@@ -523,7 +523,7 @@ def generate_knowledge_graph(output_dir: Path):
 def generate_pathway_genesets(output_dir: Path):
     print("\n=== Generating pathway_genesets.json ===")
 
-    gmt_path = PROJECT_ROOT / "downstream_analysis/pathway_analysis/data/genesets/hallmark.gmt"
+    gmt_path = PROJECT_ROOT / "Analysis/downstream_analysis/pathway_analysis/data/genesets/hallmark.gmt"
 
     gene_sets = []
     all_genes = set()

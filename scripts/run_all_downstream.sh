@@ -49,10 +49,10 @@ if [[ "$MODE" == "all" || "$MODE" == "essentiality" ]]; then
     cd "${PROJECT_ROOT}"
 
     # Run master pipeline
-    python3 downstream_analysis/essentiality/scripts/run_essentiality_pipeline.py
+    python3 Analysis/downstream_analysis/essentiality/scripts/run_essentiality_pipeline.py
     # Run supplementary plots
-    python3 downstream_analysis/essentiality/scripts/analyze_essentiality.py
-    python3 downstream_analysis/essentiality/scripts/extended_essentiality_analysis.py
+    python3 Analysis/downstream_analysis/essentiality/scripts/analyze_essentiality.py
+    python3 Analysis/downstream_analysis/essentiality/scripts/extended_essentiality_analysis.py
 
     echo "[OK] Essentiality Analysis Complete."
 else

@@ -203,7 +203,7 @@ cat("  Genes in leading edges:", nrow(pathway_layer), "\n")
 # Layer 7: Essentiality (inverse — non-essential preferred)
 # ================================================================
 cat("Loading Layer 7: Essentiality...\n")
-ess <- fread(file.path(BASE, "downstream_analysis/essentiality/results/Unified_Essentiality_Combined.csv"))
+ess <- fread(file.path(BASE, "Analysis/downstream_analysis/essentiality/results/Unified_Essentiality_Combined.csv"))
 ess_layer <- ess[, .(human_symbol = gene_symbol,
                       essentiality_score = Mean_Essentiality_Score)]
 ess_layer <- ess_layer[!duplicated(human_symbol)]

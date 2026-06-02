@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-PANDOC="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/downstream_analysis/pathway_analysis/.mamba/pathway_analysis/bin/pandoc"
+PANDOC="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/downstream_analysis/pathway_analysis/.mamba/pathway_analysis/bin/pandoc"
 CSS="docs/html/style.css"
 OUTDIR="docs/html"
 

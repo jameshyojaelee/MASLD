@@ -13,7 +13,7 @@ Inputs:
     communities_F01.csv   (per-gene community assignments)
     communities_F34.csv
     community_transition_table.csv
-  downstream_analysis/pathway_analysis/data/msigdb.v2025.1.Hs.symbols.gmt
+  Analysis/downstream_analysis/pathway_analysis/data/msigdb.v2025.1.Hs.symbols.gmt
 
 Outputs:
   community_labels.json   (JSON keyed by stage -> community_id)
@@ -35,7 +35,7 @@ from scipy.stats import hypergeom
 ROOT = Path("/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 NET_DIR = ROOT / "RNA-seq/results/network/communities_f2"
 PORTAL_DIR = ROOT / "masld-atlas-v2/public/data/network/portal_export_v2"
-GMT = ROOT / "downstream_analysis/pathway_analysis/data/msigdb.v2025.1.Hs.symbols.gmt"
+GMT = ROOT / "Analysis/downstream_analysis/pathway_analysis/data/msigdb.v2025.1.Hs.symbols.gmt"
 
 OUT_JSON = NET_DIR / "community_labels.json"
 OUT_TSV = NET_DIR / "community_labels.tsv"

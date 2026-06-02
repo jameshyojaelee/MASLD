@@ -108,7 +108,7 @@ DRUG_VALIDATION = (
 )
 GMT_PATH = (
     PROJECT_ROOT
-    / "downstream_analysis/pathway_analysis/data/msigdb.v2025.1.Hs.symbols.gmt"
+    / "Analysis/downstream_analysis/pathway_analysis/data/msigdb.v2025.1.Hs.symbols.gmt"
 )
 RESULTS_DIR = (
     PROJECT_ROOT

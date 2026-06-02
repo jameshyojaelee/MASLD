@@ -1089,14 +1089,14 @@ COL_ANNOT: dict[str, dict[str, str | bool]] = {
         source="pathway", method="fgsea leading-edge pathway count",
         ld_panel="NA", gwas_scope="NA",
         units="integer count", deprecated=False,
-        provenance="downstream_analysis/pathway_analysis/",
+        provenance="Analysis/downstream_analysis/pathway_analysis/",
         notes="MSigDB v2025.1. fgsea against Hallmark + C2 / C5.",
     ),
     "top_pathways": dict(
         source="pathway", method="fgsea top pathway list",
         ld_panel="NA", gwas_scope="NA",
         units="pathway-name string", deprecated=False,
-        provenance="downstream_analysis/pathway_analysis/",
+        provenance="Analysis/downstream_analysis/pathway_analysis/",
         notes="",
     ),
     # -------- S4 essentiality (91-93) --------

@@ -95,8 +95,8 @@ mk <- function(y, ytitle, title) ggplot(res, aes(cutoff, get(y), color = conditi
   scale_color_manual(values = pal) + scale_x_continuous(breaks = CUTS) +
   scale_y_continuous(labels = pct) + labs(x = xlab, y = ytitle, title = title) + bt
 
-pA <- mk("recall_ot", "Recall of OpenTargets MASLD genes",
-         sprintf("A  Recall of OpenTargets MASLD genes (gold standard, n=%d)", N_OT))
+pA <- mk("recall_ot", "Recovery of OpenTargets MASLD genes",
+         sprintf("A  Recovery of OpenTargets MASLD genes (n=%d)", N_OT))
 
 pB <- ggplot(res, aes(cutoff, enrich_ot, color = condition)) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "gray50", linewidth = 0.4) +

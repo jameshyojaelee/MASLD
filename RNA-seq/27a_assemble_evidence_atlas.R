@@ -1092,8 +1092,8 @@ cat("  Genes in leading edges:", nrow(pathway_layer), "\n")
 # Layer 7: Essentiality (DepMap Cas9 Chronos — liver cell lines)
 # ================================================================
 cat("Loading Layer 7: Essentiality (DepMap Cas9, liver-specific)...\n")
-depmap_file <- file.path(BASE, "downstream_analysis/essentiality/CRISPRGeneEffect.csv")
-model_file  <- file.path(BASE, "downstream_analysis/essentiality/Model.csv")
+depmap_file <- file.path(BASE, "Analysis/downstream_analysis/essentiality/CRISPRGeneEffect.csv")
+model_file  <- file.path(BASE, "Analysis/downstream_analysis/essentiality/Model.csv")
 if (file.exists(depmap_file) && file.exists(model_file)) {
   # Identify liver cell lines
   models <- fread(model_file)

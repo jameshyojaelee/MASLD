@@ -24,10 +24,10 @@ atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_at
 if (!"essentiality_chronos" %in% names(atlas) ||
     sum(!is.na(atlas$essentiality_chronos)) < 1000) {
   cat("Atlas essentiality column missing or sparse — computing from raw DepMap...\n")
-  models <- fread(file.path(BASE, "downstream_analysis/essentiality/Model.csv"))
+  models <- fread(file.path(BASE, "Analysis/downstream_analysis/essentiality/Model.csv"))
   liver_ids <- models[OncotreeLineage == "Liver", ModelID]
 
-  depmap <- fread(file.path(BASE, "downstream_analysis/essentiality/CRISPRGeneEffect.csv"))
+  depmap <- fread(file.path(BASE, "Analysis/downstream_analysis/essentiality/CRISPRGeneEffect.csv"))
   setnames(depmap, names(depmap)[1], "ModelID")
   liver_ids <- intersect(liver_ids, depmap$ModelID)
 
