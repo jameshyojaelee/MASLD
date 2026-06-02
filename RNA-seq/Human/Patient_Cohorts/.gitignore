@@ -1,0 +1,82 @@
+# Large data files
+*.fastq
+*.fq
+*.fastq.gz
+*.fq.gz
+*.bam
+*.sam
+*.bai
+*.bed
+*.bigWig
+*.bigBed
+*.h5
+*.h5ad
+*.loom
+*.rds
+*.Rdata
+*.RData
+*.csv
+*.tsv
+*.mtx
+*.serialized
+*.sqlite
+*.sqlite.gz
+
+# Folders containing large data
+**/nf-core_rnaseq/
+**/GSE130970_pipeline/
+**/GSE135251_pipeline/
+**/RNAseq_results_GSE130970/
+**/RNAseq_results_GSE135251/
+**/RNAseq_nextflow_GSE130970/
+**/RNAseq_nextflow_GSE135251/
+**/deseq2_results_GSE130970/
+**/deseq2_results_GSE135251/
+**/.venv*/
+**/fastq/
+**/alignment/
+**/RNAseq_data/
+**/data/
+**/results/
+**/bulk_RNA/RNAseq_results_GSE135251/
+**/bulk_RNA/RNAseq_results_GSE130970/
+**/bulk_RNA/RNAseq_nextflow_GSE130970/
+**/bulk_RNA/RNAseq_nextflow_GSE135251/
+**/Issler
+
+# Local archives/binaries that should not be tracked
+bulk_RNA_backup_*.tar.gz
+bulk_RNA/utilities/salmon/
+sc-eQTL/Zenodo_*.zip
+
+# Python/R environment and cache files
+__pycache__/
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.ipynb_checkpoints/
+
+# Log files
+*.log
+*.out
+*.err
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Exceptions - keep these CSV/metadata files even if small
+!samplesheet.csv
+!**/metadata/*.csv
+!**/metadata/*.tsv
+
+# Keep configuration and code files regardless of location
+!*.nf
+!nextflow.config
+!*.R
+!*.py
+!*.sh
+!*.yml
+!*.yaml
+*.zip

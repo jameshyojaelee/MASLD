@@ -1,0 +1,128 @@
+# Salmon Pseudoalignment Pipeline (Snakemake)
+# Other Diet Mouse RNA-seq
+# Output: alignments/salmon/{sample}/quant.sf
+# Supports both single-end and paired-end samples
+
+from pathlib import Path
+import csv
+
+configfile: "workflow/config.yaml"
+
+# Setup paths
+ROOT = Path(config["project_root"]).resolve()
+SAMPLESHEET = ROOT / config["samplesheet"]
+SALMON_INDEX = Path(config["indices"]["salmon"])
+SALMON_OUT = ROOT / config["output"]["salmon"]
+LOG_DIR = ROOT / config["output"]["logs"]
+
+# Load samples, excluding corrupted ones
+EXCLUDED = set(config.get("excluded_samples", []))
+
+samples = {}
+with SAMPLESHEET.open() as handle:
+    reader = csv.DictReader(handle, delimiter='\t')
+    for row in reader:
+        sid = row['sample_id']
+        if sid not in EXCLUDED:
+            samples[sid] = row
+
+SAMPLES = sorted(samples.keys())
+
+# Separate PE and SE samples
+def is_paired_end(sample):
+    """Check if sample is paired-end"""
+    row = samples[sample]
+    fq1 = row.get('fastq_1', '')
+    fq2 = row.get('fastq_2', '')
+    # Single-end if fastq_2 is empty or same as fastq_1
+    return fq2 != '' and fq2 != fq1 and Path(fq2).exists()
+
+PE_SAMPLES = [s for s in SAMPLES if is_paired_end(s)]
+SE_SAMPLES = [s for s in SAMPLES if not is_paired_end(s)]
+
+print(f"Loaded {len(SAMPLES)} samples (excluded {len(EXCLUDED)})")
+print(f"  Paired-end: {len(PE_SAMPLES)}")
+print(f"  Single-end: {len(SE_SAMPLES)}")
+
+# Helper functions
+def get_fastq(sample, read):
+    """Get fastq path for a sample and read (1 or 2)"""
+    key = f"fastq_{read}"
+    return samples[sample].get(key, '')
+
+
+# Target rule - all Salmon quantifications
+rule all:
+    input:
+        expand(SALMON_OUT / "{sample}" / "quant.sf", sample=SAMPLES)
+
+
+# Salmon quantification - Paired-End samples
+rule salmon_quant_pe:
+    input:
+        r1=lambda wc: get_fastq(wc.sample, "1"),
+        r2=lambda wc: get_fastq(wc.sample, "2")
+    output:
+        quant=SALMON_OUT / "{sample}" / "quant.sf",
+        lib=SALMON_OUT / "{sample}" / "lib_format_counts.json"
+    params:
+        outdir=lambda wc: SALMON_OUT / wc.sample,
+        libtype=config["salmon"]["libtype"],
+        index=SALMON_INDEX
+    threads: config["salmon"]["threads"]
+    log:
+        LOG_DIR / "{sample}.log"
+    resources:
+        mem_mb=32000,
+        time="2:00:00"
+    wildcard_constraints:
+        sample="|".join(PE_SAMPLES) if PE_SAMPLES else "NEVER_MATCH"
+    shell:
+        """
+        mkdir -p {params.outdir} $(dirname {log})
+        salmon quant \
+            -i {params.index} \
+            -l {params.libtype} \
+            -1 {input.r1} \
+            -2 {input.r2} \
+            -p {threads} \
+            --validateMappings \
+            --gcBias \
+            --seqBias \
+            -o {params.outdir} \
+            2> {log}
+        """
+
+
+# Salmon quantification - Single-End samples
+rule salmon_quant_se:
+    input:
+        r1=lambda wc: get_fastq(wc.sample, "1")
+    output:
+        quant=SALMON_OUT / "{sample}" / "quant.sf",
+        lib=SALMON_OUT / "{sample}" / "lib_format_counts.json"
+    params:
+        outdir=lambda wc: SALMON_OUT / wc.sample,
+        libtype=config["salmon"]["libtype"],
+        index=SALMON_INDEX
+    threads: config["salmon"]["threads"]
+    log:
+        LOG_DIR / "{sample}.log"
+    resources:
+        mem_mb=32000,
+        time="2:00:00"
+    wildcard_constraints:
+        sample="|".join(SE_SAMPLES) if SE_SAMPLES else "NEVER_MATCH"
+    shell:
+        """
+        mkdir -p {params.outdir} $(dirname {log})
+        salmon quant \
+            -i {params.index} \
+            -l {params.libtype} \
+            -r {input.r1} \
+            -p {threads} \
+            --validateMappings \
+            --seqBias \
+            -o {params.outdir} \
+            2> {log}
+        """

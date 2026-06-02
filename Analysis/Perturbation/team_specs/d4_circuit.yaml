@@ -1,0 +1,120 @@
+team: perturbation-campaign-d4
+arm: D4_Cell_Cell_Circuit
+goal: Predict paracrine effect of hepatocyte ligand perturbation on Mac/Stellate/LSEC/Chol receivers
+
+models:
+  - STATE 2-stage custom pipeline (sender perturbation → LR propagation → receiver simulation)
+  - NICHES (niche-context perturbation, R)
+  - COMMOT (OT-based CCC, Python)
+consensus_rule: 2-of-3 (receiver response replicated in ≥2 propagation pipelines)
+
+hit_set:
+  file: data/hits/d4_circuit_ligands.csv
+  size: ~30-50 hepatocyte ligands × 4 receivers
+  ground_truth: Analysis/SingleCell/results_gpu_v2/ccc/ (post-fix CCC pairs: CDH1-PTPRM, COL18A1-KDR, ST6GAL1-EGFR + 5 more)
+
+risk:
+  no_off_the_shelf_model: HIGH
+  engineering_load: HIGHEST of any arm (~3 weeks pipeline build)
+  mitigation: 2-stage architecture + 2 alternative methods (NICHES, COMMOT); LR Curator independently validates LR pairs
+
+subagents:
+  - name: arm_lead_d4
+    role: Arm Lead
+    agent_type: general-purpose
+    reports_to: cross_arm_coordinator
+
+  - name: data_engineer_d4
+    role: Data Engineer
+    agent_type: general-purpose
+    owns: hep + receiver pseudobulks + LR pair tables + receiver-specific contexts
+    reports_to: arm_lead_d4
+
+  - name: lr_curator_d4
+    role: LR Curator (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: LIANA+ + CellChat curated LR pair database; independently validates LR plausibility
+    reports_to: arm_lead_d4
+    independence: standalone
+
+  - name: receiver_modeler_mac_d4
+    role: Receiver Modeler — Macrophage (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: STATE/scGen perturbation in Mac cell population given modified ligand context
+    reports_to: arm_lead_d4
+    independence: BLINDED to other receiver modelers
+
+  - name: receiver_modeler_stellate_d4
+    role: Receiver Modeler — Stellate (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: Stellate receiver simulation
+    reports_to: arm_lead_d4
+    independence: BLINDED
+
+  - name: receiver_modeler_lsec_d4
+    role: Receiver Modeler — LSEC (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: LSEC receiver simulation
+    reports_to: arm_lead_d4
+    independence: BLINDED
+
+  - name: receiver_modeler_chol_d4
+    role: Receiver Modeler — Cholangiocyte (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: Cholangiocyte receiver simulation
+    reports_to: arm_lead_d4
+    independence: BLINDED
+
+  - name: runner_niches_d4
+    role: Pipeline Runner — NICHES (R)
+    agent_type: general-purpose
+    owns: NICHES niche-context perturbation; R env
+    reports_to: arm_lead_d4
+    independence: BLINDED
+
+  - name: runner_commot_d4
+    role: Pipeline Runner — COMMOT (Python)
+    agent_type: general-purpose
+    owns: COMMOT OT-based CCC; Python env
+    reports_to: arm_lead_d4
+    independence: BLINDED
+
+  - name: peer_reviewer_d4
+    role: Peer Reviewer (Methods)
+    agent_type: general-purpose
+    reports_to: arm_lead_d4
+    independence: independent of runners
+
+  - name: consensus_aggregator_d4
+    role: Consensus Aggregator
+    agent_type: general-purpose
+    reports_to: arm_lead_d4
+
+  - name: backtester_d4
+    role: Backtester
+    agent_type: general-purpose
+    owns: TGF-β/SMAD stellate; IL-6/STAT3 Hep→Mac; SAA1/FPR1 from CCC post-fix
+    reports_to: arm_lead_d4
+    independence: blinded to consensus
+
+  - name: lit_reviewer_d4
+    role: Literature Reviewer
+    agent_type: general-purpose
+    reports_to: arm_lead_d4
+    independence: independent
+
+  - name: output_writer_d4
+    role: Output Writer
+    agent_type: general-purpose
+    reports_to: arm_lead_d4
+
+  - name: atlas_integrator_d4
+    role: Atlas Integrator
+    agent_type: general-purpose
+    reports_to: cross_arm_coordinator
+
+deliverables:
+  - results/d4_circuit/circuit_predictions.csv (ligand × receiver × response_genes)
+  - results/d4_circuit/cards/<ligand>__<receiver>.json (top 50)
+  - results/d4_circuit/circuit_heatmap.pdf
+  - 2 atlas columns: perturb_ccc_ligand_role, perturb_ccc_predicted_receivers

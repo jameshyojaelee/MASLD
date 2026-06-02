@@ -1,0 +1,82 @@
+# Mouse Bulk ATAC-seq Pipeline Configuration
+# Dataset: GSE246213 — STZ+HFD MASLD progression model (12 samples)
+
+# Reference genome
+reference:
+  genome: "GRCm39"
+  bowtie2_index: "/gpfs/commons/home/jameslee/reference_genome/bowtie2/GRCm39/GRCm39"
+  blacklist: "/gpfs/commons/home/jameslee/reference_genome/blacklists/mm10-blacklist.v2.bed"
+  gtf: "/gpfs/commons/home/jameslee/reference_genome/refdata-gex-GRCm39-2024-A/annotation/gencode.vM37.chr_patch_hapl_scaff.annotation.gtf.gz"
+  chrom_sizes: "/gpfs/commons/home/jameslee/reference_genome/bowtie2/GRCm39/GRCm39.chrom.sizes"
+
+# Data paths
+data_dir: "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/data/GSE246213/fastq"
+results_dir: "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/ATAC/Mouse_Bulk/results"
+
+# Sample metadata (SRR → condition mapping from ENA runinfo)
+samples:
+  SRR26515782:
+    condition: "STZ_HFD"
+    replicate: 3
+  SRR26515783:
+    condition: "STZ_HFD"
+    replicate: 2
+  SRR26515784:
+    condition: "STZ_HFD"
+    replicate: 1
+  SRR26515785:
+    condition: "HFD"
+    replicate: 3
+  SRR26515786:
+    condition: "HFD"
+    replicate: 2
+  SRR26515787:
+    condition: "HFD"
+    replicate: 1
+  SRR26515788:
+    condition: "STZ_SCD"
+    replicate: 3
+  SRR26515789:
+    condition: "STZ_SCD"
+    replicate: 1
+  SRR26515790:
+    condition: "SCD_Control"
+    replicate: 3
+  SRR26515791:
+    condition: "SCD_Control"
+    replicate: 2
+  SRR26515792:
+    condition: "STZ_SCD"
+    replicate: 2
+  SRR26515793:
+    condition: "SCD_Control"
+    replicate: 1
+
+# Analysis parameters
+macs2:
+  genome_size: "mm"
+  qvalue: 0.05
+  broad: true
+  nomodel: true
+  shift: -100
+  extsize: 200
+
+alignment:
+  mapq_threshold: 30
+  max_insert_size: 2000
+
+diffbind:
+  fdr_threshold: 0.05
+  fold_change: 1.0
+
+# Contrasts for differential accessibility
+contrasts:
+  - name: "STZ_HFD_vs_Control"
+    treatment: "STZ_HFD"
+    control: "SCD_Control"
+  - name: "HFD_vs_Control"
+    treatment: "HFD"
+    control: "SCD_Control"
+  - name: "STZ_SCD_vs_Control"
+    treatment: "STZ_SCD"
+    control: "SCD_Control"

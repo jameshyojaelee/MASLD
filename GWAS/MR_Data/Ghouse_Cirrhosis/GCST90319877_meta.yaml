@@ -1,0 +1,34 @@
+adjusted_covariates:
+- age
+- sex
+- PCs
+analysis_software: plink2
+author_notes: 'Patel, Khush, et al. "New phenotype discovery method by unsupervised
+  deep representation learning empowers genetic association studies of brain imaging."
+  medRxiv (2022): 2022-12.'
+coordinate_system: 1-based
+data_file_md5sum: d3722ccf399b09efa2bb67110d03786b
+data_file_name: GCST90319877.h.tsv.gz
+date_metadata_last_modified: 2024-10-20
+file_type: GWAS-SSF v1.0
+genome_assembly: GRCh38
+genotyping_technology:
+- Genome-wide genotyping array
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90319877
+gwas_id: GCST90319877
+harmonisation_reference: ftp://ftp.ensembl.org/pub/release-95/fasta/homo_sapiens/dna/
+imputation_panel: HRC|TopMed|1000G
+imputation_software: Eagle 2.3.5|IMPUTE4|IMPUTE2
+is_harmonised: true
+is_sorted: true
+minor_allele_freq_lower_limit: 0.01
+ontology_mapping:
+- EFO_0001422
+samples:
+- case_control_study: true
+  sample_ancestry_category:
+  - European
+  sample_size: 1580011
+sex: combined
+trait_description:
+- Cirrhosis

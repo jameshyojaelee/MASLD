@@ -1,0 +1,36 @@
+name: perturbation_scgpt_fallback
+channels:
+  - conda-forge
+  - bioconda
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.10
+  - pip
+  - cuda-toolkit=11.7
+  - cudnn
+  - pytorch=1.13.*
+  - torchvision
+  - pytorch-cuda=11.7
+  - ninja
+  - scanpy>=1.9,<1.11
+  - anndata>=0.9
+  - numpy<2
+  - pandas
+  - scikit-learn
+  - h5py
+  - tqdm
+  - rich
+  - transformers>=4.30,<4.45
+  - datasets
+  - accelerate
+  - peft
+  - biopython
+  - mygene
+  - matplotlib
+  - seaborn
+  - pip:
+    - scgpt>=0.2.0
+    - "flash-attn<1.0.5"
+    - geneformer
+    - pertpy

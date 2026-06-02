@@ -1,0 +1,60 @@
+name: perturbation_state
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pip
+  - "setuptools<81"  # >=81 removes pkg_resources which scvi/lightning need
+  - wheel
+  - cuda-toolkit=12.4
+  - cudnn
+  - nccl  # explicit so torch_cuda finds matching libnccl
+  - libstdcxx-ng>=13.3  # CXXABI_1.3.15 fix
+  # Foundation model stack — pin to pytorch-channel CUDA build
+  - pytorch=2.5.*
+  - torchvision
+  - torchaudio
+  - pytorch-cuda=12.4
+  - lightning>=2.4,<2.6
+  # Single-cell stack
+  - scanpy>=1.10
+  - anndata>=0.10
+  - scvi-tools>=1.1
+  # Data + utilities
+  - numpy<2
+  - pandas
+  - scikit-learn
+  - polars
+  - pyarrow
+  - h5py
+  - hdf5plugin
+  - tqdm
+  - rich
+  - typer
+  # ML tooling
+  - datasets
+  - transformers>=4.45
+  - accelerate
+  - peft
+  - wandb
+  # JAX (for pertpy compat)
+  - "jax<0.4.30"
+  - "jaxlib<0.4.30"
+  # Bio utilities
+  - biopython
+  - gffutils
+  # Visualization
+  - matplotlib
+  - seaborn
+  - plotnine
+  - upsetplot
+  # NOTE: arc-state, pertpy, sc-toolbox, cell2sentence installed via pip in sbatch
+  # with --no-deps to PREVENT arc-state from pip-uninstalling conda's torch 2.5
+  # and pulling torch>=2.7 + nccl-cu13 (which is incompatible with our cu124 stack).
+# Notes:
+# - pytorch=2.5.* + nccl + libstdcxx-ng cluster fixes the CXXABI and ncclCommResume errors
+# - jax<0.4.30 keeps pertpy importable
+# - STATE arc-state pip-installed post-solve (see build_state.sbatch) with --no-deps

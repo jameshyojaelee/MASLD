@@ -1,0 +1,15 @@
+[theme]
+# Keep in sync with --masld-primary / --masld-bg / --masld-fg in
+# theme/custom.css so Streamlit widget accents (slider thumb, radio dot,
+# link hover) match the CSS tokens.
+primaryColor = "#3b5ad2"
+backgroundColor = "#fafafa"
+secondaryBackgroundColor = "#eff1f5"
+textColor = "#1a1a1a"
+font = "sans serif"
+
+[server]
+maxUploadSize = 50
+
+[browser]
+gatherUsageStats = false

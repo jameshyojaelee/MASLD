@@ -1,0 +1,140 @@
+# =============================================================================
+# config/pipeline_params.yaml
+# Global analysis parameters and SLURM defaults for the MASLD pipeline.
+# Centralizes all thresholds so changes propagate to all scripts.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Base paths (relative to project root, or override with env var)
+# Override via: export MASLD_PROJECT_ROOT=/your/path
+# ---------------------------------------------------------------------------
+paths:
+  project_root: "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
+  human_base: "RNA-seq/Human/Patient_Cohorts"
+  mouse_base: "RNA-seq/Mouse"
+  results: "results"
+
+# Reference genomes
+reference:
+  human:
+    genome: "GRCh38.p14"
+    annotation: "GENCODE v49"
+    star_index: "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/star_index"
+    gtf: "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
+  mouse:
+    genome: "GRCm39"
+    annotation: "GENCODE vM38"
+    star_index: "/gpfs/commons/home/jameslee/reference_genome/gencode_vm38/star_index"
+    gtf: "/gpfs/commons/home/jameslee/reference_genome/gencode_vm38/gencode.vM38.chr_patch_hapl_scaff.annotation.gtf.gz"
+
+# ---------------------------------------------------------------------------
+# QC thresholds
+# ---------------------------------------------------------------------------
+qc:
+  min_library_size: 5000000          # Minimum mapped reads to pass QC
+  min_gene_count: 1000               # Minimum number of detected genes (CPM > 0)
+  max_pct_mito: 50                   # Maximum % mitochondrial reads (placeholder)
+  sex_check_enabled: true            # Run XIST/DDX3Y sex inference
+
+# ---------------------------------------------------------------------------
+# Differential expression thresholds
+# ---------------------------------------------------------------------------
+de:
+  padj_de: 0.1                       # Adjusted p-value cutoff for per-study DE summary
+  padj_sig: 0.05                     # Adjusted p-value cutoff for mega/meta significance
+
+# ---------------------------------------------------------------------------
+# Consensus DEG thresholds
+# NOTE: Dream DEGs defined by standard padj + |logFC| thresholds.
+# ashr shrinkage (Script 05b) still runs and produces lfsr/shrunk_logFC columns
+# for supplementary reference, but is no longer used for primary thresholding.
+# ---------------------------------------------------------------------------
+consensus:
+  # Dream (canonical): standard padj + logFC thresholds
+  dream:
+    padj: 0.05
+    lfc: 0.5                           # 2026-05-28 (P0-I): canonical Tier-1 cutoff, STAR -s 2 (PI decision); 1,885 DEGs (padj<0.05). Matches Script 07/05 hardcode & CLAUDE.md.
+
+  # Human Tier 1: significant in BOTH dream AND meta-analysis (legacy reference)
+  tier1:
+    padj: 0.05
+    lfc: 1.0
+    require_both: true               # Must pass in dream AND meta
+
+  # Human Tier 2: significant in EITHER dream OR meta-analysis (legacy reference)
+  tier2:
+    padj: 0.05
+    lfc: 0.5
+    require_both: false              # Passes in dream OR meta
+
+  # Mouse consensus thresholds
+  # mouse_lfc: Set to 0.5 (cross-species match with human canonical) on 2026-04-27
+  # following 5-fold leave-one-diet-out LOO-CV stability analysis
+  # (M_loo_lfc_stability.R). The mouse stability metric did NOT yield a clean
+  # elbow: across-fold CV(N DEGs) and mean Jaccard are dominated by diet-model
+  # heterogeneity (CDAHFD/FPC fold-out drops recovery to 69-75% regardless of
+  # LFC; HFD/MCD fold-out keeps it >85%). Mean Jaccard 0.65-0.74 across
+  # LFC in [0.25, 1.0]; mean recovery 76-80% across the full sweep. Given the
+  # absence of a stability-driven optimum, we match the human canonical
+  # (|logFC|>0.5) for cross-species comparability. See
+  # figures/supplementary/figS06_cross_species/mouse_loo_lfc_stability.pdf and
+  # RNA-seq/Mouse/Unified_Integration/results/loo_lfc_stability_data.csv
+  mouse_lfc: 0.5                     # 2026-04-27: matched to human canonical (LOO-CV stability)
+  mouse_min_diets: 3                 # Require presence in >= 3 of 5 diet models
+
+# ---------------------------------------------------------------------------
+# Library design thresholds
+# ---------------------------------------------------------------------------
+library:
+  padj: 0.1
+  lfc: 0.8
+  tpm_protein_coding: 1.0
+  tpm_lncrna: 0.5
+  direction: "up"                    # Only upregulated targets for Cas13 knockdown
+
+# ---------------------------------------------------------------------------
+# SLURM job defaults
+# ---------------------------------------------------------------------------
+slurm:
+  micromamba_path: "/gpfs/commons/home/jameslee/.local/bin/micromamba"
+  conda_env: "rnaseq"
+
+  human_integration:
+    partition: "bigmem"
+    cpus: 32
+    mem: "400G"
+    time: "48:00:00"
+
+  mouse_integration:
+    partition: "bigmem"
+    cpus: 16
+    mem: "128G"
+    time: "48:00:00"
+
+  per_dataset_snakemake:
+    partition: "cpu"
+    cpus: 8
+    mem: "64G"
+    time: "48:00:00"
+
+  download:
+    partition: "io"
+    cpus: 8
+    mem: "32G"
+    time: "12:00:00"
+    chunk_size: 5                    # Samples per array job task
+
+# ---------------------------------------------------------------------------
+# Pathway analysis
+# ---------------------------------------------------------------------------
+pathway:
+  gsea_min_size: 15
+  gsea_max_size: 500
+  gsea_nperm: 10000
+  fdr_cutoff: 0.05
+  gene_sets:
+    - "H"         # Hallmark
+    - "C2:KEGG"   # KEGG pathways
+    - "C2:REACTOME"
+    - "C5:GO:BP"  # GO Biological Process
+    - "C5:GO:MF"  # GO Molecular Function

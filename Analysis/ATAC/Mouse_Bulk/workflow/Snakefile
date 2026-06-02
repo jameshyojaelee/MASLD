@@ -1,0 +1,474 @@
+# Bulk ATAC-seq Processing Pipeline (Module 1)
+# Dataset: GSE246213 — STZ+HFD MASLD progression model (12 samples)
+# Workflow: FASTQ -> fastp -> bowtie2 -> filter -> MACS2 -> consensus peaks -> count matrix
+#
+# Usage:
+#   snakemake --snakefile workflow/Snakefile -j 16 --rerun-incomplete
+#   snakemake --snakefile workflow/Snakefile -n  # dry run
+
+from pathlib import Path
+
+configfile: "workflow/config.yaml"
+
+# ---------------------------------------------------------------------------
+# Sample and path setup
+# ---------------------------------------------------------------------------
+SAMPLES = sorted(config["samples"].keys())
+DATA_DIR = config["data_dir"]
+RESULTS = config["results_dir"]
+
+# Reference paths
+BT2_INDEX = config["reference"]["bowtie2_index"]
+BLACKLIST = config["reference"]["blacklist"]
+GTF = config["reference"]["gtf"]
+CHROM_SIZES = config["reference"]["chrom_sizes"]
+
+# MACS2 parameters
+MACS2_GENOME = config["macs2"]["genome_size"]
+MACS2_QVALUE = config["macs2"]["qvalue"]
+MACS2_SHIFT = config["macs2"]["shift"]
+MACS2_EXTSIZE = config["macs2"]["extsize"]
+
+# Alignment parameters
+MAPQ_THRESHOLD = config["alignment"]["mapq_threshold"]
+MAX_INSERT = config["alignment"]["max_insert_size"]
+
+print(f"Loaded {len(SAMPLES)} samples: {', '.join(SAMPLES)}")
+
+# ---------------------------------------------------------------------------
+# Target rule
+# ---------------------------------------------------------------------------
+rule all:
+    input:
+        # Count matrix over consensus peaks
+        f"{RESULTS}/consensus_peak_counts.txt",
+        # Consensus peaks
+        f"{RESULTS}/consensus_peaks.bed",
+        # Per-sample peaks
+        expand(f"{RESULTS}/peaks/{{sample}}_peaks.broadPeak", sample=SAMPLES),
+        # QC outputs
+        expand(f"{RESULTS}/qc/{{sample}}_insert_sizes.pdf", sample=SAMPLES),
+        f"{RESULTS}/qc/tss_enrichment.pdf",
+        f"{RESULTS}/qc/frip_summary.tsv",
+        # MultiQC
+        f"{RESULTS}/qc/multiqc_report.html",
+
+
+# ---------------------------------------------------------------------------
+# Rule 1: Adapter trimming + quality filtering with fastp
+# ---------------------------------------------------------------------------
+rule fastp_trim:
+    input:
+        r1=f"{DATA_DIR}/{{sample}}/{{sample}}_S1_L001_R1_001.fastq.gz",
+        r2=f"{DATA_DIR}/{{sample}}/{{sample}}_S1_L001_R2_001.fastq.gz",
+    output:
+        r1=f"{RESULTS}/trimmed/{{sample}}_R1.trimmed.fastq.gz",
+        r2=f"{RESULTS}/trimmed/{{sample}}_R2.trimmed.fastq.gz",
+        json=f"{RESULTS}/qc/{{sample}}_fastp.json",
+        html=f"{RESULTS}/qc/{{sample}}_fastp.html",
+    threads: 4
+    resources:
+        mem_mb=8000,
+        time="1:00:00",
+    log:
+        f"logs/fastp/{{sample}}.log",
+    shell:
+        """
+        mkdir -p $(dirname {output.r1}) $(dirname {output.json}) $(dirname {log})
+        fastp \
+            -i {input.r1} -I {input.r2} \
+            -o {output.r1} -O {output.r2} \
+            --json {output.json} --html {output.html} \
+            --detect_adapter_for_pe \
+            --qualified_quality_phred 20 \
+            --length_required 20 \
+            --thread {threads} \
+            2> {log}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 2: Alignment with bowtie2 -> samtools sort
+# ---------------------------------------------------------------------------
+rule bowtie2_align:
+    input:
+        r1=f"{RESULTS}/trimmed/{{sample}}_R1.trimmed.fastq.gz",
+        r2=f"{RESULTS}/trimmed/{{sample}}_R2.trimmed.fastq.gz",
+    output:
+        bam=f"{RESULTS}/alignment/{{sample}}.bam",
+    params:
+        index=BT2_INDEX,
+        maxins=MAX_INSERT,
+    threads: 16
+    resources:
+        mem_mb=32000,
+        time="4:00:00",
+    log:
+        bt2=f"logs/bowtie2/{{sample}}.log",
+    shell:
+        """
+        mkdir -p $(dirname {output.bam}) $(dirname {log.bt2})
+        bowtie2 \
+            --very-sensitive \
+            --maxins {params.maxins} \
+            -X {params.maxins} \
+            --no-mixed \
+            --no-discordant \
+            -p {threads} \
+            -x {params.index} \
+            -1 {input.r1} \
+            -2 {input.r2} \
+            2> {log.bt2} \
+        | samtools sort -@ 4 -m 2G -o {output.bam} -
+
+        samtools index {output.bam}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 3: Filter BAM (remove chrM, duplicates, low MAPQ, blacklist)
+# ---------------------------------------------------------------------------
+rule filter_bam:
+    input:
+        bam=f"{RESULTS}/alignment/{{sample}}.bam",
+    output:
+        bam=f"{RESULTS}/alignment/{{sample}}.filtered.bam",
+        bai=f"{RESULTS}/alignment/{{sample}}.filtered.bam.bai",
+        dedup_metrics=f"{RESULTS}/qc/{{sample}}_dedup_metrics.txt",
+    params:
+        no_chrm=temp(f"{RESULTS}/alignment/{{sample}}.nochrM.bam"),
+        dedup=temp(f"{RESULTS}/alignment/{{sample}}.dedup.bam"),
+        mapq=MAPQ_THRESHOLD,
+        blacklist=BLACKLIST,
+    threads: 4
+    resources:
+        mem_mb=16000,
+        time="2:00:00",
+    log:
+        f"logs/filter/{{sample}}.log",
+    shell:
+        """
+        mkdir -p $(dirname {log})
+
+        echo "=== Step 1: Remove chrM reads ===" >> {log} 2>&1
+        samtools view -h {input.bam} \
+            | grep -v chrM \
+            | samtools view -b -o {params.no_chrm} - \
+            2>> {log}
+        samtools index {params.no_chrm} 2>> {log}
+
+        echo "=== Step 2: Remove duplicates ===" >> {log} 2>&1
+        java -jar $EBROOTPICARD/picard.jar MarkDuplicates \
+            INPUT={params.no_chrm} \
+            OUTPUT={params.dedup} \
+            METRICS_FILE={output.dedup_metrics} \
+            REMOVE_DUPLICATES=true \
+            VALIDATION_STRINGENCY=LENIENT \
+            2>> {log}
+        samtools index {params.dedup} 2>> {log}
+
+        echo "=== Step 3: MAPQ filter + proper pairs + remove blacklist ===" >> {log} 2>&1
+        bedtools intersect -v -abam {params.dedup} -b {params.blacklist} \
+            | samtools view -b -q {params.mapq} -f 2 -F 1804 -o {output.bam} - \
+            2>> {log}
+        samtools index {output.bam} 2>> {log}
+
+        echo "=== Cleanup temp files ===" >> {log} 2>&1
+        rm -f {params.no_chrm} {params.no_chrm}.bai \
+              {params.dedup} {params.dedup}.bai \
+            2>> {log}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 4: Call peaks per sample with MACS2 (broad mode)
+# ---------------------------------------------------------------------------
+rule macs2_peaks:
+    input:
+        bam=f"{RESULTS}/alignment/{{sample}}.filtered.bam",
+    output:
+        broadpeak=f"{RESULTS}/peaks/{{sample}}_peaks.broadPeak",
+        gapped=f"{RESULTS}/peaks/{{sample}}_peaks.gappedPeak",
+    params:
+        outdir=f"{RESULTS}/peaks",
+        name="{sample}",
+        genome=MACS2_GENOME,
+        qvalue=MACS2_QVALUE,
+        shift=MACS2_SHIFT,
+        extsize=MACS2_EXTSIZE,
+    threads: 1
+    resources:
+        mem_mb=8000,
+        time="1:00:00",
+    log:
+        f"logs/macs2/{{sample}}.log",
+    shell:
+        """
+        mkdir -p {params.outdir} $(dirname {log})
+        module load MACS2/2.2.9.1-foss-2023b 2>/dev/null
+        macs2 callpeak \
+            -t {input.bam} \
+            -f BAMPE \
+            --broad \
+            --nomodel \
+            --shift {params.shift} \
+            --extsize {params.extsize} \
+            -g {params.genome} \
+            -q {params.qvalue} \
+            -n {params.name} \
+            --outdir {params.outdir} \
+            --keep-dup all \
+            2> {log}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 5: Merge peaks into consensus set
+# ---------------------------------------------------------------------------
+rule consensus_peaks:
+    input:
+        peaks=expand(f"{RESULTS}/peaks/{{sample}}_peaks.broadPeak", sample=SAMPLES),
+    output:
+        bed=f"{RESULTS}/consensus_peaks.bed",
+    params:
+        merge_dist=250,
+        blacklist=BLACKLIST,
+    threads: 1
+    resources:
+        mem_mb=4000,
+        time="0:30:00",
+    log:
+        f"logs/consensus_peaks.log",
+    shell:
+        """
+        mkdir -p $(dirname {log})
+        (
+            # Concatenate all broadPeak files, sort, merge nearby peaks
+            cat {input.peaks} \
+                | cut -f1-3 \
+                | sort -k1,1 -k2,2n \
+                | bedtools merge -d {params.merge_dist} \
+                | bedtools intersect -v -a stdin -b {params.blacklist} \
+                > {output.bed}
+
+            # Report stats
+            echo "Consensus peaks: $(wc -l < {output.bed})"
+        ) 2> {log}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 6: Count matrix with featureCounts over consensus peaks
+# ---------------------------------------------------------------------------
+rule count_matrix:
+    input:
+        bams=expand(f"{RESULTS}/alignment/{{sample}}.filtered.bam", sample=SAMPLES),
+        peaks=f"{RESULTS}/consensus_peaks.bed",
+    output:
+        counts=f"{RESULTS}/consensus_peak_counts.txt",
+        summary=f"{RESULTS}/consensus_peak_counts.txt.summary",
+    params:
+        saf=temp(f"{RESULTS}/consensus_peaks.saf"),
+    threads: 8
+    resources:
+        mem_mb=16000,
+        time="1:00:00",
+    log:
+        f"logs/featurecounts.log",
+    shell:
+        """
+        mkdir -p $(dirname {log})
+
+        # Convert BED to SAF format (GeneID, Chr, Start, End, Strand)
+        awk 'BEGIN{{OFS="\\t"}} {{print "peak_"NR, $1, $2, $3, "."}}' {input.peaks} \
+            > {params.saf}
+
+        featureCounts \
+            -p --countReadPairs \
+            -F SAF \
+            -a {params.saf} \
+            -T {threads} \
+            -o {output.counts} \
+            {input.bams} \
+            2> {log}
+
+        # Cleanup temp SAF
+        rm -f {params.saf}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 7a: Fragment size distribution (insert size metrics)
+# ---------------------------------------------------------------------------
+rule insert_size_metrics:
+    input:
+        bam=f"{RESULTS}/alignment/{{sample}}.filtered.bam",
+    output:
+        pdf=f"{RESULTS}/qc/{{sample}}_insert_sizes.pdf",
+        txt=f"{RESULTS}/qc/{{sample}}_insert_sizes.txt",
+    threads: 1
+    resources:
+        mem_mb=8000,
+        time="0:30:00",
+    log:
+        f"logs/qc/insert_size_{{sample}}.log",
+    shell:
+        """
+        mkdir -p $(dirname {output.pdf}) $(dirname {log})
+        java -jar $EBROOTPICARD/picard.jar CollectInsertSizeMetrics \
+            INPUT={input.bam} \
+            OUTPUT={output.txt} \
+            HISTOGRAM_FILE={output.pdf} \
+            VALIDATION_STRINGENCY=LENIENT \
+            2> {log}
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 7b: TSS enrichment (deeptools computeMatrix + plotHeatmap)
+# ---------------------------------------------------------------------------
+rule tss_enrichment:
+    input:
+        bams=expand(f"{RESULTS}/alignment/{{sample}}.filtered.bam", sample=SAMPLES),
+        bais=expand(f"{RESULTS}/alignment/{{sample}}.filtered.bam.bai", sample=SAMPLES),
+    output:
+        matrix=f"{RESULTS}/qc/tss_matrix.gz",
+        heatmap=f"{RESULTS}/qc/tss_enrichment.pdf",
+    params:
+        gtf=GTF,
+        labels=" ".join(SAMPLES),
+        samples=" ".join(SAMPLES),
+        results_dir=RESULTS,
+    threads: 8
+    resources:
+        mem_mb=32000,
+        time="4:00:00",
+    log:
+        f"logs/qc/tss_enrichment.log",
+    shell:
+        """
+        mkdir -p $(dirname {output.matrix}) $(dirname {log})
+        module load deepTools/3.5.6 2>/dev/null
+
+        # Step 1: Convert BAMs to bigWig (required by computeMatrix)
+        BIGWIG_LIST=""
+        for sample in {params.samples}; do
+            bam="{params.results_dir}/alignment/${{sample}}.filtered.bam"
+            bw="{params.results_dir}/qc/${{sample}}.bw"
+            if [ ! -f "$bw" ]; then
+                bamCoverage -b "$bam" -o "$bw" \
+                    --binSize 10 --normalizeUsing RPKM \
+                    -p {threads} 2>> {log}
+            fi
+            BIGWIG_LIST="$BIGWIG_LIST $bw"
+        done
+
+        # Step 2: Generate BED of TSSs from the GTF
+        TSS_BED=$(dirname {output.matrix})/tss_regions.bed
+        zcat {params.gtf} \
+            | awk '$3 == "gene"' \
+            | grep -v '^#' \
+            | awk 'BEGIN{{OFS="\\t"}} {{
+                if ($7 == "+") print $1, $4-1, $4, ".", ".", $7;
+                else print $1, $5-1, $5, ".", ".", $7;
+            }}' \
+            | sort -k1,1 -k2,2n \
+            | uniq \
+            > "$TSS_BED"
+
+        # Step 3: computeMatrix around TSS
+        computeMatrix reference-point \
+            --referencePoint TSS \
+            -b 2000 -a 2000 \
+            -S $BIGWIG_LIST \
+            -R "$TSS_BED" \
+            --skipZeros \
+            -p {threads} \
+            -o {output.matrix} \
+            --samplesLabel {params.labels} \
+            2>> {log}
+
+        # Step 4: Plot heatmap
+        plotHeatmap \
+            -m {output.matrix} \
+            -o {output.heatmap} \
+            --colorMap YlGnBu \
+            --refPointLabel TSS \
+            --heatmapHeight 12 \
+            2>> {log}
+
+        rm -f "$TSS_BED"
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 7c: FRiP (fraction of reads in peaks)
+# ---------------------------------------------------------------------------
+rule frip:
+    input:
+        bams=expand(f"{RESULTS}/alignment/{{sample}}.filtered.bam", sample=SAMPLES),
+        peaks=expand(f"{RESULTS}/peaks/{{sample}}_peaks.broadPeak", sample=SAMPLES),
+    output:
+        summary=f"{RESULTS}/qc/frip_summary.tsv",
+    params:
+        samples=" ".join(SAMPLES),
+        results_dir=RESULTS,
+    threads: 1
+    resources:
+        mem_mb=8000,
+        time="4:00:00",
+    log:
+        f"logs/qc/frip.log",
+    shell:
+        """
+        mkdir -p $(dirname {log})
+        echo -e "sample\\ttotal_reads\\treads_in_peaks\\tfrip" > {output.summary}
+        for sample in {params.samples}; do
+            bam="{params.results_dir}/alignment/${{sample}}.filtered.bam"
+            peaks="{params.results_dir}/peaks/${{sample}}_peaks.broadPeak"
+
+            total=$(samtools view -c -F 4 "$bam")
+            rip=$(samtools view -c -F 4 -L "$peaks" "$bam")
+
+            if [ "$total" -gt 0 ]; then
+                frip=$(echo "scale=4; $rip/$total" | bc)
+            else
+                frip="0.0000"
+            fi
+
+            echo -e "${{sample}}\\t${{total}}\\t${{rip}}\\t${{frip}}" >> {output.summary}
+            echo "${{sample}}: ${{total}} total, ${{rip}} in peaks, FRiP=${{frip}}" >> {log}
+        done
+        """
+
+
+# ---------------------------------------------------------------------------
+# Rule 8: MultiQC aggregate report
+# ---------------------------------------------------------------------------
+rule multiqc:
+    input:
+        fastp=expand(f"{RESULTS}/qc/{{sample}}_fastp.json", sample=SAMPLES),
+        dedup=expand(f"{RESULTS}/qc/{{sample}}_dedup_metrics.txt", sample=SAMPLES),
+        insert_metrics=expand(f"{RESULTS}/qc/{{sample}}_insert_sizes.txt", sample=SAMPLES),
+        counts_summary=f"{RESULTS}/consensus_peak_counts.txt.summary",
+    output:
+        html=f"{RESULTS}/qc/multiqc_report.html",
+    params:
+        search_dir=f"{RESULTS}/qc",
+        outdir=f"{RESULTS}/qc",
+    threads: 1
+    resources:
+        mem_mb=4000,
+        time="0:30:00",
+    log:
+        f"logs/multiqc.log",
+    shell:
+        """
+        mkdir -p $(dirname {log})
+        multiqc \
+            {params.search_dir} \
+            -o {params.outdir} \
+            -n multiqc_report.html \
+            --force \
+            2> {log}
+        """

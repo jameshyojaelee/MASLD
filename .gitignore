@@ -1,0 +1,135 @@
+# ============================================================
+# MASLD — WHITELIST policy: track CODE + CONFIG only.
+# Default-deny everything, re-include code/config types,
+# then hard-exclude heavy / vendored / output / ephemeral trees.
+# ============================================================
+
+# 1) Ignore everything by default
+*
+
+# 2) Let git descend into directories
+!*/
+
+# 3) Re-include analysis code (anywhere)
+!*.R
+!*.r
+!*.py
+!*.sh
+!*.sbatch
+!*.smk
+!Snakefile
+!Makefile
+!*.pl
+
+# 4) Re-include web-portal source
+!*.ts
+!*.tsx
+!*.js
+!*.jsx
+!*.mjs
+!*.cjs
+!*.css
+!*.scss
+
+# 5) Re-include configs
+!*.yaml
+!*.yml
+!*.toml
+!.gitignore
+!.gitattributes
+!requirements.txt
+!environment.yml
+
+# 6) Re-include named config JSON / manifests only (NOT all *.json — results are json)
+!package.json
+!package-lock.json
+!tsconfig*.json
+!*.config.json
+!next.config.*
+!tailwind.config.*
+!postcss.config.*
+!components.json
+!.eslintrc*
+
+# 7) Hard-exclude top-level trees we never want (vendored / data / output / ephemeral)
+/data/
+/tools/
+/SteatoSite/
+/ScaleSC/
+/MetaXcan/
+/Liver_Atlas/
+/archive/
+/figures/
+/figures_STAR_s0/
+/figures_kallisto/
+/logs/
+/outputs/
+/agent_status/
+/comprehensive_analysis/
+/zenodo_deposit/
+/team_B_code/
+/scratch/
+/omnipathr-log/
+/NMF_*/
+/results/
+/.claude/
+/.superpowers/
+/.agent/
+/.firecrawl/
+/.review/
+/.envs/
+
+# 7b) Hard-exclude language/package environments & caches ANYWHERE
+#     (these contain thousands of library .py/.R/.sh files the whitelist would grab)
+**/.mamba/
+**/.conda/
+**/conda-meta/
+**/.venv/
+**/venv/
+**/site-packages/
+**/__pycache__/
+**/.snakemake/
+**/.Rlib*/
+**/renv/library/
+**/*_work/
+**/.ipynb_checkpoints/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+micromamba
+
+# 8) Hard-exclude output / generated / vendored subtrees ANYWHERE
+**/archive/
+**/results/
+**/results_gpu_v2*/
+**/counts/
+**/alignment/
+**/fragments/
+**/spaceranger/
+**/cellranger/
+**/cnmf_runs/
+**/qc/
+**/multiqc/
+**/fastqc/
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/out/
+**/coverage/
+**/public/data/
+
+# 9) Stray junk
+/scratch.R
+/Rplots.pdf
+
+# 10) Secrets / credentials — never track (defense in depth)
+**/.cibersortx_creds
+**/*credential*
+**/*secret*
+**/.env
+**/.env.*
+**/*.token
+**/*.pem
+**/*.key
+.streamlit/secrets.toml

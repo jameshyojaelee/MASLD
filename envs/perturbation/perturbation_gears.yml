@@ -1,0 +1,58 @@
+name: perturbation_gears
+channels:
+  - pytorch
+  - nvidia
+  - pyg
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10  # GEARS historically pins to 3.10
+  - pip
+  - setuptools
+  - wheel
+  - cuda-toolkit=12.4
+  - cudnn
+  - nccl
+  - libstdcxx-ng>=13.3
+  # PyTorch + PyG (GEARS dependency). Upper bound forces pytorch channel CUDA build.
+  - pytorch=2.4.*
+  - torchvision
+  - pytorch-cuda=12.4
+  - pyg>=2.4
+  - pytorch-cluster
+  - pytorch-scatter
+  - pytorch-sparse
+  - pytorch-spline-conv
+  # JIT / numba stack — install llvmlite via conda so the .so is in $CONDA_PREFIX/lib
+  - llvmlite>=0.42
+  - numba>=0.59
+  # Single-cell
+  - scanpy>=1.10
+  - anndata>=0.10
+  # Data
+  - numpy<2
+  - pandas
+  - scikit-learn
+  - polars
+  - pyarrow
+  - h5py
+  - tqdm
+  # Bio / network utilities for gene graphs
+  - networkx
+  - igraph
+  - biopython
+  - obonet
+  - goatools  # GO graph manipulation
+  - mygene
+  # Vis
+  - matplotlib
+  - seaborn
+  - pip:
+    - cell-gears  # primary GEARS pkg name (PyPI)
+    - pertpy
+    # Perturb-seq dataset loaders
+    - mudata
+# Notes:
+# - llvmlite/numba forced as conda deps so $CONDA_PREFIX/lib/libllvmlite.so is found
+# - pytorch=2.4.* hard-pin avoids conda-forge cpu_mkl 2.10 fallback
+# - GEARS uses GO + coessentiality graphs; networkx + obonet provide GO graph manipulation

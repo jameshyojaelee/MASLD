@@ -1,0 +1,39 @@
+# SLURM cluster profile for Snakemake
+# Used with: snakemake --profile workflow/slurm_profile
+
+# Cluster execution settings
+cluster:
+  mkdir -p logs/slurm/{rule} &&
+  sbatch
+    --partition={resources.partition}
+    --cpus-per-task={threads}
+    --mem={resources.mem_mb}M
+    --time={resources.time}
+    --job-name=smk-{rule}-{wildcards}
+    --output=logs/slurm/{rule}/%j-{wildcards}.out
+    --error=logs/slurm/{rule}/%j-{wildcards}.err
+
+# Default resources if not specified in rule
+default-resources:
+  - partition=cpu
+  - mem_mb=8000
+  - time="1:00:00"
+
+# Job limits
+jobs: 50
+max-threads: 8
+
+# Restart failed jobs once
+restart-times: 1
+
+# Wait for files to appear
+latency-wait: 60
+
+# Keep going if one job fails
+keep-going: true
+
+# Rerun incomplete jobs
+rerun-incomplete: true
+
+# Use conda/mamba environments
+use-conda: false

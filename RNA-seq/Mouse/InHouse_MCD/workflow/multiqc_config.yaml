@@ -1,0 +1,32 @@
+# MultiQC configuration for this project
+# Consistent palette and simplified header
+
+title: "RNA-seq QC — Mouse Liver MCD"
+subtitle: ""
+custom_logo: ""
+custom_css_file: "qc/multiqc/multiqc_custom.css"
+show_analysis_paths: false
+disable_version_check: true
+
+# Sample colours: map each sample ID to the project-wide palette.
+# Control = peach (#F2A45E), MCD = magenta (#C23B75)
+sp:
+  1CF: { color: "#F2A45E" }
+  1CM: { color: "#F2A45E" }
+  1MF: { color: "#C23B75" }
+  1MM: { color: "#C23B75" }
+  2CF: { color: "#F2A45E" }
+  2CM: { color: "#F2A45E" }
+  2MF: { color: "#C23B75" }
+  2MM: { color: "#C23B75" }
+  3CF: { color: "#F2A45E" }
+  3CM: { color: "#F2A45E" }
+  3MF: { color: "#C23B75" }
+  3MM: { color: "#C23B75" }
+
+# Optional: Try to shorten verbose filenames to the concise sample IDs
+# when MultiQC parses inputs. These regex replacements apply in order.
+sample_names_replace:
+  - ["^Sample_([0-9][CMF][FM]).*$", "\1"]
+  - ["^(.+?)\\.Aligned.*$", "\1"]
+

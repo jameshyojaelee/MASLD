@@ -1,0 +1,17 @@
+name: motifbreakr
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - bioconductor-biocparallel
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
+  - bioconductor-genomicranges
+  - bioconductor-motifbreakr
+  - bioconductor-motifdb
+  - bioconductor-rtracklayer
+  - r-biocmanager
+  - r-data.table
+  - r-dplyr
+  - r-tidyr
+
+prefix: "/gpfs/commons/home/jameslee/micromamba/envs/motifbreakr"

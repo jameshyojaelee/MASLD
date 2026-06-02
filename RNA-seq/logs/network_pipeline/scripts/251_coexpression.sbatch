@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name=net_251_coexpr
+#SBATCH --partition=cpu
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=48:00:00
+
+eval "$(micromamba shell hook -s bash)"
+micromamba activate rnaseq
+cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq
+echo "251 coexpression_edges | Start: $(date)"
+Rscript 251_coexpression_edges.R
+echo "251 coexpression_edges | Exit: $? | End: $(date)"

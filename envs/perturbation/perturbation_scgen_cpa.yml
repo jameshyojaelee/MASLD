@@ -1,0 +1,57 @@
+name: perturbation_scgen_cpa
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pip
+  - "setuptools<81"  # scvi/scgen/cpa need pkg_resources (removed in setuptools 81)
+  - wheel
+  - cuda-toolkit=12.4
+  - cudnn
+  - nccl
+  - libstdcxx-ng>=13.3  # fix CXXABI_1.3.15 missing in /nfs/sw GCCcore 13.3
+  # PyTorch — hard pin to channel-provided CUDA build (avoid conda-forge cpu_mkl fallback)
+  - pytorch=2.4.*
+  - torchvision
+  - pytorch-cuda=12.4
+  - lightning>=2.4,<2.6  # 2.6 expects newer torch optim API
+  # Single-cell / VAE stack
+  - scanpy>=1.10
+  - anndata>=0.10
+  - scvi-tools>=1.1
+  - mudata
+  # JAX — pin under 0.4.30 so pertpy's pjit_p import works
+  - "jax<0.4.30"
+  - "jaxlib<0.4.30"
+  # Data
+  - numpy<2
+  - pandas
+  - scikit-learn
+  - polars
+  - pyarrow
+  - h5py
+  - tqdm
+  # Bio utils
+  - biopython
+  - mygene
+  # Vis
+  - matplotlib
+  - seaborn
+  # POT via conda — it's a binary pkg, pinning it in conda guarantees ABI match
+  - pot
+  # RDKit via conda so cpa-tools can import without dragging numpy 2 in via pip
+  - rdkit>=2024
+  # NOTE: scgen + cpa-tools + pertpy + ott-jax are installed post-solve in build_scgen_cpa.sbatch
+  # with --no-deps to PREVENT pip from uninstalling conda's torch 2.4.1 and replacing it
+  # with torch 1.13.1+cu117 (which cpa-tools pins). Same for numpy<2 — pip would upgrade it.
+# Notes:
+# - libstdcxx-ng + LD_LIBRARY_PATH=$CONDA_PREFIX/lib fix CXXABI_1.3.15 / GLIBCXX issues
+# - setuptools<81 keeps pkg_resources available for scvi/scgen/cpa
+# - lightning<2.6 needed because lightning 2.6+ imports torch.optim.lr_scheduler.LRScheduler
+#   which is only present on torch>=2.4 (we have 2.4.*) so this constraint matches.
+# - jax<0.4.30 fixes pertpy's `from jax.experimental.pjit import pjit_p` (removed in newer jax)
+# - Earlier the pip: section pulled scgen which depends on torch==2.1.2 and cpa-tools which
+#   pinned torch 1.13.1; both ran after conda installed torch 2.4.1 and clobbered it.

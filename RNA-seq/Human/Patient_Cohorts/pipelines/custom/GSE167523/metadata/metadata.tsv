@@ -1,0 +1,6 @@
+sample_id	gsm_id	condition	fibrosis_stage	nas_score	age	sex	tissue	sample_name
+SRR13797134	GSM5106592	NAFLD			77		liver biopsy	
+SRR13797140	GSM5106598	NAFLD			55		liver biopsy	
+SRR13797142	GSM5106600	NAFLD			54		liver biopsy	
+SRR13797144	GSM5106602	NAFLD			48		liver biopsy	
+SRR13797148	GSM5106606	NAFLD			36		liver biopsy	

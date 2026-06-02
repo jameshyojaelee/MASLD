@@ -1,0 +1,137 @@
+from pathlib import Path
+import csv
+
+configfile: "workflow/config.yaml"
+root = Path(config["project_root"]).resolve()
+samplesheet = Path(config["samplesheet"]).resolve()
+
+samples = {}
+if samplesheet.exists():
+    with samplesheet.open() as handle:
+        reader = csv.DictReader(handle, delimiter='\t')
+        for row in reader:
+            samples[row['sample_id']] = row
+
+SAMPLES = sorted(samples)
+
+def fastq(sample, read):
+    entry = samples[sample]
+    key = f"fastq_{read.lower()}"
+    value = (entry.get(key) or "").strip()
+    if not value:
+        return ""
+    # FASTQ path might be relative to config path or absolute
+    # Here we assume it's relative to project root if not absolute
+    p = Path(value)
+    if p.is_absolute():
+        return str(p)
+    return str(root / value)
+
+def fastq_paths(sample):
+    return [path for path in (fastq(sample, 'R1'), fastq(sample, 'R2')) if path]
+
+def has_paired(sample):
+    return bool(fastq(sample, 'R2'))
+
+PAIRED_SAMPLES = [sample for sample in SAMPLES if has_paired(sample)]
+SINGLE_SAMPLES = [sample for sample in SAMPLES if not has_paired(sample)]
+
+PAIRED_REGEX = "|".join(PAIRED_SAMPLES) if PAIRED_SAMPLES else "$^"
+SINGLE_REGEX = "|".join(SINGLE_SAMPLES) if SINGLE_SAMPLES else "$^"
+
+FASTQC_DIR = root / config['qc']['fastqc_dir']
+MULTIQC_DIR = root / config['qc']['multiqc_dir']
+STAR_OUT = root / config['alignment']['star_out']
+FEATURECOUNTS_DIR = root / config['alignment']['featurecounts_out']
+STAR_INDEX = root / config['indices']['star']
+GTF = root / config['reference']['gtf']
+THREADS = config['threads']
+PIPELINE_LOG_DIR = root / config['pipeline_logs']
+
+rule all:
+    input:
+        # FastQC: already completed (outputs as SRR*_1/_2_fastqc.html, MultiQC finds them)
+        MULTIQC_DIR / "multiqc_report.html",
+        expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES),
+        FEATURECOUNTS_DIR / "gene_counts.txt",
+        # root / "deseq2" / "deseq2_results.rds"  # Deferred: requires clinical metadata
+
+rule run_deseq2:
+    input:
+        counts=FEATURECOUNTS_DIR / "gene_counts.txt",
+        samplesheet=samplesheet
+    output:
+        rds=root / "deseq2" / "deseq2_results.rds",
+        results_dir=directory(root / "deseq2")
+    params:
+        script="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/pipelines/custom/scripts/deseq2_analysis.R",
+        contrast="diet", # Adjust based on metadata
+        ref_level="Control" # Adjust
+    threads: 1
+    log: PIPELINE_LOG_DIR / "deseq2.log"
+    shell:
+        "mkdir -p {output.results_dir} $(dirname {log}) && "
+        "Rscript {params.script} --counts {input.counts} --metadata {input.samplesheet} --output {output.results_dir} --design '~ diet' > {log} 2>&1"
+
+
+rule run_fastqc:
+    input:
+        lambda wildcards: fastq_paths(wildcards.sample)
+    output:
+        r1_html=FASTQC_DIR / "{sample}_fastqc.html",
+        r1_zip=FASTQC_DIR / "{sample}_fastqc.zip",
+    params:
+        outdir=FASTQC_DIR
+    threads: THREADS['fastqc']
+    log: PIPELINE_LOG_DIR / "fastqc" / "{sample}.log"
+    run:
+        shell("mkdir -p {params.outdir} $(dirname {log})")
+        shell(
+            "fastqc --threads {threads} --outdir {params.outdir} {input} > {log} 2>&1"
+        )
+        # Helper to move outputs if needed (fastqc outputs to basedir)
+
+rule run_star:
+    input:
+        lambda wc: fastq_paths(wc.sample)
+    output:
+        bam=STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam",
+        sj=STAR_OUT / "{sample}" / "{sample}.SJ.out.tab",
+        gene_counts=STAR_OUT / "{sample}" / "{sample}.ReadsPerGene.out.tab",
+        log_final=STAR_OUT / "{sample}" / "{sample}.Log.final.out"
+    params:
+        outdir=lambda wc: STAR_OUT / wc.sample,
+        prefix=lambda wc: STAR_OUT / wc.sample / f"{wc.sample}."
+    threads: THREADS['star']
+    log: PIPELINE_LOG_DIR / "star" / "{sample}.log"
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "STAR --runThreadN {threads} --genomeDir {STAR_INDEX} "
+        "--readFilesIn {input} --readFilesCommand zcat "
+        "--outFileNamePrefix {params.prefix} --outSAMtype BAM SortedByCoordinate "
+        "--twopassMode Basic --quantMode GeneCounts --limitBAMsortRAM 30000000000 > {log} 2>&1"
+
+rule featurecounts:
+    input:
+        expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES)
+    output:
+        counts=FEATURECOUNTS_DIR / "gene_counts.txt",
+        summary=FEATURECOUNTS_DIR / "gene_counts.txt.summary"
+    threads: THREADS['featurecounts']
+    log: PIPELINE_LOG_DIR / "featurecounts.log"
+    shell:
+        "mkdir -p {FEATURECOUNTS_DIR} $(dirname {log}) && "
+        "featureCounts -p -B -T {threads} -s 2 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
+
+rule multiqc:
+    input:
+        expand(STAR_OUT / "{sample}" / "{sample}.Log.final.out", sample=SAMPLES),
+        FEATURECOUNTS_DIR / "gene_counts.txt"
+    output:
+        MULTIQC_DIR / "multiqc_report.html"
+    params:
+        outdir=MULTIQC_DIR
+    log: PIPELINE_LOG_DIR / "multiqc.log"
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "multiqc {root} -o {params.outdir} > {log} 2>&1"

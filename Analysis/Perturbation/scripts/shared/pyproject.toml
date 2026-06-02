@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "perturbation-shared"
+version = "0.1.0"
+description = "Shared utilities for the MASLD perturbation campaign (data loaders, backtest, schema, consensus, atlas writer)"
+requires-python = ">=3.10"
+dependencies = [
+    "anndata>=0.10",
+    "pandas",
+    "numpy",
+    "pydantic>=2.0",
+    "matplotlib",
+]
+
+[tool.setuptools]
+py-modules = [
+    "load_hepatocyte_atlas",
+    "load_bulk_5cohort",
+    "backtest_framework",
+    "output_schema",
+    "consensus_aggregator",
+    "atlas_writer",
+    "phase1_backtest_harness",
+    "backfill_hep_sex",
+]

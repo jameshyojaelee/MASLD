@@ -1,0 +1,207 @@
+# =============================================================================
+# config/human_datasets.yaml
+# Registry of all human RNA-seq datasets in the MASLD integration pipeline.
+#
+# TO ADD A NEW DATASET:
+#   1. Download SRA table and save to:
+#        RNA-seq/Human/Patient_Cohorts/pipelines/custom/<DATASET_ID>/metadata/SraRunTable.csv
+#   2. Add an entry below (copy the template at the bottom of this file)
+#   3. Update the harmonize() function in 00_harmonize_metadata.R with your
+#      dataset-specific condition mapping (fcase logic)
+#   4. Re-run the per-dataset Snakemake pipeline to generate counts
+#   5. Re-run the integration pipeline (scripts 00 → 08)
+# =============================================================================
+
+datasets:
+
+  # ---------------------------------------------------------------------------
+  # GSE126848 — Basic NAFLD/NASH cohort
+  # Healthy, obese controls + NAFLD + NASH
+  # ---------------------------------------------------------------------------
+  GSE126848:
+    sra_table_path: "pipelines/custom/GSE126848/metadata/SraRunTable.csv"
+    counts_path: "results/GSE126848/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: true
+    sex_annotated: true          # Sex metadata available from SRA annotation
+    de:
+      formula: "~ 0 + condition + sex"
+      contrast: "(conditionNAFL + conditionNASH)/2 - (conditionControl + conditionControl_Obese)/2"
+      condition_levels: ["Control", "Control_Obese", "NAFL", "NASH"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: true
+    notes: "GSE126848 — basic NAFLD/NASH cohort; obese controls included"
+
+  # ---------------------------------------------------------------------------
+  # GSE167523 — NAFL vs NASH, NO healthy controls
+  # Excluded from Disease-vs-Control mega-analysis
+  # ---------------------------------------------------------------------------
+  GSE167523:
+    sra_table_path: "pipelines/custom/GSE167523/metadata/SraRunTable.csv"
+    counts_path: "results/GSE167523/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: false
+    sex_annotated: true          # Sex metadata available from SRA annotation
+    de:
+      formula: "~ 0 + condition + age + sex"
+      contrast: "conditionNASH - conditionNAFL"
+      condition_levels: ["NAFL", "NASH"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: false   # No healthy controls — excluded from mega-analysis
+    notes: "GSE167523 — no healthy controls; NAFL vs NASH contrast only"
+
+  # ---------------------------------------------------------------------------
+  # GSE135251 — Largest cohort (216+ samples); no sex or age metadata
+  # Sex is inferred from XIST/DDX3Y k-means clustering in script 01.
+  # ---------------------------------------------------------------------------
+  GSE135251:
+    sra_table_path: "archive/old_data_metadata/metadata/GSE135251_SraRunTable.csv"
+    counts_path: "results/GSE135251/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: true
+    sex_annotated: false         # No sex metadata — sex inferred from XIST/DDX3Y in script 01
+    de:
+      formula: "~ 0 + condition + inferred_sex"
+      contrast: "(conditionNAFL + conditionNASH + conditionNASH_Fibrosis)/3 - conditionControl"
+      condition_levels: ["Control", "NAFL", "NASH", "NASH_Fibrosis"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: true
+    notes: "GSE135251 — largest single cohort; no sex or age metadata. Sex inferred from XIST/DDX3Y expression."
+
+  # ---------------------------------------------------------------------------
+  # GSE130970 — Richest metadata (age, sex, fibrosis stage)
+  # ---------------------------------------------------------------------------
+  GSE130970:
+    sra_table_path: "archive/old_data_metadata/metadata/GSE130970_SraRunTable.csv"
+    counts_path: "results/GSE130970/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: true
+    sex_annotated: true          # Sex metadata available from SRA annotation
+    de:
+      formula: "~ 0 + condition + age + sex"
+      contrast: "(conditionFibrosis_F1 + conditionFibrosis_F2F3 + conditionFibrosis_F4)/3 - conditionControl"
+      condition_levels: ["Control", "Fibrosis_F1", "Fibrosis_F2F3", "Fibrosis_F4"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: true
+    notes: "GSE130970 — richest metadata; fibrosis stage 0-4. F0 = Control (histologically normal). Conditions are fibrosis-stage-based, not NAFL/NASH labels."
+
+  # ---------------------------------------------------------------------------
+  # GSE213621 — Fibrosis-stage-based cohort (no explicit NAFL/NASH diagnosis)
+  # Sex is inferred from XIST/DDX3Y k-means clustering in script 01.
+  # ---------------------------------------------------------------------------
+  GSE213621:
+    sra_table_path: "pipelines/custom/GSE213621/metadata/SraRunTable.csv"
+    counts_path: "results/GSE213621/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: true
+    sex_annotated: false         # No sex metadata — sex inferred from XIST/DDX3Y in script 01
+    de:
+      formula: "~ 0 + condition + inferred_sex"
+      contrast: "(conditionFibrosis_F0F1 + conditionFibrosis_F2 + conditionFibrosis_F3F4)/3 - conditionControl"
+      condition_levels: ["Control", "Fibrosis_F0F1", "Fibrosis_F2", "Fibrosis_F3F4"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: true
+    notes: "GSE213621 — fibrosis-based labeling only; no sex or age metadata. Sex inferred from XIST/DDX3Y expression."
+
+  # ---------------------------------------------------------------------------
+  # GSE162694 — Bril et al. 2021; bariatric surgery NASH cohort
+  # 143 samples: 31 normal histology (controls), 112 NASH (F0-F4)
+  # Single-end, HiSeq 3000. Rich metadata: age, sex, fibrosis, NAS.
+  # ---------------------------------------------------------------------------
+  GSE162694:
+    sra_table_path: "pipelines/custom/GSE162694/metadata/SraRunTable.csv"
+    counts_path: "results/GSE162694/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: true
+    sex_annotated: true
+    de:
+      formula: "~ 0 + condition + age + sex"
+      contrast: "(conditionNASH_F0 + conditionNASH_F1 + conditionNASH_F2 + conditionNASH_F3 + conditionNASH_F4)/5 - conditionControl"
+      condition_levels: ["Control", "NASH_F0", "NASH_F1", "NASH_F2", "NASH_F3", "NASH_F4"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: true
+    notes: "GSE162694 — Bril et al. 2021; bariatric surgery wedge biopsies; normal histology as controls; F0-F4 staging; single-end HiSeq 3000"
+
+  # ---------------------------------------------------------------------------
+  # GSE174478 — Kawamura/Fujiwara; Japanese NAFLD cohort
+  # 94 samples, all NAFLD (F0-F4), NO healthy controls.
+  # Paired-end, NovaSeq 6000. Adds ethnic diversity.
+  # ---------------------------------------------------------------------------
+  GSE174478:
+    sra_table_path: "pipelines/custom/GSE174478/metadata/SraRunTable.csv"
+    counts_path: "results/GSE174478/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: false
+    sex_annotated: true
+    de:
+      formula: "~ 0 + condition + age + sex"
+      contrast: "(conditionFibrosis_F3 + conditionFibrosis_F4)/2 - (conditionFibrosis_F0 + conditionFibrosis_F1)/2"
+      condition_levels: ["Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2", "Fibrosis_F3", "Fibrosis_F4"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: false    # No healthy controls — excluded from mega-analysis
+    notes: "GSE174478 — Japanese NAFLD cohort; no healthy controls; fibrosis-based contrast (advanced vs early); paired-end NovaSeq 6000"
+
+  # ---------------------------------------------------------------------------
+  # GSE193066 — Large NAFLD cohort (164 samples); NO healthy controls
+  # 106 HCC-naive NAFLD patients (baseline + follow up). Excluded from mega-analysis.
+  # ---------------------------------------------------------------------------
+  GSE193066:
+    sra_table_path: "pipelines/custom/GSE193066/metadata/SraRunTable.csv"
+    counts_path: "results/GSE193066/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: false
+    sex_annotated: true          # Sex in Sex_y column (not Sex_x)
+    de:
+      formula: "~ 0 + condition + age + sex"
+      contrast: "(conditionFibrosis_F3 + conditionFibrosis_F4)/2 - (conditionFibrosis_F0 + conditionFibrosis_F1)/2"
+      condition_levels: ["Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2", "Fibrosis_F3", "Fibrosis_F4"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: false    # No healthy controls — excluded from mega-analysis
+    notes: "GSE193066 — Hoshida NAFLD cohort (164 samples); fibrosis F0-F4; sex in Sex_y; no healthy controls"
+
+  # ---------------------------------------------------------------------------
+  # GSE240729 — MASLD Fibrosis Stages (67 samples)
+  # Provides linear fibrosis staging (F0-F4) for MASLD patients
+  # ---------------------------------------------------------------------------
+  GSE240729:
+    sra_table_path: "pipelines/custom/GSE240729/metadata/SraRunTable.csv"
+    counts_path: "results/GSE240729/counts/featurecounts/gene_counts.txt"
+    excluded_samples: []
+    has_controls: false
+    sex_annotated: false         # No sex or age metadata available
+    de:
+      formula: "~ 0 + condition + inferred_sex"
+      contrast: "(conditionFibrosis_F3 + conditionFibrosis_F4)/2 - (conditionFibrosis_F0 + conditionFibrosis_F1)/2"
+      condition_levels: ["Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2", "Fibrosis_F3", "Fibrosis_F4"]
+      norm_method: "TMM"
+      quality_weights: false
+      include_in_mega: false
+    notes: "GSE240729 — MASLD patients F0-F4; FFPE samples; no sex/age metadata; sex inferred from XIST/DDX3Y"
+
+# =============================================================================
+# TEMPLATE FOR ADDING A NEW DATASET — copy and fill in below
+# =============================================================================
+#
+#  NEW_DATASET_ID:
+#    sra_table_path: "pipelines/custom/NEW_DATASET_ID/metadata/SraRunTable.csv"
+#    counts_path: "results/NEW_DATASET_ID/counts/featurecounts/gene_counts.txt"
+#    excluded_samples: []      # List any SRR IDs to exclude, or keep empty []
+#    has_controls: true        # false if no healthy controls
+#    de:
+#      formula: "~ 0 + condition"              # Add + sex and/or + age if available
+#      contrast: "conditionDisease - conditionControl"  # Adjust to your conditions
+#      condition_levels: ["Control", "Disease"]         # All levels, Control first
+#      norm_method: "TMM"           # TMM (default) or RLE (if design imbalance)
+#      quality_weights: false       # true to use voomWithQualityWeights
+#      include_in_mega: true        # false if no healthy controls
+#    notes: "Brief note on cohort design, caveats, and metadata availability"
+#
+# After adding the entry, add a harmonize() case in 00_harmonize_metadata.R.

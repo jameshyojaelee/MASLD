@@ -1,0 +1,100 @@
+team: perturbation-campaign-d5
+arm: D5_Mouse_CrossSpecies
+goal: Cross-species perturbation concordance for translatability
+
+models:
+  - Geneformer-mouse (pretrained mouse checkpoint)
+  - STATE-mouse (if Arc has mouse weights; else fine-tune STATE-human on mouse from scratch)
+  - scGen trained de novo on 463-sample mouse atlas + mouse scRNA where available
+consensus_rule: cross-species concordance score across (direction agreement, magnitude Pearson r, pathway Jaccard)
+
+hit_set:
+  file: data/hits/d5_mouse_orthologs.csv
+  size: Conserved_Core 1,108 + top-100 human convergence ortho hits = ~1,208 genes
+  ortholog_mapping: strict biomaRt 1:1 (ambiguous flagged)
+
+substrate:
+  bulk_mouse: RNA-seq/Mouse/Unified_Integration/ (463 samples × 5 diets)
+  scrna_mouse: pending substrate inventory (phase0-substrate-inventor will audit)
+
+subagents:
+  - name: arm_lead_d5
+    role: Arm Lead
+    agent_type: general-purpose
+    reports_to: cross_arm_coordinator
+
+  - name: data_engineer_d5
+    role: Data Engineer
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+
+  - name: ortholog_mapper_d5
+    role: Ortholog Mapper Specialist (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: strict biomaRt 1:1 mapping; ambiguous ortholog flagging; cross-species QC
+    reports_to: arm_lead_d5
+    independence: standalone
+
+  - name: runner_geneformer_mouse_d5
+    role: Model Runner — Geneformer-mouse
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+    independence: BLINDED
+
+  - name: runner_state_mouse_d5
+    role: Model Runner — STATE-mouse (or fine-tune from scratch)
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+    independence: BLINDED
+
+  - name: runner_scgen_mouse_d5
+    role: Model Runner — scGen-mouse
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+    independence: BLINDED
+
+  - name: peer_reviewer_d5
+    role: Peer Reviewer (Methods)
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+    independence: independent
+
+  - name: stratification_auditor_d5
+    role: Stratification Auditor (mouse-specific stratification: diet × strain × sex)
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+    independence: independent
+
+  - name: consensus_aggregator_d5
+    role: Consensus Aggregator
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+
+  - name: backtester_d5
+    role: Backtester
+    agent_type: general-purpose
+    owns: mouse-specific known KOs (MGI curated where MASLD-relevant); MGI phenotype DB comparison
+    reports_to: arm_lead_d5
+    independence: blinded to consensus
+
+  - name: lit_reviewer_d5
+    role: Literature Reviewer (mouse-specific)
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+    independence: independent
+
+  - name: output_writer_d5
+    role: Output Writer
+    agent_type: general-purpose
+    reports_to: arm_lead_d5
+
+  - name: atlas_integrator_d5
+    role: Atlas Integrator
+    agent_type: general-purpose
+    reports_to: cross_arm_coordinator
+
+deliverables:
+  - results/d5_mouse/crossspecies_concordance.csv
+  - results/d5_mouse/translatable_hits.csv (high-confidence concordant)
+  - results/d5_mouse/species_specific_hits.csv (discordant — also informative)
+  - 1 atlas column: perturb_crossspecies_concordance

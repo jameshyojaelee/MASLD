@@ -1,0 +1,48 @@
+name: masld_unified
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  # Python Core & Analysis
+  - python=3.11
+  - pandas
+  - numpy
+  - scipy
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - jupyterlab
+  - biopython
+  - pip
+  
+  # R Core (Using 4.4 to be current)
+  - r-base=4.4
+  - r-tidyverse
+  - r-data.table
+  - r-matrix
+  - r-devtools
+  - r-biocmanager
+  
+  # WGCNA & Network Analysis
+  - r-wgcna
+  - bioconductor-preprocesscore
+  - bioconductor-impute
+  - bioconductor-go.db
+  - bioconductor-annotationdbi
+  
+  # RNA-seq & Differential Expression
+  - bioconductor-deseq2
+  - bioconductor-limma
+  - bioconductor-edger
+  - bioconductor-vsn
+  
+  # Visualization
+  - bioconductor-complexheatmap
+  - r-pheatmap
+  - r-ggplot2
+  - r-ggrepel
+  
+  # Organism Databases
+  - bioconductor-org.hs.eg.db
+  - bioconductor-org.mm.eg.db

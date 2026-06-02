@@ -1,0 +1,359 @@
+##############################################################################
+# Spatial Transcriptomics Pipeline — Dataset Registry
+# All datasets, sample IDs, paths, and metadata
+##############################################################################
+
+datasets:
+  GSE192741:
+    source: GEO
+    publication: "Guilliams et al., Cell 2022"
+    technology: 10x_Visium
+    # Mixed species dataset: 10 mouse + 5 human
+    spaceranger_output_dir: Analysis/Spatial/results/spaceranger/GSE192741/
+    data_source: geo_processed  # Processed SpaceRanger outputs from GEO
+    # Per-sample metadata from GSE192741_sampleInfo_spatialRNAseq.tsv
+    sample_metadata:
+      # Mouse healthy (StSt = standard chow)
+      JBO001: {species: mouse, condition: Healthy, strain: C57Bl6, individual: Mouse_001}
+      JBO002: {species: mouse, condition: Healthy, strain: C57Bl6, individual: Mouse_001}
+      JBO003: {species: mouse, condition: Healthy, strain: C57Bl6, individual: Mouse_001}
+      JBO004: {species: mouse, condition: Healthy, strain: C57Bl6, individual: Mouse_001}
+      CAP002: {species: mouse, condition: Healthy, strain: C57Bl6, individual: Mouse_002, tissue: liver_capsule}
+      BH001:  {species: mouse, condition: Healthy, strain: C57Bl6, individual: Mouse_002, notes: "with 100 ADT antibodies"}
+      # Mouse diet models
+      JBO006: {species: mouse, condition: SD_36wk, strain: C57Bl6, individual: Mouse_001}
+      JBO009: {species: mouse, condition: WD_36wk, strain: C57Bl6, individual: Mouse_001}
+      JBO010: {species: mouse, condition: WD_36wk, strain: C57Bl6, individual: Mouse_002}
+      JBO012: {species: mouse, condition: WD_36wk, strain: C57Bl6, individual: Mouse_002}
+      # Human samples
+      JBO014: {species: human, condition: Steatotic, individual: H35}
+      JBO015: {species: human, condition: Steatotic, individual: H35}
+      JBO018: {species: human, condition: Healthy, individual: H36}
+      JBO019: {species: human, condition: Steatotic, individual: H37}
+      JBO022: {species: human, condition: Healthy, individual: H38}
+    samples:
+      - BH001
+      - CAP002
+      - JBO001
+      - JBO002
+      - JBO003
+      - JBO004
+      - JBO006
+      - JBO009
+      - JBO010
+      - JBO012
+      - JBO014
+      - JBO015
+      - JBO018
+      - JBO019
+      - JBO022
+
+  HRA007511:
+    source: NGDC
+    publication: "Li et al., Nat Genet 2025"
+    technology: 10x_Visium
+    species: human
+    condition: MASLD_spectrum
+    n_samples: 35  # Visium only; 58 scRNA-seq experiments excluded
+    fastq_dir: data/HRA007511/fastq_visium/
+    histology_dir: Analysis/Spatial/metadata/histology/HRA007511/
+    spaceranger_input_dir: Analysis/Spatial/spaceranger_input/HRA007511/
+    spaceranger_output_dir: Analysis/Spatial/results/spaceranger/HRA007511/
+    metadata_excel: data/HRA007511/metadata/HRA007511.xlsx
+    # FASTQ naming: HRR*_f1.fastq.gz / HRR*_r2.fastq.gz
+    fastq_read1_suffix: "_f1.fastq.gz"
+    fastq_read2_suffix: "_r2.fastq.gz"
+    # Sample → run accession mapping (35 Visium experiments, 40 runs)
+    # 5 samples have 2 runs (technical replicates/re-sequencing lanes)
+    # SpaceRanger can take multiple --fastqs dirs to merge them
+    sample_run_map:
+      # Batch 1: Samples 11-25
+      "HRA_11": ["HRR1782834"]
+      "HRA_12": ["HRR1782835"]
+      "HRA_13": ["HRR1782836"]
+      "HRA_14": ["HRR1782837", "HRR1782838"]  # 2 runs
+      "HRA_15": ["HRR1782839", "HRR1782840"]  # 2 runs
+      "HRA_16": ["HRR1782842"]
+      "HRA_17": ["HRR1782843"]
+      "HRA_18": ["HRR1782844"]
+      "HRA_19": ["HRR1782845", "HRR1782846"]  # 2 runs
+      "HRA_20": ["HRR1782847"]
+      "HRA_21": ["HRR1782848"]
+      "HRA_22": ["HRR1782849", "HRR1782850"]  # 2 runs
+      "HRA_23": ["HRR1782851", "HRR1782852"]  # 2 runs
+      "HRA_24": ["HRR1782853"]
+      "HRA_25": ["HRR1782854"]
+      # Batch 2: Samples 27-29 (with -ST suffix), 45-61
+      "HRA_27": ["HRR2173370"]
+      "HRA_28": ["HRR2173371"]
+      "HRA_29": ["HRR2173372"]
+      "HRA_45": ["HRR2173353"]
+      "HRA_46": ["HRR2173354"]
+      "HRA_47": ["HRR2173355"]
+      "HRA_48": ["HRR2173356"]
+      "HRA_49": ["HRR2173357"]
+      "HRA_50": ["HRR2173358"]
+      "HRA_51": ["HRR2173359"]
+      "HRA_52": ["HRR2173360"]
+      "HRA_53": ["HRR2173361"]
+      "HRA_54": ["HRR2173362"]
+      "HRA_55": ["HRR2173363"]
+      "HRA_56": ["HRR2173364"]
+      "HRA_57": ["HRR2173365"]
+      "HRA_58": ["HRR2173366"]
+      "HRA_59": ["HRR2173367"]
+      "HRA_60": ["HRR2173368"]
+      "HRA_61": ["HRR2173369"]
+    samples:
+      - HRA_11
+      - HRA_12
+      - HRA_13
+      - HRA_14
+      - HRA_15
+      - HRA_16
+      - HRA_17
+      - HRA_18
+      - HRA_19
+      - HRA_20
+      - HRA_21
+      - HRA_22
+      - HRA_23
+      - HRA_24
+      - HRA_25
+      - HRA_27
+      - HRA_28
+      - HRA_29
+      - HRA_45
+      - HRA_46
+      - HRA_47
+      - HRA_48
+      - HRA_49
+      - HRA_50
+      - HRA_51
+      - HRA_52
+      - HRA_53
+      - HRA_54
+      - HRA_55
+      - HRA_56
+      - HRA_57
+      - HRA_58
+      - HRA_59
+      - HRA_60
+      - HRA_61
+    notes:
+      - "Platform confirmed as 10x Visium from metadata Excel"
+      - "Visium FASTQs must be downloaded first (00a_download_hra007511_visium.sh)"
+      - "5 samples have 2 runs each (merged at alignment)"
+      - "H&E images must be fetched separately from NGDC"
+      - "BLOCKED: SpaceRanger requires H&E images not available on NGDC"
+      - "Use HRA007511_HMSMA (processed data) instead"
+
+  # ─── Vu et al. JHEP Reports 2025 (UQeSpace, FFPE CytAssist) ──────────────
+  Vu_et_al_2025:
+    source: UQeSpace  # doi.org/10.48610/e95155f
+    publication: "Vu et al., JHEP Reports 2025"
+    technology: 10x_Visium_CytAssist_FFPE
+    species: human
+    condition: MASLD_spectrum  # F0-F4 fibrosis, mixed per array
+    n_arrays: 10
+    n_biopsies: 33  # Multiple biopsies per array (no per-patient splitting)
+    data_source: uqespace_processed  # Pre-processed SpaceRanger outputs
+    spaceranger_output_dir: Analysis/Spatial/results/spaceranger/Vu_et_al_2025/
+    raw_data_dir: data/vu_et_al_2025/raw/Visium/
+    # Each "sample" is one Visium array containing multiple FFPE biopsies
+    # Without barcode-to-patient mapping CSVs, we treat arrays as units
+    sample_metadata:
+      VLP115_A: {species: human, condition: MASLD_spectrum, individual: VLP115_A}
+      VLP115_D: {species: human, condition: MASLD_spectrum, individual: VLP115_D}
+      VLP116_A: {species: human, condition: MASLD_spectrum, individual: VLP116_A}
+      VLP116_D: {species: human, condition: MASLD_spectrum, individual: VLP116_D}
+      VLP119_A: {species: human, condition: MASLD_spectrum, individual: VLP119_A}
+      VLP119_D: {species: human, condition: MASLD_spectrum, individual: VLP119_D}
+      VLP120_A: {species: human, condition: MASLD_spectrum, individual: VLP120_A}
+      VLP120_D: {species: human, condition: MASLD_spectrum, individual: VLP120_D}
+      VLP121_A: {species: human, condition: MASLD_spectrum, individual: VLP121_A}
+      VLP121_D: {species: human, condition: MASLD_spectrum, individual: VLP121_D}
+    samples:
+      - VLP115_A
+      - VLP115_D
+      - VLP116_A
+      - VLP116_D
+      - VLP119_A
+      - VLP119_D
+      - VLP120_A
+      - VLP120_D
+      - VLP121_A
+      - VLP121_D
+    notes:
+      - "FFPE CytAssist — different QC profile than fresh-frozen Visium"
+      - "33 biopsies across 10 arrays; no per-patient barcode mapping available"
+      - "Fibrosis stages F0-F4 (14 F0/F1, 5 F2/F3a, 14 F3b/F4)"
+      - "Includes per-spot pathologist annotations in original study (not in download)"
+      - "CODEX spatial proteomics also available (not used)"
+      - "Used for validation: SVG replication, spatial concordance with GSE192741"
+
+  # ─── HRA007511 via HMSMA Portal (processed, bypasses SpaceRanger) ────────
+  HRA007511_HMSMA:
+    source: HMSMA  # https://db.genomics.cn/stomics/hmsma/download
+    publication: "Li et al., Nat Genet 2025"
+    technology: 10x_Visium
+    species: human
+    condition: MASLD_spectrum  # CTRL / MASLD / MASH
+    n_samples: 35
+    data_source: hmsma_processed  # Pre-processed SpaceRanger outputs from HMSMA portal
+    spaceranger_output_dir: Analysis/Spatial/results/spaceranger/HRA007511_HMSMA/
+    hmsma_data_dir: data/HRA007511/hmsma_processed/stomics/
+    scrna_reference: data/HRA007511/hmsma_scrna/adata_29samples.h5ad
+    histology_dir: Analysis/Spatial/metadata/histology/HRA007511_HMSMA/
+    # Per-sample metadata from Li et al. Supplementary Table 1 (Nature Genetics 2025)
+    # HMSMA Stomics files use MASLD- prefix; paper/H&E use MASL- prefix
+    # NAS: NAFLD Activity Score (0-8); Fibrosis: Kleiner staging (0-4)
+    sample_metadata:
+      # CTRL (7 samples — Healthy controls, NAS=0, Fibrosis=0)
+      CTRL-161:  {species: human, condition: Healthy, individual: "161", sex: F, age: 52, bmi: 18.4, nas: 0, fibrosis: 0}
+      CTRL-179:  {species: human, condition: Healthy, individual: "179", sex: M, age: 28, bmi: 23.1, nas: 0, fibrosis: 0}
+      CTRL-180:  {species: human, condition: Healthy, individual: "180", sex: F, age: 30, bmi: 18.8, nas: 0, fibrosis: 0}
+      CTRL-5113: {species: human, condition: Healthy, individual: "5113", sex: F, age: 47, bmi: 23.0, nas: 0, fibrosis: 0}
+      CTRL-5759: {species: human, condition: Healthy, individual: "5759", sex: F, age: 34, bmi: 22.1, nas: 0, fibrosis: 0}
+      CTRL-8715: {species: human, condition: Healthy, individual: "8715", sex: F, age: 35, bmi: 23.8, nas: 0, fibrosis: 0}
+      CTRL-8395: {species: human, condition: Healthy, individual: "8395", sex: F, age: 34, bmi: 22.3, nas: 0, fibrosis: 0}
+      # MASLD/MASL (10 samples — Steatosis, NAS=2-4, Fibrosis=0-1)
+      MASLD-0966: {species: human, condition: Steatotic, individual: "0966", sex: M, age: 51, bmi: 28.7, nas: 3, fibrosis: 0}
+      MASLD-1479: {species: human, condition: Steatotic, individual: "1479", sex: F, age: 69, bmi: 28.7, nas: 3, fibrosis: 1}
+      MASLD-1492: {species: human, condition: Steatotic, individual: "1492", sex: M, age: 42, bmi: 28.4, nas: 2, fibrosis: 1}
+      MASLD-1493: {species: human, condition: Steatotic, individual: "1493", sex: M, age: 65, bmi: 21.6, nas: 2, fibrosis: 1}
+      MASLD-1495: {species: human, condition: Steatotic, individual: "1495", sex: M, age: 52, bmi: 25.5, nas: 3, fibrosis: 0}
+      MASLD-1497: {species: human, condition: Steatotic, individual: "1497", sex: F, age: 60, bmi: 35.1, nas: 2, fibrosis: 0}
+      MASLD-1498: {species: human, condition: Steatotic, individual: "1498", sex: M, age: 34, bmi: 32.2, nas: 2, fibrosis: 1}
+      MASLD-2768: {species: human, condition: Steatotic, individual: "2768", sex: F, age: 56, bmi: 28.5, nas: 2, fibrosis: 0}
+      MASLD-4973: {species: human, condition: Steatotic, individual: "4973", sex: F, age: 49, bmi: 27.3, nas: 3, fibrosis: 0}
+      MASLD-9993: {species: human, condition: Steatotic, individual: "9993", sex: M, age: 32, bmi: 31.3, nas: 4, fibrosis: 0}
+      # MASH (18 samples — Steatohepatitis, NAS=4-7, Fibrosis=1-4)
+      MASH-0413: {species: human, condition: NASH, individual: "0413", sex: M, age: 23, bmi: 36.3, nas: 6, fibrosis: 2}
+      MASH-0422: {species: human, condition: NASH, individual: "0422", sex: M, age: 18, bmi: 34.0, nas: 6, fibrosis: 2}
+      MASH-0835: {species: human, condition: NASH, individual: "0835", sex: M, age: 51, bmi: 28.7, nas: 6, fibrosis: 2}
+      MASH-1086: {species: human, condition: NASH, individual: "1086", sex: M, age: 30, bmi: 36.8, nas: 7, fibrosis: 3}
+      MASH-1475: {species: human, condition: NASH, individual: "1475", sex: M, age: 22, bmi: 32.7, nas: 6, fibrosis: 2}
+      MASH-1478: {species: human, condition: NASH, individual: "1478", sex: M, age: 64, bmi: 30.5, nas: 5, fibrosis: 1}
+      MASH-1480: {species: human, condition: NASH, individual: "1480", sex: M, age: 45, bmi: 33.1, nas: 5, fibrosis: 1}
+      MASH-1481: {species: human, condition: NASH, individual: "1481", sex: M, age: 55, bmi: 24.2, nas: 5, fibrosis: 1}
+      MASH-1494: {species: human, condition: NASH, individual: "1494", sex: M, age: 37, bmi: 27.1, nas: 6, fibrosis: 2}
+      MASH-1501: {species: human, condition: NASH, individual: "1501", sex: M, age: 49, bmi: 31.0, nas: 5, fibrosis: 1}
+      MASH-2534: {species: human, condition: NASH, individual: "2534", sex: M, age: 30, bmi: 35.6, nas: 5, fibrosis: 1}
+      MASH-3096: {species: human, condition: NASH, individual: "3096", sex: M, age: 21, bmi: 30.2, nas: 7, fibrosis: 3}
+      MASH-3344: {species: human, condition: NASH, individual: "3344", sex: M, age: 32, bmi: 41.2, nas: 6, fibrosis: 2}
+      MASH-4426: {species: human, condition: NASH, individual: "4426", sex: M, age: 29, bmi: 23.0, nas: 4, fibrosis: 1}
+      MASH-7866: {species: human, condition: NASH, individual: "7866", sex: F, age: 66, bmi: 28.5, nas: 7, fibrosis: 4}
+      MASH-8684: {species: human, condition: NASH, individual: "8684", sex: F, age: 55, bmi: 28.3, nas: 7, fibrosis: 3}
+      MASH-9136: {species: human, condition: NASH, individual: "9136", sex: M, age: 58, bmi: 28.5, nas: 6, fibrosis: 3}
+      MASH-9440: {species: human, condition: NASH, individual: "9440", sex: M, age: 29, bmi: 32.4, nas: 6, fibrosis: 2}
+    samples:
+      # CTRL (7)
+      - CTRL-161
+      - CTRL-179
+      - CTRL-180
+      - CTRL-5113
+      - CTRL-5759
+      - CTRL-8715
+      - CTRL-8395
+      # MASLD (10)
+      - MASLD-0966
+      - MASLD-1479
+      - MASLD-1492
+      - MASLD-1493
+      - MASLD-1495
+      - MASLD-1497
+      - MASLD-1498
+      - MASLD-2768
+      - MASLD-4973
+      - MASLD-9993
+      # MASH (18)
+      - MASH-0413
+      - MASH-0422
+      - MASH-0835
+      - MASH-1086
+      - MASH-1475
+      - MASH-1478
+      - MASH-1480
+      - MASH-1481
+      - MASH-1494
+      - MASH-1501
+      - MASH-2534
+      - MASH-3096
+      - MASH-3344
+      - MASH-4426
+      - MASH-7866
+      - MASH-8684
+      - MASH-9136
+      - MASH-9440
+    notes:
+      - "Processed SpaceRanger outputs from HMSMA portal (bypasses SpaceRanger)"
+      - "tissue_positions.csv (v2 format) → converted to tissue_positions_list.csv by 00h"
+      - "HMSMA access: contact jin.chai@cldcsw.org"
+      - "Some data may be embargoed until June 30, 2026"
+      - "H&E naming uses MASL prefix (not MASLD) for steatosis samples"
+      - "scRNA-seq reference (29 samples) available as adata_29samples.h5ad"
+
+  ##############################################################################
+  # Govaere 2026 Nat Genetics — MASLD multi-omics macrophage paper
+  # DOI: 10.1038/s41588-026-02600-3
+  # Two NEW spatial modalities (in addition to existing bulk GSE135251).
+  # See data/external/govaere2026_natgenetics/README.md for full provenance.
+  ##############################################################################
+
+  govaere2026_geomx:
+    source: Zenodo
+    publication: "Govaere et al., Nat Genetics 2026"
+    doi: "10.5281/zenodo.18153344"
+    technology: NanoString_GeoMx_WTA
+    species: human
+    raw_data_dir: data/external/govaere2026_natgenetics/geomx/
+    dcc_dir: data/external/govaere2026_natgenetics/geomx/raw_DCC_Files/
+    annotation_file: data/external/govaere2026_natgenetics/geomx/Annotation file ROIs.xlsx
+    h5ad_output: Analysis/Spatial/results/preprocessed/geomx_govaere2026.h5ad
+    expression_tsv: Analysis/Spatial/results/govaere2026/geomx_expression.tsv
+    metadata_tsv: Analysis/Spatial/results/govaere2026/geomx_metadata.tsv
+    n_segments: 80          # raw; expect ~77 after 10% above-LOQ QC
+    n_patients: 8           # MASH F3, MAS >=4
+    n_slides: 4
+    region_types: [steatohepatitis, low_steatosis, portal_tract]
+    segment_markers: [CD68, CD45, panCK]
+    cohort: "MASH F3 'at-risk' biopsies (UREC 18/0182)"
+    norm_method: Q3         # NanoString GeoMx native normalization
+    loader_env: geomx       # micromamba activate geomx (bioconductor-geomxtools)
+    loader_script: Analysis/Spatial/scripts/40_govaere2026_geomx_load.R
+    converter_script: Analysis/Spatial/scripts/40b_geomx_to_anndata.py
+    notes:
+      - "Raw DCC files (126); expression matrix reconstructed via GeomxTools 3.10"
+      - "Paper QC: 10% probes above LOQ → 77 segments / 9,572 genes retained"
+      - "All segments are MASH F3 — no stage variability within dataset"
+      - "Atlas contribution: spatial_govaere2026_geomx_{sh_vs_pt,sh_vs_ls,gpnmb_vs_kc}_logfc"
+
+  govaere2026_cosmx:
+    source: GEO
+    publication: "Govaere et al., Nat Genetics 2026"
+    accession: GSE312698
+    technology: NanoString_CosMx_1000plex
+    species: human
+    raw_data_dir: data/external/govaere2026_natgenetics/cosmx/
+    h5ad_output: Analysis/Spatial/results/preprocessed/cosmx_govaere2026.h5ad
+    cell_metadata_tsv: Analysis/Spatial/results/govaere2026/cosmx_cell_metadata.tsv
+    n_cells_total: 552676           # all 4 Leuven samples merged
+    n_cells_pass_qc: 522145         # after min_counts=20, min_genes=10, min_cells_per_gene=5
+    n_genes_target: 968             # 1000-plex panel after stripping 11 Neg + 197 SystemControl + 14 custom
+    n_samples: 4                    # Leuven subset; paper references 10 total MASLD samples
+    panel: "Human Universal Cell Characterization RNA Panel + 14 custom"
+    sample_metadata:
+      Leuven_1: {gsm: GSM9351704, n_cells: 405940, disease: TBD_from_GEO}
+      Leuven_2: {gsm: GSM9351705, n_cells:  70886, disease: TBD_from_GEO}
+      Leuven_3: {gsm: GSM9351706, n_cells:  35537, disease: TBD_from_GEO}
+      Leuven_4: {gsm: GSM9351707, n_cells:  40313, disease: TBD_from_GEO}
+    samples: [Leuven_1, Leuven_2, Leuven_3, Leuven_4]
+    cell_types_expected: [KC, MetMac, TransMac, preMac, Monocyte, cDC1, cDC2, migDC, Hepatocyte, Cholangiocyte, Mesenchymal, Endothelial, Lymphocyte]
+    loader_env: spatial             # micromamba activate spatial
+    loader_script: Analysis/Spatial/scripts/41_govaere2026_cosmx_load.py
+    notes:
+      - "Per-sample inputs: exprMat_file.csv.gz + metadata_file.csv.gz + fov_positions_file.csv.gz + polygons.csv.gz + Seurat .rds"
+      - "Disease stage per sample needs GEO sample_characteristics_ch1 query"
+      - "Atlas contribution: spatial_govaere2026_cosmx_{metmac_score, gpnmb_score, mash_vs_nomash_logfc}"
+

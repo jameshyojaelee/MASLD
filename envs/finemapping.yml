@@ -1,0 +1,21 @@
+name: finemapping
+channels:
+  - conda-forge
+dependencies:
+  - compilers
+  - gsl
+  - make
+  - r-base=4.4
+  - r-data.table=1.14.10
+  - r-dplyr
+  - r-matrix
+  - r-rcpp
+  - r-rcpparmadillo
+  - r-rcppgsl
+  - r-readr
+  - r-remotes
+  - r-stringr
+  - r-susier
+  - r-tidyr
+
+prefix: "/gpfs/commons/home/jameslee/micromamba/envs/finemapping"

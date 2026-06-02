@@ -1,0 +1,24 @@
+__default__:
+  partition: "cpu"
+  account: "nslab"
+  time: "06:00:00"
+  mem: "16G"
+  extra: "--qos=nslab"
+run_fastqc:
+  time: "01:00:00"
+  mem: "8G"
+run_star:
+  time: "24:00:00"
+  mem: "64G"
+featurecounts:
+  time: "04:00:00"
+  mem: "64G"
+salmon_quant:
+  time: "06:00:00"
+  mem: "64G"
+infer_strandness:
+  time: "02:00:00"
+  mem: "32G"
+multiqc:
+  time: "01:00:00"
+  mem: "16G"

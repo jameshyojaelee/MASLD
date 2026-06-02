@@ -1,0 +1,60 @@
+name: perturbation_scgpt
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10  # scGPT compatibility
+  - pip
+  - "setuptools<81"  # pkg_resources required by flash-attn / torch.utils.cpp_extension
+  - wheel
+  - cuda-toolkit=12.4
+  - cudnn
+  - nccl
+  - libstdcxx-ng>=13.3
+  # PyTorch — hard pin to pytorch channel CUDA build
+  - pytorch=2.4.*
+  - torchvision
+  - pytorch-cuda=12.4
+  # FlashAttention build deps (kept optional; install via pip in sbatch with --no-build-isolation)
+  - ninja
+  - packaging
+  # Single-cell
+  - scanpy>=1.10
+  - anndata>=0.10
+  - scvi-tools>=1.1
+  # Data
+  - numpy<2
+  - pandas
+  - scikit-learn
+  - polars
+  - pyarrow
+  - h5py
+  - tqdm
+  - rich
+  # Transformer stack
+  - transformers>=4.40,<4.50
+  - datasets
+  - accelerate
+  - peft
+  - wandb
+  - ipython  # scgpt imports IPython at module load
+  - ipykernel
+  # JAX for pertpy compat
+  - "jax<0.4.30"
+  - "jaxlib<0.4.30"
+  # Bio utils
+  - biopython
+  - mygene
+  # Vis
+  - matplotlib
+  - seaborn
+  # NOTE: scgpt / geneformer / pertpy / flash-attn installed post-solve in build_scgpt.sbatch.
+  # - scgpt is on PyPI but pins old torch — use --no-deps to keep conda's torch 2.4.1.
+  # - geneformer is NOT on PyPI; install from HuggingFace git.
+  # - pertpy is OK with deps (no torch conflict in 0.10).
+  # - flash-attn is a build-from-source nightmare; deferred to optional post-install with --no-build-isolation.
+# Notes:
+# - flash-attn install is best-effort (SDPA fallback works in scGPT).
+# - Removed fallback torch=1.13 path; pytorch=2.4.* + setuptools<81 + libstdcxx-ng resolves prior errors.

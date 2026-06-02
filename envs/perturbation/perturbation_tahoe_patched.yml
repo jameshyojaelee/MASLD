@@ -1,0 +1,58 @@
+name: perturbation_tahoe
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - pip
+  - setuptools
+  - wheel
+  - cuda-toolkit=12.4
+  - cudnn
+  - nccl
+  - libstdcxx-ng>=13.3
+  # PyTorch — hard pin to pytorch channel CUDA build
+  - pytorch=2.5.*
+  - torchvision
+  - pytorch-cuda=12.4
+  - lightning>=2.4,<2.6
+  # HuggingFace stack (Tahoe-100M / scTahoe distributed via HF)
+  - transformers>=4.45
+  - datasets
+  - accelerate
+  - peft
+  - huggingface_hub
+  # Single-cell
+  - scanpy>=1.10
+  - anndata>=0.10
+  - scvi-tools>=1.1
+  # JAX — must stay <0.4.30 for pertpy
+  - "jax<0.4.30"
+  - "jaxlib<0.4.30"
+  # Data
+  - numpy<2
+  - pandas
+  - scikit-learn
+  - polars
+  - pyarrow
+  - h5py
+  - tqdm
+  - rich
+  # Cheminformatics (drug perturbation)
+  - rdkit>=2024
+  # Bio utils
+  - biopython
+  - mygene
+  # Vis
+  - matplotlib
+  - seaborn
+  - pip:
+    - pertpy
+    # Drug DB integration
+    - chembl_webresource_client
+# Notes:
+# - vevo-sdk placeholder removed; install attempted post-solve in build_tahoe.sbatch
+# - Tahoe-100M weights downloaded separately via huggingface_hub.snapshot_download
+# - pytorch=2.5.* + libstdcxx-ng + jax<0.4.30 fix the CPU-fallback + pertpy import issues

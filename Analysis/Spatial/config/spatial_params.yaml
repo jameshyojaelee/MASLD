@@ -1,0 +1,151 @@
+##############################################################################
+# Spatial Transcriptomics Pipeline — Parameter Configuration
+# Single source of truth for all QC thresholds, model hyperparams, markers
+##############################################################################
+
+qc:
+  # Spot-level QC thresholds
+  min_genes_per_spot: 200
+  min_counts_per_spot: 500
+  max_pct_mt: 20.0
+  min_spots_per_gene: 10
+
+  # SpaceRanger QC thresholds
+  spaceranger:
+    min_reads_mapped_pct: 70
+    min_median_genes: 1000
+    min_spots_under_tissue: 500
+    min_frac_spots_under_tissue: 30
+    min_saturation: 50
+
+cell2location:
+  reference:
+    max_epochs: 250
+    batch_size: 2500
+    lr: 0.002
+    train_size: 1.0
+    max_cells: 150000  # Subsample if reference exceeds this (OOM protection)
+  spatial:
+    N_cells_per_location: 15  # Liver Visium: ~8-15 cells per 55um spot
+    detection_alpha: 20
+    max_epochs: 30000
+    checkpoint_every: 5000
+    num_posterior_samples: 1000
+
+zonation:
+  periportal_markers:
+    - HAL
+    - SDS
+    - ASS1
+    - CPS1
+    - ALB
+    - ASL
+    - HAMP
+    - HSD17B13
+    - GLS2
+  pericentral_markers:
+    - CYP2E1
+    - CYP1A2
+    - GLUL
+    - CYP3A4
+    - CYP2A6
+  n_bins: 5
+  min_morans_i: 0.3
+  ctrl_gene_multiplier: 5  # Control genes = n_markers * this
+
+communication:
+  n_neighbors: 6
+  n_perms: 10000
+  lr_database: CellPhoneDB
+  p_threshold: 0.01
+
+  # MASLD-relevant signaling axes to highlight
+  fibrosis_lr: [TGFB1_TGFBR1, TGFB1_TGFBR2, PDGFB_PDGFRB, PDGFA_PDGFRA]
+  inflammation_lr: [CCL2_CCR2, TNF_TNFRSF1A, IL1B_IL1R1, IL6_IL6R]
+  sinusoidal_lr: [VEGFA_KDR, VEGFA_FLT1, DLL4_NOTCH1, JAG1_NOTCH2]
+
+svg:
+  method: moran  # moran or geary
+  n_perms: 999
+  fdr_threshold: 0.05
+  min_morans_i: 0.05
+  n_jobs: 16
+
+domains:
+  spatial_weight: 0.3  # alpha: weight for spatial component in combined graph
+  n_expression_neighbors: 15
+  n_spatial_neighbors: 6
+  target_n_domains: 7
+  resolution_range: [0.3, 0.5, 0.7, 1.0, 1.5]
+
+coexpression:
+  hotspot_model: danb  # Depth-Adjusted Negative Binomial
+  n_neighbors: 30
+  fdr_threshold: 0.05
+  min_gene_threshold: 30
+  n_jobs: 16
+
+normalization:
+  target_sum: 10000
+  n_top_genes: 3000
+  hvg_flavor: seurat_v3
+
+validation:
+  hep_abundance_threshold: 0.5
+  cross_dataset_min_svg_overlap: 0.2
+
+novel_analyses:
+  zonation_de:
+    fdr_threshold: 0.05
+    min_spots_per_bin: 50
+  gwas_overlay:
+    coloc_pp4_threshold: 0.5
+  niche_targets:
+    min_domain_fold_change: 1.5
+
+##############################################################################
+# Enhanced Spatial Methods (13-17)
+##############################################################################
+
+multisp:
+  n_domains_range: [5, 6, 7, 8, 9, 10]
+  n_latent: 15
+  epochs: 300
+  gene_activity_normalization: cpm
+  peak_normalization: tfidf
+  n_top_peaks: 5000
+
+ontrac:
+  n_neighbors: 25
+  niche_cluster_range: [4, 5, 6, 7, 8]
+  default_k: 6
+  gnn_epochs: 1000
+  tag_padj_threshold: 0.05
+  tag_rho_threshold: 0.2
+
+gsmap:
+  resource_dir: data/gsmap_resource
+  gwas_config: Analysis/Spatial/data/gsmap_gwas/gwas_config.yaml
+  spots_per_chunk: 500
+  annotation_column: condition
+
+commot:
+  lr_database: CellChat
+  signaling_type: Secreted
+  dis_thr: 500
+  dis_thr_sensitivity: 200
+  cot_eps_p: 0.1
+  cot_rho: 10
+  key_pathways: [TGFB, PDGF, CCL, WNT, VEGF, HGF]
+
+paths:
+  project_root: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
+  spatial_root: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial
+  reference_genome: /gpfs/commons/home/jameslee/reference_genome/cellranger/refdata-gex-GRCh38-2024-A
+  scrna_atlas: Analysis/SingleCell/integration/output/human/scalesc_human_annotated_celltypist.h5ad
+  dream_results: RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv
+  deconv_scores: RNA-seq/results/causal_inference/deconv_attribution_scores.csv
+  multi_evidence_atlas: RNA-seq/results/multi_evidence/multi_evidence_atlas.csv
+  sex_degs: RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/sex_deg_classification.csv
+  drug_targets: RNA-seq/results/drug_repurposing/multi_layer_drug_targets.csv
+  gpu_utils: Analysis/SingleCell/scripts/gpu_utils.py

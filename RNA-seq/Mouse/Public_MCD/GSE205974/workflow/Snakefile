@@ -1,0 +1,143 @@
+from pathlib import Path
+import csv
+configfile: "workflow/config.yaml"
+root = Path(config["project_root"]).resolve()
+samplesheet = root / config["samplesheet"]
+samples = {}
+with samplesheet.open() as handle:
+    reader = csv.DictReader(handle, delimiter='\t')
+    for row in reader:
+        samples[row['sample_id']] = row
+SAMPLES = sorted(samples)
+def fastq(sample, read):
+    entry = samples[sample]
+    key = f"fastq_{read.lower()}"
+    return str(root / entry[key])
+FASTQC_DIR = root / config['qc']['fastqc_dir']
+MULTIQC_DIR = root / config['qc']['multiqc_dir']
+STAR_OUT = root / config['alignment']['star_out']
+FEATURECOUNTS_DIR = root / config['alignment']['featurecounts_out']
+SALMON_OUT = root / config['quantification']['salmon_out']
+STAR_INDEX = root / config['indices']['star']
+SALMON_INDEX = root / config['indices']['salmon']
+GTF = root / config['reference']['gtf']
+RSEQC_BED = root / config['reference']['rseqc_bed']
+THREADS = config['threads']
+PIPELINE_LOG_DIR = root / config['pipeline_logs']
+rule all:
+    input:
+        expand(FASTQC_DIR / "{sample}_R1_fastqc.html", sample=SAMPLES),
+        expand(FASTQC_DIR / "{sample}_R2_fastqc.html", sample=SAMPLES),
+        MULTIQC_DIR / "multiqc_report.html",
+        expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES),
+        FEATURECOUNTS_DIR / "gene_counts.txt",
+        expand(SALMON_OUT / "{sample}" / "quant.sf", sample=SAMPLES),
+        expand(root / "qc" / "rseqc" / "{sample}.infer_experiment.txt", sample=SAMPLES)
+rule run_fastqc:
+    input:
+        r1=lambda wildcards: fastq(wildcards.sample, 'R1'),
+        r2=lambda wildcards: fastq(wildcards.sample, 'R2')
+    output:
+        r1_html=FASTQC_DIR / "{sample}_R1_fastqc.html",
+        r1_zip=FASTQC_DIR / "{sample}_R1_fastqc.zip",
+        r2_html=FASTQC_DIR / "{sample}_R2_fastqc.html",
+        r2_zip=FASTQC_DIR / "{sample}_R2_fastqc.zip"
+    params:
+        outdir=FASTQC_DIR
+    threads: THREADS['fastqc']
+    log: PIPELINE_LOG_DIR / "fastqc" / "{sample}.log"
+    run:
+        shell("mkdir -p {params.outdir} $(dirname {log})")
+        shell(
+            "fastqc --threads {threads} --outdir {params.outdir} {input.r1} {input.r2} > {log} 2>&1"
+        )
+        from pathlib import Path
+        def _outputs(sample, read):
+            fq = Path(fastq(sample, read))
+            base = fq.stem
+            if base.endswith('.fastq'):
+                base = base[:-6]
+            if base.endswith('.fq'):
+                base = base[:-3]
+            return (
+                Path(params.outdir) / f"{base}_fastqc.html",
+                Path(params.outdir) / f"{base}_fastqc.zip",
+            )
+        r1_html, r1_zip = _outputs(wildcards.sample, 'R1')
+        r2_html, r2_zip = _outputs(wildcards.sample, 'R2')
+        Path(output.r1_html).write_bytes(Path(r1_html).read_bytes())
+        Path(output.r1_zip).write_bytes(Path(r1_zip).read_bytes())
+        Path(output.r2_html).write_bytes(Path(r2_html).read_bytes())
+        Path(output.r2_zip).write_bytes(Path(r2_zip).read_bytes())
+rule run_star:
+    input:
+        r1=lambda wc: fastq(wc.sample, 'R1'),
+        r2=lambda wc: fastq(wc.sample, 'R2')
+    output:
+        bam=STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam",
+        sj=STAR_OUT / "{sample}" / "{sample}.SJ.out.tab",
+        gene_counts=STAR_OUT / "{sample}" / "{sample}.ReadsPerGene.out.tab",
+        log_final=STAR_OUT / "{sample}" / "{sample}.Log.final.out"
+    params:
+        outdir=lambda wc: STAR_OUT / wc.sample,
+        prefix=lambda wc: STAR_OUT / wc.sample / f"{wc.sample}."
+    threads: THREADS['star']
+    log: PIPELINE_LOG_DIR / "star" / "{sample}.log"
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "STAR --runThreadN {threads} --genomeDir {STAR_INDEX} "
+        "--readFilesIn {input.r1} {input.r2} --readFilesCommand zcat "
+        "--outFileNamePrefix {params.prefix} --outSAMtype BAM SortedByCoordinate "
+        "--twopassMode Basic --quantMode GeneCounts --limitBAMsortRAM 15000000000 > {log} 2>&1"
+rule featurecounts:
+    input:
+        expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES)
+    output:
+        counts=FEATURECOUNTS_DIR / "gene_counts.txt",
+        summary=FEATURECOUNTS_DIR / "gene_counts.txt.summary"
+    threads: THREADS['featurecounts']
+    log: PIPELINE_LOG_DIR / "featurecounts.log"
+    shell:
+        "mkdir -p {FEATURECOUNTS_DIR} $(dirname {log}) && "
+        "featureCounts -T {threads} -p -s 0 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
+rule salmon_quant:
+    input:
+        r1=lambda wc: fastq(wc.sample, 'R1'),
+        r2=lambda wc: fastq(wc.sample, 'R2')
+    output:
+        quant=SALMON_OUT / "{sample}" / "quant.sf"
+    params:
+        outdir=lambda wc: SALMON_OUT / wc.sample,
+        libtype=config['params']['salmon']['libtype']
+    threads: THREADS['salmon']
+    log: PIPELINE_LOG_DIR / "salmon" / "{sample}.log"
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "salmon quant -i {SALMON_INDEX} -l {params.libtype} -1 {input.r1} -2 {input.r2} "
+        "-p {threads} -o {params.outdir} > {log} 2>&1"
+rule infer_strandness:
+    input:
+        bam=STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam"
+    output:
+        txt=root / "qc" / "rseqc" / "{sample}.infer_experiment.txt"
+    params:
+        outdir=root / "qc" / "rseqc",
+        bed=RSEQC_BED
+    log: PIPELINE_LOG_DIR / "rseqc" / "{sample}.log"
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "infer_experiment.py -r {params.bed} -i {input.bam} > {output.txt} 2> {log}"
+rule multiqc:
+    input:
+        expand(FASTQC_DIR / "{sample}_R1_fastqc.zip", sample=SAMPLES),
+        expand(FASTQC_DIR / "{sample}_R2_fastqc.zip", sample=SAMPLES),
+        expand(STAR_OUT / "{sample}" / "{sample}.Log.final.out", sample=SAMPLES),
+        FEATURECOUNTS_DIR / "gene_counts.txt"
+    output:
+        MULTIQC_DIR / "multiqc_report.html"
+    params:
+        outdir=MULTIQC_DIR
+    log: PIPELINE_LOG_DIR / "multiqc.log"
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "multiqc {root} -o {params.outdir} > {log} 2>&1"

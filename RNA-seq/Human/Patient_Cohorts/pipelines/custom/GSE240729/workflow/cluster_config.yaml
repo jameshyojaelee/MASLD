@@ -1,0 +1,30 @@
+__default__:
+    time: "24:00:00"
+    nTasks: 1
+    cpusPerTask: 4
+    mem: 32G
+    jobName: "{rule}.{jobid}"
+    logOut: "logs/cluster/{rule}.{wildcards}.out"
+    logErr: "logs/cluster/{rule}.{wildcards}.err"
+    partition: "cpu"
+
+star:
+    time: "90:00:00"
+    cpusPerTask: 16
+    mem: 64G
+    partition: "cpu"
+
+featurecounts_per_sample:
+    time: "01:00:00"
+    cpusPerTask: 4
+    mem: 16G
+
+merge_featurecounts:
+    time: "00:30:00"
+    cpusPerTask: 2
+    mem: 8G
+
+fastqc:
+    time: "02:00:00"
+    cpusPerTask: 4
+    mem: 16G

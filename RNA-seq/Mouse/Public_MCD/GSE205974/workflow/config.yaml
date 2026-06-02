@@ -1,0 +1,33 @@
+project_root: /gpfs/commons/groups/sanjana_lab/Cas13/RNA-seq/other_MCD_RNAseq/GSE205974
+samplesheet: metadata/samples.tsv
+reference:
+  fasta: reference/raw/GRCm39.primary_assembly.genome.fa
+  gtf: reference/raw/gencode.vM33.annotation.gtf
+  transcripts_fa: reference/raw/gencode.vM33.transcripts.fa
+  rseqc_bed: reference/raw/gencode.vM33.annotation.rseqc.bed
+indices:
+  star: reference/indices/star
+  star_2pass: reference/indices/star_2pass
+  hisat2_prefix: reference/indices/hisat2/grcm39
+  salmon: reference/indices/salmon
+qc:
+  fastqc_dir: qc/fastqc
+  multiqc_dir: qc/multiqc
+alignment:
+  star_out: alignments/star
+  star_2pass_out: alignments/star_2pass
+  featurecounts_out: counts/featurecounts
+quantification:
+  salmon_out: quant/salmon
+threads:
+  fastqc: 4
+  star: 32
+  featurecounts: 16
+  salmon: 16
+params:
+  star:
+    genomeSAindexNbases: 14
+    sjdbOverhang: 149
+  salmon:
+    libtype: A
+pipeline_logs: logs

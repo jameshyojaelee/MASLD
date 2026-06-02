@@ -1,0 +1,41 @@
+team: perturbation-campaign
+role: cross_arm_coordinator
+description: |
+  Top-level orchestrator above the 5 arm teams (D1-D5). Owns shared
+  infrastructure, validation sets, model checkpoints, S8 atlas integration,
+  and final paper/report assembly.
+
+reports_to: user
+direct_reports:
+  - arm_lead_d1
+  - arm_lead_d2
+  - arm_lead_d3
+  - arm_lead_d4
+  - arm_lead_d5
+
+responsibilities:
+  - Shared infrastructure (conda envs, model checkpoints, validation sets, ortholog map)
+  - Weekly cross-arm sync; aggregates Arm Lead daily standup digests
+  - Resolves cross-arm conflicts (cell-type definition, stratification levels)
+  - Owns S8 evidence source integration to multi_evidence_atlas.csv
+  - Updates RNA-seq/27a_assemble_evidence_atlas.R + RNA-seq/46d_convergence_evidence.R
+  - Final QC sign-off on cross-arm integration
+  - Composite scoring per gene → perturb_validation_tier
+  - Audits per-arm outputs against atlas columns (catches transcription errors)
+  - 10-gene manual spot-check from atlas back to source arm outputs
+  - "Strong" tier genes (~10-30) get manual lit review by coordinator
+
+cadence:
+  daily_standup: aggregate digest from 5 Arm Leads
+  weekly_sync: all Arm Leads, surface QC issues, share cross-arm patterns
+  phase_gates:
+    - phase0_to_phase1: model availability + validation set + envs ready
+    - phase1_to_phase2: backtest model panel locked per arm
+    - phase2_to_phase3: fine-tuned weights deposited + hold-out perplexity acceptable
+    - phase3_to_phase4: all 5 arms produce per-arm outputs + consensus tables
+
+decision_authority:
+  - Model eject from arm consensus pool (on Backtester recommendation)
+  - Convergence heuristic weight assignment for S8 contribution
+  - Tier threshold for "strong" / "validated" / "partial"
+  - Phase gate pass/fail

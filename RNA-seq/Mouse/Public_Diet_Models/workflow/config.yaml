@@ -1,0 +1,82 @@
+# Configuration for Salmon pseudoalignment pipeline
+# Other Diet Mouse RNA-seq
+
+project_root: "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/other_diet_mouse_RNAseq"
+samplesheet: "metadata/samples.tsv"
+
+# Exclude corrupted samples and excluded datasets
+excluded_samples:
+  # Corrupted FASTQs
+  - "SRR30252151"
+  - "SRR30252152"
+  - "SRR12883257"
+  - "SRR30252154"
+  # GSE263273 - OCA/INT787 drug treatments (not diet models)
+  - "SRR28561738"
+  - "SRR28561739"
+  - "SRR28561740"
+  - "SRR28561741"
+  - "SRR28561742"
+  - "SRR28561743"
+  - "SRR28561744"
+  - "SRR28561745"
+  - "SRR28561746"
+  - "SRR28561747"
+  - "SRR28561748"
+  - "SRR28561749"
+  - "SRR28561750"
+  - "SRR28561751"
+  - "SRR28561752"
+  - "SRR28561753"
+  - "SRR28561754"
+  - "SRR28561755"
+  - "SRR28561756"
+  - "SRR28561757"
+  - "SRR28561758"
+  - "SRR28561759"
+  - "SRR28561760"
+  - "SRR28561761"
+  - "SRR28561762"
+  - "SRR28561763"
+  - "SRR28561764"
+  - "SRR28561765"
+  # GSE225616 - siRNA vs Vehicle within GAN diet (not diet vs control)
+  - "SRR23539353"
+  - "SRR23539354"
+  - "SRR23539355"
+  - "SRR23539356"
+  - "SRR23539357"
+  - "SRR23539358"
+  - "SRR23539359"
+  - "SRR23539360"
+  - "SRR23539361"
+  - "SRR23539362"
+  - "SRR23539363"
+  - "SRR23539364"
+  - "SRR23539365"
+  - "SRR23539366"
+  - "SRR23539367"
+  - "SRR23539368"
+  - "SRR23539369"
+  - "SRR23539370"
+  - "SRR23539371"
+
+# Reference indices
+indices:
+  salmon: "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/in-house_MCD_RNAseq/reference/indices/salmon"
+
+# Output directories
+output:
+  salmon: "alignments/salmon"
+  logs: "logs/salmon"
+
+# Salmon parameters
+salmon:
+  libtype: "A"  # Auto-detect library type
+  threads: 8
+
+# SLURM settings
+slurm:
+  partition: "cpu"
+  time: "2:00:00"
+  mem_per_cpu: "4G"

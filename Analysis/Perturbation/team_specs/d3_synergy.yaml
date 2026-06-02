@@ -1,0 +1,100 @@
+team: perturbation-campaign-d3
+arm: D3_Synergy
+goal: Predict pairwise/triple/quadruple KO synergy across multi-evidence hits
+
+models:
+  - GEARS (zs + ft) — primary, gold standard combinatorial
+  - STATE-pair (zs + ft) — two-token perturbation
+  - scGPT-mask (zs + ft) — simultaneous gene masking
+  - Tahoe-100M — drug-drug synergy where compounds exist
+consensus_rule: 2-of-N synergy magnitude >2σ above additive, consistent direction
+
+hit_set:
+  files:
+    - data/hits/d3_tier1_pairs.csv  # top 100 convergence pairwise (~4,950)
+    - data/hits/d3_tier2_pairs.csv  # all 662 COLOC PP4>0.5 pairwise (~218,791)
+    - data/hits/d3_tier3_triples.csv  # top 50 convergence triples (~19,600)
+    - data/hits/d3_tier4_quadruples.csv  # top 20 quadruples (~4,845)
+    - data/hits/d3_tier5_adaptive.csv  # adaptive triples from tier 1-2 (~5,000)
+  total: ~253,000 combinatorial tests
+
+risk:
+  k562_to_hepatocyte_transfer: HIGH
+  mitigation: hepatocyte fine-tune + STATE-pair orthogonal check + explicit "K562-bias confidence" flag
+
+subagents:
+  - name: arm_lead_d3
+    role: Arm Lead
+    agent_type: general-purpose
+    reports_to: cross_arm_coordinator
+  - name: data_engineer_d3
+    role: Data Engineer
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+  - name: combinatorial_search_planner_d3
+    role: Combinatorial Search Planner (ARM-SPECIFIC)
+    agent_type: general-purpose
+    owns: chooses which pairs/triples/quadruples to test given compute budget; adaptive prioritization using D1 mechanism + atlas convergence
+    reports_to: arm_lead_d3
+    independence: standalone
+  - name: runner_gears_d3
+    role: Model Runner — GEARS
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: BLINDED
+  - name: runner_state_pair_d3
+    role: Model Runner — STATE-pair
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: BLINDED
+  - name: runner_scgpt_mask_d3
+    role: Model Runner — scGPT-mask
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: BLINDED
+  - name: runner_tahoe_d3
+    role: Model Runner — Tahoe-100M (drug-drug)
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: BLINDED
+  - name: peer_reviewer_d3
+    role: Peer Reviewer (Methods)
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: independent of runners
+  - name: stratification_auditor_d3
+    role: Stratification Auditor
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: independent of runners
+  - name: consensus_aggregator_d3
+    role: Consensus Aggregator
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+  - name: backtester_d3
+    role: Backtester
+    agent_type: general-purpose
+    owns: backtest vs known epistasis (HSD17B13×PNPLA3); additive controls (GLP1R+GIPR); BioGRID/MIST genetic interaction overlap
+    reports_to: arm_lead_d3
+    independence: blinded to consensus
+  - name: lit_reviewer_d3
+    role: Literature Reviewer
+    agent_type: general-purpose
+    reports_to: arm_lead_d3
+    independence: independent of runners
+  - name: output_writer_d3
+    role: Output Writer
+    agent_type: general-purpose
+    owns: synergy matrix (heatmap), top-100 pair JSON cards, figure panels
+    reports_to: arm_lead_d3
+  - name: atlas_integrator_d3
+    role: Atlas Integrator
+    agent_type: general-purpose
+    reports_to: cross_arm_coordinator
+
+deliverables:
+  - results/d3_synergy/synergy_matrix.csv
+  - results/d3_synergy/cards/<pair>.json (top 100 pairs)
+  - results/d3_synergy/synergy_heatmap.pdf
+  - results/d3_synergy/k562_bias_confidence.csv (per-pair transfer confidence)
+  - 3 atlas columns: perturb_synergy_partners, perturb_synergy_top_n, perturb_synergy_class

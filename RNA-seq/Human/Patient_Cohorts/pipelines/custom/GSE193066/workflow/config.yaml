@@ -1,0 +1,28 @@
+# Per-dataset Snakemake config
+project_root: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/results/GSE193066
+samplesheet: metadata/samples_with_paths.tsv
+
+reference:
+  gtf: /gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz
+
+indices:
+  star: /gpfs/commons/home/jameslee/reference_genome/gencode_v49/star_index
+
+qc:
+  fastqc_dir: qc/fastqc
+  multiqc_dir: qc/multiqc
+
+alignment:
+  star_out: alignments/star
+  featurecounts_out: counts/featurecounts
+
+threads:
+  fastqc: 4
+  star: 16
+  featurecounts: 8
+
+params:
+  featurecounts:
+    strandedness: 0   # 0=unstranded, 1=stranded, 2=reverse-stranded
+
+pipeline_logs: logs

@@ -1,0 +1,120 @@
+team: perturbation-campaign-d1
+arm: D1_Mechanism
+goal: Per-hit downstream KO prediction (DE list + pathway + cell-type-of-action)
+
+models:
+  - STATE (zs + ft)
+  - Geneformer (zs only — in_silico_perturber tool)
+  - scGPT (zs + ft)
+  - Tahoe-100M (drug-induced mechanism for druggable hits)
+consensus_rule: 2-of-4 (gene appears in top-100 downstream with consistent direction)
+
+hit_set:
+  file: data/hits/d1_mechanism_hits.csv
+  size: ~800 (deduplicated)
+  sources: Tier-1 convergence + COLOC PP4>0.8 + drug targets + hep subtype markers
+
+subagents:
+  - name: arm_lead_d1
+    role: Arm Lead
+    agent_type: general-purpose
+    owns: mission decomp, daily standup, final QC sign-off
+    reports_to: cross_arm_coordinator
+    independence: —
+
+  - name: data_engineer_d1
+    role: Data Engineer
+    agent_type: general-purpose
+    owns: hit set + cell-type pseudobulks + per-model formatting + stratification + leakage audits
+    reports_to: arm_lead_d1
+    independence: standalone
+
+  - name: runner_state_d1
+    role: Model Runner — STATE
+    agent_type: general-purpose
+    owns: STATE zs + ft + inference + SLURM jobs
+    reports_to: arm_lead_d1
+    independence: BLINDED to other runners' outputs (preserves consensus statistics)
+
+  - name: runner_geneformer_d1
+    role: Model Runner — Geneformer
+    agent_type: general-purpose
+    owns: Geneformer zs in_silico_perturber + SLURM jobs
+    reports_to: arm_lead_d1
+    independence: BLINDED
+
+  - name: runner_scgpt_d1
+    role: Model Runner — scGPT
+    agent_type: general-purpose
+    owns: scGPT zs + ft + SLURM jobs
+    reports_to: arm_lead_d1
+    independence: BLINDED
+
+  - name: runner_tahoe_d1
+    role: Model Runner — Tahoe-100M
+    agent_type: general-purpose
+    owns: Tahoe drug-perturbation prediction for druggable hits + SLURM jobs
+    reports_to: arm_lead_d1
+    independence: BLINDED
+
+  - name: peer_reviewer_d1
+    role: Peer Reviewer (Methods)
+    agent_type: general-purpose
+    owns: audit each runner output (sanity, format, NaN/Inf, distribution shape); push back if issues
+    reports_to: arm_lead_d1
+    independence: independent of runners
+
+  - name: stratification_auditor_d1
+    role: Stratification Auditor
+    agent_type: general-purpose
+    owns: audit sex×stage×subtype covariate conditioning across runners
+    reports_to: arm_lead_d1
+    independence: independent of runners
+
+  - name: consensus_aggregator_d1
+    role: Consensus Aggregator
+    agent_type: general-purpose
+    owns: pull validated outputs; 2-of-4 consensus; document disagreements
+    reports_to: arm_lead_d1
+    independence: —
+
+  - name: backtester_d1
+    role: Backtester
+    agent_type: general-purpose
+    owns: independently run validation set; recovery curves; recommend model eject
+    reports_to: arm_lead_d1
+    independence: blinded to consensus output before computing recovery
+
+  - name: lit_reviewer_d1
+    role: Literature Reviewer
+    agent_type: general-purpose
+    owns: pull published KO/CRISPR data for top hits; flag predictions contradicting literature
+    reports_to: arm_lead_d1
+    independence: independent of runners
+
+  - name: output_writer_d1
+    role: Output Writer
+    agent_type: general-purpose
+    owns: final tables, per-hit JSON cards (K=500), figure panels (consensus heatmaps, recovery curves)
+    reports_to: arm_lead_d1
+    independence: —
+
+  - name: atlas_integrator_d1
+    role: Atlas Integrator
+    agent_type: general-purpose
+    owns: write D1 output columns (perturb_mechanism_*, perturb_downstream_robust_*) to multi_evidence_atlas.csv
+    reports_to: cross_arm_coordinator
+    independence: —
+
+peer_review_rules:
+  - methods_pr: every runner output must pass peer_reviewer_d1 before reaching consensus
+  - backtest_gate: any model failing positive-control recovery (top 10%) is ejected
+  - stratification_audit: independent re-run of random stratified contexts
+  - literature_discordance: ≥3 hits contradicting published direction → arm lead review
+
+deliverables:
+  - results/d1_mechanism/consensus_predictions.csv
+  - results/d1_mechanism/cards/<gene>.json (~500 files)
+  - results/d1_mechanism/recovery_curves.pdf
+  - results/d1_mechanism/per_arm_summary.md
+  - 4 atlas columns: perturb_mechanism_pathway, perturb_mechanism_coa, perturb_downstream_robust_n, perturb_downstream_robust_genes

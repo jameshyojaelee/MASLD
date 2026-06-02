@@ -1,0 +1,156 @@
+# =============================================================================
+# config/mouse_datasets.yaml
+# Registry of all mouse RNA-seq datasets in the MASLD integration pipeline.
+# All datasets re-quantified with GENCODE vM38 / GRCm39 for consistency.
+#
+# TO ADD A NEW MOUSE DATASET:
+#   1. Prepare a samples.tsv with columns: sample_id, fastq_1, fastq_2,
+#      strandedness, condition, sex, dataset
+#   2. Run the Snakemake pipeline to generate featureCounts output
+#   3. Add an entry below under the appropriate diet_model
+#   4. Re-run the mouse integration pipeline (M00 → M04)
+#      M00 reads this YAML for excluded_conditions and filter expressions.
+#      M02 reads this YAML to build the comparisons list dynamically.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Reference genome (shared across all mouse datasets)
+# ---------------------------------------------------------------------------
+reference:
+  genome: "GRCm39"
+  annotation: "GENCODE vM38"
+  star_index: "/gpfs/commons/home/jameslee/reference_genome/gencode_vm38/star_index"
+  gtf: "/gpfs/commons/home/jameslee/reference_genome/gencode_vm38/gencode.vM38.chr_patch_hapl_scaff.annotation.gtf.gz"
+
+# ---------------------------------------------------------------------------
+# Dataset definitions
+# ---------------------------------------------------------------------------
+datasets:
+
+  # --- MCD diet models ---
+
+  InHouse_MCD:
+    samples_tsv: "InHouse_MCD/metadata/samples.tsv"
+    counts_path: "InHouse_MCD/results/counts/featurecounts/gene_counts.txt"
+    diet_model: "MCD"
+    batch: "InHouse_MCD"
+    layout: "PAIRED"
+    filter: null
+    notes: "12 paired-end in-house MCD samples (weeks 1-3); 6 Control + 6 MCD"
+
+  GSE156918:
+    samples_tsv: "Public_MCD/metadata/samples.tsv"
+    counts_path: "Public_MCD/GSE156918/results/counts/featurecounts/gene_counts.txt"
+    diet_model: "MCD"
+    batch: "GSE156918"
+    layout: "SINGLE"
+    filter: "genotype == 'Cre'"   # Exclude FLCN-KO; keep only wild-type Cre controls
+    notes: "GSE156918 — single-end MCD; Cre-only (wild-type) samples retained"
+
+  GSE205974:
+    samples_tsv: "Public_MCD/metadata/samples.tsv"
+    counts_path: "Public_MCD/GSE205974/results/counts/featurecounts/gene_counts.txt"
+    diet_model: "MCD"
+    batch: "GSE205974"
+    layout: "PAIRED"
+    filter: null
+    notes: "GSE205974 — paired-end MCD; all samples included"
+
+  # --- Multi-diet models (HFD, CDAHFD, FPC, LIDPAD, AMLN_ob) ---
+  # These are all processed through the Public_Diet_Models Snakemake pipeline
+  # and recorded in a single samples.tsv. The diet_model is encoded in the
+  # 'condition' column of that samples.tsv.
+
+  # GSE159911 (LIDPAD) EXCLUDED 2026-05-28 — LIDPAD (liver disease-promoting
+  # atherogenic diet) deemed not disease-relevant for the MASH library; dropped
+  # from all analysis and figures. Samples remain in Public_Diet_Models
+  # samples.tsv but are no longer registered here.
+  # GSE159911:
+  #   samples_tsv: "Public_Diet_Models/metadata/samples.tsv"
+  #   diet_model: "LIDPAD"
+  #   batch: "GSE159911"
+  #   filter: null
+  #   notes: "GSE159911 — LIDPAD model; shallow sequencing (1.2-4.8M reads)"
+
+  GSE162876:
+    samples_tsv: "Public_Diet_Models/metadata/samples.tsv"
+    diet_model: "CDAHFD_FPC"     # Controls shared between CDAHFD and FPC comparisons
+    batch: "GSE162876"
+    filter: null
+    notes: "GSE162876 — CDAHFD + FPC; shared control group"
+
+  GSE224069:
+    samples_tsv: "Public_Diet_Models/metadata/samples.tsv"
+    diet_model: "HFD"
+    batch: "GSE224069"
+    filter: "condition %in% c('Chow_Diet_Vehicle', 'High_Fat_Diet_Vehicle')"
+    disease_conditions:
+      - "High_Fat_Diet_Vehicle"
+    control_conditions:
+      - "Chow_Diet_Vehicle"
+    notes: "GSE224069 — HFD with paired chow controls; DDD86481 drug arms excluded via filter"
+
+  # GSE225616: EXCLUDED (2026-05-27) — no matched controls.
+  #   10 disease-only samples (GAN/DIO-NASH diet). All controls were borrowed
+  #   from other datasets, confounding diet effect with batch. Dropped for
+  #   Cas13 library design rigor.
+
+  # GSE263273: EXCLUDED (2026-05-27) — no matched controls + ob/ob genotype.
+  #   10 Lepob/Obese + AMLN diet vehicle samples. No lean/WT chow control.
+  #   Previously mislabeled as HFD, reclassified to AMLN_ob, now excluded entirely.
+
+  GSE274914:
+    samples_tsv: "Public_Diet_Models/metadata/samples.tsv"
+    diet_model: "HFD"
+    batch: "GSE274914"
+    filter: null
+    disease_conditions:
+      - "7w_HFD"
+      - "52w_HFD"
+    control_conditions:
+      - "7w_LFD"
+      - "52w_LFD"
+    notes: "GSE274914 — 7-week and 52-week HFD; shared control group"
+
+# ---------------------------------------------------------------------------
+# Diet model summary (for meta-analysis)
+# ---------------------------------------------------------------------------
+diet_models:
+  - "MCD"
+  - "HFD"
+  - "CDAHFD"
+  - "FPC"
+  # LIDPAD removed 2026-05-28 (not disease-relevant for MASH library)
+  # AMLN_ob removed (GSE263273 excluded — ob/ob, no matched controls)
+
+# Conditions to exclude from integration (drug treatment arms, KO genotypes)
+excluded_conditions:
+  - "High_Fat_Diet_Elafibranor"
+  - "High_Fat_Diet_Resmetirom"
+  - "High_Fat_Diet_DDD86481"
+  - "GAN_diet_D09100310_Research_Diets_USA_DIO_NASH_siRNA"
+  - "INT_787_30_mg_kg"
+  - "OCA_30_mg_kg"
+  - "FLCN_KO_MCD"
+  - "FLCN_KO_Control"
+
+# =============================================================================
+# TEMPLATE FOR ADDING A NEW MOUSE DATASET
+# =============================================================================
+#
+#  NEW_DATASET_ID:
+#    samples_tsv: "Public_Diet_Models/metadata/samples.tsv"  # or new file
+#    counts_path: "Public_Diet_Models/results/counts/featurecounts/gene_counts.txt"
+#    diet_model: "HFD"          # MCD | HFD | CDAHFD | FPC | LIDPAD | AMLN_ob | new_model
+#    batch: "NEW_DATASET_ID"
+#    layout: "PAIRED"           # PAIRED or SINGLE
+#    filter: null               # R expression evaluated on samples.tsv rows, or null
+#    disease_conditions:         # Optional: condition values for Disease group
+#      - "7w_HFD"
+#    control_conditions:         # Optional: condition values for Control group
+#      - "7w_LFD"
+#    notes: "Brief description"
+#
+# If adding a brand-new diet model, also add it to the diet_models list above.
+# M00 reads this YAML and evaluates `filter` expressions on sample metadata.
+# M02 reads this YAML to build the comparisons list dynamically.

@@ -1,0 +1,37 @@
+name: celltype_bio
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - bioconductor-mofa2
+  - cairo
+  - cmake
+  - freetype
+  - fribidi
+  - harfbuzz
+  - libpng
+  - pango
+  - pkg-config
+  - r-base=4.4
+  - r-biocmanager
+  - r-circlize
+  - r-curl
+  - r-data.table
+  - r-devtools
+  - r-dplyr
+  - r-ggplot2
+  - r-igraph
+  - r-jsonlite
+  - r-matrix
+  - r-nmf
+  - r-openssl
+  - r-optparse
+  - r-patchwork
+  - r-rcolorbrewer
+  - r-remotes
+  - r-seurat
+  - r-seuratobject
+  - r-tidyr
+  - r-yaml
+
+prefix: "/gpfs/commons/home/jameslee/micromamba/envs/celltype_bio"

@@ -1,0 +1,28 @@
+project_root: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/results/PRJNA512027
+samplesheet: metadata/samples_with_paths.tsv
+reference:
+  fasta: /gpfs/commons/home/jameslee/reference_genome/refdata-gex-GRCh38-2024-A/fasta/genome.fa
+  gtf: /gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz
+  rseqc_bed: /gpfs/commons/home/jameslee/reference_genome/refdata-gex-GRCh38-2024-A/genes/genes.bed
+indices:
+  star: /gpfs/commons/home/jameslee/reference_genome/gencode_v49/star_index
+qc:
+  fastqc_dir: qc/fastqc
+  multiqc_dir: qc/multiqc
+alignment:
+  star_out: alignments/star
+  featurecounts_out: counts/featurecounts
+quantification:
+  salmon_out: quant/salmon
+threads:
+  fastqc: 4
+  star: 16
+  featurecounts: 8
+  salmon: 8
+params:
+  star:
+    genomeSAindexNbases: 14
+    sjdbOverhang: 100
+  salmon:
+    libtype: A
+pipeline_logs: logs

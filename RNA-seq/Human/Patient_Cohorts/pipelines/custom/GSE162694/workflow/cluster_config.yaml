@@ -1,0 +1,13 @@
+__default__:
+  account: ""
+  time: "2:00:00"
+  mem: "32G"
+  extra: ""
+
+star:
+  time: "90:00:00"
+  mem: "64G"
+
+featurecounts:
+  time: "2:00:00"
+  mem: "32G"

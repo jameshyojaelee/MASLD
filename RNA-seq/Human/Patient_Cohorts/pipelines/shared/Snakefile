@@ -1,0 +1,212 @@
+# =============================================================================
+# Shared Snakefile for Human MASLD RNA-seq per-dataset processing
+# Used by all datasets — do NOT copy this file to individual dataset dirs.
+#
+# Each dataset has its own workflow/config.yaml pointing here via the -s flag:
+#   snakemake -s ../../shared/Snakefile --configfile workflow/config.yaml ...
+#
+# Workflow: FASTQ → FastQC → STAR alignment → featureCounts → MultiQC
+# =============================================================================
+
+from pathlib import Path
+import csv
+
+root        = Path(config["project_root"]).resolve()
+samplesheet = Path(config["samplesheet"]).resolve()
+
+# ---------------------------------------------------------------------------
+# Load sample manifest
+# ---------------------------------------------------------------------------
+samples = {}
+if samplesheet.exists():
+    with samplesheet.open() as fh:
+        reader = csv.DictReader(fh, delimiter="\t")
+        for row in reader:
+            samples[row["sample_id"]] = row
+
+SAMPLES = sorted(samples)
+
+if not SAMPLES:
+    raise ValueError(f"No samples loaded from samplesheet: {samplesheet}")
+
+# ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
+def fastq_path(sample, read):
+    """Return absolute FASTQ path for a sample/read, or '' if not present."""
+    entry = samples[sample]
+    key = f"fastq_{read.lower()}"
+    value = (entry.get(key) or "").strip()
+    if not value:
+        return ""
+    p = Path(value)
+    return str(p) if p.is_absolute() else str(root / value)
+
+def fastq_paths(sample):
+    return [p for p in (fastq_path(sample, "R1"), fastq_path(sample, "R2")) if p]
+
+def is_paired(sample):
+    return bool(fastq_path(sample, "R2"))
+
+PAIRED  = [s for s in SAMPLES if is_paired(s)]
+SINGLE  = [s for s in SAMPLES if not is_paired(s)]
+
+# ---------------------------------------------------------------------------
+# Directory variables (from config)
+# ---------------------------------------------------------------------------
+FASTQC_DIR       = root / config["qc"]["fastqc_dir"]
+MULTIQC_DIR      = root / config["qc"]["multiqc_dir"]
+STAR_OUT         = root / config["alignment"]["star_out"]
+FEATURECOUNTS_DIR = root / config["alignment"]["featurecounts_out"]
+STAR_INDEX       = Path(config["indices"]["star"])
+GTF              = Path(config["reference"]["gtf"])
+THREADS          = config["threads"]
+LOG_DIR          = root / config["pipeline_logs"]
+
+# ---------------------------------------------------------------------------
+# Rule: all
+# ---------------------------------------------------------------------------
+rule all:
+    input:
+        expand(str(FASTQC_DIR / "{sample}_1_fastqc.html"), sample=SAMPLES),
+        str(MULTIQC_DIR / "multiqc_report.html"),
+        expand(str(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam"),
+               sample=SAMPLES),
+        str(FEATURECOUNTS_DIR / "gene_counts.txt"),
+        str(FEATURECOUNTS_DIR / "gene_counts.txt.summary")
+
+# ---------------------------------------------------------------------------
+# Rule: FastQC
+# ---------------------------------------------------------------------------
+rule fastqc:
+    input:
+        lambda wc: fastq_paths(wc.sample)
+    output:
+        html = str(FASTQC_DIR / "{sample}_1_fastqc.html"),
+        zip  = str(FASTQC_DIR / "{sample}_1_fastqc.zip")
+    params:
+        outdir = str(FASTQC_DIR)
+    threads: THREADS["fastqc"]
+    log: str(LOG_DIR / "fastqc" / "{sample}.log")
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "fastqc --threads {threads} --outdir {params.outdir} {input} > {log} 2>&1"
+
+# ---------------------------------------------------------------------------
+# Rule: STAR alignment (handles both paired-end and single-end)
+# ---------------------------------------------------------------------------
+rule star:
+    input:
+        fastqs = lambda wc: fastq_paths(wc.sample)
+    output:
+        bam       = str(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam"),
+        sj        = str(STAR_OUT / "{sample}" / "{sample}.SJ.out.tab"),
+        log_final = str(STAR_OUT / "{sample}" / "{sample}.Log.final.out")
+    params:
+        prefix = lambda wc: str(STAR_OUT / wc.sample / f"{wc.sample}."),
+        star_index = str(STAR_INDEX),
+        extra  = config.get("params", {}).get("star", {}).get("extra_flags", "")
+    threads: THREADS["star"]
+    log: str(LOG_DIR / "star" / "{sample}.log")
+    shell:
+        "mkdir -p $(dirname {params.prefix}) $(dirname {log}) && "
+        "STAR --runThreadN {threads} "
+        "--genomeDir {params.star_index} "
+        "--readFilesIn {input.fastqs} "
+        "--readFilesCommand zcat "
+        "--outFileNamePrefix {params.prefix} "
+        "--outSAMtype BAM SortedByCoordinate "
+        "--twopassMode Basic "
+        "--quantMode GeneCounts "
+        "--limitBAMsortRAM 30000000000 "
+        "{params.extra} > {log} 2>&1"
+
+# ---------------------------------------------------------------------------
+# Rule: featureCounts — per-sample (runs in parallel via cluster)
+# ---------------------------------------------------------------------------
+rule featurecounts_per_sample:
+    input:
+        bam = str(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam")
+    output:
+        counts  = str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
+        summary = str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt.summary")
+    params:
+        gtf    = str(GTF),
+        strand = config.get("params", {}).get("featurecounts", {}).get("strandedness", "0"),
+        pe_flag = lambda wc: "-p --countReadPairs" if is_paired(wc.sample) else ""
+    threads: THREADS["featurecounts"]
+    log: str(LOG_DIR / "featurecounts" / "{sample}.log")
+    shell:
+        "mkdir -p $(dirname {output.counts}) $(dirname {log}) && "
+        "featureCounts -T {threads} {params.pe_flag} -s {params.strand} "
+        "-a {params.gtf} -o {output.counts} {input.bam} > {log} 2>&1"
+
+# ---------------------------------------------------------------------------
+# Rule: merge per-sample featureCounts into single matrix
+# ---------------------------------------------------------------------------
+rule merge_featurecounts:
+    input:
+        counts = expand(str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
+                        sample=SAMPLES)
+    output:
+        merged  = str(FEATURECOUNTS_DIR / "gene_counts.txt"),
+        summary = str(FEATURECOUNTS_DIR / "gene_counts.txt.summary")
+    params:
+        per_sample_dir = str(FEATURECOUNTS_DIR / "per_sample"),
+        n_samples = len(SAMPLES)
+    log: str(LOG_DIR / "merge_featurecounts.log")
+    run:
+        import pandas as pd
+        from pathlib import Path
+
+        per_sample_dir = Path(params.per_sample_dir)
+        count_files = sorted(per_sample_dir.glob("*.counts.txt"))
+
+        # Read first file to get annotation columns
+        first = pd.read_csv(count_files[0], sep="\t", comment="#")
+        annot_cols = first.columns[:6].tolist()  # Geneid, Chr, Start, End, Strand, Length
+        merged = first[annot_cols].copy()
+
+        # Add count column from each sample
+        for cf in count_files:
+            df = pd.read_csv(cf, sep="\t", comment="#")
+            sample_col = df.columns[-1]  # last column is the count
+            sample_name = Path(cf).stem.replace(".counts", "")
+            merged[sample_name] = df.iloc[:, -1]
+
+        # Write header comment (featureCounts format compatibility)
+        with open(str(output.merged), "w") as fh:
+            fh.write(f"# Program:featureCounts v2.1.1; Merged from {params.n_samples} per-sample runs\n")
+        merged.to_csv(str(output.merged), sep="\t", index=False, mode="a")
+
+        # Merge summary files
+        summary_files = sorted(per_sample_dir.glob("*.counts.txt.summary"))
+        if summary_files:
+            first_summary = pd.read_csv(summary_files[0], sep="\t")
+            merged_summary = first_summary.iloc[:, :1].copy()
+            for sf in summary_files:
+                df = pd.read_csv(sf, sep="\t")
+                sample_name = Path(sf).stem.replace(".counts.txt", "")
+                merged_summary[sample_name] = df.iloc[:, -1]
+            merged_summary.to_csv(str(output.summary), sep="\t", index=False)
+
+        with open(str(log), "w") as fh:
+            fh.write(f"Merged {len(count_files)} per-sample count files\n")
+            fh.write(f"Output: {output.merged}\n")
+            fh.write(f"Dimensions: {merged.shape[0]} genes x {merged.shape[1] - 6} samples\n")
+
+# ---------------------------------------------------------------------------
+# Rule: MultiQC
+# ---------------------------------------------------------------------------
+rule multiqc:
+    input:
+        expand(str(STAR_OUT / "{sample}" / "{sample}.Log.final.out"), sample=SAMPLES),
+        str(FEATURECOUNTS_DIR / "gene_counts.txt")
+    output:
+        str(MULTIQC_DIR / "multiqc_report.html")
+    params:
+        outdir = str(MULTIQC_DIR)
+    log: str(LOG_DIR / "multiqc.log")
+    shell:
+        "mkdir -p {params.outdir} $(dirname {log}) && "
+        "multiqc {root} -o {params.outdir} --force > {log} 2>&1"
