@@ -6,7 +6,7 @@
 #   2. CollecTRI (literature-curated, broader coverage)
 #   3. Comparison: Spearman of TF scores, overlap of top-20, Venn of sig TFs
 #
-# Input:  dream t-statistics from dream_results.csv
+# Input:  bulk t-statistics from canonical_deg_results.csv
 # Method: decoupleR run_ulm()
 # Output: RNA-seq/results/multi_evidence/functional_activity/tf_database_comparison.csv
 #
@@ -33,7 +33,7 @@ OUTDIR <- file.path(ME, "functional_activity")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 DREAM_FILE <- file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 ATLAS_FILE <- file.path(ME, "multi_evidence_atlas.csv")
 
 # ============================================================================

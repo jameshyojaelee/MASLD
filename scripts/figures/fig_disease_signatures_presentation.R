@@ -55,7 +55,7 @@ SUB_DIR  <- file.path(BASE, "RNA-seq/results/subtypes")
 # =============================================================================
 cat("--- Panel A: volcano ---\n")
 
-dream_path <- file.path(INT_RES, "integration/dream_results_ashr.csv")
+dream_path <- file.path(INT_RES, "integration/canonical_deg_results.csv")
 dream <- fread(dream_path)
 
 # Normalise column names (builds may use logFC/padj or dream_logFC/dream_padj)

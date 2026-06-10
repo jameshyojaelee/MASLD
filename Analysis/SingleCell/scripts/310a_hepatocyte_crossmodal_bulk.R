@@ -8,7 +8,7 @@
 # Input:
 #   hepatocyte_subtypes/hepatocyte_subtype_metadata.csv  (from 309)
 #   hepatocyte_subtypes/hepatocyte_atlas.h5ad  (raw counts via rhdf5)
-#   dream_results_ashr.csv  (from integration pipeline)
+#   canonical_deg_results.csv  (from integration pipeline; LVQW canonical)
 #
 # Output (to hepatocyte_subtypes/crossmodal/bulk/):
 #   {subtype}_de.csv          — limma-voom DE results per subtype
@@ -34,7 +34,7 @@ dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Dream results for correlation
 DREAM_PATH <- file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 
 # ---------------------------------------------------------------------------
 # 1. Load subtype metadata

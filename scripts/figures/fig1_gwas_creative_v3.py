@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fig 1 GWAS Portfolio — v3 (beauty pass: no absence drawn)
-KEY MESSAGE: 28 GWAS across 4 ancestries x 8 liver traits — a fully-colored
+KEY MESSAGE: 23 GWAS across 4 ancestries x 8 liver traits — a fully-colored
              coverage portrait where richness of color = cross-ancestry breadth.
 
 Outputs to figures/misc/:
@@ -39,12 +39,10 @@ GWAS_DATA = [
     ("EUR", "NAFLD",   778_614), ("EUR", "NAFLD",   370_000),
     ("EUR", "NAFLD",   111_000), ("EUR", "NAFLD",   400_000),
     ("EUR", "NAFLD",   438_857), ("EUR", "NASH",    435_000),
-    ("EUR", "HCC",     435_000), ("EUR", "ALT",     343_850),
+    ("EUR", "ALT",     343_850),
     ("EUR", "AST",     343_850), ("EUR", "GGT",     343_850),
-    ("EUR", "Cirrhosis", 431_122), ("EUR", "HCC",   310_000),
     ("EUR", "PDFF",     36_116), ("EUR", "PDFF",     32_858),
     ("EUR", "PDFF",     44_867),
-    ("EAS", "Cirrhosis", 376_326), ("EAS", "HCC",   376_326),
     ("EAS", "ALT",     160_000), ("EAS", "AST",     160_000),
     ("EAS", "GGT",     160_000),
     ("AFR", "ALT",       6_636), ("AFR", "AST",       6_636),
@@ -55,7 +53,7 @@ GWAS_DATA = [
 
 ANCESTRIES     = ["EUR", "EAS", "AFR", "SAS"]
 ANCESTRY_LABEL = {"EUR": "European", "EAS": "East Asian", "AFR": "African", "SAS": "South Asian"}
-ANCESTRY_N     = {"EUR": 17, "EAS": 5, "AFR": 3, "SAS": 3}
+ANCESTRY_N     = {"EUR": 14, "EAS": 3, "AFR": 3, "SAS": 3}
 ANCESTRY_COLOR = {"EUR": "#0072B2", "EAS": "#E69F00", "AFR": "#009E73", "SAS": "#CC79A7"}
 ANC_ALPHA = 0.80   # softer than the old crisp 0.92 (matches the alluvial's gentler feel)
 
@@ -141,6 +139,8 @@ def build_donut(path):
         t_lo, t_hi = bounds[trait]
         covs = _covs(cd, trait)
         m = len(covs)
+        if m == 0:   # trait with no surviving GWAS after the 2026-06-06 cirrhosis/HCC drop
+            continue
         seg = (t_hi - t_lo) / m
         for k, anc in enumerate(covs):
             a1 = t_lo + k * seg
@@ -169,7 +169,7 @@ def build_donut(path):
     # center hub (hero number only)
     ax.add_patch(mpatches.Circle((0, 0), R_CENTER, facecolor="white",
                                  edgecolor="#E0E0E0", linewidth=0.8, zorder=4))
-    ax.text(0, 0.07, "28", ha="center", va="center", fontsize=21,
+    ax.text(0, 0.07, "23", ha="center", va="center", fontsize=21,
             color="#2D3436", fontweight="bold", zorder=6)
     ax.text(0, -0.15, "GWAS", ha="center", va="center", fontsize=9,
             color="#636E72", zorder=6, fontweight="bold")

@@ -42,9 +42,11 @@ p1 <- ggplot(dl, aes(x, y)) +
   theme(plot.subtitle = element_text(size = 6, colour = "grey40"),
         legend.position = "right", legend.key.width = unit(0.22,"cm"),
         strip.text = element_text(size = 6.5))
-ggsave(file.path(OUT, "panelC_selfreq_concordance.pdf"), p1,
-       width = 8.0, height = 3.2, useDingbats = FALSE)
-cat("Wrote panelC_selfreq_concordance.pdf\n")
+# panelC_selfreq_concordance.pdf retired per user request 2026-06-05 — no longer generated.
+# (p1 retained above for provenance; intentionally not written.)
+# ggsave(file.path(OUT, "panelC_selfreq_concordance.pdf"), p1,
+#        width = 8.0, height = 3.2, useDingbats = FALSE)
+# cat("Wrote panelC_selfreq_concordance.pdf\n")
 
 # ---- Panel C2: per-method stably-selected gene counts ------------------------
 ss <- fread(file.path(B, "stability_summary.csv"))

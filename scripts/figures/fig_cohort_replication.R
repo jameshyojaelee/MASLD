@@ -46,7 +46,7 @@ cat("  Cohorts:", paste(sort(unique(all_de$dataset)), collapse = ", "), "\n")
 # 2. Load dream mega-analysis results
 # =============================================================================
 dream <- fread(file.path(project_root,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 cat("Dream genes:", nrow(dream), "| DEGs (padj<0.1):", sum(dream$padj < 0.1, na.rm = TRUE), "\n")
 
 # =============================================================================

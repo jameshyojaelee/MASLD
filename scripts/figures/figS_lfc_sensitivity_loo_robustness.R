@@ -69,7 +69,7 @@ fold_order_ds <- n_per[order(pct_held), dataset]
 # -----------------------------------------------------------------------------
 # Load full mega + LOO refits
 # -----------------------------------------------------------------------------
-full <- fread(file.path(INT_DIR, "dream_results.csv"))
+full <- fread(file.path(INT_DIR, "canonical_deg_results.csv"))
 setnames(full, "adj.P.Val", "padj", skip_absent = TRUE)
 
 loo_list <- lapply(fold_order_ds, function(ds) {

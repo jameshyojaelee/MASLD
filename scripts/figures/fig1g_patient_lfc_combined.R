@@ -51,7 +51,7 @@ cat(sprintf("  %d genes x %d patients\n", nrow(mat), n_patients))
 # at runtime, not hardcoded). The LFC axis below sweeps |log2FC| separately, so
 # we pre-filter on significance only.
 PADJ_CUTOFF <- 0.05
-dream <- fread(file.path(INT_DIR, "dream_results.csv"))
+dream <- fread(file.path(INT_DIR, "canonical_deg_results.csv"))
 setnames(dream, "adj.P.Val", "padj", skip_absent = TRUE)
 sig_idx <- rownames(mat) %in% dream[padj < PADJ_CUTOFF, gene]
 cat(sprintf("  Integrated DEGs (padj<%.2f): %d\n", PADJ_CUTOFF, sum(sig_idx)))

@@ -15,7 +15,7 @@
 #     tx_ovlp =  (r_cohort − r_dream) / 2   (independent of d)
 #     tx_drm  =  (r_cohort + r_dream) / 2   (independent of d)
 #
-# Output: figures/supplementary/figS_integration_value/panels/per_cohort_dream_venn.pdf
+# Output: figures/supplementary/figS_methods_validation/integration_value/panels/per_cohort_dream_venn.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -30,7 +30,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-FIGS_INT_DIR <- file.path(FIG_SUPP, "figS_integration_value")
+FIGS_INT_DIR <- FIGS_INTVAL_DIR  # consolidated under figS_methods_validation/ (2026-06-04)
 PANEL_DIR    <- file.path(FIGS_INT_DIR, "panels")
 dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 

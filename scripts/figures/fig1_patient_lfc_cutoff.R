@@ -31,7 +31,7 @@ OUT <- file.path(FIG1_DIR, "panels", "fig1_patient_lfc_cutoff.pdf")
 # -----------------------------------------------------------------------------
 DREAM <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration",
-  "dream_results.csv")
+  "canonical_deg_results.csv")
 PER_STUDY_DIR <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/per_study")
 

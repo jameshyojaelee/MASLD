@@ -183,9 +183,9 @@ cat("  Atlas: ", nrow(atlas), " genes\n")
 
 atlas <- atlas %>%
   mutate(
-    is_deg = !is.na(dream_padj) & dream_padj < 0.1,  # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
-    is_deg_up = is_deg & !is.na(dream_logFC) & dream_logFC > 0,
-    is_deg_down = is_deg & !is.na(dream_logFC) & dream_logFC < 0,
+    is_deg = !is.na(bulk_padj) & bulk_padj < 0.1,  # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
+    is_deg_up = is_deg & !is.na(bulk_logFC) & bulk_logFC > 0,
+    is_deg_down = is_deg & !is.na(bulk_logFC) & bulk_logFC < 0,
     is_pc = human_symbol %in% pc_human,
     is_pp = human_symbol %in% pp_human,
     zonation_class = case_when(
@@ -427,7 +427,7 @@ for (g in canonical_pc) {
   ar <- atlas[atlas$human_symbol == g, ]
   if (nrow(ar) > 0) {
     ar <- ar[1, ]
-    deg_str <- if (ar$is_deg) sprintf("DEG (LFC=%.2f, p=%.2e)", ar$dream_logFC, ar$dream_padj) else "Not DEG"
+    deg_str <- if (ar$is_deg) sprintf("DEG (LFC=%.2f, p=%.2e)", ar$bulk_logFC, ar$bulk_padj) else "Not DEG"
     cat(sprintf("  %s: %s, zone=%s\n", g, deg_str, ar$zonation_class))
   } else {
     cat(sprintf("  %s: Not in atlas\n", g))
@@ -439,7 +439,7 @@ for (g in canonical_pp) {
   ar <- atlas[atlas$human_symbol == g, ]
   if (nrow(ar) > 0) {
     ar <- ar[1, ]
-    deg_str <- if (ar$is_deg) sprintf("DEG (LFC=%.2f, p=%.2e)", ar$dream_logFC, ar$dream_padj) else "Not DEG"
+    deg_str <- if (ar$is_deg) sprintf("DEG (LFC=%.2f, p=%.2e)", ar$bulk_logFC, ar$bulk_padj) else "Not DEG"
     cat(sprintf("  %s: %s, zone=%s\n", g, deg_str, ar$zonation_class))
   } else {
     cat(sprintf("  %s: Not in atlas\n", g))
@@ -465,9 +465,9 @@ cat("  Written: zonation_reference.csv (", nrow(zon_ref), " genes)\n")
 # DEG zonation classification
 deg_zon <- atlas %>%
   select(human_symbol, ensembl_id, zonation_class, is_pc, is_pp,
-         dream_logFC, dream_padj, dream_tstat, is_deg, is_deg_up, is_deg_down,
+         bulk_logFC, bulk_padj, bulk_tstat, is_deg, is_deg_up, is_deg_down,
          mouse_meta_logFC, is_conserved, attribution_class, sex_class) %>%
-  arrange(zonation_class, dream_padj)
+  arrange(zonation_class, bulk_padj)
 
 # Merge spatial if available
 if ("spatial_zonation_class" %in% names(atlas)) {

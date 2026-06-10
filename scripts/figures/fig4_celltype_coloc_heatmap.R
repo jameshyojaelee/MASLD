@@ -148,7 +148,7 @@ coloc[, ensembl_clean := sub("\\.\\d+$", "", ensembl)]
 
 cat("Loading dream results...\n")
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 dream[, ensembl_clean := sub("\\.\\d+$", "", gene)]
 
 # Map dream ENSEMBL to gene symbols via COLOC table

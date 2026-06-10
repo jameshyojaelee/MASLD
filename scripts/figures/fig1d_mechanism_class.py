@@ -297,7 +297,7 @@ ax_class.text(COL_LEFT, footer_y,
               style="italic")
 
 ax_class.text(COL_RIGHT, footer_y,
-              "n = 398 regulatory-effector genes\n(SuSiE PP4 > 0.5)",
+              "n = 368 regulatory-effector genes\n(SuSiE PP4 > 0.5)",
               ha="center", va="top", fontsize=6.5,
               color=REG_COLOR, linespacing=1.4)
 

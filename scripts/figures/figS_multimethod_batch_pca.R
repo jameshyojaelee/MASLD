@@ -14,6 +14,7 @@
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(patchwork)
   library(edgeR); library(limma); library(matrixStats); library(lme4)
+  library(msigdbr)
 })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
@@ -39,9 +40,17 @@ cat(sprintf("Pooled mega samples: %d  (cohorts: %s)\n",
             ncol(dge), paste(sort(unique(samp$dataset)), collapse = ", ")))
 
 logcpm <- edgeR::cpm(dge, log = TRUE, prior.count = 1)
-rv <- matrixStats::rowVars(logcpm)
+# HVG selection on within-cohort centered matrix so cohort mean-shifts don't
+# inflate variance and bias gene selection toward cohort-discriminating genes.
+logcpm_wc <- logcpm
+for (d in unique(samp$dataset)) {
+  idx <- which(samp$dataset == d)
+  logcpm_wc[, idx] <- logcpm[, idx] - rowMeans(logcpm[, idx, drop = FALSE])
+}
+rv <- matrixStats::rowVars(logcpm_wc)
 top <- order(rv, decreasing = TRUE)[seq_len(min(2000, length(rv)))]
 X   <- logcpm[top, ]                                  # 2000 x n, shared across corrections
+cat(sprintf("HVG selection: top 2000 by within-cohort variance (was raw variance)\n"))
 
 grp <- factor(samp$group_binary, levels = c("Control", "Disease"))
 ds  <- factor(samp$dataset)
@@ -144,6 +153,108 @@ row_meta <- ggplot(percoh, aes(PC1, PC2, colour = disease)) +
   labs(x = "PC1", y = "PC2",
        title = "metafor: RAW within-cohort PCA (no cross-cohort batch to remove) - it never pools the samples, so there is no joint corrected matrix") +
   base_pca()
+
+# =============================================================================
+# Loadings analysis: what genes drive PC1/PC2 in the corrected space?
+# Use fixed-effect corrected matrix (rand is r=0.9999 identical, no need to redo)
+# =============================================================================
+pr_load <- prcomp(t(X_fixed), center = TRUE, scale. = FALSE)
+pve_load <- 100 * pr_load$sdev^2 / sum(pr_load$sdev^2)
+loads <- as.data.table(pr_load$rotation[, 1:4], keep.rownames = "gene")
+cat(sprintf("PC1=%.1f%%  PC2=%.1f%%  PC3=%.1f%%  PC4=%.1f%%\n",
+            pve_load[1], pve_load[2], pve_load[3], pve_load[4]))
+
+# map versioned Ensembl IDs -> gene symbols for enrichment + barplot labels
+meta <- fread(file.path(BASE, "data/gencode_v49_gene_metadata.tsv.gz"),
+              select = c("gene_id", "gene_name"))
+meta[, ensembl_base := sub("\\..*", "", gene_id)]
+loads[, ensembl_base := sub("\\..*", "", gene)]
+loads <- merge(loads, meta[, .(ensembl_base, gene_name)], by = "ensembl_base", all.x = TRUE)
+loads[is.na(gene_name), gene_name := gene]   # fallback to Ensembl if no match
+cat(sprintf("Symbol mapping: %d / %d genes matched\n",
+            sum(!is.na(loads$gene_name) & loads$gene_name != loads$gene), nrow(loads)))
+
+# top 30 genes by |loading| for PC1 and PC2
+top_pc1 <- loads[order(-abs(PC1))][1:30, .(gene = gene_name, loading = PC1, pc = "PC1 (batch-corrected)")]
+top_pc2 <- loads[order(-abs(PC2))][1:30, .(gene = gene_name, loading = PC2, pc = "PC2 (batch-corrected)")]
+top_loads <- rbind(top_pc1, top_pc2)
+top_loads[, gene_fac := factor(gene, levels = rev(unique(gene[order(pc, loading)])))]
+
+pLoad <- ggplot(top_loads, aes(loading, gene_fac, fill = loading > 0)) +
+  geom_col(width = 0.72, linewidth = 0) +
+  geom_vline(xintercept = 0, linewidth = 0.3, colour = "grey50") +
+  facet_wrap(~ pc, scales = "free") +
+  scale_fill_manual(values = c("TRUE" = masld_colors$nash, "FALSE" = CTRL), guide = "none") +
+  labs(x = "PC loading", y = NULL,
+       title = sprintf("Top 30 genes driving PC1 (%.1f%% var) and PC2 (%.1f%% var) after batch correction",
+                       pve_load[1], pve_load[2]),
+       subtitle = "Positive loading = pushes samples rightward/upward on that PC; negative = opposite") +
+  theme_masld(base_size = 7) +
+  theme(axis.text.y = element_text(size = 5.5), strip.text = element_text(size = 7, face = "bold"))
+
+# --- pathway enrichment: hypergeometric against MSigDB Hallmark --------------
+hall <- as.data.table(msigdbr(species = "Homo sapiens", collection = "H"))[, .(gs_name, gene_symbol)]
+universe_sym <- loads$gene_name
+n_univ       <- length(universe_sym)
+
+enrich_res <- rbindlist(lapply(c("PC1", "PC2"), function(pc_col) {
+  lo <- loads[[pc_col]]; names(lo) <- loads$gene_name
+  dirs <- list(positive = names(sort(lo, decreasing = TRUE))[1:200],
+               negative = names(sort(lo, decreasing = FALSE))[1:200])
+  rbindlist(lapply(names(dirs), function(dir_name) {
+    qgenes <- dirs[[dir_name]]
+    rbindlist(lapply(split(hall, hall$gs_name), function(gs) {
+      q <- sum(qgenes %in% gs$gene_symbol)
+      if (q == 0) return(NULL)
+      K <- sum(universe_sym %in% gs$gene_symbol)
+      data.table(pc = pc_col, direction = dir_name,
+                 pathway = sub("HALLMARK_", "", unique(gs$gs_name)),
+                 n_overlap = q, n_pathway = K,
+                 p_hyper = phyper(q - 1, K, n_univ - K, length(qgenes), lower.tail = FALSE))
+    }))
+  }))
+}))
+if (nrow(enrich_res) == 0) {
+  cat("No Hallmark overlaps found — check gene symbol mapping\n")
+  sig_enrich <- data.table()
+} else {
+  enrich_res[, padj := p.adjust(p_hyper, method = "BH"), by = .(pc, direction)]
+  sig_enrich <- enrich_res[padj < 0.25][order(pc, direction, padj)]
+}
+cat("\nSignificant Hallmark pathways (FDR<0.25) driving top PC loadings:\n")
+print(sig_enrich[, .(pc, direction, pathway, n_overlap, n_pathway, padj)])
+
+# dotplot of top enrichments (up to 8 per PC × direction)
+plot_enrich <- enrich_res[padj < 0.25][order(padj)][
+  , head(.SD, 8), by = .(pc, direction)]
+if (nrow(plot_enrich) > 0) {
+  plot_enrich[, label := sprintf("%s (%s)", pathway, direction)]
+  plot_enrich[, neg_log10p := -log10(padj + 1e-10)]
+  pEnrich <- ggplot(plot_enrich, aes(neg_log10p, reorder(label, neg_log10p),
+                                     colour = direction, size = n_overlap)) +
+    geom_point() +
+    facet_wrap(~ pc, scales = "free_y", ncol = 1) +
+    scale_colour_manual(values = c(positive = masld_colors$nash, negative = CTRL)) +
+    scale_size_continuous(range = c(1.5, 4), name = "n genes") +
+    labs(x = "-log10(FDR)", y = NULL, colour = "Loading direction",
+         title = "Hallmark pathways enriched in top-200 PC loadings (FDR < 0.25)") +
+    theme_masld(base_size = 7) +
+    theme(axis.text.y = element_text(size = 5.5), strip.text = element_text(size = 7, face = "bold"))
+} else {
+  pEnrich <- ggplot() + annotate("text", 0, 0, label = "No Hallmark pathways at FDR<0.25") +
+    theme_void()
+  cat("No significant Hallmark enrichments — top PC loadings are not pathway-structured\n")
+}
+
+fig_loads <- (pLoad / pEnrich) + plot_layout(heights = c(1.2, 1)) +
+  plot_annotation(title = "PC loadings: what genes drive the top PCs after batch correction",
+    theme = theme(plot.title = element_text(size = 9, face = "bold")))
+ggsave(file.path(OUT, "panelJ_loadings.pdf"), fig_loads,
+       width = 9.0, height = 10.0, device = cairo_pdf)
+fwrite(loads[, .(gene, gene_name, PC1, PC2, PC3, PC4)],
+       file.path(OUT, "panelJ_loadings_data.csv"))
+fwrite(sig_enrich, file.path(OUT, "panelJ_loadings_enrichment.csv"))
+cat("Wrote panelJ_loadings.pdf\n")
 
 fig <- (row_cohort / row_dis / row_meta) +
   plot_layout(heights = c(1, 1, 1)) +

@@ -10,13 +10,13 @@
 #              (EUR-only / EAS-only) flank the corner.
 #
 # Per gene, computes:
-#   x = max PP.H4 across 17 EUR GWAS
-#   y = max PP.H4 across 5 EAS GWAS
+#   x = max PP.H4 across 14 EUR GWAS
+#   y = max PP.H4 across 3 EAS GWAS
 # Each axis is gene-specific (per-gene COLOC output) — no locus-sharing.
 #
 # Output (PDF only, flat in FIG3_DIR):
-#   fig3g_cross_ancestry_pp4.pdf
-#   fig3g_cross_ancestry_pp4_table.csv  (sidecar: cross-ancestry replicators)
+#   cross_ancestry_pp4.pdf
+#   cross_ancestry_pp4_table.csv  (sidecar: cross-ancestry replicators)
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -35,19 +35,18 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 # ---------------------------------------------------------------------------
-# GWAS portfolio — 17 EUR + 5 EAS
+# GWAS portfolio — 14 EUR + 3 EAS
 # ---------------------------------------------------------------------------
-EUR_17 <- c(
+EUR_14 <- c(
   "2019_31311600_NAFLD_EUR", "2020_32298765_NAFLD_EUR",
   "2021_34128465_PDFF_EUR",  "2021_34841290_NAFLD_EUR",
   "2021_34957434_PDFF_EUR",  "2022_36402844_PDFF_EUR",
   "2023_36280732_NAFLD_deCode_EUR", "2023_36280732_NAFLD_Intermountain_EUR",
-  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_HCC", "FinnGen_NAFLD", "FinnGen_NASH",
-  "Ghouse_Cirrhosis", "Ghouse_HCC", "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
+  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_NAFLD", "FinnGen_NASH",
+  "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
 )
-BBJ_5 <- c("2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS",
-           "BBJ_ALT", "BBJ_AST", "BBJ_GGT")
-TARGET_22 <- c(EUR_17, BBJ_5)
+BBJ_3 <- c("BBJ_ALT", "BBJ_AST", "BBJ_GGT")
+TARGET_17 <- c(EUR_14, BBJ_3)
 
 # Colorblind-safe categorical colors (Set2-derived)
 COL_EUR  <- "#3B7DA5"   # cool blue
@@ -60,8 +59,8 @@ COL_BOTH <- "#7B3294"   # purple
 sc <- fread(file.path(BASE,
               "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"),
             select = c("gene", "gwas_name", "PP.H4.abf", "PP.H4.susie"))
-sc <- sc[gwas_name %in% TARGET_22]
-sc[, ancestry := fifelse(gwas_name %in% BBJ_5, "EAS", "EUR")]
+sc <- sc[gwas_name %in% TARGET_17]
+sc[, ancestry := fifelse(gwas_name %in% BBJ_3, "EAS", "EUR")]
 sc[, pp4_any  := pmax(PP.H4.abf, PP.H4.susie, na.rm = TRUE)]
 
 gl <- fread(file.path(BASE,
@@ -175,8 +174,8 @@ p <- ggplot() +
                      expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, 1.02), breaks = seq(0, 1, 0.25),
                      expand = c(0, 0)) +
-  labs(x = "max PP.H4  (17 EUR GWAS)",
-       y = "max PP.H4  (5 EAS GWAS)",
+  labs(x = "max PP.H4  (14 EUR GWAS)",
+       y = "max PP.H4  (3 EAS GWAS)",
        title = "Cross-ancestry colocalization concordance",
        subtitle = sprintf("%d genes replicate in both EUR and EAS at PP.H4 >= 0.5",
                           sum(gene_xa$tier == "both"))) +
@@ -197,7 +196,7 @@ p <- ggplot() +
          size  = guide_legend(order = 2,
                               override.aes = list(color = COL_BOTH)))
 
-out_pdf <- file.path(FIG3_DIR, "fig3g_cross_ancestry_pp4.pdf")
+out_pdf <- file.path(FIG3_DIR, "cross_ancestry_pp4.pdf")
 save_fig(p, out_pdf, width = fig_full_width * 0.6, height = 3.6)
 cat("Saved:", out_pdf, "\n")
 
@@ -208,5 +207,5 @@ out_tbl <- gene_xa[tier == "both",
                      n_phen, score)
                   ][order(-score)]
 fwrite(out_tbl,
-       file.path(FIG3_DIR, "fig3g_cross_ancestry_pp4_table.csv"))
+       file.path(FIG3_DIR, "cross_ancestry_pp4_table.csv"))
 cat("Wrote sidecar table with", nrow(out_tbl), "cross-ancestry replicators\n")

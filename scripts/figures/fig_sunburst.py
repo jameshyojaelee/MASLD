@@ -26,6 +26,7 @@ plt.rcParams.update({
 TEXT_DARK  = "#2B2B2B" # warm near-black (Liang-style ink, not pure jet)
 LABEL_GRAY = "#7A7A7A"
 BG_COLOR   = "white"
+LABEL_SIZE = 9  # unified font size for all text except the center "MASLD Atlas"
 
 # Liang et al. 2025 cell-line palette extended to 7 modalities. Each hue
 # sits in its own family with ~50% chroma — distinct at panel scale but
@@ -43,40 +44,62 @@ BINARY_COLORS = {
 }
 
 # (key, title, l1, l2, (n_human, n_mouse), weight, datasets)
-# Verified from unified metadata & processed data (2026-03-25 audit)
-# scRNA: 283 human donors + 114 mouse donors across 7 source datasets
-# GWAS: 13 GWAS (Ghodsian, Chen, UKBB ALT/AST/GGT, PDFF, FinnGen NAFLD/NASH/HCC, BBJ ALT/AST/GGT)
-#       + 3 eQTL (GTEx v8, Broadaway, sc-eQTL); ~1.5M+ unique subjects across ancestries
+# Verified from unified metadata & processed data (updated 2026-06-03)
+# scRNA: human donors + mouse donors across 7 source datasets
+# GWAS: 23 GWAS (14 EUR + 3 EAS + 3 AFR + 3 SAS Pan-UKBB) + 3 eQTL (GTEx v8, Broadaway, sc-eQTL)
+#   Registry: gwas_registry.tsv; sex-stratified Pan-UKBB F/M arms + cirrhosis/HCC GWAS excluded (2026 portfolio refactor)
+# bulk: 9 human QC-pass (1,259) + 8 mouse QC-pass (463) = 1,722 total; 17 datasets
+# pharma: LINCS L1000, network proximity, DGIdb/OT, ClinicalTrials MASH pipeline, multi-layer (5 sources)
+# spatial: Govaere 2026 (GeoMx+CosMx, integrated 2026-05-21), GSE192741 (Visium), Vu_et_al_2025 (3 active)
 SECTORS = [
-    ("bulk",    "RNA-seq",                 "18\ndatasets",    "1,741\nsamples",  (1277, 464),  18.0, 18),
-    ("scrna",   "scRNA-seq",               "7\ndatasets",    "2.29M+\ncells",   (283, 114),    8.0, 7),
-    ("spatial", "Spatial Omics",           "3\ndatasets",    "60\nsamples",     (60, 0),        4.5, 3),
-    ("atac",    "ATAC-seq",                "2\ndatasets",    "30\nsamples",     (18, 12),       4.5, 2),
-    ("proteo",  "Proteomics",              "3\ndatasets",    "307\nsamples",    (307, 0),       4.5, 3),
-    ("pharma",  "Pharmaco-genomics",       "4\ndatasets",   "1,107\ncmpds",    (1, 0),         4.0, 4),
-    ("gwas",    "Genomics",                "13 GWAS\n3 eQTL","1.5M+\nsubj.",  (1, 0),        16.0, 16),
+    ("bulk",    "RNA-seq",                    "17\nRNA-seq",      "1,722\nsamples",  (1259, 463),  18.0, 17),
+    ("scrna",   "scRNA-seq",                  "7\nscRNA-seq",     "2.29M+\ncells",   (283, 114),    8.0, 7),
+    ("spatial", "Spatial Omics",              "3\nSpatial",       "27\nsamples",     (27, 0),        4.5, 3),
+    ("atac",    "ATAC-seq",                   "2\nATAC-seq",      "30\nsamples",     (18, 12),       4.5, 2),
+    ("proteo",  "Proteomics",                 "3\nProteomics",    "307\nsamples",    (307, 0),       4.5, 3),
+    ("pharma",  "Pharmacological\nprofiling", "5\nPharma",        "1,107\ncmpds",    (1, 0),         4.5, 5),
+    ("gwas",    "Genomics",                   "23 GWAS\n3 eQTL",  "1.5M+\nsubj.",   (1, 0),        16.0, 26),
 ]
 
 # Per-dataset sample counts for proportional outer-bar heights
-# Verified from unified metadata & processed data (2026-03-25 audit)
 _DATASET_SIZES_RAW = {
-    "bulk": [  # 9 Human cohorts + 9 Mouse datasets (sample N from unified_metadata.csv;
-               # PRJNA512027 = 185 samples dropped from cohort presentation for
-               # L0/S0 library-prep batch confound with diagnosis)
-        367, 216, 164, 143, 98, 94, 78, 67, 57,           # Human (GSE213621→GSE126848)
-        213, 151, 29, 22, 12, 11, 10, 10, 6,               # Mouse (GSE162876→GSE205974)
+    "bulk": [  # 9 Human (QC-pass from sample_qc_report.csv) + 8 Mouse; STAR -s2 canonical 2026-05-28
+        358, 215, 160, 142, 97, 93, 76, 64, 55,       # Human QC-pass: Chen(GSE213621), Suppli(GSE135251), Govaere(GSE193066), Bril(GSE162694), Kawamura(GSE167523), Kozumi(GSE174478), Hoshida(GSE130970), Verschuren(GSE240729), Hoang(GSE126848)
+        213, 151, 29, 22, 12, 11, 10, 6,               # Mouse (unified_mouse_metadata.csv): CDAHFD/FPC(GSE162876), LIDPAD(GSE159911), HFD(GSE224069), HFD-long(GSE274914), InHouse_MCD, MCD-SE(GSE156918), GAN(GSE225616), MCD-PE(GSE205974)
     ],
-    "scrna": [  # 7 source datasets (donors/samples from sample_manifest.csv)
-        158, 117, 67, 21, 20, 10, 4,  # Liver_Atlas, GSE244832, GSE202379, GSE185477, GSE136103, GSE189600, GSE174748
+    "scrna": [  # 7 source datasets (unique donors; SRR technical runs excluded)
+        38, 117, 67, 21, 20, 2, 4,  # Liver_Atlas(38 donors), GSE244832, GSE202379, GSE185477, GSE136103, GSE189600(2 human donors), GSE174748
     ],
-    "spatial": [35, 15, 10],            # HRA007511, GSE192741, Vu_et_al_2025 (sections/samples)
+    "spatial": [12, 10, 5],  # Govaere2026(GeoMx 8pt+CosMx 4pt), Vu_et_al_2025(10 arrays), GSE192741(5 Visium sections)
     "atac": [18, 12],                   # Human_Multiome (18 donors), Mouse_Bulk (12 samples)
-    "proteo": [177, 72, 58],            # GSE276114 SomaScan, PXD052937 DIA-MS plasma, PXD051911 DIA-MS liver
-    "pharma": [1107, 625, 58, 20],      # LINCS compounds, network drugs, multi-layer, controls
-    "gwas": [  # 13 GWAS + 3 eQTL (donors/subjects, in thousands)
-        778, 691, 377, 377, 377, 344, 350, 340,   # Ghodsian, Chen, 3×FinnGen, UKBB ALT/AST/GGT
-        261, 261, 164, 85, 36,                     # BBJ ALT/AST/GGT, other, PDFF
-        1.183, 0.312, 0.208,                       # Broadaway, sc-eQTL, GTEx (thousands)
+    "proteo": [177, 72, 58],            # GSE276114 SomaScan, PXD052937 DIA-MS, PXD051911 liver
+    "pharma": [1107, 1173, 58, 23, 20],  # LINCS(1107 compounds), network proximity(1173 screened), DGIdb/OT, ClinicalTrials MASH, multi-layer
+    "gwas": [  # 23 GWAS + 3 eQTL (subjects in thousands); from gwas_registry.tsv (2026 portfolio refactor)
+        # EUR (14): N_tot in thousands
+        778.6,   # 2021_34841290 NAFLD EUR (Ghodsian meta)
+        438.9,   # FinnGen NAFLD
+        435.0,   # FinnGen NASH
+        343.9,   # UKBB_ALT
+        343.9,   # UKBB_AST
+        343.9,   # UKBB_GGT
+        397.0,   # 2023 UKBB NAFLD (Sveinbjornsson cohort)
+        359.2,   # deCODE NAFLD
+        44.9,    # 2022 PDFF EUR
+        36.1,    # 2021 PDFF EUR (34128465)
+        32.9,    # 2021 PDFF EUR (34957434)
+        32.7,    # Intermountain NAFLD EUR
+        9.5,     # 2020 NAFLD EUR
+        8.4,     # 2019 NAFLD EUR
+        # EAS (3)
+        160.0,   # BBJ_ALT
+        160.0,   # BBJ_AST
+        160.0,   # BBJ_GGT
+        # AFR Pan-UKBB (3)
+        6.6, 6.6, 6.6,
+        # SAS/CSA Pan-UKBB (3)
+        8.9, 8.9, 8.9,
+        # eQTL (3, in thousands of donors)
+        1.183, 0.312, 0.208,
     ],
 }
 
@@ -142,30 +165,12 @@ def main():
     ax.set_aspect("equal")
     ax.axis("off")
 
-    # Right axes: Half-sunburst legend (shifted down to avoid modality legend overlap)
-    ax_leg = fig.add_axes([0.72, 0.27, 0.25, 0.40])
+    # Right axes: Half-sunburst legend (vertically centred; no modality legend above)
+    ax_leg = fig.add_axes([0.72, 0.30, 0.25, 0.50])
     ax_leg.set_xlim(-0.3, 1.3)
     ax_leg.set_ylim(-0.8, 1.5)
     ax_leg.set_aspect("equal")
     ax_leg.axis("off")
-
-    # Top-right axes: Modality legend (taller to fit 7 modalities)
-    ax_mod = fig.add_axes([0.75, 0.68, 0.2, 0.28])
-    ax_mod.set_xlim(-0.05, 1.2)
-    ax_mod.set_ylim(-0.15, 1.25)
-    ax_mod.axis("off")
-
-    # =========================================================================
-    # MODALITY LEGEND
-    # =========================================================================
-    mod_y = 1.0
-    ax_mod.text(0, mod_y + 0.13, "Data Modality", fontsize=11, fontweight="bold", color=TEXT_DARK)
-    for key, color in MODALITY_COLORS.items():
-        title = next(s[1] for s in SECTORS if s[0] == key).replace("\n", " ")
-        patch = plt.Rectangle((0, mod_y - 0.04), 0.09, 0.09, facecolor=color, edgecolor=BG_COLOR)
-        ax_mod.add_patch(patch)
-        ax_mod.text(0.14, mod_y, title, fontsize=9.5, color=TEXT_DARK, va="center")
-        mod_y -= 0.155
 
     # =========================================================================
     # MAIN SUNBURST 
@@ -240,7 +245,7 @@ def main():
                 y = r_mid * np.sin(np.radians(mid_angle))
 
                 t_color = get_text_color(color)
-                base_size = 9.0 if layer_idx == 0 else 8.0
+                base_size = LABEL_SIZE
 
                 if span < 18:
                     f_size = base_size * max(0.55, span / 22.0)
@@ -331,7 +336,7 @@ def main():
             if rot > 90 and rot < 270:
                 rot -= 180
             ax.text(lab_x, lab_y, max_label, rotation=rot,
-                    fontsize=8.0, color="#444444",
+                    fontsize=LABEL_SIZE, color="#444444",
                     ha="center", va="center", zorder=6)
 
         current_angle = end_angle - gap_deg
@@ -359,10 +364,10 @@ def main():
             
         # Label
         r_mid = (r_in + r_out) / 2.0
-        ax_leg.text(-0.06, r_mid, labels[idx], ha="right", va="center", 
-                    fontsize=11, color=TEXT_DARK, fontweight="medium")
+        ax_leg.text(-0.06, r_mid, labels[idx], ha="right", va="center",
+                    fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
         ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
-        
+
     # Draw Species Ring Legend
     r_in = r_starts[2]
     r_out = r_ends[2]
@@ -372,15 +377,15 @@ def main():
         w = Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
                   facecolor=c, edgecolor=BG_COLOR, lw=2.0)
         ax_leg.add_patch(w)
-        
+
     r_mid = (r_in + r_out) / 2.0
-    ax_leg.text(-0.06, r_mid, "Species", ha="right", va="center", 
-                fontsize=11, color=TEXT_DARK, fontweight="medium")
+    ax_leg.text(-0.06, r_mid, "Species", ha="right", va="center",
+                fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
     ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
-        
+
     # Outer bars legend
     ax_leg.text(-0.06, r_ends[-1] + 0.2, "n of datasets", ha="right", va="center",
-                fontsize=11, color=TEXT_DARK, fontweight="medium")
+                fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
     ax_leg.plot([-0.04, -0.01], [r_ends[-1] + 0.2, r_ends[-1] + 0.2], color="black", lw=1.0)
     
     # Dummy outer bars (varying heights to illustrate proportional sizing)
@@ -405,15 +410,15 @@ def main():
     # "max" label at top of legend axis
     ax_leg.text((leg_r1 + 0.04) * np.cos(leg_axis_rad) + cx,
                 (leg_r1 + 0.04) * np.sin(leg_axis_rad) + cy,
-                "max", fontsize=5, color="#888888", ha="center", va="center")
+                "max", fontsize=LABEL_SIZE, color="#888888", ha="center", va="center")
 
     # Species Context Legend
     sp_y = -0.5
-    ax_leg.text(0, sp_y + 0.15, "Species", fontsize=11, fontweight="bold", color=TEXT_DARK)
+    ax_leg.text(0, sp_y + 0.15, "Species", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
     for key, color in BINARY_COLORS.items():
         patch = plt.Rectangle((0, sp_y - 0.05), 0.1, 0.1, facecolor=color, edgecolor=BG_COLOR)
         ax_leg.add_patch(patch)
-        ax_leg.text(0.15, sp_y, key, fontsize=10, color=TEXT_DARK, va="center")
+        ax_leg.text(0.15, sp_y, key, fontsize=LABEL_SIZE, color=TEXT_DARK, va="center")
         sp_y -= 0.18
 
     # ── Save ─────────────────────────────────────────────────────────────────

@@ -47,7 +47,7 @@ message(sprintf("  Cell type pairs: %d",
                 length(unique(paste(liana$source, liana$target, sep = "->")))))
 
 message("[2] Loading bulk dream DE (symbol-indexed)...")
-bulk <- fread(file.path(INT_RES, "dream_results_ashr.csv"),
+bulk <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
               select = c("gene","symbol","logFC","t","padj"))
 bulk <- bulk[!is.na(symbol) & symbol != ""]
 bulk <- bulk[order(-abs(t))][!duplicated(symbol)]  # keep highest |t| per symbol

@@ -18,7 +18,7 @@
 # Inputs:
 #   - sceQTL_output/significant_sc_eQTLs_with_annotations.txt.gz
 #   - sceQTL_output/ieQTLs/interaction.{celltype}_disease_group3.txt.gz
-#   - dream_results.csv, deconv_attribution_scores.csv, mr_convergent_drug_targets.csv
+#   - canonical_deg_results.csv, deconv_attribution_scores.csv, mr_convergent_drug_targets.csv
 #
 # Outputs:
 #   - results/causal_inference/sceqtl/ieqtl_disease_genes.csv
@@ -46,7 +46,7 @@ ANNOT_FILE <- file.path(EQTL_DIR,
                  "significant_sc_eQTLs_with_annotations.txt.gz")
 DREAM_FILE <- file.path(BASE_DIR,
                  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results",
-                 "integration/dream_results.csv")
+                 "integration/canonical_deg_results.csv")
 GENE_CACHE <- file.path(BASE_DIR,
                  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results",
                  "gene_annotation/human_ensg_to_symbol.tsv")
@@ -282,6 +282,10 @@ cat(sprintf("  Cell types with results: %s\n",
 cat("\n--- Step 4: Loading dream DEGs ---\n")
 
 dream <- fread(DREAM_FILE)
+# Canonical DEG table carries its own `symbol`; drop it so the ann_map merge
+# (which remaps ENSEMBL -> symbol identically to the prior dream input) does
+# not collide.
+if ("symbol" %in% names(dream)) dream[, symbol := NULL]
 dream[, ensembl_id := sub("\\.\\d+$", "", gene)]
 dream <- merge(dream, ann_map, by = "ensembl_id", all.x = TRUE)
 cat("  Dream results:", nrow(dream), "genes\n")

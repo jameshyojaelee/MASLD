@@ -111,7 +111,7 @@ class_dt[, distance_to_tss_kb := round(distance_to_tss / 1e3, 2)]
 # predictCoding for variants with alleles (Definition B has them)
 defB <- vlong[definition == "B_finemapped"]
 if (nrow(defB)) {
-  cs <- fread(file.path(BASE, "GWAS/finemapping/results/credible_sets_1kg.csv"),
+  cs <- fread(file.path(BASE, "GWAS/finemapping/results/credible_sets.csv"),
               select = c("chromosome","position","allele1","allele2"))
   cs[, variant_key := paste0(chromosome, ":", position)]
   cs <- unique(cs[, .(variant_key, allele1, allele2)])

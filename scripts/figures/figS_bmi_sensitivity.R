@@ -93,9 +93,9 @@ cat("  QC-passing samples:", length(pass_samples), "\n")
 
 # Load primary dream results for comparison
 cat("Loading primary dream results...\n")
-dream_file <- file.path(RDIR, "dream_results_ashr.csv")
+dream_file <- file.path(RDIR, "canonical_deg_results.csv")
 if (!file.exists(dream_file)) {
-  dream_file <- file.path(RDIR, "dream_results.csv")
+  dream_file <- file.path(RDIR, "canonical_deg_results.csv")
 }
 if (!file.exists(dream_file)) stop("dream_results not found — run 05 first")
 dream_primary <- fread(dream_file)

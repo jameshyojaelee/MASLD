@@ -210,7 +210,7 @@ cat("Total cell-type conserved gene entries:", nrow(ct_conserved_dt), "\n")
 # Find genes conserved in specific cell types but NOT in bulk
 # Load human bulk dream results for comparison
 bulk_path <- file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 if (file.exists(bulk_path)) {
   bulk <- fread(bulk_path)
   bulk[, gene_base := gsub("\\..*", "", gene)]

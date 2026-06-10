@@ -215,12 +215,12 @@ for (i in seq_len(nrow(drug_targets))) {
     # "Strong = FDA-approved" manual override which was circular.
 
     # C1 — DEG (primary Tier 1: padj<0.05 + |LFC|>0.5)
-    c1_deg <- !is.na(ar$dream_padj) && ar$dream_padj < 0.05 &&
-              !is.na(ar$dream_logFC) && abs(ar$dream_logFC) > 0.5
+    c1_deg <- !is.na(ar$bulk_padj) && ar$bulk_padj < 0.05 &&
+              !is.na(ar$bulk_logFC) && abs(ar$bulk_logFC) > 0.5
 
     # Exploratory annotation threshold preserved as separate column for
     # downstream consumers that rely on the lax cutoff (used in narratives).
-    is_deg <- !is.na(ar$dream_padj) && ar$dream_padj < 0.1
+    is_deg <- !is.na(ar$bulk_padj) && ar$bulk_padj < 0.1
 
     # C2 — COLOC (SuSiE-canonical, with ABF + per-GWAS PP4 fallbacks)
     c2_coloc <- any(c(
@@ -269,8 +269,8 @@ for (i in seq_len(nrow(drug_targets))) {
       drug = row$drug, target_gene = gene, stage = row$stage, moa = row$moa,
       in_atlas = TRUE,
       # L1
-      dream_logFC = ar$dream_logFC, dream_padj = ar$dream_padj,
-      dream_tstat = ar$dream_tstat, is_deg = is_deg,
+      dream_logFC = ar$bulk_logFC, dream_padj = ar$bulk_padj,
+      dream_tstat = ar$bulk_tstat, is_deg = is_deg,
       # L2
       mouse_meta_logFC = ar$mouse_meta_logFC, mouse_meta_padj = ar$mouse_meta_padj,
       n_diets_sig = ar$n_diets_sig,
@@ -289,8 +289,8 @@ for (i in seq_len(nrow(drug_targets))) {
       # L4 - ieQTL
       ieqtl_disease_interaction = ar$ieqtl_disease_interaction,
       # L5
-      sex_class = ar$sex_class, dream_logFC_M = ar$dream_logFC_M,
-      dream_logFC_F = ar$dream_logFC_F,
+      sex_class = ar$sex_class, dream_logFC_M = ar$bulk_logFC_M,
+      dream_logFC_F = ar$bulk_logFC_F,
       # L6
       n_leading_edge_pathways = ar$n_leading_edge_pathways,
       top_pathways = ar$top_pathways,

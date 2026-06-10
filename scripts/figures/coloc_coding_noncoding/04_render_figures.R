@@ -176,7 +176,7 @@ f6_fg <- fread(file.path(DATDIR, "panel_F6_lfc_pp4.csv"))
 # COLOC tests (gene-level rollup). DEGs that don't appear in defC get PP4=0
 # (i.e., land on the bottom of the plot).
 deg <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"),
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
   select = c("logFC","padj","symbol"))
 deg <- deg[!is.na(padj) & padj < 0.05 & abs(logFC) > 0.5 &
             symbol != "" & !is.na(symbol)]

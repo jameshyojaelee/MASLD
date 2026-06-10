@@ -30,7 +30,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 # ---- Output dir (new supplementary figure) ----
-FIGS_INT_DIR <- file.path(FIG_SUPP, "figS_integration_value")
+FIGS_INT_DIR <- FIGS_INTVAL_DIR  # consolidated under figS_methods_validation/ (2026-06-04)
 PANEL_DIR <- file.path(FIGS_INT_DIR, "panels")
 dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 

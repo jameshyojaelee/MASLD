@@ -109,6 +109,18 @@ locus_list <- locus_list[!is.null(study)]
 locus_list <- locus_list[order(study, locus, -converged)]
 locus_list <- locus_list[!duplicated(paste(study, locus))]
 
+# Restrict to the active GWAS portfolio in the registry (cirrhosis/HCC GWAS were
+# dropped 2026-06 to mirror the eQTL-COLOC portfolio cut). output/ still contains
+# stale per-GWAS dirs (cirrhosis/HCC + retired 2023_36653562_*/Anstee/Pazoki runs)
+# that the glob in Step 1 picks up; filter them out so the summary tables reflect
+# the canonical 23-study portfolio.
+REGISTRY <- fread(file.path(FM_DIR, "config/gwas_registry.tsv"))
+active_studies <- unique(REGISTRY$study_name)
+n_before <- length(unique(locus_list$study))
+locus_list <- locus_list[study %in% active_studies]
+cat("Restricted to registry portfolio:", n_before, "->",
+    length(unique(locus_list$study)), "studies\n")
+
 cat("Parsed", nrow(locus_list), "unique study-locus entries across",
     length(unique(locus_list$study)), "studies\n\n")
 

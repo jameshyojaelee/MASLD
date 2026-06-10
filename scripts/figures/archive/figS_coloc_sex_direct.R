@@ -479,7 +479,7 @@ composite <- (panel_A | panel_B) /
              panel_F +
   plot_annotation(
     title    = "Sex × MASLD GWAS / COLOC integration: a null intersection",
-    subtitle = "mashr sex classification × multi-ancestry COLOC (PolyFun EUR + SuSiE/ABF; 28 GWAS) | atlas 27,187 genes × 291 columns",
+    subtitle = "mashr sex classification × multi-ancestry COLOC (PolyFun EUR + SuSiE/ABF; 23 GWAS) | atlas 27,187 genes × 291 columns",
     tag_levels = "a",
     theme = theme(
       plot.title    = element_text(size = 9,   face = "bold"),

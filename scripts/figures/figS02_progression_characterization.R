@@ -11,7 +11,7 @@
 #   deg_counts_fibrosis_transitions.pdf  — incremental DEGs F0→F1, F1→F2, F2→F3, F3→F4
 #   deg_counts_nas_transitions.pdf       — incremental DEGs NAS0→1, 1→2, 2→3, …
 #
-# All DEG panels: padj < 0.05, |log2FC| > 0.5
+# All DEG panels: padj < 0.05, NO LFC filter (Tier-2 progression convention; LFC filter dropped 2026-06-09 harmonization)
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -58,7 +58,7 @@ make_bar <- function(dt, x_col, xlab, flip_angle = 0) {
                        expand = expansion(mult = c(0.12, 0.15))) +
     scale_fill_manual(values = c(Up = masld_colors$up, Down = masld_colors$down), name = NULL) +
     labs(x = xlab,
-         y = paste0("DEGs  (padj < ", PADJ, ",  |log₂FC| > ", LFC, ")")) +
+         y = paste0("DEGs  (padj < ", PADJ, ")")) +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"),
@@ -148,7 +148,7 @@ nas_dream <- load_nas_score_progression()
 nas_sizes <- load_nas_score_sample_sizes()
 
 if (!is.null(nas_dream) && nrow(nas_dream) > 0) {
-  nas_sig <- nas_dream[padj < PADJ & abs(logFC) > LFC]
+  nas_sig <- nas_dream[padj < PADJ]
   all_lvls <- sort(unique(nas_dream$nas_level))
   nas_sig[, stage_label := factor(paste0("NAS", nas_level),
                                   levels = paste0("NAS", all_lvls))]
@@ -182,7 +182,7 @@ fib_dream <- load_fibrosis_stage_dream()
 fib_sizes <- load_fibrosis_stage_sample_sizes()
 
 if (!is.null(fib_dream) && nrow(fib_dream) > 0) {
-  fib_sig  <- fib_dream[padj < PADJ & abs(logFC) > LFC]
+  fib_sig  <- fib_dream[padj < PADJ]
   all_fib  <- sort(unique(fib_dream$fib_stage))
   fib_sig[, stage_label := factor(paste0("F", fib_stage),
                                   levels = paste0("F", all_fib))]
@@ -215,7 +215,7 @@ cat("=== deg_counts_fibrosis_transitions ===\n")
 fib_consec <- load_fibrosis_consecutive()
 
 if (!is.null(fib_consec) && nrow(fib_consec) > 0) {
-  fib_inc <- fib_consec[padj < PADJ & abs(logFC) > LFC]
+  fib_inc <- fib_consec[padj < PADJ]
   fib_inc[, trans_label := gsub("F(\\d+)_vs_F(\\d+)", "F\\2→F\\1", contrast)]
   fib_inc[, order_idx   := as.integer(gsub(".*F(\\d+)$", "\\1", trans_label))]
   trans_lvls <- fib_inc[, .(order_idx = first(order_idx)), by = trans_label
@@ -250,7 +250,7 @@ cat("=== deg_counts_nas_transitions ===\n")
 nas_consec <- load_nas_consecutive()
 
 if (!is.null(nas_consec) && nrow(nas_consec) > 0) {
-  nas_inc <- nas_consec[padj < PADJ & abs(logFC) > LFC]
+  nas_inc <- nas_consec[padj < PADJ]
   nas_inc[, trans_label := gsub("NAS(\\d+)_vs_NAS(\\d+)", "NAS\\2→\\1", contrast)]
   nas_inc[, order_idx   := as.integer(gsub(".*→(\\d+)$", "\\1", trans_label))]
   nas_lvls <- nas_inc[, .(order_idx = first(order_idx)), by = trans_label

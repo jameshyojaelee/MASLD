@@ -9,7 +9,7 @@
 #   mouse evidence, with canonical lncRNAs recovered by sequence-based methods.
 #
 # Outputs:
-#   figures/supplementary/figS_cas13_library/S_lib_4_ortholog_mapping.pdf
+#   figures/supplementary/figS_cas13_library/04_ortholog_mapping.pdf
 #   figures/supplementary/figS_cas13_library/S_lib_7_lncrna_targets.pdf
 # =============================================================================
 
@@ -173,7 +173,7 @@ pC <- ggplot(canon_melt, aes(x = method, y = human_symbol,
 # render UpSet, then render B+C on a new page.
 p_BC <- pB + pC + plot_layout(widths = c(1.2, 1))
 
-out_path_slib4 <- file.path(OUT_DIR, "S_lib_4_ortholog_mapping.pdf")
+out_path_slib4 <- file.path(OUT_DIR, "04_ortholog_mapping.pdf")
 pdf_device(out_path_slib4, width = fig_full_width, height = 4.2, onefile = TRUE)
 
 # Page 1: UpSet (UpSetR internally calls grid.newpage + grid.arrange)
@@ -246,7 +246,7 @@ if (nzchar(gs_bin)) {
   cat("gs not found -- blank UpSetR pages retained\n")
 }
 
-cat("Saved S_lib_4_ortholog_mapping.pdf\n")
+cat("Saved 04_ortholog_mapping.pdf\n")
 cat("Done. (S_lib_7 lncRNA-targets figure removed from the library design per PI 2026-06-01.)\n")
 quit(save = "no")   # stop here -- S_lib_7 section below is retained for provenance but not executed
 

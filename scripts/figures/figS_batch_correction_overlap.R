@@ -77,7 +77,7 @@ per_study <- rbindlist(lapply(FIVE_COHORTS, function(ds) {
 per_study[, gene_clean := sub("\\..*", "", gene)]
 
 # Dream — use UNSHRUNK so logFC is comparable to limma-voom per-study
-dream_path <- file.path(INT_RESULTS, "dream_results.csv")
+dream_path <- file.path(INT_RESULTS, "canonical_deg_results.csv")
 if (!file.exists(dream_path))
   stop("dream_results.csv not found at ", dream_path)
 message(sprintf("Loading dream (unshrunk) from %s", dream_path))

@@ -609,9 +609,9 @@ COL_ANNOT: dict[str, dict[str, str | bool]] = {
     "finngen_hcc_coloc_pp4": dict(
         source="S3", method="COLOC vs FinnGen R12 HCC",
         ld_panel="see-source", gwas_scope="per-GWAS:FinnGen_HCC",
-        units="PP.H4 posterior [0,1]", deprecated=False,
+        units="PP.H4 posterior [0,1]", deprecated=True,
         provenance="run_finngen_coloc.sh",
-        notes="",
+        notes="DEPRECATED 2026-06-06: HCC dropped from the 23-GWAS MASLD-specific portfolio (etiology-mixed, non-MASLD endpoint). 27a emptied this column (now all-NA); retained as a placeholder only.",
     ),
     "bbj_alt_coloc_pp4": dict(
         source="S3", method="COLOC vs BBJ ALT",
@@ -638,16 +638,16 @@ COL_ANNOT: dict[str, dict[str, str | bool]] = {
         source="S3", method="COLOC vs Ghouse cirrhosis",
         ld_panel="see-source",
         gwas_scope="per-GWAS:Ghouse_cirrhosis",
-        units="PP.H4 posterior [0,1]", deprecated=False,
+        units="PP.H4 posterior [0,1]", deprecated=True,
         provenance="35_coloc_pipeline.R",
-        notes="",
+        notes="DEPRECATED 2026-06-06: cirrhosis dropped from the 23-GWAS MASLD-specific portfolio (etiology-mixed, non-MASLD endpoint). 27a emptied this column (now all-NA); retained as a placeholder only.",
     ),
     "ghouse_hcc_coloc_pp4": dict(
         source="S3", method="COLOC vs Ghouse HCC",
         ld_panel="see-source", gwas_scope="per-GWAS:Ghouse_HCC",
-        units="PP.H4 posterior [0,1]", deprecated=False,
+        units="PP.H4 posterior [0,1]", deprecated=True,
         provenance="35_coloc_pipeline.R",
-        notes="",
+        notes="DEPRECATED 2026-06-06: HCC dropped from the 23-GWAS MASLD-specific portfolio (etiology-mixed, non-MASLD endpoint). 27a emptied this column (now all-NA); retained as a placeholder only.",
     ),
     "decode_nafl_coloc_pp4": dict(
         source="S3", method="COLOC vs deCODE NAFL",
@@ -660,16 +660,16 @@ COL_ANNOT: dict[str, dict[str, str | bool]] = {
         source="S3", method="COLOC vs deCODE cirrhosis",
         ld_panel="see-source",
         gwas_scope="per-GWAS:deCODE_cirrhosis",
-        units="PP.H4 posterior [0,1]", deprecated=False,
+        units="PP.H4 posterior [0,1]", deprecated=True,
         provenance="35_coloc_pipeline.R",
-        notes="",
+        notes="DEPRECATED 2026-06-06: cirrhosis dropped from the 23-GWAS MASLD-specific portfolio (etiology-mixed, non-MASLD endpoint). 27a emptied this column (now all-NA); retained as a placeholder only.",
     ),
     "decode_hcc_coloc_pp4": dict(
         source="S3", method="COLOC vs deCODE HCC",
         ld_panel="see-source", gwas_scope="per-GWAS:deCODE_HCC",
-        units="PP.H4 posterior [0,1]", deprecated=False,
+        units="PP.H4 posterior [0,1]", deprecated=True,
         provenance="35_coloc_pipeline.R",
-        notes="",
+        notes="DEPRECATED 2026-06-06: HCC dropped from the 23-GWAS MASLD-specific portfolio (etiology-mixed, non-MASLD endpoint). 27a emptied this column (now all-NA); retained as a placeholder only.",
     ),
     # -------- S3 Pan-UKBB ancestry-specific (159-164) --------
     "panukbb_afr_alt_coloc_pp4": dict(

@@ -52,7 +52,11 @@ cat("============================================================\n\n")
 # ── 1. Load motif disruption + variant annotation ─────────────────────────────
 md_file       <- file.path(OUT_DIR, "motif_disruption_scores.csv")
 ann_file      <- file.path(OUT_DIR, "gwas_atac_variant_annotation.csv")
-reg_file      <- file.path(ATAC_DIR, "scenic_plus/disease_regulons.csv")
+# Cross-modality disease master-regulator set (replaces the empty FDR-gated
+# disease_regulons.csv; n=18 donor-level DE is underpowered, old non-zero set was
+# cell-level pseudoreplication). Env-overridable to stay in lockstep with Scripts 56/57.
+reg_file      <- Sys.getenv("REGULON_FILE",
+  unset = file.path(ATAC_DIR, "scenic_plus/disease_master_regulators.csv"))
 da_hep_file   <- file.path(ATAC_DIR, "results/snapatac2/scatac_da_corrected_hep.csv")
 da_all_file   <- file.path(ATAC_DIR, "results/snapatac2/scatac_da_results.csv")
 leads_file    <- file.path(EQTL_DIR, "Liver_eQTL_Meta_Leads_ST3_20240530.tsv")

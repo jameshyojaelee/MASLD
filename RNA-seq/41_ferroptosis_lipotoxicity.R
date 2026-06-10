@@ -24,7 +24,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 
 atlas_path   <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
-dream_path   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+dream_path   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 hep_reg_path <- file.path(BASE, "Analysis/ATAC/Human_Multiome/scenic_plus/hepatocyte_regulons.csv")
 dis_reg_path <- file.path(BASE, "Analysis/ATAC/Human_Multiome/scenic_plus/disease_regulons.csv")
 out_dir      <- file.path(BASE, "RNA-seq/results/pathway_programs")
@@ -136,9 +136,9 @@ cat("  Dream results: ", nrow(dream), " genes\n")
 # DEG definitions
 atlas <- atlas %>%
   mutate(
-    is_deg = !is.na(dream_padj) & dream_padj < 0.1,  # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.5 (Script 05b)
-    is_deg_up = is_deg & !is.na(dream_logFC) & dream_logFC > 0,
-    is_deg_down = is_deg & !is.na(dream_logFC) & dream_logFC < 0
+    is_deg = !is.na(bulk_padj) & bulk_padj < 0.1,  # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.5 (Script 05b)
+    is_deg_up = is_deg & !is.na(bulk_logFC) & bulk_logFC > 0,
+    is_deg_down = is_deg & !is.na(bulk_logFC) & bulk_logFC < 0
   )
 
 n_deg <- sum(atlas$is_deg, na.rm = TRUE)
@@ -374,8 +374,8 @@ cat("\n--- Sex stratification ---\n")
 
 ferroptosis_degs <- atlas %>%
   filter(ferroptosis_any & is_deg) %>%
-  select(human_symbol, ferroptosis_class, dream_logFC, dream_padj,
-         sex_class, dream_logFC_M, dream_logFC_F, sex_interaction_padj,
+  select(human_symbol, ferroptosis_class, bulk_logFC, bulk_padj,
+         sex_class, bulk_logFC_M, bulk_logFC_F, sex_interaction_padj,
          is_conserved, attribution_class)
 
 sex_summary <- ferroptosis_degs %>%
@@ -396,10 +396,10 @@ ferroptosis_deg_table <- atlas %>%
   select(human_symbol, ensembl_id, ferroptosis_class,
          ferroptosis_driver, ferroptosis_suppressor, ferroptosis_wp,
          ferroptosis_go, lipotoxicity,
-         dream_logFC, dream_padj, dream_tstat, is_deg, is_deg_up, is_deg_down,
+         bulk_logFC, bulk_padj, bulk_tstat, is_deg, is_deg_up, is_deg_down,
          mouse_meta_logFC, mouse_meta_padj, is_conserved,
          sex_class, attribution_class) %>%
-  arrange(dream_padj)
+  arrange(bulk_padj)
 
 fwrite(ferroptosis_deg_table,
        file.path(out_dir, "ferroptosis_degs.csv"))
@@ -409,10 +409,10 @@ cat("  Written: ferroptosis_degs.csv (", nrow(ferroptosis_deg_table), " genes)\n
 lipotox_table <- atlas %>%
   filter(lipotoxicity) %>%
   select(human_symbol, ensembl_id,
-         dream_logFC, dream_padj, dream_tstat, is_deg,
+         bulk_logFC, bulk_padj, bulk_tstat, is_deg,
          mouse_meta_logFC, is_conserved,
          sex_class, attribution_class) %>%
-  arrange(dream_padj)
+  arrange(bulk_padj)
 
 fwrite(lipotox_table,
        file.path(out_dir, "lipotoxicity_program.csv"))
@@ -458,7 +458,7 @@ for (g in canonical) {
   ar <- atlas[atlas$human_symbol == g, ]
   if (nrow(ar) > 0) {
     ar <- ar[1, ]
-    deg_str <- if (ar$is_deg) sprintf("DEG (LFC=%.2f, padj=%.2e)", ar$dream_logFC, ar$dream_padj) else "Not DEG"
+    deg_str <- if (ar$is_deg) sprintf("DEG (LFC=%.2f, padj=%.2e)", ar$bulk_logFC, ar$bulk_padj) else "Not DEG"
     cat(sprintf("  %s: %s, class=%s\n", g, deg_str,
                 ar$ferroptosis_class))
   } else {

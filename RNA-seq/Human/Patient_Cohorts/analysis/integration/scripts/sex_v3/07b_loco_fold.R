@@ -23,28 +23,14 @@
 set.seed(42)
 Sys.setenv(R_PARALLEL_SEED = "42")
 
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Engine swapped from voomWithDreamWeights + dream to limma
+# voomWithQualityWeights + lmFit + eBayes; lme4/reformulas/variancePartition
+# stack dropped.
 suppressPackageStartupMessages({
-  library(reformulas)
-  library(lme4)
+  library(limma)
   library(data.table)
   library(edgeR)
-})
-
-# lme4 namespace injection BEFORE variancePartition load
-ns_lme4 <- asNamespace("lme4")
-for (fn in c("findbars", "nobars", "subbars", "rebuildFormula")) {
-  if (exists(fn, envir = ns_lme4)) {
-    try({
-      unlockBinding(fn, ns_lme4)
-      assign(fn, get(fn, asNamespace("reformulas")), envir = ns_lme4)
-      lockBinding(fn, ns_lme4)
-    }, silent = TRUE)
-  }
-}
-
-suppressPackageStartupMessages({
-  library(variancePartition)
-  library(BiocParallel)
   library(mashr)
 })
 
@@ -99,8 +85,9 @@ cat("============================================================\n")
 # Parallel
 # ---------------------------------------------------------------------------
 ncpus <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "16"))
-cat("Using", ncpus, "CPU cores\n")
-param <- if (ncpus > 1) MulticoreParam(workers = ncpus, RNGseed = 42L) else SerialParam()
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# limma LVQW is single-threaded; cpu count retained for log parity only.
+cat("Using", ncpus, "CPU core(s) reported by SLURM (limma LVQW is single-threaded)\n")
 
 # ---------------------------------------------------------------------------
 # Load inputs
@@ -119,12 +106,16 @@ n_sv   <- ncol(sv_mat)
 sv_df <- as.data.frame(sv_mat)
 colnames(sv_df) <- paste0("SV", seq_len(n_sv))
 sv_terms <- paste(colnames(sv_df), collapse = " + ")
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Single fixed-effects design with dataset as a leading FIXED effect. In a LOCO
+# fold the held-out cohort is dropped (droplevels below) so the surviving
+# dataset factor has 4 levels -> 3 dummy columns.
 form_str <- paste0(
-  "~ group_binary * inferred_sex",
+  "~ dataset",
+  " + group_binary * inferred_sex",
   " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
   " + age_imputed",
-  " + ", sv_terms,
-  " + (1 + group_binary | dataset)"
+  " + ", sv_terms
 )
 form_full <- as.formula(form_str)
 
@@ -146,19 +137,22 @@ if (!target_cohort %in% all_cohorts) {
 # Helpers (identical to legacy 07_calibration.R)
 # ---------------------------------------------------------------------------
 fit_dream_panel <- function(dge_panel, info_k, label = "fit") {
-  cat("    [", label, "] voomWithDreamWeights...\n", sep = "")
+  # LVQW re-engineering 2026-06-08: dataset random->fixed.
+  design <- model.matrix(form_full, data = info_k)
+  stopifnot(nrow(design) == ncol(dge_panel))
+  if (qr(design)$rank < ncol(design)) {
+    stop("LVQW LOCO design rank-deficient for ", label,
+         "; inspect dataset/SV/composition collinearity in the held-out panel.")
+  }
+
+  cat("    [", label, "] voomWithQualityWeights...\n", sep = "")
   t0 <- Sys.time()
-  v <- suppressWarnings(
-    voomWithDreamWeights(dge_panel, form_full, info_k, BPPARAM = param,
-                         useWeights = TRUE)
-  )
+  v <- suppressWarnings(voomWithQualityWeights(dge_panel, design))
   cat("      elapsed:", format(Sys.time() - t0), "\n")
 
-  cat("    [", label, "] dream (random-slope)...\n", sep = "")
+  cat("    [", label, "] lmFit + eBayes...\n", sep = "")
   t0 <- Sys.time()
-  fit <- suppressWarnings(
-    dream(v, form_full, info_k, BPPARAM = param, useWeights = TRUE)
-  )
+  fit <- eBayes(lmFit(v, design))
   cat("      elapsed:", format(Sys.time() - t0), "\n")
 
   all_coefs <- colnames(fit$coefficients)
@@ -175,24 +169,21 @@ fit_dream_panel <- function(dge_panel, info_k, label = "fit") {
   beta_F  <- tt_F$logFC
   beta_int <- tt_int$logFC
   beta_M  <- beta_F + beta_int
-  # R1-Issue-1/2 fix (re-applied per meta-review B0-4): raw Wald SE (not
-  # moderated logFC/t which is sigma-shrunk) + per-gene Cov(β_F, β_int) from
-  # fit$cov.coefficients.list. Omitting 2*Cov biases Var(β_M).
+  # RAW Wald SE (not moderated logFC/t which is sigma-shrunk) + per-gene
+  # Cov(β_F, β_int). Omitting 2*Cov biases Var(β_M). For lmFit the per-gene
+  # vcov = cov.coefficients (shared UNSCALED K x K) * sigma[g]^2.
+  # NOTE: rows of topTable are in design's gene order with sort.by="none",
+  # matching fit$sigma / fit$stdev.unscaled row order, so positional indexing
+  # is aligned with beta_F/beta_int.
   raw_se_mat <- fit$stdev.unscaled * fit$sigma
   se_F   <- raw_se_mat[, group_coef]
   se_int <- raw_se_mat[, int_coef]
-  if (!"cov.coefficients.list" %in% names(fit) ||
-      length(fit$cov.coefficients.list) != length(beta_F)) {
-    stop("fit$cov.coefficients.list missing or wrong length: ",
-         length(fit$cov.coefficients.list), " vs ", length(beta_F))
+  ccm <- fit$cov.coefficients
+  if (is.null(ccm) || !(group_coef %in% rownames(ccm)) ||
+      !(int_coef %in% colnames(ccm))) {
+    stop("fit$cov.coefficients missing or coef names not found")
   }
-  ccl <- fit$cov.coefficients.list
-  cov_F_int <- vapply(seq_along(ccl), function(g) {
-    M <- ccl[[g]]
-    if (group_coef %in% rownames(M) && int_coef %in% colnames(M))
-      as.numeric(M[group_coef, int_coef])
-    else NA_real_
-  }, numeric(1))
+  cov_F_int <- as.numeric(ccm[group_coef, int_coef]) * (fit$sigma)^2
   if (any(is.na(cov_F_int))) stop(sum(is.na(cov_F_int)),
                                   " genes have missing Cov(β_F, β_int)")
   se_M   <- sqrt(pmax(se_F^2 + se_int^2 + 2 * cov_F_int, .Machine$double.eps))

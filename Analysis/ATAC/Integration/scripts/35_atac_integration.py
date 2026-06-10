@@ -695,16 +695,16 @@ def generate_summary(l8, atlas, outpath):
                 lines.append(f"\nConserved enrichment for {label}: insufficient data")
 
     # --- Correlation with other layers ---
-    lines.append("\n--- Spearman correlation: L8 columns vs dream_logFC ---")
-    if "dream_logFC" in atlas.columns:
-        merged_corr = l8.merge(atlas[["human_symbol", "dream_logFC"]], on="human_symbol", how="left")
+    lines.append("\n--- Spearman correlation: L8 columns vs bulk_logFC ---")
+    if "bulk_logFC" in atlas.columns:
+        merged_corr = l8.merge(atlas[["human_symbol", "bulk_logFC"]], on="human_symbol", how="left")
         for col in ["mouse_da_logFC", "hepatocyte_da_logFC", "scenic_regulon_activity_diff"]:
-            valid = merged_corr[[col, "dream_logFC"]].dropna()
+            valid = merged_corr[[col, "bulk_logFC"]].dropna()
             if len(valid) >= 10:
-                rho, pval = stats.spearmanr(valid[col], valid["dream_logFC"])
-                lines.append(f"  {col} vs dream_logFC: rho={rho:.3f}, p={pval:.2e} (n={len(valid):,})")
+                rho, pval = stats.spearmanr(valid[col], valid["bulk_logFC"])
+                lines.append(f"  {col} vs bulk_logFC: rho={rho:.3f}, p={pval:.2e} (n={len(valid):,})")
             else:
-                lines.append(f"  {col} vs dream_logFC: insufficient data (n={len(valid)})")
+                lines.append(f"  {col} vs bulk_logFC: insufficient data (n={len(valid)})")
 
     summary_text = "\n".join(lines)
     with open(outpath, "w") as f:

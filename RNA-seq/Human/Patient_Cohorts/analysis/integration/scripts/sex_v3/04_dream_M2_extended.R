@@ -1,19 +1,28 @@
 #!/usr/bin/env Rscript
 # sex_v3/04_dream_M2_extended.R
 # ---------------------------------------------------------------------------
-# Module 04 — Dream interaction fit with extended covariate set, repeated
-# over 5 mice age imputations, pooled via Rubin's rules.
+# Module 04 — limma-voom-quality-weighted (LVQW) interaction fit with extended
+# covariate set, repeated over 5 mice age imputations, pooled via Rubin's rules.
 #
-# Per-imputation formula:
-#   ~ group_binary * inferred_sex
-#     + Hepatocytes + Macrophages + Endothelial + Cholangiocytes   (composition)
-#     + age_imputed                                                (MI age)
-#     + SV1 + ... + SVk                                            (SVA hidden factors, k from Module 02)
-#     + diagnosis_harmonized                                       (NAFL/Borderline/NASH)
-#     + (1 + group_binary | dataset)                               (random slope per cohort)
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+#   ENGINE swap: voomWithDreamWeights + dream (variancePartition mixed model,
+#   random slope) -> voomWithQualityWeights(dge, design) + eBayes(lmFit(v, design)).
+#   The dataset random-effect structure `(1 + group_binary | dataset)` is
+#   replaced by `dataset` as a FIXED effect. Everything else (interaction,
+#   composition, MI age, SVA surrogate variables) is preserved EXACTLY.
 #
-# variancePartition >= 1.30 + useWeights = TRUE supports random slope. The
-# package version is verified at runtime; we abort early if version is older.
+# Per-imputation formula (design matrix):
+#   ~ dataset                                                     (FIXED cohort effect)
+#     + group_binary * inferred_sex                              (main effects + interaction)
+#     + Hepatocytes + Macrophages + Endothelial + Cholangiocytes (composition)
+#     + age_imputed                                              (MI age)
+#     + SV1 + ... + SVk                                          (SVA hidden factors, k from Module 02)
+#
+# RAW vs MODERATED variance (match-the-original): the dream path consumed RAW
+# (unmoderated) Wald SEs for Rubin pooling (moderation belongs downstream — mash
+# provides its own shrinkage). We preserve that: per-gene Var(beta) and
+# Cov(beta_F, beta_int) are built from the UNMODERATED sigma^2 (fit$sigma^2),
+# NOT eBayes's moderated s2.post.
 #
 # Coefficient parameterization (level alphabetics — sex_F is reference):
 #   coef = "group_binaryDisease"                       => β_F (disease-in-F)
@@ -26,43 +35,30 @@
 # Reads:  intermediates/sex_v3_input.rds
 #         intermediates/sva_factors.rds
 #         intermediates/age_mi.rds
-# Writes: dream_M2_v3.rds         (full pooled fit + vcov per gene)
+# Writes: dream_M2_v3.rds         (full pooled fit + vcov per gene; filename kept
+#                                  for downstream-path compatibility with 05/06)
 #         dream_topTable_v3.csv   (flat per-gene table)
 # ---------------------------------------------------------------------------
 
 set.seed(42)
 Sys.setenv(R_PARALLEL_SEED = "42")
 
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Engine is now limma voomWithQualityWeights + lmFit + eBayes (fixed-effects),
+# so the lme4/reformulas/variancePartition stack and its namespace injection are
+# no longer needed. limma carries voomWithQualityWeights + lmFit + eBayes.
 suppressPackageStartupMessages({
-  library(reformulas)
-  library(lme4)
+  library(limma)
   library(data.table)
   library(edgeR)
 })
 
-# Force injection into lme4 namespace BEFORE loading variancePartition
-ns_lme4 <- asNamespace("lme4")
-for (fn in c("findbars", "nobars", "subbars", "rebuildFormula")) {
-  if (exists(fn, envir = ns_lme4)) {
-    try({
-      unlockBinding(fn, ns_lme4)
-      assign(fn, get(fn, asNamespace("reformulas")), envir = ns_lme4)
-      lockBinding(fn, ns_lme4)
-    }, silent = TRUE)
-  }
-}
-
-suppressPackageStartupMessages({
-  library(variancePartition)
-  library(BiocParallel)
-})
-
-# Verify variancePartition >= 1.30 for random slope support with useWeights
-vp_ver <- packageVersion("variancePartition")
-cat("variancePartition version:", as.character(vp_ver), "\n")
-if (vp_ver < "1.30") {
-  stop("variancePartition >= 1.30 required for random-slope dream; have ",
-       as.character(vp_ver))
+# Record limma version (LVQW engine) for downstream provenance.
+limma_ver <- packageVersion("limma")
+cat("limma version:", as.character(limma_ver), "\n")
+if (limma_ver < "3.50") {
+  stop("limma >= 3.50 required for voomWithQualityWeights + cov.coefficients; have ",
+       as.character(limma_ver))
 }
 
 # ---------------------------------------------------------------------------
@@ -89,9 +85,12 @@ cat("============================================================\n")
 # ---------------------------------------------------------------------------
 # Parallel
 # ---------------------------------------------------------------------------
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# limma's voomWithQualityWeights + lmFit + eBayes are single-threaded matrix
+# algebra (no BiocParallel dispatch like dream). We retain the cpu count for
+# log parity but no longer build a BiocParallel param object.
 ncpus <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "16"))
-cat("Using", ncpus, "CPU cores\n")
-param <- if (ncpus > 1) MulticoreParam(workers = ncpus, RNGseed = 42L) else SerialParam()
+cat("Using", ncpus, "CPU core(s) reported by SLURM (limma LVQW is single-threaded)\n")
 
 # ---------------------------------------------------------------------------
 # Load intermediates
@@ -143,10 +142,12 @@ build_info_k <- function(k) {
   out
 }
 
-# Formula — R1 Issue 4 (Major) fix: random slope (1 + group_binary | dataset)
-# is over-parameterized for k=5 cohorts (singular fits expected). Try random
-# slope first; fall back to random intercept (1 | dataset) on convergence or
-# error. The chosen variant is logged per imputation.
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# The dream-era random slope `(1 + group_binary | dataset)` (R1 Issue 4: over-
+# parameterized for k=5 cohorts -> singular fits, hence the slope->intercept
+# fallback ladder) is replaced by `dataset` as a leading FIXED effect. A fixed
+# design is always full-rank here (5 cohorts -> 4 dataset dummy columns) so there
+# is NO fallback ladder: a single design is built per imputation.
 sv_terms <- paste(colnames(sv_df), collapse = " + ")
 # diagnosis_harmonized REMOVED 2026-05-14: was collinear with group_binary
 # (318/645 Disease samples have diagnosis_harmonized=="" which perfectly
@@ -154,71 +155,49 @@ sv_terms <- paste(colnames(sv_df), collapse = " + ")
 # gene whose disease effect was sensitive to the coding). The within-Disease
 # severity question (NAFL/Borderline/NASH) is a separate analysis that needs
 # a properly coded variable and a non-collinear design.
-form_fixed <- paste0(
-  "~ group_binary * inferred_sex",
+form_str_fixed <- paste0(
+  "~ dataset",
+  " + group_binary * inferred_sex",
   " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
   " + age_imputed",
   " + ", sv_terms
 )
-form_str_slope <- paste0(form_fixed, " + (1 + group_binary | dataset)")
-form_str_int   <- paste0(form_fixed, " + (1 | dataset)")
-form_slope     <- as.formula(form_str_slope)
-form_intercept <- as.formula(form_str_int)
-cat("\nFormula (random slope, primary):\n  ", form_str_slope, "\n")
-cat("Formula (random intercept, fallback):\n  ", form_str_int, "\n")
+form_fixed <- as.formula(form_str_fixed)
+cat("\nFormula (LVQW fixed-effects design, dataset fixed):\n  ", form_str_fixed, "\n")
 
-# Track which variant was used per imputation (for downstream provenance)
-variant_used <- character(m)
+# Track which variant was used per imputation (for downstream provenance).
+# LVQW has a single variant; kept as a vector for rds-schema parity.
+variant_used <- rep("lvqw_fixed", m)
 
 # ---------------------------------------------------------------------------
-# Helper: fit dream for one imputation (with random-slope fallback to RE intercept)
+# Helper: fit LVQW for one imputation (single fixed-effects design, no fallback)
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
 # ---------------------------------------------------------------------------
 fit_one_imputation <- function(k) {
   cat("\n========== Imputation", k, "of", m, "==========\n")
   info_k <- build_info_k(k)
 
-  cat("  voomWithDreamWeights (random-slope formula)...\n")
+  # Build the model.matrix from the fixed-effects formula. dataset is a leading
+  # fixed effect (4 dummy columns for 5 cohorts). All other terms are unchanged.
+  design <- model.matrix(form_fixed, data = info_k)
+  stopifnot(nrow(design) == ncol(dge))
+  qrr <- qr(design)
+  if (qrr$rank < ncol(design)) {
+    stop("LVQW design is rank-deficient (rank ", qrr$rank, " < ncol ",
+         ncol(design), "); inspect collinearity among dataset/SV/composition terms.")
+  }
+
+  cat("  voomWithQualityWeights (fixed-effects design)...\n")
   t0 <- Sys.time()
-  v_slope <- tryCatch(
-    suppressWarnings(
-      voomWithDreamWeights(dge, form_slope, info_k, BPPARAM = param,
-                           useWeights = TRUE)
-    ),
-    error = function(e) {
-      message("voom random-slope failed: ", conditionMessage(e))
-      NULL
-    }
-  )
+  v <- suppressWarnings(voomWithQualityWeights(dge, design))
   cat("    voom elapsed:", format(Sys.time() - t0), "\n")
 
-  variant <- "slope"
-  fit <- NULL
-  if (!is.null(v_slope)) {
-    cat("  dream (random-slope)...\n")
-    t0 <- Sys.time()
-    fit <- tryCatch(
-      suppressWarnings(
-        dream(v_slope, form_slope, info_k, BPPARAM = param, useWeights = TRUE)
-      ),
-      error = function(e) {
-        message("dream random-slope failed: ", conditionMessage(e))
-        NULL
-      }
-    )
-    cat("    dream elapsed:", format(Sys.time() - t0), "\n")
-  }
+  cat("  lmFit + eBayes...\n")
+  t0 <- Sys.time()
+  fit <- eBayes(lmFit(v, design))
+  cat("    lmFit+eBayes elapsed:", format(Sys.time() - t0), "\n")
 
-  if (is.null(fit)) {
-    cat("  Falling back to random-intercept (1 | dataset) — R1 Issue 4 fix\n")
-    variant <- "intercept"
-    v_int <- suppressWarnings(
-      voomWithDreamWeights(dge, form_intercept, info_k, BPPARAM = param,
-                           useWeights = TRUE)
-    )
-    fit <- suppressWarnings(
-      dream(v_int, form_intercept, info_k, BPPARAM = param, useWeights = TRUE)
-    )
-  }
+  variant <- "lvqw_fixed"
   variant_used[k] <<- variant
   cat("  variant used for imp", k, ":", variant, "\n")
 
@@ -241,16 +220,18 @@ fit_one_imputation <- function(k) {
   cat("  group coef (= β_F):", group_coef, "\n")
   cat("  interaction coef    :", int_coef, "\n")
 
-  # Extract β_F, β_int + SEs per gene
+  # Extract β_F, β_int per gene
   beta_F   <- fit$coefficients[, group_coef]
   beta_int <- fit$coefficients[, int_coef]
 
-  # ---- R1 Issue 2 fix: use RAW (unmoderated) Wald SEs, not topTable's moderated SEs.
-  # topTable's logFC/t quotient is the eBayes-shrunken posterior SE, which double-
-  # shrinks effects when fed to Rubin's pooling and downstream mash. Extract raw
-  # SE = sigma * stdev.unscaled directly from the fit object.
+  # ---- RAW (unmoderated) Wald SEs — match the dream-era choice (R1 Issue 2).
+  # LVQW re-engineering 2026-06-08: dataset random->fixed.
+  # lmFit's per-gene Var(beta) = (stdev.unscaled[gene, coef])^2 * sigma[gene]^2
+  # where sigma is the UNMODERATED residual SD (we deliberately do NOT use the
+  # eBayes-moderated s2.post, mirroring the dream path which fed RAW Wald SEs to
+  # Rubin pooling — moderation belongs downstream, mash provides its own shrink).
   stopifnot("stdev.unscaled" %in% names(fit), "sigma" %in% names(fit))
-  raw_se_mat <- fit$sigma * fit$stdev.unscaled
+  raw_se_mat <- fit$stdev.unscaled * fit$sigma   # genes x K, recycles sigma per row
   se_F   <- raw_se_mat[, group_coef]
   se_int <- raw_se_mat[, int_coef]
   names(se_F)   <- rownames(fit$coefficients)
@@ -258,27 +239,31 @@ fit_one_imputation <- function(k) {
   se_F   <- se_F[names(beta_F)]
   se_int <- se_int[names(beta_int)]
 
-  # ---- R1 Issue 1 fix: extract per-gene Cov(β_F, β_int) from cov.coefficients.list.
-  # variancePartition's MArrayLM2 stores the FULL per-gene vcov matrix in raw scale.
-  # Diagonal matches sigma^2 * stdev.unscaled^2; off-diagonal Cov(β_F, β_int) is
-  # typically strongly NEGATIVE under treatment-coded interaction (β_F = effect-in-F,
-  # β_int = M-F delta), and ASSUMING it equals zero (as the old build_vcov did)
-  # systematically over-estimates Var(β_M) = Var(β_F) + Var(β_int) + 2*Cov(β_F, β_int).
-  stopifnot("cov.coefficients.list" %in% names(fit))
-  ccl <- fit$cov.coefficients.list
-  if (is.null(ccl) || length(ccl) != length(beta_F)) {
-    stop("cov.coefficients.list missing or wrong length: ",
-         length(ccl), " vs ", length(beta_F))
+  # ---- Per-gene Cov(β_F, β_int) — R1 Issue 1 (omitting 2*Cov biases Var(β_M)).
+  # LVQW re-engineering 2026-06-08: dataset random->fixed.
+  # dream stored a FULL per-gene vcov in cov.coefficients.list; lmFit instead
+  # returns a SINGLE shared UNSCALED coefficient covariance (fit$cov.coefficients,
+  # a K x K named matrix = (X'WX)^-1) plus a per-gene fit$sigma. The per-gene
+  # raw covariance is therefore:
+  #   Cov_g(β_F, β_int) = cov.coefficients[group_coef, int_coef] * sigma[g]^2
+  # This is exactly consistent with the diagonal SEs above, since
+  #   stdev.unscaled[g, coef]^2 == cov.coefficients[coef, coef]   (shared across g)
+  # so Var_g(β) = cov.coefficients[coef,coef] * sigma[g]^2. Under treatment-coded
+  # interaction the unscaled off-diagonal is strongly NEGATIVE (see the toy QR
+  # example: Cov(gD, gD:sM) = -1 of the unscaled matrix), so Cov_g is negative and
+  # correctly shrinks Var(β_M) = Var(β_F) + Var(β_int) + 2*Cov.
+  stopifnot("cov.coefficients" %in% names(fit))
+  ccm <- fit$cov.coefficients
+  if (is.null(ccm) || !is.matrix(ccm) ||
+      !(group_coef %in% rownames(ccm)) || !(int_coef %in% colnames(ccm))) {
+    stop("fit$cov.coefficients missing or coef names not found: ",
+         paste(rownames(ccm), collapse = ", "))
   }
-  cov_F_int <- vapply(seq_along(ccl), function(g) {
-    M <- ccl[[g]]
-    # Look up by coef name (more robust than positional)
-    if (group_coef %in% rownames(M) && int_coef %in% colnames(M)) {
-      as.numeric(M[group_coef, int_coef])
-    } else {
-      NA_real_
-    }
-  }, numeric(1))
+  cov_unscaled_F_int <- as.numeric(ccm[group_coef, int_coef])
+  sigma2_g <- (fit$sigma)^2
+  names(sigma2_g) <- rownames(fit$coefficients)
+  sigma2_g <- sigma2_g[names(beta_F)]
+  cov_F_int <- cov_unscaled_F_int * sigma2_g
   names(cov_F_int) <- names(beta_F)
   if (any(is.na(cov_F_int))) {
     stop(sum(is.na(cov_F_int)),
@@ -535,8 +520,14 @@ write_atomic_rds(list(
     se_M     = se_M_mat,
     cov_F_int = cov_Fint_mat
   ),
-  formula_slope     = form_str_slope,
-  formula_intercept = form_str_int,
+  # LVQW re-engineering 2026-06-08: dataset random->fixed.
+  # formula_slope / formula_intercept are retained as KEYS (downstream rds
+  # readers that look them up by name keep working) but now both carry the
+  # single LVQW fixed-effects design string; engine = "lvqw_fixed".
+  formula_slope     = form_str_fixed,
+  formula_intercept = form_str_fixed,
+  formula_fixed     = form_str_fixed,
+  engine            = "lvqw_fixed",
   variant_used      = variant_used,
   group_coef    = fits[[1]]$group_coef,
   int_coef      = fits[[1]]$int_coef,
@@ -544,7 +535,7 @@ write_atomic_rds(list(
   sex_levels    = sex_levels,
   n_sv          = n_sv,
   m_imputations = m,
-  vp_version    = as.character(vp_ver)
+  vp_version    = as.character(limma_ver)
 ), out_rds)
 cat("Saved (atomic) pooled fit:", out_rds, "\n")
 

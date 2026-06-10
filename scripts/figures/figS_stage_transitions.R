@@ -18,8 +18,8 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 SIGS <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures")
-PADJ_THRESH <- 0.1  # FDR < 0.1 to match Govaere reference
-LFC_THRESH  <- 0     # No LFC threshold for transition counts (matching reference)
+PADJ_THRESH <- 0.05  # Tier-2 progression convention (padj<0.05, no LFC). Was 0.1 (Govaere-matched) before 2026-06-09 harmonization.
+LFC_THRESH  <- 0     # No LFC threshold for transition counts (Tier-2 convention)
 
 # --- Load consecutive dream results ---
 nas_consec <- fread(file.path(SIGS, "nas_consecutive_dream.csv"))

@@ -45,13 +45,31 @@ fm_cs <- fm %>%
 cat("Filtered to", nrow(fm_cs), "credible set / high-PIP variant-locus entries\n")
 
 # ── 3. Deduplicate across studies ────────────────────────────────────────────
-# Same variant can appear in multiple GWAS — keep max PIP and record studies
+# Same variant can appear in multiple GWAS — keep max PIP and record studies.
+# FIX (audit bug 1): the prior dedup key was (chromosome, position, allele1, allele2)
+# WITHOUT allele-order normalization, so the same physical SNP reported as A/G in one
+# study and G/A in another counted as two "unique" variants (~2% inflation). Group on a
+# strand-/order-normalized allele key (sorted pair) so A/G == G/A, while genuinely
+# distinct allele pairs at the same position (true multi-allelic SNPs, e.g. A/G vs A/T)
+# remain separate. The original allele1/allele2 are preserved from the max-PIP record so
+# downstream variant_id and join keys still carry real (un-sorted) alleles.
 pip_col <- if (has_recommended) "recommended_pip" else "max_pip"
 has_susie_clean <- "susie_pip_clean" %in% colnames(fm_cs)
 
+fm_cs <- fm_cs %>%
+  mutate(
+    .a_lo       = pmin(allele1, allele2),
+    .a_hi       = pmax(allele1, allele2),
+    allele_norm = paste(.a_lo, .a_hi, sep = "/"),
+    .order_pip  = if (has_recommended) coalesce(recommended_pip, max_pip) else max_pip
+  )
+
 variants <- fm_cs %>%
-  group_by(chromosome, position, allele1, allele2) %>%
+  group_by(chromosome, position, allele_norm) %>%
   summarise(
+    # Keep the observed allele orientation from the max-PIP record within the group
+    allele1      = allele1[which.max(replace(.order_pip, is.na(.order_pip), -Inf))],
+    allele2      = allele2[which.max(replace(.order_pip, is.na(.order_pip), -Inf))],
     max_pip      = max(max_pip, na.rm = TRUE),
     max_rec_pip  = if (has_recommended && any(!is.na(recommended_pip))) max(recommended_pip, na.rm = TRUE) else max(max_pip, na.rm = TRUE),
     n_studies    = n_distinct(study),
@@ -61,7 +79,8 @@ variants <- fm_cs %>%
     in_susie_cs  = any(!is.na(susie_cs) & susie_cs > 0, na.rm = TRUE),
     in_carma_cs  = any(!is.na(carma_cs) & carma_cs > 0, na.rm = TRUE),
     .groups = "drop"
-  )
+  ) %>%
+  select(-allele_norm)
 cat("Deduplicated to", nrow(variants), "unique variants\n")
 
 # ── 4. LiftOver hg19 → hg38 ─────────────────────────────────────────────────

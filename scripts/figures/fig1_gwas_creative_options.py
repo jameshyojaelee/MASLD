@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fig 1 GWAS Portfolio — Creative Options A–D (breadth-focused, no N encoding)
-KEY MESSAGE: 28 GWAS spanning 4 ancestries x 8 liver-disease traits — show coverage breadth.
+KEY MESSAGE: 23 GWAS spanning 4 ancestries x liver-disease traits — show coverage breadth.
 
 Outputs to figures/misc/:
   gwas_creative_A_binary_grid.pdf
@@ -46,17 +46,12 @@ GWAS_DATA = [
     ("EUR", "NAFLD",   400_000),
     ("EUR", "NAFLD",   438_857),
     ("EUR", "NASH",    435_000),
-    ("EUR", "HCC",     435_000),
     ("EUR", "ALT",     343_850),
     ("EUR", "AST",     343_850),
     ("EUR", "GGT",     343_850),
-    ("EUR", "Cirrhosis", 431_122),
-    ("EUR", "HCC",     310_000),
     ("EUR", "PDFF",     36_116),
     ("EUR", "PDFF",     32_858),
     ("EUR", "PDFF",     44_867),
-    ("EAS", "Cirrhosis", 376_326),
-    ("EAS", "HCC",     376_326),
     ("EAS", "ALT",     160_000),
     ("EAS", "AST",     160_000),
     ("EAS", "GGT",     160_000),
@@ -70,19 +65,19 @@ GWAS_DATA = [
 
 ANCESTRIES     = ["EUR", "EAS", "AFR", "SAS"]
 ANCESTRY_LABEL = {"EUR": "European", "EAS": "East Asian", "AFR": "African", "SAS": "South Asian"}
-ANCESTRY_N     = {"EUR": 17, "EAS": 5, "AFR": 3, "SAS": 3}
+ANCESTRY_N     = {"EUR": 14, "EAS": 3, "AFR": 3, "SAS": 3}
 
 # Okabe-Ito palette (colorblind-safe)
 ANCESTRY_COLOR = {
     "EUR": "#0072B2", "EAS": "#E69F00", "AFR": "#009E73", "SAS": "#CC79A7",
 }
 
-TRAITS = ["ALT", "AST", "GGT", "NAFLD", "NASH", "Cirrhosis", "HCC", "PDFF"]
+TRAITS = ["ALT", "AST", "GGT", "NAFLD", "NASH", "PDFF"]
 # Trait group: (label, col_start, col_end_excl, band_color)
 TRAIT_GROUPS = [
     ("Liver enzymes",     0, 3, "#9ECAE1"),
-    ("Disease diagnoses", 3, 7, "#FCBBA1"),
-    ("Imaging",           7, 8, "#A1D99B"),
+    ("Disease diagnoses", 3, 5, "#FCBBA1"),
+    ("Imaging",           5, 6, "#A1D99B"),
 ]
 
 ABSENT_COLOR = "#E8E8E8"
@@ -304,7 +299,7 @@ def build_B(path, extra_paths=None):
     # After invert_yaxis(), total_h is visually at the bottom; we place tag slightly below it.
     # Use DejaVu Sans for this text element to ensure the arrow glyph renders correctly.
     ax.text(0.5, total_h + 0.85,
-            "28 GWAS → 398 colocalized genes",
+            "23 GWAS → 368 colocalized genes",
             ha="center", va="top",
             fontsize=7.5, color="#2D3436", style="italic",
             fontfamily="DejaVu Sans",
@@ -405,7 +400,7 @@ def build_C(path):
     ax.add_patch(mpatches.Circle((0, 0), R_CENTER,
                                   facecolor="white", edgecolor="#CCCCCC",
                                   linewidth=0.6, zorder=4))
-    ax.text(0, 0.02, "28", ha="center", va="center",
+    ax.text(0, 0.02, "23", ha="center", va="center",
             fontsize=14, color="#333333", fontweight="bold", zorder=6)
     ax.text(0, -0.13, "GWAS", ha="center", va="center",
             fontsize=7, color="#777777", zorder=6)

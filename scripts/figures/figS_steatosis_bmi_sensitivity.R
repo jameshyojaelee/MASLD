@@ -93,7 +93,7 @@ qc <- fread(file.path(INT, "qc/sample_qc_report.csv"))
 pass_samples <- qc[pass_technical == TRUE, sample_id]
 
 cat("Loading primary dream results...\n")
-dream_primary <- fread(file.path(RDIR, "dream_results.csv"))
+dream_primary <- fread(file.path(RDIR, "canonical_deg_results.csv"))
 if ("adj.P.Val" %in% names(dream_primary) && !"padj" %in% names(dream_primary))
   setnames(dream_primary, "adj.P.Val", "padj")
 cat("  Primary dream DEGs (padj<0.05, |logFC|>0.5):",

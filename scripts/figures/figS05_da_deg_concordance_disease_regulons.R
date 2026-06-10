@@ -42,7 +42,7 @@ cat(sprintf("[DA] %d disease-regulon target genes with a Hep DA peak\n",
 
 # ── Bulk dream LFC (no filter; biology pre-filtered by disease regulon) ──
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"),
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
   select = c("symbol", "logFC", "padj"))
 dream <- dream[!is.na(symbol) & symbol != "" & !grepl("^ENSG", symbol) &
                !is.na(logFC)]

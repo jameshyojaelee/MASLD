@@ -26,7 +26,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 DGE_PATH   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/merged_dge.rds")
 META_PATH  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/staging_classifier/modeling_metadata.csv")
-DREAM_PATH <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+DREAM_PATH <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 
 OUT_FIG  <- file.path(FIGS_SENS_DIR, "figS_variance_partition.pdf")
 OUT_CSV  <- file.path(BASE, "RNA-seq/results/audit_sensitivity/variance_partition_results.csv")

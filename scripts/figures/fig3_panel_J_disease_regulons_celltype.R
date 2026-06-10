@@ -1,25 +1,37 @@
 ##############################################################################
-# Fig 3 Panel J: Disease regulon TFs (rows) x cell types (cols) heatmap
-#   Liang Cell 2024 aesthetic refinement (2026-05-18):
-#     - Row + column dendrograms
+# disease_master_regulators_celltype: Cross-modality disease master-regulator
+#   TFs (rows) x cell types (cols) heatmap, colored by regulon-activity EFFECT
+#   SIZE.
+#
+#   This panel shows the DIRECTION and MAGNITUDE of SCENIC+ regulon-activity
+#   change (MASLD vs normal) for cross-modality-defined disease master
+#   regulators across 5 cell types. It is an effect-size display, NOT a
+#   significance gate: single-cohort donor-level differential significance is
+#   underpowered (n=18 donors). The previously used FDR-gated SCENIC+
+#   disease_regulons.csv files are EMPTY (the honest donor-level n=18 DE test
+#   finds 0; the old non-zero set was cell-level pseudoreplication).
+#
+#   TF panel definition (cross-modality, defensible):
+#     scenic_plus/disease_master_regulators.csv -- hepatocyte SCENIC+ regulon
+#     TFs that are bulk MASLD DEGs (n=846) OR COLOC hits (HNF4A/RORA/THRB
+#     included). `tf_name` defines the kept set.
+#
+#   Per-cell-type regulon-activity effect sizes (heatmap fill) come from the
+#   populated (NOT disease-filtered) per-CT regulon tables:
+#     - hepatocyte_regulons.csv     (Hepatocyte)
+#     - macrophage_regulons.csv     (Macrophage)
+#     - stellate_regulons.csv       (Stellate)
+#     - endothelial_regulons.csv    (Endothelial)
+#     - cholangiocyte_regulons.csv  (Cholangiocyte)
+#   Each carries tf_name, regulon_activity_diff, activity_padj per TF per CT
+#   (long format: one row per regulon target gene; collapsed to one row/TF).
+#
+#   Aesthetic (Liang Cell 2024 refinement, 2026-05-18):
+#     - Row + column dendrograms on the effect-size matrix (guarded for n>=2)
 #     - Column-side colored annotation bar (one color per CT)
 #     - White-centered diverging scale anchored at #1565C0 / #C9265E
 #     - Drug-target row-side annotation bar (gold rectangles, NOT row borders)
-#     - 4-way validated TFs (THRB/HNF4A/RORA/MLXIPL/MAX) in bold italic
-#     - Significance stars overlaid in bold white/black on each cell
-#     - CYP26A1 italic footnote callout below heatmap
-#
-# Inputs (all from Analysis/ATAC/Human_Multiome/scenic_plus):
-#   - disease_regulons.csv               (Hepatocyte; 24 TFs)
-#   - macrophage_disease_regulons.csv    (23 TFs)
-#   - stellate_disease_regulons.csv      (48 TFs)
-#   - endothelial_disease_regulons.csv   (23 TFs)
-#   - cholangiocyte_disease_regulons.csv (72 TFs - filter hard)
-#
-# Filter:
-#   1. Per-CT canonical threshold: padj < 0.05 & |activity_diff| > 0.05
-#   2. Union of TFs surviving in >=2 CTs OR present in 4-way validated set
-#      (4-way validated TFs: THRB, HNF4A, RORA, MLXIPL, MAX)
+#     - Hepatocyte headline TFs (THRB/HNF4A/RORA/MLXIPL/MAX) in bold italic
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -38,17 +50,21 @@ source(file.path(BASE_DIR, "scripts/figures/publication_theme.R"))
 
 OUT_DIR <- file.path(FIG3_DIR, "panels")
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
-OUT_PDF <- file.path(OUT_DIR, "fig3_panel_J_disease_regulons_celltype.pdf")
-OUT_CSV <- file.path(OUT_DIR, "fig3_panel_J_disease_regulons_celltype.csv")
+OUT_PDF <- file.path(OUT_DIR, "disease_master_regulators_celltype.pdf")
+OUT_CSV <- file.path(OUT_DIR, "disease_master_regulators_celltype.csv")
 
 # ---------------------------------------------------------------------------
 # Annotations
 # ---------------------------------------------------------------------------
 DRUG_TARGET_TFS  <- c("THRB", "NR1H4", "PPARA", "PPARG")  # FDA / clinical-stage MASLD
-VALIDATED_4WAY   <- c("THRB", "HNF4A", "RORA", "MLXIPL", "MAX")
+# Hepatocyte headline master regulators (bold-italic row labels). Whichever of
+# these are present in the master-regulator panel are emphasized; HNF4A/RORA/THRB
+# are guaranteed members of the hepatocyte master-regulator set.
+HEADLINE_TFS     <- c("THRB", "HNF4A", "RORA", "MLXIPL", "MAX")
 
-PADJ_CUT    <- 0.05
-DELTA_CUT   <- 0.05
+# Cross-modality master-regulator TF set (defines the kept rows). Not a
+# significance gate; single-cohort donor-level regulon-DE is underpowered (n=18).
+MASTER_REG_F <- file.path(ATAC_DIR, "scenic_plus", "disease_master_regulators.csv")
 
 # Liang-style warm/cool CT palette (warm = positive findings / hepatic-myeloid,
 # cool = baseline / vascular-biliary).
@@ -64,12 +80,14 @@ CT_COLORS <- c(
 # Load per-CT regulons
 # ---------------------------------------------------------------------------
 SP_DIR <- file.path(ATAC_DIR, "scenic_plus")
+# Populated (NOT disease-filtered) per-CT regulon tables. The old
+# {ct}_disease_regulons.csv files are empty (FDR-gated donor-level n=18 DE).
 ct_files <- list(
-  Hepatocyte    = file.path(SP_DIR, "disease_regulons.csv"),
-  Macrophage    = file.path(SP_DIR, "macrophage_disease_regulons.csv"),
-  Stellate      = file.path(SP_DIR, "stellate_disease_regulons.csv"),
-  Endothelial   = file.path(SP_DIR, "endothelial_disease_regulons.csv"),
-  Cholangiocyte = file.path(SP_DIR, "cholangiocyte_disease_regulons.csv")
+  Hepatocyte    = file.path(SP_DIR, "hepatocyte_regulons.csv"),
+  Macrophage    = file.path(SP_DIR, "macrophage_regulons.csv"),
+  Stellate      = file.path(SP_DIR, "stellate_regulons.csv"),
+  Endothelial   = file.path(SP_DIR, "endothelial_regulons.csv"),
+  Cholangiocyte = file.path(SP_DIR, "cholangiocyte_regulons.csv")
 )
 
 load_ct <- function(ct, f) {
@@ -95,18 +113,18 @@ reg_all <- reg_all[order(cell_type, tf_name, activity_padj)]
 reg_all <- reg_all[, .SD[1], by = .(cell_type, tf_name)]
 
 # ---------------------------------------------------------------------------
-# Apply canonical filter & build TF union
+# Restrict to the cross-modality disease master-regulator TF set
+#   (defensible "disease-associated" definition; NOT a per-CT significance gate)
 # ---------------------------------------------------------------------------
-reg_all[, sig_ct := !is.na(activity_padj) & activity_padj < PADJ_CUT &
-                    !is.na(regulon_activity_diff) &
-                    abs(regulon_activity_diff) > DELTA_CUT]
-
-tf_n_sig <- reg_all[sig_ct == TRUE, .N, by = tf_name]
-keep_tfs <- union(tf_n_sig[N >= 2, tf_name], VALIDATED_4WAY)
-keep_tfs <- intersect(keep_tfs, unique(reg_all$tf_name))
-cat(sprintf("TFs after filter (>=2 CT sig OR 4-way validated): %d\n",
-            length(keep_tfs)))
-cat("Kept TFs: ", paste(keep_tfs, collapse = ", "), "\n")
+if (!file.exists(MASTER_REG_F))
+  stop("Master-regulator file not found: ", MASTER_REG_F)
+master_tfs <- unique(fread(MASTER_REG_F)$tf_name)
+keep_tfs   <- intersect(master_tfs, unique(reg_all$tf_name))
+cat(sprintf("Cross-modality master-regulator TFs: %d (present in per-CT regulons: %d)\n",
+            length(master_tfs), length(keep_tfs)))
+cat("Kept TFs: ", paste(sort(keep_tfs), collapse = ", "), "\n")
+hl_present <- intersect(HEADLINE_TFS, keep_tfs)
+cat("Headline TFs present: ", paste(hl_present, collapse = ", "), "\n")
 
 reg_keep <- reg_all[tf_name %in% keep_tfs]
 
@@ -133,13 +151,16 @@ fwrite(delta_df, OUT_CSV)
 
 # ---------------------------------------------------------------------------
 # Clustering distances (handle NA by 0-imputation for distance only;
-# matrix values displayed remain unimputed)
+# matrix values displayed remain unimputed). Clustering on the effect-size
+# matrix. Guard hclust for n>=2 rows/cols (single-row matrices break dist()).
 # ---------------------------------------------------------------------------
 clust_mat <- mat_delta
 clust_mat[is.na(clust_mat)] <- 0
 
-row_clust <- hclust(dist(clust_mat,        method = "euclidean"), method = "average")
-col_clust <- hclust(dist(t(clust_mat),     method = "euclidean"), method = "average")
+row_clust <- if (nrow(clust_mat) >= 2)
+  hclust(dist(clust_mat, method = "euclidean"), method = "average") else FALSE
+col_clust <- if (ncol(clust_mat) >= 2)
+  hclust(dist(t(clust_mat), method = "euclidean"), method = "average") else FALSE
 
 # ---------------------------------------------------------------------------
 # Color scale: white-centered diverging with Liang endpoints
@@ -153,22 +174,16 @@ col_delta <- colorRamp2(
 )
 
 # ---------------------------------------------------------------------------
-# Cell function: bold significance stars (white-on-dark, black-on-light)
+# Cell function: gray out absent (NA) TF x CT combinations only.
+# No significance stars: this is an EFFECT-SIZE display. Single-cohort
+# donor-level regulon-activity DE is underpowered (n=18), so per-CT activity_padj
+# is uninformative and intentionally NOT overlaid as significance markers.
 # ---------------------------------------------------------------------------
 star_fun <- function(j, i, x, y, width, height, fill) {
-  p  <- mat_padj[i, j]
-  d  <- mat_delta[i, j]
+  d <- mat_delta[i, j]
   if (is.na(d)) {
     grid.rect(x, y, width, height, gp = gpar(fill = "#F5F5F5", col = NA))
     return(invisible())
-  }
-  if (!is.na(p)) {
-    stars <- if (p < 0.01) "**" else if (p < 0.05) "*" else ""
-    if (nzchar(stars)) {
-      txt_col <- if (abs(d) > clamp_range * 0.55) "white" else "black"
-      grid.text(stars, x, y,
-                gp = gpar(fontsize = 7, col = txt_col, fontface = "bold"))
-    }
   }
 }
 
@@ -198,8 +213,9 @@ drug_anno <- rowAnnotation(
   show_legend = FALSE
 )
 
-# Row label faces: bold italic for 4-way validated, regular italic otherwise
-row_faces <- ifelse(rownames(mat_delta) %in% VALIDATED_4WAY,
+# Row label faces: bold italic for hepatocyte headline master regulators
+# (THRB/HNF4A/RORA/MLXIPL/MAX), regular italic otherwise.
+row_faces <- ifelse(rownames(mat_delta) %in% HEADLINE_TFS,
                     "bold.italic", "italic")
 
 # ---------------------------------------------------------------------------
@@ -207,7 +223,7 @@ row_faces <- ifelse(rownames(mat_delta) %in% VALIDATED_4WAY,
 # ---------------------------------------------------------------------------
 ht <- Heatmap(
   mat_plot,
-  name = "Delta activity",
+  name = "Regulon activity effect size",
   col = col_delta,
   na_col = "#F5F5F5",
   cluster_rows = row_clust,
@@ -228,7 +244,7 @@ ht <- Heatmap(
   height = unit(0.42 * nrow(mat_plot), "cm"),
   border = FALSE,
   heatmap_legend_param = list(
-    title = expression(Delta * " activity"),
+    title = expression(Delta * " activity\n(MASLD - normal)"),
     title_gp = gpar(fontsize = 6, fontface = "bold"),
     labels_gp = gpar(fontsize = 5),
     legend_height = unit(2.2, "cm"),
@@ -261,6 +277,8 @@ pushViewport(viewport(layout = grid.layout(
 # --- Heatmap viewport ---
 pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 1))
 draw(ht,
+     column_title = "Regulon-activity effect size of cross-modality disease master regulators",
+     column_title_gp = gpar(fontsize = 7.5, fontface = "bold"),
      heatmap_legend_side = "right",
      annotation_legend_side = "right",
      padding = unit(c(2, 2, 6, 2), "mm"),
@@ -270,13 +288,15 @@ upViewport()
 # --- Footnote viewport ---
 pushViewport(viewport(layout.pos.row = 2, layout.pos.col = 1))
 grid.text(
-  "* padj < 0.05   ** padj < 0.01    bold italic = 4-way validated (THRB, HNF4A, RORA, MLXIPL, MAX)",
-  x = 0.02, y = 0.78, just = c("left", "top"),
+  paste0("Fill = SCENIC+ regulon-activity effect size (MASLD - normal); cross-modality master ",
+         "regulators (hepatocyte regulon TFs that are bulk DEGs or COLOC hits)."),
+  x = 0.02, y = 0.82, just = c("left", "top"),
   gp = gpar(fontsize = 5.5, col = "grey25", fontface = "plain")
 )
 grid.text(
-  "CYP26A1 — novel peak-linked convergence target shared by THRB + HNF4A regulons (see Panel K)",
-  x = 0.02, y = 0.30, just = c("left", "top"),
+  paste0("Effect-size display only; single-cohort donor-level regulon DE is underpowered (n=18). ",
+         "Bold italic = hepatocyte headline TFs (THRB, HNF4A, RORA, MLXIPL, MAX). Gray = TF absent in cell type."),
+  x = 0.02, y = 0.40, just = c("left", "top"),
   gp = gpar(fontsize = 5.5, col = "grey45", fontface = "italic")
 )
 upViewport()
@@ -286,10 +306,10 @@ dev.off()
 
 cat("Done. Output:\n  PDF: ", OUT_PDF, "\n  CSV: ", OUT_CSV, "\n", sep = "")
 
-# Print quick summary of which CTs show strongest signal per kept TF
+# Print quick summary of which CTs show the strongest regulon-activity effect per TF
 sig_summary <- reg_keep[tf_name %in% rownames(mat_plot),
-  .(n_sig_ct = sum(sig_ct, na.rm = TRUE),
+  .(n_ct_present  = .N,
     max_abs_delta = max(abs(regulon_activity_diff), na.rm = TRUE)),
-  by = tf_name][order(-n_sig_ct, -max_abs_delta)]
-cat("\nTop TFs by sig-CT count:\n")
+  by = tf_name][order(-max_abs_delta, -n_ct_present)]
+cat("\nTop TFs by max |regulon-activity effect size|:\n")
 print(sig_summary, nrows = 30)

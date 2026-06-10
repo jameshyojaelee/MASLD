@@ -276,7 +276,7 @@ convergence <- bind_rows(convergence, tf_self) %>% distinct()
 
 # Join atlas evidence
 atlas_slim <- atlas %>%
-  select(human_symbol, dream_logFC, dream_padj, dream_tstat,
+  select(human_symbol, bulk_logFC, bulk_padj, bulk_tstat,
          is_conserved, attribution_class) %>%
   rename(gene = human_symbol)
 
@@ -322,7 +322,7 @@ convergence <- convergence %>%
 # Compute convergence flags
 convergence <- convergence %>%
   mutate(
-    is_deg = !is.na(dream_padj) & dream_padj < 0.1,  # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.5 (Script 05b)
+    is_deg = !is.na(bulk_padj) & bulk_padj < 0.1,  # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.5 (Script 05b)
     has_genetic = has_gwas | has_ieqtl | has_mr_twas,
     # Triple convergence: TF-regulated + GWAS + druggable
     is_triple = has_genetic & is_druggable,
@@ -354,7 +354,7 @@ cat("\n--- Triple convergence targets ---\n")
 triple_targets <- convergence %>%
   filter(is_triple) %>%
   select(tf_name, gene, regulon_activity_diff, activity_padj,
-         dream_logFC, dream_padj, is_deg,
+         bulk_logFC, bulk_padj, is_deg,
          gwas_coloc, n_gwas_coloc, max_pp4,
          ieqtl_cell_types,
          n_drugs, drugs, clinical_drug,

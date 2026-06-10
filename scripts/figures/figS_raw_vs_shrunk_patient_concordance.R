@@ -6,8 +6,12 @@
 # control baseline (the negative control: controls are the within-cohort reference
 # so their LFC ~ 0 -> rho ~ 0, directional concordance ~ 50%).
 #
+# v6 (2026-06-04): the effect-size source is the LIBRARY's canonical limma-voom +
+# metafor (REML) ashr DEGs (meta_results_ashr.csv), not dream. This validates the
+# raw-vs-ashr shrinkage on the SAME instrument the v6 library is built from.
+#
 # Inputs:
-#   dream_results_ashr.csv     (gene, padj, logFC, lfsr, shrunk_logFC)
+#   meta_results_ashr.csv      (gene, padj, logFC, lfsr, shrunk_logFC; metafor REML + ashr)
 #   patient_lfc_matrix.csv.gz  (690 disease samples; log2FC vs within-cohort control mean)
 #   merged_dge.rds             (rebuild the 156 healthy-control LFC the same way)
 # Conditions (significance fixed at 0.05; effect-size cutoff x swept 0 -> 3.0):
@@ -19,7 +23,7 @@
 #   - n_DEGs (two-sided) and raw/ashr DEG-set Jaccard (DEG-set level, no group split)
 #
 # Output (library dir): Cas13_Library_Design/figures/
-#   S_lib_9_patient_concordance_rho.pdf, _pct.pdf, S_lib_9_deg_counts.pdf, S_lib_9_raw_ashr_jaccard.pdf
+#   08a_patient_concordance_rho.pdf, _pct.pdf, 08c_deg_counts_by_cutoff.pdf, 08d_raw_ashr_jaccard.pdf
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(edgeR); library(yaml) })
@@ -30,7 +34,7 @@ FIGLIB <- file.path(BASE, "Cas13_Library_Design/figures")
 dir.create(FIGLIB, showWarnings = FALSE, recursive = TRUE)
 strip_v <- function(x) sub("[.][0-9]+$", "", x)
 
-dream <- fread(file.path(INT, "dream_results_ashr.csv"))     # gene,padj,logFC,lfsr,shrunk_logFC
+dream <- fread(file.path(INT, "meta_results_ashr.csv"))      # v6: metafor REML + ashr (gene,padj,logFC,lfsr,shrunk_logFC)
 lfc_mat <- fread(file.path(INT, "patient_lfc_matrix.csv.gz")) # disease samples
 
 # ---- healthy-control LFC matrix (same within-cohort reference as disease) ----
@@ -103,7 +107,7 @@ res[, condition := factor(condition, levels = c(RAW, ASHR))]
 res[, group := factor(group, levels = c(DZ, HZ))]
 pal <- setNames(c("#B2182B", "#3B4CC0"), c(RAW, ASHR))
 fwrite(res, file.path(BASE, "Cas13_Library_Design/data/patient_concordance_by_cutoff_to3.csv"))
-cat("\n=== sanity (cutoff 0.5 Disease vs known: raw rho~0.458/pct~72.3, ashr rho~0.480/pct~74.5) ===\n")
+cat("\n=== sanity (cutoff 0.5; metafor source -- expect Disease rho>Healthy rho, ashr>=raw concordance) ===\n")
 print(res[cutoff == 0.5])
 
 bt <- theme_bw(base_size = 11) + theme(panel.grid.minor = element_blank(),
@@ -120,7 +124,7 @@ mk <- function(y, ytitle, title, ylab_pct = FALSE) {
   g
 }
 pRho <- mk("median_rho", "Median per-sample Spearman rho",
-           "Per-sample concordance with the dream signature: disease vs healthy")
+           "Per-sample concordance with the metafor signature: disease vs healthy")
 pPct <- mk("median_pct", "Median per-sample concordance (%)",
            "Per-sample directional concordance: disease vs healthy", ylab_pct = TRUE)
 
@@ -146,8 +150,8 @@ pJac <- ggplot(jac[!is.na(jaccard)], aes(cutoff, jaccard)) +
   labs(x = "Effect-size cutoff", y = "Jaccard overlap of DEG sets",
        title = "DEG-set overlap between raw and ashr") + bt
 
-ggsave(file.path(FIGLIB, "S_lib_9_patient_concordance_rho.pdf"), pRho, width = 7.0, height = 4.6, useDingbats = FALSE)
-ggsave(file.path(FIGLIB, "S_lib_9_patient_concordance_pct.pdf"), pPct, width = 7.0, height = 4.6, useDingbats = FALSE)
-ggsave(file.path(FIGLIB, "S_lib_9_deg_counts.pdf"),              pNdeg, width = 6.8, height = 4.2, useDingbats = FALSE)
-ggsave(file.path(FIGLIB, "S_lib_9_raw_ashr_jaccard.pdf"),        pJac, width = 6.8, height = 4.2, useDingbats = FALSE)
+ggsave(file.path(FIGLIB, "08a_patient_concordance_rho.pdf"), pRho, width = 7.0, height = 4.6, useDingbats = FALSE)
+ggsave(file.path(FIGLIB, "08b_patient_concordance_pct.pdf"), pPct, width = 7.0, height = 4.6, useDingbats = FALSE)
+ggsave(file.path(FIGLIB, "08c_deg_counts_by_cutoff.pdf"),              pNdeg, width = 6.8, height = 4.2, useDingbats = FALSE)
+ggsave(file.path(FIGLIB, "08d_raw_ashr_jaccard.pdf"),        pJac, width = 6.8, height = 4.2, useDingbats = FALSE)
 cat("\nWrote S_lib_9 panels (rho/pct now with disease vs healthy) to", FIGLIB, "\n")

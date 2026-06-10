@@ -82,7 +82,7 @@ fig3g <- ggplot(f1, aes(x = method, y = n_genes, fill = fine_class)) +
   base_theme +
   theme(legend.position = "right")
 
-save_panel(fig3g, "fig3g_coloc_class_split.pdf", w = 5.6, h = 4.2)
+save_panel(fig3g, "coloc_variant_class_split.pdf", w = 5.6, h = 4.2)
 
 # ===========================================================================
 # fig3h — Tier-1 DEG → COLOC cascade (F2)
@@ -119,7 +119,7 @@ fig3h <- ggplot(funnel, aes(x = count, y = step, fill = group)) +
   theme(axis.text.y = element_text(size = 8.5),
         plot.title = element_text(face = "bold", size = 10.5))
 
-save_panel(fig3h, "fig3h_deg_coloc_funnel.pdf", w = 7.0, h = 3.5)
+save_panel(fig3h, "deg_coloc_funnel.pdf", w = 7.0, h = 3.5)
 
 # Drop the combined biotype panel from the previous iteration
 old_combined <- file.path(OUT, "fig3g_deg_coloc_biotypes.pdf")
@@ -129,12 +129,12 @@ if (file.exists(old_combined)) {
 }
 
 # ===========================================================================
-# fig3i — All 797 COLOC genes plotted by their dream log2FC × PP.H4
+# fig3i — All 797 COLOC genes plotted by their C2 (limma-voom-qw) log2FC × PP.H4
 #          Label every coding-variant gene + the top non-coding hits.
 #          Dashed vlines at logFC = ±0.5 (Tier-1 DEG threshold).
 # ===========================================================================
 deg_all <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"),
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
   select = c("logFC","padj","symbol"))
 deg_all <- deg_all[symbol != "" & !is.na(symbol)]
 setorder(deg_all, symbol, padj)
@@ -208,7 +208,7 @@ fig3i <- ggplot(coloc_pts, aes(x = logFC, y = pp4_best, color = coarse_class)) +
                                       lineheight = 1.1)) +
   guides(color = guide_legend(override.aes = list(size = 2.5), nrow = 1))
 
-save_panel(fig3i, "fig3i_deg_coloc_scatter.pdf", w = 6.4, h = 5.4)
+save_panel(fig3i, "deg_coloc_scatter.pdf", w = 6.4, h = 5.4)
 
 # Drop the temporary fig3h_deg_coloc_scatter.pdf from prior iteration
 old_h_scatter <- file.path(OUT, "fig3h_deg_coloc_scatter.pdf")

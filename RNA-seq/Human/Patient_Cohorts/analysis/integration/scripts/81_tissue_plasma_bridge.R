@@ -51,7 +51,7 @@ atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_at
 cat("Atlas:", nrow(atlas), "genes\n")
 
 # Dream DEGs
-dream_degs <- atlas[!is.na(dream_padj) & dream_padj < 0.1]
+dream_degs <- atlas[!is.na(bulk_padj) & bulk_padj < 0.1]
 cat("Dream DEGs (padj<0.1):", nrow(dream_degs), "\n")
 
 # 1b. Olink plasma data
@@ -102,9 +102,9 @@ cat("\n")
 cat("=== STEP 2: Tissue-Plasma Bridge ===\n")
 
 olink_set <- data.table(human_symbol = olink_proteins, in_plasma = TRUE)
-dream_set <- atlas[, .(human_symbol, dream_logFC, dream_padj, dream_tstat,
+dream_set <- atlas[, .(human_symbol, bulk_logFC, bulk_padj, bulk_tstat,
                         ensembl_id, gene_biotype)]
-dream_set[, is_deg := !is.na(dream_padj) & dream_padj < 0.1]
+dream_set[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.1]
 
 # Merge: all atlas genes x Olink availability
 bridge <- merge(dream_set, olink_set, by = "human_symbol", all.x = TRUE)
@@ -232,27 +232,27 @@ cat("\n=== STEP 4: Tissue-Plasma Concordance ===\n")
 if (!is.null(plasma_de)) {
   # Merge tissue dream LFC with plasma LFC
   concordance <- merge(
-    bridge[is_deg == TRUE & in_plasma == TRUE, .(human_symbol, dream_logFC, dream_padj)],
+    bridge[is_deg == TRUE & in_plasma == TRUE, .(human_symbol, bulk_logFC, bulk_padj)],
     plasma_de[, .(protein, plasma_logFC, plasma_padj)],
     by.x = "human_symbol", by.y = "protein"
   )
 
   if (nrow(concordance) > 10) {
-    rho <- cor(concordance$dream_logFC, concordance$plasma_logFC, method = "spearman",
+    rho <- cor(concordance$bulk_logFC, concordance$plasma_logFC, method = "spearman",
                use = "pairwise.complete")
-    r <- cor(concordance$dream_logFC, concordance$plasma_logFC, method = "pearson",
+    r <- cor(concordance$bulk_logFC, concordance$plasma_logFC, method = "pearson",
              use = "pairwise.complete")
 
     # Direction concordance (among significant in both)
-    both_sig <- concordance[dream_padj < 0.1 & plasma_padj < 0.05]
+    both_sig <- concordance[bulk_padj < 0.1 & plasma_padj < 0.05]
     if (nrow(both_sig) > 0) {
-      dir_conc <- mean(sign(both_sig$dream_logFC) == sign(both_sig$plasma_logFC))
+      dir_conc <- mean(sign(both_sig$bulk_logFC) == sign(both_sig$plasma_logFC))
     } else {
       dir_conc <- NA
     }
 
     # Classify each gene
-    concordance[, direction_match := sign(dream_logFC) == sign(plasma_logFC)]
+    concordance[, direction_match := sign(bulk_logFC) == sign(plasma_logFC)]
     concordance[, tissue_plasma_class := fifelse(
       plasma_padj < 0.05 & direction_match, "concordant",
       fifelse(plasma_padj < 0.05 & !direction_match, "discordant",
@@ -315,18 +315,18 @@ cat("\n=== STEP 6: Top Plasma-Translatable DEGs ===\n")
 
 # Rank bridge genes by tissue significance among plasma-detectable
 translatable <- bridge[classification == "tissue_DEG_plasma_detectable"]
-translatable <- translatable[order(dream_padj)]
+translatable <- translatable[order(bulk_padj)]
 
 cat("Top 30 plasma-translatable DEGs (by tissue significance):\n")
-print(translatable[1:30, .(human_symbol, dream_logFC = round(dream_logFC, 2),
-                            dream_padj = formatC(dream_padj, format = "e", digits = 1),
+print(translatable[1:30, .(human_symbol, bulk_logFC = round(bulk_logFC, 2),
+                            bulk_padj = formatC(bulk_padj, format = "e", digits = 1),
                             gene_biotype)])
 
 # Add plasma DE info if available
 if (!is.null(plasma_de)) {
   translatable <- merge(translatable, plasma_de[, .(protein, plasma_logFC, plasma_padj)],
                          by.x = "human_symbol", by.y = "protein", all.x = TRUE)
-  translatable[, dual_significant := !is.na(plasma_padj) & plasma_padj < 0.05 & dream_padj < 0.1]
+  translatable[, dual_significant := !is.na(plasma_padj) & plasma_padj < 0.05 & bulk_padj < 0.1]
   n_dual <- sum(translatable$dual_significant, na.rm = TRUE)
   cat("\nDual-significant (tissue padj<0.1 AND plasma padj<0.05):", n_dual, "genes\n")
 }

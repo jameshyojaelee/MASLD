@@ -119,7 +119,7 @@ consensus <- merge(consensus, symbol_map, by = "ensembl_clean", all.x = TRUE)
 # Also pull in the human tier from consensus columns
 # dream_sig + dream_dir already exist; consensus tier comes from the full consensus file
 # If a separate tier column is needed, derive from the per_study overlap later
-# For now, keep dream_logFC, dream_padj, t-statistic, dream_sig, dream_dir
+# For now, keep bulk_logFC, bulk_padj, t-statistic, dream_sig, dream_dir
 
 cat("  Genes with HGNC symbol:", sum(!is.na(consensus$human_symbol)), "/", nrow(consensus), "\n")
 
@@ -675,48 +675,19 @@ if (file.exists(bbj_ggt_file)) {
 # ================================================================
 # Layer 4q: Ghouse Cirrhosis COLOC (from Script 49, progression)
 # ================================================================
-cat("Loading Layer 4q: Ghouse Cirrhosis COLOC (progression)...\n")
-ghouse_file <- file.path(BASE, "RNA-seq/results/causal_inference/ghouse_cirrhosis/coloc_results.csv")
-if (file.exists(ghouse_file)) {
-  ghouse <- fread(ghouse_file)
-  if (nrow(ghouse) > 0 && "PP.H4" %in% names(ghouse)) {
-    ghouse_layer <- ghouse[, .(
-      human_symbol              = gene,
-      ghouse_cirrhosis_coloc_pp4 = PP.H4
-    )]
-    ghouse_layer <- ghouse_layer[!duplicated(human_symbol)]
-    cat("  Ghouse Cirrhosis COLOC genes:", nrow(ghouse_layer), "\n")
-    cat("  Ghouse PP.H4 > 0.5:", sum(ghouse_layer$ghouse_cirrhosis_coloc_pp4 > 0.5, na.rm = TRUE), "\n")
-  } else {
-    ghouse_layer <- data.table(human_symbol = character(0), ghouse_cirrhosis_coloc_pp4 = numeric(0))
-  }
-} else {
-  cat("  Ghouse Cirrhosis COLOC not found (run Script 49 with GWAS_NAME=GHOUSE_CIRRHOSIS first)\n")
-  ghouse_layer <- data.table(human_symbol = character(0), ghouse_cirrhosis_coloc_pp4 = numeric(0))
-}
+# Layer 4q DROPPED 2026-06-06: Ghouse Cirrhosis is an etiology-mixed endpoint, not
+# MASLD-specific (Broadaway excluded cirrhosis/HCC). Column retained as empty/NA so the
+# 23-GWAS MASLD portfolio gives no genetic credit for cirrhosis/HCC colocalization.
+cat("Layer 4q: Ghouse Cirrhosis COLOC — DROPPED 2026-06-06 (cirrhosis/HCC not MASLD-specific). Column NA.\n")
+ghouse_layer <- data.table(human_symbol = character(0), ghouse_cirrhosis_coloc_pp4 = numeric(0))
 
 # ================================================================
 # Layer 4q2: Ghouse HCC COLOC (from Script 49, progression)
 # ================================================================
-cat("Loading Layer 4q2: Ghouse HCC COLOC (progression)...\n")
-ghouse_hcc_file <- file.path(BASE, "RNA-seq/results/causal_inference/ghouse_hcc/coloc_results.csv")
-if (file.exists(ghouse_hcc_file)) {
-  ghouse_hcc <- fread(ghouse_hcc_file)
-  if (nrow(ghouse_hcc) > 0 && "PP.H4" %in% names(ghouse_hcc)) {
-    ghouse_hcc_layer <- ghouse_hcc[, .(
-      human_symbol           = gene,
-      ghouse_hcc_coloc_pp4   = PP.H4
-    )]
-    ghouse_hcc_layer <- ghouse_hcc_layer[!duplicated(human_symbol)]
-    cat("  Ghouse HCC COLOC genes:", nrow(ghouse_hcc_layer), "\n")
-    cat("  Ghouse HCC PP.H4 > 0.5:", sum(ghouse_hcc_layer$ghouse_hcc_coloc_pp4 > 0.5, na.rm = TRUE), "\n")
-  } else {
-    ghouse_hcc_layer <- data.table(human_symbol = character(0), ghouse_hcc_coloc_pp4 = numeric(0))
-  }
-} else {
-  cat("  Ghouse HCC COLOC not found\n")
-  ghouse_hcc_layer <- data.table(human_symbol = character(0), ghouse_hcc_coloc_pp4 = numeric(0))
-}
+# Layer 4q2 DROPPED 2026-06-06: Ghouse HCC is not MASLD-specific (Broadaway excluded
+# cirrhosis/HCC). Column retained as empty/NA — no genetic credit for HCC colocalization.
+cat("Layer 4q2: Ghouse HCC COLOC — DROPPED 2026-06-06 (cirrhosis/HCC not MASLD-specific). Column NA.\n")
+ghouse_hcc_layer <- data.table(human_symbol = character(0), ghouse_hcc_coloc_pp4 = numeric(0))
 
 # ================================================================
 # Layer 4r: deCODE NAFL COLOC (from Script 49, Icelandic replication)
@@ -744,48 +715,18 @@ if (file.exists(decode_nafl_file)) {
 # ================================================================
 # Layer 4s: deCODE Cirrhosis COLOC (from Script 49)
 # ================================================================
-cat("Loading Layer 4s: deCODE Cirrhosis COLOC...\n")
-decode_cirrhosis_file <- file.path(BASE, "RNA-seq/results/causal_inference/decode_cirrhosis/coloc_results.csv")
-if (file.exists(decode_cirrhosis_file)) {
-  decode_cirrhosis <- fread(decode_cirrhosis_file)
-  if (nrow(decode_cirrhosis) > 0 && "PP.H4" %in% names(decode_cirrhosis)) {
-    decode_cirrhosis_layer <- decode_cirrhosis[, .(
-      human_symbol                 = gene,
-      decode_cirrhosis_coloc_pp4   = PP.H4
-    )]
-    decode_cirrhosis_layer <- decode_cirrhosis_layer[!duplicated(human_symbol)]
-    cat("  deCODE Cirrhosis COLOC genes:", nrow(decode_cirrhosis_layer), "\n")
-    cat("  deCODE Cirrhosis PP.H4 > 0.5:", sum(decode_cirrhosis_layer$decode_cirrhosis_coloc_pp4 > 0.5, na.rm = TRUE), "\n")
-  } else {
-    decode_cirrhosis_layer <- data.table(human_symbol = character(0), decode_cirrhosis_coloc_pp4 = numeric(0))
-  }
-} else {
-  cat("  deCODE Cirrhosis COLOC not found (run Script 49 with GWAS_NAME=DECODE_CIRRHOSIS first)\n")
-  decode_cirrhosis_layer <- data.table(human_symbol = character(0), decode_cirrhosis_coloc_pp4 = numeric(0))
-}
+# Layer 4s DROPPED 2026-06-06: deCODE (Sveinbjornsson) Cirrhosis is not MASLD-specific
+# (Broadaway excluded cirrhosis/HCC). Column retained as empty/NA.
+cat("Layer 4s: deCODE Cirrhosis COLOC — DROPPED 2026-06-06 (cirrhosis/HCC not MASLD-specific). Column NA.\n")
+decode_cirrhosis_layer <- data.table(human_symbol = character(0), decode_cirrhosis_coloc_pp4 = numeric(0))
 
 # ================================================================
 # Layer 4t: deCODE HCC COLOC (from Script 49)
 # ================================================================
-cat("Loading Layer 4t: deCODE HCC COLOC...\n")
-decode_hcc_file <- file.path(BASE, "RNA-seq/results/causal_inference/decode_hcc/coloc_results.csv")
-if (file.exists(decode_hcc_file)) {
-  decode_hcc <- fread(decode_hcc_file)
-  if (nrow(decode_hcc) > 0 && "PP.H4" %in% names(decode_hcc)) {
-    decode_hcc_layer <- decode_hcc[, .(
-      human_symbol             = gene,
-      decode_hcc_coloc_pp4     = PP.H4
-    )]
-    decode_hcc_layer <- decode_hcc_layer[!duplicated(human_symbol)]
-    cat("  deCODE HCC COLOC genes:", nrow(decode_hcc_layer), "\n")
-    cat("  deCODE HCC PP.H4 > 0.5:", sum(decode_hcc_layer$decode_hcc_coloc_pp4 > 0.5, na.rm = TRUE), "\n")
-  } else {
-    decode_hcc_layer <- data.table(human_symbol = character(0), decode_hcc_coloc_pp4 = numeric(0))
-  }
-} else {
-  cat("  deCODE HCC COLOC not found (run Script 49 with GWAS_NAME=DECODE_HCC first)\n")
-  decode_hcc_layer <- data.table(human_symbol = character(0), decode_hcc_coloc_pp4 = numeric(0))
-}
+# Layer 4t DROPPED 2026-06-06: deCODE (Sveinbjornsson) HCC is not MASLD-specific
+# (Broadaway excluded cirrhosis/HCC). Column retained as empty/NA.
+cat("Layer 4t: deCODE HCC COLOC — DROPPED 2026-06-06 (cirrhosis/HCC not MASLD-specific). Column NA.\n")
+decode_hcc_layer <- data.table(human_symbol = character(0), decode_hcc_coloc_pp4 = numeric(0))
 
 # ================================================================
 # Layer 4u-z: Pan-UKBB AFR/CSA COLOC (from Script 50, multi-ancestry)
@@ -1016,8 +957,8 @@ if (file.exists(sex_class_file)) {
   sex_layer <- sex_class_dt[!is.na(human_symbol), .(
     human_symbol,
     sex_class,
-    dream_logFC_M = get(m_col),
-    dream_logFC_F = get(f_col),
+    bulk_logFC_M = get(m_col),
+    bulk_logFC_F = get(f_col),
     sex_interaction_padj_from_cls = if (has_int_padj) interaction_padj else NA_real_
   )]
   sex_layer <- sex_layer[!duplicated(human_symbol)]
@@ -1025,7 +966,7 @@ if (file.exists(sex_class_file)) {
 } else {
   cat("  Sex classification not found\n")
   sex_layer <- data.table(human_symbol = character(0), sex_class = character(0),
-                           dream_logFC_M = numeric(0), dream_logFC_F = numeric(0))
+                           bulk_logFC_M = numeric(0), bulk_logFC_F = numeric(0))
 }
 
 # Sex interaction p-value
@@ -1172,7 +1113,6 @@ if (file.exists(drug_file)) {
   drugs <- fread(drug_file)
   drug_layer <- drugs[, .(
     human_symbol    = symbol,
-    dgidb_druggable = as.logical(dgidb_druggable),
     opentargets_drug = as.logical(ot_has_drug),
     lincs_reversal  = as.logical(lincs_reversal)
   )]
@@ -1181,9 +1121,25 @@ if (file.exists(drug_file)) {
 } else {
   cat("  Drug targets not found\n")
   drug_layer <- data.table(human_symbol = character(0),
-                            dgidb_druggable = logical(0),
                             opentargets_drug = logical(0),
                             lincs_reversal = logical(0))
+}
+
+# FIX 2026-06-10: dgidb_druggable was previously sourced from the small
+# convergent_drug_targets.csv (~300 genes; genome-wide targets THRB/EGFR/HMGCR
+# came back blank — a broken annotation). Now sourced GENOME-WIDE from the DGIdb
+# interactions-derived druggable set (data/dgidb/dgidb_druggable_genes.csv,
+# 5,012 genes; built from dgidb.org/data/latest/interactions.tsv). Merged as its
+# own layer below; non-matches filled FALSE after the merge.
+dgidb_file <- file.path(BASE, "data/dgidb/dgidb_druggable_genes.csv")
+if (file.exists(dgidb_file)) {
+  dgidb_gw <- fread(dgidb_file)
+  dgidb_layer <- dgidb_gw[, .(human_symbol = toupper(gene_name), dgidb_druggable = TRUE)]
+  dgidb_layer <- dgidb_layer[!duplicated(human_symbol)]
+  cat("  DGIdb genome-wide druggable genes:", nrow(dgidb_layer), "\n")
+} else {
+  cat("  WARNING: genome-wide DGIdb file not found; dgidb_druggable will be FALSE\n")
+  dgidb_layer <- data.table(human_symbol = character(0), dgidb_druggable = logical(0))
 }
 
 # ================================================================
@@ -1266,11 +1222,12 @@ if (length(spatial_files) > 0) {
 cat("\n=== Assembling unified atlas ===\n")
 
 # Start with all unique human symbols from consensus
-# Sort by dream_padj so the most significant isoform wins deduplication
+# Sort by bulk_padj so the most significant isoform wins deduplication
 atlas <- unique(consensus[!is.na(human_symbol) & human_symbol != "",
                            .(human_symbol, ensembl_id = ensembl_clean,
-                             dream_logFC, dream_padj, dream_tstat = t)])
-setorder(atlas, dream_padj, na.last = TRUE)
+                             bulk_logFC, bulk_padj, bulk_tstat = t,
+                             bulk_shrunk_logFC, bulk_lfsr)])
+setorder(atlas, bulk_padj, na.last = TRUE)
 atlas <- atlas[!duplicated(human_symbol)]
 cat("Starting genes (from consensus):", nrow(atlas), "\n")
 
@@ -1508,6 +1465,9 @@ atlas <- merge(atlas, ess_layer, by = "human_symbol", all.x = TRUE)
 # Annotations
 atlas <- merge(atlas, deconv_layer, by = "human_symbol", all.x = TRUE)
 atlas <- merge(atlas, drug_layer, by = "human_symbol", all.x = TRUE)
+# Genome-wide DGIdb druggability (fix 2026-06-10) — own layer, fill non-matches FALSE
+atlas <- merge(atlas, dgidb_layer, by = "human_symbol", all.x = TRUE)
+atlas[is.na(dgidb_druggable), dgidb_druggable := FALSE]
 
 # Proteomics validation
 atlas <- merge(atlas, prot_layer, by = "human_symbol", all.x = TRUE)
@@ -1523,8 +1483,8 @@ cat("Atlas genes after all merges:", nrow(atlas), "\n")
 # Define what counts as "active" for each layer
 atlas[, layers_active := 0L]
 
-# L1: DEG significance — padj < 0.05 and |logFC| > 0.5
-atlas[, l1_active := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5]
+# L1: DEG significance — lfsr < 0.05 and |shrunk_logFC| > 0.5 (ashr canonical, 2026-06-02)
+atlas[, l1_active := !is.na(bulk_lfsr) & bulk_lfsr < 0.05 & abs(bulk_shrunk_logFC) > 0.5]
 # L2: Mouse — EXCLUDED from layers_active (supplementary only)
 # L3: has concordance data
 atlas[, l3_active := !is.na(primary_category) & primary_category != "" & primary_category != "Not_Significant"]
@@ -1606,7 +1566,8 @@ priority_cols <- c(
   # Identifiers
   "human_symbol", "ensembl_id", "gene_biotype", "mouse_ortholog",
   # L1: Human DE
-  "dream_logFC", "dream_padj", "dream_tstat",
+  "bulk_logFC", "bulk_padj", "bulk_tstat",
+  "bulk_shrunk_logFC", "bulk_lfsr",
   "human_consensus_tier",
   # L2: Mouse DE
   "mouse_meta_logFC", "mouse_meta_padj", "n_diets_sig", "mouse_consensus_tier",
@@ -1655,7 +1616,7 @@ priority_cols <- c(
   "pleiotropy_class", "pleiotropy_n_traits", "pleiotropy_n_domains",
   "pleiotropy_domains", "is_nafld_specific",
   # L5: Sex stratification
-  "sex_class", "dream_logFC_M", "dream_logFC_F", "sex_interaction_padj",
+  "sex_class", "bulk_logFC_M", "bulk_logFC_F", "sex_interaction_padj",
   # L6: Pathway biology
   "n_leading_edge_pathways", "top_pathways",
   # L7: Safety/essentiality
@@ -1686,8 +1647,8 @@ if (length(remaining_cols) > 0) {
 
 atlas <- atlas[, ..col_order]
 
-# Sort by dream_padj ascending (most significant first)
-atlas <- atlas[order(dream_padj)]
+# Sort by bulk_padj ascending (most significant first)
+atlas <- atlas[order(bulk_padj)]
 
 # ================================================================
 # Output
@@ -1708,7 +1669,14 @@ if (file.exists(out_file)) {
   # Drop renamed columns that the re-run guard would otherwise resurrect from
   # the prior atlas. 2026-04-27 LFC=0.5 migration also renamed
   # is_conserved_core -> is_conserved; the prior file still holds the old name.
-  renamed_legacy <- c("is_conserved_core")
+  # 2026-06-08 dream->bulk hard cutover: 27a now writes these 7 columns FRESH as
+  # bulk_* (S1 disease-vs-control + sex logFC_M/F). Blocklist their old dream_* names
+  # so the re-run guard does NOT resurrect the stale dream-method values from the
+  # prior atlas snapshot alongside the new bulk_* columns.
+  renamed_legacy <- c("is_conserved_core",
+                      "dream_logFC", "dream_padj", "dream_tstat",
+                      "dream_shrunk_logFC", "dream_lfsr",
+                      "dream_logFC_M", "dream_logFC_F", "dream_robustness_flag")
   if (any(renamed_legacy %in% downstream_cols)) {
     cat(sprintf("  Dropping legacy renamed columns from prior: %s\n",
                 paste(intersect(renamed_legacy, downstream_cols), collapse = ", ")))
@@ -1765,9 +1733,9 @@ cat("\n=== Atlas Summary ===\n")
 cat("Total genes:", nrow(atlas), "\n\n")
 
 cat("Layer coverage (non-NA/non-zero genes):\n")
-cat(sprintf("  L1 Human DE (padj<0.05, |logFC|>0.5): %d (%0.1f%%)\n",
-            sum(!is.na(atlas$dream_padj) & atlas$dream_padj < 0.05 & abs(atlas$dream_logFC) > 0.5),
-            100 * sum(!is.na(atlas$dream_padj) & atlas$dream_padj < 0.05 & abs(atlas$dream_logFC) > 0.5) / nrow(atlas)))
+cat(sprintf("  L1 Human DE (lfsr<0.05, |shrunk_logFC|>0.5): %d (%0.1f%%)\n",
+            sum(!is.na(atlas$bulk_lfsr) & atlas$bulk_lfsr < 0.05 & abs(atlas$bulk_shrunk_logFC) > 0.5),
+            100 * sum(!is.na(atlas$bulk_lfsr) & atlas$bulk_lfsr < 0.05 & abs(atlas$bulk_shrunk_logFC) > 0.5) / nrow(atlas)))
 cat(sprintf("  L2 Mouse DE (mouse_meta_padj<0.1): %d (%0.1f%%)\n",
             sum(!is.na(atlas$mouse_meta_padj) & atlas$mouse_meta_padj < 0.1),
             100 * sum(!is.na(atlas$mouse_meta_padj) & atlas$mouse_meta_padj < 0.1) / nrow(atlas)))
@@ -1839,8 +1807,8 @@ if ("gene_biotype" %in% names(atlas)) {
   lnc <- atlas[gene_biotype == "lncRNA"]
   cat(sprintf("\nlncRNA verification:\n"))
   cat(sprintf("  lncRNAs in atlas: %d\n", nrow(lnc)))
-  cat(sprintf("  with dream DEG (padj<0.05, |logFC|>0.5): %d\n",
-              sum(!is.na(lnc$dream_padj) & lnc$dream_padj < 0.05 & abs(lnc$dream_logFC) > 0.5)))
+  cat(sprintf("  with dream DEG (lfsr<0.05, |shrunk_logFC|>0.5): %d\n",
+              sum(!is.na(lnc$bulk_lfsr) & lnc$bulk_lfsr < 0.05 & abs(lnc$bulk_shrunk_logFC) > 0.5)))
   cat(sprintf("  with Broadaway COLOC: %d\n",
               sum(!is.na(lnc$broadaway_coloc_pp4))))
   cat(sprintf("  with Broadaway PP.H4 > 0.5: %d\n",
@@ -1866,8 +1834,8 @@ cat("\nValidation — known MASLD genes in atlas:\n")
 for (g in known_genes) {
   row <- atlas[human_symbol == g]
   if (nrow(row) > 0) {
-    cat(sprintf("  %s: dream_padj=%.2e, layers_active=%d, conserved=%s\n",
-                g, row$dream_padj[1], row$layers_active[1],
+    cat(sprintf("  %s: bulk_padj=%.2e, layers_active=%d, conserved=%s\n",
+                g, row$bulk_padj[1], row$layers_active[1],
                 as.character(row$is_conserved[1])))
   } else {
     cat(sprintf("  %s: not in atlas\n", g))
@@ -1881,7 +1849,7 @@ cat("\nComputing layer correlations...\n")
 
 # Create continuous proxies for correlation
 cor_data <- atlas[, .(
-  L1 = -log10(pmax(dream_padj, 1e-300, na.rm = TRUE)) * sign(dream_logFC),
+  L1 = -log10(pmax(bulk_lfsr, 1e-300, na.rm = TRUE)) * sign(bulk_shrunk_logFC),
   L2 = ifelse(is.na(mouse_meta_logFC), 0, -log10(pmax(mouse_meta_padj, 1e-300, na.rm = TRUE)) * sign(mouse_meta_logFC)),
   L3 = ifelse(is.na(n_concordant_diets), 0, n_concordant_diets),
   L4 = ifelse(is.na(twas_z), 0, abs(twas_z)) +

@@ -188,9 +188,9 @@ S3_BOOLEAN_COLUMNS = [
 
 SOURCE_COLUMNS = {
     "S1_human_bulk": [
-        "dream_logFC",
-        "dream_padj",
-        "dream_tstat",
+        "bulk_logFC",
+        "bulk_padj",
+        "bulk_tstat",
     ],
     "S2_mouse_bulk": [
         "mouse_meta_logFC",
@@ -206,7 +206,7 @@ SOURCE_COLUMNS = {
 # Columns used for masking: a source is "available" for a gene if
 # at least one of these signal columns is non-NaN.
 SOURCE_MASK_COLUMNS = {
-    "S1_human_bulk": ["dream_logFC"],
+    "S1_human_bulk": ["bulk_logFC"],
     "S2_mouse_bulk": ["mouse_meta_logFC"],
     "S3_genetic_causal": [
         "mr_beta",

@@ -44,11 +44,22 @@ all_susie <- rbindlist(lapply(susie_files, function(f) {
 }), fill = TRUE)
 
 # ARCHIVED 2026-04-09: Whitfield 36653562 removed (provenance unverified); Anstee removed (duplicate)
-# RESTORED 2026-04-09: FinnGen_NAFLD, FinnGen_NASH, FinnGen_HCC restored (verified R12 provenance)
+# RESTORED 2026-04-09: FinnGen_NAFLD, FinnGen_NASH restored (verified R12 provenance)
+# DROPPED 2026-06-06: FinnGen_HCC and all cirrhosis/HCC + PanUKBB sex-strat duplicates removed
+#                     (23-GWAS MASLD portfolio; etiology-mixed / duplicate, Broadaway-excluded)
 archived_studies <- c("Anstee_NAFLD",
                       "2023_36653562_NAFLD_EUR", "2023_36653562_NASH_EUR",
                       "2023_36653562_Cirrhosis_EUR", "2023_36653562_HCC_EUR",
-                      "2023_36653562_Obesity_EUR")
+                      "2023_36653562_Obesity_EUR",
+                      # cirrhosis/HCC dropped 2026-06-06 from the 23-GWAS MASLD portfolio
+                      # (etiology-mixed, not MASLD-specific; Broadaway-excluded)
+                      "FinnGen_HCC", "Ghouse_Cirrhosis", "Ghouse_HCC",
+                      "2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS",
+                      "Sveinbjornsson2022_Cirrhosis_meta_EUR", "Sveinbjornsson2022_Hcc_meta_EUR",
+                      # PanUKBB sex-stratified / both-sex EUR duplicates dropped 2026-06-06
+                      "PanUKBB_F_ALT", "PanUKBB_F_AST", "PanUKBB_F_GGT",
+                      "PanUKBB_M_ALT", "PanUKBB_M_AST", "PanUKBB_M_GGT",
+                      "PanUKBB_BS_ALT", "PanUKBB_BS_AST", "PanUKBB_BS_GGT")
 all_susie <- all_susie[!study %in% archived_studies]
 cat("Loaded", nrow(all_susie), "variants from", uniqueN(all_susie$study), "studies (after removing archived)\n")
 
@@ -98,11 +109,9 @@ study_short <- function(s) {
   s <- gsub("2023_36280732_NAFLD_deCode_EUR", "deCODE NAFLD", s)
   s <- gsub("2023_36280732_NAFLD_Intermountain_EUR", "Intermountain NAFLD", s)
   s <- gsub("2023_36280732_NAFLD_UKBB_EUR", "UKBB NAFLD", s)
-  s <- gsub("2020_32514122_Cirrhosis_EAS", "BBJ Cirr", s)
-  s <- gsub("2020_32514122_HCC_EAS", "BBJ HCC", s)
+  # DROPPED 2026-06-06: 2020_32514122_*_EAS (BBJ Cirr/HCC) and Ghouse relabels removed with the cirrhosis/HCC GWAS
   # RESTORED 2026-04-09: FinnGen label mapping
   s <- gsub("FinnGen_", "FinnGen ", s)
-  s <- gsub("Ghouse_", "Ghouse ", s)
   # ARCHIVED 2026-04-09: Pazoki_PDFF removed — duplicate of 2022_36402844_PDFF_EUR (same GCST90267352)
   s <- gsub("UKBB_", "UKBB ", s)
   s <- gsub("BBJ_", "BBJ ", s)

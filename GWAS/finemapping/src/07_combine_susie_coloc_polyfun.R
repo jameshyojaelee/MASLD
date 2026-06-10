@@ -83,8 +83,8 @@ if (length(all_results) > 0) {
       "2023_36280732_NAFLD_deCode_EUR", "2023_36280732_NAFLD_Intermountain_EUR",
       "2023_36280732_NAFLD_UKBB_EUR",
       "2021_34128465_PDFF_EUR", "2021_34957434_PDFF_EUR", "2022_36402844_PDFF_EUR",
-      "FinnGen_NAFLD", "FinnGen_NASH", "FinnGen_HCC",
-      "Ghouse_Cirrhosis", "Ghouse_HCC"
+      "FinnGen_NAFLD", "FinnGen_NASH"
+      # cirrhosis/HCC dropped 2026-06-06 (not MASLD-specific): FinnGen_HCC, Ghouse_Cirrhosis, Ghouse_HCC
     ),
     gwas_group = c(
       "UKBB_ALT", "UKBB_AST", "UKBB_GGT",
@@ -93,8 +93,8 @@ if (length(all_results) > 0) {
       "Sveinbjornsson_deCode", "Sveinbjornsson_Intermountain",
       "Ghodsian_meta",
       "UKBB_PDFF", "UKBB_PDFF", "UKBB_PDFF",
-      "FinnGen_R12", "FinnGen_R12", "FinnGen_R12",
-      "Ghouse_Cirrhosis", "Ghouse_HCC"
+      "FinnGen_R12", "FinnGen_R12"
+      # cirrhosis/HCC dropped 2026-06-06 (not MASLD-specific)
     )
   )
 

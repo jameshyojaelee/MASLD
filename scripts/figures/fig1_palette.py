@@ -18,8 +18,8 @@ MODALITY_COLORS = {
     "spatial": "#CC79A7",  # spatial               - reddish purple
     "atac":    "#E69F00",  # ATAC / epigenomic     - orange
     "proteo":  "#D55E00",  # proteomics            - vermillion
-    "gwas":    "#000000",  # genetics (GWAS/eQTL)  - black (causal = strong)
-    "pharma":  "#999999",  # pharmacogenomics      - neutral gray
+    "gwas":    "#C2185B",  # genetics (GWAS/eQTL)  - deep crimson (matches S2 causal in figS_convergence/figS_network)
+    "pharma":  "#999999",  # pharmacological profiling - neutral gray
 }
 
 # extra data types used only by the evidence-source panels (not A1/B1 modalities)

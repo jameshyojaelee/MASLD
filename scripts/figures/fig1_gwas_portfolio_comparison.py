@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fig 1 GWAS Portfolio — Options 1 and 2 (for visual comparison)
-KEY MESSAGE: 28 GWAS spanning 4 ancestries and 8 liver-disease traits enable
+KEY MESSAGE: 23 GWAS spanning 4 ancestries and 8 liver-disease traits enable
              multi-ancestry causal inference at scale.
 
 Produces two PDFs in figures/misc/ for side-by-side review:
@@ -35,10 +35,10 @@ plt.rcParams.update({
     "legend.frameon":    False,
 })
 
-# ── GWAS inventory (28 canonical; 17 EUR + 5 EAS + 3 AFR + 3 SAS) ──────────
+# ── GWAS inventory (23 canonical; 14 EUR + 3 EAS + 3 AFR + 3 SAS) ──────────
 # (ancestry, trait, N_total, short_label)
 GWAS_DATA = [
-    # European (17)
+    # European (14)
     ("EUR", "NAFLD",       8_434, "Namjou 2019"),
     ("EUR", "NAFLD",       9_491, "Anstee 2020"),
     ("EUR", "NAFLD",     778_614, "Ghodsian 2021"),
@@ -47,18 +47,13 @@ GWAS_DATA = [
     ("EUR", "NAFLD",     400_000, "Sveinbj. UKBB"),
     ("EUR", "NAFLD",     438_857, "FinnGen R12"),
     ("EUR", "NASH",      435_000, "FinnGen R12"),
-    ("EUR", "HCC",       435_000, "FinnGen R12"),
     ("EUR", "ALT",       343_850, "UKBB"),
     ("EUR", "AST",       343_850, "UKBB"),
     ("EUR", "GGT",       343_850, "UKBB"),
-    ("EUR", "Cirrhosis", 431_122, "Ghouse 2024"),
-    ("EUR", "HCC",       310_000, "Ghouse 2025"),
     ("EUR", "PDFF",       36_116, "Liu 2021"),
     ("EUR", "PDFF",       32_858, "Haas 2021"),
     ("EUR", "PDFF",       44_867, "van der Meer 2022"),
-    # East Asian (5)
-    ("EAS", "Cirrhosis", 376_326, "Ishigaki 2020"),
-    ("EAS", "HCC",       376_326, "Ishigaki 2020"),
+    # East Asian (3)
     ("EAS", "ALT",       160_000, "BBJ"),
     ("EAS", "AST",       160_000, "BBJ"),
     ("EAS", "GGT",       160_000, "BBJ"),
@@ -79,7 +74,7 @@ ANCESTRY_LABELS = {
     "AFR": "African",
     "SAS": "South Asian",
 }
-ANCESTRY_N = {"EUR": 17, "EAS": 5, "AFR": 3, "SAS": 3}
+ANCESTRY_N = {"EUR": 14, "EAS": 3, "AFR": 3, "SAS": 3}
 
 # Okabe-Ito palette (colorblind-safe)
 ANCESTRY_COLORS = {

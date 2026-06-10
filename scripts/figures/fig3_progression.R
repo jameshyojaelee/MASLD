@@ -435,7 +435,7 @@ tryCatch({
 
   bulk_path <- file.path(BASE,
     "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration",
-    "dream_results_ashr.csv")
+    "canonical_deg_results.csv")
   pb_dir <- file.path(BASE,
     "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
 

@@ -38,7 +38,7 @@ cat("Output directory:", OUTDIR, "\n\n")
 
 # ── 1. Load data ─────────────────────────────────────────────────────────
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 
 atlas <- fread(file.path(ME, "multi_evidence_atlas.csv"))
 
@@ -221,7 +221,7 @@ tryCatch({
 
     # Annotate with atlas evidence
     hub_dt <- merge(hub_dt,
-      atlas[, .(human_symbol, dream_logFC, dream_padj, layers_active,
+      atlas[, .(human_symbol, bulk_logFC, bulk_padj, layers_active,
                 is_conserved, dgidb_druggable)],
       by.x = "node", by.y = "human_symbol", all.x = TRUE)
 

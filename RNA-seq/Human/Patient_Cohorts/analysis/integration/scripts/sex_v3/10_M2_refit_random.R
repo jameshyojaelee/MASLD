@@ -1,40 +1,31 @@
 #!/usr/bin/env Rscript
 # sex_v3/10_M2_refit_random.R
 # ---------------------------------------------------------------------------
-# Pillar 1 — Dream M2 refit with sex×disease random slope.
-# Forks 04_dream_M2_extended.R; replaces fixed-only interaction with random-
-# slope-on-interaction `(1 + group_binary + inferred_sex + group_binary:inferred_sex || dataset)`
-# (F2 diagonal — no RE correlations; more identifiable on 5 cohorts than F1).
-# Falls back to F5 (current v5: `(1 + group_binary | dataset)`) on convergence
-# failure.
+# Pillar 1 — M2 refit (LVQW fixed-effects engine).
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+#   Forks 04_dream_M2_extended.R. The dream-era random-slope-on-interaction
+#   `(1 + group_binary + inferred_sex + group_binary:inferred_sex || dataset)`
+#   (F2 diagonal) and its F5/F6 fallback ladder are replaced by a single LVQW
+#   fixed-effects design with `dataset` as a FIXED effect. Interaction,
+#   composition, MI age, and SVA surrogate variables are preserved exactly.
 #
 # Single imputation (k=1) is used (per Pillar 2 design — across-MI variance
-# is dominated by cohort RE, not age; this matches calibration design).
+# is dominated by cohort effects, not age; this matches calibration design).
 #
 # Inputs (cached):
 #   intermediates/sex_v3_input.rds (Module 01)
 #   intermediates/sva_factors.rds  (Module 02)
 #   intermediates/age_mi.rds       (Module 03)
-#   dream_M2_v3.rds                (current v5; for vcov benchmark)
+#   dream_M2_v3.rds                (current; for vcov benchmark)
 #
 # Outputs:
-#   dream_M2_v3_random.rds                  -- raw fit metadata (β_int, se_int, Vhat)
+#   dream_M2_v3_random.rds                  -- raw fit metadata (β_int, se_int)
 #   interaction_classifier_v5_random.csv    -- per-gene v5 schema + *_random cols + class_v5_random
 # ---------------------------------------------------------------------------
 set.seed(42)
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
 suppressPackageStartupMessages({
-  library(reformulas); library(lme4); library(data.table); library(edgeR)
-})
-ns_lme4 <- asNamespace("lme4")
-for (fn in c("findbars", "nobars", "subbars", "rebuildFormula")) {
-  if (exists(fn, envir = ns_lme4)) {
-    try({ unlockBinding(fn, ns_lme4)
-          assign(fn, get(fn, asNamespace("reformulas")), envir = ns_lme4)
-          lockBinding(fn, ns_lme4) }, silent = TRUE)
-  }
-}
-suppressPackageStartupMessages({
-  library(variancePartition); library(BiocParallel); library(ashr)
+  library(limma); library(data.table); library(edgeR); library(ashr)
 })
 
 BASE  <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
@@ -66,8 +57,9 @@ OUT_RDS <- file.path(SEXV3, "dream_M2_v3_random.rds")
 OUT_CSV <- file.path(SEXV3, "interaction_classifier_v5_random.csv")
 
 ncpus <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "16"))
-param <- if (ncpus > 1) MulticoreParam(workers = ncpus, RNGseed = 42L) else SerialParam()
-cat("Using", ncpus, "CPU cores\n")
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# limma LVQW is single-threaded; cpu count retained for log parity only.
+cat("Using", ncpus, "CPU core(s) reported by SLURM (limma LVQW is single-threaded)\n")
 
 inp    <- readRDS(file.path(IDIR, "sex_v3_input.rds"))
 sva    <- readRDS(file.path(IDIR, "sva_factors.rds"))
@@ -85,74 +77,34 @@ rownames(info_template) <- rownames(info0)
 cat("Samples:", ncol(dge), "  Genes:", nrow(dge), "  SVs:", n_sv, "\n")
 stopifnot(identical(rownames(info_template), colnames(dge)))
 
-# F2: diagonal random slope on sex×disease (no RE correlations)
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Single LVQW fixed-effects design (dataset fixed); no random-slope ladder.
 sv_terms <- paste(colnames(sv_df), collapse = " + ")
-form_F2_str <- paste0(
-  "~ group_binary * inferred_sex",
+form_str <- paste0(
+  "~ dataset",
+  " + group_binary * inferred_sex",
   " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 + group_binary + inferred_sex + group_binary:inferred_sex || dataset)"
+  " + age_imputed + ", sv_terms
 )
-form_F5_str <- paste0(
-  "~ group_binary * inferred_sex",
-  " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 + group_binary | dataset)"
-)
-form_F6_str <- paste0(
-  "~ group_binary * inferred_sex",
-  " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 | dataset)"
-)
-cat("\nFormula F2 (diagonal random slope on sex×disease, primary):\n  ", form_F2_str, "\n")
-cat("Formula F5 (current v5 fallback):\n  ", form_F5_str, "\n")
+cat("\nFormula (LVQW fixed-effects design, dataset fixed):\n  ", form_str, "\n")
+form_fixed <- as.formula(form_str)
 
-form_F2 <- as.formula(form_F2_str)
-form_F5 <- as.formula(form_F5_str)
-form_F6 <- as.formula(form_F6_str)
+design <- model.matrix(form_fixed, data = info_template)
+stopifnot(nrow(design) == ncol(dge))
+if (qr(design)$rank < ncol(design)) {
+  stop("LVQW design is rank-deficient; inspect dataset/SV/composition collinearity.")
+}
 
-cat("\n[1] voomWithDreamWeights (F2)...\n")
+re_variant_used <- "lvqw_fixed"
+cat("\n[1] voomWithQualityWeights (fixed-effects design)...\n")
 t0 <- Sys.time()
-v_F2 <- tryCatch(
-  suppressWarnings(voomWithDreamWeights(dge, form_F2, info_template,
-                                        BPPARAM = param, useWeights = TRUE)),
-  error = function(e) { cat("  voom F2 failed:", conditionMessage(e), "\n"); NULL }
-)
+v_fixed <- suppressWarnings(voomWithQualityWeights(dge, design))
 cat("  voom elapsed:", format(Sys.time() - t0), "\n")
 
-re_variant_used <- "F2"
-fit <- NULL
-if (!is.null(v_F2)) {
-  cat("\n[2] dream (F2)...\n")
-  t0 <- Sys.time()
-  fit <- tryCatch(
-    suppressWarnings(dream(v_F2, form_F2, info_template,
-                           BPPARAM = param, useWeights = TRUE)),
-    error = function(e) { cat("  dream F2 failed:", conditionMessage(e), "\n"); NULL }
-  )
-  cat("  dream elapsed:", format(Sys.time() - t0), "\n")
-}
-
-if (is.null(fit)) {
-  cat("\n[2b] F2 failed; falling back to F5 (current v5 formula)...\n")
-  re_variant_used <- "F5"
-  v_F5 <- suppressWarnings(voomWithDreamWeights(dge, form_F5, info_template,
-                                                 BPPARAM = param, useWeights = TRUE))
-  fit <- tryCatch(
-    suppressWarnings(dream(v_F5, form_F5, info_template,
-                           BPPARAM = param, useWeights = TRUE)),
-    error = function(e) { cat("  dream F5 failed:", conditionMessage(e), "\n"); NULL }
-  )
-}
-if (is.null(fit)) {
-  cat("\n[2c] F5 failed; falling back to F6 (intercept only)...\n")
-  re_variant_used <- "F6"
-  v_F6 <- suppressWarnings(voomWithDreamWeights(dge, form_F6, info_template,
-                                                 BPPARAM = param, useWeights = TRUE))
-  fit <- suppressWarnings(dream(v_F6, form_F6, info_template,
-                                BPPARAM = param, useWeights = TRUE))
-}
+cat("\n[2] lmFit + eBayes...\n")
+t0 <- Sys.time()
+fit <- eBayes(lmFit(v_fixed, design))
+cat("  lmFit+eBayes elapsed:", format(Sys.time() - t0), "\n")
 stopifnot(!is.null(fit))
 cat("Final variant used:", re_variant_used, "\n")
 
@@ -166,16 +118,17 @@ cat("group_coef (=β_F):", group_coef, "  int_coef:", int_coef, "\n")
 beta_F   <- fit$coefficients[, group_coef]
 beta_int <- fit$coefficients[, int_coef]
 beta_M   <- beta_F + beta_int
-raw_se <- fit$sigma * fit$stdev.unscaled
+# RAW (unmoderated) Wald SE — match dream-era choice. sigma is unmoderated.
+raw_se <- fit$stdev.unscaled * fit$sigma   # genes x K, sigma recycled per row
 se_F   <- raw_se[, group_coef]
 se_int <- raw_se[, int_coef]
-# Cov(β_F, β_int) per gene
-ccl <- fit$cov.coefficients.list
-cov_F_int <- vapply(seq_along(ccl), function(g) {
-  M <- ccl[[g]]
-  if (!is.null(M) && group_coef %in% rownames(M) && int_coef %in% colnames(M))
-    as.numeric(M[group_coef, int_coef]) else NA_real_
-}, numeric(1))
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Per-gene Cov(β_F, β_int) = cov.coefficients[F,int] (shared UNSCALED) * sigma[g]^2.
+ccm <- fit$cov.coefficients
+stopifnot(!is.null(ccm), group_coef %in% rownames(ccm), int_coef %in% colnames(ccm))
+cov_F_int <- as.numeric(ccm[group_coef, int_coef]) * (fit$sigma)^2
+names(cov_F_int) <- rownames(fit$coefficients)
+cov_F_int <- cov_F_int[names(beta_F)]
 var_M <- se_int^2 + se_F^2 + 2 * cov_F_int
 se_M  <- sqrt(pmax(var_M, .Machine$double.eps))
 t_int <- beta_int / se_int
@@ -327,26 +280,23 @@ if (!is.null(v5_int)) {
       round(concord / total * 100, 1), "%\n")
 }
 
-# Save outputs — preserve the voom object that was *actually* used so the
-# permutation FDR (P2) can reuse it instead of trying to recompute under F2
-# when P1 fell back to F5/F6. Earlier `v_voom = if (F2) v_F2 else NULL` made
-# F5/F6 runs save NULL, which silently broke P2's cached-voom path and let
-# the consensus default every gene to Uncertain.
-v_voom_used <- switch(re_variant_used,
-                      F2 = v_F2,
-                      F5 = if (exists("v_F5")) v_F5 else NULL,
-                      F6 = if (exists("v_F6")) v_F6 else NULL,
-                      NULL)
-form_used <- switch(re_variant_used, F2 = form_F2, F5 = form_F5, F6 = form_F6)
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Save the LVQW voom object + the fixed-effects design so P2 (perm-FDR) can
+# reuse them. P2 reads $v_voom, $form_used, $info_template, $re_variant_used;
+# we additionally stash $design (the model.matrix) for the LVQW lmFit refit.
+v_voom_used <- v_fixed
+form_used   <- form_fixed
 stopifnot(!is.null(v_voom_used))
 
 OUT_RDS_TMP <- paste0(OUT_RDS, ".tmp")
 saveRDS(list(fit = fit, re_variant_used = re_variant_used,
+             engine = "lvqw_fixed",
              beta_F = beta_F, beta_M = beta_M, beta_int = beta_int,
              se_F = se_F, se_M = se_M, se_int = se_int,
              cov_F_int = cov_F_int, t_int = t_int,
              v_voom = v_voom_used,
              form_used = form_used,
+             design = design,
              info_template = info_template,
              tier1_genes = tier1_genes,
              spearman_vs_v5 = spearman,

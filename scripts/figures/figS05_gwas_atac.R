@@ -424,7 +424,7 @@ if (file.exists(prom_file)) {
 # ===================================================================
 message("\nPanel 15: SCENIC+ regulon-expression correlation...")
 reg_file <- file.path(ATAC_HM, "scenic_plus", "disease_regulons.csv")
-dream_file <- file.path(DREAM, "dream_results.csv")
+dream_file <- file.path(DREAM, "canonical_deg_results.csv")
 
 if (file.exists(reg_file) && file.exists(dream_file)) {
   reg <- fread(reg_file)

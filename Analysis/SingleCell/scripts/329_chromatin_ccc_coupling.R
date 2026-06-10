@@ -68,7 +68,7 @@ receptor_genes <- unique(unlist(lapply(receptors, split_complex)))
 message(sprintf("  LIANA unique ligand genes: %d, receptor genes: %d",
                 length(ligand_genes), length(receptor_genes)))
 
-bulk <- fread(file.path(INT_RES, "dream_results_ashr.csv"),
+bulk <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
               select = c("gene","symbol","logFC","padj"))
 bulk <- bulk[!is.na(symbol) & symbol != ""]
 universe <- unique(bulk$symbol)

@@ -22,7 +22,7 @@
 #      disruption).
 #   3. Load LIANA differential L-R pairs; extract ligand + receptor gene sets.
 #   4. Load per-CT pseudobulk DEGs (MASLD_vs_Healthy contrast).
-#   5. ENSG -> symbol map from bulk dream_results_ashr.csv.
+#   5. ENSG -> symbol map from bulk canonical_deg_results.csv.
 #   6. For each cell type, run hypergeometric tests:
 #        a) ATAC-regulated CCC receptors overlap with CT-DEGs
 #           (universe = LIANA receptors intersected with CT-tested genes)
@@ -111,7 +111,7 @@ if (file.exists(gencode_meta_path)) {
   message(sprintf("  GENCODE v49: %d ENSG -> symbol mappings", length(ensg2sym)))
 } else {
   message("  GENCODE metadata not found; falling back to dream symbol col")
-  bulk_dream <- fread(file.path(INT_RES, "dream_results_ashr.csv"),
+  bulk_dream <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
                       select = c("gene", "symbol"))
   bulk_dream <- bulk_dream[!is.na(symbol) & symbol != "" &
                             !grepl("^ENSG", symbol) & !is.na(gene) & gene != ""]

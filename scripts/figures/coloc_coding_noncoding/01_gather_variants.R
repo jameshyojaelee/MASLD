@@ -22,11 +22,18 @@ POLYFUN_DIR <- file.path(BASE, "GWAS/finemapping/results/susie_coloc_polyfun")
 KG_DIR      <- file.path(BASE, "GWAS/finemapping/results/susie_coloc_1kg")
 OTHER_DIR   <- file.path(BASE, "GWAS/finemapping/results/susie_coloc")
 LEAD_DIR    <- file.path(BASE, "GWAS/finemapping/data/lead_snps")
-CS_FILE     <- file.path(BASE, "GWAS/finemapping/results/credible_sets_1kg.csv")
+CS_FILE     <- file.path(BASE, "GWAS/finemapping/results/credible_sets.csv")
+
+# Active studies present in either canonical dir (excluding archived ones)
+studies_polyfun <- list.dirs(POLYFUN_DIR, recursive = FALSE, full.names = FALSE)
+studies_kg      <- list.dirs(KG_DIR,      recursive = FALSE, full.names = FALSE)
+studies_other   <- list.dirs(OTHER_DIR,   recursive = FALSE, full.names = FALSE)
+active_studies  <- unique(c(studies_polyfun, studies_kg, studies_other))
 
 # ---- Canonical study → method/ancestry/trait map ---------------------------
 # LD-panel priority (per Phase 10 swap, 2026-05-06): PolyFun > 1kg > other.
 # Any study with PolyFun output is routed to PolyFun automatically below.
+
 
 trait_of <- function(s) {
   fcase(
@@ -136,7 +143,9 @@ gather_definition_A <- function() {
                       full.names = TRUE)
   # Prefer "_merged" version when both present (matches finemapping pipeline)
   files_dt <- data.table(path = files, base = basename(files))
-  files_dt[, study := sub("_(infr_)?preprocessed_leadSNPs.*", "", base)]
+  files_dt[, study := sub("(_(infr_)?preprocessed)?_leadSNPs.*", "", base)]
+  # Filter for active studies only (prevents dropped studies from being loaded)
+  files_dt <- files_dt[study %in% active_studies]
   files_dt[, has_merged := grepl("_merged\\.tsv$", base)]
   setorder(files_dt, study, -has_merged)
   files_dt <- files_dt[!duplicated(study)]

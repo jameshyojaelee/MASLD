@@ -77,7 +77,7 @@ ds_palette <- c(
 
 # ── Load data ────────────────────────────────────────────────────────────────
 message("Loading dream STAR results...")
-dream <- fread(file.path(INT_RESULTS, "dream_results_ashr.csv"))
+dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
 setnames(dream, "logFC", "dream_logFC", skip_absent = FALSE)
 setnames(dream, "padj",  "dream_padj",  skip_absent = FALSE)
 

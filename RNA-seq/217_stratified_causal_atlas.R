@@ -169,10 +169,10 @@ if (!is.null(sex_scores)) {
                               "shared")))
     )]
     # Compute sex_causal_score: PP4 * |female_logFC - male_logFC|
-    if (all(c("dream_logFC_F", "dream_logFC_M") %in% names(atlas))) {
+    if (all(c("bulk_logFC_F", "bulk_logFC_M") %in% names(atlas))) {
       atlas[, sex_causal_score := fifelse(
-        !is.na(coloc_susie_best_pp4) & !is.na(dream_logFC_F) & !is.na(dream_logFC_M),
-        coloc_susie_best_pp4 * abs(dream_logFC_F - dream_logFC_M),
+        !is.na(coloc_susie_best_pp4) & !is.na(bulk_logFC_F) & !is.na(bulk_logFC_M),
+        coloc_susie_best_pp4 * abs(bulk_logFC_F - bulk_logFC_M),
         NA_real_
       )]
     } else {

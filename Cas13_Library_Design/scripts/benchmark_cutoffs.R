@@ -26,8 +26,8 @@ FIGDIR <- file.path(BASE, "Cas13_Library_Design/figures")
 DATDIR <- file.path(BASE, "Cas13_Library_Design/data")
 strip_v <- function(x) sub("[.][0-9]+$", "", x)
 
-# ---- 1. dream + per-gene flags ---------------------------------------------
-d <- fread(file.path(INTDIR, "dream_results_ashr.csv"))
+# ---- 1. human DEG (v6: limma-voom+metafor ashr; was dream) + per-gene flags --
+d <- fread(file.path(INTDIR, "meta_results_ashr.csv"))   # has padj/se aliases for drop-in compat
 if (!"se" %in% names(d)) d[, se := abs(logFC / t)]
 d[, gb := strip_v(gene)]
 d[, full_sign := sign(logFC)]
@@ -108,9 +108,10 @@ pB <- ggplot(res, aes(cutoff, enrich_ot, color = condition)) +
 pC <- mk("prec_mouse", "Fraction mouse-replicated", "C  Mouse cross-species precision")
 pD <- mk("loco", "Mean LOCO reproducibility", "D  Cross-cohort reproducibility (5-fold LOCO)")
 
-panels <- list(A = pA, B = pB, C = pC, D = pD)
+panels <- list("07a_cutoff_recovery" = pA, "07b_cutoff_enrichment" = pB,
+               "07c_cutoff_mouse_precision" = pC, "07d_cutoff_loco_reproducibility" = pD)
 dir.create(FIGDIR, showWarnings = FALSE, recursive = TRUE)
 for (nm in names(panels))
-  ggsave(file.path(FIGDIR, sprintf("S_lib_8_cutoff_benchmark_%s.pdf", nm)),
+  ggsave(file.path(FIGDIR, paste0(nm, ".pdf")),
          panels[[nm]], width = 6.8, height = 4.2, useDingbats = FALSE)
-cat("\nWrote individual panels A-D to", FIGDIR, "\n")
+cat("\nWrote individual panels (07a-07d) to", FIGDIR, "\n")

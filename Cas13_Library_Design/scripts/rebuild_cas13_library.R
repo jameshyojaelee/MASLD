@@ -1,18 +1,39 @@
 #!/usr/bin/env Rscript
 # rebuild_cas13_library.R
 # ---------------------------------------------------------------------------
-# Build cas13_library_v3.0.csv under the v5 definition (PI decision 2026-06-01,
-# after a 6-team red-team of v4). HUMAN-ANCHORED, READOUT-AWARE, REPRODUCIBLE.
+# Build cas13_library_v3.0.csv under the v6 definition (2026-06-04). v6 extends
+# v5 (PI 2026-06-01, 6-team red-team) with: (1) the human spine sourced from
+# limma-voom + metafor (ashr-shrunk) instead of dream; (2) a MASH-vs-MASL
+# additive tier; (3) a miRNA tier. HUMAN-ANCHORED, READOUT-AWARE, REPRODUCIBLE.
 #
-#   LIBRARY = HUMAN SPINE  (mouse orthologs of human dream ashr DEGs,
-#                           lfsr<0.05 & shrunk_logFC>0.3 -- raised from 0.2)
+#   LIBRARY = HUMAN SPINE  (mouse orthologs of human limma-voom+metafor ashr DEGs,
+#                           lfsr<0.05 & shrunk_logFC>0.2, UP only)
 #             UNION
 #             MOUSE-CONFIRMED TIER (mouse cross-diet UP, ashr lfsr<0.05 &
 #                           shrunk_logFC>0.5 in >=3 of 4 diets, AND the gene's
-#                           human ortholog has human dream logFC>0 -- i.e. mouse
+#                           human ortholog has human logFC>0 -- i.e. mouse
 #                           evidence is admitted only with human directional
 #                           concordance, never mouse-alone)
-#   restricted to protein_coding + lncRNA biotypes.
+#             UNION
+#             MASH-PROGRESSION TIER (mouse orthologs of MASH-vs-MASL UP human
+#                           DEGs, lfsr<0.05 & shrunk_logFC>0.2; full additive)
+#             UNION
+#             miRNA TIER    (ortholog-conserved mouse<->human miRNAs, tier-H
+#                           miRBase/MirGeneDB; DE-independent -- bulk polyA and
+#                           10x scRNA both miss mature miRNAs)
+#   restricted to protein_coding + lncRNA + miRNA biotypes.
+#
+# v6 NOTES:
+#  - Human DEG canonical (LIBRARY SCOPE) is now limma-voom per-study + metafor
+#    REML (06_meta_analysis.R) ashr-shrunk by 06b_meta_ashr_shrinkage.R. The
+#    multi-evidence atlas / paper-wide canonical remains dream unless propagated.
+#  - tier priority on overlap: human > mouse_confirmed > mash_progression >
+#    mirna_conserved. is_mash_deg is an annotation on ALL rows (overlap-aware).
+#  - miRNA hep-expression uses a miRNA-appropriate reference (mirna_hep_expression.csv:
+#    liver small-RNA atlas + intragenic host-gene inheritance), since the scRNA
+#    hep_substrate tag cannot score miRNAs. miRNAs are SOFT-tagged, not hard-dropped.
+#  - Cas13 targets the pri-miRNA / host transcript for miRNA rows (mature ~22nt is
+#    below the guide footprint) -- recorded as mirna_target_substrate="pri-miRNA".
 #
 # WHY v5 (changes from v4, all from the red-team):
 #  - HUMAN-ANCHORED, not a flat union. The human arm is the unconditional spine;
@@ -53,24 +74,32 @@ BASE    <- Sys.getenv("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 PERDIET <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet")
 OUT     <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0.csv")
-BACKUP  <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0_pre_v5.csv")
-DIFFOUT <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v4_to_v5_diff.csv")
+BACKUP  <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0_pre_v6.csv")
+DIFFOUT <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v5_to_v6_diff.csv")
 MANIFEST<- file.path(BASE, "Cas13_Library_Design/data/BUILD_MANIFEST.txt")
 ATLAS   <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 ORTHO   <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
 META    <- file.path(BASE, "Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
-ASHR    <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+# v6: human DEG source is the limma-voom + metafor REML meta-analysis, ashr-shrunk
+# (06b_meta_ashr_shrinkage.R), replacing dream. Schema matches dream_results_ashr.csv:
+# gene, logFC, shrunk_logFC, lfsr, symbol. dream remains canonical for the atlas/paper.
+ASHR    <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/meta_results_ashr.csv")
+# v6: MASH-vs-MASL (NASH>NAFL) limma-voom+metafor, ashr-shrunk (06b). Additive tier.
+MASH    <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/nafl_vs_nash_meta_ashr.csv")
 HEPSPEC <- file.path(BASE, "Cas13_Library_Design/data/hep_specificity.csv")
+# v6: miRNA hepatic-expression annotation (liver small-RNA atlas + intragenic
+# host-gene inheritance; scRNA hep_substrate is blind to miRNAs). Built externally.
+MIRNAHEP<- file.path(BASE, "Cas13_Library_Design/data/mirna_hep_expression.csv")
 
 DIETS            <- c("MCD", "CDAHFD", "Western", "HFD")
 MIN_DIETS        <- 3L       # mouse cross-diet replication (default; sensitivity 2/3/4 reported)
 LFSR_THR         <- 0.05     # mouse arm
 SHRUNK_LFC_THR   <- 0.5      # mouse arm (stricter bar; mouse-only effect size)
 HUMAN_LFSR_THR   <- 0.05     # human arm
-HUMAN_SHRUNK_THR <- 0.2      # human arm (0.2 = F1-calibrated optimum; targets ~4-5k library, PI 2026-06-01)
+HUMAN_SHRUNK_THR <- 0.2      # human + MASH arms (0.2 = F1-calibrated optimum; PI 2026-06-01)
 COLOC_PP4_THR    <- 0.5      # annotation only
-KEEP_BIOTYPES    <- c("protein_coding", "lncRNA")
-LIB_VERSION      <- "v5"
+KEEP_BIOTYPES    <- c("protein_coding", "lncRNA", "miRNA")
+LIB_VERSION      <- "v6"
 
 strip_v <- function(x) sub("[.][0-9]+$", "", x)
 
@@ -95,18 +124,22 @@ cross[, n_diets_up := rowSums(.SD), .SDcols = DIETS]
 cross[, diet_list := apply(.SD, 1, function(r) paste(DIETS[as.logical(r)], collapse = ",")),
       .SDcols = DIETS]
 
-# --- 2. Human arm: ashr dream DEGs + provenance assert -----------------------
+# --- 2. Human arm: limma-voom+metafor ashr DEGs + provenance assert ----------
 ash <- fread(ASHR, select = c("gene", "logFC", "shrunk_logFC", "lfsr", "symbol"))
 ash[, hb := strip_v(gene)]
 universe_n <- nrow(ash)
 col1a1_lfc <- ash[symbol == "COL1A1", logFC][1]
-cat(sprintf("PROVENANCE ashr: universe=%d  COL1A1 logFC=%.4f\n", universe_n, col1a1_lfc))
+cat(sprintf("PROVENANCE metafor-ashr: universe=%d  COL1A1 logFC=%.4f\n", universe_n, col1a1_lfc))
+# metafor universe = genes in >=3 cohorts (~26,011); guard against the old -s 0
+# dream run (34,453) or a mis-pointed file.
 if (universe_n > 30000)
-  stop(sprintf("ashr universe=%d looks like the -s 0 run (34,453). Expected STAR -s 2 (~27,638). Check ASHR path/file.", universe_n))
+  stop(sprintf("metafor-ashr universe=%d > 30000 (looks like the -s 0 dream run). Expected metafor (~26,011). Check ASHR path/file.", universe_n))
+if (is.na(col1a1_lfc) || col1a1_lfc < 0.5)
+  stop(sprintf("COL1A1 metafor logFC=%.3f unexpected (expected ~1.34, up in disease). Check ASHR file.", col1a1_lfc))
 
 human_logfc <- ash[, .(hb, human_logFC = logFC)]      # for mouse-tier concordance
 human_up <- ash[!is.na(lfsr) & lfsr < HUMAN_LFSR_THR & shrunk_logFC > HUMAN_SHRUNK_THR]
-cat(sprintf("Human ashr UP (lfsr<%.2f & shrunk_logFC>%.2f): %d genes\n",
+cat(sprintf("Human metafor-ashr UP (lfsr<%.2f & shrunk_logFC>%.2f): %d genes\n",
             HUMAN_LFSR_THR, HUMAN_SHRUNK_THR, nrow(human_up)))
 
 # --- 3. Ortholog table (deterministic, one2one-preferred) --------------------
@@ -143,7 +176,24 @@ spine <- hu[, .(entry_human_ensembl = human_ensembl[1],
                 gene_symbol_human   = human_symbol[1],
                 entry_human_logFC   = human_logFC[1]), by = gene_id_mouse]
 mouse_h <- spine$gene_id_mouse
-cat("Human spine (mouse orthologs of human ashr DEGs, 1/human):", length(mouse_h), "\n")
+cat("Human spine (mouse orthologs of human metafor-ashr DEGs, 1/human):", length(mouse_h), "\n")
+
+# --- 4a'. MASH-PROGRESSION TIER: mouse orthologs of MASH-vs-MASL UP DEGs -------
+# Full additive: every MASH-up human DEG (lfsr<0.05 & shrunk_logFC>thr; positive =
+# higher in NASH/MASH vs NAFL/MASL) contributes its mouse ortholog. Overlap with
+# the disease-vs-control spine is dedup'd by the union below and surfaced via the
+# is_mash_deg annotation.
+mash <- fread(MASH, select = c("gene", "logFC", "shrunk_logFC", "lfsr", "symbol"))
+mash[, hb := strip_v(gene)]
+mash_up <- mash[!is.na(lfsr) & lfsr < HUMAN_LFSR_THR & shrunk_logFC > HUMAN_SHRUNK_THR]
+cat(sprintf("MASH-vs-MASL UP (lfsr<%.2f & shrunk_logFC>%.2f): %d human genes\n",
+            HUMAN_LFSR_THR, HUMAN_SHRUNK_THR, nrow(mash_up)))
+mh <- merge(mash_up[, .(human_ensembl = hb, mash_shrunk_logFC = shrunk_logFC, mash_lfsr = lfsr)],
+            ortho_byhuman[, .(human_ensembl, gene_id_mouse)], by = "human_ensembl")
+setorder(mh, gene_id_mouse, -mash_shrunk_logFC, human_ensembl)  # strongest MASH effect/mouse gene
+mash_tier <- unique(mh, by = "gene_id_mouse")
+mouse_mash <- mash_tier$gene_id_mouse
+cat("MASH-progression tier (mouse orthologs of MASH-up human DEGs):", length(mouse_mash), "\n")
 
 # --- 4b. MOUSE-CONFIRMED TIER: cross-diet UP + human directional concordance --
 mouse_confirmed_at <- function(min_diets) {
@@ -156,11 +206,36 @@ mouse_confirmed <- mouse_confirmed_at(MIN_DIETS)
 cat(sprintf("Mouse-confirmed tier (>=%d diets + human concordance): %d genes\n",
             MIN_DIETS, length(mouse_confirmed)))
 
-# --- 5. Assemble library (human spine UNION mouse-confirmed), PC+lncRNA only --
-lib_genes <- sort(union(mouse_h, mouse_confirmed))
+# --- 4c. miRNA TIER: ortholog-conserved mouse<->human miRNAs (DE-independent) --
+# Neither bulk polyA nor 10x scRNA captures mature miRNAs, so the miRNA tier enters
+# by ortholog CONSERVATION, not differential expression. SUPER-CONFIDENT only:
+# require >=2 of {miRBase family-ID, MirGeneDB, biomaRt/Ensembl-Compara}. Sequence-
+# homology (MMseqs2/BLAST/TOGA) is uninformative for ~22nt mature / ~70nt hairpin
+# miRNAs and contributes 0 here. >=2-of-3 keeps every canonical hepatic miRNA
+# (miR-122/148a/21/192/22/143/let-7/451a...) that a single-source filter would drop.
+mir <- fread(cmd = paste0("zcat ", ORTHO),
+             select = c("mouse_ensembl", "human_ensembl", "human_symbol", "mouse_biotype",
+                        "tier_H_mirbase", "tier_H_mirgenedb", "tier_H_biomart",
+                        "mirbase_family", "mirbase_arm"))
+mir[, gene_id_mouse := strip_v(mouse_ensembl)]
+tier1 <- function(x) as.integer(x %in% c(1, "1", TRUE))
+mir[, mirna_n_evidence := tier1(tier_H_mirbase) + tier1(tier_H_mirgenedb) + tier1(tier_H_biomart)]
+mir <- mir[mouse_biotype == "miRNA" & mirna_n_evidence >= 2L]   # super-confident: >=2 of 3 sources
+setorder(mir, gene_id_mouse, -mirna_n_evidence, human_ensembl)  # 1 row per mouse miRNA gene
+mir <- unique(mir, by = "gene_id_mouse")
+mouse_mir <- mir$gene_id_mouse
+cat("miRNA conserved tier (super-confident, >=2 of miRBase/MirGeneDB/biomaRt):", length(mouse_mir), "\n")
+
+# --- 5. Assemble library: union of 4 tiers, PC+lncRNA+miRNA only --------------
+lib_genes <- sort(Reduce(union, list(mouse_h, mouse_confirmed, mouse_mash, mouse_mir)))
 mem <- data.table(gene_id_mouse = lib_genes)
-mem[, tier := ifelse(gene_id_mouse %in% mouse_h, "human", "mouse_confirmed")]
-mem[, has_human_de := tier == "human"]                # backward-compat column
+# tier priority on overlap: human > mouse_confirmed > mash_progression > mirna_conserved
+mem[, tier := fifelse(gene_id_mouse %in% mouse_h,         "human",
+              fifelse(gene_id_mouse %in% mouse_confirmed, "mouse_confirmed",
+              fifelse(gene_id_mouse %in% mouse_mash,      "mash_progression",
+                                                          "mirna_conserved")))]
+mem[, has_human_de := gene_id_mouse %in% mouse_h]     # disease-vs-control spine membership
+mem[, is_mash_deg  := gene_id_mouse %in% mouse_mash]  # MASH-vs-MASL annotation (overlap-aware)
 cat("Library union (pre biotype filter):", nrow(mem), "genes\n")
 
 # diet membership
@@ -168,6 +243,14 @@ mem <- merge(mem, cross[, .(gene_id_mouse, n_diets_up, diet_list)],
              by = "gene_id_mouse", all.x = TRUE)
 mem[is.na(n_diets_up), n_diets_up := 0L]
 mem[is.na(diet_list), diet_list := ""]
+
+# MASH-vs-MASL effect (annotation on all rows that are MASH-up DEGs)
+mem <- merge(mem, mash_tier[, .(gene_id_mouse, mash_shrunk_logFC, mash_lfsr)],
+             by = "gene_id_mouse", all.x = TRUE)
+
+# miRNA family / arm / evidence count (miRNA tier rows)
+mem <- merge(mem, mir[, .(gene_id_mouse, mirbase_family, mirbase_arm, mirna_n_evidence)],
+             by = "gene_id_mouse", all.x = TRUE)
 
 # entry-human (spine) + m2h (annotation); ship the direction-coherent label
 mem <- merge(mem, spine[, .(gene_id_mouse, gene_symbol_human, entry_human_ensembl)],
@@ -227,15 +310,35 @@ mem[, lnc_human_ortholog := biotype == "lncRNA" & !is.na(gene_symbol_human) &
       gene_symbol_human != "" & !grepl("^ENSG", gene_symbol_human)]
 mem[, lnc_hep_expressed := biotype == "lncRNA" & hep_substrate %in% c("high", "ambient_suspect")]
 
+# miRNA hepatic-expression tags (miRNA-appropriate: liver small-RNA atlas +
+# intragenic host-gene inheritance; the scRNA hep_substrate tag is blind to miRNAs).
+# Soft-tag -- conserved miRNAs are kept regardless; the flag prioritizes scoreable ones.
+if (file.exists(MIRNAHEP)) {
+  mhep <- fread(MIRNAHEP)
+  mhep[, gene_id_mouse := strip_v(mouse_ensembl)]
+  mem <- merge(mem, unique(mhep[, .(gene_id_mouse, mirna_hep_expressed, mirna_hep_source)],
+                           by = "gene_id_mouse"),
+               by = "gene_id_mouse", all.x = TRUE)
+} else {
+  warning("mirna_hep_expression.csv not found; miRNA hep tags pending (run the miRNA atlas build, then re-run).")
+  mem[, `:=`(mirna_hep_expressed = NA, mirna_hep_source = NA_character_)]
+}
+mem[biotype == "miRNA" & is.na(mirna_hep_source),    mirna_hep_source    := "none"]
+mem[biotype == "miRNA" & is.na(mirna_hep_expressed), mirna_hep_expressed := FALSE]
+# Cas13 targets the pri-miRNA / host transcript (mature ~22nt < guide footprint).
+mem[, mirna_target_substrate := fifelse(biotype == "miRNA", "pri-miRNA", NA_character_)]
+
 mem[, library_version := LIB_VERSION]
 
 # --- 7. Write canonical schema (old columns preserved + v5 additions) --------
 out <- mem[, .(gene_id_mouse, gene_symbol_mouse, gene_symbol_human, biotype, tier,
-               n_diets_up, diet_list, has_human_de, has_coloc, has_human_evidence,
+               n_diets_up, diet_list, has_human_de, is_mash_deg, mash_shrunk_logFC, mash_lfsr,
+               has_coloc, has_human_evidence,
                hep_substrate, hep_mean_cpm, hep_ratio, sc_disease_celltype,
                n_human_orthologs, ortholog_ambiguous, direction_conflict,
                hep_expressed_causal, lnc_human_ortholog, lnc_hep_expressed,
-               library_version)]
+               mirbase_family, mirbase_arm, mirna_n_evidence, mirna_hep_expressed, mirna_hep_source,
+               mirna_target_substrate, library_version)]
 setorder(out, tier, -n_diets_up, gene_symbol_mouse)
 fwrite(out, OUT)
 
@@ -243,9 +346,10 @@ fwrite(out, OUT)
 n_total <- nrow(out)
 n_pc    <- out[biotype == "protein_coding", .N]
 n_lnc   <- out[biotype == "lncRNA", .N]
+n_mir   <- out[biotype == "miRNA", .N]
 n_hd    <- out[tier == "human", .N]
 pct_h   <- 100 * n_hd / n_total
-n_sgrna <- n_pc * 4L + n_lnc * 4L + 100L * 4L + 500L   # 4 gRNA/target (PC + lncRNA)
+n_sgrna <- (n_pc + n_lnc + n_mir) * 4L + 100L * 4L + 500L   # 4 gRNA/target (PC + lncRNA + miRNA)
 # Coverage with delivery/sort efficiencies (PI 2026-06-01):
 #   lenti transduction 30%; Cre recombination 80% (only Cre+ cells have active
 #   RfxCas13d -> informative); FACS sorting efficiency 60% (sorted top/bottom
@@ -260,9 +364,17 @@ mice_cov <- ceiling(n_sgrna * 500 / eff_cells)             # SURVIVING mice need
 mice     <- ceiling(mice_cov / (1 - MORTALITY))            # INJECT this many to net the survivors
 
 cat("\n=== LIBRARY", LIB_VERSION, "(", OUT, ") ===\n")
-cat(sprintf("TOTAL: %d  (PC=%d, lncRNA=%d)\n", n_total, n_pc, n_lnc))
-cat(sprintf("tier: human=%d (%.1f%% -- REPORTED, not gated) | mouse_confirmed=%d (%.1f%%)\n",
-            n_hd, pct_h, n_total - n_hd, 100 * (n_total - n_hd) / n_total))
+cat(sprintf("TOTAL: %d  (PC=%d, lncRNA=%d, miRNA=%d)\n", n_total, n_pc, n_lnc, n_mir))
+cat("tier distribution (priority human>mouse_confirmed>mash_progression>mirna_conserved):\n")
+print(table(out$tier))
+cat(sprintf("  human spine = %.1f%% (REPORTED, not gated)\n", pct_h))
+cat(sprintf("MASH-vs-MASL: is_mash_deg=%d (%.1f%% of library) | net-new mash_progression rows=%d\n",
+            sum(out$is_mash_deg), 100 * mean(out$is_mash_deg), out[tier == "mash_progression", .N]))
+if (n_mir > 0) {
+  cat(sprintf("miRNA tier: %d genes | hep_expressed=%d\n",
+              n_mir, out[biotype == "miRNA" & mirna_hep_expressed == TRUE, .N]))
+  cat("  miRNA hep_source:\n"); print(table(out[biotype == "miRNA", mirna_hep_source]))
+}
 cat("hep_substrate distribution:\n"); print(table(out$hep_substrate))
 cat(sprintf("scoreable core (hep_substrate==high): %d (%.1f%%)\n",
             out[hep_substrate == "high", .N], 100 * out[hep_substrate == "high", .N] / n_total))
@@ -297,16 +409,17 @@ for (md in c(2L, 3L, 4L)) {
   cat(sprintf("  >=%d diets: %d genes | %.1f%% human\n", md, n, 100 * nh / max(n, 1)))
 }
 
-# --- 9. v4 -> v5 diff -------------------------------------------------------
-# Prefer the STABLE canonical-v4 reference over the rolling backup, so re-runs
-# always diff against true v4 (not the previous v5).
-V4REF  <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v4_canonical.csv")
-diffref <- if (file.exists(V4REF)) V4REF else BACKUP
+# --- 9. v5 -> v6 diff --------------------------------------------------------
+# Diff against the STABLE frozen v5 reference (cas13_library_v5_canonical.csv), so
+# re-runs always show the true v5->v6 delta -- not the rolling BACKUP, which a
+# re-run would overwrite with the previous v6 (giving a spurious empty diff).
+V5REF   <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v5_canonical.csv")
+diffref <- if (file.exists(V5REF)) V5REF else BACKUP
 if (file.exists(diffref)) {
-  v4 <- fread(diffref)
-  v4g <- v4$gene_id_mouse; v5g <- out$gene_id_mouse
-  added   <- setdiff(v5g, v4g)
-  dropped <- setdiff(v4g, v5g)
+  v5 <- fread(diffref)
+  v5g <- v5$gene_id_mouse; v6g <- out$gene_id_mouse
+  added   <- setdiff(v6g, v5g)
+  dropped <- setdiff(v5g, v6g)
   diff <- rbind(
     data.table(gene_id_mouse = added,   change = "added"),
     data.table(gene_id_mouse = dropped, change = "dropped")
@@ -314,8 +427,8 @@ if (file.exists(diffref)) {
   diff <- merge(diff, out[, .(gene_id_mouse, gene_symbol_mouse, gene_symbol_human, tier, biotype)],
                 by = "gene_id_mouse", all.x = TRUE)
   fwrite(diff, DIFFOUT)
-  cat(sprintf("\nv4->v5 diff: +%d added / -%d dropped (v4=%d, v5=%d) -> %s\n",
-              length(added), length(dropped), length(v4g), length(v5g), DIFFOUT))
+  cat(sprintf("\nv5->v6 diff: +%d added / -%d dropped (v5=%d, v6=%d) -> %s\n",
+              length(added), length(dropped), length(v5g), length(v6g), DIFFOUT))
 }
 
 # --- 10. BUILD_MANIFEST (provenance stamp) ----------------------------------
@@ -326,7 +439,12 @@ manifest <- c(
   sprintf("library_version: %s", LIB_VERSION),
   sprintf("built_utc: %s", format(Sys.time(), tz = "UTC", usetz = TRUE)),
   sprintf("git_sha: %s", paste(git_sha, collapse = "")),
-  sprintf("n_genes: %d (PC=%d lncRNA=%d)", n_total, n_pc, n_lnc),
+  "human_deg_source: limma-voom per-study + metafor REML, ashr-shrunk (06b); dream retired for library",
+  sprintf("n_genes: %d (PC=%d lncRNA=%d miRNA=%d)", n_total, n_pc, n_lnc, n_mir),
+  sprintf("tier: human=%d mouse_confirmed=%d mash_progression=%d mirna_conserved=%d",
+          out[tier == "human", .N], out[tier == "mouse_confirmed", .N],
+          out[tier == "mash_progression", .N], out[tier == "mirna_conserved", .N]),
+  sprintf("is_mash_deg (annotation, overlap-aware): %d", sum(out$is_mash_deg)),
   sprintf("pct_human_reported: %.1f", pct_h),
   sprintf("n_sgrna: %d  mice_surviving_500x: %d  mice_to_inject: %d", n_sgrna, mice_cov, mice),
   sprintf("coverage: transduction=%.2f Cre=%.2f FACS=%.2f IN_FRAC=%.2f GATE=%.2f mortality=%.3f -> eff_cells/mouse=%.0f (%s binds)",
@@ -335,11 +453,13 @@ manifest <- c(
   sprintf("HUMAN_SHRUNK_THR: %.2f  SHRUNK_LFC_THR: %.2f  MIN_DIETS: %d",
           HUMAN_SHRUNK_THR, SHRUNK_LFC_THR, MIN_DIETS),
   "inputs (path | mtime | md5):",
-  sprintf("  ashr: %s | %s | %s", ASHR, format(file.mtime(ASHR)), md5(ASHR)),
+  sprintf("  human_metafor_ashr: %s | %s | %s", ASHR, format(file.mtime(ASHR)), md5(ASHR)),
+  sprintf("  mash_metafor_ashr: %s | %s | %s", MASH, format(file.mtime(MASH)), md5(MASH)),
   sprintf("  ortho: %s | %s | %s", ORTHO, format(file.mtime(ORTHO)), md5(ORTHO)),
   sprintf("  atlas: %s | %s | %s", ATLAS, format(file.mtime(ATLAS)), md5(ATLAS)),
   sprintf("  hepspec: %s | %s | %s", HEPSPEC, format(file.mtime(HEPSPEC)), md5(HEPSPEC)),
-  sprintf("  ashr_universe: %d  COL1A1_logFC: %.4f (STAR -s 2 signature)", universe_n, col1a1_lfc),
+  sprintf("  mirna_hep: %s | %s | %s", MIRNAHEP, format(file.mtime(MIRNAHEP)), md5(MIRNAHEP)),
+  sprintf("  metafor_universe: %d  COL1A1_logFC: %.4f (metafor REML signature, up in disease)", universe_n, col1a1_lfc),
   paste0("  per_diet: ", paste(DIETS, collapse = ","))
 )
 writeLines(manifest, MANIFEST)

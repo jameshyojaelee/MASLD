@@ -23,7 +23,7 @@ source("scripts/figures/load_figure_data.R")
 
 SC_DE_DIR   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
 DECONV_PATH <- file.path(CAUSAL, "deconv_attribution_scores.csv")
-DREAM_PATH  <- file.path(INT_RESULTS, "dream_results_ashr.csv")
+DREAM_PATH  <- file.path(INT_RESULTS, "canonical_deg_results.csv")
 
 # ---------------------------------------------------------------------------
 # 1. Load & harmonise gene IDs

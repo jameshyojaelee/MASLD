@@ -10,7 +10,7 @@
 #   sc term `disease_stage_coarseSteatosis`        -> dream_results_stage_steatosis.csv
 #   sc term `disease_stage_coarseSteatohepatitis`  -> dream_results_stage_sh.csv
 #   sc term `disease_stage_coarseCirrhosis`        -> dream_results_stage_cirrhosis.csv
-#   continuous (macrophage pseudotime, F-stage)    -> dream_results_ashr.csv
+#   continuous (macrophage pseudotime, F-stage)    -> canonical_deg_results.csv
 #       (overall MASLD-vs-Healthy = appropriate match for continuous severity axis)
 #
 # If a stage-specific bulk anchor is missing, we silently fall back to the
@@ -41,7 +41,7 @@ CONTINUOUS_TSV<- file.path(OUT_DIR, "stage_lr_lmm_continuous.tsv")
 FSTAGE_TSV    <- file.path(OUT_DIR, "stage_lr_lmm_fstage.tsv")
 INT_DIR <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-BULK_ALL       <- file.path(INT_DIR, "dream_results_ashr.csv")
+BULK_ALL       <- file.path(INT_DIR, "canonical_deg_results.csv")
 BULK_STEATOSIS <- file.path(INT_DIR, "dream_results_stage_steatosis.csv")
 BULK_SH        <- file.path(INT_DIR, "dream_results_stage_sh.csv")
 BULK_CIRRHOSIS <- file.path(INT_DIR, "dream_results_stage_cirrhosis.csv")

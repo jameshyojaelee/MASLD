@@ -195,7 +195,7 @@ flag <- ifelse(dream_sig & sens_sig == n_voters,           "confirmed_all",
         ifelse(!dream_sig & sens_sig >= ceiling(n_voters/2),
                                                             "discordant",
                                                             "ns")))))
-merged[, dream_robustness_flag := factor(flag,
+merged[, bulk_robustness_flag := factor(flag,
        levels = c("confirmed_all","confirmed_majority","confirmed_minority",
                   "primary_only","discordant","ns"))]
 cat("Robustness voters: edgeR-QL + voomLmFit",
@@ -233,7 +233,7 @@ atlas_cols <- merged[, .(
   mashr_n_sig_cohorts,
   mashr_sharing_class,
   mashr_pan_cohort,
-  dream_robustness_flag
+  bulk_robustness_flag
 )]
 if (deseq_present) {
   atlas_cols[, sensitivity_DESeq2_logFC := merged$dslogFC]
@@ -249,7 +249,7 @@ robust_summary <- data.table(
            "primary_only","discordant"),
   n = sapply(c("confirmed_all","confirmed_majority","confirmed_minority",
                "primary_only","discordant"),
-             function(f) tier1[dream_robustness_flag == f, .N]),
+             function(f) tier1[bulk_robustness_flag == f, .N]),
   pct_tier1 = NA_real_
 )
 robust_summary[, pct_tier1 := 100 * n / max(nrow(tier1), 1)]
@@ -290,7 +290,7 @@ if (deseq_present) {
 summary_rows <- c(summary_rows, list(
   c("n_tier1_dream",                      nrow(tier1)),
   c("pct_confirmed_majority_or_better",
-    round(sum(tier1$dream_robustness_flag %in%
+    round(sum(tier1$bulk_robustness_flag %in%
               c("confirmed_all","confirmed_majority")) /
           max(nrow(tier1), 1) * 100, 1)),
   c("n_voters",                           n_voters),

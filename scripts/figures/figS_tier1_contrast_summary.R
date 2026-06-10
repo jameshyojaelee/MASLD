@@ -25,7 +25,7 @@ PADJ_CUT <- 0.05
 LFC_CUT  <- 0.5
 
 specs <- list(
-  list(tag="DvC",      csv=file.path(INTRES, "dream_results.csv"),
+  list(tag="DvC",      csv=file.path(INTRES, "canonical_deg_results.csv"),
        label="Disease vs Control",                        n_samples=847, n_cohorts=5),
   list(tag="MM",       csv=file.path(DSIG,   "mash_vs_masl_dream_strict.csv"),
        label="MASH vs MASL",                              n_samples=493, n_cohorts=7),

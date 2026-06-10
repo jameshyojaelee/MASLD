@@ -29,6 +29,7 @@ suppressPackageStartupMessages({
   library(data.table)
   library(yaml)
   library(edgeR)
+  library(limma)
 })
 
 # Force injection into lme4 namespace BEFORE loading variancePartition
@@ -231,21 +232,30 @@ print(table(info$group_binary, info$dataset))
 #       so DEGs that survive this adjustment are hepatocyte-intrinsic.
 #       GSE213621 lacks MuSiC data → those samples get median-imputed fractions.
 # ============================================================
-cat("\n===== ADJUSTED DREAM (with ALL 16 deconv covariates, T1.11) =====\n")
-# T1.11: full-CT formula using scaled covariates (exclude Hepatocytes as
-# compositional reference — dropped upstream).
+cat("\n===== ADJUSTED limma-voom-QW C2 (with ALL deconv covariates, T1.11) =====\n")
+# C2 METHOD-CONSISTENCY FIX (2026-06-09): the adjusted arm now uses limma-voom
+# quality-weighted with dataset as a FIXED effect, matching the canonical
+# producer 05h_limma_voom_qw_canonical.R (~ dataset + inferred_sex + group_binary).
+# Previously this arm used voomWithDreamWeights + dream() + (1|dataset), so the
+# attribution compared a DREAM adjusted fit against a limma-voom-QW unadjusted
+# (C2 canonical) baseline — conflating the DE-method change with the deconv
+# covariate effect. Now both arms share the engine; the ONLY difference is the
+# cell-type-fraction covariates. (Output filenames keep the legacy "dream_"
+# prefix for downstream-consumer compatibility but the content is LVQW.)
+# T1.11: full-CT scaled covariates (Hepatocytes dropped as compositional reference).
 .t111_covar_terms <- paste(CT_COVAR_VARS_SCALED, collapse = " + ")
 form_adj <- as.formula(sprintf(
-  "~ group_binary + inferred_sex + %s + (1|dataset)", .t111_covar_terms
+  "~ dataset + group_binary + inferred_sex + %s", .t111_covar_terms
 ))
-cat("Formula (T1.11 full-CT):", deparse(form_adj, width.cutoff = 500), "\n")
+info$group_binary <- factor(info$group_binary, levels = c("Control", "Disease"))
+design_adj <- model.matrix(form_adj, data = info)
+stopifnot("group_binaryDisease" %in% colnames(design_adj))
+stopifnot(nrow(design_adj) == ncol(dge_mega))  # no samples dropped to NA
+cat("Design (T1.11 full-CT, dataset FIXED):", deparse(form_adj, width.cutoff = 500), "\n")
 
-cat("Running voomWithDreamWeights (adjusted, full-CT)...\n")
-v_adj <- suppressWarnings(voomWithDreamWeights(dge_mega, form_adj, info))
-
-cat("Running dream() (adjusted, full-CT)...\n")
-fit_adj <- suppressWarnings(dream(v_adj, form_adj, info))
-# NOTE: do NOT call eBayes() after dream()
+cat("Running voomWithQualityWeights + lmFit + eBayes (adjusted, full-CT)...\n")
+v_adj   <- voomWithQualityWeights(dge_mega, design_adj)
+fit_adj <- eBayes(lmFit(v_adj, design_adj))
 
 res_adj <- topTable(fit_adj, coef = "group_binaryDisease", number = Inf, sort.by = "none")
 res_adj$gene <- rownames(res_adj)
@@ -263,9 +273,11 @@ cat("Saved: dream_results_deconvolution_adjusted_16ct.csv (T1.11 full 16-CT fit)
 
 # ---- Legacy 2-covariate (Hep+Mac) adjusted fit, kept for backward compat ----
 cat("\n[T1.11] Also running legacy 2-covariate (Hep+Mac) adjusted fit for reference...\n")
-form_adj_legacy <- ~ group_binary + inferred_sex + Hepatocytes + Macrophages + (1|dataset)
-v_adj_legacy <- suppressWarnings(voomWithDreamWeights(dge_mega, form_adj_legacy, info))
-fit_adj_legacy <- suppressWarnings(dream(v_adj_legacy, form_adj_legacy, info))
+form_adj_legacy <- ~ dataset + group_binary + inferred_sex + Hepatocytes + Macrophages
+design_adj_legacy <- model.matrix(form_adj_legacy, data = info)
+stopifnot("group_binaryDisease" %in% colnames(design_adj_legacy))
+v_adj_legacy   <- voomWithQualityWeights(dge_mega, design_adj_legacy)
+fit_adj_legacy <- eBayes(lmFit(v_adj_legacy, design_adj_legacy))
 res_adj_legacy <- topTable(fit_adj_legacy, coef = "group_binaryDisease",
                            number = Inf, sort.by = "none")
 res_adj_legacy$gene <- rownames(res_adj_legacy)
@@ -438,23 +450,25 @@ cat("\n===== INTERACTION DE: Disease x Macrophages =====\n")
 .t111_inter_main   <- setdiff(CT_COVAR_VARS_SCALED, .t111_macro_scaled)
 .t111_inter_terms  <- paste(.t111_inter_main, collapse = " + ")
 form_inter <- as.formula(sprintf(
-  "~ group_binary * Macrophages + inferred_sex + %s + (1|dataset)",
+  "~ dataset + group_binary * Macrophages + inferred_sex + %s",
   .t111_inter_terms
 ))
-cat("Formula (T1.11 full-CT interaction):", deparse(form_inter, width.cutoff = 500), "\n")
+cat("Formula (T1.11 full-CT interaction, LVQW dataset FIXED):", deparse(form_inter, width.cutoff = 500), "\n")
 
 # NOTE: In MASLD, macrophage infiltration correlates with disease status
 # (group_binary ~ Macrophages), which can cause rank deficiency in the
 # fixed-effects matrix. Wrap in tryCatch to handle gracefully.
+# C2 FIX (2026-06-09): LVQW with dataset FIXED (random intercept (1|dataset)
+# was a random-INTERCEPT only, so this is an exact fixed-effect equivalent in spirit
+# and method-consistent with the C2 canonical — no dream).
 inter_result <- tryCatch({
-  cat("Running voomWithDreamWeights (interaction)...\n")
-  v_inter <- suppressWarnings(voomWithDreamWeights(dge_mega, form_inter, info))
-
-  cat("Running dream() (interaction)...\n")
-  fit_inter <- suppressWarnings(dream(v_inter, form_inter, info))
-
-  # Extract the interaction coefficient
+  cat("Running voomWithQualityWeights + lmFit + eBayes (interaction, LVQW)...\n")
+  design_inter <- model.matrix(form_inter, data = info)
   inter_coef <- "group_binaryDisease:Macrophages"
+  stopifnot(inter_coef %in% colnames(design_inter))
+  v_inter   <- voomWithQualityWeights(dge_mega, design_inter)
+  fit_inter <- eBayes(lmFit(v_inter, design_inter))
+
   cat("Extracting coefficient:", inter_coef, "\n")
   res_inter <- topTable(fit_inter, coef = inter_coef, number = Inf, sort.by = "none")
   res_inter$gene <- rownames(res_inter)

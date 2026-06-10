@@ -9,7 +9,8 @@
 #
 # fig3c: GGT chr15 / RORA locus LD-zoom panel (the "external" c in the Fig 3 composite).
 # Single-step pipeline — figS09_locus_zoom_pg.R (plotgardener rewrite) writes
-# the LD-zoom plot DIRECTLY to fig3_regulatory_architecture/panels/fig3c.pdf
+# the LD-zoom plot DIRECTLY to
+# fig3_regulatory_architecture/panels/rora_locus_zoom_ggt_chr15.pdf
 # via the 4th CLI arg (output override). No copy step needed.
 #
 # 2026-04-29 — switched from rnaseq+figS09_locus_zoom.R (ggplot/patchwork) to
@@ -31,5 +32,5 @@ Rscript scripts/figures/figS09_locus_zoom_pg.R \
   locus_GGT_chr15_60883281 \
   GGT \
   RORA \
-  "${BASE}/figures/main/fig3_regulatory_architecture/panels/fig3c.pdf"
+  "${BASE}/figures/main/fig3_regulatory_architecture/panels/rora_locus_zoom_ggt_chr15.pdf"
 echo "[fig3c] done  $(date)"

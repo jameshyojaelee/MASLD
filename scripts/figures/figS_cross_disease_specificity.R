@@ -42,7 +42,7 @@ cat("=== Cross-Disease Specificity Analysis ===\n")
 # 1. Load MASLD DEGs
 # ============================================================================
 dream_file <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration",
-                        "results/integration/dream_results_ashr.csv")
+                        "results/integration/canonical_deg_results.csv")
 dream <- fread(dream_file)
 cat("Loaded dream results:", nrow(dream), "genes\n")
 

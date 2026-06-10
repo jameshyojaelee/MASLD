@@ -17,7 +17,7 @@
 #   - COLOC per-GWAS: GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv
 #   - TWAS results: RNA-seq/results/causal_inference/twas_multi_gwas_combined.csv
 #   - scRNA pseudobulk DE: Analysis/SingleCell/results_gpu_v2/{CellType}_de.csv
-#   - Dream DEGs: RNA-seq/Human/.../results/integration/dream_results.csv
+#   - Canonical DEGs: RNA-seq/Human/.../results/integration/canonical_deg_results.csv
 #
 # Outputs:
 #   - RNA-seq/results/gwas_rna_integration/celltype_heritability_results.csv
@@ -238,9 +238,12 @@ print(enrichment_dt[, .(cell_type, fold_enrichment_coloc,
 cat("\n=== Stratified enrichment by DEG significance ===\n")
 
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 
-# Dream uses ENSEMBL IDs — map to symbols using COLOC data
+# Canonical DEG table uses ENSEMBL IDs — remap to symbols via COLOC for an
+# identical mapping to the prior dream input (drop the table's own `symbol`
+# column first so the coloc-derived merge below does not collide).
+if ("symbol" %in% names(dream)) dream[, symbol := NULL]
 coloc_map <- coloc[gene != "" & ensembl != "", .(ensembl, symbol = gene)]
 coloc_map[, ensembl_base := sub("\\.\\d+$", "", ensembl)]
 dream[, ensembl_base := sub("\\.\\d+$", "", gene)]

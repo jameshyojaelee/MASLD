@@ -93,8 +93,8 @@ tryCatch({
 tryCatch({
   message("Panel (b): COLOC PP.H4 sweep...")
 
-  # Load 13 COLOC files (Ghodsian excluded: 0 genes at all thresholds)
-  # RESTORED 2026-04-09: FinnGen_NAFLD, FinnGen_NASH, FinnGen_HCC restored (verified R12 provenance)
+  # Load COLOC files (Ghodsian excluded: 0 genes at all thresholds)
+  # 2026 portfolio refactor: cirrhosis/HCC GWAS dropped (FinnGen_HCC removed)
   coloc_sources <- list(
     list(dir = "broadaway_ukbb",    label = "UKBB ALT",    ancestry = "European", lty = "solid"),
     list(dir = "broadaway_ukbb_ast", label = "UKBB AST",   ancestry = "European", lty = "solid"),
@@ -102,7 +102,6 @@ tryCatch({
     list(dir = "broadaway_pdff",    label = "PDFF",         ancestry = "European", lty = "solid"),
     list(dir = "finngen_nafld",     label = "FinnGen NAFLD", ancestry = "FinnGen",  lty = "dashed"),
     list(dir = "finngen_nash",      label = "FinnGen NASH",  ancestry = "FinnGen",  lty = "dashed"),
-    list(dir = "finngen_hcc",       label = "FinnGen HCC",   ancestry = "FinnGen",  lty = "dashed"),
     list(dir = "bbj_alt",           label = "BBJ ALT",      ancestry = "BBJ",      lty = "dotted"),
     list(dir = "bbj_ast",           label = "BBJ AST",      ancestry = "BBJ",      lty = "dotted"),
     list(dir = "bbj_ggt",           label = "BBJ GGT",      ancestry = "BBJ",      lty = "dotted")

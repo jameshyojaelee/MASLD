@@ -93,14 +93,10 @@ if (length(all_results) > 0) {
       # FinnGen R12: restored 2026-04-09; overlaps Ghodsian DF4 arm (651/4614 cases = 14%)
       "FinnGen_NAFLD",            # FinnGen R12 NAFLD (4,614 cases)
       "FinnGen_NASH",             # FinnGen R12 NASH (1,823 cases)
-      "FinnGen_HCC",              # FinnGen R12 HCC (1,156 cases)
-      # Cirrhosis / HCC: different phenotypes, keep separate
-      "Ghouse_Cirrhosis",
-      "Ghouse_HCC",
+      # Cirrhosis/HCC GWAS (FinnGen_HCC, Ghouse_Cirrhosis/HCC, Ishigaki EAS) dropped
+      # 2026-06-06: etiology-mixed endpoints excluded by Broadaway; not MASLD-specific.
       # BBJ EAS liver enzymes: same ~160K BBJ participants, different traits
       "BBJ_ALT", "BBJ_AST", "BBJ_GGT",
-      # EAS case-control (Ishigaki et al.)
-      "2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS",
       # Pan-UKBB AFR liver enzymes: same ~6.6K AFR participants
       "PanUKBB_AFR_ALT", "PanUKBB_AFR_AST", "PanUKBB_AFR_GGT",
       # Pan-UKBB CSA liver enzymes: same ~8.9K CSA participants
@@ -117,11 +113,7 @@ if (length(all_results) > 0) {
       "UKBB_PDFF", "UKBB_PDFF", "UKBB_PDFF",
       "FinnGen_R12",             # FinnGen R12 overlaps Ghodsian DF4 — own group
       "FinnGen_R12",             # Same FinnGen R12 cohort, different phenotype
-      "FinnGen_R12",             # Same FinnGen R12 cohort, different phenotype
-      "Ghouse_Cirrhosis",
-      "Ghouse_HCC",
       "BBJ_ALT", "BBJ_AST", "BBJ_GGT",
-      "EAS_CC_Ishigaki", "EAS_CC_Ishigaki",
       "PanUKBB_AFR", "PanUKBB_AFR", "PanUKBB_AFR",
       "PanUKBB_CSA", "PanUKBB_CSA", "PanUKBB_CSA"
     )

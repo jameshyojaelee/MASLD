@@ -25,7 +25,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 
 atlas_path <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
-dream_path <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+dream_path <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 gtf_path   <- "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
 out_dir    <- file.path(BASE, "RNA-seq/results/ncrna")
 
@@ -63,27 +63,27 @@ for (i in seq_len(min(15, nrow(bt_counts)))) {
 cat("\n--- 2. Per-biotype DEG summary ---\n")
 
 # Merge dream stats into atlas for genes with dream results
-# Atlas already has dream_logFC, dream_padj, dream_tstat
+# Atlas already has bulk_logFC, bulk_padj, bulk_tstat
 # Define DEG status
 # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
-atlas[, is_deg := !is.na(dream_padj) & dream_padj < 0.1]
-atlas[, is_deg_strict := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) >= 0.5]
-atlas[, deg_direction := fifelse(is_deg & dream_logFC > 0, "up",
-                          fifelse(is_deg & dream_logFC < 0, "down", "ns"))]
+atlas[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.1]
+atlas[, is_deg_strict := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) >= 0.5]
+atlas[, deg_direction := fifelse(is_deg & bulk_logFC > 0, "up",
+                          fifelse(is_deg & bulk_logFC < 0, "down", "ns"))]
 
 # Include protein_coding for comparison
 summary_biotypes <- c("protein_coding", ncrna_biotypes)
 
 landscape_summary <- atlas[gene_biotype %in% summary_biotypes, .(
   n_total       = .N,
-  n_tested      = sum(!is.na(dream_padj)),
+  n_tested      = sum(!is.na(bulk_padj)),
   n_deg         = sum(is_deg, na.rm = TRUE),
   n_deg_strict  = sum(is_deg_strict, na.rm = TRUE),
   n_up          = sum(deg_direction == "up", na.rm = TRUE),
   n_down        = sum(deg_direction == "down", na.rm = TRUE),
-  frac_deg      = sum(is_deg, na.rm = TRUE) / max(sum(!is.na(dream_padj)), 1),
-  median_abs_lfc = as.double(median(abs(dream_logFC[is_deg]), na.rm = TRUE)),
-  median_aveexpr = as.double(median(dream_tstat[!is.na(dream_tstat)], na.rm = TRUE)),
+  frac_deg      = sum(is_deg, na.rm = TRUE) / max(sum(!is.na(bulk_padj)), 1),
+  median_abs_lfc = as.double(median(abs(bulk_logFC[is_deg]), na.rm = TRUE)),
+  median_aveexpr = as.double(median(bulk_tstat[!is.na(bulk_tstat)], na.rm = TRUE)),
   median_sources = as.double(median(sources_active[!is.na(sources_active)], na.rm = TRUE))
 ), by = gene_biotype]
 
@@ -111,8 +111,8 @@ cat("  Saved ncrna_landscape_summary.csv\n")
 # =============================================================================
 cat("\n--- 3. lncRNA vs protein-coding comparisons ---\n")
 
-pc_genes <- atlas[gene_biotype == "protein_coding" & !is.na(dream_padj)]
-lnc_genes <- atlas[gene_biotype == "lncRNA" & !is.na(dream_padj)]
+pc_genes <- atlas[gene_biotype == "protein_coding" & !is.na(bulk_padj)]
+lnc_genes <- atlas[gene_biotype == "lncRNA" & !is.na(bulk_padj)]
 
 comparisons <- list()
 
@@ -121,13 +121,13 @@ pc_degs <- pc_genes[is_deg == TRUE]
 lnc_degs <- lnc_genes[is_deg == TRUE]
 
 if (nrow(pc_degs) > 0 & nrow(lnc_degs) > 0) {
-  lfc_test <- wilcox.test(abs(lnc_degs$dream_logFC), abs(pc_degs$dream_logFC))
+  lfc_test <- wilcox.test(abs(lnc_degs$bulk_logFC), abs(pc_degs$bulk_logFC))
   comparisons$lfc <- data.table(
     comparison = "abs_logFC_among_DEGs",
-    lncrna_median = median(abs(lnc_degs$dream_logFC)),
-    pc_median = median(abs(pc_degs$dream_logFC)),
+    lncrna_median = median(abs(lnc_degs$bulk_logFC)),
+    pc_median = median(abs(pc_degs$bulk_logFC)),
     wilcox_p = lfc_test$p.value,
-    direction = ifelse(median(abs(lnc_degs$dream_logFC)) > median(abs(pc_degs$dream_logFC)),
+    direction = ifelse(median(abs(lnc_degs$bulk_logFC)) > median(abs(pc_degs$bulk_logFC)),
                        "lncRNA_higher", "PC_higher")
   )
   cat(sprintf("  |LFC| among DEGs: lncRNA median=%.3f, PC median=%.3f, p=%.2e\n",
@@ -271,7 +271,7 @@ host_genes <- host_genes[, .(host_gene = paste(unique(host_gene), collapse = ";"
 
 # Get top 50 lncRNA DEGs by |t-statistic|
 lnc_deg_all <- atlas[gene_biotype == "lncRNA" & is_deg == TRUE]
-lnc_deg_all[, abs_tstat := abs(dream_tstat)]
+lnc_deg_all[, abs_tstat := abs(bulk_tstat)]
 setorder(lnc_deg_all, -abs_tstat)
 top50 <- head(lnc_deg_all, 50)
 
@@ -312,23 +312,23 @@ known_masld_lncrnas <- data.table(
 
 # Match to atlas
 known_validated <- merge(known_masld_lncrnas,
-                          atlas[, .(human_symbol, dream_logFC, dream_padj, dream_tstat,
+                          atlas[, .(human_symbol, bulk_logFC, bulk_padj, bulk_tstat,
                                     is_conserved, sources_active, gene_biotype)],
                           by.x = "gene", by.y = "human_symbol", all.x = TRUE)
 
 known_validated[, in_atlas := !is.na(gene_biotype)]
-known_validated[, is_deg := !is.na(dream_padj) & dream_padj < 0.1]
-known_validated[, dream_direction := fifelse(dream_logFC > 0, "up", "down")]
+known_validated[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.1]
+known_validated[, dream_direction := fifelse(bulk_logFC > 0, "up", "down")]
 known_validated[, direction_concordant := (dream_direction == literature_direction)]
 
 cat("  Known MASLD lncRNA validation:\n")
 for (i in seq_len(nrow(known_validated))) {
   row <- known_validated[i]
   status <- ifelse(!row$in_atlas, "NOT_IN_ATLAS",
-              ifelse(!row$is_deg, sprintf("NS (LFC=%.2f, p=%.3f)", row$dream_logFC, row$dream_padj),
+              ifelse(!row$is_deg, sprintf("NS (LFC=%.2f, p=%.3f)", row$bulk_logFC, row$bulk_padj),
                 ifelse(row$direction_concordant,
-                  sprintf("CONCORDANT (LFC=%.2f, p=%.2e)", row$dream_logFC, row$dream_padj),
-                  sprintf("DISCORDANT (LFC=%.2f, p=%.2e)", row$dream_logFC, row$dream_padj))))
+                  sprintf("CONCORDANT (LFC=%.2f, p=%.2e)", row$bulk_logFC, row$bulk_padj),
+                  sprintf("DISCORDANT (LFC=%.2f, p=%.2e)", row$bulk_logFC, row$bulk_padj))))
   cat(sprintf("  %-10s expected=%-5s %s\n", row$gene, row$literature_direction, status))
 }
 
@@ -364,7 +364,7 @@ ncrna_all <- merge(ncrna_all, lnc_annot[, .(gene_name, chr, start, end, strand)]
 
 # Select key columns for output
 deg_cols <- c("human_symbol", "ensembl_id", "gene_biotype", "transcript_class",
-              "dream_logFC", "dream_padj", "dream_tstat", "is_deg", "deg_direction",
+              "bulk_logFC", "bulk_padj", "bulk_tstat", "is_deg", "deg_direction",
               "host_gene", "is_known_masld_lncrna",
               "sources_active", "is_conserved",
               "chr", "start", "end", "strand",
@@ -373,7 +373,7 @@ deg_cols <- c("human_symbol", "ensembl_id", "gene_biotype", "transcript_class",
 # Keep only columns that exist
 deg_cols <- intersect(deg_cols, names(ncrna_all))
 ncrna_annotated <- ncrna_all[, ..deg_cols]
-setorder(ncrna_annotated, dream_padj, na.last = TRUE)
+setorder(ncrna_annotated, bulk_padj, na.last = TRUE)
 
 fwrite(ncrna_annotated, file.path(out_dir, "ncrna_deg_annotated.csv"))
 cat(sprintf("  Saved ncrna_deg_annotated.csv (%d rows)\n", nrow(ncrna_annotated)))
@@ -387,7 +387,7 @@ lnc_class_summary <- ncrna_all[gene_biotype == "lncRNA", .(
   n_total = .N,
   n_deg = sum(is_deg, na.rm = TRUE),
   frac_deg = sum(is_deg, na.rm = TRUE) / max(.N, 1),
-  median_abs_lfc = median(abs(dream_logFC[is_deg]), na.rm = TRUE)
+  median_abs_lfc = median(abs(bulk_logFC[is_deg]), na.rm = TRUE)
 ), by = transcript_class][order(-n_total)]
 
 cat("  lncRNA transcript class breakdown:\n")
@@ -424,11 +424,11 @@ if (length(mirna_lnc_overlaps) > 0) {
 
 # Annotate with DEG status
 mirna_hosts <- merge(mirna_hosts,
-                      atlas[, .(human_symbol, dream_padj, dream_logFC, is_deg)],
+                      atlas[, .(human_symbol, bulk_padj, bulk_logFC, is_deg)],
                       by.x = "mirna", by.y = "human_symbol", all.x = TRUE)
 mirna_hosts <- merge(mirna_hosts,
-                      atlas[, .(human_symbol, dream_padj_host = dream_padj,
-                                dream_logFC_host = dream_logFC,
+                      atlas[, .(human_symbol, dream_padj_host = bulk_padj,
+                                dream_logFC_host = bulk_logFC,
                                 is_deg_host = is_deg)],
                       by.x = "host_gene", by.y = "human_symbol", all.x = TRUE)
 
@@ -442,7 +442,7 @@ cat(sprintf("  miRNA-host co-DEG pairs: %d\n",
 cat("\n--- 9. Summary ---\n")
 
 n_ncrna_total <- nrow(atlas[gene_biotype %in% ncrna_biotypes])
-n_ncrna_tested <- nrow(atlas[gene_biotype %in% ncrna_biotypes & !is.na(dream_padj)])
+n_ncrna_tested <- nrow(atlas[gene_biotype %in% ncrna_biotypes & !is.na(bulk_padj)])
 n_ncrna_deg <- sum(atlas[gene_biotype %in% ncrna_biotypes]$is_deg, na.rm = TRUE)
 n_lncrna_deg <- sum(atlas[gene_biotype == "lncRNA"]$is_deg, na.rm = TRUE)
 n_mirna_deg <- sum(atlas[gene_biotype == "miRNA"]$is_deg, na.rm = TRUE)

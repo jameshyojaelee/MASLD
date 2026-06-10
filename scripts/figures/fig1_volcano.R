@@ -23,8 +23,8 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG1_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
-PADJ_CUT  <- 0.05
-LFC_CUT   <- 0.5
+LFSR_CUT  <- 0.05   # applied to dream_lfsr (ashr local false sign rate)
+LFC_CUT   <- 0.5    # applied to dream_shrunk_logFC (ashr-shrunk effect size)
 N_TOP_DIR <- 8     # top-padj genes labelled per direction
 
 # FIG1_VOLCANO_VECTOR=TRUE renders point clouds as native vector geometry and
@@ -56,14 +56,14 @@ dream <- load_dream_results()
 # ----------------------------------------------------------------------------
 # Build plotting frame
 # ----------------------------------------------------------------------------
-volc <- dream[!is.na(dream_padj) & !is.na(dream_logFC),
-              .(symbol, dream_logFC, dream_padj)]
-volc[, neglog10p := -log10(dream_padj)]
+volc <- dream[!is.na(dream_lfsr) & !is.na(dream_shrunk_logFC),
+              .(symbol, dream_shrunk_logFC, dream_lfsr, dream_logFC, dream_padj)]
+volc[, neglog10lfsr := -log10(dream_lfsr)]
 
-# Three-class direction × significance
+# Three-class direction × significance (lfsr + shrunk LFC, canonical 2026-06-02)
 volc[, status := fcase(
-  dream_padj < PADJ_CUT &  dream_logFC >  LFC_CUT, "Up",
-  dream_padj < PADJ_CUT &  dream_logFC < -LFC_CUT, "Down",
+  dream_lfsr < LFSR_CUT &  dream_shrunk_logFC >  LFC_CUT, "Up",
+  dream_lfsr < LFSR_CUT &  dream_shrunk_logFC < -LFC_CUT, "Down",
   default = "n.s."
 )]
 volc[, status := factor(status, levels = c("n.s.", "Down", "Up"))]
@@ -72,16 +72,16 @@ setorder(volc, status)   # n.s. plotted first, sig on top
 n_up   <- sum(volc$status == "Up")
 n_down <- sum(volc$status == "Down")
 n_ns   <- sum(volc$status == "n.s.")
-message(sprintf("DEG counts at padj<%.2g, |logFC|>%.1f: %s up, %s down, %s n.s.",
-                PADJ_CUT, LFC_CUT, comma(n_up), comma(n_down), comma(n_ns)))
+message(sprintf("DEG counts at lfsr<%.2g, |shrunk_logFC|>%.1f: %s up, %s down, %s n.s.",
+                LFSR_CUT, LFC_CUT, comma(n_up), comma(n_down), comma(n_ns)))
 
 # ----------------------------------------------------------------------------
 # Label set: top-padj per direction + curated anchors
 # ----------------------------------------------------------------------------
 sig_up   <- volc[status == "Up"   & symbol != "" & !grepl("^ENSG", symbol)]
 sig_down <- volc[status == "Down" & symbol != "" & !grepl("^ENSG", symbol)]
-setorder(sig_up,   dream_padj)
-setorder(sig_down, dream_padj)
+setorder(sig_up,   dream_lfsr)
+setorder(sig_down, dream_lfsr)
 
 top_up   <- head(sig_up,   N_TOP_DIR)
 top_down <- head(sig_down, N_TOP_DIR)
@@ -101,13 +101,13 @@ volc_colors <- c(
   "n.s." = "#D8D8D8"           # very light gray
 )
 
-x_lim <- max(abs(volc$dream_logFC), na.rm = TRUE) * 1.04
-y_max <- max(volc$neglog10p, na.rm = TRUE)
+x_lim <- max(abs(volc$dream_shrunk_logFC), na.rm = TRUE) * 1.04
+y_max <- max(volc$neglog10lfsr, na.rm = TRUE)
 y_lim <- y_max * 1.05
 
-p <- ggplot(volc, aes(x = dream_logFC, y = neglog10p, color = status)) +
+p <- ggplot(volc, aes(x = dream_shrunk_logFC, y = neglog10lfsr, color = status)) +
   # Dashed thresholds — drawn behind everything
-  geom_hline(yintercept = -log10(PADJ_CUT),
+  geom_hline(yintercept = -log10(LFSR_CUT),
              linetype = "dashed", color = "gray70", linewidth = 0.25) +
   geom_vline(xintercept = c(-LFC_CUT, LFC_CUT),
              linetype = "dashed", color = "gray70", linewidth = 0.25) +
@@ -129,12 +129,12 @@ p <- ggplot(volc, aes(x = dream_logFC, y = neglog10p, color = status)) +
    }) +
   # Halo around labelled points so they pop
   geom_point(data = label_df,
-             aes(x = dream_logFC, y = neglog10p, fill = status),
+             aes(x = dream_shrunk_logFC, y = neglog10lfsr, fill = status),
              color = "black", shape = 21, size = 1.25,
              stroke = 0.25, inherit.aes = FALSE) +
   # Labels
   geom_text_repel(data = label_df,
-                  aes(x = dream_logFC, y = neglog10p, label = symbol),
+                  aes(x = dream_shrunk_logFC, y = neglog10lfsr, label = symbol),
                   inherit.aes = FALSE,
                   size = 2.2, color = "black", fontface = "italic",
                   segment.size = 0.2, segment.color = "gray45",
@@ -160,8 +160,8 @@ p <- ggplot(volc, aes(x = dream_logFC, y = neglog10p, color = status)) +
                      expand = expansion(mult = c(0, 0)),
                      breaks = pretty_breaks(n = 5)) +
   labs(
-    x = expression("Integrated dream log"[2]*" fold change"),
-    y = expression(-log[10]~"adjusted p-value")
+    x = expression("ashr shrunk log"[2]*" fold change"),
+    y = expression(-log[10]~"lfsr")
   ) +
   theme_masld(base_size = 7) +
   theme(
@@ -179,7 +179,7 @@ save_fig(p, out_pdf, width = fig_half_width * 1.15, height = 3.2)
 # Companion CSV: every labelled gene (only on the rasterised default run, to
 # avoid clobbering when the vector pass is rendered after edits)
 if (!VECTOR_MODE) {
-  fwrite(label_df[, .(symbol, dream_logFC, dream_padj, status)],
+  fwrite(label_df[, .(symbol, dream_shrunk_logFC, dream_lfsr, dream_logFC, dream_padj, status)],
          file.path(PANEL_DIR, "fig1_volcano_labels.csv"))
 }
 

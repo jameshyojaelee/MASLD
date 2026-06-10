@@ -90,7 +90,7 @@ cat(sprintf("[Secondary] PXD051911 liver DIA-MS (MASLD vs No_MASLD): %d genes\n"
 cat(sprintf("[Fibrosis]  PXD051911 liver (MASH vs MASL): %d genes\n", nrow(fib)))
 
 # Merge atlas annotations
-dvc <- merge(dvc, atlas[, .(human_symbol, is_conserved, dream_padj,
+dvc <- merge(dvc, atlas[, .(human_symbol, is_conserved, bulk_padj,
                              n_leading_edge_pathways, top_pathways,
                              human_consensus_tier, primary_category,
                              n_prot_datasets)],

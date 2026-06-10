@@ -1,7 +1,12 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: 24 GWAS-ATAC disease regulon TFs vs F0 baseline across F1-F4 stages; HNF4A, RORA, THRB anchor the largest motif-disruption load.
+# KEY MESSAGE: Cross-modality disease master-regulator TFs vs F0 baseline across F1-F4 stages; HNF4A, RORA, THRB anchor the largest motif-disruption load.
 # Mirrors figS05_gwas_atac_tf_transition_heatmap.R but uses F0 as the common reference instead of the prior stage.
 # Source: fibrosis_stage_dream.csv (dream mega F{1-4}_vs_F0) + DoRothEA A/B/C + decoupleR run_wmean.
+# TF panel: cross-modality disease master regulators = hepatocyte SCENIC+ regulon TFs that are
+#   bulk MASLD DEGs (n=846) OR COLOC hits. The prior FDR-gated SCENIC+ disease_regulons.csv is
+#   empty (the donor-level n=18 regulon-activity DE honestly finds 0; the old non-zero set was
+#   cell-level pseudoreplication), so single-cohort regulon-DE is underpowered and not used to
+#   define the panel here.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -16,9 +21,12 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-REGULON_F <- file.path(ATAC_DIR, "scenic_plus", "disease_regulons.csv")
+# Cross-modality disease master-regulator set (default); env-overridable.
+# Old FDR-gated disease_regulons.csv is empty (pseudoreplication-prone donor-level n=18 DE).
+REGULON_F <- Sys.getenv("REGULON_FILE",
+                        unset = file.path(ATAC_DIR, "scenic_plus", "disease_master_regulators.csv"))
 DREAM_F   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/fibrosis_stage_dream.csv")
-SYMBOL_F  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+SYMBOL_F  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 MOTIF_F   <- file.path(BASE, "GWAS/finemapping/results/gwas_atac/motif_disruption_scores.csv")
 ACT_CSV   <- file.path(BASE, "RNA-seq/results/stratified_causal/fstage_vs_F0_tf_activity.csv")
 
@@ -59,7 +67,12 @@ if (file.exists(ACT_CSV)) {
 }
 
 regulons_panel <- fread(REGULON_F)
-tfs <- sub("_regulon$", "", regulons_panel$regulon_id)
+# Master-regulator file keys TFs by `tf_name`; legacy regulon files used `regulon_id`.
+if ("tf_name" %in% names(regulons_panel)) {
+  tfs <- unique(regulons_panel$tf_name)
+} else {
+  tfs <- unique(sub("_regulon$", "", regulons_panel$regulon_id))
+}
 motif <- fread(MOTIF_F)
 
 act <- tf_all[tf %in% tfs]
@@ -153,7 +166,7 @@ sig_legend <- Legend(
 
 pdf(out_pdf, width = 6.0, height = 8.0)
 draw(ht,
-     column_title = "GWAS-ATAC disease regulons across fibrosis stages (vs F0)",
+     column_title = "Cross-modality disease master regulators across fibrosis stages (vs F0)",
      column_title_gp = gpar(fontsize = 11, fontface = "bold"),
      heatmap_legend_side = "right",
      annotation_legend_list = list(sig_legend),

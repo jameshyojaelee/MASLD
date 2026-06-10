@@ -96,7 +96,7 @@ RESULTS_DIR = PROJECT_ROOT / "RNA-seq/Human/Patient_Cohorts/analysis/integration
 # ---------------------------------------------------------------------------
 SOURCE_COLUMNS = {
     "S1_human_bulk": [
-        "dream_logFC", "dream_padj", "dream_tstat",
+        "bulk_logFC", "bulk_padj", "bulk_tstat",
         # Progression contrasts (also derived from human bulk)
         "nafl_vs_nash_logFC", "nafl_vs_nash_tstat",
         "adv_fib_logFC", "nas_ge5_logFC", "extreme_logFC",
@@ -130,7 +130,7 @@ SOURCE_COLUMNS = {
     ],
     "S5_epigenomic": [
         # Sex-stratified (epigenomic proxy columns available in atlas)
-        "dream_logFC_M", "dream_logFC_F", "sex_interaction_padj",
+        "bulk_logFC_M", "bulk_logFC_F", "sex_interaction_padj",
         "n_leading_edge_pathways",
     ],
     "S6_spatial": [
@@ -148,7 +148,7 @@ SOURCE_COLUMNS = {
 # Integer count columns (e.g., n_coloc_sources) can be 0 without being NaN,
 # so we only check float "signal" columns where NaN = no data.
 SOURCE_MASK_COLUMNS = {
-    "S1_human_bulk": ["dream_logFC"],
+    "S1_human_bulk": ["bulk_logFC"],
     "S2_mouse_bulk": ["mouse_meta_logFC"],
     "S3_genetic_causal": [
         # mr_beta removed 2026-04-22 — MR ditched from paper.
@@ -157,7 +157,7 @@ SOURCE_MASK_COLUMNS = {
         "hyprcoloc_posterior",
     ],
     "S4_essentiality": ["essentiality_chronos"],
-    "S5_epigenomic": ["dream_logFC_M"],
+    "S5_epigenomic": ["bulk_logFC_M"],
     "S6_spatial": ["progression_tau"],
     "S7_single_cell": ["nafl_vs_ctrl_logFC"],
 }
@@ -376,7 +376,7 @@ def load_and_prepare_data():
         cols = SOURCE_COLUMNS[source_name]
         if not cols:
             log.warning("Source %s has no valid columns, using dummy", source_name)
-            cols = ["dream_logFC"]  # fallback
+            cols = ["bulk_logFC"]  # fallback
 
         df_sub = atlas[cols].copy()
 

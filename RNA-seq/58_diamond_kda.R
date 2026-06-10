@@ -10,7 +10,7 @@
 #   enrichment in the STRING PPI
 #
 # Inputs:
-#   - Dream DEG results (dream_results_ashr.csv)
+#   - Bulk DEG results (canonical_deg_results.csv)
 #   - WGCNA module assignments (wgcna_module_assignments.csv)
 #   - STRING PPI (9606.protein.links.v12.0.txt.gz, score >= 700)
 #   - SuSiE-COLOC gene-level results (gene_level_coloc.csv)
@@ -37,7 +37,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-dream_file   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+dream_file   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 wgcna_file   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/staging_classifier/wgcna_module_assignments.csv")
 string_links  <- file.path(BASE, "data/string_ppi/9606.protein.links.v12.0.txt.gz")
 string_info   <- file.path(BASE, "data/string_ppi/9606.protein.info.v12.0.txt.gz")
@@ -87,18 +87,18 @@ cat("\nLoading seed gene sets...\n")
 dream <- fread(dream_file)
 # Need symbol mapping: dream uses ensembl IDs, atlas has the mapping
 atlas <- fread(atlas_file, select = c("human_symbol", "ensembl_id",
-                                       "dream_logFC", "dream_padj"))
+                                       "bulk_logFC", "bulk_padj"))
 
 # Primary DEGs
-deg_all <- atlas[!is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.3]
+deg_all <- atlas[!is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.3]
 deg_symbols <- deg_all$human_symbol
 deg_in_ppi <- intersect(deg_symbols, all_genes_ppi)
 cat(sprintf("  DEGs (padj<0.05, |LFC|>0.3): %d total, %d in PPI\n",
             length(deg_symbols), length(deg_in_ppi)))
 
 # Top 500 by |logFC| for focused seed set
-top500 <- atlas[!is.na(dream_padj) & dream_padj < 0.05][
-  order(-abs(dream_logFC))][1:min(500, .N)]$human_symbol
+top500 <- atlas[!is.na(bulk_padj) & bulk_padj < 0.05][
+  order(-abs(bulk_logFC))][1:min(500, .N)]$human_symbol
 top500_in_ppi <- intersect(top500, all_genes_ppi)
 cat(sprintf("  Top-500 DEGs by |LFC|: %d in PPI\n", length(top500_in_ppi)))
 

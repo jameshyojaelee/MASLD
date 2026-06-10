@@ -29,7 +29,7 @@ SC_DE_DIR   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de
 PROP_PATH   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/disease_signatures",
                          "celltype_proportions_per_sample.csv")
 DREAM_PATH  <- file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 
 out_dir <- SC_DE_DIR
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)

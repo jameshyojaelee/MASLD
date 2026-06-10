@@ -267,7 +267,12 @@ cat("Top regulatory variants:", nrow(top_out), "\n")
 # ══════════════════════════════════════════════════════════════════════════════
 cat("\n--- Panel C ---\n")
 
-regulon_file <- file.path(ATAC_DIR, "scenic_plus/disease_regulons.csv")
+# Cross-modality disease master-regulator set (hepatocyte SCENIC+ regulon TF that is a
+# well-powered bulk MASLD DEG or COLOC hit). Replaces the FDR-gated disease_regulons.csv,
+# which is empty at the donor level (n=18 underpowered; the old non-zero set was
+# cell-level pseudoreplication). Env-overridable to stay in lockstep with Script 56.
+regulon_file <- Sys.getenv("REGULON_FILE",
+  unset = file.path(ATAC_DIR, "scenic_plus/disease_master_regulators.csv"))
 regulons <- if (file.exists(regulon_file)) fread(regulon_file) else data.table()
 
 if (has_motif && nrow(motif) > 0) {
@@ -452,6 +457,44 @@ if (!file.exists(atlas_file)) {
   gene_col <- if ("gene_symbol" %in% colnames(atlas)) "gene_symbol" else
               if ("human_symbol" %in% colnames(atlas)) "human_symbol" else "gene"
 
+  # FIX (audit bug 2): assigned_gene/nearest_gene carry GENCODE gene_name, which is an
+  # ENSG ID when no HGNC symbol exists — so those genes never join to the atlas
+  # human_symbol. Build an ENSG(base, version-stripped) -> HGNC symbol map from the
+  # GENCODE v49 metadata and resolve any "^ENSG" gene labels that DO have a real symbol
+  # before the join. Values that are already symbols pass through unchanged, and ENSGs
+  # with no GENCODE symbol are left as-is (the metadata's gene_name == ENSG for them).
+  # NOTE (verified 2026-06-07 on live data): all current ENSG-labelled assigned genes are
+  # GENCODE symbol-less lncRNAs/pseudogenes, AND the 63 that don't already match the atlas
+  # are absent from the atlas gene universe entirely — so on today's data this resolves 0
+  # to a new symbol. The map is retained because it is the correct, robust behaviour and
+  # will recover any future ENSG that does carry a real GENCODE symbol.
+  meta_file <- file.path(BASE_DIR, "data/gencode_v49_gene_metadata.tsv.gz")
+  resolve_ensg <- function(x) x  # identity fallback if metadata missing
+  if (file.exists(meta_file)) {
+    gmeta <- fread(meta_file)
+    # ensembl_base is the version-stripped ENSG; gene_name is the HGNC symbol (or ENSG)
+    ensg_base   <- if ("ensembl_base" %in% names(gmeta)) gmeta$ensembl_base
+                   else sub("\\.\\d+$", "", gmeta$gene_id)
+    sym_for_base <- gmeta$gene_name
+    # Only keep entries whose gene_name is a real symbol (not itself an ENSG)
+    keep_sym <- !grepl("^ENSG", sym_for_base) & !is.na(sym_for_base) & sym_for_base != ""
+    ensg2sym <- setNames(sym_for_base[keep_sym], ensg_base[keep_sym])
+    resolve_ensg <- function(x) {
+      out <- x
+      is_ensg <- !is.na(x) & grepl("^ENSG", x)
+      base    <- sub("\\.\\d+$", "", x[is_ensg])
+      mapped  <- ensg2sym[base]
+      # only overwrite where a symbol was found; leave unmapped ENSG as-is
+      hit <- !is.na(mapped)
+      out[is_ensg][hit] <- mapped[hit]
+      out
+    }
+    cat("Loaded GENCODE metadata:", length(ensg2sym), "ENSG->symbol mappings\n")
+  } else {
+    cat("WARNING: GENCODE metadata not found at", meta_file,
+        "— ENSG gene labels will not be resolved\n")
+  }
+
   ann_df <- as.data.frame(ann)
   gene_variant_map <- ann_df %>%
     mutate(
@@ -460,9 +503,24 @@ if (!file.exists(atlas_file)) {
         !is.na(linked_gene)        ~ linked_gene,
         !is.na(nearest_gene) & distance_to_tss <= 500000 ~ nearest_gene,
         TRUE ~ NA_character_
-      )
+      ),
+      assigned_gene = resolve_ensg(assigned_gene)
     ) %>%
     filter(!is.na(assigned_gene))
+
+  # Report ENSG->symbol recovery against the atlas symbol column
+  .atlas_syms <- unique(atlas[[gene_col]])
+  .raw_assigned <- ann_df %>%
+    mutate(raw_gene = case_when(
+      !is.na(scenic_target_gene) ~ scenic_target_gene,
+      !is.na(linked_gene)        ~ linked_gene,
+      !is.na(nearest_gene) & distance_to_tss <= 500000 ~ nearest_gene,
+      TRUE ~ NA_character_)) %>%
+    filter(!is.na(raw_gene), grepl("^ENSG", raw_gene)) %>%
+    distinct(raw_gene) %>% pull(raw_gene)
+  .recovered <- sum(resolve_ensg(.raw_assigned) %in% .atlas_syms)
+  cat("ENSG-labelled assigned genes:", length(.raw_assigned),
+      "; recovered to atlas symbol after mapping:", .recovered, "\n")
 
   cat("Gene-to-variant mapping:", nrow(gene_variant_map), "entries\n")
 
@@ -487,6 +545,7 @@ if (!file.exists(atlas_file)) {
                                ifelse(!is.na(tmp$linked_gene), tmp$linked_gene,
                                ifelse(!is.na(tmp$nearest_gene) & tmp$distance_to_tss <= 500000,
                                       tmp$nearest_gene, NA_character_)))
+          tmp$assigned_gene <- resolve_ensg(tmp$assigned_gene)  # FIX (audit bug 2): ENSG -> symbol
           tmp <- tmp[, c("variant_id", "assigned_gene")]
           tmp <- tmp[!duplicated(paste(tmp$variant_id, tmp$assigned_gene)), ]
           colnames(tmp)[1] <- "SNP_id"
@@ -521,6 +580,7 @@ if (!file.exists(atlas_file)) {
                                ifelse(!is.na(tmp$linked_gene), tmp$linked_gene,
                                ifelse(!is.na(tmp$nearest_gene) & tmp$distance_to_tss <= 500000,
                                       tmp$nearest_gene, NA_character_)))
+          tmp$assigned_gene <- resolve_ensg(tmp$assigned_gene)  # FIX (audit bug 2): ENSG -> symbol
           tmp <- tmp[, c("variant_id", "assigned_gene")]
           tmp <- tmp[!duplicated(paste(tmp$variant_id, tmp$assigned_gene)), ]
           colnames(tmp)[1] <- "SNP_id"

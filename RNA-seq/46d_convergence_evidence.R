@@ -355,12 +355,12 @@ cat("\n--- 4. Per-sub-contrast BF ---\n")
 # Define each as (effect, se_source, se_arg, effect_sign_source)
 compute_s1_bf <- function(atlas) {
   out <- list()
-  # S1.1 Overall disease: dream_logFC / dream_padj (tstat available)
-  se_dream <- se_from_tstat(atlas$dream_logFC, atlas$dream_tstat)
+  # S1.1 Overall disease: bulk_logFC / bulk_padj (tstat available)
+  se_dream <- se_from_tstat(atlas$bulk_logFC, atlas$bulk_tstat)
   out$overall <- list(
-    log_bf = wakefield_abf(atlas$dream_logFC, se_dream, W_WAKEFIELD_LOGODDS),
-    effect = atlas$dream_logFC,
-    padj   = atlas$dream_padj
+    log_bf = wakefield_abf(atlas$bulk_logFC, se_dream, W_WAKEFIELD_LOGODDS),
+    effect = atlas$bulk_logFC,
+    padj   = atlas$bulk_padj
   )
   # S1.2 NAFL -> NASH
   se_nn <- se_from_tstat(atlas$nafl_vs_nash_logFC, atlas$nafl_vs_nash_tstat)
@@ -384,7 +384,7 @@ compute_s1_bf <- function(atlas) {
     padj   = atlas$adv_fib_padj
   )
   # S1.5 Sex interaction: use |F - M| as effect, sex_interaction_padj as p
-  sex_effect <- atlas$dream_logFC_F - atlas$dream_logFC_M
+  sex_effect <- atlas$bulk_logFC_F - atlas$bulk_logFC_M
   se_sex <- se_from_padj(sex_effect, atlas$sex_interaction_padj)
   out$sex_interaction <- list(
     log_bf = wakefield_abf(sex_effect, se_sex, W_WAKEFIELD_LOGODDS),
@@ -926,9 +926,9 @@ stage_map <- c(overall = "early_disease",
 dominant_stage_S1 <- stage_map[best_contrast_S1]
 
 # Cross-species concordance flag (S8)
-cross_species_concordant <- (sign(atlas$mouse_meta_logFC) == sign(atlas$dream_logFC)) &
+cross_species_concordant <- (sign(atlas$mouse_meta_logFC) == sign(atlas$bulk_logFC)) &
                             (atlas$mouse_meta_padj < 0.05) &
-                            (atlas$dream_padj < 0.05)
+                            (atlas$bulk_padj < 0.05)
 cross_species_concordant[is.na(cross_species_concordant)] <- FALSE
 
 cat(sprintf("  genes with all 9 raw modalities active incl. S2a+S2b+S6 diagnostics (log_BF>log(3)): %d\n",

@@ -104,11 +104,10 @@ if (length(all_results) > 0) {
       "2022_36402844_PDFF_EUR",
       "FinnGen_NAFLD",
       "FinnGen_NASH",
-      "FinnGen_HCC",
-      "Ghouse_Cirrhosis",
-      "Ghouse_HCC",
+      # cirrhosis/HCC dropped 2026-06-06 (not MASLD-specific):
+      # FinnGen_HCC, Ghouse_Cirrhosis, Ghouse_HCC,
+      # 2020_32514122_Cirrhosis_EAS, 2020_32514122_HCC_EAS
       "BBJ_ALT", "BBJ_AST", "BBJ_GGT",
-      "2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS",
       "PanUKBB_AFR_ALT", "PanUKBB_AFR_AST", "PanUKBB_AFR_GGT",
       "PanUKBB_CSA_ALT", "PanUKBB_CSA_AST", "PanUKBB_CSA_GGT"
     ),
@@ -123,11 +122,8 @@ if (length(all_results) > 0) {
       "UKBB_PDFF", "UKBB_PDFF", "UKBB_PDFF",
       "FinnGen_R12",
       "FinnGen_R12",
-      "FinnGen_R12",
-      "Ghouse_Cirrhosis",
-      "Ghouse_HCC",
+      # cirrhosis/HCC dropped 2026-06-06 (not MASLD-specific)
       "BBJ_ALT", "BBJ_AST", "BBJ_GGT",
-      "EAS_CC_Ishigaki", "EAS_CC_Ishigaki",
       "PanUKBB_AFR", "PanUKBB_AFR", "PanUKBB_AFR",
       "PanUKBB_CSA", "PanUKBB_CSA", "PanUKBB_CSA"
     )

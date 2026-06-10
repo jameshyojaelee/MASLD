@@ -48,7 +48,7 @@ dvc_studies <- cohort_info[has_controls == TRUE, dataset]
 cat("===== Loading data =====\n")
 
 # --- Full dream results ---
-dream_full <- fread(file.path(INT_RESULTS, "dream_results.csv"))
+dream_full <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
 setnames(dream_full, "logFC", "full_logFC", skip_absent = TRUE)
 setnames(dream_full, "padj", "full_padj", skip_absent = TRUE)
 dream_full[, ensembl_clean := sub("\\..*", "", gene)]

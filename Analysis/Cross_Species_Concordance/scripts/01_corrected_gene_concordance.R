@@ -70,12 +70,13 @@ load_human <- function(path, label, padj_col = "adj.P.Val") {
   return(dt)
 }
 
-# Use RAW dream results for disease-vs-control (symmetric with mouse raw logFC).
-# Previous version used dream_results_ashr.csv with shrunk_logFC — this introduced
-# asymmetric shrinkage bias (human side shrunk, mouse side raw) in Spearman rho.
-disease_dream_path <- file.path(INT_DIR, "dream_results.csv")
+# Use RAW (unshrunk) logFC for disease-vs-control, symmetric with mouse raw logFC.
+# Canonical hard cutover (2026-06-08): canonical_deg_results.csv carries the raw
+# `logFC` column (plus `shrunk_logFC` as auxiliary). load_human() deliberately keeps
+# raw logFC — shrinking only the human side would bias the Spearman rho.
+disease_dream_path <- file.path(INT_DIR, "canonical_deg_results.csv")
 if (!file.exists(disease_dream_path)) {
-  stop("dream_results.csv not found at: ", disease_dream_path)
+  stop("canonical_deg_results.csv not found at: ", disease_dream_path)
 }
 human_sigs <- list(
   disease_vs_ctrl = load_human(disease_dream_path,

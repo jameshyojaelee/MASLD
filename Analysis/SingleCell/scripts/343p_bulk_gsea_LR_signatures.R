@@ -17,7 +17,7 @@
 # 12 sensitivity sets without HLA-A/HLA-B reported alongside.
 #
 # Ranking statistic: sign(logFC) × −log10(padj), per gene, on bulk Dream output.
-# Bulk anchors: all-MASLD (dream_results_ashr.csv) + stage-specific (steatosis, sh, cirrhosis).
+# Bulk anchors: all-MASLD (canonical_deg_results.csv) + stage-specific (steatosis, sh, cirrhosis).
 #
 # Outputs:
 #   Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/bulk_gsea_LR_signatures.tsv
@@ -157,7 +157,7 @@ make_ranks <- function(dt) {
 
 log_msg("Loading bulk anchors")
 bulk_files <- list(
-  AllMASLD   = file.path(BULK_DIR, "dream_results_ashr.csv"),
+  AllMASLD   = file.path(BULK_DIR, "canonical_deg_results.csv"),
   Steatosis  = file.path(BULK_DIR, "dream_results_stage_steatosis.csv"),
   SH         = file.path(BULK_DIR, "dream_results_stage_sh.csv"),
   Cirrhosis  = file.path(BULK_DIR, "dream_results_stage_cirrhosis.csv")

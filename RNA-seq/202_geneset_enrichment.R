@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # 202_geneset_enrichment.R — Competitive Gene-Set GWAS Enrichment
 #
-# Tests whether dream DEGs (and subsets) are enriched for GWAS gene-level
+# Tests whether canonical DEGs (and subsets) are enriched for GWAS gene-level
 # associations vs genome-wide background. Produces stratified QQ plot data.
 #
 # Tests:
@@ -15,7 +15,7 @@
 # Inputs:
 #   - COLOC gene-level: GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv
 #   - TWAS results: RNA-seq/results/causal_inference/twas_multi_gwas_combined.csv
-#   - Dream DEGs: RNA-seq/Human/.../results/integration/dream_results.csv
+#   - Canonical DEGs: RNA-seq/Human/.../results/integration/canonical_deg_results.csv
 #   - Deconv attribution: RNA-seq/results/causal_inference/deconv_attribution_scores.csv
 #   - Cross-species concordance: Analysis/Cross_Species_Concordance/ (Conserved)
 #   - Sex DEGs: RNA-seq/Human/.../results/integration/sex_deg_classification.csv
@@ -75,9 +75,11 @@ map_ensembl_to_symbol <- function(ensembl_ids) {
 # ===========================================================================
 cat("\nLoading gene sets...\n")
 
-# Dream DEGs (uses ENSEMBL IDs — map to symbols)
+# Canonical DEGs (uses ENSEMBL IDs — remap to symbols for an identical mapping
+# to the prior dream input; drop the table's own `symbol` to avoid a collision)
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
+if ("symbol" %in% names(dream)) dream[, symbol := NULL]
 dream[, ensembl_base := sub("\\.\\d+$", "", gene)]
 dream <- merge(dream, ensembl_to_symbol[, .(ensembl_base, symbol = gene)],
                by = "ensembl_base", all.x = TRUE)

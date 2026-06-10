@@ -282,23 +282,30 @@ ggsave(file.path(OUT_DIR, "rora_progression_sex.pdf"), pE,
 cat("  Saved rora_progression_sex\n")
 
 # =============================================================================
-# Panel F: Visium — representative spatial + per-sample violin
+# Panel F: Visium — spatial LOCALIZATION of RORA (NOT a disease contrast)
 # =============================================================================
-cat("-- Panel F: Visium spatial + quantitative --\n")
+# CRITICAL: the disease axis in this Visium data is fully confounded with study.
+# All Healthy + Steatotic sections come from GSE192741 (JBO*); all MASLD-spectrum
+# sections come from Vu 2025 (VLP*). There is zero within-study disease-vs-control
+# overlap, and per-spot log1p normalization does NOT remove cross-study batch.
+# A disease-vs-control comparison here is therefore uninterpretable. This panel is
+# used for in-situ LOCALIZATION only; the disease direction for RORA (DOWN) is
+# carried by the bulk RNA-seq (Panel E) — a within-design, cohort-adjusted contrast.
+cat("-- Panel F: Visium spatial localization (no disease claim) --\n")
 
 visium <- fread(file.path(BASE,
   "Analysis/Spatial/results/rora_case_study/rora_visium.csv"))
 
-# Density-matched sections for side-by-side: both JBO samples have
-# ~13-17e-6 density; pick highest-contrast pair
-healthy_id <- "JBO018"     # Healthy,  n=2497, mean=0.40
-masld_id   <- "VLP121_A"   # MASLD,    n=1529, mean=0.65 (highest)
-# Using a representative pair that shows the pan-lobular pattern
+# Cohort of origin is the only honest grouping (JBO = GSE192741, VLP = Vu 2025).
+visium[, cohort := ifelse(grepl("^JBO", sample_id), "GSE192741", "Vu 2025")]
 
-vis_rep <- visium[sample_id %in% c(healthy_id, masld_id)]
-vis_rep[, label := factor(
-  ifelse(sample_id == healthy_id, "Healthy", "MASLD spectrum"),
-  levels = c("Healthy", "MASLD spectrum"))]
+# Representative, density-matched sections — one per cohort. NOT chosen to
+# maximize a disease contrast (the prior "highest-mean MASLD" cherry-pick is gone).
+rep_ids <- c("JBO018", "VLP119_A")
+vis_rep <- visium[sample_id %in% rep_ids]
+vis_rep[, facet_lab := factor(
+  sprintf("%s · %s", cohort, sample_id),
+  levels = c("GSE192741 · JBO018", "Vu 2025 · VLP119_A"))]
 vis_rep[, x_norm := (x - min(x)) / (max(x) - min(x)), by = sample_id]
 vis_rep[, y_norm := 1 - (y - min(y)) / (max(y) - min(y)), by = sample_id]
 
@@ -316,9 +323,10 @@ pF_spatial <- ggplot(vis_rep, aes(x = x_norm, y = y_norm, colour = expr_c)) +
     breaks  = c(0, global_cap),
     labels  = c("low", "high")
   ) +
-  facet_wrap(~ label, nrow = 1) +
+  facet_wrap(~ facet_lab, nrow = 1) +
   coord_equal() +
-  labs(title = "Representative Visium sections") +
+  labs(title = "RORA expression in human liver Visium",
+       subtitle = "Patchy lobular hepatocyte expression · two independent cohorts") +
   theme_void(base_size = 8) +
   theme(
     strip.text        = element_text(size = 7.5, face = "bold",
@@ -329,45 +337,45 @@ pF_spatial <- ggplot(vis_rep, aes(x = x_norm, y = y_norm, colour = expr_c)) +
     legend.key.height = unit(0.5, "cm"),
     legend.key.width  = unit(0.22, "cm"),
     plot.title        = element_text(size = 8, face = "bold", hjust = 0.5,
+                                     margin = margin(b = 2)),
+    plot.subtitle     = element_text(size = 6.5, colour = "#555555", hjust = 0.5,
                                      margin = margin(b = 4)),
     plot.background   = element_rect(fill = "white", colour = NA)
   )
 
-# Right: per-sample mean RORA expression across all 15 sections, coloured
-# by condition. More honest visualization of the spatial signal.
+# Right: per-section mean RORA, grouped by COHORT (not disease). Showing the
+# cross-cohort technical offset explicitly is the honest framing — RORA is
+# robustly expressed in both datasets, and the between-cohort difference is a
+# batch/platform effect, NOT a disease signal.
 sample_means <- visium[, .(mean_rora = mean(RORA),
                            sd_rora   = sd(RORA),
                            n_spots   = .N),
-                       by = .(sample_id, condition)]
-sample_means[, condition := factor(condition,
-                                    levels = c("Healthy", "Steatotic",
-                                               "MASLD_spectrum"),
-                                    labels = c("Healthy", "Steatotic",
-                                               "MASLD"))]
+                       by = .(sample_id, cohort)]
+sample_means[, cohort := factor(cohort, levels = c("GSE192741", "Vu 2025"))]
 
-cond_cols <- c(Healthy = "#1565C0",
-               Steatotic = "#FFA726",
-               MASLD     = "#C2185B")
+cohort_cols <- c("GSE192741" = "#3949AB", "Vu 2025" = "#00897B")
 
-pF_quant <- ggplot(sample_means, aes(x = condition, y = mean_rora,
-                                      fill = condition)) +
-  geom_boxplot(width = 0.55, alpha = 0.4, outlier.shape = NA,
+pF_quant <- ggplot(sample_means, aes(x = cohort, y = mean_rora,
+                                      fill = cohort)) +
+  geom_boxplot(width = 0.55, alpha = 0.35, outlier.shape = NA,
                colour = "#444444", linewidth = 0.35) +
-  geom_jitter(aes(colour = condition, size = n_spots),
+  geom_jitter(aes(colour = cohort, size = n_spots),
               width = 0.15, alpha = 0.85, shape = 16) +
-  scale_fill_manual(values = cond_cols, guide = "none") +
-  scale_colour_manual(values = cond_cols, guide = "none") +
+  scale_fill_manual(values = cohort_cols, guide = "none") +
+  scale_colour_manual(values = cohort_cols, guide = "none") +
   scale_size_continuous(range = c(1.5, 3.5), name = "n spots",
                         breaks = c(500, 1000, 2000)) +
   labs(x = NULL, y = "Mean RORA per section",
-       title = "Per-section mean RORA expression",
-       subtitle = sprintf("n = %d sections (Visium GSE192741)",
+       title = "Per-section expression by cohort",
+       subtitle = sprintf(paste0("Localization only (n = %d sections) · ",
+                                  "cross-cohort difference is technical,\n",
+                                  "not a disease contrast; see Panel E for ",
+                                  "disease direction"),
                           length(unique(visium$sample_id)))) +
   PANEL_THEME +
   theme(
     panel.grid.major.x = element_blank(),
-    legend.position  = c(0.15, 0.85),
-    legend.background = element_blank()
+    legend.position  = "none"
   )
 
 pF <- pF_spatial + pF_quant + plot_layout(widths = c(2, 1.3))
@@ -395,4 +403,4 @@ cat("  rora_crossancestry_coloc_pp4.pdf — 4 traits x 4 ancestries COLOC\n")
 cat("  rora_gwas_atac_motif.pdf         — Motif disruption, signed bars\n")
 cat("  rora_celltype_expression.pdf     — scRNA cell-type expression\n")
 cat("  rora_progression_sex.pdf         — Vertical bars: progression + sex\n")
-cat("  rora_visium_spatial.pdf          — Spatial + per-section boxplot\n")
+cat("  rora_visium_spatial.pdf          — Spatial localization (by cohort; no disease claim)\n")

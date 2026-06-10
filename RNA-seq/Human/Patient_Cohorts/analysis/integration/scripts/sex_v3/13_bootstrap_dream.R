@@ -1,30 +1,19 @@
 #!/usr/bin/env Rscript
 # sex_v3/13_bootstrap_dream.R
 # ---------------------------------------------------------------------------
-# Pillar 4 — Dream-M2 bootstrap (replaces v5 limma+lmFit bootstrap).
-# Per rep: cohort × sex × group_binary stratified equal-N subsample (without
-# replacement, Meinshausen-Bühlmann), fresh voom + dream M2 with the F2
-# random-slope formula from P1. Per-gene classification via v5 decision tree.
-#
-# Forked from 04g_bootstrap_interaction.R; replaces limma::voom + lmFit + ashr
-# with voomWithDreamWeights + dream + ashr per arm.
+# Pillar 4 — M2 bootstrap (LVQW fixed-effects engine).
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+#   Per rep: cohort × sex × group_binary stratified equal-N subsample (without
+#   replacement, Meinshausen-Bühlmann), fresh voomWithQualityWeights + lmFit +
+#   eBayes with the LVQW fixed-effects design (dataset FIXED). Per-gene
+#   classification via v5 decision tree. ashr per arm unchanged.
 #
 # Output: intermediates/boot_v6/rep_{REP}.csv with
 #   gene, beta_F, beta_M, beta_int, p_int, q_int, lfsr_F, lfsr_M, class_v6_rep
 # ---------------------------------------------------------------------------
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
 suppressPackageStartupMessages({
-  library(reformulas); library(lme4); library(data.table); library(edgeR); library(ashr)
-})
-ns_lme4 <- asNamespace("lme4")
-for (fn in c("findbars", "nobars", "subbars", "rebuildFormula")) {
-  if (exists(fn, envir = ns_lme4)) {
-    try({ unlockBinding(fn, ns_lme4)
-          assign(fn, get(fn, asNamespace("reformulas")), envir = ns_lme4)
-          lockBinding(fn, ns_lme4) }, silent = TRUE)
-  }
-}
-suppressPackageStartupMessages({
-  library(variancePartition); library(BiocParallel)
+  library(limma); library(data.table); library(edgeR); library(ashr)
 })
 
 REP <- as.integer(Sys.getenv("REP",
@@ -64,8 +53,8 @@ emit_na_and_exit <- function(reason) {
 }
 
 ncpus <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "16"))
-param <- if (ncpus > 1) MulticoreParam(workers = ncpus, RNGseed = 42L + REP) else SerialParam()
-cat("CPU cores:", ncpus, "\n")
+# LVQW re-engineering 2026-06-08: dataset random->fixed (limma is single-threaded).
+cat("CPU cores:", ncpus, "(limma LVQW is single-threaded)\n")
 
 ok <- tryCatch({
   inp    <- readRDS(file.path(IDIR, "sex_v3_input.rds"))
@@ -112,52 +101,40 @@ cat("Per-cohort sizes:\n"); print(table(info_bs$dataset, info_bs$inferred_sex,
 
 sv_cols <- grep("^SV", colnames(info_bs), value = TRUE)
 sv_terms <- paste(sv_cols, collapse = " + ")
-form_F2_str <- paste0(
-  "~ group_binary * inferred_sex",
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Drop cohorts the stratified subsample emptied so `dataset` is full-rank. If
+# only one cohort survives, drop the dataset term entirely (no dummy columns).
+df_bs$dataset <- droplevels(as.factor(df_bs$dataset))
+dataset_term <- if (nlevels(df_bs$dataset) >= 2L) "dataset + " else ""
+form_fixed_str <- paste0(
+  "~ ", dataset_term,
+  "group_binary * inferred_sex",
   " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 + group_binary + inferred_sex + group_binary:inferred_sex || dataset)"
+  " + age_imputed + ", sv_terms
 )
-form_F5_str <- paste0(
-  "~ group_binary * inferred_sex",
-  " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 + group_binary | dataset)"
-)
-form_F2 <- as.formula(form_F2_str)
-form_F5 <- as.formula(form_F5_str)
+form_fixed <- as.formula(form_fixed_str)
+cat("[0] LVQW fixed-effects design:\n  ", form_fixed_str, "\n")
+design <- tryCatch(model.matrix(form_fixed, data = df_bs),
+                   error = function(e) NULL)
+if (is.null(design)) emit_na_and_exit("design_build_failed")
+if (qr(design)$rank < ncol(design)) emit_na_and_exit("design_rank_deficient")
 
-cat("[1] voomWithDreamWeights (F2)...\n")
+variant_used <- "lvqw_fixed"
+cat("[1] voomWithQualityWeights (fixed-effects design)...\n")
 t0 <- Sys.time()
 v <- tryCatch(
-  suppressWarnings(voomWithDreamWeights(dge_bs, form_F2, df_bs,
-                                        BPPARAM = param, useWeights = TRUE)),
-  error = function(e) { cat("  voom F2 failed:", conditionMessage(e), "\n"); NULL })
+  suppressWarnings(voomWithQualityWeights(dge_bs, design)),
+  error = function(e) { cat("  voom failed:", conditionMessage(e), "\n"); NULL })
 cat("  voom elapsed:", format(Sys.time() - t0), "\n")
+if (is.null(v)) emit_na_and_exit("voom_failed")
 
-variant_used <- "F2"
-fit_bs <- NULL
-if (!is.null(v)) {
-  cat("[2] dream (F2)...\n")
-  t0 <- Sys.time()
-  fit_bs <- tryCatch(
-    suppressWarnings(dream(v, form_F2, df_bs,
-                           BPPARAM = param, useWeights = TRUE)),
-    error = function(e) { cat("  dream F2 failed:", conditionMessage(e), "\n"); NULL })
-  cat("  dream elapsed:", format(Sys.time() - t0), "\n")
-}
-if (is.null(fit_bs)) {
-  cat("[2b] Fallback to F5...\n")
-  variant_used <- "F5"
-  v <- tryCatch(suppressWarnings(voomWithDreamWeights(dge_bs, form_F5, df_bs,
-                                                       BPPARAM = param, useWeights = TRUE)),
-                error = function(e) NULL)
-  if (is.null(v)) emit_na_and_exit("voom_F5_failed")
-  fit_bs <- tryCatch(suppressWarnings(dream(v, form_F5, df_bs,
-                                             BPPARAM = param, useWeights = TRUE)),
-                     error = function(e) NULL)
-}
-if (is.null(fit_bs)) emit_na_and_exit("dream_failed")
+cat("[2] lmFit + eBayes...\n")
+t0 <- Sys.time()
+fit_bs <- tryCatch(
+  suppressWarnings(eBayes(lmFit(v, design))),
+  error = function(e) { cat("  lmFit failed:", conditionMessage(e), "\n"); NULL })
+cat("  lmFit+eBayes elapsed:", format(Sys.time() - t0), "\n")
+if (is.null(fit_bs)) emit_na_and_exit("lmfit_failed")
 cat("Variant used:", variant_used, "\n")
 
 # Extract coefficients
@@ -171,15 +148,16 @@ cat("group_coef:", group_coef, "  int_coef:", int_coef, "\n")
 beta_F   <- fit_bs$coefficients[, group_coef]
 beta_int <- fit_bs$coefficients[, int_coef]
 beta_M   <- beta_F + beta_int
-raw_se   <- fit_bs$sigma * fit_bs$stdev.unscaled
+# RAW (unmoderated) Wald SE — match dream-era choice.
+raw_se   <- fit_bs$stdev.unscaled * fit_bs$sigma
 se_F     <- raw_se[, group_coef]
 se_int   <- raw_se[, int_coef]
-ccl <- fit_bs$cov.coefficients.list
-cov_F_int <- vapply(seq_along(ccl), function(g) {
-  M <- ccl[[g]]
-  if (!is.null(M) && group_coef %in% rownames(M) && int_coef %in% colnames(M))
-    as.numeric(M[group_coef, int_coef]) else NA_real_
-}, numeric(1))
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Per-gene Cov(β_F, β_int) = cov.coefficients[F,int] (shared UNSCALED) * sigma[g]^2.
+ccm <- fit_bs$cov.coefficients
+if (is.null(ccm) || !(group_coef %in% rownames(ccm)) ||
+    !(int_coef %in% colnames(ccm))) emit_na_and_exit("cov_coef_lookup_failed")
+cov_F_int <- as.numeric(ccm[group_coef, int_coef]) * (fit_bs$sigma)^2
 var_M <- se_int^2 + se_F^2 + 2 * cov_F_int
 se_M  <- sqrt(pmax(var_M, .Machine$double.eps))
 

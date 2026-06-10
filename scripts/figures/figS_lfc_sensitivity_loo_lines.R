@@ -64,7 +64,7 @@ setkey(n_per, dataset)
 # -----------------------------------------------------------------------------
 # Load full dream + LOO refits
 # -----------------------------------------------------------------------------
-full_dream <- fread(file.path(INT_DIR, "dream_results.csv"))
+full_dream <- fread(file.path(INT_DIR, "canonical_deg_results.csv"))
 setnames(full_dream, "adj.P.Val", "padj", skip_absent = TRUE)
 
 loo <- rbindlist(lapply(mega_cohorts, function(ds) {

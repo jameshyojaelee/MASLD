@@ -50,9 +50,8 @@ GWAS_TABLE = [
     ("anstee_nafld",       "Anstee_NAFLD",                      19264,      "NAFLD"),
     ("finngen_nafld",      "FinnGen_NAFLD",                     438857,     "NAFLD"),
     ("finngen_nash",       "FinnGen_NASH",                      340000,     "NASH"),
-    ("finngen_hcc",        "FinnGen_HCC",                       340000,     "HCC"),
-    ("ghouse_hcc",         "Ghouse_HCC",                        6500,       "HCC"),
-    ("ghouse_cirrhosis",   "Ghouse_Cirrhosis",                  6000,       "Cirrhosis"),
+    # finngen_hcc / ghouse_hcc / ghouse_cirrhosis dropped 2026-06-06
+    # (cirrhosis/HCC GWAS removed from canonical 23-GWAS COLOC portfolio)
     ("pazoki_pdff",        "Pazoki_PDFF",                       32858,      "PDFF (imaging)"),
 ]
 

@@ -30,7 +30,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 TRANS_FILE <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/progression/transition_fib_dream_results.csv")
-DREAM_FILE <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
+DREAM_FILE <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 OUT_FIG    <- file.path(FIGS02_DIR, "figS_transition_tf_activity.pdf")
 OUT_CSV    <- file.path(BASE, "RNA-seq/results/stratified_causal/transition_tf_activity.csv")
 dir.create(dirname(OUT_CSV), recursive = TRUE, showWarnings = FALSE)

@@ -1,6 +1,10 @@
-# KEY MESSAGE: 24 GWAS-ATAC disease regulon TFs show transition-specific activity shifts across the 4 fibrosis transitions; HNF4A, RORA, THRB anchor the largest motif-disruption load.
+# KEY MESSAGE: Cross-modality disease master-regulator TFs show transition-specific activity shifts across the 4 fibrosis transitions; HNF4A, RORA, THRB anchor the largest motif-disruption load.
 # Output: figS05_epigenomic_spatial/ (sits alongside existing figS_gwas_atac_regulons*).
-# Data gaps: 5/24 TFs (THRB, RORA, KLF15, MLXIPL, NR1H4, RORC) have no rows in transition_tf_activity.csv -- rendered as NA cells.
+# TF panel: cross-modality disease master regulators = hepatocyte SCENIC+ regulon TFs that are
+#   bulk MASLD DEGs (n=846) OR COLOC hits. The prior FDR-gated SCENIC+ disease_regulons.csv is
+#   empty (donor-level n=18 regulon-activity DE honestly finds 0; the old non-zero set was
+#   cell-level pseudoreplication), so single-cohort regulon-DE is underpowered and not used here.
+# Data gaps: TFs with no rows in transition_tf_activity.csv are rendered as NA cells.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -13,12 +17,20 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-REGULON_F  <- file.path(ATAC_DIR, "scenic_plus", "disease_regulons.csv")
+# Cross-modality disease master-regulator set (default); env-overridable.
+# Old FDR-gated disease_regulons.csv is empty (pseudoreplication-prone donor-level n=18 DE).
+REGULON_F  <- Sys.getenv("REGULON_FILE",
+                         unset = file.path(ATAC_DIR, "scenic_plus", "disease_master_regulators.csv"))
 TRANS_F    <- file.path(BASE, "RNA-seq/results/stratified_causal/transition_tf_activity.csv")
 MOTIF_F    <- file.path(BASE, "GWAS/finemapping/results/gwas_atac/motif_disruption_scores.csv")
 
 regulons <- fread(REGULON_F)
-tfs      <- sub("_regulon$", "", regulons$regulon_id)
+# Master-regulator file keys TFs by `tf_name`; legacy regulon files used `regulon_id`.
+if ("tf_name" %in% names(regulons)) {
+  tfs <- unique(regulons$tf_name)
+} else {
+  tfs <- unique(sub("_regulon$", "", regulons$regulon_id))
+}
 trans    <- fread(TRANS_F)
 motif    <- fread(MOTIF_F)
 
@@ -96,7 +108,7 @@ ht <- Heatmap(
 out_pdf <- file.path(FIGS05_DIR, "figS05_gwas_atac_tf_transition_heatmap.pdf")
 pdf(out_pdf, width = 6.0, height = 8.0)
 draw(ht,
-     column_title = "GWAS-ATAC disease regulons across fibrosis transitions",
+     column_title = "Cross-modality disease master regulators across fibrosis transitions",
      column_title_gp = gpar(fontsize = 11, fontface = "bold"),
      heatmap_legend_side = "right",
      padding = unit(c(4, 4, 4, 4), "mm"))

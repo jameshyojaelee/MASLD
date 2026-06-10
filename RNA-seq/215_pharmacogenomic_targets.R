@@ -16,7 +16,7 @@
 #   - CGP reversal hits:       RNA-seq/results/drug_repurposing/cgp_reversal_hits.csv
 #   - GWAS-ATAC motif:         GWAS/finemapping/results/gwas_atac/motif_disruption_scores.csv
 #   - Gene-level GWAS-ATAC:    GWAS/finemapping/results/gwas_atac/gene_level_gwas_atac.csv
-#   - Dream results:           .../results/integration/dream_results.csv
+#   - Canonical DEGs:          .../results/integration/canonical_deg_results.csv
 #   - Multi-evidence atlas:    RNA-seq/results/multi_evidence/multi_evidence_atlas.csv
 #
 # Outputs (in RNA-seq/results/stratified_causal/):
@@ -174,8 +174,11 @@ cat("  Gene-level GWAS-ATAC entries:", nrow(gene_atac), "\n")
 # 9. Load dream results for the full disease t-statistic signature
 # ===========================================================================
 cat("\n=== Loading dream results ===\n")
-dream <- fread(file.path(integ_dir, "dream_results.csv"))
+dream <- fread(file.path(integ_dir, "canonical_deg_results.csv"))
 cat("  Total dream genes:", nrow(dream), "\n")
+# Canonical DEG table carries its own `symbol`; drop it so the symbol_map merge
+# (ENSEMBL -> symbol) below does not collide with a `symbol.x`/`symbol.y` split.
+if ("symbol" %in% names(dream)) dream[, symbol := NULL]
 dream[, ensembl_base := sub("\\.[0-9]+$", "", gene)]
 # Merge symbols
 dream <- merge(dream, symbol_map, by = "ensembl_base", all.x = TRUE)

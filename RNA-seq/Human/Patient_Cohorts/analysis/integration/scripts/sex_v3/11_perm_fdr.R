@@ -2,37 +2,28 @@
 # sex_v3/11_perm_fdr.R
 # ---------------------------------------------------------------------------
 # Pillar 2 — Permutation FDR (per-rep worker).
-# Strategy: cached-voom permutation. Reads P1's dream_M2_v3_random.rds for the
-# cached voom output ($v_voom) and refits dream LMM (F2 random-slope formula)
-# with `inferred_sex` shuffled within each (cohort × group_binary) stratum.
-# Voom is invariant to sex permutation under this stratification (marginal
-# counts preserved within strata) so caching voom is safe.
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+#   Strategy: cached-voom permutation. Reads P1's dream_M2_v3_random.rds for the
+#   cached LVQW voom output ($v_voom from voomWithQualityWeights) and refits the
+#   LVQW lmFit + eBayes with `inferred_sex` shuffled within each
+#   (cohort × group_binary) stratum. Voom is approximately invariant to sex
+#   permutation under this stratification (marginal counts preserved within
+#   strata) so caching voom is safe; only the design matrix is rebuilt per rep.
 #
-# Fallback: if v_voom is NULL (P1 used F5/F6) or load fails, recompute voom
-# fresh per rep using the F2 formula on real data, then refit with permuted
-# labels. Slower but always correct.
+# Fallback: if v_voom is NULL or load fails, recompute voom fresh per rep using
+# the LVQW fixed-effects formula on real data, then refit with permuted labels.
 #
 # Inputs (cached from P1):
-#   dream_M2_v3_random.rds  — list with v_voom (TestResults / EList), info_template,
-#                              re_variant_used
+#   dream_M2_v3_random.rds  — list with v_voom (EList), info_template,
+#                              re_variant_used, form_used, design
 #
 # Output (per rep):
 #   intermediates/perm_v6/rep_{REP}.csv with columns:
 #     gene, t_int_perm, p_int_perm
 # ---------------------------------------------------------------------------
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
 suppressPackageStartupMessages({
-  library(reformulas); library(lme4); library(data.table); library(edgeR)
-})
-ns_lme4 <- asNamespace("lme4")
-for (fn in c("findbars", "nobars", "subbars", "rebuildFormula")) {
-  if (exists(fn, envir = ns_lme4)) {
-    try({ unlockBinding(fn, ns_lme4)
-          assign(fn, get(fn, asNamespace("reformulas")), envir = ns_lme4)
-          lockBinding(fn, ns_lme4) }, silent = TRUE)
-  }
-}
-suppressPackageStartupMessages({
-  library(variancePartition); library(BiocParallel)
+  library(limma); library(data.table); library(edgeR)
 })
 
 REP <- as.integer(Sys.getenv("REP",
@@ -71,8 +62,8 @@ emit_na_and_exit <- function(reason) {
 }
 
 ncpus <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "16"))
-param <- if (ncpus > 1) MulticoreParam(workers = ncpus, RNGseed = 42L + REP) else SerialParam()
-cat("CPU cores:", ncpus, "\n")
+# LVQW re-engineering 2026-06-08: dataset random->fixed (limma is single-threaded).
+cat("CPU cores:", ncpus, "(limma LVQW is single-threaded)\n")
 
 # ---- Load P1 cache ----
 if (!file.exists(P1_RDS)) emit_na_and_exit("p1_rds_missing")
@@ -109,32 +100,22 @@ info_perm_df <- as.data.frame(info_perm)
 rownames(info_perm_df) <- info_perm$sample_id
 info_perm_df$sample_id <- NULL
 
-# ---- Build formulas — use whichever variant P1 actually fit, so the
-# permutation null mirrors the parametric null. Earlier this script hardcoded
-# F2 regardless of P1's fallback ladder; if P1 fell back to F5/F6, the
-# perm-FDR fits would either silently fail or use a different model than the
-# observed run.
+# ---- Build the LVQW fixed-effects formula — mirror whatever P1 fit so the
+# permutation null mirrors the parametric null.
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
 sv_cols <- grep("^SV", colnames(info_perm_df), value = TRUE)
 sv_terms <- paste(sv_cols, collapse = " + ")
-form_F2_str <- paste0(
-  "~ group_binary * inferred_sex",
+form_fixed_str <- paste0(
+  "~ dataset",
+  " + group_binary * inferred_sex",
   " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 + group_binary + inferred_sex + group_binary:inferred_sex || dataset)"
+  " + age_imputed + ", sv_terms
 )
-form_F2 <- as.formula(form_F2_str)
-form_F5_str <- paste0(
-  "~ group_binary * inferred_sex",
-  " + Hepatocytes + Macrophages + Endothelial + Cholangiocytes",
-  " + age_imputed + ", sv_terms,
-  " + (1 + group_binary | dataset)"
-)
-form_F5 <- as.formula(form_F5_str)
+form_fixed <- as.formula(form_fixed_str)
 
-re_variant_p1 <- if (!is.null(p1$re_variant_used)) p1$re_variant_used else "F2"
-form_primary <- if (!is.null(p1$form_used)) p1$form_used else
-                switch(re_variant_p1, F2 = form_F2, F5 = form_F5, form_F2)
-cat("[2] Primary formula = P1 variant '", re_variant_p1, "'\n", sep = "")
+re_variant_p1 <- if (!is.null(p1$re_variant_used)) p1$re_variant_used else "lvqw_fixed"
+form_primary <- if (!is.null(p1$form_used)) p1$form_used else form_fixed
+cat("[2] Primary formula = P1 variant '", re_variant_p1, "' (LVQW fixed-effects)\n", sep = "")
 
 # ---- Resolve voom: cached vs per-rep fresh ----
 v_voom <- p1$v_voom
@@ -146,42 +127,53 @@ if (is.null(v_voom)) {
   if (is.null(inp)) emit_na_and_exit("dge_load_failed_no_voom_cache")
   info_real <- as.data.frame(info)
   rownames(info_real) <- rownames(info)
+  # LVQW re-engineering 2026-06-08: dataset random->fixed.
+  # voomWithQualityWeights takes a model.matrix (built from the REAL labels) —
+  # the voom weights are estimated under the real design and reused for the
+  # permuted lmFit (weights are approx. invariant to within-stratum sex shuffle).
+  design_real <- model.matrix(form_primary, data = info_real)
   t1 <- Sys.time()
   v_voom <- tryCatch(
-    suppressWarnings(voomWithDreamWeights(inp$dge, form_primary, info_real,
-                                          BPPARAM = param, useWeights = TRUE)),
+    suppressWarnings(voomWithQualityWeights(inp$dge, design_real)),
     error = function(e) NULL)
   cat("  voom recompute elapsed:", format(Sys.time() - t1), "\n")
   if (is.null(v_voom)) emit_na_and_exit("voom_recompute_failed")
 }
 rm(p1); invisible(gc())
 
-# ---- Refit dream with permuted labels (primary formula from P1; fallback F5) ----
-cat("[3] dream with permuted labels (", re_variant_p1, ")...\n", sep = "")
+# ---- Refit LVQW (lmFit + eBayes) with permuted labels ----
+# LVQW re-engineering 2026-06-08: dataset random->fixed.
+# Build the permuted design (inferred_sex shuffled within strata) and refit on
+# the cached voom EList. The permuted design's interaction column carries the
+# null sex-by-disease signal.
+cat("[3] lmFit + eBayes with permuted labels (", re_variant_p1, ")...\n", sep = "")
+design_perm <- tryCatch(model.matrix(form_primary, data = info_perm_df),
+                        error = function(e) NULL)
+if (is.null(design_perm)) emit_na_and_exit("perm_design_build_failed")
+if (qr(design_perm)$rank < ncol(design_perm))
+  emit_na_and_exit("perm_design_rank_deficient")
+# Align voom EList sample columns to the permuted design rows (defensive).
+if (!is.null(rownames(design_perm)) && !is.null(colnames(v_voom)) &&
+    !identical(rownames(design_perm), colnames(v_voom))) {
+  common <- intersect(colnames(v_voom), rownames(design_perm))
+  if (length(common) < 5) emit_na_and_exit("voom_design_sample_mismatch")
+  v_voom <- v_voom[, common]
+  design_perm <- design_perm[common, , drop = FALSE]
+}
 t0 <- Sys.time()
 fit_perm <- tryCatch(
-  suppressWarnings(dream(v_voom, form_primary, info_perm_df,
-                         BPPARAM = param, useWeights = TRUE)),
-  error = function(e) { cat("  dream primary failed:", conditionMessage(e), "\n"); NULL }
+  suppressWarnings(eBayes(lmFit(v_voom, design_perm))),
+  error = function(e) { cat("  lmFit permuted failed:", conditionMessage(e), "\n"); NULL }
 )
-cat("  dream primary elapsed:", format(Sys.time() - t0), "\n")
-if (is.null(fit_perm) && re_variant_p1 != "F5") {
-  cat("[3b] Falling back to F5 with permuted labels...\n")
-  t0 <- Sys.time()
-  fit_perm <- tryCatch(
-    suppressWarnings(dream(v_voom, form_F5, info_perm_df,
-                           BPPARAM = param, useWeights = TRUE)),
-    error = function(e) NULL)
-  cat("  dream F5 elapsed:", format(Sys.time() - t0), "\n")
-}
-if (is.null(fit_perm)) emit_na_and_exit("dream_permuted_failed")
+cat("  lmFit+eBayes permuted elapsed:", format(Sys.time() - t0), "\n")
+if (is.null(fit_perm)) emit_na_and_exit("lmfit_permuted_failed")
 
-# ---- Extract permuted t_int / p_int ----
+# ---- Extract permuted t_int / p_int (RAW Wald, matching the observed run) ----
 all_coefs <- colnames(fit_perm$coefficients)
 int_coef <- grep(":", grep("^group_binary", all_coefs, value = TRUE), value = TRUE)[1]
 if (is.na(int_coef)) emit_na_and_exit("int_coef_not_found")
 beta_int <- fit_perm$coefficients[, int_coef]
-raw_se   <- fit_perm$sigma * fit_perm$stdev.unscaled
+raw_se   <- fit_perm$stdev.unscaled * fit_perm$sigma
 se_int   <- raw_se[, int_coef]
 t_int    <- beta_int / se_int
 p_int    <- 2 * pnorm(-abs(t_int))

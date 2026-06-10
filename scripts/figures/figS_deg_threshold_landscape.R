@@ -31,7 +31,7 @@ OUT_DIR <- FIGS_SENS_DIR
 message("Loading dream results (raw padj + logFC)...")
 dream <- fread(file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration",
-  "dream_results_ashr.csv"),
+  "canonical_deg_results.csv"),
   select = c("gene", "logFC", "padj", "symbol", "shrunk_logFC", "lfsr"))
 message("  ", nrow(dream), " genes loaded")
 

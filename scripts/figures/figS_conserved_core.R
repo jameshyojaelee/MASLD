@@ -204,7 +204,7 @@ if (file.exists(allsig_path) && file.exists(pergene_path)) {
   # allsig only has summaries. Let's load the raw human and mouse results.
   human_files <- list(
     `Human (NAFL→NASH)`    = file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/nafl_vs_nash_dream.csv"),
-    `Human (Disease vs Ctrl)` = file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"),
+    `Human (Disease vs Ctrl)` = file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
     `Human (NAFL vs Ctrl)` = file.path(CONC_DIR, "nafl_vs_ctrl_dream.csv"),
     `Human (Fibrosis)`     = file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/fibrosis_dream.csv")
   )

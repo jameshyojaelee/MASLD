@@ -97,11 +97,11 @@ NUM_NEIGHBORS = [15, 10]  # neighbors sampled per layer (2 GNN layers)
 # Evidence source groupings for ablation
 SOURCE_GROUPS = {
     "S1_human_bulk": [
-        "dream_logFC",
-        "dream_padj",
-        "dream_tstat",
-        "dream_logFC_M",
-        "dream_logFC_F",
+        "bulk_logFC",
+        "bulk_padj",
+        "bulk_tstat",
+        "bulk_logFC_M",
+        "bulk_logFC_F",
         "sex_interaction_padj",
         "nafl_vs_nash_logFC",
         "nafl_vs_nash_padj",
@@ -882,8 +882,8 @@ def main():
     novel_df = pred_df[pred_df["is_known_target"] == 0].head(50).copy()
     # Add key atlas features
     key_evidence_cols = [
-        "dream_logFC",
-        "dream_padj",
+        "bulk_logFC",
+        "bulk_padj",
         # mr_pval removed 2026-04-22 — MR ditched from paper.
         "twas_pval",
         "coloc_pp4",

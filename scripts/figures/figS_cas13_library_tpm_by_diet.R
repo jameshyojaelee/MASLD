@@ -10,7 +10,7 @@
 # TPM computed from featureCounts raw counts + gene Length (gencode.vM38).
 # Per-gene value = median TPM across disease samples in that diet.
 #
-# Output: S_lib_10_tpm_by_diet.pdf  ->  Cas13_Library_Design/figures/
+# Output: 03_tpm_by_diet.pdf  ->  Cas13_Library_Design/figures/
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({
@@ -31,7 +31,7 @@ PUB_FC     <- file.path(BASE, "RNA-seq/Mouse/Public_Diet_Models/counts/featureco
 WD_DIR     <- file.path(BASE, "RNA-seq/Mouse/Western_Diet_Datasets")
 MAIN_META  <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/metadata/unified_mouse_metadata.csv")
 ASHR       <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration",
-                        "results/integration/dream_results_ashr.csv")
+                        "results/integration/meta_results_ashr.csv")  # v6: metafor ashr (was dream)
 ORTHO      <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
 MOUSE_META <- file.path(BASE, "Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
 PERDIET    <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet")
@@ -314,6 +314,6 @@ fig <- panel_violin / panel_cdf +
   ) +
   plot_layout(heights = c(1.5, 1))
 
-out_file <- file.path(OUT_DIR, "S_lib_10_tpm_by_diet.pdf")
+out_file <- file.path(OUT_DIR, "03_tpm_by_diet.pdf")
 ggsave(out_file, fig, width = 11, height = 5.5, useDingbats = FALSE)
 message("Saved: ", out_file)

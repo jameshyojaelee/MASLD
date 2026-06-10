@@ -105,7 +105,7 @@ prog_summary[, contrast_id := prog_id_map[contrast]]
 prog_counts <- prog_summary[!is.na(contrast_id), .(contrast_id, n_deg = n_deg_01)]
 
 ## 2) C1 from dream_results.csv (padj < 0.1)
-c1_dream <- fread(file.path(INT_DIR, "dream_results.csv"))
+c1_dream <- fread(file.path(INT_DIR, "canonical_deg_results.csv"))
 # padj column name
 c1_padj_col <- intersect(c("padj", "adj.P.Val"), names(c1_dream))[1]
 c1_count <- sum(c1_dream[[c1_padj_col]] < 0.1, na.rm = TRUE)
@@ -187,7 +187,7 @@ cat("Generating Panel B: Pairwise correlation heatmap...\n")
 # Load logFC for all binary contrasts — merge on gene ID
 # Binary contrasts: C1-C6, C8, C9, C11, C12, C13
 contrast_files <- list(
-  C1  = list(file = file.path(INT_DIR, "dream_results.csv"),
+  C1  = list(file = file.path(INT_DIR, "canonical_deg_results.csv"),
              padj_col = c1_padj_col),
   C2  = list(file = file.path(SIG_DIR, "nafl_vs_nash_dream.csv"),
              padj_col = c2_padj_col),

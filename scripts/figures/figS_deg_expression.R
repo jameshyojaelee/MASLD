@@ -47,7 +47,7 @@ dir_colors <- c("Up" = col_up, "Down" = col_down)
 
 # ── Canonical DEGs ────────────────────────────────────────────────────────────
 message("Loading dream STAR results...")
-dream <- fread(file.path(INT, "dream_results_ashr.csv"))
+dream <- fread(file.path(INT, "canonical_deg_results.csv"))
 can_up <- dream[padj < 0.05 & logFC >  0.5, gene]
 can_dn <- dream[padj < 0.05 & logFC < -0.5, gene]
 can_degs <- c(can_up, can_dn)

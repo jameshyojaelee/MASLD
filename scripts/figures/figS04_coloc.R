@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 # figS04_coloc.R — Supplementary Figure 4: COLOC Results
-# SuSiE-COLOC canonical (2026-04-21 rebuild) across 28 GWAS
-#   17 EUR + 5 EAS (BBJ + 2020 Cirrhosis/HCC) + 3 AFR + 3 SAS Pan-UKBB
+# SuSiE-COLOC canonical (2026-04-21 rebuild) across 23 GWAS
+#   14 EUR + 3 EAS (BBJ) + 3 AFR + 3 SAS Pan-UKBB
 # 18,975 eGenes tested; 3,480 converged SuSiE fits (18.3%).
-# SuSiE PP.H4 > 0.5/0.8/0.9 = 364/280/213; ABF fallback 585/255/167.
+# SuSiE PP.H4 > 0.5/0.8/0.9 = 368/289/210; ABF fallback 618/282/186.
 # ARCHIVED 2026-04-09: Whitfield 36653562 removed (provenance unverified).
 # Output: figures/supplementary/figS04_coloc/figS04_coloc.pdf (4-panel, 2x2)
 
@@ -52,23 +52,19 @@ gwas_category <- data.table(
     "2023_36280732_NAFLD_UKBB_EUR",
     "FinnGen_NAFLD", "FinnGen_NASH",  # RESTORED 2026-04-09: verified FinnGen R12 provenance
     # ARCHIVED: Anstee_NAFLD (duplicate), 5x Whitfield 36653562 (unverified provenance), Pazoki_PDFF (duplicate)
+    # DROPPED 2026-06: Ghouse_Cirrhosis, FinnGen_HCC, Ghouse_HCC (cirrhosis/HCC GWAS removed from 23-GWAS portfolio)
     "2021_34128465_PDFF_EUR", "2021_34957434_PDFF_EUR",
-    "2022_36402844_PDFF_EUR",
-    "Ghouse_Cirrhosis",
-    "FinnGen_HCC",  # RESTORED 2026-04-09
-    "Ghouse_HCC"
+    "2022_36402844_PDFF_EUR"
   ),
   category = c(
     rep("Liver Enzymes", 3),
     rep("NAFLD/NASH", 8),
-    rep("PDFF", 3),
-    "Cirrhosis",
-    rep("HCC", 2)
+    rep("PDFF", 3)
   )
 )
 
 # Short labels for GWAS (biobank/method-based naming convention)
-# 17 EUR GWAS after consolidation (7 archived, 3 FinnGen R12 restored)
+# 14 EUR GWAS after consolidation (7 archived, 3 cirrhosis/HCC dropped 2026-06)
 gwas_labels <- data.table(
   gwas_name = gwas_category$gwas_name,
   gwas_short = c(
@@ -79,20 +75,15 @@ gwas_labels <- data.table(
     "UKBB NAFLD",
     "FinnGen NAFLD", "FinnGen NASH",
     "Abdominal MRI PDFF", "ML-derived PDFF",
-    "Whole-body MRI PDFF",
-    "Ghouse Cirrhosis",
-    "FinnGen HCC",
-    "Ghouse HCC"
+    "Whole-body MRI PDFF"
   )
 )
 
-# Category colors (5 categories; Obesity removed with Whitfield archival)
+# Category colors (3 categories; Cirrhosis/HCC dropped with 23-GWAS portfolio)
 category_colors <- c(
   "Liver Enzymes" = "#0D47A1",
   "NAFLD/NASH"    = "#C2185B",
-  "PDFF"          = "#F57F17",
-  "Cirrhosis"     = "#7B1FA2",
-  "HCC"           = "#E91E63"
+  "PDFF"          = "#F57F17"
 )
 
 # ---------------------------------------------------------------------------

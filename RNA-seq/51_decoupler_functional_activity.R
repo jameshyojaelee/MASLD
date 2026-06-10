@@ -35,7 +35,7 @@ cat("Output directory:", OUTDIR, "\n\n")
 
 # ── 1. Load dream t-statistics ────────────────────────────────────────────
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 cat("Dream results loaded:", nrow(dream), "genes\n")
 
 # Build named t-statistic vector (gene symbol → t-stat)
@@ -251,8 +251,8 @@ gene_pw_annot <- sig_pw_net[, .(
 setnames(gene_pw_annot, "target", "human_symbol")
 
 # Merge annotations with atlas
-func_atlas <- merge(atlas[, .(human_symbol, ensembl_id, dream_logFC, dream_padj,
-                               dream_tstat, layers_active, sources_active,
+func_atlas <- merge(atlas[, .(human_symbol, ensembl_id, bulk_logFC, bulk_padj,
+                               bulk_tstat, layers_active, sources_active,
                                is_conserved, dgidb_druggable, opentargets_drug)],
                      gene_tf_annot, by = "human_symbol", all.x = TRUE)
 func_atlas <- merge(func_atlas, gene_pw_annot, by = "human_symbol", all.x = TRUE)
@@ -282,7 +282,7 @@ tf_pathway_source <- rbindlist(lapply(sig_tfs, function(tf_name) {
 
   # How many targets are DEGs?
   # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.5 (Script 05b)
-  n_deg <- atlas[human_symbol %in% targets_in_atlas & !is.na(dream_padj) & dream_padj < 0.1, .N]
+  n_deg <- atlas[human_symbol %in% targets_in_atlas & !is.na(bulk_padj) & bulk_padj < 0.1, .N]
 
   # How many targets are GWAS-causal?
   n_gwas <- sum(targets_in_atlas %in% causal_genes)
@@ -295,7 +295,7 @@ tf_pathway_source <- rbindlist(lapply(sig_tfs, function(tf_name) {
 
   # Is the TF itself a DEG?
   # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.5 (Script 05b)
-  tf_is_deg <- atlas[human_symbol == tf_name & !is.na(dream_padj) & dream_padj < 0.1, .N] > 0
+  tf_is_deg <- atlas[human_symbol == tf_name & !is.na(bulk_padj) & bulk_padj < 0.1, .N] > 0
 
   # Is the TF itself GWAS-causal?
   tf_is_gwas <- tf_name %in% causal_genes

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fig 1f — Handoff Seam: genetics → bulk RNA-seq atlas
-KEY MESSAGE: 398 SuSiE-COLOC effector genes (PP4>0.5) are 1.28x enriched among
+KEY MESSAGE: 368 SuSiE-COLOC effector genes (PP4>0.5) are 1.28x enriched among
              1,885 Tier-1 DEGs (continuous Wilcoxon p=7.2e-51).
              Modest overlap is expected: coding-effect variants (PNPLA3) are
              excluded by construction (no cis-eQTL).
@@ -9,7 +9,7 @@ KEY MESSAGE: 398 SuSiE-COLOC effector genes (PP4>0.5) are 1.28x enriched among
 Output: figures/misc/fig1f_handoff_seam.pdf
 
 All numbers are HARDCODED from verified facts pack:
-  - 398  SuSiE-COLOC genes (PP4 > 0.5, 28 GWAS)
+  - 368  SuSiE-COLOC genes (PP4 > 0.5, 23 GWAS)
   - 67   EUR + EAS replicated
   - 1885 Tier-1 DEGs (padj < 0.05, |LFC| > 0.5)
   - 1.28x enrichment (continuous Wilcoxon, p = 7.2e-51)
@@ -79,7 +79,7 @@ def main():
     ax.axis("off")
 
     # ── Hardcoded facts ───────────────────────────────────────────────────────
-    N_COLOC      = 398
+    N_COLOC      = 368
     N_REPLICATED = 67
     N_TIER1      = 1885
     FOLD_ENRICH  = 1.28

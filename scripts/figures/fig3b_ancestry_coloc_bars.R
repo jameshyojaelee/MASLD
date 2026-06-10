@@ -24,11 +24,10 @@ EUR_17 <- c(
   "2021_34128465_PDFF_EUR",  "2021_34841290_NAFLD_EUR",
   "2021_34957434_PDFF_EUR",  "2022_36402844_PDFF_EUR",
   "2023_36280732_NAFLD_deCode_EUR", "2023_36280732_NAFLD_Intermountain_EUR",
-  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_HCC", "FinnGen_NAFLD", "FinnGen_NASH",
-  "Ghouse_Cirrhosis", "Ghouse_HCC", "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
+  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_NAFLD", "FinnGen_NASH",
+  "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
 )
-BBJ_5 <- c("2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS",
-           "BBJ_ALT", "BBJ_AST", "BBJ_GGT")
+BBJ_5 <- c("BBJ_ALT", "BBJ_AST", "BBJ_GGT")
 AFR_3 <- c("PanUKBB_AFR_ALT", "PanUKBB_AFR_AST", "PanUKBB_AFR_GGT")
 SAS_3 <- c("PanUKBB_CSA_ALT", "PanUKBB_CSA_AST", "PanUKBB_CSA_GGT")
 
@@ -55,7 +54,7 @@ per_gene_anc <- sc[!is.na(pp4_best),
 
 thresholds      <- c(0.5, 0.8, 0.9)
 ancestry_levels <- c("EUR", "EAS", "AFR", "SAS")
-ancestry_n_gwas <- c(EUR = 17L, EAS = 5L, AFR = 3L, SAS = 3L)
+ancestry_n_gwas <- c(EUR = 14L, EAS = 3L, AFR = 3L, SAS = 3L)
 
 bar_dt <- rbindlist(lapply(thresholds, function(thr) {
   per_gene_anc[, .(n_genes = sum(max_pp4 > thr)),

@@ -22,13 +22,13 @@ v <- merge(vlong, ann, by = "variant_key", all.x = TRUE)
 
 # ---- DEG (Tier 1) -----------------------------------------------------------
 deg <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"),
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
   select = c("gene","logFC","padj","symbol"))
 deg_tier1 <- deg[!is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]
-cat(sprintf("Tier 1 DEGs (padj<0.05 & |logFC|>0.5): %d (expected ~1,885)\n",
+cat(sprintf("Tier 1 DEGs (padj<0.05 & |logFC|>0.5): %d (expected ~1,853, C2 canonical)\n",
             nrow(deg_tier1)))
-if (abs(nrow(deg_tier1) - 1885) > 200)
-  warning("Tier-1 DEG count drift >200 from expected 1,885")
+if (abs(nrow(deg_tier1) - 1853) > 200)
+  warning("Tier-1 DEG count drift >200 from expected 1,853")
 deg_tier1[, deg_direction := fifelse(logFC > 0, "up", "down")]
 setnames(deg_tier1, c("logFC","padj"), c("deg_logFC","deg_padj"))
 # Keep one row per non-empty symbol (most-significant by padj)

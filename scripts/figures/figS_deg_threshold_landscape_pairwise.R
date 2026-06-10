@@ -34,7 +34,7 @@ dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 message("Loading dream results...")
 dream <- fread(file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration",
-  "dream_results_ashr.csv"),
+  "canonical_deg_results.csv"),
   select = c("gene", "logFC", "padj", "symbol"))
 message("  ", nrow(dream), " genes loaded")
 

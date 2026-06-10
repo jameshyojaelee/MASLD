@@ -242,7 +242,7 @@ p_forest <- ggplot(forest, aes(y = y)) +
            label = "PP.H4 > 0.5",
            size = 1.9, colour = "gray35", fontface = "italic") +
   labs(title = "GWAS-eQTL colocalization at\nMASLD drug-target loci",
-       subtitle = "Liver eQTL × GWAS (best across SuSiE + ABF, 28 GWAS portfolio)",
+       subtitle = "Liver eQTL × GWAS (best across SuSiE + ABF, 23 GWAS portfolio)",
        x = "Colocalization PP.H4 (best GWAS)",
        y = NULL) +
   theme_masld(base_size = 7) +

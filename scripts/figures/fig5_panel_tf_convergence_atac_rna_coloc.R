@@ -6,7 +6,7 @@
 #   y    = dream logFC of the TF gene itself (mega-analysis disease vs control)
 #   size = # variants disrupting that TF's motif at 2-of-3 concordance
 #          (allele_concordance_summary.csv :: n_concord_2of3)
-#   color = max COLOC PP.H4 across 28-GWAS portfolio
+#   color = max COLOC PP.H4 across 23-GWAS portfolio
 #           (gene_level_coloc.csv :: max(coloc_best_pp4, coloc_best_susie_pp4))
 #
 # Output: figures/main/fig5_convergence/panels/fig5_tf_convergence_scatter.pdf
@@ -40,7 +40,7 @@ cat(sprintf("SCENIC+ hepatocyte regulons: %d unique TFs\n", nrow(hep_u)))
 # -----------------------------------------------------------------------------
 # 2. dream TF logFC (y-axis)
 # -----------------------------------------------------------------------------
-dream_path <- file.path(INT_RESULTS, "dream_results_ashr.csv")
+dream_path <- file.path(INT_RESULTS, "canonical_deg_results.csv")
 dream <- fread(dream_path, select = c("symbol", "logFC", "padj"))
 # Some symbols missing — drop those
 dream <- dream[!is.na(symbol) & symbol != ""]
@@ -202,7 +202,7 @@ p <- ggplot(df, aes(x = activity_diff, y = logFC)) +
     colors = c("#D9D9D9", "#BDBDBD", "#E8B6CA", "#C9265E", "#7A1140"),
     values = scales::rescale(c(0, 0.49, 0.5, 0.8, 1.0)),
     limits = c(0, 1), breaks = breaks_pp4,
-    name = "Max COLOC PP4\n(28 GWAS)",
+    name = "Max COLOC PP4\n(23 GWAS)",
     guide = guide_colorbar(barwidth = 0.6, barheight = 4, ticks = FALSE)
   ) +
   scale_size_continuous(

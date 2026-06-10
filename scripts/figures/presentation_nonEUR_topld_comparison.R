@@ -39,8 +39,7 @@ for (anc in c("eas", "afr", "sas", "all_ancestries"))
   dir.create(file.path(OUT_DIR, anc, "coloc"), recursive = TRUE, showWarnings = FALSE)
 
 ANCESTRY_GWAS <- list(
-  EAS = c("BBJ_ALT", "BBJ_AST", "BBJ_GGT",
-          "2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS"),
+  EAS = c("BBJ_ALT", "BBJ_AST", "BBJ_GGT"),  # cirrhosis/HCC dropped 2026-06-06 (not MASLD-specific)
   AFR = c("PanUKBB_AFR_ALT", "PanUKBB_AFR_AST", "PanUKBB_AFR_GGT"),
   SAS = c("PanUKBB_CSA_ALT", "PanUKBB_CSA_AST", "PanUKBB_CSA_GGT")
 )

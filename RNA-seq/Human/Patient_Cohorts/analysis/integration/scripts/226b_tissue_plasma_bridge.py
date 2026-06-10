@@ -11,7 +11,7 @@ Inputs
 2. multi_evidence_atlas.csv      – 33,943-gene tissue atlas
 3. plasma_switch_signatures.csv  – onset / switch / late gene classes
 4. clinical_drug_validation_table.csv – MASLD clinical drug targets
-5. dream_results_ashr.csv        – tissue DEGs (ashr shrinkage)
+5. canonical_deg_results.csv     – tissue DEGs (ashr shrinkage)
 
 Outputs (all to results/multiprogram/)
 ------
@@ -58,7 +58,7 @@ PATH_IMPORTANCE = os.path.join(RESULTS_MP, "226a_protein_importance.csv")
 PATH_ATLAS = os.path.join(RESULTS_ME, "multi_evidence_atlas.csv")
 PATH_SWITCH = os.path.join(RESULTS_MP, "plasma_switch_signatures.csv")
 PATH_DRUGS = os.path.join(RESULTS_DR, "clinical_drug_validation_table.csv")
-PATH_DREAM = os.path.join(RESULTS_INT, "dream_results_ashr.csv")
+PATH_DREAM = os.path.join(RESULTS_INT, "canonical_deg_results.csv")
 
 OUT_BRIDGE = os.path.join(RESULTS_MP, "226b_tissue_bridge.csv")
 OUT_ENRICHMENT = os.path.join(RESULTS_MP, "226b_enrichment.csv")
@@ -81,7 +81,7 @@ def load_atlas(path: str) -> pd.DataFrame:
     log.info("Loading atlas from %s", path)
     keep_cols = [
         "human_symbol",
-        "dream_logFC", "dream_padj", "dream_tstat",
+        "bulk_logFC", "bulk_padj", "bulk_tstat",
         "is_conserved", "attribution_class",
         "dgidb_druggable", "opentargets_drug",
         "layers_active", "sources_active",
@@ -257,7 +257,7 @@ def main():
     # ------------------------------------------------------------------
     drug_overlaps = bridge[bridge["drug_target_of"] != ""][
         ["protein", "target", "shap_rank", "mean_abs_shap", "drug_target_of",
-         "dream_logFC", "dream_padj", "is_deg", "f2_switch_class"]
+         "bulk_logFC", "bulk_padj", "is_deg", "f2_switch_class"]
     ].copy()
     log.info("Drug-target overlaps: %d rows", len(drug_overlaps))
 
@@ -266,7 +266,7 @@ def main():
     # ------------------------------------------------------------------
     col_order = [
         "protein", "target", "shap_rank", "fold_stability", "mean_abs_shap",
-        "dream_logFC", "dream_padj", "is_deg", "is_conserved",
+        "bulk_logFC", "bulk_padj", "is_deg", "is_conserved",
         "f2_switch_class", "f2_inflection_logFC", "f2_inflection_padj",
         "dgidb_druggable", "opentargets_drug",
         "attribution_class", "layers_active", "sources_active",

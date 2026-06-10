@@ -39,14 +39,24 @@ variants <- ann %>%
   arrange(desc(max_pip))
 cat("Unique variants in peaks:", nrow(variants), "\n")
 
-# ── 2. Load disease regulons for cross-referencing ───────────────────────────
-regulon_file <- file.path(ATAC_DIR, "scenic_plus/disease_regulons.csv")
+# ── 2. Load disease master regulators for cross-referencing ──────────────────
+# Cross-modality definition (Analysis/ATAC/Human_Multiome/scripts/04c_*):
+# hepatocyte SCENIC+ regulon TFs that are well-powered MASLD disease signals
+# (bulk DEG at n=846 OR genetic COLOC PP.H4>0.5). This is INDEPENDENT of the
+# motif-disruption test below, so the cross-reference is non-circular.
+# NOTE: the legacy FDR-gated `disease_regulons.csv` is EMPTY — the donor-level
+# (n=18) regulon-activity DE returns 0 at FDR; the old "12/24 TFs" came from a
+# cell-level (pseudoreplicated) test and is deliberately NOT used. Override the
+# source with REGULON_FILE if needed.
+regulon_file <- Sys.getenv("REGULON_FILE",
+  unset = file.path(ATAC_DIR, "scenic_plus/disease_master_regulators.csv"))
 if (file.exists(regulon_file)) {
   regulons <- fread(regulon_file)
   disease_tfs <- toupper(regulons$tf_name)
-  cat("Loaded", length(disease_tfs), "SCENIC+ disease regulon TFs\n")
+  cat("Loaded", length(disease_tfs), "SCENIC+ disease master-regulator TFs from",
+      basename(regulon_file), "\n")
 } else {
-  cat("WARNING: disease_regulons.csv not found — skipping regulon cross-reference\n")
+  cat("WARNING:", basename(regulon_file), "not found — skipping regulon cross-reference\n")
   disease_tfs <- character(0)
   regulons <- data.table()
 }

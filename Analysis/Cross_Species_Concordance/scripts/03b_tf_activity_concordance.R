@@ -75,7 +75,7 @@ cat("\n--- Human TF activity ---\n")
 human_tf_results <- list()
 
 human_files <- list(
-  disease_vs_ctrl = list(path = file.path(INT_DIR, "dream_results.csv"), padj_col = "padj"),
+  disease_vs_ctrl = list(path = file.path(INT_DIR, "canonical_deg_results.csv"), padj_col = "padj"),
   nafl_vs_nash    = list(path = file.path(DS_DIR, "nafl_vs_nash_dream.csv"), padj_col = "adj.P.Val"),
   fibrosis        = list(path = file.path(DS_DIR, "fibrosis_dream.csv"), padj_col = "adj.P.Val")
 )

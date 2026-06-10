@@ -284,8 +284,8 @@ ncrna_atlas <- atlas[gene_biotype %in% ncrna_biotypes]
 # Select relevant columns
 evidence_cols <- c(
   "human_symbol", "ensembl_id", "gene_biotype",
-  # Dream results
-  "dream_logFC", "dream_padj", "dream_tstat",
+  # Bulk RNA-seq results
+  "bulk_logFC", "bulk_padj", "bulk_tstat",
   # Mouse
   "mouse_ortholog", "mouse_meta_logFC", "mouse_meta_padj", "is_conserved",
   # Causal (mr_sig removed 2026-04-22 — MR ditched from paper)
@@ -306,7 +306,7 @@ evidence_cols <- c(
 
 evidence_cols <- intersect(evidence_cols, names(ncrna_atlas))
 ncrna_evidence <- ncrna_atlas[, ..evidence_cols]
-setorder(ncrna_evidence, dream_padj, na.last = TRUE)
+setorder(ncrna_evidence, bulk_padj, na.last = TRUE)
 
 fwrite(ncrna_evidence, file.path(out_dir, "ncrna_evidence_summary.csv"))
 cat(sprintf("  Saved ncrna_evidence_summary.csv: %d rows x %d columns\n",
@@ -318,7 +318,7 @@ cat(sprintf("  Saved ncrna_evidence_summary.csv: %d rows x %d columns\n",
 cat("\n--- 8. Summary ---\n")
 
 # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
-ncrna_degs <- ncrna_atlas[!is.na(dream_padj) & dream_padj < 0.1]
+ncrna_degs <- ncrna_atlas[!is.na(bulk_padj) & bulk_padj < 0.1]
 cat(sprintf("  Total ncRNAs in atlas: %d\n", nrow(ncrna_atlas)))
 cat(sprintf("  ncRNA DEGs: %d\n", nrow(ncrna_degs)))
 cat(sprintf("  With ceRNA hub score > 0: %d\n", sum(ncrna_atlas$cerna_hub_score > 0)))

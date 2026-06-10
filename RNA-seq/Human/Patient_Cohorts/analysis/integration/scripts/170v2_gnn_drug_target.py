@@ -104,11 +104,11 @@ NAN_THRESHOLD = 0.99  # drop columns with >99% NaN
 # Evidence source groupings for ablation
 SOURCE_GROUPS = {
     "S1_human_bulk": [
-        "dream_logFC",
-        "dream_padj",
-        "dream_tstat",
-        "dream_logFC_M",
-        "dream_logFC_F",
+        "bulk_logFC",
+        "bulk_padj",
+        "bulk_tstat",
+        "bulk_logFC_M",
+        "bulk_logFC_F",
         "sex_interaction_padj",
         "nafl_vs_nash_logFC",
         "nafl_vs_nash_padj",
@@ -1241,8 +1241,8 @@ def main():
         .copy()
     )
     key_evidence_cols = [
-        "dream_logFC",
-        "dream_padj",
+        "bulk_logFC",
+        "bulk_padj",
         # mr_pval removed 2026-04-22 — MR ditched from paper.
         "twas_pval",
         "n_coloc_sources",

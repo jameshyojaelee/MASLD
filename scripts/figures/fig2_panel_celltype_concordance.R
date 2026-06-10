@@ -27,7 +27,7 @@ dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 # ============================================================================
 
 # Bulk dream DEGs
-dream <- fread(file.path(INT_RESULTS, "dream_results_ashr.csv"))
+dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
 # DEG threshold: padj < 0.05 & |logFC| > 0.3
 dream[, is_deg := !is.na(padj) & padj < 0.05 & !is.na(logFC) & abs(logFC) > 0.3]
 

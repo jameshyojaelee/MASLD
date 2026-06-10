@@ -12,7 +12,7 @@ source("scripts/figures/publication_theme.R")
 
 PROJ <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-DREAM <- file.path(PROJ, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+DREAM <- file.path(PROJ, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 OUTDIR <- file.path(PROJ, "figures/main/fig1_atlas_overview/panels")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 

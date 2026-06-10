@@ -21,7 +21,7 @@ a1 <- fread(file.path(IN, "celltype_primary_attribution.csv"))
 toast[, ensg_base := sub("\\.\\d+$", "", gene)]
 
 # Add symbols via bulk dream
-bulk_sym <- fread(file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"),
+bulk_sym <- fread(file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
                   select = c("gene","symbol"))
 bulk_sym[, ensg_base := sub("\\.\\d+$", "", gene)]
 bulk_sym <- unique(bulk_sym[, .(ensg_base, symbol)])

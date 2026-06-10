@@ -49,7 +49,7 @@ if (!"sex_class" %in% names(sex) && "sex_class_stratified" %in% names(sex)) {
 sex[, ensg_base := sub("\\.\\d+$", "", gene)]
 
 # Pull symbols from bulk dream
-bulk_sym <- fread(file.path(INT_RES, "dream_results_ashr.csv"),
+bulk_sym <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
                   select = c("gene","symbol"))
 bulk_sym[, ensg_base := sub("\\.\\d+$", "", gene)]
 sex <- merge(sex, unique(bulk_sym[, .(ensg_base, symbol)]),
@@ -95,7 +95,7 @@ hyper_test <- function(set_a, set_b, bg) {
 }
 
 # Build universe as all expressed genes in bulk dream
-bulk <- fread(file.path(INT_RES, "dream_results_ashr.csv"), select = "symbol")
+bulk <- fread(file.path(INT_RES, "canonical_deg_results.csv"), select = "symbol")
 universe <- unique(bulk$symbol)
 
 female_genes <- sex[sex_class == "Female_biased", unique(symbol)]

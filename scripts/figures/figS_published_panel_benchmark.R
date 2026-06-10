@@ -27,7 +27,7 @@ cat("=== Gap #9: Published Panel Benchmark ===\n")
 # 1. Load data
 # ---------------------------------------------------------------------------
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 atlas <- fread(file.path(BASE,
   "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
 
