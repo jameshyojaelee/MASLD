@@ -16,7 +16,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 AUDIT <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
 INT   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-OUT_DIR <- file.path(BASE, "figures/supplementary/robustness")
+OUT_DIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # --- D1: Raw vs residual variance partition ---

@@ -31,7 +31,7 @@ outdir <- file.path(FIG3_DIR, "panels")
 cat("Loading data...\n")
 
 dream <- fread(file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
 
 coloc <- fread(file.path(BASE,
   "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv"))
@@ -41,6 +41,9 @@ coloc <- coloc[gene != "" & !is.na(gene)]
 ensembl_map <- coloc[gene != "" & ensembl != "", .(ensembl, symbol = gene)]
 ensembl_map[, ensembl_base := sub("\\.\\d+$", "", ensembl)]
 dream[, ensembl_base := sub("\\.\\d+$", "", gene)]
+# canonical_deg_results.csv now ships its own `symbol` column (C2 swap 2026-06-08);
+# drop it so the coloc-based ENSEMBL->symbol map merges cleanly (no symbol.x/.y clash)
+if ("symbol" %in% names(dream)) dream[, symbol := NULL]
 dream <- merge(dream, ensembl_map[, .(ensembl_base, symbol)],
                by = "ensembl_base", all.x = TRUE)
 dream[!is.na(symbol), gene_symbol := symbol]

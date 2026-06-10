@@ -10,18 +10,18 @@
 
 # lfsr variant of the patient-concordance figure family.
 # Same analytical body as the raw-LFC scripts; DEG set = ashr lfsr<0.05 (sign-confidence),
-# effect = shrunk_logFC. Output -> figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr/
+# effect = shrunk_logFC. Output -> figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr/
 set -eo pipefail
 eval "$(/gpfs/commons/home/jameslee/.local/bin/micromamba shell hook --shell bash)"
 micromamba activate rnaseq
 set -u
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 
-mkdir -p figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr
+mkdir -p figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr
 
 echo "=== [1/2] figS_patient_concordance_lfsr.R (A-D sweep + density/robustness panels) ==="
 Rscript scripts/figures/figS_patient_concordance_lfsr.R
 echo "=== [2/2] figS_pi_concordance_panels_lfsr.R (E1-E4 stage/waterfall/ROC/cohort) ==="
 Rscript scripts/figures/figS_pi_concordance_panels_lfsr.R
 echo "=== DONE ==="
-ls -1 figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr/*.pdf | wc -l
+ls -1 figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr/*.pdf | wc -l

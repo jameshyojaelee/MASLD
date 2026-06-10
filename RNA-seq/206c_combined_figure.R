@@ -21,7 +21,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 INT  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results")
 INTB <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration")
 PUB  <- file.path(BASE, "data/published_degs")
-OUTDIR <- file.path(BASE, "figures/supplementary/figS_sensitivity")
+OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/sensitivity")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("=== 206c: Combined Published DEG Comparison Figure ===\n")

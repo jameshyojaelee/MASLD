@@ -17,7 +17,7 @@ cat(sprintf("Atlas: %s genes x %s columns\n\n", format(nrow(atlas), big.mark=","
 # ── 2. Define binary evidence layers ──────────────────────────────
 
 # S1: Human bulk transcriptomic (dream mega-analysis)
-atlas[, s1_deg := !is.na(dream_padj) & dream_padj < 0.1]
+atlas[, s1_deg := !is.na(bulk_padj) & bulk_padj < 0.1]
 
 # S3: Genetic causal — multiple definitions for robustness
 # (a) SuSiE-COLOC best PP4 > 0.5 (fine-mapped, 24 EUR GWAS)
@@ -115,7 +115,7 @@ cat("======================================================================\n")
 res_main <- compute_overlap(
   atlas$s1_deg, atlas$s3_susie,
   "DEGs", "COLOC PP4>0.5",
-  cont_a = atlas$dream_tstat,
+  cont_a = atlas$bulk_tstat,
   cont_b = atlas$coloc_susie_best_pp4
 )
 
@@ -123,7 +123,7 @@ res_main <- compute_overlap(
 res_any <- compute_overlap(
   atlas$s1_deg, atlas$s3_any_coloc,
   "DEGs", "Any COLOC source",
-  cont_a = atlas$dream_tstat,
+  cont_a = atlas$bulk_tstat,
   cont_b = atlas$coloc_susie_best_pp4
 )
 
@@ -177,7 +177,7 @@ cat("======================================================================\n\n"
 
 # For the 6,200 genes tested in SuSiE-COLOC, compute continuous correlations
 has_coloc <- !is.na(atlas$coloc_susie_best_pp4)
-has_dream <- !is.na(atlas$dream_tstat)
+has_dream <- !is.na(atlas$bulk_tstat)
 has_mouse <- !is.na(atlas$mouse_meta_logFC)
 has_twas  <- !is.na(atlas$twas_z) & atlas$twas_z != 0
 
@@ -186,21 +186,21 @@ cat(sprintf("Genes with dream t-stat: %d\n", sum(has_dream)))
 cat(sprintf("Genes with mouse meta logFC: %d\n", sum(has_mouse)))
 cat(sprintf("Genes with TWAS z: %d\n\n", sum(has_twas)))
 
-# dream_tstat vs coloc_susie_best_pp4
+# bulk_tstat vs coloc_susie_best_pp4
 idx <- has_coloc & has_dream
-sp1 <- cor.test(atlas$dream_tstat[idx], atlas$coloc_susie_best_pp4[idx], method="spearman")
-cat(sprintf("dream_tstat vs coloc_susie_best_pp4  (n=%s): rho = %+.4f, p = %s\n",
+sp1 <- cor.test(atlas$bulk_tstat[idx], atlas$coloc_susie_best_pp4[idx], method="spearman")
+cat(sprintf("bulk_tstat vs coloc_susie_best_pp4  (n=%s): rho = %+.4f, p = %s\n",
             format(sum(idx), big.mark=","), sp1$estimate, format.pval(sp1$p.value, digits=3)))
 
-# dream_tstat vs |coloc_susie_best_pp4| (test if DE magnitude predicts COLOC)
-sp1b <- cor.test(abs(atlas$dream_tstat[idx]), atlas$coloc_susie_best_pp4[idx], method="spearman")
-cat(sprintf("|dream_tstat| vs coloc_susie_best_pp4 (n=%s): rho = %+.4f, p = %s\n",
+# bulk_tstat vs |coloc_susie_best_pp4| (test if DE magnitude predicts COLOC)
+sp1b <- cor.test(abs(atlas$bulk_tstat[idx]), atlas$coloc_susie_best_pp4[idx], method="spearman")
+cat(sprintf("|bulk_tstat| vs coloc_susie_best_pp4 (n=%s): rho = %+.4f, p = %s\n",
             format(sum(idx), big.mark=","), sp1b$estimate, format.pval(sp1b$p.value, digits=3)))
 
-# dream_tstat vs mouse_meta_logFC
+# bulk_tstat vs mouse_meta_logFC
 idx2 <- has_dream & has_mouse
-sp2 <- cor.test(atlas$dream_tstat[idx2], atlas$mouse_meta_logFC[idx2], method="spearman")
-cat(sprintf("dream_tstat vs mouse_meta_logFC      (n=%s): rho = %+.4f, p = %s\n",
+sp2 <- cor.test(atlas$bulk_tstat[idx2], atlas$mouse_meta_logFC[idx2], method="spearman")
+cat(sprintf("bulk_tstat vs mouse_meta_logFC      (n=%s): rho = %+.4f, p = %s\n",
             format(sum(idx2), big.mark=","), sp2$estimate, format.pval(sp2$p.value, digits=3)))
 
 # coloc_susie_best_pp4 vs mouse_meta_logFC (among genes with both)
@@ -211,8 +211,8 @@ cat(sprintf("coloc_susie_best_pp4 vs |mouse_LFC|  (n=%s): rho = %+.4f, p = %s\n"
 
 # TWAS vs dream
 idx4 <- has_twas & has_dream
-sp4 <- cor.test(abs(atlas$twas_z[idx4]), abs(atlas$dream_tstat[idx4]), method="spearman")
-cat(sprintf("|twas_z| vs |dream_tstat|             (n=%s): rho = %+.4f, p = %s\n",
+sp4 <- cor.test(abs(atlas$twas_z[idx4]), abs(atlas$bulk_tstat[idx4]), method="spearman")
+cat(sprintf("|twas_z| vs |bulk_tstat|             (n=%s): rho = %+.4f, p = %s\n",
             format(sum(idx4), big.mark=","), sp4$estimate, format.pval(sp4$p.value, digits=3)))
 
 # TWAS vs COLOC
@@ -321,7 +321,7 @@ for(i in names(src_tab)) {
 triple <- atlas[n_top3 == 3]
 cat(sprintf("\nGenes with ALL THREE sources (DEG + Conserved + COLOC): %d\n", nrow(triple)))
 if(nrow(triple) > 0) {
-  setorder(triple, -dream_tstat)
+  setorder(triple, -bulk_tstat)
   cat("  Genes: ", paste(triple$human_symbol, collapse=", "), "\n")
 }
 

@@ -7,7 +7,7 @@
 # τ² 76% reduction) while preserving effect-size concordance (r=0.894),
 # detecting 14% more genes, and producing a more conservative DEG set.
 #
-# Output: figures/supplementary/figS_quantification/figS_quantification_comparison.pdf
+# Output: figures/supplementary/figS_methods_validation/quantification/figS_quantification_comparison.pdf
 
 suppressPackageStartupMessages({
   library(data.table)

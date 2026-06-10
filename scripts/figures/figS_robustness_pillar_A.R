@@ -16,7 +16,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 AUDIT  <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
-OUT_DIR <- file.path(BASE, "figures/supplementary/robustness")
+OUT_DIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 stab <- fread(file.path(AUDIT, "pillar_A_stability.csv"))

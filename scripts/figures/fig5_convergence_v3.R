@@ -125,7 +125,7 @@ if (!"spatial_max_I" %in% names(atlas)) {
 
 # --- M1: Human DEG — sig in ≥1 of 6 RNA contrasts ---
 deg_contrast_cols_v3 <- list(
-  list(lfc = "dream_logFC",        padj = "dream_padj",        lfc_thresh = 0.5),
+  list(lfc = "bulk_logFC",        padj = "bulk_padj",        lfc_thresh = 0.5),
   list(lfc = "nafl_vs_ctrl_logFC", padj = "nafl_vs_ctrl_padj", lfc_thresh = 0.0),
   list(lfc = "nash_vs_ctrl_logFC", padj = "nash_vs_ctrl_padj", lfc_thresh = 0.0),
   list(lfc = "nafl_vs_nash_logFC", padj = "nafl_vs_nash_padj", lfc_thresh = 0.0),
@@ -148,8 +148,8 @@ mod_cols <- c("m1_human_deg", "m2_mouse_deg", "m3_genetic",
               "m4_regulatory", "m5_proteomics", "m6_spatial")
 atlas[, n_convergence := rowSums(as.matrix(.SD)), .SDcols = mod_cols]
 
-# Primary DEG denominator: MASLD vs ctrl (dream_padj < 0.05, |logFC| > 0.5)
-is_deg <- !is.na(atlas$dream_padj) & atlas$dream_padj < 0.05 & abs(atlas$dream_logFC) > 0.5
+# Primary DEG denominator: MASLD vs ctrl (bulk_padj < 0.05, |logFC| > 0.5)
+is_deg <- !is.na(atlas$bulk_padj) & atlas$bulk_padj < 0.05 & abs(atlas$bulk_logFC) > 0.5
 n_deg  <- sum(is_deg, na.rm = TRUE)
 n_tot  <- nrow(atlas)
 

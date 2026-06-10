@@ -39,6 +39,19 @@ FIG_MAIN  <- file.path(FIG_OUT, "main")
 FIG_SUPP  <- file.path(FIG_OUT, "supplementary")
 FIG_MISC  <- file.path(FIG_OUT, "misc")
 
+# Consolidated methods-validation / robustness / QC parent (2026-06-04).
+# Ten formerly-scattered validation/robustness/QC supp dirs now live as
+# subfolders here. The 5 repointed constants below (FIGS01_DIR qc_validation,
+# FIGS_SENS_DIR sensitivity, FIGS_HCAUDIT_DIR healthy_control_audit,
+# FIGS_BATCH_DIR batch_correction, FIGS_QUANT_DIR quantification) keep their
+# names so consumer scripts need no edit; the 5 below are new.
+FIGS_METHVAL_DIR   <- file.path(FIG_SUPP, "figS_methods_validation")
+FIGS_MEGAVAL_DIR   <- file.path(FIGS_METHVAL_DIR, "mega_validation")
+FIGS_MULTIMETH_DIR <- file.path(FIGS_METHVAL_DIR, "multimethod_validation")
+FIGS_INTVAL_DIR    <- file.path(FIGS_METHVAL_DIR, "integration_value")
+FIGS_ROBUST_DIR    <- file.path(FIGS_METHVAL_DIR, "robustness")
+FIGS_LFCSENS_DIR   <- file.path(FIGS_METHVAL_DIR, "lfc_sensitivity")
+
 # Main figures (Fig 1-5; reorganized 2026-04-15)
 FIG1_DIR  <- file.path(FIG_MAIN, "fig1_atlas_overview")           # Atlas + cohorts
 FIG2_DIR  <- file.path(FIG_MAIN, "fig2_progression_sex")          # Progression + sex-dimorphic programs (was fig2_f2_switch)
@@ -47,7 +60,7 @@ FIG4_DIR  <- file.path(FIG_MAIN, "fig4_validation")               # Proteomics +
 FIG5_DIR  <- file.path(FIG_MAIN, "fig5_convergence")              # Convergence matrix (was fig6_therapeutic_windows)
 
 # Supplementary figures (S1-S10 + sensitivity + therapeutics)
-FIGS01_DIR    <- file.path(FIG_SUPP, "figS01_qc_validation")
+FIGS01_DIR    <- file.path(FIGS_METHVAL_DIR, "qc_validation")  # was figS01_qc_validation (consolidated 2026-06-04)
 FIGS02_DIR    <- file.path(FIG_SUPP, "figS02_progression")
 FIGS03_DIR    <- file.path(FIG_SUPP, "figS03_deconvolution")
 FIGS04_DIR    <- file.path(FIG_SUPP, "figS04_coloc")
@@ -57,7 +70,7 @@ FIGS07_DIR    <- file.path(FIG_SUPP, "figS07_ncrna")
 FIGS08_DIR    <- file.path(FIG_SUPP, "figS08_subtyping_convergence")
 FIGS09_DIR    <- file.path(FIG_SUPP, "figS09_multi_ancestry")
 FIGS10_DIR    <- file.path(FIG_SUPP, "figS10_prediction")
-FIGS_SENS_DIR <- file.path(FIG_SUPP, "figS_sensitivity")
+FIGS_SENS_DIR <- file.path(FIGS_METHVAL_DIR, "sensitivity")  # was figS_sensitivity (consolidated 2026-06-04)
 FIGS_HEPSUB_DIR <- file.path(FIG_SUPP, "figS_hepatocyte_subtypes")
 FIGS_THERA_DIR  <- file.path(FIG_SUPP, "figS_therapeutics")  # demoted fig6 panels
 FIGS_NET_DIR    <- file.path(FIG_SUPP, "figS_network")       # Bayesian multiplex network
@@ -65,9 +78,9 @@ FIGS_RORA_DIR   <- file.path(FIG_SUPP, "figS_rora_case_study")  # RORA multi-mod
 FIGS_CELLTYPE_DIR <- file.path(FIG_SUPP, "figS_celltype_biology")  # Cell-type-resolved MASLD biology (27 analyses; A-L themes)
 FIGS_MCP_DIR      <- file.path(FIG_SUPP, "figS_mcp")            # Multi-cellular programs (cNMF + DIALOGUE)
 FIGS_CONV_EVID_DIR <- file.path(FIG_SUPP, "figS_convergence_evidence")  # Convergence evidence score (Script 46d)
-FIGS_HCAUDIT_DIR  <- file.path(FIG_SUPP, "figS_healthy_control_audit")  # Healthy-control audit (sensitivity + resilience)
+FIGS_HCAUDIT_DIR  <- file.path(FIGS_METHVAL_DIR, "healthy_control_audit")  # Healthy-control audit; was figS_healthy_control_audit (consolidated 2026-06-04)
 FIGS_SEX_DIR      <- file.path(FIG_SUPP, "figS_sex_dimorphism")  # Sex-dimorphic biology demoted from Fig 2 (2026-04-29)
-FIGS_BATCH_DIR    <- file.path(FIG_SUPP, "figS_batch_correction")  # Harmony batch-correction adequacy (UMAP vs DE)
+FIGS_BATCH_DIR    <- file.path(FIGS_METHVAL_DIR, "batch_correction")  # Harmony batch-correction adequacy; was figS_batch_correction (consolidated 2026-06-04)
 FIGS_GRANULAR_DIR <- file.path(FIG_SUPP, "figS_granular_staging")  # Two-transition decomposition + F3 sub-state multi-modal (2026-05-06)
 FIGS_SCDRS_DIR    <- file.path(FIG_SUPP, "figS_scdrs")           # Consolidated scDRS supp figs (bulk-DEG anchor + GWAS-anchored; 2026-05-12)
 FIGS_SCDRS_DATA_DIR <- file.path(FIGS_SCDRS_DIR, "panel_data")   # Per-panel CSVs for caption transparency
@@ -84,7 +97,7 @@ FIGS_HOTSPOT_DATA_DIR    <- file.path(FIGS_HOTSPOT_PANELS_DIR, "data")
 FIGS_CAS13LIB_DIR <- file.path(BASE, "Cas13_Library_Design", "figures")
 
 # Quantification comparison (STAR vs Kallisto sensitivity)
-FIGS_QUANT_DIR <- file.path(FIG_SUPP, "figS_quantification")
+FIGS_QUANT_DIR <- file.path(FIGS_METHVAL_DIR, "quantification")  # was figS_quantification (consolidated 2026-06-04)
 
 # Create all directories
 for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC,
@@ -98,7 +111,9 @@ for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC,
             FIGS_STAGECCC_DIR,
             FIGS_HOTSPOT_DIR, FIGS_HOTSPOT_PANELS_DIR, FIGS_HOTSPOT_DATA_DIR,
             FIGS_CAS13LIB_DIR,
-            FIGS_QUANT_DIR)) {
+            FIGS_QUANT_DIR,
+            FIGS_METHVAL_DIR, FIGS_MEGAVAL_DIR, FIGS_MULTIMETH_DIR,
+            FIGS_INTVAL_DIR, FIGS_ROBUST_DIR, FIGS_LFCSENS_DIR)) {
   dir.create(d, recursive = TRUE, showWarnings = FALSE)
 }
 
@@ -164,16 +179,12 @@ load_merged_dge <- function() {
 .dream_cache <- NULL
 load_dream_results <- function() {
   if (!is.null(.dream_cache)) return(.dream_cache)
-  # Prefer ashr-shrunk results; fall back to legacy file
-  f_ashr <- file.path(INT_RESULTS, "dream_results_ashr.csv")
-  f_legacy <- file.path(INT_RESULTS, "dream_results.csv")
-  if (file.exists(f_ashr)) {
-    f <- f_ashr
-  } else if (file.exists(f_legacy)) {
-    message("NOTE: dream_results_ashr.csv not found, falling back to dream_results.csv")
-    f <- f_legacy
-  } else {
-    message("WARNING: neither dream_results_ashr.csv nor dream_results.csv found")
+  # Canonical DEG table (hard cutover 2026-06-08): canonical_deg_results.csv.
+  # Schema: gene, logFC, SE, t, P.Value, padj, shrunk_logFC, lfsr, AveExpr, symbol.
+  # Output column names (dream_*) are preserved below so no figure script changes.
+  f <- file.path(INT_RESULTS, "canonical_deg_results.csv")
+  if (!file.exists(f)) {
+    message("WARNING: ", f, " not found")
     return(NULL)
   }
   dt <- fread(f)
@@ -193,12 +204,19 @@ load_dream_results <- function() {
 }
 
 # --- DEG classification helper ---
-# Returns a logical vector: TRUE if gene passes DEG threshold.
-# Uses padj < 0.05 + |logFC| > 0.5 (standard framework).
-# `dt` must have columns dream_logFC and dream_padj.
+# Returns a logical vector: TRUE if gene passes canonical DEG threshold.
+# Canonical (2026-06-02): lfsr < 0.05 AND |shrunk_logFC| > 0.5 (ashr shrinkage).
+# `dt` must carry an lfsr + shrunk_logFC column. Accepts dream_* (load_dream_results
+# output, canonical-sourced), bulk_* (the C2 atlas, post 2026-06-08 rename), or plain
+# names — so the helper works whether called on the atlas or on load_dream_results().
 is_dream_deg <- function(dt) {
-  !is.na(dt$dream_padj) & dt$dream_padj < 0.05 &
-    !is.na(dt$dream_logFC) & abs(dt$dream_logFC) > 0.5
+  lfsr_col <- intersect(c("dream_lfsr", "bulk_lfsr", "lfsr"), names(dt))[1]
+  slfc_col <- intersect(c("dream_shrunk_logFC", "bulk_shrunk_logFC", "shrunk_logFC"), names(dt))[1]
+  if (is.na(lfsr_col) || is.na(slfc_col))
+    stop("is_dream_deg: need lfsr + shrunk_logFC (dream_/bulk_/plain); have: ",
+         paste(names(dt), collapse = ", "))
+  !is.na(dt[[lfsr_col]]) & dt[[lfsr_col]] < 0.05 &
+    !is.na(dt[[slfc_col]]) & abs(dt[[slfc_col]]) > 0.5
 }
 
 # --- MASH vs MASL results ---
@@ -208,11 +226,17 @@ load_mash_vs_masl_results <- function() {
   f <- file.path(SIGS, "nafl_vs_nash_dream.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
-  # Normalize column names (adj.P.Val -> dream_padj, logFC -> dream_logFC)
-  if ("adj.P.Val" %in% names(dt) && !"dream_padj" %in% names(dt))
-    setnames(dt, "adj.P.Val", "dream_padj")
-  if ("logFC" %in% names(dt) && !"dream_logFC" %in% names(dt))
-    setnames(dt, "logFC", "dream_logFC")
+  # Normalize column names to the dream_* names downstream figures expect.
+  # Source file became limma-voom under the C2 swap (2026-06-08): it now ships
+  # `padj` (was adj.P.Val) + `shrunk_logFC`/`lfsr`, not adj.P.Val. Accept either.
+  if (!"dream_padj" %in% names(dt)) {
+    padj_src <- intersect(c("adj.P.Val", "padj"), names(dt))[1]
+    if (!is.na(padj_src)) setnames(dt, padj_src, "dream_padj")
+  }
+  if (!"dream_logFC" %in% names(dt)) {
+    lfc_src <- intersect(c("logFC", "shrunk_logFC"), names(dt))[1]
+    if (!is.na(lfc_src)) setnames(dt, lfc_src, "dream_logFC")
+  }
   dt <- add_symbols(dt, "gene")
   .mash_masl_cache <<- dt
   dt

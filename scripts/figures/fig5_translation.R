@@ -51,7 +51,7 @@ if (!is.null(drug_val) && !is.null(atlas)) {
   # --- 2. Merge atlas columns --------------------------------------------
   # mr_pval column removed 2026-04-22 — MR ditched from paper.
   atlas_sub <- atlas[human_symbol %in% gene_drugs$target_gene,
-    .(human_symbol, dream_padj, dream_logFC,
+    .(human_symbol, bulk_padj, bulk_logFC,
       best_liver_enzyme_pp4, broadaway_coloc_pp4, pdff_coloc_pp4,
       sceqtl_coloc_pp4_hep, twas_pval,
       essentiality_chronos)]
@@ -64,8 +64,8 @@ if (!is.null(drug_val) && !is.null(atlas)) {
   # --- 3. Compute normalised evidence strength per source (0–1) ----------
 
   # S1: Transcriptomic — padj < 0.05 + |logFC| > 0.5 gate, then score by -log10
-  gene_dt[, S1 := ifelse(!is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5,
-                          pmin(-log10(pmax(dream_padj, 1e-300)) / 30, 1), 0)]
+  gene_dt[, S1 := ifelse(!is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5,
+                          pmin(-log10(pmax(bulk_padj, 1e-300)) / 30, 1), 0)]
 
   # S2: Genetic/Causal — max across COLOC PP4s + TWAS score
   # (mr_score removed 2026-04-22 — MR ditched from paper)

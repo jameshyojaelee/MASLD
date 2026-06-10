@@ -309,6 +309,13 @@ unified[, diagnosis_harmonized := fcase(
   condition == "Control" | condition == "Control_Obese",       "Control",
 
   # 5. Fibrosis-only datasets (GSE213621, GSE240729): cannot classify
+  # 6. GSE162694 NASH_F* samples that lack a NAS score (26 samples; fibrosis dist
+  #    F0=9, F1=5, F2=1, F3=3, F4=8) fall through to NA here and are therefore
+  #    EXCLUDED from the NAFL-vs-NASH contrast (Script 13) BY DESIGN: NAFL-vs-NASH
+  #    classification is NAS-based (Kleiner 2005) and cannot be assigned without NAS.
+  #    117/143 GSE162694 samples are NAS-classifiable (matches the documented count in
+  #    docs/dataset_labeling_and_harmonization.md); the 26 NA-NAS are listed in the
+  #    "Excluded from NAFL/NASH" tally printed below. (Documented per audit C4-1, 2026-06-09.)
   default = NA_character_
 )]
 

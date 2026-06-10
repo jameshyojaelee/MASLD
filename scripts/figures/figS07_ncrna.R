@@ -106,18 +106,18 @@ degs <- atlas[is_deg == TRUE & gene_biotype %in% c("protein_coding", "lncRNA")]
 degs[, biotype_label := fifelse(gene_biotype == "protein_coding", "Protein-coding", "lncRNA")]
 
 if (nrow(degs) > 10) {
-  pb <- ggplot(degs, aes(x = biotype_label, y = abs(dream_logFC), fill = biotype_label)) +
+  pb <- ggplot(degs, aes(x = biotype_label, y = abs(bulk_logFC), fill = biotype_label)) +
     geom_violin(alpha = 0.7, draw_quantiles = c(0.25, 0.5, 0.75), linewidth = 0.3) +
     scale_fill_manual(values = c("Protein-coding" = "#BDBDBD", "lncRNA" = "#7B1FA2")) +
-    scale_y_continuous(limits = c(0, quantile(abs(degs$dream_logFC), 0.99))) +
+    scale_y_continuous(limits = c(0, quantile(abs(degs$bulk_logFC), 0.99))) +
     labs(x = NULL, y = "|log2 FC|", fill = NULL) +
     theme_masld() +
     theme(legend.position = "none")
 
   # Add Wilcoxon p-value
-  wt <- wilcox.test(abs(degs[gene_biotype == "lncRNA"]$dream_logFC),
-                     abs(degs[gene_biotype == "protein_coding"]$dream_logFC))
-  pb <- pb + annotate("text", x = 1.5, y = quantile(abs(degs$dream_logFC), 0.97),
+  wt <- wilcox.test(abs(degs[gene_biotype == "lncRNA"]$bulk_logFC),
+                     abs(degs[gene_biotype == "protein_coding"]$bulk_logFC))
+  pb <- pb + annotate("text", x = 1.5, y = quantile(abs(degs$bulk_logFC), 0.97),
                        label = sprintf("p = %.2e", wt$p.value), size = 2.5)
 
   save_fig(pb, file.path(out_dir, "panels", "panel_b.pdf"), width = fig_half_width * 0.6, height = 3)
@@ -370,7 +370,10 @@ if (file.exists(known_path)) {
     known[, se := abs(dream_logFC / dream_tstat)]
     known[, ci_lo := dream_logFC - 1.96 * se]
     known[, ci_hi := dream_logFC + 1.96 * se]
-    known[, sig_label := fifelse(is_dream_deg(known), "*", "")]
+    # `known` is the curated lncRNA validation table — it carries dream_logFC/dream_padj
+    # (no lfsr/shrunk_logFC), so apply the raw padj/|logFC| DEG gate directly.
+    known[, sig_label := fifelse(!is.na(dream_padj) & dream_padj < 0.05 &
+                                   !is.na(dream_logFC) & abs(dream_logFC) > 0.5, "*", "")]
     known[, concordant := (dream_direction == literature_direction)]
 
     # Deduplicate genes (keep first occurrence = highest |logFC| per direction)

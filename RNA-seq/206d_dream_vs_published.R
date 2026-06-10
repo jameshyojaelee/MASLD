@@ -16,7 +16,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 INT  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results")
 PUB  <- file.path(BASE, "data/published_degs")
-OUTDIR <- file.path(BASE, "figures/supplementary/figS_sensitivity")
+OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/sensitivity")
 
 cat("=== 206d: Dream vs Published DEG Comparison ===\n")
 

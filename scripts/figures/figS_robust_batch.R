@@ -16,7 +16,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 AUDIT   <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
 INT     <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-OUT_DIR <- file.path(FIG_SUPP, "robustness")
+OUT_DIR <- file.path(FIG_SUPP, "figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "figS_robust_batch.pdf")
 

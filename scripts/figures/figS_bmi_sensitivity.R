@@ -19,7 +19,7 @@
 #      LOO-CV to show results are robust to cohort-level BMI variation
 #
 # Three outputs:
-#   - figures/supplementary/figS_sensitivity/figS_bmi_sensitivity.pdf (5-panel figure)
+#   - figures/supplementary/figS_methods_validation/sensitivity/figS_bmi_sensitivity.pdf (5-panel figure)
 #   - RNA-seq/results/audit_sensitivity/bmi_sensitivity_results.csv
 #   - RNA-seq/results/audit_sensitivity/bmi_sensitivity_comparison.csv
 #

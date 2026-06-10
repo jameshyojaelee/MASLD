@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 AUDIT <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
-OUT_DIR <- file.path(BASE, "figures/supplementary/robustness")
+OUT_DIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # Threshold catalog (extended 2026-05-13 to include 0.75, 1, 2)

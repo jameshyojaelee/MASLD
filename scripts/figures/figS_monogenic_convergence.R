@@ -43,7 +43,7 @@ hits[, max_pp4 := pmax(coloc_susie_best_pp4, coloc_abf_best_pp4, na.rm = TRUE)]
 hits[is.na(max_pp4) | is.infinite(max_pp4), max_pp4 := 0]
 hits[, has_pl  := human_symbol %in% pl_genes]
 hits[, has_mafld := human_symbol %in% mafld_genes]
-hits[, neg_log_padj := -log10(pmax(dream_padj, 1e-50))]
+hits[, neg_log_padj := -log10(pmax(bulk_padj, 1e-50))]
 
 cat("  Panel genes in atlas:", nrow(hits), "/", length(panel_genes), "\n")
 cat("  P/LP-cohort genes in atlas:", sum(hits$has_pl), "\n")
@@ -84,23 +84,23 @@ p_a <- ggplot(fa_dat, aes(x = max_pp4, y = gene_label, color = has_pl)) +
 # ===========================================================================
 # Panel (b) — DEG signal for panel genes (volcano-style with labels)
 # ===========================================================================
-fb_dat <- atlas[, .(human_symbol, dream_logFC, dream_padj)]
+fb_dat <- atlas[, .(human_symbol, bulk_logFC, bulk_padj)]
 fb_dat[, in_panel := human_symbol %in% panel_genes]
-fb_dat[, neg_log_padj := -log10(pmax(dream_padj, 1e-50))]
-fb_dat <- fb_dat[!is.na(dream_logFC) & !is.na(dream_padj)]
+fb_dat[, neg_log_padj := -log10(pmax(bulk_padj, 1e-50))]
+fb_dat <- fb_dat[!is.na(bulk_logFC) & !is.na(bulk_padj)]
 
 # Label panel genes
-fb_label <- fb_dat[in_panel & dream_padj < 0.05]
+fb_label <- fb_dat[in_panel & bulk_padj < 0.05]
 
 p_b <- ggplot() +
   geom_point(data = fb_dat[in_panel == FALSE],
-             aes(x = dream_logFC, y = neg_log_padj),
+             aes(x = bulk_logFC, y = neg_log_padj),
              color = "grey80", alpha = 0.3, size = 0.4) +
   geom_point(data = fb_dat[in_panel == TRUE],
-             aes(x = dream_logFC, y = neg_log_padj),
+             aes(x = bulk_logFC, y = neg_log_padj),
              color = "#D62728", size = 1.6) +
   ggrepel::geom_text_repel(data = fb_label,
-             aes(x = dream_logFC, y = neg_log_padj, label = human_symbol),
+             aes(x = bulk_logFC, y = neg_log_padj, label = human_symbol),
              size = 2.5, max.overlaps = 30, box.padding = 0.3) +
   geom_vline(xintercept = c(-0.3, 0.3), linetype = "dashed", color = "grey60", linewidth = 0.3) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey60", linewidth = 0.3) +
@@ -115,10 +115,10 @@ p_b <- ggplot() +
 # Panel (c) — Complementarity scatter (max-PP4 vs |LFC|, panel genes overlaid)
 # ===========================================================================
 fc_dat <- atlas[, .(human_symbol, coloc_susie_best_pp4, coloc_abf_best_pp4,
-                    dream_logFC, dream_padj)]
+                    bulk_logFC, bulk_padj)]
 fc_dat[, max_pp4 := pmax(coloc_susie_best_pp4, coloc_abf_best_pp4, na.rm = TRUE)]
 fc_dat[is.na(max_pp4) | is.infinite(max_pp4), max_pp4 := 0]
-fc_dat[, abs_lfc := abs(dream_logFC)]
+fc_dat[, abs_lfc := abs(bulk_logFC)]
 fc_dat[, in_panel := human_symbol %in% panel_genes]
 fc_dat <- fc_dat[!is.na(abs_lfc)]
 
@@ -150,8 +150,8 @@ fd_dat <- atlas[human_symbol %in% fd_genes,
                   best_PP4 = pmax(coloc_susie_best_pp4, coloc_abf_best_pp4, na.rm=TRUE),
                   liver_enz_PP4 = best_liver_enzyme_pp4,
                   finngen_nafld_PP4 = finngen_nafld_coloc_pp4,
-                  dream_LFC = dream_logFC,
-                  dream_padj = dream_padj)]
+                  dream_LFC = bulk_logFC,
+                  bulk_padj = bulk_padj)]
 fd_long <- melt(fd_dat, id.vars = "human_symbol",
                 measure.vars = c("best_PP4", "liver_enz_PP4", "finngen_nafld_PP4"),
                 variable.name = "evidence", value.name = "PP4")

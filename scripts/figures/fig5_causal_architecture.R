@@ -301,17 +301,18 @@ if (!is.null(ukbb_broad2) && nrow(ukbb_broad2) > 0 && !is.null(me)) {
   ukbb_top[, symbol := gene]
 
   # Join with multi-evidence atlas for dream, TWAS, ieQTL
-  me_join_cols <- intersect(c("human_symbol", "dream_logFC", "dream_padj",
+  me_join_cols <- intersect(c("human_symbol", "bulk_logFC", "bulk_padj",
                               "twas_pval", "ieqtl_disease_interaction"), names(me_slim))
   me_join <- me_slim[human_symbol %in% ukbb_top$symbol, ..me_join_cols]
   b_data <- merge(ukbb_top[, .(symbol, PP.H4, chr)], me_join,
                   by.x = "symbol", by.y = "human_symbol", all.x = TRUE)
 
-  # Binary flags
-  b_data[, is_deg    := is_dream_deg(b_data)]
+  # Binary flags. b_data only carries bulk_logFC/bulk_padj (no lfsr/shrunk_logFC),
+  # so apply the raw padj/|logFC| DEG gate directly rather than is_dream_deg().
+  b_data[, is_deg    := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5]
   b_data[, is_twas   := !is.na(twas_pval) & twas_pval < 0.05]
   b_data[, is_ieqtl  := ieqtl_disease_interaction %in% c(TRUE, "TRUE")]
-  b_data[, lfc_clamp := pmax(pmin(as.numeric(dream_logFC), 2), -2)]
+  b_data[, lfc_clamp := pmax(pmin(as.numeric(bulk_logFC), 2), -2)]
 
   # Order by PP.H4 descending; de-duplicate in case of ties
   b_data <- b_data[!duplicated(symbol)]
@@ -494,7 +495,7 @@ if (nrow(ct_coloc) > 0) {
 # ==========================================================================
 
 if (!is.null(me) && nrow(me) > 0) {
-  dream_degs <- me[is_dream_deg(me) & abs(dream_logFC) > 0.5, human_symbol]
+  dream_degs <- me[is_dream_deg(me) & abs(bulk_logFC) > 0.5, human_symbol]
 
   # Method definitions from multi-evidence atlas
   method_stats <- rbindlist(list(

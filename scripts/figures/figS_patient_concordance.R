@@ -28,7 +28,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 # Output directory — all panels from this script live in the patient_concordance/ subfolder
-OUTDIR <- file.path(BASE, "figures/supplementary/figS_lfc_sensitivity/patient_concordance")
+OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 INT_RESULTS <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")

@@ -49,10 +49,13 @@ c12 <- fread(file.path(PROG_DIR, "c12_early_vs_late_nash_dream.csv"))
 c3  <- fread(file.path(PROG_DIR, "c3_adv_vs_early_fib_dream.csv"))
 c11 <- fread(file.path(PROG_DIR, "c11_nash_vs_ctrl_dream.csv"))
 
-# Standardize column names (use symbol as primary label)
-setnames(c12, "symbol", "symbol", skip_absent = TRUE)
-setnames(c3,  "symbol", "symbol", skip_absent = TRUE)
-setnames(c11, "symbol", "symbol", skip_absent = TRUE)
+# Standardize column names (use symbol as primary label).
+# C2 swap (2026-06-08): the c12/c3/c11 progression contrasts became limma-voom
+# (gene,logFC,...,padj,...) and no longer carry a `symbol` column — derive it from
+# the gene→symbol map so downstream symbol-based labelling/merging works.
+c12 <- add_symbols(c12, "gene")
+c3  <- add_symbols(c3,  "gene")
+c11 <- add_symbols(c11, "gene")
 
 # ---------------------------------------------------------------------------
 # Panel A: C12 vs C3 logFC scatter

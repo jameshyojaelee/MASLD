@@ -2,7 +2,7 @@
 #
 # *** lfsr VARIANT (auto-derived from the raw-LFC script) ***
 # DEG set = ashr lfsr < 0.05 (local false-sign-rate; sign-confidence); effect = shrunk_logFC.
-# Output -> figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr/
+# Output -> figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr/
 # figS_pi_concordance_panels.R
 # Four additional PI-facing panels proving that the population signature is
 # recapitulated at the individual level: healthy controls → 0, disease → up.
@@ -28,7 +28,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-OUTDIR      <- file.path(BASE, "figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr")
+OUTDIR      <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 INT_RESULTS <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 

@@ -23,11 +23,11 @@
 #      per-study-only.
 #
 # Output:
-#   figures/supplementary/figS_batch_correction/figS_batch_overlap.pdf
-#   figures/supplementary/figS_batch_correction/panels/figS_batch_{n,o,p}.pdf
-#   figures/supplementary/figS_batch_correction/figS_batch_n_count_sweep.csv
-#   figures/supplementary/figS_batch_correction/figS_batch_o_jaccard_grid.csv
-#   figures/supplementary/figS_batch_correction/figS_batch_p_replication_breakdown.csv
+#   figures/supplementary/figS_methods_validation/batch_correction/figS_batch_overlap.pdf
+#   figures/supplementary/figS_methods_validation/batch_correction/panels/figS_batch_{n,o,p}.pdf
+#   figures/supplementary/figS_methods_validation/batch_correction/figS_batch_n_count_sweep.csv
+#   figures/supplementary/figS_methods_validation/batch_correction/figS_batch_o_jaccard_grid.csv
+#   figures/supplementary/figS_methods_validation/batch_correction/figS_batch_p_replication_breakdown.csv
 
 suppressPackageStartupMessages({
   library(data.table)

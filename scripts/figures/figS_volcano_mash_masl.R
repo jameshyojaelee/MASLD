@@ -12,7 +12,7 @@
 # Tier 1 thresholds per contrast come from the 5%-CV-band elbow analysis
 # (see docs/mash_masl_tier1_cutoffs_2026-05-13.md).
 #
-# Output: figures/supplementary/figS_lfc_sensitivity/panels/volcano_<tag>.pdf
+# Output: figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/volcano_<tag>.pdf
 # Optional CONTRAST_TAG env var restricts to a single contrast.
 
 suppressPackageStartupMessages({
@@ -26,7 +26,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 DSIG <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures")
-OUT_DIR <- file.path(FIG_SUPP, "figS_lfc_sensitivity/panels")
+OUT_DIR <- file.path(FIG_SUPP, "figS_methods_validation/lfc_sensitivity/panels")
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 PADJ_CUT  <- 0.05

@@ -232,24 +232,38 @@ cat("\nSaved: concordance_atlas_unified.csv\n")
 cat("\n=== Updating Unified Disease Signatures ===\n")
 uds_path <- file.path(DS_DIR, "unified_disease_signatures.csv")
 if (file.exists(uds_path)) {
-  uds <- fread(uds_path)
+  # This cross-ref update is cosmetic; never let it abort the pipeline after the
+  # atlas (the real deliverable) has already been written.
+  tryCatch({
+    uds <- fread(uds_path)
 
-  # Strip old concordance columns
-  drop_cols <- intersect(names(uds), c("concordance_category", "n_diets_concordant",
-    "translatability_score", "translatability_tier"))
-  if (length(drop_cols) > 0) uds[, (drop_cols) := NULL]
+    # Defensive: prior partial runs may have left DUPLICATE column names in this file
+    # (e.g. cross_anchor_tier appearing twice), which both breaks `:= NULL` drops and
+    # trips fwrite's check_duplicate_names on the re-merge. Keep first occurrence.
+    if (any(duplicated(names(uds)))) uds <- uds[, unique(names(uds)), with = FALSE]
 
-  # Map via symbol
-  conc_info <- atlas[, .(human_symbol, concordance_category = primary_category,
-    n_diets_concordant = n_concordant,
-    cross_anchor_tier,
-    dvc_category,
-    translatability_score, translatability_tier)]
-  conc_info <- conc_info[!duplicated(human_symbol)]
+    # Strip old concordance columns. Must include EVERY column conc_info re-adds
+    # (cross_anchor_tier, dvc_category too) — otherwise the re-merge produces duplicate
+    # column names and fwrite's check_duplicate_names aborts on pipeline re-runs.
+    drop_cols <- intersect(names(uds), c("concordance_category", "n_diets_concordant",
+      "cross_anchor_tier", "dvc_category", "translatability_score", "translatability_tier"))
+    if (length(drop_cols) > 0) uds[, (drop_cols) := NULL]
 
-  uds <- merge(uds, conc_info, by.x = "symbol", by.y = "human_symbol", all.x = TRUE)
-  fwrite(uds, uds_path)
-  cat("Updated: unified_disease_signatures.csv\n")
+    # Map via symbol
+    conc_info <- atlas[, .(human_symbol, concordance_category = primary_category,
+      n_diets_concordant = n_concordant,
+      cross_anchor_tier,
+      dvc_category,
+      translatability_score, translatability_tier)]
+    conc_info <- conc_info[!duplicated(human_symbol)]
+
+    uds <- merge(uds, conc_info, by.x = "symbol", by.y = "human_symbol", all.x = TRUE)
+    fwrite(uds, uds_path)
+    cat("Updated: unified_disease_signatures.csv\n")
+  }, error = function(e) {
+    cat(sprintf("WARN: unified_disease_signatures cross-ref update skipped (non-fatal): %s\n",
+                conditionMessage(e)))
+  })
 }
 
 # ============================================================

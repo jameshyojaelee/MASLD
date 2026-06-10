@@ -95,9 +95,9 @@ pB <- ggplot(coloc_raw, aes(x = ancestry, y = trait, fill = pp4)) +
     axis.text.x      = element_text(lineheight = 0.9)
   )
 
-ggsave(file.path(OUT_DIR, "panelB_coloc_pp4.pdf"), pB,
+ggsave(file.path(OUT_DIR, "rora_crossancestry_coloc_pp4.pdf"), pB,
        width = 4.5, height = 3.2, useDingbats = FALSE)
-cat("  Saved panelB\n")
+cat("  Saved rora_crossancestry_coloc_pp4\n")
 
 # =============================================================================
 # Panel C: GWAS-ATAC motif disruption — clean horizontal bar
@@ -151,9 +151,9 @@ pC <- ggplot(rora_m, aes(x = alleleDiff, y = snp_lab_f, fill = max_pip)) +
     legend.background = element_blank()
   )
 
-ggsave(file.path(OUT_DIR, "panelC_gwas_atac.pdf"), pC,
+ggsave(file.path(OUT_DIR, "rora_gwas_atac_motif.pdf"), pC,
        width = 4.5, height = 3.0, useDingbats = FALSE)
-cat("  Saved panelC\n")
+cat("  Saved rora_gwas_atac_motif\n")
 
 # =============================================================================
 # Panel D: scRNA cell-type expression — where is RORA expressed?
@@ -206,9 +206,9 @@ pD <- ggplot(ct_df, aes(x = ave_expr, y = ct_clean,
                                                 BLUE, "black"))
   )
 
-ggsave(file.path(OUT_DIR, "panelD_celltype_expression.pdf"), pD,
+ggsave(file.path(OUT_DIR, "rora_celltype_expression.pdf"), pD,
        width = 4.2, height = 3.2, useDingbats = FALSE)
-cat("  Saved panelD\n")
+cat("  Saved rora_celltype_expression\n")
 
 # =============================================================================
 # Panel E: Disease progression + sex — simple vertical bars
@@ -277,16 +277,17 @@ pE_sex <- ggplot(sex_df, aes(x = group, y = logFC,
 
 pE <- pE_prog + pE_sex + plot_layout(widths = c(5, 2))
 
-ggsave(file.path(OUT_DIR, "panelE_progression_sex.pdf"), pE,
+ggsave(file.path(OUT_DIR, "rora_progression_sex.pdf"), pE,
        width = 5.5, height = 3.0, useDingbats = FALSE)
-cat("  Saved panelE\n")
+cat("  Saved rora_progression_sex\n")
 
 # =============================================================================
 # Panel F: Visium — representative spatial + per-sample violin
 # =============================================================================
 cat("-- Panel F: Visium spatial + quantitative --\n")
 
-visium <- fread("/tmp/rora_visium.csv")
+visium <- fread(file.path(BASE,
+  "Analysis/Spatial/results/rora_case_study/rora_visium.csv"))
 
 # Density-matched sections for side-by-side: both JBO samples have
 # ~13-17e-6 density; pick highest-contrast pair
@@ -371,37 +372,13 @@ pF_quant <- ggplot(sample_means, aes(x = condition, y = mean_rora,
 
 pF <- pF_spatial + pF_quant + plot_layout(widths = c(2, 1.3))
 
-ggsave(file.path(OUT_DIR, "panelF_visium.pdf"), pF,
+ggsave(file.path(OUT_DIR, "rora_visium_spatial.pdf"), pF,
        width = 7.0, height = 3.2, useDingbats = FALSE)
-cat("  Saved panelF\n")
+cat("  Saved rora_visium_spatial\n")
 
 # =============================================================================
-# Composite figure (B-F)
+# Individual panels only — no composite. The PI assembles Fig 3 in Illustrator.
 # =============================================================================
-cat("-- Assembling composite --\n")
-
-top_row    <- (pB | pC | pD) + plot_layout(widths = c(1, 1, 1))
-bottom_row <- (pE | pF)      + plot_layout(widths = c(1, 1.3))
-
-composite <- top_row / bottom_row +
-  plot_annotation(
-    title    = "RORA (rs339969) — multi-modal causal evidence",
-    subtitle = paste0(
-      "Cross-ancestry COLOC (GGT in EUR + EAS + CSA) · ",
-      "MASLD variants disrupt RORA TF motifs in hepatocyte ATAC peaks · ",
-      "Hepatocyte-dominant expression · ",
-      "Consistent downregulation across stages with female bias"
-    ),
-    theme = theme(
-      plot.title    = element_text(size = 10, face = "bold"),
-      plot.subtitle = element_text(size = 7, colour = "#444444",
-                                   margin = margin(b = 6))
-    )
-  ) +
-  plot_layout(heights = c(1, 1.05))
-
-ggsave(file.path(OUT_DIR, "rora_case_study_B_to_F.pdf"), composite,
-       width = 14, height = 7.5, useDingbats = FALSE)
 
 # Clean up old orphan files
 for (f in c("panelC_progression_logFC.pdf", "panelD_sex_logFC.pdf",
@@ -414,9 +391,8 @@ for (f in c("panelC_progression_logFC.pdf", "panelD_sex_logFC.pdf",
 }
 
 cat("\nDone. Outputs in:", OUT_DIR, "\n")
-cat("  panelB_coloc_pp4.pdf             — 4 traits x 4 ancestries COLOC\n")
-cat("  panelC_gwas_atac.pdf             — Motif disruption, signed bars\n")
-cat("  panelD_celltype_expression.pdf   — scRNA cell-type expression\n")
-cat("  panelE_progression_sex.pdf       — Vertical bars: progression + sex\n")
-cat("  panelF_visium.pdf                — Spatial + per-section boxplot\n")
-cat("  rora_case_study_B_to_F.pdf       — Composite\n")
+cat("  rora_crossancestry_coloc_pp4.pdf — 4 traits x 4 ancestries COLOC\n")
+cat("  rora_gwas_atac_motif.pdf         — Motif disruption, signed bars\n")
+cat("  rora_celltype_expression.pdf     — scRNA cell-type expression\n")
+cat("  rora_progression_sex.pdf         — Vertical bars: progression + sex\n")
+cat("  rora_visium_spatial.pdf          — Spatial + per-section boxplot\n")

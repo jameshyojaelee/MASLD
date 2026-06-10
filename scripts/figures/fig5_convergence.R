@@ -294,7 +294,7 @@ atlas[, max_coloc_pp4 := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = coloc_pp
 # Build score component by component
 atlas[, rs_coloc := fifelse(is.na(max_coloc_pp4), 0, max_coloc_pp4) * 3]
 atlas[, rs_intact := fifelse(is.na(intact_score_bulk), 0, intact_score_bulk) * 2]
-atlas[, rs_deg := fifelse(is.na(dream_padj) | dream_padj >= 0.05 | abs(dream_logFC) <= 0.5, 0, -log10(pmax(dream_padj, 1e-300)) / 10)]
+atlas[, rs_deg := fifelse(is.na(bulk_padj) | bulk_padj >= 0.05 | abs(bulk_logFC) <= 0.5, 0, -log10(pmax(bulk_padj, 1e-300)) / 10)]
 if ("coloc_susie_best_pp4" %in% names(atlas)) {
   atlas[, rs_susie := fifelse(is.na(coloc_susie_best_pp4), 0, coloc_susie_best_pp4)]
 } else {
@@ -378,7 +378,7 @@ notable <- c("THRB", "HKDC1", "RORA", "GCKR", "TM6SF2", "SLC39A8", "DGAT2",
              "FGFR1", "GCGR", "GLP1R", "KLB", "PPARD", "PPARG", "SCD")
 
 # Determine DEG filter column
-deg_filter <- !is.na(atlas$dream_padj) & atlas$dream_padj < 0.05 & abs(atlas$dream_logFC) > 0.5
+deg_filter <- !is.na(atlas$bulk_padj) & atlas$bulk_padj < 0.05 & abs(atlas$bulk_logFC) > 0.5
 
 # Gene selection: ALL notable genes guaranteed, remaining slots filled by rank
 # 1. Get all notable genes first (bypass DEG filter)
@@ -401,7 +401,7 @@ if (nrow(atac_gene_dt) > 0) {
 # Define DEG contrast list here so it is available for both convergence scoring
 # and matrix construction below.
 deg_contrast_defs <- list(
-  list(lfc = "dream_logFC",        padj = "dream_padj",        lfc_thresh = 0.5, label = "MASLD\nvs Ctrl"),
+  list(lfc = "bulk_logFC",        padj = "bulk_padj",        lfc_thresh = 0.5, label = "MASLD\nvs Ctrl"),
   list(lfc = "nafl_vs_ctrl_logFC", padj = "nafl_vs_ctrl_padj", lfc_thresh = 0.0, label = "MAFL\nvs Ctrl"),
   list(lfc = "nash_vs_ctrl_logFC", padj = "nash_vs_ctrl_padj", lfc_thresh = 0.0, label = "MASH\nvs Ctrl"),
   list(lfc = "nafl_vs_nash_logFC", padj = "nafl_vs_nash_padj", lfc_thresh = 0.0, label = "MASH\nvs MAFL"),  # coeff=nafl_nashNASH: positive = up in MASH
@@ -487,8 +487,8 @@ clamp <- function(x, lo, hi) {
 }
 
 # Column 1: Human logFC (z-score normalized) — kept for backward compat
-mat_human_z <- matrix(zscore_col(as.numeric(top_genes$dream_logFC)), ncol = 1,
-                      dimnames = list(genes, "dream_logFC"))
+mat_human_z <- matrix(zscore_col(as.numeric(top_genes$bulk_logFC)), ncol = 1,
+                      dimnames = list(genes, "bulk_logFC"))
 
 # Multi-contrast DEG matrices: z-scored over selected genes, NA for non-significant
 # (deg_contrast_defs defined above, before convergence scoring)
@@ -525,8 +525,7 @@ mat_pdff        <- matrix(get_cat("category_pp4_pdff"),    ncol = 1,
 # ARCHIVED 2026-04-08: FinnGen COLOC columns removed from EUR classification
 eur_coloc_cols <- intersect(c("broadaway_coloc_pp4", "ukbb_alt_coloc_pp4", "ast_coloc_pp4",
   "ggt_coloc_pp4", "pdff_coloc_pp4",
-  "ghouse_cirrhosis_coloc_pp4", "ghouse_hcc_coloc_pp4",
-  "decode_nafl_coloc_pp4", "decode_cirrhosis_coloc_pp4", "decode_hcc_coloc_pp4"), names(top_genes))
+  "decode_nafl_coloc_pp4"), names(top_genes))
 eas_coloc_cols <- intersect(c("bbj_alt_coloc_pp4", "bbj_ast_coloc_pp4", "bbj_ggt_coloc_pp4"), names(top_genes))
 mat_ancestry <- matrix(NA_character_, nrow = top_n, ncol = 1, dimnames = list(genes, "Ancestry"))
 if (length(eur_coloc_cols) > 0 && length(eas_coloc_cols) > 0) {
@@ -664,8 +663,8 @@ if (!is.null(drug_val_best)) {
 
 # ── Significance vectors for DEG stars ───────────────────────────────────────
 # Human DEG significance: padj < 0.05 + |logFC| > 0.5
-human_sig <- !is.na(top_genes$dream_padj) & top_genes$dream_padj < 0.05 &
-             abs(top_genes$dream_logFC) > 0.5
+human_sig <- !is.na(top_genes$bulk_padj) & top_genes$bulk_padj < 0.05 &
+             abs(top_genes$bulk_logFC) > 0.5
 # Mouse DEG significance
 mouse_sig <- if ("mouse_meta_padj" %in% names(top_genes)) {
   !is.na(top_genes$mouse_meta_padj) & top_genes$mouse_meta_padj < 0.05

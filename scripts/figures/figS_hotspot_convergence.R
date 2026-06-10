@@ -106,7 +106,7 @@ ATLAS_ALL <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidenc
 susie_col <- intersect(c("coloc_best_pp4_polyfun", "coloc_best_susie_pp4_polyfun",
                           "coloc_best_susie_pp4"), names(ATLAS_ALL))[1]
 abf_col   <- intersect(c("coloc_abf_best_pp4", "coloc_pp4"), names(ATLAS_ALL))[1]
-keep <- c("human_symbol", "dream_logFC", "dream_padj", susie_col, abf_col)
+keep <- c("human_symbol", "bulk_logFC", "bulk_padj", susie_col, abf_col)
 ATLAS <- ATLAS_ALL[, ..keep]
 setnames(ATLAS, c("human_symbol", susie_col, abf_col),
          c("gene", "coloc_susie_pp4", "coloc_abf_pp4"))
@@ -137,7 +137,7 @@ drug_summary <- drug_rows[, .(drug     = paste(unique(drug), collapse = "; "),
 atlas_signals <- ATLAS[gene %in% genes_panel,
                        .(gene,
                          coloc_pp4 = pmax(coloc_susie_pp4, coloc_abf_pp4, na.rm = TRUE),
-                         dream_logFC = dream_logFC)]
+                         dream_logFC = bulk_logFC)]
 atlas_signals[, coloc_pp4 := round(ifelse(is.finite(coloc_pp4), coloc_pp4, NA), 2)]
 atlas_signals[, dream_logFC := round(dream_logFC, 2)]
 

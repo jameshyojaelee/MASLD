@@ -59,7 +59,7 @@ cat("[1] Scatter: COLOC PP.H4 vs logFC ...\n")
 
 atlas <- fread(
   file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
-  select = c("human_symbol","dream_logFC","dream_padj",
+  select = c("human_symbol","bulk_logFC","bulk_padj",
              "coloc_susie_best_pp4","coloc_abf_best_pp4"))
 setnames(atlas, "human_symbol", "gene")
 atlas[, pp4 := fcoalesce(coloc_susie_best_pp4, coloc_abf_best_pp4)]
@@ -79,7 +79,7 @@ gene_role <- function(g) fcase(
 
 fg <- atlas[gene %in% key_genes]
 fg[, role := gene_role(gene)]
-bg <- atlas[!gene %in% key_genes & !is.na(dream_padj) & dream_padj < 0.05]
+bg <- atlas[!gene %in% key_genes & !is.na(bulk_padj) & bulk_padj < 0.05]
 bg[, pp4 := fcoalesce(coloc_susie_best_pp4, coloc_abf_best_pp4)]
 bg[is.na(pp4), pp4 := 0]
 
@@ -104,31 +104,31 @@ p1 <- ggplot() +
   geom_vline(xintercept = 0, linewidth = 0.25, color = "gray70") +
   # Background DEG cloud
   rasterize(
-    geom_point(data = bg, aes(x = dream_logFC, y = pp4),
+    geom_point(data = bg, aes(x = bulk_logFC, y = pp4),
                color = "gray85", size = 0.3, alpha = 0.5, shape = 16),
     dpi = 600
   ) +
   # Annotated genes
   geom_point(data = fg[role == "other"],
-             aes(x = dream_logFC, y = pp4),
+             aes(x = bulk_logFC, y = pp4),
              color = role_cols["other"], size = role_sizes["other"],
              shape = 16, alpha = 0.7) +
   geom_point(data = fg[role == "drug_unsupported"],
-             aes(x = dream_logFC, y = pp4),
+             aes(x = bulk_logFC, y = pp4),
              color = role_cols["drug_unsupported"],
              size = role_sizes["drug_unsupported"], shape = 16) +
   geom_point(data = fg[role == "novel_coloc"],
-             aes(x = dream_logFC, y = pp4),
+             aes(x = bulk_logFC, y = pp4),
              color = role_cols["novel_coloc"],
              size = role_sizes["novel_coloc"], shape = 16) +
   geom_point(data = fg[role == "causal_supported"],
-             aes(x = dream_logFC, y = pp4),
+             aes(x = bulk_logFC, y = pp4),
              color = role_cols["causal_supported"],
              size = role_sizes["causal_supported"], shape = 16) +
   # Labels — key genes only
   geom_text_repel(
     data = fg[role %in% c("causal_supported","drug_unsupported","novel_coloc")],
-    aes(x = dream_logFC, y = pp4, label = gene,
+    aes(x = bulk_logFC, y = pp4, label = gene,
         color = role),
     size = 2.2, fontface = "italic",
     box.padding = 0.4, point.padding = 0.2,
@@ -278,10 +278,9 @@ EUR_17 <- c("2019_31311600_NAFLD_EUR","2020_32298765_NAFLD_EUR",
             "2021_34128465_PDFF_EUR","2021_34841290_NAFLD_EUR",
             "2021_34957434_PDFF_EUR","2022_36402844_PDFF_EUR",
             "2023_36280732_NAFLD_deCode_EUR","2023_36280732_NAFLD_Intermountain_EUR",
-            "2023_36280732_NAFLD_UKBB_EUR","FinnGen_HCC","FinnGen_NAFLD","FinnGen_NASH",
-            "Ghouse_Cirrhosis","Ghouse_HCC","UKBB_ALT","UKBB_AST","UKBB_GGT")
-BBJ_5  <- c("2020_32514122_Cirrhosis_EAS","2020_32514122_HCC_EAS",
-            "BBJ_ALT","BBJ_AST","BBJ_GGT")
+            "2023_36280732_NAFLD_UKBB_EUR","FinnGen_NAFLD","FinnGen_NASH",
+            "UKBB_ALT","UKBB_AST","UKBB_GGT")
+BBJ_5  <- c("BBJ_ALT","BBJ_AST","BBJ_GGT")
 SAS_3  <- c("PanUKBB_CSA_ALT","PanUKBB_CSA_AST","PanUKBB_CSA_GGT")
 
 sc <- fread(file.path(BASE,
@@ -377,8 +376,8 @@ p3 <- ggplot() +
                      expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, 1.02), breaks = c(0, 0.5, 1),
                      expand = c(0, 0)) +
-  labs(x = "Max PP.H4  (17 EUR GWAS)",
-       y = "Max PP.H4  (5 EAS GWAS)") +
+  labs(x = "Max PP.H4  (14 EUR GWAS)",
+       y = "Max PP.H4  (3 EAS GWAS)") +
   theme_masld() +
   theme(panel.border = element_rect(color = "gray55", fill = NA,
                                     linewidth = 0.35),

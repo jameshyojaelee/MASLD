@@ -107,10 +107,10 @@ ortho <- ortho[order(mouse_base, otype_rank)][!duplicated(mouse_base)]
 # ---------------------------------------------------------------------------
 atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
                select = c("human_symbol", "ensembl_id", "gene_biotype",
-                           "dream_logFC", "dream_padj",
+                           "bulk_logFC", "bulk_padj",
                            "coloc_susie_best_pp4", "coloc_abf_best_pp4"))
 atlas[, human_base := sub("\\..*", "", ensembl_id)]
-atlas[, is_human_deg := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5]
+atlas[, is_human_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5]
 atlas[, has_coloc := (!is.na(coloc_susie_best_pp4) & coloc_susie_best_pp4 > 0.5) |
                       (!is.na(coloc_abf_best_pp4) & coloc_abf_best_pp4 > 0.5)]
 
@@ -305,7 +305,7 @@ ht <- Heatmap(
 
 # --- Save S_lib_2: Panel A only ---
 cat("Saving S_lib_2...\n")
-pdf_file_2 <- file.path(OUT_DIR, "S_lib_2_data_landscape.pdf")
+pdf_file_2 <- file.path(OUT_DIR, "01_mouse_data_landscape.pdf")
 
 panel_A_tagged <- panel_A +
   plot_annotation(tag_levels = list(c("A", ""))) &
@@ -523,7 +523,7 @@ p_set_bars <- ggplot(set_sizes, aes(y = y_num, fill = diet)) +
                      expand = expansion(mult = 0)) +
   scale_x_continuous(breaks = pretty(c(-max(set_sizes$n), 0), 3),
                      labels = function(x) comma(abs(x)),
-                     expand = expansion(mult = c(0.12, 0))) +
+                     expand = expansion(mult = c(0.30, 0))) +  # left headroom so the longest count label (e.g. 3,519) isn't clipped
   labs(x = "Set size", y = NULL) +
   theme_masld() + theme_pub() +
   theme(plot.margin = margin(0, 0, 2, 2),
@@ -543,7 +543,7 @@ upset_gg <- (p_empty + p_int_bars + p_set_bars + p_dots) +
 
 # --- Save S_lib_3 ---
 cat("Saving S_lib_3...\n")
-pdf_file_3 <- file.path(OUT_DIR, "S_lib_3_cross_diet_replication.pdf")
+pdf_file_3 <- file.path(OUT_DIR, "02_cross_diet_replication.pdf")
 
 # All panels are pure ggplot -- save directly with patchwork
 panel_A_tagged <- upset_gg + plot_annotation(tag_levels = list("A")) &

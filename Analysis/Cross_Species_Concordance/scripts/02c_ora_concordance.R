@@ -94,8 +94,8 @@ cat("=== Running ORA on Human Signatures ===\n")
 
 human_ora <- list()
 human_files <- list(
-  nafl_vs_nash = list(path = file.path(DS_DIR, "nafl_vs_nash_dream.csv"), padj = "adj.P.Val"),
-  fibrosis     = list(path = file.path(DS_DIR, "fibrosis_dream.csv"), padj = "adj.P.Val")
+  nafl_vs_nash = list(path = file.path(DS_DIR, "nafl_vs_nash_dream.csv"), padj = "padj"),  # LVQW/C2 files (regen 2026-06-08) carry `padj`, not `adj.P.Val`
+  fibrosis     = list(path = file.path(DS_DIR, "fibrosis_dream.csv"), padj = "padj")
 )
 
 for (sig_name in names(human_files)) {

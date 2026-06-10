@@ -17,7 +17,7 @@
 #   l: Per-cohort kBET-style chi-square mixing test — observed vs expected
 #      cohort proportions in 30-NN neighborhoods
 #
-# All panels saved individually to figures/supplementary/figS_batch_correction/panels/
+# All panels saved individually to figures/supplementary/figS_methods_validation/batch_correction/panels/
 # Combined figure regenerated to include all panels (a-l).
 
 suppressPackageStartupMessages({

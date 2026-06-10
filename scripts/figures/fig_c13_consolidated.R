@@ -84,12 +84,21 @@ strip_version <- function(x) sub("\\.[0-9]+$", "", x)
 c2$gene_base <- strip_version(c2$gene)
 c13$gene_base <- strip_version(c13$gene)
 
+# C2 swap (2026-06-08): the c13/nafl-vs-nash signature files became limma-voom
+# (gene,logFC,...,padj) and no longer carry a `symbol` column. Pull symbol only
+# from `anno` (unified_disease_signatures.csv) below; keep symbol_c13 if present.
+c13_sel <- c("gene_base", "gene", "logFC", "padj")
+if ("symbol" %in% names(c13)) c13_sel <- c(c13_sel, "symbol")
+c13_renamed <- c13 %>% select(all_of(c13_sel))
+c13_renamed <- c13_renamed %>%
+  rename(gene_c13 = gene, logFC_c13 = logFC, padj_c13 = padj)
+if ("symbol" %in% names(c13_renamed)) c13_renamed <- c13_renamed %>% rename(symbol_c13 = symbol)
 merged <- inner_join(
   c2 %>% select(gene_base, gene_c2 = gene, logFC_c2 = logFC, padj_c2 = padj),
-  c13 %>% select(gene_base, gene_c13 = gene, logFC_c13 = logFC, padj_c13 = padj,
-                  symbol_c13 = symbol),
+  c13_renamed,
   by = "gene_base"
 )
+if (!"symbol_c13" %in% names(merged)) merged$symbol_c13 <- NA_character_
 
 # Add symbol from annotations if missing from c13
 anno$gene_base <- strip_version(anno$gene)

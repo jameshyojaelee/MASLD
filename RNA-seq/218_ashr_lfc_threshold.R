@@ -16,7 +16,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 OUT_DIR <- file.path(BASE, "RNA-seq/results/stratified_causal")
-FIG_DIR <- file.path(BASE, "figures/supplementary/figS_sensitivity")
+FIG_DIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/sensitivity")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
 

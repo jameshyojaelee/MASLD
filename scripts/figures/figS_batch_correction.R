@@ -21,8 +21,8 @@
 #   F: "UMAP ≠ DE" — schematic / text panel explaining the distinction
 #
 # Output:
-#   figures/supplementary/figS_batch_correction/figS_batch_correction.pdf
-#   figures/supplementary/figS_batch_correction/panels/figS_batch_{a..f}.pdf
+#   figures/supplementary/figS_methods_validation/batch_correction/figS_batch_correction.pdf
+#   figures/supplementary/figS_methods_validation/batch_correction/panels/figS_batch_{a..f}.pdf
 
 suppressPackageStartupMessages({
   library(data.table)

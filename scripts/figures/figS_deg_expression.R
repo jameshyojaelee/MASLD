@@ -4,7 +4,7 @@
 # Shows both logCPM (library-size normalised) and TPM (length + library-size
 # normalised) so the TPM ≥ 1 filter threshold is visible on the right scale.
 #
-# Outputs (figures/supplementary/figS_lfc_sensitivity/):
+# Outputs (figures/supplementary/figS_methods_validation/lfc_sensitivity/):
 #   deg_expression_distribution.pdf  — logCPM | log2(TPM+1) side-by-side
 #   tpm_filtered_degs.csv            — canonical DEGs passing median TPM ≥ 1
 #                                      across disease patients (used by
@@ -24,7 +24,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 # 2026-05-28: repointed to canonical STAR -s 2 (was figures_STAR_s0 + _star inputs)
-OUTDIR <- file.path(BASE, "figures/supplementary/figS_lfc_sensitivity")
+OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity")
 INT    <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 
 theme_pub <- theme_minimal(base_size = 11) +

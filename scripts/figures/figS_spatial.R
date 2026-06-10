@@ -102,7 +102,7 @@ if (file.exists(hep_val_path)) {
                 method = "lm", se = TRUE, linewidth = 0.4,
                 color = "gray30", fill = "gray80", alpha = 0.3,
                 inherit.aes = FALSE) +
-    geom_label_repel(data = top_genes, aes(label = gene),
+    geom_label_repel(data = top_genes, aes(label = symbol),
                      size = 1.6, max.overlaps = 20,
                      label.padding = 0.12, box.padding = 0.4,
                      segment.size = 0.15, show.legend = FALSE) +

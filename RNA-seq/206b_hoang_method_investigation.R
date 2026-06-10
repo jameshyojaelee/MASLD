@@ -23,7 +23,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 INTB <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration")
 INT  <- file.path(INTB, "results")
 PUB  <- file.path(BASE, "data/published_degs")
-OUTDIR <- file.path(BASE, "figures/supplementary/figS_sensitivity")
+OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/sensitivity")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("=== 206b: Hoang Method Investigation ===\n")

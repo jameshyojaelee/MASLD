@@ -7,7 +7,7 @@
 # PRJNA512027 is dropped from cohort presentation, leaving 1,259 in the UMAP).
 # Joins with unified_metadata.csv for fibrosis_stage / nas_score / diagnosis.
 #
-# Output: figures/supplementary/figS01_qc_validation/panels/fig1_umap.pdf
+# Output: figures/supplementary/figS_methods_validation/qc_validation/panels/fig1_umap.pdf
 # (moved from main fig1; UMAP is now a supplementary QC panel.)
 # Composite 2x2: (1) cohort, (2) disease state, (3) fibrosis stage, (4) diagnosis.
 

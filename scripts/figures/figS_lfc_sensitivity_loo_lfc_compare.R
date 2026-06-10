@@ -18,8 +18,8 @@
 #     are pruned just by the LFC cutoff
 #
 # Output:
-#   figures/supplementary/figS_lfc_sensitivity/panels/I_loo_cv_lfc_compare.pdf
-#   figures/supplementary/figS_lfc_sensitivity/loo_cv_lfc_compare_stats.csv
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/I_loo_cv_lfc_compare.pdf
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/loo_cv_lfc_compare_stats.csv
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -37,7 +37,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 INT_DIR <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 LOO_DIR   <- file.path(INT_DIR, "loo_cv")
-OUT_DIR   <- file.path(FIG_SUPP, "figS_lfc_sensitivity")
+OUT_DIR   <- FIGS_LFCSENS_DIR  # consolidated under figS_methods_validation/ (2026-06-04)
 PANEL_DIR <- file.path(OUT_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 OUT_PDF   <- file.path(PANEL_DIR, "I_loo_cv_lfc_compare.pdf")

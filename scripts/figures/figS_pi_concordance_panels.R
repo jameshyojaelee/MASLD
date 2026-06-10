@@ -24,7 +24,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-OUTDIR      <- file.path(BASE, "figures/supplementary/figS_lfc_sensitivity/patient_concordance")
+OUTDIR      <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance")
 INT_RESULTS <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 
 # ── Publication theme (matches existing panels) ───────────────────────────────

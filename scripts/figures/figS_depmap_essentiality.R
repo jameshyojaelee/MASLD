@@ -56,9 +56,9 @@ if (!"essentiality_chronos" %in% names(atlas) ||
 # Classify DEG status using padj < 0.05 + |logFC| > 0.5
 atlas[, is_deg_flag := is_dream_deg(atlas)]
 atlas[, deg_status := fifelse(
-  is_deg_flag & !is.na(dream_logFC) & dream_logFC > 0, "Upregulated",
+  is_deg_flag & !is.na(bulk_logFC) & bulk_logFC > 0, "Upregulated",
   fifelse(
-    is_deg_flag & !is.na(dream_logFC) & dream_logFC < 0, "Downregulated",
+    is_deg_flag & !is.na(bulk_logFC) & bulk_logFC < 0, "Downregulated",
     "Not significant"
   )
 )]

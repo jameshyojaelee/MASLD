@@ -19,7 +19,7 @@
 #   F: Joint pillar-pass distribution (Atlas E1)   -- per-gene robustness summary
 #
 # Output:
-#   figures/supplementary/robustness/figS_robustness.pdf
+#   figures/supplementary/figS_methods_validation/robustness/figS_robustness.pdf
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -34,7 +34,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 AUDIT   <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
-OUT_DIR <- file.path(FIG_SUPP, "robustness")
+OUT_DIR <- FIGS_ROBUST_DIR  # consolidated under figS_methods_validation/ (2026-06-04)
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "figS_robustness.pdf")
 

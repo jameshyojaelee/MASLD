@@ -19,8 +19,8 @@
 #   CONTRAST_TAG=mash_vs_masl Rscript figS_lfc_sensitivity_loo_mash_masl.R
 #
 # Outputs (per contrast tag):
-#   figures/supplementary/figS_lfc_sensitivity/panels/F_loo_cv_stability_<tag>.pdf
-#   figures/supplementary/figS_lfc_sensitivity/loo_cv_stability_<tag>_data.csv
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/F_loo_cv_stability_<tag>.pdf
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/loo_cv_stability_<tag>_data.csv
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -35,7 +35,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 INT_DIR  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration")
 DSIG_DIR <- file.path(INT_DIR, "results/disease_signatures")
 LOO_ROOT <- file.path(INT_DIR, "results/integration/loo_cv")
-OUT_DIR  <- file.path(FIG_SUPP, "figS_lfc_sensitivity")
+OUT_DIR  <- file.path(FIG_SUPP, "figS_methods_validation/lfc_sensitivity")
 PANEL_DIR <- file.path(OUT_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 

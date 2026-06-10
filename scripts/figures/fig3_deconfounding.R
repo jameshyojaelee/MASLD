@@ -56,7 +56,7 @@ C7_FILE  <- file.path(BASE,
 # Main dream for gene symbols (used to label C2 volcano)
 DREAM_FILE <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results",
-  "integration/dream_results_ashr.csv")
+  "integration/canonical_deg_results.csv")
 # Pathway enrichment: use nas_score_gsea.csv as proxy for NASH pathway programs
 # (no c13-specific GSEA exists; we will compute pathway annotation from C13 + multi-evidence atlas)
 ATLAS_FILE <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
@@ -72,8 +72,10 @@ dream <- fread(DREAM_FILE, select = c("gene", "symbol"))
 dream[, ensembl_base := sub("\\.[0-9]+$", "", gene)]
 # Join symbol to C2
 c2 <- merge(c2, dream[, .(ensembl_base, symbol)], by = "ensembl_base", all.x = TRUE)
-# Rename to common names
-setnames(c2, "adj.P.Val", "padj")
+# Rename to common names. C2 swap (2026-06-08): nafl_vs_nash_dream.csv is now
+# limma-voom and already ships `padj` (was adj.P.Val) — only rename if needed.
+if ("adj.P.Val" %in% names(c2) && !"padj" %in% names(c2))
+  setnames(c2, "adj.P.Val", "padj")
 
 message("Loading C13 (fibrosis-adjusted)...")
 c13 <- fread(C13_FILE)

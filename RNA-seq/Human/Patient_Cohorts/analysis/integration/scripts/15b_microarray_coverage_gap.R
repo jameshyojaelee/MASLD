@@ -29,7 +29,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 INT    <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration")
 OUTDIR <- file.path(BASE, "RNA-seq/results/audit_sensitivity/microarray_gap")
-FIGDIR <- file.path(BASE, "figures/supplementary/figS_sensitivity")
+FIGDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/sensitivity")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIGDIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(FIGDIR, "panels"), recursive = TRUE, showWarnings = FALSE)

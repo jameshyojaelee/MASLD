@@ -57,7 +57,7 @@ INT     <- file.path(BASE, "analysis/integration")
 RDIR    <- file.path(INT, "results/integration")
 
 OUT_DIR <- file.path(PROJECT, "RNA-seq/results/audit_sensitivity/power_saturation")
-FIG_DIR <- file.path(PROJECT, "figures/supplementary/figS_sensitivity")
+FIG_DIR <- file.path(PROJECT, "figures/supplementary/figS_methods_validation/sensitivity")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(FIG_DIR, "panels"), recursive = TRUE, showWarnings = FALSE)

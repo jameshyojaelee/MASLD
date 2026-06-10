@@ -56,8 +56,8 @@ for (vn in names(val_sets))
 safe_neglog10 <- function(x) { x[is.na(x)] <- 1; -log10(pmax(x, 1e-300)) }
 
 # S1: Human bulk RNA-seq
-atlas[, s1 := safe_neglog10(dream_padj)]
-atlas[is.na(dream_padj), s1 := 0]
+atlas[, s1 := safe_neglog10(bulk_padj)]
+atlas[is.na(bulk_padj), s1 := 0]
 
 # S2: Genetic causal evidence (max across all COLOC PP4 + TWAS flags)
 # (mr_pval and sceqtl_twas_best_fdr removed 2026-04-22 — MR ditched from paper)

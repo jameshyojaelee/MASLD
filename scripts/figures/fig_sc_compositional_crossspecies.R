@@ -228,7 +228,7 @@ conc_d  <- round(100 * mean(sign(norm_ab$human_sc_logFC_norm) ==
                             sign(norm_ab$mouse_bulk_logFC_norm)), 1)
 
 # Highlight Conserved
-norm_ab[, point_class := ifelse(is_conserved == TRUE, "Conserved", "Other")]
+norm_ab[, point_class := ifelse(is_conserved_core == TRUE, "Conserved", "Other")]
 
 panel_d <- ggplot(norm_ab, aes(x = human_sc_logFC_norm,
                                y = mouse_bulk_logFC_norm)) +
@@ -267,7 +267,7 @@ n_e     <- nrow(norm_bb)
 conc_e  <- round(100 * mean(sign(norm_bb$human_bulk_logFC_norm) ==
                             sign(norm_bb$mouse_bulk_logFC_norm)), 1)
 
-norm_bb[, point_class := ifelse(is_conserved == TRUE, "Conserved", "Other")]
+norm_bb[, point_class := ifelse(is_conserved_core == TRUE, "Conserved", "Other")]
 
 panel_e <- ggplot(norm_bb, aes(x = human_bulk_logFC_norm,
                                y = mouse_bulk_logFC_norm)) +
@@ -374,4 +374,4 @@ message("  Human sc vs Mouse bulk: rho=", rho_d, " n=", format(n_d, big.mark=","
         " concordant=", conc_d, "%")
 message("  Human bulk vs Mouse bulk: rho=", rho_e, " n=", format(n_e, big.mark=","),
         " concordant=", conc_e, "%")
-message("  Conserved genes used: ", sum(norm_bb$is_conserved, na.rm=TRUE))
+message("  Conserved genes used: ", sum(norm_bb$is_conserved_core, na.rm=TRUE))

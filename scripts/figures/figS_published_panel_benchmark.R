@@ -6,8 +6,8 @@
 # for Govaere 25, SteatoSITE 15, Piras 685, and Feng 2026 panels
 #
 # Output:
-#   figures/supplementary/figS_sensitivity/figS_published_panel_benchmark.pdf
-#   figures/supplementary/figS_sensitivity/published_panel_benchmark.csv
+#   figures/supplementary/figS_methods_validation/sensitivity/figS_published_panel_benchmark.pdf
+#   figures/supplementary/figS_methods_validation/sensitivity/published_panel_benchmark.csv
 # =============================================================================
 
 suppressPackageStartupMessages({

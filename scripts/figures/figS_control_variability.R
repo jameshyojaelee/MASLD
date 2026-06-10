@@ -9,7 +9,7 @@
 #   V3  Dream |logFC| vs within-control SD per gene (scatter)
 #   V4  Mean expression (logCPM) vs within-control SD per gene (scatter)
 #
-# Output: figures/supplementary/figS_lfc_sensitivity/
+# Output: figures/supplementary/figS_methods_validation/lfc_sensitivity/
 
 suppressPackageStartupMessages({
   library(ggplot2)
@@ -23,7 +23,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-OUTDIR  <- file.path(BASE, "figures/supplementary/figS_lfc_sensitivity")
+OUTDIR  <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity")
 INT     <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 
 theme_pub <- theme_minimal(base_size = 11) +

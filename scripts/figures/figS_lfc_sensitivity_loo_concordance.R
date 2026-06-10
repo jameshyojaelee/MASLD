@@ -12,9 +12,9 @@
 # cutoff (truncated effect-size distribution near 0), so we drop it.
 #
 # Output:
-#   figures/supplementary/figS_lfc_sensitivity/panels/H_loo_cv_concordance.pdf
-#   figures/supplementary/figS_lfc_sensitivity/loo_cv_concordance_jaccard.csv
-#   figures/supplementary/figS_lfc_sensitivity/loo_cv_upset_intersections.csv
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/H_loo_cv_concordance.pdf
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/loo_cv_concordance_jaccard.csv
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/loo_cv_upset_intersections.csv
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -32,7 +32,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 INT_DIR <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 LOO_DIR   <- file.path(INT_DIR, "loo_cv")
-OUT_DIR   <- file.path(FIG_SUPP, "figS_lfc_sensitivity")
+OUT_DIR   <- file.path(FIG_SUPP, "figS_methods_validation/lfc_sensitivity")
 PANEL_DIR <- file.path(OUT_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 OUT_PDF   <- file.path(PANEL_DIR, "H_loo_cv_concordance.pdf")

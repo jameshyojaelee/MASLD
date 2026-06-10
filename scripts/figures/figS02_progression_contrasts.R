@@ -70,10 +70,12 @@ binary_files <- list.files(prog_dir, pattern = "^c[0-9]+.*_dream\\.csv$",
 # Exclude ordinal contrasts (c7a, c7b, c7c, c17) — they are ordinal, not binary
 binary_files <- binary_files[!grepl("c7[abc]|c17", basename(binary_files))]
 
-# Read all, keep gene + logFC + contrast_id
+# Read all, keep gene + logFC + a contrast id.
+# C2 swap (2026-06-08): the binary c*_dream.csv files became limma-voom and dropped
+# the `contrast_id` column — derive the contrast id from the file name instead.
 read_binary <- function(f) {
-  d <- fread(f, select = c("gene", "logFC", "contrast_id"))
-  cid <- d$contrast_id[1]
+  d <- fread(f, select = c("gene", "logFC"))
+  cid <- sub("_dream\\.csv$", "", basename(f))
   d[, .(gene, logFC, cid = cid)]
 }
 all_binary <- rbindlist(lapply(binary_files, read_binary))
@@ -173,8 +175,9 @@ if (nrow(top5) > 0) {
 # ---------------------------------------------------------------------------
 cat("=== Panel (d): Volcano plots ===\n")
 
-# Build gene -> symbol lookup from binary contrast files
-sym_lookup <- fread(binary_files[1], select = c("gene", "symbol"))
+# Build gene -> symbol lookup. C2 swap (2026-06-08): binary contrast files no longer
+# carry a `symbol` column — derive symbols from the gene→symbol map instead.
+sym_lookup <- add_symbols(fread(binary_files[1], select = "gene"), "gene")[, .(gene, symbol)]
 
 trans_dream[, padj := adj.P.Val]
 trans_dream <- merge(trans_dream, sym_lookup, by = "gene", all.x = TRUE)

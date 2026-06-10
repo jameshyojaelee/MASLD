@@ -132,7 +132,7 @@ if (!"symbol" %in% names(nn)) {
   nn <- merge(nn, h_annot[, .(gene_base, symbol)], by = "gene_base", all.x = TRUE)
 }
 nn_mapped <- merge(
-  nn[!is.na(symbol), .(gene_base = gsub("\\..*", "", gene), symbol, h_lfc = logFC, h_padj = adj.P.Val)],
+  nn[!is.na(symbol), .(gene_base = gsub("\\..*", "", gene), symbol, h_lfc = logFC, h_padj = padj)],  # LVQW/C2 nafl_vs_nash file uses `padj` (regen 2026-06-08)
   ortho[, .(human_gene_id, mouse_gene_id)],
   by.x = "gene_base", by.y = "human_gene_id"
 )
@@ -238,16 +238,16 @@ cat("  Saved: 03_lfc_scatter_per_diet.pdf\n")
 
 # ###########################################################
 # PLOT 3b: Cross-Species LFC Scatter — Disease-vs-Control anchor
-# Same layout as Plot 3 but using pooled MASLD vs healthy (dream_results.csv)
+# Same layout as Plot 3 but using pooled MASLD vs healthy (canonical_deg_results.csv)
 # as the human x-axis instead of NAFL→NASH.
 # Saved to a NEW file (03b_...) — does NOT overwrite Plot 3.
 # ###########################################################
 cat("\n--- Plot 3b: LFC Scatter Plots (Disease-vs-Control) ---\n")
 
-dvc_raw <- tryCatch(fread(file.path(INT_DIR, "dream_results.csv")), error = function(e) NULL)
+dvc_raw <- tryCatch(fread(file.path(INT_DIR, "canonical_deg_results.csv")), error = function(e) NULL)
 
 if (!is.null(dvc_raw)) {
-  # Normalise padj column name (dream_results uses "padj"; rename to match pipeline)
+  # Normalise padj column name (canonical uses "padj"; rename to match pipeline)
   if (!"adj.P.Val" %in% names(dvc_raw) && "padj" %in% names(dvc_raw)) {
     setnames(dvc_raw, "padj", "adj.P.Val")
   }
@@ -313,7 +313,7 @@ if (!is.null(dvc_raw)) {
          p3b_combined, width = 8, height = 5.5)
   cat("  Saved: 03b_lfc_scatter_dvc_per_diet.pdf\n")
 } else {
-  cat("  SKIPPED: dream_results.csv not found\n")
+  cat("  SKIPPED: canonical_deg_results.csv not found\n")
 }
 
 # ###########################################################

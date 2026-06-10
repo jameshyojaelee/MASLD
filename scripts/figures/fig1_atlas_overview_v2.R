@@ -17,7 +17,7 @@
 #
 # Outputs:
 #   figures/main/fig1_atlas_overview/panels/fig1{d,f,g}.pdf
-#   figures/supplementary/figS01_qc_validation/panels/figS01_loo_recovery.pdf
+#   figures/supplementary/figS_methods_validation/qc_validation/panels/figS01_loo_recovery.pdf
 #   (Combined fig1_atlas_overview.pdf is NOT generated — panels are arranged
 #    manually.)
 # =============================================================================

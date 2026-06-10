@@ -232,6 +232,11 @@ if (length(all_comparisons) == 0) {
 comparison_dt <- rbindlist(all_comparisons, use.names = TRUE, fill = TRUE)
 comparison_dt <- add_symbols(comparison_dt, gene_col = "ensembl")
 comparison_dt <- comparison_dt[order(gwas, -PP.H4.susie)]
+# Alias to the column name the figure (figS_susie_comparison.R) expects:
+#   PP.H4.abf — the ABF posterior computed inside the SuSiE script on the same
+#   merged SNP set (PP.H4.abf.susie_script), the apples-to-apples comparator
+#   against PP.H4.susie. PP.H4.abf.susie_script / .original are retained above.
+comparison_dt[, PP.H4.abf := PP.H4.abf.susie_script]
 fwrite(comparison_dt, file.path(OUTDIR, "susie_abf_comparison.csv"))
 cat("  Saved susie_abf_comparison.csv:", nrow(comparison_dt), "rows across",
     uniqueN(comparison_dt$gwas), "GWAS\n")

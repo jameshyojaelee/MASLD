@@ -12,7 +12,7 @@
 # Output:
 #   figures/main/fig1_atlas_overview/panels/fig1g.pdf
 #   figures/main/fig1_atlas_overview/panels/fig1g_patient_lfc_combined_data.csv
-#   figures/supplementary/figS01_qc_validation/fig1g_patient_lfc_pG.rds
+#   figures/supplementary/figS_methods_validation/qc_validation/fig1g_patient_lfc_pG.rds
 ##############################################################################
 
 suppressPackageStartupMessages({

@@ -37,7 +37,7 @@ atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_at
 cat("Atlas genes:", nrow(atlas), "\n")
 
 # DEGs: padj<0.05, |logFC|>0.5
-atlas[, is_deg := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5]
+atlas[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5]
 deg_genes <- atlas[is_deg == TRUE, human_symbol]
 cat("Atlas DEGs:", length(deg_genes), "\n")
 
@@ -205,11 +205,11 @@ atlas_unique <- atlas[is_deg == TRUE & !(human_symbol %in% any_external)]
 cat("Atlas-unique DEGs (not in any external DB):", nrow(atlas_unique), "\n")
 
 # Top 20 by |logFC|
-top_unique <- atlas_unique[order(-abs(dream_logFC))][1:min(20, nrow(atlas_unique))]
-top_unique[, direction := ifelse(dream_logFC > 0, "Upregulated", "Downregulated")]
+top_unique <- atlas_unique[order(-abs(bulk_logFC))][1:min(20, nrow(atlas_unique))]
+top_unique[, direction := ifelse(bulk_logFC > 0, "Upregulated", "Downregulated")]
 
-p_c <- ggplot(top_unique, aes(x = reorder(human_symbol, abs(dream_logFC)),
-                               y = dream_logFC, fill = direction)) +
+p_c <- ggplot(top_unique, aes(x = reorder(human_symbol, abs(bulk_logFC)),
+                               y = bulk_logFC, fill = direction)) +
   geom_col(width = 0.7) +
   coord_flip() +
   scale_fill_manual(values = c("Upregulated" = masld_colors$up,
@@ -332,8 +332,8 @@ cat("=== Saving companion CSV ===\n")
 
 companion <- atlas[, .(
   human_symbol,
-  dream_logFC,
-  dream_padj,
+  bulk_logFC,
+  bulk_padj,
   is_deg,
   in_kegg_nafld = human_symbol %in% kegg_genes,
   in_wp_nafld = human_symbol %in% wp_genes,

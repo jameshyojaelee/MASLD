@@ -2,7 +2,7 @@
 #
 # *** lfsr VARIANT (auto-derived from the raw-LFC script) ***
 # DEG set = ashr lfsr < 0.05 (local false-sign-rate; sign-confidence); effect = shrunk_logFC.
-# Output -> figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr/
+# Output -> figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr/
 # KEY MESSAGE: Dream DEGs are concordantly dysregulated in the majority of
 # individual MASLD patients; patient-level consistency improves with higher
 # LFC cutoffs, confirming robustness of the population-level signature.
@@ -32,7 +32,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
 # Output directory — all panels from this script live in the patient_concordance/ subfolder
-OUTDIR <- file.path(BASE, "figures/supplementary/figS_lfc_sensitivity/patient_concordance_lfsr")
+OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 INT_RESULTS <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")

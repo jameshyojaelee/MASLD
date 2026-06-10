@@ -230,7 +230,13 @@ if (has_sceqtl) {
 if (!"gene" %in% names(merged)) {
   merged[, gene := ensembl_clean]
 }
+# add_symbols() drops its key column (`ensembl_clean := NULL`) internally; the
+# merged table's join key IS `ensembl_clean` and is referenced by every
+# downstream step (out_cols/comp_cols), so preserve it across the call.
+merged[, .ensembl_clean_keep := ensembl_clean]
 merged <- add_symbols(merged, "ensembl_clean")
+merged[, ensembl_clean := .ensembl_clean_keep]
+merged[, .ensembl_clean_keep := NULL]
 # Prefer existing symbol columns over the atlas-mapped one
 if ("gene_symbol_brd" %in% names(merged)) {
   merged[!is.na(gene_symbol_brd) & gene_symbol_brd != "", symbol := gene_symbol_brd]
@@ -514,6 +520,17 @@ comp_cols <- c(comp_cols, "brd_sig", "gtex_sig", "sceqtl_sig")
 comp_cols <- intersect(comp_cols, names(merged))
 
 comparison_out <- merged[, ..comp_cols][order(-n_eqtl_sources, -PP.H4_broadaway)]
+
+# Alias to the column names the figure (figS_cross_eqtl.R) expects:
+#   broadaway_pp4 / gtex_pp4 / sceqtl_pp4 (documented in that script's header).
+# The PP.H4_* names are retained above for backward compatibility.
+if ("PP.H4_broadaway" %in% names(comparison_out))
+  comparison_out[, broadaway_pp4 := PP.H4_broadaway]
+if ("PP.H4_gtex" %in% names(comparison_out))
+  comparison_out[, gtex_pp4 := PP.H4_gtex]
+if ("PP.H4_sceqtl" %in% names(comparison_out))
+  comparison_out[, sceqtl_pp4 := PP.H4_sceqtl]
+
 cat("  Full comparison table:", nrow(comparison_out), "genes\n\n")
 
 # ==============================================================================

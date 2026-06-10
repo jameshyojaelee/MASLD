@@ -358,8 +358,10 @@ if (length(all_results) > 0) {
 cat("\n--- Section C: Protein-transcript concordance (matched contrasts) ---\n")
 
 # Pre-load dream comparators
+# Canonical bulk DEG axis = C2 (limma-voom + metafor REML, ashr-shrunk).
+# Repointed from legacy dream_results.csv to canonical_deg_results.csv (2026-06-08).
 dream_f     <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration",
-                         "results/integration/dream_results.csv")
+                         "results/integration/canonical_deg_results.csv")
 fib_dream_f <- file.path(DISEASE_SIG_DIR, "adv_vs_early_fibrosis_dream.csv")
 nn_dream_f  <- file.path(DISEASE_SIG_DIR, "nafl_vs_nash_dream.csv")
 
@@ -473,7 +475,9 @@ gene_sets <- list()
 
 if (file.exists(dream_f)) {
   dream <- fread(dream_f)
-  if (!is.null(gene_map)) {
+  # C2 canonical_deg_results.csv already carries a `symbol` column; only fall back
+  # to the Ensembl->symbol gene_map merge for the legacy dream layout (no `symbol`).
+  if (!("symbol" %in% names(dream)) && !is.null(gene_map)) {
     dream[, ensembl_clean := sub("\\..*", "", gene)]
     dream <- merge(dream, gene_map, by = "ensembl_clean", all.x = FALSE)
   }
@@ -572,10 +576,14 @@ if (length(fgsea_results) > 0) {
 # =========================================================================
 cat("\n--- Section E: Effect-size stratified detection ---\n")
 
-if (file.exists(dream_f) && !is.null(gene_map)) {
+if (file.exists(dream_f)) {
   dream <- fread(dream_f)
-  dream[, ensembl_clean := sub("\\..*", "", gene)]
-  dream <- merge(dream, gene_map, by = "ensembl_clean", all.x = FALSE)
+  # C2 canonical_deg_results.csv already carries `symbol`; only map via gene_map
+  # for the legacy dream layout (Ensembl-only `gene`, no `symbol`).
+  if (!("symbol" %in% names(dream)) && !is.null(gene_map)) {
+    dream[, ensembl_clean := sub("\\..*", "", gene)]
+    dream <- merge(dream, gene_map, by = "ensembl_clean", all.x = FALSE)
+  }
   dream_sig <- dream[padj < 0.1]
 
   bins <- c(0, 0.5, 1, 1.5, 2, Inf)

@@ -3,7 +3,7 @@
 # fig4f_prototypes.R
 # Three alternative designs for Fig 4 drug-target genetic validation panel.
 # Gene universe: 8 clinical anchors + 11 novel druggable genes with
-# SuSiE PP4 >= 0.5 from the 28-GWAS SuSiE-COLOC portfolio (2026-04-21 refresh).
+# SuSiE PP4 >= 0.5 from the 23-GWAS SuSiE-COLOC portfolio (2026-04-21 refresh).
 #
 # Outputs (figures/main/fig4_validation/panels/):
 #   fig4f_opt1_lollipop.pdf  -- lollipop by best SuSiE PP4
@@ -79,7 +79,7 @@ tier_colors <- c(
 atlas_f <- file.path(BASE,
   "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 atlas <- fread(atlas_f,
-  select = c("human_symbol", "dream_logFC", "dream_padj", "is_conserved",
+  select = c("human_symbol", "bulk_logFC", "bulk_padj", "is_conserved",
              "coloc_susie_best_pp4", "coloc_susie_best_gwas",
              "coloc_susie_n_gwas_h4_05", "coloc_susie_n_gwas_h4_08",
              "coloc_abf_best_pp4", "coloc_abf_best_gwas",
@@ -112,7 +112,7 @@ gene_tbl[, coloc_gwas_lbl := shorten_gwas(coloc_gwas)]
 
 cat("\n--- Gene panel (n=", nrow(gene_tbl), ") ---\n", sep = "")
 print(gene_tbl[, .(gene, tier, drug, coloc_pp4, coloc_gwas_lbl,
-                   dream_logFC, is_conserved)])
+                   bulk_logFC, is_conserved)])
 
 # ============================================================================
 # OPTION 1: Lollipop by best SuSiE PP4
@@ -122,7 +122,7 @@ d1 <- copy(gene_tbl)
 setorder(d1, -coloc_pp4, na.last = TRUE)
 d1[is.na(coloc_pp4), coloc_pp4 := 0]
 d1[, gene := factor(gene, levels = rev(d1$gene))]
-d1[, abs_lfc := abs(dream_logFC)]
+d1[, abs_lfc := abs(bulk_logFC)]
 d1[is.na(abs_lfc), abs_lfc := 0]
 
 p1 <- ggplot(d1, aes(x = coloc_pp4, y = gene, color = tier)) +
@@ -142,7 +142,7 @@ p1 <- ggplot(d1, aes(x = coloc_pp4, y = gene, color = tier)) +
            hjust = -0.05, vjust = 0, size = 1.8, color = "gray45") +
   annotate("text", x = 0.9,  y = 0.5, label = "PP4 = 0.9",
            hjust = -0.05, vjust = 0, size = 1.8, color = "gray45") +
-  labs(x = "Best SuSiE colocalization PP4 (across 28 GWAS)", y = NULL,
+  labs(x = "Best SuSiE colocalization PP4 (across 23 GWAS)", y = NULL,
        title = "Drug-target genetic validation (option 1: lollipop)",
        subtitle = "Point size = transcriptional effect magnitude; label = best GWAS trait") +
   theme_masld() +
@@ -158,17 +158,17 @@ save_fig(p1, file.path(PANEL_DIR, "fig4f_opt1_lollipop.pdf"),
          width = fig_half_width * 1.1, height = 4.2)
 
 # ============================================================================
-# OPTION 2: Scatter of dream_logFC vs best SuSiE PP4
+# OPTION 2: Scatter of bulk_logFC vs best SuSiE PP4
 # ============================================================================
 cat("[Option 2] Scatter\n")
 d2 <- copy(gene_tbl)
-d2[is.na(dream_logFC), dream_logFC := 0]
+d2[is.na(bulk_logFC), bulk_logFC := 0]
 d2[is.na(coloc_pp4), coloc_pp4 := 0]
 
 # Label all anchors + all novels with PP4 > 0.5
 d2[, do_label := tier != "Novel (druggable)" | coloc_pp4 >= 0.5]
 
-p2 <- ggplot(d2, aes(x = dream_logFC, y = coloc_pp4, color = tier)) +
+p2 <- ggplot(d2, aes(x = bulk_logFC, y = coloc_pp4, color = tier)) +
   geom_hline(yintercept = c(0.5, 0.9), linetype = "dashed",
              linewidth = 0.25, color = "gray55") +
   geom_vline(xintercept = 0, linewidth = 0.2, color = "gray70") +
@@ -230,7 +230,7 @@ gwas_keep <- c(
   "2023_36280732_NAFLD_Intermountain_EUR",
   "2019_31311600_NAFLD_EUR",
   # FinnGen
-  "FinnGen_NAFLD", "FinnGen_NASH", "FinnGen_HCC",
+  "FinnGen_NAFLD", "FinnGen_NASH",
   # Cross-ancestry
   "PanUKBB_CSA_ALT", "PanUKBB_CSA_GGT", "PanUKBB_AFR_ALT"
 )
@@ -255,7 +255,6 @@ gwas_lbl <- c(
   "2019_31311600_NAFLD_EUR"               = "NAFLD:Anstee",
   "FinnGen_NAFLD" = "FinnGen NAFLD",
   "FinnGen_NASH"  = "FinnGen NASH",
-  "FinnGen_HCC"   = "FinnGen HCC",
   "PanUKBB_CSA_ALT" = "PanUKBB-CSA ALT",
   "PanUKBB_CSA_GGT" = "PanUKBB-CSA GGT",
   "PanUKBB_AFR_ALT" = "PanUKBB-AFR ALT"

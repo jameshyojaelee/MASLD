@@ -5,7 +5,7 @@
 #   x = bulk dream log2FC  (replication)
 #   y = scRNA module weight (co-regulation strength)
 #   color = COLOC PP4       (genetic support)
-#   size = -log10(dream_padj)
+#   size = -log10(bulk_padj)
 # HKDC1 labeled in bold. Top genes labeled with ggrepel.
 #
 # Output: figures/main/fig2_progression_sex/panels/fig2_panel_hkdc1_module24.pdf
@@ -30,15 +30,15 @@ m24 <- mod_genes[module == 24 & !grepl("^ENSG", gene), .(symbol = gene, weight)]
 
 atlas <- fread(file.path(BASE,
   "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
-  select = c("human_symbol", "dream_logFC", "dream_padj",
+  select = c("human_symbol", "bulk_logFC", "bulk_padj",
              "coloc_best_susie_pp4_polyfun"))
 setnames(atlas, c("human_symbol", "coloc_best_susie_pp4_polyfun"), c("symbol", "pp4"))
 
 d <- merge(m24, atlas, by = "symbol", all.x = TRUE)
-d[is.na(dream_logFC), dream_logFC := 0]
-d[is.na(dream_padj),  dream_padj  := 1]
+d[is.na(bulk_logFC), bulk_logFC := 0]
+d[is.na(bulk_padj),  bulk_padj  := 1]
 d[is.na(pp4),         pp4         := 0]
-d[, neg_log10p := pmin(-log10(dream_padj), 10)]
+d[, neg_log10p := pmin(-log10(bulk_padj), 10)]
 
 # label top genes by weight + HKDC1 always
 setorder(d, -weight)
@@ -50,7 +50,7 @@ d[, label := fcase(
 )]
 
 # ── plot ──────────────────────────────────────────────────────────────────────
-p <- ggplot(d, aes(x = dream_logFC, y = weight, color = pp4, size = neg_log10p)) +
+p <- ggplot(d, aes(x = bulk_logFC, y = weight, color = pp4, size = neg_log10p)) +
   geom_point(alpha = 0.85) +
   geom_text_repel(
     data = d[label != "" & symbol != "HKDC1"],

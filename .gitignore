@@ -55,8 +55,6 @@
 /data/
 /tools/
 /SteatoSite/
-/ScaleSC/
-/MetaXcan/
 /Liver_Atlas/
 /archive/
 /figures/
@@ -69,6 +67,7 @@
 /zenodo_deposit/
 /team_B_code/
 /scratch/
+/memory/
 /omnipathr-log/
 /NMF_*/
 /results/

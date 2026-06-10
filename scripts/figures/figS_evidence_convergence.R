@@ -75,10 +75,10 @@ if (!is.null(attrib)) {
 # ==========================================================================
 # Panel a: Evidence heatmap for top 30 multi-layer genes
 # ==========================================================================
-top30 <- atlas[n_layers >= 4][order(-n_layers, dream_padj)][1:min(30, .N)]
+top30 <- atlas[n_layers >= 4][order(-n_layers, bulk_padj)][1:min(30, .N)]
 
 if (nrow(top30) == 0) {
-  top30 <- atlas[order(-n_layers, dream_padj)][1:30]
+  top30 <- atlas[order(-n_layers, bulk_padj)][1:30]
 }
 
 heat_dt <- melt(top30,

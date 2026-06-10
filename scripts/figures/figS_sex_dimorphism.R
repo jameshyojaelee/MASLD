@@ -74,8 +74,12 @@ v3_labels <- c(F_only     = "F_only",
                concordant = "concordant",
                uncertain  = "uncertain")
 
-# Use post-hoc gated class label (sign-concordance gate + anti->divergent rename)
-v3[, assigned_class := factor(assigned_class_gated, levels = v3_levels)]
+# Use post-hoc gated class label (sign-concordance gate + anti->divergent rename).
+# Sex layer regen under the LVQW collapse (2026-06-08) now bakes the gate into the
+# `assigned_class` column directly (the separate `assigned_class_gated` column was
+# dropped); fall back to it if a legacy gated column is still present.
+.gated_col <- intersect(c("assigned_class_gated", "assigned_class"), names(v3))[1]
+v3[, assigned_class := factor(get(.gated_col), levels = v3_levels)]
 
 # Cohort short-name mapping (5-cohort canonical)
 COHORT_NAMES <- c(

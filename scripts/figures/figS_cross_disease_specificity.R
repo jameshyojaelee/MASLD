@@ -15,8 +15,8 @@
 #   - NAFLD pathway: msigdbr WP_NONALCOHOLIC_FATTY_LIVER_DISEASE (155 genes)
 #
 # Output:
-#   figures/supplementary/figS_sensitivity/figS_cross_disease_specificity.pdf
-#   figures/supplementary/figS_sensitivity/cross_disease_specificity_data.csv
+#   figures/supplementary/figS_methods_validation/sensitivity/figS_cross_disease_specificity.pdf
+#   figures/supplementary/figS_methods_validation/sensitivity/cross_disease_specificity_data.csv
 # ===========================================================================
 
 suppressPackageStartupMessages({

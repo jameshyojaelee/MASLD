@@ -307,8 +307,8 @@ n_h <- sum(svg_h$svg == TRUE, na.rm = TRUE)
 n_s <- sum(svg_s$svg == TRUE, na.rm = TRUE)
 
 # Merge on gene
-svg_m <- merge(svg_h[, .(gene, I_healthy = I, padj_h = padj_bh, svg_h = svg)],
-               svg_s[, .(gene, I_masld   = I, padj_s = padj_bh, svg_s = svg)],
+svg_m <- merge(svg_h[, .(gene, I_healthy = I, svg_h = svg)],
+               svg_s[, .(gene, I_masld   = I, svg_s = svg)],
                by = "gene", all = TRUE)
 svg_m[is.na(svg_h), svg_h := FALSE]
 svg_m[is.na(svg_s), svg_s := FALSE]

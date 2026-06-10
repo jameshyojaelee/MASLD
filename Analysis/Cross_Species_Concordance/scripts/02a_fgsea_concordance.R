@@ -67,6 +67,15 @@ mouse_pathways <- split(mouse_sets$gene_symbol, mouse_sets$gs_name)
 # ============================================================
 make_ranks <- function(dt, lfc_col = "logFC", pval_col, symbol_col = "symbol") {
   dt <- copy(dt)
+  # Resolve the p-value column robustly: C2/LVQW outputs use `padj`, dream/limma
+  # outputs use `adj.P.Val`. Fall back across common names if the requested one is
+  # absent (prevents the chain aborting when a signature file's columns have drifted).
+  if (!(pval_col %in% names(dt))) {
+    alt <- intersect(c("padj", "adj.P.Val", "FDR", "P.Value", "pvalue", "pval", "P.value"), names(dt))
+    if (length(alt) == 0)
+      stop(sprintf("make_ranks: no usable p-value column; have: %s", paste(names(dt), collapse = ", ")))
+    pval_col <- alt[1]
+  }
   dt <- dt[!is.na(get(symbol_col)) & get(symbol_col) != ""]
   dt[, rank_score := sign(get(lfc_col)) * -log10(pmax(get(pval_col), 1e-300))]
   ranks <- dt[, .(score = mean(rank_score)), by = symbol_col]
@@ -80,7 +89,7 @@ make_ranks <- function(dt, lfc_col = "logFC", pval_col, symbol_col = "symbol") {
 cat("\n=== Running FGSEA on Human Signatures ===\n")
 
 human_files <- list(
-  disease_vs_ctrl = list(path = file.path(INT_DIR, "dream_results.csv"), padj = "padj"),
+  disease_vs_ctrl = list(path = file.path(INT_DIR, "canonical_deg_results.csv"), padj = "padj"),
   nafl_specific   = list(path = file.path(RES, "nafl_vs_ctrl_dream.csv"), padj = "adj.P.Val"),
   nafl_vs_nash    = list(path = file.path(DS_DIR, "nafl_vs_nash_dream.csv"), padj = "adj.P.Val"),
   fibrosis        = list(path = file.path(DS_DIR, "fibrosis_dream.csv"), padj = "adj.P.Val")

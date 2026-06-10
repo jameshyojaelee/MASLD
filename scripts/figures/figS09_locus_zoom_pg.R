@@ -44,6 +44,7 @@ PROJ  <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 
 EUR_SS      <- file.path(BASE, "data/sumstats", paste0("UKBB_", TRAIT_PAIR, "_reformatted_hg19.tsv"))
 EAS_SS      <- file.path(BASE, "data/sumstats", paste0("BBJ_",  TRAIT_PAIR, "_reformatted_hg19.tsv"))
+SAS_SS      <- file.path(BASE, "data/sumstats", paste0("PanUKBB_CSA_", TRAIT_PAIR, "_reformatted_hg19.tsv"))
 MES_VARS    <- file.path(BASE, "results/mesusie/mesusie_variant_summary.csv")
 SHARED_LOCI <- file.path(BASE, "results/susiex/shared_loci.csv")
 EQTL_DIR    <- file.path(PROJ, "data/broadaway_eqtl")
@@ -55,6 +56,8 @@ LD_BASE   <- get_ld_base_dir("EUR")
 LD_BLOCKS <- file.path(LD_BASE, "approx_LD_blocks.txt")
 EAS_LD_BASE   <- get_ld_base_dir("EAS")
 EAS_LD_BLOCKS <- file.path(EAS_LD_BASE, "approx_LD_blocks.txt")
+SAS_LD_BASE   <- tryCatch(get_ld_base_dir("SAS"), error = function(e) NA_character_)
+SAS_LD_BLOCKS <- if (!is.na(SAS_LD_BASE)) file.path(SAS_LD_BASE, "approx_LD_blocks.txt") else NA_character_
 
 OUT_DIR <- file.path(BASE, "figures/locus_zoom")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
@@ -92,13 +95,37 @@ eas_locus[, p := as.numeric(pval)]
 rm(eas_ss); gc(verbose = FALSE)
 cat("  EAS locus variants:", nrow(eas_locus), "\n")
 
+# ── SAS sumstats (PanUKBB CSA; optional 3rd-ancestry track) ──────────────────
+# Only present for liver-enzyme traits (ALT/AST/GGT). When the file or window is
+# empty, has_sas stays FALSE and the SAS Manhattan track is simply not drawn.
+has_sas <- FALSE
+sas_locus <- data.table()
+SAS_LEAD_POS <- NA_integer_
+if (file.exists(SAS_SS)) {
+  cat("Loading SAS sumstats (PanUKBB CSA)...\n")
+  sas_ss <- fread(SAS_SS,
+                  select = c("chromosome","position","allele1","allele2","beta","se","pval"))
+  sas_locus <- sas_ss[chromosome == CHR & position >= WIN_START & position <= WIN_END]
+  sas_locus[, p := as.numeric(pval)]
+  rm(sas_ss); gc(verbose = FALSE)
+  if (nrow(sas_locus[!is.na(p)]) > 0) {
+    has_sas <- TRUE
+    SAS_LEAD_POS <- sas_locus[!is.na(p)][which.min(p), position]  # min-p lead (no curated SAS lead)
+    cat(sprintf("  SAS locus variants: %d | SAS lead (min-p): %s\n",
+                nrow(sas_locus), SAS_LEAD_POS))
+  } else cat("  SAS: no variants in window — SAS track skipped.\n")
+} else {
+  cat("  SAS sumstats not found for this trait — SAS track skipped.\n")
+}
+
 # ── Single-ancestry SuSiE finemapping PIPs (replaces prior MeSuSiE track) ─────
 # Pulls per-variant SuSiE PIPs from combined_finemapping_1kg.csv (canonical
 # post-2026-04-23 for non-UKBB; UKBB EUR studies use PolyFun and don't appear
 # in this aggregate). Tries UKBB_<TRAIT> + BBJ_<TRAIT> for liver-enzyme
 # panels; otherwise uses TRAIT_PAIR directly as study name.
 fm_studies <- if (TRAIT_PAIR %in% c("ALT","AST","GGT")) {
-  c(paste0("UKBB_", TRAIT_PAIR), paste0("BBJ_", TRAIT_PAIR))
+  c(paste0("UKBB_", TRAIT_PAIR), paste0("BBJ_", TRAIT_PAIR),
+    paste0("PanUKBB_CSA_", TRAIT_PAIR))   # + SAS (South Asian) for 3-ancestry PIP track
 } else {
   TRAIT_PAIR
 }
@@ -180,6 +207,24 @@ if (!is.null(eas_ld)) {
   cat("  No EAS LD blocks file found; EAS panel will render without LD coloring.\n")
 }
 
+# SAS LD (1kg_sas panel; mirrors EAS) ─────────────────────────────────────────
+if (has_sas) {
+  cat("Loading SAS LD matrix and computing r² to SAS lead...\n")
+  sas_ld <- if (!is.na(SAS_LD_BLOCKS) && file.exists(SAS_LD_BLOCKS)) {
+              load_ld_for_window(SAS_LD_BASE, SAS_LD_BLOCKS)
+            } else NULL
+  if (!is.null(sas_ld)) {
+    sas_r2 <- r2_to_lead(sas_ld, SAS_LEAD_POS)
+    sas_locus <- merge(sas_locus, sas_r2, by = "position", all.x = TRUE)
+    sas_locus[is.na(r2), r2 := 0]
+    cat(sprintf("  LD merged: %d SAS variants matched to SAS LD panel (out of %d)\n",
+                sum(!is.na(sas_locus$r2)), nrow(sas_locus)))
+  } else {
+    sas_locus[, r2 := 0]
+    cat("  No SAS LD blocks file found; SAS panel will render without LD coloring.\n")
+  }
+}
+
 # ── Inline UKBB EUR SuSiE (only if no UKBB study had chr-level data) ───────
 ukbb_present <- any(grepl("^UKBB", unique(pips$study)))
 if (!ukbb_present && requireNamespace("susieR", quietly = TRUE)) {
@@ -230,6 +275,40 @@ if (!ukbb_present && requireNamespace("susieR", quietly = TRUE)) {
       } else cat("  Inline SuSiE did not converge.\n")
     } else cat("  z-score length / LD dim mismatch — skipping.\n")
   } else cat("  Too few shared variants for inline SuSiE.\n")
+}
+
+# ── Inline SAS SuSiE (PanUKBB CSA absent from the combined_1kg aggregate at most
+#    loci, but the SAS sumstats + 1kg_sas LD are already loaded — so fine-map
+#    inline, exactly as for UKBB EUR above, to populate the SAS PIP lollipops) ──
+sas_in_pips <- any(grepl("^PanUKBB_CSA", unique(pips$study)))
+if (has_sas && !sas_in_pips && exists("sas_ld") && !is.null(sas_ld) &&
+    requireNamespace("susieR", quietly = TRUE)) {
+  cat("  Running inline SuSiE on SAS (PanUKBB CSA) sumstats...\n")
+  sas_shared <- intersect(sas_locus$position, as.integer(rownames(sas_ld$mat)))
+  if (length(sas_shared) >= 30) {
+    sas_sub <- sas_locus[position %in% sas_shared][order(position)]
+    pos_chr <- as.character(sas_sub$position)
+    ld_sub  <- sas_ld$mat[pos_chr, pos_chr]
+    z <- if (all(c("beta","se") %in% names(sas_sub))) sas_sub$beta / sas_sub$se else NULL
+    if (!is.null(z) && length(z) == nrow(ld_sub)) {
+      fit <- tryCatch(
+        susieR::susie_rss(z = z, R = ld_sub, L = 1, coverage = 0.95,
+                          n = 8876, max_iter = 500, refine = FALSE),  # PanUKBB CSA N
+        error = function(e) { cat("  SAS susie_rss failed:", e$message, "\n"); NULL })
+      if (!is.null(fit) && (isTRUE(fit$converged) || max(fit$pip) >= 0.3)) {
+        cs_idx <- integer(length(fit$pip))
+        if (length(fit$sets$cs))
+          for (k in seq_along(fit$sets$cs)) cs_idx[fit$sets$cs[[k]]] <- k
+        sas_pips <- data.table(
+          study     = "PanUKBB_CSA (inline)", chromosome = CHR,
+          position  = sas_sub$position, susie_pip = fit$pip,
+          susie_cs  = cs_idx, susie_converged = TRUE)[susie_pip > 0]
+        pips <- rbind(pips, sas_pips, fill = TRUE)
+        cat(sprintf("  Inline SAS SuSiE: %d variants (max PIP=%.3f)\n",
+                    nrow(sas_pips), max(sas_pips$susie_pip)))
+      } else cat("  SAS inline SuSiE did not converge.\n")
+    } else cat("  SAS z-score / LD dim mismatch — skipping.\n")
+  } else cat("  Too few shared SAS variants for inline SuSiE.\n")
 }
 
 # ── eQTL track data ───────────────────────────────────────────────────────────
@@ -295,7 +374,7 @@ for (d in candidate_dirs) {
   if (!is.na(coloc_top_pos)) break
 }
 
-# ── Atlas: dream_logFC + dream_padj for continuous gene-track coloring ───────
+# ── Atlas: bulk_logFC + bulk_padj for continuous gene-track coloring ───────
 # We color genes by signed bulk dream logFC modulated by significance.
 #   logFC ≥ 0.05 magnitude AND padj < 0.05 → diverging blue↔red gradient
 #                                            (saturated at ±LFC_SAT)
@@ -306,10 +385,10 @@ LFC_SAT  <- 0.8  # saturation point for the color scale (95th-percentile shoulde
 LFC_MIN  <- 0.05 # below this magnitude, treat as essentially no change
 
 gene_atlas <- if (file.exists(ATLAS_FILE)) {
-  fread(ATLAS_FILE, select = c("human_symbol", "dream_logFC", "dream_padj"))
+  fread(ATLAS_FILE, select = c("human_symbol", "bulk_logFC", "bulk_padj"))
 } else data.table(human_symbol = character(),
-                  dream_logFC  = double(),
-                  dream_padj   = double())
+                  bulk_logFC  = double(),
+                  bulk_padj   = double())
 
 # Diverging palette: deep blue (down) → white → deep red (up)
 deg_palette <- colorRampPalette(c("#1565C0", "#90CAF9", "#FFFFFF",
@@ -336,7 +415,9 @@ cat("Output:", out_path, "\n")
 
 # Page geometry (inches)
 PAGE_W <- 7.8
-PAGE_H <- 8.4   # 2026-05-04: LD triangle removed; separate COLOC panel removed
+H_SAS_TRACK <- 1.10                              # SAS Manhattan track height (mirrors EAS)
+SAS_BLOCK   <- if (has_sas) H_SAS_TRACK + 0.18 else 0   # track + the gap above it
+PAGE_H <- 8.4 + SAS_BLOCK   # 2026-06-07: grows when the SAS (3rd-ancestry) track is added
 MARGIN_L <- 0.95   # leaves room for y-axis labels
 MARGIN_R <- 1.35   # leaves room for legends + per-track right-margin labels
 PLOT_X <- MARGIN_L
@@ -700,8 +781,59 @@ if (n_snps >= 2) {
 track_label("LD (EUR r²)", y = y_ld + 0.02)
 }  # end of dropped Track 2.5 block
 
-# Track 3: PIP lollipop (EUR + EAS overlaid) ──────────────────────────────────
-y3 <- y2 + h2 + 0.20; h3 <- 1.30
+# Track 2b: SAS GWAS (PanUKBB CSA), LD-colored to SAS lead — optional 3rd ancestry
+y_sas <- y2 + h2 + 0.18; h_sas <- H_SAS_TRACK
+if (has_sas) {
+  sas_pg <- sas_locus[!is.na(p),
+    .(chrom = paste0("chr", chromosome), pos = position, p = p, r2 = r2)]
+  if (nrow(sas_pg) > 0) {
+    setorder(sas_pg, r2)  # high-LD draws on top
+    sas_pg[, fill_col := ld_pal_vec[pmin(100, pmax(1, ceiling(r2 * 100)))]]
+    sas_pg_df <- as.data.frame(sas_pg)
+    sas_y_max <- ceiling(max(-log10(sas_pg_df$p), na.rm = TRUE)) + 1
+    mh_sas <- plotManhattan(
+      data = sas_pg_df,
+      chrom = paste0("chr", CHR), chromstart = WIN_START, chromend = WIN_END,
+      assembly = "hg19",
+      fill = NA, pch = 19, cex = 0.001,    # invisible — frame only
+      sigVal = 5e-8, sigLine = TRUE, sigCol = "black",
+      range = c(0, sas_y_max),
+      x = PLOT_X, width = PLOT_W,
+      y = y_sas, height = h_sas, default.units = "inches"
+    )
+    mh_sas_pos_to_x <- function(pos) PLOT_X + (pos - WIN_START) / (WIN_END - WIN_START) * PLOT_W
+    mh_sas_p_to_y <- function(p_value) {
+      top    <- PAGE_H - y_sas
+      bottom <- PAGE_H - (y_sas + h_sas)
+      bottom + (-log10(p_value)) / sas_y_max * (top - bottom)
+    }
+    grid.points(
+      x = unit(mh_sas_pos_to_x(sas_pg_df$pos), "inches"),
+      y = unit(mh_sas_p_to_y(sas_pg_df$p),    "inches"),
+      pch = 19, size = unit(0.07, "inches"),
+      gp = gpar(col = sas_pg_df$fill_col)
+    )
+    sas_lead_x <- mh_sas_pos_to_x(SAS_LEAD_POS)
+    sas_lead_p <- sas_pg_df$p[which.min(abs(sas_pg_df$pos - SAS_LEAD_POS))]
+    sas_lead_y <- mh_sas_p_to_y(sas_lead_p)
+    grid.points(
+      x = unit(sas_lead_x, "inches"), y = unit(sas_lead_y, "inches"),
+      pch = 23, size = unit(0.13, "inches"),
+      gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+    )
+    annoYaxis(plot = mh_sas, at = pretty(c(0, max(-log10(sas_pg$p)))), fontsize = 7)
+    draw_axis_spines(y_sas, h_sas)
+  } else {
+    plotText(label = "(no SAS data in window)",
+             x = PLOT_X + PLOT_W/2, y = y_sas + h_sas/2,
+             fontsize = 8, fontcolor = "grey50", default.units = "inches")
+  }
+  axis_label("-log10(p)", y_sas, h_sas)
+  track_label("SAS GWAS", y = y_sas + 0.02)
+}
+
+# Track 3: PIP lollipop (EUR + EAS + SAS overlaid) ─────────────────────────────
+y3 <- (if (has_sas) y_sas + h_sas else y2 + h2) + 0.20; h3 <- 1.30
 # Use grid primitives to draw lollipops on top of the genomic axis. grid is
 # bottom-up while plotgardener is top-down; helpers below convert.
 # Coordinates of the track in inches FROM TOP:
@@ -761,9 +893,11 @@ for (val in c(0, 0.5, 1.0)) {
 # Lollipops per ancestry. UKBB_* = blue (EUR); BBJ_* = orange (EAS); other
 # studies = blue (treat as EUR by default).
 study_color <- function(s) {
+  if (grepl("^PanUKBB_CSA", s)) return("#7B1FA2")  # SAS (South Asian) — purple
   if (grepl("^BBJ_", s))     return("#D55E00")
   if (grepl("^UKBB", s))     return("#1565C0")
   if (grepl("_EAS$", s))     return("#D55E00")
+  if (grepl("_SAS$", s))     return("#7B1FA2")
   if (grepl("EUR.*inline", s)) return("#1565C0")
   "#1565C0"
 }
@@ -797,6 +931,7 @@ pip_legend_y <- y3 + 0.10
 present_studies <- unique(pips$study)
 ukbb_present <- any(grepl("^UKBB", present_studies))
 bbj_present  <- any(grepl("^BBJ_", present_studies))
+sas_present  <- any(grepl("^PanUKBB_CSA", present_studies))
 xc <- pip_legend_x
 if (ukbb_present) {
   grid.points(x = unit(xc, "inches"),
@@ -815,6 +950,15 @@ if (bbj_present) {
            fontsize = 5.5, fontcolor = "grey25",
            just = c("left", "center"), default.units = "inches")
   xc <- xc + 0.92
+}
+if (sas_present) {
+  grid.points(x = unit(xc, "inches"),
+              y = unit(top_to_grid(pip_legend_y), "inches"),
+              pch = 19, size = unit(0.07, "inches"), gp = gpar(col = "#7B1FA2"))
+  plotText(label = "PanUKBB SAS (in CS)", x = xc + 0.06, y = pip_legend_y,
+           fontsize = 5.5, fontcolor = "grey25",
+           just = c("left", "center"), default.units = "inches")
+  xc <- xc + 1.05
 }
 grid.points(x = unit(xc, "inches"),
             y = unit(top_to_grid(pip_legend_y), "inches"),
@@ -886,12 +1030,12 @@ gene_symbols <- suppressMessages(
 )
 gene_symbols <- unique(gene_symbols[!is.na(gene_symbols)])
 
-# Map each gene → continuous color via dream_logFC + dream_padj.
+# Map each gene → continuous color via bulk_logFC + bulk_padj.
 gene_colors <- setNames(character(length(gene_symbols)), gene_symbols)
 for (g in gene_symbols) {
   hit <- gene_atlas[human_symbol == g][1]
-  gene_colors[g] <- if (nrow(hit) && !is.na(hit$dream_logFC)) {
-    lfc_to_color(hit$dream_logFC, hit$dream_padj)
+  gene_colors[g] <- if (nrow(hit) && !is.na(hit$bulk_logFC)) {
+    lfc_to_color(hit$bulk_logFC, hit$bulk_padj)
   } else "#BDBDBD"
 }
 gene_hl <- data.frame(gene  = names(gene_colors),

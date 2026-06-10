@@ -348,7 +348,7 @@ if (nrow(ct_coloc) > 0) {
 me <- load_multi_evidence()
 
 if (!is.null(me) && nrow(me) > 0) {
-  dream_degs <- me[dream_padj < 0.1 & abs(dream_logFC) > 0.5, human_symbol]
+  dream_degs <- me[bulk_padj < 0.1 & abs(bulk_logFC) > 0.5, human_symbol]
 
   # --- COLOC (Broadaway): union across 4 GWAS ---
   coloc_cols <- c("ukbb_alt_coloc_pp4", "ast_coloc_pp4",
@@ -598,14 +598,14 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
 
 # ==========================================================================
 # Panel (f): Multi-ancestry COLOC summary
-#   Bars for PP.H4 > 0.8; cross-ancestry overlap
+#   Bars for PP.H4 > 0.5; cross-ancestry overlap
 #   BBJ = East Asian; PanUKBB = AFR/CSA; Broadaway = primary European
 # ==========================================================================
 ancestry_sources <- list()
 
 # BBJ liver enzyme COLOC (East Asian x Broadaway eQTLs)
 bbj_dirs <- c("BBJ ALT" = "bbj_alt", "BBJ AST" = "bbj_ast", "BBJ GGT" = "bbj_ggt")
-bbj_genes_08 <- list()
+bbj_genes_05 <- list()
 for (gwas_label in names(bbj_dirs)) {
   f <- file.path(CAUSAL, bbj_dirs[[gwas_label]], "coloc_results.csv")
   if (file.exists(f)) {
@@ -616,18 +616,18 @@ for (gwas_label in names(bbj_dirs)) {
         gwas = gwas_label,
         ancestry = "East Asian (BBJ)",
         n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.8, na.rm = TRUE)
+        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
       )
-      bbj_genes_08[[gwas_label]] <- tmp[PP.H4 > 0.8, unique(symbol)]
+      bbj_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
     }
   }
 }
 
-# RESTORED 2026-04-09: FinnGen COLOC restored (FinnGen_NAFLD, FinnGen_NASH, FinnGen_HCC verified R12)
+# RESTORED 2026-04-09: FinnGen COLOC (FinnGen_NAFLD, FinnGen_NASH verified R12)
+# FinnGen_HCC dropped 2026-06-06 (cirrhosis/HCC GWAS removed from canonical portfolio)
 finngen_dirs <- c("FinnGen NAFLD" = "finngen_nafld",
-                  "FinnGen NASH"  = "finngen_nash",
-                  "FinnGen HCC"   = "finngen_hcc")
-finngen_genes_08 <- list()
+                  "FinnGen NASH"  = "finngen_nash")
+finngen_genes_05 <- list()
 for (gwas_label in names(finngen_dirs)) {
   f <- file.path(CAUSAL, finngen_dirs[[gwas_label]], "coloc_results.csv")
   if (file.exists(f)) {
@@ -638,9 +638,9 @@ for (gwas_label in names(finngen_dirs)) {
         gwas = gwas_label,
         ancestry = "European (FinnGen)",
         n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.8, na.rm = TRUE)
+        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
       )
-      finngen_genes_08[[gwas_label]] <- tmp[PP.H4 > 0.8, unique(symbol)]
+      finngen_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
     }
   }
 }
@@ -659,7 +659,7 @@ for (gwas_label in names(panukbb_afr_dirs)) {
         gwas = gwas_label,
         ancestry = "African (PanUKBB)",
         n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.8, na.rm = TRUE)
+        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
       )
     }
   }
@@ -679,7 +679,7 @@ for (gwas_label in names(panukbb_csa_dirs)) {
         gwas = gwas_label,
         ancestry = "C/S Asian (PanUKBB)",
         n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.8, na.rm = TRUE)
+        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
       )
     }
   }
@@ -690,7 +690,7 @@ broadaway_eu_dirs <- c("UKBB ALT" = "broadaway_ukbb",
                        "UKBB AST" = "broadaway_ukbb_ast",
                        "UKBB GGT" = "broadaway_ukbb_ggt",
                        "PDFF"     = "broadaway_pdff")
-eu_genes_08 <- list()
+eu_genes_05 <- list()
 for (gwas_label in names(broadaway_eu_dirs)) {
   f <- file.path(CAUSAL, broadaway_eu_dirs[[gwas_label]], "coloc_results.csv")
   if (file.exists(f)) {
@@ -701,9 +701,9 @@ for (gwas_label in names(broadaway_eu_dirs)) {
         gwas = gwas_label,
         ancestry = "European (UKBB)",
         n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.8, na.rm = TRUE)
+        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
       )
-      eu_genes_08[[gwas_label]] <- tmp[PP.H4 > 0.8, unique(symbol)]
+      eu_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
     }
   }
 }
@@ -711,9 +711,9 @@ for (gwas_label in names(broadaway_eu_dirs)) {
 if (length(ancestry_sources) > 0) {
   anc_dt <- rbindlist(ancestry_sources)
 
-  # Cross-ancestry overlap: genes in BOTH European AND East Asian at PP.H4 > 0.8
-  eu_all <- unique(unlist(eu_genes_08))
-  bbj_all <- unique(unlist(bbj_genes_08))
+  # Cross-ancestry overlap: genes in BOTH European AND East Asian at PP.H4 > 0.5
+  eu_all <- unique(unlist(eu_genes_05))
+  bbj_all <- unique(unlist(bbj_genes_05))
   cross_ancestry_overlap <- intersect(eu_all, bbj_all)
   n_cross_ancestry <- length(cross_ancestry_overlap)
 
@@ -762,7 +762,7 @@ if (length(ancestry_sources) > 0) {
     scale_fill_manual(values = ancestry_fill, name = NULL,
                       guide = guide_legend(nrow = 2)) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-    labs(x = "Genes (PP.H4 > 0.8)",
+    labs(x = "Genes (PP.H4 > 0.5)",
          y = NULL,
          title = "Multi-ancestry COLOC (Broadaway eQTLs)") +
     theme_masld() +
@@ -941,23 +941,19 @@ row2 <- p_c + p_d + plot_layout(widths = c(0.9, 1.1))
 row3 <- p_e + p_f + plot_layout(widths = c(1, 1))
 row4 <- p_g + p_h + p_i + plot_layout(widths = c(1, 0.8, 0.8))
 
-fig3 <- (row1 / row2 / row3 / row4) +
-  plot_layout(heights = c(1.2, 1.2, 1, 1.2)) +
-  plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+# Composite figure-3 assembly removed 2026-06-07 — panels are delivered as
+# individual, descriptively-named PDFs and arranged manually in Illustrator
+# (no fig3 prefix, no composite).
 
-save_fig_tall(fig3, OUT, height = 14)
-
-# Save individual panels
+# Save individual panels with clear descriptive names (no fig3 prefix)
 panel_dir <- file.path(FIG3_DIR, "panels")
-save_fig(p_a, file.path(panel_dir, "fig3a_coloc_manhattan.pdf"), height = 3.5)
-save_fig(p_b, file.path(panel_dir, "fig3b_coloc_heatmap.pdf"), height = 3.5)
-save_fig(p_c, file.path(panel_dir, "fig3c_sceqtl_dotplot.pdf"), width = fig_half_width, height = 3.5)
-save_fig(p_d, file.path(panel_dir, "fig3d_causal_coverage.pdf"), height = 3.5)
-save_fig(p_e, file.path(panel_dir, "fig3e_ieqtl_concordance.pdf"), height = 3.5)
-save_fig(p_f, file.path(panel_dir, "fig3f_multiancestry.pdf"), width = fig_half_width, height = 2.8)
-save_fig(p_g, file.path(panel_dir, "fig3g_twas_concordance.pdf"), height = 3.5)
-# Panel h (MR forest) removed 2026-04-22 — MR ditched from paper.
-save_fig(p_i, file.path(panel_dir, "fig3i_sctwas_dotplot.pdf"), width = fig_half_width, height = 3.5)
+save_fig(p_a, file.path(panel_dir, "coloc_manhattan.pdf"), height = 3.5)
+save_fig(p_b, file.path(panel_dir, "coloc_gene_gwas_heatmap.pdf"), height = 3.5)
+save_fig(p_c, file.path(panel_dir, "sceqtl_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
+save_fig(p_d, file.path(panel_dir, "causal_coverage.pdf"), height = 3.5)
+save_fig(p_e, file.path(panel_dir, "ieqtl_concordance.pdf"), height = 3.5)
+save_fig(p_f, file.path(panel_dir, "multiancestry_coloc.pdf"), width = fig_half_width, height = 2.8)
+save_fig(p_g, file.path(panel_dir, "twas_concordance.pdf"), height = 3.5)
+save_fig(p_i, file.path(panel_dir, "sctwas_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
 
-message("Fig 3 saved to ", OUT)
+message("COLOC/regulatory panels saved to ", panel_dir)

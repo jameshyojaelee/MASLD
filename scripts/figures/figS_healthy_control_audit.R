@@ -13,7 +13,7 @@
 #   (g) Olink progression-metric Z boxplot
 #   (h) Genetic anchor: 3-gene expression + TWAS concordance
 #
-# Outputs PDF panels into figures/supplementary/figS_healthy_control_audit/.
+# Outputs PDF panels into figures/supplementary/figS_methods_validation/healthy_control_audit/.
 #
 # Spec: docs/superpowers/specs/2026-04-27-healthy-control-audit-design.md
 # Env: rnaseq

@@ -5,7 +5,7 @@
 # across the 4 canonical contrasts: Disease-vs-Control (legacy), MASH-vs-MASL,
 # MASH-vs-Healthy, MASL-vs-Healthy. Strict MASH definition, PRJNA512027 excluded.
 #
-# Output: figures/supplementary/figS_lfc_sensitivity/panels/contrast_tier1_summary.pdf
+# Output: figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/contrast_tier1_summary.pdf
 
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(scales)
@@ -18,7 +18,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 DSIG   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures")
 INTRES <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-OUT_DIR <- file.path(FIG_SUPP, "figS_lfc_sensitivity/panels")
+OUT_DIR <- file.path(FIGS_LFCSENS_DIR, "panels")  # consolidated under figS_methods_validation/ (2026-06-04)
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 PADJ_CUT <- 0.05

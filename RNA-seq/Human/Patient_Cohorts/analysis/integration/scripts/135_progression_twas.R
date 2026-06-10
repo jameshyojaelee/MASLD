@@ -66,7 +66,7 @@ dir.create(RESULTS_DIR, recursive = TRUE, showWarnings = FALSE)
 
 GWAS_DIR     <- file.path(BASE_DIR, "GWAS/MR_Data")
 CAUSAL_DIR   <- file.path(BASE_DIR, "RNA-seq/results/causal_inference")
-METAXCAN_DIR <- file.path(BASE_DIR, "MetaXcan/software")
+METAXCAN_DIR <- file.path(BASE_DIR, "tools/MetaXcan/software")
 SPREDIXCAN   <- file.path(METAXCAN_DIR, "SPrediXcan.py")
 
 # PredictDB elastic net model (same as Script 19)

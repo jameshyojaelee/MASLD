@@ -14,7 +14,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 AUDIT   <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
-OUT_DIR <- file.path(FIG_SUPP, "robustness")
+OUT_DIR <- file.path(FIG_SUPP, "figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "figS_robust_perm_null.pdf")
 

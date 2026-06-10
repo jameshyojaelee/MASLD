@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 
 BASE     <- Sys.getenv("MASLD_PROJECT_ROOT",
                        "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-SUPP_DIR <- file.path(BASE, "figures_STAR/supplementary/stage_ccc")
+SUPP_DIR <- file.path(BASE, "figures/supplementary/stage_ccc")
 
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 

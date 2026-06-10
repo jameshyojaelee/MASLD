@@ -51,7 +51,7 @@ if (file.exists(ukbb_alt_f) && file.exists(bbj_alt_f)) {
   # Load dream for DEG status
   me <- load_multi_evidence()
   if (!is.null(me)) {
-    deg_genes <- me[is_dream_deg(me) & abs(dream_logFC) > 0.5, human_symbol]
+    deg_genes <- me[is_dream_deg(me) & abs(bulk_logFC) > 0.5, human_symbol]
     cross[, is_deg := symbol %in% deg_genes]
   } else {
     cross[, is_deg := FALSE]

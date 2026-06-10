@@ -62,7 +62,9 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   hep_de <- fread(hep_de_file)
   hep_de <- add_symbols(hep_de, "gene")
 
-  dream_merge_cols <- intersect(c("symbol", "dream_logFC", "dream_padj"), names(dream))
+  # Keep lfsr + shrunk_logFC so is_dream_deg() can apply the canonical ashr gate.
+  dream_merge_cols <- intersect(c("symbol", "dream_logFC", "dream_padj",
+                                  "dream_shrunk_logFC", "dream_lfsr"), names(dream))
   merged <- merge(
     dream[, ..dream_merge_cols],
     hep_de[, .(symbol, hep_logFC = logFC, hep_padj = padj)],
@@ -145,6 +147,8 @@ if (length(de_files) > 0 && !is.null(dream)) {
     ct <- gsub("_de\\.csv$", "", basename(f))
     ct_clean <- gsub("_", " ", ct)
     dt <- fread(f)
+    # Skip the all-cell pseudobulk matrix (wide, no per-celltype logFC/padj pair).
+    if (!all(c("logFC", "padj") %in% names(dt))) return(NULL)
     dt <- add_symbols(dt, "gene")
     ct_degs <- dt[padj < 0.05, symbol]
     n_ct <- length(ct_degs)
@@ -189,8 +193,12 @@ if (length(de_files) > 0 && !is.null(dream)) {
     ct <- gsub("_de\\.csv$", "", basename(f))
     ct_clean <- gsub("_", " ", ct)
     dt <- fread(f)
+    # Skip non-per-celltype DE tables that lack standard logFC/padj columns
+    # (e.g. allcell_pseudobulk_de.csv uses `lfc` + a wide cell-type matrix).
+    if (!all(c("logFC", "padj") %in% names(dt))) return(NULL)
     dt <- add_symbols(dt, "gene")
-    dream_cols <- intersect(c("symbol", "dream_logFC", "dream_padj"), names(dream))
+    dream_cols <- intersect(c("symbol", "dream_logFC", "dream_padj",
+                              "dream_shrunk_logFC", "dream_lfsr"), names(dream))
     m <- merge(dt[, .(symbol, ct_logFC = logFC, ct_padj = padj)],
                dream[, ..dream_cols],
                by = "symbol")

@@ -4,14 +4,14 @@
 #                                     2026-04-29 layout cascade)
 # Figure 3 | Multi-ancestry regulatory architecture
 #   Panels (binding: docs/manuscript/FIGURE_PLAN_REVISED.md §Figure 3):
-#     3a  Twin Manhattan: max PIP (22 validated GWAS, top) + SuSiE-COLOC PP.H4
-#           (22 validated GWAS, bottom). The full SuSiE-COLOC portfolio is 28
-#           (17 EUR + 5 EAS + 3 AFR + 3 SAS Pan-UKBB); 22 validated shown here
-#           (17 EUR + 5 BBJ EAS). AFR/SAS Pan-UKBB are exploratory (see figS09).
+#     3a  Twin Manhattan: max PIP (20 validated GWAS, top) + SuSiE-COLOC PP.H4
+#           (20 validated GWAS, bottom). The full SuSiE-COLOC portfolio is 23
+#           (14 EUR + 3 EAS + 3 AFR + 3 SAS Pan-UKBB); 20 validated shown here
+#           (14 EUR + 3 BBJ EAS). AFR/SAS Pan-UKBB are exploratory (see figS09).
 #           Canonical counts (2026-04-21 rebuild, gene_level_coloc.csv):
-#             SuSiE PP.H4.susie > 0.5: 364 (280 > 0.8, 213 > 0.9)
-#             ABF fallback > 0.5: 585 (255 > 0.8, 167 > 0.9)
-#     3b  Per-ancestry COLOC eGene counts (28-GWAS portfolio): grouped bars
+#             SuSiE PP.H4.susie > 0.5: 368 (289 > 0.8, 210 > 0.9)
+#             ABF fallback > 0.5: 618 (282 > 0.8, 186 > 0.9)
+#     3b  Per-ancestry COLOC eGene counts (23-GWAS portfolio): grouped bars
 #           at PP.H4>0.5/0.8/0.9, prefer SuSiE then ABF fallback per gene.
 #           Source: GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv
 #     3c  RORA / GGT chr15:60883281 cross-ancestry locus LD-zoom (external panel
@@ -20,12 +20,12 @@
 #     3d  GWAS-ATAC PIP vs |alleleDiff| scatter, SCENIC+ disease-regulon TFs
 #           highlighted (was 3c pre-2026-04-29).
 #     3e  High-PIP (>=0.8) variant × TF heatmap (was 3d pre-2026-04-29).
-#     3f  Drug-target genetic validation scatter: dream_logFC vs best SuSiE PP4
-#           across 28 GWAS; 8 clinical anchors + 11 novel druggable genes labelled.
+#     3f  Drug-target genetic validation scatter: bulk_logFC vs best SuSiE PP4
+#           across 23 GWAS; 8 clinical anchors + 11 novel druggable genes labelled.
 #           (Was 3e pre-2026-04-29.)
 #
 #   Demoted to figS_therapeutics 2026-04-29 (was 3f):
-#     drug-target finemapping scatter (dream_logFC vs SuSiE-X max PIP)
+#     drug-target finemapping scatter (bulk_logFC vs SuSiE-X max PIP)
 #     -> figures/supplementary/figS_therapeutics/panels/fig3_drug_finemapping_demoted.pdf
 #
 #   Outputs: figures/main/fig3_regulatory_architecture/panels/fig3{a,b,d,e,f}.pdf
@@ -60,33 +60,33 @@ save_panel <- function(p, name, width = fig_half_width, height = 3.2) {
 }
 
 # ---------------------------------------------------------------------------
-# GWAS classification (22 VALIDATED target GWAS: 17 EUR + 5 BBJ EAS).
-#   The full SuSiE-COLOC portfolio as of 2026-04-21 is 28 GWAS:
-#     17 EUR  (UKBB ALT/AST/GGT, 6 NAFLD cohorts, 3 PDFF, Ghouse cirrhosis/HCC,
-#               3 FinnGen R12), fine-mapped against UKBB EUR LD (N = 337K)
-#     5  EAS  (BBJ ALT/AST/GGT + 2 Ishigaki 2020 disease), 1000 Genomes EAS LD
+# GWAS classification (20 VALIDATED target GWAS: 14 EUR + 3 BBJ EAS).
+#   The full SuSiE-COLOC portfolio as of 2026-04-21 is 23 GWAS:
+#     14 EUR  (UKBB ALT/AST/GGT, 6 NAFLD cohorts, 3 PDFF, 2 FinnGen R12
+#               NAFLD/NASH), fine-mapped against UKBB EUR LD (N = 337K)
+#     3  EAS  (BBJ ALT/AST/GGT), 1000 Genomes EAS LD
 #     3  AFR  (Pan-UKBB ALT/AST/GGT N ≈ 6.6K), 1000 Genomes AFR LD
 #     3  SAS  (Pan-UKBB CSA ALT/AST/GGT N ≈ 8.9K), 1000 Genomes SAS LD
-#   The main Fig 3 shows the 22 validated subset; AFR/SAS exploratory go to figS09.
-#   EUR_17 contains the 3 FinnGen R12 studies. The 32514122_*_EAS naming is
+#   The main Fig 3 shows the 20 validated subset; AFR/SAS exploratory go to figS09.
+#   EUR_14 contains the 2 FinnGen R12 studies. The 32514122_*_EAS naming is
 #   historical; these ARE BBJ data. No Korean GWAS are publicly available.
+#   (2026-06-07 portfolio refactor: dropped all cirrhosis/HCC GWAS +
+#    PanUKBB sex-stratified EUR duplicates; 34 -> 23 studies.)
 # ---------------------------------------------------------------------------
 EUR_17 <- c(
   "2019_31311600_NAFLD_EUR", "2020_32298765_NAFLD_EUR",
   "2021_34128465_PDFF_EUR",  "2021_34841290_NAFLD_EUR",
   "2021_34957434_PDFF_EUR",  "2022_36402844_PDFF_EUR",
   "2023_36280732_NAFLD_deCode_EUR", "2023_36280732_NAFLD_Intermountain_EUR",
-  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_HCC", "FinnGen_NAFLD", "FinnGen_NASH",
-  "Ghouse_Cirrhosis", "Ghouse_HCC", "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
+  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_NAFLD", "FinnGen_NASH",
+  "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
 )
-FINNGEN_3       <- c("FinnGen_HCC", "FinnGen_NAFLD", "FinnGen_NASH")
-BBJ_DISEASE_2   <- c("2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS")
+FINNGEN_3       <- c("FinnGen_NAFLD", "FinnGen_NASH")
 BBJ_ENZYME_3    <- c("BBJ_ALT", "BBJ_AST", "BBJ_GGT")
-BBJ_5           <- c(BBJ_DISEASE_2, BBJ_ENZYME_3)
+BBJ_5           <- BBJ_ENZYME_3
 
 gwas_category <- function(study) {
   fcase(
-    study %in% BBJ_DISEASE_2, "BBJ disease (EAS)",
     study %in% BBJ_ENZYME_3,  "BBJ liver enzyme (EAS)",
     study %in% FINNGEN_3, "FinnGen R12",
     grepl("NAFLD|NASH|Cirrhosis|HCC", study), "EUR disease",
@@ -101,7 +101,6 @@ cat_colors <- c(
   "EUR liver enzyme"         = "#880E4F",
   "EUR PDFF"                 = "#7B1FA2",
   "FinnGen R12"              = "#1565C0",
-  "BBJ disease (EAS)"        = "#00796B",
   "BBJ liver enzyme (EAS)"   = "#F4511E"
 )
 
@@ -115,9 +114,11 @@ cat("[fig3] Panel 3a: Locus-PIP Manhattan ...\n")
 fmap <- fread(file.path(BASE,
   "GWAS/finemapping/results/combined_finemapping.csv"))
 fmap[, gwas_cat := gwas_category(study)]
-# Restrict to 22 target studies: 17 EUR (incl. 3 FinnGen) + 5 BBJ EAS (all Japanese)
+# Restrict to 20 target studies: 14 EUR (incl. 2 FinnGen) + 3 BBJ EAS (all Japanese)
 target_22 <- c(EUR_17, BBJ_5)
-stopifnot(length(target_22) == 22L)
+# 23-GWAS COLOC refactor (2026-06-06) dropped cirrhosis/HCC GWAS; the displayed
+# fine-mapping panel is the 17 MASLD/enzyme/PDFF studies: 14 EUR (incl. 2 FinnGen) + 3 BBJ EAS.
+stopifnot(length(target_22) == 17L)
 fmap <- fmap[study %in% target_22]
 # Top variant per study × locus
 top_loci <- fmap[, .SD[which.max(max_pip)], by = .(study, locus, chromosome)]
@@ -232,8 +233,8 @@ p3a_top <- ggplot(top_loci, aes(x = x_cum, y = max_pip, color = gwas_cat)) +
     fill = "white"
   ) +
   common_x +
-  labs(y = "Max fine-map PIP (22 ancestry-matched GWAS)",
-       title = "Cross-ancestry fine-mapping + COLOC (17 EUR + 5 EAS SuSiE-COLOC; 6 Pan-UKBB ABF-only)") +
+  labs(y = "Max fine-map PIP (20 ancestry-matched GWAS)",
+       title = "Cross-ancestry fine-mapping + COLOC (14 EUR + 3 EAS SuSiE-COLOC; 6 Pan-UKBB ABF-only)") +
   theme(axis.title.x = element_blank(),
         axis.text.x  = element_blank(),
         axis.ticks.x = element_blank())
@@ -255,7 +256,7 @@ p3a_bot <- ggplot(top_h4, aes(x = x_cum, y = PP.H4.abf, color = gwas_cat)) +
     fill = "white"
   ) +
   common_x +
-  labs(x = "Chromosome", y = "Max COLOC PP.H4 (22 ancestry-matched GWAS)") +
+  labs(x = "Chromosome", y = "Max COLOC PP.H4 (20 ancestry-matched GWAS)") +
   theme(axis.text.x = element_text(size = 5),
         legend.position = "none")
 
@@ -267,7 +268,7 @@ save_panel(p3a, "fig3a.pdf", width = fig_full_width, height = 5.2)
 
 # ===========================================================================
 # Panel 3b: Per-ancestry COLOC eGene counts at PP.H4 > 0.5 / 0.8 / 0.9
-#   28-GWAS portfolio split: 17 EUR + 5 EAS + 3 AFR + 3 SAS.
+#   23-GWAS portfolio split: 14 EUR + 3 EAS + 3 AFR + 3 SAS.
 #   Per gene per ancestry: take best-available PP4 (prefer SuSiE, fall back to
 #   ABF when SuSiE did not converge). Bars grouped by ancestry × threshold.
 #   Sidecar CSV preserves caption-ready counts.
@@ -303,7 +304,7 @@ per_gene_anc <- sc[!is.na(pp4_best),
 
 thresholds <- c(0.5, 0.8, 0.9)
 ancestry_levels <- c("EUR", "EAS", "AFR", "SAS")
-ancestry_n_gwas <- c(EUR = 17L, EAS = 5L, AFR = 3L, SAS = 3L)
+ancestry_n_gwas <- c(EUR = 14L, EAS = 3L, AFR = 3L, SAS = 3L)
 
 bar_dt <- rbindlist(lapply(thresholds, function(thr) {
   per_gene_anc[, .(n_genes = sum(max_pp4 > thr)),
@@ -362,7 +363,7 @@ per_gene_eur_abf <- sc_eur[!is.na(PP.H4.abf),
                            by = gene][max_pp4 > 0.1]
 fwrite(data.table(threshold = thresholds,
                   n_genes   = sapply(thresholds, function(t) sum(per_gene_eur_abf$max_pp4 > t)),
-                  n_gwas    = 17L,
+                  n_gwas    = 14L,
                   ancestry  = "EUR",
                   method    = "ABF",
                   note      = "EUR-only ABF subset for legacy caption; full per-ancestry counts in fig3b_ancestry_coloc_counts.csv"),
@@ -679,7 +680,7 @@ save_panel(p3d, "fig3e_tf_heatmap.pdf", width = 5.6, height = 3.0)
 #
 #   Two-dimensional narrative panel (transcription x genetics) over a
 #   19-gene universe: 8 clinical anchors + 11 novel druggable genes with
-#   SuSiE PP4 >= 0.5 across the 28-GWAS portfolio.
+#   SuSiE PP4 >= 0.5 across the 23-GWAS portfolio.
 #     - Failed PPARs + GLP1R + SCD cluster at PP4 ~ 0 (no genetic support)
 #     - THRB (FDA) = sole genetically supported approved target
 #     - 11 novels (HKDC1, GAS6, PKN3, CTSD, F2RL1, ST14, ALDH1B1, PKM,
@@ -752,7 +753,7 @@ masld_associated_genes <- unique(c(govaere_25, govaere_fibrosis,
 
 atlas_lite <- fread(
   file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
-  select = c("human_symbol", "dream_logFC", "dream_padj",
+  select = c("human_symbol", "bulk_logFC", "bulk_padj",
              "coloc_susie_best_pp4", "susiex_max_pip"))
 setnames(atlas_lite, "human_symbol", "gene")
 
@@ -768,8 +769,8 @@ setnames(bayev_lite, "tier", "tier_46d")
 # across the PP4 range without crowding at the top.
 atlas_anchor_genes <- atlas_lite[
   !is.na(coloc_susie_best_pp4) & coloc_susie_best_pp4 >= 0.5 &
-  !is.na(dream_padj) & dream_padj < 0.05 &
-  !is.na(dream_logFC) & abs(dream_logFC) > 0.3, gene]
+  !is.na(bulk_padj) & bulk_padj < 0.05 &
+  !is.na(bulk_logFC) & abs(bulk_logFC) > 0.3, gene]
 all_anchors <- unique(c(drug_target_genes, landmark_masld_genes,
                         atlas_anchor_genes))
 
@@ -777,12 +778,12 @@ gene_tbl <- atlas_lite[gene %in% all_anchors]
 gene_tbl <- merge(gene_tbl, bayev_lite, by = "gene", all.x = TRUE)
 gene_tbl[, coloc_pp4 := coloc_susie_best_pp4]
 gene_tbl[is.na(coloc_pp4),   coloc_pp4   := 0]
-gene_tbl[is.na(dream_logFC), dream_logFC := 0]
+gene_tbl[is.na(bulk_logFC), bulk_logFC := 0]
 
 # Background: all atlas DEGs (FDR<0.05) shown as light-gray points so the
 # anchors are read against the global cloud, not in isolation.
-atlas_bg <- atlas_lite[!is.na(dream_logFC) & !is.na(dream_padj) &
-                       dream_padj < 0.05]
+atlas_bg <- atlas_lite[!is.na(bulk_logFC) & !is.na(bulk_padj) &
+                       bulk_padj < 0.05]
 atlas_bg[, coloc_pp4 := coloc_susie_best_pp4]
 atlas_bg[is.na(coloc_pp4), coloc_pp4 := 0]
 atlas_bg <- atlas_bg[!gene %in% gene_tbl$gene]
@@ -807,7 +808,7 @@ gene_tbl[, pp4_band := fcase(
 NOVEL_CAP_PER_BAND <- c(high = 6, mid = 5, low = 5)
 
 novel_pool <- gene_tbl[fig5_group == "Novel"]
-novel_pool[, abs_lfc := abs(dream_logFC)]
+novel_pool[, abs_lfc := abs(bulk_logFC)]
 setorder(novel_pool, -coloc_pp4, -abs_lfc)
 novel_pool[, rank_in_band := seq_len(.N), by = pp4_band]
 novel_keep <- novel_pool[
@@ -828,12 +829,12 @@ tier_colors_3e <- c(
 
 # All anchors get labeled (filter is the entry criterion, not the label gate).
 gene_tbl[, do_label := TRUE]
-gene_tbl[, is_sig := factor(ifelse(!is.na(dream_padj) & dream_padj < 0.05,
+gene_tbl[, is_sig := factor(ifelse(!is.na(bulk_padj) & bulk_padj < 0.05,
                                     "sig", "ns"), levels = c("sig", "ns"))]
 
-p3e <- ggplot(gene_tbl, aes(x = dream_logFC, y = coloc_pp4, color = fig5_group)) +
+p3e <- ggplot(gene_tbl, aes(x = bulk_logFC, y = coloc_pp4, color = fig5_group)) +
   geom_point(data = atlas_bg, inherit.aes = FALSE,
-             aes(x = dream_logFC, y = coloc_pp4),
+             aes(x = bulk_logFC, y = coloc_pp4),
              color = "gray80", size = 0.4, alpha = 0.4, shape = 16) +
   geom_hline(yintercept = c(0.5, 0.9), linetype = "dashed",
              linewidth = 0.25, color = "gray55") +
@@ -880,17 +881,17 @@ gene_meta_pip[, tier := factor(tier,
 gene_tbl_pip <- merge(gene_meta_pip, atlas_lite, by = "gene", all.x = TRUE)
 gene_tbl_pip <- merge(gene_tbl_pip, bayev_lite, by = "gene", all.x = TRUE)
 gene_tbl_pip[is.na(susiex_max_pip), susiex_max_pip := 0]
-gene_tbl_pip[is.na(dream_logFC), dream_logFC := 0]
+gene_tbl_pip[is.na(bulk_logFC), bulk_logFC := 0]
 
 gene_tbl_pip[, fig5_group := classify_gene(gene)]
 gene_tbl_pip[, fig5_group := factor(fig5_group, levels = c(
   "Drug target", "Novel", "MASLD-associated"))]
 
 gene_tbl_pip[, do_label_pip := tier != "Novel" | susiex_max_pip >= 0.5]
-gene_tbl_pip[, is_sig := factor(ifelse(!is.na(dream_padj) & dream_padj < 0.05,
+gene_tbl_pip[, is_sig := factor(ifelse(!is.na(bulk_padj) & bulk_padj < 0.05,
                                         "sig", "ns"), levels = c("sig", "ns"))]
 
-p3f <- ggplot(gene_tbl_pip, aes(x = dream_logFC, y = susiex_max_pip,
+p3f <- ggplot(gene_tbl_pip, aes(x = bulk_logFC, y = susiex_max_pip,
                                 color = fig5_group)) +
   geom_hline(yintercept = c(0.5, 0.9), linetype = "dashed",
              linewidth = 0.25, color = "gray55") +
@@ -911,7 +912,7 @@ p3f <- ggplot(gene_tbl_pip, aes(x = dream_logFC, y = susiex_max_pip,
   annotate("text", x = Inf, y = 0.5, label = "PIP = 0.5 (canonical)",
            hjust = 1.05, vjust = -0.3, size = 1.9, color = "gray45") +
   labs(x = expression("Transcript log"[2]*"FC (MASLD vs control)"),
-       y = "Best SuSiE-X finemapping PIP (across 28 GWAS)",
+       y = "Best SuSiE-X finemapping PIP (across 23 GWAS)",
        title = "Finemapping vs. RNA-seq") +
   theme_masld() +
   theme(legend.position = "bottom",
@@ -922,7 +923,7 @@ p3f <- ggplot(gene_tbl_pip, aes(x = dream_logFC, y = susiex_max_pip,
          shape = guide_legend(nrow = 1))
 
 # Persist panel data for reviewers / caption text
-fwrite(gene_tbl[, .(gene, fig5_group, dream_logFC, dream_padj,
+fwrite(gene_tbl[, .(gene, fig5_group, bulk_logFC, bulk_padj,
                     coloc_pp4)],
        file.path(BASE, "RNA-seq/results/drug_repurposing/fig3f_scatter_data.csv"))
 
@@ -973,8 +974,13 @@ p3a_wrapped <- wrap_elements(full = p3a)
 
 # Inline the external RORA PDF as a raster so the composite includes it.
 rora_pdf <- file.path(PANEL_DIR, "fig3c.pdf")
-if (file.exists(rora_pdf) && requireNamespace("magick", quietly = TRUE)) {
-  rora_img <- magick::image_read_pdf(rora_pdf, density = 300)
+# magick::image_read_pdf needs the pdftools/poppler backend; if it is unavailable
+# (rnaseq env lacks pdftools) fall through to the placeholder rather than abort,
+# since the individual panels are the deliverable and fig3c is rasterised externally.
+rora_img <- if (file.exists(rora_pdf) && requireNamespace("magick", quietly = TRUE)) {
+  tryCatch(magick::image_read_pdf(rora_pdf, density = 300), error = function(e) NULL)
+} else NULL
+if (!is.null(rora_img)) {
   rora_grob <- grid::rasterGrob(rora_img, interpolate = TRUE)
   rora_panel <- wrap_elements(full = rora_grob)
 } else {
@@ -990,7 +996,7 @@ composite <- p3a_wrapped /
              p3e +
   plot_layout(heights = c(1.35, 1.0, 1.0, 1.2)) +
   plot_annotation(
-    title = "Figure 3 | Multi-ancestry regulatory architecture of MASLD (28-GWAS portfolio: 17 EUR + 5 EAS + 3 AFR + 3 SAS)",
+    title = "Figure 3 | Multi-ancestry regulatory architecture of MASLD (23-GWAS portfolio: 14 EUR + 3 EAS + 3 AFR + 3 SAS)",
     tag_levels = list(c("a", "b", "c", "d", "e", "f"))
   ) &
   theme(plot.tag = element_text(size = 9, face = "bold"))

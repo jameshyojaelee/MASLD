@@ -16,9 +16,9 @@
 # it depends on the LINCS re-run that's still queued and will land separately.
 #
 # Outputs:
-#   figures/supplementary/figS_lfc_sensitivity/figS_lfc_sensitivity.pdf
-#   figures/supplementary/figS_lfc_sensitivity/panels/{A..E}.pdf
-#   figures/supplementary/figS_lfc_sensitivity/sensitivity_data.csv
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/figS_lfc_sensitivity.pdf
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/{A..E}.pdf
+#   figures/supplementary/figS_methods_validation/lfc_sensitivity/sensitivity_data.csv
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -33,7 +33,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT_DIR  <- file.path(FIG_SUPP, "figS_lfc_sensitivity")
+OUT_DIR  <- FIGS_LFCSENS_DIR  # consolidated under figS_methods_validation/ (2026-06-04)
 PANEL_DIR <- file.path(OUT_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
@@ -50,8 +50,8 @@ cat(sprintf("  atlas: %d genes x %d cols\n", nrow(atlas), ncol(atlas)))
 
 # Helper: human DEG flag at given LFC
 is_human_deg <- function(dt, lfc) {
-  !is.na(dt$dream_padj) & dt$dream_padj < PADJ &
-    !is.na(dt$dream_logFC) & abs(dt$dream_logFC) > lfc
+  !is.na(dt$bulk_padj) & dt$bulk_padj < PADJ &
+    !is.na(dt$bulk_logFC) & abs(dt$bulk_logFC) > lfc
 }
 
 # Helper: mouse DEG flag (use atlas's mouse_meta_padj/logFC; mouse threshold

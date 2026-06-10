@@ -4,8 +4,8 @@
 #
 # Hybrid replacement for fig3a (the twin Manhattan PIP/PP.H4 panel).
 #
-#   Top strip   : compact Manhattan of locus-level max PIP across the 22 target
-#                 GWAS (17 EUR + 5 BBJ EAS), with alternating chromosome bands.
+#   Top strip   : compact Manhattan of locus-level max PIP across the 20 target
+#                 GWAS (14 EUR + 3 BBJ EAS), with alternating chromosome bands.
 #                 No GWAS color encoding here — this strip exists to convey
 #                 "we surveyed the genome, here are the high-PIP loci".
 #
@@ -40,26 +40,26 @@ PANEL_DIR <- file.path(FIG3_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # ---------------------------------------------------------------------------
-# GWAS portfolio (22 validated)
+# GWAS portfolio (20 validated)
 # ---------------------------------------------------------------------------
 EUR_17 <- c(
   "2019_31311600_NAFLD_EUR", "2020_32298765_NAFLD_EUR",
   "2021_34128465_PDFF_EUR",  "2021_34841290_NAFLD_EUR",
   "2021_34957434_PDFF_EUR",  "2022_36402844_PDFF_EUR",
   "2023_36280732_NAFLD_deCode_EUR", "2023_36280732_NAFLD_Intermountain_EUR",
-  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_HCC", "FinnGen_NAFLD", "FinnGen_NASH",
-  "Ghouse_Cirrhosis", "Ghouse_HCC", "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
+  "2023_36280732_NAFLD_UKBB_EUR", "FinnGen_NAFLD", "FinnGen_NASH",
+  "UKBB_ALT", "UKBB_AST", "UKBB_GGT"
 )
-FINNGEN_3       <- c("FinnGen_HCC", "FinnGen_NAFLD", "FinnGen_NASH")
-BBJ_DISEASE_2   <- c("2020_32514122_Cirrhosis_EAS", "2020_32514122_HCC_EAS")
+FINNGEN_3       <- c("FinnGen_NAFLD", "FinnGen_NASH")
 BBJ_ENZYME_3    <- c("BBJ_ALT", "BBJ_AST", "BBJ_GGT")
-BBJ_5           <- c(BBJ_DISEASE_2, BBJ_ENZYME_3)
+BBJ_5           <- BBJ_ENZYME_3
 TARGET_22       <- c(EUR_17, BBJ_5)
-stopifnot(length(TARGET_22) == 22L)
+# 23-GWAS COLOC refactor (2026-06-06) dropped cirrhosis/HCC GWAS; the displayed
+# fine-mapping panel is the 17 MASLD/enzyme/PDFF studies: 14 EUR (incl. 2 FinnGen) + 3 BBJ EAS.
+stopifnot(length(TARGET_22) == 17L)
 
 gwas_category <- function(study) {
   fcase(
-    study %in% BBJ_DISEASE_2, "BBJ disease (EAS)",
     study %in% BBJ_ENZYME_3,  "BBJ liver enzyme (EAS)",
     study %in% FINNGEN_3,     "FinnGen R12",
     grepl("NAFLD|NASH|Cirrhosis|HCC", study), "EUR disease",

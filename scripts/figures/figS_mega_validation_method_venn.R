@@ -2,7 +2,7 @@
 # figS_mega_validation_method_venn.R
 # Method-overlap panels for the mega_validation bundle.
 #
-# Emits under figures/supplementary/figS_mega_validation/panels/:
+# Emits under figures/supplementary/figS_methods_validation/mega_validation/panels/:
 #   method_venn_padj05.pdf            — 4-set Euler at padj<0.05 (dream + 3 NB/voom)
 #   method_upset_tier1.pdf            — 4-set UpSet at Tier 1 (padj<0.05 & |LFC|>0.5)
 #                                       style matches fig2_panel_nas_stage_upset.pdf
@@ -30,7 +30,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 INT  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration")
 RDIR <- file.path(INT, "results/mega_validation")
 OUT_DIR <- file.path(BASE,
-  "figures/supplementary/figS_mega_validation/panels")
+  "figures/supplementary/figS_methods_validation/mega_validation/panels")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # --- Load per-method results (metafor-HKSJ excluded from comparisons) ---

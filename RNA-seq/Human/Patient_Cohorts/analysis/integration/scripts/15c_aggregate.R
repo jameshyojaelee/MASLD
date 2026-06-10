@@ -19,7 +19,7 @@ INT      <- file.path(BASE, "analysis/integration")
 RDIR     <- file.path(INT, "results/integration")
 OUT_DIR  <- file.path(PROJECT, "RNA-seq/results/audit_sensitivity/power_saturation")
 ITER_DIR <- file.path(OUT_DIR, "iter")
-FIG_DIR  <- file.path(PROJECT, "figures/supplementary/figS_sensitivity")
+FIG_DIR  <- file.path(PROJECT, "figures/supplementary/figS_methods_validation/sensitivity")
 dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
 
 source(file.path(PROJECT, "scripts/figures/publication_theme.R"))

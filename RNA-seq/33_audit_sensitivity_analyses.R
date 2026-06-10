@@ -296,10 +296,15 @@ if (file.exists(concordance_file)) {
     }
 
     if ("human_symbol" %in% names(consensus)) {
-      if (!"dream_padj" %in% names(consensus) && "padj" %in% names(consensus))
-        setnames(consensus, "padj", "dream_padj")
-      if (!"dream_logFC" %in% names(consensus) && "logFC" %in% names(consensus))
-        setnames(consensus, "logFC", "dream_logFC")
+      # Accept C2-canonical (bulk_*), legacy raw (padj/logFC), or dream_* column names.
+      if (!"dream_padj" %in% names(consensus)) {
+        if ("bulk_padj" %in% names(consensus)) setnames(consensus, "bulk_padj", "dream_padj")
+        else if ("padj" %in% names(consensus)) setnames(consensus, "padj", "dream_padj")
+      }
+      if (!"dream_logFC" %in% names(consensus)) {
+        if ("bulk_logFC" %in% names(consensus)) setnames(consensus, "bulk_logFC", "dream_logFC")
+        else if ("logFC" %in% names(consensus)) setnames(consensus, "logFC", "dream_logFC")
+      }
 
       dream_degs <- consensus[!is.na(dream_padj) & dream_padj < 0.1 & abs(dream_logFC) >= 0.58]$human_symbol
 

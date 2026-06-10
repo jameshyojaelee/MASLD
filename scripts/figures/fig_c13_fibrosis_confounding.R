@@ -54,6 +54,19 @@ if (!"padj" %in% names(c13) && "adj.P.Val" %in% names(c13)) {
   c13$padj <- c13$adj.P.Val
 }
 
+# C2 swap (2026-06-08): c13 became limma-voom and dropped its `symbol` column.
+# Inject gene symbols from the unified disease-signature annotation table.
+if (!"symbol" %in% names(c13)) {
+  .anno_sym <- read.csv(file.path(results_dir, "disease_signatures/unified_disease_signatures.csv"),
+                        stringsAsFactors = FALSE)
+  .anno_sym$gene_base <- sub("\\.[0-9]+$", "", .anno_sym$gene)
+  .anno_sym <- .anno_sym[!duplicated(.anno_sym$gene_base), c("gene_base", "symbol")]
+  c13$gene_base <- sub("\\.[0-9]+$", "", c13$gene)
+  c13 <- merge(c13, .anno_sym, by = "gene_base", all.x = TRUE)
+  c13$symbol[is.na(c13$symbol)] <- c13$gene[is.na(c13$symbol)]
+  c13$gene_base <- NULL
+}
+
 # GSEA results
 gsea <- read.csv(file.path(results_dir, "progression/progression_gsea_all.csv"),
                   stringsAsFactors = FALSE)
@@ -66,11 +79,15 @@ cat(sprintf("  C2: %d genes, %d DEGs (padj<0.1)\n", nrow(c2), sum(c2$padj < 0.1,
 cat(sprintf("  C13: %d genes, %d DEGs (padj<0.1)\n", nrow(c13), sum(c13$padj < 0.1, na.rm = TRUE)))
 
 # --- Merge C2 and C13 --------------------------------------------------------
-# Use gene column (Ensembl ID) to merge; symbol from c13 (both have it)
+# C2 swap (2026-06-08): c2 ships versioned Ensembl IDs (ENSG...N) but c13 ships
+# unversioned (ENSG...) — join on the version-stripped base, not the raw `gene`.
+strip_ver <- function(x) sub("\\.[0-9]+$", "", x)
+c2$gene_base  <- strip_ver(c2$gene)
+c13$gene_base <- strip_ver(c13$gene)
 merged <- inner_join(
-  c2 %>% select(gene, logFC_c2 = logFC, padj_c2 = padj),
-  c13 %>% select(gene, logFC_c13 = logFC, padj_c13 = padj, symbol),
-  by = "gene"
+  c2 %>% select(gene_base, gene, logFC_c2 = logFC, padj_c2 = padj),
+  c13 %>% select(gene_base, logFC_c13 = logFC, padj_c13 = padj, symbol),
+  by = "gene_base"
 )
 
 # Classify genes
