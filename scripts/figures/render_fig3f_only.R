@@ -10,7 +10,7 @@ suppressPackageStartupMessages({
 })
 
 BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-PANEL_DIR <- file.path(BASE, "figures/main/fig3_regulatory_architecture/panels")
+PANEL_DIR <- file.path(BASE, "figures/main/fig2_genetics/panels")
 fig_half_width <- 4.5
 
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
@@ -59,9 +59,10 @@ tier_colors_3e <- c(
 # ---- Atlas + PIP merge ----
 atlas_lite <- fread(
   file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
-  select = c("human_symbol", "dream_logFC", "dream_padj",
+  select = c("human_symbol", "bulk_logFC", "bulk_padj",
              "nafl_vs_nash_logFC", "nafl_vs_nash_padj",
              "coloc_susie_best_pp4"))
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas_lite)))
 setnames(atlas_lite, "human_symbol", "gene")
 
 susiex_pip <- fread(
@@ -149,8 +150,8 @@ build_panel <- function(x_col, padj_col, x_label, title, show_y_label = TRUE) {
 }
 
 p_left <- build_panel(
-  x_col       = "dream_logFC",
-  padj_col    = "dream_padj",
+  x_col       = "bulk_logFC",
+  padj_col    = "bulk_padj",
   x_label     = expression("Transcript log"[2]*"FC (MASLD vs control)"),
   title       = "Finemapping vs. RNA-seq DEG",
   show_y_label = TRUE)
@@ -171,8 +172,8 @@ combined <- (p_left | p_right) +
   guides(color = guide_legend(override.aes = list(size = 2.5), nrow = 1),
          shape = guide_legend(nrow = 1))
 
-ggsave(file.path(PANEL_DIR, "fig3f.pdf"), combined,
+ggsave(file.path(PANEL_DIR, "susiex_cross_ancestry.pdf"), combined,
        width = (fig_half_width + 0.5) * 2, height = 5.4,
        device = cairo_pdf)
-cat("[render_fig3f] wrote", file.path(PANEL_DIR, "fig3f.pdf"), "\n")
+cat("[render_fig3f] wrote", file.path(PANEL_DIR, "susiex_cross_ancestry.pdf"), "\n")
 cat("[render_fig3f] DONE\n")

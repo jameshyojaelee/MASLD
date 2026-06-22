@@ -12,8 +12,8 @@
 # Features: gene-level expression on the validated panel; standardized.
 # CV: leave-one-cohort-out (same split as Script 192).
 #
-# Output: figures/main/fig3_regulatory_architecture/panels/
-#         fig3_cross_ancestry_classifier.pdf (ROC + AUROC comparison)
+# Output: figures/main/fig2_genetics/panels/
+#         cross_ancestry_classifier.pdf (ROC + AUROC comparison)
 #
 # Compute note: single-fold EN on 10 cohorts; fits on CPU in <10 min.
 # Submit via run_fig3_regulatory.sbatch (NOT a login-node job).
@@ -34,8 +34,8 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 dir.create(file.path(FIG3_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
-OUT   <- file.path(FIG3_DIR, "panels", "fig3_cross_ancestry_classifier.pdf")
-OUTCSV <- file.path(FIG3_DIR, "panels", "fig3_cross_ancestry_classifier_metrics.csv")
+OUT   <- file.path(FIG3_DIR, "panels", "cross_ancestry_classifier.pdf")
+OUTCSV <- file.path(FIG3_DIR, "panels", "cross_ancestry_classifier_metrics.csv")
 
 # -----------------------------------------------------------------------------
 # Inputs: cross-ancestry validated gene panel + expression matrix + metadata
@@ -143,5 +143,6 @@ p <- ggplot(plot_dt, aes(x = panel, y = auc, color = panel)) +
                           auc_xa, p_emp, length(panel_xa))) +
   theme_masld()
 
-ggsave(OUT, p, width = 6.0, height = 4.0, device = cairo_pdf)
-message("Wrote: ", OUT)
+# RETIRED 2026-06-12 (cross_ancestry_classifier.pdf no longer a Fig 2 panel; metrics CSV above is kept):
+# ggsave(OUT, p, width = 6.0, height = 4.0, device = cairo_pdf)
+# message("Wrote: ", OUT)

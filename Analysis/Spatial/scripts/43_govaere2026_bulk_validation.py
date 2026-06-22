@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 43_govaere2026_bulk_validation.py — Correlate Wave 3 GeoMx + CosMx DE results
-against the bulk dream Disease-vs-Control DEG signature and quantify concordance.
+against the canonical (C2 limma-voom-qw) bulk Disease-vs-Control DEG signature
+and quantify concordance.
 
 Inputs:
   Analysis/Spatial/results/govaere2026/
@@ -13,8 +14,9 @@ Inputs:
     cosmx_de_KC_MASH_vs_noMASH.csv              — KC cluster (incl. MetMac)
 
   RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/
-    dream_results_ashr.csv                      — canonical bulk DEG file
-      (cols: gene [ENSG], logFC, t, P.Value, padj, shrunk_logFC, lfsr, symbol)
+    canonical_deg_results.csv                   — canonical bulk DEG file (C2)
+      (cols: gene [ENSG], logFC, SE, t, P.Value, padj, shrunk_logFC, lfsr,
+       AveExpr, symbol)
 
 Outputs (Analysis/Spatial/results/govaere2026/):
   bulk_validation_geomx_sh_vs_pt.csv
@@ -65,10 +67,12 @@ PROJECT_ROOT = pathlib.Path(
     )
 )
 GOVAERE_DIR = PROJECT_ROOT / "Analysis" / "Spatial" / "results" / "govaere2026"
+# C2 swap 2026-06-08: repointed dream_results_ashr.csv -> canonical_deg_results.csv
+# (canonical = limma-voom quality-weighted C2). Constant name kept for back-compat.
 BULK_DREAM_CSV = (
     PROJECT_ROOT
     / "RNA-seq" / "Human" / "Patient_Cohorts" / "analysis" / "integration"
-    / "results" / "integration" / "dream_results_ashr.csv"
+    / "results" / "integration" / "canonical_deg_results.csv"
 )
 
 # Per-contrast inputs and output names
@@ -123,8 +127,8 @@ def _log(msg: str) -> None:
 
 
 def load_bulk_dream() -> pd.DataFrame:
-    """Return dream DEG table with columns: gene_symbol, bulk_dream_logFC,
-    bulk_dream_padj. Collapses duplicate symbols by retaining the row with the
+    """Return dream DEG table with columns: gene_symbol, bulk_logFC,
+    bulk_padj. Collapses duplicate symbols by retaining the row with the
     smallest padj (most significant)."""
     df = pd.read_csv(BULK_DREAM_CSV)
     needed = {"symbol", "logFC", "padj"}
@@ -134,14 +138,14 @@ def load_bulk_dream() -> pd.DataFrame:
     df = df.rename(
         columns={
             "symbol": "gene_symbol",
-            "logFC": "bulk_dream_logFC",
-            "padj": "bulk_dream_padj",
+            "logFC": "bulk_logFC",
+            "padj": "bulk_padj",
         }
-    )[["gene_symbol", "bulk_dream_logFC", "bulk_dream_padj"]]
+    )[["gene_symbol", "bulk_logFC", "bulk_padj"]]
     df = df.dropna(subset=["gene_symbol"])
     df["gene_symbol"] = df["gene_symbol"].astype(str)
     # Collapse duplicate symbols (rare) keeping most significant
-    df = df.sort_values("bulk_dream_padj", na_position="last").drop_duplicates(
+    df = df.sort_values("bulk_padj", na_position="last").drop_duplicates(
         subset=["gene_symbol"], keep="first"
     )
     return df
@@ -204,28 +208,28 @@ def concordance_for_contrast(
     n_overlap = len(merged)
     # Spearman on logFC (nominal, all overlapping genes)
     rho_nom, pval_nom, n_used_nom = _safe_spearman(
-        merged["govaere_logFC"], merged["bulk_dream_logFC"]
+        merged["govaere_logFC"], merged["bulk_logFC"]
     )
 
     # Restrict to genes significant in BOTH at padj<SIG_THRESH
     both_sig = (
         (merged["govaere_padj"] < SIG_THRESH)
-        & (merged["bulk_dream_padj"] < SIG_THRESH)
+        & (merged["bulk_padj"] < SIG_THRESH)
     )
     rho_sig, pval_sig, n_sig_both = _safe_spearman(
         merged.loc[both_sig, "govaere_logFC"],
-        merged.loc[both_sig, "bulk_dream_logFC"],
+        merged.loc[both_sig, "bulk_logFC"],
     )
 
     # Sign concordance (over all overlapping genes with non-NA logFC on both sides)
     mask_signable = (
         merged["govaere_logFC"].notna()
-        & merged["bulk_dream_logFC"].notna()
+        & merged["bulk_logFC"].notna()
         & (merged["govaere_logFC"] != 0)
-        & (merged["bulk_dream_logFC"] != 0)
+        & (merged["bulk_logFC"] != 0)
     )
     sign_match = np.sign(merged.loc[mask_signable, "govaere_logFC"]) == np.sign(
-        merged.loc[mask_signable, "bulk_dream_logFC"]
+        merged.loc[mask_signable, "bulk_logFC"]
     )
     merged["sign_concordant"] = pd.NA
     merged.loc[mask_signable, "sign_concordant"] = sign_match.astype(int)
@@ -240,7 +244,7 @@ def concordance_for_contrast(
         merged.loc[merged["govaere_padj"] < SIG_THRESH, "gene_symbol"]
     )
     bulk_sig = set(
-        merged.loc[merged["bulk_dream_padj"] < SIG_THRESH, "gene_symbol"]
+        merged.loc[merged["bulk_padj"] < SIG_THRESH, "gene_symbol"]
     )
     union = gov_sig | bulk_sig
     intersect = gov_sig & bulk_sig
@@ -279,11 +283,11 @@ def top_concordant_for_contrast(
     contrast_key: str, merged: pd.DataFrame, top_n: int = 10
 ) -> pd.DataFrame:
     """Return top-N genes that are padj<0.05 in BOTH Govaere and bulk dream,
-    ordered by combined evidence (govaere_padj × bulk_dream_padj, smallest first).
+    ordered by combined evidence (govaere_padj × bulk_padj, smallest first).
     """
     both_sig = (
         (merged["govaere_padj"] < SIG_THRESH)
-        & (merged["bulk_dream_padj"] < SIG_THRESH)
+        & (merged["bulk_padj"] < SIG_THRESH)
     )
     sub = merged.loc[both_sig].copy()
     if len(sub) == 0:
@@ -292,7 +296,7 @@ def top_concordant_for_contrast(
     eps = 1e-300
     sub["combined_neglog10_padj"] = -(
         np.log10(sub["govaere_padj"].clip(lower=eps))
-        + np.log10(sub["bulk_dream_padj"].clip(lower=eps))
+        + np.log10(sub["bulk_padj"].clip(lower=eps))
     )
     sub = sub.sort_values("combined_neglog10_padj", ascending=False).head(top_n)
     sub.insert(0, "contrast", contrast_key)
@@ -302,8 +306,8 @@ def top_concordant_for_contrast(
             "gene_symbol",
             "govaere_logFC",
             "govaere_padj",
-            "bulk_dream_logFC",
-            "bulk_dream_padj",
+            "bulk_logFC",
+            "bulk_padj",
             "sign_concordant",
             "combined_neglog10_padj",
         ]
@@ -323,7 +327,7 @@ def main() -> int:
     _log(
         f"  bulk dream rows: {len(bulk):,} unique gene symbols; "
         f"sig padj<{SIG_THRESH}: "
-        f"{int((bulk['bulk_dream_padj'] < SIG_THRESH).sum()):,}"
+        f"{int((bulk['bulk_padj'] < SIG_THRESH).sum()):,}"
     )
 
     summaries = []

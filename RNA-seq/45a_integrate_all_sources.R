@@ -35,6 +35,7 @@ stopifnot(file.exists(ATLAS_FILE))
 # ============================================================================
 atlas <- fread(ATLAS_FILE)
 cat("Loaded atlas:", nrow(atlas), "genes x", ncol(atlas), "cols\n")
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 
 # ============================================================================
 # Part A: Merge Spatial Transcriptomics
@@ -240,7 +241,7 @@ cat("\n--- Part D: Compute sources_active (canonical 7-channel + legacy v1) ---\
 
 # ----- Legacy v1 (pre-2026-05-22 permissive count) -----
 # Source 1: Human bulk transcriptomic
-atlas[, src1_human_bulk := !is.na(dream_padj) & dream_padj < 0.1]
+atlas[, src1_human_bulk := !is.na(bulk_padj) & bulk_padj < 0.1]
 
 # Source 2: Mouse bulk transcriptomic
 atlas[, src2_mouse_bulk := !is.na(mouse_meta_padj) & mouse_meta_padj < 0.1]
@@ -322,14 +323,13 @@ atlas[, sources_active_legacy_v1 := as.integer(round(
 # S7 proteomics (best_protein_padj < 0.05),
 # S8 mouse bulk (padj<0.05 & |LFC|>0.3).
 # S6 single-cell pseudobulk is DROPPED — see header comment.
-atlas[, c_s1 := !is.na(dream_padj) & dream_padj < 0.05 &
-                !is.na(dream_logFC) & abs(dream_logFC) > 0.3]
-# S2 INTACT: prefer intact_score_bulk > 0.5; fall back to strong COLOC PP4 > 0.8
-# or significant TWAS so that genes from cross-ancestry panels still count.
+atlas[, c_s1 := !is.na(bulk_padj) & bulk_padj < 0.05 &
+                !is.na(bulk_logFC) & abs(bulk_logFC) > 0.3]
+# S2 genetic-causal flag = strong COLOC PP4 > 0.8 OR significant TWAS (so genes
+# from cross-ancestry panels still count). INTACT dropped 2026-06-19 (the prior
+# intact_score_bulk branch was dead code — the atlas never carried that column).
+# Flag name c_s2_intact retained to avoid churning the schema; it is COLOC/TWAS-based.
 atlas[, c_s2_intact := FALSE]
-if ("intact_score_bulk" %in% names(atlas)) {
-  atlas[!is.na(intact_score_bulk) & intact_score_bulk > 0.5, c_s2_intact := TRUE]
-}
 for (.col in coloc_pp4_cols) {
   if (.col %in% names(atlas)) {
     atlas[, c_s2_intact := c_s2_intact | (!is.na(get(.col)) & get(.col) > 0.8)]

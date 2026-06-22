@@ -23,11 +23,11 @@ mkdir -p "${FIGS}/logs"
 echo "=== Re-render fig2 granular staging panels: $(date) ==="
 
 PANELS=(
-  fig2_panel_nas_stage_degs.R
-  fig2_panel_nas_stage_upset.R
-  fig2_panel_fib_stage_degs.R
-  fig2_panel_fib_stage_upset.R
-  fig2_panel_cascade_degs.R
+  nas_stage_degs.R
+  nas_stage_upset.R
+  fib_stage_degs.R
+  fib_stage_upset.R
+  cascade_degs.R
 )
 
 rc=0

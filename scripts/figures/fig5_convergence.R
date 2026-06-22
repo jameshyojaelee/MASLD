@@ -27,6 +27,15 @@ PANDIR <- file.path(OUTDIR, "panels")
 dir.create(PANDIR, showWarnings = FALSE, recursive = TRUE)
 OUTPDF <- file.path(PANDIR, "fig5a.pdf")
 
+# Optional: render a truncated top-N variant with taller cells.
+# `FIG5A_TOPN=20 Rscript fig5_convergence.R` -> panels/fig5a_top20.pdf
+TOPN_ENV <- Sys.getenv("FIG5A_TOPN", "")
+TOPN     <- if (nzchar(TOPN_ENV)) as.integer(TOPN_ENV) else NA_integer_
+SQ_CELL_MM <- 8L  # uniform square cell size (mm) for the top-N variant
+if (!is.na(TOPN)) {
+  OUTPDF <- file.path(PANDIR, sprintf("fig5a_top%d.pdf", TOPN))
+}
+
 # ── Per-phenotype-category max PP.H4 (ABF or SuSiE) ─────────────────────────
 # Reads per-GWAS susie_coloc/<GWAS>/susie_coloc_chr*.csv (each row has both
 # PP.H4.abf and PP.H4.susie for that gene × GWAS), takes the per-row max,
@@ -101,25 +110,7 @@ cat(sprintf("  Per-category PP4 merged (%d genes)\n",
                 !is.na(atlas$category_pp4_disease) |
                 !is.na(atlas$category_pp4_pdff))))
 
-# Load INTACT scores — prefer the newer intact_scores.csv (2026-05-06+),
-# fall back to convergence_summary.csv for older runs.
-intact_file <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/intact_scores.csv")
-conv_file   <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/convergence_summary.csv")
-if (file.exists(intact_file)) {
-  intact_dt <- fread(intact_file)
-  if ("intact_score_bulk" %in% names(intact_dt)) {
-    atlas <- merge(atlas, intact_dt[, .(gene, intact_score_bulk)],
-                   by.x = "human_symbol", by.y = "gene", all.x = TRUE)
-    cat("  INTACT scores merged from intact_scores.csv\n")
-  }
-} else if (file.exists(conv_file)) {
-  conv <- fread(conv_file)
-  if ("intact_score_bulk" %in% names(conv)) {
-    atlas <- merge(atlas, conv[, .(gene, intact_score_bulk)],
-                   by.x = "human_symbol", by.y = "gene", all.x = TRUE)
-    cat("  INTACT scores merged from convergence_summary.csv (legacy)\n")
-  }
-}
+# INTACT load removed 2026-06-19 (INTACT dropped; genetic signal = COLOC via rs_coloc/rs_susie).
 
 # Load progression driver data
 prog_file <- file.path(BASE, "RNA-seq/results/stratified_causal/progression_driver_genetics.csv")
@@ -281,7 +272,7 @@ if (file.exists(pathway_file)) {
 
 # ── Gene selection ───────────────────────────────────────────────────────────
 # Must be DEG + have at least some causal evidence
-# Rank by composite: max COLOC PP.H4 + INTACT + dream significance
+# Rank by composite: max COLOC PP.H4 + INTACT + bulk DEG significance
 # ARCHIVED 2026-04-08: FinnGen COLOC columns removed
 coloc_pp4_cols <- intersect(c("broadaway_coloc_pp4", "ukbb_alt_coloc_pp4",
   "ast_coloc_pp4", "ggt_coloc_pp4", "pdff_coloc_pp4",
@@ -293,7 +284,6 @@ atlas[, max_coloc_pp4 := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = coloc_pp
 # Rank using available columns (some may not exist after atlas rebuild)
 # Build score component by component
 atlas[, rs_coloc := fifelse(is.na(max_coloc_pp4), 0, max_coloc_pp4) * 3]
-atlas[, rs_intact := fifelse(is.na(intact_score_bulk), 0, intact_score_bulk) * 2]
 atlas[, rs_deg := fifelse(is.na(bulk_padj) | bulk_padj >= 0.05 | abs(bulk_logFC) <= 0.5, 0, -log10(pmax(bulk_padj, 1e-300)) / 10)]
 if ("coloc_susie_best_pp4" %in% names(atlas)) {
   atlas[, rs_susie := fifelse(is.na(coloc_susie_best_pp4), 0, coloc_susie_best_pp4)]
@@ -306,8 +296,8 @@ if ("progression_composite" %in% names(atlas)) {
 } else {
   atlas[, rs_prog := 0]
 }
-atlas[, rank_score := rs_coloc + rs_intact + rs_deg + rs_susie + rs_prog]
-atlas[, c("rs_coloc", "rs_intact", "rs_deg", "rs_susie", "rs_prog") := NULL]
+atlas[, rank_score := rs_coloc + rs_deg + rs_susie + rs_prog]
+atlas[, c("rs_coloc", "rs_deg", "rs_susie", "rs_prog") := NULL]
 
 # ── Merge 46d convergence evidence ──────────────────────────────────────────
 # Coexists with the heuristic rank_score above. 46d's empirically-calibrated
@@ -450,6 +440,12 @@ top_genes <- top_genes[order(-n_convergence, -bayev_score, -rank_score,
 # Keep only genes with ≥3 independent modalities converging
 top_genes <- top_genes[n_convergence >= 3]
 
+# Optional top-N truncation (genes already sorted by convergence/46d/rank above)
+if (!is.na(TOPN)) {
+  top_genes <- head(top_genes, TOPN)
+  cat(sprintf("FIG5A_TOPN set: truncating to top %d genes\n", TOPN))
+}
+
 top_n <- nrow(top_genes)
 genes <- top_genes$human_symbol
 convergence_scores <- top_genes$n_convergence
@@ -547,11 +543,6 @@ if ("susiex_max_pip"  %in% names(top_genes)) {
 }
 finemap_pip[is.infinite(finemap_pip)] <- NA
 mat_finemap <- matrix(finemap_pip, ncol = 1, dimnames = list(genes, "Finemap_PIP"))
-
-# Column 8: Multi-INTACT
-mat_intact <- matrix(
-  if ("intact_score_bulk" %in% names(top_genes)) as.numeric(top_genes$intact_score_bulk) else NA,
-  ncol = 1, dimnames = list(genes, "Multi_INTACT"))
 
 # Column 9: scEQTL COLOC (best PP.H4 across cell types)
 mat_sceqtl <- matrix(
@@ -737,7 +728,10 @@ h_human <- Heatmap(mat_rna_combined, name = "z-score", col = col_zscore,
   column_labels = colnames(mat_rna_combined), column_title = "RNA",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   left_annotation = ha_left,
-  na_col = "white", width = unit(7 * ncol(mat_rna_combined), "mm"), border = TRUE,
+  na_col = "white",
+  width = unit((if (!is.na(TOPN)) SQ_CELL_MM else 7) * ncol(mat_rna_combined), "mm"),
+  height = if (!is.na(TOPN)) unit(top_n * SQ_CELL_MM, "mm") else NULL,
+  border = TRUE,
   heatmap_legend_param = list(title = "z-score", title_gp = gpar(fontsize = 7, fontface = "bold"),
     labels_gp = gpar(fontsize = 6.5), legend_height = unit(2, "cm"), at = c(-2, 0, 2)))
 
@@ -765,7 +759,9 @@ genetic_labels <- c("ALT/AST/GGT\nCOLOC", "NAFLD/NASH\nCOLOC", "PDFF\nCOLOC",
 h_genetic <- Heatmap(mat_genetic, name = "PP.H4", col = col_pp4,
   column_labels = genetic_labels, column_title = "GWAS + eQTL",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(8 * ncol(mat_genetic), "mm"), border = TRUE,
+  na_col = "white",
+  width = unit((if (!is.na(TOPN)) SQ_CELL_MM else 8) * ncol(mat_genetic), "mm"),
+  border = TRUE,
   cell_fun = function(j, i, x, y, width, height, fill) {
     v <- mat_genetic[i, j]
     if (is.na(v)) return()
@@ -797,7 +793,7 @@ h_twas <- Heatmap(clamp(mat_twas_signed, -10, 10), name = "TWAS", col = col_twas
 h_mouse <- Heatmap(clamp(mat_mouse_z_sig, -2.5, 2.5), name = "Mouse z", col = col_zscore,
   column_labels = "Mouse\nlogFC (z)", column_title = "Mouse",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
+  na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 10, "mm"), border = TRUE,
   show_heatmap_legend = FALSE)
 
 # GWAS-ATAC: motif disruption counts + regulon hits
@@ -809,7 +805,9 @@ colnames(mat_atac_combined) <- c("N motif\ndisrupted", "Disease\nregulon")
 h_atac <- Heatmap(mat_atac_combined, name = "ATAC", col = col_count,
   column_labels = colnames(mat_atac_combined), column_title = "ATAC",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(18, "mm"), border = TRUE,
+  na_col = "white",
+  width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_atac_combined) else 18, "mm"),
+  border = TRUE,
   cell_fun = function(j, i, x, y, width, height, fill) {
     v <- mat_atac_combined[i, j]
     if (is.na(v)) return()
@@ -831,14 +829,16 @@ h_prot <- Heatmap(mat_prot_combined,
   column_labels = "Protein\nlogFC (z)",
   column_title = "Proteomics",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
+  na_col = "white",
+  width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_prot_combined) else 10, "mm"),
+  border = TRUE,
   show_heatmap_legend = FALSE)  # shares z-score legend
 
 # Spatial validation (Moran's I)
 h_spatial <- Heatmap(mat_spatial, name = "Spatial", col = col_morans,
   column_labels = "Moran's I", column_title = "Spatial",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
+  na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 10, "mm"), border = TRUE,
   heatmap_legend_param = list(title = "Moran's I", title_gp = gpar(fontsize = 7, fontface = "bold"),
     labels_gp = gpar(fontsize = 6.5), legend_height = unit(1.5, "cm"), at = c(0, 0.05, 0.1, 0.15)))
 
@@ -857,19 +857,142 @@ h_drug <- Heatmap(mat_drug, name = "Binary", col = col_binary,
   column_labels = "Druggable", column_title = "Drug",
   cluster_rows = FALSE, cluster_columns = FALSE,
   show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
+  na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 10, "mm"), border = TRUE,
   right_annotation = ha_right,
   heatmap_legend_param = list(title = "Binary", title_gp = gpar(fontsize = 7, fontface = "bold"),
     labels_gp = gpar(fontsize = 6.5), at = c(0, 1), labels = c("No", "Yes"),
     legend_height = unit(1, "cm")))
 
 # ── Assemble ─────────────────────────────────────────────────────────────────
-# Order: RNA | Progression | Pathways | ATAC | Genetic Causal | Ancestry | TWAS | Proteomics | Spatial | Mouse RNA | Sex | Clinical | Drug
-ht_list <- h_human + h_atac + h_genetic + h_prot + h_spatial + h_mouse + h_drug
-
 cat(sprintf("Saving to %s ...\n", OUTPDF))
 pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
-pdf_device(OUTPDF, width = 14, height = max(5, top_n * 0.038))
+
+if (!is.na(TOPN)) {
+  # ── Transposed layout (top-N variant) ──────────────────────────────────────
+  # Genes -> columns, modalities -> rows. Group names become horizontal row
+  # titles on the left (room for "GWAS + eQTL", "Proteomics"), and the gene
+  # names label the columns along the bottom.
+  cw    <- unit(SQ_CELL_MM * top_n, "mm")             # shared gene-axis width
+  rh    <- function(n) unit(SQ_CELL_MM * n, "mm")     # modality-block height
+  rt_gp <- gpar(fontsize = 8, fontface = "bold", fontfamily = "Helvetica")
+
+  # Convergence barplot now sits on top (per-gene = per-column)
+  ha_top <- HeatmapAnnotation(
+    "Conv." = anno_barplot(convergence_scores, height = unit(10, "mm"),
+      border = FALSE, gp = gpar(fill = gray_gradient[9], col = NA),
+      axis_param = list(gp = gpar(fontsize = 6)), bar_width = 0.7),
+    annotation_name_gp = gpar(fontsize = 6.5, fontface = "bold"),
+    annotation_name_side = "left")
+
+  # ── Per-modality row cap (transposed top-N variant): max 3 rows/modality ─────
+  # RNA 6→3 and GWAS+eQTL 5→3 (selected tracks); other modalities already ≤3.
+  rna_keep_labels <- c("MASLD\nvs Ctrl", "MASH\nvs Ctrl", "Adv Fib\n(F3-F4)")
+  gen_keep_labels <- c("ALT/AST/GGT\nCOLOC", "NAFLD/NASH\nCOLOC", "COLOC\nancestry")
+  rna_keep_idx <- match(rna_keep_labels, colnames(mat_rna_combined)); rna_keep_idx <- rna_keep_idx[!is.na(rna_keep_idx)]
+  gen_keep_idx <- match(gen_keep_labels, genetic_labels);             gen_keep_idx <- gen_keep_idx[!is.na(gen_keep_idx)]
+  mat_rna_sel    <- mat_rna_combined[, rna_keep_idx, drop = FALSE]
+  mat_gen_sel    <- mat_genetic[,      gen_keep_idx, drop = FALSE]
+  gen_labels_sel <- genetic_labels[gen_keep_idx]
+  ancestry_row   <- which(gen_labels_sel == "COLOC\nancestry")
+
+  t_rna <- t(mat_rna_sel)
+  th_rna <- Heatmap(t_rna, name = "z-score", col = col_zscore,
+    row_title = "RNA", top_annotation = ha_top, height = rh(nrow(t_rna)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    heatmap_legend_param = list(title = "z-score", title_gp = gpar(fontsize = 7, fontface = "bold"),
+      labels_gp = gpar(fontsize = 6.5), legend_height = unit(2, "cm"), at = c(-2, 0, 2)))
+
+  t_gen <- t(mat_gen_sel)
+  th_gen <- Heatmap(t_gen, name = "PP.H4", col = col_pp4,
+    row_title = "GWAS + eQTL", row_labels = gen_labels_sel, height = rh(nrow(t_gen)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    cell_fun = function(j, i, x, y, width, height, fill) {
+      v <- t_gen[i, j]
+      if (is.na(v)) return()
+      if (length(ancestry_row) && i == ancestry_row) {  # ancestry row: categorical override
+        col_val <- if (v == 1) col_ancestry["EUR"] else if (v == 2) col_ancestry["EAS"] else if (v == 3) col_ancestry["Both"] else "white"
+        grid.rect(x, y, width, height, gp = gpar(fill = col_val, col = NA))
+      }
+    },
+    heatmap_legend_param = list(title = "PP.H4", title_gp = gpar(fontsize = 7, fontface = "bold"),
+      labels_gp = gpar(fontsize = 6.5), legend_height = unit(2, "cm"), at = c(0, 0.5, 1)))
+
+  t_prot <- t(mat_prot_combined)
+  th_prot <- Heatmap(t_prot, name = "Protein", col = col_zscore,
+    row_title = "Proteomics", row_labels = "Protein\nlogFC (z)", height = rh(nrow(t_prot)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw, show_heatmap_legend = FALSE)
+
+  t_atac <- t(mat_atac_combined)
+  th_atac <- Heatmap(t_atac, name = "ATAC", col = col_count,
+    row_title = "ATAC", height = rh(nrow(t_atac)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    cell_fun = function(j, i, x, y, width, height, fill) {
+      v <- t_atac[i, j]
+      if (is.na(v)) return()
+      if (i == 2) {  # disease regulon row: binary gray
+        col_val <- if (v == 1) gray_gradient[7] else "white"
+        grid.rect(x, y, width, height, gp = gpar(fill = col_val, col = NA))
+      }
+    },
+    show_heatmap_legend = FALSE)
+
+  t_spa <- t(mat_spatial)
+  th_spa <- Heatmap(t_spa, name = "Moran's I", col = col_morans,
+    row_title = "Spatial", row_labels = "Moran's I", height = rh(nrow(t_spa)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    heatmap_legend_param = list(title = "Moran's I", title_gp = gpar(fontsize = 7, fontface = "bold"),
+      labels_gp = gpar(fontsize = 6.5), legend_height = unit(1.5, "cm"), at = c(0, 0.05, 0.1, 0.15)))
+
+  t_mou <- t(mat_mouse_z_sig)
+  th_mou <- Heatmap(t_mou, name = "Mouse z", col = col_zscore,
+    row_title = "Mouse", row_labels = "Mouse\nlogFC (z)", height = rh(nrow(t_mou)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw, show_heatmap_legend = FALSE)
+
+  t_dru <- t(mat_drug)
+  th_dru <- Heatmap(t_dru, name = "Binary", col = col_binary,
+    row_title = "Drug", row_labels = "Druggable", height = rh(nrow(t_dru)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
+    show_column_names = TRUE, column_labels = genes, column_names_side = "bottom",
+    column_names_gp = gpar(fontsize = 7, fontface = "italic", fontfamily = "Helvetica"),
+    column_names_rot = 90, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    heatmap_legend_param = list(title = "Binary", title_gp = gpar(fontsize = 7, fontface = "bold"),
+      labels_gp = gpar(fontsize = 6.5), at = c(0, 1), labels = c("No", "Yes"),
+      legend_height = unit(1, "cm")))
+
+  ht_list <- th_rna %v% th_gen %v% th_prot %v% th_atac %v% th_spa %v% th_mou %v% th_dru
+  total_rows <- nrow(t_rna) + nrow(t_gen) + nrow(t_prot) + nrow(t_atac) +
+                nrow(t_spa) + nrow(t_mou) + nrow(t_dru)
+  dev_w <- SQ_CELL_MM * top_n / 25.4 + 5.5
+  dev_h <- total_rows * SQ_CELL_MM / 25.4 + 3
+} else {
+  # Order: RNA | Genetic Causal | Proteomics | ATAC | Spatial | Mouse RNA | Drug
+  # (ATAC moved after Proteomics 2026-06-17)
+  ht_list <- h_human + h_genetic + h_prot + h_atac + h_spatial + h_mouse + h_drug
+  dev_w <- 14
+  dev_h <- max(5, top_n * 0.038)
+}
+
+pdf_device(OUTPDF, width = dev_w, height = dev_h)
 
 # Progression score legend (green)
 score_legend <- Legend(
@@ -901,7 +1024,7 @@ ancestry_legend <- Legend(
 draw(ht_list,
   heatmap_legend_side = "right",
   annotation_legend_list = list(score_legend, count_legend, ancestry_legend),
-  column_title = "Multi-Modal Convergence Matrix",
+  column_title = "Convergence matrix",
   column_title_gp = gpar(fontsize = 11, fontface = "bold", fontfamily = "Helvetica"),
   padding = unit(c(3, 3, 5, 3), "mm"))
 

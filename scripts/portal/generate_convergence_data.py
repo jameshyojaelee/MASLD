@@ -18,7 +18,7 @@ Produces:
      - adds missing s5_epigenomic field (atlas-derived)
 
 Modality numbering (applied consistently across this script and gene_index):
-  M1 s1_human       = Human bulk DE (|dream_logFC| / max, gated by is_deg)
+  M1 s1_human       = Human bulk DE (|bulk_logFC| / max, gated by is_deg)
   M2 s2_mouse       = Mouse conserved (mouse_meta_padj < 0.05 -> 1.0)
   M3 s3_genetic     = Genetic causal (coloc_susie_best_pp4, 0-1)
   M4 s4_essential   = DepMap essentiality (clamp(-essentiality_chronos/2, 0, 1))
@@ -107,9 +107,9 @@ def compute_modalities(atlas: pd.DataFrame) -> pd.DataFrame:
     """Compute 7 modality strengths (0-1) per gene."""
     out = pd.DataFrame(index=atlas.index)
 
-    # M1 Human bulk DE: |dream_logFC| / max_abs_lfc, gated by is_deg
-    lfc = pd.to_numeric(col_or(atlas, "dream_logFC"), errors="coerce")
-    padj = pd.to_numeric(col_or(atlas, "dream_padj"), errors="coerce")
+    # M1 Human bulk DE: |bulk_logFC| / max_abs_lfc, gated by is_deg
+    lfc = pd.to_numeric(col_or(atlas, "bulk_logFC"), errors="coerce")
+    padj = pd.to_numeric(col_or(atlas, "bulk_padj"), errors="coerce")
     is_deg = (padj < 0.05) & (lfc.abs() > 0.3)
     max_abs_lfc = float(lfc.abs().max())
     if not math.isfinite(max_abs_lfc) or max_abs_lfc == 0:
@@ -198,8 +198,8 @@ def compute_modalities(atlas: pd.DataFrame) -> pd.DataFrame:
 
 def build_convergence_matrix(atlas: pd.DataFrame, modalities: pd.DataFrame) -> list:
     # Flags
-    lfc = pd.to_numeric(col_or(atlas, "dream_logFC"), errors="coerce")
-    padj = pd.to_numeric(col_or(atlas, "dream_padj"), errors="coerce")
+    lfc = pd.to_numeric(col_or(atlas, "bulk_logFC"), errors="coerce")
+    padj = pd.to_numeric(col_or(atlas, "bulk_padj"), errors="coerce")
     is_deg = ((padj < 0.05) & (lfc.abs() > 0.3)).fillna(False)
     pp4 = pd.to_numeric(col_or(atlas, "coloc_susie_best_pp4"), errors="coerce").fillna(0.0)
     is_coloc = (pp4 >= 0.5)
@@ -261,8 +261,8 @@ def build_legacy_archetype_ranking(
             bayes = None
 
     # Flags
-    lfc = pd.to_numeric(col_or(atlas, "dream_logFC"), errors="coerce")
-    padj = pd.to_numeric(col_or(atlas, "dream_padj"), errors="coerce")
+    lfc = pd.to_numeric(col_or(atlas, "bulk_logFC"), errors="coerce")
+    padj = pd.to_numeric(col_or(atlas, "bulk_padj"), errors="coerce")
     is_deg = ((padj < 0.05) & (lfc.abs() > 0.3)).fillna(False)
     pp4 = pd.to_numeric(col_or(atlas, "coloc_susie_best_pp4"), errors="coerce").fillna(0.0)
     is_coloc = (pp4 >= 0.5)

@@ -50,14 +50,20 @@ cat(sprintf("Atlas: %d genes x %d cols\n", nrow(atlas), ncol(atlas)))
 #   M6: Spatial       — spatial_max_I > 0.05
 # ═══════════════════════════════════════════════════════════════════════════
 
-# --- M3: max COLOC PP.H4 across GWAS sources ---
-coloc_pp4_cols <- intersect(c("broadaway_coloc_pp4", "ukbb_alt_coloc_pp4",
-  "ast_coloc_pp4", "ggt_coloc_pp4", "pdff_coloc_pp4",
-  "bbj_alt_coloc_pp4"), names(atlas))
-if (length(coloc_pp4_cols) > 0) {
-  atlas[, max_coloc_pp4 := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = coloc_pp4_cols]
+# --- M3: genetic — canonical SuSiE-COLOC best PP.H4 (post gate-swap 2026-06-19) ---
+# `coloc_susie_best_pp4` is the canonical per-gene COLOC (SuSiE with abf fallback);
+# do NOT pmax the method-inconsistent per-trait `*_coloc_pp4` atlas columns.
+if ("coloc_susie_best_pp4" %in% names(atlas)) {
+  atlas[, max_coloc_pp4 := as.numeric(coloc_susie_best_pp4)]
 } else {
-  atlas[, max_coloc_pp4 := NA_real_]
+  coloc_pp4_cols <- intersect(c("broadaway_coloc_pp4", "ukbb_alt_coloc_pp4",
+    "ast_coloc_pp4", "ggt_coloc_pp4", "pdff_coloc_pp4",
+    "bbj_alt_coloc_pp4"), names(atlas))
+  if (length(coloc_pp4_cols) > 0) {
+    atlas[, max_coloc_pp4 := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = coloc_pp4_cols]
+  } else {
+    atlas[, max_coloc_pp4 := NA_real_]
+  }
 }
 
 # --- M4: GWAS-ATAC hepatocyte motif disruption (always derived fresh) ---
@@ -153,17 +159,62 @@ is_deg <- !is.na(atlas$bulk_padj) & atlas$bulk_padj < 0.05 & abs(atlas$bulk_logF
 n_deg  <- sum(is_deg, na.rm = TRUE)
 n_tot  <- nrow(atlas)
 
-cov_tbl <- data.table(
-  source  = c("Human DEG", "Mouse DEG", "Genetic causal",
-               "Regulatory/ATAC", "Proteomics", "Spatial"),
-  deg_n   = sapply(mod_cols, function(s) sum(atlas[[s]] & is_deg, na.rm = TRUE)),
-  atlas_n = sapply(mod_cols, function(s) sum(atlas[[s]], na.rm = TRUE))
-)
-cov_tbl[, deg_pct   := 100 * deg_n / n_deg]
-cov_tbl[, atlas_pct := 100 * atlas_n / n_tot]
-cov_tbl[, source := factor(source, levels = source)]
+# ── Top panel: THRESHOLD-FREE expression concordance (Spearman ρ + GSEA) ─────
+# Hard-threshold DEG overlap is arbitrary, discards effect-size/significance
+# information, and double-thresholding underpowers low-power assays (proteomics
+# n=130 vs bulk n=846). Instead, for each DE-comparable modality we report the
+# Spearman correlation of the human disease effect (bulk_logFC) vs the modality's
+# disease effect over ALL shared genes (threshold-free), with a bootstrap 95% CI,
+# plus an fgsea test that the human DEG-up / DEG-down signature is concordantly
+# enriched in the modality's ranked statistic (rank = sign(logFC)·−log10 padj;
+# the make_ranks idiom from Cross_Species_Concordance/02a_fgsea_concordance.R).
+# EXCLUDED from this panel (kept only in the convergence count below):
+#   · Spatial — its contrasts are zonal/niche (sh-vs-pt etc.), NOT disease-vs-
+#     control, so they don't rank-correlate with bulk (ρ≈0 / negative). Spatial
+#     stays as a spatially-structured-evidence flag in the histogram.
+#   · Genetic (COLOC posterior) and Regulatory/ATAC (GWAS-locus motif count) are
+#     not DE effect sizes → set/count evidence, convergence-count only.
+suppressPackageStartupMessages(library(fgsea))
 
-cat("\nPer-modality recovery:\n"); print(cov_tbl)
+deg_up   <- unique(atlas[is_deg & bulk_logFC > 0, human_symbol])
+deg_down <- unique(atlas[is_deg & bulk_logFC < 0, human_symbol])
+deg_sets <- list(DEG_up = deg_up, DEG_down = deg_down)
+
+p_to_stars <- function(p) ifelse(is.na(p), "",
+  ifelse(p < 1e-3, "***", ifelse(p < 1e-2, "**", ifelse(p < 0.05, "*", ""))))
+
+de_mods <- list(
+  list(s = "Mouse DEG",         lfc = "mouse_meta_logFC",    padj = "mouse_meta_padj"),
+  list(s = "Proteomics",        lfc = "best_protein_logFC",  padj = "best_protein_padj"),
+  list(s = "Single-cell (hep)", lfc = "sc_hepatocyte_logFC", padj = "sc_hepatocyte_padj")
+)
+
+set.seed(42)
+conc <- rbindlist(lapply(de_mods, function(m) {
+  d <- atlas[, .(g = human_symbol, hl = bulk_logFC, ml = get(m$lfc), mp = get(m$padj))]
+  d <- d[!is.na(g) & !is.na(hl) & !is.na(ml) & !is.na(mp)][!duplicated(g)]
+  n <- nrow(d)
+  rho <- if (n >= 10) cor(d$hl, d$ml, method = "spearman") else NA_real_
+  bs  <- if (n >= 10) replicate(1000, { i <- sample.int(n, replace = TRUE);
+              cor(d$hl[i], d$ml[i], method = "spearman") }) else rep(NA_real_, 2)
+  ci  <- if (n >= 10) unname(quantile(bs, c(0.025, 0.975))) else c(NA_real_, NA_real_)
+  rk  <- setNames(sign(d$ml) * -log10(pmax(d$mp, 1e-300)), d$g); rk <- rk[is.finite(rk)]
+  fg  <- suppressWarnings(fgsea(deg_sets, rk, minSize = 10, maxSize = 6000, eps = 0))
+  nes_up <- fg[pathway == "DEG_up",   NES]; p_up <- fg[pathway == "DEG_up",   padj]
+  nes_dn <- fg[pathway == "DEG_down", NES]; p_dn <- fg[pathway == "DEG_down", padj]
+  cand <- c()
+  if (length(nes_up) == 1 && isTRUE(nes_up > 0)) cand <- c(cand, p_up)
+  if (length(nes_dn) == 1 && isTRUE(nes_dn < 0)) cand <- c(cand, p_dn)
+  conc_p <- if (length(cand)) suppressWarnings(min(cand, na.rm = TRUE)) else NA_real_
+  if (!is.finite(conc_p)) conc_p <- NA_real_
+  data.table(source = m$s, n_shared = n, rho = rho, ci_lo = ci[1], ci_hi = ci[2],
+             nes_up   = if (length(nes_up) == 1) nes_up else NA_real_,
+             nes_down = if (length(nes_dn) == 1) nes_dn else NA_real_,
+             gsea_padj = conc_p)
+}))
+conc[, star := p_to_stars(gsea_padj)]
+conc[, source := factor(source, levels = rev(source))]
+cat("\nExpression concordance (Spearman ρ + DEG-signature GSEA):\n"); print(conc)
 
 sa_dist <- atlas[, .N, by = n_convergence][order(n_convergence)]
 setnames(sa_dist, "n_convergence", "sa")
@@ -182,21 +233,25 @@ cat(sprintf("\nHeadline: %d genes at max %d/6; %d at >=3/6; %d at >=4/6; %d at >
 # PANEL 5b — per-source DEG recovery + atlas sources-active histogram
 # ═══════════════════════════════════════════════════════════════════════════
 
-# 5b-top: per-modality coverage of primary human DEGs (horizontal bars)
-p5a_top <- ggplot(cov_tbl, aes(x = deg_pct, y = source)) +
-  geom_col(fill = masld_colors$mash, width = 0.7, alpha = 0.9) +
-  geom_text(aes(label = sprintf("%d (%.1f%%)", deg_n, deg_pct)),
-            hjust = -0.05, size = 2.1, family = "Helvetica") +
-  scale_y_discrete(limits = rev(levels(cov_tbl$source))) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.25)),
-                     labels = function(x) paste0(x, "%")) +
-  labs(x = sprintf("%% of %s primary DEGs with evidence", comma(n_deg)),
+# 5b-top: threshold-free expression concordance — Spearman ρ bars (bootstrap 95%
+# CI), bar-tip label = ρ + DEG-signature GSEA significance stars.
+rho_hi <- max(conc$ci_hi, conc$rho, na.rm = TRUE)
+p5a_top <- ggplot(conc, aes(x = rho, y = source)) +
+  geom_col(fill = masld_colors$mash, width = 0.6, alpha = 0.9) +
+  geom_errorbarh(aes(xmin = ci_lo, xmax = ci_hi), height = 0.16,
+                 linewidth = 0.3, color = "grey25") +
+  geom_text(aes(x = ci_hi, label = sprintf("ρ=%.2f%s", rho, star)),
+            hjust = -0.12, size = 2.1, family = "Helvetica") +
+  scale_x_continuous(limits = c(0, rho_hi * 1.38),
+                     expand = expansion(mult = c(0, 0.02))) +
+  labs(x = "Spearman ρ  (human disease logFC vs modality;  ✱✱✱ DEG GSEA padj<0.001)",
        y = NULL,
        title = "b",
-       subtitle = "Per-modality coverage of primary human DEGs") +
+       subtitle = "Expression concordance of human DEGs") +
   theme_masld(base_size = 7) +
   theme(plot.title = element_text(face = "bold", size = 10),
         plot.subtitle = element_text(size = 7, color = "grey30"),
+        axis.title.x = element_text(size = 6.2),
         axis.text.y = element_text(size = 7))
 
 # 5b-bottom: atlas-wide convergence histogram (0–6 modalities)
@@ -209,15 +264,12 @@ p5a_bot <- ggplot(sa_dist, aes(x = factor(sa), y = N)) +
                     guide = "none") +
   scale_y_continuous(labels = comma,
                      expand = expansion(mult = c(0, 0.15))) +
+  # PI directive (2026-06-11): short single title line only. Atlas-wide
+  # convergence counts (>=3/6, >=4/6, >=5/6, max-modality genes) are printed to
+  # stdout above and belong in the figure caption, not on the panel.
   labs(x = "Number of independent modalities active (0 to 6)",
        y = "Genes",
-       subtitle = sprintf(
-         "Atlas-wide: %s genes >=3/6 modalities; %s >=4/6; %s >=5/6; %s at max %d/6",
-         comma(convergent_ge3),
-         comma(convergent_ge4),
-         comma(convergent_ge5),
-         comma(top_sa_n),
-         max_sa)) +
+       subtitle = "Atlas-wide convergence") +
   theme_masld(base_size = 7) +
   theme(plot.subtitle = element_text(size = 7, color = "grey30"))
 
@@ -228,9 +280,9 @@ ggsave(file.path(PANDIR, "fig5b.pdf"), p5b,
 cat("Saved: panels/fig5b.pdf\n")
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Sidecar CSV: per-source DEG recovery numbers used in 5b
+# Sidecar CSVs: concordance stats (ρ/CI/NES/padj) + convergence histogram
 # ═══════════════════════════════════════════════════════════════════════════
-fwrite(cov_tbl, file.path(OUTDIR, "fig5b_modality_recovery.csv"))
+fwrite(conc, file.path(OUTDIR, "fig5b_concordance.csv"))
 fwrite(sa_dist, file.path(OUTDIR, "fig5b_convergence_histogram.csv"))
 
 cat("\nDONE.\n")

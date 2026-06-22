@@ -36,9 +36,9 @@ OUT_RDS <- file.path(OUT_DIR,   "G_loo_cv_lines_pG.rds")
 
 # Cohort first-author labels (full atlas)
 ALL_STUDY_NAMES <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE174478 = "Kawamura", GSE193066 = "Hoshida",
-  GSE213621 = "Chen",   GSE240729 = "Verschuren"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE213621 = "GSE213621",   GSE240729 = "GSE240729"
 )
 ycfg_path <- file.path(BASE, "config/human_datasets.yaml")
 mega_cohorts <- names(Filter(function(d) isTRUE(d$de$include_in_mega),

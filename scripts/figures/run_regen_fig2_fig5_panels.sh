@@ -7,7 +7,7 @@
 #SBATCH --time=48:00:00
 #SBATCH --output=scripts/figures/logs/regen_fig2_fig5_panels_%j.out
 #SBATCH --error=scripts/figures/logs/regen_fig2_fig5_panels_%j.err
-# Regenerate INDIVIDUAL PANELS for fig2_progression_sex + fig5_convergence on the
+# Regenerate INDIVIDUAL PANELS for fig3_RNAseq + fig5_convergence on the
 # current -s2 data, into figures/main/. PANELS ONLY — NO composite/assembler runs.
 # Excludes: fig2_progression.R, assemble_*, fig5_causal_architecture.R,
 #   fig5_translation.R, fig5_convergence_legacy.R, *_compact. Composite byproducts
@@ -22,16 +22,25 @@ SF=scripts/figures
 run() { echo "===== $1 ====="; Rscript "$SF/$1" 2>&1 | tail -3; echo "[exit $1=${PIPESTATUS[0]}]"; }
 
 echo "########## FIG 2 PANELS (standalone; fig2_progression.R composite EXCLUDED) ##########"
-for s in "$SF"/fig2_panel_*.R; do run "$(basename "$s")"; done
-for extra in fig2_ccc_v3_panels.R fig2_chromatin_cascade.R fig2_hotspot_module_geneset_correlation.R gen_fig2e_embeddable.R; do
+for s in bayesprism_transitions canonical_vs_perstudy_upset cascade_degs \
+         celltype_bulk_attribution celltype_cascade celltype_concordance \
+         celltype_proportion crossmodal_integration fib_stage_degs fib_stage_upset \
+         fib_stage_vs_ctrl_degs fib_stage_vs_ctrl_upset hkdc1_module24 hotspot_cascade \
+         inflection_composite nas_fib_grid nas_stage_degs nas_stage_upset \
+         nas_stage_vs_ctrl_degs nas_stage_vs_ctrl_upset network_communities \
+         nmf_programs nmf_programs_lines; do
+  [ -f "$SF/$s.R" ] && run "$s.R"
+done
+for extra in ccc_v3_panels.R fig2_chromatin_cascade.R hotspot_module_geneset_correlation.R gen_scrna_umap_embeddable.R; do
   [ -f "$SF/$extra" ] && run "$extra"
 done
 
 echo "########## FIG 5 PANELS (assemble/causal_arch/translation/legacy EXCLUDED) ##########"
 run fig5_convergence.R                              # -> panels/fig5a.pdf (guarded for empty regulons)
 run fig5_convergence_v3.R                           # -> panels/fig5b.pdf
-run fig5_panel_tf_convergence_atac_rna_coloc.R      # -> fig5_tf_convergence_scatter.pdf
-run fig5_panel_D_tf_4way_survival_lollipop.R        # -> fig5_tf_4way_survival_lollipop.pdf
+# panel 5e (TF convergence scatter + 4-way survival lollipop) CUT 2026-06-19:
+#   banned lollipop + oversold refuted 4-way claim + null SCENIC+ axis.
+#   Source scripts moved to scripts/figures/_legacy/.
 
 echo "########## PURGE composite byproducts (explicit names only) ##########"
 for c in fig2_progression.pdf fig2_progression_sex.pdf fig5_convergence.pdf fig5_composite.pdf fig1_compact.pdf; do
@@ -39,6 +48,6 @@ for c in fig2_progression.pdf fig2_progression_sex.pdf fig5_convergence.pdf fig5
 done
 
 echo "########## RESULTING PANELS in figures/main ##########"
-echo "-- fig2_progression_sex --"; find figures/main/fig2_progression_sex -name "*.pdf" 2>/dev/null | sed 's#.*/##' | sort
+echo "-- fig3_RNAseq --"; find figures/main/fig3_RNAseq -name "*.pdf" 2>/dev/null | sed 's#.*/##' | sort
 echo "-- fig5_convergence --";     find figures/main/fig5_convergence     -name "*.pdf" 2>/dev/null | sed 's#.*/##' | sort
 echo "DONE"

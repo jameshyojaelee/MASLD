@@ -15,7 +15,7 @@ Follows Sanjana Lab Publication Standards.
 
 Usage:
   python fig_bulkrna_matrix.py            # standalone (full labels)
-  python fig_bulkrna_matrix.py --panel    # fig1 panel version (author-only y-labels)
+  python fig_bulkrna_matrix.py --panel    # fig1 panel version (accession-only y-labels)
 
 Output: PDF (600 DPI) to figures/
 """
@@ -200,21 +200,21 @@ def main(panel_mode=False):
     label_x = -0.65                         # right edge of label area
     for i, d in enumerate(datasets):
         if panel_mode:
-            # Panel mode: author name only, single centered line
+            # Panel mode: accession only, single centered line
             ax_mat.text(label_x, i,
-                        d[0],
+                        d[1],
                         ha="right", va="center", fontsize=FS_LABEL,
                         fontweight="bold", color=TEXT_DARK)
         else:
             # Standalone: two-tier labels
-            # Line 1: Author (Year) — bold, larger
+            # Line 1: Accession (Year) — bold, larger
             ax_mat.text(label_x, i - 0.15,
-                        f"{d[0]} ({d[2]})",
+                        f"{d[1]} ({d[2]})",
                         ha="right", va="center", fontsize=FS_LABEL,
                         fontweight="bold", color=TEXT_DARK)
-            # Line 2: Accession · Platform · Layout — smaller, gray, italic
+            # Line 2: Platform · Layout — smaller, gray, italic
             ax_mat.text(label_x, i + 0.17,
-                        f"{d[1]}  \u00b7  {d[5]}  \u00b7  {d[6]}",
+                        f"{d[5]}  \u00b7  {d[6]}",
                         ha="right", va="center", fontsize=FS_LABEL - 1,
                         color=LABEL_GRAY, fontstyle="italic")
 
@@ -293,15 +293,19 @@ def main(panel_mode=False):
     # ── Title ─────────────────────────────────────────────────────────────
 
     # ── Save ──────────────────────────────────────────────────────────────
-    out_dir = os.path.join(
+    fig_root = os.path.join(
         os.path.dirname(os.path.dirname(os.path.dirname(
             os.path.abspath(__file__)))),
-        "figures", "main", "fig1_atlas_overview", "panels",
+        "figures", "main",
     )
-    os.makedirs(out_dir, exist_ok=True)
     if panel_mode:
-        pdf_path = os.path.join(out_dir, "fig1c.pdf")
+        # fig1c relocated into the Figure-3 RNA-seq panel dir (2026-06-11)
+        out_dir = os.path.join(fig_root, "fig3_RNAseq", "panels")
+        os.makedirs(out_dir, exist_ok=True)
+        pdf_path = os.path.join(out_dir, "cohort_metadata_matrix.pdf")
     else:
+        out_dir = os.path.join(fig_root, "fig1_atlas_overview", "panels")
+        os.makedirs(out_dir, exist_ok=True)
         pdf_path = os.path.join(out_dir, "bulkrna_metadata_matrix.pdf")
 
     fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
@@ -312,6 +316,6 @@ def main(panel_mode=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--panel", action="store_true",
-                        help="Panel mode: author-only y-labels, saves to bulkrna_metadata_panel.pdf")
+                        help="Panel mode: accession-only y-labels, saves to bulkrna_metadata_panel.pdf")
     args = parser.parse_args()
     main(panel_mode=args.panel)

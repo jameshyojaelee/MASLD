@@ -185,13 +185,13 @@ p_d <- placeholder("Panel d: Dream volcano")
 
 dream <- load_dream_results()
 if (!is.null(dream)) {
-  dream[, neg_log10_padj := -log10(pmin(dream_padj, 1))]
+  dream[, neg_log10_padj := -log10(pmin(bulk_padj, 1))]
   # Cap at 50 (max observed ~47)
   padj_cap <- 50
   dream[neg_log10_padj > padj_cap, neg_log10_padj := padj_cap]
 
-  dream[, sig := fifelse(dream_padj < 0.1 & abs(dream_logFC) > 0.5,
-                          fifelse(dream_logFC > 0, "Up", "Down"), "NS")]
+  dream[, sig := fifelse(bulk_padj < 0.1 & abs(bulk_logFC) > 0.5,
+                          fifelse(bulk_logFC > 0, "Up", "Down"), "NS")]
 
   n_up   <- sum(dream$sig == "Up", na.rm = TRUE)
   n_down <- sum(dream$sig == "Down", na.rm = TRUE)
@@ -199,10 +199,10 @@ if (!is.null(dream)) {
 
   # Tight LFC range for compact display
   lfc_cap <- 4
-  dream[, logFC_plot := pmin(pmax(dream_logFC, -lfc_cap), lfc_cap)]
+  dream[, logFC_plot := pmin(pmax(bulk_logFC, -lfc_cap), lfc_cap)]
 
   # Label top 5 genes per direction (by rank score = |LFC| * -log10p)
-  dream[, rank_score := abs(dream_logFC) * neg_log10_padj]
+  dream[, rank_score := abs(bulk_logFC) * neg_log10_padj]
   top_genes <- rbind(
     dream[sig == "Up"][order(-rank_score)][1:min(5, sum(dream$sig == "Up"))],
     dream[sig == "Down"][order(-rank_score)][1:min(5, sum(dream$sig == "Down"))]

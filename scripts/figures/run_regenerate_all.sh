@@ -17,10 +17,8 @@ micromamba activate rnaseq
 SCRIPTS=(
   scripts/figures/fig1_atlas_overview.R
   scripts/figures/fig1_compact.R
-  scripts/figures/fig1_integration_value_panels.R
   scripts/figures/fig1_integration_value_panels_v2.R
   scripts/figures/fig1_loo_cv_panels.R
-  scripts/figures/fig1d_candidates.R
   scripts/figures/fig2_compact.R
   scripts/figures/fig2_concordance_atlas.R
   scripts/figures/fig2_disease_progression.R

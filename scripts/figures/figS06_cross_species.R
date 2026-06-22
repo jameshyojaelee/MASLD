@@ -115,77 +115,77 @@ p_b <- ggplot(cor_dt, aes(x = Diet1, y = Diet2, fill = rho)) +
   labs(x = NULL, y = NULL, title = "Cross-diet LFC correlation")
 
 # ==========================================================================
-# Panel c: Each diet vs human dream (scatter)
+# Panel c: Each diet vs human (C2 canonical) — ortholog-joined LFC concordance
 # ==========================================================================
-if (!is.null(dream) && !is.null(per_diet)) {
-  # Need gene symbol mapping for mouse
-  # Use dream's mouse_symbol column if available
-  if ("mouse_symbol" %in% names(dream)) {
-    dream_m <- dream[!is.na(mouse_symbol) & mouse_symbol != ""]
-    setnames(dream_m, "mouse_symbol", "mouse_gene", skip_absent = TRUE)
-  } else if ("symbol" %in% names(dream)) {
-    dream_m <- dream[!is.na(symbol)]
-    dream_m[, mouse_gene := symbol]  # Assume orthologs share symbol
+# C2 fix (2026-06-21): canonical_deg_results.csv carries no mouse_symbol and the
+# mouse per-diet tables carry no human symbol, so the old shared-symbol merge
+# dropped to "mapping not available". Join through the 1:1 ortholog map
+# (replicates concordance script 01 / fig4g): human C2 logFC -> mouse_gene_id ->
+# mouse per-diet logFC.
+ortho_path <- file.path(BASE,
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/gene_annotation/ortholog_mapping.tsv")
+if (!is.null(dream) && !is.null(per_diet) && "bulk_logFC" %in% names(dream) && file.exists(ortho_path)) {
+  ortho <- fread(ortho_path)
+  hd <- copy(dream); hd[, gene_base := gsub("\\..*", "", gene)]
+  h_mapped <- merge(hd[, .(gene_base, human_logFC = bulk_logFC)],
+                    ortho[, .(human_gene_id, mouse_gene_id)],
+                    by.x = "gene_base", by.y = "human_gene_id")
+  pd <- copy(per_diet[diet_model %in% diets]); pd[, mouse_base := gsub("\\..*", "", gene)]
+  diet_human <- merge(pd[, .(mouse_base, logFC, diet_model)],
+                      h_mapped[, .(mouse_gene_id, human_logFC)],
+                      by.x = "mouse_base", by.y = "mouse_gene_id", allow.cartesian = TRUE)
+
+  if (nrow(diet_human) > 0) {
+    cors <- diet_human[, .(
+      rho = cor(logFC, human_logFC, use = "complete.obs", method = "spearman"),
+      n = .N
+    ), by = diet_model]
+
+    p_c <- ggplot(diet_human, aes(x = human_logFC, y = logFC)) +
+      rasterize_layer(geom_point(size = 0.1, alpha = 0.15, color = "gray50", shape = 16)) +
+      geom_smooth(method = "lm", linewidth = 0.4, color = masld_colors$up, se = FALSE) +
+      geom_abline(slope = 1, intercept = 0, linetype = "dashed",
+                  linewidth = 0.2, color = "gray40") +
+      geom_text(data = cors, aes(label = sprintf("rho=%.2f\nn=%s", rho, format(n, big.mark = ","))),
+                x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3, size = 2, inherit.aes = FALSE) +
+      facet_wrap(~diet_model, nrow = 1) +
+      coord_cartesian(xlim = c(-4, 4), ylim = c(-4, 4)) +
+      theme_masld() +
+      labs(x = expression("Human integrated log"[2]*"FC (C2)"),
+           y = expression("Mouse diet log"[2]*"FC"),
+           title = "Mouse-human LFC concordance by diet model")
   } else {
-    dream_m <- NULL
-  }
-
-  if (!is.null(dream_m) && "symbol" %in% names(per_diet)) {
-    # Merge per-diet with human dream via symbol
-    diet_human <- merge(
-      per_diet[diet_model %in% diets, .(gene, symbol, logFC, padj, diet_model)],
-      dream_m[, .(symbol, human_logFC = dream_logFC)],
-      by = "symbol", allow.cartesian = TRUE
-    )
-
-    if (nrow(diet_human) > 0) {
-      # Compute per-diet correlation with human
-      cors <- diet_human[, .(
-        rho = cor(logFC, human_logFC, use = "complete.obs", method = "spearman"),
-        n = .N
-      ), by = diet_model]
-
-      p_c <- ggplot(diet_human, aes(x = human_logFC, y = logFC)) +
-        rasterize_layer(geom_point(size = 0.1, alpha = 0.15, color = "gray50", shape = 16)) +
-        geom_smooth(method = "lm", linewidth = 0.4, color = masld_colors$up, se = FALSE) +
-        geom_abline(slope = 1, intercept = 0, linetype = "dashed",
-                    linewidth = 0.2, color = "gray40") +
-        geom_text(data = cors, aes(label = sprintf("rho=%.2f\nn=%s", rho, format(n, big.mark = ","))),
-                  x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3, size = 2, inherit.aes = FALSE) +
-        facet_wrap(~diet_model, nrow = 1) +
-        coord_cartesian(xlim = c(-4, 4), ylim = c(-4, 4)) +
-        theme_masld() +
-        labs(x = expression("Human integrated log"[2]*"FC"),
-             y = expression("Mouse diet log"[2]*"FC"),
-             title = "Mouse-human LFC concordance by diet model")
-    } else {
-      p_c <- placeholder("No overlapping genes between mouse and human")
-    }
-  } else {
-    p_c <- placeholder("Gene symbol mapping not available")
+    p_c <- placeholder("No overlapping orthologs between mouse and human")
   }
 } else {
-  p_c <- placeholder("Dream or per-diet data missing")
+  p_c <- placeholder("Ortholog map or human/mouse C2 data missing")
 }
 
 # ==========================================================================
 # Panel d: Consensus tier composition
 # ==========================================================================
-if (!is.null(consensus) && "consensus_tier" %in% names(consensus)) {
-  tier_summary <- consensus[, .N, by = consensus_tier]
+# C2 fix (2026-06-21): the consensus column is `tier` (Significant/Not_significant),
+# not the legacy `consensus_tier`; accept either so the panel renders a real bar.
+tier_col <- if (!is.null(consensus)) intersect(c("consensus_tier", "tier"), names(consensus))[1] else NA_character_
+if (!is.null(consensus) && !is.na(tier_col)) {
+  tier_summary <- consensus[, .N, by = c(tier_col)]
+  setnames(tier_summary, tier_col, "grp")
   tier_summary[, pct := N / sum(N) * 100]
 
-  p_d <- ggplot(tier_summary, aes(x = reorder(consensus_tier, -N), y = N,
-                                   fill = consensus_tier)) +
+  p_d <- ggplot(tier_summary, aes(x = reorder(grp, -N), y = N, fill = grp)) +
     geom_col(width = 0.6) +
     geom_text(aes(label = paste0(format(N, big.mark = ","), "\n(",
                                  sprintf("%.1f%%", pct), ")")),
-              vjust = -0.3, size = 2.2) +
-    scale_fill_manual(values = tier_consensus_colors, guide = "none") +
+              vjust = -0.3, size = 2.2, color = "black") +
+    scale_fill_manual(values = c(Significant = masld_colors$up,
+                                 Not_significant = "#9E9E9E",
+                                 Consensus = tryCatch(masld_colors$conserved,
+                                                      error = function(e) "#1B7C6F")),
+                      guide = "none", na.value = "#9E9E9E") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
     theme_masld() +
-    labs(x = NULL, y = "Gene count",
-         title = "Mouse consensus DEG tiers")
+    labs(x = NULL, y = "Mouse genes",
+         title = "Mouse consensus significance (across diet models)")
 } else if (!is.null(meta)) {
   # Fallback: show per-diet significant gene counts
   meta_sig <- meta[, .(

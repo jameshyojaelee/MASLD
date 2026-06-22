@@ -103,6 +103,7 @@ pB <- B_parts$genes | B_parts$traj
 # Panel C — triple-pipeline cross-reference for 5 priority genes
 # ----------------------------------------------------------------------------
 ATLAS_ALL <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(ATLAS_ALL)))
 susie_col <- intersect(c("coloc_best_pp4_polyfun", "coloc_best_susie_pp4_polyfun",
                           "coloc_best_susie_pp4"), names(ATLAS_ALL))[1]
 abf_col   <- intersect(c("coloc_abf_best_pp4", "coloc_pp4"), names(ATLAS_ALL))[1]
@@ -137,9 +138,9 @@ drug_summary <- drug_rows[, .(drug     = paste(unique(drug), collapse = "; "),
 atlas_signals <- ATLAS[gene %in% genes_panel,
                        .(gene,
                          coloc_pp4 = pmax(coloc_susie_pp4, coloc_abf_pp4, na.rm = TRUE),
-                         dream_logFC = bulk_logFC)]
+                         bulk_logFC = bulk_logFC)]
 atlas_signals[, coloc_pp4 := round(ifelse(is.finite(coloc_pp4), coloc_pp4, NA), 2)]
-atlas_signals[, dream_logFC := round(dream_logFC, 2)]
+atlas_signals[, bulk_logFC := round(bulk_logFC, 2)]
 
 pickC <- merge(NARRATIVE, atlas_signals, by = "gene", all.x = TRUE)
 pickC <- merge(pickC, drug_summary, by = "gene", all.x = TRUE)
@@ -153,12 +154,12 @@ pickC[, drug_str := ifelse(drug == "None" | drug == "—", "—",
 
 # Reshape to long for tile plot
 plot_long <- melt(pickC[, .(gene, module_label, sig_str,
-                            coloc_pp4, dream_logFC, drug_str)],
+                            coloc_pp4, bulk_logFC, drug_str)],
                   id.vars = "gene", variable.name = "field", value.name = "value")
 plot_long[, value_str := ifelse(is.na(value) | value == "NA", "—",
                                   as.character(value))]
 plot_long[, field := factor(field, levels = c("module_label", "sig_str",
-                                              "coloc_pp4", "dream_logFC",
+                                              "coloc_pp4", "bulk_logFC",
                                               "drug_str"),
                             labels = c("Hotspot module\n(CT-specific)",
                                        "Disease β / q",

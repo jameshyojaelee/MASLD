@@ -2,6 +2,14 @@
 # Same 18 curated TFs as the TF × cell-type panel, but restricted to
 # hepatocyte cells and stratified by disease condition (NORMAL / MASL / MASH).
 # Donor exclusions match the SCENIC+ donor-regulon panel.
+#
+# SIGNIFICANCE CAVEAT (honest framing): the point-size -log10(padj) is a
+# Wilcoxon-vs-F0 BH-corrected WITHIN this curated ~18-TF hypothesis set — it is
+# EXPLORATORY, hypothesis-driven significance, NOT genome-wide. Across the full
+# donor-level chromVAR test space (~7,133 TF x cell-type tests) NOTHING survives
+# BH correction (n=18 multiome is underpowered; the inflated per-cell "4,832"
+# was pseudoreplication — see memory/project-megareview-2026-06-14). Treat this
+# panel as a descriptive deviation map on pre-selected TFs, not a discovery claim.
 
 suppressPackageStartupMessages({
   library(data.table)

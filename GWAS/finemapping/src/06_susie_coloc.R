@@ -242,6 +242,17 @@ for (i in seq_along(egenes)) {
     tryCatch({
       s_eqtl <- readRDS(eqtl_rds)
 
+      # Guard: a non-converged eQTL SuSiE fit can report PIP=1.0 for multiple
+      # variants at once (physically impossible; PIPs within a credible set
+      # should sum to ~1 for a single causal signal). Feeding such a fit into
+      # coloc.susie() emits a spurious high PP.H4 (the PNPLA3/TM6SF2 PIP-myth
+      # producer). Skip the SuSiE arm and fall through to ABF when the eQTL fit
+      # did not converge (or lacks the converged flag).
+      eqtl_converged <- isTRUE(s_eqtl$converged)
+      if (!eqtl_converged) {
+        stop("eQTL SuSiE fit not converged — skipping SuSiE-COLOC (ABF fallback)")
+      }
+
       # SNP IDs in the pre-computed eQTL fit are "CHR:POS"
       eqtl_snp_ids  <- colnames(s_eqtl$lbf_variable)
       eqtl_positions <- as.integer(sub("^[0-9]+:", "", eqtl_snp_ids))
@@ -296,7 +307,10 @@ for (i in seq_along(egenes)) {
             error = function(e) NULL
           )
 
-          if (!is.null(s_gwas)) {
+          # Same convergence guard on the GWAS-side SuSiE fit: a non-converged
+          # susie_rss() solution yields unreliable PIPs that propagate into a
+          # spurious coloc.susie() PP.H4. Require convergence before colocalizing.
+          if (!is.null(s_gwas) && isTRUE(s_gwas$converged)) {
             # Subset eQTL SuSiE to SNPs shared with GWAS LD set
             common_snps <- intersect(snp_ids, colnames(s_eqtl$lbf_variable))
 

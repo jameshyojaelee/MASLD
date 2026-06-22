@@ -16,7 +16,7 @@
 #           Source: GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv
 #     3c  RORA / GGT chr15:60883281 cross-ancestry locus LD-zoom (external panel
 #           rendered by run_fig3c_rora_locus_zoom.sh; figS09_locus_zoom.R writes
-#           directly to panels/fig3c.pdf).
+#           directly to panels/rora_locus_zoom.pdf).
 #     3d  GWAS-ATAC PIP vs |alleleDiff| scatter, SCENIC+ disease-regulon TFs
 #           highlighted (was 3c pre-2026-04-29).
 #     3e  High-PIP (>=0.8) variant × TF heatmap (was 3d pre-2026-04-29).
@@ -29,8 +29,8 @@
 #     -> figures/supplementary/figS_therapeutics/panels/fig3_drug_finemapping_demoted.pdf
 #
 #   Outputs: figures/main/fig3_regulatory_architecture/panels/fig3{a,b,d,e,f}.pdf
-#            figures/main/fig3_regulatory_architecture/fig3_regulatory_architecture.pdf
-#            (fig3c.pdf written by external RORA launcher)
+#            figures/main/fig3_regulatory_architecture/regulatory_architecture.pdf
+#            (rora_locus_zoom.pdf written by external RORA launcher)
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -264,7 +264,8 @@ p3a <- p3a_top / p3a_bot +
   plot_layout(heights = c(1, 1), guides = "collect") &
   theme(legend.position = "top")
 
-save_panel(p3a, "fig3a.pdf", width = fig_full_width, height = 5.2)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): pip_coloc_manhattan.pdf
+# save_panel(p3a, "pip_coloc_manhattan.pdf", width = fig_full_width, height = 5.2)
 
 # ===========================================================================
 # Panel 3b: Per-ancestry COLOC eGene counts at PP.H4 > 0.5 / 0.8 / 0.9
@@ -352,9 +353,9 @@ p3b <- ggplot(bar_dt, aes(x = ancestry_label, y = n_genes,
         plot.subtitle = element_text(size = 6, color = "gray35"),
         axis.text.x = element_text(size = 6.5))
 
-save_panel(p3b, "fig3b.pdf", width = fig_half_width, height = 3.0)
+save_panel(p3b, "ancestry_coloc_counts.pdf", width = fig_half_width, height = 3.0)
 fwrite(bar_dt[, .(ancestry, n_gwas, threshold, n_genes)],
-       file.path(FIG3_DIR, "fig3b_ancestry_coloc_counts.csv"))
+       file.path(FIG3_DIR, "ancestry_coloc_counts.csv"))
 
 # Caption sidecar (kept for backward compatibility with figS09 / NUMBERS.md)
 sc_eur <- sc[ancestry == "EUR"]
@@ -366,8 +367,8 @@ fwrite(data.table(threshold = thresholds,
                   n_gwas    = 14L,
                   ancestry  = "EUR",
                   method    = "ABF",
-                  note      = "EUR-only ABF subset for legacy caption; full per-ancestry counts in fig3b_ancestry_coloc_counts.csv"),
-       file.path(FIG3_DIR, "fig3a_pph4_thresholds.csv"))
+                  note      = "EUR-only ABF subset for legacy caption; full per-ancestry counts in ancestry_coloc_counts.csv"),
+       file.path(FIG3_DIR, "pph4_thresholds.csv"))
 
 # ===========================================================================
 # Supplementary inset (writes to figS09): Cross-ancestry locus zoom at
@@ -588,7 +589,8 @@ p3c <- ggplot(credible, aes(x = max_pip, y = abs_diff)) +
   theme_masld() +
   theme(plot.margin = margin(4, 4, 4, 4))
 
-save_panel(p3c, "fig3d.pdf", width = 5.0, height = 2.8)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): pip_vs_disruption_scatter.pdf
+# save_panel(p3c, "pip_vs_disruption_scatter.pdf", width = 5.0, height = 2.8)
 
 # --- Panel 3e (was 3d pre-2026-04-29): high-PIP variant × TF heatmap -------
 hi <- credible[max_pip >= 0.8]
@@ -671,7 +673,8 @@ p3d <- ggplot(hi_grid, aes(x = tf_name, y = var_label)) +
     plot.margin     = margin(4, 4, 4, 4)
   )
 
-save_panel(p3d, "fig3e_tf_heatmap.pdf", width = 5.6, height = 3.0)
+# RETIRED 2026-06-12 (not a Fig 2 panel): tf_heatmap.pdf
+# save_panel(p3d, "tf_heatmap.pdf", width = 5.6, height = 3.0)
 
 # ===========================================================================
 # Panel 3f (+ demoted figS_therapeutics inset): Drug-target genetic validation
@@ -927,7 +930,7 @@ fwrite(gene_tbl[, .(gene, fig5_group, bulk_logFC, bulk_padj,
                     coloc_pp4)],
        file.path(BASE, "RNA-seq/results/drug_repurposing/fig3f_scatter_data.csv"))
 
-save_panel(p3e, "fig3e.pdf", width = fig_half_width, height = 4.0)
+save_panel(p3e, "drug_target_validation.pdf", width = fig_half_width, height = 4.0)
 
 # Demote drug-target finemapping (PIP) scatter to figS_therapeutics.
 THERA_PANELS <- file.path(FIGS_THERA_DIR, "panels")
@@ -936,21 +939,21 @@ save_fig(p3f, file.path(THERA_PANELS, "fig3_drug_finemapping_demoted.pdf"),
          width = fig_half_width, height = 4.0)
 cat("[fig3] Demoted drug-target finemapping scatter -> figS_therapeutics/panels/fig3_drug_finemapping_demoted.pdf\n")
 
-# NOTE: fig3c.pdf (RORA / GGT chr15 locus LD-zoom) is generated externally
+# NOTE: rora_locus_zoom.pdf (RORA / GGT chr15 locus LD-zoom) is generated externally
 # by scripts/figures/run_fig3c_rora_locus_zoom.sh (figS09_locus_zoom.R writes
-# directly via its 4th CLI arg). Do NOT delete fig3c.pdf.
+# directly via its 4th CLI arg). Do NOT delete rora_locus_zoom.pdf.
 for (stale in c("fig3g.pdf", "fig3h.pdf")) {
   p <- file.path(PANEL_DIR, stale)
   if (file.exists(p)) {
     file.remove(p); cat("[fig3] Removed stale", stale, "\n")
   }
 }
-# Old fig3b.pdf (RORA at the wrong slot) is retired by the cascade — remove.
-old_b <- file.path(PANEL_DIR, "fig3b.pdf")
+# Old ancestry_coloc_counts.pdf (RORA at the wrong slot) is retired by the cascade — remove.
+old_b <- file.path(PANEL_DIR, "ancestry_coloc_counts.pdf")
 if (file.exists(old_b)) {
-  bak <- file.path(PANEL_DIR, ".fig3b_pre_cascade.pdf")
+  bak <- file.path(PANEL_DIR, ".ancestry_coloc_counts_pre_cascade.pdf")
   file.rename(old_b, bak)
-  cat("[fig3] Old fig3b.pdf (RORA at wrong slot) renamed ->", bak, "\n")
+  cat("[fig3] Old ancestry_coloc_counts.pdf (RORA at wrong slot) renamed ->", bak, "\n")
 }
 
 # ===========================================================================
@@ -973,7 +976,7 @@ cat("[fig3] Assembling composite (6 panels: a, b, c, d, e, f) ...\n")
 p3a_wrapped <- wrap_elements(full = p3a)
 
 # Inline the external RORA PDF as a raster so the composite includes it.
-rora_pdf <- file.path(PANEL_DIR, "fig3c.pdf")
+rora_pdf <- file.path(PANEL_DIR, "rora_locus_zoom.pdf")
 # magick::image_read_pdf needs the pdftools/poppler backend; if it is unavailable
 # (rnaseq env lacks pdftools) fall through to the placeholder rather than abort,
 # since the individual panels are the deliverable and fig3c is rasterised externally.
@@ -984,9 +987,9 @@ if (!is.null(rora_img)) {
   rora_grob <- grid::rasterGrob(rora_img, interpolate = TRUE)
   rora_panel <- wrap_elements(full = rora_grob)
 } else {
-  cat("[fig3] WARNING: fig3c.pdf (RORA) not yet generated; composite will use a placeholder.\n")
+  cat("[fig3] WARNING: rora_locus_zoom.pdf (RORA) not yet generated; composite will use a placeholder.\n")
   rora_panel <- wrap_elements(full = grid::textGrob(
-    "fig3c.pdf (RORA) pending\nrun run_fig3c_rora_locus_zoom.sh",
+    "rora_locus_zoom.pdf (RORA) pending\nrun run_fig3c_rora_locus_zoom.sh",
     gp = grid::gpar(fontsize = 10, col = "grey50")))
 }
 
@@ -1001,9 +1004,11 @@ composite <- p3a_wrapped /
   ) &
   theme(plot.tag = element_text(size = 9, face = "bold"))
 
-out_composite <- file.path(FIG3_DIR, "fig3_regulatory_architecture.pdf")
-save_fig(composite, out_composite,
-         width = fig_full_width, height = 13.5)
-cat("[fig3] Composite saved:", out_composite, "\n")
+# RETIRED 2026-06-12 (regulatory_architecture.pdf composite no longer a Fig 2 deliverable;
+# individual panels ancestry_coloc_counts / tf_heatmap / drug_target_validation are still written above):
+# out_composite <- file.path(FIG3_DIR, "regulatory_architecture.pdf")
+# save_fig(composite, out_composite,
+#          width = fig_full_width, height = 13.5)
+# cat("[fig3] Composite saved:", out_composite, "\n")
 
 cat("[fig3] DONE (6 displayed panels a,b,c,d,e,f; drug-PIP scatter demoted; GGT1 locus -> figS09).\n")

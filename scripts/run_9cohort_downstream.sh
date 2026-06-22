@@ -25,7 +25,7 @@ echo "  Job: $SLURM_JOB_ID | CPUs: $SLURM_CPUS_PER_TASK"
 echo "  Started: $(date)"
 echo "=========================================="
 
-# Cross-species concordance (reads dream_results.csv)
+# Cross-species concordance (reads canonical_deg_results.csv)
 echo ""
 echo "=== Cross-Species Concordance (Phase 1: Gene-level) ==="
 Rscript Analysis/Cross_Species_Concordance/scripts/01_corrected_gene_concordance.R 2>&1
@@ -48,7 +48,7 @@ echo "=== 20: Drug Repurposing ==="
 Rscript RNA-seq/20_drug_repurposing_v3.R 2>&1
 if [ $? -ne 0 ]; then echo "WARNING: Drug repurposing failed (non-fatal)"; fi
 
-# GWAS overlay (reads dream_results.csv)
+# GWAS overlay (reads canonical_deg_results.csv)
 echo ""
 echo "=== 30: GWAS Overlay ==="
 Rscript RNA-seq/30_gwas_overlay_v2.R 2>&1

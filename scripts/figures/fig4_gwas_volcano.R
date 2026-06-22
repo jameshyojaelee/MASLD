@@ -209,8 +209,11 @@ p <- p + annotate("text", x = max(plot_dt$logFC) * 0.7, y = max(plot_dt$neglog10
 # ===========================================================================
 # 5. Save
 # ===========================================================================
+# RETIRED 2026-06-17: dead/illegible panel, cut in the Fig 2 review and archived.
+# This script misroutes to FIG3_DIR (=fig2_genetics). Archived copy:
+# figures/main/fig2_genetics/panels/_archive/panel_gwas_volcano.pdf
 outfile <- file.path(outdir, "panel_gwas_volcano.pdf")
-ggsave(outfile, p, width = 120, height = 85, units = "mm", device = cairo_pdf)
-cat("Saved:", outfile, "\n")
+# ggsave(outfile, p, width = 120, height = 85, units = "mm", device = cairo_pdf)
+# cat("Saved:", outfile, "\n")
 
 cat("Done.\n")

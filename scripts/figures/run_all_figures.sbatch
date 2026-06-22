@@ -75,9 +75,7 @@ run_group() {
 # ============================================================
 run_group "Main Fig1 — Atlas" \
   fig1_atlas_overview.R          "Fig1 atlas_overview" \
-  fig1_integration_value_panels.R "Fig1 integration_value" \
   fig1_loo_cv_panels.R           "Fig1 loo_cv" \
-  fig1d_candidates.R             "Fig1d candidates" \
   fig1_compact.R                 "Fig1 compact"
 
 # ============================================================

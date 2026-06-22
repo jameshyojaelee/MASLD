@@ -43,6 +43,42 @@ BINARY_COLORS = {
     "Mouse": "#8FBE6F",  # spring sage
 }
 
+# Disease-vs-control composition per modality, RESOLVED BY SPECIES — drives the
+# proportional INNER ring (human block | mouse block, each split disease/control).
+# Format {"human": (disease, control), "mouse": (disease, control)}; omit a species
+# with no data. Counts sourced 2026-06-18 from harmonized metadata (proportions render;
+# the human|mouse split angle is taken from the species `context` so it aligns with the
+# species ring, and disease/control within each block uses these species-specific n):
+#   bulk    = human 1124/160 (9 cohorts, unified_metadata.csv) + mouse 179/114 (unified_mouse_metadata.csv)
+#   scrna   = human 196/64 (donor condition_binary; 9 NA excl). Atlas scRNA is HUMAN-ONLY:
+#             all 7 datasets are human liver studies (269 donors, donor_metadata.tsv). The
+#             prior (283,114) species split was spurious — corrected to (269,0) 2026-06-18.
+#   spatial = human 22/5 (Govaere 12 + Vu 10 disease vs GSE192741 5 healthy/steatotic; dataset-level)
+#   atac    = human 13/5 (donor_metadata_curated) + mouse 9/3 (config SCD_Control = control)
+#   proteo  = human 111/19 (plasma 65/7 is_masld + liver 46/12 PXD051911 group)
+#   pharma / gwas = None → not a case/control design (compounds / population genetics)
+SPECIES_DISEASE = {
+    "bulk":    {"human": (1124, 160), "mouse": (179, 114)},
+    "scrna":   {"human": (196, 64)},
+    "spatial": {"human": (22, 5)},
+    "atac":    {"human": (13, 5), "mouse": (9, 3)},
+    "proteo":  {"human": (111, 19)},
+    "pharma":  None,
+    "gwas":    None,
+}
+CONTROL_GRAY  = "#9E9E9E"  # canonical control gray (FIGURE_GUIDELINES)
+DISEASE_COLOR = "#C0524E"  # single semantic disease red — deliberately NOT a modality/blue hue
+NA_GRAY       = "#E2E2E2"  # neutral fill for non-case/control modalities
+SPECIES_LIGHTEN = 0.45     # mouse arcs = this much lighter than human (lightness = species)
+
+# GWAS inner ring = ANCESTRY of the 23 GWAS (by study count). The 3 eQTL
+# (GTEx/Broadaway/sc-eQTL, EUR reference panels) are EXCLUDED — not ancestry-stratified
+# GWAS. Violet gradient (dark EUR → pale SAS). Source: gwas_registry.tsv.
+ANCESTRY = {
+    "gwas": [("EUR", 14, "#3A2259"), ("EAS", 3, "#7B4FB0"),
+             ("AFR", 3, "#C08AC9"), ("SAS", 3, "#EBD4E8")],
+}
+
 # (key, title, l1, l2, (n_human, n_mouse), weight, datasets)
 # Verified from unified metadata & processed data (updated 2026-06-03)
 # scRNA: human donors + mouse donors across 7 source datasets
@@ -53,11 +89,11 @@ BINARY_COLORS = {
 # spatial: Govaere 2026 (GeoMx+CosMx, integrated 2026-05-21), GSE192741 (Visium), Vu_et_al_2025 (3 active)
 SECTORS = [
     ("bulk",    "RNA-seq",                    "17\nRNA-seq",      "1,722\nsamples",  (1259, 463),  18.0, 17),
-    ("scrna",   "scRNA-seq",                  "7\nscRNA-seq",     "2.29M+\ncells",   (283, 114),    8.0, 7),
+    ("scrna",   "scRNA-seq",                  "7\nscRNA-seq",     "2.29M+\ncells",   (269, 0),      8.0, 7),
     ("spatial", "Spatial Omics",              "3\nSpatial",       "27\nsamples",     (27, 0),        4.5, 3),
     ("atac",    "ATAC-seq",                   "2\nATAC-seq",      "30\nsamples",     (18, 12),       4.5, 2),
-    ("proteo",  "Proteomics",                 "3\nProteomics",    "307\nsamples",    (307, 0),       4.5, 3),
-    ("pharma",  "Pharmacological\nprofiling", "5\nPharma",        "1,107\ncmpds",    (1, 0),         4.5, 5),
+    ("proteo",  "Proteomics",                 "2\nProteomics",    "130\nsamples",    (130, 0),       4.5, 2),
+    ("pharma",  "Therapeutics",               "5\nTherapeutics",  "1,107\ncmpds",    (1, 0),         4.5, 5),
     ("gwas",    "Genomics",                   "23 GWAS\n3 eQTL",  "1.5M+\nsubj.",   (1, 0),        16.0, 26),
 ]
 
@@ -72,7 +108,7 @@ _DATASET_SIZES_RAW = {
     ],
     "spatial": [12, 10, 5],  # Govaere2026(GeoMx 8pt+CosMx 4pt), Vu_et_al_2025(10 arrays), GSE192741(5 Visium sections)
     "atac": [18, 12],                   # Human_Multiome (18 donors), Mouse_Bulk (12 samples)
-    "proteo": [177, 72, 58],            # GSE276114 SomaScan, PXD052937 DIA-MS, PXD051911 liver
+    "proteo": [72, 58],                 # PXD052937 plasma DIA-MS, PXD051911 liver DIA-MS (GSE276114 removed 2026-06: GEO confirms bulk RNA-seq, not SomaScan proteomics)
     "pharma": [1107, 1173, 58, 23, 20],  # LINCS(1107 compounds), network proximity(1173 screened), DGIdb/OT, ClinicalTrials MASH, multi-layer
     "gwas": [  # 23 GWAS + 3 eQTL (subjects in thousands); from gwas_registry.tsv (2026 portfolio refactor)
         # EUR (14): N_tot in thousands
@@ -168,7 +204,7 @@ def main():
     # Right axes: Half-sunburst legend (vertically centred; no modality legend above)
     ax_leg = fig.add_axes([0.72, 0.30, 0.25, 0.50])
     ax_leg.set_xlim(-0.3, 1.3)
-    ax_leg.set_ylim(-0.8, 1.5)
+    ax_leg.set_ylim(-1.35, 1.5)
     ax_leg.set_aspect("equal")
     ax_leg.axis("off")
 
@@ -191,16 +227,15 @@ def main():
             color=TEXT_DARK, ha="center", va="center", zorder=11)
 
     # Rings (Hierarchical thicknesses)
-    # Layer 0: Counts (Inner)
-    # Layer 1: Datasets 
-    # Layer 2: Binary Species flag (Outermost slim ring)
-    r_starts = [0.31, 0.65, 0.95]
-    r_ends   = [0.65, 0.95, 1.05]
-    
-    # Shading: inner ring sits ~65% toward white (lighter wash for the
-    # count layer), outer modality ring softened ~15% so it doesn't punch
-    # against the muted palette.
-    layer_shading = [0.65, 0.15]  # Layer 2 (species) handled separately
+    # Layer 0: Disease vs control composition (inner, proportional arcs)
+    # Layer 1: Datasets — modality name + n datasets
+    # Layer 2: Binary species flag (outermost slim ring)
+    # (The old inner per-modality "Counts" totals ring was removed 2026-06-18 — it
+    #  duplicated the outer bars; replaced here by disease/control composition.)
+    r_starts = [0.31, 0.62, 0.95]
+    r_ends   = [0.62, 0.95, 1.05]
+
+    MOD_SHADE = 0.15   # modality (name) ring — softened so it doesn't punch
     
     total_weight = sum(s[5] for s in SECTORS)
     gap_deg = 3.5  # Distinct sector gaps
@@ -215,50 +250,82 @@ def main():
         end_angle = current_angle - span
         
         base_color = MODALITY_COLORS[key]
-        layer_texts = [l2, l1]  # Inner to Outer texts
-        
-        # 1. First 2 Concentric Layers (Modality Colors)
-        for layer_idx in range(2):
-            r_in = r_starts[layer_idx]
-            r_out = r_ends[layer_idx]
-            
-            text_str = layer_texts[layer_idx]
-            color = blend_white(base_color, layer_shading[layer_idx])
-            
-            # The Wedge
-            wedge = Wedge((0, 0), r_out, end_angle, current_angle, width=r_out - r_in,
-                          facecolor=color, edgecolor=BG_COLOR, linewidth=2.0, zorder=5)
-            ax.add_patch(wedge)
-            
-            # Text placement — adaptive for narrow wedges
-            if text_str:
-                r_mid = (r_in + r_out) / 2.0
-                mid_angle = (current_angle + end_angle) / 2.0
 
-                rot = mid_angle - 90
-                if rot < -90:
-                    rot += 180
-                elif rot > 90:
-                    rot -= 180
-
-                x = r_mid * np.cos(np.radians(mid_angle))
-                y = r_mid * np.sin(np.radians(mid_angle))
-
-                t_color = get_text_color(color)
-                base_size = LABEL_SIZE
-
-                if span < 18:
-                    f_size = base_size * max(0.55, span / 22.0)
-                elif span < 25:
-                    f_size = base_size * max(0.7, span / 25.0)
+        # 1. Inner ring — disease vs control composition, split by species.
+        #    Each sector is a human block then a mouse block (angles from `context`
+        #    so they line up with the species ring); within each block, disease
+        #    (red) vs control (gray). Mouse arcs are lightened so species reads off
+        #    lightness without adding another hue.
+        r_in0, r_out0 = r_starts[0], r_ends[0]
+        sd = SPECIES_DISEASE.get(key)
+        if sd is not None:
+            sp_total = sum(context) if sum(context) > 0 else 1
+            all_d = sum(v[0] for v in sd.values())
+            all_c = sum(v[1] for v in sd.values())
+            overall_dfrac = all_d / (all_d + all_c)
+            seg_start = current_angle
+            for sp_idx, sp_name in enumerate(("human", "mouse")):
+                sp_count = context[sp_idx]
+                if sp_count <= 0:
+                    continue
+                sp_span = (sp_count / sp_total) * span
+                if sp_name in sd:
+                    d, c = sd[sp_name]
+                    dfrac = d / (d + c)
                 else:
-                    f_size = base_size
+                    dfrac = overall_dfrac  # mouse block w/o per-species data → overall
+                lighten = 0.0 if sp_name == "human" else SPECIES_LIGHTEN
+                for cond_frac, base in [(dfrac, DISEASE_COLOR), (1 - dfrac, CONTROL_GRAY)]:
+                    if cond_frac > 0:
+                        seg_end = seg_start - cond_frac * sp_span
+                        ax.add_patch(Wedge((0, 0), r_out0, seg_end, seg_start, width=r_out0 - r_in0,
+                                           facecolor=blend_white(base, lighten),
+                                           edgecolor=BG_COLOR, linewidth=2.0, zorder=5))
+                        seg_start = seg_end
+        elif ANCESTRY.get(key) is not None:
+            # GWAS/eQTL — ancestry composition (violet gradient, dark EUR → pale SAS)
+            anc = ANCESTRY[key]
+            tot = sum(n for _, n, _ in anc)
+            seg_start = current_angle
+            for _lab, n, col in anc:
+                if n > 0:
+                    seg_end = seg_start - (n / tot) * span
+                    ax.add_patch(Wedge((0, 0), r_out0, seg_end, seg_start, width=r_out0 - r_in0,
+                                       facecolor=col, edgecolor=BG_COLOR, linewidth=2.0, zorder=5))
+                    seg_start = seg_end
+        else:
+            # pharma — sources not commensurable as case/control or ancestry → neutral fill
+            ax.add_patch(Wedge((0, 0), r_out0, end_angle, current_angle, width=r_out0 - r_in0,
+                               facecolor=NA_GRAY, edgecolor=BG_COLOR, linewidth=2.0, zorder=5))
 
-                ax.text(x, y, text_str, rotation=rot, color=t_color,
-                        fontsize=f_size, fontweight="medium",
-                        ha="center", va="center", zorder=6)
-        
-        # 2. 3rd Layer: Binary Species Flag (Proportionally Scaled)
+        # 2. Modality ring — name + n datasets
+        r_in1, r_out1 = r_starts[1], r_ends[1]
+        color = blend_white(base_color, MOD_SHADE)
+        ax.add_patch(Wedge((0, 0), r_out1, end_angle, current_angle, width=r_out1 - r_in1,
+                           facecolor=color, edgecolor=BG_COLOR, linewidth=2.0, zorder=5))
+        # Text placement — adaptive for narrow wedges
+        r_mid = (r_in1 + r_out1) / 2.0
+        mid_angle = (current_angle + end_angle) / 2.0
+        rot = mid_angle - 90
+        if rot < -90:
+            rot += 180
+        elif rot > 90:
+            rot -= 180
+        x = r_mid * np.cos(np.radians(mid_angle))
+        y = r_mid * np.sin(np.radians(mid_angle))
+        t_color = get_text_color(color)
+        base_size = LABEL_SIZE
+        if span < 18:
+            f_size = base_size * max(0.55, span / 22.0)
+        elif span < 25:
+            f_size = base_size * max(0.7, span / 25.0)
+        else:
+            f_size = base_size
+        ax.text(x, y, l1, rotation=rot, color=t_color,
+                fontsize=f_size, fontweight="medium",
+                ha="center", va="center", zorder=6)
+
+        # 3. Outer slim layer: Binary Species Flag (Proportionally Scaled)
         total_samples = sum(context)
         if total_samples > 0:
             h_frac = context[0] / total_samples
@@ -279,7 +346,7 @@ def main():
                     
                     seg_start = seg_end
                           
-        # 3. Outer bars (Layer 4) — one bar per dataset, height ∝ dataset size (linear % of max)
+        # 2b. Outer bars (Layer 3) — one bar per dataset, height ∝ dataset size (linear % of max)
         margin = 1.0
         usable_span = span - 2 * margin
         r_base = r_ends[-1] + 0.02
@@ -349,45 +416,44 @@ def main():
     
     leg_colors = [MODALITY_COLORS["scrna"], MODALITY_COLORS["bulk"]]
     leg_angles = [(45, 90), (0, 45)]
-    labels = ["Counts", "Datasets"]  
-    
-    # Draw Quarter Rings for Modality Layers
-    for idx in range(2):
-        r_in = r_starts[idx]
-        r_out = r_ends[idx]
-        
-        for ang_idx, (th1, th2) in enumerate(leg_angles):
-            c = blend_white(leg_colors[ang_idx], layer_shading[idx])
-            w = Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
-                      facecolor=c, edgecolor=BG_COLOR, lw=2.0)
-            ax_leg.add_patch(w)
-            
-        # Label
-        r_mid = (r_in + r_out) / 2.0
-        ax_leg.text(-0.06, r_mid, labels[idx], ha="right", va="center",
-                    fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
-        ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
+    # Inner ring — Disease vs Control (disease red + control gray)
+    r_in, r_out = r_starts[0], r_ends[0]
+    dc_demo = [DISEASE_COLOR, CONTROL_GRAY]
+    for ang_idx, (th1, th2) in enumerate(leg_angles):
+        ax_leg.add_patch(Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
+                               facecolor=dc_demo[ang_idx], edgecolor=BG_COLOR, lw=2.0))
+    r_mid = (r_in + r_out) / 2.0
+    ax_leg.text(-0.06, r_mid, "Condition", ha="right", va="center",
+                fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
+    ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
 
-    # Draw Species Ring Legend
-    r_in = r_starts[2]
-    r_out = r_ends[2]
+    # Modality (Datasets) ring
+    r_in, r_out = r_starts[1], r_ends[1]
+    for ang_idx, (th1, th2) in enumerate(leg_angles):
+        c = blend_white(leg_colors[ang_idx], MOD_SHADE)
+        ax_leg.add_patch(Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
+                               facecolor=c, edgecolor=BG_COLOR, lw=2.0))
+    r_mid = (r_in + r_out) / 2.0
+    ax_leg.text(-0.06, r_mid, "Modality", ha="right", va="center",
+                fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
+    ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
+
+    # Species ring
+    r_in, r_out = r_starts[2], r_ends[2]
     sp_legend_colors = [BINARY_COLORS["Human"], BINARY_COLORS["Mouse"]]
     for ang_idx, (th1, th2) in enumerate(leg_angles):
-        c = sp_legend_colors[ang_idx]
-        w = Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
-                  facecolor=c, edgecolor=BG_COLOR, lw=2.0)
-        ax_leg.add_patch(w)
-
+        ax_leg.add_patch(Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
+                               facecolor=sp_legend_colors[ang_idx], edgecolor=BG_COLOR, lw=2.0))
     r_mid = (r_in + r_out) / 2.0
     ax_leg.text(-0.06, r_mid, "Species", ha="right", va="center",
                 fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
     ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
 
     # Outer bars legend
-    ax_leg.text(-0.06, r_ends[-1] + 0.2, "n of datasets", ha="right", va="center",
+    ax_leg.text(-0.06, r_ends[-1] + 0.2, "Datasets", ha="right", va="center",
                 fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
     ax_leg.plot([-0.04, -0.01], [r_ends[-1] + 0.2, r_ends[-1] + 0.2], color="black", lw=1.0)
-    
+
     # Dummy outer bars (varying heights to illustrate proportional sizing)
     dummy_lengths = [0.42, 0.25, 0.10, 0.38, 0.15, 0.30]
     bar_idx = 0
@@ -412,14 +478,27 @@ def main():
                 (leg_r1 + 0.04) * np.sin(leg_axis_rad) + cy,
                 "max", fontsize=LABEL_SIZE, color="#888888", ha="center", va="center")
 
-    # Species Context Legend
+    # Bottom swatch legends — two columns: Species (left), Disease/Control (right)
     sp_y = -0.5
     ax_leg.text(0, sp_y + 0.15, "Species", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
     for key, color in BINARY_COLORS.items():
-        patch = plt.Rectangle((0, sp_y - 0.05), 0.1, 0.1, facecolor=color, edgecolor=BG_COLOR)
-        ax_leg.add_patch(patch)
+        ax_leg.add_patch(plt.Rectangle((0, sp_y - 0.05), 0.1, 0.1, facecolor=color, edgecolor=BG_COLOR))
         ax_leg.text(0.15, sp_y, key, fontsize=LABEL_SIZE, color=TEXT_DARK, va="center")
         sp_y -= 0.18
+
+    dc_x, dc_y = 0.62, -0.5
+    ax_leg.text(dc_x, dc_y + 0.15, "Condition", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
+    for lab, col in [("Disease", DISEASE_COLOR), ("Control", CONTROL_GRAY)]:
+        ax_leg.add_patch(plt.Rectangle((dc_x, dc_y - 0.05), 0.1, 0.1, facecolor=col, edgecolor=BG_COLOR))
+        ax_leg.text(dc_x + 0.15, dc_y, lab, fontsize=LABEL_SIZE, color=TEXT_DARK, va="center")
+        dc_y -= 0.18
+
+    # Ancestry legend (GWAS inner ring) — 2×2 grid under the Species column
+    ax_leg.text(0, -0.95, "Ancestry", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
+    anc_pos = [(0.0, -1.10), (0.30, -1.10), (0.0, -1.26), (0.30, -1.26)]
+    for (label, _n, col), (ax_, ay_) in zip(ANCESTRY["gwas"], anc_pos):
+        ax_leg.add_patch(plt.Rectangle((ax_, ay_ - 0.05), 0.09, 0.1, facecolor=col, edgecolor=BG_COLOR))
+        ax_leg.text(ax_ + 0.12, ay_, label, fontsize=LABEL_SIZE - 1, color=TEXT_DARK, va="center")
 
     # ── Save ─────────────────────────────────────────────────────────────────
     out_dir = os.path.join(

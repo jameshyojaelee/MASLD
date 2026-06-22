@@ -1,10 +1,11 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # Fig 1 LOO-CV panels: Leave-one-study-out cross-validation visualizations.
-# Generates 3 standalone PDFs:
+# Generates standalone PDFs:
 #   A. LOO-CV stability (DEG count + Spearman rho)
-#   B. AUROC cross-study prediction heatmap
 #   C. Gene-level LOO robustness heatmap
+# (The former Panel B "AUROC cross-study prediction heatmap"
+#  [fig1_auroc_heatmap.pdf] was retired 2026-06-12 — stale panel.)
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -19,16 +20,16 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-# ─── Shared: author name mapping ─────────────────────────────────────────────
+# ─── Shared: cohort accession mapping ────────────────────────────────────────
 STUDY_NAMES <- c(
-  GSE213621  = "Chen",
-  GSE135251  = "Govaere",
-  GSE130970  = "Hoang",
-  GSE162694  = "Bril",
-  GSE174478  = "Kawamura",
-  GSE193066  = "Hoshida",
-  GSE240729  = "Verschuren",
-  GSE126848  = "Suppli"
+  GSE213621  = "GSE213621",
+  GSE135251  = "GSE135251",
+  GSE130970  = "GSE130970",
+  GSE162694  = "GSE162694",
+  GSE174478  = "GSE174478",
+  GSE193066  = "GSE193066",
+  GSE240729  = "GSE240729",
+  GSE126848  = "GSE126848"
 )
 
 LOO_DIR <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/loo_cv")
@@ -50,7 +51,7 @@ if (!file.exists(loo_summary_file)) {
 
   # Full model DEG count
   dream <- load_dream_results()
-  full_n_degs <- sum(dream$dream_padj < 0.1)
+  full_n_degs <- sum(dream$bulk_padj < 0.1)
 
   # Load QC-passing sample counts (matches actual dream model input)
   qc_file <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/qc/sample_qc_report.csv")
@@ -99,95 +100,11 @@ if (!file.exists(loo_summary_file)) {
 }
 
 # =============================================================================
-# PANEL B: AUROC Heatmap
+# PANEL B (AUROC cross-study heatmap) RETIRED 2026-06-12.
+# The standalone fig1_auroc_heatmap.pdf was a stale panel and is no longer
+# generated here. (fig1_compact.R still renders its own inline AUROC sub-panel
+# from auroc_matrix.csv -- that one is unaffected.)
 # =============================================================================
-cat("\n── Panel B: AUROC heatmap ──\n")
-
-auroc_matrix_file <- file.path(LOO_DIR, "auroc_matrix.csv")
-auroc_int_file <- file.path(LOO_DIR, "auroc_integrated.csv")
-
-if (!file.exists(auroc_matrix_file)) {
-  cat("WARNING: auroc_matrix.csv not found. Skipping Panel B.\n")
-} else {
-  auroc_mat <- fread(auroc_matrix_file)
-  auroc_mat[, train_author := STUDY_NAMES[train]]
-  auroc_mat[, test_author := STUDY_NAMES[test]]
-
-  # Add integrated row if available
-  if (file.exists(auroc_int_file)) {
-    auroc_int <- fread(auroc_int_file)
-    auroc_int[, test_author := STUDY_NAMES[held_out]]
-    auroc_int[, train_author := "Integrated"]
-    auroc_int[, train := "Integrated"]
-    auroc_int[, test := held_out]
-    int_rows <- auroc_int[, .(train, test, auroc, n_test, n_disease, n_control, train_author, test_author)]
-    auroc_all <- rbind(auroc_mat, int_rows, fill = TRUE)
-  } else {
-    auroc_all <- auroc_mat
-  }
-
-  # Mark fibrosis-contrast training signatures (no healthy controls)
-  FIBROSIS_ONLY <- c("Kawamura", "Hoshida", "Verschuren")
-
-  # Order: single cohorts alphabetically, "Integrated" at bottom
-  train_levels <- c(sort(unique(auroc_mat$train_author)), "Integrated")
-  test_levels <- sort(unique(auroc_all$test_author))
-  auroc_all[, train_author := factor(train_author, levels = rev(train_levels))]
-  auroc_all[, test_author := factor(test_author, levels = test_levels)]
-
-  # Annotate fibrosis-contrast rows in y-axis labels
-  train_labels <- rev(train_levels)
-  train_labels_styled <- ifelse(
-    train_labels %in% FIBROSIS_ONLY,
-    paste0(train_labels, "\u2020"),  # dagger for fibrosis-contrast
-    train_labels
-  )
-
-  p_auroc <- ggplot(auroc_all, aes(x = test_author, y = train_author, fill = auroc)) +
-    geom_tile(color = "white", linewidth = 0.5) +
-    geom_text(aes(label = sprintf("%.2f", auroc)), size = 2, color = "black") +
-    scale_fill_gradient(low = "white", high = masld_colors$up,
-                        limits = c(0.45, 1), oob = squish,
-                        name = "AUROC") +
-    scale_y_discrete(labels = setNames(train_labels_styled, train_labels)) +
-    labs(x = "Test cohort", y = "Training signature") +
-    theme_masld() +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      panel.grid = element_blank()
-    )
-
-  # Add bold rectangle around integrated row
-  if ("Integrated" %in% levels(auroc_all$train_author)) {
-    int_y <- which(levels(auroc_all$train_author) == "Integrated")
-    p_auroc <- p_auroc +
-      annotate("rect", xmin = 0.5, xmax = length(test_levels) + 0.5,
-               ymin = int_y - 0.5, ymax = int_y + 0.5,
-               fill = NA, color = masld_colors$up, linewidth = 1)
-  }
-
-  # Compute summary stats for annotation (exclude self-predictions)
-  single_cross <- auroc_mat[train != test]
-  int_only <- if (file.exists(auroc_int_file)) auroc_int else data.table()
-
-  if (nrow(int_only) > 0) {
-    # Use disease-contrast-only single-study mean for fair comparison
-    disease_cross <- if ("train_is_fibrosis_contrast" %in% names(single_cross)) {
-      single_cross[train_is_fibrosis_contrast == FALSE]
-    } else {
-      single_cross
-    }
-    p_auroc <- p_auroc +
-      labs(subtitle = sprintf(
-        "Integrated: %.2f vs Single-study: %.2f (mean cross-study AUROC)\n\u2020 Fibrosis-contrast signature (no healthy controls)",
-        mean(int_only$auroc, na.rm = TRUE),
-        mean(disease_cross$auroc, na.rm = TRUE)))
-  }
-
-  save_fig(p_auroc, file.path(PANEL_DIR, "fig1_auroc_heatmap.pdf"),
-           width = fig_half_width + 1, height = fig_half_width)
-  cat("Saved:", file.path(PANEL_DIR, "fig1_auroc_heatmap.pdf"), "\n")
-}
 
 # =============================================================================
 # PANEL C: Gene-Level LOO Robustness
@@ -202,7 +119,7 @@ if (!file.exists(gene_stab_file)) {
   dream <- load_dream_results()
 
   # Top 30 genes by |dream t-stat| that are also DEGs
-  top_genes <- dream[dream_padj < 0.1][order(-abs(t))][1:30]
+  top_genes <- dream[bulk_padj < 0.1][order(-abs(t))][1:30]
 
   # Build significance grid: gene × LOO iteration
   COHORTS <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694",
@@ -219,7 +136,7 @@ if (!file.exists(gene_stab_file)) {
   }
 
   # Add full model column
-  full_sig <- dream[gene %in% top_genes$gene, .(gene, sig = as.character(dream_padj < 0.1))]
+  full_sig <- dream[gene %in% top_genes$gene, .(gene, sig = as.character(bulk_padj < 0.1))]
   full_sig[, cohort := "Full model"]
   grid_list[["full"]] <- full_sig
 

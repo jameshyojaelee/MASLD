@@ -268,7 +268,7 @@ pillar_A[is.na(kfold50_recur), kfold50_recur := 0L]
 
 # Annotate canonical DEG status from full dream
 pillar_A <- merge(pillar_A,
-                   full[, .(gene, dream_logFC = logFC, dream_padj = padj,
+                   full[, .(gene, dream_logFC = logFC, dream_padj = padj,  # C2-OK-sensitivity (dream robustness battery)
                             is_canonical_DEG = (padj < PADJ_THR & abs(logFC) > LFC_THR))],
                    by = "gene", all = TRUE)
 

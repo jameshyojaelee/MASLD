@@ -19,7 +19,7 @@ suppressPackageStartupMessages({
 })
 
 BASE   <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-OUT    <- file.path(BASE, "figures/main/fig3_regulatory_architecture/panels")
+OUT    <- file.path(BASE, "figures/main/fig2_genetics/panels")
 DATDIR <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
@@ -82,7 +82,8 @@ fig3g <- ggplot(f1, aes(x = method, y = n_genes, fill = fine_class)) +
   base_theme +
   theme(legend.position = "right")
 
-save_panel(fig3g, "coloc_variant_class_split.pdf", w = 5.6, h = 4.2)
+# RETIRED 2026-06-12 (superseded by coding_noncoding_split.pdf): coloc_variant_class_split.pdf
+# save_panel(fig3g, "coloc_variant_class_split.pdf", w = 5.6, h = 4.2)
 
 # ===========================================================================
 # fig3h — Tier-1 DEG → COLOC cascade (F2)
@@ -119,7 +120,8 @@ fig3h <- ggplot(funnel, aes(x = count, y = step, fill = group)) +
   theme(axis.text.y = element_text(size = 8.5),
         plot.title = element_text(face = "bold", size = 10.5))
 
-save_panel(fig3h, "deg_coloc_funnel.pdf", w = 7.0, h = 3.5)
+# RETIRED 2026-06-12 (not a Fig 2 panel): deg_coloc_funnel.pdf
+# save_panel(fig3h, "deg_coloc_funnel.pdf", w = 7.0, h = 3.5)
 
 # Drop the combined biotype panel from the previous iteration
 old_combined <- file.path(OUT, "fig3g_deg_coloc_biotypes.pdf")
@@ -196,19 +198,15 @@ fig3i <- ggplot(coloc_pts, aes(x = logFC, y = pp4_best, color = coarse_class)) +
   scale_x_continuous(expand = expansion(mult = c(0.06, 0.06))) +
   labs(x = expression("Bulk dream log"[2]*"FC (MASLD vs control)"),
        y = "Best COLOC PP.H4",
-       title = "DEG vs. COLOC",
-       subtitle = sprintf(
-         paste0("%d COLOC genes (padj < 0.05; PP.H4 ≥ 0.5); dashed lines: |logFC| = 0.5 Tier-1 cutoff\n",
-                "Color = where the COLOC top-H4 SNP falls: ",
-                "coding (CDS) vs non-coding (intron / UTR / promoter / intergenic)"),
-         nrow(coloc_pts))) +
+       title = "DEG vs. COLOC") +
   base_theme +
-  theme(legend.position = "bottom",
-        plot.subtitle = element_text(size = 8.5, color = "gray30",
-                                      lineheight = 1.1)) +
+  theme(legend.position = "bottom") +
   guides(color = guide_legend(override.aes = list(size = 2.5), nrow = 1))
 
-save_panel(fig3i, "deg_coloc_scatter.pdf", w = 6.4, h = 5.4)
+OUT_RNASEQ <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
+ggsave(file.path(OUT_RNASEQ, "deg_coloc_scatter.pdf"), fig3i,
+       width = 6.4, height = 5.4, device = cairo_pdf)
+cat(" wrote deg_coloc_scatter.pdf ->", OUT_RNASEQ, "\n")
 
 # Drop the temporary fig3h_deg_coloc_scatter.pdf from prior iteration
 old_h_scatter <- file.path(OUT, "fig3h_deg_coloc_scatter.pdf")

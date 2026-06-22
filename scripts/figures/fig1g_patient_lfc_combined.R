@@ -28,11 +28,13 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 INT_DIR <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-PANEL_DIR <- file.path(FIG1_DIR, "panels")
+# Outputs (fig1g.pdf + fig1g_patient_lfc_combined_data.csv) relocated to the
+# Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq, back-compat constant name).
+PANEL_DIR <- file.path(FIG2_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
-OUT_PDF <- file.path(PANEL_DIR, "fig1g.pdf")
+OUT_PDF <- file.path(PANEL_DIR, "fig3b_patient_lfc_cutoff.pdf")
 OUT_RDS <- file.path(FIGS01_DIR, "fig1g_patient_lfc_pG.rds")
-OUT_CSV <- file.path(PANEL_DIR, "fig1g_patient_lfc_combined_data.csv")
+OUT_CSV <- file.path(PANEL_DIR, "patient_lfc_cutoff_data.csv")
 
 # -----------------------------------------------------------------------------
 # Load per-patient LFC matrix (genes x disease patients)

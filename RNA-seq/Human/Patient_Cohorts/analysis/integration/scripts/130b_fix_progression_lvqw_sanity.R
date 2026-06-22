@@ -13,7 +13,7 @@
 #
 # Recomputes per contrast:
 #   n_shared                       genes present in both (stripped-key join)
-#   direction_concordance_shared   mean(sign(lvqw_logFC)==sign(dream_logFC)) over shared
+#   direction_concordance_shared   mean(sign(lvqw_logFC)==sign(dream_logFC)) over shared  # C2-OK-sensitivity
 #   direction_concordance_bothsig  same, restricted to genes padj<0.05 in BOTH
 #   n_both_sig                     count of both-significant genes
 #   logFC_spearman                 Spearman rho of logFC over shared genes

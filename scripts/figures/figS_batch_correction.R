@@ -44,16 +44,16 @@ dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # Match fig1c first-author labels
 COHORT_LABEL <- c(
-  GSE126848   = "Suppli",     GSE130970   = "Hoang",
-  GSE135251   = "Govaere",    GSE162694   = "Bril",
-  GSE167523   = "Kozumi",     GSE174478   = "Kawamura",
-  GSE193066   = "Hoshida",    GSE213621   = "Chen",
-  GSE240729   = "Verschuren", PRJNA512027 = "Gerhard"
+  GSE126848   = "GSE126848",   GSE130970   = "GSE130970",
+  GSE135251   = "GSE135251",   GSE162694   = "GSE162694",
+  GSE167523   = "GSE167523",   GSE174478   = "GSE174478",
+  GSE193066   = "GSE193066",   GSE213621   = "GSE213621",
+  GSE240729   = "GSE240729",   PRJNA512027 = "PRJNA512027"
 )
 COHORT_COLORS <- c(
-  "Suppli"="#1F77B4","Hoang"="#FF7F0E","Govaere"="#2CA02C","Bril"="#D62728",
-  "Kozumi"="#9467BD","Kawamura"="#8C564B","Hoshida"="#E377C2","Chen"="#7F7F7F",
-  "Verschuren"="#BCBD22","Gerhard"="#17BECF"
+  "GSE126848"="#1F77B4","GSE130970"="#FF7F0E","GSE135251"="#2CA02C","GSE162694"="#D62728",
+  "GSE167523"="#9467BD","GSE174478"="#8C564B","GSE193066"="#E377C2","GSE213621"="#7F7F7F",
+  "GSE240729"="#BCBD22","PRJNA512027"="#17BECF"
 )
 
 PADJ_INT <- 0.05
@@ -81,8 +81,8 @@ plot_dt[, disease_state := factor(group, levels = c("Control", "Disease"))]
 
 dream <- load_dream_results()
 dream[, gene_clean := sub("\\..*", "", gene)]
-dream[, is_tier1 := !is.na(dream_padj) & dream_padj < PADJ_INT &
-                    !is.na(dream_logFC) & abs(dream_logFC) > LFC_INT]
+dream[, is_tier1 := !is.na(bulk_padj) & bulk_padj < PADJ_INT &
+                    !is.na(bulk_logFC) & abs(bulk_logFC) > LFC_INT]
 n_tier1 <- sum(dream$is_tier1, na.rm = TRUE)
 message(sprintf("Tier 1 DEGs (padj<%.2g, |LFC|>%.1f): %s",
                 PADJ_INT, LFC_INT, comma(n_tier1)))

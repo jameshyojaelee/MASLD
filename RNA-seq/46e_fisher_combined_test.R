@@ -3,7 +3,7 @@
 # 46e_fisher_combined_test.R
 #
 # Fisher's combined probability test across truly INDEPENDENT evidence sources:
-#   1. Human bulk RNA-seq (dream_padj)
+#   1. Human bulk RNA-seq (bulk_padj)
 #   2. Mouse bulk RNA-seq (mouse_meta_padj)
 #   3. GWAS genetics (INTACT posterior -> p-value, or coloc_susie_best_pp4)
 #   4. Spatial (spatial_morans_i via atlas spatial_sig or spatial_is_svg)
@@ -41,6 +41,7 @@ cat("\n--- 1. Load atlas + INTACT scores ---\n")
 
 atlas <- fread(file.path(ME, "multi_evidence_atlas.csv"))
 cat(sprintf("  Atlas: %d rows x %d cols\n", nrow(atlas), ncol(atlas)))
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 
 # Load 46d heuristic output for rank comparison
 conv_path <- file.path(ME, "convergence_evidence.csv")
@@ -50,16 +51,11 @@ if (!file.exists(conv_path)) {
 conv <- fread(conv_path)
 cat(sprintf("  46d convergence evidence: %d rows\n", nrow(conv)))
 
-# Load INTACT scores
-intact_path <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/intact_scores.csv")
-intact_score <- rep(NA_real_, nrow(atlas))
-if (file.exists(intact_path)) {
-  intact_dt <- fread(intact_path)
-  if (all(c("gene", "intact_score_bulk") %in% names(intact_dt))) {
-    m <- match(atlas$human_symbol, intact_dt$gene)
-    intact_score <- intact_dt$intact_score_bulk[m]
-    cat(sprintf("  INTACT scores: %d genes matched\n", sum(!is.na(intact_score))))
-  }
+# Genetic-causal score = COLOC PP.H4 (INTACT dropped 2026-06-19; mirrors 46d).
+coloc_pp4 <- rep(NA_real_, nrow(atlas))
+if ("coloc_susie_best_pp4" %in% names(atlas)) {
+  coloc_pp4 <- atlas$coloc_susie_best_pp4
+  cat(sprintf("  COLOC PP.H4 (genetic-causal): %d genes\n", sum(!is.na(coloc_pp4))))
 }
 
 # ============================================================================
@@ -89,8 +85,8 @@ message("CAVEAT: the genetics p (1-INTACT) and spatial heuristic p are ",
 
 n <- nrow(atlas)
 
-# Source 1: Human bulk RNA-seq (dream_padj)
-p_human <- atlas$dream_padj
+# Source 1: Human bulk RNA-seq (bulk_padj)
+p_human <- atlas$bulk_padj
 p_human[p_human <= 0] <- NA_real_
 p_human[p_human > 1]  <- 1
 cat(sprintf("  S1 Human bulk: %d non-NA p-values\n", sum(!is.na(p_human))))
@@ -101,18 +97,16 @@ p_mouse[p_mouse <= 0] <- NA_real_
 p_mouse[p_mouse > 1]  <- 1
 cat(sprintf("  S2 Mouse bulk: %d non-NA p-values\n", sum(!is.na(p_mouse))))
 
-# Source 3: GWAS genetics
-# Strategy: prefer INTACT posterior -> convert to a one-sided p-value.
-# INTACT posterior is P(causal | TWAS + COLOC). Under the null of no
-# causality, the posterior ≈ prior (~0.05). We convert to a p-value via
-# the posterior-predictive approximation: p = 1 - intact_score.
-# If INTACT is NA, fall back to coloc_susie_best_pp4 -> p = 1 - pp4.
+# Source 3: GWAS genetics (COLOC PP.H4; INTACT dropped 2026-06-19, mirrors 46d).
+# Strategy: convert the COLOC posterior PP.H4 to a one-sided p-value via the
+# posterior-predictive approximation p = 1 - PP.H4. Primary = SuSiE-COLOC
+# (coloc_susie_best_pp4); fall back to ABF-COLOC where SuSiE is absent.
 # If both are NA, the gene gets NA for this source.
 p_genetic <- rep(NA_real_, n)
 
-# INTACT path
-has_intact <- !is.na(intact_score)
-p_genetic[has_intact] <- 1 - intact_score[has_intact]
+# Primary: SuSiE-COLOC PP.H4
+has_coloc <- !is.na(coloc_pp4)
+p_genetic[has_coloc] <- 1 - coloc_pp4[has_coloc]
 
 # Fallback: coloc_susie_best_pp4
 if ("coloc_susie_best_pp4" %in% names(atlas)) {
@@ -130,11 +124,10 @@ if ("coloc_abf_best_pp4" %in% names(atlas)) {
 # Floor at machine epsilon to avoid log(0)
 p_genetic[!is.na(p_genetic) & p_genetic <= 0] <- .Machine$double.eps
 p_genetic[!is.na(p_genetic) & p_genetic > 1] <- 1
-cat(sprintf("  S3 Genetics: %d non-NA p-values (INTACT=%d, COLOC-SuSiE fallback=%d, COLOC-ABF fallback=%d)\n",
+cat(sprintf("  S3 Genetics: %d non-NA p-values (COLOC-SuSiE=%d, COLOC-ABF fallback=%d)\n",
             sum(!is.na(p_genetic)),
-            sum(has_intact),
-            sum(!is.na(p_genetic) & !has_intact & !is.na(atlas$coloc_susie_best_pp4)),
-            sum(!is.na(p_genetic) & !has_intact & is.na(atlas$coloc_susie_best_pp4))))
+            sum(has_coloc),
+            sum(!is.na(p_genetic) & !has_coloc)))
 
 # Source 4: Spatial
 # Use spatial_is_svg (boolean) + spatial_morans_i to construct a p-value.

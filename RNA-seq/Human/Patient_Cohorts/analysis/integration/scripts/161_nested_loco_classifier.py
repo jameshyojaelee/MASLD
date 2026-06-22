@@ -14,7 +14,10 @@ Targets:
 Feature configs:
   M1_clinical    — sex, age, fibrosis_stage (2-3 features)
   M2_celltype    — bp_*/ct_* cell-type fractions (17 features)
-  M3_expression  — div_* divergence genes (100 features, inner-CV selection)
+  M3_expression  — div_* divergence genes (FULL candidate pool, top-N chosen
+                   fold-internally by inner-CV univariate-AUROC; A7 leakage fix
+                   2026-06-13 — Script 150 no longer bakes a full-cohort
+                   |cohens_d| top-100 screen into the static matrix)
   M4_combined    — M2 + inner-CV-selected expression genes
 
 Baselines:

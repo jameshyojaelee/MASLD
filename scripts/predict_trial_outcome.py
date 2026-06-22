@@ -74,8 +74,8 @@ def predict_trial_outcome(
         _to_float(atlas_row.get("coloc_susie_best_pp4")),
         _to_float(atlas_row.get("coloc_abf_best_pp4")),
     )
-    bulk_lfc = _to_float(atlas_row.get("dream_logFC"))
-    bulk_padj = _to_float(atlas_row.get("dream_padj"), default=1.0)
+    bulk_lfc = _to_float(atlas_row.get("bulk_logFC"))
+    bulk_padj = _to_float(atlas_row.get("bulk_padj"), default=1.0)
     is_deg = (bulk_padj < 0.05) and (abs(bulk_lfc) > 0.5)
     n_diets_sig = _to_float(atlas_row.get("n_diets_sig"))
 
@@ -268,8 +268,8 @@ ATLAS_COLS = [
     "coloc_best_pp4_polyfun",
     "coloc_susie_best_pp4",
     "coloc_abf_best_pp4",
-    "dream_logFC",
-    "dream_padj",
+    "bulk_logFC",
+    "bulk_padj",
     "n_diets_sig",
 ]
 
@@ -305,6 +305,8 @@ def main() -> None:
 
     print(f"Loading atlas: {atlas_path}")
     atlas = pd.read_csv(atlas_path, low_memory=False, usecols=ATLAS_COLS)
+    assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), \
+        "C2: atlas missing bulk_* — rebuild 27a"
     atlas_idx = atlas.set_index("human_symbol")
 
     # Compute hashes
@@ -325,8 +327,8 @@ def main() -> None:
             a = pd.Series(dtype=float)
         pred = predict_trial_outcome(a, trial["extrahepatic_class"])
         rows.append({**trial, **{f"prediction_{k}": v for k, v in pred.items()},
-                     "atlas_dream_logFC": _to_float(a.get("dream_logFC")),
-                     "atlas_dream_padj": _to_float(a.get("dream_padj"), 1.0),
+                     "atlas_bulk_logFC": _to_float(a.get("bulk_logFC")),
+                     "atlas_bulk_padj": _to_float(a.get("bulk_padj"), 1.0),
                      "atlas_max_PP4": max(
                          _to_float(a.get("coloc_best_susie_pp4_polyfun")),
                          _to_float(a.get("coloc_best_pp4_polyfun")),

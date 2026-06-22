@@ -178,7 +178,7 @@ mash_masl <- load_mash_vs_masl_results()
 nas_comp_f <- load_nas_components()
 
 if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
-  mash_masl[, neg_log10p := pmin(-log10(dream_padj), 50)]
+  mash_masl[, neg_log10p := pmin(-log10(padj), 50)]
   mash_masl[, component_driver := "No data"]
 
   if (!is.null(nas_comp_f) && nrow(nas_comp_f) > 0) {
@@ -197,7 +197,7 @@ if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
     mash_masl[dominant, component_driver := i.driver, on = "gene"]
   }
 
-  mash_masl[, sig := dream_padj < PADJ_THRESH & abs(dream_logFC) > LFC_THRESH]
+  mash_masl[, sig := padj < PADJ_THRESH & abs(logFC) > LFC_THRESH]
   mash_masl[, color_group := fifelse(!sig, "NS", component_driver)]
   color_order <- c("Steatosis", "Inflammation", "Fibrosis", "No data", "NS")
   mash_masl[, color_group := factor(color_group, levels = color_order)]
@@ -210,10 +210,10 @@ if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
     NS           = "#cccccc"
   )
 
-  top_label <- mash_masl[sig == TRUE][order(dream_padj)][1:min(20, sum(mash_masl$sig, na.rm = TRUE))]
+  top_label <- mash_masl[sig == TRUE][order(padj)][1:min(20, sum(mash_masl$sig, na.rm = TRUE))]
 
   p_c <- ggplot(mash_masl[order(-as.integer(color_group))],
-                aes(x = dream_logFC, y = neg_log10p, color = color_group)) +
+                aes(x = logFC, y = neg_log10p, color = color_group)) +
     rasterize_layer(geom_point(size = 0.3, alpha = 0.5, shape = 16)) +
     geom_hline(yintercept = -log10(PADJ_THRESH), linetype = "dashed",
                linewidth = 0.3, color = "gray50") +

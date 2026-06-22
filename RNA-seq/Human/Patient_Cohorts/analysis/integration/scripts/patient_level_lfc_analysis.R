@@ -97,8 +97,8 @@ for (ds in valid_datasets) {
 
 cat("  Patient LFC matrix:", nrow(patient_lfc), "genes ×", ncol(patient_lfc), "patients\n")
 
-# --- Also load dream results for significance filter ---
-dream <- fread(file.path(RDIR, "dream_results.csv"))
+# --- Also load canonical DEG results (C2 limma-voom-qw) for significance filter ---
+dream <- fread(file.path(RDIR, "canonical_deg_results.csv"))
 setnames(dream, "adj.P.Val", "padj", skip_absent = TRUE)
 
 # --- Sweep: LFC cutoffs × patient percentage thresholds ---
@@ -170,7 +170,7 @@ gene_summary <- data.table(
   pct_down_1.0 = rowSums(patient_lfc < -1.0) / n_patients * 100
 )
 # Merge dream stats
-gene_summary <- merge(gene_summary, dream[, .(gene, dream_logFC = logFC, dream_padj = padj)],
+gene_summary <- merge(gene_summary, dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
                       by = "gene", all.x = TRUE)
 fwrite(gene_summary, file.path(RDIR, "patient_lfc_gene_summary.csv"))
 cat("Saved:", file.path(RDIR, "patient_lfc_gene_summary.csv"), "\n")
@@ -254,11 +254,11 @@ top_lfc <- patient_lfc[top_genes, , drop = FALSE]
 top_lfc_long <- melt(as.data.table(top_lfc, keep.rownames = "gene"),
                      id.vars = "gene", variable.name = "sample", value.name = "lfc")
 # Add dream direction
-top_lfc_long <- merge(top_lfc_long, dream[, .(gene, dream_logFC = logFC)], by = "gene")
+top_lfc_long <- merge(top_lfc_long, dream[, .(gene, bulk_logFC = logFC)], by = "gene")
 top_lfc_long[, gene_label := factor(gene, levels = top_genes)]
 
-p_violin <- ggplot(top_lfc_long, aes(x = reorder(gene, -abs(dream_logFC)), y = lfc,
-                                      fill = ifelse(dream_logFC > 0, "Up", "Down"))) +
+p_violin <- ggplot(top_lfc_long, aes(x = reorder(gene, -abs(bulk_logFC)), y = lfc,
+                                      fill = ifelse(bulk_logFC > 0, "Up", "Down"))) +
   geom_violin(scale = "width", alpha = 0.7, linewidth = 0.3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   scale_fill_manual(values = c("Up" = "#E41A1C", "Down" = "#377EB8"), name = "Integrated direction") +
@@ -270,7 +270,7 @@ p_violin <- ggplot(top_lfc_long, aes(x = reorder(gene, -abs(dream_logFC)), y = l
 # ---- Panel E: Scatter — dream LFC vs median patient LFC ----
 gene_summary_sig <- gene_summary[gene %in% dream[padj < 0.1, gene]]
 
-p_scatter <- ggplot(gene_summary_sig, aes(x = dream_logFC, y = median_lfc)) +
+p_scatter <- ggplot(gene_summary_sig, aes(x = bulk_logFC, y = median_lfc)) +
   geom_hex(bins = 80) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
   scale_fill_viridis_c(option = "inferno", trans = "log1p", name = "Genes") +
@@ -281,8 +281,8 @@ p_scatter <- ggplot(gene_summary_sig, aes(x = dream_logFC, y = median_lfc)) +
   theme_pub
 
 # ---- Panel F: Histogram of patient consistency (pct_up for upregulated DEGs) ----
-up_degs <- gene_summary[dream_padj < 0.1 & dream_logFC > 0]
-down_degs <- gene_summary[dream_padj < 0.1 & dream_logFC < 0]
+up_degs <- gene_summary[bulk_padj < 0.1 & bulk_logFC > 0]
+down_degs <- gene_summary[bulk_padj < 0.1 & bulk_logFC < 0]
 
 hist_data <- rbind(
   up_degs[, .(gene, pct = pct_up_any, direction = "Upregulated DEGs\n(% patients with LFC > 0)")],
@@ -351,7 +351,7 @@ for (pct in c(50, 70, 90)) {
 }
 
 # Correlation between dream LFC and median patient LFC
-r <- cor(gene_summary$dream_logFC, gene_summary$median_lfc, use = "complete.obs", method = "spearman")
-cat(sprintf("\nSpearman rho (dream LFC vs median patient LFC): %.3f\n", r))
+r <- cor(gene_summary$bulk_logFC, gene_summary$median_lfc, use = "complete.obs", method = "spearman")
+cat(sprintf("\nSpearman rho (integrated bulk LFC vs median patient LFC): %.3f\n", r))
 
 cat("\nDone.\n")

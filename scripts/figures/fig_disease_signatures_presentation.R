@@ -58,17 +58,14 @@ cat("--- Panel A: volcano ---\n")
 dream_path <- file.path(INT_RES, "integration/canonical_deg_results.csv")
 dream <- fread(dream_path)
 
-# Normalise column names (builds may use logFC/padj or dream_logFC/dream_padj)
-if ("logFC" %in% names(dream) && !"dream_logFC" %in% names(dream))
-  setnames(dream, "logFC", "dream_logFC")
-if ("padj" %in% names(dream) && !"dream_padj" %in% names(dream))
-  setnames(dream, "padj", "dream_padj")
-if ("adj.P.Val" %in% names(dream) && !"dream_padj" %in% names(dream))
-  setnames(dream, "adj.P.Val", "dream_padj")
+# canonical_deg_results.csv uses unprefixed logFC/padj (C2 cutover 2026-06-08)
+if ("adj.P.Val" %in% names(dream) && !"padj" %in% names(dream))
+  setnames(dream, "adj.P.Val", "padj")
+stopifnot(all(c("padj", "logFC") %in% names(dream)))
 
-dream[, sig := fifelse(dream_padj < 0.05 & abs(dream_logFC) > 0.5,
-  fifelse(dream_logFC > 0, "Up", "Down"), "NS")]
-dream[, neg_log_p := pmin(-log10(dream_padj), 50)]  # cap for display
+dream[, sig := fifelse(padj < 0.05 & abs(logFC) > 0.5,
+  fifelse(logFC > 0, "Up", "Down"), "NS")]
+dream[, neg_log_p := pmin(-log10(padj), 50)]  # cap for display
 
 n_up   <- sum(dream$sig == "Up")
 n_down <- sum(dream$sig == "Down")
@@ -78,7 +75,7 @@ n_deg  <- n_up + n_down
 dream[, abs_t := abs(get(names(dream)[grep("^t$|^t\\.", names(dream))[1]]))]
 top_genes <- dream[sig != "NS"][order(-abs_t)][1:min(15, .N)]
 
-pA <- ggplot(dream, aes(x = dream_logFC, y = neg_log_p, color = sig)) +
+pA <- ggplot(dream, aes(x = logFC, y = neg_log_p, color = sig)) +
   ggrastr::rasterise(geom_point(size = 0.5, alpha = 0.4), dpi = 300) +
   geom_point(data = top_genes, size = 1.5, alpha = 0.9) +
   geom_text_repel(data = top_genes, aes(label = symbol),
@@ -90,7 +87,7 @@ pA <- ggplot(dream, aes(x = dream_logFC, y = neg_log_p, color = sig)) +
     linewidth = LWt, color = "gray60") +
   scale_color_manual(values = c(Up = masld_colors$up,
     Down = masld_colors$down, NS = masld_colors$ns), guide = "none") +
-  annotate("text", x = max(dream$dream_logFC) * 0.7, y = 48,
+  annotate("text", x = max(dream$logFC) * 0.7, y = 48,
     label = sprintf("%s DEGs\n(%s up, %s down)",
       comma(n_deg), comma(n_up), comma(n_down)),
     size = TXTs, color = "gray25", fontface = "italic") +

@@ -26,8 +26,8 @@ python scripts/figures/fig_bulkrna_matrix.py --panel;   echo "[exit bulkrna_matr
 step "FIG 1 — compact assembler"
 Rscript scripts/figures/fig1_compact.R;                 echo "[exit fig1_compact=$?]"
 
-step "FIG 1 — volcano (dream mega-analysis)"
-Rscript scripts/figures/fig1_volcano.R;                 echo "[exit fig1_volcano=$?]"
+step "FIG 3 — canonical DEG volcano (limma-voom C2; moved from fig1)"
+Rscript scripts/figures/fig3_deg_volcano.R;             echo "[exit fig3_deg_volcano=$?]"
 
 step "FIG 1 — RNA-seq concordance data (05_concordance)"
 INT=RNA-seq/Human/Patient_Cohorts/analysis/integration
@@ -40,15 +40,13 @@ step "FIG 5 — panel 5a (multi-evidence matrix)"
 Rscript scripts/figures/fig5_convergence.R;             echo "[exit fig5_convergence(5a)=$?]"
 step "FIG 5 — panel 5b (sources-active + recovery)"
 Rscript scripts/figures/fig5_convergence_v3.R;          echo "[exit fig5_convergence_v3(5b)=$?]"
-step "FIG 5 — composite assemble"
-Rscript scripts/figures/assemble_fig5.R;                echo "[exit assemble_fig5=$?]"
+# Composite assembly removed 2026-06-20 (PI directive): individual panels only.
 
 step "OUTPUT PDFs (mtime)"
 ls -l --time-style=+%H:%M \
       figures/main/fig1_atlas_overview/fig1_compact.pdf \
-      figures/main/fig1_atlas_overview/panels/fig1_volcano.pdf \
+      figures/main/fig3_RNAseq/panels/deg_volcano.pdf \
       figures/supplementary/figS_methods_validation/mega_validation/panels/panelF_method_overlap_alluvial.pdf \
       figures/supplementary/figS_methods_validation/mega_validation/panels/panelF_method_overlap_chord.pdf \
-      figures/main/fig5_convergence/fig5_composite.pdf \
       figures/main/fig5_convergence/panels/fig5{a,b}.pdf 2>/dev/null
 echo "DONE regen"

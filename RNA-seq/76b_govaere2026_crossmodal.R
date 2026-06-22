@@ -58,7 +58,7 @@ ATLAS_FILE <- file.path(PROJECT_ROOT,
   "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 DREAM_FILE <- file.path(PROJECT_ROOT,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration",
-  "dream_results_ashr.csv")
+  "canonical_deg_results.csv")
 MACRO_CORR_FILE <- file.path(PROJECT_ROOT,
   "Analysis/SingleCell/results_gpu_v2/pseudotime/pseudotime_corr_Macrophages.csv")
 HEP_DE_FILE <- file.path(PROJECT_ROOT,
@@ -102,6 +102,7 @@ cat(sprintf("  sup11 GPNMB+ DE  : %d genes\n", nrow(sup11)))
 
 # Atlas (large; we only need IL32 panel + dream cols, so don't shrink yet)
 atlas <- fread(ATLAS_FILE)
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
 cat(sprintf("  atlas            : %d genes x %d cols\n",
             nrow(atlas), ncol(atlas)))
 
@@ -344,7 +345,7 @@ cat("\n[76b] CHECK 3: IL32 axis atlas + Govaere column lookup\n")
 
 # Atlas needs to be subsetted on human_symbol; only requested cols.
 atlas_sub <- atlas[human_symbol %in% IL32_PANEL,
-                   .(symbol = human_symbol, dream_logFC, dream_padj)]
+                   .(symbol = human_symbol, bulk_logFC, bulk_padj)]
 
 sig_sub <- sig_wide[human_symbol %in% IL32_PANEL,
                     .(symbol = human_symbol,
@@ -363,7 +364,7 @@ il32_panel_dt <- data.table(symbol = IL32_PANEL)
 il32_out <- merge(il32_panel_dt, atlas_sub, by = "symbol", all.x = TRUE)
 il32_out <- merge(il32_out, hep_de, by = "symbol", all.x = TRUE)
 il32_out <- merge(il32_out, sig_sub, by = "symbol", all.x = TRUE)
-setcolorder(il32_out, c("symbol", "dream_logFC", "dream_padj",
+setcolorder(il32_out, c("symbol", "bulk_logFC", "bulk_padj",
                         "sc_hepatocyte_logFC", "sc_hepatocyte_padj",
                         "geomx_sh_vs_ls_logfc", "geomx_sh_vs_ls_padj",
                         "gpnmb_logfc", "gpnmb_padj", "il32_axis_member"))
@@ -371,7 +372,7 @@ setcolorder(il32_out, c("symbol", "dream_logFC", "dream_padj",
 fwrite(il32_out, file.path(OUT_DIR, "il32_axis_atlas_lookup.tsv"), sep = "\t")
 
 # Also drop a Markdown rendering for human review.
-md_header <- "| symbol | dream_logFC | dream_padj | sc_hep_logFC | sc_hep_padj | geomx_SH_vs_LS_logFC | geomx_padj | gpnmb_logFC | gpnmb_padj | il32_axis |"
+md_header <- "| symbol | bulk_logFC | bulk_padj | sc_hep_logFC | sc_hep_padj | geomx_SH_vs_LS_logFC | geomx_padj | gpnmb_logFC | gpnmb_padj | il32_axis |"
 md_sep    <- "|---|---|---|---|---|---|---|---|---|---|"
 fmt <- function(x, dig = 3) {
   if (is.na(x)) return("NA")
@@ -383,7 +384,7 @@ md_rows <- vapply(seq_len(nrow(il32_out)), function(i) {
   r <- il32_out[i]
   sprintf("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |",
           r$symbol,
-          fmt(r$dream_logFC), fmt(r$dream_padj),
+          fmt(r$bulk_logFC), fmt(r$bulk_padj),
           fmt(r$sc_hepatocyte_logFC), fmt(r$sc_hepatocyte_padj),
           fmt(r$geomx_sh_vs_ls_logfc), fmt(r$geomx_sh_vs_ls_padj),
           fmt(r$gpnmb_logfc), fmt(r$gpnmb_padj),
@@ -403,40 +404,40 @@ cat("\n[76b] CHECK 4: bulk dream vs Sup Table 11 concordance\n")
 dream <- fread(DREAM_FILE)
 dream <- dream[!is.na(symbol) & symbol != ""]
 dream_min <- dream[, .(symbol,
-                       dream_logFC = logFC,
-                       dream_padj  = padj)]
+                       bulk_logFC = logFC,
+                       bulk_padj  = padj)]
 merged <- merge(dream_min, sup11, by.x = "symbol", by.y = "gene")
-cat(sprintf("  dream genes: %d ; sup11 genes: %d ; intersect: %d\n",
+cat(sprintf("  bulk genes: %d ; sup11 genes: %d ; intersect: %d\n",
             nrow(dream_min), nrow(sup11), nrow(merged)))
 
 # Spearman on logFC.
 if (nrow(merged) >= 10) {
-  s4 <- suppressWarnings(cor.test(merged$dream_logFC, merged$log2FC,
+  s4 <- suppressWarnings(cor.test(merged$bulk_logFC, merged$log2FC,
                                   method = "spearman"))
   spear4 <- list(rho = unname(s4$estimate), p = s4$p.value)
 } else {
   spear4 <- list(rho = NA_real_, p = NA_real_)
 }
 # Sign concordance: same sign across both.
-sign_match <- merged[!is.na(dream_logFC) & !is.na(log2FC)
-                     & dream_logFC != 0 & log2FC != 0,
-                     sign(dream_logFC) == sign(log2FC)]
+sign_match <- merged[!is.na(bulk_logFC) & !is.na(log2FC)
+                     & bulk_logFC != 0 & log2FC != 0,
+                     sign(bulk_logFC) == sign(log2FC)]
 sign_pct <- 100 * mean(sign_match, na.rm = TRUE)
 
 # Jaccard at padj < 0.05 (both directions).
-dream_sig <- dream_min[!is.na(dream_padj) & dream_padj < 0.05, symbol]
+bulk_sig <- dream_min[!is.na(bulk_padj) & bulk_padj < 0.05, symbol]
 sup11_sig <- sup11[!is.na(p_val_adj) & p_val_adj < 0.05, gene]
-jaccard <- length(intersect(dream_sig, sup11_sig)) /
-  max(1L, length(union(dream_sig, sup11_sig)))
+jaccard <- length(intersect(bulk_sig, sup11_sig)) /
+  max(1L, length(union(bulk_sig, sup11_sig)))
 
 # Sign concordance restricted to genes sig in both.
-both_sig <- intersect(dream_sig, sup11_sig)
+both_sig <- intersect(bulk_sig, sup11_sig)
 both_dt <- merged[symbol %in% both_sig]
 both_sign_pct <- if (nrow(both_dt) > 0) {
-  100 * mean(sign(both_dt$dream_logFC) == sign(both_dt$log2FC), na.rm = TRUE)
+  100 * mean(sign(both_dt$bulk_logFC) == sign(both_dt$log2FC), na.rm = TRUE)
 } else NA_real_
 
-fwrite(merged[, .(symbol, dream_logFC, dream_padj,
+fwrite(merged[, .(symbol, bulk_logFC, bulk_padj,
                   sup11_log2FC = log2FC, sup11_padj = p_val_adj)],
        file.path(OUT_DIR, "bulk_dream_vs_sup11.csv"))
 
@@ -456,8 +457,8 @@ bulk_summary <- c(
           else sprintf("%.1f%% (n=%d)", both_sign_pct, nrow(both_dt))),
   sprintf("Jaccard padj<0.05        : %.3f (intersect=%d, union=%d)",
           jaccard,
-          length(intersect(dream_sig, sup11_sig)),
-          length(union(dream_sig, sup11_sig))),
+          length(intersect(bulk_sig, sup11_sig)),
+          length(union(bulk_sig, sup11_sig))),
   "",
   "Interpretation:",
   paste0("  Bulk dream is a bulk-tissue Disease-vs-Control contrast spanning",

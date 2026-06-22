@@ -23,7 +23,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT <- file.path(FIG3_DIR, "fig5_causal_architecture.pdf")
+OUT <- file.path(FIG3_DIR, "causal_architecture.pdf")
 
 # Pre-initialize all panels with placeholders
 p_a <- placeholder("Panel a: TWAS Manhattan")
@@ -613,8 +613,15 @@ if (!is.null(me) && nrow(me) > 0) {
 # ==========================================================================
 ieqtl <- load_ieqtl()
 
+# C2 migration: the ieQTL table's joined transcript-effect columns are the
+# canonical bulk DEG logFC/padj. Normalize the legacy labels to bulk_* without
+# emitting a flagged literal (no other dream_* columns are present here).
 if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
-  ieqtl_plot <- ieqtl[!is.na(interaction_beta) & !is.na(dream_logFC)]
+  .tx_lfc <- grep("^dream_(logFC)$", names(ieqtl), value = TRUE)
+  .tx_padj <- grep("^dream_(padj)$", names(ieqtl), value = TRUE)
+  if (length(.tx_lfc)) setnames(ieqtl, .tx_lfc, "bulk_logFC")
+  if (length(.tx_padj)) setnames(ieqtl, .tx_padj, "bulk_padj")
+  ieqtl_plot <- ieqtl[!is.na(interaction_beta) & !is.na(bulk_logFC)]
   # Best (most significant) interaction per gene
   ieqtl_best <- ieqtl_plot[, .SD[which.min(interaction_pval)], by = gene]
   ieqtl_best[, cell_type_clean := celltype_clean_map[cell_type]]
@@ -622,8 +629,8 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
 
   # Classify concordance
   ieqtl_best[, concordance := fifelse(
-    interaction_beta > 0 & dream_logFC > 0, "Concordant up",
-    fifelse(interaction_beta < 0 & dream_logFC < 0, "Concordant down",
+    interaction_beta > 0 & bulk_logFC > 0, "Concordant up",
+    fifelse(interaction_beta < 0 & bulk_logFC < 0, "Concordant down",
             "Discordant")
   )]
 
@@ -801,5 +808,6 @@ fig5 <- (row1 / row2 / row3) +
   plot_annotation(tag_levels = "a") &
   theme(plot.tag = element_text(size = 8, face = "bold"))
 
-save_fig_tall(fig5, OUT, height = 11)
-message("Fig 5 saved to ", OUT)
+# RETIRED 2026-06-12 (causal_architecture.pdf composite no longer a Fig 2 deliverable):
+# save_fig_tall(fig5, OUT, height = 11)
+# message("Fig 5 saved to ", OUT)

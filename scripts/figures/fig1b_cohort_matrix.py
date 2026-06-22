@@ -140,15 +140,15 @@ def main():
 
     # ── Row labels (left side) ────────────────────────────────────────────────
     for ri, (pi_name, geo_id, n, is_ctrl) in enumerate(COHORTS):
-        # Cohort PI name (italic)
-        ax.text(-0.55, ri, pi_name,
+        # GEO accession (primary row label)
+        ax.text(-0.55, ri, geo_id,
                 ha="right", va="center",
-                fontsize=8.5, fontstyle="italic",
+                fontsize=8.5,
                 fontweight="semibold",
                 color="#212121")
-        # GEO ID + n (smaller, gray)
+        # n (smaller, gray)
         ax.text(-0.55, ri + 0.28,
-                f"{geo_id}  n={n}",
+                f"n={n}",
                 ha="right", va="center",
                 fontsize=6.0, color="#757575")
         # Marker for control-bearing cohorts (bold asterisk, Helvetica-safe)

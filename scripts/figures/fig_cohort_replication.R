@@ -65,15 +65,15 @@ gene_rep <- all_de[, .(
 
 # Merge with dream
 gene_rep <- merge(gene_rep,
-  dream[, .(gene, dream_logFC = logFC, dream_padj = padj)],
+  dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   by = "gene", all.x = TRUE)
-gene_rep[, dream_sig := !is.na(dream_padj) & dream_padj < 0.1]
+gene_rep[, bulk_sig := !is.na(bulk_padj) & bulk_padj < 0.1]
 
 cat("\n--- Replication summary ---\n")
 cat("Genes tested in all", n_cohorts, "cohorts:", sum(gene_rep$n_tested == n_cohorts), "\n")
 cat("Genes tested in >=4 cohorts:", sum(gene_rep$n_tested >= 4), "\n")
 cat("Dream DEGs significant in 0 per-study cohorts:",
-    sum(gene_rep$dream_sig & gene_rep$n_sig == 0), "\n")
+    sum(gene_rep$bulk_sig & gene_rep$n_sig == 0), "\n")
 
 # =============================================================================
 # 4. Panel A: Cumulative gene counts at each threshold
@@ -186,7 +186,7 @@ PADJ_COHORT_C <- 0.05
 # count direction within a cohort, not concordance with the integrated effect.
 ps_with_dream <- merge(
   all_de[, .(gene, dataset, ps_logFC = logFC, ps_padj = adj.P.Val)],
-  dream[, .(gene, dream_logFC = logFC, dream_padj = padj)],
+  dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   by = "gene", all.x = FALSE
 )
 ps_with_dream[, concordant_sig := !is.na(ps_padj) & ps_padj < PADJ_COHORT_C]
@@ -196,10 +196,10 @@ fig1f_concord <- ps_with_dream[, .(n_cohorts_concordant = sum(concordant_sig, na
 # Integrated DEGs at canonical threshold
 dream_genes_C <- merge(
   dream[!is.na(padj) & padj < PADJ_INT_C & abs(logFC) > LFC_INT_C,
-        .(gene, dream_logFC = logFC, dream_padj = padj)],
+        .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   fig1f_concord, by = "gene", all.x = TRUE)
 dream_genes_C[is.na(n_cohorts_concordant), n_cohorts_concordant := 0L]
-dream_genes_C[, dir := fifelse(dream_logFC > 0,
+dream_genes_C[, dir := fifelse(bulk_logFC > 0,
                                "Integrated upregulated",
                                "Integrated downregulated")]
 
@@ -255,7 +255,7 @@ pC <- ggplot(rep_dist_C,
 # 7. Panel D: Dream-rescued genes (dream-sig but per-study non-sig)
 # =============================================================================
 # Genes significant in dream but in 0 individual cohorts
-rescued <- gene_rep[dream_sig == TRUE & n_sig == 0]
+rescued <- gene_rep[bulk_sig == TRUE & n_sig == 0]
 cat("Dream-rescued genes (0 per-study sig):", nrow(rescued), "\n")
 
 # For these genes, show nominal replication

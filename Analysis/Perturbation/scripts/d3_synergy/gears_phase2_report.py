@@ -112,7 +112,7 @@ def main():
                  "null result for these specific invocab hits — both Phase 1 (Norman K562 vocab miss) and "
                  "Phase 2 (Saunders vocab miss) return 0 predictions for these targets.")
     lines.append("- **Saunders-internal pair set**: Among C(181,2)=16,290 in-vocab pairs, the top 200 ranked "
-                 "by `|dream_tstat| + 5×SuSiE-COLOC PP4` capture liver-relevant synergy candidates "
+                 "by `|bulk_tstat| + 5×SuSiE-COLOC PP4` capture liver-relevant synergy candidates "
                  "(MET × MTOR, INSR × MET, FASN × MTOR, …). These are predictable by the Saunders-tuned "
                  "model and are the proper Phase 2 deliverable given the vocab constraint.")
     lines.append("")

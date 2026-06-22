@@ -95,7 +95,15 @@ GHOUSE_HCC_COLOC = os.path.join(RNASEQ, "results/causal_inference/ghouse_hcc/col
 OUT_DIR = os.path.join(INTEG, "results/prognosis")
 
 # ── Parameters ───────────────────────────────────────────────────────────────
-N_DIVERGENCE_GENES = 100  # top genes by |cohens_d|
+# A7 leakage fix (mega-review 2026-06-13): the div_* tier must NOT bake a
+# full-cohort supervised screen into the static feature matrix. Selecting the
+# top |cohens_d| genes on ALL samples (including downstream CV test folds) leaks
+# the S1-vs-S2 contrast into every later LOCO fold. We therefore carry the FULL
+# divergence candidate pool here and defer the actual top-N selection to the
+# fold-internal inner-CV in Script 161 (univariate-AUROC ranking fit on the
+# inner-train split only). Set N_DIVERGENCE_GENES to a finite int ONLY for a
+# legacy/diagnostic leaky run; the canonical (None) carries all candidates.
+N_DIVERGENCE_GENES = None  # None = carry full pool (fold-internal selection in 161); int = legacy leaky top-N
 N_DRIVER_GENES_PER_TRANSITION = 50  # top driver genes per transition
 HCC_COLOC_THRESHOLD = 0.3  # PP.H4 threshold for HCC genetic score
 KNN_K = 30  # k for pseudotime velocity (nearest neighbors)
@@ -203,10 +211,29 @@ def main():
     t1_count = 0
     if div_genes is not None:
         div_genes["abs_cohens_d"] = div_genes["cohens_d"].abs()
-        top_div = div_genes.nlargest(N_DIVERGENCE_GENES, "abs_cohens_d")
+        if N_DIVERGENCE_GENES is None:
+            # A7 fix: carry the FULL divergence candidate pool — no full-cohort
+            # supervised screen. Fold-internal inner-CV in Script 161 selects the
+            # top-N per outer training split. Sort only for deterministic column
+            # order / description provenance, NOT to subset.
+            top_div = div_genes.sort_values("abs_cohens_d", ascending=False)
+            log.info("T1: carrying FULL divergence pool (%d candidate genes; "
+                     "fold-internal selection deferred to Script 161)", len(top_div))
+        else:
+            # Legacy/diagnostic leaky path: full-cohort top-N screen.
+            top_div = div_genes.nlargest(N_DIVERGENCE_GENES, "abs_cohens_d")
+            log.warning("T1: LEGACY leaky path — full-cohort top-%d |cohens_d| "
+                        "screen baked into the static matrix (A7 leakage). Set "
+                        "N_DIVERGENCE_GENES=None for the canonical fold-internal build.",
+                        N_DIVERGENCE_GENES)
         for _, row in top_div.iterrows():
-            sym = row["gene_symbol"]
             ensg = row["gene"]  # versioned Ensembl ID
+            # A7 fold-internal divergence CSV (divergence_genes_per_fold.csv) carries
+            # only the versioned Ensembl 'gene' column (no 'gene_symbol'); derive the
+            # symbol from the annotation map built at load time.
+            sym = (ensg_versioned_to_symbol.get(ensg)
+                   or ensg_to_symbol.get(ensg.split(".")[0])
+                   or ensg)
             # Try versioned ID first, then symbol lookup
             col_idx = h5_gene_idx.get(ensg)
             if col_idx is None:
@@ -218,7 +245,7 @@ def main():
                 t1_count += 1
             else:
                 log.warning("T1: gene %s (%s) not in h5 expression matrix", sym, ensg)
-        log.info("T1: %d / %d divergence genes mapped", t1_count, N_DIVERGENCE_GENES)
+        log.info("T1: %d / %d divergence genes mapped", t1_count, len(top_div))
     else:
         log.warning("T1: divergence_genes.csv not found, skipping")
 

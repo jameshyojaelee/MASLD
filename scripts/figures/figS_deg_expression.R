@@ -116,7 +116,7 @@ message(sprintf("  DEGs with median TPM ≥ 1: %d / %d (%.1f%%)",
 tpm_filter_tbl <- data.table(
   gene      = can_in_dge,
   direction = ifelse(can_in_dge %in% can_up, "Up", "Down"),
-  dream_logFC = dream$logFC[match(can_in_dge, dream$gene)],
+  logFC       = dream$logFC[match(can_in_dge, dream$gene)],
   median_tpm  = round(median_tpm, 3),
   tpm_pass    = can_in_dge %in% tpm_pass
 )

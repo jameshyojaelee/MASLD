@@ -64,10 +64,10 @@ if (has_concordance) {
 # Panel a: Forest plot — top 15 upregulated genes
 # ==========================================================================
 # Select top 15 up from dream by absolute logFC * significance
-dream_sig <- dream[is_dream_deg(dream) & !grepl("^ENS", symbol)]
+bulk_sig <- dream[is_dream_deg(dream) & !grepl("^ENS", symbol)]
 
-top_up <- dream_sig[dream_logFC > 0][order(-dream_logFC)][1:min(15, .N)]
-top_down <- dream_sig[dream_logFC < 0][order(dream_logFC)][1:min(15, .N)]
+top_up <- bulk_sig[bulk_logFC > 0][order(-bulk_logFC)][1:min(15, .N)]
+top_down <- bulk_sig[bulk_logFC < 0][order(bulk_logFC)][1:min(15, .N)]
 
 make_forest <- function(top_genes, per_study_dt, direction_label) {
   # Get per-study data for selected genes
@@ -77,7 +77,7 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
   if (nrow(forest_dt) == 0) return(placeholder(paste("No per-study data for", direction_label)))
 
   # Add dream summary
-  dream_summary <- top_genes[, .(symbol, dream_logFC, dream_padj)]
+  dream_summary <- top_genes[, .(symbol, bulk_logFC, bulk_padj)]
   forest_dt <- merge(forest_dt, dream_summary, by = "symbol", all.x = TRUE)
 
   # Compute approximate 95% CI from t-statistic
@@ -91,7 +91,7 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
   }
 
   # Order genes by dream logFC
-  gene_order <- top_genes[order(dream_logFC)]$symbol
+  gene_order <- top_genes[order(bulk_logFC)]$symbol
   forest_dt[, symbol := factor(symbol, levels = gene_order)]
 
   # Color by significance
@@ -103,7 +103,7 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
                    linewidth = 0.3, color = "gray60") +
     geom_point(aes(color = sig, shape = dataset), size = 1.5, alpha = 0.8) +
     # Add dream summary as diamond
-    geom_point(data = top_genes, aes(x = dream_logFC, y = symbol),
+    geom_point(data = top_genes, aes(x = bulk_logFC, y = symbol),
                shape = 23, size = 2.5, fill = "black", color = "black", stroke = 0.5) +
     scale_color_manual(values = c("padj < 0.05" = masld_colors$up, "NS" = masld_colors$ns),
                        name = "Per-study") +

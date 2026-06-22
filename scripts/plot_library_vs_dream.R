@@ -11,7 +11,7 @@ outdir <- "results/library"
 
 # --- Load data ---
 lib_core <- fread("results/library/final_core_degs.csv")
-dream <- fread("RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+dream <- fread("RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")  # C2-OK-sensitivity
 dream[, ensembl_id := sub("\\.[0-9]+$", "", gene)]
 
 # --- Build unique set of human orthologs from library (excl. mouse-only) ---
@@ -127,11 +127,11 @@ ggsave(file.path(outdir, "library_enrichment_in_dream.pdf"), p3,
 # =============================================
 # Fig 4: Direction concordance (human ortholog level)
 # =============================================
-dream_sig <- dream[padj < 0.1]
-setkey(dream_sig, ensembl_id)
+dream_sig <- dream[padj < 0.1]  # C2-OK-sensitivity
+setkey(dream_sig, ensembl_id)  # C2-OK-sensitivity
 
 dir_status <- sapply(lib_human_ids, function(eid) {
-  hit <- dream_sig[ensembl_id == eid]
+  hit <- dream_sig[ensembl_id == eid]  # C2-OK-sensitivity
   if (nrow(hit) == 0) return("no_match")
   if (hit$logFC[1] > 0) "up" else "down"
 })

@@ -286,15 +286,15 @@ function ComparisonTable({
   const rows: { label: string; render: (gene: GeneIndexEntry) => string }[] = [
     {
       label: "logFC",
-      render: (g) => (g.dream_logfc != null ? g.dream_logfc.toFixed(2) : "N/A"),
+      render: (g) => (g.bulk_logfc != null ? g.bulk_logfc.toFixed(2) : "N/A"),
     },
     {
       label: "padj",
       render: (g) =>
-        g.dream_padj != null
-          ? g.dream_padj < 0.001
-            ? g.dream_padj.toExponential(1)
-            : g.dream_padj.toFixed(3)
+        g.bulk_padj != null
+          ? g.bulk_padj < 0.001
+            ? g.bulk_padj.toExponential(1)
+            : g.bulk_padj.toFixed(3)
           : "N/A",
     },
     {

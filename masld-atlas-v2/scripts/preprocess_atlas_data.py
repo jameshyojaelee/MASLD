@@ -39,9 +39,10 @@ PROJECT_ROOT = Path(
 )
 
 ATLAS_CSV = PROJECT_ROOT / "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"
-DREAM_ASHR_CSV = (
+# C2: canonical human bulk DEGs = limma-voom-qw C2 (was dream_results_ashr.csv, retired)
+CANONICAL_DEG_CSV = (
     PROJECT_ROOT
-    / "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"
+    / "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"
 )
 COLOC_GENE_CSV = (
     PROJECT_ROOT / "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv"
@@ -152,10 +153,13 @@ def load_data():
     print(f"Loading atlas from {ATLAS_CSV} ...")
     atlas = pd.read_csv(ATLAS_CSV, low_memory=False)
     print(f"  Atlas shape: {atlas.shape}")
+    assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), (
+        "C2: atlas missing bulk_* — rebuild 27a"
+    )
 
-    print(f"Loading dream_ashr from {DREAM_ASHR_CSV} ...")
-    dream = pd.read_csv(DREAM_ASHR_CSV)
-    print(f"  Dream shape: {dream.shape}")
+    print(f"Loading canonical DEGs from {CANONICAL_DEG_CSV} ...")
+    deg = pd.read_csv(CANONICAL_DEG_CSV)
+    print(f"  Canonical DEG shape: {deg.shape}")
 
     print(f"Loading COLOC gene-level from {COLOC_GENE_CSV} ...")
     coloc = pd.read_csv(COLOC_GENE_CSV)
@@ -165,13 +169,13 @@ def load_data():
     drugs = pd.read_csv(CLINICAL_DRUGS_CSV, low_memory=False)
     print(f"  Drugs shape: {drugs.shape}")
 
-    return atlas, dream, coloc, drugs
+    return atlas, deg, coloc, drugs
 
 
-def compute_deg_count(dream: pd.DataFrame) -> int:
-    """Compute DEG count from dream: padj < 0.05 AND |logFC| > 0.3."""
+def compute_deg_count(deg: pd.DataFrame) -> int:
+    """Compute DEG count from canonical DEGs: padj < 0.05 AND |logFC| > 0.3."""
     return int(
-        ((dream["padj"] < 0.05) & (dream["logFC"].abs() > 0.3)).sum()
+        ((deg["padj"] < 0.05) & (deg["logFC"].abs() > 0.3)).sum()
     )
 
 
@@ -180,10 +184,10 @@ def compute_evidence_strengths(atlas: pd.DataFrame) -> pd.DataFrame:
 
     evidence = pd.DataFrame(index=atlas.index)
 
-    # S1 Human Bulk: |dream_tstat| normalized to 99th percentile
-    if "dream_tstat" in atlas.columns:
+    # S1 Human Bulk: |bulk_tstat| normalized to 99th percentile
+    if "bulk_tstat" in atlas.columns:
         evidence["s1_human"] = normalize_to_percentile(
-            atlas["dream_tstat"].astype(float), 99.0
+            atlas["bulk_tstat"].astype(float), 99.0
         )
     else:
         evidence["s1_human"] = 0.0
@@ -255,7 +259,7 @@ def build_atlas_parquet(atlas: pd.DataFrame, output_dir: Path):
 
 
 def build_gene_index(
-    atlas: pd.DataFrame, evidence: pd.DataFrame, dream: pd.DataFrame, output_dir: Path
+    atlas: pd.DataFrame, evidence: pd.DataFrame, deg: pd.DataFrame, output_dir: Path
 ):
     """Build gene_index.json: compact search index with evidence strengths.
 
@@ -263,16 +267,16 @@ def build_gene_index(
     - Null optional fields (sex_class, zonation_class, ferroptosis_class) are omitted
     - Boolean false values for is_conserved and dgidb_druggable are omitted
     - Evidence values of 0.0 are omitted from the evidence dict
-    - dream_logfc/dream_padj rounded to 3/4 decimal places
+    - bulk_logfc/bulk_padj rounded to 3/4 decimal places
     - Evidence rounded to 2 decimal places
     """
     out_path = output_dir / "gene_index.json"
     print(f"Building gene index ...")
 
-    # Merge dream DEG status into atlas
-    dream_degs = set(
-        dream.loc[
-            (dream["padj"] < 0.05) & (dream["logFC"].abs() > 0.3), "symbol"
+    # Merge canonical DEG status into atlas
+    canonical_degs = set(
+        deg.loc[
+            (deg["padj"] < 0.05) & (deg["logFC"].abs() > 0.3), "symbol"
         ].dropna()
     )
 
@@ -285,9 +289,9 @@ def build_gene_index(
         symbol = str(symbol).strip()
         ensembl_id = safe_json_value(row.get("ensembl_id"))
         biotype = safe_json_value(row.get("gene_biotype"))
-        dream_logfc = safe_json_value(row.get("dream_logFC"))
-        dream_padj = safe_json_value(row.get("dream_padj"))
-        is_deg = symbol in dream_degs
+        bulk_logfc = safe_json_value(row.get("bulk_logFC"))
+        bulk_padj = safe_json_value(row.get("bulk_padj"))
+        is_deg = symbol in canonical_degs
 
         # Boolean / categorical fields
         is_conserved_raw = row.get("is_conserved")
@@ -346,8 +350,8 @@ def build_gene_index(
             "symbol": symbol,
             "ensembl_id": ensembl_id,
             "biotype": biotype,
-            "dream_logfc": round(float(dream_logfc), 3) if dream_logfc is not None else None,
-            "dream_padj": round(float(dream_padj), 4) if dream_padj is not None else None,
+            "bulk_logfc": round(float(bulk_logfc), 3) if bulk_logfc is not None else None,
+            "bulk_padj": round(float(bulk_padj), 4) if bulk_padj is not None else None,
             "is_deg": is_deg,
             "is_conserved": is_conserved,
             "sex_class": sex_class,
@@ -390,7 +394,7 @@ def build_gene_index(
 
 def build_atlas_summary(
     atlas: pd.DataFrame,
-    dream: pd.DataFrame,
+    deg: pd.DataFrame,
     coloc: pd.DataFrame,
     drugs: pd.DataFrame,
     output_dir: Path,
@@ -399,7 +403,7 @@ def build_atlas_summary(
     out_path = output_dir / "atlas_summary.json"
     print(f"Building atlas summary ...")
 
-    total_degs = compute_deg_count(dream)
+    total_degs = compute_deg_count(deg)
     coloc_genes = int((coloc["coloc_best_pp4"] > 0.5).sum())
     drug_targets = int(drugs.shape[0])
 
@@ -480,8 +484,8 @@ def build_featured_genes(
             "ensembl_id": gi.get("ensembl_id"),
             "tagline": meta["tagline"],
             "category": meta["category"],
-            "dream_logfc": gi.get("dream_logfc"),
-            "dream_padj": gi.get("dream_padj"),
+            "bulk_logfc": gi.get("bulk_logfc"),
+            "bulk_padj": gi.get("bulk_padj"),
             "is_deg": gi.get("is_deg", False),
             "is_conserved": gi.get("is_conserved", False),
             "layers_active": gi.get("layers_active", 0),
@@ -520,7 +524,7 @@ def main():
     print(f"Output directory: {output_dir}")
 
     # Load data
-    atlas, dream, coloc, drugs = load_data()
+    atlas, deg, coloc, drugs = load_data()
 
     # Compute evidence strengths
     print("Computing evidence strengths ...")
@@ -530,10 +534,10 @@ def main():
     build_atlas_parquet(atlas, output_dir)
 
     # 2. gene_index.json
-    gene_index = build_gene_index(atlas, evidence, dream, output_dir)
+    gene_index = build_gene_index(atlas, evidence, deg, output_dir)
 
     # 3. atlas_summary.json
-    build_atlas_summary(atlas, dream, coloc, drugs, output_dir)
+    build_atlas_summary(atlas, deg, coloc, drugs, output_dir)
 
     # 4. featured_genes.json
     build_featured_genes(atlas, evidence, drugs, gene_index, output_dir)

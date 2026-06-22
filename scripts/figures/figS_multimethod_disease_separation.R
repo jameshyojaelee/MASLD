@@ -1,12 +1,13 @@
 #!/usr/bin/env Rscript
 # figS_multimethod_disease_separation.R
-# Panel K (supervised disease separation) — the companion to panelJ. Unsupervised
-# PCA (panelJ) does NOT separate Control/Disease because disease is <1% of variance.
+# Supervised disease separation — the companion to the batch-model PCA
+# (batch_model_pca.pdf), which does NOT separate Control/Disease because disease
+# is <1% of variance.
 # This panel shows the disease contrast IS recoverable on a SUPERVISED axis, with
 # NO double-dipping: a leave-one-cohort-out (LOCO) disease signature is trained on
 # 4 cohorts and projected onto the held-out 5th; the held-out samples never inform
 # their own signature or scaling.
-#   panelK_supervised_disease.pdf
+#   supervised_disease.pdf  (was panelK_supervised_disease.pdf)
 #   left  : held-out LOCO disease score per cohort, coloured by true label
 #   right : pooled held-out ROC (+ per-cohort AUROC)
 suppressPackageStartupMessages({
@@ -23,8 +24,8 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"; set.seed(42)
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-                  GSE162694 = "Bril", GSE213621 = "Chen")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+                  GSE162694 = "GSE162694", GSE213621 = "GSE213621")
 TOPK <- 200L            # signature size (genes by |t| on the training cohorts)
 
 dge <- load_merged_dge(); stopifnot(!is.null(dge))
@@ -103,8 +104,8 @@ fig <- (pL | pR) + plot_layout(widths = c(1.5, 1)) +
   plot_annotation(
     title = "Leave-one-cohort-out supervised disease score",
     theme = theme(plot.title = element_text(size = 9, face = "bold")))
-ggsave(file.path(OUT, "panelK_supervised_disease.pdf"), fig,
+ggsave(file.path(OUT, "supervised_disease.pdf"), fig,
        width = 8.4, height = 4.2, device = cairo_pdf)
-fwrite(scores, file.path(OUT, "panelK_supervised_disease_data.csv"))
-fwrite(auc_by, file.path(OUT, "panelK_supervised_disease_auc.csv"))
-cat("Wrote panelK_supervised_disease.pdf\n")
+fwrite(scores, file.path(OUT, "supervised_disease_data.csv"))
+fwrite(auc_by, file.path(OUT, "supervised_disease_auc.csv"))
+cat("Wrote supervised_disease.pdf\n")

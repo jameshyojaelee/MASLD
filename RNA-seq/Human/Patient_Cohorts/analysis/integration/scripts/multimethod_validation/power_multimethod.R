@@ -198,6 +198,18 @@ run_one_method <- function(m, counts, meta) {
         return(NULL)
       }
       run_metafor(per_study_list, K = Kfit, bp)
+    } else if (m == "limma_voom") {
+      run_limma_voom(counts, meta, bp)
+    } else if (m == "limma_voom_qw") {
+      run_limma_voom_qw(counts, meta, bp)
+    } else if (m == "limma_trend") {
+      run_limma_trend(counts, meta, bp)
+    } else if (m == "edger_qlf") {
+      run_edger_qlf(counts, meta, bp)
+    } else if (m == "edger_qlf_robust") {
+      run_edger_qlf_robust(counts, meta, bp)
+    } else if (m == "edger_lrt") {
+      run_edger_lrt(counts, meta, bp)
     } else {
       cat("  Unknown method '", m, "' — skipping\n", sep = "")
       NULL

@@ -95,7 +95,7 @@ def compute_spatial_metrics(adata, dataset_label, n_perms=999, n_jobs=8):
 
 
 def load_bulk_results():
-    """Load dream DEG results with gene symbols."""
+    """Load canonical (C2 limma-voom-qw) bulk DEG results with gene symbols."""
     dream = load_dream_degs(padj_thresh=1.0, lfc_thresh=0.0)  # all genes
     gene_col = "symbol" if "symbol" in dream.columns else dream.columns[0]
 
@@ -106,7 +106,7 @@ def load_bulk_results():
     elif "tstat" in dream.columns:
         bulk["tstat"] = dream["tstat"]
     padj_col = "padj" if "padj" in dream.columns else "adj.P.Val"
-    bulk["dream_padj"] = dream[padj_col]
+    bulk["bulk_padj"] = dream[padj_col]
     bulk = bulk.rename(columns={gene_col: "symbol"})
     bulk = bulk.dropna(subset=["symbol"])
     bulk = bulk.drop_duplicates(subset=["symbol"], keep="first")
@@ -117,13 +117,13 @@ def load_bulk_results():
 def merge_bulk_spatial(bulk_df, spatial_df):
     """Merge bulk and spatial results on gene symbol."""
     merged = spatial_df.merge(
-        bulk_df[["symbol", "logFC", "tstat", "dream_padj"]],
+        bulk_df[["symbol", "logFC", "tstat", "bulk_padj"]],
         left_index=True, right_on="symbol", how="inner"
     )
-    merged["is_deg"] = merged["dream_padj"] < 0.1
-    merged["is_deg_strong"] = (merged["dream_padj"] < 0.1) & (merged["logFC"].abs() > 0.5)
-    merged["is_up"] = (merged["dream_padj"] < 0.1) & (merged["logFC"] > 0)
-    merged["is_down"] = (merged["dream_padj"] < 0.1) & (merged["logFC"] < 0)
+    merged["is_deg"] = merged["bulk_padj"] < 0.1
+    merged["is_deg_strong"] = (merged["bulk_padj"] < 0.1) & (merged["logFC"].abs() > 0.5)
+    merged["is_up"] = (merged["bulk_padj"] < 0.1) & (merged["logFC"] > 0)
+    merged["is_down"] = (merged["bulk_padj"] < 0.1) & (merged["logFC"] < 0)
     print(f"    Merged: {len(merged)} genes ({merged['is_deg'].sum()} DEGs)")
     return merged
 

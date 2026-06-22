@@ -183,14 +183,14 @@ def main():
 
     label_x = -0.65                         # right edge of label area
     for i, d in enumerate(datasets):
-        # Line 1: Author (Year) — bold, larger
+        # Line 1: Accession (Year) — bold, larger
         ax_mat.text(label_x, i - 0.15,
-                    f"{d[0]} ({d[2]})",
+                    f"{d[1]} ({d[2]})",
                     ha="right", va="center", fontsize=9,
                     fontweight="bold", color=TEXT_DARK)
-        # Line 2: Accession · Platform · Layout — smaller, gray, italic
+        # Line 2: Platform · Layout — smaller, gray, italic
         ax_mat.text(label_x, i + 0.17,
-                    f"{d[1]}  \u00b7  {d[5]}  \u00b7  {d[6]}",
+                    f"{d[5]}  \u00b7  {d[6]}",
                     ha="right", va="center", fontsize=6.5,
                     color=LABEL_GRAY, fontstyle="italic")
 

@@ -223,14 +223,15 @@ def main():
     hep_pb = pd.read_csv(hep_file, index_col=0)
     print(f"  Hepatocyte pseudobulk: {hep_pb.shape}")
 
-    # Transcript logFC = dream mega-analysis disease-vs-control logFC (population
+    # Transcript logFC = canonical bulk disease-vs-control logFC (population
     # level). The pseudobulk above has no shared subjects with the plasma
-    # proteomics, so we use the canonical dream logFC for the transcript side
+    # proteomics, so we use the canonical bulk logFC for the transcript side
     # rather than positionally pairing pseudobulk columns to protein samples.
+    # C2 swap 2026-06-08: dream_results.csv -> canonical_deg_results.csv (LVQW C2).
     dream_f = (root / "RNA-seq" / "Human" / "Patient_Cohorts" / "analysis" /
-               "integration" / "results" / "integration" / "dream_results.csv")
+               "integration" / "results" / "integration" / "canonical_deg_results.csv")
     if not dream_f.exists():
-        raise FileNotFoundError(f"dream mega-analysis results not found: {dream_f}")
+        raise FileNotFoundError(f"canonical bulk DEG results not found: {dream_f}")
     dream = pd.read_csv(dream_f)
     gene_col = "symbol" if "symbol" in dream.columns else "gene"
     transcript_logfc = (dream.dropna(subset=[gene_col])

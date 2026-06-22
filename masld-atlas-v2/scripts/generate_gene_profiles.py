@@ -154,6 +154,9 @@ def load_atlas():
     print(f"Loading atlas: {ATLAS_CSV}")
     df = pd.read_csv(ATLAS_CSV, low_memory=False)
     print(f"  {df.shape[0]} genes x {df.shape[1]} columns")
+    assert {"bulk_padj", "bulk_logFC"} <= set(df.columns), (
+        "C2: atlas missing bulk_* — rebuild 27a"
+    )
     return df
 
 
@@ -766,15 +769,15 @@ def build_profile(
 
     # ------- EXPRESSION -------
     expression = {}
-    dream_lfc = safe_round(row.get("dream_logFC"), 3)
-    dream_padj = safe_round(row.get("dream_padj"), 4)
-    dream_tstat = safe_round(row.get("dream_tstat"), 3)
-    if dream_lfc is not None:
-        expression["dream_logfc"] = dream_lfc
-    if dream_padj is not None:
-        expression["dream_padj"] = dream_padj
-    if dream_tstat is not None:
-        expression["dream_tstat"] = dream_tstat
+    bulk_lfc = safe_round(row.get("bulk_logFC"), 3)
+    bulk_padj = safe_round(row.get("bulk_padj"), 4)
+    bulk_tstat = safe_round(row.get("bulk_tstat"), 3)
+    if bulk_lfc is not None:
+        expression["bulk_logfc"] = bulk_lfc
+    if bulk_padj is not None:
+        expression["bulk_padj"] = bulk_padj
+    if bulk_tstat is not None:
+        expression["bulk_tstat"] = bulk_tstat
 
     # Legacy: single dream contrast per cohort
     per_cohort = per_study_map.get(ensembl_base)
@@ -882,8 +885,8 @@ def build_profile(
         atlas_sex_padj = safe_round(row.get("sex_interaction_padj"), 4)
         if atlas_sex_padj is not None:
             sex_subtype["sex_interaction_padj"] = atlas_sex_padj
-        atlas_lfc_f = safe_round(row.get("dream_logFC_F"), 3)
-        atlas_lfc_m = safe_round(row.get("dream_logFC_M"), 3)
+        atlas_lfc_f = safe_round(row.get("bulk_logFC_F"), 3)
+        atlas_lfc_m = safe_round(row.get("bulk_logFC_M"), 3)
         if atlas_lfc_f is not None:
             sex_subtype["logfc_female"] = atlas_lfc_f
         if atlas_lfc_m is not None:

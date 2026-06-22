@@ -56,11 +56,11 @@ DISEASE_PADJ_THR       <- 0.05   # padj threshold for disease genes
 DISEASE_LFC_THR        <- 0.5    # |logFC| threshold for disease genes
 
 # File paths
-# Prefer ashr-shrunk DEGs (lfsr + shrunk_logFC) for disease module; fall back to raw dream
+# Canonical human bulk DEGs (limma-voom-qw C2): carries raw logFC/padj plus
+# ashr shrunk_logFC + lfsr. Disease module uses the canonical DEG definition.
 DREAM_ASHR_FILE <- file.path(RNASEQ_DIR,
-  "Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
-DREAM_RAW_FILE <- file.path(RNASEQ_DIR,
-  "Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+  "Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
+DREAM_RAW_FILE <- DREAM_ASHR_FILE
 LINCS_FILE <- file.path(RNASEQ_DIR, "results/drug_repurposing/lincs_top50_reversals.csv")
 DGIDB_FILE <- file.path(RNASEQ_DIR, "results/drug_repurposing/dgidb_drug_gene_interactions.csv")
 PHARMA_FILE <- file.path(RNASEQ_DIR, "results/drug_repurposing/pharmacotranscriptomics_summary.csv")
@@ -143,15 +143,13 @@ cat("  PPI: ", vcount(ppi), "nodes,", ecount(ppi), "edges\n")
 # ==============================================================================
 cat("\n--- Step 2: Defining MASLD disease gene module ---\n")
 
-# Load dream results (canonical DEG definition: padj < 0.05, |logFC| > 0.5).
-# Fall back to raw dream results for backward compatibility.
-# NOTE: t-statistics from raw dream are retained for any GSEA-like operations (unaffected by ashr).
+# Load canonical bulk DEGs (limma-voom-qw C2; DEG definition: padj < 0.05, |logFC| > 0.5).
 USE_ASHR <- file.exists(DREAM_ASHR_FILE)
 if (USE_ASHR) {
-  cat("  Using ashr-shrunk dream results (canonical DEG definition)\n")
+  cat("  Using canonical bulk DEGs (limma-voom-qw C2)\n")
   dream <- fread(DREAM_ASHR_FILE)
 } else {
-  cat("  WARNING: ashr results not found, falling back to raw dream results\n")
+  cat("  WARNING: canonical DEG file not found at", DREAM_ASHR_FILE, "\n")
   dream <- fread(DREAM_RAW_FILE)
 }
 dream[, ensembl_id := sub("\\.\\d+$", "", gene)]

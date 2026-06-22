@@ -334,8 +334,8 @@ export async function loadGeneGraph(symbol: string): Promise<GeneGraph> {
     degree: 0,
     layers_active: 0,
     evidence: {} as NetworkNode["evidence"],
-    dream_logfc: null,
-    dream_padj: null,
+    bulk_logfc: null,
+    bulk_padj: null,
     sex_class: null,
     progression_class: null,
     is_deg: false,
@@ -415,8 +415,8 @@ export async function loadGeneGraph(symbol: string): Promise<GeneGraph> {
   center.is_deg = !!v2.attributes?.is_deg;
   center.is_conserved_core = !!v2.attributes?.is_conserved_core;
   center.dgidb_druggable = !!v2.attributes?.dgidb_druggable;
-  center.dream_logfc = v2.attributes?.dream_logFC ?? null;
-  center.dream_padj = v2.attributes?.dream_padj ?? null;
+  center.bulk_logfc = v2.attributes?.bulk_logFC ?? null;
+  center.bulk_padj = v2.attributes?.bulk_padj ?? null;
   center.sex_class = v2.attributes?.sex_class ?? null;
   center.degree = links.length;
 

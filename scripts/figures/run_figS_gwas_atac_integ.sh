@@ -3,7 +3,7 @@
 eval "$(micromamba shell hook -s bash)"
 micromamba activate rnaseq
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
-for s in figS05_gwas_atac.R fig_gwas_atac_regulons.R figS_twas_coloc_intact.R figS_gwas_celltype.R; do
+for s in figS05_gwas_atac.R fig_gwas_atac_regulons.R figS_gwas_celltype.R; do  # figS_twas_coloc_intact.R cut 2026-06-19 (INTACT dropped)
   echo "=== Running $s ==="
   Rscript scripts/figures/$s 2>&1 || echo "FAIL: $s"
 done

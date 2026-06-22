@@ -194,7 +194,7 @@ def load_atlas() -> pd.DataFrame:
         "human_symbol", "ensembl_id", "gene_biotype", "mouse_ortholog",
         "coloc_best_susie_pp4_polyfun", "coloc_best_susie_gwas_polyfun",
         "coloc_susie_best_pp4", "coloc_susie_best_gwas",
-        "dream_logFC", "dream_padj",
+        "bulk_logFC", "bulk_padj",
     ]
     df = pd.read_csv(ATLAS_CSV, usecols=cols, low_memory=False)
     df["ensembl_base"] = strip_version(df["ensembl_id"])

@@ -78,15 +78,13 @@ ds_palette <- c(
 # ── Load data ────────────────────────────────────────────────────────────────
 message("Loading dream STAR results...")
 dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
-setnames(dream, "logFC", "dream_logFC", skip_absent = FALSE)
-setnames(dream, "padj",  "dream_padj",  skip_absent = FALSE)
 
-# === lfsr VARIANT: alias ashr columns so every downstream "dream_padj < 0.05" gate
-# becomes lfsr < 0.05 and every "dream_logFC" effect becomes the ashr-shrunk posterior,
+# === lfsr VARIANT: alias ashr columns so every downstream "padj < 0.05" gate
+# becomes lfsr < 0.05 and every "logFC" effect becomes the ashr-shrunk posterior,
 # WITHOUT editing the analytical body. (sign is preserved by ashr; magnitude shrinks.) ===
 stopifnot(all(c("shrunk_logFC","lfsr") %in% names(dream)))
-dream[, dream_logFC := shrunk_logFC]
-dream[, dream_padj  := lfsr]
+dream[, logFC := shrunk_logFC]
+dream[, padj  := lfsr]
 
 message("Loading patient LFC matrix (34k genes × 691 patients)...")
 lfc_mat <- fread(file.path(INT_RESULTS, "patient_lfc_matrix.csv.gz"))
@@ -121,8 +119,8 @@ lfc_cutoffs <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.5, 2.0)
 message("Computing per-patient concordance across LFC cutoffs...")
 
 patient_results <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  up_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC > cut)
-  dn_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut)
+  up_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC > cut)
+  dn_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC < -cut)
   n_up <- length(up_idx)
   n_dn <- length(dn_idx)
   n_total <- n_up + n_dn
@@ -148,9 +146,9 @@ patient_results <- rbindlist(lapply(lfc_cutoffs, function(cut) {
   if (n_dn > 0) n_concordant <- n_concordant + colSums(lfc_m[dn_idx, , drop = FALSE] < 0)
   pct_combined <- n_concordant / n_total * 100
 
-  # Spearman rho per patient between dream_logFC and patient LFC (for this gene set)
+  # Spearman rho per patient between logFC and patient LFC (for this gene set)
   all_idx <- c(up_idx, dn_idx)
-  dream_lfc_sub <- dream_sub$dream_logFC[all_idx]
+  dream_lfc_sub <- dream_sub$logFC[all_idx]
   pat_lfc_sub   <- lfc_m[all_idx, , drop = FALSE]
   # rank dream LFC once (same for all patients)
   rk_dream <- rank(dream_lfc_sub)
@@ -325,8 +323,8 @@ PAT_THRESH <- 0.5
 
 message("Computing strict concordance (patient |LFC| >= 0.5 required)...")
 strict_results <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  up_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut)
-  dn_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut)
+  up_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC >  cut)
+  dn_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC < -cut)
   n_up <- length(up_idx); n_dn <- length(dn_idx)
   n_total <- n_up + n_dn
   if (n_total == 0) return(NULL)
@@ -470,9 +468,9 @@ ctrl_sid_ds <- setNames(sinfo[sample_id %in% ctrl_sids, dataset],
 
 # ── Compute concordance for controls ─────────────────────────────────────────
 ctrl_concordance <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  up_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut &
+  up_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC >  cut &
                     dream_sub$gene %in% rownames(ctrl_lfc))
-  dn_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut &
+  dn_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC < -cut &
                     dream_sub$gene %in% rownames(ctrl_lfc))
   n_up <- length(up_idx); n_dn <- length(dn_idx)
   n_total <- n_up + n_dn
@@ -692,8 +690,8 @@ metric_dt <- rbindlist(lapply(lfc_cutoffs, function(cut) {
   rbindlist(lapply(grp_levels, function(grp) {
     mat <- mat_for[[grp]]
     gp  <- rownames(mat)
-    up_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut], gp)
-    dn_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut], gp)
+    up_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  cut], gp)
+    dn_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -cut], gp)
     n_up <- length(up_g); n_dn <- length(dn_g); n_total <- n_up + n_dn
     if (n_total == 0) return(NULL)
     ns <- ncol(mat)
@@ -740,14 +738,14 @@ mean_full <- sx / n_c
 sd_full   <- pmax(sqrt(pmax((sx2 - n_c * mean_full^2) / (n_c - 1), 0)), 0.1)  # sd floor 0.1
 loo_mean  <- (sx - ctrl_lfc) / (n_c - 1)                                       # genes x n_c
 loo_sd    <- pmax(sqrt(pmax((sx2 - ctrl_lfc^2 - (n_c - 1) * loo_mean^2) / (n_c - 2), 0)), 0.1)
-dsign_v   <- setNames(sign(dream_sub$dream_logFC), dream_sub$gene)[g_ctrl]     # +1/-1 per ctrl gene
+dsign_v   <- setNames(sign(dream_sub$logFC), dream_sub$gene)[g_ctrl]     # +1/-1 per ctrl gene
 
 # Oriented z: disease vs full control null; controls vs leave-one-out null
 dis_z  <- ((lfc_m[g_ctrl, , drop = FALSE] - mean_full) / sd_full) * dsign_v
 ctrl_z <- ((ctrl_lfc - loo_mean) / loo_sd) * dsign_v
 
 z_dt <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  deg_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & abs(dream_sub$dream_logFC) > cut], g_ctrl)
+  deg_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & abs(dream_sub$logFC) > cut], g_ctrl)
   if (length(deg_g) < 5) return(NULL)
   rbind(
     data.table(sample_id = colnames(lfc_m),    group = "Disease", lfc_cutoff = cut,
@@ -881,8 +879,8 @@ tau_dt <- rbindlist(lapply(tau_set, function(tau) {
   rbindlist(lapply(lfc_cutoffs, function(cut) {
     rbindlist(lapply(grp_levels, function(grp) {
       mat <- mat_for[[grp]]; gp <- rownames(mat)
-      up_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut], gp)
-      dn_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut], gp)
+      up_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  cut], gp)
+      dn_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -cut], gp)
       nt <- length(up_g) + length(dn_g); if (nt == 0) return(NULL)
       nc <- numeric(ncol(mat))
       if (length(up_g)) nc <- nc + colSums(mat[up_g, , drop = FALSE] >  tau)
@@ -970,9 +968,9 @@ message("Saved: C1_why_controls_50pct.pdf")
 
 # ── C2: Per-patient robustness scatter grid (dream LFC vs each individual's LFC) ─
 # Representative individuals spanning the strict-recall distribution at |LFC|>0.5.
-deg05  <- dream_sub[dream_padj < 0.05 & abs(dream_logFC) > 0.5 & gene %in% g_ctrl]
+deg05  <- dream_sub[padj < 0.05 & abs(logFC) > 0.5 & gene %in% g_ctrl]
 gsel   <- deg05$gene
-dx     <- setNames(deg05$dream_logFC, gsel)
+dx     <- setNames(deg05$logFC, gsel)
 rec_d  <- metric_dt[group == "Disease" & lfc_cutoff == 0.5]
 rec_c  <- metric_dt[group == "Control" & lfc_cutoff == 0.5]
 pick_by_q <- function(tab, qs) {
@@ -1028,8 +1026,8 @@ message("Saved: C2_robustness_scatter.pdf")
 # x = patient log2FC = (sample − own-cohort control mean), for the canonical
 # |LFC| > 0.5 DEG set. Genes indexed by name (robust to disease/control gene-set diff).
 DTHR <- 0.5
-deg_u_all <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  DTHR]
-deg_d_all <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -DTHR]
+deg_u_all <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  DTHR]
+deg_d_all <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -DTHR]
 du_d <- intersect(deg_u_all, rownames(lfc_m));    dd_d <- intersect(deg_d_all, rownames(lfc_m))
 du_c <- intersect(deg_u_all, rownames(ctrl_lfc)); dd_c <- intersect(deg_d_all, rownames(ctrl_lfc))
 
@@ -1077,8 +1075,8 @@ message("Saved: D2_density_raw_updown.pdf")
 
 # D3 — per-individual RAW LFC HISTOGRAM over the dream DEG signature (lfsr < 0.05,
 # |LFC| > 0.5). 20 random disease + 20 random control. No recall metric or label.
-allu   <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  0.5]
-alld   <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -0.5]
+allu   <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  0.5]
+alld   <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -0.5]
 allu_d <- intersect(allu, rownames(lfc_m));    alld_d <- intersect(alld, rownames(lfc_m))
 allu_c <- intersect(allu, rownames(ctrl_lfc)); alld_c <- intersect(alld, rownames(ctrl_lfc))
 all_d  <- c(allu_d, alld_d); all_c <- c(allu_c, alld_c)

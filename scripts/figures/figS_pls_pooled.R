@@ -21,10 +21,10 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang",
-                  GSE135251 = "Govaere", GSE162694 = "Bril", GSE213621 = "Chen")
-cohort_pal   <- c(Suppli = "#1F77B4", Hoang = "#FF7F0E", Govaere = "#2CA02C",
-                  Bril = "#D62728", Chen = "#9467BD")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970",
+                  GSE135251 = "GSE135251", GSE162694 = "GSE162694", GSE213621 = "GSE213621")
+cohort_pal   <- c(GSE126848 = "#1F77B4", GSE130970 = "#FF7F0E", GSE135251 = "#2CA02C",
+                  GSE162694 = "#D62728", GSE213621 = "#9467BD")
 N_HVG <- 2000L; NCOMP <- 2L
 
 # ---------------------------------------------------------------------------

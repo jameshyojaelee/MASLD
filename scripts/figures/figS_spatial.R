@@ -26,7 +26,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 OUT <- file.path(FIGS05_DIR, "figS_spatial.pdf")
-dir.create(file.path(FIGS05_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
+dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # Spatial results directory
 SPATIAL <- file.path(BASE, "Analysis/Spatial/results")
@@ -433,7 +433,7 @@ if (file.exists(dlr_path)) {
 # ==========================================================================
 fig_spatial <- (p_a | p_b) / (p_c | p_d) / (p_e | p_f) +
   plot_annotation(
-    title = "Spatial transcriptomics validation (Guilliams et al.)",
+    title = "Spatial transcriptomics validation (GSE192741)",
     tag_levels = "a"
   ) &
   theme(plot.tag = element_text(size = 8, face = "bold"))

@@ -37,7 +37,7 @@ p1 <- ggplot(e1_dt, aes(x = factor(n_pillars_passed), y = N, fill = factor(n_pil
 
 # E2 — heat strip: genes × pillar pass
 deg[, sum_pass := as.integer(A_pass) + as.integer(C_pass) + as.integer(D_pass)]
-top200 <- deg[order(-sum_pass, -abs(dream_logFC))][1:min(200, nrow(deg))]
+top200 <- deg[order(-sum_pass, -abs(dream_logFC))][1:min(200, nrow(deg))]  # C2-OK-sensitivity
 top200[, gene_idx := seq_len(.N)]
 heat_long <- melt(top200[, .(gene_idx, A = A_pass, C = C_pass, D = D_pass)],
                   id.vars = "gene_idx", variable.name = "pillar", value.name = "pass")

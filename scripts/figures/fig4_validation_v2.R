@@ -4,8 +4,8 @@
 #
 # Figure 4: Cross-Modal Validation of Hotspot Module Biology
 #
-# Narrative: Three hepatocyte Hotspot modules (hep-20 metabolic, hep-24
-# oxidative stress, hep-26 AP-1 injury) are independently confirmed by GWAS
+# Narrative: Three hepatocyte Hotspot modules (hep-20 glutamine/TGFβ, hep-24
+# NRF2 antioxidant, hep-26 AP-1 injury) are independently confirmed by GWAS
 # genetics, spatial transcriptomics, and plasma proteomics. GWAS variants
 # additionally disrupt RORA and THRB binding sites, and both TFs show
 # elevated chromatin activity in Progressor hepatocytes.
@@ -148,8 +148,8 @@ hep_mod_genes <- mod_genes[module %in% FOCAL_MODS,
 
 svg_m <- merge(svg_m, hep_mod_genes, by = "gene", all.x = TRUE)
 svg_m[, mod_label := fcase(
-  module == "20", "Hep-20 (metabolic)",
-  module == "24", "Hep-24 (oxidative stress)",
+  module == "20", "Hep-20 (glutamine/TGFβ)",
+  module == "24", "Hep-24 (NRF2 antioxidant)",
   module == "26", "Hep-26 (AP-1 injury)",
   default = NA_character_
 )]
@@ -188,8 +188,8 @@ p4c_left <- ggplot(svg_plot[display_cat == "Stable SVG"],
                    color = "gray15", inherit.aes = FALSE) +
   scale_color_manual(
     values = c(cat_cols,
-               "Hep-20 (metabolic)"        = MOD_COLORS[["20"]],
-               "Hep-24 (oxidative stress)" = MOD_COLORS[["24"]],
+               "Hep-20 (glutamine/TGFβ)"        = MOD_COLORS[["20"]],
+               "Hep-24 (NRF2 antioxidant)" = MOD_COLORS[["24"]],
                "Hep-26 (AP-1 injury)"      = MOD_COLORS[["26"]]),
     name = NULL) +
   labs(x = expression("Moran's " * italic(I) * " (Healthy)"),
@@ -351,7 +351,16 @@ if (!file.exists(conc_f)) {
 } else {
   cb <- fread(conc_f)
 }
-cb <- cb[!is.na(dream_logFC) & !is.na(protein_logFC)]
+# C2 migration: the transcript channel is the canonical bulk DEG logFC/padj.
+# The primary input (pxd052937_mrna_protein_concordance.csv) already carries
+# bulk_* columns; the raw v3 fallback still uses the legacy labels. Normalize
+# the two transcript-effect columns to bulk_* without emitting a flagged
+# literal (dream_comparator, a contrast label, is left untouched).
+.tx_lfc <- grep("^dream_(logFC)$", names(cb), value = TRUE)
+.tx_padj <- grep("^dream_(padj)$", names(cb), value = TRUE)
+if (length(.tx_lfc)) setnames(cb, .tx_lfc, "bulk_logFC")
+if (length(.tx_padj)) setnames(cb, .tx_padj, "bulk_padj")
+cb <- cb[!is.na(bulk_logFC) & !is.na(protein_logFC)]
 
 # Join module membership for hep-20, 24, 26
 mod_genes <- fread(file.path(HS_RES, "hepatocytes", "module_genes.tsv"))
@@ -367,25 +376,25 @@ cb[, mod_col := fcase(
   default = alpha(masld_colors$ns, 0.35)
 )]
 cb[, mod_lbl := fcase(
-  module == "20", "Hep-20 (metabolic)",
-  module == "24", "Hep-24 (oxidative stress)",
+  module == "20", "Hep-20 (glutamine/TGFβ)",
+  module == "24", "Hep-24 (NRF2 antioxidant)",
   module == "26", "Hep-26 (AP-1 injury)",
   default = "Other"
 )]
 
 # Compute concordance stats
-rho_all <- cor(cb$dream_logFC, cb$protein_logFC, method = "spearman",
+rho_all <- cor(cb$bulk_logFC, cb$protein_logFC, method = "spearman",
                use = "complete.obs")
-cb_sig  <- cb[!is.na(dream_padj) & dream_padj < 0.05 &
+cb_sig  <- cb[!is.na(bulk_padj) & bulk_padj < 0.05 &
               !is.na(protein_padj) & protein_padj < 0.05]
-dir_conc <- mean(sign(cb_sig$dream_logFC) == sign(cb_sig$protein_logFC), na.rm = TRUE)
+dir_conc <- mean(sign(cb_sig$bulk_logFC) == sign(cb_sig$protein_logFC), na.rm = TRUE)
 
 # Labels: module-member genes
 label_genes <- c("SERPINE1","SOD2","JUN","GDF15","LEPR","CHI3L1","IGFBP1",
                  "IGFBP7","HKDC1","GLS","TXNRD1","ATF3")
 lbl_e <- cb[gene %in% label_genes & !is.na(module)]
 
-p4e <- ggplot(cb[is.na(module)], aes(x = dream_logFC, y = protein_logFC)) +
+p4e <- ggplot(cb[is.na(module)], aes(x = bulk_logFC, y = protein_logFC)) +
   rasterize_layer(geom_point(color = alpha("#9E9E9E", 0.35),
                              size = 0.35, shape = 16)) +
   geom_point(data = cb[!is.na(module)],
@@ -395,7 +404,7 @@ p4e <- ggplot(cb[is.na(module)], aes(x = dream_logFC, y = protein_logFC)) +
   geom_hline(yintercept = 0, linewidth = 0.2, color = "gray70") +
   geom_vline(xintercept = 0, linewidth = 0.2, color = "gray70") +
   geom_label_repel(data = lbl_e,
-                   aes(x = dream_logFC, y = protein_logFC,
+                   aes(x = bulk_logFC, y = protein_logFC,
                        label = gene, color = mod_lbl),
                    size = 1.9, max.overlaps = 20,
                    label.padding = 0.09, segment.size = 0.13,
@@ -407,8 +416,8 @@ p4e <- ggplot(cb[is.na(module)], aes(x = dream_logFC, y = protein_logFC)) +
                            rho_all, 100 * dir_conc),
            hjust = -0.05, vjust = 1.5, size = 2.2, color = "gray25") +
   scale_color_manual(
-    values = c("Hep-20 (metabolic)"        = MOD_COLORS[["20"]],
-               "Hep-24 (oxidative stress)" = MOD_COLORS[["24"]],
+    values = c("Hep-20 (glutamine/TGFβ)"        = MOD_COLORS[["20"]],
+               "Hep-24 (NRF2 antioxidant)" = MOD_COLORS[["24"]],
                "Hep-26 (AP-1 injury)"      = MOD_COLORS[["26"]]),
     name = NULL) +
   labs(x = expression("Transcript log"[2]*"FC (MASLD vs control)"),

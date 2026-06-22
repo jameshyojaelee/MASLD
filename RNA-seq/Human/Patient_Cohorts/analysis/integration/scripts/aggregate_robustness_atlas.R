@@ -30,8 +30,8 @@ PADJ_THR <- 0.05; LFC_THR <- 0.5
 # --- Canonical full dream ---
 full <- fread(file.path(RDIR, "dream_results.csv"))
 atlas <- full[, .(gene,
-                  dream_logFC = round(logFC, 4),
-                  dream_padj  = signif(padj, 4),
+                  dream_logFC = round(logFC, 4),  # C2-OK-sensitivity (dream robustness battery)
+                  dream_padj  = signif(padj, 4),  # C2-OK-sensitivity (dream robustness battery)
                   is_canonical_DEG = (padj < PADJ_THR & abs(logFC) > LFC_THR))]
 cat("Atlas seed rows:", nrow(atlas), " canonical DEGs:", sum(atlas$is_canonical_DEG), "\n")
 

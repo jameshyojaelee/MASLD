@@ -22,9 +22,9 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 # ─── Shared constants ────────────────────────────────────────────────────────
 STUDY_NAMES <- c(
-  GSE213621 = "Chen", GSE135251 = "Govaere", GSE130970 = "Hoang",
-  GSE162694 = "Bril", GSE174478 = "Kawamura", GSE193066 = "Hoshida",
-  GSE240729 = "Verschuren", GSE126848 = "Suppli"
+  GSE213621 = "GSE213621", GSE135251 = "GSE135251", GSE130970 = "GSE130970",
+  GSE162694 = "GSE162694", GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE240729 = "GSE240729", GSE126848 = "GSE126848"
 )
 COMPARE_STUDIES <- names(STUDY_NAMES)
 N_STUDIES <- length(COMPARE_STUDIES)
@@ -51,9 +51,9 @@ ps <- per_study[dataset %in% COMPARE_STUDIES]
 cat("\n── Idea 5: Per-study detection heatmap ──\n")
 
 # Select top integrated DEGs: 15 upregulated + 15 downregulated by |t|
-dream_sig <- dream[dream_padj < 0.01]
-top_up  <- dream_sig[dream_logFC > 0][order(-abs(t))][1:15]
-top_dn  <- dream_sig[dream_logFC < 0][order(-abs(t))][1:15]
+sig_degs <- dream[bulk_padj < 0.01]
+top_up  <- sig_degs[bulk_logFC > 0][order(-abs(t))][1:15]
+top_dn  <- sig_degs[bulk_logFC < 0][order(-abs(t))][1:15]
 hm_genes <- rbind(top_up, top_dn)
 hm_genes <- hm_genes[!is.na(symbol) & symbol != ""]
 # Remove duplicates and unknowns
@@ -61,7 +61,7 @@ hm_genes <- hm_genes[!duplicated(symbol)]
 hm_genes <- hm_genes[!grepl("^ENSG", symbol)]
 # Supplement if needed
 if (nrow(hm_genes) < 25) {
-  extra <- dream_sig[!symbol %in% hm_genes$symbol & !grepl("^ENSG", symbol)][
+  extra <- sig_degs[!symbol %in% hm_genes$symbol & !grepl("^ENSG", symbol)][
     order(-abs(t))][1:(30 - nrow(hm_genes))]
   hm_genes <- rbind(hm_genes, extra)
 }
@@ -72,28 +72,28 @@ cat(sprintf("  Selected %d genes for heatmap\n", nrow(hm_genes)))
 # Build gene × study significance matrix
 hm_ps <- ps[gene_clean %in% hm_genes$gene_clean,
             .(gene_clean, dataset, padj, logFC)]
-hm_ps <- merge(hm_ps, hm_genes[, .(gene_clean, symbol, dream_logFC)],
+hm_ps <- merge(hm_ps, hm_genes[, .(gene_clean, symbol, bulk_logFC)],
                by = "gene_clean")
 
 # Significance status: significant + concordant direction
 hm_ps[, sig_status := fifelse(
-  padj < 0.1 & sign(logFC) == sign(dream_logFC), "Significant",
+  padj < 0.1 & sign(logFC) == sign(bulk_logFC), "Significant",
   fifelse(padj < 0.1, "Opposite direction", "Not significant")
 )]
 hm_ps[, author := STUDY_NAMES[dataset]]
 
 # Gene order: sorted by dream logFC (up top, down bottom)
-gene_order <- hm_genes[order(-dream_logFC), symbol]
+gene_order <- hm_genes[order(-bulk_logFC), symbol]
 hm_ps[, symbol := factor(symbol, levels = gene_order)]
 
 # Study order: by sample size (largest left)
-study_order <- c("Chen", "Govaere", "Bril", "Verschuren",
-                 "Hoshida", "Kawamura", "Hoang", "Suppli")
+study_order <- c("GSE213621", "GSE135251", "GSE162694", "GSE240729",
+                 "GSE193066", "GSE174478", "GSE130970", "GSE126848")
 hm_ps[, author := factor(author, levels = study_order)]
 
 # Add integrated result as a column
-hm_dream <- hm_genes[, .(symbol, dream_padj,
-                          sig_status = fifelse(dream_padj < 0.1,
+hm_dream <- hm_genes[, .(symbol, bulk_padj,
+                          sig_status = fifelse(bulk_padj < 0.1,
                                                "Significant", "Not significant"))]
 hm_dream[, author := factor("Integrated", levels = c(study_order, "Integrated"))]
 hm_dream[, symbol := factor(symbol, levels = gene_order)]
@@ -180,7 +180,7 @@ if (!is.null(vp) && nrow(vp) > 0) {
                 vp_summary$median_var[i] * 100))
 
   # Split into DEG vs non-DEG
-  dream_sig_genes <- dream[dream_padj < 0.1, sub("\\..*", "", gene)]
+  dream_sig_genes <- dream[bulk_padj < 0.1, sub("\\..*", "", gene)]
   vp_long[, gene_clean := sub("\\..*", "", gene)]
   vp_long[, is_deg := gene_clean %in% dream_sig_genes]
   vp_long[, deg_label := fifelse(is_deg,
@@ -223,9 +223,9 @@ if (!is.null(vp) && nrow(vp) > 0) {
 cat("\n── Idea 7: Effect size precision gain ──\n")
 
 # Integrated SE: |logFC / t|
-dream_se <- dream[abs(t) > 0 & !is.na(dream_padj),
-                   .(gene_clean, dream_se = abs(dream_logFC / t),
-                     dream_padj, dream_logFC, symbol)]
+dream_se <- dream[abs(t) > 0 & !is.na(bulk_padj),
+                   .(gene_clean, dream_se = abs(bulk_logFC / t),
+                     bulk_padj, bulk_logFC, symbol)]
 
 # Per-study SE: compute per gene, take median across studies
 ps_se <- ps[abs(t) > 0, .(gene_clean, dataset, ps_se = abs(logFC / t))]
@@ -235,7 +235,7 @@ ps_se_med <- ps_se[, .(median_ps_se = median(ps_se),
 # Merge
 se_cmp <- merge(dream_se, ps_se_med, by = "gene_clean")
 se_cmp <- se_cmp[n_studies >= 3]  # genes in ≥3 studies
-se_cmp[, sig := dream_padj < 0.1]
+se_cmp[, sig := bulk_padj < 0.1]
 se_cmp[, fold_reduction := median_ps_se / dream_se]
 
 median_fold <- median(se_cmp$fold_reduction, na.rm = TRUE)
@@ -293,15 +293,15 @@ cat("\n── Idea 8: Heterogeneity vs integration power ──\n")
 if (!is.null(meta) && nrow(meta) > 0) {
   # Merge meta I² with dream results
   meta[, gene_clean := sub("\\..*", "", gene)]
-  het <- merge(dream[, .(gene_clean, dream_padj, dream_logFC, symbol)],
+  het <- merge(dream[, .(gene_clean, bulk_padj, bulk_logFC, symbol)],
                meta[, .(gene_clean, meta_I2, meta_padj)],
                by = "gene_clean")
-  het <- het[!is.na(meta_I2) & !is.na(dream_padj)]
+  het <- het[!is.na(meta_I2) & !is.na(bulk_padj)]
 
   # Classification
   het[, status := fifelse(
-    dream_padj < 0.1 & meta_padj < 0.1, "Both significant",
-    fifelse(dream_padj < 0.1, "Integrated only",
+    bulk_padj < 0.1 & meta_padj < 0.1, "Both significant",
+    fifelse(bulk_padj < 0.1, "Integrated only",
     fifelse(meta_padj < 0.1, "Meta only", "Neither"))
   )]
 
@@ -316,7 +316,7 @@ if (!is.null(meta) && nrow(meta) > 0) {
   # Known genes to label (high I², significant in dream)
   label_genes <- c("TREM2", "SPP1", "COL1A1", "CYP7A1", "CIDEC", "FAP",
                    "ACTA2", "GDF15", "TIMP1", "THY1", "PLIN2", "SLC27A5")
-  het_labels <- het[symbol %in% label_genes & dream_padj < 0.1]
+  het_labels <- het[symbol %in% label_genes & bulk_padj < 0.1]
   het_labels <- het_labels[!duplicated(symbol)]
 
   status_cols <- c(
@@ -326,11 +326,11 @@ if (!is.null(meta) && nrow(meta) > 0) {
     "Neither"           = "#E0E0E0"
   )
 
-  p8 <- ggplot(het_plot, aes(x = meta_I2, y = -log10(dream_padj))) +
+  p8 <- ggplot(het_plot, aes(x = meta_I2, y = -log10(bulk_padj))) +
     # Background quadrants
     annotate("rect", xmin = 50, xmax = 100, ymin = -log10(0.1), ymax = Inf,
              fill = "#FCE4EC", alpha = 0.3) +
-    annotate("text", x = 75, y = max(-log10(het_plot$dream_padj)) * 0.95,
+    annotate("text", x = 75, y = max(-log10(het_plot$bulk_padj)) * 0.95,
              label = "High heterogeneity\nresolved by integration",
              size = 1.8, color = "#880E4F", fontface = "italic",
              lineheight = 0.85) +
@@ -347,10 +347,10 @@ if (!is.null(meta) && nrow(meta) > 0) {
     scale_color_manual(values = status_cols, name = "Significance") +
     # Label known genes
     geom_point(data = het_labels,
-               aes(x = meta_I2, y = -log10(dream_padj)),
+               aes(x = meta_I2, y = -log10(bulk_padj)),
                shape = 1, size = 2, color = "#880E4F", stroke = 0.4) +
     geom_text_repel(data = het_labels,
-                    aes(x = meta_I2, y = -log10(dream_padj), label = symbol),
+                    aes(x = meta_I2, y = -log10(bulk_padj), label = symbol),
                     size = 1.8, fontface = "italic", color = "#880E4F",
                     segment.size = 0.2, box.padding = 0.2,
                     max.overlaps = 20, seed = 42) +

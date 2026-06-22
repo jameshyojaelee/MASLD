@@ -3,7 +3,7 @@
 # Panel B0 (VISUAL methods primer) for the multi-method power analysis: SHOWS how
 # the known-truth NB simulation works, by actually simulating from the cached real
 # NB params and plotting the data — so panels B/B2 (the grid sweep) make sense.
-#   panelB0_power_design.pdf
+#   power_design.pdf  (was panelB0_power_design.pdf)
 #   A  the simulated cohort data: 10% of genes carry a planted Disease effect
 #   B  what tau2 does: cross-cohort consistency of the planted effect
 #   C  one run scored vs the known truth (volcano; planted DE vs null)
@@ -182,6 +182,6 @@ pC <- ggplot(dC[order(truth)], aes(logFC, -log10(p), colour = truth)) +
         legend.text = element_text(size = 6), legend.key.size = unit(0.3, "cm"))
 
 final <- pA / (pB | pC) + plot_layout(heights = c(1, 0.95))
-ggsave(file.path(OUT, "panelB0_power_design.pdf"), final,
+ggsave(file.path(OUT, "power_design.pdf"), final,
        width = 8.8, height = 6.6, device = cairo_pdf)
-cat(sprintf("Wrote panelB0_power_design.pdf  (run power=%d%% FDR=%d%%)\n", pw, fdr))
+cat(sprintf("Wrote power_design.pdf  (run power=%d%% FDR=%d%%)\n", pw, fdr))

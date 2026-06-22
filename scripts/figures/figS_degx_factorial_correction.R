@@ -44,6 +44,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+source(file.path(BASE, "scripts/figures/method_correction_labels.R"))
 
 # --- CLI: --dir <degx_factorial dir> ---------------------------------------
 parse_args <- function() {
@@ -83,26 +84,14 @@ fam_cols <- c(DESeq2="#4aa2c2", edgeR="#518dc9", limma="#9b75d6",
               dream="#40b499", metafor="#e37faf", other="#BDBDBD")
 FAM_LEVELS <- c("DESeq2","edgeR","limma","dream","metafor","other")
 
-# pretty correction labels (short)
-corr_labels <- c(
-  C0="C0 none", C1="C1 tech-cov", C2="C2 bio-cov", C3="C3 tech+bio",
-  C4="C4 cohort-FE", C5="C5 cohort-RE", C6g="C6g SVA", C6s="C6s SVA-2step",
-  C6r="C6r RUVr", C6hk="C6hk RUVg-HK", C7="C7 ComBat-seq",
-  C8="C8 quantile", C9="C9 PEER-PC", C10="C10 paired")
-pc <- function(x){ x <- as.character(x)
-  ifelse(x %in% names(corr_labels), corr_labels[x], x) }
-
-# pretty engine labels
-eng_labels <- c(
-  deseq2_wald="DESeq2 (Wald)", deseq2_lrt="DESeq2 (LRT)",
-  edger_qlf="edgeR (QLF)", edger_qlf_robust="edgeR (QLF-rob)", edger_lrt="edgeR (LRT)",
-  limma_voom="limma-voom", limma_voom_qw="limma-voom (QW)", limma_trend="limma-trend",
-  dream="dream", metafor_re="metafor (RE)")
-pe <- function(x){ x <- as.character(x)
-  ifelse(x %in% names(eng_labels), eng_labels[x], x) }
-
-# k_sv pretty
-pk <- function(x){ x <- as.character(x); sub("^k", "", x) }   # kbe->be, k10->10, kna->na
+# Readable correction / engine / k_sv labels come from the shared lookup
+# (scripts/figures/method_correction_labels.R). The previous inline `corr_labels`
+# vector was both cryptic AND wrong for several codes (e.g. C8 is dream random
+# intercept, not "quantile"; C9 is dream+SVs, not "PEER-PC"); the shared lookup
+# carries the actual covariate schemes derived from the degx correction registry.
+pc <- function(x) correction_label(x, short = TRUE)   # "C2: +dataset+sex", ...
+pe <- function(x) engine_label(x)                     # "DESeq2 (Wald)", ...
+pk <- function(x) ksv_label(x)                        # "num.sv (BE)", "k=10", "-"
 
 # --- shared helpers --------------------------------------------------------
 rd <- function(...) { f <- file.path(...); if (file.exists(f)) utils::read.csv(f, check.names=FALSE, stringsAsFactors=FALSE) else NULL }
@@ -131,10 +120,20 @@ backfill_ids <- function(df){
   df
 }
 
+# Per-cell calibration + manifest shards may live in DEGX_DIR OR its calib/ subdir
+# (the permutation runner writes calib/; promoted/older shards sit at top level).
+# Glob BOTH, newest-first so the first-wins dedupe keeps the most-recent shard.
+# [2026-06-14 calib/ path fix -- mirrors build_ranked_table.R::list_degx().]
+list_degx <- function(pattern) {
+  dirs <- c(DEGX_DIR, file.path(DEGX_DIR, "calib"))
+  fs   <- unlist(lapply(dirs[dir.exists(dirs)],
+                        function(d) list.files(d, pattern = pattern, full.names = TRUE)))
+  if (length(fs)) fs[order(file.info(fs)$mtime, decreasing = TRUE)] else fs
+}
 # GLOB + rbind the per-cell calibration files.
 load_calibration <- function(){
   pat <- sprintf("^metrics_calibration_%s__.*\\.csv$", CONTRAST)
-  cfs <- list.files(DEGX_DIR, pattern = pat, full.names = TRUE)
+  cfs <- list_degx(pat)
   if (length(cfs) == 0) return(NULL)
   parts <- lapply(cfs, function(f) tryCatch(utils::read.csv(f, check.names=FALSE, stringsAsFactors=FALSE),
                                             error = function(e) NULL))
@@ -146,7 +145,7 @@ load_calibration <- function(){
 }
 # GLOB + rbind the manifest shards.
 load_manifest <- function(){
-  mfs <- list.files(DEGX_DIR, pattern = "^manifest_disease_vs_control.*\\.csv$", full.names = TRUE)
+  mfs <- list_degx("^manifest_disease_vs_control.*\\.csv$")
   if (length(mfs) == 0) return(NULL)
   parts <- lapply(mfs, function(f) tryCatch(utils::read.csv(f, check.names=FALSE, stringsAsFactors=FALSE),
                                             error = function(e) NULL))
@@ -212,7 +211,7 @@ if (is.null(W) || !"perm_typeI_mean" %in% names(W) || all(is.na(W$perm_typeI_mea
   if (nrow(win)) {
     pJ1 <- pJ1 + geom_point(data=win, aes(perm_typeI_mean, y), shape=21,
                             color="black", fill=NA, size=3.4, stroke=0.6)
-    wlab <- sprintf("winner: %s", win$cell_id[1])
+    wlab <- sprintf("winner: %s", cell_label(win$cell_id[1], short = TRUE))
     lab_layer <- if (requireNamespace("ggrepel", quietly=TRUE))
         ggrepel::geom_text_repel(data=win, aes(perm_typeI_mean, y, label=wlab),
           size=PUB_GEOM_TEXT, color="grey15", seed=42, min.segment.length=0,
@@ -230,9 +229,9 @@ if (is.null(W) || !"perm_typeI_mean" %in% names(W) || all(is.na(W$perm_typeI_mea
          x="permutation type-I error (per cell)",
          y="composite rank-sum  (lower = better; top = best)") +
     theme_masld()+theme_pub()+theme(legend.position="right")
-  save_fig(pJ1, file.path(OUT, "panelJ1_calibration_gate.pdf"),
+  save_fig(pJ1, file.path(OUT, "calibration_gate.pdf"),
            width=fig_col_width, height=fig_col_width*0.82)
-  mark(file.path(OUT, "panelJ1_calibration_gate.pdf"))
+  mark(file.path(OUT, "calibration_gate.pdf"))
 }
 
 # ===========================================================================
@@ -275,15 +274,55 @@ if (is.null(W) || !"composite_ranksum" %in% names(W) || all(!is.finite(W$composi
     }
     pJ2 <- pJ2 +
       scale_color_manual(values=fam_cols, name="engine family", drop=TRUE) +
-      scale_y_discrete(labels=function(x) x) +
+      scale_y_discrete(labels=function(x) cell_label(x, short=TRUE)) +
       scale_x_continuous(expand=expansion(mult=c(0,0.06))) +
       labs(title="Composite ranking of gate-passing, eligible cells",
            subtitle="Dot = composite rank-sum (lower = better); grey ticks = R1 (held-out LOCO) and R2 (external) component ranks; ring = winner",
            x="composite rank-sum (lower = better)", y=NULL) +
       theme_masld()+theme_pub()+theme(legend.position="right")
-    save_fig(pJ2, file.path(OUT, "panelJ2_composite_rank.pdf"),
+    save_fig(pJ2, file.path(OUT, "composite_rank.pdf"),
              width=fig_col_width, height=max(3.0, 0.16*nrow(d)+1.2))
-    mark(file.path(OUT, "panelJ2_composite_rank.pdf"))
+    mark(file.path(OUT, "composite_rank.pdf"))
+  }
+}
+
+# ===========================================================================
+# J2b. LOCO REPRODUCIBILITY -- the held-out leave-one-cohort-out score itself
+#      (loco_repro_scalar in [0,1] = mean of DEG-set Jaccard, rescaled logFC
+#      Spearman, direction concordance, replication AUROC), NOT its rank. Same
+#      gate-pass & eligible cells. Cleveland dot plot zoomed to the actual range
+#      so the real magnitudes and the near-ties at the top are honest (a rank
+#      axis would manufacture even spacing the scores do not have).
+# ===========================================================================
+if (is.null(W) || !"loco_repro_scalar" %in% names(W) || all(!is.finite(W$loco_repro_scalar))) {
+  skip("J2b LOCO reproducibility", "degmethod_ranked_winners.csv absent or no loco_repro_scalar")
+} else {
+  el <- if ("eligible" %in% names(W)) W$eligible %in% TRUE else TRUE
+  gp <- W$gate_pass %in% TRUE
+  d <- W[gp & el & is.finite(W$loco_repro_scalar), , drop=FALSE]
+  if (nrow(d) == 0) {
+    skip("J2b LOCO reproducibility", "no gate-pass & eligible cells with a LOCO scalar")
+  } else {
+    message("[render] J2b LOCO reproducibility")
+    d <- d[order(d$loco_repro_scalar), , drop=FALSE]   # ascending -> best (highest) at top
+    d$lab <- factor(d$cell_id, levels = d$cell_id)
+    # readable cell labels with the raw correction codes (C0/C1/C2/...) stripped --
+    # local to this panel; the shared cell_label() keeps them for cross-referencing.
+    lab_clean <- function(x) sub("C[0-9]+[a-zA-Z]*:\\s*", "", cell_label(x, short=TRUE))
+    pJ2b <- ggplot(d, aes(loco_repro_scalar, lab)) +
+      geom_point(aes(color=fam), size=2.2) +
+      scale_color_manual(values=fam_cols, name="engine family", drop=TRUE) +
+      scale_y_discrete(labels=lab_clean) +
+      scale_x_continuous(expand=expansion(mult=c(0.04,0.06))) +
+      labs(title="Leave-one-cohort-out reproducibility",
+           subtitle="Held-out reproducibility per configuration (mean of DEG-set overlap, logFC correlation, direction, AUROC).",
+           x="held-out LOCO reproducibility (0-1 scale; higher = better)", y=NULL) +
+      theme_masld()+theme_pub()+
+      theme(legend.position="right",
+            panel.grid.major.y=element_line(color="grey92", linewidth=0.25))
+    save_fig(pJ2b, file.path(OUT, "loco_reproducibility.pdf"),
+             width=fig_full_width, height=max(3.0, 0.16*nrow(d)+1.2))
+    mark(file.path(OUT, "loco_reproducibility.pdf"))
   }
 }
 
@@ -335,9 +374,9 @@ if (is.null(W) || !"composite_ranksum" %in% names(W) || all(!is.finite(W$composi
            x="correction", y=unique(d3$metric_name)[1]) +
       theme_masld()+theme_pub()+
       theme(axis.text.x=element_text(angle=40, hjust=1), legend.position="right")
-    save_fig(pJ3, file.path(OUT, "panelJ3_correction_disease_axis.pdf"),
+    save_fig(pJ3, file.path(OUT, "correction_disease_axis.pdf"),
              width=fig_full_width, height=3.6)
-    mark(file.path(OUT, "panelJ3_correction_disease_axis.pdf"))
+    mark(file.path(OUT, "correction_disease_axis.pdf"))
   }
 }
 
@@ -424,16 +463,16 @@ if (is.null(W) || !"composite_ranksum" %in% names(W) || all(!is.finite(W$composi
            x="number of surrogate variables (k_sv)", y=NULL) +
       theme_masld()+theme_pub()+
       theme(legend.position="right", panel.spacing=unit(0.5,"lines"))
-    save_fig(pJ4, file.path(OUT, "panelJ4_sv_sweep.pdf"),
+    save_fig(pJ4, file.path(OUT, "sv_sweep.pdf"),
              width=fig_full_width, height=3.2)
-    mark(file.path(OUT, "panelJ4_sv_sweep.pdf"))
+    mark(file.path(OUT, "sv_sweep.pdf"))
   }
 }
 
 # ===========================================================================
 # J5. CONSENSUS CORE -- # genes called DEG (padj<0.05 & |logFC|>0.5) by exactly
 #     k of the N ok cells, plus the >=k cumulative curve. Stable consensus core
-#     vs method-unique tail. (panelI4 idea from figS_degx_multimethod.R.)
+#     vs method-unique tail. (consensus-core idea from figS_degx_multimethod.R.)
 # ===========================================================================
 {
   cell_files <- if (dir.exists(CELLS_DIR))
@@ -478,9 +517,9 @@ if (is.null(W) || !"composite_ranksum" %in% names(W) || all(!is.finite(W$composi
              subtitle=sprintf("Bars = genes called DEG (padj<0.05 & |logFC|>0.5) by EXACTLY k of %d cells; magenta line = >= k (cumulative). Dark = all-cell core; grey = 1-cell unique.", N),
              x="number of cells calling the gene DEG", y="number of genes") +
         theme_masld()+theme_pub()+theme(legend.position="none")
-      save_fig(pJ5, file.path(OUT, "panelJ5_consensus_core.pdf"),
+      save_fig(pJ5, file.path(OUT, "consensus_core_factorial.pdf"),
                width=fig_col_width, height=3.4)
-      mark(file.path(OUT, "panelJ5_consensus_core.pdf"))
+      mark(file.path(OUT, "consensus_core_factorial.pdf"))
     }
   }
 }

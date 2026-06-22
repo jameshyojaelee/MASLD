@@ -185,6 +185,9 @@ def generate_knowledge_graph(output_dir: Path):
         low_memory=False,
     )
     print(f"  Atlas: {len(atlas)} genes x {len(atlas.columns)} columns")
+    assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), (
+        "C2: atlas missing bulk_* — rebuild 27a"
+    )
 
     # --- Load drug validation ---
     drug_val = pd.read_csv(
@@ -228,7 +231,7 @@ def generate_knowledge_graph(output_dir: Path):
     # Helper to build a gene node from an atlas row
     def make_gene_node(row, symbol_override=None):
         symbol = symbol_override if symbol_override else row["human_symbol"]
-        padj = safe_float(row.get("dream_padj"))
+        padj = safe_float(row.get("bulk_padj"))
         is_deg = padj is not None and padj < 0.05
         is_coloc = False
         for cc in existing_coloc_cols:
@@ -244,7 +247,7 @@ def generate_knowledge_graph(output_dir: Path):
             "is_deg": is_deg,
             "is_coloc": is_coloc,
         }
-        lfc = safe_float(row.get("dream_logFC"))
+        lfc = safe_float(row.get("bulk_logFC"))
         if lfc is not None:
             node["logFC"] = round(lfc, 3)
         return node

@@ -9,7 +9,7 @@
 set -euo pipefail
 export MASLD_PROJECT_ROOT="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 cd "$MASLD_PROJECT_ROOT"
-mkdir -p logs figures/fig3/panels
+mkdir -p logs figures/main/fig2_genetics/panels
 
 eval "$(micromamba shell hook --shell bash)"
 micromamba activate rnaseq
@@ -23,6 +23,6 @@ Rscript scripts/figures/figS_causal_extended.R
 
 echo ""
 echo "Output:"
-ls -la figures/fig3/fig3_compact.pdf 2>/dev/null || echo "fig3_compact.pdf not found"
-ls -la figures/fig3/panels/*.pdf 2>/dev/null || echo "No individual panels"
+ls -la figures/main/fig2_genetics/genetics_compact.pdf 2>/dev/null || echo "fig3_compact.pdf not found"
+ls -la figures/main/fig2_genetics/panels/*.pdf 2>/dev/null || echo "No individual panels"
 ls -la figures/figS_causal_extended/*.pdf 2>/dev/null || echo "No supp panels"

@@ -61,15 +61,15 @@ message(sprintf("Plot data (PRJNA excluded): %s samples across %s cohorts",
 # Cohort labels (short names matching Fig 1 convention)
 # ----------------------------------------------------------------------------
 cohort_short <- c(
-  GSE126848   = "Suppli",
-  GSE130970   = "Hoang",
-  GSE135251   = "Govaere",
-  GSE162694   = "Bril",
-  GSE167523   = "Kozumi",
-  GSE174478   = "Kawamura",
-  GSE193066   = "Hoshida",
-  GSE213621   = "Chen",
-  GSE240729   = "Verschuren"
+  GSE126848   = "GSE126848",
+  GSE130970   = "GSE130970",
+  GSE135251   = "GSE135251",
+  GSE162694   = "GSE162694",
+  GSE167523   = "GSE167523",
+  GSE174478   = "GSE174478",
+  GSE193066   = "GSE193066",
+  GSE213621   = "GSE213621",
+  GSE240729   = "GSE240729"
 )
 plot_dt[, cohort := factor(cohort_short[dataset],
                            levels = unname(cohort_short))]
@@ -117,16 +117,16 @@ plot_dt[, unified_dx := factor(unified_dx, levels = c(
 # ----------------------------------------------------------------------------
 # 10-cohort palette — rotate Tab10-style hues
 cohort_colors <- c(
-  "Suppli"     = "#1F77B4",
-  "Hoang"      = "#FF7F0E",
-  "Govaere"    = "#2CA02C",
-  "Bril"       = "#D62728",
-  "Kozumi"     = "#9467BD",
-  "Kawamura"   = "#8C564B",
-  "Hoshida"    = "#E377C2",
-  "Chen"       = "#7F7F7F",
-  "Verschuren" = "#BCBD22",
-  "Gerhard"    = "#17BECF"
+  "GSE126848"   = "#1F77B4",
+  "GSE130970"   = "#FF7F0E",
+  "GSE135251"   = "#2CA02C",
+  "GSE162694"   = "#D62728",
+  "GSE167523"   = "#9467BD",
+  "GSE174478"   = "#8C564B",
+  "GSE193066"   = "#E377C2",
+  "GSE213621"   = "#7F7F7F",
+  "GSE240729"   = "#BCBD22",
+  "PRJNA512027" = "#17BECF"
 )
 
 # Control is always rendered in neutral gray across all panels (project

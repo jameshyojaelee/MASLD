@@ -42,7 +42,15 @@ meta_path  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integratio
 qc_path    <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/qc/sample_qc_report.csv")
 atlas_path <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 
-out_dir <- file.path(BASE, "RNA-seq/results/subtypes")
+# Canonical INPUT directory (rubric + cache fallbacks live here regardless of
+# where this run writes its outputs).
+in_dir <- file.path(BASE, "RNA-seq/results/subtypes")
+# SUBTYPE_OUT_DIR override (additive, 2026-06-10): lets a re-fit / sensitivity
+# run redirect all emitted CSVs + figures to a separate directory so the
+# canonical subtypes/ outputs (program_labels.csv, nmf_assignments.csv,
+# subtype_markers.csv) are never clobbered. Default keeps canonical path.
+out_dir <- Sys.getenv("SUBTYPE_OUT_DIR", unset = in_dir)
+dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 fig_dir <- file.path(out_dir, "figures")
 dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -128,7 +136,7 @@ tag_program <- function(top50_syms, fgsea_tbl,
 # ============================================================
 cat("--- Choosing k ---\n")
 chosen_k_env <- Sys.getenv("NMF_CHOSEN_K", unset = "")
-rubric_path  <- file.path(out_dir, "nmf_ksweep_rubric_scores.csv")
+rubric_path  <- file.path(in_dir, "nmf_ksweep_rubric_scores.csv")
 
 if (chosen_k_env != "") {
   chosen_k <- as.integer(chosen_k_env)
@@ -173,9 +181,9 @@ meta_sub <- meta %>% filter(sample_id %in% available_samples)
 # ============================================================
 # Cache precedence: NMF_CACHE_PATH env var > clean (Script 95) > nosex (Script 94) > full (Script 92).
 env_cache   <- Sys.getenv("NMF_CACHE_PATH", "")
-clean_cache <- file.path(out_dir, "nmf_results_cache_clean.rds")
-nosex_cache <- file.path(out_dir, "nmf_results_cache_nosex.rds")
-full_cache  <- file.path(out_dir, "nmf_results_cache.rds")
+clean_cache <- file.path(in_dir, "nmf_results_cache_clean.rds")
+nosex_cache <- file.path(in_dir, "nmf_results_cache_nosex.rds")
+full_cache  <- file.path(in_dir, "nmf_results_cache.rds")
 cache_path  <- if (nzchar(env_cache)) {
   env_cache
 } else if (file.exists(clean_cache)) {

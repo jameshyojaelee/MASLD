@@ -5,7 +5,7 @@
 # Supersedes Scripts 08, 14c, 14f, 133, 115b.
 #
 # Contrasts:
-#   C1  Disease vs Control          (dream_results.csv)
+#   C1  Disease vs Control          (canonical_deg_results.csv)
 #   C2  NASH vs NAFL                (nafl_vs_nash_dream.csv)
 #   Fibrosis cumulative  F1-F4 vs F0 (fibrosis_stage_dream.csv)
 #   Fibrosis consecutive F0->F4     (fibrosis_consecutive_dream.csv)
@@ -122,8 +122,8 @@ load_contrast <- function(file, contrast_name, t_col = "t", gene_col = "gene",
 # Accumulate all contrasts
 all_contrasts <- list()
 
-# C1: Disease vs Control
-c1 <- load_contrast(file.path(RDIR, "dream_results.csv"),
+# C1: Disease vs Control (canonical limma-voom-qw C2)
+c1 <- load_contrast(file.path(RDIR, "canonical_deg_results.csv"),
                      "DiseaseVsControl")
 all_contrasts <- c(all_contrasts, c1)
 

@@ -1,10 +1,11 @@
 #!/usr/bin/env Rscript
 # figS_multimethod_batch_pca.R
-# Panel J (batch-model PCA) for the multi-method comparison: PCA of the pooled
+# Batch-model PCA for the multi-method comparison: PCA of the pooled
 # 5-cohort mega samples under each method's ACTUAL batch model, so the reader sees
-# how each DE method treats the dataset (cohort) axis. (panelA-I now belong to the
-# degx battery; this bespoke batch-handling diagnostic is panelJ.)
-#   panelJ_batch_model_pca.pdf
+# how each DE method treats the dataset (cohort) axis. (The power/calibration/
+# agreement panels belong to the degx battery; this is the bespoke batch-handling
+# diagnostic.)
+#   batch_model_pca.pdf  (was panelJ_batch_model_pca.pdf)
 #   Row 1 (coloured by COHORT)  : Raw | Fixed-effect (DESeq2 ~dataset) | Random-effect (dream (1|dataset))
 #   Row 2 (coloured by DISEASE) : same three corrections -> biology preserved
 #   Row 3 (metafor)             : 5 per-cohort PCAs -> metafor never pools (no joint matrix)
@@ -26,10 +27,10 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-                  GSE162694 = "Bril", GSE213621 = "Chen")
-cohort_pal <- c(Suppli = "#1F77B4", Hoang = "#FF7F0E", Govaere = "#2CA02C",
-                Bril = "#D62728", Chen = "#9467BD")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+                  GSE162694 = "GSE162694", GSE213621 = "GSE213621")
+cohort_pal <- c(GSE126848 = "#1F77B4", GSE130970 = "#FF7F0E", GSE135251 = "#2CA02C",
+                GSE162694 = "#D62728", GSE213621 = "#9467BD")
 
 # --- pooled counts: 5 mega cohorts only -------------------------------------
 dge <- load_merged_dge(); stopifnot(!is.null(dge))
@@ -249,25 +250,25 @@ if (nrow(plot_enrich) > 0) {
 fig_loads <- (pLoad / pEnrich) + plot_layout(heights = c(1.2, 1)) +
   plot_annotation(title = "PC loadings: what genes drive the top PCs after batch correction",
     theme = theme(plot.title = element_text(size = 9, face = "bold")))
-ggsave(file.path(OUT, "panelJ_loadings.pdf"), fig_loads,
+ggsave(file.path(OUT, "loadings.pdf"), fig_loads,
        width = 9.0, height = 10.0, device = cairo_pdf)
 fwrite(loads[, .(gene, gene_name, PC1, PC2, PC3, PC4)],
-       file.path(OUT, "panelJ_loadings_data.csv"))
-fwrite(sig_enrich, file.path(OUT, "panelJ_loadings_enrichment.csv"))
-cat("Wrote panelJ_loadings.pdf\n")
+       file.path(OUT, "loadings_data.csv"))
+fwrite(sig_enrich, file.path(OUT, "loadings_enrichment.csv"))
+cat("Wrote loadings.pdf\n")
 
 fig <- (row_cohort / row_dis / row_meta) +
   plot_layout(heights = c(1, 1, 1)) +
   plot_annotation(
     title = "Batch handling of the pooled mega samples, per DE method",
-    subtitle = sprintf("Top-2,000 most-variable log2-CPM; %d samples, 5 control-bearing mega cohorts. Fixed-effect = limma::removeBatchEffect (DESeq2 ~dataset); random-effect = per-gene lme4 (1|dataset) BLUP removal (dream). Disease is ~0.9%% of expression variance (vs dataset ~23%%) - never a dominant PC, so it does not separate in PCA by ANY method (PCA = batch diagnostic, not a disease classifier; for supervised disease separation see panelK).",
+    subtitle = sprintf("Top-2,000 most-variable log2-CPM; %d samples, 5 control-bearing mega cohorts. Fixed-effect = limma::removeBatchEffect (DESeq2 ~dataset); random-effect = per-gene lme4 (1|dataset) BLUP removal (dream). Disease is ~0.9%% of expression variance (vs dataset ~23%%) - never a dominant PC, so it does not separate in PCA by ANY method (PCA = batch diagnostic, not a disease classifier; for supervised disease separation see supervised_disease.pdf).",
                        ncol(dge)),
     theme = theme(plot.title = element_text(size = 9.5, face = "bold"),
                   plot.subtitle = element_text(size = 6.2, colour = "grey35")))
 
-ggsave(file.path(OUT, "panelJ_batch_model_pca.pdf"), fig,
+ggsave(file.path(OUT, "batch_model_pca.pdf"), fig,
        width = 9.0, height = 8.2, device = cairo_pdf)
 fwrite(pca[, .(sample_id, dataset, cohort, disease, model, PC1, PC2)],
-       file.path(OUT, "panelJ_batch_model_pca_data.csv"))
-cat("Wrote panelJ_batch_model_pca.pdf\n")
+       file.path(OUT, "batch_model_pca_data.csv"))
+cat("Wrote batch_model_pca.pdf\n")
 print(ann)

@@ -46,10 +46,10 @@ p_f <- placeholder("(f) AUROC heatmap")
 # Study name mapping (shared) — PRJNA512027 (Gerhard 2018) excluded from
 # cohort presentation due to L0/S0 library-prep / diagnosis confound.
 STUDY_NAMES <- c(
-  GSE213621 = "Chen", GSE135251 = "Govaere", GSE130970 = "Hoang",
-  GSE162694 = "Bril", GSE174478 = "Kawamura", GSE193066 = "Hoshida",
-  GSE240729 = "Verschuren", GSE126848 = "Suppli",
-  GSE167523 = "Pantano"
+  GSE213621 = "GSE213621", GSE135251 = "GSE135251", GSE130970 = "GSE130970",
+  GSE162694 = "GSE162694", GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE240729 = "GSE240729", GSE126848 = "GSE126848",
+  GSE167523 = "GSE167523"
 )
 
 # ==========================================================================
@@ -81,11 +81,11 @@ if (!is.null(per_study) && !is.null(dream_masld)) {
                      "GSE162694", "GSE213621")
 
   upset_names <- c(
-    GSE126848 = "Suppli",
-    GSE130970 = "Hoang",
-    GSE135251 = "Govaere",
-    GSE162694 = "Bril",
-    GSE213621 = "Chen"
+    GSE126848 = "GSE126848",
+    GSE130970 = "GSE130970",
+    GSE135251 = "GSE135251",
+    GSE162694 = "GSE162694",
+    GSE213621 = "GSE213621"
   )
 
   # Consistent thresholds
@@ -105,7 +105,7 @@ if (!is.null(per_study) && !is.null(dream_masld)) {
   }
 
   # Dream integrated DEGs
-  dream_degs <- dream_masld[dream_padj < padj_thr & abs(dream_logFC) > lfc_thr, gene]
+  dream_degs <- dream_masld[bulk_padj < padj_thr & abs(bulk_logFC) > lfc_thr, gene]
   dream_degs <- sub("\\..*", "", dream_degs)
   deg_lists[["Integrated"]] <- unique(dream_degs)
 
@@ -260,7 +260,7 @@ if (file.exists(auroc_matrix_f)) {
   }
 
   # Fibrosis-contrast cohorts (no healthy controls) — train rows only
-  FIBROSIS_ONLY <- c("Kawamura", "Hoshida", "Verschuren")
+  FIBROSIS_ONLY <- c("GSE174478", "GSE193066", "GSE240729")
 
   # Factor levels: single cohorts alphabetical, Integrated at bottom
   train_levels <- c(sort(unique(auroc_mat$train_author)), "Integrated")

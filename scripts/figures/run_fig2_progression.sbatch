@@ -12,18 +12,14 @@ set -euo pipefail
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 mkdir -p Analysis/SingleCell/results_gpu_v2_phase05/logs
 
-echo "[$(date)] starting Fig 2 panel renders + compositor on $(hostname)"
+echo "[$(date)] starting Fig 2 panel renders on $(hostname)"
 
 # Render each new panel
-for s in fig2_panel_cascade_degs fig2_panel_inflection_composite \
-         fig2_panel_celltype_cascade fig2_panel_network_communities \
-         fig2_panel_nmf_programs; do
+for s in cascade_degs inflection_composite \
+         celltype_cascade network_communities \
+         nmf_programs; do
   echo "[$(date)] panel script: $s"
   micromamba run -n rnaseq Rscript scripts/figures/$s.R
 done
-
-# Compose
-echo "[$(date)] compositor"
-micromamba run -n rnaseq Rscript scripts/figures/fig2_progression.R
 
 echo "[$(date)] DONE"

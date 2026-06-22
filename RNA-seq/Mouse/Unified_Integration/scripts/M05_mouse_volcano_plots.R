@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 # Publication-quality volcano plots for per-diet DE and dream mega-analysis.
 # Uses Sanjana Lab mouse color scheme (Cyan/Green family).
-# Input:  results/per_diet/*_de_results.csv, results/meta_analysis/dream_pooled_results.csv
+# Input:  results/per_diet/*_de_results.csv, results/meta_analysis/lvqw_pooled_results.csv
 # Output: results/volcanos_per_diet.pdf, results/volcano_dream_mega.pdf
 # ---------------------------------------------------------------------------
 
@@ -102,7 +102,7 @@ for (d in levels(per_diet$diet)) {
 
 # ===== Dream Mega-Analysis Volcano =====
 cat("\nLoading dream mega-analysis results...\n")
-dream <- fread(file.path(RDIR, "meta_analysis/dream_pooled_results.csv"))
+dream <- fread(file.path(RDIR, "meta_analysis/lvqw_pooled_results.csv"))
 
 dream[, category := fcase(
   adj.P.Val < PADJ_THRESH & logFC > LFC_THRESH, "Up",

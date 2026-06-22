@@ -5,14 +5,14 @@
 # Sex inferred from XIST/DDX3Y k-means for samples with missing annotation.
 #
 # Outputs (all in panels/):
-#   panelJ_pca_raw.pdf
-#   panelJ_pca_batch.pdf
-#   panelJ_pca_batch_sex.pdf
-#   panelJ_pca_batch_sex_sva.pdf
-#   panelJ_3d_raw.pdf
-#   panelJ_3d_batch.pdf
-#   panelJ_3d_batch_sex.pdf
-#   panelJ_3d_batch_sex_sva.pdf
+#   pca_raw.pdf
+#   pca_batch.pdf
+#   pca_batch_sex.pdf
+#   pca_batch_sex_sva.pdf
+#   3d_raw.pdf
+#   3d_batch.pdf
+#   3d_batch_sex.pdf
+#   3d_batch_sex_sva.pdf
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(patchwork)
   library(edgeR); library(limma); library(matrixStats); library(sva)
@@ -25,17 +25,20 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 OUT <- file.path(BASE,
-  "figures/supplementary/figS_methods_validation/multimethod_validation/panels")
+  "figures/supplementary/figS_methods_validation/multimethod_validation/panels/pca")
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang",
-                  GSE135251 = "Govaere", GSE162694 = "Bril", GSE213621 = "Chen")
-cohort_pal   <- c(Suppli = "#1F77B4", Hoang = "#FF7F0E", Govaere = "#2CA02C",
-                  Bril = "#D62728", Chen = "#9467BD")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970",
+                  GSE135251 = "GSE135251", GSE162694 = "GSE162694", GSE213621 = "GSE213621")
+cohort_pal   <- c(GSE126848 = "#1F77B4", GSE130970 = "#FF7F0E", GSE135251 = "#2CA02C",
+                  GSE162694 = "#D62728", GSE213621 = "#9467BD")
 disease_pal  <- c(Control = CTRL, Disease = masld_colors$nash)
 sex_pal      <- c(F = masld_colors$nash, M = "#1F77B4", Unknown = "grey80")
+NA_GREY      <- "grey85"
+fib_pal      <- c(F0 = "#FEE0B6", F1 = "#FDB863", F2 = "#E08214",
+                  F3 = "#B35806", F4 = "#7F3B08", Unknown = NA_GREY)
 
 # ---------------------------------------------------------------------------
 # 1. Load data
@@ -48,6 +51,17 @@ cat(sprintf("n = %d samples\n", ncol(dge)))
 
 grp <- factor(samp$group_binary, levels = c("Control", "Disease"))
 ds  <- factor(samp$dataset)
+
+# Clinical phenotypes (NAS / fibrosis) for the severity panels.
+# Reference (update) join keeps samp in its original column order so rows stay
+# aligned with the dge columns / grp / logcpm matrices.
+meta_clin <- fread(file.path(BASE,
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/metadata/unified_metadata.csv"),
+  select = c("sample_id", "fibrosis_stage", "nas_score"))
+samp[meta_clin, on = "sample_id",
+     `:=`(fibrosis_stage = i.fibrosis_stage, nas_score = i.nas_score)]
+cat(sprintf("Clinical: NAS non-NA=%d  fibrosis non-NA=%d  of %d samples\n",
+            sum(!is.na(samp$nas_score)), sum(!is.na(samp$fibrosis_stage)), nrow(samp)))
 
 # ---------------------------------------------------------------------------
 # 2. Infer sex from XIST / DDX3Y for samples missing annotation
@@ -132,6 +146,10 @@ make_dt <- function(scores, pve) {
              sex     = sex_inferred,
              cohort  = factor(cohort_short[samp$dataset], levels = unname(cohort_short)),
              disease = factor(samp$group_binary, levels = c("Control", "Disease")),
+             nas     = as.numeric(samp$nas_score),
+             fibrosis = factor(ifelse(is.na(samp$fibrosis_stage), "Unknown",
+                                      paste0("F", samp$fibrosis_stage)),
+                               levels = c("F0", "F1", "F2", "F3", "F4", "Unknown")),
              PC1 = scores[, 1], PC2 = scores[, 2], PC3 = scores[, 3],
              pve1 = pve[1], pve2 = pve[2], pve3 = pve[3])
 }
@@ -165,14 +183,55 @@ scatter2d <- function(dt, colour_by, pal, leg_name, title) {
     base_theme()
 }
 
-# combined figure: cohort | disease | sex  (3 panels per correction level)
-make_combined <- function(dt, subtitle) {
+# NAS panel — SHAPE encodes group (open = control, filled = disease); COLOUR
+# encodes the NAS score (red gradient). Samples lacking a NAS score are gray
+# (na.value): an unscored sample is gray, a scored control is an open NAS-coloured
+# ring, a scored disease sample a filled NAS-coloured dot. Unscored points drawn
+# first so the scored gradient reads on top.
+scatter_nas <- function(dt, title) {
+  ggplot(dt[order(!is.na(nas))], aes(PC1, PC2, colour = nas, shape = disease)) +
+    geom_point(size = 0.7, stroke = 0.3, alpha = 0.8) +
+    scale_colour_gradient(name = "NAS", low = "#fad0ce", high = "#741816",
+                          limits = c(0, 8), na.value = NA_GREY) +
+    scale_shape_manual(name = NULL, values = c(Control = 1, Disease = 16)) +
+    guides(colour = guide_colourbar(order = 1, barwidth = 0.4, barheight = 2.6),
+           shape  = guide_legend(order = 2,
+                       override.aes = list(size = 1.8, colour = "grey30"))) +
+    labs(x = sprintf("PC1 (%.1f%%)", dt$pve1[1]),
+         y = sprintf("PC2 (%.1f%%)", dt$pve2[1]), title = title) +
+    base_theme()
+}
+
+# Fibrosis panel — same encoding: SHAPE = group (open control / filled disease),
+# COLOUR = fibrosis stage (orange; Unknown/unscored = gray). Unknown drawn first.
+scatter_fib <- function(dt, title) {
+  ggplot(dt[order(fibrosis == "Unknown", decreasing = TRUE)],
+         aes(PC1, PC2, colour = fibrosis, shape = disease)) +
+    geom_point(size = 0.7, stroke = 0.3, alpha = 0.85) +
+    scale_colour_manual(name = "Fibrosis", values = fib_pal) +
+    scale_shape_manual(name = NULL, values = c(Control = 1, Disease = 16)) +
+    guides(colour = guide_legend(order = 1, override.aes = list(size = 1.8, shape = 16)),
+           shape  = guide_legend(order = 2,
+                       override.aes = list(size = 1.8, colour = "grey30"))) +
+    labs(x = sprintf("PC1 (%.1f%%)", dt$pve1[1]),
+         y = sprintf("PC2 (%.1f%%)", dt$pve2[1]), title = title) +
+    base_theme()
+}
+
+# combined figure: cohort | sex | disease, optionally + NAS | fibrosis
+make_combined <- function(dt, subtitle, clinical = FALSE) {
   pC <- scatter2d(dt, "cohort",  cohort_pal,  "Cohort",  "by Cohort")
-  pD <- scatter2d(dt, "disease", disease_pal, "Disease", "by Disease")
   pS <- scatter2d(dt, "sex",     sex_pal,     "Sex",     "by Sex")
-  (pC | pD | pS) +
-    plot_annotation(subtitle = subtitle,
-      theme = theme(plot.subtitle = element_text(size = 6.5, colour = "grey35")))
+  pD <- scatter2d(dt, "disease", disease_pal, "Disease", "by Disease")
+  row <- if (clinical) {
+    pN <- scatter_nas(dt, "by NAS score")
+    pF <- scatter_fib(dt, "by Fibrosis stage")
+    (pC | pS | pD | pN | pF)
+  } else {
+    (pC | pS | pD)
+  }
+  invisible(subtitle)   # subtitles removed from the figures (2026-06-12); arg kept for call compatibility
+  row
 }
 
 # ---------------------------------------------------------------------------
@@ -187,29 +246,40 @@ save_combined <- function(fig, filename, title, width = 10, height = 3.8) {
   cat("Wrote", filename, "\n")
 }
 
-save_combined(
-  make_combined(dt_raw, sprintf("Top-2000 HVGs, no correction. PC1=%.1f%% PC2=%.1f%%",
-                                 dt_raw$pve1[1], dt_raw$pve2[1])),
-  "panelJ_pca_raw.pdf",
-  "Raw logCPM — cohort dominates, disease invisible, sex axis visible")
+nas_fib_tag <- function(dt) sprintf("NAS n=%d, fibrosis n=%d (controls = open circles, grey = N/A)",
+                                    sum(!is.na(dt$nas)), sum(dt$fibrosis != "Unknown"))
 
 save_combined(
-  make_combined(dt_bat, sprintf("Batch (cohort) corrected. PC1=%.1f%% PC2=%.1f%%",
-                                 dt_bat$pve1[1], dt_bat$pve2[1])),
-  "panelJ_pca_batch.pdf",
-  "Batch-corrected — sex becomes the dominant binary structure within cohorts")
+  make_combined(dt_raw, sprintf("Top-2000 HVGs, no correction. PC1=%.1f%% PC2=%.1f%%. %s",
+                                 dt_raw$pve1[1], dt_raw$pve2[1], nas_fib_tag(dt_raw)),
+                clinical = TRUE),
+  "pca_raw.pdf",
+  "Raw logCPM — cohort dominates, disease invisible, sex axis visible",
+  width = 16.5)
 
 save_combined(
-  make_combined(dt_sex, sprintf("Batch + sex corrected. PC1=%.1f%% PC2=%.1f%%",
-                                 dt_sex$pve1[1], dt_sex$pve2[1])),
-  "panelJ_pca_batch_sex.pdf",
-  "Batch + sex corrected — diagonal residual from unmeasured confounders (BMI, age, RIN)")
+  make_combined(dt_bat, sprintf("Batch (cohort) corrected. PC1=%.1f%% PC2=%.1f%%. %s",
+                                 dt_bat$pve1[1], dt_bat$pve2[1], nas_fib_tag(dt_bat)),
+                clinical = TRUE),
+  "pca_batch.pdf",
+  "Batch-corrected — sex becomes the dominant binary structure within cohorts",
+  width = 16.5)
 
 save_combined(
-  make_combined(dt_sva, sprintf("Batch + sex + SVA (%d SVs). PC1=%.1f%% PC2=%.1f%%",
-                                 n_sv, dt_sva$pve1[1], dt_sva$pve2[1])),
-  "panelJ_pca_batch_sex_sva.pdf",
-  sprintf("Batch + sex + SVA (%d SVs) — unmeasured confounders removed; disease still not dominant in PCA", n_sv))
+  make_combined(dt_sex, sprintf("Batch + sex corrected. PC1=%.1f%% PC2=%.1f%%. %s",
+                                 dt_sex$pve1[1], dt_sex$pve2[1], nas_fib_tag(dt_sex)),
+                clinical = TRUE),
+  "pca_batch_sex.pdf",
+  "Batch + sex corrected — diagonal residual from unmeasured confounders (BMI, age, RIN)",
+  width = 16.5)
+
+save_combined(
+  make_combined(dt_sva, sprintf("Batch + sex + SVA (%d SVs). PC1=%.1f%% PC2=%.1f%%. %s",
+                                 n_sv, dt_sva$pve1[1], dt_sva$pve2[1], nas_fib_tag(dt_sva)),
+                clinical = TRUE),
+  "pca_batch_sex_sva.pdf",
+  sprintf("Batch + sex + SVA (%d SVs) — unmeasured confounders removed; disease/NAS/fibrosis still not dominant in PCA", n_sv),
+  width = 16.5)
 
 # ---------------------------------------------------------------------------
 # 7. Save 3D figures (plotly + kaleido)
@@ -237,8 +307,8 @@ save_3d <- function(dt, subtitle_str, filename) {
   }
   fig <- subplot(
     mk(dt, "cohort",  cohort_pal,  "by Cohort"),
-    mk(dt, "disease", disease_pal, "by Disease"),
     mk(dt, "sex",     sex_pal,     "by Sex"),
+    mk(dt, "disease", disease_pal, "by Disease"),
     nrows = 1, shareX = FALSE, shareY = FALSE, titleX = TRUE, titleY = TRUE
   ) |> layout(title = list(text = subtitle_str, font = list(size = 10)))
 
@@ -254,16 +324,16 @@ save_3d <- function(dt, subtitle_str, filename) {
   cat("Wrote", filename, "\n")
 }
 
-save_3d(dt_raw, "Raw logCPM",         "panelJ_3d_raw.pdf")
-save_3d(dt_bat, "Batch-corrected",    "panelJ_3d_batch.pdf")
-save_3d(dt_sex, "Batch+sex corrected","panelJ_3d_batch_sex.pdf")
-save_3d(dt_sva, sprintf("Batch+sex+SVA (%d SVs)", n_sv), "panelJ_3d_batch_sex_sva.pdf")
+save_3d(dt_raw, "Raw logCPM",         "3d_raw.pdf")
+save_3d(dt_bat, "Batch-corrected",    "3d_batch.pdf")
+save_3d(dt_sex, "Batch+sex corrected","3d_batch_sex.pdf")
+save_3d(dt_sva, sprintf("Batch+sex+SVA (%d SVs)", n_sv), "3d_batch_sex_sva.pdf")
 
 # ---------------------------------------------------------------------------
 # 8. Raw vs. SVA comparison: 2-row x 3-col 3D figure (6 scenes)
 # Uses plotly multi-scene layout so both rows share the same figure.
 # Row 1 = Raw, Row 2 = Batch+sex+SVA
-# Cols = Cohort | Disease | Sex
+# Cols = Cohort | Sex | Disease
 # ---------------------------------------------------------------------------
 scene_spec <- function(dt, col_x, row_y, w, h) {
   list(
@@ -298,11 +368,11 @@ y_top <- 0.52; y_bot <- 0.01
 
 fig_cmp <- plot_ly()
 fig_cmp <- add_group_traces(fig_cmp, dt_raw, "cohort",  cohort_pal,  "scene",  TRUE)
-fig_cmp <- add_group_traces(fig_cmp, dt_raw, "disease", disease_pal, "scene2", TRUE)
-fig_cmp <- add_group_traces(fig_cmp, dt_raw, "sex",     sex_pal,     "scene3", TRUE)
+fig_cmp <- add_group_traces(fig_cmp, dt_raw, "sex",     sex_pal,     "scene2", TRUE)
+fig_cmp <- add_group_traces(fig_cmp, dt_raw, "disease", disease_pal, "scene3", TRUE)
 fig_cmp <- add_group_traces(fig_cmp, dt_sva, "cohort",  cohort_pal,  "scene4", FALSE)
-fig_cmp <- add_group_traces(fig_cmp, dt_sva, "disease", disease_pal, "scene5", FALSE)
-fig_cmp <- add_group_traces(fig_cmp, dt_sva, "sex",     sex_pal,     "scene6", FALSE)
+fig_cmp <- add_group_traces(fig_cmp, dt_sva, "sex",     sex_pal,     "scene5", FALSE)
+fig_cmp <- add_group_traces(fig_cmp, dt_sva, "disease", disease_pal, "scene6", FALSE)
 fig_cmp <- fig_cmp |> layout(
     scene  = scene_spec(dt_raw, 0,           y_top, w, h),
     scene2 = scene_spec(dt_raw, w + gap,     y_top, w, h),
@@ -320,16 +390,16 @@ fig_cmp <- fig_cmp |> layout(
            font=list(size=12, color="grey25"), xanchor="left"),
       list(text="Cohort",  x=w/2,           y=1.02, xref="paper",
            yref="paper", showarrow=FALSE, font=list(size=9), xanchor="center"),
-      list(text="Disease", x=w+gap+w/2,     y=1.02, xref="paper",
+      list(text="Sex",     x=w+gap+w/2,     y=1.02, xref="paper",
            yref="paper", showarrow=FALSE, font=list(size=9), xanchor="center"),
-      list(text="Sex",     x=2*(w+gap)+w/2, y=1.02, xref="paper",
+      list(text="Disease", x=2*(w+gap)+w/2, y=1.02, xref="paper",
            yref="paper", showarrow=FALSE, font=list(size=9), xanchor="center")
     ),
     legend = list(font=list(size=7)),
     margin = list(l=0, r=0, t=45, b=0)
   )
 
-out_cmp <- file.path(OUT, "panelJ_3d_comparison_raw_vs_sva.pdf")
+out_cmp <- file.path(OUT, "3d_comparison_raw_vs_sva.pdf")
 tryCatch(
   plotly::save_image(fig_cmp, out_cmp, width = 1400, height = 900, scale = 2),
   error = function(e) {
@@ -338,6 +408,6 @@ tryCatch(
     cat("  kaleido fallback -> HTML\n")
   }
 )
-cat("Wrote panelJ_3d_comparison_raw_vs_sva.pdf\n")
+cat("Wrote 3d_comparison_raw_vs_sva.pdf\n")
 
 cat("\nDone. All panels in", OUT, "\n")

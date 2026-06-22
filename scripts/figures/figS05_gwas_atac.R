@@ -3,9 +3,12 @@
 # figS05_gwas_atac.R — Supplementary Figure 5: GWAS-ATAC Regulatory Variants
 #
 # Generates panels: DA volcanos, peak annotations, chromVAR heatmap,
-# mouse bulk ATAC panels, SCENIC+ correlation, cross-species conservation.
+# SCENIC+ correlation, cross-species conservation. (Mouse bulk-ATAC panels
+# 12-14 cut 2026-06-19 — composition artifact; see note below.)
 #
-# Output: figures/supplementary/figS05_epigenomic_spatial/panel_*.pdf
+# Output: figures/supplementary/figS05_epigenomic_spatial/panel_*.pdf (FLAT —
+# panels write to the figS05 root dir; the panels/ subdir was consolidated away
+# 2026-06-19 per the project's flat-panel convention).
 # ==========================================================================
 
 suppressPackageStartupMessages({
@@ -28,7 +31,7 @@ ATAC_INT <- file.path(BASE, "Analysis", "ATAC", "Integration")
 DREAM    <- file.path(BASE, "RNA-seq", "Human", "Patient_Cohorts",
                       "analysis", "integration", "results", "integration")
 OUT      <- FIGS05_DIR
-PANELS   <- file.path(FIGS05_DIR, "panels")
+PANELS   <- FIGS05_DIR   # consolidated 2026-06-19: panels write FLAT to root (no panels/ subdir)
 dir.create(PANELS, showWarnings = FALSE, recursive = TRUE)
 
 save_panel <- function(p, name, w = fig_half_width, h = 3) {
@@ -177,13 +180,21 @@ if (!is.null(da_annot) && "distance_to_tss" %in% names(da_annot)) {
 # Panel 11: chromVAR TF motif heatmap (top TFs across cell types)
 # ===================================================================
 message("\nPanel 11: chromVAR TF heatmap...")
-# Prefer label-transfer-corrected chromVAR v2; fall back to original
-cv_file <- file.path(ATAC_HM, "results", "chromvar_v2", "chromvar_tf_activity.csv")
+# A6 pseudoreplication fix (2026-06-20): DONOR-LEVEL limma table replaces the
+# per-cell Mann-Whitney table (4,832 "sig" = n-of-cells inflation; donor = 110 sig
+# genome-wide, 0 in hepatocytes). Falls back to the per-cell table only if absent.
+cv_file <- file.path(ATAC_HM, "results", "chromvar_v2", "chromvar_limma_per_ct.csv")
 if (!file.exists(cv_file))
-  cv_file <- file.path(ATAC_HM, "results", "chromvar", "chromvar_tf_activity.csv")
+  cv_file <- file.path(ATAC_HM, "results", "chromvar_v2", "chromvar_tf_activity.csv")
 
 if (file.exists(cv_file)) {
   cv <- fread(cv_file)
+
+  # Normalize the donor schema (cell_type/TF/logFC/adj.P.Val) to the columns this
+  # panel expects (tf_name/logFC_deviation/padj). No-op on the per-cell fallback.
+  if (!"tf_name" %in% names(cv) && "TF" %in% names(cv)) setnames(cv, "TF", "tf_name")
+  if (!"logFC_deviation" %in% names(cv) && "logFC" %in% names(cv)) setnames(cv, "logFC", "logFC_deviation")
+  if (!"padj" %in% names(cv) && "adj.P.Val" %in% names(cv)) setnames(cv, "adj.P.Val", "padj")
 
   # Get top 30 TFs by significance in hepatocytes (handle both naming conventions)
   cv_hep <- cv[cell_type %in% c("Hepatocyte", "Hepatocytes")][order(padj)][1:min(30, .N)]
@@ -228,196 +239,11 @@ if (file.exists(cv_file)) {
   message("  WARNING: ", cv_file, " not found, skipping panel 11")
 }
 
-# ===================================================================
-# Panel 12: Mouse bulk ATAC peak annotation distribution
-# ===================================================================
-message("\nPanel 12: Mouse peak annotation distribution...")
-
-if (file.exists(annot_file)) {
-  mouse_peaks <- fread(annot_file)
-
-  # Simplify ChIPseeker annotation categories
-  mouse_peaks[, annot_simple := fcase(
-    grepl("^Promoter", annotation),          "Promoter",
-    grepl("Intron",    annotation),          "Intron",
-    grepl("Exon",      annotation),          "Exon",
-    grepl("UTR",       annotation),          "UTR",
-    grepl("Downstream", annotation),         "Downstream",
-    grepl("Distal Intergenic", annotation),  "Intergenic",
-    default = "Other"
-  )]
-
-  annot_counts_m <- mouse_peaks[, .N, by = annot_simple]
-  annot_counts_m[, pct := N / sum(N) * 100]
-  annot_counts_m[, annot_simple := factor(annot_simple,
-    levels = c("Promoter", "Exon", "UTR", "Intron", "Downstream",
-               "Intergenic", "Other"))]
-
-  annot_colors_m <- c(Promoter = "#0D47A1", Exon = "#1565C0",
-                       UTR = "#42A5F5", Intron = "#7B1FA2",
-                       Downstream = "#E91E63", Intergenic = "#BDBDBD",
-                       Other = "#E0E0E0")
-
-  p12 <- ggplot(annot_counts_m, aes(x = annot_simple, y = pct,
-                                     fill = annot_simple)) +
-    geom_col(width = 0.7) +
-    scale_fill_manual(values = annot_colors_m) +
-    geom_text(aes(label = paste0(round(pct, 1), "%")),
-              vjust = -0.3, size = 2) +
-    labs(x = NULL, y = "Percentage of peaks",
-         title = paste0("Mouse bulk ATAC peak annotations (",
-                        formatC(nrow(mouse_peaks), big.mark = ","),
-                        " peaks)")) +
-    theme_masld() +
-    theme(legend.position = "none",
-          axis.text.x = element_text(angle = 35, hjust = 1))
-
-  save_panel(p12, "panel_12_mouse_peak_annotation.pdf",
-             w = fig_half_width, h = 3)
-} else {
-  message("  WARNING: ", annot_file, " not found, skipping panel 12")
-}
-
-# ===================================================================
-# Panel 13: Mouse DA volcano (HFD vs Control)
-# ===================================================================
-message("\nPanel 13: Mouse DA volcano...")
-da_mouse_file <- file.path(ATAC_MB, "results", "da_HFD_vs_Control.csv")
-
-if (file.exists(da_mouse_file)) {
-  da_m <- fread(da_mouse_file)
-  da_m[, neg_log10_padj := -log10(pmin(padj, 1))]
-  da_m[, sig := fifelse(padj < 0.05 & abs(logFC) > 0.5,
-                         fifelse(logFC > 0, "Opened", "Closed"), "NS")]
-
-  n_open   <- sum(da_m$sig == "Opened", na.rm = TRUE)
-  n_closed <- sum(da_m$sig == "Closed", na.rm = TRUE)
-
-  # Merge with annotations to get gene names for labeling
-  if (file.exists(annot_file)) {
-    annot_m <- fread(annot_file)
-    da_m <- merge(da_m, annot_m[, .(peak_id, SYMBOL)],
-                  by = "peak_id", all.x = TRUE)
-  } else {
-    da_m[, SYMBOL := NA_character_]
-  }
-
-  # Top peaks for labeling
-  da_m[, rank_score := abs(logFC) * neg_log10_padj]
-  top_peaks <- da_m[sig != "NS" & !is.na(SYMBOL) & SYMBOL != ""][
-    order(-rank_score)][1:min(15, .N)]
-
-  p13 <- ggplot(da_m, aes(x = logFC, y = neg_log10_padj, color = sig)) +
-    geom_point(size = 0.3, alpha = 0.5, shape = 16) +
-    scale_color_manual(values = c(Closed = masld_colors$down,
-                                  NS     = masld_colors$ns,
-                                  Opened = masld_colors$up)) +
-    geom_text_repel(data = top_peaks,
-                    aes(label = SYMBOL), size = 1.8,
-                    max.overlaps = 20, segment.size = 0.2,
-                    min.segment.length = 0) +
-    geom_vline(xintercept = c(-0.5, 0.5), linetype = "dashed",
-               linewidth = 0.3, color = "gray60") +
-    geom_hline(yintercept = -log10(0.05), linetype = "dashed",
-               linewidth = 0.3, color = "gray60") +
-    labs(x = expression(log[2]~"fold change (HFD / Control)"),
-         y = expression(-log[10]~"(adjusted p-value)"),
-         title = "Mouse bulk ATAC: HFD vs Control") +
-    annotate("text", x = max(da_m$logFC, na.rm = TRUE) * 0.6,
-             y = max(da_m$neg_log10_padj, na.rm = TRUE) * 0.95,
-             label = paste0(n_open, " opened"), color = masld_colors$up,
-             size = 2.2, hjust = 1) +
-    annotate("text", x = min(da_m$logFC, na.rm = TRUE) * 0.6,
-             y = max(da_m$neg_log10_padj, na.rm = TRUE) * 0.95,
-             label = paste0(n_closed, " closed"), color = masld_colors$down,
-             size = 2.2, hjust = 0) +
-    theme_masld() +
-    theme(legend.position = "none")
-
-  save_panel(p13, "panel_13_mouse_da_volcano.pdf", w = fig_half_width, h = 3)
-} else {
-  message("  WARNING: ", da_mouse_file, " not found, skipping panel 13")
-}
-
-# ===================================================================
-# Panel 14: Mouse promoter accessibility heatmap (top DA genes)
-# ===================================================================
-message("\nPanel 14: Mouse promoter accessibility heatmap...")
-prom_file <- file.path(ATAC_MB, "results", "promoter_accessibility.csv")
-
-if (file.exists(prom_file)) {
-  prom <- fread(prom_file)
-
-  # Get all DA files for diet models
-  da_files <- list.files(file.path(ATAC_MB, "results"),
-                         pattern = "^da_.*_vs_Control\\.csv$",
-                         full.names = TRUE)
-
-  if (length(da_files) > 0) {
-    all_da <- rbindlist(lapply(da_files, function(f) {
-      dt <- fread(f)
-      # Keep only shared columns across contrasts
-      dt[, .(peak_id, logFC, padj, contrast)]
-    }))
-
-    # Merge promoter peaks with DA results
-    # peak_coordinate uses "chr:start-end" but DA peak_id uses "chr_start_end"
-    if ("peak_coordinate" %in% names(prom)) {
-      prom[, peak_id := gsub("[:-]", "_", peak_coordinate)]
-    }
-    if ("peak_id" %in% names(prom) && "peak_id" %in% names(all_da)) {
-      da_prom <- merge(all_da, prom[, .(peak_id, gene_symbol)],
-                       by = "peak_id", all.x = FALSE)
-    } else {
-      da_prom <- data.table()
-    }
-
-    if (nrow(da_prom) > 0 && "gene_symbol" %in% names(da_prom)) {
-      # Get top 40 genes by max absolute logFC across any contrast
-      gene_max <- da_prom[, .(max_lfc = max(abs(logFC), na.rm = TRUE)),
-                          by = gene_symbol][order(-max_lfc)][1:min(40, .N)]
-
-      da_top <- da_prom[gene_symbol %in% gene_max$gene_symbol]
-      da_top[, logFC_capped := pmin(pmax(logFC, -3), 3)]
-
-      mat_df <- dcast(da_top, gene_symbol ~ contrast,
-                      value.var = "logFC_capped",
-                      fun.aggregate = mean, fill = 0)
-
-      if (ncol(mat_df) > 1) {
-        gene_names <- mat_df$gene_symbol
-        mat <- as.matrix(mat_df[, -1, with = FALSE])
-        rownames(mat) <- gene_names
-
-        # Cluster rows
-        if (nrow(mat) > 2) {
-          hc <- hclust(dist(mat))
-          mat <- mat[hc$order, , drop = FALSE]
-        }
-
-        plot_df <- as.data.table(reshape2::melt(mat,
-          varnames = c("Gene", "Contrast"), value.name = "logFC"))
-
-        p14 <- ggplot(plot_df, aes(x = Contrast, y = Gene, fill = logFC)) +
-          geom_tile(color = "white", linewidth = 0.2) +
-          scale_fill_gradient2(low = masld_colors$down, mid = "white",
-                               high = masld_colors$up, midpoint = 0,
-                               name = expression(log[2]~FC),
-                               limits = c(-3, 3)) +
-          labs(x = NULL, y = NULL,
-               title = "Mouse promoter accessibility (top DA genes)") +
-          theme_masld() +
-          theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-                axis.text.y = element_text(size = 4))
-
-        save_panel(p14, "panel_14_mouse_promoter_heatmap.pdf",
-                   w = fig_half_width, h = 5)
-      }
-    }
-  }
-} else {
-  message("  WARNING: ", prom_file, " not found, skipping panel 14")
-}
+# Panels 12-14 (mouse bulk-ATAC: peak annotation, HFD-vs-Control DA volcano,
+# promoter-accessibility heatmap) CUT 2026-06-19 — the mouse-ATAC disease signal
+# is a COMPOSITION artifact (hepatocyte dropout: ~90% of ALL promoters lose
+# accessibility in MASH, d=-0.80, not locus-specific), the same reason these were
+# cut from main Fig 4. See memory/project-fig4-epigenetics-mouse-atac-2026-06-18.
 
 # ===================================================================
 # Panel 15: SCENIC+ regulon activity vs bulk RNA LFC

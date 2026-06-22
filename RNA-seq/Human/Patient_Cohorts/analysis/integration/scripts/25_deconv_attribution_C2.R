@@ -302,9 +302,9 @@ stopifnot(file.exists(c2_path))
 dt_unadj <- fread(c2_path)
 # Use RAW padj / logFC for the Tier-1 denominator (1,853). ashr columns
 # (shrunk_logFC / lfsr) exist in C2 but Tier-1 canonical = raw.
-dt_unadj[, dream_sig := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]
+dt_unadj[, bulk_sig := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]
 cat("  C2 unadjusted Tier-1 (padj<0.05, |logFC|>0.5):",
-    nrow(dt_unadj[dream_sig == TRUE]), "\n")
+    nrow(dt_unadj[bulk_sig == TRUE]), "\n")
 # USE_ASHR_UNADJ flag retained for downstream branch; here it means
 # "use C2 raw padj column" (TRUE path uses dt_unadj_m[gene, padj]).
 USE_ASHR_UNADJ <- TRUE

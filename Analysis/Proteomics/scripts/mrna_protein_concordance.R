@@ -100,15 +100,15 @@ dvc <- merge(dvc, atlas[, .(human_symbol, is_conserved, bulk_padj,
 # ---------------------------------------------------------------------------
 # 3. Compute concordance statistics
 # ---------------------------------------------------------------------------
-# DEG status (dream padj < 0.05, |logFC| > 0.3)
-dvc[, is_deg := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.3]
+# DEG status (canonical bulk padj < 0.05, |logFC| > 0.3)
+dvc[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.3]
 dvc[, is_prot_sig := !is.na(protein_padj) & protein_padj < 0.05]
 dvc[, both_sig := is_deg & is_prot_sig]
-dvc[, direction_match := sign(dream_logFC) == sign(protein_logFC)]
+dvc[, direction_match := sign(bulk_logFC) == sign(protein_logFC)]
 dvc[, is_conserved := ifelse(is.na(is_conserved), FALSE, is_conserved)]
 
 # Overall concordance
-overall_rho <- cor(dvc$dream_logFC, dvc$protein_logFC, method = "spearman",
+overall_rho <- cor(dvc$bulk_logFC, dvc$protein_logFC, method = "spearman",
                    use = "complete.obs")
 overall_dir <- mean(dvc$direction_match, na.rm = TRUE) * 100
 
@@ -122,32 +122,32 @@ strat <- rbind(
              rho = overall_rho,
              direction_pct = overall_dir),
   data.table(stratum = "DEGs (padj<0.05, |LFC|>0.3)", n = sum(dvc$is_deg),
-             rho = cor(dvc[is_deg == TRUE]$dream_logFC,
+             rho = cor(dvc[is_deg == TRUE]$bulk_logFC,
                        dvc[is_deg == TRUE]$protein_logFC,
                        method = "spearman", use = "complete.obs"),
              direction_pct = mean(dvc[is_deg == TRUE]$direction_match, na.rm = TRUE) * 100),
   data.table(stratum = "Non-DEGs", n = sum(!dvc$is_deg),
-             rho = cor(dvc[is_deg == FALSE]$dream_logFC,
+             rho = cor(dvc[is_deg == FALSE]$bulk_logFC,
                        dvc[is_deg == FALSE]$protein_logFC,
                        method = "spearman", use = "complete.obs"),
              direction_pct = mean(dvc[is_deg == FALSE]$direction_match, na.rm = TRUE) * 100),
   data.table(stratum = "Conserved", n = sum(dvc$is_conserved),
              rho = if (sum(dvc$is_conserved) > 10)
-               cor(dvc[is_conserved == TRUE]$dream_logFC,
+               cor(dvc[is_conserved == TRUE]$bulk_logFC,
                    dvc[is_conserved == TRUE]$protein_logFC,
                    method = "spearman", use = "complete.obs") else NA_real_,
              direction_pct = if (sum(dvc$is_conserved) > 10)
                mean(dvc[is_conserved == TRUE]$direction_match, na.rm = TRUE) * 100 else NA_real_),
   data.table(stratum = "Both significant", n = sum(dvc$both_sig),
              rho = if (sum(dvc$both_sig) > 10)
-               cor(dvc[both_sig == TRUE]$dream_logFC,
+               cor(dvc[both_sig == TRUE]$bulk_logFC,
                    dvc[both_sig == TRUE]$protein_logFC,
                    method = "spearman", use = "complete.obs") else NA_real_,
              direction_pct = if (sum(dvc$both_sig) > 10)
                mean(dvc[both_sig == TRUE]$direction_match, na.rm = TRUE) * 100 else NA_real_),
   data.table(stratum = "Protein sig only", n = sum(dvc$is_prot_sig & !dvc$is_deg),
              rho = if (sum(dvc$is_prot_sig & !dvc$is_deg) > 10)
-               cor(dvc[is_prot_sig == TRUE & is_deg == FALSE]$dream_logFC,
+               cor(dvc[is_prot_sig == TRUE & is_deg == FALSE]$bulk_logFC,
                    dvc[is_prot_sig == TRUE & is_deg == FALSE]$protein_logFC,
                    method = "spearman", use = "complete.obs") else NA_real_,
              direction_pct = if (sum(dvc$is_prot_sig & !dvc$is_deg) > 10)
@@ -156,9 +156,9 @@ strat <- rbind(
 
 # Secondary: PXD051911 liver DIA-MS (MASLD vs No_MASLD) — tissue-proteomics
 if (nrow(tissue) > 50) {
-  t_rho <- cor(tissue$dream_logFC, tissue$protein_logFC, method = "spearman",
+  t_rho <- cor(tissue$bulk_logFC, tissue$protein_logFC, method = "spearman",
                use = "complete.obs")
-  t_dir <- mean(sign(tissue$dream_logFC) == sign(tissue$protein_logFC),
+  t_dir <- mean(sign(tissue$bulk_logFC) == sign(tissue$protein_logFC),
                 na.rm = TRUE) * 100
   strat <- rbind(strat,
     data.table(stratum = "PXD051911 liver (MASLD vs ctrl)", n = nrow(tissue),
@@ -169,9 +169,9 @@ if (nrow(tissue) > 50) {
 
 # Fibrosis: PXD051911 MASH vs MASL
 if (nrow(fib) > 50) {
-  fib_rho <- cor(fib$dream_logFC, fib$protein_logFC, method = "spearman",
+  fib_rho <- cor(fib$bulk_logFC, fib$protein_logFC, method = "spearman",
                  use = "complete.obs")
-  fib_dir <- mean(sign(fib$dream_logFC) == sign(fib$protein_logFC), na.rm = TRUE) * 100
+  fib_dir <- mean(sign(fib$bulk_logFC) == sign(fib$protein_logFC), na.rm = TRUE) * 100
   strat <- rbind(strat,
     data.table(stratum = "PXD051911 (MASH vs MASL)", n = nrow(fib),
                rho = fib_rho, direction_pct = fib_dir))
@@ -187,7 +187,7 @@ if ("top_pathways" %in% names(dvc)) {
 
   pathway_strat <- dvc[, .(
     n = .N,
-    rho = if (.N > 20) cor(dream_logFC, protein_logFC, method = "spearman",
+    rho = if (.N > 20) cor(bulk_logFC, protein_logFC, method = "spearman",
                            use = "complete.obs") else NA_real_,
     direction_pct = mean(direction_match, na.rm = TRUE) * 100
   ), by = first_pathway][order(-n)]
@@ -206,14 +206,14 @@ print(strat)
 # 4. Identify discordant genes
 # ---------------------------------------------------------------------------
 # Discordant = opposite sign AND both have non-trivial effect
-dvc[, discordance_score := abs(dream_logFC) + abs(protein_logFC)]
-discordant <- dvc[direction_match == FALSE & abs(dream_logFC) > 0.2 & abs(protein_logFC) > 0.2]
+dvc[, discordance_score := abs(bulk_logFC) + abs(protein_logFC)]
+discordant <- dvc[direction_match == FALSE & abs(bulk_logFC) > 0.2 & abs(protein_logFC) > 0.2]
 discordant <- discordant[order(-discordance_score)]
 
 cat(sprintf("\nDiscordant genes (opp. sign, both |LFC|>0.2): %d\n", nrow(discordant)))
 cat("Top 20 discordant:\n")
 print(discordant[1:min(20, nrow(discordant)),
-                 .(gene, dream_logFC, protein_logFC, dream_padj, protein_padj,
+                 .(gene, bulk_logFC, protein_logFC, bulk_padj, protein_padj,
                    is_deg, is_conserved)])
 
 # ---------------------------------------------------------------------------
@@ -240,19 +240,19 @@ sig_cat_colors <- c(
 # --- Panel (a): mRNA vs protein logFC scatter ---
 # Label top concordant and discordant genes
 label_genes <- c(
-  head(dvc[both_sig == TRUE][order(-abs(dream_logFC))]$gene, 8),
+  head(dvc[both_sig == TRUE][order(-abs(bulk_logFC))]$gene, 8),
   head(discordant$gene, 7)
 )
 dvc[, label := fifelse(gene %in% label_genes, gene, "")]
 
-pa <- ggplot(dvc, aes(x = dream_logFC, y = protein_logFC, color = sig_cat)) +
+pa <- ggplot(dvc, aes(x = bulk_logFC, y = protein_logFC, color = sig_cat)) +
   rasterize_layer(geom_point(alpha = 0.4, size = 0.5)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray60", linewidth = 0.3) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "gray60", linewidth = 0.3) +
   geom_smooth(data = dvc[both_sig == TRUE | (is_deg & abs(protein_logFC) > 0.1)],
               method = "lm", se = TRUE, color = "black", linewidth = 0.4, alpha = 0.15,
               inherit.aes = FALSE,
-              aes(x = dream_logFC, y = protein_logFC)) +
+              aes(x = bulk_logFC, y = protein_logFC)) +
   geom_text_repel(aes(label = label), size = 1.8, max.overlaps = 20,
                   segment.size = 0.2, show.legend = FALSE) +
   scale_color_manual(values = sig_cat_colors, name = "Significance") +
@@ -287,9 +287,9 @@ disc_top[, gene := factor(gene, levels = rev(unique(gene)))]
 
 # Melt for paired bar chart
 disc_melt <- melt(disc_top, id.vars = "gene",
-                  measure.vars = c("dream_logFC", "protein_logFC"),
+                  measure.vars = c("bulk_logFC", "protein_logFC"),
                   variable.name = "modality", value.name = "logFC")
-disc_melt[, modality := fifelse(modality == "dream_logFC", "mRNA", "Protein")]
+disc_melt[, modality := fifelse(modality == "bulk_logFC", "mRNA", "Protein")]
 
 pc <- ggplot(disc_melt, aes(x = gene, y = logFC, fill = modality)) +
   geom_col(position = position_dodge(width = 0.7), width = 0.6) +
@@ -318,7 +318,7 @@ cat(sprintf("\nFigure saved: %s\n",
 # Primary output — PXD052937-only (so downstream never re-mixes RNA-seq)
 out_csv <- file.path(BASE, "Analysis/Proteomics/results/mrna_protein_concordance_summary.csv")
 
-summary_out <- dvc[, .(gene, dream_logFC, dream_padj, protein_logFC, protein_padj,
+summary_out <- dvc[, .(gene, bulk_logFC, bulk_padj, protein_logFC, protein_padj,
                        dataset, dream_comparator,
                        direction_match, is_deg, is_prot_sig, both_sig,
                        is_conserved, sig_cat, discordance_score)]
@@ -337,7 +337,7 @@ cat(sprintf("Stratified CSV saved: %s\n", strat_csv))
 
 # Save discordant genes
 disc_csv <- file.path(BASE, "Analysis/Proteomics/results/mrna_protein_discordant_genes.csv")
-fwrite(discordant[, .(gene, dream_logFC, dream_padj, protein_logFC, protein_padj,
+fwrite(discordant[, .(gene, bulk_logFC, bulk_padj, protein_logFC, protein_padj,
                        dataset, is_deg, is_conserved, discordance_score)],
        disc_csv)
 cat(sprintf("Discordant genes CSV saved: %s (%d genes)\n", disc_csv, nrow(discordant)))

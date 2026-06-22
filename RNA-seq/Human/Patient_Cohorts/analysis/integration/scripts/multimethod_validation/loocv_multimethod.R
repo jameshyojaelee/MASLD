@@ -99,6 +99,18 @@ for (m in ACTIVE_METHODS()) {
                            meta_tr[sel], contrast_mode = "binary")
       })
       run_metafor(per_study_list, K = length(training), bp)
+    } else if (m == "limma_voom") {
+      run_limma_voom(counts_tr, meta_tr, bp)
+    } else if (m == "limma_voom_qw") {
+      run_limma_voom_qw(counts_tr, meta_tr, bp)
+    } else if (m == "limma_trend") {
+      run_limma_trend(counts_tr, meta_tr, bp)
+    } else if (m == "edger_qlf") {
+      run_edger_qlf(counts_tr, meta_tr, bp)
+    } else if (m == "edger_qlf_robust") {
+      run_edger_qlf_robust(counts_tr, meta_tr, bp)
+    } else if (m == "edger_lrt") {
+      run_edger_lrt(counts_tr, meta_tr, bp)
     } else {
       stop("Unknown method '", m, "' in VALIDATION_METHODS")
     }
@@ -134,6 +146,16 @@ cat(sprintf("\nHeld-out target (%s): %d genes (%d with padj<0.05)\n",
 OUT_DIR <- file.path(RDIR, "multimethod_validation", "loocv")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
+# Method tag so per-(method x cohort) array tasks write distinct files and don't
+# clobber one another. Default (legacy dream,deseq2[,metafor]) => no tag, so the
+# original loocv_<cohort>.csv naming is preserved. A single-method subset (the
+# new per-method array) => loocv_<cohort>__<method>.csv. The aggregator globs
+# loocv_<cohort>*.csv and rbinds all method rows.
+.active <- ACTIVE_METHODS()
+METHOD_TAG <- if (identical(sort(.active), sort(c("dream", "deseq2"))) ||
+                  identical(sort(.active), sort(c("dream", "deseq2", "metafor"))))
+                "" else paste0("__", paste(.active, collapse = "_"))
+
 metric_rows <- list()
 for (m in ACTIVE_METHODS()) {
   if (is.null(method_results[[m]])) next
@@ -147,7 +169,7 @@ if (length(metric_rows) == 0)
   stop("No method produced metrics for fold ", HELD_OUT, " (all methods failed).")
 
 metrics <- rbindlist(metric_rows, fill = TRUE)
-metrics_file <- file.path(OUT_DIR, paste0("loocv_", HELD_OUT, ".csv"))
+metrics_file <- file.path(OUT_DIR, paste0("loocv_", HELD_OUT, METHOD_TAG, ".csv"))
 fwrite(metrics, metrics_file)
 cat("\nSaved per-fold metrics:", metrics_file, "\n")
 
@@ -169,7 +191,7 @@ if (is.null(pergene)) {
   pergene <- merge(pergene, ho_dt[, .(gene, ho_logFC, ho_padj)],
                    by = "gene", all = TRUE)
 }
-pergene_file <- file.path(OUT_DIR, paste0("loocv_pergene_", HELD_OUT, ".csv"))
+pergene_file <- file.path(OUT_DIR, paste0("loocv_pergene_", HELD_OUT, METHOD_TAG, ".csv"))
 fwrite(pergene, pergene_file)
 cat("Saved per-gene wide table:", pergene_file,
     sprintf("(%d genes)\n", nrow(pergene)))

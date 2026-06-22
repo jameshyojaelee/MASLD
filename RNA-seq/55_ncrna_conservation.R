@@ -468,7 +468,7 @@ if (file.exists(phastcons_path)) {
 cat("\n--- 9. Merging DEG status and saving ---\n")
 
 # Merge DEG status — deduplicate lncrna data first to prevent cartesian product
-lncrna_dedup <- lncrna[!duplicated(human_symbol), .(human_symbol, is_deg, dream_logFC, dream_padj)]
+lncrna_dedup <- lncrna[!duplicated(human_symbol), .(human_symbol, is_deg, bulk_logFC, bulk_padj)]
 cat(sprintf("  DEG data: %d unique lncRNAs (from %d rows)\n", nrow(lncrna_dedup), nrow(lncrna)))
 flanking_dt <- merge(flanking_dt, lncrna_dedup,
                       by.x = "lncrna", by.y = "human_symbol", all.x = TRUE)

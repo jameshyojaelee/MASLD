@@ -251,35 +251,70 @@ if (file.exists(hypr_file)) {
 }
 
 # ==============================================================================
-# 7. scDRS (Phase 4A) — per-cell-type disease enrichment
+# 7. Cell-type GWAS-signal enrichment (donor-correct MAGMA-equivalent arm)
 # ==============================================================================
-cat("\n--- 7. scDRS ---\n")
+# REPOINTED 2026-06-20 (mega-review A6.4 / A8): the previously consumed arm,
+# scdrs/<gwas>/group_results.csv, runs a per-CELL one-sample/welch t-test over
+# 200K–657K cells. Cells from the same donor are not independent, so that test
+# pseudoreplicates and returns top_celltype_pval = 0.0 / fdr = 0.0 (see the
+# scdrs_summary diagnostic below) — an artefact, not a donor-level signal.
+#
+# The donor-correct, MAGMA.Celltyping-equivalent enrichment is produced by
+# 201_celltype_heritability.R: it asks whether genes specifically expressed in
+# each cell type are enriched for the canonical GWAS COLOC/TWAS evidence
+# (gene-set Wilcoxon, with Bonferroni control across cell types). That arm
+# REVERSES the per-cell "hepatocyte is the top enriched cell type" claim:
+# under the donor-correct arm hepatocytes carry the WEAKEST COLOC
+# fold-enrichment of all 11 native lineages (1.16x, rank 11/11); the leading
+# lineages are immune/stromal (Circulating NK/NKT 1.40x, T cells 1.38x,
+# Macrophages 1.32x). We therefore report the donor-correct values here.
+cat("\n--- 7. Cell-type GWAS-signal enrichment ---\n")
 
+# 7a. Per-cell scDRS summary — DIAGNOSTIC ONLY (pseudoreplicated, p inflated).
 scdrs_summary <- file.path(CAUSAL_DIR, "scdrs/scdrs_summary.csv")
 if (file.exists(scdrs_summary)) {
   scdrs <- fread(scdrs_summary)
-  cat("  Loaded scDRS summary:", nrow(scdrs), "GWAS\n")
-  # Per-GWAS, per-cell-type enrichment → find best cell type per gene across GWAS
-  # This is at the GWAS level. Individual gene-level results are in cell_scores.csv
-  # For atlas integration, we use the group_results (cell-type enrichment) rather
-  # than per-cell scores. Report summary stats in integration log.
+  cat("  [diagnostic only — per-cell t-test pseudoreplicates over",
+      "~200K–657K cells; p=0.0 is an artefact, NOT consumed]\n")
   for (i in seq_len(nrow(scdrs))) {
     row <- scdrs[i]
-    cat(sprintf("  %s: %d sig cells (%.1f%%), top CT: %s (p=%.2e)\n",
+    cat(sprintf("    %s: %d sig cells (%.1f%%), per-cell top CT: %s (p=%.2e, INVALID)\n",
                 row$gwas, row$n_sig_cells, row$frac_sig_cells * 100,
                 row$top_celltype, row$top_celltype_pval))
   }
 }
 
-# Load per-gene scDRS scores from the best GWAS (UKBB ALT by default)
-for (gwas_name in c("ukbb_alt", "ukbb_ast", "ukbb_ggt", "ghodsian")) {
-  scdrs_group <- file.path(CAUSAL_DIR, "scdrs", gwas_name, "group_results.csv")
-  if (file.exists(scdrs_group)) {
-    grp <- fread(scdrs_group)
-    cat("  scDRS cell-type enrichment for", gwas_name, ":", nrow(grp), "cell types\n")
-    cat("  FDR<0.05:", sum(grp$fdr < 0.05, na.rm = TRUE), "cell types\n")
-    break  # Just report from first available GWAS
+# 7b. Donor-correct MAGMA-equivalent enrichment (201_celltype_heritability.R).
+herit_file <- file.path(BASE, "RNA-seq/results/gwas_rna_integration",
+                        "celltype_heritability_results.csv")
+if (file.exists(herit_file)) {
+  herit <- fread(herit_file)
+  # Restrict to native per-cell-type sets; drop progression-contrast (*_vs_*)
+  # and deconvolution (*_bayesprism) rows so the reported enrichment is the
+  # clean cell-type heritability arm (producer fix tracked under A8).
+  herit_ct <- herit[!grepl("_vs_|bayesprism", cell_type)]
+  cat("  Donor-correct MAGMA-equivalent COLOC enrichment:",
+      nrow(herit_ct), "cell types\n")
+  n_bonf_sig <- sum(herit_ct$wilcox_p_coloc_bonf < 0.05, na.rm = TRUE)
+  cat("  Bonferroni-significant (wilcox_p_coloc_bonf<0.05):",
+      n_bonf_sig, "cell types\n")
+  setorder(herit_ct, -fold_enrichment_coloc)
+  for (i in seq_len(nrow(herit_ct))) {
+    row <- herit_ct[i]
+    cat(sprintf("    %s: COLOC fold-enrich %.2fx (wilcox_p_coloc_bonf=%.2g)\n",
+                row$cell_type, row$fold_enrichment_coloc, row$wilcox_p_coloc_bonf))
   }
+  hep <- herit_ct[cell_type == "Hepatocytes"]
+  if (nrow(hep) == 1) {
+    hep_rank <- which(herit_ct$cell_type == "Hepatocytes")
+    cat(sprintf(paste0("  NOTE: hepatocytes rank %d/%d by COLOC fold-enrichment ",
+                       "(%.2fx, bonf p=%.2g) — the per-cell 'top hepatocyte' ",
+                       "claim does NOT replicate donor-correct.\n"),
+                hep_rank, nrow(herit_ct), hep$fold_enrichment_coloc,
+                hep$wilcox_p_coloc_bonf))
+  }
+} else {
+  cat("  WARNING: donor-correct heritability file not found:", herit_file, "\n")
 }
 
 # ==============================================================================

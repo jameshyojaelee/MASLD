@@ -139,8 +139,8 @@ def load_atlas_gene_level() -> pd.DataFrame:
     want = [
         "human_symbol",
         "gene_biotype",
-        "dream_padj",
-        "dream_logFC",
+        "bulk_padj",
+        "bulk_logFC",
         "is_conserved",
         "coloc_susie_best_pp4",
         "coloc_n_gwas_h4_08",

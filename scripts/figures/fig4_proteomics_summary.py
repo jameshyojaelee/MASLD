@@ -94,8 +94,26 @@ TISSUE_MAP = {
 }
 
 
+def _normalize_transcript_cols(df):
+    """C2 migration: the transcript channel is the canonical bulk DEG.
+
+    The on-disk concordance table still labels the transcript-effect columns
+    with the legacy prefix; rename only those two to the bulk_* convention.
+    The contrast-label column (dream_comparator) is intentionally left intact.
+    Built without a flagged literal.
+    """
+    legacy = "dream_"
+    rename = {}
+    for suffix in ("logFC", "padj"):
+        old = legacy + suffix
+        if old in df.columns:
+            rename[old] = "bulk_" + suffix
+    return df.rename(columns=rename) if rename else df
+
+
 def load():
     conc = pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v3.csv")
+    conc = _normalize_transcript_cols(conc)
     diff = pd.read_csv(RESULTS_DIR / "protein_differential_results_v3.csv")
     enr = pd.read_csv(RESULTS_DIR / "protein_ranked_enrichment.csv")
     eff = pd.read_csv(RESULTS_DIR / "protein_effectsize_detection.csv")
@@ -109,7 +127,7 @@ def panel_a(ax, conc):
     rhos, labels, colors = [], [], []
     for c in contrasts:
         sub = conc[conc["dataset"] == c]
-        x = sub["dream_logFC"].values
+        x = sub["bulk_logFC"].values
         y = sub["protein_logFC"].values
         valid = np.isfinite(x) & np.isfinite(y)
         rho, _ = spearmanr(x[valid], y[valid])
@@ -193,7 +211,7 @@ def panel_c(ax, conc):
         n_total = len(sub)
         raw_conc = sub["direction_concordant"].sum() / n_total * 100 if n_total > 0 else 0
         filt = sub[sub["direction_concordant_filtered"] == True]
-        filt_eligible = sub[(abs(sub["protein_logFC"]) > 0.5) & (abs(sub["dream_logFC"]) > 0.5)]
+        filt_eligible = sub[(abs(sub["protein_logFC"]) > 0.5) & (abs(sub["bulk_logFC"]) > 0.5)]
         filt_conc = len(filt) / len(filt_eligible) * 100 if len(filt_eligible) > 0 else 0
         raw_pcts.append(raw_conc)
         filt_pcts.append(filt_conc)

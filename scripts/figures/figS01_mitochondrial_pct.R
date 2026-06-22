@@ -39,10 +39,10 @@ qc <- data.table(
 
 # Short cohort labels (match fig1_umap.R convention)
 cohort_short <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE167523 = "Kozumi", GSE174478 = "Kawamura",
-  GSE193066 = "Hoshida", GSE213621 = "Chen", GSE240729 = "Verschuren",
-  PRJNA512027 = "Gerhard"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE167523 = "GSE167523", GSE174478 = "GSE174478",
+  GSE193066 = "GSE193066", GSE213621 = "GSE213621", GSE240729 = "GSE240729",
+  PRJNA512027 = "PRJNA512027"
 )
 qc[, cohort := cohort_short[dataset]]
 ord <- qc[, .(med = median(mt_pct)), by = cohort][order(med), cohort]

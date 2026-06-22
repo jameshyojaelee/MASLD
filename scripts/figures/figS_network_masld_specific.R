@@ -464,8 +464,8 @@ if (!is.na(f2_file)) {
 if ((length(f2_up) + length(f2_down)) < 20 && !is.null(atlas)) {
   message("  falling back to atlas-based inflammation-up + OxPhos-down pattern")
   sym_col <- intersect(c("human_symbol", "symbol"), names(atlas))[1]
-  lfc_col <- intersect(c("dream_logFC", "dream_shrunk_logFC"), names(atlas))[1]
-  padj_col <- intersect(c("dream_padj", "dream_lfsr"), names(atlas))[1]
+  lfc_col <- intersect(c("bulk_logFC", "bulk_shrunk_logFC"), names(atlas))[1]
+  padj_col <- intersect(c("bulk_padj", "bulk_lfsr"), names(atlas))[1]
 
   if (!is.na(sym_col) && !is.na(lfc_col) && !is.na(padj_col)) {
     atlas_slim <- atlas[!is.na(get(padj_col)) & get(padj_col) < 0.05 &

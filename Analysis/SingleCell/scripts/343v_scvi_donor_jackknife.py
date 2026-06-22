@@ -7,7 +7,9 @@ Honest donor-level leave-one-out for the scVI F-stage projection.
 Why this script exists
 ----------------------
 The QWK = 0.76 number reported in `memory/MEMORY.md` for F-stage inference
-was produced by kNN-5 leave-one-donor-out on a FIXED scVI latent space —
+is LEAKED and must not be used as a headline (see HONEST RESULT block below;
+honest value = 0.286). It was produced by kNN-5 leave-one-donor-out on a
+FIXED scVI latent space —
 i.e. scVI was trained on the full atlas (all 269 donors), and only the
 classifier head was re-fit per fold. The latent representation itself
 already saw every held-out donor's cells, so per-donor LOOCV on the
@@ -26,6 +28,29 @@ This script does the proper version: for ONE held-out donor it
 
 Run 10 such jobs (one per held-out donor), then aggregate via
 `343x_aggregate_loocv.R` to get the honest QWK distribution.
+
+HONEST (leakage-free) RESULT — this is the number to report
+-----------------------------------------------------------
+Aggregating the per-donor predictions this worker emits (10 retrain-from-
+scratch folds, balanced F0-F4) gives **donor-jackknife QWK = 0.286**
+(verified on disk 2026-06-20 from the `knn_prediction.tsv` outputs under
+`scvi_validation/donor_jackknife/`). Held-out Andrews — the single cohort
+with documented Kleiner F-stage — collapses to **QWK = 0.0**. These are the
+leakage-free F-stage generalization benchmarks (mega-review A7, theme-4
+H9-0022..27).
+
+DO NOT report the inflated 0.74-0.76 (kNN-5 on a FIXED scVI latent trained
+on all 269 donors — held-out donors' cells were in the latent fit) or the
+augmented-anchor "0.391 -> 0.639 external rho gain" as headline numbers.
+Both are leaked. The 0.74-0.76 leak is intrinsic to the fixed-latent design
+this script replaces. The augmented-anchor self-validation is computed in a
+SIBLING script (343m / `donor_metadata_extended.tsv` `F_stage_augmented`),
+NOT here — its F0/F4 anchors are drawn from `disease_stage_coarse` and the
+"external" rho is then measured against `disease_stage_numeric` (the same
+variable) over all 260 donors INCLUDING the 69 anchors, so the gain is
+anchor self-validation; the leakage-free non-anchor rho is **0.247**. This
+worker is anchor-free by construction (labels come only from documented
+Andrews F-stage in `donor_fstage_documented.tsv`).
 
 Usage
 -----

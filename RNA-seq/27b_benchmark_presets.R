@@ -29,6 +29,7 @@ if (!file.exists(atlas_file)) {
 }
 atlas <- fread(atlas_file)
 cat("Atlas loaded:", nrow(atlas), "genes x", ncol(atlas), "columns\n")
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 
 # ================================================================
 # Load positive controls
@@ -67,7 +68,7 @@ if (file.exists(drug_file)) {
 cat("Pharmacological mechanism targets:", paste(pharma_targets, collapse=", "), "\n")
 pharma_in_atlas <- pharma_targets[pharma_targets %in% atlas$human_symbol]
 cat("  In atlas:", length(pharma_in_atlas), "\n")
-pharma_de <- atlas[human_symbol %in% pharma_in_atlas & !is.na(dream_padj) & dream_padj < 0.1]
+pharma_de <- atlas[human_symbol %in% pharma_in_atlas & !is.na(bulk_padj) & bulk_padj < 0.1]
 cat("  With padj < 0.1:", nrow(pharma_de), "(", paste(pharma_de$human_symbol, collapse=", "), ")\n")
 cat("  NOTE: Most pharma targets are NOT expected to pass DE filters\n")
 
@@ -85,10 +86,10 @@ apply_preset <- function(atlas, config) {
 
   # L1 filter (always applied as AND)
   if (!is.null(config$l1_padj)) {
-    selected <- selected & !is.na(atlas$dream_padj) & atlas$dream_padj < config$l1_padj
+    selected <- selected & !is.na(atlas$bulk_padj) & atlas$bulk_padj < config$l1_padj
   }
   if (!is.null(config$l1_lfc)) {
-    selected <- selected & !is.na(atlas$dream_logFC) & abs(atlas$dream_logFC) > config$l1_lfc
+    selected <- selected & !is.na(atlas$bulk_logFC) & abs(atlas$bulk_logFC) > config$l1_lfc
   }
 
   # Additional layer filters — collect as booleans

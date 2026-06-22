@@ -339,10 +339,10 @@ def enrichment_tests(atlas):
     # Build gene sets to test against SVGs
     gene_sets = {}
 
-    # 1. Dream DEGs (intersect with the SVG-tested universe so the Fisher 2x2
+    # 1. Bulk DEGs (intersect with the SVG-tested universe so the Fisher 2x2
     #    is conditioned on the same background — F071/F184)
-    if "dream_padj" in atlas.columns:
-        gene_sets["Dream_DEGs"] = set(atlas[atlas["dream_padj"] < 0.1][symbol_col]) & all_genes
+    assert "bulk_padj" in atlas.columns, "C2: atlas missing bulk_* — rebuild 27a"
+    gene_sets["Bulk_DEGs"] = set(atlas[atlas["bulk_padj"] < 0.1][symbol_col]) & all_genes
 
     # 2. Conserved
     conserved = load_conserved()

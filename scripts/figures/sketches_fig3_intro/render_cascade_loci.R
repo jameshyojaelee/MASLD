@@ -52,9 +52,9 @@ ggsave(file.path(OUT, "option_10b_cascade_loci.pdf"),
        p, width = 11, height = 5, device = cairo_pdf)
 
 # Also drop into the main fig3 panels dir
-FIG3_PANELS <- file.path(BASE, "figures/main/fig3_regulatory_architecture/panels")
-ggsave(file.path(FIG3_PANELS, "fig3_intro_cascade_loci.pdf"),
+FIG3_PANELS <- file.path(BASE, "figures/main/fig2_genetics/panels")
+ggsave(file.path(FIG3_PANELS, "intro_cascade_loci.pdf"),
        p, width = 11, height = 5, device = cairo_pdf)
 
 cat("Wrote: ", file.path(OUT, "option_10b_cascade_loci.pdf"),
-    "\n   and: ", file.path(FIG3_PANELS, "fig3_intro_cascade_loci.pdf"), "\n")
+    "\n   and: ", file.path(FIG3_PANELS, "intro_cascade_loci.pdf"), "\n")

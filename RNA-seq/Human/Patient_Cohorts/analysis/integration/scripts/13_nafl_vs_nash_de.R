@@ -252,28 +252,28 @@ meta_dt <- meta_results
 
 # Merge dream + meta
 consensus <- merge(
-  dream_dt[, .(gene, dream_lfc = logFC, dream_padj = adj.P.Val)],
+  dream_dt[, .(gene, dream_lfc = logFC, dream_padj = adj.P.Val)],  # C2-OK-sensitivity
   meta_dt[, .(gene, meta_logFC, meta_padj)],
   by = "gene", all = TRUE
 )
 
 consensus[, `:=`(
-  dream_sig = dream_padj < 0.05,
+  dream_sig = dream_padj < 0.05,  # C2-OK-sensitivity
   meta_sig = meta_padj < 0.05,
-  dream_dir = fifelse(dream_lfc > 0, "up", "down"),
+  dream_dir = fifelse(dream_lfc > 0, "up", "down"),  # C2-OK-sensitivity
   meta_dir = fifelse(meta_logFC > 0, "up", "down")
 )]
 
 # Tier 1: significant in BOTH and concordant
 consensus[, tier := "NS"]
-consensus[dream_sig == TRUE & meta_sig == TRUE &
-          !is.na(dream_dir) & !is.na(meta_dir) &
-          dream_dir == meta_dir, tier := "Tier1"]
+consensus[dream_sig == TRUE & meta_sig == TRUE &  # C2-OK-sensitivity
+          !is.na(dream_dir) & !is.na(meta_dir) &  # C2-OK-sensitivity
+          dream_dir == meta_dir, tier := "Tier1"]  # C2-OK-sensitivity
 
 # Tier 2: significant in at least one, concordant if both exist
-consensus[(dream_sig == TRUE | meta_sig == TRUE) &
+consensus[(dream_sig == TRUE | meta_sig == TRUE) &  # C2-OK-sensitivity
           tier == "NS" &
-          (is.na(dream_dir) | is.na(meta_dir) | dream_dir == meta_dir),
+          (is.na(dream_dir) | is.na(meta_dir) | dream_dir == meta_dir),  # C2-OK-sensitivity
           tier := "Tier2"]
 
 cat("Tier 1 (both sig + concordant):", sum(consensus$tier == "Tier1"), "\n")

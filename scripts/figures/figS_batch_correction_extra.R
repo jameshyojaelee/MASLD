@@ -40,14 +40,14 @@ PANEL_DIR <- file.path(FIGS_BATCH_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 COHORT_LABEL <- c(
-  GSE126848="Suppli", GSE130970="Hoang", GSE135251="Govaere", GSE162694="Bril",
-  GSE167523="Kozumi", GSE174478="Kawamura", GSE193066="Hoshida", GSE213621="Chen",
-  GSE240729="Verschuren", PRJNA512027="Gerhard"
+  GSE126848="GSE126848", GSE130970="GSE130970", GSE135251="GSE135251", GSE162694="GSE162694",
+  GSE167523="GSE167523", GSE174478="GSE174478", GSE193066="GSE193066", GSE213621="GSE213621",
+  GSE240729="GSE240729", PRJNA512027="PRJNA512027"
 )
 COHORT_COLORS <- c(
-  "Suppli"="#1F77B4","Hoang"="#FF7F0E","Govaere"="#2CA02C","Bril"="#D62728",
-  "Kozumi"="#9467BD","Kawamura"="#8C564B","Hoshida"="#E377C2","Chen"="#7F7F7F",
-  "Verschuren"="#BCBD22","Gerhard"="#17BECF"
+  "GSE126848"="#1F77B4","GSE130970"="#FF7F0E","GSE135251"="#2CA02C","GSE162694"="#D62728",
+  "GSE167523"="#9467BD","GSE174478"="#8C564B","GSE193066"="#E377C2","GSE213621"="#7F7F7F",
+  "GSE240729"="#BCBD22","PRJNA512027"="#17BECF"
 )
 disease_colors <- c(Control = masld_colors$control, Disease = masld_colors$nash)
 
@@ -77,8 +77,8 @@ plot_dt[, disease_state := factor(group, levels = c("Control", "Disease"))]
 
 dream <- load_dream_results()
 dream[, gene_clean := sub("\\..*", "", gene)]
-dream[, is_tier1 := !is.na(dream_padj) & dream_padj < PADJ_INT &
-                    !is.na(dream_logFC) & abs(dream_logFC) > LFC_INT]
+dream[, is_tier1 := !is.na(bulk_padj) & bulk_padj < PADJ_INT &
+                    !is.na(bulk_logFC) & abs(bulk_logFC) > LFC_INT]
 n_tier1 <- sum(dream$is_tier1, na.rm = TRUE)
 message(sprintf("Tier 1 DEGs: %s", comma(n_tier1)))
 
@@ -194,7 +194,7 @@ ps <- ps[dataset %in% FIVE_COHORTS]
 ps[, gene_clean := sub("\\..*", "", gene)]
 
 # Tier 1 DEG genes from integrated
-tier1_genes <- dream[is_tier1 == TRUE, .(gene_clean, dream_logFC, dream_padj)]
+tier1_genes <- dream[is_tier1 == TRUE, .(gene_clean, bulk_logFC, bulk_padj)]
 ps_t1 <- merge(ps[, .(gene_clean, dataset, ps_logFC = logFC, ps_padj = padj)],
                tier1_genes, by = "gene_clean")
 ps_t1[, cohort := factor(COHORT_LABEL[dataset],
@@ -204,9 +204,9 @@ ps_t1[, sig_flag := ps_padj < PADJ_INT]
 # Per-cohort summary stats
 cohort_stats <- ps_t1[, .(
   n = .N,
-  spearman = cor(ps_logFC, dream_logFC, method = "spearman", use = "complete.obs"),
-  pearson  = cor(ps_logFC, dream_logFC, method = "pearson", use = "complete.obs"),
-  pct_concordant = 100 * mean(sign(ps_logFC) == sign(dream_logFC), na.rm = TRUE)
+  spearman = cor(ps_logFC, bulk_logFC, method = "spearman", use = "complete.obs"),
+  pearson  = cor(ps_logFC, bulk_logFC, method = "pearson", use = "complete.obs"),
+  pct_concordant = 100 * mean(sign(ps_logFC) == sign(bulk_logFC), na.rm = TRUE)
 ), by = cohort]
 setorder(cohort_stats, -spearman)
 cohort_stats[, label := sprintf("rho==%.2f~ '|'~%.0f*'%%'~direction",
@@ -216,14 +216,14 @@ cohort_stats[, label := sprintf("rho==%.2f~ '|'~%.0f*'%%'~direction",
 ps_t1[, cohort := factor(cohort,
                          levels = cohort_stats$cohort)]
 xlim_i <- range(ps_t1$ps_logFC, na.rm = TRUE)
-ylim_i <- range(ps_t1$dream_logFC, na.rm = TRUE)
+ylim_i <- range(ps_t1$bulk_logFC, na.rm = TRUE)
 common_lim <- c(min(xlim_i[1], ylim_i[1]), max(xlim_i[2], ylim_i[2]))
 
-stats_pos <- ps_t1[, .(x = -2.5, y = max(dream_logFC, na.rm = TRUE) * 0.98),
+stats_pos <- ps_t1[, .(x = -2.5, y = max(bulk_logFC, na.rm = TRUE) * 0.98),
                    by = cohort]
 stats_pos <- merge(stats_pos, cohort_stats[, .(cohort, label)], by = "cohort")
 
-p_i <- ggplot(ps_t1, aes(x = ps_logFC, y = dream_logFC)) +
+p_i <- ggplot(ps_t1, aes(x = ps_logFC, y = bulk_logFC)) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "gray70", linewidth = 0.2) +
   geom_vline(xintercept = 0, linetype = "dotted", color = "gray70", linewidth = 0.2) +
   geom_abline(slope = 1, intercept = 0, color = "gray45",
@@ -366,9 +366,9 @@ message("Panel K: direction concordance per Tier 1 DEG...")
 # For each Tier 1 DEG, count how many of the 5 mega-eligible cohorts have
 # sign(per-cohort logFC) matching sign(integrated logFC).
 ps_dir <- ps_t1[, .(n_cohorts_concordant = sum(
-                       sign(ps_logFC) == sign(dream_logFC), na.rm = TRUE),
+                       sign(ps_logFC) == sign(bulk_logFC), na.rm = TRUE),
                     n_cohorts_tested = sum(!is.na(ps_logFC))),
-                by = .(gene_clean, dream_logFC)]
+                by = .(gene_clean, bulk_logFC)]
 # Restrict to the genes that have all 5 cohorts tested
 ps_dir <- ps_dir[n_cohorts_tested == 5]
 
@@ -485,7 +485,7 @@ vp_path <- file.path(BASE,
                      "RNA-seq/results/audit_sensitivity/variance_partition_results.csv")
 vp <- fread(vp_path)
 vp[, gene_clean := sub("\\..*", "", gene)]
-vp <- merge(vp, dream[, .(gene_clean, is_tier1, dream_logFC, dream_padj)],
+vp <- merge(vp, dream[, .(gene_clean, is_tier1, bulk_logFC, bulk_padj)],
             by = "gene_clean", all.x = TRUE)
 vp[is.na(is_tier1), is_tier1 := FALSE]
 vp[, biology_var := pmax(0, fibrosis_stage) + pmax(0, group_binary)]

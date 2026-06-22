@@ -244,26 +244,20 @@ fwrite(res_coarse, file.path(OUT_DIR, "stage_lr_lmm_coarse.tsv"), sep = "\t")
 cat(sprintf("[output] %d rows -> stage_lr_lmm_coarse.tsv\n", nrow(res_coarse)))
 
 # Axis (b): F-stage (ordered, treated as numeric for slope).
-# Priority — respects the pre-registered bootstrap gate from 343q:
-#   - If BOOTSTRAP_FALLBACK_REQUIRED.flag exists, the augmented model is unreliable
-#     (F3 bootstrap stability failed). Use F_stage_inferred (343b) instead.
-#   - If override is active (ALLOW_F_STAGE_AUGMENTED_DESPITE_FLAG=TRUE), prefer
-#     F_stage_augmented_clean (NA for excluded donors).
+# Mega-review A7.2 (2026-06-13): F_stage_augmented is LEAKED — its scVI QWK of
+# 0.74-0.76 collapses to jackknife 0.286 / held-out Andrews 0.0 because the
+# augmented-anchor training set was screened with leak. The WS3 stage-CCC
+# cascade therefore routes the F-stage axis through F_stage_inferred (343b
+# ordinal, behind its pre-registered bootstrap gate from 343q), NOT the
+# augmented column. F_stage_augmented(_clean) is no longer eligible as the
+# primary axis here, regardless of BOOTSTRAP_FALLBACK_REQUIRED.flag presence or
+# the ALLOW_F_STAGE_AUGMENTED_DESPITE_FLAG override (both retained upstream only
+# for the producer's own provenance; they no longer feed this cascade).
 #   - Donor-level protocol contamination (GSE136103 + Liver_Atlas) is handled
 #     separately by the exclude_stage_analysis filter upstream of this block.
-.use_augmented <- file.exists(.boot_flag) == FALSE || identical(.override, "TRUE")
-if (.use_augmented &&
-    "F_stage_augmented_clean" %in% names(lr_long) &&
-    sum(!is.na(lr_long$F_stage_augmented_clean)) > 0) {
-  fstage_col <- "F_stage_augmented_clean"
-} else if (.use_augmented &&
-           "F_stage_augmented" %in% names(lr_long) &&
-           sum(!is.na(lr_long$F_stage_augmented)) >=
-             sum(!is.na(lr_long$F_stage_documented))) {
-  fstage_col <- "F_stage_augmented"
-} else if ("F_stage_inferred" %in% names(lr_long) &&
-           sum(!is.na(lr_long$F_stage_inferred)) >=
-             sum(!is.na(lr_long$F_stage_documented))) {
+if ("F_stage_inferred" %in% names(lr_long) &&
+    sum(!is.na(lr_long$F_stage_inferred)) >=
+      sum(!is.na(lr_long$F_stage_documented))) {
   fstage_col <- "F_stage_inferred"
 } else if ("F_stage_documented" %in% names(lr_long) &&
            sum(!is.na(lr_long$F_stage_documented)) > 0) {

@@ -18,4 +18,4 @@ micromamba activate rnaseq
 Rscript scripts/figures/fig2_progression_sex.R
 
 echo "=== Outputs ==="
-ls -la figures/main/fig2_progression_sex/ figures/main/fig2_progression_sex/panels/
+ls -la figures/main/fig3_RNAseq/ figures/main/fig3_RNAseq/panels/

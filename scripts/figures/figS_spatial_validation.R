@@ -34,14 +34,21 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 VAL_DIR <- file.path(BASE, "Analysis/Spatial/results/validation_bulk")
 PROG_DIR <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/progression")
 OUT     <- file.path(FIGS05_DIR, "figS14_spatial_validation.pdf")
-dir.create(file.path(FIGS05_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
+dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # Colors & labels
 vu_col <- "#C2185B"
 gu_col <- "#1565C0"
 VU <- "Vu et al."
 GU <- "Guilliams et al."
+# Display labels (accession for the deposited datasets; Vu et al. has no
+# accession in the registry so it is shown by author). GU/VU above remain the
+# DATA KEYS that match the `dataset` column in the loaded CSVs — never relabel
+# the key, only the rendered text.
+GU_LAB <- "GSE192741"
+VU_LAB <- VU
 ds_pal <- setNames(c(gu_col, vu_col), c(GU, VU))
+ds_lab <- setNames(c(GU_LAB, VU_LAB), c(GU, VU))   # display labels keyed by data value
 
 # ---------------------------------------------------------------------------
 # Load
@@ -107,7 +114,7 @@ p_a <- ggplot(vdt, aes(x = group, y = I, fill = group)) +
               linewidth = 0.2, color = "gray50") +
   geom_boxplot(width = 0.12, outlier.size = 0.15, outlier.alpha = 0.2,
                linewidth = 0.25, color = "gray30", fill = "white") +
-  facet_wrap(~ dataset) +
+  facet_wrap(~ dataset, labeller = as_labeller(ds_lab)) +
   scale_fill_manual(values = grp_pal, guide = "none") +
   geom_text(data = pv, aes(x = 2, y = y_top, label = lab_up),
             inherit.aes = FALSE, size = 2.5, color = vu_col, fontface = "bold") +
@@ -143,7 +150,7 @@ eall[, nlp := -log10(pmax(mannwhitney_pval, 1e-30))]
 p_b <- ggplot(eall, aes(x = fold_enrichment, y = label)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "gray70", linewidth = 0.3) +
   geom_point(aes(color = dataset, size = nlp, shape = sig)) +
-  scale_color_manual(values = ds_pal, name = NULL) +
+  scale_color_manual(values = ds_pal, labels = ds_lab, name = NULL) +
   scale_shape_manual(values = c(`TRUE` = 16, `FALSE` = 1), guide = "none") +
   scale_size_continuous(range = c(1.5, 4),
                         name = expression(-log[10] ~ italic(p)),
@@ -190,8 +197,8 @@ p_c <- ggplot(zx, aes(x = rho1, y = rho2)) +
   scale_color_manual(values = hl_pal, name = NULL,
                      guide = guide_legend(override.aes = list(size = 2))) +
   coord_fixed() +
-  labs(x = paste0("Zonation score (", GU, ")"),
-       y = paste0("Zonation score (", VU, ")"),
+  labs(x = paste0("Zonation score (", GU_LAB, ")"),
+       y = paste0("Zonation score (", VU_LAB, ")"),
        title = "Same genes sit in same liver zones") +
   theme_masld() +
   theme(legend.position = c(0.87, 0.15),
@@ -223,6 +230,7 @@ p_d <- ggplot(zcnt, aes(x = dataset, y = N, fill = zone)) +
                 label = sprintf("PP:PC = %.1f:1", ratio)),
             inherit.aes = FALSE, size = 2.2, color = "gray30", fontface = "italic") +
   scale_fill_manual(values = c(PP = gu_col, PC = vu_col), name = NULL) +
+  scale_x_discrete(labels = ds_lab) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(x = NULL, y = "Zonated DEGs", title = "Periportal excess") +
   theme_masld() +
@@ -381,7 +389,7 @@ save_fig_tall(fig, OUT, width = fig_full_width, height = 10.5)
 cat("Saved:", OUT, "\n")
 
 # Final panels — individual panel PDFs
-PANELS05 <- file.path(FIGS05_DIR, "panels")
+PANELS05 <- FIGS05_DIR
 save_fig(p_a, file.path(PANELS05, "spatial_val_a_violin.pdf"), width = fig_full_width, height = 2.5)
 save_fig(p_b, file.path(PANELS05, "spatial_val_b_enrichment.pdf"), width = fig_half_width, height = 2)
 save_fig(p_c, file.path(PANELS05, "spatial_val_c_zonation.pdf"), width = fig_half_width, height = 3.5)

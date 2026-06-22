@@ -41,7 +41,7 @@ SCRIPTS=(
   "scripts/figures/figS_convergence_evidence.R"
   "scripts/figures/figS_coloc_sensitivity.R"
   "scripts/figures/figS_coloc_threshold_sensitivity.R"
-  "scripts/figures/figS_coloc_method_comparison.R"
+  # "scripts/figures/figS_coloc_method_comparison.R"  # cut 2026-06-19 (INTACT dropped)
   "scripts/figures/figS_coloc_window_sensitivity.R"
   # SuSiE validation (15-18)
   "scripts/figures/figS_susie_expression_scatters.R"

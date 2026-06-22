@@ -9,7 +9,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT_PDF <- file.path(FIG2_DIR, "panels", "fig2f_pseudobulk_bulk.pdf")
+OUT_PDF <- file.path(FIG2_DIR, "panels", "pseudobulk_bulk.pdf")
 dir.create(dirname(OUT_PDF), recursive = TRUE, showWarnings = FALSE)
 
 scvi_dir <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2")
@@ -23,12 +23,12 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   hep_de[, ensembl_clean := sub("\\..*", "", gene)]
 
   dream_slim <- copy(dream)
-  dream_padj_col <- intersect(c("dream_padj", "padj"), names(dream_slim))[1]
-  dream_lfc_col  <- intersect(c("dream_logFC", "logFC"), names(dream_slim))[1]
+  bulk_padj_col <- intersect(c("bulk_padj", "padj"), names(dream_slim))[1]
+  bulk_lfc_col  <- intersect(c("bulk_logFC", "logFC"), names(dream_slim))[1]
   dream_slim[, ensembl_clean := sub("\\..*", "", gene)]
   dream_slim <- dream_slim[, .(ensembl_clean,
-                                dream_lfc = get(dream_lfc_col),
-                                dream_padj = get(dream_padj_col))]
+                                bulk_lfc = get(bulk_lfc_col),
+                                bulk_padj = get(bulk_padj_col))]
 
   merged_f <- merge(
     hep_de[, .(ensembl_clean, hep_lfc = logFC, hep_padj = padj)],
@@ -37,27 +37,27 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   )
 
   # Calculate Spearman correlation
-  valid <- merged_f[is.finite(hep_lfc) & is.finite(dream_lfc)]
-  cor_s <- cor(valid$hep_lfc, valid$dream_lfc, method = "spearman", use = "complete.obs")
+  valid <- merged_f[is.finite(hep_lfc) & is.finite(bulk_lfc)]
+  cor_s <- cor(valid$hep_lfc, valid$bulk_lfc, method = "spearman", use = "complete.obs")
   
   cor_label <- sprintf("Spearman rho = %.3f\n(n=%s genes)", 
                        cor_s, format(nrow(valid), big.mark = ","))
 
   lim_f_hep <- max(abs(valid$hep_lfc), na.rm = TRUE)
-  lim_f_dream <- max(abs(valid$dream_lfc), na.rm = TRUE)
-  
+  lim_f_dream <- max(abs(valid$bulk_lfc), na.rm = TRUE)
+
   # Trim extreme 1% for visualization limits to prevent squishing
   lim_f_hep <- quantile(abs(valid$hep_lfc), 0.99, na.rm=TRUE)
-  lim_f_dream <- quantile(abs(valid$dream_lfc), 0.99, na.rm=TRUE)
+  lim_f_dream <- quantile(abs(valid$bulk_lfc), 0.99, na.rm=TRUE)
 
   P_CUTOFF_SC <- 0.1
   P_CUTOFF_BULK <- 0.1
 
   # Color by concordance
   merged_f[, quad_class := fcase(
-      (!is.na(hep_padj) & hep_padj < P_CUTOFF_SC & !is.na(dream_padj) & dream_padj < P_CUTOFF_BULK), "Both DE",
+      (!is.na(hep_padj) & hep_padj < P_CUTOFF_SC & !is.na(bulk_padj) & bulk_padj < P_CUTOFF_BULK), "Both DE",
       (!is.na(hep_padj) & hep_padj < P_CUTOFF_SC), "Pseudobulk only",
-      (!is.na(dream_padj) & dream_padj < P_CUTOFF_BULK), "Bulk only",
+      (!is.na(bulk_padj) & bulk_padj < P_CUTOFF_BULK), "Bulk only",
       default = "Non-sig"
   )]
 
@@ -69,7 +69,7 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   merged_f[, quad_class := factor(quad_class, levels=c("Non-sig", "Bulk only", "Pseudobulk only", "Both DE"))]
   merged_f <- merged_f[order(quad_class)]
 
-  p_f <- ggplot(merged_f, aes(x = hep_lfc, y = dream_lfc, color = quad_class)) +
+  p_f <- ggplot(merged_f, aes(x = hep_lfc, y = bulk_lfc, color = quad_class)) +
     # Draw reference axes
     geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.3, color = "gray30") +
     geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.3, color = "gray30") +
@@ -79,7 +79,7 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
     annotate("label", x = -lim_f_hep * 0.9, y = lim_f_dream * 0.9, label = cor_label,
              hjust = 0, vjust=1, size = 2.5, fill = "white", label.padding = unit(0.2, "lines")) +
     labs(x = expression("scRNA-seq (Pseudobulk) log"[2]*"FC"),
-         y = expression("Bulk RNA-seq (Dream) log"[2]*"FC"),
+         y = expression("Bulk RNA-seq log"[2]*"FC"),
          title = sprintf("Hepatocyte vs Bulk LFC Concordance\n(padj < %s)", P_CUTOFF_SC)) +
     theme_masld() +
     theme(legend.key.size = unit(0.2, "cm"),

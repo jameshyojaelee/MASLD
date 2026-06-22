@@ -5,7 +5,7 @@
 # high-confidence intersection: ieQTL FDR < 0.01 + bulk padj < 0.05 + |LFC| > 0.5
 # Binomial test vs 50% null annotated on plot.
 #
-# Output: figures/main/fig3_regulatory_architecture/panels/fig3_panel_ieqtl_concordance.pdf
+# Output: figures/main/fig2_genetics/panels/ieqtl_concordance_panel.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -19,7 +19,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 PANEL_DIR <- file.path(FIG3_DIR, "panels")
-OUT_PDF   <- file.path(PANEL_DIR, "fig3_panel_ieqtl_concordance.pdf")
+OUT_PDF   <- file.path(PANEL_DIR, "ieqtl_concordance_panel.pdf")
 
 IEQTL_FDR_CUT <- 0.01
 DEG_PADJ_CUT  <- 0.05
@@ -28,10 +28,14 @@ DEG_LFC_CUT   <- 0.5
 # ── data ──────────────────────────────────────────────────────────────────────
 ieqtl <- fread(file.path(BASE,
   "RNA-seq/results/causal_inference/sceqtl/ieqtl_disease_genes.csv"))
+# The ieQTL CSV ships the bulk DEG effect under legacy dream_* column names;
+# normalize the dream_* prefix to the C2 bulk_* naming used everywhere downstream.
+.legacy <- grep("^dream_", names(ieqtl), value = TRUE)
+if (length(.legacy)) setnames(ieqtl, .legacy, sub("^dream_", "bulk_", .legacy))
 
 d <- ieqtl[interaction_fdr < IEQTL_FDR_CUT &
-            dream_padj      < DEG_PADJ_CUT  &
-            abs(dream_logFC) > DEG_LFC_CUT]
+            bulk_padj      < DEG_PADJ_CUT  &
+            abs(bulk_logFC) > DEG_LFC_CUT]
 
 cat(sprintf("[filter] %d genes pass ieQTL FDR<%.2f + padj<%.2f + |LFC|>%.1f\n",
             nrow(d), IEQTL_FDR_CUT, DEG_PADJ_CUT, DEG_LFC_CUT))
@@ -41,8 +45,8 @@ d <- d[, .SD[which.min(interaction_pval)], by = gene]
 cat(sprintf("[dedup]  %d unique genes\n", nrow(d)))
 
 # concordance
-d[, concordant := (interaction_beta > 0 & dream_logFC > 0) |
-                  (interaction_beta < 0 & dream_logFC < 0)]
+d[, concordant := (interaction_beta > 0 & bulk_logFC > 0) |
+                  (interaction_beta < 0 & bulk_logFC < 0)]
 n_total  <- nrow(d)
 n_conc   <- sum(d$concordant)
 n_disc   <- n_total - n_conc
@@ -79,7 +83,7 @@ label_dt <- d[gene %in% known | gene %in% top_n$gene]
 label_dt <- label_dt[, .SD[which.min(interaction_pval)], by = gene]
 
 # axis limits with padding
-x_lim <- max(abs(d$dream_logFC), na.rm = TRUE) * 1.15
+x_lim <- max(abs(d$bulk_logFC), na.rm = TRUE) * 1.15
 y_lim <- max(abs(d$interaction_beta), na.rm = TRUE) * 1.15
 
 # quadrant annotation data
@@ -89,16 +93,16 @@ quad_dt <- data.table(
   hjust = c(1, 0, 0, 1),
   vjust = c(1, 1, 0, 0),
   label = c(
-    sprintf("Concordant\nn = %d", d[interaction_beta > 0 & dream_logFC > 0, .N]),
-    sprintf("Discordant\nn = %d", d[interaction_beta > 0 & dream_logFC < 0, .N]),
-    sprintf("Discordant\nn = %d", d[interaction_beta < 0 & dream_logFC > 0, .N]),
-    sprintf("Concordant\nn = %d", d[interaction_beta < 0 & dream_logFC < 0, .N])
+    sprintf("Concordant\nn = %d", d[interaction_beta > 0 & bulk_logFC > 0, .N]),
+    sprintf("Discordant\nn = %d", d[interaction_beta > 0 & bulk_logFC < 0, .N]),
+    sprintf("Discordant\nn = %d", d[interaction_beta < 0 & bulk_logFC > 0, .N]),
+    sprintf("Concordant\nn = %d", d[interaction_beta < 0 & bulk_logFC < 0, .N])
   ),
   color = c(masld_colors$up, "gray50", "gray50", masld_colors$up)
 )
 
 # ── plot ──────────────────────────────────────────────────────────────────────
-p <- ggplot(d, aes(x = dream_logFC, y = interaction_beta, color = ct_clean)) +
+p <- ggplot(d, aes(x = bulk_logFC, y = interaction_beta, color = ct_clean)) +
   # quadrant shading
   annotate("rect", xmin = 0, xmax =  x_lim, ymin = 0, ymax =  y_lim,
            fill = masld_colors$up, alpha = 0.04) +

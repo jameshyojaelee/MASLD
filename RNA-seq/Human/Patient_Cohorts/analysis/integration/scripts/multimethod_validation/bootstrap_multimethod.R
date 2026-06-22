@@ -150,8 +150,19 @@ run_one_method <- function(m) {
       }
       run_metafor(per_study_list, K = K, bp)
     } else {
-      cat("  Unknown method '", m, "' — skipping\n", sep = "")
-      NULL
+      # Generic dispatch for the limma / edgeR engine families. Each is defined
+      # in de_validation_helpers.R as run_<method>(counts, meta, bp) returning
+      # dt(gene, logFC, stat, padj, method) — the SAME shape as dream/deseq2 —
+      # and (unlike metafor) fits directly on the full resampled split. Looking
+      # the runner up by name keeps this in lockstep with the helper grid so any
+      # future engine is picked up without touching this dispatch.
+      fn_name <- paste0("run_", m)
+      if (exists(fn_name, mode = "function")) {
+        get(fn_name)(counts_s, meta_s, bp)
+      } else {
+        cat("  Unknown method '", m, "' — skipping\n", sep = "")
+        NULL
+      }
     }
   }, error = function(e) {
     cat("  METHOD", m, "ERROR:", conditionMessage(e), "\n")

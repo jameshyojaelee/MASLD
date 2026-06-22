@@ -15,8 +15,8 @@ export interface GeneIndexEntry {
   symbol: string;
   ensembl_id: string;
   biotype: string | null;
-  dream_logfc: number | null;
-  dream_padj: number | null;
+  bulk_logfc: number | null;
+  bulk_padj: number | null;
   is_deg: boolean;
   is_conserved_core: boolean;
   sex_class: string | null;
@@ -46,7 +46,7 @@ export interface FeaturedGene {
   ensembl_id: string;
   tagline: string;
   evidence: EvidenceStrengths;
-  dream_logfc: number;
+  bulk_logfc: number;
   coloc_pp4: number | null;
   drug: string | null;
   category: string;

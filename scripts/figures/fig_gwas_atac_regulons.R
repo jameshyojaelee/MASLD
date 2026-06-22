@@ -122,8 +122,8 @@ pA <- ggplot(credible, aes(x = max_pip, y = abs_diff)) +
   geom_point(data = credible[motif_in_disease_regulon == TRUE],
              aes(size = abs_diff),
              colour = REG_COL, alpha = 0.95, shape = 16) +
-  geom_text_repel(aes(label = label,
-                      colour = regulon_lab),
+  geom_text_repel(aes(label = label),
+                  colour = "black",
                   size = 2.3, segment.size = 0.25,
                   min.segment.length = 0.1,
                   box.padding = 0.3,
@@ -141,7 +141,7 @@ pA <- ggplot(credible, aes(x = max_pip, y = abs_diff)) +
   scale_x_continuous(limits = c(0.18, 1.05),
                      breaks = c(0.2, 0.5, 0.8, 1.0)) +
   labs(x = "GWAS max PIP", y = "|motif alleleDiff|",
-       title = "Credible MASLD variants disrupt TF binding motifs",
+       title = "Credible MASLD variants: predicted TF-motif disruption (motifbreakR)",
        subtitle = sprintf(paste0(
          "%d variant-TF pairs (PIP >= 0.2); magenta = SCENIC+ MASLD ",
          "disease-regulon TFs (n = %d pairs, %d TFs)"),
@@ -227,7 +227,7 @@ pC <- ggplot(hi_grid, aes(x = tf_name, y = var_label)) +
   labs(
     x = NULL,
     y = sprintf("Variant (nearest gene within %.0f kb)", ceiling(max_d_kb)),
-    title = "High-confidence MASLD variants (PIP >= 0.8) disrupting TF motifs",
+    title = "High-confidence MASLD variants (PIP >= 0.8): predicted motif disruption (motifbreakR)",
     subtitle = sprintf(paste0(
       "%d variants × %d TFs (disease-regulon + TFs hit by >=2 variants); ",
       "bold = MASLD disease-regulon TF"),
@@ -240,9 +240,7 @@ pC <- ggplot(hi_grid, aes(x = tf_name, y = var_label)) +
                                 face = ifelse(levels(hi_f$tf_name)
                                               %in% regulon_tfs,
                                               "bold", "plain"),
-                                colour = ifelse(levels(hi_f$tf_name)
-                                                %in% regulon_tfs,
-                                                REG_COL, "black"),
+                                colour = "black",
                                 size = 6.8),
     axis.text.y = element_text(family = "mono", size = 6.5),
     panel.grid  = element_blank(),

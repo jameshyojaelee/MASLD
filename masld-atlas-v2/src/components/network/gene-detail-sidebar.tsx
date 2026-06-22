@@ -183,8 +183,8 @@ export function GeneDetailSidebar({
                 </p>
                 <p>
                   <span className="text-muted-foreground">logFC:</span>{" "}
-                  <span className={`font-mono font-medium ${logfcColor(node.dream_logfc)}`}>
-                    {formatLogFC(node.dream_logfc)}
+                  <span className={`font-mono font-medium ${logfcColor(node.bulk_logfc)}`}>
+                    {formatLogFC(node.bulk_logfc)}
                   </span>
                 </p>
               </div>

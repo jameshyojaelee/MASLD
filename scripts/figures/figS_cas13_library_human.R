@@ -28,7 +28,7 @@ pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
 strip_v <- function(x) sub("[.][0-9]+$", "", x)
 
 INT     <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-PERDIET <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet")
+PERDIET <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet_cas13")  # Cas13 library Western pool; decoupled from paper 4-model per_diet (2026-06-16)
 ORTHO   <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
 DIETS   <- c("MCD", "CDAHFD", "Western", "HFD")
 LFSR <- 0.05; H_SHRUNK <- 0.2; M_SHRUNK <- 0.5; MIN_DIETS <- 3L

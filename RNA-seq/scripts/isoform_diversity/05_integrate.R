@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Phase 3 integration — fuse isoform diversity + DTU + dream DEGs into one per-gene
+# Phase 3 integration — fuse isoform diversity + DTU + canonical (C2) DEGs into one per-gene
 # table with the DEG x DTU quadrant and the disease/control-dominant isoform.
 #
 # Usage: Rscript 05_integrate.R <species: human|mouse>
@@ -39,15 +39,15 @@ tpm  <- readRDS(file.path(RES, "tx_tpm.rds"))
 cts_dtu <- readRDS(file.path(RES, "tx_counts_dtuscaled.rds"))   # tested quantity for isoform naming
 samp <- fread(file.path(RES, "samples.tsv")); setkey(samp, sample_id); samp <- samp[colnames(tpm)]
 
-# --- DEG layer (human only: dream; mouse: skip) ---
+# --- DEG layer (human only: canonical limma-voom-qw C2; mouse: skip) ---
 div[, ensg := strip(gene)]
 if (species == "human") {
-  dream <- fread(file.path(PROJ,
-      "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"))
-  dream[, ensg := strip(gene)]
-  dream[, tier1 := !is.na(lfsr) & lfsr < 0.05 & abs(shrunk_logFC) > 0.5]
-  dream[, deg_dir := ifelse(shrunk_logFC > 0, "up", "down")]
-  deg <- dream[, .(ensg, dream_shrunk_logFC = shrunk_logFC, dream_lfsr = lfsr,
+  deg_src <- fread(file.path(PROJ,
+      "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
+  deg_src[, ensg := strip(gene)]
+  deg_src[, tier1 := !is.na(lfsr) & lfsr < 0.05 & abs(shrunk_logFC) > 0.5]
+  deg_src[, deg_dir := ifelse(shrunk_logFC > 0, "up", "down")]
+  deg <- deg_src[, .(ensg, bulk_shrunk_logFC = shrunk_logFC, bulk_lfsr = lfsr,
                    tier1, deg_dir)]
   # deg merged onto the full gene UNION after the DTU merge (review P1: keeps DTU+ genes
   # that fail the diversity expression filter, and lets us flag deg_tested vs untested)
@@ -116,7 +116,7 @@ out[is.na(dtu_pos), dtu_pos := FALSE]
 # --- quadrant + focus tags ---
 if (species == "human") {
   out <- merge(out, deg, by = "ensg", all.x = TRUE)       # tier1/deg_dir for the full union
-  out[, deg_tested := ensg %in% dream$ensg]               # gene present in dream's tested universe
+  out[, deg_tested := ensg %in% deg_src$ensg]             # gene present in the canonical DEG tested universe
   out[is.na(tier1), tier1 := FALSE]                       # NA tier1 (untested) -> not a Tier1 DEG
   out[, quadrant := fifelse(tier1 & dtu_pos, "DEG+DTU+",
                     fifelse(tier1 & !dtu_pos, "DEG_only",

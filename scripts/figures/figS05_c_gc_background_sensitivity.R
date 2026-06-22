@@ -1,7 +1,12 @@
-# figS05 C: GC background sensitivity for motif disruption calls
-# Rows = disease regulon TFs, cols = uniform / genome / peak GC backgrounds
-# Side-bar = in-disease-regulon flag (warm magenta vs gray)
-# 4-way validated TFs (THRB, HNF4A, RORA, MLXIPL, MAX) labelled bold italic.
+# figS05 C: GC background sensitivity for motif-disruption PREDICTIONS.
+# Rows = disease regulon TFs, cols = uniform / genome / peak GC backgrounds.
+# Side-bar = in-disease-regulon flag (warm magenta vs gray).
+# The disease master-regulator TFs of interest (THRB, HNF4A, RORA, MLXIPL, MAX)
+# are labelled bold italic. NOTE: these are PUTATIVE motif-disruption predictions
+# (FIMO/motifbreakR) shown to be robust to GC-background choice — they are NOT
+# functionally validated. The one functional test (Currin caQTL) does NOT confirm
+# them (46.3% concordant, median 50%; only 2 four-way variants exist, in ZNF701 —
+# see figS05_scatac_caqtl_concordance). "4-way validated" wording removed 2026-06-19.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -33,12 +38,12 @@ dis_tfs_full <- unique(reg$tf_name)
 # Backup: also pull from tier file flag
 dis_tfs_full <- unique(c(dis_tfs_full, tier[in_disease_regulon == TRUE, tf_name]))
 
-# 4-way validated TFs (call out)
-four_way <- c("THRB", "HNF4A", "RORA", "MLXIPL", "MAX")
+# disease master-regulator TFs of interest (call out; putative predictions)
+callout_tfs <- c("THRB", "HNF4A", "RORA", "MLXIPL", "MAX")
 
 # Per the design brief, target ~18 TFs: disease-regulon TFs that survive in bg
 keep_tfs <- intersect(bg$tf_name, dis_tfs_full)
-keep_tfs <- union(keep_tfs, intersect(bg$tf_name, four_way))
+keep_tfs <- union(keep_tfs, intersect(bg$tf_name, callout_tfs))
 
 mat_dt <- bg[tf_name %in% keep_tfs, .(tf_name, uniform, genome, peak, total)]
 setorder(mat_dt, -total)
@@ -66,8 +71,8 @@ right_anno <- rowAnnotation(
   annotation_name_rot = 0
 )
 
-# row name face: 4-way validated TFs in bold italic
-row_face <- ifelse(tf_order %in% four_way, "bold.italic", "plain")
+# row name face: disease master-regulator TFs of interest in bold italic
+row_face <- ifelse(tf_order %in% callout_tfs, "bold.italic", "plain")
 
 ht <- Heatmap(
   mat,
@@ -106,9 +111,9 @@ draw(ht,
      heatmap_legend_side = "right",
      annotation_legend_side = "right",
      padding = unit(c(4, 4, 4, 4), "mm"))
-grid.text("Bold italic = 4-way validated TF (THRB / HNF4A / RORA / MLXIPL / MAX)",
+grid.text("Bold italic = disease master-regulator TF (putative motif-disruption prediction; not caQTL-validated)",
           x = 0.5, y = 0.03,
-          gp = gpar(fontsize = 6, col = "gray30"))
+          gp = gpar(fontsize = 5.5, col = "gray30"))
 dev.off()
 message("Wrote: ", out_pdf)
 

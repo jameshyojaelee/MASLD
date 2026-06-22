@@ -187,9 +187,9 @@ interface VolcanoPoint {
 function buildVolcanoPoints(genes: GeneIndexEntry[]): VolcanoPoint[] {
   const points: VolcanoPoint[] = [];
   for (const g of genes) {
-    if (g.dream_logfc == null || g.dream_padj == null) continue;
-    const lfc = g.dream_logfc;
-    const padj = g.dream_padj;
+    if (g.bulk_logfc == null || g.bulk_padj == null) continue;
+    const lfc = g.bulk_logfc;
+    const padj = g.bulk_padj;
     const neglog = Math.min(-Math.log10(Math.max(padj, 1e-300)), 300);
     let color: "up" | "down" | "ns" = "ns";
     if (g.is_deg && lfc > 0) color = "up";
@@ -342,11 +342,11 @@ function VolcanoPlot({ genes }: VolcanoPlotProps) {
                   style={{ cursor: "pointer" }}
                   onMouseEnter={() => {
                     const gene = genes.find((g) => g.symbol === p.symbol);
-                    if (gene && gene.dream_logfc != null && gene.dream_padj != null) {
+                    if (gene && gene.bulk_logfc != null && gene.bulk_padj != null) {
                       setTooltip({
                         symbol: p.symbol,
-                        lfc: gene.dream_logfc,
-                        padj: gene.dream_padj,
+                        lfc: gene.bulk_logfc,
+                        padj: gene.bulk_padj,
                         svgX: cx,
                         svgY: cy,
                       });
@@ -642,7 +642,7 @@ export default function AtlasPage() {
           </h2>
           {!volcanoLoading && (
             <span className="text-xs text-muted-foreground">
-              {genes.filter((g) => g.dream_logfc != null && g.dream_padj != null).length.toLocaleString()} genes plotted
+              {genes.filter((g) => g.bulk_logfc != null && g.bulk_padj != null).length.toLocaleString()} genes plotted
             </span>
           )}
         </div>

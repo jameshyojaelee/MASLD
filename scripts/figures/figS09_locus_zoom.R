@@ -571,15 +571,16 @@ genes_df <- genes_df[!is.na(genes_df$symbol), ]
 
 # DEG status from Atlas
 if (file.exists(ATLAS_FILE)) {
-  atlas <- fread(ATLAS_FILE, select = c("human_symbol", "dream_logFC", "dream_padj"))
+  atlas <- fread(ATLAS_FILE, select = c("human_symbol", "bulk_logFC", "bulk_padj"))
+  stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
   genes_df <- merge(genes_df, atlas, by.x = "symbol", by.y = "human_symbol", all.x = TRUE)
 } else {
-  genes_df$dream_logFC <- NA_real_
-  genes_df$dream_padj  <- NA_real_
+  genes_df$bulk_logFC <- NA_real_
+  genes_df$bulk_padj  <- NA_real_
 }
 genes_df$deg_status <- "Not Significant"
-genes_df$deg_status[!is.na(genes_df$dream_padj) & genes_df$dream_padj < 0.05 & genes_df$dream_logFC >  0.5] <- "Upregulated"
-genes_df$deg_status[!is.na(genes_df$dream_padj) & genes_df$dream_padj < 0.05 & genes_df$dream_logFC < -0.5] <- "Downregulated"
+genes_df$deg_status[!is.na(genes_df$bulk_padj) & genes_df$bulk_padj < 0.05 & genes_df$bulk_logFC >  0.5] <- "Upregulated"
+genes_df$deg_status[!is.na(genes_df$bulk_padj) & genes_df$bulk_padj < 0.05 & genes_df$bulk_logFC < -0.5] <- "Downregulated"
 genes_df$deg_status <- factor(genes_df$deg_status, levels = c("Upregulated", "Downregulated", "Not Significant"))
 
 # Exon rectangles: for each gene pick the transcript with most exons in window

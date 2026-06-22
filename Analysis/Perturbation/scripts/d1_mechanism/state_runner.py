@@ -49,9 +49,12 @@ PROJECT_ROOT = Path(
 )
 STATE_SE600M_DIR = PROJECT_ROOT / "data/perturbation/checkpoints/state/SE-600M"
 HITS_PATH = PROJECT_ROOT / "Analysis/Perturbation/data/hits/d1_mechanism_hits.csv"
+# C2 swap 2026-06-08: repointed dream_results_ashr.csv -> canonical_deg_results.csv
+# (canonical disease-vs-control = limma-voom quality-weighted C2). Variable name
+# kept for back-compat; auto-detects symbol/t/padj columns (both files carry them).
 ATLAS_DREAM_PATH = PROJECT_ROOT / (
     "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/"
-    "dream_results_ashr.csv"
+    "canonical_deg_results.csv"
 )
 
 

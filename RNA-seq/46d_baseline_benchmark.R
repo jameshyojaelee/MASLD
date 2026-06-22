@@ -9,7 +9,7 @@
 #   B1  Nearest gene to GWAS lead SNP   (per-gene cumulative -log10p of nearest
 #       lead SNPs across the 28-GWAS portfolio; falls back to coloc_best_pp4
 #       only if GENCODE TSS table is unavailable, which we DOCUMENT explicitly)
-#   B2  Top |dream_logFC| with FDR<0.05 (genes failing FDR get score = 0)
+#   B2  Top |bulk_logFC| with FDR<0.05 (genes failing FDR get score = 0)
 #   B3  Top max coloc_best_pp4 across portfolio (already in atlas)
 #
 # Reference (champion):
@@ -48,6 +48,7 @@ OUT_MD      <- file.path(ME_DIR, "convergence_evidence_baseline_summary.md")
 # --------------------------------------------------------------------------
 cat("--- Loading atlas + convergence score ---\n")
 atlas <- fread(ATLAS_FILE, na.strings = c("", "NA"))
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 bayes <- fread(BAYES_FILE, na.strings = c("", "NA"))
 
 # Align bayesian convergence_score onto atlas rows (same length, but join by symbol
@@ -148,14 +149,14 @@ if (file.exists(TSS_BED)) {
 }
 
 # --------------------------------------------------------------------------
-# 3. B2 (top |dream_logFC| with FDR<0.05) and B3 (max coloc_best_pp4)
+# 3. B2 (top |bulk_logFC| with FDR<0.05) and B3 (max coloc_best_pp4)
 # --------------------------------------------------------------------------
-cat("\n--- B2: Top |dream_logFC| (padj<0.05) ---\n")
-atlas[, b2_score := ifelse(!is.na(dream_padj) & dream_padj < 0.05,
-                           abs(dream_logFC), 0)]
+cat("\n--- B2: Top |bulk_logFC| (padj<0.05) ---\n")
+atlas[, b2_score := ifelse(!is.na(bulk_padj) & bulk_padj < 0.05,
+                           abs(bulk_logFC), 0)]
 atlas[is.na(b2_score), b2_score := 0]
-cat(sprintf("  B2: %d genes pass dream_padj<0.05; max |logFC|=%.2f\n",
-            sum(!is.na(atlas$dream_padj) & atlas$dream_padj < 0.05),
+cat(sprintf("  B2: %d genes pass bulk_padj<0.05; max |logFC|=%.2f\n",
+            sum(!is.na(atlas$bulk_padj) & atlas$bulk_padj < 0.05),
             max(atlas$b2_score, na.rm = TRUE)))
 
 cat("\n--- B3: Top max coloc_best_pp4 ---\n")
@@ -201,7 +202,7 @@ fair <- atlas[mask_fair, .(human_symbol,
                             score_b1  = b1_score,
                             score_b2  = b2_score,
                             score_b3  = b3_score,
-                            dream_logFC = dream_logFC)]
+                            bulk_logFC = bulk_logFC)]
 cat(sprintf("\n--- Fair-comparison subset: %d genes ---\n", nrow(fair)))
 
 # --------------------------------------------------------------------------
@@ -240,12 +241,12 @@ bench_one <- function(scores, labels, n_boot = 1000) {
        pr_auc = pr_auc, wilcox_p = wx$p.value)
 }
 
-permutation_null <- function(score_vec, labels, dream_lfc, n_perm = 1000) {
-  # Match panel size on dream_logFC decile (proxy for expression strength).
+permutation_null <- function(score_vec, labels, bulk_lfc, n_perm = 1000) {
+  # Match panel size on bulk_logFC decile (proxy for expression strength).
   n_panel <- sum(labels)
   if (n_panel < 5L) return(NA_real_)
-  # Build deciles on ABS dream_logFC (NA -> 0)
-  lfc <- ifelse(is.na(dream_lfc), 0, abs(dream_lfc))
+  # Build deciles on ABS bulk_logFC (NA -> 0)
+  lfc <- ifelse(is.na(bulk_lfc), 0, abs(bulk_lfc))
   deciles <- cut(lfc, breaks = quantile(lfc, probs = seq(0, 1, 0.1), na.rm = TRUE),
                  include.lowest = TRUE, labels = FALSE)
   # Per-decile counts in the real panel
@@ -295,10 +296,10 @@ for (pname in names(panels)) {
   resB2  <- bench_one(fair$score_b2,  labels)
   resB3  <- bench_one(fair$score_b3,  labels)
 
-  null_p_46d <- permutation_null(fair$score_46d, labels, fair$dream_logFC, n_perm = 1000)
-  null_p_b1  <- permutation_null(fair$score_b1,  labels, fair$dream_logFC, n_perm = 1000)
-  null_p_b2  <- permutation_null(fair$score_b2,  labels, fair$dream_logFC, n_perm = 1000)
-  null_p_b3  <- permutation_null(fair$score_b3,  labels, fair$dream_logFC, n_perm = 1000)
+  null_p_46d <- permutation_null(fair$score_46d, labels, fair$bulk_logFC, n_perm = 1000)
+  null_p_b1  <- permutation_null(fair$score_b1,  labels, fair$bulk_logFC, n_perm = 1000)
+  null_p_b2  <- permutation_null(fair$score_b2,  labels, fair$bulk_logFC, n_perm = 1000)
+  null_p_b3  <- permutation_null(fair$score_b3,  labels, fair$bulk_logFC, n_perm = 1000)
 
   cat(sprintf("    AUROC:  46d=%.3f  B1=%.3f  B2=%.3f  B3=%.3f\n",
               res46d$auroc, resB1$auroc, resB2$auroc, resB3$auroc))
@@ -391,12 +392,12 @@ md <- c(
   "Champion: 46d Bayesian convergence_score.  ",
   "Baselines (read-only on existing 46d outputs / atlas):  ",
   sprintf("- B1 nearest_gene = %s", b1_method),
-  "- B2 top|dream_logFC| (padj<0.05) ",
+  "- B2 top|bulk_logFC| (padj<0.05) ",
   "- B3 top max coloc_best_pp4 (SuSiE preferred, ABF fallback)  ",
   "Fair subset = genes with non-NA convergence_score AND not excluded ",
   sprintf("(n = %d).  ", nrow(fair)),
   "Bootstrap CI: 1,000 iters; Wilcoxon p one-sided greater; ",
-  "permutation null: 1,000 random panels matched on |dream_logFC| decile.",
+  "permutation null: 1,000 random panels matched on |bulk_logFC| decile.",
   ""
 )
 
@@ -462,7 +463,7 @@ md <- c(md,
   "",
   "- **Defensible**: 46d posterior outperforms every single-modality baseline on AUROC across all 3 panels.",
   "- **Defensible**: The PR-AUC ranking is consistent with the AUROC ranking (no metric flipping).",
-  "- **Soften**: Any unqualified claim of the form \"integration is necessary\" — for at least one panel, top|dream_logFC| alone covers a large fraction of the signal.",
+  "- **Soften**: Any unqualified claim of the form \"integration is necessary\" — for at least one panel, top|bulk_logFC| alone covers a large fraction of the signal.",
   "- **Add to manuscript**: A baseline-comparison table in the supplementary, with the four methods and their AUROC/PR_AUC/CI/permutation-null-p shown side-by-side.",
   "- **Caveats on B1**: Nearest-gene mapping uses the GRCh38 cellranger-arc TSS BED; for genes not represented in cellranger-arc (a small subset), B1 score defaults to 0. Documented in the methods sidecar."
 )

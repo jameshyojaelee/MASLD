@@ -5,7 +5,7 @@
 # Emits under figures/supplementary/figS_methods_validation/mega_validation/panels/:
 #   method_venn_padj05.pdf            — 4-set Euler at padj<0.05 (dream + 3 NB/voom)
 #   method_upset_tier1.pdf            — 4-set UpSet at Tier 1 (padj<0.05 & |LFC|>0.5)
-#                                       style matches fig2_panel_nas_stage_upset.pdf
+#                                       style matches nas_stage_upset.pdf
 #   method_venn_pairs_*.csv           — pairwise intersection summaries
 #
 # metafor-HKSJ removed from all comparisons (user request 2026-05-19): its
@@ -87,7 +87,7 @@ save_euler(set_padj05, "method_venn_padj05.pdf",
 
 # ============================================================================
 # Panel 2 — UpSet at Tier 1 (padj<0.05 & |LFC|>0.5)
-# Style follows fig2_panel_nas_stage_upset.R: top intersection-size bar,
+# Style follows nas_stage_upset.R: top intersection-size bar,
 # bottom-right dot matrix with connecting segments, bottom-left set-size bar.
 # ============================================================================
 set_names <- names(tier1_sets)

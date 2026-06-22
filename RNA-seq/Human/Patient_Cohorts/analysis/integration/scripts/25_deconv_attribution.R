@@ -281,7 +281,7 @@ ashr_path <- file.path(RDIR, "dream_results_ashr.csv")
 if (file.exists(ashr_path)) {
   dt_unadj <- fread(ashr_path)
   # padj and logFC already exist as-is in the data
-  dt_unadj[, dream_sig := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]  # Migrated 0.3 -> 0.5 (LOO-CV stability)
+  dt_unadj[, dream_sig := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]  # Migrated 0.3 -> 0.5 (LOO-CV stability)  # C2-OK-sensitivity (dream-arm twin; canonical = 25_deconv_attribution_C2.R)
   cat("  Using dream results (padj-based significance)\n")
   USE_ASHR_UNADJ <- TRUE
 } else {

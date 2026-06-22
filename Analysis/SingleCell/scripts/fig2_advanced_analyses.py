@@ -374,8 +374,31 @@ if liana_results.get("MASLD") is not None and liana_results.get("Control") is no
     diff = masld_slim.merge(ctrl_slim, on=merge_keys, how="outer")
     diff["score_masld"] = diff["score_masld"].fillna(1.0)
     diff["score_control"] = diff["score_control"].fillna(1.0)
-    # Lower rank = stronger; diff < 0 means stronger in MASLD
-    diff["score_diff"] = diff["score_masld"] - diff["score_control"]
+    # CONVENTION (A5 fix, 2026-06-20): magnitude_rank is LOWER = stronger, so an
+    # interaction stronger in MASLD has score_masld < score_control. We define
+    # score_diff = score_control - score_masld so that POSITIVE = stronger/enriched
+    # in MASLD and NEGATIVE = stronger in Control. All consumers (R + Python) must
+    # use "score_diff > 0 == MASLD-enriched". (Previously score_masld - score_control,
+    # which inverted the intuitive sign and was read backwards by the R consumers.)
+    diff["score_diff"] = diff["score_control"] - diff["score_masld"]
+
+    # --- Regression guard (formula-based, pair-agnostic): by construction a pair
+    # stronger in MASLD has a LOWER magnitude_rank in MASLD (score_masld <
+    # score_control) and MUST therefore yield score_diff > 0 under this convention.
+    # This pins the formula sign without relying on any single biological pair:
+    # individual canonical ligands are unreliable anchors here because magnitude_rank
+    # is normalized WITHIN each condition, so secreted inflammatory ligands
+    # (SPP1/TIMP1/IL1B) wash out and only ECM-integrin axes robustly rank MASLD-up.
+    # A future re-inversion to score_masld - score_control would flip these and trip
+    # this guard.
+    _masld_stronger = diff["score_masld"] < diff["score_control"]
+    if _masld_stronger.any() and not bool((diff.loc[_masld_stronger, "score_diff"] > 0).all()):
+        raise AssertionError(
+            "score_diff convention inverted: pairs with lower MASLD magnitude_rank "
+            "(score_masld < score_control) must have score_diff > 0 (MASLD-enriched)."
+        )
+    log.info("A5 sign check OK: all %d MASLD-stronger pairs have score_diff > 0",
+             int(_masld_stronger.sum()))
 
     out_liana_diff = os.path.join(OUT_DIR, "liana_differential_interactions.csv")
     diff.to_csv(out_liana_diff, index=False)
@@ -390,8 +413,9 @@ if liana_results.get("MASLD") is not None and liana_results.get("Control") is no
             "n_interactions": len(grp),
             "mean_score_masld": float(grp["score_masld"].mean()),
             "mean_score_control": float(grp["score_control"].mean()),
-            "n_stronger_masld": int((grp["score_diff"] < -0.1).sum()),
-            "n_stronger_control": int((grp["score_diff"] > 0.1).sum()),
+            # Convention: score_diff = score_control - score_masld, so > 0 = MASLD-enriched.
+            "n_stronger_masld": int((grp["score_diff"] > 0.1).sum()),
+            "n_stronger_control": int((grp["score_diff"] < -0.1).sum()),
         })
     agg_df = pd.DataFrame(agg_rows)
     out_liana_agg = os.path.join(OUT_DIR, "liana_aggregated_communication.csv")

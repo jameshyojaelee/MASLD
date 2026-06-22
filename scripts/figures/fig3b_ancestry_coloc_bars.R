@@ -101,8 +101,8 @@ p3b <- ggplot(bar_dt, aes(x = ancestry_label, y = n_genes,
         plot.subtitle = element_text(size = 6, color = "gray35"),
         axis.text.x = element_text(size = 6.5))
 
-out_pdf <- file.path(PANEL_DIR, "fig3b.pdf")
-out_csv <- file.path(FIG3_DIR, "fig3b_ancestry_coloc_counts.csv")
+out_pdf <- file.path(PANEL_DIR, "ancestry_coloc_counts.pdf")
+out_csv <- file.path(FIG3_DIR, "ancestry_coloc_counts.csv")
 save_fig(p3b, out_pdf, width = fig_half_width, height = 3.0)
 fwrite(bar_dt[, .(ancestry, n_gwas, threshold, n_genes)], out_csv)
 cat("[fig3b] Wrote:", out_pdf, "\n")

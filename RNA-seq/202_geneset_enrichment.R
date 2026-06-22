@@ -76,27 +76,28 @@ map_ensembl_to_symbol <- function(ensembl_ids) {
 cat("\nLoading gene sets...\n")
 
 # Canonical DEGs (uses ENSEMBL IDs — remap to symbols for an identical mapping
-# to the prior dream input; drop the table's own `symbol` to avoid a collision)
-dream <- fread(file.path(BASE,
+# to the prior input; drop the table's own `symbol` to avoid a collision).
+# Source: canonical_deg_results.csv (limma-voom-qw C2; unprefixed columns).
+deg <- fread(file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
-if ("symbol" %in% names(dream)) dream[, symbol := NULL]
-dream[, ensembl_base := sub("\\.\\d+$", "", gene)]
-dream <- merge(dream, ensembl_to_symbol[, .(ensembl_base, symbol = gene)],
+if ("symbol" %in% names(deg)) deg[, symbol := NULL]
+deg[, ensembl_base := sub("\\.\\d+$", "", gene)]
+deg <- merge(deg, ensembl_to_symbol[, .(ensembl_base, symbol = gene)],
                by = "ensembl_base", all.x = TRUE)
-dream[!is.na(symbol), gene_symbol := symbol]
-dream[is.na(symbol), gene_symbol := gene]
-cat("  Dream: mapped", sum(!is.na(dream$symbol)), "/", nrow(dream), "to symbols\n")
+deg[!is.na(symbol), gene_symbol := symbol]
+deg[is.na(symbol), gene_symbol := gene]
+cat("  DEGs: mapped", sum(!is.na(deg$symbol)), "/", nrow(deg), "to symbols\n")
 
 # NOTE: Uses padj<0.1 for competitive gene-set enrichment (more permissive for GSEA background).
 # Primary DEGs defined at padj<0.05 + |logFC|>0.5 in Script 05b.
-dream_sig <- dream[padj < 0.1]
+deg_sig <- deg[padj < 0.1]
 
 gene_sets <- list(
-  "All_DEGs" = dream_sig$gene_symbol,
-  "DEGs_Up" = dream_sig[logFC > 0]$gene_symbol,
-  "DEGs_Down" = dream_sig[logFC < 0]$gene_symbol,
-  "DEGs_Top5pct" = dream[order(-abs(t))][1:round(nrow(dream) * 0.05)]$gene_symbol,
-  "DEGs_LFC_gt_08" = dream_sig[abs(logFC) > 0.8]$gene_symbol
+  "All_DEGs" = deg_sig$gene_symbol,
+  "DEGs_Up" = deg_sig[logFC > 0]$gene_symbol,
+  "DEGs_Down" = deg_sig[logFC < 0]$gene_symbol,
+  "DEGs_Top5pct" = deg[order(-abs(t))][1:round(nrow(deg) * 0.05)]$gene_symbol,
+  "DEGs_LFC_gt_08" = deg_sig[abs(logFC) > 0.8]$gene_symbol
 )
 
 # Hepatocyte-intrinsic DEGs
@@ -156,7 +157,7 @@ sc_files <- list.files(sc_dir, pattern = "_de\\.csv$", full.names = TRUE)
 for (f in sc_files) {
   dt <- fread(f)
   ct <- gsub("_de\\.csv$", "", basename(f))
-  # scRNA pseudobulk uses lowercase `lfc` (not `logFC` as in the dream bulk CSV)
+  # scRNA pseudobulk uses lowercase `lfc` (not `logFC` as in the canonical bulk CSV)
   lfc_col <- if ("logFC" %in% names(dt)) "logFC" else "lfc"
   ct_sig <- dt[padj < 0.05 & abs(get(lfc_col)) > 0.25]$gene
   if (length(ct_sig) > 10) {
@@ -250,23 +251,23 @@ print(enrichment_dt[, .(gene_set, n_in_set, fold_enrichment,
 cat("\n=== Generating stratified QQ plot data ===\n")
 
 # Stratify genes by DEG significance (merge using symbol)
-dream_merged <- merge(dream[, .(gene = gene_symbol, t, logFC, padj)],
+deg_merged <- merge(deg[, .(gene = gene_symbol, t, logFC, padj)],
                       gwas_genes, by = "gene")
 
 # Create 3 strata: top 10% DEGs, middle 80%, bottom 10% (non-DEGs)
-dream_merged[, abs_t := abs(t)]
-q90 <- quantile(dream_merged$abs_t, 0.90, na.rm = TRUE)
-q50 <- quantile(dream_merged$abs_t, 0.50, na.rm = TRUE)
+deg_merged[, abs_t := abs(t)]
+q90 <- quantile(deg_merged$abs_t, 0.90, na.rm = TRUE)
+q50 <- quantile(deg_merged$abs_t, 0.50, na.rm = TRUE)
 
-dream_merged[, stratum := fcase(
+deg_merged[, stratum := fcase(
   abs_t >= q90, "Top 10% DEGs",
   abs_t >= q50, "Middle",
   default = "Bottom 50%"
 )]
 
 # For each stratum, compute expected vs observed COLOC PP.H4 distribution
-qq_data <- lapply(unique(dream_merged$stratum), function(s) {
-  sub <- dream_merged[stratum == s & !is.na(coloc_pp4)]
+qq_data <- lapply(unique(deg_merged$stratum), function(s) {
+  sub <- deg_merged[stratum == s & !is.na(coloc_pp4)]
   n <- nrow(sub)
   if (n == 0) return(NULL)
 
@@ -285,7 +286,7 @@ qq_dt <- rbindlist(qq_data, fill = TRUE)
 cat("  Stratified QQ data:", nrow(qq_dt), "rows\n")
 
 # Lambda (genomic inflation factor) per stratum
-lambda_dt <- dream_merged[!is.na(coloc_pp4), .(
+lambda_dt <- deg_merged[!is.na(coloc_pp4), .(
   n_genes = .N,
   mean_coloc = mean(coloc_pp4),
   median_coloc = median(coloc_pp4),
@@ -305,7 +306,7 @@ cat("\n=== DEG-COLOC directional analysis ===\n")
 # COLOC itself is direction-agnostic, but eQTL direction + GWAS direction
 # gives expected expression direction
 # We just check: are COLOC genes more likely to be DEGs? And which direction?
-coloc_degs <- dream_merged[coloc_pp4 > 0.5]
+coloc_degs <- deg_merged[coloc_pp4 > 0.5]
 cat("  COLOC genes that are DEGs (padj < 0.1):",
     sum(coloc_degs$padj < 0.1, na.rm = TRUE), "/", nrow(coloc_degs), "\n")
 cat("  Direction of COLOC DEGs: Up =",

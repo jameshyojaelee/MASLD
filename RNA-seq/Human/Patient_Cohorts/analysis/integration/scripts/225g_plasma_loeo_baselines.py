@@ -351,12 +351,12 @@ if os.path.exists(TISSUE_BRIDGE_PATH):
         tissue_informed = bridge[
             (bridge["is_deg"] == True) & (bridge["in_plasma"] == True)
         ].copy()
-    elif "dream_logFC" in bridge.columns:
-        tissue_informed = bridge.dropna(subset=["dream_logFC"]).copy()
+    elif "dream_logFC" in bridge.columns:  # C2-OK-sensitivity (tissue_plasma_bridge.csv on-disk column)
+        tissue_informed = bridge.dropna(subset=["dream_logFC"]).copy()  # C2-OK-sensitivity (bridge on-disk column)
     else:
         tissue_informed = bridge.copy()
 
-    sort_col = "dream_logFC" if "dream_logFC" in tissue_informed.columns else tissue_informed.columns[1]
+    sort_col = "dream_logFC" if "dream_logFC" in tissue_informed.columns else tissue_informed.columns[1]  # C2-OK-sensitivity (bridge on-disk column)
     tissue_ranked = tissue_informed.reindex(
         tissue_informed[sort_col].abs().sort_values(ascending=False).index
     )

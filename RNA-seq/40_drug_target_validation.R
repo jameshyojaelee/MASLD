@@ -8,8 +8,8 @@
 #
 # Tier system (E4 rebuild 2026-05-22, replaces 2026-04-24 circular Strong=FDA):
 #   Four INDEPENDENT criteria — none of which is FDA approval:
-#     C1 DEG          = dream_padj < 0.05 AND |dream_logFC| > 0.5  (Tier 1)
-#     C2 COLOC        = coloc_best_susie_pp4 > 0.5 in any liver-relevant GWAS
+#     C1 DEG          = bulk_padj < 0.05 AND |bulk_logFC| > 0.5  (Tier 1)
+#     C2 COLOC        = coloc_susie_best_pp4 > 0.5 in any liver-relevant GWAS
 #                       (SuSiE-canonical post 2026-04-21, ABF/per-GWAS fallback)
 #     C3 TF-regulated = ≥1 disease regulon edge AFTER stripping self-edges
 #                       (gene must be regulated by another TF, not by itself)
@@ -96,6 +96,7 @@ cat("Drug registry: ", nrow(drug_registry), " drugs, ",
 # --- Load Data ---
 cat("\nLoading multi-evidence atlas...\n")
 atlas <- fread(atlas_path)
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
 cat("  Atlas: ", nrow(atlas), " genes x ", ncol(atlas), " columns\n")
 
 cat("Loading disease regulons...\n")
@@ -138,7 +139,7 @@ for (i in seq_len(nrow(drug_targets))) {
       drug = row$drug, target_gene = gene, stage = row$stage, moa = row$moa,
       in_atlas = FALSE,
       # L1
-      dream_logFC = NA, dream_padj = NA, dream_tstat = NA, is_deg = FALSE,
+      bulk_logFC = NA, bulk_padj = NA, bulk_tstat = NA, is_deg = FALSE,
       # L2
       mouse_meta_logFC = NA, mouse_meta_padj = NA, n_diets_sig = NA,
       # L3
@@ -153,7 +154,7 @@ for (i in seq_len(nrow(drug_targets))) {
       # L4 - ieQTL
       ieqtl_disease_interaction = NA,
       # L5
-      sex_class = NA, dream_logFC_M = NA, dream_logFC_F = NA,
+      sex_class = NA, bulk_logFC_M = NA, bulk_logFC_F = NA,
       # L6
       n_leading_edge_pathways = NA, top_pathways = NA,
       # L7
@@ -198,8 +199,8 @@ for (i in seq_len(nrow(drug_targets))) {
     # E4 Patch 2 (2026-05-22): 4-criterion C1-C4 tier logic
     # -----------------------------------------------------------------------
     # Four INDEPENDENT criteria, NONE of which is FDA approval status:
-    #   C1 DEG   = dream_padj < 0.05 AND |dream_logFC| > 0.5   (Tier 1 primary)
-    #   C2 COLOC = coloc_best_susie_pp4 > 0.5 (SuSiE-canonical post 2026-04-21)
+    #   C1 DEG   = bulk_padj < 0.05 AND |bulk_logFC| > 0.5   (Tier 1 primary)
+    #   C2 COLOC = coloc_susie_best_pp4 > 0.5 (SuSiE-canonical post 2026-04-21)
     #              fall back to ABF / per-GWAS PP4 if susie unavailable
     #   C3 TF (clean) = ≥1 disease regulon edge AFTER stripping self
     #                   (i.e., independent TF drives target)
@@ -224,7 +225,7 @@ for (i in seq_len(nrow(drug_targets))) {
 
     # C2 — COLOC (SuSiE-canonical, with ABF + per-GWAS PP4 fallbacks)
     c2_coloc <- any(c(
-      !is.na(ar$coloc_best_susie_pp4) && ar$coloc_best_susie_pp4 > 0.5,
+      !is.na(ar$coloc_susie_best_pp4) && ar$coloc_susie_best_pp4 > 0.5,
       !is.na(ar$ast_coloc_pp4)        && ar$ast_coloc_pp4 > 0.5,
       !is.na(ar$ggt_coloc_pp4)        && ar$ggt_coloc_pp4 > 0.5,
       !is.na(ar$pdff_coloc_pp4)       && ar$pdff_coloc_pp4 > 0.5,
@@ -269,8 +270,8 @@ for (i in seq_len(nrow(drug_targets))) {
       drug = row$drug, target_gene = gene, stage = row$stage, moa = row$moa,
       in_atlas = TRUE,
       # L1
-      dream_logFC = ar$bulk_logFC, dream_padj = ar$bulk_padj,
-      dream_tstat = ar$bulk_tstat, is_deg = is_deg,
+      bulk_logFC = ar$bulk_logFC, bulk_padj = ar$bulk_padj,
+      bulk_tstat = ar$bulk_tstat, is_deg = is_deg,
       # L2
       mouse_meta_logFC = ar$mouse_meta_logFC, mouse_meta_padj = ar$mouse_meta_padj,
       n_diets_sig = ar$n_diets_sig,
@@ -289,8 +290,8 @@ for (i in seq_len(nrow(drug_targets))) {
       # L4 - ieQTL
       ieqtl_disease_interaction = ar$ieqtl_disease_interaction,
       # L5
-      sex_class = ar$sex_class, dream_logFC_M = ar$bulk_logFC_M,
-      dream_logFC_F = ar$bulk_logFC_F,
+      sex_class = ar$sex_class, bulk_logFC_M = ar$bulk_logFC_M,
+      bulk_logFC_F = ar$bulk_logFC_F,
       # L6
       n_leading_edge_pathways = ar$n_leading_edge_pathways,
       top_pathways = ar$top_pathways,
@@ -361,12 +362,12 @@ for (d in unique(validation_table$drug)) {
 
     # L1
     if (r$is_deg) {
-      dir <- if (r$dream_logFC > 0) "upregulated" else "downregulated"
+      dir <- if (r$bulk_logFC > 0) "upregulated" else "downregulated"
       evidence_bits <- c(evidence_bits,
-        sprintf("DEG (%s, LFC=%.2f, padj=%.2e)", dir, r$dream_logFC, r$dream_padj))
-    } else if (!is.na(r$dream_padj)) {
+        sprintf("DEG (%s, LFC=%.2f, padj=%.2e)", dir, r$bulk_logFC, r$bulk_padj))
+    } else if (!is.na(r$bulk_padj)) {
       evidence_bits <- c(evidence_bits,
-        sprintf("Not DEG (LFC=%.2f, padj=%.2e)", r$dream_logFC, r$dream_padj))
+        sprintf("Not DEG (LFC=%.2f, padj=%.2e)", r$bulk_logFC, r$bulk_padj))
     } else {
       evidence_bits <- c(evidence_bits, "No expression data")
     }

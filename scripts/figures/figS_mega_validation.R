@@ -90,7 +90,7 @@ panel_theme <- theme_minimal(base_size = 10) +
 # ============================================================================
 # Compute rho on logFC (same scale for all 6 methods; t-stats not available
 # for the metafor engines so we use logFC throughout for consistency).
-lfc_cols <- c(dream = "dream_logFC", `edgeR-QL` = "eqlogFC",
+lfc_cols <- c(dream = "dream_logFC", `edgeR-QL` = "eqlogFC", # C2-OK-sensitivity
               voomLmFit = "vlmlogFC", DESeq2 = "dslogFC",
               `metafor(voom)` = "lv_logFC", `metafor(DESeq2)` = "ds_logFC")
 lfc_mat <- as.matrix(merged[, lfc_cols, with = FALSE])
@@ -256,11 +256,11 @@ message("Saved panelC_dream_vs_eql_scatter.pdf")
 # ============================================================================
 # Panel C2 — dream vs metafor(voom) logFC scatter (I2-coloured)
 # ============================================================================
-lim_c2 <- max(abs(c(merged$dream_logFC, merged$lv_logFC)), na.rm = TRUE) * 1.05
-rho_c2 <- cor(merged$dream_logFC, merged$lv_logFC,
+lim_c2 <- max(abs(c(merged$dream_logFC, merged$lv_logFC)), na.rm = TRUE) * 1.05 # C2-OK-sensitivity
+rho_c2 <- cor(merged$dream_logFC, merged$lv_logFC, # C2-OK-sensitivity
               method = "spearman", use = "complete.obs")
 pC2 <- ggplot(merged[!is.na(lv_logFC)],
-              aes(dream_logFC, lv_logFC, colour = I2)) +
+              aes(dream_logFC, lv_logFC, colour = I2)) + # C2-OK-sensitivity
   geom_point(size = 0.3, alpha = 0.4) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed",
               colour = "#B0BEC5", linewidth = 0.4) +
@@ -378,7 +378,7 @@ make_alluvial <- function(deg_lists, title, subtitle,
 # panelF — Tier 1: padj < 0.05 AND |logFC| > 0.5
 make_alluvial(
   deg_lists = list(
-    dream             = merged[!is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5, gene],
+    dream             = merged[!is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5, gene], # C2-OK-sensitivity
     `edgeR-QL`        = merged[!is.na(eqpadj)    & eqpadj    < 0.05 & abs(eqlogFC)    > 0.5, gene],
     voomLmFit         = merged[!is.na(vlmpadj)   & vlmpadj   < 0.05 & abs(vlmlogFC)   > 0.5, gene],
     DESeq2            = merged[!is.na(dspadj)    & dspadj    < 0.05 & abs(dslogFC)    > 0.5, gene],
@@ -393,7 +393,7 @@ make_alluvial(
 # panelF2 — padj < 0.05 only (no LFC cutoff)
 make_alluvial(
   deg_lists = list(
-    dream             = merged[!is.na(dream_padj) & dream_padj < 0.05, gene],
+    dream             = merged[!is.na(dream_padj) & dream_padj < 0.05, gene], # C2-OK-sensitivity
     `edgeR-QL`        = merged[!is.na(eqpadj)    & eqpadj    < 0.05, gene],
     voomLmFit         = merged[!is.na(vlmpadj)   & vlmpadj   < 0.05, gene],
     DESeq2            = merged[!is.na(dspadj)    & dspadj    < 0.05, gene],
@@ -407,7 +407,7 @@ make_alluvial(
 
 # --- Chord Plot (Tier 1 only) ---
 deg_lists_chord <- list(
-  dream             = merged[!is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5, gene],
+  dream             = merged[!is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.5, gene], # C2-OK-sensitivity
   `edgeR-QL`        = merged[!is.na(eqpadj)    & eqpadj    < 0.05 & abs(eqlogFC)    > 0.5, gene],
   voomLmFit         = merged[!is.na(vlmpadj)   & vlmpadj   < 0.05 & abs(vlmlogFC)   > 0.5, gene],
   DESeq2            = merged[!is.na(dspadj)    & dspadj    < 0.05 & abs(dslogFC)    > 0.5, gene],

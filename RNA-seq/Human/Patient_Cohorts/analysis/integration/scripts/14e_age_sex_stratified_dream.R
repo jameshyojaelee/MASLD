@@ -80,8 +80,8 @@ if ("adj.P.Val" %in% names(dream) && !"padj" %in% names(dream))
   setnames(dream, "adj.P.Val", "padj")
 
 # Top 200 DEGs by absolute t-statistic
-dream_sig <- dream[padj < 0.1][order(-abs(t))]
-top200 <- head(dream_sig$gene, 200)
+dream_sig <- dream[padj < 0.1][order(-abs(t))]  # C2-OK-sensitivity
+top200 <- head(dream_sig$gene, 200)  # C2-OK-sensitivity
 cat("Top 200 DEGs selected for dysregulation score\n")
 
 # Compute log2(CPM+1) for all QC-passing samples

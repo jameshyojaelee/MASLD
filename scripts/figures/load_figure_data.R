@@ -54,8 +54,8 @@ FIGS_LFCSENS_DIR   <- file.path(FIGS_METHVAL_DIR, "lfc_sensitivity")
 
 # Main figures (Fig 1-5; reorganized 2026-04-15)
 FIG1_DIR  <- file.path(FIG_MAIN, "fig1_atlas_overview")           # Atlas + cohorts
-FIG2_DIR  <- file.path(FIG_MAIN, "fig2_progression_sex")          # Progression + sex-dimorphic programs (was fig2_f2_switch)
-FIG3_DIR  <- file.path(FIG_MAIN, "fig3_regulatory_architecture")  # Regulatory architecture / GWAS-eQTL (was fig4_causal_architecture)
+FIG2_DIR  <- file.path(FIG_MAIN, "fig3_RNAseq")                   # RNA-seq DEGs / progression (dir renamed from fig2_progression_sex -> fig3_RNAseq 2026-06-11; constant name FIG2_DIR kept for back-compat across ~32 consumer scripts). NB: distinct from FIG3_DIR below.
+FIG3_DIR  <- file.path(FIG_MAIN, "fig2_genetics")                 # Genetics / GWAS-eQTL (main Fig 2; dir renamed fig3_regulatory_architecture -> fig2_genetics 2026-06-12; constant name FIG3_DIR kept for back-compat across ~21 consumer scripts). NB: this is main Fig 2, distinct from FIG2_DIR (fig3_RNAseq) above.
 FIG4_DIR  <- file.path(FIG_MAIN, "fig4_validation")               # Proteomics + spatial validation
 FIG5_DIR  <- file.path(FIG_MAIN, "fig5_convergence")              # Convergence matrix (was fig6_therapeutic_windows)
 
@@ -181,23 +181,25 @@ load_dream_results <- function() {
   if (!is.null(.dream_cache)) return(.dream_cache)
   # Canonical DEG table (hard cutover 2026-06-08): canonical_deg_results.csv.
   # Schema: gene, logFC, SE, t, P.Value, padj, shrunk_logFC, lfsr, AveExpr, symbol.
-  # Output column names (dream_*) are preserved below so no figure script changes.
+  # C2 sweep (2026-06-08): output column names are emitted as bulk_* (matching
+  # the multi-evidence atlas S1 columns) so canonical-DEG and atlas figures share
+  # one naming. The retired dream_* aliases were dropped.
   f <- file.path(INT_RESULTS, "canonical_deg_results.csv")
   if (!file.exists(f)) {
     message("WARNING: ", f, " not found")
     return(NULL)
   }
   dt <- fread(f)
-  # Map ashr columns for backward compatibility
-  if ("shrunk_logFC" %in% names(dt) && !"dream_shrunk_logFC" %in% names(dt))
-    setnames(dt, "shrunk_logFC", "dream_shrunk_logFC")
-  if ("lfsr" %in% names(dt) && !"dream_lfsr" %in% names(dt))
-    setnames(dt, "lfsr", "dream_lfsr")
-  # Normalize legacy column names
-  if ("padj" %in% names(dt) && !"dream_padj" %in% names(dt))
-    setnames(dt, "padj", "dream_padj")
-  if ("logFC" %in% names(dt) && !"dream_logFC" %in% names(dt))
-    setnames(dt, "logFC", "dream_logFC")
+  # Map ashr columns to the bulk_* names
+  if ("shrunk_logFC" %in% names(dt) && !"bulk_shrunk_logFC" %in% names(dt))
+    setnames(dt, "shrunk_logFC", "bulk_shrunk_logFC")
+  if ("lfsr" %in% names(dt) && !"bulk_lfsr" %in% names(dt))
+    setnames(dt, "lfsr", "bulk_lfsr")
+  # Normalize canonical unprefixed column names to bulk_*
+  if ("padj" %in% names(dt) && !"bulk_padj" %in% names(dt))
+    setnames(dt, "padj", "bulk_padj")
+  if ("logFC" %in% names(dt) && !"bulk_logFC" %in% names(dt))
+    setnames(dt, "logFC", "bulk_logFC")
   dt <- add_symbols(dt, "gene")
   .dream_cache <<- dt
   dt
@@ -206,14 +208,14 @@ load_dream_results <- function() {
 # --- DEG classification helper ---
 # Returns a logical vector: TRUE if gene passes canonical DEG threshold.
 # Canonical (2026-06-02): lfsr < 0.05 AND |shrunk_logFC| > 0.5 (ashr shrinkage).
-# `dt` must carry an lfsr + shrunk_logFC column. Accepts dream_* (load_dream_results
-# output, canonical-sourced), bulk_* (the C2 atlas, post 2026-06-08 rename), or plain
-# names — so the helper works whether called on the atlas or on load_dream_results().
+# `dt` must carry an lfsr + shrunk_logFC column. Accepts bulk_* (the C2 atlas /
+# canonical loader output, post 2026-06-08 rename) or plain names — so the helper
+# works whether called on the atlas or on load_dream_results().
 is_dream_deg <- function(dt) {
-  lfsr_col <- intersect(c("dream_lfsr", "bulk_lfsr", "lfsr"), names(dt))[1]
-  slfc_col <- intersect(c("dream_shrunk_logFC", "bulk_shrunk_logFC", "shrunk_logFC"), names(dt))[1]
+  lfsr_col <- intersect(c("bulk_lfsr", "lfsr"), names(dt))[1]
+  slfc_col <- intersect(c("bulk_shrunk_logFC", "shrunk_logFC"), names(dt))[1]
   if (is.na(lfsr_col) || is.na(slfc_col))
-    stop("is_dream_deg: need lfsr + shrunk_logFC (dream_/bulk_/plain); have: ",
+    stop("is_dream_deg: need lfsr + shrunk_logFC (bulk_/plain); have: ",
          paste(names(dt), collapse = ", "))
   !is.na(dt[[lfsr_col]]) & dt[[lfsr_col]] < 0.05 &
     !is.na(dt[[slfc_col]]) & abs(dt[[slfc_col]]) > 0.5
@@ -226,16 +228,16 @@ load_mash_vs_masl_results <- function() {
   f <- file.path(SIGS, "nafl_vs_nash_dream.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
-  # Normalize column names to the dream_* names downstream figures expect.
-  # Source file became limma-voom under the C2 swap (2026-06-08): it now ships
-  # `padj` (was adj.P.Val) + `shrunk_logFC`/`lfsr`, not adj.P.Val. Accept either.
-  if (!"dream_padj" %in% names(dt)) {
-    padj_src <- intersect(c("adj.P.Val", "padj"), names(dt))[1]
-    if (!is.na(padj_src)) setnames(dt, padj_src, "dream_padj")
+  # Normalize to unprefixed canonical names (MASH-vs-MASL contrast; not the main
+  # disease-vs-control bulk channel). Source became limma-voom under the C2 swap
+  # (2026-06-08): it ships `padj` (was adj.P.Val) + `logFC`/`shrunk_logFC`/`lfsr`.
+  if (!"padj" %in% names(dt)) {
+    padj_src <- intersect(c("adj.P.Val"), names(dt))[1]
+    if (!is.na(padj_src)) setnames(dt, padj_src, "padj")
   }
-  if (!"dream_logFC" %in% names(dt)) {
-    lfc_src <- intersect(c("logFC", "shrunk_logFC"), names(dt))[1]
-    if (!is.na(lfc_src)) setnames(dt, lfc_src, "dream_logFC")
+  if (!"logFC" %in% names(dt)) {
+    lfc_src <- intersect(c("shrunk_logFC"), names(dt))[1]
+    if (!is.na(lfc_src)) setnames(dt, lfc_src, "logFC")
   }
   dt <- add_symbols(dt, "gene")
   .mash_masl_cache <<- dt
@@ -278,21 +280,21 @@ load_consensus_degs <- function() {
     dt <- merge(dt, meta_slim, by = "gene", all.x = TRUE)
   }
 
-  # Determine significance flags
+  # Determine significance flags (consensus_degs.csv now carries bulk_* cols)
   padj_thr <- 0.1; lfc_thr <- 0.5
-  dream_padj_col <- intersect(c("dream_padj", "padj"), names(dt))[1]
-  dream_lfc_col  <- intersect(c("dream_logFC", "logFC"), names(dt))[1]
+  bulk_padj_col <- intersect(c("bulk_padj", "padj"), names(dt))[1]
+  bulk_lfc_col  <- intersect(c("bulk_logFC", "logFC"), names(dt))[1]
 
-  if (!is.na(dream_padj_col) && !is.na(dream_lfc_col)) {
-    dt[, dream_sig_tier := get(dream_padj_col) < padj_thr & abs(get(dream_lfc_col)) > lfc_thr]
+  if (!is.na(bulk_padj_col) && !is.na(bulk_lfc_col)) {
+    dt[, bulk_sig_tier := get(bulk_padj_col) < padj_thr & abs(get(bulk_lfc_col)) > lfc_thr]
   } else {
-    dt[, dream_sig_tier := FALSE]
+    dt[, bulk_sig_tier := FALSE]
   }
   if ("meta_padj" %in% names(dt) && "meta_logFC" %in% names(dt)) {
     dt[, meta_sig_tier := meta_padj < padj_thr & abs(meta_logFC) > lfc_thr]
     # Direction concordance
-    if (!is.na(dream_lfc_col)) {
-      dt[, dir_concordant := sign(get(dream_lfc_col)) == sign(meta_logFC) | is.na(meta_logFC)]
+    if (!is.na(bulk_lfc_col)) {
+      dt[, dir_concordant := sign(get(bulk_lfc_col)) == sign(meta_logFC) | is.na(meta_logFC)]
     } else {
       dt[, dir_concordant := TRUE]
     }
@@ -303,21 +305,21 @@ load_consensus_degs <- function() {
 
   # Assign tiers
   dt[, tier := "Not_Consensus"]
-  dt[dream_sig_tier == TRUE & meta_sig_tier == TRUE & dir_concordant == TRUE,
+  dt[bulk_sig_tier == TRUE & meta_sig_tier == TRUE & dir_concordant == TRUE,
      tier := "Tier1_HighConfidence"]
   dt[tier == "Not_Consensus" &
-     (dream_sig_tier == TRUE | meta_sig_tier == TRUE) &
+     (bulk_sig_tier == TRUE | meta_sig_tier == TRUE) &
      dir_concordant == TRUE,
      tier := "Tier2_Moderate"]
-  # Tier3 needs per-study counts (simplified: use dream_sig from consensus file)
-  if ("dream_sig" %in% names(dt)) {
+  # Tier3 needs per-study counts (simplified: use bulk_sig from consensus file)
+  if ("bulk_sig" %in% names(dt)) {
     # If n_studies column exists, use it
     if ("n_studies_sig" %in% names(dt)) {
       dt[tier == "Not_Consensus" & n_studies_sig >= 3, tier := "Tier3_Exploratory"]
     }
   }
   # Clean up temp columns
-  dt[, c("dream_sig_tier", "meta_sig_tier", "dir_concordant") := NULL]
+  dt[, c("bulk_sig_tier", "meta_sig_tier", "dir_concordant") := NULL]
   .consensus_cache <<- dt
   dt
 }
@@ -1079,10 +1081,14 @@ load_hepatocyte_regulons <- function() {
 .chromvar_cache <- NULL
 load_chromvar_hepatocyte <- function() {
   if (!is.null(.chromvar_cache)) return(.chromvar_cache)
-  # Prefer label-transfer-corrected chromVAR v2; fall back to original
-  f <- file.path(ATAC_DIR, "results", "chromvar_v2", "chromvar_tf_activity.csv")
+  # A6 pseudoreplication fix (2026-06-20): serve the DONOR-LEVEL limma table
+  # (chromvar_limma_per_ct.csv: cell_type/TF/logFC/adj.P.Val; 110 sig genome-wide,
+  # 0 in hepatocytes) NOT the per-CELL Mann-Whitney table (chromvar_tf_activity.csv;
+  # 4,832 "sig" = n-of-cells inflation). fig3_epigenomic_panels.R Panel(h) has a
+  # schema shim that renames TF/logFC/adj.P.Val and zero-fills mean_deviation_*.
+  f <- file.path(ATAC_DIR, "results", "chromvar_v2", "chromvar_limma_per_ct.csv")
   if (!file.exists(f))
-    f <- file.path(ATAC_DIR, "results", "chromvar", "chromvar_tf_activity.csv")
+    f <- file.path(ATAC_DIR, "results", "chromvar_v2", "chromvar_tf_activity.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
   # Filter to hepatocyte rows (handle both naming conventions)

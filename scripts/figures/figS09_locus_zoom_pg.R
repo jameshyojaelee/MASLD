@@ -33,6 +33,10 @@ LOCUS_ID        <- if (length(args) >= 1) args[1] else "locus_GGT_chr15_60883281
 TRAIT_PAIR      <- if (length(args) >= 2) args[2] else sub("locus_([^_]+)_.*", "\\1", LOCUS_ID)
 FORCE_EQTL_GENE <- if (length(args) >= 3) args[3] else NA_character_
 OUT_OVERRIDE    <- if (length(args) >= 4) args[4] else NA_character_
+# SHOW_SAS: include the South Asian (PanUKBB CSA) track in the PLOT. Default OFF
+# (2026-06-19) — Fig 2 locus zooms are EUR+EAS only. Set env SHOW_SAS=1 to restore.
+# All SAS handling code below is retained; this only gates rendering.
+SHOW_SAS <- tolower(Sys.getenv("SHOW_SAS", "false")) %in% c("1", "true", "yes")
 
 cat(sprintf("Locus: %s | Trait: %s | eQTL gene: %s\n",
             LOCUS_ID, TRAIT_PAIR,
@@ -101,7 +105,7 @@ cat("  EAS locus variants:", nrow(eas_locus), "\n")
 has_sas <- FALSE
 sas_locus <- data.table()
 SAS_LEAD_POS <- NA_integer_
-if (file.exists(SAS_SS)) {
+if (SHOW_SAS && file.exists(SAS_SS)) {
   cat("Loading SAS sumstats (PanUKBB CSA)...\n")
   sas_ss <- fread(SAS_SS,
                   select = c("chromosome","position","allele1","allele2","beta","se","pval"))
@@ -125,7 +129,7 @@ if (file.exists(SAS_SS)) {
 # panels; otherwise uses TRAIT_PAIR directly as study name.
 fm_studies <- if (TRAIT_PAIR %in% c("ALT","AST","GGT")) {
   c(paste0("UKBB_", TRAIT_PAIR), paste0("BBJ_", TRAIT_PAIR),
-    paste0("PanUKBB_CSA_", TRAIT_PAIR))   # + SAS (South Asian) for 3-ancestry PIP track
+    if (SHOW_SAS) paste0("PanUKBB_CSA_", TRAIT_PAIR))   # SAS PIP lollipops only when SHOW_SAS
 } else {
   TRAIT_PAIR
 }
@@ -526,15 +530,23 @@ grid.points(
   gp   = gpar(col = eur_pg_df$fill_col)
 )
 
-# Highlight lead SNP with a diamond marker
-lead_x <- mh_eur_pos_to_x(EUR_LEAD_POS)
-lead_p <- eur_pg_df$p[which.min(abs(eur_pg_df$pos - EUR_LEAD_POS))]
-lead_y <- mh_eur_p_to_y(lead_p)
-grid.points(
-  x = unit(lead_x, "inches"), y = unit(lead_y, "inches"),
-  pch = 23, size = unit(0.13, "inches"),
-  gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
-)
+# Lead-SNP diamond — drawn only if this ancestry carries a real signal in the
+# window (>= suggestive, p < 1e-5). Otherwise the "lead" is just the top of noise
+# and its diamond is misleading (e.g. South Asian at the CYP2A6 locus, peak
+# -log10p 2.5). NOTE: the strict genome-wide line (5e-8) would also drop genuine
+# sub-GW signals that still colocalize (e.g. RORA SAS, peak -log10p 7.2), so the
+# suggestive threshold is used.
+LEAD_SIG_P <- 1e-5
+if (min(eur_pg_df$p, na.rm = TRUE) < LEAD_SIG_P) {
+  lead_x <- mh_eur_pos_to_x(EUR_LEAD_POS)
+  lead_p <- eur_pg_df$p[which.min(abs(eur_pg_df$pos - EUR_LEAD_POS))]
+  lead_y <- mh_eur_p_to_y(lead_p)
+  grid.points(
+    x = unit(lead_x, "inches"), y = unit(lead_y, "inches"),
+    pch = 23, size = unit(0.13, "inches"),
+    gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+  )
+}
 
 annoYaxis(plot = mh_eur, at = pretty(c(0, max(-log10(eur_pg$p)))), fontsize = 7)
 draw_axis_spines(y1, h1)
@@ -578,15 +590,33 @@ if (nrow(eas_pg) > 0) {
     size = unit(0.07, "inches"),
     gp   = gpar(col = eas_pg_df$fill_col)
   )
-  # Highlight EAS lead SNP with a diamond
-  eas_lead_x <- mh_eas_pos_to_x(EAS_LEAD_POS)
-  eas_lead_p <- eas_pg_df$p[which.min(abs(eas_pg_df$pos - EAS_LEAD_POS))]
-  eas_lead_y <- mh_eas_p_to_y(eas_lead_p)
-  grid.points(
-    x = unit(eas_lead_x, "inches"), y = unit(eas_lead_y, "inches"),
-    pch = 23, size = unit(0.13, "inches"),
-    gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
-  )
+  # Highlight EAS lead SNP with a diamond (only if a real signal is present)
+  if (min(eas_pg_df$p, na.rm = TRUE) < LEAD_SIG_P) {
+    eas_lead_x <- mh_eas_pos_to_x(EAS_LEAD_POS)
+    eas_lead_p <- eas_pg_df$p[which.min(abs(eas_pg_df$pos - EAS_LEAD_POS))]
+    eas_lead_y <- mh_eas_p_to_y(eas_lead_p)
+    grid.points(
+      x = unit(eas_lead_x, "inches"), y = unit(eas_lead_y, "inches"),
+      pch = 23, size = unit(0.13, "inches"),
+      gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+    )
+  }
+  # Mark the SuSiE-COLOC top variant on the EAS track too (gold diamond, matching
+  # the eQTL track) when it is a DISTINCT signal from the EAS lead. This makes a
+  # secondary-signal colocalization (e.g. CYP2A6, where the colocalizing EAS
+  # signal sits ~60 kb from the primary GWAS peak) visually self-evident: the
+  # gold diamond here aligns vertically with the gold diamond on the eQTL track.
+  # >20 kb apart = a genuinely distinct secondary signal (not the same LD block
+  # as the lead); only then is a separate marker informative.
+  if (!is.na(coloc_top_pos) && abs(coloc_top_pos - EAS_LEAD_POS) > 20000 &&
+      coloc_top_pos >= WIN_START && coloc_top_pos <= WIN_END) {
+    eas_coloc_p <- eas_pg_df$p[which.min(abs(eas_pg_df$pos - coloc_top_pos))]
+    grid.points(
+      x = unit(mh_eas_pos_to_x(coloc_top_pos), "inches"),
+      y = unit(mh_eas_p_to_y(eas_coloc_p),     "inches"),
+      pch = 23, size = unit(0.13, "inches"),
+      gp = gpar(col = "black", fill = "#FFD600", lwd = 0.8))
+  }
   annoYaxis(plot = mh_eas, at = pretty(c(0, max(-log10(eas_pg$p)))), fontsize = 7)
   draw_axis_spines(y2, h2)
 } else {
@@ -813,14 +843,16 @@ if (has_sas) {
       pch = 19, size = unit(0.07, "inches"),
       gp = gpar(col = sas_pg_df$fill_col)
     )
-    sas_lead_x <- mh_sas_pos_to_x(SAS_LEAD_POS)
-    sas_lead_p <- sas_pg_df$p[which.min(abs(sas_pg_df$pos - SAS_LEAD_POS))]
-    sas_lead_y <- mh_sas_p_to_y(sas_lead_p)
-    grid.points(
-      x = unit(sas_lead_x, "inches"), y = unit(sas_lead_y, "inches"),
-      pch = 23, size = unit(0.13, "inches"),
-      gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
-    )
+    if (min(sas_pg_df$p, na.rm = TRUE) < LEAD_SIG_P) {
+      sas_lead_x <- mh_sas_pos_to_x(SAS_LEAD_POS)
+      sas_lead_p <- sas_pg_df$p[which.min(abs(sas_pg_df$pos - SAS_LEAD_POS))]
+      sas_lead_y <- mh_sas_p_to_y(sas_lead_p)
+      grid.points(
+        x = unit(sas_lead_x, "inches"), y = unit(sas_lead_y, "inches"),
+        pch = 23, size = unit(0.13, "inches"),
+        gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+      )
+    }
     annoYaxis(plot = mh_sas, at = pretty(c(0, max(-log10(sas_pg$p)))), fontsize = 7)
     draw_axis_spines(y_sas, h_sas)
   } else {
@@ -1024,11 +1056,13 @@ locus_gr     <- GRanges(seqnames = paste0("chr", CHR),
 genes_in_win <- suppressMessages(genes(TxDb.Hsapiens.UCSC.hg19.knownGene,
                                        filter = list(tx_chrom = paste0("chr", CHR))))
 genes_in_win <- subsetByOverlaps(genes_in_win, locus_gr)
-gene_symbols <- suppressMessages(
-  mapIds(org.Hs.eg.db, keys = genes_in_win$gene_id,
-         column = "SYMBOL", keytype = "ENTREZID", multiVals = "first")
-)
-gene_symbols <- unique(gene_symbols[!is.na(gene_symbols)])
+# guard: some windows (distal-regulatory loci where the eQTL target sits outside
+# the credible-set window) contain no TxDb genes — mapIds errors on zero keys.
+gene_symbols <- if (length(genes_in_win) > 0) {
+  unique(na.omit(suppressMessages(
+    mapIds(org.Hs.eg.db, keys = genes_in_win$gene_id,
+           column = "SYMBOL", keytype = "ENTREZID", multiVals = "first"))))
+} else character(0)
 
 # Map each gene → continuous color via bulk_logFC + bulk_padj.
 gene_colors <- setNames(character(length(gene_symbols)), gene_symbols)
@@ -1042,17 +1076,57 @@ gene_hl <- data.frame(gene  = names(gene_colors),
                       color = unname(gene_colors),
                       stringsAsFactors = FALSE)
 
-plotGenes(
-  chrom = paste0("chr", CHR), chromstart = WIN_START, chromend = WIN_END,
-  assembly = "hg19",
-  fill = c("#9E9E9E", "#9E9E9E"),
-  fontcolor = c("#424242", "#424242"),
-  geneHighlights = gene_hl,
-  geneBackground = "grey85",
-  fontsize = 7, strandLabels = TRUE,
-  x = PLOT_X, width = PLOT_W,
-  y = y5, height = h5, default.units = "inches"
-)
+# Custom transcript-style gene model (2026-06-19): exons = thick boxes, introns
+# = thin line, strand = chevrons — so intron stretches are unmistakable (the
+# default plotGenes() collapses the model and introns/exons look alike).
+xin <- function(p) PLOT_X + (pmax(WIN_START, pmin(WIN_END, p)) - WIN_START) /
+                   (WIN_END - WIN_START) * PLOT_W
+ex_by_gene <- suppressMessages(exonsBy(TxDb.Hsapiens.UCSC.hg19.knownGene, by = "gene"))
+gmod <- list()
+for (i in seq_along(genes_in_win)) {
+  gid <- as.character(genes_in_win$gene_id[i])
+  sym <- suppressMessages(mapIds(org.Hs.eg.db, gid, "SYMBOL", "ENTREZID"))
+  if (is.na(sym) || is.null(ex_by_gene[[gid]])) next
+  exr <- reduce(ex_by_gene[[gid]])
+  if (max(end(exr)) < WIN_START || min(start(exr)) > WIN_END) next
+  gmod[[length(gmod) + 1]] <- list(sym = sym, strand = as.character(strand(exr))[1],
+    gs = min(start(exr)), ge = max(end(exr)),
+    es = start(exr), ee = end(exr),
+    col = if (sym %in% names(gene_colors)) gene_colors[[sym]] else "#9E9E9E")
+}
+# greedy row-packing on genomic extent so overlapping genes stack
+if (length(gmod)) {
+  gmod <- gmod[order(sapply(gmod, `[[`, "gs"))]
+  row_end <- numeric(0)
+  for (j in seq_along(gmod)) {
+    gs <- max(WIN_START, gmod[[j]]$gs); placed <- FALSE
+    for (r in seq_along(row_end)) if (gs > row_end[r] + 0.02 * (WIN_END - WIN_START)) {
+      gmod[[j]]$row <- r; row_end[r] <- min(WIN_END, gmod[[j]]$ge); placed <- TRUE; break }
+    if (!placed) { row_end <- c(row_end, min(WIN_END, gmod[[j]]$ge)); gmod[[j]]$row <- length(row_end) }
+  }
+  nrows <- max(row_end_n <- length(row_end), 1)
+  row_gap <- min(0.30, (h5 - 0.20) / nrows)          # fit within fixed h5
+  for (g in gmod) {
+    yc <- y5 + 0.18 + (g$row - 1) * row_gap
+    yg <- top_to_grid(yc); x0 <- xin(g$gs); x1 <- xin(g$ge)
+    grid.lines(x = unit(c(x0, x1), "inches"), y = unit(yg, "inches"),
+               gp = gpar(col = g$col, lwd = 1.0))          # intron line
+    nch <- floor((x1 - x0) / 0.22)                          # strand chevrons
+    if (nch >= 1) {
+      chx <- seq(x0 + 0.06, x1 - 0.06, length.out = nch + 1)
+      for (cx in chx) grid.text(if (g$strand == "-") "<" else ">",
+        x = unit(cx, "inches"), y = unit(yg, "inches"), gp = gpar(col = g$col, fontsize = 5))
+    }
+    for (k in seq_along(g$es)) {                            # exon boxes
+      ex0 <- xin(g$es[k]); ex1 <- xin(g$ee[k])
+      grid.rect(x = unit(ex0, "inches"), y = unit(yg, "inches"),
+        width = unit(max(ex1 - ex0, 0.006), "inches"), height = unit(0.085, "inches"),
+        just = c("left", "center"), gp = gpar(col = NA, fill = g$col))
+    }
+    grid.text(g$sym, x = unit((x0 + x1) / 2, "inches"), y = unit(top_to_grid(yc + 0.11), "inches"),
+              gp = gpar(col = g$col, fontsize = 6, fontface = "italic"))
+  }
+}
 track_label("Genes", y = y5 + 0.02)
 
 # Inline horizontal logFC scale bar in the right margin

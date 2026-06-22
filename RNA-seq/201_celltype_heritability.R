@@ -82,7 +82,17 @@ sc_files <- list.files(sc_dir, pattern = "_de\\.csv$", full.names = TRUE)
 # this filter the glob pulls in allcell_pseudobulk_de.csv and breaks the
 # downstream logFC / AveExpr select.
 sc_files <- sc_files[!grepl("^allcell_", basename(sc_files))]
-cat("  Found", length(sc_files), "cell-type DE files\n")
+# FDR-family contamination fix (mega-review A6.x, 2026-06-20): restrict the glob
+# to TRUE per-cell-type disease-vs-control DE files only. The directory also holds
+# ~52 stage-pseudo-celltype contrasts (`*_F{N}_vs_F{M}_bayesprism`) plus stage-
+# transition pseudo-celltypes (`*_Steatosis_vs_Healthy`, `*_Cirrhosis_vs_*`, etc.).
+# These are progression contrasts, NOT distinct cell types — including them inflated
+# the per-cell-type test from 11 to 63 members, contaminating the FDR/Bonferroni
+# family (the line-220 Bonferroni comment already assumes "11 celltypes"). Drop every
+# `*_vs_*` (the operative pattern; covers both `*_bayesprism` and `*_Steatosis_vs_*`)
+# so only the 11 canonical cell-type DE files remain, tested against the 23-GWAS COLOC.
+sc_files <- sc_files[!grepl("_vs_|_bayesprism|_Steatosis_vs_", basename(sc_files))]
+cat("  Found", length(sc_files), "cell-type DE files (true per-cell-type only)\n")
 
 sc_list <- lapply(sc_files, function(f) {
   dt <- fread(f)

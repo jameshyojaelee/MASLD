@@ -83,10 +83,12 @@ def draw_treemap(ax, datasets, color_map, title, title_color, species):
 
     for d in datasets_sorted:
         name, acc, year, n, model = d
+        # Display by accession (GEO ID) instead of author/descriptive name
+        disp = acc
         # Full label
-        labels.append(f"{name}\n({year})\nn={n}")
+        labels.append(f"{disp}\n({year})\nn={n}")
         # Short label for small boxes
-        short_labels.append(f"{name}\nn={n}")
+        short_labels.append(f"{disp}\nn={n}")
         sizes.append(n)
         colors.append(color_map.get(model, "#cccccc"))
 

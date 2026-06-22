@@ -22,7 +22,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 dir.create(file.path(FIG3_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
-OUT <- file.path(FIG3_DIR, "panels", "fig3_epigenomic_panels.pdf")
+OUT <- file.path(FIG3_DIR, "panels", "epigenomic_panels.pdf")
 
 # Pre-initialize all panels with placeholders
 p_f <- placeholder("Panel f: SCENIC+ regulon activity")
@@ -238,6 +238,28 @@ if (!is.null(hep_regulons) && nrow(hep_regulons) > 0 &&
 
 chromvar <- load_chromvar_hepatocyte()
 
+# Schema shim: the canonical chromVAR source is the DONOR-LEVEL limma table
+# (chromvar_limma_per_ct.csv), which replaces the pseudoreplicated per-cell
+# Mann-Whitney table (chromvar_tf_activity.csv; 4,832 "sig" was n-of-cells
+# inflation). The donor table names columns TF / logFC / adj.P.Val and carries
+# NO raw mean_deviation_* fields (limma effect sizes are bounded, not raw
+# chromVAR deviations). Normalise to the names panels (h)/(j) consume so the
+# downstream code is source-agnostic; the corruption filter (|dev|>5) becomes a
+# harmless no-op on bounded limma logFCs.
+if (!is.null(chromvar) && nrow(chromvar) > 0) {
+  setDT(chromvar)
+  if (!"tf_name" %in% names(chromvar) && "TF" %in% names(chromvar))
+    setnames(chromvar, "TF", "tf_name")
+  if (!"logFC_deviation" %in% names(chromvar) && "logFC" %in% names(chromvar))
+    setnames(chromvar, "logFC", "logFC_deviation")
+  if (!"padj" %in% names(chromvar) && "adj.P.Val" %in% names(chromvar))
+    setnames(chromvar, "adj.P.Val", "padj")
+  if (!"mean_deviation_masld" %in% names(chromvar))
+    chromvar[, mean_deviation_masld := 0]
+  if (!"mean_deviation_normal" %in% names(chromvar))
+    chromvar[, mean_deviation_normal := 0]
+}
+
 if (!is.null(chromvar) && nrow(chromvar) > 0) {
   cv <- copy(chromvar)
 
@@ -261,6 +283,15 @@ if (!is.null(chromvar) && nrow(chromvar) > 0) {
     setorder(cv_top, logFC_deviation)
     cv_top[, tf_name := factor(tf_name, levels = cv_top$tf_name)]
     cv_top[, direction := fifelse(logFC_deviation >= 0, "up", "down")]
+
+    # Honest-null guard (A6 donor repoint, 2026-06-20): donor-level chromVAR has 0
+    # significant hepatocyte motifs (the retired per-cell table reported 4,832). An
+    # empty cv_top makes y_faces character(0) -> element_text(face=...) errors; show
+    # a placeholder instead so the rest of the panel set still renders.
+    if (nrow(cv_top) == 0) {
+      p_h <- placeholder("chromVAR hepatocyte motifs\n0 significant (donor-level FDR < 0.05)")
+      message("Panel h: chromVAR — 0 significant hepatocyte motifs at donor level (honest null)")
+    } else {
 
     cv_top[, stars := ""]
     if ("padj" %in% names(cv_top)) {
@@ -313,6 +344,7 @@ if (!is.null(chromvar) && nrow(chromvar) > 0) {
 
     message("Panel h: chromVAR done (", nrow(cv_top), " motifs, ",
             n_sig_up, " up + ", n_sig_dn, " down significant)")
+    }
   } else {
     message("Panel h: missing required columns in chromvar data")
   }
@@ -320,7 +352,7 @@ if (!is.null(chromvar) && nrow(chromvar) > 0) {
 
 # ==========================================================================
 # Panel (i): Epigenomic-transcriptomic convergence scatter
-#   X-axis: dream_logFC (from dream results)
+#   X-axis: bulk_logFC (from the canonical bulk DEG results)
 #   Y-axis: regulon_activity_diff (from SCENIC+, for genes in hepatocyte
 #           regulon targets)
 #   Spearman correlation annotation; highlight key genes
@@ -333,7 +365,7 @@ if (!is.null(dream) && nrow(dream) > 0 &&
     !is.null(regulons) && nrow(regulons) > 0) {
 
   # Build a table: for each target_gene in hepatocyte_regulons,
-  # get its associated TF's regulon_activity_diff and the gene's dream_logFC
+  # get its associated TF's regulon_activity_diff and the gene's bulk_logFC
   hr <- copy(hep_regulons)
 
   # Merge TF-level regulon_activity_diff
@@ -342,13 +374,13 @@ if (!is.null(dream) && nrow(dream) > 0 &&
               suffixes = c("", ".tf"))
 
   # Merge dream results for target genes
-  dream_slim <- dream[, .(symbol, dream_logFC, dream_padj)]
+  dream_slim <- dream[, .(symbol, bulk_logFC, bulk_padj)]
   dream_slim <- dream_slim[!duplicated(symbol)]
   conv <- merge(hr, dream_slim, by.x = "target_gene", by.y = "symbol",
                 all.x = TRUE)
 
   # Keep only genes with both values
-  conv <- conv[!is.na(dream_logFC) & !is.na(regulon_activity_diff)]
+  conv <- conv[!is.na(bulk_logFC) & !is.na(regulon_activity_diff)]
 
   if (nrow(conv) > 0) {
     # If a gene appears under multiple TFs, take the one with most
@@ -358,7 +390,7 @@ if (!is.null(dream) && nrow(dream) > 0 &&
 
     # Significance classification
     conv[, sig_class := fifelse(
-      !is.na(dream_padj) & dream_padj < 0.1 &
+      !is.na(bulk_padj) & bulk_padj < 0.1 &
         !is.na(activity_padj) & activity_padj < 0.05,
       "Both significant",
       "Other"
@@ -366,7 +398,7 @@ if (!is.null(dream) && nrow(dream) > 0 &&
 
     # Spearman correlation
     cor_test <- tryCatch(
-      cor.test(conv$dream_logFC, conv$regulon_activity_diff,
+      cor.test(conv$bulk_logFC, conv$regulon_activity_diff,
                method = "spearman"),
       error = function(e) NULL
     )
@@ -389,7 +421,7 @@ if (!is.null(dream) && nrow(dream) > 0 &&
     sig_colors <- c("Both significant" = epigenomic_colors[["convergent"]],
                     "Other"            = "gray70")
 
-    p_i <- ggplot(conv, aes(x = dream_logFC, y = regulon_activity_diff)) +
+    p_i <- ggplot(conv, aes(x = bulk_logFC, y = regulon_activity_diff)) +
       rasterize_layer(
         geom_point(aes(color = sig_class), size = 0.8, alpha = 0.6, shape = 16)
       ) +
@@ -435,7 +467,7 @@ if (!is.null(dream) && nrow(dream) > 0 &&
 
 # ==========================================================================
 # Panel (j): chromVAR-transcriptomic convergence scatter
-#   X-axis: dream logFC of the TF gene itself
+#   X-axis: bulk logFC of the TF gene itself
 #   Y-axis: chromVAR motif accessibility change (logFC_deviation)
 #   Shows whether TFs with altered expression also have altered chromatin
 # ==========================================================================
@@ -463,7 +495,7 @@ if (!is.null(chromvar) && nrow(chromvar) > 0 &&
   message("  After deduplication: ", nrow(cv_conv), " unique TFs")
 
   # Merge dream logFC for the TF itself
-  dream_slim2 <- dream[, .(symbol, dream_logFC, dream_padj)]
+  dream_slim2 <- dream[, .(symbol, bulk_logFC, bulk_padj)]
   dream_slim2 <- dream_slim2[!duplicated(symbol)]
   dream_slim2[, symbol_upper := toupper(symbol)]
 
@@ -471,20 +503,20 @@ if (!is.null(chromvar) && nrow(chromvar) > 0 &&
                     by.x = "tf_upper", by.y = "symbol_upper",
                     all.x = FALSE)
 
-  cv_merge <- cv_merge[!is.na(dream_logFC) & !is.na(logFC_deviation)]
+  cv_merge <- cv_merge[!is.na(bulk_logFC) & !is.na(logFC_deviation)]
   message("  Merged with dream: ", nrow(cv_merge), " TFs with both data")
 
   if (nrow(cv_merge) > 0) {
     # All chromVAR motifs already significant; classify by dream significance
     cv_merge[, sig_class := fifelse(
-      !is.na(dream_padj) & dream_padj < 0.1,
+      !is.na(bulk_padj) & bulk_padj < 0.1,
       "Both significant",
       "chromVAR only"
     )]
 
     # Spearman correlation
     cor_test_cv <- tryCatch(
-      cor.test(cv_merge$dream_logFC, cv_merge$logFC_deviation,
+      cor.test(cv_merge$bulk_logFC, cv_merge$logFC_deviation,
                method = "spearman"),
       error = function(e) NULL
     )
@@ -510,7 +542,7 @@ if (!is.null(chromvar) && nrow(chromvar) > 0 &&
     sig_colors_cv <- c("Both significant" = epigenomic_colors[["convergent"]],
                        "chromVAR only"    = "gray70")
 
-    p_j <- ggplot(cv_merge, aes(x = dream_logFC, y = logFC_deviation)) +
+    p_j <- ggplot(cv_merge, aes(x = bulk_logFC, y = logFC_deviation)) +
       rasterize_layer(
         geom_point(aes(color = sig_class), size = 0.8, alpha = 0.6, shape = 16)
       ) +
@@ -560,15 +592,18 @@ if (!is.null(chromvar) && nrow(chromvar) > 0 &&
 # ==========================================================================
 EPIG_PANELS <- file.path(FIG3_DIR, "panels")
 
-save_fig(p_f, file.path(EPIG_PANELS, "fig3a_scenic_regulons.pdf"),
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): scenic_regulons.pdf
+# save_fig(p_f, file.path(EPIG_PANELS, "scenic_regulons.pdf"),
+#          width = fig_half_width, height = 3.5, dpi = 300)
+# RETIRED 2026-06-12 (not a Fig 2 panel): tf_target_network.pdf
+# save_fig(p_g, file.path(EPIG_PANELS, "tf_target_network.pdf"),
+#          width = fig_half_width, height = 3.5, dpi = 300)
+save_fig(p_h, file.path(EPIG_PANELS, "chromvar_motifs.pdf"),
          width = fig_half_width, height = 3.5, dpi = 300)
-save_fig(p_g, file.path(EPIG_PANELS, "fig3b_tf_target_network.pdf"),
-         width = fig_half_width, height = 3.5, dpi = 300)
-save_fig(p_h, file.path(EPIG_PANELS, "fig3c_chromvar_motifs.pdf"),
-         width = fig_half_width, height = 3.5, dpi = 300)
-save_fig(p_i, file.path(EPIG_PANELS, "fig3d_scenic_convergence.pdf"),
-         width = fig_half_width, height = 3.5, dpi = 300)
-save_fig(p_j, file.path(EPIG_PANELS, "fig3e_chromvar_convergence.pdf"),
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): scenic_convergence.pdf
+# save_fig(p_i, file.path(EPIG_PANELS, "scenic_convergence.pdf"),
+#          width = fig_half_width, height = 3.5, dpi = 300)
+save_fig(p_j, file.path(EPIG_PANELS, "chromvar_convergence.pdf"),
          width = fig_half_width, height = 3.5, dpi = 300)
 
 message("Individual epigenomic panels saved to ", EPIG_PANELS)
@@ -582,5 +617,7 @@ fig <- (p_f | p_g) / (p_h | p_i) +
                              tag_prefix = "(", tag_suffix = ")") &
   theme(plot.tag = element_text(size = 8, face = "bold"))
 
-save_fig(fig, OUT, width = fig_full_width, height = 7)
-message("Fig 3 epigenomic panels saved to ", OUT)
+# RETIRED 2026-06-12 (epigenomic_panels.pdf composite no longer a Fig 2 panel; the individual
+# panels tf_target_network / chromvar_motifs / chromvar_convergence are still written above):
+# save_fig(fig, OUT, width = fig_full_width, height = 7)
+# message("Fig 3 epigenomic panels saved to ", OUT)

@@ -17,7 +17,7 @@
 #   GWAS/finemapping/results/gwas_atac/currin_caqtl_per_tf.csv
 #
 # Output:
-#   figures/main/fig3_regulatory_architecture/panels/fig3_orthogonal_validation.pdf
+#   figures/main/fig2_genetics/panels/fig3_orthogonal_validation.pdf
 ##############################################################################
 
 suppressPackageStartupMessages({

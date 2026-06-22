@@ -209,8 +209,8 @@ upset <- top / bottom +
                   plot.subtitle = element_text(size = 6, color = "gray35"))
   )
 
-out_pdf <- file.path(PANEL_DIR, "fig3b.pdf")
-out_csv <- file.path(FIG3_DIR, "fig3b_ancestry_coloc_upset.csv")
+out_pdf <- file.path(PANEL_DIR, "ancestry_coloc_upset.pdf")
+out_csv <- file.path(FIG3_DIR, "ancestry_coloc_upset.csv")
 save_fig(upset, out_pdf, width = fig_full_width * 0.55, height = 3.2)
 
 # Persist intersection table for reviewers / caption

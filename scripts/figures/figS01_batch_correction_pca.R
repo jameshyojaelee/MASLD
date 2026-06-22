@@ -74,10 +74,10 @@ pca <- merge(pca, samp[, .(sample_id, dataset, group_binary, sex,
 
 # Short cohort labels (consistent with fig1_umap.R)
 cohort_short <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE167523 = "Kozumi", GSE174478 = "Kawamura",
-  GSE193066 = "Hoshida", GSE213621 = "Chen", GSE240729 = "Verschuren",
-  PRJNA512027 = "Gerhard"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE167523 = "GSE167523", GSE174478 = "GSE174478",
+  GSE193066 = "GSE193066", GSE213621 = "GSE213621", GSE240729 = "GSE240729",
+  PRJNA512027 = "PRJNA512027"
 )
 pca[, cohort  := factor(cohort_short[dataset], levels = unname(cohort_short))]
 pca[, disease := factor(group_binary, levels = c("Control", "Disease"))]
@@ -93,9 +93,9 @@ ann[, lab := sprintf("PC1=%.1f%%  PC2=%.1f%%", pc1, pc2)]
 
 # Palettes
 cohort_pal <- c(
-  Suppli="#1F77B4", Hoang="#FF7F0E", Govaere="#2CA02C", Bril="#D62728",
-  Kozumi="#9467BD", Kawamura="#8C564B", Hoshida="#E377C2",
-  Chen="#7F7F7F", Verschuren="#BCBD22", Gerhard="#17BECF"
+  GSE126848="#1F77B4", GSE130970="#FF7F0E", GSE135251="#2CA02C", GSE162694="#D62728",
+  GSE167523="#9467BD", GSE174478="#8C564B", GSE193066="#E377C2",
+  GSE213621="#7F7F7F", GSE240729="#BCBD22", PRJNA512027="#17BECF"
 )
 disease_pal <- c(Control = CONTROL_GRAY, Disease = masld_colors$nash)
 sex_pal     <- c(F = masld_colors$female, M = masld_colors$male)

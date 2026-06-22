@@ -29,7 +29,7 @@ datasets:
       contrast: "(conditionNAFL + conditionNASH)/2 - (conditionControl + conditionControl_Obese)/2"
       condition_levels: ["Control", "Control_Obese", "NAFL", "NASH"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: true
     notes: "GSE126848 — basic NAFLD/NASH cohort; obese controls included"
 
@@ -48,7 +48,7 @@ datasets:
       contrast: "conditionNASH - conditionNAFL"
       condition_levels: ["NAFL", "NASH"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: false   # No healthy controls — excluded from mega-analysis
     notes: "GSE167523 — no healthy controls; NAFL vs NASH contrast only"
 
@@ -67,7 +67,7 @@ datasets:
       contrast: "(conditionNAFL + conditionNASH + conditionNASH_Fibrosis)/3 - conditionControl"
       condition_levels: ["Control", "NAFL", "NASH", "NASH_Fibrosis"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: true
     notes: "GSE135251 — largest single cohort; no sex or age metadata. Sex inferred from XIST/DDX3Y expression."
 
@@ -85,7 +85,7 @@ datasets:
       contrast: "(conditionFibrosis_F1 + conditionFibrosis_F2F3 + conditionFibrosis_F4)/3 - conditionControl"
       condition_levels: ["Control", "Fibrosis_F1", "Fibrosis_F2F3", "Fibrosis_F4"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: true
     notes: "GSE130970 — richest metadata; fibrosis stage 0-4. F0 = Control (histologically normal). Conditions are fibrosis-stage-based, not NAFL/NASH labels."
 
@@ -104,7 +104,7 @@ datasets:
       contrast: "(conditionFibrosis_F0F1 + conditionFibrosis_F2 + conditionFibrosis_F3F4)/3 - conditionControl"
       condition_levels: ["Control", "Fibrosis_F0F1", "Fibrosis_F2", "Fibrosis_F3F4"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: true
     notes: "GSE213621 — fibrosis-based labeling only; no sex or age metadata. Sex inferred from XIST/DDX3Y expression."
 
@@ -124,7 +124,7 @@ datasets:
       contrast: "(conditionNASH_F0 + conditionNASH_F1 + conditionNASH_F2 + conditionNASH_F3 + conditionNASH_F4)/5 - conditionControl"
       condition_levels: ["Control", "NASH_F0", "NASH_F1", "NASH_F2", "NASH_F3", "NASH_F4"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: true
     notes: "GSE162694 — Bril et al. 2021; bariatric surgery wedge biopsies; normal histology as controls; F0-F4 staging; single-end HiSeq 3000"
 
@@ -144,7 +144,7 @@ datasets:
       contrast: "(conditionFibrosis_F3 + conditionFibrosis_F4)/2 - (conditionFibrosis_F0 + conditionFibrosis_F1)/2"
       condition_levels: ["Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2", "Fibrosis_F3", "Fibrosis_F4"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: false    # No healthy controls — excluded from mega-analysis
     notes: "GSE174478 — Japanese NAFLD cohort; no healthy controls; fibrosis-based contrast (advanced vs early); paired-end NovaSeq 6000"
 
@@ -163,7 +163,7 @@ datasets:
       contrast: "(conditionFibrosis_F3 + conditionFibrosis_F4)/2 - (conditionFibrosis_F0 + conditionFibrosis_F1)/2"
       condition_levels: ["Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2", "Fibrosis_F3", "Fibrosis_F4"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: false    # No healthy controls — excluded from mega-analysis
     notes: "GSE193066 — Hoshida NAFLD cohort (164 samples); fibrosis F0-F4; sex in Sex_y; no healthy controls"
 
@@ -182,7 +182,7 @@ datasets:
       contrast: "(conditionFibrosis_F3 + conditionFibrosis_F4)/2 - (conditionFibrosis_F0 + conditionFibrosis_F1)/2"
       condition_levels: ["Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2", "Fibrosis_F3", "Fibrosis_F4"]
       norm_method: "TMM"
-      quality_weights: false
+      quality_weights: true
       include_in_mega: false
     notes: "GSE240729 — MASLD patients F0-F4; FFPE samples; no sex/age metadata; sex inferred from XIST/DDX3Y"
 

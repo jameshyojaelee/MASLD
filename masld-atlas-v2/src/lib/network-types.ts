@@ -13,8 +13,8 @@ export interface NetworkNode {
   degree: number;
   layers_active: number;
   evidence: EvidenceStrengths;
-  dream_logfc: number | null;
-  dream_padj: number | null;
+  bulk_logfc: number | null;
+  bulk_padj: number | null;
   sex_class: string | null;
   progression_class: string | null;
   is_deg: boolean;
@@ -224,8 +224,11 @@ export interface StageNeighborhood {
 /** Gene-level attributes surfaced in the v2 per-gene JSON. */
 export interface GeneAttributesV2 {
   is_deg?: boolean;
-  dream_logFC?: number;
-  dream_padj?: number;
+  // These keys mirror gene_graphs/*.json node attributes, produced by Script 267
+  // (267_gene_neighborhoods.py NODE_ATTRS), migrated dream_* -> bulk_* in the
+  // 2026-06-08 C2 swap. Regenerate the gene_graphs JSON (267 -> 269) to repopulate.
+  bulk_logFC?: number;
+  bulk_padj?: number;
   coloc_susie_best_pp4?: number;
   is_conserved_core?: boolean;
   sex_class?: string;

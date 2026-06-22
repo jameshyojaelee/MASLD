@@ -50,9 +50,9 @@ const CONTRAST_LABELS: Record<ContrastKey, string> = {
 };
 
 interface ExpressionData {
-  dream_logfc: number;
-  dream_padj: number;
-  dream_tstat: number;
+  bulk_logfc: number;
+  bulk_padj: number;
+  bulk_tstat: number;
   /** Legacy: single-contrast per-cohort dream DE */
   per_cohort_dream?: CohortDE[];
   /** New: per-cohort DE per contrast family (Phase 7C) */
@@ -218,9 +218,9 @@ function buildEvidenceFromProfile(profile: GeneProfile): EvidenceStrengths {
   };
 
   // S1: Human expression
-  if (profile.expression?.dream_padj != null) {
-    const padj = profile.expression.dream_padj;
-    const absLfc = Math.abs(profile.expression.dream_logfc ?? 0);
+  if (profile.expression?.bulk_padj != null) {
+    const padj = profile.expression.bulk_padj;
+    const absLfc = Math.abs(profile.expression.bulk_logfc ?? 0);
     if (padj <= 0.05 && absLfc >= 0.2) e.s1_human = Math.min(1, 0.5 + absLfc);
     else if (padj <= 0.05) e.s1_human = 0.3;
     else e.s1_human = Math.min(0.15, absLfc * 0.5);
@@ -863,23 +863,23 @@ export function GeneEvidenceCard({ symbol }: { symbol: string }) {
                 </span>
                 <div
                   className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-sm font-semibold ${
-                    expr.dream_padj != null && expr.dream_padj <= 0.05
-                      ? expr.dream_logfc >= 0
+                    expr.bulk_padj != null && expr.bulk_padj <= 0.05
+                      ? expr.bulk_logfc >= 0
                         ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                         : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                       : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
                   }`}
                   title="Integrated mega-analysis across 10 cohorts (1,444 samples)"
                 >
-                  <span className="text-base">{directionArrow(expr.dream_logfc)}</span>
-                  <span>logFC {formatLogFC(expr.dream_logfc)}</span>
+                  <span className="text-base">{directionArrow(expr.bulk_logfc)}</span>
+                  <span>logFC {formatLogFC(expr.bulk_logfc)}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  padj = {formatPadj(expr.dream_padj)}
+                  padj = {formatPadj(expr.bulk_padj)}
                 </span>
-                {expr.dream_tstat != null && (
+                {expr.bulk_tstat != null && (
                   <span className="text-xs text-muted-foreground">
-                    t = {expr.dream_tstat.toFixed(2)}
+                    t = {expr.bulk_tstat.toFixed(2)}
                   </span>
                 )}
               </div>
@@ -1494,7 +1494,7 @@ export function GeneEvidenceCard({ symbol }: { symbol: string }) {
           symbol={profile.symbol}
           profile={{
             expression: expr
-              ? { dream_logfc: expr.dream_logfc, dream_padj: expr.dream_padj }
+              ? { bulk_logfc: expr.bulk_logfc, bulk_padj: expr.bulk_padj }
               : undefined,
             causal: causal
               ? {

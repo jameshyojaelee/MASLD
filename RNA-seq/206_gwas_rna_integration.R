@@ -37,6 +37,7 @@ outdir <- indir
 cat("Loading multi-evidence atlas...\n")
 atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
 cat("  Atlas:", nrow(atlas), "genes x", ncol(atlas), "columns\n")
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))  # C2: human-bulk channel (was dream_*)
 
 # Standardize gene column name
 gene_col <- intersect(names(atlas), c("human_symbol", "gene", "gene_symbol"))[1]
@@ -95,47 +96,34 @@ if (file.exists(scdrs_ct_file)) {
   scdrs_ct <- fread(scdrs_ct_file)
   cat("  scDRS cell-type enrichment:", nrow(scdrs_ct), "cell types\n")
 
-  # Identify significantly enriched cell types (FDR < 0.05)
-  scdrs_ct[, scdrs_sig := fdr < 0.05]
-  sig_ct <- scdrs_ct[scdrs_sig == TRUE, cell_type]
-  cat("  Significantly enriched cell types:", paste(sig_ct, collapse = ", "), "\n")
+  # CAVEAT (M3, mega-review A6.3/A6.7 remediation 2026-06-21):
+  # scdrs_celltype_enrichment.csv carries PER-CELL scDRS statistics
+  # (n_cells ~ 6.6e5; mc_pvalue at the 1/n_mc floor, fdr ~0.008) — these are
+  # PSEUDOREPLICATED: every cell is treated as an independent observation, so
+  # the p-values/FDR are inflated to the Monte-Carlo floor and carry no valid
+  # per-cell-type significance. We therefore retire ALL per-cell p-value-derived
+  # outputs (mc_pvalue / prop_sig / fdr / enriched flags / "best enriched" by
+  # min-p) from the atlas. Only the DESCRIPTIVE mean scDRS score is kept, and it
+  # is NOT used to gate the convergence tier. The CANONICAL cell-type
+  # heritability / GWAS-enrichment arm is the DONOR-level MAGMA analysis
+  # (Script 201, celltype_heritability_results.csv) — cite that for any
+  # cell-type GWAS-enrichment significance claim, not these columns.
 
-  # Store best enriched cell type
-  best_scdrs_ct <- scdrs_ct[which.min(mc_pvalue)]
-  cat("  Most enriched cell type:", best_scdrs_ct$cell_type,
-      "p =", best_scdrs_ct$mc_pvalue, "\n")
-
-  # Build per-cell-type scDRS lookup for gene annotation
-  scdrs_lookup <- scdrs_ct[, .(cell_type, scdrs_mean_score = mean_scdrs,
-                                scdrs_mc_pvalue = mc_pvalue,
-                                scdrs_prop_sig = prop_sig, scdrs_fdr = fdr)]
+  # Build per-cell-type DESCRIPTIVE scDRS lookup (mean score only — no p-values)
+  scdrs_lookup <- scdrs_ct[, .(cell_type, scdrs_mean_score = mean_scdrs)]
 
   # If genes have a best cell type (from specificity, section 3), annotate
-  # with that cell type's scDRS enrichment
+  # with that cell type's DESCRIPTIVE mean scDRS score (no significance gate)
   if ("sc_best_ct" %in% names(atlas)) {
     atlas <- merge(atlas,
-      scdrs_lookup[, .(sc_best_ct = cell_type, scdrs_ct_mean_score = scdrs_mean_score,
-                       scdrs_ct_mc_pvalue = scdrs_mc_pvalue,
-                       scdrs_ct_prop_sig = scdrs_prop_sig,
-                       scdrs_ct_fdr = scdrs_fdr)],
+      scdrs_lookup[, .(sc_best_ct = cell_type, scdrs_ct_mean_score = scdrs_mean_score)],
       by = "sc_best_ct", all.x = TRUE)
-    # Flag: gene's best cell type is scDRS-enriched
-    atlas[, scdrs_ct_enriched := !is.na(scdrs_ct_fdr) & scdrs_ct_fdr < 0.05]
-    cat("  Genes in scDRS-enriched cell types:", sum(atlas$scdrs_ct_enriched, na.rm = TRUE), "\n")
+    cat("  Genes annotated with descriptive scDRS mean score:",
+        sum(!is.na(atlas$scdrs_ct_mean_score)), "\n")
   } else {
-    cat("  NOTE: sc_best_ct not available; adding global scDRS annotation only\n")
-    # Add global summary columns
+    cat("  NOTE: sc_best_ct not available; adding descriptive scDRS column only\n")
     atlas[, scdrs_ct_mean_score := NA_real_]
-    atlas[, scdrs_ct_mc_pvalue := NA_real_]
-    atlas[, scdrs_ct_prop_sig := NA_real_]
-    atlas[, scdrs_ct_fdr := NA_real_]
-    atlas[, scdrs_ct_enriched := FALSE]
   }
-
-  # Add count of significantly enriched cell types as scalar column
-  atlas[, scdrs_n_sig_celltypes := length(sig_ct)]
-  # Add best enriched cell type name
-  atlas[, scdrs_best_celltype := best_scdrs_ct$cell_type]
 } else {
   cat("  WARNING: scDRS cell-type enrichment not found\n")
 }
@@ -185,7 +173,7 @@ cat("\n=== Deriving convergence tiers ===\n")
 
 # Check which columns exist
 has_coloc <- "coloc_best_pp4" %in% names(atlas) || "broadaway_coloc_pp4" %in% names(atlas)
-has_dream <- "dream_padj" %in% names(atlas)
+has_dream <- "bulk_padj" %in% names(atlas)
 has_intact <- "intact_score_bulk" %in% names(atlas)
 has_mediation <- "mediation_proportion" %in% names(atlas)
 
@@ -195,10 +183,10 @@ coloc_col <- intersect(names(atlas), c("coloc_best_pp4", "broadaway_coloc_pp4"))
 # Count evidence sources per gene
 atlas[, n_evidence_gwas_rna := 0L]
 
-# 1. Bulk DEG (dream)
+# 1. Bulk DEG (limma-voom-qw C2)
 if (has_dream) {
   # NOTE: Exploratory DEG flag for GWAS overlap annotation. Primary threshold: padj<0.05 + |logFC|>0.3.
-  atlas[, is_deg := dream_padj < 0.1 & !is.na(dream_padj)]
+  atlas[, is_deg := bulk_padj < 0.1 & !is.na(bulk_padj)]
   atlas[is_deg == TRUE, n_evidence_gwas_rna := n_evidence_gwas_rna + 1L]
 }
 
@@ -244,9 +232,11 @@ cat("Total columns:", ncol(atlas), "\n")
 new_cols <- c("intact_score_bulk", "intact_score_ct",
               "intact_best_celltype", "sc_tau", "sc_best_ct",
               "prop_coloc_rho", "gwas_rna_convergence_tier",
-              "scdrs_ct_mean_score", "scdrs_ct_fdr", "scdrs_ct_enriched",
-              "scdrs_disease_shift", "scdrs_disease_p",
-              "scdrs_n_sig_celltypes", "scdrs_best_celltype")
+              # scdrs_ct_mean_score is DESCRIPTIVE only (M3 remediation); the
+              # per-cell p-value-derived cols (mc_pvalue/prop_sig/fdr/enriched/
+              # n_sig_celltypes/best_celltype) were retired — see section 5.
+              "scdrs_ct_mean_score",
+              "scdrs_disease_shift", "scdrs_disease_p")
 for (col in new_cols) {
   if (col %in% names(atlas)) {
     n_non_na <- sum(!is.na(atlas[[col]]))
@@ -263,7 +253,7 @@ if (nrow(strong) > 0) {
     setorder(strong, -intact_score_bulk)
   }
   print(strong[1:min(20, nrow(strong)),
-    .(gene, dream_logFC, get(coloc_col), intact_score_bulk,
+    .(gene, bulk_logFC, get(coloc_col), intact_score_bulk,
       mediation_proportion, n_evidence_gwas_rna)])
 }
 
@@ -280,7 +270,7 @@ convergence_summary <- atlas[n_evidence_gwas_rna >= 1, .(
   gwas_rna_convergence_tier,
   n_evidence_gwas_rna
 )]
-if ("dream_logFC" %in% names(atlas)) convergence_summary <- merge(convergence_summary, atlas[, .(gene, dream_logFC, dream_padj)], by = "gene")
+if ("bulk_logFC" %in% names(atlas)) convergence_summary <- merge(convergence_summary, atlas[, .(gene, bulk_logFC, bulk_padj)], by = "gene")
 if (!is.null(coloc_col) && coloc_col %in% names(atlas)) {
   convergence_summary <- merge(convergence_summary, atlas[, .(gene, coloc_pp4 = get(coloc_col))], by = "gene")
 }

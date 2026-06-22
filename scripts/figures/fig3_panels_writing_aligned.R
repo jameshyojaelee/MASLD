@@ -5,11 +5,11 @@
 # No titles / subtitles — data speaks through design.
 #
 # Panels:
-#   fig3_scatter_coloc_vs_deg.pdf    — PP.H4 vs logFC
-#   fig3_atac_rora_thrb.pdf          — GWAS-ATAC motif disruption
-#   fig3_cross_ancestry_labeled.pdf  — EUR × EAS concordance
-#   fig3_cyp26a1_locus.pdf           — CYP26A1 EAS locus zoom
-#   fig3_regulon_tf_lollipop.pdf     — disease-regulon TF lollipop
+#   scatter_coloc_vs_deg.pdf    — PP.H4 vs logFC
+#   atac_rora_thrb.pdf          — GWAS-ATAC motif disruption
+#   cross_ancestry_labeled.pdf  — EUR × EAS concordance
+#   cyp26a1_locus.pdf           — CYP26A1 EAS locus zoom
+#   regulon_tf_lollipop.pdf     — disease-regulon TF lollipop
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -152,7 +152,7 @@ p1 <- ggplot() +
   theme(panel.border = element_rect(color = "gray70", fill = NA,
                                     linewidth = 0.3))
 
-save_panel(p1, "fig3_scatter_coloc_vs_deg.pdf",
+save_panel(p1, "scatter_coloc_vs_deg.pdf",
            width = fig_half_width + 0.4, height = 3.6)
 
 
@@ -263,8 +263,9 @@ p2 <- ggplot(per_var, aes(x = max_pip, y = abs_diff)) +
        y = "|Motif alleleDiff|") +
   theme_masld()
 
-save_panel(p2, "fig3_atac_rora_thrb.pdf",
-           width = fig_half_width + 0.6, height = 3.2)
+# RETIRED 2026-06-12 (not a Fig 2 panel): atac_rora_thrb.pdf
+# save_panel(p2, "atac_rora_thrb.pdf",
+#            width = fig_half_width + 0.6, height = 3.2)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -388,14 +389,15 @@ p3 <- ggplot() +
         legend.text  = element_text(size = 5)) +
   guides(size = guide_legend(override.aes = list(color = COL_BOTH)))
 
-save_panel(p3, "fig3_cross_ancestry_labeled.pdf",
-           width = fig_half_width + 0.8, height = 3.6)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): cross_ancestry_labeled.pdf
+# save_panel(p3, "cross_ancestry_labeled.pdf",
+#            width = fig_half_width + 0.8, height = 3.6)
 
 # Sidecar CSV
 fwrite(gene_xa[tier == "both"][order(-(EUR + EAS)),
                .(gene, EUR_max_pp4 = round(EUR,4),
                  EAS_max_pp4 = round(EAS,4), n_phen)],
-       file.path(FIG3_DIR, "fig3g_cross_ancestry_pp4_table.csv"))
+       file.path(FIG3_DIR, "cross_ancestry_pp4_table_aligned.csv"))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -479,8 +481,9 @@ p4b <- ggplot() +
 
 p4 <- p4a / p4b + plot_layout(heights = c(2.4, 1))
 
-save_panel(p4, "fig3_cyp26a1_locus.pdf",
-           width = fig_half_width, height = 3.4)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): cyp26a1_locus.pdf
+# save_panel(p4, "cyp26a1_locus.pdf",
+#            width = fig_half_width, height = 3.4)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -542,8 +545,9 @@ p5 <- ggplot(reg_tfs, aes(y = tf_name, x = n_vars)) +
     plot.margin  = margin(4, 8, 4, 4)
   )
 
-save_panel(p5, "fig3_regulon_tf_lollipop.pdf",
-           width = fig_half_width + 0.4, height = 3.2)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): regulon_tf_lollipop.pdf
+# save_panel(p5, "regulon_tf_lollipop.pdf",
+#            width = fig_half_width + 0.4, height = 3.2)
 
 
 cat("\n[fig3] Done. Panels in:", PANEL_DIR, "\n")

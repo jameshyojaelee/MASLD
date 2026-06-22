@@ -24,7 +24,7 @@ cat("=== Gap #17: Cell-type-resolved Cross-Species Concordance ===\n\n")
 ORTHO_PATH  <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/gene_annotation/ortholog_mapping.tsv")
 MOUSE_PATH  <- file.path(BASE,
-  "RNA-seq/Mouse/Unified_Integration/results/meta_analysis/dream_pooled_results.csv")
+  "RNA-seq/Mouse/Unified_Integration/results/meta_analysis/lvqw_pooled_results.csv")
 PB_DIR      <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
 RES_DIR     <- file.path(BASE,

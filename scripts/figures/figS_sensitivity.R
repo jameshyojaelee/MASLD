@@ -47,7 +47,7 @@ tryCatch({
 
     sweep_a <- rbindlist(lapply(sig_vals, function(sv) {
       rbindlist(lapply(lfc_vals, function(lf) {
-        n <- sum(dream$dream_padj < sv & abs(dream$dream_logFC) >= lf, na.rm = TRUE)
+        n <- sum(dream$bulk_padj < sv & abs(dream$bulk_logFC) >= lf, na.rm = TRUE)
         data.table(sig_threshold = sv, lfc_threshold = lf, n_degs = n)
       }))
     }))

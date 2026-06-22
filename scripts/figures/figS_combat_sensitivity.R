@@ -26,7 +26,7 @@ concordance <- load_combat_concordance()
 # ---- Panel (a): LFC scatter primary vs ComBat (rasterized) ----
 if (!is.null(dream_primary) && !is.null(dream_combat)) {
   merged <- merge(
-    dream_primary[, .(gene, lfc_primary = dream_logFC, padj_primary = dream_padj, symbol)],
+    dream_primary[, .(gene, lfc_primary = bulk_logFC, padj_primary = bulk_padj, symbol)],
     dream_combat[, .(gene, lfc_combat = logFC, padj_combat = padj)],
     by = "gene"
   )
@@ -72,7 +72,7 @@ if (!is.null(concordance)) {
     theme_masld()
 } else if (!is.null(dream_primary) && !is.null(dream_combat)) {
   # Compute from data
-  sig_p <- dream_primary[dream_padj < 0.1]$gene
+  sig_p <- dream_primary[bulk_padj < 0.1]$gene
   sig_c <- dream_combat[padj < 0.1]$gene
   overlap_genes <- intersect(sig_p, sig_c)
   overlap_dt <- data.table(

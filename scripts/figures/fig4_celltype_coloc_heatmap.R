@@ -167,7 +167,7 @@ if (!"gene_sym" %in% names(dream_mapped)) {
 # Get logFC per gene (some genes may have multiple ENSEMBL IDs - take the one with smallest padj)
 dream_lfc <- dream_mapped[, {
   idx <- which.min(padj)
-  list(dream_logFC = logFC[idx], dream_padj = padj[idx])
+  list(logFC = logFC[idx], padj = padj[idx])
 }, by = gene_sym]
 setnames(dream_lfc, "gene_sym", "gene")
 
@@ -228,13 +228,13 @@ cat("  Heritability enrichment mapped for", nrow(herit_mapped), "cell types\n")
 dream_vec <- rep(NA_real_, nrow(mat))
 names(dream_vec) <- rownames(mat)
 m <- match(dream_lfc$gene, rownames(mat))
-dream_vec[m[!is.na(m)]] <- dream_lfc$dream_logFC[!is.na(m)]
+dream_vec[m[!is.na(m)]] <- dream_lfc$logFC[!is.na(m)]
 
 # Dream significance
 dream_sig_vec <- rep(NA_real_, nrow(mat))
 names(dream_sig_vec) <- rownames(mat)
 m2 <- match(dream_lfc$gene, rownames(mat))
-dream_sig_vec[m2[!is.na(m2)]] <- dream_lfc$dream_padj[!is.na(m2)]
+dream_sig_vec[m2[!is.na(m2)]] <- dream_lfc$padj[!is.na(m2)]
 
 lfc_max <- max(abs(dream_vec), na.rm = TRUE)
 lfc_cap <- min(lfc_max, 3)
@@ -421,7 +421,11 @@ cat("Saving to:", out_file, "\n")
 fig_height <- max(6, min(14, length(selected_genes) * 0.08 + 3))
 fig_width  <- 8  # inches
 
+# RETIRED 2026-06-17: dead/illegible panel, cut in the Fig 2 review and archived.
+# This script misroutes to FIG3_DIR (=fig2_genetics). Archived copy:
+# figures/main/fig2_genetics/panels/_archive/panel_celltype_coloc_heatmap.pdf
 pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
+if (FALSE) {
 pdf_device(out_file, width = fig_width, height = fig_height)
 draw(ht,
      heatmap_legend_side = "right",
@@ -430,6 +434,7 @@ draw(ht,
      merge_legend = TRUE)
 dev.off()
 cat("  Saved:", out_file, "\n")
+}
 
 # =============================================================================
 # 9. Summary statistics

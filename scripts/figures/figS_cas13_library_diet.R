@@ -75,7 +75,7 @@ SHRUNK_LFC_THR <- 0.5
 # ---------------------------------------------------------------------------
 # Load per-diet DE results
 # ---------------------------------------------------------------------------
-de_dir <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet")
+de_dir <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet_cas13")  # Cas13 library Western pool; decoupled from paper 4-model per_diet (2026-06-16)
 de_list <- lapply(diet_order, function(d) {
   f <- file.path(de_dir, paste0(d, "_de_results.csv"))
   dt <- fread(f)

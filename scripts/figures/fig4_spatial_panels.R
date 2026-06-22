@@ -210,7 +210,11 @@ p_h <- ggplot(eall, aes(x = fold_enrichment, y = label)) +
   geom_point(aes(color = dataset, size = nlp, shape = sig)) +
   geom_text(aes(label = sig_star, color = dataset),
             hjust = -0.5, vjust = 0.3, size = 2, show.legend = FALSE) +
-  scale_color_manual(values = ds_pal, name = NULL) +
+  # Display Guilliams Visium dataset by its GEO accession (data keys unchanged
+  # so the color join against `dataset` still matches; Vu has no mapped accession).
+  scale_color_manual(values = ds_pal, name = NULL,
+                     labels = c(`Guilliams et al.` = "GSE192741",
+                                `Vu et al.` = "Vu et al.")) +
   scale_shape_manual(values = c(`TRUE` = 16, `FALSE` = 1), guide = "none") +
   scale_size_continuous(range = c(1.5, 4),
                         name = expression(-log[10] ~ italic(p)),

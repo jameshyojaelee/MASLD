@@ -318,7 +318,7 @@ print(gene["causal"]["coloc_pp4_max"])  # 0.9999`}
           <pre className="text-xs leading-relaxed text-foreground">
 {`const res = await fetch("/data/genes/HNF4A.json");
 const gene = await res.json();
-console.log(gene.expression.dream_logfc);  // -0.482`}
+console.log(gene.expression.bulk_logfc);  // -0.482`}
           </pre>
         </div>
 

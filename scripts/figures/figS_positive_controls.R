@@ -21,8 +21,8 @@ OUT <- file.path(FIGS01_DIR, "panels", "figS_positive_controls.pdf")
 pos_ctrl <- load_positive_controls()
 
 if (!is.null(pos_ctrl)) {
-  lfc_col  <- intersect(c("dream_logFC", "logFC"), names(pos_ctrl))[1]
-  padj_col <- intersect(c("dream_padj", "padj"), names(pos_ctrl))[1]
+  lfc_col  <- intersect(c("bulk_logFC", "logFC"), names(pos_ctrl))[1]
+  padj_col <- intersect(c("bulk_padj", "padj"), names(pos_ctrl))[1]
   sym_col  <- intersect(c("symbol", "gene"), names(pos_ctrl))[1]
 
   # Determine control type split

@@ -47,9 +47,9 @@ SC_COLOR = {"Healthy": CONTROL, "Steatosis": "#FEE0D2", "Steatohepatitis": "#FB8
             "Cirrhosis": "#B30000", "": HATCH_FACE}
 SC_LABEL = {"Healthy": "Healthy", "Steatosis": "MASL", "Steatohepatitis": "MASH",
             "Cirrhosis": "Cirrhosis", "": "stage n.a."}
-COHORT_PI = {"GSE126848": "Suppli", "GSE130970": "Hoang", "GSE135251": "Govaere",
-             "GSE162694": "Bril", "GSE167523": "Kozumi", "GSE174478": "Kawamura",
-             "GSE193066": "Hoshida", "GSE213621": "Chen", "GSE240729": "Verschuren"}
+COHORT_PI = {"GSE126848": "GSE126848", "GSE130970": "GSE130970", "GSE135251": "GSE135251",
+             "GSE162694": "GSE162694", "GSE167523": "GSE167523", "GSE174478": "GSE174478",
+             "GSE193066": "GSE193066", "GSE213621": "GSE213621", "GSE240729": "GSE240729"}
 PAPER = list(COHORT_PI.keys())
 
 

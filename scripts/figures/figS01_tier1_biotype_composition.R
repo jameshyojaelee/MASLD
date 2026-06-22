@@ -56,7 +56,7 @@ classify <- function(symbol, biotype, chr) {
 }
 
 m[, category   := classify(symbol, gene_biotype, chromosome)]
-m[, direction  := ifelse(dream_logFC > 0, "Up", "Down")]
+m[, direction  := ifelse(bulk_logFC > 0, "Up", "Down")]
 
 tally <- m[, .(N = .N), by = .(category, direction)]
 order_tally <- m[, .(N = .N), by = category][order(N)]

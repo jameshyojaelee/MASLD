@@ -79,7 +79,7 @@ def classify_deg_zonation(adata, bulk_df, dataset_label):
     records = []
 
     # Get genes present in both spatial and bulk
-    degs = bulk_df[bulk_df["dream_padj"] < 0.1]
+    degs = bulk_df[bulk_df["bulk_padj"] < 0.1]
     gene_col = "symbol"
     spatial_genes = set(adata.var_names)
 
@@ -118,7 +118,7 @@ def classify_deg_zonation(adata, bulk_df, dataset_label):
         records.append({
             "gene": gene,
             "dataset": dataset_label,
-            "dream_logFC": row["logFC"],
+            "bulk_logFC": row["logFC"],
             "spearman_rho": rho,
             "spearman_pval": pval,
             "zonation_class": zon_class,
@@ -210,7 +210,7 @@ def run_lr_analysis(adata, dataset_label, bulk_df, config):
         lr_df = pd.DataFrame(records)
         if len(lr_df) > 0:
             # Cross-reference with DEGs
-            deg_symbols = set(bulk_df[bulk_df["dream_padj"] < 0.1]["symbol"])
+            deg_symbols = set(bulk_df[bulk_df["bulk_padj"] < 0.1]["symbol"])
             lr_df["ligand_is_deg"] = lr_df["ligand"].isin(deg_symbols)
             lr_df["receptor_is_deg"] = lr_df["receptor"].isin(deg_symbols)
             lr_df["either_deg"] = lr_df["ligand_is_deg"] | lr_df["receptor_is_deg"]
@@ -245,7 +245,7 @@ def _lr_coexpression_fallback(adata, dataset_label, bulk_df, config):
                     all_pairs.append((parts[0], parts[1], category))
 
     records = []
-    deg_symbols = set(bulk_df[bulk_df["dream_padj"] < 0.1]["symbol"])
+    deg_symbols = set(bulk_df[bulk_df["bulk_padj"] < 0.1]["symbol"])
     spatial_genes = set(adata.var_names)
 
     for ligand, receptor, category in all_pairs:
@@ -306,7 +306,7 @@ def main():
     dream = load_dream_degs(padj_thresh=1.0, lfc_thresh=0.0)
     gene_col = "symbol" if "symbol" in dream.columns else dream.columns[0]
     padj_col = "padj" if "padj" in dream.columns else "adj.P.Val"
-    bulk = dream.rename(columns={gene_col: "symbol", padj_col: "dream_padj"})
+    bulk = dream.rename(columns={gene_col: "symbol", padj_col: "bulk_padj"})
     bulk = bulk.dropna(subset=["symbol"]).drop_duplicates(subset=["symbol"], keep="first")
 
     cc_genes = set(load_conserved())

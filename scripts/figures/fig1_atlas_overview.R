@@ -77,13 +77,13 @@ if (!is.null(per_study) && !is.null(dream_masld)) {
   upset_studies <- c("GSE126848", "GSE130970", "GSE135251",
                      "GSE162694", "GSE213621")
 
-  # Short display names (first author)
+  # Short display names (accession)
   upset_names <- c(
-    GSE126848   = "Suppli",
-    GSE130970   = "Hoang",
-    GSE135251   = "Govaere",
-    GSE162694   = "Bril",
-    GSE213621   = "Chen"
+    GSE126848   = "GSE126848",
+    GSE130970   = "GSE130970",
+    GSE135251   = "GSE135251",
+    GSE162694   = "GSE162694",
+    GSE213621   = "GSE213621"
   )
 
   # Consistent thresholds: padj < 0.1, |LFC| > 0.58
@@ -103,9 +103,9 @@ if (!is.null(per_study) && !is.null(dream_masld)) {
   }
 
   # Dream DEGs
-  dream_masld[, sig_cat := fifelse(dream_padj < 0.1 & dream_logFC > 0.5, "Up",
-                     fifelse(dream_padj < 0.1 & dream_logFC < -0.5, "Down", "NS"))]
-  dream_degs <- dream_masld[dream_padj < padj_thr & abs(dream_logFC) > lfc_thr, gene]
+  dream_masld[, sig_cat := fifelse(bulk_padj < 0.1 & bulk_logFC > 0.5, "Up",
+                     fifelse(bulk_padj < 0.1 & bulk_logFC < -0.5, "Down", "NS"))]
+  dream_degs <- dream_masld[bulk_padj < padj_thr & abs(bulk_logFC) > lfc_thr, gene]
   dream_degs <- sub("\\..*", "", dream_degs)
   deg_lists[["Integrated"]] <- unique(dream_degs)
 

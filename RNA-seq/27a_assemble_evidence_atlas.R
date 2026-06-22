@@ -117,20 +117,20 @@ biotype_map <- biotype_map[!duplicated(ensembl_clean)]
 consensus <- merge(consensus, symbol_map, by = "ensembl_clean", all.x = TRUE)
 
 # Also pull in the human tier from consensus columns
-# dream_sig + dream_dir already exist; consensus tier comes from the full consensus file
+# bulk_sig + bulk_dir already exist; consensus tier comes from the full consensus file
 # If a separate tier column is needed, derive from the per_study overlap later
-# For now, keep bulk_logFC, bulk_padj, t-statistic, dream_sig, dream_dir
+# For now, keep bulk_logFC, bulk_padj, t-statistic, bulk_sig, bulk_dir
 
 cat("  Genes with HGNC symbol:", sum(!is.na(consensus$human_symbol)), "/", nrow(consensus), "\n")
 
 # ================================================================
 # Layer 1b: Human consensus tiers (if separate tier file exists)
 # ================================================================
-# The consensus_degs.csv only has dream results. The actual tier classification
+# The consensus_degs.csv only has bulk (limma-voom-qw C2) results. The actual tier classification
 # (Tier1_HighConfidence, Tier2_Moderate, Tier3_Exploratory) was computed in Script 07.
 # Check if it's present as a column or needs separate loading.
 tier_file <- file.path(RDIR, "consensus_degs.csv")
-# dream_sig column already indicates significance; we need the tier mapping
+# bulk_sig column already indicates significance; we need the tier mapping
 # from the existing multi_evidence_scored_genes.csv (which has human_tier)
 old_me_file <- file.path(OUTDIR, "multi_evidence_scored_genes.csv")
 if (file.exists(old_me_file)) {
@@ -931,14 +931,16 @@ if (nrow(coloc_sources) > 0) {
 # Layer 5: Sex stratification
 # ================================================================
 cat("Loading Layer 5: Sex-stratified analysis...\n")
-# v3 fallback (added 2026-05-13): prefer mashr-based v3 classification when present.
-# v3 file (sex_v3/sex_deg_classification_v3.csv) is the canonical output of the
-# Module 06 (06_classify_v3.R) pipeline. v2 (sex_deg_classification.csv) is
-# retained as the legacy fallback; this preserves backward compatibility while
-# the v3 pipeline lands.
+# LVQW-canonical (C2 swap 2026-06-08): the limma-voom quality-weighted sex
+# classification (sex_v3/lvqw_staging/sex_deg_classification_v3.csv) is CANONICAL
+# — 8 sex-dimorphic genes (1 Female_biased / 7 Male_biased / 0 Divergent), matching
+# the manuscript. The parent sex_v3/sex_deg_classification_v3.csv (dream/mashr, ~50
+# dimorphic) and sex_deg_classification.csv (dream-290 v2) are RETIRED sensitivity
+# arms, used only as fallbacks if the LVQW output is absent. Provides logFC_M/F too.
+sex_lvqw_path <- file.path(RDIR, "sex_v3/lvqw_staging/sex_deg_classification_v3.csv")
 sex_v3_path <- file.path(RDIR, "sex_v3/sex_deg_classification_v3.csv")
 sex_v2_path <- file.path(RDIR, "sex_deg_classification.csv")
-sex_class_file <- if (file.exists(sex_v3_path)) sex_v3_path else sex_v2_path
+sex_class_file <- if (file.exists(sex_lvqw_path)) sex_lvqw_path else if (file.exists(sex_v3_path)) sex_v3_path else sex_v2_path
 message(sprintf("Atlas reading sex classification from: %s", basename(sex_class_file)))
 if (file.exists(sex_class_file)) {
   sex_class_dt <- fread(sex_class_file)
@@ -974,9 +976,12 @@ if (file.exists(sex_class_file)) {
 # when available, falling back to the v2 file. Same pattern as the L942
 # sex classification fallback. v3 csv schema is a strict superset (extra
 # adj.P.Val + se_int columns) so the `padj` lookup on L988 works for both.
+# LVQW-canonical (C2 swap): prefer the limma-voom-qw interaction p-values to match
+# the LVQW sex classification above; parent v3 (dream) and v2 are retired fallbacks.
+sex_int_lvqw_path <- file.path(RDIR, "sex_v3/lvqw_staging/sex_interaction_dream_v3.csv")
 sex_int_v3_path <- file.path(RDIR, "sex_v3/sex_interaction_dream_v3.csv")
 sex_int_v2_path <- file.path(RDIR, "sex_interaction_dream.csv")
-sex_int_file <- if (file.exists(sex_int_v3_path)) sex_int_v3_path else sex_int_v2_path
+sex_int_file <- if (file.exists(sex_int_lvqw_path)) sex_int_lvqw_path else if (file.exists(sex_int_v3_path)) sex_int_v3_path else sex_int_v2_path
 message(sprintf("Atlas reading sex interaction from: %s", basename(sex_int_file)))
 if (file.exists(sex_int_file)) {
   sex_int <- fread(sex_int_file)
@@ -1674,9 +1679,9 @@ if (file.exists(out_file)) {
   # so the re-run guard does NOT resurrect the stale dream-method values from the
   # prior atlas snapshot alongside the new bulk_* columns.
   renamed_legacy <- c("is_conserved_core",
-                      "dream_logFC", "dream_padj", "dream_tstat",
-                      "dream_shrunk_logFC", "dream_lfsr",
-                      "dream_logFC_M", "dream_logFC_F", "dream_robustness_flag")
+                      "dream_logFC", "dream_padj", "dream_tstat",  # C2-OK-sensitivity (drop-list of retired names)
+                      "dream_shrunk_logFC", "dream_lfsr",  # C2-OK-sensitivity
+                      "dream_logFC_M", "dream_logFC_F", "dream_robustness_flag")  # C2-OK-sensitivity
   if (any(renamed_legacy %in% downstream_cols)) {
     cat(sprintf("  Dropping legacy renamed columns from prior: %s\n",
                 paste(intersect(renamed_legacy, downstream_cols), collapse = ", ")))

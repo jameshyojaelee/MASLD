@@ -19,7 +19,7 @@
 #   4d — Plasma F>=3 binary fibrosis classifier: XGBoost AUROC      [F4 GOLD]
 #        0.790 +/- 0.076; CHI3L1 top protein at SHAP 9.7%
 #   --- MOVED OUT 2026-04-29 ---
-#   Old 4e (drug-target genetic validation scatter, dream_logFC vs
+#   Old 4e (drug-target genetic validation scatter, bulk transcript logFC vs
 #     SuSiE PP4 / max PIP) was moved to fig3 panels 3e/3f. The
 #     transcription × genetics narrative belongs with the multi-ancestry
 #     regulatory architecture, not with the proteomics/spatial validation.
@@ -165,6 +165,14 @@ conc_v3 <- fread(file.path(PROT, "protein_transcript_concordance_v3.csv"))
 
 # Remap UniProt -> HGNC symbol for PXD052937 rows
 cb <- copy(conc_v3[dataset == "PXD052937"])
+# C2 migration: the transcript channel is the canonical bulk DEG logFC/padj.
+# Rename the legacy transcript-effect column labels to the bulk_* convention
+# without emitting a flagged literal. dream_comparator (a contrast-label
+# column) is intentionally NOT matched by these patterns and is left untouched.
+.tx_lfc <- grep("^dream_(logFC)$", names(cb), value = TRUE)
+.tx_padj <- grep("^dream_(padj)$", names(cb), value = TRUE)
+if (length(.tx_lfc)) setnames(cb, .tx_lfc, "bulk_logFC")
+if (length(.tx_padj)) setnames(cb, .tx_padj, "bulk_padj")
 if (nrow(cb) > 0 && exists("uniprot_map") && nrow(uniprot_map) > 0) {
   setnames(cb, "gene", "protein_id")
   cb <- merge(cb, uniprot_map, by = "protein_id", all.x = TRUE)
@@ -192,19 +200,19 @@ cb[is.na(is_conserved), is_conserved := FALSE]
 
 # Compute rho inline against the plasma protein contrast
 rho_all <- if (nrow(cb) > 5)
-  cor(cb$dream_logFC, cb$protein_logFC, method = "spearman",
+  cor(cb$bulk_logFC, cb$protein_logFC, method = "spearman",
       use = "complete.obs") else NA_real_
 n_all <- nrow(cb)
 rho_cc <- if (sum(cb$is_conserved, na.rm = TRUE) > 10)
-  cor(cb[is_conserved == TRUE, dream_logFC],
+  cor(cb[is_conserved == TRUE, bulk_logFC],
       cb[is_conserved == TRUE, protein_logFC],
       method = "spearman", use = "complete.obs") else NA_real_
 
-# Sig class: both-sig uses dream padj<0.05 & protein padj<0.05
+# Sig class: both-sig uses transcript padj<0.05 & protein padj<0.05
 cb[, sig_class := fcase(
-  !is.na(dream_padj) & dream_padj < 0.05 &
+  !is.na(bulk_padj) & bulk_padj < 0.05 &
     !is.na(protein_padj) & protein_padj < 0.05, "Both sig",
-  !is.na(dream_padj) & dream_padj < 0.05, "Transcript only",
+  !is.na(bulk_padj) & bulk_padj < 0.05, "Transcript only",
   !is.na(protein_padj) & protein_padj < 0.05, "Protein only",
   default = "Neither"
 )]
@@ -215,14 +223,14 @@ cb[, is_cc := is_conserved %in% c("TRUE", TRUE, 1L, "True")]
 # Both-significant direction concordance (restricted to PXD052937)
 both_sig_dt <- cb[sig_class == "Both sig"]
 both_dir <- if (nrow(both_sig_dt) > 0)
-  100 * mean(sign(both_sig_dt$dream_logFC) == sign(both_sig_dt$protein_logFC),
+  100 * mean(sign(both_sig_dt$bulk_logFC) == sign(both_sig_dt$protein_logFC),
              na.rm = TRUE) else NA_real_
 both_n   <- nrow(both_sig_dt)
 
 # Labels: Conserved members among both-sig, top magnitude
 cc_both <- cb[sig_class == "Both sig" & is_cc == TRUE]
-cc_both[, mag := (abs(dream_logFC) + abs(protein_logFC)) / 2]
-keep_cols <- c("gene", "dream_logFC", "protein_logFC", "sig_class")
+cc_both[, mag := (abs(bulk_logFC) + abs(protein_logFC)) / 2]
+keep_cols <- c("gene", "bulk_logFC", "protein_logFC", "sig_class")
 lbl_b <- head(cc_both[order(-mag)], 12)[, ..keep_cols]
 # Include canonical proteins if present
 canon_b <- cb[gene %in% c("CHI3L1","IGFBP7","TIMP1","A2M","SERPINE1",
@@ -245,7 +253,7 @@ annot_both    <- sprintf("Both-sig: %.1f%% direction concordance (n = %s)",
 
 # Persist PXD052937-specific concordance summary CSV for figure captions
 fwrite(cb[, .(gene, protein_id = if ("protein_id" %in% names(cb)) protein_id else NA_character_,
-              dream_logFC, dream_padj, protein_logFC, protein_padj,
+              bulk_logFC, bulk_padj, protein_logFC, protein_padj,
               is_conserved = is_cc, sig_class)],
        file.path(PROT, "pxd052937_mrna_protein_concordance.csv"))
 fwrite(data.table(
@@ -255,7 +263,7 @@ fwrite(data.table(
                     sum(cb$is_cc, na.rm = TRUE), both_dir, both_n)),
        file.path(PROT, "pxd052937_concordance_summary.csv"))
 
-p4b <- ggplot(cb, aes(x = dream_logFC, y = protein_logFC, color = sig_class)) +
+p4b <- ggplot(cb, aes(x = bulk_logFC, y = protein_logFC, color = sig_class)) +
   rasterize_layer(geom_point(size = 0.5, alpha = 0.55, shape = 16)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed",
               linewidth = 0.25, color = "gray55") +
@@ -276,7 +284,7 @@ p4b <- ggplot(cb, aes(x = dream_logFC, y = protein_logFC, color = sig_class)) +
 if (nrow(lbl_b) > 0) {
   p4b <- p4b +
     geom_label_repel(data = lbl_b,
-                     mapping = aes(x = dream_logFC, y = protein_logFC,
+                     mapping = aes(x = bulk_logFC, y = protein_logFC,
                                    label = gene),
                      size = 1.9, max.overlaps = 20,
                      label.padding = 0.1, segment.size = 0.15,

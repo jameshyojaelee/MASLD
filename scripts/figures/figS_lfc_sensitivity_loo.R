@@ -52,9 +52,9 @@ OUT_CSV <- file.path(OUT_DIR,   "loo_cv_stability_data.csv")
 
 # Cohort first-author labels (full atlas)
 ALL_STUDY_NAMES <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE174478 = "Kawamura", GSE193066 = "Hoshida",
-  GSE213621 = "Chen",   GSE240729 = "Verschuren"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE213621 = "GSE213621",   GSE240729 = "GSE240729"
 )
 # Mega-analysis cohort set is the canonical source of truth in
 # config/human_datasets.yaml (`include_in_mega: true`).

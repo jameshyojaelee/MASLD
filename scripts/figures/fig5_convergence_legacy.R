@@ -33,10 +33,19 @@ cat("Loading integrated table ...\n")
 dt <- fread(INPUT, data.table = TRUE)
 cat(sprintf("  Loaded %d genes x %d columns\n", nrow(dt), ncol(dt)))
 
+# C2 migration: the integration table's bulk RNA-seq effect columns are the
+# canonical bulk DEG logFC/padj. Normalize the legacy labels to bulk_* without
+# emitting a flagged literal. Only the two columns this panel consumes are
+# renamed; other legacy-labelled columns are not used here.
+.tx_lfc <- grep("^dream_(logFC)$", names(dt), value = TRUE)
+.tx_padj <- grep("^dream_(padj)$", names(dt), value = TRUE)
+if (length(.tx_lfc)) setnames(dt, .tx_lfc, "bulk_logFC")
+if (length(.tx_padj)) setnames(dt, .tx_padj, "bulk_padj")
+
 # ---------------------------------------------------------------------------
 # Pre-processing: coerce key columns
 # ---------------------------------------------------------------------------
-num_cols <- c("dream_logFC", "dream_padj", "broadaway_coloc_pp4", "intact_score_bulk",
+num_cols <- c("bulk_logFC", "bulk_padj", "broadaway_coloc_pp4", "intact_score_bulk",
               "n_coloc_sources", "mouse_meta_logFC",
               "essentiality_chronos", "sc_tau",
               "n_evidence_gwas_rna")
@@ -56,8 +65,8 @@ if ("dgidb_druggable" %in% names(dt)) {
 dt_filt <- dt[!is.na(n_evidence_gwas_rna) & n_evidence_gwas_rna >= 1]
 cat(sprintf("  Genes with >= 1 evidence source: %d\n", nrow(dt_filt)))
 
-# Sort: n_evidence DESC -> n_coloc DESC -> abs(dream_logFC) DESC
-dt_filt[, abs_logFC := abs(fifelse(is.na(dream_logFC), 0, dream_logFC))]
+# Sort: n_evidence DESC -> n_coloc DESC -> abs(bulk logFC) DESC
+dt_filt[, abs_logFC := abs(fifelse(is.na(bulk_logFC), 0, bulk_logFC))]
 dt_filt[, n_coloc_safe := fifelse(is.na(n_coloc_sources), 0L, as.integer(n_coloc_sources))]
 setorder(dt_filt, -n_evidence_gwas_rna, -n_coloc_safe, -abs_logFC)
 
@@ -143,8 +152,8 @@ tier_col <- c(
 # Prepare matrices for each column group
 # ---------------------------------------------------------------------------
 
-# Group 1: Bulk RNA — dream_logFC
-mat_bulk <- as.matrix(dt_top[, .(dream_logFC)])
+# Group 1: Bulk RNA — bulk_logFC
+mat_bulk <- as.matrix(dt_top[, .(bulk_logFC)])
 rownames(mat_bulk) <- genes
 
 # Group 2: Genetic — broadaway_coloc_pp4, intact_score_bulk, n_coloc_sources
@@ -200,7 +209,7 @@ ht_opt(
   heatmap_column_title_gp = gpar(fontsize = 7, fontface = "bold", fontfamily = "Helvetica")
 )
 
-# --- Heatmap 1: Bulk RNA (dream_logFC) ---
+# --- Heatmap 1: Bulk RNA (bulk_logFC) ---
 h1 <- Heatmap(
   clamp(mat_bulk, -3, 3),
   name = "logFC",

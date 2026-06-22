@@ -17,7 +17,7 @@
 #                 - subtle "high-confidence corner" shading
 #                 - marginal rugs along top and right axes
 #
-# Output: figures/main/fig3_regulatory_architecture/panels/fig3a_hybrid.pdf
+# Output: figures/main/fig2_genetics/panels/coloc_deg_hybrid.pdf
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -266,17 +266,19 @@ p_sc <- ggplot() +
          size  = guide_legend(override.aes = list(color = "gray30",
                                                    alpha = 0.85)))
 
-out <- file.path(PANEL_DIR, "fig3a_hybrid.pdf")
-save_fig(p_sc, out, width = fig_full_width * 0.6, height = 3.6)
-cat("[fig3a-hybrid] Saved:", out, "\n")
+out <- file.path(PANEL_DIR, "coloc_deg_hybrid.pdf")
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_deg_hybrid.pdf
+# save_fig(p_sc, out, width = fig_full_width * 0.6, height = 3.6)
+# cat("[fig3a-hybrid] Saved:", out, "\n")
 
 # Sidecar CSV: one row per corner gene
 corner_export <- gene_corner[, .(best_gene, top_var_pp, max_pp4,
                                   best_gwas, ancestry_class, n_gwas)
                             ][order(-max_pp4, -top_var_pp)]
-fwrite(corner_export,
-       file.path(PANEL_DIR, "fig3a_hybrid_corner_genes.csv"))
-cat("[fig3a-hybrid] Wrote sidecar CSV with", nrow(corner_export), "corner genes\n")
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_deg_hybrid_corner_genes.csv
+# fwrite(corner_export,
+#        file.path(PANEL_DIR, "coloc_deg_hybrid_corner_genes.csv"))
+# cat("[fig3a-hybrid] Wrote sidecar CSV with", nrow(corner_export), "corner genes\n")
 
 # ===========================================================================
 # Version B : ALL genes plotted (axes from 0 to 1), labels limited to the
@@ -392,6 +394,7 @@ p_sc_b <- ggplot() +
   guides(color = guide_legend(override.aes = list(size = 2.4, alpha = 0.95,
                                                    shape = 16)))
 
-out_b <- file.path(PANEL_DIR, "fig3a_hybrid_b.pdf")
-save_fig(p_sc_b, out_b, width = fig_full_width * 0.85, height = 5.0)
-cat("[fig3a-hybrid] Saved version B (full-range, quadrant labels):", out_b, "\n")
+out_b <- file.path(PANEL_DIR, "coloc_deg_hybrid_b.pdf")
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_deg_hybrid_b.pdf
+# save_fig(p_sc_b, out_b, width = fig_full_width * 0.85, height = 5.0)
+# cat("[fig3a-hybrid] Saved version B (full-range, quadrant labels):", out_b, "\n")

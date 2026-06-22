@@ -126,5 +126,5 @@ p3c <- (p3c_1 / p3c_2 / p3c_3 / p3c_4) +
                   plot.subtitle = element_text(size = 5.5, color = "grey30"))
   )
 
-save_panel(p3c, "fig3c.pdf", width = fig_half_width, height = 4.0)
+save_panel(p3c, "rora_locus_zoom.pdf", width = fig_half_width, height = 4.0)
 cat("Done.\n")

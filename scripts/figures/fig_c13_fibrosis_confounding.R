@@ -338,7 +338,7 @@ pC <- ggplot(heat_long, aes(x = contrast_label, y = pathway_clean, fill = NES)) 
   )
 
 # =============================================================================
-# PANEL D: Top 20 robust core genes (lollipop by |logFC|)
+# PANEL D: Top 20 robust core genes (diverging bars by fibrosis-adjusted logFC)
 # =============================================================================
 
 robust_genes <- merged %>%
@@ -353,13 +353,11 @@ robust_genes <- merged %>%
 robust_genes$symbol <- factor(robust_genes$symbol,
                                levels = robust_genes$symbol[order(abs(robust_genes$logFC_c13))])
 
-pD <- ggplot(robust_genes, aes(x = logFC_c13, y = symbol, color = direction)) +
-  geom_segment(aes(x = 0, xend = logFC_c13, y = symbol, yend = symbol),
-               linewidth = 0.4) +
-  geom_point(size = 2) +
+pD <- ggplot(robust_genes, aes(x = logFC_c13, y = symbol, fill = direction)) +
+  geom_col(width = 0.72) +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "grey40") +
-  scale_color_manual(values = c("Up" = col_c13, "Down" = col_masked),
-                     name = "Direction") +
+  scale_fill_manual(values = c("Up" = col_c13, "Down" = col_masked),
+                    name = "Direction") +
   labs(
     x = expression("log"[2]*"FC (C13, fibrosis-adjusted)"),
     y = NULL,
@@ -367,7 +365,7 @@ pD <- ggplot(robust_genes, aes(x = logFC_c13, y = symbol, color = direction)) +
   ) +
   theme_publication() +
   theme(
-    axis.text.y  = element_text(face = "italic", size = 6),
+    axis.text.y  = element_text(face = "italic", size = 6, color = "black"),
     legend.position = c(0.85, 0.15),
     legend.background = element_rect(fill = "white", color = "grey80", linewidth = 0.3),
     panel.grid.major.y = element_blank()
@@ -409,7 +407,7 @@ save_pdf(pC,
          width = 4.5, height = 4.5)
 
 save_pdf(pD,
-         file.path(panel_dir, "panel_c13_d_robust_core_lollipop.pdf"),
+         file.path(panel_dir, "panel_c13_d_robust_core_bars.pdf"),
          width = 4, height = 4)
 
 cat("Done.\n")

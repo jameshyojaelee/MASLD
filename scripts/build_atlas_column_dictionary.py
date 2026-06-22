@@ -34,7 +34,7 @@ OUT_PATH = PROJECT_ROOT / "RNA-seq/results/multi_evidence/atlas_columns.tsv"
 
 
 # Hand-curated annotation. Schema:
-#   source         : S1 bulk human dream / S2 mouse meta / S3 genetic causal /
+#   source         : S1 bulk human limma-voom-qw C2 / S2 mouse meta / S3 genetic causal /
 #                    S4 essentiality / S5 epigenomic / S6 spatial /
 #                    S7 single-cell / proteomics / drug / progression /
 #                    sex / pathway / annotation / ortholog / identifier
@@ -90,27 +90,27 @@ COL_ANNOT: dict[str, dict[str, str | bool]] = {
         provenance="streamlit_deg_explorer/data/mouse_human_orthologs.tsv.gz",
         notes="Empty when no 1:1 ortholog.",
     ),
-    # -------- S1 bulk human dream DEG (5-7, 86-87) --------
-    "dream_logFC": dict(
-        source="S1", method="dream limma-voom mega-analysis",
+    # -------- S1 bulk human DEG (limma-voom-qw C2 canonical) (5-7, 86-87) --------
+    "bulk_logFC": dict(
+        source="S1", method="limma-voom quality-weighted C2 mega-analysis",
         ld_panel="NA", gwas_scope="NA",
         units="log2 fold change (Disease vs Control)", deprecated=False,
-        provenance="05_dream_mega_analysis.R / 05b output dream_results_ashr.csv",
-        notes="5-cohort canonical mega (n=847). Tier 1 = padj<0.05 & |logFC|>0.5.",
+        provenance="canonical_deg_results.csv (C2 swap 2026-06-08; renamed from the retired dream-prefixed logFC column)",
+        notes="5-cohort canonical mega (n=847). Tier 1 = padj<0.05 & |logFC|>0.5. Renamed from the dream-prefixed column pre-2026-06-08.",
     ),
-    "dream_padj": dict(
-        source="S1", method="dream limma-voom (BH-adjusted)",
+    "bulk_padj": dict(
+        source="S1", method="limma-voom quality-weighted C2 (BH-adjusted)",
         ld_panel="NA", gwas_scope="NA",
         units="BH-adjusted p-value", deprecated=False,
-        provenance="05_dream_mega_analysis.R",
+        provenance="canonical_deg_results.csv (renamed from the retired dream-prefixed padj column 2026-06-08)",
         notes="Two-tier system: padj<0.05 (Tier 1); padj<0.1 (Tier 2/exploratory).",
     ),
-    "dream_tstat": dict(
-        source="S1", method="dream limma-voom",
+    "bulk_tstat": dict(
+        source="S1", method="limma-voom quality-weighted C2",
         ld_panel="NA", gwas_scope="NA",
         units="t-statistic", deprecated=False,
-        provenance="05_dream_mega_analysis.R",
-        notes="Signed test statistic; direction matches dream_logFC.",
+        provenance="canonical_deg_results.csv (renamed from the retired dream-prefixed tstat column 2026-06-08)",
+        notes="Signed test statistic; direction matches bulk_logFC.",
     ),
     "human_consensus_tier": dict(
         source="S1", method="multi-threshold tier assignment",
@@ -119,18 +119,18 @@ COL_ANNOT: dict[str, dict[str, str | bool]] = {
         provenance="27a_assemble_evidence_atlas.R",
         notes="Tier 1: padj<0.05 & |logFC|>0.5; Tier 2: padj<0.05 no LFC filter; Tier 3: padj<0.1.",
     ),
-    "dream_logFC_M": dict(
-        source="sex", method="dream sex-stratified (male only)",
+    "bulk_logFC_M": dict(
+        source="sex", method="limma-voom-qw sex-stratified (male only)",
         ld_panel="NA", gwas_scope="NA",
         units="log2 fold change (M only)", deprecated=False,
-        provenance="26_sex_stratified_analysis.R",
+        provenance="26_sex_stratified_analysis.R (renamed from the retired dream-prefixed male logFC column 2026-06-08)",
         notes="Stratified-DE artifact-prone; cross-check sex_interaction_padj.",
     ),
-    "dream_logFC_F": dict(
-        source="sex", method="dream sex-stratified (female only)",
+    "bulk_logFC_F": dict(
+        source="sex", method="limma-voom-qw sex-stratified (female only)",
         ld_panel="NA", gwas_scope="NA",
         units="log2 fold change (F only)", deprecated=False,
-        provenance="26_sex_stratified_analysis.R",
+        provenance="26_sex_stratified_analysis.R (renamed from the retired dream-prefixed female logFC column 2026-06-08)",
         notes="Stratified-DE artifact-prone; cross-check sex_interaction_padj.",
     ),
     # -------- S2 mouse meta-analysis (8-17) --------

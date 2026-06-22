@@ -78,6 +78,10 @@ SSGSEA_PATH = os.path.join(STAGING, "pathway_scores_ssgsea.csv")
 TF_PATH = os.path.join(STAGING, "tf_activity_features.csv")
 COLOC_PATH = os.path.join(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv")
 TRANSITION_PATH = os.path.join(OUTDIR, "pseudotime_transition_scores.csv")
+# Full-universe z-scored expression (~34k genes), the source for the
+# leakage-free random-gene null (excludes the supervised-screened 3k pool).
+FULL_EXPR_RDS = os.path.join(STAGING, "zscore_expression_full.rds")
+FULL_EXPR_CSV = os.path.join(OUTDIR, "_zscore_expression_full.csv")
 
 RSCRIPT = "/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -189,6 +193,49 @@ gene_base = {g.split(".")[0]: i for i, g in enumerate(gene_names)}
 coloc_gene_idx = [gene_base[e] for e in coloc_ensembl if e in gene_base]
 coloc_expr = expr_mat[:, coloc_gene_idx]
 log.info(f"  COLOC genes: {len(coloc_ensembl)} Ensembl IDs (PP4>0.5), {coloc_expr.shape[1]} in expression matrix")
+
+# ── Full-universe expression for the leakage-free random-gene null ─────────
+# NULL FIX (mega-review A7): `expr_mat` (from prepared_data.h5) is NOT the full
+# transcriptome — it is the 3,000 genes that Script 61 pre-selected by max |t|
+# across the disease/NAS/fibrosis DE contrasts (a SUPERVISED, label-aware
+# screen; Script 61 itself flags it "leaks test-fold info"). Drawing a "random"
+# baseline from that pool samples genes already enriched for disease signal, so
+# the null overstates chance performance and understates how much the
+# supervised model beats random. The corrected null draws from the FULL
+# ~34k-gene universe EXCLUDING the supervised-screened 3k pool.
+full_expr_mat = None
+random_pool_idx = None      # indices into full_expr_mat columns, screened pool removed
+full_gene_names = None
+if os.path.exists(FULL_EXPR_RDS):
+    if not os.path.exists(FULL_EXPR_CSV):
+        log.info("  Converting full-universe expression RDS -> CSV (one-time)...")
+        import subprocess
+        subprocess.run([RSCRIPT, "-e", f"""
+            suppressMessages(library(data.table))
+            m <- readRDS("{FULL_EXPR_RDS}")            # genes x samples
+            dt <- as.data.table(m, keep.rownames="gene")
+            fwrite(dt, "{FULL_EXPR_CSV}")
+        """], check=True)
+    full_df = pd.read_csv(FULL_EXPR_CSV).set_index("gene")  # genes x samples
+    # Align columns (samples) to metadata sample order; fill missing with 0
+    full_df = full_df.reindex(columns=sample_ids).fillna(0.0)
+    full_gene_names = full_df.index.tolist()
+    full_expr_mat = full_df.values.T.astype(np.float32)      # samples x genes
+    # Supervised-screened pool = the 3k genes used by the real model (`gene_names`),
+    # matched on base Ensembl ID (strip version suffix on both sides).
+    screened_base = {g.split(".")[0] for g in gene_names}
+    full_base = np.array([g.split(".")[0] for g in full_gene_names])
+    random_pool_idx = np.where(~np.isin(full_base, list(screened_base)))[0]
+    log.info(
+        f"  Full universe: {full_expr_mat.shape[1]} genes; "
+        f"screened pool excluded = {full_expr_mat.shape[1] - len(random_pool_idx)}; "
+        f"random-null pool = {len(random_pool_idx)} genes"
+    )
+else:
+    log.warning(
+        f"  Full-universe expression not found at {FULL_EXPR_RDS}; "
+        f"random-gene null will FALL BACK to the screened 3k pool (NOT leakage-free)."
+    )
 
 # Pseudotime transition scores (from Script 191)
 transition_scores = None
@@ -344,14 +391,35 @@ def run_elastic_net_loco(X, task_name, modality_name, feature_names=None):
 
 # ── 5. Random gene baseline ──────────────────────────────────────────────
 def run_random_gene_baseline(n_draws=100):
-    """Run random 500-gene baseline for each target."""
-    log.info("Running random gene baselines (100 draws)...")
+    """Run random 500-gene baseline for each target.
+
+    NULL FIX (mega-review A7): draw the 500 random genes from the FULL
+    ~34k-gene universe EXCLUDING the supervised-screened 3k pool, so the
+    baseline is a genuine null rather than a draw from the disease-enriched
+    pre-selected genes. Falls back to the screened pool only if the full
+    universe matrix is unavailable (logged loudly upstream).
+    """
     rng = np.random.RandomState(SEED)
     baseline_results = []
 
+    if full_expr_mat is not None and random_pool_idx is not None and len(random_pool_idx) >= 500:
+        source_mat = full_expr_mat
+        pool = random_pool_idx
+        log.info(
+            f"Running random gene baselines (100 draws) from leakage-free pool "
+            f"({len(pool)} genes, supervised 3k pool excluded)..."
+        )
+    else:
+        source_mat = expr_mat
+        pool = np.arange(expr_mat.shape[1])
+        log.warning(
+            "Running random gene baselines (100 draws) from the SCREENED 3k pool "
+            "(full universe unavailable) — this null is NOT leakage-free."
+        )
+
     for draw in range(n_draws):
-        gene_idx = rng.choice(expr_mat.shape[1], size=500, replace=False)
-        X_random = expr_mat[:, gene_idx]
+        gene_idx = rng.choice(pool, size=500, replace=False)
+        X_random = source_mat[:, gene_idx]
 
         for task_name in TASK_CFG:
             results, _ = run_elastic_net_loco(X_random, task_name, f"random_{draw}")

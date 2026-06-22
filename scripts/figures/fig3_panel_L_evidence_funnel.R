@@ -14,7 +14,7 @@
 # Liang aesthetic: warm magenta (#C9265E) survivors, neutral gray (#9E9E9E) drops,
 # gold (#FFB300) ring for FDA drug-target TFs.
 #
-# Output: figures/main/fig3_regulatory_architecture/panels/fig3_panel_L_evidence_funnel.pdf
+# Output: figures/main/fig2_genetics/panels/evidence_funnel.pdf
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -307,12 +307,12 @@ p <- ggplot() +
     plot.margin     = margin(8, 30, 8, 8)
   )
 
-out_pdf <- file.path(OUT_DIR, "fig3_panel_L_evidence_funnel.pdf")
+out_pdf <- file.path(OUT_DIR, "evidence_funnel.pdf")
 ggsave(out_pdf, p, width = 6.0, height = 5.0, device = cairo_pdf)
 cat(sprintf("\nWrote %s\n", out_pdf))
 
 # Source data csv
-src_csv <- file.path(OUT_DIR, "fig3_panel_L_evidence_funnel_source.csv")
+src_csv <- file.path(OUT_DIR, "evidence_funnel_source.csv")
 fwrite(flow[, .(tf_name, in_orig, in_lenient, in_canonical, in_4way,
                 final_stage, activity_padj, regulon_activity_diff)],
        src_csv)

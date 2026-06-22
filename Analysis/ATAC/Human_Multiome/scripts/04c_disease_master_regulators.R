@@ -42,9 +42,10 @@ ATAC_DIR <- file.path(BASE_DIR, "Analysis/ATAC/Human_Multiome")
 SCENIC_DIR <- file.path(ATAC_DIR, "scenic_plus")
 
 HEP_REGULON_FILE <- file.path(SCENIC_DIR, "hepatocyte_regulons.csv")
-DREAM_ASHR_FILE  <- file.path(BASE_DIR,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
-DREAM_FILE       <- file.path(BASE_DIR,
+# Canonical bulk DEG = limma-voom quality-weighted C2 (cols: gene,logFC,SE,t,
+# P.Value,padj,shrunk_logFC,lfsr,AveExpr,symbol). There is NO bulk_logFC column
+# here -- map raw logFC -> bulk effect, lfsr -> bulk significance.
+BULK_DEG_FILE    <- file.path(BASE_DIR,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 COLOC_FILE       <- file.path(BASE_DIR,
   "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv")
@@ -77,37 +78,33 @@ reg[, tf_upper := toupper(tf_name)]
 cat("Candidate hepatocyte regulon TFs (universe):", nrow(reg), "\n\n")
 
 # ── 2a. Bulk MASLD differential expression (n=846, well-powered) ─────────────
-if (file.exists(DREAM_ASHR_FILE)) {
-  dream <- fread(DREAM_ASHR_FILE)
-  dream_source <- "dream_results_ashr.csv"
-  dream[, dream_logFC := if ("shrunk_logFC" %in% names(dream)) shrunk_logFC else logFC]
-  dream[, dream_sig_stat := if ("lfsr" %in% names(dream)) lfsr else padj]
-  dream_stat_name <- if ("lfsr" %in% names(dream)) "lfsr" else "padj"
-  dream[, dream_symbol := if ("symbol" %in% names(dream)) symbol else gene]
-} else if (file.exists(DREAM_FILE)) {
-  dream <- fread(DREAM_FILE)
-  dream_source <- "dream_results.csv"
-  dream[, dream_logFC := logFC]
-  dream[, dream_sig_stat := padj]
-  dream_stat_name <- "padj"
-  # dream_results.csv keys on gene; symbol may live in `gene` already
-  dream[, dream_symbol := if ("symbol" %in% names(dream)) symbol else gene]
+stopifnot(file.exists(BULK_DEG_FILE))
+bulk <- fread(BULK_DEG_FILE)
+bulk_source <- "canonical_deg_results.csv"
+# Map canonical C2 columns: raw logFC -> bulk effect; lfsr -> bulk significance
+# (fall back to padj only if lfsr absent, e.g. a non-ashr canonical file).
+bulk[, bulk_effect := logFC]
+if ("lfsr" %in% names(bulk)) {
+  bulk[, bulk_sig_stat := lfsr]
+  bulk_stat_name <- "lfsr"
 } else {
-  stop("No dream results file found (ashr or plain).")
+  bulk[, bulk_sig_stat := padj]
+  bulk_stat_name <- "padj"
 }
-cat("Bulk DE source:", dream_source, "(significance stat:", dream_stat_name, ")\n")
+bulk[, bulk_symbol := if ("symbol" %in% names(bulk)) symbol else gene]
+cat("Bulk DE source:", bulk_source, "(significance stat:", bulk_stat_name, ")\n")
 
-dream[, dream_symbol_upper := toupper(dream_symbol)]
+bulk[, bulk_symbol_upper := toupper(bulk_symbol)]
 # One row per symbol: keep most significant
-dream_tf <- dream[order(dream_sig_stat),
-                  .SD[1], by = dream_symbol_upper,
-                  .SDcols = c("dream_logFC", "dream_sig_stat")]
-setnames(dream_tf, "dream_sig_stat", "dream_lfsr")  # column name kept generic
+bulk_tf <- bulk[order(bulk_sig_stat),
+                .SD[1], by = bulk_symbol_upper,
+                .SDcols = c("bulk_effect", "bulk_sig_stat")]
+setnames(bulk_tf, c("bulk_effect", "bulk_sig_stat"), c("bulk_logFC", "bulk_lfsr"))
 
-reg <- merge(reg, dream_tf, by.x = "tf_upper", by.y = "dream_symbol_upper", all.x = TRUE)
-reg[, is_bulk_deg := !is.na(dream_lfsr) & dream_lfsr < ifelse(dream_stat_name == "lfsr", LFSR_CUT, PADJ_CUT)]
-cat("  bulk DEG TFs (", dream_stat_name, " < ",
-    ifelse(dream_stat_name == "lfsr", LFSR_CUT, PADJ_CUT), "): ",
+reg <- merge(reg, bulk_tf, by.x = "tf_upper", by.y = "bulk_symbol_upper", all.x = TRUE)
+reg[, is_bulk_deg := !is.na(bulk_lfsr) & bulk_lfsr < ifelse(bulk_stat_name == "lfsr", LFSR_CUT, PADJ_CUT)]
+cat("  bulk DEG TFs (", bulk_stat_name, " < ",
+    ifelse(bulk_stat_name == "lfsr", LFSR_CUT, PADJ_CUT), "): ",
     sum(reg$is_bulk_deg, na.rm = TRUE), "\n", sep = "")
 
 # ── 2b. Genetic causal colocalization (well-powered) ─────────────────────────
@@ -147,7 +144,7 @@ reg[, sc_regulon_dir := sign(regulon_activity_diff)]
 reg[, sc_underpowered := TRUE]   # n=18 donor-level test; n.s. at FDR
 
 master <- reg[is_master_regulator == TRUE]
-setorder(master, -n_evidence, dream_lfsr, -coloc_pp4)
+setorder(master, -n_evidence, bulk_lfsr, -coloc_pp4)
 
 DEFINITION <- paste0(
   "cross-modality: hepatocyte SCENIC+ regulon TF that is a bulk MASLD DEG ",
@@ -158,8 +155,8 @@ out <- master[, .(
   regulon_activity_diff,
   activity_padj,
   is_bulk_deg,
-  dream_logFC,
-  dream_lfsr,
+  bulk_logFC,
+  bulk_lfsr,
   is_coloc,
   coloc_pp4,
   n_evidence,
@@ -180,8 +177,8 @@ cat("  master regulators (DEG OR COLOC): ", nrow(out), "\n")
 cat("Wrote: ", OUT_FILE, "\n\n")
 
 cat("Full master-regulator TF set (n =", nrow(out), "):\n")
-print(out[, .(tf_name, is_bulk_deg, dream_logFC = round(dream_logFC, 3),
-              dream_lfsr = signif(dream_lfsr, 3), is_coloc,
+print(out[, .(tf_name, is_bulk_deg, bulk_logFC = round(bulk_logFC, 3),
+              bulk_lfsr = signif(bulk_lfsr, 3), is_coloc,
               coloc_pp4 = round(coloc_pp4, 3), n_evidence, sc_regulon_dir)],
       nrows = nrow(out))
 
@@ -191,8 +188,8 @@ for (tf in c("HNF4A", "RORA", "THRB")) {
   if (nrow(r) == 0) {
     cat(sprintf("  %-6s: ABSENT from master set (UNEXPECTED)\n", tf))
   } else {
-    cat(sprintf("  %-6s: PRESENT | is_bulk_deg=%s dream_logFC=%.3f dream_lfsr=%.2e | is_coloc=%s coloc_pp4=%.3f | n_evidence=%d\n",
-                tf, r$is_bulk_deg, r$dream_logFC, r$dream_lfsr, r$is_coloc, r$coloc_pp4, r$n_evidence))
+    cat(sprintf("  %-6s: PRESENT | is_bulk_deg=%s bulk_logFC=%.3f bulk_lfsr=%.2e | is_coloc=%s coloc_pp4=%.3f | n_evidence=%d\n",
+                tf, r$is_bulk_deg, r$bulk_logFC, r$bulk_lfsr, r$is_coloc, r$coloc_pp4, r$n_evidence))
   }
 }
 cat("\nDone.\n")

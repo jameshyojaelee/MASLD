@@ -76,7 +76,7 @@ def load_saunders_panel(orth_map_path):
 
 def annotate_with_atlas(panel, atlas_path):
     cols = ["human_symbol", "is_conserved", "coloc_best_susie_pp4_polyfun", "coloc_best_susie_gwas_polyfun",
-            "coloc_pp4", "dream_logFC", "dream_padj",
+            "coloc_pp4", "bulk_logFC", "bulk_padj",
             "dgidb_druggable", "opentargets_drug", "drug_target_stratification"]
     print(f"\nLoading atlas (selected cols)...")
     atlas = pd.read_csv(atlas_path, usecols=cols, low_memory=False)

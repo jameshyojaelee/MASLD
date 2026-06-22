@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 # Gene set enrichment analysis (fgsea) on dream mega-analysis results.
 # Uses Mus musculus gene sets from MSigDB.
-# Input:  results/meta_analysis/dream_pooled_results.csv
+# Input:  results/meta_analysis/lvqw_pooled_results.csv
 # Output: results/gsea_results.csv, results/gsea_hallmark_barplot.pdf
 # ---------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ RDIR <- file.path(BASE, "results")
 
 # --- Load dream results ---
 cat("Loading dream mega-analysis results...\n")
-dream <- fread(file.path(RDIR, "meta_analysis/dream_pooled_results.csv"))
+dream <- fread(file.path(RDIR, "meta_analysis/lvqw_pooled_results.csv"))
 cat("  Genes:", nrow(dream), "\n")
 
 # --- Prepare ranked gene list ---

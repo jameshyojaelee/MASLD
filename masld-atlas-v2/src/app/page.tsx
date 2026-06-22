@@ -113,7 +113,7 @@ export default function HomePage() {
                   {gene.tagline}
                 </p>
                 <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>logFC: <span className="font-mono">{gene.dream_logfc.toFixed(3)}</span></span>
+                  <span>logFC: <span className="font-mono">{gene.bulk_logfc.toFixed(3)}</span></span>
                   {gene.coloc_pp4 != null && (
                     <span>PP.H4: <span className="font-mono">{gene.coloc_pp4.toFixed(3)}</span></span>
                   )}

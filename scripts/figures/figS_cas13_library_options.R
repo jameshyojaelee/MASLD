@@ -1,394 +1,297 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# Figure S_lib_6 -- Library composition and experimental feasibility
-# KEY MESSAGE: Library size trades off between human-evidence breadth (looser
-# ashr threshold) and experimental feasibility (fewer mice). The human arm
-# sweeps an ashr shrunk_logFC ladder (the SAME instrument used on the mouse
-# arm). HUMAN-ANCHORED: human ashr spine UNION mouse cross-diet>=3 that is
-# ALSO human-direction-concordant. Selected design = Human ashr>0.2 (PI 2026-06-01).
+# Figure S_lib_6 -- Library composition options (v8 strategy)
+# KEY MESSAGE: under the v8 target strategy the library is assembled from
+#   CORE (integrated disease-vs-control DEGs, canonical limma-voom QW C2)
+#   UNION COHORT-REPLICATED (DE in >=N of 5 cohorts)
+#   UNION MOUSE-CONFIRMED (cross-diet >=3, human-concordant)
+#   UNION COLOC (canonical SuSiE PP.H4>0.5)
+#   UNION POSITIVE CONTROLS.
+# miRNA and the MASH tier are retired. v8 PC gate = mouse-HEPATOCYTE scRNA
+# substrate (drop 'absent' or 'ambient_suspect' with hep/other ratio<0.1),
+# replacing the v7 bulk-MCD-TPM gate; lncRNA ungated (exploratory arm); positive
+# controls + high-COLOC (SuSiE>=0.9) exempt. This figure enumerates the candidate
+# scenarios (cohort threshold 2+ vs 3+; human-only vs +mouse +COLOC +controls)
+# with gene counts + experimental feasibility, and marks the chosen design inside
+# the ~2,000+-500 target band.
 #
-# v6 (2026-06-04): the human arm is now sourced from the limma-voom + metafor
-# (REML) ashr DEGs (meta_results_ashr.csv), replacing dream. This is a human-arm
-# THRESHOLD-EXPLORATION figure (PC+lncRNA, TPM-gated); the v6 library ALSO carries
-# additive MASH-progression and miRNA-conserved tiers, whose full 4-tier x 3-biotype
-# composition is shown in cas13_v6_tier_composition.pdf (not re-derived here).
-# =============================================================================
 # Panels:
-#   A  Options comparison table (per-option 4-tier + biotype counts, via gridExtra)
-#   B  Gene composition stacked bars (4 v6 tiers: human/MASH/mouse-conf/miRNA)
-#   C  Coverage-vs-mice curves per option (efficiency- + mortality-aware)
-#
+#   A  Options comparison table (per-scenario tier + biotype counts)
+#   B  Composition stacked bars (human-only vs FULL, at 2+ and 3+; band shaded)
+#   C  Coverage-vs-mice curves per scenario (10 gRNA/target)
 # Output: Cas13_Library_Design/figures/11{a,b,c}_*.pdf
 # =============================================================================
 
 suppressPackageStartupMessages({
-  library(data.table)
-  library(ggplot2)
-  library(patchwork)
-  library(grid)
-  library(gridExtra)
-  library(scales)
-  library(gtable)
+  library(data.table); library(ggplot2); library(patchwork)
+  library(grid); library(gridExtra); library(scales); library(gtable)
 })
 
-# -- Project paths & theme ----------------------------------------------------
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-
 OUT_DIR <- FIGS_CAS13LIB_DIR
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
+strip_v <- function(x) sub("[.][0-9]+$", "", x)
 
-# -- Constants ----------------------------------------------------------------
-DIETS_ALL <- c("MCD", "CDAHFD", "Western", "HFD")  # NASH+Western merged 2026-05-29 (4 groups)
-PERDIET_DIR <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet")
-ORTHO_TABLE <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
-MOUSE_META  <- file.path(BASE, "Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
-ASHR_PATH   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration",
-                         "results/integration/meta_results_ashr.csv")  # v6: limma-voom+metafor ashr (was dream)
-MASH_PATH   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration",
-                         "results/disease_signatures/nafl_vs_nash_meta_ashr.csv")  # v6: MASH-vs-MASL metafor ashr
-LIBRARY_CSV <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0.csv") # canonical v6 (for verification)
+# -- Sources (mirror rebuild_cas13_library.R v8) ------------------------------
+CANONICAL <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
+PERSTUDY  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/per_study")
+PERDIET   <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet_cas13")  # Cas13 library Western pool; decoupled from paper 4-model per_diet (2026-06-16)
+COLOCFILE <- file.path(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv")
+POSCTRL   <- file.path(BASE, "results/library/positive_control.csv")
+MCDTPM    <- file.path(BASE, "RNA-seq/Mouse/InHouse_MCD/results/mean_tpm_mcd.csv")
+ORTHO     <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
+META      <- file.path(BASE, "Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
+LIBRARY_CSV <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0.csv")
+COHORTS   <- c("GSE126848","GSE130970","GSE135251","GSE162694","GSE213621")
+DIETS     <- c("MCD","CDAHFD","Western","HFD")
+PADJ <- 0.05; LFC <- 0.5; COLOC_PP4 <- 0.5; MIN_DIETS <- 3L
+HEP_RATIO_MIN <- 0.1; COLOC_EXEMPT <- 0.9   # v8 mouse-hep gate + COLOC gate-exemption
+MOUSEHEP  <- file.path(BASE, "Cas13_Library_Design/data/mouse_hep_specificity.csv")
+CHOSEN_COHORT <- 2L
+N_SGRNA <- 10L; N_NT <- 500L; N_EXTRA_CTRL <- 30L
+POSCTRL_ALIASES <- c("SCD1" = "SCD"); POSCTRL_EXCLUDE <- c("GIPR", "GLP1R", "FAP")
 
-# Mouse UP-DEG definition: ashr-shrunk effect size (M02c), lfsr<0.05 & shrunk>0.5.
-LFSR_THR       <- 0.05
-SHRUNK_LFC_THR <- 0.5
-
-# v6: the options ladder sweeps the human shrunk_logFC threshold (human spine).
-# Each option = human spine(threshold) UNION the three FIXED v6 tiers:
-#   mouse-confirmed (>=3 of 4 diets, human-concordant) + MASH-progression (MASH-vs-MASL
-#   UP) + miRNA-conserved (tier-H ortholog). Tier priority on overlap:
-#   human > mouse_confirmed > mash_progression > mirna_conserved. NO TPM gate, NO GWAS
-#   tier (the v5 deployability/GWAS exploration is retired) -> option F == canonical v6.
-HUMAN_LFSR_THR <- 0.05
-HUMAN_THRS     <- c(1.00, 0.75, 0.50, 0.40, 0.30, 0.20, 0.15, 0.10)  # A..H (strict -> loose)
-CHOSEN_THR     <- 0.20                                    # selected design (option F = canonical v6)
-MASH_SHRUNK    <- 0.20                                    # MASH-vs-MASL UP threshold (fixed)
-KEEP_BIOTYPES  <- c("protein_coding", "lncRNA", "miRNA")  # v6 adds miRNA
-SUF     <- ""
-
-# Experimental parameters
-N_SGRNA_PC   <- 4L    # gRNA per protein-coding gene
-N_SGRNA_LNC  <- 4L    # gRNA per lncRNA gene
-N_SGRNA_MIR  <- 4L    # gRNA per miRNA gene (pri-miRNA / host transcript)
-N_CTRL_GENES <- 100L  # control protein-coding genes
-N_SGRNA_CTRL <- 4L    # gRNA per control gene
-N_NT_GUIDES  <- 500L  # non-targeting (NT) guides
-
-# Delivery / sort / survival efficiencies (PI 2026-06-01)
-HEP_PER_MOUSE    <- 10000000L  # hepatocytes harvested per mouse
-TRANSDUCTION_EFF <- 0.30       # lenti transduction (fraction carrying a guide)
-CRE_EFF          <- 0.80       # Cre recombination -> only Cre+ cells have active Cas13 (informative)
-FACS_EFF         <- 0.60       # FACS sorting efficiency (sorted arms only)
-GATE_FRACTION    <- 0.15       # per FACS gate: top 15% AND bottom 15% (one sort, two bins)
-COVERAGE_TARGET  <- 500L       # cells per gRNA per sequenced population
-INPUT_FRACTION   <- 0.13       # transduced cells set aside PRE-SORT as unsorted input (no FACS loss)
-MORTALITY        <- 1/8        # 1 in 8 mice die after viral injection
-
-# Per-mouse INFORMATIVE (Cre+) cell yields feeding 3 sequenced pools: unsorted
-# input + top-15% arm + bottom-15% arm. Sorted arms also lose FACS_EFF; mice are
-# set by the smallest-yield pool (binding constraint), then scaled for mortality.
-TRANSDUCED_PER_MOUSE  <- HEP_PER_MOUSE * TRANSDUCTION_EFF                 # 3.0e6 guide+
-INFORMATIVE_PER_MOUSE <- TRANSDUCED_PER_MOUSE * CRE_EFF                   # 2.4e6 Cre+ (perturbed)
-INPUT_CELLS_PER_MOUSE <- INFORMATIVE_PER_MOUSE * INPUT_FRACTION
-ARM_CELLS_PER_MOUSE   <- INFORMATIVE_PER_MOUSE * (1 - INPUT_FRACTION) * GATE_FRACTION * FACS_EFF
-EFF_CELLS_PER_MOUSE   <- min(ARM_CELLS_PER_MOUSE, INPUT_CELLS_PER_MOUSE) # ~187,920 (arm binds)
-
-# Option color palette (colorblind-safe)
-option_colors <- c(A = "#E64B35", B = "#4DBBD5", C = "#00A087", D = "#F39B7F",
-                   E = "#3C5488", F = "#8491B4", G = "#7E6148", H = "#DC0000")
-# v6 tier colors (match figS_cas13_library_core_vs_mash_overlap.R)
-tier_colors <- c(`Human` = "#e35070", `MASH-progression` = "#b771e6",
-                 `Mouse-confirmed` = "#4baeef", `miRNA-conserved` = "#30d796")
+# Tier colors (controls always grey per FIGURE_GUIDELINES)
+tier_colors <- c(`Core` = "#e35070", `Cohort-replicated` = "#f0a050",
+                 `Mouse-confirmed` = "#4baeef", `COLOC` = "#8e6fc7",
+                 `Positive control` = "#9E9E9E")
+biotype_colors <- c(protein_coding = "#5480C2", lncRNA = "#D4834A")
 
 # =============================================================================
-# 1. Load per-diet mouse DE, compute per-gene diet replication (mouse arm)
+# 1. Build the mouse-gene tier sets (same logic as the rebuild)
 # =============================================================================
-message("Loading per-diet mouse DE ...")
-de_list <- lapply(DIETS_ALL, function(d) {
-  f <- file.path(PERDIET_DIR, paste0(d, "_de_results.csv"))
-  if (!file.exists(f)) { warning("Missing: ", f); return(NULL) }
-  dt <- fread(f); dt[, gene_base := sub("\\..*", "", gene)]; dt
-})
-names(de_list) <- DIETS_ALL
-up_genes_per_diet <- lapply(DIETS_ALL, function(d) {
-  dt <- de_list[[d]]; if (is.null(dt)) return(character(0))
-  dt[lfsr < LFSR_THR & shrunk_logFC > SHRUNK_LFC_THR, gene_base]
-})
-names(up_genes_per_diet) <- DIETS_ALL
-all_up <- unique(unlist(up_genes_per_diet))
-gene_diet_mat <- data.table(gene_base = all_up)
-for (d in DIETS_ALL) gene_diet_mat[, (d) := gene_base %in% up_genes_per_diet[[d]]]
-gene_diet_mat[, n_diets := rowSums(.SD), .SDcols = DIETS_ALL]
-cat(sprintf("Mouse UP genes: total union = %d | >=3 diets: %d\n",
-            nrow(gene_diet_mat), sum(gene_diet_mat$n_diets >= 3)))
+message("Loading sources ...")
+mm <- fread(META)
+setnames(mm, c("mouse_ensembl_base","mouse_biotype"), c("gb","bt0"), skip_absent = TRUE)
+mm[grepl("protein_coding", bt0), bt := "protein_coding"]
+mm[grepl("lncRNA|lincRNA", bt0), bt := "lncRNA"]
+pc_ids <- mm[bt == "protein_coding", gb]; lnc_ids <- mm[bt == "lncRNA", gb]
+pclnc  <- c(pc_ids, lnc_ids)
 
-# =============================================================================
-# 2. Mouse gene metadata (biotype, normalized like rebuild_cas13_library.R)
-# =============================================================================
-mouse_meta <- fread(MOUSE_META)
-mouse_meta[, gene_base := mouse_ensembl_base]
-mouse_meta[grepl("protein_coding", mouse_biotype), bt2 := "protein_coding"]
-mouse_meta[grepl("lncRNA|lincRNA", mouse_biotype), bt2 := "lncRNA"]
-mouse_meta[grepl("miRNA", mouse_biotype), bt2 := "miRNA"]
-pc_lnc_ids <- mouse_meta[bt2 %in% c("protein_coding", "lncRNA"), gene_base]  # human/mouse/MASH tiers
-pc_ids     <- mouse_meta[bt2 == "protein_coding", gene_base]
-lnc_ids    <- mouse_meta[bt2 == "lncRNA", gene_base]
-mir_ids    <- mouse_meta[bt2 == "miRNA", gene_base]                          # miRNA tier
+ortho <- fread(cmd = paste0("zcat ", ORTHO),
+               select = c("mouse_ensembl","human_ensembl","human_symbol","confidence_tier","is_one2one"))
+ortho <- ortho[confidence_tier %in% c("H","M")]
+ortho[, `:=`(hb = strip_v(human_ensembl), mb = strip_v(mouse_ensembl), hsym = toupper(human_symbol))]
+ortho[, trank := match(confidence_tier, c("H","M"))]
+ortho[, o2o := ifelse(is_one2one %in% c(TRUE,"True","TRUE","true"), 0L, 1L)]
+oh <- copy(ortho); setorder(oh, hb, trank, o2o, mb); oh <- unique(oh, by = "hb")
+om <- copy(ortho); setorder(om, mb, trank, o2o, hb); om <- unique(om, by = "mb")
+osym <- ortho[hsym != ""]; setorder(osym, hsym, trank, o2o, mb); osym <- unique(osym, by = "hsym")
+h2m  <- function(hv){ hv <- hv[hv != ""]; intersect(unique(oh[hb %in% hv, mb]), pclnc) }
+sym2m<- function(sv){ intersect(unique(osym[hsym %in% toupper(sv), mb]), pclnc) }
 
-# v6: NO TPM scoreability gate (retired with the v5 deployability exploration). The
-# canonical v6 library carries hepatocyte substrate as a SOFT annotation, not a hard
-# filter -- so the option sizes here match rebuild_cas13_library.R exactly.
+can <- fread(CANONICAL, select = c("gene","logFC","padj")); can[, hb := strip_v(gene)]
+hlfc <- setNames(can$logFC, can$hb)
+core_h <- unique(can[!is.na(padj) & !is.na(logFC) & padj < PADJ & logFC > LFC, hb])
+core_mouse <- h2m(core_h)
 
-# =============================================================================
-# 3. Ortholog bridge (deterministic, one2one-preferred) + human ashr DE
-# =============================================================================
-message("Loading ortholog bridge + human ashr DE ...")
-ortho_raw <- fread(ORTHO_TABLE,
-                   select = c("mouse_ensembl", "human_ensembl", "mouse_symbol",
-                              "human_symbol", "confidence_tier", "is_one2one"))
-ortho_raw[, mouse_ensembl := sub("\\..*", "", mouse_ensembl)]
-ortho_raw[, human_ensembl := sub("\\..*", "", human_ensembl)]
-ortho <- ortho_raw[confidence_tier %in% c("H", "M")]
-ortho <- unique(ortho, by = c("mouse_ensembl", "human_ensembl"))
-ortho[, trank := match(confidence_tier, c("H", "M"))]
-ortho[, one2one_rank := ifelse(is_one2one %in% c(TRUE, "True", "TRUE", "true"), 0L, 1L)]
-# best mouse per human (spine)
-ortho_byhuman <- copy(ortho); setorder(ortho_byhuman, human_ensembl, trank, one2one_rank, mouse_ensembl)
-ortho_byhuman <- unique(ortho_byhuman, by = "human_ensembl")
-# best human per mouse (for mouse-tier concordance + control mapping)
-ortho_m2h <- copy(ortho); setorder(ortho_m2h, mouse_ensembl, trank, one2one_rank, human_ensembl)
-ortho_m2h <- unique(ortho_m2h, by = "mouse_ensembl")
+cohort_lists <- lapply(COHORTS, function(c){
+  d <- fread(file.path(PERSTUDY, paste0(c,"_de_results.csv"))); d[, hb := strip_v(gene)]
+  unique(d[!is.na(adj.P.Val) & !is.na(logFC) & adj.P.Val < PADJ & logFC > LFC, hb]) })
+cohort_n <- table(unlist(cohort_lists))
+cohort_mouse <- function(nmin) h2m(names(cohort_n)[cohort_n >= nmin])
 
-ash <- fread(ASHR_PATH, select = c("gene", "logFC", "shrunk_logFC", "lfsr"))
-ash[, hb := sub("\\..*", "", gene)]
-human_logfc <- ash[, .(hb, hlfc = logFC)]
-get_human_spine <- function(shrunk_thr) {
-  hup <- unique(ash[!is.na(lfsr) & lfsr < HUMAN_LFSR_THR & shrunk_logFC > shrunk_thr, hb])
-  unique(ortho_byhuman[human_ensembl %in% hup, mouse_ensembl])
+de <- lapply(DIETS, function(d) fread(file.path(PERDIET, paste0(d,"_de_results.csv"))))
+upd <- lapply(de, function(d){ d[, gb := strip_v(gene)]; d[lfsr < 0.05 & shrunk_logFC > 0.5, gb] })
+ndiet <- table(unlist(upd)); mouse3 <- names(ndiet)[ndiet >= MIN_DIETS]
+mcm <- om[mb %in% mouse3]; mcm[, hl := hlfc[hb]]
+mouse_conf <- intersect(mcm[!is.na(hl) & hl > 0, mb], pclnc)
+
+cl <- fread(COLOCFILE); cl[, hb := strip_v(ensembl)]
+coloc_mouse <- h2m(unique(cl[hb != "" & !is.na(coloc_best_susie_pp4) & coloc_best_susie_pp4 > COLOC_PP4, hb]))
+
+pcv <- fread(POSCTRL)[["Gene symbol"]]; pcv <- toupper(pcv)
+pcv[pcv %in% names(POSCTRL_ALIASES)] <- POSCTRL_ALIASES[pcv[pcv %in% names(POSCTRL_ALIASES)]]
+pcv <- setdiff(pcv, POSCTRL_EXCLUDE)                          # drop systemic-mechanism controls
+posctrl_mouse <- sym2m(pcv)
+scd1_id <- mm[toupper(mouse_symbol_gtf) == "SCD1", gb][1]     # SCD mis-maps to Scd3 -> force Scd1
+posctrl_mouse <- unique(c(setdiff(posctrl_mouse, sym2m("SCD")), scd1_id))
+
+# v8 PC screen-expression gate: mouse-HEPATOCYTE scRNA substrate. Drop PC genes that
+# are 'absent' or 'ambient_suspect' with hep/other ratio < HEP_RATIO_MIN (ambient
+# spillover). lncRNA ungated; positive controls + high-COLOC (SuSiE>=COLOC_EXEMPT) exempt.
+mhs <- fread(MOUSEHEP)
+id2sym  <- setNames(mm$mouse_symbol_gtf, mm$gb)
+sym2sub <- setNames(mhs$mouse_hep_substrate, mhs$gene_symbol)
+sym2rat <- setNames(mhs$mouse_hep_ratio, mhs$gene_symbol)
+hep_fail <- function(ids) { s <- unname(sym2sub[id2sym[ids]]); r <- unname(sym2rat[id2sym[ids]])
+  s[is.na(s)] <- "absent"
+  s == "absent" | (s == "ambient_suspect" & (is.na(r) | r < HEP_RATIO_MIN)) }
+clp <- fread(COLOCFILE); clp[, hb := strip_v(ensembl)]
+clmap <- merge(clp[hb != "" & !is.na(coloc_best_susie_pp4), .(hb, pp4 = coloc_best_susie_pp4)],
+               oh[, .(hb, mb)], by = "hb")
+cpp <- clmap[, .(pp4 = max(pp4)), by = mb]; coloc_pp4_of <- setNames(cpp$pp4, cpp$mb)
+gate_pc <- function(g) {
+  pc <- intersect(g, pc_ids); lnc <- intersect(g, lnc_ids)
+  exempt <- (pc %in% posctrl_mouse) | (!is.na(coloc_pp4_of[pc]) & coloc_pp4_of[pc] >= COLOC_EXEMPT)
+  pc_ok <- pc[!hep_fail(pc) | exempt]
+  union(pc_ok, lnc)
 }
-mouse_3diets <- gene_diet_mat[n_diets >= 3, gene_base]
-# mouse-confirmed tier: >=3 diets AND best human ortholog is up in human dream
-mc_map <- merge(ortho_m2h[mouse_ensembl %in% mouse_3diets, .(mouse_ensembl, hb = human_ensembl)],
-                human_logfc, by = "hb", all.x = TRUE)
-mouse_conf <- mc_map[!is.na(hlfc) & hlfc > 0, mouse_ensembl]
-# MASH-progression tier: mouse orthologs of MASH-vs-MASL UP human DEGs (lfsr<0.05 & shrunk>thr)
-mash <- fread(MASH_PATH, select = c("gene", "shrunk_logFC", "lfsr"))
-mash[, hb := sub("\\..*", "", gene)]
-mash_up  <- unique(mash[!is.na(lfsr) & lfsr < HUMAN_LFSR_THR & shrunk_logFC > MASH_SHRUNK, hb])
-mash_set <- unique(ortho_byhuman[human_ensembl %in% mash_up, mouse_ensembl])
-# miRNA-conserved tier: super-confident ortholog-conserved mouse miRNAs (DE-independent):
-# >=2 of {miRBase family-ID, MirGeneDB, biomaRt/Compara} (matches rebuild_cas13_library.R).
-mir_raw <- fread(cmd = paste0("zcat ", ORTHO_TABLE),
-                 select = c("mouse_ensembl", "mouse_biotype", "tier_H_mirbase", "tier_H_mirgenedb", "tier_H_biomart"))
-mir_raw[, mouse_ensembl := sub("\\..*", "", mouse_ensembl)]
-tier1 <- function(x) as.integer(x %in% c(1, "1", TRUE))
-mir_raw[, n_ev := tier1(tier_H_mirbase) + tier1(tier_H_mirgenedb) + tier1(tier_H_biomart)]
-mirna_set <- unique(mir_raw[mouse_biotype == "miRNA" & n_ev >= 2L, mouse_ensembl])
-cat(sprintf("Human spine (mouse orthologs): >0.5=%d >0.3=%d >0.2=%d >0.15=%d | mouse-confirmed=%d | MASH=%d | miRNA=%d\n",
-            length(get_human_spine(0.5)), length(get_human_spine(0.3)),
-            length(get_human_spine(0.2)), length(get_human_spine(0.15)),
-            length(mouse_conf), length(mash_set), length(mirna_set)))
 
-# =============================================================================
-# 4. Build option gene sets (human-anchored: spine UNION mouse-confirmed)
-# =============================================================================
-build_option <- function(human_thr, label) {
-  h0  <- intersect(get_human_spine(human_thr), pc_lnc_ids)   # human spine (PC/lncRNA)
-  mc0 <- intersect(mouse_conf, pc_lnc_ids)                   # mouse-confirmed (PC/lncRNA)
-  ma0 <- intersect(mash_set,  pc_lnc_ids)                    # MASH-progression (PC/lncRNA)
-  mi0 <- intersect(mirna_set, mir_ids)                       # miRNA-conserved
-  # tier priority on overlap (matches rebuild_cas13_library.R):
-  #   human > mouse_confirmed > mash_progression > mirna_conserved
-  human   <- h0
-  mouse_c <- setdiff(mc0, human)
-  mash_p  <- setdiff(ma0, union(human, mouse_c))
-  mirna_c <- setdiff(mi0, Reduce(union, list(human, mouse_c, mash_p)))
-  gene_set <- Reduce(union, list(human, mouse_c, mash_p, mirna_c))
-  n_pc  <- length(intersect(gene_set, pc_ids))
-  n_lnc <- length(intersect(gene_set, lnc_ids))
-  n_mir <- length(intersect(gene_set, mir_ids))
-  n_sgrna <- n_pc * N_SGRNA_PC + n_lnc * N_SGRNA_LNC + n_mir * N_SGRNA_MIR +
-             N_CTRL_GENES * N_SGRNA_CTRL + N_NT_GUIDES
-  surv_mice <- ceiling(n_sgrna * COVERAGE_TARGET / EFF_CELLS_PER_MOUSE)  # survivors needed @500x
-  inj_mice  <- ceiling(surv_mice / (1 - MORTALITY))                      # mice to INJECT
-  data.table(
-    option = label, human_thr = human_thr,
-    n_total = length(gene_set), n_pc = n_pc, n_lnc = n_lnc, n_mir = n_mir,
-    n_human = length(human), n_mouse = length(mouse_c),
-    n_mash = length(mash_p), n_mirna = length(mirna_c),
-    pct_human = round(100 * length(human) / max(length(gene_set), 1), 1),
-    n_sgrna = n_sgrna, surv_mice = surv_mice, min_mice = inj_mice,
-    chosen = isTRUE(all.equal(human_thr, CHOSEN_THR)),
-    gene_set = list(gene_set)
-  )
+# priority-assigned tier composition for any scenario (core>cohort>mouse>coloc>control)
+scenario <- function(label, nmin, include, chosen = FALSE) {
+  coh <- if ("cohort" %in% include) cohort_mouse(nmin) else character(0)
+  mo  <- if ("mouse"  %in% include) mouse_conf else character(0)
+  co  <- if ("coloc"  %in% include) coloc_mouse else character(0)
+  ct  <- if ("control"%in% include) posctrl_mouse else character(0)
+  core_g <- core_mouse
+  coh_g  <- setdiff(coh, core_g)
+  mo_g   <- setdiff(mo,  union(core_g, coh_g))
+  co_g   <- setdiff(co,  Reduce(union, list(core_g, coh_g, mo_g)))
+  ct_g   <- setdiff(ct,  Reduce(union, list(core_g, coh_g, mo_g, co_g)))
+  ungated <- Reduce(union, list(core_g, coh_g, mo_g, co_g, ct_g))
+  allg <- gate_pc(ungated)                                   # PC mouse-hepatocyte gate (lncRNA ungated)
+  ing <- function(s) length(intersect(s, allg))
+  data.table(scenario = label, cohort_min = nmin,
+             Core = ing(core_g), `Cohort-replicated` = ing(coh_g),
+             `Mouse-confirmed` = ing(mo_g), COLOC = ing(co_g), `Positive control` = ing(ct_g),
+             n_total = length(allg), n_ungated = length(ungated),
+             n_pc = length(intersect(allg, pc_ids)), n_lnc = length(intersect(allg, lnc_ids)),
+             chosen = chosen, gene_set = list(allg))
 }
-options_dt <- rbindlist(lapply(seq_along(HUMAN_THRS), function(i)
-  build_option(HUMAN_THRS[i], LETTERS[i])), fill = TRUE)
+opts <- rbindlist(list(
+  scenario("Core only",            2L, c("core")),
+  scenario("Core ∪ 2+ cohort",     2L, c("core","cohort")),
+  scenario("+ Mouse-confirmed",    2L, c("core","cohort","mouse")),
+  scenario("+ COLOC",              2L, c("core","cohort","mouse","coloc")),
+  scenario("FULL (2+)",            2L, c("core","cohort","mouse","coloc","control"), chosen = TRUE),
+  scenario("FULL (3+)",            3L, c("core","cohort","mouse","coloc","control"))
+), fill = TRUE)
+opts[, n_sgrna := n_total * N_SGRNA + N_NT + N_EXTRA_CTRL * N_SGRNA]
 
-cat("\n=== v6 Library Options (human spine ∪ mouse-confirmed ∪ MASH ∪ miRNA; priority-assigned) ===\n")
-print(options_dt[, .(option, human_thr, n_total, n_human, n_mash, n_mouse, n_mirna,
-                     n_pc, n_lnc, n_mir, pct_human, n_sgrna, min_mice, chosen)])
+# feasibility (delivery/sort/survival; PI 2026-06-01)
+HEP<-1e7; TRANSD<-0.30; CRE_EFF<-0.80; FACS_EFF<-0.60; IN_FRAC<-0.13; GATE<-0.15; MORTALITY<-1/8
+eff_cells <- min(HEP*TRANSD*CRE_EFF*IN_FRAC, HEP*TRANSD*CRE_EFF*(1-IN_FRAC)*GATE*FACS_EFF)
+eff_inject<- eff_cells*(1-MORTALITY)
+opts[, surv_mice := ceiling(n_sgrna*500/eff_cells)]
+opts[, min_mice  := ceiling(surv_mice/(1-MORTALITY))]
 
-# verify option F reproduces the canonical v6 library tier counts
+cat("\n=== v8 Library Options ===\n")
+print(opts[, .(scenario, cohort_min, n_total, Core, `Cohort-replicated`,
+               `Mouse-confirmed`, COLOC, `Positive control`, n_pc, n_lnc, n_sgrna, min_mice, chosen)])
+
+# canonical check vs the rebuilt CSV
 if (file.exists(LIBRARY_CSV)) {
-  libv6 <- fread(LIBRARY_CSV); canon <- libv6[, .N, by = tier]; optF <- options_dt[chosen == TRUE]
-  cv <- function(t) { v <- canon[tier == t, N]; if (length(v)) v else 0L }
-  cat(sprintf("CANONICAL CHECK (option F vs cas13_library_v3.0.csv):\n  fig: human=%d mouse=%d mash=%d mirna=%d total=%d\n  csv: human=%d mouse_confirmed=%d mash_progression=%d mirna_conserved=%d total=%d\n",
-      optF$n_human, optF$n_mouse, optF$n_mash, optF$n_mirna, optF$n_total,
-      cv("human"), cv("mouse_confirmed"), cv("mash_progression"), cv("mirna_conserved"), nrow(libv6)))
+  lib <- fread(LIBRARY_CSV); chosenN <- opts[chosen == TRUE, n_total]
+  cat(sprintf("CANONICAL CHECK: chosen scenario total=%d vs cas13_library_v3.0.csv rows=%d (%s)\n",
+              chosenN, nrow(lib), ifelse(chosenN == nrow(lib), "MATCH", "MISMATCH")))
 }
 
 # =============================================================================
-# PANEL A: Options comparison table
+# PANEL A: options table
 # =============================================================================
-message("Building Panel A (table) ...")
-table_display <- data.table(
-  Option                = options_dt$option,
-  Definition            = sprintf("Human metafor-ashr>%.2f\n∪ mouse ∪ MASH ∪ miRNA", options_dt$human_thr),
-  `Total`               = comma(options_dt$n_total),
-  `Human`               = comma(options_dt$n_human),
-  `MASH\nprog.`         = comma(options_dt$n_mash),
-  `Mouse\nconf.`        = comma(options_dt$n_mouse),
-  `miRNA`               = comma(options_dt$n_mirna),
-  PC                    = comma(options_dt$n_pc),
-  lncRNA                = comma(options_dt$n_lnc),
-  `% Human`             = sprintf("%.1f%%", options_dt$pct_human),
-  sgRNAs                = comma(options_dt$n_sgrna),
-  `Mice inject\n(500x)` = options_dt$min_mice
-)
-tt_theme <- ttheme_minimal(
-  base_size = 7, base_family = "Helvetica",
-  core    = list(bg_params = list(fill = c("gray97", "white"), col = "gray80", lwd = 0.4),
-                 fg_params = list(fontsize = 7, hjust = 0.5, x = 0.5)),
+tbl <- data.table(
+  Composition = opts$scenario,
+  `Cohort` = paste0(">=", opts$cohort_min),
+  `Pre-gate` = comma(opts$n_ungated),
+  Total    = comma(opts$n_total),
+  Core     = comma(opts$Core),
+  `Cohort\nrep.` = comma(opts$`Cohort-replicated`),
+  `Mouse\nconf.` = comma(opts$`Mouse-confirmed`),
+  COLOC    = comma(opts$COLOC),
+  `Pos.\nctrl` = comma(opts$`Positive control`),
+  PC = comma(opts$n_pc), lncRNA = comma(opts$n_lnc),
+  sgRNAs = comma(opts$n_sgrna), `Mice\n(500x)` = opts$min_mice)
+tt <- ttheme_minimal(base_size = 7, base_family = "Helvetica",
+  core = list(bg_params = list(fill = ifelse(opts$chosen, "#FDECEF", c("gray97","white")),
+                               col = "gray80", lwd = 0.4),
+              fg_params = list(fontsize = 7, hjust = 0.5, x = 0.5)),
   colhead = list(bg_params = list(fill = "#E8E8E8", col = "gray60", lwd = 0.5),
-                 fg_params = list(fontsize = 7, fontface = "bold", hjust = 0.5, x = 0.5)),
-  rowhead = list(fg_params = list(fontsize = 7, fontface = "bold")))
-tbl_grob <- tableGrob(table_display, rows = NULL, theme = tt_theme)
-# (no chosen-row highlight per PI 2026-06-01)
-tbl_grob <- gtable_add_grob(tbl_grob,
-  grobs = rectGrob(gp = gpar(lwd = 1.0, col = "gray40", fill = NA)),
-  t = 1, b = nrow(tbl_grob), l = 1, r = ncol(tbl_grob))
-panel_A <- wrap_elements(full = tbl_grob) +
-  ggtitle("A") +
-  labs(caption = paste0("Each option = Human metafor-ashr>(threshold) spine ∪ mouse-confirmed (≥3 of 4 diets, ",
-                        "human-concordant) ∪ MASH-progression (MASH-vs-MASL UP) ∪ miRNA-conserved (tier-H ortholog); ",
-                        "tiers priority-assigned (human > mouse > MASH > miRNA). Option F (>0.20) = canonical v6 library. ",
-                        "% human reported. Mice = injected (incl. 12.5% post-injection mortality).")) +
-  theme(plot.title   = element_text(face = "bold", size = 9, hjust = 0),
+                 fg_params = list(fontsize = 7, fontface = "bold", hjust = 0.5, x = 0.5)))
+tg <- tableGrob(tbl, rows = NULL, theme = tt)
+tg <- gtable_add_grob(tg, rectGrob(gp = gpar(lwd = 1.0, col = "gray40", fill = NA)),
+                      t = 1, b = nrow(tg), l = 1, r = ncol(tg))
+panel_A <- wrap_elements(full = tg) + ggtitle("A") +
+  labs(caption = paste0("v8 strategy: Core (integrated C2, padj<0.05 & logFC>0.5, UP) ",
+        "∪ Cohort-replicated (DE in >=N of 5 cohorts) ∪ Mouse-confirmed (>=3 diets, concordant) ",
+        "∪ COLOC (SuSiE PP.H4>0.5) ∪ positive controls. PC+lncRNA, no miRNA. ",
+        "Pre-gate = ungated union; Total = after PC mouse-hepatocyte gate (drop 'absent' or ",
+        "ambient_suspect with hep/other ratio<", HEP_RATIO_MIN, "; lncRNA ungated; positive controls + COLOC>=",
+        COLOC_EXEMPT, " exempt). Library v8 = FULL (2+) = ", comma(opts[chosen == TRUE, n_total]),
+        " genes. ", N_SGRNA, " gRNA/target; mice incl. 12.5% mortality.")) +
+  theme(plot.title = element_text(face = "bold", size = 9, hjust = 0),
         plot.caption = element_text(size = 5, color = "gray40", hjust = 0))
 
 # =============================================================================
-# PANEL B: Gene composition stacked bars
+# PANEL B: composition stacked bars (human-only vs FULL, 2+ and 3+) + band
 # =============================================================================
-message("Building Panel B (composition bars) ...")
-lfc_labels <- setNames(sprintf(">%.2f", options_dt$human_thr), options_dt$option)
-comp_dt <- rbindlist(lapply(1:nrow(options_dt), function(i) {
-  opt <- options_dt[i]
-  rbindlist(list(
-    data.table(option = opt$option, component = "Human",            n_genes = opt$n_human),
-    data.table(option = opt$option, component = "MASH-progression", n_genes = opt$n_mash),
-    data.table(option = opt$option, component = "Mouse-confirmed",  n_genes = opt$n_mouse),
-    data.table(option = opt$option, component = "miRNA-conserved",  n_genes = opt$n_mirna)))
-}))
-comp_dt[, option := factor(option, levels = options_dt$option)]
-comp_dt[, component := factor(component, levels = c("miRNA-conserved", "MASH-progression", "Mouse-confirmed", "Human"))]
-totals <- options_dt[, .(option, n_total)]
-totals[, option := factor(option, levels = options_dt$option)]
-panel_B <- ggplot(comp_dt, aes(x = option, y = n_genes, fill = component)) +
-  geom_col(width = 0.65, color = "white", linewidth = 0.2) +
-  geom_text(data = totals, aes(x = option, y = n_total, label = comma(n_total), fill = NULL),
-            vjust = -0.4, size = 2.3, fontface = "bold", inherit.aes = FALSE) +
-  scale_fill_manual(values = tier_colors, name = NULL) +
-  scale_x_discrete(labels = lfc_labels) +
+barset <- rbindlist(list(
+  scenario("Human-only\n(2+)",    2L, c("core","cohort")),
+  scenario("Human-only\n(3+)",    3L, c("core","cohort")),
+  scenario("FULL (2+)",           2L, c("core","cohort","mouse","coloc","control"), chosen = TRUE),
+  scenario("FULL\n(3+)",          3L, c("core","cohort","mouse","coloc","control"))
+), fill = TRUE)
+tier_lvls <- c("Positive control","COLOC","Mouse-confirmed","Cohort-replicated","Core")
+comp <- melt(barset[, c("scenario", tier_lvls), with = FALSE], id.vars = "scenario",
+             variable.name = "tier", value.name = "n")
+comp[, scenario := factor(scenario, levels = barset$scenario)]
+comp[, tier := factor(tier, levels = tier_lvls)]
+tot <- barset[, .(scenario = factor(scenario, levels = barset$scenario), n_total, chosen)]
+panel_B <- ggplot(comp, aes(scenario, n, fill = tier)) +
+  annotate("rect", xmin = -Inf, xmax = Inf, ymin = 1500, ymax = 2500,
+           fill = "#2E9A86", alpha = 0.10) +
+  annotate("text", x = -Inf, y = 2500, label = "target ~2,000 +- 500", hjust = -0.05, vjust = 1.4,
+           size = 2.0, color = "#2E9A86", fontface = "italic") +
+  geom_col(width = 0.66, color = "white", linewidth = 0.2) +
+  geom_text(data = tot, aes(scenario, n_total, label = comma(n_total), fill = NULL,
+            fontface = ifelse(chosen, "bold", "plain")), vjust = -0.4, size = 2.5,
+            inherit.aes = FALSE) +
+  scale_fill_manual(values = tier_colors, name = NULL, breaks = rev(tier_lvls)) +
   scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.12))) +
-  labs(x = "Library option (human metafor-ashr threshold)", y = "Library target genes", title = "B") +
+  labs(x = NULL, y = "Library target genes", title = "B") +
   theme_masld() + theme_pub() +
   theme(plot.title = element_text(face = "bold", size = 9, hjust = 0),
         legend.position = "bottom", legend.key.size = unit(0.3, "cm"),
-        legend.text = element_text(size = 6), axis.text.x = element_text(size = 6))
+        legend.text = element_text(size = 6), axis.text.x = element_text(size = 6.2))
 
 # =============================================================================
-# PANEL C: Coverage-vs-mice curves (x = surviving/contributing mice)
+# PANEL C: coverage-vs-mice curves
 # =============================================================================
-message("Building Panel C (coverage curves) ...")
-effective_cells <- EFF_CELLS_PER_MOUSE
-eff_inject <- effective_cells * (1 - MORTALITY)   # avg usable cells per INJECTED mouse (12.5% die)
-COV_CAP   <- 1000L
-COV_LINES <- c(100L, 250L, 500L, 750L)
-options_dt[, mice_at_cap := ceiling(COV_CAP * n_sgrna / eff_inject)]
-max_mice <- max(options_dt$mice_at_cap) + 3
-mice_range <- 5:max_mice
-coverage_curves <- rbindlist(lapply(1:nrow(options_dt), function(i) {
-  opt <- options_dt[i]
-  data.table(option = opt$option, mice = mice_range,
-             coverage = (mice_range * eff_inject) / opt$n_sgrna)   # x = mice to inject
-}))
-# annotate at mice-to-inject needed for 500x; label = inject number only
-min_mice_pts <- options_dt[, .(option, min_mice, n_sgrna)]
-min_mice_pts[, coverage_at_min := (min_mice * eff_inject) / n_sgrna]
-setorder(min_mice_pts, min_mice, option)
-min_mice_pts[, label_y := COVERAGE_TARGET + 45 + (seq_len(.N) - 1) * 56]  # fits 8 options under COV_CAP
-cov_ref <- data.table(y = COV_LINES, lab = paste0(COV_LINES, "x"))
-panel_C <- ggplot(coverage_curves, aes(x = mice, y = coverage, color = option)) +
-  geom_hline(data = cov_ref[y != COVERAGE_TARGET], inherit.aes = FALSE,
-             aes(yintercept = y), linetype = "dotted", color = "gray80", linewidth = 0.3) +
-  geom_hline(yintercept = COVERAGE_TARGET, linetype = "dashed", color = "gray40", linewidth = 0.4) +
-  geom_text(data = cov_ref, inherit.aes = FALSE, aes(x = 3, y = y, label = lab),
-            size = 2.2, color = "gray40", hjust = 0, vjust = -0.3) +
+COV_CAP <- 1000L; COV_LINES <- c(100L,250L,500L,750L)
+opts[, mice_at_cap := ceiling(COV_CAP*n_sgrna/eff_inject)]
+max_mice <- max(opts$mice_at_cap)+3; mice_range <- 5:max_mice
+cc <- rbindlist(lapply(1:nrow(opts), function(i)
+  data.table(scenario = opts$scenario[i], mice = mice_range,
+             coverage = (mice_range*eff_inject)/opts$n_sgrna[i])))
+cc[, scenario := factor(scenario, levels = opts$scenario)]
+pts <- opts[, .(scenario = factor(scenario, levels = opts$scenario), min_mice, n_sgrna, chosen)]
+pts[, cov_at_min := (min_mice*eff_inject)/n_sgrna]
+setorder(pts, min_mice); pts[, label_y := 500 + 50 + (seq_len(.N)-1)*60]
+opt_colors <- setNames(scales::hue_pal()(nrow(opts)), opts$scenario)
+opt_colors[opts[chosen==TRUE, scenario]] <- "#C0143C"
+panel_C <- ggplot(cc, aes(mice, coverage, color = scenario)) +
+  geom_hline(yintercept = 500, linetype = "dashed", color = "gray40", linewidth = 0.4) +
+  geom_text(data = data.table(y = COV_LINES, lab = paste0(COV_LINES,"x")), inherit.aes = FALSE,
+            aes(x = 3, y = y, label = lab), size = 2.2, color = "gray45", hjust = 0, vjust = -0.3) +
   geom_line(linewidth = 0.7) +
-  geom_segment(data = min_mice_pts,
-               aes(x = min_mice, xend = min_mice, y = coverage_at_min, yend = label_y, color = option),
-               linewidth = 0.25, linetype = "dotted", show.legend = FALSE) +
-  geom_point(data = min_mice_pts, aes(x = min_mice, y = coverage_at_min, color = option),
-             size = 2.2, shape = 16, show.legend = FALSE) +
-  geom_text(data = min_mice_pts,
-            aes(x = min_mice, y = label_y, color = option, label = paste0(option, ": ", min_mice, " mice")),
-            size = 2.8, fontface = "bold", vjust = -0.3, hjust = 0.5, show.legend = FALSE) +
-  scale_color_manual(values = option_colors, name = "Option") +
-  scale_x_continuous(breaks = seq(10, ceiling(max_mice / 10) * 10, by = 10),
-                     limits = c(3, max_mice + 2)) +
+  geom_point(data = pts, aes(min_mice, cov_at_min, color = scenario), size = 2, show.legend = FALSE) +
+  geom_text(data = pts, aes(min_mice, label_y, color = scenario,
+            label = paste0(min_mice, " mice")), size = 2.4, vjust = -0.3, show.legend = FALSE) +
+  scale_color_manual(values = opt_colors, name = NULL) +
   scale_y_continuous(breaks = c(COV_LINES, COV_CAP), labels = comma) +
   coord_cartesian(ylim = c(0, COV_CAP)) +
   labs(x = "Mice to inject (for 500x coverage)", y = "Coverage per sgRNA", title = "C",
-       caption = paste0(
-         comma(HEP_PER_MOUSE), " hep/mouse x ", TRANSDUCTION_EFF * 100, "% transduction x ",
-         CRE_EFF * 100, "% Cre = ", comma(INFORMATIVE_PER_MOUSE), " informative cells/mouse.\n",
-         INPUT_FRACTION * 100, "% unsorted input + top/bottom ", GATE_FRACTION * 100,
-         "% gates at ", FACS_EFF * 100, "% FACS -> binding pool ~", comma(round(EFF_CELLS_PER_MOUSE)),
-         " cells/mouse.\n",
-         "x-axis = mice to inject (12.5% die post-injection).\n",
-         N_SGRNA_PC, " gRNA/PC, ", N_SGRNA_LNC, " gRNA/lncRNA, ", N_SGRNA_MIR, " gRNA/miRNA, ",
-         N_CTRL_GENES, " ctrl x ", N_SGRNA_CTRL, " + ", N_NT_GUIDES, " NT; 500x per population.")) +
+       caption = sprintf("%s hep/mouse x %.0f%% transduction x %.0f%% Cre = %s informative; binding pool ~%s cells/mouse; %d gRNA/target.",
+                         comma(HEP), TRANSD*100, CRE_EFF*100, comma(HEP*TRANSD*CRE_EFF), comma(round(eff_cells)), N_SGRNA)) +
   theme_masld() + theme_pub() +
   theme(plot.title = element_text(face = "bold", size = 9, hjust = 0),
-        plot.caption = element_text(size = 4.5, color = "gray50", hjust = 0),
-        legend.position = c(0.87, 0.40), legend.key.width = unit(0.5, "cm"),
-        legend.background = element_rect(fill = alpha("white", 0.8), color = NA))
-
-# (Panel D positive-control dot matrix removed from the library design per PI 2026-06-01)
+        plot.caption = element_text(size = 4.8, color = "gray50", hjust = 0),
+        legend.position = "right", legend.text = element_text(size = 5.5),
+        legend.key.size = unit(0.3, "cm"))
 
 # =============================================================================
-# Save panels individually
+# Save panels
 # =============================================================================
-message("Saving panels individually ...")
 pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
-panels <- list()
-panels[[paste0("11a_library_options_table", SUF)]] <- list(plot = panel_A, w = 12.5, h = 4.8)
-panels[[paste0("11b_library_composition",   SUF)]] <- list(plot = panel_B, w = fig_half_width, h = 3.5)
-panels[[paste0("11c_coverage_curves",       SUF)]] <- list(plot = panel_C, w = 9.0, h = 5.5)
+panels <- list(`11a_library_options_table` = list(p = panel_A, w = 13.5, h = 4.2),
+               `11b_library_composition`   = list(p = panel_B, w = fig_half_width + 0.5, h = 3.8),
+               `11c_coverage_curves`       = list(p = panel_C, w = 9.0, h = 5.2))
 for (nm in names(panels)) {
-  p <- panels[[nm]]
-  ggsave(file.path(OUT_DIR, paste0(nm, ".pdf")), p$plot, width = p$w, height = p$h, device = pdf_device)
+  ggsave(file.path(OUT_DIR, paste0(nm, ".pdf")), panels[[nm]]$p,
+         width = panels[[nm]]$w, height = panels[[nm]]$h, device = pdf_device)
   message("Saved: ", nm)
 }
-cat("\n=== Final Option Statistics (v6 4-tier) ===\n")
-for (i in 1:nrow(options_dt)) {
-  opt <- options_dt[i]
-  cat(sprintf("  Option %s%s: %s targets (%s PC, %s lnc, %s miRNA) | tiers H=%s/MASH=%s/mouse=%s/miR=%s | %s%% human | %s sgRNAs | %d surv / %d inject\n",
-              opt$option, ifelse(opt$chosen, " *", ""), comma(opt$n_total),
-              comma(opt$n_pc), comma(opt$n_lnc), comma(opt$n_mir),
-              comma(opt$n_human), comma(opt$n_mash), comma(opt$n_mouse), comma(opt$n_mirna),
-              opt$pct_human, comma(opt$n_sgrna), opt$surv_mice, opt$min_mice))
-}
+cat("\nfigS_cas13_library_options.R complete.\n")

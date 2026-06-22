@@ -256,7 +256,7 @@ DRUG_ROSTER = [
 # ---- atlas columns to extract ----
 ATLAS_COLS = [
     "human_symbol", "ensembl_id", "gene_biotype",
-    "dream_logFC", "dream_padj", "dream_tstat",
+    "bulk_logFC", "bulk_padj", "bulk_tstat",
     "mouse_meta_logFC", "mouse_meta_padj", "n_diets_sig",
     "primary_category", "is_conserved",
     "coloc_best_pp4_polyfun", "coloc_best_susie_pp4_polyfun",
@@ -305,8 +305,8 @@ def verdict_from_evidence(row: pd.Series) -> tuple[str, str]:
         _to_float(row.get("coloc_susie_best_pp4")),
         _to_float(row.get("coloc_abf_best_pp4")),
     )
-    bulk_lfc = _to_float(row.get("dream_logFC"))
-    bulk_padj = _to_float(row.get("dream_padj"), default=1.0)
+    bulk_lfc = _to_float(row.get("bulk_logFC"))
+    bulk_padj = _to_float(row.get("bulk_padj"), default=1.0)
     is_deg = (bulk_padj < 0.05) and (abs(bulk_lfc) > 0.5)
     extra = bool(row.get("extrahepatic_mechanism", False))
 
@@ -347,6 +347,8 @@ def verdict_from_evidence(row: pd.Series) -> tuple[str, str]:
 def main() -> None:
     print(f"Reading atlas {ATLAS_PATH}")
     atlas = pd.read_csv(ATLAS_PATH, low_memory=False, usecols=ATLAS_COLS)
+    assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), \
+        "C2: atlas missing bulk_* — rebuild 27a"
     atlas_index = atlas.set_index("human_symbol")
 
     print(f"Reading celltype attribution {CELLTYPE_PATH}")
@@ -435,8 +437,8 @@ def main() -> None:
             "coloc_best_pp4_polyfun": row.get("atlas_coloc_best_pp4_polyfun", np.nan),
             "coloc_susie_best_pp4": row.get("atlas_coloc_susie_best_pp4", np.nan),
             "coloc_abf_best_pp4": row.get("atlas_coloc_abf_best_pp4", np.nan),
-            "dream_logFC": row.get("atlas_dream_logFC", np.nan),
-            "dream_padj": row.get("atlas_dream_padj", 1.0),
+            "bulk_logFC": row.get("atlas_bulk_logFC", np.nan),
+            "bulk_padj": row.get("atlas_bulk_padj", 1.0),
         })
         row["atlas_verdict"] = verdict
         row["atlas_verdict_rationale"] = rationale

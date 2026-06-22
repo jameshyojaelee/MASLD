@@ -55,9 +55,9 @@ message("[2] Loading A1 primary attribution...")
 att <- fread(file.path(ATT, "celltype_primary_attribution.csv"))
 
 message("[3] Joining drug targets with cell-type attribution (plus bulk LFC fallback)...")
-# Load bulk dream for fallback: if target isn't NS-labelled but not in A1 primary,
-# we can still use bulk logFC direction.
-bulk <- fread(file.path(INT_RES, "dream_results_ashr.csv"),
+# Load canonical bulk DE for fallback: if target isn't NS-labelled but not in A1
+# primary, we can still use bulk logFC direction.
+bulk <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
               select = c("symbol","logFC","padj"))
 bulk <- bulk[!is.na(symbol) & symbol != ""]
 setnames(bulk, c("logFC","padj"), c("bulk_lfc_full","bulk_padj_full"))

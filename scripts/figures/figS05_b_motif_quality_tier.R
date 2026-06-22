@@ -44,7 +44,7 @@ p_left <- ggplot(grade_counts, aes(x = x, y = N, fill = grade)) +
   scale_fill_manual(values = grade_colors, name = "Grade",
                     breaks = c("A", "B", "C"),
                     labels = c("A (high IC, SELEX)",
-                               "B (validated)",
+                               "B (curated motif)",
                                "C (low confidence)")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.04))) +
   labs(x = NULL,

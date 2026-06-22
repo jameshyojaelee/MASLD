@@ -100,6 +100,31 @@ out <- merge(gn, ph, by = "human_symbol", all = TRUE)
 out <- merge(out, ct_agg, by = "human_symbol", all.x = TRUE)
 out[is.na(clintrial_active), clintrial_active := FALSE]
 out[is.na(clintrial_max_phase), clintrial_max_phase := NA_real_]
+
+# ---------------------------------------------------------------------------
+# 4b. Systematic drug-development-status classification (Wave-4 reframe).
+#     Genome-wide drug_dev_status (OpenTargets + DGIdb + Pharos + CT.gov +
+#     curated MASH pipeline). MASLD-specific status comes from curated + CT.gov.
+#     OUTER-joined so every classified gene is represented in the output.
+#     See docs/manuscript/working/drug_dev_status_reframe_spec.md.
+# ---------------------------------------------------------------------------
+dds_path <- file.path(EXT, "drug_targets/drug_target_classification.tsv")
+if (file.exists(dds_path)) {
+  dds <- fread(dds_path, select = c("symbol", "drug_dev_status",
+                                    "max_phase_any", "max_phase_masld",
+                                    "has_masld_trial", "masld_preclinical_evidence"))
+  dds <- dds[symbol != "" & !duplicated(symbol)]
+  setnames(dds, "symbol", "human_symbol")
+  out <- merge(out, dds, by = "human_symbol", all = TRUE)  # OUTER: keep all classified genes
+  cat(sprintf("  drug_dev_status: %d classified genes joined; status = %s\n",
+              nrow(dds),
+              paste(sprintf("%s:%d", names(table(dds$drug_dev_status)),
+                            as.integer(table(dds$drug_dev_status))), collapse = " ")))
+} else {
+  cat("  ! drug_target_classification.tsv missing; skipping drug_dev_status block\n")
+}
+
+out[is.na(clintrial_active), clintrial_active := FALSE]
 setorder(out, human_symbol)
 
 dir.create(dirname(OUT), showWarnings = FALSE, recursive = TRUE)
@@ -114,4 +139,16 @@ for (g in c("THRB", "PNPLA3", "GLP1R", "FGF21", "NR1H4")) {
                 g, r$pharos_tdl[1], r$gnomad_loeuf[1],
                 as.character(r$clintrial_max_phase[1]), r$clintrial_status[1],
                 substr(r$clintrial_drugs[1], 1, 40)))
+}
+
+# drug_dev_status sanity anchor (Wave-4 reframe)
+if ("drug_dev_status" %in% names(out)) {
+  for (g in c("THRB", "RORA", "HKDC1", "NR1H4", "GLP1R")) {
+    r <- out[human_symbol == g]
+    if (nrow(r))
+      cat(sprintf("  [%s] drug_dev_status=%s max_phase_any=%s max_phase_masld=%s\n",
+                  g, r$drug_dev_status[1],
+                  as.character(r$max_phase_any[1]),
+                  as.character(r$max_phase_masld[1])))
+  }
 }

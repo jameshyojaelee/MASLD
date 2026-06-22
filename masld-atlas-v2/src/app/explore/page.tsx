@@ -14,8 +14,8 @@ import type { GeneIndexEntry } from "@/lib/types";
 type Preset = "all" | "deg" | "conserved" | "druggable";
 type SortKey =
   | "symbol"
-  | "dream_logfc"
-  | "dream_padj"
+  | "bulk_logfc"
+  | "bulk_padj"
   | "sex_class"
   | "layers_active";
 type SortDir = "asc" | "desc";
@@ -31,8 +31,8 @@ const PRESET_OPTIONS: { key: Preset; label: string }[] = [
 
 const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
   { key: "symbol", label: "Symbol" },
-  { key: "dream_logfc", label: "logFC", className: "text-right" },
-  { key: "dream_padj", label: "padj", className: "text-right" },
+  { key: "bulk_logfc", label: "logFC", className: "text-right" },
+  { key: "bulk_padj", label: "padj", className: "text-right" },
   { key: "sex_class", label: "Sex Class" },
   { key: "layers_active", label: "Layers", className: "text-right" },
 ];
@@ -62,10 +62,10 @@ function getSortValue(
   switch (key) {
     case "symbol":
       return gene.symbol;
-    case "dream_logfc":
-      return gene.dream_logfc ?? null;
-    case "dream_padj":
-      return gene.dream_padj ?? null;
+    case "bulk_logfc":
+      return gene.bulk_logfc ?? null;
+    case "bulk_padj":
+      return gene.bulk_padj ?? null;
     case "sex_class":
       return gene.sex_class ?? "";
     case "layers_active":
@@ -389,14 +389,14 @@ export default function ExplorePage() {
 
                   {/* logFC */}
                   <td
-                    className={`px-3 py-1.5 text-right font-mono text-xs ${logfcColor(gene.dream_logfc)}`}
+                    className={`px-3 py-1.5 text-right font-mono text-xs ${logfcColor(gene.bulk_logfc)}`}
                   >
-                    {formatLogFC(gene.dream_logfc)}
+                    {formatLogFC(gene.bulk_logfc)}
                   </td>
 
                   {/* padj */}
                   <td className="px-3 py-1.5 text-right font-mono text-xs text-muted-foreground">
-                    {formatPadj(gene.dream_padj)}
+                    {formatPadj(gene.bulk_padj)}
                   </td>
 
                   {/* Sex Class */}

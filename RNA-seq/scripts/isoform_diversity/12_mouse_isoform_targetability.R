@@ -1,18 +1,20 @@
 #!/usr/bin/env Rscript
-# Bridge to Cas13: map the GSE213621 MANE-switching genes to their MOUSE ortholog's
+# Bridge to Cas13: map ALL GSE213621 DTU-switch genes to their MOUSE ortholog's
 # isoform structure (mouse liver expression), to flag which have a designable
 # isoform-SELECTIVE window vs only pan-isoform targeting. Human DTU = gene-level prior;
 # actual targetability comes from mouse-empirical isoform structure (no isoform orthology).
+# NOTE: the MANE-direction filter (switch_away_from_mane==TRUE, 67/91) was DROPPED 2026-06-11 —
+# all 91 switches now enter the funnel; the toward-canonical switches are treated equally.
 suppressPackageStartupMessages({ library(data.table) })
 PROJ <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 HRES <- file.path(PROJ, "RNA-seq/results/isoform_diversity/human")
 MRES <- file.path(PROJ, "RNA-seq/results/isoform_diversity/mouse")
 strip <- function(x) sub("\\..*$","",x)
 
-# 67 human MANE-switchers (GSE213621)
-tg <- fread(file.path(HRES, "gse213621_dtu_targets.tsv"))[switch_away_from_mane == TRUE]
+# ALL human GSE213621 DTU switches (MANE-direction filter dropped 2026-06-11)
+tg <- fread(file.path(HRES, "gse213621_dtu_targets.tsv"))
 tg[, h_ensg := strip(gene_id)]
-cat(sprintf("[bridge] %d human MANE-switching targets\n", nrow(tg)))
+cat(sprintf("[bridge] %d human GSE213621 DTU switches\n", nrow(tg)))
 
 # human ENSG -> mouse ENSMUSG (tier-H; flag 1:1)
 pairs <- fread(cmd = paste0("zcat ", PROJ, "/data/external/orthologs/master_ortholog_table.tsv.gz"))
@@ -40,7 +42,7 @@ mouse_struct <- function(mensg) {
   if (gsum < 1) return(data.table(mouse_n_tx=length(idx), mouse_n_expr_iso=0L,
                                   mouse_dom_iso=NA, mouse_dom_prop=NA, mouse_canon_dominant=NA))
   prop <- tp / gsum
-  expr <- prop >= 0.05 & tp >= 1                           # meaningfully expressed isoforms (>=5% of gene)
+  expr <- prop >= 0.05 & tp >= 0.5                         # expressed isoforms (>=5% of gene & >=0.5 TPM; floor lowered from 1.0 2026-06-11 to recover balanced low-TPM genes)
   canon <- mt2g$is_ensembl_canonical[idx] == 1
   data.table(mouse_n_tx = length(idx), mouse_n_expr_iso = sum(expr),
              mouse_dom_iso = rownames(mtpm)[idx][which.max(prop)],
@@ -62,7 +64,7 @@ rows <- rbindlist(lapply(seq_len(nrow(tg)), function(i) {
 }), fill = TRUE)
 
 # targetability verdict
-rows[, isoform_selective_possible := !is.na(mouse_n_expr_iso) & mouse_n_expr_iso >= 2 & mouse_dom_prop < 0.85]
+rows[, isoform_selective_possible := !is.na(mouse_n_expr_iso) & mouse_n_expr_iso >= 2]  # >=2 expressed isoforms (85% dominant cap removed 2026-06-11)
 rows[, targeting := fifelse(is.na(mouse_ensg), "no mouse ortholog",
                     fifelse(is.na(mouse_n_expr_iso) | mouse_n_expr_iso == 0, "mouse gene not expressed",
                     fifelse(isoform_selective_possible, "isoform-selective possible", "pan-only (single dominant)")))]

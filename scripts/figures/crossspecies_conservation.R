@@ -5,7 +5,7 @@
 # dietary models (MCD, HFD, CDAHFD, FPC). ONE integrated panel, columns = models:
 #   TOP    human<->mouse log2FC scatter — all orthologs (grey), conserved core
 #          (light teal = >=3/4 models, dark teal = all 4), hero genes labeled;
-#          per-model header reports rho_all -> rho_sig.
+#          per-model header reports the genome-wide Spearman rho (all orthologs).
 #   BOTTOM Fibrotic-arm pathway human-proximity per model = correlation of each
 #          diet's KEGG-pathway-NES profile with the human Severe-vs-Mild pathway
 #          reference (the PEP-space construction of Vacca et al. 2024 Nat Metab).
@@ -123,7 +123,7 @@ vm_pep   <- fread(file.path(VBdir, "q1_litmus_models_fibrotic_pep_shared.csv"))
 west_med <- median(vm_pep[grepl("WD|GAN|AMLN|AMLD", diet_group)]$fibro_pep, na.rm = TRUE)  # LITMUS Western reference
 
 # ── Integrated panel: columns = models; top scatter / bottom NES ─────────────
-strip_lab <- setNames(sprintf("%s\nrho %.2f → %.2f", rsum$diet, rsum$rho_all, rsum$rho_sig), diet_order)
+strip_lab <- setNames(sprintf("%s\nrho %.2f", rsum$diet, rsum$rho_all), diet_order)
 hero_dt   <- P[human_symbol %in% heroes & core != "bg"]
 
 ptop <- ggplot(P[order(core)], aes(h_lfc, m_lfc)) +

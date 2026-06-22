@@ -36,8 +36,8 @@ LOO_DIR <- file.path(INT_RESULTS, "loo_cv")
 cohort_info <- data.table(
   dataset = c("GSE126848", "GSE130970", "GSE135251", "GSE162694",
               "GSE174478", "GSE193066", "GSE213621", "GSE240729"),
-  label   = c("Suppli", "Hoang", "Govaere", "Bril",
-              "Kawamura", "Hoshida", "Chen", "Verschuren"),
+  label   = c("GSE126848", "GSE130970", "GSE135251", "GSE162694",
+              "GSE174478", "GSE193066", "GSE213621", "GSE240729"),
   n       = c(55, 76, 215, 142, 94, 164, 359, 67),
   has_controls = c(TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, TRUE, FALSE)
 )
@@ -110,9 +110,9 @@ p_a <- ggplot(merged, aes(x = delta_logFC)) +
            label = sprintf("Median |shift| = %.3f\n%.1f%% genes |shift| < 0.1",
                            median_shift, pct_small),
            vjust = 1.5, size = 2.2, color = "grey30") +
-  labs(x = expression(Delta * "log"[2] * "FC (full model - Chen LOO)"),
+  labs(x = expression(Delta * "log"[2] * "FC (full model - GSE213621 LOO)"),
        y = "Number of genes",
-       title = "(a) Effect size shift when Chen removed") +
+       title = "(a) Effect size shift when GSE213621 removed") +
   theme_masld() +
   theme(legend.position = c(0.8, 0.8), legend.key.size = unit(3, "mm"))
 
@@ -170,7 +170,7 @@ p_b <- ggplot(conc_counts, aes(x = n_concordant, y = N)) +
   geom_text(aes(label = sprintf("%d\n(%.0f%%)", N, pct)), vjust = -0.3, size = 2) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
   labs(x = sprintf("Concordant cohorts (of %d tested)", length(other_studies)),
-       y = "Chen-dependent genes",
+       y = "GSE213621-dependent genes",
        title = "(b) Direction concordance in other cohorts") +
   theme_masld()
 
@@ -259,9 +259,9 @@ p_e <- ggplot() +
              size = 0.5, alpha = 0.7) +
   scale_color_manual(values = c("Control" = masld_colors$control,
                                 "Disease" = masld_colors$up),
-                     name = "Chen samples") +
+                     name = "GSE213621 samples") +
   labs(x = "UMAP 1", y = "UMAP 2",
-       title = "(e) Chen samples intermixed in UMAP") +
+       title = "(e) GSE213621 samples intermixed in UMAP") +
   theme_masld() +
   theme(legend.position = c(0.15, 0.15),
         legend.key.size = unit(3, "mm"),
@@ -395,9 +395,9 @@ if (length(ds_files) >= 5) {
                  color = masld_colors$up, linewidth = 0.5) +
     geom_point(aes(y = loo_value), shape = 18, size = 3, color = masld_colors$up) +
     labs(x = NULL, y = "Value",
-         title = "(g) Down-sampling Chen to N=118") +
+         title = "(g) Down-sampling GSE213621 to N=118") +
     annotate("text", x = 3.4, y = min(ds_melt$value) * 0.95,
-             label = "Diamond = Chen LOO", size = 1.8, color = masld_colors$up,
+             label = "Diamond = GSE213621 LOO", size = 1.8, color = masld_colors$up,
              hjust = 1) +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 30, hjust = 1))

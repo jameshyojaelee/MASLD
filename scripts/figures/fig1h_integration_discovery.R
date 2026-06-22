@@ -6,7 +6,7 @@
 # x: number of cohorts (0..5) where padj<0.05 AND sign(logFC) == sign(integrated logFC)
 # y: integrated dream logFC
 # Cohort universe matches Fig 1e UpSet: Suppli, Hoang, Govaere, Bril, Chen.
-# Output: figures/main/fig1_atlas_overview/panels/fig1h_integration_discovery.pdf
+# Output: figures/main/fig3_RNAseq/panels/fig3a_integration_discovery.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -21,7 +21,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG1_DIR, "panels")
+PANEL_DIR <- file.path(FIG2_DIR, "panels")   # relocated fig1 -> fig3_RNAseq (mirrors fig1h_optionb.R)
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 PADJ_INT       <- 0.05   # integrated significance threshold (panel inclusion)
@@ -46,14 +46,14 @@ ps    <- load_per_study_de()[dataset %in% FIVE_COHORTS]
 dream[, gene_clean := sub("\\..*", "", gene)]
 ps[,    gene_clean := sub("\\..*", "", gene)]
 
-dream_lookup <- dream[, .(gene_clean, dream_logFC, dream_padj)]
+dream_lookup <- dream[, .(gene_clean, bulk_logFC, bulk_padj)]
 
 ps_join <- merge(ps[, .(gene_clean, dataset, logFC, padj)],
                  dream_lookup, by = "gene_clean", all.x = FALSE)
 # x-axis: cohorts with concordant nominal significance (padj + same direction)
 ps_join[, concordant_sig := !is.na(padj) & padj < PADJ_COHORT &
-                            !is.na(logFC) & !is.na(dream_logFC) &
-                            sign(logFC) == sign(dream_logFC) & sign(logFC) != 0]
+                            !is.na(logFC) & !is.na(bulk_logFC) &
+                            sign(logFC) == sign(bulk_logFC) & sign(logFC) != 0]
 # color: cohorts that meet canonical DEG threshold (padj + |logFC|>0.5 + direction)
 ps_join[, canonical_deg := concordant_sig & abs(logFC) > LFC_CANONICAL]
 
@@ -69,8 +69,8 @@ panel_df[is.na(n_cohorts_canonical),  n_cohorts_canonical := 0L]
 # Restrict the panel to integrated DEGs (statistical significance only).
 # Non-DEGs are not part of the question. See the LFC_INT note above for why we
 # do NOT impose |logFC|>0.5 here.
-panel_df <- panel_df[!is.na(dream_logFC) & !is.na(dream_padj) &
-                     dream_padj < PADJ_INT]
+panel_df <- panel_df[!is.na(bulk_logFC) & !is.na(bulk_padj) &
+                     bulk_padj < PADJ_INT]
 
 # Integration-only = no cohort meets canonical DEG criteria for this gene
 # (padj < 0.05 AND |logFC| > 0.5 AND same direction). Genes can still be
@@ -106,9 +106,9 @@ if (length(n_replicated) == 0) n_replicated <- 0
 # ----------------------------------------------------------------------------
 # Per-gene supplementary table
 # ----------------------------------------------------------------------------
-out_table <- panel_df[, .(gene, symbol, dream_logFC, dream_padj,
+out_table <- panel_df[, .(gene, symbol, bulk_logFC, bulk_padj,
                           n_cohorts_concordant, n_cohorts_canonical, category)]
-setorder(out_table, dream_padj)
+setorder(out_table, bulk_padj)
 fwrite(out_table, file.path(PANEL_DIR, "fig1h_concordance_table.csv"))
 message(sprintf("\nWrote table: %s rows", comma(nrow(out_table))))
 
@@ -123,8 +123,8 @@ cat_colors <- c(
 )
 
 panel_df[, x_factor := factor(n_cohorts_concordant, levels = 0:5)]
-panel_df[, abs_logFC := abs(dream_logFC)]
-panel_df[, direction := fifelse(dream_logFC >= 0, "Up", "Down")]
+panel_df[, abs_logFC := abs(bulk_logFC)]
+panel_df[, direction := fifelse(bulk_logFC >= 0, "Up", "Down")]
 panel_df[, category := factor(category,
                               levels = c("Canonical DEG in ≥1 cohort", "Integration-only"))]
 setorder(panel_df, category)   # so Integration-only renders on top
@@ -141,7 +141,7 @@ curated_labels <- c(
 )
 label_df <- panel_df[symbol %in% curated_labels &
                      category == "Integration-only"]
-setorder(label_df, dream_padj)
+setorder(label_df, bulk_padj)
 
 # Per-bin n label
 n_label_df <- panel_df[, .(N = .N),
@@ -165,7 +165,7 @@ p <- ggplot(panel_df,
                show.legend = FALSE) +
   # Top integration-only gene labels (use abs_logFC for y-position)
   geom_text_repel(data = label_df,
-                  aes(x = x_factor, y = abs(dream_logFC), label = symbol),
+                  aes(x = x_factor, y = abs(bulk_logFC), label = symbol),
                   inherit.aes = FALSE,
                   size = 2.8, color = "black",
                   fontface = "italic",
@@ -202,10 +202,10 @@ p <- ggplot(panel_df,
     legend.key.height = unit(0.3, "cm")
   )
 
-save_fig(p, file.path(PANEL_DIR, "fig1h_integration_discovery.pdf"),
+save_fig(p, file.path(PANEL_DIR, "fig3a_integration_discovery.pdf"),
          width = fig_half_width * 1.55, height = 3.5)
 
-fp <- file.path(PANEL_DIR, "fig1h_integration_discovery.pdf")
+fp <- file.path(PANEL_DIR, "fig3a_integration_discovery.pdf")
 if (file.exists(fp)) {
   message(sprintf("\nOutput: %s (%s)", fp,
                   utils:::format.object_size(file.size(fp), "auto")))

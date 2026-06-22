@@ -27,6 +27,8 @@ np.random.seed(42)
 # ── 1. Load atlas ───────────────────────────────────────────────────────────
 print("Loading atlas...")
 atlas = pd.read_csv(os.path.join(ME, "multi_evidence_atlas.csv"))
+assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), \
+    "C2: atlas missing bulk_* — rebuild 27a"
 atlas_genes = set(atlas["human_symbol"].dropna().unique())
 N_atlas = len(atlas)
 print(f"  Atlas: {N_atlas} genes")
@@ -110,7 +112,7 @@ print("Computing source seed vectors...")
 seed_vectors = {}
 
 for si, (name, compute_fn) in enumerate({
-    "S1": lambda g: safe_neglog10(get_val(g, "dream_padj", 1.0)) * abs(get_val(g, "dream_logFC", 0.0)),
+    "S1": lambda g: safe_neglog10(get_val(g, "bulk_padj", 1.0)) * abs(get_val(g, "bulk_logFC", 0.0)),
     "S2": lambda g: max(
         get_val(g, "coloc_pp4"), get_val(g, "broadaway_coloc_pp4"),
         get_val(g, "best_liver_enzyme_pp4"), get_val(g, "ukbb_alt_coloc_pp4"),

@@ -38,7 +38,7 @@ p <- ggplot(data.table(I2 = i2), aes(I2)) +
   theme_masld(base_size = 7) +
   theme(plot.subtitle = element_text(size = 6, colour = "grey40"))
 
-ggsave(file.path(OUT, "panelE_i2_distribution.pdf"), p,
+ggsave(file.path(OUT, "i2_distribution.pdf"), p,
        width = 4.6, height = 3.0, useDingbats = FALSE)
-cat(sprintf("Wrote panelE_i2_distribution.pdf | n=%d median=%.1f%% >50=%.1f%% >75=%.1f%%\n",
+cat(sprintf("Wrote i2_distribution.pdf | n=%d median=%.1f%% >50=%.1f%% >75=%.1f%%\n",
             length(i2), med, p50, p75))

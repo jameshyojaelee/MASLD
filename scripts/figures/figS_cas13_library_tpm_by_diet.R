@@ -34,7 +34,7 @@ ASHR       <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integratio
                         "results/integration/meta_results_ashr.csv")  # v6: metafor ashr (was dream)
 ORTHO      <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
 MOUSE_META <- file.path(BASE, "Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
-PERDIET    <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet")
+PERDIET    <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet_cas13")  # Cas13 library Western pool; decoupled from paper 4-model per_diet (2026-06-16)
 
 DIETS         <- c("MCD", "CDAHFD", "Western", "HFD")
 KEEP_BIOTYPES <- c("protein_coding", "lncRNA")

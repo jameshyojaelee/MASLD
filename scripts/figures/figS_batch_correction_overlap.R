@@ -48,8 +48,8 @@ dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 FIVE_COHORTS <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
 COHORT_LABEL <- c(
-  GSE126848 = "Suppli",  GSE130970 = "Hoang",   GSE135251 = "Govaere",
-  GSE162694 = "Bril",    GSE213621 = "Chen"
+  GSE126848 = "GSE126848",  GSE130970 = "GSE130970",   GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",  GSE213621 = "GSE213621"
 )
 
 PADJ_CANON <- 0.05
@@ -82,11 +82,8 @@ if (!file.exists(dream_path))
   stop("dream_results.csv not found at ", dream_path)
 message(sprintf("Loading dream (unshrunk) from %s", dream_path))
 dream <- fread(dream_path)
-# Normalize column names (legacy file uses logFC/padj; some use dream_*)
-if ("dream_logFC" %in% names(dream) && !"logFC" %in% names(dream))
-  setnames(dream, "dream_logFC", "logFC")
-if ("dream_padj" %in% names(dream) && !"padj" %in% names(dream))
-  setnames(dream, "dream_padj", "padj")
+# canonical_deg_results.csv uses unprefixed logFC/padj
+stopifnot(all(c("padj", "logFC") %in% names(dream)))
 dream[, gene_clean := sub("\\..*", "", gene)]
 dream <- dream[!is.na(padj) & !is.na(logFC), .(gene_clean, logFC, padj)]
 
@@ -176,7 +173,7 @@ p_n <- ggplot(sweep_long, aes(x = lfc_cut, y = n, color = set)) +
        title = "DEG counts: union per-study vs integrated dream",
        caption = paste0(
          "Symmetric cutoff applied to both sides. Dashed = canonical Tier-1 cutoff (|LFC|>0.5).\n",
-         "Per-study union = ∪ over 5 mega-eligible cohorts (Suppli/Hoang/Govaere/Bril/Chen)."
+         "Per-study union = ∪ over 5 mega-eligible cohorts (GSE126848/GSE130970/GSE135251/GSE162694/GSE213621)."
        )) +
   theme_masld(base_size = 7) +
   theme(plot.title    = element_text(size = 8, face = "bold"),

@@ -31,7 +31,7 @@ interface ValidatedDrug {
   moa: string;
   support: string;
   is_deg: boolean;
-  dream_logfc: number | null;
+  bulk_logfc: number | null;
 }
 
 interface SexStats {
@@ -486,11 +486,11 @@ export default function DrugsPage() {
                       DEG
                     </Badge>
                   )}
-                  {primary.dream_logfc != null && (
+                  {primary.bulk_logfc != null && (
                     <span
-                      className={`font-mono text-[10px] ${logfcColor(primary.dream_logfc)}`}
+                      className={`font-mono text-[10px] ${logfcColor(primary.bulk_logfc)}`}
                     >
-                      logFC {formatLogFC(primary.dream_logfc)}
+                      logFC {formatLogFC(primary.bulk_logfc)}
                     </span>
                   )}
                 </div>

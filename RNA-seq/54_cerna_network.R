@@ -999,10 +999,11 @@ cat("  Saved: cerna_network_full.csv\n")
 cat("\n--- 4. MASLD DEG overlay ---\n")
 
 atlas <- fread(atlas_path)
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
 cat("  Atlas loaded:", nrow(atlas), "genes\n")
 
-# Extract dream stats for gene name matching
-deg_info <- atlas[, .(gene_name = human_symbol, dream_logFC, dream_padj, gene_biotype)]
+# Extract bulk DEG stats for gene name matching
+deg_info <- atlas[, .(gene_name = human_symbol, bulk_logFC, bulk_padj, gene_biotype)]
 deg_info <- deg_info[!is.na(gene_name) & gene_name != ""]
 deg_info <- unique(deg_info, by = "gene_name")
 
@@ -1010,14 +1011,14 @@ deg_info <- unique(deg_info, by = "gene_name")
 triplets_annot <- merge(triplets, deg_info,
                         by.x = "lncrna", by.y = "gene_name", all.x = TRUE)
 setnames(triplets_annot,
-         c("dream_logFC", "dream_padj", "gene_biotype"),
+         c("bulk_logFC", "bulk_padj", "gene_biotype"),
          c("lncrna_logFC", "lncrna_padj", "lncrna_biotype"))
 
 # Merge onto mRNA
 triplets_annot <- merge(triplets_annot, deg_info,
                         by.x = "mrna", by.y = "gene_name", all.x = TRUE)
 setnames(triplets_annot,
-         c("dream_logFC", "dream_padj", "gene_biotype"),
+         c("bulk_logFC", "bulk_padj", "gene_biotype"),
          c("mrna_logFC", "mrna_padj", "mrna_biotype"))
 
 # Flag DEG status
@@ -1120,7 +1121,7 @@ if (nrow(masld_net) > 0) {
   node_df[, betweenness := betweenness(g, v = node, normalized = TRUE)]
 
   # Merge dream stats
-  node_df <- merge(node_df, deg_info[, .(gene_name, dream_logFC, dream_padj)],
+  node_df <- merge(node_df, deg_info[, .(gene_name, bulk_logFC, bulk_padj)],
                    by.x = "node", by.y = "gene_name", all.x = TRUE)
 
   node_df <- node_df[order(-degree, -betweenness)]
@@ -1147,7 +1148,7 @@ if (nrow(masld_net) > 0) {
   cat("  Skipping network metrics (no MASLD triplets)\n")
   hubs <- data.table(node = character(), node_type = character(),
                      degree = integer(), betweenness = numeric(),
-                     dream_logFC = numeric(), dream_padj = numeric())
+                     bulk_logFC = numeric(), bulk_padj = numeric())
   fwrite(hubs, file.path(out_dir, "cerna_hubs.csv"))
 }
 
@@ -1195,9 +1196,9 @@ for (node_col in c("lncrna", "mirna", "mrna")) {
     node_col
   }
   tmp <- merge(validated_axes[, .(axis_name, node = get(node_col))],
-               deg_info[, .(gene_name, dream_logFC, dream_padj)],
+               deg_info[, .(gene_name, bulk_logFC, bulk_padj)],
                by.x = "node", by.y = "gene_name", all.x = TRUE)
-  setnames(tmp, c("dream_logFC", "dream_padj"),
+  setnames(tmp, c("bulk_logFC", "bulk_padj"),
            paste0(node_col, c("_logFC", "_padj")))
   validated_axes <- merge(validated_axes, tmp[, -"node"],
                           by = "axis_name", all.x = TRUE)
@@ -1229,7 +1230,7 @@ cat("\n--- 8. Enrichment test ---\n")
 
 # Test: are mRNA ceRNA partners of lncRNA DEGs enriched for MASLD DEGs?
 # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
-lncrna_degs <- deg_info[gene_biotype == "lncRNA" & !is.na(dream_padj) & dream_padj < 0.1]$gene_name
+lncrna_degs <- deg_info[gene_biotype == "lncRNA" & !is.na(bulk_padj) & bulk_padj < 0.1]$gene_name
 cat("  lncRNA DEGs in atlas: ", length(lncrna_degs), "\n")
 
 # Get mRNAs that are ceRNA partners of lncRNA DEGs
@@ -1239,7 +1240,7 @@ cat("  mRNA ceRNA partners of lncRNA DEGs: ", length(cerna_partner_mrnas), "\n")
 # Background: all mRNAs in atlas
 all_mrnas_atlas <- deg_info[gene_biotype == "protein_coding" | is.na(gene_biotype)]$gene_name
 # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
-all_mrnas_deg   <- deg_info[!is.na(dream_padj) & dream_padj < 0.1 &
+all_mrnas_deg   <- deg_info[!is.na(bulk_padj) & bulk_padj < 0.1 &
                             (gene_biotype == "protein_coding" | is.na(gene_biotype))]$gene_name
 
 if (length(cerna_partner_mrnas) > 0 && length(all_mrnas_atlas) > 0) {

@@ -357,13 +357,16 @@ if (length(all_results) > 0) {
 # =========================================================================
 cat("\n--- Section C: Protein-transcript concordance (matched contrasts) ---\n")
 
-# Pre-load dream comparators
-# Canonical bulk DEG axis = C2 (limma-voom + metafor REML, ashr-shrunk).
-# Repointed from legacy dream_results.csv to canonical_deg_results.csv (2026-06-08).
+# Pre-load transcript comparators — ALL on the C2 axis (limma-voom quality-weighted).
+# disease_vs_control: canonical_deg_results.csv (C2; repointed 2026-06-08).
+# nafl_vs_nash: nafl_vs_nash_lvqw.csv (C2/LVQW; swapped off the retired dream file
+#   2026-06-20 — same columns, 27,638 genes). The `dream_*` OUTPUT column names are
+#   kept only for downstream-consumer compatibility (27a keys on dream_comparator);
+#   the DATA they carry is C2, not dream.
 dream_f     <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration",
                          "results/integration/canonical_deg_results.csv")
-fib_dream_f <- file.path(DISEASE_SIG_DIR, "adv_vs_early_fibrosis_dream.csv")
-nn_dream_f  <- file.path(DISEASE_SIG_DIR, "nafl_vs_nash_dream.csv")
+fib_dream_f <- file.path(DISEASE_SIG_DIR, "adv_vs_early_fibrosis_dream.csv")  # unused (no contrast maps to it)
+nn_dream_f  <- file.path(DISEASE_SIG_DIR, "nafl_vs_nash_lvqw.csv")
 
 # Helper: load a dream file and map Ensembl→symbol
 load_dream_slim <- function(dream_path, lfc_col = "logFC", padj_col = NULL) {
@@ -374,11 +377,11 @@ load_dream_slim <- function(dream_path, lfc_col = "logFC", padj_col = NULL) {
     padj_col <- intersect(c("padj", "adj.P.Val"), names(d))[1]
   }
   if ("symbol" %in% names(d)) {
-    slim <- d[, .(symbol, dream_logFC = get(lfc_col), dream_padj = get(padj_col))]
+    slim <- d[, .(symbol, bulk_logFC = get(lfc_col), bulk_padj = get(padj_col))]
   } else if (!is.null(gene_map)) {
     d[, ensembl_clean := sub("\\..*", "", gene)]
-    slim <- merge(d[, .(ensembl_clean, dream_logFC = get(lfc_col),
-                         dream_padj = get(padj_col))],
+    slim <- merge(d[, .(ensembl_clean, bulk_logFC = get(lfc_col),
+                         bulk_padj = get(padj_col))],
                   gene_map, by = "ensembl_clean")
     slim[, ensembl_clean := NULL]
   } else {
@@ -427,13 +430,13 @@ for (ds_name in names(all_results)) {
 
   if (nrow(ds_conc) > 0) {
     conc_parts[[ds_name]] <- ds_conc
-    rho <- cor(ds_conc$protein_logFC, ds_conc$dream_logFC,
+    rho <- cor(ds_conc$protein_logFC, ds_conc$bulk_logFC,
                method = "spearman", use = "complete.obs")
-    dir_conc <- sum(sign(ds_conc$protein_logFC) == sign(ds_conc$dream_logFC), na.rm = TRUE)
+    dir_conc <- sum(sign(ds_conc$protein_logFC) == sign(ds_conc$bulk_logFC), na.rm = TRUE)
     # Filtered concordance: only genes with |LFC| > 0.5 in both
-    filt_mask <- abs(ds_conc$protein_logFC) > 0.5 & abs(ds_conc$dream_logFC) > 0.5
+    filt_mask <- abs(ds_conc$protein_logFC) > 0.5 & abs(ds_conc$bulk_logFC) > 0.5
     filt_conc <- if (sum(filt_mask) > 0)
-      sum(sign(ds_conc$protein_logFC[filt_mask]) == sign(ds_conc$dream_logFC[filt_mask]))
+      sum(sign(ds_conc$protein_logFC[filt_mask]) == sign(ds_conc$bulk_logFC[filt_mask]))
     else NA
     filt_n <- sum(filt_mask)
 
@@ -450,10 +453,10 @@ for (ds_name in names(all_results)) {
 
 if (length(conc_parts) > 0) {
   concordance <- rbindlist(conc_parts, fill = TRUE)
-  concordance[, direction_concordant := sign(protein_logFC) == sign(dream_logFC)]
+  concordance[, direction_concordant := sign(protein_logFC) == sign(bulk_logFC)]
   concordance[, direction_concordant_filtered :=
-    sign(protein_logFC) == sign(dream_logFC) &
-    abs(protein_logFC) > 0.5 & abs(dream_logFC) > 0.5]
+    sign(protein_logFC) == sign(bulk_logFC) &
+    abs(protein_logFC) > 0.5 & abs(bulk_logFC) > 0.5]
   conc_f <- file.path(RESULTS_DIR, "protein_transcript_concordance_v3.csv")
   fwrite(concordance, conc_f)
   cat("  Saved:", conc_f, "\n")
@@ -481,11 +484,11 @@ if (file.exists(dream_f)) {
     dream[, ensembl_clean := sub("\\..*", "", gene)]
     dream <- merge(dream, gene_map, by = "ensembl_clean", all.x = FALSE)
   }
-  dream_sig <- dream[padj < 0.1]
-  if (nrow(dream_sig) > 0) {
-    gene_sets[["dream_DEG_up"]] <- dream_sig[logFC > 0, symbol]
-    gene_sets[["dream_DEG_down"]] <- dream_sig[logFC < 0, symbol]
-    gene_sets[["dream_DEG_all"]] <- dream_sig[, symbol]
+  bulk_sig <- dream[padj < 0.1]
+  if (nrow(bulk_sig) > 0) {
+    gene_sets[["dream_DEG_up"]] <- bulk_sig[logFC > 0, symbol]
+    gene_sets[["dream_DEG_down"]] <- bulk_sig[logFC < 0, symbol]
+    gene_sets[["dream_DEG_all"]] <- bulk_sig[, symbol]
   }
 }
 
@@ -584,11 +587,11 @@ if (file.exists(dream_f)) {
     dream[, ensembl_clean := sub("\\..*", "", gene)]
     dream <- merge(dream, gene_map, by = "ensembl_clean", all.x = FALSE)
   }
-  dream_sig <- dream[padj < 0.1]
+  bulk_sig <- dream[padj < 0.1]
 
   bins <- c(0, 0.5, 1, 1.5, 2, Inf)
   bin_labels <- c("0-0.5", "0.5-1", "1-1.5", "1.5-2", "2+")
-  dream_sig[, lfc_bin := cut(abs(logFC), breaks = bins, labels = bin_labels,
+  bulk_sig[, lfc_bin := cut(abs(logFC), breaks = bins, labels = bin_labels,
                               include.lowest = TRUE, right = FALSE)]
 
   eff_parts <- list()
@@ -608,18 +611,18 @@ if (file.exists(dream_f)) {
     }
 
     for (b in bin_labels) {
-      bin_genes <- dream_sig[lfc_bin == b, symbol]
+      bin_genes <- bulk_sig[lfc_bin == b, symbol]
       n_dream <- length(bin_genes)
       if (n_dream < 5) next
 
       detected <- ds[gene %in% bin_genes]
       n_detected <- nrow(detected)
 
-      dream_dirs <- dream_sig[symbol %in% detected$gene, .(symbol, dream_dir = sign(logFC))]
-      if (nrow(dream_dirs) > 0 && nrow(detected) > 0) {
+      bulk_dirs <- bulk_sig[symbol %in% detected$gene, .(symbol, bulk_dir = sign(logFC))]
+      if (nrow(bulk_dirs) > 0 && nrow(detected) > 0) {
         merged <- merge(detected[, .(gene, protein_dir = sign(logFC))],
-                        dream_dirs, by.x = "gene", by.y = "symbol")
-        n_concordant <- sum(merged$protein_dir == merged$dream_dir, na.rm = TRUE)
+                        bulk_dirs, by.x = "gene", by.y = "symbol")
+        n_concordant <- sum(merged$protein_dir == merged$bulk_dir, na.rm = TRUE)
       } else {
         n_concordant <- NA_integer_
       }

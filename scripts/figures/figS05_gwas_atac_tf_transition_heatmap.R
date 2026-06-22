@@ -1,4 +1,9 @@
 # KEY MESSAGE: Cross-modality disease master-regulator TFs show transition-specific activity shifts across the 4 fibrosis transitions; HNF4A, RORA, THRB anchor the largest motif-disruption load.
+# NOTE: "motif-disruption load" is a PUTATIVE computational prediction (FIMO/
+# motifbreakR on fine-mapped variants), NOT functionally validated -- the Currin
+# caQTL test does not confirm it (motif x caQTL 46.3%, median 50%; only 2 four-way
+# variants, in ZNF701; see figS05_scatac_caqtl_concordance). Report as PREDICTED
+# regulatory disruption, never "validated".
 # Output: figS05_epigenomic_spatial/ (sits alongside existing figS_gwas_atac_regulons*).
 # TF panel: cross-modality disease master regulators = hepatocyte SCENIC+ regulon TFs that are
 #   bulk MASLD DEGs (n=846) OR COLOC hits. The prior FDR-gated SCENIC+ disease_regulons.csv is

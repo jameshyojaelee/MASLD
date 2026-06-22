@@ -3,10 +3,11 @@
 # ---------------------------------------------------------------------------
 # Two analyses:
 #  (A) Per-diet-type meta-analysis — random-effects rma() across diet types
-#  (B) Pooled mega-analysis — dream() across ALL disease vs control samples
-#      with dataset as random effect for batch correction
+#  (B) Pooled mega-analysis — limma-voom quality-weighted across ALL disease vs
+#      control samples, dataset as FIXED effect (mirrors the human
+#      limma_voom_qw__C2 canonical; dream retired for mouse 2026-06-16), ashr-shrunk
 # Input:  per_diet/*_de_results.csv, merged_counts_raw.rds, meta_matched.rds
-# Output: meta_per_diet.csv, dream_pooled_results.csv
+# Output: meta_per_diet.csv, lvqw_pooled_results.csv
 # ---------------------------------------------------------------------------
 
 # ---- Seed pinning (T2.4, 2026-04-22) -----
@@ -19,6 +20,7 @@ suppressPackageStartupMessages({
   library(limma)
   library(variancePartition)
   library(metafor)
+  library(ashr)
   library(BiocParallel)
   library(ggplot2)
 })
@@ -30,7 +32,7 @@ DEDIR  <- file.path(RDIR, "per_diet")
 METADIR <- file.path(RDIR, "meta_analysis")
 dir.create(METADIR, recursive = TRUE, showWarnings = FALSE)
 
-cat("=== M03: Meta-Analysis + Pooled Dream ===\n\n")
+cat("=== M03: Meta-Analysis + Pooled limma-voom-qw ===\n\n")
 
 # ============================================================
 # (A) Per-Diet-Type Meta-Analysis (random-effects rma)
@@ -117,9 +119,9 @@ fwrite(meta_results, file.path(METADIR, "meta_per_diet.csv"))
 cat("Saved: meta_per_diet.csv\n\n")
 
 # ============================================================
-# (B) Pooled Dream Mega-Analysis
+# (B) Pooled limma-voom-qw Mega-Analysis  (replaces dream, 2026-06-16)
 # ============================================================
-cat("===== (B) POOLED DREAM MEGA-ANALYSIS =====\n\n")
+cat("===== (B) POOLED limma-voom-qw MEGA-ANALYSIS =====\n\n")
 
 # Load raw counts and metadata
 merged <- readRDS(file.path(RDIR, "merged_counts_raw.rds"))
@@ -133,9 +135,9 @@ if (HAS_TX_OFFSETS) {
   gene_lengths_all <- readRDS(lengths_file)
   cat("Loaded tximport gene-length matrix:", nrow(gene_lengths_all), "genes x",
       ncol(gene_lengths_all), "samples\n")
-  cat("  -> Will apply log(length) offsets to voomWithDreamWeights\n\n")
+  cat("  -> Will apply log(length) offsets to the voom object\n\n")
 } else {
-  cat("No tximport gene-length matrix found — no offsets for dream\n\n")
+  cat("No tximport gene-length matrix found — no length offsets applied\n\n")
 }
 
 # Filter to QC-passing
@@ -161,22 +163,21 @@ dge <- calcNormFactors(dge)
 
 cat("\nGenes after filterByExpr:", nrow(dge), "\n")
 
-# Dream formula: disease with dataset as random effect
-form <- ~ group_binary + (1 | dataset)
-cat("Formula:", deparse(form), "\n")
+# C2-style fixed-effect design (2026-06-16): mouse now mirrors the human
+# limma_voom_qw__C2 canonical. `dataset` is a FIXED effect (batch correction);
+# the retired dream random intercept (1|dataset) is no longer used. Mouse sex is
+# too sparsely annotated to include as a covariate, so it is omitted.
+# Align metadata rows to the count-matrix column order before building the design.
+meta <- meta[match(colnames(dge), meta$sample_id)]
+design <- model.matrix(~ dataset + group_binary, data = meta)
+cat("Design columns:", paste(colnames(design), collapse = ", "), "\n")
 
-# Set up parallel
-n_cores <- min(parallelly::availableCores(), 16)
-cat("Using", n_cores, "CPU cores\n")
-param <- SnowParam(n_cores, "SOCK", progressbar = TRUE)
+# voom with quality weights (limma); replaces voomWithDreamWeights
+cat("Running voomWithQualityWeights...\n")
+vobj <- voomWithQualityWeights(dge, design)
 
-# Run voom + dream
-cat("Running voomWithDreamWeights...\n")
-vobj <- voomWithDreamWeights(dge, form, meta, BPPARAM = param)
-
-# Apply tximport transcript-length offsets when available.
-# Same logic as M02: log(effective_length) per gene per sample corrects for
-# condition-dependent isoform switching in Kallisto-quantified data.
+# Apply tximport transcript-length offsets when available (Kallisto arm).
+# log(effective_length) per gene per sample corrects condition-dependent isoform usage.
 if (HAS_TX_OFFSETS) {
   common_g <- intersect(rownames(vobj), rownames(gene_lengths_all))
   common_s <- intersect(colnames(vobj), colnames(gene_lengths_all))
@@ -188,28 +189,34 @@ if (HAS_TX_OFFSETS) {
   len_sub[is.na(len_sub) | len_sub <= 0] <- 1
   vobj <- vobj[common_g, common_s]
   vobj$offset <- log(len_sub)
-  cat("  [offset] Applied tximport length offsets to dream voom object\n")
+  design <- design[common_s, , drop = FALSE]   # keep design aligned if samples subset
+  cat("  [offset] Applied tximport length offsets to voom object\n")
 }
 
-cat("Running dream()...\n")
-fit <- dream(vobj, form, meta, BPPARAM = param)
-# NOTE: eBayes(fit) was removed here (2026-05-26). dream() already computes
-# moderated t-statistics via Satterthwaite degrees of freedom; calling eBayes()
-# on top applies double variance shrinkage, inflating significance.
+cat("Running lmFit + eBayes (limma-voom quality-weighted)...\n")
+fit <- lmFit(vobj, design)
+fit <- eBayes(fit)
 
-# Extract results
-dream_res <- topTable(fit, coef = "group_binaryDisease", number = Inf, sort.by = "none")
-dream_res$gene <- rownames(dream_res)
-dream_res <- as.data.table(dream_res)
-setcolorder(dream_res, "gene")
+# Extract the Disease-vs-Control coefficient
+lvqw_res <- topTable(fit, coef = "group_binaryDisease", number = Inf, sort.by = "none")
+lvqw_res$gene <- rownames(lvqw_res)
+lvqw_res <- as.data.table(lvqw_res)
+setcolorder(lvqw_res, "gene")
 
-sig_dream <- dream_res[adj.P.Val < 0.05]
-cat("\nDream pooled DEGs (padj<0.05):", nrow(sig_dream),
-    " (Up:", sum(sig_dream$logFC > 0),
-    "Down:", sum(sig_dream$logFC < 0), ")\n")
+# ashr adaptive shrinkage (mirrors the human canonical: adds shrunk_logFC + lfsr)
+se_hat  <- lvqw_res$logFC / lvqw_res$t
+ash_fit <- ashr::ash(as.numeric(lvqw_res$logFC), as.numeric(se_hat),
+                     mixcompdist = "normal")
+lvqw_res[, shrunk_logFC := ashr::get_pm(ash_fit)]
+lvqw_res[, lfsr := ashr::get_lfsr(ash_fit)]
 
-fwrite(dream_res[order(adj.P.Val)], file.path(METADIR, "dream_pooled_results.csv"))
-cat("Saved: dream_pooled_results.csv\n")
+sig_lvqw <- lvqw_res[adj.P.Val < 0.05]
+cat("\nPooled limma-voom-qw DEGs (padj<0.05):", nrow(sig_lvqw),
+    " (Up:", sum(sig_lvqw$logFC > 0),
+    "Down:", sum(sig_lvqw$logFC < 0), ")\n")
+
+fwrite(lvqw_res[order(adj.P.Val)], file.path(METADIR, "lvqw_pooled_results.csv"))
+cat("Saved: lvqw_pooled_results.csv\n")
 
 # Save DGE object for downstream
 saveRDS(dge, file.path(RDIR, "merged_dge.rds"))

@@ -215,6 +215,14 @@ if (nrow(regulons) > 0) {
     select(-tf_upper)
 }
 
+# Dedup exact-duplicate variant-motif rows from the MotifDb dual jaspar2022/jaspar2024
+# query (the same PWM in both providers -> identical motifbreakR result -> duplicate row;
+# ~969/2757 of the prior canonical CSV). Key on variant coords + TF + alleleDiff so that
+# genuinely distinct PWM disruptions of the same TF are retained; only true exact dups drop.
+.n_pre_dedup <- nrow(mb_dt)
+mb_dt <- mb_dt %>% distinct(SNP_id, seqnames, start, end, tf_name, alleleDiff, .keep_all = TRUE)
+cat("  De-duplicated dual-jaspar rows:", .n_pre_dedup, "->", nrow(mb_dt), "\n")
+
 n_regulon <- sum(mb_dt$motif_in_disease_regulon)
 cat("  Disrupting SCENIC+ disease regulon motifs:", n_regulon, "\n")
 

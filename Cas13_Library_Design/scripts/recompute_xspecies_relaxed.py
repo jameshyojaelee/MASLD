@@ -6,7 +6,7 @@ pairs) without modification.
 
 Relaxed filters (locked by user 2026-05-21):
   Pool A — RNA-seq UP-concordant (RELAXED Tier 2):
-    Human:  atlas dream_padj<0.05 AND dream_logFC > 0.3   (was >0.5)
+    Human:  atlas bulk_padj<0.05 AND bulk_logFC > 0.3   (was >0.5)
     Mouse:  (MCD OR CDAHFD) adj.P.Val<0.05 AND logFC > 0.3 (was >0.5)
     Both UP-concordant; cross-species ortholog match required.
   Pool B — SuSiE-COLOC genetic causal (UNCHANGED PP4 cut):
@@ -207,8 +207,8 @@ def map_hens_to_mens(human_ens_set: set) -> set:
 
 
 # --- Strict (re-derived for the side-by-side table) ---
-human_strict_up = atlas[(atlas["dream_padj"] < 0.05) &
-                        (atlas["dream_logFC"] > HUMAN_LFC_STRICT)]
+human_strict_up = atlas[(atlas["bulk_padj"] < 0.05) &
+                        (atlas["bulk_logFC"] > HUMAN_LFC_STRICT)]
 human_strict_up_ens = set(human_strict_up["ensembl_id_base"].dropna())
 human_strict_up_mouse = map_hens_to_mens(human_strict_up_ens)
 
@@ -216,8 +216,8 @@ mouse_strict_up = mouse_up("MCD", MOUSE_LFC_STRICT) | mouse_up("CDAHFD", MOUSE_L
 pool_a_strict = human_strict_up_mouse & mouse_strict_up
 
 # --- Relaxed ---
-human_relaxed_up = atlas[(atlas["dream_padj"] < 0.05) &
-                         (atlas["dream_logFC"] > HUMAN_LFC_RELAXED)]
+human_relaxed_up = atlas[(atlas["bulk_padj"] < 0.05) &
+                         (atlas["bulk_logFC"] > HUMAN_LFC_RELAXED)]
 human_relaxed_up_ens = set(human_relaxed_up["ensembl_id_base"].dropna())
 human_relaxed_up_mouse = map_hens_to_mens(human_relaxed_up_ens)
 
@@ -273,8 +273,8 @@ print(f"  A∪B   : {len(union_relaxed):,}  PC {ur_pc}  lncRNA {ur_lnc}  other {
 # Human lncRNA DEGs UP at relaxed cut
 n_human_lnc_up_relaxed = len(atlas[
     (atlas["gene_biotype"] == "lncRNA")
-    & (atlas["dream_padj"] < 0.05)
-    & (atlas["dream_logFC"] > HUMAN_LFC_RELAXED)
+    & (atlas["bulk_padj"] < 0.05)
+    & (atlas["bulk_logFC"] > HUMAN_LFC_RELAXED)
 ])
 # Mouse-only UP lncRNA (MCD ∪ CDAHFD UP at relaxed cut, mouse biotype = lncRNA, biotype-TPM filter)
 mcd_lnc_up_relaxed = {g for g in mouse_up("MCD", MOUSE_LFC_RELAXED)
@@ -288,8 +288,8 @@ mouse_only_up_lnc_relaxed = mouse_only_up_lnc_relaxed_all & expressed_relaxed
 # Cross-species lncRNA matches at relaxed
 human_lnc_up_relaxed_ens = set(
     atlas.loc[(atlas["gene_biotype"] == "lncRNA")
-              & (atlas["dream_padj"] < 0.05)
-              & (atlas["dream_logFC"] > HUMAN_LFC_RELAXED), "ensembl_id_base"].dropna()
+              & (atlas["bulk_padj"] < 0.05)
+              & (atlas["bulk_logFC"] > HUMAN_LFC_RELAXED), "ensembl_id_base"].dropna()
 )
 human_lnc_up_mouse_ens = map_hens_to_mens(human_lnc_up_relaxed_ens)
 xspecies_lnc_matches = human_lnc_up_mouse_ens & mouse_only_up_lnc_relaxed_all
@@ -325,7 +325,7 @@ def lookup_de(d, mens, col):
 for col_d in ["MCD", "CDAHFD"]:
     top20[f"{col_d}_logFC"] = top20["mouse_ensembl"].apply(lambda m: lookup_de(col_d, m, "logFC"))
     top20[f"{col_d}_padj"] = top20["mouse_ensembl"].apply(lambda m: lookup_de(col_d, m, "adj.P.Val"))
-top20["dream_direction"] = top20["dream_logFC"].apply(direction)
+top20["dream_direction"] = top20["bulk_logFC"].apply(direction)
 top20["in_pool_a_relaxed"] = top20["mouse_ensembl"].isin(pool_a_relaxed)
 top20["in_pool_b_relaxed"] = top20["mouse_ensembl"].isin(pool_b_relaxed)
 
@@ -337,7 +337,7 @@ ab_inter_table = (
     .drop(columns=["human_symbol"], errors="ignore")
     .merge(
         atlas[["ensembl_id_base", "human_symbol", "gene_biotype",
-               "dream_logFC", "dream_padj",
+               "bulk_logFC", "bulk_padj",
                "coloc_pp4_canonical", "coloc_gwas_canonical"]],
         left_on="human_ensembl", right_on="ensembl_id_base", how="left",
     )
@@ -384,8 +384,8 @@ A("## 1. Threshold table — strict (prior) vs relaxed (this run)")
 A("")
 A("| Filter | Strict (prior) | Relaxed (this run) |")
 A("|---|---|---|")
-A("| Human UP `dream_padj` | <0.05 | <0.05 |")
-A(f"| Human UP `dream_logFC` | >{HUMAN_LFC_STRICT} (Tier 1) | >{HUMAN_LFC_RELAXED} (Tier 2) |")
+A("| Human UP `bulk_padj` | <0.05 | <0.05 |")
+A(f"| Human UP `bulk_logFC` | >{HUMAN_LFC_STRICT} (Tier 1) | >{HUMAN_LFC_RELAXED} (Tier 2) |")
 A("| Mouse UP `adj.P.Val` | <0.05 | <0.05 |")
 A(f"| Mouse UP `logFC` (MCD ∪ CDAHFD) | >{MOUSE_LFC_STRICT} | >{MOUSE_LFC_RELAXED} |")
 A("| Pool A UP-concordant | required | required |")
@@ -456,7 +456,7 @@ for i, (_, r) in enumerate(top20.iterrows(), start=1):
         f"{r['coloc_gwas_canonical'] if pd.notna(r['coloc_gwas_canonical']) else 'n/a'} | "
         f"{'YES' if r['in_pool_a_relaxed'] else '—'} | "
         f"{'YES' if r['in_pool_b_relaxed'] else '—'} | "
-        f"{fmt(r['dream_logFC'], '{:.2f}')} | {fmt_padj(r['dream_padj'])} | "
+        f"{fmt(r['bulk_logFC'], '{:.2f}')} | {fmt_padj(r['bulk_padj'])} | "
         f"{r['dream_direction']} | "
         f"{fmt(r['MCD_logFC'], '{:.2f}')} | {fmt_padj(r['MCD_padj'])} | "
         f"{fmt(r['CDAHFD_logFC'], '{:.2f}')} | {fmt_padj(r['CDAHFD_padj'])} | "
@@ -478,7 +478,7 @@ for _, r in ab_inter_table.iterrows():
         f"{r['human_ensembl']} | {r['mouse_ensembl']} | "
         f"{fmt(r['coloc_pp4_canonical'], '{:.3f}')} | "
         f"{r['coloc_gwas_canonical'] if pd.notna(r['coloc_gwas_canonical']) else 'n/a'} | "
-        f"{fmt(r['dream_logFC'], '{:.2f}')} | "
+        f"{fmt(r['bulk_logFC'], '{:.2f}')} | "
         f"{fmt(r['MCD_logFC'], '{:.2f}')} | "
         f"{fmt(r['CDAHFD_logFC'], '{:.2f}')} | "
         f"{r['mouse_biotype'] or '?'} |"
@@ -488,7 +488,7 @@ A("")
 # ---- Section 6: lncRNA-specific ------------------------------------------- #
 A("## 6. lncRNA-specific accounting at relaxed thresholds")
 A("")
-A(f"- Human lncRNA DEGs UP at relaxed `dream_padj<0.05, dream_logFC>{HUMAN_LFC_RELAXED}`: "
+A(f"- Human lncRNA DEGs UP at relaxed `bulk_padj<0.05, bulk_logFC>{HUMAN_LFC_RELAXED}`: "
   f"**{n_human_lnc_up_relaxed:,}**.")
 A(f"- Mouse-only UP lncRNA pool (MCD ∪ CDAHFD UP `|LFC|>{MOUSE_LFC_RELAXED}`, "
   f"mouse biotype=lncRNA, biotype-TPM expression filter): "
@@ -545,7 +545,7 @@ if au_pc_relaxed < 2500:
     # Walk down the cut to find what gets us to >= 2500
     targets = []
     for thr in [0.25, 0.20, 0.15, 0.10, 0.05, 0.00]:
-        h_set = atlas[(atlas["dream_padj"] < 0.05) & (atlas["dream_logFC"] > thr)]
+        h_set = atlas[(atlas["bulk_padj"] < 0.05) & (atlas["bulk_logFC"] > thr)]
         h_ens = set(h_set["ensembl_id_base"].dropna())
         h_mouse = map_hens_to_mens(h_ens)
         m_set = mouse_up("MCD", thr) | mouse_up("CDAHFD", thr)

@@ -24,6 +24,10 @@ suppressPackageStartupMessages({
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
+# Shared engine/correction/k_sv label lookups. The local method_labels / rex_labels
+# below are kept (they already carry the NB-sim + R-exact variant names) but the
+# canonical engine names match scripts/figures/method_correction_labels.R.
+source(file.path(BASE, "scripts/figures/method_correction_labels.R"))
 
 DEGX_RUNS <- Sys.getenv("DEGX_RUNS", file.path(Sys.getenv("HOME"), "degx", "runs", "robustness"))
 REX_DIR   <- file.path(dirname(DEGX_RUNS), "Rexact")
@@ -110,8 +114,8 @@ if (!is.null(perm) && !is.null(simn)) {
          x="parametric (simulation) type-I error", y="permutation (real-data) type-I error",
          caption=NULL) +
     theme_masld()+theme_pub()+theme(legend.position="right")
-  save_fig(pG, file.path(OUT,"panelG_calibration_two_nulls.pdf"), width=fig_col_width, height=fig_col_width*0.92)
-  mark(file.path(OUT,"panelG_calibration_two_nulls.pdf"))
+  save_fig(pG, file.path(OUT,"calibration_two_nulls.pdf"), width=fig_col_width, height=fig_col_width*0.92)
+  mark(file.path(OUT,"calibration_two_nulls.pdf"))
 
   # G2 -- parametric type-I vs samples per group, small multiples
   ord2 <- para %>% arrange(parametric) %>% pull(estimator)
@@ -129,8 +133,35 @@ if (!is.null(perm) && !is.null(simn)) {
          x="samples per group", y="type-I error", caption=prov("sim_null 2,000 reps")) +
     theme_masld()+theme_pub()+
     theme(legend.position="right", legend.key.width=unit(0.18,"cm"), panel.spacing=unit(0.45,"lines"))
-  save_fig(pG2, file.path(OUT,"panelG2_typeI_vs_n.pdf"), width=fig_full_width, height=4.0)
-  mark(file.path(OUT,"panelG2_typeI_vs_n.pdf"))
+  save_fig(pG2, file.path(OUT,"typeI_vs_n.pdf"), width=fig_full_width, height=4.0)
+  mark(file.path(OUT,"typeI_vs_n.pdf"))
+}
+
+# ===========================================================================
+# G1. Type-I calibration -- PERMUTATION (real-data) null ONLY.
+#     The two-nulls scatter with the parametric axis dropped: per-method
+#     permutation type-I vs the nominal 0.05. Renders on `perm` alone (no sim).
+# ===========================================================================
+if (!is.null(perm)) {
+  message("[render] G1 permutation-only calibration")
+  pc <- perm %>% transmute(estimator, ti=type_i_mean, mcse=type_i_mcse,
+                           fam=fam_resample(estimator), lab=pm(estimator)) %>%
+    arrange(ti) %>% mutate(lab=factor(lab, levels=lab))
+  n_perm <- format(max(perm$n_resample, na.rm=TRUE), big.mark=",")
+  pG1 <- ggplot(pc, aes(lab, ti, color=ti)) +
+    annotate("rect", xmin=-Inf,xmax=Inf, ymin=CAL_LO,ymax=CAL_HI, fill="#9E9E9E", alpha=0.12) +
+    geom_hline(yintercept=NOMINAL, linetype="dashed", linewidth=0.3, color="grey40") +
+    geom_errorbar(aes(ymin=ti-1.96*mcse, ymax=ti+1.96*mcse), width=0.25, linewidth=0.35, color="grey60") +
+    geom_point(size=2.2) +
+    cal_color(limits=sym_lim(pc$ti)) +
+    scale_y_continuous(expand=expansion(mult=c(0.05,0.07))) +
+    labs(title="False-positive rate at the 0.05 cutoff",
+         subtitle=sprintf("Real-data permutation null, %s permutations per method; shaded band = 0.04-0.06.", n_perm),
+         x=NULL, y="permutation type-I error", caption=NULL) +
+    theme_masld()+theme_pub()+
+    theme(legend.position="right", axis.text.x=element_text(angle=45, hjust=1))
+  save_fig(pG1, file.path(OUT,"calibration_permutation.pdf"), width=fig_col_width, height=3.8)
+  mark(file.path(OUT,"calibration_permutation.pdf"))
 }
 
 # ===========================================================================
@@ -159,8 +190,8 @@ if (!is.null(pvn)) {
          caption=prov("1,000 permutations per n")) +
     theme_masld()+theme_pub()+
     theme(legend.position="right", legend.key.width=unit(0.18,"cm"), panel.spacing=unit(0.45,"lines"))
-  save_fig(pG3, file.path(OUT,"panelG3_perm_typeI_vs_n.pdf"), width=fig_full_width, height=4.0)
-  mark(file.path(OUT,"panelG3_perm_typeI_vs_n.pdf"))
+  save_fig(pG3, file.path(OUT,"perm_typeI_vs_n.pdf"), width=fig_full_width, height=4.0)
+  mark(file.path(OUT,"perm_typeI_vs_n.pdf"))
 }
 
 # ===========================================================================
@@ -171,25 +202,36 @@ kfold <- rd(DEGX_RUNS, CONTRAST, paste0("resample_kfold_summary_",CONTRAST,".csv
 # metafor two-stage RE arm (CPU side-run; CPSS only) -- spliced in if present
 cpss_mf <- rd(DEGX_RUNS, CONTRAST, paste0("resample_cpss_summary_",CONTRAST,"_metafor.csv"))
 if (!is.null(cpss) && !is.null(cpss_mf)) cpss <- dplyr::bind_rows(cpss, cpss_mf)
-if (!is.null(cpss)) {
-  message("[render] H stability phi", if(!is.null(cpss_mf)) " (+metafor)" else "")
-  st <- bind_rows(
-    cpss  %>% transmute(estimator, phi=stability_phi, lo=phi_ci_lo, hi=phi_ci_hi, protocol="CPSS (50% subsampling)"),
-    if(!is.null(kfold)) kfold %>% transmute(estimator, phi=stability_phi, lo=phi_ci_lo, hi=phi_ci_hi, protocol="k-fold (10-fold)") else NULL
-  ) %>% mutate(fam=fam_resample(estimator), lab=pm(estimator))
-  ordp <- cpss %>% arrange(stability_phi) %>% pull(estimator)
-  st$lab <- factor(st$lab, levels=pm(ordp))
-  pH <- ggplot(st, aes(phi, lab, color=fam, shape=protocol)) +
-    geom_errorbarh(aes(xmin=lo, xmax=hi), height=0.25, linewidth=0.35, color="grey55") +
+# CPSS and k-fold are rendered as SEPARATE, VERTICAL panels (phi on the y-axis).
+# Their phi live on very different scales (CPSS ~0.59-0.76 vs k-fold ~0.96), so a
+# shared axis compresses one protocol -- a per-protocol y-axis reads cleanly.
+render_stability_vert <- function(df, protocol_lab, cap, outfile, y_lo) {
+  st <- df %>% transmute(estimator, phi=stability_phi, lo=phi_ci_lo, hi=phi_ci_hi) %>%
+    mutate(fam=fam_resample(estimator), lab=pm(estimator)) %>% arrange(phi)
+  st$lab <- factor(st$lab, levels=st$lab)   # ascending phi -> lowest at left
+  # phi is a [0,1]-bounded index (1 = perfect). y_lo = per-protocol y-axis floor for a
+  # tight, context-rich view: CPSS 0.5 (keeps metafor ~0.59 in frame); k-fold (50-fold) 0.7.
+  p <- ggplot(st, aes(lab, phi, color=fam)) +
+    geom_errorbar(aes(ymin=lo, ymax=hi), width=0.25, linewidth=0.35, color="grey55") +
     geom_point(size=1.9) +
     scale_color_manual(values=fam_cols, name="family") +
-    scale_shape_manual(values=c(16,17), name="protocol") +
-    labs(title="Stability: does the same gene list recur under resampling?",
-         subtitle="Nogueira phi: 1 = identical set every resample; lower = the list churns with the samples.",
-         x="stability phi  (-> more reproducible)", y=NULL, caption=prov("CPSS 100 pairs; k-fold 50 splits")) +
-    theme_masld()+theme_pub()+theme(legend.position="right")
-  save_fig(pH, file.path(OUT,"panelH_stability_phi.pdf"), width=fig_col_width, height=3.8)
-  mark(file.path(OUT,"panelH_stability_phi.pdf"))
+    scale_y_continuous(breaks=seq(0,1,0.1), expand=expansion(mult=c(0.01,0.02))) +
+    coord_cartesian(ylim=c(y_lo, 1)) +
+    labs(title=sprintf("Stability under %s: does the same gene list recur?", protocol_lab),
+         subtitle="Nogueira phi: 1 = identical set every resample.",
+         x=NULL, y="stability phi  (-> more reproducible)", caption=prov(cap)) +
+    theme_masld()+theme_pub()+
+    theme(legend.position="right", axis.text.x=element_text(angle=45, hjust=1))
+  save_fig(p, file.path(OUT, outfile), width=fig_col_width, height=3.8)
+  mark(file.path(OUT, outfile))
+}
+if (!is.null(cpss)) {
+  message("[render] H stability phi -- CPSS", if(!is.null(cpss_mf)) " (+metafor)" else "")
+  render_stability_vert(cpss, "CPSS (50% subsampling)", "CPSS 100 pairs", "stability_phi_cpss.pdf", y_lo=0.5)
+}
+if (!is.null(kfold)) {
+  message("[render] H stability phi -- k-fold")
+  render_stability_vert(kfold, "k-fold (50-fold)", "k-fold 50 folds", "stability_phi_kfold.pdf", y_lo=0.7)
 }
 
 # ===========================================================================
@@ -211,8 +253,8 @@ if (!is.null(boot)) {
          subtitle="Bars = genes reproducibly called in >= 60% of 1,000 bootstraps; open points = bootstrap logFC CI excludes 0",
          x="number of stably-selected genes", y=NULL, caption=prov("1,000 stratified bootstraps")) +
     theme_masld()+theme_pub()+theme(legend.position="right")
-  save_fig(pC2, file.path(OUT,"panelC2_stability_counts.pdf"), width=fig_col_width, height=3.6)
-  mark(file.path(OUT,"panelC2_stability_counts.pdf"))
+  save_fig(pC2, file.path(OUT,"stability_counts.pdf"), width=fig_col_width, height=3.6)
+  mark(file.path(OUT,"stability_counts.pdf"))
 }
 
 # ===========================================================================
@@ -245,8 +287,8 @@ if (file.exists(rho_csv) || file.exists(pq)) {
       theme(axis.text.x=element_text(angle=40,hjust=1), legend.position="right",
             legend.key.width=unit(0.18,"cm"))
     # panelC_selfreq_concordance.pdf retired per user request 2026-06-05 — no longer generated.
-    # save_fig(pC, file.path(OUT,"panelC_selfreq_concordance.pdf"), width=fig_col_width, height=fig_col_width)
-    # mark(file.path(OUT,"panelC_selfreq_concordance.pdf"))
+    # save_fig(pC, file.path(OUT,"selfreq_concordance.pdf"), width=fig_col_width, height=fig_col_width)
+    # mark(file.path(OUT,"selfreq_concordance.pdf"))
   }
 }
 
@@ -280,8 +322,8 @@ if (length(rex_files) > 0) {
            x="number of DEGs", y=NULL,
            caption=prov("R/Bioconductor exact fits; metafor FE/HK omitted")) +
       theme_masld()+theme_pub()+theme(legend.position="right")
-    save_fig(pI0, file.path(OUT,"panelI0_rexact_deg_counts.pdf"), width=fig_col_width, height=4.4)
-    mark(file.path(OUT,"panelI0_rexact_deg_counts.pdf"))
+    save_fig(pI0, file.path(OUT,"rexact_deg_counts.pdf"), width=fig_col_width, height=4.4)
+    mark(file.path(OUT,"rexact_deg_counts.pdf"))
   }
 
   # I1 -- pairwise Jaccard of DEG sets, clustered heatmap (metafor FE/HK dropped)
@@ -302,8 +344,8 @@ if (length(rex_files) > 0) {
     theme_masld()+theme_pub()+
     theme(axis.text.x=element_text(angle=45,hjust=1), legend.position="right",
           legend.key.width=unit(0.18,"cm"))
-  save_fig(pI1, file.path(OUT,"panelI1_rexact_jaccard.pdf"), width=6.6, height=6.2)
-  mark(file.path(OUT,"panelI1_rexact_jaccard.pdf"))
+  save_fig(pI1, file.path(OUT,"rexact_jaccard.pdf"), width=6.6, height=6.2)
+  mark(file.path(OUT,"rexact_jaccard.pdf"))
 
   # I2 -- concordance at the top (CAT), two panels: vs dream | vs metafor-RE
   rank_by_p <- function(d) if(all(c("gene","padj") %in% names(d))) d$gene[order(d$padj)] else character(0)
@@ -327,8 +369,8 @@ if (length(rex_files) > 0) {
       facet_wrap(~ref, nrow=1) +
       labs(title="Concordance at the top", x="top-k genes (log scale)", y="concordance at the top") +
       theme_masld()+theme_pub()+theme(legend.position="right")
-    save_fig(pI2, file.path(OUT,"panelI2_rexact_cat.pdf"), width=fig_full_width, height=3.4)
-    mark(file.path(OUT,"panelI2_rexact_cat.pdf"))
+    save_fig(pI2, file.path(OUT,"rexact_cat.pdf"), width=fig_full_width, height=3.4)
+    mark(file.path(OUT,"rexact_cat.pdf"))
   }
 
   # F -- metafor stage-1 engine sensitivity (voom RE vs DESeq2 RE), logFC concordance
@@ -348,8 +390,8 @@ if (length(rex_files) > 0) {
            x="meta log2FC (voom stage-1)", y="meta log2FC (DESeq2 stage-1)",
            caption=prov("R-exact metafor RE")) +
       theme_masld()+theme_pub()
-    save_fig(pF, file.path(OUT,"panelF_metafor_engine_sensitivity.pdf"), width=fig_half_width, height=fig_half_width)
-    mark(file.path(OUT,"panelF_metafor_engine_sensitivity.pdf"))
+    save_fig(pF, file.path(OUT,"metafor_engine_sensitivity.pdf"), width=fig_half_width, height=fig_half_width)
+    mark(file.path(OUT,"metafor_engine_sensitivity.pdf"))
   }
 }
 
@@ -377,7 +419,7 @@ if (!file.exists(powf)) {
          subtitle="Power (true-positive rate at FDR<0.05) vs effect size, tau2=0.04. Higher / earlier rise = more sensitive; dotted = 80% power.",
          x="true log2 fold change", y="power (TPR at FDR < 0.05)", caption=prov(capg))+
     theme_masld()+theme_pub()+theme(legend.position="top", panel.spacing=unit(0.45,"lines"))
-  save_fig(pB, file.path(OUT,"panelB_power_curves.pdf"), width=fig_full_width, height=4.4); mark(file.path(OUT,"panelB_power_curves.pdf"))
+  save_fig(pB, file.path(OUT,"power_curves.pdf"), width=fig_full_width, height=4.4); mark(file.path(OUT,"power_curves.pdf"))
 
   # B2 -- observed FDR per method, diverging calibration bars
   b2 <- pw %>% filter(!is.na(obs_fdr_mean)) %>% group_by(estimator) %>%
@@ -393,7 +435,7 @@ if (!file.exists(powf)) {
          subtitle="Mean observed FDR over the 48-cell grid; shaded zone (> 0.05) = FDR target violated (too many false discoveries)",
          x=NULL, y="observed FDR", caption=prov(capg))+
     theme_masld()+theme_pub()+theme(legend.position="right", legend.key.width=unit(0.18,"cm"))
-  save_fig(pB2, file.path(OUT,"panelB2_fdr_control.pdf"), width=fig_half_width, height=3.6); mark(file.path(OUT,"panelB2_fdr_control.pdf"))
+  save_fig(pB2, file.path(OUT,"fdr_control.pdf"), width=fig_half_width, height=3.6); mark(file.path(OUT,"fdr_control.pdf"))
 
   # D -- AUROC heatmap (method x effect-size grid, facet by n)
   d <- pw %>% filter(abs(tau2-0.04)<1e-9) %>%
@@ -406,7 +448,7 @@ if (!file.exists(powf)) {
     labs(title="Discrimination: are true DEGs ranked above null genes? (AUROC, 1 = perfect)",
          x="true log2 fold change", y=NULL, caption=prov(capg))+
     theme_masld()+theme_pub()+theme(legend.position="right")
-  save_fig(pD, file.path(OUT,"panelD_auroc_heatmap.pdf"), width=fig_full_width, height=4.0); mark(file.path(OUT,"panelD_auroc_heatmap.pdf"))
+  save_fig(pD, file.path(OUT,"auroc_heatmap.pdf"), width=fig_full_width, height=4.0); mark(file.path(OUT,"auroc_heatmap.pdf"))
 }
 
 message("\n[degx multimethod] wrote ", length(written), " panel(s) to:\n  ", OUT)

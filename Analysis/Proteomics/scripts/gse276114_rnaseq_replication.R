@@ -159,8 +159,8 @@ padj_col <- intersect(c("padj", "adj.P.Val", "FDR"), names(dream))[1]
 
 dream_slim <- dream[!is.na(symbol) & symbol != "",
                     .(symbol,
-                      dream_logFC = get(lfc_col),
-                      dream_padj  = get(padj_col))]
+                      bulk_logFC = get(lfc_col),
+                      bulk_padj  = get(padj_col))]
 dream_slim <- dream_slim[!duplicated(symbol)]
 
 # ---------------------------------------------------------------------------
@@ -189,18 +189,18 @@ compute_ci <- function(x, y, R = 1000, conf = 0.95) {
 }
 
 # Overall replication
-ovr <- compute_ci(rep_tab$gse_logFC, rep_tab$dream_logFC)
+ovr <- compute_ci(rep_tab$gse_logFC, rep_tab$bulk_logFC)
 
-# DEG subset (dream padj < 0.05, |dream_logFC| > 0.3)
-deg_mask <- rep_tab$dream_padj < 0.05 & abs(rep_tab$dream_logFC) > 0.3
+# DEG subset (bulk padj < 0.05, |bulk_logFC| > 0.3)
+deg_mask <- rep_tab$bulk_padj < 0.05 & abs(rep_tab$bulk_logFC) > 0.3
 deg_subset <- compute_ci(rep_tab$gse_logFC[deg_mask],
-                         rep_tab$dream_logFC[deg_mask])
+                         rep_tab$bulk_logFC[deg_mask])
 
 # Sign concordance
-dir_all <- mean(sign(rep_tab$gse_logFC) == sign(rep_tab$dream_logFC),
+dir_all <- mean(sign(rep_tab$gse_logFC) == sign(rep_tab$bulk_logFC),
                 na.rm = TRUE) * 100
 dir_deg <- mean(sign(rep_tab$gse_logFC[deg_mask]) ==
-                sign(rep_tab$dream_logFC[deg_mask]),
+                sign(rep_tab$bulk_logFC[deg_mask]),
                 na.rm = TRUE) * 100
 
 summary_dt <- data.table(

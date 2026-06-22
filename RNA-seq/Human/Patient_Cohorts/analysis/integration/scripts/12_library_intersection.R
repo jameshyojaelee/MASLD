@@ -64,7 +64,7 @@ consensus_mouse_ids <- unique(ortho_map$mouse_gene_id)
 overlap_ids <- intersect(library_mouse_ids, consensus_mouse_ids)
 
 # Significant DEGs
-sig_mouse <- ortho_map[gene_base %in% consensus[dream_sig == TRUE, gene_base], mouse_gene_id]
+sig_mouse <- ortho_map[gene_base %in% consensus[bulk_sig == TRUE, gene_base], mouse_gene_id]
 
 overlap_sig <- intersect(library_mouse_ids, sig_mouse)
 
@@ -93,27 +93,27 @@ lib_dt[, in_library := TRUE]
 
 # Merge with consensus info via mouse_gene_id
 consensus_info <- ortho_map[, .(mouse_gene_id, gene_base, human_symbol)]
-consensus_info <- merge(consensus_info, 
-                         consensus[, .(gene_base, dream_sig, dream_logFC, dream_padj)],
+consensus_info <- merge(consensus_info,
+                         consensus[, .(gene_base, bulk_sig, bulk_logFC, bulk_padj)],
                          by = "gene_base", all.x = TRUE)
 consensus_info <- unique(consensus_info)
 
 intersection <- merge(
   lib_dt[, .(mouse_gene_id, mouse_gene_symbol, mouse_biotype, 
              source_analyses, n_analyses, has_mouse_data, has_human_data, in_library)],
-  consensus_info[, .(mouse_gene_id, dream_sig, dream_logFC, dream_padj)],
+  consensus_info[, .(mouse_gene_id, bulk_sig, bulk_logFC, bulk_padj)],
   by = "mouse_gene_id", all = TRUE
 )
 
 # Fill NAs
 intersection[is.na(in_library), in_library := FALSE]
-intersection[is.na(dream_sig), dream_sig := FALSE]
+intersection[is.na(bulk_sig), bulk_sig := FALSE]
 
 # Classify
 intersection[, status := fcase(
-  in_library & dream_sig == TRUE, "Validated",
-  in_library & dream_sig == FALSE, "Unsupported",
-  !in_library & dream_sig == TRUE, "New_candidate",
+  in_library & bulk_sig == TRUE, "Validated",
+  in_library & bulk_sig == FALSE, "Unsupported",
+  !in_library & bulk_sig == TRUE, "New_candidate",
   default = "Other"
 )]
 
@@ -152,11 +152,11 @@ dev.off()
 cat("\nSaved: library_overlap_summary.pdf\n")
 
 # --- Save ---
-fwrite(intersection[order(status, dream_padj)], file.path(RDIR, "library_intersection.csv"))
+fwrite(intersection[order(status, bulk_padj)], file.path(RDIR, "library_intersection.csv"))
 cat("Saved: library_intersection.csv\n")
 
 # Also save the new candidates separately
-new_cands <- intersection[status == "New_candidate"][order(dream_padj)]
+new_cands <- intersection[status == "New_candidate"][order(bulk_padj)]
 if (nrow(new_cands) > 0) {
   fwrite(new_cands, file.path(RDIR, "new_candidate_genes.csv"))
   cat("Saved: new_candidate_genes.csv (", nrow(new_cands), "genes)\n")

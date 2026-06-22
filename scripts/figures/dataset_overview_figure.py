@@ -103,29 +103,23 @@ def draw_panel(ax, datasets, disease_color, control_color, species_label, bg_col
                        color=disease_color, edgecolor="white", linewidth=0.5,
                        zorder=3, label="Disease")
     
-    # Y-axis labels: Author (Year)
+    # Y-axis labels: Accession (Year)
     y_labels = []
     for d in datasets:
-        label = f"{d[0]} ({d[2]})"
+        label = f"{d[1]} ({d[2]})"
         y_labels.append(label)
     ax.set_yticks(y_pos)
     ax.set_yticklabels(y_labels, fontweight="bold", fontsize=10)
-    
-    # Annotate: total N + accession on each bar
+
+    # Annotate: total N on each bar
     for i, d in enumerate(datasets):
         total = d[3] + d[4]
-        acc = d[1]
-        
+
         # Total N inside/outside bar
         x_text = total + max_total * 0.02
         ax.text(x_text, y_pos[i] + 0.01, f"n={total}",
                 va="center", ha="left", fontsize=8.5, fontweight="bold",
                 color=ACCENT_BORDER, zorder=5)
-        
-        # GEO accession below label
-        ax.text(x_text, y_pos[i] - 0.23, acc,
-                va="center", ha="left", fontsize=7,
-                color=LABEL_GRAY, style="italic", zorder=5)
     
     # Panel title
     ax.set_title(species_label, fontsize=14, fontweight="bold", pad=12,

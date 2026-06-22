@@ -188,7 +188,7 @@ dream <- fread(DREAM_PATH)
 # dream has columns: gene, logFC, AveExpr, t, P.Value, padj, ...
 # Use 'symbol' column (gene symbols) — 'gene' has Ensembl IDs which
 # won't match the scRNA var_names (gene symbols like TSPAN6)
-dream_t <- dream[, .(gene = symbol, dream_t = t, dream_logFC = logFC, dream_padj = padj)]
+dream_t <- dream[, .(gene = symbol, dream_t = t, bulk_logFC = logFC, bulk_padj = padj)]
 setkey(dream_t, gene)
 message("  ", nrow(dream_t), " genes with dream t-statistics")
 
@@ -323,14 +323,14 @@ for (st in subtypes) {
 
       # Direction concordance among co-significant genes (padj < 0.05 in both)
       res_sig_genes <- res_sub[padj < 0.05, gene]
-      dream_sig_genes <- dream_t[dream_padj < 0.05, gene]
+      dream_sig_genes <- dream_t[bulk_padj < 0.05, gene]
       cosig_genes <- intersect(res_sig_genes, dream_sig_genes)
       n_cosig <- length(cosig_genes)
 
       if (n_cosig > 0) {
         cosig_res   <- res_sub[match(cosig_genes, gene)]
         cosig_dream <- dream_t[match(cosig_genes, gene)]
-        dir_conc <- mean(sign(cosig_res$logFC) == sign(cosig_dream$dream_logFC),
+        dir_conc <- mean(sign(cosig_res$logFC) == sign(cosig_dream$bulk_logFC),
                          na.rm = TRUE)
       } else {
         dir_conc <- NA_real_

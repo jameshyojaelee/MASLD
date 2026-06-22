@@ -20,7 +20,7 @@
 #   - HYPERGEOMETRIC enrichment of each stage-DEG set in each module; background
 #     = that cell type's Hotspot autocorrelation gene universe (autocorr.tsv,
 #     ~9-13k genes per CT). HEADLINE restricted to progression-modules.
-#   - Direction check via pct_concordant_up / mean_dream_logFC (all_modules.tsv).
+#   - Direction check via pct_concordant_up / mean_bulk_logFC (all_modules.tsv).
 #
 # OUTPUTS (under stagedeg_routing/)
 #   - phenotype_correlations_stagedeg.tsv     : re-fit stage-beta, both axes
@@ -177,11 +177,11 @@ for (ct in CELL_TYPES) message(sprintf("  %s: universe=%d genes, modules=%d, mod
   ct, length(universe[[ct]]), dplyr::n_distinct(module_genes$module[module_genes$cell_type==ct]),
   sum(module_genes$cell_type==ct)))
 
-# all_modules.tsv direction columns (mean_dream_logFC = C2/LVQW post canonical
-# swap; pct_concordant_up = fraction of module genes up in bulk).
+# all_modules.tsv direction columns (mean_bulk_logFC = C2/LVQW canonical bulk
+# logFC; pct_concordant_up = fraction of module genes up in bulk).
 all_modules <- read_tsv(file.path(HS, "all_modules.tsv"), show_col_types = FALSE) |>
   transmute(cell_type, module = as.integer(module),
-            mean_dream_logFC, pct_concordant_up, bulk_replicated, is_novel)
+            mean_bulk_logFC, pct_concordant_up, bulk_replicated, is_novel)
 
 # -----------------------------------------------------------------------------
 # 3. Stage-DEG sets
@@ -284,7 +284,7 @@ enrich_axis <- enrich_axis |>
             is.na(pct_concordant_up) ~ NA_character_,
             pct_concordant_up >= 0.5 ~ "up",
             TRUE ~ "down"),
-         module_mean_logFC = mean_dream_logFC)
+         module_mean_logFC = mean_bulk_logFC)
 
 write_csv(enrich_axis |>
             select(axis, cell_type, module, stage_set, universe_N,

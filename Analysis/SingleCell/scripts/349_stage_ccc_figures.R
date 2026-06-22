@@ -9,7 +9,7 @@
 #   - bulk concordance flag (from Script 348)
 #   - LOO replication rate (from Script 347)
 #
-# Output: figures/main/fig2_progression_sex/panels/figS_stage_ccc_trajectory.pdf
+# Output: figures/main/fig3_RNAseq/panels/figS_stage_ccc_trajectory.pdf
 # (placed in supplementary by default; promote to figs/main if user approves)
 # ============================================================================
 
@@ -22,7 +22,7 @@ suppressPackageStartupMessages({
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 OUT_DIR <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory")
-FIG_DIR <- file.path(BASE, "figures/main/fig2_progression_sex/panels")
+FIG_DIR <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
 SUPP_DIR<- file.path(BASE, "figures/supplementary/stage_ccc")
 dir.create(SUPP_DIR, showWarnings = FALSE, recursive = TRUE)
 

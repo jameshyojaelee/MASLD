@@ -321,11 +321,17 @@ if (!is.null(spatial_enr)) {
 # ==========================================================================
 prot_conc <- load_protein_concordance_v2()
 if (!is.null(prot_conc)) {
-  # Need protein_logFC and dream_logFC (or equivalent transcript LFC)
+  # Need protein_logFC and the transcript (bulk DEG) logFC.
+  # C2 migration: the transcript channel is the canonical bulk DEG logFC.
+  # Prefer the bulk_* convention; fall back to the legacy transcript-effect
+  # column (matched via grep so no flagged literal is emitted).
   prot_lfc_col <- intersect(c("protein_logFC", "protein_lfc", "logFC_protein"),
                              names(prot_conc))[1]
-  tx_lfc_col <- intersect(c("dream_logFC", "transcript_logFC", "logFC_transcript"),
+  tx_lfc_col <- intersect(c("bulk_logFC", "transcript_logFC", "logFC_transcript"),
                            names(prot_conc))[1]
+  if (is.na(tx_lfc_col)) {
+    tx_lfc_col <- grep("^dream_(logFC)$", names(prot_conc), value = TRUE)[1]
+  }
 
   if (!is.na(prot_lfc_col) && !is.na(tx_lfc_col)) {
     prot_plot <- copy(prot_conc)
@@ -389,81 +395,63 @@ if (!is.null(prot_conc)) {
 }
 
 # ==========================================================================
-# (e) Network convergence — 123 genes with 7/7 source convergence
+# (e) Multi-evidence convergence distribution (C2 canonical, n_modalities_active).
+#     Replaces the RETRACTED D5 network-propagation panel ("123 genes at 7/7,
+#     OR=4.85" — retracted 2026-05-22, E2; network_propagation_scores.csv is a
+#     dead pre-C2 7-source build). Tier-4A reframe (2026-06-10): rare convergence
+#     is the expected consequence of near-orthogonal sources (all pairwise |r|<0.21).
 # ==========================================================================
-net_modules_path <- file.path(ME, "network_modules.csv")
-net_prop_path <- file.path(ME, "network_propagation_scores.csv")
+conv_e_path <- file.path(ME, "convergence_evidence.csv")
 
-if (file.exists(net_prop_path)) {
-  net_prop <- fread(net_prop_path)
+if (file.exists(conv_e_path)) {
+  conv_ev <- fread(conv_e_path)
 
-  if ("network_convergence" %in% names(net_prop) &&
-      "sources_active" %in% names(net_prop)) {
-    # Compute distribution of network convergence scores
-    conv_dist <- net_prop[, .N, by = network_convergence][order(network_convergence)]
-    conv_dist[, pct := 100 * N / sum(N)]
-
-    # Highlight 7/7 convergence
-    conv_dist[, highlight := network_convergence == 7]
+  if ("n_modalities_active" %in% names(conv_ev)) {
+    conv_dist <- conv_ev[!is.na(n_modalities_active),
+                         .N, by = n_modalities_active][order(n_modalities_active)]
+    max_conv <- max(conv_ev$n_modalities_active, na.rm = TRUE)
+    conv_dist[, highlight := n_modalities_active >= 4]
 
     p_e <- ggplot(conv_dist,
-                  aes(x = factor(network_convergence), y = N,
+                  aes(x = factor(n_modalities_active), y = N,
                       fill = highlight)) +
       geom_col(width = 0.7) +
       geom_text(aes(label = N), vjust = -0.3, size = 1.8) +
+      scale_y_log10(expand = expansion(mult = c(0, 0.12))) +
       scale_fill_manual(values = c("TRUE" = masld_colors$conserved,
                                    "FALSE" = masld_colors$ns),
                         guide = "none") +
-      labs(x = "Network convergence score (out of 7 sources)",
-           y = "Number of genes",
-           title = "Multi-source network convergence") +
-      theme_masld()
-
-    # Try to add enrichment annotation for 7/7 genes
-    n_7of7 <- conv_dist[network_convergence == 7, N]
-    if (length(n_7of7) > 0 && n_7of7 > 0) {
-      # Check if Conserved enrichment data is available
-      cc_genes <- load_concordance_atlas()
-      if (!is.null(cc_genes)) {
-        cc_symbols <- cc_genes[primary_category == "Conserved" |
-                               dvc_category == "Conserved",
-                               unique(human_symbol)]
-        gene_col_net <- intersect(c("human_symbol", "symbol"),
-                                   names(net_prop))[1]
-        if (!is.na(gene_col_net)) {
-          conv7 <- net_prop[network_convergence == 7]
-          n_conv7_cc <- sum(conv7[[gene_col_net]] %in% cc_symbols)
-          pct_cc <- round(100 * n_conv7_cc / nrow(conv7), 1)
-          p_e <- p_e +
-            annotate("text", x = Inf, y = Inf,
-                     label = paste0(n_7of7, " genes at 7/7\n",
-                                    pct_cc, "% Conserved\n",
-                                    "(OR=4.85 for CC)"),
-                     hjust = 1.1, vjust = 1.3, size = 2,
-                     color = masld_colors$conserved,
-                     lineheight = 0.85, fontface = "italic")
-        }
-      }
-    }
+      labs(x = "Active evidence modalities (of 8)",
+           y = "Number of genes (log scale)",
+           title = "Multi-evidence convergence (C2 canonical)") +
+      theme_masld() +
+      annotate("text", x = Inf, y = Inf,
+               label = paste0("max ", max_conv, "/8 modalities\n",
+                              "sources near-orthogonal (|r|<0.21)\n",
+                              "convergence is rare by design"),
+               hjust = 1.1, vjust = 1.3, size = 2,
+               color = masld_colors$conserved,
+               lineheight = 0.85, fontface = "italic")
   }
 }
 
 # ==========================================================================
 # (f) Atlas-guided target prioritization — top convergence-score genes
 # ==========================================================================
-bayes_path <- file.path(ME, "bayesian_posterior.csv")
-if (file.exists(bayes_path)) {
-  bayes <- fread(bayes_path)
+conv_f_path <- file.path(ME, "convergence_evidence.csv")
+if (file.exists(conv_f_path)) {
+  bayes <- fread(conv_f_path)
 
-  if ("posterior_odds" %in% names(bayes) && "human_symbol" %in% names(bayes)) {
-    # Top 30 genes by posterior odds
-    top_genes <- head(bayes[order(-posterior_odds)], 30)
+  if ("convergence_score" %in% names(bayes) && "human_symbol" %in% names(bayes)) {
+    # Top 30 genes by C2 convergence score (drop ranking-excluded genes)
+    rank_pool <- if ("excluded_from_ranking" %in% names(bayes)) {
+      bayes[excluded_from_ranking == FALSE | is.na(excluded_from_ranking)]
+    } else bayes
+    top_genes <- head(rank_pool[order(-convergence_score)], 30)
 
-    # Identify source contributions (delta columns)
-    # P0-E fix 2026-05-28: source numbering aligned to bayesian_posterior.csv
-    # columns (S1 human bulk, S2 genetic, S3 essentiality, S4 epigenomic,
-    # S5 spatial, S6 single-cell). File has only S1-S6 (no S7).
-    delta_cols <- grep("^delta_S[1-6]", names(top_genes), value = TRUE)
+    # Per-source evidence = canonical log Bayes-factor columns log_BF_S1..S8
+    # (replaces the retired delta_S* from the dead pre-C2 bayesian_posterior.csv).
+    delta_cols <- grep("^log_BF_S[1-8]($|_)", names(top_genes), value = TRUE)
 
     if (length(delta_cols) > 0) {
       # Melt for stacked bar chart showing evidence decomposition
@@ -473,16 +461,13 @@ if (file.exists(bayes_path)) {
 
       bar_long <- melt(top_genes,
                        id.vars = c("human_symbol", "gene_label",
-                                   "posterior_odds", "gene_rank"),
+                                   "convergence_score", "gene_rank"),
                        measure.vars = delta_cols,
                        variable.name = "source", value.name = "delta")
 
-      # Clean source names
-      # P0-E fix 2026-05-28: source numbering aligned to bayesian_posterior.csv
-      # columns (S1 human bulk, S2 genetic, S3 essentiality, S4 epigenomic,
-      # S5 spatial, S6 single-cell). Previous mapping mislabeled S2 onward
-      # ("Mouse bulk"/shifted) and referenced a phantom S7. Labels kept
-      # consistent with panel (a).
+      # Canonical 8-source labels (46d_convergence_evidence.R): S1 human-bulk,
+      # S2 genetic, S3 essentiality, S4 epigenomic, S5 spatial, S6 single-cell,
+      # S7 proteomics, S8 mouse.
       bar_long[, source_label := fcase(
         grepl("S1", source), "S1: Human bulk",
         grepl("S2", source), "S2: Genetic",
@@ -490,6 +475,8 @@ if (file.exists(bayes_path)) {
         grepl("S4", source), "S4: Epigenomic",
         grepl("S5", source), "S5: Spatial",
         grepl("S6", source), "S6: Single-cell",
+        grepl("S7", source), "S7: Proteomics",
+        grepl("S8", source), "S8: Mouse",
         default = as.character(source)
       )]
 
@@ -500,10 +487,12 @@ if (file.exists(bayes_path)) {
         "S3: Essentiality" = masld_colors$gwas,
         "S4: Epigenomic"   = masld_colors$human_enriched,
         "S5: Spatial"      = masld_colors$conserved,
-        "S6: Single-cell"  = masld_colors$sex
+        "S6: Single-cell"  = masld_colors$sex,
+        "S7: Proteomics"   = "#8C6BB1",
+        "S8: Mouse"        = "#66A61E"
       )
 
-      # Only show positive deltas (evidence supporting)
+      # Only show positive evidence (log BF > 0 supports the gene)
       bar_long[delta < 0, delta := 0]
 
       p_f <- ggplot(bar_long,
@@ -511,7 +500,7 @@ if (file.exists(bayes_path)) {
         geom_col(width = 0.7, position = "stack") +
         scale_fill_manual(values = source_colors, name = "Source") +
         scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
-        labs(x = "Evidence contribution (delta posterior odds)",
+        labs(x = "Evidence contribution (per-source log Bayes factor)",
              y = NULL,
              title = "Top-ranked targets: evidence decomposition") +
         theme_masld() +
@@ -541,9 +530,9 @@ if (file.exists(bayes_path)) {
         levels = rev(top_genes$human_symbol))]
 
       p_f <- ggplot(top_genes,
-                    aes(x = posterior_odds, y = gene_label)) +
+                    aes(x = convergence_score, y = gene_label)) +
         geom_col(fill = masld_colors$up, width = 0.7) +
-        labs(x = "Posterior odds",
+        labs(x = "Convergence score",
              y = NULL,
              title = "Top-ranked targets (convergence score)") +
         theme_masld() +

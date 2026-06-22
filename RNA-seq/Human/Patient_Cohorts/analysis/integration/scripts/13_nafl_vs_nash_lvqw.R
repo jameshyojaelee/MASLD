@@ -152,31 +152,31 @@ if (file.exists(dream_path) && !file.exists(backup_path)) {
 #    both-significant genes, logFC Spearman rho. Expect dir>=0.95, rho>=0.85.
 # ---------------------------------------------------------------------------
 dream <- fread(dream_path)
-setnames(dream, "adj.P.Val", "dream_padj", skip_absent = TRUE)
-setnames(dream, "logFC", "dream_logFC", skip_absent = TRUE)
+setnames(dream, "adj.P.Val", "dream_padj", skip_absent = TRUE)  # C2-OK-sensitivity
+setnames(dream, "logFC", "dream_logFC", skip_absent = TRUE)  # C2-OK-sensitivity
 
 mg <- merge(
   res[, .(gene, lvqw_logFC = logFC, lvqw_padj = padj)],
-  dream[, .(gene, dream_logFC, dream_padj)],
+  dream[, .(gene, dream_logFC, dream_padj)],  # C2-OK-sensitivity
   by = "gene"
 )
 cat(sprintf("[sanity] shared genes: %d (lvqw=%d, dream=%d)\n",
             nrow(mg), nrow(res), nrow(dream)))
 
-rho_all <- suppressWarnings(cor(mg$lvqw_logFC, mg$dream_logFC,
+rho_all <- suppressWarnings(cor(mg$lvqw_logFC, mg$dream_logFC,  # C2-OK-sensitivity
                                 method = "spearman", use = "complete.obs"))
 
-both_sig <- mg[lvqw_padj < 0.05 & dream_padj < 0.05]
+both_sig <- mg[lvqw_padj < 0.05 & dream_padj < 0.05]  # C2-OK-sensitivity
 dir_conc_both <- if (nrow(both_sig) > 0) {
-  mean(sign(both_sig$lvqw_logFC) == sign(both_sig$dream_logFC))
+  mean(sign(both_sig$lvqw_logFC) == sign(both_sig$dream_logFC))  # C2-OK-sensitivity
 } else NA_real_
 
 lvqw_sig <- mg[lvqw_padj < 0.05]
 dir_conc_lvqw_sig <- if (nrow(lvqw_sig) > 0) {
-  mean(sign(lvqw_sig$lvqw_logFC) == sign(lvqw_sig$dream_logFC))
+  mean(sign(lvqw_sig$lvqw_logFC) == sign(lvqw_sig$dream_logFC))  # C2-OK-sensitivity
 } else NA_real_
 
-dir_conc_all <- mean(sign(mg$lvqw_logFC) == sign(mg$dream_logFC), na.rm = TRUE)
+dir_conc_all <- mean(sign(mg$lvqw_logFC) == sign(mg$dream_logFC), na.rm = TRUE)  # C2-OK-sensitivity
 
 sanity <- data.table(
   metric = c("n_genes_lvqw", "n_genes_dream", "n_shared_genes",
@@ -187,7 +187,7 @@ sanity <- data.table(
              "logFC_spearman_rho_all_shared",
              "n_cohorts", "n_nafl", "n_nash", "n_samples"),
   value = c(nrow(res), nrow(dream), nrow(mg),
-            n_deg, sum(dream$dream_padj < 0.05, na.rm = TRUE), nrow(both_sig),
+            n_deg, sum(dream$dream_padj < 0.05, na.rm = TRUE), nrow(both_sig),  # C2-OK-sensitivity
             round(dir_conc_both, 4),
             round(dir_conc_lvqw_sig, 4),
             round(dir_conc_all, 4),

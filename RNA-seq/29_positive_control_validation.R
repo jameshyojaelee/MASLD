@@ -57,13 +57,13 @@ results <- data.table(gene = pc_symbols)
 # Consensus DEGs
 if ("hgnc_symbol" %in% names(consensus)) {
   # Select available columns (meta_logFC/meta_padj may not exist post-threshold change)
-  avail_cols <- intersect(names(consensus), c("dream_logFC", "dream_padj", "dream_sig", "dream_dir"))
+  avail_cols <- intersect(names(consensus), c("bulk_logFC", "bulk_padj", "bulk_sig", "bulk_dir"))
   cons_match <- consensus[hgnc_symbol %in% pc_symbols, c("hgnc_symbol", avail_cols), with = FALSE]
   setnames(cons_match, "hgnc_symbol", "gene")
   cons_match <- cons_match[!duplicated(gene)]
   results <- merge(results, cons_match, by = "gene", all.x = TRUE)
 } else {
-  results[, c("dream_logFC", "dream_padj", "dream_sig") := .(NA, NA, NA)]
+  results[, c("bulk_logFC", "bulk_padj", "bulk_sig") := .(NA, NA, NA)]
 }
 
 # Concordance atlas (column is n_concordant, not best_n_concordant)
@@ -85,8 +85,8 @@ cat("  In concordance atlas:", sum(!is.na(results$concordance_category)), "/", n
 if ("twas_fdr" %in% names(results)) {
   cat("  With TWAS signal (fdr<0.1):", sum(!is.na(results$twas_fdr) & results$twas_fdr < 0.1), "/", nrow(results), "\n")
 }
-if ("dream_sig" %in% names(results)) {
-  cat("  In consensus DEGs (dream_sig):", sum(results$dream_sig == TRUE, na.rm = TRUE), "/", nrow(results), "\n")
+if ("bulk_sig" %in% names(results)) {
+  cat("  In consensus DEGs (bulk_sig):", sum(results$bulk_sig == TRUE, na.rm = TRUE), "/", nrow(results), "\n")
 }
 
 fwrite(results, file.path(OUTDIR, "positive_control_validation.csv"))

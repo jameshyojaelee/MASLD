@@ -9,8 +9,8 @@ import type { EvidenceStrengths } from "@/lib/types";
 // ---------------------------------------------------------------------------
 
 interface ExpressionData {
-  dream_logfc: number;
-  dream_padj: number;
+  bulk_logfc: number;
+  bulk_padj: number;
 }
 
 interface CausalData {
@@ -53,8 +53,8 @@ function buildNarration(
 
   switch (stepIndex) {
     case 0: {
-      const logfc = profile?.expression?.dream_logfc;
-      const padj = profile?.expression?.dream_padj;
+      const logfc = profile?.expression?.bulk_logfc;
+      const padj = profile?.expression?.bulk_padj;
       if (val === 0) {
         return {
           headline: "Human Bulk RNA-seq",

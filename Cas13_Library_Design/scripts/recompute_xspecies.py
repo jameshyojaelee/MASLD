@@ -137,8 +137,8 @@ print(f"Mouse genes with AveExpr ≥ 1 in any diet: {len(expressed_mouse_genes):
 
 # ----------------------------- §6 — UP-only Tier 1 ∩ MCD∪CDAHFD ------------ #
 
-# Atlas: Tier 1 (UP) — dream_padj<0.05, dream_logFC>0.5
-human_tier1_up = atlas[(atlas["dream_padj"] < 0.05) & (atlas["dream_logFC"] > 0.5)].copy()
+# Atlas: Tier 1 (UP) — bulk_padj<0.05, bulk_logFC>0.5
+human_tier1_up = atlas[(atlas["bulk_padj"] < 0.05) & (atlas["bulk_logFC"] > 0.5)].copy()
 print(f"Atlas Tier 1 UP rows (any biotype): {len(human_tier1_up):,}")
 
 # Map human Tier 1 → mouse_ensembl set via ortholog bridge
@@ -171,8 +171,8 @@ for thr in [0.3, 0.5, 0.75, 1.0]:
 # Human lncRNA DEGs UP (any LFC, padj<0.05)
 human_lnc_up = atlas[
     (atlas["gene_biotype"] == "lncRNA")
-    & (atlas["dream_padj"] < 0.05)
-    & (atlas["dream_logFC"] > 0)
+    & (atlas["bulk_padj"] < 0.05)
+    & (atlas["bulk_logFC"] > 0)
 ].copy()
 n_human_lnc_up = len(human_lnc_up)
 
@@ -204,17 +204,17 @@ cd_lnc_up_05 = {g for g in cd_up_05 if mouse_biotype.get(g) == "lncRNA"}
 # Best human row per mouse_ensembl (lowest padj wins)
 atlas_min = (
     atlas.dropna(subset=["ensembl_id_base"])
-    .sort_values("dream_padj")
+    .sort_values("bulk_padj")
     .drop_duplicates("ensembl_id_base", keep="first")
 )
 # Build mouse_ensembl → (h_lfc, h_padj) via bridge
 mouse_to_h = (
-    ortho.merge(atlas_min[["ensembl_id_base", "dream_logFC", "dream_padj", "human_symbol", "gene_biotype"]],
+    ortho.merge(atlas_min[["ensembl_id_base", "bulk_logFC", "bulk_padj", "human_symbol", "gene_biotype"]],
                 left_on="human_ensembl", right_on="ensembl_id_base", how="left")
-    .dropna(subset=["dream_padj"])
+    .dropna(subset=["bulk_padj"])
 )
 # pick per mouse_ensembl the human row with lowest padj
-mouse_to_h = mouse_to_h.sort_values("dream_padj").drop_duplicates("mouse_ensembl", keep="first")
+mouse_to_h = mouse_to_h.sort_values("bulk_padj").drop_duplicates("mouse_ensembl", keep="first")
 m2h_lookup = mouse_to_h.set_index("mouse_ensembl")
 
 sec8_rows = []
@@ -226,14 +226,14 @@ for d in ["MCD", "CDAHFD"]:
         columns={"logFC": "m_lfc", "adj.P.Val": "m_padj"}
     ), how="inner")
     # both significant
-    both_sig = paired[(paired["m_padj"] < 0.05) & (paired["dream_padj"] < 0.05)].copy()
+    both_sig = paired[(paired["m_padj"] < 0.05) & (paired["bulk_padj"] < 0.05)].copy()
     n_both_sig = len(both_sig)
     if n_both_sig:
-        same_sign = (np.sign(both_sig["dream_logFC"]) == np.sign(both_sig["m_lfc"])).mean()
-        up_in_both = ((both_sig["dream_logFC"] > 0) & (both_sig["m_lfc"] > 0)).sum()
-        down_in_both = ((both_sig["dream_logFC"] < 0) & (both_sig["m_lfc"] < 0)).sum()
+        same_sign = (np.sign(both_sig["bulk_logFC"]) == np.sign(both_sig["m_lfc"])).mean()
+        up_in_both = ((both_sig["bulk_logFC"] > 0) & (both_sig["m_lfc"] > 0)).sum()
+        down_in_both = ((both_sig["bulk_logFC"] < 0) & (both_sig["m_lfc"] < 0)).sum()
         discordant = n_both_sig - up_in_both - down_in_both
-        r = np.corrcoef(both_sig["dream_logFC"], both_sig["m_lfc"])[0, 1]
+        r = np.corrcoef(both_sig["bulk_logFC"], both_sig["m_lfc"])[0, 1]
     else:
         same_sign = up_in_both = down_in_both = discordant = float("nan")
         r = float("nan")
@@ -315,7 +315,7 @@ def direction(lfc):
         return "n/a"
     return "UP" if lfc > 0 else "DOWN"
 
-top10["dream_direction"] = top10["dream_logFC"].apply(direction)
+top10["dream_direction"] = top10["bulk_logFC"].apply(direction)
 
 # Pull MCD / CDAHFD logFC + padj via mouse_ensembl
 def lookup_de(d, mens, col):
@@ -440,7 +440,7 @@ A("")
 A("## 4. Recomputed §6 — Human Tier 1 (UP) ∩ MCD ∪ CDAHFD (UP)")
 A("")
 A("**Filter**:")
-A("- Human Tier 1 UP: atlas `dream_padj<0.05 AND dream_logFC>0.5` (UP-only, "
+A("- Human Tier 1 UP: atlas `bulk_padj<0.05 AND bulk_logFC>0.5` (UP-only, "
   "per Cas13 KD direction)")
 A("- Mouse anchor UP: per-diet `adj.P.Val<0.05 AND logFC>{thr}` (UP-only)")
 A("- Union: MCD UP ∪ CDAHFD UP")
@@ -470,8 +470,8 @@ A(f"**Headline**: the bridge resolves ~74% of Tier 1 UP rows "
 A("")
 A("## 5. Recomputed §7 — lncRNA inventory (UP-only cross-species)")
 A("")
-A(f"- Human lncRNA DEGs UP (atlas `gene_biotype=lncRNA AND dream_padj<0.05 "
-  f"AND dream_logFC>0`): **{n_human_lnc_up:,}**.")
+A(f"- Human lncRNA DEGs UP (atlas `gene_biotype=lncRNA AND bulk_padj<0.05 "
+  f"AND bulk_logFC>0`): **{n_human_lnc_up:,}**.")
 A(f"- Of these with a mouse ortholog (union of all three sources): "
   f"**{n_human_lnc_up_with_mouse:,}**.")
 A(f"- Of those mouse-orthologous human-up-lncRNAs, also mouse "
@@ -495,9 +495,9 @@ A("**Diagnosis of the lncRNA gap**: only ~17,000 of mouse and ~19,000 of "
 A("")
 A("## 6. Recomputed §8 — Direction concordance UP-in-both")
 A("")
-A("Genes significant in BOTH human (atlas `dream_padj<0.05`) AND mouse "
+A("Genes significant in BOTH human (atlas `bulk_padj<0.05`) AND mouse "
   "(per-diet `adj.P.Val<0.05 AND |logFC|>0.5`).  Bridge resolves to one human "
-  "row per mouse ENSMUSG (lowest dream_padj wins for one-to-many fans).")
+  "row per mouse ENSMUSG (lowest bulk_padj wins for one-to-many fans).")
 A("")
 A("| diet | n both-sig | UP-in-both | DOWN-in-both | discordant | concordant frac | Pearson r (human dream vs mouse logFC) |")
 A("|---|---:|---:|---:|---:|---:|---:|")
@@ -517,7 +517,7 @@ A("")
 A("## 7. Pool A and Pool B sizes (the headline)")
 A("")
 A("**Pool A — RNA-seq strict UP-concordant:**")
-A("- Human: `dream_padj<0.05 AND dream_logFC>0.5`")
+A("- Human: `bulk_padj<0.05 AND bulk_logFC>0.5`")
 A("- Mouse: (MCD OR CDAHFD) `adj.P.Val<0.05 AND logFC>0.5`")
 A("- Both UP concordant (human logFC > 0 AND mouse logFC > 0)")
 A("- Cross-species ortholog match required (biomaRt + atlas bridge)")
@@ -548,7 +548,7 @@ ab_table = (
     ortho.loc[ortho["mouse_ensembl"].isin(pool_ab_inter)]
     .drop(columns=["human_symbol"], errors="ignore")
     .merge(
-        atlas[["ensembl_id_base", "human_symbol", "dream_logFC", "dream_padj",
+        atlas[["ensembl_id_base", "human_symbol", "bulk_logFC", "bulk_padj",
                "coloc_pp4_canonical", "coloc_gwas_canonical"]],
         left_on="human_ensembl", right_on="ensembl_id_base", how="left",
     )
@@ -575,7 +575,7 @@ for _, r in ab_table.iterrows():
         f"{r['mouse_ensembl']} | "
         f"{fmt(r['coloc_pp4_canonical'], '{:.3f}')} | "
         f"{r['coloc_gwas_canonical'] if pd.notna(r['coloc_gwas_canonical']) else 'n/a'} | "
-        f"{fmt(r['dream_logFC'], '{:.2f}')} | {fmt_padj(r['dream_padj'])} | "
+        f"{fmt(r['bulk_logFC'], '{:.2f}')} | {fmt_padj(r['bulk_padj'])} | "
         f"{fmt(r['MCD_logFC'], '{:.2f}')} | {fmt(r['CDAHFD_logFC'], '{:.2f}')} |"
     )
 A("")
@@ -597,7 +597,7 @@ for i, (_, r) in enumerate(top10.iterrows(), start=1):
         f"{fmt(r['coloc_pp4_canonical'], '{:.3f}')} | "
         f"{r['coloc_gwas_canonical'] if pd.notna(r['coloc_gwas_canonical']) else 'n/a'} | "
         f"{'✅' if r['in_pool_a'] else '—'} | "
-        f"{fmt(r['dream_logFC'], '{:.2f}')} | {fmt_padj(r['dream_padj'])} | "
+        f"{fmt(r['bulk_logFC'], '{:.2f}')} | {fmt_padj(r['bulk_padj'])} | "
         f"{r['dream_direction']} | "
         f"{fmt(r['MCD_logFC'], '{:.2f}')} | {fmt_padj(r['MCD_padj'])} | "
         f"{fmt(r['CDAHFD_logFC'], '{:.2f}')} | {fmt_padj(r['CDAHFD_padj'])} | "

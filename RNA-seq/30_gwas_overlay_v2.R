@@ -35,16 +35,10 @@ dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
 
 GWAS_FILE  <- file.path(PROJECT, "GWAS", "Closest_genes.csv")
-# Use ashr-shrunk dream results if available (lfsr-based significance)
+# Canonical human bulk DEGs (limma-voom-qw C2; ashr-shrunk logFC + lfsr columns)
 DREAM_FILE <- file.path(RNA_DIR, "Human", "Patient_Cohorts", "analysis",
                         "integration", "results", "integration",
-                        "dream_results_ashr.csv")
-if (!file.exists(DREAM_FILE)) {
-  DREAM_FILE <- file.path(RNA_DIR, "Human", "Patient_Cohorts", "analysis",
-                          "integration", "results", "integration",
-                          "dream_results.csv")
-  cat("WARNING: dream_results_ashr.csv not found; falling back to dream_results.csv\n")
-}
+                        "canonical_deg_results.csv")
 ATLAS_FILE <- file.path(RNA_DIR, "Analysis", "Cross_Species_Concordance",
                         "results", "concordance_atlas_unified.csv")
 # MR_FILE removed 2026-04-22 — MR ditched from paper.
@@ -105,7 +99,7 @@ cat(sprintf("    Raw entries: %d | After pipe-split & dedup: %d unique HGNC symb
 
 # ============================================================
 #  2. Human-only mapping (Tier 1): biomaRt Ensembl → HGNC, then
-#     join to dream_results.csv
+#     join to canonical_deg_results.csv
 # ============================================================
 cat("\n[2] Human-only mapping via dream results...\n")
 dream <- fread(DREAM_FILE)
@@ -179,10 +173,10 @@ gwas_in_dream <- gwas_in_dream[!duplicated(hgnc_symbol)]  # best padj per symbol
 human_mapping <- gwas_in_dream[, .(
   gwas_symbol    = hgnc_symbol,
   ensembl_id     = gene,
-  dream_logFC    = logFC,
-  dream_padj     = padj,
-  dream_AveExpr  = AveExpr,
-  dream_t        = t
+  bulk_logFC     = logFC,
+  bulk_padj      = padj,
+  bulk_AveExpr   = AveExpr,
+  bulk_t         = t
 )]
 
 n_mapped_dream <- nrow(human_mapping)
@@ -378,11 +372,11 @@ cards[, c("twas_z", "twas_p", "twas_fdr", "mr_beta", "mr_p", "mr_fdr",
            NA_real_, NA_real_)]
 
 # Add evidence summary flags
-cards[, in_dream         := !is.na(dream_logFC)]
+cards[, in_dream         := !is.na(bulk_logFC)]
 cards[, in_atlas         := !is.na(primary_category)]
 # Standard padj-based significance (padj < 0.05, |logFC| > 0.5)
-# dream_padj already in cards from line 184 column selection
-cards[, dream_sig := !is.na(dream_padj) & dream_padj < 0.05 & !is.na(dream_logFC) & abs(dream_logFC) > 0.5]
+# bulk_padj already in cards from human_mapping column selection
+cards[, bulk_sig := !is.na(bulk_padj) & bulk_padj < 0.05 & !is.na(bulk_logFC) & abs(bulk_logFC) > 0.5]
 cards[, in_conserved := primary_category == "Conserved" & !is.na(primary_category)]
 # has_mr is now always FALSE (MR ditched 2026-04-22); column retained for compat
 cards[, has_mr := FALSE]
@@ -403,12 +397,12 @@ cat(sprintf("    Saved: %s\n",
 cat("\n    Priority loci evidence summary:\n")
 for (i in seq_len(nrow(cards))) {
   row <- cards[i]
-  cat(sprintf("    - %-12s | dream_logFC=%6s | dream_padj=%8s | atlas=%s | n_concord=%s | trans=%.3s\n",
+  cat(sprintf("    - %-12s | bulk_logFC=%6s | bulk_padj=%8s | atlas=%s | n_concord=%s | trans=%.3s\n",
               row$gwas_symbol,
-              ifelse(is.na(row$dream_logFC), "  --  ",
-                     sprintf("%+.3f", row$dream_logFC)),
-              ifelse(is.na(row$dream_padj), "   --   ",
-                     sprintf("%.2e", row$dream_padj)),
+              ifelse(is.na(row$bulk_logFC), "  --  ",
+                     sprintf("%+.3f", row$bulk_logFC)),
+              ifelse(is.na(row$bulk_padj), "   --   ",
+                     sprintf("%.2e", row$bulk_padj)),
               ifelse(is.na(row$primary_category), "NOT_IN_ATLAS",
                      row$primary_category),
               ifelse(is.na(row$best_n_concordant), "-",
@@ -494,11 +488,11 @@ cat("    [6c] Priority loci convergence dot plot...\n")
 # Build a long-form evidence matrix for the dot plot
 evidence_long <- rbindlist(list(
   cards[, .(gwas_symbol,
-            evidence = "Human DE (dream)",
+            evidence = "Human DE (bulk)",
             value    = fifelse(in_dream, 1, 0),
-            lfc      = dream_logFC,
-            nlog10p  = -log10(dream_padj),
-            detail   = fifelse(!is.na(dream_padj), sprintf("p=%.1e", dream_padj), ""))],
+            lfc      = bulk_logFC,
+            nlog10p  = -log10(bulk_padj),
+            detail   = fifelse(!is.na(bulk_padj), sprintf("p=%.1e", bulk_padj), ""))],
   cards[, .(gwas_symbol,
             evidence = "Concordance Atlas",
             value    = fifelse(in_atlas, 1, 0),
@@ -512,8 +506,8 @@ evidence_long <- rbindlist(list(
             nlog10p  = NA_real_,
             detail   = "")],
   cards[, .(gwas_symbol,
-            evidence = "Dream padj < 0.05",
-            value    = fifelse(dream_sig, 1, 0),
+            evidence = "Bulk padj < 0.05",
+            value    = fifelse(bulk_sig, 1, 0),
             lfc      = NA_real_,
             nlog10p  = NA_real_,
             detail   = "")]

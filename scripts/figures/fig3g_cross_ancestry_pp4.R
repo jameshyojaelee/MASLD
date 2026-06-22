@@ -196,9 +196,10 @@ p <- ggplot() +
          size  = guide_legend(order = 2,
                               override.aes = list(color = COL_BOTH)))
 
-out_pdf <- file.path(FIG3_DIR, "cross_ancestry_pp4.pdf")
-save_fig(p, out_pdf, width = fig_full_width * 0.6, height = 3.6)
-cat("Saved:", out_pdf, "\n")
+# RETIRED 2026-06-12 (cross_ancestry_pp4.pdf no longer a Fig 2 panel; sidecar CSV below is kept):
+# out_pdf <- file.path(FIG3_DIR, "cross_ancestry_pp4.pdf")
+# save_fig(p, out_pdf, width = fig_full_width * 0.6, height = 3.6)
+# cat("Saved:", out_pdf, "\n")
 
 # Sidecar CSV: cross-ancestry replicators for caption / supplement
 out_tbl <- gene_xa[tier == "both",

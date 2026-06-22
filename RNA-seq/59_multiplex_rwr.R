@@ -53,11 +53,12 @@ out_pdf <- file.path(fig_dir, "figS_multiplex_rwr.pdf")
 # ---------------------------------------------------------------------------
 cat("\n--- Loading atlas ---\n")
 atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
 cat("Atlas:", nrow(atlas), "genes x", ncol(atlas), "columns\n")
 
 # Identify seed genes: DEG (padj<0.05, |logFC|>0.3) AND COLOC PP.H4>0.5
 # Use coloc_susie_best_pp4 (SuSiE-COLOC, active column with 577 genes > 0.5)
-atlas[, is_deg := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.3]
+atlas[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.3]
 atlas[, has_coloc := !is.na(coloc_susie_best_pp4) & coloc_susie_best_pp4 > 0.5]
 atlas[, is_seed := is_deg & has_coloc]
 cat("DEGs:", sum(atlas$is_deg, na.rm = TRUE), "\n")
@@ -389,7 +390,7 @@ rwr_dt <- data.table(
 # Atlas gene IDs are already unversioned (after rename above)
 atlas_slim <- atlas[, .(gene,
                         symbol, gene_biotype,
-                        dream_logFC, dream_padj,
+                        bulk_logFC, bulk_padj,
                         coloc_susie_best_pp4,
                         is_deg, has_coloc, is_seed,
                         is_conserved)]
@@ -412,7 +413,7 @@ rwr_dt[!is.na(gene_biotype), .(
 # Top lncRNAs
 cat("\nTop 20 lncRNAs by RWR score:\n")
 rwr_dt[gene_biotype == "lncRNA"][order(rwr_rank)][1:20,
-  .(rwr_rank, symbol, rwr_score, is_deg, dream_padj, coloc_susie_best_pp4)] |> print()
+  .(rwr_rank, symbol, rwr_score, is_deg, bulk_padj, coloc_susie_best_pp4)] |> print()
 
 # Save
 fwrite(rwr_dt[order(rwr_rank)], out_csv)

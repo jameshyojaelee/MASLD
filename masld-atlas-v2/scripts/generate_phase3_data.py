@@ -78,7 +78,7 @@ def build_progression_journey() -> dict:
     atlas_path = PROJECT_ROOT / "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"
     atlas = pd.read_csv(atlas_path, usecols=[
         "human_symbol", "ensembl_id", "top_pathways",
-        "dream_logFC", "dream_padj",
+        "bulk_logFC", "bulk_padj",
     ])
     # Strip version suffix from ensembl_id for joining
     atlas["ens_base"] = atlas["ensembl_id"].str.replace(r"\.\d+$", "", regex=True)
@@ -383,7 +383,9 @@ def build_drug_pipeline() -> dict:
             "moa": str(r["moa"]),
             "support": str(r["atlas_support"]),
             "is_deg": bool(r["is_deg"]) if pd.notna(r.get("is_deg")) else None,
-            "dream_logfc": _round(r.get("dream_logFC")),
+            # JSON key unified to bulk_* (C2); source clinical_drug_validation_table.csv
+            # is a non-atlas drug table not yet migrated (separate area).
+            "bulk_logfc": _round(r.get("dream_logFC")),  # C2-OK-sensitivity
         })
 
     result = {

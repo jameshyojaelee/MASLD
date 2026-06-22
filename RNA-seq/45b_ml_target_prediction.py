@@ -63,9 +63,9 @@ N_REPEATS = 10
 
 SOURCE_FEATURES = {
     "S1_human_bulk": [
-        ("dream_logFC", "abs", "abs_dream_logFC"),
-        ("dream_padj", "neglog10", "neglog10_dream_padj"),
-        ("dream_tstat", None, "dream_tstat"),
+        ("bulk_logFC", "abs", "abs_bulk_logFC"),
+        ("bulk_padj", "neglog10", "neglog10_bulk_padj"),
+        ("bulk_tstat", None, "bulk_tstat"),
     ],
     "S2_mouse_bulk": [
         ("mouse_meta_logFC", "abs", "abs_mouse_meta_logFC"),
@@ -116,8 +116,8 @@ SOURCE_FEATURES = {
         ("is_conserved", "binary", "is_conserved"),
     ],
     "Derived_sex": [
-        ("dream_logFC_M", None, "dream_logFC_M"),
-        ("dream_logFC_F", None, "dream_logFC_F"),
+        ("bulk_logFC_M", None, "bulk_logFC_M"),
+        ("bulk_logFC_F", None, "bulk_logFC_F"),
         ("sex_interaction_padj", "neglog10", "neglog10_sex_interaction_padj"),
     ],
     "Derived_pathway": [
@@ -205,6 +205,8 @@ def main():
     # Load data
     atlas = pd.read_csv(ATLAS_FILE)
     print(f"Atlas: {atlas.shape[0]} genes x {atlas.shape[1]} cols")
+    assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), \
+        "C2: atlas missing bulk_* — rebuild 27a"
 
     pos_ctrl = pd.read_csv(POS_CTRL_FILE)
     drug_targets = pd.read_csv(DRUG_FILE)
@@ -297,12 +299,12 @@ def main():
 
     baselines = {}
 
-    # Baseline 1: L1 only (dream padj ranking)
-    dream_score = -np.log10(atlas["dream_padj"].clip(lower=1e-300).astype(float))
-    dream_score = dream_score.fillna(0)
-    baselines["L1_dream_only"] = {
-        "auroc": roc_auc_score(y, dream_score),
-        "auprc": average_precision_score(y, dream_score),
+    # Baseline 1: L1 only (bulk padj ranking)
+    bulk_score = -np.log10(atlas["bulk_padj"].clip(lower=1e-300).astype(float))
+    bulk_score = bulk_score.fillna(0)
+    baselines["L1_bulk_only"] = {
+        "auroc": roc_auc_score(y, bulk_score),
+        "auprc": average_precision_score(y, bulk_score),
     }
 
     # Baseline 2: Genetic causal only (n_coloc_sources)
@@ -537,8 +539,8 @@ def main():
     print(f"  CV AUPRC: {np.mean(results[best_model_name]['auprc']):.3f} "
           f"± {np.std(results[best_model_name]['auprc']):.3f}")
     print(f"Beats L1-only baseline: "
-          f"{'YES' if full_auroc > baselines['L1_dream_only']['auroc'] else 'NO'} "
-          f"({full_auroc:.3f} vs {baselines['L1_dream_only']['auroc']:.3f})")
+          f"{'YES' if full_auroc > baselines['L1_bulk_only']['auroc'] else 'NO'} "
+          f"({full_auroc:.3f} vs {baselines['L1_bulk_only']['auroc']:.3f})")
     print(f"Beats layers_active: "
           f"{'YES' if full_auroc > baselines['layers_active_count']['auroc'] else 'NO'} "
           f"({full_auroc:.3f} vs {baselines['layers_active_count']['auroc']:.3f})")

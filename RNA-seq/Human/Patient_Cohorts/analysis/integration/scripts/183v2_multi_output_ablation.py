@@ -529,6 +529,14 @@ for ablation_name, ablation_cols in ABLATION_CONFIGS.items():
 # =========================================================================
 log.info(f"\n=== PART 6: Permutation Null ({N_PERM} permutations) ===")
 
+# NULL FIX (mega-review A7): the permutation null must RE-SELECT features
+# INSIDE each permutation. Previously it used X_tr_s[:, :50] (the first 50
+# columns of the full matrix) and never paid the feature-selection cost, so
+# the null underestimated chance performance and inflated the apparent
+# significance of the real AUROC. We now rank features with the SAME
+# univariate_auroc screen the real model uses, but computed on the SHUFFLED
+# training labels, and take the top PERM_K features per fold/permutation.
+PERM_K = 50
 for oname, y_out, is_binary in outputs:
     perm_metrics = []
     for pi in range(N_PERM):
@@ -539,26 +547,40 @@ for oname, y_out, is_binary in outputs:
 
             X_tr_imp, X_te_imp = median_impute(X[train_mask], X[test_mask])
             scaler = StandardScaler()
-            X_tr_s = scaler.fit_transform(X_tr_imp)
-            X_te_s = scaler.transform(X_te_imp)
+            X_tr_s = pd.DataFrame(scaler.fit_transform(X_tr_imp), index=X_tr_imp.index, columns=X_tr_imp.columns)
+            X_te_s = pd.DataFrame(scaler.transform(X_te_imp), index=X_te_imp.index, columns=X_te_imp.columns)
 
-            y_tr = y_out.reindex(X[train_mask].index)
-            y_te = y_out.reindex(X[test_mask].index)
+            y_tr = y_out.reindex(X_tr_s.index)
+            y_te = y_out.reindex(X_te_s.index)
             valid_tr = y_tr.notna()
             valid_te = y_te.notna()
 
             if valid_tr.sum() < 10 or valid_te.sum() < 5:
                 continue
 
-            # Shuffle training labels
-            y_tr_perm = y_tr[valid_tr].values.copy()
-            np.random.shuffle(y_tr_perm)
+            # Shuffle training labels (positions aligned to valid training rows)
+            y_tr_perm = pd.Series(y_tr[valid_tr].values.copy(), index=X_tr_s[valid_tr].index)
+            shuffled = y_tr_perm.values.copy()
+            np.random.shuffle(shuffled)
+            y_tr_perm[:] = shuffled
 
-            if len(np.unique(y_tr_perm)) < 2:
+            if len(np.unique(y_tr_perm.values)) < 2:
                 continue
 
+            # Re-select features INSIDE the permutation, on the shuffled labels.
             try:
-                _, prob = fit_predict(X_tr_s[valid_tr.values][:, :50], y_tr_perm.astype(int), X_te_s[valid_te.values][:, :50], binary=is_binary)
+                perm_rank = univariate_auroc(X_tr_s[valid_tr], y_tr_perm, binary=is_binary)
+                perm_feats = perm_rank.head(PERM_K).index.tolist()
+            except Exception:
+                perm_feats = list(X_tr_s.columns[:PERM_K])
+
+            try:
+                _, prob = fit_predict(
+                    X_tr_s[valid_tr][perm_feats].values,
+                    y_tr_perm.values.astype(int),
+                    X_te_s[valid_te][perm_feats].values,
+                    binary=is_binary,
+                )
                 m = compute_metrics(y_te[valid_te].values.astype(int), prob, binary=is_binary)
                 fold_metrics.append(m.get("auroc", m.get("macro_f1", 0)))
             except:
@@ -571,7 +593,7 @@ for oname, y_out, is_binary in outputs:
         all_results.append({
             "output": oname, "config": "permutation_null",
             "auroc" if is_binary else "macro_f1": np.mean(perm_metrics),
-            "fold": "all", "n_train": 0, "n_test": 0, "n_features": 50,
+            "fold": "all", "n_train": 0, "n_test": 0, "n_features": PERM_K,
             "perm_std": np.std(perm_metrics), "n_perms": len(perm_metrics)
         })
         log.info(f"  {oname} permutation null: {np.mean(perm_metrics):.3f} ± {np.std(perm_metrics):.3f}")

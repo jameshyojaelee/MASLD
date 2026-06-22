@@ -6,11 +6,11 @@
 #   - saves HTML via htmlwidgets::saveWidget (selfcontained = TRUE)
 #
 # Outputs (all in panels/):
-#   panelJ_3d_raw.html
-#   panelJ_3d_batch.html
-#   panelJ_3d_batch_sex.html
-#   panelJ_3d_batch_sex_sva.html
-#   panelJ_3d_comparison_raw_vs_sva.html
+#   3d_raw.html
+#   3d_batch.html
+#   3d_batch_sex.html
+#   3d_batch_sex_sva.html
+#   3d_comparison_raw_vs_sva.html
 suppressPackageStartupMessages({
   library(data.table); library(edgeR); library(limma)
   library(matrixStats); library(sva); library(plotly); library(htmlwidgets)
@@ -24,10 +24,10 @@ OUT <- file.path(BASE,
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 
 MEGA        <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang",
-                  GSE135251 = "Govaere", GSE162694 = "Bril", GSE213621 = "Chen")
-cohort_pal   <- c(Suppli = "#1F77B4", Hoang = "#FF7F0E", Govaere = "#2CA02C",
-                  Bril = "#D62728", Chen = "#9467BD")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970",
+                  GSE135251 = "GSE135251", GSE162694 = "GSE162694", GSE213621 = "GSE213621")
+cohort_pal   <- c(GSE126848 = "#1F77B4", GSE130970 = "#FF7F0E", GSE135251 = "#2CA02C",
+                  GSE162694 = "#D62728", GSE213621 = "#9467BD")
 CTRL         <- "#9E9E9E"
 disease_pal  <- c(Control = CTRL, Disease = "#C0392B")
 sex_pal      <- c(F = "#C0392B", M = "#1F77B4", Unknown = "grey80")
@@ -127,10 +127,10 @@ dt_sex <- make_dt(pca_sex$scores, pca_sex$pve)
 dt_sva <- make_dt(pca_sva$scores, pca_sva$pve)
 
 # save PCA coordinates for future lightweight re-use
-fwrite(dt_raw, file.path(OUT, "panelJ_3d_pca_raw.csv"))
-fwrite(dt_bat, file.path(OUT, "panelJ_3d_pca_batch.csv"))
-fwrite(dt_sex, file.path(OUT, "panelJ_3d_pca_batch_sex.csv"))
-fwrite(dt_sva, file.path(OUT, "panelJ_3d_pca_batch_sex_sva.csv"))
+fwrite(dt_raw, file.path(OUT, "3d_pca_raw.csv"))
+fwrite(dt_bat, file.path(OUT, "3d_pca_batch.csv"))
+fwrite(dt_sex, file.path(OUT, "3d_pca_batch_sex.csv"))
+fwrite(dt_sva, file.path(OUT, "3d_pca_batch_sex_sva.csv"))
 cat("PCA data CSVs written\n")
 
 # ---------------------------------------------------------------------------
@@ -194,20 +194,20 @@ save_html <- function(fig, filename) {
 # ---------------------------------------------------------------------------
 save_html(
   make_3panel(dt_raw, "Raw logCPM — 3D PCA (no correction)<br><sub>Cohort | Disease | Sex</sub>"),
-  "panelJ_3d_raw.html")
+  "3d_raw.html")
 
 save_html(
   make_3panel(dt_bat, "Batch-corrected — 3D PCA<br><sub>Cohort | Disease | Sex</sub>"),
-  "panelJ_3d_batch.html")
+  "3d_batch.html")
 
 save_html(
   make_3panel(dt_sex, "Batch + Sex corrected — 3D PCA<br><sub>Cohort | Disease | Sex</sub>"),
-  "panelJ_3d_batch_sex.html")
+  "3d_batch_sex.html")
 
 save_html(
   make_3panel(dt_sva,
     sprintf("Batch + Sex + SVA (%d SVs) — 3D PCA<br><sub>Cohort | Disease | Sex</sub>", n_sv)),
-  "panelJ_3d_batch_sex_sva.html")
+  "3d_batch_sex_sva.html")
 
 # ---------------------------------------------------------------------------
 # 7. Raw vs. SVA comparison: 2-row × 3-col (6 scenes)
@@ -276,6 +276,6 @@ fig_cmp <- fig_cmp |> layout(
   margin = list(l = 0, r = 0, t = 55, b = 0)
 )
 
-save_html(fig_cmp, "panelJ_3d_comparison_raw_vs_sva.html")
+save_html(fig_cmp, "3d_comparison_raw_vs_sva.html")
 
 cat("\nDone. All 5 HTML panels in", OUT, "\n")

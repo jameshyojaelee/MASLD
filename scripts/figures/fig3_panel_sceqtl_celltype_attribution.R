@@ -6,7 +6,7 @@
 # Highlights that genetic risk for MASLD operates through specific cell types —
 # information invisible in bulk eQTL.
 #
-# Output: figures/main/fig3_regulatory_architecture/panels/fig3_panel_sceqtl_celltype_attribution.pdf
+# Output: figures/main/fig2_genetics/panels/sceqtl_celltype_attribution.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -19,7 +19,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 PANEL_DIR <- file.path(FIG3_DIR, "panels")
-OUT_PDF   <- file.path(PANEL_DIR, "fig3_panel_sceqtl_celltype_attribution.pdf")
+OUT_PDF   <- file.path(PANEL_DIR, "sceqtl_celltype_attribution.pdf")
 SCEQTL    <- file.path(BASE, "RNA-seq/results/causal_inference/sceqtl")
 
 # ── load all cell-type COLOC results (UKBB ALT GWAS) ─────────────────────────

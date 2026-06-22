@@ -345,19 +345,19 @@ def run_enrichment_tests(atlas, convergence, gene_col):
             "fisher_pval": pval,
         })
 
-    # 2. Dream DEGs
-    if "dream_padj" in atlas.columns:
-        dream_genes = set(atlas.loc[atlas["dream_padj"] < 0.1, gene_col].dropna()) & all_genes
-        if dream_genes:
-            odds, pval, overlap = fisher_test(converged_genes, dream_genes, all_genes)
-            tests.append({
-                "test_set": "Dream_DEGs",
-                "n_converged": len(converged_genes),
-                "n_test_set": len(dream_genes),
-                "n_overlap": overlap,
-                "odds_ratio": odds,
-                "fisher_pval": pval,
-            })
+    # 2. Bulk DEGs
+    assert "bulk_padj" in atlas.columns, "C2: atlas missing bulk_* — rebuild 27a"
+    bulk_genes = set(atlas.loc[atlas["bulk_padj"] < 0.1, gene_col].dropna()) & all_genes
+    if bulk_genes:
+        odds, pval, overlap = fisher_test(converged_genes, bulk_genes, all_genes)
+        tests.append({
+            "test_set": "Bulk_DEGs",
+            "n_converged": len(converged_genes),
+            "n_test_set": len(bulk_genes),
+            "n_overlap": overlap,
+            "odds_ratio": odds,
+            "fisher_pval": pval,
+        })
 
     # 3. Drug targets
     drug_df = load_drug_targets()

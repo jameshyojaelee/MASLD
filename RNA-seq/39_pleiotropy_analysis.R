@@ -47,7 +47,7 @@ FINNGEN_DIR <- file.path(BASE_DIR, "GWAS/MR_Data/FinnGen")
 # Input files
 ZENODO_INTEGRATED <- file.path(SCEQTL_DIR, "zenodo_coloc_integrated.csv")
 DREAM_FILE <- file.path(BASE_DIR,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 GENE_CACHE <- file.path(BASE_DIR,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/gene_annotation/human_ensg_to_symbol.tsv")
 CONCORDANCE_FILE <- file.path(BASE_DIR,
@@ -198,7 +198,7 @@ print(coloc_raw[, .N, by = pleiotropy_class][order(-N)])
 # Merge dream DEG info from the integrated file
 coloc_raw <- merge(
   coloc_raw,
-  zenodo_int[, .(gene, cell_type, is_deg, dream_logFC, dream_padj,
+  zenodo_int[, .(gene, cell_type, is_deg, bulk_logFC, bulk_padj,
                  consensus_tier, layers_active, in_atlas)],
   by = c("gene", "cell_type"), all.x = TRUE
 )
@@ -209,7 +209,7 @@ out_class <- coloc_raw[, c("gene", "cell_type", "nafld_coloc",
                             "n_total_coloc", domain_count_cols,
                             "n_domains_coloc", "domain_profile",
                             "pleiotropy_class",
-                            "is_deg", "dream_logFC", "dream_padj",
+                            "is_deg", "bulk_logFC", "bulk_padj",
                             "consensus_tier"), with = FALSE]
 
 out_class_file <- file.path(RESULTS_DIR, "pleiotropy_classification.csv")
@@ -248,8 +248,8 @@ gene_summary <- coloc_raw[, {
     all_domains = paste(all_doms, collapse = ";"),
     is_nafld_specific = best_class == "NAFLD_specific",
     is_deg = any(is_deg == TRUE, na.rm = TRUE),
-    dream_logFC = dream_logFC[1],
-    dream_padj = dream_padj[1]
+    bulk_logFC = bulk_logFC[1],
+    bulk_padj = bulk_padj[1]
   )
 }, by = gene]
 
@@ -573,7 +573,7 @@ cat("Wrote: pleiotropy_deg_enrichment.csv\n")
 cat("\nComputing per-class characteristics...\n")
 class_chars <- gene_summary[, .(
   n_genes = .N,
-  median_dream_logFC = median(abs(dream_logFC), na.rm = TRUE),
+  median_bulk_logFC = median(abs(bulk_logFC), na.rm = TRUE),
   frac_degs = mean(is_deg, na.rm = TRUE),
   frac_conserved = mean(is_conserved, na.rm = TRUE),
   frac_drug_targets = mean(is_drug_target, na.rm = TRUE),
@@ -843,8 +843,8 @@ summary_out <- gene_summary[, .(
   all_domains,
   is_nafld_specific,
   is_deg,
-  dream_logFC,
-  dream_padj,
+  bulk_logFC,
+  bulk_padj,
   is_conserved,
   is_drug_target,
   layers_active = layers_active_atlas
@@ -855,16 +855,16 @@ cat("Wrote: pleiotropy_summary.csv\n")
 
 # NAFLD-specific therapeutic targets
 nafld_targets <- gene_summary[
-  is_nafld_specific == TRUE & is_deg == TRUE & !is.na(dream_padj) & dream_padj < PADJ_THR
+  is_nafld_specific == TRUE & is_deg == TRUE & !is.na(bulk_padj) & bulk_padj < PADJ_THR
 ]
-nafld_targets[, abs_logFC := abs(dream_logFC)]
+nafld_targets[, abs_logFC := abs(bulk_logFC)]
 setorder(nafld_targets, -abs_logFC)
 nafld_targets[, abs_logFC := NULL]
 
 nafld_targets_out <- nafld_targets[, .(
   human_symbol,
-  dream_logFC,
-  dream_padj,
+  bulk_logFC,
+  bulk_padj,
   max_traits_coloc,
   is_conserved,
   is_drug_target,

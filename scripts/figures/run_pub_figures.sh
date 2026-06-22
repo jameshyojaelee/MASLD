@@ -52,14 +52,8 @@ run_figure() {
 # Fig 5: Translational Convergence & Validation (was Fig 6; Fig 5 convergence → supplementary)
 MAIN_FIGURES=(
   "fig1_compact.R"
-  # 2026-05-28 (P0-H): fig2_compact.R was retired in the 2026-05-17 Fig 2
-  # redesign (commit 20cf5af archived it to
-  # archive/fig2_pre_redesign_2026-05-17/fig2_compact.R). Fig 2 is now built
-  # from ~22 fig2_panel_*.R scripts that each render a panel PDF into
-  # FIG2_DIR/panels/, then tiled by fig2_progression.R (driven by the
-  # run_assemble_fig2.sh wrapper). The single-script compositor no longer
-  # exists, so fig2_progression.R is the correct compositor to call here.
-  "fig2_progression.R"
+  # Fig 2/3 (RNA-seq) is assembled manually from the panel PDFs in
+  # FIG2_DIR/panels/ — no compositor script (removed 2026-06-11).
   "fig3_compact.R"
   # fig4_compact.R sources pharma + spatial sub-scripts and runs the canonical
   # fig4_validation.R first (proteomics + spatial composite).
@@ -114,6 +108,61 @@ SUPP_FIGURES=(
 )
 
 for script_name in "${SUPP_FIGURES[@]}"; do
+  script="${SCRIPT_DIR}/${script_name}"
+  if [[ -f "${script}" ]]; then
+    run_figure "${script}"
+  else
+    echo "WARNING: ${script_name} not found"
+  fi
+done
+
+# ---------- Fig 3 (RNA-seq) individual panels ----------
+# Fig 3 / S3 is assembled from individual panel scripts (no compositor). Added
+# 2026-06-17 (main 3H-3M + supp S3J-S3T); updated 2026-06-18 (+ 3N single-cell
+# cascade; zonation 3J/S3R relocated to Fig 4, see FIG4_SPATIAL_PANELS below;
+# #2 fibrosis mechanism cascade deleted). Callout->filename index in
+# figures/main/fig3_RNAseq/README.md. Plotting-only (main -> fig3_RNAseq/panels/,
+# supp -> figures/supplementary/<theme dir>/).
+FIG3_RNASEQ_PANELS=(
+  # main Fig 3 (-> figures/main/fig3_RNAseq/panels/)
+  "progression_cascade.R"                              # 3E (comprehensive stage-progression cascade)
+  "drug_target_orthogonality_landscape.R"              # 3H
+  "crossmodal_convergence_matrix.R"                    # 3I (spatial col dropped 2026-06-18)
+  "nmf_dominant_program_stage_composition.R"           # 3K
+  "multicelltype_hotspot_cascade_landscape.R"          # 3M
+  "singlecell_disease_cascade.R"                       # 3N (shared-x single-cell cascade)
+  # supplementary (-> figures/supplementary/<theme dir>/)
+  "per_study_lfc_correlation_heatmap.R"                # S3J
+  "deg_meta_heterogeneity_ridge.R"                     # S3K
+  "loo_per_gene_reproducibility_bar.R"                 # S3L
+  "fibrosis_stage_directional_asymmetry.R"             # S3M
+  "fibrosis_stage_hallmark_escalation.R"               # S3N
+  "deconvolution_composition_shift_forest.R"           # S3O
+  "scrna_clr_abundance_forest.R"                       # S3P
+  "hep_module_sc_vs_bulk_concordance_scatter.R"        # S3Q
+  "progression_driver_coloc_phenotype_class_heatmap.R" # S3S
+  "cross_species_pathway_translatability_matrix.R"     # S3T
+  "figS_pca_definitive.R"                              # S3U (definitive control-vs-disease PCA; loads merged DGE -> heavier)
+)
+
+for script_name in "${FIG3_RNASEQ_PANELS[@]}"; do
+  script="${SCRIPT_DIR}/${script_name}"
+  if [[ -f "${script}" ]]; then
+    run_figure "${script}"
+  else
+    echo "WARNING: ${script_name} not found"
+  fi
+done
+
+# ---------- Fig 4 (spatial/zonation) panels relocated from fig3 (2026-06-18) ----------
+# Render to figures/main/fig4_validation/ (scripts repointed to FIG4_DIR); moved
+# out of fig3 under the "all spatial -> Fig 4" rule.
+FIG4_SPATIAL_PANELS=(
+  "zonation_directional_polarity.R"
+  "zonation_directional_polarity_xspecies.R"
+  "zonation_crossspecies_concordance.R"
+)
+for script_name in "${FIG4_SPATIAL_PANELS[@]}"; do
   script="${SCRIPT_DIR}/${script_name}"
   if [[ -f "${script}" ]]; then
     run_figure "${script}"

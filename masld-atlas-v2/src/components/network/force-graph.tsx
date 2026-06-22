@@ -158,12 +158,12 @@ function getNodeColor(node: NetworkNode, colorBy: NodeColorBy): string {
     case "progression":
       return PROGRESSION_COLORS[node.progression_class ?? ""] ?? "#95a5a6";
     case "logfc": {
-      if (node.dream_logfc == null) return "#95a5a6";
-      if (node.dream_logfc > 0) {
-        const intensity = Math.min(1, Math.abs(node.dream_logfc) / 2);
+      if (node.bulk_logfc == null) return "#95a5a6";
+      if (node.bulk_logfc > 0) {
+        const intensity = Math.min(1, Math.abs(node.bulk_logfc) / 2);
         return `hsl(0, ${Math.round(intensity * 80)}%, ${60 - Math.round(intensity * 15)}%)`;
       }
-      const intensity = Math.min(1, Math.abs(node.dream_logfc) / 2);
+      const intensity = Math.min(1, Math.abs(node.bulk_logfc) / 2);
       return `hsl(220, ${Math.round(intensity * 80)}%, ${60 - Math.round(intensity * 15)}%)`;
     }
     case "druggability":

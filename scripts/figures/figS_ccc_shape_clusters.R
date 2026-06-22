@@ -1,15 +1,26 @@
+# KEY MESSAGE: MASLD progression rewires paracrine signaling gradually across stages, not as a binary control-vs-disease switch.
 # =============================================================================
-# figS_ccc_shape_clusters.R
-# Trajectory-shape cluster summary for all 486 significant LR pairs
+# figS_ccc_shape_clusters.R  ->  staged ligand-receptor rewiring heatmap
 #
-# Groups every significant LR pair (padj<0.05 Bonferroni) into one of 6
-# trajectory shapes based on 4-stage effect-size vectors (H=0, St, SH, Cir).
-# Stacks all lines per shape (no gene labels) to show pattern density, with a
-# bold mean line per shape. Saves per-shape gene lists for example selection.
+# REBUILD (2026-06-12): the prior exploratory trajectory-shape clustering panel
+# (output figS_ccc_shape_clusters.pdf) is SUPERSEDED. That PDF is left on disk
+# but is no longer the narrative panel. This script now produces a clean
+# stage-progressive LR heatmap that advances the rewiring story:
 #
-# Input:  figures/supplementary/stage_ccc/significant_lr_pairs_padj05.tsv
-# Output: figures/supplementary/stage_ccc/figS_ccc_shape_clusters.pdf
-#         figures/supplementary/stage_ccc/shape_gene_lists.tsv
+#   rows    = top stage-progressive ligand-receptor pairs (one per ct_pair x lr_pair)
+#   cols    = disease stage (Healthy / Steatosis / Steatohepatitis)
+#   fill    = per-stage LIANA interaction strength (-log10 magnitude_rank, z within row)
+#   facet   = sender -> receiver cell-type pair (rows grouped)
+#   order   = continuous F-stage slope (Estimate from the augmented-F-stage LMM)
+#   strip   = right-margin annotation: stage-slope sign + bulk-DEG concordance
+#
+# Inputs:
+#   Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/stage_lr_lmm_fstage_augmented.tsv
+#   Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/all_donor_lr_scores.tsv.gz
+#   Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/donor_metadata_extended.tsv
+#   Analysis/SingleCell/results_gpu_v2/ccc/liana_bulk_concordance_perLR.csv
+# Output:
+#   figures/supplementary/stage_ccc/ccc_stage_rewiring.pdf   (FIGS_STAGECCC_DIR)
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -18,315 +29,242 @@ suppressPackageStartupMessages({
   library(patchwork)
 })
 
-BASE     <- Sys.getenv("MASLD_PROJECT_ROOT",
-                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-SUPP_DIR <- file.path(BASE, "figures/supplementary/stage_ccc")
-
+BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
+                   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
+source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-# Stage labels and x-axis tick colours (3-stage display; Cirrhosis excluded from
-# plot — hepatocytes depleted by fibrotic replacement, n=19 single snRNA-seq
-# dataset. classify_shape_beta() still uses ci internally for shape assignment.)
-STAGE_SHORT       <- c("H", "St", "SH")
-STAGE_TICK_COLORS <- c(H  = masld_colors$ns,    # "#9E9E9E"
-                       St = masld_colors$masl,  # "#F4A674"
-                       SH = masld_colors$mash)  # "#C9265E"
+SC_DIR <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory")
 
-# Direction colours (project invariants)
-COL_UP   <- masld_colors$up    # "#C9265E"
-COL_DOWN <- masld_colors$down  # "#1565C0"
-COL_MIX  <- "#7B1FA2"          # violet for mixed-direction shapes
+# Stage display (3-stage primary axis; Cirrhosis excluded from the heatmap —
+# n=19, single snRNA-seq dataset, hepatocytes depleted by fibrotic replacement).
+STAGE_LEVELS <- c("Healthy", "Steatosis", "Steatohepatitis")
+STAGE_SHORT  <- c(Healthy = "H", Steatosis = "St", Steatohepatitis = "SH")
+STAGE_TICK_COL <- c(Healthy = masld_colors$control,  # "#9E9E9E"
+                    Steatosis = masld_colors$masl,    # "#F4A674"
+                    Steatohepatitis = masld_colors$mash) # "#C9265E"
 
-# =============================================================================
-# 1. Load data
-# =============================================================================
-dat <- fread(file.path(SUPP_DIR, "significant_lr_pairs_padj05.tsv"))
-message("Loaded ", nrow(dat), " significant LR pairs")
+N_TOP <- 32  # rows: most-significant stage-progressive LR pairs
 
-# Anchor H=0 explicitly
-dat[, H := 0.0]
-
-# Unique identifier per interaction (ct_pair × lr_pair is the primary key)
-dat[, uid := paste(ct_pair, lr_pair, sep = " | ")]
+# Headline pairs to retain if present even outside the top-N significance cut.
+HEADLINE <- c("NAMPT__INSR", "COL1A1__CD44", "CDH1__PTPRM")
 
 # =============================================================================
-# 2. Trajectory shape classifier (adapted for signed betas; H = 0 reference)
+# 1. Stage-progressive LMM: pick significant pairs, carry continuous slope sign
 # =============================================================================
-# Precedence: flat → monotone_up/down → late_emergent → reversal →
-#             nash_transient → steatosis_waning → other
-#
-# Key design principles:
-#   late_emergent vs reversal: late_emergent requires a SILENT early phase (St, SH
-#     near 0); reversal requires a REAL early signal that genuinely inverts.
-#     Minimum early-signal gate (max(|St|,|SH|) > 0.15) prevents noise-driven sign
-#     flips from masquerading as reversals.
-#   nash_transient (SH-peaked bell): peak at SH with genuine interior rise from St
-#     and substantial return at Cir. MASH-inflammation-specific.
-#   steatosis_waning (St-peaked): peak at Steatosis, monotonically lost through
-#     progression. Biologically distinct from nash_transient.
-classify_shape_beta <- function(st, sh, ci) {
-  m    <- c(0, st, sh, ci)
-  if (any(is.na(m))) return(NA_character_)
-  abm  <- abs(m)
-  # Flat: all stage deviations small
-  if (max(abm[2:4]) < 0.30) return("flat")
-  # Monotone up: non-decreasing entire trajectory, ends clearly positive
-  if (all(diff(m) >= 0) && ci >  0.20) return("monotone_up")
-  # Monotone down: non-increasing entire trajectory, ends clearly negative
-  if (all(diff(m) <= 0) && ci < -0.20) return("monotone_down")
-  # Late emergent: Cirrhosis is the dominant outlier AND early stages are silent.
-  # The silence gate (1.5× ratio against a 0.10 floor) ensures truly emergent
-  # patterns; the 0.50 floor on |Cir| rejects borderline noise.
-  i_ext <- which.max(abm)
-  if (i_ext == 4 && abm[4] > 1.5 * max(abm[1:3], 0.10) && abm[4] > 0.50)
-    return("late_emergent")
-  # Reversal: GENUINE direction inversion — early signal must be real (not noise),
-  # and Cirrhosis must carry opposite sign with meaningful magnitude.
-  # Gate: max(|St|, |SH|) > 0.15 prevents noise-driven sign flips (e.g., St≈−0.04
-  # followed by large positive Cir) from being mislabelled as reversals.
-  max_early <- max(abm[2:3])
-  nonH <- m[2:4]; sigs <- sign(nonH[nonH != 0])
-  if (length(unique(sigs)) > 1 && max_early > 0.15) return("reversal")
-  # NASH-transient (SH-peaked bell / valley): interaction peaks specifically during
-  # the MASH inflammatory phase, with a genuine interior rise from Steatosis
-  # (|St| < |SH|) and substantial return at Cirrhosis (≤55% of SH peak).
-  if (i_ext == 3 && abm[2] < abm[3] && abm[4] < abm[3] * 0.55)
-    return("nash_transient")
-  # Steatosis-waning (St-peaked): interaction highest in early steatosis and
-  # progressively lost. SH must still carry ≥25% of peak (not noise) and share
-  # the same sign; Cir returns to ≤55% of the Steatosis peak.
-  if (i_ext == 2 && sign(sh) == sign(st) &&
-      abm[3] > abm[2] * 0.25 && abm[4] < abm[2] * 0.55)
-    return("steatosis_waning")
-  return("other")
+lmm <- fread(file.path(SC_DIR, "stage_lr_lmm_fstage_augmented.tsv"))
+lmm[, uid := paste(ct_pair, lr_pair, sep = " | ")]
+sig <- lmm[is.finite(padj_within_ct) & padj_within_ct < 0.05]
+message("Significant stage-progressive LR pairs (padj_within_ct<0.05): ", nrow(sig))
+
+setorder(sig, padj_within_ct)
+top <- sig[seq_len(min(N_TOP, nrow(sig)))]
+
+# Ensure headline pairs are present (add their most-significant context if missing)
+for (h in HEADLINE) {
+  if (!(h %in% top$lr_pair) && (h %in% sig$lr_pair)) {
+    add <- sig[lr_pair == h][which.min(padj_within_ct)]
+    top <- rbind(top, add)
+  }
 }
-
-dat[, shape := mapply(classify_shape_beta,
-                      Estimate_Steatosis, Estimate_Steatohepatitis,
-                      Estimate_Cirrhosis)]
-
-# Direction per pair
-dat[, dir_label := ifelse(best_Estimate > 0, "up", "down")]
+top <- unique(top, by = "uid")
+message("Rows shown in heatmap: ", nrow(top))
 
 # =============================================================================
-# 3. Save per-shape gene lists (sorted by shape, then |effect size| descending)
+# 2. Per-stage interaction strength from per-donor LIANA scores
 # =============================================================================
-# Unique gene-level LR pairs per shape (same lr_pair can appear in multiple
-# cell-type contexts — this counts how many distinct ligand__receptor genes)
-uniq_lr_per_shape <- dat[!is.na(shape),
-                         .(n_unique_lr_pairs = uniqueN(lr_pair)),
-                         by = shape]
-dat <- merge(dat, uniq_lr_per_shape, by = "shape", all.x = TRUE)
+sc <- fread(file.path(SC_DIR, "all_donor_lr_scores.tsv.gz"))
+sc[, ct_pair := paste(source, target, sep = "->")]
+sc[, lr_pair := paste(ligand_complex, receptor_complex, sep = "__")]
+sc[, score   := -log10(pmax(magnitude_rank, 1e-4))]   # higher = stronger interaction
+sc[, uid     := paste(ct_pair, lr_pair, sep = " | ")]
 
-out_cols <- c("shape", "n_unique_lr_pairs",
-              "ct_pair", "lr_pair", "ligand_complex", "receptor_complex",
-              "source", "target", "best_Estimate", "best_padj",
-              "Estimate_Steatosis", "padj_Steatosis",
-              "Estimate_Steatohepatitis", "padj_Steatohepatitis",
-              "Estimate_Cirrhosis", "padj_Cirrhosis",
-              "rank", "n_donors")
-gene_lists <- dat[order(shape, -abs(best_Estimate)), ..out_cols]
-fwrite(gene_lists, file.path(SUPP_DIR, "shape_gene_lists.tsv"),
-       sep = "\t", quote = FALSE, na = "NA")
+meta <- fread(file.path(SC_DIR, "donor_metadata_extended.tsv"))
+if (!"exclude_stage_analysis" %in% names(meta)) meta[, exclude_stage_analysis := FALSE]
+meta <- meta[exclude_stage_analysis != TRUE]
+message("Donors after exclude_stage_analysis filter: ", nrow(meta))
 
-# Print summary table for the user
-cat("\n=== LR pair counts per trajectory shape ===\n")
-summary_tbl <- merge(
-  dat[!is.na(shape), .N, by = shape],
-  uniq_lr_per_shape, by = "shape"
-)[order(-N)]
-setnames(summary_tbl, c("N", "n_unique_lr_pairs"),
-         c("n_context_rows", "n_unique_lr_pairs"))
-print(summary_tbl)
-cat("\n")
+sc <- merge(sc[uid %in% top$uid], meta[, .(sample, disease_stage_coarse)],
+            by = "sample")
+sc <- sc[disease_stage_coarse %in% STAGE_LEVELS]
+
+# Mean per-stage strength per LR pair (donor-level mean)
+strength <- sc[, .(mean_score = mean(score, na.rm = TRUE)),
+               by = .(uid, ct_pair, lr_pair, disease_stage_coarse)]
+
+# Drop rows lacking all 3 stages (incomplete = not a real trajectory)
+n_stage <- strength[, uniqueN(disease_stage_coarse), by = uid]
+keep_uid <- n_stage[V1 == length(STAGE_LEVELS), uid]
+strength <- strength[uid %in% keep_uid]
+top      <- top[uid %in% keep_uid]
+message("Rows with complete 3-stage coverage: ", nrow(top))
+
+# Row-wise z-score of strength (emphasise the SHAPE of stage rewiring, not the
+# absolute LIANA magnitude which differs across LR pairs).
+strength[, z := {
+  m <- mean(mean_score); s <- sd(mean_score)
+  if (is.na(s) || s == 0) rep(0, .N) else (mean_score - m) / s
+}, by = uid]
+# Clip color to 2-98th percentile (project invariant).
+zc <- quantile(strength$z, c(0.02, 0.98), na.rm = TRUE)
+strength[, z_clip := pmin(pmax(z, zc[1]), zc[2])]
 
 # =============================================================================
-# 4. Build long-format data for plotting
+# 3. Row order + labels (by continuous stage slope Estimate)
 # =============================================================================
-build_long <- function(x_pos, beta_col) {
-  dat[, .(uid, ct_pair, lr_pair, dir_label, shape,
-          stage_x = x_pos, beta = get(beta_col))]
+top[, slope_dir := fifelse(Estimate > 0, "up", "down")]
+top[, lr_label  := sub("__", "→", lr_pair)]            # ligand -> receptor
+ct_abbr <- function(x) {
+  x <- gsub("Hepatocytes", "Hep", x); x <- gsub("Endothelial cells", "Endo", x)
+  x <- gsub("Fibroblasts", "Fib", x); x <- gsub("Macrophages", "Mac", x)
+  x <- gsub("Cholangiocytes", "Chol", x); x <- gsub("T cells", "T", x); x
 }
+top[, ct_facet := factor(ct_abbr(ct_pair))]
+top[, row_label := lr_label]
 
-long_dat <- rbindlist(list(
-  build_long(1L, "H"),
-  build_long(2L, "Estimate_Steatosis"),
-  build_long(3L, "Estimate_Steatohepatitis"),
-  build_long(4L, "Estimate_Cirrhosis")
-))
+# Concordance with bulk DEGs (both ligand and receptor LFC concordant)
+conc <- fread(file.path(BASE,
+  "Analysis/SingleCell/results_gpu_v2/ccc/liana_bulk_concordance_perLR.csv"))
+conc[, key := paste(source, target, ligand_complex, receptor_complex, sep = "|")]
+conc_u <- unique(conc[, .(key, both_concordant)], by = "key")
+top[, key := paste(source, target, ligand_complex, receptor_complex, sep = "|")]
+top <- merge(top, conc_u, by = "key", all.x = TRUE)
+top[, concordant := fifelse(isTRUE(both_concordant) | both_concordant == TRUE,
+                            "Concordant", "n.s./discordant"), by = uid]
+top[is.na(both_concordant), concordant := "no bulk match"]
 
-# =============================================================================
-# 5. Shape metadata
-# =============================================================================
-shape_palette <- c(
-  monotone_up      = COL_UP,                    # deep magenta
-  monotone_down    = COL_DOWN,                  # deep blue
-  late_emergent    = masld_colors$fibrosis,     # "#A01753" dark magenta
-  nash_transient   = "#42A5F5",                 # light blue (MASH-specific)
-  steatosis_waning = "#80DEEA",                 # pale cyan (early steatosis)
-  reversal         = "#7B1FA2",                 # violet
-  flat             = "#BDBDBD",                 # light gray
-  other            = masld_colors$ns            # neutral gray
-)
+# Order rows globally by Estimate (descending = strongest up-with-stage on top),
+# then enforce that ordering inside each facet via a global factor on uid.
+setorder(top, -Estimate)
+uid_order <- top$uid
+top[, uid := factor(uid, levels = rev(uid_order))]   # rev: top of plot = highest Estimate
+strength[, uid := factor(uid, levels = levels(top$uid))]
+strength <- strength[!is.na(uid)]
 
-shape_nice_labels <- c(
-  monotone_up      = "Progressive up",
-  monotone_down    = "Progressive down",
-  late_emergent    = "Late-emergent\u2020",
-  nash_transient   = "SH-peak",
-  steatosis_waning = "Steatosis-peak",
-  reversal         = "Reversal",
-  flat             = "Flat",
-  other            = "Other"
-)
+# Attach facet + labels onto the strength (heatmap body) table
+lab_map <- top[, .(uid, row_label, ct_facet)]
+strength <- merge(strength, lab_map, by = "uid")
+strength[, disease_stage_coarse := factor(disease_stage_coarse, levels = STAGE_LEVELS)]
 
-# Display order (biologically most interesting first)
-shape_level_order <- c("late_emergent", "monotone_up", "monotone_down",
-                       "reversal", "nash_transient", "steatosis_waning",
-                       "other", "flat")
-
-# Determine which shapes have data
-shapes_present  <- dat[!is.na(shape), .N, by = shape][N > 0, shape]
-shapes_to_plot  <- intersect(shape_level_order, shapes_present)
+# Highlight headline pairs in the row labels (bold via plotmath would clutter;
+# use a leading marker instead).
+top[, is_headline := lr_pair %in% HEADLINE]
 
 # =============================================================================
-# 6. Compute mean trajectories and dominant-direction colour per shape
+# 4. Heatmap body
 # =============================================================================
-mean_traj <- long_dat[shape %in% shapes_to_plot,
-                      .(mean_beta = mean(beta, na.rm = TRUE)),
-                      by = .(shape, stage_x)]
-
-dom_dir <- dat[shape %in% shapes_to_plot,
-               .(pct_up = mean(dir_label == "up")),
-               by = shape]
-dom_dir[, mean_line_col := fcase(
-  pct_up > 0.65, COL_UP,
-  pct_up < 0.35, COL_DOWN,
-  default = COL_MIX
-)]
-
-# Shared y-axis limits (5th/95th percentile to avoid extreme outlier squeeze)
-y_lo <- quantile(long_dat$beta, 0.02, na.rm = TRUE)
-y_hi <- quantile(long_dat$beta, 0.98, na.rm = TRUE)
-y_pad <- (y_hi - y_lo) * 0.10
-y_lim <- c(y_lo - y_pad, y_hi + y_pad)
-
-# =============================================================================
-# 7. Build per-shape panels
-# =============================================================================
-build_shape_panel <- function(sh) {
-  d_ind  <- long_dat[shape == sh]
-  d_mean <- mean_traj[shape == sh][order(stage_x)]
-  n_pairs <- uniqueN(d_ind$uid)
-  lc      <- dom_dir[shape == sh, mean_line_col]
-  if (length(lc) == 0) lc <- masld_colors$ns
-
-  panel_title <- sprintf("%s  (N = %d)", shape_nice_labels[sh], n_pairs)
-
-  # Truncate display to 3-stage (H/St/SH). Cirrhosis excluded: hepatocytes are
-  # depleted by fibrotic replacement; n=19 donors from a single snRNA-seq dataset
-  # (GSE202379). classify_shape_beta() still consumes ci internally for shape
-  # assignment (late_emergent, nash_transient, steatosis_waning gates).
-  d_ind  <- d_ind[stage_x <= 3L]
-  d_mean <- d_mean[stage_x <= 3L]
-
-  ggplot() +
-    # Zero reference (Healthy anchor)
-    geom_hline(yintercept = 0, linetype = "dashed",
-               color = "#9E9E9E", linewidth = 0.3) +
-    # Individual trajectories — coloured by up/down direction, low alpha
-    geom_line(data = d_ind,
-              aes(x = stage_x, y = beta, group = uid, color = dir_label),
-              alpha = 0.12, linewidth = 0.18, show.legend = FALSE) +
-    # Mean trajectory — bold, dominant-direction colour
-    geom_line(data = d_mean,
-              aes(x = stage_x, y = mean_beta),
-              color = lc, linewidth = 1.1, alpha = 1) +
-    geom_point(data = d_mean,
-               aes(x = stage_x, y = mean_beta),
-               color = lc, size = 1.0, alpha = 1) +
-    # Colour scale for individual lines
-    scale_color_manual(values = c(up = COL_UP, down = COL_DOWN), guide = "none") +
-    scale_x_continuous(breaks = 1:3, labels = STAGE_SHORT,
-                       limits = c(0.65, 3.35), expand = c(0, 0)) +
-    coord_cartesian(ylim = y_lim, clip = "off") +
-    labs(title = panel_title, x = NULL, y = "β (vs Healthy)") +
-    theme_masld(base_size = 7) +
-    theme(
-      plot.title   = element_text(size = 7.0, face = "bold", hjust = 0.5,
-                                  margin = margin(b = 3)),
-      axis.text.x  = element_text(size = 6.5, face = "bold",
-                                  color = STAGE_TICK_COLORS[STAGE_SHORT]),
-      axis.text.y  = element_text(size = 6.0),
-      axis.title.y = element_text(size = 6.5),
-      axis.ticks   = element_line(linewidth = 0.25),
-      axis.line    = element_line(linewidth = 0.25),
-      plot.margin  = margin(5, 5, 3, 5)
-    )
-}
-
-panels      <- lapply(shapes_to_plot, build_shape_panel)
-names(panels) <- shapes_to_plot
-
-# =============================================================================
-# 8. Summary bar chart
-# =============================================================================
-shape_counts <- dat[!is.na(shape), .N, by = shape]
-shape_counts[, shape      := factor(shape, levels = shape_level_order)]
-shape_counts[, nice_label := factor(shape_nice_labels[as.character(shape)],
-                                     levels = shape_nice_labels[shape_level_order])]
-shape_counts <- shape_counts[!is.na(shape)][order(shape)]
-
-p_bar <- ggplot(shape_counts, aes(x = nice_label, y = N, fill = shape)) +
-  geom_col(width = 0.62) +
-  geom_text(aes(label = N), vjust = -0.5,
-            size = PUB_GEOM_TEXT + 0.7, fontface = "bold") +
-  scale_fill_manual(values = shape_palette, drop = FALSE) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.20))) +
-  labs(
-    title = sprintf(
-      "Trajectory-shape distribution  —  %d significant LR pairs (Bonferroni padj < 0.05)",
-      nrow(dat)),
-    x = NULL, y = "Number of LR pairs"
-  ) +
+# Diverging colorblind-safe scale for relative strength (low=blue, high=magenta).
+heat <- ggplot(strength,
+               aes(x = disease_stage_coarse, y = uid, fill = z_clip)) +
+  geom_tile(color = "white", linewidth = 0.35) +
+  facet_grid(rows = vars(ct_facet), scales = "free_y", space = "free_y",
+             switch = "y") +
+  scale_x_discrete(labels = STAGE_SHORT, position = "top", expand = c(0, 0)) +
+  scale_y_discrete(labels = setNames(top$row_label, as.character(top$uid)),
+                   expand = c(0, 0)) +
+  scale_fill_gradient2(
+    low = masld_colors$down, mid = "#F7F7F7", high = masld_colors$up,
+    midpoint = 0, name = "Interaction\nstrength\n(row z)",
+    breaks = c(floor(zc[1]), 0, ceiling(zc[2]))) +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(
-    legend.position     = "none",
-    axis.text.x         = element_text(angle = 30, hjust = 1, size = 6.5),
-    axis.text.y         = element_text(size = 6.5),
-    axis.title.y        = element_text(size = 7),
-    plot.title          = element_text(size = 7.5, face = "bold", hjust = 0,
-                                       margin = margin(b = 2)),
-    plot.title.position = "plot",
-    plot.margin         = margin(4, 6, 3, 4)
+    panel.spacing.y   = unit(1.5, "pt"),
+    strip.placement   = "outside",
+    strip.text.y.left = element_text(angle = 0, size = 6, face = "bold",
+                                     hjust = 1),
+    strip.background  = element_blank(),
+    axis.text.x.top   = element_text(size = 7, face = "bold",
+                                     color = STAGE_TICK_COL[STAGE_LEVELS]),
+    axis.text.y       = element_text(size = 5.6),
+    axis.ticks        = element_blank(),
+    panel.grid        = element_blank(),
+    panel.border      = element_blank(),
+    legend.key.width  = unit(7, "pt"),
+    legend.key.height = unit(12, "pt"),
+    legend.title      = element_text(size = 6),
+    legend.text       = element_text(size = 5.5),
+    plot.margin       = margin(4, 2, 4, 4)
   )
 
 # =============================================================================
-# 9. Assemble and save
+# 5. Right-margin annotation strip: stage-slope sign + bulk-DEG concordance
 # =============================================================================
-n_p    <- length(panels)
-n_cols <- min(n_p, 4L)           # up to 4 columns
-n_rows <- ceiling(n_p / n_cols)
+ann <- top[, .(uid, ct_facet, slope_dir, concordant, is_headline)]
+ann_long <- rbindlist(list(
+  ann[, .(uid, ct_facet, track = "Stage\nslope", val = slope_dir)],
+  ann[, .(uid, ct_facet, track = "Bulk-DEG\nconcord.", val = concordant)]
+))
+ann_long[, track := factor(track, levels = c("Stage\nslope", "Bulk-DEG\nconcord."))]
 
-panel_h <- 2.0   # inches per row of shape panels
-bar_h   <- 2.0   # inches for summary bar
-fig_h   <- n_rows * panel_h + bar_h
-fig_w   <- 7.5
+ann_cols <- c(
+  up                = masld_colors$up,
+  down              = masld_colors$down,
+  Concordant        = "#1B7837",   # green = bulk-DEG concordant
+  `n.s./discordant` = "#BDBDBD",
+  `no bulk match`   = "#EEEEEE"
+)
 
-grid <- wrap_plots(panels, ncol = n_cols, nrow = n_rows)
+strip <- ggplot(ann_long, aes(x = track, y = uid, fill = val)) +
+  geom_tile(color = "white", linewidth = 0.35) +
+  facet_grid(rows = vars(ct_facet), scales = "free_y", space = "free_y") +
+  scale_x_discrete(position = "top", expand = c(0, 0)) +
+  scale_y_discrete(expand = c(0, 0)) +
+  scale_fill_manual(values = ann_cols, name = NULL,
+                    breaks = c("up", "down", "Concordant", "n.s./discordant"),
+                    labels = c("Up with stage", "Down with stage",
+                               "Bulk concordant", "Not concordant")) +
+  labs(x = NULL, y = NULL) +
+  theme_masld(base_size = 7) +
+  theme(
+    panel.spacing.y = unit(1.5, "pt"),
+    strip.text      = element_blank(),
+    strip.background = element_blank(),
+    axis.text.x.top = element_text(size = 5.6, lineheight = 0.85),
+    axis.text.y     = element_blank(),
+    axis.ticks      = element_blank(),
+    panel.grid      = element_blank(),
+    panel.border    = element_blank(),
+    legend.key.size = unit(7, "pt"),
+    legend.text     = element_text(size = 5.5),
+    plot.margin     = margin(4, 4, 4, 0)
+  )
 
-fig <- grid / p_bar +
-  plot_layout(heights = c(n_rows * panel_h, bar_h)) +
+# =============================================================================
+# 6. Assemble
+# =============================================================================
+fig <- (heat | strip) +
+  plot_layout(widths = c(1, 0.34)) +
   plot_annotation(
-    caption = "\u2020 Late-emergent: interactions that peak specifically in Cirrhosis (n=19 donors, GSE202379 snRNA-seq, single dataset) \u2014 secondary validation axis. Shape classification logic uses 4-stage effect-size vectors (H, St, SH, Cir); Cirrhosis position is required to identify late-emergent patterns."
-  ) &
-  theme(plot.caption = element_text(size = 5, color = "grey50", hjust = 0, lineheight = 1.1))
+    title = "Stage-progressive paracrine rewiring",
+    caption = paste0(
+      "Top ", nrow(top), " stage-progressive LR pairs (LMM padj<0.05). ",
+      "Fill = per-stage LIANA strength (row z); rows ordered by continuous F-stage slope. ",
+      "Cirrhosis excluded (n=19, single snRNA-seq dataset)."),
+    theme = theme(
+      plot.title   = element_text(size = 9, face = "bold"),
+      plot.caption = element_text(size = 5, color = "grey50", hjust = 0,
+                                  lineheight = 1.1)))
 
-out_pdf <- file.path(SUPP_DIR, "figS_ccc_shape_clusters.pdf")
-ggsave(out_pdf, fig,
-       width = fig_w, height = fig_h,
-       device = cairo_pdf, units = "in")
+n_rows  <- nrow(top)
+fig_h   <- max(4.0, 0.9 + n_rows * 0.135)   # ~0.135 in per row
+fig_w   <- 6.6
 
-message("Saved figure: ", out_pdf)
-message("Saved gene lists: ",
-        file.path(SUPP_DIR, "shape_gene_lists.tsv"))
+OUT_PDF <- file.path(FIGS_STAGECCC_DIR, "ccc_stage_rewiring.pdf")
+dir.create(dirname(OUT_PDF), showWarnings = FALSE, recursive = TRUE)
+ggsave(OUT_PDF, fig, width = fig_w, height = fig_h,
+       device = cairo_pdf, units = "in", limitsize = FALSE)
+
+# Source data for the panel
+fwrite(merge(strength, top[, .(uid, Estimate, pval, padj_within_ct, slope_dir,
+                               concordant, is_headline)], by = "uid"),
+       file.path(FIGS_STAGECCC_DIR, "ccc_stage_rewiring_data.csv"))
+
+message("Saved figure: ", OUT_PDF)
+
+# Console summary: the LR pairs shown, with slope sign + concordance flag
+cat("\n=== LR pairs in heatmap (ordered by stage slope) ===\n")
+print(top[order(-Estimate),
+          .(ct_pair, lr_pair, Estimate = round(Estimate, 3),
+            padj = signif(padj_within_ct, 2),
+            slope = slope_dir, concord = concordant, headline = is_headline)])

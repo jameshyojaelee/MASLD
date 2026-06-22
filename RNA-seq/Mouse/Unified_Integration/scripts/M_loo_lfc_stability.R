@@ -82,7 +82,7 @@ print(n_per)
 # -----------------------------------------------------------------------------
 # Load full dream model + LOO refits
 # -----------------------------------------------------------------------------
-full_dream <- fread(file.path(RDIR, "meta_analysis/dream_pooled_results.csv"))
+full_dream <- fread(file.path(RDIR, "meta_analysis/lvqw_pooled_results.csv"))
 setnames(full_dream, "adj.P.Val", "padj", skip_absent = TRUE)
 
 # Identify which folds are available on disk

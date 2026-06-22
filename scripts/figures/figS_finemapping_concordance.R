@@ -20,7 +20,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 FM <- file.path(BASE, "GWAS/finemapping")
 outdir <- FIGS05_DIR
-dir.create(file.path(FIGS05_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
+dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)
 grDevices::pdf.options(useDingbats = FALSE)
 
 # ---------------------------------------------------------------------------
@@ -358,7 +358,7 @@ pC <- ggplot(cs_plot, aes(x = reorder(gene, median_jaccard), y = median_jaccard)
 # ---------------------------------------------------------------------------
 # Save individual panels
 # ---------------------------------------------------------------------------
-panels_dir <- file.path(outdir, "panels")
+panels_dir <- outdir
 save_fig(pB, file.path(panels_dir, "panel_G_pip_concordance.pdf"),
          width = fig_half_width, height = 3.5)
 cat("Saved: panels/panel_G_pip_concordance.pdf\n")

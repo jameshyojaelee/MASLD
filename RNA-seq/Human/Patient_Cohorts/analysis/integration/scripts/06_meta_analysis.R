@@ -135,33 +135,33 @@ if (!file.exists(dream_file)) {
   dream <- fread(dream_file)
   # dream columns: gene, logFC, padj (plus symbol, etc.)
   dream[, gene := sub("\\.[0-9]+$", "", gene)]
-  dream_sub <- dream[, .(gene, dream_logFC = logFC, dream_padj = padj)]
+  dream_sub <- dream[, .(gene, dream_logFC = logFC, dream_padj = padj)]  # C2-OK-sensitivity
   meta_sub  <- meta_results[, .(gene, meta_logFC, meta_padj, meta_I2)]
 
   concordance <- merge(dream_sub, meta_sub, by = "gene", all = TRUE)
   concordance[, `:=`(
-    dream_sig = !is.na(dream_padj) & dream_padj < 0.1,
+    dream_sig = !is.na(dream_padj) & dream_padj < 0.1,  # C2-OK-sensitivity
     meta_sig  = !is.na(meta_padj)  & meta_padj  < 0.1,
-    direction_concordant = sign(dream_logFC) == sign(meta_logFC)
+    direction_concordant = sign(dream_logFC) == sign(meta_logFC)  # C2-OK-sensitivity
   )]
 
   # Genes tested in both
-  both <- concordance[!is.na(dream_logFC) & !is.na(meta_logFC)]
-  dream_only <- concordance[!is.na(dream_logFC) & is.na(meta_logFC)]
-  meta_only  <- concordance[is.na(dream_logFC) & !is.na(meta_logFC)]
+  both <- concordance[!is.na(dream_logFC) & !is.na(meta_logFC)]  # C2-OK-sensitivity
+  dream_only <- concordance[!is.na(dream_logFC) & is.na(meta_logFC)]  # C2-OK-sensitivity
+  meta_only  <- concordance[is.na(dream_logFC) & !is.na(meta_logFC)]  # C2-OK-sensitivity
 
   # Spearman correlation of logFCs
-  rho <- cor(both$dream_logFC, both$meta_logFC, method = "spearman", use = "complete.obs")
-  pearson_r <- cor(both$dream_logFC, both$meta_logFC, method = "pearson", use = "complete.obs")
+  rho <- cor(both$dream_logFC, both$meta_logFC, method = "spearman", use = "complete.obs")  # C2-OK-sensitivity
+  pearson_r <- cor(both$dream_logFC, both$meta_logFC, method = "pearson", use = "complete.obs")  # C2-OK-sensitivity
 
   # DEG overlap (padj < 0.1)
-  dream_degs <- both[dream_sig == TRUE, gene]
+  dream_degs <- both[dream_sig == TRUE, gene]  # C2-OK-sensitivity
   meta_degs  <- both[meta_sig == TRUE, gene]
   overlap    <- intersect(dream_degs, meta_degs)
   jaccard    <- length(overlap) / length(union(dream_degs, meta_degs))
 
   # Direction concordance among genes significant in BOTH
-  both_sig <- both[dream_sig == TRUE & meta_sig == TRUE]
+  both_sig <- both[dream_sig == TRUE & meta_sig == TRUE]  # C2-OK-sensitivity
   dir_concord <- mean(both_sig$direction_concordant, na.rm = TRUE)
 
   cat("Genes in both analyses:          ", nrow(both), "\n")
@@ -190,7 +190,7 @@ if (!file.exists(dream_file)) {
   pdf(file.path(RDIR, "dream_vs_meta_scatter.pdf"), width = 12, height = 5)
 
   # Panel 1: logFC scatter
-  p1 <- ggplot(both, aes(x = dream_logFC, y = meta_logFC)) +
+  p1 <- ggplot(both, aes(x = dream_logFC, y = meta_logFC)) +  # C2-OK-sensitivity
     geom_point(aes(color = meta_I2), size = 0.4, alpha = 0.5) +
     scale_color_viridis_c(name = expression(I^2), limits = c(0, 100)) +
     geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "red", linewidth = 0.5) +

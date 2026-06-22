@@ -66,15 +66,13 @@ grp_colors <- c("Disease" = col_disease, "Control" = col_control)
 
 message("Loading dream STAR results...")
 dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
-setnames(dream, "logFC", "dream_logFC", skip_absent = FALSE)
-setnames(dream, "padj",  "dream_padj",  skip_absent = FALSE)
 
-# === lfsr VARIANT: alias ashr columns so every downstream "dream_padj < 0.05" gate
-# becomes lfsr < 0.05 and every "dream_logFC" effect becomes the ashr-shrunk posterior,
+# === lfsr VARIANT: alias ashr columns so every downstream "padj < 0.05" gate
+# becomes lfsr < 0.05 and every "logFC" effect becomes the ashr-shrunk posterior,
 # WITHOUT editing the analytical body. (sign is preserved by ashr; magnitude shrinks.) ===
 stopifnot(all(c("shrunk_logFC","lfsr") %in% names(dream)))
-dream[, dream_logFC := shrunk_logFC]
-dream[, dream_padj  := lfsr]
+dream[, logFC := shrunk_logFC]
+dream[, padj  := lfsr]
 
 message("Loading patient LFC matrix (disease samples)...")
 lfc_mat    <- fread(file.path(INT_RESULTS, "patient_lfc_matrix.csv.gz"))
@@ -130,8 +128,8 @@ ctrl_lfc  <- ctrl_lfc[dream_sub$gene, ]
 
 # ── Signature score at canonical cutoff ──────────────────────────────────────
 CUT <- 0     # lfsr variant: pure lfsr<0.05 gate, no shrunk-magnitude floor
-up_g    <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  CUT]
-dn_g    <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -CUT]
+up_g    <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  CUT]
+dn_g    <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -CUT]
 n_total <- length(up_g) + length(dn_g)
 message(sprintf("  DEGs at |LFC|>%.1f: %d up + %d down = %d total",
                 CUT, length(up_g), length(dn_g), n_total))

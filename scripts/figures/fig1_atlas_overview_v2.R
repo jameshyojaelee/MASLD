@@ -39,17 +39,17 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG1_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
-# ---- Cohort name map (first author) ----
+# ---- Cohort name map (accession) ----
 STUDY_NAMES <- c(
-  GSE126848   = "Suppli",
-  GSE130970   = "Hoang",
-  GSE135251   = "Govaere",
-  GSE162694   = "Bril",
-  GSE167523   = "Pantano",
-  GSE174478   = "Kawamura",
-  GSE193066   = "Hoshida",
-  GSE213621   = "Chen",
-  GSE240729   = "Verschuren"
+  GSE126848   = "GSE126848",
+  GSE130970   = "GSE130970",
+  GSE135251   = "GSE135251",
+  GSE162694   = "GSE162694",
+  GSE167523   = "GSE167523",
+  GSE174478   = "GSE174478",
+  GSE193066   = "GSE193066",
+  GSE213621   = "GSE213621",
+  GSE240729   = "GSE240729"
 )
 # PRJNA512027 (Gerhard 2018) excluded from cohort presentation: L0/S0
 # library-prep batch perfectly confounded with diagnosis (all 34 controls
@@ -350,9 +350,11 @@ p_d_dots <- ggplot() +
 
 p_d <- p_d_bars / p_d_dots + plot_layout(heights = c(2, 1.4))
 
-save_fig(p_d, file.path(PANEL_DIR, "fig1d.pdf"),
+# fig1d.pdf relocated to the Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq,
+# back-compat constant name). All OTHER panels in this script still write to FIG1_DIR.
+save_fig(p_d, file.path(FIG2_DIR, "panels", "cohort_diagnosis_composition.pdf"),
          width = fig_col_width, height = 2.6)
-cat("  Saved fig1d.pdf\n")
+cat("  Saved cohort_diagnosis_composition.pdf\n")
 
 # =============================================================================
 # PANEL 1e: Per-study LOO-CV replication

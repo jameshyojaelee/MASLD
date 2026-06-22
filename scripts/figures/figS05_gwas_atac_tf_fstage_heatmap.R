@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 # KEY MESSAGE: Cross-modality disease master-regulator TFs vs F0 baseline across F1-F4 stages; HNF4A, RORA, THRB anchor the largest motif-disruption load.
+# NOTE: "motif-disruption load" is a PUTATIVE computational prediction (FIMO/
+# motifbreakR on fine-mapped variants), NOT functionally validated -- the Currin
+# caQTL test does not confirm it (motif x caQTL 46.3%, median 50%; only 2 four-way
+# variants, in ZNF701; see figS05_scatac_caqtl_concordance). Report as PREDICTED
+# regulatory disruption, never "validated".
 # Mirrors figS05_gwas_atac_tf_transition_heatmap.R but uses F0 as the common reference instead of the prior stage.
 # Source: fibrosis_stage_dream.csv (dream mega F{1-4}_vs_F0) + DoRothEA A/B/C + decoupleR run_wmean.
 # TF panel: cross-modality disease master regulators = hepatocyte SCENIC+ regulon TFs that are

@@ -9,12 +9,17 @@ suppressPackageStartupMessages({
 })
 
 source("scripts/figures/publication_theme.R")
+source("scripts/figures/load_figure_data.R")  # provides FIG2_DIR (= fig3_RNAseq)
 
 PROJ <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 DREAM <- file.path(PROJ, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 OUTDIR <- file.path(PROJ, "figures/main/fig1_atlas_overview/panels")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
+# fig1g_figs3c_deg_landscape_cv.pdf + fig1g_deg_landscape_data.csv relocated to the
+# Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq, back-compat constant name).
+FIG2_PANEL_DIR <- file.path(FIG2_DIR, "panels")
+dir.create(FIG2_PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 
 d <- fread(DREAM)
 cat("Loaded:", nrow(d), "genes\n")
@@ -77,13 +82,13 @@ pB <- ggplot(cv_dt, aes(x = lfc, y = cv)) +
 
 combined <- pA / pB + plot_layout(heights = c(2, 1))
 
-out_pdf <- file.path(OUTDIR, "fig1g_deg_landscape_cv.pdf")
+out_pdf <- file.path(FIG2_PANEL_DIR, "figs3c_deg_landscape_cv.pdf")
 ggsave(out_pdf, combined, width = 7, height = 6)
 cat("Saved:", out_pdf, "\n")
 
-out_csv <- file.path(OUTDIR, "fig1g_deg_landscape_data.csv")
+out_csv <- file.path(FIG2_PANEL_DIR, "deg_landscape_cv_data.csv")
 fwrite(grid, out_csv)
 
-out_cv <- file.path(OUTDIR, "fig1g_cv_data.csv")
+out_cv <- file.path(OUTDIR, "fig1g_cv_data.csv")  # not relocated; stays in fig1
 fwrite(cv_dt, out_cv)
 cat("Data:", out_csv, out_cv, "\n")

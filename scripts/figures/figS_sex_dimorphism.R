@@ -81,13 +81,13 @@ v3_labels <- c(F_only     = "F_only",
 .gated_col <- intersect(c("assigned_class_gated", "assigned_class"), names(v3))[1]
 v3[, assigned_class := factor(get(.gated_col), levels = v3_levels)]
 
-# Cohort short-name mapping (5-cohort canonical)
+# Cohort short-name mapping (5-cohort canonical) — display by accession
 COHORT_NAMES <- c(
-  GSE126848 = "Suppli",
-  GSE130970 = "Hoang",
-  GSE135251 = "Govaere",
-  GSE162694 = "Bril",
-  GSE213621 = "Chen"
+  GSE126848 = "GSE126848",
+  GSE130970 = "GSE130970",
+  GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",
+  GSE213621 = "GSE213621"
 )
 
 # ---------------------------------------------------------------------------

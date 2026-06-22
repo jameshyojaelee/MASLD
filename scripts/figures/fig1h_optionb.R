@@ -28,7 +28,9 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG1_DIR, "panels")
+# Outputs (fig1h_optionb.pdf + fig1h_optionb_table.csv) relocated to the
+# Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq, back-compat constant name).
+PANEL_DIR <- file.path(FIG2_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 PADJ_INT      <- 0.05
@@ -42,68 +44,74 @@ FIVE_COHORTS <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621
 # Load + merge
 # ----------------------------------------------------------------------------
 message("Loading data...")
-dream <- load_dream_results()
-ps    <- load_per_study_de()[dataset %in% FIVE_COHORTS]
-
-dream[, gene_clean := sub("\\..*", "", gene)]
-ps[,    gene_clean := sub("\\..*", "", gene)]
-
-# Wide table: one row per gene, cohort logFCs as columns
-ps_wide <- dcast(ps[, .(gene_clean, dataset, logFC, padj)],
-                 gene_clean ~ dataset, value.var = c("logFC", "padj"))
-
-panel_df <- merge(dream[, .(gene_clean, symbol, dream_logFC, dream_padj)],
-                  ps_wide, by = "gene_clean", all.x = TRUE)
-
-# ----------------------------------------------------------------------------
-# Per-gene metrics
-# ----------------------------------------------------------------------------
-lfc_cols  <- paste0("logFC_", FIVE_COHORTS)
-padj_cols <- paste0("padj_",  FIVE_COHORTS)
-
-# n_sign_concordant: cohorts with logFC sign matching dream
-panel_df[, n_sign_concordant := rowSums(
-  sign(.SD[, ..lfc_cols, with = FALSE]) ==
-    sign(panel_df$dream_logFC), na.rm = TRUE
-)]
-
-# n_cohorts_canonical: cohorts where padj<0.05 AND |logFC|>0.5 AND same dir
-canonical_mat <- mapply(function(lfc_col, padj_col) {
-  lfc  <- panel_df[[lfc_col]]
-  padj <- panel_df[[padj_col]]
-  !is.na(lfc) & !is.na(padj) & padj < PADJ_COHORT &
-    abs(lfc) > LFC_CANONICAL &
-    sign(lfc) == sign(panel_df$dream_logFC) & sign(lfc) != 0
-}, lfc_cols, padj_cols, SIMPLIFY = TRUE)
-panel_df[, n_cohorts_canonical := rowSums(canonical_mat, na.rm = TRUE)]
+# Per-cohort sign concordance is computed from A2's OWN percohort_lvqw files plus
+# the canonical integrated direction — this reproduces A2's n_concord EXACTLY
+# (verified 100% per-gene identical; 46.7% concordant in >=4/5). The newer
+# standalone per-study CSVs (QW-flipped 2026-06-11) drift to ~52%, so we
+# deliberately do NOT use load_per_study_de() here.
+A2_DIR <- file.path(INT_RESULTS, "integration_only_C2")
+can <- load_dream_results()                        # canonical_deg_results.csv (C2)
+can[, gene_clean := sub("\\..*", "", gene)]
+sgn <- can[, .(gene_clean, symbol, bulk_logFC, bulk_padj,
+               int_sign = sign(bulk_logFC))]
+# AveExpr (for A2's AveExpr-decile-matched control) read straight from canonical
+ave <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"),
+             select = c("gene", "AveExpr"))
+ave[, gene_clean := sub("\\..*", "", gene)]
+sgn <- merge(sgn, ave[, .(gene_clean, AveExpr)], by = "gene_clean", all.x = TRUE)
+for (co in FIVE_COHORTS) {
+  pc <- fread(file.path(A2_DIR, sprintf("percohort_lvqw_%s.csv", co)))
+  pc[, gene_clean := sub("\\..*", "", gene)]
+  pc <- pc[, .(gene_clean, s = sign(logFC))]
+  setnames(pc, "s", co)
+  sgn <- merge(sgn, pc, by = "gene_clean", all.x = TRUE)
+}
+sign_mat <- as.matrix(sgn[, ..FIVE_COHORTS])
+sgn[, n_sign_concordant := rowSums(sign_mat == int_sign, na.rm = TRUE)]
+panel_df <- sgn
 
 # ----------------------------------------------------------------------------
 # Define groups
 # ----------------------------------------------------------------------------
-# Group A: integration-only (sig integrated, no cohort canonical)
-group_A <- panel_df[!is.na(dream_padj) & dream_padj < PADJ_INT &
-                    n_cohorts_canonical == 0 &
-                    !is.na(dream_logFC) & dream_logFC != 0]
+# Group A: the CANONICAL integration-only set (A2_integration_only_genes_C2.csv,
+# 5,926 genes) with A2's own per-cohort concordance — matches the manuscript
+# exactly (integration_only_n = 5926, dirconcord_io_pct = 46.7).
+io_gids <- sub("\\..*", "", fread(file.path(A2_DIR,
+                  "A2_integration_only_genes_C2.csv"))$gid)
+group_A <- panel_df[gene_clean %in% io_gids]
+cat(sprintf("[sanity] group_A n=%d (A2 canonical=5926); >=4/5 concordant=%.1f%% (A2=46.7%%)\n",
+            nrow(group_A), 100 * mean(group_A$n_sign_concordant >= 4)))
 
-# Group B: random non-DEG, size-matched
-non_deg_pool <- panel_df[!is.na(dream_padj) & dream_padj >= PADJ_INT &
-                         !is.na(dream_logFC) & dream_logFC != 0]
-
+# Group B: AveExpr-DECILE-size-matched non-DEGs — replicates A2's matched control
+# exactly (A2 matches on AveExpr deciles of the io set -> 16.1% / OR 4.55; a plain
+# random non-DEG sample undershoots to ~12.6%).
+non_deg_pool <- panel_df[!is.na(bulk_padj) & bulk_padj >= PADJ_INT & !is.na(AveExpr)]
+io_ave <- group_A$AveExpr
+brk    <- unique(quantile(io_ave, probs = seq(0, 1, 0.1), na.rm = TRUE))
+io_bin <- cut(io_ave, breaks = brk, include.lowest = TRUE)
+ns_bin <- cut(non_deg_pool$AveExpr, breaks = brk, include.lowest = TRUE)
 set.seed(SET_SEED)
-group_B <- non_deg_pool[sample(.N, min(nrow(group_A), .N))]
+matched <- character(0)
+for (b in levels(io_bin)) {
+  need <- sum(io_bin == b, na.rm = TRUE)
+  pool <- non_deg_pool$gene_clean[which(ns_bin == b)]
+  if (length(pool) == 0 || need == 0) next
+  matched <- c(matched, sample(pool, need, replace = length(pool) < need))
+}
+group_B <- non_deg_pool[match(matched, gene_clean)]
 
 message(sprintf("Group A (Integration-only): %s genes", comma(nrow(group_A))))
 message(sprintf("Group B (Random non-DEG):   %s genes (sampled from %s pool)",
                 comma(nrow(group_B)), comma(nrow(non_deg_pool))))
 
-group_A[, group := "Integration-only (dream padj<0.05, no cohort canonical)"]
-group_B[, group := "Non-DEG control (dream padj≥0.05, size-matched)"]
+group_A[, group := "Integration-only DEGs"]
+group_B[, group := "Size-matched non-DEGs"]
 combined <- rbindlist(list(group_A, group_B), use.names = TRUE)
 
 # ----------------------------------------------------------------------------
 # Tabulate concordance distributions
 # ----------------------------------------------------------------------------
-combined[, group := factor(group, levels = c("Integration-only (dream padj<0.05, no cohort canonical)", "Non-DEG control (dream padj≥0.05, size-matched)"))]
+combined[, group := factor(group, levels = c("Integration-only DEGs", "Size-matched non-DEGs"))]
 dist_dt <- combined[, .N, by = .(group, n_sign_concordant)]
 dist_dt[, total := sum(N), by = group]
 dist_dt[, pct := 100 * N / total]
@@ -124,23 +132,25 @@ fisher_or <- fisher.test(mat)$estimate
 message(sprintf("Fisher's exact (4+/5 vs <4/5): OR=%.2f, p=%.2e",
                 fisher_or, fisher_p))
 
-frac_int_high <- high_conc[group == "Integration-only (dream padj<0.05, no cohort canonical)",     n_high / (n_high + n_low)]
-frac_rnd_high <- high_conc[group == "Non-DEG control (dream padj≥0.05, size-matched)",   n_high / (n_high + n_low)]
+frac_int_high <- high_conc[group == "Integration-only DEGs",     n_high / (n_high + n_low)]
+frac_rnd_high <- high_conc[group == "Size-matched non-DEGs",   n_high / (n_high + n_low)]
+n_hi_A <- high_conc[group == "Integration-only DEGs", n_high]
+n_hi_B <- high_conc[group == "Size-matched non-DEGs", n_high]
 
 # ----------------------------------------------------------------------------
 # Plot
 # ----------------------------------------------------------------------------
 group_colors <- c(
-  "Integration-only (dream padj<0.05, no cohort canonical)"      = "#C9265E",
-  "Non-DEG control (dream padj≥0.05, size-matched)"    = "#9E9E9E"
+  "Integration-only DEGs"      = "#C9265E",
+  "Size-matched non-DEGs"    = "#9E9E9E"
 )
 
 # Ensure all 6 levels (0..5) appear
 all_levels <- CJ(group = levels(combined$group),
                  n_sign_concordant = 0:5)
-dist_full <- merge(all_levels, dist_dt[, .(group, n_sign_concordant, pct)],
+dist_full <- merge(all_levels, dist_dt[, .(group, n_sign_concordant, N)],
                    by = c("group", "n_sign_concordant"), all.x = TRUE)
-dist_full[is.na(pct), pct := 0]
+dist_full[is.na(N), N := 0]
 dist_full[, x_factor := factor(n_sign_concordant, levels = 0:5)]
 
 p_str <- if (fisher_p < 1e-300) "p<1e-300" else
@@ -152,14 +162,14 @@ label_text <- sprintf(
 )
 
 p <- ggplot(dist_full,
-            aes(x = x_factor, y = pct, fill = group)) +
+            aes(x = x_factor, y = N, fill = group)) +
   geom_col(position = position_dodge(width = 0.75), width = 0.7) +
   scale_fill_manual(values = group_colors, name = NULL) +
-  scale_y_continuous(labels = function(v) paste0(v, "%"),
-                     expand = expansion(mult = c(0, 0.10))) +
+  scale_y_continuous(labels = scales::comma,
+                     expand = expansion(mult = c(0, 0.13))) +
   labs(
     x = "Cohorts with concordant log2FC sign (of 5)",
-    y = "Genes (%)",
+    y = "Number of genes",
     title = "Integration-rescued DEGs share effect direction across cohorts"
   ) +
   theme_masld(base_size = 10) +
@@ -176,15 +186,15 @@ p <- ggplot(dist_full,
     legend.key.height = unit(0.3, "cm")
   )
 
-save_fig(p, file.path(PANEL_DIR, "fig1h_optionb.pdf"),
+save_fig(p, file.path(PANEL_DIR, "integration_discovery_optionb.pdf"),
          width = fig_half_width * 1.55, height = 3.4)
 
 # Per-gene table
-fwrite(combined[, .(gene_clean, symbol, dream_logFC, dream_padj,
-                    n_sign_concordant, n_cohorts_canonical, group)],
-       file.path(PANEL_DIR, "fig1h_optionb_table.csv"))
+fwrite(combined[, .(gene_clean, symbol, bulk_logFC, bulk_padj,
+                    n_sign_concordant, group)],
+       file.path(PANEL_DIR, "integration_discovery_optionb_table.csv"))
 
-fp <- file.path(PANEL_DIR, "fig1h_optionb.pdf")
+fp <- file.path(PANEL_DIR, "integration_discovery_optionb.pdf")
 if (file.exists(fp)) {
   message(sprintf("\nOutput: %s (%s)", fp,
                   utils:::format.object_size(file.size(fp), "auto")))
