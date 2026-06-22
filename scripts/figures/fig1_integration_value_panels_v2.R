@@ -155,8 +155,9 @@ p5 <- ggplot(hm_all, aes(x = author, y = symbol, fill = sig_status)) +
 cat("\n── Idea 6: Variance partitioning ──\n")
 
 if (!is.null(vp) && nrow(vp) > 0) {
-  # Columns: gene, condition, dataset, sex, Residuals (+ symbol from loader)
-  vp_cols <- c("condition", "dataset", "sex", "Residuals")
+  # Columns: gene, dataset, group_binary, sex, Residuals (+ symbol from loader)
+  # C2 variance_partition.csv names the disease term 'group_binary' (was 'condition' pre-C2)
+  vp_cols <- c("group_binary", "dataset", "sex", "Residuals")
   vp_num <- copy(vp[, c("gene", vp_cols), with = FALSE])
   for (col in vp_cols) vp_num[, (col) := as.numeric(get(col))]
   vp_long <- melt(vp_num, id.vars = "gene",
@@ -164,7 +165,7 @@ if (!is.null(vp) && nrow(vp) > 0) {
                   variable.name = "source", value.name = "variance")
   # Clean names
   vp_long[, source := factor(source,
-    levels = c("dataset", "condition", "sex", "Residuals"),
+    levels = c("dataset", "group_binary", "sex", "Residuals"),
     labels = c("Cohort (batch)", "Disease status", "Sex", "Residual")
   )]
   vp_long <- vp_long[!is.na(source)]

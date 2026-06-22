@@ -240,6 +240,18 @@ if (file.exists(dis_reg_file)) {
   }
 }
 
+# Disrupted master-regulator targets (the dense ATAC/regulatory column, 2026-06-22):
+# # of disease master-regulators that are motif-disrupted by fine-mapped MASLD risk
+# variants (fig4 disease_master_regulators) AND regulate this gene (CollecTRI).
+# Precomputed by scripts/figures/compute_disrupted_mr_targets.R.
+mrt_file <- file.path(BASE, "RNA-seq/results/multi_evidence/disrupted_mr_targets.csv")
+if (file.exists(mrt_file)) {
+  mrt <- fread(mrt_file)[, .(human_symbol, n_disrupted_mr_targets)]
+  atlas <- merge(atlas, mrt, by = "human_symbol", all.x = TRUE)
+  atlas[is.na(n_disrupted_mr_targets), n_disrupted_mr_targets := 0L]
+  cat("  Disrupted master-regulator targets merged:", sum(atlas$n_disrupted_mr_targets > 0), "genes\n")
+}
+
 # Load clinical drug validation for target genes — prefer v2 (2026-04-24+).
 drug_val_v2 <- file.path(BASE, "RNA-seq/results/drug_repurposing/clinical_drug_validation_table_v2.csv")
 drug_val_v1 <- file.path(BASE, "RNA-seq/results/drug_repurposing/clinical_drug_validation_table.csv")
@@ -579,16 +591,13 @@ if ("best_da_logFC" %in% names(top_genes)) {
   mat_da_lfc[sig_da, 1] <- as.numeric(top_genes$best_da_logFC[sig_da])
 }
 
-# N motifs disrupted (GWAS-ATAC, count)
-mat_motif <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "N motif\ndisrupted"))
-if ("n_motifs_disrupted" %in% names(top_genes)) {
-  mat_motif[, 1] <- as.numeric(top_genes$n_motifs_disrupted)
-}
-
-# Disease regulon target (binary)
-mat_reg <- matrix(0L, nrow = top_n, ncol = 1, dimnames = list(genes, "Disease\nregulon"))
-if ("is_disease_reg_target" %in% names(top_genes)) {
-  mat_reg[, 1] <- as.integer(top_genes$is_disease_reg_target == TRUE)
+# Disrupted master-regulator targets (count) — ONE dense regulatory column that
+# replaces the old sparse per-gene "N motif disrupted" + empty "Disease regulon".
+# = # of motif-disrupted disease master-regulators (CollecTRI) regulating the gene.
+mat_mrtarget <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "Disrupted-MR\ntargets"))
+if ("n_disrupted_mr_targets" %in% names(top_genes)) {
+  v <- as.numeric(top_genes$n_disrupted_mr_targets)
+  mat_mrtarget[!is.na(v) & v > 0, 1] <- v[!is.na(v) & v > 0]   # 0 -> NA (white = no evidence)
 }
 
 # Proteomics: protein logFC (z-score normalized) + n_datasets validated
@@ -720,9 +729,11 @@ ha_right <- rowAnnotation(
 # ── Build heatmaps — ALL COLUMNS FLAT (no group headers) ────────────────────
 
 # Human logFC (z-score, * for significant DEGs)
-# Combined RNA matrix: 6 DEG contrast cols
+# Consolidated 2026-06-22: show only 3 key contrasts (disease / steatohepatitis
+# progression / advanced fibrosis) instead of all 6 — the rest were redundant.
 mat_rna_combined <- clamp(mat_deg_z_sig, -2.5, 2.5)
-colnames(mat_rna_combined) <- sapply(deg_contrast_defs, `[[`, "label")
+rna_show <- c("MASLD\nvs Ctrl", "MASH\nvs MAFL", "Adv Fib\n(F3-F4)")
+mat_rna_combined <- mat_rna_combined[, intersect(rna_show, colnames(mat_rna_combined)), drop = FALSE]
 
 h_human <- Heatmap(mat_rna_combined, name = "z-score", col = col_zscore,
   column_labels = colnames(mat_rna_combined), column_title = "RNA",
@@ -745,19 +756,21 @@ if (!all(is.na(mat_ancestry[, 1]))) {
   mat_ancestry_num[mat_ancestry[, 1] == "Both", 1] <- 3L
 }
 
-# Combine genetic columns: Enzyme COLOC | Disease COLOC | PDFF | SuSiE | INTACT | ieQTL | Ancestry
+# Consolidated 2026-06-22: 3 COLOC categories (enzyme/disease/PDFF) -> one best
+# PP.H4 column. Genetics block = COLOC | Finemap PIP | ancestry.
+mat_coloc_best <- matrix(
+  suppressWarnings(pmax(mat_enzyme_pp4[, 1], mat_disease_pp4[, 1], mat_pdff[, 1], na.rm = TRUE)),
+  ncol = 1, dimnames = list(genes, "COLOC\n(PP.H4)"))
+mat_coloc_best[is.infinite(mat_coloc_best)] <- NA
 mat_genetic <- cbind(
-  clamp(mat_enzyme_pp4, 0, 1),
-  clamp(mat_disease_pp4, 0, 1),
-  clamp(mat_pdff, 0, 1),
+  clamp(mat_coloc_best, 0, 1),
   clamp(mat_finemap, 0, 1),
   mat_ancestry_num
 )
-genetic_labels <- c("ALT/AST/GGT\nCOLOC", "NAFLD/NASH\nCOLOC", "PDFF\nCOLOC",
-                     "Finemap\nPIP", "COLOC\nancestry")
+genetic_labels <- c("COLOC\n(PP.H4)", "Finemap\nPIP", "COLOC\nancestry")
 
 h_genetic <- Heatmap(mat_genetic, name = "PP.H4", col = col_pp4,
-  column_labels = genetic_labels, column_title = "GWAS + eQTL",
+  column_labels = genetic_labels, column_title = "Genetics",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   na_col = "white",
   width = unit((if (!is.na(TOPN)) SQ_CELL_MM else 8) * ncol(mat_genetic), "mm"),
@@ -796,29 +809,15 @@ h_mouse <- Heatmap(clamp(mat_mouse_z_sig, -2.5, 2.5), name = "Mouse z", col = co
   na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 10, "mm"), border = TRUE,
   show_heatmap_legend = FALSE)
 
-# GWAS-ATAC: motif disruption counts + regulon hits
-# Normalize motif count to max for color scale
-# Combined ATAC matrix: N motifs disrupted | Disease regulon — single box
-mat_atac_combined <- cbind(mat_motif, mat_reg)
-colnames(mat_atac_combined) <- c("N motif\ndisrupted", "Disease\nregulon")
+# ATAC/regulatory: ONE dense column — disrupted master-regulator targets (count).
+mat_atac_combined <- mat_mrtarget
 
 h_atac <- Heatmap(mat_atac_combined, name = "ATAC", col = col_count,
   column_labels = colnames(mat_atac_combined), column_title = "ATAC",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   na_col = "white",
-  width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_atac_combined) else 18, "mm"),
+  width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_atac_combined) else 12, "mm"),
   border = TRUE,
-  cell_fun = function(j, i, x, y, width, height, fill) {
-    v <- mat_atac_combined[i, j]
-    if (is.na(v)) return()
-    if (j == 1) {
-      # N motifs: purple count scale (default)
-    } else {
-      # Disease regulon: binary gray
-      col_val <- if (v == 1) gray_gradient[7] else "white"
-      grid.rect(x, y, width, height, gp = gpar(fill = col_val, col = NA))
-    }
-  },
   show_heatmap_legend = FALSE)  # uses unified Count legend
 
 # Proteomics validation (protein logFC z-score)
@@ -885,9 +884,9 @@ if (!is.na(TOPN)) {
     annotation_name_side = "left")
 
   # ── Per-modality row cap (transposed top-N variant): max 3 rows/modality ─────
-  # RNA 6→3 and GWAS+eQTL 5→3 (selected tracks); other modalities already ≤3.
-  rna_keep_labels <- c("MASLD\nvs Ctrl", "MASH\nvs Ctrl", "Adv Fib\n(F3-F4)")
-  gen_keep_labels <- c("ALT/AST/GGT\nCOLOC", "NAFLD/NASH\nCOLOC", "COLOC\nancestry")
+  # RNA and Genetics already consolidated to 3 cols above; match those labels.
+  rna_keep_labels <- c("MASLD\nvs Ctrl", "MASH\nvs MAFL", "Adv Fib\n(F3-F4)")
+  gen_keep_labels <- c("COLOC\n(PP.H4)", "Finemap\nPIP", "COLOC\nancestry")
   rna_keep_idx <- match(rna_keep_labels, colnames(mat_rna_combined)); rna_keep_idx <- rna_keep_idx[!is.na(rna_keep_idx)]
   gen_keep_idx <- match(gen_keep_labels, genetic_labels);             gen_keep_idx <- gen_keep_idx[!is.na(gen_keep_idx)]
   mat_rna_sel    <- mat_rna_combined[, rna_keep_idx, drop = FALSE]

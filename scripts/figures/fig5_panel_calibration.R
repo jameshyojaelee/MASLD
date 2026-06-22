@@ -1,135 +1,95 @@
 ##############################################################################
-# fig5_panel_calibration.R — Fig 5 PANEL 5d (NEW, 2026-06-10)
+# fig5_panel_calibration.R — Fig 5 PANEL 5d (REBUILT 2026-06-22)
 #
-# Held-out calibration of the multi-evidence CONVERGENCE SCORE (Script 46d,
-# the canonical evidence-weighted heuristic convergence ranking).
+# CALIBRATION of the multi-evidence CONVERGENCE SCORE (Script 46d) against
+# INDEPENDENT external MASLD truth panels — vs CHANCE, not vs our old method.
 #
-# What it shows: the convergence score ranks genes in three EXTERNAL held-out
-# truth panels (Govaere consensus MASLD signature, NIDDK, Open Targets MASLD
-# associations) better than chance, and improves over our OWN prior ranking
-# method (Script 46b, retired). The held-out panels are TRUTH, not competitors.
+# Objective: show the convergence ranking recovers diverse, independent external
+# truth ABOVE CHANCE (so the ranking is real / non-circular). NOT a horse race.
+# The previous "vs prior method (46b, retired)" comparison was dropped — beating
+# our own deprecated method is a development artifact, not a result.
 #
-# HONESTY GUARDRAIL (do NOT violate): 46b is OUR retired method; Govaere /
-# NIDDK / Open Targets are held-out evaluation panels (TRUTH sets), NOT rival
-# tools. Framing is strictly "convergence score predicts held-out panels and
-# improves over our prior method." NEVER state or imply that the convergence
-# score outperforms any of those external resources as a competing tool.
+# Three external truth panels, each a different evidence type:
+#   Govaere 2020   — published bulk MASLD expression signature   (expression)
+#   NIDDK 2024     — curated MASLD clinical drug targets          (clinical)
+#   Open Targets   — MASLD genetic associations (NASH EFO_1001249) (genetic)
 #
-# Data: RNA-seq/results/multi_evidence/convergence_evidence_benchmark.csv
-#   columns auroc_46d (convergence score) + auroc_46b (prior method) per panel.
-#
-# Output: $FIG5_DIR/panels/fig5d_calibration.pdf  (+ source CSV)
+# HONEST framing (caption, emitted to stdout — NOT on the panel):
+#  - The convergence score recovers EXPRESSION (Govaere) and CLINICAL (NIDDK)
+#    truth strongly, and PURELY-GENETIC truth (Open Targets) weakly/near-chance.
+#    This is BY DESIGN: the score rewards genes with CONVERGENT multi-modal
+#    support, so a gene with only a genetic association (no expression/protein/
+#    single-cell signal) scores low. The genetic panel tests what the score is
+#    deliberately NOT built to do — it characterizes the score, it is not a flaw.
+#  - Open Targets panel uses NASH EFO_1001249 only; the EFO_0004612 set is HDL
+#    (not NAFLD; see memory) and is dropped.
+#  - Govaere shares samples with the bulk layer (GSE135251); a held-out
+#    sensitivity (bulk DEG recomputed excluding Govaere) moves the bulk-layer
+#    AUROC only 0.905 -> 0.891, so the recovery is not driven by sample overlap.
+#  - Govaere / NIDDK / Open Targets are TRUTH sets being predicted, NOT rival
+#    tools. NEVER imply the score "beats" those external resources.
 ##############################################################################
 
-suppressPackageStartupMessages({
-  library(data.table)
-  library(ggplot2)
-  library(scales)
-})
-
+suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(scales) })
 set.seed(42)
-
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+PANDIR <- file.path(FIG5_DIR, "panels"); dir.create(PANDIR, recursive = TRUE, showWarnings = FALSE)
 
-OUTDIR <- FIG5_DIR
-PANDIR <- file.path(OUTDIR, "panels")
-dir.create(PANDIR, recursive = TRUE, showWarnings = FALSE)
+# ── Convergence score + external truth panels ────────────────────────────────
+A  <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
+ce <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/convergence_evidence.csv"))
+A  <- merge(A, ce[, .(human_symbol, conv = convergence_score)], by = "human_symbol", all.x = TRUE)
+A  <- A[is.finite(conv)]                                    # scored universe (matches 46d benchmark)
+rd <- function(p) { L <- readLines(p); L <- L[!grepl("^#", L)]
+                    unique(fread(text = paste(L, collapse = "\n"))$gene_symbol) }
+ot <- { L <- readLines(file.path(BASE, "data/published_gene_panels/opentargets_masld_2025.tsv"))
+        d <- fread(text = paste(L[!grepl("^#", L)], collapse = "\n"))
+        unique(d[source_disease == "NASH_EFO_1001249", gene_symbol]) }   # drop HDL EFO_0004612
+panels <- list(
+  Govaere = list(genes = rd(file.path(BASE, "data/published_gene_panels/govaere_2020_panel.tsv")),
+                 label = "Govaere signature\n(expression)"),
+  NIDDK   = list(genes = rd(file.path(BASE, "data/published_gene_panels/niddk_pipeline_2024.tsv")),
+                 label = "NIDDK targets\n(clinical)"),
+  OpenTargets = list(genes = ot, label = "Open Targets\n(genetic)"))
 
-# ---------------------------------------------------------------------------
-# Load held-out benchmark
-# ---------------------------------------------------------------------------
-bench_f <- file.path(BASE, "RNA-seq/results/multi_evidence",
-                     "convergence_evidence_benchmark.csv")
-stopifnot(file.exists(bench_f))
-bench <- fread(bench_f)
+aurocf <- function(s, lab) { r <- rank(s, ties.method = "average")
+  n1 <- sum(lab); n0 <- sum(!lab); (sum(r[lab]) - n1*(n1+1)/2) / (n1*n0) }
+# Hanley & McNeil (1982) analytic 95% CI — the standard AUROC SE; correctly
+# wide for small positive sets (a stratified bootstrap under-states it because
+# the few panel genes are consistently top-ranked).
+hanley <- function(a, n1, n0) { Q1 <- a/(2-a); Q2 <- 2*a^2/(1+a)
+  se <- sqrt((a*(1-a) + (n1-1)*(Q1-a^2) + (n0-1)*(Q2-a^2)) / (n1*n0))
+  c(lo = max(0, a - 1.96*se), hi = min(1, a + 1.96*se)) }
+res <- rbindlist(lapply(names(panels), function(pn) {
+  lab <- A$human_symbol %in% panels[[pn]]$genes; s <- A$conv
+  au  <- aurocf(s, lab); ci <- hanley(au, sum(lab), sum(!lab))
+  p   <- suppressWarnings(wilcox.test(s[lab], s[!lab], alternative = "greater")$p.value)
+  data.table(panel = pn, label = panels[[pn]]$label, n_pos = sum(lab),
+             auroc = au, ci_lo = ci["lo"], ci_hi = ci["hi"], p = p) }))
+res[, star := fifelse(p < 1e-3, "***", fifelse(p < 1e-2, "**", fifelse(p < 0.05, "*", "ns")))]
+res[, label := factor(label, levels = res[order(-auroc), label])]
+fwrite(res, file.path(PANDIR, "fig5d_calibration_source.csv"))
 
-# Human-readable panel labels + ordering (best discrimination first).
-# Govaere consensus signature is derived from the Govaere bulk cohort
-# (GSE135251); display by accession. Keys (panel column values) unchanged.
-panel_lab <- c(
-  Govaere     = "GSE135251 consensus\nMASLD signature",
-  NIDDK       = "NIDDK\nMASLD panel",
-  OpenTargets = "Open Targets\nMASLD associations"
-)
-bench <- bench[panel %in% names(panel_lab)]
-bench[, panel_label := panel_lab[panel]]
-
-# Long format: one row per (panel, method).
-long <- rbindlist(list(
-  bench[, .(panel, panel_label, n_in_panel_atlas,
-            method = "Convergence score", auroc = auroc_46d)],
-  bench[, .(panel, panel_label, n_in_panel_atlas,
-            method = "Prior method", auroc = auroc_46b)]
-))
-
-# Order panels by convergence-score AUROC (descending), methods score-first.
-panel_order <- bench[order(-auroc_46d), panel_label]
-long[, panel_label := factor(panel_label, levels = panel_order)]
-long[, method := factor(method, levels = c("Convergence score", "Prior method"))]
-
-# Per-panel label annotating held-out panel size (n positives in atlas).
-panel_n <- unique(long[, .(panel_label, n_in_panel_atlas)])
-
-cat("Held-out calibration (AUROC):\n")
-print(bench[, .(panel, auroc_46d, auroc_46b)])
-
-# ---------------------------------------------------------------------------
-# Panel 5d — grouped bars: convergence score vs prior method per held-out panel
-# Semantic colors: convergence score = disease magenta; prior method = gray.
-# Chance line at 0.5.
-# ---------------------------------------------------------------------------
-method_cols <- c("Convergence score" = masld_colors$mash,
-                 "Prior method"      = "#9E9E9E")  # control/neutral gray (invariant)
-
-p5d <- ggplot(long, aes(x = panel_label, y = auroc,
-                        fill = method, group = method)) +
-  geom_hline(yintercept = 0.5, linetype = "dashed",
-             linewidth = 0.3, color = "grey55") +
-  geom_col(position = position_dodge(width = 0.72),
-           width = 0.66, alpha = 0.95) +
-  geom_text(aes(label = sprintf("%.2f", auroc)),
-            position = position_dodge(width = 0.72),
-            vjust = -0.4, size = 2.0, family = "Helvetica") +
-  annotate("text", x = 3.42, y = 0.47, label = "chance (0.50)",
-           hjust = 1, vjust = 1, size = 1.9, color = "grey45",
-           fontface = "italic", family = "Helvetica") +
-  scale_fill_manual(values = method_cols, name = NULL) +
-  scale_y_continuous(limits = c(0, 1.0),
-                     breaks = seq(0, 1, 0.25),
-                     expand = expansion(mult = c(0, 0.08))) +
-  # PI directive (2026-06-11): short single title line only. The framing
-  # sentence ("convergence score predicts held-out panels and improves over
-  # OUR prior method"; Govaere/NIDDK/Open Targets are held-out truth panels,
-  # NOT competitors) lives in the figure caption, not on the panel.
-  labs(x = NULL,
-       y = "Held-out AUROC",
-       title = "d",
-       subtitle = "Held-out AUROC") +
+# ── Panel 5d — convergence-score AUROC ± bootstrap CI per panel, vs chance ────
+p5d <- ggplot(res, aes(x = label, y = auroc)) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.3, color = "grey55") +
+  geom_col(width = 0.62, fill = masld_colors$mash, alpha = 0.95) +
+  geom_errorbar(aes(ymin = ci_lo, ymax = ci_hi), width = 0.18, linewidth = 0.4, color = "black") +
+  geom_text(aes(label = sprintf("%.2f%s", auroc, star), y = ci_hi), vjust = -0.5, size = 2.3, color = "black") +
+  annotate("text", x = 0.55, y = 0.515, label = "chance", hjust = 0, vjust = 0, size = 2.0, color = "grey45") +
+  scale_y_continuous(limits = c(0, 1.05), breaks = seq(0, 1, 0.25), expand = expansion(mult = c(0, 0.02))) +
+  labs(x = NULL, y = "AUROC (external-panel recovery)", title = "d") +
   theme_masld(base_size = 7) +
   theme(plot.title = element_text(face = "bold", size = 10),
-        plot.subtitle = element_text(size = 6.3, color = "grey30"),
-        axis.text.x = element_text(size = 6.2, lineheight = 0.85),
-        legend.position = c(0.99, 0.99),
-        legend.justification = c(1, 1),
-        legend.background = element_rect(fill = scales::alpha("white", 0.7),
-                                         color = NA),
-        legend.key.size = unit(0.28, "cm"),
-        legend.text = element_text(size = 6))
+        axis.text.x = element_text(size = 6.2, lineheight = 0.85))
+ggsave(file.path(PANDIR, "fig5d_calibration.pdf"), p5d, width = 3.4, height = 3.2, device = cairo_pdf)
 
-ggsave(file.path(PANDIR, "fig5d_calibration.pdf"), p5d,
-       width = 3.6, height = 3.3, device = cairo_pdf)
-cat("Saved: panels/fig5d_calibration.pdf\n")
-
-# Sidecar CSV for caption transparency.
-out_csv <- bench[, .(panel, n_positives_in_atlas = n_in_panel_atlas,
-                     auroc_convergence_score = auroc_46d,
-                     auroc_prior_method = auroc_46b,
-                     p_convergence_score = p_46d,
-                     p_prior_method = p_46b)]
-fwrite(out_csv, file.path(PANDIR, "fig5d_calibration_source.csv"))
-cat("Saved: panels/fig5d_calibration_source.csv\n")
-
-cat("\nDONE.\n")
+cat("Saved panels/fig5d_calibration.pdf + source.csv\n\n")
+print(res[, .(panel, n_pos, auroc = round(auroc,3), ci = sprintf("[%.2f,%.2f]", ci_lo, ci_hi), p = signif(p,2), star)])
+cat("\nCAPTION (not on panel): The convergence score recovers independent external MASLD truth above\n",
+    "chance for expression (Govaere) and clinical-target (NIDDK) panels; recovery of the purely-genetic\n",
+    "Open Targets panel is near chance BY DESIGN (the score rewards multi-modal convergence, so genes with\n",
+    "only a genetic association score low). Panels are held-out TRUTH, not competing tools.\n")

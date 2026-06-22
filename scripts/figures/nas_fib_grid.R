@@ -30,8 +30,8 @@ META_FILE <- file.path(BASE,
 QC_FILE   <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/qc/sample_qc_report.csv")
 
-BASE_SIZE <- 7
-LBL_SIZE  <- 7 / ggplot2::.pt
+BASE_SIZE <- 6
+LBL_SIZE  <- 6 / ggplot2::.pt
 
 meta <- fread(META_FILE)
 qc   <- fread(QC_FILE)
@@ -74,7 +74,7 @@ ext[, nas_lab := factor(nas_lab, levels = nas_lvls_ext)]
 ext[, fill_n  := ifelse(kind == "cell", N, NA_real_)]
 
 # ── Numeric tile positions with a small gap before the marginal "Total" band ──
-GAP <- 0.45
+GAP <- 0.3
 ext[, x := as.numeric(fib_lab)]            # F0..F4 = 1..5 ; Total = 6
 ext[, y := as.numeric(nas_lab)]            # 0..8    = 1..9 ; Total = 10
 ext[fib_lab == "Total", x := 6 + GAP]      # push Total column right of the grid
@@ -106,31 +106,34 @@ panel <- ggplot(ext, aes(x = x, y = y)) +
   scale_color_identity() +
   scale_fill_gradient(low = "#EAF2FB", high = "#1565C0",
                       name = "Samples (n)", breaks = pretty_breaks(4),
-                      guide = guide_colorbar(barwidth = 0.4, barheight = 4.2,
+                      guide = guide_colorbar(barwidth = 0.3, barheight = 2.2,
                                              ticks.colour = "white")) +
   scale_x_continuous(breaks = x_breaks, labels = fib_lvls_ext,
-                     expand = expansion(add = 0.06)) +
+                     expand = expansion(add = 0.04)) +
   scale_y_continuous(breaks = y_breaks, labels = nas_lvls_ext,
-                     expand = expansion(add = 0.06)) +
-  coord_fixed() +
-  labs(title    = "Sample staging composition",
-       subtitle = sprintf("Fibrosis stage × NAS score · n = %s paired-staged samples",
-                          comma(n_both)),
-       x = "Fibrosis stage", y = "NAS score") +
+                     expand = expansion(add = 0.04)) +
+  # square cells — keeps the grid narrow (6 cols) rather than stretched wide
+  coord_fixed(ratio = 1) +
+  labs(x = "Fibrosis stage", y = "NAS score") +
   theme_masld(base_size = BASE_SIZE) +
   theme(panel.grid    = element_blank(),
         panel.border  = element_blank(),
         axis.ticks    = element_blank(),
-        plot.title    = element_text(size = BASE_SIZE + 1, face = "bold"),
-        plot.subtitle = element_text(size = BASE_SIZE - 0.5, colour = "grey35",
-                                     margin = margin(b = 6)),
         axis.title    = element_text(size = BASE_SIZE),
         axis.text     = element_text(size = BASE_SIZE),
-        legend.title  = element_text(size = BASE_SIZE - 0.5),
-        legend.text   = element_text(size = BASE_SIZE - 0.5),
-        plot.margin   = margin(4, 4, 4, 4))
+        legend.title  = element_text(size = BASE_SIZE - 1),
+        legend.text   = element_text(size = BASE_SIZE - 1),
+        legend.key.height  = unit(2.2, "lines"),
+        legend.margin      = margin(0, 0, 0, 0),
+        legend.box.spacing = unit(2, "pt"),
+        plot.margin        = margin(2, 2, 2, 2))
 
-save_fig(panel, OUT_PDF, width = 4.7, height = 6.0)
+# Descriptive text lives in the caption (house style: no in-panel title/subtitle).
+message(sprintf(
+  "[caption] figs3b — Sample staging composition: Fibrosis stage x NAS score; n = %s paired-staged samples.",
+  comma(n_both)))
+
+save_fig(panel, OUT_PDF, width = 2.9, height = 3.7)
 fwrite(grid_full,  file.path(DATA_DIR, "nas_fib_grid_data.csv"))
 fwrite(fib_margin, file.path(DATA_DIR, "nas_fib_grid_fib_margin.csv"))
 fwrite(nas_margin, file.path(DATA_DIR, "nas_fib_grid_nas_margin.csv"))

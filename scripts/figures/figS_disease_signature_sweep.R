@@ -282,6 +282,18 @@ method_labels <- c(
 method_colors <- setNames(RColorBrewer::brewer.pal(6, "Set2"), METHOD_NAMES)
 
 # ── Part 1: LOCO sweep ───────────────────────────────────────────────────────────
+# Reuse-guard: the LOCO/train1 sweeps are expensive (dream fits ~85 min/fold).
+# When cached result CSVs exist we re-plot from them instead of recomputing — this
+# is what makes a label-only/cosmetic refresh cheap. Set SIGSWEEP_RECOMPUTE=TRUE to
+# force a full refit (e.g. after a DEG-method/data change).
+RECOMPUTE_SWEEP <- toupper(Sys.getenv("SIGSWEEP_RECOMPUTE", "FALSE")) %in% c("TRUE", "1", "YES")
+LOCO_CSV   <- file.path(OUT, "auroc_loco_sweep_data.csv")
+TRAIN1_CSV <- file.path(OUT, "auroc_train1_project4_data.csv")
+
+if (!RECOMPUTE_SWEEP && file.exists(LOCO_CSV)) {
+  cat("\n=== Part 1: reusing cached auroc_loco_sweep_data.csv (set SIGSWEEP_RECOMPUTE=TRUE to refit) ===\n")
+  results_loco <- fread(LOCO_CSV)
+} else {
 cat("\n=== Part 1: LOCO sweep (5 folds x 7 methods x 7 N + 100 null reps) ===\n")
 
 # Fixed gene universe for the random null (method-agnostic: random genes, no sign).
@@ -336,10 +348,15 @@ results_loco <- rbindlist(lapply(MEGA, function(test_cohort) {
   rbind(real_rows, null_rows)
 }))
 
-fwrite(results_loco, file.path(OUT, "auroc_loco_sweep_data.csv"))
+fwrite(results_loco, LOCO_CSV)
 cat("\nSaved auroc_loco_sweep_data.csv\n")
+}
 
 # ── Part 2: Train-on-1, project-to-4 ─────────────────────────────────────────────
+if (!RECOMPUTE_SWEEP && file.exists(TRAIN1_CSV)) {
+  cat("\n=== Part 2: reusing cached auroc_train1_project4_data.csv ===\n")
+  results_train1 <- fread(TRAIN1_CSV)
+} else {
 cat("\n=== Part 2: Train-on-1 cohort, project-to-4 (limma-voom) ===\n")
 
 results_train1 <- rbindlist(lapply(MEGA, function(train_cohort) {
@@ -367,8 +384,9 @@ results_train1 <- rbindlist(lapply(MEGA, function(train_cohort) {
   }))
 }))
 
-fwrite(results_train1, file.path(OUT, "auroc_train1_project4_data.csv"))
+fwrite(results_train1, TRAIN1_CSV)
 cat("\nSaved auroc_train1_project4_data.csv\n")
+}
 
 # ── Figures ───────────────────────────────────────────────────────────────────────
 cat("\n=== Generating figures ===\n")

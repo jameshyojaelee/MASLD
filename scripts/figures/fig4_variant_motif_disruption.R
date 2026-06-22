@@ -46,7 +46,7 @@ BASE_DIR <- Sys.getenv("MASLD_PROJECT_ROOT",
 
 MOTIF_FILE <- file.path(BASE_DIR,
   "GWAS/finemapping/results/gwas_atac/motif_disruption_scores.csv")
-OUT_DIR <- file.path(BASE_DIR, "figures/main/fig4_validation")
+OUT_DIR <- file.path(BASE_DIR, "figures/main/fig4_validation/_supp")  # demoted to supp (2026-06-22): redundant with atac_rora_motif
 OUT_PDF <- file.path(OUT_DIR, "fig4b_variant_motif_disruption.pdf")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
@@ -130,8 +130,7 @@ p <- ggplot(reg, aes(x = alleleDiff, y = snp_y)) +
   labs(
     x = expression(paste("Allelic motif-score difference (alt - ref), motifbreakR ", Delta)),
     y = NULL,
-    title = "Risk alleles disrupt disease master-regulator motifs",
-    subtitle = "Sequence-level, sample-size-independent; magnitude only, not a test"
+    caption = "Sequence-level, sample-size-independent; magnitude only, not a test"
   ) +
   theme_masld(base_size = 7) +
   theme(
@@ -140,7 +139,7 @@ p <- ggplot(reg, aes(x = alleleDiff, y = snp_y)) +
                                      colour = "black"),
     strip.placement  = "outside",
     panel.spacing.y  = unit(2, "pt"),
-    plot.subtitle    = element_text(size = 5, colour = "grey35"),
+    plot.caption     = element_text(size = 5, colour = "grey35", hjust = 0),
     legend.position  = "right",
     legend.box       = "vertical",
     legend.key.size  = unit(0.28, "cm")

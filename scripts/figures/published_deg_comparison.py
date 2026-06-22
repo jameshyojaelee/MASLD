@@ -92,7 +92,7 @@ print(f"  Disease vs Control: mega={ref_dvc['n_mega']:,}, meta={ref_dvc['n_meta'
 ref_nn = load_mega_meta(
     f"{DISEASE_SIG}/nafl_vs_nash_dream.csv",
     f"{DISEASE_SIG}/nafl_vs_nash_meta.csv",
-    'adj.P.Val', 'logFC', 'meta_padj', 'meta_logFC')
+    'padj', 'logFC', 'meta_padj', 'meta_logFC')  # this file's padj col = 'padj' (adv_vs_early below genuinely uses 'adj.P.Val')
 print(f"  NAFL vs NASH: mega={ref_nn['n_mega']:,}, meta={ref_nn['n_meta']:,}")
 
 ref_fib = load_mega_meta(

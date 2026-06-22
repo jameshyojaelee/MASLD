@@ -177,10 +177,8 @@ cell <- cell %>%
 # is preserved (so the column headers render) and the marker / label are offset
 # from each tick via position_nudge.
 p <- ggplot(cell, aes(x = modality, y = tf_lab)) +
-  # subtle row band behind the hero TFs to draw the eye to the convergence rows
-  geom_tile(data = cell %>% filter(hero, modality == levels(cell$modality)[1]),
-            aes(x = 2, y = tf_lab), width = 3, height = 0.92,
-            fill = "#F4A674", alpha = 0.18, inherit.aes = FALSE) +
+  # heroes (bulk-DEG + COLOC convergent) are flagged by the "*" tick suffix only —
+  # no background shading (house style: no shaded bands)
   geom_point(aes(fill = I(cell_fill), alpha = I(cell_alpha)),
              shape = 21, color = "grey35", stroke = 0.3, size = 3.4,
              position = position_nudge(x = 0.20)) +
@@ -192,20 +190,12 @@ p <- ggplot(cell, aes(x = modality, y = tf_lab)) +
             position = position_nudge(x = -0.18)) +
   scale_x_discrete(position = "top", expand = expansion(add = 0.6)) +
   scale_y_discrete(expand = expansion(add = 0.55)) +
-  labs(
-    x = NULL, y = NULL,
-    title = "scATAC GRN corroborates the powered disease TFs",
-    subtitle = "Hepatocyte SCENIC+ master regulators × independent powered evidence"
-  ) +
+  labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
   theme(
     axis.text.x      = element_text(face = "bold", lineheight = 0.85),
-    # Heroes are flagged via the "*" suffix on their tick label (not by colour or
-    # a per-tick face, which ggplot does not officially support) — house style
-    # keeps ALL figure text black.
+    # Heroes flagged via the "*" tick suffix (house style: ALL figure text black).
     axis.text.y      = element_text(face = "plain"),
-    plot.title       = element_text(size = 7.5, face = "bold"),
-    plot.subtitle    = element_text(size = 6, color = "grey30"),
     panel.grid.major.y = element_line(color = "grey92", linewidth = 0.2),
     plot.margin      = margin(4, 6, 4, 4)
   )
@@ -247,6 +237,7 @@ for (tf in setdiff(heroes, c("RORA", "THRB"))) {
                   tf, r$bulk_logFC, r$bulk_lfsr, r$coloc_pp4, r$motif_uniq))
 }
 message("------------------------------------------------------------------")
+message("'*' on a TF tick = bulk-DEG + GWAS-COLOC convergent (n_evidence=2).")
 message("FILL semantics: bulk cell = magenta(up)/blue(down) MASLD effect;")
 message("  COLOC + variant->motif cells = violet positive-evidence (faded if absent).")
 message("  Dot size: |bulk_logFC|, PP.H4, or # unique variants. Cell label = value.")

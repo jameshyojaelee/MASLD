@@ -73,14 +73,13 @@ rate_df[, rate := num / den]
 rate_df[, lab := factor(lab, levels = lab)]      # plasma bottom, liver top
 rate_cols <- c(masld_colors$down, masld_colors$up)
 
-pA <- ggplot(rate_df, aes(x = rate, y = lab, color = lab)) +
-  geom_segment(aes(x = 0, xend = rate, yend = lab), linewidth = 1.1) +
-  geom_point(size = 2.8) +
+pA <- ggplot(rate_df, aes(x = rate, y = lab, fill = lab)) +
+  geom_col(width = 0.6) +
   geom_text(aes(label = sprintf("%.0f%%  (%d/%d)", rate*100, num, den)),
             hjust = 0, nudge_x = 0.02, size = PUB_GEOM_TEXT + 0.4,
             fontface = "bold", color = "black") +
-  scale_color_manual(values = rate_cols, guide = "none") +
-  scale_x_continuous(limits = c(0, 0.85), breaks = c(0, 0.25, 0.5, 0.75),
+  scale_fill_manual(values = rate_cols, guide = "none") +
+  scale_x_continuous(limits = c(0, 0.95), breaks = c(0, 0.25, 0.5, 0.75),
                      labels = scales::percent_format(accuracy = 1),
                      expand = expansion(mult = c(0, 0))) +
   labs(x = "Disease-altered proteins that\nalso track severity (padj < 0.05)", y = NULL) +
@@ -106,24 +105,27 @@ show <- show[order(logFC)]
 show[, gene := factor(gene, levels = gene)]
 
 lab_max <- max(show$logFC)
-pB <- ggplot(show, aes(x = logFC, y = gene)) +
-  geom_segment(aes(x = 0, xend = logFC, yend = gene), color = masld_colors$up, linewidth = 0.9) +
-  geom_point(aes(size = -log10(padj)), color = masld_colors$up) +
-  scale_size_continuous(range = c(1.2, 3.2), name = "-log10 padj", breaks = c(2, 4, 6)) +
+pB <- ggplot(show, aes(x = logFC, y = gene, fill = -log10(padj))) +
+  geom_col(width = 0.68) +
+  scale_fill_gradient(low = "#F3B0C9", high = masld_colors$up, name = "-log10 padj",
+                      breaks = c(2, 4, 6)) +
   scale_x_continuous(limits = c(0, lab_max * 1.12), breaks = c(0, 0.5, 1.0, 1.5),
                      expand = expansion(mult = c(0, 0.02))) +
   labs(x = "log2FC, NAS >=4 vs <4", y = NULL) +
   coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
   theme(panel.grid.major.y = element_blank(),
-        axis.text.y = element_text(size = PUB_AXIS_TEXT, color = "black"),
-        legend.position = c(0.82, 0.28),
+        axis.text.y = element_text(size = PUB_AXIS_TEXT, color = "black", face = "italic"),
+        legend.position = c(0.84, 0.30),
         legend.background = element_blank(),
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_text(size = PUB_AXIS_TEXT),
+        legend.text = element_text(size = PUB_AXIS_TEXT - 0.5),
         plot.margin = margin(5.5, 8, 5.5, 5.5))
 
 p <- pA + pB + plot_layout(widths = c(1, 1))
 
-out <- file.path(FIG4_DIR, "_supp", "nas_severity_proteomics.pdf")
+out <- file.path(FIG4_DIR, "fig4b_nas_severity_proteomics.pdf")  # promoted to main 4b (2026-06-22): proteins grade by NAS severity
 cairo_pdf(out, width = fig_full_width * 0.82, height = fig_half_width * 0.62, family = "Helvetica")
 print(p)
 dev.off()

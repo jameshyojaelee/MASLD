@@ -36,10 +36,10 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 # ── Per-gene mRNA(dream/C2)-protein concordance, both compartments ────────────
 v3 <- fread(file.path(BASE,
   "Analysis/Proteomics/results/protein_transcript_concordance_v3.csv"),
-  select = c("gene", "protein_logFC", "dream_logFC", "dataset", "dream_comparator"))
+  select = c("gene", "protein_logFC", "bulk_logFC", "dataset", "dream_comparator"))
 v3 <- v3[dream_comparator == "disease_vs_control" &
          dataset %in% c("PXD051911", "PXD052937") &
-         is.finite(protein_logFC) & is.finite(dream_logFC)]
+         is.finite(protein_logFC) & is.finite(bulk_logFC)]
 v3[, compartment := fifelse(dataset == "PXD051911", "Liver tissue", "Plasma")]
 v3[, compartment := factor(compartment, levels = c("Liver tissue", "Plasma"))]
 
@@ -66,7 +66,7 @@ rho_tab <- rbindlist(lapply(levels(v3$compartment), function(cp) {
   rbindlist(lapply(names(sets), function(s) {
     d <- sets[[s]]
     data.table(compartment = cp, set = s, n = nrow(d),
-               rho = if (nrow(d) > 3) cor(d$dream_logFC, d$protein_logFC, method = "spearman") else NA_real_)
+               rho = if (nrow(d) > 3) cor(d$bulk_logFC, d$protein_logFC, method = "spearman") else NA_real_)
   }))
 }))
 rho_tab[, compartment := factor(compartment, levels = c("Liver tissue", "Plasma"))]
@@ -80,7 +80,7 @@ lab_dt <- rho_tab[, .(label = paste(sprintf("%-9s ρ=%.2f (n=%s)",
 cat_cols <- c("All genes" = masld_colors$ns, "Primary DEG" = masld_colors$up,
               "Conserved" = masld_colors$conserved)
 LIM <- 4
-v3[, `:=`(x = pmax(pmin(dream_logFC, LIM), -LIM),
+v3[, `:=`(x = pmax(pmin(bulk_logFC, LIM), -LIM),
           y = pmax(pmin(protein_logFC, LIM), -LIM))]
 
 # ── Plot: 2-facet scatter ────────────────────────────────────────────────────
@@ -89,14 +89,14 @@ p <- ggplot(v3, aes(x, y)) +
   geom_vline(xintercept = 0, color = "grey85", linewidth = 0.25) +
   geom_abline(slope = 1, intercept = 0, linetype = "22", color = "grey70", linewidth = 0.3) +
   rasterize_layer(geom_point(data = v3[category == "All genes"],
-                             color = cat_cols["All genes"], size = 0.3, alpha = 0.18, shape = 16), dpi = 600) +
+                             color = cat_cols["All genes"], size = 0.18, alpha = 0.16, shape = 16), dpi = 600) +
   rasterize_layer(geom_point(data = v3[category == "Primary DEG"],
-                             color = cat_cols["Primary DEG"], size = 0.55, alpha = 0.55, shape = 16), dpi = 600) +
+                             color = cat_cols["Primary DEG"], size = 0.3, alpha = 0.5, shape = 16), dpi = 600) +
   geom_point(data = v3[category == "Conserved"],
-             color = cat_cols["Conserved"], size = 0.7, alpha = 0.7, shape = 16) +
+             color = cat_cols["Conserved"], size = 0.4, alpha = 0.6, shape = 16) +
   geom_smooth(method = "lm", se = FALSE, color = "grey30", linewidth = 0.4, linetype = "solid") +
   geom_text(data = lab_dt, aes(x = -LIM, y = LIM, label = label), inherit.aes = FALSE,
-            hjust = 0, vjust = 1, size = PUB_GEOM_TEXT - 0.2, family = "mono",
+            hjust = 0, vjust = 1, size = PUB_GEOM_TEXT, family = "Helvetica",
             lineheight = 0.95, color = "black") +
   facet_wrap(~ compartment, nrow = 1) +
   coord_cartesian(xlim = c(-LIM, LIM), ylim = c(-LIM, LIM), clip = "off") +

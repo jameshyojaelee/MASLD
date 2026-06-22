@@ -292,22 +292,25 @@ save_fig(p_d, file.path(PANEL_DIR, "figS_batch_d_varpart.pdf"),
 # PANEL E: LOO-CV stability of integrated DEGs at |LFC|=0.5
 # ----------------------------------------------------------------------------
 message("Building panel E (LOO-CV recovery)...")
-loo_path <- file.path(FIG1_DIR, "panels", "fig1g_loo_stability_data.csv")
-loo <- fread(loo_path)
-loo_05 <- loo[lfc_cutoff == 0.5]
+# Canonical C2 LOO-CV recovery, written by loo_cv_stability.R. The legacy
+# fig1g_loo_stability_data.csv (lfc_cutoff-indexed) is no longer produced; this
+# C2 table is per-cohort (held_out_cohort / recovery_pct / jaccard / pct_held).
+loo_path <- file.path(FIG2_DIR, "panels", "data", "loo_cv_stability.csv")
+if (file.exists(loo_path)) {
+loo_05 <- fread(loo_path)
+loo_05[, pct_recovered := recovery_pct]   # C2 schema rename; single canonical cutoff (no lfc_cutoff dim)
 
-# Apply first-author labels
-loo_05[, cohort_label := COHORT_LABEL[held_out]]
+# Apply cohort (accession) labels
+loo_05[, cohort_label := COHORT_LABEL[held_out_cohort]]
 setorder(loo_05, pct_recovered)
 loo_05[, cohort_label := factor(cohort_label, levels = cohort_label)]
 
 mean_rec <- mean(loo_05$pct_recovered)
 mean_jac <- mean(loo_05$jaccard)
 
+# Bars (house style: no lollipops); % patients held-out encoded as fill.
 p_e <- ggplot(loo_05, aes(x = pct_recovered, y = cohort_label)) +
-  geom_segment(aes(x = 0, xend = pct_recovered, yend = cohort_label),
-               color = "gray70", linewidth = 0.4) +
-  geom_point(aes(size = pct_held), color = "#C2185B", alpha = 0.85) +
+  geom_col(aes(fill = pct_held), width = 0.7, alpha = 0.9) +
   geom_text(aes(label = sprintf("%.0f%%", pct_recovered)),
             hjust = -0.3, size = 1.95, color = "gray20") +
   geom_vline(xintercept = mean_rec, linetype = "dashed",
@@ -318,16 +321,15 @@ p_e <- ggplot(loo_05, aes(x = pct_recovered, y = cohort_label)) +
                            mean_rec, mean_jac),
            hjust = -0.05, vjust = 0, size = 2.1, color = "gray25",
            lineheight = 0.85) +
-  scale_size_continuous(range = c(1.2, 3.4),
-                        breaks = c(5, 15, 30),
-                        name = "% patients\nheld out") +
+  scale_fill_gradient(low = "#F8BBD0", high = "#C2185B",
+                      name = "% patients\nheld out") +
   scale_x_continuous(limits = c(0, 110),
                      breaks = c(0, 25, 50, 75, 100),
                      labels = function(v) paste0(v, "%"),
                      expand = expansion(mult = 0)) +
   labs(x = "% Tier 1 DEGs recovered when cohort held out",
        y = NULL,
-       title = "LOO-CV recovery of integrated DEGs (|LFC| > 0.5)") +
+       title = "LOO-CV recovery of integrated DEGs") +
   theme_masld(base_size = 7) +
   theme(plot.title = element_text(size = 8, face = "bold"),
         legend.position  = "right",
@@ -337,6 +339,10 @@ p_e <- ggplot(loo_05, aes(x = pct_recovered, y = cohort_label)) +
 
 save_fig(p_e, file.path(PANEL_DIR, "figS_batch_e_loo_recovery.pdf"),
          width = fig_half_width * 1.05, height = 2.6)
+} else {
+  message("Panel E skipped: ", loo_path, " not found (run loo_cv_stability.R first).")
+  p_e <- patchwork::plot_spacer()
+}
 
 # ----------------------------------------------------------------------------
 # PANEL F: "UMAP ≠ DE" schematic / text panel

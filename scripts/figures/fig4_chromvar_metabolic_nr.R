@@ -102,8 +102,7 @@ p <- ggplot(df, aes(x = logFC, y = label, fill = direction)) +
                      breaks = c(-0.2, 0, 0.2),
                      expand = expansion(mult = c(0.02, 0.02))) +
   labs(x = "chromVAR motif accessibility log2FC (MASLD vs control)",
-       y = NULL, title = "Hepatocyte metabolic-TF motif accessibility",
-       caption = note) +
+       y = NULL, caption = note) +
   theme_masld() + theme_pub() +
   theme(
     axis.text.y  = element_text(face = "italic", color = "black"),
@@ -116,7 +115,8 @@ p <- ggplot(df, aes(x = logFC, y = label, fill = direction)) +
                                 hjust = 0, margin = margin(t = 4))
   )
 
-out <- file.path(FIG4_DIR, "fig4d_chromvar_metabolic_nr.pdf")
+out <- file.path(FIG4_DIR, "_supp", "fig4d_chromvar_metabolic_nr.pdf")  # demoted to supp (2026-06-22): exploratory 0/993-FDR null
+dir.create(file.path(FIG4_DIR, "_supp"), recursive = TRUE, showWarnings = FALSE)
 pdf(out, width = fig_half_width, height = 2.35, useDingbats = FALSE)
 print(p)
 invisible(dev.off())

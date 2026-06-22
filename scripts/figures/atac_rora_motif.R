@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
-# fig4_hero_locus_atac.R
-# Fig 4 — Panel C: hero locus accessibility schematic.
+# atac_rora_motif.R
+# Fig 4 — Panel C: a fine-mapped MASLD regulatory variant in an open hepatocyte
+#   ATAC peak disrupts a RORA (RORE) binding motif. Locus track + motifbreakR.
 #
 # KEY MESSAGE (sequence-level, VALID evidence — not n=18 disease-DE):
 #   A high-confidence GWAS credible-set variant (max_PIP = 0.999) sits INSIDE an
@@ -29,8 +30,8 @@
 # hardcoded as a claim (the few literals below are echoed back from the data and
 # re-validated with stopifnot()).
 #
-# Output: figures/main/fig4_validation/fig4c_hero_locus_atac.pdf
-# Run:    ~/micromamba/envs/rnaseq/bin/Rscript scripts/figures/fig4_hero_locus_atac.R
+# Output: figures/main/fig4_validation/fig4c_atac_rora_motif.pdf
+# Run:    ~/micromamba/envs/rnaseq/bin/Rscript scripts/figures/atac_rora_motif.R
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -57,7 +58,7 @@ GTF_PATH  <- "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v
 
 OUT_DIR <- file.path(PROJ, "figures/main/fig4_validation")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
-OUT_PDF <- file.path(OUT_DIR, "fig4c_hero_locus_atac.pdf")
+OUT_PDF <- file.path(OUT_DIR, "fig4c_atac_rora_motif.pdf")
 
 HERO_TF  <- "RORA"          # preferred = THRB but its best motif variant is PIP=0.18
                             #   (weak); RORA carries the only PIP~1 credible-set hit.
@@ -144,21 +145,26 @@ ex <- tryCatch(fread(cmd = gtf_cmd, header = FALSE,
                                                strand = character()))
 ex_win <- ex[end >= WIN_START & start <= WIN_END]
 GENE_STRAND <- if (nrow(ex) > 0) ex$strand[1] else "-"
-cat(sprintf("[gene]  %s MANE exons in window: %d (strand %s)\n",
-            HOST_GENE, nrow(ex_win), GENE_STRAND))
+# Full MANE-transcript span (so the gene-body line — and the intron the variant
+# sits in — is drawn ACROSS the whole window, not truncated at the last in-window exon)
+GENE_START  <- if (nrow(ex) > 0) min(ex$start) else WIN_START
+GENE_END    <- if (nrow(ex) > 0) max(ex$end)   else WIN_END
+cat(sprintf("[gene]  %s MANE exons in window: %d (strand %s); transcript %s:%d-%d; variant intronic=%s\n",
+            HOST_GENE, nrow(ex_win), GENE_STRAND, CHR, GENE_START, GENE_END,
+            VAR_POS >= GENE_START & VAR_POS <= GENE_END &&
+              nrow(ex[start <= VAR_POS & end >= VAR_POS]) == 0))
 
-# ── PLOT ─────────────────────────────────────────────────────────────────────
+# ── PLOT (clean schematic; ALL prose lives in the caption below, not on-panel) ─
 COL_PEAK   <- "#00695C"   # teal — accessible chromatin (open peak)
 COL_VAR    <- "#C9265E"   # Liang deep magenta — disease/variant marker
 COL_GENE   <- "#37474F"   # slate — host gene model
 COL_MOTIF  <- "#A01753"   # deep magenta — motif disruption emphasis
-mb <- function(x) sprintf("%.3f", x / 1e6)   # bp -> Mb label
 
 # Track y-positions (single coordinate panel, stacked lanes)
 Y_GENE <- 3; Y_PEAK <- 2; Y_VAR <- 1
 lane_lab <- data.table(
   y = c(Y_GENE, Y_PEAK, Y_VAR),
-  lab = c(sprintf("%s gene\n(host)", HOST_GENE),
+  lab = c(sprintf("%s intron", HOST_GENE),
           "Hepatocyte\nscATAC peak",
           "Credible-set\nvariant"))
 
@@ -168,132 +174,97 @@ hep_win[, is_hero := (start == PEAK_START & end == PEAK_END)]
 
 # ---- (A) Locus track panel -------------------------------------------------
 pA <- ggplot() +
-  # gene span line
-  { if (nrow(ex_win) > 0)
-      annotate("segment", x = max(WIN_START, min(ex_win$start)),
-               xend = min(WIN_END, max(ex_win$end)),
-               y = Y_GENE, yend = Y_GENE, linewidth = 0.4, color = COL_GENE) } +
-  # gene exons (boxes)
+  # gene-body line across the window (clipped to the MANE transcript) — draws the
+  # large intron the variant sits in, instead of stopping at the last in-window exon
+  annotate("segment", x = max(WIN_START, GENE_START), xend = min(WIN_END, GENE_END),
+           y = Y_GENE, yend = Y_GENE, linewidth = 0.5, color = COL_GENE) +
   { if (nrow(ex_win) > 0)
       geom_rect(data = ex_win,
-                aes(xmin = start, xmax = end, ymin = Y_GENE - 0.22, ymax = Y_GENE + 0.22),
+                aes(xmin = start, xmax = end, ymin = Y_GENE - 0.26, ymax = Y_GENE + 0.26),
                 fill = COL_GENE, color = COL_GENE) } +
-  # all hep peaks in window (context, light)
   geom_rect(data = hep_win[is_hero == FALSE],
-            aes(xmin = start, xmax = end, ymin = Y_PEAK - 0.22, ymax = Y_PEAK + 0.22),
+            aes(xmin = start, xmax = end, ymin = Y_PEAK - 0.26, ymax = Y_PEAK + 0.26),
             fill = "#B2DFDB", color = NA) +
-  # the overlapping hero peak (emphasis)
   geom_rect(data = hep_win[is_hero == TRUE],
-            aes(xmin = start, xmax = end, ymin = Y_PEAK - 0.28, ymax = Y_PEAK + 0.28),
+            aes(xmin = start, xmax = end, ymin = Y_PEAK - 0.32, ymax = Y_PEAK + 0.32),
             fill = COL_PEAK, color = COL_PEAK) +
-  # variant marker — vertical guide through all lanes + diamond at variant lane
-  annotate("segment", x = VAR_POS, xend = VAR_POS, y = Y_VAR - 0.35, yend = Y_GENE + 0.35,
-           linetype = "22", linewidth = 0.3, color = COL_VAR) +
-  annotate("point", x = VAR_POS, y = Y_VAR, shape = 23, size = 2.6,
-           fill = COL_VAR, color = "black", stroke = 0.3) +
-  # lane labels
+  annotate("segment", x = VAR_POS, xend = VAR_POS, y = Y_VAR - 0.42, yend = Y_GENE + 0.42,
+           linetype = "22", linewidth = 0.35, color = COL_VAR) +
+  annotate("point", x = VAR_POS, y = Y_VAR, shape = 23, size = 3.4,
+           fill = COL_VAR, color = "black", stroke = 0.35) +
+  # RORE: the disrupted RORA-binding motif, sitting in the HNF1B intron at the variant
+  annotate("segment", x = VAR_POS, xend = VAR_POS, y = Y_GENE - 0.30, yend = Y_GENE + 0.30,
+           linewidth = 1.4, color = COL_MOTIF) +
+  annotate("text", x = VAR_POS, y = Y_GENE + 0.55, label = "RORE",
+           size = 2.0, color = "black") +
   geom_text(data = lane_lab, aes(x = WIN_START, y = y, label = lab),
-            hjust = 1.05, vjust = 0.5, size = 1.9, color = "black", lineheight = 0.85) +
+            hjust = 1.05, vjust = 0.5, size = 2.4, color = "black", lineheight = 0.85) +
   scale_x_continuous(
     name = sprintf("%s position (Mb, hg38)", CHR),
-    limits = c(WIN_START - (WIN_END - WIN_START) * 0.28, WIN_END),
+    limits = c(WIN_START - (WIN_END - WIN_START) * 0.30, WIN_END),
     labels = function(x) sprintf("%.3f", x / 1e6),
     breaks = scales::pretty_breaks(4),
     expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0.4, 3.7), expand = c(0, 0)) +
-  labs(title = sprintf("%s-motif-disrupting regulatory variant in an accessible hepatocyte peak",
-                       HERO_TF),
-       subtitle = sprintf("%s  |  %s:%s  |  credible-set PIP = %.3f",
-                          SNP_ID, CHR, format(VAR_POS, big.mark = ","), MAX_PIP)) +
-  theme_masld() + theme_pub() +
-  theme(axis.title.y = element_blank(),
-        axis.text.y  = element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.line.y  = element_blank(),
-        plot.title    = element_text(size = PUB_TITLE, face = "bold"),
-        plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"))
-
-# ---- (B) Peak zoom: variant inside the peak + RORA-family motif disruption --
-# Tight window on the peak; show the peak rectangle, variant position, and a
-# compact bar of allele-diff for the co-disrupted RORE-family motifs.
-ZWIN_START <- PEAK_START - 60L
-ZWIN_END   <- PEAK_END + 60L
-pB1 <- ggplot() +
-  geom_rect(aes(xmin = PEAK_START, xmax = PEAK_END, ymin = 0.4, ymax = 0.8),
-            fill = COL_PEAK, color = COL_PEAK) +
-  annotate("text", x = (PEAK_START + PEAK_END) / 2, y = 0.6,
-           label = sprintf("Hep scATAC peak\n%s:%s-%s  (%d bp)",
-                           CHR, format(PEAK_START, big.mark = ","),
-                           format(PEAK_END, big.mark = ","), PEAK_WIDTH),
-           size = 1.8, color = "white", lineheight = 0.85) +
-  annotate("segment", x = VAR_POS, xend = VAR_POS, y = 0.35, yend = 0.95,
-           linewidth = 0.4, color = COL_VAR) +
-  annotate("point", x = VAR_POS, y = 0.95, shape = 23, size = 2.4,
-           fill = COL_VAR, color = "black", stroke = 0.3) +
-  annotate("text", x = VAR_POS, y = 1.12,
-           label = sprintf("variant  %s>%s", REF_AL, ALT_AL),
-           size = 1.9, color = "black", fontface = "bold") +
-  scale_x_continuous(name = sprintf("%s (kb, hg38)", CHR),
-                     limits = c(ZWIN_START, ZWIN_END),
-                     labels = function(x) sprintf("%.1f", x / 1e3),
-                     breaks = c(PEAK_START, VAR_POS, PEAK_END), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0.3, 1.25), expand = c(0, 0)) +
-  labs(subtitle = "Variant lies inside the open peak") +
+  scale_y_continuous(limits = c(0.4, 3.75), expand = c(0, 0)) +
+  labs(x = sprintf("%s position (Mb, hg38)", CHR), y = NULL) +
   theme_masld() + theme_pub() +
   theme(axis.title.y = element_blank(), axis.text.y = element_blank(),
         axis.ticks.y = element_blank(), axis.line.y = element_blank(),
-        axis.text.x  = element_text(size = PUB_AXIS_TEXT),
-        plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"))
+        axis.text.x  = element_text(size = PUB_AXIS_TEXT, color = "black"),
+        plot.margin  = margin(2, 4, 2, 2))
 
-# Co-disrupted motif allele-diff bars (motifbreakR; negative = ALT weakens motif)
+# ---- (B) Co-disrupted motif allele-diff bars (motifbreakR; <0 = ALT weakens) --
+# (The base-pair peak-zoom was dropped — it only re-stated the locus track above.
+#  The variant's C->A change is carried in the x-axis label + the caption.)
 cod <- copy(codisrupt)
 cod[, tf := factor(tf_name, levels = tf_name[order(alleleDiff)])]
 cod[, is_hero := tf_name == HERO_TF]
-pB2 <- ggplot(cod, aes(x = alleleDiff, y = tf)) +
-  geom_col(aes(fill = is_hero), width = 0.7) +
+pB <- ggplot(cod, aes(x = alleleDiff, y = tf)) +
+  geom_col(aes(fill = is_hero), width = 0.72) +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "black") +
   geom_text(aes(label = sprintf("%.2f", alleleDiff),
-                hjust = ifelse(alleleDiff < 0, 1.1, -0.1)),
-            size = 1.7, color = "black") +
+                hjust = ifelse(alleleDiff < 0, 1.15, -0.15)),
+            size = 2.2, color = "black") +
   scale_fill_manual(values = c(`TRUE` = COL_MOTIF, `FALSE` = "#9E9E9E"), guide = "none") +
-  scale_x_continuous(name = "motifbreakR allele-diff (ALT - REF)",
-                     expand = expansion(mult = c(0.18, 0.18))) +
-  labs(y = NULL, subtitle = sprintf("%s>%s disrupts RORE-family motifs", REF_AL, ALT_AL)) +
+  scale_x_continuous(name = sprintf("motifbreakR allele-diff, %s→%s (ALT − REF)", REF_AL, ALT_AL),
+                     expand = expansion(mult = c(0.10, 0.10))) +
+  labs(y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.text.y = element_text(size = PUB_AXIS_TEXT, face = "italic", color = "black"),
-        plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"))
+  theme(axis.text.y = element_text(size = PUB_AXIS_TEXT + 1, face = "italic", color = "black"),
+        axis.text.x = element_text(size = PUB_AXIS_TEXT, color = "black"),
+        plot.margin = margin(2, 6, 2, 2))
 
-# ---- (C) Honest evidence-convergence caption box ---------------------------
-ct_txt <- if (n_ct_open > 1) {
-  sprintf("Peak open in %d cell types (incl. 5 other hepatic lineages) - accessible-in-hepatocytes, not hepatocyte-exclusive.", n_ct_open)
-} else {
-  "Peak open in hepatocytes."
-}
-wrap <- function(s, w = 96) paste(strwrap(s, width = w), collapse = "\n")
-cap_txt <- paste(
-  wrap(sprintf("RORA candidate (independent, well-powered): cross-ancestry COLOC PP.H4 = %.3f (%s, %s; %s GWAS); bulk n=846 logFC = %.2f, lfsr = %.0e.",
-               COLOC_PP4, COLOC_GWAS, COLOC_METH, COLOC_NGWAS, DE_LFC, DE_LFSR)),
-  wrap(sprintf("Variant %s (PIP %.3f) disrupts a RORA binding MOTIF (allele-diff %.2f, '%s'); it falls in an intron of the host gene %s, NOT the RORA gene. %s",
-               SNP_ID, MAX_PIP, ALLELE_DIFF, EFFECT, HOST_GENE, ct_txt)),
-  sep = "\n")
-pC <- ggplot() +
-  annotate("text", x = 0, y = 1, label = cap_txt, hjust = 0, vjust = 1,
-           size = 1.85, color = "black", lineheight = 1.05) +
-  scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
-  theme_void()
+# ── Compose: locus track on top; motifbreakR bars below (no zoom, no prose box) ─
+panel <- (pA / pB) + plot_layout(heights = c(1.05, 1.15))
 
-# ── Compose ───────────────────────────────────────────────────────────────
-panel <- (pA / ((pB1 | pB2) + plot_layout(widths = c(1, 1.05))) / pC) +
-  plot_layout(heights = c(1.15, 1.0, 0.42))
-
-# PDF only; cairo_pdf when available (no dingbats by construction), else base
-# pdf() with useDingbats = FALSE per repo figure convention.
 if (capabilities("cairo")) {
-  ggsave(OUT_PDF, panel, width = fig_col_width, height = 5.0, device = cairo_pdf)
+  ggsave(OUT_PDF, panel, width = fig_col_width, height = 3.6, device = cairo_pdf)
 } else {
-  ggsave(OUT_PDF, panel, width = fig_col_width, height = 5.0,
+  ggsave(OUT_PDF, panel, width = fig_col_width, height = 3.6,
          device = grDevices::pdf, useDingbats = FALSE)
 }
 
-cat(sprintf("\n[done] wrote %s  (%.1f KB)\n", OUT_PDF, file.info(OUT_PDF)$size / 1024))
+# ── Caption / provenance → stdout (ALL prose lives here, not on the panel) ────
+ct_txt <- if (n_ct_open > 1) {
+  sprintf("open in %d cell types (incl. 5 other hepatic lineages) — accessible-in-hepatocytes, not hepatocyte-exclusive", n_ct_open)
+} else "open in hepatocytes"
+message(strrep("=", 78))
+message("FIG 4c — RORA-motif-disrupting regulatory variant in an open hepatocyte peak")
+message(strrep("=", 78))
+message(sprintf(
+"A high-confidence GWAS credible-set variant (%s, hg19 id; %s:%s hg38; PIP=%.3f) sits
+INSIDE an accessible hepatocyte scATAC peak (%s:%s-%s, %d bp; %s) and its %s→%s
+substitution strongly disrupts a RORA binding motif (motifbreakR allele-diff %.2f, '%s'),
+the strongest of the co-disrupted RORE-family motifs. (a) Locus context: the variant
+falls in an intron of the host gene %s — NOT the RORA gene (RORA is on chr15) — so this
+is a trans-regulatory motif site, not a cis-RORA variant. (b) motifbreakR allele-diff for
+every RORE-family motif disrupted at this variant (RORA strongest; negative = ALT weakens). RORA is
+an independently well-powered candidate: cross-ancestry SuSiE-COLOC PP.H4=%.3f (%s, %s; %s
+GWAS) and down-regulated in the bulk n=846 disease-vs-control mega-analysis (logFC=%.2f,
+lfsr=%.0e). No n=18 per-cell/condition disease-DE p-value is shown (under-powered).",
+  SNP_ID, CHR, format(VAR_POS, big.mark = ","), MAX_PIP,
+  CHR, format(PEAK_START, big.mark = ","), format(PEAK_END, big.mark = ","), PEAK_WIDTH, ct_txt,
+  REF_AL, ALT_AL, ALLELE_DIFF, EFFECT, HOST_GENE,
+  COLOC_PP4, COLOC_GWAS, COLOC_METH, COLOC_NGWAS, DE_LFC, DE_LFSR))
+message(strrep("=", 78))
+cat(sprintf("[done] wrote %s  (%.1f KB)\n", OUT_PDF, file.info(OUT_PDF)$size / 1024))
