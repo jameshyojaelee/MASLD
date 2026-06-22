@@ -594,7 +594,7 @@ if ("best_da_logFC" %in% names(top_genes)) {
 # Disrupted master-regulator targets (count) — ONE dense regulatory column that
 # replaces the old sparse per-gene "N motif disrupted" + empty "Disease regulon".
 # = # of motif-disrupted disease master-regulators (CollecTRI) regulating the gene.
-mat_mrtarget <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "Disrupted-MR\ntargets"))
+mat_mrtarget <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "Targets of\ndisrupted TFs"))
 if ("n_disrupted_mr_targets" %in% names(top_genes)) {
   v <- as.numeric(top_genes$n_disrupted_mr_targets)
   mat_mrtarget[!is.na(v) & v > 0, 1] <- v[!is.na(v) & v > 0]   # 0 -> NA (white = no evidence)
@@ -813,7 +813,7 @@ h_mouse <- Heatmap(clamp(mat_mouse_z_sig, -2.5, 2.5), name = "Mouse z", col = co
 mat_atac_combined <- mat_mrtarget
 
 h_atac <- Heatmap(mat_atac_combined, name = "ATAC", col = col_count,
-  column_labels = colnames(mat_atac_combined), column_title = "ATAC",
+  column_labels = colnames(mat_atac_combined), column_title = "Regulatory",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   na_col = "white",
   width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_atac_combined) else 12, "mm"),
@@ -932,7 +932,7 @@ if (!is.na(TOPN)) {
 
   t_atac <- t(mat_atac_combined)
   th_atac <- Heatmap(t_atac, name = "ATAC", col = col_count,
-    row_title = "ATAC", height = rh(nrow(t_atac)),
+    row_title = "Regulatory", height = rh(nrow(t_atac)),
     cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
     row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
     show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
