@@ -18,10 +18,15 @@
 # All counts read live from frozen on-disk sources so they always match the text:
 #   - merged_loci_map.csv          -> consolidation + SuSiE max_pip per independent locus
 #   - carma_all_results.csv        -> CARMA per-variant PIP (mapped to independent loci)
-#   - susiex_4way/susiex_cs_4way.csv-> SuSiEx OVRL_PIP per trait-specific locus
-#   - mesusie_polyfun/mesusie_locus_summary.csv -> meSuSiE max_pip per converged locus
+#   - susiex_mvp/susiex_cs_mvp.csv -> SuSiEx OVRL_PIP per MVP cross-ancestry locus
+#   - mesusie_mvp/mesusie_locus_summary_mvp.csv -> meSuSiE max_pip per converged locus
+#   The SuSiEx / meSuSiE arms are the within-MVP N-way cross-ancestry fine-mapping
+#   (SuSiEx + meSuSiE; EUR/AFR/AMR/EAS; 7 MVP traits, 411 shared loci) that REPLACES
+#   the retired enzyme-only EUR/EAS 2-way run. The within-ancestry SuSiE/CARMA arms
+#   and cross-ancestry arms ran on their OWN locus sets (different denominators by
+#   design), so the bar-end totals differ.
 #
-# Out: figures/main/fig2_genetics/panels/fig2B_finemap_cascade.pdf
+# Out: figures/main/fig2_genetics/panels/FigS2B_finemap_cascade.pdf
 #      (replaces the old single-bar cascade; supersedes fig2_finemap_cascade.R)
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(ggnewscale)
@@ -64,10 +69,10 @@ key <- lm[, .(study, original_locus, merged_locus, kept)]
 ca  <- merge(ca, key, by.x = c("study", "locus"), by.y = c("study", "original_locus"), all.x = TRUE)
 carma_b <- cls(ca[kept == TRUE, .(mx = max(PIP, na.rm = TRUE)), by = merged_locus]$mx)
 
-sx <- fread(file.path(FM, "susiex_4way/susiex_cs_4way.csv"))
+sx <- fread(file.path(FM, "susiex_mvp/susiex_cs_mvp.csv"))
 susiex_b <- cls(sx[, .(mx = max(OVRL_PIP, na.rm = TRUE)), by = locus_id]$mx)
 
-me <- fread(file.path(FM, "mesusie_polyfun/mesusie_locus_summary.csv"))
+me <- fread(file.path(FM, "mesusie_mvp/mesusie_locus_summary_mvp.csv"))
 mesusie_b <- cls(me[converged == TRUE]$max_pip)
 
 tools <- rbindlist(lapply(list(
@@ -88,7 +93,12 @@ colB <- c("variant PIP ≥ 0.9" = "#0D3B66", "best PIP 0.5–0.9" = "#7FB3D5", "
 # ---------------------------------------------------------------------------
 # One figure, one axis
 # ---------------------------------------------------------------------------
-XMAX <- n_total * 1.14
+# Accommodate the longest bar: the MVP cross-ancestry tools resolve far more loci
+# (across 7 traits) than the within-ancestry independent set, so key the axis off
+# the largest tool total rather than n_total alone (prevents label clipping).
+XMAX <- max(n_total, tools$hi + tools$mod + tools$lo) * 1.14
+XBRK <- pretty(c(0, XMAX), n = 5)
+XBRK <- XBRK[XBRK <= XMAX]
 
 p <- ggplot() +
   # consolidation bars (own fill scale, no legend — labels are self-explanatory)
@@ -103,18 +113,18 @@ p <- ggplot() +
             fontface = "bold", color = "grey15") +
   scale_fill_manual(values = colB, name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0)), limits = c(0, XMAX),
-                     breaks = seq(0, 200, 50)) +
+                     breaks = XBRK) +
   scale_y_discrete(drop = FALSE) +
   labs(x = "Loci", y = NULL,
        title = "GWAS fine-mapping: consolidation and resolution") +
   theme_masld(base_size = 9) +
   theme(plot.title    = element_text(size = 9.5, face = "bold"),
         axis.text.y   = element_text(size = 8),
-        legend.position = c(0.99, 0.04), legend.justification = c(1, 0),
+        legend.position = c(0.99, 0.97), legend.justification = c(1, 1),
         legend.key.size = unit(0.32, "cm"), legend.text = element_text(size = 7),
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA))
 
-save_fig(p, file.path(PANEL_DIR, "fig2B_finemap_cascade.pdf"),
+save_fig(p, file.path(PANEL_DIR, "FigS2B_finemap_cascade.pdf"),
          width = fig_col_width * 1.15, height = 3.9)
 cat(sprintf("[finemap_resolution] loci %d/%d/%d (tot/shared/uniq) | per-tool loci by best PIP (hi/mod/lo):\n",
             n_total, n_shared, n_unique))

@@ -75,15 +75,73 @@ ANCESTRY_REGISTRY = {
         "ref_kind":      "chr",
         "chr_basename":  "chr{chrom}_sas",
     },
+    # AMR: MVP-only arm (no enzyme UKBB/BBJ/PanUKBB template). gwas_template and
+    # n_gwas are omitted deliberately — the MVP cohort path resolves study name
+    # and N from the registry (see _build_sumstats_path / _lookup_n_gwas).
+    "AMR": {
+        "ref_kind":      "chr",
+        "chr_basename":  "chr{chrom}_amr",
+    },
 }
 
-# Sumstats paths (relative to FM_DIR) for each (ancestry, trait) — derived from
-# gwas_template; cached at startup so we can fail fast if any file is missing.
-def _build_sumstats_path(ancestry, trait):
-    template = ANCESTRY_REGISTRY[ancestry]["gwas_template"]
+# ---------------------------------------------------------------------------
+# GWAS registry lookup (config/gwas_registry.tsv) — used for the MVP cohort,
+# whose per-stratum study names and sample sizes are NOT a fixed per-ancestry
+# constant (they vary by trait x ancestry).
+# ---------------------------------------------------------------------------
+_REGISTRY_CACHE = None
+
+
+def _load_registry():
+    global _REGISTRY_CACHE
+    if _REGISTRY_CACHE is not None:
+        return _REGISTRY_CACHE
+    reg_path = os.path.join(FM_DIR, "config/gwas_registry.tsv")
+    reg = {}
+    with open(reg_path) as f:
+        header = None
+        for line in f:
+            if line.lstrip().startswith("#") or not line.strip():
+                continue
+            parts = line.rstrip("\n").split("\t")
+            if header is None:
+                header = parts
+                continue
+            row = dict(zip(header, parts))
+            reg[row["study_name"]] = row
+    _REGISTRY_CACHE = reg
+    return reg
+
+
+# Sumstats paths (relative to FM_DIR) for each (ancestry, trait). For the legacy
+# enzyme cohort the study is derived from the per-ancestry gwas_template; for the
+# MVP cohort it is MVP_<trait>_<ANC> resolved against the registry (so both the
+# path and N follow the registry, not a hardcoded template).
+def _build_sumstats_path(ancestry, trait, cohort="legacy"):
+    if cohort == "MVP":
+        study = f"MVP_{trait}_{ancestry}"
+        reg = _load_registry()
+        if study in reg and reg[study].get("sumstats_path"):
+            return study, os.path.join(FM_DIR, reg[study]["sumstats_path"])
+        # Not in registry (e.g. MVP_Cirrhosis_EAS does not exist) — signal missing.
+        return study, None
+    template = ANCESTRY_REGISTRY[ancestry].get("gwas_template")
+    if template is None:
+        return f"{ancestry}_{trait}", None
     study = template.format(trait=trait)
     rel = f"data/sumstats/{study}_reformatted_hg19.tsv"
     return study, os.path.join(FM_DIR, rel)
+
+
+def _lookup_n_gwas(ancestry, trait, study, cohort="legacy"):
+    """Per-arm GWAS sample size. MVP -> registry N_tot (varies per stratum);
+    legacy enzyme -> fixed per-ancestry constant in ANCESTRY_REGISTRY."""
+    if cohort == "MVP":
+        reg = _load_registry()
+        if study in reg and reg[study].get("N_tot"):
+            return int(float(reg[study]["N_tot"]))
+        raise KeyError(f"No N_tot in registry for MVP stratum {study}")
+    return ANCESTRY_REGISTRY[ancestry]["n_gwas"]
 
 
 def get_active_ancestries():
@@ -101,7 +159,8 @@ def get_active_ancestries():
 # ---------------------------------------------------------------------------
 def _resolve_ld_dir(ancestry):
     override_env = {"EUR": "UKBB_LD_DIR", "EAS": "EAS_LD_DIR",
-                    "AFR": "AFR_LD_DIR", "SAS": "SAS_LD_DIR"}[ancestry]
+                    "AFR": "AFR_LD_DIR", "AMR": "AMR_LD_DIR",
+                    "SAS": "SAS_LD_DIR"}[ancestry]
     if os.environ.get(override_env):
         return os.environ[override_env]
     panel = os.environ.get("LD_PANEL", "1kg").lower()
@@ -293,10 +352,12 @@ def run_susiex_for_locus(locus, output_dir, ancestries, threads=4):
     win_start  = int(locus["window_start"])
     win_end    = int(locus["window_end"])
     trait_pair = locus["trait_pair"]
+    # cohort: "MVP" (within-MVP multi-ancestry) vs legacy enzyme UKBB<->BBJ.
+    cohort     = str(locus["cohort"]) if "cohort" in locus.index else "legacy"
 
     print(f"\n{'='*60}")
     print(f"Locus: {locus_id}  Region: chr{chrom}:{win_start}-{win_end}")
-    print(f"Trait: {trait_pair}  Ancestries requested: {','.join(ancestries)}")
+    print(f"Trait: {trait_pair}  Cohort: {cohort}  Ancestries requested: {','.join(ancestries)}")
     os.makedirs(output_dir, exist_ok=True)
 
     summary_file = os.path.join(output_dir, f"{locus_id}.summary")
@@ -307,8 +368,8 @@ def run_susiex_for_locus(locus, output_dir, ancestries, threads=4):
     # 1. Load sumstats per ancestry; drop arms with no variants
     ss_per_anc = {}
     for anc in ancestries:
-        study, path = _build_sumstats_path(anc, trait_pair)
-        if not os.path.exists(path):
+        study, path = _build_sumstats_path(anc, trait_pair, cohort)
+        if path is None or not os.path.exists(path):
             print(f"  [{anc}] sumstats missing ({study}); dropping arm")
             continue
         ss = load_sumstats_window(study, path, chrom, win_start, win_end)
@@ -351,7 +412,7 @@ def run_susiex_for_locus(locus, output_dir, ancestries, threads=4):
             ss_file = os.path.join(tmpdir, f"{locus_id}_{anc}.txt")
             ss.to_csv(ss_file, sep="\t", index=False)
             ss_files.append(ss_file)
-            n_gwas_list.append(ANCESTRY_REGISTRY[anc]["n_gwas"])
+            n_gwas_list.append(_lookup_n_gwas(anc, trait_pair, study, cohort))
             study_list.append(study)
 
         print(f"  Active arms: {','.join(f'{a}={s}' for a, s in zip(active, study_list))}")
@@ -403,7 +464,11 @@ def main():
 
     ancestries = get_active_ancestries()
 
-    shared_loci_path = os.path.join(FM_DIR, "results/susiex/shared_loci.csv")
+    # SHARED_LOCI_FILE overrides the default enzyme loci table (used by the MVP
+    # runner to point at results/susiex_mvp/shared_loci.csv).
+    shared_loci_path = os.environ.get(
+        "SHARED_LOCI_FILE",
+        os.path.join(FM_DIR, "results/susiex/shared_loci.csv"))
     if not os.path.exists(shared_loci_path):
         print(f"ERROR: shared_loci.csv not found at {shared_loci_path}", file=sys.stderr)
         sys.exit(1)

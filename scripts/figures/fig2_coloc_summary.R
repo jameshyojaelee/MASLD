@@ -21,10 +21,9 @@ PANEL_DIR <- file.path(FIG3_DIR, "panels")
 
 # ── assemble per-gene table ──────────────────────────────────────────────────
 sc <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
-anc <- function(g) fifelse(grepl("BBJ", g), "EAS",
-                  fifelse(grepl("PanUKBB_AFR", g), "AFR",
-                  fifelse(grepl("PanUKBB_CSA", g), "SAS", "EUR")))
-sc[, ancestry := anc(gwas_name)]
+# ancestry from the GWAS registry (50-GWAS portfolio incl. MVP AMR/AFR/EAS/EUR strata) —
+# NOT the retired grepl() heuristic, which misrouted every MVP stratum into EUR.
+sc[, ancestry := as.character(gwas_ancestry(gwas_name))]
 sc[, pos := as.integer(sub("^[0-9]+:", "", top_snp))]
 sc <- sc[!is.na(PP.H4.susie)]
 # best PP.H4 per gene x ancestry
@@ -33,9 +32,9 @@ mat_dt <- dcast(ba, gene ~ ancestry, value.var = "pp4")
 # overall best + its chr/pos (genomic location)
 best <- sc[, .SD[which.max(PP.H4.susie)], by = gene][, .(gene, chr, pos, best = PP.H4.susie)]
 g <- merge(mat_dt, best, by = "gene")
-for (a in c("EUR","EAS","SAS","AFR")) if (!a %in% names(g)) g[[a]] <- NA_real_
-g[, n_anc := rowSums(.SD > 0.9, na.rm = TRUE), .SDcols = c("EUR","EAS","SAS","AFR")]
-g[, n_anc5 := rowSums(.SD > 0.5, na.rm = TRUE), .SDcols = c("EUR","EAS","SAS","AFR")]
+for (a in GWAS_ANCESTRY_LEVELS) if (!a %in% names(g)) g[[a]] <- NA_real_
+g[, n_anc := rowSums(.SD > 0.9, na.rm = TRUE), .SDcols = GWAS_ANCESTRY_LEVELS]
+g[, n_anc5 := rowSums(.SD > 0.5, na.rm = TRUE), .SDcols = GWAS_ANCESTRY_LEVELS]
 
 # class (coding / non-coding)
 cva <- fread(file.path(BASE, "RNA-seq/results/coloc_variant_classes/coloc_variant_annotation.csv"))
@@ -54,8 +53,9 @@ g[, deg_dir := fifelse(!is.na(padj) & padj < 0.05 & logFC > 0, "Up",
 g[, chr := as.integer(chr)]
 setorder(g, chr, pos)
 
-fwrite(g[best > 0.5, .(gene, chr, pos, EUR = round(EUR,3), EAS = round(EAS,3),
-        SAS = round(SAS,3), AFR = round(AFR,3), best = round(best,3), n_anc_gt0.9 = n_anc,
+fwrite(g[best > 0.5, .(gene, chr, pos, EUR = round(EUR,3), AFR = round(AFR,3),
+        AMR = round(AMR,3), EAS = round(EAS,3), SAS = round(SAS,3),
+        best = round(best,3), n_anc_gt0.9 = n_anc,
         class = coarse_class, deg_dir)],
        file.path(PANEL_DIR, "coloc_summary_source.csv"))
 
@@ -64,11 +64,11 @@ fwrite(g[best > 0.5, .(gene, chr, pos, EUR = round(EUR,3), EAS = round(EAS,3),
 # ════════════════════════════════════════════════════════════════════════════
 hi <- g[best > 0.9]
 setorder(hi, chr, pos)
-M <- as.matrix(hi[, .(EUR, EAS, SAS, AFR)]); rownames(M) <- hi$gene
+M <- as.matrix(hi[, .(EUR, AFR, AMR, EAS, SAS)]); rownames(M) <- hi$gene
 col_pp4 <- colorRamp2(c(0.5, 0.75, 1.0), c("#E8F0EF", "#5BA89C", "#00695C"))
 cls_col <- c("coding" = "#C9265E", "non-coding" = "#1565C0")
 deg_col <- c("Up" = "#C0392B", "Down" = "#2471A3", "n.s." = "#D5D8DC")
-# label only multi-ancestry (>=2) + tri-ancestry genes to keep it readable
+# label only multi-ancestry (>=2 of the 5 ancestries) genes to keep it readable
 lab_idx <- which(hi$n_anc >= 2)
 left_anno <- rowAnnotation(
   Class = hi$coarse_class, DEG = hi$deg_dir,
@@ -123,7 +123,7 @@ pB <- ggplot(gm, aes(gx, best)) +
                   box.padding = 0.2, show.legend = FALSE) +
   scale_color_manual(values = c("non-coding" = "#1565C0", "coding" = "#C9265E"),
                      name = "Lead variant") +
-  scale_size_continuous(range = c(0.8, 2.6), breaks = c(1,2,3), name = "# ancestries") +
+  scale_size_continuous(range = c(0.8, 2.6), breaks = c(1,2,3,4,5), name = "# ancestries") +
   scale_x_continuous(breaks = axis_df$center, labels = axis_df$chr, expand = c(0.01, 0)) +
   scale_y_continuous(limits = c(0.48, 1.02), breaks = c(0.5,0.7,0.9), expand = c(0, 0)) +
   labs(x = "Chromosome", y = expression("Best PP.H"[4]*" (SuSiE-coloc)"),

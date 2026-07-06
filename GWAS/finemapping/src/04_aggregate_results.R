@@ -27,7 +27,12 @@ skipped_loci <- list()
 
 for (i in 1:nrow(REGISTRY)) {
   study <- REGISTRY$study_name[i]
-  ld_pop <- REGISTRY$ancestry[i]
+  anc <- REGISTRY$ancestry[i]
+  # FM output dir = the ld_panel subdir for NON-EUR (the fresh 1kg_<anc> runs from
+  # run_fm_nonEUR_expanded.sh -> 03); EUR canonical FM lives in <EUR>_0.5Mb. Using
+  # ancestry for all (prior behaviour) pointed non-EUR at <ANC>_0.5Mb, which is empty
+  # (MVP) or stale (BBJ/PanUKBB) -> the entire fresh non-EUR/MVP run was silently missed.
+  ld_pop <- if (anc == "EUR") anc else REGISTRY$ld_panel[i]
   window_mb <- REGISTRY$window_mb[i]
   out_base <- file.path(FM_DIR, "output", study, paste0(ld_pop, "_", window_mb, "Mb"))
 
@@ -128,7 +133,7 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
   # Join on variant position + study + locus
   susie_slim <- susie_combined %>%
     select(chromosome, position, allele1, allele2, locus, study, ancestry,
-           susie_pip = PIP, susie_cs = CS, susie_converged = converged)
+           susie_pip = PIP, susie_cs = CS, susie_converged = converged, lambda_s)
   carma_slim <- carma_combined %>%
     select(chromosome, position, allele1, allele2, locus, study, ancestry,
            carma_pip = PIP, carma_cs = CS, carma_outlier = outlier)
@@ -181,13 +186,21 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
   # ===========================================================================
   # Integrate cross-ancestry joint fine-mapping (SuSiEX + MESuSiE)
   # ===========================================================================
-  susiex_file <- file.path(RESULTS_DIR, "susiex", "susiex_variant_summary.csv")
-  mesusie_file <- file.path(RESULTS_DIR, "mesusie", "mesusie_variant_summary.csv")
+  # Union the legacy enzyme 2-way run (UKBB<->BBJ ALT/AST/GGT) with the within-MVP
+  # N-way cross-ancestry run (EUR/AFR/AMR/EAS; 7 traits, 411 loci; 2026-07-05). The
+  # _mvp file is schema-identical; the dedup below keeps max PIP per (variant, trait),
+  # so ALT/AST take the best of either run and GGT (legacy-only) / the MVP-only
+  # disease+biomarker traits are preserved.
+  susiex_files <- c(file.path(RESULTS_DIR, "susiex", "susiex_variant_summary.csv"),
+                    file.path(RESULTS_DIR, "susiex_mvp", "susiex_variant_summary_mvp.csv"))
+  susiex_files <- susiex_files[file.exists(susiex_files)]
 
-  if (file.exists(susiex_file)) {
-    cat("\n=== Integrating SuSiEX results ===\n")
-    susiex <- fread(susiex_file,
-                    select = c("chr", "pos", "a1", "a2", "OVRL_PIP", "trait_pair"))
+  if (length(susiex_files) > 0) {
+    cat("\n=== Integrating SuSiEX results (", length(susiex_files), "source(s):",
+        paste(basename(susiex_files), collapse = ", "), ") ===\n")
+    susiex <- rbindlist(lapply(susiex_files, function(f)
+      fread(f, select = c("chr", "pos", "a1", "a2", "OVRL_PIP", "trait_pair"))),
+      use.names = TRUE)
     setnames(susiex, c("chr", "pos", "a1", "a2", "OVRL_PIP", "trait_pair"),
              c("chromosome", "position", "allele1", "allele2", "susiex_pip", "trait"))
     susiex[, chromosome := as.integer(chromosome)]
@@ -197,35 +210,45 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
     # trait, but we must NOT collapse across traits (that broadcast a
     # liver-enzyme OVRL_PIP=1.0 onto disease-GWAS rows). Keep max PIP per
     # (variant, trait); the join below is keyed on trait so each PIP stays with
-    # its own liver-enzyme study.
+    # its own study.
     susiex <- susiex[, .(susiex_pip = max(susiex_pip, na.rm = TRUE)),
                      by = .(chromosome, position, allele1, allele2, trait)]
     cat("  SuSiEX: ", nrow(susiex), " unique (variant, trait) entries loaded\n")
   } else {
-    cat("  SuSiEX summary not found at:", susiex_file, "\n")
+    cat("  SuSiEX summary not found (legacy or _mvp)\n")
     susiex <- NULL
   }
 
-  if (file.exists(mesusie_file)) {
-    cat("\n=== Integrating MESuSiE results ===\n")
-    mesusie <- fread(mesusie_file,
-                     select = c("chr", "pos", "a1", "a2", "pip", "in_cs",
-                                "cs_category", "trait_pair"))
+  mesusie_files <- c(file.path(RESULTS_DIR, "mesusie", "mesusie_variant_summary.csv"),
+                     file.path(RESULTS_DIR, "mesusie_mvp", "mesusie_variant_summary_mvp.csv"))
+  mesusie_files <- mesusie_files[file.exists(mesusie_files)]
+
+  if (length(mesusie_files) > 0) {
+    cat("\n=== Integrating MESuSiE results (", length(mesusie_files), "source(s):",
+        paste(basename(mesusie_files), collapse = ", "), ") ===\n")
+    mesusie <- rbindlist(lapply(mesusie_files, function(f)
+      fread(f, select = c("chr", "pos", "a1", "a2", "pip", "in_cs",
+                          "cs_category", "trait_pair"))), use.names = TRUE)
     setnames(mesusie, c("chr", "pos", "a1", "a2", "pip", "trait_pair"),
              c("chromosome", "position", "allele1", "allele2", "mesusie_pip", "trait"))
     mesusie[, chromosome := as.integer(chromosome)]
     mesusie[, position  := as.integer(position)]
     mesusie[, trait     := toupper(trait)]
-    mesusie[, mesusie_in_shared_cs := (in_cs == TRUE & grepl("EUR_EAS|shared", cs_category, ignore.case = TRUE))]
+    # Shared CS = credible set spanning >=2 ancestries. Legacy encodes this as
+    # "EUR_EAS"/"shared"; the MVP N-way run encodes the ancestry combo directly
+    # (EUR_AFR, EAS_AFR_AMR, ...). Any underscore-joined multi-ancestry category
+    # (or the literal "shared") counts; a single-ancestry category (EUR, AFR, AMR)
+    # is ancestry-specific.
+    mesusie[, mesusie_in_shared_cs := (in_cs == TRUE & grepl("_|shared", cs_category, ignore.case = TRUE))]
     # Deduplicate WITHIN trait (same broadcast hazard as SuSiEX): keep max PIP
     # and any shared CS hit per (variant, trait). The join below is keyed on
-    # trait, so a liver-enzyme PIP never lands on a disease-GWAS row.
+    # trait, so a PIP never lands on a different-trait GWAS row.
     mesusie <- mesusie[, .(mesusie_pip = max(mesusie_pip, na.rm = TRUE),
                            mesusie_in_shared_cs = any(mesusie_in_shared_cs, na.rm = TRUE)),
                        by = .(chromosome, position, allele1, allele2, trait)]
     cat("  MESuSiE:", nrow(mesusie), "unique (variant, trait) entries loaded\n")
   } else {
-    cat("  MESuSiE summary not found at:", mesusie_file, "\n")
+    cat("  MESuSiE summary not found (legacy or _mvp)\n")
     mesusie <- NULL
   }
 
@@ -245,12 +268,16 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
   # confines each joint PIP to the matching liver-enzyme study and leaves disease
   # rows as NA (no joint fine-map exists for them).
   #
-  # Trait is encoded in the study_name token (e.g. UKBB_ALT, BBJ_GGT,
-  # PanUKBB_AFR_AST); disease/PDFF studies carry no ALT/AST/GGT token -> NA.
-  # regmatches() drops non-matching elements, so derive per-row explicitly.
+  # Trait is the study_name token (UKBB_ALT, BBJ_GGT, MVP_Albumin_EUR,
+  # MVP_NAFLD_AMR, ...), matched case-insensitively and upper-cased to match the
+  # toupper'd trait_pair on the joint tables. The MVP N-way run (2026-07-05) added
+  # the Albumin/ChronLiver/Cirrhosis/NAFLD/Platelet traits, so they are matched too
+  # (a joint PIP still only attaches to same-trait studies). regmatches() drops
+  # non-matches, so derive per-row explicitly.
   combined[, trait := vapply(study, function(s) {
-    m <- regmatches(s, regexpr("ALT|AST|GGT", s))
-    if (length(m) == 0) NA_character_ else m
+    m <- regmatches(s, regexpr("ALT|AST|GGT|Albumin|ChronLiver|Cirrhosis|NAFLD|NASH|Platelet|PDFF",
+                               s, ignore.case = TRUE))
+    if (length(m) == 0) NA_character_ else toupper(m)
   }, character(1))]
 
   if (!is.null(susiex)) {

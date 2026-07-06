@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Fig 1 GWAS Portfolio — Creative Options A–D (breadth-focused, no N encoding)
-KEY MESSAGE: 23 GWAS spanning 4 ancestries x liver-disease traits — show coverage breadth.
+Fig 2A GWAS Portfolio — alluvial, evidence cascade, and per-study bars (breadth, no N encoding).
+KEY MESSAGE: 50 colocalising GWAS spanning 5 ancestries (EUR/AFR/AMR/EAS/SAS, MVP included)
+x liver-disease traits — show coverage breadth. All counts are DATA-DRIVEN at runtime from
+the GWAS registry, per-study fine-mapping summary, and per-gene colocalisation tables (no
+hardcoded manifest).
 
-Outputs to figures/misc/:
-  gwas_creative_A_binary_grid.pdf
-  gwas_creative_B_alluvial.pdf
-  gwas_creative_C_radial.pdf
-  gwas_creative_D_unit_chart.pdf
+Canonical Fig 2A panel outputs (figures/main/fig2_genetics/panels/):
+  fig2A_gwas_alluvial.pdf     (build_B)
+  fig2A_gwas_cascade.pdf      (build_cascade)
+  FigS2A_gwas_perstudy.pdf    (build_study_bars)
+Also writes exploratory options A–F to figures/misc/.
 """
 
 import matplotlib
@@ -36,58 +39,12 @@ plt.rcParams.update({
     "legend.frameon":    False,
 })
 
-# ── Data ──────────────────────────────────────────────────────────────────────
-GWAS_DATA = [
-    ("EUR", "NAFLD",     8_434),
-    ("EUR", "NAFLD",     9_491),
-    ("EUR", "NAFLD",   778_614),
-    ("EUR", "NAFLD",   370_000),
-    ("EUR", "NAFLD",   111_000),
-    ("EUR", "NAFLD",   400_000),
-    ("EUR", "NAFLD",   438_857),
-    ("EUR", "NASH",    435_000),
-    ("EUR", "ALT",     343_850),
-    ("EUR", "AST",     343_850),
-    ("EUR", "GGT",     343_850),
-    ("EUR", "PDFF",     36_116),
-    ("EUR", "PDFF",     32_858),
-    ("EUR", "PDFF",     44_867),
-    ("EAS", "ALT",     160_000),
-    ("EAS", "AST",     160_000),
-    ("EAS", "GGT",     160_000),
-    ("AFR", "ALT",       6_636),
-    ("AFR", "AST",       6_636),
-    ("AFR", "GGT",       6_636),
-    ("SAS", "ALT",       8_876),
-    ("SAS", "AST",       8_876),
-    ("SAS", "GGT",       8_876),
-]
-
-ANCESTRIES     = ["EUR", "EAS", "AFR", "SAS"]
-ANCESTRY_LABEL = {"EUR": "European", "EAS": "East Asian", "AFR": "African", "SAS": "South Asian"}
-ANCESTRY_N     = {"EUR": 14, "EAS": 3, "AFR": 3, "SAS": 3}
-
-# Okabe-Ito palette (colorblind-safe)
-ANCESTRY_COLOR = {
-    "EUR": "#0072B2", "EAS": "#E69F00", "AFR": "#009E73", "SAS": "#CC79A7",
-}
-
-TRAITS = ["ALT", "AST", "GGT", "NAFLD", "NASH", "PDFF"]
-# Trait group: (label, col_start, col_end_excl, band_color)
-TRAIT_GROUPS = [
-    ("Liver enzymes",     0, 3, "#9ECAE1"),
-    ("Disease diagnoses", 3, 5, "#FCBBA1"),
-    ("Imaging",           5, 6, "#A1D99B"),
-]
-
-ABSENT_COLOR = "#E8E8E8"
-
-
-def _cell_data():
-    mat = defaultdict(lambda: defaultdict(int))
-    for anc, trait, _ in GWAS_DATA:
-        mat[anc][trait] += 1
-    return mat
+# ── Data (DATA-DRIVEN: read GWAS registry + fine-mapping + coloc at runtime) ────
+# The portfolio (50 colocalising GWAS across 5 ancestries, incl. the MVP / Million
+# Veteran Program multi-ancestry strata) is NOT hardcoded here — every count is
+# recomputed at runtime from the three canonical GWAS files below.
+import csv as _csv
+import math as _math
 
 
 def _project_root():
@@ -98,6 +55,132 @@ def _out_path(fname):
     d = os.path.join(_project_root(), "figures", "misc")
     os.makedirs(d, exist_ok=True)
     return os.path.join(d, fname)
+
+
+_ROOT          = os.environ.get("MASLD_PROJECT_ROOT", _project_root())
+_REGISTRY_TSV  = os.path.join(_ROOT, "GWAS/finemapping/config/gwas_registry.tsv")
+_STUDY_SUMMARY = os.path.join(_ROOT, "GWAS/finemapping/results/study_summary.csv")
+_GENE_COLOC    = os.path.join(_ROOT, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv")
+
+# Trait derived from a study/gwas name — longer/specific tokens first so e.g.
+# "ChronLiver"/"Albumin" match before the enzyme tokens.
+_TRAIT_TOKENS = [
+    ("ChronLiver", "Chronic liver disease"), ("Cirrhosis", "Cirrhosis"),
+    ("Albumin", "Albumin"), ("Platelet", "Platelet"), ("PDFF", "PDFF"),
+    ("NAFLD", "NAFLD"), ("NASH", "NASH"), ("HCC", "HCC"),
+    ("ALT", "ALT"), ("AST", "AST"), ("GGT", "GGT"),
+]
+
+
+def _trait_of(name):
+    low = name.lower()
+    for tok, lab in _TRAIT_TOKENS:
+        if tok.lower() in low:
+            return lab
+    return None
+
+
+def _fnum(x):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return float("nan")
+
+
+def _load_manifest():
+    """Read the 50-GWAS registry, per-study fine-mapping yield, and per-gene coloc.
+    Returns data-driven aggregates used by every panel — no frozen literals."""
+    # 1) registry -> per-(ancestry, trait) GWAS-dataset counts
+    reg = list(_csv.DictReader(open(_REGISTRY_TSV), delimiter="\t"))
+    anc_of_study = {r["study_name"]: r["ancestry"] for r in reg}
+    at_gwas, anc_gwas = defaultdict(int), defaultdict(int)
+    studies = set()
+    for r in reg:
+        a, t = r["ancestry"], _trait_of(r["study_name"])
+        at_gwas[(a, t)] += 1
+        anc_gwas[a] += 1
+        # distinct-study count collapses the Sveinbjornsson 2023 (PMID 36280732)
+        # deCODE/Intermountain/UKBB cohort-arms of one study into a single study.
+        base = "2023_36280732_NAFLD" if r["study_name"].startswith("2023_36280732") else r["study_name"]
+        studies.add(base)
+
+    # 2) study_summary -> per-study & per-(ancestry, trait) fine-mapped loci
+    at_loci, study_loci = defaultdict(int), {}
+    for r in _csv.DictReader(open(_STUDY_SUMMARY)):
+        s = r["study"]
+        a = anc_of_study.get(s)
+        if a is None:
+            continue
+        nl = int(r["n_loci"])
+        at_loci[(a, _trait_of(s))] += nl
+        study_loci[s] = nl
+
+    # 3) gene_level_coloc -> union (SuSiE OR ABF, PP.H4>0.5) colocalising genes.
+    # Each gene belongs to the ancestry/trait of its single best colocalisation.
+    at_genes, anc_genes, study_genes = defaultdict(int), defaultdict(int), defaultdict(int)
+    union_total = susie_total = 0
+    for r in _csv.DictReader(open(_GENE_COLOC)):
+        abf, su = _fnum(r["coloc_best_pp4"]), _fnum(r["coloc_best_susie_pp4"])
+        abf_ok, su_ok = abf > 0.5, su > 0.5
+        if su_ok:
+            susie_total += 1
+        if not (abf_ok or su_ok):
+            continue
+        union_total += 1
+        if su_ok and (_math.isnan(abf) or su >= abf):
+            a, gw = r["coloc_best_susie_ancestry"], r["coloc_best_susie_gwas"]
+        else:
+            a, gw = r["coloc_best_ancestry"], r["coloc_best_gwas"]
+        at_genes[(a, _trait_of(gw))] += 1
+        anc_genes[a] += 1
+        study_genes[gw] += 1
+
+    return dict(reg=reg, anc_of_study=anc_of_study, at_gwas=at_gwas, anc_gwas=anc_gwas,
+                n_gwas=len(reg), n_studies=len(studies), at_loci=at_loci, study_loci=study_loci,
+                at_genes=at_genes, anc_genes=anc_genes, study_genes=study_genes,
+                union_total=union_total, susie_total=susie_total)
+
+
+_M          = _load_manifest()
+N_GWAS      = _M["n_gwas"]        # 50 colocalising GWAS datasets
+N_STUDIES   = _M["n_studies"]     # 48 distinct studies (Sveinbjornsson arms collapsed)
+UNION_GENES = _M["union_total"]   # 1527 union SuSiE-or-ABF PP.H4>0.5 coloc genes
+SUSIE_GENES = _M["susie_total"]   # 736 SuSiE PP.H4>0.5 coloc genes
+
+# Ancestry order = descending GWAS count (EUR, AFR, EAS, AMR, SAS).
+ANCESTRIES     = sorted(_M["anc_gwas"], key=lambda a: (-_M["anc_gwas"][a], a))
+ANCESTRY_LABEL = {"EUR": "European", "AFR": "African", "AMR": "Admixed American",
+                  "EAS": "East Asian", "SAS": "South Asian"}
+ANCESTRY_N     = {a: _M["anc_gwas"][a] for a in ANCESTRIES}
+# Canonical ancestry palette shared across the Fig 2 genetics panels (colorblind-safe).
+ANCESTRY_COLOR = {"EUR": "#4C72B0", "AFR": "#55A868", "AMR": "#DD8452",
+                  "EAS": "#C44E52", "SAS": "#8172B3"}
+
+# Traits present in the portfolio, grouped disease -> imaging -> enzymes -> biomarkers.
+TRAITS      = ["NAFLD", "NASH", "Cirrhosis", "Chronic liver disease", "PDFF",
+               "ALT", "AST", "GGT", "Albumin", "Platelet"]
+TRAIT_SHORT = {"Chronic liver disease": "Chr. liver"}
+# Trait group: (label, col_start, col_end_excl, band_color) — greyscale (colour = ancestry).
+TRAIT_GROUPS = [
+    ("Disease diagnoses", 0, 4,  "#444444"),
+    ("Imaging",           4, 5,  "#7F7F7F"),
+    ("Liver enzymes",     5, 8,  "#C0C0C0"),
+    ("Other biomarkers",  8, 10, "#9C9C9C"),
+]
+TRAIT_GROUP_OF = {}
+for _lbl, _c0, _c1, _gc in TRAIT_GROUPS:
+    for _t in TRAITS[_c0:_c1]:
+        TRAIT_GROUP_OF[_t] = _gc
+
+ABSENT_COLOR = "#E8E8E8"
+
+
+def _cell_data():
+    """Per-(ancestry, trait) GWAS-dataset counts, data-driven from the registry."""
+    mat = defaultdict(lambda: defaultdict(int))
+    for (a, t), n in _M["at_gwas"].items():
+        mat[a][t] = n
+    return mat
 
 
 def _group_bands(ax, alpha=0.07):
@@ -130,7 +213,7 @@ def _grid_axis(ax):
     ax.set_xlim(-0.5, n_trait - 0.5)
     ax.set_ylim(-0.5, len(ANCESTRIES) - 0.5)
     ax.set_xticks(range(n_trait))
-    ax.set_xticklabels(TRAITS, fontsize=8.5)
+    ax.set_xticklabels([TRAIT_SHORT.get(t, t) for t in TRAITS], fontsize=6, rotation=45, ha="right")
     ax.set_yticks(range(len(ANCESTRIES)))
     ax.set_yticklabels([ANCESTRY_LABEL[a] for a in ANCESTRIES], fontsize=8.5)
     ax.tick_params(left=False, bottom=False)
@@ -160,7 +243,7 @@ def build_A(path):
             ))
             if n > 1:
                 ax.text(j, i, str(n), ha="center", va="center",
-                        fontsize=10, color="white", fontweight="bold", zorder=3)
+                        fontsize=6, color="white", zorder=3)
 
     for x in np.arange(-0.5, len(TRAITS), 1):
         ax.axvline(x, color="white", linewidth=1.5, zorder=1)
@@ -179,7 +262,7 @@ def build_A(path):
               bbox_to_anchor=(1.0, -0.26), ncol=3, frameon=False)
 
     ax.set_title("Option A — Binary coverage grid  |  number = study count  |  color = ancestry",
-                 fontsize=8, pad=16, loc="left", color="#555555")
+                 fontsize=6, pad=16, loc="left", color="black")
     fig.tight_layout()
     fig.savefig(path, bbox_inches="tight", dpi=300, facecolor="white")
     plt.close(fig)
@@ -210,12 +293,12 @@ def _ribbon(ax, x0, y0b, y0t, x1, y1b, y1t, color, alpha=0.40):
 def build_B(path, extra_paths=None):
     """Alluvial: unit width = 1 GWAS study. Left = ancestries, Right = traits."""
     cd = _cell_data()
-    GAP = 0.55
+    GAP = 0.40   # reduced from 0.55 to make layout more compact
     BW  = 0.055   # block width
 
-    # Trait order: most GWAS first (descending), keeps largest ribbons on top → less crossing
+    # Trait order: disease -> imaging -> enzymes -> biomarkers (TRAITS is already in this order)
     trait_total = {t: sum(cd[a][t] for a in ANCESTRIES) for t in TRAITS}
-    right_order = sorted(TRAITS, key=lambda t: -trait_total[t])
+    right_order = list(TRAITS)
 
     # Ancestry blocks (left, top-to-bottom, y increasing downward after invert_yaxis)
     left_start = {}
@@ -233,11 +316,10 @@ def build_B(path, extra_paths=None):
         y += trait_total[t] + GAP
     total_right = y - GAP
 
-    total_h = max(total_left, total_right) + 1.0
-    # Extra bottom margin to accommodate the annotation tag
-    TAG_MARGIN = 1.5
+    total_h = max(total_left, total_right) + 0.4
+    TAG_MARGIN = 0.1
 
-    fig, ax = plt.subplots(figsize=(7.5, 6.5))
+    fig, ax = plt.subplots(figsize=(7.0, 5.0))  # compact: 6pt text vs canvas
     fig.patch.set_facecolor("white")
     ax.set_xlim(-0.28, 1.28)
     ax.set_ylim(0, total_h + TAG_MARGIN)
@@ -250,29 +332,27 @@ def build_B(path, extra_paths=None):
         h  = ANCESTRY_N[anc]
         ax.add_patch(mpatches.Rectangle(
             (-BW / 2, y0), BW, h,
-            facecolor=ANCESTRY_COLOR[anc], edgecolor="none", alpha=0.92, zorder=4,
+            facecolor=ANCESTRY_COLOR[anc], edgecolor="none", alpha=1.0, zorder=4,
         ))
         ax.text(-BW / 2 - 0.02, y0 + h / 2,
-                f"{ANCESTRY_LABEL[anc]}\nn={ANCESTRY_N[anc]}",
-                ha="right", va="center", fontsize=8.5,
-                color=ANCESTRY_COLOR[anc], fontweight="bold")
+                f"{ANCESTRY_LABEL[anc]}\n({ANCESTRY_N[anc]})",
+                ha="right", va="center", fontsize=6,
+                color="black")
 
-    # Right trait blocks + labels  (colored by trait group)
-    grp_color_of = {}
-    for (_, c0, c1, gc) in TRAIT_GROUPS:
-        for t in TRAITS[c0:c1]:
-            grp_color_of[t] = gc
+    # Right trait blocks + labels — each block coloured by its trait group (greyscale;
+    # colour is reserved for ancestry).
+    trait_colors = dict(TRAIT_GROUP_OF)
 
     for t in right_order:
         y0 = right_start[t]
         h  = trait_total[t]
         ax.add_patch(mpatches.Rectangle(
             (1.0 - BW / 2, y0), BW, h,
-            facecolor=grp_color_of[t], edgecolor="none", alpha=0.92, zorder=4,
+            facecolor=trait_colors[t], edgecolor="none", alpha=1.0, zorder=4,
         ))
         ax.text(1.0 + BW / 2 + 0.02, y0 + h / 2,
-                f"{t}  n={h}", ha="left", va="center",
-                fontsize=8.5, color="#444444")
+                f"{t}  ({h})", ha="left", va="center",
+                fontsize=6, color="black")
 
     # Ribbons: iterate traits in right_order within each ancestry block
     l_off = {anc: left_start[anc] for anc in ANCESTRIES}
@@ -290,20 +370,15 @@ def build_B(path, extra_paths=None):
             r_off[t]   += n
 
     # Category legend (right side top)
-    cat_patches = [mpatches.Patch(facecolor=gc, alpha=0.92, label=lbl)
+    cat_patches = [mpatches.Patch(facecolor=gc, alpha=1.0, label=lbl)
                    for lbl, _, _, gc in TRAIT_GROUPS]
-    ax.legend(handles=cat_patches, fontsize=7, loc="upper right",
+    ax.legend(handles=cat_patches, fontsize=6, loc="upper right",
               bbox_to_anchor=(1.26, 1.0), frameon=False)
 
     # Annotation tag: just below the bottom of the existing plot nodes
     # After invert_yaxis(), total_h is visually at the bottom; we place tag slightly below it.
     # Use DejaVu Sans for this text element to ensure the arrow glyph renders correctly.
-    ax.text(0.5, total_h + 0.85,
-            "23 GWAS → 368 colocalized genes",
-            ha="center", va="top",
-            fontsize=7.5, color="#2D3436", style="italic",
-            fontfamily="DejaVu Sans",
-            transform=ax.transData)
+
 
     fig.tight_layout()
     fig.savefig(path, bbox_inches="tight", dpi=300, facecolor="white")
@@ -312,6 +387,12 @@ def build_B(path, extra_paths=None):
         for ep in extra_paths:
             fig.savefig(ep, bbox_inches="tight", dpi=300, facecolor="white")
             print(f"Saved: {ep}")
+    print(f"CAPTION (Fig2A alluvial): GWAS portfolio — {N_GWAS} colocalising GWAS datasets "
+          f"({N_STUDIES} distinct studies) spanning {len(ANCESTRIES)} ancestries (European, "
+          "African, Admixed American, East Asian, South Asian) and "
+          f"{len(TRAITS)} liver-disease traits, with the MVP (Million Veteran Program) "
+          "multi-ancestry strata (AFR/AMR/EAS/EUR) included. Left = ancestry (n GWAS), "
+          "right = trait; unit = 1 GWAS dataset.")
     plt.close(fig)
 
 
@@ -400,10 +481,10 @@ def build_C(path):
     ax.add_patch(mpatches.Circle((0, 0), R_CENTER,
                                   facecolor="white", edgecolor="#CCCCCC",
                                   linewidth=0.6, zorder=4))
-    ax.text(0, 0.02, "23", ha="center", va="center",
-            fontsize=14, color="#333333", fontweight="bold", zorder=6)
+    ax.text(0, 0.02, str(N_GWAS), ha="center", va="center",
+            fontsize=14, color="black", zorder=6)
     ax.text(0, -0.13, "GWAS", ha="center", va="center",
-            fontsize=7, color="#777777", zorder=6)
+            fontsize=7, color="black", zorder=6)
 
     # Ancestry legend
     anc_leg = [mpatches.Patch(facecolor=ANCESTRY_COLOR[a], alpha=0.85,
@@ -487,8 +568,236 @@ def build_D(path):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Extended cascade: Ancestry -> Trait -> Fine-mapped loci -> Coloc genes
+# ─────────────────────────────────────────────────────────────────────────────
+def build_cascade(path, extra_paths=None):
+    """4-stage cascade: Ancestry -> Trait (GWAS datasets) -> fine-mapped loci -> coloc genes.
+    Trait = spine for the 3 right stages; colour = ancestry; each stage normalised to equal
+    height (totals differ) with the total labelled. FULLY DATA-DRIVEN: GWAS from the registry,
+    per-(ancestry,trait) loci from study_summary n_loci, genes = union SuSiE-or-ABF PP.H4>0.5
+    with each gene assigned to the ancestry/trait of its single best colocalisation."""
+    r_order = list(TRAITS)
+    at_g, at_l, at_ge = _M["at_gwas"], _M["at_loci"], _M["at_genes"]
+    DAT = {}
+    for a in ANCESTRIES:
+        for t in r_order:
+            g, l, ge = at_g.get((a, t), 0), at_l.get((a, t), 0), at_ge.get((a, t), 0)
+            if g or l or ge:
+                DAT[(a, t)] = (g, l, ge)
+    MIDX = {"trait": 0, "loci": 1, "genes": 2}
+    H, GAP, BW = 13.0, 0.42, 0.06
+    # equal horizontal width for every section (ancestry@0 -> trait -> loci -> genes)
+    SEC = 0.82
+    XCOL = {"trait": SEC, "loci": 2*SEC, "genes": 3*SEC}
+
+    def layout(metric):
+        tot = sum(v[metric] for v in DAT.values())
+        scale = (H - GAP*(len(r_order)-1)) / tot if tot else 0.0
+        seg, tspan = {}, {}; y = 0.0
+        for t in r_order:
+            y0t = y
+            for a in ANCESTRIES:
+                v = DAT.get((a, t), (0, 0, 0))[metric]
+                if v > 0:
+                    seg[(a, t)] = (y, y + v*scale); y += v*scale
+            tspan[t] = (y0t, y); y += GAP
+        return seg, tspan, scale
+    L = {s: layout(MIDX[s]) for s in XCOL}
+    tot = {s: sum(v[MIDX[s]] for v in DAT.values()) for s in XCOL}
+
+    fig, ax = plt.subplots(figsize=(5.6, 4.3))
+    ax.set_xlim(-0.62, 3*SEC + 0.5); ax.set_ylim(-1.35, H + 1.1); ax.invert_yaxis(); ax.axis("off")
+
+    # Ancestry column (x=0)
+    anc_tot = {a: sum(DAT[k][0] for k in DAT if k[0] == a) for a in ANCESTRIES}
+    s0 = (H - GAP*(len(ANCESTRIES)-1)) / sum(anc_tot.values())
+    anc_y = {}; y = 0.0
+    for a in ANCESTRIES:
+        h = anc_tot[a]*s0; anc_y[a] = (y, y+h)
+        ax.add_patch(mpatches.Rectangle((-BW/2, y), BW, h, facecolor=ANCESTRY_COLOR[a], edgecolor="none", zorder=4))
+        ax.text(-BW/2-0.03, y+h/2, f"{ANCESTRY_LABEL[a]} ({anc_tot[a]})", ha="right", va="center", fontsize=6, color="black")
+        y += h + GAP
+    ax.text(0, -0.7, f"{len(ANCESTRIES)} ancestries", ha="center", va="bottom", fontsize=6, color="black")
+
+    # stage blocks + headers
+    for s in XCOL:
+        seg = L[s][0]; x = XCOL[s]
+        for (a, t), (y0, y1) in seg.items():
+            ax.add_patch(mpatches.Rectangle((x-BW/2, y0), BW, y1-y0, facecolor=ANCESTRY_COLOR[a], edgecolor="white", lw=0.2, zorder=4))
+        hdr = {"trait": f"{tot['trait']} GWAS datasets",
+               "loci": f"{tot['loci']} fine-mapped loci",
+               "genes": f"{tot['genes']} coloc genes"}[s]
+        ax.text(x, -0.7, hdr, ha="center", va="bottom", fontsize=6, color="black")
+    # trait name + dataset count ABOVE each trait block, e.g. "NAFLD (11)"
+    for t in r_order:
+        y0, y1 = L["trait"][1][t]
+        n_gw = sum(DAT[(a, t)][MIDX["trait"]] for a in ANCESTRIES if (a, t) in DAT)
+        if n_gw == 0:
+            continue
+        ax.text(XCOL["trait"], y0 - 0.06, f"{TRAIT_SHORT.get(t, t)} ({n_gw})",
+                ha="center", va="bottom", fontsize=6, color="black", zorder=8)
+    # per-trait count ABOVE the loci / genes blocks (no name to pair with there)
+    for s in ("loci", "genes"):
+        tspan = L[s][1]; x = XCOL[s]
+        for t in r_order:
+            y0, y1 = tspan[t]
+            cnt = sum(DAT[(a, t)][MIDX[s]] for a in ANCESTRIES if (a, t) in DAT)
+            if cnt == 0:
+                continue
+            ax.text(x, y0 - 0.06, str(cnt), ha="center", va="bottom", fontsize=6, color="black", zorder=8)
+
+    # ribbons: Anc -> Trait
+    seg_tr = L["trait"][0]; off = {a: anc_y[a][0] for a in ANCESTRIES}
+    for a in ANCESTRIES:
+        for t in r_order:
+            if (a, t) in seg_tr:
+                n = DAT[(a, t)][0]*s0; hy0 = off[a]; off[a] += n
+                ry0, ry1 = seg_tr[(a, t)]
+                _ribbon(ax, BW/2, hy0, hy0+n, XCOL["trait"]-BW/2, ry0, ry1, ANCESTRY_COLOR[a], alpha=0.30)
+    # ribbons: Trait->Loci, Loci->Genes
+    for sf, sg in [("trait", "loci"), ("loci", "genes")]:
+        segf, segg = L[sf][0], L[sg][0]
+        for a in ANCESTRIES:
+            for t in r_order:
+                if (a, t) in segf and (a, t) in segg:
+                    f0, f1 = segf[(a, t)]; g0, g1 = segg[(a, t)]
+                    _ribbon(ax, XCOL[sf]+BW/2, f0, f1, XCOL[sg]-BW/2, g0, g1, ANCESTRY_COLOR[a], alpha=0.30)
+    # fallback: coloc genes whose GWAS has no fine-mapped-loci entry (the 7 MVP-EUR strata,
+    # fine-mapped under a separate PolyFun-LD pipeline) -> faint ribbon straight from the
+    # trait block across the empty loci column to the gene block, so no gene block floats.
+    seg_tr2, seg_lo, seg_ge = L["trait"][0], L["loci"][0], L["genes"][0]
+    for a in ANCESTRIES:
+        for t in r_order:
+            if (a, t) in seg_ge and (a, t) not in seg_lo and (a, t) in seg_tr2:
+                g0, g1 = seg_ge[(a, t)]; t0, t1 = seg_tr2[(a, t)]
+                _ribbon(ax, XCOL["trait"]+BW/2, t0, t1, XCOL["genes"]-BW/2, g0, g1, ANCESTRY_COLOR[a], alpha=0.12)
+
+    fig.tight_layout(); fig.savefig(path, bbox_inches="tight", dpi=300, facecolor="white")
+    print(f"Saved: {path}")
+    if extra_paths:
+        for ep in extra_paths:
+            fig.savefig(ep, bbox_inches="tight", dpi=300, facecolor="white"); print(f"Saved: {ep}")
+    print(f"CAPTION (Fig2A cascade): GWAS evidence cascade — {N_GWAS} colocalising GWAS datasets "
+          f"({N_STUDIES} distinct studies; {len(ANCESTRIES)} ancestries x {len(TRAITS)} liver traits, "
+          f"MVP included) -> {tot['loci']} fine-mapped loci -> {tot['genes']} colocalising genes "
+          "(union SuSiE-or-ABF PP.H4>0.5), coloured by ancestry. Non-European panels (AFR/AMR/EAS) yield "
+          "the most fine-mapped loci but far fewer colocalising genes, whereas European GWAS yield few "
+          "loci yet most coloc genes — the European-eQTL ancestry bottleneck. Fine-mapped-loci counts are "
+          "per-study locus windows (LD-panel dependent, so non-European panels report more windows); EUR "
+          "loci exclude the 7 MVP-EUR strata fine-mapped under a separate PolyFun-LD pipeline (their "
+          "colocalising genes are retained, shown as faint trait->gene ribbons).")
+    plt.close(fig)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Companion to the cascade: per-study fine-mapped loci & coloc genes
+# ─────────────────────────────────────────────────────────────────────────────
+def build_study_bars(path, extra_paths=None):
+    """Two aligned horizontal bar panels (loci | genes) sharing one row per GWAS study,
+    grouped by ancestry. DATA-DRIVEN: rows = the studies carrying a fine-mapping summary
+    (study_summary.csv); loci = n_loci; genes = union SuSiE-or-ABF PP.H4>0.5 assigned to
+    that study; the Sveinbjornsson 2023 cohort-arms are collapsed to one study. The
+    per-study loci-vs-genes contrast shows the European-eQTL bottleneck directly."""
+    # Pretty display names for the PMID-keyed legacy EUR studies (curated); every other
+    # study gets an auto-generated "<source> <trait>" label.
+    NAME_MAP = {
+        "2019_31311600": "Namjou 2019 NAFLD",   "2020_32298765": "Anstee 2020 NAFLD",
+        "2021_34128465": "Liu 2021 PDFF",         "2021_34841290": "Ghodsian 2021 NAFLD",
+        "2021_34957434": "Haas 2021 PDFF",         "2022_36402844": "van der Meer 2022 PDFF",
+        "2023_36280732": "Sveinbjornsson 2022 NAFLD",
+    }
+
+    def _label(study):
+        for pref, lab in NAME_MAP.items():
+            if study.startswith(pref):
+                return lab
+        t = _trait_of(study)
+        for pref, src in (("MVP_", "MVP"), ("BBJ_", "BBJ"), ("UKBB_", "UKBB"),
+                          ("FinnGen_", "FinnGen"), ("PanUKBB_", "PanUKBB")):
+            if study.startswith(pref):
+                return f"{src} {t}"
+        return study.replace("_", " ")
+
+    # Aggregate per study (collapsing Sveinbjornsson arms): loci from study_summary,
+    # genes from the union coloc assignment.
+    agg = {}
+    for s, loci in _M["study_loci"].items():
+        a = _M["anc_of_study"][s]
+        key = "2023_36280732_NAFLD" if s.startswith("2023_36280732") else s
+        genes = _M["study_genes"].get(s, 0)
+        if key not in agg:
+            agg[key] = [a, 0, 0, _label(s)]
+        agg[key][1] += loci
+        agg[key][2] += genes
+    # order rows by ancestry (EUR, AFR, EAS, AMR, SAS) then genes descending
+    ROWS = []
+    for a in ANCESTRIES:
+        rws = sorted([(v[3], a, v[1], v[2]) for v in agg.values() if v[0] == a],
+                     key=lambda z: -z[3])
+        ROWS.extend(rws)
+
+    n = len(ROWS); ys = list(range(n-1, -1, -1))  # first row at top
+    loci_mx  = max(r[2] for r in ROWS) * 1.35
+    genes_mx = max(r[3] for r in ROWS) * 1.12
+    fig, (axL, axR) = plt.subplots(1, 2, figsize=(7.8, 9.6), sharey=True,
+                                   gridspec_kw={"wspace": 0.5})
+    # Fine-mapped loci span ~3 orders of magnitude (MVP AFR/AMR panels are LD-inflated),
+    # so the loci axis is log-x; coloc genes stay linear.
+    for ax, idx, ttl, mx, logx in [(axL, 2, "Fine-mapped loci (log)", loci_mx, True),
+                                   (axR, 3, "Coloc genes (union PP.H4 > 0.5)", genes_mx, False)]:
+        for i, row in enumerate(ROWS):
+            v = row[idx]
+            ax.barh(ys[i], v, color=ANCESTRY_COLOR[row[1]], height=0.66, zorder=3)
+            if v > 0:
+                xoff = v * 1.08 if logx else v + mx*0.013
+                ax.text(xoff, ys[i], str(v), va="center", ha="left", fontsize=6, color="black")
+        if logx:
+            ax.set_xscale("log"); ax.set_xlim(0.8, mx)
+        else:
+            ax.set_xlim(0, mx)
+        ax.set_ylim(-0.7, n-0.3)
+        ax.set_title(ttl, fontsize=7, color="black")
+        for sp in ("top", "right", "left"):
+            ax.spines[sp].set_visible(False)
+        ax.tick_params(axis="x", labelsize=6, colors="black")
+        ax.set_yticks([])
+    # study labels + ancestry-group separators on the left panel
+    axL.set_yticks(ys); axL.set_yticklabels([r[0] for r in ROWS], fontsize=6, color="black")
+    bounds = []; prev = ROWS[0][1]
+    for i, row in enumerate(ROWS):
+        if row[1] != prev:
+            bounds.append(i - 0.5); prev = row[1]
+    for b in bounds:
+        for ax in (axL, axR):
+            ax.axhline(n-1-b, color="#CCCCCC", lw=0.5, zorder=1)
+
+    fig.savefig(path, bbox_inches="tight", dpi=300, facecolor="white")
+    print(f"Saved: {path}")
+    if extra_paths:
+        for ep in extra_paths:
+            fig.savefig(ep, bbox_inches="tight", dpi=300, facecolor="white"); print(f"Saved: {ep}")
+    print(f"CAPTION (Fig2A per-study): Fine-mapped loci (log scale) and colocalising genes "
+          f"(union SuSiE-or-ABF PP.H4>0.5) per GWAS study, for the {n} studies carrying a "
+          f"fine-mapping summary, grouped by {len(ANCESTRIES)} ancestries (incl. MVP AFR/AMR/EAS). "
+          "The loci-vs-genes contrast exposes the European-eQTL ancestry bottleneck at the study "
+          "level: non-European studies (MVP/BBJ/PanUKBB AFR/AMR/EAS) yield many fine-mapped loci "
+          "but few coloc genes, whereas European UKBB studies yield few loci but many genes. The 7 "
+          "MVP-EUR strata (fine-mapped under a separate PolyFun-LD pipeline) are not shown here but "
+          f"contribute to the {UNION_GENES} coloc-gene total.")
+    plt.close(fig)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     build_A(_out_path("gwas_creative_A_binary_grid.pdf"))
+    PANELS = os.path.join(_project_root(), "figures", "main", "fig2_genetics", "panels")
     build_B(_out_path("gwas_creative_B_alluvial.pdf"),
-            extra_paths=[_out_path("fig1c_gwas_alluvial.pdf")])
+            extra_paths=[
+                _out_path("fig1c_gwas_alluvial.pdf"),
+                os.path.join(PANELS, "fig2A_gwas_alluvial.pdf"),
+            ])
+    build_cascade(_out_path("gwas_creative_E_cascade.pdf"),
+                  extra_paths=[os.path.join(PANELS, "fig2A_gwas_cascade.pdf")])
+    build_study_bars(_out_path("gwas_creative_F_perstudy.pdf"),
+                     extra_paths=[os.path.join(PANELS, "FigS2A_gwas_perstudy.pdf")])
     print("All done.")

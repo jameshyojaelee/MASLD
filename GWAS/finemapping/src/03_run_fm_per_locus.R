@@ -79,20 +79,29 @@ LDpanel <- switch(ancestry,
   EUR = "UKBB",
   EAS = "1KG_EAS",
   AFR = "1KG_AFR",
+  AMR = "1KG_AMR",
   SAS = "1KG_SAS",
   stop(paste("Unsupported ancestry for LDpanel:", ancestry))
 )
 
 # Run SuSiE
 cat("\n--- Running SuSiE ---\n")
+set.seed(42)  # C7 reproducibility: deterministic per-locus SuSiE
 run_susie(ss_filtered, ld_filtered, N_tot, N_cases,
           sumstats_name, ld_pop, window_mb, locus, LDpanel,
           base_dir = FM_DIR)
 
-# Run CARMA
-cat("\n--- Running CARMA ---\n")
-run_CARMA(ss_filtered, ld_filtered,
-          sumstats_name, ld_pop, window_mb, locus, LDpanel,
-          base_dir = FM_DIR)
+# Run CARMA (skippable via SKIP_CARMA=1 — e.g. exploratory non-EUR runs where
+# SuSiE + the convergence/purity/lambda_s guards suffice and CARMA's per-locus
+# cost isn't justified at scale)
+if (Sys.getenv("SKIP_CARMA", "0") != "1") {
+  cat("\n--- Running CARMA ---\n")
+  set.seed(42)  # C7 reproducibility: deterministic per-locus CARMA
+  run_CARMA(ss_filtered, ld_filtered,
+            sumstats_name, ld_pop, window_mb, locus, LDpanel,
+            base_dir = FM_DIR)
+} else {
+  cat("\n--- CARMA skipped (SKIP_CARMA=1) ---\n")
+}
 
 cat("\n=== Completed fine-mapping for locus", locus, "===\n")

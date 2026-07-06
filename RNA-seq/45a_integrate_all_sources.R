@@ -195,7 +195,13 @@ if (file.exists(LIANA_FILE)) {
 
   liana_summary[, liana_is_diff_ligand := liana_n_as_ligand > 0]
   liana_summary[, liana_is_diff_receptor := liana_n_as_receptor > 0]
-  liana_summary[, liana_n_diff_interactions := liana_n_as_ligand + liana_n_as_receptor]
+  # `liana_n_diff_interactions` DROPPED 2026-07-04 (round-2 audit F1a): 0 atlas
+  # consumers, and the name is a misnomer — this pooled LIANA file is raw
+  # ligand-receptor connectivity, not a DIFFERENTIAL test (8,304 of its rows have
+  # score_diff == 0), so a "n_diff_interactions" count overstates it. The
+  # per-gene ligand/receptor connectivity is still available via
+  # liana_n_as_ligand / liana_n_as_receptor. Column drops on the next atlas rebuild.
+  # liana_summary[, liana_n_diff_interactions := liana_n_as_ligand + liana_n_as_receptor]
 
   cat("  Unique genes in LIANA:", nrow(liana_summary), "\n")
   cat("  Ligands:", sum(liana_summary$liana_is_diff_ligand), "\n")
@@ -211,7 +217,7 @@ if (file.exists(LIANA_FILE)) {
   # Merge by human_symbol
   atlas <- merge(atlas, liana_summary, by.x = "human_symbol", by.y = "gene", all.x = TRUE)
   cat("After LIANA merge:", nrow(atlas), "x", ncol(atlas), "\n")
-  cat("  Genes with LIANA data:", sum(!is.na(atlas$liana_n_diff_interactions)), "\n")
+  cat("  Genes with LIANA data:", sum(!is.na(atlas$liana_n_as_ligand)), "\n")
 } else {
   cat("WARNING: LIANA file not found:", LIANA_FILE, "\n")
 }
@@ -297,8 +303,12 @@ if ("cross_species_promoter_conserved" %in% names(atlas))
 atlas[, src6_spatial := !is.na(spatial_is_svg) & spatial_is_svg == TRUE]
 
 # Source 7: Single-cell transcriptomic
+# LIANA channel: `liana_n_diff_interactions` was dropped 2026-07-04 (audit F1a);
+# use the retained per-gene differential ligand/receptor flags (a differential
+# interaction == being a differential ligand OR receptor, the same set).
 atlas[, src7_singlecell := (!is.na(sc_best_padj) & sc_best_padj < 0.05) |
-                            (!is.na(liana_n_diff_interactions) & liana_n_diff_interactions > 0)]
+                            (!is.na(liana_is_diff_ligand) & liana_is_diff_ligand) |
+                            (!is.na(liana_is_diff_receptor) & liana_is_diff_receptor)]
 
 # Compute sources_active_legacy_v1 (0-7) — same algebra as pre-2026-05-22
 # T0.3 (2026-04-22): force integer output. NA booleans -> FALSE -> 0. Defensive

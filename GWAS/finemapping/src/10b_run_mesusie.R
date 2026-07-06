@@ -27,7 +27,10 @@ FM_DIR <- Sys.getenv("FM_DIR",
 
 source(file.path(FM_DIR, "src/finemapping_functions.R"))
 
-SHARED_LOCI_FILE <- file.path(FM_DIR, "results/susiex/shared_loci.csv")
+# SHARED_LOCI_FILE overrides the default enzyme loci table (MVP runner points it
+# at results/susiex_mvp/shared_loci.csv).
+SHARED_LOCI_FILE <- Sys.getenv("SHARED_LOCI_FILE",
+  unset = file.path(FM_DIR, "results/susiex/shared_loci.csv"))
 MESUSIE_RESULTS_SUFFIX <- Sys.getenv("MESUSIE_RESULTS_SUFFIX", unset = "")
 OUTPUT_BASE      <- file.path(FM_DIR, paste0("results/mesusie", MESUSIE_RESULTS_SUFFIX))
 MESUSIE_L        <- 10L
@@ -35,20 +38,47 @@ LD_REGULARIZE    <- 1e-3
 MIN_SNPS         <- 50L
 
 # ---------------------------------------------------------------------------
-# Per-ancestry registry
+# Per-ancestry registry. Legacy enzyme cohort resolves study+N from these
+# fixed templates/constants. AMR is MVP-only (no enzyme template): its study
+# name and N come from the GWAS registry (see build_study_path / registry).
 # ---------------------------------------------------------------------------
 ANCESTRY_REGISTRY <- list(
   EUR = list(template = "UKBB_{trait}",         n = 343850),
   EAS = list(template = "BBJ_{trait}",          n = 160000),
   AFR = list(template = "PanUKBB_AFR_{trait}",  n = 6636),
-  SAS = list(template = "PanUKBB_CSA_{trait}",  n = 8876)
+  SAS = list(template = "PanUKBB_CSA_{trait}",  n = 8876),
+  AMR = list(template = NA_character_,          n = NA_real_)
 )
 
-build_study_path <- function(anc, trait) {
+# GWAS registry lookup for the MVP cohort (per-stratum study name + N_tot).
+load_gwas_registry <- function() {
+  path   <- file.path(FM_DIR, "config/gwas_registry.tsv")
+  lines  <- readLines(path)
+  active <- lines[!grepl("^\\s*#", lines) & nchar(trimws(lines)) > 0]
+  fread(text = paste(active, collapse = "\n"), sep = "\t")
+}
+GWAS_REGISTRY <- load_gwas_registry()
+
+build_study_path <- function(anc, trait, cohort = "legacy") {
+  if (identical(cohort, "MVP")) {
+    study <- paste0("MVP_", trait, "_", anc)
+    row   <- GWAS_REGISTRY[study_name == study]
+    if (nrow(row) == 1) {
+      return(list(study = study,
+                  path  = file.path(FM_DIR, row$sumstats_path[1]),
+                  n     = as.numeric(row$N_tot[1])))
+    }
+    # Not in registry (e.g. MVP_Cirrhosis_EAS absent) — return a non-existent
+    # path so the loader drops the arm gracefully.
+    return(list(study = study,
+                path  = file.path(FM_DIR, paste0("data/sumstats/", study, "_reformatted_hg19.tsv")),
+                n     = NA_real_))
+  }
   template <- ANCESTRY_REGISTRY[[anc]]$template
-  study <- gsub("\\{trait\\}", trait, template)
+  study    <- gsub("\\{trait\\}", trait, template)
   list(study = study,
-       path  = file.path(FM_DIR, paste0("data/sumstats/", study, "_reformatted_hg19.tsv")))
+       path  = file.path(FM_DIR, paste0("data/sumstats/", study, "_reformatted_hg19.tsv")),
+       n     = ANCESTRY_REGISTRY[[anc]]$n)
 }
 
 get_active_ancestries <- function() {
@@ -80,6 +110,8 @@ chrom      <- as.integer(locus$chr)
 win_start  <- as.integer(locus$window_start)
 win_end    <- as.integer(locus$window_end)
 trait_pair <- locus$trait_pair
+# cohort: "MVP" (within-MVP multi-ancestry) vs legacy enzyme UKBB<->BBJ.
+cohort     <- if ("cohort" %in% names(locus)) as.character(locus$cohort) else "legacy"
 
 ancestries <- get_active_ancestries()
 
@@ -128,9 +160,9 @@ load_sumstats_window <- function(study, path, chr, start, end) {
   ss
 }
 
-ss_per_anc <- list(); study_per_anc <- list()
+ss_per_anc <- list(); study_per_anc <- list(); n_per_anc <- list()
 for (anc in ancestries) {
-  bp <- build_study_path(anc, trait_pair)
+  bp <- build_study_path(anc, trait_pair, cohort)
   ss <- load_sumstats_window(bp$study, bp$path, chrom, win_start, win_end)
   if (is.null(ss) || nrow(ss) < MIN_SNPS) {
     cat(sprintf("  [%s] dropped (only %d variants)\n", anc,
@@ -139,6 +171,7 @@ for (anc in ancestries) {
   }
   ss_per_anc[[anc]] <- ss
   study_per_anc[[anc]] <- bp$study
+  n_per_anc[[anc]] <- bp$n
 }
 if (length(ss_per_anc) < 2) {
   cat(sprintf("  Fewer than 2 viable arms (%s) — skipping\n",
@@ -182,7 +215,7 @@ for (anc in names(ss_per_anc)) {
                  error = function(e) { cat("    Error:", conditionMessage(e), "\n"); NULL })
   if (is.null(ld)) {
     cat(sprintf("  [%s] LD load failed — dropping arm\n", anc))
-    ss_per_anc[[anc]] <- NULL; study_per_anc[[anc]] <- NULL
+    ss_per_anc[[anc]] <- NULL; study_per_anc[[anc]] <- NULL; n_per_anc[[anc]] <- NULL
     next
   }
   ld_per_anc[[anc]] <- ld
@@ -322,7 +355,7 @@ for (anc in names(ss_final)) {
     Beta = beta,
     Se   = se,
     Z    = beta / se,
-    N    = ANCESTRY_REGISTRY[[anc]]$n,
+    N    = n_per_anc[[anc]],
     stringsAsFactors = FALSE)
 }
 

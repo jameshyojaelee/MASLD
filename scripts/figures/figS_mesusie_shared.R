@@ -1,9 +1,17 @@
 #!/usr/bin/env Rscript
-# figS_mesusie_shared.R  (2026-06-17)  — Fig 2 supplement (defends para 4)
+# figS_mesusie_shared.R  (2026-07-05)  — Fig 2 supplement (defends para 4)
 # Multi-ancestry joint fine-mapping (meSuSiE) distinguishes causal credible sets
-# SHARED across EUR-EAS from ancestry-SPECIFIC ones. Most loci carry a shared
+# SHARED across ancestries from ancestry-SPECIFIC ones. Most loci carry a shared
 # signal, but a substantial minority are ancestry-restricted — discoverable only
 # with multi-ancestry inference. All numbers from disk.
+#
+# SOURCE (2026-07-05): repointed from the retired enzyme-only EUR/EAS 2-way run
+# (mesusie/mesusie_locus_summary.csv) to the within-MVP N-way cross-ancestry run
+# (mesusie_mvp/mesusie_locus_summary_mvp.csv; EUR/AFR/AMR/EAS, 7 MVP traits). The
+# per-credible-set ancestry composition is now encoded as one n_cs_<combo> column
+# per ancestry combination (e.g. n_cs_EUR, n_cs_AFR, n_cs_AMR = single-ancestry;
+# n_cs_EUR_AFR, n_cs_EUR_AFR_AMR, ... = multi-ancestry "shared"). We split them
+# programmatically by token count so the panel is robust to which combos appear.
 #
 # Out: figures/main/fig2_genetics/panels/mesusie_shared_specific.pdf (+ source CSV)
 suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
@@ -13,34 +21,70 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG3_DIR, "panels")
 
-ml <- fread(file.path(BASE, "GWAS/finemapping/results/mesusie/mesusie_locus_summary.csv"))
-sh <- sum(ml$n_cs_shared, na.rm = TRUE); eu <- sum(ml$n_cs_eur, na.rm = TRUE); ea <- sum(ml$n_cs_eas, na.rm = TRUE)
-tot <- sh + eu + ea
-nloci <- nrow(ml); nshared_loci <- sum(ml$n_cs_shared > 0, na.rm = TRUE)
+ml <- fread(file.path(BASE, "GWAS/finemapping/results/mesusie_mvp/mesusie_locus_summary_mvp.csv"))
+ml <- ml[converged == TRUE]
 
-dec <- data.table(type = c("Shared EUR-EAS", "EUR-only", "EAS-only"), n = c(sh, eu, ea))
-dec[, type := factor(type, levels = c("EAS-only", "EUR-only", "Shared EUR-EAS"))]
+# --- split n_cs_<combo> columns into single-ancestry-specific vs multi-ancestry shared
+ncs_cols  <- grep("^n_cs_", names(ml), value = TRUE)
+n_token   <- vapply(sub("^n_cs_", "", ncs_cols),
+                    function(x) length(strsplit(x, "_")[[1]]), integer(1))
+spec_cols <- ncs_cols[n_token == 1]        # e.g. n_cs_EUR / n_cs_AFR / n_cs_AMR
+shar_cols <- ncs_cols[n_token >= 2]        # any credible set spanning >= 2 ancestries
+
+# per-locus shared/specific CS counts (for the loci-level summary)
+ml[, shared_n := rowSums(as.matrix(.SD), na.rm = TRUE), .SDcols = shar_cols]
+ml[, spec_n   := rowSums(as.matrix(.SD), na.rm = TRUE), .SDcols = spec_cols]
+nloci        <- nrow(ml)
+nshared_loci <- sum(ml$shared_n > 0)
+amr_cols     <- ncs_cols[grepl("AMR", ncs_cols)]
+ml[, amr_n := rowSums(as.matrix(.SD), na.rm = TRUE), .SDcols = amr_cols]
+n_amr_loci   <- sum(ml$amr_n > 0)
+
+# credible-set totals: one aggregate "Shared" bar + one bar per single ancestry
+sh        <- sum(unlist(ml[, ..shar_cols]), na.rm = TRUE)
+spec_tot  <- vapply(spec_cols, function(c) sum(ml[[c]], na.rm = TRUE), numeric(1))
+spec_anc  <- sub("^n_cs_", "", spec_cols)                       # EUR / AFR / AMR
+tot       <- sh + sum(spec_tot)
+
+dec <- rbindlist(c(
+  list(data.table(type = "Shared (≥2 ancestries)", n = sh, key_anc = "Shared")),
+  lapply(seq_along(spec_cols), function(i)
+    data.table(type = paste0(spec_anc[i], "-specific"), n = spec_tot[i], key_anc = spec_anc[i]))
+))
 dec[, pct := 100 * n / tot]
-dec_cols <- c("Shared EUR-EAS" = "#00695C", "EUR-only" = "#1565C0", "EAS-only" = "#E68A2E")
+# order: single-ancestry bars first (ascending n), Shared last -> plotted at the
+# TOP (ggplot maps the last factor level to the top of a horizontal bar).
+dec[, is_shared := as.integer(key_anc == "Shared")]
+setorder(dec, is_shared, n)
+dec[, type := factor(type, levels = type)]
+dec[, is_shared := NULL]
+
+# colours: shared = teal; single-ancestry bars = ANCESTRY_COLORS (EUR/AFR/AMR/EAS)
+dec_cols <- c("Shared" = "#00695C", ANCESTRY_COLORS)
+names(dec_cols)[1] <- "Shared"
+fill_map <- setNames(dec_cols[dec$key_anc], dec$type)
 
 p <- ggplot(dec, aes(n, type, fill = type)) +
   geom_col(width = 0.66) +
   geom_text(aes(label = sprintf("%d  (%.0f%%)", n, pct)), hjust = -0.12, size = 2.8, color = "grey15") +
-  scale_fill_manual(values = dec_cols, guide = "none") +
-  scale_x_continuous(limits = c(0, 1.18 * sh), expand = expansion(mult = c(0, 0))) +
+  scale_fill_manual(values = fill_map, guide = "none") +
+  scale_x_continuous(limits = c(0, 1.18 * max(dec$n)), expand = expansion(mult = c(0, 0))) +
   labs(x = "meSuSiE credible sets", y = NULL,
        title = "Shared vs ancestry-specific causal signals",
-       subtitle = sprintf("%d EUR-EAS loci jointly fine-mapped; %d (%.0f%%) carry >=1 shared credible set",
-                          nloci, nshared_loci, 100 * nshared_loci / nloci)) +
+       subtitle = sprintf("%d MVP loci; %d (%.0f%%) carry >=1 shared credible set; %d involve AMR",
+                          nloci, nshared_loci, 100 * nshared_loci / nloci, n_amr_loci)) +
   theme_masld(base_size = 9) +
   theme(plot.title = element_text(size = 9, face = "bold"),
         plot.subtitle = element_text(size = 5.8, color = "grey35"),
-        axis.text.y = element_text(size = 8, face = "bold"))
+        axis.text.y = element_text(size = 8))
 
 save_fig(p, file.path(PANEL_DIR, "mesusie_shared_specific.pdf"),
          width = fig_col_width * 1.05, height = 2.2)
 
 fwrite(dec[order(-n), .(type, n, pct = round(pct, 1))],
        file.path(PANEL_DIR, "mesusie_shared_specific_source.csv"))
-cat(sprintf("[figS meSuSiE] shared=%d eur=%d eas=%d (%.0f%% shared); %d/%d loci shared\n",
-            sh, eu, ea, 100 * sh / tot, nshared_loci, nloci))
+cat(sprintf("[figS meSuSiE MVP] shared CS=%d (%.0f%%); specific CS: %s\n",
+            sh, 100 * sh / tot,
+            paste(sprintf("%s=%d", spec_anc, spec_tot), collapse = " ")))
+cat(sprintf("[figS meSuSiE MVP] loci: %d total; %d with >=1 shared CS; %d only-specific; %d involve AMR\n",
+            nloci, nshared_loci, sum(ml$shared_n == 0 & ml$spec_n > 0), n_amr_loci))
