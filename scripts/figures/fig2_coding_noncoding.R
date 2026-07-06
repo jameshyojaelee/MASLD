@@ -5,15 +5,17 @@
 # Answers the draft's Fig 2C placeholder "[How many noncoding vs coding variants?]".
 # Single horizontal stacked bar over the de-duplicated SuSiE-OR-ABF colocalization set
 # (best PP.H4 > 0.5 per gene), segmented by the VEP CONSEQUENCE of that gene's strongest
-# COLOC lead SNP (NOT a TSS-distance cut). Headline: only 59/1,527 (3.9%) colocalizing genes
-# are coding-led; ~96% act through non-coding regulatory sequence -> motivates the
-# expression-mediated effector model (and the coding class deferred to later figs).
+# COLOC lead SNP (NOT a TSS-distance cut). Headline (MAIN, Tier-1/2): only ~34/1,031 (~3%)
+# colocalizing genes are coding-led; ~97% act through non-coding regulatory sequence ->
+# motivates the expression-mediated effector model (coding class deferred to later figs).
 #
-# 2026-06-25: switched from SuSiE-only (736) to the de-duped SuSiE-OR-ABF union (1,527) so the
+# 2026-06-25: switched from SuSiE-only to the de-duped SuSiE-OR-ABF union so the
 #             denominator MATCHES Fig2G (ancestry specificity, also SuSiE/ABF). Per-gene
 #             consequence = the fine_class of the gene's max-PP.H4 colocalization.
-# 2026-07-04: portfolio rebuilt with MVP (23->50 GWAS); union grew 751->1,527, coding 26->59.
-#             All counts recomputed from disk, so the plot tracks the rebuild automatically.
+# 2026-07-04: portfolio rebuilt with MVP (23->50 GWAS).
+# 2026-07-06: scoped to the Tier-1/2 MAIN strata only (placement=="main"); union drops from
+#             the full-portfolio 1,527 to the MAIN 1,031 (coding 59->34). All counts recomputed
+#             from disk, so the plot tracks the restriction automatically.
 # Data: RNA-seq/results/coloc_variant_classes/coloc_variant_annotation.csv (per-gene/GWAS,
 #       carries pp4_susie/pp4_abf/pp4_best + fine_class/coarse_class).
 # Out : figures/main/fig2_genetics/panels/Fig2C_coding_noncoding_split.pdf (+ source CSV)
@@ -28,6 +30,13 @@ DAT <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
 
 # de-duped SuSiE U ABF: one row per gene = its strongest colocalization (max best PP.H4)
 av <- fread(file.path(DAT, "coloc_variant_annotation.csv"))[!is.na(pp4_best)]
+# MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): keep only variant/gene rows
+# whose driving `study` is a placement=="main" stratum (NAFLD/NASH/PDFF + ALT/AST/GGT);
+# Tier-3/4 supp strata move to a supplementary full-portfolio figure. Keeps the denominator
+# aligned with the MAIN-restricted Fig2G ancestry-specificity panel.
+MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
+  placement == "main", study_name]
+av <- av[study %in% MAIN_STUDIES]
 setorder(av, gene_symbol, -pp4_best)
 best <- av[, .SD[1], by = gene_symbol][pp4_best > 0.5]
 # Merge the single spliceSite gene (1 gene) into coding to simplify the legend and bar

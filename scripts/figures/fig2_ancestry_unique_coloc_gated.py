@@ -5,10 +5,17 @@ Honest variants of Fig2G that gate the "non-EUR-unique" colocalizing genes on th
 genome-wide significance of their colocalizing lead variant in the non-European GWAS
 (audit: scripts/figures/audit_noneur_gws.R -> noneur_gws_audit.csv).
 
-The ungated Fig2G (fig2_ancestry_unique_coloc.py) is LEFT UNTOUCHED. This script adds:
+COLOC SET (2026-07-06): SuSiE-PRIMARY. Colocalization is defined as PP.H4.susie > 0.5
+ONLY (the 473-gene SuSiE-COLOC set), NOT the SuSiE-OR-ABF union that this script used
+before. The ancestry partition (EUR-only / shared / non-EUR-unique) is recomputed on the
+SuSiE set, so the counts here are SMALLER than the retired union panel.
+
+The ungated Fig2G base panel (fig2_ancestry_unique_coloc.py) is RETIRED 2026-07-06
+(indefensible without a non-EUR significance gate); this script produces the gated
+SuSiE-COLOC companions that supersede it:
   GATE=gws         -> p<5e-8   -> Fig2G_ancestry_unique_coloc_GWS.pdf
   GATE=suggestive  -> p<1e-6   -> Fig2G_ancestry_unique_coloc_suggestive.pdf
-Genes that fail the gate stay colocalizing genes but move to a grey
+Genes that fail the gate stay SuSiE-coloc genes but move to a grey
 "non-EUR sub-threshold" tile (they are NOT genome-wide-significant discoveries).
 
 ANCESTRY (2026-07-05): now registry-driven (mirrors gwas_ancestry() in
@@ -33,8 +40,10 @@ import pandas as pd
 
 plt.rcParams.update({"font.family": "sans-serif", "font.sans-serif": ["Helvetica", "Nimbus Sans", "DejaVu Sans"],
                      "pdf.fonttype": 42, "axes.linewidth": 0})
-# consistent across all 3 ancestry-unique figures: Helvetica, all-black text
-TITLE_FS, BODY_FS, TXT = 10.5, 8.5, "black"
+# consistent across all 3 ancestry-unique figures: Helvetica, all-black text.
+# ALL text = 6 pt, non-bold (lab style, 2026-07-06): title AND every tile/caption/number
+# label share one size so nothing outsizes the title (matches the other Fig 2 panels).
+TITLE_FS, BODY_FS, TXT = 6, 6, "black"
 
 GATE = os.environ.get("GATE", "gws")
 THRESH = {"gws": 5e-8, "suggestive": 1e-6}[GATE]
@@ -49,22 +58,33 @@ PANEL_DIR = os.path.join(BASE, "figures/main/fig2_genetics/panels")
 SC = os.path.join(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")
 AUD = os.path.join(BASE, "RNA-seq/results/coloc_variant_classes/noneur_gws_audit.csv")
 REG = os.path.join(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
+TIER = os.path.join(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv")
 
 # ancestry from the GWAS registry (mirrors gwas_ancestry() in load_figure_data.R);
 # retires the hardcoded name-sets, which had no AMR bin and routed MVP strata into EUR.
 _reg = pd.read_csv(REG, sep="\t")
 ANC_MAP = dict(zip(_reg["study_name"], _reg["ancestry"]))
 
+# MAIN (Tier-1/2, liver-specific) allowlist (2026-07-06): keep only placement=="main"
+# strata so the gated non-EUR-unique set MATCHES the MAIN-scoped ungated Fig2G panel and
+# the MAIN-scoped audit (audit_noneur_gws.R). Tier-3/4 supp strata are excluded.
+_tier = pd.read_csv(TIER, sep="\t")
+MAIN_STUDIES = set(_tier.loc[_tier["placement"] == "main", "study_name"])
+
 
 def ancestry(g):
     return ANC_MAP.get(g)
 
 
-# ---- bins (same as the ungated panel) --------------------------------------
+# ---- bins (SuSiE-COLOC set; partition mirrors the retired ungated panel) ----
 df = pd.read_csv(SC)
+df = df[df["gwas_name"].isin(MAIN_STUDIES)].copy()   # MAIN (Tier-1/2) strata only
 df["ancestry"] = df["gwas_name"].map(ancestry)
 df = df[df["ancestry"].notna()].copy()
-df["pp4_best"] = df[["PP.H4.susie", "PP.H4.abf"]].max(axis=1)
+# SuSiE-PRIMARY (2026-07-06): coloc set = PP.H4.susie > 0.5 ONLY (473-gene SuSiE-COLOC
+# set), NOT the former SuSiE-OR-ABF union. NaN PP.H4.susie (SuSiE non-convergence) is
+# excluded by the > 0.5 comparison.
+df["pp4_best"] = df["PP.H4.susie"]
 sig = df[df["pp4_best"] > 0.5]
 by_gene = sig.groupby("gene")["ancestry"].apply(set)
 
@@ -110,7 +130,7 @@ pct = lambda n: 100.0 * n / n_total
 
 # ---- flat treemap: EUR-only / shared / non-EUR sub-threshold / non-EUR-unique
 sizes = [n_eur, n_shared, n_fail, n_pass]
-# light fills so all-black labels stay legible (orange = EAS, matching the ungated panel)
+# light fills so all-black labels stay legible (orange = surviving non-EUR discovery tile)
 cols  = ["#D6DBDE", "#A7B6BE", "#E9ECEE", "#F79268"]   # grey, grey-blue, light-grey, EAS-orange
 W, H = 100.0, 64.0
 rects = squarify.squarify(squarify.normalize_sizes(sizes, W, H), 0, 0, W, H)
@@ -141,17 +161,18 @@ ax.set_xlim(0, W + 30)
 ax.set_ylim(0, H + 12)
 ax.invert_yaxis()
 ax.axis("off")
-ax.set_title(f"Colocalization by ancestry — {GLAB}", fontsize=TITLE_FS,
-             fontweight="bold", color=TXT, loc="left", pad=6)
+ax.set_title(f"SuSiE-COLOC by ancestry — {GLAB}", fontsize=TITLE_FS,
+             fontweight="normal", color=TXT, loc="left", pad=6)
 
 os.makedirs(PANEL_DIR, exist_ok=True)
 out = os.path.join(PANEL_DIR, OUT)
 fig.tight_layout()
 fig.savefig(out, bbox_inches="tight")
 plt.close(fig)
-print(f"[fig2G/{GATE}] wrote {OUT} | EUR-only {n_eur}, shared {n_shared}, "
-      f"non-EUR sub-threshold {n_fail}, non-EUR-unique(gated) {n_pass} [{comp_str}]")
-print(f"CAPTION: Non-EUR-unique colocalizing genes gated on {GLAB} of the colocalizing lead "
-      f"variant in the non-European GWAS (50-GWAS portfolio incl. MVP). Of {len(nonEUR_genes)} "
-      f"non-EUR-unique genes, {n_pass} survive ({comp_str}); the remaining {n_fail} are "
-      f"sub-threshold (coloc.abf on the eQTL cis-window, not GWS).")
+print(f"[fig2G/{GATE}] wrote {OUT} | SuSiE-COLOC (PP.H4.susie>0.5): EUR-only {n_eur}, "
+      f"shared {n_shared}, non-EUR sub-threshold {n_fail}, non-EUR-unique(gated) {n_pass} [{comp_str}]")
+print(f"CAPTION: Non-EUR-unique SuSiE-COLOC genes (PP.H4.susie > 0.5) gated on {GLAB} of the "
+      f"colocalizing lead variant in the non-European GWAS (35 Tier-1/2 liver-specific GWAS incl. "
+      f"MVP NAFLD/ALT/AST). Of {len(nonEUR_genes)} non-EUR-unique genes, {n_pass} survive "
+      f"({comp_str}); the remaining {n_fail} are sub-threshold (SuSiE-coloc but the non-EUR lead "
+      f"variant is not genome-wide significant).")

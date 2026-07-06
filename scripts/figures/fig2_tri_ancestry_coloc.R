@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 # fig2_tri_ancestry_coloc.R  (2026-06-17; redesigned 2026-07-01; MVP 5-ancestry 2026-07-05)  — Fig 2 (defends para 6)
 # Cross-ancestry colocalization of the pan-ancestry-portable effector genes.
+# Scoped 2026-07-06 to the Tier-1/2 (liver-specific) MAIN strata only.
 # Eligibility: PP.H4 > 0.5 in >=3 of the 5 tested ancestry panels (EUR/AFR/AMR/EAS/SAS,
-# 50-GWAS portfolio incl. MVP), ranked by overall convergence evidence
+# 35 Tier-1/2 GWAS incl. MVP NAFLD/ALT/AST), ranked by overall convergence evidence
 # (RNA-seq/results/multi_evidence/convergence_evidence.csv) so the headline genes are the
 # most manuscript-relevant, not just the 3 liver-enzyme genes (RORA/EPHA2/GGT1) that
 # happened to be hand-picked originally. Filename kept as *_tri_* for assembly-ref
@@ -26,8 +27,13 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG3_DIR, "panels")
 
 sc <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
-# ancestry + trait from the GWAS registry (50-GWAS portfolio incl. MVP) — NOT the
-# retired grepl() heuristics. The old anc() dropped every MVP stratum into EUR (and
+# MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): placement=="main" strata only
+# (NAFLD/NASH/PDFF + ALT/AST/GGT); Tier-3/4 supp strata move to a supplementary figure.
+MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
+  placement == "main", study_name]
+sc <- sc[gwas_name %in% MAIN_STUDIES]
+# ancestry + trait from the GWAS registry (Tier-1/2 portfolio incl. MVP NAFLD/ALT/AST) —
+# NOT the retired grepl() heuristics. The old anc() dropped every MVP stratum into EUR (and
 # had no AMR bin); the old trait() collapsed ChronLiver/Cirrhosis/Albumin/Platelet
 # all into "NAFLD". gwas_ancestry()/gwas_trait() are registry-driven (load_figure_data.R).
 sc[, ancestry := as.character(gwas_ancestry(gwas_name))]
@@ -132,7 +138,7 @@ save_fig(p, file.path(PANEL_DIR, "Fig2F_rora_tri_ancestry_coloc.pdf"),
 n_secondary <- m[status == "secondary_signal", .N]
 n_no_coloc  <- m[status == "no_coloc", .N]
 message(sprintf(
-  "CAPTION (Fig2F): Cross-ancestry colocalization of the %d most convergence-relevant pan-ancestry-portable effector genes (PP.H4 > 0.5 in >=3/5 ancestry panels; ranked by overall multi-evidence convergence score). Point shape = ancestry panel (EUR/AFR/AMR/EAS/SAS across the 50-GWAS portfolio); position = max eQTL-GWAS colocalization posterior across tested liver/enzyme traits. Dark teal = colocalizes within 10kb of the EUR discovery lead variant (same causal signal); amber = colocalizes but >=10kb away (distinct secondary signal, n=%d); gray = does not colocalize (n=%d).",
+  "CAPTION (Fig2F): Cross-ancestry colocalization of the %d most convergence-relevant pan-ancestry-portable effector genes (PP.H4 > 0.5 in >=3/5 ancestry panels; ranked by overall multi-evidence convergence score). Point shape = ancestry panel (EUR/AFR/AMR/EAS/SAS across the 35 Tier-1/2 (liver-specific) GWAS); position = max eQTL-GWAS colocalization posterior across tested liver/enzyme traits. Dark teal = colocalizes within 10kb of the EUR discovery lead variant (same causal signal); amber = colocalizes but >=10kb away (distinct secondary signal, n=%d); gray = does not colocalize (n=%d).",
   length(GENES), n_secondary, n_no_coloc))
 
 fwrite(m[order(gene, ancestry), .(gene, ancestry, PP_H4 = round(best, 4),

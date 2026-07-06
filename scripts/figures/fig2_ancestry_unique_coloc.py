@@ -8,7 +8,7 @@ small non-EUR categories still get a labeled tile instead of an invisible sliver
 
   Top level : EUR-only / EUR+non-EUR (shared) / non-EUR-unique
   The non-EUR-unique tile is subdivided by ancestry: EAS / AFR / SAS / AMR / multiple non-EUR
-  (50-GWAS portfolio incl. MVP; AMR added 2026-07-05).
+  (35 Tier-1/2 liver-specific GWAS incl. MVP NAFLD/ALT/AST; scoped to MAIN strata 2026-07-06).
 
 Purely GWAS x eQTL colocalization (no RNA-seq disease signal) -> safe before Fig 3.
 Colocalization = best PP.H4 > 0.5 (SuSiE with ABF fallback, since SuSiE cannot
@@ -36,6 +36,7 @@ BASE = os.environ.get("MASLD_PROJECT_ROOT",
 PANEL_DIR = os.path.join(BASE, "figures/main/fig2_genetics/panels")
 SC = os.path.join(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")
 REG = os.path.join(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
+TIER = os.path.join(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv")
 
 # ancestry from the GWAS registry (SINGLE SOURCE OF TRUTH). The .py panels cannot
 # source load_figure_data.R, so mirror its registry-driven gwas_ancestry() here.
@@ -45,6 +46,12 @@ REG = os.path.join(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
 _reg = pd.read_csv(REG, sep="\t")
 ANC_MAP = dict(zip(_reg["study_name"], _reg["ancestry"]))
 
+# MAIN (Tier-1/2, liver-specific) allowlist (2026-07-06): keep only placement=="main"
+# strata (NAFLD/NASH/PDFF + ALT/AST/GGT); the Tier-3/4 supp strata (MVP Cirrhosis/
+# ChronLiver/Albumin/Platelet) move to a supplementary full-portfolio figure.
+_tier = pd.read_csv(TIER, sep="\t")
+MAIN_STUDIES = set(_tier.loc[_tier["placement"] == "main", "study_name"])
+
 
 def ancestry(g):
     return ANC_MAP.get(g)
@@ -52,6 +59,7 @@ def ancestry(g):
 
 # ---- data: per-gene ancestry set -> specificity bin ------------------------
 df = pd.read_csv(SC)
+df = df[df["gwas_name"].isin(MAIN_STUDIES)].copy()   # MAIN (Tier-1/2) strata only
 df["ancestry"] = df["gwas_name"].map(ancestry)
 df = df[df["ancestry"].notna()].copy()
 df["pp4_best"] = df[["PP.H4.susie", "PP.H4.abf"]].max(axis=1)
@@ -138,17 +146,20 @@ ax.set_title("Colocalization by ancestry (SuSiE or ABF)", fontsize=TITLE_FS,
 os.makedirs(PANEL_DIR, exist_ok=True)
 out = os.path.join(PANEL_DIR, "Fig2G_ancestry_unique_coloc.pdf")
 fig.tight_layout()
-fig.savefig(out, bbox_inches="tight")
+# ---- base ungated Fig2G RETIRED 2026-07-06 ---------------------------------
+# The ungated base panel counts ALL non-EUR-unique coloc genes with NO non-EUR
+# significance gate, which is indefensible (a coloc can score PP.H4 > 0.5 on a
+# sub-threshold non-EUR signal). Its output is DISABLED so the retired PDF is not
+# regenerated; the retired PDF is archived at
+#   figures/main/fig2_genetics/panels/_archive/RETIRED_Fig2G_ancestry_unique_coloc_base.pdf
+# Use the GWS/suggestive gated SuSiE-COLOC panels instead
+#   (scripts/figures/fig2_ancestry_unique_coloc_gated.py).
+# fig.savefig(out, bbox_inches="tight")
+# pd.DataFrame({"bin": ["EUR only", "EUR + non-EUR (shared)", "EAS only", "AFR only",
+#                       "SAS only", "AMR only", "multiple non-EUR"],
+#               "n": [n_eur, n_shared, eas, afr, sas, amr, multi]}).to_csv(
+#     os.path.join(PANEL_DIR, "Fig2G_ancestry_unique_coloc_source.csv"), index=False)
 plt.close(fig)
-
-pd.DataFrame({"bin": ["EUR only", "EUR + non-EUR (shared)", "EAS only", "AFR only",
-                      "SAS only", "AMR only", "multiple non-EUR"],
-              "n": [n_eur, n_shared, eas, afr, sas, amr, multi]}).to_csv(
-    os.path.join(PANEL_DIR, "Fig2G_ancestry_unique_coloc_source.csv"), index=False)
-print(f"[fig2G] wrote {out} | {n_total} coloc genes; {n_unique} non-EUR-unique "
-      f"(EAS {eas}/AFR {afr}/SAS {sas}/AMR {amr}/multi {multi}); EUR-only {n_eur}, shared {n_shared}")
-print(f"CAPTION (Fig2G): Ancestry specificity of {n_total} colocalizing MASLD effector genes "
-      f"(best PP.H4 > 0.5; SuSiE with ABF fallback; 50-GWAS portfolio incl. MVP). Area = gene count. "
-      f"{n_unique} ({pct(n_unique):.0f}%) colocalize ONLY in non-European ancestries "
-      f"(EAS {eas}/AFR {afr}/SAS {sas}/AMR {amr}/multi {multi}) and would be missed by a "
-      f"European-only analysis; {n_shared} shared with EUR; {n_eur} EUR-only.")
+print("[fig2G] BASE UNGATED PANEL RETIRED 2026-07-06 — output disabled; "
+      "use the GWS/suggestive gated SuSiE-COLOC panels "
+      "(fig2_ancestry_unique_coloc_gated.py) instead.")

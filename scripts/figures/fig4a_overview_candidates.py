@@ -10,9 +10,15 @@ Fig 4 is the paper's *validation* tier. Validation LOGIC (locked with the PI
         TREAT set (1,918 DEGs) is RNA-seq's OWN confidence spine and is kept as a
         highlighted "confident core"; validation is deliberately run on the looser
         significance set so modest-but-real DEGs a 2nd assay confirms aren't lost.
-      - GWAS-COLOC genes (best PP.H4>0.5; 1,234 on the MVP 50-GWAS portfolio, was
-        618 pre-MVP). Co-equal genetic axis.
-    Union universe = 13,552 (671 shared).
+      - GWAS-COLOC genes (best PP.H4>0.5). MAIN render = the LIVER-SPECIFIC
+        Tier-1/2 portfolio only: the 35 strata flagged placement=="main" in
+        GWAS/finemapping/config/gwas_trait_tier.tsv (direct MASLD/NAFLD/NASH/PDFF
+        + liver-enzyme ALT/AST/GGT across ancestries) -> 862 COLOC genes. The
+        distal/non-specific Tier-3/4 strata (MVP ChronLiver/Cirrhosis/Albumin/
+        Platelet) are DROPPED. Co-equal genetic axis.
+    Union universe = 13,390 (461 shared). The full 50-GWAS portfolio (COLOC 1,234,
+    universe 13,552; adds Tier-3/4) is emitted as a labeled SUPP/sensitivity render
+    (FIG4A_KEEP_TIER34=1 -> the same panels with a _supp_full50gwas suffix).
   * VALIDATED by a lens = BOTH-SIGNIFICANT, direction-AGNOSTIC: in the target
     universe AND significant in that modality's disease contrast. Direction is an
     ANNOTATION not a filter (a gene up-in-RNA/down-in-protein, if significant in
@@ -33,6 +39,10 @@ encodes a real count. ALL text black, font size 6, NO bold; color on marks only.
   build_cascade -> fig4a_overview_cascade.pdf   (Fig 2A-style alluvial funnel).
   This is the SELECTED Fig 4A overview; the rings / upset / pyramid / funnel
   candidates were cut 2026-07-02 (user chose the alluvial cascade).
+
+  MAIN render (default, Tier-1/2 COLOC) -> fig4a_overview_{cascade,enrichment,upset}.pdf.
+  SUPP render (FIG4A_KEEP_TIER34=1, full 50-GWAS COLOC) -> the same panels with a
+  _supp_full50gwas suffix, so the sensitivity variant NEVER overwrites the main PDFs.
 
 Numbers computed live by compute_counts() from the canonical sources and asserted
 against the values locked 2026-07-01. Env: rnaseq python (needs pandas). matplotlib
@@ -65,14 +75,18 @@ COLOC_CSV = os.path.join(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_
 COLOC_PERTRAIT = os.path.join(BASE,
     "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")
 
-# Tier-3/4 GWAS traits dropped from the paper (user 2026-07-06): the COLOC arm of
-# the prioritized universe excludes genes whose colocalization is only supported by
-# Albumin / Platelet. We RE-COMPUTE each gene's best abf PP.H4 over the RETAINED
-# traits (so a gene rescued by a second-best liver/enzyme trait is kept) rather than
-# naively dropping best-trait==Albumin/Platelet. Set FIG4A_KEEP_TIER34=1 to revert
-# to the all-50-trait canonical (coloc_best_pp4). Full-trait coloc = 1,234;
-# tier-1/2 (drop Albumin+Platelet) = 892. Keep this pattern identical to fig2.
-EXCLUDE_TRAIT_RE = r"Albumin|Platelet"
+# Tier-1/2 vs Tier-3/4 GWAS portfolio (canonical tier map, 2026-07-06). The MAIN
+# render restricts the COLOC arm to the LIVER-SPECIFIC Tier-1/2 portfolio: the 35
+# strata flagged placement=="main" in gwas_trait_tier.tsv (direct MASLD + liver
+# enzymes). We RE-COMPUTE each gene's best abf PP.H4 over ONLY those main strata (so
+# a gene rescued by a second-best liver/enzyme trait survives), which drops the
+# distal/non-specific Tier-3/4 strata (MVP ChronLiver, Cirrhosis, Albumin, Platelet).
+# Tier-1/2 coloc = 862 (identical to gene_level_coloc_tier12.csv coloc_best_abf_pp4>0.5).
+# Set FIG4A_KEEP_TIER34=1 to REVERT to the all-50-GWAS canonical (coloc_best_pp4 =
+# 1,234) -> the labeled SUPP/sensitivity render. NOTE: placement=="main" is STRICTER
+# than the old Albumin/Platelet-only regex, which retained Tier-3 ChronLiver/Cirrhosis
+# and gave 891.
+GWAS_TIER = os.path.join(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv")
 
 # -- Canonical palette (single source of truth) -------------------------------
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -101,28 +115,37 @@ plt.rcParams.update({
 
 DEG_HEADLINE = 1918   # TREAT confident set (lfc=0.25); RNA-seq's own spine
 
-# Values re-locked 2026-07-05 for the MVP 50-GWAS COLOC expansion: coloc PP.H4>0.5
-# grew 618->1,234 (universe 13,271->13,552), nudging the validated counts (proteo
-# 218->221, scATAC 334->343, >=1-lens 644->656). E1b remediation PRESERVED — spatial
-# S_val=111 and >=2-lens=19 are UNCHANGED because the CosMx cell-level exclusion is
-# coded, not locked. E1b context: the CosMx cosmx_*_mash_padj columns carry NO valid
-# cell-level p (pseudoreplication over ~297K cells nested in 4 slides; A6 fix —
-# slide-level DIRECTION only), so the spatial gate drops the cell-level CosMx-hep
-# column (S_val had collapsed 639->111; ge1 1144->644, ge2 47->19 at that fix).
+# Values re-locked 2026-07-06 for the Tier-1/2 (liver-specific) MAIN render: the COLOC
+# arm is restricted to the 35 placement=="main" strata (direct MASLD + liver enzymes),
+# recomputed best-abf-over-main -> coloc PP.H4>0.5 = 862 (universe 13,390), dropping the
+# distal Tier-3/4 strata (ChronLiver/Cirrhosis/Albumin/Platelet). The full 50-GWAS
+# portfolio (coloc 1,234, universe 13,552) is the SUPP/sensitivity render
+# (FIG4A_KEEP_TIER34=1), which DELIBERATELY drifts vs this LOCK. E1b remediation
+# PRESERVED — spatial S_val=111, >=2-lens=19 and all-3=0 are UNCHANGED from the full
+# portfolio because the convergent core is robust to the COLOC scope (the CosMx cell-
+# level exclusion is coded, not locked). E1b context: the CosMx cosmx_*_mash_padj
+# columns carry NO valid cell-level p (pseudoreplication over ~297K cells nested in 4
+# slides; A6 fix — slide-level DIRECTION only), so the spatial gate drops the cell-level
+# CosMx-hep column (S_val had collapsed 639->111 at that fix).
 LOCK = dict(
-    substrate=12989, coloc=1234, coloc_only=563, coloc_shared=671, universe=13552,
+    substrate=12989, coloc=862, coloc_only=401, coloc_shared=461, universe=13390,
     confident=1915,
-    P_meas=3509, P_val=221, P_conv=18,
-    S_meas=7311, S_val=111, S_conv=12,
-    A_meas=766,  A_val=343, A_conv=8,
-    ge1=656, ge2=19, all3=0,
+    P_meas=3450, P_val=220, P_conv=18,
+    S_meas=7197, S_val=111, S_conv=12,
+    A_meas=755,  A_val=337, A_conv=8,
+    ge1=649, ge2=19, all3=0,
     PS=11, PA=7, SA=1,
-    P_only=203, S_only=99, A_only=335,
+    P_only=202, S_only=99, A_only=329,
     # per-dataset validators for the named-dataset alluvial (tier-1/2 universe;
     # fallback only — the live values track compute_counts / the active COLOC scope)
-    P_liver_meas=3345, P_liver_val=169, P_plasma_meas=1940, P_plasma_val=71,
-    S_vis_meas=163, S_geomx_meas=7161,
+    P_liver_meas=3342, P_liver_val=169, P_plasma_meas=1938, P_plasma_val=71,
+    S_vis_meas=163, S_geomx_meas=7151,
 )
+# MAIN (Tier-1/2) writes the canonical fig4a_overview_*.pdf; the full-50-GWAS SUPP
+# render (FIG4A_KEEP_TIER34=1) appends a _supp_full50gwas suffix so it never overwrites
+# the main PDFs (applied centrally in _save()).
+SUPP_FULL50 = bool(os.environ.get("FIG4A_KEEP_TIER34"))
+OUT_SUFFIX  = "_supp_full50gwas" if SUPP_FULL50 else ""
 
 
 # -- Data ---------------------------------------------------------------------
@@ -145,17 +168,23 @@ def compute_counts():
         treat   = set(d.loc[d["treat_fdr"] < 0.05, "sym"])
 
         if os.environ.get("FIG4A_KEEP_TIER34"):
+            # SUPP/sensitivity: full 50-GWAS canonical (best PP.H4 over ALL traits).
             gl = pd.read_csv(COLOC_CSV)
             coloc = set(gl.loc[gl["coloc_best_pp4"] > 0.5, "gene"])
+            print(f"[compute_counts] COLOC full 50-GWAS canonical: {len(coloc)} genes "
+                  "(SUPP/sensitivity render)")
         else:
-            # tier-1/2 portfolio: recompute best abf PP.H4 over RETAINED traits
-            # (drop Albumin/Platelet), so second-best liver/enzyme rescues survive.
+            # MAIN: Tier-1/2 liver-specific portfolio. Recompute best abf PP.H4 over
+            # ONLY the placement=="main" strata (drops Tier-3/4 ChronLiver/Cirrhosis/
+            # Albumin/Platelet), so a gene rescued by a second-best liver/enzyme trait
+            # survives. Identical to gene_level_coloc_tier12.csv coloc_best_abf_pp4>0.5.
+            tier = pd.read_csv(GWAS_TIER, sep="\t")
+            main = set(tier.loc[tier["placement"] == "main", "study_name"])
             pt = pd.read_csv(COLOC_PERTRAIT, usecols=["gwas_name", "gene", "PP.H4.abf"])
-            keep = ~pt["gwas_name"].str.contains(EXCLUDE_TRAIT_RE, case=False, na=False)
-            best = pt.loc[keep].groupby("gene")["PP.H4.abf"].max()
+            best = pt.loc[pt["gwas_name"].isin(main)].groupby("gene")["PP.H4.abf"].max()
             coloc = set(best.index[best > 0.5])
-            print(f"[compute_counts] COLOC tier-1/2 (drop {EXCLUDE_TRAIT_RE}): "
-                  f"{len(coloc)} genes (all-trait canonical = 1234)")
+            print(f"[compute_counts] COLOC Tier-1/2 (placement==main, {len(main)} strata): "
+                  f"{len(coloc)} genes (all-50-GWAS canonical = 1234)")
         coloc = {g for g in coloc if isinstance(g, str) and g}
         target = rna_sig | coloc
         coloc_only = coloc - rna_sig          # orthogonal genetic axis (not RNA-DEG)
@@ -402,6 +431,8 @@ def _ribbon(ax, x0, y0a, y0b, x1, y1a, y1b, color, alpha=0.38):
 
 def _save(fig, name):
     os.makedirs(OUT_DIR, exist_ok=True)
+    if OUT_SUFFIX and name.endswith(".pdf"):   # SUPP full-50 render: never clobber main
+        name = name[:-4] + OUT_SUFFIX + ".pdf"
     p = os.path.join(OUT_DIR, name)
     fig.savefig(p, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -424,8 +455,8 @@ def build_cascade(d):
     only), Vu Visium (replication). Counts are live from compute_counts (so they
     track the active COLOC scope). Proteomics' two DIA-MS datasets OVERLAP, so the
     per-dataset labels show TRUE counts and sum > the proteomics union (noted in
-    the caption); spatial's validator flow is Visium (163), NOT the 7,311 spatial-
-    measured — that 7,311 is 99% GeoMx (0 validated), shown in the orthogonal tier."""
+    the caption); spatial's validator flow is Visium (163), NOT the ~7,200 spatial-
+    measured — that ~99% GeoMx (0 validated) is shown in the orthogonal tier."""
     import matplotlib.colors as mcolors
 
     def tint(hexc, f):                       # lighten a modality hue for sub-nodes
@@ -756,16 +787,22 @@ def build_upset(d, stats):
                            color=(dict((l[0], l[2]) for l in LENS)[L] if filled else "#D9D9D9"),
                            edgecolors="none", zorder=3)
     ax_mat.set_xlim(-0.6, n - 0.4); ax_mat.set_ylim(-0.6, len(order) - 0.4)
-    ax_mat.set_yticks([ymap[l[0]] for l in LENS]); ax_mat.set_yticklabels([l[1] for l in LENS])
-    ax_mat.set_xticks([]); ax_mat.tick_params(length=0, labelsize=FS)
+    ax_mat.set_yticks([]); ax_mat.set_xticks([]); ax_mat.tick_params(length=0)
     for s in ("top", "right", "bottom", "left"):
         ax_mat.spines[s].set_visible(False)
 
-    # ── set-size bars (left, extending leftward), aligned to matrix rows ──
+    # ── set-size bars (extend leftward); modality NAME at far left, COUNT at the
+    #    bar base (right) so neither collides with the dot-matrix rows ──
+    maxsz = max(sz for *_, sz in LENS)
+    ytf = ax_set.get_yaxis_transform()          # x = axes fraction, y = data
     for L, name, col, sz in LENS:
         ax_set.barh(ymap[L], sz, height=0.5, color=col, alpha=0.85, zorder=3)
-        ax_set.text(sz + 8, ymap[L], f"{sz}", ha="left", va="center", color=INK, zorder=6)
-    ax_set.set_ylim(-0.6, len(order) - 0.4); ax_set.invert_xaxis()
+        ax_set.text(0.02, ymap[L], name, transform=ytf, ha="left", va="center",
+                    color=INK, zorder=6)
+        ax_set.text(0.98, ymap[L], f"{sz}", transform=ytf, ha="right", va="center",
+                    color=INK, zorder=6)
+    ax_set.set_ylim(-0.6, len(order) - 0.4)
+    ax_set.set_xlim(0, maxsz * 1.45); ax_set.invert_xaxis()
     ax_set.set_yticks([]); ax_set.set_xticks([])
     for s in ("top", "right", "bottom", "left"):
         ax_set.spines[s].set_visible(False)
@@ -782,7 +819,7 @@ def build_upset(d, stats):
                  fontsize=FS, fontstyle="italic")
     _save(fig, "fig4a_overview_upset.pdf")
     print("[caption:upset] UpSet of the three orthogonal validation lenses on the "
-          "13,552-gene prioritized universe. Bars = exclusive intersection sizes; "
+          f"{d['universe']:,}-gene prioritized universe. Bars = exclusive intersection sizes; "
           "dashed tick = permutation-null expected (seed 42, 10,000 draws). Only "
           "proteomics∩spatial clears its chance marker "
           f"({d['PS']} vs {stats['conv']['PS']['exp']:.1f}, "

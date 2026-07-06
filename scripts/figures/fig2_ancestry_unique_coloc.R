@@ -34,6 +34,10 @@ PANEL_DIR <- file.path(FIG3_DIR, "panels")
 # GWS/suggestive companions). Do NOT run this .R over the .py — the ancestry fix here
 # only guarantees it can't emit a MISLABELED PDF if someone does.
 sc <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+# MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): placement=="main" strata only.
+MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
+  placement == "main", study_name]
+sc <- sc[gwas_name %in% MAIN_STUDIES]
 sc[, ancestry := as.character(gwas_ancestry(gwas_name))]
 sc <- sc[!is.na(ancestry)]
 sc[, pp4_best := pmax(PP.H4.susie, PP.H4.abf, na.rm = TRUE)]   # best of SuSiE/ABF (user-chosen)
@@ -107,12 +111,16 @@ p <- p_strip / p_break + plot_layout(heights = c(1, 2.4)) +
   plot_annotation(title = "Colocalization by ancestry specificity",
                   theme = theme(plot.title = element_text(size = 9, face = "bold")))
 
-save_fig(p, file.path(PANEL_DIR, "Fig2G_ancestry_unique_coloc.pdf"),
-         width = fig_col_width * 1.15, height = 2.9)
-
-fwrite(g[, .N, by = bin][order(-N)], file.path(PANEL_DIR, "Fig2G_ancestry_unique_coloc_source.csv"))
-cat(sprintf("[fig2G/.R legacy] wrote Fig2G_ancestry_unique_coloc.pdf | %d colocalizing genes; %d non-EUR-unique (EAS %d/AFR %d/SAS %d/AMR %d/multi %d)\n",
-            n_total, n_unique, eas, afr, sas, amr, multi))
-message(sprintf("CAPTION (Fig2G): Ancestry specificity of %d colocalizing MASLD effector genes (best PP.H4 > 0.5; SuSiE with ABF fallback; 50-GWAS portfolio incl. MVP). %d (%.0f%%) colocalize ONLY in non-European ancestries (EAS %d / AFR %d / SAS %d / AMR %d / multiple non-EUR %d) and would be missed by a European-only analysis; %d (%.0f%%) are shared with EUR and %d (%.0f%%) are EUR-only.",
-                n_total, n_unique, 100*n_unique/n_total, eas, afr, sas, amr, multi,
-                n_shared, 100*n_shared/n_total, n_eur, 100*n_eur/n_total))
+# ---- base ungated Fig2G RETIRED 2026-07-06 ---------------------------------
+# The ungated base panel counts ALL non-EUR-unique coloc genes with NO non-EUR
+# significance gate, which is indefensible (a coloc can score PP.H4 > 0.5 on a
+# sub-threshold non-EUR signal). Its output is DISABLED so the retired PDF is not
+# regenerated; the retired PDF is archived at
+#   figures/main/fig2_genetics/panels/_archive/RETIRED_Fig2G_ancestry_unique_coloc_base.pdf
+# Use the GWS/suggestive gated SuSiE-COLOC panels instead
+#   (scripts/figures/fig2_ancestry_unique_coloc_gated.py). This .R was already a legacy
+#   duplicate of the canonical .py family.
+# save_fig(p, file.path(PANEL_DIR, "Fig2G_ancestry_unique_coloc.pdf"),
+#          width = fig_col_width * 1.15, height = 2.9)
+# fwrite(g[, .N, by = bin][order(-N)], file.path(PANEL_DIR, "Fig2G_ancestry_unique_coloc_source.csv"))
+cat("[fig2G/.R legacy] BASE UNGATED PANEL RETIRED 2026-07-06 — output disabled; use the gated SuSiE-COLOC panels.\n")

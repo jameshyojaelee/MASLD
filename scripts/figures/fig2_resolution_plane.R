@@ -13,7 +13,7 @@
 # x source = max within-ancestry SuSiE/recommended PIP among the gene's coloc-lead
 #            variants (combined_finemapping.csv). NOT the contested cross-ancestry
 #            SuSiEx max_pip (the "PNPLA3 0.987" artifact) and NOT the coloc-test PIP.
-# y source = max PP.H4.susie across the 50-GWAS portfolio (susie_coloc_all_gwas.csv).
+# y source = max PP.H4.susie across the 35 Tier-1/2 (liver-specific) GWAS (susie_coloc_all_gwas.csv).
 #
 # Output: figures/main/fig2_genetics/panels/Fig2B_PIP_vs_SuSiE-coloc.pdf
 #         figures/main/fig2_genetics/panels/Fig2B_PIP_vs_SuSiE-coloc_source.csv
@@ -34,6 +34,12 @@ dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 # ---------------------------------------------------------------------------
 coloc <- fread(file.path(BASE,
   "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+# MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): keep only placement=="main"
+# strata (NAFLD/NASH/PDFF + ALT/AST/GGT); Tier-3/4 supp strata move to a supplementary
+# full-portfolio figure. y (max PP.H4.susie) is thus computed over the MAIN strata only.
+MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
+  placement == "main", study_name]
+coloc <- coloc[gwas_name %in% MAIN_STUDIES]
 setnames(coloc, c("PP.H4.susie", "PP.H4.abf"), c("pp4_susie", "pp4_abf"), skip_absent = TRUE)
 coloc <- coloc[!is.na(gene) & gene != ""]
 coloc[, pp4_susie := suppressWarnings(as.numeric(pp4_susie))]

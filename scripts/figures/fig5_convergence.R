@@ -438,7 +438,7 @@ deg_contrast_defs <- list(
 # ── Compute convergence score (N independent modalities with evidence) ──────
 # Max = 5. Each modality counted once (0 or 1).
 # Progression is excluded — it is derived from RNA, not an independent source.
-# Mouse is excluded from the convergence count per user request.
+# Mouse is excluded — convergence is human-only 6-channel (no cross-species in atlas paper).
 top_genes[, n_convergence := 0L]
 
 # 1. Human DEG: significant in ≥1 of the 6 RNA contrasts
@@ -689,10 +689,8 @@ mat_twas <- matrix(
   if ("twas_z" %in% names(top_genes)) as.numeric(top_genes$twas_z) else NA,
   ncol = 1, dimnames = list(genes, "TWAS_z"))
 
-# Column 10: Mouse logFC (z-score normalized, same scale as human)
-mat_mouse_z <- matrix(zscore_col(
-  if ("mouse_meta_logFC" %in% names(top_genes)) as.numeric(top_genes$mouse_meta_logFC) else rep(NA, top_n)),
-  ncol = 1, dimnames = list(genes, "mouse_logFC"))
+# (Mouse logFC column removed 2026-07-06 — convergence is human-only 6-channel;
+#  the mouse heatmap was already dead code, absent from both assembled ht_lists.)
 
 # Column 11: Progression score (composite: causal score where available, class-derived otherwise)
 mat_prog <- matrix(
@@ -778,10 +776,6 @@ if (!is.null(drug_val_best)) {
 # ── Significance vectors for DEG stars ───────────────────────────────────────
 # Human DEG significance: bulk_treat_fdr < 0.05 (canonical TREAT; lfc=0.25 floor in test)
 human_sig <- !is.na(top_genes$bulk_treat_fdr) & top_genes$bulk_treat_fdr < 0.05
-# Mouse DEG significance
-mouse_sig <- if ("mouse_meta_padj" %in% names(top_genes)) {
-  !is.na(top_genes$mouse_meta_padj) & top_genes$mouse_meta_padj < 0.05
-} else { rep(FALSE, top_n) }
 
 # ── Color scales (publication_color_themes.R gradients) ──────────────────────
 source(file.path(BASE, "scripts/publication_color_themes.R"))
@@ -818,8 +812,6 @@ ht_opt(
 # mat_deg_z_sig already has NA for non-significant entries (built above)
 # mat_human_z_sig: first column of multi-contrast matrix for backward compat
 mat_human_z_sig <- mat_deg_z_sig[, 1, drop = FALSE]
-mat_mouse_z_sig <- mat_mouse_z
-mat_mouse_z_sig[!mouse_sig, 1] <- NA
 
 # ── Row annotations: convergence bar (left) + optional Primary axis (left). ──────────
 if (FIG5A_LAYOUT == "therapeutic_axes") {
@@ -914,12 +906,7 @@ h_twas <- Heatmap(clamp(mat_twas_signed, -10, 10), name = "TWAS", col = col_twas
   heatmap_legend_param = list(title = "TWAS", title_gp = gpar(fontsize = 7, fontface = "bold"),
     labels_gp = gpar(fontsize = 6.5), legend_height = unit(1.5, "cm"), at = c(-10, 0, 10)))
 
-# Mouse logFC (z-score, * for significant)
-h_mouse <- Heatmap(clamp(mat_mouse_z_sig, -2.5, 2.5), name = "Mouse z", col = col_zscore,
-  column_labels = "Mouse\nlogFC (z)", column_title = "Mouse",
-  cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 12, "mm"), border = TRUE,
-  show_heatmap_legend = FALSE)
+# (Mouse logFC heatmap removed 2026-07-06 — convergence is human-only 6-channel.)
 
 # ATAC/regulatory: ONE dense column — disrupted master-regulator targets (count).
 mat_atac_combined <- mat_mrtarget
@@ -1064,13 +1051,7 @@ if (!is.na(TOPN)) {
     heatmap_legend_param = list(title = "Moran's I", title_gp = gpar(fontsize = 7, fontface = "bold"),
       labels_gp = gpar(fontsize = 6.5), legend_height = unit(1.5, "cm"), at = c(0, 0.05, 0.1, 0.15)))
 
-  t_mou <- t(mat_mouse_z_sig)
-  th_mou <- Heatmap(t_mou, name = "Mouse z", col = col_zscore,
-    row_title = "Mouse", row_labels = "Mouse\nlogFC (z)", height = rh(nrow(t_mou)),
-    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
-    row_names_gp = gpar(fontsize = 6.5, fontfamily = "Helvetica"),
-    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
-    na_col = "white", border = TRUE, width = cw, show_heatmap_legend = FALSE)
+  # (Mouse transposed heatmap removed 2026-07-06 — convergence is human-only 6-channel.)
 
   t_dru <- t(mat_drug)
   th_dru <- Heatmap(t_dru, name = "Clinical", col = col_binary,
@@ -1149,7 +1130,7 @@ draw(ht_list,
 dev.off()
 ht_opt(RESET = TRUE)
 
-n_total_cols <- ncol(mat_genetic) + 1 + 1 + 1 + 1 + 1 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1  # genetic + EAS + prog + pathway + atac(2) + prot(2) + spatial + mouse + CC + sex + clin + drug
+n_total_cols <- ncol(mat_genetic) + 1 + 1 + 1 + 1 + 1 + 2 + 2 + 1 + 1 + 1 + 1 + 1      # genetic + EAS + prog + pathway + atac(2) + prot(2) + spatial + CC + sex + clin + drug  (mouse column removed 2026-07-06 — human-only)
 cat("Done.\n")
 cat(sprintf("  %d genes, %d evidence columns\n", top_n, n_total_cols))
 cat(sprintf("  Notable genes included: %s\n",

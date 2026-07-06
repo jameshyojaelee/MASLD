@@ -21,8 +21,14 @@ PANEL_DIR <- file.path(FIG3_DIR, "panels")
 
 # ── assemble per-gene table ──────────────────────────────────────────────────
 sc <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
-# ancestry from the GWAS registry (50-GWAS portfolio incl. MVP AMR/AFR/EAS/EUR strata) —
-# NOT the retired grepl() heuristic, which misrouted every MVP stratum into EUR.
+# MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): keep only placement=="main"
+# strata (NAFLD/NASH/PDFF + ALT/AST/GGT); the Tier-3/4 supp strata (MVP Cirrhosis/
+# ChronLiver/Albumin/Platelet) move to a supplementary full-portfolio figure.
+MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
+  placement == "main", study_name]
+sc <- sc[gwas_name %in% MAIN_STUDIES]
+# ancestry from the GWAS registry (Tier-1/2 portfolio incl. MVP NAFLD/ALT/AST AMR/AFR/EAS/
+# EUR strata) — NOT the retired grepl() heuristic, which misrouted every MVP stratum into EUR.
 sc[, ancestry := as.character(gwas_ancestry(gwas_name))]
 sc[, pos := as.integer(sub("^[0-9]+:", "", top_snp))]
 sc <- sc[!is.na(PP.H4.susie)]

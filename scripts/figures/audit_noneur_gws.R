@@ -4,6 +4,11 @@
 # Matches coloc top_snp (hg19 chr:pos) -> the SAME reformatted-hg19 sumstats the
 # finemapping/COLOC pipeline ran on -> p_value (col 7).
 #
+# COLOC SET (2026-07-06): SuSiE-PRIMARY. Colocalization is defined as PP.H4.susie > 0.5
+# ONLY (the 473-gene SuSiE-COLOC set), NOT the former SuSiE-OR-ABF union. This matches the
+# gated Fig2G SuSiE-COLOC panels (fig2_ancestry_unique_coloc_gated.py); the non-EUR-unique
+# gene set is therefore SMALLER than the retired union audit.
+#
 # ANCESTRY (2026-07-05, MVP-fix): registry-driven via gwas_ancestry() from
 # load_figure_data.R, covering the 50-GWAS portfolio (23 legacy + 27 MVP strata) incl.
 # AMR. RETIRES (a) the hardcoded heuristic grepl(BBJ->EAS / AFR->AFR / CSA->SAS /
@@ -16,10 +21,14 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))  # gwas_ancestry() + load_gwas_registry()
 reg <- load_gwas_registry()
+# MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): audit only the placement=="main"
+# strata so the non-EUR-unique gene set MATCHES the MAIN-scoped Fig2G ancestry panel.
+MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
+  placement == "main", study_name]
 co <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
-co <- co[gwas_name %in% reg$study_name]                         # keep registry-known strata only
+co <- co[gwas_name %in% MAIN_STUDIES]                            # keep MAIN (Tier-1/2) strata only
 co[, ancestry := as.character(gwas_ancestry(gwas_name))]         # registry-driven EUR/AFR/AMR/EAS/SAS
-co[, pp4 := pmax(PP.H4.susie, PP.H4.abf, na.rm = TRUE)]
+co[, pp4 := PP.H4.susie]                                         # SuSiE-PRIMARY (2026-07-06): SuSiE only, no ABF union
 sig <- co[is.finite(pp4) & pp4 > 0.5]
 
 # non-EUR-unique genes + their specificity bin
