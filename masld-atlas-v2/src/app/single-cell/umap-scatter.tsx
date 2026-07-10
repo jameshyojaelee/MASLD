@@ -8,8 +8,8 @@
  * `dynamic(() => import("./umap-scatter"), { ssr: false })`, so the top-level
  * regl-scatterplot import never runs on the server.
  *
- * Coloring is categorical (cell type via `categoricalColor`, all from the
- * palette authority) OR by disease state (Healthy → control gray, disease →
+ * Coloring is by cell type via the canonical `cellTypeColor` map (matching the
+ * published Fig 3 palette) OR by disease state (Healthy → control gray, disease →
  * diverging red). A "reduce points" toggle strides the drawn set for lower-power
  * devices; a "lasso" toggle flips the drag behaviour to marquee-select, whose
  * `select` / `deselect` events lift the selected cells to the page for a live
@@ -20,7 +20,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import createScatterplot from "regl-scatterplot";
 import { useReducedMotion } from "framer-motion";
-import { CONTROL, DIVERGING, categoricalColor } from "@/lib/palette";
+import { CONTROL, DIVERGING, cellTypeColor } from "@/lib/palette";
 
 export interface UmapPoint {
   x: number;
@@ -58,7 +58,7 @@ function encoding(points: UmapPoint[], mode: ColorMode) {
     return { cats, colors, keyOf: (p: UmapPoint) => index.get(p.condition) ?? 0 };
   }
   const cats = Array.from(new Set(points.map((p) => p.cellType))).sort();
-  const colors = cats.map((_, i) => categoricalColor(i));
+  const colors = cats.map((c, i) => cellTypeColor(c, i));
   const index = new Map(cats.map((c, i) => [c, i]));
   return { cats, colors, keyOf: (p: UmapPoint) => index.get(p.cellType) ?? 0 };
 }

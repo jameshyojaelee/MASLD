@@ -34,15 +34,15 @@ export function BentoGrid() {
 
   return (
     <div className="grid auto-rows-[172px] grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {/* Hero: Atlas (2×2) */}
+      {/* Hero: Single-cell UMAP (2×2) — the flagship atlas figure */}
       <BentoTile
-        title="Atlas"
-        description="Pooled 5-cohort disease-vs-control differential expression"
-        stat={`${fmt(DEG_COUNT)} DEGs`}
-        href="/atlas"
+        title="Single-cell"
+        description="Integrated liver cell atlas across 16 cell types"
+        stat={`${scMillions}M cells`}
+        href="/single-cell"
         className="[background-image:var(--gradient-surface)] sm:col-span-2 sm:row-span-2 lg:col-span-2 lg:row-span-2"
       >
-        <MiniVolcano />
+        <MiniUmap />
       </BentoTile>
 
       {/* Genetics */}
@@ -65,14 +65,14 @@ export function BentoGrid() {
         <DrugFunnel />
       </BentoTile>
 
-      {/* Single-cell */}
+      {/* Atlas — bulk differential expression */}
       <BentoTile
-        title="Single-cell"
-        description="Integrated liver cell atlas"
-        stat={`${scMillions}M cells`}
-        href="/single-cell"
+        title="Atlas"
+        description="Pooled 5-cohort disease-vs-control differential expression"
+        stat={`${fmt(DEG_COUNT)} DEGs`}
+        href="/atlas"
       >
-        <MiniUmap />
+        <MiniVolcano />
       </BentoTile>
 
       {/* Progression */}

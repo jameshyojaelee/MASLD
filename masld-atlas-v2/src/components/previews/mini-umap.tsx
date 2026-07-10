@@ -14,7 +14,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { dataUrl } from "@/lib/data-base";
-import { categoricalColor } from "@/lib/palette";
+import { cellTypeColor } from "@/lib/palette";
 import { useMeasure } from "./use-measure";
 
 interface UmapPoint {
@@ -50,7 +50,7 @@ export function MiniUmap() {
     if (!pts) return m;
     [...new Set(pts.map((p) => p.celltype))]
       .sort()
-      .forEach((ct, i) => m.set(ct, categoricalColor(i)));
+      .forEach((ct, i) => m.set(ct, cellTypeColor(ct, i)));
     return m;
   }, [pts]);
 

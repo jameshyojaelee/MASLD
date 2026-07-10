@@ -204,6 +204,38 @@ export function categoricalColor(i: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Single-cell cell-type palette — the canonical Fig 3 map (publication_theme.R
+// `ct_palette`). Color cells by type wherever they appear (main UMAP + landing
+// mini-UMAP) so the web matches the published figures instead of an arbitrary
+// index-based cycle. Unknown types fall back to the categorical cycle.
+// ---------------------------------------------------------------------------
+
+export const CELL_TYPE_COLORS: Record<string, string> = {
+  Hepatocytes: "#0D47A1",
+  Cholangiocytes: "#1565C0",
+  "Endothelial cells": "#2E7D32",
+  Fibroblasts: "#F57F17",
+  Macrophages: "#C2185B",
+  "Mono+mono derived cells": "#E91E63",
+  "T cells": "#7B1FA2",
+  "B cells": "#9C27B0",
+  "Resident NK": "#00695C",
+  "Circulating NK/NKT": "#00897B",
+  "Plasma cells": "#5D4037",
+  Neutrophils: "#FF6F00",
+  cDC1s: "#AD1457",
+  cDC2s: "#D81B60",
+  pDCs: "#6A1B9A",
+  "Mig.cDCs": "#AB47BC",
+  Basophils: "#78909C",
+};
+
+/** Canonical cell-type color; categorical-cycle fallback for unmapped types. */
+export function cellTypeColor(cellType: string, fallbackIndex = 0): string {
+  return CELL_TYPE_COLORS[cellType] ?? categoricalColor(fallbackIndex);
+}
+
+// ---------------------------------------------------------------------------
 // Network edge-layer palette (categorical layer identities). Mirrors the
 // map in network-data.ts; import from here so the canvas + legend agree.
 // ---------------------------------------------------------------------------
