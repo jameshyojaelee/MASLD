@@ -117,9 +117,9 @@ export function MiniUmap() {
     // A mostly-opaque colored BODY (keeps hue even in dense cores) plus, on
     // dark, a wider low-alpha additive GLOW halo layered over it.
     const bodyR = r * 1.2;
-    const glowR = r * 2.8;
+    const glowR = r * 2.3;
     const BODY_ALPHA = 0.9;
-    const GLOW_ALPHA = 0.18;
+    const GLOW_ALPHA = 0.1;
 
     // Screen positions, per-point phase seeds, and colors.
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
