@@ -95,8 +95,7 @@ export function Hero() {
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
           A multi-modal atlas for metabolic dysfunction-associated steatotic
-          liver disease — genetics, transcriptomics, and drug evidence in one
-          place.
+          liver disease
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <Button size="lg" onClick={() => setCommandOpen(true)}>
