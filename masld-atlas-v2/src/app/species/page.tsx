@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback, type CSSProperties } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { HashLink as Link } from "@/components/hash-link";
+import { useHashNavigate } from "@/lib/hash-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/page-container";
@@ -157,7 +157,7 @@ function NesBar({ value, maxAbs }: { value: number; maxAbs: number }) {
 // ---------------------------------------------------------------------------
 
 export default function SpeciesPage() {
-  const router = useRouter();
+  const navigate = useHashNavigate();
   const [data, setData] = useState<CrossSpeciesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeCategories, setActiveCategories] = useState<Set<string>>(
@@ -436,7 +436,7 @@ export default function SpeciesPage() {
               { x: "right", y: "bottom", text: "Discordant", muted: true },
             ]}
             onPointClick={(sym) =>
-              router.push(`/gene?symbol=${encodeURIComponent(sym)}`)
+              navigate(`#/gene?symbol=${encodeURIComponent(sym)}`)
             }
             tooltipLines={(p) => (
               <>
@@ -590,7 +590,7 @@ export default function SpeciesPage() {
                   >
                     <td className="px-3 py-1.5">
                       <Link
-                        href={`/gene?symbol=${encodeURIComponent(gene.symbol)}`}
+                        href={`#/gene?symbol=${encodeURIComponent(gene.symbol)}`}
                         className="font-mono font-semibold text-primary hover:underline"
                       >
                         {gene.symbol}

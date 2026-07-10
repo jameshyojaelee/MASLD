@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -376,7 +376,7 @@ export default function ResolutionPage() {
                   >
                     <td className="px-4 py-2.5">
                       <Link
-                        href={`/gene?symbol=${encodeURIComponent(row.tf)}`}
+                        href={`#/gene?symbol=${encodeURIComponent(row.tf)}`}
                         className="font-mono text-xs font-semibold text-primary hover:underline"
                       >
                         {row.tf}

@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "@/components/app-shell";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { HashRouterProvider } from "@/lib/hash-router";
+import { RouteSwitch } from "@/components/route-switch";
 import { GeneSearch } from "@/components/gene-search";
 import { GeneComparePanel } from "@/components/gene-compare-panel";
 
@@ -58,9 +60,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen antialiased" suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
         <MotionProvider>
-          <AppShell>{children}</AppShell>
-          <GeneComparePanel />
-          <GeneSearch />
+          <HashRouterProvider>
+            <AppShell>
+              <RouteSwitch>{children}</RouteSwitch>
+            </AppShell>
+            <GeneComparePanel />
+            <GeneSearch />
+          </HashRouterProvider>
         </MotionProvider>
       </body>
     </html>

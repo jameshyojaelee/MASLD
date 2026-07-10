@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { dataUrl } from "@/lib/data-base";
@@ -43,7 +43,7 @@ const DOWNLOAD_RESOURCES: DownloadResource[] = [
     format: "Parquet (6 tables)",
     size: "~8 MB total",
     href: null,
-    note: "Query any gene from the Gene page (/gene?symbol=SYMBOL), or download the individual tables below.",
+    note: "Query any gene from the Gene page (#/gene?symbol=SYMBOL), or download the individual tables below.",
   },
   {
     name: "Pathway Gene Sets",

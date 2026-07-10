@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useHashSearchParams, replaceHash } from "@/lib/hash-router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -163,8 +163,7 @@ const F_STAGE_OPTIONS: { value: FStageFilter; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 function NetworkPageInner() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const searchParams = useHashSearchParams();
 
   // URL state
   const urlGenes = useMemo(
@@ -311,9 +310,9 @@ function NetworkPageInner() {
         params.set(k, v);
       }
       const qs = params.toString();
-      router.replace(qs ? `/network?${qs}` : "/network", { scroll: false });
+      replaceHash(qs ? `/network?${qs}` : "/network");
     },
-    [router]
+    []
   );
 
   // ---------------------------------------------------------------------------

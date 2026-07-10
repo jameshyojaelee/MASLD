@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -319,7 +319,7 @@ export function GeneDetailSidebar({
           variant="outline"
           size="sm"
           className="w-full"
-          render={<Link href={`/gene?symbol=${encodeURIComponent(node.symbol)}`} />}
+          render={<Link href={`#/gene?symbol=${encodeURIComponent(node.symbol)}`} />}
         >
           View full gene page
           <svg className="ml-1 size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

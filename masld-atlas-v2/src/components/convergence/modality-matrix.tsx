@@ -331,7 +331,7 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
                 <g key={r.gene}>
                   {/* Row label (gene) */}
                   <a
-                    href={`/gene?symbol=${encodeURIComponent(r.gene)}`}
+                    href={`#/gene?symbol=${encodeURIComponent(r.gene)}`}
                     onClick={(e) => {
                       if (onRowClick) {
                         e.preventDefault();

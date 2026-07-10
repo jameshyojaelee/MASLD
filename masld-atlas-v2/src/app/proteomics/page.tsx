@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/page-container";
@@ -345,7 +345,7 @@ export default function ProteomicsPage() {
                 >
                   <td className="px-3 py-1.5">
                     <Link
-                      href={`/gene?symbol=${encodeURIComponent(r.gene)}`}
+                      href={`#/gene?symbol=${encodeURIComponent(r.gene)}`}
                       className="font-mono font-semibold text-primary hover:underline"
                     >
                       {r.gene}

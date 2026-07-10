@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { HashLink as Link } from "@/components/hash-link";
+import { useHashLocation } from "@/lib/hash-router";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -47,7 +47,7 @@ export function SidebarSearchButton() {
  * itself when a link is chosen.
  */
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
-  const pathname = usePathname();
+  const { path: pathname } = useHashLocation();
   return (
     <nav className="flex-1 overflow-y-auto px-3 pb-3">
       {NAV.map((section) => (

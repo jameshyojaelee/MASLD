@@ -4,7 +4,7 @@
 // live for now; changes here are correctness-only (no expanded surface).
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -622,7 +622,7 @@ export default function CausalPage() {
                               </span>
                               <span className="w-[100px] shrink-0 px-3 py-2.5 text-left text-xs font-semibold text-primary">
                                 <Link
-                                  href={`/gene?symbol=${encodeURIComponent(v.nearest_gene)}`}
+                                  href={`#/gene?symbol=${encodeURIComponent(v.nearest_gene)}`}
                                   onClick={(e) => e.stopPropagation()}
                                   className="hover:underline"
                                 >
@@ -767,7 +767,7 @@ export default function CausalPage() {
             >
               <div className="flex items-center justify-between">
                 <Link
-                  href={`/gene?symbol=${encodeURIComponent(tf.tf)}`}
+                  href={`#/gene?symbol=${encodeURIComponent(tf.tf)}`}
                   className="font-mono text-lg font-bold text-primary hover:underline"
                 >
                   {tf.tf}

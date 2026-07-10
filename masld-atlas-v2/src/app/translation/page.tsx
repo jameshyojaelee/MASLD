@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useHashNavigate } from "@/lib/hash-router";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -358,7 +358,7 @@ interface KnowledgeGraphProps {
 }
 
 function KnowledgeGraph({ data }: KnowledgeGraphProps) {
-  const router = useRouter();
+  const navigate = useHashNavigate();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [visibleTypes, setVisibleTypes] = useState<Record<NodeType, boolean>>({
     gene: true,
@@ -528,7 +528,7 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
                   isDimmed={dm}
                   onMouseEnter={enterHandler}
                   onMouseLeave={leaveHandler}
-                  onClick={() => router.push(`/gene?symbol=${encodeURIComponent(node.label)}`)}
+                  onClick={() => navigate(`#/gene?symbol=${encodeURIComponent(node.label)}`)}
                 />
               );
             }
@@ -751,7 +751,7 @@ function BayesianRankingTable({ data }: { data: BayesianRanking }) {
             <span key={g.symbol} className="font-mono text-xs">
               {i > 0 && <span className="mx-1.5 text-muted-foreground">·</span>}
               <Link
-                href={`/gene?symbol=${encodeURIComponent(g.symbol)}`}
+                href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
                 className="font-semibold text-primary hover:underline"
               >
                 {g.symbol}
@@ -844,7 +844,7 @@ function BayesianRankingTable({ data }: { data: BayesianRanking }) {
                 </td>
                 <td className="px-4 py-2">
                   <Link
-                    href={`/gene?symbol=${encodeURIComponent(g.symbol)}`}
+                    href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
                     className="font-mono text-xs font-semibold text-primary hover:underline"
                   >
                     {g.symbol}

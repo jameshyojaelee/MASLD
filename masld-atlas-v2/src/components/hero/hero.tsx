@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";

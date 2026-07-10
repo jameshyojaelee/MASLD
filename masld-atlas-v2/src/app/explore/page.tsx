@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -380,7 +380,7 @@ export default function ExplorePage() {
                   {/* Symbol */}
                   <td className="px-3 py-1.5">
                     <Link
-                      href={`/gene?symbol=${encodeURIComponent(gene.symbol)}`}
+                      href={`#/gene?symbol=${encodeURIComponent(gene.symbol)}`}
                       className="font-mono font-semibold text-primary hover:underline"
                     >
                       {gene.symbol}

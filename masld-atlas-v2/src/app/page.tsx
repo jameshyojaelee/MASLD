@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { EvidenceFingerprint } from "@/components/evidence-fingerprint";
@@ -83,7 +83,7 @@ export default function HomePage() {
               {featured.map((gene) => (
                 <Link
                   key={gene.symbol}
-                  href={`/gene?symbol=${gene.symbol}`}
+                  href={`#/gene?symbol=${gene.symbol}`}
                   className="hover-lift group rounded-lg border border-border bg-card p-4 hover:border-primary/40"
                 >
                 <div className="flex items-start justify-between">

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useHashNavigate } from "@/lib/hash-router";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
@@ -169,7 +169,7 @@ const RESULT_CARDS: ResultCard[] = [
 // ---------------------------------------------------------------------------
 
 export default function AtlasPage() {
-  const router = useRouter();
+  const navigate = useHashNavigate();
   const [genes, setGenes] = useState<GeneIndexEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -360,7 +360,7 @@ export default function AtlasPage() {
               height={460}
               ariaLabel="Volcano plot of disease vs healthy differential expression"
               onPointClick={(sym) =>
-                router.push(`/gene?symbol=${encodeURIComponent(sym)}`)
+                navigate(`#/gene?symbol=${encodeURIComponent(sym)}`)
               }
               caption={
                 <>

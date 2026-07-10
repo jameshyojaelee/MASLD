@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { dataUrl } from "@/lib/data-base";
@@ -378,7 +378,7 @@ function GeneList({ genes, direction }: { genes: GeneEntry[]; direction: "up" | 
         <div key={g.symbol} className="flex items-center justify-between gap-2 text-xs">
           {isNamedGene(g.symbol) ? (
             <Link
-              href={`/gene?symbol=${encodeURIComponent(g.symbol)}`}
+              href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
               className="font-mono font-semibold text-primary hover:underline"
             >
               {g.symbol}
@@ -578,7 +578,7 @@ function LateStageSignatureSection({ data }: { data: LateStageSignature }) {
           <div key={g.symbol} className="flex items-center justify-between rounded bg-white/50 px-2 py-1 text-xs dark:bg-white/5">
             {isNamedGene(g.symbol) ? (
               <Link
-                href={`/gene?symbol=${encodeURIComponent(g.symbol)}`}
+                href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
                 className="font-mono font-semibold text-primary hover:underline"
               >
                 {g.symbol}

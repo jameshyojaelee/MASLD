@@ -14,7 +14,7 @@
  *                  female-enriched-progressor narrative is retired (2026-06-08).
  *
  * Data: programs_summary.json + program_gene_membership.parquet (duck) +
- * sex_summary.json. All gene marks link to /gene?symbol= via GeneLink.
+ * sex_summary.json. All gene marks link to #/gene?symbol= via GeneLink.
  *
  * NOTE on the loading bars: raw top-|logFC| in program_gene_membership.parquet
  * is dominated by sex-chromosome escapees (KDM5D/USP9Y/XIST) that the atlas NMF
