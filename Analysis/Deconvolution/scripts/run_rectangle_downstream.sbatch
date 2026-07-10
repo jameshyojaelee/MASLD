@@ -18,13 +18,26 @@
 # All figures obey the project rules; NO existing file is modified (new dirs only).
 # ---------------------------------------------------------------------------
 
-set -uo pipefail
+# NOTE: no `set -u` — the rnaseq env's binutils activation script references an
+# unbound ADDR2LINE and would abort activation under set -u. run_step handles
+# per-step failures explicitly, so we don't need -e/-u here.
+set -o pipefail
 
 ROOT=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 export MASLD_PROJECT_ROOT="${ROOT}"
 
 eval "$(micromamba shell hook --shell bash)"
 micromamba activate rnaseq
+
+# Pin BLAS/OpenMP to a single thread. limma-voom does many small matrix ops; a
+# multithreaded BLAS oversubscribes cores and makes voomWithQualityWeights
+# DRAMATICALLY slower (observed ~25 CPU-core-hours in 46 min wall before this pin).
+# Single-threaded voom on 846 samples completes in ~1-2 min.
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
 
 echo "[$(date)] Rectangle downstream on $(hostname), CPUs=${SLURM_CPUS_PER_TASK:-NA}"
 

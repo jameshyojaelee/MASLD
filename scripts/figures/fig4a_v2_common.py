@@ -100,35 +100,192 @@ def get_data():
       stats["enrich"] : {"universe"|"coloc_only": {lens: {obs,exp,fold,p,N,K,k}}}
                         (per-lens hypergeometric enrichment vs genome-wide background)
     """
-    d = compute_counts()
-    stats = permutation_null(d)
+    # DEFAULT = STRICT (significance-test-only) definition. The inclusive definition
+    # (curated GeoMx zonation signature + static promoter-accessible / chromVAR-SCENIC
+    # TF flags counted as "validated") inflates spatial 112->447 and snATAC 233->560 and
+    # makes measured ~= validated for those assays. Strict keeps only per-assay disease
+    # SIGNIFICANCE TESTS; under it proteome-and-spatial is stronger (2.07x, p=9e-4 vs
+    # 1.36x, p=2.6e-3). Set FIG4A_INCLUSIVE=1 for the original inclusive definition.
+    if os.environ.get("FIG4A_INCLUSIVE"):
+        return _get_data_inclusive()
+    return _compute_strict()
 
+
+def _partition(d):
+    """Attach the exclusive convergence partition (all disjoint, summing to ge1) +
+    the origin split, derived from the live gene sets. Shared by both definitions."""
     S = d["_sets"]
     def _clean(s):
         return {x for x in s if isinstance(x, str) and x and x.lower() != "nan"}
     P, Sp, A = _clean(S["Pval"]), _clean(S["Sval"]), _clean(S["Aval"])
-
     part = dict(
-        P_only=len(P - Sp - A),
-        S_only=len(Sp - P - A),
-        A_only=len(A - P - Sp),
+        P_only=len(P - Sp - A), S_only=len(Sp - P - A), A_only=len(A - P - Sp),
         PS=len((P & Sp) - A),          # exactly-two, proteo & spatial (not snATAC)
-        PA=len((P & A) - Sp),
-        SA=len((Sp & A) - P),
-        all3=len(P & Sp & A),
+        PA=len((P & A) - Sp), SA=len((Sp & A) - P), all3=len(P & Sp & A),
     )
-    part["ge1"] = len(P | Sp | A)                                   # any-assay validated
-    part["ge2"] = part["PS"] + part["PA"] + part["SA"] + part["all3"]  # exactly->=2 (clean)
+    part["ge1"] = len(P | Sp | A)
+    part["ge2"] = part["PS"] + part["PA"] + part["SA"] + part["all3"]
     part["unvalidated"] = d["universe"] - part["ge1"]
-    # origin split of the prioritized universe (for opener strips / marimekko)
     rna, coloc = _clean(S["rna"]), _clean(S["coloc"])
-    part["tx_only"]      = len(rna - coloc)
-    part["overlap"]      = len(rna & coloc)
-    part["genetic_only"] = len(coloc - rna)
+    part["tx_only"], part["overlap"], part["genetic_only"] = \
+        len(rna - coloc), len(rna & coloc), len(coloc - rna)
     d["_part"] = part
+    return part
 
+
+def _get_data_inclusive():
+    """INCLUSIVE definition (original): validated = significant in ANY of a modality's
+    layers, incl. curated signatures + static flags. Kept for comparison (FIG4A_INCLUSIVE=1)."""
+    d = compute_counts()
+    stats = permutation_null(d)
+    part = _partition(d)
     banner(d, part)
     return d, stats
+
+
+# -- STRICT definition (significance-test-only) -------------------------------
+_UDIR  = os.path.join(BASE, "Analysis/Spatial/results/universe_validation")
+_ATLAS = os.path.join(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
+_PROT  = os.path.join(BASE, "Analysis/Proteomics/results/protein_transcript_concordance_v3.csv")
+_DEG   = os.path.join(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/"
+                            "results/integration/canonical_deg_results.csv")
+
+
+def _sclean(s):
+    return {x for x in s if isinstance(x, str) and x and x.lower() != "nan"}
+
+
+def _compute_strict():
+    """Validated = per-assay disease SIGNIFICANCE TEST only (no signatures / static flags):
+    proteomics = protein DE padj<0.05 (measured = DIA-MS detected); spatial = Visium-hep
+    Wilcoxon DE (measured = tested); snATAC = hepatocyte DA (measured = tested). Same
+    schema as _get_data_inclusive so every builder reads strict numbers unchanged."""
+    import pandas as pd
+
+    def _rd(f):
+        return _sclean(set(open(os.path.join(_UDIR, f)).read().split()))
+    rna, coloc = _rd("universe_transcriptomic.txt"), _rd("universe_genetic.txt")
+    target = _rd("prioritized_universe_FINAL.txt")
+    coloc_only = coloc - rna
+
+    deg = pd.read_csv(_DEG)
+    deg["sym"] = deg["symbol"].fillna(deg["gene"])
+    treat = _sclean(set(deg.loc[deg["treat_fdr"] < 0.05, "sym"]))
+
+    c = pd.read_csv(_PROT)
+    P_meas_all = _sclean(set(c["gene"].dropna()))
+    P_val_all = _sclean(set(c.loc[c["protein_padj"] < 0.05, "gene"].dropna()))
+
+    a = pd.read_csv(_ATLAS, low_memory=False).rename(columns={"human_symbol": "sym"})
+    def _nn(col):   return _sclean(set(a.loc[a[col].notna(), "sym"])) if col in a.columns else set()
+    def _padj(col): return _sclean(set(a.loc[a[col] < 0.05, "sym"])) if col in a.columns else set()
+    S_meas_all, S_val_all = _nn("spatial_hep_wilcoxon_padj_bh"), _padj("spatial_hep_wilcoxon_padj_bh")
+    A_meas_all, A_val_all = _nn("hepatocyte_da_padj"), _padj("hepatocyte_da_padj")
+    P_val_all &= P_meas_all; S_val_all &= S_meas_all; A_val_all &= A_meas_all
+
+    Pmeas, Pval = P_meas_all & target, P_val_all & target
+    Smeas, Sval = S_meas_all & target, S_val_all & target
+    Ameas, Aval = A_meas_all & target, A_val_all & target
+
+    def _pds(prefix):
+        x = c[c["dataset"].str.startswith(prefix)]
+        m = _sclean(set(x["gene"].dropna())) & target
+        v = _sclean(set(x.loc[x["protein_padj"] < 0.05, "gene"].dropna())) & target
+        return len(m), len(v)
+    P_liver_meas, P_liver_val = _pds("PXD051911")
+    P_plasma_meas, P_plasma_val = _pds("PXD052937")
+
+    P, Sp, A = Pval, Sval, Aval
+    d = dict(
+        substrate=len(rna), coloc=len(coloc), coloc_shared=len(rna & coloc),
+        coloc_only=len(coloc_only), universe=len(target), confident=len(rna & treat),
+        P_meas=len(Pmeas), P_val=len(Pval), S_meas=len(Smeas), S_val=len(Sval),
+        A_meas=len(Ameas), A_val=len(Aval),
+        P_liver_meas=P_liver_meas, P_liver_val=P_liver_val,
+        P_plasma_meas=P_plasma_meas, P_plasma_val=P_plasma_val,
+        S_hep_meas=len(Smeas), S_hep_val=len(Sval), S_zon_meas=0, S_zon_val=0,
+        S_cos_meas=0, S_cos_val=0,
+        A_acc_meas=len(Ameas), A_acc_val=len(Aval), A_tf_meas=0, A_tf_val=0,
+        PS=len(P & Sp), PA=len(P & A), SA=len(Sp & A),
+        P_only=len(P - Sp - A), S_only=len(Sp - P - A), A_only=len(A - P - Sp),
+        all3=len(P & Sp & A), ge1=len(P | Sp | A),
+    )
+    d["ge2"] = len(P & Sp) + len(P & A) + len(Sp & A) - 2 * d["all3"]  # genes in >=2
+    d["none"] = d["universe"] - d["ge1"]
+    d.update(proteo=d["P_val"], spatial=d["S_val"], scatac=d["A_val"], PSA=d["all3"])
+    d["_sets"] = dict(
+        universe=target, rna=rna, coloc=coloc, coloc_only=coloc_only, treat=treat,
+        Pmeas=Pmeas, Pval=Pval, Smeas=Smeas, Sval=Sval, Ameas=Ameas, Aval=Aval,
+        P_meas_all=P_meas_all, P_val_all=P_val_all, S_meas_all=S_meas_all,
+        S_val_all=S_val_all, A_meas_all=A_meas_all, A_val_all=A_val_all)
+    part = _partition(d)
+
+    stats = _strict_null(d)
+    banner(d, part)
+    print("[fig4a_v2] STRICT definition: validated = significance test only "
+          "(spatial=Visium-hep DE, snATAC=hepatocyte DA; signatures/flags dropped). "
+          "FIG4A_INCLUSIVE=1 reverts.")
+    return d, stats
+
+
+def _strict_null(d, n_perm=10000, seed=42):
+    """Same random-placement convergence null + hypergeometric per-lens enrichment as
+    the canonical permutation_null, on the STRICT sets. Fresh rng for the convergence
+    loop (independent of the enrichment draws) so it reproduces the strict recompute."""
+    S = d["_sets"]
+    rng_e = np.random.default_rng(seed)
+
+    def hyper(pset, meas_all, val_all):
+        Nn, K = len(meas_all), len(val_all)
+        k, obs = len(pset & meas_all), len(pset & val_all)
+        if k == 0 or K == 0 or K >= Nn:
+            return dict(obs=obs, exp=float("nan"), fold=float("nan"), p=1.0, N=Nn, K=K, k=k)
+        draws = rng_e.hypergeometric(K, Nn - K, k, size=n_perm)
+        exp = float(draws.mean())
+        return dict(obs=obs, exp=exp, fold=(obs / exp if exp > 0 else float("inf")),
+                    p=(int(np.sum(draws >= obs)) + 1) / (n_perm + 1), N=Nn, K=K, k=k)
+
+    lenses = (("proteomics", S["P_meas_all"], S["P_val_all"]),
+              ("spatial",    S["S_meas_all"], S["S_val_all"]),
+              ("scATAC",     S["A_meas_all"], S["A_val_all"]))
+    enrich = {nm: {ln: hyper(P, m, v) for ln, m, v in lenses}
+              for nm, P in (("universe", S["universe"]), ("coloc_only", S["coloc_only"]))}
+
+    rng_c = np.random.default_rng(seed)
+    uni = sorted(g for g in S["universe"] if isinstance(g, str))
+    idx = {g: i for i, g in enumerate(uni)}
+    U = len(uni)
+    meas_idx = {L: np.fromiter((idx[g] for g in ms if g in idx), dtype=np.int64)
+                for L, ms in (("P", S["Pmeas"]), ("S", S["Smeas"]), ("A", S["Ameas"]))}
+    val_n = {"P": len(S["Pval"]), "S": len(S["Sval"]), "A": len(S["Aval"])}
+    keys = ("ge2", "all3", "P_only", "S_only", "A_only", "PS", "PA", "SA")
+    null = {k: np.empty(n_perm, dtype=np.int32) for k in keys}
+    for it in range(n_perm):
+        mP = np.zeros(U, bool); mS = np.zeros(U, bool); mA = np.zeros(U, bool)
+        for L, m in (("P", mP), ("S", mS), ("A", mA)):
+            if val_n[L] and len(meas_idx[L]) >= val_n[L]:
+                m[rng_c.choice(meas_idx[L], size=val_n[L], replace=False)] = True
+        both = (mP & mS) | (mP & mA) | (mS & mA)
+        null["ge2"][it] = int(both.sum())
+        null["all3"][it] = int((mP & mS & mA).sum())
+        null["P_only"][it] = int((mP & ~mS & ~mA).sum())
+        null["S_only"][it] = int((mS & ~mP & ~mA).sum())
+        null["A_only"][it] = int((mA & ~mP & ~mS).sum())
+        null["PS"][it] = int((mP & mS & ~mA).sum())
+        null["PA"][it] = int((mP & mA & ~mS).sum())
+        null["SA"][it] = int((mS & mA & ~mP).sum())
+
+    def summ(obs, nul):
+        exp = float(nul.mean())
+        lo, hi = np.percentile(nul, [2.5, 97.5])
+        return dict(obs=int(obs), exp=exp, fold=(obs / exp if exp > 0 else float("inf")),
+                    p=(int(np.sum(nul >= obs)) + 1) / (n_perm + 1), lo=float(lo), hi=float(hi))
+
+    obs_excl = dict(ge2=d["ge2"], all3=d["all3"], P_only=d["P_only"],
+                    S_only=d["S_only"], A_only=d["A_only"],
+                    PS=d["PS"] - d["all3"], PA=d["PA"] - d["all3"], SA=d["SA"] - d["all3"])
+    conv = {k: summ(obs_excl[k], null[k]) for k in keys}
+    return dict(enrich=enrich, conv=conv, lenses=[l[0] for l in lenses])
 
 
 def banner(d, part):
@@ -183,6 +340,10 @@ def fold_ci(st):
 
 
 if __name__ == "__main__":
-    # smoke test: compute + print, write nothing
+    # smoke test: compute + print the key convergence verdicts, write nothing
     _d, _s = get_data()
-    print("[fig4a_v2_common] OK — conv keys:", sorted(_s["conv"]) if _s else None)
+    for _k in ("PS", "PA", "SA", "ge2", "all3"):
+        _c = _s["conv"][_k]
+        print(f"  conv {_k:>4}: obs={_c['obs']:>4}  exp={_c['exp']:>7.2f}  "
+              f"[{_c['lo']:.1f},{_c['hi']:.1f}]  {_c['fold']:.2f}x  p={_c['p']:.2e}")
+    print("[fig4a_v2_common] OK")

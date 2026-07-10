@@ -7,8 +7,8 @@ Regenerable, auditable builder for the three on-disk universe files under
 `Analysis/Spatial/results/universe_validation/`:
 
     universe_genetic.txt          genetic-evidence arm   (locked count: 3,038)
-    universe_transcriptomic.txt   transcriptomic arm     (locked count: 8,088)
-    prioritized_universe_FINAL.txt = genetic ∪ transcriptomic   (9,882)
+    universe_transcriptomic.txt   transcriptomic arm     (locked count: 8,260)
+    prioritized_universe_FINAL.txt = genetic ∪ transcriptomic   (10,044)
 
 Consumers: `15g_prioritized_gsmap_enrichment.py`, `15h_arm_decomposition_gsmap.py`,
 `15h2_eur_expansion_enrichment.py`, `scripts/figures/fig4a_overview_candidates.py`,
@@ -25,11 +25,17 @@ docstring). The FINAL set is EXACTLY the union of two arms:
     reproduces the on-disk universe_genetic.txt EXACTLY (3,038/3,038, 0 extra,
     0 missing — validated 2026-07-08).
 
-  TRANSCRIPTOMIC (8,088) — CONSUMED HERE as a locked upstream artifact, NOT
+  TRANSCRIPTOMIC (8,260) — CONSUMED HERE as a locked upstream artifact, NOT
     re-derived. It is the union of "every DE contrast (bulk disease-vs-control,
+    strict histologic extremes (definite-disease vs strict-control), MASH-vs-control,
     stage steatosis/SH/cirrhosis, fibrosis-gradient F0→F4, MASH-vs-MASL, sc
     pseudobulk per cell type) gated by the same interval-null TREAT @ lfc=0.25 as
     the core Fig-3 DEG, ∪ hotspot / LIANA / SVG / conserved-core membership."
+    (2026-07-10: added the strict-extremes and MASH-vs-control contrasts as an
+    explicit dynamic-DEG family; +172 net-new genes over the 2026-07-06 lock of
+    8,088 — extremes +163, MASH-vs-control +9. Orthogonality is robust across the
+    whole family: 92% canonical / 87% extremes / 97% MASH-vs-ctrl / 98% MASH-vs-MASL,
+    see RNA-seq/results/audit_sensitivity/orthogonality_by_contrast.csv.)
     Those per-contrast TREAT refits are owned by the bulk/sc DE pipelines and are
     NOT stored as atlas columns (the atlas keeps padj, not per-contrast treat_fdr),
     so the arm cannot be reproduced from the atlas alone. Source pointers for a
@@ -41,6 +47,14 @@ docstring). The FINAL set is EXACTLY the union of two arms:
           RNA-seq/results/{granular_staging,reversal,stratified_causal}/…
       - MASH-vs-MASL (mash_vs_masl_treat_degs = 207):
           RNA-seq/results/audit_sensitivity/lfc_sweep_mash_vs_masl*.csv
+      - strict histologic extremes (definite-disease vs strict-control; TREAT DEGs
+          3,548; +163 net-new to tx; added 2026-07-10):
+          RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/
+          sensitivity/extreme_phenotype_definite_vs_strict.csv  (TREAT reconstructed
+          from summary stats; validated vs canonical treat_fdr, Jaccard 1.000)
+      - MASH-vs-control (c11; TREAT DEGs 762; +9 net-new to tx; added 2026-07-10):
+          RNA-seq/Human/Patient_Cohorts/analysis/integration/results/progression/
+          c11_nash_vs_ctrl_lvqw.csv
       - sc pseudobulk per cell type: Analysis/SingleCell pseudobulk DE outputs
       - membership: hotspot modules, LIANA differential interactions, spatial SVGs,
           conserved-core (spatial_utils.load_conserved)
@@ -204,6 +218,10 @@ def main():
         "genetic_rules": [f"{c} {k} {t}" for c, k, t in GENETIC_RULES],
         "transcriptomic_source": "locked upstream artifact (per-contrast TREAT + hotspot/LIANA/SVG/conserved-core)",
         "recipe_locked": "2026-07-06",
+        "recipe_updated": "2026-07-10 (+strict-extremes, +MASH-vs-control; tx 8,088->8,260, FINAL 9,882->10,044)",
+        "tx_augment_2026_07_10": {"strict_extremes_treat_degs": 3548,
+                                  "mash_vs_control_treat_degs": 762,
+                                  "net_new_to_tx": 172},
         "rebuilt_by": "Analysis/Spatial/scripts/build_prioritized_universe.py",
     }
     # carry forward documented tx-arm provenance counts if the existing meta has them

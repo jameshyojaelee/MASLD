@@ -3,28 +3,21 @@
 /**
  * Landing page — the "Living Atlas" composition.
  *
- * Hero (gene constellation) → animated KPI band → full-bleed gene ticker →
- * bento entry grid of real-data mini-viz previews → at-a-glance data story →
- * featured genes. Each section is a self-contained client component; the heavy
- * previews lazy-mount inside their bento tiles, so first paint stays cheap.
+ * Hero (animated gene constellation + aurora) → full-bleed gene ticker → bento
+ * entry grid of real-data mini-viz previews → featured genes. Each section is a
+ * self-contained client component; the heavy previews lazy-mount inside their
+ * bento tiles, so first paint stays cheap.
  */
 
 import { Hero } from "@/components/hero/hero";
-import { HeroStats } from "@/components/landing/hero-stats";
 import { GeneTicker } from "@/components/landing/gene-ticker";
 import { BentoGrid } from "@/components/landing/bento-grid";
-import { AtlasStory } from "@/components/landing/atlas-story";
 import { FeaturedGenes } from "@/components/landing/featured-genes";
 
 export default function HomePage() {
   return (
     <div className="pb-16">
       <Hero />
-
-      {/* Animated KPI band on the page surface, just below the hero. */}
-      <div className="mx-auto max-w-6xl px-6">
-        <HeroStats className="mt-2" />
-      </div>
 
       {/* Full-bleed gene ticker — top differentially expressed genes. */}
       <div className="mt-10 border-y border-border/60 bg-card/40">
@@ -39,8 +32,6 @@ export default function HomePage() {
           </h2>
           <BentoGrid />
         </section>
-
-        <AtlasStory />
 
         <FeaturedGenes />
       </div>

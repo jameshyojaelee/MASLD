@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 import { loadHeroGraph, type HeroGraph } from "@/lib/hero-data";
 import { HeroFallback } from "@/components/hero/hero-fallback";
+import { Aurora } from "@/components/backgrounds/aurora";
 
 const GeneConstellation = dynamic(
   () => import("@/components/hero/gene-constellation"),
@@ -61,6 +62,8 @@ export function Hero() {
 
   return (
     <section className="relative isolate overflow-hidden">
+      {/* Backmost ambient aurora — decorative brand glow beneath every layer. */}
+      <Aurora />
       {/* Live constellation (or static fallback) behind everything. */}
       <div
         aria-hidden

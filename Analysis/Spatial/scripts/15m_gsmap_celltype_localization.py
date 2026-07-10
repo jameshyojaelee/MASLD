@@ -35,15 +35,15 @@ C2L = os.path.join(BASE, "Analysis/Spatial/results/cell2location")
 PREF = "c2l_q05cell_abundance_w_sf_means_per_cluster_mu_fg_"
 
 FAMILIES = {
-    "enzyme": ["ukbb_alt", "mvp_alt", "ukbb_ast", "mvp_ast", "ukbb_ggt"],
-    "NAFLD": ["finngen_nafld", "ghodsian_nafld", "mvp_nafld", "ukbb2023_nafld", "anstee2020_nafld"],
+    "Liver enzyme": ["ukbb_alt", "mvp_alt", "ukbb_ast", "mvp_ast", "ukbb_ggt"],
+    "NAFLD/NASH": ["finngen_nafld", "ghodsian_nafld", "mvp_nafld", "ukbb2023_nafld",
+                   "anstee2020_nafld", "finngen_nash"],
     "PDFF": ["pdff", "pdff_2021a", "pdff_2021b", "pdff_2022"],
-    "NASH": ["finngen_nash"],
 }
 # all cell types are tested (derived from the cell2location model columns at runtime);
-# this list only controls the compact console summary at the end.
-CELLTYPES = ["Hepatocytes", "Fibroblasts", "Cholangiocytes", "Macrophages",
-             "Endothelial cells", "Mono+mono derived cells", "B cells"]
+# this list only controls the compact console summary at the end. The 4 CLR-robust
+# cell types shown in the figure:
+CELLTYPES = ["Hepatocytes", "Fibroblasts", "Macrophages", "B cells"]
 
 
 def strip_bc(bcs):
@@ -86,6 +86,13 @@ def load_cohort(cohort):
         ab = pd.DataFrame(np.asarray(A.obsm["q05_cell_abundance_w_sf"]),
                           index=A.obs_names, columns=names)
     prop = ab.div(ab.sum(1), axis=0)
+    # CLR (centered-log-ratio) transform — the correct handling of compositional
+    # proportions (which sum to 1): log-ratio of each cell type to the per-spot
+    # geometric mean. Without this, "anti-hepatocyte" spuriously makes every other
+    # cell type correlate positively (a compositional shadow). Cell-type columns
+    # below are CLR values, not raw proportions.
+    L = np.log(prop.values + 1e-6)
+    prop = pd.DataFrame(L - L.mean(axis=1, keepdims=True), index=prop.index, columns=prop.columns)
     prop["bc"] = strip_bc(A.obs_names)
     prop["sample_id"] = A.obs["sample_id"].astype(str).values
     prop["tc"] = A.obs["total_counts"].values
@@ -133,7 +140,7 @@ def main():
                     if len(j) < 50:
                         continue
                     vals.append(partial(j["p"].values, j[ct].values, j["tc"].values))
-                    if fam == "NAFLD" and ct == "Hepatocytes":
+                    if fam == "NAFLD/NASH" and ct == "Hepatocytes":
                         depth_r.append((cohort, sec,
                                         np.corrcoef(rk(j["p"]), rk(j["tc"]))[0, 1]))
                 v = np.array(vals)
@@ -159,13 +166,13 @@ def main():
     out = os.path.join(GS, "gsmap_celltype_localization.csv")
     df.to_csv(out, index=False)
     print(f"\nwrote {out} ({len(df)} rows)")
-    print(f"depth confound r(-log10P NAFLD, total_counts) mean: "
+    print(f"depth confound r(-log10P NAFLD/NASH, total_counts) mean: "
           f"{np.mean([r for _,_,r in depth_r]):.2f}")
 
-    print("\n=== depth-corrected partial r (mean | n_same_sign/n_sections), key contrast ===")
-    print(f"{'family':8}{'cell_type':16}{'GSE':>16}{'Vu':>16}{'concord':>9}")
-    for fam in ["NAFLD", "PDFF", "enzyme"]:
-        for ct in ["Hepatocytes", "Fibroblasts", "Macrophages"]:
+    print("\n=== CLR depth-corrected partial r (mean | n_same_sign/n_sections), figure cells ===")
+    print(f"{'family':14}{'cell_type':16}{'GSE':>16}{'Vu':>16}{'concord':>9}")
+    for fam in ["Liver enzyme", "NAFLD/NASH", "PDFF"]:
+        for ct in CELLTYPES:
             g = df[(df.cohort == "gse192741") & (df.trait_family == fam) & (df.cell_type == ct)]
             v = df[(df.cohort == "vu") & (df.trait_family == fam) & (df.cell_type == ct)]
             if g.empty or v.empty:

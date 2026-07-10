@@ -78,10 +78,10 @@ assays = [
 ]
 
 # ---------------------------------------------------------------- figure
-fig = plt.figure(figsize=(6.2, 3.0))
+fig = plt.figure(figsize=(4.9, 2.35))
 # col 3 is an empty spacer so the colorbar's right-side label doesn't collide
 # with the bar panel's y-axis label.
-gs = fig.add_gridspec(2, 5, width_ratios=[1, 1, 0.09, 0.55, 1.25], wspace=0.08, hspace=0.16)
+gs = fig.add_gridspec(2, 5, width_ratios=[1, 1, 0.08, 0.48, 1.05], wspace=0.05, hspace=0.10)
 
 def draw_img(ax, d, ylabel=None):
     ax.imshow(d["img"], origin="upper")
@@ -103,10 +103,12 @@ for i, row in enumerate(data):
         sca = draw_img(fig.add_subplot(gs[i, j]), d,
                        ylabel=(("Healthy", "MASLD")[i] if j == 0 else None))
 
-# shared colorbar
+# shared colorbar — label as a short title ON TOP (rotated side-label would collide
+# with the bar panel's y-axis label in the compact layout)
 cax = fig.add_subplot(gs[:, 2])
-cb = fig.colorbar(sca, cax=cax); cb.ax.tick_params(labelsize=6, width=0.4, length=2)
-cb.outline.set_linewidth(0.3); cb.set_label(f"$\\it{{{GENE}}}$  log1p", fontsize=6)
+cb = fig.colorbar(sca, cax=cax); cb.ax.tick_params(labelsize=5.5, width=0.4, length=2)
+cb.outline.set_linewidth(0.3)
+cax.set_title("log1p", fontsize=6, pad=3)
 
 # cross-assay bars (spans both rows; col 3 is an empty spacer)
 axb = fig.add_subplot(gs[:, 4])
@@ -123,8 +125,8 @@ axb.set_ylim(0, max(lfcs) * 1.22)
 axb.tick_params(axis="y", labelsize=6, length=2, width=0.4); axb.tick_params(axis="x", length=0)
 for sp in ("top", "right"): axb.spines[sp].set_visible(False)
 
-fig.suptitle(GENE, fontstyle="italic", fontsize=8, x=0.28, y=1.0)  # gene label over the images
-fig.subplots_adjust(left=0.05, right=0.97, top=0.88, bottom=0.14)
+fig.suptitle(GENE, fontstyle="italic", fontsize=8, x=0.27, y=1.01)  # gene label over the images
+fig.subplots_adjust(left=0.055, right=0.985, top=0.90, bottom=0.12)
 fig.savefig(OUT, bbox_inches="tight")
 print(f"saved {OUT}")
 

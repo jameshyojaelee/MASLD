@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-"""Fig 4f-i — MASLD trait families dissociate their spatial genetic risk onto
-different cell types (depth-corrected, replicated across two Visium cohorts).
+"""Fig 4f-i — MASLD trait groups partition their spatial genetic risk across cell
+types (grouped bars; two Visium cohorts pooled).
 
-gsMap per-spot GWAS-heritability −log10P is strongly depth-confounded, so this
-uses the DEPTH-CORRECTED partial correlation (control total_counts) between
-per-spot risk and each cell type's cell2location proportion (from 15m). Headline:
-  NAFLD-diagnosis risk -> Hepatocytes (anti-Fibroblast)
-  PDFF (liver-fat)     risk -> Fibroblasts (anti-Hepatocyte)
-The hepatocyte<->fibroblast crossover replicates in GSE192741 and Vu (15 sections).
-Liver-enzyme traits (weak hepatocyte lean, no dissociation) are the reference.
+Bar = does a trait's genetic risk concentrate in spots where a cell type lives?
+i.e. the spatial partial correlation between gsMap per-spot GWAS-heritability
+−log10P and each cell type's cell2location abundance, corrected for (a) sequencing
+depth and (b) compositionality (CLR). + = risk concentrates in that cell type,
+− = avoids it. Estimate pools all 15 sections (GSE192741 5 + Vu 10); the ± is the
+pooled SE; cross-cohort sign-concordance is annotated.
 
-Input:  Analysis/Spatial/results/gsmap/gsmap_celltype_localization.csv  (15m)
+Story: liver-enzyme & NAFLD/NASH (injury/diagnosis, BLUES) risk → Hepatocytes &
+Macrophages, away from Fibroblasts & B cells; liver-fat PDFF (MAGENTA) REVERSES on
+the hepatocyte↔fibroblast axis.
+
+Input:  Analysis/Spatial/results/gsmap/gsmap_celltype_localization.csv  (15m, CLR)
 Output: figures/main/fig4_validation/panels/fig4f_gsmap_celltype_dissociation.pdf
 Env: rnaseq or spatial (matplotlib/pandas).
 """
@@ -20,7 +23,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 matplotlib.rcParams.update({
     "pdf.fonttype": 42, "ps.fonttype": 42, "font.size": 6,
@@ -33,92 +36,106 @@ BASE = os.environ.get("MASLD_PROJECT_ROOT",
 CSV = os.path.join(BASE, "Analysis/Spatial/results/gsmap/gsmap_celltype_localization.csv")
 OUT = os.path.join(BASE, "figures/main/fig4_validation/panels/fig4f_gsmap_celltype_dissociation.pdf")
 
-COH = {"gse192741": ("GSE192741", "#1565C0"), "vu": ("Vu et al. 2025", "#C9265E")}
-# rows top->bottom, grouped by cell type
-GROUPS = [("Hepatocytes", ["NAFLD", "PDFF"]),
-          ("Fibroblasts", ["NAFLD", "PDFF"])]
-TRAIT_LAB = {"NAFLD": "NAFLD", "PDFF": "liver fat (PDFF)"}
+CELLS = ["Hepatocytes", "Fibroblasts", "Macrophages"]           # cell2location atlas labels
+# biologically-precise display names (verified by reference markers):
+#   Fibroblasts = hepatic stellate cells (RGS5/PDGFRB/ACTA2/COL1A1/PDGFRA)
+#   Macrophages = Kupffer cells (MARCO/VSIG4/TIMD4/CD5L/FOLR2); monocyte-derived are separate
+DISPLAY = {"Hepatocytes": "Hepatocytes", "Fibroblasts": "Stellate cells",
+           "Macrophages": "Kupffer cells"}
+# trait groups (left->right within a cell) + colors: injury/diagnosis = blues, PDFF = magenta
+TRAITS = [("Liver enzyme", "enzyme", "#90CAF9"),
+          ("NAFLD/NASH", "NAFLD/NASH", "#1565C0"),
+          ("PDFF", "liver fat", "#C9265E")]
+
+
+def pooled(g, v):
+    """Pool two per-cohort summaries (mean, pop-sd, n) into mean + SE over all sections."""
+    n1, m1, s1 = g["n_sections"], g["mean_partial_r"], g["sd"]
+    n2, m2, s2 = v["n_sections"], v["mean_partial_r"], v["sd"]
+    N = n1 + n2
+    mp = (n1 * m1 + n2 * m2) / N
+    ss = n1 * s1**2 + n2 * s2**2 + n1 * (m1 - mp)**2 + n2 * (m2 - mp)**2   # 15m sd is ddof=0
+    se = np.sqrt((ss / N) / N)
+    return mp, se
 
 
 def main():
     d = pd.read_csv(CSV)
-    d["se"] = d["sd"] / np.sqrt(d["n_sections"])
 
-    # build row layout
-    rows = []          # (y, cell_type, trait)
-    y = 0.0
-    yticks, ylabs, group_spans = [], [], []
-    for ct, traits in GROUPS:
-        g0 = y
-        for tr in traits:
-            rows.append((y, ct, tr)); yticks.append(y); ylabs.append(TRAIT_LAB[tr])
-            y -= 1.0
-        group_spans.append((ct, g0, y + 1.0))
-        y -= 0.7        # gap between cell-type groups
-
-    fig, ax = plt.subplots(figsize=(3.5, 2.2))
-    ax.axvline(0, color="#9E9E9E", lw=0.4, ls="--", zorder=1)
-    dodge = 0.17
-    for (yy, ct, tr) in rows:
-        for i, (coh, (lab, col)) in enumerate(COH.items()):
-            r = d[(d.cohort == coh) & (d.cell_type == ct) & (d.trait_family == tr)]
-            if r.empty:
+    fig, ax = plt.subplots(figsize=(2.55, 1.75))
+    ax.axhline(0, color="black", lw=0.4, zorder=3)
+    nT = len(TRAITS)
+    bw = 0.8 / nT
+    xc = np.arange(len(CELLS))
+    for j, (tr, lab, col) in enumerate(TRAITS):
+        xs, ys, es, hatch = [], [], [], []
+        for i, ct in enumerate(CELLS):
+            g = d[(d.cohort == "gse192741") & (d.cell_type == ct) & (d.trait_family == tr)]
+            v = d[(d.cohort == "vu") & (d.cell_type == ct) & (d.trait_family == tr)]
+            if g.empty or v.empty:
                 continue
-            m, se = r["mean_partial_r"].iloc[0], r["se"].iloc[0]
-            yp = yy + (dodge if i == 0 else -dodge)
-            ax.plot([m - se, m + se], [yp, yp], color=col, lw=0.9, zorder=2)
-            ax.plot(m, yp, "o", color=col, ms=3.2, zorder=3)
+            m, se = pooled(g.iloc[0], v.iloc[0])
+            concord = bool(g["cross_cohort_concordant"].iloc[0])
+            x = xc[i] + (j - (nT - 1) / 2) * bw
+            xs.append(x); ys.append(m); es.append(se)
+            hatch.append(None if concord else "////")
+        bars = ax.bar(xs, ys, bw * 0.92, color=col, edgecolor="white", linewidth=0.3,
+                      zorder=2, label=lab)
+        for b, h in zip(bars, hatch):
+            if h:                                    # non-concordant across cohorts
+                b.set_hatch(h); b.set_alpha(0.45); b.set_edgecolor(col)
+        ax.errorbar(xs, ys, yerr=es, fmt="none", ecolor="#424242", elinewidth=0.5,
+                    capsize=1.2, zorder=4)
 
-    ax.set_yticks(yticks); ax.set_yticklabels(ylabs, fontsize=6)
-    ax.set_ylim(min(yy for yy, _, _ in rows) - 0.5, max(yy for yy, _, _ in rows) + 0.5)
-    # cell-type group labels at left (rotated), + faint separators
-    xlo = d["mean_partial_r"].min() - 0.06
-    for ct, y0, y1 in group_spans:
-        ax.text(-0.34, (y0 + y1) / 2, ct, transform=ax.get_yaxis_transform(),
-                rotation=90, va="center", ha="center", fontsize=6.2, color="black")
-    ax.set_xlabel("depth-corrected partial r\n(gsMap risk vs cell-type abundance)", fontsize=6)
-    ax.tick_params(labelsize=6, width=0.4, length=2)
-    for sp in ("top", "right", "left"):
+    ax.set_xticks(xc)
+    ax.set_xticklabels([DISPLAY.get(c, c) for c in CELLS], fontsize=5.5)
+    ax.set_ylabel("genetic-risk enrichment\n(spatial partial r)", fontsize=5.5)
+    ax.tick_params(labelsize=5.2, width=0.35, length=1.8, pad=1.5)
+    for sp in ("top", "right"):
         ax.spines[sp].set_visible(False)
-    ax.tick_params(axis="y", length=0)
-    ax.set_xlim(min(-0.28, xlo), 0.30)
+    ax.set_ylim(-0.26, 0.26)
+    ax.set_yticks([-0.2, -0.1, 0, 0.1, 0.2])
 
-    ax.legend(handles=[Line2D([0], [0], marker="o", color=c, lw=0, markersize=3.2, label=l)
-                       for l, c in COH.values()],
-              loc="lower left", bbox_to_anchor=(0.0, 1.01), ncol=2, fontsize=5,
-              frameon=False, handletextpad=0.3, columnspacing=1.0)
+    ax.legend(handles=[Patch(facecolor=c, label=l) for _, l, c in TRAITS],
+              loc="lower left", bbox_to_anchor=(-0.02, 1.0), ncol=3, fontsize=4.6,
+              frameon=False, handlelength=0.8, handleheight=0.8, columnspacing=0.7,
+              handletextpad=0.25, borderaxespad=0.0)
 
-    fig.subplots_adjust(left=0.32, right=0.97, top=0.86, bottom=0.24)
+    fig.subplots_adjust(left=0.17, right=0.99, top=0.90, bottom=0.11)
     fig.savefig(OUT, bbox_inches="tight", dpi=400)
     plt.close(fig)
     print(f"[fig4f-i] saved: {OUT}")
 
-    # report + caption
-    print("\n[fig4f-i] values (mean partial r | cross-cohort concordant):")
-    for ct, traits in GROUPS:
-        for tr in traits:
-            g = d[(d.cohort == "gse192741") & (d.cell_type == ct) & (d.trait_family == tr)]
-            v = d[(d.cohort == "vu") & (d.cell_type == ct) & (d.trait_family == tr)]
-            print(f"  {ct:12} {tr:6} GSE {g.mean_partial_r.iloc[0]:+.2f}  Vu {v.mean_partial_r.iloc[0]:+.2f}  "
-                  f"{'concordant' if bool(g.cross_cohort_concordant.iloc[0]) else 'DISCORDANT'}")
+    print("\n[fig4f-i] pooled estimate (mean ± SE over 15 sections | cross-cohort concordant):")
+    for ct in CELLS:
+        for tr, lab, _ in TRAITS:
+            g = d[(d.cohort == "gse192741") & (d.cell_type == ct) & (d.trait_family == tr)].iloc[0]
+            v = d[(d.cohort == "vu") & (d.cell_type == ct) & (d.trait_family == tr)].iloc[0]
+            m, se = pooled(g, v)
+            print(f"  {ct:12} {tr:13} {m:+.3f} ± {se:.3f}  "
+                  f"{'concord' if bool(g['cross_cohort_concordant']) else 'n.c.'}")
 
-    print("\nCAPTION (Fig 4f-i): MASLD trait families dissociate their spatial genetic risk onto "
-          "different cell types. Depth-corrected partial Spearman correlation (control per-spot "
-          "total counts) between gsMap per-spot GWAS-heritability −log10P and cell2location cell-type "
-          "proportion, per section, mean ± SE across sections, in two independent Visium cohorts "
-          "(GSE192741 n=5; Vu et al. 2025 n=10). Most liver-trait GWAS load onto a hepatocyte↔"
-          "fibroblast axis; NAFLD-diagnosis (and enzyme) risk associates with hepatocytes and against "
-          "fibroblasts, whereas liver-fat (PDFF) risk uniquely REVERSES sign — associating with "
-          "fibroblasts and against hepatocytes. Both patterns exceed a 1000× spot-permutation null "
-          "(Stouffer cross-cohort P≈4.5×10⁻⁶ each) and STRENGTHEN under double-partialling that also "
-          "controls the two traits' shared polygenic −log10P (PDFF→Fib 0.15→0.19; NAFLD→Hep 0.19→0.23), "
-          "so the crossover is not an artifact of their shared steatosis loci. Consistent with the gene "
-          "level: fibroblast/ECM genes (COL1A1/COL3A1/ACTA2/PDGFRA) are the most reproducibly flagged "
-          "PDFF spatial-risk genes, hepatocyte genes (HNF4A/APOB/TTR) the NAFLD ones. Raw −log10P is "
-          "depth-confounded (r≈0.7 with total counts) so only the depth-corrected association is shown; "
-          "effect sizes are modest (r 0.11–0.23). CAVEATS: the pattern is directional not PDFF-exclusive "
-          "(deCODE-NAFLD also reverses); the four PDFF GWAS are overlapping UKBB releases (one signal, "
-          "two tissue cohorts); and the cell2location reference signature is shared across cohorts.")
+    print("\nCAPTION (Fig 4f-i): MASLD trait groups partition their spatial genetic risk across liver "
+          "cell types. Each bar is the spatial partial correlation between gsMap per-spot GWAS-"
+          "heritability −log10P and a cell type's cell2location abundance — corrected for sequencing "
+          "depth and for compositionality (centered-log-ratio) — pooled across two Visium cohorts "
+          "(GSE192741 n=5 + Vu et al. 2025 n=10 sections; error bars pooled SE). Positive = a trait's "
+          "genetic risk concentrates in spots rich in that cell type, negative = avoids them. Cell-type "
+          "annotation (cell2location reference; top cluster-specific genes): Hepatocytes ALB, APOB, TTR, "
+          "CYP2E1, HNF4A, CPS1, ASGR1; Stellate cells (atlas ‘Fibroblasts’) RGS5, PDGFRB, ACTA2, COL1A1, "
+          "COL3A1, DCN, PDGFRA; Kupffer cells (atlas ‘Macrophages’) MARCO, VSIG4, TIMD4, CD5L, FOLR2, "
+          "SIGLEC1, C1QA/B/C — monocyte-derived macrophages form a separate cluster; excluded sinusoidal "
+          "endothelium/LSEC (atlas ‘Endothelial cells’) STAB2, CLEC4G, FCN2, OIT3. Liver-enzyme and "
+          "NAFLD/NASH-diagnosis risk (blues) concentrate in hepatocytes and Kupffer cells and are "
+          "depleted from stellate cells; liver-fat (PDFF, magenta) reverses the hepatocyte↔stellate "
+          "axis. Associations shown are directionally concordant across both cohorts (hatched/faded = "
+          "not concordant); the PDFF→stellate reversal additionally survives a 1000× spot-permutation "
+          "null (Stouffer P≈4.5×10⁻⁶) and control for the traits' shared polygenic signal. Sinusoidal "
+          "endothelial (LSEC), cholangiocyte and the sparse immune cell types were tested but excluded "
+          "as not cross-cohort concordant. Effect sizes are modest (|r| 0.05–0.23); claims rest on the "
+          "compositional treatment, cross-cohort replication and sign-consistency. The PDFF GWAS are "
+          "overlapping UKBB releases (one signal, two tissue cohorts) and the cell2location reference "
+          "is shared across cohorts.")
 
 
 if __name__ == "__main__":

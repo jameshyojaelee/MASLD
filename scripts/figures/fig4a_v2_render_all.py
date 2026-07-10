@@ -14,6 +14,7 @@ import fig4a_v2_ghostflow
 import fig4a_v2_corefield
 import fig4a_v2_physlayers
 import fig4a_v2_triangle
+import fig4a_v2_icons
 
 
 def main():
@@ -24,6 +25,7 @@ def main():
         ("corefield",  fig4a_v2_corefield.build),
         ("physlayers", fig4a_v2_physlayers.build),
         ("triangle",   fig4a_v2_triangle.build),
+        ("icons",      fig4a_v2_icons.build),
     ]
     ok, fail = [], []
     for name, fn in builders:

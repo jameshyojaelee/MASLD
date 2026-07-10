@@ -318,4 +318,48 @@
       will-change: auto;
     }
   }
+
+  /* Ambient aurora — large, soft, slow-drifting brand-gradient blobs behind the
+     hero (decorative chrome; never a data mark). The radial-gradient falloff IS
+     the blur; a modest static blur softens the edge further. Per-blob
+     animation-name / duration / delay / position come from aurora.tsx. */
+  .aurora-blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(40px);
+    will-change: transform;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+  }
+  @keyframes aurora-drift-a {
+    from {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+      transform: translate3d(6%, 8%, 0) scale(1.12);
+    }
+  }
+  @keyframes aurora-drift-b {
+    from {
+      transform: translate3d(0, 0, 0) scale(1.05);
+    }
+    to {
+      transform: translate3d(-8%, -5%, 0) scale(1.15);
+    }
+  }
+  @keyframes aurora-drift-c {
+    from {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+      transform: translate3d(5%, -7%, 0) scale(1.1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-blob {
+      animation: none !important;
+      will-change: auto;
+    }
+  }
 }
