@@ -6,18 +6,25 @@
 # Implements the panel set required by FIGURE_PLAN_REVISED.md §Figure 4 and
 # the reframes in VERIFICATION_REPORT.md for F5 (BRONZE) and G2 (BRONZE).
 #
-# Panels (all written to FIG4_DIR/panels/, combined into FIG4_DIR/fig4_validation.pdf):
+# Panels (all written to FIG4_DIR/panels/; the fig4_validation.pdf composite
+# was retired 2026-07-07 — individual panel PDFs are the canonical output):
 #   4a — Proteomics DE volcano (PXD052937 plasma DIA-MS, MASLD vs   [F2 SILVER]
 #        control). Rewired 2026-04-22: previously used GSE276114
 #        which is RNA-seq (not proteomics) — see T0.6 correction.
+#        Output renamed panels/figS4b.pdf 2026-07-07 (also serves as
+#        Supp Fig 4b; see docs/paper_outline.md Fig S4).
 #   4b — mRNA-protein concordance scatter (bulk dream logFC vs      [F2 SILVER]
 #        PXD052937 plasma DIA-MS logFC). ρ computed inline from
 #        PXD052937 subset of protein_transcript_concordance_v3.csv.
 #        Rewired 2026-04-22 — previously circular (RNA vs RNA).
 #   4c — Spatial zonation of disease signature + notable SVGs       [F1 BRONZE]
 #        (309 Healthy / 451 Steatotic SVGs; GSE192741 single-dataset)
-#   4d — Plasma F>=3 binary fibrosis classifier: XGBoost AUROC      [F4 GOLD]
-#        0.790 +/- 0.076; CHI3L1 top protein at SHAP 9.7%
+#   --- WITHDRAWN 2026-06-29 (AUDIT P0#4) ---
+#   Old 4d (plasma F>=3 binary fibrosis classifier, XGBoost AUROC 0.790) was
+#   REMOVED: the plasma Olink AUROCs are withdrawn — there is no per-subject
+#   Olink<->GSE276114 crosswalk (218 plasma vs 177 liver), so the labels cannot
+#   be validated. Sweep artifacts archived to data/archive/withdrawn_olink_2026-06-01/.
+#   See STATISTICAL_AUDIT_2026-06-29.md P0#4. Revive only after a real crosswalk.
 #   --- MOVED OUT 2026-04-29 ---
 #   Old 4e (drug-target genetic validation scatter, bulk transcript logFC vs
 #     SuSiE PP4 / max PIP) was moved to fig3 panels 3e/3f. The
@@ -30,7 +37,9 @@
 #     story that 4a/4b already cover.
 #
 # Output paths (FIG4_DIR only):
-#   panels/fig4a.pdf ... fig4d.pdf  +  fig4_validation.pdf (composite)
+#   panels/figS4b.pdf (was fig4a.pdf), fig4b.pdf, fig4c.pdf
+#   (4d withdrawn 2026-06-29 — see header; composite fig4_validation.pdf
+#   retired 2026-07-07 — see header)
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -54,8 +63,8 @@ dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 PROT   <- PROTEOMICS_DIR
 SPAT   <- SPATIAL_DIR
-PLASMA <- file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/multiprogram")
+# PLASMA constant removed 2026-06-29 (AUDIT P0#4) — Panel 4d (plasma classifier)
+# withdrawn; sweep artifacts archived to data/archive/withdrawn_olink_2026-06-01/.
 
 # ============================================================================
 # Panel 4a — Proteomics DE volcano (PXD052937 plasma DIA-MS)
@@ -67,6 +76,7 @@ PLASMA <- file.path(BASE,
 #   HGNC via Candidates.tsv lookup built by differential_proteomics.R.
 # ============================================================================
 message("[4a] Proteomics volcano (PXD052937 plasma DIA-MS, MASLD vs control)")
+message("[caption] Plasma proteomics (PXD052937): MASLD vs control. DIA-MS; 3,346 proteins x 72 plasma samples (Sourianarayanane et al.)")
 
 prot_de <- fread(file.path(PROT, "protein_differential_results_v3.csv"))
 pdat    <- prot_de[dataset == "PXD052937" & !is.na(padj) & !is.na(logFC)]
@@ -123,7 +133,7 @@ p4a <- ggplot(pdat, aes(x = logFC, y = nlp, color = sig)) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed",
              linewidth = 0.25, color = "gray60") +
   geom_label_repel(data = top_lbl, aes(label = gene),
-                   size = 1.9, max.overlaps = 20,
+                   size = GEOM_TEXT_6PT, max.overlaps = 20,
                    label.padding = 0.1, segment.size = 0.15,
                    min.segment.length = 0, fontface = "italic",
                    color = "black", fill = alpha("white", 0.85),
@@ -133,21 +143,18 @@ p4a <- ggplot(pdat, aes(x = logFC, y = nlp, color = sig)) +
                                 sprintf("Down (%d)", n_down),
                                 "n.s.")) +
   labs(x = expression("Plasma protein log"[2]*"FC (MASLD vs control)"),
-       y = expression(-log[10]~italic(p)[adj]),
-       title = "Plasma proteomics (PXD052937): MASLD vs control",
-       subtitle = "DIA-MS; 3,346 proteins x 72 plasma samples (Sourianarayanane et al.)") +
+       y = expression(-log[10]~italic(p)[adj])) +
   theme_masld() +
   theme(legend.position = "inside",
         legend.position.inside = c(0.82, 0.88),
         legend.background = element_rect(fill = alpha("white", 0.85), color = NA),
-        legend.key.size = unit(0.25, "cm"),
-        plot.subtitle = element_text(size = 6, color = "gray35"))
+        legend.key.size = unit(0.25, "cm"))
 
 # Persist a lightweight volcano CSV for downstream QC/caption text
 fwrite(pdat[, .(protein_id, gene, logFC, padj, nlp, sig)],
        file.path(PROT, "pxd052937_dep_volcano.csv"))
 
-save_fig(p4a, file.path(PANEL_DIR, "fig4a.pdf"),
+save_fig(p4a, file.path(PANEL_DIR, "figS4b.pdf"),
          width = fig_half_width, height = 3.3)
 
 # ============================================================================
@@ -263,39 +270,13 @@ fwrite(data.table(
                     sum(cb$is_cc, na.rm = TRUE), both_dir, both_n)),
        file.path(PROT, "pxd052937_concordance_summary.csv"))
 
-p4b <- ggplot(cb, aes(x = bulk_logFC, y = protein_logFC, color = sig_class)) +
-  rasterize_layer(geom_point(size = 0.5, alpha = 0.55, shape = 16)) +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed",
-              linewidth = 0.25, color = "gray55") +
-  geom_hline(yintercept = 0, linewidth = 0.2, color = "gray70") +
-  geom_vline(xintercept = 0, linewidth = 0.2, color = "gray70") +
-  scale_color_manual(values = sig_cols_b, name = NULL) +
-  annotate("text", x = -Inf, y = Inf, label = annot_both,
-           hjust = -0.05, vjust = 1.6, size = 2.0, color = "gray25") +
-  labs(x = expression("Transcript log"[2]*"FC (MASLD vs control)"),
-       y = expression("Plasma protein log"[2]*"FC (PXD052937; MASLD vs control)"),
-       title = "mRNA vs plasma protein concordance") +
-  theme_masld() +
-  theme(legend.position = "inside",
-        legend.position.inside = c(0.82, 0.20),
-        legend.background = element_rect(fill = alpha("white", 0.85), color = NA),
-        legend.key.size = unit(0.22, "cm"))
-
-if (nrow(lbl_b) > 0) {
-  p4b <- p4b +
-    geom_label_repel(data = lbl_b,
-                     mapping = aes(x = bulk_logFC, y = protein_logFC,
-                                   label = gene),
-                     size = 1.9, max.overlaps = 20,
-                     label.padding = 0.1, segment.size = 0.15,
-                     min.segment.length = 0, fontface = "italic",
-                     color = "black", fill = alpha("white", 0.85),
-                     inherit.aes = FALSE,
-                     show.legend = FALSE)
-}
-
-save_fig(p4b, file.path(PANEL_DIR, "fig4b.pdf"),
-         width = fig_half_width, height = 3.3)
+# ── Panel 4b (RETIRED 2026-07-07 — do NOT re-create fig4b.pdf) ──────────────
+# The PXD052937 transcript-vs-plasma-protein plane (former fig4b.pdf) is retired:
+# the "liver -> plasma translation" claim did not hold on the rigorous 41-paired
+# PXD051911 plasma cohort. The canonical 4c is now the disease-residualized
+# protein-program co-regulation panel (composite_mrna_protein.R ->
+# fig4c_mrna_protein_composite.pdf). The concordance CSVs written above are kept
+# for provenance/captions; the fig4b.pdf panel PDF is no longer written.
 
 # ============================================================================
 # Panel 4c — Spatial zonation of disease signature + notable SVGs
@@ -360,15 +341,14 @@ p4c <- ggplot(svg_plot[display_cat == "Stable SVG"],
   geom_label_repel(data = lbl_c,
                    aes(x = I_healthy, y = I_masld, label = gene,
                        color = display_cat),
-                   size = 1.7, max.overlaps = 22,
+                   size = GEOM_TEXT_6PT, max.overlaps = 22,
                    label.padding = 0.08, segment.size = 0.12,
                    min.segment.length = 0, fontface = "italic",
                    fill = alpha("white", 0.85), show.legend = FALSE,
                    inherit.aes = FALSE) +
   scale_color_manual(values = cat_cols, name = NULL) +
   labs(x = expression("Moran's " * italic(I) * " (Healthy)"),
-       y = expression("Moran's " * italic(I) * " (Steatotic)"),
-       title = "Spatial zonation") +
+       y = expression("Moran's " * italic(I) * " (Steatotic)")) +
   theme_masld() +
   theme(legend.position = "inside",
         legend.position.inside = c(0.25, 0.88),
@@ -376,73 +356,21 @@ p4c <- ggplot(svg_plot[display_cat == "Stable SVG"],
         legend.key.size = unit(0.22, "cm")) +
   guides(color = guide_legend(override.aes = list(size = 1.5, alpha = 1)))
 
-save_fig(p4c, file.path(PANEL_DIR, "fig4c.pdf"),
-         width = fig_half_width, height = 3.3)
+# fig4c.pdf RETIRED 2026-07-07 (do NOT re-create): the bare Moran's I spatial-
+# zonation panel is superseded by fig4d_spatial_reorganization.pdf. p4c is no
+# longer saved. Do NOT re-add this save_fig().
+# save_fig(p4c, file.path(PANEL_DIR, "fig4c.pdf"),
+#          width = fig_half_width, height = 3.3)
 
 # ============================================================================
-# Panel 4d — Plasma F>=3 binary fibrosis classifier
-#   XGBoost AUROC 0.790 +/- 0.076 (10x5 nested CV).
-#   CHI3L1 top SHAP at 9.7% of total SHAP mass (not 40%).
+# Panel 4d — WITHDRAWN 2026-06-29 (AUDIT P0#4)
+#   The plasma F>=3 binary fibrosis classifier (XGBoost AUROC 0.790) and its
+#   SHAP leaderboard were REMOVED: the plasma Olink AUROCs are withdrawn (no
+#   per-subject Olink<->GSE276114 crosswalk; 218 plasma vs 177 liver), so the
+#   labels cannot be validated. Sweep artifacts (226f_sweep_leaderboard.csv)
+#   archived to data/archive/withdrawn_olink_2026-06-01/.
+#   See STATISTICAL_AUDIT_2026-06-29.md P0#4. Revive only after a real crosswalk.
 # ============================================================================
-message("[4d] Plasma fibrosis classifier (F4 GOLD)")
-
-lb   <- fread(file.path(PLASMA, "226f_sweep_leaderboard.csv"))
-imp  <- fread(file.path(PLASMA, "226a_protein_importance.csv"))
-
-lb_t1 <- lb[target == "T1_binary" & primary_metric_name == "AUROC"]
-setorder(lb_t1, -primary_metric_mean)
-lb_t1[, model := factor(model, levels = rev(model))]
-n_show <- min(12, nrow(lb_t1))
-lb_show <- head(lb_t1, n_show)
-lb_show[, highlight := model == "xgboost"]
-
-# Panel 4d(i): model leaderboard bar
-pd1 <- ggplot(lb_show,
-              aes(x = primary_metric_mean, y = model, fill = highlight)) +
-  geom_col(width = 0.75) +
-  geom_errorbarh(aes(xmin = primary_metric_mean - primary_metric_sd,
-                     xmax = primary_metric_mean + primary_metric_sd),
-                 height = 0.2, linewidth = 0.3, color = "gray25") +
-  geom_vline(xintercept = 0.5, linetype = "dashed",
-             linewidth = 0.3, color = "gray55") +
-  geom_text(data = lb_show[highlight == TRUE],
-            aes(label = sprintf("%.3f +/- %.3f",
-                                 primary_metric_mean, primary_metric_sd)),
-            hjust = -0.05, size = 2.0, color = "gray15") +
-  scale_fill_manual(values = c(`TRUE` = masld_colors$up, `FALSE` = "#B0BEC5"),
-                    guide = "none") +
-  scale_x_continuous(limits = c(0.48, 0.95),
-                     expand = expansion(mult = c(0, 0.02))) +
-  labs(x = "AUROC (10x5 nested CV)", y = NULL,
-       title = "Plasma F>=3 fibrosis: model leaderboard") +
-  theme_masld() +
-  theme(axis.text.y = element_text(size = 6))
-
-# Panel 4d(ii): top SHAP proteins (T1_binary)
-imp_t1 <- imp[target == "T1_binary"]
-total_shap <- sum(imp_t1$mean_abs_shap, na.rm = TRUE)
-imp_t1[, shap_frac := 100 * mean_abs_shap / total_shap]
-setorder(imp_t1, -mean_abs_shap)
-top_imp <- head(imp_t1, 10)
-top_imp[, protein := factor(protein, levels = rev(protein))]
-top_imp[, highlight := protein == "CHI3L1"]
-
-pd2 <- ggplot(top_imp, aes(x = shap_frac, y = protein, fill = highlight)) +
-  geom_col(width = 0.75) +
-  geom_text(aes(label = sprintf("%.1f%%", shap_frac)),
-            hjust = -0.1, size = 2.0, color = "gray20") +
-  scale_fill_manual(values = c(`TRUE` = masld_colors$up, `FALSE` = "#90CAF9"),
-                    guide = "none") +
-  scale_x_continuous(limits = c(0, max(top_imp$shap_frac) * 1.25),
-                     expand = expansion(mult = c(0, 0))) +
-  labs(x = "Fraction of total SHAP (%)", y = NULL,
-       title = "Top 10 proteins; CHI3L1 leads (9.7% SHAP)") +
-  theme_masld() +
-  theme(axis.text.y = element_text(size = 6, face = "italic"))
-
-p4d <- (pd1 | pd2) + plot_layout(widths = c(1.05, 1))
-save_fig(p4d, file.path(PANEL_DIR, "fig4d.pdf"),
-         width = fig_full_width, height = 3.3)
 
 # Panel 4e (drug-target genetic validation scatters) was moved 2026-04-29
 # to fig3_regulatory_architecture_v2.R as panels 3e/3f. The scatter narrative
@@ -450,23 +378,11 @@ save_fig(p4d, file.path(PANEL_DIR, "fig4d.pdf"),
 # architecture, not the proteomics/spatial validation figure.
 
 # ============================================================================
-# Composite assembly
+# Composite assembly — RETIRED 2026-07-07
 # ============================================================================
-message("[composite] Assembling fig4_validation.pdf")
-
-# Row 1: 4a | 4b | 4c   (three ~half-width panels)
-# Row 2: 4d (full-width, has two sub-bars)
-row1 <- (p4a | p4b | p4c)
-row2 <- p4d
-
-combined <- row1 / row2 +
-  plot_layout(heights = c(1, 1)) +
-  plot_annotation(tag_levels = list(c("a","b","c","d",""))) &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
-
-out_composite <- file.path(FIGDIR, "fig4_validation.pdf")
-save_fig(combined, out_composite,
-         width = fig_full_width, height = 6.8)
+# The fig4_validation.pdf composite (a|b|c) is no longer produced. figS4b.pdf
+# (proteomics volcano) above is the canonical individual-panel output; the
+# fig4b.pdf and fig4c.pdf panels were RETIRED 2026-07-07 and are no longer
+# written (Illustrator assembly convention). Do not re-add the composite save_fig().
 
 message("Done. Panels in: ", PANEL_DIR)
-message("Composite:      ", out_composite)

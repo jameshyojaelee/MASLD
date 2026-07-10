@@ -315,7 +315,7 @@ for (padj_thresh in padj_grid) {
       config$min_layers_active <- min_layers
 
       selected_idx <- apply_preset(atlas, config)
-      metrics <- evaluate_selection(atlas, selected_idx, full_positive)
+      metrics <- evaluate_selection(atlas, selected_idx, positive_in_atlas)  # F6: independent external controls
 
       grid_results <- rbindlist(list(grid_results, data.table(
         l1_padj = padj_thresh,
@@ -332,16 +332,23 @@ for (padj_thresh in padj_grid) {
   }
 }
 
-# Find F1-optimal
-best_idx <- which.max(grid_results$f1)
-best_config <- grid_results[best_idx]
-cat("\nBest therapeutic recovery configuration:\n")
-print(best_config)
+# F6 DE-CIRCULARISATION (2026-07-01): argmax-F1 over this 36-cell grid has NO held-out
+# and optimistically inflates F1 (the threshold is tuned to the very positive set it is
+# scored on). We therefore DO NOT tune. The grid is retained only as a transparency / PR
+# surface (grid_search_results.csv). The therapeutic_recovery preset uses a SINGLE
+# PRE-REGISTERED threshold chosen a priori (= the library annotation threshold:
+# padj<0.1, |lfc|>0.5, >=2 evidence layers), NOT selected to maximise F1.
+best_idx <- which.max(grid_results$f1)   # optimistic reference ONLY (reported, not used)
+cat(sprintf("\n[reference only] argmax-F1 grid cell (OPTIMISTIC, NOT used to set the preset): padj=%.3f lfc=%.2f min_layers=%d F1=%.4f\n",
+            grid_results$l1_padj[best_idx], grid_results$l1_lfc[best_idx],
+            grid_results$min_layers[best_idx], grid_results$f1[best_idx]))
 
-# Update therapeutic_recovery preset with optimal values
-presets$therapeutic_recovery$l1_padj <- best_config$l1_padj
-presets$therapeutic_recovery$l1_lfc <- best_config$l1_lfc
-presets$therapeutic_recovery$min_layers_active <- best_config$min_layers
+PREREG_PADJ <- 0.1; PREREG_LFC <- 0.5; PREREG_MIN_LAYERS <- 2L   # pre-registered a priori
+presets$therapeutic_recovery$l1_padj           <- PREREG_PADJ
+presets$therapeutic_recovery$l1_lfc            <- PREREG_LFC
+presets$therapeutic_recovery$min_layers_active <- PREREG_MIN_LAYERS
+cat(sprintf("[pre-registered] therapeutic_recovery: padj<%.2f, |lfc|>%.2f, min_layers>=%d (a priori, NOT tuned to F1)\n",
+            PREREG_PADJ, PREREG_LFC, PREREG_MIN_LAYERS))
 
 # ================================================================
 # Evaluate all presets
@@ -353,27 +360,32 @@ benchmark_results <- data.table()
 for (preset_name in names(presets)) {
   config <- presets[[preset_name]]
   selected_idx <- apply_preset(atlas, config)
-  metrics <- evaluate_selection(atlas, selected_idx, full_positive)
+  # F6 HEADLINE: F1 vs the INDEPENDENT external expression-driven controls only.
+  metrics      <- evaluate_selection(atlas, selected_idx, positive_in_atlas)
+  # Transparency: circular F1 vs the 78-gene set that ALSO includes the 21 atlas-derived
+  # convergence targets (recoverable by construction — inflates F1).
+  metrics_circ <- evaluate_selection(atlas, selected_idx, full_positive)
+  # Honest drug metric: recovery of EXTERNAL pharmacological targets (not convergence-derived).
+  pharma_rec   <- sum(pharma_in_atlas %in% metrics$selected_genes)
 
-  cat(sprintf("\n%s: %d genes selected, precision=%.3f, recall=%.3f, F1=%.3f, drugs=%d/%d\n",
-              config$name, metrics$n_selected, metrics$precision, metrics$recall,
-              metrics$f1, metrics$drugs_recovered, length(drug_targets)))
-
-  # Show which drugs recovered
-  drugs_found <- drug_targets[drug_targets %in% metrics$selected_genes]
-  if (length(drugs_found) > 0) {
-    cat("  Drugs recovered:", paste(drugs_found, collapse = ", "), "\n")
-  }
+  cat(sprintf("\n%s: %d selected | INDEPENDENT F1=%.3f (P=%.3f R=%.3f, %d/%d ext controls) | circular F1=%.3f | ext-pharma %d/%d | convergent-drug(circular) %d/%d\n",
+              config$name, metrics$n_selected, metrics$f1, metrics$precision, metrics$recall,
+              metrics$true_positives, length(positive_in_atlas),
+              metrics_circ$f1, pharma_rec, length(pharma_in_atlas),
+              metrics$drugs_recovered, length(drug_targets)))
 
   benchmark_results <- rbindlist(list(benchmark_results, data.table(
     preset = preset_name,
     preset_label = config$name,
     n_selected = metrics$n_selected,
-    true_positives = metrics$true_positives,
+    true_positives = metrics$true_positives,            # vs independent external set
     precision = round(metrics$precision, 4),
     recall = round(metrics$recall, 4),
-    f1 = round(metrics$f1, 4),
-    drugs_recovered = metrics$drugs_recovered,
+    f1 = round(metrics$f1, 4),                           # HEADLINE = independent (de-circularised, F6)
+    f1_circular = round(metrics_circ$f1, 4),             # transparency: incl. 21 convergence-derived positives
+    pharma_recovered = pharma_rec,                       # external pharmacological targets recovered
+    pharma_total = length(pharma_in_atlas),
+    drugs_recovered = metrics$drugs_recovered,           # convergent (score>=5) — CIRCULAR, informational only
     drug_recovery_rate = round(metrics$drug_recovery_rate, 4),
     genetic_controls_captured = metrics$genetic_controls_captured
   )))
@@ -391,7 +403,7 @@ for (padj_thresh in c(0.001, 0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.
   for (min_layers in c(1, 2, 3, 4, 5)) {
     config <- list(l1_padj = padj_thresh, min_layers_active = min_layers, logic = "AND")
     selected_idx <- apply_preset(atlas, config)
-    metrics <- evaluate_selection(atlas, selected_idx, full_positive)
+    metrics <- evaluate_selection(atlas, selected_idx, positive_in_atlas)  # F6: independent set
     pr_data <- rbindlist(list(pr_data, data.table(
       padj_threshold = padj_thresh,
       min_layers = min_layers,

@@ -62,7 +62,7 @@ fib <- secretome %>%
 
 p_land <- ggplot(fib, aes(x = bulk_lfc, y = max_score_diff)) +
   geom_point(aes(color = is_focal, size = is_focal)) +
-  geom_text_repel(aes(label = gene, fontface = ifelse(is_focal, "bold.italic", "italic"),
+  geom_text_repel(aes(label = gene, fontface = ifelse(is_focal, "italic", "italic"),
                       color = is_focal),
                   size = PUB_GEOM_TEXT, box.padding = 0.3, segment.size = 0.2,
                   max.overlaps = Inf, seed = 1, show.legend = FALSE) +
@@ -70,8 +70,7 @@ p_land <- ggplot(fib, aes(x = bulk_lfc, y = max_score_diff)) +
                      guide = "none") +
   scale_size_manual(values = c(`TRUE` = 3.2, `FALSE` = 1.4), guide = "none") +
   scale_y_continuous(limits = c(0.65, 1.0)) +
-  labs(x = "Bulk mRNA log2FC", y = "LIANA ligand score",
-       title = "Fibroblast-derived ligands") +
+  labs(x = "Bulk mRNA log2FC", y = "LIANA ligand score") +
   theme_masld() + theme_pub()
 
 # ── Panel ii: SERPINE1 spatial autocorrelation, healthy -> steatotic ─────────
@@ -85,10 +84,9 @@ p_spat <- ggplot(spat_df, aes(x = cond, y = moran, fill = fill)) +
   scale_fill_identity() +
   scale_y_continuous(limits = c(0, max(spat_df$moran) * 1.08),
                      expand = expansion(mult = c(0, 0.02))) +
-  labs(x = NULL, y = "Spatial autocorrelation\n(Moran's I)",
-       title = "SERPINE1 spatial") +
+  labs(x = NULL, y = "Spatial autocorrelation\n(Moran's I)") +
   theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT + 0.5))
+  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT))
 
 # ── Assemble ──────────────────────────────────────────────────────────────────
 serp <- fib %>% filter(is_focal)
@@ -97,7 +95,7 @@ message(sprintf("[serpine1 legend] SERPINE1 fibroblast LIANA score = %.3f; bulk 
 
 p_out <- (p_land | p_spat) + plot_layout(widths = c(2.2, 1))
 
-out <- file.path(FIG4_DIR, "serpine1_ligand.pdf")
+out <- file.path(FIG4_DIR, "panels", "serpine1_ligand.pdf")
 pdf(out, width = fig_full_width * 0.92, height = 2.5, useDingbats = FALSE)
 print(p_out)
 dev.off()

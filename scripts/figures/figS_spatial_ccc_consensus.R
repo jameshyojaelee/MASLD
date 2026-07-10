@@ -58,7 +58,7 @@ pC <- ggplot(topD, aes(liana_score_diff, pair, fill = both_concordant)) +
                          legend.text = element_text(size = 6))
 
 fig <- (pA | pB) / pC + plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 ggsave(file.path(FIGS_CELLTYPE_DIR, "figS_I1_spatial_ccc_consensus.pdf"),
        fig, width = 14, height = 11)

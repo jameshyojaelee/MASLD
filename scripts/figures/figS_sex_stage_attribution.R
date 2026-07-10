@@ -207,7 +207,7 @@ fig <- (pA | pB) / (pC | pD) +
   plot_annotation(tag_levels = "a",
                   title = "Stage-attribution of sex bias across the MASLD trajectory",
                   subtitle = "4 sex x disease contrasts: D-vs-Ctrl (formal, n=847) + MASH-vs-MASL (formal, n=687) + MASL-vs-Ctrl + MASH-vs-Ctrl (descriptive)",
-                  theme = theme(plot.title    = element_text(size = PUB_TITLE,    face = "bold"),
+                  theme = theme(plot.title    = element_text(size = PUB_TITLE,    face = "plain"),
                                 plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30")))
 ggsave(OUT, fig,
        width = fig_full_width, height = 1.1 * fig_full_width, units = "in")

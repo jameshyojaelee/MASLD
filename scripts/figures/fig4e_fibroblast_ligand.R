@@ -17,7 +17,7 @@
 #
 # Panel: fibroblast-derived ligands, bulk log2FC (x) x LIANA ligand score (y);
 #        FOCAL the hero. Bulk = canonical limma-voom-qw C2 (`bulk_lfc`).
-# Output: figures/main/fig4_validation/fig4e_fibroblast_ligand_<FOCAL>.pdf
+# Output: figures/main/fig4_validation/panels/fig4e_fibroblast_ligand.pdf (canonical main 4e; FOCAL=THBS2)
 # Env:    rnaseq
 # ==============================================================================
 
@@ -81,7 +81,7 @@ p_land <- ggplot(fib, aes(x = bulk_lfc, y = max_score_diff)) +
   geom_vline(xintercept = 0, linewidth = 0.25, color = "grey75") +
   geom_point(aes(color = is_focal, size = is_focal)) +
   geom_text_repel(aes(label = gene,
-                      fontface = ifelse(is_focal, "bold.italic", "italic")),
+                      fontface = "italic"),
                   color = "black",
                   size = PUB_GEOM_TEXT, box.padding = 0.30, segment.size = 0.2,
                   segment.color = "grey70", max.overlaps = Inf, seed = 1,
@@ -123,6 +123,9 @@ message(sprintf(
   ifelse(is.na(foc_coloc), "NA (no colocalization signal)", sprintf("%.2f", foc_coloc))))
 message(strrep("=", 78))
 
-out <- file.path(FIG4_DIR, sprintf("fig4e_fibroblast_ligand_%s.pdf", FOCAL))
-ggsave(out, p_land, width = 4.8, height = 3.5, useDingbats = FALSE)
-message("Wrote: ", out)
+# ⛔ RETIRED 2026-07-07 (user-directed) — this RNA×LIANA scatter is NOT a Fig 4 panel (both axes are
+#   transcriptome-derived → Fig-3 material, not orthogonal validation). Output DISABLED; do NOT re-create.
+#   The live 4e is the fibroblast-secretome multi-modal panel (`fig4e_*`). Kept only as a data explorer.
+out <- file.path(FIG4_DIR, "panels", "fig4e_fibroblast_ligand.pdf")
+# ggsave(out, p_land, width = 3.4, height = 3.0, device = grDevices::cairo_pdf)   # DISABLED — do not re-enable
+message("[retired] fig4e_fibroblast_ligand.R writes NO panel (RNA×LIANA is not an orthogonal-validation figure).")

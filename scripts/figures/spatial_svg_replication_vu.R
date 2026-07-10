@@ -75,7 +75,7 @@ pA <- ggplot(rate_df, aes(pct, lab)) +
   geom_segment(aes(x = 0, xend = pct, yend = lab), linewidth = 1.1, color = masld_colors$conserved) +
   geom_point(size = 2.8, color = masld_colors$conserved) +
   geom_text(aes(label = sprintf("%.0f%% (%d/%d)", pct, num, den)), hjust = 0, nudge_x = 2.5,
-            size = 3.2, fontface = "bold", color = "black") +
+            size = 3.2, fontface = "plain", color = "black") +
   scale_x_continuous(limits = c(0, 118), breaks = c(0, 50, 100),
                      labels = function(x) paste0(x, "%"), expand = expansion(mult = c(0, 0))) +
   labs(x = "GSE192741 SVGs replicating in Vu", y = NULL) +
@@ -97,7 +97,7 @@ pB <- ggplot(m, aes(gse_moran, vu_moran)) +
                   color = "gray15", max.overlaps = Inf, seed = 1, box.padding = 0.4) +
   annotate("text", x = max(m$gse_moran, na.rm = TRUE) * 0.98, y = 0.02,
            label = sprintf("Spearman rho = %.2f", S$rho), hjust = 1, vjust = 0,
-           size = 3.4, fontface = "bold", color = "gray20") +
+           size = 3.4, fontface = "plain", color = "gray20") +
   labs(x = "GSE192741 Moran's I (steatotic)", y = "Vu Moran's I") +
   theme_masld() + theme_pub() +
   theme(axis.title = element_text(size = 11), axis.text = element_text(size = 10, color = "black"))

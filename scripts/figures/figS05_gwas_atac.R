@@ -104,7 +104,7 @@ if (file.exists(da_file)) {
                        name = NULL) +
     geom_text_repel(data = top_genes,
                     aes(label = gene_symbol),
-                    size = 1.8, max.overlaps = 25,
+                    size = GEOM_TEXT_6PT, max.overlaps = 25,
                     segment.size = 0.2, min.segment.length = 0) +
     geom_vline(xintercept = c(-0.25, 0.25), linetype = "dashed",
                linewidth = 0.3, color = "gray60") +
@@ -112,20 +112,19 @@ if (file.exists(da_file)) {
                linewidth = 0.3, color = "gray60") +
     coord_cartesian(xlim = c(-xlim_val, xlim_val)) +
     labs(x = expression(log[2]~"fold change (MASLD / Normal)"),
-         y = expression(-log[10]~"(adjusted p-value)"),
-         title = "Hepatocyte Differential Accessibility",
-         subtitle = subtitle_text) +
+         y = expression(-log[10]~"(adjusted p-value)")) +
     annotate("text", x = xlim_val * 0.7,
              y = max(da$neg_log10_padj, na.rm = TRUE) * 0.95,
              label = paste0(n_up, " opened"), color = masld_colors$up,
-             size = 2.2, hjust = 0.5) +
+             size = GEOM_TEXT_6PT, hjust = 0.5) +
     annotate("text", x = -xlim_val * 0.7,
              y = max(da$neg_log10_padj, na.rm = TRUE) * 0.95,
              label = paste0(n_down, " closed"), color = masld_colors$down,
-             size = 2.2, hjust = 0.5) +
+             size = GEOM_TEXT_6PT, hjust = 0.5) +
     theme_masld() +
     theme(legend.position = "none")
 
+  message("  [caption] Hepatocyte Differential Accessibility: ", subtitle_text)
   save_panel(p9, "panel_09_scatac_da_volcano.pdf", w = fig_half_width, h = 3.5)
 } else {
   message("  WARNING: ", da_file, " not found, skipping panel 09")
@@ -160,16 +159,16 @@ if (!is.null(da_annot) && "distance_to_tss" %in% names(da_annot)) {
                      "Proximal (3-10kb)" = "#42A5F5", "Distal (10-100kb)" = "#E91E63",
                      "Intergenic (>100kb)" = "#BDBDBD")
 
+  message("  [caption] scATAC DA peak genomic distribution")
   p10 <- ggplot(annot_counts, aes(x = annotation, y = pct, fill = annotation)) +
     geom_col(width = 0.7) +
     scale_fill_manual(values = annot_colors) +
     geom_text(aes(label = paste0(round(pct, 1), "%")),
-              vjust = -0.3, size = 2) +
-    labs(x = NULL, y = "Percentage of DA peaks",
-         title = "scATAC DA peak genomic distribution") +
+              vjust = -0.3, size = GEOM_TEXT_6PT) +
+    labs(x = NULL, y = "Percentage of DA peaks") +
     theme_masld() +
     theme(legend.position = "none",
-          axis.text.x = element_text(angle = 35, hjust = 1, size = 5))
+          axis.text.x = element_text(angle = 35, hjust = 1, size = 6))
 
   save_panel(p10, "panel_10_peak_annotation.pdf", w = fig_half_width, h = 3)
 } else {
@@ -227,12 +226,12 @@ if (file.exists(cv_file)) {
                          high = masld_colors$up, midpoint = 0,
                          name = expression(Delta~"deviation"),
                          limits = c(-1.5, 1.5)) +
-    labs(x = NULL, y = NULL,
-         title = "chromVAR TF motif deviations (MASLD vs Normal)") +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-          axis.text.y = element_text(size = 4.5))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6))
 
+  message("  [caption] chromVAR TF motif deviations (MASLD vs Normal)")
   save_panel(p11, "panel_11_chromvar_heatmap.pdf",
              w = fig_half_width + 0.5, h = 5)
 } else {
@@ -275,18 +274,18 @@ if (file.exists(reg_file) && file.exists(dream_file)) {
       geom_point(color = masld_colors$up, size = 2, alpha = 0.7, shape = 16) +
       geom_smooth(method = "lm", se = TRUE, color = "gray40",
                   linewidth = 0.5, linetype = "dashed") +
-      geom_text_repel(aes(label = tf_name), size = 2, max.overlaps = 15,
+      geom_text_repel(aes(label = tf_name), size = GEOM_TEXT_6PT, max.overlaps = 15,
                       segment.size = 0.2) +
       labs(x = expression("Bulk RNA integrated"~log[2]~FC),
-           y = expression(Delta~"regulon activity (MASLD - Normal)"),
-           title = "SCENIC+ regulon activity vs transcriptomic change") +
+           y = expression(Delta~"regulon activity (MASLD - Normal)")) +
       annotate("text", x = min(merged$logFC) * 0.8,
                y = max(merged$regulon_activity_diff) * 0.95,
                label = paste0("rho = ", round(cor_test$estimate, 3),
                               "\np = ", format.pval(cor_test$p.value, digits = 2)),
-               hjust = 0, size = 2.2, color = "gray30") +
+               hjust = 0, size = GEOM_TEXT_6PT, color = "black") +
       theme_masld()
 
+    message("  [caption] SCENIC+ regulon activity vs transcriptomic change")
     save_panel(p15, "panel_15_scenic_rna_correlation.pdf",
                w = fig_half_width, h = fig_half_width * 0.8)
   } else {
@@ -336,16 +335,16 @@ if (file.exists(l8_file)) {
       geom_hline(yintercept = 0, linewidth = 0.2, color = "gray70") +
       geom_vline(xintercept = 0, linewidth = 0.2, color = "gray70") +
       labs(x = expression("Mouse DA"~log[2]~FC~"(HFD / Control)"),
-           y = expression("Human scATAC DA"~log[2]~FC~"(MASLD / Normal)"),
-           title = "Cross-species chromatin accessibility") +
+           y = expression("Human scATAC DA"~log[2]~FC~"(MASLD / Normal)")) +
       annotate("text", x = min(l8_both$mouse_da_logFC, na.rm = TRUE) * 0.5,
                y = max(l8_both$hepatocyte_da_logFC, na.rm = TRUE) * 0.9,
                label = paste0("rho = ", round(cor_val, 3)),
-               size = 2.5, color = "gray30") +
+               size = GEOM_TEXT_6PT, color = "black") +
       theme_masld() +
       theme(legend.position = c(0.85, 0.2),
             legend.key.size = unit(0.25, "cm"))
 
+    message("  [caption] Cross-species chromatin accessibility")
     save_panel(p16, "panel_16_cross_species_conservation.pdf",
                w = fig_half_width, h = fig_half_width * 0.8)
   } else {

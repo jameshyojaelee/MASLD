@@ -88,7 +88,7 @@ p_left <- ggplot(cat_summary, aes(x = 1, y = N, fill = music_category)) +
   geom_text(aes(y = midpoint,
                 label = sprintf("n=%s\n%.1f%%",
                                 formatC(N, big.mark = ","), pct)),
-            size = PUB_GEOM_TEXT, color = "white", fontface = "bold",
+            size = PUB_GEOM_TEXT, color = "white", fontface = "plain",
             lineheight = 0.85) +
   coord_flip(clip = "off") +
   scale_fill_manual(values = cat_colors,
@@ -181,9 +181,9 @@ out_dir <- file.path(FIG2_DIR, "panels")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 out_file <- file.path(out_dir, "celltype_bulk_attribution.pdf")
 
-ggsave(out_file, p_composite,
-       width = 180 / 25.4, height = 60 / 25.4,
-       device = cairo_pdf)
-
-cat("Saved:", out_file, "\n")
-cat("File size:", file.size(out_file), "bytes\n")
+# ggsave(out_file, p_composite,
+#        width = 180 / 25.4, height = 60 / 25.4,
+#        device = cairo_pdf)
+# 
+# cat("Saved:", out_file, "\n")
+# cat("File size:", file.size(out_file), "bytes\n")

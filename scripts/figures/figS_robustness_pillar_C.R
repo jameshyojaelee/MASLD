@@ -32,14 +32,11 @@ p1 <- ggplot(count_dt, aes(x = n_deg_perm)) +
   geom_vline(xintercept = n_obs, colour = "red", linewidth = 1) +
   annotate("text", x = n_obs * 0.95, y = Inf, vjust = 1.5, hjust = 1,
            label = sprintf("Observed = %s", comma(n_obs)),
-           colour = "red") +
+           colour = "red", size = GEOM_TEXT_6PT) +
   annotate("text", x = max(count_dt$n_deg_perm), y = Inf, vjust = 3, hjust = 1,
-           label = sprintf("Empirical FDR = %.4f", emp_fdr)) +
+           label = sprintf("Empirical FDR = %.4f", emp_fdr), size = GEOM_TEXT_6PT) +
   scale_x_continuous(labels = comma) +
-  labs(title = "C1 — DEG count under within-cohort permutation",
-       subtitle = sprintf("B = %d permutations; preserves per-cohort case/control counts",
-                          nrow(count_dt)),
-       x = "Permuted DEG count (padj < 0.05 & |LFC| > 0.3)", y = "Permutations") +
+  labs(x = "Permuted DEG count (padj < 0.05 & |LFC| > 0.3)", y = "Permutations") +
   theme_pub()
 
 # C2 — |perm z| ECDF
@@ -51,8 +48,7 @@ p2 <- ggplot(gene_dt[!is.na(perm_z)], aes(x = abs(perm_z), colour = deg_class)) 
   geom_vline(xintercept = 3, linetype = "dashed", colour = "grey30") +
   scale_x_continuous(limits = c(0, quantile(abs(gene_dt$perm_z), 0.995, na.rm = TRUE)),
                      oob = scales::squish) +
-  labs(title = "C2 — |permutation z| distribution",
-       x = "|z| = (t_observed − μ_perm) / σ_perm", y = "ECDF",
+  labs(x = "|z| = (t_observed − μ_perm) / σ_perm", y = "ECDF",
        colour = "") + theme_pub()
 
 # C3 — observed t vs empirical p (volcano-ish)
@@ -60,11 +56,13 @@ p3 <- ggplot(gene_dt[!is.na(perm_emp_p)], aes(x = t_obs, y = -log10(perm_emp_p +
                                               colour = deg_class)) +
   geom_point(alpha = 0.3, size = 0.4) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", colour = "grey30") +
-  labs(title = "C3 — observed t vs empirical permutation p",
-       x = "dream t-statistic (observed)", y = "-log10(empirical p)",
+  labs(x = "dream t-statistic (observed)", y = "-log10(empirical p)",
        colour = "") + theme_pub()
 
 combined <- (p1 / (p2 | p3)) + plot_layout(heights = c(1, 1))
 out_pdf <- file.path(OUT_DIR, "figS_robustness_pillar_C.pdf")
-ggsave(out_pdf, combined, width = 12, height = 9, device = cairo_pdf)
+message("[caption] C1: DEG count under within-cohort permutation (B = ", nrow(count_dt),
+        " permutations; preserves per-cohort case/control counts). ",
+        "C2: |permutation z| distribution. C3: observed t vs empirical permutation p.")
+ggsave(out_pdf, combined, width = fig_full_width, height = fig_full_width * 9 / 12, device = cairo_pdf)
 cat("Saved:", out_pdf, "\n")

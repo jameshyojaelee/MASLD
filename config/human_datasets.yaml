@@ -109,7 +109,7 @@ datasets:
     notes: "GSE213621 — fibrosis-based labeling only; no sex or age metadata. Sex inferred from XIST/DDX3Y expression."
 
   # ---------------------------------------------------------------------------
-  # GSE162694 — Bril et al. 2021; bariatric surgery NASH cohort
+  # GSE162694 — Pantano et al. 2021; bariatric surgery NASH cohort
   # 143 samples: 31 normal histology (controls), 112 NASH (F0-F4)
   # Single-end, HiSeq 3000. Rich metadata: age, sex, fibrosis, NAS.
   # ---------------------------------------------------------------------------
@@ -126,7 +126,7 @@ datasets:
       norm_method: "TMM"
       quality_weights: true
       include_in_mega: true
-    notes: "GSE162694 — Bril et al. 2021; bariatric surgery wedge biopsies; normal histology as controls; F0-F4 staging; single-end HiSeq 3000"
+    notes: "GSE162694 — Pantano et al. 2021; bariatric surgery wedge biopsies; normal histology as controls; F0-F4 staging; single-end HiSeq 3000"
 
   # ---------------------------------------------------------------------------
   # GSE174478 — Kawamura/Fujiwara; Japanese NAFLD cohort

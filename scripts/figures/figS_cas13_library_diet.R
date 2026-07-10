@@ -175,23 +175,22 @@ PANEL_GEOM_TXT <- 2.1
 
 # Top: sample size
 p_samples <- ggplot(diet_summary, aes(x = diet_group, y = n_samples, fill = diet_group)) +
-  geom_col(width = 0.7, color = "black", linewidth = 0.2) +
+  geom_col(width = 0.6, color = "black", linewidth = 0.2) +
   scale_fill_manual(values = diet_colors_vec, guide = "none") +
   geom_text(aes(label = n_samples), vjust = -0.3, size = PANEL_GEOM_TXT) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
   scale_x_discrete(labels = diet_display) +
-  labs(y = "N samples", x = NULL, title = "Samples per diet group") +
+  labs(y = "N samples", x = NULL) +
   theme_masld(base_size = 9) + theme_pub() +
   theme(axis.text.x  = element_blank(),
         axis.ticks.x = element_blank(),
         axis.text.y  = element_text(size = PANEL_FONT),
         axis.title   = element_text(size = PANEL_FONT),
-        plot.title   = element_text(size = PANEL_FONT, face = "bold"),
-        plot.margin  = margin(2, 2, 0, 2))
+        plot.margin  = margin(1, 2, 0, 2))
 
 # Bottom: UP DEGs, simple diet names on x-axis
 p_degs <- ggplot(diet_summary, aes(x = diet_group, y = n_up, fill = diet_group)) +
-  geom_col(width = 0.7, color = "black", linewidth = 0.2) +
+  geom_col(width = 0.6, color = "black", linewidth = 0.2) +
   scale_fill_manual(values = diet_colors_vec, guide = "none") +
   geom_text(aes(label = comma(n_up)), vjust = -0.3, size = PANEL_GEOM_TXT) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.18)), labels = comma) +
@@ -305,13 +304,13 @@ ht <- Heatmap(
 
 # --- Save S_lib_2: Panel A only ---
 cat("Saving S_lib_2...\n")
-pdf_file_2 <- file.path(OUT_DIR, "01_mouse_data_landscape.pdf")
+pdf_file_2 <- file.path(OUT_DIR, "mouse_data_landscape.pdf")
 
 panel_A_tagged <- panel_A +
   plot_annotation(tag_levels = list(c("A", ""))) &
-  theme(plot.tag = element_text(size = 10, face = "bold"))
+  theme(plot.tag = element_text(size = 10, face = "plain"))
 ggsave(pdf_file_2, panel_A_tagged,
-       width = fig_half_width * 1.3, height = 3.5,
+       width = fig_half_width * 1.02, height = 2.7,
        device = if (capabilities("cairo")) cairo_pdf else pdf)
 cat("  -> Saved:", pdf_file_2, "\n")
 
@@ -375,28 +374,27 @@ panel_B_euler <- ggplot() +
   scale_fill_manual(values = fam_colors, name = "Diet family") +
   # Exclusive counts
   annotate("text", x = -1.3, y = 0, label = comma(nd_only),
-           size = 2.5, fontface = "bold") +
+           size = GEOM_TEXT_6PT, fontface = "plain") +
   annotate("text", x = 1.7, y = 0, label = comma(me_only),
-           size = 2.5, fontface = "bold") +
-  # Shared overlap
+           size = GEOM_TEXT_6PT, fontface = "plain") +
+  # Shared overlap (all in-plot text BLACK per house style)
   annotate("text", x = 0.2, y = 0, label = comma(n_nd_me),
-           size = 2.5, fontface = "bold", color = "#880E4F") +
+           size = GEOM_TEXT_6PT, fontface = "plain", color = "black") +
   # Total counts per family (outside circles)
   annotate("text", x = -1.3, y = 1.6, label = paste0("N=", comma(n_nd)),
-           size = 2.0, color = "#E64B35", fontface = "italic") +
+           size = GEOM_TEXT_6PT, color = "black", fontface = "plain") +
   annotate("text", x = 1.7, y = 1.6, label = paste0("N=", comma(n_me)),
-           size = 2.0, color = "#00A087", fontface = "italic") +
+           size = GEOM_TEXT_6PT, color = "black", fontface = "plain") +
   coord_fixed(clip = "off") +
-  labs(title = "Diet family UP-DEG overlap") +
   theme_void(base_size = 7) +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.3, "cm"),
-        legend.text = element_text(size = 5),
-        legend.title = element_text(size = 6, face = "bold"),
-        plot.title = element_text(size = 7, face = "bold", hjust = 0.5),
-        plot.margin = margin(5, 5, 15, 5))
+        legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6, face = "plain"),
+        plot.margin = margin(2, 4, 4, 4))
+message("[caption] Diet family UP-DEG overlap")
 
-# --- Panel C: Cleveland dot chart -- Replication tier gene counts ---
+# --- Panel C: grouped bars -- Replication tier gene counts (no lollipops) ---
 all_up_with_biotype <- merge(
   gene_diet_count[gene_base %in% all_up],
   mouse_meta[, .(gene_base, mouse_biotype)],
@@ -413,22 +411,21 @@ tier_counts <- merge(all_tiers, tier_counts, by = c("n_diets", "biotype_simple")
 tier_counts[is.na(N), N := 0]
 tier_counts[, n_diets_f := factor(n_diets)]
 
+tier_counts[, biotype_simple := factor(biotype_simple, levels = c("Protein-coding", "lncRNA"))]
+dodge_C <- position_dodge(width = 0.72)
 panel_C <- ggplot(tier_counts,
-                  aes(x = N, y = n_diets_f, color = biotype_simple,
-                      shape = biotype_simple)) +
-  geom_segment(aes(x = 0, xend = N, y = n_diets_f, yend = n_diets_f),
-               linewidth = 0.3, show.legend = FALSE) +
-  geom_point(size = 2.5) +
-  geom_text(aes(label = comma(N)), hjust = -0.3, size = 2.0, show.legend = FALSE) +
-  scale_shape_manual(values = c("Protein-coding" = 16, lncRNA = 1), name = "Biotype") +
-  scale_color_manual(values = c("Protein-coding" = "#0D47A1", lncRNA = "#7B1FA2"),
-                     name = "Biotype") +
-  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.2))) +
-  labs(x = "Gene count", y = "Replication tier\n(n diets UP, lfsr<0.05, shrunk LFC>0.5)",
-       title = "Replication tier gene counts") +
+                  aes(x = N, y = n_diets_f, fill = biotype_simple)) +
+  geom_col(width = 0.68, position = dodge_C, color = "black", linewidth = 0.15) +
+  geom_text(aes(label = comma(N), group = biotype_simple), position = dodge_C,
+            hjust = -0.18, size = GEOM_TEXT_6PT, color = "black") +
+  scale_fill_manual(values = c("Protein-coding" = "#0D47A1", lncRNA = "#7B1FA2"),
+                    name = "Biotype") +
+  scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.20))) +
+  labs(x = "Gene count", y = "Replication tier (n diets UP)") +
   theme_masld() + theme_pub() +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.3, "cm"))
+message("[caption] Replication tier gene counts")
 
 # --- Build UpSet-style plot in pure ggplot (avoids base/grid mixing issues) ---
 
@@ -458,7 +455,7 @@ upset_xexp <- expansion(mult = c(0.01, 0.01))
 # Intersection bar chart (top)
 p_int_bars <- ggplot(int_top, aes(x = rank, y = N)) +
   geom_col(width = 0.6, fill = "gray30") +
-  geom_text(aes(label = comma(N)), vjust = -0.3, size = 1.8) +
+  geom_text(aes(label = comma(N)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12)), labels = comma) +
   scale_x_continuous(limits = upset_xlim, expand = upset_xexp, breaks = NULL) +
   labs(y = "Intersection\nsize", x = NULL) +
@@ -515,7 +512,7 @@ set_colors_rev <- diet_colors_vec[diet_levels_rev]
 # Horizontal bars: x = 0 to n, reversed so bars grow left
 p_set_bars <- ggplot(set_sizes, aes(y = y_num, fill = diet)) +
   geom_rect(aes(xmin = 0, xmax = -n, ymin = y_num - 0.3, ymax = y_num + 0.3)) +
-  geom_text(aes(x = -n, label = comma(n)), hjust = 1.1, size = 1.6) +
+  geom_text(aes(x = -n, label = comma(n)), hjust = 1.1, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = set_colors_rev, guide = "none") +
   scale_y_continuous(breaks = seq_along(diet_levels_rev),
                      labels = diet_display[diet_levels_rev],
@@ -543,16 +540,16 @@ upset_gg <- (p_empty + p_int_bars + p_set_bars + p_dots) +
 
 # --- Save S_lib_3 ---
 cat("Saving S_lib_3...\n")
-pdf_file_3 <- file.path(OUT_DIR, "02_cross_diet_replication.pdf")
+pdf_file_3 <- file.path(OUT_DIR, "cross_diet_replication.pdf")
 
 # All panels are pure ggplot -- save directly with patchwork
 panel_A_tagged <- upset_gg + plot_annotation(tag_levels = list("A")) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 panel_B_tagged <- panel_B_euler + labs(tag = "B") +
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 panel_C_tagged <- panel_C + labs(tag = "C") +
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 panel_BC <- (panel_B_tagged | panel_C_tagged) +
   plot_layout(widths = c(1.1, 0.9))
 
@@ -560,7 +557,7 @@ panel_BC <- (panel_B_tagged | panel_C_tagged) +
 full_fig <- panel_A_tagged / panel_BC +
   plot_layout(heights = c(1.2, 1))
 
-save_fig_tall(full_fig, pdf_file_3, width = fig_full_width, height = 9)
+save_fig_tall(full_fig, pdf_file_3, width = fig_full_width, height = 6.8)
 
 cat("  -> Saved:", pdf_file_3, "\n")
 cat("\nDone. Output files:\n")

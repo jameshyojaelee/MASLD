@@ -207,7 +207,7 @@ mt[, theta_lab := factor(theta_lab, levels = c("raw (no correction)",
 p_a <- ggplot(mt, aes(x = cohort_ilisi_med, y = disease_ilisi_med)) +
   geom_path(color = "grey60", linewidth = 0.4) +
   geom_point(aes(color = theta_lab), size = 3) +
-  ggrepel::geom_text_repel(aes(label = theta_lab), size = 2.4,
+  ggrepel::geom_text_repel(aes(label = theta_lab), size = GEOM_TEXT_6PT,
                           family = "Helvetica", max.overlaps = Inf,
                           segment.size = 0.2) +
   scale_color_viridis_d(option = "plasma", end = 0.9, name = NULL, guide = "none") +
@@ -216,15 +216,13 @@ p_a <- ggplot(mt, aes(x = cohort_ilisi_med, y = disease_ilisi_med)) +
   scale_y_continuous(limits = c(1, 2),
                      breaks = c(1, 1.25, 1.5, 1.75, 2)) +
   labs(x = "Cohort iLISI (max 10; higher = better cohort mixing)",
-       y = "Disease iLISI (max 2; lower = cleaner biology)",
-       title = "Harmony theta sweep: cohort mixing vs biology preservation",
-       subtitle = "Top-left = good (cohorts mixed, disease/control preserved). Top-right = biology destroyed.") +
+       y = "Disease iLISI (max 2; lower = cleaner biology)") +
   theme_masld()
 
 p_b <- ggplot(mt, aes(x = cohort_ilisi_med, y = disease_auroc)) +
   geom_path(color = "grey60", linewidth = 0.4) +
   geom_point(aes(color = theta_lab), size = 3) +
-  ggrepel::geom_text_repel(aes(label = theta_lab), size = 2.4,
+  ggrepel::geom_text_repel(aes(label = theta_lab), size = GEOM_TEXT_6PT,
                           family = "Helvetica", max.overlaps = Inf,
                           segment.size = 0.2) +
   scale_color_viridis_d(option = "plasma", end = 0.9, name = NULL, guide = "none") +
@@ -233,28 +231,26 @@ p_b <- ggplot(mt, aes(x = cohort_ilisi_med, y = disease_auroc)) +
   scale_y_continuous(limits = c(0.5, 1),
                      breaks = c(0.5, 0.6, 0.7, 0.8, 0.9, 1.0)) +
   labs(x = "Cohort iLISI (higher = better cohort mixing)",
-       y = "Disease vs control AUROC (logistic on 30 PCs, 5-fold CV)",
-       title = "Disease classifiability after batch correction",
-       subtitle = "Drop in AUROC at high theta = batch correction over-corrects biology.") +
+       y = "Disease vs control AUROC (logistic on 30 PCs, 5-fold CV)") +
   theme_masld()
 
 p_c <- ggplot(mt, aes(x = cohort_ilisi_med, y = silhouette_disease)) +
   geom_path(color = "grey60", linewidth = 0.4) +
   geom_point(aes(color = theta_lab), size = 3) +
-  ggrepel::geom_text_repel(aes(label = theta_lab), size = 2.4,
+  ggrepel::geom_text_repel(aes(label = theta_lab), size = GEOM_TEXT_6PT,
                           family = "Helvetica", max.overlaps = Inf,
                           segment.size = 0.2) +
   scale_color_viridis_d(option = "plasma", end = 0.9, name = NULL, guide = "none") +
   geom_hline(yintercept = 0, color = "grey80", linetype = "dashed", linewidth = 0.3) +
   labs(x = "Cohort iLISI (higher = better cohort mixing)",
-       y = "Mean silhouette width (disease label)",
-       title = "Disease silhouette after batch correction",
-       subtitle = "Negative silhouette = disease & control inseparable in the embedding.") +
+       y = "Mean silhouette width (disease label)") +
   theme_masld()
+
+message("[caption] a: Harmony theta sweep: cohort mixing vs biology preservation (top-left = good; top-right = biology destroyed). b: Disease classifiability after batch correction (AUROC drop at high theta = over-correction). c: Disease silhouette after batch correction (negative = disease/control inseparable).")
 
 tradeoff <- p_a / p_b / p_c +
   plot_annotation(tag_levels = list(c("a", "b", "c"))) &
-  theme(plot.tag = element_text(face = "bold", size = 10))
+  theme(plot.tag = element_text(face = "plain", size = 6))
 
 save_fig(tradeoff,
          file.path(OUT_DIR, "figS_batch_harmony_sweep_tradeoff.pdf"),
@@ -275,38 +271,38 @@ all_em <- merge(all_em, mt_lookup, by = "theta_lab")
 all_em[, cohort_strip := sprintf("%s | cohort iLISI = %.2f", theta_lab, cohort_ilisi_med)]
 all_em[, disease_strip := sprintf("%s | disease iLISI = %.2f", theta_lab, disease_ilisi_med)]
 
+message("[caption] UMAP by cohort across theta sweep.")
 p_um_cohort <- ggplot(all_em, aes(UMAP1, UMAP2, color = cohort)) +
   rasterize_layer(geom_point(size = 0.18, alpha = 0.7, shape = 16)) +
   scale_color_manual(values = COHORT_COLORS, name = NULL) +
   facet_wrap(~ cohort_strip, ncol = 2, scales = "free") +
   guides(color = guide_legend(override.aes = list(size = 1.6, alpha = 1),
                               ncol = 2)) +
-  labs(title = "UMAP by cohort across theta sweep") +
   theme_masld() +
-  theme(strip.text = element_text(size = 7),
+  theme(strip.text = element_text(size = 6),
         axis.text = element_blank(), axis.ticks = element_blank(),
         legend.position = "bottom",
-        legend.text = element_text(size = 7))
+        legend.text = element_text(size = 6))
 
+message("[caption] UMAP by disease state across theta sweep.")
 p_um_disease <- ggplot(all_em, aes(UMAP1, UMAP2, color = disease)) +
   rasterize_layer(geom_point(size = 0.18, alpha = 0.7, shape = 16)) +
   scale_color_manual(values = c(Control = masld_colors$control,
                                 Disease = masld_colors$nash), name = NULL) +
   facet_wrap(~ disease_strip, ncol = 2, scales = "free") +
   guides(color = guide_legend(override.aes = list(size = 1.6, alpha = 1))) +
-  labs(title = "UMAP by disease state across theta sweep") +
   theme_masld() +
-  theme(strip.text = element_text(size = 7),
+  theme(strip.text = element_text(size = 6),
         axis.text = element_blank(), axis.ticks = element_blank(),
         legend.position = "bottom",
-        legend.text = element_text(size = 7))
+        legend.text = element_text(size = 6))
 
 save_fig(p_um_cohort,
          file.path(OUT_DIR, "figS_batch_harmony_sweep_umaps_cohort.pdf"),
-         width = 8, height = 13)
+         width = 7.09, height = 11.52)
 save_fig(p_um_disease,
          file.path(OUT_DIR, "figS_batch_harmony_sweep_umaps_disease.pdf"),
-         width = 8, height = 13)
+         width = 7.09, height = 11.52)
 
 message("\nWrote:")
 message("  ", file.path(OUT_DIR, "figS_batch_harmony_sweep_metrics.csv"))

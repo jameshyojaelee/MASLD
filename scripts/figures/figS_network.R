@@ -91,6 +91,7 @@ if (file.exists(layout_path) && file.exists(comm_path)) {
     if (n_comm > 20) comm_pal <- rep(comm_pal, length.out = n_comm)
     names(comm_pal) <- levels(map_dt$community)
 
+    message("[caption] Global community map (ForceAtlas2 layout)")
     p_a <- ggplot(map_dt, aes(x = x, y = y, color = community)) +
       rasterize_layer(
         geom_point(size = 0.15, alpha = 0.4, shape = 16)
@@ -100,14 +101,13 @@ if (file.exists(layout_path) && file.exists(comm_path)) {
                      show.legend = FALSE) +
       geom_label_repel(data = centroids,
                        aes(x = cx, y = cy, label = label),
-                       size = 1.8, fontface = "bold",
+                       size = GEOM_TEXT_6PT, fontface = "plain",
                        label.padding = 0.12, box.padding = 0.3,
                        segment.size = 0.15, max.overlaps = 30,
                        inherit.aes = FALSE, fill = "white", alpha = 0.85) +
       scale_color_manual(values = comm_pal, guide = "none") +
       scale_fill_manual(values = comm_pal, guide = "none") +
-      labs(title = "Global community map (ForceAtlas2 layout)",
-           x = "FA2 dimension 1", y = "FA2 dimension 2") +
+      labs(x = "FA2 dimension 1", y = "FA2 dimension 2") +
       theme_masld() +
       theme(axis.text = element_blank(), axis.ticks = element_blank(),
             axis.line = element_blank())
@@ -183,16 +183,14 @@ for (gene_sym in example_genes) {
                       shape = 21, stroke = 0.3, color = "gray30") +
       geom_node_text(aes(label = ifelse(is_center | comp_degree >= quantile(comp_degree, 0.8),
                                         name, "")),
-                     size = 1.6, repel = TRUE, max.overlaps = 15) +
+                     size = GEOM_TEXT_6PT, repel = TRUE, max.overlaps = 15) +
       scale_edge_color_manual(values = layer_colors, na.value = "#BDBDBD") +
       scale_fill_manual(values = c("TRUE" = "#FFD600", "FALSE" = "white"),
                         guide = "none") +
       scale_size_continuous(range = c(1.5, 5), guide = "none") +
-      labs(title = gene_sym) +
       theme_masld() +
       theme(axis.text = element_blank(), axis.ticks = element_blank(),
-            axis.line = element_blank(), axis.title = element_blank(),
-            plot.title = element_text(face = "bold.italic", size = 7, hjust = 0.5))
+            axis.line = element_blank(), axis.title = element_blank())
 
     neighborhood_panels[[gene_sym]] <- p_sub
   }, error = function(e) {
@@ -201,9 +199,9 @@ for (gene_sym in example_genes) {
 }
 
 # Assemble 2x2 grid for Panel D
-p_d <- wrap_plots(neighborhood_panels, ncol = 2) +
-  plot_annotation(title = "Example gene neighborhoods",
-                  theme = theme(plot.title = element_text(size = 8, face = "bold")))
+message("[caption] Example gene neighborhoods (reading order): ",
+        paste(example_genes, collapse = ", "))
+p_d <- wrap_plots(neighborhood_panels, ncol = 2)
 
 # ===========================================================================
 # Save outputs

@@ -46,14 +46,13 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_BASE <- file.path(FIGS_SENS_DIR, "figS_composition_mediation")
 dir.create(PANEL_BASE, recursive = TRUE, showWarnings = FALSE)
 
-BASE_SIZE <- 7
-LBL_PT    <- 7
+BASE_SIZE <- 6
+LBL_PT    <- 6
 LBL_SIZE  <- LBL_PT / ggplot2::.pt
 
 theme_figS <- function() {
   theme_masld(base_size = BASE_SIZE) +
     theme(
-      plot.title    = element_text(size = BASE_SIZE),
       axis.title    = element_text(size = BASE_SIZE),
       axis.text     = element_text(size = BASE_SIZE),
       legend.title  = element_text(size = BASE_SIZE),
@@ -101,7 +100,8 @@ if (!file.exists(QUAD_F)) {
   meta <- merge(meta, qc[, .(sample_id, pass_technical)], by = "sample_id",
                 all.x = TRUE)
   meta <- meta[!is.na(pass_technical) & pass_technical == TRUE &
-                 !is.na(fibrosis_stage)]
+                 !is.na(fibrosis_stage) &
+                 !dataset %in% c("GSE213621", "PRJNA512027")]  # coarse/dropped cohorts
   meta[, fibrosis_stage := as.integer(fibrosis_stage)]
 
   prop <- fread(PROP_F)
@@ -236,8 +236,7 @@ p_A <- ggplot(a_long, aes(x = value, y = label, fill = fill_key,
                     labels = c("Intrinsic",
                                paste0("Composition (", names(ct_palette), ")"))) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.02))) +
-  labs(x = "|beta_TE|  (composition + intrinsic)", y = NULL,
-       title = "A  Top-30 F1->F2 bulk DEGs: composition vs intrinsic split") +
+  labs(x = "|beta_TE|  (composition + intrinsic)", y = NULL) +
   theme_figS() +
   theme(panel.grid.major.y = element_blank(),
         legend.position = "right",
@@ -284,11 +283,10 @@ p_B <- ggplot(quad_b, aes(x = delta_mu, y = delta_pi, colour = cell_type)) +
   facet_wrap(~ cell_type, scales = "free", ncol = 5) +
   scale_colour_manual(values = ct_palette) +
   labs(x = "Delta mu_g,k  (F1 -> F2 cell-type expression change, log2)",
-       y = "Delta pi_k  (F1 -> F2 proportion change)",
-       title = "B  Quadrant: cell-type proportion change vs cell-type expression change") +
+       y = "Delta pi_k  (F1 -> F2 proportion change)") +
   theme_figS() +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold", size = BASE_SIZE),
+        strip.text = element_text(face = "plain", size = BASE_SIZE),
         panel.spacing = unit(6, "pt"))
 
 fwrite(quad_b, file.path(PANEL_BASE, "figS_composition_mediation_B_quad.csv"))
@@ -318,8 +316,7 @@ p_C <- ggplot(c_dat, aes(x = transition, y = label, fill = MP)) +
                        name = "MP\n(0=intrinsic\n1=composition)",
                        guide = guide_colorbar(barwidth = unit(0.25, "cm"),
                                               barheight = unit(2.5, "cm"))) +
-  labs(x = NULL, y = NULL,
-       title = "C  Mediation proportion across F-transitions") +
+  labs(x = NULL, y = NULL) +
   theme_figS() +
   theme(panel.grid = element_blank(),
         axis.line  = element_blank(),
@@ -335,8 +332,12 @@ bottom_row <- p_B
 p_full <- top_row / bottom_row +
   plot_layout(heights = c(1.0, 0.7))
 
+message("[caption] A: Top-30 F1->F2 bulk DEGs: composition vs intrinsic split")
+message("[caption] B: Quadrant: cell-type proportion change vs cell-type expression change")
+message("[caption] C: Mediation proportion across F-transitions")
+
 out_pdf <- file.path(PANEL_BASE, "figS_composition_mediation.pdf")
-save_fig(p_full, out_pdf, width = 13, height = 10)
+save_fig(p_full, out_pdf, width = fig_full_width, height = fig_full_width * 10 / 13)
 message("Wrote: ", out_pdf)
 
 # ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 #   cohort_venn.pdf      — 5-petal flower (totals only, no dream)
 #   twin_chords.pdf     — twin chord: validated + cohort attribution
 #   overlap_chord.pdf — corrected chord: cohort × replication tier
-#   overlap_alluvial.pdf — alluvial: study → replication tier
+#   Fig3C_overlap_alluvial.pdf — alluvial: study → replication tier
 #   concordance_volcano.pdf — % cohort-sign concordance vs dream sig
 #   pairwise_lfc_grid.pdf  — 5x5 LFC scatter + Spearman + sign agreement
 #
@@ -275,27 +275,25 @@ p_A <- ggplot() +
   # annotation were removed 2026-06-11 at user request.
   geom_text(data = plot_regions[is_compact == FALSE],
             aes(x = leader_x, y = leader_y, label = lbl_total),
-            size = 1.45, color = "gray15") +
+            size = GEOM_TEXT_6PT, color = "gray15") +
   geom_text(data = plot_regions[is_compact == TRUE],
             aes(x = leader_x, y = leader_y, label = lbl_total),
-            size = 1.40, color = "gray15") +
+            size = GEOM_TEXT_6PT, color = "gray15") +
   # Cohort labels at the outer tips
   geom_text(data = ellipses,
             aes(x = lab_x, y = lab_y,
                 label = sprintf("%s\n(%s)", cohort,
                                 comma(study_sizes[cohort]))),
-            size = 2.1, fontface = "bold", lineheight = 0.9,
+            size = GEOM_TEXT_6PT, fontface = "plain", lineheight = 0.9,
             color = "gray15") +
   coord_fixed(xlim = c(-extent, extent), ylim = c(-extent, extent),
               clip = "off") +
   theme_void() +
-  theme(plot.title = element_text(size = 8, face = "bold", hjust = 0.5,
-                                  margin = margin(b = 4)),
-        plot.margin = margin(6, 6, 6, 6)) +
-  labs(title = "5-cohort DEG overlap")
+  theme(plot.margin = margin(6, 6, 6, 6))
 
 save_fig(p_A, file.path(PANEL_DIR, "integrated_venn.pdf"),
          width = fig_half_width, height = fig_half_width)
+message("[caption] 5-cohort DEG overlap")
 message("  Saved integrated_venn.pdf")
 
 # ============================================================================
@@ -439,8 +437,6 @@ circos.trackPlotRegion(
                 facing = "bending.outside", niceFacing = TRUE,
                 cex = 0.45)
   }, bg.border = NA)
-title(main = "Integrated DEGs validation",
-      cex.main = 0.85, line = 1.5)
 circos.clear()
 
 # --- Bottom chord: rejected by tier → cohort of origin ---
@@ -469,10 +465,9 @@ circos.trackPlotRegion(
                 facing = "bending.outside", niceFacing = TRUE,
                 cex = 0.45)
   }, bg.border = NA)
-title(main = "Integrated-NS validation",
-      cex.main = 0.85, line = 1.5)
 circos.clear()
 dev.off()
+message("[caption] Top: integrated DEGs validation. Bottom: integrated-NS validation.")
 message("  Saved twin_chords.pdf")
 
 # ----------------------------------------------------------------------------
@@ -560,10 +555,9 @@ chordDiagram(
   annotationTrackHeight = c(0.03, 0.03)
 )
 draw_label_v4(n_no_overlap_v4)
-title(main = "Per-cohort DEG replication tier",
-      cex.main = 0.85, line = 1.5)
 circos.clear()
 dev.off()
+message("[caption] Per-cohort DEG replication tier")
 message("  Saved overlap_chord.pdf")
 
 # ----------------------------------------------------------------------------
@@ -581,8 +575,8 @@ setnames(df_alluv, c("Study", "Tier", "Freq"))
 df_alluv[, Freq := as.numeric(Freq)]
 
 cohort_order_top_down <- names(sort(sapply(deg_lists, length), decreasing = TRUE))
-tier_order_top_down   <- c("5 cohorts", "4 cohorts", "3 cohorts",
-                           "2 cohorts", "Unique to study")
+tier_order_top_down   <- c("Unique to study", "2 cohorts", "3 cohorts",
+                           "4 cohorts", "5 cohorts")
 df_alluv[, Study := factor(Study, levels = cohort_order_top_down)]
 df_alluv[, Tier  := factor(Tier,  levels = tier_order_top_down)]
 
@@ -617,38 +611,36 @@ p_alluv <- ggplot(df_alluv, aes(y = Freq, axis1 = Study, axis2 = Tier)) +
                color = "white", linewidth = 0.45) +
   annotate("text", x = 1 - 0.085, y = left_dt$y_mid,
            label = as.character(left_dt$Study), hjust = 1,
-           size = 2.2, fontface = "bold", color = "gray15") +
+           size = GEOM_TEXT_6PT, fontface = "plain", color = "gray15") +
   annotate("text", x = 2 + 0.085, y = right_dt$y_mid,
            label = ifelse(as.character(right_dt$Tier) == "Unique to study",
                           sprintf("Unique to study\n(%s)", format(n_no_overlap_v4, big.mark = ",")),
                           as.character(right_dt$Tier)), hjust = 0,
-           size = 2.2, fontface = "bold", color = "gray15") +
+           size = GEOM_TEXT_6PT, fontface = "plain", color = "gray15") +
   scale_x_discrete(limits = c("Study", "Overlap"),
                    expand = c(0.30, 0.30), position = "top") +
   scale_y_continuous(expand = c(0.005, 0.005)) +
   scale_fill_manual(values = c(cohort_pal_pastel, tier_pal_pastel),
                     guide = "none") +
-  labs(title = "Per-cohort DEG overlap",
-       x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   theme_void() +
-  theme(plot.title      = element_text(size = 8.5, face = "bold",
-                                       hjust = 0.5, margin = margin(b = 6)),
-        axis.text.x.top = element_text(size = 7.5, face = "bold",
+  theme(axis.text.x.top = element_text(size = 6, face = "plain",
                                        color = "gray15",
                                        margin = margin(b = 4)),
         plot.margin     = margin(8, 14, 6, 14))
 
 save_fig(p_alluv,
-         file.path(PANEL_DIR, "overlap_alluvial.pdf"),
+         file.path(PANEL_DIR, "Fig3C_overlap_alluvial.pdf"),
          width = fig_half_width + 1.6, height = fig_half_width + 0.5)
-message("  Saved overlap_alluvial.pdf")
-# Replicate into the main Fig 3 panels dir (promoted to main Fig 3B 2026-06-15);
-# the supplementary copy above is the canonical source.
+message("[caption] Per-cohort DEG overlap")
+message("  Saved Fig3C_overlap_alluvial.pdf (supplementary source copy)")
+# RESTORED 2026-07-02 (A–J layout): replicate into the main Fig 3 panels dir as
+# panel 3C (top row); the supplementary copy above is the canonical source.
 fig3_panels <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
 dir.create(fig3_panels, recursive = TRUE, showWarnings = FALSE)
-file.copy(file.path(PANEL_DIR, "overlap_alluvial.pdf"),
-          file.path(fig3_panels, "overlap_alluvial.pdf"), overwrite = TRUE)
-message("  Replicated overlap_alluvial.pdf -> main Fig 3 panels (3B)")
+file.copy(file.path(PANEL_DIR, "Fig3C_overlap_alluvial.pdf"),
+          file.path(fig3_panels, "fig3c_overlap_alluvial.pdf"), overwrite = TRUE)
+message("  Replicated -> main Fig 3 panels as fig3c_overlap_alluvial.pdf (3C)")
 
 # ============================================================================
 # PANEL C — Direction-concordance volcano (Idea 3)
@@ -719,7 +711,7 @@ p_C <- ggplot(volcano_dt,
            fill = NA, color = "#880E4F", linewidth = 0.5, linetype = "solid") +
   annotate("text", x = 81, y = max(volcano_dt$neglog10_p) * 0.97,
            label = sprintf("Integrated rescued: %s", comma(n_rescue)),
-           hjust = 0, vjust = 1, size = 2.2, color = "#880E4F", fontface = "bold") +
+           hjust = 0, vjust = 1, size = GEOM_TEXT_6PT, color = "#880E4F", fontface = "plain") +
   scale_color_manual(values = indiv_palette,
                      name = "Individually\nDEG (cohorts)") +
   scale_x_continuous(limits = c(-2, 102), breaks = c(0, 20, 40, 60, 80, 100),
@@ -727,14 +719,13 @@ p_C <- ggplot(volcano_dt,
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
   guides(color = guide_legend(override.aes = list(size = 1.6, alpha = 1))) +
   labs(x = "% of cohorts with same LFC sign as integrated",
-       y = expression(-log[10]("integrated padj")),
-       title = "Integrated analysis rescues consistent-direction genes individual cohorts miss") +
+       y = expression(-log[10]("integrated padj"))) +
   theme_masld(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        legend.position = "right")
+  theme(legend.position = "right")
 
 save_fig(p_C, file.path(PANEL_DIR, "concordance_volcano.pdf"),
          width = fig_col_width, height = 3.2)
+message("[caption] Integrated analysis rescues consistent-direction genes individual cohorts miss")
 message("  Saved concordance_volcano.pdf")
 
 # ============================================================================
@@ -806,13 +797,13 @@ make_upper <- function(coh_x, coh_y) {
     annotate("rect", xmin = 0, xmax = 1, ymin = 0, ymax = 1, fill = bg_fill, color = NA) +
     annotate("text", x = 0.5, y = 0.68,
              label = sprintf("ρ = %.2f", rho),
-             size = 3.2, color = txt_col, fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = txt_col, fontface = "plain") +
     annotate("text", x = 0.5, y = 0.42,
              label = sprintf("%.0f%% same dir", pct_same),
-             size = 3.2, color = sub_col) +
+             size = GEOM_TEXT_6PT, color = sub_col) +
     annotate("text", x = 0.5, y = 0.17,
              label = sprintf("n = %s", comma(n_genes)),
-             size = 3.2, color = sub_col) +
+             size = GEOM_TEXT_6PT, color = sub_col) +
     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
     theme_void() +
     theme(panel.border = element_rect(color = "gray60", fill = NA, linewidth = 0.25),
@@ -825,10 +816,10 @@ make_diag <- function(coh) {
   n_d <- diag_dt[cohort == coh, n_degs]
   ggplot() +
     annotate("text", x = 0.5, y = 0.62, label = coh,
-             size = 3.2, color = "gray10", fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = "gray10", fontface = "plain") +
     annotate("text", x = 0.5, y = 0.35,
              label = sprintf("%s DEGs", comma(n_d)),
-             size = 3.2, color = masld_colors$conserved) +
+             size = GEOM_TEXT_6PT, color = masld_colors$conserved) +
     coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
     theme_void() +
     theme(panel.border = element_rect(color = "gray30", fill = NA, linewidth = 0.4),
@@ -856,15 +847,9 @@ for (i in seq_along(cohort_names)) {
 # Row/column labels via patchwork::wrap_plots
 grid_p <- wrap_plots(panels, nrow = 5, ncol = 5)
 
-# Add a header and footer caption via patchwork title
-grid_p_titled <- grid_p +
-  plot_annotation(
-    title = "Pairwise per-cohort LFC concordance · ρ and % same dir computed among per-study DEGs (union)",
-    theme = theme(plot.title = element_text(size = 8, face = "bold"))
-  )
-
-save_fig(grid_p_titled, file.path(PANEL_DIR, "pairwise_lfc_grid.pdf"),
+save_fig(grid_p, file.path(PANEL_DIR, "pairwise_lfc_grid.pdf"),
          width = fig_full_width, height = fig_full_width)
+message("[caption] Pairwise per-cohort LFC concordance - rho and % same dir computed among per-study DEGs (union)")
 message("  Saved pairwise_lfc_grid.pdf")
 
 message("\nAll 4 panels saved under: ", PANEL_DIR)

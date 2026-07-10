@@ -1,8 +1,9 @@
 #!/usr/bin/env Rscript
 # ============================================================================
 # progression_driver_coloc_phenotype_class_heatmap.R
-# Supplementary (figS04_coloc) — progression-driver colocalization by GWAS
-# phenotype class.
+# Fig 2 (genetics) supplement — Fig S2N (relocated from Fig 3 supp 2026-07-08;
+# S2M is the meSuSiE shared/ancestry-specific panel, so this appends as S2N).
+# Output dir figS04_coloc. Progression-driver colocalization by GWAS phenotype class.
 #
 # Among stage-progression drivers with strong hepatic colocalization
 # (coloc_best_pp4>0.5), the genetic anchor is almost exclusively a liver-enzyme
@@ -18,8 +19,9 @@
 # (derived from gene_level_coloc.csv). Atlas coloc_susie_best_pp4 NEVER used.
 # Assert all PP.H4 <= 1.
 #
-# Output: figures/supplementary/figS04_coloc/
-#         progression_driver_coloc_phenotype_class_heatmap.pdf
+# Output: figures/main/fig2_genetics/panels/
+#         FigS2N_progression_driver_coloc_phenotype_class_heatmap.pdf
+#         (co-located + FigS2N_-prefixed to match the other FigS2 panels, 2026-07-07)
 # ============================================================================
 
 suppressPackageStartupMessages({
@@ -32,10 +34,10 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT_DIR <- FIGS04_DIR
+OUT_DIR <- file.path(FIG3_DIR, "panels")   # fig2_genetics/panels (co-located with FigS2A-M)
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
-OUT_PDF  <- file.path(OUT_DIR, "progression_driver_coloc_phenotype_class_heatmap.pdf")
-DATA_CSV <- file.path(OUT_DIR, "progression_driver_coloc_phenotype_class_heatmap.csv")
+OUT_PDF  <- file.path(OUT_DIR, "FigS2N_progression_driver_coloc_phenotype_class_heatmap.pdf")
+DATA_CSV <- file.path(OUT_DIR, "FigS2N_progression_driver_coloc_phenotype_class_heatmap_source.csv")
 
 # ---------------------------------------------------------------------------
 # Load + dedup per gene (file is per-transition; per-gene PP.H4 cols are
@@ -89,7 +91,7 @@ fwrite(core, DATA_CSV)
 p <- ggplot(long, aes(x = pheno, y = gene_symbol, fill = pp4)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = ifelse(pp4 > 0.5, sprintf("%.2f", pp4), "")),
-            size = 1.8, color = "white", fontface = "bold") +
+            size = 1.8, color = "white", fontface = "plain") +
   scale_fill_gradient(low = "#F3E1EA", high = "#C9265E",
                       limits = c(0, 1), name = "PP.H4",
                       breaks = c(0, 0.5, 1)) +
@@ -98,8 +100,8 @@ p <- ggplot(long, aes(x = pheno, y = gene_symbol, fill = pp4)) +
        title = "Progression drivers anchor on liver-enzyme GWAS") +
   theme_masld(base_size = 7) +
   theme(
-    plot.title      = element_text(size = 7.1, face = "bold", margin = margin(b = 5)),
-    axis.text.x.top = element_text(size = 6, face = "bold"),
+    plot.title      = element_text(size = 7.1, face = "plain", margin = margin(b = 5)),
+    axis.text.x.top = element_text(size = 6, face = "plain"),
     axis.text.y     = element_text(size = 6, face = "italic"),
     axis.line       = element_blank(),
     axis.ticks      = element_blank(),

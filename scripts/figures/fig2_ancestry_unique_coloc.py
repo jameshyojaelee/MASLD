@@ -29,7 +29,7 @@ import pandas as pd
 plt.rcParams.update({"font.family": "sans-serif", "font.sans-serif": ["Helvetica", "Nimbus Sans", "DejaVu Sans"],
                      "pdf.fonttype": 42, "axes.linewidth": 0})
 # consistent across all 3 ancestry-unique figures: Helvetica, all-black text
-TITLE_FS, BODY_FS, TXT = 10.5, 8.5, "black"
+TITLE_FS, BODY_FS, TXT = 6, 6, "black"
 
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
@@ -140,8 +140,7 @@ ax.set_xlim(0, W + 22)
 ax.set_ylim(0, H + 13)
 ax.invert_yaxis()
 ax.axis("off")
-ax.set_title("Colocalization by ancestry (SuSiE or ABF)", fontsize=TITLE_FS,
-             fontweight="bold", color=TXT, loc="left", pad=6)
+print("[caption] Colocalization by ancestry (SuSiE or ABF)")
 
 os.makedirs(PANEL_DIR, exist_ok=True)
 out = os.path.join(PANEL_DIR, "Fig2G_ancestry_unique_coloc.pdf")

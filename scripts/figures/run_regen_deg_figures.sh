@@ -70,8 +70,7 @@ SCRIPTS=(
   # fig6_therapeutic_windows.R and fig6_convergence_sankey.R archived 2026-04-22
   # (6-fig → 5-fig restructure; content folded into fig5_convergence.R + figS_therapeutics)
   "fig5_convergence.R"
-  # Fig1-4: use canonical bulk logFC (raw) via load_figure_data.R — need refresh after column rename
-  "fig1_integration_value_panels_v2.R"
+  # Fig2-4: use canonical bulk logFC (raw) via load_figure_data.R — need refresh after column rename
   "fig2_compact.R"
   "fig3_compact.R"
   "fig3_progression.R"

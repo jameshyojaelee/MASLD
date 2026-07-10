@@ -77,18 +77,18 @@ p <- ggplot(d, aes(x = logit_diff, y = celltype, color = sig)) +
   facet_wrap(~ contrast, nrow = 1) +
   scale_color_manual(values = sig_cols, name = "BH padj < 0.05",
                      labels = c(`TRUE` = "Significant", `FALSE` = "n.s.")) +
-  labs(x = "Composition shift (logit difference)", y = NULL,
-       title = "Bulk deconvolution composition shifts") +
-  theme_masld(base_size = 7) +
+  labs(x = "Composition shift (logit difference)", y = NULL) +
+  theme_masld(base_size = 6) +
   theme(
-    plot.title      = element_text(size = 7.3, face = "bold", margin = margin(b = 6)),
     axis.text.y     = element_text(size = 6),
-    strip.text      = element_text(size = 6.5, face = "bold"),
+    strip.text      = element_text(size = 6, face = "plain"),
     legend.position = "bottom",
-    legend.text     = element_text(size = 5.5),
+    legend.text     = element_text(size = 6),
     legend.title    = element_text(size = 6),
     legend.key.size = unit(0.2, "cm")
   )
+
+message("[caption] Bulk deconvolution composition shifts")
 
 ggsave(OUT_PDF, p,
        width  = 130 / 25.4,

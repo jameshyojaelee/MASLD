@@ -140,7 +140,7 @@ if (is.null(v1) || is.null(kg) || is.null(topld) || is.null(polyfun)) {
     geom_vline(xintercept = 0.5, color = "grey60", linetype = "dotted", linewidth = 0.4) +
     geom_point(data = lbl_long, color = "black", size = 2.2) +
     geom_text_repel(data = lbl_long, aes(label = gene),
-                    size = 4.2, color = "black", fontface = "bold",
+                    size = 4.2, color = "black", fontface = "plain",
                     box.padding = 0.4, max.overlaps = 25,
                     segment.color = "grey30", segment.size = 0.3) +
     facet_wrap(~ comparison, ncol = 3) +
@@ -148,8 +148,8 @@ if (is.null(v1) || is.null(kg) || is.null(topld) || is.null(polyfun)) {
     labs(x = "PP.H4.susie (panel on x)", y = "PP.H4.susie (panel on y)",
          title = "Gene-level SuSiE-COLOC concordance — 4 EUR LD panels (6 pairwise)") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 14, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 14, face = "plain"),
           axis.title = element_text(size = 18),
           axis.text  = element_text(size = 14))
   ggsave(file.path(OUT_DIR, "coloc/scatter_pairwise.pdf"), p_coloc_scatter,
@@ -171,14 +171,14 @@ if (is.null(v1) || is.null(kg) || is.null(topld) || is.null(polyfun)) {
   )
   p_hits <- ggplot(hits_coloc, aes(x = panel, y = n, fill = panel)) +
     geom_col(width = 0.7) +
-    geom_text(aes(label = n), vjust = -0.35, size = 5.5, fontface = "bold") +
+    geom_text(aes(label = n), vjust = -0.35, size = 5.5, fontface = "plain") +
     facet_wrap(~ threshold, ncol = 3, scales = "free_y") +
     scale_fill_manual(values = PANEL_COLORS, guide = "none") +
     labs(x = NULL, y = "# gene × GWAS",
          title = "SuSiE-COLOC hit counts at increasing PP.H4 thresholds") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 16, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 16, face = "plain"),
           axis.text.x = element_text(size = 13, angle = 25, hjust = 1),
           axis.text.y = element_text(size = 13)) +
     expand_limits(y = max(hits_coloc$n) * 1.18)
@@ -199,13 +199,13 @@ if (is.null(v1) || is.null(kg) || is.null(topld) || is.null(polyfun)) {
   set_counts[, lbl := factor(lbl, levels = lbl)]
   p_set <- ggplot(set_counts, aes(x = lbl, y = N, fill = nchar(as.character(lbl)))) +
     geom_col(width = 0.65) +
-    geom_text(aes(label = N), vjust = -0.3, size = 5, fontface = "bold") +
+    geom_text(aes(label = N), vjust = -0.3, size = 5, fontface = "plain") +
     scale_fill_gradient(low = "#90CAF9", high = "#0D47A1", guide = "none") +
     labs(x = "Subset (V=UKBB v1, K=1KG, T=TOP-LD, P=PolyFun) at SuSiE PP.H4>0.5",
          y = "# gene × GWAS",
          title = "4-way set agreement at SuSiE PP.H4 > 0.5") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
           axis.text.x = element_text(size = 11, angle = 30, hjust = 1)) +
     expand_limits(y = max(set_counts$N) * 1.18)
   ggsave(file.path(OUT_DIR, "coloc/set_agreement_4way.pdf"), p_set,
@@ -224,19 +224,19 @@ if (is.null(v1) || is.null(kg) || is.null(topld) || is.null(polyfun)) {
   N_HL <- nrow(hl_tbl)
   hl_tbl[, row_y := rev(seq_len(N_HL))]
   p_hl <- ggplot(hl_tbl) +
-    geom_text(aes(x = 0,    y = row_y, label = gene),    hjust = 0, size = 6, fontface = "bold") +
+    geom_text(aes(x = 0,    y = row_y, label = gene),    hjust = 0, size = 6, fontface = "plain") +
     geom_text(aes(x = 1.4,  y = row_y, label = UKBB_v1), hjust = 1, size = 6) +
     geom_text(aes(x = 2.6,  y = row_y, label = `1KG`),   hjust = 1, size = 6) +
     geom_text(aes(x = 3.8,  y = row_y, label = TOPLD),   hjust = 1, size = 6) +
     geom_text(aes(x = 5.0,  y = row_y, label = PolyFun), hjust = 1, size = 6) +
     annotate("text", x = c(0, 1.4, 2.6, 3.8, 5.0), y = N_HL + 0.8,
              label = c("Gene","UKBB v1","1KG","TOPLD","PolyFun"),
-             hjust = c(0,1,1,1,1), size = 7, fontface = "bold") +
+             hjust = c(0,1,1,1,1), size = 7, fontface = "plain") +
     scale_x_continuous(limits = c(-0.1, 5.2)) +
     scale_y_continuous(limits = c(0.5, N_HL + 1.3)) +
     labs(title = "Hallmark genes — SuSiE PP.H4 head-to-head (4 panels)") +
     theme_void(base_size = 18) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
           plot.margin = margin(15,15,15,15))
   ggsave(file.path(OUT_DIR, "coloc/hallmarks.pdf"), p_hl,
          width = 12, height = 9, device = cairo_pdf)
@@ -328,8 +328,8 @@ if (is.null(fm_polyfun)) {
     labs(x = "PIP (panel on x)", y = "PIP (panel on y)",
          title = "Per-variant SuSiE PIP concordance — 4 EUR LD panels (6 pairwise)") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 14, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 14, face = "plain"),
           axis.title = element_text(size = 18))
   ggsave(file.path(OUT_DIR, "fm/scatter_pairwise.pdf"), p_fm,
          width = 18, height = 12, device = cairo_pdf)
@@ -344,12 +344,12 @@ if (is.null(fm_polyfun)) {
   )
   p_fm_hits <- ggplot(hits_fm, aes(x = panel, y = n, fill = panel)) +
     geom_col(width = 0.65) +
-    geom_text(aes(label = n), vjust = -0.35, size = 6, fontface = "bold") +
+    geom_text(aes(label = n), vjust = -0.35, size = 6, fontface = "plain") +
     scale_fill_manual(values = PANEL_COLORS, guide = "none") +
     labs(x = NULL, y = "# variants with PIP > 0.5",
          title = "PIP > 0.5 variant counts per LD panel") +
     theme_masld(base_size = 18) +
-    theme(plot.title = element_text(size = 22, face = "bold")) +
+    theme(plot.title = element_text(size = 22, face = "plain")) +
     expand_limits(y = max(hits_fm$n) * 1.18)
   ggsave(file.path(OUT_DIR, "fm/pip_hits_bar.pdf"), p_fm_hits,
          width = 10, height = 7, device = cairo_pdf)

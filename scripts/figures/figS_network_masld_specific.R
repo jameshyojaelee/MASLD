@@ -134,29 +134,28 @@ if (nrow(comp_multi) > 0) {
     name = "Spearman\ncorrelation",
     col = col_fun_corr,
     cluster_rows = FALSE, cluster_columns = FALSE,
-    row_names_gp = gpar(fontsize = 7),
-    column_names_gp = gpar(fontsize = 7),
+    row_names_gp = gpar(fontsize = 6),
+    column_names_gp = gpar(fontsize = 6),
     column_names_rot = 45,
     cell_fun = function(j, i, x, y, w, h, fill) {
       v <- cor_mat[i, j]
       if (!is.na(v)) {
         grid.text(sprintf("%.2f", v), x, y,
-                  gp = gpar(fontsize = 5,
+                  gp = gpar(fontsize = 6,
                             col = ifelse(abs(v) > 0.35, "white", "black")))
       }
     },
     heatmap_legend_param = list(
-      title_gp = gpar(fontsize = 6, fontface = "bold"),
-      labels_gp = gpar(fontsize = 5),
+      title_gp = gpar(fontsize = 6, fontface = "plain"),
+      labels_gp = gpar(fontsize = 6),
       legend_height = unit(2.8, "cm")
     )
   )
 
+  message("[caption] Cross-layer posterior correlation")
   out_a <- file.path(OUT_DIR, "figS_masld_cross_layer_correlation.pdf")
   pdf(out_a, width = fig_col_width, height = 4.2)
-  draw(h_corr,
-       column_title = "Cross-layer posterior correlation",
-       column_title_gp = gpar(fontsize = 8, fontface = "bold"))
+  draw(h_corr)
   dev.off()
   message("  saved: ", out_a)
 
@@ -251,14 +250,13 @@ plot_hub_panel <- function(dt, title_str, bar_fill = "#C2185B") {
   ggplot(dt, aes(x = degree, y = gene, fill = color_group)) +
     geom_col(width = 0.75, color = "gray30", linewidth = 0.2) +
     scale_fill_manual(values = pal, drop = FALSE, name = NULL) +
-    labs(title = title_str, x = "Composite degree (p>=0.5)", y = NULL) +
+    labs(x = "Composite degree (p>=0.5)", y = NULL) +
     theme_masld() +
     theme(axis.text.y = element_text(face = "italic", size = 6),
           axis.text.x = element_text(size = 6),
-          plot.title  = element_text(face = "bold", size = 8),
           legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 6))
 }
 
 p_b1 <- plot_hub_panel(top_deg,   sprintf("Top %d DEG hubs", TOP_N_HUBS),
@@ -273,6 +271,8 @@ p_b <- (p_b1 | p_b2 | p_b3) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
 
+message(sprintf("[caption] Panel B: Top %d DEG hubs / Top %d COLOC hubs (PP4>%.1f) / Top %d druggable hubs",
+                TOP_N_HUBS, TOP_N_HUBS, COLOC_THR, TOP_N_HUBS))
 out_b <- file.path(OUT_DIR, "figS_masld_specific_hubs.pdf")
 save_fig(p_b, out_b, width = fig_full_width, height = 5.5)
 message("  plot saved: ", out_b)
@@ -361,35 +361,34 @@ h_enr <- Heatmap(
   name = "-log10(padj)",
   col = col_fun_enr,
   cluster_rows = FALSE, cluster_columns = FALSE,
-  row_names_gp = gpar(fontsize = 7),
-  column_names_gp = gpar(fontsize = 7),
+  row_names_gp = gpar(fontsize = 6),
+  column_names_gp = gpar(fontsize = 6),
   column_names_rot = 45,
   row_title = "Macro community",
   column_title = "Disease category",
-  row_title_gp = gpar(fontsize = 7, fontface = "bold"),
-  column_title_gp = gpar(fontsize = 7, fontface = "bold"),
+  row_title_gp = gpar(fontsize = 6, fontface = "plain"),
+  column_title_gp = gpar(fontsize = 6, fontface = "plain"),
   cell_fun = function(j, i, x, y, w, h, fill) {
     v <- padj_mat[i, j]
     or <- or_mat[i, j]
     if (!is.na(v) && v >= 1.3) {
       label <- if (!is.na(or)) sprintf("%.1f\nOR=%.1f", v, or) else sprintf("%.1f", v)
       grid.text(label, x, y,
-                gp = gpar(fontsize = 4.5,
+                gp = gpar(fontsize = 6,
                           col = ifelse(v > 8, "white", "black")))
     }
   },
   heatmap_legend_param = list(
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2.8, "cm")
   )
 )
 
+message("[caption] Disease-category enrichment per community")
 out_c <- file.path(OUT_DIR, "figS_masld_community_enrichment.pdf")
 pdf(out_c, width = fig_col_width, height = 5.0)
-draw(h_enr,
-     column_title = "Disease-category enrichment per community",
-     column_title_gp = gpar(fontsize = 8, fontface = "bold"))
+draw(h_enr)
 dev.off()
 message("  saved: ", out_c)
 
@@ -559,26 +558,23 @@ if (length(all_nodes_f2) >= 2 && nrow(f2_edges_all) > 0) {
                    color = "gray55") +
     geom_node_point(aes(size = degree, fill = group),
                     shape = 21, stroke = 0.3, color = "gray20") +
-    geom_node_text(aes(label = name, fontface = ifelse(group == "Bridge", "plain", "bold")),
-                   size = 1.8, repel = TRUE, max.overlaps = 40,
+    geom_node_text(aes(label = name, fontface = ifelse(group == "Bridge", "plain", "italic")),
+                   size = GEOM_TEXT_6PT, repel = TRUE, max.overlaps = 40,
                    bg.color = "white", bg.r = 0.08) +
     scale_edge_width_continuous(range = c(0.15, 0.8), guide = "none") +
     scale_edge_alpha_continuous(range = c(0.3, 0.8), guide = "none") +
     scale_fill_manual(values = group_colors, name = "Role") +
     scale_size_continuous(range = c(1.5, 5), name = "Degree") +
-    labs(title = "Mid-stage (F1-F3) metabolic-to-inflammatory inflection network neighborhood",
-         subtitle = sprintf("%d nodes, %d edges  (source: %s; p_composite >= 0.5 internal, >= 0.7 bridge)",
-                            vcount(g_f2), ecount(g_f2), f2_source)) +
     theme_masld() +
     theme(axis.text = element_blank(), axis.ticks = element_blank(),
           axis.line = element_blank(), axis.title = element_blank(),
           legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5),
-          legend.title = element_text(size = 6, face = "bold"),
-          plot.subtitle = element_text(size = 6, color = "gray40"),
-          plot.title = element_text(face = "bold", size = 8))
+          legend.text = element_text(size = 6),
+          legend.title = element_text(size = 6, face = "plain"))
 
+  message(sprintf("[caption] Mid-stage (F1-F3) metabolic-to-inflammatory inflection network neighborhood: %d nodes, %d edges (source: %s; p_composite >= 0.5 internal, >= 0.7 bridge)",
+                  vcount(g_f2), ecount(g_f2), f2_source))
   out_d <- file.path(OUT_DIR, "figS_midstage_inflection_neighborhood.pdf")
   save_fig(p_d, out_d, width = fig_full_width, height = 6.0)
   message("  saved: ", out_d)

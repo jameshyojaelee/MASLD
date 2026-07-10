@@ -51,7 +51,7 @@ if (file.exists(ukbb_alt_f) && file.exists(bbj_alt_f)) {
   # Load dream for DEG status
   me <- load_multi_evidence()
   if (!is.null(me)) {
-    deg_genes <- me[is_dream_deg(me) & abs(bulk_logFC) > 0.5, human_symbol]
+    deg_genes <- me[is_dream_deg(me) & abs(bulk_logFC) > 0.3, human_symbol]
     cross[, is_deg := symbol %in% deg_genes]
   } else {
     cross[, is_deg := FALSE]
@@ -93,6 +93,7 @@ if (file.exists(ukbb_alt_f) && file.exists(bbj_alt_f)) {
 
   subtitle_text <- paste0(n_cross, " EUR+EAS cross-ancestry validated; AFR (",
                            n_afr, ") & CSA (", n_csa, ") exploratory")
+  message("[caption] Cross-ancestry COLOC replication: ", subtitle_text)
 
   # Label top cross-validated genes
   known_genes <- c("THRB", "DGAT2", "HSD17B13", "SLC39A8", "SORT1",
@@ -112,7 +113,7 @@ if (file.exists(ukbb_alt_f) && file.exists(bbj_alt_f)) {
     geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.2, color = "gray60") +
     geom_vline(xintercept = 0.5, linetype = "dashed", linewidth = 0.2, color = "gray60") +
     geom_text_repel(data = label_dt, aes(label = symbol),
-                    size = 1.8, max.overlaps = 15, segment.size = 0.15,
+                    size = GEOM_TEXT_6PT, max.overlaps = 15, segment.size = 0.15,
                     min.segment.length = 0, fontface = "italic",
                     color = "black") +
     scale_color_manual(values = c("TRUE" = masld_colors$up, "FALSE" = "gray60"),
@@ -123,12 +124,10 @@ if (file.exists(ukbb_alt_f) && file.exists(bbj_alt_f)) {
                        name = NULL) +
     annotate("text", x = 0.75, y = 0.05,
              label = paste0(n_cross, " cross-ancestry\nvalidated genes"),
-             size = 2.5, color = "#2E7D32", fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = "#2E7D32", fontface = "plain") +
     coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
     labs(x = "UKBB ALT PP.H4 (European)",
-         y = "BBJ ALT PP.H4 (East Asian)",
-         title = "Cross-ancestry COLOC replication",
-         subtitle = subtitle_text) +
+         y = "BBJ ALT PP.H4 (East Asian)") +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"))
@@ -206,15 +205,15 @@ if (file.exists(sens_file)) {
       scale_color_manual(values = frag_colors, name = "Fragility") +
       facet_wrap(~source_label, scales = "free_y") +
       labs(x = expression(p[12]~"prior"),
-           y = "PP.H4",
-           title = "COLOC prior sensitivity (p12 variation)") +
+           y = "PP.H4") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.25, "cm"),
-            axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
             strip.text = element_text(size = 6))
 
     message("  Panel (b) built: ", nrow(sens_plot), " data points")
+    message("[caption] COLOC prior sensitivity (p12 variation)")
   }, error = function(e) {
     message("  Panel (b) error: ", conditionMessage(e))
     p_b <<- placeholder("(b) Prior sensitivity — error")
@@ -288,20 +287,20 @@ if (length(gwas_gene_sets) >= 2) {
 
   p_c <- ggplot(combo_counts, aes(x = N, y = combo, fill = factor(n_gwas_combo))) +
     geom_bar(stat = "identity", width = 0.7) +
-    geom_text(aes(label = N), hjust = -0.15, size = 2, color = "gray30") +
+    geom_text(aes(label = N), hjust = -0.15, size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_manual(values = c("1" = "#90CAF9", "2" = "#42A5F5",
                                   "3" = "#1565C0", "4" = "#0D47A1"),
                       name = "# GWAS") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
     labs(x = "Number of genes (PP.H4 > 0.5)",
-         y = "GWAS combination",
-         title = "COLOC gene overlap across 4 European GWAS") +
+         y = "GWAS combination") +
     theme_masld() +
-    theme(axis.text.y = element_text(size = 5),
+    theme(axis.text.y = element_text(size = 6),
           legend.position = "inside",
           legend.position.inside = c(0.8, 0.8),
           legend.key.size = unit(0.25, "cm"))
 }
+message("[caption] COLOC gene overlap across 4 European GWAS")
 
 # ==========================================================================
 # Assemble
@@ -309,7 +308,7 @@ if (length(gwas_gene_sets) >= 2) {
 fig_supp <- (p_a | p_b) / p_c +
   plot_layout(heights = c(1, 1)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 OUT <- file.path(PANEL_DIR, "figS09_multi_ancestry_coloc.pdf")
 save_fig_tall(fig_supp, OUT, height = 9)

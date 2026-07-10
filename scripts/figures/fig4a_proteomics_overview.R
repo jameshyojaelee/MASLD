@@ -83,6 +83,7 @@ message(sprintf("[fig4a] both-sig: n=%d, %.1f%% directional concordance",
                 both_n, both_pct))
 message(sprintf("[fig4a] per-platform rho: plasma=%.2f  tissue=%.2f",
                 rho_plasma, rho_tissue))
+message("[caption] Protein-level replication")
 
 # ── Colors ───────────────────────────────────────────────────────────────────
 # Stringency ramp: neutral gray (all) -> disease magenta (DEGs) -> teal
@@ -103,25 +104,24 @@ p <- ggplot(bar_df, aes(x = rho, y = stratum, color = stratum)) +
   geom_text(aes(label = sprintf("%.2f  (n=%s)", rho,
                                 formatC(n, big.mark = ",", format = "d"))),
             hjust = 0, nudge_x = 0.022,
-            size = PUB_GEOM_TEXT + 0.4, fontface = "bold", color = "black") +
+            size = PUB_GEOM_TEXT, fontface = "plain", color = "black") +
   scale_color_manual(values = strat_cols, guide = "none") +
   scale_x_continuous(limits = c(0, x_axis_max),
                      breaks = c(0, 0.2, 0.4, 0.6),
                      expand = expansion(mult = c(0, 0))) +
   labs(x = "mRNA-protein log2FC concordance (Spearman rho)",
-       y = NULL,
-       title = "Protein-level replication") +
+       y = NULL) +
   # Both-significant directional concordance + per-platform agreement belong in
   # the figure legend, not the panel (PI directive) — emitted to stdout above.
   coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
   theme(panel.grid.major.y = element_blank(),
         panel.grid.minor.x = element_blank(),
-        axis.text.y = element_text(face = "bold", size = PUB_AXIS_TITLE),
+        axis.text.y = element_text(face = "plain", size = PUB_AXIS_TITLE),
         plot.margin = margin(5.5, 34, 5.5, 5.5))
 
 # ── Save ─────────────────────────────────────────────────────────────────────
-out <- file.path(FIG4_DIR, "proteomics_concordance.pdf")
+out <- file.path(FIG4_DIR, "panels", "proteomics_concordance.pdf")
 pdf(out, width = fig_half_width, height = fig_half_width * 0.62, useDingbats = FALSE)
 print(p)
 dev.off()

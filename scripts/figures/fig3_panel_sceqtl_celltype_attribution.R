@@ -7,6 +7,13 @@
 # information invisible in bulk eQTL.
 #
 # Output: figures/main/fig2_genetics/panels/sceqtl_celltype_attribution.pdf
+#
+# RETIRED 2026-07-07: sceqtl_celltype_attribution.pdf is not part of the Fig 2 (genetics)
+# or FigS2 panel set; it was a stale leftover in fig2_genetics/panels/. This script's ONLY
+# output was that panel, so it is retired wholesale (early quit) to guarantee the stale PDF
+# is never regenerated. Plotting code kept below for provenance.
+message("[fig3_panel_sceqtl_celltype_attribution] RETIRED 2026-07-07 — output not in Fig2/FigS2 set; no panel written.")
+quit(save = "no", status = 0)
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -71,9 +78,9 @@ plot_dt[, cell_type := factor(cell_type,
 # known MASLD genes to bold
 known <- c("HSD17B13", "SPTLC3", "EFHD1", "CHEK2", "PNPLA3", "TM6SF2",
            "MARC1", "GCKR", "FABP1", "HKDC1", "THRB", "SLC12A8", "MLIP")
-plot_dt[, gene_face := ifelse(as.character(gene) %in% known, "bold.italic", "plain")]
+plot_dt[, gene_face := ifelse(as.character(gene) %in% known, "italic", "plain")]
 
-y_faces <- ifelse(rev(gene_order) %in% known, "bold.italic", "plain")
+y_faces <- ifelse(rev(gene_order) %in% known, "italic", "plain")
 
 # ── plot ──────────────────────────────────────────────────────────────────────
 n_sig <- nrow(best[best_PP4 > 0.5])
@@ -86,23 +93,21 @@ p <- ggplot(plot_dt, aes(x = cell_type, y = gene, fill = PP4)) +
                       name   = "COLOC\nPP4") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  labs(x = NULL, y = NULL,
-       title = "Cell-type-resolved genetic risk for MASLD") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 11) +
-  theme(axis.text.x      = element_text(size = 10, face = "bold",
+  theme(axis.text.x      = element_text(size = 6, face = "plain",
                                          angle = 35, hjust = 1, vjust = 1),
-        axis.text.y      = element_text(size = 8.5, face = y_faces),
+        axis.text.y      = element_text(size = 6, face = y_faces),
         panel.grid        = element_blank(),
         axis.line         = element_blank(),
         axis.ticks        = element_blank(),
         legend.position   = "right",
         legend.key.height = unit(1.2, "cm"),
         legend.key.width  = unit(0.35, "cm"),
-        legend.text       = element_text(size = 9),
-        legend.title      = element_text(size = 9),
-        plot.title        = element_text(size = 12, face = "bold",
-                                         margin = margin(b = 8)))
+        legend.text       = element_text(size = 6),
+        legend.title      = element_text(size = 6))
 
+message("[caption] Cell-type-resolved genetic risk for MASLD")
 ggsave(OUT_PDF, p,
        width  = 5.5,
        height = 2 + TOP_N * 0.28,

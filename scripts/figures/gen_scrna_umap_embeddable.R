@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
 # gen_scrna_umap_embeddable.R
-# Generates scrna_umap_embeddable.pdf — fully vectorized (NO ggrastr rasterization)
+# Generates fig3f_scrna_umap_embeddable.pdf — fully vectorized (NO ggrastr rasterization)
 # for direct editing in Illustrator. Uses the same data / layout as scrna_umap.pdf
 # but skips rasterize_layer() so every element is an editable vector object.
 #
-# Output: figures/main/fig3_RNAseq/panels/scrna_umap_embeddable.pdf
+# Output: figures/main/fig3_RNAseq/panels/fig3f_scrna_umap_embeddable.pdf
 # Does NOT overwrite scrna_umap.pdf (the rasterized compositor panel).
 # ============================================================================
 
@@ -26,11 +26,11 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR  <- file.path(FIG2_DIR, "panels")
 ATLAS_UMAP <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2/atlas_umap_for_fig2.csv.gz")
-OUT_PDF    <- file.path(PANEL_DIR, "scrna_umap_embeddable.pdf")
+OUT_PDF    <- file.path(PANEL_DIR, "fig3f_scrna_umap_embeddable.pdf")
 
 # Style constants (mirror archive script)
-BASE_SIZE <- 7
-LBL_SIZE  <- 7 / ggplot2::.pt
+BASE_SIZE <- 6
+LBL_SIZE  <- 6 / ggplot2::.pt
 
 theme_fig2 <- function() {
   theme_masld(base_size = BASE_SIZE) +
@@ -162,7 +162,7 @@ p2e <- ggplot() +
                              stroke = 0, shape = 16)) +
   geom_text_repel(data = ct_centroids,
             aes(x = umap_1, y = umap_2, label = cell_group),
-            size = LBL_SIZE, color = "black", fontface = "bold",
+            size = LBL_SIZE, color = "black", fontface = "plain",
             bg.color = "white", bg.r = 0.12,
             min.segment.length = 0, segment.size = 0.2,
             segment.color = "grey40",
@@ -172,15 +172,14 @@ p2e <- ggplot() +
                        midpoint = 0,
                        limits = c(-fill_lim, fill_lim),
                        na.value = "white",
-                       name = expression(log[2] * " density ratio\n(MASH / Healthy)"),
+                       name = expression(log[2] * " density ratio\n(Steatohepatitis / Healthy)"),
                        guide = guide_colorbar(barwidth = 0.3, barheight = 3, order = 1)) +
   scale_color_manual(values = umbrella_palette_use, na.value = "grey80",
                      drop = FALSE,
                      guide = guide_legend(
                        override.aes = list(size = 1.5, alpha = 1, shape = 16),
                        ncol = 1, keyheight = unit(7, "pt"), order = 2)) +
-  labs(title = sprintf("e  scRNA atlas (n=%s cells)", comma(n_total)),
-       x = "UMAP 1", y = "UMAP 2", color = NULL) +
+  labs(x = "UMAP 1", y = "UMAP 2", color = NULL) +
   theme_fig2() +
   theme(axis.text  = element_blank(),
         axis.ticks = element_blank(),
@@ -189,6 +188,6 @@ p2e <- ggplot() +
         legend.key.size = unit(0.25, "cm"))
 
 message("[save] ", OUT_PDF)
-save_fig(p2e, OUT_PDF, width = fig_full_width * 0.65, height = 3.6, dpi = 600)
+save_fig(p2e, OUT_PDF, width = 3.10, height = 2.43, dpi = 600)
 message(sprintf("[done] %s (%.0f KB)", OUT_PDF,
                 file.info(OUT_PDF)$size / 1024))

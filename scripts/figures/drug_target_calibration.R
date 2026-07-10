@@ -23,7 +23,7 @@
 # CAVEATS baked into the legend (per ledger):
 #   - Both COLOC are abf-only (no SuSiE convergence) -> axis labelled "COLOC PP.H4"
 #     NOT "SuSiE-COLOC".
-#   - THRB bulk |logFC| = 0.189 falls BELOW our |logFC| > 0.5 DEG floor (honest):
+#   - THRB bulk |logFC| = 0.189 falls BELOW our |logFC| > 0.3 DEG floor (honest):
 #     the screen recovers it via genetic + druggability evidence, not bulk DE.
 #   - NR1H4 / obeticholic acid was WITHDRAWN from the US market (Sept 2025).
 # =============================================================================
@@ -94,7 +94,7 @@ message(sprintf("NR1H4 COLOC PP.H4 = %.4f (%s, %s)  | clinical tier = %s",
 # are NOT bulk DEGs); we cite the ledger value directly to avoid atlas-version drift.
 THRB_BULK  <- -0.189
 NR1H4_BULK <- -0.061
-DEG_FLOOR  <- 0.5   # canonical |logFC| Tier-1 floor
+DEG_FLOOR  <- 0.3   # canonical |shrunk_logFC| Tier-1 floor
 
 dat <- data.table(
   gene  = c("THRB", "NR1H4"),
@@ -125,14 +125,14 @@ pA <- ggplot(dat, aes(x = coloc_pp4, y = gene, color = fate)) +
   geom_segment(aes(x = 0, xend = coloc_pp4, yend = gene), linewidth = 0.9) +
   geom_point(size = 3.2) +
   geom_text(aes(label = sprintf("%.2f", coloc_pp4)),
-            hjust = -0.45, size = PUB_GEOM_TEXT + 0.3, color = "black") +
+            hjust = -0.45, size = PUB_GEOM_TEXT, color = "black") +
   scale_color_manual(values = fate_col, guide = "none") +
   scale_x_continuous(limits = c(0, 1.18), breaks = c(0, 0.5, 1.0),
                      expand = expansion(mult = c(0, 0.02))) +
   scale_y_discrete(expand = expansion(add = c(0.6, 0.9))) +
-  labs(x = "COLOC PP.H4", y = NULL, subtitle = "Genetic causal support") +
+  labs(x = "COLOC PP.H4", y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.text.y = element_text(face = "bold"))
+  theme(axis.text.y = element_text(face = "plain"))
 
 # ---------------------------------------------------------------------------
 # 4. Panel B — Bulk transcriptomic effect (lollipop, anchored at 0; negatives left)
@@ -146,15 +146,14 @@ pB <- ggplot(dat, aes(x = bulk_logfc, y = gene, color = fate)) +
   geom_point(size = 3.2) +
   geom_text(aes(label = sprintf("%+.3f", bulk_logfc)),
             hjust = -0.30, nudge_y = 0.30,
-            size = PUB_GEOM_TEXT + 0.3, color = "black") +
-  annotate("text", x = 0, y = 2.72, label = "DEG |log2FC| floor (0.5)",
-           size = PUB_GEOM_TEXT, color = "gray45", hjust = 0.5) +
+            size = PUB_GEOM_TEXT, color = "black") +
+  annotate("text", x = 0, y = 2.72, label = "DEG |log2FC| floor (0.3)",
+           size = PUB_GEOM_TEXT, color = "black", hjust = 0.5) +
   scale_color_manual(values = fate_col, guide = "none") +
   scale_x_continuous(limits = c(-xrng, xrng),
-                     breaks = c(-0.5, 0, 0.5)) +
+                     breaks = c(-0.3, 0, 0.3)) +
   scale_y_discrete(expand = expansion(add = c(0.6, 0.9))) +
-  labs(x = "Bulk log2FC (disease vs control)", y = NULL,
-       subtitle = "Transcriptomic effect") +
+  labs(x = "Bulk log2FC (disease vs control)", y = NULL) +
   coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
@@ -166,12 +165,12 @@ pB <- ggplot(dat, aes(x = bulk_logfc, y = gene, color = fate)) +
 pC <- ggplot(dat, aes(x = 1, y = gene)) +
   geom_tile(aes(fill = tier), width = 0.85, height = 0.62, color = "white") +
   geom_text(aes(label = tier),
-            size = PUB_GEOM_TEXT + 0.5, fontface = "bold",
-            color = ifelse(dat$tier %in% c("Strong", "Moderate"), "white", "gray15")) +
+            size = PUB_GEOM_TEXT, fontface = "plain",
+            color = ifelse(dat$tier %in% c("Strong", "Moderate"), "white", "black")) +
   scale_fill_manual(values = tier_fill, guide = "none") +
   scale_x_continuous(limits = c(0.5, 1.5), expand = c(0, 0)) +
   scale_y_discrete(expand = expansion(add = c(0.6, 0.9))) +
-  labs(x = NULL, y = NULL, subtitle = "Clinical-evidence tier") +
+  labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
   theme(axis.text   = element_blank(),
         axis.ticks  = element_blank(),
@@ -189,13 +188,13 @@ dat_lab <- data.table(
 pD <- ggplot(dat_lab, aes(x = 1, y = gene)) +
   geom_point(aes(color = fate), size = 4.0) +
   geom_text(aes(label = drug), x = 1.10, hjust = 0, nudge_y = 0.16,
-            size = PUB_GEOM_TEXT + 0.3, fontface = "bold", color = "black") +
+            size = PUB_GEOM_TEXT, fontface = "plain", color = "black") +
   geom_text(aes(label = status, color = fate), x = 1.10, hjust = 0, nudge_y = -0.20,
             size = PUB_GEOM_TEXT) +
   scale_color_manual(values = fate_col, guide = "none") +
   scale_x_continuous(limits = c(0.85, 3.6), expand = c(0, 0)) +
   scale_y_discrete(expand = expansion(add = c(0.6, 0.9))) +
-  labs(x = NULL, y = NULL, subtitle = "Drug / regulatory outcome") +
+  labs(x = NULL, y = NULL) +
   coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
   theme(axis.text   = element_blank(),
@@ -221,6 +220,8 @@ ggsave(out_pdf, fig, width = 180/25.4, height = 52/25.4,
        device = pdf_device)
 
 message("Wrote: ", out_pdf)
+message("[caption] Panels: A) Genetic causal support (COLOC PP.H4); B) Transcriptomic effect ",
+        "(bulk log2FC); C) Clinical-evidence tier; D) Drug / regulatory outcome.")
 
 # ---------------------------------------------------------------------------
 # 9. Legend (emit to stdout — stats live in the legend, not on the panel)

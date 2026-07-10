@@ -34,7 +34,7 @@ INT <- file.path(BASE,
 stab <- fread(file.path(INT, "loo_cv_C2/loo_cv_C2_per_gene_stability.csv"))
 deg  <- fread(file.path(INT, "canonical_deg_results.csv"))
 
-deg[, is_deg := padj < 0.05 & abs(logFC) > 0.5]
+deg[, is_deg := is_dream_deg(deg)]
 deg_genes <- deg[is_deg == TRUE, gene]
 
 x <- stab[gene %in% deg_genes]
@@ -77,7 +77,7 @@ plot_dt[, pct_lab := ifelse(frac >= 0.04, sprintf("%.1f%%", 100 * frac), "")]
 p <- ggplot(plot_dt, aes(x = bar, y = frac, fill = lab)) +
   geom_col(width = 0.55, color = "white", linewidth = 0.4) +
   geom_text(aes(label = pct_lab), position = position_stack(vjust = 0.5),
-            size = 2.2, color = "white", fontface = "bold") +
+            size = 2.2, color = "white", fontface = "plain") +
   # cumulative annotations
   annotate("segment", x = 1.32, xend = 1.32, y = 1 - all5, yend = 1,
            color = "#1565C0", linewidth = 0.5) +
@@ -96,13 +96,10 @@ p <- ggplot(plot_dt, aes(x = bar, y = frac, fill = lab)) +
                      expand = expansion(mult = c(0, 0.02))) +
   coord_cartesian(xlim = c(0.7, 2.2)) +
   labs(title = "Most integrated DEGs are reproducible per gene",
-       subtitle = sprintf("%s Tier-1 DEGs, 5-fold leave-one-cohort-out refit (padj<0.1)",
-                          format(n_deg, big.mark = ",")),
        x = NULL) +
   theme_masld(base_size = 7) +
   theme(
-    plot.title      = element_text(size = 7.3, face = "bold", margin = margin(b = 2)),
-    plot.subtitle   = element_text(size = 5.3, color = "#555555", margin = margin(b = 5)),
+    plot.title      = element_text(size = 7.3, face = "plain", margin = margin(b = 2)),
     axis.text.x     = element_blank(),
     axis.ticks.x    = element_blank(),
     legend.position = "left",
@@ -110,6 +107,9 @@ p <- ggplot(plot_dt, aes(x = bar, y = frac, fill = lab)) +
     legend.text     = element_text(size = 5.5),
     legend.title    = element_text(size = 5.8)
   )
+
+message(sprintf("[caption] %s Tier-1 DEGs (TREAT FDR<0.05 at lfc=0.25), 5-fold leave-one-cohort-out refit (per-fold padj<0.1).",
+                format(n_deg, big.mark = ",")))
 
 ggsave(OUT_PDF, p, width = 70 / 25.4, height = 72 / 25.4,
        units = "in", device = cairo_pdf)

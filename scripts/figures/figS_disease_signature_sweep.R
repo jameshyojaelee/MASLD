@@ -428,14 +428,14 @@ p1 <- ggplot() +
   scale_color_manual(values = col_map, name = NULL) +
   coord_cartesian(ylim = c(0.45, 1.0)) +
   labs(x = "Gene signature size (N, log scale)",
-       y = "AUROC — 5-fold LOCO mean ± SD",
-       title = "Supervised disease separation: method × signature size") +
-  theme_masld(base_size = 7) +
+       y = "AUROC — 5-fold LOCO mean ± SD") +
+  theme_masld(base_size = 6) +
   theme(legend.position  = "right",
         panel.grid.minor = element_blank(),
         axis.text.x      = element_text(angle = 30, hjust = 1))
+message("[caption] Supervised disease separation: method x signature size")
 ggsave(file.path(OUT, "auroc_vs_N.pdf"), p1,
-       width = 8.4, height = 4.2, device = cairo_pdf)
+       width = 7.09, height = 3.55, device = cairo_pdf)
 cat("  auroc_vs_N.pdf\n")
 
 # ── Panel 2: Method x N heatmap ──────────────────────────────────────────────────
@@ -443,15 +443,15 @@ loco_sum[, N_lbl := factor(N, levels = N_VALS)]
 
 p2 <- ggplot(loco_sum, aes(x = N_lbl, y = method_lbl, fill = auroc_mean)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = sprintf("%.2f", auroc_mean)), size = 2.2, color = "grey15") +
+  geom_text(aes(label = sprintf("%.2f", auroc_mean)), size = GEOM_TEXT_6PT, color = "grey15") +
   scale_fill_gradient2(low = "#f7fbff", mid = "#6baed6", high = "#08306b",
                        midpoint = 0.75, limits = c(0.5, 1.0), na.value = "grey90",
                        name = "Mean\nAUROC") +
-  labs(x = "Gene signature size (N)", y = NULL,
-       title = "Mean AUROC (5-fold LOCO) by method and N") +
-  theme_masld(base_size = 7) +
+  labs(x = "Gene signature size (N)", y = NULL) +
+  theme_masld(base_size = 6) +
   theme(panel.grid = element_blank(),
         axis.text.x = element_text(angle = 30, hjust = 1))
+message("[caption] Mean AUROC (5-fold LOCO) by method and N")
 ggsave(file.path(OUT, "method_N_heatmap.pdf"), p2,
        width = 7.0, height = 3.2, device = cairo_pdf)
 cat("  method_N_heatmap.pdf\n")
@@ -464,14 +464,14 @@ p3 <- ggplot(p3_dt, aes(x = method_lbl, y = auroc, color = method_lbl)) +
   facet_wrap(~ cohort_lbl, nrow = 1) +
   scale_color_manual(values = col_map) +
   coord_cartesian(ylim = c(0.4, 1.0)) +
-  labs(x = NULL, y = "AUROC at N = 200", color = NULL,
-       title = "Per held-out cohort AUROC at N = 200") +
-  theme_masld(base_size = 7) +
+  labs(x = NULL, y = "AUROC at N = 200", color = NULL) +
+  theme_masld(base_size = 6) +
   theme(axis.text.x  = element_text(angle = 45, hjust = 1),
         legend.position = "none",
-        strip.text = element_text(size = 6.5))
+        strip.text = element_text(size = 6))
+message("[caption] Per held-out cohort AUROC at N = 200")
 ggsave(file.path(OUT, "per_cohort_N200.pdf"), p3,
-       width = 9.0, height = 3.5, device = cairo_pdf)
+       width = 7.09, height = 2.76, device = cairo_pdf)
 cat("  per_cohort_N200.pdf\n")
 
 # ── Panel 4: Null distribution vs real methods ───────────────────────────────────
@@ -491,12 +491,12 @@ p4 <- ggplot() +
   scale_color_manual(values = col_map, name = NULL) +
   coord_cartesian(ylim = c(0.35, 1.0)) +
   labs(x = "Gene signature size (N)",
-       y = "AUROC",
-       title = "Random null (grey box) vs. real method AUROCs (coloured points)") +
-  theme_masld(base_size = 7) +
+       y = "AUROC") +
+  theme_masld(base_size = 6) +
   theme(legend.position = "right")
+message("[caption] Random null (grey box) vs. real method AUROCs (coloured points)")
 ggsave(file.path(OUT, "null_vs_real.pdf"), p4,
-       width = 9.0, height = 4.0, device = cairo_pdf)
+       width = 7.09, height = 3.15, device = cairo_pdf)
 cat("  null_vs_real.pdf\n")
 
 # ── Panel 5: Train-on-1, project-to-4 heatmap (N=200) ────────────────────────────
@@ -506,15 +506,15 @@ p5_dt[, test_lbl  := factor(cohort_short[test_cohort],  levels = c_lvls)]
 
 p5 <- ggplot(p5_dt, aes(x = test_lbl, y = train_lbl, fill = auroc)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = sprintf("%.2f", auroc)), size = 2.4, color = "grey15") +
+  geom_text(aes(label = sprintf("%.2f", auroc)), size = GEOM_TEXT_6PT, color = "grey15") +
   scale_fill_gradient(low = "#fff5eb", high = "#7f2704",
                       limits = c(0.5, 1.0), na.value = "grey92",
                       name = "AUROC") +
-  labs(x = "Test cohort (held-out)", y = "Training cohort",
-       title = "Train-on-1-cohort, project-to-4 (limma-voom, N = 200)") +
-  theme_masld(base_size = 7) +
+  labs(x = "Test cohort (held-out)", y = "Training cohort") +
+  theme_masld(base_size = 6) +
   theme(panel.grid   = element_blank(),
         axis.text.x  = element_text(angle = 45, hjust = 1))
+message("[caption] Train-on-1-cohort, project-to-4 (limma-voom, N = 200)")
 ggsave(file.path(OUT, "train1_project4.pdf"), p5,
        width = 4.5, height = 4.0, device = cairo_pdf)
 cat("  train1_project4.pdf\n")

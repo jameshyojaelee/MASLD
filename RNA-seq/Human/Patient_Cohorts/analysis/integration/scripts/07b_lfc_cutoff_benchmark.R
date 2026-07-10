@@ -6,7 +6,10 @@
 # THRESHOLD best recovers known MASLD biology while staying on the CV-stability
 # plateau. Read-only on pipeline inputs; writes only its own results dir.
 #
-# Inputs : dream_results_ashr.csv (logFC, shrunk_logFC, lfsr, padj, AveExpr)
+# Inputs : canonical_deg_results.csv (logFC, shrunk_logFC, lfsr, padj, AveExpr,
+#            symbol) — the limma-voom-qw C2 canonical (promoted 2026-06-08,
+#            superseding dream_results_ashr.csv, which is retained on disk only
+#            as a retired-method sensitivity arm)
 #          positive_control_validation.csv (62 Expression_driven + 3 GWAS_variant)
 #          published panels (Govaere25 / Feng / SteatoSITE) — vectors below
 #          drug targets (THRB, DGAT2, SCD, HSD17B13, ...) from Script 40
@@ -20,16 +23,19 @@ INT  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/resu
 OUT  <- file.path(BASE, "RNA-seq/results/audit_sensitivity/lfc_cutoff_benchmark")
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 
-# --- load dream ashr + DE-DUPLICATED ensembl->symbol map (the quick-sweep bug) ---
-a <- fread(file.path(INT, "dream_results_ashr.csv"))
+# --- load canonical (limma-voom-qw C2) + DE-DUPLICATED ensembl->symbol map ---
+a <- fread(file.path(INT, "canonical_deg_results.csv"))
 a[, eb := sub("\\.[0-9]+$", "", gene)]
-stopifnot(!anyDuplicated(a$eb))                       # dream rows must be unique per gene
+stopifnot(!anyDuplicated(a$eb))                       # canonical rows must be unique per gene
 map <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
              select = c("ensembl_id", "human_symbol"))
 map[, eb := sub("\\.[0-9]+$", "", ensembl_id)]
 map <- unique(map[!is.na(human_symbol) & human_symbol != ""], by = "eb")   # DEDUP
 a[, human_symbol := map[.(a$eb), on = "eb", human_symbol]]
-cat(sprintf("dream genes: %d (%d with symbol); rows unique per gene: %s\n",
+# canonical carries its own `symbol`; fall back to it where the atlas map missed
+if ("symbol" %in% names(a))
+  a[is.na(human_symbol) & !is.na(symbol) & symbol != "", human_symbol := symbol]
+cat(sprintf("canonical genes: %d (%d with symbol); rows unique per gene: %s\n",
             nrow(a), sum(!is.na(a$human_symbol)), !anyDuplicated(a$eb)))
 
 # --- positive sets ---
@@ -91,6 +97,14 @@ cv <- rbindlist(cv_rows)
 plateau <- cv[cv<10, .(first_stable_thr=min(threshold)), by=scale]
 cat("\n=== CV<10% stability plateau onset per scale ===\n"); print(plateau)
 
+# Persist the per-scale CV<10% crossing point (was ephemeral stdout only):
+#   scale, threshold (first |LFC| with CV<10%), cv (its CV value).
+plateau_cv <- merge(plateau, cv,
+                    by.x = c("scale","first_stable_thr"),
+                    by.y = c("scale","threshold"))[, .(scale, threshold = first_stable_thr, cv)]
+fwrite(plateau_cv, file.path(OUT,"cutoff_cv_plateau.csv"))
+cat("\n=== Persisted CV plateau crossing points (cutoff_cv_plateau.csv) ===\n"); print(plateau_cv)
+
 # --- (4) matched-N recall (fair cross-scale at equal DEG count) ---
 matchN <- function(targetN){
   rbindlist(lapply(c("raw","shrunk"), function(sc){ col <- if(sc=="raw") a$logFC else a$shrunk_logFC
@@ -110,5 +124,27 @@ p2 <- ggplot(cv, aes(threshold, cv, color=scale)) + geom_line() + geom_hline(yin
   labs(title="CV-stability plateau per scale", x="|LFC| threshold", y="CV of DEG count (%)") + theme_bw(base_size=10)
 p3 <- ggplot(sweep[grepl("raw|shrunk",scale)], aes(nDEG, median_AveExpr, color=scale)) + geom_line() +
   labs(title="Low-expression composition vs DEG count", x="# DEGs", y="median AveExpr of set") + theme_bw(base_size=10)
-ggsave(file.path(OUT,"cutoff_benchmark.pdf"), (p1|p2)/(p3|patchwork::plot_spacer()), width=11, height=8)
+ggsave(file.path(OUT,"cutoff_benchmark.pdf"), (p1|p2)/(p3|patchwork::plot_spacer()),
+       width=11, height=8, useDingbats=FALSE)
+
+# --- per-scale STANDALONE panels (unambiguous on-disk raw vs shrunk set) ---
+SCALE_TITLE <- c(raw="raw |log2FC|", shrunk="ashr-shrunk |log2FC|")
+for(sc in c("raw","shrunk")){
+  lab <- SCALE_TITLE[[sc]]; scl <- paste0(sc,"_absLFC")
+  sw <- sweep[scale==scl]; cvs <- cv[scale==sc]
+  q1 <- ggplot(sw, aes(nDEG, recall_known)) + geom_line() + geom_point(size=1) +
+    geom_vline(xintercept=1853, linetype="dashed", color="grey50") +
+    labs(title=sprintf("Known-MASLD recall vs DEG count (%s)", lab),
+         x="# DEGs", y="recall known union (%)") + theme_bw(base_size=10)
+  q2 <- ggplot(cvs, aes(threshold, cv)) + geom_line() + geom_point(size=1) +
+    geom_hline(yintercept=10, linetype="dashed") +
+    labs(title=sprintf("CV-stability plateau (%s)", lab),
+         x="|LFC| threshold", y="CV of DEG count (%)") + theme_bw(base_size=10)
+  q3 <- ggplot(sw, aes(nDEG, median_AveExpr)) + geom_line() +
+    labs(title=sprintf("Low-expression composition (%s)", lab),
+         x="# DEGs", y="median AveExpr of set") + theme_bw(base_size=10)
+  ggsave(file.path(OUT, sprintf("cutoff_benchmark_%s.pdf", sc)),
+         (q1|q2)/(q3|patchwork::plot_spacer()), width=11, height=8, useDingbats=FALSE)
+  cat(sprintf("[done] wrote cutoff_benchmark_%s.pdf\n", sc))
+}
 cat("\n[done] outputs in", OUT, "\n")

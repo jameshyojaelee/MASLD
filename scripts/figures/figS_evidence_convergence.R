@@ -122,10 +122,10 @@ p_a <- ggplot(heat_dt, aes(x = layer_label, y = human_symbol,
   scale_fill_manual(values = layer_palette, na.value = "#F5F5F5", guide = "none") +
   theme_masld() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-    axis.text.y = element_text(face = "italic", size = 5.5)
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+    axis.text.y = element_text(face = "italic", size = 6)
   ) +
-  labs(x = NULL, y = NULL, title = "Top multi-evidence targets")
+  labs(x = NULL, y = NULL)
 
 # ==========================================================================
 # Panel b: Conserved vs Causal overlap
@@ -147,18 +147,17 @@ p_b <- ggplot() +
                alpha = 0.25, color = masld_colors$conserved, linewidth = 0.6) +
   geom_polygon(data = c2, aes(x, y), fill = masld_colors$mr,
                alpha = 0.25, color = masld_colors$mr, linewidth = 0.6) +
-  annotate("text", x = -1.2, y = 0, label = n_cons_only, size = 5, fontface = "bold",
+  annotate("text", x = -1.2, y = 0, label = n_cons_only, size = GEOM_TEXT_6PT, fontface = "plain",
            color = masld_colors$conserved) +
-  annotate("text", x = 0, y = 0, label = n_both, size = 5, fontface = "bold") +
-  annotate("text", x = 1.2, y = 0, label = n_caus_only, size = 5, fontface = "bold",
+  annotate("text", x = 0, y = 0, label = n_both, size = GEOM_TEXT_6PT, fontface = "plain") +
+  annotate("text", x = 1.2, y = 0, label = n_caus_only, size = GEOM_TEXT_6PT, fontface = "plain",
            color = masld_colors$mr) +
-  annotate("text", x = -0.6, y = 1.6, label = "Conserved\nCore", size = 2.5,
-           fontface = "italic", color = masld_colors$conserved) +
-  annotate("text", x = 0.6, y = 1.6, label = "L4 Causal\nEvidence", size = 2.5,
-           fontface = "italic", color = masld_colors$mr) +
+  annotate("text", x = -0.6, y = 1.6, label = "Conserved\nCore", size = GEOM_TEXT_6PT,
+           fontface = "plain", color = masld_colors$conserved) +
+  annotate("text", x = 0.6, y = 1.6, label = "L4 Causal\nEvidence", size = GEOM_TEXT_6PT,
+           fontface = "plain", color = masld_colors$mr) +
   coord_fixed(xlim = c(-2.5, 2.5), ylim = c(-2, 2.2)) +
-  theme_void(base_size = 7) +
-  labs(title = "Conservation vs causation: orthogonal evidence")
+  theme_void(base_size = 6)
 
 # ==========================================================================
 # Panel c: Hepatocyte-intrinsic enrichment per evidence layer
@@ -198,13 +197,12 @@ if (!is.null(attrib) && "attribution_category" %in% names(atlas)) {
   p_c <- ggplot(enrich_dt, aes(x = layer_label, y = log2(OR))) +
     geom_col(aes(fill = pval < 0.05), width = 0.6) +
     geom_hline(yintercept = 0, linewidth = 0.3) +
-    geom_text(aes(label = sig), vjust = -0.3, size = 2.5) +
+    geom_text(aes(label = sig), vjust = -0.3, size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = c("TRUE" = masld_colors$hep_intrinsic, "FALSE" = "gray70"),
                       guide = "none") +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
-    labs(x = NULL, y = expression("log"[2]*"(OR)"),
-         title = "Hepatocyte-intrinsic gene enrichment")
+    labs(x = NULL, y = expression("log"[2]*"(OR)"))
 } else {
   p_c <- placeholder("Attribution data not available")
 }
@@ -219,13 +217,12 @@ p_d <- ggplot(layer_dist, aes(x = factor(n_layers), y = N)) +
   geom_col(aes(fill = n_layers), width = 0.6) +
   geom_text(aes(label = paste0(format(N, big.mark = ","), "\n(",
                                sprintf("%.1f%%", pct), ")")),
-            vjust = -0.2, size = 2) +
+            vjust = -0.2, size = GEOM_TEXT_6PT) +
   scale_fill_gradient(low = "#E3F2FD", high = "#0D47A1", guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   theme_masld() +
   labs(x = "Number of supporting evidence layers",
-       y = "Gene count (human DEGs only)",
-       title = "Multi-evidence support distribution")
+       y = "Gene count (human DEGs only)")
 
 # ==========================================================================
 # Assemble
@@ -233,7 +230,11 @@ p_d <- ggplot(layer_dist, aes(x = factor(n_layers), y = N)) +
 fig <- (p_a | (p_b / p_c)) / (p_d) +
   plot_layout(heights = c(2, 1)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
-save_fig(fig, OUT, width = fig_full_width, height = 10)
+save_fig(fig, OUT, width = fig_full_width, height = 9.5)
+message("[caption] a: Top multi-evidence targets (evidence layer heatmap). ",
+        "b: Conservation vs causation — orthogonal evidence overlap. ",
+        "c: Hepatocyte-intrinsic gene enrichment across evidence layers. ",
+        "d: Multi-evidence support distribution across genes.")
 message("Evidence convergence figure saved to ", OUT)

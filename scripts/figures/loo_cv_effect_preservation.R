@@ -74,7 +74,7 @@ p <- ggplot(dt, aes(full, loo)) +
        y = expression("Leave-one-out log"[2]*"FC"),
        title = "Integrated effect sizes are preserved under leave-one-cohort-out") +
   theme_masld(base_size = 9) +
-  theme(plot.title = element_text(size = 9.5, face = "bold", margin = margin(b = 4)),
+  theme(plot.title = element_text(size = 9.5, face = "plain", margin = margin(b = 4)),
         legend.position = "right",
         legend.key.width = unit(0.3, "cm"),
         legend.title = element_text(size = 7),

@@ -6,9 +6,8 @@
 #
 # Canonical letter order (per docs/manuscript/05_figure_legends.md
 # Figure 4 + figures/README.md Fig 4 section):
-#   A  proteomics DE volcano                fig4a.pdf
-#   B  DEP-DEG correlation                  fig4b.pdf
-#   C  spatial zonation (Visium)            fig4c.pdf
+#   A  proteomics DE volcano                figS4b.pdf (was fig4a.pdf)
+#   (fig4b.pdf / fig4c.pdf panels RETIRED 2026-07-07 — removed from this composite)
 #   D  plasma fibrosis classifier (F4)      fig4d.pdf
 #   E  drug regulon disruption (Venn+forest) fig4_panel_E_drug_regulon_disruption.pdf  [NEW]
 #   F  drug-target pharma panels            fig4_pharma_panels.pdf
@@ -29,9 +28,7 @@ PANEL_DIR <- file.path(FIG4_DIR, "panels")
 OUT_PDF   <- file.path(FIG4_DIR, "fig4_composite.pdf")
 
 panel_files <- c(
-  A = "fig4a.pdf",
-  B = "fig4b.pdf",
-  C = "fig4c.pdf",
+  A = "figS4b.pdf",
   D = "fig4d.pdf",
   E = "fig4_panel_E_drug_regulon_disruption.pdf",
   F = "fig4_pharma_panels.pdf"
@@ -66,7 +63,7 @@ panel_to_gg <- function(img, label) {
        cowplot::draw_label(
          label,
          x = 0.005, y = 0.995, hjust = 0, vjust = 1,
-         fontface = "bold", size = 11
+         fontface = "plain", size = 6
        )
   attr(p, "aspect") <- aspect
   p
@@ -84,10 +81,10 @@ panels_gg <- mapply(panel_to_gg, imgs, names(imgs), SIMPLIFY = FALSE)
 # aspect ratios so nothing is squashed.
 COMPOSITE_W <- 7.2
 N_COL       <- 2
-N_ROW       <- 3
+N_ROW       <- 2
 CELL_W      <- COMPOSITE_W / N_COL
 
-panel_order <- c("A","B","C","D","E","F")
+panel_order <- c("A","D","E","F")
 aspects <- sapply(panel_order, function(k) attr(panels_gg[[k]], "aspect"))
 # Per-row height = max of the two panels in that row * cell width
 row_heights <- sapply(seq_len(N_ROW), function(r) {

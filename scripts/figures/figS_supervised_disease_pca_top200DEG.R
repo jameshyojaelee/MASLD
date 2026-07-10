@@ -103,9 +103,9 @@ fwrite(dt, file.path(OUT, "supervised_disease_top200DEG_data.csv"))
 # --- 2D figure: cohort | disease | sex --------------------------------------
 base_theme <- function() theme_masld(base_size = 7) +
   theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank(),
-        legend.position = "right", legend.title = element_text(size = 6.5, face = "bold"),
+        legend.position = "right", legend.title = element_text(size = 6.5, face = "plain"),
         legend.text = element_text(size = 6), legend.key.size = unit(0.28, "cm"),
-        plot.title = element_text(size = 7.5, face = "bold"))
+        plot.title = element_text(size = 7.5, face = "plain"))
 sc <- function(cby, pal, nm, ti) ggplot(dt, aes(PC1, PC2, colour = .data[[cby]])) +
   geom_point(size = 0.6, alpha = 0.7) + scale_colour_manual(values = pal, name = nm) +
   guides(colour = guide_legend(override.aes = list(size = 1.8, alpha = 1))) +
@@ -117,7 +117,7 @@ fig2d <- (sc("cohort", cohort_pal, "Cohort", "by Cohort") |
   plot_annotation(
     title = sprintf("Supervised PCA: top-%d DEGs by |t|, batch+sex corrected (n=%d)", length(sel_idx), ncol(dge)),
     subtitle = sprintf("PC1 separates disease (AUC=%.2f) BY CONSTRUCTION — DEGs were selected on these same samples (double-dipping). Descriptive only; for honest accuracy see the LOOCV/held-out panels.", auc_pc1),
-    theme = theme(plot.title = element_text(size = 9, face = "bold"),
+    theme = theme(plot.title = element_text(size = 9, face = "plain"),
                   plot.subtitle = element_text(size = 6.2, colour = "grey35")))
 ggsave(file.path(OUT, "supervised_disease_top200DEG.pdf"), fig2d, width = 10, height = 3.8, device = cairo_pdf)
 cat("Wrote supervised_disease_top200DEG.pdf\n")

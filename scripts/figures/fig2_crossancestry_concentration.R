@@ -31,8 +31,8 @@
 # DATA: GWAS/finemapping/results/susiex_mvp/susiex_gene_summary_mvp.csv
 #       GWAS/finemapping/results/mesusie_mvp/mesusie_gene_summary_mvp.csv
 #
-# Output: figures/main/fig2_genetics/panels/crossancestry_pip_concentration.pdf
-#         figures/main/fig2_genetics/panels/crossancestry_pip_concentration_source.csv
+# Output: figures/main/fig2_genetics/panels/FigS2J_crossancestry_pip_concentration.pdf
+#         figures/main/fig2_genetics/panels/FigS2J_crossancestry_pip_concentration_source.csv
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2)
 })
@@ -102,7 +102,7 @@ src <- full[, .(gene, chr, pos, ancestries, eur_pip = round(eur_pip, 4),
                 joint_pip = round(joint_pip, 4), joint_method,
                 susiex_joint_pip = round(susiex_joint, 4),
                 delta = round(delta, 4))][order(-joint_pip)]
-fwrite(src, file.path(PANEL_DIR, "crossancestry_pip_concentration_source.csv"))
+fwrite(src, file.path(PANEL_DIR, "FigS2J_crossancestry_pip_concentration_source.csv"))
 
 # ---------------------------------------------------------------------------
 # 4. Dumbbell plot — established MASLD / liver loci (the full set is in the CSV;
@@ -133,10 +133,10 @@ p <- ggplot(pl, aes(y = yi)) +
   # 0.5 / 0.9 PIP guides
   geom_vline(xintercept = c(0.5, 0.9), linetype = "dashed",
              linewidth = 0.25, color = "grey75") +
-  annotate("text", x = 0.5, y = n_eur + 0.85, label = "0.5", size = 1.7,
-           color = "grey55", vjust = 0) +
-  annotate("text", x = 0.9, y = n_eur + 0.85, label = "0.9", size = 1.7,
-           color = "grey55", vjust = 0) +
+  annotate("text", x = 0.5, y = n_eur + 0.85, label = "0.5", size = PUB_GEOM_TEXT,
+           color = "black", vjust = 0) +
+  annotate("text", x = 0.9, y = n_eur + 0.85, label = "0.9", size = PUB_GEOM_TEXT,
+           color = "black", vjust = 0) +
   # connecting arrow EUR-only -> joint
   geom_segment(aes(x = eur_pip, xend = joint_pip, yend = yi, color = direction),
                linewidth = 0.55,
@@ -155,11 +155,7 @@ p <- ggplot(pl, aes(y = yi)) +
   coord_cartesian(clip = "off") +
   labs(
     x = "Lead-variant PIP (EUR-specific ○ → joint cross-ancestry ●)",
-    y = NULL,
-    title = "Joint fine-mapping concentrates probability mass",
-    subtitle = sprintf(
-      "MVP cross-ancestry (EUR/AFR/AMR/EAS): joint inference raised the lead-variant\nPIP above the EUR-specific signal at %d of %d MASLD loci; %d lowered, %d unchanged.",
-      n_gain, n_eur, sum(pl$delta < -0.005), sum(abs(pl$delta) <= 0.005))
+    y = NULL
   ) +
   theme_masld() + theme_pub() +
   theme(
@@ -169,7 +165,6 @@ p <- ggplot(pl, aes(y = yi)) +
     legend.justification = c(0, 0.5),
     legend.background = element_rect(fill = scales::alpha("white", 0.65), color = NA),
     legend.key.size = unit(0.18, "cm"),
-    plot.subtitle = element_text(size = PUB_SUBTITLE - 0.5, color = "gray30", lineheight = 1.05),
     axis.text.y = element_text(face = "italic"),
     panel.grid.major.y = element_blank(),
     plot.margin = margin(4, 8, 3, 3)
@@ -181,13 +176,17 @@ p <- ggplot(pl, aes(y = yi)) +
 if (nrow(gpam) == 1)
   p <- p + annotate("text", x = gpam$joint_pip, y = gpam$yi,
                     label = sprintf("%.2f→%.2f", gpam$eur_pip, gpam$joint_pip),
-                    size = 1.7, color = "#00695C", vjust = -1.3, hjust = 0.6)
+                    size = PUB_GEOM_TEXT, color = "#00695C", vjust = -1.3, hjust = 0.6)
 if (nrow(gckr) == 1)
   p <- p + annotate("text", x = gckr$eur_pip, y = gckr$yi,
                     label = sprintf("%.2f→%.2f", gckr$eur_pip, gckr$joint_pip),
-                    size = 1.7, color = "#00695C", vjust = -1.3, hjust = 1.08)
+                    size = PUB_GEOM_TEXT, color = "#00695C", vjust = -1.3, hjust = 1.08)
 
-save_fig(p, file.path(PANEL_DIR, "crossancestry_pip_concentration.pdf"),
+message(sprintf(
+  "[caption] Joint fine-mapping concentrates probability mass. MVP cross-ancestry (EUR/AFR/AMR/EAS): joint inference raised the lead-variant PIP above the EUR-specific signal at %d of %d MASLD loci; %d lowered, %d unchanged.",
+  n_gain, n_eur, sum(pl$delta < -0.005), sum(abs(pl$delta) <= 0.005)))
+
+save_fig(p, file.path(PANEL_DIR, "FigS2J_crossancestry_pip_concentration.pdf"),
          width = fig_half_width, height = 2.9)
 
 # ---------------------------------------------------------------------------
@@ -201,5 +200,5 @@ cat("\nPer-locus (plotted canonical loci, ordered by joint PIP):\n")
 print(pl[order(-joint_pip), .(gene, ancestries, eur_pip = round(eur_pip, 3),
                               joint_pip = round(joint_pip, 3), joint_method,
                               delta = round(delta, 3))])
-cat("\nWrote:\n  ", file.path(PANEL_DIR, "crossancestry_pip_concentration.pdf"),
-    "\n  ", file.path(PANEL_DIR, "crossancestry_pip_concentration_source.csv"), "\n")
+cat("\nWrote:\n  ", file.path(PANEL_DIR, "FigS2J_crossancestry_pip_concentration.pdf"),
+    "\n  ", file.path(PANEL_DIR, "FigS2J_crossancestry_pip_concentration_source.csv"), "\n")

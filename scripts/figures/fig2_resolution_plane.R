@@ -258,8 +258,10 @@ p <- ggplot(plot_dt, aes(x = x_plot, y = y_plot)) +
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA)) +
   guides(color = guide_legend(order = 1, override.aes = list(size = 1.8, alpha = 0.95), ncol = 3))
 
-save_fig(p, file.path(PANEL_DIR, "Fig2B_PIP_vs_SuSiE-coloc.pdf"),
-         width = 2.3, height = 2.3)
+source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))   # save_panel(): exact contract size + cairo_pdf
+save_panel(p, "main/fig2_genetics/panels/Fig2B_PIP_vs_SuSiE-coloc.pdf",
+           read_sizes(file.path(BASE, "figures/layout_specs/figure2_panel_sizes.tsv")),
+           file.path(BASE, "figures"))
 
 # ---------------------------------------------------------------------------
 # 6. Freeze source CSV (so the cited numbers are reproducible). Record ALL

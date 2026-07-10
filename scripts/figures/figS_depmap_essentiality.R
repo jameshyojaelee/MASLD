@@ -53,7 +53,7 @@ if (!"essentiality_chronos" %in% names(atlas) ||
   rm(depmap, depmap_liver, models, scores); gc(verbose = FALSE)
 }
 
-# Classify DEG status using padj < 0.05 + |logFC| > 0.5
+# Classify DEG status using the canonical gate (ashr lfsr<0.05 + |shrunk_logFC|>0.3)
 atlas[, is_deg_flag := is_dream_deg(atlas)]
 atlas[, deg_status := fifelse(
   is_deg_flag & !is.na(bulk_logFC) & bulk_logFC > 0, "Upregulated",
@@ -77,13 +77,13 @@ pa <- ggplot(ess_genes, aes(x = essentiality_chronos)) +
   geom_vline(xintercept = -0.5, linetype = "dashed", color = masld_colors$up,
              linewidth = 0.4) +
   annotate("text", x = -0.55, y = Inf, label = "Essential\nthreshold",
-           hjust = 1, vjust = 1.2, size = 2, color = masld_colors$up) +
+           hjust = 1, vjust = 1.2, size = GEOM_TEXT_6PT, color = masld_colors$up) +
   annotate("text", x = -4.3, y = Inf,
            label = sprintf("n = %s genes\n%s essential (%.1f%%)",
                            format(nrow(ess_genes), big.mark = ","),
                            format(sum(ess_genes$is_essential, na.rm = TRUE), big.mark = ","),
                            100 * mean(ess_genes$is_essential, na.rm = TRUE)),
-           hjust = 0, vjust = 1.2, size = 2, color = "gray30") +
+           hjust = 0, vjust = 1.2, size = GEOM_TEXT_6PT, color = "black") +
   scale_x_continuous(limits = c(-4.5, 1), breaks = seq(-4, 1, 1)) +
   labs(x = "DepMap Chronos score (liver cell lines)",
        y = "Density",
@@ -116,13 +116,13 @@ pb <- ggplot(plot_dt, aes(x = deg_status, y = count, fill = ess_class)) +
            x = c(1, 2),
            y = deg_ess_counts[match(c("Upregulated", "Downregulated"), deg_status)]$n_total,
            label = sprintf("%.1f%%", deg_ess_counts[match(c("Upregulated", "Downregulated"), deg_status)]$pct_essential),
-           vjust = -0.5, hjust = 0.5, size = 2, color = masld_colors$up) +
+           vjust = -0.5, hjust = 0.5, size = GEOM_TEXT_6PT, color = masld_colors$up) +
   geom_hline(yintercept = 0, linewidth = 0.3) +
   scale_fill_manual(values = c("Non-essential" = masld_colors$ns,
                                "Essential" = masld_colors$up),
                     name = "Essentiality") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-  labs(x = "MASLD DEG status (padj < 0.05, |LFC| > 0.5)",
+  labs(x = "MASLD DEG status (TREAT FDR<0.05, lfc=0.25)",
        y = "Number of genes",
        tag = "b") +
   theme_masld() +

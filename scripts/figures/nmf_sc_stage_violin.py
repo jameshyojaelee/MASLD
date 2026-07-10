@@ -5,7 +5,7 @@ Violin plots: bulk NMF k=6 program scores (from sc.tl.score_genes) in
 individual scRNA-seq cells, stratified by MASLD disease stage coarse
 (Healthy / Steatosis / Steatohepatitis / Cirrhosis).
 
-Programs shown: P1 Stromal, P2 Inflammatory, P3 Fibrogenic, P6 Kupffer-cell
+Programs shown: P1 Stromal, P2 Inflammatory, P3 Fibrotic-ECM, P6 Kupffer-cell
 Excluded: P4 Quiescent-1, P5 Quiescent-2
 
 Input:
@@ -49,7 +49,7 @@ OUT_PDF       = BASE / "figures/main/fig3_RNAseq/panels/nmf_sc_stage_violin.pdf"
 PROGRAMS = [
     {"col": "bulk_P1", "label": "P1\nStromal",       "color": "#F4A674"},
     {"col": "bulk_P2", "label": "P2\nInflammatory",   "color": "#C9265E"},
-    {"col": "bulk_P3", "label": "P3\nFibrogenic",     "color": "#1565C0"},
+    {"col": "bulk_P3", "label": "P3\nFibrotic-ECM",    "color": "#1565C0"},
     {"col": "bulk_P6", "label": "P6\nKupffer-cell",   "color": "#00695C"},
 ]
 

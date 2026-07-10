@@ -224,7 +224,7 @@ p3a_top <- ggplot(top_loci, aes(x = x_cum, y = max_pip, color = gwas_cat)) +
     data = label_coords,
     aes(x = x_cum, y = y, label = gene),
     inherit.aes = FALSE,
-    size = 2.2, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     label.size = 0.25, label.padding = unit(0.1, "lines"),
     box.padding = 0.35, point.padding = 0.2,
     segment.size = 0.5, segment.color = "black",
@@ -233,11 +233,12 @@ p3a_top <- ggplot(top_loci, aes(x = x_cum, y = max_pip, color = gwas_cat)) +
     fill = "white"
   ) +
   common_x +
-  labs(y = "Max fine-map PIP (20 ancestry-matched GWAS)",
-       title = "Cross-ancestry fine-mapping + COLOC (14 EUR + 3 EAS SuSiE-COLOC; 6 Pan-UKBB ABF-only)") +
+  labs(y = "Max fine-map PIP (20 ancestry-matched GWAS)") +
   theme(axis.title.x = element_blank(),
         axis.text.x  = element_blank(),
         axis.ticks.x = element_blank())
+
+message("[caption] Cross-ancestry fine-mapping + COLOC (14 EUR + 3 EAS SuSiE-COLOC; 6 Pan-UKBB ABF-only)")
 
 p3a_bot <- ggplot(top_h4, aes(x = x_cum, y = PP.H4.abf, color = gwas_cat)) +
   rasterize_layer(geom_point(size = 0.7, alpha = 0.75, stroke = 0)) +
@@ -247,7 +248,7 @@ p3a_bot <- ggplot(top_h4, aes(x = x_cum, y = PP.H4.abf, color = gwas_cat)) +
     data = label_h4,
     aes(x = x_cum, y = y_h4, label = gene),
     inherit.aes = FALSE,
-    size = 2.2, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     label.size = 0.25, label.padding = unit(0.1, "lines"),
     box.padding = 0.35, point.padding = 0.2,
     segment.size = 0.5, segment.color = "black",
@@ -257,7 +258,7 @@ p3a_bot <- ggplot(top_h4, aes(x = x_cum, y = PP.H4.abf, color = gwas_cat)) +
   ) +
   common_x +
   labs(x = "Chromosome", y = "Max COLOC PP.H4 (20 ancestry-matched GWAS)") +
-  theme(axis.text.x = element_text(size = 5),
+  theme(axis.text.x = element_text(size = 6),
         legend.position = "none")
 
 p3a <- p3a_top / p3a_bot +
@@ -337,22 +338,19 @@ p3b <- ggplot(bar_dt, aes(x = ancestry_label, y = n_genes,
            color = "white", linewidth = 0.2) +
   geom_text(aes(label = n_genes),
             position = position_dodge(width = 0.8),
-            vjust = -0.3, size = 1.9, color = "gray25") +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray25") +
   scale_fill_manual(values = ancestry_colors_3b, guide = "none") +
   scale_alpha_manual(values = threshold_alphas, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(x = NULL,
-       y = "Colocalised eGenes (best PP.H4 across ancestry's GWAS)",
-       title = "Per-ancestry COLOC support",
-       subtitle = "Best SuSiE PP.H4 per gene; ABF fallback when SuSiE did not converge") +
+       y = "Colocalised eGenes (best PP.H4 across ancestry's GWAS)") +
   theme_masld() +
   theme(legend.position = "top",
         legend.key.size = unit(0.3, "cm"),
         legend.text = element_text(size = 6),
-        plot.title = element_text(size = 8, face = "bold"),
-        plot.subtitle = element_text(size = 6, color = "gray35"),
-        axis.text.x = element_text(size = 6.5))
+        axis.text.x = element_text(size = 6))
 
+message("[caption] Per-ancestry COLOC support: best SuSiE PP.H4 per gene; ABF fallback when SuSiE did not converge")
 save_panel(p3b, "ancestry_coloc_counts.pdf", width = fig_half_width, height = 3.0)
 fwrite(bar_dt[, .(ancestry, n_gwas, threshold, n_genes)],
        file.path(FIG3_DIR, "ancestry_coloc_counts.csv"))
@@ -453,7 +451,7 @@ p3c_3 <- ggplot(lz_pips, aes(pos, pip_eur)) +
   geom_point(data = top_eur, fill = COL_EUR,
              color = "black", size = 2.5, shape = 21, stroke = 0.4) +
   geom_text(data = top_eur, aes(label = sprintf("PIP=%.2f", pip_eur)),
-            hjust = -0.1, vjust = 0.5, size = 2, color = COL_EUR, fontface = "bold") +
+            hjust = -0.1, vjust = 0.5, size = GEOM_TEXT_6PT, color = COL_EUR, fontface = "plain") +
   scale_color_manual(values = c("EUR CS" = COL_EUR, "EAS CS" = COL_EAS,
                                 "not in CS" = "grey80"), guide = "none") +
   scale_y_continuous(limits = c(0, 1.05), breaks = c(0, 0.5, 1)) +
@@ -468,7 +466,7 @@ p3c_4 <- ggplot(lz_pips, aes(pos, pip_eas)) +
   geom_point(data = top_eas, fill = COL_EAS,
              color = "black", size = 2.5, shape = 21, stroke = 0.4) +
   geom_text(data = top_eas, aes(label = sprintf("PIP=%.2f", pip_eas)),
-            hjust = -0.1, vjust = 0.5, size = 2, color = COL_EAS, fontface = "bold") +
+            hjust = -0.1, vjust = 0.5, size = GEOM_TEXT_6PT, color = COL_EAS, fontface = "plain") +
   scale_color_manual(values = c("EUR CS" = COL_EUR, "EAS CS" = COL_EAS,
                                 "not in CS" = "grey80"), guide = "none") +
   scale_y_continuous(limits = c(0, 1.05), breaks = c(0, 0.5, 1)) +
@@ -476,16 +474,7 @@ p3c_4 <- ggplot(lz_pips, aes(pos, pip_eas)) +
   lz_common
 
 p3c <- (p3c_1 / p3c_2 / p3c_3 / p3c_4) +
-  plot_layout(heights = c(3, 3, 2, 2)) +
-  plot_annotation(
-    title    = "GGT1 locus (chr22:24.23–24.56 Mb)",
-    subtitle = sprintf("Cross-ancestry fine-mapping · EUR lead %s bp, EAS lead %s bp (\u0394 = %d kb)",
-                       format(EUR_LEAD, big.mark = ","),
-                       format(EAS_LEAD, big.mark = ","),
-                       abs(round((EUR_LEAD - EAS_LEAD) / 1e3))),
-    theme    = theme(plot.title = element_text(size = 7, face = "bold"),
-                     plot.subtitle = element_text(size = 5.5, color = "grey30"))
-  )
+  plot_layout(heights = c(3, 3, 2, 2))
 
 # Save to figS09 (multi-ancestry supplement) instead of fig3 panels.
 save_fig(p3c,
@@ -568,26 +557,26 @@ p3c <- ggplot(credible, aes(x = max_pip, y = abs_diff)) +
   geom_text_repel(
     aes(label = label_3c),
     colour = REG_COL_3,
-    size = 2.1, segment.size = 0.2, min.segment.length = 0.1,
+    size = GEOM_TEXT_6PT, segment.size = 0.2, min.segment.length = 0.1,
     box.padding = 0.15, point.padding = 0.1,
     max.overlaps = Inf, seed = 42, force = 0.5
   ) +
   annotate("text", x = 0.8, y = max(credible$abs_diff) * 1.05,
-           label = "PIP 0.8", hjust = -0.1, size = 2, colour = "#666666") +
+           label = "PIP 0.8", hjust = -0.1, size = GEOM_TEXT_6PT, colour = "#666666") +
   annotate("text", x = 0.5, y = max(credible$abs_diff) * 1.05,
-           label = "PIP 0.5", hjust = -0.1, size = 2, colour = "#888888") +
+           label = "PIP 0.5", hjust = -0.1, size = GEOM_TEXT_6PT, colour = "#888888") +
   scale_x_continuous(limits = c(0.18, 1.05),
                      breaks = c(0.2, 0.5, 0.8, 1.0)) +
-  labs(x = "GWAS max PIP", y = "|motif alleleDiff|",
-       title = "Credible MASLD variants disrupt TF binding motifs",
-       subtitle = sprintf(paste0(
-         "%d pairs (PIP >= 0.2); magenta = SCENIC+ disease-regulon TFs ",
-         "(%d pairs, %d TFs)"),
-         nrow(credible),
-         sum(credible$motif_in_disease_regulon),
-         length(unique(credible[motif_in_disease_regulon==TRUE]$tf_name)))) +
+  labs(x = "GWAS max PIP", y = "|motif alleleDiff|") +
   theme_masld() +
   theme(plot.margin = margin(4, 4, 4, 4))
+
+message(sprintf(paste0(
+  "[caption] Credible MASLD variants disrupt TF binding motifs: ",
+  "%d pairs (PIP >= 0.2); magenta = SCENIC+ disease-regulon TFs (%d pairs, %d TFs)"),
+  nrow(credible),
+  sum(credible$motif_in_disease_regulon),
+  length(unique(credible[motif_in_disease_regulon==TRUE]$tf_name))))
 
 # RETIRED 2026-06-12 (no longer a Fig 2 panel): pip_vs_disruption_scatter.pdf
 # save_panel(p3c, "pip_vs_disruption_scatter.pdf", width = 5.0, height = 2.8)
@@ -640,24 +629,18 @@ p3d <- ggplot(hi_grid, aes(x = tf_name, y = var_label)) +
   scale_x_discrete(position = "top", expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   labs(x = NULL,
-       y = sprintf("Variant (nearest gene within %.0f kb)", ceiling(max_d_kb_3h)),
-       title = "High-confidence MASLD variants (PIP >= 0.8) disrupting TF motifs",
-       subtitle = sprintf(paste0(
-         "%d variants × %d TFs (disease-regulon + TFs hit by >=2 variants); ",
-         "bold = SCENIC+ MASLD disease-regulon TF"),
-         length(unique(hi_f$var_label)),
-         length(unique(hi_f$tf_name)))) +
+       y = sprintf("Variant (nearest gene within %.0f kb)", ceiling(max_d_kb_3h))) +
   theme_masld() +
   theme(
     axis.text.x = element_text(angle = 55, hjust = 0, vjust = 0,
                                 face = ifelse(levels(hi_f$tf_name)
                                               %in% regulon_tfs,
-                                              "bold", "plain"),
+                                              "italic", "plain"),
                                 colour = ifelse(levels(hi_f$tf_name)
                                                 %in% regulon_tfs,
                                                 REG_COL_3, "black"),
-                                size = 6.5),
-    axis.text.y     = element_text(family = "mono", size = 5.8),
+                                size = 6),
+    axis.text.y     = element_text(family = "Helvetica", size = 6),
     axis.ticks      = element_blank(),
     panel.grid      = element_blank(),
     panel.border    = element_blank(),
@@ -665,13 +648,17 @@ p3d <- ggplot(hi_grid, aes(x = tf_name, y = var_label)) +
     legend.key.width  = unit(0.2, "cm"),
     legend.key.height = unit(0.35, "cm"),
     legend.text     = element_text(size = 6),
-    legend.title    = element_text(size = 6.5),
-    plot.title      = element_text(hjust = 0, size = 8),
-    plot.subtitle   = element_text(hjust = 0, size = 6,
-                                    margin = margin(b = 2)),
+    legend.title    = element_text(size = 6),
     plot.title.position = "plot",
     plot.margin     = margin(4, 4, 4, 4)
   )
+
+message(sprintf(paste0(
+  "[caption] High-confidence MASLD variants (PIP >= 0.8) disrupting TF motifs: ",
+  "%d variants x %d TFs (disease-regulon + TFs hit by >=2 variants); ",
+  "italic = SCENIC+ MASLD disease-regulon TF"),
+  length(unique(hi_f$var_label)),
+  length(unique(hi_f$tf_name))))
 
 # RETIRED 2026-06-12 (not a Fig 2 panel): tf_heatmap.pdf
 # save_panel(p3d, "tf_heatmap.pdf", width = 5.6, height = 3.0)
@@ -845,7 +832,7 @@ p3e <- ggplot(gene_tbl, aes(x = bulk_logFC, y = coloc_pp4, color = fig5_group)) 
   geom_point(aes(shape = is_sig), size = 2.2, alpha = 0.9) +
   ggrepel::geom_text_repel(data = gene_tbl[do_label == TRUE],
                    aes(label = gene),
-                   size = 2.1, max.overlaps = Inf,
+                   size = GEOM_TEXT_6PT, max.overlaps = Inf,
                    force = 3, force_pull = 1,
                    box.padding = 0.3, point.padding = 0.15,
                    segment.size = 0.2, segment.color = "gray55",
@@ -859,8 +846,7 @@ p3e <- ggplot(gene_tbl, aes(x = bulk_logFC, y = coloc_pp4, color = fig5_group)) 
                      breaks = c(0, 0.5, 0.9, 1.0),
                      labels = c("0", "0.5", "0.9", "1")) +
   labs(x = expression("Transcript log"[2]*"FC (MASLD vs control)"),
-       y = "Best SuSiE colocalization PP4",
-       title = "COLOC vs. RNA-seq DEG") +
+       y = "Best SuSiE colocalization PP4") +
   theme_masld() +
   theme(legend.position = "bottom",
         legend.box = "vertical",
@@ -902,7 +888,7 @@ p3f <- ggplot(gene_tbl_pip, aes(x = bulk_logFC, y = susiex_max_pip,
   geom_point(aes(shape = is_sig), size = 2.2, alpha = 0.9) +
   geom_label_repel(data = gene_tbl_pip[do_label_pip == TRUE],
                    aes(label = gene),
-                   size = 2.0, max.overlaps = 30,
+                   size = GEOM_TEXT_6PT, max.overlaps = 30,
                    label.padding = 0.1, segment.size = 0.2,
                    min.segment.length = 0, fontface = "italic",
                    fill = alpha("white", 0.85), show.legend = FALSE) +
@@ -911,12 +897,11 @@ p3f <- ggplot(gene_tbl_pip, aes(x = bulk_logFC, y = susiex_max_pip,
                      breaks = c(0, 0.5, 0.9, 1.0),
                      labels = c("0", "0.5", "0.9", "1")) +
   annotate("text", x = Inf, y = 0.9, label = "PIP = 0.9 (strong)",
-           hjust = 1.05, vjust = -0.3, size = 1.9, color = "gray30") +
+           hjust = 1.05, vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray30") +
   annotate("text", x = Inf, y = 0.5, label = "PIP = 0.5 (canonical)",
-           hjust = 1.05, vjust = -0.3, size = 1.9, color = "gray45") +
+           hjust = 1.05, vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray45") +
   labs(x = expression("Transcript log"[2]*"FC (MASLD vs control)"),
-       y = "Best SuSiE-X finemapping PIP (across 23 GWAS)",
-       title = "Finemapping vs. RNA-seq") +
+       y = "Best SuSiE-X finemapping PIP (across 23 GWAS)") +
   theme_masld() +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.25, "cm")) +
@@ -990,7 +975,7 @@ if (!is.null(rora_img)) {
   cat("[fig3] WARNING: rora_locus_zoom.pdf (RORA) not yet generated; composite will use a placeholder.\n")
   rora_panel <- wrap_elements(full = grid::textGrob(
     "rora_locus_zoom.pdf (RORA) pending\nrun run_fig3c_rora_locus_zoom.sh",
-    gp = grid::gpar(fontsize = 10, col = "grey50")))
+    gp = grid::gpar(fontsize = 6, col = "black")))
 }
 
 composite <- p3a_wrapped /
@@ -999,10 +984,11 @@ composite <- p3a_wrapped /
              p3e +
   plot_layout(heights = c(1.35, 1.0, 1.0, 1.2)) +
   plot_annotation(
-    title = "Figure 3 | Multi-ancestry regulatory architecture of MASLD (23-GWAS portfolio: 14 EUR + 3 EAS + 3 AFR + 3 SAS)",
     tag_levels = list(c("a", "b", "c", "d", "e", "f"))
   ) &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 9, face = "plain"))
+
+message("[caption] Figure 3 | Multi-ancestry regulatory architecture of MASLD (23-GWAS portfolio: 14 EUR + 3 EAS + 3 AFR + 3 SAS)")
 
 # RETIRED 2026-06-12 (regulatory_architecture.pdf composite no longer a Fig 2 deliverable;
 # individual panels ancestry_coloc_counts / tf_heatmap / drug_target_validation are still written above):

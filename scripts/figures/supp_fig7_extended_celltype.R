@@ -95,8 +95,8 @@ if (file.exists(prop_path) && file.exists(meta_path)) {
            title = "MuSiC cell-type fractions") +
       theme_masld() +
       theme(
-        strip.text  = element_text(size = 7, face = "bold"),
-        plot.title  = element_text(size = 7, face = "bold"),
+        strip.text  = element_text(size = 7, face = "plain"),
+        plot.title  = element_text(size = 7, face = "plain"),
         axis.text.x = element_text(size = 6)
       )
   }
@@ -160,7 +160,7 @@ if (!is.null(deconv)) {
           theme_masld() +
           theme(
             strip.text     = element_text(size = 6, face = "bold.italic"),
-            plot.title     = element_text(size = 7, face = "bold"),
+            plot.title     = element_text(size = 7, face = "plain"),
             axis.text.x    = element_text(angle = 30, hjust = 1, size = 6),
             legend.position = "none"
           )
@@ -214,8 +214,8 @@ if (nrow(full_bp) > 0 && file.exists(meta_path2)) {
          title = "Non-parenchymal cell-type fractions (BayesPrism)") +
     theme_masld() +
     theme(
-      strip.text  = element_text(size = 6, face = "bold"),
-      plot.title  = element_text(size = 7, face = "bold"),
+      strip.text  = element_text(size = 6, face = "plain"),
+      plot.title  = element_text(size = 7, face = "plain"),
       axis.text.x = element_text(size = 6)
     )
 
@@ -248,7 +248,7 @@ if (nrow(full_bp) > 0 && file.exists(meta_path2)) {
          title = "Mean cell-type composition") +
     theme_masld() +
     theme(
-      plot.title     = element_text(size = 7, face = "bold"),
+      plot.title     = element_text(size = 7, face = "plain"),
       legend.text    = element_text(size = 5),
       legend.title   = element_text(size = 6),
       legend.key.size = unit(0.25, "cm"),
@@ -276,7 +276,7 @@ if (nrow(full_bp) > 0 && file.exists(meta_path2)) {
            title = "Per-dataset hepatocyte fraction") +
       theme_masld() +
       theme(
-        plot.title     = element_text(size = 7, face = "bold"),
+        plot.title     = element_text(size = 7, face = "plain"),
         axis.text.x    = element_text(size = 5, angle = 45, hjust = 1),
         legend.position = "bottom",
         legend.text     = element_text(size = 6),
@@ -298,7 +298,7 @@ row3 <- p_d + p_e + plot_layout(widths = c(1, 2))
 figS7 <- row1 / row2 / row3 +
   plot_layout(heights = c(1, 1, 1)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(figS7, OUT, width = fig_full_width, height = 10)
 message("Supp Fig 7 (Extended Cell-Type) saved to ", OUT)

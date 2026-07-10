@@ -112,18 +112,17 @@ p <- ggplot(dat, aes(x = stage, y = pathway)) +
                        midpoint = 0, limits = c(-nmax, nmax), name = "NES") +
   scale_size_continuous(range = c(0.6, 4), name = expression(-log[10]~padj)) +
   scale_y_discrete(labels = lab_map) +
-  labs(x = "Fibrosis stage (vs F0)", y = NULL,
-       title = "Hallmark program escalation across fibrosis stage") +
-  theme_masld(base_size = 7) +
+  labs(x = "Fibrosis stage (vs F0)", y = NULL) +
+  theme_masld(base_size = 6) +
   theme(
-    plot.title      = element_text(size = 7.3, face = "bold", margin = margin(b = 6)),
-    axis.text.x     = element_text(size = 6.5, face = "bold"),
-    axis.text.y     = element_text(size = 5.6),
+    axis.text.x     = element_text(size = 6, face = "plain"),
+    axis.text.y     = element_text(size = 6),
     legend.position = "right",
-    legend.text     = element_text(size = 5.2),
-    legend.title    = element_text(size = 5.8),
+    legend.text     = element_text(size = 6),
+    legend.title    = element_text(size = 6),
     legend.key.size = unit(0.22, "cm")
   )
+message("[caption] Hallmark program escalation across fibrosis stage")
 
 ggsave(OUT_PDF, p,
        width  = 110 / 25.4,

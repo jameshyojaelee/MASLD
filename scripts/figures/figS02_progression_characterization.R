@@ -25,7 +25,8 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 PADJ <- 0.05
-LFC  <- 0.5
+# Tier-2 progression convention: padj < 0.05, NO LFC floor (binary stage
+# contrasts dilute per-gene fold changes). No |logFC| threshold is applied.
 OUT  <- FIGS02_DIR
 
 save_panel <- function(p, name, w, h) {
@@ -53,7 +54,7 @@ make_bar <- function(dt, x_col, xlab, flip_angle = 0) {
     geom_col(width = 0.7) +
     geom_hline(yintercept = 0, linewidth = 0.3) +
     geom_text(aes(label = lbl, vjust = ifelse(n >= 0, -0.3, 1.3)),
-              size = 2.2, color = "gray20") +
+              size = GEOM_TEXT_6PT, color = "black") +
     scale_y_continuous(labels = function(x) comma(abs(x)),
                        expand = expansion(mult = c(0.12, 0.15))) +
     scale_fill_manual(values = c(Up = masld_colors$up, Down = masld_colors$down), name = NULL) +
@@ -62,10 +63,10 @@ make_bar <- function(dt, x_col, xlab, flip_angle = 0) {
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"),
-          legend.text     = element_text(size = 7),
-          axis.text.x     = element_text(size = 8, angle = flip_angle,
+          legend.text     = element_text(size = 6),
+          axis.text.x     = element_text(size = 6, angle = flip_angle,
                                          hjust = ifelse(flip_angle > 0, 1, 0.5)),
-          axis.title      = element_text(size = 8))
+          axis.title      = element_text(size = 6))
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -107,9 +108,9 @@ p_cohort <- ggplot(meta_qc, aes(x = diag_cat, fill = dataset)) +
   theme_masld() +
   theme(legend.position = "right",
         legend.key.size = unit(0.25, "cm"),
-        legend.title    = element_text(size = 7),
+        legend.title    = element_text(size = 6),
         legend.text     = element_text(size = 6),
-        axis.text.x     = element_text(size = 9))
+        axis.text.x     = element_text(size = 6))
 
 save_panel(p_cohort, "cohort_diagnosis_composition", w = 5, h = 4)
 
@@ -125,7 +126,7 @@ if (!is.null(sd) && nrow(sd) > 0) {
 
   p_heatmap <- ggplot(sd, aes(x = nas_group, y = fib_stage, fill = N)) +
     geom_tile(color = "white", linewidth = 0.6) +
-    geom_text(aes(label = N), size = 2.5, color = "black") +
+    geom_text(aes(label = N), size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_gradient(low = "#E3F2FD", high = "#0D47A1",
                         name = "n", na.value = "gray95") +
     labs(x = "NAS Score", y = "Fibrosis Stage") +
@@ -166,7 +167,7 @@ if (!is.null(nas_dream) && nrow(nas_dream) > 0) {
     p_nas_base <- p_nas_base +
       geom_text(data = ns_lbl,
                 aes(x = stage_label, y = -max_dn * 1.18, label = paste0("n=", N)),
-                inherit.aes = FALSE, size = 2, color = "gray50")
+                inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "black")
   }
 
   save_panel(p_nas_base, "deg_counts_nas_vs_baseline", w = 5, h = 4)
@@ -200,7 +201,7 @@ if (!is.null(fib_dream) && nrow(fib_dream) > 0) {
     p_fib_base <- p_fib_base +
       geom_text(data = fs_lbl,
                 aes(x = stage_label, y = -max_dn * 1.18, label = paste0("n=", N)),
-                inherit.aes = FALSE, size = 2, color = "gray50")
+                inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "black")
   }
 
   save_panel(p_fib_base, "deg_counts_fibrosis_vs_baseline", w = 4, h = 4)
@@ -236,7 +237,7 @@ if (!is.null(fib_consec) && nrow(fib_consec) > 0) {
   p_fib_trans <- p_fib_trans +
     geom_text(data = ts_fib[!is.na(trans_label)],
               aes(x = trans_label, y = -max_dn * 1.18, label = paste0("n=", n_samples)),
-              inherit.aes = FALSE, size = 2, color = "gray50")
+              inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "black")
 
   save_panel(p_fib_trans, "deg_counts_fibrosis_transitions", w = 4.5, h = 4)
 } else {

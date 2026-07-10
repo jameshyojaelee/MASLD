@@ -41,6 +41,9 @@ sx[is.na(sx)|sx==""]<-"Unknown"
 meta <- fread(file.path(BASE,"RNA-seq/Human/Patient_Cohorts/analysis/integration/metadata/unified_metadata.csv"),
               select=c("sample_id","fibrosis_stage","nas_score"))
 samp <- merge(samp, meta, by="sample_id", all.x=TRUE, sort=FALSE)
+# GSE213621 (Chen) fibrosis is COARSE (F0F1/F3F4 grouped, not true Kleiner) -> show as
+# Unknown rather than mislabel as precise F1/F3 (see load_figure_data.R cohort guards).
+samp$fibrosis_stage[samp$dataset == "GSE213621"] <- NA
 cat(sprintf("NAS non-NA=%d  fibrosis non-NA=%d  of %d\n",
             sum(!is.na(samp$nas_score)), sum(!is.na(samp$fibrosis_stage)), nrow(samp)))
 
@@ -69,8 +72,8 @@ fwrite(dt, file.path(OUT,"supervised_disease_top200DEG_clinical_data.csv"))
 
 # --- 2D: 5 panels -----------------------------------------------------------
 bt <- function() theme_masld(base_size=7)+theme(axis.text=element_blank(),axis.ticks=element_blank(),
-  panel.grid=element_blank(),legend.position="right",legend.title=element_text(size=6,face="bold"),
-  legend.text=element_text(size=5.5),legend.key.size=unit(0.22,"cm"),plot.title=element_text(size=7.5,face="bold"))
+  panel.grid=element_blank(),legend.position="right",legend.title=element_text(size=6,face="plain"),
+  legend.text=element_text(size=5.5),legend.key.size=unit(0.22,"cm"),plot.title=element_text(size=7.5,face="plain"))
 xy <- function() labs(x=sprintf("PC1 (%.1f%%)",pve[1]),y=sprintf("PC2 (%.1f%%)",pve[2]))
 pC <- ggplot(dt,aes(PC1,PC2,colour=cohort))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=cohort_pal,name="Cohort")+xy()+labs(title="by Cohort")+bt()
 pD <- ggplot(dt,aes(PC1,PC2,colour=disease))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=disease_pal,name="Disease")+xy()+labs(title="by Disease")+bt()
@@ -84,7 +87,7 @@ fig2d <- (pC|pD|pS|pN|pF)+plot_annotation(
   title=sprintf("Supervised PCA (top-%d DEGs by |t|, batch+sex corrected, n=%d) coloured by clinical severity",length(idx),ncol(dge)),
   subtitle=sprintf("PC1 disease AUC=%.2f (in-sample, double-dipped — DEGs selected on these same samples; descriptive). NAS n=%d, fibrosis n=%d (grey = not available, e.g. GSE126848).",
                    auc, sum(!is.na(dt$nas)), sum(dt$fibrosis!="Unknown")),
-  theme=theme(plot.title=element_text(size=9,face="bold"),plot.subtitle=element_text(size=6,colour="grey35")))
+  theme=theme(plot.title=element_text(size=9,face="plain"),plot.subtitle=element_text(size=6,colour="grey35")))
 ggsave(file.path(OUT,"supervised_disease_top200DEG_clinical.pdf"),fig2d,width=16.5,height=3.5,device=cairo_pdf)
 cat("Wrote supervised_disease_top200DEG_clinical.pdf\n")
 

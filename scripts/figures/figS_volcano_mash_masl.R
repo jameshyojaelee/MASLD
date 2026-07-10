@@ -42,14 +42,16 @@ CURATED <- c(
 
 # Contrast registry.
 #
-# Canonical Tier 1 cutoff: padj < 0.05 & |logFC| > 0.5 across ALL contrasts
-# (decision 2026-05-13). Same convention as the legacy Disease-vs-Control Tier 1.
-# The 5%-CV elbow analysis (figS_lfc_sensitivity_loo*) remains in the supplement
-# as STABILITY EVIDENCE — confirms |LFC|>0.5 is past each contrast's CV elbow.
+# These are Tier-2 progression contrasts (MASH-vs-MASL / MASH-vs-Healthy /
+# MASL-vs-Healthy). Per the CLAUDE.md Tier-2 convention they are gated at
+# padj < 0.05 with NO LFC floor — binary progression grouping dilutes per-gene
+# fold changes, so a |logFC| floor is not imposed (it WAS 0.5 here; removed
+# 2026-06-27 to match Tier-2). The 5%-CV elbow analysis (figS_lfc_sensitivity_loo*)
+# remains in the supplement as stability evidence.
 #
 # MASH definition: strict NAS >= 5 only (Borderline excluded). Primary-mode
 # (Borderline-grouped) figures deprecated; data CSVs preserved on disk.
-LFC_CUT_UNIFORM <- 0.5
+LFC_CUT_UNIFORM <- 0
 
 CONTRASTS <- list(
   mash_vs_masl_strict = list(
@@ -134,11 +136,11 @@ plot_volcano <- function(tag) {
                     show.legend = FALSE) +
     annotate("text", x = -x_lim * 0.98, y = y_lim * 0.97,
              label = sprintf("%s ↓", comma(n_down)),
-             hjust = 0, vjust = 1, size = 2.4, fontface = "bold",
+             hjust = 0, vjust = 1, size = 2.4, fontface = "plain",
              color = masld_colors$down) +
     annotate("text", x =  x_lim * 0.98, y = y_lim * 0.97,
              label = sprintf("%s ↑", comma(n_up)),
-             hjust = 1, vjust = 1, size = 2.4, fontface = "bold",
+             hjust = 1, vjust = 1, size = 2.4, fontface = "plain",
              color = masld_colors$up) +
     scale_color_manual(values = volc_colors, guide = "none") +
     scale_fill_manual(values = volc_colors, guide = "none") +
@@ -159,7 +161,7 @@ plot_volcano <- function(tag) {
     theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_line(linewidth = 0.18, color = "gray92"),
           legend.position  = "none",
-          plot.title       = element_text(size = 8, face = "bold"),
+          plot.title       = element_text(size = 8, face = "plain"),
           plot.subtitle    = element_text(size = 6.5, color = "gray30"),
           axis.title       = element_text(size = 7.5),
           plot.margin      = margin(4, 6, 2, 4))

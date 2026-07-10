@@ -175,6 +175,9 @@ human_mapping <- gwas_in_dream[, .(
   ensembl_id     = gene,
   bulk_logFC     = logFC,
   bulk_padj      = padj,
+  bulk_shrunk_logFC = shrunk_logFC,
+  bulk_lfsr      = lfsr,
+  bulk_treat_fdr = treat_fdr,
   bulk_AveExpr   = AveExpr,
   bulk_t         = t
 )]
@@ -374,9 +377,8 @@ cards[, c("twas_z", "twas_p", "twas_fdr", "mr_beta", "mr_p", "mr_fdr",
 # Add evidence summary flags
 cards[, in_dream         := !is.na(bulk_logFC)]
 cards[, in_atlas         := !is.na(primary_category)]
-# Standard padj-based significance (padj < 0.05, |logFC| > 0.5)
-# bulk_padj already in cards from human_mapping column selection
-cards[, bulk_sig := !is.na(bulk_padj) & bulk_padj < 0.05 & !is.na(bulk_logFC) & abs(bulk_logFC) > 0.5]
+# Canonical significance: TREAT FDR < 0.05 (lfc=0.25; 2026-06-29, was ashr lfsr+|shrunk|>0.3)
+cards[, bulk_sig := !is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05]
 cards[, in_conserved := primary_category == "Conserved" & !is.na(primary_category)]
 # has_mr is now always FALSE (MR ditched 2026-04-22); column retained for compat
 cards[, has_mr := FALSE]
@@ -478,9 +480,9 @@ p_dist <- ggplot(cat_dist[count > 0],
 
 # Combine Wilcoxon enrichment and Category Distribution into a single figure
 p_combined_enrichment <- p_dist + p_wilcox + plot_layout(ncol = 2, widths = c(1, 1.2))
-ggsave(file.path(FIG_DIR, "gwas_category_enrichment_combined_v3.pdf"),
-       p_combined_enrichment, width = 7.5, height = 3.5, device = cairo_pdf)
-cat(sprintf("    Saved: %s\n", file.path(FIG_DIR, "gwas_category_enrichment_combined_v3.pdf")))
+# ggsave(file.path(FIG_DIR, "gwas_category_enrichment_combined_v3.pdf"),
+#        p_combined_enrichment, width = 7.5, height = 3.5, device = cairo_pdf)
+# cat(sprintf("    Saved: %s\n", file.path(FIG_DIR, "gwas_category_enrichment_combined_v3.pdf")))
 
 # --- 6c. Convergence dot plot for 14 priority loci ---
 cat("    [6c] Priority loci convergence dot plot...\n")
@@ -578,10 +580,10 @@ p_trans_bar <- ggplot(trans_dt, aes(x = translatability_score, y = gwas_symbol))
 
 p_combined_dot <- p_dot + p_trans_bar + plot_layout(ncol = 2, widths = c(4, 1))
 
-ggsave(file.path(FIG_DIR, "gwas_priority_convergence_dotplot_v3.pdf"),
-       p_combined_dot, width = 6.5, height = 4.5, device = cairo_pdf)
-cat(sprintf("    Saved: %s\n",
-            file.path(FIG_DIR, "gwas_priority_convergence_dotplot_v3.pdf")))
+# ggsave(file.path(FIG_DIR, "gwas_priority_convergence_dotplot_v3.pdf"),
+#        p_combined_dot, width = 6.5, height = 4.5, device = cairo_pdf)
+# cat(sprintf("    Saved: %s\n",
+#             file.path(FIG_DIR, "gwas_priority_convergence_dotplot_v3.pdf")))
 
 # ============================================================
 #  Session summary

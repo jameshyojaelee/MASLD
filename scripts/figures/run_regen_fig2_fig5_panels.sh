@@ -24,11 +24,10 @@ run() { echo "===== $1 ====="; Rscript "$SF/$1" 2>&1 | tail -3; echo "[exit $1=$
 echo "########## FIG 2 PANELS (standalone; fig2_progression.R composite EXCLUDED) ##########"
 for s in bayesprism_transitions canonical_vs_perstudy_upset cascade_degs \
          celltype_bulk_attribution celltype_cascade celltype_concordance \
-         celltype_proportion crossmodal_integration fib_stage_degs fib_stage_upset \
-         fib_stage_vs_ctrl_degs fib_stage_vs_ctrl_upset hkdc1_module24 hotspot_cascade \
-         inflection_composite nas_fib_grid nas_stage_degs nas_stage_upset \
-         nas_stage_vs_ctrl_degs nas_stage_vs_ctrl_upset network_communities \
-         nmf_programs nmf_programs_lines; do
+         fib_stage_degs fib_stage_upset \
+         fib_stage_vs_ctrl_degs fib_stage_vs_ctrl_upset hkdc1_module24 \
+         nas_fib_grid nas_stage_degs nas_stage_upset \
+         nas_stage_vs_ctrl_degs nas_stage_vs_ctrl_upset network_communities; do
   [ -f "$SF/$s.R" ] && run "$s.R"
 done
 for extra in ccc_v3_panels.R fig2_chromatin_cascade.R hotspot_module_geneset_correlation.R gen_scrna_umap_embeddable.R; do
@@ -36,14 +35,14 @@ for extra in ccc_v3_panels.R fig2_chromatin_cascade.R hotspot_module_geneset_cor
 done
 
 echo "########## FIG 5 PANELS (assemble/causal_arch/translation/legacy EXCLUDED) ##########"
-run fig5_convergence.R                              # -> panels/fig5a.pdf (guarded for empty regulons)
+run fig5_convergence.R                              # -> panels/fig5a_therapeutic_axes.pdf (canonical)
 run fig5_convergence_v3.R                           # -> panels/fig5b.pdf
 # panel 5e (TF convergence scatter + 4-way survival lollipop) CUT 2026-06-19:
 #   banned lollipop + oversold refuted 4-way claim + null SCENIC+ axis.
 #   Source scripts moved to scripts/figures/_legacy/.
 
 echo "########## PURGE composite byproducts (explicit names only) ##########"
-for c in fig2_progression.pdf fig2_progression_sex.pdf fig5_convergence.pdf fig5_composite.pdf fig1_compact.pdf; do
+for c in fig2_progression.pdf fig2_progression_sex.pdf fig5_convergence.pdf fig5_composite.pdf fig5_composite_v2.pdf fig1_compact.pdf; do
   find figures/main -name "$c" -delete -print 2>/dev/null
 done
 

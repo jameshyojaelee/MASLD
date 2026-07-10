@@ -4,10 +4,10 @@
 # Supp Fig S02 — up:down DEG ratio collapses as fibrosis advances.
 #
 # Per fibrosis-stage contrast (F1..F4 vs F0) count significant up- and
-# down-regulated genes (padj < 0.05 & |logFC| > 0.5; canonical Tier-1) and
-# plot the up:down ratio as a lollipop. Early fibrosis is induction-dominated
-# (~4.8:1); advanced fibrosis approaches parity as downregulation
-# (parenchymal collapse) overtakes induction (~1.6:1).
+# down-regulated genes (C2 canonical: analytical TREAT, fdr_treat < 0.05 at lfc=0.25)
+# and plot the up:down ratio as a bar chart. Early fibrosis is induction-dominated
+# (F1 = induction only, 0 down; F2 ~8.8:1); advanced fibrosis approaches parity as
+# downregulation (parenchymal collapse) overtakes induction (F4 ~2.1:1).
 #
 # Source: fibrosis_stage_dream.csv (limma_voom_qw per-stage-vs-F0 contrasts)
 #
@@ -37,11 +37,33 @@ OUT_PDF  <- file.path(OUT_DIR, "fibrosis_stage_directional_asymmetry.pdf")
 de <- fread(file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/fibrosis_stage_dream.csv"))
 
-# Canonical Tier-1 DEG threshold: padj < 0.05 & |logFC| > 0.5 (binary stage
-# contrasts dilute fold changes; the LFC floor isolates the directional
-# asymmetry signal). Direction from logFC sign.
-de <- de[!is.na(padj) & !is.na(logFC)]
-sig <- de[padj < 0.05 & abs(logFC) > 0.5]
+# C2 canonical stage-vs-F0 DEG gate: analytical TREAT, fdr_treat < 0.05 at lfc=0.25.
+# treat() tests H0:|true logFC|<=lfc, so the effect-size floor is folded INTO the test
+# (no separate |logFC| filter). The per-stage CSV carries logFC + SE + t + P.Value but
+# no treat_fdr, so we reconstruct the moderated-t TREAT statistic here (mirrors
+# rebuild_cas13_library.R::add_treat_fdr, proven identical to limma::treat), inferring
+# df.total per contrast from (t, P.Value). Direction from logFC sign.
+TREAT_LFC <- 0.25
+infer_df_total <- function(dt) {
+  pr <- dt[is.finite(t) & is.finite(P.Value) & P.Value > 0 & P.Value < 1 & abs(t) > 1e-6]
+  idx <- unique(round(seq(1, nrow(pr), length.out = min(nrow(pr), 12))))
+  median(vapply(idx, function(i)
+    uniroot(function(df) 2 * pt(-abs(pr$t[i]), df = df) - pr$P.Value[i], c(0.1, 1e6))$root,
+    numeric(1)))
+}
+add_treat_fdr <- function(dt, lfc, se_col = "SE") {
+  out <- copy(dt)
+  se <- if (se_col %in% names(out)) out[[se_col]] else abs(out$logFC / out$t)
+  se[!is.finite(se) | se <= 0] <- NA_real_
+  df_use <- infer_df_total(out)
+  out[, p_treat := pt((abs(logFC) - lfc) / se, df = df_use, lower.tail = FALSE) +
+                   pt((abs(logFC) + lfc) / se, df = df_use, lower.tail = FALSE)]
+  out[, fdr_treat := p.adjust(p_treat, method = "BH")]
+  out
+}
+de <- de[!is.na(logFC) & !is.na(SE)]
+de <- rbindlist(lapply(split(de, by = "contrast"), add_treat_fdr, lfc = TREAT_LFC))
+sig <- de[fdr_treat < 0.05]
 sig[, dir := ifelse(logFC > 0, "up", "down")]
 
 # ---------------------------------------------------------------------------
@@ -56,33 +78,41 @@ tab[, stage := factor(contrast, levels = c("F1_vs_F0", "F2_vs_F0", "F3_vs_F0", "
                       labels = c("F1", "F2", "F3", "F4"))]
 setorder(tab, stage)
 
+# Under TREAT, F1 has 0 down DEGs -> ratio is undefined (Inf). Cap the BAR HEIGHT just
+# above the max finite ratio so the bar still renders (induction-only = off the chart),
+# and label it with the TRUE counts ("N:0") rather than fabricating a finite ratio.
+fin_max <- max(tab[is.finite(ratio), ratio], na.rm = TRUE)
+tab[, ratio_plot := ifelse(is.finite(ratio), ratio, fin_max * 1.12)]
+tab[, ratio_lab  := ifelse(is.finite(ratio), sprintf("%.1f:1", ratio),
+                           sprintf("%d:0", n_up))]
+if (any(!is.finite(tab$ratio)))
+  message(sprintf("CAPTION: %s has 0 down DEGs (pure induction); ratio undefined, bar capped at panel max, labelled with raw up:down counts.",
+                  paste(tab[!is.finite(ratio), as.character(stage)], collapse = ", ")))
+
 fwrite(tab, file.path(DATA_DIR, "fibrosis_stage_directional_asymmetry.csv"))
 
-cat("[hero] up:down DEG ratio per stage (padj<0.05 & |logFC|>0.5):\n")
+cat("[hero] up:down DEG ratio per stage (TREAT fdr<0.05, lfc=0.25):\n")
 for (i in seq_len(nrow(tab))) {
   cat(sprintf("    %s: %d up / %d down = %.2f:1\n",
               tab$stage[i], tab$n_up[i], tab$n_down[i], tab$ratio[i]))
 }
 
 # ---------------------------------------------------------------------------
-# Lollipop
+# Bar chart (up:down ratio per stage)
 # ---------------------------------------------------------------------------
-p <- ggplot(tab, aes(x = stage, y = ratio)) +
+message("[caption] Down-regulation overtakes induction as fibrosis advances")
+p <- ggplot(tab, aes(x = stage, y = ratio_plot)) +
+  geom_col(aes(fill = ratio_plot), width = 0.68) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "#9E9E9E", linewidth = 0.3) +
-  geom_segment(aes(xend = stage, y = 1, yend = ratio),
-               color = "#6D6D6D", linewidth = 0.5) +
-  geom_point(aes(color = ratio), size = 3.4) +
-  geom_text(aes(label = sprintf("%.1f:1", ratio)),
-            vjust = -1.0, size = 2.1, fontface = "bold") +
-  scale_color_gradient(low = "#C9265E", high = "#1565C0", guide = "none") +
+  geom_text(aes(label = ratio_lab),
+            vjust = -0.6, size = 6 / .pt, fontface = "plain") +
+  scale_fill_gradient(low = "#C9265E", high = "#1565C0", guide = "none") +
   scale_y_continuous(name = "Up : down DEG ratio",
-                     expand = expansion(mult = c(0.02, 0.15))) +
-  labs(x = "Fibrosis stage (vs F0)",
-       title = "Down-regulation overtakes induction\nas fibrosis advances") +
+                     expand = expansion(mult = c(0, 0.15))) +
+  labs(x = "Fibrosis stage (vs F0)") +
   theme_masld(base_size = 7) +
   theme(
-    plot.title  = element_text(size = 7.0, face = "bold", margin = margin(b = 6)),
-    axis.text.x = element_text(size = 6.5, face = "bold")
+    axis.text.x = element_text(size = 6, face = "plain")
   )
 
 ggsave(OUT_PDF, p,

@@ -393,7 +393,7 @@ ht <- Heatmap(
   # Legend
   heatmap_legend_param = list(
     title = "scTWAS\nsign(beta) x\n-log10(p)",
-    title_gp = gpar(fontsize = 5, fontface = "bold"),
+    title_gp = gpar(fontsize = 5, fontface = "plain"),
     labels_gp = gpar(fontsize = 5),
     legend_height = unit(3, "cm"),
     at = c(-10, -5, 0, 5, 10),
@@ -403,7 +403,7 @@ ht <- Heatmap(
   # Row split by k-means for visual grouping if many genes
   row_km = if (length(selected_genes) > 80) 4 else if (length(selected_genes) > 40) 3 else 2,
   row_km_repeats = 50,
-  row_title_gp = gpar(fontsize = 7, fontface = "bold"),
+  row_title_gp = gpar(fontsize = 7, fontface = "plain"),
   row_gap = unit(1, "mm"),
 
   # Width/height

@@ -33,7 +33,27 @@ pretty_chord <- function(adj, nodes, grid_col,
                          show_total   = TRUE,
                          axis_step    = NULL,
                          link_border  = "white",
-                         link_lwd     = 0.5) {
+                         link_lwd     = 0.5,
+                         # --- text styling (defaults preserve legacy cex behaviour
+                         #     for ccc_v3_panels.R; the Fig3 chords override these
+                         #     with explicit 6pt / Helvetica / plain values). When
+                         #     label_fontsize is NULL the sizes fall back to the
+                         #     cex-based sizing (label_cex) used historically.
+                         label_fontsize = NULL,   # sector-name pt size (NULL -> label_cex)
+                         total_fontsize = NULL,   # per-sector total pt size (NULL -> label_cex*0.66)
+                         axis_fontsize  = NULL,   # axis-tick label pt size (NULL -> 0.5*12)
+                         text_family    = "",     # font family for all chord text ("" = device default)
+                         label_font     = 1,      # sector-name face (plain; house style forbids bold)
+                         total_font     = 1,      # per-sector total face
+                         axis_font      = 1,      # axis-tick label face
+                         label_offset   = 7.2,    # radial offset (mm) for sector names
+                         total_offset   = 1.8,    # radial offset (mm) for per-sector totals
+                         canvas_lim     = 1.45) { # half-extent of the square canvas (smaller -> chord fills more of the panel)
+
+  # convert requested point sizes to cex (device pointsize is 12pt)
+  label_cex_eff <- if (!is.null(label_fontsize)) label_fontsize / 12 else label_cex
+  total_cex_eff <- if (!is.null(total_fontsize)) total_fontsize / 12 else label_cex * 0.66
+  axis_cex_eff  <- if (!is.null(axis_fontsize))  axis_fontsize  / 12 else 0.5
 
   adj <- as.data.table(adj)
   nodes <- unname(nodes[nodes %in% c(adj$from, adj$to)])
@@ -50,8 +70,8 @@ pretty_chord <- function(adj, nodes, grid_col,
              track.margin            = c(0.005, 0.005),
              cell.padding            = c(0, 0, 0, 0),
              points.overflow.warning = FALSE,
-             canvas.xlim             = c(-1.45, 1.45),
-             canvas.ylim             = c(-1.45, 1.45))
+             canvas.xlim             = c(-canvas_lim, canvas_lim),
+             canvas.ylim             = c(-canvas_lim, canvas_lim))
 
   chordDiagram(
     x                  = adj[, .(from, to, value)],
@@ -97,20 +117,23 @@ pretty_chord <- function(adj, nodes, grid_col,
       }
       brks <- seq(0, floor(xl[2] / step) * step, by = step)
       circos.axis(h = "top", major.at = brks, labels = brks,
-                  labels.cex = 0.5, labels.col = "grey35",
+                  labels.cex = axis_cex_eff, labels.col = "black",
+                  labels.font = axis_font,
                   col = "grey55", lwd = 0.7,
                   major.tick.length = mm_y(0.9), minor.ticks = 1)
     }
     # condensed count: one total per sector, set below the name with a clear gap
     if (show_total) {
-      circos.text(mean(xl), yl[2] + mm_y(1.8),
+      circos.text(mean(xl), yl[2] + mm_y(total_offset),
                   format(sector_total[s], big.mark = ","),
                   facing = "bending.inside", niceFacing = TRUE,
-                  cex = label_cex * 0.66, font = 1, col = "grey40")
+                  cex = total_cex_eff, font = total_font,
+                  family = text_family, col = "black")
     }
-    circos.text(mean(xl), yl[2] + mm_y(7.2), s,
+    circos.text(mean(xl), yl[2] + mm_y(label_offset), s,
                 facing = "bending.inside", niceFacing = TRUE,
-                cex = label_cex, font = 2, col = "grey12")
+                cex = label_cex_eff, font = label_font,
+                family = text_family, col = "black")
   })
 
   circos.clear()

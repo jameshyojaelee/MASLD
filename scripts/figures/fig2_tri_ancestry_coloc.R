@@ -6,8 +6,12 @@
 # 35 Tier-1/2 GWAS incl. MVP NAFLD/ALT/AST), ranked by overall convergence evidence
 # (RNA-seq/results/multi_evidence/convergence_evidence.csv) so the headline genes are the
 # most manuscript-relevant, not just the 3 liver-enzyme genes (RORA/EPHA2/GGT1) that
-# happened to be hand-picked originally. Filename kept as *_tri_* for assembly-ref
-# stability though the panel is now up to 5-ancestry.
+# happened to be hand-picked originally. Renamed 2026-07-07 (Fig2F_crossancestry_coloc)
+# from the stale *_rora_tri_* name: the panel shows 9 genes across 5 ancestries, so
+# neither "rora" nor "tri" described it (repo grep confirmed no external ref used the
+# old name). 2026-07-07 also: outline now encodes the estimator (SuSiE vs ABF) so the
+# estimator/ancestry confound is visible; caption discloses EUR-only eQTL + per-ancestry
+# trait heterogeneity; rows reordered by portability; "portable" overclaim softened.
 # All values computed from disk so they always match the manuscript text.
 #
 # 2026-07-01 redesign: the original 3x4 tile heatmap wasted the panel on color alone
@@ -17,7 +21,7 @@
 # within each gene's row, color flags whether the colocalizing signal sits at the
 # EUR discovery locus's lead variant (<10kb) or a distinct nearby signal.
 #
-# Out: figures/main/fig2_genetics/panels/Fig2F_rora_tri_ancestry_coloc.pdf (+ source CSV)
+# Out: figures/main/fig2_genetics/panels/Fig2F_crossancestry_coloc.pdf (+ source CSV)
 suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
@@ -81,20 +85,41 @@ m[, status := fifelse(!colocalizes, "no_coloc",
              fifelse(dist_kb < 10, "same_signal", "secondary_signal"))]
 m[, status := factor(status, levels = c("same_signal", "secondary_signal", "no_coloc"))]
 
-# gene rows ordered by convergence importance (top gene at the top of the plot)
-m[, gene := factor(gene, levels = rev(GENES))]
+# Selection is convergence-ranked (above); DISPLAY order = portability so the visual
+# message (how many ancestries replicate) reads top-to-bottom. Order by n ancestries
+# colocalizing, then mean PP.H4; keep convergence_rank as the final tie-break.
+crank <- rank[, .(human_symbol, convergence_rank)]
+port <- m[, .(n_coloc = sum(colocalizes), mean_best = mean(best, na.rm = TRUE)), by = gene]
+port <- merge(port, crank, by.x = "gene", by.y = "human_symbol", all.x = TRUE)
+setorder(port, -n_coloc, -mean_best, convergence_rank)
+GENE_ORDER <- as.character(port$gene)
+m[, gene := factor(gene, levels = rev(GENE_ORDER))]
 m[, ancestry := factor(ancestry, levels = ANC)]
+m[, method_used := factor(method_used, levels = c("SuSiE", "ABF"))]  # outline aes
 dodge <- c(EUR = 0.30, AFR = 0.15, AMR = 0.0, EAS = -0.15, SAS = -0.30)
 m[, y_num := as.numeric(gene) + dodge[as.character(ancestry)]]
-m[, lab := fifelse(status == "no_coloc", sprintf("%.3f", best), "")]
+# No per-point value labels: x-position already encodes PP.H4 for every point, so a
+# floating number just restates the coordinate, and labeling only a couple of points
+# would falsely flag them as special. The 0.5 gridline shows near-misses directly.
 
 status_cols <- c(same_signal      = "#00695C",   # dark teal: colocalizes, EUR's own lead signal (<10kb)
                   secondary_signal = "#F5A623",  # amber (cat_palette): colocalizes, distinct signal (>=10kb)
                   no_coloc         = "#9E9E9E")  # house ns/control gray: does not colocalize
-status_labs <- c(same_signal       = "same signal as EUR (<10kb)",
-                  secondary_signal = "distinct signal (≥10kb)",
-                  no_coloc          = "does not colocalize")
+# Fill = genomic proximity of the ancestry's lead variant to the EUR discovery lead.
+# Wording is deliberately "lead variant" not "signal": the colocalizing TRAIT can differ
+# across ancestries at the same variant (e.g. RORA ALT in EUR vs GGT in EAS/SAS), so
+# "same variant" must NOT be read as "same trait" (trait is in the source CSV + caption).
+# Compact labels so the 3-item status legend fits the 3.26in width without clipping;
+# the full "same lead variant as the EUR discovery lead" wording lives in the caption.
+status_labs <- c(same_signal      = "same variant (<10 kb)",
+                  secondary_signal = "distinct (≥10 kb)",
+                  no_coloc          = "no coloc")
 anc_shapes <- c(EUR = 21, AFR = 22, AMR = 25, EAS = 23, SAS = 24)  # all fillable (21-25)
+# Outline color encodes the estimator. The estimator is unevenly distributed across
+# ancestries (AFR/SAS almost entirely ABF; EUR/EAS mostly SuSiE), and SuSiE PP.H4
+# (multi-causal) vs ABF PP.H4 (single-causal) are different estimands -- making the
+# estimator visible stops "AFR colocalizes less" from being read as pure ancestry.
+method_cols <- c(SuSiE = "grey15", ABF = "#C0C0C0")
 
 # zebra background band per gene row (helps track 9 rows without axis clutter)
 band <- data.table(y = seq_along(GENES))[y %% 2 == 0]
@@ -104,15 +129,18 @@ p <- ggplot(m, aes(x = best, y = y_num)) +
         aes(ymin = y - 0.5, ymax = y + 0.5), xmin = -Inf, xmax = Inf,
         fill = "grey96") } +
   geom_vline(xintercept = 0.5, linetype = "22", linewidth = 0.35, color = "grey60") +
-  geom_point(aes(fill = status, shape = ancestry), size = 1.8, color = "grey20", stroke = 0.25) +
-  geom_text(aes(label = lab), hjust = -0.3, size = 2.1, color = "grey30") +
+  geom_point(aes(fill = status, shape = ancestry, colour = method_used),
+             size = 1.8, stroke = 0.5) +
   scale_fill_manual(values = status_cols, labels = status_labs[levels(m$status)],
                     name = NULL, drop = FALSE,
-                    guide = guide_legend(override.aes = list(shape = 21), order = 1)) +
-  scale_shape_manual(values = anc_shapes, name = "ancestry", guide = guide_legend(order = 2)) +
+                    guide = guide_legend(override.aes = list(shape = 21, colour = "grey15"), order = 1)) +
+  scale_shape_manual(values = anc_shapes, name = "ancestry",
+                     guide = guide_legend(override.aes = list(fill = "grey70", colour = "grey15"), order = 2)) +
+  scale_colour_manual(values = method_cols, name = "estimator",
+                      guide = guide_legend(override.aes = list(shape = 21, fill = "grey85"), order = 3)) +
   scale_x_continuous(limits = c(-0.02, 1.12), breaks = c(0, 0.25, 0.5, 0.75, 1.0),
                       expand = c(0, 0)) +
-  scale_y_continuous(breaks = seq_along(GENES), labels = rev(GENES),
+  scale_y_continuous(breaks = seq_along(GENES), labels = rev(GENE_ORDER),
                       limits = c(0.5, length(GENES) + 0.5), expand = c(0, 0)) +
   labs(x = "Colocalization posterior (PP.H4)", y = NULL) +
   theme_masld() + theme_pub() +
@@ -131,20 +159,23 @@ p <- ggplot(m, aes(x = best, y = y_num)) +
         legend.key.size = unit(0.24, "cm"),
         legend.margin = margin(t = 2, b = 0))
 
-save_fig(p, file.path(PANEL_DIR, "Fig2F_rora_tri_ancestry_coloc.pdf"),
-         width = fig_col_width * 0.95, height = 3.15)
+source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))   # save_panel(): exact contract size + cairo_pdf
+save_panel(p, "main/fig2_genetics/panels/Fig2E_crossancestry_coloc.pdf",
+           read_sizes(file.path(BASE, "figures/layout_specs/figure2_panel_sizes.tsv")),
+           file.path(BASE, "figures"))
 
 # Caption (house style: no in-plot title/subtitle) -> stdout
 n_secondary <- m[status == "secondary_signal", .N]
 n_no_coloc  <- m[status == "no_coloc", .N]
+n_max_anc   <- max(port$n_coloc)   # honest ceiling: no gene is 5/5
 message(sprintf(
-  "CAPTION (Fig2F): Cross-ancestry colocalization of the %d most convergence-relevant pan-ancestry-portable effector genes (PP.H4 > 0.5 in >=3/5 ancestry panels; ranked by overall multi-evidence convergence score). Point shape = ancestry panel (EUR/AFR/AMR/EAS/SAS across the 35 Tier-1/2 (liver-specific) GWAS); position = max eQTL-GWAS colocalization posterior across tested liver/enzyme traits. Dark teal = colocalizes within 10kb of the EUR discovery lead variant (same causal signal); amber = colocalizes but >=10kb away (distinct secondary signal, n=%d); gray = does not colocalize (n=%d).",
-  length(GENES), n_secondary, n_no_coloc))
+  "CAPTION (Fig2E): Cross-ancestry colocalization of the %d top convergence-ranked effector genes that show cross-ancestry portability (eQTL-GWAS PP.H4 > 0.5 in >=3 of 5 ancestry panels). Portability is PARTIAL: %d-%d of 5 panels replicate; no gene colocalizes in all five, so this is a replicated-subset panel, not a pan-ancestry claim. Point shape = ancestry (EUR/AFR/AMR/EAS/SAS across the 35 Tier-1/2 liver-specific GWAS); x = max PP.H4 across the tested liver traits (ALT/AST/GGT/NAFLD). OUTLINE = estimator (dark = SuSiE multi-causal; light gray = ABF single-causal): the estimator is unevenly distributed across ancestries (AFR/SAS almost all ABF), so apparent ancestry differences partly reflect the estimator. eQTL panel = EUR liver (Broadaway, N=1,183) for ALL ancestries -- no ancestry-matched liver eQTL exists -- so non-EUR cells test whether the EUR-defined effector's signal ports to the non-EUR GWAS, NOT ancestry-matched colocalization. FILL = genomic proximity of the ancestry's lead variant to the EUR discovery lead (dark teal <10 kb = same variant; amber >=10 kb = distinct signal, n=%d; gray = does not colocalize, n=%d). NOTE the colocalizing trait can differ across ancestries at the SAME variant (e.g. RORA: ALT in EUR, GGT in EAS/SAS) -- 'same variant' does not imply 'same trait' (per-cell trait in the source CSV column 'colocalizing_trait'). Rows ordered by number of replicating ancestries.",
+  length(GENES), min(port$n_coloc), n_max_anc, n_secondary, n_no_coloc))
 
 fwrite(m[order(gene, ancestry), .(gene, ancestry, PP_H4 = round(best, 4),
         colocalizing_trait = trait, method = method_used, lead_variant = top_snp,
         dist_from_eur_kb = round(dist_kb, 2), status, colocalizes)],
-       file.path(PANEL_DIR, "Fig2F_rora_tri_ancestry_coloc_source.csv"))
-cat("[fig2 cross-ancestry] wrote Fig2F_rora_tri_ancestry_coloc.pdf  (genes:",
-    paste(GENES, collapse = ", "), ")\n")
+       file.path(PANEL_DIR, "Fig2E_crossancestry_coloc_source.csv"))
+cat("[fig2 cross-ancestry] wrote Fig2E_crossancestry_coloc.pdf  (genes, portability order:",
+    paste(GENE_ORDER, collapse = ", "), ")\n")
 print(m[order(gene, ancestry), .(gene, ancestry, best = round(best, 3), status, dist_kb = round(dist_kb,1))])

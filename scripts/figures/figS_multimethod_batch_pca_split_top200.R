@@ -144,14 +144,13 @@ dt_sva <- make_dt(pca_sva$scores, pca_sva$pve)
 # 5. Plot helpers
 # ---------------------------------------------------------------------------
 base_theme <- function() {
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
     theme(axis.text = element_blank(), axis.ticks = element_blank(),
           panel.grid = element_blank(),
           legend.position = "right",
-          legend.title = element_text(size = 6.5, face = "bold"),
+          legend.title = element_text(size = 6, face = "plain"),
           legend.text  = element_text(size = 6),
-          legend.key.size = unit(0.28, "cm"),
-          plot.title  = element_text(size = 7.5, face = "bold"))
+          legend.key.size = unit(0.28, "cm"))
 }
 
 scatter2d <- function(dt, colour_by, pal, leg_name, title) {
@@ -160,8 +159,7 @@ scatter2d <- function(dt, colour_by, pal, leg_name, title) {
     scale_colour_manual(values = pal, name = leg_name) +
     guides(colour = guide_legend(override.aes = list(size = 1.8, alpha = 1))) +
     labs(x = sprintf("PC1 (%.1f%%)", dt$pve1[1]),
-         y = sprintf("PC2 (%.1f%%)", dt$pve2[1]),
-         title = title) +
+         y = sprintf("PC2 (%.1f%%)", dt$pve2[1])) +
     base_theme()
 }
 
@@ -170,19 +168,15 @@ make_combined <- function(dt, subtitle) {
   pC <- scatter2d(dt, "cohort",  cohort_pal,  "Cohort",  "by Cohort")
   pD <- scatter2d(dt, "disease", disease_pal, "Disease", "by Disease")
   pS <- scatter2d(dt, "sex",     sex_pal,     "Sex",     "by Sex")
-  (pC | pD | pS) +
-    plot_annotation(subtitle = subtitle,
-      theme = theme(plot.subtitle = element_text(size = 6.5, colour = "grey35")))
+  pC | pD | pS
 }
 
 # ---------------------------------------------------------------------------
 # 6. Save 2D combined figures
 # ---------------------------------------------------------------------------
-save_combined <- function(fig, filename, title, width = 10, height = 3.8) {
-  fig2 <- fig + plot_annotation(
-    title = title,
-    theme = theme(plot.title = element_text(size = 9, face = "bold")))
-  ggsave(file.path(OUT, filename), fig2, width = width, height = height,
+save_combined <- function(fig, filename, title, width = 7.09, height = 2.69) {
+  message("[caption] ", title)
+  ggsave(file.path(OUT, filename), fig, width = width, height = height,
          device = cairo_pdf)
   cat("Wrote", filename, "\n")
 }
@@ -222,25 +216,25 @@ save_3d <- function(dt, subtitle_str, filename) {
             marker = list(size = 2, opacity = 0.7,
                           line = list(width = 0))) |>
       layout(
-        title = list(text = title_str, font = list(size = 9)),
         scene = list(
           xaxis = list(title = sprintf("PC1 (%.1f%%)", dt2$pve1[1]),
-                       titlefont = list(size = 8), tickfont = list(size = 6)),
+                       titlefont = list(size = 6), tickfont = list(size = 6)),
           yaxis = list(title = sprintf("PC2 (%.1f%%)", dt2$pve2[1]),
-                       titlefont = list(size = 8), tickfont = list(size = 6)),
+                       titlefont = list(size = 6), tickfont = list(size = 6)),
           zaxis = list(title = sprintf("PC3 (%.1f%%)", dt2$pve3[1]),
-                       titlefont = list(size = 8), tickfont = list(size = 6)),
+                       titlefont = list(size = 6), tickfont = list(size = 6)),
           camera = list(eye = list(x = 1.5, y = 1.5, z = 0.8))
         ),
-        legend = list(font = list(size = 7)),
+        legend = list(font = list(size = 6)),
         margin = list(l = 0, r = 0, t = 35, b = 0))
   }
+  message("[caption] ", subtitle_str)
   fig <- subplot(
     mk(dt, "cohort",  cohort_pal,  "by Cohort"),
     mk(dt, "disease", disease_pal, "by Disease"),
     mk(dt, "sex",     sex_pal,     "by Sex"),
     nrows = 1, shareX = FALSE, shareY = FALSE, titleX = TRUE, titleY = TRUE
-  ) |> layout(title = list(text = subtitle_str, font = list(size = 10)))
+  )
 
   out_path <- file.path(OUT, filename)
   tryCatch(
@@ -269,11 +263,11 @@ scene_spec <- function(dt, col_x, row_y, w, h) {
   list(
     domain = list(x = c(col_x, col_x + w), y = c(row_y, row_y + h)),
     xaxis  = list(title = sprintf("PC1 %.1f%%", dt$pve1[1]),
-                  titlefont = list(size = 7), tickfont = list(size = 5.5)),
+                  titlefont = list(size = 6), tickfont = list(size = 6)),
     yaxis  = list(title = sprintf("PC2 %.1f%%", dt$pve2[1]),
-                  titlefont = list(size = 7), tickfont = list(size = 5.5)),
+                  titlefont = list(size = 6), tickfont = list(size = 6)),
     zaxis  = list(title = sprintf("PC3 %.1f%%", dt$pve3[1]),
-                  titlefont = list(size = 7), tickfont = list(size = 5.5)),
+                  titlefont = list(size = 6), tickfont = list(size = 6)),
     camera = list(eye = list(x = 1.5, y = 1.5, z = 0.8))
   )
 }
@@ -313,19 +307,19 @@ fig_cmp <- fig_cmp |> layout(
     annotations = list(
       list(text = "RAW", x = 0.01, y = 0.99,
            xref="paper", yref="paper", showarrow=FALSE,
-           font=list(size=12, color="grey25"), xanchor="left"),
+           font=list(size=6, color="black"), xanchor="left"),
       list(text = sprintf("BATCH + SEX + SVA (%d SV)", n_sv),
            x = 0.01, y = 0.48,
            xref="paper", yref="paper", showarrow=FALSE,
-           font=list(size=12, color="grey25"), xanchor="left"),
+           font=list(size=6, color="black"), xanchor="left"),
       list(text="Cohort",  x=w/2,           y=1.02, xref="paper",
-           yref="paper", showarrow=FALSE, font=list(size=9), xanchor="center"),
+           yref="paper", showarrow=FALSE, font=list(size=6), xanchor="center"),
       list(text="Disease", x=w+gap+w/2,     y=1.02, xref="paper",
-           yref="paper", showarrow=FALSE, font=list(size=9), xanchor="center"),
+           yref="paper", showarrow=FALSE, font=list(size=6), xanchor="center"),
       list(text="Sex",     x=2*(w+gap)+w/2, y=1.02, xref="paper",
-           yref="paper", showarrow=FALSE, font=list(size=9), xanchor="center")
+           yref="paper", showarrow=FALSE, font=list(size=6), xanchor="center")
     ),
-    legend = list(font=list(size=7)),
+    legend = list(font=list(size=6)),
     margin = list(l=0, r=0, t=45, b=0)
   )
 

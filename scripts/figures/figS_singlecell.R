@@ -205,7 +205,7 @@ if (scvi_ready) {
       theme(legend.position = "none",
             axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
             axis.text.y = element_text(size = 6),
-            strip.text = element_text(size = 7, face = "bold", margin = margin(b=4, t=4))) +
+            strip.text = element_text(size = 7, face = "plain", margin = margin(b=4, t=4))) +
       labs(x = NULL, y = "Proportion of cells", title = "Cell-type abundance")
       
   } else {
@@ -313,7 +313,7 @@ fig_out <- p_a + p_b + p_c + p_d +
   plot_annotation(
     tag_levels = "a"
   ) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(fig_out, OUT, height = 8)
 message("Figure saved to ", OUT)

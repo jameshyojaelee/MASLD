@@ -27,7 +27,7 @@ hep_lsec <- fread(file.path(CCC, "D2_hep_LSEC_bidirectional.csv"))
 stromal  <- fread(file.path(CCC, "D3_stromal_stromal.csv"))
 
 make_panel <- function(dt, title, top_n = 14) {
-  if (nrow(dt) == 0) return(ggplot() + labs(title = paste("No data:", title)) + theme_masld())
+  if (nrow(dt) == 0) return(ggplot() + theme_masld())
   dt_top <- dt[order(-score_diff)][1:min(top_n, nrow(dt))]
   # Include direction in label to disambiguate shared L-R
   dt_top[, pair_label := paste0(direction, ": ", ligand, " -> ", receptor)]
@@ -45,7 +45,7 @@ make_panel <- function(dt, title, top_n = 14) {
                                   "not concordant"   = "grey75"),
                        name = NULL) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-    labs(x = "LIANA score_diff (MASLD - Control)", y = NULL, title = title) +
+    labs(x = "LIANA score_diff (MASLD - Control)", y = NULL) +
     theme_masld() +
     theme(axis.text.y = element_text(size = 6),
           legend.position = "bottom",
@@ -74,18 +74,18 @@ pD <- ggplot(stromal_top, aes(score_diff, pair_label, fill = axis, color = bulk_
                                 "not concordant"   = "grey75"),
                      name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "LIANA score_diff", y = NULL,
-       title = "Stromal-stromal CCC (Fib/LSEC/Mac)") +
+  labs(x = "LIANA score_diff", y = NULL) +
   theme_masld() +
   theme(axis.text.y = element_text(size = 6),
         legend.position = "bottom",
         legend.key.size = unit(3, "mm"),
-        legend.text = element_text(size = 5.5))
+        legend.text = element_text(size = 6))
 
 fig <- (pA + pB) / (pC + pD) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_D2_D3_hep_stromal_circuits.pdf")
-ggsave(out_path, fig, width = 14, height = 11)
+message("[caption] A: Hepatocyte<->Fibroblast (HSC proxy) top LR pairs; B: Hepatocyte<->Macrophage top LR pairs; C: Hepatocyte<->LSEC top LR pairs; D: Stromal-stromal CCC (Fib/LSEC/Mac) top LR pairs")
+ggsave(out_path, fig, width = fig_full_width, height = fig_full_width * 11 / 14)
 message("Saved: ", out_path)

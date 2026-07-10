@@ -49,14 +49,13 @@ cat("DEGs at padj<0.05, |LFC|>", first_below_10, ":", n_at_threshold, "\n")
 pA <- ggplot(grid, aes(x = factor(lfc), y = factor(padj), fill = n_DEG)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = formatC(n_DEG, format = "d", big.mark = ",")),
-            size = 2.2, color = "black") +
+            size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_gradient2(low = "white", mid = "#4393C3", high = "#2166AC",
                        midpoint = max(grid$n_DEG) / 2, name = "DEGs") +
   geom_vline(xintercept = which(levels(factor(lfcs)) == as.character(first_below_10)),
              linetype = "dashed", color = "red", linewidth = 0.6) +
-  labs(x = "|log2FC| cutoff", y = "padj cutoff",
-       title = "DEG count by threshold") +
-  theme_minimal(base_size = 9) +
+  labs(x = "|log2FC| cutoff", y = "padj cutoff") +
+  theme_minimal(base_size = 6) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid = element_blank())
 
@@ -71,15 +70,15 @@ pB <- ggplot(cv_dt, aes(x = lfc, y = cv)) +
            label = sprintf("|LFC| = %.2f\nCV = %.1f%%\n%s DEGs (padj<0.05)",
                            first_below_10, cv_at_threshold,
                            formatC(n_at_threshold, big.mark = ",")),
-           size = 2.5, hjust = 0, color = "red") +
-  annotate("text", x = 0.85, y = 11.5, label = "CV = 10%", size = 2.5,
+           size = GEOM_TEXT_6PT, hjust = 0, color = "red") +
+  annotate("text", x = 0.85, y = 11.5, label = "CV = 10%", size = GEOM_TEXT_6PT,
            color = "#999999") +
   scale_x_continuous(breaks = seq(0.1, 1.0, by = 0.1)) +
   labs(x = "|log2FC| cutoff",
-       y = "CV of DEG count\nacross padj thresholds (%)",
-       title = "Threshold stability") +
-  theme_minimal(base_size = 9)
+       y = "CV of DEG count\nacross padj thresholds (%)") +
+  theme_minimal(base_size = 6)
 
+message("[caption] Panel A: DEG count by threshold. Panel B: threshold stability (CV of DEG count across padj thresholds).")
 combined <- pA / pB + plot_layout(heights = c(2, 1))
 
 out_pdf <- file.path(FIG2_PANEL_DIR, "figs3c_deg_landscape_cv.pdf")

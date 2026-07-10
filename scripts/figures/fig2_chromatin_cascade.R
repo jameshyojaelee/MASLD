@@ -59,7 +59,7 @@ panel <- ggplot(dat, aes(x = transition, y = n_sig + 1,
   geom_text_repel(data = label_dat, aes(label = cell_type),
                   nudge_x = 0.25, hjust = 0, direction = "y",
                   segment.size = 0.2, segment.colour = "grey60",
-                  size = 2.3, fontface = "bold", show.legend = FALSE,
+                  size = GEOM_TEXT_6PT, fontface = "plain", show.legend = FALSE,
                   min.segment.length = 0) +
   scale_colour_manual(values = ct_pal, guide = "none") +
   scale_y_log10(breaks = c(1, 10, 100, 1000),
@@ -68,8 +68,8 @@ panel <- ggplot(dat, aes(x = transition, y = n_sig + 1,
   labs(x = NULL, y = "Significant DA peaks") +
   theme_masld(base_size = 7) +
   theme_pub() +
-  theme(axis.title.y = element_text(face = "bold"),
-        axis.text.x  = element_text(face = "bold"),
+  theme(axis.title.y = element_text(face = "plain"),
+        axis.text.x  = element_text(face = "plain"),
         panel.grid   = element_blank())
 
 ggsave(OUT_PDF, panel, width = 3.6, height = 2.4, device = cairo_pdf)

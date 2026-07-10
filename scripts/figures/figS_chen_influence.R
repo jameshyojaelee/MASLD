@@ -109,13 +109,13 @@ p_a <- ggplot(merged, aes(x = delta_logFC)) +
   annotate("text", x = max(merged$delta_logFC) * 0.6, y = Inf,
            label = sprintf("Median |shift| = %.3f\n%.1f%% genes |shift| < 0.1",
                            median_shift, pct_small),
-           vjust = 1.5, size = 2.2, color = "grey30") +
+           vjust = 1.5, size = GEOM_TEXT_6PT, color = "black") +
   labs(x = expression(Delta * "log"[2] * "FC (full model - GSE213621 LOO)"),
-       y = "Number of genes",
-       title = "(a) Effect size shift when GSE213621 removed") +
+       y = "Number of genes") +
   theme_masld() +
   theme(legend.position = c(0.8, 0.8), legend.key.size = unit(3, "mm"))
 
+message("[caption] (a) Effect size shift when GSE213621 removed")
 ggsave(file.path(PANEL_DIR, "panel_a.pdf"), p_a, width = 3.5, height = 2.8)
 
 # ==========================================================================
@@ -167,13 +167,13 @@ conc_counts[, n_concordant := factor(n_concordant)]
 
 p_b <- ggplot(conc_counts, aes(x = n_concordant, y = N)) +
   geom_col(fill = masld_colors$up, width = 0.6) +
-  geom_text(aes(label = sprintf("%d\n(%.0f%%)", N, pct)), vjust = -0.3, size = 2) +
+  geom_text(aes(label = sprintf("%d\n(%.0f%%)", N, pct)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
   labs(x = sprintf("Concordant cohorts (of %d tested)", length(other_studies)),
-       y = "GSE213621-dependent genes",
-       title = "(b) Direction concordance in other cohorts") +
+       y = "GSE213621-dependent genes") +
   theme_masld()
 
+message("[caption] (b) Direction concordance in other cohorts")
 ggsave(file.path(PANEL_DIR, "panel_b.pdf"), p_b, width = 3.5, height = 2.8)
 
 # ==========================================================================
@@ -187,14 +187,14 @@ p_c <- ggplot(loo_summary, aes(x = n, y = pct_full_recovered)) +
   geom_point(aes(color = held_out == "GSE213621"),
              size = 2.5) +
   geom_text(aes(label = label),
-            vjust = -0.8, size = 2, fontface = "italic") +
+            vjust = -0.8, size = GEOM_TEXT_6PT, fontface = "plain") +
   scale_color_manual(values = c("FALSE" = masld_colors$down, "TRUE" = masld_colors$up),
                      guide = "none") +
   labs(x = "Cohort sample size (N)",
-       y = "DEG recovery when held out (%)",
-       title = "(c) Influence scales with sample size") +
+       y = "DEG recovery when held out (%)") +
   theme_masld()
 
+message("[caption] (c) Influence scales with sample size")
 ggsave(file.path(PANEL_DIR, "panel_c.pdf"), p_c, width = 3.5, height = 2.8)
 
 # ==========================================================================
@@ -229,16 +229,16 @@ cor_long[, col := factor(col, levels = dvc_labels$label)]
 
 p_d <- ggplot(cor_long, aes(x = col, y = row, fill = rho)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = sprintf("%.2f", rho)), size = 2.2) +
+  geom_text(aes(label = sprintf("%.2f", rho)), size = GEOM_TEXT_6PT) +
   scale_fill_gradient2(low = masld_colors$down, mid = "white", high = masld_colors$up,
                        midpoint = 0.5, limits = c(0, 1), name = expression(rho)) +
-  labs(x = NULL, y = NULL,
-       title = "(d) Per-study logFC correlation (Spearman)") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.key.height = unit(8, "mm"),
         legend.key.width = unit(3, "mm"))
 
+message("[caption] (d) Per-study logFC correlation (Spearman)")
 ggsave(file.path(PANEL_DIR, "panel_d.pdf"), p_d, width = 3.5, height = 3.2)
 
 # ==========================================================================
@@ -260,13 +260,13 @@ p_e <- ggplot() +
   scale_color_manual(values = c("Control" = masld_colors$control,
                                 "Disease" = masld_colors$up),
                      name = "GSE213621 samples") +
-  labs(x = "UMAP 1", y = "UMAP 2",
-       title = "(e) GSE213621 samples intermixed in UMAP") +
+  labs(x = "UMAP 1", y = "UMAP 2") +
   theme_masld() +
   theme(legend.position = c(0.15, 0.15),
         legend.key.size = unit(3, "mm"),
         legend.background = element_rect(fill = alpha("white", 0.7), color = NA))
 
+message("[caption] (e) GSE213621 samples intermixed in UMAP")
 ggsave(file.path(PANEL_DIR, "panel_e.pdf"), p_e, width = 3.5, height = 3)
 
 # ==========================================================================
@@ -312,17 +312,17 @@ p_f <- ggplot(power_data, aes(x = n, y = power, color = effect_size)) +
   geom_line(linewidth = 0.6) +
   geom_point(data = cohort_power, size = 1.5) +
   geom_text(data = cohort_power[effect_size == "0.5"],
-            aes(label = label), vjust = -0.8, size = 1.8, show.legend = FALSE) +
+            aes(label = label), vjust = -0.8, size = GEOM_TEXT_6PT, show.legend = FALSE) +
   geom_hline(yintercept = 0.8, linetype = "dashed", color = "grey60", linewidth = 0.3) +
   scale_color_manual(values = c("0.3" = "#42A5F5", "0.5" = "#7B1FA2",
                                 "0.8" = "#E91E63", "1.0" = "#880E4F"),
                      name = expression(delta)) +
   labs(x = "Cohort sample size (N)",
-       y = "Statistical power",
-       title = "(f) Power scales with N") +
+       y = "Statistical power") +
   theme_masld() +
   theme(legend.position = c(0.85, 0.3), legend.key.size = unit(3, "mm"))
 
+message("[caption] (f) Power scales with N")
 ggsave(file.path(PANEL_DIR, "panel_f.pdf"), p_f, width = 3.5, height = 2.8)
 
 # ==========================================================================
@@ -394,14 +394,14 @@ if (length(ds_files) >= 5) {
     stat_summary(fun = mean, geom = "crossbar", width = 0.3,
                  color = masld_colors$up, linewidth = 0.5) +
     geom_point(aes(y = loo_value), shape = 18, size = 3, color = masld_colors$up) +
-    labs(x = NULL, y = "Value",
-         title = "(g) Down-sampling GSE213621 to N=118") +
+    labs(x = NULL, y = "Value") +
     annotate("text", x = 3.4, y = min(ds_melt$value) * 0.95,
-             label = "Diamond = GSE213621 LOO", size = 1.8, color = masld_colors$up,
+             label = "Diamond = GSE213621 LOO", size = GEOM_TEXT_6PT, color = masld_colors$up,
              hjust = 1) +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
+  message("[caption] (g) Down-sampling GSE213621 to N=118")
   ggsave(file.path(PANEL_DIR, "panel_g.pdf"), p_g, width = 3.5, height = 2.8)
 } else {
   cat("  No downsampling results found; skipping panel (g)\n")
@@ -416,14 +416,14 @@ cat("\n----- Assembling composite figure -----\n")
 if (!is.null(p_g)) {
   composite <- (p_a | p_b | p_c) / (p_d | p_e | p_f) / (p_g | plot_spacer() | plot_spacer()) +
     plot_layout(heights = c(1, 1, 1))
-  fig_h <- 9
+  fig_h <- 6.38
 } else {
   composite <- (p_a | p_b | p_c) / (p_d | p_e | p_f)
-  fig_h <- 6.2
+  fig_h <- 4.4
 }
 
 ggsave(file.path(FIGS_SENS_DIR, "figS_chen_influence.pdf"),
-       composite, width = 10, height = fig_h)
+       composite, width = fig_full_width, height = fig_h)
 
 cat("\nDone. Figures saved to:\n")
 cat("  Composite:", file.path(FIGS_SENS_DIR, "figS_chen_influence.pdf"), "\n")

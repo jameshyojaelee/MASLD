@@ -38,21 +38,26 @@ INT_RES <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/r
 CAUSAL  <- file.path(BASE, "RNA-seq/results/causal_inference")
 SC_DE   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
 # C2 RECOUNT (2026-06-08): bulk input = C2 canonical (limma-voom-qw) Tier-1.
-# Outputs to a C2 subdir so the dream-canonical attribution is preserved.
-OUTDIR  <- file.path(BASE, "RNA-seq/results/celltype_attribution/c2_recount")
+# TREAT migration (2026-06-29, audit P2#17): the canonical Tier-1 DEG gate is now
+# TREAT (`treat_fdr < 0.05`, the 1,918-gene set; McCarthy & Smyth 2009), which folds
+# the lfc=0.25 effect-size floor INTO the significance test. The previous
+# padj<0.05 & |logFC|>0.5 gate (raw-1853) is retired here. Outputs to a NEW subdir
+# (c2_treat) so the prior c2_recount / dream-canonical attribution is preserved.
+OUTDIR  <- file.path(BASE, "RNA-seq/results/celltype_attribution/c2_treat")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 # Thresholds
 PVAL_CT     <- 0.05   # nominal pvalue for per-cell-type concordance
-PADJ_BULK   <- 0.05   # bulk C2 DEG cutoff
-LFC_MIN     <- 0.5    # bulk |logFC| — C2 Tier-1 (was 0.3 for dream)
+TREAT_FDR   <- 0.05   # bulk C2 Tier-1 DEG gate (TREAT canonical; the 1,918 set)
 
-message("[1] Loading bulk C2 canonical DE (limma-voom-qw, Tier-1)...")
+message("[1] Loading bulk C2 canonical DE (limma-voom-qw, TREAT Tier-1)...")
 bulk <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
-              select = c("gene", "symbol", "logFC", "t", "padj"))
+              select = c("gene", "symbol", "logFC", "t", "padj", "treat_fdr"))
 setnames(bulk, c("logFC","t","padj"), c("bulk_lfc","bulk_t","bulk_padj"))
 bulk[, ensg_base := sub("\\.\\d+$", "", gene)]
-message(sprintf("  %d genes in bulk C2 canonical", nrow(bulk)))
+message(sprintf("  %d genes in bulk C2 canonical (%d Tier-1 TREAT DEGs at treat_fdr<%.2f)",
+                nrow(bulk), sum(bulk$treat_fdr < TREAT_FDR, na.rm = TRUE), TREAT_FDR))
+stopifnot(sum(bulk$treat_fdr < TREAT_FDR, na.rm = TRUE) == 1918L)
 
 message("[2] Loading per-cell-type pseudobulk DE (11 cell types)...")
 sc_de_files <- list.files(SC_DE, pattern = "_de\\.csv$", full.names = TRUE)
@@ -144,9 +149,8 @@ merged[, primary_score          := as.numeric(class_out[2, ])]
 merged[, n_sig_concordant_ct    := as.integer(class_out[3, ])]
 merged[, attribution_class      := class_out[4, ]]
 
-# Restrict attribution_class label to bulk DEGs; otherwise NS
-merged[!(bulk_padj < PADJ_BULK & abs(bulk_lfc) > LFC_MIN),
-       attribution_class := "NS_bulk"]
+# Restrict attribution_class label to bulk Tier-1 TREAT DEGs; otherwise NS
+merged[!(treat_fdr < TREAT_FDR), attribution_class := "NS_bulk"]
 merged[primary_score <= 0, primary_celltype := NA]
 
 message("[7] Writing outputs...")
@@ -162,7 +166,7 @@ primary <- merged[, .(ensg_base, symbol,
 fwrite(primary, file.path(OUTDIR, "celltype_primary_attribution.csv"))
 
 # Summary
-deg <- merged[bulk_padj < PADJ_BULK & abs(bulk_lfc) > LFC_MIN]
+deg <- merged[treat_fdr < TREAT_FDR]
 summ <- deg[, .N, by = attribution_class][order(-N)]
 multict <- deg[attribution_class == "multi_celltype", .N]
 strong_by_ct <- deg[grepl("_intrinsic_strong$", attribution_class), .N, by = attribution_class][order(-N)]
@@ -171,8 +175,8 @@ hep_agree <- deg[!is.na(music_category) & !is.na(primary_celltype),
                  .N, by = .(music_category, primary_celltype)][order(-N)][1:20]
 
 summary_lines <- c(
-  sprintf("Bulk DEGs (padj<%.2f, |LFC|>%.1f): %d",
-          PADJ_BULK, LFC_MIN, nrow(deg)),
+  sprintf("Bulk Tier-1 TREAT DEGs (treat_fdr<%.2f): %d",
+          TREAT_FDR, nrow(deg)),
   "",
   "Per-class attribution:",
   capture.output(print(summ, nrows = 40)),
@@ -188,8 +192,8 @@ summary_lines <- c(
   "MuSiC hepatocyte class vs primary celltype agreement (top 20):",
   capture.output(print(hep_agree)),
   "",
-  sprintf("Thresholds: PVAL_CT=%.2f (nominal), PADJ_BULK=%.2f, LFC_MIN=%.1f",
-          PVAL_CT, PADJ_BULK, LFC_MIN),
+  sprintf("Thresholds: PVAL_CT=%.2f (nominal), bulk Tier-1 gate = TREAT treat_fdr<%.2f (1,918 set)",
+          PVAL_CT, TREAT_FDR),
   "",
   "NOTE: scRNA pseudobulk DE has limited power (fewer donors per CT).",
   "      v2 (CARseq + bMIND) will provide bulk-level CT-specific DE.")

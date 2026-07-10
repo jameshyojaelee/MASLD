@@ -4,8 +4,9 @@
 # Main Fig 3 (RNA-seq) — cross-modal convergence dot-heatmap
 #
 # A rare convergent core: genes that are simultaneously a robust bulk DEG
-# (bulk_lfsr<0.05 & |bulk_shrunk_logFC|>0.5) AND a strong hepatic colocalization
-# hit (coloc_best_pp4>0.5). For each convergent gene we show which orthogonal
+# (bulk_treat_fdr<0.05; TREAT lfc=0.25, effect floor IS in the test) AND a strong
+# hepatic colocalization hit (coloc_best_pp4>0.5). For each convergent gene we show
+# which orthogonal
 # modalities are "lit": human bulk, mouse bulk, sc-hepatocyte, Hotspot module
 # membership, spatial GeoMx direction, and colocalization presence.
 #
@@ -19,7 +20,7 @@
 #   rendered as direction or presence only (GeoMx padj all >0.85 -> not a
 #   significance claim; Hotspot/COLOC are membership/presence).
 #
-# Output: figures/main/fig3_RNAseq/panels/fig3i_crossmodal_convergence_matrix.pdf
+# Output: figures/main/fig3_RNAseq/panels/figs3_crossmodal_convergence_matrix.pdf
 # ============================================================================
 
 suppressPackageStartupMessages({
@@ -34,7 +35,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
-OUT_PDF   <- file.path(PANEL_DIR, "fig3i_crossmodal_convergence_matrix.pdf")
+OUT_PDF   <- file.path(PANEL_DIR, "figs3_crossmodal_convergence_matrix.pdf")
 dir.create(DATA_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # ---------------------------------------------------------------------------
@@ -47,7 +48,7 @@ coloc <- fread(file.path(BASE,
 # INTEGRITY regression check
 stopifnot(max(coloc$coloc_best_pp4, na.rm = TRUE) <= 1)
 
-acols <- c("human_symbol", "bulk_shrunk_logFC", "bulk_lfsr", "mouse_meta_logFC",
+acols <- c("human_symbol", "bulk_shrunk_logFC", "bulk_treat_fdr", "mouse_meta_logFC",
            "n_diets_sig", "sc_hepatocyte_logFC", "hotspot_n_modules")
 m <- merge(atlas[, ..acols], coloc[, .(human_symbol = gene, coloc_best_pp4)],
            by = "human_symbol")
@@ -55,12 +56,12 @@ m <- merge(atlas[, ..acols], coloc[, .(human_symbol = gene, coloc_best_pp4)],
 # ---------------------------------------------------------------------------
 # Convergent core: robust bulk DEG AND strong hepatic COLOC
 # ---------------------------------------------------------------------------
-core <- m[bulk_lfsr < 0.05 & abs(bulk_shrunk_logFC) > 0.5 & coloc_best_pp4 > 0.5]
+core <- m[bulk_treat_fdr < 0.05 & coloc_best_pp4 > 0.5]   # TREAT canonical; effect floor (lfc=0.25) IS in the test -> NO separate |shrunk_logFC| filter
 
 # Per-modality "lit" flags
 core[, lit_bulk    := TRUE]                                   # core defn
 core[, lit_mouse   := !is.na(mouse_meta_logFC) & (n_diets_sig > 0 |
-                        abs(mouse_meta_logFC) > 0.5)]
+                        abs(mouse_meta_logFC) > 0.3)]  # 2026-06-27: 0.5 -> 0.3 (mouse threshold tracks human canonical)
 core[, lit_schep   := !is.na(sc_hepatocyte_logFC) & abs(sc_hepatocyte_logFC) > 0.25]
 core[, lit_hotspot := !is.na(hotspot_n_modules) & hotspot_n_modules > 0]
 core[, lit_coloc   := TRUE]                                   # core defn
@@ -122,6 +123,8 @@ fwrite(core, file.path(DATA_DIR, "crossmodal_convergence_matrix.csv"))
 # ---------------------------------------------------------------------------
 # Plot
 # ---------------------------------------------------------------------------
+message("[caption] Cross-modal convergent core")
+
 dir_colors <- c(Up = "#C9265E", Down = "#1565C0", Present = "#616161")
 
 p <- ggplot(long, aes(x = modality, y = gene)) +
@@ -131,12 +134,10 @@ p <- ggplot(long, aes(x = modality, y = gene)) +
                     breaks = c("Up", "Down", "Present")) +
   scale_size_continuous(range = c(1.4, 4.2), guide = "none") +
   scale_x_discrete(position = "top") +
-  labs(x = NULL, y = NULL,
-       title = "Cross-modal convergent core") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(
-    plot.title       = element_text(size = 7.3, face = "bold", margin = margin(b = 5)),
-    axis.text.x.top  = element_text(size = 6, angle = 40, hjust = 0, face = "bold"),
+    axis.text.x.top  = element_text(size = 6, angle = 40, hjust = 0, face = "plain"),
     axis.text.y      = element_text(size = 6, face = "italic"),
     panel.grid.major = element_line(color = "grey92", linewidth = 0.2),
     axis.line        = element_blank(),
@@ -145,9 +146,11 @@ p <- ggplot(long, aes(x = modality, y = gene)) +
     legend.key.size  = unit(0.18, "cm")
   )
 
-ggsave(OUT_PDF, p,
-       width  = 78 / 25.4,
-       height = max(70, 6 * nrow(core) + 28) / 25.4,
-       units  = "in",
-       device = cairo_pdf)
-cat(sprintf("[saved] %s\n", OUT_PDF))
+# ── PANEL CUT 2026-07-08 (user request): figs3_crossmodal_convergence_matrix is permanently removed — do NOT re-enable this save. ──
+message("[CUT 2026-07-08] figs3_crossmodal_convergence_matrix panel removed per user request; no PDF written.")
+# ggsave(OUT_PDF, p,
+#        width  = 78 / 25.4,
+#        height = max(70, 6 * nrow(core) + 28) / 25.4,
+#        units  = "in",
+#        device = cairo_pdf)
+cat("figs3_crossmodal_convergence_matrix panel is CUT (2026-07-08) — no PDF written.\n")

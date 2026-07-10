@@ -26,7 +26,7 @@ import os
 plt.rcParams.update({
     "font.family":      "sans-serif",
     "font.sans-serif":  ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size":        10,
+    "font.size":        6,
     "pdf.fonttype":     42,
     "ps.fonttype":      42,
     "figure.dpi":       150,
@@ -74,12 +74,8 @@ def main(no_title=False):
     ax.axis("off")
     fig.patch.set_facecolor("white")
 
-    # ── Title ────────────────────────────────────────────────────────────────
-    if not no_title:
-        ax.text(0, 1.30,
-                "Multi-omic MASLD Atlas",
-                fontsize=14, fontweight="bold", color=TEXT_DARK,
-                ha="center", va="top")
+    # ── Title removed (publication figure) ─────────────────────────────────
+    print("[caption] Multi-omic MASLD Atlas")
 
     # ── Central hub ──────────────────────────────────────────────────────────
     hub_r = 0.20
@@ -94,9 +90,9 @@ def main(no_title=False):
                            linewidth=1, alpha=alpha, zorder=9)
         ax.add_patch(glow)
 
-    ax.text(0, 0.025, "MASLD", fontsize=10, fontweight="bold",
+    ax.text(0, 0.025, "MASLD", fontsize=6,
             color="white", ha="center", va="center", zorder=11)
-    ax.text(0, -0.07, "Atlas", fontsize=10, fontweight="bold",
+    ax.text(0, -0.07, "Atlas", fontsize=6,
             color="white", ha="center", va="center", zorder=11)
 
     # ── Sector arcs ──────────────────────────────────────────────────────────
@@ -160,13 +156,13 @@ def main(no_title=False):
             ha = "right"
 
         ax.text(label_x, label_y + 0.06, title,
-                fontsize=9.5, fontweight="bold", color=color,
+                fontsize=6, color=color,
                 ha=ha, va="center", zorder=7)
         ax.text(label_x, label_y - 0.04, line1,
-                fontsize=7.5, color="#777777",
+                fontsize=6, color="black",
                 ha=ha, va="center", zorder=7)
         ax.text(label_x, label_y - 0.13, line2,
-                fontsize=7.5, color="#999999",
+                fontsize=6, color="black",
                 ha=ha, va="center", zorder=7)
 
         # Thin line from label to arc
@@ -188,7 +184,7 @@ def main(no_title=False):
     ]
     summary_text = "  \u2502  ".join(s[0] for s in summary_items)
     ax.text(0, -1.25, summary_text,
-            fontsize=8.5, color=LABEL_GRAY, fontweight="bold",
+            fontsize=6, color="black",
             ha="center", va="center", zorder=7)
 
     # ── Save ─────────────────────────────────────────────────────────────────

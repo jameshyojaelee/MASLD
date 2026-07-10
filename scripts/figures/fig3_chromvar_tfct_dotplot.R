@@ -96,7 +96,7 @@ plot_dt[, is_sig        := padj < 0.05]
 y_levels <- levels(plot_dt$display)
 # strip any parenthetical for matching (e.g., "NR1H3 (LXRα)" -> "NR1H3")
 y_stem   <- sub(" \\(.*", "", y_levels)
-y_face   <- ifelse(y_stem %in% BOLD_TFS, "bold", "plain")
+y_face   <- ifelse(y_stem %in% BOLD_TFS, "italic", "plain")
 
 # -----------------------------------------------------------------------------
 # Group separators (horizontal lines between TF functional groups)
@@ -136,7 +136,7 @@ p <- ggplot(plot_dt,
   ) +
   scale_x_discrete(labels = function(x) gsub("_", " ", x)) +
   labs(x = NULL, y = NULL) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(
     axis.text.x      = element_text(angle = 35, hjust = 1, vjust = 1,
@@ -149,7 +149,7 @@ p <- ggplot(plot_dt,
     legend.box       = "vertical",
     legend.spacing.y = unit(0.2, "cm"),
     legend.margin    = margin(l = 4, r = 0),
-    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "bold"),
+    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "plain"),
     legend.text      = element_text(size = PUB_LEGEND),
     plot.margin      = margin(4, 6, 2, 4)
   ) +

@@ -62,8 +62,8 @@ pC <- ggplot(gene_q, aes(weight, gene_label)) +
   facet_wrap(~ mod_label, nrow = 2, scales = "free_y") +
   labs(x = "Hotspot module weight", y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.text.y = element_text(size = 5),
-        strip.text = element_text(size = PUB_AXIS_TITLE, face = "bold"))
+  theme(axis.text.y = element_text(size = 6),
+        strip.text = element_text(size = PUB_AXIS_TITLE, face = "plain"))
 
 # ----------------------------------------------------------------------------
 # Save

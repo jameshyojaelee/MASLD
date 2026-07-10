@@ -100,12 +100,10 @@ p1 <- ggplot(music_long, aes(x = group_binary, y = proportion, fill = group_bina
   facet_wrap(~ cell_type, scales = "free_y", ncol = 4) +
   scale_fill_manual(values = disease_fill, guide = "none") +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = NULL, y = "Estimated proportion",
-       title = "MuSiC cell-type fractions across all 16 cell types") +
+  labs(x = NULL, y = "Estimated proportion") +
   theme_masld() +
-  theme(strip.text = element_text(size = 6, face = "bold"),
-        plot.title = element_text(size = 8, face = "bold"),
-        axis.text.x = element_text(size = 5))
+  theme(strip.text = element_text(size = 6, face = "plain"),
+        axis.text.x = element_text(size = 6))
 
 save_fig_tall(p1, file.path(OUT_DIR, "music_all_celltypes.pdf"),
               width = fig_full_width, height = 9)
@@ -126,12 +124,10 @@ p2 <- ggplot(bp_long, aes(x = group_binary, y = proportion, fill = group_binary)
   facet_wrap(~ cell_type, scales = "free_y", ncol = 4) +
   scale_fill_manual(values = disease_fill, guide = "none") +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = NULL, y = "Estimated proportion",
-       title = "BayesPrism cell-type fractions across all 16 cell types") +
+  labs(x = NULL, y = "Estimated proportion") +
   theme_masld() +
-  theme(strip.text = element_text(size = 6, face = "bold"),
-        plot.title = element_text(size = 8, face = "bold"),
-        axis.text.x = element_text(size = 5))
+  theme(strip.text = element_text(size = 6, face = "plain"),
+        axis.text.x = element_text(size = 6))
 
 save_fig_tall(p2, file.path(OUT_DIR, "bp_all_celltypes.pdf"),
               width = fig_full_width, height = 9)
@@ -163,16 +159,14 @@ p3 <- ggplot(comparison, aes(x = MuSiC, y = BayesPrism)) +
   geom_point(size = 0.1, alpha = 0.08, color = "gray30", shape = 16) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red", linewidth = 0.3) +
   geom_text(data = cor_dt, aes(x = Inf, y = Inf, label = label),
-            hjust = 1.1, vjust = 1.3, size = 1.8, color = masld_colors$hep_intrinsic) +
+            hjust = 1.1, vjust = 1.3, size = GEOM_TEXT_6PT, color = masld_colors$hep_intrinsic) +
   facet_wrap(~ cell_type, scales = "free", ncol = 4) +
   scale_x_continuous(labels = percent_format()) +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = "MuSiC proportion", y = "BayesPrism proportion",
-       title = "Method concordance: MuSiC vs BayesPrism per cell type") +
+  labs(x = "MuSiC proportion", y = "BayesPrism proportion") +
   theme_masld() +
-  theme(strip.text = element_text(size = 6, face = "bold"),
-        plot.title = element_text(size = 8, face = "bold"),
-        axis.text = element_text(size = 4.5))
+  theme(strip.text = element_text(size = 6, face = "plain"),
+        axis.text = element_text(size = 6))
 
 save_fig_tall(p3, file.path(OUT_DIR, "method_comparison_scatter.pdf"),
               width = fig_full_width, height = 9)
@@ -207,11 +201,9 @@ p4 <- ggplot(ba_dt, aes(x = mean_prop, y = diff_prop)) +
   facet_wrap(~ cell_type, scales = "free", ncol = 3) +
   scale_x_continuous(labels = percent_format()) +
   labs(x = "Mean proportion (MuSiC + BP) / 2",
-       y = "Difference (BP - MuSiC)",
-       title = "Bland-Altman agreement: BayesPrism vs MuSiC") +
+       y = "Difference (BP - MuSiC)") +
   theme_masld() +
-  theme(strip.text = element_text(size = 6.5, face = "bold"),
-        plot.title = element_text(size = 8, face = "bold"))
+  theme(strip.text = element_text(size = 6, face = "plain"))
 
 save_fig(p4, file.path(OUT_DIR, "method_comparison_bland_altman.pdf"),
          width = fig_full_width, height = 5)
@@ -242,10 +234,10 @@ p5a <- ggplot(bp_comp_mean, aes(x = group_binary, y = mean_prop, fill = cell_typ
   geom_col(width = 0.7, color = "white", linewidth = 0.15) +
   scale_fill_manual(values = fill_vals, name = "Cell type") +
   scale_y_continuous(labels = percent_format(), expand = expansion(mult = c(0, 0.02))) +
-  labs(x = NULL, y = "Mean proportion", title = "BayesPrism: by condition") +
+  labs(x = NULL, y = "Mean proportion") +
   theme_masld() +
-  theme(legend.text = element_text(size = 5), legend.title = element_text(size = 6),
-        legend.key.size = unit(0.2, "cm"), plot.title = element_text(size = 7, face = "bold")) +
+  theme(legend.text = element_text(size = 6), legend.title = element_text(size = 6),
+        legend.key.size = unit(0.2, "cm")) +
   guides(fill = guide_legend(ncol = 1, reverse = TRUE))
 
 # 5b: Same for MuSiC
@@ -260,10 +252,10 @@ p5b <- ggplot(music_comp_mean, aes(x = group_binary, y = mean_prop, fill = cell_
   geom_col(width = 0.7, color = "white", linewidth = 0.15) +
   scale_fill_manual(values = fill_vals, name = "Cell type") +
   scale_y_continuous(labels = percent_format(), expand = expansion(mult = c(0, 0.02))) +
-  labs(x = NULL, y = "Mean proportion", title = "MuSiC: by condition") +
+  labs(x = NULL, y = "Mean proportion") +
   theme_masld() +
-  theme(legend.text = element_text(size = 5), legend.title = element_text(size = 6),
-        legend.key.size = unit(0.2, "cm"), plot.title = element_text(size = 7, face = "bold")) +
+  theme(legend.text = element_text(size = 6), legend.title = element_text(size = 6),
+        legend.key.size = unit(0.2, "cm")) +
   guides(fill = guide_legend(ncol = 1, reverse = TRUE))
 
 # 5c: Per-dataset mean (BayesPrism, both conditions)
@@ -279,12 +271,11 @@ p5c <- ggplot(bp_ds_comp, aes(x = ds_cond, y = mean_prop, fill = cell_type)) +
   geom_col(width = 0.85, color = "white", linewidth = 0.1) +
   scale_fill_manual(values = fill_vals, name = "Cell type") +
   scale_y_continuous(labels = percent_format(), expand = expansion(mult = c(0, 0.02))) +
-  labs(x = NULL, y = "Mean proportion",
-       title = "BayesPrism composition per dataset and condition") +
+  labs(x = NULL, y = "Mean proportion") +
   theme_masld() +
-  theme(axis.text.x = element_text(size = 3.5, angle = 90, hjust = 1, vjust = 0.5),
-        legend.text = element_text(size = 5), legend.title = element_text(size = 6),
-        legend.key.size = unit(0.2, "cm"), plot.title = element_text(size = 7, face = "bold")) +
+  theme(axis.text.x = element_text(size = 6, angle = 90, hjust = 1, vjust = 0.5),
+        legend.text = element_text(size = 6), legend.title = element_text(size = 6),
+        legend.key.size = unit(0.2, "cm")) +
   guides(fill = guide_legend(ncol = 1, reverse = TRUE))
 
 # Assemble stacked composition figure
@@ -292,7 +283,7 @@ p5_top <- p5a + p5b + plot_layout(guides = "collect") &
   theme(legend.position = "right")
 p5_full <- p5_top / p5c + plot_layout(heights = c(1, 1.3)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig_tall(p5_full, file.path(OUT_DIR, "stacked_composition.pdf"),
               width = fig_full_width, height = 8)
@@ -316,12 +307,10 @@ p6a <- ggplot(both_hep, aes(x = dataset, y = proportion, fill = group_binary)) +
   facet_wrap(~ method, ncol = 1) +
   scale_fill_manual(values = disease_fill, name = "Group") +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = NULL, y = "Hepatocyte proportion",
-       title = "Hepatocyte fraction per dataset") +
+  labs(x = NULL, y = "Hepatocyte proportion") +
   theme_masld() +
-  theme(axis.text.x = element_text(size = 5, angle = 45, hjust = 1),
-        strip.text = element_text(size = 7, face = "bold"),
-        plot.title = element_text(size = 8, face = "bold"),
+  theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
+        strip.text = element_text(size = 6, face = "plain"),
         legend.position = "bottom")
 
 # Macrophages
@@ -337,17 +326,15 @@ p6b <- ggplot(both_mac, aes(x = dataset, y = proportion, fill = group_binary)) +
   facet_wrap(~ method, ncol = 1) +
   scale_fill_manual(values = disease_fill, name = "Group") +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = NULL, y = "Macrophage proportion",
-       title = "Macrophage fraction per dataset") +
+  labs(x = NULL, y = "Macrophage proportion") +
   theme_masld() +
-  theme(axis.text.x = element_text(size = 5, angle = 45, hjust = 1),
-        strip.text = element_text(size = 7, face = "bold"),
-        plot.title = element_text(size = 8, face = "bold"),
+  theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
+        strip.text = element_text(size = 6, face = "plain"),
         legend.position = "bottom")
 
 p6_full <- p6a + p6b + plot_layout(guides = "collect") +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"),
+  theme(plot.tag = element_text(size = 6, face = "plain"),
         legend.position = "bottom")
 
 save_fig_tall(p6_full, file.path(OUT_DIR, "per_dataset_boxplots.pdf"),
@@ -384,17 +371,15 @@ if (file.exists(attr_path)) {
     p7 <- ggplot(conf, aes(x = bp_class, y = music_class, fill = pct)) +
       geom_tile(color = "white", linewidth = 0.5) +
       geom_text(aes(label = paste0(N, "\n(", round(pct, 1), "%)")),
-                size = 2.2, color = "black") +
+                size = GEOM_TEXT_6PT, color = "black") +
       scale_fill_gradient(low = "white", high = masld_colors$hep_intrinsic,
                           name = "% of\nMuSiC class") +
       scale_x_discrete(labels = function(x) gsub("_", "\n", x)) +
       scale_y_discrete(labels = function(x) gsub("_", "\n", x)) +
       labs(x = "BayesPrism attribution class",
-           y = "MuSiC attribution class",
-           title = "Attribution class concordance: MuSiC vs BayesPrism") +
+           y = "MuSiC attribution class") +
       theme_masld() +
-      theme(plot.title = element_text(size = 8, face = "bold"),
-            axis.text.x = element_text(size = 6, angle = 0, hjust = 0.5),
+      theme(axis.text.x = element_text(size = 6, angle = 0, hjust = 0.5),
             axis.text.y = element_text(size = 6),
             panel.border = element_rect(color = "gray50", fill = NA, linewidth = 0.3))
 
@@ -438,24 +423,20 @@ p8a <- ggplot(bp_sev, aes(x = severity, y = Hepatocytes, fill = severity)) +
   geom_jitter(width = 0.12, size = 0.1, alpha = 0.15, color = "gray30") +
   scale_fill_manual(values = sev_colors, guide = "none") +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = "Disease stage", y = "Hepatocyte proportion",
-       title = "Hepatocyte fraction by disease severity") +
-  theme_masld() +
-  theme(plot.title = element_text(size = 7, face = "bold"))
+  labs(x = "Disease stage", y = "Hepatocyte proportion") +
+  theme_masld()
 
 p8b <- ggplot(bp_sev, aes(x = severity, y = Macrophages, fill = severity)) +
   geom_boxplot(outlier.size = 0.3, linewidth = 0.3, width = 0.65, alpha = 0.8) +
   geom_jitter(width = 0.12, size = 0.1, alpha = 0.15, color = "gray30") +
   scale_fill_manual(values = sev_colors, guide = "none") +
   scale_y_continuous(labels = percent_format()) +
-  labs(x = "Disease stage", y = "Macrophage proportion",
-       title = "Macrophage fraction by disease severity") +
-  theme_masld() +
-  theme(plot.title = element_text(size = 7, face = "bold"))
+  labs(x = "Disease stage", y = "Macrophage proportion") +
+  theme_masld()
 
 p8_full <- p8a + p8b +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig(p8_full, file.path(OUT_DIR, "hep_fraction_vs_disease.pdf"),
          width = fig_full_width, height = 4)

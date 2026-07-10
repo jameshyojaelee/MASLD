@@ -6,7 +6,7 @@
 #   Bottom — Coarse-stage concordant DEG tile heatmap
 #
 # Concordant = padj<0.05 in BayesPrism/coarse AND same direction as bulk
-#              bulk C2 DEG (padj<0.05, |logFC|>0.5)
+#              bulk C2 DEG (TREAT fdr_treat<0.05, lfc=0.25)
 # ────────────────────────────────────────────────────────────────────────────
 
 suppressPackageStartupMessages({
@@ -29,9 +29,8 @@ dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 dream <- load_dream_results()
 stopifnot(!is.null(dream), nrow(dream) > 0)
 
-# Tag bulk DEGs: C2 Tier-1 (padj < 0.05, |logFC| > 0.5)
-dream[, bulk_deg := (!is.na(bulk_padj) & bulk_padj < 0.05 &
-                       !is.na(bulk_logFC) & abs(bulk_logFC) > 0.5)]
+# Tag bulk DEGs: C2 Tier-1 (TREAT fdr_treat < 0.05 at lfc=0.25; canonical 2026-06-29)
+dream[, bulk_deg := is_dream_deg(dream)]
 dream_ref <- dream[bulk_deg == TRUE, .(symbol, bulk_logFC)]
 dream_ref <- unique(dream_ref, by = "symbol")
 message("Bulk dream DEGs for concordance: ", nrow(dream_ref))
@@ -82,6 +81,7 @@ bp_counts[, cell_type := factor(cell_type, levels = rev(ct_order_bp))]
 bp_counts[, transition := factor(transition, levels = transition_labels)]
 bp_counts[, log_n := log10(n_concordant + 1)]
 
+message("[caption] Cell-type-resolved fibrosis progression DEGs")
 message("\n--- BayesPrism fibrosis transition concordant DEG counts ---")
 print(dcast(bp_counts, cell_type ~ transition, value.var = "n_concordant"))
 
@@ -92,8 +92,7 @@ p_bp <- ggplot(bp_counts, aes(x = transition, y = cell_type, fill = log_n)) +
                       name = expression(log[10](n + 1)),
                       breaks = c(0, 1, 2, 3),
                       labels = c("0", "1", "2", "3")) +
-  labs(title = "Cell-type-resolved fibrosis progression DEGs",
-       x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme_pub() +
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5),
@@ -156,6 +155,7 @@ coarse_counts[, cell_type := factor(cell_type,
 coarse_counts[, contrast := factor(contrast, levels = contrast_labels)]
 coarse_counts[, log_n := log10(n_concordant + 1)]
 
+message("[caption] Cell-type-resolved coarse-stage progression DEGs")
 message("\n--- Coarse-stage concordant DEG counts ---")
 print(dcast(coarse_counts, cell_type ~ contrast, value.var = "n_concordant"))
 
@@ -167,8 +167,7 @@ p_coarse <- ggplot(coarse_counts,
                       name = expression(log[10](n + 1)),
                       breaks = c(0, 1, 2, 3),
                       labels = c("0", "1", "2", "3")) +
-  labs(title = "Cell-type-resolved coarse-stage progression DEGs",
-       x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme_pub() +
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5),
@@ -184,10 +183,10 @@ composite <- p_bp / p_coarse +
   plot_annotation(tag_levels = "a") +
   plot_layout(heights = c(1, 0.7))
 
-out_path <- file.path(out_dir, "bayesprism_transitions.pdf")
-ggsave(out_path, composite,
-       width = 180 / 25.4, height = 120 / 25.4,
-       device = cairo_pdf)
-
-message("\nSaved: ", out_path)
-message("File size: ", file.size(out_path), " bytes")
+# out_path <- file.path(out_dir, "bayesprism_transitions.pdf")
+# ggsave(out_path, composite,
+#        width = 180 / 25.4, height = 120 / 25.4,
+#        device = cairo_pdf)
+# 
+# message("\nSaved: ", out_path)
+# message("File size: ", file.size(out_path), " bytes")

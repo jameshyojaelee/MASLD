@@ -33,6 +33,14 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
+# ── RETIRED 2026-07-02 ────────────────────────────────────────────────────────
+# This standalone panel was CUT from Fig 4 and its PDF deleted. RORA is still
+# represented in Fig 4 by fig4c_atac_rora_motif (the regulatory-mechanism panel)
+# and in the supplement by figS_rora_case_study. This script no longer emits.
+# Body below retained for provenance only; remove the guard to regenerate.
+message("[RETIRED 2026-07-02] fig4c_rora_cross_ancestry_discovery was cut from Fig 4; not regenerated.")
+quit(save = "no", status = 0)
+
 # ── Cross-ancestry COLOC + lead credible-set variant per ancestry ────────────
 co <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
 rora <- co[gene == "RORA"]
@@ -62,7 +70,7 @@ bulk_lfc <- deg[symbol == "RORA", logFC][1]; bulk_padj <- deg[symbol == "RORA", 
 # ── Plot: chr15 locus axis, 3 ancestry tracks, lead variant shaded by PIP ────
 lead_pos <- sort(unique(lead$pos))                       # the (≤2) lead variants
 xpad <- 4000
-xr <- range(lead$pos) + c(-xpad, xpad)
+xr <- range(lead$pos) + c(-xpad, xpad * 3.2)   # extra right pad so right-anchored PP.H4 labels clear the EUR variant's PIP label
 
 p <- ggplot(lead) +
   # converging lead-variant guide lines
@@ -72,10 +80,10 @@ p <- ggplot(lead) +
   # lead credible-set variant, shaded by PIP
   geom_point(aes(x = pos, y = y, fill = pip), shape = 21, size = 4.2, stroke = 0.3, color = "white") +
   geom_text(aes(x = pos, y = y + 0.26, label = sprintf("PIP %.2f", pip)),
-            size = PUB_GEOM_TEXT - 0.3, color = "black") +
+            size = GEOM_TEXT_6PT, color = "black") +
   # COLOC PP.H4 annotated at the right (BLACK text — no colored fonts)
   geom_text(aes(x = xr[2], y = y, label = sprintf("PP.H4 %.3f", PP.H4.susie)),
-            hjust = 1, vjust = -0.8, size = PUB_GEOM_TEXT - 0.3, color = "black", fontface = "bold") +
+            hjust = 1, vjust = -0.8, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_gradientn(colours = colorRampPalette(c("#F4A6C2", "#C9265E", "#7A1140"))(64),
                        limits = c(0.4, 1), name = "PIP",
                        guide = guide_colorbar(barheight = 2.2, barwidth = 0.35, ticks = FALSE)) +
@@ -84,16 +92,14 @@ p <- ggplot(lead) +
   scale_x_continuous(labels = function(z) sprintf("%.3f", z / 1e6),
                      breaks = lead_pos) +
   labs(x = "chr15 position (Mb)", y = NULL) +
-  theme_masld() + theme_pub() +
-  theme(plot.title = element_text(size = PUB_TITLE, face = "plain", color = "black"),
-        plot.subtitle = element_text(size = PUB_AXIS_TEXT - 0.5, color = "grey35"),
-        axis.text.y = element_text(face = "bold", size = PUB_AXIS_TEXT + 0.5, color = "black"),
+  theme_masld_compact() +
+  theme(axis.text.y = element_text(size = 6, color = "black"),
         legend.position = "right", legend.direction = "vertical",
         legend.key.height = unit(0.28, "cm"), legend.key.width = unit(0.22, "cm"),
         panel.grid = element_blank(), plot.margin = margin(3, 6, 3, 3))
 
-out <- file.path(FIG4_DIR, "fig4c_rora_cross_ancestry_discovery.pdf")
-save_fig(p, out, width = fig_half_width + 1.1, height = 2.05)
+out <- file.path(FIG4_DIR, "panels", "fig4c_rora_cross_ancestry_discovery.pdf")
+save_fig(p, out, width = fig_half_width - 0.15, height = 1.7)
 message("Saved: ", out)
 print(lead[, .(ancestry, trait, top_snp, pos, pip = round(pip,3), PP.H4.susie = round(PP.H4.susie,3))])
 message(sprintf("[rora] lead variants %s bp apart; bulk logFC %.2f padj %.1e", diff(range(lead$pos)), bulk_lfc, bulk_padj))

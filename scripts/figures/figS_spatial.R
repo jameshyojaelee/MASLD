@@ -118,7 +118,7 @@ if (file.exists(hep_val_path)) {
              hjust = 1.1, vjust = 1.5, size = 2.2) +
     annotate("text", x = Inf, y = Inf,
              label = paste0(pct_valid, "% validated"),
-             hjust = 1.1, vjust = 3.2, size = 2.2, fontface = "bold") +
+             hjust = 1.1, vjust = 3.2, size = 2.2, fontface = "plain") +
     labs(x = "Bulk attribution score",
          y = "Spatial FC (hep / non-hep spots)",
          title = "Hepatocyte-intrinsic spatial validation") +
@@ -190,11 +190,11 @@ if (file.exists(prop_path)) {
     annotate("segment", x = 0.5, xend = 2.5, y = -0.04, yend = -0.04,
              color = masld_colors$control, linewidth = 0.6) +
     annotate("text", x = 1.5, y = -0.065, label = "Healthy",
-             color = masld_colors$control, size = 2, fontface = "bold") +
+             color = masld_colors$control, size = 2, fontface = "plain") +
     annotate("segment", x = 2.5, xend = 5.5, y = -0.04, yend = -0.04,
              color = masld_colors$up, linewidth = 0.6) +
     annotate("text", x = 4, y = -0.065, label = "Steatotic",
-             color = masld_colors$up, size = 2, fontface = "bold") +
+             color = masld_colors$up, size = 2, fontface = "plain") +
     coord_cartesian(clip = "off") +
     theme(plot.margin = margin(5, 5, 20, 5))
 }
@@ -380,7 +380,7 @@ if (file.exists(zon_path)) {
     geom_text(data = zon_melt[subset == "Conserved" & count > 0],
               aes(x = count, label = paste0(count, " Core")),
               hjust = -0.05, size = 1.8, color = masld_colors$conserved,
-              fontface = "bold") +
+              fontface = "plain") +
     scale_fill_manual(values = zon_class_colors, guide = "none") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.35))) +
     labs(x = paste0("DEGs (N=", comma(n_zon), " classified)"),
@@ -436,7 +436,7 @@ fig_spatial <- (p_a | p_b) / (p_c | p_d) / (p_e | p_f) +
     title = "Spatial transcriptomics validation (GSE192741)",
     tag_levels = "a"
   ) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(fig_spatial, OUT, height = 10)
 message("Spatial supplementary figure saved to ", OUT)

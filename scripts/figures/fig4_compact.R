@@ -12,8 +12,9 @@
 #   - fig4_spatial_panels.R    → p_f, p_g, p_h  (relettered to f,g,h in assembly)
 # Proteomics row: 2026-05-28 (P0-H) the former fig4_proteomics_panels.R source
 # was removed (deleted 2026-04-23, superseded by fig4_validation.R, run first).
-# The canonical proteomics composite is figures/main/fig4_validation/
-# fig4_validation.pdf; see the proteomics block below.
+# The canonical proteomics panels are figures/main/fig4_validation/panels/
+# fig4{a,b,c}.pdf (the fig4_validation.pdf composite was retired 2026-07-07);
+# see the proteomics block below.
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -33,8 +34,9 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 # T1.8 (2026-04-22): fig4_validation.R is the canonical source of reframed
 # Fig 4 panels (CHI3L1 SHAP 9.7%, drug/SVG reframed values). Run it in an
-# isolated environment FIRST so fig4_validation.pdf + panels/fig4{a..f}.pdf
-# are rebuilt with the canonical values even when the compact wrapper runs.
+# isolated environment FIRST so panels/fig4{a..c}.pdf are rebuilt with the
+# canonical values even when the compact wrapper runs. (The fig4_validation.pdf
+# composite was retired 2026-07-07 — fig4_validation.R no longer writes it.)
 local({
   canonical_script <- file.path(BASE, "scripts/figures/fig4_validation.R")
   if (file.exists(canonical_script)) {
@@ -123,7 +125,7 @@ fig4 <- (pharma[["a"]]  | pharma[["b"]]) /
         (spatial[["f"]] | spatial[["g"]] | spatial[["h"]]) +
   plot_layout(heights = c(1.1, 1, 1)) +
   plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 # Full-width, tall enough that each row has breathing room
 save_fig_tall(fig4, OUT, width = fig_full_width, height = 11)

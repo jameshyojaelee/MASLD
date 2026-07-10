@@ -128,18 +128,16 @@ make_volcano <- function(df, padj_col = "padj", logfc_col = "logFC",
     geom_text_repel(
       data = top_genes,
       aes(label = label),
-      size = 2.2, color = "black", segment.size = 0.2,
+      size = GEOM_TEXT_6PT, color = "black", segment.size = 0.2,
       max.overlaps = 15, box.padding = 0.3, point.padding = 0.2
     ) +
-    labs(title = title, subtitle = subtitle,
-         x = "log2 FC (NASH vs NAFL)", y = "-log10(padj)") +
+    labs(x = "log2 FC (NASH vs NAFL)", y = "-log10(padj)") +
     theme_masld() +
     theme(
-      plot.title    = element_text(size = 7, face = "bold"),
-      plot.subtitle = element_text(size = 6, color = "gray40"),
       axis.title    = element_text(size = 6),
-      axis.text     = element_text(size = 5.5)
+      axis.text     = element_text(size = 6)
     )
+  message("[caption] ", title, ": ", gsub("\n", " ", subtitle))
   p
 }
 
@@ -154,8 +152,7 @@ pA_c13 <- make_volcano(c13, padj_col = "padj", logfc_col = "logFC",
                         title = "C13: Fibrosis-adjusted",
                         n_degs = N_C13, n_label = 8)
 
-pA <- (pA_c2 | pA_c13) +
-  plot_annotation(title = "A", theme = theme(plot.title = element_text(size = 8, face = "bold")))
+pA <- (pA_c2 | pA_c13)
 
 # ---------------------------------------------------------------------------
 # PANEL B: Horizontal bar chart — NAS subscore DEG counts
@@ -183,22 +180,20 @@ pB <- ggplot(c7_long, aes(x = count, y = component, fill = direction)) +
   geom_text(
     data = c7_plot,
     aes(x = n_deg + 60, y = component, label = scales::comma(n_deg)),
-    inherit.aes = FALSE, size = 2.5, hjust = 0
+    inherit.aes = FALSE, size = GEOM_TEXT_6PT, hjust = 0
   ) +
   scale_fill_manual(values = dir_pal, name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.18)),
                      labels = scales::comma) +
-  labs(title = "B", subtitle = "NAS subscore DEGs (padj<0.05)",
-       x = "Number of DEGs", y = NULL) +
+  labs(x = "Number of DEGs", y = NULL) +
   theme_masld() +
   theme(
-    plot.title    = element_text(size = 8, face = "bold"),
-    plot.subtitle = element_text(size = 6, color = "gray40"),
     axis.title.x  = element_text(size = 6),
     axis.text     = element_text(size = 6),
     legend.text   = element_text(size = 6),
     legend.key.size = unit(0.35, "cm")
   )
+message("[caption] B: NAS subscore DEGs (padj<0.05)")
 
 # ---------------------------------------------------------------------------
 # PANEL C: Confounding proportion — annotated stacked bar
@@ -224,18 +219,13 @@ pC <- ggplot(conf_dt, aes(x = "C2 DEGs", y = count, fill = category)) +
   geom_col(width = 0.55, position = position_stack()) +
   geom_text(aes(label = label),
             position = position_stack(vjust = 0.5),
-            size = 2.5, color = "white", fontface = "bold", lineheight = 1.2) +
+            size = GEOM_TEXT_6PT, color = "white", fontface = "plain", lineheight = 1.2) +
   scale_fill_manual(values = conf_pal, name = NULL) +
   scale_y_continuous(labels = scales::comma,
                      expand = expansion(mult = c(0, 0.05))) +
-  labs(title = "C",
-       subtitle = paste0("C2 total: ", scales::comma(N_C2), " DEGs\n",
-                         round(100 * N_CONFOUNDED / N_C2, 1), "% fibrosis-confounded"),
-       x = NULL, y = "Number of DEGs") +
+  labs(x = NULL, y = "Number of DEGs") +
   theme_masld() +
   theme(
-    plot.title    = element_text(size = 8, face = "bold"),
-    plot.subtitle = element_text(size = 6, color = "gray40"),
     axis.title.y  = element_text(size = 6),
     axis.text     = element_text(size = 6),
     axis.text.x   = element_blank(),
@@ -243,6 +233,8 @@ pC <- ggplot(conf_dt, aes(x = "C2 DEGs", y = count, fill = category)) +
     legend.text   = element_text(size = 6),
     legend.key.size = unit(0.35, "cm")
   )
+message("[caption] C: C2 total: ", scales::comma(N_C2), " DEGs; ",
+        round(100 * N_CONFOUNDED / N_C2, 1), "% fibrosis-confounded")
 
 # ---------------------------------------------------------------------------
 # PANEL D: True NASH core pathway enrichment
@@ -314,18 +306,15 @@ if (c13_gsea_found && nrow(c13_gsea) > 0) {
     geom_col(width = 0.65) +
     geom_vline(xintercept = 0, color = "gray50", linewidth = 0.3) +
     scale_fill_manual(values = dir_pal2, name = NULL) +
-    labs(title = "D",
-         subtitle = "True NASH core: Hallmark pathway enrichment",
-         x = "Normalized Enrichment Score (NES)", y = NULL) +
+    labs(x = "Normalized Enrichment Score (NES)", y = NULL) +
     theme_masld() +
     theme(
-      plot.title    = element_text(size = 8, face = "bold"),
-      plot.subtitle = element_text(size = 6, color = "gray40"),
       axis.title.x  = element_text(size = 6),
-      axis.text     = element_text(size = 5.5),
+      axis.text     = element_text(size = 6),
       legend.text   = element_text(size = 6),
       legend.key.size = unit(0.35, "cm")
     )
+  message("[caption] D: True NASH core: Hallmark pathway enrichment")
 } else {
   # Ultimate fallback: placeholder with key message
   message("  No pathway data found — using text placeholder for Panel D")
@@ -333,10 +322,8 @@ if (c13_gsea_found && nrow(c13_gsea) > 0) {
     annotate("text", x = 0.5, y = 0.5,
              label = paste0("True NASH core (n=", N_CORE, " genes)\n",
                             "Pathway enrichment data not available"),
-             size = 3, hjust = 0.5) +
-    labs(title = "D") +
-    theme_void() +
-    theme(plot.title = element_text(size = 8, face = "bold"))
+             size = GEOM_TEXT_6PT, hjust = 0.5) +
+    theme_void()
 }
 
 # ---------------------------------------------------------------------------
@@ -349,34 +336,27 @@ top_row    <- pA_c2 | pA_c13
 bottom_row <- pB | pC | pD
 
 fig3 <- top_row / bottom_row +
-  plot_layout(heights = c(1.3, 1)) +
-  plot_annotation(
-    title    = "Fig 3: Fibrosis Deconfounding Unmasks the True NASH Transcriptome",
-    subtitle = paste0(
-      "C2 (unadjusted): ", scales::comma(N_C2), " DEGs  |  ",
-      "C13 (fib-adjusted): ", N_C13, " DEGs  |  ",
-      round(100 * N_CONFOUNDED / N_C2, 1), "% fibrosis-confounded  |  ",
-      "True NASH core: ", N_CORE, " genes"
-    ),
-    theme = theme(
-      plot.title    = element_text(size = 9, face = "bold"),
-      plot.subtitle = element_text(size = 7, color = "gray40")
-    )
-  )
+  plot_layout(heights = c(1.3, 1))
+
+message("[caption] Fig 3: Fibrosis Deconfounding Unmasks the True NASH Transcriptome — ",
+        "C2 (unadjusted): ", scales::comma(N_C2), " DEGs | ",
+        "C13 (fib-adjusted): ", N_C13, " DEGs | ",
+        round(100 * N_CONFOUNDED / N_C2, 1), "% fibrosis-confounded | ",
+        "True NASH core: ", N_CORE, " genes")
 
 # ---------------------------------------------------------------------------
 # Save
 # ---------------------------------------------------------------------------
 outfile <- file.path(FIGDIR, "fig3_deconfounding.pdf")
 message("Saving to: ", outfile)
-save_fig(fig3, outfile, width = 18.3, height = 20)
+save_fig(fig3, outfile, width = fig_full_width, height = 20 * fig_full_width / 18.3)
 
 # Also save individual panels for Illustrator assembly
-save_fig(pA_c2,  file.path(FIGS03_DIR, "panels", "fig3a_volcano_c2.pdf"),  width = 8,  height = 7)
-save_fig(pA_c13, file.path(FIGS03_DIR, "panels", "fig3a_volcano_c13.pdf"), width = 8,  height = 7)
-save_fig(pB,     file.path(FIGS03_DIR, "panels", "fig3b_nas_subcomponents.pdf"), width = 9, height = 5)
+save_fig(pA_c2,  file.path(FIGS03_DIR, "panels", "fig3a_volcano_c2.pdf"),  width = fig_full_width,  height = 7 * fig_full_width / 8)
+save_fig(pA_c13, file.path(FIGS03_DIR, "panels", "fig3a_volcano_c13.pdf"), width = fig_full_width,  height = 7 * fig_full_width / 8)
+save_fig(pB,     file.path(FIGS03_DIR, "panels", "fig3b_nas_subcomponents.pdf"), width = fig_full_width, height = 5 * fig_full_width / 9)
 save_fig(pC,     file.path(FIGS03_DIR, "panels", "fig3c_confounding_breakdown.pdf"), width = 5, height = 7)
-save_fig(pD,     file.path(FIGS03_DIR, "panels", "fig3d_nash_core_pathways.pdf"), width = 10, height = 7)
+save_fig(pD,     file.path(FIGS03_DIR, "panels", "fig3d_nash_core_pathways.pdf"), width = fig_full_width, height = 7 * fig_full_width / 10)
 
 message("=== Fig 3 complete ===")
 message("Output: ", outfile)

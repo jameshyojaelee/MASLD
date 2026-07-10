@@ -26,8 +26,8 @@ OUT_PDF <- file.path(PANEL_DIR, "fib_stage_degs.pdf")
 FIB_STAGE <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/fibrosis_stage_dream.csv")
 
-BASE_SIZE <- 7
-LBL_SIZE  <- 7 / ggplot2::.pt
+BASE_SIZE <- 6
+LBL_SIZE  <- 6 / ggplot2::.pt
 col_up    <- masld_colors$up
 col_down  <- masld_colors$down
 
@@ -62,20 +62,20 @@ panel <- ggplot(long, aes(x = contrast, y = signed_n, fill = direction)) +
   scale_fill_manual(values = c(Up = col_up, Down = col_down), name = NULL) +
   scale_y_continuous(labels = function(x) comma(abs(x)),
                      expand = expansion(mult = c(0.18, 0.18))) +
-  labs(title = "Fibrosis stage DEGs",
-       x = "Fibrosis stage (vs F0)", y = "DEGs") +
+  labs(x = "Fibrosis stage (vs F0)", y = "DEGs") +
   theme_masld(base_size = BASE_SIZE) +
-  theme(plot.title    = element_text(size = BASE_SIZE),
-        axis.title    = element_text(size = BASE_SIZE),
+  theme(axis.title    = element_text(size = BASE_SIZE),
         axis.text     = element_text(size = BASE_SIZE),
         legend.title  = element_text(size = BASE_SIZE),
         legend.text   = element_text(size = BASE_SIZE),
+        plot.title    = element_blank(),
         plot.subtitle = element_blank(),
         plot.margin   = margin(3, 3, 3, 3),
         legend.position = "top",
         legend.justification = "left",
         axis.text.x = element_text(angle = 0, hjust = 0.5))
 
+message("[caption] Fibrosis stage DEGs")
 save_fig(panel, OUT_PDF,
          width = fig_half_width, height = 3.0)
 fwrite(fib_counts, file.path(DATA_DIR, "fib_stage_degs_data.csv"))

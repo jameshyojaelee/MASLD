@@ -40,7 +40,7 @@ p_left <- ggplot(grade_counts, aes(x = x, y = N, fill = grade)) +
   geom_col(width = 0.45, color = "black", linewidth = 0.3) +
   geom_text(aes(label = lab),
             position = position_stack(vjust = 0.5),
-            size = 2.4, fontface = "bold", color = "white") +
+            size = 6/ggplot2::.pt, fontface = "plain", color = "white") +
   scale_fill_manual(values = grade_colors, name = "Grade",
                     breaks = c("A", "B", "C"),
                     labels = c("A (high IC, SELEX)",
@@ -48,16 +48,14 @@ p_left <- ggplot(grade_counts, aes(x = x, y = N, fill = grade)) +
                                "C (low confidence)")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.04))) +
   labs(x = NULL,
-       y = paste0("Motifs (n=", total_n, ")"),
-       title = "Motif quality tiers") +
-  theme_masld(base_size = 8) +
+       y = paste0("Motifs (n=", total_n, ")")) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(
-    axis.title.y    = element_text(face = "bold", color = "black"),
-    axis.text.x     = element_text(face = "bold", color = "black"),
-    plot.title      = element_text(face = "bold", color = "black"),
+    axis.title.y    = element_text(face = "plain", color = "black"),
+    axis.text.x     = element_text(face = "plain", color = "black"),
     legend.position = "right",
-    legend.title    = element_text(face = "bold")
+    legend.title    = element_text(face = "plain")
   )
 
 # ---- Right panel: TF survival heatmap across tier_all / tier_AB / tier_Aonly ----
@@ -99,12 +97,12 @@ ht <- Heatmap(
   na_col = "#E0E0E0",
   cluster_rows = FALSE, cluster_columns = FALSE,
   row_names_side = "left",
-  row_names_gp = gpar(fontsize = 7,
+  row_names_gp = gpar(fontsize = 6,
                      fontface = ifelse(tf_order %in% drug_targets,
-                                       "bold.italic", "plain")),
+                                       "italic", "plain")),
   column_labels = c("all", "A+B", "A only"),
   column_names_rot = 0, column_names_centered = TRUE,
-  column_names_gp = gpar(fontsize = 7),
+  column_names_gp = gpar(fontsize = 6),
   cell_fun = function(j, i, x, y, w, h, fill) {
     v <- mat[i, j]
     if (is.na(v)) {
@@ -114,20 +112,18 @@ ht <- Heatmap(
       grid.text(v, x, y,
                 gp = gpar(fontsize = 6,
                           col = if (v > vmax * 0.6) "white" else "black",
-                          fontface = "bold"))
+                          fontface = "plain"))
     }
   },
   right_annotation = right_anno,
   rect_gp = gpar(col = "white", lwd = 0.5),
   heatmap_legend_param = list(
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
     labels_gp = gpar(fontsize = 6),
     legend_height = unit(1.5, "cm")
   ),
   width  = unit(2.8, "cm"),
-  height = unit(0.30 * nrow(mat), "cm"),
-  column_title = "Disease regulon TF survival",
-  column_title_gp = gpar(fontsize = 8, fontface = "bold")
+  height = unit(0.30 * nrow(mat), "cm")
 )
 
 # capture heatmap to a grob via grid graphics
@@ -140,9 +136,11 @@ ht_grob <- grid.grabExpr({
 # combine left ggplot + right heatmap with patchwork
 p_combined <- p_left + wrap_elements(ht_grob) + plot_layout(widths = c(1, 1.4))
 
+message("[caption] Left: motif quality tiers (grade A/B/C stacked bar). Right: disease regulon TF survival across tier_all / tier_AB / tier_Aonly.")
+
 out_pdf <- file.path(FIGS05_DIR, "figS05_b_motif_quality_tier.pdf")
 dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)
-ggsave(out_pdf, p_combined, width = 8, height = 4, useDingbats = FALSE)
+ggsave(out_pdf, p_combined, width = 7.09, height = 3.55, useDingbats = FALSE)
 message("Wrote: ", out_pdf)
 
 # data export

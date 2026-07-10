@@ -137,11 +137,10 @@ p_a <- ggplot(pa_dt, aes(x = regime, y = pct, fill = n_folds)) +
   geom_text(aes(label = format(N, big.mark = ",")),
             position = position_stack(vjust = 0.5),
             size = 1.9,
-            color = ifelse(pa_dt$n_folds %in% c("4", "5"), "white", "gray15")) +
+            color = ifelse(pa_dt$n_folds %in% c("4", "5"), "white", "black")) +
   scale_fill_manual(values = SUPPORT_COLS, name = "# folds") +
   scale_y_continuous(expand = c(0, 0), labels = function(v) paste0(v, "%")) +
-  labs(x = NULL, y = "% of LOO union",
-       title = "A. Fold support of LOO union") +
+  labs(x = NULL, y = "% of LOO union") +
   theme_masld() + theme_pub() +
   theme(axis.text.x   = element_text(size = PUB_AXIS_TEXT, color = "black"))
 
@@ -156,14 +155,12 @@ p_b <- ggplot(pb_dt, aes(x = n_folds, y = N, fill = n_folds)) +
   geom_col(width = 0.7) +
   geom_text(aes(label = sprintf("%s (%.0f%%)",
                                 format(N, big.mark = ","), pct)),
-            vjust = -0.4, size = 1.9, color = "gray15") +
+            vjust = -0.4, size = 1.9, color = "black") +
   scale_fill_manual(values = c(`0` = "#E0E5E9", SUPPORT_COLS), guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.20)),
                      labels = label_comma()) +
   labs(x = "# LOO folds calling gene",
-       y = "Mega DEGs",
-       title = sprintf("B. Mega DEGs (n=%s) by fold support",
-                       format(n_mega, big.mark = ","))) +
+       y = "Mega DEGs") +
   theme_masld() + theme_pub()
 
 # -----------------------------------------------------------------------------
@@ -196,8 +193,7 @@ p_c <- ggplot(pc_dt, aes(x = n_folds_nocut, y = N, fill = in_cut_union)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05)),
                      labels = label_comma()) +
   labs(x = "# folds calling (no LFC cut)",
-       y = "Genes",
-       title = "C. LFC-cut survival by consensus") +
+       y = "Genes") +
   theme_masld() + theme_pub() +
   theme(legend.position = "bottom",
         legend.margin   = margin(t = -5))
@@ -242,9 +238,7 @@ p_d <- ggplot(pd_dt, aes(x = sd_lfc, fill = group, color = group)) +
                      name = NULL) +
   scale_x_continuous(limits = c(0, quantile(pd_dt$sd_lfc, 0.99, na.rm = TRUE))) +
   labs(x = "sd(log2FC) across 5 LOO refits",
-       y = "Density",
-       title = sprintf("D. Cross-fold LFC stability (median sd = %.3f for mega)",
-                       med_dt[group == "Mega DEGs", med_sd])) +
+       y = "Density") +
   theme_masld() + theme_pub() +
   theme(legend.position = "bottom",
         legend.margin   = margin(t = -5))
@@ -252,6 +246,9 @@ p_d <- ggplot(pd_dt, aes(x = sd_lfc, fill = group, color = group)) +
 # -----------------------------------------------------------------------------
 # Compose
 # -----------------------------------------------------------------------------
+message(sprintf(
+  "[caption] A: Fold support of LOO union. B: Mega DEGs (n=%s) by fold support. C: LFC-cut survival by consensus. D: Cross-fold LFC stability (median sd = %.3f for mega).",
+  format(n_mega, big.mark = ","), med_dt[group == "Mega DEGs", med_sd]))
 p_j <- (p_a | p_b) / (p_c | p_d)
 ggsave(OUT_PDF, p_j, width = 7.0, height = 4.6, device = cairo_pdf)
 

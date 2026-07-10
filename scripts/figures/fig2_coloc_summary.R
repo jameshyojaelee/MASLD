@@ -63,7 +63,7 @@ fwrite(g[best > 0.5, .(gene, chr, pos, EUR = round(EUR,3), AFR = round(AFR,3),
         AMR = round(AMR,3), EAS = round(EAS,3), SAS = round(SAS,3),
         best = round(best,3), n_anc_gt0.9 = n_anc,
         class = coarse_class, deg_dir)],
-       file.path(PANEL_DIR, "coloc_summary_source.csv"))
+       file.path(PANEL_DIR, "FigS2H_coloc_summary_source.csv"))   # shared source for FigS2H (heatmap) + FigS2I (manhattan)
 
 # ════════════════════════════════════════════════════════════════════════════
 # Draft A — gene x ancestry heatmap (genes >0.9 in >=1 ancestry)
@@ -79,28 +79,28 @@ lab_idx <- which(hi$n_anc >= 2)
 left_anno <- rowAnnotation(
   Class = hi$coarse_class, DEG = hi$deg_dir,
   col = list(Class = cls_col, DEG = deg_col),
-  annotation_name_gp = gpar(fontsize = 7), simple_anno_size = unit(2.5, "mm"),
-  annotation_legend_param = list(Class = list(title_gp = gpar(fontsize = 7), labels_gp = gpar(fontsize = 6)),
-                                 DEG = list(title_gp = gpar(fontsize = 7), labels_gp = gpar(fontsize = 6))))
+  annotation_name_gp = gpar(fontsize = 6), simple_anno_size = unit(2.5, "mm"),
+  annotation_legend_param = list(Class = list(title_gp = gpar(fontsize = 6), labels_gp = gpar(fontsize = 6)),
+                                 DEG = list(title_gp = gpar(fontsize = 6), labels_gp = gpar(fontsize = 6))))
 right_mark <- rowAnnotation(mark = anno_mark(at = lab_idx, labels = hi$gene[lab_idx],
-                            labels_gp = gpar(fontsize = 5.5, fontface = "italic"), link_width = unit(4, "mm")))
+                            labels_gp = gpar(fontsize = 6, fontface = "italic"), link_width = unit(4, "mm")))
 ht <- Heatmap(M, name = "PP.H4", col = col_pp4, na_col = "grey94",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  column_names_gp = gpar(fontsize = 8, fontface = "bold"), column_names_rot = 0,
+  column_names_gp = gpar(fontsize = 6, fontface = "plain"), column_names_rot = 0,
   column_names_centered = TRUE,
   row_title = sprintf("%d high-confidence genes (PP.H4 > 0.9; subset of %d at > 0.5), by chromosome",
                       nrow(M), nrow(g[best > 0.5])),
-  row_title_gp = gpar(fontsize = 7),
+  row_title_gp = gpar(fontsize = 6),
   left_annotation = left_anno, right_annotation = right_mark,
-  heatmap_legend_param = list(title_gp = gpar(fontsize = 7), labels_gp = gpar(fontsize = 6),
+  heatmap_legend_param = list(title_gp = gpar(fontsize = 6), labels_gp = gpar(fontsize = 6),
                               at = c(0.5, 0.75, 1.0)),
   width = unit(2.6, "cm"))
 
-pdf(file.path(PANEL_DIR, "coloc_summary_heatmap.pdf"), width = 5.2, height = 8.6)
-draw(ht, column_title = "Cross-ancestry colocalization landscape",
-     column_title_gp = gpar(fontsize = 9, fontface = "bold"),
+pdf(file.path(PANEL_DIR, "FigS2H_coloc_summary_heatmap.pdf"), width = 5.2, height = 8.6)
+draw(ht,
      heatmap_legend_side = "right", annotation_legend_side = "right", merge_legend = TRUE)
 dev.off()
+message("[caption] Cross-ancestry colocalization landscape")
 cat(sprintf("[summary A] heatmap: %d genes >0.9 (%d multi-ancestry labeled)\n", nrow(M), length(lab_idx)))
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -124,7 +124,7 @@ pB <- ggplot(gm, aes(gx, best)) +
             inherit.aes = FALSE, fill = "grey95") +
   geom_hline(yintercept = c(0.8, 0.9), linetype = "22", linewidth = 0.25, color = "grey70") +
   geom_point(aes(color = class, size = n_anc5), alpha = 0.85) +
-  geom_text_repel(aes(label = lab, color = class), size = 2, fontface = "italic",
+  geom_text_repel(aes(label = lab, color = class), size = GEOM_TEXT_6PT, fontface = "italic",
                   max.overlaps = 20, segment.size = 0.15, min.segment.length = 0.2,
                   box.padding = 0.2, show.legend = FALSE) +
   scale_color_manual(values = c("non-coding" = "#1565C0", "coding" = "#C9265E"),
@@ -132,17 +132,16 @@ pB <- ggplot(gm, aes(gx, best)) +
   scale_size_continuous(range = c(0.8, 2.6), breaks = c(1,2,3,4,5), name = "# ancestries") +
   scale_x_continuous(breaks = axis_df$center, labels = axis_df$chr, expand = c(0.01, 0)) +
   scale_y_continuous(limits = c(0.48, 1.02), breaks = c(0.5,0.7,0.9), expand = c(0, 0)) +
-  labs(x = "Chromosome", y = expression("Best PP.H"[4]*" (SuSiE-coloc)"),
-       title = sprintf("Colocalization landscape: %d SuSiE-coloc effector genes (PP.H4 > 0.5)", nrow(gm))) +
+  labs(x = "Chromosome", y = expression("Best PP.H"[4]*" (SuSiE-coloc)")) +
   theme_masld(base_size = 8) +
-  theme(plot.title = element_text(size = 9, face = "bold"),
-        panel.grid = element_blank(),
+  theme(panel.grid = element_blank(),
         legend.position = c(0.99, 0.02), legend.justification = c(1, 0),
         legend.direction = "horizontal", legend.box = "horizontal",
         legend.key.size = unit(0.2, "cm"), legend.title = element_text(size = 6),
-        legend.text = element_text(size = 5.5),
+        legend.text = element_text(size = 6),
         axis.text.x = element_text(size = 6))
+message(sprintf("[caption] Colocalization landscape: %d SuSiE-coloc effector genes (PP.H4 > 0.5)", nrow(gm)))
 
-save_fig(pB, file.path(PANEL_DIR, "coloc_summary_manhattan.pdf"),
+save_fig(pB, file.path(PANEL_DIR, "FigS2I_coloc_summary_manhattan.pdf"),
          width = fig_full_width * 0.92, height = 3.0)
 cat(sprintf("[summary B] manhattan: %d genes >0.5 plotted\n", nrow(gm)))

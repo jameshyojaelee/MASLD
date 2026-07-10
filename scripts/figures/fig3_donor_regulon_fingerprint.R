@@ -227,21 +227,21 @@ row_anno <- rowAnnotation(
     `Fibrosis stage` = fstage_col,
     `Condition`      = COND_COLORS
   ),
-  annotation_name_gp = gpar(fontsize = 5.5, fontface = "bold"),
+  annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
   annotation_name_side = "bottom",
   simple_anno_size = unit(2.5, "mm"),
   gap = unit(0.6, "mm"),
   border = FALSE,
   annotation_legend_param = list(
     `Fibrosis stage` = list(
-      title_gp = gpar(fontsize = 6, fontface = "bold"),
-      labels_gp = gpar(fontsize = 5),
+      title_gp = gpar(fontsize = 6, fontface = "plain"),
+      labels_gp = gpar(fontsize = 6),
       grid_height = unit(2.5, "mm"),
       grid_width  = unit(2.5, "mm")
     ),
     `Condition`      = list(
-      title_gp = gpar(fontsize = 6, fontface = "bold"),
-      labels_gp = gpar(fontsize = 5),
+      title_gp = gpar(fontsize = 6, fontface = "plain"),
+      labels_gp = gpar(fontsize = 6),
       grid_height = unit(2.5, "mm"),
       grid_width  = unit(2.5, "mm")
     )
@@ -258,8 +258,8 @@ col_z <- colorRamp2(
   c("#1565C0", "#FFFFFF", "#C9265E")
 )
 
-# TF column label face: bold for validated, plain otherwise
-col_faces <- ifelse(disease_tfs %in% BOLD_TFS, "bold", "plain")
+# TF column label face: italic (gene symbol) for validated TFs, plain otherwise
+col_faces <- ifelse(disease_tfs %in% BOLD_TFS, "italic", "plain")
 
 # ---------------------------------------------------------------------------
 # Heatmap
@@ -287,8 +287,8 @@ ht <- Heatmap(
   rect_gp = gpar(col = "#FFFFFF", lwd = 0.25),   # thin white grid lines
   heatmap_legend_param = list(
     title = "Z-score",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2.4, "cm"),
     direction = "vertical",
     at = c(-z_clip, 0, z_clip),

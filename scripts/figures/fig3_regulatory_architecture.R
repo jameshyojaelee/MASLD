@@ -90,27 +90,27 @@ pA <- ggplot(coloc, aes(x = rank, y = max_pp4, color = n_gwas_cat)) +
   geom_label_repel(
     data = label_dt,
     aes(label = gene),
-    size = 2, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     label.size = 0.15, label.padding = unit(0.1, "lines"),
     box.padding = 0.3, point.padding = 0.2,
     segment.size = 0.3, max.overlaps = 20,
     fill = alpha("white", 0.85)
   ) +
   annotate("text", x = n_total * 0.7, y = 0.92, label = ann_text,
-           size = 2, color = "gray30", hjust = 0) +
+           size = GEOM_TEXT_6PT, color = "black", hjust = 0) +
   scale_color_manual(values = color_vals, name = "# GWAS\n(PP4>0.5)") +
   scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.25, 0.5, 0.75, 1)) +
   scale_x_continuous(labels = comma) +
   labs(
     x = "Gene rank (by max PP4)",
-    y = "Max colocalization PP4",
-    title = "SuSiE-COLOC: liver eQTL × 24 GWAS"
+    y = "Max colocalization PP4"
   ) +
   theme_masld() +
   theme(legend.position = c(0.85, 0.7),
         legend.background = element_rect(fill = alpha("white", 0.8), color = NA))
 
 save_panel(pA, "fig4_panel_A.pdf", width = fig_half_width, height = 3.2)
+message("[caption] Panel A: SuSiE-COLOC, liver eQTL x 24 GWAS")
 
 # ===========================================================================
 # Panel B: GWAS-ATAC variant enrichment per cell type
@@ -133,7 +133,7 @@ pB <- ggplot(atac_enrich,
   geom_col(width = 0.7) +
   geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.35, color = "gray40") +
   geom_text(aes(label = sig_label, x = fold_enrichment + 0.02),
-            hjust = 0, size = 3.5, color = "#880E4F") +
+            hjust = 0, size = GEOM_TEXT_6PT, color = "#880E4F") +
   scale_fill_manual(values = c("FALSE" = "#BDBDBD", "TRUE" = "#C9265E"),
                     labels = c("ns", "padj<0.05"),
                     name = NULL) +
@@ -141,14 +141,14 @@ pB <- ggplot(atac_enrich,
                      limits = c(0, NA)) +
   labs(
     x = "Fold enrichment (Fisher)",
-    y = NULL,
-    title = "GWAS credible set variants\nin scATAC peaks"
+    y = NULL
   ) +
   theme_masld() +
   theme(legend.position = "top",
         axis.text.y = element_text(size = 6))
 
 save_panel(pB, "fig4_panel_B.pdf", width = fig_half_width, height = 3.0)
+message("[caption] Panel B: GWAS credible set variants in scATAC peaks")
 
 # ===========================================================================
 # Panel C: GWAS-ATAC top regulatory variants (lollipop)
@@ -186,20 +186,20 @@ pC <- ggplot(top_var, aes(x = max_pip, y = gene_ord, color = coloc_cat)) +
                linewidth = 0.5, color = "#DDDDDD") +
   geom_point(size = 2.2) +
   geom_text(aes(label = sprintf("n_ct=%d", n_ct)),
-            hjust = -0.15, size = 1.8, color = "gray40") +
+            hjust = -0.15, size = GEOM_TEXT_6PT, color = "black") +
   scale_color_manual(values = coloc_colors, name = "COLOC PP4",
                      drop = FALSE) +
   scale_x_continuous(limits = c(0, 1.18), breaks = c(0, 0.5, 1.0)) +
   labs(
     x = "Max PIP (SuSiE)",
-    y = NULL,
-    title = "Top regulatory variants\nin hepatocyte ATAC peaks"
+    y = NULL
   ) +
   theme_masld() +
   theme(legend.position = "right",
-        axis.text.y = element_text(size = 5.5))
+        axis.text.y = element_text(size = 6))
 
 save_panel(pC, "fig4_panel_C.pdf", width = fig_half_width, height = 3.8)
+message("[caption] Panel C: Top regulatory variants in hepatocyte ATAC peaks")
 
 # ===========================================================================
 # Panel D: Multi-ancestry COLOC bar chart
@@ -242,19 +242,19 @@ fill_map <- c(
 pD <- ggplot(class_counts[class != "Neither"],
              aes(x = N, y = class_f, fill = class)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = N), hjust = -0.15, size = 2.5, color = "gray20") +
+  geom_text(aes(label = N), hjust = -0.15, size = GEOM_TEXT_6PT, color = "black") +
   scale_y_discrete(labels = class_labels) +
   scale_fill_manual(values = fill_map, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
   labs(
     x = "Number of genes",
-    y = NULL,
-    title = "Multi-ancestry COLOC replication\n(PP4 > 0.5)"
+    y = NULL
   ) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 7))
+  theme(axis.text.y = element_text(size = 6))
 
 save_panel(pD, "fig4_panel_D.pdf", width = fig_half_width, height = 2.8)
+message("[caption] Panel D: Multi-ancestry COLOC replication (PP4 > 0.5)")
 
 # ===========================================================================
 # Panel E: Drug target genetics (lollipop by COLOC PP4, per target class)
@@ -309,15 +309,15 @@ pE <- ggplot(drug_tgt_u,
   scale_x_continuous(limits = c(0, 1.05), breaks = c(0, 0.5, 0.8, 1.0)) +
   labs(
     x = "Best COLOC PP4 (any GWAS)",
-    y = NULL,
-    title = "Drug target genetic validation"
+    y = NULL
   ) +
   theme_masld() +
   theme(legend.position = "right",
         legend.key.height = unit(0.4, "cm"),
-        axis.text.y = element_text(size = 7, face = "italic"))
+        axis.text.y = element_text(size = 6, face = "italic"))
 
 save_panel(pE, "fig4_panel_E.pdf", width = fig_col_width, height = 3.2)
+message("[caption] Panel E: Drug target genetic validation")
 
 # ===========================================================================
 # Composite figure
@@ -331,13 +331,13 @@ composite <- (pA | pB) /
              (pC | pD) /
              (pE + plot_spacer()) +
   plot_annotation(
-    title = "Figure 4 | Causal Architecture of MASLD Genetics",
     tag_levels = "a"
   ) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_composite <- file.path(FIGDIR, "fig3_regulatory_architecture.pdf")
 save_fig(composite, out_composite, width = fig_full_width, height = 10.5)
 cat("[fig4] Composite saved:", out_composite, "\n")
+message("[caption] Figure 4: Causal Architecture of MASLD Genetics")
 
 cat("[fig4] DONE.\n")

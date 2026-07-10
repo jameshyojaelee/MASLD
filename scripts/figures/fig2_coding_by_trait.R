@@ -34,23 +34,21 @@ startlab <- w[stage == "GWAS lead"]
 p <- ggplot(w, aes(x = stage, y = pct_coding, color = trait_cat, group = trait_cat)) +
   geom_line(linewidth = 0.8) +
   geom_point(aes(size = total), shape = 21, fill = "white", stroke = 0.9) +
-  geom_text_repel(aes(label = sprintf("%d/%d", coding, total)), size = 2.3,
+  geom_text_repel(aes(label = sprintf("%d/%d", coding, total)), size = GEOM_TEXT_6PT,
                   box.padding = 0.5, point.padding = 0.25, min.segment.length = 0.2,
                   force = 2.5, force_pull = 0.4, segment.size = 0.2,
                   max.overlaps = Inf, seed = 1, show.legend = FALSE) +
   geom_text(data = startlab, aes(label = trait_cat), hjust = 1, nudge_x = -0.12,
-            size = 2.6, fontface = "bold", show.legend = FALSE) +
+            size = GEOM_TEXT_6PT, fontface = "plain", show.legend = FALSE) +
   scale_color_manual(values = trait_cols, guide = "none") +
   scale_size_continuous(range = c(1.4, 3.3), name = "n variants", breaks = c(50, 300, 900)) +
   scale_x_discrete(expand = expansion(mult = c(0.45, 0.30))) +
   scale_y_continuous(limits = c(0, 60), expand = expansion(mult = c(0.02, 0.08))) +
-  labs(x = NULL, y = "Coding-led variants (%)",
-       title = "Coding variants drop out at colocalization") +
+  labs(x = NULL, y = "Coding-led variants (%)") +
   theme_masld(base_size = 9) +
-  theme(plot.title = element_text(size = 9, face = "bold"),
-        legend.position = c(0.99, 0.97), legend.justification = c(1, 1),
+  theme(legend.position = c(0.99, 0.97), legend.justification = c(1, 1),
         legend.direction = "horizontal", legend.key.size = unit(0.18, "cm"),
-        legend.title = element_text(size = 5.5), legend.text = element_text(size = 5))
+        legend.title = element_text(size = 6), legend.text = element_text(size = 6))
 
 # RETIRED 2026-06-18: cut from Fig 2 — near-tautological (coding variants don't
 # colocalize by definition), duplicated 2C/2E, and the 3-stage line implied a
@@ -61,5 +59,6 @@ p <- ggplot(w, aes(x = stage, y = pct_coding, color = trait_cat, group = trait_c
 fwrite(w[order(trait_cat, stage), .(trait_cat, stage, coding, noncoding, total,
         pct_coding = round(pct_coding, 1))],
        file.path(PANEL_DIR, "coding_led_by_trait_source.csv"))
+message("[caption] Coding variants drop out at colocalization")
 cat("[fig2 coding-by-trait] wrote coding_led_by_trait.pdf\n")
 print(w[order(trait_cat, stage), .(trait_cat, stage, coding, total, pct_coding = round(pct_coding,1))])

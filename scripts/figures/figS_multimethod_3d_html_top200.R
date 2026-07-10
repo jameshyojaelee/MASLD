@@ -143,15 +143,15 @@ mk_trace <- function(dt, colour_by, pal, axis_labels) {
     type   = "scatter3d", mode = "markers",
     marker = list(size = 2.5, opacity = 0.72, line = list(width = 0))) |>
     layout(scene = list(
-      xaxis = list(title = axis_labels[1], titlefont = list(size = 9),
-                   tickfont = list(size = 7)),
-      yaxis = list(title = axis_labels[2], titlefont = list(size = 9),
-                   tickfont = list(size = 7)),
-      zaxis = list(title = axis_labels[3], titlefont = list(size = 9),
-                   tickfont = list(size = 7)),
+      xaxis = list(title = axis_labels[1], titlefont = list(size = 6),
+                   tickfont = list(size = 6)),
+      yaxis = list(title = axis_labels[2], titlefont = list(size = 6),
+                   tickfont = list(size = 6)),
+      zaxis = list(title = axis_labels[3], titlefont = list(size = 6),
+                   tickfont = list(size = 6)),
       camera = list(eye = list(x = 1.5, y = 1.5, z = 0.8))
     ),
-    legend = list(font = list(size = 9)),
+    legend = list(font = list(size = 6)),
     margin = list(l = 0, r = 0, t = 45, b = 0))
 }
 
@@ -160,6 +160,7 @@ ax_labels <- function(dt)
           dt$pve1[1], dt$pve2[1], dt$pve3[1])
 
 make_3panel <- function(dt, title_str) {
+  message(sprintf("[caption] %s", gsub("<[^>]+>", " ", title_str)))
   subplot(
     mk_trace(dt, "cohort",  cohort_pal,  ax_labels(dt)),
     mk_trace(dt, "disease", disease_pal, ax_labels(dt)),
@@ -168,16 +169,15 @@ make_3panel <- function(dt, title_str) {
     titleX = TRUE, titleY = TRUE
   ) |>
     layout(
-      title  = list(text = title_str, font = list(size = 13, color = "#333")),
-      legend = list(font = list(size = 9)),
+      legend = list(font = list(size = 6)),
       margin = list(l = 10, r = 10, t = 60, b = 10),
       annotations = list(
         list(text = "Cohort",  x = 0.13, y = 1.06, xref = "paper",
-             yref = "paper", showarrow = FALSE, font = list(size = 11)),
+             yref = "paper", showarrow = FALSE, font = list(size = 6)),
         list(text = "Disease", x = 0.50, y = 1.06, xref = "paper",
-             yref = "paper", showarrow = FALSE, font = list(size = 11)),
+             yref = "paper", showarrow = FALSE, font = list(size = 6)),
         list(text = "Sex",     x = 0.87, y = 1.06, xref = "paper",
-             yref = "paper", showarrow = FALSE, font = list(size = 11))
+             yref = "paper", showarrow = FALSE, font = list(size = 6))
       )
     )
 }
@@ -219,11 +219,11 @@ scene_spec <- function(dt, col_x, row_y) {
   list(
     domain = list(x = c(col_x, col_x + w), y = c(row_y, row_y + h)),
     xaxis  = list(title = sprintf("PC1 %.1f%%", dt$pve1[1]),
-                  titlefont = list(size = 8), tickfont = list(size = 6)),
+                  titlefont = list(size = 6), tickfont = list(size = 6)),
     yaxis  = list(title = sprintf("PC2 %.1f%%", dt$pve2[1]),
-                  titlefont = list(size = 8), tickfont = list(size = 6)),
+                  titlefont = list(size = 6), tickfont = list(size = 6)),
     zaxis  = list(title = sprintf("PC3 %.1f%%", dt$pve3[1]),
-                  titlefont = list(size = 8), tickfont = list(size = 6)),
+                  titlefont = list(size = 6), tickfont = list(size = 6)),
     camera = list(eye = list(x = 1.5, y = 1.5, z = 0.8))
   )
 }
@@ -260,19 +260,19 @@ fig_cmp <- fig_cmp |> layout(
   annotations = list(
     list(text = "RAW", x = 0.01, y = 0.99,
          xref = "paper", yref = "paper", showarrow = FALSE,
-         font = list(size = 13, color = "grey25"), xanchor = "left"),
+         font = list(size = 6, color = "black"), xanchor = "left"),
     list(text = sprintf("BATCH + SEX + SVA (%d SV)", n_sv),
          x = 0.01, y = 0.47,
          xref = "paper", yref = "paper", showarrow = FALSE,
-         font = list(size = 13, color = "grey25"), xanchor = "left"),
+         font = list(size = 6, color = "black"), xanchor = "left"),
     list(text = "Cohort",  x = w/2,           y = 1.02, xref = "paper",
-         yref = "paper", showarrow = FALSE, font = list(size = 10), xanchor = "center"),
+         yref = "paper", showarrow = FALSE, font = list(size = 6), xanchor = "center"),
     list(text = "Disease", x = w+gap+w/2,     y = 1.02, xref = "paper",
-         yref = "paper", showarrow = FALSE, font = list(size = 10), xanchor = "center"),
+         yref = "paper", showarrow = FALSE, font = list(size = 6), xanchor = "center"),
     list(text = "Sex",     x = 2*(w+gap)+w/2, y = 1.02, xref = "paper",
-         yref = "paper", showarrow = FALSE, font = list(size = 10), xanchor = "center")
+         yref = "paper", showarrow = FALSE, font = list(size = 6), xanchor = "center")
   ),
-  legend = list(font = list(size = 8)),
+  legend = list(font = list(size = 6)),
   margin = list(l = 0, r = 0, t = 55, b = 0)
 )
 

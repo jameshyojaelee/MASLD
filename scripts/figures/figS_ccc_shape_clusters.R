@@ -167,23 +167,23 @@ heat <- ggplot(strength,
     midpoint = 0, name = "Interaction\nstrength\n(row z)",
     breaks = c(floor(zc[1]), 0, ceiling(zc[2]))) +
   labs(x = NULL, y = NULL) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme(
     panel.spacing.y   = unit(1.5, "pt"),
     strip.placement   = "outside",
-    strip.text.y.left = element_text(angle = 0, size = 6, face = "bold",
+    strip.text.y.left = element_text(angle = 0, size = 6, face = "plain",
                                      hjust = 1),
     strip.background  = element_blank(),
-    axis.text.x.top   = element_text(size = 7, face = "bold",
+    axis.text.x.top   = element_text(size = 6, face = "plain",
                                      color = STAGE_TICK_COL[STAGE_LEVELS]),
-    axis.text.y       = element_text(size = 5.6),
+    axis.text.y       = element_text(size = 6),
     axis.ticks        = element_blank(),
     panel.grid        = element_blank(),
     panel.border      = element_blank(),
     legend.key.width  = unit(7, "pt"),
     legend.key.height = unit(12, "pt"),
     legend.title      = element_text(size = 6),
-    legend.text       = element_text(size = 5.5),
+    legend.text       = element_text(size = 6),
     plot.margin       = margin(4, 2, 4, 4)
   )
 
@@ -215,35 +215,34 @@ strip <- ggplot(ann_long, aes(x = track, y = uid, fill = val)) +
                     labels = c("Up with stage", "Down with stage",
                                "Bulk concordant", "Not concordant")) +
   labs(x = NULL, y = NULL) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme(
     panel.spacing.y = unit(1.5, "pt"),
     strip.text      = element_blank(),
     strip.background = element_blank(),
-    axis.text.x.top = element_text(size = 5.6, lineheight = 0.85),
+    axis.text.x.top = element_text(size = 6, lineheight = 0.85),
     axis.text.y     = element_blank(),
     axis.ticks      = element_blank(),
     panel.grid      = element_blank(),
     panel.border    = element_blank(),
     legend.key.size = unit(7, "pt"),
-    legend.text     = element_text(size = 5.5),
+    legend.text     = element_text(size = 6),
     plot.margin     = margin(4, 4, 4, 0)
   )
 
 # =============================================================================
 # 6. Assemble
 # =============================================================================
+message("[caption] Stage-progressive paracrine rewiring")
 fig <- (heat | strip) +
   plot_layout(widths = c(1, 0.34)) +
   plot_annotation(
-    title = "Stage-progressive paracrine rewiring",
     caption = paste0(
       "Top ", nrow(top), " stage-progressive LR pairs (LMM padj<0.05). ",
       "Fill = per-stage LIANA strength (row z); rows ordered by continuous F-stage slope. ",
       "Cirrhosis excluded (n=19, single snRNA-seq dataset)."),
     theme = theme(
-      plot.title   = element_text(size = 9, face = "bold"),
-      plot.caption = element_text(size = 5, color = "grey50", hjust = 0,
+      plot.caption = element_text(size = 6, color = "grey50", hjust = 0,
                                   lineheight = 1.1)))
 
 n_rows  <- nrow(top)

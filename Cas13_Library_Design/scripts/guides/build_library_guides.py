@@ -2,14 +2,14 @@
 """
 build_library_guides.py — assemble the full Cas13 sgRNA guide library.
 
-Reads the v8 target roster (cas13_library_v3.0.csv), pulls N guides/gene for the
+Reads the v8 target roster (cas13_library.csv), pulls N guides/gene for the
 protein-coding + lncRNA targets from the cached parquet index (no miRNA tier in
 v8), merges the library annotations, and pulls control-gene guides (essential
 genes; positive controls are in-library targets, not re-pulled).
 
 Outputs (Cas13_Library_Design/data/guides/):
-  cas13_library_guides_<release>_<ver>.csv   target guides + annotations
-  cas13_control_guides_<release>_<ver>.csv   essential-gene QC guides
+  cas13_library_guides_<release>.csv   target guides + annotations
+  cas13_control_guides_<release>.csv   essential-gene QC guides
   cas13_guides_coverage_report.csv           per-gene coverage (PC + lncRNA roster)
   GUIDE_BUILD_MANIFEST.txt                   provenance + parameters + counts
 
@@ -44,6 +44,44 @@ def _git_sha() -> str:
 
 
 # ---------------------------------------------------------------------------
+# Essentiality (DepMap Chronos, liver cell lines) — annotated onto the guide table
+# ---------------------------------------------------------------------------
+def liver_essentiality() -> pd.DataFrame:
+    """Per-human-gene mean DepMap Chronos across LIVER cell lines (Model.csv
+    OncotreeLineage == 'Liver'); mirrors RNA-seq/27a_assemble_evidence_atlas.R layer 7.
+
+    Returns: gene_symbol_human, essentiality_chronos_liver, n_liver_lines,
+    is_essential_liver (Chronos < cfg.ESSENTIAL_CHRONOS_THR; more negative = more
+    essential). The 412 MB gene-effect matrix is read only on a cache miss; the small
+    per-gene table is cached to cfg.LIVER_ESSENTIALITY_CACHE thereafter.
+    """
+    cache = cfg.LIVER_ESSENTIALITY_CACHE
+    if cache.exists():
+        return pd.read_csv(cache)
+    models = pd.read_csv(cfg.DEPMAP_MODEL, usecols=["ModelID", "OncotreeLineage"])
+    liver_ids = set(models.loc[models["OncotreeLineage"] == "Liver", "ModelID"])
+    eff = pd.read_csv(cfg.DEPMAP_GENE_EFFECT, index_col=0)      # rows=ModelID, cols 'SYM (ENTREZ)'
+    eff = eff.loc[eff.index.isin(liver_ids)]
+    chronos = eff.mean(axis=0, skipna=True)                    # per-gene mean across liver lines
+    n_lines = eff.notna().sum(axis=0).astype(int)
+    syms = chronos.index.to_series().str.replace(r"\s*\(\d+\)$", "", regex=True)
+    tbl = (pd.DataFrame({
+                "gene_symbol_human": syms.values,
+                "essentiality_chronos_liver": chronos.round(4).values,
+                "n_liver_lines": n_lines.values,
+            })
+           .dropna(subset=["gene_symbol_human"])
+           .query("gene_symbol_human != ''")
+           .drop_duplicates("gene_symbol_human"))
+    tbl["is_essential_liver"] = tbl["essentiality_chronos_liver"] < cfg.ESSENTIAL_CHRONOS_THR
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    tbl.to_csv(cache, index=False)
+    print(f"[build] liver essentiality: {len(eff)} liver lines x {len(tbl)} genes "
+          f"-> {cache.name} (cached)")
+    return tbl
+
+
+# ---------------------------------------------------------------------------
 # Targets (protein-coding + lncRNA; miRNA deferred)
 # ---------------------------------------------------------------------------
 def build_targets(lazy, lib: pd.DataFrame, n: int):
@@ -68,7 +106,7 @@ def build_controls(lazy, n: int):
     notes = {}
 
     # v7: positive controls are now folded into the TARGET roster (flagged
-    # is_positive_control in cas13_library_v3.0.csv), so they are NOT pulled
+    # is_positive_control in cas13_library.csv), so they are NOT pulled
     # separately here -- that would double-list them. Only the assay-QC controls
     # (essential genes) are generated; non-targeting + safe-harbor remain a TODO.
     notes["positive_controls"] = "in-library targets (is_positive_control flag); not re-pulled"
@@ -168,7 +206,7 @@ def write_manifest(path: Path, release: str, n: int,
         f"  ortholog_min_tier : {cfg.ORTHOLOG_MIN_TIER}",
         f"  selection         : constitutive-first (max isoform coverage), transcript-spread, combined_score",
         "",
-        "LIBRARY ROSTER (cas13_library_v3.0.csv)",
+        "LIBRARY ROSTER (cas13_library.csv)",
         f"  total_genes       : {len(lib)}",
         *[f"    {k:16s}: {v}" for k, v in bt.items()],
         "",
@@ -206,16 +244,26 @@ def main():
     print(f"[build] library roster: {len(lib)} genes "
           f"({lib['biotype'].value_counts().to_dict()})")
 
+    # --- liver essentiality (DepMap Chronos) annotation, joined on gene_symbol_human ---
+    ess = liver_essentiality()
+
     # --- targets ---
     target_guides, target_summary = build_targets(lazy, lib, args.n)
-    out_targets = cfg.GUIDES_DIR / f"cas13_library_guides_{args.release}_{cfg.LIBRARY_VERSION}.csv"
+    target_guides = target_guides.merge(ess, on="gene_symbol_human", how="left")
+    n_ess_genes = target_guides.dropna(subset=["essentiality_chronos_liver"])["gene_id_mouse"].nunique()
+    out_targets = cfg.GUIDES_DIR / f"cas13_library_guides_{args.release}.csv"
     target_guides.to_csv(out_targets, index=False)
     print(f"[build] targets: {len(target_guides)} guides over "
-          f"{target_guides['gene_id_mouse'].nunique()} genes -> {out_targets.name}")
+          f"{target_guides['gene_id_mouse'].nunique()} genes -> {out_targets.name}"
+          f"  (liver-essentiality scored: {n_ess_genes} genes)")
 
     # --- controls ---
     controls, control_notes = build_controls(lazy, args.n)
-    out_controls = cfg.GUIDES_DIR / f"cas13_control_guides_{args.release}_{cfg.LIBRARY_VERSION}.csv"
+    if not controls.empty and "human_symbol" in controls.columns:
+        controls = controls.merge(
+            ess.rename(columns={"gene_symbol_human": "human_symbol"}),
+            on="human_symbol", how="left")
+    out_controls = cfg.GUIDES_DIR / f"cas13_control_guides_{args.release}.csv"
     controls.to_csv(out_controls, index=False)
     print(f"[build] controls: {len(controls)} guides -> {out_controls.name}  {control_notes}")
 
@@ -224,6 +272,23 @@ def main():
     out_cov = cfg.GUIDES_DIR / "cas13_guides_coverage_report.csv"
     cov.to_csv(out_cov, index=False)
     print(f"[build] coverage: {cov['status'].value_counts().to_dict()} -> {out_cov.name}")
+
+    # --- persistent unguideable list (genes with NO qualifying guide in the pool) ---
+    # rebuild_cas13_library.R reads this to drop untargetable genes at the SOURCE.
+    # Accumulated as a UNION across runs so a gene already dropped from the roster is
+    # not "forgotten" when a later run no longer processes it (convergence guarantee).
+    ung_now = cov.loc[cov["status"] == "no_guides_in_source",
+                      ["gene_id_mouse", "gene_symbol_mouse", "biotype",
+                       "genome_n_guides_passed", "exclusion_reason"]].copy()
+    ung_path = cfg.GUIDES_DIR / f"unguideable_{args.release}.csv"
+    if ung_path.exists():
+        prev = pd.read_csv(ung_path, dtype=str)
+        ung = pd.concat([prev, ung_now.astype(str)], ignore_index=True) \
+                .drop_duplicates("gene_id_mouse", keep="last")
+    else:
+        ung = ung_now
+    ung.to_csv(ung_path, index=False)
+    print(f"[build] unguideable: {len(ung_now)} this run, {len(ung)} cumulative -> {ung_path.name}")
 
     # --- manifest ---
     write_manifest(cfg.GUIDES_DIR / "GUIDE_BUILD_MANIFEST.txt", args.release, args.n,

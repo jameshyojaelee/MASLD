@@ -44,7 +44,7 @@ cat("  Metadata rows:", nrow(meta), "\n")
 meta <- meta[meta$sample_id %in% colnames(logcpm), ]
 
 # Restrict to samples with fibrosis stage
-meta <- meta[!is.na(meta$fibrosis_stage), ]
+meta <- meta[!is.na(meta$fibrosis_stage) & !meta$dataset %in% c("GSE213621", "PRJNA512027"), ]  # exclude coarse/dropped cohorts
 cat("  Samples with fibrosis_stage:", nrow(meta), "\n")
 
 # Create F0-F4 labels
@@ -207,10 +207,10 @@ pa <- ggplot(hm_df, aes(x = fibrosis_stage, y = pathway, fill = zscore)) +
   geom_tile(color = "white", linewidth = 0.5) +
   geom_text(data = sig_df,
             aes(x = "F4", y = pathway, label = sig_label),
-            inherit.aes = FALSE, size = 2.5, hjust = -0.3) +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, hjust = -0.3) +
   scale_fill_gradient2(low = masld_colors$down, mid = "white", high = masld_colors$up,
                        midpoint = 0, name = "Z-score") +
-  labs(x = "Fibrosis stage", y = NULL, title = "Pathway activity across fibrosis") +
+  labs(x = "Fibrosis stage", y = NULL) +
   theme_masld() +
   theme(axis.text.y = element_text(size = 6))
 
@@ -244,8 +244,7 @@ pb <- ggplot(traj_df, aes(x = fibrosis_stage, y = mean_score,
   geom_errorbar(aes(ymin = mean_score - se, ymax = mean_score + se),
                 width = 0.2, linewidth = 0.3) +
   scale_color_manual(values = traj_cols, name = "Pathway") +
-  labs(x = "Fibrosis stage", y = "ssGSEA score (mean +/- SE)",
-       title = "Pathway trajectories across fibrosis") +
+  labs(x = "Fibrosis stage", y = "ssGSEA score (mean +/- SE)") +
   theme_masld() +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"))
@@ -292,11 +291,10 @@ if (nrow(dream_sub) > 0) {
                          midpoint = 0, name = "logFC") +
     facet_wrap(~pathway_group, scales = "free_x", nrow = 1) +
     labs(x = NULL, y = "Dream logFC (MASLD vs Control)",
-         title = "Individual gene evidence (DEG status)",
          caption = "* = padj < 0.05") +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-          strip.text = element_text(size = 6.5))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          strip.text = element_text(size = 6))
 } else {
   pc <- placeholder("No pyroptosis/necroptosis genes\nfound in dream results")
 }
@@ -315,9 +313,8 @@ if ("Fission_Fusion_Ratio" %in% unique(scores_df$pathway)) {
     geom_boxplot(outlier.size = 0.3, linewidth = 0.3) +
     scale_fill_manual(values = fibrosis_stage_colors, guide = "none") +
     annotate("text", x = 3, y = max(ratio_df$score, na.rm = TRUE) * 1.05,
-             label = pval_label, size = 2.5) +
-    labs(x = "Fibrosis stage", y = "Fission - Fusion score",
-         title = "Mitochondrial fission/fusion balance") +
+             label = pval_label, size = GEOM_TEXT_6PT) +
+    labs(x = "Fibrosis stage", y = "Fission - Fusion score") +
     theme_masld()
 } else {
   pd <- placeholder("Fission/fusion ratio\n(insufficient genes)")
@@ -327,10 +324,11 @@ if ("Fission_Fusion_Ratio" %in% unique(scores_df$pathway)) {
 # 9. Compose figure
 # ---------------------------------------------------------------------------
 cat("[5] Composing figure ...\n")
+message("[caption] (a) Pathway activity across fibrosis; (b) Pathway trajectories across fibrosis; (c) Individual gene evidence (DEG status); (d) Mitochondrial fission/fusion balance")
 
 fig <- (pa | pb) / (pc | pd) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 9, face = "plain"))
 
 out_dir <- FIGS02_DIR
 

@@ -43,7 +43,7 @@ pA <- ggplot(bars, aes(rho, cohort)) +
   geom_point(data = pts, aes(rho, cohort), color = "gray35", size = 1.4,
              position = position_nudge(y = 0.18), alpha = 0.8) +
   geom_text(aes(label = sprintf("%.2f", rho)), nudge_y = -0.22,
-            size = 3.1, fontface = "bold", color = masld_colors$conserved) +
+            size = 3.1, fontface = "plain", color = masld_colors$conserved) +
   scale_x_continuous(limits = c(-0.74, 0.04), breaks = c(-0.6, -0.4, -0.2, 0)) +
   labs(x = "Hepatocyte-Fibroblast spatial\nco-occurrence (Spearman rho)", y = NULL) +
   theme_masld() + theme_pub() +

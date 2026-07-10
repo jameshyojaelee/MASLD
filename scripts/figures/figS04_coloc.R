@@ -1,9 +1,9 @@
 #!/usr/bin/env Rscript
 # figS04_coloc.R — Supplementary Figure 4: COLOC Results
-# SuSiE-COLOC canonical (2026-04-21 rebuild) across 23 GWAS
-#   14 EUR + 3 EAS (BBJ) + 3 AFR + 3 SAS Pan-UKBB
-# 18,975 eGenes tested; 3,480 converged SuSiE fits (18.3%).
-# SuSiE PP.H4 > 0.5/0.8/0.9 = 368/289/210; ABF fallback 618/282/186.
+# SuSiE-COLOC canonical (2026-07-05 MVP rebuild) across 50 GWAS strata
+#   EUR 21 + AFR 10 + EAS 9 + AMR 7 + SAS 3 (27 MVP + 23 legacy studies)
+# 18,975 eGenes tested.
+# SuSiE PP.H4 > 0.5/0.8/0.9 = 736/569/416; ABF fallback 1,234/547.
 # ARCHIVED 2026-04-09: Whitfield 36653562 removed (provenance unverified).
 # Output: figures/supplementary/figS04_coloc/figS04_coloc.pdf (4-panel, 2x2)
 
@@ -97,16 +97,15 @@ hits_per_gwas[, gwas_short := factor(gwas_short, levels = gwas_short[order(N)])]
 pA <- ggplot(hits_per_gwas, aes(x = N, y = gwas_short, fill = category)) +
   geom_col(width = 0.7) +
   geom_text(aes(label = paste0("n=", format(N, big.mark = ","))),
-            hjust = -0.05, size = 1.8, color = "black") +
+            hjust = -0.05, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values = category_colors, name = "Phenotype") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15)),
                      labels = scales::comma) +
-  labs(x = "Genes with PP.H4 > 0.9", y = NULL,
-       title = "Colocalization hits per GWAS") +
+  labs(x = "Genes with PP.H4 > 0.9", y = NULL) +
   theme_masld(base_size = 7) +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"),
-        axis.text.y = element_text(size = 5.5))
+        axis.text.y = element_text(size = 6))
 
 # ---------------------------------------------------------------------------
 # Panel B: Cross-GWAS replication histogram
@@ -137,24 +136,24 @@ annot_label <- paste(c("C2orf16 (12)", "ATP13A1 (8)", "MTTP (7)",
                         "CWF19L1 (7)", "HKDC1 (6)", "EPHA2 (6)"),
                       collapse = "\n")
 
+message("[caption] Cross-GWAS replication: ",
+        paste0(sum(gene_level$coloc_n_gwas_h4_05 >= 1, na.rm = TRUE),
+               " genes colocalize in \u22651 GWAS; ",
+               bin_counts[n_bin == "0", format(N, big.mark=",")],
+               " with 0 omitted"))
+
 pB <- ggplot(bin_counts_nozero, aes(x = n_bin, y = N)) +
   geom_col(fill = masld_colors$up, width = 0.7) +
   geom_text(aes(label = format(N, big.mark = ",")),
-            vjust = -0.3, size = 2, color = "black") +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
   annotate("text", x = "5", y = bin_counts_nozero[n_bin == "1", N] * 0.85,
            label = annot_label,
-           size = 1.6, hjust = 0.5, color = "gray20", fontface = "italic",
+           size = GEOM_TEXT_6PT, hjust = 0.5, color = "gray20", fontface = "italic",
            lineheight = 0.9) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.25)),
                      labels = scales::comma) +
-  labs(x = "Number of GWAS with PP.H4 > 0.5", y = "Number of genes",
-       title = "Cross-GWAS replication",
-       subtitle = paste0(sum(gene_level$coloc_n_gwas_h4_05 >= 1, na.rm = TRUE),
-                         " genes colocalize in \u22651 GWAS; ",
-                         bin_counts[n_bin == "0", format(N, big.mark=",")],
-                         " with 0 omitted")) +
-  theme_masld(base_size = 7) +
-  theme(plot.subtitle = element_text(size = 5.5, color = "gray40"))
+  labs(x = "Number of GWAS with PP.H4 > 0.5", y = "Number of genes") +
+  theme_masld(base_size = 7)
 
 # ---------------------------------------------------------------------------
 # Panel C: Cross-phenotype heatmap
@@ -199,6 +198,8 @@ gene_labels_c <- setNames(
   rev(gene_order)
 )
 
+message("[caption] Cross-phenotype colocalization (top 30 genes)")
+
 pC <- ggplot(heatmap_data, aes(x = category, y = gene, fill = max_pp4)) +
   geom_tile(color = "white", linewidth = 0.3) +
   scale_fill_gradientn(
@@ -210,15 +211,14 @@ pC <- ggplot(heatmap_data, aes(x = category, y = gene, fill = max_pp4)) +
   ) +
   scale_y_discrete(labels = gene_labels_c) +
   labs(x = NULL, y = NULL,
-       title = "Cross-phenotype colocalization (top 30 genes)",
        caption = "* = known MASLD drug target; MHC-region and LD-cluster secondary genes excluded") +
   theme_masld(base_size = 7) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-        axis.text.y = element_text(size = 5),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+        axis.text.y = element_text(size = 6),
         legend.position = "right",
         legend.key.height = unit(0.5, "cm"),
         legend.key.width = unit(0.25, "cm"),
-        plot.caption = element_text(size = 5, color = "gray40", hjust = 0))
+        plot.caption = element_text(size = 6, color = "gray40", hjust = 0))
 
 # ---------------------------------------------------------------------------
 # Panel D: Known target validation (dot plot)
@@ -245,14 +245,13 @@ pD <- ggplot(target_data, aes(x = gene, y = coloc_best_pp4)) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray60", linewidth = 0.3) +
   geom_hline(yintercept = 0.8, linetype = "dashed", color = "gray40", linewidth = 0.3) +
   geom_text(data = thresh_labels, aes(x = gene, y = y, label = label),
-            size = 1.8, color = thresh_labels$color, hjust = 1.05, inherit.aes = FALSE) +
+            size = GEOM_TEXT_6PT, color = thresh_labels$color, hjust = 1.05, inherit.aes = FALSE) +
   geom_point(aes(color = category, size = coloc_n_gwas_h4_05)) +
   scale_color_manual(values = category_colors, name = "Best GWAS\ncategory") +
   scale_size_continuous(range = c(2, 5), name = "N GWAS\nPP.H4 > 0.9",
                         breaks = c(0, 1, 2, 3)) +
   scale_y_continuous(limits = c(0, 1.05), breaks = seq(0, 1, 0.2)) +
-  labs(x = "Known MASLD drug target", y = "Best PP.H4 (any GWAS)",
-       title = "Known target validation") +
+  labs(x = "Known MASLD drug target", y = "Best PP.H4 (any GWAS)") +
   theme_masld(base_size = 7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, face = "italic", size = 6),
         legend.position = "right",
@@ -266,7 +265,7 @@ combined <- plot_grid(
   pC, pD,
   labels = c("a", "b", "c", "d"),
   label_size = 9,
-  label_fontface = "bold",
+  label_fontface = "plain",
   ncol = 2,
   rel_widths = c(1.1, 0.9),
   rel_heights = c(1, 1.1)

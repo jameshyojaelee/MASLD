@@ -40,8 +40,9 @@ run_fig "figS_twas_coloc_intact.R" "figS_twas_coloc_intact"
 # Method comparison (ABF vs SuSiE concordance)
 run_fig "figS_coloc_method_comparison.R" "figS_coloc_method_comparison"
 
-# Main figure 4 panel: expression × COLOC scatter
-run_fig "fig4_expression_pip_scatter.R" "fig4_expression_pip_scatter"
+# RETIRED 2026-07-07: fig4_expression_pip_scatter.R dropped — its outputs
+# (panel_expression_pip_scatter/panel_expression_coloc_scatter) are stale panels
+# not in the Fig2/FigS2 set; the script itself now early-quits.
 
 # Existing reviewer defense sensitivity figure
 run_fig "figS_coloc_sensitivity.R" "figS_coloc_sensitivity"

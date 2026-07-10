@@ -34,6 +34,7 @@ prop <- fread(file.path(BASE, "RNA-seq/results/gwas_rna_integration/proportion_c
 geneset <- fread(file.path(BASE, "RNA-seq/results/gwas_rna_integration/geneset_enrichment_results.csv"))
 
 cat("Proportion correlations:", nrow(prop), "tests\n")
+message("[caption] (c) Proportion-expression correlation; (d) GWAS enrichment by DEG direction")
 
 # ===========================================================================
 # (c) Proportion x COLOC: hepatocyte correlation
@@ -45,11 +46,10 @@ if (nrow(hep_prop) > 0) {
     geom_smooth(method = "lm", color = masld_colors$deg, linewidth = 0.5, se = FALSE) +
     scale_color_manual(values = c("TRUE" = masld_colors$up, "FALSE" = masld_colors$ns),
                        labels = c("TRUE" = "FDR < 0.05", "FALSE" = "ns"), name = NULL) +
-    labs(x = "COLOC PP.H4", y = "Spearman rho\n(expression x hepatocyte proportion)",
-         title = "Proportion-expression correlation") +
-    theme_masld(base_size = 7)
+    labs(x = "COLOC PP.H4", y = "Spearman rho\n(expression x hepatocyte proportion)") +
+    theme_masld(base_size = 6)
 } else {
-  p_c <- ggplot() + theme_void() + labs(title = "No hepatocyte data")
+  p_c <- ggplot() + theme_void()
 }
 
 # ===========================================================================
@@ -69,13 +69,12 @@ p_d <- ggplot(dir_dt, aes(x = direction, y = fold_enrichment, fill = direction))
   geom_col(width = 0.6) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "grey50", linewidth = 0.3) +
   geom_text(aes(label = sprintf("p=%.1e\nn=%s", p_value, format(n_genes, big.mark = ","))),
-            vjust = -0.3, size = 2) +
+            vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("Upregulated" = masld_colors$up,
                                "Downregulated" = masld_colors$down)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
-  labs(x = NULL, y = "Fold enrichment\n(COLOC in DEGs vs background)",
-       title = "GWAS enrichment by DEG direction") +
-  theme_masld(base_size = 7) +
+  labs(x = NULL, y = "Fold enrichment\n(COLOC in DEGs vs background)") +
+  theme_masld(base_size = 6) +
   theme(legend.position = "none")
 
 # ===========================================================================

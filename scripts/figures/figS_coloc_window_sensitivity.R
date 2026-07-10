@@ -60,16 +60,15 @@ pA <- ggplot(counts, aes(x = window_label, y = n_genes, fill = threshold)) +
   geom_col(position = position_dodge(width = 0.75), width = 0.7) +
   geom_text(aes(label = n_genes),
             position = position_dodge(width = 0.75),
-            vjust = -0.3, size = 2, color = "black") +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(
     values = c("PP.H4 > 0.5" = "#BBDEFB",
                "PP.H4 > 0.8" = "#1565C0",
                "PP.H4 > 0.9" = "#0D47A1"),
     name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "COLOC window (half-width)", y = "Unique genes",
-       title = "Gene counts by window size") +
-  theme_masld(base_size = 7) +
+  labs(x = "COLOC window (half-width)", y = "Unique genes") +
+  theme_masld(base_size = 6) +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"),
         axis.text.x = element_text(size = 6))
@@ -102,7 +101,7 @@ pB <- ggplot(ret_long, aes(x = window_label, y = pct_retained,
   geom_line(linewidth = 0.7) +
   geom_point(size = 2) +
   geom_text(aes(label = sprintf("%.0f%%", pct_retained)),
-            vjust = -0.6, size = 1.8, show.legend = FALSE) +
+            vjust = -0.6, size = GEOM_TEXT_6PT, show.legend = FALSE) +
   scale_color_manual(
     values = c("PP.H4 > 0.5" = "#90CAF9",
                "PP.H4 > 0.8" = "#1565C0",
@@ -110,9 +109,8 @@ pB <- ggplot(ret_long, aes(x = window_label, y = pct_retained,
     name = NULL) +
   scale_y_continuous(limits = c(0, 105), labels = function(x) paste0(x, "%")) +
   labs(x = "COLOC window (half-width)",
-       y = paste0("% of 1Mb hits retained (n=", n_orig, ")"),
-       title = "Retention of PP.H4>0.5 hits at narrower windows") +
-  theme_masld(base_size = 7) +
+       y = paste0("% of 1Mb hits retained (n=", n_orig, ")")) +
+  theme_masld(base_size = 6) +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"),
         axis.text.x = element_text(size = 6))
@@ -164,14 +162,13 @@ make_scatter <- function(half_window_kb_val, window_label_str) {
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
     annotate("text", x = 0.02, y = 0.97,
              label = sprintf("r = %.3f\nρ = %.3f\nn = %d", r_p, r_s, n),
-             hjust = 0, vjust = 1, size = 2, color = "gray20") +
+             hjust = 0, vjust = 1, size = GEOM_TEXT_6PT, color = "black") +
     labs(x = "PP.H4 (±1,000 kb, current)",
-         y = sprintf("PP.H4 (%s)", window_label_str),
-         title = sprintf("Window: %s vs ±1,000 kb", window_label_str)) +
-    theme_masld(base_size = 7) +
+         y = sprintf("PP.H4 (%s)", window_label_str)) +
+    theme_masld(base_size = 6) +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.2, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 6))
 }
 
 pC <- make_scatter(500,  "±500 kb")
@@ -183,13 +180,14 @@ pD <- make_scatter(250,  "±250 kb")
 combined <- plot_grid(
   pA, pB, pC, pD,
   labels     = c("a", "b", "c", "d"),
-  label_size = 9, label_fontface = "bold",
+  label_size = 9, label_fontface = "plain",
   ncol = 2,
   rel_heights = c(1, 1.1)
 )
 
 save_fig_tall(combined, OUT_FILE, width = fig_full_width, height = 7)
 cat("Saved:", OUT_FILE, "\n")
+message("[caption] a: gene counts by COLOC window size. b: retention of PP.H4>0.5 hits at narrower windows. c-d: PP.H4 at 500kb/250kb vs 1Mb (window: 500kb vs 1Mb / 250kb vs 1Mb).")
 
 # ---------------------------------------------------------------------------
 # Print summary to stdout (also appears in methods)

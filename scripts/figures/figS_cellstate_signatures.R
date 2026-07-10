@@ -31,17 +31,16 @@ pA <- ggplot(fr, aes(NES, nice_name, fill = sig)) +
   geom_col(width = 0.7, color = "white") +
   geom_text(aes(label = sprintf("NES=%.2f, p=%.2g\n(size=%d)", NES, pval, size),
                 x = NES + sign(NES) * 0.03),
-            hjust = ifelse(fr$NES > 0, 0, 1), size = 2.1) +
+            hjust = ifelse(fr$NES > 0, 0, 1), size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("padj<0.05" = "#C0392B", "ns" = "grey65"), name = NULL) +
   scale_x_continuous(expand = expansion(mult = 0.4)) +
-  labs(x = "NES (bulk dream t-stat ranking)", y = NULL,
-       title = "Cell-state signatures enriched in MASLD bulk DE") +
+  labs(x = "NES (bulk dream t-stat ranking)", y = NULL) +
   theme_masld() +
   theme(axis.text.y = element_text(size = 6))
 
 make_gene_panel <- function(sig_name, title_text) {
   g <- gene_lvl[signature == sig_name][order(-bulk_t)]
-  if (nrow(g) == 0) return(ggplot() + labs(title = paste("No data:", sig_name)) + theme_masld())
+  if (nrow(g) == 0) return(ggplot() + theme_masld())
   top_up <- g[1:min(12, .N)]
   top_dn <- g[(max(1, .N - 11)):.N]
   combo <- unique(rbind(top_up, top_dn))
@@ -52,10 +51,10 @@ make_gene_panel <- function(sig_name, title_text) {
   ggplot(combo, aes(bulk_t, symbol, fill = direction)) +
     geom_col(width = 0.7, color = "white") +
     geom_text(aes(label = sprintf("%.1f", bulk_t)),
-              hjust = ifelse(combo$bulk_t > 0, -0.1, 1.1), size = 2) +
+              hjust = ifelse(combo$bulk_t > 0, -0.1, 1.1), size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = c("up" = "#C0392B","down" = "#2980B9"), guide = "none") +
     scale_x_continuous(expand = expansion(mult = 0.2)) +
-    labs(x = "Bulk dream t-stat", y = NULL, title = title_text) +
+    labs(x = "Bulk dream t-stat", y = NULL) +
     theme_masld() +
     theme(axis.text.y = element_text(size = 6))
 }
@@ -66,8 +65,9 @@ pD <- make_gene_panel("J1_Tcell_exhaustion", "J1 T-cell exhaustion (bulk DE)")
 
 fig <- (pA / (pB + pC + pD)) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
+message("[caption] A: Cell-state signatures enriched in MASLD bulk DE. B: H2 SASP pro-fibrotic (bulk DE). C: J2 Ductular reaction (bulk DE). D: J1 T-cell exhaustion (bulk DE).")
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_H2_J1_J2_K1_cellstate_signatures.pdf")
-ggsave(out_path, fig, width = 14, height = 13)
+ggsave(out_path, fig, width = fig_full_width, height = fig_full_width * 13 / 14)
 message("Saved: ", out_path)

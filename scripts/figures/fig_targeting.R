@@ -275,7 +275,7 @@ pd <- tryCatch({
 # ══════════════════════════════════════════════════════════════════════════════
 combined <- (pa + pb) / (pc + pd) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 9, face = "plain"))
 
 width_in  <- 180 / 25.4
 height_in <- 120 / 25.4

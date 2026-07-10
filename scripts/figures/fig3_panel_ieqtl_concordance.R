@@ -6,6 +6,13 @@
 # Binomial test vs 50% null annotated on plot.
 #
 # Output: figures/main/fig2_genetics/panels/ieqtl_concordance_panel.pdf
+#
+# RETIRED 2026-07-07: ieqtl_concordance_panel.pdf is not part of the Fig 2 (genetics)
+# or FigS2 panel set; it was a stale leftover in fig2_genetics/panels/. This script's
+# ONLY output was that panel, so it is retired wholesale (early quit) to guarantee the
+# stale PDF is never regenerated. Plotting code kept below for provenance.
+message("[fig3_panel_ieqtl_concordance] RETIRED 2026-07-07 — output not in Fig2/FigS2 set; no panel written.")
+quit(save = "no", status = 0)
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -118,7 +125,7 @@ p <- ggplot(d, aes(x = bulk_logFC, y = interaction_beta, color = ct_clean)) +
   geom_point(size = 2, alpha = 0.8) +
   geom_text_repel(data = label_dt,
                   aes(label = gene),
-                  size = 2.8, color = "black",
+                  size = GEOM_TEXT_6PT, color = "black",
                   min.segment.length = 0.2,
                   segment.color = "gray60",
                   segment.size  = 0.3,
@@ -129,28 +136,25 @@ p <- ggplot(d, aes(x = bulk_logFC, y = interaction_beta, color = ct_clean)) +
             aes(x = x, y = y, label = label, hjust = hjust, vjust = vjust,
                 color = NULL),
             color = quad_dt$color,
-            size = 2.8, fontface = "bold", inherit.aes = FALSE) +
+            size = GEOM_TEXT_6PT, fontface = "plain", inherit.aes = FALSE) +
   # concordance annotation
   annotate("text",
            x = -x_lim * 0.98, y = y_lim * 0.98,
            hjust = 0, vjust = 1,
            label = sprintf("%d/%d (%.0f%%) concordant\nBinomial %s",
                            n_conc, n_total, pct_conc, p_label),
-           size = 3, color = "gray20") +
+           size = GEOM_TEXT_6PT, color = "gray20") +
   scale_color_manual(values = ct_pal, name = "Cell type") +
   scale_x_continuous(limits = c(-x_lim, x_lim)) +
   scale_y_continuous(limits = c(-y_lim, y_lim)) +
   labs(x = "Bulk RNA-seq log₂FC  (disease vs control)",
-       y = "ieQTL interaction β  (MASLD disease effect on eQTL)",
-       title    = "ieQTL × DEG directional concordance",
-       subtitle = sprintf("ieQTL FDR < %.2f  |  padj < %.2f  |  |log₂FC| > %.1f",
-                          IEQTL_FDR_CUT, DEG_PADJ_CUT, DEG_LFC_CUT)) +
+       y = "ieQTL interaction β  (MASLD disease effect on eQTL)") +
   theme_masld(base_size = 11) +
   theme(legend.position = "right",
         legend.key.size = unit(0.35, "cm"),
-        legend.text     = element_text(size = 9),
-        plot.title      = element_text(size = 12, face = "bold"),
-        plot.subtitle   = element_text(size = 8, color = "gray40"))
+        legend.text     = element_text(size = 6))
 
+message(sprintf("[caption] ieQTL x DEG directional concordance (ieQTL FDR < %.2f | padj < %.2f | |log2FC| > %.1f)",
+                IEQTL_FDR_CUT, DEG_PADJ_CUT, DEG_LFC_CUT))
 ggsave(OUT_PDF, p, width = 6, height = 5.5, device = cairo_pdf)
 cat(sprintf("Saved: %s\n", OUT_PDF))

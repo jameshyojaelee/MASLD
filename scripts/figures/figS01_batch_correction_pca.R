@@ -107,13 +107,13 @@ compact_theme <- function() {
     theme(
       axis.text       = element_blank(),
       axis.ticks      = element_blank(),
-      axis.title      = element_text(size = 6.5),
-      strip.text      = element_text(size = 7, face = "bold"),
+      axis.title      = element_text(size = 6),
+      strip.text      = element_text(size = 6, face = "plain"),
       strip.background = element_blank(),
       plot.title      = element_blank(),
       legend.position  = "right",
-      legend.title     = element_text(size = 6.5, face = "bold"),
-      legend.text      = element_text(size = 5.8),
+      legend.title     = element_text(size = 6, face = "plain"),
+      legend.text      = element_text(size = 6),
       legend.key.size  = unit(0.22, "cm"),
       legend.margin    = margin(0, 0, 0, 0),
       legend.box.spacing = unit(0, "cm"),
@@ -140,7 +140,7 @@ make_row <- function(color_var, palette, legend_title, ncol_legend = 1,
   if (add_var_annot) {
     p <- p + geom_text(data = ann, aes(x = -Inf, y = Inf, label = lab),
                        inherit.aes = FALSE, hjust = -0.08, vjust = 1.4,
-                       size = 2.2, colour = "grey30")
+                       size = 6 / ggplot2::.pt, colour = "black")
   }
   p
 }
@@ -154,17 +154,13 @@ p4 <- make_row("fib",     fib_pal,     "Fibrosis",  ncol_legend = 1)
 fig <- p1 / p2 / p3 / p4 +
   plot_layout(heights = c(1, 1, 1, 1)) +
   plot_annotation(
-    title    = "PCA before vs after dataset batch correction",
-    subtitle = sprintf(
-      "Top 2,000 most-variable log2-CPM genes; %s samples · 10 cohorts · limma::removeBatchEffect proxy for dream `(1|dataset)`",
-      format(ncol(logcpm_top), big.mark = ",")),
     theme    = theme(
-      plot.title    = element_text(size = 9, face = "bold",
-                                   family = "Helvetica"),
-      plot.subtitle = element_text(size = 6.5, colour = "grey35",
-                                   family = "Helvetica"),
       plot.margin   = margin(2, 2, 2, 2))
   )
+
+message(sprintf(
+  "[caption] PCA before vs after dataset batch correction. Top 2,000 most-variable log2-CPM genes; %s samples, 10 cohorts, limma::removeBatchEffect proxy for dream `(1|dataset)`.",
+  format(ncol(logcpm_top), big.mark = ",")))
 
 out_pdf <- file.path(OUT_DIR, "figS01_batch_correction_pca.pdf")
 ggsave(out_pdf, fig, width = 6.8, height = 8.4, device = cairo_pdf)

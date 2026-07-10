@@ -26,19 +26,9 @@ sbatch --parsable \
   --error="${LOGDIR}/fig_207_%j.err" \
   --wrap="micromamba run -n rnaseq Rscript ${FIGDIR}/fig4_gwas_volcano.R"
 
-sbatch --parsable \
-  --partition=cpu --cpus-per-task=4 --mem=32G --time=48:00:00 \
-  --job-name=fig4_expression_scatter \
-  --output="${LOGDIR}/fig_208_%j.out" \
-  --error="${LOGDIR}/fig_208_%j.err" \
-  --wrap="micromamba run -n rnaseq Rscript ${FIGDIR}/fig4_expression_pip_scatter.R"
-
-sbatch --parsable \
-  --partition=cpu --cpus-per-task=4 --mem=32G --time=48:00:00 \
-  --job-name=fig4_celltype_herit \
-  --output="${LOGDIR}/fig_212_%j.out" \
-  --error="${LOGDIR}/fig_212_%j.err" \
-  --wrap="micromamba run -n rnaseq Rscript ${FIGDIR}/fig4_celltype_heritability.R"
+# RETIRED 2026-07-07: fig4_expression_pip_scatter.R + fig4_celltype_heritability.R dropped
+# from this orchestrator — their outputs (panel_expression_*/panel_celltype_*/panel_geneset_*)
+# are stale panels not in the Fig2/FigS2 set; the scripts themselves now early-quit.
 
 # Fig 6 panels — archived 2026-04-22 (6-fig → 5-fig restructure; convergence content absorbed into fig5_convergence)
 # Legacy fig6_convergence_sankey.R lives in archive/fig6_ditched_2026-04-22/.

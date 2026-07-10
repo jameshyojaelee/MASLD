@@ -84,27 +84,22 @@ p <- ggplot(counts, aes(x = xpos, y = n, fill = method, alpha = provenance)) +
   scale_x_continuous(breaks = seq_along(levels(counts$threshold)),
                      labels = levels(counts$threshold)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
-  labs(x = NULL, y = "Colocalizing genes",
-       title = "GWAS-eQTL colocalization (Broadaway liver eQTLs)",
-       subtitle = sprintf("%s cis-eQTL genes, 35 Tier-1/2 (liver-specific) GWAS; bar height = colocalizing genes, faded cap = cross-ancestry headline",
-                          format(n_genes, big.mark = ","))) +
+  labs(x = NULL, y = "Colocalizing genes") +
   theme_masld(base_size = 9) +
   theme(legend.position = c(0.98, 0.97), legend.justification = c(1, 1),
-        legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA),
-        plot.title = element_text(size = 9),
-        plot.subtitle = element_text(size = 6.5, color = "grey30"))
+        legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA))
 
-save_fig(p, file.path(PANEL_DIR, "coloc_method_counts.pdf"),
+save_fig(p, file.path(PANEL_DIR, "FigS2G_coloc_method_counts.pdf"),
          width = fig_col_width * 1.05, height = 2.9)
 
 fwrite(dcast(counts, threshold ~ method + provenance, value.var = "n"),
-       file.path(PANEL_DIR, "coloc_method_counts_source.csv"))
+       file.path(PANEL_DIR, "FigS2G_coloc_method_counts_source.csv"))
 message("CAPTION: GWAS-eQTL colocalization across the 35 Tier-1/2 (liver-specific) GWAS ",
         "(Broadaway EUR liver cis-eQTLs). coloc.abf (baseline) vs SuSiE-coloc (primary); ",
         "bar height = colocalizing genes at each PP.H4 threshold, split into EUR-headline ",
         "(solid) vs cross-ancestry-headline (faded, headline PP.H4 from a non-EUR GWAS). ",
         "Because the eQTL panel is EUR, cross-ancestry headlines hold a lower evidentiary bar.")
-cat(sprintf("[fig2B] wrote coloc_method_counts.pdf (n=%d genes; PP.H4>0.5: ABF %d [%d cross-anc] vs SuSiE %d [%d cross-anc])\n",
+cat(sprintf("[FigS2G] wrote coloc_method_counts.pdf (n=%d genes; PP.H4>0.5: ABF %d [%d cross-anc] vs SuSiE %d [%d cross-anc])\n",
             n_genes,
             sum(abf > 0.5, na.rm = TRUE), sum(abf > 0.5 & abf_xa, na.rm = TRUE),
             sum(su  > 0.5, na.rm = TRUE), sum(su  > 0.5 & su_xa,  na.rm = TRUE)))

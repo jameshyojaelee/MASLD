@@ -27,7 +27,4 @@ Rscript figS_conserved_core.R || echo "WARN: figS_conserved_core.R exited non-ze
 echo "=== [$(date '+%F %T')] figS_published_panel_benchmark.R ==="
 Rscript figS_published_panel_benchmark.R || echo "WARN: figS_published_panel_benchmark.R exited non-zero"
 
-echo "=== [$(date '+%F %T')] fig_disease_signatures_presentation.R ==="
-Rscript fig_disease_signatures_presentation.R || echo "WARN: fig_disease_signatures_presentation.R exited non-zero"
-
 echo "=== [$(date '+%F %T')] DONE ==="

@@ -45,6 +45,11 @@ sx[is.na(sx)|sx==""]<-"Unknown"
 meta <- fread(file.path(BASE,"RNA-seq/Human/Patient_Cohorts/analysis/integration/metadata/unified_metadata.csv"),
               select=c("sample_id","fibrosis_stage","nas_score"))
 samp <- merge(samp, meta, by="sample_id", all.x=TRUE, sort=FALSE)
+# GSE213621 (Chen) fibrosis is COARSE (study reports F0F1/F2/F3F4 groups; harmonize
+# maps F0F1->1, F3F4->3) — NOT true Kleiner. Show as "Unknown" in the fibrosis panel
+# rather than mislabel it as precise F1/F3 (Chen stays in the PCA for cohort/disease/
+# NAS coloring; its NAS is already absent -> grey). See load_figure_data.R cohort guards.
+samp$fibrosis_stage[samp$dataset == "GSE213621"] <- NA
 
 # --- gene selection ---------------------------------------------------------
 if (MODE=="hvg") {
@@ -76,13 +81,13 @@ auc <- {r<-rank(dt$PC1); nD<-sum(dt$disease=="Disease"); nC<-sum(dt$disease=="Co
 cat(sprintf("PVE PC1=%.1f%% PC2=%.1f%%  PC1 disease AUC=%.3f\n",pve[1],pve[2],auc))
 fwrite(dt, file.path(OUT, paste0(BASEFN,"_data.csv")))
 
-bt <- function() theme_masld(base_size=7)+theme(axis.text=element_blank(),axis.ticks=element_blank(),
-  panel.grid=element_blank(),legend.position="right",legend.title=element_text(size=6,face="bold"),
-  legend.text=element_text(size=5.5),legend.key.size=unit(0.22,"cm"),plot.title=element_text(size=7.5,face="bold"))
+bt <- function() theme_masld(base_size=6)+theme(axis.text=element_blank(),axis.ticks=element_blank(),
+  panel.grid=element_blank(),legend.position="right",legend.title=element_text(size=6,face="plain"),
+  legend.text=element_text(size=6),legend.key.size=unit(0.22,"cm"))
 xy <- function() labs(x=sprintf("PC1 (%.1f%%)",pve[1]),y=sprintf("PC2 (%.1f%%)",pve[2]))
-pC<-ggplot(dt,aes(PC1,PC2,colour=cohort))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=cohort_pal,name="Cohort")+xy()+labs(title="by Cohort")+bt()
-pD<-ggplot(dt,aes(PC1,PC2,colour=disease))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=disease_pal,name="Disease")+xy()+labs(title="by Disease")+bt()
-pS<-ggplot(dt,aes(PC1,PC2,colour=sex))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=sex_pal,name="Sex")+xy()+labs(title="by Sex")+bt()
+pC<-ggplot(dt,aes(PC1,PC2,colour=cohort))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=cohort_pal,name="Cohort")+xy()+bt()
+pD<-ggplot(dt,aes(PC1,PC2,colour=disease))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=disease_pal,name="Disease")+xy()+bt()
+pS<-ggplot(dt,aes(PC1,PC2,colour=sex))+geom_point(size=.55,alpha=.7)+scale_colour_manual(values=sex_pal,name="Sex")+xy()+bt()
 # NAS / fibrosis: SHAPE encodes group (open=control, filled=disease), COLOUR the
 # score (gray when unscored). Scored control = open coloured ring; scored disease
 # = filled coloured dot; unscored = gray (open if control, filled if disease).
@@ -92,20 +97,20 @@ pN<-ggplot(dt[order(!is.na(nas))],aes(PC1,PC2,colour=nas,shape=disease))+
     scale_shape_manual(name=NULL,values=c(Control=1,Disease=16))+
     guides(colour=guide_colourbar(order=1,barwidth=.4,barheight=2.6),
            shape=guide_legend(order=2,override.aes=list(size=1.8,colour="grey30")))+
-    xy()+labs(title="by NAS score")+bt()
+    xy()+bt()
 pF<-ggplot(dt[order(fibrosis=="Unknown",decreasing=TRUE)],aes(PC1,PC2,colour=fibrosis,shape=disease))+
     geom_point(size=.7,stroke=.3,alpha=.85)+
     scale_colour_manual(values=fib_pal,name="Fibrosis")+
     scale_shape_manual(name=NULL,values=c(Control=1,Disease=16))+
     guides(colour=guide_legend(order=1,override.aes=list(size=1.8,shape=16)),
            shape=guide_legend(order=2,override.aes=list(size=1.8,colour="grey30")))+
-    xy()+labs(title="by Fibrosis stage")+bt()
+    xy()+bt()
 sub <- if (MODE=="hvg")
   sprintf("Variance-selected genes (unsupervised) — disease/NAS/fibrosis are NOT high-variance axes, so they do not separate. PC1 disease AUC=%.2f. NAS n=%d, fibrosis n=%d (grey=N/A).",auc,sum(!is.na(dt$nas)),sum(dt$fibrosis!="Unknown")) else
   sprintf("PC1 disease AUC=%.2f (in-sample, double-dipped — DEGs selected on these same samples; descriptive). NAS n=%d, fibrosis n=%d (grey=N/A).",auc,sum(!is.na(dt$nas)),sum(dt$fibrosis!="Unknown"))
-fig2d <- (pC|pS|pD|pN|pF)+plot_annotation(title=sprintf("%s, n=%d",sel_lab,ncol(dge)),subtitle=sub,
-  theme=theme(plot.title=element_text(size=9,face="bold"),plot.subtitle=element_text(size=6,colour="grey35")))
-ggsave(file.path(OUT, paste0(BASEFN,".pdf")), fig2d, width=16.5, height=3.5, device=cairo_pdf)
+message(sprintf("[caption] %s, n=%d. %s", sel_lab, ncol(dge), sub))
+fig2d <- (pC|pS|pD|pN|pF)
+ggsave(file.path(OUT, paste0(BASEFN,".pdf")), fig2d, width=fig_full_width, height=1.5, device=cairo_pdf)
 cat("Wrote", paste0(BASEFN,".pdf"), "\n")
 
 scn<-function() list(xaxis=list(title=sprintf("PC1 %.1f%%",pve[1]),titlefont=list(size=8),tickfont=list(size=6)),

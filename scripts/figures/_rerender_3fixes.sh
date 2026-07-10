@@ -16,7 +16,6 @@ run(){ local k="$1"; shift; echo "=== [$k] $* ==="; local t0=$SECONDS
   local rc=$?; local dt=$((SECONDS-t0))
   if [ $rc -eq 0 ]; then PASS+=("$* (${dt}s)"); echo "[PASS] $* (${dt}s)"; else FAIL+=("$* rc=$rc"); echo "[FAIL] $* rc=$rc (${dt}s)"; fi; }
 run PY published_deg_comparison.py
-run R  fig1_integration_value_panels_v2.R
 run R  figS_batch_correction.R
 echo ""; echo "#### 3-FIX SUMMARY: ${#PASS[@]} PASS / ${#FAIL[@]} FAIL ####"
 echo "PASS:"; printf '  %s\n' "${PASS[@]:-none}"; echo "FAIL:"; printf '  %s\n' "${FAIL[@]:-none}"

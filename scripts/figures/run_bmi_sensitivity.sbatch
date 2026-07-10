@@ -7,7 +7,9 @@
 #SBATCH --output=logs/bmi_sensitivity_%j.out
 #SBATCH --error=logs/bmi_sensitivity_%j.err
 
-set -euo pipefail
+# NOTE: no `-u` (nounset) — micromamba/conda activate.d scripts (binutils ADDR2LINE)
+# reference unset vars and abort the job under set -u before Rscript runs.
+set -eo pipefail
 
 echo "=== BMI Confounding Sensitivity Analysis ==="
 echo "Job ID: ${SLURM_JOB_ID}"

@@ -4,7 +4,7 @@
 # fgsea NES heatmap: 12 passing hepatocyte Hotspot modules vs Hallmark gene sets.
 # Module gene weights used as ranking statistic.
 #
-# Output: figures/main/fig3_RNAseq/panels/fig3g_hotspot_geneset_correlation.pdf
+# Output: figures/main/fig3_RNAseq/panels/figs3_hotspot_geneset_correlation.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -19,7 +19,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 HS_RES    <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/hotspot_modules")
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
-OUT_PDF   <- file.path(PANEL_DIR, "fig3g_hotspot_geneset_correlation.pdf")
+OUT_PDF   <- file.path(PANEL_DIR, "figs3_hotspot_geneset_correlation.pdf")
 
 # ── passing modules ───────────────────────────────────────────────────────────
 mods <- fread(file.path(HS_RES, "all_modules.tsv"))
@@ -28,7 +28,17 @@ passing <- mods[cell_type == "hepatocytes" &
                 stability_fail == FALSE,
                 .(module, disease_stage_beta, disease_stage_q)]
 setorder(passing, disease_stage_q)
+
+# canonical module names (509_module_pathway_names → module_names.tsv authority),
+# joined on cell_type+module — matches the labelling of the other Fig 3 panels.
+mod_names <- fread(file.path(HS_RES, "module_names.tsv"))
+passing   <- merge(passing,
+                   mod_names[cell_type == "hepatocytes", .(module, module_name)],
+                   by = "module", all.x = TRUE, sort = FALSE)
+setorder(passing, disease_stage_q)   # restore q-value order after the merge
+passing[is.na(module_name) | module_name == "", module_name := NA_character_]
 passing[, module_label := paste0("Hep-", module,
+                                  ifelse(is.na(module_name), "", paste0(" · ", module_name)),
                                   ifelse(disease_stage_beta > 0, " (+)", " (−)"))]
 cat(sprintf("[modules] %d passing\n", nrow(passing)))
 
@@ -124,7 +134,7 @@ p <- ggplot(plot_dt, aes(x = module_label, y = pathway_clean, fill = log2or)) +
         panel.grid        = element_blank(),
         axis.line         = element_blank(),
         axis.ticks        = element_blank(),
-        plot.title        = element_text(size = 11, face = "bold"),
+        plot.title        = element_text(size = 11, face = "plain"),
         plot.subtitle     = element_text(size = 8, color = "gray40"))
 
 n_gs  <- length(unique(plot_dt$pathway_clean))

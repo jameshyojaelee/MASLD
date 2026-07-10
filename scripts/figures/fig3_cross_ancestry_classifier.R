@@ -137,11 +137,11 @@ p <- ggplot(plot_dt, aes(x = panel, y = auc, color = panel)) +
                                 "EUR-only"       = "#4575b4",
                                 "Random"         = "grey60"),
                      guide = "none") +
-  labs(x = NULL, y = "AUROC (leave-one-cohort-out)",
-       title = "Cross-ancestry COLOC panel elastic-net classifier",
-       subtitle = sprintf("Cross-ancestry AUROC = %.3f (p_emp vs random = %.3f, n = %d genes)",
-                          auc_xa, p_emp, length(panel_xa))) +
+  labs(x = NULL, y = "AUROC (leave-one-cohort-out)") +
   theme_masld()
+
+message(sprintf("[caption] Cross-ancestry COLOC panel elastic-net classifier: Cross-ancestry AUROC = %.3f (p_emp vs random = %.3f, n = %d genes)",
+                auc_xa, p_emp, length(panel_xa)))
 
 # RETIRED 2026-06-12 (cross_ancestry_classifier.pdf no longer a Fig 2 panel; metrics CSV above is kept):
 # ggsave(OUT, p, width = 6.0, height = 4.0, device = cairo_pdf)

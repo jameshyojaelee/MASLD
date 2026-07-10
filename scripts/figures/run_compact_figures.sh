@@ -49,7 +49,6 @@ run_fig() {
 }
 
 # --- Main Figures ---
-run_fig "Fig 1: Atlas"               "${SCRIPT_DIR}/fig1_compact.R"
 run_fig "Fig 2: Single-cell & Deconvolution" "${SCRIPT_DIR}/fig2_compact.R"
 
 # Sub-panels first (sourced by fig3_compact and fig4_compact)

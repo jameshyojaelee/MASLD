@@ -107,11 +107,11 @@ p <- ggplot(df, aes(x = logFC, y = label, fill = direction)) +
   theme(
     axis.text.y  = element_text(face = "italic", color = "black"),
     strip.placement = "outside",
-    strip.text.y.left = element_text(angle = 90, face = "bold", color = "black"),
+    strip.text.y.left = element_text(angle = 90, face = "plain", color = "black"),
     legend.position = "top",
     legend.key.size = PUB_LEGEND_KEY,
     plot.margin  = margin(3, 6, 3, 4),
-    plot.caption = element_text(size = PUB_SUBTITLE - 1, color = "gray35",
+    plot.caption = element_text(size = PUB_SUBTITLE, color = "black",
                                 hjust = 0, margin = margin(t = 4))
   )
 

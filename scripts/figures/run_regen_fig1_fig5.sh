@@ -22,9 +22,7 @@ step() { echo "=================== $* ==================="; }
 step "FIG 1 — py panels"
 python scripts/figures/fig_sunburst.py;                 echo "[exit fig_sunburst=$?]"
 python scripts/figures/fig_convergence_wheel.py --no-title; echo "[exit convergence_wheel=$?]"
-python scripts/figures/fig_bulkrna_matrix.py --panel;   echo "[exit bulkrna_matrix=$?]"
-step "FIG 1 — compact assembler"
-Rscript scripts/figures/fig1_compact.R;                 echo "[exit fig1_compact=$?]"
+python scripts/figures/fig_bulkrna_matrix.py --panel;   echo "[exit bulkrna_matrix=$?]"  # Fig 3A cohort-metadata (restored 2026-07-02, A–J layout)
 
 step "FIG 3 — canonical DEG volcano (limma-voom C2; moved from fig1)"
 Rscript scripts/figures/fig3_deg_volcano.R;             echo "[exit fig3_deg_volcano=$?]"
@@ -44,7 +42,6 @@ Rscript scripts/figures/fig5_convergence_v3.R;          echo "[exit fig5_converg
 
 step "OUTPUT PDFs (mtime)"
 ls -l --time-style=+%H:%M \
-      figures/main/fig1_atlas_overview/fig1_compact.pdf \
       figures/main/fig3_RNAseq/panels/deg_volcano.pdf \
       figures/supplementary/figS_methods_validation/mega_validation/panels/panelF_method_overlap_alluvial.pdf \
       figures/supplementary/figS_methods_validation/mega_validation/panels/panelF_method_overlap_chord.pdf \

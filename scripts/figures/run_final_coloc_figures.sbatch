@@ -30,7 +30,7 @@ run_fig figS_coloc_threshold_sensitivity.R "Threshold sensitivity"
 run_fig figS04_coloc.R "COLOC ABF overview (figS_coloc_abf.pdf)"
 run_fig figS_twas_coloc_intact.R "TWAS x COLOC x INTACT"
 run_fig figS_coloc_method_comparison.R "Method comparison"
-run_fig fig4_expression_pip_scatter.R "Fig4 expression x COLOC"
+# RETIRED 2026-07-07: fig4_expression_pip_scatter.R dropped (stale panels, script early-quits)
 run_fig figS_coloc_sensitivity.R "Reviewer defense"
 run_fig figS_sensitivity.R "Threshold sweep"
 run_fig figS_finemapping_concordance.R "Finemapping concordance"

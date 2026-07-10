@@ -44,9 +44,9 @@ meta <- meta[!is.na(meta_I2) & n_datasets >= 2]
 # meta gene IDs are UNVERSIONED ENSG; canonical/anchors are VERSIONED -> strip
 meta[, gene_base := sub("\\..*$", "", gene)]
 
-# Tier-1 integrated DEG (C2 canonical): padj<0.05 & |logFC|>0.5
+# Tier-1 integrated DEG (TREAT canonical): treat_fdr<0.05 at lfc=0.25
 deg[, gene_base := sub("\\..*$", "", gene)]
-deg[, is_deg := padj < 0.05 & abs(logFC) > 0.5]
+deg[, is_deg := is_dream_deg(deg)]
 deg_genes <- deg[is_deg == TRUE, gene_base]
 
 meta[, deg_status := ifelse(gene_base %in% deg_genes,
@@ -96,27 +96,23 @@ p <- ggplot(meta, aes(x = meta_I2, fill = deg_status, color = deg_status)) +
   geom_rug(data = anch, aes(x = meta_I2), inherit.aes = FALSE,
            color = "#1565C0", linewidth = 0.6, length = unit(0.06, "npc")) +
   geom_text_repel(data = anch, aes(x = meta_I2, y = 0.004, label = gene),
-                  inherit.aes = FALSE, size = 2.1, color = "#1565C0",
+                  inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "#1565C0",
                   fontface = "italic", segment.size = 0.25,
                   direction = "y", nudge_y = 0.006, min.segment.length = 0) +
   annotate("text", x = med_deg, y = Inf, label = sprintf("DEG median\n%.1f%%", med_deg),
-           hjust = 1.1, vjust = 1.4, size = 2.0, color = "#C9265E", lineheight = 0.9) +
+           hjust = 1.1, vjust = 1.4, size = GEOM_TEXT_6PT, color = "#C9265E", lineheight = 0.9) +
   annotate("text", x = med_other, y = Inf, label = sprintf("genome-wide\n%.1f%%", med_other),
-           hjust = -0.08, vjust = 1.4, size = 2.0, color = "#616161", lineheight = 0.9) +
+           hjust = -0.08, vjust = 1.4, size = GEOM_TEXT_6PT, color = "#616161", lineheight = 0.9) +
   scale_fill_manual(values = fill_cols, name = NULL) +
   scale_color_manual(values = fill_cols, name = NULL) +
   scale_x_continuous(name = expression("Cross-cohort heterogeneity  " * I^2 * "  (%)"),
                      limits = c(0, 100), expand = expansion(mult = c(0.01, 0.02))) +
   scale_y_continuous(name = "Density", expand = expansion(mult = c(0, 0.06))) +
-  labs(title = "Integrated DEGs are less heterogeneous across cohorts",
-       subtitle = expression("metafor sensitivity-arm " * I^2 * " (not the C2 DEG model) — a consistency diagnostic")) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme(
-    plot.title      = element_text(size = 7.3, face = "bold", margin = margin(b = 2)),
-    plot.subtitle   = element_text(size = 5.3, color = "#555555", margin = margin(b = 5)),
     legend.position = c(0.99, 0.62),
     legend.justification = c(1, 0.5),
-    legend.text     = element_text(size = 5.5),
+    legend.text     = element_text(size = 6),
     legend.key.size = unit(0.16, "cm"),
     legend.background = element_blank()
   )
@@ -124,3 +120,4 @@ p <- ggplot(meta, aes(x = meta_I2, fill = deg_status, color = deg_status)) +
 ggsave(OUT_PDF, p, width = 84 / 25.4, height = 64 / 25.4,
        units = "in", device = cairo_pdf)
 cat(sprintf("[saved] %s\n", OUT_PDF))
+message("[caption] Integrated DEGs are less heterogeneous across cohorts (metafor sensitivity-arm I^2, not the C2 DEG model) — a consistency diagnostic")

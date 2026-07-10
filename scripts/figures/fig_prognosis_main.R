@@ -62,7 +62,7 @@ panel_a <- tryCatch({
                       ymax = pmin(mean_auroc + sd_auroc, 1.0)),
                   width = 0.2, linewidth = 0.3) +
     geom_text(aes(label = sprintf("%.3f", mean_auroc)),
-              vjust = -0.6, size = 1.7, fontface = "bold") +
+              vjust = -0.6, size = GEOM_TEXT_6PT, fontface = "plain") +
     # Arrow for best model
     geom_point(data = d[d$is_best, ],
                aes(y = pmin(mean_auroc + sd_auroc, 1.0) + 0.05),
@@ -72,7 +72,7 @@ panel_a <- tryCatch({
                        expand = expansion(mult = c(0, 0))) +
     labs(x = NULL, y = "AUROC (LOCO-CV)") +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 5, lineheight = 0.75,
+    theme(axis.text.x = element_text(size = 6, lineheight = 0.75,
                                      margin = margin(t = 1)))
 }, error = function(e) placeholder(paste("(a) Error:", e$message)))
 
@@ -103,7 +103,7 @@ panel_b <- tryCatch({
   ggplot(d, aes(x = quartile_label, y = s2_fraction * 100, fill = quartile_label)) +
     geom_col(width = 0.65, color = "black", linewidth = 0.2) +
     geom_text(aes(label = paste0(round(s2_fraction * 100), "%")),
-              vjust = -0.5, size = 2, fontface = "bold") +
+              vjust = -0.5, size = GEOM_TEXT_6PT, fontface = "plain") +
     # Enrichment bracket
     annotate("segment", x = 1, xend = 4, y = 47, yend = 47,
              linewidth = 0.3, color = "black") +
@@ -113,7 +113,7 @@ panel_b <- tryCatch({
              linewidth = 0.3, color = "black") +
     annotate("text", x = 2.5, y = 52,
              label = paste0(enrichment, "x enrichment; NRI = 0.266"),
-             size = 1.9, fontface = "bold") +
+             size = GEOM_TEXT_6PT, fontface = "plain") +
     scale_fill_manual(values = q_colors, guide = "none") +
     scale_y_continuous(limits = c(0, 57), breaks = seq(0, 50, 10),
                        expand = expansion(mult = c(0, 0))) +
@@ -140,12 +140,12 @@ panel_c <- tryCatch({
     geom_point(color = masld_colors$up, size = 2.2, shape = 16) +
     # "Full model" label at bottom-right, inside plot
     annotate("text", x = 30, y = m3_auroc - 0.013,
-             label = "Full model (100 features)", size = 1.5,
-             color = "gray45", hjust = 0.5, fontface = "italic") +
+             label = "Full model (100 features)", size = GEOM_TEXT_6PT,
+             color = "gray45", hjust = 0.5, fontface = "plain") +
     # Annotate 5-gene point (to the right, above dashed line)
     annotate("text", x = 7.5, y = d$mean_auroc[d$panel_size == 5] + 0.03,
              label = sprintf("5 genes: %.3f", d$mean_auroc[d$panel_size == 5]),
-             size = 1.6, fontface = "bold", hjust = 0) +
+             size = GEOM_TEXT_6PT, fontface = "plain", hjust = 0) +
     annotate("segment", x = 7, xend = 5.5,
              y = d$mean_auroc[d$panel_size == 5] + 0.023,
              yend = d$mean_auroc[d$panel_size == 5] + 0.007,
@@ -154,7 +154,7 @@ panel_c <- tryCatch({
     # Annotate 15-gene peak (above the point)
     annotate("text", x = 15, y = d$mean_auroc[d$panel_size == 15] + 0.04,
              label = sprintf("15 genes: %.3f", d$mean_auroc[d$panel_size == 15]),
-             size = 1.7, fontface = "bold", hjust = 0.5) +
+             size = GEOM_TEXT_6PT, fontface = "plain", hjust = 0.5) +
     annotate("segment", x = 15, xend = 15,
              y = d$mean_auroc[d$panel_size == 15] + 0.032,
              yend = d$mean_auroc[d$panel_size == 15] + 0.01,
@@ -199,12 +199,12 @@ panel_d <- tryCatch({
     # Terminal annotations (nudge to avoid overlap)
     geom_text(data = terminal,
               aes(label = sprintf("%.1f%%", survival_fraction * 100)),
-              hjust = 0, nudge_x = 0.02, size = 1.8,
-              fontface = "bold", show.legend = FALSE) +
+              hjust = 0, nudge_x = 0.02, size = GEOM_TEXT_6PT,
+              fontface = "plain", show.legend = FALSE) +
     # C-index annotation (top-right, away from legend)
     annotate("text", x = 0.95, y = 1.02,
              label = sprintf("C-index = %.3f, p < 2.2e-16", cps_ci),
-             size = 1.8, hjust = 1, fontface = "italic") +
+             size = GEOM_TEXT_6PT, hjust = 1, fontface = "plain") +
     scale_color_manual(values = cps_colors, labels = cps_labels,
                        name = NULL) +
     scale_x_continuous(limits = c(0, 1.15), breaks = seq(0, 1, 0.25)) +
@@ -218,7 +218,7 @@ panel_d <- tryCatch({
           legend.key.height = unit(0.22, "cm"),
           legend.key.width = unit(0.35, "cm"),
           legend.spacing.y = unit(0.02, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 6))
 }, error = function(e) placeholder(paste("(d) Error:", e$message)))
 
 # =============================================================================
@@ -266,7 +266,7 @@ panel_e <- tryCatch({
     annotate("text", x = 3, y = y_max + y_range * 0.12,
              label = sprintf("rho == %.3f~~p == %.1e~~(n == %d)",
                              sp$estimate, sp$p.value, n_total),
-             parse = TRUE, size = 1.9, hjust = 0.5) +
+             parse = TRUE, size = GEOM_TEXT_6PT, hjust = 0.5) +
     scale_fill_manual(values = fibrosis_stage_colors, guide = "none") +
     coord_cartesian(ylim = c(y_min - y_range * 0.02,
                              y_max + y_range * 0.18)) +
@@ -329,13 +329,13 @@ panel_f <- tryCatch({
   ggplot(plot_data, aes(x = panel, y = -rank)) +
     geom_tile(aes(fill = panel), width = 0.9, height = 0.9,
               color = "white", linewidth = 0.25) +
-    geom_text(aes(label = gene), size = 1.55, color = "white",
-              fontface = "bold") +
+    geom_text(aes(label = gene), size = GEOM_TEXT_6PT, color = "white",
+              fontface = "plain") +
     scale_fill_manual(values = panel_cols, guide = "none") +
     # Orthogonality annotation between columns, placed below gene tiles
     annotate("label", x = 1.5, y = -17,
              label = "0 / 15 shared\nJaccard = 0.0",
-             size = 2, fontface = "bold", lineheight = 0.85,
+             size = GEOM_TEXT_6PT, fontface = "plain", lineheight = 0.85,
              fill = "grey95", label.padding = unit(0.15, "lines")) +
     coord_cartesian(ylim = c(-18.5, -0.2), clip = "off") +
     labs(x = NULL, y = NULL) +
@@ -343,7 +343,7 @@ panel_f <- tryCatch({
     theme(axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line = element_blank(),
-          axis.text.x = element_text(size = 5.5, face = "bold"),
+          axis.text.x = element_text(size = 6, face = "plain"),
           plot.margin = margin(3, 3, 8, 3))
 }, error = function(e) placeholder(paste("(f) Error:", e$message)))
 
@@ -355,7 +355,7 @@ composite <- (panel_a | panel_b | panel_c) /
   plot_annotation(
     tag_levels = "a",
     theme = theme(
-      plot.tag = element_text(size = 9, face = "bold", family = "Helvetica")
+      plot.tag = element_text(size = 6, face = "plain", family = "Helvetica")
     )
   )
 

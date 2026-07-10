@@ -331,7 +331,7 @@ cat("Assembling composite figure\n")
 layout <- (p_a | p_b | p_c) / (p_d | p_e)
 fig <- layout +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 # Save composite
 out_path <- file.path(OUT_DIR, "figS_sex_subsampling.pdf")

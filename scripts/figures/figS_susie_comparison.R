@@ -344,7 +344,7 @@ message("Assembling composite figure...")
 fig <- (p_a | p_b) / p_c +
   plot_layout(heights = c(1, 1.2)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(fig, OUT, height = 7)
 message("Saved composite: ", OUT)

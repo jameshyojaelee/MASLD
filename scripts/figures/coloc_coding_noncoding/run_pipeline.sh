@@ -27,10 +27,5 @@ Rscript $SCRIPTS/02_annotate_variants.R
 
 echo "[$(date)] [03] aggregate + DEG overlap + GWAS-ATAC overlay"
 Rscript $SCRIPTS/03_aggregate_and_deg_overlap.R
-
-echo "[$(date)] [04] render F1-F8 panels"
-Rscript $SCRIPTS/04_render_figures.R
-
 echo "[$(date)] DONE"
-ls -la $BASE/figures/sketches/coloc_coding_noncoding/
 ls -la $BASE/RNA-seq/results/coloc_variant_classes/

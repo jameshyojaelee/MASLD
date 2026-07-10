@@ -71,10 +71,9 @@ pA <- ggplot(plt_all, aes(bulk_lfc, sc_lfc)) +
   geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.3, color = "grey50") +
   annotate("text", x = Inf, y = -Inf, hjust = 1.05, vjust = -0.5,
            label = sprintf("rho = %.3f\nn = %s", rho_all, format(n_all, big.mark = ",")),
-           size = 2.5, fontface = "italic") +
+           size = GEOM_TEXT_6PT, fontface = "plain") +
   labs(x = "Bulk RNA-seq logFC\n(MASLD vs Healthy)",
-       y = "sc Hepatocyte pseudobulk logFC\n(MASLD vs Healthy)",
-       title = "All shared genes") +
+       y = "sc Hepatocyte pseudobulk logFC\n(MASLD vs Healthy)") +
   theme_masld()
 
 # ---------------------------------------------------------------------------
@@ -93,10 +92,9 @@ pB <- ggplot(merged_hi, aes(bulk_lfc, sc_lfc)) +
   geom_vline(xintercept = 0, linetype = "dashed", linewidth = 0.3, color = "grey50") +
   annotate("text", x = Inf, y = -Inf, hjust = 1.05, vjust = -0.5,
            label = sprintf("rho = %.3f\nn = %s", rho_hi, format(n_hi, big.mark = ",")),
-           size = 2.5, fontface = "italic") +
+           size = GEOM_TEXT_6PT, fontface = "plain") +
   labs(x = "Bulk RNA-seq logFC\n(MASLD vs Healthy)",
-       y = "sc Hepatocyte pseudobulk logFC\n(MASLD vs Healthy)",
-       title = "Hepatocyte-intrinsic genes\n(deconvolution-attributed)") +
+       y = "sc Hepatocyte pseudobulk logFC\n(MASLD vs Healthy)") +
   theme_masld()
 
 # ---------------------------------------------------------------------------
@@ -121,12 +119,11 @@ pC <- ggplot(conc_dt, aes(label, concordance)) +
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey40", linewidth = 0.4) +
   geom_text(aes(label = sprintf("%.1f%%\n(n=%s)", concordance * 100,
                                 format(n, big.mark = ","))),
-            vjust = -0.2, size = 2.2) +
+            vjust = -0.2, size = GEOM_TEXT_6PT) +
   scale_y_continuous(labels = percent_format(accuracy = 1),
                      limits = c(0, 1.05), expand = c(0, 0)) +
   labs(x = NULL,
-       y = "Direction concordance\n(bulk vs sc hepatocyte)",
-       title = "Direction agreement\nby stringency") +
+       y = "Direction concordance\n(bulk vs sc hepatocyte)") +
   theme_masld() +
   theme(axis.text.x = element_text(size = 6, lineheight = 1.1))
 
@@ -168,13 +165,12 @@ pD <- ggplot(fres, aes(NES, pathway, fill = NES > 0)) +
   geom_text(aes(label = nes_label,
                 x = ifelse(NES > 0, NES + 0.05, NES - 0.05),
                 hjust = ifelse(NES > 0, 0, 1)),
-            size = 2.4) +
+            size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("TRUE" = "#C0392B", "FALSE" = "#2980B9")) +
   geom_vline(xintercept = 0, linewidth = 0.4) +
   scale_x_continuous(expand = expansion(mult = 0.4)) +
   labs(x = "Normalized Enrichment Score",
-       y = NULL,
-       title = "Bulk DEG sets enriched\nin sc hepatocyte ranking") +
+       y = NULL) +
   theme_masld()
 
 # ---------------------------------------------------------------------------
@@ -216,15 +212,12 @@ if (file.exists(comp_path)) {
     geom_text(aes(label = sprintf("rho=%.3f", rho),
                   y = ifelse(rho >= 0, rho + 0.015, rho - 0.015),
                   vjust = ifelse(rho >= 0, 0, 1)),
-              size = 2.4) +
+              size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = c("wrong" = "#E74C3C", "right" = "#2980B9")) +
     scale_y_continuous(limits = c(min(rho_dt$rho) - 0.08, max(rho_dt$rho) + 0.08)) +
-    labs(x = NULL, y = "Spearman rho vs bulk",
-         title = sprintf("Comparison level determines\nbulk-sc concordance (n=%d genes)", n_shared),
-         subtitle = "Red = wrong comparison; Blue = cell-type matched") +
+    labs(x = NULL, y = "Spearman rho vs bulk") +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 6.5, lineheight = 1.1),
-          plot.subtitle = element_text(size = 5.5, color = "grey40"))
+    theme(axis.text.x = element_text(size = 6, lineheight = 1.1))
 } else {
   message("WARNING: allcell_vs_bulk_comparison.csv not found; skipping Panel E")
 }
@@ -235,14 +228,16 @@ if (file.exists(comp_path)) {
 if (!is.null(pE)) {
   fig <- (pA + pB + pE) / (pC + pD + plot_spacer()) +
     plot_annotation(tag_levels = "A") &
-    theme(plot.tag = element_text(size = 8, face = "bold"))
-  fig_width <- 13; fig_height <- 8
+    theme(plot.tag = element_text(size = 8, face = "plain"))
+  fig_width <- fig_full_width; fig_height <- fig_full_width * (8 / 13)
 } else {
   fig <- (pA + pB) / (pC + pD) +
     plot_annotation(tag_levels = "A") &
-    theme(plot.tag = element_text(size = 8, face = "bold"))
-  fig_width <- 10; fig_height <- 8
+    theme(plot.tag = element_text(size = 8, face = "plain"))
+  fig_width <- fig_full_width; fig_height <- fig_full_width * (8 / 10)
 }
+
+message("[caption] A: All shared genes. B: Hepatocyte-intrinsic genes (deconvolution-attributed). C: Direction agreement by stringency. D: Bulk DEG sets enriched in sc hepatocyte ranking.")
 
 out_path <- file.path(FIGS03_DIR, "figS_bulk_sc_concordance.pdf")
 ggsave(out_path, fig, width = fig_width, height = fig_height)

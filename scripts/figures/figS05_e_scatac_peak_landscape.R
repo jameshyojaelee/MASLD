@@ -94,13 +94,13 @@ panel_a <- ggplot(land_long, aes(y = ct_label, x = n / 1000, fill = annotation))
   labs(tag = "a", y = NULL) +
   theme_masld(base_size = 9) +
   theme(
-    axis.title.x    = element_text(size = 9, face = "bold"),
-    axis.text.y     = element_text(size = 8),
-    axis.text.x     = element_text(size = 7),
-    plot.tag        = element_text(size = 11, face = "bold"),
+    axis.title.x    = element_text(size = 6, face = "plain"),
+    axis.text.y     = element_text(size = 6),
+    axis.text.x     = element_text(size = 6),
+    plot.tag        = element_text(size = 6, face = "plain"),
     plot.tag.position = c(0.02, 0.97),
     legend.position = "bottom",
-    legend.text     = element_text(size = 7),
+    legend.text     = element_text(size = 6),
     legend.key.size = unit(0.30, "cm"),
     legend.margin   = margin(t = -2),
     panel.grid      = element_blank()
@@ -161,13 +161,13 @@ panel_b <- ggplot(da_long, aes(y = ct_label, x = n, fill = direction)) +
   labs(tag = "b", y = NULL) +
   theme_masld(base_size = 9) +
   theme(
-    axis.title.x    = element_text(size = 9, face = "bold"),
-    axis.text.y     = element_text(size = 8),
-    axis.text.x     = element_text(size = 7),
-    plot.tag        = element_text(size = 11, face = "bold"),
+    axis.title.x    = element_text(size = 6, face = "plain"),
+    axis.text.y     = element_text(size = 6),
+    axis.text.x     = element_text(size = 6),
+    plot.tag        = element_text(size = 6, face = "plain"),
     plot.tag.position = c(0.02, 0.97),
     legend.position = "bottom",
-    legend.text     = element_text(size = 7),
+    legend.text     = element_text(size = 6),
     legend.key.size = unit(0.30, "cm"),
     legend.margin   = margin(t = -2),
     panel.grid      = element_blank()

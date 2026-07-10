@@ -58,10 +58,10 @@ BINARY_COLORS = {
 #   proteo  = human 111/19 (plasma 65/7 is_masld + liver 46/12 PXD051911 group)
 #   pharma / gwas = None → not a case/control design (compounds / population genetics)
 SPECIES_DISEASE = {
-    "bulk":    {"human": (1124, 160), "mouse": (179, 114)},
+    "bulk":    {"human": (1124, 160)},
     "scrna":   {"human": (196, 64)},
     "spatial": {"human": (22, 5)},
-    "atac":    {"human": (13, 5), "mouse": (9, 3)},
+    "atac":    {"human": (13, 5)},
     "proteo":  {"human": (111, 19)},
     "pharma":  None,
     "gwas":    None,
@@ -71,70 +71,70 @@ DISEASE_COLOR = "#C0524E"  # single semantic disease red — deliberately NOT a 
 NA_GRAY       = "#E2E2E2"  # neutral fill for non-case/control modalities
 SPECIES_LIGHTEN = 0.45     # mouse arcs = this much lighter than human (lightness = species)
 
-# GWAS inner ring = ANCESTRY of the 23 GWAS (by study count). The 3 eQTL
+# GWAS inner ring = ANCESTRY of the 50 GWAS strata (by dataset count). The 3 eQTL
 # (GTEx/Broadaway/sc-eQTL, EUR reference panels) are EXCLUDED — not ancestry-stratified
-# GWAS. Violet gradient (dark EUR → pale SAS). Source: gwas_registry.tsv.
+# GWAS. Violet gradient (dark EUR → pale SAS). Source: gwas_registry.tsv (MVP 50-GWAS
+# portfolio, 2026-07-05: EUR 21 + AFR 10 + EAS 9 + AMR 7 + SAS 3 = 50; AMR is the new
+# MVP ancestry). Counts verified on disk against gwas_registry.tsv.
 ANCESTRY = {
-    "gwas": [("EUR", 14, "#3A2259"), ("EAS", 3, "#7B4FB0"),
-             ("AFR", 3, "#C08AC9"), ("SAS", 3, "#EBD4E8")],
+    "gwas": [("EUR", 21, "#3A2259"), ("AFR", 10, "#5F3A8F"),
+             ("EAS", 9, "#8B5FC0"), ("AMR", 7, "#B592D4"),
+             ("SAS", 3, "#E4CDEE")],
 }
 
-# (key, title, l1, l2, (n_human, n_mouse), weight, datasets)
-# Verified from unified metadata & processed data (updated 2026-06-03)
+# (key, title, l1, l2, (n_human, n_mouse), weight, n_bars)
+# Verified from unified metadata & processed data (GWAS updated 2026-07-08 to MVP 50-GWAS portfolio)
 # scRNA: human donors + mouse donors across 7 source datasets
-# GWAS: 23 GWAS (14 EUR + 3 EAS + 3 AFR + 3 SAS Pan-UKBB) + 3 eQTL (GTEx v8, Broadaway, sc-eQTL)
-#   Registry: gwas_registry.tsv; sex-stratified Pan-UKBB F/M arms + cirrhosis/HCC GWAS excluded (2026 portfolio refactor)
-# bulk: 9 human QC-pass (1,259) + 8 mouse QC-pass (463) = 1,722 total; 17 datasets
+# GWAS: 50 GWAS strata (EUR 21 + AFR 10 + EAS 9 + AMR 7 + SAS 3) + 3 eQTL (GTEx v8, Broadaway, sc-eQTL)
+#   Registry: GWAS/finemapping/config/gwas_registry.tsv (MVP R4 added 2026-07-05; 23 legacy + 27 MVP strata
+#   that colocalized). 50 datasets = 48 distinct studies (Sveinbjornsson split into deCODE/Intermountain/UKBB).
+#   Fig 2 uses the same 50-GWAS portfolio (35 are Tier-1/2 liver-specific). eQTL EXCLUDED from ancestry ring.
+#   n_bars=13 (NOT 50): the outer per-dataset bars are AGGREGATED BY TRAIT (10 traits: NAFLD/NASH/
+#   PDFF/ALT/AST/GGT + MVP-added Cirrhosis/ChronLiver/Albumin/Platelet) + 3 eQTL bars, 2026-07-08 —
+#   53 individual-study bars degraded into an illegible sub-pixel fringe at this angular weight; trait
+#   aggregation keeps the bars legible while the l1 text label still states the true 50-study count.
+# bulk: 9 human QC-pass (1,259); 9 datasets (mouse removed 2026-06-25)
 # pharma: LINCS L1000, network proximity, DGIdb/OT, ClinicalTrials MASH pipeline, multi-layer (5 sources)
 # spatial: Govaere 2026 (GeoMx+CosMx, integrated 2026-05-21), GSE192741 (Visium), Vu_et_al_2025 (3 active)
 SECTORS = [
-    ("bulk",    "RNA-seq",                    "17\nRNA-seq",      "1,722\nsamples",  (1259, 463),  18.0, 17),
-    ("scrna",   "scRNA-seq",                  "7\nscRNA-seq",     "2.29M+\ncells",   (269, 0),      8.0, 7),
+    ("bulk",    "RNA-seq",                    "9\nRNA-seq",       "1,259\nsamples",  (1259, 0),    18.0, 9),
+    ("scrna",   "scRNA-seq",                  "7\nscRNA-seq",     "269\ndonors",     (269, 0),      8.0, 7),
     ("spatial", "Spatial Omics",              "3\nSpatial",       "27\nsamples",     (27, 0),        4.5, 3),
-    ("atac",    "ATAC-seq",                   "2\nATAC-seq",      "30\nsamples",     (18, 12),       4.5, 2),
+    ("atac",    "ATAC-seq",                   "1\nATAC-seq",      "18\nsamples",     (18, 0),        4.5, 1),
     ("proteo",  "Proteomics",                 "2\nProteomics",    "130\nsamples",    (130, 0),       4.5, 2),
-    ("pharma",  "Therapeutics",               "5\nTherapeutics",  "1,107\ncmpds",    (1, 0),         4.5, 5),
-    ("gwas",    "Genomics",                   "23 GWAS\n3 eQTL",  "1.5M+\nsubj.",   (1, 0),        16.0, 26),
+    ("pharma",  "Clinical",                   "5\nClinical",      "1,107\ncmpds",    (1, 0),         4.5, 5),
+    ("gwas",    "Genomics",                   "50 GWAS\n3 eQTL",  "1.5M+\nsubj.",   (1, 0),        16.0, 13),
 ]
 
 # Per-dataset sample counts for proportional outer-bar heights
 _DATASET_SIZES_RAW = {
-    "bulk": [  # 9 Human (QC-pass from sample_qc_report.csv) + 8 Mouse; STAR -s2 canonical 2026-05-28
+    "bulk": [  # 9 Human QC-pass from sample_qc_report.csv; STAR -s2 canonical 2026-05-28 (mouse removed 2026-06-25)
         358, 215, 160, 142, 97, 93, 76, 64, 55,       # Human QC-pass: Chen(GSE213621), Suppli(GSE135251), Govaere(GSE193066), Bril(GSE162694), Kawamura(GSE167523), Kozumi(GSE174478), Hoshida(GSE130970), Verschuren(GSE240729), Hoang(GSE126848)
-        213, 151, 29, 22, 12, 11, 10, 6,               # Mouse (unified_mouse_metadata.csv): CDAHFD/FPC(GSE162876), LIDPAD(GSE159911), HFD(GSE224069), HFD-long(GSE274914), InHouse_MCD, MCD-SE(GSE156918), GAN(GSE225616), MCD-PE(GSE205974)
     ],
     "scrna": [  # 7 source datasets (unique donors; SRR technical runs excluded)
         38, 117, 67, 21, 20, 2, 4,  # Liver_Atlas(38 donors), GSE244832, GSE202379, GSE185477, GSE136103, GSE189600(2 human donors), GSE174748
     ],
     "spatial": [12, 10, 5],  # Govaere2026(GeoMx 8pt+CosMx 4pt), Vu_et_al_2025(10 arrays), GSE192741(5 Visium sections)
-    "atac": [18, 12],                   # Human_Multiome (18 donors), Mouse_Bulk (12 samples)
+    "atac": [18],                       # Human_Multiome (18 donors); Mouse_Bulk removed 2026-06-25
     "proteo": [72, 58],                 # PXD052937 plasma DIA-MS, PXD051911 liver DIA-MS (GSE276114 removed 2026-06: GEO confirms bulk RNA-seq, not SomaScan proteomics)
     "pharma": [1107, 1173, 58, 23, 20],  # LINCS(1107 compounds), network proximity(1173 screened), DGIdb/OT, ClinicalTrials MASH, multi-layer
-    "gwas": [  # 23 GWAS + 3 eQTL (subjects in thousands); from gwas_registry.tsv (2026 portfolio refactor)
-        # EUR (14): N_tot in thousands
-        778.6,   # 2021_34841290 NAFLD EUR (Ghodsian meta)
-        438.9,   # FinnGen NAFLD
-        435.0,   # FinnGen NASH
-        343.9,   # UKBB_ALT
-        343.9,   # UKBB_AST
-        343.9,   # UKBB_GGT
-        397.0,   # 2023 UKBB NAFLD (Sveinbjornsson cohort)
-        359.2,   # deCODE NAFLD
-        44.9,    # 2022 PDFF EUR
-        36.1,    # 2021 PDFF EUR (34128465)
-        32.9,    # 2021 PDFF EUR (34957434)
-        32.7,    # Intermountain NAFLD EUR
-        9.5,     # 2020 NAFLD EUR
-        8.4,     # 2019 NAFLD EUR
-        # EAS (3)
-        160.0,   # BBJ_ALT
-        160.0,   # BBJ_AST
-        160.0,   # BBJ_GGT
-        # AFR Pan-UKBB (3)
-        6.6, 6.6, 6.6,
-        # SAS/CSA Pan-UKBB (3)
-        8.9, 8.9, 8.9,
-        # eQTL (3, in thousands of donors)
+    "gwas": [  # AGGREGATED BY TRAIT (N_tot summed across all 5 ancestries per trait, in thousands;
+               # from gwas_registry.tsv, MVP 50-GWAS portfolio 2026-07-05). 10 traits + 3 eQTL = 13
+               # bars — the prior 53 individual-study bars were sub-pixel/illegible at this angular
+               # weight. Verified: trait sums total 8,253.719K, exactly matching the registry's full
+               # 50-row N_tot sum (binary 4,310.369K + quantitative 3,943.350K), so no study double-
+               # counted or dropped. Direct Tier-1/2 liver traits first, then MVP-added Tier-3/4 traits.
+        2637.014,  # NAFLD (11 studies, all 5 ancestries; incl. Ghodsian 778.6K meta)
+        435.000,   # NASH (1 study: FinnGen)
+        113.841,   # PDFF (3 studies, EUR only)
+        1103.344,  # ALT (8 studies, all 5 ancestries)
+        1081.068,  # AST (8 studies, all 5 ancestries)
+        519.362,   # GGT (4 studies: UKBB/BBJ/PanUKBB-AFR/PanUKBB-CSA, no MVP GGT stratum)
+        626.711,   # Cirrhosis (3 MVP studies: EUR/AFR/AMR — no EAS stratum)
+        611.644,   # ChronLiver (4 MVP studies, all non-SAS ancestries)
+        542.276,   # Albumin (4 MVP studies, all non-SAS ancestries)
+        583.459,   # Platelet (4 MVP studies, all non-SAS ancestries)
+        # eQTL (3, in thousands of donors) — unchanged, not trait-aggregated
         1.183, 0.312, 0.208,
     ],
 }
@@ -229,11 +229,11 @@ def main():
     # Rings (Hierarchical thicknesses)
     # Layer 0: Disease vs control composition (inner, proportional arcs)
     # Layer 1: Datasets — modality name + n datasets
-    # Layer 2: Binary species flag (outermost slim ring)
-    # (The old inner per-modality "Counts" totals ring was removed 2026-06-18 — it
-    #  duplicated the outer bars; replaced here by disease/control composition.)
-    r_starts = [0.31, 0.62, 0.95]
-    r_ends   = [0.62, 0.95, 1.05]
+    # (Species ring removed 2026-06-25 — human-only atlas, so the flag was constant.
+    #  The old inner per-modality "Counts" totals ring was removed 2026-06-18 — it
+    #  duplicated the outer bars; replaced by disease/control composition.)
+    r_starts = [0.31, 0.62]
+    r_ends   = [0.62, 0.95]
 
     MOD_SHADE = 0.15   # modality (name) ring — softened so it doesn't punch
     
@@ -325,27 +325,7 @@ def main():
                 fontsize=f_size, fontweight="medium",
                 ha="center", va="center", zorder=6)
 
-        # 3. Outer slim layer: Binary Species Flag (Proportionally Scaled)
-        total_samples = sum(context)
-        if total_samples > 0:
-            h_frac = context[0] / total_samples
-            m_frac = context[1] / total_samples
-            
-            # Start from outer bound (current_angle)
-            seg_start = current_angle
-            
-            for f, col_name in zip([h_frac, m_frac], ["Human", "Mouse"]):
-                if f > 0:
-                    seg_span = f * span
-                    seg_end = seg_start - seg_span
-                    
-                    sp_color = BINARY_COLORS[col_name]
-                    w_species = Wedge((0, 0), r_ends[2], seg_end, seg_start, width=r_ends[2] - r_starts[2],
-                                      facecolor=sp_color, edgecolor=BG_COLOR, linewidth=1.5, zorder=5)
-                    ax.add_patch(w_species)
-                    
-                    seg_start = seg_end
-                          
+        # (Species ring removed 2026-06-25 — human-only atlas.)
         # 2b. Outer bars (Layer 3) — one bar per dataset, height ∝ dataset size (linear % of max)
         margin = 1.0
         usable_span = span - 2 * margin
@@ -370,41 +350,25 @@ def main():
                               linewidth=0.8, alpha=0.55, zorder=4)
                 ax.add_patch(w_bar)
 
-            # Per-sector radial axis: line at the leading edge of the sector
-            # with a single tick at the per-modality max value, so bar heights
-            # are interpretable in the modality's own units (samples / donors /
-            # subjects / compounds).
-            axis_ang = current_angle - margin
-            axis_rad = np.radians(axis_ang)
-            r_axis0  = r_base
-            r_axis1  = r_base + BAR_LEN_MAX
-            # Axis stem
-            ax.plot([r_axis0 * np.cos(axis_rad), r_axis1 * np.cos(axis_rad)],
-                    [r_axis0 * np.sin(axis_rad), r_axis1 * np.sin(axis_rad)],
-                    color="#555555", linewidth=0.7, zorder=6)
-            # Outward tick at max, perpendicular to the radial axis
-            tick_len = 0.025
-            tang_x = -np.sin(axis_rad) * tick_len
-            tang_y =  np.cos(axis_rad) * tick_len
-            tx0 = r_axis1 * np.cos(axis_rad)
-            ty0 = r_axis1 * np.sin(axis_rad)
-            ax.plot([tx0 - tang_x, tx0 + tang_x],
-                    [ty0 - tang_y, ty0 + tang_y],
-                    color="#555555", linewidth=0.7, zorder=6)
-            # Max-value tick label, sitting just beyond the axis line
-            s_max = max(sizes)
-            unit  = _SECTOR_UNITS.get(key, "")
-            max_label = f"{_fmt_axis_val(key, s_max)} {unit}".strip()
-            r_label = r_axis1 + 0.06
-            lab_x = r_label * np.cos(axis_rad) - tang_x * 0.6
-            lab_y = r_label * np.sin(axis_rad) - tang_y * 0.6
-            # Tangential rotation so label reads along the axis
-            rot = (axis_ang - 90) % 360
-            if rot > 90 and rot < 270:
+            # Per-sector TOTAL label — modality-level n (from l2), CENTERED on the
+            # sector mid-angle just beyond the tallest bar, matching the modality-name
+            # orientation so it reads as that wedge's total. Shows the modality total
+            # (not the max single dataset); bars stay proportional to the per-modality
+            # max as a relative-size texture. GWAS/Clinical totals are descriptive
+            # (GWAS subjects overlap biobanks; compound sources not disjoint) — NOT sums.
+            label_ang = (current_angle + end_angle) / 2.0
+            label_rad = np.radians(label_ang)
+            r_label = r_base + BAR_LEN_MAX + 0.11
+            lab_x = r_label * np.cos(label_rad)
+            lab_y = r_label * np.sin(label_rad)
+            rot = label_ang - 90
+            if rot < -90:
+                rot += 180
+            elif rot > 90:
                 rot -= 180
-            ax.text(lab_x, lab_y, max_label, rotation=rot,
-                    fontsize=LABEL_SIZE, color="#444444",
-                    ha="center", va="center", zorder=6)
+            ax.text(lab_x, lab_y, l2, rotation=rot,
+                    fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium",
+                    ha="center", va="center", zorder=6, linespacing=0.9)
 
         current_angle = end_angle - gap_deg
 
@@ -438,16 +402,7 @@ def main():
                 fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
     ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
 
-    # Species ring
-    r_in, r_out = r_starts[2], r_ends[2]
-    sp_legend_colors = [BINARY_COLORS["Human"], BINARY_COLORS["Mouse"]]
-    for ang_idx, (th1, th2) in enumerate(leg_angles):
-        ax_leg.add_patch(Wedge((cx, cy), r_out, th1, th2, width=r_out - r_in,
-                               facecolor=sp_legend_colors[ang_idx], edgecolor=BG_COLOR, lw=2.0))
-    r_mid = (r_in + r_out) / 2.0
-    ax_leg.text(-0.06, r_mid, "Species", ha="right", va="center",
-                fontsize=LABEL_SIZE, color=TEXT_DARK, fontweight="medium")
-    ax_leg.plot([-0.04, -0.01], [r_mid, r_mid], color="black", lw=1.0)
+    # Species ring removed 2026-06-25 (human-only atlas).
 
     # Outer bars legend
     ax_leg.text(-0.06, r_ends[-1] + 0.2, "Datasets", ha="right", va="center",
@@ -465,37 +420,21 @@ def main():
                       width=length, facecolor="#B0B0B0", edgecolor=BG_COLOR, lw=0.8, alpha=0.55)
             ax_leg.add_patch(w)
 
-    # Radial axis line in legend (at right edge of dummy bars)
-    leg_axis_ang = 70
-    leg_axis_rad = np.radians(leg_axis_ang)
-    leg_r0 = r_ends[-1] + 0.02
-    leg_r1 = r_ends[-1] + 0.02 + BAR_LEN_MAX
-    ax_leg.plot([leg_r0 * np.cos(leg_axis_rad) + cx, leg_r1 * np.cos(leg_axis_rad) + cx],
-                [leg_r0 * np.sin(leg_axis_rad) + cy, leg_r1 * np.sin(leg_axis_rad) + cy],
-                color="#888888", linewidth=0.5)
-    # "max" label at top of legend axis
-    ax_leg.text((leg_r1 + 0.04) * np.cos(leg_axis_rad) + cx,
-                (leg_r1 + 0.04) * np.sin(leg_axis_rad) + cy,
-                "max", fontsize=LABEL_SIZE, color="#888888", ha="center", va="center")
+    # (Bar axis + "max" annotation removed 2026-06-25 — per-modality totals are
+    #  labeled directly on each sector; bars just show relative dataset sizes.)
 
     # Bottom swatch legends — two columns: Species (left), Disease/Control (right)
-    sp_y = -0.5
-    ax_leg.text(0, sp_y + 0.15, "Species", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
-    for key, color in BINARY_COLORS.items():
-        ax_leg.add_patch(plt.Rectangle((0, sp_y - 0.05), 0.1, 0.1, facecolor=color, edgecolor=BG_COLOR))
-        ax_leg.text(0.15, sp_y, key, fontsize=LABEL_SIZE, color=TEXT_DARK, va="center")
-        sp_y -= 0.18
-
-    dc_x, dc_y = 0.62, -0.5
+    # Species swatch removed 2026-06-25 (human-only atlas).
+    dc_x, dc_y = 0.0, -0.5
     ax_leg.text(dc_x, dc_y + 0.15, "Condition", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
     for lab, col in [("Disease", DISEASE_COLOR), ("Control", CONTROL_GRAY)]:
         ax_leg.add_patch(plt.Rectangle((dc_x, dc_y - 0.05), 0.1, 0.1, facecolor=col, edgecolor=BG_COLOR))
         ax_leg.text(dc_x + 0.15, dc_y, lab, fontsize=LABEL_SIZE, color=TEXT_DARK, va="center")
         dc_y -= 0.18
 
-    # Ancestry legend (GWAS inner ring) — 2×2 grid under the Species column
+    # Ancestry legend (GWAS inner ring) — 5 ancestries (3 top / 2 bottom) under the Condition column
     ax_leg.text(0, -0.95, "Ancestry", fontsize=LABEL_SIZE, fontweight="bold", color=TEXT_DARK)
-    anc_pos = [(0.0, -1.10), (0.30, -1.10), (0.0, -1.26), (0.30, -1.26)]
+    anc_pos = [(0.0, -1.10), (0.30, -1.10), (0.60, -1.10), (0.0, -1.26), (0.30, -1.26)]
     for (label, _n, col), (ax_, ay_) in zip(ANCESTRY["gwas"], anc_pos):
         ax_leg.add_patch(plt.Rectangle((ax_, ay_ - 0.05), 0.09, 0.1, facecolor=col, edgecolor=BG_COLOR))
         ax_leg.text(ax_ + 0.12, ay_, label, fontsize=LABEL_SIZE - 1, color=TEXT_DARK, va="center")

@@ -135,7 +135,7 @@ plot_S1 <- ggplot(s1_data, aes(x = Estimate, y = pair_label)) +
        title = "A. LMM effect size with bootstrap CI across 4 stage axes",
        subtitle = "Bootstrap CI shown only for coarse axis (B=500). Non-bootstrap axes: point estimate only.") +
   theme_masld(base_size = 7) +
-  theme(strip.text = element_text(size = 6, face = "bold"),
+  theme(strip.text = element_text(size = 6, face = "plain"),
         legend.position = "right",
         legend.text = element_text(size = 5))
 
@@ -176,7 +176,7 @@ plot_S2 <- ggplot(s2_data, aes(x = stage, y = pct, fill = condition)) +
   theme_masld(base_size = 7) +
   theme(legend.position = "top",
         legend.text = element_text(size = 5),
-        plot.title = element_text(size = 7, face = "bold"),
+        plot.title = element_text(size = 7, face = "plain"),
         plot.subtitle = element_text(size = 5.5, color = "grey35"))
 
 # ============================================================================
@@ -228,8 +228,8 @@ plot_S3 <- ggplot(v_all, aes(x = Estimate, y = neglogp)) +
        title = "C. Per-axis volcano with 8 headline LR pairs labeled",
        subtitle = "Gray points = all tested pairs (2,170 - 8,019 per axis). Colored points = 8 paracrine headline pairs.") +
   theme_masld(base_size = 7) +
-  theme(strip.text = element_text(size = 6, face = "bold"),
-        plot.title = element_text(size = 7, face = "bold"),
+  theme(strip.text = element_text(size = 6, face = "plain"),
+        plot.title = element_text(size = 7, face = "plain"),
         plot.subtitle = element_text(size = 5.5, color = "grey35"))
 
 # ============================================================================

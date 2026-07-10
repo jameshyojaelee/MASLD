@@ -10,17 +10,25 @@
 # strongest among the genes that actually change.)
 #
 # DESIGN: paired per-gene scatters (Liver | Plasma), x = mRNA log2FC, y = protein
-# log2FC; faded "all genes" cloud + DEGs (magenta) + conserved core (teal)
-# overlaid; Spearman rho + n annotated per gene-set per compartment. NO lollipop
+# log2FC; faded "all genes" cloud + DEGs (magenta) overlaid; Spearman rho + n
+# annotated for each of those two gene-sets per compartment. NO lollipop
 # (see memory/feedback-no-lollipop). rho/n recomputed from the per-gene table so
 # the points and the annotated statistics are self-consistent; cross-checked
 # against mrna_protein_concordance_stratified.csv.
+#
+# SIMPLIFIED 2026-07-02 (→ callout 4b): dropped the y=x dashed diagonal and the
+# lm fit line (declutter), and removed the cross-species Conserved set from both
+# the points and the annotation — conserved core has its own dedicated panel (4g),
+# so here it only added a third indistinguishable teal cloud. Now two sets only:
+# All genes vs Primary DEG.
 #
 # CAVEAT (legend): the two DIA-MS sources are NOT like-for-like replicates —
 # liver tissue measures the biology directly; plasma is the non-invasive
 # biomarker complement.
 #
-# Output: figures/main/fig4_validation/fig4a_proteomics_concordance.pdf
+# Output: figures/main/fig4_validation/panels/figS4a.pdf (renamed 2026-07-07;
+#         was fig4a_proteomics_concordance.pdf; also serves as Supp Fig 4a —
+#         see docs/paper_outline.md Fig S4)
 # Env:    rnaseq
 
 suppressPackageStartupMessages({
@@ -43,26 +51,22 @@ v3 <- v3[dream_comparator == "disease_vs_control" &
 v3[, compartment := fifelse(dataset == "PXD051911", "Liver tissue", "Plasma")]
 v3[, compartment := factor(compartment, levels = c("Liver tissue", "Plasma"))]
 
-# ── Gene-set membership: primary DEG (atlas C2) + cross-species conserved core ─
+# ── Gene-set membership: primary DEG (atlas C2) ───────────────────────────────
 atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
                select = c("human_symbol", "bulk_padj", "bulk_logFC"))
 deg_genes <- atlas[!is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.3, human_symbol]
-conc <- fread(file.path(CONCORDANCE, "concordance_atlas_unified.csv"),
-              select = c("human_symbol", "n_concordant"))
-cons_genes <- conc[n_concordant >= 3, human_symbol]
 
-# Category (priority conserved > DEG > other) drives colour + layering.
-v3[, category := fifelse(gene %in% cons_genes, "Conserved",
-                  fifelse(gene %in% deg_genes,  "Primary DEG", "All genes"))]
-v3[, category := factor(category, levels = c("All genes", "Primary DEG", "Conserved"))]
+# Category (DEG > other) drives colour + layering. (Conserved set removed 2026-07-02;
+# conservation as a translatability filter has its own dedicated panel, 4g.)
+v3[, category := fifelse(gene %in% deg_genes, "Primary DEG", "All genes")]
+v3[, category := factor(category, levels = c("All genes", "Primary DEG"))]
 
 # ── Spearman rho + n per compartment x gene-set (self-consistent w/ the points) ─
-# "All genes" = the full overlap; DEG / Conserved = the restricted subsets.
+# "All genes" = the full overlap; DEG = the restricted subset.
 rho_tab <- rbindlist(lapply(levels(v3$compartment), function(cp) {
   sub <- v3[compartment == cp]
   sets <- list("All genes"   = sub,
-               "Primary DEG" = sub[gene %in% deg_genes],
-               "Conserved"   = sub[gene %in% cons_genes])
+               "Primary DEG" = sub[gene %in% deg_genes])
   rbindlist(lapply(names(sets), function(s) {
     d <- sets[[s]]
     data.table(compartment = cp, set = s, n = nrow(d),
@@ -70,15 +74,14 @@ rho_tab <- rbindlist(lapply(levels(v3$compartment), function(cp) {
   }))
 }))
 rho_tab[, compartment := factor(compartment, levels = c("Liver tissue", "Plasma"))]
-rho_tab[, set := factor(set, levels = c("All genes", "Primary DEG", "Conserved"))]
+rho_tab[, set := factor(set, levels = c("All genes", "Primary DEG"))]
 # label text block per facet
 lab_dt <- rho_tab[, .(label = paste(sprintf("%-9s ρ=%.2f (n=%s)",
                        set, rho, formatC(n, big.mark = ",", format = "d")),
                        collapse = "\n")), by = compartment]
 
 # ── Colours + display clipping ───────────────────────────────────────────────
-cat_cols <- c("All genes" = masld_colors$ns, "Primary DEG" = masld_colors$up,
-              "Conserved" = masld_colors$conserved)
+cat_cols <- c("All genes" = masld_colors$ns, "Primary DEG" = masld_colors$up)
 LIM <- 4
 v3[, `:=`(x = pmax(pmin(bulk_logFC, LIM), -LIM),
           y = pmax(pmin(protein_logFC, LIM), -LIM))]
@@ -87,16 +90,12 @@ v3[, `:=`(x = pmax(pmin(bulk_logFC, LIM), -LIM),
 p <- ggplot(v3, aes(x, y)) +
   geom_hline(yintercept = 0, color = "grey85", linewidth = 0.25) +
   geom_vline(xintercept = 0, color = "grey85", linewidth = 0.25) +
-  geom_abline(slope = 1, intercept = 0, linetype = "22", color = "grey70", linewidth = 0.3) +
   rasterize_layer(geom_point(data = v3[category == "All genes"],
                              color = cat_cols["All genes"], size = 0.18, alpha = 0.16, shape = 16), dpi = 600) +
   rasterize_layer(geom_point(data = v3[category == "Primary DEG"],
                              color = cat_cols["Primary DEG"], size = 0.3, alpha = 0.5, shape = 16), dpi = 600) +
-  geom_point(data = v3[category == "Conserved"],
-             color = cat_cols["Conserved"], size = 0.4, alpha = 0.6, shape = 16) +
-  geom_smooth(method = "lm", se = FALSE, color = "grey30", linewidth = 0.4, linetype = "solid") +
   geom_text(data = lab_dt, aes(x = -LIM, y = LIM, label = label), inherit.aes = FALSE,
-            hjust = 0, vjust = 1, size = PUB_GEOM_TEXT, family = "Helvetica",
+            hjust = 0, vjust = 1, size = GEOM_TEXT_6PT, family = "Helvetica",
             lineheight = 0.95, color = "black") +
   facet_wrap(~ compartment, nrow = 1) +
   coord_cartesian(xlim = c(-LIM, LIM), ylim = c(-LIM, LIM), clip = "off") +
@@ -104,11 +103,9 @@ p <- ggplot(v3, aes(x, y)) +
        y = expression("protein "*log[2]*"FC")) +
   # legend for the 3 gene-sets (manual, since colours are hard-set per layer)
   guides(color = guide_legend(override.aes = list(size = 1.6, alpha = 1))) +
-  theme_masld() + theme_pub() +
-  theme(plot.title = element_text(size = PUB_TITLE, face = "bold", color = "black"),
-        axis.text = element_text(color = "black"),
-        panel.spacing.x = unit(0.3, "cm"),
-        strip.text = element_text(size = PUB_AXIS_TITLE, face = "bold", color = "black"))
+  theme_masld_compact() +
+  theme(axis.text = element_text(color = "black"),
+        panel.spacing.x = unit(0.3, "cm"))
 
 # manual colour legend via dummy layer
 p <- p + geom_point(data = data.frame(x = NA, y = NA, category = names(cat_cols)),
@@ -118,8 +115,8 @@ p <- p + geom_point(data = data.frame(x = NA, y = NA, category = names(cat_cols)
   theme(legend.position = "bottom", legend.key.size = unit(0.18, "cm"),
         legend.margin = margin(t = -5), plot.margin = margin(3, 4, 1, 3))
 
-out <- file.path(FIG4_DIR, "fig4a_proteomics_concordance.pdf")
-save_fig(p, out, width = fig_full_width * 0.68, height = 2.3)
+out <- file.path(FIG4_DIR, "panels", "figS4a.pdf")
+save_fig(p, out, width = fig_full_width * 0.66, height = 1.9)
 message("Saved: ", out)
 
 # sidecar + cross-check vs canonical stratified table

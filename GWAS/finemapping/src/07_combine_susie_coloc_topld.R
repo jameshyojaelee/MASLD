@@ -7,6 +7,14 @@
 # Output: GWAS/finemapping/results/susie_coloc_topld/gene_level_coloc_topld.csv
 # Schema: identical to v1 gene_level_coloc.csv for direct comparability.
 #
+# RESEARCH-ONLY (LD-panel sensitivity arm) — NOT the atlas source. This variant
+#   processes EUR GWAS only, so it intentionally OMITS the cross-ancestry
+#   provenance/tier columns added to the canonical 07 (coloc_*_ancestry,
+#   _conf_tier, _ancestry_matched, _headline_cross_anc, _pp4_EUR, n_anc_*): every
+#   row here is EUR × EUR-eQTL (ancestry_matched), so those labels are moot. The
+#   canonical atlas reads results/susie_coloc/gene_level_coloc.csv (27a:273); do
+#   NOT wire this output into 27a/75/217 or any headline claim.
+#
 # Differences vs 07_combine_susie_coloc.R:
 #   - COLOC_DIR points at susie_coloc_topld/
 #   - Per-GWAS combined CSV name unchanged (susie_coloc_combined.csv)

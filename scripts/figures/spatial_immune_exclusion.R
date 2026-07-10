@@ -74,7 +74,7 @@ p_cooc <- ggplot(hep_pairs, aes(x = rho, y = partner)) +
   geom_text(data = hep_pairs[ct2 == "Fibroblasts"],
             aes(label = sprintf("%.3f", rho)),
             hjust = -0.25, vjust = -1.1, size = PUB_GEOM_TEXT,
-            fontface = "bold", color = masld_colors$up) +
+            fontface = "plain", color = masld_colors$up) +
   scale_color_manual(values = lolli_cols, guide = "none") +
   scale_x_continuous(limits = c(-0.65, 0.30),
                      breaks = c(-0.5, -0.25, 0, 0.25)) +

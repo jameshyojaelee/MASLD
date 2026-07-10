@@ -3,7 +3,7 @@
 # fib_stage_vs_ctrl_upset.R
 # Fig 2 panel — UpSet of stage-specific DEG sets (F1-F4 vs strictly healthy
 # controls). Mirrors fib_stage_upset.R.
-# DEG definition: padj<0.05, |logFC|>0.5. Top 11 intersections shown.
+# DEG definition: analytical TREAT, fdr_treat<0.05 at lfc=0.25 (canonical 2026-06-29). Top 11 intersections shown.
 # ============================================================================
 
 suppressPackageStartupMessages({
@@ -32,19 +32,44 @@ if (!file.exists(FIB_VS_CTRL)) {
   stop("fibrosis_stage_vs_ctrl_dream.csv not found. Run 14b_stage_vs_healthy_dream.R first.")
 }
 
-PADJ_THR <- 0.05
-LFC_THR  <- 0.5
-TOP_N    <- 11L
+TREAT_LFC <- 0.25  # canonical TREAT effect-size offset (folded into the test; 2026-06-29)
+FDR_THR   <- 0.05  # treat_fdr cutoff (BH within each stage contrast)
+TOP_N     <- 11L
 
 BAR_FILL <- "#546E7A"  # single neutral color for intersection bars
+
+# Analytical TREAT reconstruction (mirrors rebuild_cas13_library.R::add_treat_fdr,
+# proven identical to limma::treat). The per-stage source CSV carries logFC + SE + t +
+# P.Value but no treat_fdr, so we reconstruct the moderated-t TREAT statistic here:
+# H0 is |true logFC| <= TREAT_LFC, the effect-size floor folded INTO the test (no
+# separate |logFC| filter). df.total inferred per contrast from the (t, P.Value) pair.
+infer_df_total <- function(dt) {
+  pr <- dt[is.finite(t) & is.finite(P.Value) & P.Value > 0 & P.Value < 1 & abs(t) > 1e-6]
+  idx <- unique(round(seq(1, nrow(pr), length.out = min(nrow(pr), 12))))
+  median(vapply(idx, function(i)
+    uniroot(function(df) 2 * pt(-abs(pr$t[i]), df = df) - pr$P.Value[i], c(0.1, 1e6))$root,
+    numeric(1)))
+}
+add_treat_fdr <- function(dt, lfc, se_col = "SE") {
+  out <- copy(dt)
+  se <- if (se_col %in% names(out)) out[[se_col]] else abs(out$logFC / out$t)
+  se[!is.finite(se) | se <= 0] <- NA_real_
+  df_use <- infer_df_total(out)
+  out[, p_treat := pt((abs(logFC) - lfc) / se, df = df_use, lower.tail = FALSE) +
+                   pt((abs(logFC) + lfc) / se, df = df_use, lower.tail = FALSE)]
+  out[, fdr_treat := p.adjust(p_treat, method = "BH")]
+  out
+}
 
 # ---------------------------------------------------------------------------
 # Build per-stage DEG sets
 # ---------------------------------------------------------------------------
 de <- fread(FIB_VS_CTRL)
-padj_col <- if ("padj" %in% names(de)) "padj" else "adj.P.Val"
-de <- de[!is.na(get(padj_col)) & !is.na(logFC)]
-de_sig <- de[get(padj_col) < PADJ_THR & abs(logFC) > LFC_THR, .(gene, contrast)]
+stopifnot(all(c("logFC", "SE", "t", "P.Value", "contrast") %in% names(de)))
+de <- de[!is.na(logFC) & !is.na(SE)]
+# Per-contrast analytical TREAT (each stage-vs-Ctrl contrast is its own test family)
+de <- rbindlist(lapply(split(de, by = "contrast"), add_treat_fdr, lfc = TREAT_LFC))
+de_sig <- de[fdr_treat < FDR_THR, .(gene, contrast)]
 
 stage_labels   <- paste0("F", 1:4)
 contrast_map   <- setNames(stage_labels, paste0("F", 1:4, "_vs_Ctrl"))
@@ -92,7 +117,7 @@ stage_colors <- c(
 # ---------------------------------------------------------------------------
 p_top <- ggplot(intersections, aes(x = ix_label, y = n_genes)) +
   geom_col(width = 0.75, fill = BAR_FILL, color = NA) +
-  geom_text(aes(label = comma(n_genes)), vjust = -0.3, size = 1.9, color = "gray20") +
+  geom_text(aes(label = comma(n_genes)), vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray20") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.18)), labels = comma) +
   labs(x = NULL, y = "DEGs (intersection size)") +
   theme_masld() +
@@ -126,7 +151,7 @@ p_dots <- ggplot(dot_dt, aes(x = ix_label, y = stage)) +
   theme(panel.grid    = element_blank(),
         axis.text.x  = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.text.y  = element_text(face = "bold", size = 6.5),
+        axis.text.y  = element_text(face = "plain", size = 6),
         plot.margin  = margin(0, 4, 4, 4))
 
 # ---------------------------------------------------------------------------
@@ -135,7 +160,7 @@ p_dots <- ggplot(dot_dt, aes(x = ix_label, y = stage)) +
 p_left <- ggplot(set_sizes,
                  aes(y = stage, x = n_genes, fill = as.character(stage))) +
   geom_col(width = 0.7, color = NA) +
-  geom_text(aes(label = comma(n_genes)), hjust = 1.1, size = 1.9, color = "white") +
+  geom_text(aes(label = comma(n_genes)), hjust = 1.1, size = GEOM_TEXT_6PT, color = "white") +
   scale_fill_manual(values = stage_colors, guide = "none") +
   scale_x_reverse(expand = expansion(mult = c(0.05, 0)), labels = comma,
                   breaks = scales::breaks_pretty(n = 3)) +
@@ -144,7 +169,7 @@ p_left <- ggplot(set_sizes,
   theme(panel.grid    = element_blank(),
         axis.text.y  = element_blank(),
         axis.ticks.y = element_blank(),
-        axis.text.x  = element_text(size = 5.5, angle = 35, hjust = 1),
+        axis.text.x  = element_text(size = 6, angle = 35, hjust = 1),
         plot.margin  = margin(0, 1, 4, 4))
 
 # ---------------------------------------------------------------------------

@@ -120,13 +120,12 @@ if (!is.null(atlas)) {
   p_a <- ggplot(src_dt, aes(x = pct, y = source, fill = source)) +
     geom_col(width = 0.65) +
     geom_text(aes(label = paste0(sprintf("%.1f", pct), "%  (n=", comma(n_active), ")")),
-              hjust = -0.05, size = 2, color = "gray20") +
+              hjust = -0.05, size = GEOM_TEXT_6PT, color = "gray20") +
     scale_fill_manual(values = source_fills, guide = "none") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.35)),
                        labels = function(x) paste0(x, "%")) +
     labs(x = paste0("Gene coverage (N = ", comma(n_genes), " genes)"),
-         y = NULL,
-         title = "Evidence source architecture") +
+         y = NULL) +
     theme_masld()
 }
 
@@ -152,16 +151,14 @@ if (file.exists(loo_summary_path) && file.exists(loo_gene_path)) {
     geom_vline(xintercept = mean_recovery, linetype = "dashed",
                linewidth = 0.3, color = "gray40") +
     geom_text(aes(label = paste0(sprintf("%.1f", pct_full_recovered), "%")),
-              hjust = -0.1, size = 2, color = "gray20") +
+              hjust = -0.1, size = GEOM_TEXT_6PT, color = "gray20") +
     annotate("text", x = mean_recovery, y = 0.5,
              label = paste0("Mean: ", sprintf("%.1f", mean_recovery), "%"),
-             hjust = -0.05, vjust = -0.5, size = 2, color = "gray40",
-             fontface = "italic") +
+             hjust = -0.05, vjust = -0.5, size = GEOM_TEXT_6PT, color = "gray40") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.2)),
                        labels = function(x) paste0(x, "%")) +
     labs(x = "DEG recovery (%)",
-         y = NULL,
-         title = "LOO-CV cohort stability") +
+         y = NULL) +
     theme_masld()
 
   # --- Right: gene robustness histogram ---
@@ -188,12 +185,11 @@ if (file.exists(loo_summary_path) && file.exists(loo_gene_path)) {
 
   p_b_hist <- ggplot(rob_summary, aes(x = robustness, y = N, fill = robustness)) +
     geom_col(width = 0.6) +
-    geom_text(aes(label = comma(N)), vjust = -0.3, size = 2) +
+    geom_text(aes(label = comma(N)), vjust = -0.3, size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = rob_colors, guide = "none") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.15)),
                        labels = comma) +
-    labs(x = NULL, y = "DEGs",
-         title = "Gene robustness") +
+    labs(x = NULL, y = "DEGs") +
     theme_masld()
 
   # Combine bar + histogram side by side
@@ -211,11 +207,10 @@ if (file.exists(loo_summary_path) && file.exists(loo_gene_path)) {
     geom_vline(xintercept = mean_recovery, linetype = "dashed",
                linewidth = 0.3, color = "gray40") +
     geom_text(aes(label = paste0(sprintf("%.1f", pct_full_recovered), "%")),
-              hjust = -0.1, size = 2, color = "gray20") +
+              hjust = -0.1, size = GEOM_TEXT_6PT, color = "gray20") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.2)),
                        labels = function(x) paste0(x, "%")) +
-    labs(x = "DEG recovery (%)", y = NULL,
-         title = "LOO-CV cohort stability") +
+    labs(x = "DEG recovery (%)", y = NULL) +
     theme_masld()
 }
 
@@ -265,7 +260,7 @@ if (file.exists(auroc_mat_path)) {
     geom_tile(color = "white", linewidth = 0.5) +
     geom_text(aes(label = ifelse(is.na(auroc), "",
                                  sprintf("%.2f", auroc))),
-              size = 1.8, color = ifelse(
+              size = GEOM_TEXT_6PT, color = ifelse(
                 is.na(auroc_combined$auroc), "white",
                 ifelse(auroc_combined$auroc > 0.75, "white", "black")
               )) +
@@ -278,11 +273,10 @@ if (file.exists(auroc_mat_path)) {
                          oob = squish,
                          name = "AUROC") +
     labs(x = "Test cohort",
-         y = "Training cohort",
-         title = "Cross-study prediction (AUROC)") +
+         y = "Training cohort") +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-          axis.text.y = element_text(size = 5.5),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6),
           panel.grid = element_blank(),
           legend.key.height = unit(0.5, "cm"),
           legend.key.width = unit(0.25, "cm"))
@@ -300,10 +294,10 @@ if (file.exists(auroc_mat_path)) {
 fig_atlas <- p_a / (p_b | p_c) +
   plot_layout(heights = c(1, 1.5)) +
   plot_annotation(
-    title = "Atlas architecture and cross-study validation",
     tag_levels = "a"
   ) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(fig_atlas, OUT, height = 8)
+message("[caption] Atlas architecture and cross-study validation")
 message("Atlas validation supplementary figure saved to ", OUT)

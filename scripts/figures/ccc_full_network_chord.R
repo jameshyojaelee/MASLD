@@ -6,7 +6,7 @@
 # Does NOT touch the canonical ccc_v3_panels.R outputs (the stage-gated chord).
 #
 # Output (figures/main/fig3_RNAseq/panels/):
-#   ccc_chord_all_lr.pdf
+#   figs3_ccc_chord_all_lr.pdf   (supp; was fig3g, demoted 2026-07-02)
 #      FULL LIANA communication network. Every directed sender->receiver
 #      cell-type pair across all 9 cell types. Ribbon width = number of
 #      *consensus* ligand-receptor interactions, where an LR pair is "present"
@@ -38,7 +38,7 @@ PANEL_DIR <- file.path(FIG2_DIR, "panels")   # FIG2_DIR == .../fig3_RNAseq
 DATA_DIR  <- file.path(PANEL_DIR, "data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 
-OUT_ALL  <- file.path(PANEL_DIR, "ccc_chord_all_lr.pdf")
+OUT_ALL  <- file.path(PANEL_DIR, "figs3_ccc_chord_all_lr.pdf")   # DEMOTED to supp 2026-07-02 (was fig3g)
 
 # Tunable thresholds (printed to log for reproducibility)
 SPEC_CUT   <- 0.05   # LIANA specificity_rank cutoff for "present in a donor"
@@ -106,20 +106,23 @@ grid_col_all <- setNames(ct_short_col[nodes_all], nodes_all)
 # ribbon color = sender cell type (semi-transparent)
 adj_all[, col := alpha(ct_short_col[from], 0.62)]
 
-FIG_W <- 150 / 25.4
-FIG_H <- 168 / 25.4
+FIG_W <- 95 / 25.4
+FIG_H <- 96 / 25.4
 cairo_pdf(OUT_ALL, width = FIG_W, height = FIG_H)
-layout(matrix(c(1, 2), nrow = 2), heights = c(153, 15) / 25.4)
-par(mar = c(0.5, 0.5, 0.5, 0.5))
+layout(matrix(c(1, 2), nrow = 2), heights = c(86, 10) / 25.4)
+par(mar = c(0.5, 0.5, 0.5, 0.5), family = "Helvetica")
 
 pretty_chord(adj_all, nodes_all, grid_col_all,
-             start.degree = 90, gap.degree = 4, label_cex = 1.05,
-             show_axis = FALSE, show_total = TRUE)
+             start.degree = 90, gap.degree = 4,
+             show_axis = FALSE, show_total = TRUE,
+             label_fontsize = 6, total_fontsize = 6,
+             text_family = "Helvetica", label_font = 1, total_font = 1,
+             label_offset = 5.5, total_offset = 1.4, canvas_lim = 1.28)
 
-par(mar = c(0, 0, 0, 0)); plot.new()
+par(mar = c(0, 0, 0, 0), family = "Helvetica"); plot.new()
 legend("center", legend = names(grid_col_all), fill = grid_col_all,
-       border = NA, horiz = TRUE, bty = "n", cex = 0.95, x.intersp = 0.4,
-       title = "Sender / receiver cell type", title.font = 2)
+       border = NA, horiz = TRUE, bty = "n", cex = 0.5, x.intersp = 0.4,
+       title = "Sender / receiver cell type", title.font = 1)
 dev.off()
 cat(sprintf("[all-LR] wrote %s\n", OUT_ALL))
 

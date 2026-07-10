@@ -220,7 +220,7 @@ p <- ggplot(tiles, aes(x = modality, y = gene)) +
     legend.box       = "vertical",
     legend.spacing.y = unit(0.04, "cm"),
     legend.margin    = margin(0, 0, 0, 0),
-    plot.title       = element_text(size = PUB_TITLE, face = "bold")
+    plot.title       = element_text(size = PUB_TITLE, face = "plain")
   )
 
 # Separator line along the drug-development gradient: APPROVED/CLINICAL above

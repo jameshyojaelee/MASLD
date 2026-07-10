@@ -65,11 +65,11 @@ fib_colors <- c(
   "Control" = "#9E9E9E"
 )
 
-# Subtype colors (Metabolic = resolving trajectory, Fibrogenic = progressing trajectory)
+# Subtype colors (Metabolic = resolving trajectory, Fibrotic-ECM = progressing trajectory)
 subtype_colors <- c(
-  "Metabolic"      = "#42A5F5",  # Blue (resolving) — legacy name for panel (c)/(g)
-  "Non-Fibrogenic" = "#42A5F5",  # Blue — k-program lumped non-Fibrotic label
-  "Fibrogenic"     = "#C9265E"   # Liang deep magenta (progressing)
+  "Metabolic"    = "#42A5F5",  # Blue (resolving) — legacy name for panel (c)/(g)
+  "Other"        = "#42A5F5",  # Blue — k-program lumped non-Fibrotic-ECM  # was: "Non-Fibrogenic"
+  "Fibrotic-ECM" = "#C9265E"   # Liang deep magenta (progressing)           # was: "Fibrogenic"
 )
 
 # Transition labels for clean display
@@ -184,23 +184,24 @@ tryCatch({
     # Annotate OT transport costs above each column
     geom_text(data = ot_fib, inherit.aes = FALSE,
               aes(x = transition_disp, y = Inf, label = cost_label),
-              vjust = -0.3, size = 1.8, color = "#880E4F", fontface = "bold") +
+              vjust = -0.3, size = GEOM_TEXT_6PT, color = "#880E4F", fontface = "plain") +
     scale_fill_gradient2(
       low = masld_colors$down, mid = "white", high = masld_colors$up,
       midpoint = 0, limits = c(-2, 2), oob = squish,
       name = "logFC"
     ) +
     coord_cartesian(clip = "off") +
-    labs(title = "Transition-specific gene programs", x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
-      axis.text.y = element_text(size = 5),
+      axis.text.y = element_text(size = 6),
       legend.key.width = unit(0.3, "cm"),
       legend.key.height = unit(1.5, "cm"),
       plot.margin = margin(10, 3, 3, 3)
     )
 
+  message("[caption] Transition-specific gene programs")
   save_fig(p_b, file.path(OUT_DIR, "panel_b_cascade.pdf"),
            width = fig_half_width, height = 4.5)
 
@@ -233,29 +234,30 @@ if (ENABLE_NMF_SUBTYPE_PANELS) tryCatch({
              y = bif_peak$divergence_score,
              label = paste0("Early\nbifurcation\n(t=",
                             round(bif_peak$pseudotime_center, 2), ")"),
-             size = 2, color = masld_colors$up, hjust = 0, vjust = 0.5) +
+             size = GEOM_TEXT_6PT, color = masld_colors$up, hjust = 0, vjust = 0.5) +
     geom_point(data = bif_late_peak, color = masld_colors$fibrosis, size = 2.5) +
     annotate("text", x = bif_late_peak$pseudotime_center - 0.08,
              y = bif_late_peak$divergence_score,
              label = paste0("Late\nre-divergence\n(t=",
                             round(bif_late_peak$pseudotime_center, 2), ")"),
-             size = 2, color = masld_colors$fibrosis, hjust = 1, vjust = 0.5) +
+             size = GEOM_TEXT_6PT, color = masld_colors$fibrosis, hjust = 1, vjust = 0.5) +
     geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray60",
                linewidth = 0.3) +
     scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25),
                        expand = c(0.02, 0)) +
     scale_y_continuous(expand = c(0, 0.02)) +
-    labs(title = "Metabolic/Fibrogenic subtype divergence", x = "Consensus pseudotime",
+    labs(x = "Consensus pseudotime",
          y = "Divergence score") +
     theme_masld()
 
+  message("[caption] Metabolic/Fibrotic-ECM subtype divergence")
   save_fig(p_c, file.path(OUT_DIR, "panel_c_bifurcation.pdf"),
            width = fig_half_width, height = 2.5)
 
 }, error = function(e) message("Panel (c) failed: ", e$message))
 
 # ===========================================================================
-# Panel (d): Fate probabilities — density of P(F4) for Metabolic vs Fibrogenic subtypes
+# Panel (d): Fate probabilities — density of P(F4) for Metabolic vs Fibrotic-ECM subtypes  # was: Fibrogenic
 # ===========================================================================
 if (ENABLE_NMF_SUBTYPE_PANELS) tryCatch({
   message("Panel (d): Fate probability densities...")
@@ -263,14 +265,15 @@ if (ENABLE_NMF_SUBTYPE_PANELS) tryCatch({
   fate <- fread(file.path(PROG_DIR, "fate_probabilities.csv"))
   # k-program refactor (2026-04-20): legacy nmf_subtype S1/S2 in this CSV is a
   # convenience binary where S2 = dominant-program-is-Fibrotic, S1 = all other
-  # programs. Relabel for plot; the Non-Fibrogenic label captures Metabolic +
+  # programs. Relabel for plot; the "Other" group captures Metabolic +  # was: Non-Fibrogenic
   # Inflammatory + Sex-* + HCC-like samples lumped together.
-  fate[, subtype := fifelse(subtype == "S1", "Non-Fibrogenic", "Fibrogenic")]
-  fate[, subtype := factor(subtype, levels = c("Non-Fibrogenic", "Fibrogenic"))]
+  # S2 = dominant-program-is-Fibrotic-ECM (P3), S1 = all other programs
+  fate[, subtype := fifelse(dominant_program_code == "P3", "Fibrotic-ECM", "Other")]  # was: "Fibrogenic"/"Non-Fibrogenic"
+  fate[, subtype := factor(subtype, levels = c("Other", "Fibrotic-ECM"))]
 
   # Wilcoxon test for annotation
-  wtest <- wilcox.test(fate[subtype == "Non-Fibrogenic"]$fate_prob_F4,
-                       fate[subtype == "Fibrogenic"]$fate_prob_F4)
+  wtest <- wilcox.test(fate[subtype == "Other"]$fate_prob_F4,  # was: subtype == "Non-Fibrogenic"
+                       fate[subtype == "Fibrotic-ECM"]$fate_prob_F4)  # was: subtype == "Fibrogenic"
   pval_label <- ifelse(wtest$p.value < 2.2e-16, "P < 2.2e-16",
                        paste0("P = ", signif(wtest$p.value, 2)))
 
@@ -284,12 +287,12 @@ if (ENABLE_NMF_SUBTYPE_PANELS) tryCatch({
     scale_fill_manual(values = subtype_colors, name = "Subtype") +
     scale_color_manual(values = subtype_colors, name = "Subtype") +
     annotate("text", x = 0.65, y = Inf, label = pval_label,
-             vjust = 1.5, size = 2.2, fontface = "italic") +
-    labs(title = "Fate probability by subtype",
-         x = "P(progression to F4)", y = "Density") +
+             vjust = 1.5, size = GEOM_TEXT_6PT, fontface = "plain") +
+    labs(x = "P(progression to F4)", y = "Density") +
     theme_masld() +
     theme(legend.position = c(0.85, 0.8))
 
+  message("[caption] Fate probability by subtype")
   save_fig(p_d, file.path(OUT_DIR, "panel_d_fate.pdf"),
            width = fig_half_width, height = 2.5)
 
@@ -359,14 +362,14 @@ tryCatch({
                             round(stellate_early * 100, 1), "% -> ",
                             round(stellate_late * 100, 1), "%\n(",
                             round(stellate_fold, 1), "x expansion)"),
-             size = 2, fontface = "bold", color = "#F57F17", hjust = 0.5) +
-    labs(title = "Non-hepatocyte composition across progression",
-         x = "Consensus pseudotime", y = "Proportion (non-hepatocyte)") +
+             size = GEOM_TEXT_6PT, fontface = "plain", color = "#F57F17", hjust = 0.5) +
+    labs(x = "Consensus pseudotime", y = "Proportion (non-hepatocyte)") +
     theme_masld() +
     theme(legend.position = "right",
-          legend.text = element_text(size = 5),
+          legend.text = element_text(size = 6),
           legend.key.size = unit(0.25, "cm"))
 
+  message("[caption] Non-hepatocyte composition across progression")
   save_fig(p_e, file.path(OUT_DIR, "panel_e_composition.pdf"),
            width = fig_half_width + 1, height = 2.8)
 
@@ -402,22 +405,22 @@ tryCatch({
     geom_text(aes(label = ifelse(n_degs_01 > 0,
                                   formatC(n_degs_01, format = "d", big.mark = ","),
                                   "")),
-              size = 1.8, color = "black") +
+              size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_gradient(
       low = "white", high = "#0D47A1",
       name = expression(log[10]*"(DEGs+1)"),
       limits = c(0, NA)
     ) +
-    labs(title = "Cell-type transition programs",
-         x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
-      axis.text.y = element_text(size = 5.5),
+      axis.text.y = element_text(size = 6),
       legend.key.width = unit(0.3, "cm"),
       legend.key.height = unit(1.5, "cm")
     )
 
+  message("[caption] Cell-type transition programs")
   save_fig(p_f, file.path(OUT_DIR, "panel_f_attribution.pdf"),
            width = fig_half_width, height = 3.5)
 
@@ -527,10 +530,10 @@ tryCatch({
                size = 2.2, color = "grey20", stroke = 0.3) +
     geom_text(data = long[source == "Cell-type pseudobulk"],
               aes(label = sig_label),
-              hjust = -0.4, size = 1.9, color = "grey20") +
+              hjust = -0.4, size = GEOM_TEXT_6PT, color = "black") +
     geom_text(data = long[source == "Bulk RNA-seq"],
               aes(label = sig_label),
-              hjust = 1.4, size = 1.9, color = "grey45") +
+              hjust = 1.4, size = GEOM_TEXT_6PT, color = "black") +
     scale_shape_manual(values = c("Bulk RNA-seq" = 22,
                                   "Cell-type pseudobulk" = 21),
                        name = NULL) +
@@ -549,20 +552,19 @@ tryCatch({
     facet_grid(category ~ ., scales = "free_y", space = "free_y",
                switch = "y") +
     labs(x = expression(log[2]*" fold change (disease vs healthy)"),
-         y = NULL,
-         title = "scRNA-seq cell-type-specific DEGs diffused in bulk") +
+         y = NULL) +
     theme_masld() +
     theme(strip.placement = "outside",
           strip.text.y.left = element_text(angle = 0, size = 6,
-                                           face = "bold"),
+                                           face = "plain"),
           axis.text.y = element_text(face = "italic", size = 6),
           legend.position = "bottom",
           legend.box = "vertical",
           legend.spacing.y = unit(0.05, "cm"),
-          legend.text = element_text(size = 5),
-          legend.key.size = unit(0.3, "cm"),
-          plot.title = element_text(size = 7))
+          legend.text = element_text(size = 6),
+          legend.key.size = unit(0.3, "cm"))
 
+  message("[caption] scRNA-seq cell-type-specific DEGs diffused in bulk")
   save_fig(p_f2, file.path(OUT_DIR, "panel_f2_bulk_masked_genes.pdf"),
            width = fig_half_width, height = 3.5)
 
@@ -575,7 +577,7 @@ tryCatch({
 }, error = function(e) message("Panel (f2) failed: ", e$message))
 
 # ===========================================================================
-# Panel (g): Top divergence genes between Metabolic and Fibrogenic (dot plot)
+# Panel (g): Top divergence genes between Metabolic and Fibrotic-ECM (dot plot)  # was: Fibrogenic
 #            Annotated with ECM/fibrosis/collagen category
 # ===========================================================================
 tryCatch({
@@ -632,11 +634,11 @@ tryCatch({
     scale_color_manual(values = cat_colors, name = "Category") +
     scale_size_continuous(range = c(0.8, 3), name = expression(-log[10]*"(padj)"),
                          guide = guide_legend(override.aes = list(alpha = 1))) +
-    labs(title = "Metabolic/Fibrogenic divergence genes (top 30)",
-         x = "Cohen's d (Metabolic vs Fibrogenic)", y = NULL) +
+    labs(x = "Cohen's d (Metabolic vs Fibrotic-ECM)", y = NULL) +  # was: "Cohen's d (Metabolic vs Fibrogenic)"
     theme_masld() +
-    theme(axis.text.y = element_text(size = 5))
+    theme(axis.text.y = element_text(size = 6))
 
+  message("[caption] Metabolic/Fibrotic-ECM divergence genes (top 30)")
   save_fig(p_g, file.path(OUT_DIR, "panel_g_divergence.pdf"),
            width = fig_half_width + 0.5, height = 4)
 
@@ -686,7 +688,7 @@ tryCatch({
       geom_point(size = 1.5) +
       geom_text_repel(
         data = prog_targets[x_pos == max(x_pos)],
-        aes(label = symbol), size = 2, nudge_x = 0.3, segment.size = 0.2,
+        aes(label = symbol), size = GEOM_TEXT_6PT, nudge_x = 0.3, segment.size = 0.2,
         direction = "y", max.overlaps = 20, show.legend = FALSE
       ) +
       scale_color_manual(values = dir_colors, name = "Program") +
@@ -694,8 +696,7 @@ tryCatch({
         breaks = trans_x$x_pos, labels = trans_x$label,
         expand = expansion(mult = c(0.05, 0.15))
       ) +
-      labs(title = "Key gene dynamics across fibrosis stages",
-           x = NULL, y = "logFC (vs. preceding stage)") +
+      labs(x = NULL, y = "logFC (vs. preceding stage)") +
       theme_masld() +
       theme(
         axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
@@ -733,7 +734,7 @@ tryCatch({
       geom_point(size = 1.5) +
       geom_text_repel(
         data = prog_targets[x_pos == max(x_pos)],
-        aes(label = symbol), size = 2, nudge_x = 0.3, segment.size = 0.2,
+        aes(label = symbol), size = GEOM_TEXT_6PT, nudge_x = 0.3, segment.size = 0.2,
         direction = "y", max.overlaps = 20, show.legend = FALSE
       ) +
       scale_color_manual(values = dir_colors, name = "Program") +
@@ -741,8 +742,7 @@ tryCatch({
         breaks = trans_x$x_pos, labels = trans_x$label,
         expand = expansion(mult = c(0.05, 0.15))
       ) +
-      labs(title = "Key gene dynamics across fibrosis stages",
-           x = NULL, y = "logFC (vs. preceding stage)") +
+      labs(x = NULL, y = "logFC (vs. preceding stage)") +
       theme_masld() +
       theme(
         axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
@@ -750,6 +750,7 @@ tryCatch({
       )
   }
 
+  message("[caption] Key gene dynamics across fibrosis stages")
   save_fig(p_h, file.path(OUT_DIR, "panel_h_exemplars.pdf"),
            width = fig_half_width, height = 2.5)
 
@@ -768,9 +769,9 @@ if (ENABLE_NMF_SUBTYPE_PANELS) {
     (p_g | p_h)
   ) +
     plot_annotation(tag_levels = "a", title = NULL,
-      theme = theme(plot.tag = element_text(size = 9, face = "bold", family = "Helvetica"))) +
+      theme = theme(plot.tag = element_text(size = 9, face = "plain", family = "Helvetica"))) +
     plot_layout(heights = c(1.2, 0.8, 0.9, 1.1))
-  save_fig(composite, OUT, width = fig_full_width, height = 11)
+  save_fig(composite, OUT, width = fig_full_width, height = 9.5)
 } else {
   # NMF-dependent panels (c, d) dropped; assemble 6-panel composite.
   composite <- (
@@ -779,7 +780,7 @@ if (ENABLE_NMF_SUBTYPE_PANELS) {
     (p_g | p_h)
   ) +
     plot_annotation(tag_levels = "a", title = NULL,
-      theme = theme(plot.tag = element_text(size = 9, face = "bold", family = "Helvetica"))) +
+      theme = theme(plot.tag = element_text(size = 9, face = "plain", family = "Helvetica"))) +
     plot_layout(heights = c(1.2, 0.9, 1.1))
   save_fig(composite, OUT, width = fig_full_width, height = 9)
 }

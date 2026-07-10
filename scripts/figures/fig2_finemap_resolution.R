@@ -103,27 +103,26 @@ XBRK <- XBRK[XBRK <= XMAX]
 p <- ggplot() +
   # consolidation bars (own fill scale, no legend — labels are self-explanatory)
   geom_col(data = dA, aes(n, y, fill = catf), width = 0.64) +
-  geom_text(data = dA, aes(n, y, label = n), hjust = -0.20, size = 2.8,
-            fontface = "bold", color = "grey15") +
+  geom_text(data = dA, aes(n, y, label = n), hjust = -0.20, size = GEOM_TEXT_6PT,
+            fontface = "plain", color = "black") +
   scale_fill_manual(values = colA, guide = "none") +
   ggnewscale::new_scale_fill() +
   # fine-mapper bars (PIP fill scale -> the only legend)
   geom_col(data = dB, aes(n, y, fill = pip), width = 0.64) +
-  geom_text(data = tot, aes(tot, y, label = tot), hjust = -0.28, size = 2.8,
-            fontface = "bold", color = "grey15") +
+  geom_text(data = tot, aes(tot, y, label = tot), hjust = -0.28, size = GEOM_TEXT_6PT,
+            fontface = "plain", color = "black") +
   scale_fill_manual(values = colB, name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0)), limits = c(0, XMAX),
                      breaks = XBRK) +
   scale_y_discrete(drop = FALSE) +
-  labs(x = "Loci", y = NULL,
-       title = "GWAS fine-mapping: consolidation and resolution") +
+  labs(x = "Loci", y = NULL) +
   theme_masld(base_size = 9) +
-  theme(plot.title    = element_text(size = 9.5, face = "bold"),
-        axis.text.y   = element_text(size = 8),
+  theme(axis.text.y   = element_text(size = 6),
         legend.position = c(0.99, 0.97), legend.justification = c(1, 1),
-        legend.key.size = unit(0.32, "cm"), legend.text = element_text(size = 7),
+        legend.key.size = unit(0.32, "cm"), legend.text = element_text(size = 6),
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA))
 
+message("[caption] GWAS fine-mapping: consolidation and resolution")
 save_fig(p, file.path(PANEL_DIR, "FigS2B_finemap_cascade.pdf"),
          width = fig_col_width * 1.15, height = 3.9)
 cat(sprintf("[finemap_resolution] loci %d/%d/%d (tot/shared/uniq) | per-tool loci by best PIP (hi/mod/lo):\n",

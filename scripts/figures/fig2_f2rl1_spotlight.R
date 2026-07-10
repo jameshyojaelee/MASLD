@@ -6,7 +6,7 @@
 # 0.954 (a multi-credible-set signal abf collapses). PAR2 is druggable.
 # All values read from disk.
 #
-# Out: figures/main/fig2_genetics/panels/f2rl1_spotlight.pdf (+ source CSV)
+# Out: figures/main/fig2_genetics/panels/FigS2L_f2rl1_spotlight.pdf (+ source CSV)
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(patchwork)
 })
@@ -33,14 +33,13 @@ mcols <- c("coloc.abf" = "#90A4AE", "SuSiE-coloc" = "#1565C0")
 pA <- ggplot(co, aes(pp4, label, fill = method)) +
   geom_col(width = 0.66) +
   geom_vline(xintercept = 0.5, linetype = "22", linewidth = 0.3, color = "grey45") +
-  geom_text(aes(label = sprintf("%.3f", pp4)), hjust = -0.15, size = 2.5, color = "grey15") +
+  geom_text(aes(label = sprintf("%.3f", pp4)), hjust = -0.15, size = GEOM_TEXT_6PT, color = "grey15") +
   scale_fill_manual(values = mcols, name = NULL, guide = "none") +
   scale_x_continuous(limits = c(0, 1.12), breaks = c(0, 0.5, 1),
                      expand = expansion(mult = c(0, 0))) +
-  labs(x = "PP.H4", y = NULL, title = "Colocalization (GGT)") +
+  labs(x = "PP.H4", y = NULL) +
   theme_masld(base_size = 9) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        axis.text.y = element_text(size = 6.5, lineheight = 0.8))
+  theme(axis.text.y = element_text(size = 6, lineheight = 0.8))
 
 d <- deg[symbol == "F2RL1"]
 ci <- 1.96 * d$SE[1]
@@ -52,26 +51,25 @@ pB <- ggplot(ed, aes(lfc, lab)) +
   geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0.10, color = "#C9265E", linewidth = 0.5) +
   geom_point(size = 3, color = "#C9265E") +
   geom_text(aes(x = lab_x, label = sprintf("+%.2f\npadj %.0e", lfc, padj)), hjust = 0,
-            size = 2.4, color = "grey15", lineheight = 0.85) +
+            size = GEOM_TEXT_6PT, color = "grey15", lineheight = 0.85) +
   scale_x_continuous(limits = c(0, 1.5), breaks = c(0, 0.5, 1),
                      expand = expansion(mult = c(0, 0.02))) +
-  labs(x = expression("Disease log"[2]*"FC"), y = NULL, title = "Disease expression") +
+  labs(x = expression("Disease log"[2]*"FC"), y = NULL) +
   theme_masld(base_size = 9) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        axis.text.y = element_text(size = 7, face = "bold.italic"))
+  theme(axis.text.y = element_text(size = 6, face = "italic"))
 
-p <- (pA | pB) + plot_layout(widths = c(1.85, 1)) +
-  plot_annotation(
-    title = "F2RL1 / PAR2 — a novel MASLD effector recovered by SuSiE-coloc",
-    theme = theme(plot.title = element_text(size = 9, face = "bold")))
+p <- (pA | pB) + plot_layout(widths = c(1.85, 1))
+message("[caption] F2RL1 / PAR2 -- left: colocalization (GGT); right: disease expression")
 
-save_fig(p, file.path(PANEL_DIR, "f2rl1_spotlight.pdf"),
+save_fig(p, file.path(PANEL_DIR, "FigS2L_f2rl1_spotlight.pdf"),
          width = fig_col_width * 1.25, height = 2.5)
 
 fwrite(rbind(
   co[, .(evidence = "coloc", detail = gsub("\n", " ", label), value = round(pp4, 4))],
   data.table(evidence = "DEG", detail = "disease vs control log2FC",
              value = round(d$logFC[1], 3))),
-  file.path(PANEL_DIR, "f2rl1_spotlight_source.csv"))
-cat(sprintf("[fig2 F2RL1] wrote f2rl1_spotlight.pdf | EUR abf=%.3f susie=%.3f, SAS abf=%.3f | logFC=%.2f padj=%.1e\n",
+  file.path(PANEL_DIR, "FigS2L_f2rl1_spotlight_source.csv"))
+cat(sprintf("[fig2 F2RL1] wrote FigS2L_f2rl1_spotlight.pdf | EUR abf=%.3f susie=%.3f, SAS abf=%.3f | logFC=%.2f padj=%.1e\n",
             co$pp4[1], co$pp4[2], co$pp4[3], d$logFC[1], d$padj[1]))
+message(sprintf("CAPTION (Fig2G): F2RL1/PAR2, a druggable novel MASLD effector. Colocalizes with serum GGT and is induced in disease. SuSiE-coloc resolves the EUR GGT signal to PP.H4 %.3f where coloc.abf collapses it to %.3f (a multi-credible-set signal); disease log2FC +%.2f (padj %.0e).",
+                co$pp4[2], co$pp4[1], d$logFC[1], d$padj[1]))

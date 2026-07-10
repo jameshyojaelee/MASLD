@@ -244,7 +244,7 @@ ha_left <- rowAnnotation(
     dream_vec,
     gp = gpar(fill = ifelse(dream_vec > 0, masld_colors$up, masld_colors$down)),
     width = unit(1.5, "cm"),
-    axis_param = list(gp = gpar(fontsize = 5)),
+    axis_param = list(gp = gpar(fontsize = 6)),
     ylim = c(-lfc_cap, lfc_cap)
   ),
   show_annotation_name = TRUE,
@@ -272,14 +272,14 @@ ha_right <- rowAnnotation(
     pp4_vec,
     gp = gpar(fill = "#00695C"),
     width = unit(1.2, "cm"),
-    axis_param = list(gp = gpar(fontsize = 5)),
+    axis_param = list(gp = gpar(fontsize = 6)),
     ylim = c(0, 1)
   ),
   `INTACT` = anno_barplot(
     intact_vec,
     gp = gpar(fill = "#7B1FA2"),
     width = unit(1.0, "cm"),
-    axis_param = list(gp = gpar(fontsize = 5)),
+    axis_param = list(gp = gpar(fontsize = 6)),
     ylim = c(0, 1)
   ),
   `Drug\nTarget` = anno_simple(
@@ -330,11 +330,11 @@ ha_top <- HeatmapAnnotation(
     herit_vals,
     gp = gpar(fill = ct_color_map[colnames(mat)]),
     height = unit(1.5, "cm"),
-    axis_param = list(gp = gpar(fontsize = 5)),
+    axis_param = list(gp = gpar(fontsize = 6)),
     baseline = 1  # reference line at fold = 1
   ),
   show_annotation_name = TRUE,
-  annotation_name_gp = gpar(fontsize = 5),
+  annotation_name_gp = gpar(fontsize = 6),
   annotation_name_side = "left"
 )
 
@@ -353,7 +353,7 @@ cat("Drawing heatmap...\n")
 
 # Determine whether to show row names based on gene count
 show_row_names <- length(selected_genes) <= 100
-row_fontsize <- if (length(selected_genes) <= 60) 5 else if (length(selected_genes) <= 100) 4 else 3
+row_fontsize <- if (length(selected_genes) <= 60) 6 else if (length(selected_genes) <= 100) 6 else 6
 
 ht <- Heatmap(
   mat,
@@ -369,7 +369,7 @@ ht <- Heatmap(
   # Row settings
   show_row_names = show_row_names,
   row_names_gp   = gpar(fontsize = row_fontsize, fontface = ifelse(
-    rownames(mat) %in% drug_genes, "bold", "plain"
+    rownames(mat) %in% drug_genes, "italic", "plain"
   )),
   row_names_side = "left",
   row_dend_width = unit(1.5, "cm"),
@@ -377,7 +377,7 @@ ht <- Heatmap(
 
   # Column settings
   column_labels  = col_labels,
-  column_names_gp = gpar(fontsize = 5),
+  column_names_gp = gpar(fontsize = 6),
   column_names_rot = 45,
   show_column_dend = TRUE,
   column_dend_height = unit(0.8, "cm"),
@@ -393,8 +393,8 @@ ht <- Heatmap(
   # Legend
   heatmap_legend_param = list(
     title = "scTWAS\nsign(beta) x\n-log10(p)",
-    title_gp = gpar(fontsize = 5, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(3, "cm"),
     at = c(-10, -5, 0, 5, 10),
     labels = c("-10\n(down in\ndisease)", "-5", "0", "5", "10\n(up in\ndisease)")
@@ -403,7 +403,7 @@ ht <- Heatmap(
   # Row split by k-means for visual grouping if many genes
   row_km = if (length(selected_genes) > 80) 4 else if (length(selected_genes) > 40) 3 else 2,
   row_km_repeats = 50,
-  row_title_gp = gpar(fontsize = 7, fontface = "bold"),
+  row_title_gp = gpar(fontsize = 6, fontface = "plain"),
   row_gap = unit(1, "mm"),
 
   # Width/height
@@ -419,7 +419,7 @@ cat("Saving to:", out_file, "\n")
 
 # Calculate height based on gene count
 fig_height <- max(6, min(14, length(selected_genes) * 0.08 + 3))
-fig_width  <- 8  # inches
+fig_width  <- fig_full_width  # inches
 
 # RETIRED 2026-06-17: dead/illegible panel, cut in the Fig 2 review and archived.
 # This script misroutes to FIG3_DIR (=fig2_genetics). Archived copy:

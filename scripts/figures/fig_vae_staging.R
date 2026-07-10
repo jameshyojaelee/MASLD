@@ -46,11 +46,11 @@ dataset_colors <- c(
 
 theme_pub <- theme_bw(base_size = 9) +
   theme(
-    plot.title = element_text(face = "bold", size = 10, margin = margin(b = 3)),
+    plot.title = element_text(face = "plain", size = 10, margin = margin(b = 3)),
     axis.title = element_text(size = 8),
     axis.text = element_text(size = 7),
     legend.text = element_text(size = 7),
-    legend.title = element_text(size = 8, face = "bold"),
+    legend.title = element_text(size = 8, face = "plain"),
     legend.key.size = unit(0.35, "cm"),
     panel.grid = element_blank(),
     plot.margin = margin(3, 5, 3, 3)
@@ -300,7 +300,7 @@ composite <- p_a + p_b + p_c + p_d + p_e + p_f +
     title = "VAE Embedding Analysis for MASLD Disease Staging",
     subtitle = "64-dimensional latent space captures fibrosis biology more efficiently than 3,000 raw genes",
     theme = theme(
-      plot.title = element_text(face = "bold", size = 12),
+      plot.title = element_text(face = "plain", size = 12),
       plot.subtitle = element_text(size = 8.5, color = "gray30")
     )
   )

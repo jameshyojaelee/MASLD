@@ -235,6 +235,15 @@ def build_spatial_evidence(atlas, spatial_results):
     # CosMx column schema: gene, logfoldchange, pval, pval_adj, score,
     #                      pct_nz_MASH, pct_nz_no_MASH, n_cells_MASH,
     #                      n_cells_no_MASH, cell_type
+    # padj_col = None means "expose the slide-level DIRECTION only, no p-value".
+    # The hep/kc CSVs were A6-fixed at Script 42b: `logfoldchange` was overwritten
+    # to the slide-level logfc and `pval_adj` blanked, because the CosMx cells are
+    # nested in only 4 slides (pseudoreplication makes a cell-level Wilcoxon p
+    # anticonservative). The macrophage sub-cluster CSVs (41b) were NOT A6-fixed —
+    # their `logfoldchange`/`pval_adj` are still the cell-level values — so mirror
+    # the fix here at integration time: map the CSV's `slide_logfc` as the logfc and
+    # attach NO cell-level padj (all-NaN column). This keeps hep/kc identical (their
+    # on-disk `logfoldchange` already IS the slide direction and `pval_adj` is blank).
     govaere_map = [
         # (results-key,                  output_prefix,                            logfc_col,        padj_col)
         ("govaere_geomx_sh_vs_pt",       "spatial_govaere2026_geomx_sh_vs_pt",     "logFC",         "padj_bh"),
@@ -242,28 +251,37 @@ def build_spatial_evidence(atlas, spatial_results):
         ("govaere_cosmx_hep_mash",       "spatial_govaere2026_cosmx_hep_mash",     "logfoldchange", "pval_adj"),
         ("govaere_cosmx_kc_mash",        "spatial_govaere2026_cosmx_kc_mash",      "logfoldchange", "pval_adj"),
         # Macrophage sub-cluster CosMx outputs (41b) — adds the GPNMB+/MetMac
-        # axis directly. Paper's primary macrophage finding.
-        ("govaere_cosmx_metmac_mash",    "spatial_govaere2026_cosmx_metmac_mash",  "logfoldchange", "pval_adj"),
-        ("govaere_cosmx_transmac_mash",  "spatial_govaere2026_cosmx_transmac_mash","logfoldchange", "pval_adj"),
-        ("govaere_cosmx_kcpost_mash",    "spatial_govaere2026_cosmx_kcpost_mash",  "logfoldchange", "pval_adj"),
-        ("govaere_cosmx_premac_mash",    "spatial_govaere2026_cosmx_premac_mash",  "logfoldchange", "pval_adj"),
-        ("govaere_cosmx_mono_mash",      "spatial_govaere2026_cosmx_mono_mash",    "logfoldchange", "pval_adj"),
+        # axis directly. Paper's primary macrophage finding. Slide-DIRECTION only
+        # (A6 pseudoreplication fix): slide_logfc as the effect, no cell-level p.
+        ("govaere_cosmx_metmac_mash",    "spatial_govaere2026_cosmx_metmac_mash",  "slide_logfc",   None),
+        ("govaere_cosmx_transmac_mash",  "spatial_govaere2026_cosmx_transmac_mash","slide_logfc",   None),
+        ("govaere_cosmx_kcpost_mash",    "spatial_govaere2026_cosmx_kcpost_mash",  "slide_logfc",   None),
+        ("govaere_cosmx_premac_mash",    "spatial_govaere2026_cosmx_premac_mash",  "slide_logfc",   None),
+        ("govaere_cosmx_mono_mash",      "spatial_govaere2026_cosmx_mono_mash",    "slide_logfc",   None),
     ]
     for key, prefix, lfc_col, padj_col in govaere_map:
         if key not in spatial_results:
             continue
         df = spatial_results[key]
-        if "_gene_key" not in df.columns or lfc_col not in df.columns or padj_col not in df.columns:
+        if "_gene_key" not in df.columns or lfc_col not in df.columns or \
+                (padj_col is not None and padj_col not in df.columns):
             print(f"  WARNING: {key} missing required columns; skipping")
             continue
-        # Aggregate duplicate symbols (some panels have isoform rows). Keep
-        # the row with the smallest padj per gene (most significant evidence).
-        df_agg = (df.sort_values(padj_col)
+        # Aggregate duplicate symbols (some panels have isoform rows). When a
+        # cell-level padj is available, keep the row with the smallest padj per
+        # gene (most significant evidence); otherwise keep the first per gene.
+        sort_col = padj_col if padj_col is not None else lfc_col
+        df_agg = (df.sort_values(sort_col)
                     .drop_duplicates(subset="_gene_key", keep="first"))
         lfc_map  = dict(zip(df_agg["_gene_key"], df_agg[lfc_col]))
-        padj_map = dict(zip(df_agg["_gene_key"], df_agg[padj_col]))
         atlas[f"{prefix}_logfc"] = atlas[symbol_col].map(lfc_map)
-        atlas[f"{prefix}_padj"]  = atlas[symbol_col].map(padj_map)
+        if padj_col is not None:
+            padj_map = dict(zip(df_agg["_gene_key"], df_agg[padj_col]))
+            atlas[f"{prefix}_padj"] = atlas[symbol_col].map(padj_map)
+        else:
+            # Slide-direction only: no cell-level p (pseudoreplication). Emit an
+            # all-NaN padj column so the schema is preserved for downstream readers.
+            atlas[f"{prefix}_padj"] = np.nan
 
     # --- Govaere2026 signature panels (wide, already gene-keyed) ---
     if "govaere_signatures" in spatial_results:

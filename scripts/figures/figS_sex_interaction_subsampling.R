@@ -308,11 +308,11 @@ composite <- (p_a | p_b | p_c) /
     subtitle = paste0("3,080 dimorphic genes | 378 robust (selection prob >= 60%) | ",
                       "Spearman \u03c1 = 0.89 | Direction consistency = 100%"),
     theme = theme(
-      plot.title = element_text(size = 9, face = "bold"),
+      plot.title = element_text(size = 9, face = "plain"),
       plot.subtitle = element_text(size = 7, color = "grey40")
     )
   ) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 # ============================================================================
 # Save outputs

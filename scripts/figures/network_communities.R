@@ -124,7 +124,7 @@ p_main <- ggplot(fam, aes(x = side, y = n_genes, fill = family)) +
            fill = "white", color = "grey50", linewidth = 0.25) +
   annotate("text", x = 2.025, y = 2300,
            label = "Robustness",
-           hjust = 0.5, size = 1.9, fontface = "bold", color = "grey20") +
+           hjust = 0.5, size = 1.9, fontface = "plain", color = "grey20") +
   annotate("text", x = 2.025, y = 2150,
            label = "LOCO Jaccard 0.875",
            hjust = 0.5, size = 1.8, color = masld_colors$nash) +
@@ -141,9 +141,9 @@ p_main <- ggplot(fam, aes(x = side, y = n_genes, fill = family)) +
                           inflam_f34 - inflam_f01, metab_f34 - metab_f01)) +
   theme_masld(base_size = 7) +
   theme(
-    plot.title    = element_text(size = 7.3, face = "bold"),
+    plot.title    = element_text(size = 7.3, face = "plain"),
     plot.subtitle = element_text(size = 5.5, color = "grey35"),
-    axis.text.x   = element_text(size = 6.5, face = "bold"),
+    axis.text.x   = element_text(size = 6.5, face = "plain"),
     legend.position = "right",
     legend.text   = element_text(size = 5),
     legend.key.size = unit(0.18, "cm")

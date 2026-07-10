@@ -69,7 +69,7 @@ trans_pal <- c(
 panel <- ggplot(casc, aes(x = transition_id, y = n_DEGs, fill = transition_id)) +
   geom_col(width = 0.65, color = "grey25", linewidth = 0.2) +
   geom_text(aes(label = format(n_DEGs, big.mark = ",")),
-            vjust = -0.4, size = 2.4, fontface = "bold", color = "grey20") +
+            vjust = -0.4, size = 6 / .pt, fontface = "plain", color = "black") +
   scale_fill_manual(values = trans_pal, guide = "none") +
   scale_y_continuous(
     name   = "DEGs (padj < 0.05)",
@@ -77,14 +77,14 @@ panel <- ggplot(casc, aes(x = transition_id, y = n_DEGs, fill = transition_id)) 
     expand = c(0, 0)
   ) +
   labs(x = NULL) +
-  theme_masld(base_size = 7) +
-  theme(axis.text.x = element_text(size = 6.5, face = "bold"))
+  theme_masld(base_size = 6) +
+  theme(axis.text.x = element_text(size = 6, face = "plain"))
 
-ggsave(OUT_PDF, panel,
-       width  = 70 / 25.4,
-       height = 60 / 25.4,
-       units  = "in",
-       device = cairo_pdf)
+# ggsave(OUT_PDF, panel,
+#        width  = 70 / 25.4,
+#        height = 60 / 25.4,
+#        units  = "in",
+#        device = cairo_pdf)
 
 fwrite(casc, file.path(DATA_DIR, "cascade_degs_main.csv"))
-cat(sprintf("[saved] %s\n", OUT_PDF))
+# cat(sprintf("[saved] %s\n", OUT_PDF))

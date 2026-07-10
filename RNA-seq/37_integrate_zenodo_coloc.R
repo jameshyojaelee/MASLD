@@ -118,13 +118,13 @@ cat("--- Loading consensus tiers ---\n")
 tier_lookup <- data.table(symbol = character(), consensus_tier = character())
 
 if (file.exists(ATLAS_FILE)) {
-  # Atlas has human_consensus_tier for all genes
+  # human_consensus_tier removed 2026-06-29 (legacy dream∩metafor tier); canonical DEG = bulk_sig (TREAT treat_fdr<0.05)
   atlas_tiers <- fread(ATLAS_FILE, header = TRUE,
-                       select = c("human_symbol", "human_consensus_tier"))
-  atlas_tiers <- atlas_tiers[human_consensus_tier != "Not_significant"]
-  setnames(atlas_tiers, c("human_symbol", "human_consensus_tier"),
-           c("symbol", "consensus_tier"))
-  tier_lookup <- atlas_tiers[!duplicated(symbol)]
+                       select = c("human_symbol", "bulk_sig"))
+  atlas_tiers <- atlas_tiers[bulk_sig == TRUE]
+  atlas_tiers[, consensus_tier := "TREAT_DEG"]
+  setnames(atlas_tiers, "human_symbol", "symbol")
+  tier_lookup <- atlas_tiers[!duplicated(symbol), .(symbol, consensus_tier)]
   cat(sprintf("  Loaded tiers from atlas: %d genes\n", nrow(tier_lookup)))
 } else if (file.exists(TIER1_FILE)) {
   tiers <- fread(TIER1_FILE, header = TRUE)

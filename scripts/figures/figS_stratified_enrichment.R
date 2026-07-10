@@ -173,7 +173,7 @@ pD <- ggplot(bar_dt, aes(x = label, y = fold, fill = type)) +
 # ---------------------------------------------------------------------------
 combined <- (pA | pB) / (pC | pD) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 outfile <- file.path(outdir, "figS_stratified_enrichment.pdf")
 save_fig(combined, outfile, width = 170 / 25.4, height = 170 / 25.4)

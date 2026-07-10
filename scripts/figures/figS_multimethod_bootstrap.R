@@ -41,14 +41,12 @@ if (length(pairs)) {
     scale_fill_viridis_c(trans = "log10", name = "genes", option = "mako", direction = -1) +
     facet_wrap(~ pair, nrow = 1) +
     coord_fixed(xlim = c(0,1), ylim = c(0,1)) +
-    labs(x = "selection frequency (method A)", y = "selection frequency (method B)",
-         title = "Bootstrap selection-frequency concordance (500 resamples)",
-         subtitle = "pairwise per-gene selection-frequency agreement across DE methods") +
-    theme_masld(base_size = 7) +
-    theme(plot.subtitle = element_text(size = 6, colour = "grey40"),
-          legend.position = "right", legend.key.width = unit(0.22,"cm"),
-          strip.text = element_text(size = 6.5))
+    labs(x = "selection frequency (method A)", y = "selection frequency (method B)") +
+    theme_masld(base_size = 6) +
+    theme(legend.position = "right", legend.key.width = unit(0.22,"cm"),
+          strip.text = element_text(size = 6))
 }
+# [caption] Bootstrap selection-frequency concordance (500 resamples): pairwise per-gene selection-frequency agreement across DE methods
 # selfreq concordance panel retired per user request 2026-06-05 — no longer generated.
 # (p1 retained above for provenance; intentionally not written.)
 
@@ -65,16 +63,15 @@ sl[, method := factor(method, levels = present)]
 p2 <- ggplot(sl, aes(threshold, n_genes, fill = method)) +
   geom_col(position = position_dodge(0.8), width = 0.72) +
   geom_text(aes(label = scales::comma(n_genes)), position = position_dodge(0.8),
-            vjust = -0.3, size = 2.3) +
+            vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = mcol, labels = setNames(engine_label(present), present),
                     name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12)), labels = scales::comma) +
-  labs(x = "bootstrap selection-frequency threshold", y = "stably-selected genes",
-       title = "Bootstrap stability: stably-selected genes per method",
-       subtitle = "genes reproducibly called across 500 cohort-stratified bootstrap resamples") +
-  theme_masld(base_size = 7) +
-  theme(legend.position = "top", plot.subtitle = element_text(size = 5.6, colour = "grey40"))
+  labs(x = "bootstrap selection-frequency threshold", y = "stably-selected genes") +
+  theme_masld(base_size = 6) +
+  theme(legend.position = "top")
 ggsave(file.path(OUT, "bootstrap_stability_counts.pdf"), p2,
        width = 5.2, height = 3.4, useDingbats = FALSE)
+message("[caption] Bootstrap stability: stably-selected genes per method — genes reproducibly called across 500 cohort-stratified bootstrap resamples")
 cat("Wrote bootstrap_stability_counts.pdf\n")
 print(ss[, .(method, n_freq_gt_0.5, n_freq_gt_0.9, median_logFC_cv = round(median_logFC_cv,3))])

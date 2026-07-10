@@ -67,7 +67,7 @@ cat("\n--- 2. Per-biotype DEG summary ---\n")
 # Define DEG status
 # Exploratory annotation threshold; primary DEGs: padj<0.05 + |logFC|>0.3 (Script 05b)
 atlas[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.1]
-atlas[, is_deg_strict := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) >= 0.5]
+atlas[, is_deg_strict := !is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05]
 atlas[, deg_direction := fifelse(is_deg & bulk_logFC > 0, "up",
                           fifelse(is_deg & bulk_logFC < 0, "down", "ns"))]
 

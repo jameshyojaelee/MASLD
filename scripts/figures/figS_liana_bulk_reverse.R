@@ -38,16 +38,14 @@ rates <- data.table(
 
 pA <- ggplot(rates, aes(level, rate, fill = level)) +
   geom_col(width = 0.55, color = "white") +
-  geom_text(aes(label = sprintf("%.1f%%", rate * 100)), vjust = -0.3, size = 2.6) +
+  geom_text(aes(label = sprintf("%.1f%%", rate * 100)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("#27AE60","#2980B9","#C0392B","grey60"),
                     guide = "none") +
   scale_y_continuous(labels = percent_format(accuracy = 1),
                      limits = c(0, max(rates$rate) * 1.18), expand = c(0,0)) +
-  labs(x = NULL, y = "Concordance rate",
-       title = sprintf("LIANA reverse validation in bulk (n=%s strong pairs)",
-                       format(nrow(strong), big.mark = ","))) +
+  labs(x = NULL, y = "Concordance rate") +
   theme_masld() +
-  theme(axis.text.x = element_text(size = 7))
+  theme(axis.text.x = element_text(size = 6))
 
 # ---- Panel B: fgsea ---------------------------------------------------------
 fgsea_r[, pathway := factor(pathway,
@@ -58,12 +56,11 @@ fgsea_r[, pval_lab := fifelse(pval < 1e-3, sprintf("p<1e-3"), sprintf("p=%.3f", 
 pB <- ggplot(fgsea_r, aes(NES, pretty, fill = NES > 0)) +
   geom_col(width = 0.45, show.legend = FALSE) +
   geom_text(aes(label = sprintf("NES=%.2f\n%s", NES, pval_lab),
-                x = NES + 0.05), hjust = 0, size = 2.4) +
+                x = NES + 0.05), hjust = 0, size = GEOM_TEXT_6PT) +
   geom_vline(xintercept = 0, linewidth = 0.4) +
   scale_fill_manual(values = c("TRUE" = "#C0392B","FALSE" = "#2980B9")) +
   scale_x_continuous(expand = expansion(mult = 0.35)) +
-  labs(x = "NES (bulk MASLD t-stat ranking)", y = NULL,
-       title = "scRNA-predicted LR genes enriched in bulk DE") +
+  labs(x = "NES (bulk MASLD t-stat ranking)", y = NULL) +
   theme_masld()
 
 # ---- Panel C: per cell-type-pair heatmap ------------------------------------
@@ -76,15 +73,14 @@ hm <- per_ct[source %in% senders & target %in% receivers]
 pC <- ggplot(hm, aes(target, source, fill = frac_both_concordant)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%.0f%%", frac_both_concordant * 100)),
-            size = 2.1) +
+            size = GEOM_TEXT_6PT) +
   scale_fill_gradient2(low = "#2980B9", mid = "grey93", high = "#C0392B",
                        midpoint = 0.25, limits = c(0.15, 0.65),
                        oob = squish, name = "both-\nconcordant") +
-  labs(x = "Receiver", y = "Sender",
-       title = "Per cell-type-pair bulk concordance (>=30 LR pairs)") +
+  labs(x = "Receiver", y = "Sender") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 35, hjust = 1, size = 6.5),
-        axis.text.y = element_text(size = 6.5))
+  theme(axis.text.x = element_text(angle = 35, hjust = 1, size = 6),
+        axis.text.y = element_text(size = 6))
 
 # ---- Panel D: scatter score_diff vs bulk product -----------------------------
 strong[, bulk_prod := lig_lfc * rec_lfc]
@@ -103,17 +99,17 @@ pD <- ggplot(sub, aes(score_diff, bulk_prod)) +
   annotate("text", x = Inf, y = -Inf, hjust = 1.05, vjust = -0.5,
            label = sprintf("rho = %.3f\nn = %s", rho,
                            format(nrow(strong), big.mark = ",")),
-           size = 2.5, fontface = "italic") +
+           size = GEOM_TEXT_6PT, fontface = "plain") +
   labs(x = "LIANA score_diff (MASLD - Control, scRNA)",
-       y = "Bulk ligand_lfc x receptor_lfc",
-       title = "scRNA LR score vs. bulk LR expression product") +
+       y = "Bulk ligand_lfc x receptor_lfc") +
   theme_masld()
 
 # ---- Assemble ---------------------------------------------------------------
 fig <- (pA + pB) / (pC + pD) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_B2_liana_bulk_reverse.pdf")
-ggsave(out_path, fig, width = 13, height = 10)
+ggsave(out_path, fig, width = fig_full_width, height = 10 * fig_full_width / 13)
+message("[caption] LIANA reverse validation in bulk: (A) overall concordance vs 25% null; (B) scRNA-predicted LR genes enriched in bulk DE (fgsea); (C) per cell-type-pair bulk concordance (>=30 LR pairs); (D) scRNA LR score vs. bulk LR expression product.")
 message("Saved: ", out_path)

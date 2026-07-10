@@ -44,12 +44,11 @@ p <- ggplot(d, aes(label, n_deg_05)) +
   scale_color_manual(values=famcol, name="Correction family") +
   scale_y_continuous(breaks=seq(0,20000,4000)) +
   coord_flip() +
-  labs(title="DEG count depends strongly on confound-correction scheme",
-       subtitle="Disease vs Control (846 samples, 5 cohorts); each point = one (method, k) cell; DEGs at padj < 0.05",
-       x=NULL, y="# DEGs (padj < 0.05)") +
+  labs(x=NULL, y="# DEGs (padj < 0.05)") +
   theme_masld() + theme_pub() +
   theme(legend.position="right", panel.grid.major.y=element_blank())
 
+message("[caption] DEG count depends strongly on confound-correction scheme. Disease vs Control (846 samples, 5 cohorts); each point = one (method, k) cell; DEGs at padj < 0.05")
 save_fig(p, file.path(OUT,"DEGcount_by_scheme.pdf"), width=7.0, height=4.4)
 cat("wrote", file.path(OUT,"DEGcount_by_scheme.pdf"), "\n")
 

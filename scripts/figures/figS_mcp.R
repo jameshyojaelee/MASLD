@@ -70,15 +70,15 @@ panel_g <- function() {
   d[, neg_log10_q := -log10(pmax(hypergeom_q, 1e-10))]
   p <- ggplot(d, aes(factor(dialogue_meta_mcp), factor(cnmf_program))) +
     geom_tile(aes(fill = jaccard_top100)) +
-    geom_text(data = d[hypergeom_q < 0.05], aes(label = "*"), size = 2, color = "white") +
+    geom_text(data = d[hypergeom_q < 0.05], aes(label = "*"), size = GEOM_TEXT_6PT, color = "white") +
     scale_fill_gradient(low = "white", high = "#C2185B", limits = c(0, 0.5), oob = scales::squish) +
     facet_wrap(~ celltype, scales = "free", nrow = 2) +
-    labs(x = "DIALOGUE meta-MCP", y = "cNMF program", fill = "Jaccard top-100",
-         title = "cNMF GEPs vs DIALOGUE MCPs (cross-tool concordance)") +
-    theme_minimal(base_size = 8) +
+    labs(x = "DIALOGUE meta-MCP", y = "cNMF program", fill = "Jaccard top-100") +
+    theme_minimal(base_size = 6) +
     theme(axis.text.x = element_text(angle = 60, hjust = 1))
   ggsave(file.path(OUT, "figSmcp_g_cnmf_dialogue_concordance.pdf"),
-         p, width = 10, height = 7, device = cairo_pdf)
+         p, width = fig_full_width, height = 4.96, device = cairo_pdf)
+  message("[caption] cNMF GEPs vs DIALOGUE MCPs (cross-tool concordance)")
   cat("[figS_mcp] panel g written\n")
 }
 
@@ -92,12 +92,12 @@ panel_h <- function(name = "global", k = 20) {
   p <- ggplot(d, aes(bulk_program, factor(cnmf_program))) +
     geom_tile(aes(fill = pearson_r)) +
     scale_fill_gradient2(low = "#1565C0", mid = "white", high = "#C2185B", limits = c(-1, 1)) +
-    labs(x = "Bulk k=6 program", y = "scRNA cNMF program", fill = "Pearson r",
-         title = "Bulk vs single-cell program correspondence") +
-    theme_minimal(base_size = 8) +
+    labs(x = "Bulk k=6 program", y = "scRNA cNMF program", fill = "Pearson r") +
+    theme_minimal(base_size = 6) +
     theme(axis.text.x = element_text(angle = 60, hjust = 1))
   ggsave(file.path(OUT, sprintf("figSmcp_h_bulk_sc_bridge_%s_k%d.pdf", name, k)),
          p, width = 6, height = 6, device = cairo_pdf)
+  message("[caption] Bulk vs single-cell program correspondence")
   cat("[figS_mcp] panel h written\n")
 }
 
@@ -112,11 +112,11 @@ panel_i <- function(name = "global", k = 20) {
   p <- ggplot(d, aes(factor(program_num), morans_I)) +
     geom_boxplot(fill = "#F48FB1", alpha = 0.6, outlier.alpha = 0.3) +
     geom_hline(yintercept = 0, linetype = 2) +
-    labs(x = "cNMF program", y = "Moran's I (spatial autocorrelation)",
-         title = "Spatial coherence of programs across Visium slides") +
-    theme_minimal(base_size = 8)
+    labs(x = "cNMF program", y = "Moran's I (spatial autocorrelation)") +
+    theme_minimal(base_size = 6)
   ggsave(file.path(OUT, sprintf("figSmcp_i_spatial_moran_%s_k%d.pdf", name, k)),
          p, width = 7, height = 4, device = cairo_pdf)
+  message("[caption] Spatial coherence of programs across Visium slides")
   cat("[figS_mcp] panel i written\n")
 }
 
@@ -132,12 +132,12 @@ panel_k <- function(name = "global", k = 20) {
               aes(factor(program), neg_log10_q)) +
     geom_col(fill = "#C2185B") +
     geom_hline(yintercept = -log10(0.05), linetype = 2, color = "gray40") +
-    labs(x = "cNMF program", y = "-log10(q-value)",
-         title = "COLOC PP4 > 0.5 hypergeometric enrichment per program") +
-    theme_minimal(base_size = 8) +
+    labs(x = "cNMF program", y = "-log10(q-value)") +
+    theme_minimal(base_size = 6) +
     theme(axis.text.x = element_text(angle = 60, hjust = 1))
   ggsave(file.path(OUT, sprintf("figSmcp_k_coloc_enrichment_%s_k%d.pdf", name, k)),
          p, width = 8, height = 4, device = cairo_pdf)
+  message("[caption] COLOC PP4 > 0.5 hypergeometric enrichment per program")
   cat("[figS_mcp] panel k written\n")
 }
 
@@ -217,21 +217,21 @@ panel_o <- function() {
     scale_y_continuous(labels = function(x) paste0(x, "%"),
                        expand = expansion(mult = c(0, 0.02))) +
     labs(x = "Disease stage", y = "% mean program usage",
-         title = "cNMF k=16 program composition across disease stages (Healthy / Steatosis / Steatohepatitis)",
          caption = paste0("[a] Originally labeled 'Cirrhosis-spike'; reclassified as late-emergent after ",
                           "protocol-contamination remediation (2026-05-22) — breakpoint signal was driven by ",
                           "NPC-enriched GSE136103 donors (excluded). cNMF re-factorization on clean atlas pending.\n",
                           "[b] flags programs with high dataset-variance (P5: 76%; P9: 44%)")) +
-    theme_minimal(base_size = 8) +
+    theme_minimal(base_size = 6) +
     theme(axis.text.x  = element_text(angle = 25, hjust = 1),
-          legend.text  = element_text(size = 7),
-          legend.title = element_text(size = 8),
+          legend.text  = element_text(size = 6),
+          legend.title = element_text(size = 6),
           legend.key.size = unit(0.32, "cm"),
           plot.caption = element_text(size = 6, color = "gray35", hjust = 0))
 
   ggsave(file.path(OUT, "figSmcp_o_stage_composition_global_k16.pdf"),
          p, width = 7.4, height = 4.2, device = cairo_pdf)
   fwrite(d_long, file.path(OUT, "figSmcp_o_stage_composition_global_k16_data.csv"))
+  message("[caption] cNMF k=16 program composition across disease stages (Healthy / Steatosis / Steatohepatitis)")
   cat("[figS_mcp] panel o written\n")
 }
 
@@ -327,7 +327,7 @@ panel_p <- function(k = 10) {
 
   p1 <- ggplot(hz, aes(x = stage, y = label, fill = z)) +
     geom_tile(color = "white", linewidth = 0.3) +
-    geom_text(aes(label = sig_label), size = 3.5, vjust = 0.8, color = "black") +
+    geom_text(aes(label = sig_label), size = GEOM_TEXT_6PT, vjust = 0.8, color = "black") +
     scale_fill_gradient2(low = "#1565C0", mid = "grey95", high = "#C62828",
                          midpoint = 0, name = "Z-score\n(row-norm.)") +
     geom_tile(data = sidebar_dt,
@@ -337,13 +337,13 @@ panel_p <- function(k = 10) {
                        guide = guide_legend(override.aes = list(fill = lineage_pal,
                                                                  color = "white"))) +
     labs(x = NULL, y = NULL,
-         title = sprintf("cNMF k=%d program usage across disease stages (z-scored)", k),
          caption = "* kruskal q < 0.05 (BH); [b] = batch-confounded program") +
-    theme_masld(base_size = 8) +
+    theme_masld(base_size = 6) +
     theme(axis.text.x = element_text(angle = 25, hjust = 1),
-          axis.text.y = element_text(size = 7),
+          axis.text.y = element_text(size = 6),
           plot.caption = element_text(size = 6, color = "grey40", hjust = 0))
 
+  message(sprintf("[caption] cNMF k=%d program usage across disease stages (z-scored)", k))
   save_fig(p1, file.path(OUT, sprintf("figSmcp_p1_stage_heatmap_k%d.pdf", k)),
            width = fig_half_width, height = 4.2)
 
@@ -360,14 +360,14 @@ panel_p <- function(k = 10) {
                                                   override.aes = list(color = "gray40")),
                             labels = c("dashed" = "batch-confounded", "solid" = "")) +
     facet_wrap(~ lineage, ncol = 3, scales = "free_y") +
-    labs(x = NULL, y = "Mean cNMF program usage",
-         title = sprintf("cNMF k=%d stage trajectories by lineage", k)) +
-    theme_masld(base_size = 8) +
+    labs(x = NULL, y = "Mean cNMF program usage") +
+    theme_masld(base_size = 6) +
     theme(axis.text.x = element_text(angle = 25, hjust = 1),
           strip.background = element_rect(fill = "gray95", color = NA),
           panel.spacing = unit(4, "pt"),
           legend.position = "right")
 
+  message(sprintf("[caption] cNMF k=%d stage trajectories by lineage", k))
   save_fig(p2, file.path(OUT, sprintf("figSmcp_p2_stage_lines_k%d.pdf", k)),
            width = fig_full_width, height = 4.0)
 

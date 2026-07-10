@@ -168,7 +168,7 @@ cnt[, class_display := factor(class_display, levels = rev(focal))]
 p_class <- ggplot(cnt, aes(y = class_display, x = N, fill = class_display)) +
   geom_col(width = 0.7, color = "white", linewidth = 0.2) +
   geom_text(aes(label = format(N, big.mark = ",")),
-            hjust = -0.2, size = 2.4, fontface = "bold", color = "gray20") +
+            hjust = -0.2, size = 2.4, fontface = "plain", color = "gray20") +
   scale_fill_manual(values = class_colors, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.18))) +
   labs(y = NULL, x = "Genes (cross-pillar consensus)",

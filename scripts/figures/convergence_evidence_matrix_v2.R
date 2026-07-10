@@ -272,7 +272,7 @@ p <- p +
             hjust = 1, size = PUB_GEOM_TEXT, color = "#37474F") +
   annotate("text", x = bar_x0 - 0.5 * 0.95, y = length(gene_y) + 0.75,
            label = "modalities\nconverging", lineheight = 0.85,
-           size = PUB_GEOM_TEXT - 0.1, color = "#37474F", fontface = "plain")
+           size = PUB_GEOM_TEXT, color = "#37474F", fontface = "plain")
 
 # ── Drug-dev gradient separator: approved/clinical (top) | preclinical/case ───
 #    (between NR1H4 and HKDC1). Above = in-clinic real MASLD drugs the
@@ -298,19 +298,18 @@ p <- p +
                      position = "top", expand = c(0, 0)) +
   scale_y_continuous(breaks = gene_y, labels = names(gene_y),
                      limits = c(0.4, length(gene_y) + 1.35), expand = c(0, 0)) +
-  labs(x = NULL, y = NULL, title = "Each target has a unique evidence fingerprint") +
+  labs(x = NULL, y = NULL) +
   coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
   theme(
-    axis.text.y     = element_text(face = "italic", size = PUB_AXIS_TEXT + 1),
-    axis.text.x.top = element_text(angle = 35, hjust = 0, size = PUB_AXIS_TEXT + 0.5),
+    axis.text.y     = element_text(face = "italic", size = PUB_AXIS_TEXT),
+    axis.text.x.top = element_text(angle = 35, hjust = 0, size = PUB_AXIS_TEXT),
     axis.line       = element_blank(),
     axis.ticks      = element_blank(),
     legend.position = "right",
     legend.box      = "vertical",
     legend.spacing.y = unit(0.03, "cm"),
     legend.margin   = margin(0, 0, 0, 0),
-    plot.title      = element_text(size = PUB_TITLE, face = "bold"),
     plot.margin     = margin(3, 4, 3, 3)
   )
 
@@ -323,6 +322,7 @@ invisible(dev.off())
 message("Saved: ", out)
 
 # ── Legend text + caveats to stdout (stats live in the legend, not on panel) ──
+message("[caption] Each target has a unique evidence fingerprint")
 message("\n[convergence_evidence_matrix_v2] FIGURE LEGEND TEXT:")
 message("Cross-modal evidence fingerprints for six prioritized MASLD targets ",
         "spanning the drug-development gradient (drug_dev_status): approved / ",

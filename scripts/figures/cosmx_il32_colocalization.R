@@ -49,11 +49,9 @@ pA <- ggplot(ps, aes(delta_high_minus_low_um, label, color = grp)) +
   geom_point(size = 2.8) +
   scale_color_manual(values = cols, guide = "none") +
   scale_x_continuous(limits = c(-1.6, 0.25)) +
-  labs(x = "Nearest-macrophage distance shift (um)", y = NULL,
-       subtitle = "IL32-high minus IL32-low hepatocytes") +
+  labs(x = "Nearest-macrophage distance shift (um)", y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.title = element_text(size = 10.5), axis.text = element_text(size = 10, color = "black"),
-        plot.subtitle = element_text(size = 8.5, color = "gray35"),
+  theme(axis.title = element_text(size = 6), axis.text = element_text(size = 6, color = "black"),
         panel.grid.major.y = element_blank())
 
 # ── Panel B: hepatocyte IL32 vs nearest-macrophage CD74 ──────────────────────
@@ -63,14 +61,12 @@ pB <- ggplot(ps, aes(rho_il32_vs_knn_cd74, label, color = grp)) +
   geom_point(size = 2.8) +
   scale_color_manual(values = cols, name = NULL) +
   scale_x_continuous(limits = c(-0.06, 0.17), breaks = c(0, 0.05, 0.10, 0.15)) +
-  labs(x = "rho: IL32 vs neighbour CD74", y = NULL,
-       subtitle = "hepatocyte vs nearest macrophages") +
+  labs(x = "rho: IL32 vs neighbour CD74", y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.title = element_text(size = 10.5), axis.text = element_text(size = 10, color = "black"),
+  theme(axis.title = element_text(size = 6), axis.text = element_text(size = 6, color = "black"),
         axis.text.y = element_blank(), axis.ticks.y = element_blank(),
-        plot.subtitle = element_text(size = 8.5, color = "gray35"),
         panel.grid.major.y = element_blank(),
-        legend.position = c(0.78, 0.22), legend.text = element_text(size = 9),
+        legend.position = c(0.78, 0.22), legend.text = element_text(size = 6),
         legend.key.size = unit(0.32, "cm"))
 
 p_out <- (pA | pB) + plot_layout(widths = c(1.18, 1))

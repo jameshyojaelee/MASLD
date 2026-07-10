@@ -48,7 +48,7 @@ rho <- function(x, y) suppressWarnings(cor(x, y, method = "spearman"))
 build_panel <- function(ds_id, ptitle) {
   d <- conc %>%
     filter(dataset == ds_id) %>%
-    transmute(gene, mrna_lfc = dream_logFC, prot_lfc = protein_logFC,
+    transmute(gene, mrna_lfc = bulk_logFC, prot_lfc = protein_logFC,
               prot_padj = protein_padj) %>%
     filter(!is.na(mrna_lfc), !is.na(prot_lfc)) %>%
     mutate(is_deg   = gene %in% deg_set,
@@ -107,10 +107,10 @@ SZ <- 13
 p_out <- (pL | pR) +
   plot_annotation(
     title = "Atlas DEGs replicate at the protein level in liver and plasma",
-    theme = theme(plot.title = element_text(size = SZ, face = "bold"))
+    theme = theme(plot.title = element_text(size = SZ, face = "plain"))
   ) &
   theme(legend.position = "none",
-        plot.title  = element_text(size = SZ, face = "bold"),
+        plot.title  = element_text(size = SZ, face = "plain"),
         axis.title  = element_text(size = SZ),
         axis.text   = element_text(size = SZ, color = "black"))
 

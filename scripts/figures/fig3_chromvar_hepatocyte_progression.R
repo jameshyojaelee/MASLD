@@ -147,7 +147,7 @@ bin_stats[, F_bin   := factor(F_bin, levels = STAGE_LEVELS)]
 # Bold-face y labels for user-specified TFs
 y_levels <- levels(bin_stats$display)
 y_stem   <- sub(" \\(.*", "", y_levels)
-y_face   <- ifelse(y_stem %in% BOLD_TFS, "bold", "plain")
+y_face   <- ifelse(y_stem %in% BOLD_TFS, "italic", "plain")
 
 # Group separators
 group_of <- tf_lookup$group[match(y_levels, tf_lookup$display)]
@@ -196,7 +196,7 @@ p <- ggplot(bin_stats,
     legend.box       = "vertical",
     legend.spacing.y = unit(0.2, "cm"),
     legend.margin    = margin(l = 4, r = 0),
-    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "bold"),
+    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "plain"),
     legend.text      = element_text(size = PUB_LEGEND),
     plot.margin      = margin(4, 6, 2, 4)
   ) +

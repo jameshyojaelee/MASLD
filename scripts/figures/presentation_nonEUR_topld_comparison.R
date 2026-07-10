@@ -126,14 +126,14 @@ for (anc in names(ANCESTRY_GWAS)) {
     geom_vline(xintercept = 0.5, color = "grey60", linetype = "dotted") +
     geom_point(data = lbl_pts, color = "black", size = 2.6) +
     geom_text_repel(data = lbl_pts, aes(label = gene), size = 4.5,
-                    color = "black", fontface = "bold", max.overlaps = 25) +
+                    color = "black", fontface = "plain", max.overlaps = 25) +
     coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
     labs(x = "PP.H4 (1KG-EUR per-ancestry)",
          y = "PP.H4 (TOP-LD per-ancestry)",
          title = sprintf("%s: 1KG ↔ TOP-LD COLOC concordance\n%d genes paired, r = %.3f, ρ = %.3f",
                          anc, nrow(m), r, rho)) +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 20, face = "bold"),
+    theme(plot.title = element_text(size = 20, face = "plain"),
           axis.title = element_text(size = 18))
   ggsave(file.path(OUT_DIR, tolower(anc), "coloc/scatter.pdf"),
          p_scatter, width = 9, height = 9, device = cairo_pdf)
@@ -149,14 +149,14 @@ for (anc in names(ANCESTRY_GWAS)) {
   )
   p_hits <- ggplot(hits, aes(x = panel, y = n, fill = panel)) +
     geom_col(width = 0.65) +
-    geom_text(aes(label = n), vjust = -0.35, size = 5, fontface = "bold") +
+    geom_text(aes(label = n), vjust = -0.35, size = 5, fontface = "plain") +
     facet_wrap(~ threshold, ncol = 3, scales = "free_y") +
     scale_fill_manual(values = PANEL_COLORS, guide = "none") +
     labs(x = NULL, y = "# gene × GWAS",
          title = sprintf("%s: COLOC hit counts per panel", anc)) +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 20, face = "bold"),
-          strip.text = element_text(size = 16, face = "bold"),
+    theme(plot.title = element_text(size = 20, face = "plain"),
+          strip.text = element_text(size = 16, face = "plain"),
           axis.text.x = element_text(size = 13)) +
     expand_limits(y = max(hits$n) * 1.20)
   ggsave(file.path(OUT_DIR, tolower(anc), "coloc/hits_bar.pdf"),
@@ -199,9 +199,9 @@ if (length(per_anc_results) > 0) {
     geom_vline(xintercept = 0.5, color = "grey60", linetype = "dotted", linewidth = 0.4) +
     geom_point(data = lbl_combined, color = "black", size = 2.0) +
     geom_text_repel(data = lbl_combined, aes(label = gene), size = 3.6,
-                    color = "black", fontface = "bold", max.overlaps = 20) +
+                    color = "black", fontface = "plain", max.overlaps = 20) +
     geom_text(data = ann, aes(label = label), x = 0.05, y = 0.92,
-              hjust = 0, vjust = 1, size = 5, fontface = "bold", color = "grey20") +
+              hjust = 0, vjust = 1, size = 5, fontface = "plain", color = "grey20") +
     facet_wrap(~ ancestry, ncol = 3) +
     scale_color_manual(values = ANC_COLORS, guide = "none") +
     coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
@@ -209,8 +209,8 @@ if (length(per_anc_results) > 0) {
          y = "PP.H4 (TOP-LD-per-ancestry)",
          title = "Non-EUR COLOC concordance: 1KG ↔ TOP-LD by ancestry") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 16, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 16, face = "plain"),
           axis.title = element_text(size = 18))
   ggsave(file.path(OUT_DIR, "all_ancestries/coloc_concordance_per_ancestry.pdf"),
          p_facet, width = 18, height = 7, device = cairo_pdf)

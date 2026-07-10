@@ -76,7 +76,7 @@ p <- ggplot(anc, aes(x = ancestry, y = pp4, fill = fill)) +
   scale_fill_identity() +
   scale_y_continuous(limits = c(0, 1.02), breaks = c(0, 0.5, 1.0),
                      expand = expansion(mult = c(0, 0.02))) +
-  labs(x = NULL, y = "SuSiE-COLOC PP.H4", title = "FADS2 (East-Asian-specific)") +
+  labs(x = NULL, y = "SuSiE-COLOC PP.H4") +
   theme_masld() + theme_pub() +
   theme(axis.text.x = element_text(size = PUB_AXIS_TEXT))
 

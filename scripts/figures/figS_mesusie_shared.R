@@ -13,7 +13,7 @@
 # n_cs_EUR_AFR, n_cs_EUR_AFR_AMR, ... = multi-ancestry "shared"). We split them
 # programmatically by token count so the panel is robust to which combos appear.
 #
-# Out: figures/main/fig2_genetics/panels/mesusie_shared_specific.pdf (+ source CSV)
+# Out: figures/main/fig2_genetics/panels/FigS2M_mesusie_shared_specific.pdf (+ source CSV)
 suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
@@ -66,23 +66,19 @@ fill_map <- setNames(dec_cols[dec$key_anc], dec$type)
 
 p <- ggplot(dec, aes(n, type, fill = type)) +
   geom_col(width = 0.66) +
-  geom_text(aes(label = sprintf("%d  (%.0f%%)", n, pct)), hjust = -0.12, size = 2.8, color = "grey15") +
+  geom_text(aes(label = sprintf("%d  (%.0f%%)", n, pct)), hjust = -0.12, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values = fill_map, guide = "none") +
   scale_x_continuous(limits = c(0, 1.18 * max(dec$n)), expand = expansion(mult = c(0, 0))) +
-  labs(x = "meSuSiE credible sets", y = NULL,
-       title = "Shared vs ancestry-specific causal signals",
-       subtitle = sprintf("%d MVP loci; %d (%.0f%%) carry >=1 shared credible set; %d involve AMR",
-                          nloci, nshared_loci, 100 * nshared_loci / nloci, n_amr_loci)) +
+  labs(x = "meSuSiE credible sets", y = NULL) +
   theme_masld(base_size = 9) +
-  theme(plot.title = element_text(size = 9, face = "bold"),
-        plot.subtitle = element_text(size = 5.8, color = "grey35"),
-        axis.text.y = element_text(size = 8))
+  theme(axis.text.y = element_text(size = 6))
 
-save_fig(p, file.path(PANEL_DIR, "mesusie_shared_specific.pdf"),
+save_fig(p, file.path(PANEL_DIR, "FigS2M_mesusie_shared_specific.pdf"),
          width = fig_col_width * 1.05, height = 2.2)
 
 fwrite(dec[order(-n), .(type, n, pct = round(pct, 1))],
-       file.path(PANEL_DIR, "mesusie_shared_specific_source.csv"))
+       file.path(PANEL_DIR, "FigS2M_mesusie_shared_specific_source.csv"))
+message("[caption] Shared vs ancestry-specific causal signals")
 cat(sprintf("[figS meSuSiE MVP] shared CS=%d (%.0f%%); specific CS: %s\n",
             sh, 100 * sh / tot,
             paste(sprintf("%s=%d", spec_anc, spec_tot), collapse = " ")))

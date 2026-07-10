@@ -1,43 +1,63 @@
 #!/usr/bin/env Rscript
 # rebuild_cas13_library.R
 # ---------------------------------------------------------------------------
-# Build cas13_library_v3.0.csv under the v7 definition (2026-06-11). v7 changes
+# Build cas13_library.csv under the v9 definition (2026-06-27). v9 changes
 # the target-gene strategy from v6: the human arm broadens from the integrated
 # spine alone to integrated UNION cohort-replicated DEGs, COLOC genetic targets
 # and positive controls are folded in, and the MASH + miRNA tiers are removed.
 #
-#   LIBRARY = CORE              (mouse orthologs of the INTEGRATED human disease-vs-
-#                                control DEGs: canonical limma-voom quality-weighted
-#                                C2, padj<0.05 & logFC>0.5, UP)
+#   Target selection moved to TREAT FDR (2026-06-27). Every DE arm is now gated by an
+#   ANALYTICAL TREAT reconstruction (add_treat_fdr): the moderated-t statistic is
+#   re-tested against an explicit logFC offset `lfc` (a two-sided shifted-t tail using
+#   the topTable moderated SE and a median-inferred residual+prior df), then BH-adjusted;
+#   the gate is fdr_treat < 0.05 & logFC > 0 (UP). This REPLACES the prior raw-padj /
+#   ashr-lfsr selection (the old "padj<0.05 & logFC>0.5" / "lfsr<0.05 & shrunk_logFC>0.5"
+#   point-estimate cutoffs). The `lfc` offset, NOT a point-estimate floor, now encodes
+#   effect-size stringency, applied BIOTYPE-WISE (add_treat_fdr_bt): protein-coding genes
+#   use lfc = SHRUNK_LFC_THR (env CAS13_PC_LFC) on the human C1 + per-cohort axes and the
+#   mouse PC arm; lncRNAs use lfc = 0.0 everywhere (TREAT@0 == ordinary moderated-t
+#   FDR<0.05, no effect-size floor). The floor is keyed on BIOTYPE, not on which contrast a
+#   gene enters through, so the advertised PC LFC floor binds on protein-coding genes
+#   regardless of axis (this also closed an earlier C2/C3 lfc=0-for-all leak; C2/C3 have
+#   since been dropped as entry axes entirely, 2026-06-29).
+#
+#   LIBRARY = CORE              (mouse orthologs of UP human DEGs from the integrated
+#                                disease-vs-control axis ONLY -- canonical limma-voom QW
+#                                C2 -- gated TREAT FDR<0.05 & logFC>0, biotype-split lfc
+#                                (PC=SHRUNK_LFC_THR, lncRNA=0). The MASH-vs-MASL (C2) and
+#                                advanced-vs-early-fibrosis (C3) progression axes were
+#                                DROPPED 2026-06-29 (PI); they are no longer entry axes.)
 #             UNION
-#             COHORT-REPLICATED (mouse orthologs of human DEGs significant in >=N of
-#                                the 5 control-bearing cohorts, padj<0.05 & logFC>0.5,
-#                                UP; N = COHORT_MIN, default 2)
+#             COHORT-REPLICATED (mouse orthologs of human DEGs significant [TREAT FDR<0.05,
+#                                lfc=0.5, UP] in >=N of the 5 control-bearing cohorts;
+#                                N = COHORT_MIN, default 2)
 #             UNION
-#             MOUSE-CONFIRMED   (mouse cross-diet UP, ashr lfsr<0.05 & shrunk_logFC>0.5
-#                                in >=3 of 4 diets, AND human ortholog logFC>0 --
-#                                human directional concordance, never mouse-alone)
+#             MOUSE-CONFIRMED   (mouse cross-diet UP, TREAT FDR<0.05 per diet [PC lfc=0.5,
+#                                lncRNA lfc=0.0] in >=3 of 4 diets, AND human ortholog
+#                                logFC>0 -- human directional concordance, never mouse-alone)
 #             UNION
 #             COLOC             (canonical SuSiE COLOC PP.H4 > 0.5, gene_level_coloc.csv;
 #                                genetic causal support, NOT the permissive ABF fallback)
 #             UNION
 #             POSITIVE CONTROLS (65 curated MASLD-biology genes, folded in as targets)
-#   restricted to protein_coding + lncRNA. NO miRNA, NO MASH tier.
-#   PROTEIN-CODING screen-expression gate (v8): drop PC genes whose MOUSE-HEPATOCYTE
-#   scRNA substrate is "absent" (hep<1 CPM). The screen reads out CELL-AUTONOMOUS
-#   hepatocyte lipid, so a target can only score if its mouse transcript is present
-#   in mouse hepatocytes (Cas13 substrate). This replaces the v7 whole-liver bulk MCD
-#   TPM gate, which retained non-parenchymal genes (e.g. Col1a1, a stellate gene).
-#   lncRNA is UNGATED (intrinsically low). EXEMPT from the gate: positive controls
-#   AND high-COLOC genes (SuSiE PP.H4 >= CAS13_COLOC_GATE_EXEMPT_PP4, default 0.9) --
-#   genetic-causal in HUMANS, kept regardless of mouse expression but flagged
-#   mouse_untestable when hep-absent (e.g. HKDC1: human COLOC 0.992, mouse Hkdc1
-#   0.30 CPM "absent" -- mouse hepatocytes use Gck). Bulk MCD TPM kept as a secondary
-#   annotation; human hep scRNA stays as a separate SOFT tag (hep_substrate).
-#   lncRNA is demoted to an EXPLORATORY arm (library_arm); all 233 retained.
+#   restricted to protein_coding + lncRNA. NO miRNA, NO MASH tier. CORE = the single C1
+#   integrated disease-vs-control axis (PC at lfc=SHRUNK_LFC_THR, lncRNA no-floor); the
+#   human spine is CORE UNION COHORT-REPLICATED only (C2/C3 dropped 2026-06-29).
+#   Screen-expression gate (v9): the screen is hepatocyte-autonomous, so gate on the
+#   MOUSE-HEPATOCYTE scRNA pseudobulk substrate (mouse_hep_cpm) with biotype-aware
+#   floors: protein_coding >=1.0 CPM, lncRNA >=0.1 CPM. The metric is CPM (10x UMI
+#   counts / library-size x 1e6, hepatocyte pseudobulk) -- the correct unit for droplet
+#   scRNA, NOT length-normalized TPM. A whole-liver bulk gate (the prior MCD-TPM gate)
+#   admits non-parenchymal passengers (e.g. Col1a1, stellate) that cannot move a cell-
+#   autonomous hepatocyte-lipid readout, so the hepatocyte substrate is the correct gate.
+#   Positive controls AND high-COLOC genes (SuSiE PP.H4 >= CAS13_COLOC_GATE_EXEMPT_PP4,
+#   default 0.9) remain exempt and are kept even if hep-absent, but flagged
+#   mouse_untestable. In-house MCD bulk TPM (mcd_mean_tpm) is retained as an ANNOTATION
+#   column only; human hep scRNA stays a separate SOFT tag (hep_substrate). lncRNA is
+#   still demoted to an EXPLORATORY arm (library_arm); human lncRNA remains raw-FDR/no-LFC.
 #
-# tier priority on overlap: core > cohort_replicated > mouse_confirmed > coloc >
-#   positive_control. has_human_de = core OR cohort. is_mash_deg kept as a soft
+# tier priority on overlap: positive_control > core > cohort_replicated >
+#   mouse_confirmed > coloc. has_human_de = core OR cohort. is_mash_deg kept as a soft
 #   annotation only (adds no genes).
 #
 # v7 SOURCE CHANGE: the human arm is sourced from the paper-canonical limma-voom
@@ -45,8 +65,8 @@
 # DEGs, replacing the v6 metafor spine -- this matches the integrated-vs-per-study
 # venn and the project-wide canonical DEG method.
 #
-# Consumed by figS_cas13_library_*.R. Output filename kept as cas13_library_v3.0.csv
-# for consumer compatibility; library_version column = v8.
+# Consumed by figS_cas13_library_*.R. Output filename kept as cas13_library.csv
+# for consumer compatibility; library_version column = v9.
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({ library(data.table) })
@@ -55,21 +75,26 @@ BASE     <- Sys.getenv("MASLD_PROJECT_ROOT",
                        "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 PERDIET  <- file.path(BASE, "RNA-seq/Mouse/Unified_Integration/results/per_diet_cas13")  # Cas13 library Western pool; decoupled from paper 4-model per_diet (2026-06-16)
 PERSTUDY <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/per_study")
-OUT      <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0.csv")
-BACKUP   <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0_pre_v8.csv")
-V7REF    <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v7_canonical.csv")  # frozen for diff
-DIFFOUT  <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v7_to_v8_diff.csv")
+OUT      <- file.path(BASE, "Cas13_Library_Design/data/cas13_library.csv")
+BACKUP   <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0_pre_v9.csv")
+V7REF    <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v8_canonical.csv")  # frozen v8, baseline for v8->v9 diff
+DIFFOUT  <- file.path(BASE, "Cas13_Library_Design/data/cas13_library_v8_to_v9_diff.csv")
 MANIFEST <- file.path(BASE, "Cas13_Library_Design/data/BUILD_MANIFEST.txt")
 ATLAS    <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 ORTHO    <- file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz")
 META     <- file.path(BASE, "Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
 HEPSPEC  <- file.path(BASE, "Cas13_Library_Design/data/hep_specificity.csv")
-# Mouse MCD mean TPM -> v8: secondary annotation only (v7 gate retired).
+# Mouse MCD mean TPM -> hard screen-expression gate + annotation.
 MCDTPM   <- file.path(BASE, "RNA-seq/Mouse/InHouse_MCD/results/mean_tpm_mcd.csv")
-# Mouse-hepatocyte scRNA substrate -> v8 protein-coding screen-expression gate.
-MOUSEHEP <- file.path(BASE, "Cas13_Library_Design/data/mouse_hep_specificity.csv")
+# Mouse-hepatocyte scRNA substrate -> annotation only. Now the vM38 re-quantification
+# (2026-06-25): full GENCODE vM38 atlas (114 samples, custom permissive-lncRNA cellranger
+# ref), native vM38 gene_ids matching the library, all loci measured. vM37<->vM38 hep_cpm
+# Spearman rho = 0.972 on shared genes. Old vM37 substrate: mouse_hep_specificity.csv.
+MOUSEHEP <- file.path(BASE, "Cas13_Library_Design/data/mouse_hep_specificity_vm38.csv")
 # v7: human disease-vs-control arm = canonical limma-voom QW C2 (integrated).
 CANONICAL<- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
+MASHMASL <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/mash_vs_masl_dream.csv")
+ADVFIB   <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/adv_vs_early_fibrosis_dream.csv")
 # COLOC tier = canonical SuSiE PP.H4 > 0.5 (gene-level, EUR/EAS/AFR/SAS portfolio).
 COLOCFILE<- file.path(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv")
 # Positive controls (human symbols + steatosis-direction label).
@@ -83,21 +108,22 @@ COHORT_MIN <- as.integer(Sys.getenv("CAS13_COHORT_MIN", "2"))  # >=N cohorts for
 
 DIETS          <- c("MCD", "CDAHFD", "Western", "HFD")
 MIN_DIETS      <- 3L       # mouse cross-diet replication
-LFSR_THR       <- 0.05     # mouse arm
-SHRUNK_LFC_THR <- 0.5      # mouse arm (stricter; mouse-only effect size)
-HUMAN_PADJ_THR <- 0.05     # human arm (raw C2)
-HUMAN_LFC_THR  <- 0.5      # human arm (raw C2, UP only)
+LFSR_THR       <- 0.05     # FDR cutoff applied to fdr_treat (name is historical; not an lfsr now)
+# NOTE: despite the name, SHRUNK_LFC_THR is now the TREAT lfc OFFSET (the |logFC| the
+# moderated-t is tested against), NOT a point-estimate cutoff on a shrunk logFC. It is
+# reused as the lfc offset for every PROTEIN-CODING arm (all human axes C1/C2/C3 + per-
+# cohort + mouse cross-diet PC); lncRNAs use SHRUNK_LFC_THR_LNC=0. Kept as-is for ref
+# stability; rename deferred (touches many call sites).
+SHRUNK_LFC_THR <- as.numeric(Sys.getenv("CAS13_PC_LFC", "0.2"))  # TREAT lfc offset, PC arms, UP only (env-tunable; 0.2 -> ~2,177 lib, 2026-06-29 PI sizing)
+SHRUNK_LFC_THR_LNC <- 0.0  # TREAT lfc offset, lncRNA (no effect-size floor)
+HUMAN_PADJ_THR <- 0.05     # human arm FDR cutoff (applied to fdr_treat)
 COLOC_PP4_THR  <- 0.5      # canonical SuSiE PP.H4 threshold (tier + annotation)
 KEEP_BIOTYPES  <- c("protein_coding", "lncRNA")
-MCD_TPM_PC_GATE <- as.numeric(Sys.getenv("CAS13_PC_TPM_GATE", "1.0"))  # v8: annotation reference only (bulk MCD); no longer gates
-# v8 PC gate: drop PC genes with no usable mouse-hepatocyte transcript -- substrate
-# "absent", OR "ambient_suspect" with hep/other ratio below the ambient floor (ambient
-# RNA scales with the contaminating lineage, so a low ratio = consistent with spillover
-# regardless of absolute hep CPM; this drops e.g. Col1a1, hep 1.1 CPM ratio 0.001).
-HEP_RATIO_MIN <- as.numeric(Sys.getenv("CAS13_HEP_RATIO_MIN", "0.1"))
+HEP_CPM_PC_GATE  <- as.numeric(Sys.getenv("CAS13_PC_HEP_CPM_GATE", "1.0"))   # mouse-hepatocyte scRNA pseudobulk CPM floor (PC)
+HEP_CPM_LNC_GATE <- as.numeric(Sys.getenv("CAS13_LNC_HEP_CPM_GATE", "0.1"))  # mouse-hepatocyte scRNA pseudobulk CPM floor (lncRNA)
 # high-COLOC genes (SuSiE PP.H4 >= this) are exempt (kept, flagged mouse_untestable).
 COLOC_GATE_EXEMPT_PP4 <- as.numeric(Sys.getenv("CAS13_COLOC_GATE_EXEMPT_PP4", "0.9"))
-LIB_VERSION    <- "v8"
+LIB_VERSION    <- "v9"
 
 # Positive-control roster aliases (roster colloquial name -> HGNC symbol).
 POSCTRL_ALIASES <- c("SCD1" = "SCD")
@@ -111,7 +137,55 @@ POSCTRL_EXCLUDE <- c("GIPR", "GLP1R", "FAP")
 POSCTRL_MOUSE_OVERRIDE <- c("SCD" = "Scd1")   # values are MOUSE symbols
 
 strip_v <- function(x) sub("[.][0-9]+$", "", x)
+infer_df_total <- function(dt) {
+  pr <- dt[is.finite(t) & is.finite(P.Value) & P.Value > 0 & P.Value < 1 & abs(t) > 1e-6]
+  idx <- unique(round(seq(1, nrow(pr), length.out = min(nrow(pr), 12))))
+  median(vapply(idx, function(i)
+    uniroot(function(df) 2 * pt(-abs(pr$t[i]), df = df) - pr$P.Value[i], c(0.1, 1e6))$root,
+    numeric(1)))
+}
+add_treat_fdr <- function(dt, lfc, se_col = NULL, df_col = NULL) {
+  out <- copy(dt)
+  se <- if (!is.null(se_col) && se_col %in% names(out)) out[[se_col]] else abs(out$logFC / out$t)
+  se[!is.finite(se) | se <= 0] <- NA_real_
+  df_use <- if (!is.null(df_col) && df_col %in% names(out)) out[[df_col]] else infer_df_total(out)
+  out[, p_treat := pt((abs(logFC) - lfc) / se, df = df_use, lower.tail = FALSE) +
+                   pt((abs(logFC) + lfc) / se, df = df_use, lower.tail = FALSE)]
+  out[, fdr_treat := p.adjust(p_treat, method = "BH")]
+  out
+}
+# Biotype-aware TREAT: protein-coding genes are tested against the PC effect-size
+# offset (lfc_pc), lncRNAs against no floor (lfc_lnc=0) -- the same biotype split the
+# mouse cross-diet arm already uses, applied uniformly to EVERY human axis (C1/C2/C3 +
+# per-cohort) so the advertised "PC LFC>=0.5" floor actually binds on PROTEIN-CODING
+# genes regardless of which contrast they enter through. `dt` must already carry `bt`.
+add_treat_fdr_bt <- function(dt, se_col = NULL, df_col = NULL,
+                             lfc_pc = SHRUNK_LFC_THR, lfc_lnc = SHRUNK_LFC_THR_LNC) {
+  pc  <- add_treat_fdr(dt[bt != "lncRNA"], lfc = lfc_pc,  se_col = se_col, df_col = df_col)
+  lnc <- add_treat_fdr(dt[bt == "lncRNA"], lfc = lfc_lnc, se_col = se_col, df_col = df_col)
+  rbindlist(list(pc, lnc), fill = TRUE)
+}
 
+# Biotype maps retained for explicit PCG/lncRNA threshold provenance.
+meta_bt0 <- fread(META, select = c("mouse_ensembl_base", "mouse_biotype"))
+setnames(meta_bt0, c("mouse_ensembl_base", "mouse_biotype"), c("gene_id_mouse", "biotype"))
+meta_bt0[grepl("protein_coding", biotype), biotype := "protein_coding"]
+meta_bt0[grepl("lncRNA|lincRNA", biotype), biotype := "lncRNA"]
+mouse_biotype_of <- setNames(meta_bt0$biotype, meta_bt0$gene_id_mouse)
+
+ortho_bt0 <- fread(cmd = paste0("zcat ", ORTHO),
+                   select = c("mouse_ensembl", "human_ensembl",
+                              "confidence_tier", "is_one2one"))
+ortho_bt0[, gene_id_mouse := strip_v(mouse_ensembl)]
+ortho_bt0[, human_ensembl := strip_v(human_ensembl)]
+ortho_bt0 <- ortho_bt0[confidence_tier %in% c("H", "M")]
+ortho_bt0[, trank := match(confidence_tier, c("H", "M"))]
+ortho_bt0[, o2o := is_one2one %in% c(TRUE, "True", "TRUE", "true")]
+ortho_bt0[, one2one_rank := ifelse(o2o, 0L, 1L)]
+setorder(ortho_bt0, human_ensembl, trank, one2one_rank, mouse_ensembl)
+ortho_bt0 <- unique(ortho_bt0, by = "human_ensembl")
+human_biotype_of <- setNames(mouse_biotype_of[ortho_bt0$gene_id_mouse],
+                             ortho_bt0$human_ensembl)
 # --- 0. Freeze the current (v7) library, then back it up ---------------------
 if (file.exists(OUT)) {
   if (!file.exists(V7REF)) { file.copy(OUT, V7REF); cat("froze v7 reference ->", V7REF, "\n") }
@@ -119,11 +193,15 @@ if (file.exists(OUT)) {
   cat("backed up current library ->", BACKUP, "\n")
 }
 
-# --- 1. Mouse cross-diet membership (ashr-shrunk effect size) ----------------
+# --- 1. Mouse cross-diet membership (TREAT FDR, consistent with human) -------
 up_by_diet <- lapply(DIETS, function(d) {
   dt <- fread(file.path(PERDIET, paste0(d, "_de_results.csv")))
   dt[, gene_base := strip_v(gene)]
-  dt[lfsr < LFSR_THR & shrunk_logFC > SHRUNK_LFC_THR, gene_base]
+  dt[, bt := unname(mouse_biotype_of[gene_base])]
+  dt[is.na(bt), bt := "protein_coding"]
+  dt_pc <- add_treat_fdr(dt[bt != "lncRNA"], lfc = SHRUNK_LFC_THR, df_col = "df_total")
+  dt_lnc <- add_treat_fdr(dt[bt == "lncRNA"], lfc = 0.0, df_col = "df_total")
+  rbindlist(list(dt_pc, dt_lnc), fill = TRUE)[fdr_treat < LFSR_THR & logFC > 0, gene_base]
 })
 names(up_by_diet) <- DIETS
 all_up <- sort(unique(unlist(up_by_diet)))
@@ -133,8 +211,8 @@ cross[, n_diets_up := rowSums(.SD), .SDcols = DIETS]
 cross[, diet_list := apply(.SD, 1, function(r) paste(DIETS[as.logical(r)], collapse = ",")),
       .SDcols = DIETS]
 
-# --- 2. Human CORE: integrated canonical C2 disease-vs-control DEGs ----------
-can <- fread(CANONICAL, select = c("gene", "logFC", "padj", "symbol"))
+# --- 2. Human CORE: union of therapeutic-axis human DEGs ---------------------
+can <- fread(CANONICAL, select = c("gene", "logFC", "padj", "symbol", "SE", "t", "P.Value"))
 can[, hb := strip_v(gene)]
 universe_n <- nrow(can)
 col1a1_lfc <- can[symbol == "COL1A1", logFC][1]
@@ -144,17 +222,27 @@ if (universe_n > 30000)
 if (is.na(col1a1_lfc) || col1a1_lfc < 0.5)
   stop(sprintf("COL1A1 canonical logFC=%.3f unexpected (expected ~1.3, up in disease). Check CANONICAL file.", col1a1_lfc))
 
-human_logfc <- can[, .(hb, human_logFC = logFC)]              # for mouse-tier concordance + entry label
-core_h <- unique(can[!is.na(padj) & !is.na(logFC) &
-                     padj < HUMAN_PADJ_THR & logFC > HUMAN_LFC_THR, hb])
-cat(sprintf("Human CORE (integrated C2 padj<%.2f & logFC>%.1f, UP): %d genes\n",
-            HUMAN_PADJ_THR, HUMAN_LFC_THR, length(core_h)))
+can[, bt := human_biotype_of[hb]]
+can[is.na(bt), bt := "protein_coding"]
+can <- add_treat_fdr_bt(can, se_col = "SE")  # CORE = C1 integrated disease-vs-control ONLY: PC lfc=0.5, lncRNA 0
+# CORE is the integrated disease-vs-control DEG set ALONE. The MASH-vs-MASL (C2) and
+# advanced-fibrosis (C3) progression axes were dropped (2026-06-29, PI): the human arm
+# is CORE integrated DEGs UNION COHORT-REPLICATED DEGs only (see spine_h below).
+core_h <- unique(can[!is.na(logFC) & fdr_treat < HUMAN_PADJ_THR & logFC > 0, hb])
+cat(sprintf("Human CORE (C1 MASLD-vs-Control integrated only, TREAT FDR<%.2f, PC LFC>=%.1f / lnc no-floor): %d genes\n",
+            HUMAN_PADJ_THR, SHRUNK_LFC_THR, length(core_h)))
+human_support <- can[hb %in% core_h, .(hb, human_symbol = symbol, human_logFC = logFC, contrast = "C1_disease_vs_ctrl")]
+human_logfc <- human_support[, .(human_logFC = max(human_logFC, na.rm = TRUE)), by = hb]
 
 # --- 2b. COHORT-REPLICATED: human DEGs significant in >=COHORT_MIN cohorts ----
 cohort_lists <- lapply(COHORTS, function(c) {
   d <- fread(file.path(PERSTUDY, paste0(c, "_de_results.csv")))
   d[, hb := strip_v(gene)]
-  unique(d[!is.na(adj.P.Val) & !is.na(logFC) & adj.P.Val < HUMAN_PADJ_THR & logFC > HUMAN_LFC_THR, hb])
+  d[, bt := human_biotype_of[hb]]
+  d[is.na(bt), bt := "protein_coding"]
+  
+  d <- add_treat_fdr_bt(d, se_col = "SE", df_col = "df.total")   # cohort: PC at lfc=0.5, lncRNA at 0
+  unique(d[!is.na(logFC) & fdr_treat < HUMAN_PADJ_THR & logFC > 0, hb])
 })
 cohort_n_tab <- table(unlist(cohort_lists))                  # per human gene: #cohorts significant
 cohort_h <- names(cohort_n_tab)[cohort_n_tab >= COHORT_MIN]
@@ -198,8 +286,8 @@ cohort_mouse <- map_h2m(cohort_h)
 spine_mouse  <- union(core_mouse, cohort_mouse)
 cat(sprintf("Human spine (mouse orthologs): core=%d cohort=%d union=%d\n",
             length(core_mouse), length(cohort_mouse), length(spine_mouse)))
-# entry human (strongest C2 logFC among the spine humans mapping to each mouse gene)
-spine_hu <- merge(can[hb %in% spine_h, .(human_ensembl = hb, human_symbol = symbol, human_logFC = logFC)],
+# entry human (strongest logFC among the contributing therapeutic-axis contrasts)
+spine_hu <- merge(human_support[hb %in% spine_h, .(human_ensembl = hb, human_symbol, human_logFC)],
                   ortho_byhuman[, .(human_ensembl, gene_id_mouse)], by = "human_ensembl")
 setorder(spine_hu, gene_id_mouse, -human_logFC, human_ensembl)
 spine <- spine_hu[, .(entry_human_ensembl = human_ensembl[1],
@@ -259,12 +347,12 @@ mash_mouse <- map_h2m(mash_h)
 # --- 5. Assemble library: union of 5 tiers, PC+lncRNA only -------------------
 lib_genes <- sort(Reduce(union, list(spine_mouse, mouse_confirmed, coloc_mouse, posctrl_mouse)))
 mem <- data.table(gene_id_mouse = lib_genes)
-# tier priority: core > cohort_replicated > mouse_confirmed > coloc > positive_control
-mem[, tier := fifelse(gene_id_mouse %in% core_mouse,       "core",
+# tier priority: positive_control > core > cohort_replicated > mouse_confirmed > coloc
+mem[, tier := fifelse(gene_id_mouse %in% posctrl_mouse,    "positive_control",
+              fifelse(gene_id_mouse %in% core_mouse,       "core",
               fifelse(gene_id_mouse %in% cohort_mouse,     "cohort_replicated",
               fifelse(gene_id_mouse %in% mouse_confirmed,  "mouse_confirmed",
-              fifelse(gene_id_mouse %in% coloc_mouse,      "coloc",
-                                                           "positive_control"))))]
+                                                           "coloc"))))]
 mem[, is_core              := gene_id_mouse %in% core_mouse]
 mem[, is_cohort_replicated := gene_id_mouse %in% cohort_mouse]
 mem[, has_human_de         := gene_id_mouse %in% spine_mouse]   # core OR cohort
@@ -311,50 +399,84 @@ n_before <- nrow(mem)
 mem <- mem[biotype %in% KEEP_BIOTYPES]
 cat("Biotype filter PC+lncRNA:", n_before, "->", nrow(mem), "genes\n")
 
-# --- 5b. PC screen-expression gate: MOUSE-HEPATOCYTE scRNA substrate (v8) ------
-#         The screen reads out CELL-AUTONOMOUS hepatocyte lipid, so a PC target can
-#         only score if its mouse transcript is present in mouse HEPATOCYTES (Cas13
-#         substrate). Drop PC genes whose mouse_hep_substrate == "absent" (hep<1 CPM).
-#         lncRNA ungated. EXEMPT: positive controls AND high-COLOC genes (SuSiE PP.H4
-#         >= COLOC_GATE_EXEMPT_PP4) -- genetic-causal in HUMANS, kept regardless of
-#         mouse expression but flagged mouse_untestable when hep-absent (e.g. HKDC1).
-mhs <- fread(MOUSEHEP)                                   # keyed on mouse symbol
-mem <- merge(mem, mhs[, .(gene_symbol_mouse = gene_symbol, mouse_hep_cpm,
-                          mouse_hep_ratio, mouse_hep_substrate)],
-             by = "gene_symbol_mouse", all.x = TRUE)
-mem[is.na(mouse_hep_substrate), mouse_hep_substrate := "absent"]
-# bulk MCD mean TPM (v8: secondary cross-check annotation; v7 gate retired)
+# --- 5b. Screen-expression gate: mouse-HEPATOCYTE scRNA pseudobulk CPM (v9) ---
+#         The screen is hepatocyte-autonomous, so a target can only score if its
+#         mouse transcript is present in mouse HEPATOCYTES -- not a whole-liver-bulk
+#         passenger from another lineage (e.g. Col1a1, stellate). Gate on mouse_hep_cpm
+#         with biotype-aware floors: PC >= 1.0 CPM, lncRNA >= 0.1 CPM. The metric is
+#         CPM (10x UMI counts / library-size x 1e6, hepatocyte pseudobulk) -- the
+#         correct unit for droplet scRNA, NOT length-normalized TPM. Positive controls
+#         and high-COLOC genes remain exempt (kept, flagged mouse_untestable). In-house
+#         MCD bulk TPM (mcd_mean_tpm) is retained as an ANNOTATION column only.
+mhs <- fread(MOUSEHEP)                                   # carries gene_id (GRCm39-2024-A) + gene_symbol
+# Join the substrate on STABLE Ensembl gene_id (2026-06-24): survives symbol drift
+# between the library roster and the scRNA atlas (e.g. Akr1b1<->Akr1b3, Atp5f1d<->
+# Atp5d, Lars1<->Lars, Fyb1<->Fyb) that previously zeroed ~19 real hepatocyte genes.
+# Fall back to gene_symbol for the few substrate rows lacking a ref gene_id.
+mhs_id <- unique(mhs[!is.na(gene_id) & gene_id != "",
+                     .(gene_id_mouse = gene_id, mouse_hep_cpm,
+                       mouse_hep_ratio, mouse_hep_substrate)], by = "gene_id_mouse")
+mem <- merge(mem, mhs_id, by = "gene_id_mouse", all.x = TRUE)
+mhs_sym <- unique(mhs[, .(gene_symbol_mouse = gene_symbol, cpm_s = mouse_hep_cpm,
+                          ratio_s = mouse_hep_ratio, sub_s = mouse_hep_substrate)],
+                  by = "gene_symbol_mouse")
+mem <- merge(mem, mhs_sym, by = "gene_symbol_mouse", all.x = TRUE)
+mem[is.na(mouse_hep_substrate), `:=`(mouse_hep_cpm = cpm_s, mouse_hep_ratio = ratio_s,
+                                     mouse_hep_substrate = sub_s)]
+mem[, c("cpm_s", "ratio_s", "sub_s") := NULL]
+mem[is.na(mouse_hep_cpm), mouse_hep_cpm := 0]
+
+# bulk MCD mean TPM (v9: ANNOTATION only; the hard gate is mouse_hep_cpm above)
 mcd <- fread(MCDTPM, select = c("gene_id", "mean_tpm"))
 mcd[, gene_id_mouse := strip_v(gene_id)]
 mcd <- mcd[, .(mcd_mean_tpm = max(mean_tpm)), by = gene_id_mouse]
 mem <- merge(mem, mcd, by = "gene_id_mouse", all.x = TRUE)
+mem[is.na(mcd_mean_tpm), mcd_mean_tpm := 0]
 
-# a PC gene FAILS the hepatocyte-substrate gate if it has no hepatocyte transcript
-# (absent) or its hepatocyte signal is ambient-level (ambient_suspect & ratio < floor).
-hep_gate_fail <- function(sub, ratio) sub == "absent" |
-                 (sub == "ambient_suspect" & (is.na(ratio) | ratio < HEP_RATIO_MIN))
+gate_fail <- (mem$biotype == "protein_coding" & mem$mouse_hep_cpm < HEP_CPM_PC_GATE) |
+             (mem$biotype == "lncRNA" & mem$mouse_hep_cpm < HEP_CPM_LNC_GATE)
 
-pc_fail     <- mem$biotype == "protein_coding" &
-               hep_gate_fail(mem$mouse_hep_substrate, mem$mouse_hep_ratio)
 gate_exempt <- mem$is_positive_control |
                (mem$has_coloc & !is.na(mem$coloc_best_susie_pp4) &
                 mem$coloc_best_susie_pp4 >= COLOC_GATE_EXEMPT_PP4)
-drop_pc  <- pc_fail & !gate_exempt
-n_exempt <- sum(pc_fail & gate_exempt)
+
+drop_gene  <- gate_fail & !gate_exempt
+n_exempt <- sum(gate_fail & gate_exempt)
 n_pre <- nrow(mem)
-mem <- mem[!drop_pc]
-cat(sprintf("PC mouse-hep gate (drop absent|ambient<ratio %.2f; lncRNA ungated; %d exempt [ctrl|COLOC>=%.2f]): %d -> %d genes\n",
-            HEP_RATIO_MIN, n_exempt, COLOC_GATE_EXEMPT_PP4, n_pre, nrow(mem)))
-# kept via exemption but no usable mouse hepatocyte transcript -> in the library
-# (human-priority / control) but NOT assayable by the hepatocyte-lipid readout.
-mem[, mouse_untestable := biotype == "protein_coding" &
-      hep_gate_fail(mouse_hep_substrate, mouse_hep_ratio)]
-mem[, hep_substrate_confident := mouse_hep_substrate == "high"]
-# benchmark-eligible controls = pass the hepatocyte gate (genuine hep transcript):
-# the ones that can actually anchor the positive-control AUROC / dynamic range.
-# Gate-failing controls are KEPT but flagged not-eligible-as-anchor.
-mem[, control_benchmark_eligible := is_positive_control &
-      !hep_gate_fail(mouse_hep_substrate, mouse_hep_ratio)]
+mem <- mem[!drop_gene]
+
+cat(sprintf("mouse-hep CPM gate (drop PC <%.1f CPM, lncRNA <%.1f CPM; %d exempt [ctrl|COLOC>=%.2f]): %d -> %d genes\n",
+            HEP_CPM_PC_GATE, HEP_CPM_LNC_GATE, n_exempt, COLOC_GATE_EXEMPT_PP4, n_pre, nrow(mem)))
+
+mem[, mouse_untestable := (biotype == "protein_coding" & mouse_hep_cpm < HEP_CPM_PC_GATE) |
+                          (biotype == "lncRNA" & mouse_hep_cpm < HEP_CPM_LNC_GATE)]
+mem[, hep_substrate_confident := !mouse_untestable]
+mem[, control_benchmark_eligible := is_positive_control & !mouse_untestable]
+
+# --- 5c. Pool-guideability gate (2026-06-24): drop genes with NO qualifying Cas13
+#         guide in the upstream vM38 pool. A target with zero designable guides cannot
+#         be in the screen at all -- a HARD physical constraint, so it applies to EVERY
+#         tier INCLUDING positive controls and high-COLOC exemptions (the hep exemption
+#         only concerns the lipid readout, not guide existence). The list is maintained
+#         as a UNION across guide-build runs by build_library_guides.py
+#         (coverage status == 'no_guides_in_source'); reasons: mitochondrial, wrong
+#         biotype, no basic-CCDS PC transcript, or every spacer failing the off-target/
+#         uniqueness filter (single-exon or large paralog families -- Sox4, Rpl36,
+#         Tuba1b, Ugt1a1, ...). genome_n_guides_passed == 0 confirmed for all (not a
+#         symbol/gene_id join artifact).
+UNGUIDEABLE <- file.path(BASE, "Cas13_Library_Design/data/guides/unguideable_vM38.csv")
+if (file.exists(UNGUIDEABLE)) {
+  ung_ids <- strip_v(fread(UNGUIDEABLE)$gene_id_mouse)
+  in_ung    <- mem$gene_id_mouse %in% ung_ids
+  n_ctrl_g  <- sum(in_ung & mem$is_positive_control)
+  n_coloc_g <- sum(in_ung & mem$has_coloc & !is.na(mem$coloc_best_susie_pp4) &
+                   mem$coloc_best_susie_pp4 >= COLOC_GATE_EXEMPT_PP4)
+  n_pre_g <- nrow(mem); mem <- mem[!in_ung]
+  cat(sprintf("pool-guideability gate (drop no-guide genes in vM38 pool): %d -> %d  [-%d; incl %d pos-ctrl, %d COLOC>=%.2f]\n",
+              n_pre_g, nrow(mem), sum(in_ung), n_ctrl_g, n_coloc_g, COLOC_GATE_EXEMPT_PP4))
+} else {
+  cat("pool-guideability gate: unguideable_vM38.csv not found (run build_library_guides.py first) -- no genes dropped\n")
+}
 
 # --- 6. Readout-aware soft tags (hepatocyte substrate + disease cell type) ----
 if (file.exists(HEPSPEC)) {
@@ -383,7 +505,7 @@ mem[, n_evidence_axes := as.integer(has_human_de) + as.integer(n_diets_up >= MIN
       as.integer(has_coloc) + as.integer(is_positive_control)]
 
 # library arm: PC tiers = primary discovery; lncRNA = exploratory secondary (decided
-# v8 -- kept in full but de-prioritised; weakest orthology + low mouse expression).
+# v9 -- kept in full but de-prioritised; weakest orthology + low mouse expression).
 mem[, library_arm := ifelse(biotype == "lncRNA", "exploratory_lncrna", "primary")]
 
 # lncRNA flags
@@ -396,7 +518,7 @@ mem[, lnc_priority := biotype == "lncRNA" &
 
 mem[, library_version := LIB_VERSION]
 
-# --- 7. Write canonical schema (v8) -----------------------------------------
+# --- 7. Write canonical schema (v9) -----------------------------------------
 out <- mem[, .(gene_id_mouse, gene_symbol_mouse, gene_symbol_human, biotype, tier,
                library_arm,
                is_core, is_cohort_replicated, n_cohorts_sig, n_diets_up, diet_list,
@@ -415,7 +537,7 @@ fwrite(out, OUT)
 n_total <- nrow(out)
 n_pc    <- out[biotype == "protein_coding", .N]
 n_lnc   <- out[biotype == "lncRNA", .N]
-N_SGRNA <- 10L; N_NT <- 500L; N_EXTRA_CTRL <- 30L              # 10 gRNA/target; NT + safe-harbor/essential
+N_SGRNA <- 4L; N_NT <- 500L; N_EXTRA_CTRL <- 30L               # 4 gRNA/target (build_library_guides.py --n 4, 2026-06-29); NT + safe-harbor/essential
 n_sgrna <- (n_pc + n_lnc) * N_SGRNA + N_NT + N_EXTRA_CTRL * N_SGRNA
 HEP <- 1e7; TRANSD <- 0.30; CRE_EFF <- 0.80; FACS_EFF <- 0.60
 IN_FRAC <- 0.13; GATE <- 0.15; MORTALITY <- 1/8
@@ -427,7 +549,7 @@ mice     <- ceiling(mice_cov / (1 - MORTALITY))
 
 cat("\n=== LIBRARY", LIB_VERSION, "(", OUT, ") ===\n")
 cat(sprintf("TOTAL: %d  (PC=%d, lncRNA=%d)\n", n_total, n_pc, n_lnc))
-cat("tier distribution (core>cohort_replicated>mouse_confirmed>coloc>positive_control):\n")
+cat("tier distribution (positive_control>core>cohort_replicated>mouse_confirmed>coloc):\n")
 print(table(out$tier))
 cat(sprintf("  is_core=%d  is_cohort_replicated=%d  has_human_de(core|cohort)=%d\n",
             sum(out$is_core), sum(out$is_cohort_replicated), sum(out$has_human_de)))
@@ -436,25 +558,27 @@ cat(sprintf("  has_coloc=%d  is_positive_control=%d  is_mash_deg(annotation)=%d\
 cat("library_arm distribution:\n"); print(table(out$library_arm))
 stopifnot("miRNA leaked into the library" = out[biotype == "miRNA", .N] == 0)
 stopifnot("MASH tier should not exist" = out[tier == "mash_progression", .N] == 0)
-# v8 gate diagnostics: mouse-hepatocyte substrate + exemption book-keeping
-cat("mouse_hep_substrate distribution (PC only):\n")
+# v9 gate diagnostics: mouse-hepatocyte substrate + exemption book-keeping
+cat("mouse_hep_substrate distribution (PC only; gate substrate):\n")
 print(table(out[biotype == "protein_coding", mouse_hep_substrate]))
-cat(sprintf("  mouse_untestable (PC, hep-absent, kept via exemption)=%d  control_benchmark_eligible=%d\n",
+cat(sprintf("  mouse_untestable (fails mouse-hep CPM gate, kept via exemption)=%d  control_benchmark_eligible=%d\n",
             sum(out$mouse_untestable), sum(out$control_benchmark_eligible)))
-cat(sprintf("  scoreable PC (mouse_hep_substrate==high): %d (%.1f%% of PC)\n",
-            out[biotype == "protein_coding" & mouse_hep_substrate == "high", .N],
-            100 * out[biotype == "protein_coding" & mouse_hep_substrate == "high", .N] / max(n_pc, 1)))
+cat(sprintf("  scoreable PC (mouse-hep CPM >= %.1f): %d (%.1f%% of PC)\n",
+            HEP_CPM_PC_GATE,
+            out[biotype == "protein_coding" & mouse_hep_cpm >= HEP_CPM_PC_GATE, .N],
+            100 * out[biotype == "protein_coding" & mouse_hep_cpm >= HEP_CPM_PC_GATE, .N] / max(n_pc, 1)))
 # flagship verification: HKDC1 rescued-but-flagged; Gck (mouse hepatic hexokinase) clean
 hk <- out[gene_symbol_mouse == "Hkdc1"]
 gk <- out[gene_symbol_mouse == "Gck"]
-cat(sprintf("  CHECK Hkdc1: present=%s tier=%s mouse_hep_substrate=%s mouse_untestable=%s\n",
+cat(sprintf("  CHECK Hkdc1: present=%s tier=%s mouse_hep_substrate=%s mouse_hep_cpm=%.3f mouse_untestable=%s\n",
             nrow(hk) > 0, if (nrow(hk)) hk$tier else "NA",
             if (nrow(hk)) hk$mouse_hep_substrate else "NA",
+            if (nrow(hk)) hk$mouse_hep_cpm else NA_real_,
             if (nrow(hk)) hk$mouse_untestable else "NA"))
 cat(sprintf("  CHECK Gck:   present=%s mouse_hep_substrate=%s\n",
             nrow(gk) > 0, if (nrow(gk)) gk$mouse_hep_substrate else "NA"))
 if (nrow(hk) == 0)
-  warning("HKDC1 absent from v8 library -- expected present via COLOC exemption (PP4 0.992 >= ",
+  warning("HKDC1 absent from v9 library -- expected present via COLOC exemption (PP4 0.992 >= ",
           COLOC_GATE_EXEMPT_PP4, "). Check coloc tier / exemption threshold.")
 cat("human hep_substrate distribution (soft tag):\n"); print(table(out$hep_substrate))
 cat("disease-DE cell type (top 6):\n"); print(head(sort(table(out$sc_disease_celltype), decreasing = TRUE), 6))
@@ -464,30 +588,36 @@ cat(sprintf("sgRNAs: %d (%d/target, +%d NT, +%d safe-harbor/essential x%d)\n",
             n_sgrna, N_SGRNA, N_NT, N_EXTRA_CTRL, N_SGRNA))
 cat(sprintf("mice: %d surviving @500x; INJECT %d (1/8 mortality)\n", mice_cov, mice))
 
-# COHORT_MIN sensitivity (FULL library AFTER the v8 PC mouse-hep gate)
-cat("\nCOHORT_MIN sensitivity (FULL library after PC mouse-hep gate):\n")
+# COHORT_MIN sensitivity (FULL library AFTER the v9 mouse-hep CPM gate)
+cat("\nCOHORT_MIN sensitivity (FULL library after mouse-hep CPM gate):\n")
 pc_set  <- meta[grepl("protein_coding", biotype), gene_id_mouse]
 lnc_set <- meta[grepl("lncRNA|lincRNA", biotype), gene_id_mouse]
 id2sym    <- setNames(meta$gene_symbol_mouse, meta$gene_id_mouse)
-sym2sub   <- setNames(mhs$mouse_hep_substrate, mhs$gene_symbol)
-sym2ratio <- setNames(mhs$mouse_hep_ratio, mhs$gene_symbol)
-fail_of   <- function(ids) { s <- unname(sym2sub[id2sym[ids]]); s[is.na(s)] <- "absent"
-                             hep_gate_fail(s, unname(sym2ratio[id2sym[ids]])) }
+# gene_id-keyed mouse-hep CPM lookup (matches the actual gate)
+hep_cpm_of <- setNames(mhs_id$mouse_hep_cpm, mhs_id$gene_id_mouse)
+fail_of   <- function(ids) {
+  cpm <- unname(hep_cpm_of[ids])
+  cpm[is.na(cpm)] <- 0.0
+  bt <- unname(mouse_biotype_of[ids])
+  bt[is.na(bt)] <- "protein_coding"
+  (bt == "protein_coding" & cpm < HEP_CPM_PC_GATE) | (bt == "lncRNA" & cpm < HEP_CPM_LNC_GATE)
+}
 coloc_pp4_of <- setNames(coloc_pp4_dt$coloc_best_susie_pp4, coloc_pp4_dt$gene_id_mouse)
 exempt_pc <- function(ids) (ids %in% posctrl_mouse) |
              (!is.na(coloc_pp4_of[ids]) & coloc_pp4_of[ids] >= COLOC_GATE_EXEMPT_PP4)
 gated_n <- function(g) {
   pc <- intersect(g, pc_set); lnc <- intersect(g, lnc_set)
   pc_ok <- pc[!fail_of(pc) | exempt_pc(pc)]
-  length(union(pc_ok, lnc))
+  lnc_ok <- lnc[!fail_of(lnc) | exempt_pc(lnc)]
+  length(union(pc_ok, lnc_ok))
 }
 for (cm in c(2L, 3L, 4L)) {
   sm <- union(core_mouse, map_h2m(names(cohort_n_tab)[cohort_n_tab >= cm]))
   full <- Reduce(union, list(sm, mouse_confirmed, coloc_mouse, posctrl_mouse))
-  cat(sprintf("  >=%d cohorts: FULL (PC mouse-hep-gated) = %d\n", cm, gated_n(full)))
+  cat(sprintf("  >=%d cohorts: FULL (mouse-hep CPM-gated) = %d\n", cm, gated_n(full)))
 }
 
-# --- 9. v7 -> v8 diff --------------------------------------------------------
+# --- 9. v8 -> v9 diff --------------------------------------------------------
 diffref <- if (file.exists(V7REF)) V7REF else BACKUP
 if (file.exists(diffref)) {
   v7 <- fread(diffref); v7g <- v7$gene_id_mouse; v8g <- out$gene_id_mouse
@@ -497,7 +627,7 @@ if (file.exists(diffref)) {
   diff <- merge(diff, out[, .(gene_id_mouse, gene_symbol_mouse, gene_symbol_human, tier, biotype)],
                 by = "gene_id_mouse", all.x = TRUE)
   fwrite(diff, DIFFOUT)
-  cat(sprintf("\nv7->v8 diff: +%d added / -%d dropped (v7=%d, v8=%d) -> %s\n",
+  cat(sprintf("\nv8->v9 diff: +%d added / -%d dropped (v8=%d, v9=%d) -> %s\n",
               length(added), length(dropped), length(v7g), length(v8g), DIFFOUT))
 }
 
@@ -509,11 +639,13 @@ manifest <- c(
   sprintf("library_version: %s", LIB_VERSION),
   sprintf("built_utc: %s", format(Sys.time(), tz = "UTC", usetz = TRUE)),
   sprintf("git_sha: %s", paste(git_sha, collapse = "")),
-  "human_deg_source: canonical limma-voom QW C2 (integrated) UNION per-study cohort-replicated",
-  sprintf("cohort_min: %d of %d  |  human_padj<%.2f & logFC>%.1f (UP)", COHORT_MIN, length(COHORTS),
-          HUMAN_PADJ_THR, HUMAN_LFC_THR),
-  sprintf("pc_gate: mouse-hepatocyte scRNA substrate (drop absent | ambient_suspect with hep/other ratio < %.2f; protein_coding only; lncRNA ungated; positive controls + COLOC SuSiE>=%.2f exempt, flagged mouse_untestable)", HEP_RATIO_MIN, COLOC_GATE_EXEMPT_PP4),
-  sprintf("mouse_untestable(PC hep-absent, kept via exemption): %d | control_benchmark_eligible: %d",
+  "human_deg_source: CORE = C1 MASLD-vs-Control integrated DEGs only, UNION per-study cohort-replicated DEGs (C2 MASH-vs-MASL + C3 fibrosis axes dropped 2026-06-29)",
+  sprintf("cohort_min: %d of %d  |  human TREAT FDR<%.2f (PC LFC>=%.1f biotype-split on C1 core + per-cohort axes; lncRNA no-LFC, UP)",
+          COHORT_MIN, length(COHORTS), HUMAN_PADJ_THR, SHRUNK_LFC_THR),
+  sprintf("mouse_confirmed: >=%d diets  |  TREAT FDR<%.2f per diet (PC LFC>=%.1f; lncRNA lfc=0.0), UP",
+          MIN_DIETS, LFSR_THR, SHRUNK_LFC_THR),
+  sprintf("pc_gate: mouse-HEPATOCYTE scRNA pseudobulk CPM (drop PC <%.1f CPM, lncRNA <%.1f CPM; positive controls + COLOC SuSiE>=%.2f exempt, flagged mouse_untestable). MCD bulk TPM = annotation only.", HEP_CPM_PC_GATE, HEP_CPM_LNC_GATE, COLOC_GATE_EXEMPT_PP4),
+  sprintf("mouse_untestable(fails mouse-hep CPM gate, kept via exemption): %d | control_benchmark_eligible: %d",
           sum(out$mouse_untestable), sum(out$control_benchmark_eligible)),
   sprintf("library_arm: primary=%d exploratory_lncrna=%d",
           out[library_arm == "primary", .N], out[library_arm == "exploratory_lncrna", .N]),

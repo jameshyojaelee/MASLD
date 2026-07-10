@@ -75,7 +75,7 @@ svg_fills <- c(Gained = GAINED_COL, Maintained = MAINTAINED_COL, Lost = LOST_COL
 p_svg <- ggplot(svg_df, aes(x = state, y = n, fill = state)) +
   geom_col(width = 0.62) +
   geom_text(aes(label = n), vjust = -0.45, size = PUB_GEOM_TEXT + 0.6,
-            fontface = "bold", color = "black") +
+            fontface = "plain", color = "black") +
   scale_fill_manual(values = svg_fills, guide = "none") +
   scale_y_continuous(limits = c(0, max(svg_df$n) * 1.18),
                      expand = expansion(mult = c(0, 0.02))) +
@@ -117,7 +117,7 @@ ymax <- max(zon_df$n) + 14
 p_zon <- ggplot(zon_df, aes(x = zone, y = n, fill = zone)) +
   geom_col(width = 0.55) +
   geom_text(aes(label = n), hjust = -0.4, size = PUB_GEOM_TEXT + 0.6,
-            fontface = "bold", color = "black") +
+            fontface = "plain", color = "black") +
   geom_text(aes(label = lab, color = zone), y = max(zon_df$n) + 1.4,
             hjust = 0, vjust = 0.5, size = PUB_GEOM_TEXT - 0.1,
             fontface = "italic", lineheight = 0.9) +

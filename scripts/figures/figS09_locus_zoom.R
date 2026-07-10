@@ -130,7 +130,7 @@ COL_EUR  <- "black"     # Coworker's original black for EUR
 COL_EAS  <- "#D55E00"   # Coworker's burnt orange for EAS
 GWS      <- -log10(5e-8)
 
-theme_locus <- theme_masld(base_size = 7) +
+theme_locus <- theme_masld(base_size = 6) +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
@@ -141,7 +141,7 @@ theme_locus <- theme_masld(base_size = 7) +
     axis.line.y   = element_line(linewidth = 0.5, color = "black"),
     legend.position = "none",
     plot.title    = element_blank(),
-    strip.text.y.left = element_text(angle = 0, hjust = 1, vjust = 0.5, face = "bold", size = 8, margin = margin(r = 5)),
+    strip.text.y.left = element_text(angle = 0, hjust = 1, vjust = 0.5, face = "plain", size = 6, margin = margin(r = 5)),
     strip.background  = element_blank(),
     strip.placement   = "outside",
     plot.margin       = margin(t = 2, r = 15, b = 2, l = 5)
@@ -350,7 +350,7 @@ p2_eur_ld <- ggplot(eur_locus, aes(x = position, y = mlog10p)) +
   labs(y = expression(-log[10](italic(p))), title = NULL) +
   facet_grid("Summary\nstatistics" ~ ., switch = "y") +
   theme_locus +
-  theme(legend.position = "right", legend.title = element_text(size = 8),
+  theme(legend.position = "right", legend.title = element_text(size = 6),
         legend.key.height = unit(0.3, "cm"), legend.key = element_rect(color="white"),
         plot.margin = margin(b = 0, unit = "pt"))
 
@@ -493,8 +493,8 @@ p2_cs <- ggplot() +
   facet_grid("Finemapped\nvariants" ~ ., switch = "y") +
   theme_locus_x +
   theme(axis.line.x = element_line(linewidth=0.5, color="black"),
-        legend.position = "right", legend.text = element_text(size = 7),
-        legend.title = element_text(size = 8),
+        legend.position = "right", legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6),
         legend.key.size = unit(0.5, "lines"))
 
 # ── eQTL track ────────────────────────────────────────────────────────────────
@@ -666,7 +666,7 @@ p2_genes <- ggplot(genes_df) +
     else list() } +
   # Gene labels
   geom_text(aes(x = mid, y = row - 0.38, label = symbol),
-            size = 2.0, fontface = "italic", hjust = 0.5, color = "grey20") +
+            size = GEOM_TEXT_6PT, fontface = "italic", hjust = 0.5, color = "black") +
   scale_color_manual(values = c("Upregulated" = "#D73027", "Downregulated" = "#4575B4",
                                  "Not Significant" = "grey65"), name = "MASLD DEG") +
   scale_fill_manual(values  = c("Upregulated" = "#D73027", "Downregulated" = "#4575B4",
@@ -682,12 +682,12 @@ p2_genes <- ggplot(genes_df) +
     axis.text.y   = element_text(color = "transparent"),
     axis.ticks.y  = element_blank(),
     axis.line.y   = element_blank(),
-    axis.text.x   = element_text(size = 8, color = "grey30"),
+    axis.text.x   = element_text(size = 6, color = "black"),
     axis.ticks.x  = element_line(color = "grey50"),
     axis.line.x   = element_line(color = "grey50"),
     legend.position    = "right",
-    legend.title       = element_text(size = 8),
-    legend.text        = element_text(size = 7),
+    legend.title       = element_text(size = 6),
+    legend.text        = element_text(size = 6),
     legend.key.height  = unit(0.3, "cm"),
     legend.key         = element_rect(fill = "white")
   )

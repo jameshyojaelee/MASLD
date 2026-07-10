@@ -17,9 +17,13 @@
 #   - |core(no LFC)| vs |core(with LFC)|: how many "padj-unanimous" genes
 #     are pruned just by the LFC cutoff
 #
-# Output:
-#   figures/supplementary/figS_methods_validation/lfc_sensitivity/panels/I_loo_cv_lfc_compare.pdf
-#   figures/supplementary/figS_methods_validation/lfc_sensitivity/loo_cv_lfc_compare_stats.csv
+# Source (2026-06-27): canonical C2 limma-voom-qw LOO refits
+#   results/integration/loo_cv_C2/lvqw_loo_C2_<COHORT>.csv (carry shrunk_logFC+lfsr)
+#
+# Emitted per scale {raw, shrunk} (suffix appended; raw=logFC/padj,
+# shrunk=shrunk_logFC/lfsr PRIMARY):
+#   panels/loo_cv_lfc_compare<suffix>.pdf
+#   loo_cv_lfc_compare_stats<suffix>.csv
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -36,12 +40,34 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 INT_DIR <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
-LOO_DIR   <- file.path(INT_DIR, "loo_cv")
+# Canonical C2 limma-voom-qw LOO refits (carry shrunk_logFC+lfsr);
+# repointed off retired loo_cv/dream_loo_* 2026-06-27.
+LOO_DIR   <- file.path(INT_DIR, "loo_cv_C2")
 OUT_DIR   <- FIGS_LFCSENS_DIR  # consolidated under figS_methods_validation/ (2026-06-04)
 PANEL_DIR <- file.path(OUT_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
-OUT_PDF   <- file.path(PANEL_DIR, "I_loo_cv_lfc_compare.pdf")
-OUT_STATS <- file.path(OUT_DIR,   "loo_cv_lfc_compare_stats.csv")
+
+# Effect-size / significance scale definitions; each emits suffixed outputs.
+#   raw    -> logFC       gated on padj < 0.05
+#   shrunk -> shrunk_logFC gated on lfsr < 0.05  (PRIMARY)
+SCALES <- list(
+  raw = list(
+    suffix    = "_raw",
+    eff_col   = "logFC",
+    sig_col   = "padj",
+    sig_cut   = 0.05,
+    nocut_lbl = "padj < 0.05 (no LFC cutoff)",
+    cut_lbl   = "padj < 0.05 AND |raw log2FC| > 0.5",
+    title     = "LOOCV cross-fold consensus: padj-only vs padj + |raw log2FC| > 0.5"),
+  shrunk = list(
+    suffix    = "_shrunk",
+    eff_col   = "shrunk_logFC",
+    sig_col   = "lfsr",
+    sig_cut   = 0.05,
+    nocut_lbl = "lfsr < 0.05 (no LFC cutoff)",
+    cut_lbl   = "lfsr < 0.05 AND |ashr-shrunk log2FC| > 0.5",
+    title     = "LOOCV cross-fold consensus: lfsr-only vs lfsr + |ashr-shrunk log2FC| > 0.5")
+)
 
 ALL_STUDY_NAMES <- c(
   GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
@@ -53,7 +79,6 @@ mega_cohorts <- names(Filter(function(d) isTRUE(d$de$include_in_mega),
                                "config/human_datasets.yaml"))$datasets))
 STUDY_NAMES <- ALL_STUDY_NAMES[intersect(names(ALL_STUDY_NAMES), mega_cohorts)]
 
-PADJ_CUTOFF <- 0.05
 LFC_CUTOFF  <- 0.5
 TOP_K       <- 15L
 
@@ -70,7 +95,7 @@ names(fold_labels) <- fold_order_ds
 fold_lvls <- unname(fold_labels[fold_order_ds])
 
 loo_list <- lapply(fold_order_ds, function(ds) {
-  dt <- fread(file.path(LOO_DIR, sprintf("dream_loo_%s.csv", ds)))
+  dt <- fread(file.path(LOO_DIR, sprintf("lvqw_loo_C2_%s.csv", ds)))
   setnames(dt, "adj.P.Val", "padj", skip_absent = TRUE)
   dt
 })
@@ -121,19 +146,15 @@ build_upset <- function(deg_sets, panel_title, panel_subtitle) {
   p_bar <- ggplot(pat_top, aes(x = rank, y = n_genes)) +
     geom_col(fill = "#37474F", width = 0.7) +
     geom_text(aes(label = format(n_genes, big.mark = ",")),
-              vjust = -0.3, size = 1.7, color = "gray15") +
+              vjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.18)),
                        labels = scales::label_comma()) +
-    labs(x = NULL, y = "Intersection size",
-         title = panel_title,
-         subtitle = panel_subtitle) +
+    labs(x = NULL, y = "Intersection size") +
     theme_masld() + theme_pub() +
     theme(axis.text.x   = element_blank(),
           axis.ticks.x  = element_blank(),
           panel.grid.major.x = element_blank(),
-          panel.grid.minor   = element_blank(),
-          plot.title    = element_text(size = PUB_TITLE, face = "bold"),
-          plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"))
+          panel.grid.minor   = element_blank())
 
   p_dots <- ggplot(long_top, aes(x = rank, y = fold_label)) +
     geom_segment(data = seg_dt,
@@ -160,88 +181,88 @@ build_upset <- function(deg_sets, panel_title, panel_subtitle) {
 }
 
 # -----------------------------------------------------------------------------
-# Build both UpSets
+# Per-scale driver: two stacked UpSets (no-cut vs +0.5 cut) + containment stats
 # -----------------------------------------------------------------------------
-deg_nocut <- lapply(loo_list, function(dt) dt[padj < PADJ_CUTOFF, gene])
-names(deg_nocut) <- fold_order_ds
-deg_cut   <- lapply(loo_list, function(dt)
-  dt[padj < PADJ_CUTOFF & abs(logFC) > LFC_CUTOFF, gene])
-names(deg_cut) <- fold_order_ds
+run_scale <- function(sc) {
+  eff <- sc$eff_col; sig <- sc$sig_col; sig_cut <- sc$sig_cut
+  OUT_PDF   <- file.path(PANEL_DIR, sprintf("loo_cv_lfc_compare%s.pdf", sc$suffix))
+  OUT_STATS <- file.path(OUT_DIR,   sprintf("loo_cv_lfc_compare_stats%s.csv", sc$suffix))
 
-up_nocut <- build_upset(deg_nocut,
-  panel_title = "padj < 0.05 (no LFC cutoff)",
-  panel_subtitle = sprintf("Per-fold DEGs: %s",
-    paste(format(sapply(deg_nocut, length), big.mark = ","), collapse = " / ")))
+  cat(sprintf("\n================ scale = %s (%s gated on %s) ================\n",
+              sc$suffix, eff, sig))
 
-up_cut <- build_upset(deg_cut,
-  panel_title = "padj < 0.05 AND |log2FC| > 0.5 (canonical)",
-  panel_subtitle = sprintf("Per-fold DEGs: %s",
-    paste(format(sapply(deg_cut, length), big.mark = ","), collapse = " / ")))
+  deg_nocut <- lapply(loo_list, function(dt) dt[get(sig) < sig_cut, gene])
+  names(deg_nocut) <- fold_order_ds
+  deg_cut   <- lapply(loo_list, function(dt)
+    dt[get(sig) < sig_cut & abs(get(eff)) > LFC_CUTOFF, gene])
+  names(deg_cut) <- fold_order_ds
 
-# -----------------------------------------------------------------------------
-# Containment statistics
-# -----------------------------------------------------------------------------
-union_nocut <- unique(unlist(deg_nocut))
-union_cut   <- unique(unlist(deg_cut))
-core_nocut  <- Reduce(intersect, deg_nocut)
-core_cut    <- Reduce(intersect, deg_cut)
+  up_nocut <- build_upset(deg_nocut,
+    panel_title = sc$nocut_lbl,
+    panel_subtitle = sprintf("Per-fold DEGs: %s",
+      paste(format(sapply(deg_nocut, length), big.mark = ","), collapse = " / ")))
 
-contained_union_in_nocut <- mean(union_cut %in% union_nocut)        # expect 1
-contained_core_in_nocut  <- mean(core_cut  %in% core_nocut)         # expect 1
-nocut_core_passing_lfc   <- mean(core_nocut %in% core_cut)          # the diagnostic
-fraction_lost_to_lfc     <- 1 - nocut_core_passing_lfc
+  up_cut <- build_upset(deg_cut,
+    panel_title = sc$cut_lbl,
+    panel_subtitle = sprintf("Per-fold DEGs: %s",
+      paste(format(sapply(deg_cut, length), big.mark = ","), collapse = " / ")))
 
-stats <- data.table(
-  metric = c(
-    "union_with_LFC_cut",
-    "union_no_LFC_cut",
-    "core_with_LFC_cut",
-    "core_no_LFC_cut",
-    "frac_cut_union_inside_nocut_union",
-    "frac_cut_core_inside_nocut_core",
-    "frac_nocut_core_passing_LFC",
-    "frac_nocut_core_lost_to_LFC"
-  ),
-  value = c(
-    length(union_cut),
-    length(union_nocut),
-    length(core_cut),
-    length(core_nocut),
-    contained_union_in_nocut,
-    contained_core_in_nocut,
-    nocut_core_passing_lfc,
-    fraction_lost_to_lfc
+  # Containment statistics
+  union_nocut <- unique(unlist(deg_nocut))
+  union_cut   <- unique(unlist(deg_cut))
+  core_nocut  <- Reduce(intersect, deg_nocut)
+  core_cut    <- Reduce(intersect, deg_cut)
+
+  contained_union_in_nocut <- mean(union_cut %in% union_nocut)        # expect 1
+  contained_core_in_nocut  <- mean(core_cut  %in% core_nocut)         # expect 1
+  nocut_core_passing_lfc   <- mean(core_nocut %in% core_cut)          # the diagnostic
+  fraction_lost_to_lfc     <- 1 - nocut_core_passing_lfc
+
+  stats <- data.table(
+    metric = c(
+      "union_with_LFC_cut",
+      "union_no_LFC_cut",
+      "core_with_LFC_cut",
+      "core_no_LFC_cut",
+      "frac_cut_union_inside_nocut_union",
+      "frac_cut_core_inside_nocut_core",
+      "frac_nocut_core_passing_LFC",
+      "frac_nocut_core_lost_to_LFC"
+    ),
+    value = c(
+      length(union_cut),
+      length(union_nocut),
+      length(core_cut),
+      length(core_nocut),
+      contained_union_in_nocut,
+      contained_core_in_nocut,
+      nocut_core_passing_lfc,
+      fraction_lost_to_lfc
+    )
   )
-)
-fwrite(stats, OUT_STATS)
+  fwrite(stats, OUT_STATS)
+  cat("Saved: ", OUT_STATS, "\n", sep = "")
+  cat("\n--- Comparison: with-cut vs no-cut ---\n")
+  print(stats)
 
-cat("\n--- Comparison: with-cut vs no-cut ---\n")
-print(stats)
+  # Descriptive caption -> stdout (house style: not in the figure)
+  message(sprintf(
+    paste0("[caption %s] Core (all 5 folds): %s genes (%s) vs %s (+|%s| > 0.5); ",
+           "%.0f%% of unanimous genes pruned by the LFC cut; ",
+           "union containment (cut inside no-cut) %.1f%%."),
+    sc$suffix, format(up_nocut$core, big.mark = ","), sc$nocut_lbl,
+    format(up_cut$core, big.mark = ","), eff,
+    100 * fraction_lost_to_lfc, 100 * contained_union_in_nocut))
 
-# -----------------------------------------------------------------------------
-# Compose: two stacked UpSets
-# -----------------------------------------------------------------------------
-caption_text <- sprintf(
-  paste0(
-    "Core (all 5 folds): %s genes at padj < 0.05  vs  %s at padj < 0.05 + |LFC| > 0.5  ",
-    "(%.0f%% of padj-unanimous genes pruned by LFC cutoff). ",
-    "Union containment (cut union inside no-cut union): %.1f%%."
-  ),
-  format(up_nocut$core, big.mark = ","),
-  format(up_cut$core, big.mark = ","),
-  100 * fraction_lost_to_lfc,
-  100 * contained_union_in_nocut)
+  # Compose: two stacked UpSets (no in-plot title; see caption below)
+  p_i <- up_nocut$bar / up_nocut$dots / up_cut$bar / up_cut$dots +
+    plot_layout(heights = c(2.2, 1.4, 2.2, 1.4))
 
-p_i <- up_nocut$bar / up_nocut$dots / up_cut$bar / up_cut$dots +
-  plot_layout(heights = c(2.2, 1.4, 2.2, 1.4)) +
-  plot_annotation(
-    title = "LOOCV cross-fold consensus: padj-only vs padj + |LFC| > 0.5",
-    caption = caption_text,
-    theme = theme(plot.title = element_text(size = PUB_TITLE + 1, face = "bold"),
-                  plot.caption = element_text(size = PUB_SUBTITLE,
-                                              color = "gray30", hjust = 0)))
+  ggsave(OUT_PDF, p_i, width = 6.5, height = 6.0, device = cairo_pdf)
+  cat("Saved: ", OUT_PDF, "\n", sep = "")
+  invisible(NULL)
+}
 
-ggsave(OUT_PDF, p_i, width = 6.5, height = 6.0, device = cairo_pdf)
-cat("Saved: ", OUT_PDF, "\n", sep = "")
+for (nm in names(SCALES)) run_scale(SCALES[[nm]])
 
 cat("\nDone.\n")

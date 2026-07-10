@@ -32,8 +32,8 @@ if (!file.exists(FIB_VS_CTRL)) {
   stop("fibrosis_stage_vs_ctrl_dream.csv not found. Run 14b_stage_vs_healthy_dream.R first.")
 }
 
-BASE_SIZE <- 7
-LBL_SIZE  <- 7 / ggplot2::.pt
+BASE_SIZE <- 6
+LBL_SIZE  <- 6 / ggplot2::.pt
 col_up    <- masld_colors$up
 col_down  <- masld_colors$down
 
@@ -53,6 +53,7 @@ fib_counts <- fib_de[, count_ud(.SD, padj_col), by = contrast]
 sizes <- if (file.exists(SIZES_FILE)) fread(SIZES_FILE) else NULL
 n_ctrl <- if (!is.null(sizes)) sizes[grp == "Ctrl", N] else "?"
 n_label <- sprintf("Reference: %s healthy controls (condition='Control')", n_ctrl)
+message(sprintf("[caption] Fibrosis stage DEGs vs healthy controls. %s", n_label))
 
 # Order stages F1-F4
 stage_order <- paste0("F", 1:4, "_vs_Ctrl")
@@ -77,13 +78,9 @@ panel <- ggplot(long, aes(x = contrast, y = signed_n, fill = direction)) +
   scale_fill_manual(values = c(Up = col_up, Down = col_down), name = NULL) +
   scale_y_continuous(labels = function(x) comma(abs(x)),
                      expand = expansion(mult = c(0.18, 0.18))) +
-  labs(title = "Fibrosis stage DEGs vs healthy controls",
-       subtitle = n_label,
-       x = "Fibrosis stage (vs healthy controls)", y = "DEGs") +
+  labs(x = "Fibrosis stage (vs healthy controls)", y = "DEGs") +
   theme_masld(base_size = BASE_SIZE) +
-  theme(plot.title    = element_text(size = BASE_SIZE),
-        plot.subtitle = element_text(size = BASE_SIZE - 1, colour = "grey40"),
-        axis.title    = element_text(size = BASE_SIZE),
+  theme(axis.title    = element_text(size = BASE_SIZE),
         axis.text     = element_text(size = BASE_SIZE),
         legend.title  = element_text(size = BASE_SIZE),
         legend.text   = element_text(size = BASE_SIZE),

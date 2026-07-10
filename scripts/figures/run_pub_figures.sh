@@ -51,7 +51,10 @@ run_figure() {
 # Fig 4: Pharmacotranscriptomics, Proteomics & Spatial (sub-scripts)
 # Fig 5: Translational Convergence & Validation (was Fig 6; Fig 5 convergence → supplementary)
 MAIN_FIGURES=(
-  "fig1_compact.R"
+  # Fig 1 (atlas overview) is assembled manually in Illustrator from the panel
+  # PDFs in FIG1_DIR/panels/ — no compositor script (fig1_compact.R removed
+  # 2026-06-25; the combined fig1_atlas_overview.pdf / fig1_compact.pdf are no
+  # longer generated).
   # Fig 2/3 (RNA-seq) is assembled manually from the panel PDFs in
   # FIG2_DIR/panels/ — no compositor script (removed 2026-06-11).
   "fig3_compact.R"
@@ -84,12 +87,9 @@ SUPP_FIGURES=(
   "figS_combat_sensitivity.R"
   "figS_positive_controls.R"
   "figS_sex_divergent.R"
-  # 2026-05-28 (P0-H): stale names fixed. The conserved-enrichment supplement
-  # is figS_conserved_core.R (was referenced as figS4_conserved.R) and the
-  # variance-partition supplement is figS_variance_partition.R (was referenced
-  # as figS5_variance_partition.R). Both real scripts exist; only the runner
-  # references were out of date.
-  "figS_conserved_core.R"
+  # figS_conserved_core.R REMOVED 2026-07-05 — cross-species conserved-core dropped
+  # from the atlas paper (no cross-species); script moved to scripts/figures/_legacy/.
+  # variance-partition supplement is figS_variance_partition.R (real script exists).
   "figS_variance_partition.R"
   "figS6_per_cohort_qc.R"
   "supp_fig7_extended_celltype.R"
@@ -125,12 +125,29 @@ done
 # supp -> figures/supplementary/<theme dir>/).
 FIG3_RNASEQ_PANELS=(
   # main Fig 3 (-> figures/main/fig3_RNAseq/panels/)
-  "progression_cascade.R"                              # 3E (comprehensive stage-progression cascade)
-  "drug_target_orthogonality_landscape.R"              # 3H
-  "crossmodal_convergence_matrix.R"                    # 3I (spatial col dropped 2026-06-18)
-  "nmf_dominant_program_stage_composition.R"           # 3K
-  "multicelltype_hotspot_cascade_landscape.R"          # 3M
-  "singlecell_disease_cascade.R"                       # 3N (shared-x single-cell cascade)
+  # A–J layout 2026-07-02. Assembled manually in Illustrator (no compositor). Reading order:
+  # row1 = 3A metadata / 3B fib×NAS grid / 3C alluvial; then 3D PCA · 3E disconnect ·
+  # 3F cascade · 3G UMAP · 3H TF (aligns under 3F, shared F0–F4 axis) · 3I module · 3J L-R.
+  # 3A cohort metadata = fig_bulkrna_matrix.py --panel (PYTHON; run via run_regen_fig1_fig5.sh, NOT this R array).
+  "nas_fib_grid.R"                                     # 3B fibrosis × NAS patient-count grid
+  "figS_integration_value.R"                           # 3C DEG-overlap alluvial (also writes the supp source copy)
+  # 3D = figS_pca_definitive.R — listed once in the supplementary block below (emits BOTH fig3d + S3U)
+  "coloc_deg_bridge.R"                                 # 3E genetics<->expression disconnect (gene-level bulk LFC vs COLOC PP.H4; promoted from supp 2026-07-02; the 7-lineage cell-type scatter was retired — non-sig correlation)
+  "progression_cascade.R"                              # 3F fibrosis-only F0-F4 cascade (shares x-axis with 3H)
+  "gen_scrna_umap_embeddable.R"                        # 3G scRNA atlas UMAP
+  "tf_convergence_vsF0.R"                              # 3H TF cross-modal convergence (aligns in 3F's column)
+  "singlecell_module_heatmap.R"                        # 3I module heatmap + 3J LIANA L-R heatmap (one script)
+  "stagedeg_carrier_routing.R"                         # supp figs3_stagedeg_carrier_routing (demoted from main 2026-07-02)
+  "nas_activity_cascade.R"                             # supp figs3_nas_activity_cascade (NAS analogue of 3F, in-dir)
+  # retired / stale array entries removed 2026-07-02:
+  # "genetics_expression_disconnect.R"                 # cell-type disconnect scatter RETIRED (-> _legacy; 7-lineage correlation non-sig p=0.35, hepatocyte-outlier-driven). 3E is now the gene-level coloc_deg_bridge.
+  # "deconvolution_celltype_de_limitation.R"           # RETIRED (-> _legacy) with the cell-type scatter it supported. Coarse recompute scripts kept as exploratory: Analysis/SingleCell/scripts/pseudobulk_de_coarse_lineage.R, RNA-seq/201b_celltype_heritability_coarse.R, RNA-seq/89b_toast_celltype_de_coarse.R.
+  # "combined_nas_fibrosis_cascade.R"                  # DEPRECATED to _legacy 2026-07-08 — progression_cascade.R now builds the combined NAS+fibrosis cascade (Fig 3E)
+  # "drug_target_orthogonality_landscape.R"            # stale entry (not a current fig3 panel)
+  # "crossmodal_convergence_matrix.R"                  # stale entry (not a current fig3 panel)
+  # "nmf_dominant_program_stage_composition.R"         # (retired)
+  # "multicelltype_hotspot_cascade_landscape.R"        # (retired 2026-07-02)
+  # "singlecell_disease_cascade.R"                     # (retired 2026-07-02 — line cascade removed)
   # supplementary (-> figures/supplementary/<theme dir>/)
   "per_study_lfc_correlation_heatmap.R"                # S3J
   "deg_meta_heterogeneity_ridge.R"                     # S3K
@@ -141,8 +158,8 @@ FIG3_RNASEQ_PANELS=(
   "scrna_clr_abundance_forest.R"                       # S3P
   "hep_module_sc_vs_bulk_concordance_scatter.R"        # S3Q
   "progression_driver_coloc_phenotype_class_heatmap.R" # S3S
-  "cross_species_pathway_translatability_matrix.R"     # S3T
-  "figS_pca_definitive.R"                              # S3U (definitive control-vs-disease PCA; loads merged DGE -> heavier)
+  # cross_species_pathway_translatability_matrix.R (S3T) REMOVED 2026-07-05 — no cross-species; -> _legacy/
+  "figS_pca_definitive.R"                              # 3D (fig3d_pca_fibrosis_gradient) + S3U supp variants (loads merged DGE -> heavier)
 )
 
 for script_name in "${FIG3_RNASEQ_PANELS[@]}"; do
@@ -159,10 +176,25 @@ done
 # out of fig3 under the "all spatial -> Fig 4" rule.
 FIG4_SPATIAL_PANELS=(
   "zonation_directional_polarity.R"
-  "zonation_directional_polarity_xspecies.R"
-  "zonation_crossspecies_concordance.R"
+  # zonation_directional_polarity_xspecies.R + zonation_crossspecies_concordance.R
+  # REMOVED 2026-07-05 — cross-species dropped from the atlas paper; scripts -> _legacy/.
 )
 for script_name in "${FIG4_SPATIAL_PANELS[@]}"; do
+  script="${SCRIPT_DIR}/${script_name}"
+  if [[ -f "${script}" ]]; then
+    run_figure "${script}"
+  else
+    echo "WARNING: ${script_name} not found"
+  fi
+done
+
+# ---------- Fig 4 (validation) — mRNA-protein composite, panel 4c (2026-07-05) ----------
+# The one composite kept after the adversarial review; the other five are in
+# scripts/figures/_legacy/ (see _legacy/README_composites_cut_2026-07-05.md). Emits to FIG4_DIR.
+FIG4_COMPOSITE_PANELS=(
+  "composite_mrna_protein.R"   # 4c: protein co-abundance (Reactome-grouped) + mRNA-protein buffering
+)
+for script_name in "${FIG4_COMPOSITE_PANELS[@]}"; do
   script="${SCRIPT_DIR}/${script_name}"
   if [[ -f "${script}" ]]; then
     run_figure "${script}"

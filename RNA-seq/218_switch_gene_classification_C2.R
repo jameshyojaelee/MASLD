@@ -5,7 +5,8 @@
 # AIC-at-F2-boundary DEG classification on the C2 canonical DEG set.
 #
 # OLD (dream-era): 1,992 switch-like of 5,484 dream DEGs (padj<.05 & |logFC|>.3).
-# NEW (C2): denominator = C2 canonical Tier-1 raw (padj<.05 & |logFC|>.5) = 1,853.
+# OLD (C2 raw): denominator = C2 canonical Tier-1 raw (padj<.05 & |logFC|>.5) = 1,853.
+# NEW (C2 ashr): denominator = C2 canonical Tier-1 ashr (lfsr<.05 & |shrunk_logFC|>.3) = 3,626.
 #
 # The AIC classification itself is DE-method-invariant: it fits per-gene
 # expression~stage (linear) vs expression~I(stage>=2) (step) on logCPM from
@@ -34,9 +35,9 @@ dge <- readRDS(file.path(INT, "results/integration/merged_dge.rds"))
 cat("DGE:", nrow(dge), "genes x", ncol(dge), "samples\n")
 
 can <- fread(file.path(INT, "results/integration/canonical_deg_results.csv"))
-# C2 Tier-1 raw threshold (matches 05h producer + project canonical):
-degs <- can[!is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]
-cat("C2 canonical Tier-1 DEGs (padj<.05 & |logFC|>.5):", nrow(degs), "\n")
+# C2 canonical DEGs (project canonical 2026-06-29: TREAT FDR < 0.05, lfc=0.25):
+degs <- can[!is.na(treat_fdr) & treat_fdr < 0.05]
+cat("C2 canonical DEGs (treat_fdr<.05, lfc=0.25):", nrow(degs), "\n")
 deg_genes <- unique(degs$gene)   # VERSIONED ENSG, matching merged_dge rownames
 
 # -- 2. Fibrosis staging metadata -------------------------------------------

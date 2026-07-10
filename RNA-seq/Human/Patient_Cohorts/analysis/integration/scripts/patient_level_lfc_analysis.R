@@ -101,6 +101,41 @@ cat("  Patient LFC matrix:", nrow(patient_lfc), "genes ×", ncol(patient_lfc), "
 dream <- fread(file.path(RDIR, "canonical_deg_results.csv"))
 setnames(dream, "adj.P.Val", "padj", skip_absent = TRUE)
 
+# --- Scale selector (Agent C: raw vs ashr-shrunk DEG-selection gate) ----------
+# The per-patient LFC matrix is RAW per-patient and scale-independent. Only the
+# DEG-selection gate (which genes count as "significant") differs:
+#   raw    : padj < 0.1 & raw   logFC   (default; preserves canonical behaviour)
+#   shrunk : lfsr < 0.1 & ashr-shrunk_logFC  (aliased onto logFC/padj below so the
+#            analytical body is unchanged — sign preserved by ashr, magnitude shrinks)
+# Figure + sweep/gene-summary outputs get a "_<scale>" suffix; the SHARED canonical
+# patient_lfc_matrix.csv.gz (read by 5 sibling figure scripts) stays unsuffixed and
+# is written only in raw mode.
+LFC_SCALE <- tolower(Sys.getenv("LFC_SCALE", "raw"))
+stopifnot(LFC_SCALE %in% c("raw", "shrunk"))
+if (LFC_SCALE == "shrunk") {
+  stopifnot(all(c("shrunk_logFC", "lfsr") %in% names(dream)))
+  dream[, logFC := shrunk_logFC]
+  dream[, padj  := lfsr]
+  GATE_LAB <- "lfsr < 0.1"; SCALE_LAB <- "ashr-shrunk log2FC"
+} else {
+  GATE_LAB <- "padj < 0.1"; SCALE_LAB <- "raw log2FC"
+}
+SCALE_SUFFIX <- paste0("_", LFC_SCALE)
+cat(sprintf("LFC_SCALE = %s  (gate %s, effect %s)\n", LFC_SCALE, GATE_LAB, SCALE_LAB))
+
+.add_suffix <- function(path) {
+  d <- dirname(path); b <- basename(path)
+  if (grepl("\\.csv\\.gz$", b)) {            # preserve compound .csv.gz extension
+    return(file.path(d, paste0(sub("\\.csv\\.gz$", "", b), SCALE_SUFFIX, ".csv.gz")))
+  }
+  stem <- sub("\\.[^.]*$", "", b); ext <- sub("^.*\\.", "", b)
+  file.path(d, paste0(stem, SCALE_SUFFIX, ".", ext))
+}
+.ggsave_orig <- ggplot2::ggsave
+ggsave <- function(filename, ...) .ggsave_orig(.add_suffix(filename), ...)
+.fwrite_orig <- data.table::fwrite
+fwrite <- function(x, file = "", ...) .fwrite_orig(x, file = .add_suffix(file), ...)
+
 # --- Sweep: LFC cutoffs × patient percentage thresholds ---
 lfc_cutoffs <- c(0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
 pct_thresholds <- c(50, 60, 70, 80, 90)
@@ -150,11 +185,18 @@ print(sweep)
 fwrite(sweep, file.path(RDIR, "patient_lfc_sweep.csv"))
 cat("\nSaved:", file.path(RDIR, "patient_lfc_sweep.csv"), "\n")
 
-# --- Save compressed patient LFC matrix ---
-cat("Saving patient LFC matrix (compressed)...\n")
-lfc_dt <- as.data.table(patient_lfc, keep.rownames = "gene")
-fwrite(lfc_dt, file.path(RDIR, "patient_lfc_matrix.csv.gz"))
-cat("Saved:", file.path(RDIR, "patient_lfc_matrix.csv.gz"), "\n")
+# --- Save compressed patient LFC matrix (SHARED canonical; scale-independent) ---
+# Written only in raw mode and kept unsuffixed: 5 sibling figure scripts read this
+# exact path. The shrunk run reuses the identical matrix (sign/magnitude are the
+# raw per-patient LFCs regardless of the DEG-selection gate).
+if (LFC_SCALE == "raw") {
+  cat("Saving patient LFC matrix (compressed)...\n")
+  lfc_dt <- as.data.table(patient_lfc, keep.rownames = "gene")
+  .fwrite_orig(lfc_dt, file.path(RDIR, "patient_lfc_matrix.csv.gz"))
+  cat("Saved:", file.path(RDIR, "patient_lfc_matrix.csv.gz"), "\n")
+} else {
+  cat("Skipping patient_lfc_matrix.csv.gz (canonical raw copy retained; scale-independent)\n")
+}
 
 # --- Per-gene summary stats ---
 gene_summary <- data.table(
@@ -225,7 +267,7 @@ p_heatmap_sig <- ggplot(sweep_long_sig, aes(x = factor(lfc_cutoff), y = factor(p
   scale_fill_viridis_c(option = "plasma", trans = "log1p", name = "Genes",
                         labels = scales::comma) +
   labs(x = expression("Log"[2]*"FC cutoff"), y = "% of patients",
-       title = "Integrated-significant genes (padj < 0.1): consistently dysregulated") +
+       title = sprintf("Integrated-significant genes (%s): consistently dysregulated", GATE_LAB)) +
   theme_pub
 
 # ---- Panel C: Line plot — gene count vs LFC cutoff, colored by patient % ----
@@ -323,10 +365,11 @@ ggsave(file.path(PANELS_DIR, "histogram_consistency.pdf"), p_hist,
 combined <- (p_heatmap_all | p_line) / (p_heatmap_sig | p_hist) / (p_scatter | p_violin) +
   plot_annotation(
     title = "Patient-level fold-change analysis: MASLD vs healthy controls",
-    subtitle = sprintf("%s disease patients across %d datasets | %s genes tested",
+    subtitle = sprintf("%s disease patients across %d datasets | %s genes tested | DEG gate: %s, %s",
                        format(n_patients, big.mark = ","),
                        length(valid_datasets),
-                       format(nrow(patient_lfc), big.mark = ",")),
+                       format(nrow(patient_lfc), big.mark = ","),
+                       GATE_LAB, SCALE_LAB),
     theme = theme(plot.title = element_text(face = "bold", size = 15),
                   plot.subtitle = element_text(size = 12, color = "grey30"))
   )

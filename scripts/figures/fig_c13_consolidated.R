@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # fig_c13_consolidated.R
-# Consolidated 4-panel C13 fibrosis-deconfounding figure (2x2, 12x10 inches)
+# Consolidated 4-panel C13 fibrosis-deconfounding figure (2x2, 7.09x5.91 inches)
 # Panel a: DEG reduction + classification
 # Panel b: C2 vs C13 logFC scatter (key panel)
 # Panel c: Pathway NES comparison heatmap
@@ -149,7 +149,7 @@ bar_df <- data.frame(
 pA1 <- ggplot(bar_df, aes(x = label, y = count, fill = fill)) +
   geom_col(width = 0.55, show.legend = FALSE) +
   geom_text(aes(label = formatC(count, format = "d", big.mark = ",")),
-            vjust = -0.5, size = 2.5, fontface = "bold") +
+            vjust = -0.5, size = 6/.pt, fontface = "plain") +
   scale_fill_manual(values = c("C2" = col_c2, "C13" = col_c13)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.18)),
                      labels = comma) +
@@ -161,8 +161,8 @@ pA1 <- ggplot(bar_df, aes(x = label, y = count, fill = fill)) +
            color = col_c13, linewidth = 0.6) +
   annotate("text", x = 1.5, y = n_c2_deg * 0.60,
            label = paste0(pct_reduction, "%\nreduction"),
-           color = col_c13, size = 3.2, fontface = "bold") +
-  labs(x = NULL, y = "DEGs (padj < 0.1)", title = "NASH vs NAFL DEGs") +
+           color = col_c13, size = 6/.pt, fontface = "plain") +
+  labs(x = NULL, y = "DEGs (padj < 0.1)") +
   theme_publication() +
   theme(panel.grid.major.x = element_blank())
 
@@ -180,7 +180,7 @@ pA2 <- ggplot(breakdown_df, aes(x = count, y = "Classification", fill = category
   geom_col(position = "stack", width = 0.45) +
   geom_text(aes(label = paste0(category, "\n(n=", formatC(count, big.mark = ","), ")")),
             position = position_stack(vjust = 0.5),
-            size = 1.9, color = "white", fontface = "bold", lineheight = 0.85) +
+            size = 6/.pt, color = "white", fontface = "plain", lineheight = 0.85) +
   scale_fill_manual(values = c(
     "Robust core" = col_robust,
     "Confounded"  = col_confused,
@@ -251,7 +251,7 @@ pB <- ggplot(merged_plot, aes(x = logFC_c2, y = logFC_c13)) +
     data = merged_label,
     aes(label = symbol),
     color = merged_label$label_color,
-    size = 2.2, fontface = "italic",
+    size = 6/.pt, fontface = "italic",
     max.overlaps = 30,
     segment.size = 0.2, segment.color = "grey50",
     min.segment.length = 0.1,
@@ -261,11 +261,10 @@ pB <- ggplot(merged_plot, aes(x = logFC_c2, y = logFC_c13)) +
   # Rho annotation
   annotate("label", x = -0.8, y = 1.8,
            label = sprintf("rho = %.3f", as.numeric(rho)),
-           size = 3.2, hjust = 0, fill = "white", label.size = 0, color = "grey30") +
+           size = 6/.pt, hjust = 0, fill = "white", label.size = 0, color = "grey30") +
   labs(
     x = expression("C2 log"[2]*"FC (unadjusted NASH vs NAFL)"),
-    y = expression("C13 log"[2]*"FC (fibrosis-adjusted)"),
-    title = "Effect size: unadjusted vs fibrosis-adjusted"
+    y = expression("C13 log"[2]*"FC (fibrosis-adjusted)")
   ) +
   coord_cartesian(xlim = c(-2.2, 2.5), ylim = c(-2.2, 2.5)) +
   theme_publication() +
@@ -328,7 +327,7 @@ pC <- ggplot(heat_long, aes(x = contrast_label, y = pathway_clean, fill = NES)) 
   geom_tile(color = "white", linewidth = 0.5) +
   # NES values
   geom_text(aes(label = nes_text, color = text_color),
-            size = 2.2, show.legend = FALSE) +
+            size = 6/.pt, show.legend = FALSE) +
   scale_color_identity() +
   # Non-significant C13 entries marked with x
   geom_point(data = heat_long %>% filter(!sig),
@@ -340,11 +339,10 @@ pC <- ggplot(heat_long, aes(x = contrast_label, y = pathway_clean, fill = NES)) 
     midpoint = 0, limits = c(-3, 3.5), oob = squish,
     name = "NES"
   ) +
-  labs(x = NULL, y = NULL,
-       title = "Hallmark pathway enrichment") +
+  labs(x = NULL, y = NULL) +
   theme_publication() +
   theme(
-    axis.text.y = element_text(size = 5.5),
+    axis.text.y = element_text(size = 6),
     panel.grid  = element_blank(),
     legend.key.height = unit(0.5, "cm"),
     legend.key.width  = unit(0.25, "cm")
@@ -375,8 +373,7 @@ pD <- ggplot(robust_genes, aes(x = logFC_c13, y = symbol, color = direction)) +
                      name = "Direction") +
   labs(
     x = expression("log"[2]*"FC (C13, fibrosis-adjusted)"),
-    y = NULL,
-    title = "Top 20 robust NASH core genes"
+    y = NULL
   ) +
   theme_publication() +
   theme(
@@ -397,16 +394,18 @@ composite <- (pA_wrapped | pB) / (pC | pD) +
   plot_annotation(
     tag_levels = "a",
     theme = theme(
-      plot.tag = element_text(size = 12, face = "bold", family = font_family)
+      plot.tag = element_text(size = 12, face = "plain", family = font_family)
     )
   ) +
   plot_layout(heights = c(1, 1))
+
+message("[caption] a: NASH vs NAFL DEGs (C2 unadjusted vs C13 fibrosis-adjusted) and classification breakdown. b: Effect size comparison, unadjusted (C2) vs fibrosis-adjusted (C13) log2FC. c: Hallmark pathway enrichment (NES) comparison. d: Top 20 robust NASH core genes (fibrosis-adjusted log2FC).")
 
 # --- Save outputs ------------------------------------------------------------
 cat("Saving figure...\n")
 
 out_file <- file.path(out_dir, "fig_c13_consolidated.pdf")
-save_pdf(composite, out_file, width = 12, height = 10)
+save_pdf(composite, out_file, width = 7.09, height = 5.91)
 cat(sprintf("  Saved: %s\n", out_file))
 
 cat("\nDone.\n")

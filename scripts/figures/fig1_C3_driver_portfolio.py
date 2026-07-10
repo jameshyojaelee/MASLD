@@ -25,7 +25,7 @@ import csv, math, os
 plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size": 9, "pdf.fonttype": 42, "ps.fonttype": 42,
+    "font.size": 6, "pdf.fonttype": 42, "ps.fonttype": 42,
     "axes.spines.top": False, "axes.spines.right": False,
     "figure.dpi": 150, "savefig.dpi": 300,
     "figure.facecolor": "white", "axes.facecolor": "white",
@@ -101,20 +101,19 @@ def main():
             else:
                 ax.add_patch(mpatches.Circle((si, y), 0.07, facecolor="none",
                              edgecolor=ABSENT, lw=1.0, zorder=2))
-        ax.text(-0.75, y, g, ha="right", va="center", fontsize=7.4,
-                color="#2D3436", fontweight="bold")
+        ax.text(-0.75, y, g, ha="right", va="center", fontsize=6,
+                color="#2D3436", fontstyle="italic")
 
     # source column headers, colored
     for si, (code, _, lab, color) in enumerate(SOURCES):
-        ax.text(si, n_g - 0.32, lab, ha="center", va="bottom", fontsize=6.2,
-                color=color, fontweight="bold", linespacing=0.9)
+        ax.text(si, n_g - 0.32, lab, ha="center", va="bottom", fontsize=6,
+                color=color, linespacing=0.9)
 
     ax.set_xlim(-2.0, n_s - 0.45)
     ax.set_ylim(-0.7, n_g + 0.6)
     ax.axis("off")
 
-    ax.text(-2.0, n_g + 0.95, "Canonical MASLD drivers recovered across complementary sources",
-            ha="left", va="bottom", fontsize=7.5, fontweight="bold", color="#2D3436")
+    print("[caption] Canonical MASLD drivers recovered across complementary sources")
 
     fig.savefig(os.path.join(_root(), "figures/misc/fig1_C3_driver_portfolio.pdf"),
                 bbox_inches="tight", dpi=300, facecolor="white")

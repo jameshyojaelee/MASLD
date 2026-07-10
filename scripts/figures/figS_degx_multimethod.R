@@ -109,9 +109,7 @@ if (!is.null(perm) && !is.null(simn)) {
     geom_point(size=2) + lab_layer +
     scale_color_manual(values=fam_cols, name="family") +
     coord_fixed(xlim=rng, ylim=rng) +
-    labs(title="Calibration: are false positives held at the advertised 0.05?",
-         subtitle="Each point = one method. Off-diagonal = the two nulls disagree.",
-         x="parametric (simulation) type-I error", y="permutation (real-data) type-I error",
+    labs(x="parametric (simulation) type-I error", y="permutation (real-data) type-I error",
          caption=NULL) +
     theme_masld()+theme_pub()+theme(legend.position="right")
   save_fig(pG, file.path(OUT,"calibration_two_nulls.pdf"), width=fig_col_width, height=fig_col_width*0.92)
@@ -128,9 +126,7 @@ if (!is.null(perm) && !is.null(simn)) {
     geom_line(linewidth=0.4, color="grey60") + geom_point(aes(color=type_i_mean), size=1.4) +
     cal_color(limits=sym_lim(b2g$type_i_mean)) +
     facet_wrap(~lab, ncol=5) +
-    labs(title="Calibration vs sample size (simulation null), by method",
-         subtitle="In-band [0.04,0.06] = calibrated; drift away from 0.05 with n exposes sample-size-dependent miscalibration",
-         x="samples per group", y="type-I error", caption=prov("sim_null 2,000 reps")) +
+    labs(x="samples per group", y="type-I error", caption=prov("sim_null 2,000 reps")) +
     theme_masld()+theme_pub()+
     theme(legend.position="right", legend.key.width=unit(0.18,"cm"), panel.spacing=unit(0.45,"lines"))
   save_fig(pG2, file.path(OUT,"typeI_vs_n.pdf"), width=fig_full_width, height=4.0)
@@ -155,9 +151,7 @@ if (!is.null(perm)) {
     geom_point(size=2.2) +
     cal_color(limits=sym_lim(pc$ti)) +
     scale_y_continuous(expand=expansion(mult=c(0.05,0.07))) +
-    labs(title="False-positive rate at the 0.05 cutoff",
-         subtitle=sprintf("Real-data permutation null, %s permutations per method; shaded band = 0.04-0.06.", n_perm),
-         x=NULL, y="permutation type-I error", caption=NULL) +
+    labs(x=NULL, y="permutation type-I error", caption=NULL) +
     theme_masld()+theme_pub()+
     theme(legend.position="right", axis.text.x=element_text(angle=45, hjust=1))
   save_fig(pG1, file.path(OUT,"calibration_permutation.pdf"), width=fig_col_width, height=3.8)
@@ -184,9 +178,7 @@ if (!is.null(pvn)) {
     geom_line(linewidth=0.4, color="grey60") + geom_point(aes(color=type_i_mean), size=1.4) +
     cal_color(limits=sym_lim(d3$type_i_mean)) +
     facet_wrap(~lab, ncol=4) +
-    labs(title="Calibration vs sample size (real-data permutation), by method",
-         subtitle="In-band [0.04,0.06] = calibrated. Labels permuted within cohort; n = balanced per-group subsample (Control-limited, max 156)",
-         x="samples per group (balanced)", y="permutation type-I error",
+    labs(x="samples per group (balanced)", y="permutation type-I error",
          caption=prov("1,000 permutations per n")) +
     theme_masld()+theme_pub()+
     theme(legend.position="right", legend.key.width=unit(0.18,"cm"), panel.spacing=unit(0.45,"lines"))
@@ -217,9 +209,7 @@ render_stability_vert <- function(df, protocol_lab, cap, outfile, y_lo) {
     scale_color_manual(values=fam_cols, name="family") +
     scale_y_continuous(breaks=seq(0,1,0.1), expand=expansion(mult=c(0.01,0.02))) +
     coord_cartesian(ylim=c(y_lo, 1)) +
-    labs(title=sprintf("Stability under %s: does the same gene list recur?", protocol_lab),
-         subtitle="Nogueira phi: 1 = identical set every resample.",
-         x=NULL, y="stability phi  (-> more reproducible)", caption=prov(cap)) +
+    labs(x=NULL, y="stability phi  (-> more reproducible)", caption=prov(cap)) +
     theme_masld()+theme_pub()+
     theme(legend.position="right", axis.text.x=element_text(angle=45, hjust=1))
   save_fig(p, file.path(OUT, outfile), width=fig_col_width, height=3.8)
@@ -249,9 +239,7 @@ if (!is.null(boot)) {
     geom_point(aes(x=n_ci_excl_0), shape=21, fill="white", color="grey25", size=1.6, stroke=0.4) +
     scale_fill_manual(values=fam_cols, name="family") +
     scale_x_continuous(expand=expansion(mult=c(0,0.05)), labels=scales::comma) +
-    labs(title="Stability: how many genes survive resampling?",
-         subtitle="Bars = genes reproducibly called in >= 60% of 1,000 bootstraps; open points = bootstrap logFC CI excludes 0",
-         x="number of stably-selected genes", y=NULL, caption=prov("1,000 stratified bootstraps")) +
+    labs(x="number of stably-selected genes", y=NULL, caption=prov("1,000 stratified bootstraps")) +
     theme_masld()+theme_pub()+theme(legend.position="right")
   save_fig(pC2, file.path(OUT,"stability_counts.pdf"), width=fig_col_width, height=3.6)
   mark(file.path(OUT,"stability_counts.pdf"))
@@ -280,9 +268,7 @@ if (file.exists(rho_csv) || file.exists(pq)) {
       scale_fill_gradientn(colours=green_sc, limits=c(min(rho),1), oob=scales::squish,
                            name="Spearman\nrho") +
       coord_fixed() +
-      labs(title="Bootstrap selection-frequency concordance",
-           subtitle=sprintf("Per-gene selection frequency, Spearman rho (all pairs >= %.2f -> methods agree)", min(rho[rho<1])),
-           x=NULL, y=NULL, caption=prov(sprintf("1,000 bootstraps; %d methods, clustered", nrow(rho)))) +
+      labs(x=NULL, y=NULL, caption=prov(sprintf("1,000 bootstraps; %d methods, clustered", nrow(rho)))) +
       theme_masld()+theme_pub()+
       theme(axis.text.x=element_text(angle=40,hjust=1), legend.position="right",
             legend.key.width=unit(0.18,"cm"))
@@ -317,9 +303,7 @@ if (length(rex_files) > 0) {
       geom_col(width=0.74, color="white", linewidth=0.25) +
       scale_fill_manual(values=fam_cols_rex, name="family") +
       scale_x_continuous(expand=expansion(mult=c(0,0.06)), labels=scales::comma) +
-      labs(title="DEGs called by each exact method (padj < 0.05)",
-           subtitle="Same data, same contrast; method choice spans ~3,500 (metafor-RE) to ~13,400 (edgeR) DEGs",
-           x="number of DEGs", y=NULL,
+      labs(x="number of DEGs", y=NULL,
            caption=prov("R/Bioconductor exact fits; metafor FE/HK omitted")) +
       theme_masld()+theme_pub()+theme(legend.position="right")
     save_fig(pI0, file.path(OUT,"rexact_deg_counts.pdf"), width=fig_col_width, height=4.4)
@@ -338,9 +322,7 @@ if (length(rex_files) > 0) {
     geom_tile(color="white", linewidth=0.3) +
     scale_fill_gradientn(colours=green_sc, limits=c(0,1), na.value="grey90", name="Jaccard") +
     coord_fixed() +
-    labs(title="Exact-method DEG-set agreement",
-         subtitle="Pairwise Jaccard of DEG sets (padj < 0.05); clustered",
-         x=NULL, y=NULL, caption=prov("R/Bioconductor exact fits, incl. ComBat-seq / sva; metafor FE/HK omitted")) +
+    labs(x=NULL, y=NULL, caption=prov("R/Bioconductor exact fits, incl. ComBat-seq / sva; metafor FE/HK omitted")) +
     theme_masld()+theme_pub()+
     theme(axis.text.x=element_text(angle=45,hjust=1), legend.position="right",
           legend.key.width=unit(0.18,"cm"))
@@ -367,7 +349,7 @@ if (length(rex_files) > 0) {
       scale_color_manual(values=fam_cols_rex, name="family") +
       scale_x_log10(labels=scales::comma) + ylim(0,1) +
       facet_wrap(~ref, nrow=1) +
-      labs(title="Concordance at the top", x="top-k genes (log scale)", y="concordance at the top") +
+      labs(x="top-k genes (log scale)", y="concordance at the top") +
       theme_masld()+theme_pub()+theme(legend.position="right")
     save_fig(pI2, file.path(OUT,"rexact_cat.pdf"), width=fig_full_width, height=3.4)
     mark(file.path(OUT,"rexact_cat.pdf"))
@@ -385,9 +367,7 @@ if (length(rex_files) > 0) {
       coord_fixed(xlim=c(-lim,lim), ylim=c(-lim,lim)) +
       annotate("text", x=-lim*0.95, y=lim*0.9, hjust=0, size=PUB_GEOM_TEXT+0.3,
                label=sprintf("Spearman rho = %.3f\nn = %s genes", rr, format(nrow(mg),big.mark=","))) +
-      labs(title="metafor stage-1 engine sensitivity",
-           subtitle="Per-cohort DE engine: limma-voom vs DESeq2 (both RE meta-analysis)",
-           x="meta log2FC (voom stage-1)", y="meta log2FC (DESeq2 stage-1)",
+      labs(x="meta log2FC (voom stage-1)", y="meta log2FC (DESeq2 stage-1)",
            caption=prov("R-exact metafor RE")) +
       theme_masld()+theme_pub()
     save_fig(pF, file.path(OUT,"metafor_engine_sensitivity.pdf"), width=fig_half_width, height=fig_half_width)
@@ -415,9 +395,7 @@ if (!file.exists(powf)) {
     geom_hline(yintercept=0.8, linetype="dotted", linewidth=0.25, color="grey50")+
     geom_line(linewidth=0.5)+geom_point(size=0.9)+scale_color_manual(values=npal,name="n / group")+
     ylim(0,1)+facet_wrap(~lab, ncol=5)+
-    labs(title="Power: can the method detect true DEGs?",
-         subtitle="Power (true-positive rate at FDR<0.05) vs effect size, tau2=0.04. Higher / earlier rise = more sensitive; dotted = 80% power.",
-         x="true log2 fold change", y="power (TPR at FDR < 0.05)", caption=prov(capg))+
+    labs(x="true log2 fold change", y="power (TPR at FDR < 0.05)", caption=prov(capg))+
     theme_masld()+theme_pub()+theme(legend.position="top", panel.spacing=unit(0.45,"lines"))
   save_fig(pB, file.path(OUT,"power_curves.pdf"), width=fig_full_width, height=4.4); mark(file.path(OUT,"power_curves.pdf"))
 
@@ -431,9 +409,7 @@ if (!file.exists(powf)) {
     geom_hline(yintercept=NOMINAL, linetype="dashed", linewidth=0.3, color="grey35")+
     cal_fill(limits=sym_lim(b2$fdr), name="observed\nFDR")+
     scale_y_continuous(expand=expansion(mult=c(0,0.05)))+coord_flip()+
-    labs(title="FDR control: do called DEGs stay within the 0.05 target?",
-         subtitle="Mean observed FDR over the 48-cell grid; shaded zone (> 0.05) = FDR target violated (too many false discoveries)",
-         x=NULL, y="observed FDR", caption=prov(capg))+
+    labs(x=NULL, y="observed FDR", caption=prov(capg))+
     theme_masld()+theme_pub()+theme(legend.position="right", legend.key.width=unit(0.18,"cm"))
   save_fig(pB2, file.path(OUT,"fdr_control.pdf"), width=fig_half_width, height=3.6); mark(file.path(OUT,"fdr_control.pdf"))
 
@@ -445,8 +421,7 @@ if (!file.exists(powf)) {
   pD <- ggplot(d, aes(lfc, lab, fill=auroc_mean))+geom_tile(color="white",linewidth=0.3)+
     scale_fill_gradientn(colours=colorRampPalette(c("#dae7c7","#193c1e"))(12), limits=c(0.5,1), oob=scales::squish, name="AUROC")+
     facet_wrap(~n, nrow=1, labeller=labeller(n=function(x) paste0("n = ",x)))+
-    labs(title="Discrimination: are true DEGs ranked above null genes? (AUROC, 1 = perfect)",
-         x="true log2 fold change", y=NULL, caption=prov(capg))+
+    labs(x="true log2 fold change", y=NULL, caption=prov(capg))+
     theme_masld()+theme_pub()+theme(legend.position="right")
   save_fig(pD, file.path(OUT,"auroc_heatmap.pdf"), width=fig_full_width, height=4.0); mark(file.path(OUT,"auroc_heatmap.pdf"))
 }

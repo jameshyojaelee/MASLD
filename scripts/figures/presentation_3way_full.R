@@ -106,7 +106,7 @@ p_coloc_scatter <- ggplot(long_coloc, aes(x = x, y = y)) +
   geom_vline(xintercept = 0.5, color = "grey60", linetype = "dotted", linewidth = 0.4) +
   geom_point(data = lbl_long, color = "black", size = 2.5) +
   geom_text_repel(data = lbl_long, aes(label = gene),
-                  size = 5, color = "black", fontface = "bold",
+                  size = 5, color = "black", fontface = "plain",
                   box.padding = 0.5, max.overlaps = 25,
                   segment.color = "grey30", segment.size = 0.3) +
   facet_wrap(~ comparison, ncol = 3) +
@@ -114,8 +114,8 @@ p_coloc_scatter <- ggplot(long_coloc, aes(x = x, y = y)) +
   labs(x = "PP.H4 (panel on x)", y = "PP.H4 (panel on y)",
        title = "Gene-level SuSiE-COLOC concordance across 3 LD panels") +
   theme_masld(base_size = 18) +
-  theme(plot.title = element_text(size = 26, face = "bold"),
-        strip.text = element_text(size = 18, face = "bold"),
+  theme(plot.title = element_text(size = 26, face = "plain"),
+        strip.text = element_text(size = 18, face = "plain"),
         axis.title = element_text(size = 20),
         axis.text  = element_text(size = 16))
 
@@ -137,15 +137,15 @@ hits_coloc <- data.table(
 )
 p_coloc_hits <- ggplot(hits_coloc, aes(x = panel, y = n, fill = panel)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = n), vjust = -0.35, size = 6, fontface = "bold") +
+  geom_text(aes(label = n), vjust = -0.35, size = 6, fontface = "plain") +
   facet_wrap(~ threshold, ncol = 3, scales = "free_y") +
   scale_fill_manual(values = c("UKBB v1" = "#0D47A1", "1KG EUR" = "#7B1FA2",
                                 "TOP-LD EUR" = "#C2185B"), guide = "none") +
   labs(x = NULL, y = "# gene × GWAS",
        title = "Hit counts at increasing PP.H4 thresholds (3-way)") +
   theme_masld(base_size = 18) +
-  theme(plot.title = element_text(size = 26, face = "bold"),
-        strip.text = element_text(size = 18, face = "bold"),
+  theme(plot.title = element_text(size = 26, face = "plain"),
+        strip.text = element_text(size = 18, face = "plain"),
         axis.text.x = element_text(size = 16),
         axis.text.y = element_text(size = 14),
         axis.title.y = element_text(size = 18),
@@ -175,7 +175,7 @@ sets <- data.table(
 )
 p_coloc_set <- ggplot(sets, aes(x = category, y = n, fill = category)) +
   geom_col(width = 0.55) +
-  geom_text(aes(label = n), vjust = -0.3, size = 6, fontface = "bold") +
+  geom_text(aes(label = n), vjust = -0.3, size = 6, fontface = "plain") +
   scale_fill_manual(values = c("All 3 agree" = "#0D47A1",
                                 "UKBB+1KG only" = "#1F77B4",
                                 "UKBB+TOP-LD only" = "#9467BD",
@@ -187,7 +187,7 @@ p_coloc_set <- ggplot(sets, aes(x = category, y = n, fill = category)) +
   labs(x = NULL, y = "# gene × GWAS at PP.H4 > 0.5",
        title = "3-way set agreement at PP.H4 > 0.5") +
   theme_masld(base_size = 18) +
-  theme(plot.title = element_text(size = 26, face = "bold"),
+  theme(plot.title = element_text(size = 26, face = "plain"),
         axis.text.x = element_text(angle = 30, hjust = 1, size = 14),
         axis.text.y = element_text(size = 14),
         axis.title.y = element_text(size = 18),
@@ -210,7 +210,7 @@ N_HL <- nrow(hl_tbl)
 hl_tbl[, row_y := rev(seq_len(N_HL))]
 p_hl <- ggplot(hl_tbl) +
   geom_text(aes(x = 0,   y = row_y, label = gene),
-            hjust = 0, size = 7, fontface = "bold") +
+            hjust = 0, size = 7, fontface = "plain") +
   geom_text(aes(x = 1.2, y = row_y, label = UKBB),
             hjust = 1, size = 7) +
   geom_text(aes(x = 2.4, y = row_y, label = `1KG`),
@@ -219,12 +219,12 @@ p_hl <- ggplot(hl_tbl) +
             hjust = 1, size = 7) +
   annotate("text", x = c(0, 1.2, 2.4, 3.6), y = N_HL + 0.8,
            label = c("Gene", "UKBB v1", "1KG EUR", "TOP-LD EUR"),
-           hjust = c(0, 1, 1, 1), size = 8, fontface = "bold") +
+           hjust = c(0, 1, 1, 1), size = 8, fontface = "plain") +
   scale_x_continuous(limits = c(-0.1, 3.8)) +
   scale_y_continuous(limits = c(0.5, N_HL + 1.3)) +
   labs(title = "Hallmark genes — 3-way head-to-head") +
   theme_void(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         plot.margin = margin(15, 15, 15, 15))
 ggsave(file.path(OUT_DIR, "coloc/hallmarks.pdf"), p_hl,
        width = 9, height = 8, device = cairo_pdf)
@@ -310,8 +310,8 @@ if (!is.null(fm_topld) && nrow(fm_topld) > 0) {
     coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
     labs(x = "PIP", y = "PIP", title = "SuSiE PIP — 3 EUR LD panels (PIP > 0.1)") +
     theme_masld(base_size = 18) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 16, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 16, face = "plain"),
           axis.title = element_text(size = 18),
           axis.text  = element_text(size = 14))
   ggsave(file.path(OUT_DIR, "fm/scatter.pdf"), p_fm_scatter,
@@ -337,15 +337,15 @@ if (!is.null(fm_topld) && nrow(fm_topld) > 0) {
   )
   p_fm_hits <- ggplot(hits_fm, aes(x = panel, y = n, fill = panel)) +
     geom_col(width = 0.7) +
-    geom_text(aes(label = n), vjust = -0.35, size = 7, fontface = "bold") +
+    geom_text(aes(label = n), vjust = -0.35, size = 7, fontface = "plain") +
     facet_wrap(~ threshold, ncol = 2, scales = "free_y") +
     scale_fill_manual(values = c("UKBB v1" = "#0D47A1", "1KG EUR" = "#7B1FA2",
                                   "TOP-LD EUR" = "#C2185B"), guide = "none") +
     labs(x = NULL, y = "# variants",
          title = "High-PIP variant counts (per panel, raw)") +
     theme_masld(base_size = 18) +
-    theme(plot.title = element_text(size = 26, face = "bold"),
-          strip.text = element_text(size = 18, face = "bold"),
+    theme(plot.title = element_text(size = 26, face = "plain"),
+          strip.text = element_text(size = 18, face = "plain"),
           axis.text.x = element_text(size = 16),
           axis.text.y = element_text(size = 14),
           axis.title.y = element_text(size = 18),
@@ -367,13 +367,13 @@ if (!is.null(fm_topld) && nrow(fm_topld) > 0) {
   )
   p_fm_loci <- ggplot(hi_loci, aes(x = panel, y = n_loci, fill = panel)) +
     geom_col(width = 0.55) +
-    geom_text(aes(label = n_loci), vjust = -0.3, size = 9, fontface = "bold") +
+    geom_text(aes(label = n_loci), vjust = -0.3, size = 9, fontface = "plain") +
     scale_fill_manual(values = c("UKBB v1" = "#0D47A1", "1KG EUR" = "#7B1FA2",
                                   "TOP-LD EUR" = "#C2185B"), guide = "none") +
     labs(x = NULL, y = "# loci with ≥1 PIP>0.5 variant",
          title = "Loci with high-PIP variant (per panel)") +
     theme_masld(base_size = 18) +
-    theme(plot.title = element_text(size = 26, face = "bold"),
+    theme(plot.title = element_text(size = 26, face = "plain"),
           axis.text.x = element_text(size = 18),
           axis.text.y = element_text(size = 16),
           axis.title.y = element_text(size = 20),
@@ -462,8 +462,8 @@ if (!is.null(sx_topld) && nrow(sx_topld) > 0) {
       labs(x = "Top PIP (panel on x)", y = "Top PIP (panel on y)",
            title = "SuSiEX per-locus top PIP across 3 LD panels") +
       theme_masld(base_size = 18) +
-      theme(plot.title = element_text(size = 26, face = "bold"),
-            strip.text = element_text(size = 18, face = "bold"),
+      theme(plot.title = element_text(size = 26, face = "plain"),
+            strip.text = element_text(size = 18, face = "plain"),
             axis.title = element_text(size = 20),
             axis.text  = element_text(size = 16),
             legend.text = element_text(size = 16),
@@ -486,15 +486,15 @@ if (!is.null(sx_topld) && nrow(sx_topld) > 0) {
     )
     p_sx_hits <- ggplot(hits_sx, aes(x = panel, y = n, fill = panel)) +
       geom_col(width = 0.7) +
-      geom_text(aes(label = n), vjust = -0.35, size = 7, fontface = "bold") +
+      geom_text(aes(label = n), vjust = -0.35, size = 7, fontface = "plain") +
       facet_wrap(~ metric, ncol = 2, scales = "free_y") +
       scale_fill_manual(values = c("UKBB v1" = "#0D47A1", "1KG EUR" = "#7B1FA2",
                                     "TOP-LD EUR" = "#C2185B"), guide = "none") +
       labs(x = NULL, y = "count",
            title = "SuSiEX hit counts (per panel, raw)") +
       theme_masld(base_size = 18) +
-      theme(plot.title = element_text(size = 26, face = "bold"),
-            strip.text = element_text(size = 18, face = "bold"),
+      theme(plot.title = element_text(size = 26, face = "plain"),
+            strip.text = element_text(size = 18, face = "plain"),
             axis.text.x = element_text(size = 16),
             axis.text.y = element_text(size = 14),
             axis.title.y = element_text(size = 18),
@@ -518,14 +518,14 @@ if (!is.null(sx_topld) && nrow(sx_topld) > 0) {
     p_sx_snp <- ggplot(snp_agree, aes(x = pair, y = pct, fill = pair)) +
       geom_col(width = 0.55) +
       geom_text(aes(label = sprintf("%d (%.0f%%)", n, pct)),
-                vjust = -0.3, size = 7, fontface = "bold") +
+                vjust = -0.3, size = 7, fontface = "plain") +
       scale_fill_manual(values = c("All 3 agree" = "#0D47A1", "UKBB ↔ 1KG" = "#1F77B4",
                                     "UKBB ↔ TOP-LD" = "#9467BD", "1KG ↔ TOP-LD" = "#FF7F0E"),
                         guide = "none") +
       labs(x = NULL, y = "% loci with same top-PIP SNP",
            title = sprintf("Top-PIP SNP agreement (n=%d loci)", nrow(m_sx))) +
       theme_masld(base_size = 18) +
-      theme(plot.title = element_text(size = 24, face = "bold"),
+      theme(plot.title = element_text(size = 24, face = "plain"),
             axis.text.x = element_text(size = 16),
             axis.text.y = element_text(size = 14),
             axis.title.y = element_text(size = 18),

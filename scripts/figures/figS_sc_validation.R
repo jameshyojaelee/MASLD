@@ -62,9 +62,10 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   hep_de <- fread(hep_de_file)
   hep_de <- add_symbols(hep_de, "gene")
 
-  # Keep lfsr + shrunk_logFC so is_dream_deg() can apply the canonical ashr gate.
+  # Keep treat_fdr (+ lfsr/shrunk_logFC reference) so is_dream_deg() can apply the canonical TREAT gate.
   dream_merge_cols <- intersect(c("symbol", "bulk_logFC", "bulk_padj",
-                                  "bulk_shrunk_logFC", "bulk_lfsr"), names(dream))
+                                  "bulk_shrunk_logFC", "bulk_lfsr",
+                                  "bulk_treat_fdr", "treat_fdr"), names(dream))
   merged <- merge(
     dream[, ..dream_merge_cols],
     hep_de[, .(symbol, hep_logFC = logFC, hep_padj = padj)],
@@ -198,7 +199,8 @@ if (length(de_files) > 0 && !is.null(dream)) {
     if (!all(c("logFC", "padj") %in% names(dt))) return(NULL)
     dt <- add_symbols(dt, "gene")
     dream_cols <- intersect(c("symbol", "bulk_logFC", "bulk_padj",
-                              "bulk_shrunk_logFC", "bulk_lfsr"), names(dream))
+                              "bulk_shrunk_logFC", "bulk_lfsr",
+                              "bulk_treat_fdr", "treat_fdr"), names(dream))
     m <- merge(dt[, .(symbol, ct_logFC = logFC, ct_padj = padj)],
                dream[, ..dream_cols],
                by = "symbol")
@@ -302,7 +304,7 @@ if (file.exists(sc_props_file)) {
 # ==========================================================================
 fig <- (p_a | p_b) / (p_c | p_d) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig(fig, OUT, width = fig_full_width, height = 8)
 message("Single-cell validation figure saved to ", OUT)

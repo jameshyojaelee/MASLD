@@ -54,12 +54,6 @@ echo "=== 30: GWAS Overlay ==="
 Rscript RNA-seq/30_gwas_overlay_v2.R 2>&1
 if [ $? -ne 0 ]; then echo "WARNING: GWAS overlay failed (non-fatal)"; fi
 
-# Regenerate Figure 1
-echo ""
-echo "=== Figure 1: Atlas Overview ==="
-Rscript scripts/figures/fig1_atlas_overview.R 2>&1
-if [ $? -ne 0 ]; then echo "WARNING: Figure 1 failed (non-fatal)"; fi
-
 echo ""
 echo "=========================================="
 echo "  Downstream rebuild complete: $(date)"

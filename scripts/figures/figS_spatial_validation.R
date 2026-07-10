@@ -117,9 +117,9 @@ p_a <- ggplot(vdt, aes(x = group, y = I, fill = group)) +
   facet_wrap(~ dataset, labeller = as_labeller(ds_lab)) +
   scale_fill_manual(values = grp_pal, guide = "none") +
   geom_text(data = pv, aes(x = 2, y = y_top, label = lab_up),
-            inherit.aes = FALSE, size = 2.5, color = vu_col, fontface = "bold") +
+            inherit.aes = FALSE, size = 2.5, color = vu_col, fontface = "plain") +
   geom_text(data = pv, aes(x = 3, y = y_top, label = lab_dn),
-            inherit.aes = FALSE, size = 2.5, color = gu_col, fontface = "bold") +
+            inherit.aes = FALSE, size = 2.5, color = gu_col, fontface = "plain") +
   coord_cartesian(ylim = c(-0.02, y_top * 1.05)) +
   labs(x = NULL, y = "Spatial patterning\n(Moran's I)",
        title = "Up-regulated DEGs are spatially organized in liver tissue") +
@@ -383,7 +383,7 @@ fig <- (p_a | p_b) /
        (prog_svg | prog_zon) +
   plot_layout(heights = c(1, 1.2, 0.8, 0.8)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 9, face = "plain"))
 
 save_fig_tall(fig, OUT, width = fig_full_width, height = 10.5)
 cat("Saved:", OUT, "\n")

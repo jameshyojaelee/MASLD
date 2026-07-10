@@ -71,20 +71,19 @@ p <- ggplot(long, aes(x = ct, y = fe, fill = method)) +
   scale_fill_manual(values = bar_colors, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.22))) +
   labs(x = NULL,
-       y = "Fold enrichment\n(fine-mapped variants in cell-type ATAC peaks)",
-       title = "GWAS variant enrichment in cell-type ATAC peaks") +
+       y = "Fold enrichment\n(fine-mapped variants in cell-type ATAC peaks)") +
   theme_masld(base_size = 9) +
   theme(
-    plot.title      = element_text(size = 9, face = "bold", color = "black"),
-    axis.title.y    = element_text(size = 8, face = "bold", color = "black",
+    axis.title.y    = element_text(size = 6, face = "plain", color = "black",
                                    margin = margin(r = 4)),
-    axis.text.x     = element_text(size = 8, angle = 30, hjust = 1, color = "black"),
-    axis.text.y     = element_text(size = 7.5, color = "black"),
-    legend.text     = element_text(size = 7.5),
+    axis.text.x     = element_text(size = 6, angle = 30, hjust = 1, color = "black"),
+    axis.text.y     = element_text(size = 6, color = "black"),
+    legend.text     = element_text(size = 6),
     legend.position = c(0.85, 0.92),
     legend.background = element_rect(fill = "white", color = NA),
     legend.key.size = unit(0.35, "cm")
   )
+message("[caption] GWAS variant enrichment in cell-type ATAC peaks")
 
 out_pdf <- file.path(FIGS05_DIR, "figS05_a_ld_aware_null_comparison.pdf")
 dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)

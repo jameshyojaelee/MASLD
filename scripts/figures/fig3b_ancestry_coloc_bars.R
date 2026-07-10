@@ -71,22 +71,19 @@ p3b <- ggplot(bar_dt, aes(x = ancestry_label, y = n_genes,
            color = "white", linewidth = 0.2) +
   geom_text(aes(label = n_genes),
             position = position_dodge(width = 0.8),
-            vjust = -0.3, size = 1.9, color = "gray25") +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values = ancestry_colors_3b, guide = "none") +
   scale_alpha_manual(values = threshold_alphas, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(x = NULL,
-       y = "Colocalised eGenes (best PP.H4 across ancestry's GWAS)",
-       title = "Per-ancestry COLOC support",
-       subtitle = "Best SuSiE PP.H4 per gene; ABF fallback when SuSiE did not converge") +
+       y = "Colocalised eGenes (best PP.H4 across ancestry's GWAS)") +
   theme_masld() +
   theme(legend.position = "top",
         legend.key.size = unit(0.3, "cm"),
         legend.text = element_text(size = 6),
-        plot.title = element_text(size = 8, face = "bold"),
-        plot.subtitle = element_text(size = 6, color = "gray35"),
-        axis.text.x = element_text(size = 6.5))
+        axis.text.x = element_text(size = 6))
 
+message("[caption] Per-ancestry COLOC support: best SuSiE PP.H4 per gene; ABF fallback when SuSiE did not converge")
 out_pdf <- file.path(PANEL_DIR, "ancestry_coloc_counts.pdf")
 out_csv <- file.path(FIG3_DIR, "ancestry_coloc_counts.csv")
 save_fig(p3b, out_pdf, width = fig_half_width, height = 3.0)

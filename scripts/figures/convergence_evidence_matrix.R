@@ -267,8 +267,8 @@ p <- ggplot(tiles, aes(x = modality, y = gene_lab)) +
   labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
   theme(
-    axis.text.y      = element_text(size = PUB_AXIS_TEXT + 1),
-    axis.text.x.top  = element_text(angle = 35, hjust = 0, size = PUB_AXIS_TEXT + 0.5),
+    axis.text.y      = element_text(size = PUB_AXIS_TEXT),
+    axis.text.x.top  = element_text(angle = 35, hjust = 0, size = PUB_AXIS_TEXT),
     axis.line        = element_blank(),
     axis.ticks       = element_blank(),
     legend.position  = "right",
@@ -280,7 +280,7 @@ p <- ggplot(tiles, aes(x = modality, y = gene_lab)) +
 # fontface vector. ggplot's axis.text takes a single face, so we instead render
 # the symbol bold-italic via element_markdown-free approach: keep plain text but
 # italic for clarity. (All labels italic reads cleanly for gene symbols.)
-p <- p + theme(axis.text.y = element_text(face = "italic", size = PUB_AXIS_TEXT + 1))
+p <- p + theme(axis.text.y = element_text(face = "italic", size = PUB_AXIS_TEXT))
 
 # Divider along the drug-development gradient. In the reversed factor the
 # boundary sits between NR1H4 and HKDC1: above = clinically anchored, recovered

@@ -62,7 +62,7 @@ BASE = os.environ.get(
     "MASLD_PROJECT_ROOT",
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design",
 )
-OUT_DIR   = os.path.join(BASE, "figures/main/fig4_validation")
+OUT_DIR   = os.path.join(BASE, "figures/main/fig4_validation", "panels")
 ATLAS     = os.path.join(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 DEG_CSV   = os.path.join(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/"
                                "results/integration/canonical_deg_results.csv")
@@ -102,7 +102,7 @@ C_CORE    = "#5F6368"                     # TREAT confident core (dark inner ban
 C_CONV    = "#2E6E8E"                     # convergent core (deep teal)
 
 FS = 6  # SINGLE font size for every text element (PI: font 6, no bold, compact)
-INK = "#2B2B2B"
+INK = "#231f20"  # 2026-07-09 house re-skin: near-black ink (was #2B2B2B)
 
 plt.rcParams.update({
     "font.family":     "sans-serif",
@@ -115,32 +115,12 @@ plt.rcParams.update({
 
 DEG_HEADLINE = 1918   # TREAT confident set (lfc=0.25); RNA-seq's own spine
 
-# Values re-locked 2026-07-06 for the Tier-1/2 (liver-specific) MAIN render: the COLOC
-# arm is restricted to the 35 placement=="main" strata (direct MASLD + liver enzymes),
-# recomputed best-abf-over-main -> coloc PP.H4>0.5 = 862 (universe 13,390), dropping the
-# distal Tier-3/4 strata (ChronLiver/Cirrhosis/Albumin/Platelet). The full 50-GWAS
-# portfolio (coloc 1,234, universe 13,552) is the SUPP/sensitivity render
-# (FIG4A_KEEP_TIER34=1), which DELIBERATELY drifts vs this LOCK. E1b remediation
-# PRESERVED — spatial S_val=111, >=2-lens=19 and all-3=0 are UNCHANGED from the full
-# portfolio because the convergent core is robust to the COLOC scope (the CosMx cell-
-# level exclusion is coded, not locked). E1b context: the CosMx cosmx_*_mash_padj
-# columns carry NO valid cell-level p (pseudoreplication over ~297K cells nested in 4
-# slides; A6 fix — slide-level DIRECTION only), so the spatial gate drops the cell-level
-# CosMx-hep column (S_val had collapsed 639->111 at that fix).
-LOCK = dict(
-    substrate=12989, coloc=862, coloc_only=401, coloc_shared=461, universe=13390,
-    confident=1915,
-    P_meas=3450, P_val=220, P_conv=18,
-    S_meas=7197, S_val=111, S_conv=12,
-    A_meas=755,  A_val=337, A_conv=8,
-    ge1=649, ge2=19, all3=0,
-    PS=11, PA=7, SA=1,
-    P_only=202, S_only=99, A_only=329,
-    # per-dataset validators for the named-dataset alluvial (tier-1/2 universe;
-    # fallback only — the live values track compute_counts / the active COLOC scope)
-    P_liver_meas=3342, P_liver_val=169, P_plasma_meas=1938, P_plasma_val=71,
-    S_vis_meas=163, S_geomx_meas=7151,
-)
+# NO hard-coded "lock" of expected counts. The atlas / universe / DE sources change
+# legitimately over time (new datasets, re-processed contrasts, broadened universe),
+# so a frozen reference only goes stale and can silently mislabel a panel. compute_counts()
+# is the SINGLE source of truth — every number is recomputed live from the source files,
+# and if a source is unreadable it RAISES (fails the render) rather than falling back to
+# stale numbers with current labels.
 # MAIN (Tier-1/2) writes the canonical fig4a_overview_*.pdf; the full-50-GWAS SUPP
 # render (FIG4A_KEEP_TIER34=1) appends a _supp_full50gwas suffix so it never overwrites
 # the main PDFs (applied centrally in _save()).
@@ -152,7 +132,7 @@ OUT_SUFFIX  = "_supp_full50gwas" if SUPP_FULL50 else ""
 def compute_counts():
     """Recompute every panel number live. Universe = RNA-seq signal (padj<0.05)
     UNION GWAS-COLOC (best PP.H4>0.5). Each lens VALIDATED = universe member AND
-    modality-disease-DE padj<0.05. Falls back to LOCK if a source is unreadable.
+    modality-disease-DE padj<0.05. RAISES if a source is unreadable (no stale fallback).
 
     Also returns (under res["_sets"]) the underlying gene SETS the enrichment /
     UpSet builders need: per-lens universe-restricted measured/validated sets, the
@@ -164,83 +144,113 @@ def compute_counts():
 
         d = pd.read_csv(DEG_CSV)
         d["sym"] = d["symbol"].fillna(d["gene"])
-        rna_sig = set(d.loc[d["padj"] < 0.05, "sym"])
-        treat   = set(d.loc[d["treat_fdr"] < 0.05, "sym"])
+        treat   = set(d.loc[d["treat_fdr"] < 0.05, "sym"])   # bulk TREAT confident core (1,915)
 
-        if os.environ.get("FIG4A_KEEP_TIER34"):
-            # SUPP/sensitivity: full 50-GWAS canonical (best PP.H4 over ALL traits).
-            gl = pd.read_csv(COLOC_CSV)
-            coloc = set(gl.loc[gl["coloc_best_pp4"] > 0.5, "gene"])
-            print(f"[compute_counts] COLOC full 50-GWAS canonical: {len(coloc)} genes "
-                  "(SUPP/sensitivity render)")
-        else:
-            # MAIN: Tier-1/2 liver-specific portfolio. Recompute best abf PP.H4 over
-            # ONLY the placement=="main" strata (drops Tier-3/4 ChronLiver/Cirrhosis/
-            # Albumin/Platelet), so a gene rescued by a second-best liver/enzyme trait
-            # survives. Identical to gene_level_coloc_tier12.csv coloc_best_abf_pp4>0.5.
-            tier = pd.read_csv(GWAS_TIER, sep="\t")
-            main = set(tier.loc[tier["placement"] == "main", "study_name"])
-            pt = pd.read_csv(COLOC_PERTRAIT, usecols=["gwas_name", "gene", "PP.H4.abf"])
-            best = pt.loc[pt["gwas_name"].isin(main)].groupby("gene")["PP.H4.abf"].max()
-            coloc = set(best.index[best > 0.5])
-            print(f"[compute_counts] COLOC Tier-1/2 (placement==main, {len(main)} strata): "
-                  f"{len(coloc)} genes (all-50-GWAS canonical = 1234)")
-        coloc = {g for g in coloc if isinstance(g, str) and g}
-        target = rna_sig | coloc
-        coloc_only = coloc - rna_sig          # orthogonal genetic axis (not RNA-DEG)
+        # ── BROADENED, TREAT-consistent PRIORITIZED universe (locked 2026-07-06) ──
+        # The first column is NOT just bulk padj<0.05. It is the union of ALL
+        # transcriptomic candidates + ALL genetic candidates:
+        #   transcriptomic (rna_sig, 8,088) = every DE contrast (bulk disease-vs-control,
+        #     stage steatosis/SH/cirrhosis, fibrosis-gradient F0->F4, MASH-vs-MASL, sc
+        #     pseudobulk per cell type) gated by the SAME interval-null TREAT @ lfc=0.25
+        #     as the core Fig-3 DEG  ∪  hotspot / LIANA / SVG / conserved-core membership.
+        #   genetic (coloc, 3,038) = all coloc (ABF + SuSiE, every GWAS) + fine-map
+        #     credible sets (SuSiEx/MESuSiE) + regulatory-gwas-driven + TWAS + burden + ClinVar.
+        # Precomputed gene lists (provenance in Analysis/Spatial/results/universe_validation/).
+        UDIR = os.path.join(BASE, "Analysis/Spatial/results/universe_validation")
+        rna_sig = set(open(os.path.join(UDIR, "universe_transcriptomic.txt")).read().split())
+        coloc   = set(open(os.path.join(UDIR, "universe_genetic.txt")).read().split())
+        target  = set(open(os.path.join(UDIR, "prioritized_universe_FINAL.txt")).read().split())
+        coloc_only = coloc - rna_sig          # genetic-only axis (not a transcriptomic candidate)
+        print(f"[compute_counts] BROADENED universe: transcriptomic {len(rna_sig)} "
+              f"∪ genetic {len(coloc)} = {len(target)}")
 
-        # ── Proteomics: FULL background (all measured) + universe-restricted ──
+        # ── VALIDATION = INCLUSIVE across ALL biological layers per modality ──
+        # A gene is "validated" by a modality if it is significant in ANY of that
+        # modality's disease/progression/co-localization layers — NOT just a single
+        # disease-vs-control gate. This mirrors the multi-contrast prioritized universe.
+        # Proteomics: every protein contrast across BOTH DIA-MS proteomes (liver
+        # PXD051911 + PLASMA PXD052937): disease-vs-control + MASH-vs-MASL + NAS-high-
+        # vs-low. (Olink is withdrawn 2026-06-01 — labels unrecoverable — so excluded.)
         c = pd.read_csv(PROT_CSV)
-        c = (c[c["dream_comparator"] == "disease_vs_control"]
-             .sort_values("protein_padj").drop_duplicates("gene"))
-        P_meas_all = set(c["gene"])
-        P_val_all  = set(c.loc[c["protein_padj"] < 0.05, "gene"])
+        P_meas_all = set(c["gene"].dropna())
+        P_val_all  = set(c.loc[c["protein_padj"] < 0.05, "gene"].dropna())
         Pmeas = P_meas_all & target
         Pval  = P_val_all  & target
 
-        # ── Spatial / scATAC: compute FULL background on the unfiltered atlas ──
         a_all = pd.read_csv(ATLAS, low_memory=False).rename(columns={"human_symbol": "sym"})
-        # Spatial significance gate = only the arms with a VALID unit-of-analysis
-        # p-value: GeoMx (ROI-level LMM, patient RE) + Visium hepatocyte Wilcoxon.
-        # CosMx cosmx_*_mash_padj is DELIBERATELY EXCLUDED (E1b remediation): its
-        # cell-level Wilcoxon over ~297K cells nested in 4 slides is pseudoreplicated
-        # and no valid cell-level p exists — the atlas now carries slide-level
-        # DIRECTION only (padj = NaN), so CosMx contributes direction support, never
-        # a significance-gated "validated" count. (This also makes S_val robust to the
-        # atlas cosmx-padj state, not merely reliant on it being NaN.)
-        sp = ["spatial_govaere2026_geomx_sh_vs_ls_padj",
-              "spatial_govaere2026_geomx_sh_vs_pt_padj",
-              "spatial_hep_wilcoxon_padj_bh"]
-        sp = [c0 for c0 in sp if c0 in a_all.columns]
-        S_meas_all = set(a_all.loc[a_all[sp].notna().any(axis=1), "sym"])
-        S_val_all  = set(a_all.loc[(a_all[sp] < 0.05).any(axis=1), "sym"])
-        A_meas_all = set(a_all.loc[a_all["hepatocyte_da_padj"].notna(), "sym"])
-        A_val_all  = set(a_all.loc[a_all["hepatocyte_da_padj"] < 0.05, "sym"])
-        Smeas = S_meas_all & target
-        Sval  = S_val_all  & target
-        Ameas = A_meas_all & target
-        Aval  = A_val_all  & target
+        def _u(m):    return set(a_all.loc[m.fillna(False), "sym"])
+        def _padj(col): return _u(a_all[col] < 0.05) if col in a_all.columns else set()
+        def _flag(col): return _u((a_all[col] == True) | (a_all[col].astype(str).str.lower() == "true")) if col in a_all.columns else set()
+        def _nn(col):   return _u(a_all[col].notna() & (a_all[col].astype(str).str.strip() != "") & (a_all[col].astype(str).str.lower() != "nan")) if col in a_all.columns else set()
+        # Spatial: hepatocyte spatial localization + Govaere 2026 MASH zonation
+        # signatures (centrilobular + periportal). SVG/Moran's-I is a TRANSCRIPTOMIC
+        # prioritization candidate (excluded here — circular); GeoMx niche + zonation
+        # yield 0 in-universe; CosMx = slide-level DIRECTION only (no valid cell-level p).
+        S_val_all = (_padj("spatial_hep_wilcoxon_padj_bh")
+                     | _padj("signature_govaere2026_epithelia_mash_centrilobular_padj")
+                     | _padj("signature_govaere2026_epithelia_mash_periportal_padj"))
+        # measured base MUST cover EVERY column the gate uses (hep + centrilobular +
+        # periportal) — a periportal-only-validated gene missing from measured makes
+        # S_val ⊄ S_meas, and the permutation null's rng.choice(meas, size=val_n)
+        # raises "sample larger than population". `| S_val_all` guarantees the
+        # superset invariant regardless of per-column NA/typing quirks.
+        S_meas_all = set(a_all.loc[a_all["spatial_hep_wilcoxon_padj_bh"].notna()
+                                   | a_all.get("signature_govaere2026_epithelia_mash_centrilobular_padj", pd.Series(index=a_all.index)).notna()
+                                   | a_all.get("signature_govaere2026_epithelia_mash_periportal_padj", pd.Series(index=a_all.index)).notna(), "sym"]) | S_val_all
+        # scATAC / epigenomic: hepatocyte differential accessibility + chromVAR TF
+        # motif + SCENIC+ regulon target + promoter accessibility. (SCENIC+ enhancer-
+        # gene link excluded: ~every gene has one -> trivially true, not validation.)
+        A_val_all = (_padj("hepatocyte_da_padj") | _nn("chromvar_top_tf")
+                     | _nn("scenic_regulon_tf") | _flag("human_promoter_accessible"))
+        # same superset invariant as spatial: cover DA + chromVAR + SCENIC measured
+        # bases, then `| A_val_all` folds in the promoter-accessible flagged genes
+        # (bool column: notna == genome-wide, so we take the flagged set via A_val_all
+        # rather than notna to keep the measured base — hence the cascade n.s.
+        # remainder — sane instead of exploding to the whole atlas).
+        A_meas_all = set(a_all.loc[a_all["hepatocyte_da_padj"].notna()
+                                   | a_all.get("chromvar_top_tf", pd.Series(index=a_all.index)).notna()
+                                   | a_all.get("scenic_regulon_tf", pd.Series(index=a_all.index)).notna(), "sym"]) | A_val_all
+        Smeas = S_meas_all & target; Sval = S_val_all & target
+        Ameas = A_meas_all & target; Aval = A_val_all & target
 
-        # ── PER-DATASET splits (for the named-dataset validation alluvial) ──
-        # Proteomics: the two DIA-MS proteomes are BOTH gated validators. The
-        # union (P_meas/P_val) is what P_val counts; per-dataset the two overlap
-        # (1,863 co-measured / 20 co-validated), so liver+plasma sum > union.
-        cds = pd.read_csv(PROT_CSV)
-        cds = cds[cds["dream_comparator"] == "disease_vs_control"]
-        def _proteo_ds(name):
-            x = cds[cds["dataset"] == name]
-            m = set(x["gene"]) & target
-            v = set(x.loc[x["protein_padj"] < 0.05, "gene"]) & target
+        # ── PER-DATASET proteomics splits (inclusive: union across a dataset's contrasts) ──
+        def _proteo_ds(prefix):
+            x = c[c["dataset"].str.startswith(prefix)]
+            m = set(x["gene"].dropna()) & target
+            v = set(x.loc[x["protein_padj"] < 0.05, "gene"].dropna()) & target
             return len(m), len(v)
         P_liver_meas,  P_liver_val  = _proteo_ds("PXD051911")   # liver DIA-MS (Boel)
-        P_plasma_meas, P_plasma_val = _proteo_ds("PXD052937")   # plasma DIA-MS (Sourianarayanane)
-        # Spatial: Visium (GSE192741) is the SOLE gated validator; GeoMx is gated
-        # but yields 0, so it goes to the orthogonal tier (its measured count is
-        # reported so the reader sees it was deployed, not skipped).
-        S_vis_meas = len(set(a_all.loc[a_all["spatial_hep_wilcoxon_padj_bh"].notna(), "sym"]) & target)
+        P_plasma_meas, P_plasma_val = _proteo_ds("PXD052937")   # PLASMA DIA-MS (Sourianarayanane)
+        S_vis_meas = len(Smeas)
         _geo = [c0 for c0 in ("spatial_govaere2026_geomx_sh_vs_ls_padj",
                               "spatial_govaere2026_geomx_sh_vs_pt_padj") if c0 in a_all.columns]
         S_geomx_meas = len(set(a_all.loc[a_all[_geo].notna().any(axis=1), "sym"]) & target) if _geo else 0
+
+        # ── PER-LAYER bundles for the VALIDATION-LAYER column (2 per modality) ──
+        # Spatial splits into hepatocyte spatial-localization (Visium GSE192741) and
+        # MASH zonation signatures (Govaere GeoMx CL+PP) — each with its OWN measured
+        # base, so no node's significant count exceeds its measured base.
+        S_hep_meas = len(set(a_all.loc[a_all["spatial_hep_wilcoxon_padj_bh"].notna(), "sym"]) & target)
+        S_hep_val  = len(_padj("spatial_hep_wilcoxon_padj_bh") & target)
+        _zc = [c0 for c0 in ("signature_govaere2026_epithelia_mash_centrilobular_padj",
+                             "signature_govaere2026_epithelia_mash_periportal_padj") if c0 in a_all.columns]
+        S_zon_meas = len(set(a_all.loc[a_all[_zc].notna().any(axis=1), "sym"]) & target) if _zc else 0
+        S_zon_val  = len((_padj("signature_govaere2026_epithelia_mash_centrilobular_padj")
+                          | _padj("signature_govaere2026_epithelia_mash_periportal_padj")) & target)
+        # Govaere CosMx: NO valid cell-level p (E1b pseudoreplication) -> DIRECTION only.
+        # A universe gene is CosMx-concordant if |MASH logFC| > 0.25 (same effect-size
+        # floor as the DEG TREAT test) in ANY profiled cell type. Shown as a spatial
+        # validator (direction, daggered), never a significance-gated count.
+        _cx = [c0 for c0 in a_all.columns
+               if c0.startswith("spatial_govaere2026_cosmx_") and c0.endswith("_logfc")]
+        S_cos_meas = len(set(a_all.loc[a_all[_cx].notna().any(axis=1), "sym"]) & target) if _cx else 0
+        S_cos_val  = len(set(a_all.loc[a_all[_cx].abs().gt(0.25).any(axis=1), "sym"]) & target) if _cx else 0
+        # scATAC splits into disease chromatin ACCESSIBILITY (hepatocyte DA + promoter)
+        # and regulatory TF ACTIVITY (chromVAR motif + SCENIC+ regulon).
+        A_acc_meas = len(set(a_all.loc[a_all["hepatocyte_da_padj"].notna(), "sym"]) & target)
+        A_acc_val  = len((_padj("hepatocyte_da_padj") | _flag("human_promoter_accessible")) & target)
+        A_tf_val   = len((_nn("chromvar_top_tf") | _nn("scenic_regulon_tf")) & target)
+        A_tf_meas  = max(A_tf_val, len(set(a_all.loc[a_all["chromvar_top_tf"].notna(), "sym"]) & target))
 
         allv = Pval | Sval | Aval
         # per-gene lens membership over the universe-restricted validated sets
@@ -261,10 +271,15 @@ def compute_counts():
             PS=len(Pval & Sval), PA=len(Pval & Aval), SA=len(Sval & Aval),
             P_only=len(Pval - Sval - Aval), S_only=len(Sval - Pval - Aval),
             A_only=len(Aval - Pval - Sval),
-            # per-dataset validators (named-dataset alluvial)
+            # per-dataset / per-layer validators (validation-layer alluvial)
             P_liver_meas=P_liver_meas, P_liver_val=P_liver_val,
             P_plasma_meas=P_plasma_meas, P_plasma_val=P_plasma_val,
             S_vis_meas=S_vis_meas, S_geomx_meas=S_geomx_meas,
+            S_hep_meas=S_hep_meas, S_hep_val=S_hep_val,
+            S_zon_meas=S_zon_meas, S_zon_val=S_zon_val,
+            S_cos_meas=S_cos_meas, S_cos_val=S_cos_val,
+            A_acc_meas=A_acc_meas, A_acc_val=A_acc_val,
+            A_tf_meas=A_tf_meas, A_tf_val=A_tf_val,
         )
         res.update(proteo=res["P_val"], spatial=res["S_val"], scatac=res["A_val"],
                    none=res["universe"] - res["ge1"], PSA=res["all3"])
@@ -278,18 +293,14 @@ def compute_counts():
         )
         print("[compute_counts] live:",
               {k: res[k] for k in sorted(res) if not k.startswith("_")})
-        drift = {k: (res[k], LOCK[k]) for k in LOCK if res.get(k) != LOCK[k]}
-        if drift:
-            print("[compute_counts] WARNING drift vs locked:", drift)
         return res
-    except Exception as e:  # pragma: no cover
+    except Exception as e:
+        # NO stale fallback: a broken source must FAIL the render, never silently
+        # produce a mislabeled panel with frozen numbers. Re-raise with context.
         import traceback
-        print(f"[compute_counts] fell back to LOCK ({e})")
         traceback.print_exc()
-        r = dict(LOCK)
-        r.update(proteo=r["P_val"], spatial=r["S_val"], scatac=r["A_val"],
-                 none=r["universe"] - r["ge1"], PSA=r["all3"])
-        return r
+        raise RuntimeError(f"[compute_counts] source unreadable — refusing to render "
+                           f"stale/mislabeled numbers: {e}") from e
 
 
 # -- Above-chance null (pure numpy; NO scipy — rnaseq scipy/numpy ABI risk) ---
@@ -316,12 +327,12 @@ def permutation_null(res):
         honestly whichever way it lands (the lenses are near-independent, so few
         genes converge even under real signal; (a) is the robust headline)."""
     if "_sets" not in res:
-        print("[permutation_null] no gene sets (LOCK fallback) — skipping null")
+        print("[permutation_null] no gene sets — skipping null")
         return None
     import numpy as np
     # Sanitize gene sets for the null (a stray NaN symbol can slip into the
     # universe; drop non-string / empty so sorting & indexing are well-defined).
-    # compute_counts() reported the LOCK-matching COUNTS already — this only guards
+    # compute_counts() already reported the live COUNTS — this only guards
     # the null's set ops and changes nothing displayed.
     def _clean(s):
         return {x for x in s if isinstance(x, str) and x and x.lower() != "nan"}
@@ -350,11 +361,11 @@ def permutation_null(res):
 
     # (b) convergence null over the universe-co-measured sets, tracking each
     #     EXCLUSIVE UpSet intersection so the UpSet can show a chance reference.
-    # Drop non-string members (the COLOC master carries one pp4>0.5 locus with a
-    # NaN gene symbol) so sorted() does not choke on mixed float/str. This only
-    # affects the Monte-Carlo null's sampling pool (13,552 -> 13,551); every
-    # DISPLAYED count comes from len() in compute_counts (d[...]), so 1,234 coloc /
-    # 13,552 universe / 111 spatial / 19 ge2 / 0 all3 are unchanged.
+    # Drop non-string members (a COLOC locus may carry a pp4>0.5 NaN gene symbol)
+    # so sorted() does not choke on mixed float/str. This only affects the
+    # Monte-Carlo null's sampling pool; every DISPLAYED count comes from len() in
+    # compute_counts (d[...]), so the 9,882 universe / 447 spatial / 141 ge2 /
+    # 3 all3 values are unchanged.
     uni = sorted(g for g in S["universe"] if isinstance(g, str))
     idx = {g: i for i, g in enumerate(uni)}
     U = len(uni)
@@ -434,7 +445,7 @@ def _save(fig, name):
     if OUT_SUFFIX and name.endswith(".pdf"):   # SUPP full-50 render: never clobber main
         name = name[:-4] + OUT_SUFFIX + ".pdf"
     p = os.path.join(OUT_DIR, name)
-    fig.savefig(p, bbox_inches="tight", facecolor="white")
+    fig.savefig(p, bbox_inches="tight", pad_inches=0.02, facecolor="white")
     plt.close(fig)
     print("Saved:", p)
 
@@ -448,38 +459,56 @@ def build_cascade(d):
       PRIORITIZED  bulk RNA-seq (+TREAT core) + GWAS-COLOC     (the Figs 2-3 axes)
       MODALITY     proteomics / spatial / scATAC              (3 orthogonal lenses)
       DATASET      each modality's NAMED gated-VALIDATOR dataset(s)
-      OUTCOME      per dataset: VALIDATED (solid) vs not significant (grey)
+      OUTCOME      TWO groups only: VALIDATED (>=1 assay, deep teal) vs UNVALIDATED
+                   (grey; no >=1-assay support — includes genes never measured by any
+                   assay, so "unvalidated" not "not significant") — every dataset's
+                   validated flow merges into ONE Validated node, labelled with the
+                   UNIQUE union count (assays overlap, so inflowing ribbons sum higher).
 
-    A muted 'also profiled' tier below names the assays NOT in the significance
-    gate: Olink plasma (withdrawn), GeoMx (gated but 0 hits), CosMx (direction-
-    only), Vu Visium (replication). Counts are live from compute_counts (so they
-    track the active COLOC scope). Proteomics' two DIA-MS datasets OVERLAP, so the
-    per-dataset labels show TRUE counts and sum > the proteomics union (noted in
-    the caption); spatial's validator flow is Visium (163), NOT the ~7,200 spatial-
-    measured — that ~99% GeoMx (0 validated) is shown in the orthogonal tier."""
+    Counts are live from compute_counts (so they track the active COLOC scope).
+    Because the two DIA-MS proteomes (and the three spatial arms) share genes, the
+    per-assay validated ribbons entering the Validated node sum to MORE than the
+    d['ge1'] unique validated genes — that overlap is exactly why the outcome is
+    collapsed to a single deduplicated Validated node rather than 6 disjoint grooves."""
     import matplotlib.colors as mcolors
 
     def tint(hexc, f):                       # lighten a modality hue for sub-nodes
         r, g, b = mcolors.to_rgb(hexc)
         return (r + (1 - r) * f, g + (1 - g) * f, b + (1 - b) * f)
 
-    # datasets: (modality, accession, platform·N, measured, validated)
+    BLACK = "#231f20"  # 2026-07-09 house re-skin: near-black ink (was pure #000000)
+    # DATASET nodes: (modality, dataset key [unique], platform/analysis, measured, validated).
+    # EVERY dataset actually used to validate is a node here — no separate 'also profiled'
+    # tier. Each has its OWN measured base so no node's validated count exceeds it. CosMx
+    # is direction-only (no valid cell-level p, E1b); explained in the caption, not on-panel.
+    # Olink (withdrawn 2026-06-01) and Vu 2025 (0 universe genes validated) are genuinely
+    # not validators, so they simply do not appear.
+    # DATASET column labels the ASSAY/MODALITY only — no GSE/PXD accession (dropped
+    # from the panel; accessions live in the printed caption). 6th tuple field = the
+    # on-panel display label. The atac modality is single-NUCLEUS ATAC (snATAC), so the
+    # MODALITY lane is named "snATAC" too — NOT "scATAC" — to stay consistent with the
+    # dataset (sc and sn are distinct assays; GSE244832 is snATAC).
     DS = [
-        ("proteo",  "PXD051911", "liver DIA-MS · 58",  d["P_liver_meas"],  d["P_liver_val"]),
-        ("proteo",  "PXD052937", "plasma DIA-MS · 72", d["P_plasma_meas"], d["P_plasma_val"]),
-        ("spatial", "GSE192741", "Visium · 5",         d["S_vis_meas"],    d["S_val"]),
-        ("atac",    "GSE244832", "snATAC · 18 donors", d["A_meas"],        d["A_val"]),
+        ("proteo",  "PXD051911", "liver DIA-MS",  d["P_liver_meas"],  d["P_liver_val"],  "liver DIA-MS"),
+        ("proteo",  "PXD052937", "plasma DIA-MS", d["P_plasma_meas"], d["P_plasma_val"], "plasma DIA-MS"),
+        ("spatial", "GSE192741", "Visium",        d["S_hep_meas"],    d["S_hep_val"],    "Visium"),
+        ("spatial", "GeoMx",     "Govaere",       d["S_zon_meas"],    d["S_zon_val"],    "GeoMx"),
+        ("spatial", "CosMx",     "Govaere",       d["S_cos_meas"],    d["S_cos_val"],    "CosMx"),
+        ("atac",    "GSE244832", "snATAC",        d["A_meas"],        d["A_val"],        "snATAC"),
     ]
     lanes   = ["proteo", "spatial", "atac"]
-    MODNAME = {"proteo": "proteomics", "spatial": "spatial", "atac": "scATAC"}
+    MODNAME = {"proteo": "proteomics", "spatial": "spatial", "atac": "snATAC"}
     COL     = {"proteo": C_PROTEO, "spatial": C_SPATIAL, "atac": C_ATAC}
-    # modality measured = its VALIDATOR union (spatial = Visium only; GeoMx -> tier)
-    MOD_MEAS = {"proteo": d["P_meas"], "spatial": d["S_vis_meas"], "atac": d["A_meas"]}
+    # modality measured = sum of its 2 layer-bundles' measured (fan conserves)
+    MOD_MEAS = {l: float(len([x for x in DS if x[0] == l])) for l in lanes}  # inventory: room ∝ DATASET COUNT
     ds_of = {l: [x for x in DS if x[0] == l] for l in lanes}
-    ACC = {g[1]: g for g in DS}
 
-    H, GAP, BW = 10.0, 0.70, 0.13
-    SEC = 2.30
+    H, GAP, BW = 11.5, 0.85, 0.13
+    # SEC widened (2.30->2.65, 2026-07-08) to use the room freed by wrapping the
+    # left-most "transcriptomics"/"genetics" labels onto 2 lines (below) -- keeps
+    # the same overall tight-cropped panel footprint but stretches the alluvial
+    # itself into the reclaimed space instead of leaving it as empty left margin.
+    SEC = 2.65
     X0, X1, X2, X3 = 0.0, SEC, 2 * SEC, 3 * SEC
     C_NS = "#E4E4E4"
     # min node height: this is an INTRO/inventory panel, so floor each lane well
@@ -513,26 +542,43 @@ def build_cascade(d):
     slotDS = {}
     for l in lanes:
         my0, my1 = slotMod[l]; grp = ds_of[l]
-        sub = _stack([g[1] for g in grp], {g[1]: g[3] for g in grp},
-                     my1 - my0, GAP * 0.55, min(MINH, (my1 - my0) / len(grp)))
+        sub = _stack([g[1] for g in grp], {g[1]: 1.0 for g in grp},
+                     my1 - my0, GAP * 1.0, min(0.9, (my1 - my0) / len(grp) / 1.4))
         for k, (a, b) in sub.items():
             slotDS[k] = (my0 + a, my0 + b)
 
-    # OUTCOME column: VALIDATED group (top) + gap + n.s. group (bottom)
+    # OUTCOME column: TWO groups only — Validated (any assay) vs Unvalidated.
+    # The former 6 per-dataset validated + 6 n.s. endpoints collapse into ONE
+    # Validated node (top) and ONE Not-significant node (bottom). Each dataset's
+    # validated portion sweeps UP into the shared Validated node, its non-validated
+    # portion DOWN into the shared Not-significant node; inside each group the ribbons
+    # keep a per-dataset sub-slot (stacked in DS order) so they land without crossing.
+    # The Validated node's LABEL is the UNIQUE union d['ge1'] (genes validated by >=1
+    # assay); the inflowing per-assay validated ribbons sum higher than that because
+    # assays share genes — the very overlap the 6-groove version double-counted.
     order = [g[1] for g in DS]
-    VAL = {g[1]: g[4] for g in DS}; MEA = {g[1]: g[3] for g in DS}
-    NS  = {k: MEA[k] - VAL[k] for k in order}
-    GG = 0.9
-    scO = (H - GG - GAP * 2 * (len(order) - 1)) / float(sum(VAL.values()) + sum(NS.values()))
-    slotV = {}; y = 0.0
+    VAL = {g[1]: g[4] for g in DS}; MEA = {g[1]: max(g[3], g[4]) for g in DS}
+    dsh   = {k: (slotDS[k][1] - slotDS[k][0]) for k in order}     # dataset node heights
+    vfrac = {k: (VAL[k] / MEA[k] if MEA[k] else 0.0) for k in order}
+    val_w = {k: dsh[k] * vfrac[k] for k in order}                 # validated ribbon width
+    ns_w  = {k: dsh[k] * (1.0 - vfrac[k]) for k in order}         # n.s. ribbon width
+    GG = 0.9                                                      # gap between the 2 groups
+    vtot = sum(val_w.values()); ntot = sum(ns_w.values())
+    scO  = (H - GG) / (vtot + ntot) if (vtot + ntot) else 1.0
+    subV = {}; y = 0.0
     for k in order:
-        h = max(VAL[k] * scO, 0.5); slotV[k] = (y, y + h); y += h + GAP
-    slotN = {}; y = (y - GAP) + GG
+        h = val_w[k] * scO; subV[k] = (y, y + h); y += h
+    vy0, vy1 = 0.0, y
+    ny0 = vy1 + GG; subN = {}; y = ny0
     for k in order:
-        h = max(NS[k] * scO, 0.35); slotN[k] = (y, y + h); y += h + GAP
+        h = ns_w[k] * scO; subN[k] = (y, y + h); y += h
+    ny1 = y
 
-    fig, ax = plt.subplots(figsize=(7.3, 4.7))
-    ax.set_xlim(-2.75, X3 + 1.75); ax.set_ylim(-1.35, H + 4.2)
+    # Compact canvas (Fig 2A idiom): the data content is drawn on a small figure so the
+    # fixed 6 pt text reads large relative to the panel, instead of tiny on a 7x5.4 sheet.
+    # Sized + tightly cropped to the Fig 4 layout slot (panel A, 3.03x2.13in; 2026-07-08).
+    fig, ax = plt.subplots(figsize=(3.50, 2.71))
+    ax.set_xlim(-1.3, X3 + 1.55); ax.set_ylim(-0.55, H + 0.15)
     ax.invert_yaxis(); ax.axis("off")
 
     def node(x, y0, y1, c, z=4, ec="white"):
@@ -544,12 +590,10 @@ def build_cascade(d):
     hR = avail * d["substrate"] / o_tot
     rna0, rna1 = 0.0, hR; gco0, gco1 = hR + o_gap, H
     node(X0, rna0, rna1, C_RNA)
-    ax.add_patch(Rectangle((X0 - BW / 2, rna0), BW, (rna1 - rna0) * DEG_HEADLINE / d["substrate"],
-                           facecolor=C_CORE, edgecolor="none", zorder=5))
     node(X0, gco0, gco1, C_GWAS)
     lx = X0 - BW / 2 - 0.16
-    ax.text(lx, (rna0 + rna1) / 2, f"bulk RNA-seq {d['substrate']:,}", ha="right", va="center", color=INK, zorder=8)
-    ax.text(lx, (gco0 + gco1) / 2, f"GWAS-COLOC {d['coloc']:,}", ha="right", va="center", color=INK, zorder=8)
+    ax.text(lx, (rna0 + rna1) / 2, f"transcriptomics\n{d['substrate']:,}", ha="right", va="center", color=BLACK, zorder=8)
+    ax.text(lx, (gco0 + gco1) / 2, f"genetics\n{d['coloc']:,}", ha="right", va="center", color=BLACK, zorder=8)
 
     # ── PRIORITIZED -> MODALITY (partition mouth by validator-coverage share) ──
     tot = float(sum(MOD_MEAS.values())); y = 0.0
@@ -559,67 +603,65 @@ def build_cascade(d):
         y += h
     for l in lanes:
         y0, y1 = slotMod[l]; node(X1, y0, y1, COL[l])
-        ax.text(X1, y0 - 0.13, MODNAME[l], ha="center", va="bottom", color=INK, zorder=8)
+        ax.text(X1 - BW / 2 - 0.10, (y0 + y1) / 2, MODNAME[l], ha="right", va="center", color=BLACK, zorder=8)
 
     # ── MODALITY -> DATASET (fan each modality into its named datasets) ──
     for l in lanes:
-        m0, m1 = slotMod[l]; grp = ds_of[l]; gtot = float(sum(g[3] for g in grp)); yy = m0
+        m0, m1 = slotMod[l]; grp = ds_of[l]; yy = m0
         for g in grp:
-            seg = (m1 - m0) * g[3] / gtot; dd0, dd1 = slotDS[g[1]]
+            dd0, dd1 = slotDS[g[1]]; seg = dd1 - dd0
             _ribbon(ax, X1 + BW / 2, yy, yy + seg, X2 - BW / 2, dd0, dd1, tint(COL[l], 0.25), alpha=0.32)
             yy += seg
+    _wbox = dict(boxstyle="round,pad=0.14", fc="white", ec="#D9D9D9", lw=0.3, alpha=0.9)
     for g in DS:
         dd0, dd1 = slotDS[g[1]]; node(X2, dd0, dd1, tint(COL[g[0]], 0.18))
-        ax.text(X2, dd0 - 0.34, g[1], ha="center", va="bottom", color=INK, zorder=8)          # accession
-        ax.text(X2, dd0 - 0.07, g[2], ha="center", va="bottom", color="#6B6B6B", zorder=8)     # platform · N
+        # single white-backed assay-name label ABOVE the node — lifts off the ribbons
+        ax.text(X2, dd0 - 0.10, g[5], ha="center", va="bottom", color=BLACK,
+                zorder=10, bbox=_wbox)
 
-    # ── DATASET -> OUTCOME (validated sweeps up, n.s. flows down) ──
+    # ── DATASET -> OUTCOME (each dataset's validated sweeps UP into the single
+    #    Validated node, non-validated DOWN into the single Not-significant node) ──
     for g in DS:
         acc, l = g[1], g[0]; dd0, dd1 = slotDS[acc]
-        hv = (dd1 - dd0) * (VAL[acc] / MEA[acc]) if MEA[acc] else 0.0
-        _ribbon(ax, X2 + BW / 2, dd0, dd0 + hv, X3 - BW / 2, slotV[acc][0], slotV[acc][1], COL[l], alpha=0.42)
-        _ribbon(ax, X2 + BW / 2, dd0 + hv, dd1, X3 - BW / 2, slotN[acc][0], slotN[acc][1], C_NS, alpha=0.7)
-    for g in DS:
-        acc, l = g[1], g[0]
-        y0, y1 = slotV[acc]; node(X3, y0, y1, COL[l])
-        ax.text(X3 + BW / 2 + 0.13, (y0 + y1) / 2, f"{VAL[acc]:,}", ha="left", va="center", color=INK, zorder=8)
-        y0, y1 = slotN[acc]; node(X3, y0, y1, C_NS)
+        hv = (dd1 - dd0) * vfrac[acc]
+        a0, a1 = subV[acc]
+        _ribbon(ax, X2 + BW / 2, dd0, dd0 + hv, X3 - BW / 2, a0, a1, COL[l], alpha=0.52)
+        b0, b1 = subN[acc]
+        _ribbon(ax, X2 + BW / 2, dd0 + hv, dd1, X3 - BW / 2, b0, b1, C_NS, alpha=0.45)
+    # single Validated node (deep teal) + single Not-significant node (control grey)
+    node(X3, vy0, vy1, C_CONV)
+    node(X3, ny0, ny1, C_NS)
+    ax.text(X3 + BW / 2 + 0.13, (vy0 + vy1) / 2, f"validated\n{d['ge1']:,}",
+            ha="left", va="center", color=BLACK, zorder=8)
+    # Unvalidated node left unlabelled (per PI 2026-07-07): the grey node speaks for itself.
 
-    vy = (slotV[order[0]][0] + slotV[order[-1]][1]) / 2.0
-    ny = (slotN[order[0]][0] + slotN[order[-1]][1]) / 2.0
-    ax.text(X3 + BW / 2 + 0.62, vy, "VALIDATED", ha="left", va="center", color=INK, zorder=8)
-    ax.text(X3 + BW / 2 + 0.13, ny, "not significant", ha="left", va="center", color="#8A8A8A", zorder=8)
-
-    # ── stage headers ──
-    HY = -1.05
-    for xx, lab in ((X0, "PRIORITIZED"), (X1, "MODALITY"), (X2, "DATASET"), (X3, "OUTCOME")):
-        ax.text(xx, HY, lab, ha="center", va="bottom", color=INK, zorder=8)
-
-    # ── orthogonal 'also profiled' tier (muted; NOT in the significance gate) ──
-    ty = H + 1.35
-    ax.plot([X0 - 0.1, X3 + 0.4], [ty - 0.55, ty - 0.55], color="#C9C9C9", lw=0.5, zorder=1)
-    ax.text(X0 - 0.1, ty - 0.5, "also profiled — orthogonal support, not in the significance gate",
-            ha="left", va="bottom", color="#6B6B6B", zorder=8)
-    orth = [
-        (C_PROTEO,  "proteomics", "Olink Explore plasma · Yang/Zeybel 2025 · 1,461 × 218 (matched to GSE192741 RNA-seq)"),
-        (C_SPATIAL, "spatial",    f"GeoMx · Govaere 2026 · {d['S_geomx_meas']:,} measured, 0 gated   ·   "
-                                  "CosMx · GSE312698 · 552K cells (direction only)   ·   Vu 2025 · Visium · 33 biopsies (replication)"),
-    ]
-    for i, (c, mod, txt) in enumerate(orth):
-        yy = ty + i * 0.85
-        ax.add_patch(Rectangle((X0 - 0.1, yy - 0.16), 0.16, 0.32, facecolor=c, edgecolor="none", alpha=0.5, zorder=3))
-        ax.text(X0 + 0.16, yy, txt, ha="left", va="center", color="#3A3A3A", zorder=8)
+    # Stage headers (Prioritized / Modality / Dataset / Outcome) removed per PI
+    # (2026-07-07) — the stages read from the node labels + caption.
 
     _save(fig, "fig4a_overview_cascade.pdf")
     # printed caption (no on-panel subtitle, per house style)
-    print("[caption:cascade] Fig 4 opener. Prioritized universe (bulk RNA-seq padj<0.05 "
-          f"∪ GWAS-COLOC PP.H4>0.5 = {d['universe']:,}) is co-measured by three orthogonal "
-          "assays, each a NAMED dataset new to Fig 4. Node = dataset (accession · platform); "
-          "ribbon width = genes; VALIDATED = both-significant (direction-agnostic). Proteomics' "
-          f"two DIA-MS datasets overlap, so per-dataset validated (liver {d['P_liver_val']} + "
-          f"plasma {d['P_plasma_val']}) sum > the union ({d['P_val']}); spatial validated "
-          f"({d['S_val']}) is Visium GSE192741 alone (163 tested). Orthogonal assays "
-          "(Olink/GeoMx/CosMx/Vu) are profiled but not significance-gated.")
+    print(f"[caption:cascade] Fig 4 opener. PRIORITIZED universe = {d['universe']:,} genes = "
+          f"transcriptomic candidates {d['substrate']:,} (all bulk + single-cell DE contrasts at the "
+          f"same TREAT interval-null test, lfc=0.25, as the core DEG — disease-vs-control, MASH-vs-MASL, "
+          f"stage, fibrosis-gradient — ∪ hotspot ∪ LIANA ∪ conserved-core) ∪ genetic candidates "
+          f"{d['coloc']:,} (coloc [ABF + SuSiE, all GWAS] ∪ fine-map credible sets ∪ regulatory-GWAS ∪ "
+          f"TWAS ∪ burden ∪ ClinVar); {d.get('coloc_shared',0):,} shared. Each prioritized gene is tested "
+          "in EVERY dataset we hold, INCLUSIVELY across all biological layers (not just disease-vs-control): "
+          "proteomics = disease-vs-control + MASH-vs-MASL + NAS-high-vs-low across liver (PXD051911) + "
+          "plasma (PXD052937) DIA-MS; spatial = hepatocyte spatial-localization (Visium GSE192741) + MASH "
+          "zonation signatures (Govaere GeoMx CL+PP) + CosMx MASH direction-concordance "
+          "(|logFC|>0.25, no valid cell-level p — slide-level pseudoreplication, E1b); scATAC = hepatocyte "
+          "differential accessibility + promoter accessibility + chromVAR TF-motif + SCENIC+ regulon "
+          "(GSE244832). 'VALIDATED' = significant/positive/direction-concordant in that dataset. Per-modality "
+          f"union: proteomics {d['P_val']}, spatial {d['S_val']} (Visium+GeoMx gated) + CosMx {d['S_cos_val']} "
+          f"direction, scATAC {d['A_val']}; any-assay {d['ge1']} of {d['universe']:,}. Olink (Yang/Zeybel) "
+          "withdrawn 2026-06-01 (unrecoverable labels) and Vu 2025 Visium (0 universe genes validated) are "
+          "not validators and are omitted. OUTCOME collapses to two deduplicated groups — "
+          f"VALIDATED = {d['ge1']:,} unique genes hit in >=1 assay (of {d['universe']:,}), UNVALIDATED = "
+          f"{d['none']:,} (no >=1-assay support — includes genes not measured by any of the three assays); "
+          f"because assays share genes the per-dataset validated ribbons entering the Validated "
+          f"node sum to {sum(g[4] for g in DS):,} (> the {d['ge1']:,} unique union), so the node is labelled "
+          "with the unique count.")
 
 
 def _ge2_genes(d, membership):
@@ -640,7 +682,7 @@ def build_enrichment(d, stats):
     proteomics∩spatial = 3.8x (p=2e-4); the broad 3-way convergence sits at
     chance and is shown as such. The 11 cross-assay-reproduced genes are named."""
     if stats is None:
-        print("[build_enrichment] no stats (LOCK fallback) — skipping"); return
+        print("[build_enrichment] no stats — skipping"); return
     conv, enr = stats["conv"], stats["enrich"]["universe"]
 
     def R(label, st, color):
@@ -674,14 +716,21 @@ def build_enrichment(d, stats):
     XCH = 1.0                                  # chance line (fold = 1)
     XANN = 4.35                                # fixed annotation column
     for yy, r in zip(ys, items):
-        x0, x1 = (XCH, r["fold"]) if r["fold"] >= XCH else (r["fold"], XCH)
-        ax.add_patch(Rectangle((x0, yy - 0.32), x1 - x0, 0.64,
-                               facecolor=r["color"], edgecolor="none",
-                               alpha=0.95 if r["sig"] else 0.55, zorder=3))
+        undef = not np.isfinite(r["exp"])   # null undefined (background saturated: meas≈val)
+        if not undef:
+            x0, x1 = (XCH, r["fold"]) if r["fold"] >= XCH else (r["fold"], XCH)
+            ax.add_patch(Rectangle((x0, yy - 0.32), x1 - x0, 0.64,
+                                   facecolor=r["color"], edgecolor="none",
+                                   alpha=0.95 if r["sig"] else 0.55, zorder=3))
         ax.text(-0.10, yy, r["label"], ha="right", va="center", color=INK, zorder=6)
-        star = "  *" if r["sig"] else ""
-        ax.text(XANN, yy, f"{r['obs']:,} vs {r['exp']:.1f}  p={r['p']:.1g}{star}",
-                ha="left", va="center", color=INK, zorder=6)
+        if undef:
+            # meas == val -> hypergeometric expectation undefined; report count only
+            ax.text(XANN, yy, f"{r['obs']:,}  null n/a", ha="left", va="center",
+                    color=INK, zorder=6)
+        else:
+            star = "  *" if r["sig"] else ""
+            ax.text(XANN, yy, f"{r['obs']:,} vs {r['exp']:.1f}  p={r['p']:.1g}{star}",
+                    ha="left", va="center", color=INK, zorder=6)
     for hy, htext in headers:
         ax.text(-0.10, hy, htext, ha="right", va="center", color=INK, zorder=6)
 
@@ -693,9 +742,6 @@ def build_enrichment(d, stats):
     ax.tick_params(axis="x", length=2, labelsize=FS)
     ax.set_xlabel("fold enrichment over chance (observed / permutation-expected)")
     ax.spines["bottom"].set_bounds(0, 4)
-
-    ax.set_title("Prioritized targets: above-chance reproduction", loc="left",
-                 color=INK, fontsize=FS)
 
     # name the cross-assay (proteomics+spatial) reproduced genes — the real core.
     # Placed via fig-coords BELOW the x-axis label (tight bbox expands to include).
@@ -772,8 +818,6 @@ def build_upset(d, stats):
     ax_bar.set_ylabel("genes")
     ax_bar.spines[["top", "right"]].set_visible(False)
     ax_bar.tick_params(labelbottom=False, labelsize=FS, length=2)
-    ax_bar.set_title("Validated-gene intersections vs chance (– – expected)",
-                     loc="left", color=INK, fontsize=FS)
 
     # ── membership dot matrix ──
     ymap = {L: len(order) - 1 - i for i, L in enumerate(order)}
@@ -806,25 +850,20 @@ def build_upset(d, stats):
     ax_set.set_yticks([]); ax_set.set_xticks([])
     for s in ("top", "right", "bottom", "left"):
         ax_set.spines[s].set_visible(False)
-    ax_set.set_title("set size", loc="right", color=INK, fontsize=FS)
 
-    # ── name the proteomics∩spatial reproduced genes ──
-    ps_genes = _ge2_genes(d, ("P", "S"))
-    if ps_genes:
-        txt = ",  ".join(ps_genes)
-        fig.text(0.13, 0.015,
-                 f"proteomics + spatial ({len(ps_genes)}):", ha="left", va="bottom",
-                 color=INK, fontsize=FS)
-        fig.text(0.13, -0.03, txt, ha="left", va="bottom", color=INK,
-                 fontsize=FS, fontstyle="italic")
-    _save(fig, "fig4a_overview_upset.pdf")
+    _save(fig, "figS4f.pdf")   # demoted from main Fig 4a to Supp Fig S4F (2026-07-07)
+    # caption fully live (no hard-coded counts): the exclusive P∩S bar = PS - all3,
+    # matching both the panel bar and the permutation stat (which is computed on the
+    # exclusive intersection); all-3 is reported live with its own chance expectation.
+    ps_excl = d["PS"] - d["all3"]
     print("[caption:upset] UpSet of the three orthogonal validation lenses on the "
           f"{d['universe']:,}-gene prioritized universe. Bars = exclusive intersection sizes; "
           "dashed tick = permutation-null expected (seed 42, 10,000 draws). Only "
           "proteomics∩spatial clears its chance marker "
-          f"({d['PS']} vs {stats['conv']['PS']['exp']:.1f}, "
+          f"({ps_excl} vs {stats['conv']['PS']['exp']:.1f}, "
           f"{stats['conv']['PS']['fold']:.1f}x, p={stats['conv']['PS']['p']:.1g}); "
-          "all-3 = 0 (chance ~0).")
+          f"all-3 = {d['all3']} (chance {stats['conv']['all3']['exp']:.1f}, "
+          f"p={stats['conv']['all3']['p']:.2g}).")
 
 
 def LENS_C(mem, LENS):
@@ -840,9 +879,10 @@ def main():
         print("Wrote nothing (FIG4A_STATS_ONLY set)")
         return
     build_cascade(d)
-    build_enrichment(d, stats)
+    # build_enrichment intentionally NOT rendered (dropped 2026-07-07 per PI):
+    # fig4a_overview_enrichment.pdf is no longer generated.
     build_upset(d, stats)
-    print("Wrote fig4a_overview_{cascade,enrichment,upset}.pdf to", OUT_DIR)
+    print("Wrote fig4a_overview_{cascade}.pdf (+ figS4f upset) to", OUT_DIR)
 
 
 if __name__ == "__main__":

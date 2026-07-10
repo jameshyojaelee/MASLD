@@ -196,6 +196,10 @@ if (!is.null(bridge_data)) {
     gene_order <- bridges[gene %in% top_bridges][order(-n_layers), gene]
     alluvial_dt[, gene := factor(gene, levels = rev(gene_order))]
 
+    message(sprintf("[caption] Cross-modality bridge genes (n=%s, top %d shown). Top 10 outlined: %s",
+                    format(n_bridges, big.mark = ","), top_n,
+                    paste(top10$gene, collapse = ", ")))
+
     p_e <- ggplot(alluvial_dt, aes(x = layer, y = gene)) +
       geom_point(aes(size = mean_posterior,
                      color = layer),
@@ -206,18 +210,12 @@ if (!is.null(bridge_data)) {
       scale_color_manual(values = layer_colors, guide = "none") +
       scale_size_continuous(range = c(0.8, 3.5), name = "Mean\nposterior",
                             breaks = c(0.5, 0.7, 0.9)) +
-      labs(x = "Modality layer", y = NULL,
-           title = sprintf("Cross-modality bridge genes (n=%s, top %d shown)",
-                           format(n_bridges, big.mark = ","), top_n),
-           subtitle = sprintf("Top 10 outlined: %s",
-                              paste(top10$gene, collapse = ", "))) +
+      labs(x = "Modality layer", y = NULL) +
       theme_masld() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
-            axis.text.y = element_text(size = ifelse(top_n > 30, 4, 5),
+            axis.text.y = element_text(size = 6,
                                        face = ifelse(gene_order %in% top10$gene,
-                                                     "bold", "plain")),
-            plot.title = element_text(size = 8, face = "bold"),
-            plot.subtitle = element_text(size = 6, face = "italic"),
+                                                     "italic", "plain")),
             legend.position = "right")
 
   } else {
@@ -231,18 +229,18 @@ if (!is.null(bridge_data)) {
     tile_dt[, gene := factor(gene, levels = rev(gene_order))]
     tile_dt[, layer := factor(layer, levels = names(layer_colors))]
 
+    message(sprintf("[caption] Cross-modality bridge genes (n=%s, top %d shown)",
+                    format(n_bridges, big.mark = ","), top_n))
+
     p_e <- ggplot(tile_dt, aes(x = layer, y = gene, fill = mean_posterior)) +
       geom_tile(color = "white", linewidth = 0.2) +
       scale_fill_gradient2(low = "#E3F2FD", mid = "#42A5F5", high = "#0D47A1",
                            midpoint = 0.7, name = "Mean\nposterior",
                            limits = c(0.5, 1)) +
-      labs(x = "Modality layer", y = NULL,
-           title = sprintf("Cross-modality bridge genes (n=%s, top %d shown)",
-                           format(n_bridges, big.mark = ","), top_n)) +
+      labs(x = "Modality layer", y = NULL) +
       theme_masld() +
       theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
-            axis.text.y = element_text(size = ifelse(top_n > 30, 4, 5)),
-            plot.title = element_text(size = 8, face = "bold"),
+            axis.text.y = element_text(size = 6),
             legend.position = "right")
   }
 
@@ -255,11 +253,9 @@ if (!is.null(bridge_data)) {
     geom_col(width = 0.7) +
     scale_fill_manual(values = layer_colors, guide = "none") +
     scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.08))) +
-    labs(x = NULL, y = "Bridge gene\nparticipation",
-         title = "Layer participation") +
+    labs(x = NULL, y = "Bridge gene\nparticipation") +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-          plot.title = element_text(size = 7, face = "bold"))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
 
   # Combine main panel + summary bar
   p_e <- p_e / p_bar + plot_layout(heights = c(3, 1))

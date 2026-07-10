@@ -15,9 +15,8 @@ mkdir -p Analysis/SingleCell/results_gpu_v2_phase05/logs
 echo "[$(date)] starting Fig 2 panel renders on $(hostname)"
 
 # Render each new panel
-for s in cascade_degs inflection_composite \
-         celltype_cascade network_communities \
-         nmf_programs; do
+for s in cascade_degs \
+         celltype_cascade network_communities; do
   echo "[$(date)] panel script: $s"
   micromamba run -n rnaseq Rscript scripts/figures/$s.R
 done

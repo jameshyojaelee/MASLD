@@ -120,7 +120,7 @@ p <- ggplot(d, aes(x = disease_stage_beta, y = mean_dream_logFC)) +
                         "hep-19 dashed = cirrhosis-dependent.")) +
   theme_masld(base_size = 7) +
   theme(
-    plot.title    = element_text(size = 7.3, face = "bold", margin = margin(b = 5)),
+    plot.title    = element_text(size = 7.3, face = "plain", margin = margin(b = 5)),
     plot.caption  = element_text(size = 4.8, color = "grey35", hjust = 0),
     legend.position = "right",
     legend.text   = element_text(size = 5.5),

@@ -14,6 +14,14 @@ suppressPackageStartupMessages({
   library(patchwork)
 })
 
+# RETIRED 2026-07-07: all three outputs of this script (panel_celltype_heritability.pdf,
+# panel_celltype_enrichment_bar.pdf, panel_geneset_enrichment_forest.pdf) are cell-type
+# heritability panels that are NOT part of the Fig 2 (genetics) or FigS2 set — they were
+# stale leftovers in fig2_genetics/panels/ (the FIG3_DIR constant resolves there). Retired
+# wholesale (early quit) so they are never regenerated. Plotting code kept for provenance.
+message("[fig4_celltype_heritability] RETIRED 2026-07-07 — outputs not in Fig2/FigS2 set; no panels written.")
+quit(save = "no", status = 0)
+
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
@@ -63,23 +71,23 @@ p_a <- ggplot(herit, aes(x = reorder(cell_type_label, fold_enrichment_coloc),
   geom_hline(yintercept = 1, linetype = "dashed", color = "grey50", linewidth = 0.3) +
   # Significance stars
   geom_text(aes(label = sig_label, y = fold_enrichment_coloc + 0.02),
-            hjust = 0, size = 2.5) +
+            hjust = 0, size = GEOM_TEXT_6PT) +
   # Count annotation
   geom_text(aes(label = paste0("n=", n_coloc_in_set), y = 0.02),
-            hjust = 0, size = 1.8, color = "white") +
+            hjust = 0, size = GEOM_TEXT_6PT, color = "white") +
   scale_fill_manual(values = c("Significant" = masld_colors$up,
                                 "Not significant" = masld_colors$ns),
                     name = NULL) +
   coord_flip(ylim = c(0, max(herit$fold_enrichment_coloc) * 1.15)) +
   labs(
     x = NULL,
-    y = "Fold enrichment\n(COLOC PP.H4 in cell-type genes vs background)",
-    title = "Cell-type GWAS enrichment"
+    y = "Fold enrichment\n(COLOC PP.H4 in cell-type genes vs background)"
   ) +
   theme_masld(base_size = 7) +
   theme(legend.position = c(0.95, 0.05),
         legend.justification = c(1, 0),
         legend.background = element_rect(fill = "white", color = NA))
+message("[caption] a: Cell-type GWAS enrichment — fold enrichment of COLOC PP.H4 in cell-type-specific genes vs background")
 
 # ===========================================================================
 # 3. Panel (b): DEG quintile × COLOC enrichment
@@ -94,17 +102,18 @@ if (file.exists(quintile_file)) {
   p_b <- ggplot(quintile, aes(x = t_quintile, y = prop_coloc_05)) +
     geom_col(fill = masld_colors$gwas, width = 0.6) +
     geom_text(aes(label = sprintf("%.1f%%", prop_coloc_05 * 100)),
-              vjust = -0.5, size = 2) +
+              vjust = -0.5, size = GEOM_TEXT_6PT) +
     scale_y_continuous(labels = scales::percent,
                        expand = expansion(mult = c(0, 0.15))) +
     labs(
       x = "DEG significance quintile (Q1=weakest, Q5=strongest)",
-      y = "% genes with\nCOLOC PP.H4 > 0.5",
-      title = "GWAS signal by DEG strength"
+      y = "% genes with\nCOLOC PP.H4 > 0.5"
     ) +
     theme_masld(base_size = 7)
+  message("[caption] b: GWAS signal by DEG strength — % genes with COLOC PP.H4 > 0.5 across DEG significance quintiles")
 } else {
-  p_b <- ggplot() + theme_void() + labs(title = "DEG quintile data not available")
+  p_b <- ggplot() + theme_void()
+  message("[caption] b: DEG quintile data not available")
 }
 
 # ===========================================================================
@@ -139,11 +148,11 @@ if (file.exists(geneset_file)) {
     scale_size_continuous(range = c(1, 3), name = "Gene set\nsize") +
     labs(
       x = "Fold enrichment (COLOC in gene set vs background)",
-      y = NULL,
-      title = "Gene-set GWAS enrichment"
+      y = NULL
     ) +
     theme_masld(base_size = 7) +
     theme(legend.position = "right")
+  message("[caption] c: Gene-set GWAS enrichment — fold enrichment of COLOC PP.H4 in curated gene sets vs background")
 } else {
   p_c <- ggplot() + theme_void()
 }

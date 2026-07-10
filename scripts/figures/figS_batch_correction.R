@@ -56,8 +56,8 @@ COHORT_COLORS <- c(
   "GSE240729"="#BCBD22","PRJNA512027"="#17BECF"
 )
 
-PADJ_INT <- 0.05
-LFC_INT  <- 0.5    # Tier 1
+PADJ_INT <- 0.05   # retained for per-cohort significance flags
+LFC_INT  <- 0.3    # (unused) legacy ashr floor; canonical Tier 1 gate now TREAT FDR<0.05 (lfc=0.25)
 KNN_K    <- 30      # neighborhood size for the mixing metric
 
 # ----------------------------------------------------------------------------
@@ -81,11 +81,10 @@ plot_dt[, disease_state := factor(group, levels = c("Control", "Disease"))]
 
 dream <- load_dream_results()
 dream[, gene_clean := sub("\\..*", "", gene)]
-dream[, is_tier1 := !is.na(bulk_padj) & bulk_padj < PADJ_INT &
-                    !is.na(bulk_logFC) & abs(bulk_logFC) > LFC_INT]
+dream[, is_tier1 := is_dream_deg(dream)]   # TREAT FDR<0.05 (lfc=0.25)
 n_tier1 <- sum(dream$is_tier1, na.rm = TRUE)
-message(sprintf("Tier 1 DEGs (padj<%.2g, |LFC|>%.1f): %s",
-                PADJ_INT, LFC_INT, comma(n_tier1)))
+message(sprintf("Tier 1 DEGs (TREAT FDR<0.05, lfc=0.25): %s",
+                comma(n_tier1)))
 
 # ----------------------------------------------------------------------------
 # PANEL A: Cohort + disease UMAP pair
@@ -102,14 +101,14 @@ base_umap <- function(dt, color_var, palette, title, legend_ncol = 2) {
     coord_fixed() +
     guides(color = guide_legend(ncol = legend_ncol,
                                 override.aes = list(size = 1.2, alpha = 1))) +
-    labs(x = "UMAP 1", y = "UMAP 2", title = title) +
+    labs(x = "UMAP 1", y = "UMAP 2") +
     theme_masld(base_size = 7) +
-    theme(plot.title = element_text(size = 8, face = "bold"),
-          legend.text = element_text(size = 6),
+    theme(legend.text = element_text(size = 6),
           legend.key.size = unit(0.22, "cm"),
           legend.position = "right")
 }
 
+message("[caption] Panel A: UMAP colored by cohort (left) and by disease state (right).")
 p_a_cohort  <- base_umap(plot_dt, "cohort", COHORT_COLORS, "by cohort", legend_ncol = 2)
 p_a_disease <- base_umap(plot_dt, "disease_state", disease_colors, "by disease state", legend_ncol = 1)
 p_a <- p_a_cohort | p_a_disease
@@ -137,18 +136,17 @@ confound[, label := ifelse(N > 0, sprintf("%d\n(%.0f%%)", N, pct), "")]
 order_dt <- plot_dt[, .N, by = cohort][order(-N)]
 confound[, cohort := factor(cohort, levels = rev(order_dt$cohort))]
 
+message("[caption] Panel B: Cohort x disease-state confounding (sample counts).")
 p_b <- ggplot(confound, aes(x = dx, y = cohort, fill = pct)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = label), size = 1.95, color = "gray15", lineheight = 0.85) +
+  geom_text(aes(label = label), size = GEOM_TEXT_6PT, color = "black", lineheight = 0.85) +
   scale_fill_gradientn(
     colors = c("#FFFFFF", "#FCE4EC", "#F48FB1", "#C2185B"),
     limits = c(0, 100), name = "%",
     labels = function(v) paste0(v, "%")) +
-  labs(x = NULL, y = NULL,
-       title = "Cohort × disease-state confounding (sample counts)") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        axis.text.x = element_text(angle = 0, hjust = 0.5),
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5),
         legend.key.height = unit(0.32, "cm"),
         legend.key.width  = unit(0.18, "cm"),
         legend.position = "right")
@@ -205,25 +203,24 @@ p_c <- ggplot(lisi_long, aes(x = metric, y = value, fill = metric)) +
   geom_text(data = lisi_summary,
             aes(x = metric, y = max + 0.18,
                 label = sprintf("max possible\n(%d unique labels)", max)),
-            inherit.aes = FALSE, size = 1.7, color = "gray35", lineheight = 0.85) +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "black", lineheight = 0.85) +
   geom_text(data = lisi_summary,
             aes(x = metric, y = q25 - 0.4,
                 label = sprintf("median = %.2f", med)),
-            inherit.aes = FALSE, size = 2.1, fontface = "bold", color = "gray15") +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, fontface = "plain", color = "black") +
   scale_fill_manual(values = c("Cohort iLISI" = "#9E9E9E",
                                "Disease iLISI" = "#C2185B"),
                     guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0.04, 0.08))) +
   labs(x = NULL, y = "iLISI",
-       title = sprintf("Local label diversity (k = %d nearest neighbors)", KNN_K),
        caption = paste0(
          "Higher Cohort iLISI = better cohort mixing in the embedding.\n",
          "Lower Disease iLISI = cleaner Control/Disease separation (biology preserved)."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title    = element_text(size = 8, face = "bold"),
-        plot.caption  = element_text(size = 6, color = "gray35", hjust = 0))
+  theme(plot.caption  = element_text(size = 6, color = "black", hjust = 0))
 
+message(sprintf("[caption] Panel C: Local label diversity (k = %d nearest neighbors).", KNN_K))
 save_fig(p_c, file.path(PANEL_DIR, "figS_batch_c_ilisi.pdf"),
          width = fig_half_width * 0.9, height = 2.6)
 
@@ -273,18 +270,17 @@ p_d <- ggplot(vp_long, aes(x = covariate, y = 100 * frac, fill = deg_class)) +
   scale_y_continuous(labels = function(v) paste0(v, "%"),
                      expand = expansion(mult = c(0, 0.02))) +
   labs(x = NULL, y = "% variance per gene",
-       title = "Per-gene variance partition (Tier 1 DEG vs non-DEG)",
        caption = paste0(
          "Dataset variance is high in *non-DEGs* (median = ",
          round(vp_summ[covariate == "Dataset" & deg_class == "Non-DEG", median_pct], 1),
          "%) but biology dominates Tier 1 DEGs."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title   = element_text(size = 8, face = "bold"),
-        plot.caption = element_text(size = 6, color = "gray35", hjust = 0),
+  theme(plot.caption = element_text(size = 6, color = "black", hjust = 0),
         legend.position = "top",
         legend.key.size = unit(0.28, "cm"))
 
+message("[caption] Panel D: Per-gene variance partition (Tier 1 DEG vs non-DEG).")
 save_fig(p_d, file.path(PANEL_DIR, "figS_batch_d_varpart.pdf"),
          width = fig_full_width * 0.55, height = 2.6)
 
@@ -312,14 +308,14 @@ mean_jac <- mean(loo_05$jaccard)
 p_e <- ggplot(loo_05, aes(x = pct_recovered, y = cohort_label)) +
   geom_col(aes(fill = pct_held), width = 0.7, alpha = 0.9) +
   geom_text(aes(label = sprintf("%.0f%%", pct_recovered)),
-            hjust = -0.3, size = 1.95, color = "gray20") +
+            hjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
   geom_vline(xintercept = mean_rec, linetype = "dashed",
              color = "gray40", linewidth = 0.3) +
   annotate("text",
            x = mean_rec, y = 0.6,
            label = sprintf("mean recovery = %.1f%%\nJaccard = %.2f",
                            mean_rec, mean_jac),
-           hjust = -0.05, vjust = 0, size = 2.1, color = "gray25",
+           hjust = -0.05, vjust = 0, size = GEOM_TEXT_6PT, color = "black",
            lineheight = 0.85) +
   scale_fill_gradient(low = "#F8BBD0", high = "#C2185B",
                       name = "% patients\nheld out") +
@@ -328,15 +324,14 @@ p_e <- ggplot(loo_05, aes(x = pct_recovered, y = cohort_label)) +
                      labels = function(v) paste0(v, "%"),
                      expand = expansion(mult = 0)) +
   labs(x = "% Tier 1 DEGs recovered when cohort held out",
-       y = NULL,
-       title = "LOO-CV recovery of integrated DEGs") +
+       y = NULL) +
   theme_masld(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        legend.position  = "right",
+  theme(legend.position  = "right",
         legend.key.size  = unit(0.3, "cm"),
-        legend.title     = element_text(size = 6.5),
+        legend.title     = element_text(size = 6),
         legend.text      = element_text(size = 6))
 
+message("[caption] Panel E: LOO-CV recovery of integrated DEGs.")
 save_fig(p_e, file.path(PANEL_DIR, "figS_batch_e_loo_recovery.pdf"),
          width = fig_half_width * 1.05, height = 2.6)
 } else {
@@ -350,35 +345,36 @@ save_fig(p_e, file.path(PANEL_DIR, "figS_batch_e_loo_recovery.pdf"),
 message("Building panel F (UMAP vs DE schematic)...")
 text_lines <- list(
   list(label = "UMAP",
-       y = 0.92, size = 5.0, face = "bold", color = "#1565C0"),
+       y = 0.92, size = GEOM_TEXT_6PT, face = "plain", color = "#1565C0"),
   list(label = "Low-rank 2D embedding for visualization.",
-       y = 0.84, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.84, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "Operates on a denoised PCA representation of",
-       y = 0.79, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.79, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "the full expression matrix; surfaces residual",
-       y = 0.74, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.74, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "technical AND biological cohort structure.",
-       y = 0.69, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.69, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "Cohort × disease confounding looks like batch.",
-       y = 0.62, size = 2.6, face = "italic", color = "#1565C0"),
+       y = 0.62, size = GEOM_TEXT_6PT, face = "plain", color = "#1565C0"),
 
   list(label = "dream mega-analysis",
-       y = 0.45, size = 5.0, face = "bold", color = "#C2185B"),
+       y = 0.45, size = GEOM_TEXT_6PT, face = "plain", color = "#C2185B"),
   list(label = "Mixed-effects model on the full gene matrix:",
-       y = 0.37, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.37, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "  ~ disease + sex + (1 | dataset)",
-       y = 0.31, size = 2.6, face = "plain", color = "gray15"),
+       y = 0.31, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "Cohort variance lives in a random intercept;",
-       y = 0.25, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.25, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "fixed effects extract the disease signal across",
-       y = 0.20, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.20, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "cohorts without scrubbing it from expression.",
-       y = 0.15, size = 2.6, face = "plain", color = "gray25"),
+       y = 0.15, size = GEOM_TEXT_6PT, face = "plain", color = "black"),
   list(label = "DE call does not depend on UMAP geometry.",
-       y = 0.08, size = 2.6, face = "italic", color = "#C2185B")
+       y = 0.08, size = GEOM_TEXT_6PT, face = "plain", color = "#C2185B")
 )
 text_dt <- rbindlist(lapply(text_lines, as.data.table))
 
+message("[caption] Panel F: UMAP visualization is not equivalent to DE inference.")
 p_f <- ggplot(text_dt, aes(x = 0.5, y = y, label = label)) +
   geom_text(aes(size = size, fontface = face, color = color),
             hjust = 0.5, lineheight = 0.85) +
@@ -386,11 +382,8 @@ p_f <- ggplot(text_dt, aes(x = 0.5, y = y, label = label)) +
   scale_color_identity() +
   scale_x_continuous(limits = c(0, 1), expand = expansion(0)) +
   scale_y_continuous(limits = c(0, 1), expand = expansion(0)) +
-  labs(title = "UMAP visualization ≠ DE inference") +
   theme_void(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold", hjust = 0.5,
-                                  color = "gray10"),
-        plot.background = element_rect(fill = "#FAFAFA", color = "gray85",
+  theme(plot.background = element_rect(fill = "#FAFAFA", color = "gray85",
                                        linewidth = 0.3),
         plot.margin = margin(8, 8, 6, 8))
 
@@ -405,15 +398,12 @@ top_row    <- p_a
 mid_row    <- p_b | p_c | p_d
 bot_row    <- p_e | p_f
 
+message("[caption] Batch correction adequacy: cohort structure in UMAP is biology, not residual batch (10 cohorts, 1,444 QC-passing samples; dream uses (1 | dataset) random intercept).")
 fig <- top_row / mid_row / bot_row +
   plot_layout(heights = c(1, 1, 1)) +
   plot_annotation(
-    title    = "Batch correction adequacy: cohort structure in UMAP is biology, not residual batch",
-    subtitle = "10 cohorts | 1,444 QC-passing samples | dream uses (1 | dataset) random intercept",
     tag_levels = "a",
-    theme = theme(plot.title    = element_text(size = 9, face = "bold"),
-                  plot.subtitle = element_text(size = 7, color = "gray35"),
-                  plot.tag      = element_text(size = 9, face = "bold"))
+    theme = theme(plot.tag = element_text(size = 6, face = "plain"))
   )
 
 out_pdf <- file.path(FIGS_BATCH_DIR, "figS_batch_correction.pdf")

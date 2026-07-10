@@ -32,11 +32,10 @@ theme_pub <- theme_minimal(base_size = 11) +
         axis.ticks = element_line(colour = "black", linewidth = 0.3),
         legend.background = element_blank(), legend.key = element_blank(),
         strip.background = element_blank(),
-        strip.text  = element_text(face = "bold", size = 10),
-        plot.title  = element_text(face = "bold", size = 12),
-        axis.title  = element_text(size = 10),
-        axis.text   = element_text(size = 9),
-        legend.text = element_text(size = 9),
+        strip.text  = element_text(face = "plain", size = 6),
+        axis.title  = element_text(size = 6),
+        axis.text   = element_text(size = 6),
+        legend.text = element_text(size = 6),
         plot.margin = margin(8, 10, 8, 8))
 theme_set(theme_pub)
 
@@ -142,10 +141,10 @@ pV1 <- ggplot(sd_plot, aes(x = ds_label, y = ctrl_sd)) +
                fill = "white", color = col_ctrl, linewidth = 0.4) +
   scale_y_continuous(breaks = seq(0, 4, 0.5)) +
   labs(x = NULL,
-       y = "Within-control SD (log\u2082CPM)",
-       title = "V1  Within-control variability of canonical DEGs") +
-  theme(axis.text.x = element_text(size = 8))
+       y = "Within-control SD (log\u2082CPM)") +
+  theme(axis.text.x = element_text(size = 6))
 
+message("[caption] V1  Within-control variability of canonical DEGs")
 ggsave(file.path(OUTDIR, "ctrl_variability_per_dataset.pdf"),
        pV1, width = 6.5, height = 4, device = cairo_pdf)
 message("Saved: V1_ctrl_sd_per_dataset.pdf")
@@ -175,12 +174,12 @@ pV2 <- ggplot(v2, aes(x = abs_lfc, color = group, fill = group)) +
   scale_x_continuous(breaks = seq(0, 4, 0.5),
                      labels = function(x) sprintf("%.1f", x)) +
   annotate("text", x = 0.52, y = Inf, label = "|LFC| = 0.5",
-           hjust = 0, vjust = 1.5, size = 2.8, color = "grey40") +
+           hjust = 0, vjust = 1.5, size = GEOM_TEXT_6PT, color = "grey40") +
   labs(x = "|Patient LFC| (log\u2082CPM, relative to control mean)",
-       y = "Density",
-       title = "V2  |LFC| distribution: disease patients vs controls") +
+       y = "Density") +
   theme(legend.position = c(0.82, 0.82))
 
+message("[caption] V2  |LFC| distribution: disease patients vs controls")
 ggsave(file.path(OUTDIR, "abs_lfc_disease_vs_control.pdf"),
        pV2, width = 5.5, height = 4, device = cairo_pdf)
 message("Saved: V2_abs_lfc_distribution.pdf")
@@ -194,10 +193,10 @@ pV3 <- ggplot(gene_stats, aes(x = dream_abs_lfc, y = ctrl_sd, color = direction)
   scale_x_continuous(breaks = seq(0, 5, 0.5)) +
   scale_y_continuous(breaks = seq(0, 4, 0.5)) +
   labs(x = "Dream |log\u2082FC| (population effect size)",
-       y = "Within-control SD (log\u2082CPM)",
-       title = "V3  Larger population effect = more variable in controls") +
+       y = "Within-control SD (log\u2082CPM)") +
   theme(legend.position = c(0.88, 0.15))
 
+message("[caption] V3  Larger population effect = more variable in controls")
 ggsave(file.path(OUTDIR, "dream_lfc_vs_ctrl_variability.pdf"),
        pV3, width = 5.5, height = 4, device = cairo_pdf)
 message("Saved: V3_dream_lfc_vs_ctrl_sd.pdf")
@@ -215,12 +214,12 @@ pV4 <- ggplot(gene_stats, aes(x = mean_log2tpm1, y = ctrl_sd, color = direction)
   scale_x_continuous(breaks = seq(0, 14, 2)) +
   scale_y_continuous(breaks = seq(0, 4, 0.5)) +
   annotate("text", x = tpm1_vline + 0.1, y = Inf, label = "TPM = 1",
-           hjust = 0, vjust = 1.5, size = 2.8, color = "grey40") +
+           hjust = 0, vjust = 1.5, size = GEOM_TEXT_6PT, color = "grey40") +
   labs(x = "Mean log\u2082(TPM + 1) across all samples",
-       y = "Within-control SD (log\u2082CPM)",
-       title = "Expression level vs within-control variability") +
+       y = "Within-control SD (log\u2082CPM)") +
   theme(legend.position = c(0.88, 0.85))
 
+message("[caption] V4  Expression level vs within-control variability")
 ggsave(file.path(OUTDIR, "expression_vs_ctrl_variability.pdf"),
        pV4, width = 5.5, height = 4, device = cairo_pdf)
 message("Saved: V4_expr_vs_ctrl_sd.pdf")

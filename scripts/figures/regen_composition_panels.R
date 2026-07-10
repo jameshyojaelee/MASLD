@@ -209,10 +209,10 @@ p2f <- ggplot() +
         legend.key.size = unit(0.25, "cm"),
         panel.grid.major.x = element_blank())
 
-save_fig(p2f, file.path(PANEL_DIR, "celltype_composition_shift.pdf"),
-         width = fig_half_width * 1.05, height = 3.4)
+# save_fig(p2f, file.path(PANEL_DIR, "celltype_composition_shift.pdf"),
+#          width = fig_half_width * 1.05, height = 3.4)
 fwrite(stage_summary, file.path(PANEL_DIR, "celltype_composition_shift_data.csv"))
-message(sprintf("Saved %s", file.path(PANEL_DIR, "celltype_composition_shift.pdf")))
+# message(sprintf("Saved %s", file.path(PANEL_DIR, "celltype_composition_shift.pdf")))
 
 # ============================================================================
 # Panel 2g - hepatocyte progressor expansion at F2

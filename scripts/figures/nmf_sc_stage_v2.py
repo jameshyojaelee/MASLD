@@ -75,7 +75,7 @@ CT_COLORS = {
 PROGRAMS = [
     {"col": "bulk_P1", "label": "P1\nStromal",     "color": "#F4A674"},
     {"col": "bulk_P2", "label": "P2\nInflammatory", "color": "#C9265E"},
-    {"col": "bulk_P3", "label": "P3\nFibrogenic",   "color": "#1565C0"},
+    {"col": "bulk_P3", "label": "P3\nFibrotic-ECM",  "color": "#1565C0"},
     {"col": "bulk_P6", "label": "P6\nKupffer-cell", "color": "#00695C"},
 ]
 

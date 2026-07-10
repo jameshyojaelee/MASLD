@@ -35,7 +35,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- FIG4_DIR                       # panels are flat in FIG4_DIR (no panels/ subdir)
+PANEL_DIR <- file.path(FIG4_DIR, "panels")  # panels moved under panels/ (matches fig2/fig3)
 OUT_PDF   <- file.path(FIG4_DIR, "validation_composite.pdf")
 
 # Descriptive, no figure-number prefix (user organizes main/supp in Illustrator).
@@ -72,7 +72,7 @@ panel_to_gg <- function(img, label) {
   p <- cowplot::ggdraw() +
     cowplot::draw_image(img, x = 0, y = 0, width = 1, height = 1) +
     cowplot::draw_label(label, x = 0.004, y = 0.996, hjust = 0, vjust = 1,
-                        fontface = "bold", size = 11)
+                        fontface = "plain", size = 6)
   attr(p, "aspect") <- aspect
   p
 }

@@ -66,7 +66,7 @@ INT_DIR     <- file.path(RNASEQ_DIR,
 
 # NOTE: Uses canonical_deg_results.csv (limma-voom-qw C2) for t-statistic ranking
 # (fgsea + LINCS). t-statistics drive the disease query signature. DEG significance
-# comes from consensus_degs.csv bulk_sig column (padj < 0.05, |logFC| > 0.5).
+# comes from consensus_degs.csv bulk_sig column (canonical: lfsr < 0.05, |shrunk_logFC| > 0.3; 2026-06-27).
 DREAM_FILE     <- file.path(INT_DIR, "canonical_deg_results.csv")
 CONSENSUS_FILE <- file.path(INT_DIR, "consensus_degs.csv")
 MR_FILE        <- file.path(RNASEQ_DIR, "results/causal_inference/causal_inference_summary.csv")
@@ -1208,10 +1208,10 @@ composite <- (pa | pb) / (pc | pd | pe) +
   ) +
   plot_layout(heights = c(1, 1))
 
-fig_path <- file.path(FIG_DIR, "figS_pharmacotranscriptomics.pdf")
-save_fig(composite, fig_path, width = fig_full_width, height = 10)
-cat("  Saved:", fig_path, "\n")
-cat("  Saved:", sub("\\.pdf$", ".png", fig_path), "\n")
+# fig_path <- file.path(FIG_DIR, "figS_pharmacotranscriptomics.pdf")
+# save_fig(composite, fig_path, width = fig_full_width, height = 10)
+# cat("  Saved:", fig_path, "\n")
+# cat("  Saved:", sub("\\.pdf$", ".png", fig_path), "\n")
 
 
 # ==============================================================================

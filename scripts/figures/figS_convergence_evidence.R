@@ -45,19 +45,18 @@ tier_colors <- c("1: Genetic\nvalidated" = "#880E4F",
                  "3: Suggestive" = "#F48FB1",
                  "4: Weak" = "#BDBDBD")
 
+message(sprintf("[caption] Convergence evidence tier distribution. Total ranked: %s  (excluded confounders: %d)",
+                comma(sum(tier_tbl$N)),
+                sum(ev$excluded_from_ranking)))
+
 pa <- ggplot(tier_tbl, aes(x = tier, y = N, fill = tier)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = comma(N)), vjust = -0.3, size = 2.2, color = "gray15") +
+  geom_text(aes(label = comma(N)), vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray15") +
   scale_fill_manual(values = tier_colors, guide = "none") +
   scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
-  labs(x = NULL, y = "Gene count",
-       title = "Convergence evidence tier distribution",
-       subtitle = sprintf("Total ranked: %s  (excluded confounders: %d)",
-                          comma(sum(tier_tbl$N)),
-                          sum(ev$excluded_from_ranking))) +
+  labs(x = NULL, y = "Gene count") +
   theme_masld() +
-  theme(plot.subtitle = element_text(size = 6, color = "gray35"),
-        axis.text.x = element_text(size = 6.5))
+  theme(axis.text.x = element_text(size = 6))
 
 # ============================================================================
 # Panel (b) — Concordance state by tier (stacked %)
@@ -81,11 +80,10 @@ pb <- ggplot(state_tbl, aes(x = tier, y = N, fill = concordance_state)) +
   geom_col(position = "fill", width = 0.7) +
   scale_fill_manual(values = state_colors, name = NULL) +
   scale_y_continuous(labels = percent_format(), expand = c(0, 0)) +
-  labs(x = NULL, y = "Share of tier",
-       title = "Concordance state composition per tier") +
+  labs(x = NULL, y = "Share of tier") +
   theme_masld() +
   theme(legend.position = "bottom", legend.key.size = unit(0.25, "cm"),
-        legend.text = element_text(size = 5.5)) +
+        legend.text = element_text(size = 6)) +
   guides(fill = guide_legend(nrow = 2))
 
 # ============================================================================
@@ -100,25 +98,25 @@ plof_top[, label := sprintf(
   ifelse(is.na(dominant_stage_S1),"NA",substr(dominant_stage_S1,1,14)))]
 plof_top[, y := seq(.N, 1)]
 
+message(sprintf("[caption] Protective-LOF candidates (top %d of %d). Genetic + expression-down signature (inhibitor-target pattern).",
+                nrow(plof_top), nrow(plof)))
+
 pc <- ggplot(plof_top, aes(x = 0, y = y)) +
-  geom_text(aes(label = label), hjust = 0, size = 1.9,
+  geom_text(aes(label = label), hjust = 0, size = GEOM_TEXT_6PT,
             family = "mono", color = "gray15") +
   scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, nrow(plof_top) + 1), expand = c(0, 0)) +
-  labs(title = sprintf("Protective-LOF candidates (top %d of %d)",
-                        nrow(plof_top), nrow(plof)),
-       subtitle = "Genetic + expression-down signature (inhibitor-target pattern)",
-       x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
   theme(axis.text = element_blank(),
         axis.ticks = element_blank(),
-        panel.grid = element_blank(),
-        plot.subtitle = element_text(size = 5.5, color = "gray35"))
+        panel.grid = element_blank())
 
 # ============================================================================
 # Panel (d) — Held-out panel recovery curves
 # ============================================================================
 if (!is.null(bench) && nrow(bench) > 0) {
+  message("[caption] Held-out panel recovery. AUROC for distinguishing panel members vs rest (higher = better).")
   bench_dt <- melt(bench,
     id.vars = "panel",
     measure.vars = c("auroc_46d","auroc_46b"),
@@ -137,14 +135,11 @@ if (!is.null(bench) && nrow(bench) > 0) {
                                   "46b (archetype)"     = "#42A5F5"),
                       name = NULL) +
     scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
-    labs(x = NULL, y = "AUROC",
-         title = "Held-out panel recovery",
-         subtitle = "AUROC for distinguishing panel members vs rest (higher = better)") +
+    labs(x = NULL, y = "AUROC") +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
           legend.position = "bottom",
-          legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 6, color = "gray35"))
+          legend.key.size = unit(0.25, "cm"))
 } else {
   pd <- placeholder("Panel benchmark CSV missing — curate data/published_gene_panels/")
 }
@@ -155,7 +150,7 @@ if (!is.null(bench) && nrow(bench) > 0) {
 composite <- (pa | pb) / (pc | pd) +
   plot_layout(heights = c(1, 1.3)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig(composite, file.path(FIGDIR, "figS_convergence_evidence.pdf"),
          width = fig_full_width, height = 9)

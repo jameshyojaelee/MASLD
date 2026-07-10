@@ -149,12 +149,12 @@ body_col <- colorRamp2(c(qs[1], qs[2], qs[3]), c("#3B4CC0", "#F7F7F7", "#B40426"
 ha <- HeatmapAnnotation(
   `Disease status` = disease_status, Cohort = cohort, Sex = sex,
   col = list(`Disease status` = disease_cols, Cohort = cohort_cols, Sex = sex_cols),
-  annotation_name_gp = gpar(fontsize = 8), annotation_name_side = "left",
+  annotation_name_gp = gpar(fontsize = 6), annotation_name_side = "left",
   simple_anno_size = unit(3.0, "mm"), gap = unit(0.7, "mm"),
   annotation_legend_param = list(
-    `Disease status` = list(title_gp=gpar(fontsize=8,fontface="bold"), labels_gp=gpar(fontsize=7)),
-    Cohort = list(title_gp=gpar(fontsize=8,fontface="bold"), labels_gp=gpar(fontsize=7), ncol=1),
-    Sex = list(title_gp=gpar(fontsize=8,fontface="bold"), labels_gp=gpar(fontsize=7))))
+    `Disease status` = list(title_gp=gpar(fontsize=6,fontface="plain"), labels_gp=gpar(fontsize=6)),
+    Cohort = list(title_gp=gpar(fontsize=6,fontface="plain"), labels_gp=gpar(fontsize=6), ncol=1),
+    Sex = list(title_gp=gpar(fontsize=6,fontface="plain"), labels_gp=gpar(fontsize=6))))
 
 ht <- Heatmap(
   S, name = "Spearman ρ", col = body_col,
@@ -163,17 +163,16 @@ ht <- Heatmap(
   show_row_dend = FALSE, show_column_dend = TRUE,
   column_dend_height = unit(14, "mm"), top_annotation = ha,
   use_raster = TRUE, raster_quality = 4,
-  column_title = sprintf(
-    "Spearman clustering of %d human RNA-seq samples on the consensus disease signature\n(%d DEGs; batch + sex removed, disease-conditioned; %d cohorts)",
-    ncol(S), length(sig), nlevels(cohort)),
-  column_title_gp = gpar(fontsize = 9, fontface = "bold"),
-  heatmap_legend_param = list(title_gp=gpar(fontsize=8,fontface="bold"),
-    labels_gp=gpar(fontsize=7), legend_height=unit(28,"mm")))
+  heatmap_legend_param = list(title_gp=gpar(fontsize=6,fontface="plain"),
+    labels_gp=gpar(fontsize=6), legend_height=unit(28,"mm")))
+message(sprintf(
+  "[caption] Spearman clustering of %d human RNA-seq samples on the consensus disease signature (%d DEGs; batch + sex removed, disease-conditioned; %d cohorts)",
+  ncol(S), length(sig), nlevels(cohort)))
 
 pdf_path <- file.path(OUT_DIR, sprintf("sample_spearman_heatmap%s.pdf", OUT_SUFFIX))
-ok <- tryCatch({ cairo_pdf(pdf_path, width = 9.4, height = 7.8); TRUE },
+ok <- tryCatch({ cairo_pdf(pdf_path, width = 7.09, height = 5.88); TRUE },
                error = function(e) FALSE)
-if (!ok) pdf(pdf_path, width = 9.4, height = 7.8, useDingbats = FALSE)
+if (!ok) pdf(pdf_path, width = 7.09, height = 5.88, useDingbats = FALSE)
 draw(ht, merge_legend = TRUE, heatmap_legend_side = "right", annotation_legend_side = "right")
 dev.off()
 cat("[write]", pdf_path, "\n")

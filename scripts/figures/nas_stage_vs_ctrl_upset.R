@@ -131,7 +131,7 @@ p_dots <- ggplot(dot_dt, aes(x = ix_label, y = stage)) +
   theme(panel.grid    = element_blank(),
         axis.text.x  = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.text.y  = element_text(face = "bold", size = 6.5),
+        axis.text.y  = element_text(face = "plain", size = 6.5),
         plot.margin  = margin(0, 4, 4, 4))
 
 # ---------------------------------------------------------------------------

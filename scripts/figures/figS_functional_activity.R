@@ -66,16 +66,15 @@ pa <- ggplot(top_tfs, aes(x = score, y = tf, fill = direction)) +
   geom_col(width = 0.7) +
   geom_text(aes(label = sig_label,
                 x = score + sign(score) * 0.3),
-            size = 2, hjust = ifelse(top_tfs$score > 0, 0, 1)) +
+            size = GEOM_TEXT_6PT, hjust = ifelse(top_tfs$score > 0, 0, 1)) +
   scale_fill_manual(values = c("activated" = masld_colors$up,
                                 "repressed" = masld_colors$down),
                      name = "Direction") +
   geom_vline(xintercept = 0, linewidth = 0.3) +
-  labs(x = "TF activity score (ULM)", y = NULL,
-       title = "Disease-dysregulated TFs (decoupleR)") +
+  labs(x = "TF activity score (ULM)", y = NULL) +
   theme_masld() +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 7))
+  theme(legend.position = "bottom")
+message("[caption] Panel a: Disease-dysregulated TFs (decoupleR)")
 
 # ==========================================================================
 # Panel (b): Pathway activity — all 14 PROGENy pathways
@@ -96,15 +95,14 @@ pb <- ggplot(pw_scores, aes(x = score, y = pathway)) +
                      labels = c("Activated (sig)", "Repressed (sig)", "Not significant"),
                      name = NULL) +
   geom_vline(xintercept = 0, linewidth = 0.3) +
-  labs(x = "Pathway activity score (ULM)", y = NULL,
-       title = "Signaling pathway activities (PROGENy)") +
+  labs(x = "Pathway activity score (ULM)", y = NULL) +
   theme_masld() +
   theme(legend.position = "bottom",
-        legend.key.size = unit(0.25, "cm"),
-        plot.title = element_text(size = 7)) +
+        legend.key.size = unit(0.25, "cm")) +
   annotate("text", x = max(pw_scores$score) * 0.7, y = 3,
            label = paste0(pw_scores[padj < 0.05, .N], "/14 sig\n(padj < 0.05)"),
-           size = 2, color = "gray40")
+           size = GEOM_TEXT_6PT, color = "black")
+message("[caption] Panel b: Signaling pathway activities (PROGENy)")
 
 # ==========================================================================
 # Panel (c): decoupleR vs SCENIC+ concordance
@@ -121,23 +119,22 @@ pc <- ggplot(scenic_comp, aes(x = scenic_activity_diff, y = decoupler_score)) +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "gray80") +
   geom_point(aes(color = sign(decoupler_score) == sign(scenic_activity_diff)),
              size = 2, shape = 16) +
-  ggrepel::geom_text_repel(aes(label = tf), size = 2, max.overlaps = 15) +
+  ggrepel::geom_text_repel(aes(label = tf), size = GEOM_TEXT_6PT, max.overlaps = 15) +
   scale_color_manual(values = c("TRUE" = masld_colors$conserved,
                                  "FALSE" = masld_colors$up),
                       labels = c("Discordant", "Concordant"),
                       name = "Direction") +
   labs(x = "SCENIC+ regulon activity difference",
-       y = "decoupleR TF activity (ULM)",
-       title = "Bulk-inferred vs chromatin-level TF activity") +
+       y = "decoupleR TF activity (ULM)") +
   annotate("text", x = min(scenic_comp$scenic_activity_diff) * 0.8,
            y = max(scenic_comp$decoupler_score) * 0.9,
            label = paste0("rho = ", round(rho_val, 2), "\n",
                           n_conc, "/", nrow(scenic_comp), " concordant\n",
                           "binomial p = ", signif(binom_p, 2)),
-           size = 2, hjust = 0) +
+           size = GEOM_TEXT_6PT, hjust = 0) +
   theme_masld() +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 7))
+  theme(legend.position = "bottom")
+message("[caption] Panel c: Bulk-inferred vs chromatin-level TF activity")
 
 # ==========================================================================
 # Panel (d): Statistically significant bridging TFs
@@ -158,14 +155,13 @@ pd <- ggplot(bridge_top, aes(x = gwas_enrichment, y = tf)) +
                      name = "GWAS enrichment") +
   geom_text(aes(label = paste0(n_gwas_targets, "/", round(expected_gwas)),
                 x = gwas_enrichment + 0.15),
-            size = 1.8, hjust = 0, color = "black") +
+            size = GEOM_TEXT_6PT, hjust = 0, color = "black") +
   labs(x = "GWAS target fold enrichment (obs/exp annotated)",
-       y = NULL,
-       title = "TFs bridging GWAS-causal to DE genes") +
+       y = NULL) +
   theme_masld() +
-  theme(legend.position = "bottom",
-        plot.title = element_text(size = 7)) +
+  theme(legend.position = "bottom") +
   coord_cartesian(xlim = c(0, max(bridge_top$gwas_enrichment) * 1.3))
+message("[caption] Panel d: TFs bridging GWAS-causal to DE genes")
 
 # ==========================================================================
 # Panel (e): Top mechanistic paths (dot plot)
@@ -188,12 +184,11 @@ pe <- ggplot(path_top, aes(x = n_de_targets, y = short_desc)) +
                       labels = c("Repressed TF", "Activated TF"),
                       name = "TF direction") +
   scale_size_continuous(range = c(1.5, 5), name = "|TF activity|") +
-  labs(x = "DE targets downstream of TF", y = NULL,
-       title = expression("GWAS" %->% "TF" %->% "DE mechanistic paths")) +
+  labs(x = "DE targets downstream of TF", y = NULL) +
   theme_masld() +
   theme(legend.position = "bottom",
-        axis.text.y = element_text(size = 5),
-        plot.title = element_text(size = 7))
+        axis.text.y = element_text(size = 6))
+message("[caption] Panel e: GWAS -> TF -> DE mechanistic paths")
 
 # ==========================================================================
 # Panel (f): Drug target TF regulatory context
@@ -216,20 +211,19 @@ if (nrow(drug_conv) > 0) {
     geom_segment(aes(xend = 0, yend = tf), linewidth = 0.3, color = "gray80") +
     geom_point(aes(size = n_deg_targets, color = direction), alpha = 0.8, shape = 16) +
     geom_text(aes(label = n_gwas_targets, x = n_druggable_targets + 0.5),
-              size = 2, hjust = 0) +
+              size = GEOM_TEXT_6PT, hjust = 0) +
     scale_color_manual(values = c("activated" = masld_colors$up,
                                    "repressed" = masld_colors$down),
                         name = "TF direction") +
     scale_size_continuous(range = c(2, 6), name = "DE targets") +
     labs(x = "Druggable targets in regulon",
-         y = NULL,
-         title = "High-convergence TFs: druggable + GWAS context") +
+         y = NULL) +
     theme_masld() +
-    theme(legend.position = "bottom",
-          plot.title = element_text(size = 7)) +
+    theme(legend.position = "bottom") +
     annotate("text", x = max(drug_conv$n_druggable_targets) * 0.5,
              y = 1.5, label = "numbers = GWAS targets",
-             size = 1.6, color = "gray50", fontface = "italic")
+             size = GEOM_TEXT_6PT, color = "black", fontface = "plain")
+  message("[caption] Panel f: High-convergence TFs: druggable + GWAS context")
 } else {
   pf <- placeholder("No high-convergence TFs")
 }
@@ -243,7 +237,7 @@ fig <- (pa | pb) /
        (pc | pd) /
        (pe | pf) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(fig, OUT, width = fig_full_width, height = 9)
 cat("Saved:", OUT, "\n")

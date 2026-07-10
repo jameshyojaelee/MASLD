@@ -66,7 +66,7 @@ p <- ggplot(d, aes(x = bulk_logFC, y = weight, color = pp4, size = neg_log10p)) 
   geom_text_repel(
     data = d[symbol == "HKDC1"],
     aes(label = "HKDC1"),
-    fontface      = "bold",
+    fontface      = "plain",
     size          = 3.5,
     color         = masld_colors$up,
     nudge_x       = 0.08,
@@ -92,7 +92,7 @@ p <- ggplot(d, aes(x = bulk_logFC, y = weight, color = pp4, size = neg_log10p)) 
         legend.key.size  = unit(0.4, "cm"),
         legend.title     = element_text(size = 9),
         legend.text      = element_text(size = 8),
-        plot.title       = element_text(size = 12, face = "bold"),
+        plot.title       = element_text(size = 12, face = "plain"),
         plot.subtitle    = element_text(size = 8.5, color = "gray40"))
 
 ggsave(OUT_PDF, p, width = 6.5, height = 5.5, device = cairo_pdf)

@@ -170,7 +170,7 @@ if (length(coloc_parts_a) > 0) {
       geom_label_repel(
         data = label_dt_a,
         aes(label = symbol),
-        size = 1.7, max.overlaps = 15,
+        size = GEOM_TEXT_6PT, max.overlaps = 15,
         label.padding = 0.1, segment.size = 0.15,
         min.segment.length = 0, fontface = "italic",
         color = "black", show.legend = FALSE
@@ -182,16 +182,14 @@ if (length(coloc_parts_a) > 0) {
                          expand = expansion(mult = 0.01)) +
       scale_y_continuous(limits = c(0.3, 1.02), expand = c(0, 0)) +
       labs(x = "Chromosome",
-           y = "PP.H4 (colocalization probability)",
-           title = "Broadaway eQTL \u00d7 UKBB GWAS colocalization",
-           subtitle = paste0(n_total_genes, " genes PP.H4 > 0.5; ",
-                             n_high_genes, " PP.H4 > 0.8; ",
-                             n_replicated_3, " in 3+ GWAS")) +
+           y = "PP.H4 (colocalization probability)") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.2, "cm"),
-            legend.margin = margin(0, 0, 0, 0),
-            plot.subtitle = element_text(size = 5, color = "gray40"))
+            legend.margin = margin(0, 0, 0, 0))
+    message("[caption] Broadaway eQTL x UKBB GWAS colocalization: ",
+            n_total_genes, " genes PP.H4 > 0.5; ",
+            n_high_genes, " PP.H4 > 0.8; ", n_replicated_3, " in 3+ GWAS")
   }
 }
 
@@ -234,7 +232,7 @@ if (length(coloc_parts_a) > 0) {
                "EFHD1", "PNPLA3", "TM6SF2", "THRB", "PPARG", "MBOAT7",
                "DGAT2", "SLC39A8", "SORT1", "CELSR2", "CDK6", "MARC1",
                "GCKR", "SAMM50", "CHEK2")
-  y_faces_b <- ifelse(gene_order_b %in% known_b, "bold.italic", "italic")
+  y_faces_b <- ifelse(gene_order_b %in% known_b, "italic", "italic")
   names(y_faces_b) <- gene_order_b
 
   # N genes replicated across GWAS
@@ -249,32 +247,30 @@ if (length(coloc_parts_a) > 0) {
     geom_tile(aes(fill = PP.H4), color = "white", linewidth = 0.3) +
     scale_fill_gradient(low = "white", high = "#9C27B0",
                         limits = c(0, 1), name = "PP.H4") +
-    labs(x = NULL, y = NULL,
-         title = paste0("COLOC across GWAS (",
-                        n_replicated, " genes in 2+ GWAS)")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-          axis.text.y = element_text(size = 5, face = y_faces_b),
-          plot.title = element_text(size = 7))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6, face = y_faces_b))
+  message("[caption] COLOC across GWAS: ", n_replicated, " genes in 2+ GWAS")
 
   # Side annotation strip: # GWAS with PP.H4 > 0.5
   p_b_strip <- ggplot(n_gwas_side_b, aes(x = "#GWAS", y = symbol,
                                            fill = n_gwas_coloc)) +
     geom_tile(color = "white", linewidth = 0.3) +
-    geom_text(aes(label = n_gwas_coloc), size = 1.8, color = "white",
-              fontface = "bold") +
+    geom_text(aes(label = n_gwas_coloc), size = GEOM_TEXT_6PT, color = "white",
+              fontface = "plain") +
     scale_fill_gradient(low = "#CE93D8", high = "#4A148C",
                         limits = c(1, 4), name = "#GWAS\nsig") +
     labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 4.5, angle = 45, hjust = 1),
+    theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
           axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank(),
           plot.margin = margin(2, 2, 2, 1),
           legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5),
-          legend.title = element_text(size = 5))
+          legend.text = element_text(size = 6),
+          legend.title = element_text(size = 6))
 
   p_b <- wrap_elements(full =
     p_b_main + p_b_strip +
@@ -338,7 +334,7 @@ if (nrow(ct_coloc) > 0) {
   known_masld_c <- c("HSD17B13", "PNPLA3", "TM6SF2", "MBOAT7", "GCKR",
                      "CIDEC", "PPARG", "COL1A1", "THRB", "EFHD1",
                      "FABP1", "RORA", "HKDC1", "SPTLC3")
-  y_faces_c <- ifelse(gene_order_c %in% known_masld_c, "bold.italic", "italic")
+  y_faces_c <- ifelse(gene_order_c %in% known_masld_c, "italic", "italic")
   names(y_faces_c) <- gene_order_c
 
   p_c <- ggplot(dot_grid_c[PP.H4 > 0], aes(x = cell_type_clean, y = gene)) +
@@ -347,15 +343,15 @@ if (nrow(ct_coloc) > 0) {
                           breaks = c(0.3, 0.5, 0.8, 1.0),
                           name = "PP.H4") +
     scale_color_manual(values = celltype_colors, name = "Cell type") +
-    labs(x = NULL, y = NULL,
-         title = paste0("sc-eQTL COLOC (MASLD eQTL x Ghodsian/UKBB, ",
-                        length(top_c_genes), " genes)")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-          axis.text.y = element_text(size = 5, face = y_faces_c),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6, face = y_faces_c),
           legend.position = "right",
           legend.key.size = unit(0.25, "cm"),
           plot.margin = margin(2, 2, 2, 2))
+  message("[caption] sc-eQTL COLOC (MASLD eQTL x Ghodsian/UKBB, ",
+          length(top_c_genes), " genes)")
 }
 
 # ==========================================================================
@@ -367,7 +363,8 @@ if (nrow(ct_coloc) > 0) {
 me <- load_multi_evidence()
 
 if (!is.null(me) && nrow(me) > 0) {
-  dream_degs <- me[bulk_padj < 0.1 & abs(bulk_logFC) > 0.5, human_symbol]
+  # Canonical DEG gate (2026-06-29): TREAT FDR < 0.05 at lfc=0.25 (is_dream_deg).
+  dream_degs <- me[is_dream_deg(me), human_symbol]
 
   # --- COLOC (Broadaway): union across 4 GWAS ---
   coloc_cols <- c("ukbb_alt_coloc_pp4", "ast_coloc_pp4",
@@ -487,24 +484,22 @@ if (!is.null(me) && nrow(me) > 0) {
     geom_text(data = method_stats,
               aes(x = n_sig + max(method_stats$n_sig) * 0.04,
                   y = method_f, label = paste0(n_sig, " / ", n_tested)),
-              inherit.aes = FALSE, size = 1.7, hjust = 0, color = "gray30") +
+              inherit.aes = FALSE, size = GEOM_TEXT_6PT, hjust = 0, color = "black") +
     scale_fill_manual(
       values = c("Sig & DEG overlap" = masld_colors$up,
                  "Sig (not DEG)"     = masld_colors$twas),
       name = NULL
     ) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.3))) +
-    labs(x = "Number of genes", y = NULL,
-         title = "Causal method coverage (S3)",
-         subtitle = paste0("Significant / tested; S3 total: ",
-                           s3_pct, "% of atlas genes")) +
+    labs(x = "Number of genes", y = NULL) +
     theme_masld() +
     theme(legend.position = "inside",
           legend.position.inside = c(0.75, 0.15),
           legend.background = element_blank(),
           legend.key = element_blank(),
-          legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 5))
+          legend.key.size = unit(0.25, "cm"))
+  message("[caption] Causal method coverage (S3): significant / tested; S3 total: ",
+          s3_pct, "% of atlas genes")
 
   # Clean up temporary columns
   me[, c("coloc_any_pp4", "has_s3") := NULL]
@@ -596,10 +591,10 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
       # Quadrant annotations
       geom_text(data = quad_labels_simple,
                 aes(x = x, y = y, label = label, hjust = hjust, vjust = vjust),
-                inherit.aes = FALSE, size = 1.5, color = "gray50",
-                fontface = "italic", lineheight = 0.85) +
+                inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "black",
+                fontface = "plain", lineheight = 0.85) +
       geom_text_repel(data = label_dt_e,
-                      aes(label = gene), size = 1.7,
+                      aes(label = gene), size = GEOM_TEXT_6PT,
                       max.overlaps = 20, segment.size = 0.2,
                       min.segment.length = 0, box.padding = 0.3,
                       color = "black") +
@@ -609,11 +604,10 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
                               "; r = ", round(r_ie, 3),
                               "\nn = ", comma(n_ie),
                               "\n", pct_conc, "% concordant"),
-               hjust = 1.1, vjust = -0.3, size = 2, fontface = "italic",
+               hjust = 1.1, vjust = -0.3, size = GEOM_TEXT_6PT, fontface = "plain",
                lineheight = 0.85) +
       labs(x = "Integrated logFC (disease vs control)",
-           y = "ieQTL interaction beta",
-           title = "ieQTL x DEG directional concordance") +
+           y = "ieQTL interaction beta") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.2, "cm"),
@@ -767,27 +761,25 @@ if (length(ancestry_sources) > 0) {
   p_f <- ggplot(anc_dt, aes(x = n_coloc, y = trait, fill = ancestry)) +
     geom_bar(stat = "identity", width = 0.6) +
     geom_text(aes(label = n_coloc),
-              hjust = -0.15, size = 1.3, color = "gray30", show.legend = FALSE) +
+              hjust = -0.15, size = GEOM_TEXT_6PT, color = "black", show.legend = FALSE) +
     facet_grid(source ~ ., scales = "free_y", space = "free_y", switch = "y") +
     scale_fill_manual(values = ancestry_fill, name = NULL,
                       guide = guide_legend(nrow = 2)) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
     labs(x = "Genes (PP.H4 > 0.5)",
-         y = NULL,
-         title = "Multi-ancestry COLOC (Broadaway eQTLs)") +
+         y = NULL) +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.15, "cm"),
-          legend.text = element_text(size = 4.5),
+          legend.text = element_text(size = 6),
           legend.margin = margin(0, 0, 0, 0),
           legend.spacing.x = unit(0.1, "cm"),
-          plot.title = element_text(size = 7),
           plot.margin = margin(2, 2, 2, 2),
-          axis.text.y = element_text(size = 5),
-          axis.text.x = element_text(size = 5),
+          axis.text.y = element_text(size = 6),
+          axis.text.x = element_text(size = 6),
           axis.title.x = element_text(size = 6),
           strip.placement = "outside",
-          strip.text.y.left = element_text(size = 5, angle = 0, hjust = 1),
+          strip.text.y.left = element_text(size = 6, angle = 0, hjust = 1),
           strip.background = element_blank(),
           panel.spacing.y = unit(0.1, "cm"))
 }
@@ -840,20 +832,19 @@ if (!is.null(twas_combined) && nrow(twas_combined) > 0) {
       geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50",
                    linewidth = 0.3) +
       geom_text_repel(data = label_genes,
-                       aes(label = symbol), size = 1.8, max.overlaps = 20,
+                       aes(label = symbol), size = GEOM_TEXT_6PT, max.overlaps = 20,
                        segment.size = 0.2, min.segment.length = 0.3,
-                       color = "gray20", fontface = "italic") +
+                       color = "black", fontface = "italic") +
       scale_color_manual(values = sig_colors, name = NULL) +
       labs(x = "TWAS z-score (Ghodsian NAFLD)",
-           y = "TWAS z-score (Chen NAFLD)",
-           title = paste0("TWAS cross-GWAS concordance (rho=",
-                           round(rho, 2), ", n=", n_both_sig, " both sig)")) +
+           y = "TWAS z-score (Chen NAFLD)") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.15, "cm"),
-            legend.text = element_text(size = 5),
-            plot.title = element_text(size = 7),
+            legend.text = element_text(size = 6),
             axis.title = element_text(size = 6))
+    message("[caption] TWAS cross-GWAS concordance (rho=",
+            round(rho, 2), ", n=", n_both_sig, " both sig)")
 
     cat("Panel g: TWAS Ghodsian vs Chen scatter — done\n")
   }
@@ -919,7 +910,7 @@ if (file.exists(sceqtl_twas_f)) {
     known_sc <- c("HSD17B13", "PNPLA3", "TM6SF2", "MBOAT7", "GCKR",
                    "CIDEC", "PPARG", "COL1A1", "THRB", "EFHD1",
                    "FABP1", "RORA", "HKDC1", "SPTLC3")
-    y_faces_i <- ifelse(gene_order_i %in% known_sc, "bold.italic", "italic")
+    y_faces_i <- ifelse(gene_order_i %in% known_sc, "italic", "italic")
     names(y_faces_i) <- gene_order_i
 
     p_i <- ggplot(dot_grid_i[best_fdr < 1], aes(x = cell_type_clean, y = symbol)) +
@@ -928,16 +919,15 @@ if (file.exists(sceqtl_twas_f)) {
                              breaks = c(1, 2, 5, 10),
                              name = expression(-log[10](FDR))) +
       scale_color_manual(values = celltype_colors, name = "Cell type") +
-      labs(x = NULL, y = NULL,
-           title = paste0("sc-TWAS by cell type (",
-                           length(top_sc_genes), " genes, MASLD eQTLs)")) +
+      labs(x = NULL, y = NULL) +
       theme_masld() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-            axis.text.y = element_text(size = 5, face = y_faces_i),
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+            axis.text.y = element_text(size = 6, face = y_faces_i),
             legend.position = "right",
             legend.key.size = unit(0.25, "cm"),
-            plot.title = element_text(size = 7),
             plot.margin = margin(2, 2, 2, 2))
+    message("[caption] sc-TWAS by cell type (",
+            length(top_sc_genes), " genes, MASLD eQTLs)")
 
     cat("Panel i: sc-TWAS cell-type dot plot — done\n")
   }
@@ -960,14 +950,17 @@ panel_dir <- file.path(FIG3_DIR, "panels")
 save_fig(p_a, file.path(panel_dir, "coloc_manhattan.pdf"), height = 3.5)
 # RETIRED 2026-06-12 (not a Fig 2 panel): coloc_gene_gwas_heatmap.pdf
 # save_fig(p_b, file.path(panel_dir, "coloc_gene_gwas_heatmap.pdf"), height = 3.5)
-save_fig(p_c, file.path(panel_dir, "sceqtl_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover): sceqtl_celltype_dotplot.pdf
+# save_fig(p_c, file.path(panel_dir, "sceqtl_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
 # RETIRED 2026-06-12 (not a Fig 2 panel): causal_coverage.pdf
 # save_fig(p_d, file.path(panel_dir, "causal_coverage.pdf"), height = 3.5)
 # RETIRED 2026-06-12 (no longer a Fig 2 panel): ieqtl_concordance.pdf
 # save_fig(p_e, file.path(panel_dir, "ieqtl_concordance.pdf"), height = 3.5)
-save_fig(p_f, file.path(panel_dir, "multiancestry_coloc.pdf"), width = fig_half_width, height = 2.8)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover): multiancestry_coloc.pdf
+# save_fig(p_f, file.path(panel_dir, "multiancestry_coloc.pdf"), width = fig_half_width, height = 2.8)
 # RETIRED 2026-06-12 (not a Fig 2 panel): twas_concordance.pdf
 # save_fig(p_g, file.path(panel_dir, "twas_concordance.pdf"), height = 3.5)
-save_fig(p_i, file.path(panel_dir, "sctwas_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover): sctwas_celltype_dotplot.pdf
+# save_fig(p_i, file.path(panel_dir, "sctwas_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
 
 message("COLOC/regulatory panels saved to ", panel_dir)

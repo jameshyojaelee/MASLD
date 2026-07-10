@@ -140,32 +140,32 @@ if (file.exists(comp_file)) {
         ) +
         # Gene labels
         geom_text_repel(data = label_dt, aes(label = symbol),
-                        size = 1.8, max.overlaps = 15, segment.size = 0.15,
+                        size = GEOM_TEXT_6PT, max.overlaps = 15, segment.size = 0.15,
                         min.segment.length = 0, fontface = "italic",
                         color = "black") +
         # Annotation: rho and cross-validated count
         annotate("text", x = 0.02, y = 0.95,
                  label = paste0("Spearman \u03c1 = ", sprintf("%.3f", rho),
                                 "\n", n_cross, " cross-validated"),
-                 size = 2.2, hjust = 0, fontface = "bold", color = "gray30") +
+                 size = GEOM_TEXT_6PT, hjust = 0, fontface = "plain", color = "black") +
         # Threshold annotations
         annotate("text", x = broadaway_thresh + 0.02, y = 0.02,
-                 label = "PP.H4 = 0.5", size = 1.8, hjust = 0,
-                 color = "gray50", fontface = "italic") +
+                 label = "PP.H4 = 0.5", size = GEOM_TEXT_6PT, hjust = 0,
+                 color = "black", fontface = "plain") +
         annotate("text", x = 0.02, y = gtex_thresh + 0.02,
-                 label = "PP.H4 = 0.3", size = 1.8, hjust = 0,
-                 color = "gray50", fontface = "italic") +
+                 label = "PP.H4 = 0.3", size = GEOM_TEXT_6PT, hjust = 0,
+                 color = "black", fontface = "plain") +
         scale_color_manual(values = cat_colors, name = NULL, drop = FALSE) +
         coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
         labs(x = "Broadaway eQTL PP.H4 (N = 1,183)",
-             y = "GTEx eQTL PP.H4 (N = 208)",
-             title = "Cross-eQTL COLOC validation (UKBB ALT)") +
+             y = "GTEx eQTL PP.H4 (N = 208)") +
         theme_masld() +
         theme(legend.position = "bottom",
               legend.key.size = unit(0.25, "cm"))
 
       message("  Panel (a) built: ", nrow(comp), " genes, ",
               n_cross, " cross-validated, rho = ", sprintf("%.3f", rho))
+      message("[caption] Cross-eQTL COLOC validation (UKBB ALT)")
     } else {
       message("  Missing required columns (broadaway_pp4, gtex_pp4)")
     }
@@ -252,14 +252,13 @@ if (file.exists(comp_file)) {
       p_b <- ggplot(combo_counts, aes(x = N, y = combo,
                                        fill = factor(n_src))) +
         geom_bar(stat = "identity", width = 0.7) +
-        geom_text(aes(label = N), hjust = -0.15, size = 2, color = "gray30") +
+        geom_text(aes(label = N), hjust = -0.15, size = GEOM_TEXT_6PT, color = "black") +
         scale_fill_manual(values = src_fill_colors, name = "# eQTL\nsources") +
         scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
         labs(x = "Number of genes (PP.H4 > 0.5)",
-             y = "eQTL source combination",
-             title = "COLOC gene overlap across eQTL datasets") +
+             y = "eQTL source combination") +
         theme_masld() +
-        theme(axis.text.y = element_text(size = 5),
+        theme(axis.text.y = element_text(size = 6),
               legend.position = "inside",
               legend.position.inside = c(0.82, 0.82),
               legend.key.size = unit(0.25, "cm"))
@@ -269,6 +268,7 @@ if (file.exists(comp_file)) {
       n_multi <- sum(member_mat$n_sources >= 2)
       message("  Panel (b) built: ", n_any, " total genes, ",
               n_multi, " validated in 2+ sources")
+      message("[caption] COLOC gene overlap across eQTL datasets")
     } else if (n_sources == 1) {
       message("  Only 1 eQTL source available — cannot build overlap panel")
       p_b <- placeholder("(b) eQTL overlap — only 1 source available")
@@ -291,7 +291,7 @@ message("Assembling composite figure...")
 fig <- p_a | p_b
 fig <- fig +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 # Save composite
 OUT <- file.path(FIGS04_DIR, "figS_cross_eqtl.pdf")

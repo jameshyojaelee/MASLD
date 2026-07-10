@@ -41,12 +41,11 @@ pA <- ggplot(bar, aes(set, N, fill = axis_conservation)) +
                     name = NULL) +
   scale_y_continuous(labels = scales::percent_format(),
                      expand = c(0, 0)) +
-  labs(x = NULL, y = "Proportion",
-       title = "Axis conservation (LIANA LR pairs vs cross-species atlas)") +
+  labs(x = NULL, y = "Proportion") +
   theme_masld() +
   theme(legend.key.size = unit(3, "mm"),
         legend.text = element_text(size = 6),
-        axis.text.x = element_text(size = 7))
+        axis.text.x = element_text(size = 6))
 
 # Panel B — top 20 fully-conserved MASLD-enriched
 topB <- pri[1:min(20, nrow(pri))]
@@ -56,12 +55,11 @@ topB[, pair_label := factor(pair_label, levels = rev(unique(pair_label)))]
 pB <- ggplot(topB, aes(score_diff, pair_label)) +
   geom_col(fill = "#27AE60", width = 0.7, color = "white") +
   geom_text(aes(label = sprintf("%.3f", score_diff)),
-            hjust = -0.1, size = 2) +
+            hjust = -0.1, size = GEOM_TEXT_6PT) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
-  labs(x = "LIANA score_diff", y = NULL,
-       title = sprintf("Top 20 fully-conserved MASLD-enriched CCC axes (of %d)", nrow(pri))) +
+  labs(x = "LIANA score_diff", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 5.5))
+  theme(axis.text.y = element_text(size = 6))
 
 # Panel C — divergent (top by |score_diff|)
 topC <- div[1:min(15, nrow(div))]
@@ -72,10 +70,9 @@ pC <- ggplot(topC, aes(score_diff, pair_label)) +
   geom_col(fill = "#E74C3C", width = 0.7, color = "white") +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "grey50") +
   scale_x_continuous(expand = expansion(mult = 0.2)) +
-  labs(x = "LIANA score_diff", y = NULL,
-       title = "Species-divergent CCC axes (mouse model caution)") +
+  labs(x = "LIANA score_diff", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 5.5))
+  theme(axis.text.y = element_text(size = 6))
 
 # Panel D — cell-type pair distribution
 ct_pri <- pri[, .N, by = .(source, target)][order(-N)][1:14]
@@ -83,17 +80,17 @@ ct_pri[, pair := paste0(source, " -> ", target)]
 ct_pri[, pair := factor(pair, levels = rev(pair))]
 pD <- ggplot(ct_pri, aes(N, pair)) +
   geom_col(fill = "#27AE60", width = 0.65, color = "white") +
-  geom_text(aes(label = N), hjust = -0.2, size = 2.4) +
+  geom_text(aes(label = N), hjust = -0.2, size = GEOM_TEXT_6PT) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "Fully-conserved MASLD-enriched LR pairs", y = NULL,
-       title = "Cell-type pairs with most conserved CCC") +
+  labs(x = "Fully-conserved MASLD-enriched LR pairs", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 6.5))
+  theme(axis.text.y = element_text(size = 6))
 
 fig <- (pA | pD) / (pB | pC) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_L3_crossspecies_ccc.pdf")
-ggsave(out_path, fig, width = 14, height = 12)
+ggsave(out_path, fig, width = fig_full_width, height = fig_full_width * (12 / 14))
+message("[caption] A: Axis conservation (LIANA LR pairs vs cross-species atlas). B: Top 20 fully-conserved MASLD-enriched CCC axes (of ", nrow(pri), "). C: Species-divergent CCC axes (mouse model caution). D: Cell-type pairs with most conserved CCC.")
 message("Saved: ", out_path)

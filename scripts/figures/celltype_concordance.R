@@ -28,8 +28,8 @@ dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Bulk dream DEGs
 dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
-# DEG threshold: C2 Tier-1 (padj < 0.05 & |logFC| > 0.5)
-dream[, is_deg := !is.na(padj) & padj < 0.05 & !is.na(logFC) & abs(logFC) > 0.5]
+# DEG threshold: C2 Tier-1 (lfsr < 0.05 & |shrunk_logFC| > 0.3)
+dream[, is_deg := is_dream_deg(dream)]
 
 # scRNA pseudobulk DE files
 sc_dir <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
@@ -140,11 +140,10 @@ pA_rho <- ggplot(ct_metrics, aes(x = rho, y = ct_display)) +
                color = "grey70", linewidth = 0.3) +
   geom_point(aes(color = ct_display), size = 1.8) +
   geom_text(aes(label = sprintf("%.3f", rho)),
-            hjust = -0.3, size = PUB_GEOM_TEXT, color = "grey30") +
+            hjust = -0.3, size = PUB_GEOM_TEXT, color = "black") +
   scale_color_manual(values = ct_palette, guide = "none") +
   scale_x_continuous(limits = c(0, 0.45), breaks = seq(0, 0.4, 0.1)) +
-  labs(x = "Spearman ρ (LFC vs bulk)", y = NULL,
-       title = "Bulk-scRNA concordance") +
+  labs(x = "Spearman ρ (LFC vs bulk)", y = NULL) +
   theme_masld(base_size = 7) + theme_pub()
 
 pA_conc <- ggplot(ct_metrics, aes(x = concordance_pct, y = ct_display)) +
@@ -152,7 +151,7 @@ pA_conc <- ggplot(ct_metrics, aes(x = concordance_pct, y = ct_display)) +
                color = "grey70", linewidth = 0.3) +
   geom_point(aes(color = ct_display), size = 1.8) +
   geom_text(aes(label = sprintf("%.1f%%", concordance_pct)),
-            hjust = -0.2, size = PUB_GEOM_TEXT, color = "grey30") +
+            hjust = -0.2, size = PUB_GEOM_TEXT, color = "black") +
   scale_color_manual(values = ct_palette, guide = "none") +
   scale_x_continuous(limits = c(50, 78), breaks = seq(50, 75, 5)) +
   geom_vline(xintercept = 50, linetype = "dashed", color = "grey50", linewidth = 0.3) +
@@ -182,12 +181,11 @@ pB <- ggplot(bar_data, aes(x = n_genes, y = ct_display, fill = type_label)) +
   geom_col(width = 0.6) +
   geom_text(data = bar_totals,
             aes(x = total, y = ct_display, label = total, fill = NULL),
-            hjust = -0.3, size = PUB_GEOM_TEXT, color = "grey30") +
+            hjust = -0.3, size = PUB_GEOM_TEXT, color = "black") +
   scale_fill_manual(values = c("Concordant" = "#00695C", "Discordant" = "#E91E63"),
                     name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "Sig. DEGs in both", y = NULL,
-       title = "Shared significant DEGs") +
+  labs(x = "Sig. DEGs in both", y = NULL) +
   theme_masld(base_size = 7) + theme_pub() +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank(),
         legend.position = "bottom",
@@ -247,11 +245,10 @@ exclusive_counts[, ct_display := factor(ct_display, levels = levels(ct_metrics$c
 pC <- ggplot(exclusive_counts, aes(x = n_exclusive, y = ct_display, fill = ct_display)) +
   geom_col(width = 0.6) +
   geom_text(aes(label = n_exclusive),
-            hjust = -0.3, size = PUB_GEOM_TEXT, color = "grey30") +
+            hjust = -0.3, size = PUB_GEOM_TEXT, color = "black") +
   scale_fill_manual(values = ct_palette, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
-  labs(x = "Exclusive DEGs", y = NULL,
-       title = "Cell-type-exclusive") +
+  labs(x = "Exclusive DEGs", y = NULL) +
   theme_masld(base_size = 7) + theme_pub() +
   theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
 
@@ -262,7 +259,10 @@ pC <- ggplot(exclusive_counts, aes(x = n_exclusive, y = ct_display, fill = ct_di
 composite <- pA + pB + pC +
   plot_layout(widths = c(2.5, 1.2, 1)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
+
+message("[caption] Panel a: Bulk-scRNA concordance (Spearman rho + direction concordance). ",
+        "Panel b: Shared significant DEGs (concordant/discordant). Panel c: Cell-type-exclusive bulk DEGs.")
 
 out_path <- file.path(out_dir, "celltype_concordance.pdf")
 ggsave(out_path, composite,

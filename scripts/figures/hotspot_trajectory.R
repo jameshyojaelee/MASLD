@@ -121,10 +121,10 @@ p <- ggplot(hm, aes(transition, label, fill = delta_clip)) +
   theme_masld(base_size = 11) +
   theme(
     panel.grid   = element_blank(),
-    axis.text.x  = element_text(size = 10, face = "bold"),
+    axis.text.x  = element_text(size = 10, face = "plain"),
     axis.text.y  = element_text(size = 10),
     axis.ticks   = element_blank(),
-    plot.title   = element_text(size = 10.5, face = "bold", hjust = 0,
+    plot.title   = element_text(size = 10.5, face = "plain", hjust = 0,
                                 margin = margin(b = 6)),
     plot.margin  = margin(8, 8, 4, 4),
     legend.title = element_text(size = 8),

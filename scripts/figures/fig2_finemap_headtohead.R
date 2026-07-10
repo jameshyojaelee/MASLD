@@ -88,17 +88,17 @@ colB <- c("PIP ≥ 0.9" = "#0D3B66", "PIP 0.5–0.9" = "#7FB3D5", "PIP < 0.5" = 
 p <- ggplot(dB, aes(N, tool, fill = band)) +
   geom_col(width = 0.66, position = position_stack(reverse = TRUE)) +
   geom_text(aes(label = ifelse(N > 0, N, "")), position = position_stack(vjust = 0.5, reverse = TRUE),
-            size = 2.8, color = "black") +
+            size = GEOM_TEXT_6PT, color = "black") +
   geom_text(data = pct, aes(x = x, y = tool, label = lab), inherit.aes = FALSE,
-            hjust = -0.25, size = 2.8, fontface = "bold", color = "black") +
+            hjust = -0.25, size = GEOM_TEXT_6PT, fontface = "plain", color = "black") +
   scale_fill_manual(values = colB, name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.16)), limits = c(0, NTOT),
                      breaks = seq(0, NTOT, 10)) +
   labs(x = "Loci", y = NULL) +
-  theme_masld(base_size = 9) +
+  theme_masld(base_size = 6) +
   theme(axis.text = element_text(color = "black"),
         axis.title = element_text(color = "black"),
-        legend.position = "bottom", legend.text = element_text(size = 7, color = "black"),
+        legend.position = "bottom", legend.text = element_text(size = 6, color = "black"),
         legend.key.size = unit(0.32, "cm"))
 
 save_fig(p, file.path(PANEL_DIR, "FigS2C_finemap_method_headtohead.pdf"),

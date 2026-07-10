@@ -126,11 +126,11 @@ if (file.exists(posterior_path) && file.exists(comm_path)) {
                     column_names_gp = gpar(fontsize = 6),
                     column_names_rot = 45,
                     row_title = "Community",
-                    column_title = "Modality layer informativeness",
-                    column_title_gp = gpar(fontsize = 8, fontface = "bold"),
+                    column_title_gp = gpar(fontsize = 6, fontface = "plain"),
                     heatmap_legend_param = list(title_gp = gpar(fontsize = 6),
-                                                labels_gp = gpar(fontsize = 5)))
+                                                labels_gp = gpar(fontsize = 6)))
 
+      message("[caption] Modality layer informativeness")
       pdf(out_b, width = fig_full_width, height = 5)
       draw(ht, padding = unit(c(2, 2, 2, 10), "mm"))
       dev.off()
@@ -139,21 +139,21 @@ if (file.exists(posterior_path) && file.exists(comm_path)) {
       message("Panel B: no intra-community edges found")
       pdf(out_b, width = fig_full_width, height = 5)
       grid.newpage()
-      grid.text("Panel B: no intra-community edges found", gp = gpar(fontsize = 10))
+      grid.text("Panel B: no intra-community edges found", gp = gpar(fontsize = 6))
       dev.off()
     }
   } else {
     message("Panel B: required columns not found in posterior_edges.csv")
     pdf(out_b, width = fig_full_width, height = 5)
     grid.newpage()
-    grid.text("Panel B: required columns not found", gp = gpar(fontsize = 10))
+    grid.text("Panel B: required columns not found", gp = gpar(fontsize = 6))
     dev.off()
   }
 } else {
   message("Panel B: posterior_edges.csv or community_labels.csv not found")
   pdf(out_b, width = fig_full_width, height = 5)
   grid.newpage()
-  grid.text("Panel B: data files not found", gp = gpar(fontsize = 10))
+  grid.text("Panel B: data files not found", gp = gpar(fontsize = 6))
   dev.off()
 }
 
@@ -202,14 +202,13 @@ if (file.exists(composite_path)) {
       scale_fill_manual(values = bar_colors, name = "Max-contributing\nlayer") +
       scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
       labs(x = "Edge multiplicity (K)",
-           y = "Number of gene pairs",
-           title = "Edge multiplicity distribution") +
+           y = "Number of gene pairs") +
       theme_masld() +
-      theme(legend.position = "right",
-            plot.title = element_text(size = 8, face = "bold"))
+      theme(legend.position = "right")
   }
 }
 
+message("[caption] Edge multiplicity distribution")
 out_c <- file.path(FIGS_NET_DIR, "figS_network_multiplicity.pdf")
 save_fig(p_c, out_c, width = fig_full_width, height = 3.5)
 message("Panel C saved to ", out_c)
@@ -283,12 +282,10 @@ if (file.exists(diag_path) && dir.exists(null_dir)) {
         scale_color_manual(values = dist_colors, name = NULL) +
         scale_fill_manual(values = dist_colors, name = NULL, guide = "none") +
         facet_wrap(~ layer, ncol = 5, scales = "free_y") +
-        labs(x = "Edge weight", y = "Density",
-             title = "Bayesian diagnostics: null vs observed edge weight distributions") +
+        labs(x = "Edge weight", y = "Density") +
         theme_masld() +
         theme(legend.position = "bottom",
-              strip.text = element_text(size = 6, face = "bold"),
-              plot.title = element_text(size = 8, face = "bold"))
+              strip.text = element_text(size = 6, face = "plain"))
 
       # Add pi_0 annotations if available
       if (!is.null(pi0_dt) && nrow(pi0_dt) > 0) {
@@ -299,13 +296,14 @@ if (file.exists(diag_path) && dir.exists(null_dir)) {
             geom_text(data = pi0_dt,
                       aes(x = 0.75, y = Inf, label = sprintf("pi[0]==%.2f", pi_0)),
                       parse = TRUE, inherit.aes = FALSE,
-                      vjust = 1.5, hjust = 0.5, size = 2, color = "gray30")
+                      vjust = 1.5, hjust = 0.5, size = GEOM_TEXT_6PT, color = "black")
         }
       }
     }
   }
 }
 
+message("[caption] Bayesian diagnostics: null vs observed edge weight distributions")
 out_f <- file.path(FIGS_NET_DIR, "figS_network_diagnostics.pdf")
 save_fig(p_f, out_f, width = fig_full_width, height = 5)
 message("Panel F saved to ", out_f)

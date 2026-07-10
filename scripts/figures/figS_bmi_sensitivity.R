@@ -64,6 +64,21 @@ dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+# Canonical limma-voom-QW (C2) engine helper: build_design_guarded()
+source(file.path(INT, "scripts/de_engine_lvqw.R"))
+
+# Two DEG gates are used here, by design:
+#  (1) PRIMARY canonical reference = TREAT (McCarthy & Smyth 2009): treat_fdr<0.05
+#      at lfc=0.25 — the paper-wide canonical (canonical_deg_results.csv). Used for
+#      the headline DEG count and the BMI-proxy gene-enrichment test.
+#  (2) SUBSET-INTERNAL significance gate = padj<0.05 (no |logFC| floor), used ONLY
+#      for the cross-arm OVERLAP/Jaccard panels. TREAT@0.25 is underpowered on the
+#      small sensitivity subsets (N~40-80) and collapses those overlap sets to 0;
+#      a plain significance gate keeps the overlap comparison interpretable. The
+#      robustness conclusion itself rests on the threshold-free logFC concordance.
+TREAT_FDR_T <- 0.05   # (1) primary canonical TREAT gate
+SIG_P       <- 0.05   # (2) subset-internal overlap significance gate (padj only)
+
 FIGDIR <- FIGS_SENS_DIR
 dir.create(file.path(FIGDIR, "panels"), showWarnings = FALSE, recursive = TRUE)
 
@@ -101,9 +116,10 @@ if (!file.exists(dream_file)) stop("dream_results not found — run 05 first")
 dream_primary <- fread(dream_file)
 if ("adj.P.Val" %in% names(dream_primary) && !"padj" %in% names(dream_primary))
   setnames(dream_primary, "adj.P.Val", "padj")
-cat("  Primary dream genes:", nrow(dream_primary), "\n")
-cat("  Primary DEGs (padj<0.05, |logFC|>0.5):",
-    sum(dream_primary$padj < 0.05 & abs(dream_primary$logFC) > 0.5, na.rm = TRUE), "\n\n")
+stopifnot("treat_fdr" %in% names(dream_primary))  # canonical TREAT gate
+cat("  Primary canonical genes:", nrow(dream_primary), "\n")
+cat("  Primary DEGs (TREAT FDR<0.05 @ lfc=0.25):",
+    sum(dream_primary$treat_fdr < TREAT_FDR_T, na.rm = TRUE), "\n\n")
 
 # Load LOO results if available (Analysis D)
 loo_file <- file.path(RDIR, "loo_cv_metrics.csv")
@@ -205,20 +221,21 @@ dge_all <- dge_all[keep_all, , keep.lib.sizes = FALSE]
 dge_all <- calcNormFactors(dge_all, method = "RLE")
 cat("After expression filter (all ctrls):", nrow(dge_all), "genes\n")
 
-# Dream: single dataset so no random effect
+# limma-voom QW: single dataset so no dataset term (dataset is FIXED only when >1)
 form_single <- ~ group_binary + inferred_sex
 cat("  Formula:", deparse(form_single), "\n")
 
-cat("  Running dream (all controls)...\n")
-v_all <- suppressWarnings(voomWithDreamWeights(dge_all, form_single, info_all, BPPARAM = param))
-fit_all <- suppressWarnings(dream(v_all, form_single, info_all, BPPARAM = param))
-fit_all <- eBayes(fit_all)
+cat("  Running limma-voom QW (all controls)...\n")
+des_all <- build_design_guarded(info_all, c("group_binary", "inferred_sex"))
+stopifnot("group_binaryDisease" %in% colnames(des_all$design))
+v_all <- limma::voomWithQualityWeights(dge_all, des_all$design)
+fit_all <- limma::eBayes(limma::lmFit(v_all, des_all$design))
 res_all <- topTable(fit_all, coef = "group_binaryDisease", number = Inf, sort.by = "none")
 res_all$gene <- rownames(res_all)
 res_all_dt <- as.data.table(res_all)
 if ("adj.P.Val" %in% names(res_all_dt)) setnames(res_all_dt, "adj.P.Val", "padj")
-cat("  DEGs (padj<0.05, |logFC|>0.5) all controls:",
-    sum(res_all_dt$padj < 0.05 & abs(res_all_dt$logFC) > 0.5, na.rm = TRUE), "\n")
+cat("  DEGs (padj<0.05 sig. gate) all controls:",
+    sum(res_all_dt$padj < SIG_P, na.rm = TRUE), "\n")
 
 # --- Run 2: Lean controls only vs disease ---
 samp_lean <- c(lean_ctrl, disease_samp)
@@ -239,16 +256,17 @@ info_lean <- data.frame(
 dge_lean <- dge_lean[keep_all, , keep.lib.sizes = FALSE]
 dge_lean <- calcNormFactors(dge_lean, method = "RLE")
 
-cat("  Running dream (lean controls only)...\n")
-v_lean <- suppressWarnings(voomWithDreamWeights(dge_lean, form_single, info_lean, BPPARAM = param))
-fit_lean <- suppressWarnings(dream(v_lean, form_single, info_lean, BPPARAM = param))
-fit_lean <- eBayes(fit_lean)
+cat("  Running limma-voom QW (lean controls only)...\n")
+des_lean <- build_design_guarded(info_lean, c("group_binary", "inferred_sex"))
+stopifnot("group_binaryDisease" %in% colnames(des_lean$design))
+v_lean <- limma::voomWithQualityWeights(dge_lean, des_lean$design)
+fit_lean <- limma::eBayes(limma::lmFit(v_lean, des_lean$design))
 res_lean <- topTable(fit_lean, coef = "group_binaryDisease", number = Inf, sort.by = "none")
 res_lean$gene <- rownames(res_lean)
 res_lean_dt <- as.data.table(res_lean)
 if ("adj.P.Val" %in% names(res_lean_dt)) setnames(res_lean_dt, "adj.P.Val", "padj")
-cat("  DEGs (padj<0.05, |logFC|>0.5) lean only:",
-    sum(res_lean_dt$padj < 0.05 & abs(res_lean_dt$logFC) > 0.5, na.rm = TRUE), "\n")
+cat("  DEGs (padj<0.05 sig. gate) lean only:",
+    sum(res_lean_dt$padj < SIG_P, na.rm = TRUE), "\n")
 
 # --- Concordance metrics ---
 common_genes_b <- intersect(res_all_dt$gene, res_lean_dt$gene)
@@ -259,8 +277,8 @@ rho_b <- cor(all_aligned$logFC, lean_aligned$logFC, method = "spearman", use = "
 r_b   <- cor(all_aligned$logFC, lean_aligned$logFC, method = "pearson", use = "complete.obs")
 dir_b <- mean(sign(all_aligned$logFC) == sign(lean_aligned$logFC), na.rm = TRUE) * 100
 
-degs_all_set  <- all_aligned[padj < 0.05 & abs(logFC) > 0.5, gene]
-degs_lean_set <- lean_aligned[padj < 0.05 & abs(logFC) > 0.5, gene]
+degs_all_set  <- all_aligned[padj < SIG_P, gene]
+degs_lean_set <- lean_aligned[padj < SIG_P, gene]
 jaccard_b <- length(intersect(degs_all_set, degs_lean_set)) /
              length(union(degs_all_set, degs_lean_set))
 
@@ -268,7 +286,7 @@ cat("\n--- GSE126848 Concordance: All vs Lean Controls ---\n")
 cat("  Spearman rho (logFC):", round(rho_b, 4), "\n")
 cat("  Pearson r (logFC):", round(r_b, 4), "\n")
 cat("  Direction concordance:", round(dir_b, 1), "%\n")
-cat("  Jaccard (padj<0.05, |logFC|>0.5):", round(jaccard_b, 4), "\n")
+cat("  Jaccard (padj<0.05 sig. gate):", round(jaccard_b, 4), "\n")
 cat("  DEGs all:", length(degs_all_set), "| DEGs lean:", length(degs_lean_set), "\n")
 cat("  Shared:", length(intersect(degs_all_set, degs_lean_set)),
     "| All-only:", length(setdiff(degs_all_set, degs_lean_set)),
@@ -289,8 +307,8 @@ comp_b <- data.table(
   padj_lean_only = lean_aligned$padj,
   t_all_controls = all_aligned$t,
   t_lean_only = lean_aligned$t,
-  sig_all = all_aligned$padj < 0.05 & abs(all_aligned$logFC) > 0.5,
-  sig_lean = lean_aligned$padj < 0.05 & abs(lean_aligned$logFC) > 0.5
+  sig_all = all_aligned$padj < SIG_P,
+  sig_lean = lean_aligned$padj < SIG_P
 )
 comp_b[, status := fcase(
   sig_all & sig_lean,  "shared",
@@ -340,10 +358,10 @@ disease_sets <- c(
   "HALLMARK_APOPTOSIS"
 )
 
-# Define dream DEGs at standard threshold
-dream_degs <- dream_primary[padj < 0.05 & abs(logFC) > 0.5, gene]
+# Define canonical DEGs at the TREAT gate
+dream_degs <- dream_primary[treat_fdr < TREAT_FDR_T, gene]
 all_tested <- dream_primary$gene
-cat("Dream DEGs:", length(dream_degs), "of", length(all_tested), "tested\n")
+cat("Canonical DEGs:", length(dream_degs), "of", length(all_tested), "tested\n")
 
 # Run fgsea on dream t-statistics for formal enrichment
 dream_ranks <- setNames(dream_primary$t, dream_primary$gene)
@@ -522,25 +540,25 @@ dge_noobese <- dge_noobese[keep_noobese, , keep.lib.sizes = FALSE]
 dge_noobese <- calcNormFactors(dge_noobese, method = "RLE")
 cat("After expression filter:", nrow(dge_noobese), "genes\n")
 
-# Dream formula (matches primary)
-form_primary <- ~ group_binary + sex_covar + (1 | dataset)
+# limma-voom QW design (dataset FIXED; matches the C2 canonical engine)
+form_primary <- ~ dataset + group_binary + sex_covar
 cat("Formula:", deparse(form_primary), "\n")
 
-cat("Running dream (without obese controls)...\n")
+cat("Running limma-voom QW (without obese controls)...\n")
 t0 <- Sys.time()
-v_noobese <- suppressWarnings(
-  voomWithDreamWeights(dge_noobese, form_primary, info_noobese, BPPARAM = param))
-fit_noobese <- suppressWarnings(
-  dream(v_noobese, form_primary, info_noobese, BPPARAM = param))
+des_noobese <- build_design_guarded(info_noobese, c("dataset", "group_binary", "sex_covar"))
+stopifnot("group_binaryDisease" %in% colnames(des_noobese$design))
+v_noobese <- limma::voomWithQualityWeights(dge_noobese, des_noobese$design)
+fit_noobese <- limma::eBayes(limma::lmFit(v_noobese, des_noobese$design))
 res_noobese <- topTable(fit_noobese, coef = "group_binaryDisease",
                         number = Inf, sort.by = "none")
 res_noobese$gene <- rownames(res_noobese)
 res_noobese_dt <- as.data.table(res_noobese)
 if ("adj.P.Val" %in% names(res_noobese_dt))
   setnames(res_noobese_dt, "adj.P.Val", "padj")
-cat("  Dream completed in", round(difftime(Sys.time(), t0, units = "mins"), 1), "min\n")
-cat("  DEGs (padj<0.05, |logFC|>0.5) without obese:",
-    sum(res_noobese_dt$padj < 0.05 & abs(res_noobese_dt$logFC) > 0.5, na.rm = TRUE), "\n")
+cat("  limma-voom QW completed in", round(difftime(Sys.time(), t0, units = "mins"), 1), "min\n")
+cat("  DEGs (padj<0.05 sig. gate) without obese:",
+    sum(res_noobese_dt$padj < SIG_P, na.rm = TRUE), "\n")
 
 # --- Compare with primary dream ---
 common_genes_e <- intersect(dream_primary$gene, res_noobese_dt$gene)
@@ -554,8 +572,8 @@ r_e   <- cor(primary_aligned$logFC, noobese_aligned$logFC,
 dir_e <- mean(sign(primary_aligned$logFC) == sign(noobese_aligned$logFC),
               na.rm = TRUE) * 100
 
-primary_degs <- primary_aligned[padj < 0.05 & abs(logFC) > 0.5, gene]
-noobese_degs <- noobese_aligned[padj < 0.05 & abs(noobese_aligned$logFC) > 0.5, gene]
+primary_degs <- primary_aligned[padj < SIG_P, gene]
+noobese_degs <- noobese_aligned[padj < SIG_P, gene]
 jaccard_e <- length(intersect(primary_degs, noobese_degs)) /
              length(union(primary_degs, noobese_degs))
 
@@ -565,7 +583,7 @@ cat("\n--- Multi-cohort Concordance: Primary vs No-Obese Controls ---\n")
 cat("  Spearman rho (logFC):", round(rho_e, 4), "\n")
 cat("  Pearson r (logFC):", round(r_e, 4), "\n")
 cat("  Direction concordance:", round(dir_e, 1), "%\n")
-cat("  Jaccard (padj<0.05, |logFC|>0.5):", round(jaccard_e, 4), "\n")
+cat("  Jaccard (padj<0.05 sig. gate):", round(jaccard_e, 4), "\n")
 cat("  DEGs primary:", length(primary_degs), "| DEGs no-obese:", length(noobese_degs), "\n")
 cat("  Shared:", length(intersect(primary_degs, noobese_degs)),
     "| Primary-only:", length(setdiff(primary_degs, noobese_degs)),
@@ -583,8 +601,8 @@ comp_e <- data.table(
   padj_no_obese = noobese_aligned$padj,
   t_primary = primary_aligned$t,
   t_no_obese = noobese_aligned$t,
-  sig_primary = primary_aligned$padj < 0.05 & abs(primary_aligned$logFC) > 0.5,
-  sig_no_obese = noobese_aligned$padj < 0.05 & abs(noobese_aligned$logFC) > 0.5
+  sig_primary = primary_aligned$padj < SIG_P,
+  sig_no_obese = noobese_aligned$padj < SIG_P
 )
 comp_e[, status := fcase(
   sig_primary & sig_no_obese,   "shared",
@@ -608,7 +626,7 @@ metrics_dt <- data.table(
   ),
   metric = rep(c(
     "spearman_rho_logFC", "pearson_r_logFC", "direction_concordance_pct",
-    "jaccard_padj005_lfc05", "n_degs_baseline", "n_degs_modified",
+    "jaccard_padj005", "n_degs_baseline", "n_degs_modified",
     "mean_abs_lfc_shift"
   ), 2),
   value = c(
@@ -629,8 +647,9 @@ print(metrics_dt)
 # FIGURE: 5-panel supplementary figure
 # ============================================================
 cat("\n=== Generating figure ===\n")
+message("[caption] A: BMI data availability across 10 cohorts (individual-level BMI not deposited in any cohort; GSE126848 has obese healthy controls). B: GSE126848 effect of obese controls on logFC (N = ", length(samp_all), " all vs ", length(samp_lean), " lean-ctrl only). C: limma-voom QW primary vs no obese controls (removing ", length(obese_ctrl_in_dge), " obese healthy controls from GSE126848). D: DEG overlap with vs without obese controls (baseline = all controls; modified = lean controls only). E: BMI-proxy vs disease-specific pathway enrichment (fGSEA on limma-voom-QW t-statistics; * = padj < 0.05).")
 
-pdf(file.path(FIGDIR, "figS_bmi_sensitivity.pdf"), width = 14, height = 10)
+pdf(file.path(FIGDIR, "figS_bmi_sensitivity.pdf"), width = fig_full_width, height = fig_full_width * 10 / 14)
 
 # Panel layout: 2 rows x 3 columns (last spot empty or used for text)
 par(mfrow = c(1, 1))  # reset
@@ -639,15 +658,13 @@ par(mfrow = c(1, 1))  # reset
 p_a <- ggplot(audit_dt, aes(x = reorder(dataset, -n_total), y = n_total)) +
   geom_col(aes(fill = ifelse(has_obese_ctrl, "Has obese ctrl", "No BMI data")),
            width = 0.7) +
-  geom_text(aes(label = n_total), vjust = -0.3, size = 3) +
+  geom_text(aes(label = n_total), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("Has obese ctrl" = masld_colors$up,
                                "No BMI data" = masld_colors$ns),
                     name = "BMI Proxy") +
-  labs(x = NULL, y = "QC-passing samples",
-       title = "A  BMI data availability across 10 cohorts",
-       subtitle = "Individual-level BMI not deposited in any cohort; GSE126848 has obese healthy controls") +
+  labs(x = NULL, y = "QC-passing samples") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
 
 # --- Panel B: logFC scatter (GSE126848 all vs lean) ---
 comp_b[, sig_class := fcase(
@@ -668,12 +685,9 @@ p_b <- ggplot(comp_b, aes(x = logFC_all_controls, y = logFC_lean_only)) +
   ), name = "DEG status") +
   annotate("text", x = Inf, y = -Inf,
            label = paste0("rho = ", round(rho_b, 3)),
-           hjust = 1.1, vjust = -0.5, size = 4, fontface = "italic") +
+           hjust = 1.1, vjust = -0.5, size = GEOM_TEXT_6PT, fontface = "plain") +
   labs(x = "logFC (all controls: lean + obese)",
-       y = "logFC (lean controls only)",
-       title = "B  GSE126848: Effect of obese controls on logFC",
-       subtitle = paste0("N = ", length(samp_all), " (all) vs ",
-                        length(samp_lean), " (lean ctrl only)")) +
+       y = "logFC (lean controls only)") +
   theme_masld() +
   coord_fixed()
 
@@ -696,12 +710,9 @@ p_c <- ggplot(comp_e, aes(x = logFC_primary, y = logFC_no_obese)) +
   ), name = "DEG status") +
   annotate("text", x = Inf, y = -Inf,
            label = paste0("rho = ", round(rho_e, 3), "\nJaccard = ", round(jaccard_e, 3)),
-           hjust = 1.1, vjust = -0.5, size = 4, fontface = "italic") +
-  labs(x = "logFC (primary, 1,444 samples)",
-       y = "logFC (without obese controls)",
-       title = "C  10-cohort dream: primary vs no obese controls",
-       subtitle = paste0("Removing ", length(obese_ctrl_in_dge),
-                        " obese healthy controls from GSE126848")) +
+           hjust = 1.1, vjust = -0.5, size = GEOM_TEXT_6PT, fontface = "plain") +
+  labs(x = "logFC (primary canonical)",
+       y = "logFC (without obese controls)") +
   theme_masld() +
   coord_fixed()
 
@@ -732,15 +743,13 @@ p_d <- ggplot(overlap_data, aes(x = analysis, y = count, fill = category)) +
   geom_col(position = "dodge", width = 0.7) +
   geom_text(data = jaccard_labels,
             aes(x = analysis, y = Inf, label = label),
-            inherit.aes = FALSE, vjust = 1.5, size = 3.5, fontface = "italic") +
+            inherit.aes = FALSE, vjust = 1.5, size = GEOM_TEXT_6PT, fontface = "plain") +
   scale_fill_manual(values = c(
     "Shared" = masld_colors$up,
     "Baseline only" = masld_colors$down,
     "Modified only" = "#7B1FA2"
   ), name = "DEG category") +
-  labs(x = NULL, y = "Number of DEGs",
-       title = "D  DEG overlap: with vs without obese controls",
-       subtitle = "Baseline = all controls; Modified = lean controls only") +
+  labs(x = NULL, y = "Number of DEGs") +
   theme_masld()
 
 # --- Panel E: BMI-proxy vs Disease pathway NES comparison ---
@@ -753,15 +762,13 @@ p_e <- ggplot(fgsea_plot, aes(x = reorder(pathway_short, NES), y = NES,
                                fill = category)) +
   geom_col(width = 0.7) +
   geom_text(aes(label = sig_label), hjust = ifelse(fgsea_plot$NES > 0, -0.3, 1.3),
-            size = 5) +
+            size = GEOM_TEXT_6PT) +
   coord_flip() +
   scale_fill_manual(values = c(
     "BMI_proxy" = masld_colors$down,
     "Disease_specific" = masld_colors$up
   ), labels = c("BMI-proxy", "Disease-specific"), name = "Pathway type") +
-  labs(x = NULL, y = "Normalized Enrichment Score (NES)",
-       title = "E  BMI-proxy vs disease-specific pathway enrichment",
-       subtitle = "fGSEA on dream t-statistics; * = padj < 0.05") +
+  labs(x = NULL, y = "Normalized Enrichment Score (NES)") +
   theme_masld()
 
 # Arrange panels

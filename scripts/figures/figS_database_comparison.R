@@ -7,7 +7,7 @@
 #   1. KEGG hsa04932 NAFLD pathway (157 genes, via KEGGREST)
 #   2. WikiPathways NAFLD (155 genes, via msigdbr)
 #   3. Open Targets NAFLD/FLD (5,946 genes, pre-downloaded)
-#   4. Atlas DEGs (padj<0.05, |logFC|>0.5)
+#   4. Atlas DEGs (lfsr<0.05, |shrunk_logFC|>0.3)
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -36,8 +36,8 @@ cat("=== Loading data ===\n")
 atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
 cat("Atlas genes:", nrow(atlas), "\n")
 
-# DEGs: padj<0.05, |logFC|>0.5
-atlas[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5]
+# DEGs: C2 canonical Tier-1 (bulk_lfsr<0.05, |bulk_shrunk_logFC|>0.3)
+atlas[, is_deg := is_dream_deg(atlas)]
 deg_genes <- atlas[is_deg == TRUE, human_symbol]
 cat("Atlas DEGs:", length(deg_genes), "\n")
 
@@ -127,18 +127,17 @@ upset_plot <- UpSet(
   set_order = c("Atlas DEGs", "Open Targets", "KEGG NAFLD", "WikiPathways NAFLD"),
   comb_order = order(comb_size(comb_mat), decreasing = TRUE),
   top_annotation = upset_top_annotation(comb_mat, add_numbers = TRUE,
-                                         numbers_gp = gpar(fontsize = 8),
+                                         numbers_gp = gpar(fontsize = 6),
                                          height = unit(4, "cm")),
   right_annotation = upset_right_annotation(comb_mat, add_numbers = TRUE,
-                                             numbers_gp = gpar(fontsize = 9),
+                                             numbers_gp = gpar(fontsize = 6),
                                              width = unit(3, "cm")),
-  row_names_gp = gpar(fontsize = 10),
-  column_title = "Gene Set Overlaps: Atlas DEGs vs External Databases",
-  column_title_gp = gpar(fontsize = 12, fontface = "bold")
+  row_names_gp = gpar(fontsize = 6)
 )
 draw(upset_plot)
 dev.off()
 cat("Saved:", upset_pdf, "\n")
+message("[caption] Gene Set Overlaps: Atlas DEGs vs External Databases")
 
 # ---- Panel (b): Recovery bar chart ----
 cat("\n=== Panel (b): Recovery bar chart ===\n")
@@ -182,19 +181,18 @@ bar_colors <- c(
 p_b <- ggplot(recovery_dt, aes(x = Database, y = Count, fill = Category)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
   geom_text(aes(label = paste0(Pct, "%")),
-            position = position_dodge(width = 0.8), vjust = -0.3, size = 2.8) +
+            position = position_dodge(width = 0.8), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = bar_colors) +
   scale_y_log10(labels = comma, breaks = c(1, 10, 100, 1000, 10000)) +
-  labs(x = NULL, y = "Gene count (log scale)",
-       title = "Atlas Recovery of External Database Genes") +
+  labs(x = NULL, y = "Gene count (log scale)") +
   theme_masld() +
   theme(
-    axis.text.x = element_text(size = 8, lineheight = 0.9),
+    axis.text.x = element_text(size = 6, lineheight = 0.9),
     legend.position = "right",
     legend.title = element_blank(),
-    legend.text = element_text(size = 8),
-    plot.title = element_text(size = 11, face = "bold")
+    legend.text = element_text(size = 6)
   )
+message("[caption] Atlas Recovery of External Database Genes")
 
 # ---- Panel (c): Atlas-unique top genes ----
 cat("\n=== Panel (c): Atlas-unique genes ===\n")
@@ -214,15 +212,14 @@ p_c <- ggplot(top_unique, aes(x = reorder(human_symbol, abs(bulk_logFC)),
   coord_flip() +
   scale_fill_manual(values = c("Upregulated" = masld_colors$up,
                                 "Downregulated" = masld_colors$down)) +
-  labs(x = NULL, y = "Dream logFC",
-       title = paste0("Top 20 Atlas-Unique DEGs\n(",
-                      nrow(atlas_unique), " DEGs not in any surveyed database)")) +
+  labs(x = NULL, y = "Dream logFC") +
   theme_masld() +
   theme(
     legend.position = "bottom",
-    legend.title = element_blank(),
-    plot.title = element_text(size = 10, face = "bold")
+    legend.title = element_blank()
   )
+message(sprintf("[caption] Top 20 Atlas-Unique DEGs (%d DEGs not in any surveyed database)",
+                nrow(atlas_unique)))
 
 # ---- Panel (d): Statistics text ----
 cat("\n=== Panel (d): Key statistics ===\n")
@@ -298,10 +295,9 @@ cat("--- END ---\n\n")
 stats_text <- paste(stats_lines, collapse = "\n")
 p_d <- ggplot() +
   annotate("text", x = 0.5, y = 0.5, label = stats_text,
-           hjust = 0.5, vjust = 0.5, size = 3, family = "mono", lineheight = 1.3) +
-  theme_void() +
-  labs(title = "External Database Comparison: Key Statistics") +
-  theme(plot.title = element_text(size = 11, face = "bold", hjust = 0.5))
+           hjust = 0.5, vjust = 0.5, size = GEOM_TEXT_6PT, family = "mono", lineheight = 1.3) +
+  theme_void()
+message("[caption] External Database Comparison: Key Statistics")
 
 # ---- Composite figure (panels b-d; panel a is ComplexHeatmap PDF) ----
 cat("=== Assembling composite figure ===\n")
@@ -316,13 +312,10 @@ draw(upset_plot)
 grid.newpage()
 composite <- (p_b / (p_c | p_d)) +
   plot_annotation(
-    title = "Supplementary Figure: External Database Comparison",
-    tag_levels = list(c("b", "c", "d")),
-    theme = theme(
-      plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
-    )
+    tag_levels = list(c("b", "c", "d"))
   )
 print(composite)
+message("[caption] Supplementary Figure: External Database Comparison")
 
 dev.off()
 cat("Saved composite:", composite_pdf, "\n")

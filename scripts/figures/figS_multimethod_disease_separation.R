@@ -94,18 +94,16 @@ setorder(roc_dt, fpr, tpr)
 pR <- ggplot(roc_dt, aes(fpr, tpr)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey70", linewidth = 0.3) +
   geom_path(colour = masld_colors$nash, linewidth = 0.7) +
-  annotate("text", x = 0.6, y = 0.18, size = 2.8, colour = "grey15",
+  annotate("text", x = 0.6, y = 0.18, size = 6/ggplot2::.pt, colour = "grey15",
            label = sprintf("pooled held-out\nAUROC = %.2f", auc_all)) +
   coord_equal() +
   labs(x = "false positive rate", y = "true positive rate") +
   theme_masld(base_size = 7)
 
-fig <- (pL | pR) + plot_layout(widths = c(1.5, 1)) +
-  plot_annotation(
-    title = "Leave-one-cohort-out supervised disease score",
-    theme = theme(plot.title = element_text(size = 9, face = "bold")))
+fig <- (pL | pR) + plot_layout(widths = c(1.5, 1))
+message("[caption] Leave-one-cohort-out supervised disease score")
 ggsave(file.path(OUT, "supervised_disease.pdf"), fig,
-       width = 8.4, height = 4.2, device = cairo_pdf)
+       width = 7.09, height = 3.54, device = cairo_pdf)
 fwrite(scores, file.path(OUT, "supervised_disease_data.csv"))
 fwrite(auc_by, file.path(OUT, "supervised_disease_auc.csv"))
 cat("Wrote supervised_disease.pdf\n")

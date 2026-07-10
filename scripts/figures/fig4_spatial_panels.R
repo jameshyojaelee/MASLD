@@ -7,17 +7,19 @@
 #   Guilliams et al. (Cell 2022) — fresh-frozen, 6,546 spots
 #   Vu et al. (JHEP Reports 2025) — FFPE CytAssist, 17,512 spots
 #
-# 3 panels:
-#   (f) Disease-emergent SVGs — Moran's I scatter
+# Panels saved (g)-(h):
 #   (g) Gene expression dynamics along pseudotime
 #   (h) Spatial enrichment summary — dot plot
+#
+# Panel (f) Disease-emergent SVGs (Moran's I scatter) and the (f)-(h) composite
+# were retired 2026-07-07 (superseded by the Fig4 spatial candidate gallery;
+# see memory project-fig4-panelA-validation-wheel-2026-07-01) — p_f is still
+# computed above but no longer saved; do not re-add its save_fig() call.
 #
 # Panels moved to supplementary (figS_spatial_validation.R):
 #   Cross-dataset zonation concordance scatter
 #   Periportal excess replicated — grouped bar
 #   Fibrosis LR pairs spatial co-localization
-#
-# Exports: p_f, p_g, p_h
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -101,7 +103,7 @@ p_f <- ggplot(dsvg_plot[display_cat == "Stable SVG"],
   geom_abline(slope = 1, intercept = 0, linetype = "dashed",
               linewidth = 0.3, color = "gray50") +
   geom_label_repel(data = top_lab_f, aes(label = gene, color = display_cat),
-                   size = 1.6, max.overlaps = 20,
+                   size = GEOM_TEXT_6PT, max.overlaps = 20,
                    label.padding = 0.07, box.padding = 0.25,
                    segment.size = 0.1, fill = alpha("white", 0.85),
                    show.legend = FALSE) +
@@ -113,14 +115,14 @@ p_f <- ggplot(dsvg_plot[display_cat == "Stable SVG"],
     )
   ) +
   labs(x = expression("Moran's " * italic(I) * " (Healthy)"),
-       y = expression("Moran's " * italic(I) * " (Steatotic)"),
-       title = "Disease creates spatially organized gene programs") +
+       y = expression("Moran's " * italic(I) * " (Steatotic)")) +
   theme_masld() +
   theme(legend.position = c(0.25, 0.88),
         legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
         legend.key.size = unit(0.2, "cm")) +
   guides(color = guide_legend(override.aes = list(size = 1.5, alpha = 1)))
 
+message("[caption] Disease creates spatially organized gene programs")
 cat("  ", nrow(dsvg_plot), "SVGs plotted\n")
 
 # ==========================================================================
@@ -167,13 +169,14 @@ p_g <- ggplot(traj_sub, aes(x = bin, y = mean_expr, color = gene, fill = gene)) 
   # not bin 9 (F191). Span the full data range so "Steatotic" sits at the end.
   scale_x_continuous(breaks = c(0, 9, 19),
                      labels = c("Healthy-like", "Transition", "Steatotic")) +
-  labs(x = "Spatial pseudotime", y = "Mean expression",
-       title = "Gene dysregulation follows a spatial gradient") +
+  labs(x = "Spatial pseudotime", y = "Mean expression") +
   theme_masld() +
   theme(legend.position = c(0.15, 0.85),
         legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
         legend.key.size = unit(0.25, "cm"),
         axis.text.x = element_text(size = 6))
+
+message("[caption] Gene dysregulation follows a spatial gradient")
 
 # ==========================================================================
 # (h) Spatial enrichment summary — dot plot
@@ -191,11 +194,17 @@ cc_fmt <- cc_test[, .(dataset, comparison = "Conserved",
                        fold_enrichment, mannwhitney_pval)]
 enrich_slim <- enrich[, .(dataset, comparison, fold_enrichment, mannwhitney_pval)]
 eall <- rbind(enrich_slim, cc_fmt, fill = TRUE)
-eall <- eall[comparison %in% c("Strong DEGs (|LFC|>0.5)", "Up-regulated DEGs", "Conserved")]
+# Match the "Strong DEGs" row by prefix so the panel renders regardless of the
+# |LFC| threshold string carried in deg_spatial_enrichment.csv. NOTE: the on-disk
+# enrichment is currently computed on the RAW |LFC|>0.5 DEG set (upstream spatial
+# generator, not regenerated against the relaxed |shrunk_logFC|>0.3 Tier-1 set);
+# the displayed label is the threshold-agnostic "Strong DEGs".
+eall <- eall[grepl("^Strong DEGs", comparison) |
+             comparison %in% c("Up-regulated DEGs", "Conserved")]
 
 # Clean labels
 eall[, label := fcase(
-  comparison == "Strong DEGs (|LFC|>0.5)", "Strong DEGs",
+  grepl("^Strong DEGs", comparison), "Strong DEGs",
   comparison == "Up-regulated DEGs", "Up-regulated DEGs",
   comparison == "Conserved", "Conserved"
 )]
@@ -209,7 +218,7 @@ p_h <- ggplot(eall, aes(x = fold_enrichment, y = label)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "gray70", linewidth = 0.3) +
   geom_point(aes(color = dataset, size = nlp, shape = sig)) +
   geom_text(aes(label = sig_star, color = dataset),
-            hjust = -0.5, vjust = 0.3, size = 2, show.legend = FALSE) +
+            hjust = -0.5, vjust = 0.3, size = GEOM_TEXT_6PT, show.legend = FALSE) +
   # Display Guilliams Visium dataset by its GEO accession (data keys unchanged
   # so the color join against `dataset` still matches; Vu has no mapped accession).
   scale_color_manual(values = ds_pal, name = NULL,
@@ -220,30 +229,20 @@ p_h <- ggplot(eall, aes(x = fold_enrichment, y = label)) +
                         name = expression(-log[10] ~ italic(p)),
                         breaks = c(5, 15)) +
   scale_x_continuous(breaks = c(1, 1.5, 2, 2.5, 3)) +
-  labs(x = "Spatial enrichment (fold over non-DEGs)", y = NULL,
-       title = "Cross-species conserved genes are most spatially structured") +
+  labs(x = "Spatial enrichment (fold over non-DEGs)", y = NULL) +
   theme_masld() +
   theme(legend.position = "right", legend.key.size = unit(0.25, "cm"))
 
+message("[caption] Cross-species conserved genes are most spatially structured")
+
 # ==========================================================================
-# Compose panels (f)-(h)
-# ==========================================================================
-cat("Composing figure...\n")
-
-fig <- (p_f | p_g | p_h) +
-  plot_annotation(tag_levels = list(c("f", "g", "h"))) &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
-
-OUT <- file.path(FIG4_DIR, "panels", "fig4_spatial_panels.pdf")
-save_fig(fig, OUT, width = fig_full_width, height = 3.5)
-cat("Saved:", OUT, "\n")
-
 # Individual panels for Illustrator
-save_fig(p_f, file.path(FIG4_DIR, "panels", "f_emergent_svgs.pdf"),
-         width = fig_half_width, height = 3.5)
-save_fig(p_g, file.path(FIG4_DIR, "panels", "g_pseudotime.pdf"),
-         width = fig_half_width, height = 3.5)
-save_fig(p_h, file.path(FIG4_DIR, "panels", "h_enrichment.pdf"),
-         width = fig_half_width, height = 3)
+# ==========================================================================
+# NOTE: the composite fig4_spatial_panels.pdf and panels (f) f_emergent_svgs.pdf,
+# (g) g_pseudotime.pdf, (h) h_enrichment.pdf were retired 2026-07-07 (superseded
+# by the Fig4 spatial candidate gallery; see memory
+# project-fig4-panelA-validation-wheel-2026-07-01) — do not re-add their
+# save_fig() calls. p_f/p_g/p_h are still computed above and sourced in-memory
+# by fig4_compact.R for the fig4_compact.pdf composite spatial row.
 
-cat("Done. Individual panels in:", file.path(FIG4_DIR, "panels"), "\n")
+cat("Done (no standalone panel PDFs — p_f/p_g/p_h consumed by fig4_compact.R).\n")

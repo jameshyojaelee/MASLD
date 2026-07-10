@@ -49,8 +49,8 @@ GATE = os.environ.get("GATE", "gws")
 THRESH = {"gws": 5e-8, "suggestive": 1e-6}[GATE]
 GLAB = {"gws": "GWS-gated (p < 5×10⁻⁸)", "suggestive": "suggestive-gated (p < 10⁻⁶)"}[GATE]
 ULAB = {"gws": "non-EUR\nGWS-unique", "suggestive": "non-EUR\nsuggestive-unique"}[GATE]
-OUT  = {"gws": "Fig2G_ancestry_unique_coloc_GWS.pdf",
-        "suggestive": "Fig2G_ancestry_unique_coloc_suggestive.pdf"}[GATE]
+OUT  = {"gws": "Fig2D_ancestry_unique_coloc_GWS.pdf",
+        "suggestive": "Fig2D_ancestry_unique_coloc_suggestive.pdf"}[GATE]
 
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
@@ -135,7 +135,7 @@ cols  = ["#D6DBDE", "#A7B6BE", "#E9ECEE", "#F79268"]   # grey, grey-blue, light-
 W, H = 100.0, 64.0
 rects = squarify.squarify(squarify.normalize_sizes(sizes, W, H), 0, 0, W, H)
 
-fig, ax = plt.subplots(figsize=(4.3, 3.0))
+fig, ax = plt.subplots(figsize=(2.75, 2.44))   # exact Fig2D contract size (D-slot: ancestry mosaic)
 labels = [("EUR-only", f"{n_eur} ({pct(n_eur):.0f}%)"),
           ("shared", f"{n_shared} ({pct(n_shared):.0f}%)"),
           ("non-EUR\nsub-threshold", f"{n_fail} ({pct(n_fail):.0f}%)"),
@@ -161,15 +161,13 @@ ax.set_xlim(0, W + 30)
 ax.set_ylim(0, H + 12)
 ax.invert_yaxis()
 ax.axis("off")
-ax.set_title(f"SuSiE-COLOC by ancestry — {GLAB}", fontsize=TITLE_FS,
-             fontweight="normal", color=TXT, loc="left", pad=6)
 
 os.makedirs(PANEL_DIR, exist_ok=True)
 out = os.path.join(PANEL_DIR, OUT)
 fig.tight_layout()
-fig.savefig(out, bbox_inches="tight")
+fig.savefig(out)   # NO bbox_inches="tight": exact figsize for place-at-100%
 plt.close(fig)
-print(f"[fig2G/{GATE}] wrote {OUT} | SuSiE-COLOC (PP.H4.susie>0.5): EUR-only {n_eur}, "
+print(f"[fig2D/{GATE}] wrote {OUT} | SuSiE-COLOC (PP.H4.susie>0.5): EUR-only {n_eur}, "
       f"shared {n_shared}, non-EUR sub-threshold {n_fail}, non-EUR-unique(gated) {n_pass} [{comp_str}]")
 print(f"CAPTION: Non-EUR-unique SuSiE-COLOC genes (PP.H4.susie > 0.5) gated on {GLAB} of the "
       f"colocalizing lead variant in the non-European GWAS (35 Tier-1/2 liver-specific GWAS incl. "

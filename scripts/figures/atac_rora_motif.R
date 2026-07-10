@@ -56,9 +56,9 @@ PEAK_DIR  <- file.path(PROJ,
   "Analysis/ATAC/Human_Multiome/results/label_transfer/cell_type_peak_sets_v2")
 GTF_PATH  <- "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
 
-OUT_DIR <- file.path(PROJ, "figures/main/fig4_validation")
+OUT_DIR <- file.path(PROJ, "figures/main/fig4_validation", "_supp")   # DEMOTED from main 4c (2026-07-07): chromatin unvalidated (caQTL n.s.); regulatory/motif content lives in Fig 2
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
-OUT_PDF <- file.path(OUT_DIR, "fig4c_atac_rora_motif.pdf")
+OUT_PDF <- file.path(OUT_DIR, "atac_rora_motif.pdf")
 
 HERO_TF  <- "RORA"          # preferred = THRB but its best motif variant is PIP=0.18
                             #   (weak); RORA carries the only PIP~1 credible-set hit.
@@ -196,9 +196,9 @@ pA <- ggplot() +
   annotate("segment", x = VAR_POS, xend = VAR_POS, y = Y_GENE - 0.30, yend = Y_GENE + 0.30,
            linewidth = 1.4, color = COL_MOTIF) +
   annotate("text", x = VAR_POS, y = Y_GENE + 0.55, label = "RORE",
-           size = 2.0, color = "black") +
+           size = GEOM_TEXT_6PT, color = "black") +
   geom_text(data = lane_lab, aes(x = WIN_START, y = y, label = lab),
-            hjust = 1.05, vjust = 0.5, size = 2.4, color = "black", lineheight = 0.85) +
+            hjust = 1.05, vjust = 0.5, size = GEOM_TEXT_6PT, color = "black", lineheight = 0.85) +
   scale_x_continuous(
     name = sprintf("%s position (Mb, hg38)", CHR),
     limits = c(WIN_START - (WIN_END - WIN_START) * 0.30, WIN_END),
@@ -207,10 +207,10 @@ pA <- ggplot() +
     expand = c(0, 0)) +
   scale_y_continuous(limits = c(0.4, 3.75), expand = c(0, 0)) +
   labs(x = sprintf("%s position (Mb, hg38)", CHR), y = NULL) +
-  theme_masld() + theme_pub() +
+  theme_masld_compact() +
   theme(axis.title.y = element_blank(), axis.text.y = element_blank(),
         axis.ticks.y = element_blank(), axis.line.y = element_blank(),
-        axis.text.x  = element_text(size = PUB_AXIS_TEXT, color = "black"),
+        axis.text.x  = element_text(color = "black"),
         plot.margin  = margin(2, 4, 2, 2))
 
 # ---- (B) Co-disrupted motif allele-diff bars (motifbreakR; <0 = ALT weakens) --
@@ -224,23 +224,23 @@ pB <- ggplot(cod, aes(x = alleleDiff, y = tf)) +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "black") +
   geom_text(aes(label = sprintf("%.2f", alleleDiff),
                 hjust = ifelse(alleleDiff < 0, 1.15, -0.15)),
-            size = 2.2, color = "black") +
+            size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values = c(`TRUE` = COL_MOTIF, `FALSE` = "#9E9E9E"), guide = "none") +
   scale_x_continuous(name = sprintf("motifbreakR allele-diff, %s→%s (ALT − REF)", REF_AL, ALT_AL),
                      expand = expansion(mult = c(0.10, 0.10))) +
   labs(y = NULL) +
-  theme_masld() + theme_pub() +
-  theme(axis.text.y = element_text(size = PUB_AXIS_TEXT + 1, face = "italic", color = "black"),
-        axis.text.x = element_text(size = PUB_AXIS_TEXT, color = "black"),
+  theme_masld_compact() +
+  theme(axis.text.y = element_text(face = "italic", color = "black"),
+        axis.text.x = element_text(color = "black"),
         plot.margin = margin(2, 6, 2, 2))
 
 # ── Compose: locus track on top; motifbreakR bars below (no zoom, no prose box) ─
 panel <- (pA / pB) + plot_layout(heights = c(1.05, 1.15))
 
 if (capabilities("cairo")) {
-  ggsave(OUT_PDF, panel, width = fig_col_width, height = 3.6, device = cairo_pdf)
+  ggsave(OUT_PDF, panel, width = 4.6, height = 2.9, device = cairo_pdf)
 } else {
-  ggsave(OUT_PDF, panel, width = fig_col_width, height = 3.6,
+  ggsave(OUT_PDF, panel, width = 4.6, height = 2.9,
          device = grDevices::pdf, useDingbats = FALSE)
 }
 

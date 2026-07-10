@@ -23,11 +23,11 @@ import numpy as np
 plt.rcParams.update({
     "font.family":      "sans-serif",
     "font.sans-serif":  ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size":        10,
-    "axes.titlesize":   13,
-    "axes.labelsize":   11,
-    "xtick.labelsize":  9,
-    "ytick.labelsize":  10,
+    "font.size":        6,
+    "axes.titlesize":   6,
+    "axes.labelsize":   6,
+    "xtick.labelsize":  6,
+    "ytick.labelsize":  6,
     "pdf.fonttype":     42,       # Type 42 (TrueType) for editable text
     "ps.fonttype":      42,
     "axes.spines.top":  False,
@@ -109,7 +109,7 @@ def draw_panel(ax, datasets, disease_color, control_color, species_label, bg_col
         label = f"{d[1]} ({d[2]})"
         y_labels.append(label)
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(y_labels, fontweight="bold", fontsize=10)
+    ax.set_yticklabels(y_labels, fontweight="normal", fontsize=6)
 
     # Annotate: total N on each bar
     for i, d in enumerate(datasets):
@@ -118,15 +118,11 @@ def draw_panel(ax, datasets, disease_color, control_color, species_label, bg_col
         # Total N inside/outside bar
         x_text = total + max_total * 0.02
         ax.text(x_text, y_pos[i] + 0.01, f"n={total}",
-                va="center", ha="left", fontsize=8.5, fontweight="bold",
+                va="center", ha="left", fontsize=6, fontweight="normal",
                 color=ACCENT_BORDER, zorder=5)
-    
-    # Panel title
-    ax.set_title(species_label, fontsize=14, fontweight="bold", pad=12,
-                 color=disease_color)
-    
+
     # X-axis
-    ax.set_xlabel("Number of Samples", fontsize=10, color=LABEL_GRAY)
+    ax.set_xlabel("Number of Samples", fontsize=6, color="black")
     ax.set_xlim(0, max_total * 1.45)
     
     # Liang style: no dashed gridlines on stacked bars
@@ -146,7 +142,7 @@ def draw_panel(ax, datasets, disease_color, control_color, species_label, bg_col
 def main():
     # ── Create Figure ────────────────────────────────────────────────────
     fig, (ax_human, ax_mouse) = plt.subplots(
-        1, 2, figsize=(14, 5.5),
+        1, 2, figsize=(7.09, 2.79),
         gridspec_kw={"wspace": 0.45}
     )
     
@@ -170,8 +166,8 @@ def main():
         mpatches.Patch(facecolor=HUMAN_CONTROL, edgecolor="white", label="Control"),
     ]
     ax_human.legend(handles=h_patches, loc="center right", framealpha=0.9,
-                    fontsize=8, edgecolor="#dddddd", title="Condition",
-                    title_fontsize=9)
+                    fontsize=6, edgecolor="#dddddd", title="Condition",
+                    title_fontsize=6)
     
     # Mouse legend
     m_patches = [
@@ -179,13 +175,12 @@ def main():
         mpatches.Patch(facecolor=MOUSE_CONTROL, edgecolor="white", label="Control"),
     ]
     ax_mouse.legend(handles=m_patches, loc="center right", framealpha=0.9,
-                    fontsize=8, edgecolor="#dddddd", title="Condition",
-                    title_fontsize=9)
-    
-    # ── Suptitle ─────────────────────────────────────────────────────────
-    fig.suptitle("RNA-seq Dataset Overview — MASLD Transcriptomic Atlas",
-                 fontsize=15, fontweight="bold", y=0.98, color="#333333")
-    
+                    fontsize=6, edgecolor="#dddddd", title="Condition",
+                    title_fontsize=6)
+
+    print("[caption] RNA-seq Dataset Overview - MASLD Transcriptomic Atlas "
+          "(left: Human Patient Cohorts; right: Mouse Diet Models)")
+
     # ── Summary annotations ──────────────────────────────────────────────
     human_total = sum(d[3] + d[4] for d in human_datasets)
     mouse_total = sum(d[3] + d[4] for d in mouse_datasets)
@@ -193,14 +188,14 @@ def main():
     ax_human.text(0.97, 0.97,
                   f"Total: {human_total} samples\n6 cohorts",
                   transform=ax_human.transAxes, ha="right", va="top",
-                  fontsize=9, color=HUMAN_DISEASE, fontweight="bold",
+                  fontsize=6, color=HUMAN_DISEASE, fontweight="normal",
                   bbox=dict(boxstyle="round,pad=0.3", facecolor="white",
                             edgecolor=HUMAN_DISEASE, alpha=0.85))
-    
+
     ax_mouse.text(0.97, 0.97,
                   f"Total: {mouse_total} samples\n8 datasets, 5 diets",
                   transform=ax_mouse.transAxes, ha="right", va="top",
-                  fontsize=9, color=MOUSE_DISEASE, fontweight="bold",
+                  fontsize=6, color=MOUSE_DISEASE, fontweight="normal",
                   bbox=dict(boxstyle="round,pad=0.3", facecolor="white",
                             edgecolor=MOUSE_DISEASE, alpha=0.85))
     
@@ -212,10 +207,11 @@ def main():
     
     pdf_path = os.path.join(out_dir, "dataset_overview.pdf")
 
-    fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
+    # RETIRED 2026-06-23 (user request): stray root-level dataset_overview.pdf no longer generated.
+    # fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
     plt.close(fig)
 
-    print(f"✅ Saved: {pdf_path}")
+    print("RETIRED 2026-06-23: dataset_overview.pdf generation disabled.")
 
 
 if __name__ == "__main__":

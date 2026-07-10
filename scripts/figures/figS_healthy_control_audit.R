@@ -44,13 +44,12 @@ GRP_LABELS <- c(lean_healthy = "Lean healthy",
                 resilient    = "Resilient",
                 obese_MASLD  = "Obese-MASLD")
 
-theme_panel <- theme_classic(base_size = 9) +
+theme_panel <- theme_classic(base_size = 6) +
   theme(legend.position = "right",
-        plot.title = element_text(size = 9, face = "bold"),
-        axis.title = element_text(size = 8),
-        axis.text  = element_text(size = 7),
-        legend.text = element_text(size = 7),
-        legend.title = element_text(size = 8))
+        axis.title = element_text(size = 6),
+        axis.text  = element_text(size = 6),
+        legend.text = element_text(size = 6),
+        legend.title = element_text(size = 6))
 
 # ---------------------------------------------------------------------------
 # Panel (a): Cohort flow + 3-way table
@@ -67,11 +66,11 @@ tbl_a[, group3 := factor(group3, levels = c("lean_healthy", "resilient", "obese_
 p_a <- ggplot(tbl_a, aes(x = dataset, y = N, fill = group3)) +
   geom_col(position = "stack") +
   scale_fill_manual(values = GRP_COLORS, labels = GRP_LABELS) +
-  labs(title = "(a) 3-way pool composition by cohort",
-       x = NULL, y = "Subjects", fill = "Group") +
+  labs(x = NULL, y = "Subjects", fill = "Group") +
   theme_panel +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+message("[caption] (a) 3-way pool composition by cohort")
 ggsave(file.path(OUTDIR, "panel_a_cohort_breakdown.pdf"), p_a,
        width = 4.5, height = 3, device = cairo_pdf)
 
@@ -90,10 +89,10 @@ p_b <- ggplot(sc[!is.na(P_Pro_inflammatory_score)],
   geom_jitter(width = 0.15, height = 0, alpha = 0.85, size = 1.4) +
   scale_color_manual(values = TERT_COLORS, drop = FALSE) +
   facet_wrap(~ dataset, nrow = 2) +
-  labs(title = "(b) Subclinical screen of histology-healthy controls",
-       x = "NAS score (clinical)", y = "NMF P_Pro_inflammatory_score",
+  labs(x = "NAS score (clinical)", y = "NMF P_Pro_inflammatory_score",
        color = "Tertile") +
   theme_panel
+message("[caption] (b) Subclinical screen of histology-healthy controls")
 ggsave(file.path(OUTDIR, "panel_b_subclinical_screen.pdf"), p_b,
        width = 5.5, height = 3, device = cairo_pdf)
 
@@ -118,11 +117,11 @@ if (file.exists(sens_fp)) {
     scale_fill_continuous(type = "viridis") +
     annotate("text", x = -Inf, y = Inf,
               label = sprintf("Spearman ρ = %.3f", rho),
-              hjust = -0.1, vjust = 1.5, size = 3) +
-    labs(title = sprintf("(c) F2+ vs F0 logFC: original vs cleaned controls\nTop 1000 by |orig logFC|"),
-         x = "logFC (orig: all F0 controls)",
+              hjust = -0.1, vjust = 1.5, size = GEOM_TEXT_6PT) +
+    labs(x = "logFC (orig: all F0 controls)",
          y = "logFC (clean: subclinical-suspect dropped)") +
     theme_panel
+  message("[caption] (c) F2+ vs F0 logFC: original vs cleaned controls, top 1000 by |orig logFC|")
   ggsave(file.path(OUTDIR, "panel_c_progression_robustness.pdf"), p_c,
          width = 4.5, height = 3.5, device = cairo_pdf)
 } else {
@@ -137,9 +136,9 @@ if (file.exists(sens_fp)) {
   p_c <- ggplot(atlas_sig, aes(x = f2_inflection_logFC)) +
     geom_histogram(fill = "#377eb8", alpha = 0.7, bins = 60) +
     geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(title = "(c) Placeholder: progression-metric logFC distribution",
-         x = "Progression-inflection logFC", y = "Genes") +
+    labs(x = "Progression-inflection logFC", y = "Genes") +
     theme_panel
+  message("[caption] (c) Placeholder: progression-metric logFC distribution")
   ggsave(file.path(OUTDIR, "panel_c_progression_robustness.pdf"), p_c,
          width = 4.5, height = 3, device = cairo_pdf)
 }
@@ -171,12 +170,12 @@ if (file.exists(sens_summary_fp)) {
   p_d <- ggplot(attn, aes(x = metric, y = value)) +
     geom_col(fill = "#984ea3", width = 0.6) +
     geom_hline(aes(yintercept = target), color = "red", linetype = "dashed") +
-    geom_text(aes(label = sprintf("%.2f", value)), vjust = -0.5, size = 2.5) +
+    geom_text(aes(label = sprintf("%.2f", value)), vjust = -0.5, size = GEOM_TEXT_6PT) +
     coord_cartesian(ylim = c(0, 1.05)) +
-    labs(title = "(d) F2+vs-F0 DE robustness to control cleaning",
-         x = NULL, y = "Value (red = robustness target)") +
+    labs(x = NULL, y = "Value (red = robustness target)") +
     theme_panel +
     theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
+  message("[caption] (d) F2+vs-F0 DE robustness to control cleaning")
   ggsave(file.path(OUTDIR, "panel_d_effect_attenuation.pdf"), p_d,
          width = 4, height = 3, device = cairo_pdf)
 } else {
@@ -185,9 +184,9 @@ if (file.exists(sens_summary_fp)) {
   attn <- data.table(metric = "pending", value = NA_real_)
   p_d <- ggplot(attn, aes(x = metric, y = value)) +
     geom_col(fill = "grey80") +
-    labs(title = "(d) Placeholder: pending Script 232",
-         x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_panel
+  message("[caption] (d) Placeholder: pending Script 232")
   ggsave(file.path(OUTDIR, "panel_d_effect_attenuation.pdf"), p_d,
          width = 3, height = 2, device = cairo_pdf)
 }
@@ -211,20 +210,21 @@ for (label in names(de_files)) {
   for (cn in unique(d$contrast)) {
     dd <- d[contrast == cn]
     dd[, neglog10p := -log10(pmax(adj.P.Val, 1e-300))]
-    dd[, sig := !is.na(adj.P.Val) & adj.P.Val < 0.05 & abs(logFC) > 0.5]
+    dd[, sig := !is.na(adj.P.Val) & adj.P.Val < 0.05 & abs(logFC) > 0.3]
     p_v <- ggplot(dd, aes(x = logFC, y = neglog10p, color = sig)) +
       geom_point(alpha = 0.4, size = 0.5) +
       scale_color_manual(values = c(`FALSE` = "grey80", `TRUE` = "#e41a1c"),
                           guide = "none") +
-      geom_vline(xintercept = c(-0.5, 0.5), linetype = "dotted", color = "grey30") +
+      geom_vline(xintercept = c(-0.3, 0.3), linetype = "dotted", color = "grey30") +
       geom_hline(yintercept = -log10(0.05), linetype = "dotted", color = "grey30") +
-      labs(title = sprintf("(e) %s: %s", label, cn),
-           x = "logFC", y = "-log10 FDR") +
+      labs(x = "logFC", y = "-log10 FDR") +
       theme_panel
     volcano_plots[[paste(label, cn, sep = "_")]] <- p_v
   }
 }
 if (length(volcano_plots) > 0) {
+  message(sprintf("[caption] (e) Resilient transcriptome volcanoes: %s",
+                   paste(names(volcano_plots), collapse = ", ")))
   pe <- wrap_plots(volcano_plots, ncol = 2)
   ggsave(file.path(OUTDIR, "panel_e_volcanos.pdf"), pe,
          width = 7, height = 2.5 * ceiling(length(volcano_plots) / 2),
@@ -257,12 +257,12 @@ if (file.exists(gsea_fp)) {
     geom_tile(color = "white") +
     scale_fill_gradient2(low = "#377eb8", mid = "white", high = "#e41a1c",
                           midpoint = 0, limits = c(-3, 3), oob = squish) +
-    geom_text(aes(label = ifelse(padj < 0.05, "*", "")), size = 2.5) +
-    labs(title = "(f) Pathway NES across resilient contrasts",
-         x = NULL, y = NULL, fill = "NES") +
+    geom_text(aes(label = ifelse(padj < 0.05, "*", "")), size = GEOM_TEXT_6PT) +
+    labs(x = NULL, y = NULL, fill = "NES") +
     theme_panel +
     theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
           axis.text.y = element_text(size = 6))
+  message("[caption] (f) Pathway NES across resilient contrasts")
   ggsave(file.path(OUTDIR, "panel_f_gsea_heatmap.pdf"), p_f,
          width = 6, height = 7, device = cairo_pdf)
 } else {
@@ -301,11 +301,10 @@ if (file.exists(olink_fp)) {
     geom_boxplot(outlier.size = 0.6, alpha = 0.7) +
     scale_fill_manual(values = pal_g, guide = "none") +
     annotate("text", x = 2.5, y = max(ok_labeled$progression_z, na.rm = TRUE) * 0.92,
-             label = kw_lbl, size = 3) +
-    labs(title = "(g) Plasma progression score by liver disease stage",
-         subtitle = "Yang et al. 2025 (GSE276114); n=217 subjects",
-         x = NULL, y = "Progression Z-score") +
+             label = kw_lbl, size = GEOM_TEXT_6PT) +
+    labs(x = NULL, y = "Progression Z-score") +
     theme_panel
+  message("[caption] (g) Plasma progression score by liver disease stage; Yang et al. 2025 (GSE276114); n=217 subjects")
   ggsave(file.path(OUTDIR, "panel_g_olink_progression.pdf"), p_g,
          width = 5, height = 3.5, device = cairo_pdf)
 }
@@ -323,10 +322,10 @@ if (file.exists(hand_fp)) {
     geom_boxplot(outlier.size = 0.5) +
     facet_wrap(~ symbol, scales = "free_y") +
     scale_fill_manual(values = GRP_COLORS, labels = GRP_LABELS, guide = "none") +
-    labs(title = "(h.i) Curated protective alleles: bulk expression",
-         x = NULL, y = "log2 CPM") +
+    labs(x = NULL, y = "log2 CPM") +
     theme_panel +
     theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  message("[caption] (h.i) Curated protective alleles: bulk expression")
   ggsave(file.path(OUTDIR, "panel_h_protective_genes.pdf"), p_h1,
          width = 5, height = 3, device = cairo_pdf)
 }

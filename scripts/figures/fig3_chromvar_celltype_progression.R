@@ -132,19 +132,19 @@ col_anno <- HeatmapAnnotation(
     `Cell type` = CT_COLORS[CT_KEEP],
     `Condition` = COND_COLORS
   ),
-  annotation_name_gp   = gpar(fontsize = 6, fontface = "bold"),
+  annotation_name_gp   = gpar(fontsize = 6, fontface = "plain"),
   annotation_name_side = "left",
   simple_anno_size     = unit(2.5, "mm"),
   gap                  = unit(0.6, "mm"),
   border               = FALSE,
   show_legend          = TRUE,
   annotation_legend_param = list(
-    `Cell type` = list(title_gp = gpar(fontsize = 6, fontface = "bold"),
-                       labels_gp = gpar(fontsize = 5),
+    `Cell type` = list(title_gp = gpar(fontsize = 6, fontface = "plain"),
+                       labels_gp = gpar(fontsize = 6),
                        grid_height = unit(2.5, "mm"),
                        grid_width  = unit(2.5, "mm")),
-    `Condition` = list(title_gp = gpar(fontsize = 6, fontface = "bold"),
-                       labels_gp = gpar(fontsize = 5),
+    `Condition` = list(title_gp = gpar(fontsize = 6, fontface = "plain"),
+                       labels_gp = gpar(fontsize = 6),
                        grid_height = unit(2.5, "mm"),
                        grid_width  = unit(2.5, "mm"))
   )
@@ -157,7 +157,7 @@ col_split <- factor(col_ct, levels = CT_KEEP)
 # Y-axis label aesthetics: bold for user-specified TFs
 y_levels <- rownames(mat_plot)
 y_stem   <- sub(" \\(.*", "", y_levels)
-y_face   <- ifelse(y_stem %in% BOLD_TFS, "bold", "plain")
+y_face   <- ifelse(y_stem %in% BOLD_TFS, "italic", "plain")
 
 # Row group separators (functional TF categories)
 row_group <- tf_lookup$group[match(y_levels, tf_lookup$display)]
@@ -181,7 +181,7 @@ ht <- Heatmap(
   row_split    = row_split,
   row_gap      = unit(1.2, "mm"),
   column_gap   = unit(2.0, "mm"),
-  row_title_gp = gpar(fontsize = 6, fontface = "bold"),
+  row_title_gp = gpar(fontsize = 6, fontface = "plain"),
   row_title_side = "left",
   row_title_rot = 0,
   column_title  = NULL,
@@ -196,8 +196,8 @@ ht <- Heatmap(
   rect_gp   = gpar(col = "#FFFFFF", lwd = 0.25),
   heatmap_legend_param = list(
     title = "Motif deviation z",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2.0, "cm"),
     direction = "vertical",
     at = c(-z_clip, 0, z_clip),

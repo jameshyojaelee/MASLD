@@ -20,7 +20,7 @@ OUT_DIR <- file.path(FIG_SUPP, "figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "figS_robust_batch.pdf")
 
-theme_robust <- theme_minimal(base_size = 10) +
+theme_robust <- theme_minimal(base_size = 6) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(colour = "grey92", linewidth = 0.25),
@@ -29,11 +29,7 @@ theme_robust <- theme_minimal(base_size = 10) +
     legend.position = "top",
     legend.title  = element_blank(),
     legend.margin = margin(b = -3),
-    plot.title    = element_text(face = "bold", size = 11,
-                                 margin = margin(b = 2)),
-    plot.subtitle = element_text(size = 9, colour = "grey30",
-                                 margin = margin(b = 6)),
-    plot.tag      = element_text(face = "bold", size = 12),
+    plot.tag      = element_text(face = "plain", size = 12),
     plot.margin   = margin(8, 10, 8, 10)
   )
 
@@ -84,7 +80,7 @@ p_a <- ggplot(both, aes(x = component_lbl, y = var_frac,
                 label = sprintf("%.0f%%", 100 * median_frac),
                 group = partition),
             position = position_dodge(width = 0.78),
-            vjust = -1.0, size = 2.8, colour = "grey15",
+            vjust = -1.0, size = 6 / ggplot2::.pt, colour = "black",
             show.legend = FALSE) +
   scale_fill_manual(values = PAL_PART) +
   scale_colour_manual(values = PAL_PART) +
@@ -92,8 +88,6 @@ p_a <- ggplot(both, aes(x = component_lbl, y = var_frac,
                      expand = expansion(mult = c(0.02, 0.10)),
                      limits = c(0, 1)) +
   labs(tag = "A",
-       title = "Variance partition",
-       subtitle = "Per-gene variance fraction (violins); white dots = medians",
        x = NULL, y = "Variance fraction") +
   theme_robust
 
@@ -117,15 +111,14 @@ p_b <- ggplot(sva_plot, aes(x = logFC_primary, y = logFC_sva,
                            sva_summary$rho_logFC[1],
                            sva_summary$jaccard[1],
                            sva_summary$n_sv[1]),
-           size = 3.2, colour = "grey20") +
+           size = 6 / ggplot2::.pt, colour = "black") +
   scale_colour_manual(values = c("Non-DEG" = "grey70", "DEG" = "#0072B2")) +
   labs(tag = "B",
-       title = "dream vs dream + SVA",
-       subtitle = "Surrogate variables on top of dream barely shift any logFC",
        x = "log2FC (dream)", y = "log2FC (dream + SVA)") +
   theme_robust +
   guides(colour = guide_legend(override.aes = list(size = 2, alpha = 1)))
 
 composite <- p_a + p_b + plot_layout(ncol = 2)
-ggsave(OUT_PDF, composite, width = 9, height = 4, device = cairo_pdf)
+message("[caption] (A) Variance partition: per-gene variance fraction (violins); white dots = medians. (B) dream vs dream + SVA: surrogate variables on top of dream barely shift any logFC.")
+ggsave(OUT_PDF, composite, width = 7.09, height = 3.15, device = cairo_pdf)
 cat("Saved:", OUT_PDF, "\n")

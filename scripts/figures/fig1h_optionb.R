@@ -7,8 +7,8 @@
 # more often than for a random non-DEG control set.
 #
 # Comparison:
-#   Group A: Integration-only — dream padj < 0.05 AND no cohort meets canonical
-#            (padj < 0.05 AND |logFC| > 0.5 AND same direction as dream).
+#   Group A: Integration-only — dream lfsr < 0.05 AND no cohort meets canonical
+#            (lfsr < 0.05 AND |shrunk_logFC| > 0.3 AND same direction as dream).
 #   Group B: Random non-DEG — random size-matched sample of dream padj >= 0.05.
 #
 # Metric per gene: count of 5 cohorts where sign(per-cohort logFC) ==
@@ -33,9 +33,13 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
+# NOTE: PADJ_COHORT / LFC_CANONICAL are documentation-only here — group membership
+# comes from the precomputed A2 integration-only gene list and the sign-concordance
+# metric is raw-sign based (reproduces the manuscript's exact 46.7%); these constants
+# do not enter the plotted numbers. Canonical per-cohort gate = TREAT FDR<0.05 at lfc=0.25.
 PADJ_INT      <- 0.05
 PADJ_COHORT   <- 0.05
-LFC_CANONICAL <- 0.5
+LFC_CANONICAL <- 0.3
 SET_SEED      <- 42
 
 FIVE_COHORTS <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
@@ -153,6 +157,7 @@ dist_full <- merge(all_levels, dist_dt[, .(group, n_sign_concordant, N)],
 dist_full[is.na(N), N := 0]
 dist_full[, x_factor := factor(n_sign_concordant, levels = 0:5)]
 
+message("[caption] Integration-rescued DEGs share effect direction across cohorts")
 p_str <- if (fisher_p < 1e-300) "p<1e-300" else
   paste0("p=", formatC(fisher_p, format = "e", digits = 1))
 label_text <- sprintf(
@@ -169,13 +174,10 @@ p <- ggplot(dist_full,
                      expand = expansion(mult = c(0, 0.13))) +
   labs(
     x = "Cohorts with concordant log2FC sign (of 5)",
-    y = "Number of genes",
-    title = "Integration-rescued DEGs share effect direction across cohorts"
+    y = "Number of genes"
   ) +
   theme_masld(base_size = 10) +
   theme(
-    plot.title    = element_text(size = 11, face = "bold", margin = margin(b = 1)),
-    plot.subtitle = element_text(size = 8.5, color = "gray30", margin = margin(b = 2)),
     plot.margin   = margin(2, 3, 2, 2),
     axis.title.x  = element_text(margin = margin(t = 1)),
     axis.title.y  = element_text(margin = margin(r = 1)),

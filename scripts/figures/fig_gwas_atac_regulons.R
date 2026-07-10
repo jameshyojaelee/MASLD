@@ -27,16 +27,12 @@ OUT_DIR <- FIGS05_DIR   # epigenomic + spatial supplementary
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 cat("Output directory:", OUT_DIR, "\n")
 
-PANEL_THEME <- theme_masld(base_size = 8) +
+PANEL_THEME <- theme_masld(base_size = 6) +
   theme(
-    plot.title       = element_text(size = 8.5, face = "bold", hjust = 0,
-                                    margin = margin(b = 3)),
-    plot.subtitle    = element_text(size = 6.8, colour = "#555555",
-                                    margin = margin(b = 5)),
-    axis.title       = element_text(size = 7.5),
-    axis.text        = element_text(size = 7),
-    legend.text      = element_text(size = 6.5),
-    legend.title     = element_text(size = 7),
+    axis.title       = element_text(size = 6),
+    axis.text        = element_text(size = 6),
+    legend.text      = element_text(size = 6),
+    legend.title     = element_text(size = 6),
     legend.key.size  = unit(0.32, "cm"),
     panel.grid.minor = element_blank()
   )
@@ -124,15 +120,15 @@ pA <- ggplot(credible, aes(x = max_pip, y = abs_diff)) +
              colour = REG_COL, alpha = 0.95, shape = 16) +
   geom_text_repel(aes(label = label),
                   colour = "black",
-                  size = 2.3, segment.size = 0.25,
+                  size = GEOM_TEXT_6PT, segment.size = 0.25,
                   min.segment.length = 0.1,
                   box.padding = 0.3,
                   max.overlaps = Inf, seed = 42) +
   annotate("text", x = 0.8,  y = max(credible$abs_diff) * 1.05,
-           label = "PIP 0.8", hjust = -0.1, size = 2.3,
+           label = "PIP 0.8", hjust = -0.1, size = GEOM_TEXT_6PT,
            colour = "#666666") +
   annotate("text", x = 0.5,  y = max(credible$abs_diff) * 1.05,
-           label = "PIP 0.5", hjust = -0.1, size = 2.3,
+           label = "PIP 0.5", hjust = -0.1, size = GEOM_TEXT_6PT,
            colour = "#888888") +
   scale_size_continuous(range = c(1.2, 3.8), guide = "none") +
   scale_colour_manual(values = c(`SCENIC+ MASLD disease-regulon TF` = REG_COL,
@@ -140,15 +136,16 @@ pA <- ggplot(credible, aes(x = max_pip, y = abs_diff)) +
                       guide = "none") +
   scale_x_continuous(limits = c(0.18, 1.05),
                      breaks = c(0.2, 0.5, 0.8, 1.0)) +
-  labs(x = "GWAS max PIP", y = "|motif alleleDiff|",
-       title = "Credible MASLD variants: predicted TF-motif disruption (motifbreakR)",
-       subtitle = sprintf(paste0(
-         "%d variant-TF pairs (PIP >= 0.2); magenta = SCENIC+ MASLD ",
-         "disease-regulon TFs (n = %d pairs, %d TFs)"),
-         nrow(credible),
-         sum(credible$motif_in_disease_regulon),
-         length(unique(credible[motif_in_disease_regulon==TRUE]$tf_name)))) +
+  labs(x = "GWAS max PIP", y = "|motif alleleDiff|") +
   PANEL_THEME
+
+message(sprintf(paste0(
+  "[caption] Credible MASLD variants: predicted TF-motif disruption (motifbreakR). ",
+  "%d variant-TF pairs (PIP >= 0.2); magenta = SCENIC+ MASLD ",
+  "disease-regulon TFs (n = %d pairs, %d TFs)"),
+  nrow(credible),
+  sum(credible$motif_in_disease_regulon),
+  length(unique(credible[motif_in_disease_regulon==TRUE]$tf_name))))
 
 ggsave(file.path(OUT_DIR, "figS_gwas_atac_regulons_panelA_pip_vs_disruption.pdf"), pA,
        width = 7.0, height = 4.5, useDingbats = FALSE)
@@ -226,26 +223,27 @@ pC <- ggplot(hi_grid, aes(x = tf_name, y = var_label)) +
   scale_x_discrete(position = "top") +
   labs(
     x = NULL,
-    y = sprintf("Variant (nearest gene within %.0f kb)", ceiling(max_d_kb)),
-    title = "High-confidence MASLD variants (PIP >= 0.8): predicted motif disruption (motifbreakR)",
-    subtitle = sprintf(paste0(
-      "%d variants × %d TFs (disease-regulon + TFs hit by >=2 variants); ",
-      "bold = MASLD disease-regulon TF"),
-      length(unique(hi_f$var_label)),
-      length(unique(hi_f$tf_name)))
+    y = sprintf("Variant (nearest gene within %.0f kb)", ceiling(max_d_kb))
   ) +
   PANEL_THEME +
   theme(
     axis.text.x = element_text(angle = 55, hjust = 0, vjust = 0,
                                 face = ifelse(levels(hi_f$tf_name)
                                               %in% regulon_tfs,
-                                              "bold", "plain"),
+                                              "italic", "plain"),
                                 colour = "black",
-                                size = 6.8),
-    axis.text.y = element_text(family = "mono", size = 6.5),
+                                size = 6),
+    axis.text.y = element_text(family = "Helvetica", size = 6),
     panel.grid  = element_blank(),
     legend.position = "right"
   )
+
+message(sprintf(paste0(
+  "[caption] High-confidence MASLD variants (PIP >= 0.8): predicted motif disruption (motifbreakR). ",
+  "%d variants x %d TFs (disease-regulon + TFs hit by >=2 variants); ",
+  "italic = MASLD disease-regulon TF"),
+  length(unique(hi_f$var_label)),
+  length(unique(hi_f$tf_name))))
 
 ggsave(file.path(OUT_DIR, "figS_gwas_atac_regulons_panelB_high_pip_heatmap.pdf"), pC,
        width = 6.5, height = 4.0, useDingbats = FALSE)
@@ -268,22 +266,16 @@ cat("\nWrote supporting table:", out_tsv, "\n")
 cat("\n-- Assembling composite --\n")
 
 composite <- (pA / pC) +
-  plot_layout(heights = c(1.2, 1)) +
-  plot_annotation(
-    title = "MASLD fine-mapped variants disrupt disease-regulon TF motifs",
-    subtitle = paste0(
-      "PIP-credible variants (>= 0.2) × hepatocyte scATAC peaks × motifbreakR · ",
-      "annotated with GWAS fine-mapping max PIP and nearest gene"
-    ),
-    theme = theme(
-      plot.title    = element_text(size = 10, face = "bold"),
-      plot.subtitle = element_text(size = 7, colour = "#444444",
-                                   margin = margin(b = 6))
-    )
-  )
+  plot_layout(heights = c(1.2, 1))
+
+message(paste0(
+  "[caption] MASLD fine-mapped variants disrupt disease-regulon TF motifs. ",
+  "PIP-credible variants (>= 0.2) x hepatocyte scATAC peaks x motifbreakR - ",
+  "annotated with GWAS fine-mapping max PIP and nearest gene"
+))
 
 ggsave(file.path(OUT_DIR, "figS_gwas_atac_regulons.pdf"), composite,
-       width = 10, height = 8, useDingbats = FALSE)
+       width = 7.09, height = 5.67, useDingbats = FALSE)
 
 # clean up deprecated panel files from prior runs
 for (f in c("figS_gwas_atac_regulons_panelC_high_pip_heatmap.pdf",

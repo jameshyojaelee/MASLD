@@ -66,18 +66,17 @@ p <- ggplot(qc, aes(x = cohort, y = mt_pct, fill = cohort)) +
   geom_hline(yintercept = 10, linetype = "dashed", colour = "grey50",
              linewidth = 0.3) +
   annotate("text", x = 0.6, y = 11, label = "10% reference",
-           hjust = 0, size = 2.5, colour = "grey40") +
+           hjust = 0, size = GEOM_TEXT_6PT, colour = "grey40") +
   scale_y_log10(breaks = c(0.1, 1, 5, 10, 30, 60, 100),
                 labels = c("0.1", "1", "5", "10", "30", "60", "100")) +
   scale_fill_brewer(palette = "Set3", guide = "none") +
-  labs(x = NULL, y = "Mitochondrial reads (%, log scale)",
-       title = "Per-cohort mitochondrial read fraction",
-       subtitle = sprintf(
-         "Computed from 34 chrM-encoded genes; %s samples; ordered by median",
-         format(nrow(qc), big.mark = ","))) +
+  labs(x = NULL, y = "Mitochondrial reads (%, log scale)") +
   theme_masld() +
-  theme(axis.text.x  = element_text(angle = 35, hjust = 1, size = 7),
-        plot.subtitle = element_text(size = 8, color = "grey35"))
+  theme(axis.text.x  = element_text(angle = 35, hjust = 1, size = 6))
+
+message(sprintf(
+  "[caption] Per-cohort mitochondrial read fraction. Computed from 34 chrM-encoded genes; %s samples; ordered by median.",
+  format(nrow(qc), big.mark = ",")))
 
 out_pdf <- file.path(OUT_DIR, "figS01_mt_pct.pdf")
 out_csv <- file.path(FIGS01_DIR, "figS01_mt_pct_summary.csv")

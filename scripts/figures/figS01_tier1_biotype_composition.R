@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: Tier 1 dream DEGs (n=1,885) are dominated by protein-coding (50.7%)
-# and lncRNA (38.9%); the remaining ~10.6% are technical-noise-prone biotypes
+# KEY MESSAGE: canonical Tier 1 DEGs (TREAT FDR<0.05 at lfc=0.25; n~1,918,
+# recomputed live) are dominated by protein-coding and lncRNA; the remainder are
+# technical-noise-prone biotypes
 # (processed pseudogenes, immune V(D)J recombination genes, small RNAs).
 #
 # Panel for figS01_qc_validation — biotype composition of canonical Tier 1 DEGs.
@@ -76,20 +77,20 @@ p <- ggplot(tally, aes(x = N, y = category, fill = direction)) +
   geom_text(data = clean_pct,
             aes(x = N, y = category, label = label),
             inherit.aes = FALSE,
-            hjust = -0.05, size = 3) +
+            hjust = -0.05, size = 6 / ggplot2::.pt) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.18))) +
   scale_fill_manual(values = c(Up = "#D6604D", Down = "#4393C3"),
                     breaks = c("Up", "Down")) +
-  labs(x = "Number of Tier 1 DEGs (padj<0.05, |logFC|>0.5)",
+  labs(x = "Number of Tier 1 DEGs (TREAT FDR<0.05, lfc=0.25)",
        y = NULL,
-       fill = "Direction",
-       title = "Biotype composition of canonical Tier 1 DEGs",
-       subtitle = sprintf("Total n = %s (Up = %s, Down = %s); annotation: GENCODE v49",
-                          format(nrow(m), big.mark = ","),
-                          format(sum(m$direction == "Up"),   big.mark = ","),
-                          format(sum(m$direction == "Down"), big.mark = ","))) +
-  theme(legend.position = "top",
-        plot.subtitle = element_text(size = 10, colour = "grey30"))
+       fill = "Direction") +
+  theme(legend.position = "top")
+
+message(sprintf(
+  "[caption] Biotype composition of canonical Tier 1 DEGs. Total n = %s (Up = %s, Down = %s); annotation: GENCODE v49",
+  format(nrow(m), big.mark = ","),
+  format(sum(m$direction == "Up"),   big.mark = ","),
+  format(sum(m$direction == "Down"), big.mark = ",")))
 
 out_pdf <- file.path(FIGS01_DIR, "figS01_tier1_biotype_composition.pdf")
 out_csv <- file.path(FIGS01_DIR, "figS01_tier1_biotype_composition.csv")

@@ -134,12 +134,12 @@ p <- ggplot(reg, aes(x = alleleDiff, y = snp_y)) +
   ) +
   theme_masld(base_size = 7) +
   theme(
-    axis.text.y      = element_text(size = 5, colour = "black"),
-    strip.text.y.left = element_text(angle = 0, face = "bold.italic", size = 7,
+    axis.text.y      = element_text(size = 6, colour = "black"),
+    strip.text.y.left = element_text(angle = 0, face = "italic", size = 6,
                                      colour = "black"),
     strip.placement  = "outside",
     panel.spacing.y  = unit(2, "pt"),
-    plot.caption     = element_text(size = 5, colour = "grey35", hjust = 0),
+    plot.caption     = element_text(size = 6, colour = "black", hjust = 0),
     legend.position  = "right",
     legend.box       = "vertical",
     legend.key.size  = unit(0.28, "cm")

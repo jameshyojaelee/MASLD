@@ -44,14 +44,13 @@ if (!is.null(drug_val) && !is.null(atlas)) {
     atlas_support = atlas_support[1],
     # S4 epigenomic flags (from drug_val, not atlas)
     scenic_grn      = any(scenic_grn_target == TRUE, na.rm = TRUE),
-    disease_regulon = any(is_disease_regulon_target == TRUE, na.rm = TRUE),
-    promoter_acc    = any(mouse_promoter_accessible == TRUE, na.rm = TRUE)
+    disease_regulon = any(is_disease_regulon_target == TRUE, na.rm = TRUE)
   ), by = target_gene]
 
   # --- 2. Merge atlas columns --------------------------------------------
   # mr_pval column removed 2026-04-22 — MR ditched from paper.
   atlas_sub <- atlas[human_symbol %in% gene_drugs$target_gene,
-    .(human_symbol, bulk_padj, bulk_logFC,
+    .(human_symbol, bulk_padj, bulk_logFC, bulk_lfsr, bulk_shrunk_logFC, bulk_treat_fdr,
       best_liver_enzyme_pp4, broadaway_coloc_pp4, pdff_coloc_pp4,
       sceqtl_coloc_pp4_hep, twas_pval,
       essentiality_chronos)]
@@ -63,8 +62,10 @@ if (!is.null(drug_val) && !is.null(atlas)) {
 
   # --- 3. Compute normalised evidence strength per source (0–1) ----------
 
-  # S1: Transcriptomic — padj < 0.05 + |logFC| > 0.5 gate, then score by -log10
-  gene_dt[, S1 := ifelse(!is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5,
+  # S1: Transcriptomic — canonical Tier-1 DEG gate (TREAT FDR < 0.05 at lfc=0.25;
+  # 2026-06-29 migration off the ashr lfsr/|shrunk|>0.3 gate — the effect floor is
+  # folded into the test), then score by -log10 padj magnitude.
+  gene_dt[, S1 := ifelse(!is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05,
                           pmin(-log10(pmax(bulk_padj, 1e-300)) / 30, 1), 0)]
 
   # S2: Genetic/Causal — max across COLOC PP4s + TWAS score
@@ -83,10 +84,10 @@ if (!is.null(drug_val) && !is.null(atlas)) {
                            pmin(abs(essentiality_chronos) / 2, 1),
                            NA_real_)]
 
-  # S4: Epigenomic — fraction of 3 flags TRUE
+  # S4: Epigenomic — fraction of 2 human flags TRUE
+  # (mouse_promoter_accessible dropped 2026-07-05 — atlas paper drops cross-species)
   gene_dt[, S4 := (as.numeric(scenic_grn) +
-                    as.numeric(disease_regulon) +
-                    as.numeric(promoter_acc)) / 3]
+                    as.numeric(disease_regulon)) / 2]
 
   # S5: Spatial — check atlas columns
   gene_dt[, S5 := NA_real_]
@@ -146,21 +147,20 @@ if (!is.null(drug_val) && !is.null(atlas)) {
                                   sprintf("%.2f", strength)),
                   color = ifelse(!is.na(strength) & strength > 0.5,
                                   "light", "dark")),
-              size = 2, show.legend = FALSE) +
+              size = GEOM_TEXT_6PT, show.legend = FALSE) +
     scale_fill_gradient(low = "white", high = masld_colors$up,
                         na.value = "#F0F0F0", limits = c(0, 1),
                         name = "Evidence\nstrength") +
-    scale_color_manual(values = c(light = "white", dark = "gray30")) +
-    labs(x = NULL, y = NULL,
-         title = "Clinical drug targets \u00d7 evidence sources") +
+    scale_color_manual(values = c(light = "white", dark = "black")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-          axis.text.y = element_text(size = 5.5),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6),
           legend.position = "right",
           legend.key.height = unit(0.6, "cm"),
           legend.key.width  = unit(0.25, "cm"),
-          legend.title = element_text(size = 5.5),
-          legend.text  = element_text(size = 5))
+          legend.title = element_text(size = 6),
+          legend.text  = element_text(size = 6))
 
   # --- 7. Tier annotation strip -------------------------------------------
   tier_colors <- c(Strong = masld_colors$conserved,
@@ -173,8 +173,8 @@ if (!is.null(drug_val) && !is.null(atlas)) {
     theme_void() +
     theme(legend.position = "right",
           legend.key.size = unit(0.25, "cm"),
-          legend.title = element_text(size = 5.5),
-          legend.text  = element_text(size = 5),
+          legend.title = element_text(size = 6),
+          legend.text  = element_text(size = 6),
           axis.text = element_blank(),
           axis.ticks = element_blank())
 
@@ -199,12 +199,11 @@ if (!is.null(lincs)) {
 
       p_b_left <- ggplot(top_moa, aes(x = N, y = moa)) +
         geom_col(fill = masld_colors$up, width = 0.6) +
-        geom_text(aes(label = N), hjust = -0.2, size = 1.8) +
+        geom_text(aes(label = N), hjust = -0.2, size = GEOM_TEXT_6PT) +
         scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
-        labs(x = "Compounds", y = NULL,
-             title = "Top LINCS MOA classes") +
+        labs(x = "Compounds", y = NULL) +
         theme_masld() +
-        theme(axis.text.y = element_text(size = 4.5))
+        theme(axis.text.y = element_text(size = 6))
 
       # Combine with network proximity if available
       if (!is.null(netprox) && nrow(netprox) > 0) {
@@ -225,11 +224,10 @@ if (!is.null(lincs)) {
                               guide = "none") +
             annotate("text", x = -2, y = Inf,
                      label = "z < -2",
-                     hjust = 1.1, vjust = 1.5, size = 2,
-                     color = masld_colors$mr, fontface = "italic") +
+                     hjust = 1.1, vjust = 1.5, size = GEOM_TEXT_6PT,
+                     color = masld_colors$mr) +
             labs(x = paste0("Network proximity (", z_col, ")"),
-                 y = "Drugs",
-                 title = "Drug-disease network proximity") +
+                 y = "Drugs") +
             theme_masld()
 
           p_b <- p_b_left | p_b_right
@@ -258,8 +256,7 @@ if (!is.null(lincs)) {
                                    "FALSE" = masld_colors$ns),
                         guide = "none") +
       labs(x = paste0("Network proximity (", z_col, ")"),
-           y = "Drugs",
-           title = "Drug-disease network proximity") +
+           y = "Drugs") +
       theme_masld()
   }
 }
@@ -304,14 +301,13 @@ if (!is.null(spatial_enr)) {
                  color = "gray50") +
       geom_text(aes(label = paste0("OR=", round(odds_ratio, 2),
                                    " ", sig_label)),
-                hjust = -0.05, size = 1.8, color = "gray30") +
+                hjust = -0.05, size = GEOM_TEXT_6PT, color = "black") +
       scale_fill_manual(values = c("TRUE" = masld_colors$conserved,
                                    "FALSE" = masld_colors$ns),
                         guide = "none") +
       scale_x_continuous(expand = expansion(mult = c(0, 0.4))) +
       labs(x = "Odds ratio (SVG enrichment)",
-           y = NULL,
-           title = "Spatial SVG enrichment in gene sets") +
+           y = NULL) +
       theme_masld()
   }
 }
@@ -378,11 +374,10 @@ if (!is.null(prot_conc)) {
                  label = paste0("rho = ", round(rho_prot, 3),
                                 "\nn = ", comma(n_prot),
                                 "\n", pct_conc, "% concordant"),
-                 hjust = 1.1, vjust = -0.3, size = 2, fontface = "italic",
+                 hjust = 1.1, vjust = -0.3, size = GEOM_TEXT_6PT,
                  lineheight = 0.85) +
         labs(x = "Transcript logFC (integrated)",
-             y = "Protein logFC",
-             title = "Protein-transcript direction concordance") +
+             y = "Protein logFC") +
         theme_masld() +
         theme(legend.position = "bottom",
               legend.key.size = unit(0.2, "cm"))
@@ -416,22 +411,21 @@ if (file.exists(conv_e_path)) {
                   aes(x = factor(n_modalities_active), y = N,
                       fill = highlight)) +
       geom_col(width = 0.7) +
-      geom_text(aes(label = N), vjust = -0.3, size = 1.8) +
+      geom_text(aes(label = N), vjust = -0.3, size = GEOM_TEXT_6PT) +
       scale_y_log10(expand = expansion(mult = c(0, 0.12))) +
       scale_fill_manual(values = c("TRUE" = masld_colors$conserved,
                                    "FALSE" = masld_colors$ns),
                         guide = "none") +
-      labs(x = "Active evidence modalities (of 8)",
-           y = "Number of genes (log scale)",
-           title = "Multi-evidence convergence (C2 canonical)") +
+      labs(x = "Active evidence modalities (of 6)",
+           y = "Number of genes (log scale)") +
       theme_masld() +
       annotate("text", x = Inf, y = Inf,
-               label = paste0("max ", max_conv, "/8 modalities\n",
+               label = paste0("max ", max_conv, "/6 modalities\n",
                               "sources near-orthogonal (|r|<0.21)\n",
                               "convergence is rare by design"),
-               hjust = 1.1, vjust = 1.3, size = 2,
+               hjust = 1.1, vjust = 1.3, size = GEOM_TEXT_6PT,
                color = masld_colors$conserved,
-               lineheight = 0.85, fontface = "italic")
+               lineheight = 0.85)
   }
 }
 
@@ -449,9 +443,11 @@ if (file.exists(conv_f_path)) {
     } else bayes
     top_genes <- head(rank_pool[order(-convergence_score)], 30)
 
-    # Per-source evidence = canonical log Bayes-factor columns log_BF_S1..S8
+    # Per-source evidence = canonical log Bayes-factor columns log_BF_S1..S7
     # (replaces the retired delta_S* from the dead pre-C2 bayesian_posterior.csv).
-    delta_cols <- grep("^log_BF_S[1-8]($|_)", names(top_genes), value = TRUE)
+    # S8 (mouse) is excluded from the score 2026-07-05 and retained only as a
+    # diagnostic column log_BF_S8, so it is filtered out of the display here.
+    delta_cols <- grep("^log_BF_S[1-7]($|_)", names(top_genes), value = TRUE)
 
     if (length(delta_cols) > 0) {
       # Melt for stacked bar chart showing evidence decomposition
@@ -465,9 +461,9 @@ if (file.exists(conv_f_path)) {
                        measure.vars = delta_cols,
                        variable.name = "source", value.name = "delta")
 
-      # Canonical 8-source labels (46d_convergence_evidence.R): S1 human-bulk,
-      # S2 genetic, S3 essentiality, S4 epigenomic, S5 spatial, S6 single-cell,
-      # S7 proteomics, S8 mouse.
+      # 7 scored sources (S8 mouse dropped 2026-07-05; S3 essentiality reported
+      # but unscored) (46d_convergence_evidence.R): S1 human-bulk, S2 genetic,
+      # S3 essentiality, S4 epigenomic, S5 spatial, S6 single-cell, S7 proteomics.
       bar_long[, source_label := fcase(
         grepl("S1", source), "S1: Human bulk",
         grepl("S2", source), "S2: Genetic",
@@ -476,7 +472,6 @@ if (file.exists(conv_f_path)) {
         grepl("S5", source), "S5: Spatial",
         grepl("S6", source), "S6: Single-cell",
         grepl("S7", source), "S7: Proteomics",
-        grepl("S8", source), "S8: Mouse",
         default = as.character(source)
       )]
 
@@ -488,8 +483,7 @@ if (file.exists(conv_f_path)) {
         "S4: Epigenomic"   = masld_colors$human_enriched,
         "S5: Spatial"      = masld_colors$conserved,
         "S6: Single-cell"  = masld_colors$sex,
-        "S7: Proteomics"   = "#8C6BB1",
-        "S8: Mouse"        = "#66A61E"
+        "S7: Proteomics"   = "#8C6BB1"
       )
 
       # Only show positive evidence (log BF > 0 supports the gene)
@@ -501,13 +495,12 @@ if (file.exists(conv_f_path)) {
         scale_fill_manual(values = source_colors, name = "Source") +
         scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
         labs(x = "Evidence contribution (per-source log Bayes factor)",
-             y = NULL,
-             title = "Top-ranked targets: evidence decomposition") +
+             y = NULL) +
         theme_masld() +
-        theme(axis.text.y = element_text(size = 4.5),
+        theme(axis.text.y = element_text(size = 6),
               legend.position = "bottom",
               legend.key.size = unit(0.2, "cm"),
-              legend.text = element_text(size = 5),
+              legend.text = element_text(size = 6),
               legend.margin = margin(0, 0, 0, 0))
 
       # Highlight known drug targets
@@ -520,7 +513,7 @@ if (file.exists(conv_f_path)) {
                    label = paste0("Known targets in top 30:\n",
                                   paste(top_known$human_symbol,
                                         collapse = ", ")),
-                   hjust = 1.1, vjust = -0.3, size = 1.8,
+                   hjust = 1.1, vjust = -0.3, size = GEOM_TEXT_6PT,
                    color = masld_colors$mr, fontface = "italic",
                    lineheight = 0.85)
       }
@@ -533,10 +526,9 @@ if (file.exists(conv_f_path)) {
                     aes(x = convergence_score, y = gene_label)) +
         geom_col(fill = masld_colors$up, width = 0.7) +
         labs(x = "Convergence score",
-             y = NULL,
-             title = "Top-ranked targets (convergence score)") +
+             y = NULL) +
         theme_masld() +
-        theme(axis.text.y = element_text(size = 4.5))
+        theme(axis.text.y = element_text(size = 6))
     }
   }
 }
@@ -547,6 +539,13 @@ if (file.exists(conv_f_path)) {
 # Row 2: (c) spatial SVG | (d) proteomics concordance
 # Row 3: (e) network convergence | (f) target prioritization
 # ==========================================================================
+message("[caption] (a) Clinical drug targets x evidence sources")
+message("[caption] (b) Top LINCS MOA classes / drug-disease network proximity")
+message("[caption] (c) Spatial SVG enrichment in gene sets")
+message("[caption] (d) Protein-transcript direction concordance")
+message("[caption] (e) Multi-evidence convergence (C2 canonical)")
+message("[caption] (f) Top-ranked targets: evidence decomposition / convergence score")
+
 fig5 <- (p_a | p_b) /
         (p_c | p_d) /
         (p_e | p_f)

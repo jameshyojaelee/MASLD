@@ -84,12 +84,12 @@ p <- ggplot(z, aes(x = bulk_logFC, y = y, color = direction)) +
        title = "Zonated DEG directional polarity") +
   theme_masld(base_size = 7) +
   theme(
-    plot.title       = element_text(size = 7.3, face = "bold", margin = margin(b = 6)),
+    plot.title       = element_text(size = 7.3, face = "plain", margin = margin(b = 6)),
     axis.text.y      = element_blank(),
     axis.ticks.y     = element_blank(),
     panel.grid.major.y = element_blank(),
     strip.placement  = "outside",
-    strip.text.y.left = element_text(size = 6.5, face = "bold", angle = 90),
+    strip.text.y.left = element_text(size = 6.5, face = "plain", angle = 90),
     legend.position  = "top"
   )
 

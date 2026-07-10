@@ -51,8 +51,7 @@ if (!is.null(psd) && nrow(psd) > 0) {
     geom_col(position = "dodge", width = 0.7) +
     scale_fill_manual(values = c(Up = masld_colors$up, Down = masld_colors$down), name = NULL) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
-    labs(x = NULL, y = sprintf("DEGs (padj < %s)", format(PADJ_SIG_CUTOFF)),
-         title = "Per-cohort DEG counts") +
+    labs(x = NULL, y = sprintf("DEGs (padj < %s)", format(PADJ_SIG_CUTOFF))) +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
           legend.position = c(0.85, 0.85), legend.background = element_blank())
@@ -76,7 +75,7 @@ if (!is.null(psd) && nrow(psd) > 0) {
     geom_hline(yintercept = -log10(PADJ_SIG_CUTOFF),
                linetype = "dashed", linewidth = 0.2, color = "gray50") +
     geom_vline(xintercept = c(-0.5, 0.5), linetype = "dashed", linewidth = 0.2, color = "gray50") +
-    geom_text_repel(data = top_genes, aes(label = symbol), size = 1.5,
+    geom_text_repel(data = top_genes, aes(label = symbol), size = GEOM_TEXT_6PT,
                     max.overlaps = 8, segment.size = 0.15, color = "black") +
     facet_wrap(~dataset, scales = "free", ncol = 3) +
     labs(x = expression(log[2]~fold~change), y = expression(-log[10]~padj)) +
@@ -89,7 +88,8 @@ if (!is.null(psd) && nrow(psd) > 0) {
 # ---- Assemble ----
 figS6 <- p_a / p_b + plot_layout(heights = c(1, 2)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(figS6, OUT, height = 8)
+message("[caption] Per-cohort DEG counts")
 message("FigS6 saved to ", OUT)

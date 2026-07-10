@@ -34,7 +34,7 @@ DIETS   <- c("MCD", "CDAHFD", "Western", "HFD")
 LFSR <- 0.05; H_SHRUNK <- 0.2; M_SHRUNK <- 0.5; MIN_DIETS <- 3L
 
 # -- human ashr ---------------------------------------------------------------
-ash <- fread(file.path(INT, "meta_results_ashr.csv"), select = c("gene", "shrunk_logFC", "lfsr", "symbol"))  # v6: limma-voom+metafor ashr (was dream)
+ash <- fread(file.path(INT, "canonical_deg_results.csv"), select = c("gene", "shrunk_logFC", "lfsr", "symbol"))  # canonical limma-voom QW C2 (2026-06-24: was metafor meta_results_ashr.csv)
 ash[, hb := strip_v(gene)]
 ash[, hDEG := !is.na(lfsr) & lfsr < LFSR & abs(shrunk_logFC) > H_SHRUNK]
 
@@ -90,28 +90,24 @@ pA <- ggplot(deg, aes(h_shrunk, mouse_mean_shrunk, color = category)) +
   scale_color_manual(values = pal, name = NULL) +
   coord_cartesian(xlim = c(-lim, lim), ylim = c(-lim, lim)) +
   guides(color = guide_legend(override.aes = list(size = 2.5, alpha = 1))) +
-  labs(x = "Human shrunk log2FC (ashr)", y = "Mouse mean shrunk log2FC (ashr, 4 diets)",
-       title = sprintf("A  Human vs mouse ashr DEG effect sizes (shared: %.0f%% concordant, rho=%.2f)",
-                       conc_pct, rho)) +
+  labs(x = "Human shrunk log2FC (ashr)", y = "Mouse mean shrunk log2FC (ashr, 4 diets)") +
   theme_masld() + theme_pub() +
-  theme(plot.title = element_text(face = "bold", size = 8.5, hjust = 0),
-        legend.position = "right", legend.key.size = unit(0.3, "cm"),
+  theme(legend.position = "right", legend.key.size = unit(0.3, "cm"),
         legend.text = element_text(size = 6))
 
 cnts <- deg[, .N, by = category][order(match(category, cat_levels))]
 cnts[, category := factor(category, levels = rev(cat_levels))]
 pB <- ggplot(cnts, aes(N, category, fill = category)) +
-  geom_col(width = 0.7) +
-  geom_text(aes(label = scales::comma(N)), hjust = -0.1, size = 2.8) +
+  geom_col(width = 0.62) +
+  geom_text(aes(label = scales::comma(N)), hjust = -0.1, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = pal, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.18)), labels = scales::comma) +
-  labs(x = "Genes", y = NULL, title = "B  DEG-set overlap") +
+  labs(x = "Genes", y = NULL) +
   theme_masld() + theme_pub() +
-  theme(plot.title = element_text(face = "bold", size = 9, hjust = 0),
-        axis.text.y = element_text(size = 7))
+  theme(axis.text.y = element_text(size = 6))
 
 fig <- pA + pB + plot_layout(widths = c(1.6, 1)) +
   plot_annotation(caption = "Human DEG: lfsr<0.05 & |shrunk log2FC|>0.2 (spine).  Mouse DEG: lfsr<0.05 & |shrunk|>0.5 in >=3 of 4 diets (mouse-confirmed).")
-ggsave(file.path(OUT_DIR, "05_human_vs_mouse_degs.pdf"), fig,
-       width = 11, height = 4.8, device = pdf_device)
+ggsave(file.path(OUT_DIR, "human_vs_mouse_degs.pdf"), fig,
+       width = 7.2, height = 3.6, device = pdf_device)
 cat("Saved: 05_human_vs_mouse_degs.pdf (ashr basis)\n")

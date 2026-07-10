@@ -214,21 +214,20 @@ if (is.null(W) || !"perm_typeI_mean" %in% names(W) || all(is.na(W$perm_typeI_mea
     wlab <- sprintf("winner: %s", cell_label(win$cell_id[1], short = TRUE))
     lab_layer <- if (requireNamespace("ggrepel", quietly=TRUE))
         ggrepel::geom_text_repel(data=win, aes(perm_typeI_mean, y, label=wlab),
-          size=PUB_GEOM_TEXT, color="grey15", seed=42, min.segment.length=0,
+          size=PUB_GEOM_TEXT, color="black", seed=42, min.segment.length=0,
           segment.size=0.2, box.padding=0.6)
       else geom_text(data=win, aes(perm_typeI_mean, y, label=wlab),
-          size=PUB_GEOM_TEXT, color="grey15", vjust=-1)
+          size=PUB_GEOM_TEXT, color="black", vjust=-1)
     pJ1 <- pJ1 + lab_layer
   }
   pJ1 <- pJ1 +
     scale_color_manual(values=fam_cols, name="engine family", drop=TRUE) +
     scale_y_reverse() +
     coord_cartesian(xlim=xr) +
-    labs(title="Calibration gate: who survives, and which survivor ranks best?",
-         subtitle="Grey band [0.04,0.06] = type-I PASS zone; grey points = gated-out / ineligible cells; coloured = survivors; ring = winner",
-         x="permutation type-I error (per cell)",
+    labs(x="permutation type-I error (per cell)",
          y="composite rank-sum  (lower = better; top = best)") +
     theme_masld()+theme_pub()+theme(legend.position="right")
+  message("[caption] Calibration gate: who survives, and which survivor ranks best? Grey band [0.04,0.06] = type-I PASS zone; grey points = gated-out / ineligible cells; coloured = survivors; ring = winner")
   save_fig(pJ1, file.path(OUT, "calibration_gate.pdf"),
            width=fig_col_width, height=fig_col_width*0.82)
   mark(file.path(OUT, "calibration_gate.pdf"))
@@ -276,10 +275,9 @@ if (is.null(W) || !"composite_ranksum" %in% names(W) || all(!is.finite(W$composi
       scale_color_manual(values=fam_cols, name="engine family", drop=TRUE) +
       scale_y_discrete(labels=function(x) cell_label(x, short=TRUE)) +
       scale_x_continuous(expand=expansion(mult=c(0,0.06))) +
-      labs(title="Composite ranking of gate-passing, eligible cells",
-           subtitle="Dot = composite rank-sum (lower = better); grey ticks = R1 (held-out LOCO) and R2 (external) component ranks; ring = winner",
-           x="composite rank-sum (lower = better)", y=NULL) +
+      labs(x="composite rank-sum (lower = better)", y=NULL) +
       theme_masld()+theme_pub()+theme(legend.position="right")
+    message("[caption] Composite ranking of gate-passing, eligible cells. Dot = composite rank-sum (lower = better); grey ticks = R1 (held-out LOCO) and R2 (external) component ranks; ring = winner")
     save_fig(pJ2, file.path(OUT, "composite_rank.pdf"),
              width=fig_col_width, height=max(3.0, 0.16*nrow(d)+1.2))
     mark(file.path(OUT, "composite_rank.pdf"))
@@ -314,12 +312,11 @@ if (is.null(W) || !"loco_repro_scalar" %in% names(W) || all(!is.finite(W$loco_re
       scale_color_manual(values=fam_cols, name="engine family", drop=TRUE) +
       scale_y_discrete(labels=lab_clean) +
       scale_x_continuous(expand=expansion(mult=c(0.04,0.06))) +
-      labs(title="Leave-one-cohort-out reproducibility",
-           subtitle="Held-out reproducibility per configuration (mean of DEG-set overlap, logFC correlation, direction, AUROC).",
-           x="held-out LOCO reproducibility (0-1 scale; higher = better)", y=NULL) +
+      labs(x="held-out LOCO reproducibility (0-1 scale; higher = better)", y=NULL) +
       theme_masld()+theme_pub()+
       theme(legend.position="right",
             panel.grid.major.y=element_line(color="grey92", linewidth=0.25))
+    message("[caption] Leave-one-cohort-out reproducibility. Held-out reproducibility per configuration (mean of DEG-set overlap, logFC correlation, direction, AUROC).")
     save_fig(pJ2b, file.path(OUT, "loco_reproducibility.pdf"),
              width=fig_full_width, height=max(3.0, 0.16*nrow(d)+1.2))
     mark(file.path(OUT, "loco_reproducibility.pdf"))
@@ -369,11 +366,10 @@ if (is.null(W) || !"loco_repro_scalar" %in% names(W) || all(!is.finite(W$loco_re
       geom_jitter(aes(color=fam), width=0.14, height=0, size=1.4, alpha=0.9) +
       scale_fill_manual(values=setNames(box_fill, levels(d3$corr)), guide="none") +
       scale_color_manual(values=fam_cols, name="engine family", drop=TRUE) +
-      labs(title="Does the batch-correction choice move held-out replication?",
-           subtitle="Held-out LOCO reproducibility per correction (each point = one engine x k_sv cell); baseline C0 box in grey. Flat = correction is second-order.",
-           x="correction", y=unique(d3$metric_name)[1]) +
+      labs(x="correction", y=unique(d3$metric_name)[1]) +
       theme_masld()+theme_pub()+
       theme(axis.text.x=element_text(angle=40, hjust=1), legend.position="right")
+    message("[caption] Does the batch-correction choice move held-out replication? Held-out LOCO reproducibility per correction (each point = one engine x k_sv cell); baseline C0 box in grey. Flat = correction is second-order.")
     save_fig(pJ3, file.path(OUT, "correction_disease_axis.pdf"),
              width=fig_full_width, height=3.6)
     mark(file.path(OUT, "correction_disease_axis.pdf"))
@@ -458,11 +454,10 @@ if (is.null(W) || !"loco_repro_scalar" %in% names(W) || all(!is.finite(W$loco_re
       geom_line(linewidth=0.45) + geom_point(size=1.3) +
       scale_color_manual(values=corr_pal, name="correction") +
       facet_wrap(~metric, scales="free_y", nrow=1) +
-      labs(title="Surrogate-variable sweep: does fixed-k beat data-driven 'be'?",
-           subtitle="Median across engines vs number of surrogate variables; dashed = 'be' (data-driven, the eligible/primary k). Plateau at 'be' = no cherry-pick gain.",
-           x="number of surrogate variables (k_sv)", y=NULL) +
+      labs(x="number of surrogate variables (k_sv)", y=NULL) +
       theme_masld()+theme_pub()+
       theme(legend.position="right", panel.spacing=unit(0.5,"lines"))
+    message("[caption] Surrogate-variable sweep: does fixed-k beat data-driven 'be'? Median across engines vs number of surrogate variables; dashed = 'be' (data-driven, the eligible/primary k). Plateau at 'be' = no cherry-pick gain.")
     save_fig(pJ4, file.path(OUT, "sv_sweep.pdf"),
              width=fig_full_width, height=3.2)
     mark(file.path(OUT, "sv_sweep.pdf"))
@@ -509,14 +504,13 @@ if (is.null(W) || !"loco_repro_scalar" %in% names(W) || all(!is.finite(W$loco_re
         geom_line(aes(x=k, y=atleast), color="#C9265E", linewidth=0.5) +
         geom_point(aes(x=k, y=atleast), color="#C9265E", size=1.2) +
         annotate("text", x=N, y=max(exact$atleast), label=lab_core,
-                 hjust=1, vjust=-0.6, size=PUB_GEOM_TEXT, color="grey20") +
+                 hjust=1, vjust=-0.6, size=PUB_GEOM_TEXT, color="black") +
         annotate("text", x=1, y=exact$n_genes[exact$k==1], label=lab_uniq,
-                 hjust=0, vjust=-0.6, size=PUB_GEOM_TEXT, color="grey30") +
+                 hjust=0, vjust=-0.6, size=PUB_GEOM_TEXT, color="black") +
         scale_y_continuous(expand=expansion(mult=c(0,0.08)), labels=scales::comma) +
-        labs(title="Consensus core vs method-unique tail",
-             subtitle=sprintf("Bars = genes called DEG (padj<0.05 & |logFC|>0.5) by EXACTLY k of %d cells; magenta line = >= k (cumulative). Dark = all-cell core; grey = 1-cell unique.", N),
-             x="number of cells calling the gene DEG", y="number of genes") +
+        labs(x="number of cells calling the gene DEG", y="number of genes") +
         theme_masld()+theme_pub()+theme(legend.position="none")
+      message(sprintf("[caption] Consensus core vs method-unique tail. Bars = genes called DEG (padj<0.05 & |logFC|>0.5) by EXACTLY k of %d cells; magenta line = >= k (cumulative). Dark = all-cell core; grey = 1-cell unique.", N))
       save_fig(pJ5, file.path(OUT, "consensus_core_factorial.pdf"),
                width=fig_col_width, height=3.4)
       mark(file.path(OUT, "consensus_core_factorial.pdf"))

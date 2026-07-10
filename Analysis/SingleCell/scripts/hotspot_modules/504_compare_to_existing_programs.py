@@ -86,19 +86,30 @@ def load_hotspot_cell_scores() -> pd.DataFrame:
     """
     consolidated = RESULTS / "cell_scores_all.parquet"
     if consolidated.exists():
-        df = pd.read_parquet(consolidated)
-        # 502 namespaces module as "<ct>__<int>"; canonicalize to (ct, int)
-        if df["module"].dtype == object and df["module"].str.contains("__").all():
-            split = df["module"].str.split("__", n=1, expand=True)
-            df = df.assign(cell_type=split[0], module=split[1].astype(int))
-        return df[["cell_id", "cell_type", "module", "score"]]
+        try:
+            df = pd.read_parquet(consolidated)
+            # 502 namespaces module as "<ct>__<int>"; canonicalize to (ct, int)
+            if df["module"].dtype == object and df["module"].str.contains("__").all():
+                split = df["module"].str.split("__", n=1, expand=True)
+                df = df.assign(cell_type=split[0], module=split[1].astype(int))
+            return df[["cell_id", "cell_type", "module", "score"]]
+        except Exception as e:
+            # Present-but-unreadable (e.g. corrupt/incompatible parquet) — fall
+            # through to the per-CT files, which after the clean re-runs are the
+            # current scores anyway.
+            print(f"[WARN] could not read consolidated {consolidated} ({e}); "
+                  f"falling back to per-CT cell_scores.parquet")
     # Fallback: read per-CT files directly
     frames = []
     for ct in RUN_ORDER:
         p = RESULTS / ct / "cell_scores.parquet"
         if not p.exists():
             continue
-        df = pd.read_parquet(p)
+        try:
+            df = pd.read_parquet(p)
+        except Exception as e:
+            print(f"[WARN] could not read {p} ({e}); skipping {ct} for Pearson criterion")
+            continue
         df["cell_type"] = ct
         frames.append(df)
     if not frames:

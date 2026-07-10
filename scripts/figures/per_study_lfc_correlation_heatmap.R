@@ -83,7 +83,7 @@ fwrite(dt, OUT_CSV)
 p <- ggplot(dt, aes(x = cohort_x, y = cohort_y, fill = rho)) +
   geom_tile(color = "white", linewidth = 0.7) +
   geom_text(aes(label = sprintf("%.2f", rho),
-                color = abs(rho) > 0.6), size = 2.3, fontface = "bold") +
+                color = abs(rho) > 0.6), size = 2.3, fontface = "plain") +
   scale_color_manual(values = c("TRUE" = "white", "FALSE" = "#333333"),
                      guide = "none") +
   scale_fill_gradient2(low = "#1565C0", mid = "#F5F5F5", high = "#C9265E",
@@ -97,10 +97,10 @@ p <- ggplot(dt, aes(x = cohort_x, y = cohort_y, fill = rho)) +
        x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(
-    plot.title      = element_text(size = 7.3, face = "bold", margin = margin(b = 2)),
+    plot.title      = element_text(size = 7.3, face = "plain", margin = margin(b = 2)),
     plot.subtitle   = element_text(size = 5.3, color = "#555555", margin = margin(b = 5)),
-    axis.text.x     = element_text(size = 6.5, face = "bold", angle = 0),
-    axis.text.y     = element_text(size = 6.5, face = "bold"),
+    axis.text.x     = element_text(size = 6.5, face = "plain", angle = 0),
+    axis.text.y     = element_text(size = 6.5, face = "plain"),
     panel.grid      = element_blank(),
     legend.position = "right",
     legend.key.size = unit(0.25, "cm"),

@@ -23,7 +23,9 @@
 #         (gene x sample RAW counts, one file per mouse lineage; ~114 samples
 #          pooled across GSE189600 ALIOS + the Liver Cell Atlas mouse). Keyed on
 #          MOUSE SYMBOL (column 1 == "gene").
-# Output: Cas13_Library_Design/data/mouse_hep_specificity.csv  (keyed on mouse symbol)
+# Output: Cas13_Library_Design/data/mouse_hep_specificity.csv  (carries BOTH
+#         gene_id [Ensembl, via GRCm39-2024-A] and gene_symbol; downstream joins
+#         on gene_id to survive symbol drift)
 #
 # Run on a COMPUTE NODE, e.g.:
 #   srun --partition=io --qos=interactive --mem=16G --cpus-per-task=2 \
@@ -87,6 +89,29 @@ out <- data.table(gene_symbol = genes,
                   mouse_hep_ratio = round(ratio, 3),
                   mouse_top_other_celltype = topother,
                   mouse_hep_substrate = sub)
+
+# ── gene_id annotation (2026-06-24) ─────────────────────────────────────────
+# Map mouse SYMBOL -> Ensembl gene_id through the SAME reference the scRNA atlas
+# (hence this pseudobulk) was built on: Cell Ranger refdata-gex-GRCm39-2024-A
+# (GENCODE vM37). The pseudobulk `gene` column IS this reference's gene_name, so
+# the symbol->gene_id map is a clean 1:1. Downstream (rebuild_cas13_library.R)
+# then joins the gate on the STABLE gene_id, not the drift-prone symbol -- which
+# fixes false-zeros where the library roster uses a newer Ensembl symbol than the
+# atlas (e.g. Akr1b1<->Akr1b3, Atp5f1d<->Atp5d, Lars1<->Lars, Fyb1<->Fyb).
+REFGTF <- Sys.getenv("MOUSE_REF_GTF",
+  "/gpfs/commons/home/jameslee/reference_genome/refdata-gex-GRCm39-2024-A/genes/genes.gtf.gz")
+gl  <- fread(cmd = paste0("zcat -f ", shQuote(REFGTF), " | awk -F\"\\t\" '$3==\"gene\"'"),
+             header = FALSE, sep = "\t", quote = "")
+ext <- function(col, key) { m <- regmatches(col, regexpr(paste0(key, ' "[^"]+"'), col))
+                            sub(paste0(key, ' "'), "", sub('"$', "", m)) }
+refmap <- data.table(gene_id = sub("[.][0-9]+$", "", ext(gl$V9, "gene_id")),
+                     gene_symbol = ext(gl$V9, "gene_name"))
+refmap <- unique(refmap, by = "gene_symbol")     # collapse rare duplicate symbols (keep first)
+out[refmap, gene_id := i.gene_id, on = "gene_symbol"]
+setcolorder(out, c("gene_id", "gene_symbol"))
+cat(sprintf("gene_id mapped for %d / %d substrate genes (GRCm39-2024-A)\n",
+            sum(!is.na(out$gene_id)), nrow(out)))
+
 fwrite(out, OUT)
 cat("wrote", OUT, "-", nrow(out), "genes\n")
 print(table(out$mouse_hep_substrate))

@@ -42,14 +42,14 @@ rates <- data.table(
             mean(strong$both_concordant), 0.25)
 )
 b2_masld_nes <- b2_fg[pathway == "LIANA_MASLD_up_LR", NES]
+message(sprintf("[caption] Panel A (B2): LIANA scRNA CCC reverse-validated in bulk (fgsea MASLD-up NES=%.2f, p<1e-24)", b2_masld_nes))
 pA <- ggplot(rates, aes(level, rate, fill = level)) +
   geom_col(width = 0.55, color = "white") +
-  geom_text(aes(label = sprintf("%.1f%%", rate*100)), vjust = -0.3, size = 2.4) +
+  geom_text(aes(label = sprintf("%.1f%%", rate*100)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("#27AE60","#2980B9","#C0392B","grey60"), guide = "none") +
   scale_y_continuous(labels = percent_format(1), limits = c(0, .55), expand = c(0,0)) +
-  labs(x = NULL, y = "Concordance rate",
-       title = sprintf("B2: LIANA scRNA CCC reverse-validated in bulk\n(fgsea MASLD-up NES=%.2f, p<1e-24)", b2_masld_nes)) +
-  theme_masld() + theme(axis.text.x = element_text(size = 6.5))
+  labs(x = NULL, y = "Concordance rate") +
+  theme_masld() + theme(axis.text.x = element_text(size = 6))
 
 # ---- Panel B: A2 composition shifts ----------------------------------------
 a2_mv <- a2[contrast == "Control_vs_Disease"][order(-abs(t))][1:12]
@@ -64,8 +64,7 @@ pB <- ggplot(a2_mv, aes(logit_diff, celltype, color = sig)) +
   geom_point(size = 1.6) +
   scale_color_manual(values = c("sig" = "#C0392B","ns" = "grey60"),
                      labels = c("sig" = "padj<0.05", "ns" = "ns"), name = NULL) +
-  labs(x = "Logit shift (Disease - Control)", y = NULL,
-       title = "A2: Composition shifts") +
+  labs(x = "Logit shift (Disease - Control)", y = NULL) +
   theme_masld() + theme(axis.text.y = element_text(size = 6))
 
 # ---- Panel C: A1 attribution counts ----------------------------------------
@@ -77,10 +76,10 @@ c_counts <- deg[, .N, by = primary_celltype_label][order(-N)][1:10]
 c_counts[, primary_celltype_label := factor(primary_celltype_label, levels = rev(primary_celltype_label))]
 pC <- ggplot(c_counts, aes(N, primary_celltype_label, fill = primary_celltype_label)) +
   geom_col(width = 0.65, color = "white") +
-  geom_text(aes(label = N), hjust = -0.2, size = 2.3) +
+  geom_text(aes(label = N), hjust = -0.2, size = GEOM_TEXT_6PT) +
   scale_fill_brewer(palette = "Set3", guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "DEGs", y = NULL, title = "A1: Bulk DEGs by primary cell type") +
+  labs(x = "DEGs", y = NULL) +
   theme_masld() + theme(axis.text.y = element_text(size = 6))
 
 # ---- Panel D: G2 enrichment ------------------------------------------------
@@ -92,12 +91,11 @@ pD <- ggplot(g2_sub, aes(odds_ratio, test_short, fill = sig)) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "grey50", linewidth = 0.3) +
   geom_col(width = 0.6, color = "white") +
   geom_text(aes(label = sprintf("OR=%.2f\np=%.2g", odds_ratio, pvalue)),
-            hjust = -0.05, size = 2) +
+            hjust = -0.05, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("sig" = "#C0392B","ns" = "grey65"), guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.45))) +
-  labs(x = "Odds ratio", y = NULL,
-       title = "G2: GWAS-ATAC × LIANA ligand/receptor") +
-  theme_masld() + theme(axis.text.y = element_text(size = 5.5))
+  labs(x = "Odds ratio", y = NULL) +
+  theme_masld() + theme(axis.text.y = element_text(size = 6))
 
 # ---- Panel E: F1 secretome funnel ------------------------------------------
 funnel <- data.table(
@@ -109,12 +107,11 @@ funnel <- data.table(
         nrow(f1_trip)))
 pE <- ggplot(funnel, aes(stage, N, fill = stage)) +
   geom_col(width = 0.6, color = "white") +
-  geom_text(aes(label = N), vjust = -0.3, size = 2.5) +
+  geom_text(aes(label = N), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_brewer(palette = "YlOrRd", guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = NULL, y = "Ligand count",
-       title = "F1: Tissue → plasma biomarker funnel") +
-  theme_masld() + theme(axis.text.x = element_text(size = 6.5))
+  labs(x = NULL, y = "Ligand count") +
+  theme_masld() + theme(axis.text.x = element_text(size = 6))
 
 # ---- Panel F: L1 sex enrichment --------------------------------------------
 l1_sub <- l1[grepl("ligands|receptors", test)]
@@ -127,10 +124,10 @@ pF <- ggplot(l1_sub, aes(odds_ratio, test_s, fill = sig)) +
   geom_col(width = 0.6, color = "white") +
   geom_text(aes(label = sprintf("OR=%.2f\np=%.2g (%s)",
                                 odds_ratio, pvalue, what)),
-            hjust = -0.05, size = 2) +
+            hjust = -0.05, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("sig" = "#E91E63","ns" = "grey65"), guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.45))) +
-  labs(x = "Odds ratio", y = NULL, title = "L1: Sex-biased DEGs × CCC") +
+  labs(x = "Odds ratio", y = NULL) +
   theme_masld() + theme(axis.text.y = element_text(size = 6))
 
 # ---- Panel G: D1 Kupffer/LAM LR count --------------------------------------
@@ -141,12 +138,11 @@ d1_cnt <- data.table(
 d1_cnt[, cls := factor(cls, levels = cls)]
 pG <- ggplot(d1_cnt, aes(cls, N, fill = cls)) +
   geom_col(width = 0.55, color = "white") +
-  geom_text(aes(label = N), vjust = -0.3, size = 3) +
+  geom_text(aes(label = N), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c("#C0392B","#2980B9"), guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
-  labs(x = NULL, y = "Hep→Mac LR pairs",
-       title = "D1: Kupffer↔LAM Hep→Mac axes") +
-  theme_masld() + theme(axis.text.x = element_text(size = 7))
+  labs(x = NULL, y = "Hep→Mac LR pairs") +
+  theme_masld() + theme(axis.text.x = element_text(size = 6))
 
 # ---- Panel H: per-cell top deltas ------------------------------------------
 key_sigs <- c("H2_senescence_core","H2_SASP_profibrotic","H2_SenMayo",
@@ -161,10 +157,9 @@ pH <- ggplot(pc_top, aes(delta, label, fill = dir)) +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "grey50") +
   scale_fill_manual(values = c("disease-enriched" = "#C0392B",
                                 "healthy-enriched" = "#2980B9"), name = NULL) +
-  labs(x = "Per-cell mean delta (1.2M cells, scanpy)", y = NULL,
-       title = "H2+H3+D1-deep: per-cell signature disease-delta") +
+  labs(x = "Per-cell mean delta (1.2M cells, scanpy)", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 5.8),
+  theme(axis.text.y = element_text(size = 6),
         legend.position = "bottom",
         legend.key.size = unit(3, "mm"),
         legend.text = element_text(size = 6))
@@ -175,21 +170,16 @@ ct_pri[, pair := paste0(source, " -> ", target)]
 ct_pri[, pair := factor(pair, levels = rev(pair))]
 pI <- ggplot(ct_pri, aes(N, pair)) +
   geom_col(fill = "#27AE60", width = 0.65, color = "white") +
-  geom_text(aes(label = N), hjust = -0.2, size = 2.4) +
+  geom_text(aes(label = N), hjust = -0.2, size = GEOM_TEXT_6PT) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "Fully-conserved MASLD-enriched LR pairs", y = NULL,
-       title = "L3: Cross-species conserved CCC (top pairs)") +
+  labs(x = "Fully-conserved MASLD-enriched LR pairs", y = NULL) +
   theme_masld() + theme(axis.text.y = element_text(size = 6))
 
 # ---- Assemble 3×3 -----------------------------------------------------------
 fig <- (pA | pB | pC) / (pD | pE | pF) / (pG | pH | pI)
-fig <- fig + plot_annotation(
-  tag_levels = "A",
-  title = "Cell-type-resolved MASLD biology — integrative overview",
-  subtitle = "17 supplementary analyses across 12 themes (A-L); see figS_celltype_biology/ for individual panels",
-  theme = theme(plot.title = element_text(size = 11, face = "bold"),
-                plot.subtitle = element_text(size = 8, color = "grey35"))) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+message("[caption] Cell-type-resolved MASLD biology - integrative overview: 17 supplementary analyses across 12 themes (A-L); see figS_celltype_biology/ for individual panels")
+fig <- fig + plot_annotation(tag_levels = "A") &
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_celltype_biology_OVERVIEW.pdf")
 ggsave(out_path, fig, width = 18, height = 16)

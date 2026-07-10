@@ -60,12 +60,12 @@ make_spotlight <- function(ct, mod_int, title, n_genes = 12, bar_color) {
   gf <- file.path(HS_RES, ct, "module_genes.tsv")
   g <- fread(gf)[module == mod_int][order(-weight)][1:n_genes]
   g[, gene := factor(gene, levels = rev(gene))]
+  message(sprintf("[caption] %s — top %d members", title, n_genes))
   pg <- ggplot(g, aes(weight, gene)) +
     geom_col(width = 0.7, fill = bar_color, color = "black", linewidth = 0.15) +
-    labs(x = "Hotspot weight", y = NULL,
-         subtitle = sprintf("%s — top %d members", title, n_genes)) +
+    labs(x = "Hotspot weight", y = NULL) +
     theme_masld() + theme_pub() +
-    theme(axis.text.y = element_text(size = 5, face = "bold"))
+    theme(axis.text.y = element_text(size = 6, face = "plain"))
 
   d <- ds[cell_type == ct & module_int == mod_int]
   d <- d[disease_stage_coarse %in% STAGE_LEVELS]
@@ -82,12 +82,12 @@ make_spotlight <- function(ct, mod_int, title, n_genes = 12, bar_color) {
     stat_summary(fun = median, geom = "point", shape = 21, size = 1.1,
                  color = "black", fill = "white", stroke = 0.3) +
     scale_fill_manual(values = STAGE_COLORS, guide = "none") +
-    labs(x = NULL, y = "Module score (dataset-centered)",
-         subtitle = sprintf("β=%+0.2f  q=%.1e  stab=%.2f",
-                            m$disease_stage_beta, m$disease_stage_q,
-                            m$stability_score)) +
+    labs(x = NULL, y = "Module score (dataset-centered)") +
     theme_masld() + theme_pub() +
     theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  message(sprintf("[caption] %s — beta=%+0.2f q=%.1e stab=%.2f",
+                  title, m$disease_stage_beta, m$disease_stage_q,
+                  m$stability_score))
   list(genes = pg, traj = pt)
 }
 
@@ -167,15 +167,15 @@ plot_long[, field := factor(field, levels = c("module_label", "sig_str",
                                        "dream\nlogFC",
                                        "Drug pipeline\n(evidence)"))]
 
+message("[caption] Cross-pipeline anchor: Hotspot module + dream + COLOC + drug pipeline")
 pC <- ggplot(plot_long, aes(field, gene)) +
   geom_tile(fill = "white", color = "gray70", linewidth = 0.3) +
-  geom_text(aes(label = value_str), size = 1.7, lineheight = 0.95) +
-  labs(x = NULL, y = NULL,
-       subtitle = "Cross-pipeline anchor: Hotspot module + dream + COLOC + drug pipeline") +
+  geom_text(aes(label = value_str), size = GEOM_TEXT_6PT, lineheight = 0.95) +
+  labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5,
                                    size = PUB_AXIS_TEXT, lineheight = 1.1),
-        axis.text.y = element_text(face = "bold", size = PUB_AXIS_TEXT + 1),
+        axis.text.y = element_text(face = "plain", size = PUB_AXIS_TEXT + 1),
         axis.line = element_blank(),
         axis.ticks = element_blank(),
         panel.grid = element_blank())

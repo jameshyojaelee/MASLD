@@ -70,7 +70,7 @@ p <- ggplot(ct, aes(x = transition_id, y = celltype,
                      fill = log2FC_proportion)) +
   geom_tile(color = "white", linewidth = 0.25) +
   geom_text(aes(label = sig_mark),
-            size = 1.7, color = "grey15", vjust = 0.7) +
+            size = GEOM_TEXT_6PT, color = "grey15", vjust = 0.7) +
   scale_fill_gradient2(name = "log2FC\nproportion",
                        low = "#1565C0", mid = "white",
                        high = masld_colors$nash,
@@ -80,27 +80,25 @@ p <- ggplot(ct, aes(x = transition_id, y = celltype,
                        breaks = c(-2, 0, 2, 3)) +
   scale_x_discrete(position = "top", expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
-  labs(x = NULL, y = NULL,
-       title = "Cell-type cascade per CRN transition",
-       subtitle = "T (F0→F1, +1.34) → Plasma+Fib (F1→F2) → Stellate+Chol (F2→F3) → ductular (F3→F4, +3.31). BP×MuSiC Jaccard 0.774. * padj<0.05; ** padj<0.01.") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(
-    plot.title    = element_text(size = 7.5, face = "bold"),
-    plot.subtitle = element_text(size = 5.3, color = "grey35"),
-    axis.text.x   = element_text(size = 6, face = "bold"),
-    axis.text.y   = element_text(size = 5.8),
+    axis.text.x   = element_text(size = 6, face = "plain"),
+    axis.text.y   = element_text(size = 6),
     legend.position = "right",
-    legend.title  = element_text(size = 5),
-    legend.text   = element_text(size = 5),
+    legend.title  = element_text(size = 6),
+    legend.text   = element_text(size = 6),
     legend.key.height = unit(0.4, "cm"),
     legend.key.width  = unit(0.18, "cm"),
     panel.grid    = element_blank()
   )
 
-ggsave(OUT_PDF, p,
-       width  = 180 / 25.4,
-       height = 50 / 25.4,
-       units  = "in",
-       device = cairo_pdf)
+message("[caption] Cell-type cascade per CRN transition: T (F0->F1, +1.34) -> Plasma+Fib (F1->F2) -> Stellate+Chol (F2->F3) -> ductular (F3->F4, +3.31). BP x MuSiC Jaccard 0.774. * padj<0.05; ** padj<0.01.")
+
+# ggsave(OUT_PDF, p,
+#        width  = 180 / 25.4,
+#        height = 50 / 25.4,
+#        units  = "in",
+#        device = cairo_pdf)
 fwrite(ct, file.path(DATA_DIR, "celltype_cascade.csv"))
-cat(sprintf("[saved] %s\n", OUT_PDF))
+# cat(sprintf("[saved] %s\n", OUT_PDF))

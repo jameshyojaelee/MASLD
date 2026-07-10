@@ -3,7 +3,7 @@
 # fig4f_prototypes.R
 # Three alternative designs for Fig 4 drug-target genetic validation panel.
 # Gene universe: 8 clinical anchors + 11 novel druggable genes with
-# SuSiE PP4 >= 0.5 from the 23-GWAS SuSiE-COLOC portfolio (2026-04-21 refresh).
+# SuSiE PP4 >= 0.5 from the 50-GWAS SuSiE-COLOC portfolio (MVP 5-ancestry expansion; was 23-GWAS pre-2026-07-05).
 #
 # Outputs (figures/main/fig4_validation/panels/):
 #   fig4f_opt1_lollipop.pdf  -- lollipop by best SuSiE PP4
@@ -132,27 +132,26 @@ p1 <- ggplot(d1, aes(x = coloc_pp4, y = gene, color = tier)) +
   geom_vline(xintercept = c(0.5, 0.9), linetype = "dashed",
              linewidth = 0.25, color = "gray55") +
   geom_text(aes(label = coloc_gwas_lbl),
-            hjust = -0.15, size = 1.8, color = "gray25") +
+            hjust = -0.15, size = GEOM_TEXT_6PT, color = "black") +
   scale_color_manual(values = tier_colors, name = NULL, drop = FALSE) +
   scale_size_continuous(name = expression("|log"[2]*"FC|"),
                         range = c(0.8, 3.2), limits = c(0, 1.6)) +
   scale_x_continuous(limits = c(0, 1.35), breaks = c(0, 0.5, 0.9, 1.0),
                      labels = c("0", "0.5", "0.9", "1")) +
   annotate("text", x = 0.5,  y = 0.5, label = "PP4 = 0.5",
-           hjust = -0.05, vjust = 0, size = 1.8, color = "gray45") +
+           hjust = -0.05, vjust = 0, size = GEOM_TEXT_6PT, color = "black") +
   annotate("text", x = 0.9,  y = 0.5, label = "PP4 = 0.9",
-           hjust = -0.05, vjust = 0, size = 1.8, color = "gray45") +
-  labs(x = "Best SuSiE colocalization PP4 (across 23 GWAS)", y = NULL,
-       title = "Drug-target genetic validation (option 1: lollipop)",
-       subtitle = "Point size = transcriptional effect magnitude; label = best GWAS trait") +
+           hjust = -0.05, vjust = 0, size = GEOM_TEXT_6PT, color = "black") +
+  labs(x = "Best SuSiE colocalization PP4 (across 50 GWAS)", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 6.5, face = "italic"),
+  theme(axis.text.y = element_text(size = 6, face = "italic"),
         legend.position = "bottom",
         legend.box = "horizontal",
-        legend.key.size = unit(0.25, "cm"),
-        plot.subtitle = element_text(size = 6, color = "gray35")) +
+        legend.key.size = unit(0.25, "cm")) +
   guides(color = guide_legend(override.aes = list(size = 2), nrow = 2),
          size  = guide_legend(nrow = 1))
+
+message("[caption] Drug-target genetic validation, option 1: lollipop by best SuSiE PP4. Point size = transcriptional effect magnitude; label = best GWAS trait.")
 
 save_fig(p1, file.path(PANEL_DIR, "fig4f_opt1_lollipop.pdf"),
          width = fig_half_width * 1.1, height = 4.2)
@@ -175,7 +174,7 @@ p2 <- ggplot(d2, aes(x = bulk_logFC, y = coloc_pp4, color = tier)) +
   geom_point(size = 2.2, alpha = 0.9) +
   geom_label_repel(data = d2[do_label == TRUE],
                    aes(label = gene),
-                   size = 2.0, max.overlaps = 30,
+                   size = GEOM_TEXT_6PT, max.overlaps = 30,
                    label.padding = 0.1, segment.size = 0.2,
                    min.segment.length = 0, fontface = "italic",
                    fill = alpha("white", 0.85), show.legend = FALSE) +
@@ -184,18 +183,17 @@ p2 <- ggplot(d2, aes(x = bulk_logFC, y = coloc_pp4, color = tier)) +
                      breaks = c(0, 0.5, 0.9, 1.0),
                      labels = c("0", "0.5", "0.9", "1")) +
   annotate("text", x = Inf, y = 0.9, label = "PP4 = 0.9 (strong)",
-           hjust = 1.05, vjust = -0.3, size = 1.9, color = "gray30") +
+           hjust = 1.05, vjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
   annotate("text", x = Inf, y = 0.5, label = "PP4 = 0.5 (canonical)",
-           hjust = 1.05, vjust = -0.3, size = 1.9, color = "gray45") +
+           hjust = 1.05, vjust = -0.3, size = GEOM_TEXT_6PT, color = "black") +
   labs(x = expression("Transcript log"[2]*"FC (dream; MASLD vs control)"),
-       y = "Best SuSiE colocalization PP4",
-       title = "Drug-target genetic validation (option 2: scatter)",
-       subtitle = "Top-right / top-left = genetically validated + transcriptionally regulated") +
+       y = "Best SuSiE colocalization PP4") +
   theme_masld() +
   theme(legend.position = "bottom",
-        legend.key.size = unit(0.25, "cm"),
-        plot.subtitle = element_text(size = 6, color = "gray35")) +
+        legend.key.size = unit(0.25, "cm")) +
   guides(color = guide_legend(override.aes = list(size = 2.5), nrow = 2))
+
+message("[caption] Drug-target genetic validation, option 2: scatter of transcript logFC vs best SuSiE PP4. Top-right / top-left = genetically validated + transcriptionally regulated.")
 
 save_fig(p2, file.path(PANEL_DIR, "fig4f_opt2_scatter.pdf"),
          width = fig_half_width * 1.1, height = 4.2)
@@ -269,7 +267,7 @@ p3 <- ggplot(d3, aes(x = gwas_lbl, y = gene, fill = pp4)) +
   geom_tile(color = "white", linewidth = 0.25) +
   geom_text(data = d3[pp4 >= 0.5],
             aes(label = sprintf("%.2f", pp4)),
-            size = 1.6, color = "white", fontface = "bold") +
+            size = GEOM_TEXT_6PT, color = "white", fontface = "plain") +
   scale_fill_gradientn(
     colours = c("#F5F5F5", "#CFD8DC", "#42A5F5", "#C9265E", "#A01753"),
     values  = scales::rescale(c(0, 0.25, 0.5, 0.8, 1.0)),
@@ -277,14 +275,13 @@ p3 <- ggplot(d3, aes(x = gwas_lbl, y = gene, fill = pp4)) +
     breaks  = c(0, 0.5, 0.9, 1.0),
     name    = "PP4"
   ) +
-  labs(x = NULL, y = NULL,
-       title = "Drug-target genetic validation (option 3: per-GWAS heatmap)",
-       subtitle = "SuSiE PP4 per GWAS trait; tile annotated when PP4 >= 0.5") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
-  theme(axis.text.x = element_text(size = 5.5, angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 6.5, face = "italic"),
-        legend.key.size = unit(0.3, "cm"),
-        plot.subtitle = element_text(size = 6, color = "gray35"))
+  theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 6, face = "italic"),
+        legend.key.size = unit(0.3, "cm"))
+
+message("[caption] Drug-target genetic validation, option 3: per-GWAS SuSiE PP4 heatmap; tile annotated when PP4 >= 0.5.")
 
 save_fig(p3, file.path(PANEL_DIR, "fig4f_opt3_forest.pdf"),
          width = fig_full_width * 0.7, height = 4.5)
@@ -294,15 +291,11 @@ save_fig(p3, file.path(PANEL_DIR, "fig4f_opt3_forest.pdf"),
 # ============================================================================
 cat("[compare] Assembling comparison sheet\n")
 
+message("[caption] Fig 4f alternatives: drug-target genetic validation. Same gene universe; compare visual clarity and information density.")
+
 compare <- (p1 | p2) / p3 +
-  plot_layout(heights = c(1, 1.2)) +
-  plot_annotation(
-    title = "Fig 4f alternatives: drug-target genetic validation",
-    subtitle = "Same gene universe; compare visual clarity and information density",
-    theme = theme(plot.title = element_text(size = 10, face = "bold"),
-                  plot.subtitle = element_text(size = 8, color = "gray30"))
-  ) &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  plot_layout(heights = c(1, 1.2)) &
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig(compare, file.path(PANEL_DIR, "fig4f_compare.pdf"),
          width = fig_full_width, height = 9)

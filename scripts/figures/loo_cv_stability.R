@@ -61,7 +61,7 @@ p <- ggplot(m, aes(value, label)) +
              linetype = "dashed", color = "gray55", linewidth = 0.3) +
   geom_point(aes(fill = pct_held), shape = 21, size = 2.6, stroke = 0.25, color = "black") +
   geom_text(data = means, aes(x = mu, y = ytop, label = lab),
-            inherit.aes = FALSE, size = 2.3, fontface = "bold", color = "gray25") +
+            inherit.aes = FALSE, size = 2.3, fontface = "plain", color = "gray25") +
   facet_wrap(~ metric, nrow = 1, scales = "free_x") +
   scale_fill_gradient(low = masld_colors$masl, high = masld_colors$mash,
                       name = "% samples\nheld out") +
@@ -69,8 +69,8 @@ p <- ggplot(m, aes(value, label)) +
   labs(x = NULL, y = NULL,
        title = "Integrated DEGs are stable to leave-one-cohort-out refits") +
   theme_masld(base_size = 9) +
-  theme(plot.title    = element_text(size = 10, face = "bold", margin = margin(b = 4)),
-        strip.text    = element_text(size = 9, face = "bold"),
+  theme(plot.title    = element_text(size = 10, face = "plain", margin = margin(b = 4)),
+        strip.text    = element_text(size = 9, face = "plain"),
         axis.text.y   = element_text(size = 8.5),
         axis.text.x   = element_text(size = 7.5),
         panel.spacing = unit(0.5, "lines"),

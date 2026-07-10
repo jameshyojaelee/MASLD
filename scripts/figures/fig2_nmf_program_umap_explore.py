@@ -175,7 +175,7 @@ def _scatter_panel(ax, df, color_vals, *, vmin=None, vmax=None, cmap="viridis",
     ax.set_xticks([]); ax.set_yticks([])
     for spine in ax.spines.values():
         spine.set_linewidth(0.4)
-    ax.set_title(title, fontsize=8, pad=2)
+    ax.set_title(title, fontsize=6, pad=2)
     return sc_handle
 
 
@@ -201,15 +201,15 @@ def render_facets_continuous(df, score_cols, labels, ncols, outpath, *,
         sc_h = _scatter_panel(ax, sub, sub_vals, vmin=vmin, vmax=vmax,
                               title=labels.get(col, col))
         cb = fig.colorbar(sc_h, ax=ax, fraction=0.04, pad=0.02, shrink=0.8)
-        cb.ax.tick_params(labelsize=5, length=2)
+        cb.ax.tick_params(labelsize=6, length=2)
         cb.outline.set_linewidth(0.3)
     # blank any leftover axes
     for k in range(len(score_cols), nrows*ncols):
         r, c = divmod(k, ncols)
         axes[r][c].axis("off")
     if title:
-        fig.suptitle(title, fontsize=9, y=0.99)
-    fig.tight_layout(rect=[0, 0, 1, 0.97 if title else 1])
+        msg(f"[caption] {title}")
+    fig.tight_layout()
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     msg(f"  wrote {outpath}")
@@ -240,7 +240,7 @@ def render_argmax(df, score_cols, labels, palette, outpath, *, title=None):
     leg = ax.legend(markerscale=10, fontsize=6, frameon=False,
                     loc="center left", bbox_to_anchor=(1.02, 0.5))
     if title:
-        ax.set_title(title, fontsize=9)
+        msg(f"[caption] {title}")
     fig.savefig(outpath, dpi=200, bbox_inches="tight")
     plt.close(fig)
     msg(f"  wrote {outpath}")
@@ -283,7 +283,7 @@ def render_only(sub_csv: Path):
     render_facets_continuous(
         sub, cnmf_cols, cnmf_label_for_col, ncols=4,
         outpath=OUTDIR / "cnmf_k16_umap_facets.pdf",
-        panel_w=2.0, panel_h=1.9,
+        panel_w=1.85, panel_h=1.9,
         title="cNMF k=16 program usages")
 
     cnmf_palette_cmap = plt.get_cmap("husl") if "husl" in plt.colormaps() \
@@ -394,7 +394,7 @@ def main():
     render_facets_continuous(
         sub, cnmf_cols, cnmf_label_for_col, ncols=4,
         outpath=OUTDIR / "cnmf_k16_umap_facets.pdf",
-        panel_w=2.0, panel_h=1.9,
+        panel_w=1.85, panel_h=1.9,
         title="cNMF k=16 program usages")
 
     # cNMF argmax (16-color husl palette)

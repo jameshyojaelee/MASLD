@@ -87,11 +87,11 @@ pA <- ggplot(merged, aes(logFC_star, logFC_kall)) +
   ) +
   annotate("text", x = -3.2, y = 3.1,
            label = sprintf("r = %.3f  |  ρ = %.3f", r_val, rho_val),
-           size = 2.2, hjust = 0, vjust = 1, color = "gray20", fontface = "bold") +
+           size = GEOM_TEXT_6PT, hjust = 0, vjust = 1, color = "black", fontface = "plain") +
   annotate("text", x = 2.8, y = -2.5,
            label = sprintf("Both: %s\nSTAR only: %s\nKallisto only: %s",
                            comma(n_both), comma(n_star_only), comma(n_kall_only)),
-           size = 1.8, hjust = 1, vjust = 0, color = "gray35") +
+           size = GEOM_TEXT_6PT, hjust = 1, vjust = 0, color = "black") +
   coord_fixed(xlim = c(-3.5, 3.5), ylim = c(-3.5, 3.5)) +
   labs(x = expression(log[2]*"FC (STAR + featureCounts)"),
        y = expression(log[2]*"FC (Kallisto + tximport)")) +
@@ -113,10 +113,10 @@ deg_counts <- data.table(
 
 pB <- ggplot(deg_counts, aes(category, count, fill = col)) +
   geom_col(width = 0.65) +
-  geom_text(aes(label = comma(count)), vjust = -0.4, size = 2.0) +
+  geom_text(aes(label = comma(count)), vjust = -0.4, size = GEOM_TEXT_6PT) +
   annotate("text", x = 2, y = max(deg_counts$count) * 0.85,
            label = sprintf("Jaccard = %.3f", jaccard),
-           size = 2.0, fontface = "bold", color = "white") +
+           size = GEOM_TEXT_6PT, fontface = "plain", color = "white") +
   scale_fill_manual(values = c("star_only" = col_star_only, "both" = col_both,
                                "kall_only" = col_kall_only), guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
@@ -145,11 +145,11 @@ pC <- ggplot(het_all, aes(I2, fill = method, color = method)) +
              color = col_kall, linewidth = 0.25) +
   annotate("label", x = 55, y = 0.058,
            label = sprintf("STAR: %.1f%%", med_star_i2),
-           size = 1.8, color = "gray30", fill = "white",
+           size = GEOM_TEXT_6PT, color = "black", fill = "white",
            label.padding = unit(0.12, "lines")) +
   annotate("label", x = 55, y = 0.050,
            label = sprintf("Kallisto: %.1f%%", med_kall_i2),
-           size = 1.8, color = col_kall, fill = "white",
+           size = GEOM_TEXT_6PT, color = col_kall, fill = "white",
            label.padding = unit(0.12, "lines")) +
   scale_fill_manual(values = c("STAR" = col_star, "Kallisto" = col_kall), guide = "none") +
   scale_color_manual(values = c("STAR" = "gray50", "Kallisto" = col_kall), guide = "none") +
@@ -177,10 +177,10 @@ pD <- ggplot(tau_all, aes(method, tau2, fill = method)) +
                width = 0.45, linewidth = 0.25, median.linewidth = 0.6) +
   geom_text(data = tau_meds,
             aes(method, med, label = sprintf("%.4f", med)),
-            vjust = -0.6, size = 1.8, fontface = "bold") +
+            vjust = -0.6, size = GEOM_TEXT_6PT, fontface = "plain") +
   annotate("text", x = 1.5, y = quantile(tau_all$tau2, 0.94, na.rm = TRUE),
            label = sprintf("%.0f%% reduction", pct_reduction),
-           size = 2.0, fontface = "bold", color = col_kall) +
+           size = GEOM_TEXT_6PT, fontface = "plain", color = col_kall) +
   scale_fill_manual(values = c("STAR" = col_star, "Kallisto" = col_kall), guide = "none") +
   scale_y_continuous(limits = c(0, quantile(tau_all$tau2, 0.95, na.rm = TRUE)),
                      expand = expansion(mult = c(0, 0.08))) +
@@ -202,7 +202,7 @@ pE <- ggplot(per_gene_rho, aes(spearman_log_tpm)) +
              color = "gray30", linewidth = 0.25) +
   annotate("label", x = 0.4, y = Inf,
            label = sprintf("median ρ = %.3f\n%.1f%% genes ρ > 0.8", med_rho, pct_high),
-           size = 1.8, hjust = 0.5, vjust = 1.3, color = "gray25",
+           size = GEOM_TEXT_6PT, hjust = 0.5, vjust = 1.3, color = "black",
            fill = "white", label.padding = unit(0.15, "lines")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.08)),
                      labels = label_comma()) +
@@ -226,13 +226,13 @@ det_dt <- data.table(
 
 pF <- ggplot(det_dt, aes(method, count, fill = method)) +
   geom_col(width = 0.55) +
-  geom_text(aes(label = comma(count)), vjust = -0.4, size = 2.0) +
+  geom_text(aes(label = comma(count)), vjust = -0.4, size = GEOM_TEXT_6PT) +
   annotate("segment", x = 1.15, xend = 1.85,
            y = n_star_genes, yend = n_star_genes,
            linetype = "dotted", color = "gray50", linewidth = 0.25) +
   annotate("text", x = 2, y = (n_star_genes + n_kall_genes) / 2,
            label = sprintf("+%s\n(+%.1f%%)", comma(n_new), 100 * n_new / n_star_genes),
-           size = 1.8, fontface = "bold", color = "white") +
+           size = GEOM_TEXT_6PT, fontface = "plain", color = "white") +
   scale_fill_manual(values = c("STAR" = col_star, "Kallisto" = col_kall), guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1)),
                      labels = label_comma()) +
@@ -246,7 +246,7 @@ fig <- (pA | pB) / (pC | pD) / (pE | pF) +
   plot_annotation(
     tag_levels = "a",
     theme = theme(
-      plot.tag = element_text(size = 8, face = "bold"),
+      plot.tag = element_text(size = 6, face = "plain"),
       plot.margin = margin(4, 4, 4, 4)
     )
   )

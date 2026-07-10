@@ -80,23 +80,20 @@ p5c <- ggplot(corr_show, aes(x = L1, y = L2, fill = Correlation)) +
   geom_tile(color = "white", linewidth = 0.6) +
   geom_text(aes(label = lab,
                 color = abs(Correlation) > 0.6 | is_diag),
-            size = 1.9, family = "Helvetica", show.legend = FALSE) +
+            size = 6 / .pt, family = "Helvetica", show.legend = FALSE) +
   scale_color_manual(values = c(`TRUE` = "white", `FALSE` = "grey20")) +
   scale_fill_gradient2(low = masld_colors$down, mid = "white",
                        high = masld_colors$up, midpoint = 0,
                        limits = c(-1, 1), breaks = c(-1, -0.5, 0, 0.5, 1),
                        name = expression(Spearman~rho)) +
   coord_equal() +
-  # PI directive (2026-06-11): short single title line only. The honest
-  # headline number (max off-diagonal |rho| = 0.18) is printed to stdout for
-  # the figure caption — NOT annotated on the panel.
-  labs(x = NULL, y = NULL,
-       title = "Evidence-layer correlations") +
-  theme_masld(base_size = 7) +
-  theme(plot.title = element_text(face = "bold", size = 8),
-        plot.subtitle = element_text(size = 6.3, color = "grey30"),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 6.2),
-        axis.text.y = element_text(size = 6.2),
+  # PI directive (2026-06-11): honest headline number (max off-diagonal
+  # |rho| = 0.18) is printed to stdout for the figure caption — NOT
+  # annotated on the panel. Title removed per house style; see caption below.
+  labs(x = NULL, y = NULL) +
+  theme_masld(base_size = 6) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+        axis.text.y = element_text(size = 6),
         axis.line = element_blank(),
         axis.ticks = element_blank(),
         legend.key.height = unit(0.45, "cm"),
@@ -105,6 +102,7 @@ p5c <- ggplot(corr_show, aes(x = L1, y = L2, fill = Correlation)) +
 
 ggsave(file.path(OUTDIR, "evidence_layer_independence.pdf"), p5c,
        width = 3.6, height = 3.3, device = cairo_pdf)
+message("[caption] Evidence-layer correlations")
 cat("Saved: figS08_subtyping_convergence/evidence_layer_independence.pdf\n")
 
 cat("\nDONE.\n")

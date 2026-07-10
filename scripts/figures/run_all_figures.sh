@@ -51,7 +51,6 @@ run_figure() {
 
 FIGURE_SCRIPTS=(
   # Main figures (consolidated)
-  "fig1_atlas_overview.R"
   "fig2_concordance_atlas.R"
   "fig3_deconvolution.R"
   # fig4_sex_stratification.R — panels moved into fig2 (i, j)

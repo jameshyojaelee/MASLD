@@ -70,16 +70,13 @@ p <- ggplot(summ, aes(metric, mean, fill = method)) +
              size = 0.9, shape = 21, colour = "white", stroke = 0.2, alpha = 0.8) +
   scale_fill_manual(values = method_cols, name = NULL, labels = method_labs) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25), expand = c(0, 0)) +
-  labs(x = NULL, y = "Held-out replication (5-fold LOO-CV)",
-       title = "Leave-one-cohort-out replication across methods",
-       subtitle = sprintf("bars = mean ± SD over 5 folds; points = folds  |  %d DE engines",
-                          length(present))) +
-  theme_masld(base_size = 7) +
+  labs(x = NULL, y = "Held-out replication (5-fold LOO-CV)") +
+  theme_masld(base_size = 6) +
   theme(legend.position = "top",
-        plot.subtitle = element_text(size = 6, colour = "grey40"),
         axis.text.x = element_text(size = 6))
 
 ggsave(file.path(OUT, "loocv_replication.pdf"), p,
        width = 5.6, height = 3.4, useDingbats = FALSE)
+message(sprintf("[caption] Leave-one-cohort-out replication across methods; bars = mean +/- SD over 5 folds; points = folds | %d DE engines", length(present)))
 cat("Wrote loocv_replication.pdf\n")
 print(summ[order(metric, method)])

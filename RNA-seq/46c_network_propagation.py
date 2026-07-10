@@ -2,6 +2,15 @@
 """
 46c_network_propagation.py — Network Propagation with Source Convergence
 
+*** DEPRECATED 2026-07-04 (round-2 audit B5a). DO NOT RE-RUN INTO THE PAPER. ***
+The RWR convergence result this script produced ("123 genes at 7/7, OR=4.85")
+was RETRACTED 2026-05-22 (E2) as a dead pre-C2 7-source build; the live Fig5
+panel was replaced by the C2 convergence distribution (see
+scripts/figures/fig5_translation.R panel (e)). This script has 0 active
+consumers. Its outputs (network_propagation_scores.csv / network_modules.csv /
+network_rank_gainers.csv) were archived under
+data/archive/dead_rwr_output_2026-07-04/. Kept here for provenance only.
+
 Random walk with restart (RWR) from 6 source-specific seed vectors on STRING PPI.
 Tests whether independent evidence sources converge on the same network modules.
 

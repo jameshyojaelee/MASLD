@@ -7,13 +7,13 @@
 # panels reflecting the 2026-05-16 master review + 2026-05-17 final headline.
 #
 # Outputs (figures/main/fig3_RNAseq/panels/):
-#   1. fig3f_ccc_chord.pdf
+#   1. figs3_ccc_chord.pdf
 #      Chord diagram of the stage-progressive paracrine LR pairs (13 pairs
 #      passing all 4 statistical gates) across Hep / Endo / Fib / Mac / Chol
 #      cell types. Ribbon color = stage slope; width = number of significant
 #      LR pairs for that sender->receiver pair.
 #
-#   2. fig3f_ccc_trajectories.pdf
+#   2. figs3_ccc_trajectories.pdf
 #      Per-donor LIANA score across the 4 stage bins (Healthy / Steatosis /
 #      Steatohepatitis / Cirrhosis) for the 8 headline LR pairs. NAMPT->INSR
 #      (Mac->Hep) thickened/colored gold to highlight the macrophage-adipokine
@@ -55,8 +55,8 @@ DATA_DIR  <- file.path(PANEL_DIR, "data")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 
-OUT_CHORD       <- file.path(PANEL_DIR, "fig3f_ccc_chord.pdf")
-OUT_TRAJ        <- file.path(PANEL_DIR, "fig3f_ccc_trajectories.pdf")
+OUT_CHORD       <- file.path(PANEL_DIR, "figs3_ccc_chord.pdf")
+OUT_TRAJ        <- file.path(PANEL_DIR, "figs3_ccc_trajectories.pdf")
 
 # ---------------------------------------------------------------------------
 # Palettes (Liang canonical)
@@ -127,9 +127,12 @@ setorder(para, q_chord)
 para[, headline_label := factor(headline_label, levels = headline_label)]
 
 # ============================================================================
-# PANEL 1: fig3f_ccc_chord.pdf
+# PANEL 1: figs3_ccc_chord.pdf  — REMOVED 2026-07-01 (retired per user request;
+# the stage-gated communication story is carried by fig3i's LIANA trajectory
+# track). Block disabled so figs3_ccc_chord.pdf is no longer generated.
 # ============================================================================
-cat("\n[chord] writing fig3f_ccc_chord.pdf\n")
+if (FALSE) {
+cat("\n[chord] writing figs3_ccc_chord.pdf\n")
 
 # Aggregate: one ribbon per (from, to, direction); width = LR pair count
 adj <- para[!is.na(sender_short) & !is.na(receiver_short),
@@ -177,11 +180,12 @@ fwrite(para[, .(lr_pair, ct_pair, headline_label, q_label, q_chord, eff_estimate
                 slope_dir, sender_short, receiver_short)],
        file.path(DATA_DIR, "ccc_chord_data.csv"))
 cat(sprintf("  -> %s\n", OUT_CHORD))
+}  # end disabled PANEL 1 (figs3_ccc_chord retired 2026-07-01)
 
 # ============================================================================
-# PANEL 2: fig3f_ccc_trajectories.pdf
+# PANEL 2: figs3_ccc_trajectories.pdf
 # ============================================================================
-cat("\n[trajectories] writing fig3f_ccc_trajectories.pdf\n")
+cat("\n[trajectories] writing figs3_ccc_trajectories.pdf\n")
 
 pair_keys <- para[, .(ct_pair, lr_pair, headline_label, q_label)]
 B_data <- merge(lr_long[, .(sample, ct_pair, lr_pair, disease_stage_coarse, score)],
@@ -245,8 +249,8 @@ plot_traj <- ggplot() +
        caption = "\u2020 Cirrhosis n=19 (single snRNA-seq dataset) \u2014 secondary axis.") +
   theme_masld(base_size = 7) +
   theme(legend.position = "right",
-        legend.text = element_text(size = 5),
-        plot.caption = element_text(size = 5, color = "grey50", hjust = 0),
+        legend.text = element_text(size = 6),
+        plot.caption = element_text(size = 6, color = "black", hjust = 0),
         axis.text.x = element_text(angle = 25, hjust = 1, vjust = 1))
 
 ggsave(OUT_TRAJ, plot_traj,

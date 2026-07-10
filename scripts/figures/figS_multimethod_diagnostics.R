@@ -48,19 +48,17 @@ if (!is.null(vp)) {
     geom_boxplot(width = 0.12, outlier.size = 0.15, outlier.alpha = 0.2,
                  linewidth = 0.25, fill = "white") +
     geom_text(data = meds, aes(component, ytxt, label = sprintf("%.1f%%", 100 * med)),
-              inherit.aes = FALSE, size = 2.3, fontface = "bold", colour = "grey20") +
+              inherit.aes = FALSE, size = GEOM_TEXT_6PT, fontface = "plain", colour = "black") +
     scale_fill_manual(values = comp_pal, guide = "none") +
     scale_x_discrete(labels = lab) +
     scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
     labs(x = NULL, y = "Variance fraction per gene",
-         title = "Variance partition of the pooled expression data (shared across methods)",
-         subtitle = wrap(sprintf("All five methods condition on dataset+sex, so this raw decomposition is identical for every method. n=%s genes x 846 samples; model ~ (1|group_binary)+(1|inferred_sex)+(1|dataset). Cohort dominates (median %.0f%%, agreeing with the cohort-driven PC1 in panelJ); disease is a minor per-gene axis (median %.1f%%) yet drives >1,400 Tier-1 DEGs - small variance fraction != weak signal at n=846. Per-method differences appear in panel M.",
-                            format(nrow(vp), big.mark = ","),
-                            100 * meds[component == "dataset", med], 100 * meds[component == "group_binary", med]), 118),
          caption = "Source: variance_partition_mega846.csv (846 mega subset; NOT the stale 1,260-sample variance_partition.csv).") +
-    theme_masld(base_size = 7) +
-    theme(plot.subtitle = element_text(size = 5.6, colour = "grey35"),
-          plot.caption = element_text(size = 5, colour = "grey45", hjust = 0))
+    theme_masld(base_size = 6) +
+    theme(plot.caption = element_text(size = 6, colour = "black", hjust = 0))
+  message(sprintf("[caption] Variance partition of the pooled expression data (shared across methods): all five methods condition on dataset+sex, so this raw decomposition is identical for every method. n=%s genes x 846 samples; model ~ (1|group_binary)+(1|inferred_sex)+(1|dataset). Cohort dominates (median %.0f%%, agreeing with the cohort-driven PC1 in panelJ); disease is a minor per-gene axis (median %.1f%%) yet drives >1,400 Tier-1 DEGs - small variance fraction != weak signal at n=846. Per-method differences appear in panel M.",
+                  format(nrow(vp), big.mark = ","),
+                  100 * meds[component == "dataset", med], 100 * meds[component == "group_binary", med]))
   sav(pL, "variance_partition.pdf", 6.6, 3.8)
   fwrite(meds[, .(component, median_frac = med)], file.path(OUT, "variance_partition_data.csv"))
 }
@@ -87,13 +85,11 @@ if (!is.null(pv)) {
     geom_col(position = position_dodge(width = 0.78), width = 0.72, linewidth = 0) +
     scale_fill_manual(values = corr_pal, name = "Batch correction") +
     scale_y_discrete(labels = cov_lab) +
-    labs(x = "% variance (eigenvalue-weighted PVCA)", y = NULL,
-         title = "Residual variance after each method's batch model",
-         subtitle = wrap(sprintf("Eigenvalue-weighted PVCA on top-2,000 within-cohort-HVG log-CPM. Fixed = limma-voom-QW / DESeq2 / edgeR-QLF (removeBatchEffect, ~dataset); Random = dream ((1|dataset) shrunken BLUPs). Both collapse cohort variance to ~0 (27.5%% -> 0.7%%) while disease is preserved (re-proportioned upward); fixed ~ random (r~0.9999 PCA equivalence). metafor (RE): n/a - never pools, so a joint residual is undefined. %s",
-                            pd_note), 118)) +
-    theme_masld(base_size = 7) +
-    theme(plot.subtitle = element_text(size = 5.6, colour = "grey35"),
-          legend.position = "top")
+    labs(x = "% variance (eigenvalue-weighted PVCA)", y = NULL) +
+    theme_masld(base_size = 6) +
+    theme(legend.position = "top")
+  message(sprintf("[caption] Residual variance after each method's batch model: eigenvalue-weighted PVCA on top-2,000 within-cohort-HVG log-CPM. Fixed = limma-voom-QW / DESeq2 / edgeR-QLF (removeBatchEffect, ~dataset); Random = dream ((1|dataset) shrunken BLUPs). Both collapse cohort variance to ~0 (27.5%% -> 0.7%%) while disease is preserved (re-proportioned upward); fixed ~ random (r~0.9999 PCA equivalence). metafor (RE): n/a - never pools, so a joint residual is undefined. %s",
+                  pd_note))
   sav(pM, "residual_pvca.pdf", 6.8, 4.0)
   fwrite(pv, file.path(OUT, "residual_pvca_data.csv"))
 }
@@ -114,31 +110,28 @@ if (!is.null(qq) && !is.null(lam)) {
     geom_abline(slope = 1, intercept = 0, linewidth = 0.3, colour = "grey45") +
     geom_line(data = qq, aes(exp, obs, colour = method), linewidth = 0.5) +
     scale_colour_manual(values = method_pal, labels = lam_lab, name = NULL) +
-    labs(x = expression(Expected ~ -log[10](p)), y = expression(Observed ~ -log[10](p)),
-         title = "Genomic inflation (QQ), per DE method",
-         subtitle = wrap(sprintf("Common universe n=%s genes. With pi1~0.6-0.7 most genes are non-null, so the QQ departs the diagonal early and lambda_GC is mechanically large - this is real polygenic-scale signal, not miscalibration. The calibrated-null check is the flat p-value shelf in panel O.",
-                            format(n_common, big.mark = ",")), 96)) +
-    theme_masld(base_size = 7) +
+    labs(x = expression(Expected ~ -log[10](p)), y = expression(Observed ~ -log[10](p))) +
+    theme_masld(base_size = 6) +
     theme(legend.position = c(0.02, 0.98), legend.justification = c(0, 1),
-          legend.background = element_rect(fill = scales::alpha("white", 0.6), colour = NA),
-          plot.subtitle = element_text(size = 5.6, colour = "grey35"))
+          legend.background = element_rect(fill = scales::alpha("white", 0.6), colour = NA))
+  message(sprintf("[caption] Genomic inflation (QQ), per DE method: common universe n=%s genes. With pi1~0.6-0.7 most genes are non-null, so the QQ departs the diagonal early and lambda_GC is mechanically large - this is real polygenic-scale signal, not miscalibration. The calibrated-null check is the flat p-value shelf in panel O.",
+                  format(n_common, big.mark = ",")))
 
   lamp <- ggplot(lam, aes(lambda_common, method, colour = method)) +
     geom_vline(xintercept = 1, linetype = "dashed", linewidth = 0.3, colour = "grey55") +
     geom_segment(aes(x = 1, xend = lambda_common, yend = method), linewidth = 0.5) +
     geom_point(size = 2) +
-    geom_text(aes(label = sprintf("%.2f", lambda_common)), vjust = -0.9, size = 2.1, colour = "grey20") +
+    geom_text(aes(label = sprintf("%.2f", lambda_common)), vjust = -0.9, size = GEOM_TEXT_6PT, colour = "black") +
     scale_colour_manual(values = method_pal, guide = "none") +
     scale_y_discrete(limits = rev(method_levels)) +
-    labs(x = expression(lambda[GC] ~ "(common set)"), y = NULL,
-         title = expression(lambda[GC] ~ "per method")) +
-    theme_masld(base_size = 7)
+    labs(x = expression(lambda[GC] ~ "(common set)"), y = NULL) +
+    theme_masld(base_size = 6)
 
   pN <- qqp + lamp + plot_layout(widths = c(2, 1)) +
     plot_annotation(
       caption = wrap("lambda_GC > 1 is EXPECTED, not miscalibration: an 846-sample contrast perturbs >1,400 Tier-1 genes (1,433 ashr / 1,853 raw). Because the median gene is non-null (pi1 > 0.5), the median-based lambda_GC is mechanically inflated by real biology. Read calibration from panel O (flat null shelf); type-I error is held at 0.05 under within-cohort permutation (degx panels G/G3). metafor (RE) is lowest, tracking its low pi1 (underpowered RE meta at high I-squared).", 150),
-      theme = theme(plot.caption = element_text(size = 5, colour = "grey45", hjust = 0)))
-  sav(pN, "genomic_inflation_qq.pdf", 8.2, 4.0)
+      theme = theme(plot.caption = element_text(size = 6, colour = "black", hjust = 0)))
+  sav(pN, "genomic_inflation_qq.pdf", fig_full_width, 3.5)
   fwrite(lam, file.path(OUT, "genomic_inflation_qq_lambda_table.csv"))
 }
 
@@ -161,16 +154,13 @@ if (!is.null(pl)) {
     facet_wrap(~ method, nrow = 1) +
     scale_fill_manual(values = method_pal, guide = "none") +
     scale_x_continuous(breaks = c(0, 0.5, 1)) +
-    labs(x = "raw p-value", y = "genes",
-         title = "P-value distribution per DE method",
-         subtitle = wrap("Flat shelf toward p=1 (matching the dashed uniform reference) = calibrated null; near-zero spike = true-DEG mass. Storey pi1 = estimated non-null fraction (complement of pi0); pi1 and the panel-N lambda are two views of the same true signal. This shelf - not panel N's QQ - is the calibration read.", 170)) +
-    theme_masld(base_size = 7) +
-    theme(plot.subtitle = element_text(size = 5.6, colour = "grey35"),
-          strip.text = element_text(size = 6))
+    labs(x = "raw p-value", y = "genes") +
+    theme_masld(base_size = 6)
+  message("[caption] P-value distribution per DE method: flat shelf toward p=1 (matching the dashed uniform reference) = calibrated null; near-zero spike = true-DEG mass. Storey pi1 = estimated non-null fraction (complement of pi0); pi1 and the panel-N lambda are two views of the same true signal. This shelf - not panel N's QQ - is the calibration read.")
   if (!is.null(ann))
     pO <- pO + geom_text(data = ann, aes(x = 0.97, y = Inf, label = sprintf("π₁=%.2f", pi1_full)),
-                         inherit.aes = FALSE, hjust = 1, vjust = 1.6, size = 2.1, colour = "grey20")
-  sav(pO, "pvalue_distribution.pdf", 9.0, 2.8)
+                         inherit.aes = FALSE, hjust = 1, vjust = 1.6, size = GEOM_TEXT_6PT, colour = "black")
+  sav(pO, "pvalue_distribution.pdf", fig_full_width, 2.2)
   if (!is.null(pi1)) fwrite(pi1, file.path(OUT, "pvalue_distribution_pi1_table.csv"))
 }
 

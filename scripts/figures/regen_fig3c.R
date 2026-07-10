@@ -106,7 +106,7 @@ p3c_4 <- ggplot(lz_pips, aes(pos, pip_eas)) +
   geom_point(data = top_eas, fill = COL_EAS,
              color = "black", size = 3, shape = 21, stroke = 0.5) +
   geom_text(data = top_eas, aes(label = sprintf("PIP = %.2f", pip_eas)),
-            hjust = -0.15, vjust = 0.4, size = 2.2, color = COL_EAS, fontface = "bold") +
+            hjust = -0.15, vjust = 0.4, size = 2.2, color = COL_EAS, fontface = "plain") +
   scale_y_continuous(limits = c(0, 1.05), breaks = c(0, 0.25, 0.50, 0.75, 1.00)) +
   labs(x = sprintf("chr%s position (hg19, bp)", LZ_CHR), y = "PIP EAS") +
   lz_common
@@ -122,7 +122,7 @@ p3c <- (p3c_1 / p3c_2 / p3c_3 / p3c_4) +
       format(EUR_LEAD, big.mark = ","), format(EAS_LEAD, big.mark = ","),
       abs(round((EUR_LEAD - EAS_LEAD) / 1e3)),
       top_eur$pip_eur, top_eas$pip_eas),
-    theme = theme(plot.title = element_text(size = 7, face = "bold"),
+    theme = theme(plot.title = element_text(size = 7, face = "plain"),
                   plot.subtitle = element_text(size = 5.5, color = "grey30"))
   )
 

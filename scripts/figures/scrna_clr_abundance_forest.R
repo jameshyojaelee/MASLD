@@ -69,7 +69,7 @@ p <- ggplot(d, aes(x = beta, y = cell_type, color = sig)) +
        title = "Donor-level compositional (CLR) mixed model") +
   theme_masld(base_size = 7) +
   theme(
-    plot.title      = element_text(size = 7.3, face = "bold", margin = margin(b = 6)),
+    plot.title      = element_text(size = 7.3, face = "plain", margin = margin(b = 6)),
     axis.text.y     = element_text(size = 6),
     legend.position = "bottom",
     legend.text     = element_text(size = 5.5),

@@ -100,6 +100,9 @@ meta <- fread(file.path(BASE,
 setkey(samp, sample_id); setkey(meta, sample_id)
 samp <- meta[samp]   # right join preserving samp rows
 samp <- samp[colnames(logcpm)]  # restore original column order
+# GSE213621 (Chen) fibrosis is COARSE (F0F1/F3F4 grouped, not Kleiner) -> exclude from the
+# continuous Fibrosis/NAS PC-association (NA dropped by cor). See load_figure_data.R guards.
+samp$fibrosis_stage[samp$dataset == "GSE213621"] <- NA
 
 # ---------------------------------------------------------------------------
 # 4. Covariate definitions
@@ -176,20 +179,19 @@ make_heatmap <- function(dat, lbl) {
     geom_tile(colour = "white", linewidth = 0.25) +
     geom_text(aes(label = ifelse(!is.na(neglog10p) & neglog10p > sig,
                                  sprintf("%.0f", neglog10p), "")),
-              size = 1.9, colour = "grey20") +
+              size = GEOM_TEXT_6PT, colour = "black") +
     scale_fill_gradient(low = "white", high = "#D62728",
                         name = expression(-log[10](p)),
                         na.value = "grey92", limits = c(0, 35),
                         oob = scales::squish) +
     scale_x_discrete(position = "top") +
-    labs(x = NULL, y = NULL, title = lbl) +
-    theme_masld(base_size = 6.5) +
+    labs(x = NULL, y = NULL) +
+    theme_masld(base_size = 6) +
     theme(axis.text.x  = element_text(angle = 40, hjust = 0, size = 6),
           axis.text.y  = element_text(size = 6),
           axis.ticks   = element_blank(),
           panel.grid   = element_blank(),
           legend.position = "none",
-          plot.title   = element_text(size = 7.5, face = "bold"),
           plot.margin  = margin(2, 6, 2, 6))
 }
 
@@ -203,7 +205,7 @@ leg_p <- ggplot(data.table(x=1,y=1,z=17.5), aes(x,y,fill=z)) +
                       name=expression(-log[10](p)), limits=c(0,35)) +
   theme_void() +
   theme(legend.position="right",
-        legend.title=element_text(size=6.5), legend.text=element_text(size=6),
+        legend.title=element_text(size=6), legend.text=element_text(size=6),
         legend.key.height=unit(0.5,"cm"), legend.key.width=unit(0.25,"cm"))
 leg <- cowplot::get_legend(leg_p)
 
@@ -211,8 +213,11 @@ library(cowplot)
 grid <- plot_grid(plotlist = panels, nrow = 2, ncol = 2, align = "hv")
 fig  <- plot_grid(grid, leg, nrow = 1, rel_widths = c(1, 0.07))
 
+message(sprintf(
+  "[caption] Panels (left-to-right, top-to-bottom): %s",
+  paste(lbl_order, collapse = " | ")))
 ggsave(file.path(OUT, "panelJ_covariate_pc_association.pdf"), fig,
-       width = 10, height = 7.5, device = cairo_pdf)
+       width = fig_full_width, height = 5.31, device = cairo_pdf)
 fwrite(res_all, file.path(OUT, "panelJ_covariate_pc_association_data.csv"))
 cat("Wrote panelJ_covariate_pc_association.pdf\n")
 

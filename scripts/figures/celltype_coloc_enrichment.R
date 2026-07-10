@@ -101,7 +101,7 @@ comp_cols <- c(
 )
 ct[, compartment := factor(compartment, levels = names(comp_cols))]
 
-xr <- max(ct$fold_enrichment_coloc) * 1.10
+xr <- max(ct$fold_enrichment_coloc) * 1.28
 
 # (Metric / honesty prose lives in the message() caption below, not on the panel.
 #  The only on-panel annotation is the "* FDR < 0.05" note placed up by the legend.)
@@ -110,7 +110,7 @@ xr <- max(ct$fold_enrichment_coloc) * 1.10
 p <- ggplot(ct, aes(x = fold_enrichment_coloc, y = display, fill = compartment)) +
   geom_vline(xintercept = 1, linewidth = 0.3, color = "gray55") +
   geom_col(width = 0.68) +
-  geom_text(aes(label = vlab), hjust = -0.12, size = PUB_GEOM_TEXT,
+  geom_text(aes(label = vlab), hjust = -0.12, size = GEOM_TEXT_6PT,
             color = "black") +
   scale_fill_manual(values = comp_cols, name = NULL) +
   scale_x_continuous(
@@ -119,26 +119,28 @@ p <- ggplot(ct, aes(x = fold_enrichment_coloc, y = display, fill = compartment))
     expand = expansion(mult = c(0, 0.02))
   ) +
   labs(x = "GWAS-COLOC marker enrichment (fold vs background)",
-       y = NULL, subtitle = "* FDR < 0.05") +
-  theme_masld() + theme_pub() +
+       y = NULL) +
+  theme_masld_compact() +
   theme(
     axis.text.y    = element_text(color = "black"),
     legend.position = "top",
     legend.key.size = PUB_LEGEND_KEY,
     legend.text    = element_text(color = "black"),
-    plot.margin    = margin(3, 8, 3, 4),
-    plot.subtitle  = element_text(size = PUB_SUBTITLE - 1, color = "black",
-                                  hjust = 1, margin = margin(b = 1))
+    plot.margin    = margin(3, 8, 3, 4)
   )
 
-# ── Save ─────────────────────────────────────────────────────────────────────
-out <- file.path(FIG4_DIR, "fig4g_celltype_coloc.pdf")
-dir.create(FIG4_DIR, recursive = TRUE, showWarnings = FALSE)
-pdf(out, width = fig_half_width, height = 3.0, useDingbats = FALSE)
-print(p)
-invisible(dev.off())
+# ── Save — RETIRED 2026-07-07 (do NOT re-create) ─────────────────────────────
+# fig4g_celltype_coloc.pdf (cell-type COLOC-marker enrichment) was removed from
+# Fig 4 as not relevant. The PDF is no longer written; the diagnostic messages
+# below are kept for reference.
+# out <- file.path(FIG4_DIR, "panels", "fig4g_celltype_coloc.pdf")
+# dir.create(FIG4_DIR, recursive = TRUE, showWarnings = FALSE)
+# pdf(out, width = 3.0, height = 2.3, useDingbats = FALSE)
+# print(p)
+# invisible(dev.off())
 
-message("Saved: ", out)
+message("[caption] * = FDR < 0.05 (fdr_coloc)")
+message("fig4g_celltype_coloc panel RETIRED — no PDF written.")
 message("Source: ", src)
 message(sprintf("  %d cell types | %d FDR-sig (fdr_coloc<0.05) | top = %s %.2fx | hep = %.2fx (fdr=%.2f)",
                 nrow(ct), sum(ct$fdr_sig),

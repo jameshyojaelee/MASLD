@@ -116,44 +116,138 @@ def _passes_score(tiger: Optional[float], cas13: Optional[float]) -> bool:
 # ---------------------------------------------------------------------------
 # Per-gene selection
 # ---------------------------------------------------------------------------
-def _spread_select(candidate: list[dict], n: int) -> list[dict]:
-    """Pick N guides spread along the transcript, best combined_score per region."""
-    if len(candidate) <= n:
-        return list(candidate)
+def _txpos(r: dict) -> dict:
+    """Parse a guide's tx_id_pos ('TX:pos|TX:pos|...') into {transcript_id: pos},
+    cached on the row. Used for transcript-AWARE overlap detection: two guides can
+    only overlap if they target a COMMON transcript."""
+    tp = r.get("_txpos")
+    if tp is None:
+        tp = {}
+        for seg in (r.get("tx_id_pos") or "").split("|"):
+            if ":" in seg:
+                t, p = seg.rsplit(":", 1)
+                try:
+                    tp[t] = int(p)
+                except ValueError:
+                    pass
+        r["_txpos"] = tp
+    return tp
+
+
+def _far_enough(r: dict, selected: list[dict], min_spacing: int) -> bool:
+    """True iff guide r does NOT overlap any already-selected guide. Overlap is
+    TRANSCRIPT-AWARE: two guides conflict only when they target a COMMON transcript
+    and their positions ON THAT TRANSCRIPT are < min_spacing apart. Guides on
+    disjoint isoforms cannot overlap (different sequence) and never conflict.
+
+    This fixes the multi-isoform blind spot where the single `position` (the
+    FIRST-listed transcript only) made two guides at the SAME site look far apart
+    when they happened to list different transcripts first (e.g. Adora1 g01/g03,
+    2 nt apart on the shared transcript but 779 'apart' by first-segment position).
+    Falls back to the representative `position` axis only when a pair lacks
+    transcript coordinates."""
+    rt = _txpos(r)
+    for s in selected:
+        st = _txpos(s)
+        if rt and st:
+            if any(abs(rt[t] - st[t]) < min_spacing for t in (rt.keys() & st.keys())):
+                return False
+            # disjoint transcripts -> no possible overlap -> not a conflict
+        else:                                   # missing tx coords -> safe fallback
+            p, q = r.get("position"), s.get("position")
+            if p is not None and q is not None and abs(p - q) < min_spacing:
+                return False
+    return True
+
+
+def _spread_select(candidate: list[dict], n: int,
+                   min_spacing: int = cfg.MIN_GUIDE_SPACING) -> list[dict]:
+    """Pick up to N guides spread along the transcript, each >= min_spacing bp from
+    every other selected guide (no overlap when min_spacing >= GUIDE_LEN).
+
+    Transcript-wide spread is preserved by position binning; the min-distance
+    constraint is enforced at EVERY step (both the per-bin pick and the score-ordered
+    fill), which closes the prior overlap leak. If a gene has fewer than N
+    non-overlapping guides, fewer are returned (clean) -- an overlapping guide is
+    never added (non-overlap takes priority over hitting N)."""
+    if not candidate:
+        return []
     have_pos = [r["position"] for r in candidate if r["position"] is not None]
-    if len(set(have_pos)) < n:
-        return sorted(candidate, key=lambda r: -r["combined_score"])[:n]
-    pmin, pmax = min(have_pos), max(have_pos)
-    width = max((pmax - pmin) / n, 1e-9)
-    bins: dict[int, list[dict]] = defaultdict(list)
-    for r in candidate:
-        p = r["position"]
-        b = n if p is None else min(int((p - pmin) / width), n - 1)  # n = no-pos bucket
-        bins[b].append(r)
     selected: list[dict] = []
-    for b in range(n):
-        if bins.get(b):
-            best = max(bins[b], key=lambda r: r["combined_score"])
-            selected.append(best)
-            bins[b].remove(best)
+    # --- Binned pass: one non-overlapping guide per transcript bin (spread) ---------
+    if len(set(have_pos)) >= n:
+        pmin, pmax = min(have_pos), max(have_pos)
+        width = max((pmax - pmin) / n, 1e-9)
+        bins: dict[int, list[dict]] = defaultdict(list)
+        for r in candidate:
+            p = r["position"]
+            b = n if p is None else min(int((p - pmin) / width), n - 1)  # n = no-pos bucket
+            bins[b].append(r)
+        for b in range(n):
+            for r in sorted(bins.get(b, []), key=lambda r: -r["combined_score"]):
+                if _far_enough(r, selected, min_spacing):   # skip if it overlaps a pick
+                    selected.append(r)
+                    break
+            if len(selected) >= n:
+                break
+    # --- Greedy fill: best score first, non-overlapping only ------------------------
+    # Covers small / low-position-diversity pools and tops up bins that were skipped.
     if len(selected) < n:
-        leftover = [r for b in bins for r in bins[b]]
-        leftover.sort(key=lambda r: -r["combined_score"])
-        selected += leftover[: (n - len(selected))]
+        sel_ids = {id(s) for s in selected}
+        for r in sorted(candidate, key=lambda r: -r["combined_score"]):
+            if id(r) in sel_ids:
+                continue
+            if _far_enough(r, selected, min_spacing):
+                selected.append(r)
+                sel_ids.add(id(r))
+                if len(selected) >= n:
+                    break
     return selected[:n]
 
 
+def _has_cds(r: dict) -> bool:
+    """Guide overlaps the CODING SEQUENCE (region 'CDS', '5'UTR|CDS', '3'UTR|CDS')."""
+    return "CDS" in str(r.get("region") or "").upper()
+
+
+def _constitutive_candidate(pool: list[dict], n: int) -> list[dict]:
+    """Constitutive-first candidate set: take whole isoform-coverage tiers
+    (most isoforms first) until >= n candidates accumulate."""
+    if not pool:
+        return []
+    iso_tiers = sorted({r["n_isoforms_targeted"] for r in pool}, reverse=True)
+    cand: list[dict] = []
+    for iso in iso_tiers:
+        cand += [r for r in pool if r["n_isoforms_targeted"] == iso]
+        if len(cand) >= n:
+            break
+    return cand
+
+
 def _select_for_gene(rows: list[dict], n: int) -> list[dict]:
-    """Constitutive-first candidate set, then transcript-spread top-N."""
+    """CDS-first, constitutive-first candidate set, then transcript-spread top-N.
+
+    Region preference (RfxCas13d targets the mature mRNA, but CDS-targeting is the
+    validated knockdown design): prefer guides overlapping the CODING SEQUENCE;
+    only fall back to UTR-only guides when a gene has < n CDS candidates. lncRNA
+    genes have no CDS (region 'lncRNA') so they pass straight through the fallback
+    branch unchanged. Within the chosen pool: constitutive-first (max isoform
+    coverage) -> transcript-spread -> combined_score.
+    """
     if not rows:
         return []
-    iso_tiers = sorted({r["n_isoforms_targeted"] for r in rows}, reverse=True)
-    candidate: list[dict] = []
-    for iso in iso_tiers:
-        candidate += [r for r in rows if r["n_isoforms_targeted"] == iso]
-        if len(candidate) >= n:
-            break
+    cds_rows = [r for r in rows if _has_cds(r)]
+    utr_rows = [r for r in rows if not _has_cds(r)]
+    # Progressive widening so the >=MIN_GUIDE_SPACING spacing constraint doesn't starve
+    # genes that have plenty of guides at lower isoform tiers: try the constitutive-first
+    # CDS set, then ALL CDS rows, then CDS + UTR -- stopping as soon as N non-overlapping
+    # guides are selectable. Constitutive-first is preserved as the FIRST attempt.
+    candidate = _constitutive_candidate(cds_rows, n)            # prefer CDS, constitutive
     selected = _spread_select(candidate, n)
+    if len(selected) < n and len(cds_rows) > len(candidate):    # widen to all CDS rows
+        selected = _spread_select(cds_rows, n)
+    if len(selected) < n and utr_rows:                          # UTR fallback
+        selected = _spread_select(cds_rows + utr_rows, n)
     selected.sort(
         key=lambda r: (r["position"] if r["position"] is not None else 1 << 60,
                        -r["combined_score"])

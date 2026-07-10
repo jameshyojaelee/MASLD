@@ -167,6 +167,8 @@ cat(sprintf("[hero] discontinued PP.H4: NR1H4=%.3f CCR2=%.3f MAP3K5=%.3f LOXL2=%
 
 fwrite(named[order(-coloc_best_pp4)], file.path(DATA_DIR, "drug_target_orthogonality_landscape.csv"))
 
+message("[caption] Drug targets: expression vs genetic anchoring")
+
 # ---------------------------------------------------------------------------
 # Plot
 # ---------------------------------------------------------------------------
@@ -207,17 +209,14 @@ p <- ggplot() +
                      expand = expansion(mult = c(0.01, 0.02))) +
   scale_x_continuous(name = expression("Disease bulk log"[2]*"FC (shrunk)"),
                      expand = expansion(mult = c(0.10, 0.02))) +
-  labs(title = "c", subtitle = "Drug targets: expression vs genetic anchoring") +
   theme_masld(base_size = 7) +
   theme(
-    plot.title       = element_text(size = 10, face = "bold"),
-    plot.subtitle    = element_text(size = 6.3, color = "grey30", margin = margin(b = 4)),
     legend.position  = "bottom",
     legend.box       = "vertical",
     legend.spacing.y = unit(0.01, "cm"),
     legend.margin    = margin(t = 0, b = 0),
-    legend.title     = element_text(size = 5.8, face = "bold"),
-    legend.text      = element_text(size = 5),
+    legend.title     = element_text(size = 6, face = "plain"),
+    legend.text      = element_text(size = 6),
     legend.key.size  = unit(0.16, "cm")
   ) +
   guides(

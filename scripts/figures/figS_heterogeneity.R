@@ -59,7 +59,7 @@ pB <- ggplot(dB, aes(rank, es, color=set)) + geom_line(linewidth=0.8) +
   geom_hline(yintercept=0, linewidth=0.2, color="grey60") +
   scale_color_manual(values=c("variance-only"=col$up, "expr-matched control"=col$ns), name=NULL) +
   labs(x="gene rank (progression to stable)", y="running enrichment score") +
-  annotate("text", x=length(rk)*0.04, y=min(dB$es)*0.78, hjust=0, size=3.2, color="black",
+  annotate("text", x=length(rk)*0.04, y=min(dB$es)*0.78, hjust=0, size=GEOM_TEXT_6PT, color="black",
            label="NES −2.17,  p = 1.8e−13") +
   theme_minimal(base_size=10) + theme_pub() + theme(legend.position=c(0.98,0.98), legend.justification=c(1,1), legend.key.size=unit(9,"pt"))
 sv(pB, "B_gse193066_progression_gsea.pdf", 5.0, 4.0)

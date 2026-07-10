@@ -58,24 +58,21 @@ p <- ggplot(d, aes(convergence_score, abs_disease_axis_effect)) +
               fill = "#ECEFF1", linewidth = 0.4, alpha = 0.6) +
   geom_point(aes(fill = tier, size = n_cells), shape = 21,
              color = "white", stroke = 0.25, alpha = 0.9) +
-  ggrepel::geom_text_repel(aes(label = label), size = 1.9, color = "#212121",
+  ggrepel::geom_text_repel(aes(label = label), size = GEOM_TEXT_6PT, color = "#212121",
                            segment.size = 0.2, segment.color = "#9E9E9E",
                            min.segment.length = 0, max.overlaps = 30,
                            box.padding = 0.3, na.rm = TRUE) +
   scale_fill_manual(values = tier_pal, name = "Atlas tier", drop = FALSE) +
   scale_size_continuous(range = c(0.6, 3.2), name = "n cells") +
   annotate("text", x = x_rng[1], y = y_rng[2],
-           label = ann, hjust = 0, vjust = 1, size = 2.0, color = "#263238") +
+           label = ann, hjust = 0, vjust = 1, size = GEOM_TEXT_6PT, color = "#263238") +
   labs(
     x = "Atlas convergence score",
-    y = "Hepatocyte disease-axis perturbation magnitude  |effect| (NC-standardized)",
-    title = "Forward validation: atlas convergence vs. Saunders 2025 in-vivo CRISPRi effect",
-    subtitle = "Independent mouse hepatocyte Perturb-seq (not designed around the atlas)") +
+    y = "Hepatocyte disease-axis perturbation magnitude  |effect| (NC-standardized)") +
   theme_masld() +
-  theme(plot.title = element_text(size = 7, face = "bold"),
-        plot.subtitle = element_text(size = 6, color = "#546E7A"),
-        legend.position = "right")
+  theme(legend.position = "right")
 
+message("[caption] Forward validation: atlas convergence vs. Saunders 2025 in-vivo CRISPRi effect (independent mouse hepatocyte Perturb-seq, not designed around the atlas)")
 out_pdf <- file.path(ROOT, "figures/supplementary/figS_perturb_forward_validation.pdf")
 save_fig(p, out_pdf, width = fig_full_width, height = 4.6)
 cat("Wrote figure:", out_pdf, "\n")

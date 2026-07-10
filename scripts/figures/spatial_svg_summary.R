@@ -69,7 +69,7 @@ svg_fills <- c(Gained = PERICENTRAL_COL, Maintained = "#9E9E9E", Lost = PERIPORT
 p_svg <- ggplot(svg_df, aes(x = state, y = n, fill = state)) +
   geom_col(width = 0.62) +
   geom_text(aes(label = n), vjust = -0.35, size = PUB_GEOM_TEXT + 0.4,
-            fontface = "bold", color = "black") +
+            fontface = "plain", color = "black") +
   scale_fill_manual(values = svg_fills, guide = "none") +
   scale_y_continuous(limits = c(0, max(svg_df$n) * 1.18),
                      expand = expansion(mult = c(0, 0.02))) +
@@ -112,7 +112,7 @@ ymax <- max(zon_df$n) + 14
 p_zon <- ggplot(zon_df, aes(x = zone, y = n, fill = zone)) +
   geom_col(width = 0.55) +
   geom_text(aes(label = n), hjust = -0.35, size = PUB_GEOM_TEXT + 0.4,
-            fontface = "bold", color = "black") +
+            fontface = "plain", color = "black") +
   geom_text(aes(label = lab, color = zone), y = max(zon_df$n) + 1.4,
             hjust = 0, vjust = 0.5, size = PUB_GEOM_TEXT - 0.1,
             fontface = "italic", lineheight = 0.9) +
@@ -139,7 +139,7 @@ message(sprintf(
   length(peri_central), peri_central_lab,
   length(peri_portal),  peri_portal_lab))
 
-out <- file.path(FIG4_DIR, "spatial_svg_summary.pdf")
+out <- file.path(FIG4_DIR, "panels", "spatial_svg_summary.pdf")
 dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
 pdf_device <- if (capabilities("cairo")) grDevices::cairo_pdf else grDevices::pdf
 pdf_device(out, width = fig_col_width, height = 2.2)

@@ -58,8 +58,8 @@ def index_path(release: str) -> Path:
 # ---------------------------------------------------------------------------
 # Library roster + annotations
 # ---------------------------------------------------------------------------
-LIBRARY_CSV = CAS13LIB / "data" / "cas13_library_v3.0.csv"   # v8 target list
-LIBRARY_VERSION = "v8"
+LIBRARY_CSV = CAS13LIB / "data" / "cas13_library.csv"   # canonical v9 target roster (2,177 genes)
+LIBRARY_VERSION = "v9"
 
 # Library annotation columns merged onto the guide table (keyed by gene_id_mouse).
 # v7: positive controls are folded into the target roster, so the guide table
@@ -76,6 +76,19 @@ LIBRARY_ANNOT_COLS = [
 
 # Biotypes we can build guides for from the upstream pool (miRNA deferred).
 TARGET_BIOTYPES = ("protein_coding", "lncRNA")
+
+# ---------------------------------------------------------------------------
+# Essentiality (DepMap CRISPR Chronos — LIVER cell lines only)
+# ---------------------------------------------------------------------------
+# Per-human-gene mean Chronos across DepMap LIVER lines (Model.csv OncotreeLineage
+# == 'Liver'); mirrors RNA-seq/27a_assemble_evidence_atlas.R layer 7. Annotated onto
+# the guide table (joined on gene_symbol_human) so essential KD-dropout targets are
+# flagged for the steatosis screen readout. More negative Chronos = more essential.
+DEPMAP_DIR = PROJECT / "Analysis" / "downstream_analysis" / "essentiality"
+DEPMAP_GENE_EFFECT = DEPMAP_DIR / "CRISPRGeneEffect.csv"   # rows=ModelID, cols 'SYMBOL (ENTREZ)'
+DEPMAP_MODEL = DEPMAP_DIR / "Model.csv"                    # ModelID + OncotreeLineage
+LIVER_ESSENTIALITY_CACHE = CAS13LIB / "data" / "depmap_liver_essentiality.csv"
+ESSENTIAL_CHRONOS_THR = -0.5   # Chronos < this => essential (DepMap convention)
 
 # ---------------------------------------------------------------------------
 # Controls
@@ -102,8 +115,10 @@ ESSENTIAL_GENES_HUMAN = [
 # ---------------------------------------------------------------------------
 # Guide-design parameters
 # ---------------------------------------------------------------------------
-N_GUIDES_DEFAULT = 10            # flat guides-per-gene (PI-pending; re-runnable)
+N_GUIDES_DEFAULT = 6             # guides-per-gene (PI 2026-06-24: 10->6, retain only highest-quality, CDS-first)
 GUIDE_LEN = 23                   # RfxCas13d spacer length in this pool
+MIN_GUIDE_SPACING = 23           # min transcript-position gap between a gene's selected guides
+                                 # (>=GUIDE_LEN => no shared nucleotide; 2026-06-30, prevents overlapping guides)
 TIGER_MIN = 0.75                 # basic-criteria guard (re-asserted)
 CAS13_MIN = 0.75                 # basic-criteria guard (re-asserted: TIGER>=.75 OR cas13>=.75)
 HOMOPOLYMERS = ("TTTT", "AAAAA", "CCCCC", "GGGGG")  # disallowed runs

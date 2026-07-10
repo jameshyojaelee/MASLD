@@ -73,7 +73,7 @@ strip[, txt := fifelse(cat == "EUR-only", "grey15", "white")]
 p_strip <- ggplot(strip, aes(x = n, y = "all", fill = cat)) +
   geom_col(position = "fill", width = 0.55, color = "white", linewidth = 0.4) +
   geom_text(aes(label = sprintf("%.0f%%", pct), color = cat),
-            position = position_fill(vjust = 0.5), fontface = "bold", size = 2.7) +
+            position = position_fill(vjust = 0.5), fontface = "plain", size = 2.7) +
   scale_fill_manual(values = c("EUR-only" = "#BDBDBD",
                                "EUR + non-EUR (shared)" = "#78909C",
                                "non-EUR-unique" = "#283593"), name = NULL) +
@@ -83,7 +83,7 @@ p_strip <- ggplot(strip, aes(x = n, y = "all", fill = cat)) +
   scale_x_continuous(expand = expansion(0)) +
   labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
-  theme(legend.position = "top", legend.text = element_text(size = 7, color = "black"),
+  theme(legend.position = "top", legend.text = element_text(size = 6, color = "black"),
         legend.key.size = unit(0.30, "cm"),
         axis.text = element_blank(), axis.ticks = element_blank(),
         panel.grid = element_blank())
@@ -99,7 +99,7 @@ acol <- c("EAS only" = "#C44E52", "AFR only" = "#55A868", "SAS only" = "#8172B3"
           "AMR only" = "#DD8452", "multiple non-EUR" = "#455A64")
 p_break <- ggplot(brk, aes(x = n, y = ancb, fill = ancb)) +
   geom_col(width = 0.66) +
-  geom_text(aes(label = n), hjust = -0.3, size = 2.9, fontface = "bold", color = "black") +
+  geom_text(aes(label = n), hjust = -0.3, size = 2.9, fontface = "plain", color = "black") +
   scale_fill_manual(values = acol, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(x = sprintf("non-EUR-unique colocalizing genes (n=%d of %d)", n_unique, n_total), y = NULL) +
@@ -107,9 +107,8 @@ p_break <- ggplot(brk, aes(x = n, y = ancb, fill = ancb)) +
   theme(axis.text = element_text(color = "black"),
         axis.title.x = element_text(color = "black"))
 
-p <- p_strip / p_break + plot_layout(heights = c(1, 2.4)) +
-  plot_annotation(title = "Colocalization by ancestry specificity",
-                  theme = theme(plot.title = element_text(size = 9, face = "bold")))
+message("[caption] Colocalization by ancestry specificity")
+p <- p_strip / p_break + plot_layout(heights = c(1, 2.4))
 
 # ---- base ungated Fig2G RETIRED 2026-07-06 ---------------------------------
 # The ungated base panel counts ALL non-EUR-unique coloc genes with NO non-EUR

@@ -72,8 +72,8 @@ base_lolli <- function(df, x, xlab, xlim, xbreaks, vline = NULL, vtype = "solid"
     labs(x = xlab, y = NULL) +
     theme_masld() + theme_pub()
   if (show_y) {
-    p <- p + theme(axis.text.y = element_text(face = "bold.italic",
-                                              size = PUB_AXIS_TEXT + 1))
+    p <- p + theme(axis.text.y = element_text(face = "italic",
+                                              size = PUB_AXIS_TEXT))
   } else {
     p <- p + theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
   }
@@ -94,7 +94,7 @@ p_out <- (p_expr | p_coloc | p_atac) +
   plot_layout(widths = c(1.2, 1.2, 1.4), guides = "collect") &
   theme(legend.position = "bottom", legend.key.size = PUB_LEGEND_KEY)
 
-out <- file.path(FIG4_DIR, "nuclear_receptor_triad.pdf")
+out <- file.path(FIG4_DIR, "panels", "nuclear_receptor_triad.pdf")
 pdf(out, width = fig_full_width, height = 1.85, useDingbats = FALSE)
 print(p_out)
 dev.off()

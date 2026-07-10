@@ -47,23 +47,16 @@ run() {  # run <interpreter> <relative-script-and-args...>
 }
 
 ############################ Python overview figures ############################
-run PY fig1b_cohort_matrix.py
-run PY fig_bulkrna_matrix.py
 run PY fig_bulkrna_matrix.py --panel
 run PY metadata_matrix.py
 run PY dataset_treemap.py
 run PY dataset_overview_figure.py
 run PY published_deg_comparison.py
-run PY fig1d_rnaseq_candidates.py
 
 ################################ R figures ######################################
 R_SCRIPTS=(
   fig1_umap.R
-  fig1_compact.R
   fig1_atlas_overview_v2.R
-  fig1_atlas_overview.R
-  fig1_integration_value_panels_v2.R
-  fig1_loo_cv_panels.R
   figS_batch_harmony_sweep.R
   figS_batch_correction.R
   figS_batch_correction_extra.R
@@ -96,7 +89,6 @@ R_SCRIPTS=(
   figS_lfc_sensitivity_loo_concordance.R
   per_study_lfc_correlation_heatmap.R
   figS_sex_dimorphism.R
-  figS_cas13_integrated_vs_perstudy_venn.R
   deg_upset_cohorts.R
   fig4_spatial_panels.R
   cyp3a4_zonation.R

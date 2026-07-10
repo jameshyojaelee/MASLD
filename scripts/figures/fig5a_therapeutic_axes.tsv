@@ -1,0 +1,59 @@
+gene	primary_therapeutic_axis	rationale
+FADS2	Metabolic dysfunction & lipid handling	Polyunsaturated fatty-acid desaturation
+DGAT2	Metabolic dysfunction & lipid handling	Hepatic triglyceride synthesis
+ADH4	Metabolic dysfunction & lipid handling	Hepatic alcohol and retinoid metabolism
+PLIN2	Metabolic dysfunction & lipid handling	Lipid-droplet storage and turnover
+ABCB4	Metabolic dysfunction & lipid handling	Canalicular phospholipid transport
+ASS1	Metabolic dysfunction & lipid handling	Urea-cycle and nitrogen metabolism
+TAT	Metabolic dysfunction & lipid handling	Hepatic amino-acid catabolism
+NNMT	Metabolic dysfunction & lipid handling	Hepatic methyl and energy metabolism
+THRB	Metabolic dysfunction & lipid handling	Liver-directed thyroid hormone metabolic signaling
+AKR1B10	Metabolic dysfunction & lipid handling	Lipid-carbonyl detoxification and lipogenic state
+LPL	Metabolic dysfunction & lipid handling	Triglyceride-rich lipoprotein processing
+SCD	Metabolic dysfunction & lipid handling	Monounsaturated fatty-acid synthesis
+GCKR	Metabolic dysfunction & lipid handling	Hepatic glucose and de novo lipogenesis control
+HSD17B13	Metabolic dysfunction & lipid handling	Lipid-droplet enzyme and genetic therapeutic target
+HKDC1	Metabolic dysfunction & lipid handling	Hepatic glucose handling and mitochondrial metabolism
+NR1H4	Metabolic dysfunction & lipid handling	FXR-mediated bile-acid and lipid homeostasis
+PNPLA3	Metabolic dysfunction & lipid handling	Lipid-droplet remodeling and genetic susceptibility
+KRT8	Hepatocellular injury & inflammation	Hepatocyte stress and cytoskeletal injury marker
+FGG	Hepatocellular injury & inflammation	Acute-phase coagulation and inflammatory response
+ANXA5	Hepatocellular injury & inflammation	Membrane injury and cell-death response
+CAPN2	Hepatocellular injury & inflammation	Stress-responsive proteolysis and cell injury
+GSN	Hepatocellular injury & inflammation	Actin remodeling during tissue injury
+LCN2	Hepatocellular injury & inflammation	Innate immune and inflammatory hepatocyte response
+TM4SF4	Hepatocellular injury & inflammation	Hepatocyte injury and regenerative signaling
+CDK6	Hepatocellular injury & inflammation	Injury-associated immune and regenerative proliferation
+RORA	Hepatocellular injury & inflammation	Immunometabolic and inflammatory transcriptional control
+ACTG1	Fibrogenesis & matrix remodeling	Contractile cytoskeleton and tissue remodeling
+COL3A1	Fibrogenesis & matrix remodeling	Fibrillar extracellular-matrix collagen
+CD151	Fibrogenesis & matrix remodeling	Integrin-associated cell-matrix adhesion
+COL1A2	Fibrogenesis & matrix remodeling	Type I collagen and scar deposition
+COL1A1	Fibrogenesis & matrix remodeling	Type I collagen and scar deposition
+AEBP1	Fibrogenesis & matrix remodeling	Fibroblast activation and profibrotic signaling
+VIM	Fibrogenesis & matrix remodeling	Mesenchymal activation and cytoskeletal remodeling
+MMP9	Fibrogenesis & matrix remodeling	Extracellular-matrix turnover and remodeling
+EPHA2	Fibrogenesis & matrix remodeling	Cell-matrix signaling and fibrogenic tissue remodeling
+LGALS3	Fibrogenesis & matrix remodeling	Galectin-3 inhibitor target for fibrosis
+CCR2	Hepatocellular injury & inflammation	Chemokine receptor driving macrophage recruitment
+HAL	Metabolic dysfunction & lipid handling	Histidine ammonia-lyase involved in amino-acid catabolism
+HGD	Metabolic dysfunction & lipid handling	Homogentisate 1,2-dioxygenase involved in tyrosine metabolism
+ETNPPL	Metabolic dysfunction & lipid handling	Ethanolamine-phosphate phospho-lyase regulating lipid state
+C1QC	Hepatocellular injury & inflammation	Complement component C1q involved in inflammatory response
+CORO1A	Hepatocellular injury & inflammation	Coronin 1A involved in leukocyte migration and inflammation
+COL14A1	Fibrogenesis & matrix remodeling	Fibril-associated collagen upregulated in matrix deposition
+EMILIN1	Fibrogenesis & matrix remodeling	TGF-beta regulator involved in elastic fiber formation
+FASN	Metabolic dysfunction & lipid handling	Fatty acid synthase mediating de novo lipogenesis
+KHK	Metabolic dysfunction & lipid handling	Ketohexokinase regulating fructose metabolism
+ACACA	Metabolic dysfunction & lipid handling	Acetyl-CoA carboxylase alpha driving fatty acid synthesis
+ACACB	Metabolic dysfunction & lipid handling	Acetyl-CoA carboxylase beta regulating mitochondrial beta-oxidation
+GHR	Metabolic dysfunction & lipid handling	Growth hormone receptor modulating hepatic metabolism
+HMGCR	Metabolic dysfunction & lipid handling	HMG-CoA reductase mediating cholesterol biosynthesis
+MAP3K5	Hepatocellular injury & inflammation	ASK1 signaling kinase mediating stress-responsive hepatocyte apoptosis
+CNR1	Hepatocellular injury & inflammation	Cannabinoid receptor 1 regulating liver injury and inflammation
+ADGRE5	Hepatocellular injury & inflammation	Adhesion G-protein coupled receptor E5 driving inflammatory cell infiltration
+LOXL2	Fibrogenesis & matrix remodeling	Lysyl oxidase-like 2 mediating extracellular matrix collagen cross-linking
+ADORA3	Fibrogenesis & matrix remodeling	Adenosine A3 receptor modulating fibrogenesis and inflammation
+FGF21	Fibrogenesis & matrix remodeling	Fibroblast growth factor 21 regulating lipid and energy homeostasis
+
+

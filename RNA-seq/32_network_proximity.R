@@ -53,7 +53,7 @@ dir.create(STRING_DIR, recursive = TRUE, showWarnings = FALSE)
 STRING_SCORE_THRESHOLD <- 700    # STRING combined score >= 700 (high confidence)
 N_PERMUTATIONS         <- 1000   # Random permutations for z-score
 DISEASE_PADJ_THR       <- 0.05   # padj threshold for disease genes
-DISEASE_LFC_THR        <- 0.5    # |logFC| threshold for disease genes
+DISEASE_LFC_THR        <- 0.3    # |shrunk_logFC| threshold for disease genes (canonical 2026-06-27; was 0.5)
 
 # File paths
 # Canonical human bulk DEGs (limma-voom-qw C2): carries raw logFC/padj plus
@@ -166,9 +166,8 @@ if (file.exists(GENE_CACHE)) {
   dream[, symbol := ensembl_id]
 }
 
-# Disease genes: significant DEGs
-# Standard: padj < 0.05, |logFC| > 0.5
-disease_genes <- dream[padj < 0.05 & abs(logFC) > 0.5 &
+# Disease genes: canonical DEGs (TREAT FDR < 0.05, lfc=0.25; 2026-06-29, was ashr lfsr+|shrunk|>0.3)
+disease_genes <- dream[treat_fdr < 0.05 &
                         !is.na(symbol) & symbol != "", symbol]
 disease_genes_in_ppi <- intersect(disease_genes, V(ppi)$name)
 cat("  MASLD DEGs:", length(disease_genes), "\n")
@@ -312,41 +311,35 @@ compute_shortest <- function(drug_nodes, disease_nodes, g, inf_replace = NULL) {
 sample_degree_preserving <- function(n_genes, degree_vec, all_nodes_vec, n_bins = 10,
                                      original_nodes = NULL) {
   if (n_genes == 0) return(character(0))
-  # Bin all PPI nodes by degree
-  bins <- cut(degree_vec, breaks = n_bins, labels = FALSE)
+  # Equal-COUNT (quantile) degree bins with >=100 nodes/bin, per Guney et al.
+  # (2016). Equal-WIDTH cut(degree, breaks=10) piles the heavy-tailed degree
+  # distribution into a handful of low-degree bins and leaves hub bins nearly
+  # empty, so matched sampling would repeatedly exhaust hub bins and fall back to
+  # hub-biased uniform draws. Quantile bins keep every degree stratum populated.
+  n_eff  <- max(1L, min(n_bins, floor(length(degree_vec) / 100)))
+  qbreaks <- unique(stats::quantile(degree_vec, probs = seq(0, 1, length.out = n_eff + 1),
+                                    na.rm = TRUE, type = 7))
+  if (length(qbreaks) < 2) qbreaks <- range(degree_vec)  # degenerate (all equal degree)
+  bins <- cut(degree_vec, breaks = qbreaks, labels = FALSE, include.lowest = TRUE)
   names(bins) <- all_nodes_vec
+  bin_to_nodes <- split(names(bins), bins)
 
-  # Determine bin sampling weights from the original gene set's degree distribution.
-  # If original_nodes is provided, each replacement is drawn from the same bin
-  # as the corresponding original node.
-  if (!is.null(original_nodes) && length(original_nodes) > 0) {
-    orig_bins <- bins[intersect(original_nodes, all_nodes_vec)]
-    # Sample one replacement per original node from its degree bin
-    sampled <- character(0)
-    for (b in orig_bins) {
-      candidates <- setdiff(names(bins[bins == b]), sampled)
-      if (length(candidates) > 0) {
-        sampled <- c(sampled, sample(candidates, 1))
-      }
-    }
+  # For each original (seed) node, draw one replacement from its OWN degree bin.
+  # No cross-bin / hub random-fill: if a bin is exhausted we allow a repeat within
+  # the same bin (never a uniform draw from all nodes, which would bias the null
+  # toward high-degree hubs and inflate proximity significance).
+  seeds <- if (!is.null(original_nodes) && length(original_nodes) > 0) {
+    intersect(original_nodes, all_nodes_vec)
   } else {
-    # Fallback: uniform bin sampling (legacy behavior)
-    sampled <- character(0)
-    max_attempts <- n_genes * 5
-    attempts <- 0L
-    while (length(sampled) < n_genes && attempts < max_attempts) {
-      target_bin <- sample(bins, size = 1)
-      bin_nodes <- setdiff(names(bins[bins == target_bin]), sampled)
-      if (length(bin_nodes) > 0) {
-        sampled <- c(sampled, sample(bin_nodes, 1))
-      }
-      attempts <- attempts + 1L
-    }
+    sample(all_nodes_vec, min(n_genes, length(all_nodes_vec)))
   }
-  # Fallback: if degree-preserving didn't produce enough, random-fill
-  if (length(sampled) < n_genes) {
-    remaining <- setdiff(all_nodes_vec, sampled)
-    sampled <- c(sampled, sample(remaining, min(n_genes - length(sampled), length(remaining))))
+  sampled <- character(0)
+  for (g in seeds) {
+    b    <- as.character(bins[[g]])
+    pool <- setdiff(bin_to_nodes[[b]], sampled)   # unused nodes in the same bin
+    if (length(pool) == 0) pool <- bin_to_nodes[[b]]  # bin exhausted: repeat within bin
+    if (length(pool) == 0) next
+    sampled <- c(sampled, pool[sample.int(length(pool), 1L)])
   }
   sampled
 }
@@ -411,9 +404,11 @@ for (i in seq_along(drug_targets_filtered)) {
     0
   }
 
-  # P-values (one-sided: is drug closer than random?)
-  p_closest  <- mean(d_closest_perm <= d_closest_obs)
-  p_shortest <- mean(d_shortest_perm <= d_shortest_obs)
+  # P-values (one-sided: is drug closer than random?). Add-one empirical p,
+  # (sum(perm <= obs) + 1) / (N + 1), so p is never exactly 0 and stays a valid
+  # (conservative) permutation p-value (Phipson & Smyth 2010).
+  p_closest  <- (sum(d_closest_perm  <= d_closest_obs)  + 1) / (N_PERMUTATIONS + 1)
+  p_shortest <- (sum(d_shortest_perm <= d_shortest_obs) + 1) / (N_PERMUTATIONS + 1)
 
   results_list[[drug_name]] <- data.table(
     drug             = drug_name,

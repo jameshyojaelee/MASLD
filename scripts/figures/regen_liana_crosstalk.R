@@ -55,6 +55,6 @@ p_j <- ggplot(top_links,
        y = NULL,
        title = "Hepatocyte-targeted L\u2013R\ninteractions (LIANA)")
 
-out_file <- file.path(panel_dir, "fig3f_liana_crosstalk.pdf")
+out_file <- file.path(panel_dir, "figs3_liana_crosstalk.pdf")
 ggsave(out_file, p_j, width = 4, height = 3.5, device = cairo_pdf)
 message("Saved: ", out_file)

@@ -47,17 +47,16 @@ pA <- ggplot(bA, aes(convergence_score, directional_reversal)) +
               linewidth = 0.4, alpha = 0.6) +
   geom_point(aes(fill = tier, size = n_cells), shape = 21, color = "white",
              stroke = 0.25, alpha = 0.9) +
-  ggrepel::geom_text_repel(aes(label = label), size = 1.9, color = "#212121",
+  ggrepel::geom_text_repel(aes(label = label), size = GEOM_TEXT_6PT, color = "#212121",
                            segment.size = 0.2, segment.color = "#9E9E9E",
                            min.segment.length = 0, max.overlaps = 30, na.rm = TRUE) +
   scale_fill_manual(values = tier_pal, name = "Atlas tier", drop = FALSE) +
   scale_size_continuous(range = c(0.6, 3.0), name = "n cells") +
   annotate("text", x = min(bA$convergence_score), y = max(bA$directional_reversal),
-           label = annA, hjust = 0, vjust = 1, size = 1.9, color = "#263238") +
+           label = annA, hjust = 0, vjust = 1, size = GEOM_TEXT_6PT, color = "#263238") +
   labs(x = "Atlas convergence score",
-       y = "Directional reversal\n(+ = knockdown reverses disease)",
-       title = "A  Directional reversal vs convergence") +
-  theme_masld() + theme(plot.title = element_text(size = 7, face = "bold"))
+       y = "Directional reversal\n(+ = knockdown reverses disease)") +
+  theme_masld()
 
 # ---- Panel B: high vs low convergence directional boxplot ----
 bB <- clear[clear$conv_group %in% c("high", "low"), ]
@@ -69,10 +68,9 @@ pB <- ggplot(bB, aes(conv_group, directional_reversal, fill = conv_group)) +
   geom_jitter(width = 0.12, height = 0, size = 0.5, alpha = 0.5, color = "#37474F") +
   scale_fill_manual(values = c(low = "#90A4AE", high = "#C2185B"), guide = "none") +
   annotate("text", x = 1.5, y = max(bB$directional_reversal, na.rm = TRUE),
-           label = annB, size = 2.0, color = "#263238", vjust = 1) +
-  labs(x = "Convergence group", y = "Directional reversal",
-       title = "B  High vs low convergence") +
-  theme_masld() + theme(plot.title = element_text(size = 7, face = "bold"))
+           label = annB, size = GEOM_TEXT_6PT, color = "#263238", vjust = 1) +
+  labs(x = "Convergence group", y = "Directional reversal") +
+  theme_masld()
 
 # ---- Panel C: disease-UP subset one-sample distribution ----
 up <- clear[clear$atlas_dir > 0, ]
@@ -85,17 +83,15 @@ pC <- ggplot(up, aes(directional_reversal)) +
   geom_vline(xintercept = 0, linetype = "dashed", color = "#37474F", linewidth = 0.4) +
   geom_vline(xintercept = medUP, color = "#C2185B", linewidth = 0.5) +
   annotate("text", x = min(up$directional_reversal), y = Inf, label = annC,
-           hjust = 0, vjust = 1.3, size = 1.9, color = "#263238") +
-  labs(x = "Directional reversal (disease-UP genes)", y = "Perturbed genes",
-       title = "C  Knockdown of disease-UP genes") +
-  theme_masld() + theme(plot.title = element_text(size = 7, face = "bold"))
+           hjust = 0, vjust = 1.3, size = GEOM_TEXT_6PT, color = "#263238") +
+  labs(x = "Directional reversal (disease-UP genes)", y = "Perturbed genes") +
+  theme_masld()
 
-p <- (pA | pB | pC) + plot_layout(widths = c(1.5, 0.8, 1.1)) +
-  plot_annotation(
-    title = "Directional forward validation: atlas convergence vs Saunders 2025 in-vivo CRISPRi",
-    subtitle = "Positive reversal = CRISPRi knockdown moved hepatocytes OPPOSITE to the gene's atlas disease direction",
-    theme = theme(plot.title = element_text(size = 7.5, face = "bold"),
-                  plot.subtitle = element_text(size = 6, color = "#546E7A")))
+p <- (pA | pB | pC) + plot_layout(widths = c(1.5, 0.8, 1.1))
+
+message("[caption] Directional forward validation: atlas convergence vs Saunders 2025 in-vivo CRISPRi. ",
+        "Positive reversal = CRISPRi knockdown moved hepatocytes OPPOSITE to the gene's atlas disease direction. ",
+        "A: directional reversal vs convergence. B: high vs low convergence. C: knockdown of disease-UP genes.")
 
 out_pdf <- file.path(ROOT, "figures/supplementary/figS_perturb_forward_validation_directional.pdf")
 save_fig(p, out_pdf, width = fig_full_width, height = 3.4)

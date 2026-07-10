@@ -32,7 +32,7 @@ INT_DIR <- file.path(BASE,
 # Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq, back-compat constant name).
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
-OUT_PDF <- file.path(PANEL_DIR, "fig3b_patient_lfc_cutoff.pdf")
+OUT_PDF <- file.path(PANEL_DIR, "figs3_patient_lfc_cutoff.pdf")
 OUT_RDS <- file.path(FIGS01_DIR, "fig1g_patient_lfc_pG.rds")
 OUT_CSV <- file.path(PANEL_DIR, "patient_lfc_cutoff_data.csv")
 
@@ -105,7 +105,7 @@ p_g <- ggplot(sweep, aes(x = lfc_label, y = pct_label, fill = n_total_sig)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = format(n_total_sig, big.mark = ","),
                 color = label_color),
-            size = 2.6) +
+            size = 6 / ggplot2::.pt) +
   # Highlight chosen cutoff column
   geom_tile(data = sweep[lfc_cutoff == chosen_cutoff],
             color = "#FFB300", fill = NA, linewidth = 0.9) +
@@ -116,15 +116,14 @@ p_g <- ggplot(sweep, aes(x = lfc_label, y = pct_label, fill = n_total_sig)) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   labs(x = expression("|log"[2]*"FC| cutoff"),
-       y = "% of patients (concordant direction)",
-       title = "Consistently dys-regulated integrated DEGs vs effect-size cutoff",
-       subtitle = sprintf(
-         "Integrated DEGs at padj < %.2f (N = %s) · %d disease patients across %d cohorts · chosen |LFC| = %.1f",
-         PADJ_CUTOFF, format(sum(sig_idx), big.mark = ","), n_patients, n_cohorts, chosen_cutoff)) +
+       y = "% of patients (concordant direction)") +
   theme_masld() +
   theme(panel.grid = element_blank(),
-        axis.ticks = element_blank(),
-        plot.subtitle = element_text(size = 8, color = "gray40"))
+        axis.ticks = element_blank())
+
+message(sprintf(
+  "[caption] Consistently dys-regulated integrated DEGs vs effect-size cutoff. Integrated DEGs at padj < %.2f (N = %s) - %d disease patients across %d cohorts - chosen |LFC| = %.1f",
+  PADJ_CUTOFF, format(sum(sig_idx), big.mark = ","), n_patients, n_cohorts, chosen_cutoff))
 
 ggsave(OUT_PDF, p_g, width = 5, height = 4, device = cairo_pdf)
 saveRDS(p_g, OUT_RDS)

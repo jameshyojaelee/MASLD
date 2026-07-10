@@ -29,7 +29,8 @@
 #   - Drug-clearance consequences are substrate-specific (CYP3A4 metabolizes ~50%
 #     of drugs but the impact varies by compound).
 #
-# Output: figures/main/fig4_validation/fig4f_cyp3a4_zonation.pdf   (flat, no fig-# prefix)
+# Output: figures/main/fig4_validation/fig4f_cyp3a4_zonation.pdf   (flat, no fig-# prefix;
+# relettered g->f 2026-07-08 so it sits directly after cyp3a4_he/e in the Fig4 lineup)
 # Env:    rnaseq
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -57,7 +58,8 @@ dz <- read.csv(file.path(BASE,
 
 # Canonical COLOC: gene_level_coloc.csv (NOT the atlas *_coloc_pp4 convenience
 # columns, which are method-mixed). coloc_best_pp4 = best abf PP.H4 across the
-# 23-GWAS portfolio; coloc_best_susie_pp4 = best SuSiE PP.H4 (NA = non-convergent).
+# 50-GWAS portfolio (MVP 5-ancestry expansion; was 23-GWAS pre-2026-07-05);
+# coloc_best_susie_pp4 = best SuSiE PP.H4 (NA = non-convergent).
 coloc <- read.csv(file.path(BASE,
   "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv"),
   stringsAsFactors = FALSE)
@@ -99,13 +101,12 @@ p_autocorr <- ggplot(autocorr_df, aes(x = cond, y = morans, group = 1)) +
   geom_line(linewidth = 0.7, color = "#E65100") +
   geom_point(aes(color = cond), size = 3.2) +
   geom_text(aes(label = sprintf("%.3f", morans)),
-            vjust = -1.1, size = PUB_GEOM_TEXT, color = "gray15") +
+            vjust = -1.1, size = GEOM_TEXT_6PT, color = "gray15") +
   scale_color_manual(values = cond_cols, guide = "none") +
   scale_y_continuous(limits = c(0.30, 0.52),
                      breaks = c(0.35, 0.40, 0.45, 0.50)) +
   labs(x = NULL, y = "Spatial autocorrelation\n(Moran's I)") +
-  theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT + 0.5))
+  theme_masld_compact()
 
 # ── Panel B: CYP3A4 periportal -> pericentral expression gradient ─────────────
 zone_order  <- c("PP1", "PP2", "Mid", "PC2", "PC1")
@@ -139,10 +140,10 @@ p_gradient <- ggplot(cyp_dz, aes(x = zone, y = expr_z, group = dataset,
                         labels = c("Guilliams" = "GSE192741", "Vu" = "Vu"),
                         name = NULL) +
   labs(x = NULL, y = "Expression (z)") +
-  theme_masld() + theme_pub() +
+  theme_masld_compact() +
   theme(legend.position  = "bottom",
         legend.key.size  = PUB_LEGEND_KEY,
-        axis.text.x      = element_text(size = PUB_AXIS_TEXT, angle = 35, hjust = 1))
+        axis.text.x      = element_text(size = 6, angle = 35, hjust = 1))
 
 # ── Panel C: mRNA vs protein log2FC (both DOWN) ───────────────────────────────
 modality_df <- data.frame(
@@ -157,8 +158,7 @@ p_modality <- ggplot(modality_df, aes(x = modality, y = logFC, fill = fill_col))
   scale_fill_identity() +
   scale_y_continuous(limits = c(-0.78, 0.04), breaks = c(-0.6, -0.4, -0.2, 0)) +
   labs(x = NULL, y = "log2FC (MASLD vs control)") +
-  theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT + 0.5))
+  theme_masld_compact()
 
 # ── Legend stats + caveats -> stdout (NOT on the panel) ───────────────────────
 message(sprintf(
@@ -175,8 +175,8 @@ message(sprintf(
 p_out <- (p_modality | p_gradient | p_autocorr) +
   plot_layout(widths = c(0.85, 1.15, 0.85))
 
-out <- file.path(FIG4_DIR, "fig4f_cyp3a4_zonation.pdf")
-cairo_pdf(out, width = fig_full_width, height = 2.6, onefile = TRUE)
+out <- file.path(FIG4_DIR, "panels", "fig4f_cyp3a4_zonation.pdf")
+cairo_pdf(out, width = 5.1, height = 2.0, onefile = TRUE)
 print(p_out)
 dev.off()
 message("Saved: ", out)

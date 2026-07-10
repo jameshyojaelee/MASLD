@@ -1,10 +1,18 @@
 #!/usr/bin/env Rscript
 # ===========================================================================
-# Script 59: Multiplex Network Random Walk with Restart (RWR)
+# Script 59: Aggregated-Network Random Walk with Restart (RWR)
 # ===========================================================================
 # Purpose: Score ALL genes (including lncRNAs) by network proximity to
-#          high-confidence seed genes (DEG + COLOC overlap) using RWR
-#          across a multiplex network (PPI + coexpression + regulatory).
+#          high-confidence seed genes (DEG + COLOC overlap) using RWR on a
+#          single AGGREGATED network built by averaging three column-normalized
+#          layers (PPI + coexpression + regulatory).
+#
+# NOTE ON METHOD (corrected 2026-07-04, round-2 audit B5d): this is a MONOPLEX
+#   RWR on the per-column active-layer average of the three layers. It is NOT a
+#   true multiplex / supra-adjacency RWR (Valdeolivas et al. 2019) — there is no
+#   inter-layer coupling and no per-layer walker state; the layers are collapsed
+#   into one transition matrix before the walk. Earlier comments calling it
+#   "multiplex" / "supra-adjacency" were a misnomer and have been corrected.
 #
 # Layers:
 #   L1 — STRING PPI (combined_score > 700)
@@ -37,7 +45,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-cat("=== Script 59: Multiplex RWR ===\n")
+cat("=== Script 59: Aggregated-Network RWR (monoplex on layer-averaged graph) ===\n")
 cat("Start:", format(Sys.time()), "\n")
 
 # ---------------------------------------------------------------------------
@@ -308,7 +316,11 @@ cat("Coexpression adjacency: nnz =", nnzero(A_coexpr), "\n")
 cat("Regulatory adjacency: nnz =", nnzero(A_reg), "\n")
 
 # ---------------------------------------------------------------------------
-# 7. Column-normalize each layer and combine (supra-adjacency)
+# 7. Column-normalize each layer and collapse to a single monoplex transition
+#    matrix (per-column active-layer average). NOTE: this is NOT a true multiplex
+#    supra-adjacency RWR (no inter-layer coupling, no per-layer walker state);
+#    the three layers are averaged into one aggregated network on which a plain
+#    (monoplex) RWR is run.
 # ---------------------------------------------------------------------------
 cat("\n--- Normalizing and combining layers ---\n")
 
@@ -320,16 +332,20 @@ col_normalize <- function(A) {
   return(A_norm)
 }
 
-# Normalize each layer
+# Normalize each layer (each active column now sums to 1; isolated-node columns
+# sum to 0).
 M_ppi    <- col_normalize(A_ppi)
 M_coexpr <- col_normalize(A_coexpr)
 M_reg    <- col_normalize(A_reg)
 
-# Count active layers per gene (for weighting)
-n_layers <- 3
-# Simple average across layers (equal weighting)
-# Genes present in multiple layers get information from all
-M <- (M_ppi + M_coexpr + M_reg) / n_layers
+# Average across the layers in which each gene is ACTIVE, i.e. divide column j by
+# k_j = #{layers with >=1 edge on gene j}, NOT by the constant n_layers=3.
+# Dividing by 3 made the column of any gene present in <3 layers sub-stochastic
+# (colSum = k_j/3 < 1), leaking probability mass in the walk. Dividing by k_j
+# restores a column-stochastic transition matrix for every non-isolated gene.
+k_active <- (colSums(M_ppi) > 0) + (colSums(M_coexpr) > 0) + (colSums(M_reg) > 0)
+inv_k    <- ifelse(k_active > 0, 1 / k_active, 0)  # isolated genes (k_j=0) -> 0 column
+M <- (M_ppi + M_coexpr + M_reg) %*% Diagonal(x = inv_k)
 
 cat("Combined transition matrix: dim =", dim(M), "\n")
 cat("Nonzeros in M:", nnzero(M), "\n")

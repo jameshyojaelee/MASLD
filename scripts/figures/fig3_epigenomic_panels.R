@@ -62,9 +62,9 @@ if (!is.null(regulons) && nrow(regulons) > 0) {
     # Color by direction
     reg_f[, direction := fifelse(regulon_activity_diff >= 0, "up", "down")]
 
-    # Determine which labels to bold (drug targets)
+    # Determine which labels to italicize (drug target gene symbols)
     tf_levels <- levels(reg_f$tf_name)
-    y_faces <- ifelse(tf_levels %in% DRUG_TARGET_TFS, "bold", "plain")
+    y_faces <- ifelse(tf_levels %in% DRUG_TARGET_TFS, "italic", "plain")
     names(y_faces) <- tf_levels
 
     # Position for stars: slightly beyond the bar end
@@ -79,7 +79,7 @@ if (!is.null(regulons) && nrow(regulons) > 0) {
     p_f <- ggplot(reg_f, aes(x = regulon_activity_diff, y = tf_name,
                               fill = direction)) +
       geom_bar(stat = "identity", width = 0.7) +
-      geom_text(aes(x = star_x, label = stars), size = 2, vjust = 0.5,
+      geom_text(aes(x = star_x, label = stars), size = GEOM_TEXT_6PT, vjust = 0.5,
                 show.legend = FALSE) +
       # Annotate drug targets with a small triangle marker
       geom_point(data = reg_f[tf_name %in% DRUG_TARGET_TFS],
@@ -96,11 +96,9 @@ if (!is.null(regulons) && nrow(regulons) > 0) {
       geom_vline(xintercept = 0, linewidth = 0.3, color = "gray40") +
       scale_x_continuous(expand = expansion(mult = c(0.15, 0.15))) +
       labs(x = "Regulon activity change\n(Normal \u2192 MASLD)",
-           y = NULL,
-           title = paste0("SCENIC+ disease regulons (n = ",
-                          nrow(reg_f), ")")) +
+           y = NULL) +
       theme_masld() +
-      theme(axis.text.y = element_text(size = 5.5, face = y_faces),
+      theme(axis.text.y = element_text(size = 6, face = y_faces),
             legend.position = "inside",
             legend.position.inside = c(0.75, 0.15),
             legend.background = element_blank(),
@@ -189,14 +187,13 @@ if (!is.null(hep_regulons) && nrow(hep_regulons) > 0 &&
                    color = "gray40", shape = 16, alpha = 0.7) +
         # TF labels (left side)
         geom_text(data = unique(links[, .(tf_name, tf_y, direction)]),
-                  aes(x = x_tf - 0.05, y = tf_y, label = tf_name,
-                      fontface = ifelse(tf_name %in% DRUG_TARGET_TFS,
-                                        "bold.italic", "italic")),
-                  hjust = 1, size = 2, color = "black") +
+                  aes(x = x_tf - 0.05, y = tf_y, label = tf_name),
+                  hjust = 1, size = GEOM_TEXT_6PT, fontface = "italic",
+                  color = "black") +
         # Target labels (right side)
         geom_text(data = links[, .(target_gene, tgt_y)][!duplicated(target_gene)],
                   aes(x = x_tgt + 0.05, y = tgt_y, label = target_gene),
-                  hjust = 0, size = 1.8, fontface = "italic", color = "gray30") +
+                  hjust = 0, size = GEOM_TEXT_6PT, fontface = "italic", color = "black") +
         scale_color_manual(
           values = c("down" = epigenomic_colors[["regulon_down"]],
                      "up"   = epigenomic_colors[["regulon_up"]]),
@@ -206,8 +203,6 @@ if (!is.null(hep_regulons) && nrow(hep_regulons) > 0 &&
         scale_size_continuous(range = c(1, 3.5), name = "Enhancers",
                               breaks = pretty_breaks(3)) +
         coord_cartesian(xlim = c(-0.45, 1.55), clip = "off") +
-        labs(title = paste0("TF \u2192 target links (top ",
-                            length(top10_tfs), " TFs)")) +
         theme_masld() +
         theme(axis.text  = element_blank(),
               axis.title = element_blank(),
@@ -308,11 +303,11 @@ if (!is.null(chromvar) && nrow(chromvar) > 0) {
       logFC_deviation - nudge_h
     )]
 
-    # Bold known MASLD TFs
+    # Italicize known MASLD TF gene symbols
     known_tfs <- c("HNF4A", "PPARA", "NR1H4", "Nr1H4", "Nr1h3", "NR1H3",
                    "THRB", "HNF1A", "FOXA1", "FOXA2", "ETS1", "CEBPB")
     tf_levels <- levels(cv_top$tf_name)
-    y_faces <- ifelse(toupper(tf_levels) %in% toupper(known_tfs), "bold", "plain")
+    y_faces <- ifelse(toupper(tf_levels) %in% toupper(known_tfs), "italic", "plain")
     names(y_faces) <- tf_levels
 
     n_sig_up <- nrow(cv_sig[logFC_deviation > 0])
@@ -321,7 +316,7 @@ if (!is.null(chromvar) && nrow(chromvar) > 0) {
     p_h <- ggplot(cv_top, aes(x = logFC_deviation, y = tf_name, fill = direction)) +
       geom_bar(stat = "identity", width = 0.7) +
       geom_text(aes(x = star_x, label = stars),
-                size = 2, vjust = 0.5, show.legend = FALSE) +
+                size = GEOM_TEXT_6PT, vjust = 0.5, show.legend = FALSE) +
       scale_fill_manual(
         values = c("down" = epigenomic_colors[["regulon_down"]],
                    "up"   = epigenomic_colors[["regulon_up"]]),
@@ -332,10 +327,9 @@ if (!is.null(chromvar) && nrow(chromvar) > 0) {
       geom_vline(xintercept = 0, linewidth = 0.3, color = "gray40") +
       scale_x_continuous(expand = expansion(mult = c(0.15, 0.15))) +
       labs(x = "Motif accessibility change",
-           y = NULL,
-           title = paste0("chromVAR hepatocyte motifs (top 15\u2191 + 15\u2193)")) +
+           y = NULL) +
       theme_masld() +
-      theme(axis.text.y = element_text(size = 5, face = y_faces),
+      theme(axis.text.y = element_text(size = 6, face = y_faces),
             legend.position = "inside",
             legend.position.inside = c(0.80, 0.15),
             legend.background = element_blank(),
@@ -431,13 +425,12 @@ if (!is.null(dream) && nrow(dream) > 0 &&
       geom_vline(xintercept = 0, linewidth = 0.2, color = "gray50") +
       scale_color_manual(values = sig_colors, name = NULL) +
       labs(x = expression("Transcriptomic log"[2]*"FC"),
-           y = "Regulon activity change\n(SCENIC+)",
-           title = "SCENIC+ transcriptomic convergence") +
+           y = "Regulon activity change\n(SCENIC+)") +
       annotate("text", x = Inf, y = Inf, label = cor_label,
-               hjust = 1.05, vjust = 1.5, size = 2.2, color = "gray20") +
+               hjust = 1.05, vjust = 1.5, size = GEOM_TEXT_6PT, color = "black") +
       annotate("text", x = Inf, y = Inf,
                label = paste0("n = ", nrow(conv), " genes"),
-               hjust = 1.05, vjust = 3.0, size = 2, color = "gray40") +
+               hjust = 1.05, vjust = 3.0, size = GEOM_TEXT_6PT, color = "black") +
       theme_masld() +
       theme(legend.position = "inside",
             legend.position.inside = c(0.25, 0.90),
@@ -451,7 +444,7 @@ if (!is.null(dream) && nrow(dream) > 0 &&
         geom_label_repel(
           data = label_dt,
           aes(label = label),
-          size = 1.8, max.overlaps = 15,
+          size = GEOM_TEXT_6PT, max.overlaps = 15,
           label.padding = 0.1, segment.size = 0.15,
           min.segment.length = 0, fontface = "italic",
           color = "black", fill = "white", alpha = 0.85,
@@ -552,13 +545,12 @@ if (!is.null(chromvar) && nrow(chromvar) > 0 &&
       geom_vline(xintercept = 0, linewidth = 0.2, color = "gray50") +
       scale_color_manual(values = sig_colors_cv, name = NULL) +
       labs(x = expression("Transcriptomic log"[2]*"FC"),
-           y = "Motif accessibility change\n(chromVAR)",
-           title = "chromVAR transcriptomic convergence") +
+           y = "Motif accessibility change\n(chromVAR)") +
       annotate("text", x = Inf, y = Inf, label = cor_label_cv,
-               hjust = 1.05, vjust = 1.5, size = 2.2, color = "gray20") +
+               hjust = 1.05, vjust = 1.5, size = GEOM_TEXT_6PT, color = "black") +
       annotate("text", x = Inf, y = Inf,
                label = paste0("n = ", nrow(cv_merge), " TFs"),
-               hjust = 1.05, vjust = 3.0, size = 2, color = "gray40") +
+               hjust = 1.05, vjust = 3.0, size = GEOM_TEXT_6PT, color = "black") +
       theme_masld() +
       theme(legend.position = "inside",
             legend.position.inside = c(0.25, 0.90),
@@ -572,7 +564,7 @@ if (!is.null(chromvar) && nrow(chromvar) > 0 &&
         geom_label_repel(
           data = label_cv,
           aes(label = label),
-          size = 1.8, max.overlaps = 30,
+          size = GEOM_TEXT_6PT, max.overlaps = 30,
           label.padding = 0.1, segment.size = 0.15,
           min.segment.length = 0, fontface = "italic",
           color = "black", fill = "white", alpha = 0.85,
@@ -615,7 +607,7 @@ fig <- (p_f | p_g) / (p_h | p_i) +
   plot_layout(heights = c(1, 1)) +
   patchwork::plot_annotation(tag_levels = "a",
                              tag_prefix = "(", tag_suffix = ")") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 # RETIRED 2026-06-12 (epigenomic_panels.pdf composite no longer a Fig 2 panel; the individual
 # panels tf_target_network / chromvar_motifs / chromvar_convergence are still written above):

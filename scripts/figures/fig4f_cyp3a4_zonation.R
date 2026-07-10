@@ -102,15 +102,14 @@ p_zone_landscape <- ggplot(
     aes(label = human_symbol),
     size = PUB_GEOM_TEXT, label.size = 0.1, box.padding = 0.3,
     segment.size = 0.25, fill = "white", color = "gray15",  # don't inherit faint zone hue
-    fontface = ifelse(label_df$is_focal, "bold.italic", "italic")
+    fontface = ifelse(label_df$is_focal, "italic", "italic")
   ) +
   scale_color_manual(values = zone_colors, name = "Lobular zone") +
   scale_size_manual(values  = c(`TRUE` = 3.5, `FALSE` = 1.2), guide = "none") +
   scale_alpha_manual(values = c(`TRUE` = 1,   `FALSE` = 0.65), guide = "none") +
   scale_y_continuous(limits = c(0, 1.1)) +
   labs(x = "Spatial autocorrelation (Moran's I)",
-       y = "COLOC PP.H4",
-       title = "Spatial × genetic") +
+       y = "COLOC PP.H4") +
   theme_masld() + theme_pub() +
   theme(legend.position = "right")
 
@@ -155,8 +154,7 @@ p_gradient <- ggplot(cyp_dz, aes(x = zone, y = expr_z, group = dataset,
                         labels = c("Guilliams" = "GSE192741", "Vu" = "Vu"),
                         name = NULL) +
   labs(x = NULL,
-       y = "Expression (z-score)",
-       title = "Pericentral gradient") +
+       y = "Expression (z-score)") +
   theme_masld() + theme_pub() +
   theme(legend.position  = "bottom",
         legend.key.size  = PUB_LEGEND_KEY,
@@ -177,10 +175,9 @@ p_modality <- ggplot(modality_df, aes(x = modality, y = logFC, fill = fill_col))
   geom_hline(yintercept = 0, linewidth = 0.3, color = "gray60") +
   scale_fill_identity() +
   scale_y_continuous(limits = c(-0.75, 0.05), breaks = c(-0.6, -0.4, -0.2, 0)) +
-  labs(x = NULL, y = "log2FC (MASLD vs control)",
-       title = "mRNA vs protein") +
+  labs(x = NULL, y = "log2FC (MASLD vs control)") +
   theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT + 0.5))
+  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT))
 
 # ── Assemble ──────────────────────────────────────────────────────────────────
 # All stats (Moran's I, bulk/protein logFC, COLOC PP.H4) belong in the figure
@@ -191,6 +188,7 @@ message(sprintf(
   cyp_atlas$bulk_logFC[1],
   cyp_atlas$best_protein_logFC[1],
   cyp_atlas$coloc_abf_best_pp4[1]))
+message("[caption] Panels: i. Spatial x genetic convergence landscape; ii. Pericentral gradient; iii. mRNA vs protein")
 
 p_out <- (p_zone_landscape | (p_gradient / p_modality)) +
   plot_layout(widths = c(1.5, 1))

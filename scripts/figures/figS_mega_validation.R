@@ -81,8 +81,8 @@ share_cols <- c(pan_cohort = "#1b9e77",
                 divergent = "#e6ab02",
                 null = "#9E9E9E")
 
-panel_theme <- theme_minimal(base_size = 10) +
-  theme(plot.title = element_text(face = "bold", size = 11),
+panel_theme <- theme_minimal(base_size = 6) +
+  theme(plot.title = element_text(face = "plain", size = 6),
         plot.margin = margin(8, 10, 8, 10))
 
 # ============================================================================
@@ -107,17 +107,17 @@ rho_long5[, y := factor(y, levels = method_order5)]
 
 pA <- ggplot(rho_long5, aes(x, y, fill = rho)) +
   geom_tile() +
-  geom_text(aes(label = sprintf("%.3f", rho)), size = 2.8) +
+  geom_text(aes(label = sprintf("%.3f", rho)), size = 6 / .pt) +
   scale_fill_viridis(option = "magma",
                      limits = c(min(rho_long5$rho, na.rm = TRUE), 1),
                      name = "Spearman rho") +
-  labs(title = "Spearman rho on logFC (6 methods, 2 metafor engines)",
-       x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   panel_theme +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave(file.path(PANEL_DIR, "panelA_rho_heatmap.pdf"), pA,
        width = 6.0, height = 5.0, device = cairo_pdf)
+message("[caption] Spearman rho on logFC (6 methods, 2 metafor engines)")
 message("Saved panelA_rho_heatmap.pdf")
 
 # ============================================================================
@@ -162,10 +162,10 @@ BAR_FILL <- "#3a86ff"
 p_top <- ggplot(intersections, aes(x = ix_label, y = n_genes)) +
   geom_col(width = 0.75, fill = BAR_FILL, color = NA) +
   geom_text(aes(label = comma(n_genes)), vjust = -0.3,
-            size = 2.2, color = "gray20") +
+            size = 6 / .pt, color = "black") +
   scale_y_continuous(expand = expansion(mult = c(0.02, 0.20)), labels = comma) +
   labs(x = NULL, y = "DEGs (intersection size)") +
-  theme_minimal(base_size = 9) +
+  theme_minimal(base_size = 6) +
   theme(panel.grid.major.x = element_blank(),
         panel.grid.minor   = element_blank(),
         axis.text.x        = element_blank(),
@@ -189,25 +189,25 @@ p_dots <- ggplot(dot_dt, aes(x = ix_label, y = method)) +
   scale_color_manual(values = c("TRUE" = "#212121", "FALSE" = "#E0E0E0"),
                      guide = "none") +
   labs(x = NULL, y = NULL) +
-  theme_minimal(base_size = 9) +
+  theme_minimal(base_size = 6) +
   theme(panel.grid = element_blank(),
         axis.text.x   = element_blank(), axis.ticks.x = element_blank(),
-        axis.text.y   = element_text(face = "bold", size = 8),
+        axis.text.y   = element_text(face = "plain", size = 6),
         plot.margin   = margin(0, 4, 4, 4))
 
 p_left <- ggplot(set_sizes,
                  aes(y = method, x = n_genes, fill = as.character(method))) +
   geom_col(width = 0.7, color = NA) +
-  geom_text(aes(label = comma(n_genes)), hjust = 1.1, size = 2.2,
+  geom_text(aes(label = comma(n_genes)), hjust = 1.1, size = 6 / .pt,
             color = "white") +
   scale_fill_manual(values = method_cols, guide = "none") +
   scale_x_reverse(expand = expansion(mult = c(0.20, 0.03)), labels = comma,
                   breaks = scales::breaks_pretty(n = 3)) +
   labs(x = "Set size", y = NULL) +
-  theme_minimal(base_size = 9) +
+  theme_minimal(base_size = 6) +
   theme(panel.grid = element_blank(),
         axis.text.y  = element_blank(), axis.ticks.y = element_blank(),
-        axis.text.x  = element_text(size = 7, angle = 35, hjust = 1),
+        axis.text.x  = element_text(size = 6, angle = 35, hjust = 1),
         plot.margin  = margin(2, 4, 6, 14))
 
 aligned <- align_plots(p_top, p_dots, align = "v", axis = "lr")
@@ -217,7 +217,7 @@ bottom_row <- plot_grid(p_left, aligned[[2]], rel_widths = c(1.8, 5),
 upset_padj05 <- plot_grid(top_row, bottom_row, ncol = 1,
                            rel_heights = c(1.8, 1.0))
 ggsave(file.path(PANEL_DIR, "panelB_upset.pdf"), upset_padj05,
-       width = 8.5, height = 4.4, device = cairo_pdf)
+       width = 7.09, height = 3.67, device = cairo_pdf)
 fwrite(all_intersections[, c("intersection_id", mem_cols, "n_sets",
                           "n_genes", "ix_rank"), with = FALSE],
        file.path(PANEL_DIR, "panelB_upset_intersections.csv"))
@@ -237,20 +237,19 @@ pC <- if (mashr_has_data) {
     geom_abline(linetype = "dashed", color = "#444444") +
     scale_color_manual(values = share_cols, name = "mashr class",
                        na.value = "#cccccc") +
-    labs(title = "dream vs edgeR-QL t-statistic",
-         x = "dream t", y = "edgeR-QL signed-sqrt(F)") +
+    labs(x = "dream t", y = "edgeR-QL signed-sqrt(F)") +
     guides(color = guide_legend(override.aes = list(size = 2.4, alpha = 1))) +
     panel_theme
 } else {
   ggplot(sc[!is.na(eqt)], aes(dream_t, eqt)) +
     geom_point(size = 0.6, alpha = 0.4, color = "#3a86ff") +
     geom_abline(linetype = "dashed", color = "#444444") +
-    labs(title = "dream vs edgeR-QL t-statistic",
-         x = "dream t", y = "edgeR-QL signed-sqrt(F)") +
+    labs(x = "dream t", y = "edgeR-QL signed-sqrt(F)") +
     panel_theme
 }
 ggsave(file.path(PANEL_DIR, "panelC_dream_vs_eql_scatter.pdf"), pC,
        width = 6, height = 5.5, device = cairo_pdf)
+message("[caption] dream vs edgeR-QL t-statistic")
 message("Saved panelC_dream_vs_eql_scatter.pdf")
 
 # ============================================================================
@@ -268,12 +267,12 @@ pC2 <- ggplot(merged[!is.na(lv_logFC)],
                          option = "plasma", direction = -1,
                          na.value = "#CFD8DC") +
   coord_fixed(xlim = c(-lim_c2, lim_c2), ylim = c(-lim_c2, lim_c2)) +
-  labs(title = sprintf("dream vs metafor(voom) logFC  |  rho = %.3f", rho_c2),
-       x = "dream logFC", y = "metafor(voom) logFC") +
+  labs(x = "dream logFC", y = "metafor(voom) logFC") +
   panel_theme +
   theme(legend.position = "right")
 ggsave(file.path(PANEL_DIR, "panelC2_dream_vs_meta_scatter.pdf"), pC2,
        width = 6, height = 5.5, device = cairo_pdf)
+message(sprintf("[caption] dream vs metafor(voom) logFC | rho = %.3f", rho_c2))
 message("Saved panelC2_dream_vs_meta_scatter.pdf")
 
 # ============================================================================
@@ -286,14 +285,14 @@ if (nrow(PD$sharing_classes) > 0) {
                aes(reorder(sharing_class, N), N, fill = sharing_class)) +
     geom_col() + coord_flip() +
     geom_text(aes(label = sprintf("%d (%.1f%%)", N, pct)),
-              hjust = -0.05, size = 3.2) +
+              hjust = -0.05, size = 6 / .pt) +
     scale_fill_manual(values = share_cols, guide = "none") +
-    labs(title = "mashr sharing-class distribution",
-         x = NULL, y = "Genes") +
+    labs(x = NULL, y = "Genes") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.3))) +
     panel_theme
   ggsave(file.path(PANEL_DIR, "panelE_mashr_sharing.pdf"), pE,
          width = 6, height = 3.5, device = cairo_pdf)
+  message("[caption] mashr sharing-class distribution")
   message("Saved panelE_mashr_sharing.pdf")
 } else {
   message("Skipped panelE_mashr_sharing.pdf — no mashr data")
@@ -352,26 +351,23 @@ make_alluvial <- function(deg_lists, title, subtitle,
                  color = "white", linewidth = 0.45) +
     annotate("text", x = 1 - 0.085, y = ld$y_mid,
              label = as.character(ld$Method), hjust = 1,
-             size = 2.5, fontface = "bold", color = "gray15") +
+             size = 6 / .pt, fontface = "plain", color = "black") +
     annotate("text", x = 2 + 0.085, y = rd$y_mid,
              label = as.character(rd$Tier), hjust = 0,
-             size = 2.5, fontface = "bold", color = "gray15") +
+             size = 6 / .pt, fontface = "plain", color = "black") +
     scale_x_discrete(limits = c("Method", "Overlap"),
                      expand = c(0.30, 0.30), position = "top") +
     scale_y_continuous(expand = c(0.005, 0.005)) +
     scale_fill_manual(values = c(method_cols, tc), guide = "none") +
-    labs(title = title, subtitle = subtitle, x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_void() +
-    theme(plot.title    = element_text(size = 9.5, face = "bold",
-                                       hjust = 0.5, margin = margin(b = 2)),
-          plot.subtitle = element_text(size = 8, hjust = 0.5,
-                                       color = "gray40", margin = margin(b = 6)),
-          axis.text.x.top = element_text(size = 8.5, face = "bold",
-                                         color = "gray15", margin = margin(b = 4)),
+    theme(axis.text.x.top = element_text(size = 6, face = "plain",
+                                         color = "black", margin = margin(b = 4)),
           plot.margin   = margin(8, 14, 6, 14))
 
   ggsave(file.path(PANEL_DIR, outfile), p,
          width = width, height = height, device = cairo_pdf)
+  message("[caption] ", title, " -- ", subtitle)
   message("Saved ", outfile)
 }
 
@@ -470,10 +466,9 @@ draw_label_m <- function(r_near = 1.08, r_far = 1.12, clash_deg = 22, cex = 0.70
   }
 }
 draw_label_m()
-title(main = "Per-method DEG replication tier (padj<0.05, |logFC|>0.5)",
-      cex.main = 0.80, line = 1.5)
 circos.clear()
 dev.off()
+message("[caption] Per-method DEG replication tier (padj<0.05, |logFC|>0.5)")
 message("Saved panelF_method_overlap_chord.pdf")
 
 # ============================================================================
@@ -508,21 +503,20 @@ n_tier1 <- sum(rob$n)
 
 pH <- ggplot(rob, aes(x = n, y = label, fill = flag)) +
   geom_col(width = 0.6) +
-  geom_text(aes(label = pct_label), hjust = -0.08, size = 3.0, color = "gray20") +
+  geom_text(aes(label = pct_label), hjust = -0.08, size = 6 / .pt, color = "black") +
   scale_fill_manual(values = flag_cols, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.22)),
                      labels = scales::comma) +
   labs(
-    title    = "dream Tier-1 DEG confirmation across methods",
-    subtitle = sprintf("n = %s dream Tier-1 DEGs (padj < 0.05, |logFC| > 0.5)  |  voters: edgeR-QL, voomLmFit, DESeq2",
-                       scales::comma(n_tier1)),
     x = "Number of genes", y = NULL
   ) +
   panel_theme +
-  theme(axis.text.y = element_text(size = 9.5))
+  theme(axis.text.y = element_text(size = 6))
 
 ggsave(file.path(PANEL_DIR, "panelH_robustness_bar.pdf"), pH,
-       width = 7.5, height = 3.2, device = cairo_pdf)
+       width = 7.09, height = 3.02, device = cairo_pdf)
+message(sprintf("[caption] dream Tier-1 DEG confirmation across methods | n = %s dream Tier-1 DEGs (padj < 0.05, |logFC| > 0.5) | voters: edgeR-QL, voomLmFit, DESeq2",
+                scales::comma(n_tier1)))
 message("Saved panelH_robustness_bar.pdf")
 
 message("\nAll panels in: ", PANEL_DIR)

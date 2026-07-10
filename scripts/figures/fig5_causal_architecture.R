@@ -241,7 +241,7 @@ if (length(parts) > 0) {
     geom_label_repel(
       data = label_dt,
       aes(label = symbol),
-      size = 1.8, max.overlaps = 22,
+      size = GEOM_TEXT_6PT, max.overlaps = 22,
       label.padding = 0.1, segment.size = 0.15,
       min.segment.length = 0, fontface = "italic",
       show.legend = FALSE
@@ -263,18 +263,17 @@ if (length(parts) > 0) {
     scale_x_continuous(breaks = chr_info$mid, labels = chr_info$chr,
                        expand = expansion(mult = 0.01)) +
     labs(x = "Chromosome",
-         y = expression("-log"[10]*"(p) / -log"[10]*"(1 \u2013 PP.H4)"),
-         title = bquote("Unified causal Manhattan (" * .(format(n_total, big.mark = ",")) * " genes)"),
-         subtitle = paste0(n_fdr_twas, " TWAS FDR < 0.05, ",
-                           n_pp4_high, " COLOC PP.H4 > 0.8")) +
+         y = expression("-log"[10]*"(p) / -log"[10]*"(1 \u2013 PP.H4)")) +
     theme_masld() +
     theme(legend.position = "inside",
           legend.position.inside = c(0.85, 0.85),
           legend.background = element_blank(),
-          legend.key = element_blank(),
-          plot.subtitle = element_text(size = 5.5)) +
+          legend.key = element_blank()) +
     guides(color = guide_legend(override.aes = list(size = 1.5, alpha = 1)),
            shape = guide_legend(override.aes = list(size = 1.5)))
+
+  message("[caption] Panel a: Unified causal Manhattan (", format(n_total, big.mark = ","),
+          " genes); ", n_fdr_twas, " TWAS FDR < 0.05, ", n_pp4_high, " COLOC PP.H4 > 0.8")
 }
 
 # ==========================================================================
@@ -302,14 +301,14 @@ if (!is.null(ukbb_broad2) && nrow(ukbb_broad2) > 0 && !is.null(me)) {
 
   # Join with multi-evidence atlas for dream, TWAS, ieQTL
   me_join_cols <- intersect(c("human_symbol", "bulk_logFC", "bulk_padj",
+                              "bulk_shrunk_logFC", "bulk_lfsr", "bulk_treat_fdr",
                               "twas_pval", "ieqtl_disease_interaction"), names(me_slim))
   me_join <- me_slim[human_symbol %in% ukbb_top$symbol, ..me_join_cols]
   b_data <- merge(ukbb_top[, .(symbol, PP.H4, chr)], me_join,
                   by.x = "symbol", by.y = "human_symbol", all.x = TRUE)
 
-  # Binary flags. b_data only carries bulk_logFC/bulk_padj (no lfsr/shrunk_logFC),
-  # so apply the raw padj/|logFC| DEG gate directly rather than is_dream_deg().
-  b_data[, is_deg    := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5]
+  # Binary flags. Canonical DEG gate = TREAT FDR<0.05 at lfc=0.25 (is_dream_deg).
+  b_data[, is_deg    := is_dream_deg(b_data)]
   b_data[, is_twas   := !is.na(twas_pval) & twas_pval < 0.05]
   b_data[, is_ieqtl  := ieqtl_disease_interaction %in% c(TRUE, "TRUE")]
   b_data[, lfc_clamp := pmax(pmin(as.numeric(bulk_logFC), 2), -2)]
@@ -338,7 +337,7 @@ if (!is.null(ukbb_broad2) && nrow(ukbb_broad2) > 0 && !is.null(me)) {
   # Known MASLD genes bold
   known_b <- c("HSD17B13", "FABP1", "RORA", "HKDC1", "SPTLC3", "CHEK2",
                "EFHD1", "PNPLA3", "TM6SF2", "THRB", "PPARG", "MBOAT7")
-  y_faces_b <- ifelse(gene_order_b %in% known_b, "bold.italic", "italic")
+  y_faces_b <- ifelse(gene_order_b %in% known_b, "italic", "italic")
   names(y_faces_b) <- gene_order_b
 
   n_b <- nrow(b_data)
@@ -347,16 +346,14 @@ if (!is.null(ukbb_broad2) && nrow(ukbb_broad2) > 0 && !is.null(me)) {
                       aes(x = ev, y = symbol)) +
     geom_tile(aes(fill = val), color = "white", linewidth = 0.3) +
     geom_text(aes(label = sprintf("%.2f", val), color = val > 0.6),
-              size = 1.6, show.legend = FALSE) +
+              size = GEOM_TEXT_6PT, show.legend = FALSE) +
     scale_color_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
     scale_fill_gradient(low = "white", high = "#9C27B0", limits = c(0, 1),
                         name = "PP.H4") +
-    labs(x = NULL, y = NULL,
-         title = paste0("UKBB ALT COLOC: top ", n_b, " genes")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 5, lineheight = 0.85),
-          axis.text.y = element_text(size = 5, face = y_faces_b),
-          plot.title  = element_text(size = 7))
+    theme(axis.text.x = element_text(size = 6, lineheight = 0.85),
+          axis.text.y = element_text(size = 6, face = y_faces_b))
 
   p_b_binary <- ggplot(long_b[ev != "COLOC\n(UKBB ALT)"],
                        aes(x = ev, y = symbol)) +
@@ -372,7 +369,7 @@ if (!is.null(ukbb_broad2) && nrow(ukbb_broad2) > 0 && !is.null(me)) {
                          guide = guide_colorbar(barheight = 3)) +
     labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 5, lineheight = 0.85),
+    theme(axis.text.x = element_text(size = 6, lineheight = 0.85),
           axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank())
@@ -381,6 +378,8 @@ if (!is.null(ukbb_broad2) && nrow(ukbb_broad2) > 0 && !is.null(me)) {
     p_b_coloc + p_b_binary +
     plot_layout(widths = c(1.2, 1.6))
   )
+
+  message("[caption] Panel b: UKBB ALT COLOC top ", n_b, " genes")
 }
 
 # ==========================================================================
@@ -445,21 +444,21 @@ if (nrow(ct_coloc) > 0) {
                      "CIDEC", "PPARG", "COL1A1", "THRB",
                      "EFHD1", "LCOR", "ALAD", "ETS2", "USP40",
                      "FABP1", "RORA", "HKDC1", "SPTLC3", "CHEK2")
-  y_faces_c <- ifelse(gene_order_c %in% known_masld_c, "bold.italic", "italic")
+  y_faces_c <- ifelse(gene_order_c %in% known_masld_c, "italic", "italic")
   names(y_faces_c) <- gene_order_c
 
   # Main COLOC heatmap
   p_c_main <- ggplot(heat_grid, aes(x = cell_type_clean, y = gene)) +
     geom_tile(aes(fill = PP.H4), color = "white", linewidth = 0.3) +
     geom_text(aes(label = ifelse(PP.H4 >= 0.01, sprintf("%.2f", PP.H4), ""),
-                  color = PP.H4 > 0.6), size = 1.6, show.legend = FALSE) +
+                  color = PP.H4 > 0.6), size = GEOM_TEXT_6PT, show.legend = FALSE) +
     scale_color_manual(values = c("TRUE" = "white", "FALSE" = "black")) +
     scale_fill_gradient(low = "white", high = "#9C27B0",
                         limits = c(0, 1), name = "PP.H4") +
     labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-          axis.text.y = element_text(size = 5, face = y_faces_c),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6, face = y_faces_c),
           plot.margin = margin(2, 2, 2, 2))
 
   # GWAS source strip (right side annotation)
@@ -468,23 +467,21 @@ if (nrow(ct_coloc) > 0) {
     scale_fill_manual(values = source_colors_c, name = "Best GWAS") +
     labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 4.5, angle = 45, hjust = 1),
+    theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
           axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank(),
           plot.margin = margin(2, 2, 2, 1),
           legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5),
-          legend.title = element_text(size = 5))
-
-  # Move title to p_c_main to avoid tag concatenation from outer patchwork
-  p_c_main <- p_c_main +
-    labs(title = paste0("Cell-type COLOC (", length(top_c_genes), " genes, PP.H4 > 0.5)"))
+          legend.text = element_text(size = 6),
+          legend.title = element_text(size = 6))
 
   p_c <- wrap_elements(full =
     p_c_main + p_c_strip +
     plot_layout(widths = c(5, 1))
   )
+
+  message("[caption] Panel c: Cell-type COLOC (", length(top_c_genes), " genes, PP.H4 > 0.5)")
 }
 
 # ==========================================================================
@@ -495,7 +492,7 @@ if (nrow(ct_coloc) > 0) {
 # ==========================================================================
 
 if (!is.null(me) && nrow(me) > 0) {
-  dream_degs <- me[is_dream_deg(me) & abs(bulk_logFC) > 0.5, human_symbol]
+  dream_degs <- me[is_dream_deg(me), human_symbol]
 
   # Method definitions from multi-evidence atlas
   method_stats <- rbindlist(list(
@@ -585,23 +582,22 @@ if (!is.null(me) && nrow(me) > 0) {
     geom_text(data = method_stats,
               aes(x = n_sig + max(method_stats$n_sig) * 0.04,
                   y = method_f, label = paste0(n_sig, " / ", n_tested)),
-              inherit.aes = FALSE, size = 1.8, hjust = 0, color = "gray30") +
+              inherit.aes = FALSE, size = GEOM_TEXT_6PT, hjust = 0, color = "black") +
     scale_fill_manual(
       values = c("Sig & DEG overlap" = masld_colors$up,
                  "Sig (not DEG)"     = masld_colors$twas),
       name = NULL
     ) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.25))) +
-    labs(x = "Number of genes", y = NULL,
-         title = "Causal method coverage",
-         subtitle = "Significant / tested, overlap with integrated DEGs") +
+    labs(x = "Number of genes", y = NULL) +
     theme_masld() +
     theme(legend.position = "inside",
           legend.position.inside = c(0.75, 0.15),
           legend.background = element_blank(),
           legend.key = element_blank(),
-          legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 5.5))
+          legend.key.size = unit(0.25, "cm"))
+
+  message("[caption] Panel d: Causal method coverage — significant / tested, overlap with integrated DEGs")
 }
 
 # ==========================================================================
@@ -676,21 +672,20 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
     geom_bar(stat = "identity", width = 0.7) +
     geom_text(data = fisher_dt,
               aes(x = cell_type_clean, y = 103, label = stars),
-              inherit.aes = FALSE, size = 2.5, vjust = 0) +
+              inherit.aes = FALSE, size = GEOM_TEXT_6PT, vjust = 0) +
     scale_fill_manual(values = conc_colors_e, name = "Concordance") +
     scale_x_discrete(drop = FALSE) +
     scale_y_continuous(limits = c(0, 115), expand = c(0, 0),
                        labels = function(x) paste0(x, "%")) +
-    labs(x = NULL, y = "% of ieQTL genes",
-         title = "ieQTL \u00d7 DEG directional concordance",
-         subtitle = "* Fisher exact p < 0.05 for DEG enrichment in concordant ieQTLs") +
+    labs(x = NULL, y = "% of ieQTL genes") +
     theme_masld() +
     theme(legend.position = "inside",
           legend.position.inside = c(0.80, 0.85),
           legend.background = element_blank(),
           legend.key = element_blank(),
-          legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 5))
+          legend.key.size = unit(0.25, "cm"))
+
+  message("[caption] Panel e: ieQTL \u00d7 DEG directional concordance; * Fisher exact p < 0.05 for DEG enrichment in concordant ieQTLs")
 }
 
 # ==========================================================================
@@ -759,7 +754,7 @@ if (!is.null(me) && nrow(me) > 0) {
                     aes(x = N, y = factor(combo, levels = rev(combo_top$combo)),
                         fill = factor(n_methods))) +
     geom_bar(stat = "identity", width = 0.7) +
-    geom_text(aes(label = N), hjust = -0.1, size = 1.8, color = "gray30") +
+    geom_text(aes(label = N), hjust = -0.1, size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_manual(values = method_count_colors, name = "# methods") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
     labs(x = "Genes", y = NULL) +
@@ -784,7 +779,7 @@ if (!is.null(me) && nrow(me) > 0) {
               aes(group = combo), color = masld_colors$up, linewidth = 0.6) +
     labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 4.5, lineheight = 0.85),
+    theme(axis.text.x = element_text(size = 6, lineheight = 0.85),
           axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank(),
@@ -794,6 +789,8 @@ if (!is.null(me) && nrow(me) > 0) {
     p_f_bar + p_f_matrix +
     plot_layout(widths = c(1.4, 1))
   )
+
+  message("[caption] Panel f: Causal method overlap across TWAS/COLOC(bulk)/COLOC(sc)/ieQTL combinations")
 }
 
 # ==========================================================================
@@ -806,7 +803,7 @@ row3 <- p_e + p_f + plot_layout(widths = c(1, 1))
 fig5 <- (row1 / row2 / row3) +
   plot_layout(heights = c(1.2, 1.2, 1)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 # RETIRED 2026-06-12 (causal_architecture.pdf composite no longer a Fig 2 deliverable):
 # save_fig_tall(fig5, OUT, height = 11)

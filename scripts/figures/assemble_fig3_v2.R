@@ -207,8 +207,8 @@ for (r in 0:(N_ROW-1)) {
               x = unit(x_in, "in"),
               y = unit(y_in, "in"),
               just = c("left", "top"),
-              gp = gpar(fontsize = 12, fontface = "bold",
-                        fontfamily = "sans"))
+              gp = gpar(fontsize = 12, fontface = "plain",
+                        fontfamily = "Helvetica"))
     idx_lin <- idx_lin + 1
   }
 }

@@ -71,13 +71,10 @@ run_group() {
 }
 
 # ============================================================
-# GROUP 1: Main Fig 1 — Atlas overview
-# ============================================================
-run_group "Main Fig1 — Atlas" \
-  fig1_atlas_overview.R          "Fig1 atlas_overview" \
-  fig1_loo_cv_panels.R           "Fig1 loo_cv" \
-  fig1_compact.R                 "Fig1 compact"
-
+# GROUP 1 (Main Fig 1 — Atlas overview) removed 2026-06-25:
+# fig1_atlas_overview.R / fig1_loo_cv_panels.R / fig1_compact.R were retired;
+# the combined fig1_atlas_overview.pdf + fig1_compact.pdf are no longer generated.
+# Fig 1 is assembled manually in Illustrator from FIG1_DIR/panels/*.pdf.
 # ============================================================
 # GROUP 2: Main Fig 2-3 — mid-stage (F1-F3) inflection + deconfounding
 # ============================================================
@@ -98,8 +95,6 @@ run_group "Main Fig2-3 — Switch + Deconfounding" \
 run_group "Main Fig4 — Causal" \
   fig3_regulatory_architecture.R     "Fig4 causal_architecture" \
   fig4_celltype_coloc_heatmap.R  "Fig4 celltype_coloc" \
-  fig4_celltype_heritability.R   "Fig4 celltype_heritability" \
-  fig4_expression_pip_scatter.R  "Fig4 expression_pip" \
   fig4_gwas_volcano.R            "Fig4 gwas_volcano" \
   fig4_pharma_panels.R           "Fig4 pharma_panels" \
   fig4_proteomics_panels.R       "Fig4 proteomics_panels" \
@@ -187,8 +182,10 @@ run_group "Supp S09-S10 — Multi-ancestry/Prediction" \
   fig_vae_staging.R                  "S10 vae_staging" \
   fig_nas_vae_progression.R          "S10 nas_vae_progression" \
   fig_staging_classifier.R           "S10 staging_classifier" \
-  fig_composition_features.R         "S10 composition_features" \
-  figS16_plasma_proteomics.R         "S10 plasma_proteomics"
+  fig_composition_features.R         "S10 composition_features"
+  # figS16_plasma_proteomics.R WITHDRAWN 2026-07-04 (round-2 E3c): Olink plasma
+  # label-integrity withdrawal; script + inputs archived under
+  # data/archive/withdrawn_olink_2026-06-01/. Do not re-add.
 
 # ============================================================
 # GROUP 9: Sensitivity figures

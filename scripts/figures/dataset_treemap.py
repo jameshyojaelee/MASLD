@@ -20,7 +20,7 @@ import numpy as np
 plt.rcParams.update({
     "font.family":      "sans-serif",
     "font.sans-serif":  ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size":        10,
+    "font.size":        6,
     "pdf.fonttype":     42,
     "ps.fonttype":      42,
     "figure.dpi":       150,
@@ -118,24 +118,24 @@ def draw_treemap(ax, datasets, color_map, title, title_color, species):
         # Heuristics for font size and content
         display_label = label
         if area > 400:
-            fontsize = 10
+            fontsize = 6
         elif area > 150:
-            fontsize = 9
+            fontsize = 6
         elif area > 60:
-            fontsize = 7.5
+            fontsize = 6
         elif area > 25:
              # Very small box - use short label and small font
             fontsize = 6
             display_label = short_label
         else:
             # Extremely small - just show N or maybe nothing if really tiny
-            fontsize = 5
+            fontsize = 6
             display_label = f"n={size}"
 
         # If box is too thin, rotate or hide
         if min_dim < 6 and area > 25:
              # If it's long but thin, maybe rotate? (Not doing rotation for now, just shrinking)
-             fontsize = max(5, fontsize - 1)
+             fontsize = 6
         
         if min_dim < 3:
              # Too thin to print anything legible
@@ -149,7 +149,7 @@ def draw_treemap(ax, datasets, color_map, title, title_color, species):
         if display_label:
             ax.text(x + dx / 2, y + dy / 2, display_label,
                     ha="center", va="center", fontsize=fontsize,
-                    fontweight="bold", color=text_color,
+                    color=text_color,
                     linespacing=1.2)
 
     ax.set_xlim(0, 100)
@@ -157,18 +157,16 @@ def draw_treemap(ax, datasets, color_map, title, title_color, species):
     ax.invert_yaxis()
     ax.set_aspect("equal")
     ax.axis("off")
-    ax.set_title(title, fontsize=14, fontweight="bold", pad=10,
-                 color=title_color)
 
     # Total annotation
     ax.text(50, -3, f"Total: {total} samples",
-            ha="center", va="center", fontsize=10,
-            fontweight="bold", color=title_color)
+            ha="center", va="center", fontsize=6,
+            color=title_color)
 
 
 def main():
     fig, (ax_human, ax_mouse) = plt.subplots(
-        1, 2, figsize=(16, 6),
+        1, 2, figsize=(7.09, 2.66),
         gridspec_kw={"wspace": 0.15}
     )
 
@@ -181,18 +179,15 @@ def main():
     h_patches = [mpatches.Patch(facecolor=c, edgecolor="white", label=k)
                  for k, c in HUMAN_COLORS.items()]
     ax_human.legend(handles=h_patches, loc="lower left",
-                    fontsize=7, framealpha=0.9, edgecolor="#dddddd",
-                    title="Disease Model", title_fontsize=8, ncol=2)
+                    fontsize=6, framealpha=0.9, edgecolor="#dddddd",
+                    title="Disease Model", title_fontsize=6, ncol=2)
 
     # ── Legend for Mouse ─────────────────────────────────────────────────
     m_patches = [mpatches.Patch(facecolor=c, edgecolor="white", label=k)
                  for k, c in MOUSE_COLORS.items()]
     ax_mouse.legend(handles=m_patches, loc="lower left",
-                    fontsize=7, framealpha=0.9, edgecolor="#dddddd",
-                    title="Diet Type", title_fontsize=8, ncol=2)
-
-    fig.suptitle("Sample Contribution Treemap — MASLD Transcriptomic Atlas",
-                 fontsize=15, fontweight="bold", y=0.98, color="#333333")
+                    fontsize=6, framealpha=0.9, edgecolor="#dddddd",
+                    title="Diet Type", title_fontsize=6, ncol=2)
 
     # ── Save ─────────────────────────────────────────────────────────────
     import os
@@ -202,10 +197,13 @@ def main():
 
     pdf_path = os.path.join(out_dir, "dataset_treemap.pdf")
 
-    fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
+    # RETIRED 2026-06-23 (user request): stray root-level dataset_treemap.pdf no longer generated.
+    # fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
     plt.close(fig)
 
-    print(f"✅ Saved: {pdf_path}")
+    print("[caption] Sample Contribution Treemap - MASLD Transcriptomic Atlas. "
+          "Left panel: Human Patient Cohorts. Right panel: Mouse Diet Models.")
+    print("RETIRED 2026-06-23: dataset_treemap.pdf generation disabled.")
 
 
 if __name__ == "__main__":

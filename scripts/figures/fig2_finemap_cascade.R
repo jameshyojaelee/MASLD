@@ -39,16 +39,16 @@ phase_cols <- c("Within-ancestry SuSiE" = "#1565C0", "Cross-ancestry" = "#00695C
 
 p <- ggplot(dt, aes(x = n, y = stage, fill = phase)) +
   geom_col(width = 0.68) +
-  geom_text(aes(label = lab), hjust = -0.12, size = 2.9, fontface = "bold", color = "grey15") +
+  geom_text(aes(label = lab), hjust = -0.12, size = GEOM_TEXT_6PT, fontface = "plain", color = "black") +
   scale_fill_manual(values = phase_cols, name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.18)), limits = c(0, 260)) +
-  labs(x = "Loci", y = NULL, title = "Fine-mapping cascade") +
+  labs(x = "Loci", y = NULL) +
   theme_masld(base_size = 9) +
   theme(legend.position = c(0.98, 0.06), legend.justification = c(1, 0),
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA),
-        plot.title = element_text(size = 9, face = "bold"),
-        axis.text.y = element_text(size = 8))
+        axis.text.y = element_text(size = 6))
 
 save_fig(p, file.path(PANEL_DIR, "finemap_cascade.pdf"),
          width = fig_col_width * 1.12, height = 2.5)
+message("[caption] Fine-mapping cascade")
 cat("[finemap_cascade] wrote panel — 241/233/184 + SuSiEx 70 + meSuSiE 108\n")

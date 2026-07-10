@@ -56,9 +56,9 @@ pa <- tryCatch({
     scale_y_continuous(breaks = seq(-0.4, 0.8, 0.2), limits = c(-0.4, 0.75)) +
     labs(x = NULL, y = "Spearman rho") +
     # Annotate stellate binary AUROC
-    annotate("text", x = 4.35, y = 0.65, size = 2,
+    annotate("text", x = 4.35, y = 0.65, size = GEOM_TEXT_6PT,
              label = paste0("Stellate binary\nAUROC = ", round(stel_auroc, 3)),
-             hjust = 1, color = "#880E4F", fontface = "italic") +
+             hjust = 1, color = "#880E4F", fontface = "plain") +
     theme_masld() +
     theme(
       axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
@@ -78,6 +78,7 @@ pa <- tryCatch({
 pb <- tryCatch({
   pred <- read_csv(file.path(RESULTS_DECONV, "deconv_panel_predictions.csv"), show_col_types = FALSE)
   meta <- read_csv(META_PATH, show_col_types = FALSE) %>%
+    filter(!dataset %in% c("GSE213621", "PRJNA512027")) %>%   # coarse/dropped cohorts (see load_figure_data.R)
     select(sample_id, fibrosis_stage)
 
   # Filter to Stellate cell type (this is the 25-gene panel predictions)
@@ -99,9 +100,9 @@ pb <- tryCatch({
     scale_color_manual(values = fibrosis_stage_colors, name = "Fibrosis", na.value = "grey70") +
     annotate("text", x = 0.02, y = max(stel_pred$predicted, na.rm = TRUE) * 0.95,
              label = paste0("rho = ", round(rho_val, 3)),
-             hjust = 0, size = 2.2, fontface = "italic") +
+             hjust = 0, size = GEOM_TEXT_6PT, fontface = "plain") +
     annotate("text", x = max(stel_pred$actual, na.rm = TRUE) * 0.6, y = 0.048,
-             label = "4% threshold", size = 1.8, color = "#880E4F", fontface = "italic") +
+             label = "4% threshold", size = GEOM_TEXT_6PT, color = "#880E4F", fontface = "plain") +
     labs(x = "Actual stellate fraction", y = "Predicted stellate fraction") +
     theme_masld() +
     theme(
@@ -161,7 +162,7 @@ pc <- tryCatch({
 
   p <- ggplot(feat_m5, aes(x = abs_mean_coefficient, y = display_name, fill = tier)) +
     geom_col(width = 0.7) +
-    geom_text(aes(label = stability_label), hjust = -0.1, size = 1.8, color = "grey30") +
+    geom_text(aes(label = stability_label), hjust = -0.1, size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_manual(values = tier_colors_prs, name = "Feature tier") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
     labs(x = "Mean |coefficient|", y = NULL) +
@@ -170,7 +171,7 @@ pc <- tryCatch({
       legend.position = c(0.72, 0.25),
       legend.background = element_blank(),
       legend.key.size = unit(0.25, "cm"),
-      axis.text.y = element_text(size = 5.5)
+      axis.text.y = element_text(size = 6)
     )
   p
 }, error = function(e) {
@@ -233,8 +234,8 @@ pd <- tryCatch({
     scale_fill_manual(values = subtype_colors, name = "Subtype") +
     # Annotate stability and function below
     geom_text(data = gene_annot, aes(x = gene, y = -Inf, label = func),
-              inherit.aes = FALSE, vjust = 1.5, size = 1.6, color = "grey40",
-              fontface = "italic") +
+              inherit.aes = FALSE, vjust = 1.5, size = GEOM_TEXT_6PT, color = "black",
+              fontface = "plain") +
     labs(x = NULL, y = "S1-S2 divergence score") +
     theme_masld() +
     theme(
@@ -257,7 +258,7 @@ pd <- tryCatch({
 # ===========================================================================
 fig <- (pa | pb) / (pc | pd) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 9, face = "plain"))
 
 # Save composite
 save_fig(fig, file.path(OUT_DIR, "fig_composition_features.pdf"),

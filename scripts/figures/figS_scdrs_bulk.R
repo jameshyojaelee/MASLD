@@ -81,14 +81,14 @@ LBL_SIZE  <- LBL_PT / ggplot2::.pt
 theme_scdrs <- function() {
   theme_masld(base_size = BASE_SIZE) +
     theme(
-      plot.title    = element_text(size = BASE_SIZE, face = "bold"),
+      plot.title    = element_text(size = BASE_SIZE, face = "plain"),
       plot.subtitle = element_text(size = BASE_SIZE - 1, colour = "grey25",
                                    lineheight = 1.05),
       axis.text.x   = element_text(angle = 45, hjust = 1),
       legend.key.size = unit(0.3, "cm"),
       panel.grid    = element_blank(),
       strip.background = element_rect(fill = "grey96", colour = NA),
-      strip.text       = element_text(size = BASE_SIZE - 1, face = "bold")
+      strip.text       = element_text(size = BASE_SIZE - 1, face = "plain")
     )
 }
 

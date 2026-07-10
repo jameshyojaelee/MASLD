@@ -46,7 +46,7 @@ LBL_SIZE  <- BASE_SIZE / ggplot2::.pt
 theme_min <- function() {
   theme_masld(base_size = BASE_SIZE) +
     theme(
-      plot.title    = element_text(size = BASE_SIZE, face = "bold"),
+      plot.title    = element_text(size = BASE_SIZE, face = "plain"),
       plot.subtitle = element_blank(),
       panel.grid    = element_blank(),
       legend.key.size = unit(0.3, "cm")

@@ -61,10 +61,10 @@ p_a <- ggplot(v, aes(x = alleleDiff, y = currin_caqtl_beta)) +
            label = sprintf("%.1f%% concordant\n(n = %s; p = %.1e vs 50%%)",
                            pct_conc, format(n_tot, big.mark = ","), binom_p)) +
   scale_colour_manual(values = c("Concordant" = BLUE, "Discordant" = GRAY), name = NULL) +
-  scale_x_continuous(name = expression(bold("Motif disruption (alleleDiff)")),
+  scale_x_continuous(name = "Motif disruption (alleleDiff)",
                      limits = c(-1, 1) * max(abs(v$alleleDiff)),
                      expand = expansion(mult = 0.04)) +
-  scale_y_continuous(name = expression(bold(paste("caQTL ", beta))),
+  scale_y_continuous(name = expression(paste("caQTL ", beta)),
                      expand = expansion(mult = 0.05)) +
   labs(tag = "a", colour = NULL) +
   theme_masld(base_size = 7) +
@@ -72,7 +72,7 @@ p_a <- ggplot(v, aes(x = alleleDiff, y = currin_caqtl_beta)) +
   theme(panel.grid = element_blank(),
         legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"),
-        plot.tag = element_text(size = 11, face = "bold"),
+        plot.tag = element_text(size = 11, face = "plain"),
         plot.tag.position = c(0.02, 0.97))
 
 # ---- Panel b: per-TF concordance distribution (NO lollipop) ---------------
@@ -95,16 +95,16 @@ p_b <- ggplot(tfh, aes(x = pct_motif_caqtl_agree)) +
   annotate("text", x = 50, y = Inf, vjust = 1.4, hjust = -0.06,
            size = PUB_GEOM_TEXT, colour = "black",
            label = sprintf("median %.0f%%\n(%d TFs)", med_tf, nrow(tfh))) +
-  scale_x_continuous(name = expression(bold("Motif x caQTL concordance (%) per TF")),
+  scale_x_continuous(name = "Motif x caQTL concordance (%) per TF",
                      breaks = c(0, 25, 50, 75, 100)) +
   scale_y_continuous(name = "TFs", expand = expansion(mult = c(0, 0.08))) +
   labs(tag = "b") +
   theme_masld(base_size = 7) +
   theme_pub() +
   theme(panel.grid = element_blank(),
-        axis.title.x = element_text(face = "bold"),
-        axis.title.y = element_text(face = "bold"),
-        plot.tag = element_text(size = 11, face = "bold"),
+        axis.title.x = element_text(face = "plain"),
+        axis.title.y = element_text(face = "plain"),
+        plot.tag = element_text(size = 11, face = "plain"),
         plot.tag.position = c(0.02, 0.97))
 
 # ---- Compose (2 panels; the old one-bar "panel c" was a single ZNF701 datum,

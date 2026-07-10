@@ -257,26 +257,26 @@ p <- ggplot() +
   # Labels (italic small TF names to right of each node)
   geom_text(data = nodes[show_label == TRUE & stage == "four_way"],
             aes(x = x + 0.14, y = y, label = tf_name),
-            size = 2.3, hjust = 0, fontface = "bold.italic",
+            size = GEOM_TEXT_6PT, hjust = 0, fontface = "italic",
             color = "#8E1B43") +
   geom_text(data = nodes[show_label == TRUE & stage == "canonical" & !(tf_name %in% TF_4WAY)],
             aes(x = x + 0.14, y = y, label = tf_name),
-            size = 2.1, hjust = 0, fontface = "italic", color = "grey25") +
+            size = GEOM_TEXT_6PT, hjust = 0, fontface = "italic", color = "black") +
   geom_text(data = nodes[show_label == TRUE & stage == "lenient" & !(tf_name %in% canonical_5)],
             aes(x = x + 0.14, y = y, label = tf_name),
-            size = 1.9, hjust = 0, fontface = "italic", color = "grey35") +
+            size = GEOM_TEXT_6PT, hjust = 0, fontface = "italic", color = "black") +
   geom_text(data = nodes[show_label == TRUE & stage == "orig" & !(tf_name %in% lenient_12)],
             aes(x = x + 0.14, y = y, label = tf_name),
-            size = 1.7, hjust = 0, fontface = "italic", color = "grey55") +
+            size = GEOM_TEXT_6PT, hjust = 0, fontface = "italic", color = "black") +
   # Stage column headers
   geom_text(data = stage_labels_df,
             aes(x = x, y = y, label = label),
-            size = 2.4, fontface = "bold", color = "black",
+            size = GEOM_TEXT_6PT, fontface = "plain", color = "black",
             lineheight = 0.95, vjust = 0) +
   # Callout below 4-way: convergent target CYP26A1
   annotate("text", x = STAGE_X["four_way"], y = y_axis_min + 0.2,
            label = "CYP26A1\nconvergent target shared by THRB + HNF4A",
-           size = 2.0, fontface = "italic", color = "grey45",
+           size = GEOM_TEXT_6PT, fontface = "plain", color = "black",
            lineheight = 0.95, hjust = 0.5) +
   # Bracket/arrow connecting THRB+HNF4A to the callout
   annotate("segment",
@@ -290,22 +290,20 @@ p <- ggplot() +
   coord_cartesian(xlim = c(0.55, 4.85), ylim = c(y_axis_min, y_axis_max + 1.8),
                   clip = "off") +
   labs(
-    x = NULL, y = NULL,
-    title = "Disease regulon evidence funnel",
-    subtitle = "24 SCENIC+ regulons → 4-way validated TFs (motif + eQTL + DA + caQTL)"
+    x = NULL, y = NULL
   ) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(
     axis.line       = element_blank(),
     axis.text       = element_blank(),
     axis.ticks      = element_blank(),
     panel.grid      = element_blank(),
-    plot.title      = element_text(size = PUB_TITLE, face = "bold", color = "black"),
-    plot.subtitle   = element_text(size = PUB_SUBTITLE, color = "grey30"),
     legend.position = "none",
     plot.margin     = margin(8, 30, 8, 8)
   )
+
+message("[caption] Disease regulon evidence funnel: 24 SCENIC+ regulons -> 4-way validated TFs (motif + eQTL + DA + caQTL)")
 
 out_pdf <- file.path(OUT_DIR, "evidence_funnel.pdf")
 ggsave(out_pdf, p, width = 6.0, height = 5.0, device = cairo_pdf)

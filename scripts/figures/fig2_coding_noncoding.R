@@ -41,21 +41,21 @@ setorder(av, gene_symbol, -pp4_best)
 best <- av[, .SD[1], by = gene_symbol][pp4_best > 0.5]
 # Merge the single spliceSite gene (1 gene) into coding to simplify the legend and bar
 best[fine_class == "spliceSite", fine_class := "coding"]
+best[fine_class %in% c("fiveUTR", "threeUTR"), fine_class := "UTR"]   # clump 5'/3' UTR into one group
 f1 <- best[, .(n_genes = .N), by = fine_class]
 f1[, `:=`(method = "SuSiE or ABF",                 # single bar over the union set
           coarse_class = fifelse(fine_class == "coding", "coding", "non-coding"))]
 
 # consequence order — coding first so that coding lands at the very top of the vertical stack
-lev <- c("coding","fiveUTR","threeUTR","promoter","intron","intergenic")
+lev <- c("coding","UTR","promoter","intron","intergenic")
 labs <- c(intergenic="intergenic", intron="intron", promoter="promoter",
-          threeUTR="3' UTR", fiveUTR="5' UTR", coding="coding")
+          UTR="UTR", coding="coding")
 f1[, fine_class := factor(fine_class, levels = lev)]
 f1[, method := factor(method, levels = "SuSiE or ABF")]
 present_lev <- lev[lev %in% as.character(f1$fine_class)]   # legend shows only classes with data
 
 cls_cols <- c(intergenic="#B0BEC5", intron="#64B5F6", promoter="#1565C0",
-              threeUTR="#4DB6AC", fiveUTR="#80CBC4",
-              spliceSite="#880E4F", coding="#C9265E")
+              UTR="#4DB6AC", coding="#C9265E")
 
 tot  <- f1[, .(n = sum(n_genes)), by = method]
 codg <- f1[fine_class %in% c("coding","spliceSite"), .(coding = sum(n_genes)), by = method]
@@ -69,39 +69,32 @@ p <- ggplot(f1, aes(x = method, y = n_genes, fill = fine_class)) +
   # counts inside the wide segments (white); thin slivers are named by the coarse tags below
   geom_text(aes(label = ifelse(n_genes >= 30, n_genes, "")),
             position = position_stack(vjust = 0.5),
-            color = "white", fontface = "bold", size = 2.7) +
+            color = "white", fontface = "plain", size = GEOM_TEXT_6PT) +
   # total above the vertical bar (black)
-  geom_text(data = tot, aes(x = method, y = n, label = paste0(n, " genes")),
-            inherit.aes = FALSE, vjust = -0.4, hjust = 0.5, size = 2.7, fontface = "bold") +
-  # coarse coding-vs-non-coding headline, next to the bar (black)
-  # non-coding: a bracket spanning the regulatory classes, label centred to the right (bracket opens leftward)
-  annotate("segment", x = 1.34, xend = 1.34, y = 5, yend = nnon - 5, linewidth = 0.4, colour = "black") +
-  annotate("segment", x = 1.34, xend = 1.30, y = 5, yend = 5, linewidth = 0.4, colour = "black") +
-  annotate("segment", x = 1.34, xend = 1.30, y = nnon - 5, yend = nnon - 5, linewidth = 0.4, colour = "black") +
-  annotate("text", x = 1.38, y = nnon/2, hjust = 0, vjust = 0.5, size = 2.7, fontface = "bold", colour = "black",
-           label = sprintf("non-coding  %d (%.0f%%)", nnon, 100 - ann$pct)) +
-  # coding: a leader line to the (tiny) coding sliver, label to the right (line is black)
-  annotate("segment", x = 1.26, xend = 1.36, y = nnon + ncod/2, yend = nnon + ncod/2,
-           linewidth = 0.4, colour = "black") +
-  annotate("text", x = 1.38, y = nnon + ncod/2, hjust = 0, vjust = 0.5, size = 2.5,
-           fontface = "bold", colour = "black",
-           label = sprintf("coding  %d (%.0f%%)", ncod, ann$pct)) +
+  geom_text(data = tot, aes(x = method, y = n, label = n),
+            inherit.aes = FALSE, vjust = -0.6, hjust = 0.5, size = GEOM_TEXT_6PT, fontface = "plain") +
+  # coding/non-coding bracket labels dropped for the slim 0.97in-wide column (no room
+  # for side labels); the split (non-coding 997 / coding 34) is in the caption. Visually:
+  # coding = the magenta sliver at top, everything below = non-coding.
   scale_fill_manual(values = cls_cols, labels = unname(labs[present_lev]),
                     name = NULL, breaks = present_lev) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
-  scale_x_discrete(expand = expansion(add = c(0.45, 0.75))) +
-  labs(x = NULL, y = "Colocalizing genes (best PP.H4 > 0.5)",
-       title = "Colocalizing variant class") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.10))) +
+  scale_x_discrete(expand = expansion(add = c(0.35, 0.35))) +
+  labs(x = NULL, y = "Colocalizing genes") +   # PP.H4>0.5 threshold in caption (title too long for the short vertical axis)
   coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
-  theme(legend.position = "bottom", legend.key.size = unit(0.30, "cm"),
-        legend.text = element_text(size = 7),
-        axis.text.x = element_blank(), axis.ticks.x = element_blank(),
-        plot.title = element_text(size = 9, face = "bold", hjust = 0.5)) +
-  guides(fill = guide_legend(ncol = 2))
+  theme(legend.position = "bottom", legend.key.size = unit(0.18, "cm"),
+        legend.text = element_text(size = 6), legend.margin = margin(1, 0, 0, 0),
+        legend.box.spacing = unit(2, "pt"), legend.spacing.x = unit(1, "pt"),
+        axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(ncol = 1))   # 0.96in width fits only a single-column legend (2-col words overflow)
 
-save_fig(p, file.path(PANEL_DIR, "Fig2C_coding_noncoding_split.pdf"),
-         width = 2.5, height = 3.8)
+message(sprintf("[caption] Fig2C variant class: non-coding %d (%.0f%%) vs coding %d (%.0f%%); best PP.H4 > 0.5.",
+                nnon, 100 - ann$pct, ncod, ann$pct))
+source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))   # save_panel(): exact contract size + cairo_pdf
+save_panel(p, "main/fig2_genetics/panels/Fig2C_coding_noncoding_split.pdf",
+           read_sizes(file.path(BASE, "figures/layout_specs/figure2_panel_sizes.tsv")),
+           file.path(BASE, "figures"))
 
 out <- merge(f1[, .(method, consequence = as.character(fine_class), coarse_class, n_genes)],
              ann[, .(method, method_total = n, coding_led = coding, coding_pct = pct)],

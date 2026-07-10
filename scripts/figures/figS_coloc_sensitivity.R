@@ -75,16 +75,16 @@ tryCatch({
     annotate("text", x = 1e-6, y = 0.95,
              label = paste0(n_fragile, "/", n_total,
                             " genes entirely\nprior-dependent"),
-             size = 2.2, hjust = 0, fontface = "bold", color = "gray30") +
-    labs(x = expression(p[12]~"prior"), y = "PP.H4",
-         title = "Prior sensitivity: AFR (N=6,636)") +
+             size = GEOM_TEXT_6PT, hjust = 0, fontface = "plain", color = "gray30") +
+    labs(x = expression(p[12]~"prior"), y = "PP.H4") +
     theme_masld() +
     theme(legend.position = "right",
           legend.key.height = unit(0.3, "cm"),
           legend.key.width  = unit(0.15, "cm"),
-          legend.text = element_text(size = 5),
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 5))
+          legend.text = element_text(size = 6),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
 
+  message("[caption] Prior sensitivity: AFR (N=6,636)")
   message("  AFR: ", n_fragile, "/", n_total, " genes prior-dependent")
 }, error = function(e) message("Panel (a) error: ", e$message))
 
@@ -132,15 +132,15 @@ tryCatch({
     annotate("text", x = 1e-6, y = 0.95,
              label = paste0(n_robust, "/", n_default,
                             " genes robust\nacross all priors"),
-             size = 2.2, hjust = 0, fontface = "bold", color = "gray30") +
-    labs(x = expression(p[12]~"prior"), y = "PP.H4",
-         title = paste0("Prior sensitivity: EUR (N=361,194)")) +
+             size = GEOM_TEXT_6PT, hjust = 0, fontface = "plain", color = "gray30") +
+    labs(x = expression(p[12]~"prior"), y = "PP.H4") +
     theme_masld() +
     theme(legend.position = "right",
           legend.key.height = unit(0.2, "cm"),
-          legend.text = element_text(size = 5),
-          axis.text.x = element_text(angle = 45, hjust = 1, size = 5))
+          legend.text = element_text(size = 6),
+          axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
 
+  message("[caption] Prior sensitivity: EUR (N=361,194)")
   message("  EUR: ", n_robust, "/", n_default, " robust at p12=1e-6")
 }, error = function(e) message("Panel (b) error: ", e$message))
 
@@ -183,12 +183,11 @@ tryCatch({
     scale_color_manual(values = source_colors, name = NULL) +
     scale_x_continuous(breaks = seq(0, 0.5, by = 0.1)) +
     labs(x = "Minor allele frequency (MAF)",
-         y = expression("Min |"*beta*"| at 80% power"),
-         title = "Minimum detectable effect size (80% power)") +
+         y = expression("Min |"*beta*"| at 80% power")) +
     theme_masld() +
     theme(legend.position = "right",
           legend.key.height = unit(0.2, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 6))
 
   # Add MAF=0.05 annotations if data exists
   if (nrow(maf05_labels) > 0) {
@@ -197,7 +196,7 @@ tryCatch({
                  size = 1.5, show.legend = FALSE) +
       geom_text_repel(data = maf05_labels,
                       aes(x = MAF, y = min_beta_80pct, label = label_text),
-                      size = 2, nudge_x = 0.03, show.legend = FALSE,
+                      size = GEOM_TEXT_6PT, nudge_x = 0.03, show.legend = FALSE,
                       min.segment.length = 0, segment.size = 0.15)
   }
 
@@ -231,14 +230,13 @@ tryCatch({
                linewidth = 0.3) +
     geom_text(aes(label = sprintf("r = %.3f\nn = %s", pearson_r,
                                   format(n_variants, big.mark = ","))),
-              vjust = -0.3, size = 2.2) +
+              vjust = -0.3, size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = ancestry_colors) +
     scale_y_continuous(limits = c(0, 1.15), breaks = seq(0, 1, 0.25)) +
     annotate("text", x = 1.5, y = 1.05,
-             label = "Expected (same ancestry)", size = 2,
-             color = "gray50", fontface = "italic") +
-    labs(x = NULL, y = "Pearson r (EUR eQTL EAF vs GWAS EAF)",
-         title = "EAF concordance: EUR eQTL vs GWAS") +
+             label = "Expected (same ancestry)", size = GEOM_TEXT_6PT,
+             color = "gray50", fontface = "plain") +
+    labs(x = NULL, y = "Pearson r (EUR eQTL EAF vs GWAS EAF)") +
     theme_masld()
 
   message("  EAF concordance: AFR r=", eaf[ancestry == "AFR", pearson_r],
@@ -272,12 +270,11 @@ tryCatch({
   p_e <- ggplot(metrics, aes(x = ancestry_label, y = value,
                               fill = ancestry_label)) +
     geom_col(width = 0.6, show.legend = FALSE) +
-    geom_text(aes(label = sprintf("%.2f", value)), vjust = -0.3, size = 2.2) +
+    geom_text(aes(label = sprintf("%.2f", value)), vjust = -0.3, size = GEOM_TEXT_6PT) +
     facet_wrap(~ metric, scales = "free_y", nrow = 1) +
     scale_fill_manual(values = ancestry_colors_e) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
-    labs(x = NULL, y = NULL,
-         title = "Cross-population allele frequency divergence") +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
     theme(strip.text = element_text(size = 6))
 
@@ -361,20 +358,18 @@ tryCatch({
 
   p_f <- ggplot(tile_data, aes(x = gwas, y = gene, fill = status)) +
     geom_tile(color = "white", linewidth = 0.5) +
-    geom_text(aes(label = pp4_label), size = 1.8, color = "white",
-              fontface = "bold") +
+    geom_text(aes(label = pp4_label), size = GEOM_TEXT_6PT, color = "white",
+              fontface = "plain") +
     scale_fill_manual(values = status_colors, name = NULL) +
-    labs(x = NULL, y = NULL,
-         title = "Anchor gene COLOC status",
-         subtitle = paste0(n_fail, "/", length(anchor_genes),
-                           " fail, ", n_untested, " untested \u2014 coding variant architecture")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
           axis.text.y = element_text(face = "italic", size = 6),
           legend.position = "bottom",
-          legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 6, color = "gray40"))
+          legend.key.size = unit(0.25, "cm"))
 
+  message("[caption] Anchor gene COLOC status: ", n_fail, "/", length(anchor_genes),
+          " fail, ", n_untested, " untested \u2014 coding variant architecture")
   message("  Anchor genes: ", n_success, " colocalized, ", n_fail,
           " fail, ", n_untested, " untested across ", length(gwas_dirs), " GWAS")
 }, error = function(e) message("Panel (f) error: ", e$message))
@@ -405,7 +400,7 @@ message("Assembling 3x2 composite figure...")
 fig <- (p_a | p_b) / (p_c | p_d) / (p_e | p_f) +
   plot_layout(heights = c(1, 1, 1)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig_tall(fig, OUT, height = 10)
 message("Saved composite: ", OUT)

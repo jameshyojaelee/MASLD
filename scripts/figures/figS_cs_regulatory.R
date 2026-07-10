@@ -5,7 +5,7 @@
 # acting through cis-regulation rather than protein change. VEP consequence
 # classification (not TSS-distance binning). All numbers from disk.
 #
-# Out: figures/main/fig2_genetics/panels/cs_regulatory_composition.pdf (+ source CSV)
+# Out: figures/main/fig2_genetics/panels/FigS2K_cs_regulatory_composition.pdf (+ source CSV)
 suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
@@ -29,20 +29,17 @@ pct_noncoding <- 100 * sum(comp[fine_class != "coding", n]) / N
 
 p <- ggplot(comp, aes(pct, cls, fill = cls)) +
   geom_col(width = 0.72) +
-  geom_text(aes(label = sprintf("%.0f%%  (%d)", pct, n)), hjust = -0.1, size = 2.7, color = "grey15") +
+  geom_text(aes(label = sprintf("%.0f%%  (%d)", pct, n)), hjust = -0.1, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values = cls_cols, guide = "none") +
   scale_x_continuous(limits = c(0, 52), expand = expansion(mult = c(0, 0.04))) +
-  labs(x = "% of colocalizing credible-set lead variants", y = NULL,
-       title = "Colocalizing variants are non-coding regulatory",
-       subtitle = sprintf("%d credible-set leads (VEP consequence); %.1f%% non-coding", N, pct_noncoding)) +
-  theme_masld(base_size = 9) +
-  theme(plot.title = element_text(size = 9, face = "bold"),
-        plot.subtitle = element_text(size = 5.8, color = "grey35"),
-        axis.text.y = element_text(size = 8))
+  labs(x = "% of colocalizing credible-set lead variants", y = NULL) +
+  theme_masld(base_size = 6) +
+  theme(axis.text.y = element_text(size = 6))
 
-save_fig(p, file.path(PANEL_DIR, "cs_regulatory_composition.pdf"),
+message(sprintf("[caption] Colocalizing variants are non-coding regulatory: %d credible-set leads (VEP consequence); %.1f%% non-coding", N, pct_noncoding))
+save_fig(p, file.path(PANEL_DIR, "FigS2K_cs_regulatory_composition.pdf"),
          width = fig_col_width * 1.05, height = 2.3)
 
 fwrite(comp[order(-n), .(fine_class, n, pct = round(pct, 1))],
-       file.path(PANEL_DIR, "cs_regulatory_composition_source.csv"))
+       file.path(PANEL_DIR, "FigS2K_cs_regulatory_composition_source.csv"))
 cat(sprintf("[figS regulatory] N=%d  %.1f%% non-coding regulatory\n", N, pct_noncoding))

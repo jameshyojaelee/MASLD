@@ -143,15 +143,15 @@ two_set_venn <- function(nA, nB, nOverlap, labA, labB, colA, colB,
     geom_circle(aes(x0 = x0, y0 = y0, r = r, fill = grp), color = NA, alpha = 0.32) +
     scale_fill_manual(values = c(A = colA, B = colB), guide = "none") +
     annotate("text", x = tx_A,    y = 0, label = comma(nA_only),
-             size = 2.8, color = darken(colA), fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = darken(colA), fontface = "plain") +
     annotate("text", x = tx_ovlp, y = 0, label = comma(nOverlap),
-             size = 2.8, color = "gray15", fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = "gray15", fontface = "plain") +
     annotate("text", x = tx_B,    y = 0, label = comma(nB_only),
-             size = 2.8, color = darken(colB), fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = darken(colB), fontface = "plain") +
     annotate("text", x = cx_A, y = r_A + 0.20, label = titleA,
-             size = 2.3, color = darken(colA), fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = darken(colA), fontface = "plain") +
     annotate("text", x = cx_B, y = r_B + 0.20, label = titleB,
-             size = 2.3, color = darken(colB), fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = darken(colB), fontface = "plain") +
     coord_fixed(xlim = c(x_lo, x_hi), ylim = c(y_lo, y_hi), clip = "off") +
     theme_void() +
     theme(plot.margin = margin(-2, 6, -2, 6))
@@ -170,12 +170,10 @@ venn_panels <- lapply(names(deg_lists), function(nm) {
                titleA = nm, titleB = "Integrated")
 })
 
+message("[caption] Per-cohort vs integrated signature")
 combined <- wrap_plots(venn_panels, ncol = 1) +
   plot_annotation(
-    title = "Per-cohort vs integrated signature",
-    theme = theme(plot.title  = element_text(size = 8, face = "bold", hjust = 0,
-                                             margin = margin(b = 4)),
-                  plot.margin = margin(6, 6, 4, 6)))
+    theme = theme(plot.margin = margin(6, 6, 4, 6)))
 
 out_percohort <- file.path(PANEL_DIR, "per_cohort_integrated_venn.pdf")
 save_fig(combined, out_percohort,
@@ -207,34 +205,24 @@ p_union <- two_set_venn(
   nA = n_integrated, nB = length(per_study_union), nOverlap = ov_union,
   labA = "Integrated", labB = "Per-study union",
   colA = integrated_color, colB = union_color,
-  titleA = "Integrated", titleB = "Per-study union") +
-  labs(subtitle = "Integrated vs union of 5 per-study DEG sets") +
-  theme(plot.subtitle = element_text(size = 6.5, hjust = 0.5, color = "gray25"))
+  titleA = "Integrated", titleB = "Per-study union")
 
 p_2plus <- two_set_venn(
   nA = n_integrated, nB = length(two_plus), nOverlap = ov_2plus,
   labA = "Integrated", labB = "DE in 2+ cohorts",
   colA = integrated_color, colB = twoplus_color,
-  titleA = "Integrated", titleB = "DE in 2+ cohorts") +
-  labs(subtitle = sprintf("Integrated vs genes replicated in 2+ cohorts (%s shared)",
-                          comma(ov_2plus))) +
-  theme(plot.subtitle = element_text(size = 6.5, hjust = 0.5, color = "gray25"))
+  titleA = "Integrated", titleB = "DE in 2+ cohorts")
 
 p_all5 <- two_set_venn(
   nA = length(all5_core), nB = n_integrated, nOverlap = ov_all5,
   labA = "All-5 core", labB = "Integrated",
   colA = all5_color, colB = integrated_color,
-  titleA = "DE in all 5 cohorts", titleB = "Integrated") +
-  labs(subtitle = sprintf("%d gene(s) DE in all 5 cohorts but NOT integrated",
-                          length(all5_core) - ov_all5)) +
-  theme(plot.subtitle = element_text(size = 6.5, hjust = 0.5, color = "gray25"))
+  titleA = "DE in all 5 cohorts", titleB = "Integrated")
 
+message("[caption] Integrated signature vs per-study DEGs")
 combined2 <- (p_union / p_2plus / p_all5) +
   plot_annotation(
-    title = "Integrated signature vs per-study DEGs",
-    theme = theme(plot.title  = element_text(size = 8, face = "bold", hjust = 0,
-                                             margin = margin(b = 4)),
-                  plot.margin = margin(6, 6, 4, 6)))
+    theme = theme(plot.margin = margin(6, 6, 4, 6)))
 
 out_union <- file.path(PANEL_DIR, "integrated_vs_perstudy_venn.pdf")
 save_fig(combined2, out_union,

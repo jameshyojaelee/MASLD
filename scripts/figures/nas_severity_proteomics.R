@@ -21,7 +21,7 @@
 # under-powering. Severity axes differ by compartment (liver = NAS grade; plasma
 # = MASH vs MASL, its only severity contrast).
 #
-# Output: figures/main/fig4_validation/nas_severity_proteomics.pdf
+# Output: figures/main/fig4_validation/fig4c_nas_severity_proteomics.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({
@@ -76,18 +76,17 @@ rate_cols <- c(masld_colors$down, masld_colors$up)
 pA <- ggplot(rate_df, aes(x = rate, y = lab, fill = lab)) +
   geom_col(width = 0.6) +
   geom_text(aes(label = sprintf("%.0f%%  (%d/%d)", rate*100, num, den)),
-            hjust = 0, nudge_x = 0.02, size = PUB_GEOM_TEXT + 0.4,
-            fontface = "bold", color = "black") +
+            hjust = 0, nudge_x = 0.02, size = GEOM_TEXT_6PT,
+            color = "black") +
   scale_fill_manual(values = rate_cols, guide = "none") +
   scale_x_continuous(limits = c(0, 0.95), breaks = c(0, 0.25, 0.5, 0.75),
                      labels = scales::percent_format(accuracy = 1),
                      expand = expansion(mult = c(0, 0))) +
   labs(x = "Disease-altered proteins that\nalso track severity (padj < 0.05)", y = NULL) +
   coord_cartesian(clip = "off") +
-  theme_masld() + theme_pub() +
+  theme_masld_compact() +
   theme(panel.grid.major.y = element_blank(),
-        axis.text.y = element_text(face = "bold", size = PUB_AXIS_TEXT),
-        plot.margin = margin(5.5, 34, 5.5, 5.5))
+        plot.margin = margin(5.5, 30, 5.5, 5.5))
 
 # ════════════════════════════════════════════════════════════════════════════
 # Panel B — top severity-driven proteins (liver disease-sig AND NAS-sig)
@@ -113,20 +112,17 @@ pB <- ggplot(show, aes(x = logFC, y = gene, fill = -log10(padj))) +
                      expand = expansion(mult = c(0, 0.02))) +
   labs(x = "log2FC, NAS >=4 vs <4", y = NULL) +
   coord_cartesian(clip = "off") +
-  theme_masld() + theme_pub() +
+  theme_masld_compact() +
   theme(panel.grid.major.y = element_blank(),
-        axis.text.y = element_text(size = PUB_AXIS_TEXT, color = "black", face = "italic"),
+        axis.text.y = element_text(color = "black", face = "italic"),
         legend.position = c(0.84, 0.30),
         legend.background = element_blank(),
-        legend.key.size = unit(0.3, "cm"),
-        legend.title = element_text(size = PUB_AXIS_TEXT),
-        legend.text = element_text(size = PUB_AXIS_TEXT - 0.5),
-        plot.margin = margin(5.5, 8, 5.5, 5.5))
+        legend.key.size = unit(0.3, "cm"))
 
 p <- pA + pB + plot_layout(widths = c(1, 1))
 
-out <- file.path(FIG4_DIR, "fig4b_nas_severity_proteomics.pdf")  # promoted to main 4b (2026-06-22): proteins grade by NAS severity
-cairo_pdf(out, width = fig_full_width * 0.82, height = fig_half_width * 0.62, family = "Helvetica")
+out <- file.path(FIG4_DIR, "_supp", "nas_severity_proteomics.pdf")  # DEMOTED from main 4c (2026-07-07): duplicates 4b proteomics; cited as Fig S4A
+cairo_pdf(out, width = fig_full_width * 0.68, height = fig_half_width * 0.52, family = "Helvetica")
 print(p)
 dev.off()
 message("Saved: ", out)

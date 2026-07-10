@@ -21,7 +21,8 @@
 # (susie_coloc_all_gwas.csv), NOT the method-inconsistent atlas *_coloc_pp4
 # convenience columns (HARD GATE).
 #
-# Output: figures/main/fig4_validation/fig4d_hkdc1_circuit.pdf
+# Output: figures/main/fig4_validation/fig4g_hkdc1_circuit.pdf
+# (relettered e->g 2026-07-08: now sits after both cyp3a4 panels, per the Fig4 lineup)
 # Env:    rnaseq
 
 suppressPackageStartupMessages({
@@ -122,16 +123,11 @@ p_coloc <- ggplot(best_coloc, aes(x = pp4, y = gene_f)) +
                      expand = expansion(mult = c(0, 0))) +
   coord_cartesian(clip = "off") +
   labs(x = "COLOC PP.H4", y = NULL) +
-  theme_masld() + theme_pub() +
+  theme_masld_compact() +
   theme(
-    plot.title  = element_text(size = PUB_AXIS_TITLE, face = "plain", hjust = 0),
-    axis.text.y = element_text(
-      size = PUB_AXIS_TEXT,
-      face = ifelse(levels(best_coloc$gene_f) == "HKDC1", "bold.italic", "italic")),
+    axis.text.y = element_text(size = 6, face = "italic", color = "black"),
     legend.position = "bottom",
-    legend.key.size = unit(0.28, "lines"),
-    legend.title    = element_text(size = PUB_AXIS_TEXT),
-    legend.text     = element_text(size = PUB_AXIS_TEXT))
+    legend.key.size = unit(0.28, "lines"))
 
 # ── Panel ii: hepatocyte antioxidant co-expression module ─────────────────────
 p_module <- ggplot(top_mod, aes(x = weight, y = gene)) +
@@ -145,16 +141,11 @@ p_module <- ggplot(top_mod, aes(x = weight, y = gene)) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.06))) +
   coord_cartesian(clip = "off") +
   labs(x = "Co-expression weight", y = NULL) +
-  theme_masld() + theme_pub() +
+  theme_masld_compact() +
   theme(
-    plot.title  = element_text(size = PUB_AXIS_TITLE, face = "plain", hjust = 0),
-    axis.text.y = element_text(
-      size = PUB_AXIS_TEXT,
-      face = ifelse(levels(top_mod$gene) == "HKDC1", "bold.italic", "italic")),
+    axis.text.y = element_text(size = 6, face = "italic", color = "black"),
     legend.position = "bottom",
-    legend.key.size = unit(0.28, "lines"),
-    legend.title    = element_text(size = PUB_AXIS_TEXT),
-    legend.text     = element_text(size = PUB_AXIS_TEXT))
+    legend.key.size = unit(0.28, "lines"))
 
 # ── Legend stats → stdout (NOT on the panel; PI directive) ────────────────────
 hk <- best_coloc %>% filter(gene == "HKDC1")
@@ -184,9 +175,9 @@ message("=======================================================================
 p_out <- (p_coloc | p_module) +
   plot_layout(widths = c(1, 1.25))
 
-out <- file.path(FIG4_DIR, "fig4d_hkdc1_circuit.pdf")
+out <- file.path(FIG4_DIR, "panels", "fig4g_hkdc1_circuit.pdf")
 if (!dir.exists(FIG4_DIR)) dir.create(FIG4_DIR, recursive = TRUE)
-cairo_pdf(out, width = fig_full_width * 0.74, height = 2.5, family = "Helvetica")
+cairo_pdf(out, width = fig_full_width * 0.66, height = 2.05, family = "Helvetica")
 print(p_out)
 invisible(dev.off())
 message("Saved: ", out)

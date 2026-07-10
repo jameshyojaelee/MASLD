@@ -309,12 +309,15 @@ cat("\n--- Step 5: Loading consensus tier info ---\n")
 atlas_file <- file.path(BASE_DIR,
                         "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 if (file.exists(atlas_file)) {
+  # human_consensus_tier removed 2026-06-29 (legacy dream∩metafor tier); derive from bulk_sig (TREAT DEG)
   atlas <- fread(atlas_file,
-                 select = c("human_symbol", "human_consensus_tier"))
+                 select = c("human_symbol", "bulk_sig"))
   setnames(atlas, "human_symbol", "symbol")
   atlas <- atlas[!is.na(symbol) & symbol != ""]
   atlas <- atlas[!duplicated(symbol)]
-  cat("  Atlas loaded:", nrow(atlas), "genes with tier info\n")
+  atlas[, human_consensus_tier := fifelse(bulk_sig %in% TRUE, "TREAT_DEG", "Not_significant")]
+  atlas[, bulk_sig := NULL]
+  cat("  Atlas loaded:", nrow(atlas), "genes (DEG flag from bulk_sig)\n")
 } else {
   cat("  Multi-evidence atlas not found. Consensus tier will be NA.\n")
   atlas <- data.table(symbol = character(), human_consensus_tier = character())

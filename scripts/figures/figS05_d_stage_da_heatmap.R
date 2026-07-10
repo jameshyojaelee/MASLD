@@ -100,10 +100,10 @@ p <- ggplot(bar, aes(x = contrast, y = n, fill = direction)) +
   labs(x = NULL, y = "DA peaks  (padj < 0.05)") +
   theme_masld(base_size = 10) +
   theme_pub() +
-  theme(strip.text       = element_text(size = 9, face = "bold"),
+  theme(strip.text       = element_text(size = 6, face = "plain"),
         axis.text.x      = element_text(size = PUB_AXIS_TEXT, angle = 35, hjust = 1,
                                         colour = "black"),
-        axis.title.y     = element_text(size = PUB_AXIS_TITLE, face = "bold"),
+        axis.title.y     = element_text(size = PUB_AXIS_TITLE, face = "plain"),
         legend.position  = "bottom",
         legend.key.size  = unit(0.3, "cm"),
         panel.grid       = element_blank())
