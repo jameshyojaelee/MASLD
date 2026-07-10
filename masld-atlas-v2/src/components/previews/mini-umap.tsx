@@ -5,9 +5,9 @@
  *
  * Fetches `umap_thumbnail.json` (`[{x,y,celltype}]`, ~2.5k points) and paints
  * them on a devicePixelRatio-aware canvas as soft ROUND dots, colored by cell
- * type via the canonical Fig-3 palette (`cellTypeColor`). On dark (the default
- * theme) dots are drawn with additive blending so dense clusters bloom like a
- * nebula; on light they are soft solid dots (additive would blow out to white).
+ * type via the canonical Fig-3 palette (`cellTypeColor`). Each dot is a solid
+ * colored core (so dense clusters keep their hue) with, on dark, a subtle
+ * additive glow halo layered over it; light mode uses the cores alone.
  *
  * Motion: points fade + scale into place (a ~1.2s "bloom-in"), then breathe
  * with a very slow ambient drift. Perf: one cached glow sprite per cell-type
@@ -114,7 +114,12 @@ export function MiniUmap() {
     // Dot radius scales with the tile so the 2x2 hero reads bigger than a 1x1.
     const minDim = Math.min(width, height);
     const r = Math.max(1.8, Math.min(3.2, minDim / 110));
-    const spriteR = Math.ceil(r * (dark ? 3.4 : 2.0)); // halo radius (css px)
+    // A mostly-opaque colored BODY (keeps hue even in dense cores) plus, on
+    // dark, a wider low-alpha additive GLOW halo layered over it.
+    const bodyR = r * 1.2;
+    const glowR = r * 2.8;
+    const BODY_ALPHA = 0.9;
+    const GLOW_ALPHA = 0.18;
 
     // Screen positions, per-point phase seeds, and colors.
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -142,56 +147,89 @@ export function MiniUmap() {
       colors[i] = colorMap.get(p.celltype) ?? "#9E9E9E";
     }
 
-    // One cached glow sprite per color; blitting is far cheaper than per-point
-    // radial gradients every frame.
-    const sprites = new Map<string, HTMLCanvasElement>();
-    const spriteFor = (color: string): HTMLCanvasElement => {
-      const hit = sprites.get(color);
+    // Cached sprites per color (blitting >> per-point gradients each frame): a
+    // solid-cored BODY sprite, and a soft halo sprite for the additive glow.
+    const bodySprites = new Map<string, HTMLCanvasElement>();
+    const glowSprites = new Map<string, HTMLCanvasElement>();
+    const makeSprite = (
+      cache: Map<string, HTMLCanvasElement>,
+      color: string,
+      rad: number,
+      stops: [number, number][]
+    ): HTMLCanvasElement => {
+      const hit = cache.get(color);
       if (hit) return hit;
       const s = document.createElement("canvas");
-      s.width = s.height = Math.ceil(spriteR * 2 * dpr);
+      s.width = s.height = Math.ceil(rad * 2 * dpr);
       const sc = s.getContext("2d")!;
       sc.scale(dpr, dpr);
-      const g = sc.createRadialGradient(spriteR, spriteR, 0, spriteR, spriteR, spriteR);
-      if (dark) {
-        g.addColorStop(0, rgba(color, 0.95));
-        g.addColorStop(0.4, rgba(color, 0.5));
-        g.addColorStop(1, rgba(color, 0));
-      } else {
-        g.addColorStop(0, rgba(color, 0.9));
-        g.addColorStop(0.55, rgba(color, 0.55));
-        g.addColorStop(1, rgba(color, 0));
-      }
+      const g = sc.createRadialGradient(rad, rad, 0, rad, rad, rad);
+      for (const [stop, a] of stops) g.addColorStop(stop, rgba(color, a));
       sc.fillStyle = g;
       sc.beginPath();
-      sc.arc(spriteR, spriteR, spriteR, 0, Math.PI * 2);
+      sc.arc(rad, rad, rad, 0, Math.PI * 2);
       sc.fill();
-      sprites.set(color, s);
+      cache.set(color, s);
       return s;
     };
-    for (const c of new Set(colors)) spriteFor(c);
+    const bodyFor = (c: string) =>
+      makeSprite(bodySprites, c, bodyR, [
+        [0, 1],
+        [0.6, 0.85],
+        [1, 0],
+      ]);
+    const glowFor = (c: string) =>
+      makeSprite(glowSprites, c, glowR, [
+        [0, 0.85],
+        [0.5, 0.35],
+        [1, 0],
+      ]);
+    for (const c of new Set(colors)) {
+      bodyFor(c);
+      if (dark) glowFor(c);
+    }
 
-    const composite: GlobalCompositeOperation = dark ? "lighter" : "source-over";
+    const bx = new Float32Array(N);
+    const by = new Float32Array(N);
+    const be = new Float32Array(N);
 
     const paint = (bloom: number, now: number, drift: boolean) => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      ctx.globalCompositeOperation = composite;
+      // Per-point staggered bloom (fade + grow in) and ambient drift offset.
       for (let i = 0; i < N; i++) {
-        // Per-point staggered bloom (fade + scale in).
         const delay = seed[i] * STAGGER_MS;
         const lt = Math.max(0, Math.min(1, (bloom - delay) / (BLOOM_MS - STAGGER_MS)));
-        const ease = 1 - Math.pow(1 - lt, 3);
-        if (ease <= 0) continue;
+        be[i] = 1 - Math.pow(1 - lt, 3);
         let ox = 0, oy = 0;
         if (drift) {
           const ph = seed[i] * Math.PI * 2;
           ox = Math.cos(now * 0.00016 + ph) * DRIFT_AMP;
           oy = Math.sin(now * 0.00014 + ph) * DRIFT_AMP;
         }
-        const drawR = spriteR * (0.28 + 0.72 * ease);
-        ctx.globalAlpha = ease;
-        ctx.drawImage(spriteFor(colors[i]), sx[i] + ox - drawR, sy[i] + oy - drawR, drawR * 2, drawR * 2);
+        bx[i] = sx[i] + ox;
+        by[i] = sy[i] + oy;
+      }
+      // Pass 1 — colored bodies (normal compositing keeps hue in dense cores).
+      ctx.globalCompositeOperation = "source-over";
+      for (let i = 0; i < N; i++) {
+        const e = be[i];
+        if (e <= 0) continue;
+        const dr = bodyR * (0.4 + 0.6 * e);
+        ctx.globalAlpha = e * BODY_ALPHA;
+        ctx.drawImage(bodyFor(colors[i]), bx[i] - dr, by[i] - dr, dr * 2, dr * 2);
+      }
+      // Pass 2 — subtle additive glow halo (dark only); low alpha so it never
+      // washes the colored cores to white.
+      if (dark) {
+        ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < N; i++) {
+          const e = be[i];
+          if (e <= 0) continue;
+          const dr = glowR * (0.4 + 0.6 * e);
+          ctx.globalAlpha = e * GLOW_ALPHA;
+          ctx.drawImage(glowFor(colors[i]), bx[i] - dr, by[i] - dr, dr * 2, dr * 2);
+        }
       }
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";

@@ -67,12 +67,12 @@ export function Hero() {
       {/* Live constellation (or static fallback) behind everything. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-70 dark:opacity-80"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-90 dark:opacity-100"
         style={{
           maskImage:
-            "radial-gradient(115% 92% at 50% 42%, transparent 0%, transparent 30%, black 70%)",
+            "radial-gradient(120% 115% at 50% 42%, rgba(0,0,0,0.5) 0%, black 40%, black 68%, transparent 100%)",
           WebkitMaskImage:
-            "radial-gradient(115% 92% at 50% 42%, transparent 0%, transparent 30%, black 70%)",
+            "radial-gradient(120% 115% at 50% 42%, rgba(0,0,0,0.5) 0%, black 40%, black 68%, transparent 100%)",
         }}
       >
         {graph ? <GeneConstellation graph={graph} /> : <HeroFallback />}
@@ -89,7 +89,7 @@ export function Hero() {
         style={{ backgroundImage: "var(--depth-vignette)" }}
       />
 
-      <div className="mx-auto max-w-3xl px-6 pt-14 pb-16 text-center sm:pt-20 sm:pb-20">
+      <div className="mx-auto max-w-3xl px-6 pt-28 pb-20 text-center sm:pt-36 sm:pb-24">
         <h1 className="text-gradient font-display text-display-xl font-semibold tracking-tight text-balance">
           MASLD Atlas
         </h1>

@@ -107,7 +107,7 @@ export function GeneConstellation({ graph }: { graph: HeroGraph }) {
   const graphData = useMemo(() => {
     const nodes = graph.nodes.map((n) => ({
       ...n,
-      __r: n.kind === "gene" ? 2.6 + n.weight * 5 : 1.8,
+      __r: n.kind === "gene" ? 3.2 + n.weight * 6 : 2.2,
     }));
     const links = graph.links.map((l) => ({ source: l.source, target: l.target }));
     return { nodes, links };
@@ -165,9 +165,9 @@ export function GeneConstellation({ graph }: { graph: HeroGraph }) {
       const isGene = n.kind === "gene";
       const fill = isGene ? lerp(c.primary, c.accent, n.weight) : c.hub;
       ctx.save();
-      ctx.globalAlpha = isGene ? 0.92 : 0.42;
+      ctx.globalAlpha = isGene ? 0.95 : 0.5;
       if (isGene) {
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 14;
         ctx.shadowColor = css(fill, 0.9);
       }
       ctx.beginPath();
@@ -179,7 +179,7 @@ export function GeneConstellation({ graph }: { graph: HeroGraph }) {
     []
   );
 
-  const linkColor = useCallback(() => css(colorsRef.current.primary, 0.16), []);
+  const linkColor = useCallback(() => css(colorsRef.current.primary, 0.26), []);
 
   const onEngineStop = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -197,7 +197,7 @@ export function GeneConstellation({ graph }: { graph: HeroGraph }) {
           height={dim.h}
           nodeCanvasObject={paintNode}
           linkColor={linkColor}
-          linkWidth={0.6}
+          linkWidth={1}
           cooldownTicks={70}
           d3AlphaDecay={0.03}
           enableNodeDrag={false}
