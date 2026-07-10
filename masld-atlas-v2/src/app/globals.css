@@ -287,4 +287,35 @@
       transform: none;
     }
   }
+
+  /* Seamless marquee track. The track holds TWO identical child copies and
+     slides exactly one copy-width (-50%) so the loop is gapless. Duration is
+     driven per-instance by the `--marquee-duration` custom property. */
+  @keyframes marquee-x {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  .animate-marquee {
+    animation: marquee-x var(--marquee-duration, 40s) linear infinite;
+    will-change: transform;
+  }
+  /* Offscreen / caller-driven pause. */
+  .animate-marquee[data-paused="true"] {
+    animation-play-state: paused;
+  }
+  /* Pause on hover (opt-in via the container class). */
+  .marquee-hoverpause:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-marquee {
+      animation: none;
+      transform: none;
+      will-change: auto;
+    }
+  }
 }

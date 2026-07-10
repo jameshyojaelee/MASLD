@@ -27,10 +27,13 @@ export function CountUp({
   animateOnMount?: boolean;
 }) {
   const reduce = useReducedMotion();
-  const [display, setDisplay] = useState<number>(
-    reduce || !animateOnMount ? value : 0
-  );
-  const fromRef = useRef<number>(reduce || !animateOnMount ? value : 0);
+  // Initial render MUST NOT depend on `reduce`: it is false during SSR/prerender
+  // but can be true on the client's first paint under reduced motion, which
+  // desyncs the server and client text and triggers a hydration mismatch
+  // (React #418). Start deterministically at 0 (animated) / value (static), then
+  // let the effect jump-to-value (reduced motion) or animate.
+  const [display, setDisplay] = useState<number>(animateOnMount ? 0 : value);
+  const fromRef = useRef<number>(animateOnMount ? 0 : value);
 
   useEffect(() => {
     if (reduce || !animateOnMount) {

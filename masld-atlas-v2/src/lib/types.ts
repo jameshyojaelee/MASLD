@@ -40,16 +40,35 @@ export interface AtlasSummary {
   evidence_sources: number;
 }
 
-/** Featured gene for landing page cards */
+/** A drug annotation attached to a featured gene (from `featured_genes.json`). */
+export interface FeaturedGeneDrug {
+  drug: string;
+  stage: string;
+  moa: string;
+  /** Strength of atlas evidence backing the target, e.g. "Weak" | "Absent". */
+  atlas_support?: string;
+}
+
+/**
+ * Featured gene for landing-page cards. Shape mirrors `featured_genes.json`
+ * exactly (there is no `coloc_pp4`/`drug` field — those were dead reads; drug
+ * annotations live in the `drugs` array). NOTE: the emitted `evidence`
+ * sub-object currently ships only s1–s7 (no `s8_proteomics`); the full
+ * `EvidenceStrengths` type is retained because consumers render it through
+ * `EvidenceFingerprint`, which tolerates a missing axis (`evidence[key] ?? 0`).
+ */
 export interface FeaturedGene {
   symbol: string;
   ensembl_id: string;
   tagline: string;
-  evidence: EvidenceStrengths;
-  bulk_logfc: number;
-  coloc_pp4: number | null;
-  drug: string | null;
   category: string;
+  bulk_logfc: number;
+  bulk_padj: number;
+  is_deg: boolean;
+  is_conserved: boolean;
+  layers_active: number;
+  evidence: EvidenceStrengths;
+  drugs: FeaturedGeneDrug[];
 }
 
 /** Modality metadata */

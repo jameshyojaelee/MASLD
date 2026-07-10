@@ -88,6 +88,9 @@ KEEP_JSON = [
     "programs_summary.json",
     "sex_summary.json",
     "cross_species.json",
+    "volcano_preview.json",
+    "umap_thumbnail.json",
+    "landing_ticker.json",
 ]
 
 # Directory tree copied wholesale EXCEPT the named subdir(s).
