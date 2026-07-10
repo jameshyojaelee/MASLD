@@ -554,8 +554,15 @@ def generate_pathway_genesets(output_dir: Path):
             })
             all_genes.update(genes)
 
-    # Universe size from atlas
-    atlas_genes = 33943  # from atlas dimensions documented in CLAUDE.md
+    # Universe size = current atlas gene count, derived dynamically (was
+    # hardcoded 33943, a stale pre-refresh value; current atlas = 27,187).
+    atlas_csv = PROJECT_ROOT / "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"
+    try:
+        atlas_genes = int(pd.read_csv(atlas_csv, usecols=["human_symbol"]).shape[0])
+    except Exception as e:
+        print(f"  [warn] could not read atlas universe size ({e}); using line count")
+        with open(atlas_csv) as _fh:
+            atlas_genes = sum(1 for _ in _fh) - 1
 
     output = {
         "collections": [

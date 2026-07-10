@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { EVIDENCE_SOURCES } from "@/lib/colors";
+import { GWAS_COUNT } from "@/lib/atlas-constants";
 import type { EvidenceStrengths } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -58,7 +59,7 @@ function buildNarration(
       if (val === 0) {
         return {
           headline: "Human Bulk RNA-seq",
-          detail: "No significant differential expression in the Integrated mega-analysis.",
+          detail: "No significant differential expression in the pooled (cohort-adjusted) analysis.",
         };
       }
       const dir = logfc != null && logfc >= 0 ? "upregulated" : "downregulated";
@@ -71,7 +72,7 @@ function buildNarration(
           : "";
       return {
         headline: "Human Bulk RNA-seq",
-        detail: `${dir.charAt(0).toUpperCase() + dir.slice(1)} across 10 cohorts (1,444 samples). ${lfcStr}${lfcStr && padjStr ? ", " : ""}${padjStr}`,
+        detail: `${dir.charAt(0).toUpperCase() + dir.slice(1)} across 5 cohorts (846 samples). ${lfcStr}${lfcStr && padjStr ? ", " : ""}${padjStr}`,
       };
     }
     case 1: {
@@ -79,7 +80,7 @@ function buildNarration(
       if (val === 0) {
         return {
           headline: "Genetic Causal",
-          detail: "No colocalization detected across 24 GWAS studies.",
+          detail: `No colocalization detected across ${GWAS_COUNT} GWAS.`,
         };
       }
       const pp4Str = pp4 != null ? `Best COLOC PP.H4 = ${pp4.toFixed(3)}` : "";

@@ -187,12 +187,12 @@ def build_progression_journey() -> dict:
             "key_pathways": key_pathways_display,
         })
 
-    # --- F2 switch analysis ---
-    # F2 is the transitional stage with near-zero OVR DEGs (it sits between
-    # the metabolic F0-F1 bloc and the inflammatory F3-F4 bloc).  The "switch"
-    # is best captured by comparing the early-stage (F0/F1) DEG programme with
-    # the late-stage (F3/F4) programme — genes that are NOT significant in
-    # F0/F1 but become strongly significant in F3/F4.
+    # --- Early-to-late stage signature ---
+    # Part of the multi-step (F0→F1→F2→F3→F4) fibrosis progression, not a
+    # discrete F2 "switch" (that framing is retired). Captured by comparing
+    # the early-stage (F0/F1) DEG programme with the late-stage (F3/F4)
+    # programme — genes that are NOT significant in F0/F1 but become
+    # strongly significant in F3/F4.
     early_labels = ["F0_vs_rest", "F1_vs_rest"]
     late_labels = ["F3_vs_rest", "F4_vs_rest"]
 
@@ -208,13 +208,13 @@ def build_progression_journey() -> dict:
 
     new_in_late = late_sig - early_sig  # emerge only in F3/F4
 
-    # For switch genes, compare the max absolute LFC in early vs late
+    # For transition genes, compare the max absolute LFC in early vs late
     f0_map = fib_de[fib_de["stage_label"] == "F0_vs_rest"].set_index("gene")["logFC"]
     f1_map = fib_de[fib_de["stage_label"] == "F1_vs_rest"].set_index("gene")["logFC"]
     f3_map = fib_de[fib_de["stage_label"] == "F3_vs_rest"].set_index("gene")["logFC"]
     f4_map = fib_de[fib_de["stage_label"] == "F4_vs_rest"].set_index("gene")["logFC"]
 
-    switch_genes = []
+    transition_genes = []
     for g in new_in_late:
         early_lfc = max(
             abs(f0_map.get(g, 0.0)),
@@ -225,21 +225,21 @@ def build_progression_journey() -> dict:
         f4_lfc = f4_map.get(g, 0.0)
         late_lfc = f3_lfc if abs(f3_lfc) >= abs(f4_lfc) else f4_lfc
         sym = map_symbol(g)
-        switch_genes.append({
+        transition_genes.append({
             "symbol": sym,
             "logfc_early": _round(early_lfc),
             "logfc_late": _round(late_lfc),
         })
-    switch_genes.sort(key=lambda x: abs(x["logfc_late"] or 0), reverse=True)
+    transition_genes.sort(key=lambda x: abs(x["logfc_late"] or 0), reverse=True)
 
-    new_inflammatory = sum(1 for sg in switch_genes if (sg["logfc_late"] or 0) > 0)
+    new_inflammatory = sum(1 for sg in transition_genes if (sg["logfc_late"] or 0) > 0)
 
-    f2_switch = {
+    late_stage_signature = {
         "total_late_degs": len(late_sig),
         "early_degs": len(early_sig),
         "new_in_late": len(new_in_late),
         "new_inflammatory_genes": new_inflammatory,
-        "key_switch_genes": switch_genes[:15],
+        "key_transition_genes": transition_genes[:15],
     }
 
     # --- Classifier metrics (hardcoded from verified results) ---
@@ -251,16 +251,16 @@ def build_progression_journey() -> dict:
 
     result = {
         "stages": stages,
-        "f2_switch": f2_switch,
+        "late_stage_signature": late_stage_signature,
         "classifier_metrics": classifier_metrics,
     }
 
     # Stats
     total_degs = sum(s["n_degs_up"] + s["n_degs_down"] for s in stages)
     print(f"    Stages: {len(stages)}, total DEGs across stages: {total_degs}")
-    print(f"    F2 switch: {f2_switch['total_late_degs']} late DEGs, "
-          f"{f2_switch['new_in_late']} new in late (F3/F4), "
-          f"{f2_switch['new_inflammatory_genes']} inflammatory")
+    print(f"    Early-to-late signature: {late_stage_signature['total_late_degs']} late DEGs, "
+          f"{late_stage_signature['new_in_late']} new in late (F3/F4), "
+          f"{late_stage_signature['new_inflammatory_genes']} inflammatory")
     for s in stages:
         print(f"      {s['stage']}: {s['n_samples']} samples, "
               f"{s['n_degs_up']}↑ / {s['n_degs_down']}↓ DEGs, "

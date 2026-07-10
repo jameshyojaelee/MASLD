@@ -139,7 +139,8 @@ export type EdgeType =
   | "D-XS";
 
 /**
- * F2-switch emergence classification for an edge or gene.
+ * Stage-emergence classification for an edge or gene (multi-step fibrosis
+ * progression, not a discrete F2 transition).
  * `null` indicates the assignment was not computable (e.g. insufficient stage coverage).
  */
 export type EmergenceStage =
@@ -225,7 +226,7 @@ export interface StageNeighborhood {
 export interface GeneAttributesV2 {
   is_deg?: boolean;
   // These keys mirror gene_graphs/*.json node attributes, produced by Script 267
-  // (267_gene_neighborhoods.py NODE_ATTRS), migrated dream_* -> bulk_* in the
+  // (267_gene_neighborhoods.py NODE_ATTRS), migrated to the bulk_* naming in the
   // 2026-06-08 C2 swap. Regenerate the gene_graphs JSON (267 -> 269) to repopulate.
   bulk_logFC?: number;
   bulk_padj?: number;

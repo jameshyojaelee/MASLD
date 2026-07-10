@@ -1,10 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { SkeletonBlock } from "@/components/states";
+import { Scatter, type ScatterPoint } from "@/components/charts";
+import { dataUrl } from "@/lib/data-base";
+import { speciesCategoryColor, categoricalColor, CONTROL } from "@/lib/palette";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,56 +54,33 @@ interface CrossSpeciesData {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
+// Category config. Colors flow through the palette authority:
+// speciesCategoryColor maps the canonical categories (Not_Significant /
+// Unclassified -> CONTROL); Moderate_Concordance is not a palette category, so
+// it takes a distinct qualitative slot (olive) — never control gray.
 // ---------------------------------------------------------------------------
 
-const CATEGORY_CONFIG: Record<
-  string,
-  { label: string; color: string; dotClass: string }
-> = {
-  Conserved_Core: {
-    label: "Conserved Core",
-    color: "#22c55e",
-    dotClass: "bg-green-500",
-  },
-  Moderate_Concordance: {
-    label: "Moderate Concordance",
-    color: "#86efac",
-    dotClass: "bg-green-300",
-  },
-  Human_Enriched: {
-    label: "Human Enriched",
-    color: "#3b82f6",
-    dotClass: "bg-blue-500",
-  },
-  Mouse_Specific: {
-    label: "Mouse Specific",
-    color: "#ec4899",
-    dotClass: "bg-pink-500",
-  },
-  Diet_Selective: {
-    label: "Diet Selective",
-    color: "#f59e0b",
-    dotClass: "bg-amber-500",
-  },
-  Species_Discordant: {
-    label: "Discordant",
-    color: "#ef4444",
-    dotClass: "bg-red-500",
-  },
-  Not_Significant: {
-    label: "Not Significant",
-    color: "#9ca3af",
-    dotClass: "bg-gray-400",
-  },
-  Unclassified: {
-    label: "Unclassified",
-    color: "#6b7280",
-    dotClass: "bg-gray-500",
-  },
+const CATEGORY_LABELS: Record<string, string> = {
+  Conserved_Core: "Conserved Core",
+  Moderate_Concordance: "Moderate Concordance",
+  Human_Enriched: "Human Enriched",
+  Mouse_Specific: "Mouse Specific",
+  Diet_Selective: "Diet Selective",
+  Species_Discordant: "Discordant",
+  Not_Significant: "Not Significant",
+  Unclassified: "Unclassified",
 };
 
-const ALL_CATEGORIES = Object.keys(CATEGORY_CONFIG);
+const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS);
+
+function categoryColor(cat: string): string {
+  if (cat === "Moderate_Concordance") return categoricalColor(9); // olive
+  return speciesCategoryColor(cat);
+}
+
+function categoryLabel(cat: string): string {
+  return CATEGORY_LABELS[cat] ?? cat;
+}
 
 const PAGE_SIZE = 50;
 
@@ -114,15 +97,14 @@ type SortDir = "asc" | "desc";
 // ---------------------------------------------------------------------------
 
 function formatLogFC(val: number | null | undefined): string {
-  if (val == null) return "\u2014";
+  if (val == null) return "—";
   return val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2);
 }
 
-function logfcColor(val: number | null | undefined): string {
-  if (val == null) return "text-muted-foreground";
-  if (val > 0) return "text-red-500 dark:text-red-400";
-  if (val < 0) return "text-blue-500 dark:text-blue-400";
-  return "text-muted-foreground";
+/** Sign-encoded logFC color for table cells (direction = data mark). */
+function lfcStyle(val: number | null | undefined): CSSProperties {
+  if (val == null || val === 0) return { color: "var(--color-muted-foreground)" };
+  return { color: val > 0 ? "var(--color-effect-up)" : "var(--color-effect-down)" };
 }
 
 function categoryBadgeVariant(
@@ -142,259 +124,27 @@ function categoryBadgeVariant(
 }
 
 // ---------------------------------------------------------------------------
-// Scatterplot component
-// ---------------------------------------------------------------------------
-
-const PLOT_W = 500;
-const PLOT_H = 500;
-const MARGIN = { top: 20, right: 20, bottom: 45, left: 55 };
-const INNER_W = PLOT_W - MARGIN.left - MARGIN.right;
-const INNER_H = PLOT_H - MARGIN.top - MARGIN.bottom;
-
-function Scatterplot({
-  genes,
-  activeCategories,
-}: {
-  genes: CrossSpeciesGene[];
-  activeCategories: Set<string>;
-}) {
-  const router = useRouter();
-
-  // Compute axis bounds: symmetric range covering data
-  const { xMin, xMax, yMin, yMax } = useMemo(() => {
-    const xVals = genes.map((g) => g.human_logfc);
-    const yVals = genes.map((g) => g.mouse_logfc);
-    const xAbs = Math.ceil(Math.max(Math.abs(Math.min(...xVals)), Math.abs(Math.max(...xVals))) * 10) / 10 + 0.3;
-    const yAbs = Math.ceil(Math.max(Math.abs(Math.min(...yVals)), Math.abs(Math.max(...yVals))) * 10) / 10 + 0.3;
-    return { xMin: -xAbs, xMax: xAbs, yMin: -yAbs, yMax: yAbs };
-  }, [genes]);
-
-  const scaleX = useCallback(
-    (v: number) => ((v - xMin) / (xMax - xMin)) * INNER_W,
-    [xMin, xMax]
-  );
-  const scaleY = useCallback(
-    (v: number) => INNER_H - ((v - yMin) / (yMax - yMin)) * INNER_H,
-    [yMin, yMax]
-  );
-
-  // Build ticks
-  const xTicks = useMemo(() => {
-    const ticks: number[] = [];
-    const step = xMax > 2 ? 1 : 0.5;
-    for (let v = Math.ceil(xMin / step) * step; v <= xMax; v += step) {
-      ticks.push(Math.round(v * 10) / 10);
-    }
-    return ticks;
-  }, [xMin, xMax]);
-
-  const yTicks = useMemo(() => {
-    const ticks: number[] = [];
-    const step = yMax > 2 ? 1 : 0.5;
-    for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) {
-      ticks.push(Math.round(v * 10) / 10);
-    }
-    return ticks;
-  }, [yMin, yMax]);
-
-  // Separate visible (active) and dimmed (inactive) genes
-  const { visible, dimmed } = useMemo(() => {
-    const vis: CrossSpeciesGene[] = [];
-    const dim: CrossSpeciesGene[] = [];
-    for (const g of genes) {
-      if (activeCategories.has(g.category)) {
-        vis.push(g);
-      } else {
-        dim.push(g);
-      }
-    }
-    return { visible: vis, dimmed: dim };
-  }, [genes, activeCategories]);
-
-  return (
-    <svg
-      viewBox={`0 0 ${PLOT_W} ${PLOT_H}`}
-      className="w-full max-w-[500px]"
-      role="img"
-      aria-label="Human vs Mouse logFC scatterplot"
-    >
-      <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-        {/* Grid lines */}
-        {xTicks.map((t) => (
-          <line
-            key={`xg-${t}`}
-            x1={scaleX(t)}
-            x2={scaleX(t)}
-            y1={0}
-            y2={INNER_H}
-            className="stroke-border"
-            strokeWidth={t === 0 ? 1.5 : 0.5}
-            strokeDasharray={t === 0 ? undefined : "2,2"}
-          />
-        ))}
-        {yTicks.map((t) => (
-          <line
-            key={`yg-${t}`}
-            x1={0}
-            x2={INNER_W}
-            y1={scaleY(t)}
-            y2={scaleY(t)}
-            className="stroke-border"
-            strokeWidth={t === 0 ? 1.5 : 0.5}
-            strokeDasharray={t === 0 ? undefined : "2,2"}
-          />
-        ))}
-
-        {/* Quadrant labels */}
-        <text
-          x={INNER_W * 0.75}
-          y={INNER_H * 0.08}
-          textAnchor="middle"
-          className="fill-muted-foreground text-[10px]"
-        >
-          Both Up
-        </text>
-        <text
-          x={INNER_W * 0.25}
-          y={INNER_H * 0.92}
-          textAnchor="middle"
-          className="fill-muted-foreground text-[10px]"
-        >
-          Both Down
-        </text>
-        <text
-          x={INNER_W * 0.25}
-          y={INNER_H * 0.08}
-          textAnchor="middle"
-          className="fill-muted-foreground/60 text-[10px]"
-        >
-          Discordant
-        </text>
-        <text
-          x={INNER_W * 0.75}
-          y={INNER_H * 0.92}
-          textAnchor="middle"
-          className="fill-muted-foreground/60 text-[10px]"
-        >
-          Discordant
-        </text>
-
-        {/* Dimmed dots (inactive categories) */}
-        {dimmed.map((g) => (
-          <circle
-            key={`d-${g.symbol}`}
-            cx={scaleX(g.human_logfc)}
-            cy={scaleY(g.mouse_logfc)}
-            r={2}
-            fill="#9ca3af"
-            opacity={0.12}
-          />
-        ))}
-
-        {/* Active dots */}
-        {visible.map((g) => {
-          const cfg = CATEGORY_CONFIG[g.category];
-          return (
-            <circle
-              key={g.symbol}
-              cx={scaleX(g.human_logfc)}
-              cy={scaleY(g.mouse_logfc)}
-              r={g.category === "Conserved_Core" ? 3.5 : 2.5}
-              fill={cfg?.color ?? "#6b7280"}
-              opacity={0.75}
-              className="cursor-pointer transition-opacity hover:opacity-100"
-              onClick={() =>
-                router.push(`/gene/${encodeURIComponent(g.symbol)}`)
-              }
-            >
-              <title>
-                {g.symbol} | Human: {formatLogFC(g.human_logfc)} | Mouse:{" "}
-                {formatLogFC(g.mouse_logfc)} | {cfg?.label ?? g.category}
-              </title>
-            </circle>
-          );
-        })}
-
-        {/* X axis ticks + labels */}
-        {xTicks.map((t) => (
-          <g key={`xt-${t}`} transform={`translate(${scaleX(t)},${INNER_H})`}>
-            <line y2={4} className="stroke-muted-foreground" strokeWidth={0.5} />
-            <text
-              y={14}
-              textAnchor="middle"
-              className="fill-muted-foreground text-[10px]"
-            >
-              {t}
-            </text>
-          </g>
-        ))}
-
-        {/* Y axis ticks + labels */}
-        {yTicks.map((t) => (
-          <g key={`yt-${t}`} transform={`translate(0,${scaleY(t)})`}>
-            <line x2={-4} className="stroke-muted-foreground" strokeWidth={0.5} />
-            <text
-              x={-8}
-              textAnchor="end"
-              dominantBaseline="middle"
-              className="fill-muted-foreground text-[10px]"
-            >
-              {t}
-            </text>
-          </g>
-        ))}
-
-        {/* Axis labels */}
-        <text
-          x={INNER_W / 2}
-          y={INNER_H + 36}
-          textAnchor="middle"
-          className="fill-foreground text-xs font-medium"
-        >
-          Human logFC
-        </text>
-        <text
-          x={-INNER_H / 2}
-          y={-42}
-          textAnchor="middle"
-          transform="rotate(-90)"
-          className="fill-foreground text-xs font-medium"
-        >
-          Mouse logFC
-        </text>
-      </g>
-    </svg>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// NES bar helper
+// NES bar helper (diverging: down = blue, up = red, via effect tokens)
 // ---------------------------------------------------------------------------
 
 function NesBar({ value, maxAbs }: { value: number; maxAbs: number }) {
   const pct = Math.min(Math.abs(value) / maxAbs, 1) * 100;
   const isPos = value >= 0;
+  const barColor = isPos ? "var(--color-effect-up)" : "var(--color-effect-down)";
   return (
     <div className="flex items-center gap-1.5">
       <div className="relative h-3 w-20 overflow-hidden rounded-sm bg-muted">
-        {isPos ? (
-          <div
-            className="absolute top-0 left-1/2 h-full rounded-sm bg-red-400/70"
-            style={{ width: `${pct / 2}%` }}
-          />
-        ) : (
-          <div
-            className="absolute top-0 h-full rounded-sm bg-blue-400/70"
-            style={{
-              width: `${pct / 2}%`,
-              right: "50%",
-            }}
-          />
-        )}
+        <div
+          className="absolute top-0 h-full rounded-sm"
+          style={{
+            width: `${pct / 2}%`,
+            backgroundColor: barColor,
+            opacity: 0.7,
+            ...(isPos ? { left: "50%" } : { right: "50%" }),
+          }}
+        />
       </div>
-      <span
-        className={`font-mono text-xs ${isPos ? "text-red-500 dark:text-red-400" : "text-blue-500 dark:text-blue-400"}`}
-      >
+      <span className="font-mono text-xs" style={{ color: barColor }}>
         {value >= 0 ? "+" : ""}
         {value.toFixed(2)}
       </span>
@@ -407,6 +157,7 @@ function NesBar({ value, maxAbs }: { value: number; maxAbs: number }) {
 // ---------------------------------------------------------------------------
 
 export default function SpeciesPage() {
+  const router = useRouter();
   const [data, setData] = useState<CrossSpeciesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeCategories, setActiveCategories] = useState<Set<string>>(
@@ -419,7 +170,7 @@ export default function SpeciesPage() {
   const [genePage, setGenePage] = useState(0);
 
   useEffect(() => {
-    fetch("/data/cross_species.json")
+    fetch(dataUrl("cross_species.json"))
       .then((r) => r.json())
       .then((d: CrossSpeciesData) => {
         setData(d);
@@ -451,6 +202,20 @@ export default function SpeciesPage() {
     setActiveCategories(new Set(ALL_CATEGORIES));
     setGenePage(0);
   }, []);
+
+  // Scatter points (color via palette; inactive categories dim by opacity).
+  const scatterPoints = useMemo<ScatterPoint[]>(() => {
+    if (!data) return [];
+    return data.genes.map((g) => ({
+      x: g.human_logfc,
+      y: g.mouse_logfc,
+      label: g.symbol,
+      color: categoryColor(g.category),
+      category: g.category,
+      dimmed: !activeCategories.has(g.category),
+      emphasized: g.category === "Conserved_Core",
+    }));
+  }, [data, activeCategories]);
 
   // Filtered + sorted genes
   const filteredGenes = useMemo(() => {
@@ -533,51 +298,52 @@ export default function SpeciesPage() {
 
   const sortIndicator = (key: GeneSortKey) => {
     if (geneSortKey !== key) return null;
-    return geneSortDir === "asc" ? " \u25B2" : " \u25BC";
+    return geneSortDir === "asc" ? " ▲" : " ▼";
   };
+
+  const header = (
+    <PageHeader
+      eyebrow="Cross-species validation"
+      title="Cross-Species Mirror"
+      description={
+        data
+          ? `Human-mouse concordance validation across ${data.summary.total_orthologs.toLocaleString()} orthologs, ${data.summary.diet_models.length} diet models, and ${data.summary.conserved_core.toLocaleString()} Conserved Core genes.`
+          : "Human-mouse concordance validation across orthologs and diet models."
+      }
+    />
+  );
 
   // Loading state
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Cross-Species Mirror
-        </h1>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Loading concordance data...
-        </p>
-      </div>
+      <PageContainer>
+        {header}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonBlock key={i} className="h-20 rounded-lg" />
+          ))}
+        </div>
+        <SkeletonBlock className="mt-8 h-[420px] w-full max-w-2xl rounded-lg" />
+      </PageContainer>
     );
   }
 
   if (!data) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Cross-Species Mirror
-        </h1>
+      <PageContainer>
+        {header}
         <p className="mt-6 text-sm text-destructive">
           Failed to load cross-species data.
         </p>
-      </div>
+      </PageContainer>
     );
   }
 
   const { summary } = data;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Cross-Species Mirror
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Human-mouse concordance validation across {summary.total_orthologs.toLocaleString()} orthologs,{" "}
-          {summary.diet_models.length} diet models, and{" "}
-          {summary.conserved_core.toLocaleString()} Conserved Core genes.
-        </p>
-      </div>
+    <PageContainer>
+      {header}
 
       {/* Section 1: Summary Stats */}
       <div className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -588,17 +354,17 @@ export default function SpeciesPage() {
         <StatCard
           label="Conserved Core"
           value={summary.conserved_core.toLocaleString()}
-          accent="green"
+          accentColor={categoryColor("Conserved_Core")}
         />
         <StatCard
           label="Human Enriched"
           value={summary.human_specific.toLocaleString()}
-          accent="blue"
+          accentColor={categoryColor("Human_Enriched")}
         />
         <StatCard
           label="Discordant"
           value={summary.discordant.toLocaleString()}
-          accent="red"
+          accentColor={categoryColor("Species_Discordant")}
         />
         <StatCard
           label="Diet Models"
@@ -609,9 +375,7 @@ export default function SpeciesPage() {
 
       {/* Section 2 + 3: Scatterplot with category filters */}
       <div className="mb-10">
-        <h2 className="mb-4 text-xl font-semibold">
-          Concordance Scatterplot
-        </h2>
+        <h2 className="mb-4 text-xl font-semibold">Concordance Scatterplot</h2>
 
         {/* Category filters */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -627,11 +391,8 @@ export default function SpeciesPage() {
             All
           </Button>
           {ALL_CATEGORIES.map((cat) => {
-            const cfg = CATEGORY_CONFIG[cat];
             const isActive = activeCategories.has(cat);
-            const count = data.genes.filter(
-              (g) => g.category === cat
-            ).length;
+            const count = data.genes.filter((g) => g.category === cat).length;
             return (
               <Button
                 key={cat}
@@ -641,10 +402,13 @@ export default function SpeciesPage() {
                 onDoubleClick={() => selectOnlyCategory(cat)}
               >
                 <span
-                  className={`mr-1.5 inline-block h-2.5 w-2.5 rounded-full ${cfg.dotClass}`}
-                  style={{ opacity: isActive ? 1 : 0.3 }}
+                  className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full"
+                  style={{
+                    backgroundColor: categoryColor(cat),
+                    opacity: isActive ? 1 : 0.3,
+                  }}
                 />
-                {cfg.label}
+                {categoryLabel(cat)}
                 <span className="ml-1 text-xs text-muted-foreground">
                   ({count})
                 </span>
@@ -658,10 +422,33 @@ export default function SpeciesPage() {
         </p>
 
         {/* Scatterplot */}
-        <div className="flex justify-center">
-          <Scatterplot
-            genes={data.genes}
-            activeCategories={activeCategories}
+        <div className="mx-auto w-full max-w-2xl">
+          <Scatter
+            data={scatterPoints}
+            xLabel="Human logFC"
+            yLabel="Mouse logFC"
+            height={460}
+            ariaLabel="Human vs mouse logFC concordance scatterplot"
+            quadrantLabels={[
+              { x: "right", y: "top", text: "Both Up" },
+              { x: "left", y: "bottom", text: "Both Down" },
+              { x: "left", y: "top", text: "Discordant", muted: true },
+              { x: "right", y: "bottom", text: "Discordant", muted: true },
+            ]}
+            onPointClick={(sym) =>
+              router.push(`/gene?symbol=${encodeURIComponent(sym)}`)
+            }
+            tooltipLines={(p) => (
+              <>
+                <div className="font-medium italic">{p.label}</div>
+                <div>
+                  Human {formatLogFC(p.x)} · Mouse {formatLogFC(p.y)}
+                </div>
+                <div className="text-muted-foreground">
+                  {categoryLabel(p.category ?? "")}
+                </div>
+              </>
+            )}
           />
         </div>
       </div>
@@ -709,16 +496,13 @@ export default function SpeciesPage() {
                   <td className="px-3 py-1.5 text-center">
                     {pw.concordant ? (
                       <span
-                        className="text-green-600 dark:text-green-400"
+                        style={{ color: categoricalColor(2) }}
                         title="Concordant"
                       >
                         &#10003;
                       </span>
                     ) : (
-                      <span
-                        className="text-red-500 dark:text-red-400"
-                        title="Discordant"
-                      >
+                      <span style={{ color: CONTROL }} title="Discordant">
                         &#10007;
                       </span>
                     )}
@@ -799,48 +583,47 @@ export default function SpeciesPage() {
                   </td>
                 </tr>
               ) : (
-                pageGenes.map((gene) => {
-                  const cfg = CATEGORY_CONFIG[gene.category];
-                  return (
-                    <tr
-                      key={gene.symbol}
-                      className="border-b border-border/50 transition-colors hover:bg-muted/30"
+                pageGenes.map((gene) => (
+                  <tr
+                    key={gene.symbol}
+                    className="border-b border-border/50 transition-colors hover:bg-muted/30"
+                  >
+                    <td className="px-3 py-1.5">
+                      <Link
+                        href={`/gene?symbol=${encodeURIComponent(gene.symbol)}`}
+                        className="font-mono font-semibold text-primary hover:underline"
+                      >
+                        {gene.symbol}
+                      </Link>
+                    </td>
+                    <td
+                      className="px-3 py-1.5 text-right font-mono text-xs"
+                      style={lfcStyle(gene.human_logfc)}
                     >
-                      <td className="px-3 py-1.5">
-                        <Link
-                          href={`/gene/${encodeURIComponent(gene.symbol)}`}
-                          className="font-mono font-semibold text-primary hover:underline"
-                        >
-                          {gene.symbol}
-                        </Link>
-                      </td>
-                      <td
-                        className={`px-3 py-1.5 text-right font-mono text-xs ${logfcColor(gene.human_logfc)}`}
+                      {formatLogFC(gene.human_logfc)}
+                    </td>
+                    <td
+                      className="px-3 py-1.5 text-right font-mono text-xs"
+                      style={lfcStyle(gene.mouse_logfc)}
+                    >
+                      {formatLogFC(gene.mouse_logfc)}
+                    </td>
+                    <td className="px-3 py-1.5 text-right font-mono text-xs">
+                      {gene.translatability_score.toFixed(3)}
+                    </td>
+                    <td className="px-3 py-1.5 text-right font-mono text-xs">
+                      {gene.n_concordant}/{summary.diet_models.length}
+                    </td>
+                    <td className="px-3 py-1.5">
+                      <Badge
+                        variant={categoryBadgeVariant(gene.category)}
+                        className="text-[10px]"
                       >
-                        {formatLogFC(gene.human_logfc)}
-                      </td>
-                      <td
-                        className={`px-3 py-1.5 text-right font-mono text-xs ${logfcColor(gene.mouse_logfc)}`}
-                      >
-                        {formatLogFC(gene.mouse_logfc)}
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-mono text-xs">
-                        {gene.translatability_score.toFixed(3)}
-                      </td>
-                      <td className="px-3 py-1.5 text-right font-mono text-xs">
-                        {gene.n_concordant}/{summary.diet_models.length}
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <Badge
-                          variant={categoryBadgeVariant(gene.category)}
-                          className="text-[10px]"
-                        >
-                          {cfg?.label ?? gene.category}
-                        </Badge>
-                      </td>
-                    </tr>
-                  );
-                })
+                        {categoryLabel(gene.category)}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -875,7 +658,7 @@ export default function SpeciesPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }
 
@@ -886,28 +669,20 @@ export default function SpeciesPage() {
 function StatCard({
   label,
   value,
-  accent,
+  accentColor,
   small,
 }: {
   label: string;
   value: string;
-  accent?: "green" | "blue" | "red";
+  accentColor?: string;
   small?: boolean;
 }) {
-  const accentClass =
-    accent === "green"
-      ? "text-green-600 dark:text-green-400"
-      : accent === "blue"
-        ? "text-blue-600 dark:text-blue-400"
-        : accent === "red"
-          ? "text-red-600 dark:text-red-400"
-          : "text-foreground";
-
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-card p-4 hover-lift">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p
-        className={`mt-1 font-semibold ${accentClass} ${small ? "text-sm" : "text-2xl"}`}
+        className={`mt-1 font-semibold ${small ? "text-sm" : "text-2xl"} ${accentColor ? "" : "text-foreground"}`}
+        style={accentColor ? { color: accentColor } : undefined}
       >
         {value}
       </p>

@@ -1,521 +1,683 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { PageHeader } from "@/components/page-header";
+import { PageContainer } from "@/components/page-container";
+import { StatTile } from "@/components/stat-tile";
+import { DataTable, type DataTableColumn } from "@/components/data-table";
+import { TabBar, type TabItem } from "@/components/tab-bar";
+import {
+  StackedBar,
+  Heatmap,
+  Bar,
+  type HeatmapCell,
+  type BarDatum,
+} from "@/components/charts";
+import { EmptyState, SkeletonBlock, Legend } from "@/components/states";
 import { Badge } from "@/components/ui/badge";
+import { queryParquet } from "@/lib/duck";
+import { dataUrl } from "@/lib/data-base";
+import { DEV_STAGE_COLORS, CONTROL, MODALITY_HEX } from "@/lib/palette";
+import {
+  DRUGS_APPROVED,
+  DRUGS_CLINICAL,
+  DRUGS_PRECLINICAL,
+  fmt,
+} from "@/lib/atlas-constants";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface FunnelStage {
-  stage: string;
-  count: number;
-  description: string;
-}
-
 interface TopCompound {
+  rank: number;
   name: string;
   target: string | null;
   moa: string | null;
   composite_score: number;
   score_reversal: number;
   score_network: number;
-  score_dgidb: number;
 }
 
-interface ValidatedDrug {
+interface GeneDrug {
+  symbol: string;
   drug: string;
-  target: string;
   stage: string;
   moa: string;
   support: string;
-  is_deg: boolean;
-  bulk_logfc: number | null;
 }
 
-interface SexStats {
-  female_biased: number;
-  male_biased: number;
-  balanced: number;
-  total_compounds: number;
+interface GeneLincs {
+  symbol: string;
+  compound: string;
+  score: number;
+  moa: string;
 }
 
-interface DrugPipelineData {
-  funnel: FunnelStage[];
-  top_compounds: TopCompound[];
-  validated_drugs: ValidatedDrug[];
-  sex_stats: SexStats;
+interface PhaseCount {
+  stage: string;
+  count: number;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function stageBadgeClass(stage: string): string {
-  if (stage.toLowerCase().includes("fda approved")) {
-    return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
-  }
-  if (stage.toLowerCase().includes("phase 3")) {
-    return "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
-  }
-  if (stage.toLowerCase().includes("phase 2")) {
-    return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-  }
-  return "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400";
+interface HeatRow {
+  human_symbol: string;
+  bulk_shrunk_logFC: number | null;
+  coloc_best_susie_pp4: number | null;
+  coloc_abf_best_pp4: number | null;
+  twas_z: number | null;
+  essentiality_chronos: number | null;
+  spatial_morans_i: number | null;
+  pharos_tdl: string | null;
+  max_phase_masld: number | null;
 }
 
-function supportBadgeClass(support: string): string {
-  switch (support) {
-    case "Strong":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
-    case "Moderate":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-    default:
-      return "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400";
-  }
-}
-
-function formatLogFC(val: number | null | undefined): string {
-  if (val == null) return "\u2014";
-  return val >= 0 ? `+${val.toFixed(3)}` : val.toFixed(3);
-}
-
-function logfcColor(val: number | null | undefined): string {
-  if (val == null) return "text-muted-foreground";
-  if (val > 0) return "text-red-500 dark:text-red-400";
-  if (val < 0) return "text-blue-500 dark:text-blue-400";
-  return "text-muted-foreground";
+// Supplementary essentiality section: most essential *druggable* atlas genes by
+// DepMap CHRONOS gene-effect. `essentiality_chronos` is guaranteed non-null by
+// the query's WHERE clause (so a plain `number` here is safe).
+interface EssentialGene {
+  human_symbol: string;
+  essentiality_chronos: number;
+  pharos_tdl: string | null;
+  max_phase_masld: number | null;
 }
 
 // ---------------------------------------------------------------------------
-// Funnel SVG
+// Constants
 // ---------------------------------------------------------------------------
 
-const FUNNEL_COLORS = [
-  { fill: "#93c5fd", stroke: "#3b82f6" }, // blue-300 / blue-500
-  { fill: "#6ee7b7", stroke: "#10b981" }, // emerald-300 / emerald-500
-  { fill: "#fcd34d", stroke: "#f59e0b" }, // amber-300 / amber-500
-  { fill: "#a78bfa", stroke: "#8b5cf6" }, // violet-300 / violet-500
+// Phase → color. Approved/Clinical from the sanctioned dev-stage palette;
+// Preclinical uses a light-blue extension of the same ramp rather than the
+// control gray (#9E9E9E is reserved for control/healthy series, never a data
+// series like "preclinical").
+const PHASE_ORDER = ["Approved", "Clinical", "Preclinical"] as const;
+const PHASE_COLOR: Record<string, string> = {
+  Approved: DEV_STAGE_COLORS.Approved,
+  Clinical: DEV_STAGE_COLORS.Clinical,
+  Preclinical: "#a9cce3",
+};
+
+// Map the drug-target drug_dev_status buckets onto the three headline
+// development phases. Non-MASLD buckets (undetermined / discovery /
+// drugged_other_indication / discontinued) are the broader druggable universe,
+// not pipeline phases, so they are excluded from the phase decomposition.
+// Source = drug_targets.parquet (full drug-target universe, NOT atlas-restricted)
+// so the GROUP BY lands the canonical 2 / 208 / 1,504 exactly.
+const DEV_STATUS_TO_PHASE: Record<string, string> = {
+  masld_approved: "Approved",
+  masld_clinical: "Clinical",
+  masld_preclinical: "Preclinical",
+};
+
+// Fallback phase counts (drug-level headline from atlas-constants), used when
+// the live parquet query is unavailable.
+const FALLBACK_PHASES: PhaseCount[] = [
+  { stage: "Approved", count: DRUGS_APPROVED },
+  { stage: "Clinical", count: DRUGS_CLINICAL },
+  { stage: "Preclinical", count: DRUGS_PRECLINICAL },
 ];
 
-function FunnelChart({ stages }: { stages: FunnelStage[] }) {
-  if (stages.length === 0) return null;
+// Evidence-modality columns for the target × evidence heatmap. Each returns a
+// value normalised to [0, 1] (or null → blank cell) so modalities on different
+// native scales are visually comparable.
+const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
-  const svgW = 700;
-  const svgH = 240;
-  const padX = 20;
-  const padY = 30;
-  const barH = 48;
-  const gapY = 12;
-
-  const maxCount = Math.max(...stages.map((s) => s.count));
-
-  // compute widths: proportional to count, but minimum 80px for readability
-  const availW = svgW - padX * 2;
-  const widths = stages.map((s) => Math.max(80, (s.count / maxCount) * availW));
-
-  return (
-    <svg
-      viewBox={`0 0 ${svgW} ${svgH}`}
-      className="w-full max-w-3xl"
-      role="img"
-      aria-label="Drug pipeline funnel showing 4 stages of filtering"
-    >
-      {stages.map((stage, i) => {
-        const y = padY + i * (barH + gapY);
-        const w = widths[i];
-        const x = (svgW - w) / 2;
-        const color = FUNNEL_COLORS[i % FUNNEL_COLORS.length];
-
-        // connector trapezoid between stages
-        const connector =
-          i < stages.length - 1 ? (
-            <polygon
-              key={`conn-${i}`}
-              points={`${x},${y + barH} ${x + w},${y + barH} ${(svgW - widths[i + 1]) / 2 + widths[i + 1]},${y + barH + gapY} ${(svgW - widths[i + 1]) / 2},${y + barH + gapY}`}
-              fill={color.fill}
-              opacity={0.25}
-            />
-          ) : null;
-
-        return (
-          <g key={i}>
-            {connector}
-            <rect
-              x={x}
-              y={y}
-              width={w}
-              height={barH}
-              rx={6}
-              fill={color.fill}
-              stroke={color.stroke}
-              strokeWidth={1.5}
-            />
-            {/* Count (large) */}
-            <text
-              x={svgW / 2}
-              y={y + 20}
-              textAnchor="middle"
-              className="fill-foreground text-[15px] font-bold"
-            >
-              {stage.count.toLocaleString()}
-            </text>
-            {/* Stage label */}
-            <text
-              x={svgW / 2}
-              y={y + 36}
-              textAnchor="middle"
-              className="fill-muted-foreground text-[11px]"
-            >
-              {stage.stage}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
+function pharosScore(tdl: string | null): number | null {
+  switch (tdl) {
+    case "Tclin":
+      return 1;
+    case "Tchem":
+      return 0.7;
+    case "Tbio":
+      return 0.4;
+    case "Tdark":
+      return 0.15;
+    default:
+      return null;
+  }
 }
 
-// ---------------------------------------------------------------------------
-// Composite score bar (inline)
-// ---------------------------------------------------------------------------
-
-function ScoreBar({ value, max = 1 }: { value: number; max?: number }) {
-  const pct = Math.min(100, (value / max) * 100);
-  return (
-    <div className="flex items-center gap-2">
-      <div className="h-2 w-20 rounded-full bg-muted">
-        <div
-          className="h-2 rounded-full bg-primary"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="font-mono text-xs">{value.toFixed(3)}</span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Sex stratification bar
-// ---------------------------------------------------------------------------
-
-function SexBar({ stats }: { stats: SexStats }) {
-  const total = stats.total_compounds;
-  const femalePct = (stats.female_biased / total) * 100;
-  const malePct = (stats.male_biased / total) * 100;
-  const balancedPct = (stats.balanced / total) * 100;
-
-  return (
-    <div className="space-y-3">
-      {/* stacked bar */}
-      <div className="flex h-6 w-full overflow-hidden rounded-full">
-        {femalePct > 0 && (
-          <div
-            className="flex items-center justify-center bg-pink-400 text-[10px] font-semibold text-white dark:bg-pink-500"
-            style={{ width: `${femalePct}%` }}
-          >
-            {stats.female_biased}
-          </div>
-        )}
-        {balancedPct > 0 && (
-          <div
-            className="flex items-center justify-center bg-zinc-300 text-[10px] font-semibold text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200"
-            style={{ width: `${Math.max(balancedPct, 3)}%` }}
-          >
-            {stats.balanced}
-          </div>
-        )}
-        {malePct > 0 && (
-          <div
-            className="flex items-center justify-center bg-blue-400 text-[10px] font-semibold text-white dark:bg-blue-500"
-            style={{ width: `${malePct}%` }}
-          >
-            {stats.male_biased}
-          </div>
-        )}
-      </div>
-      {/* legend */}
-      <div className="flex gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-400" />
-          Female-biased ({stats.female_biased})
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-300 dark:bg-zinc-600" />
-          Balanced ({stats.balanced})
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-400" />
-          Male-biased ({stats.male_biased})
-        </span>
-      </div>
-    </div>
-  );
-}
+const EVIDENCE_COLUMNS: {
+  col: string;
+  get: (r: HeatRow) => number | null;
+}[] = [
+  {
+    col: "Human DE",
+    get: (r) =>
+      r.bulk_shrunk_logFC == null ? null : clamp01(Math.abs(r.bulk_shrunk_logFC) / 2),
+  },
+  {
+    col: "COLOC",
+    get: (r) => {
+      const v = Math.max(r.coloc_best_susie_pp4 ?? 0, r.coloc_abf_best_pp4 ?? 0);
+      return v > 0 ? clamp01(v) : null;
+    },
+  },
+  {
+    col: "TWAS",
+    get: (r) => (r.twas_z == null ? null : clamp01(Math.abs(r.twas_z) / 6)),
+  },
+  {
+    col: "Essentiality",
+    get: (r) =>
+      r.essentiality_chronos == null ? null : clamp01(-r.essentiality_chronos),
+  },
+  {
+    col: "Spatial",
+    get: (r) =>
+      r.spatial_morans_i == null ? null : clamp01(r.spatial_morans_i / 0.5),
+  },
+  {
+    col: "Druggability",
+    get: (r) => {
+      const phase = r.max_phase_masld ? r.max_phase_masld / 4 : null;
+      const pharos = pharosScore(r.pharos_tdl);
+      const best = Math.max(phase ?? 0, pharos ?? 0);
+      return best > 0 ? clamp01(best) : null;
+    },
+  },
+];
 
 // ---------------------------------------------------------------------------
-// Page component
+// Page
 // ---------------------------------------------------------------------------
 
 export default function DrugsPage() {
-  const [data, setData] = useState<DrugPipelineData | null>(null);
+  const [phases, setPhases] = useState<PhaseCount[] | null>(null);
+  const [druggableCount, setDruggableCount] = useState<number | null>(null);
+  const [heatRows, setHeatRows] = useState<HeatRow[]>([]);
+  const [essentialGenes, setEssentialGenes] = useState<EssentialGene[]>([]);
+  const [topCompounds, setTopCompounds] = useState<TopCompound[]>([]);
+  const [geneDrugs, setGeneDrugs] = useState<GeneDrug[]>([]);
+  const [geneLincs, setGeneLincs] = useState<GeneLincs[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableTab, setTableTab] = useState("reversal");
 
   useEffect(() => {
-    fetch("/data/drug_pipeline.json")
-      .then((r) => r.json())
-      .then((d: DrugPipelineData) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    let cancelled = false;
+
+    async function load() {
+      // Phase decomposition (live from the full drug-target universe, so the
+      // canonical 2 / 208 / 1,504 is reproduced exactly — not atlas-restricted).
+      const phasePromise = queryParquet<{ status: string; n: number }>(
+        "drug_targets.parquet",
+        (t) =>
+          `SELECT drug_dev_status AS status, COUNT(*)::INT AS n
+           FROM ${t} WHERE drug_dev_status IS NOT NULL
+           GROUP BY drug_dev_status`
+      )
+        .then((rows) => {
+          const acc: Record<string, number> = {
+            Approved: 0,
+            Clinical: 0,
+            Preclinical: 0,
+          };
+          for (const r of rows) {
+            const phase = DEV_STATUS_TO_PHASE[r.status];
+            if (phase) acc[phase] += r.n;
+          }
+          const out = PHASE_ORDER.map((s) => ({ stage: s, count: acc[s] }));
+          return out.some((p) => p.count > 0) ? out : FALLBACK_PHASES;
+        })
+        .catch(() => FALLBACK_PHASES);
+
+      const druggablePromise = queryParquet<{ n: number }>(
+        "atlas_core.parquet",
+        (t) => `SELECT COUNT(*)::INT AS n FROM ${t} WHERE dgidb_druggable`
+      )
+        .then((rows) => rows[0]?.n ?? null)
+        .catch(() => null);
+
+      // Target × evidence heatmap rows: DE-supported druggable targets, ranked
+      // by breadth of evidence (layers_active), then convergence.
+      const heatPromise = queryParquet<HeatRow>(
+        "atlas_core.parquet",
+        (t) =>
+          `SELECT human_symbol, bulk_shrunk_logFC,
+                  coloc_best_susie_pp4, coloc_abf_best_pp4, twas_z,
+                  essentiality_chronos, spatial_morans_i, pharos_tdl, max_phase_masld
+           FROM ${t}
+           WHERE is_deg
+             AND (dgidb_druggable
+                  OR pharos_tdl IN ('Tclin','Tchem')
+                  OR max_phase_masld > 0
+                  OR drug_dev_status LIKE 'masld_%')
+           ORDER BY layers_active DESC, convergence_score DESC,
+                    ABS(bulk_shrunk_logFC) DESC
+           LIMIT 24`
+      ).catch(() => [] as HeatRow[]);
+
+      // Supplementary: most essential *druggable* atlas genes by DepMap CHRONOS
+      // gene-effect (more negative = more essential). Not a convergence channel —
+      // essentiality is a constitutive property, reported here as context only.
+      const essentialPromise = queryParquet<EssentialGene>(
+        "atlas_core.parquet",
+        (t) =>
+          `SELECT human_symbol, essentiality_chronos, pharos_tdl, max_phase_masld
+           FROM ${t}
+           WHERE dgidb_druggable AND essentiality_chronos IS NOT NULL
+           ORDER BY essentiality_chronos ASC
+           LIMIT 15`
+      ).catch(() => [] as EssentialGene[]);
+
+      // Reversal compounds (JSON, refreshed by the data pipeline).
+      const compoundsPromise = fetch(dataUrl("drug_pipeline.json"))
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          const raw: unknown[] = Array.isArray(d?.top_compounds)
+            ? d.top_compounds
+            : [];
+          return raw.map((c, i) => {
+            const o = c as Record<string, unknown>;
+            return {
+              rank: i + 1,
+              name: String(o.name ?? ""),
+              target: (o.target as string | null) ?? null,
+              moa: (o.moa as string | null) ?? null,
+              composite_score: Number(o.composite_score ?? 0),
+              score_reversal: Number(o.score_reversal ?? 0),
+              score_network: Number(o.score_network ?? 0),
+            } satisfies TopCompound;
+          });
+        })
+        .catch(() => [] as TopCompound[]);
+
+      // Per-target clinical drugs + LINCS reversal compounds.
+      const drugsPromise = queryParquet<GeneDrug>(
+        "gene_drugs.parquet",
+        (t) => `SELECT symbol, drug, stage, moa, support FROM ${t}`
+      ).catch(() => [] as GeneDrug[]);
+
+      const lincsPromise = queryParquet<GeneLincs>(
+        "gene_lincs.parquet",
+        (t) => `SELECT symbol, compound, score, moa FROM ${t} ORDER BY score DESC`
+      ).catch(() => [] as GeneLincs[]);
+
+      const [ph, dg, heat, ess, comp, drugs, lincs] = await Promise.all([
+        phasePromise,
+        druggablePromise,
+        heatPromise,
+        essentialPromise,
+        compoundsPromise,
+        drugsPromise,
+        lincsPromise,
+      ]);
+
+      if (cancelled) return;
+      setPhases(ph);
+      setDruggableCount(dg);
+      setHeatRows(heat);
+      setEssentialGenes(ess);
+      setTopCompounds(comp);
+      setGeneDrugs(drugs);
+      setGeneLincs(lincs);
+      setLoading(false);
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="w-full px-6 py-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Drug Pipeline Explorer
-        </h1>
-        <p className="mt-6 text-muted-foreground">Loading drug data...</p>
-      </div>
-    );
-  }
+  // ----- derived: phase bar (long format) --------------------------------
+  const phaseData = useMemo(
+    () =>
+      (phases ?? []).map((p) => ({
+        group: p.stage,
+        category: p.stage,
+        value: p.count,
+      })),
+    [phases]
+  );
 
-  if (!data) {
-    return (
-      <div className="w-full px-6 py-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Drug Pipeline Explorer
-        </h1>
-        <p className="mt-6 text-muted-foreground">
-          Failed to load drug pipeline data.
-        </p>
-      </div>
-    );
-  }
+  const phaseCount = (stage: string) =>
+    phases?.find((p) => p.stage === stage)?.count ?? 0;
 
-  // Deduplicate validated drugs by drug name for card display
-  // (some drugs like Lanifibranor appear multiple times for different targets)
-  const drugCardMap = new Map<string, ValidatedDrug[]>();
-  for (const d of data.validated_drugs) {
-    const existing = drugCardMap.get(d.drug) ?? [];
-    existing.push(d);
-    drugCardMap.set(d.drug, existing);
-  }
-  const drugCards = Array.from(drugCardMap.entries());
+  // ----- derived: heatmap cells ------------------------------------------
+  const heatData = useMemo<HeatmapCell[]>(() => {
+    const cells: HeatmapCell[] = [];
+    for (const r of heatRows) {
+      for (const { col, get } of EVIDENCE_COLUMNS) {
+        const v = get(r);
+        if (v != null && !Number.isNaN(v)) {
+          cells.push({ row: r.human_symbol, col, value: v });
+        }
+      }
+    }
+    return cells;
+  }, [heatRows]);
+
+  const heatRowOrder = useMemo(() => heatRows.map((r) => r.human_symbol), [heatRows]);
+
+  // ----- derived: essentiality bars (magnitude = −CHRONOS) ----------------
+  // Data mark colored with the sanctioned essentiality-modality hex from the
+  // palette (never a raw utility class). More-negative CHRONOS → longer bar.
+  const essentialBars = useMemo<BarDatum[]>(
+    () =>
+      essentialGenes.map((g) => ({
+        label: g.human_symbol,
+        value: -g.essentiality_chronos,
+        color: MODALITY_HEX.s3_essential,
+        annotation: g.essentiality_chronos.toFixed(2),
+      })),
+    [essentialGenes]
+  );
+
+  // ----- table column defs -----------------------------------------------
+  const compoundCols: DataTableColumn<TopCompound>[] = [
+    { key: "rank", header: "#", numeric: true, width: "3rem" },
+    { key: "name", header: "Compound", sortable: true },
+    { key: "target", header: "Target" },
+    { key: "moa", header: "Mechanism" },
+    {
+      key: "composite_score",
+      header: "Composite",
+      numeric: true,
+      sortable: true,
+      render: (r) => r.composite_score.toFixed(3),
+    },
+    {
+      key: "score_reversal",
+      header: "Reversal",
+      numeric: true,
+      sortable: true,
+      render: (r) => r.score_reversal.toFixed(3),
+    },
+    {
+      key: "score_network",
+      header: "Network",
+      numeric: true,
+      sortable: true,
+      render: (r) => (r.score_network > 0 ? r.score_network.toFixed(3) : "—"),
+    },
+  ];
+
+  const geneDrugCols: DataTableColumn<GeneDrug>[] = [
+    { key: "symbol", header: "Target", sortable: true },
+    { key: "drug", header: "Drug", sortable: true },
+    { key: "stage", header: "Stage", sortable: true },
+    { key: "moa", header: "Mechanism" },
+    { key: "support", header: "Atlas support", sortable: true },
+  ];
+
+  const lincsCols: DataTableColumn<GeneLincs>[] = [
+    { key: "symbol", header: "Target", sortable: true },
+    { key: "compound", header: "Compound", sortable: true },
+    { key: "moa", header: "Mechanism" },
+    {
+      key: "score",
+      header: "Reversal score",
+      numeric: true,
+      sortable: true,
+      render: (r) => r.score.toFixed(3),
+    },
+  ];
+
+  const essentialCols: DataTableColumn<EssentialGene>[] = [
+    { key: "human_symbol", header: "Gene", sortable: true },
+    {
+      key: "essentiality_chronos",
+      header: "CHRONOS",
+      numeric: true,
+      sortable: true,
+      render: (r) => r.essentiality_chronos.toFixed(3),
+    },
+    {
+      key: "pharos_tdl",
+      header: "Druggable · TDL",
+      sortable: true,
+      render: (r) => (r.pharos_tdl ? `DGIdb · ${r.pharos_tdl}` : "DGIdb"),
+    },
+    {
+      key: "max_phase_masld",
+      header: "MASLD max phase",
+      numeric: true,
+      sortable: true,
+      render: (r) =>
+        r.max_phase_masld != null && r.max_phase_masld > 0
+          ? String(r.max_phase_masld)
+          : "—",
+    },
+  ];
+
+  const tableTabs: TabItem[] = [
+    { id: "reversal", label: `Top reversal compounds (${topCompounds.length})` },
+    { id: "clinical", label: `Clinical MASLD drugs (${geneDrugs.length})` },
+    { id: "lincs", label: `Reversal by target (${geneLincs.length})` },
+  ];
 
   return (
-    <div className="w-full px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Drug Pipeline Explorer
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Translating transcriptomic disease signatures into drug candidates
-          through LINCS L1000 reversal, network proximity, and clinical
-          validation across 133 CGP compounds.
-        </p>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Therapeutics"
+        title="Drug Pipeline"
+        description={
+          <>
+            Translating human MASLD transcriptomic signatures into therapeutic
+            hypotheses through LINCS L1000 signature reversal, network proximity,
+            druggability, and clinical-stage validation. The MASLD drug landscape
+            spans {DRUGS_APPROVED} approved, {fmt(DRUGS_CLINICAL)} clinical-stage,
+            and {fmt(DRUGS_PRECLINICAL)} preclinical programs.
+          </>
+        }
+      />
+
+      {/* KPI tiles */}
+      <div className="mb-10 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile label="Approved" value={fmt(DRUGS_APPROVED)} sublabel="for MASLD/MASH" />
+        <StatTile
+          label="In clinical trials"
+          value={fmt(DRUGS_CLINICAL)}
+          sublabel="clinical-stage programs"
+        />
+        <StatTile
+          label="Preclinical"
+          value={fmt(DRUGS_PRECLINICAL)}
+          sublabel="discovery / preclinical"
+        />
+        <StatTile
+          label="Druggable genes"
+          value={druggableCount != null ? fmt(druggableCount) : "—"}
+          sublabel="DGIdb druggable genome"
+        />
       </div>
 
-      {/* Section 1: Funnel */}
+      {/* Development-phase decomposition (retires the funnel) */}
       <section className="mb-10">
         <h2 className="mb-1 text-xl font-semibold tracking-tight">
-          Discovery Funnel
+          MASLD drug-development stage
         </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Compounds are filtered through successive evidence layers, from
-          signature reversal to clinical validation.
+        <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
+          MASLD drug targets grouped by the most-advanced development stage of a
+          drug acting on them. The pipeline is bottom-heavy: a large preclinical
+          space narrows to a handful of clinical-stage and approved therapies.
         </p>
-        <div className="rounded-lg border border-border bg-muted/30 p-6">
-          <FunnelChart stages={data.funnel} />
-          {/* descriptions below funnel */}
-          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {data.funnel.map((s, i) => (
-              <div key={i} className="text-xs text-muted-foreground">
-                <span
-                  className="mr-1.5 inline-block h-2.5 w-2.5 rounded-sm"
-                  style={{
-                    backgroundColor:
-                      FUNNEL_COLORS[i % FUNNEL_COLORS.length].fill,
-                  }}
-                />
-                {s.description}
-              </div>
-            ))}
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+          {loading ? (
+            <SkeletonBlock className="h-[300px]" />
+          ) : phaseData.length > 0 ? (
+            <>
+              <StackedBar
+                data={phaseData}
+                groups={[...PHASE_ORDER]}
+                categories={[...PHASE_ORDER]}
+                colorFor={(c) => PHASE_COLOR[c] ?? CONTROL}
+                yLabel="targets"
+                showLegend={false}
+                height={300}
+                ariaLabel="MASLD drug targets by development stage"
+              />
+              <Legend
+                className="mt-2 justify-center"
+                items={PHASE_ORDER.map((s) => ({
+                  color: PHASE_COLOR[s],
+                  label: `${s} (${fmt(phaseCount(s))})`,
+                }))}
+              />
+            </>
+          ) : (
+            <EmptyState title="No development-stage data available." />
+          )}
+        </div>
+      </section>
+
+      {/* Target × evidence heatmap */}
+      <section className="mb-10">
+        <h2 className="mb-1 text-xl font-semibold tracking-tight">
+          Target × evidence
+        </h2>
+        <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
+          Druggable disease genes scored across independent evidence modalities.
+          Each column is normalised to a comparable 0–1 scale; blank cells mark
+          modalities with no measurement for that target.
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+          {loading ? (
+            <SkeletonBlock className="h-[420px]" />
+          ) : heatData.length > 0 ? (
+            <Heatmap
+              data={heatData}
+              rows={heatRowOrder}
+              cols={EVIDENCE_COLUMNS.map((c) => c.col)}
+              colorScale="sequential"
+              domain={[0, 1]}
+              valueFormat={(v) => v.toFixed(2)}
+              ariaLabel="Druggable target by evidence-modality heatmap"
+              height={Math.max(320, heatRowOrder.length * 22 + 90)}
+            />
+          ) : (
+            <EmptyState title="No druggable-target evidence available." />
+          )}
+        </div>
+      </section>
+
+      {/* Reversal / clinical / per-target tables */}
+      <section className="mb-10">
+        <h2 className="mb-1 text-xl font-semibold tracking-tight">
+          Compounds &amp; drugs
+        </h2>
+        <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
+          Signature-reversal compounds ranked by composite score, clinical-stage
+          MASLD drugs with atlas transcriptomic support, and per-target LINCS
+          reversal hits.
+        </p>
+
+        <TabBar
+          tabs={tableTabs}
+          active={tableTab}
+          onChange={setTableTab}
+          aria-label="Compound tables"
+          className="mb-4"
+        />
+
+        {loading ? (
+          <div className="space-y-2">
+            <SkeletonBlock className="h-8" />
+            <SkeletonBlock className="h-64" />
+          </div>
+        ) : tableTab === "reversal" ? (
+          topCompounds.length > 0 ? (
+            <DataTable
+              data={topCompounds}
+              columns={compoundCols}
+              geneColumn="target"
+              rowKey={(r) => `${r.rank}-${r.name}`}
+              initialSort={{ key: "composite_score", dir: "desc" }}
+              pageSize={25}
+            />
+          ) : (
+            <EmptyState title="Reversal-compound data unavailable." />
+          )
+        ) : tableTab === "clinical" ? (
+          geneDrugs.length > 0 ? (
+            <DataTable
+              data={geneDrugs}
+              columns={geneDrugCols}
+              geneColumn="symbol"
+              rowKey={(r) => `${r.symbol}-${r.drug}`}
+              pageSize={25}
+            />
+          ) : (
+            <EmptyState title="Clinical-drug data unavailable." />
+          )
+        ) : geneLincs.length > 0 ? (
+          <DataTable
+            data={geneLincs}
+            columns={lincsCols}
+            geneColumn="symbol"
+            rowKey={(r) => `${r.symbol}-${r.compound}`}
+            initialSort={{ key: "score", dir: "desc" }}
+            pageSize={25}
+          />
+        ) : (
+          <EmptyState title="LINCS reversal data unavailable." />
+        )}
+      </section>
+
+      {/* Essentiality (DepMap) — supplementary, NOT a convergence modality */}
+      <section className="mb-10">
+        <div className="mb-1 flex items-center gap-2">
+          <Badge
+            variant="secondary"
+            className="uppercase tracking-wide"
+          >
+            Supplementary
+          </Badge>
+          <h2 className="text-xl font-semibold tracking-tight">
+            Essentiality (DepMap CHRONOS)
+          </h2>
+        </div>
+        <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
+          DepMap CHRONOS gene-effect scores flag genes whose knockout reduces
+          cancer-cell-line viability — a druggability / target-tractability
+          signal (more negative = more essential). Essentiality is a{" "}
+          <em>constitutive</em> cellular property, not MASLD-specific evidence,
+          so it is reported here as supplementary context rather than a
+          convergence channel. Shown: the most essential druggable atlas genes
+          (DGIdb-druggable).
+        </p>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            {loading ? (
+              <SkeletonBlock className="h-[380px]" />
+            ) : essentialBars.length > 0 ? (
+              <Bar
+                data={essentialBars}
+                orientation="horizontal"
+                valueLabel="−CHRONOS (more essential →)"
+                height={Math.max(320, essentialBars.length * 22 + 60)}
+                valueFormat={(v) => v.toFixed(2)}
+                ariaLabel="Most essential druggable atlas genes by DepMap CHRONOS gene-effect"
+                tooltipLines={(d) => (
+                  <>
+                    <div className="font-medium">{d.label}</div>
+                    <div>CHRONOS {(-d.value).toFixed(3)}</div>
+                  </>
+                )}
+              />
+            ) : (
+              <EmptyState title="No essentiality data available." />
+            )}
+          </div>
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            {loading ? (
+              <SkeletonBlock className="h-[380px]" />
+            ) : essentialGenes.length > 0 ? (
+              <DataTable
+                data={essentialGenes}
+                columns={essentialCols}
+                geneColumn="human_symbol"
+                rowKey={(r) => r.human_symbol}
+                initialSort={{ key: "essentiality_chronos", dir: "asc" }}
+                pageSize={0}
+                dense
+              />
+            ) : (
+              <EmptyState title="No essentiality data available." />
+            )}
           </div>
         </div>
       </section>
-
-      {/* Section 2: Top Reversal Compounds */}
-      <section className="mb-10">
-        <h2 className="mb-1 text-xl font-semibold tracking-tight">
-          Top Reversal Compounds
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Top 20 compounds ranked by composite score (reversal 35% +
-          significance 20% + MR 20% + DGIdb 15% + network 10%).
-        </p>
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                  #
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                  Compound
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                  Target
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                  MoA
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">
-                  Composite
-                </th>
-                <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
-                  Reversal
-                </th>
-                <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground">
-                  Network
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.top_compounds.map((c, i) => (
-                <tr
-                  key={i}
-                  className="border-b border-border/50 transition-colors hover:bg-muted/30"
-                >
-                  <td className="px-3 py-1.5 font-mono text-xs text-muted-foreground">
-                    {i + 1}
-                  </td>
-                  <td className="px-3 py-1.5 font-medium">{c.name}</td>
-                  <td className="px-3 py-1.5">
-                    {c.target ? (
-                      <Link
-                        href={`/gene/${encodeURIComponent(c.target)}`}
-                        className="font-mono text-xs font-semibold text-primary hover:underline"
-                      >
-                        {c.target}
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        {"\u2014"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-1.5 text-xs text-muted-foreground">
-                    {c.moa ?? "\u2014"}
-                  </td>
-                  <td className="px-3 py-1.5">
-                    <ScoreBar value={c.composite_score} />
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono text-xs">
-                    {c.score_reversal.toFixed(3)}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-mono text-xs">
-                    {c.score_network > 0
-                      ? c.score_network.toFixed(3)
-                      : "\u2014"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* Section 3: Clinically Validated Drugs */}
-      <section className="mb-10">
-        <h2 className="mb-1 text-xl font-semibold tracking-tight">
-          Clinically Validated Drugs
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Drugs currently in clinical trials or approved for MASLD/NASH, with
-          atlas transcriptomic support level.
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {drugCards.map(([drugName, entries]) => {
-            // Use first entry for shared fields
-            const primary = entries[0];
-            return (
-              <div
-                key={drugName}
-                className="flex flex-col gap-2 rounded-lg border border-border p-4 transition-colors hover:bg-muted/30"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold leading-tight">
-                    {drugName}
-                  </h3>
-                  <span
-                    className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${stageBadgeClass(primary.stage)}`}
-                  >
-                    {primary.stage}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">{primary.moa}</p>
-                {/* Targets */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">
-                    Targets:
-                  </span>
-                  {entries.map((e, j) => (
-                    <Link
-                      key={j}
-                      href={`/gene/${encodeURIComponent(e.target)}`}
-                      className="font-mono text-xs font-semibold text-primary hover:underline"
-                    >
-                      {e.target}
-                    </Link>
-                  ))}
-                </div>
-                {/* Support + DEG */}
-                <div className="mt-auto flex items-center gap-2 pt-1">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${supportBadgeClass(primary.support)}`}
-                  >
-                    {primary.support}
-                  </span>
-                  {primary.is_deg && (
-                    <Badge variant="default" className="text-[10px]">
-                      DEG
-                    </Badge>
-                  )}
-                  {primary.bulk_logfc != null && (
-                    <span
-                      className={`font-mono text-[10px] ${logfcColor(primary.bulk_logfc)}`}
-                    >
-                      logFC {formatLogFC(primary.bulk_logfc)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Section 4: Sex Stratification */}
-      <section className="mb-10">
-        <h2 className="mb-1 text-xl font-semibold tracking-tight">
-          Sex-Stratified Reversal
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          CGP reversal compounds classified by sex-biased efficacy. Of{" "}
-          {data.sex_stats.total_compounds} compounds,{" "}
-          {data.sex_stats.female_biased} ({((data.sex_stats.female_biased / data.sex_stats.total_compounds) * 100).toFixed(0)}%) show
-          female-biased reversal signatures, consistent with the predominantly
-          female transcriptomic MASLD signature.
-        </p>
-        <div className="rounded-lg border border-border p-4">
-          <SexBar stats={data.sex_stats} />
-        </div>
-      </section>
-    </div>
+    </PageContainer>
   );
 }

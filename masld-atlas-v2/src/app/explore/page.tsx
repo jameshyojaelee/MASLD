@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EvidenceFingerprint } from "@/components/evidence-fingerprint";
 import { EnrichmentPanel } from "@/components/enrichment-panel";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { getGeneIndex } from "@/lib/search-index";
 import type { GeneIndexEntry } from "@/lib/types";
 
@@ -195,14 +197,12 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="w-full px-6 py-8">
+    <PageContainer>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Gene Explorer</h1>
-        <p className="mt-2 text-muted-foreground">
-          Search, filter, and compare genes across 7 evidence layers.
-        </p>
-      </div>
+      <PageHeader
+        title="Gene Explorer"
+        description="Search, filter, and compare genes across 7 evidence layers."
+      />
 
       {/* Filter bar */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -380,7 +380,7 @@ export default function ExplorePage() {
                   {/* Symbol */}
                   <td className="px-3 py-1.5">
                     <Link
-                      href={`/gene/${encodeURIComponent(gene.symbol)}`}
+                      href={`/gene?symbol=${encodeURIComponent(gene.symbol)}`}
                       className="font-mono font-semibold text-primary hover:underline"
                     >
                       {gene.symbol}
@@ -474,6 +474,6 @@ export default function ExplorePage() {
           onClose={() => setShowEnrichment(false)}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

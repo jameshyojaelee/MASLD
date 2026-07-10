@@ -1,5 +1,6 @@
 import Fuse from "fuse.js";
 import type { GeneIndexEntry } from "./types";
+import { dataUrl } from "./data-base";
 
 let fuseInstance: Fuse<GeneIndexEntry> | null = null;
 let geneData: GeneIndexEntry[] = [];
@@ -10,7 +11,7 @@ async function ensureLoaded(): Promise<void> {
   if (loadPromise) return loadPromise;
 
   loadPromise = (async () => {
-    const response = await fetch("/data/gene_index.json");
+    const response = await fetch(dataUrl("gene_index.json"));
     geneData = await response.json();
     fuseInstance = new Fuse(geneData, {
       keys: [

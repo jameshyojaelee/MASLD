@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { dataUrl } from "@/lib/data-base";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -35,7 +36,7 @@ export function EnrichmentPanel({
 
   // Load pathway gene sets once
   useEffect(() => {
-    fetch("/data/pathway_genesets.json")
+    fetch(dataUrl("pathway_genesets.json"))
       .then((r) => r.json())
       .then(
         (data: {

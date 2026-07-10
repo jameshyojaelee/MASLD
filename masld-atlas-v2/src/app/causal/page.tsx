@@ -1,8 +1,17 @@
 "use client";
 
+// LEGACY: this route is absorbed by /genetics — retire after migration. Kept
+// live for now; changes here are correctness-only (no expanded surface).
+
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { SkeletonBlock } from "@/components/states";
+import { useChartTooltip, ChartTooltip } from "@/components/charts";
+import { dataUrl } from "@/lib/data-base";
+import { COLOC_SUSIE, GWAS_COUNT, fmt } from "@/lib/atlas-constants";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,24 +68,24 @@ interface FrameworkStat {
 
 const FRAMEWORK_STATS: FrameworkStat[] = [
   {
-    value: "179",
-    label: "COLOC genes",
-    sublabel: "PP.H4 > 0.9 across 24 GWAS",
+    value: fmt(COLOC_SUSIE),
+    label: "SuSiE effector genes",
+    sublabel: "Tier-1/2 liver-specific, PP.H4 > 0.5",
   },
   {
-    value: "24",
+    value: String(GWAS_COUNT),
     label: "GWAS studies",
-    sublabel: "EUR, EAS, AFR ancestries",
+    sublabel: "EUR, AFR, EAS, AMR, SAS ancestries",
   },
   {
-    value: "3",
+    value: "5",
     label: "Ancestries",
-    sublabel: "European, East Asian, African",
+    sublabel: "European, African, East Asian, Admixed American, South Asian",
   },
   {
-    value: "67",
+    value: "248",
     label: "Cross-ancestry genes",
-    sublabel: "Replicated in EUR + EAS",
+    sublabel: "PP.H4 replicated in ≥2 ancestries",
   },
 ];
 
@@ -139,6 +148,9 @@ function CellTypeEnrichmentChart({
 }: {
   data: CellTypeEnrichment[];
 }) {
+  const { wrapperRef, tooltip, show, hide } =
+    useChartTooltip<CellTypeEnrichment>();
+
   // Sort by count descending
   const sorted = [...data].sort((a, b) => b.count - a.count);
   const maxCount = Math.max(...sorted.map((d) => d.count));
@@ -148,75 +160,89 @@ function CellTypeEnrichmentChart({
     BAR_MARGIN.top + sorted.length * BAR_CHART_H_PER_ROW + BAR_MARGIN.bottom;
 
   return (
-    <svg
-      width={BAR_CHART_W}
-      height={totalH}
-      className="max-w-full overflow-visible"
-      style={{ fontFamily: "inherit" }}
-    >
-      <g transform={`translate(${BAR_MARGIN.left},${BAR_MARGIN.top})`}>
-        {sorted.map((d, i) => {
-          const barW = (d.count / maxCount) * innerW;
-          const y = i * BAR_CHART_H_PER_ROW;
-          const barH = BAR_CHART_H_PER_ROW - 6;
-          const isSig = d.padj < 0.05;
+    <div ref={wrapperRef} className="relative">
+      <svg
+        width={BAR_CHART_W}
+        height={totalH}
+        className="max-w-full overflow-visible"
+        style={{ fontFamily: "inherit" }}
+      >
+        <g transform={`translate(${BAR_MARGIN.left},${BAR_MARGIN.top})`}>
+          {sorted.map((d, i) => {
+            const barW = (d.count / maxCount) * innerW;
+            const y = i * BAR_CHART_H_PER_ROW;
+            const barH = BAR_CHART_H_PER_ROW - 6;
+            const isSig = d.padj < 0.05;
 
-          return (
-            <g key={d.cell_type}>
-              {/* Label */}
-              <text
-                x={-8}
-                y={y + barH / 2 + 4}
-                textAnchor="end"
-                fontSize={11}
-                fill="hsl(var(--foreground))"
-                fontWeight={500}
+            return (
+              <g
+                key={d.cell_type}
+                onMouseMove={(e) => show(e, d)}
+                onMouseLeave={hide}
               >
-                {formatCellType(d.cell_type)}
-              </text>
-              {/* Bar */}
-              <rect
-                x={0}
-                y={y}
-                width={barW}
-                height={barH}
-                rx={3}
-                fill={
-                  isSig
-                    ? "hsl(210 100% 56%)"
-                    : "hsl(var(--muted-foreground))"
-                }
-                opacity={isSig ? 0.8 : 0.35}
-              />
-              {/* Count inside bar */}
-              <text
-                x={barW + 6}
-                y={y + barH / 2 + 4}
-                fontSize={10}
-                fill="hsl(var(--foreground))"
-                fontWeight={600}
-              >
-                {d.count}
-              </text>
-              {/* OR + padj annotation */}
-              <text
-                x={barW + 40}
-                y={y + barH / 2 + 4}
-                fontSize={10}
-                fill="hsl(var(--muted-foreground))"
-              >
-                OR={d.enrichment.toFixed(2)}{" "}
-                {isSig ? (
-                  `padj=${formatPadj(d.padj)}`
-                ) : (
-                  "ns"
-                )}
-              </text>
-            </g>
-          );
-        })}
-      </g>
-    </svg>
+                {/* Label */}
+                <text
+                  x={-8}
+                  y={y + barH / 2 + 4}
+                  textAnchor="end"
+                  fontSize={11}
+                  fill="var(--color-foreground)"
+                  fontWeight={500}
+                >
+                  {formatCellType(d.cell_type)}
+                </text>
+                {/* Bar: significance by palette hue (genetic modality) + opacity;
+                    non-significant falls back to control gray. */}
+                <rect
+                  x={0}
+                  y={y}
+                  width={barW}
+                  height={barH}
+                  rx={3}
+                  fill={isSig ? "var(--color-s2-genetic)" : "var(--color-control)"}
+                  opacity={isSig ? 0.85 : 0.4}
+                />
+                {/* Count inside bar */}
+                <text
+                  x={barW + 6}
+                  y={y + barH / 2 + 4}
+                  fontSize={10}
+                  fill="var(--color-foreground)"
+                  fontWeight={600}
+                >
+                  {d.count}
+                </text>
+                {/* OR + padj annotation */}
+                <text
+                  x={barW + 40}
+                  y={y + barH / 2 + 4}
+                  fontSize={10}
+                  fill="var(--color-muted-foreground)"
+                >
+                  OR={d.enrichment.toFixed(2)}{" "}
+                  {isSig ? `padj=${formatPadj(d.padj)}` : "ns"}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+
+      {tooltip && (
+        <ChartTooltip left={tooltip.left} top={tooltip.top}>
+          <div className="font-medium">
+            {formatCellType(tooltip.data.cell_type)}
+          </div>
+          <div>{tooltip.data.count} variants</div>
+          <div>
+            OR {tooltip.data.enrichment.toFixed(2)} ·{" "}
+            {tooltip.data.padj < 0.05
+              ? `padj ${formatPadj(tooltip.data.padj)}`
+              : "n.s."}
+          </div>
+        </ChartTooltip>
+      )}
+    </div>
   );
 }
 
@@ -311,7 +337,7 @@ export default function CausalPage() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/data/gwas_atac_browser.json")
+    fetch(dataUrl("gwas_atac_browser.json"))
       .then((res) => res.json())
       .then((json: GwasAtacData) => {
         setData(json);
@@ -355,19 +381,19 @@ export default function CausalPage() {
   }, [cellTypeFilter]);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <PageContainer>
       {/* ------------------------------------------------------------------ */}
       {/* Header                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Causal Architecture
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          COLOC + TWAS across 24 GWAS, multi-ancestry replication, regulatory
-          variant mapping
-        </p>
-      </div>
+      <PageHeader
+        title="Causal Architecture"
+        description={
+          <>
+            COLOC + TWAS across {GWAS_COUNT} GWAS (5 ancestries), multi-ancestry
+            replication, regulatory variant mapping
+          </>
+        }
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Section 1: Causal Framework Overview                                 */}
@@ -379,10 +405,12 @@ export default function CausalPage() {
         <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
           We integrate colocalization (COLOC), transcriptome-wide association
           (TWAS), and fine-mapping to identify genetically causal MASLD genes.
-          SuSiE fine-mapping with ABF COLOC was applied across 24 European GWAS
-          plus FinnGen and BioBank Japan for multi-ancestry replication.
-          Regulatory variant mapping intersects credible set variants with
-          single-cell ATAC-seq peaks to identify causal non-coding mechanisms.
+          SuSiE fine-mapping with ABF COLOC fallback was applied across{" "}
+          {GWAS_COUNT} GWAS spanning 5 ancestries (European, African, East
+          Asian, Admixed American, South Asian) for cross-ancestry
+          replication. Regulatory variant mapping intersects credible set
+          variants with single-cell ATAC-seq peaks to identify causal
+          non-coding mechanisms.
         </p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {FRAMEWORK_STATS.map((stat) => (
@@ -411,8 +439,14 @@ export default function CausalPage() {
         </h2>
 
         {loading ? (
-          <div className="flex h-[200px] items-center justify-center rounded-lg border border-border bg-muted/30 text-sm text-muted-foreground">
-            Loading variant data&hellip;
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonBlock key={i} className="h-24 rounded-lg" />
+              ))}
+            </div>
+            <SkeletonBlock className="h-56 w-full rounded-lg" />
+            <SkeletonBlock className="h-72 w-full rounded-lg" />
           </div>
         ) : data ? (
           <>
@@ -588,7 +622,7 @@ export default function CausalPage() {
                               </span>
                               <span className="w-[100px] shrink-0 px-3 py-2.5 text-left text-xs font-semibold text-primary">
                                 <Link
-                                  href={`/gene/${encodeURIComponent(v.nearest_gene)}`}
+                                  href={`/gene?symbol=${encodeURIComponent(v.nearest_gene)}`}
                                   onClick={(e) => e.stopPropagation()}
                                   className="hover:underline"
                                 >
@@ -733,7 +767,7 @@ export default function CausalPage() {
             >
               <div className="flex items-center justify-between">
                 <Link
-                  href={`/gene/${encodeURIComponent(tf.tf)}`}
+                  href={`/gene?symbol=${encodeURIComponent(tf.tf)}`}
                   className="font-mono text-lg font-bold text-primary hover:underline"
                 >
                   {tf.tf}
@@ -773,6 +807,6 @@ export default function CausalPage() {
           Therapeutic Translation &rarr;
         </Link>
       </div>
-    </div>
+    </PageContainer>
   );
 }

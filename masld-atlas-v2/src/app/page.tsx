@@ -2,35 +2,43 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { EvidenceFingerprint } from "@/components/evidence-fingerprint";
-import { useAppStore } from "@/lib/store";
+import { Hero } from "@/components/hero/hero";
+import { dataUrl } from "@/lib/data-base";
+import {
+  DEG_COUNT,
+  GWAS_COUNT,
+  DRUGS_APPROVED,
+  DRUGS_CLINICAL,
+  DRUGS_PRECLINICAL,
+  fmt,
+} from "@/lib/atlas-constants";
 import type { FeaturedGene } from "@/lib/types";
 
 const QUICK_LINKS = [
   {
     title: "Atlas",
-    description: "10-cohort Integrated mega-analysis with 5,484 DEGs",
+    description: `Pooled 5-cohort analysis · ${fmt(DEG_COUNT)} DEGs`,
     href: "/atlas",
     color: "text-chart-1",
   },
   {
     title: "Progression",
-    description: "F0-F4 disease trajectory and the F2 switch",
+    description: "F0-F4 disease trajectory and stage transitions",
     href: "/progression",
     color: "text-chart-2",
   },
   {
     title: "Causal Architecture",
-    description: "COLOC + TWAS across 24 GWAS studies",
-    href: "/causal",
+    description: `COLOC + TWAS across ${GWAS_COUNT} GWAS (5 ancestries)`,
+    href: "/genetics",
     color: "text-chart-3",
   },
   {
     title: "Drug Pipeline",
-    description: "133 reversal compounds, 15 validated targets",
+    description: `${DRUGS_APPROVED} approved · ${fmt(DRUGS_CLINICAL)} clinical · ${fmt(DRUGS_PRECLINICAL)} preclinical`,
     href: "/drugs",
     color: "text-chart-4",
   },
@@ -49,55 +57,35 @@ const QUICK_LINKS = [
 ];
 
 export default function HomePage() {
-  const { setCommandOpen } = useAppStore();
   const [featured, setFeatured] = useState<FeaturedGene[]>([]);
 
   useEffect(() => {
-    fetch("/data/featured_genes.json")
+    fetch(dataUrl("featured_genes.json"))
       .then((r) => r.json())
       .then(setFeatured)
       .catch(() => {});
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      {/* Hero */}
-      <section className="mb-12 text-center">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          MASLD Atlas
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Multi-modal atlas for metabolic dysfunction-associated steatotic
-          liver disease.
-        </p>
-        <div className="mt-6 flex items-center justify-center gap-3">
-          <Button size="lg" onClick={() => setCommandOpen(true)}>
-            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-            Search genes
-          </Button>
-          <Button variant="outline" size="lg" render={<Link href="/atlas" />}>
-            Explore atlas
-          </Button>
-        </div>
-      </section>
+    <div className="pb-16">
+      <Hero />
 
-      <Separator className="mb-12" />
+      <div className="mx-auto max-w-6xl px-6">
+        <Separator className="mb-12" />
 
-      {/* Featured genes */}
-      {featured.length > 0 && (
-        <section className="mb-12">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-            Featured genes
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((gene) => (
-              <Link
-                key={gene.symbol}
-                href={`/gene/${gene.symbol}/`}
-                className="group rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40"
-              >
+        {/* Featured genes */}
+        {featured.length > 0 && (
+          <section className="mb-12">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Featured genes
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {featured.map((gene) => (
+                <Link
+                  key={gene.symbol}
+                  href={`/gene?symbol=${gene.symbol}`}
+                  className="hover-lift group rounded-lg border border-border bg-card p-4 hover:border-primary/40"
+                >
                 <div className="flex items-start justify-between">
                   <div>
                     <span className="font-mono text-base font-semibold group-hover:text-primary">
@@ -139,7 +127,7 @@ export default function HomePage() {
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/40"
+              className="hover-lift rounded-lg border border-border bg-card p-4 hover:border-primary/40"
             >
               <p className={`text-sm font-semibold ${link.color}`}>{link.title}</p>
               <p className="mt-1 text-xs text-muted-foreground">{link.description}</p>
@@ -147,7 +135,7 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
+      </div>
     </div>
   );
 }

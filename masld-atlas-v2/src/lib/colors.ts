@@ -1,4 +1,5 @@
 import type { EvidenceSource, EvidenceStrengths } from "./types";
+import { GWAS_COUNT } from "./atlas-constants";
 
 export const EVIDENCE_SOURCES: EvidenceSource[] = [
   {
@@ -6,14 +7,14 @@ export const EVIDENCE_SOURCES: EvidenceSource[] = [
     label: "Human Bulk RNA-seq",
     short: "Human",
     color: "var(--color-s1-human)",
-    description: "Integrated mega-analysis across 10 cohorts (1,444 samples)",
+    description: "Pooled (cohort-adjusted) analysis across 5 control-bearing cohorts (846 samples)",
   },
   {
     key: "s2_genetic",
     label: "Genetic Causal",
     short: "Genetic",
     color: "var(--color-s2-genetic)",
-    description: "COLOC + TWAS across 24 GWAS studies",
+    description: `COLOC + TWAS across ${GWAS_COUNT} GWAS (5 ancestries)`,
   },
   {
     key: "s3_essential",

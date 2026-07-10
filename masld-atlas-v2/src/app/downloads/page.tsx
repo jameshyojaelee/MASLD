@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { dataUrl } from "@/lib/data-base";
+import { DEG_COUNT, DEG_GATE_LABEL, fmt } from "@/lib/atlas-constants";
 
 // ---------------------------------------------------------------------------
 // Download resources
@@ -17,29 +21,29 @@ const DOWNLOAD_RESOURCES: DownloadResource[] = [
   {
     name: "Multi-Evidence Atlas",
     description:
-      "33,943 genes x 101 columns with 7 independent modalities, causal inference, and derived annotations.",
+      "27,187 genes x 446 columns with 7 independent modalities, causal inference, and derived annotations.",
     format: "Parquet",
-    size: "4.3 MB",
-    href: "/data/atlas.parquet",
+    size: "21 MB",
+    href: dataUrl("atlas.parquet"),
     note: null,
   },
   {
     name: "Gene Index",
     description:
-      "Compact gene search index with DEG status, evidence strength indicators, and effect sizes for all 33,943 genes.",
+      "Compact gene search index with symbol and biotype for all 27,187 genes, used by the in-app search.",
     format: "JSON",
-    size: "6 MB",
-    href: "/data/gene_index.json",
+    size: "1.3 MB",
+    href: dataUrl("gene_symbols.json"),
     note: null,
   },
   {
     name: "Per-Gene Profiles",
     description:
-      "Individual evidence cards for all genes. Each file contains full multi-evidence profiles including expression, causal, drug, and epigenomic data.",
-    format: "JSON (33,943 files)",
-    size: "19 MB total",
+      "Long-format, symbol-keyed tables (per-cohort DE, stage trajectories, COLOC by GWAS, per-cell-type DE, drug/LINCS evidence) queried client-side via DuckDB-WASM rather than shipped as one file per gene.",
+    format: "Parquet (6 tables)",
+    size: "~8 MB total",
     href: null,
-    note: "Access individual genes at /data/genes/{SYMBOL}.json",
+    note: "Query any gene from the Gene page (/gene?symbol=SYMBOL), or download the individual tables below.",
   },
   {
     name: "Pathway Gene Sets",
@@ -47,7 +51,7 @@ const DOWNLOAD_RESOURCES: DownloadResource[] = [
       "50 Hallmark gene sets from MSigDB for enrichment analysis, formatted for direct use with the atlas.",
     format: "JSON",
     size: "61 KB",
-    href: "/data/pathway_genesets.json",
+    href: dataUrl("pathway_genesets.json"),
     note: null,
   },
   {
@@ -56,7 +60,7 @@ const DOWNLOAD_RESOURCES: DownloadResource[] = [
       "Regulatory variant annotations: 533 credible set variants overlapping scATAC peaks with motif disruption scores.",
     format: "JSON",
     size: "121 KB",
-    href: "/data/gwas_atac_browser.json",
+    href: dataUrl("gwas_atac_browser.json"),
     note: null,
   },
   {
@@ -65,7 +69,7 @@ const DOWNLOAD_RESOURCES: DownloadResource[] = [
       "Gene-drug-TF-pathway network capturing multi-evidence relationships for network visualization and analysis.",
     format: "JSON",
     size: "61 KB",
-    href: "/data/knowledge_graph.json",
+    href: dataUrl("knowledge_graph.json"),
     note: null,
   },
 ];
@@ -84,20 +88,21 @@ const EVIDENCE_SOURCES: EvidenceSource[] = [
   {
     name: "Human Bulk RNA-seq",
     abbrev: "S1",
-    description:
-      "Integrated mixed-model mega-analysis across 10 cohorts (1,444 samples). Per-study DE via limma-voom, followed by variance partition and cross-cohort integration. 5,484 DEGs at padj < 0.05, |logFC| > 0.3, validated by leave-one-out cross-validation (88.1% mean recovery).",
+    description: `Pooled (cohort-adjusted) analysis across 5 control-bearing cohorts (846 samples). Per-study DE via limma-voom, followed by cross-cohort integration. ${fmt(
+      DEG_COUNT
+    )} DEGs by the ${DEG_GATE_LABEL}, validated by leave-one-out cross-validation.`,
   },
   {
     name: "Mouse Bulk RNA-seq",
     abbrev: "S2",
     description:
-      "Integration of 5 mouse diet models (463 samples) with metafor random-effects meta-analysis and Integrated mega-analysis. Cross-species concordance via strict 1:1 ortholog mapping (GENCODE v49 / vM38). 723 Conserved_Core genes with concordant direction.",
+      "Integration of 5 mouse diet models (463 samples) with metafor random-effects meta-analysis and pooled (cohort-adjusted) analysis. Cross-species concordance via strict 1:1 ortholog mapping (GENCODE v49 / vM38). 723 Conserved_Core genes with concordant direction.",
   },
   {
     name: "Genetic Causal Inference",
     abbrev: "S3",
     description:
-      "TWAS (elastic net, OTTERS multi-method), COLOC (SuSiE + ABF across 24 European GWAS), HyPrColoc multi-trait, cTWAS, sc-TWAS (multi-cell-type), and bidirectional MR. FinnGen + BBJ cross-ancestry replication. 179 genes with PP.H4 > 0.9.",
+      "TWAS (elastic net, OTTERS multi-method), COLOC (SuSiE + ABF across 50 GWAS, 5 ancestries), HyPrColoc multi-trait, sc-TWAS (multi-cell-type). FinnGen + BBJ + Pan-UKBB cross-ancestry replication. 434 genes with SuSiE PP.H4 > 0.9.",
   },
   {
     name: "Essentiality (DepMap)",
@@ -131,19 +136,14 @@ const EVIDENCE_SOURCES: EvidenceSource[] = [
 
 export default function DownloadsPage() {
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <PageContainer>
       {/* ------------------------------------------------------------------ */}
       {/* Header                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Downloads &amp; Documentation
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Full multi-evidence atlas, gene profiles, and supplementary data.
-          All resources are served as static files for programmatic access.
-        </p>
-      </div>
+      <PageHeader
+        title="Downloads & Documentation"
+        description="Full multi-evidence atlas, gene profiles, and supplementary data. All resources are served as static files for programmatic access."
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Section 1: Data Downloads                                            */}
@@ -221,8 +221,8 @@ export default function DownloadsPage() {
           <div className="rounded-lg border border-border px-4 py-3">
             <p className="text-sm font-semibold">Reference</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Lee J et al. A multi-evidence transcriptomic atlas reveals the F2
-              metabolic-to-inflammatory switch in MASLD.{" "}
+              Lee J et al. A multi-evidence transcriptomic atlas reveals a
+              multi-step metabolic-to-inflammatory progression in MASLD.{" "}
               <span className="italic">In preparation</span> (2026).
             </p>
           </div>
@@ -268,8 +268,8 @@ export default function DownloadsPage() {
         <div className="overflow-x-auto rounded-lg border border-border bg-muted/30 p-4">
           <pre className="text-xs leading-relaxed text-foreground">
 {`@article{lee2026masld,
-  title={A multi-evidence transcriptomic atlas reveals the F2
-         metabolic-to-inflammatory switch in MASLD},
+  title={A multi-evidence transcriptomic atlas reveals a multi-step
+         metabolic-to-inflammatory progression in MASLD},
   author={Lee, James and others},
   journal={In preparation},
   year={2026}
@@ -286,49 +286,57 @@ export default function DownloadsPage() {
           API / Programmatic Access
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          All data is served as static JSON and Parquet files. You can fetch any
-          gene&apos;s evidence profile directly:
+          All data is served as static Parquet and JSON files from the{" "}
+          <a
+            href="https://huggingface.co/datasets/jameshyojaelee/masld-atlas-data"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-primary hover:underline"
+          >
+            companion Hugging Face Dataset
+          </a>
+          . The app itself queries per-gene evidence client-side with
+          DuckDB-WASM &mdash; no per-gene endpoint is served; query the parquet
+          files directly instead:
         </p>
-
-        <div className="mb-3 rounded-lg border border-border bg-muted/30 p-4">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Endpoint
-          </p>
-          <code className="text-sm font-semibold text-primary">
-            /data/genes/&#123;SYMBOL&#125;.json
-          </code>
-        </div>
 
         <div className="overflow-x-auto rounded-lg border border-border bg-muted/30 p-4">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Python Example
+            Python Example (pandas)
           </p>
           <pre className="text-xs leading-relaxed text-foreground">
-{`import requests
+{`import pandas as pd
 
-gene = requests.get("https://masld-atlas.org/data/genes/THRB.json").json()
-print(gene["causal"]["coloc_pp4_max"])  # 0.9999`}
+base = "https://huggingface.co/datasets/jameshyojaelee/masld-atlas-data/resolve/main"
+atlas = pd.read_parquet(f"{base}/atlas_core.parquet")
+row = atlas.loc[atlas["human_symbol"] == "THRB"]
+print(row["coloc_best_susie_pp4"].iloc[0])  # 0.9999`}
           </pre>
         </div>
 
         <div className="mt-3 overflow-x-auto rounded-lg border border-border bg-muted/30 p-4">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            JavaScript Example
+            JavaScript Example (DuckDB-WASM, as used in-app)
           </p>
           <pre className="text-xs leading-relaxed text-foreground">
-{`const res = await fetch("/data/genes/HNF4A.json");
-const gene = await res.json();
-console.log(gene.expression.bulk_logfc);  // -0.482`}
+{`import { queryParquet } from "@/lib/duck";
+
+const rows = await queryParquet(
+  "atlas_core.parquet",
+  (t) => \`SELECT * FROM \${t} WHERE human_symbol = ?\`,
+  ["HNF4A"]
+);
+console.log(rows[0].bulk_logFC);  // -0.482`}
           </pre>
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground">
-          The full gene index at{" "}
+          The slim search index at{" "}
           <code className="rounded bg-muted px-1 py-0.5 text-[10px]">
-            /data/gene_index.json
+            gene_symbols.json
           </code>{" "}
-          contains compact records for all 33,943 genes, suitable for building
-          custom search or enrichment tools.
+          contains symbol and biotype for all 27,187 genes, suitable for
+          building custom search or enrichment tools.
         </p>
       </section>
 
@@ -349,6 +357,6 @@ console.log(gene.expression.bulk_logfc);  // -0.482`}
           Home
         </Link>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -57,7 +57,7 @@ export function GeneSearch() {
     (symbol: string) => {
       setCommandOpen(false);
       setQuery("");
-      router.push(`/gene/${symbol}/`);
+      router.push(`/gene?symbol=${encodeURIComponent(symbol)}`);
     },
     [router, setCommandOpen]
   );
@@ -138,7 +138,7 @@ export function GeneSearch() {
               <CommandItem
                 onSelect={() => {
                   setCommandOpen(false);
-                  router.push("/explore/");
+                  router.push("/explore");
                 }}
               >
                 Gene Explorer
@@ -146,7 +146,7 @@ export function GeneSearch() {
               <CommandItem
                 onSelect={() => {
                   setCommandOpen(false);
-                  router.push("/downloads/");
+                  router.push("/downloads");
                 }}
               >
                 Downloads

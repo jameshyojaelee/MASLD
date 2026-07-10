@@ -8,10 +8,17 @@ export function ThemeToggle() {
   const { theme, setTheme } = useAppStore();
 
   useEffect(() => {
+    // Initialize the store from the theme the pre-hydration script already
+    // applied (localStorage, else the class it set from the OS preference),
+    // so a first-visit OS-dark preference is not reset to light.
     const saved = localStorage.getItem("masld-atlas-theme");
-    if (saved === "dark" || saved === "light") {
-      setTheme(saved);
-    }
+    const initial =
+      saved === "dark" || saved === "light"
+        ? saved
+        : document.documentElement.classList.contains("dark")
+          ? "dark"
+          : "light";
+    setTheme(initial);
   }, [setTheme]);
 
   useEffect(() => {

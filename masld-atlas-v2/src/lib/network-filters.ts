@@ -13,8 +13,9 @@
 
 import { loadSearchIndexV2 } from "./network-data";
 import type { NetworkSearchEntryV2 } from "./network-types";
+import { dataUrl } from "./data-base";
 
-const BASE_V2 = "/data/network/portal_export_v2";
+const BASE_V2 = dataUrl("network/portal_export_v2");
 
 export type FStageFilter =
   | "all"
