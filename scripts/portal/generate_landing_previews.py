@@ -142,7 +142,9 @@ def build_ticker(atlas: pd.DataFrame) -> list[dict]:
     df = df[df["is_deg"].astype(bool)
             & np.isfinite(df["bulk_logFC"])
             & df["human_symbol"].str.len().gt(0)
-            & ~df["human_symbol"].isin(["nan", "NA", "None"])]
+            & ~df["human_symbol"].isin(["nan", "NA", "None"])
+            # drop unnamed genes whose symbol is a raw ENSEMBL id (e.g. ENSG000...)
+            & ~df["human_symbol"].str.match(r"^ENSG\d", case=False, na=False)]
     df = df.reindex(df["bulk_logFC"].abs().sort_values(ascending=False).index)
     top = df.head(TICKER_N)
     return [

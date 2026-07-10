@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
 
@@ -21,7 +21,16 @@ export function ThemeToggle() {
     setTheme(initial);
   }, [setTheme]);
 
+  // Persist + sync the DOM only on actual theme CHANGES, never on mount — the
+  // pre-hydration script already applied the correct class, and running this on
+  // mount (with the store's transient initial value) would clobber the user's
+  // stored choice.
+  const firstRun = useRef(true);
   useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
     localStorage.setItem("masld-atlas-theme", theme);
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);

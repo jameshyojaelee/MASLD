@@ -21,9 +21,9 @@ export default function HomePage() {
     <div className="pb-16">
       <Hero />
 
-      {/* Animated KPI band, tucked up into the hero's lower vignette. */}
+      {/* Animated KPI band on the page surface, just below the hero. */}
       <div className="mx-auto max-w-6xl px-6">
-        <HeroStats className="relative z-10 -mt-8 sm:-mt-12" />
+        <HeroStats className="mt-2" />
       </div>
 
       {/* Full-bleed gene ticker — top differentially expressed genes. */}

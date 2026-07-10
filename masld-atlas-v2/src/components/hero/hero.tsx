@@ -86,7 +86,7 @@ export function Hero() {
         style={{ backgroundImage: "var(--depth-vignette)" }}
       />
 
-      <div className="mx-auto max-w-3xl px-6 py-24 text-center sm:py-28">
+      <div className="mx-auto max-w-3xl px-6 pt-14 pb-16 text-center sm:pt-20 sm:pb-20">
         <h1 className="text-gradient font-display text-display-xl font-semibold tracking-tight text-balance">
           MASLD Atlas
         </h1>

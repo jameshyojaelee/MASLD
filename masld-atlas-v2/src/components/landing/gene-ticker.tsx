@@ -65,6 +65,16 @@ export function GeneTicker({ className }: { className?: string }) {
       ref={rootRef}
       aria-label="Top differentially expressed genes"
       className={className}
+      // Horizontal edge-fade: chips dissolve in/out at both ends instead of
+      // hard-clipping. Color-agnostic (transparent↔black), so it works in both
+      // themes; masks the overflow-clipped marquee subtree without touching the
+      // hover/offscreen pause or reduced-motion behavior.
+      style={{
+        maskImage:
+          "linear-gradient(to right, transparent 0, black 5%, black 95%, transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0, black 5%, black 95%, transparent 100%)",
+      }}
     >
       <MarqueeRow durationSec={60} paused={paused}>
         {genes.map((g, i) => {

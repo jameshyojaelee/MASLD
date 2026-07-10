@@ -3,15 +3,16 @@
 /**
  * The landing entry grid: an asymmetric bento of the atlas's primary sections.
  *
- * Replaces the flat quick-links row. The Atlas tile is a 2x2 hero; the rest are
- * 1x1 cells with tiny real-data previews (volcano / ancestry / funnel / UMAP /
- * stage), a ⌘K gene-search prompt, and two text-only navigation tiles. Layout
+ * Replaces the flat quick-links row. The Single-cell UMAP tile is a 2x2 hero;
+ * the rest are 1x1 cells with tiny real-data previews (ancestry / funnel /
+ * volcano / stage), a ⌘K gene-search prompt, and two nav tiles with faint
+ * decorative watermarks. Layout
  * is a plain CSS grid (1 col mobile → 2 → 4) with explicit spans for rhythm.
  * Section stats come from `atlas-constants`; previews are lazy-mounted inside
  * each tile so they never block first paint.
  */
 
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, Download, ArrowLeftRight } from "lucide-react";
 import { BentoTile } from "./bento-tile";
 import { MiniVolcano } from "@/components/previews/mini-volcano";
 import { AncestryBars } from "@/components/previews/ancestry-bars";
@@ -104,21 +105,39 @@ export function BentoGrid() {
         </div>
       </BentoTile>
 
-      {/* Downloads (text only) */}
+      {/* Downloads — no data preview; a faint watermark icon gives it weight */}
       <BentoTile
         title="Downloads"
         description="Full atlas, gene lists, supplementary tables"
         stat={<ArrowRight className="size-3.5" aria-hidden />}
         href="/downloads"
-      />
+        lazy={false}
+      >
+        <div className="relative h-full w-full">
+          <Download
+            aria-hidden
+            strokeWidth={1.25}
+            className="pointer-events-none absolute -bottom-3 -right-2 size-24 text-muted-foreground/15"
+          />
+        </div>
+      </BentoTile>
 
-      {/* Translation (text only) */}
+      {/* Translation — cross-species arrows as a faint decorative watermark */}
       <BentoTile
         title="Translation"
         description="Cross-species and clinical translation"
         stat={<ArrowRight className="size-3.5" aria-hidden />}
         href="/translation"
-      />
+        lazy={false}
+      >
+        <div className="relative h-full w-full">
+          <ArrowLeftRight
+            aria-hidden
+            strokeWidth={1.25}
+            className="pointer-events-none absolute -bottom-3 -right-2 size-24 text-muted-foreground/15"
+          />
+        </div>
+      </BentoTile>
     </div>
   );
 }

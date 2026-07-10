@@ -6,9 +6,11 @@
  *
  * No fetch — counts come from `atlas-constants`. Tier widths scale by log of
  * the count so the 2 approved targets stay visible next to 1,504 preclinical
- * ones. An SVG funnel (three stacked trapezoids, approved darkest) sits beside
- * a small theme-token legend; stage colors come from the dev-stage palette
- * (preclinical = control gray).
+ * ones. A single measured SVG draws three stacked trapezoids (approved darkest)
+ * that fill the tile height, each with a compact inline label — count over tier
+ * name — sitting beside its band. Stage colors come from the dev-stage palette
+ * (preclinical = control gray); label text stays theme-token neutral (never
+ * data-colored).
  */
 
 import {
@@ -32,7 +34,10 @@ const TIERS: Tier[] = [
   { name: "Approved", value: DRUGS_APPROVED, color: devStageColor("Approved") },
 ];
 
+/** Minimum width fraction so the narrowest tier stays visibly clickable. */
 const MIN_FRAC = 0.16;
+/** Share of the width the funnel graphic claims (the rest holds the labels). */
+const FUNNEL_FRAC = 0.55;
 
 export function DrugFunnel() {
   const [ref, { width, height }] = useMeasure<HTMLDivElement>();
@@ -44,26 +49,31 @@ export function DrugFunnel() {
   );
 
   return (
-    <div className="flex h-full w-full items-center gap-3">
-      <div ref={ref} className="h-full flex-[3]">
-        {ready && (
-          <svg
-            width={width}
-            height={height}
-            className="block"
-            role="img"
-            aria-label="Drug development funnel"
-          >
-            {(() => {
-              const cx = width / 2;
-              const track = width - 2;
-              const bandH = height / TIERS.length;
-              // Boundary widths: top of each band, plus a flat bottom.
-              const w = frac.map((f) => f * track);
-              const level = [...w, w[w.length - 1]];
-              return TIERS.map((t, k) => {
+    <div ref={ref} className="h-full w-full">
+      {ready &&
+        (() => {
+          const funnelW = width * FUNNEL_FRAC;
+          const cx = funnelW / 2;
+          const track = funnelW - 4;
+          const bandH = height / TIERS.length;
+          // Boundary widths: top of each band, plus a flat bottom.
+          const w = frac.map((f) => f * track);
+          const level = [...w, w[w.length - 1]];
+          const labelX = funnelW + 8;
+          const countFs = Math.min(12, Math.max(9, bandH * 0.34));
+          const nameFs = Math.min(9, Math.max(7, bandH * 0.24));
+          return (
+            <svg
+              width={width}
+              height={height}
+              className="block"
+              role="img"
+              aria-label="Drug development funnel: preclinical, clinical, approved"
+            >
+              {TIERS.map((t, k) => {
                 const yTop = k * bandH + 1;
                 const yBot = (k + 1) * bandH - 1;
+                const yMid = (yTop + yBot) / 2;
                 const tw = level[k];
                 const bw = level[k + 1];
                 const pts = [
@@ -74,25 +84,34 @@ export function DrugFunnel() {
                 ]
                   .map((p) => p.join(","))
                   .join(" ");
-                return <polygon key={t.name} points={pts} fill={t.color} />;
-              });
-            })()}
-          </svg>
-        )}
-      </div>
-      <ul className="flex flex-[2] flex-col justify-center gap-1.5">
-        {TIERS.map((t) => (
-          <li key={t.name} className="flex items-center gap-1.5 text-[10px] leading-tight">
-            <span
-              aria-hidden
-              className="size-2 shrink-0 rounded-[2px]"
-              style={{ backgroundColor: t.color }}
-            />
-            <span className="text-muted-foreground">{t.name}</span>
-            <span className="ml-auto font-numeric text-foreground">{fmt(t.value)}</span>
-          </li>
-        ))}
-      </ul>
+                return (
+                  <g key={t.name}>
+                    <polygon points={pts} fill={t.color} />
+                    <text
+                      x={labelX}
+                      y={yMid - nameFs * 0.55}
+                      dominantBaseline="central"
+                      fontSize={countFs}
+                      fill="var(--color-foreground)"
+                      style={{ fontFamily: "var(--font-mono)" }}
+                    >
+                      {fmt(t.value)}
+                    </text>
+                    <text
+                      x={labelX}
+                      y={yMid + countFs * 0.55}
+                      dominantBaseline="central"
+                      fontSize={nameFs}
+                      fill="var(--color-muted-foreground)"
+                    >
+                      {t.name}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
+          );
+        })()}
     </div>
   );
 }

@@ -36,15 +36,15 @@ export const metadata: Metadata = {
 /**
  * Pre-hydration theme script. Runs synchronously as the first child of <body>,
  * before body content paints, so the correct theme is applied with no flash.
- * Reads the persisted choice (localStorage), falling back to the OS preference.
+ * Reads the persisted choice (localStorage). The app is dark-first, so it
+ * defaults to dark unless the user has explicitly chosen light.
  * zustand remains the runtime source of truth once React hydrates.
  */
 const THEME_INIT = `
 (function () {
   try {
     var s = localStorage.getItem('masld-atlas-theme');
-    var dark = s === 'dark' || (s !== 'light' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var dark = s !== 'light'; // dark by default; only an explicit 'light' opts out
     document.documentElement.classList.toggle('dark', dark);
   } catch (e) {}
 })();

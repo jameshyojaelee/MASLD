@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 import {
   ATLAS_GENES,
   DEG_COUNT,
-  DEG_GATE_LABEL,
   CONVERGENCE_TIER1,
   DRUGS_APPROVED,
   DRUGS_CLINICAL,
@@ -59,7 +58,7 @@ export function AtlasStory() {
 
   beats.push(
     { value: fmt(ATLAS_GENES), caption: "genes profiled across the atlas" },
-    { value: fmt(DEG_COUNT), caption: `differential genes (${DEG_GATE_LABEL})` },
+    { value: fmt(DEG_COUNT), caption: "differential genes (FDR < 0.05)" },
     {
       value: fmt(CONVERGENCE_TIER1),
       caption: "Tier-1 convergent targets with multi-omics agreement",

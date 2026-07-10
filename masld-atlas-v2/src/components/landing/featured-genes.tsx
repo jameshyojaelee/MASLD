@@ -68,9 +68,15 @@ export function FeaturedGenes() {
                   {gene.tagline}
                 </p>
                 <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>
-                    logFC: <span className="font-mono">{gene.bulk_logfc.toFixed(3)}</span>
-                  </span>
+                  {Math.abs(gene.bulk_logfc) < 0.2 ? (
+                    <span>
+                      <span className="font-mono">{gene.layers_active}</span> evidence layers
+                    </span>
+                  ) : (
+                    <span>
+                      logFC: <span className="font-mono">{gene.bulk_logfc.toFixed(3)}</span>
+                    </span>
+                  )}
                   {lead && (
                     <span className="truncate">
                       {lead.drug}
