@@ -15,7 +15,7 @@
 # message()). Data-encoding colour gradient is allowed (it is not text).
 #
 # Data:   RNA-seq/results/glp1ra/scrna_incretin_axis/scrna_pct_expressing_by_celltype.csv
-# Output: figures/main/fig5_convergence/panels/fig5e_glp1ra_incretin_axis.pdf
+# Output: figures/supplementary/figS_glp1ra/fig5e_glp1ra_incretin_axis.pdf
 # Env:    rnaseq
 # ─────────────────────────────────────────────────────────────────────────────
 suppressPackageStartupMessages({
@@ -29,7 +29,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
-dir.create(file.path(FIG5_DIR, "panels"), recursive = TRUE, showWarnings = FALSE)
+dir.create(FIGS_GLP1RA_DIR, recursive = TRUE, showWarnings = FALSE)
 
 d <- fread(file.path(BASE,
   "RNA-seq/results/glp1ra/scrna_incretin_axis/scrna_pct_expressing_by_celltype.csv"))
@@ -48,20 +48,23 @@ d[, cell_type := factor(cell_type, levels = ct_order)]
 d[, gene := factor(gene, levels = rev(gene_order))]   # rev so GLP1R plots at top
 
 p <- ggplot(d, aes(x = cell_type, y = gene)) +
-  geom_point(aes(size = pct_cells_expressing, colour = mean_cp10k)) +
-  scale_size_continuous(range = c(0.05, 4.6),
+  geom_point(aes(size = pct_cells_expressing, fill = mean_cp10k),
+             shape = 21, stroke = 0.15, colour = "grey35") +
+  scale_size_continuous(range = c(0.3, 5.4),
                         breaks = c(0.1, 1, 5, 10, 18),
                         name = "% cells\nexpressing") +
-  scale_colour_gradient(low = "grey88", high = "#08306b",
-                        name = "Mean expr\n(CP10k)") +
+  scale_fill_gradient(low = "#eef0f6", high = "#08306b", trans = "sqrt",
+                      breaks = c(0.05, 0.25, 0.75),
+                      name = "Mean expr\n(CP10k)") +
   labs(x = NULL, y = NULL) +
+  guides(size = guide_legend(override.aes = list(fill = "grey55"))) +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         axis.text.y = element_text(face = "italic"),
         legend.position = "right",
-        panel.grid.major = element_line(colour = "grey93", linewidth = 0.2))
+        panel.grid.major = element_line(colour = "grey94", linewidth = 0.2))
 
-outfile <- file.path(FIG5_DIR, "panels", "fig5e_glp1ra_incretin_axis.pdf")
+outfile <- file.path(FIGS_GLP1RA_DIR, "fig5e_glp1ra_incretin_axis.pdf")
 ggsave(outfile, p, width = 3.5, height = 1.9, device = pdf_device)
 
 message("Fig 5e written: ", outfile)

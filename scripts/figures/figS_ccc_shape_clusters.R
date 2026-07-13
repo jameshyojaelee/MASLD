@@ -1,3 +1,15 @@
+# =============================================================================
+# SUPERSEDED (2026-07-12, donor-collapse remediation). DO NOT USE / RENDER.
+# -----------------------------------------------------------------------------
+# This panel is built on (1) RUN-LEVEL per-donor LIANA scores (pseudoreplicated
+# -- multiple SRR runs per biological donor) and (2) the BANNED augmented
+# cross-cohort F-stage axis (stage_lr_lmm_fstage_augmented.tsv), which project
+# rules say must not be presented. It is non-canonical (absent from
+# run_pub_figures.sh; PDF not git-tracked) and redundant with the canonical
+# Fig 3 CCC panels (Fig3H trajectory + Fig3J LIANA heatmap), rebuilt on
+# donor-collapsed DOCUMENTED-F-stage data by promote-fig3gh -- use those.
+# Run-level backup: results_gpu_v2/ccc/stage_trajectory/prepromote_runlevel_2026-07-12/.
+# =============================================================================
 # KEY MESSAGE: MASLD progression rewires paracrine signaling gradually across stages, not as a binary control-vs-disease switch.
 # =============================================================================
 # figS_ccc_shape_clusters.R  ->  staged ligand-receptor rewiring heatmap

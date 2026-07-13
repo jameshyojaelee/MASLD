@@ -4,10 +4,10 @@
 # Healthy → Steatosis → Steatohepatitis. Three outputs from one matrix (shared
 # colour scale so they never drift):
 #   MAIN(3I) fig3g_singlecell_module_heatmap.pdf — COMPACT: top-3 up + top-3 down
-#         per cell type (24 modules) — the multi-cellular hand-off at a glance.
+#         per cell type (17 modules) — the multi-cellular hand-off at a glance.
 #   MAIN(3J) fig3h_ccc_lr_heatmap.pdf           — companion communication heatmap
 #         (13 headline L-R pairs, row z-scored) as its own panel.
-#   SUPP  figs3_singlecell_module_heatmap_full.pdf — the FULL 54-module breadth.
+#   SUPP  figs3_singlecell_module_heatmap_full.pdf — the FULL 22-module breadth.
 # ============================================================================
 # singlecell_module_heatmap.R  — Fig 3G module remodeling heatmap(s)
 #
@@ -17,6 +17,14 @@
 # stat-audit flagged as circular. Values via the dataset-centered-median method
 # used by hotspot_cascade.R / the NPC track. Cell-type colours = shared ct_palette
 # (identical to the fig3g CCC chord).
+#
+# DONOR-LEVEL (canonical 2026-07-12): pseudoreplication fix. Module SELECTION reads
+# the donor-collapsed disease_stage_q from donor_collapse/all_modules_donor.tsv, and
+# the in-script disease-slope beta collapses each per-cell-type donor_scores.tsv from
+# sequencing-run to TRUE biological donor (mean over runs, lib_donor_collapse) BEFORE
+# lmer. 22 disease-significant modules across the 5 cell types (run-level was 54);
+# compact main shows 17 (top-3 up + top-3 down per cell type). The fig3h L-R panel
+# reads the donor-collapsed ccc_trajectories_data.csv (repointed in ccc_v3_panels.R).
 # ============================================================================
 suppressPackageStartupMessages({
   library(data.table); library(ComplexHeatmap); library(circlize); library(grid)
@@ -26,8 +34,10 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))   # ct_palette (shared with the CCC chord)
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))  # build_srr_to_donor_map
 
 HS        <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/hotspot_modules")
+ALL_MOD   <- file.path(HS, "donor_collapse/all_modules_donor.tsv")   # DONOR-LEVEL selection stats (pseudoreplication fix)
 META_F    <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/donor_metadata_extended.tsv")
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
@@ -52,10 +62,20 @@ MAIN_MODULE_HEIGHT_IN <- 2.54
 MAIN_LIANA_WIDTH_IN   <- 3.54
 MAIN_LIANA_HEIGHT_IN  <- 1.95
 
+# donor-collapse machinery (pseudoreplication fix) --------------------------
+# atlas `sample` = a sequencing run / sort-fraction library; collapse to true
+# biological donor (mean over runs) so per-donor stats are not pseudoreplicated.
+srr_to_donor <- build_srr_to_donor_map(BASE)
+collapse_scores <- function(dt) {           # sample,module,score -> donor,module,score (mean over runs)
+  dt <- copy(dt)
+  dt[, donor := ifelse(sample %in% names(srr_to_donor), srr_to_donor[sample], sample)]
+  dt[, .(score = mean(score, na.rm = TRUE)), by = .(module, donor)]
+}
+
 # ---------------------------------------------------------------------------
-# (1) disease-significant modules (+ beta + biological name)
+# (1) disease-significant modules (+ beta + biological name)  [DONOR-LEVEL q]
 # ---------------------------------------------------------------------------
-am  <- fread(file.path(HS, "all_modules.tsv"))
+am  <- fread(ALL_MOD)
 sig <- am[disease_stage_q < 0.05 & cell_type %in% CTS,
           .(cell_type, module, beta = disease_stage_beta, q = disease_stage_q,
             name = fifelse(is.na(module_name) | module_name == "", best_match_program, module_name))]
@@ -70,9 +90,12 @@ NSIG <- table(factor(sig$cell_type, levels = CTS))
 # ---------------------------------------------------------------------------
 meta <- fread(META_F, select = c("sample", "disease_stage_coarse", "dataset", "exclude_stage_analysis"))
 meta <- meta[exclude_stage_analysis != TRUE & disease_stage_coarse %in% STAGES]
+meta[, donor := ifelse(sample %in% names(srr_to_donor), srr_to_donor[sample], sample)]
+meta_donor <- unique(meta[, .(donor, disease_stage_coarse, dataset)], by = "donor")  # invariant within donor
 trend <- rbindlist(lapply(CTS, function(ct) {
   sm <- sig[cell_type == ct, module]; if (!length(sm)) return(NULL)
-  ds <- merge(fread(file.path(HS, ct, "donor_scores.tsv"))[module %in% sm], meta, by = "sample")
+  ds <- merge(collapse_scores(fread(file.path(HS, ct, "donor_scores.tsv"))[module %in% sm]),
+              meta_donor, by = "donor")
   ds[, sc := score - mean(score, na.rm = TRUE), by = .(module, dataset)]
   ds[, .(med = median(sc, na.rm = TRUE)), by = .(module, disease_stage_coarse)][, cell_type := ct][]
 }))
@@ -87,7 +110,8 @@ use_lmer <- requireNamespace("lmerTest", quietly = TRUE)
 if (use_lmer) suppressPackageStartupMessages(library(lmerTest))
 slope <- rbindlist(lapply(CTS, function(ct) {
   sm <- sig[cell_type == ct, module]; if (!length(sm)) return(NULL)
-  ds <- merge(fread(file.path(HS, ct, "donor_scores.tsv"))[module %in% sm], meta, by = "sample")
+  ds <- merge(collapse_scores(fread(file.path(HS, ct, "donor_scores.tsv"))[module %in% sm]),
+              meta_donor, by = "donor")
   ds[, ord := as.integer(factor(disease_stage_coarse, levels = STAGES)) - 1L]
   rbindlist(lapply(sm, function(mm) {
     d  <- ds[module == mm]
@@ -239,10 +263,12 @@ draw(ht_l, heatmap_legend_side = "right", padding = unit(c(2, 1, 2, 1), "mm"))
 dev.off()
 cat(sprintf("[saved] %s  (%d L-R pairs)\n", OUT_LIANA, ncol(lmat)))
 
+n_sig_total <- nrow(sig)          # donor-level disease-significant modules across the 5 cell types
+n_compact   <- nrow(W[rk <= 3])   # compact main selection (top-3 up + top-3 down per cell type)
 message(sprintf(paste0(
-  "[Fig 3G/3H caption] Single-cell remodeling across MASLD. fig3g (MAIN): per cell type the ",
-  "3 disease-up + 3 disease-down Hotspot modules with the SMALLEST disease-stage FDR q ",
-  "(ranked by disease_stage_q, most significant first; 24 of 54 significant; full set in ",
+  "[Fig 3G/3H caption] Single-cell remodeling across MASLD (DONOR-LEVEL). fig3g (MAIN): per cell type the ",
+  "3 disease-up + 3 disease-down Hotspot modules with the SMALLEST donor-level disease-stage FDR q ",
+  "(ranked by disease_stage_q, most significant first; ", n_compact, " compact of ", n_sig_total, " donor-significant; full set in ",
   "figs3_..._full) split by cell type × coarse stage Healthy→Steatohepatitis; colour = ",
   "dataset-centered median module score over the 3 stages Healthy/Steatosis/Steatohepatitis ",
   "(Cirrhosis excluded; scale shared with the full supp panel). Right bars = disease slope ",

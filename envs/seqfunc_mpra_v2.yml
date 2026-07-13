@@ -1,0 +1,21 @@
+name: seqfunc_mpra_v2
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.4
+  - bioconductor-deseq2
+  - bioconductor-mpranalyze
+  - bioconductor-biocparallel
+  - bioconductor-genomeinfodbdata
+  - r-data.table
+  - r-jsonlite
+  - r-readxl
+  - r-optparse
+  - python=3.11
+  - jq
+  - pandas
+  - pyarrow
+  - scipy
+  - scikit-learn

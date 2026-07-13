@@ -1,0 +1,15 @@
+name: seqfunc_chrombpnet
+channels:
+  - conda-forge
+  - bioconda
+channel_priority: strict
+dependencies:
+  - python=3.10
+  - pip
+  - samtools
+  - bedtools
+  - pybigwig
+  - meme
+  - ucsc-bedgraphtobigwig
+  - pip:
+      - chrombpnet==1.0.1

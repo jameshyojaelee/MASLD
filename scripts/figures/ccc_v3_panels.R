@@ -47,8 +47,14 @@ V3_DIR <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2_phase05/ccc/stage_trajectory_v3")
 V2_DIR <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2_phase05/ccc/stage_trajectory_v2")
+# DONOR-COLLAPSED inputs (canonical 2026-07-12): pseudoreplication fix. The v2
+# LR scores + donor metadata are now keyed on the TRUE biological donor (06 donor-
+# collapse fix / ccc_v3_dc_rebuild.R), not the sequencing run. Run-level inputs
+# (all_donor_lr_scores_v2.tsv.gz + donor_metadata_v2.tsv) are retained on disk for
+# provenance / before-after review.
+LR_V2  <- file.path(V2_DIR, "all_donor_lr_scores_v2_dc.tsv.gz")
 META_V2 <- file.path(BASE,
-  "Analysis/SingleCell/results_gpu_v2_phase05/mcp/inputs/donor_metadata_v2.tsv")
+  "Analysis/SingleCell/results_gpu_v2_phase05/mcp/inputs/donor_metadata_v2_dc.tsv")
 
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
@@ -86,7 +92,7 @@ para <- hl[sender_ct != receiver_ct &
            gate_permutation  == TRUE &
            (gate_leverage == TRUE | is.na(gate_leverage))]
 
-lr_long <- fread(file.path(V2_DIR, "all_donor_lr_scores_v2.tsv.gz"))
+lr_long <- fread(LR_V2)   # donor-collapsed LR scores (see LR_V2 note above)
 lr_long[, lr_pair := paste(ligand_complex, receptor_complex, sep = "__")]
 lr_long[, ct_pair := paste(source, target, sep = "->")]
 lr_long[, score   := -log10(pmax(magnitude_rank, 1e-4))]

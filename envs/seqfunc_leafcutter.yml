@@ -1,0 +1,17 @@
+name: seqfunc_leafcutter
+channels:
+  - conda-forge
+  - bioconda
+channel_priority: strict
+dependencies:
+  - python=3.10
+  - leafcutter=2.0.3
+  - regtools=1.0.0
+  - samtools
+  - bedtools
+  - r-base=4.3
+  - r-data.table
+  - r-dplyr
+  - r-ggplot2
+  - r-optparse
+  - r-remotes

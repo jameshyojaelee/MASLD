@@ -61,29 +61,37 @@ cc[, ct := prettyct(cell_type)]
 ctt <- suppressWarnings(cor.test(cc$scrna_beta_fig3g, cc$beta_protein_saf, method = "spearman"))
 sc  <- 100 * mean(cc$sign_concordant)
 lab_pts <- cc[order(-abs(scrna_beta_fig3g))][
-  (!is.na(nes_padj) & nes_padj < 0.05) | seq_len(.N) <= 8]
+  ((!is.na(nes_padj) & nes_padj < 0.05) | seq_len(.N) <= 8) &
+  !grepl("Ion / membrane potential|Nucleoside catabolism|ARHGAP22|FKBP5|ITGA9/TCF7L2", name)
+]
 xr <- max(abs(cc$scrna_beta_fig3g)); yr <- max(abs(cc$beta_protein_saf), na.rm = TRUE)
 pB <- ggplot(cc, aes(scrna_beta_fig3g, beta_protein_saf)) +
   annotate("rect", xmin = 0, xmax = xr * 1.1, ymin = 0, ymax = yr * 1.15, fill = masld_colors$up, alpha = 0.05) +
   annotate("rect", xmin = -xr * 1.1, xmax = 0, ymin = -yr * 1.15, ymax = 0, fill = masld_colors$down, alpha = 0.05) +
   geom_hline(yintercept = 0, color = GREY, linewidth = 0.3) +
   geom_vline(xintercept = 0, color = GREY, linewidth = 0.3) +
-  geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 0.4, linetype = "22") +
-  geom_point(aes(color = ct), size = 1.3, alpha = 0.9) +
-  scale_color_manual(values = CT_COLS, name = "Cell type", na.value = GREY) +
-  labs(x = expression("scRNA module stage slope  " * beta[scRNA] * "  (fig3g: Healthy" %->% "Steatohepatitis)"),
-       y = expression("Liver-protein module stage slope  " * beta[protein] * "  (No_MASLD" %->% "MASH)")) +
+  geom_point(aes(color = ct), size = 1.0, alpha = 0.9) +
+  scale_color_manual(values = CT_COLS, name = NULL, na.value = GREY) +
+  labs(x = expression("scRNA stage slope  " * beta[scRNA] * "  (Healthy" %->% "Steatohepatitis)"),
+       y = expression("Protein stage slope  " * beta[protein] * "  (No_MASLD" %->% "MASH)")) +
   annotate("text", x = -xr, y = yr * 1.1, hjust = 0, size = TXT,
            label = sprintf("Spearman rho = %.2f, p = %.3f\nsign-concordant %.0f%% (%d/%d)",
                            ctt$estimate, ctt$p.value, sc, sum(cc$sign_concordant), nrow(cc))) +
-  theme_masld_compact() + theme(legend.position = "right")
+  theme_masld_compact() +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.box = "horizontal",
+    legend.margin = margin(-5, 0, 0, 0),
+    legend.spacing.x = unit(0.05, "cm")
+  )
 if (HAS_REPEL) pB <- pB + ggrepel::geom_text_repel(
   data = lab_pts, aes(label = name), size = TXT, color = "black",
   min.segment.length = 0, segment.size = 0.2, max.overlaps = 20, box.padding = 0.3)
 # Panel B (centerpiece) is PROMOTED into the main Fig4 validation panel set as figS4m
 # (per 2026-07-10 request); the enrichment (A) + cascade (C) stay in the standalone supp block.
 FIG4_PANELS <- file.path(FIG4_DIR, "panels"); dir.create(FIG4_PANELS, showWarnings = FALSE, recursive = TRUE)
-save_fig(pB, file.path(FIG4_PANELS, "figS4m.pdf"), width = 5.6, height = 4.2)
+save_fig(pB, file.path(FIG4_PANELS, "figS4m.pdf"), width = 3.4, height = 3.2)
 
 # ── Panel C: per-module protein cascade across saf stages ─────────────────────
 STG <- c("No_MASLD", "MASL", "MASH")

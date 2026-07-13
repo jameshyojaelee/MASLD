@@ -40,8 +40,8 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 #   coloc + logFC define the plane (identical to fig5c); hep_mean_cpm is the
 #   hepatocyte single-cell mean CPM (our scRNA substrate); sig_class flags bulk-DEG
 #   significance (kept for the audit CSV, not drawn — panel 5c carries it).
-FIG5_DATA_DIR <- file.path(FIG5_DIR, "data")
-dir.create(file.path(FIG5_DIR, "panels"), recursive = TRUE, showWarnings = FALSE)
+FIG5_DATA_DIR <- file.path(FIG5_DIR, "data")   # input: shared drug_target_calibration.csv
+dir.create(FIGS_GLP1RA_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIG5_DATA_DIR, recursive = TRUE, showWarnings = FALSE)
 dt <- fread(file.path(FIG5_DATA_DIR, "drug_target_calibration.csv"),
             select = c("gene", "outcome", "coloc", "logFC", "treat_lfc", "treat_fdr",
@@ -92,7 +92,7 @@ p <- ggplot(dt, aes(xj, yj)) +
         legend.text = element_text(size = 6, face = "plain"),
         plot.margin = margin(3, 4, 3, 3))
 
-out <- file.path(FIG5_DIR, "panels", "figS5_target_expression.pdf")
+out <- file.path(FIGS_GLP1RA_DIR, "figS5_target_expression.pdf")
 save_fig(p, out, width = 3.4, height = 2.4)
 message("Saved: ", out)
 message("CAPTION: The fig5c calibration plane (x = COLOC PP.H4, y = canonical raw ",
@@ -109,7 +109,7 @@ fwrite(dt[order(-hep_mean_cpm),
             treat_lfc = round(treat_lfc, 3), treat_fdr = signif(treat_fdr, 3),
             hep_mean_cpm = round(hep_mean_cpm, 3), hep_ratio = round(hep_ratio, 3),
             hep_class, sig_class)],
-       file.path(FIG5_DATA_DIR, "figS5_target_expression.csv"))
+       file.path(FIGS_GLP1RA_DIR, "figS5_target_expression.csv"))
 
 # ── Sanity print ─────────────────────────────────────────────────────────────
 cat("==== fig5d expression-plane sanity (sorted by hepatocyte CPM) ====\n")

@@ -9,23 +9,20 @@ the rest. Run on a compute node in the rnaseq env (see run_fig4a_v2.sh)."""
 import traceback
 
 from fig4a_v2_common import get_data
-import fig4a_v2_forest
-import fig4a_v2_ghostflow
 import fig4a_v2_corefield
 import fig4a_v2_physlayers
-import fig4a_v2_triangle
 import fig4a_v2_icons
+# forest / ghostflow / triangle were CUT by the user 2026-07-10 (PDFs deleted); their
+# builder scripts remain on disk but are no longer auto-rendered here so a re-render
+# does not resurrect the deleted candidates. corefield ("Null Lineup") is the WINNER.
 
 
 def main():
     d, stats = get_data()
     builders = [
-        ("forest",     fig4a_v2_forest.build),
-        ("ghostflow",  fig4a_v2_ghostflow.build),
-        ("corefield",  fig4a_v2_corefield.build),
-        ("physlayers", fig4a_v2_physlayers.build),
-        ("triangle",   fig4a_v2_triangle.build),
-        ("icons",      fig4a_v2_icons.build),
+        ("corefield",  fig4a_v2_corefield.build),   # WINNER (Null Lineup)
+        ("physlayers", fig4a_v2_physlayers.build),   # fallback
+        ("icons",      fig4a_v2_icons.build),        # fallback (PI's assayed-vs-validated)
     ]
     ok, fail = [], []
     for name, fn in builders:

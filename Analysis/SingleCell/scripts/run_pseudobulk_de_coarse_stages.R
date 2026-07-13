@@ -35,8 +35,14 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 scvi_dir <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2")
 h5ad_file <- file.path(scvi_dir, "integrated_atlas.h5ad")
 pb_dir <- file.path(scvi_dir, "pseudobulk")
-out_dir <- file.path(scvi_dir, "pseudobulk_de")
+# Donor-collapsed output (fixes run-level pseudoreplication). Written to a NEW
+# directory so the legacy run-level coarse _de.csv files are not clobbered.
+out_dir <- file.path(scvi_dir, "pseudobulk_de/coarse_stage_donorcollapsed")
 donor_pairing_file <- file.path(BASE, "data/GSE244832/metadata/donor_pairing.csv")
+
+# Shared donor-collapse utility (SRR run -> biological donor for GSE244832 /
+# GSE185477 / GSE202379). Makes donor-level DE the default going forward.
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
 
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -92,17 +98,15 @@ cell_meta <- data.table(
   preparation_method = prep_vec
 )
 
-# Per-sample cell counts (used for >=50 cells filter)
-cell_counts <- cell_meta[, .N, by = sample]
-setnames(cell_counts, "N", "n_cells")
-
-# Collapse to sample-level metadata via majority vote on each field
+# Collapse to RUN-level metadata via majority vote on each field.
+# NOTE: `sample` here is a SEQUENCING RUN (SRR), not a biological donor, for
+# GSE244832 / GSE185477. Donor-collapse + donor-level cell counts happen below,
+# after per-SRR stage recovery (which needs the raw SRR ids).
 sample_meta <- cell_meta[, .(
   dataset = dataset[1],
   condition = names(sort(table(condition), decreasing = TRUE))[1],
   preparation_method = preparation_method[1]
 ), by = sample]
-sample_meta <- merge(sample_meta, cell_counts, by = "sample", all.x = TRUE)
 
 # Stage mapping (mirrors extract_atlas_umap_for_fig2.py)
 cond_to_stage <- c(
@@ -138,6 +142,34 @@ if (file.exists(donor_pairing_file)) {
           " / ",
           sum(sample_meta$dataset == "GSE244832"))
 }
+
+# ---------------------------------------------------------------------------
+# 1b. Donor-collapse (fix run-level pseudoreplication)
+# ---------------------------------------------------------------------------
+# `sample` is a sequencing RUN, not a donor, for GSE244832 (117 runs -> 18
+# donors) and GSE185477 (21 runs -> 3 donors); all other datasets are 1 run =
+# 1 donor and pass through unchanged. The per-run stage recovery above MUST run
+# first because it keys on raw SRR ids.
+srr_to_donor <- build_srr_to_donor_map(BASE)
+
+# Collapse run-level sample_meta to donor level (majority vote per field). The
+# per-run stage recovery above runs FIRST (it keys on raw SRR ids), so the vote
+# resolves each donor's stage from its runs; the hardened util returns NA for an
+# all-NA field (GSE202379, whose generic "MASLD" has no coarse-stage mapping).
+n_runs_pre <- nrow(sample_meta)
+sample_meta <- collapse_sample_meta_to_donor(sample_meta, BASE)
+message(sprintf("  donor-collapse: %d run-level rows -> %d donor-level rows",
+                n_runs_pre, nrow(sample_meta)))
+
+# Donor-level cell counts for the >=50-cell filter: sum each donor's per-run
+# cell counts (a run-level n_cells >=50 filter would wrongly drop donors whose
+# reads are split across many small runs).
+run_cell_counts <- cell_meta[, .N, by = sample]
+run_cell_counts[, donor := ifelse(sample %in% names(srr_to_donor),
+                                  srr_to_donor[sample], sample)]
+donor_cell_counts <- run_cell_counts[, .(n_cells = sum(N)), by = donor]
+setnames(donor_cell_counts, "donor", "sample")
+sample_meta <- merge(sample_meta, donor_cell_counts, by = "sample", all.x = TRUE)
 
 # Apply prep-method filter consistently (same as pseudobulk_de.R)
 de_preps <- c("nuclei", "cd45_negative", "unsorted")
@@ -265,8 +297,11 @@ for (ct_name in TARGET_CELL_TYPES) {
   counts_mat <- as.matrix(counts_dt[, -1, with = FALSE])
   rownames(counts_mat) <- gene_names
   storage.mode(counts_mat) <- "numeric"
-  message(sprintf("  Loaded %d genes x %d samples",
-                  nrow(counts_mat), ncol(counts_mat)))
+  n_runs_cols <- ncol(counts_mat)
+  # Collapse run-level columns (SRR) to donor level (sum raw counts per donor).
+  counts_mat <- collapse_counts_to_donor(counts_mat, BASE)
+  message(sprintf("  Loaded %d genes x %d samples (donor-collapsed from %d runs)",
+                  nrow(counts_mat), ncol(counts_mat), n_runs_cols))
 
   for (contrast_name in names(CONTRASTS)) {
     pair <- CONTRASTS[[contrast_name]]

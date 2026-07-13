@@ -106,9 +106,38 @@ message("    Dataset breakdown: ",
               sep = "=", collapse = ", "))
 
 # --------------------------------------------------------------------------
+# 1b. Donor-collapse (CANONICAL DEFAULT, 2026-07-12)
+# --------------------------------------------------------------------------
+# The atlas obs `sample` key is a SEQUENCING RUN (or a sort-fraction library),
+# NOT a biological donor, for several datasets (GSE244832 / GSE202379 /
+# GSE185477 / GSE136103). Treating runs as independent replicates is
+# pseudoreplication. Collapse run-level `sample` to biological donor (summing
+# raw counts across a donor's runs) so DE operates on true biological
+# replicates. Samples not covered by any donor_pairing.csv pass through 1:1.
+# See lib_donor_collapse.R. Ordering matches the audited variant:
+# prep filter -> condition filter (above) -> THEN collapse.
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
+srr_to_donor <- build_srr_to_donor_map(BASE)
+sample_meta  <- collapse_sample_meta_to_donor(sample_meta, BASE)
+# Donor-aggregated per-unit cell counts for the >=50 min-cells gate below: a
+# donor with 8 runs x 20 cells must pass as 160, not fail as 8 sub-threshold
+# runs. Cells are re-keyed to donor id and summed (global across cell types,
+# matching the original per-sample approximation).
+cell_meta_donor_id <- ifelse(cell_meta$sample %in% names(srr_to_donor),
+                             srr_to_donor[cell_meta$sample], cell_meta$sample)
+cell_counts_donor  <- table(cell_meta_donor_id)
+message("  [donor-collapse] DE now keyed on ", nrow(sample_meta),
+        " biological donors")
+
+# --------------------------------------------------------------------------
 # 2. Run limma-voom DE per cell type
 # --------------------------------------------------------------------------
 pb_files <- list.files(pb_dir, pattern = "_pseudobulk\\.csv$", full.names = TRUE)
+# Belt-and-suspenders: drop stale space-named twins (e.g. "T cells_pseudobulk.csv",
+# "Mono+mono derived cells_pseudobulk.csv" — Mar-05 duplicates of the canonical
+# underscore-named Mar-17 files). The canonical pipeline emits underscore names
+# only, so any file whose basename contains a space is a stale artifact.
+pb_files <- pb_files[!grepl(" ", basename(pb_files), fixed = TRUE)]
 message("Found ", length(pb_files), " pseudobulk files")
 
 for (pb_file in pb_files) {
@@ -122,6 +151,10 @@ for (pb_file in pb_files) {
   rownames(counts_mat) <- gene_names
   storage.mode(counts_mat) <- "numeric"
 
+  # Donor-collapse (canonical default 2026-07-12): sum run-level columns to
+  # biological donor. Columns not covered by any donor_pairing.csv relabel 1:1.
+  counts_mat <- collapse_counts_to_donor(counts_mat, BASE)
+
   # Match columns (samples) to DE-eligible metadata
   col_samples <- colnames(counts_mat)
   matched_idx <- match(col_samples, sample_meta$sample)
@@ -133,16 +166,14 @@ for (pb_file in pb_files) {
   counts_mat <- counts_mat[, keep, drop = FALSE]
   matched <- sample_meta[matched_idx[keep]]
 
-  # Filter samples with fewer than 50 cells contributing to the pseudobulk.
-  # Cell counts per sample are derived from cell_meta (one row per cell); the
-  # pseudobulk CSV columns are named by sample ID, so we count how many cells
-  # from cell_meta match each sample column for this cell type.  The pseudobulk
-  # files are named {CellType}_pseudobulk.csv and the h5ad obs must contain a
-  # 'cell_type' or equivalent field; here we conservatively count from the
-  # colnames present in this cell-type's count matrix (i.e. only samples that
-  # contributed ≥1 count already appear as columns).
-  cell_counts <- table(cell_meta$sample)
-  sample_cell_n <- as.integer(cell_counts[colnames(counts_mat)])
+  # Filter units with fewer than 50 cells contributing to the pseudobulk.
+  # counts_mat columns are now DONOR ids (post-collapse), so the min-cells gate
+  # uses donor-aggregated cell counts (cell_counts_donor, built once above):
+  # a donor spanning several runs of <50 cells each is summed and passes if the
+  # donor total is >=50 (fixing the run-level under-count). This is a global
+  # per-donor cell count (across cell types), matching the original per-sample
+  # approximation.
+  sample_cell_n <- as.integer(cell_counts_donor[colnames(counts_mat)])
   sample_cell_n[is.na(sample_cell_n)] <- 0L
   keep_mincells <- sample_cell_n >= 50L
   n_dropped_mincells <- sum(!keep_mincells)

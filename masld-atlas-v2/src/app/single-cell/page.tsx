@@ -501,7 +501,12 @@ function CellTypeDeTab({
   cellTypes: string[];
   initialCellType?: string | null;
 }) {
-  const [cellType, setCellType] = useState<string>(initialCellType ?? ALL_CELLS);
+  // Default to a real cell type (Hepatocytes). The "All cells" pseudobulk view
+  // was RETIRED 2026-07-13: it served the all-cell pseudobulk DE, which is
+  // batch-confounded (bulk-vs-sc rho negative = dataset confound, not a disease
+  // axis; persists at donor level) — a do-not-use analysis. The per-cell-type DE
+  // (gene_pseudobulk_de.parquet, donor-collapsed) is the valid single-cell DE.
+  const [cellType, setCellType] = useState<string>(initialCellType ?? "Hepatocytes");
   const [contrast, setContrast] = useState<string>("disease_vs_control");
   const [rows, setRows] = useState<DeRow[] | null>(null);
   const [markers, setMarkers] = useState<HepMarkerRow[] | null>(null);
@@ -616,7 +621,7 @@ function CellTypeDeTab({
             <Picker
               value={cellType}
               onChange={setCellType}
-              options={[ALL_CELLS, ...(deCellTypes.length ? deCellTypes : cellTypes)]}
+              options={deCellTypes.length ? deCellTypes : cellTypes}
               label="Cell type"
             />
             {cellType !== ALL_CELLS && (

@@ -165,6 +165,7 @@ FIGS_SCDRS_DIR    <- file.path(FIG_SUPP, "figS_scdrs")           # Consolidated 
 FIGS_SCDRS_DATA_DIR <- file.path(FIGS_SCDRS_DIR, "panel_data")   # Per-panel CSVs for caption transparency
 FIGS_STAGECCC_DIR <- file.path(FIG_SUPP, "stage_ccc")            # Stage-stratified CCC trajectories (Scripts 349/349b/349c/351/352/353; 2026-05-13)
 FIGS_PROTEO_DIR   <- file.path(FIG_SUPP, "figS_proteomics")       # Proteomics supp (DIA-MS volcano/enrichment + liver->blood decoupling demoted from Fig 4, 2026-07-02)
+FIGS_GLP1RA_DIR   <- file.path(FIG_SUPP, "figS_glp1ra")          # GLP-1RA / incretin axis (mechanism-only; demoted from Fig 5, 2026-07-13)
 
 # Hotspot autocorrelation modules (Pipeline 14; 2026-05-17). FLAT layout —
 # all composites land directly under figS_hotspot/; all individual panels under
@@ -188,7 +189,7 @@ for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC,
             FIGS_NET_DIR, FIGS_RORA_DIR, FIGS_CELLTYPE_DIR, FIGS_MCP_DIR,
             FIGS_CONV_EVID_DIR, FIGS_HCAUDIT_DIR, FIGS_SEX_DIR, FIGS_BATCH_DIR,
             FIGS_GRANULAR_DIR, FIGS_SCDRS_DIR, FIGS_SCDRS_DATA_DIR,
-            FIGS_STAGECCC_DIR, FIGS_PROTEO_DIR,
+            FIGS_STAGECCC_DIR, FIGS_PROTEO_DIR, FIGS_GLP1RA_DIR,
             FIGS_HOTSPOT_DIR, FIGS_HOTSPOT_PANELS_DIR, FIGS_HOTSPOT_DATA_DIR,
             FIGS_CAS13LIB_DIR,
             FIGS_QUANT_DIR,
