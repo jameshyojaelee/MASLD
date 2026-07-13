@@ -156,7 +156,7 @@ c13_row <- deg_counts[contrast_id == "C13"]
 
 pA <- ggplot(deg_counts, aes(x = n_deg, y = label, fill = type)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = comma(n_deg)), hjust = -0.1, size = 2, family = "Helvetica") +
+  geom_text(aes(label = comma(n_deg)), hjust = -0.1, size = GEOM_TEXT_6PT, family = "Helvetica") +
   # Special callout for C13 (small bar)
   geom_point(data = c13_row, aes(x = n_deg + max(deg_counts$n_deg) * 0.06),
              shape = 18, size = 2.5, color = "#C2185B", show.legend = FALSE) +
@@ -164,18 +164,18 @@ pA <- ggplot(deg_counts, aes(x = n_deg, y = label, fill = type)) +
            x = c13_row$n_deg + max(deg_counts$n_deg) * 0.09,
            y = c13_row$label,
            label = "Fibrosis-adjusted\n(residual signal)",
-           hjust = 0, size = 1.8, fontface = "italic", family = "Helvetica",
+           hjust = 0, size = GEOM_TEXT_6PT, fontface = "plain", family = "Helvetica",
            color = "#C2185B") +
   scale_fill_manual(values = contrast_type_colors, name = "Contrast type") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.25)),
                      labels = comma) +
-  labs(x = "Number of DEGs (padj < 0.1)", y = NULL,
-       title = "DEG yield across 15 progression contrasts") +
+  labs(x = "Number of DEGs (padj < 0.1)", y = NULL) +
   theme_masld(base_size = 7) +
   theme(legend.position = c(0.85, 0.25),
         legend.background = element_rect(fill = "white", color = "grey80", linewidth = 0.2),
         panel.grid.major.x = element_line(color = "grey90", linewidth = 0.2))
 
+message("[caption] DEG yield across 15 progression contrasts")
 save_fig(pA, file.path(PANEL_DIR, "panel_landscape_a_deg_counts.pdf"),
          width = 5, height = 4)
 
@@ -241,17 +241,17 @@ rho_dt[, contrast2 := factor(contrast2, levels = clust_order)]
 pB <- ggplot(rho_dt, aes(x = contrast1, y = contrast2, fill = rho)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%.2f", rho)),
-            size = 1.8, family = "Helvetica") +
+            size = GEOM_TEXT_6PT, family = "Helvetica") +
   scale_fill_gradient2(low = "#1565C0", mid = "white", high = "#C2185B",
                        midpoint = 0, limits = c(-0.5, 1),
                        name = expression(rho)) +
-  labs(x = NULL, y = NULL,
-       title = "Pairwise logFC correlation (Spearman)") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "right",
         panel.grid = element_blank())
 
+message("[caption] Pairwise logFC correlation (Spearman)")
 save_fig(pB, file.path(PANEL_DIR, "panel_landscape_b_correlation.pdf"),
          width = 5.5, height = 4.5)
 
@@ -316,18 +316,17 @@ pC <- ggplot(class_dt, aes(ymax = ymax, ymin = ymin,
                             fill = gene_class)) +
   geom_rect(color = "white", linewidth = 0.3) +
   geom_text(aes(x = 4.7, y = ymid, label = label_txt),
-            size = 1.8, hjust = 0, family = "Helvetica", lineheight = 0.9) +
+            size = GEOM_TEXT_6PT, hjust = 0, family = "Helvetica", lineheight = 0.9) +
   annotate("text", x = 0, y = total_genes / 2,
            label = paste0(comma(total_genes), "\ngenes"),
-           size = 3, fontface = "bold", family = "Helvetica") +
+           size = GEOM_TEXT_6PT, fontface = "plain", family = "Helvetica") +
   coord_polar(theta = "y") +
   scale_fill_manual(values = class_colors, guide = "none") +
   xlim(c(0, 8)) +
-  labs(title = "Gene classification across 14 contrasts") +
   theme_void(base_family = "Helvetica") +
-  theme(plot.title = element_text(size = 8, face = "bold", hjust = 0.5),
-        plot.margin = margin(5, 5, 5, 5))
+  theme(plot.margin = margin(5, 5, 5, 5))
 
+message("[caption] Gene classification across 14 contrasts")
 save_fig(pC, file.path(PANEL_DIR, "panel_landscape_c_classification.pdf"),
          width = 5, height = 4.5)
 
@@ -394,23 +393,23 @@ pD <- ggplot(scatter_dt, aes(x = logFC_C4, y = logFC_C2)) +
   annotate("text", x = Inf, y = Inf,
            label = paste0("rho == ", round(rho_c4_c2, 3)),
            parse = TRUE, hjust = 1.1, vjust = 1.5,
-           size = 2.5, family = "Helvetica", fontface = "italic") +
+           size = GEOM_TEXT_6PT, family = "Helvetica", fontface = "plain") +
   # Label top divergent genes
   geom_text_repel(data = top_divergent,
                   aes(label = symbol),
-                  size = 2, family = "Helvetica",
+                  size = GEOM_TEXT_6PT, family = "Helvetica",
                   max.overlaps = 15, segment.size = 0.2,
                   min.segment.length = 0, seed = 42) +
   scale_color_manual(values = sig_colors, name = "Significant in") +
   labs(x = "logFC: NAFL vs Control (C4, onset)",
-       y = "logFC: NASH vs NAFL (C2, progression)",
-       title = "Onset biology is orthogonal to progression") +
+       y = "logFC: NASH vs NAFL (C2, progression)") +
   theme_masld(base_size = 7) +
   theme(legend.position = c(0.15, 0.85),
         legend.background = element_rect(fill = alpha("white", 0.9),
                                          color = "grey80", linewidth = 0.2),
         aspect.ratio = 1)
 
+message("[caption] Onset biology is orthogonal to progression")
 save_fig(pD, file.path(PANEL_DIR, "panel_landscape_d_onset_vs_progression.pdf"),
          width = 4.5, height = 4.5)
 
@@ -423,12 +422,12 @@ composite <- (pA | pB) / (pC | pD) +
   plot_annotation(
     tag_levels = "a",
     theme = theme(
-      plot.tag = element_text(size = 10, face = "bold", family = "Helvetica")
+      plot.tag = element_text(size = 10, face = "plain", family = "Helvetica")
     )
   )
 
 save_fig(composite, file.path(OUT_DIR, "fig_contrast_landscape.pdf"),
-         width = 14, height = 10)
+         width = fig_full_width, height = 9)
 
 cat("\n=== Done ===\n")
 cat("Composite:", file.path(OUT_DIR, "fig_contrast_landscape.pdf"), "\n")

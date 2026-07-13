@@ -77,11 +77,10 @@ if (!is.null(atlas)) {
                (!is.na(atlas$broadaway_coloc_pp4) & atlas$broadaway_coloc_pp4 > 0.5)
   # S3: Essentiality
   s3_active <- !is.na(atlas$essentiality_chronos) & atlas$essentiality_chronos < -0.5
-  # S4: Epigenomic
-  s4_active <- (!is.na(atlas$mouse_da_padj) & atlas$mouse_da_padj < 0.05) |
-               (!is.na(atlas$hepatocyte_da_padj) & atlas$hepatocyte_da_padj < 0.05) |
-               (!is.na(atlas$scenic_grn_target) & atlas$scenic_grn_target != "" & !is.na(atlas$scenic_grn_target)) |
-               (!is.na(atlas$cross_species_promoter_conserved) & atlas$cross_species_promoter_conserved == TRUE)
+  # S4: Epigenomic (human-only: hepatocyte ATAC DA + SCENIC+ GRN target;
+  # mouse_da_padj + cross_species_promoter_conserved dropped 2026-07-05)
+  s4_active <- (!is.na(atlas$hepatocyte_da_padj) & atlas$hepatocyte_da_padj < 0.05) |
+               (!is.na(atlas$scenic_grn_target) & atlas$scenic_grn_target != "" & !is.na(atlas$scenic_grn_target))
   # S5: Spatial
   s5_active <- !is.na(atlas$spatial_is_svg) & atlas$spatial_is_svg == TRUE
   # S6: Single-cell
@@ -122,14 +121,13 @@ if (!is.null(atlas)) {
   p_a <- ggplot(unique_counts, aes(x = source, y = unique_genes, fill = source)) +
     geom_col(width = 0.7, show.legend = FALSE) +
     geom_text(aes(label = paste0(unique_genes, "\n(", round(pct_unique, 0), "%)")),
-              vjust = -0.3, size = 1.8, lineheight = 0.8) +
+              vjust = -0.3, size = GEOM_TEXT_6PT, lineheight = 0.8) +
     scale_x_discrete(labels = SOURCE_LABELS_SHORT) +
     scale_fill_manual(values = source_colors) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.25))) +
-    labs(x = NULL, y = "Uniquely captured genes",
-         title = "Source-exclusive gene coverage") +
+    labs(x = NULL, y = "Uniquely captured genes") +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 5.5))
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
 }
 
 # ==========================================================================
@@ -169,7 +167,7 @@ if (file.exists(mi_file)) {
 
   p_b <- ggplot(mi_plot_dt, aes(x = Source_B, y = Source_A, fill = MI)) +
     geom_tile(color = "white", linewidth = 0.5) +
-    geom_text(aes(label = mi_label), size = 2, color = "black") +
+    geom_text(aes(label = mi_label), size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_gradient2(
       low = "white", mid = "#F48FB1", high = "#880E4F",
       midpoint = 0.03, name = "MI (bits)",
@@ -177,12 +175,11 @@ if (file.exists(mi_file)) {
     ) +
     scale_x_discrete(labels = SOURCE_LABELS_SHORT[sources[1:5]]) +
     scale_y_discrete(labels = SOURCE_LABELS_SHORT[sources[2:6]]) +
-    labs(title = "Mutual information between sources",
-         x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
     theme(
-      axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-      axis.text.y = element_text(size = 5.5),
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+      axis.text.y = element_text(size = 6),
       legend.key.width = unit(0.3, "cm"),
       legend.key.height = unit(0.6, "cm"),
       panel.border = element_blank(),
@@ -243,7 +240,6 @@ if (file.exists(enr_file)) {
     labs(
       x = "Top-k genes ranked",
       y = "Fold enrichment\n(DGIdb druggable)",
-      title = "Cumulative enrichment for druggable genes",
       color = "Ranking", linetype = "Ranking"
     ) +
     theme_masld() +
@@ -251,7 +247,7 @@ if (file.exists(enr_file)) {
       legend.position = c(0.7, 0.75),
       legend.background = element_rect(fill = alpha("white", 0.8), color = NA),
       legend.key.width = unit(0.7, "cm"),
-      legend.text = element_text(size = 5.5)
+      legend.text = element_text(size = 6)
     )
 }
 
@@ -281,19 +277,18 @@ if (file.exists(comp_file)) {
     geom_hline(yintercept = 0, linewidth = 0.3, color = "gray30") +
     geom_text(aes(label = sig_label,
                   y = ifelse(improvement >= 0, improvement + 0.15, improvement - 0.15)),
-              size = 2.5, fontface = "bold") +
+              size = GEOM_TEXT_6PT, fontface = "plain") +
     geom_text(aes(label = sprintf("p=%.3f", perm_pvalue)),
-              y = -4.5, size = 1.8, color = "gray40") +
+              y = -4.5, size = GEOM_TEXT_6PT, color = "black") +
     scale_x_discrete(labels = SOURCE_LABELS_SHORT) +
     scale_fill_manual(values = source_colors) +
     scale_y_continuous(expand = expansion(mult = c(0.15, 0.1))) +
     labs(
       x = NULL,
-      y = "Enrichment change\n(top-200 DGIdb)",
-      title = "Source contribution to enrichment"
+      y = "Enrichment change\n(top-200 DGIdb)"
     ) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 5.5))
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
 }
 
 # ==========================================================================
@@ -346,13 +341,12 @@ if (file.exists(bayes_file)) {
       scale_fill_manual(values = source_colors) +
       labs(
         x = "Evidence source",
-        y = "Delta log-odds",
-        title = "Per-source Bayesian contribution for key targets"
+        y = "Delta log-odds"
       ) +
       theme_masld() +
       theme(
-        strip.text = element_text(size = 6, face = "bold"),
-        axis.text.x = element_text(size = 5.5)
+        strip.text = element_text(size = 6, face = "plain"),
+        axis.text.x = element_text(size = 6)
       )
   }
 }
@@ -364,7 +358,10 @@ figS <- (p_a | p_b) /
          (p_c | p_d) /
          p_e +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
+message("[caption] (a) Source-exclusive gene coverage. (b) Mutual information between sources. ",
+        "(c) Cumulative enrichment for druggable genes. (d) Source contribution to enrichment. ",
+        "(e) Per-source Bayesian contribution for key targets.")
 save_fig_tall(figS, OUT, height = 9)
 message("Saved: ", OUT)

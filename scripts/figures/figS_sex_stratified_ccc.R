@@ -70,7 +70,7 @@ pD <- make_top(ax, "Female_receptor", "Top female-receptor MASLD-enriched axes")
 
 fig <- (pA + pB) / (pC + pD) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_L1_sex_stratified_ccc.pdf")
 ggsave(out_path, fig, width = 14, height = 11)

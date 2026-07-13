@@ -2,7 +2,7 @@
 # 08_pathway_analysis.R
 # ---------------------------------------------------------------------------
 # Gene set enrichment analysis (fgsea) and overrepresentation analysis
-# (clusterProfiler) on dream results and Tier 1 consensus DEGs.
+# (clusterProfiler) on canonical bulk DEGs and Tier 1 consensus DEGs.
 # Output: results/integration/gsea_results.csv, enrichment plots
 # ---------------------------------------------------------------------------
 
@@ -26,8 +26,8 @@ BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Hum
 INT  <- file.path(BASE, "analysis/integration")
 RDIR <- file.path(INT, "results/integration")
 
-# --- Load dream results ---
-dream <- fread(file.path(RDIR, "dream_results.csv"))
+# --- Load canonical bulk DEGs (limma-voom-qw C2) ---
+dream <- fread(file.path(RDIR, "canonical_deg_results.csv"))
 
 # --- Prepare ranked gene list (strip version from ENSEMBL IDs) ---
 dream[, gene_base := gsub("\\..*", "", gene)]
@@ -139,8 +139,8 @@ if (has_clusterProfiler) {
     tier1[, gene_base := gsub("\\..*", "", gene)]
 
     # Map ENSEMBL to ENTREZ — both query genes AND background universe
-    # Background = all tested genes from dream results (not the full genome)
-    dream_bg <- fread(file.path(RDIR, "dream_results.csv"))
+    # Background = all tested genes from canonical bulk DEGs (not the full genome)
+    dream_bg <- fread(file.path(RDIR, "canonical_deg_results.csv"))
     dream_bg[, gene_base := gsub("\\..*", "", gene)]
     bg_mapping <- bitr(dream_bg$gene_base, fromType = "ENSEMBL", toType = "ENTREZID",
                        OrgDb = org.Hs.eg.db)

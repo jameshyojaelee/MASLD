@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=pb_de_coarse
+#SBATCH --job-name=coarsestagede
 #SBATCH --partition=io
 #SBATCH --qos=interactive
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=64G
 #SBATCH --time=48:00:00
-#SBATCH --output=logs/pb_de_coarse_%j.log
+#SBATCH --output=logs/coarsestagede_%j.log
 
 set -eo pipefail
 

@@ -32,13 +32,13 @@ read_topgenes <- function(ct, mod, n = 10) {
 # The 5 canonical hepatocyte programs from Fig 2, in display order
 FIVE_MODS <- list(
   list(ct = "hepatocytes", mod = 19,
-       label = "Hep-19\nHNF4A-AS1 · EHHADH · BDH1\n(hepatocyte identity, loss)"),
+       label = "Hep-19\nHNF4A-AS1 · EHHADH · BDH1\n(HNF4A identity, loss)"),
   list(ct = "hepatocytes", mod = 27,
-       label = "Hep-27\nCFH · NR1H4 · C8A\n(hepatic synthesis, loss)"),
+       label = "Hep-27\nCFH · NR1H4 · C8A\n(complement/FXR, loss)"),
   list(ct = "hepatocytes", mod = 20,
-       label = "Hep-20\nBICC1 · GLS · ITGAV\n(gain with severity)"),
+       label = "Hep-20\nBICC1 · GLS · ITGAV\n(glutamine/TGFβ, gain)"),
   list(ct = "hepatocytes", mod = 24,
-       label = "Hep-24\nSOD2 · HKDC1 · SQSTM1\n(oxidative stress, gain)"),
+       label = "Hep-24\nSOD2 · HKDC1 · SQSTM1\n(NRF2 antioxidant, gain)"),
   list(ct = "hepatocytes", mod = 26,
        label = "Hep-26\nJUN · ATF3 · SERPINE1\n(AP-1 injury, gain)")
 )
@@ -62,8 +62,8 @@ pC <- ggplot(gene_q, aes(weight, gene_label)) +
   facet_wrap(~ mod_label, nrow = 2, scales = "free_y") +
   labs(x = "Hotspot module weight", y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.text.y = element_text(size = 5),
-        strip.text = element_text(size = PUB_AXIS_TITLE, face = "bold"))
+  theme(axis.text.y = element_text(size = 6),
+        strip.text = element_text(size = PUB_AXIS_TITLE, face = "plain"))
 
 # ----------------------------------------------------------------------------
 # Save

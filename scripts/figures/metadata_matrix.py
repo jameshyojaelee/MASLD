@@ -86,7 +86,7 @@ datasets = [
      0,  51, 113,
      0, 1, 1, 1, 1, 1, 0),
 
-    ("Bril",       "GSE162694",   2021, 143, 142, "HiSeq 3000",    "SE",
+    ("Pantano",    "GSE162694",   2021, 143, 142, "HiSeq 3000",    "SE",
      31,  65,  47,
      1, 1, 1, 0.5, 1, 1, 1),
 
@@ -183,14 +183,14 @@ def main():
 
     label_x = -0.65                         # right edge of label area
     for i, d in enumerate(datasets):
-        # Line 1: Author (Year) — bold, larger
+        # Line 1: Accession (Year) — bold, larger
         ax_mat.text(label_x, i - 0.15,
-                    f"{d[0]} ({d[2]})",
+                    f"{d[1]} ({d[2]})",
                     ha="right", va="center", fontsize=9,
                     fontweight="bold", color=TEXT_DARK)
-        # Line 2: Accession · Platform · Layout — smaller, gray, italic
+        # Line 2: Platform · Layout — smaller, gray, italic
         ax_mat.text(label_x, i + 0.17,
-                    f"{d[1]}  \u00b7  {d[5]}  \u00b7  {d[6]}",
+                    f"{d[5]}  \u00b7  {d[6]}",
                     ha="right", va="center", fontsize=6.5,
                     color=LABEL_GRAY, fontstyle="italic")
 
@@ -303,9 +303,12 @@ def main():
     os.makedirs(out_dir, exist_ok=True)
     pdf_path = os.path.join(out_dir, "metadata_matrix.pdf")
 
-    fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
+    # RETIRED 2026-06-23 (user request): this stray root-level metadata_matrix.pdf is no
+    # longer generated. The kept metadata table is the fig3 panel from fig_bulkrna_matrix.py
+    # -> figures/main/fig3_RNAseq/panels/cohort_metadata_matrix.pdf.
+    # fig.savefig(pdf_path, bbox_inches="tight", dpi=600)
     plt.close(fig)
-    print(f"Saved: {pdf_path}")
+    print("RETIRED 2026-06-23: metadata_matrix.pdf generation disabled (see cohort_metadata_matrix.pdf).")
 
 
 if __name__ == "__main__":

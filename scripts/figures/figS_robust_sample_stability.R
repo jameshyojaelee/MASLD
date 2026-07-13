@@ -18,7 +18,7 @@ OUT_DIR <- file.path(FIG_SUPP, "figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "figS_robust_sample_stability.pdf")
 
-theme_robust <- theme_minimal(base_size = 10) +
+theme_robust <- theme_minimal(base_size = 6) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(colour = "grey92", linewidth = 0.25),
@@ -27,11 +27,7 @@ theme_robust <- theme_minimal(base_size = 10) +
     legend.position = "top",
     legend.title  = element_blank(),
     legend.margin = margin(b = -3),
-    plot.title    = element_text(face = "bold", size = 11,
-                                 margin = margin(b = 2)),
-    plot.subtitle = element_text(size = 9, colour = "grey30",
-                                 margin = margin(b = 6)),
-    plot.tag      = element_text(face = "bold", size = 12),
+    plot.tag      = element_text(face = "plain", size = 6),
     plot.margin   = margin(8, 10, 8, 10)
   )
 
@@ -53,16 +49,14 @@ p_a <- ggplot(stab[!is.na(cpss_pi_hat)],
   geom_vline(xintercept = 0.7, linetype = "dashed",
              colour = "grey25", linewidth = 0.4) +
   annotate("text", x = 0.71, y = Inf, label = " stability\n cutoff = 0.7",
-           hjust = 0, vjust = 1.4, size = 3, colour = "grey25") +
+           hjust = 0, vjust = 1.4, size = 6 / .pt, colour = "grey25") +
   annotate("text", x = 0.99, y = Inf, hjust = 1, vjust = 3,
            label = sprintf("%.1f%% of mega DEGs\npass cutoff", pct_pi),
-           size = 3.2, colour = "#D55E00", fontface = "bold") +
+           size = 6 / .pt, colour = "#D55E00", fontface = "plain") +
   scale_fill_manual(values = PAL) +
   scale_colour_manual(values = PAL) +
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
   labs(tag = "A",
-       title = "CPSS selection probability",
-       subtitle = "100 paired half-samples; pi-hat = max selection over pairs",
        x = expression(hat(pi)),
        y = "Density") +
   theme_robust
@@ -74,21 +68,22 @@ p_b <- ggplot(stab[!is.na(bootstrap_freq)],
   geom_vline(xintercept = 0.9, linetype = "dashed",
              colour = "grey25", linewidth = 0.4) +
   annotate("text", x = 0.91, y = 0.05, label = " freq >= 0.9",
-           hjust = 0, vjust = 0, size = 3, colour = "grey25") +
+           hjust = 0, vjust = 0, size = 6 / .pt, colour = "grey25") +
   annotate("text", x = 0.05, y = 0.55, hjust = 0, vjust = 1,
            label = sprintf("%.1f%% of mega DEGs\nselected in >= 90%%\nof bootstraps",
                            pct_boot),
-           size = 3.2, colour = "#D55E00", fontface = "bold") +
+           size = 6 / .pt, colour = "#D55E00", fontface = "plain") +
   scale_colour_manual(values = PAL) +
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
   scale_y_continuous(limits = c(0, 1), labels = percent_format(accuracy = 1)) +
   labs(tag = "B",
-       title = "Bootstrap selection frequency",
-       subtitle = "B = 1000 cohort-stratified subsamples (80% of cases + controls)",
        x = "P(selected as DEG)",
        y = "ECDF") +
   theme_robust
 
+message("[caption] A: CPSS selection probability -- 100 paired half-samples; pi-hat = max selection over pairs")
+message("[caption] B: Bootstrap selection frequency -- B = 1000 cohort-stratified subsamples (80% of cases + controls)")
+
 composite <- p_a + p_b + plot_layout(ncol = 2)
-ggsave(OUT_PDF, composite, width = 9, height = 4, device = cairo_pdf)
+ggsave(OUT_PDF, composite, width = fig_full_width, height = 3.14, device = cairo_pdf)
 cat("Saved:", OUT_PDF, "\n")

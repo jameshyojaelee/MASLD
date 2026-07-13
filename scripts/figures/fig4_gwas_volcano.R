@@ -178,7 +178,7 @@ p <- ggplot(plot_dt, aes(x = logFC, y = neglog10p)) +
     data = plot_dt[show_label == TRUE],
     aes(label = gene_symbol),
     color = "black",
-    size = 2, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     max.overlaps = 30, segment.size = 0.2,
     min.segment.length = 0, box.padding = 0.3,
     seed = 42
@@ -192,7 +192,7 @@ p <- ggplot(plot_dt, aes(x = logFC, y = neglog10p)) +
     x = expression("Integrated log"[2]*"FC (Disease vs Control)"),
     y = expression("-log"[10]*"(adjusted "*italic(P)*"-value)")
   ) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme(legend.position = c(0.02, 0.98),
         legend.justification = c(0, 1),
         legend.background = element_rect(fill = "white", color = NA, linewidth = 0))
@@ -204,13 +204,16 @@ n_coloc_sug <- sum(plot_dt$category == "COLOC_suggestive")
 p <- p + annotate("text", x = max(plot_dt$logFC) * 0.7, y = max(plot_dt$neglog10p) * 0.95,
                   label = sprintf("COLOC PP.H4 > 0.9: %d\n(up: %d, down: %d)",
                                   n_coloc_up + n_coloc_dn, n_coloc_up, n_coloc_dn),
-                  size = 2, hjust = 0, vjust = 1, color = "grey30")
+                  size = GEOM_TEXT_6PT, hjust = 0, vjust = 1, color = "grey30")
 
 # ===========================================================================
 # 5. Save
 # ===========================================================================
+# RETIRED 2026-06-17: dead/illegible panel, cut in the Fig 2 review and archived.
+# This script misroutes to FIG3_DIR (=fig2_genetics). Archived copy:
+# figures/main/fig2_genetics/panels/_archive/panel_gwas_volcano.pdf
 outfile <- file.path(outdir, "panel_gwas_volcano.pdf")
-ggsave(outfile, p, width = 120, height = 85, units = "mm", device = cairo_pdf)
-cat("Saved:", outfile, "\n")
+# ggsave(outfile, p, width = 120, height = 85, units = "mm", device = cairo_pdf)
+# cat("Saved:", outfile, "\n")
 
 cat("Done.\n")

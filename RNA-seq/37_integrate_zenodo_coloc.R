@@ -35,7 +35,7 @@ COLOC_DIR   <- file.path(ZENODO_DIR, "coloc")
 PERTURB_DIR <- file.path(ZENODO_DIR, "bulkRNA_seq")
 RESULTS_DIR <- file.path(BASE_DIR, "RNA-seq/results/causal_inference/sceqtl")
 DREAM_FILE  <- file.path(BASE_DIR,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 GENE_CACHE  <- file.path(BASE_DIR,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/gene_annotation/human_ensg_to_symbol.tsv")
 TIER1_FILE  <- file.path(BASE_DIR,
@@ -99,14 +99,14 @@ dream[, symbol := ensg_to_sym[gene]]
 dream_with_sym <- dream[!is.na(symbol)]
 cat(sprintf("  Mapped to symbol: %d genes\n", nrow(dream_with_sym)))
 
-# Create quick lookup: symbol -> dream row
-dream_lookup <- dream_with_sym[, .(dream_logFC = logFC, dream_padj = padj), by = symbol]
+# Create quick lookup: symbol -> bulk DEG row
+dream_lookup <- dream_with_sym[, .(bulk_logFC = logFC, bulk_padj = padj), by = symbol]
 # Handle duplicates: keep the one with smallest padj
-dream_lookup <- dream_lookup[order(dream_padj)][!duplicated(symbol)]
+dream_lookup <- dream_lookup[order(bulk_padj)][!duplicated(symbol)]
 setkey(dream_lookup, symbol)
 
 # DEG set (padj < 0.1)
-deg_symbols <- dream_lookup[dream_padj < PADJ_THR, symbol]
+deg_symbols <- dream_lookup[bulk_padj < PADJ_THR, symbol]
 cat(sprintf("  DEGs (padj < %.1f): %d\n", PADJ_THR, length(deg_symbols)))
 
 # ==============================================================================
@@ -118,13 +118,13 @@ cat("--- Loading consensus tiers ---\n")
 tier_lookup <- data.table(symbol = character(), consensus_tier = character())
 
 if (file.exists(ATLAS_FILE)) {
-  # Atlas has human_consensus_tier for all genes
+  # human_consensus_tier removed 2026-06-29 (legacy dream∩metafor tier); canonical DEG = bulk_sig (TREAT treat_fdr<0.05)
   atlas_tiers <- fread(ATLAS_FILE, header = TRUE,
-                       select = c("human_symbol", "human_consensus_tier"))
-  atlas_tiers <- atlas_tiers[human_consensus_tier != "Not_significant"]
-  setnames(atlas_tiers, c("human_symbol", "human_consensus_tier"),
-           c("symbol", "consensus_tier"))
-  tier_lookup <- atlas_tiers[!duplicated(symbol)]
+                       select = c("human_symbol", "bulk_sig"))
+  atlas_tiers <- atlas_tiers[bulk_sig == TRUE]
+  atlas_tiers[, consensus_tier := "TREAT_DEG"]
+  setnames(atlas_tiers, "human_symbol", "symbol")
+  tier_lookup <- atlas_tiers[!duplicated(symbol), .(symbol, consensus_tier)]
   cat(sprintf("  Loaded tiers from atlas: %d genes\n", nrow(tier_lookup)))
 } else if (file.exists(TIER1_FILE)) {
   tiers <- fread(TIER1_FILE, header = TRUE)
@@ -340,8 +340,8 @@ for (exp_name in names(PERTURB_FILES)) {
 
   # Compute direction concordance: same sign of LFC in perturbation and MASLD
   overlap_dt[, direction_concordant := fifelse(
-    is.na(dream_logFC) | is.na(perturbation_logFC), NA,
-    sign(perturbation_logFC) == sign(dream_logFC)
+    is.na(bulk_logFC) | is.na(perturbation_logFC), NA,
+    sign(perturbation_logFC) == sign(bulk_logFC)
   )]
 
   perturb_results[[exp_name]] <- overlap_dt
@@ -386,7 +386,7 @@ if (length(perturb_results) > 0) {
 
   # Reorder columns for output
   out_cols <- c("experiment", "gene", "perturbation_logFC", "perturbation_padj",
-                "is_masld_deg", "dream_logFC", "dream_padj", "direction_concordant")
+                "is_masld_deg", "bulk_logFC", "bulk_padj", "direction_concordant")
   setcolorder(perturb_combined, intersect(out_cols, names(perturb_combined)))
 
   out_perturb <- file.path(RESULTS_DIR, "zenodo_perturbation_validation.csv")

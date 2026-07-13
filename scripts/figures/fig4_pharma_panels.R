@@ -93,14 +93,13 @@ if (!is.null(lincs) && "composite_score" %in% names(lincs)) {
   p_a <- ggplot(moa_top, aes(x = mean_score, y = display, fill = masld_relevant)) +
     geom_col(width = 0.65) +
     geom_text(aes(label = paste0("n=", n_compounds)),
-              hjust = -0.15, size = 2, color = "gray30") +
+              hjust = -0.15, size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_manual(values = bar_fill,
                       labels = c("Other", "MASLD-relevant"),
                       name = NULL) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.18))) +
     labs(x = "Mean composite reversal score",
-         y = NULL,
-         title = "Drug mechanism classes reversing MASLD signature") +
+         y = NULL) +
     theme_masld() +
     theme(axis.text.y = element_text(size = 6),
           legend.position = c(0.78, 0.18),
@@ -108,6 +107,7 @@ if (!is.null(lincs) && "composite_score" %in% names(lincs)) {
           legend.key.size = unit(0.25, "cm"))
 
   cat("  ", nrow(moa_top), "MOA classes plotted (n>=2 compounds each)\n")
+  message("[caption] Drug mechanism classes reversing MASLD signature")
 }
 
 # ==========================================================================
@@ -145,16 +145,16 @@ if (!is.null(drug_val) && "drug_name" %in% names(drug_val)) {
       geom_tile(color = "white", linewidth = 0.4) +
       scale_fill_manual(values = drug_evidence_colors,
                         name = "Evidence", na.value = "gray90") +
-      labs(x = NULL, y = NULL,
-           title = "Known MASLD drug target recovery") +
+      labs(x = NULL, y = NULL) +
       theme_masld() +
-      theme(axis.text.x = element_text(angle = 40, hjust = 1, size = 5.5),
+      theme(axis.text.x = element_text(angle = 40, hjust = 1, size = 6),
             axis.text.y = element_text(size = 6),
             legend.position = "right",
             legend.key.size = unit(0.3, "cm"))
 
     cat("  ", uniqueN(val_long$drug_name), "drugs ×",
         uniqueN(val_long$evidence), "evidence layers\n")
+    message("[caption] Known MASLD drug target recovery")
   }
 }
 
@@ -166,7 +166,7 @@ cat("Composing pharma panels...\n")
 fig <- p_a | p_b
 fig <- fig +
   plot_annotation(tag_levels = list(c("a", "b"))) &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 9, face = "plain"))
 
 save_fig(fig, OUT, width = fig_full_width, height = 3.5)
 cat("Saved:", OUT, "\n")

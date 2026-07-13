@@ -106,7 +106,7 @@ if (!is.null(sx_v1) && !is.null(sx_1kg) && !is.null(sx_tl) && !is.null(sx_tlf)) 
     geom_vline(xintercept = 0.5, color = "grey60", linetype = "dotted", linewidth = 0.4) +
     geom_point(data = lbl_sx, color = "black", size = 2.2) +
     geom_text_repel(data = lbl_sx, aes(label = GeneSymbol),
-                    size = 4.2, color = "black", fontface = "bold",
+                    size = 4.2, color = "black", fontface = "plain",
                     box.padding = 0.4, max.overlaps = 25,
                     segment.color = "grey30", segment.size = 0.3) +
     facet_wrap(~ comparison, ncol = 3) +
@@ -115,8 +115,8 @@ if (!is.null(sx_v1) && !is.null(sx_1kg) && !is.null(sx_tl) && !is.null(sx_tlf)) 
          y = "max SuSiEX PIP (panel on y)",
          title = "Gene-level SuSiEX max-PIP concordance — 4 panels (6 pairwise)") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 14, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 14, face = "plain"),
           axis.title = element_text(size = 18))
   ggsave(file.path(OUT_DIR, "susiex/pip_scatter_pairwise.pdf"), p_sx_scatter,
          width = 18, height = 12, device = cairo_pdf)
@@ -137,13 +137,13 @@ if (!is.null(sx_v1) && !is.null(sx_1kg) && !is.null(sx_tl) && !is.null(sx_tlf)) 
   )
   p_sx_hits <- ggplot(hits_sx, aes(x = panel, y = n, fill = panel)) +
     geom_col(width = 0.7) +
-    geom_text(aes(label = n), vjust = -0.35, size = 5.5, fontface = "bold") +
+    geom_text(aes(label = n), vjust = -0.35, size = 5.5, fontface = "plain") +
     facet_wrap(~ threshold, ncol = 3, scales = "free_y") +
     scale_fill_manual(values = PANEL_COLORS, guide = "none") +
     labs(x = NULL, y = "# gene × trait", title = "SuSiEX hits at increasing PIP thresholds (4-way)") +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 16, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 16, face = "plain"),
           axis.text.x = element_text(size = 13, angle = 25, hjust = 1)) +
     expand_limits(y = max(hits_sx$n) * 1.18)
   ggsave(file.path(OUT_DIR, "susiex/hits_bar.pdf"), p_sx_hits,
@@ -237,7 +237,7 @@ if (length(panels_avail) >= 2) {
     geom_vline(xintercept = 0.5, color = "grey60", linetype = "dotted", linewidth = 0.4) +
     geom_point(data = lbl_ms, color = "black", size = 1.8) +
     geom_text_repel(data = lbl_ms, aes(label = GeneSymbol),
-                    size = 3.2, color = "black", fontface = "bold",
+                    size = 3.2, color = "black", fontface = "plain",
                     box.padding = 0.3, max.overlaps = 20,
                     segment.color = "grey30", segment.size = 0.3) +
     facet_wrap(~ comparison, ncol = 5, scales = "fixed") +
@@ -247,8 +247,8 @@ if (length(panels_avail) >= 2) {
          title = sprintf("Gene-level MESuSiE max-PIP concordance — %d panels (%d pairwise)",
                          length(panels_avail), length(pair_specs))) +
     theme_masld(base_size = 12) +
-    theme(plot.title = element_text(size = 18, face = "bold"),
-          strip.text = element_text(size = 9, face = "bold"),
+    theme(plot.title = element_text(size = 18, face = "plain"),
+          strip.text = element_text(size = 9, face = "plain"),
           axis.title = element_text(size = 14))
   n_facet_rows <- ceiling(length(pair_specs) / 5)
   ggsave(file.path(OUT_DIR, "mesusie/pip_scatter_pairwise.pdf"), p_ms_scatter,
@@ -268,15 +268,15 @@ if (length(panels_avail) >= 2) {
 
   p_ms_hits <- ggplot(hits_ms, aes(x = panel, y = n, fill = panel)) +
     geom_col(width = 0.7) +
-    geom_text(aes(label = n), vjust = -0.35, size = 5, fontface = "bold") +
+    geom_text(aes(label = n), vjust = -0.35, size = 5, fontface = "plain") +
     facet_wrap(~ threshold, ncol = 3, scales = "free_y") +
     scale_fill_manual(values = pretty_color[panel_keys], guide = "none",
                       labels = pretty_label[panel_keys]) +
     labs(x = NULL, y = "# gene × trait",
          title = sprintf("MESuSiE hits at increasing PIP thresholds (%d-way)", length(panels_avail))) +
     theme_masld(base_size = 16) +
-    theme(plot.title = element_text(size = 22, face = "bold"),
-          strip.text = element_text(size = 16, face = "bold"),
+    theme(plot.title = element_text(size = 22, face = "plain"),
+          strip.text = element_text(size = 16, face = "plain"),
           axis.text.x = element_text(size = 12, angle = 28, hjust = 1)) +
     expand_limits(y = max(hits_ms$n) * 1.18)
   ggsave(file.path(OUT_DIR, "mesusie/hits_bar.pdf"), p_ms_hits,

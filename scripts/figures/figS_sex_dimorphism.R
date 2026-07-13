@@ -81,13 +81,13 @@ v3_labels <- c(F_only     = "F_only",
 .gated_col <- intersect(c("assigned_class_gated", "assigned_class"), names(v3))[1]
 v3[, assigned_class := factor(get(.gated_col), levels = v3_levels)]
 
-# Cohort short-name mapping (5-cohort canonical)
+# Cohort short-name mapping (5-cohort canonical) — display by accession
 COHORT_NAMES <- c(
-  GSE126848 = "Suppli",
-  GSE130970 = "Hoang",
-  GSE135251 = "Govaere",
-  GSE162694 = "Bril",
-  GSE213621 = "Chen"
+  GSE126848 = "GSE126848",
+  GSE130970 = "GSE130970",
+  GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",
+  GSE213621 = "GSE213621"
 )
 
 # ---------------------------------------------------------------------------
@@ -125,7 +125,7 @@ panel_A <- ggplot(n_dat, aes(x = cohort_short, y = N, fill = sex_group)) +
   geom_text(data = info[, .N, by = cohort_short],
             aes(x = cohort_short, y = N, label = paste0("n=", N)),
             inherit.aes = FALSE,
-            vjust = -0.4, size = 2.0, fontface = "bold", color = "gray25") +
+            vjust = -0.4, size = 2.0, fontface = "plain", color = "gray25") +
   scale_fill_manual(values = sg_pal, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(
@@ -343,7 +343,7 @@ panel_D <- ggplot(b_dat, aes(x = assigned_class, y = chr_bin,
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = format(N, big.mark = ","),
                 color = log10(N + 1) > 2.5),
-            size = 2.4, fontface = "bold") +
+            size = 2.4, fontface = "plain") +
   scale_fill_gradient(low = "#F5F5F5", high = "#37474F",
                       name = expression(log[10](count + 1))) +
   scale_color_manual(values = c("TRUE" = "white", "FALSE" = "gray20"),
@@ -359,8 +359,8 @@ panel_D <- ggplot(b_dat, aes(x = assigned_class, y = chr_bin,
         legend.key.size = unit(6, "pt"),
         legend.title    = element_text(size = 6),
         legend.text     = element_text(size = 6),
-        axis.text.x     = element_text(face = "bold"),
-        axis.text.y     = element_text(face = "bold"),
+        axis.text.x     = element_text(face = "plain"),
+        axis.text.y     = element_text(face = "plain"),
         axis.ticks      = element_blank(),
         panel.grid      = element_blank())
 
@@ -506,7 +506,7 @@ panel_G <- ggplot(e_dat, aes(x = assigned_class, y = frac, fill = biotype_bin)) 
             aes(x = assigned_class, y = 1.04,
                 label = sprintf("n=%s", format(total, big.mark = ","))),
             inherit.aes = FALSE,
-            size = 2.1, fontface = "bold", color = "gray25") +
+            size = 2.1, fontface = "plain", color = "gray25") +
   scale_fill_manual(values = biotype_pal, name = NULL) +
   scale_y_continuous(labels = label_percent(),
                      limits = c(0, 1.10),
@@ -601,7 +601,7 @@ if (have_pm) {
               aes(x = assigned_class, y = 1.04,
                   label = sprintf("n=%s", format(total, big.mark = ","))),
               inherit.aes = FALSE,
-              size = 2.1, fontface = "bold", color = "gray25") +
+              size = 2.1, fontface = "plain", color = "gray25") +
     scale_fill_manual(values = stab_pal,
                       name = "PM bootstrap stability\n(fraction reps same class)",
                       drop = FALSE) +
@@ -645,9 +645,9 @@ composite <- (panel_A | panel_B) /
     subtitle = "Bayesian sex classification (mashr on dream M2; cohort RE + multiply-imputed age + SVA + composition) | triple gate: posterior_P > 0.8, lfsr < 0.05, sign-concordance | 100-rep power-matched bootstrap | 794 samples, 27,638 genes",
     tag_levels = "a",
     theme = theme(
-      plot.title    = element_text(size = 9,   face = "bold"),
+      plot.title    = element_text(size = 9,   face = "plain"),
       plot.subtitle = element_text(size = 6.8, color = "gray35"),
-      plot.tag      = element_text(size = 8,   face = "bold")
+      plot.tag      = element_text(size = 8,   face = "plain")
     )
   ) &
   theme_masld(base_size = 7)

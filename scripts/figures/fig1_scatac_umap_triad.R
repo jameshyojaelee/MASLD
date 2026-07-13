@@ -121,21 +121,21 @@ axis_arrow_layers <- list(
            linewidth = 0.3, color = "black"),
   annotate("text",
            x = ax0_x + arrow_len_x / 2, y = ax0_y - 0.025 * diff(yrng),
-           label = "UMAP1", size = 1.7, fontface = "bold", hjust = 0.5,
+           label = "UMAP1", size = GEOM_TEXT_6PT, fontface = "plain", hjust = 0.5,
            vjust = 1, color = "black"),
   annotate("text",
            x = ax0_x - 0.025 * diff(xrng), y = ax0_y + arrow_len_y / 2,
-           label = "UMAP2", size = 1.7, fontface = "bold", angle = 90,
+           label = "UMAP2", size = GEOM_TEXT_6PT, fontface = "plain", angle = 90,
            hjust = 0.5, vjust = 0, color = "black")
 )
 
 theme_umap <- theme_void(base_size = 7, base_family = "Helvetica") +
   theme(
-    plot.title       = element_text(size = 7, face = "bold", hjust = 0,
+    plot.title       = element_text(size = 6, face = "plain", hjust = 0,
                                     margin = margin(b = 1)),
     legend.position  = "bottom",
-    legend.title     = element_text(size = 5, face = "bold"),
-    legend.text      = element_text(size = 5),
+    legend.title     = element_text(size = 6, face = "plain"),
+    legend.text      = element_text(size = 6),
     legend.key.size  = unit(0.18, "cm"),
     legend.box.spacing = unit(1, "pt"),
     legend.margin    = margin(0, 0, 0, 0),
@@ -160,7 +160,7 @@ make_umap <- function(df, color_col, color_scale, tag, legend_nrow = 2) {
       override.aes = list(size = 1.4, alpha = 1)
     )) +
     theme_umap +
-    theme(plot.tag = element_text(size = 9, face = "bold"),
+    theme(plot.tag = element_text(size = 9, face = "plain"),
           plot.tag.position = c(0.02, 0.98))
 }
 
@@ -209,7 +209,7 @@ p_cond <- make_umap(
 # ---------------------------------------------------------------------------
 combo <- (p_ct | p_fs | p_cond) +
   plot_layout(ncol = 3, guides = "keep") &
-  theme(plot.tag = element_text(size = 7, face = "bold"))
+  theme(plot.tag = element_text(size = 7, face = "plain"))
 
 message(sprintf("[save] %s", OUT_PDF))
 ggsave(

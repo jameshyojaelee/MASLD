@@ -1,10 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState, type CSSProperties } from "react";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { dataUrl } from "@/lib/data-base";
 import { Separator } from "@/components/ui/separator";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { SkeletonBlock } from "@/components/states";
+import { fibrosisStageColor, categoricalColor } from "@/lib/palette";
+
+// Two NMF subtypes are qualitative series (not fibrosis stages): S1 metabolic
+// (categorical blue), S2 inflammatory (categorical orange).
+const S1_COLOR = categoricalColor(0);
+const S2_COLOR = categoricalColor(1);
+
+/** Sign-encoded logFC color for table cells (direction = data mark). */
+function lfcStyle(val: number): CSSProperties {
+  if (val > 0) return { color: "var(--color-effect-up)" };
+  if (val < 0) return { color: "var(--color-effect-down)" };
+  return { color: "var(--color-muted-foreground)" };
+}
 
 // ---------------------------------------------------------------------------
 // Types matching progression_journey.json
@@ -16,7 +33,7 @@ interface GeneEntry {
   padj: number;
 }
 
-interface SwitchGene {
+interface TransitionGene {
   symbol: string;
   logfc_early: number;
   logfc_late: number;
@@ -35,12 +52,12 @@ interface StageData {
   key_pathways: string[];
 }
 
-interface F2Switch {
+interface LateStageSignature {
   total_late_degs: number;
   early_degs: number;
   new_in_late: number;
   new_inflammatory_genes: number;
-  key_switch_genes: SwitchGene[];
+  key_transition_genes: TransitionGene[];
 }
 
 interface ClassifierMetrics {
@@ -51,7 +68,7 @@ interface ClassifierMetrics {
 
 interface ProgressionData {
   stages: StageData[];
-  f2_switch: F2Switch;
+  late_stage_signature: LateStageSignature;
   classifier_metrics: ClassifierMetrics;
 }
 
@@ -59,18 +76,20 @@ interface ProgressionData {
 // Stage metadata
 // ---------------------------------------------------------------------------
 
-const STAGE_META: Record<string, { color: string; bgClass: string; borderClass: string; badgeVariant: "default" | "secondary" | "destructive" | "outline" }> = {
-  F0: { color: "#10b981", bgClass: "bg-emerald-50 dark:bg-emerald-950/30", borderClass: "border-emerald-200 dark:border-emerald-800", badgeVariant: "secondary" },
-  F1: { color: "#3b82f6", bgClass: "bg-blue-50 dark:bg-blue-950/30", borderClass: "border-blue-200 dark:border-blue-800", badgeVariant: "secondary" },
-  F2: { color: "#f59e0b", bgClass: "bg-amber-50 dark:bg-amber-950/30", borderClass: "border-amber-200 dark:border-amber-800", badgeVariant: "destructive" },
-  F3: { color: "#f97316", bgClass: "bg-orange-50 dark:bg-orange-950/30", borderClass: "border-orange-200 dark:border-orange-800", badgeVariant: "destructive" },
-  F4: { color: "#ef4444", bgClass: "bg-red-50 dark:bg-red-950/30", borderClass: "border-red-200 dark:border-red-800", badgeVariant: "destructive" },
+// Stage marker color flows through the fibrosis palette (F0 = control gray, not
+// green). The bg/border tints are decorative card chrome only.
+const STAGE_META: Record<string, { bgClass: string; borderClass: string; badgeVariant: "default" | "secondary" | "destructive" | "outline" }> = {
+  F0: { bgClass: "bg-muted/40", borderClass: "border-border", badgeVariant: "secondary" },
+  F1: { bgClass: "bg-amber-50 dark:bg-amber-950/30", borderClass: "border-amber-200 dark:border-amber-800", badgeVariant: "secondary" },
+  F2: { bgClass: "bg-amber-50 dark:bg-amber-950/30", borderClass: "border-amber-200 dark:border-amber-800", badgeVariant: "destructive" },
+  F3: { bgClass: "bg-orange-50 dark:bg-orange-950/30", borderClass: "border-orange-200 dark:border-orange-800", badgeVariant: "destructive" },
+  F4: { bgClass: "bg-red-50 dark:bg-red-950/30", borderClass: "border-red-200 dark:border-red-800", badgeVariant: "destructive" },
 };
 
 const STAGE_LABELS: Record<string, string> = {
   F0: "Healthy / No Fibrosis",
   F1: "Mild Fibrosis",
-  F2: "Moderate Fibrosis \u2014 THE SWITCH",
+  F2: "Moderate Fibrosis",
   F3: "Severe Fibrosis",
   F4: "Cirrhosis",
 };
@@ -81,12 +100,6 @@ const STAGE_LABELS: Record<string, string> = {
 
 function formatLogFC(val: number): string {
   return val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2);
-}
-
-function logfcColor(val: number): string {
-  if (val > 0) return "text-red-500 dark:text-red-400";
-  if (val < 0) return "text-blue-500 dark:text-blue-400";
-  return "text-muted-foreground";
 }
 
 function formatPadj(val: number): string {
@@ -129,64 +142,36 @@ function TimelineBar({ stages }: { stages: StageData[] }) {
       />
       {stages.map((stage, i) => {
         const cx = padX + i * spacing;
-        const meta = STAGE_META[stage.stage] ?? STAGE_META.F0;
-        const isF2 = stage.stage === "F2";
-        const r = isF2 ? 18 : 12;
-
+        // Stage code + descriptive label sit below the marker in theme tokens
+        // so figure text never depends on a fixed mark color for contrast.
         return (
           <g key={stage.stage}>
-            {/* Highlight glow for F2 */}
-            {isF2 && (
-              <circle
-                cx={cx}
-                cy={baseY}
-                r={24}
-                fill={meta.color}
-                opacity={0.12}
-              />
-            )}
             <circle
               cx={cx}
               cy={baseY}
-              r={r}
-              fill={meta.color}
-              opacity={isF2 ? 1 : 0.8}
+              r={11}
+              fill={fibrosisStageColor(stage.stage)}
+              opacity={0.9}
             />
             <text
               x={cx}
-              y={baseY + 1}
+              y={baseY + 22}
               textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={isF2 ? 11 : 9}
-              fontWeight={isF2 ? 700 : 600}
-              fill="white"
+              fontSize={10}
+              fontWeight={600}
+              fill="var(--color-foreground)"
             >
               {stage.stage}
             </text>
-            {/* Label below */}
             <text
               x={cx}
-              y={baseY + (isF2 ? 34 : 26)}
+              y={baseY + 33}
               textAnchor="middle"
               fontSize={8}
-              fill="currentColor"
-              opacity={0.6}
+              fill="var(--color-muted-foreground)"
             >
               {stage.label}
             </text>
-            {/* SWITCH label for F2 */}
-            {isF2 && (
-              <text
-                x={cx}
-                y={baseY - 28}
-                textAnchor="middle"
-                fontSize={9}
-                fontWeight={700}
-                fill={meta.color}
-              >
-                THE SWITCH
-              </text>
-            )}
           </g>
         );
       })}
@@ -253,11 +238,11 @@ function NMFAreaChart({ stages }: { stages: StageData[] }) {
         />
       ))}
 
-      {/* S1 area (blue) */}
-      <path d={areaPath(s1Points)} fill="#3b82f6" fillOpacity={0.25} stroke="#3b82f6" strokeWidth={1.5} strokeOpacity={0.6} />
+      {/* S1 area (metabolic — categorical blue) */}
+      <path d={areaPath(s1Points)} fill={S1_COLOR} fillOpacity={0.25} stroke={S1_COLOR} strokeWidth={1.5} strokeOpacity={0.6} />
 
-      {/* S2 area (orange/red) */}
-      <path d={areaPath(s2Points)} fill="#f97316" fillOpacity={0.25} stroke="#f97316" strokeWidth={1.5} strokeOpacity={0.6} />
+      {/* S2 area (inflammatory — categorical orange) */}
+      <path d={areaPath(s2Points)} fill={S2_COLOR} fillOpacity={0.25} stroke={S2_COLOR} strokeWidth={1.5} strokeOpacity={0.6} />
 
       {/* Dividing line (S2 fraction) */}
       {stages.map((s, i) => {
@@ -285,8 +270,8 @@ function NMFAreaChart({ stages }: { stages: StageData[] }) {
           cx={scaleX(i)}
           cy={scaleY(s.s2_fraction)}
           r={3.5}
-          fill="white"
-          stroke="#f97316"
+          fill="var(--color-background)"
+          stroke={S2_COLOR}
           strokeWidth={2}
         />
       ))}
@@ -299,7 +284,7 @@ function NMFAreaChart({ stages }: { stages: StageData[] }) {
             y1={margin.top}
             x2={scaleX(crossIdx)}
             y2={margin.top + plotH}
-            stroke="#f97316"
+            stroke={S2_COLOR}
             strokeOpacity={0.3}
             strokeWidth={1}
             strokeDasharray="3,3"
@@ -340,11 +325,11 @@ function NMFAreaChart({ stages }: { stages: StageData[] }) {
       ))}
 
       {/* Legend */}
-      <rect x={margin.left + 8} y={margin.top + 4} width={10} height={10} rx={2} fill="#3b82f6" fillOpacity={0.5} />
+      <rect x={margin.left + 8} y={margin.top + 4} width={10} height={10} rx={2} fill={S1_COLOR} fillOpacity={0.5} />
       <text x={margin.left + 22} y={margin.top + 13} fontSize={10} fill="currentColor" opacity={0.7}>
         S1 (Metabolic)
       </text>
-      <rect x={margin.left + 120} y={margin.top + 4} width={10} height={10} rx={2} fill="#f97316" fillOpacity={0.5} />
+      <rect x={margin.left + 120} y={margin.top + 4} width={10} height={10} rx={2} fill={S2_COLOR} fillOpacity={0.5} />
       <text x={margin.left + 134} y={margin.top + 13} fontSize={10} fill="currentColor" opacity={0.7}>
         S2 (Inflammatory)
       </text>
@@ -364,13 +349,11 @@ function SubtypeBar({ s1, s2 }: { s1: number; s2: number }) {
     <div className="flex items-center gap-2">
       <div className="flex h-4 flex-1 overflow-hidden rounded-full">
         <div
-          className="bg-blue-400/60 transition-all"
-          style={{ width: `${s1Pct}%` }}
+          style={{ width: `${s1Pct}%`, backgroundColor: S1_COLOR, opacity: 0.6 }}
           title={`S1: ${s1Pct}%`}
         />
         <div
-          className="bg-orange-400/60 transition-all"
-          style={{ width: `${s2Pct}%` }}
+          style={{ width: `${s2Pct}%`, backgroundColor: S2_COLOR, opacity: 0.6 }}
           title={`S2: ${s2Pct}%`}
         />
       </div>
@@ -395,7 +378,7 @@ function GeneList({ genes, direction }: { genes: GeneEntry[]; direction: "up" | 
         <div key={g.symbol} className="flex items-center justify-between gap-2 text-xs">
           {isNamedGene(g.symbol) ? (
             <Link
-              href={`/gene/${encodeURIComponent(g.symbol)}`}
+              href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
               className="font-mono font-semibold text-primary hover:underline"
             >
               {g.symbol}
@@ -403,7 +386,7 @@ function GeneList({ genes, direction }: { genes: GeneEntry[]; direction: "up" | 
           ) : (
             <span className="font-mono text-muted-foreground">{g.symbol}</span>
           )}
-          <span className={`font-mono ${logfcColor(g.logfc)}`}>
+          <span className="font-mono" style={lfcStyle(g.logfc)}>
             {formatLogFC(g.logfc)}
           </span>
         </div>
@@ -419,13 +402,10 @@ function GeneList({ genes, direction }: { genes: GeneEntry[]; direction: "up" | 
 function StageCard({ stage }: { stage: StageData }) {
   const meta = STAGE_META[stage.stage] ?? STAGE_META.F0;
   const label = STAGE_LABELS[stage.stage] ?? stage.label;
-  const isF2 = stage.stage === "F2";
   const totalDegs = stage.n_degs_up + stage.n_degs_down;
 
   return (
-    <div
-      className={`rounded-lg border p-5 ${meta.bgClass} ${meta.borderClass} ${isF2 ? "ring-2 ring-amber-400/50 dark:ring-amber-500/30" : ""}`}
-    >
+    <div className={`rounded-lg border p-5 ${meta.bgClass} ${meta.borderClass}`}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <Badge variant={meta.badgeVariant} className="text-xs font-bold">
@@ -447,10 +427,10 @@ function StageCard({ stage }: { stage: StageData }) {
       {/* DEG counts */}
       {totalDegs > 0 && (
         <div className="mb-3 flex gap-4 text-xs">
-          <span className="text-red-500 dark:text-red-400">
+          <span style={{ color: "var(--color-effect-up)" }}>
             {stage.n_degs_up.toLocaleString()} up
           </span>
-          <span className="text-blue-500 dark:text-blue-400">
+          <span style={{ color: "var(--color-effect-down)" }}>
             {stage.n_degs_down.toLocaleString()} down
           </span>
         </div>
@@ -468,13 +448,19 @@ function StageCard({ stage }: { stage: StageData }) {
           <Separator className="my-3" />
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="mb-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+              <p
+                className="mb-1.5 text-xs font-medium"
+                style={{ color: "var(--color-effect-up)" }}
+              >
                 Top Upregulated
               </p>
               <GeneList genes={stage.top_genes_up} direction="up" />
             </div>
             <div>
-              <p className="mb-1.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+              <p
+                className="mb-1.5 text-xs font-medium"
+                style={{ color: "var(--color-effect-down)" }}
+              >
                 Top Downregulated
               </p>
               <GeneList genes={stage.top_genes_down} direction="down" />
@@ -483,14 +469,14 @@ function StageCard({ stage }: { stage: StageData }) {
         </>
       )}
 
-      {/* F2 special: no DEGs message */}
-      {isF2 && totalDegs === 0 && (
+      {/* No stage-unique DEGs at the chosen threshold */}
+      {totalDegs === 0 && (
         <>
           <Separator className="my-3" />
           <p className="text-sm text-muted-foreground italic">
-            F2 is the inflection point. No stage-unique DEGs detected here because this
-            stage marks the transition boundary between early (F0-F1) and late (F3-F4)
-            disease programs.
+            No stage-unique DEGs detected at this threshold in the one-vs-rest
+            comparison for this stage — part of the broader multi-step
+            progression across F0–F4 (see the Early-to-Late Stage Shift below).
           </p>
         </>
       )}
@@ -514,10 +500,10 @@ function StageCard({ stage }: { stage: StageData }) {
 }
 
 // ---------------------------------------------------------------------------
-// F2 Switch Highlight Section
+// Early-to-Late Stage Shift Section
 // ---------------------------------------------------------------------------
 
-function F2SwitchSection({ data }: { data: F2Switch }) {
+function LateStageSignatureSection({ data }: { data: LateStageSignature }) {
   return (
     <div className="rounded-lg border-2 border-amber-400 bg-amber-50/80 p-6 dark:border-amber-600 dark:bg-amber-950/30">
       <div className="mb-4 flex items-center gap-3">
@@ -527,9 +513,10 @@ function F2SwitchSection({ data }: { data: F2Switch }) {
           </svg>
         </div>
         <div>
-          <h2 className="text-lg font-bold">The Metabolic-to-Inflammatory Switch</h2>
+          <h2 className="text-lg font-bold">Early-to-Late Stage Transcriptomic Shift</h2>
           <p className="text-sm text-muted-foreground">
-            A discrete transition at F2 that defines irreversibility
+            Genes with minimal early-stage signal that become prominent later in the
+            multi-step fibrosis progression
           </p>
         </div>
       </div>
@@ -571,7 +558,6 @@ function F2SwitchSection({ data }: { data: F2Switch }) {
           <svg width="40" height="24" viewBox="0 0 40 24" className="text-amber-500">
             <path d="M4 12H36M36 12L28 6M36 12L28 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
-          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">F2</span>
         </div>
         <div className="flex-1 rounded-md bg-red-100 p-3 text-center dark:bg-red-900/30">
           <p className="text-sm font-semibold text-red-700 dark:text-red-300">Late (F3-F4)</p>
@@ -582,17 +568,17 @@ function F2SwitchSection({ data }: { data: F2Switch }) {
         </div>
       </div>
 
-      {/* Switch genes */}
+      {/* Transition genes */}
       <Separator className="my-3" />
       <p className="mb-2 text-xs font-medium text-muted-foreground">
-        Key Switch Genes (largest early-to-late change)
+        Key Transition Genes (largest early-to-late change)
       </p>
       <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
-        {data.key_switch_genes.slice(0, 9).map((g) => (
+        {data.key_transition_genes.slice(0, 9).map((g) => (
           <div key={g.symbol} className="flex items-center justify-between rounded bg-white/50 px-2 py-1 text-xs dark:bg-white/5">
             {isNamedGene(g.symbol) ? (
               <Link
-                href={`/gene/${encodeURIComponent(g.symbol)}`}
+                href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
                 className="font-mono font-semibold text-primary hover:underline"
               >
                 {g.symbol}
@@ -605,7 +591,7 @@ function F2SwitchSection({ data }: { data: F2Switch }) {
                 {g.logfc_early === 0 ? "0" : formatLogFC(g.logfc_early)}
               </span>
               <span className="text-muted-foreground/50">&rarr;</span>
-              <span className={logfcColor(g.logfc_late)}>
+              <span style={lfcStyle(g.logfc_late)}>
                 {formatLogFC(g.logfc_late)}
               </span>
             </span>
@@ -669,7 +655,7 @@ export default function ProgressionPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/data/progression_journey.json")
+    fetch(dataUrl("progression_journey.json"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -684,35 +670,41 @@ export default function ProgressionPage() {
       });
   }, []);
 
+  const header = (
+    <PageHeader
+      title="Disease Progression"
+      description="From steatosis to cirrhosis: a five-stage journey through MASLD fibrosis. Each stage is characterized by distinct transcriptomic programs, part of a continuous multi-step progression from metabolic to inflammatory biology."
+    />
+  );
+
   if (loading) {
     return (
-      <div className="w-full px-6 py-10">
-        <p className="text-muted-foreground">Loading progression data...</p>
-      </div>
+      <PageContainer>
+        {header}
+        <SkeletonBlock className="mx-auto mb-10 h-20 w-full max-w-2xl rounded-lg" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonBlock key={i} className="h-56 rounded-lg" />
+          ))}
+        </div>
+      </PageContainer>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="w-full px-6 py-10">
-        <p className="text-destructive">Failed to load data: {error ?? "unknown error"}</p>
-      </div>
+      <PageContainer>
+        {header}
+        <p className="text-destructive">
+          Failed to load data: {error ?? "unknown error"}
+        </p>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="w-full px-6 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Disease Progression
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          From steatosis to cirrhosis: a five-stage journey through MASLD
-          fibrosis. Each stage is characterized by distinct transcriptomic
-          programs, with a discrete metabolic-to-inflammatory switch at F2.
-        </p>
-      </div>
+    <PageContainer>
+      {header}
 
       {/* Timeline Bar */}
       <section className="mb-10">
@@ -733,9 +725,9 @@ export default function ProgressionPage() {
         </div>
       </section>
 
-      {/* F2 Switch Highlight */}
+      {/* Early-to-Late Stage Shift */}
       <section className="mb-12">
-        <F2SwitchSection data={data.f2_switch} />
+        <LateStageSignatureSection data={data.late_stage_signature} />
       </section>
 
       {/* NMF Subtype Dynamics */}
@@ -777,6 +769,6 @@ export default function ProgressionPage() {
           </Button>
         </Link>
       </section>
-    </div>
+    </PageContainer>
   );
 }

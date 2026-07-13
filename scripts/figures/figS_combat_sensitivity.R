@@ -26,7 +26,7 @@ concordance <- load_combat_concordance()
 # ---- Panel (a): LFC scatter primary vs ComBat (rasterized) ----
 if (!is.null(dream_primary) && !is.null(dream_combat)) {
   merged <- merge(
-    dream_primary[, .(gene, lfc_primary = dream_logFC, padj_primary = dream_padj, symbol)],
+    dream_primary[, .(gene, lfc_primary = bulk_logFC, padj_primary = bulk_padj, symbol)],
     dream_combat[, .(gene, lfc_combat = logFC, padj_combat = padj)],
     by = "gene"
   )
@@ -37,7 +37,7 @@ if (!is.null(dream_primary) && !is.null(dream_combat)) {
     geom_abline(slope = 1, intercept = 0, linetype = "dashed", linewidth = 0.3, color = "gray50") +
     geom_smooth(method = "lm", se = FALSE, linewidth = 0.4, color = masld_colors$up) +
     annotate("text", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.3,
-             label = paste0("r = ", round(cor_val, 3)), size = 2.5, color = masld_colors$up) +
+             label = paste0("r = ", round(cor_val, 3)), size = GEOM_TEXT_6PT, color = masld_colors$up) +
     labs(x = "Primary meta-analysis logFC", y = "ComBat-seq meta-analysis logFC") +
     theme_masld()
 } else {
@@ -61,18 +61,18 @@ if (!is.null(concordance)) {
 
   p_b <- ggplot(overlap_dt, aes(x = Category, y = Count, fill = Category)) +
     geom_col(width = 0.6) +
-    geom_text(aes(label = comma(Count)), vjust = -0.3, size = 2.2) +
+    geom_text(aes(label = comma(Count)), vjust = -0.3, size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = c("Primary only" = masld_colors$down,
                                   "Overlap" = masld_colors$up,
                                   "ComBat only" = "#F48FB1"), guide = "none") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
     annotate("text", x = 2, y = max(overlap_dt$Count) * 0.9,
-             label = paste0("Jaccard = ", round(jaccard, 3)), size = 2.5) +
+             label = paste0("Jaccard = ", round(jaccard, 3)), size = GEOM_TEXT_6PT) +
     labs(x = NULL, y = "DEG count") +
     theme_masld()
 } else if (!is.null(dream_primary) && !is.null(dream_combat)) {
   # Compute from data
-  sig_p <- dream_primary[dream_padj < 0.1]$gene
+  sig_p <- dream_primary[bulk_padj < 0.1]$gene
   sig_c <- dream_combat[padj < 0.1]$gene
   overlap_genes <- intersect(sig_p, sig_c)
   overlap_dt <- data.table(
@@ -84,13 +84,13 @@ if (!is.null(concordance)) {
 
   p_b <- ggplot(overlap_dt, aes(x = Category, y = Count, fill = Category)) +
     geom_col(width = 0.6) +
-    geom_text(aes(label = comma(Count)), vjust = -0.3, size = 2.2) +
+    geom_text(aes(label = comma(Count)), vjust = -0.3, size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = c("Primary only" = masld_colors$down,
                                   "Overlap" = masld_colors$up,
                                   "ComBat only" = "#F48FB1"), guide = "none") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
     annotate("text", x = 2, y = max(overlap_dt$Count) * 0.9,
-             label = paste0("Jaccard = ", round(jac, 3)), size = 2.5) +
+             label = paste0("Jaccard = ", round(jac, 3)), size = GEOM_TEXT_6PT) +
     labs(x = NULL, y = "DEG count") +
     theme_masld()
 } else {
@@ -112,9 +112,9 @@ if (!is.null(concordance)) {
 
   p_c <- ggplot(summary_dt, aes(x = Value, y = Metric)) +
     geom_col(fill = masld_colors$up, width = 0.5) +
-    geom_text(aes(label = sprintf("%.3f", Value)), hjust = -0.1, size = 2.5) +
+    geom_text(aes(label = sprintf("%.3f", Value)), hjust = -0.1, size = GEOM_TEXT_6PT) +
     scale_x_continuous(limits = c(0, 1.15), expand = c(0, 0)) +
-    labs(x = "Value", y = NULL, title = "Concordance metrics") +
+    labs(x = "Value", y = NULL) +
     theme_masld()
 } else {
   p_c <- placeholder("Panel c: concordance metrics not found")
@@ -123,7 +123,8 @@ if (!is.null(concordance)) {
 # ---- Assemble ----
 figS1 <- (p_a | p_b | p_c) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig(figS1, OUT, height = 3.5)
+message("[caption] Panel c: Concordance metrics")
 message("FigS1 saved to ", OUT)

@@ -82,8 +82,8 @@ if (file.exists(cvf)) {
   val("rows", nrow(cv))
   tier_col <- intersect(c("tier", "convergence_tier"), names(cv))[1]
   if (!is.na(tier_col)) { cat("  tier breakdown:\n"); print(cv[, .N, by = tier_col]) }
-  if ("intact_score_source" %in% names(cv))
-    { cat("  intact_score_source breakdown:\n"); print(cv[, .N, by = intact_score_source]) }
+  if ("coloc_best_gwas" %in% names(cv))
+    { cat("  coloc_best_gwas (genetic-channel provenance) breakdown:\n"); print(cv[, .N, by = coloc_best_gwas][order(-N)][1:min(10,.N)]) }
 } else {
   val("MISSING (46d not yet re-run?)", cvf)
 }
@@ -91,7 +91,7 @@ if (file.exists(cvf)) {
 # ---------------------------------------------------------------------------
 # 4. INTACT (intact_scores.csv) — multi vs ct_single
 # ---------------------------------------------------------------------------
-section("4. INTACT (intact_scores.csv)")
+section("4. INTACT (intact_scores.csv) — RETIRED 2026-06-19, no longer feeds 46d")
 inf <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/intact_scores.csv")
 if (file.exists(inf)) {
   ic <- fread(inf)

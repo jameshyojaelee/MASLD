@@ -6,7 +6,7 @@ Fig 4B — Spatial overview (two panels):
   Right:  Disease-emergent SVG score distribution across ALL spots from
           both cohorts (GSE192741 + Vu et al.), split by condition
 
-Output: figures/main/fig4_validation/panels/fig4b_spatial_overview.pdf
+Output: figures/main/fig4_validation/spatial_zonation.pdf
 Environment: spatial (conda)
 """
 import os, sys
@@ -31,7 +31,7 @@ sc.settings.verbosity = 0
 sys.path.insert(0, os.path.join(BASE, "Analysis/Spatial/scripts"))
 from spatial_stats import ensure_lognorm
 
-OUT_DIR      = os.path.join(BASE, "figures/main/fig4_validation/panels")
+OUT_DIR      = os.path.join(BASE, "figures/main/fig4_validation", "panels")
 DATA_DIR     = os.path.join(BASE, "Analysis/Spatial/data/gsmap_input")
 SVG_CSV      = os.path.join(BASE, "Analysis/Spatial/results/integration/spatial_consensus.csv")
 # Real disease-emergent SVG call (F250/F196): genes that gained spatial structure
@@ -200,15 +200,15 @@ for idx, (label, adata) in enumerate(tissue_adatas.items()):
     ax.set_aspect("equal")
     ax.axis("off")
     title_short = label.split("\n")[0]
-    ax.set_title(title_short, fontsize=7, fontweight="bold", pad=3)
+    ax.set_title(title_short, fontsize=6, pad=3)
 
 # Zone legend on first tissue panel
 ax0 = fig.axes[0]
 legend_elements = [Patch(facecolor=ZONE_COLORS[z], edgecolor="none",
                          label=z if z in ("PP1", "PC1") else z)
                    for z in zone_bin_order]
-ax0.legend(handles=legend_elements, fontsize=5, title="Zone",
-           title_fontsize=5.5, loc="lower left",
+ax0.legend(handles=legend_elements, fontsize=6, title="Zone",
+           title_fontsize=6, loc="lower left",
            frameon=True, framealpha=0.85, edgecolor="none",
            handlelength=1, handleheight=0.8)
 
@@ -240,32 +240,30 @@ for pos, cond in zip(positions, cond_order):
                      linewidth=0.4, zorder=6)
 
 ax_v.set_xticks(positions)
-ax_v.set_xticklabels(cond_labels, fontsize=5.5)
+ax_v.set_xticklabels(cond_labels, fontsize=6)
 ax_v.set_ylabel("Disease-emergent SVG score", fontsize=6)
-ax_v.set_title("Disease-emergent SVG score per spot\n(points = per-donor medians)",
-               fontsize=7, fontweight="bold")
-ax_v.tick_params(axis="y", labelsize=5.5)
+ax_v.tick_params(axis="y", labelsize=6)
 ax_v.spines["top"].set_visible(False)
 ax_v.spines["right"].set_visible(False)
 ax_v.spines["bottom"].set_linewidth(0.5)
 ax_v.spines["left"].set_linewidth(0.5)
 ax_v.tick_params(width=0.5)
 
-# Figure caption — report the DONOR n, not the pooled spot n (F193). The violin
-# shows the spot-level score distribution (descriptive); black points are the
-# per-donor medians (the unit of inference: Healthy n=2, Steatohepatitis n=3
-# GSE192741 donors; Vu n=10 slices).
+# Minimal on-figure key only (PI directive: stats/sample-sizes belong in the
+# legend, not on the panel). The violins are spot-level descriptive
+# distributions; black points are the per-donor medians (the unit of inference).
+# The donor counts (Healthy n=2, Steatohepatitis n=3 GSE192741 donors; Vu n=10
+# slices, F193) are emitted to stdout below for the figure legend.
 n_total = len(vdf)
 fig.text(0.5, 0.01,
-         "Left: spots colored by periportal (blue) → pericentral (orange) zonation zone  |  "
-         "Right: disease-emergent SVG score per spot (violins, descriptive); "
-         "black points = per-donor medians (Healthy n=2, Steatohepatitis n=3 donors; Vu n=10 slices)",
-         ha="center", fontsize=5.5, color="#444444")
+         "Spots: periportal (blue) → pericentral (orange)  |  "
+         "points = per-donor medians",
+         ha="center", fontsize=6, color="#444444")
 
-out = os.path.join(OUT_DIR, "fig4b_spatial_overview.pdf")
+out = os.path.join(OUT_DIR, "spatial_zonation.pdf")
 plt.savefig(out, bbox_inches="tight", dpi=300)
 print(f"Saved: {out}")
-print(f"  GSE192741: {sum(1 for c in gse_map.values() if c=='Healthy')} healthy, "
-      f"{sum(1 for c in gse_map.values() if c=='Steatohepatitis')} steatohepatitis samples")
-print(f"  Vu et al.: {len(vu_files)} samples")
-print(f"  Total spots in violin: {n_total:,}")
+print("[fig4b legend] donor-level n: "
+      f"Healthy n={int(cond_ndonor.get('Healthy', 0))}, "
+      f"Steatohepatitis n={int(cond_ndonor.get('Steatohepatitis', 0))} (GSE192741); "
+      f"Vu n={len(vu_files)} slices; total spots in violin = {n_total:,}")

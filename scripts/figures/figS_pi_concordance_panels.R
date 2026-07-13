@@ -37,13 +37,11 @@ theme_pub <- theme_minimal(base_size = 11) +
     legend.background = element_blank(),
     legend.key        = element_blank(),
     strip.background  = element_blank(),
-    strip.text        = element_text(face = "bold", size = 10),
-    plot.title        = element_text(face = "bold", size = 12),
-    plot.subtitle     = element_text(size = 9, color = "grey40"),
-    axis.title        = element_text(size = 10),
-    axis.text         = element_text(size = 9),
-    legend.text       = element_text(size = 9),
-    legend.title      = element_text(size = 9),
+    strip.text        = element_text(face = "plain", size = 6),
+    axis.title        = element_text(size = 6),
+    axis.text         = element_text(size = 6),
+    legend.text       = element_text(size = 6),
+    legend.title      = element_text(size = 6),
     plot.margin       = margin(8, 10, 8, 8)
   )
 theme_set(theme_pub)
@@ -61,8 +59,6 @@ grp_colors <- c("Disease" = col_disease, "Control" = col_control)
 
 message("Loading dream STAR results...")
 dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
-setnames(dream, "logFC", "dream_logFC", skip_absent = FALSE)
-setnames(dream, "padj",  "dream_padj",  skip_absent = FALSE)
 
 message("Loading patient LFC matrix (disease samples)...")
 lfc_mat    <- fread(file.path(INT_RESULTS, "patient_lfc_matrix.csv.gz"))
@@ -118,8 +114,8 @@ ctrl_lfc  <- ctrl_lfc[dream_sub$gene, ]
 
 # ── Signature score at canonical cutoff ──────────────────────────────────────
 CUT <- 0.5
-up_g    <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  CUT]
-dn_g    <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -CUT]
+up_g    <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  CUT]
+dn_g    <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -CUT]
 n_total <- length(up_g) + length(dn_g)
 message(sprintf("  DEGs at |LFC|>%.1f: %d up + %d down = %d total",
                 CUT, length(up_g), length(dn_g), n_total))
@@ -137,13 +133,13 @@ ctrl_scores <- sig_score(ctrl_lfc, up_g, dn_g, n_total)
 scores_dis <- merge(
   data.table(sample_id = names(dis_scores), sig_score = as.numeric(dis_scores),
              group_binary = "Disease"),
-  meta[, .(sample_id, dataset, fibrosis_stage = as.character(fibrosis_stage))],
+  meta[, .(sample_id, dataset, fibrosis_stage = fifelse(dataset %in% c("GSE213621", "PRJNA512027"), NA_character_, as.character(fibrosis_stage)))],
   by = "sample_id", all.x = TRUE)
 
 scores_ctrl <- merge(
   data.table(sample_id = names(ctrl_scores), sig_score = as.numeric(ctrl_scores),
              group_binary = "Control"),
-  meta[, .(sample_id, dataset, fibrosis_stage = as.character(fibrosis_stage))],
+  meta[, .(sample_id, dataset, fibrosis_stage = fifelse(dataset %in% c("GSE213621", "PRJNA512027"), NA_character_, as.character(fibrosis_stage)))],
   by = "sample_id", all.x = TRUE)
 
 scores_all <- rbind(scores_dis, scores_ctrl)
@@ -203,16 +199,16 @@ pE1 <- ggplot(scores_stage, aes(x = stage_group, y = mean_lfc_up, fill = stage_g
   geom_boxplot(width = 0.12, outlier.shape = NA, color = "grey15", fill = "white",
                alpha = 0.5, linewidth = 0.42) +
   geom_text(data = stage_n, aes(x = stage_group, y = -Inf, label = paste0("n=", N)),
-            vjust = -0.3, size = 2.6, color = "grey45", inherit.aes = FALSE) +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "grey45", inherit.aes = FALSE) +
   scale_fill_manual(values = stage_fill, guide = "none") +
   scale_x_discrete(labels = c("Control" = "Control\n(healthy)",
                                "F0" = "F0\n(disease)", "F1" = "F1",
                                "F2" = "F2", "F3" = "F3", "F4" = "F4")) +
   labs(
     x        = "Group  (healthy controls → fibrosis stage)",
-    y        = expression("Mean log"[2]*"FC per patient"),
-    title    = "Per-patient mean log₂FC of dream DEGs across fibrosis stages"
+    y        = expression("Mean log"[2]*"FC per patient")
   )
+message("[caption] Per-patient mean log2FC of dream DEGs across fibrosis stages")
 
 ggsave(file.path(OUTDIR, "E1_fibrosis_stage_score.pdf"),
        pE1, width = 7, height = 5, device = cairo_pdf)
@@ -257,16 +253,16 @@ pE1_med <- ggplot(scores_stage_med, aes(x = stage_group, y = med_lfc, fill = sta
   geom_boxplot(width = 0.12, outlier.shape = NA, color = "grey15", fill = "white",
                alpha = 0.5, linewidth = 0.42) +
   geom_text(data = stage_n_med, aes(x = stage_group, y = -Inf, label = paste0("n=", N)),
-            vjust = -0.3, size = 2.6, color = "grey45", inherit.aes = FALSE) +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "grey45", inherit.aes = FALSE) +
   scale_fill_manual(values = stage_fill, guide = "none") +
   scale_x_discrete(labels = c("Control" = "Control\n(healthy)",
                                "F0" = "F0\n(disease)", "F1" = "F1",
                                "F2" = "F2", "F3" = "F3", "F4" = "F4")) +
   labs(
     x        = "Group  (healthy controls → fibrosis stage)",
-    y        = expression("Median log"[2]*"FC per patient"),
-    title    = "Per-patient median log₂FC of dream DEGs across fibrosis stages"
+    y        = expression("Median log"[2]*"FC per patient")
   )
+message("[caption] Per-patient median log2FC of dream DEGs across fibrosis stages")
 
 ggsave(file.path(OUTDIR, "E1_fibrosis_stage_score_median.pdf"),
        pE1_med, width = 7, height = 5, device = cairo_pdf)
@@ -301,23 +297,22 @@ pE2 <- ggplot(scores_wf, aes(x = rank, y = sig_score, fill = bar_fill)) +
   geom_hline(yintercept = 0, color = "grey35", linewidth = 0.35) +
   annotate("text", x = mean_ctrl_r, y = score_95 * 0.88,
            label = sprintf("Controls\n(n=%d)", n_ctrl),
-           color = "grey45", size = 3, hjust = 0.5, fontface = "bold") +
+           color = "grey45", size = GEOM_TEXT_6PT, hjust = 0.5, fontface = "plain") +
   annotate("text", x = mean_dis_r, y = score_95 * 0.88,
            label = sprintf("Disease\n(n=%d)", n_dis),
-           color = col_disease, size = 3, hjust = 0.5, fontface = "bold") +
+           color = col_disease, size = GEOM_TEXT_6PT, hjust = 0.5, fontface = "plain") +
   scale_fill_identity() +
   scale_x_continuous(expand = c(0.005, 0)) +
   labs(
     x        = "All samples ranked by signature score (low → high)",
-    y        = "Signature score",
-    title    = "Waterfall: healthy controls cluster at 0, disease patients score higher",
-    subtitle = sprintf("padj < 0.05, |log₂FC| > %.1f", CUT)
+    y        = "Signature score"
   ) +
   theme(axis.text.x  = element_blank(),
         axis.ticks.x = element_blank())
+message(sprintf("[caption] Waterfall: healthy controls cluster at 0, disease patients score higher (padj < 0.05, |log2FC| > %.1f)", CUT))
 
 ggsave(file.path(OUTDIR, "E2_waterfall.pdf"),
-       pE2, width = 9, height = 4.5, device = cairo_pdf)
+       pE2, width = fig_full_width, height = 3.55, device = cairo_pdf)
 message("Saved: E2_waterfall.pdf")
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -355,22 +350,21 @@ pE3 <- ggplot(roc_curve, aes(x = fpr, y = tpr)) +
   annotate("label",
            x = 0.62, y = 0.20,
            label = sprintf("AUROC = %.3f", auroc),
-           size = 4.5, fontface = "bold", color = col_disease,
+           size = GEOM_TEXT_6PT, fontface = "plain", color = col_disease,
            fill = "white", label.size = 0.3) +
   annotate("text",
            x = opt_fpr + 0.04, y = opt_tpr - 0.05,
            label = sprintf("Youden J\n(score = %.2f)", opt_thr),
-           size = 2.7, color = "#C9265E", hjust = 0) +
+           size = GEOM_TEXT_6PT, color = "#C9265E", hjust = 0) +
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2),
                      labels = paste0(seq(0, 100, 20), "%")) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2),
                      labels = paste0(seq(0, 100, 20), "%")) +
   labs(
     x        = "False positive rate  (1 − specificity)",
-    y        = "True positive rate  (sensitivity)",
-    title    = "Individual-level discrimination: signature score classifies disease vs. healthy",
-    subtitle = sprintf("padj < 0.05, |log₂FC| > %.1f", CUT)
+    y        = "True positive rate  (sensitivity)"
   )
+message(sprintf("[caption] Individual-level discrimination: signature score classifies disease vs. healthy (padj < 0.05, |log2FC| > %.1f)", CUT))
 
 ggsave(file.path(OUTDIR, "E3_roc_curve.pdf"),
        pE3, width = 5.5, height = 5.5, device = cairo_pdf)
@@ -414,22 +408,21 @@ pE4 <- ggplot(scores_cohort,
                color = "grey30", fill = "white", linewidth = 0.40) +
   geom_text(data = cohort_stats,
             aes(x = 1.5, y = y_top * 1.02, label = p_label),
-            size = 2.6, inherit.aes = FALSE, color = "grey35", hjust = 0.5) +
+            size = GEOM_TEXT_6PT, inherit.aes = FALSE, color = "grey35", hjust = 0.5) +
   facet_wrap(~ dataset, nrow = 1) +
   scale_fill_manual(values = grp_colors, name = NULL) +
   scale_x_discrete(labels = c("Control" = "Ctrl", "Disease" = "Disease")) +
   labs(
     x        = NULL,
-    y        = "Signature score",
-    title    = "Consistent separation across all 5 canonical cohorts",
-    subtitle = sprintf("padj < 0.05, |log₂FC| > %.1f", CUT)
+    y        = "Signature score"
   ) +
   theme(legend.position = "none",
-        axis.text.x     = element_text(size = 8),
-        strip.text      = element_text(size = 8.5))
+        axis.text.x     = element_text(size = 6),
+        strip.text      = element_text(size = 6))
+message(sprintf("[caption] Consistent separation across all 5 canonical cohorts (padj < 0.05, |log2FC| > %.1f)", CUT))
 
 ggsave(file.path(OUTDIR, "E4_cohort_boxplots.pdf"),
-       pE4, width = 11, height = 5, device = cairo_pdf)
+       pE4, width = fig_full_width, height = 3.22, device = cairo_pdf)
 message("Saved: E4_cohort_boxplots.pdf")
 
 message("\n========== All E-panels saved to: ", OUTDIR, " ==========")

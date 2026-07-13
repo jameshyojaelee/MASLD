@@ -75,17 +75,17 @@ p <- ggplot(d, aes(x = deg_logFC, y = da_logFC)) +
   geom_vline(xintercept = 0, linewidth = 0.25, colour = "gray70") +
   geom_point(aes(colour = concord), size = 1.6, shape = 16) +
   geom_text_repel(aes(label = symbol),
-                  size = 2.4, colour = "black",
+                  size = GEOM_TEXT_6PT, colour = "black",
                   segment.colour = "gray50", segment.size = 0.25,
                   min.segment.length = 0, box.padding = 0.4,
                   max.overlaps = Inf) +
   scale_colour_manual(values = c(`TRUE` = MAG, `FALSE` = GRAY),
                       guide = "none") +
   scale_x_continuous(limits = c(-x_lim, x_lim),
-                     name = expression(bold("Bulk RNA-seq  "*log[2]*"FC"))) +
+                     name = expression("Bulk RNA-seq  "*log[2]*"FC")) +
   scale_y_continuous(limits = c(-y_lim, y_lim),
-                     name = expression(bold("Hep ATAC  "*log[2]*"FC"))) +
-  theme_masld(base_size = 7) +
+                     name = expression("Hep ATAC  "*log[2]*"FC")) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(panel.grid = element_blank(),
         plot.margin = margin(6, 6, 4, 4))

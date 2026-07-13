@@ -2,6 +2,14 @@
 # Same 18 curated TFs as the TF × cell-type panel, but restricted to
 # hepatocyte cells and stratified by disease condition (NORMAL / MASL / MASH).
 # Donor exclusions match the SCENIC+ donor-regulon panel.
+#
+# SIGNIFICANCE CAVEAT (honest framing): the point-size -log10(padj) is a
+# Wilcoxon-vs-F0 BH-corrected WITHIN this curated ~18-TF hypothesis set — it is
+# EXPLORATORY, hypothesis-driven significance, NOT genome-wide. Across the full
+# donor-level chromVAR test space (~7,133 TF x cell-type tests) NOTHING survives
+# BH correction (n=18 multiome is underpowered; the inflated per-cell "4,832"
+# was pseudoreplication — see memory/project-megareview-2026-06-14). Treat this
+# panel as a descriptive deviation map on pre-selected TFs, not a discovery claim.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -139,7 +147,7 @@ bin_stats[, F_bin   := factor(F_bin, levels = STAGE_LEVELS)]
 # Bold-face y labels for user-specified TFs
 y_levels <- levels(bin_stats$display)
 y_stem   <- sub(" \\(.*", "", y_levels)
-y_face   <- ifelse(y_stem %in% BOLD_TFS, "bold", "plain")
+y_face   <- ifelse(y_stem %in% BOLD_TFS, "italic", "plain")
 
 # Group separators
 group_of <- tf_lookup$group[match(y_levels, tf_lookup$display)]
@@ -188,7 +196,7 @@ p <- ggplot(bin_stats,
     legend.box       = "vertical",
     legend.spacing.y = unit(0.2, "cm"),
     legend.margin    = margin(l = 4, r = 0),
-    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "bold"),
+    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "plain"),
     legend.text      = element_text(size = PUB_LEGEND),
     plot.margin      = margin(4, 6, 2, 4)
   ) +

@@ -21,8 +21,8 @@ OUT <- file.path(FIGS01_DIR, "panels", "figS_positive_controls.pdf")
 pos_ctrl <- load_positive_controls()
 
 if (!is.null(pos_ctrl)) {
-  lfc_col  <- intersect(c("dream_logFC", "logFC"), names(pos_ctrl))[1]
-  padj_col <- intersect(c("dream_padj", "padj"), names(pos_ctrl))[1]
+  lfc_col  <- intersect(c("bulk_logFC", "logFC"), names(pos_ctrl))[1]
+  padj_col <- intersect(c("bulk_padj", "padj"), names(pos_ctrl))[1]
   sym_col  <- intersect(c("symbol", "gene"), names(pos_ctrl))[1]
 
   # Determine control type split
@@ -51,7 +51,7 @@ if (!is.null(pos_ctrl)) {
       scale_color_manual(values = c(`TRUE` = masld_colors$up, `FALSE` = masld_colors$ns),
                          labels = c("NS", "padj < 0.1"), name = NULL) +
       scale_size_continuous(range = c(0.5, 3), name = expression(-log[10]~padj)) +
-      labs(x = "Meta-analysis logFC", y = NULL, title = "Expression-driven controls") +
+      labs(x = "Meta-analysis logFC", y = NULL) +
       theme_masld() +
       theme(axis.text.y = element_text(face = "italic", size = 6))
   } else {
@@ -74,12 +74,9 @@ if (!is.null(pos_ctrl)) {
       geom_point(size = 2.5, shape = 16) +
       scale_color_manual(values = c(`TRUE` = masld_colors$up, `FALSE` = masld_colors$ns),
                          labels = c("NS", "padj < 0.1"), name = NULL) +
-      labs(x = "Meta-analysis logFC", y = NULL,
-           title = "Genetic-risk controls",
-           subtitle = "DE not expected (protein-altering variants)") +
+      labs(x = "Meta-analysis logFC", y = NULL) +
       theme_masld() +
-      theme(axis.text.y = element_text(face = "italic", size = 6),
-            plot.subtitle = element_text(size = 5, color = "gray40"))
+      theme(axis.text.y = element_text(face = "italic", size = 6))
   } else {
     p_b <- placeholder("Panel b: genetic-risk controls not found")
   }
@@ -91,7 +88,8 @@ if (!is.null(pos_ctrl)) {
 # ---- Assemble ----
 figS2 <- (p_a | p_b) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig(figS2, OUT, height = 5)
+message("[caption] Panel a: Expression-driven controls. Panel b: Genetic-risk controls (DE not expected; protein-altering variants).")
 message("FigS2 saved to ", OUT)

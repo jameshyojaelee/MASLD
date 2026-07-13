@@ -19,7 +19,7 @@
 #   Analysis/Proteomics/data/olink_plasma/olink.qc.finished.mendeley.data.txt
 #     1,460 proteins (Assay = gene symbol) x 218 subjects (NPX)
 #   results/multiprogram/plasma_selected_proteins.csv
-#     protein, is_tissue_deg, dream_logFC, dream_padj, tissue_classification
+#     protein, is_tissue_deg, dream_logFC, dream_padj, tissue_classification  # C2-OK-sensitivity
 #     (from Script 221 — used to define Olink-side DEG status)
 #
 # Output:
@@ -172,8 +172,8 @@ cat(sprintf("  Spearman rho of mean abundance (Olink NPX vs DIA-MS log2): %.3f\n
 if (!is.null(prot_annot) && "protein" %in% names(prot_annot)) {
   # Determine DEG columns available
   deg_col    <- if ("is_tissue_deg" %in% names(prot_annot)) "is_tissue_deg" else NULL
-  lfc_col    <- if ("dream_logFC"   %in% names(prot_annot)) "dream_logFC"   else NULL
-  padj_col   <- if ("dream_padj"    %in% names(prot_annot)) "dream_padj"    else NULL
+  lfc_col    <- if ("dream_logFC"   %in% names(prot_annot)) "dream_logFC"   else NULL  # C2-OK-sensitivity
+  padj_col   <- if ("dream_padj"    %in% names(prot_annot)) "dream_padj"    else NULL  # C2-OK-sensitivity
   class_col  <- if ("tissue_classification" %in% names(prot_annot)) "tissue_classification" else NULL
 
   keep_cols <- c("protein", deg_col, lfc_col, padj_col, class_col)

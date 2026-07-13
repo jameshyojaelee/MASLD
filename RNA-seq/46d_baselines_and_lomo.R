@@ -8,7 +8,7 @@
 #   (C) baseline competitors vs. 46d convergence score on Govaere/NIDDK/OT panels
 #         1. Nearest gene to GWAS lead SNP (approximate via top PP.H4 gene per
 #            GWAS locus from per-GWAS coloc columns — used as a PP4-free proxy)
-#         2. Top |dream_logFC| among padj<0.05
+#         2. Top |bulk_logFC| among padj<0.05
 #         3. Top coloc_best_pp4 (max SuSiE PP4 across 28 GWAS)
 #         4. 46d convergence_score (reference score)
 #       → AUROC + bootstrap 95% CI + PR-AUC + Wilcoxon p per panel per score
@@ -56,16 +56,17 @@ bayev <- fread(BAYEV_F)
 cat(sprintf("  convergence_evidence: %d rows\n", nrow(bayev)))
 
 atlas <- fread(ATLAS_F,
-  select = c("human_symbol","dream_logFC","dream_padj","coloc_susie_best_pp4",
+  select = c("human_symbol","bulk_logFC","bulk_padj","coloc_susie_best_pp4",
              "coloc_abf_best_pp4"))
 setnames(atlas, "human_symbol", "symbol")
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 cat(sprintf("  atlas columns loaded: %d rows\n", nrow(atlas)))
 
 # Merge panel-relevant scores onto bayev on human_symbol.
 # Note: 2026-04-23 overhaul replaced log_BF_S2a + log_BF_S2b with a single
-# log_BF_S2_intact (Okamoto 2023 INTACT consolidation).
+# log_BF_S2_coloc (Okamoto 2023 INTACT consolidation).
 dt <- merge(bayev[, .(symbol = human_symbol, convergence_score, excluded_from_ranking,
-                       log_BF_S1, log_BF_S2_intact, log_BF_S3,
+                       log_BF_S1, log_BF_S2_coloc, log_BF_S3,
                        log_BF_S4, log_BF_S5, log_BF_S6, log_BF_S7, log_BF_S8,
                        evidence_unsigned, evidence_signed_magnitude,
                        evidence_signed_sum, concordance_state)],
@@ -99,11 +100,11 @@ panels <- panels[!sapply(panels, is.null)]
 #    GWAS colocalization — a PP4-based proxy for "which gene did the finemap
 #    credible set prefer." We separately record top_pp4 via atlas column.
 #
-# 2. Top |dream_logFC| with padj<0.05 filter: sig-DEG-rank score
+# 2. Top |bulk_logFC| with padj<0.05 filter: sig-DEG-rank score
 #
 # 3. Top coloc_best_pp4: genetic-only baseline
-dt[, score_top_logFC := ifelse(!is.na(dream_padj) & dream_padj < 0.05,
-                                abs(dream_logFC), 0)]
+dt[, score_top_logFC := ifelse(!is.na(bulk_padj) & bulk_padj < 0.05,
+                                abs(bulk_logFC), 0)]
 dt[is.na(score_top_logFC), score_top_logFC := 0]
 dt[, score_top_pp4 := pmax(coloc_susie_best_pp4, coloc_abf_best_pp4, na.rm = TRUE)]
 dt[is.na(score_top_pp4) | is.infinite(score_top_pp4), score_top_pp4 := 0]
@@ -117,7 +118,7 @@ dt[, score_nearest_gene := score_top_pp4]  # same proxy (documented limitation)
 # recomputing evidence_total = sum(pmax(log_BF_i, 0)) across kept modalities.
 # This is a coarse approximation but captures the magnitude effect.
 compute_lomo_scores <- function(dt) {
-  bf_cols <- c("log_BF_S1","log_BF_S2_intact","log_BF_S3","log_BF_S4",
+  bf_cols <- c("log_BF_S1","log_BF_S2_coloc","log_BF_S3","log_BF_S4",
                "log_BF_S5","log_BF_S6","log_BF_S7","log_BF_S8")
   lomo <- list()
   base <- rowSums(sapply(bf_cols, function(c) pmax(dt[[c]], 0, na.rm = TRUE)))
@@ -217,8 +218,8 @@ print(lomo_dt)
 
 # ---- Expression-decile-matched permutation null -------------------------------
 cat("\n=== (D) Expression-matched permutation null ===\n")
-# Decile-bin genes by |dream_logFC|
-dt[, abs_lfc := abs(dream_logFC)]
+# Decile-bin genes by |bulk_logFC|
+dt[, abs_lfc := abs(bulk_logFC)]
 dt[is.na(abs_lfc), abs_lfc := 0]
 dt[, lfc_decile := cut(abs_lfc, quantile(abs_lfc, probs = seq(0, 1, 0.1), na.rm=TRUE),
                        include.lowest = TRUE, labels = FALSE)]
@@ -277,7 +278,7 @@ summary_lines <- c(
           baseline_dt[panel=="Govaere" & score=="convergence_score", auroc]),
   sprintf("- **46d LOMO-S1 (bulk-DE-stripped) Govaere AUROC:** %s ← **this is the revised headline number**",
           lomo_dt[panel=="Govaere" & lomo_variant=="LOMO_S1", auroc]),
-  sprintf("- **Top |dream_logFC| baseline Govaere AUROC:** %s (Patel 2025 concern: how much does 46d add over a trivial |logFC| rank?)",
+  sprintf("- **Top |bulk_logFC| baseline Govaere AUROC:** %s (Patel 2025 concern: how much does 46d add over a trivial |logFC| rank?)",
           baseline_dt[panel=="Govaere" & score=="score_top_logFC", auroc]),
   sprintf("- **Top COLOC PP4 baseline Govaere AUROC:** %s",
           baseline_dt[panel=="Govaere" & score=="score_top_pp4", auroc]),

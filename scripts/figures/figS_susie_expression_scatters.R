@@ -118,7 +118,7 @@ cat(sprintf("  MI = %.4f bits, Spearman rho = %.4f\n", mi_value, spearman_rho))
 # 4. Define quadrants and labels
 # ===========================================================================
 # Thresholds
-deg_thresh <- 0.5  # |logFC| > 0.5
+deg_thresh <- 0.3  # |logFC| > 0.3 (canonical effect-size floor, 2026-06-27)
 coloc_thresh <- 0.9  # PP.H4 > 0.9 (stringent)
 
 scatter[, quadrant := fcase(
@@ -138,7 +138,7 @@ priority <- c("PNPLA3", "TM6SF2", "HSD17B13", "MBOAT7", "GCKR",
               "THRB", "NR1H4", "MARC1")
 
 # Top convergent: high PP.H4 AND strong |logFC| — only label the best
-top_convergent <- scatter[coloc_pp4 > 0.9 & abs(logFC) > 0.5][
+top_convergent <- scatter[coloc_pp4 > 0.9 & abs(logFC) > 0.3][
   order(-coloc_pp4 * abs(logFC))][1:8]$gene_symbol
 
 label_genes <- unique(c(priority, top_convergent))
@@ -205,7 +205,7 @@ p_top <- ggplot(scatter, aes(x = logFC, fill = coloc_pp4 > coloc_thresh)) +
 
 # Marginal right: proportion of DEGs at each PP.H4 bin (not raw counts)
 # Raw histogram fails because DEG counts are dwarfed by non-DEGs at low PP.H4
-scatter[, is_deg := padj < 0.1 & abs(logFC) > 0.5]
+scatter[, is_deg := padj < 0.1 & abs(logFC) > 0.3]
 scatter[, pp4_bin := cut(coloc_pp4, breaks = seq(0, 1, 0.05), include.lowest = TRUE)]
 pp4_prop <- scatter[!is.na(pp4_bin), .(
   prop_deg = mean(is_deg, na.rm = TRUE),

@@ -40,9 +40,9 @@ PANEL_DIR <- file.path(OUT_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 STUDY_NAMES <- c(
-  GSE126848   = "Suppli",   GSE130970 = "Hoang",     GSE135251 = "Govaere",
-  GSE162694   = "Bril",     GSE174478 = "Kawamura",  GSE193066 = "Hoshida",
-  GSE213621   = "Chen",     GSE240729 = "Verschuren",
+  GSE126848   = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694   = "GSE162694", GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE213621   = "GSE213621", GSE240729 = "GSE240729",
   GSE167523   = "GSE167523",PRJNA512027 = "PRJNA512027")
 
 PADJ_CUTOFF <- 0.05
@@ -147,6 +147,9 @@ plot_contrast <- function(tag) {
   cat(sprintf("  min CV = %.4f at LFC=%.2g | CV at uniform Tier 1 |LFC|>%.2g = %.4f (n_full=%d)\n",
               cv_min, cv_min_lfc, TIER1_LFC, cv_at_tier1, n_at_tier1))
 
+  message(sprintf("[caption] %s: N DEGs in LOO fold (padj < %.2f); Tier 1 = |LFC| > %.2g (uniform across contrasts)",
+                  spec$title, PADJ_CUTOFF, TIER1_LFC))
+
   # Plot panels
   sweep[, fold_label := sprintf("%s (%.1f%%)", author, pct_held)]
   fold_order <- sweep[lfc_cutoff == 0][order(pct_held), fold_label]
@@ -160,7 +163,7 @@ plot_contrast <- function(tag) {
   p_hm <- ggplot(sweep, aes(x = lfc_label, y = fold_label, fill = n_fold)) +
     geom_tile(color = "white", linewidth = 0.3) +
     geom_text(aes(label = format(n_fold, big.mark = ",")),
-              size = 2.0, color = "gray15") +
+              size = GEOM_TEXT_6PT, color = "gray15") +
     annotate("rect",
              xmin = tier1_x - 0.5, xmax = tier1_x + 0.5,
              ymin = 0.5, ymax = n_folds + 0.5,
@@ -170,17 +173,12 @@ plot_contrast <- function(tag) {
                         name = "N DEGs\nin fold") +
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0)) +
-    labs(x = NULL, y = NULL,
-         title = spec$title,
-         subtitle = sprintf("N DEGs in LOO fold (padj < %.2f); Tier 1 = |LFC| > %.2g (uniform across contrasts)",
-                            PADJ_CUTOFF, TIER1_LFC)) +
+    labs(x = NULL, y = NULL) +
     theme_masld() + theme_pub() +
     theme(panel.grid = element_blank(),
           axis.ticks = element_blank(),
-          plot.title = element_text(size = PUB_TITLE + 1, face = "bold"),
-          plot.subtitle = element_text(size = PUB_SUBTITLE + 1, color = "gray30"),
           axis.text = element_text(size = PUB_AXIS_TEXT, color = "black"),
-          legend.title = element_text(size = PUB_LEGEND_TIT, face = "bold"),
+          legend.title = element_text(size = PUB_LEGEND_TIT, face = "plain"),
           legend.text  = element_text(size = PUB_LEGEND))
 
   stab[, lfc_label := factor(sprintf("%.2g", lfc_cutoff),
@@ -199,8 +197,8 @@ plot_contrast <- function(tag) {
          caption = sprintf("Min CV = %.3f at |LFC|>%.2g (dotted); uniform Tier 1 = |LFC|>%.2g (dashed gold).",
                            cv_min, cv_min_lfc, TIER1_LFC)) +
     theme_masld() + theme_pub() +
-    theme(axis.text  = element_text(size = PUB_AXIS_TEXT + 1, color = "black"),
-          axis.title = element_text(size = PUB_AXIS_TITLE + 1),
+    theme(axis.text  = element_text(size = PUB_AXIS_TEXT, color = "black"),
+          axis.title = element_text(size = PUB_AXIS_TITLE),
           plot.caption = element_text(size = PUB_LEGEND, color = "gray40"))
 
   p <- p_hm / p_curve + plot_layout(heights = c(2.4, 1))

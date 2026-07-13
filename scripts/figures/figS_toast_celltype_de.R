@@ -105,7 +105,7 @@ if (nrow(mk) > 0) {
 }
 
 fig <- (pA | pC) / pB / pD + plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 ggsave(file.path(FIGS_CELLTYPE_DIR, "figS_A1v2_toast_celltype_de.pdf"),
        fig, width = 15, height = 13)

@@ -36,23 +36,47 @@ active_studies  <- unique(c(studies_polyfun, studies_kg, studies_other))
 
 
 trait_of <- function(s) {
+  # Tokens are NOT end-anchored: MVP strata carry the trait mid-name
+  # (MVP_ALT_AFR / MVP_AST_EAS / MVP_Albumin_EUR), so the prior "ALT$/AST$/GGT$"
+  # anchors dropped every MVP quant-trait stratum into "Other". Albumin/Platelet/
+  # ChronLiver tokens were also absent (MVP-only traits). ALT/AST/GGT do not
+  # substring-collide with any other registry study_name.
   fcase(
-    grepl("ALT$",       s), "Liver enzymes",
-    grepl("AST$",       s), "Liver enzymes",
-    grepl("GGT$",       s), "Liver enzymes",
+    grepl("ALT",        s), "Liver enzymes",
+    grepl("AST",        s), "Liver enzymes",
+    grepl("GGT",        s), "Liver enzymes",
+    grepl("Albumin",    s, ignore.case = TRUE), "Albumin",
+    grepl("Platelet",   s, ignore.case = TRUE), "Platelet",
     grepl("PDFF",       s), "PDFF",
-    grepl("Cirrhosis",  s, ignore.case = TRUE), "Cirrhosis",
+    grepl("ChronLiver", s, ignore.case = TRUE), "Chronic liver disease",
+    grepl("Cirrhosis|CHIRHEP", s, ignore.case = TRUE), "Cirrhosis",
     grepl("HCC",        s), "HCC",
     grepl("NAFLD|NASH", s, ignore.case = TRUE), "NAFLD/NASH",
     default = "Other")
 }
+# Registry-driven ancestry (canonical source). The prior regex heuristic had no
+# AMR branch, so MVP *_AMR strata fell through to the EUR default. The finemapping
+# registry carries an explicit per-study ancestry column (EUR/AFR/AMR/EAS/SAS);
+# use it as the authority, keeping the regex only as a defensive fallback for any
+# study not present in the registry (e.g. lead-SNP files without a registry row).
+REGISTRY <- file.path(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
+reg_ancestry <- NULL
+if (file.exists(REGISTRY)) {
+  reg <- fread(REGISTRY)
+  if (all(c("study_name", "ancestry") %in% names(reg)))
+    reg_ancestry <- setNames(as.character(reg$ancestry), reg$study_name)
+}
 ancestry_of <- function(s) {
-  fcase(
+  fallback <- fcase(
     grepl("EAS$|^BBJ_", s), "EAS",
+    grepl("AMR$",       s), "AMR",
     grepl("AFR",        s), "AFR",
     grepl("CSA",        s), "SAS",
     grepl("EUR$|^UKBB|^FinnGen|^Ghouse|^2019|^2020|^2021|^2022|^2023", s), "EUR",
     default = "EUR")
+  if (is.null(reg_ancestry)) return(fallback)
+  reg_hit <- unname(reg_ancestry[s])
+  fifelse(is.na(reg_hit), fallback, reg_hit)
 }
 
 # ---- 1. Definition C: top gene-level COLOC variant per (gene, GWAS) ---------

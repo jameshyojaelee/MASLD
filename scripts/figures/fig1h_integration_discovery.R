@@ -1,12 +1,16 @@
 #!/usr/bin/env Rscript
 # fig1h_integration_discovery.R — Per-gene integrated logFC vs. cohort concordance count.
-# Highlights genes that reach significance only in the dream mega-analysis ("integration-only"),
-# vs. genes already significant in 2+ individual cohorts ("shared discovery").
+# Highlights genes that reach the canonical TREAT DEG call only in the pooled
+# (cohort-adjusted) analysis ("integration-only"), vs. genes already TREAT-DEGs in
+# individual cohorts ("shared discovery").
 #
-# x: number of cohorts (0..5) where padj<0.05 AND sign(logFC) == sign(integrated logFC)
-# y: integrated dream logFC
+# x: number of cohorts (0..5) where per-cohort FDR<0.05 (adj.P.Val) AND
+#    sign(logFC) == sign(integrated logFC)  — looser concordant-significance bar
+# color: Integration-only = NO cohort passes the per-cohort canonical TREAT DEG
+#    gate (treat FDR<0.05 at lfc=0.25, same direction).
+# y: integrated logFC (canonical limma-voom-qw C2)
 # Cohort universe matches Fig 1e UpSet: Suppli, Hoang, Govaere, Bril, Chen.
-# Output: figures/main/fig1_atlas_overview/panels/fig1h_integration_discovery.pdf
+# Output: figures/main/fig3_RNAseq/panels/figs3_integration_discovery.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -21,15 +25,17 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG1_DIR, "panels")
+PANEL_DIR <- file.path(FIG2_DIR, "panels")   # relocated fig1 -> fig3_RNAseq (mirrors fig1h_optionb.R)
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
-PADJ_INT       <- 0.05   # integrated significance threshold (panel inclusion)
-# Deliberately NO |logFC| cutoff on the integrated side: integration's power is
-# detecting small-effect genes single cohorts miss; an LFC cutoff preferentially
-# filters out the integration-only population.
-PADJ_COHORT    <- 0.05   # per-cohort padj for x-axis "concordantly significant"
-LFC_CANONICAL  <- 0.5    # per-cohort |logFC| for canonical DEG status (Integration-only color)
+TREAT_FDR_CUT  <- 0.05   # integrated + per-cohort canonical TREAT DEG FDR cutoff
+LFC_TREAT      <- 0.25   # treat() effect-size offset (H0:|logFC|<=lfc), folded into the test
+# Integrated DEG = canonical TREAT (treat FDR<0.05 at lfc=0.25): the effect floor is
+# folded INTO the test, so it replaces the old "lfsr<0.05 (no |shrunk| cut)" inclusion.
+# The x-axis uses the LOOSER per-cohort FDR (adj.P.Val<0.05) so integration-only genes
+# (direction-concordant in cohorts but never passing the per-cohort TREAT effect floor)
+# can still sit at high x — that is the integration-discovery population.
+PADJ_COHORT    <- 0.05   # per-cohort FDR significance (adj.P.Val) for the x-axis "concordant"
 N_LABEL_GENES   <- 4    # top integration-only genes by padj
 N_BIN0_OUTLIERS <- 2    # additional bin-0 genes by largest |logFC|
 
@@ -46,16 +52,44 @@ ps    <- load_per_study_de()[dataset %in% FIVE_COHORTS]
 dream[, gene_clean := sub("\\..*", "", gene)]
 ps[,    gene_clean := sub("\\..*", "", gene)]
 
-dream_lookup <- dream[, .(gene_clean, dream_logFC, dream_padj)]
+# --- Per-cohort analytical TREAT (mirrors the pooled canonical TREAT engine) --
+# Two per-cohort stringencies on each cohort's own limma-voom-qw fit:
+#   sig       (x-axis, looser)   per-cohort FDR significance: adj.P.Val < 0.05
+#   treat_sig (color, canonical) per-cohort TREAT DEG: treat FDR<0.05 at lfc=0.25
+#     (limma::treat reconstructed from logFC+SE+df.total; the effect floor folded
+#     into the test replaces the old |shrunk_logFC|>0.3 cut). Rows without a usable
+#     SE keep the FDR call but cannot enter the canonical TREAT (treat_sig=FALSE).
+# load_per_study_de() renames adj.P.Val -> padj.
+ps[, `:=`(eff = logFC,
+          sig = !is.na(padj) & padj < PADJ_COHORT,
+          treat_sig = FALSE)]
+has_se <- "SE" %in% names(ps)
+for (co in FIVE_COHORTS) {
+  idx <- which(ps$dataset == co & is.finite(ps$logFC) &
+               is.finite(ps$SE) & ps$SE > 0)
+  if (!has_se || length(idx) == 0) {
+    message(sprintf("  [%s] no usable SE -> per-cohort TREAT skipped (FDR call retained)", co)); next
+  }
+  dfu <- if ("df.total" %in% names(ps)) ps$df.total[idx] else .Machine$integer.max
+  p_treat <- pt((abs(ps$logFC[idx]) - LFC_TREAT) / ps$SE[idx], df = dfu, lower.tail = FALSE) +
+             pt((abs(ps$logFC[idx]) + LFC_TREAT) / ps$SE[idx], df = dfu, lower.tail = FALSE)
+  set(ps, i = idx, j = "treat_sig",
+      value = p.adjust(p_treat, method = "BH") < TREAT_FDR_CUT)
+}
+message(sprintf("Per-cohort TREAT applied to %d of %d cohort-gene rows (%.1f%%).",
+                sum(ps$treat_sig), nrow(ps), 100 * mean(ps$treat_sig)))
 
-ps_join <- merge(ps[, .(gene_clean, dataset, logFC, padj)],
+dream_lookup <- dream[, .(gene_clean, bulk_logFC, bulk_padj, treat_fdr)]
+
+ps_join <- merge(ps[, .(gene_clean, dataset, logFC, eff, sig, treat_sig)],
                  dream_lookup, by = "gene_clean", all.x = FALSE)
-# x-axis: cohorts with concordant nominal significance (padj + same direction)
-ps_join[, concordant_sig := !is.na(padj) & padj < PADJ_COHORT &
-                            !is.na(logFC) & !is.na(dream_logFC) &
-                            sign(logFC) == sign(dream_logFC) & sign(logFC) != 0]
-# color: cohorts that meet canonical DEG threshold (padj + |logFC|>0.5 + direction)
-ps_join[, canonical_deg := concordant_sig & abs(logFC) > LFC_CANONICAL]
+# x-axis: cohorts with concordant FDR significance (adj.P.Val<0.05 + same direction)
+ps_join[, concordant_sig := sig & !is.na(eff) & !is.na(bulk_logFC) &
+                            sign(eff) == sign(bulk_logFC) & sign(eff) != 0]
+# color: cohorts meeting the canonical per-cohort TREAT DEG gate
+# (treat FDR<0.05 at lfc=0.25 + same direction)
+ps_join[, canonical_deg := treat_sig & !is.na(eff) & !is.na(bulk_logFC) &
+                           sign(eff) == sign(bulk_logFC) & sign(eff) != 0]
 
 concordance <- ps_join[, .(
   n_cohorts_concordant = sum(concordant_sig, na.rm = TRUE),
@@ -66,16 +100,16 @@ panel_df <- merge(dream, concordance, by = "gene_clean", all.x = TRUE)
 panel_df[is.na(n_cohorts_concordant), n_cohorts_concordant := 0L]
 panel_df[is.na(n_cohorts_canonical),  n_cohorts_canonical := 0L]
 
-# Restrict the panel to integrated DEGs (statistical significance only).
-# Non-DEGs are not part of the question. See the LFC_INT note above for why we
-# do NOT impose |logFC|>0.5 here.
-panel_df <- panel_df[!is.na(dream_logFC) & !is.na(dream_padj) &
-                     dream_padj < PADJ_INT]
+# Restrict the panel to canonical integrated DEGs (TREAT FDR<0.05 at lfc=0.25).
+# Non-DEGs are not part of the question.
+panel_df <- panel_df[!is.na(bulk_logFC) & !is.na(treat_fdr) &
+                     treat_fdr < TREAT_FDR_CUT]
 
-# Integration-only = no cohort meets canonical DEG criteria for this gene
-# (padj < 0.05 AND |logFC| > 0.5 AND same direction). Genes can still be
-# Integration-only at high x-axis values if cohorts agree on direction at
-# padj < 0.05 but none had |logFC| > 0.5 — orthogonal to the x-axis.
+# Integration-only = no cohort meets the canonical per-cohort TREAT DEG gate for
+# this gene (treat FDR<0.05 at lfc=0.25 AND same direction). Genes can still be
+# Integration-only at high x-axis values if cohorts agree on direction at the
+# looser per-cohort FDR (adj.P.Val<0.05) but none clears the per-cohort TREAT
+# effect floor — orthogonal to the x-axis.
 panel_df[, category := fifelse(n_cohorts_canonical == 0,
                                "Integration-only", "Canonical DEG in ≥1 cohort")]
 
@@ -106,9 +140,9 @@ if (length(n_replicated) == 0) n_replicated <- 0
 # ----------------------------------------------------------------------------
 # Per-gene supplementary table
 # ----------------------------------------------------------------------------
-out_table <- panel_df[, .(gene, symbol, dream_logFC, dream_padj,
+out_table <- panel_df[, .(gene, symbol, bulk_logFC, bulk_padj,
                           n_cohorts_concordant, n_cohorts_canonical, category)]
-setorder(out_table, dream_padj)
+setorder(out_table, bulk_padj)
 fwrite(out_table, file.path(PANEL_DIR, "fig1h_concordance_table.csv"))
 message(sprintf("\nWrote table: %s rows", comma(nrow(out_table))))
 
@@ -123,8 +157,8 @@ cat_colors <- c(
 )
 
 panel_df[, x_factor := factor(n_cohorts_concordant, levels = 0:5)]
-panel_df[, abs_logFC := abs(dream_logFC)]
-panel_df[, direction := fifelse(dream_logFC >= 0, "Up", "Down")]
+panel_df[, abs_logFC := abs(bulk_logFC)]
+panel_df[, direction := fifelse(bulk_logFC >= 0, "Up", "Down")]
 panel_df[, category := factor(category,
                               levels = c("Canonical DEG in ≥1 cohort", "Integration-only"))]
 setorder(panel_df, category)   # so Integration-only renders on top
@@ -141,7 +175,7 @@ curated_labels <- c(
 )
 label_df <- panel_df[symbol %in% curated_labels &
                      category == "Integration-only"]
-setorder(label_df, dream_padj)
+setorder(label_df, bulk_padj)
 
 # Per-bin n label
 n_label_df <- panel_df[, .(N = .N),
@@ -165,7 +199,7 @@ p <- ggplot(panel_df,
                show.legend = FALSE) +
   # Top integration-only gene labels (use abs_logFC for y-position)
   geom_text_repel(data = label_df,
-                  aes(x = x_factor, y = abs(dream_logFC), label = symbol),
+                  aes(x = x_factor, y = abs(bulk_logFC), label = symbol),
                   inherit.aes = FALSE,
                   size = 2.8, color = "black",
                   fontface = "italic",
@@ -174,8 +208,8 @@ p <- ggplot(panel_df,
                   force = 3, max.overlaps = Inf,
                   min.segment.length = 0, seed = 42,
                   show.legend = FALSE) +
-  # Reference line at |logFC| = 0.5 — canonical Tier 1 DEG cutoff.
-  geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.3, color = "gray60") +
+  # Reference line at 0.25 — TREAT effect-size floor (lfc; the H0 boundary).
+  geom_hline(yintercept = 0.25, linetype = "dashed", linewidth = 0.3, color = "gray60") +
   scale_color_manual(values = cat_colors,
                      breaks = c("Integration-only", "Canonical DEG in ≥1 cohort"),
                      name = NULL) +
@@ -183,13 +217,13 @@ p <- ggplot(panel_df,
   scale_y_continuous(expand = expansion(mult = c(0.02, 0.16)),
                      limits = c(0, NA)) +
   labs(
-    x = "Cohorts with concordant significance (padj < 0.05, of 5)",
+    x = "Cohorts with concordant significance (FDR < 0.05, of 5)",
     y = expression("Integrated |log"[2]*" FC|"),
     title = "Effect size scales with cross-cohort replication"
   ) +
   theme_masld(base_size = 10) +
   theme(
-    plot.title    = element_text(size = 11, face = "bold", margin = margin(b = 1)),
+    plot.title    = element_text(size = 11, face = "plain", margin = margin(b = 1)),
     plot.subtitle = element_text(size = 8.5, color = "gray30", margin = margin(b = 2)),
     plot.margin   = margin(2, 3, 2, 2),
     axis.title.x  = element_text(margin = margin(t = 1)),
@@ -202,10 +236,10 @@ p <- ggplot(panel_df,
     legend.key.height = unit(0.3, "cm")
   )
 
-save_fig(p, file.path(PANEL_DIR, "fig1h_integration_discovery.pdf"),
+save_fig(p, file.path(PANEL_DIR, "figs3_integration_discovery.pdf"),
          width = fig_half_width * 1.55, height = 3.5)
 
-fp <- file.path(PANEL_DIR, "fig1h_integration_discovery.pdf")
+fp <- file.path(PANEL_DIR, "figs3_integration_discovery.pdf")
 if (file.exists(fp)) {
   message(sprintf("\nOutput: %s (%s)", fp,
                   utils:::format.object_size(file.size(fp), "auto")))

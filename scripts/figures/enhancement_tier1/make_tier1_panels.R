@@ -26,8 +26,8 @@ pal <- c(Hepatocytes="#C2185B", `T cells`="#1565C0", Fibroblasts="#2E7D32",
 p1a <- style(ggplot(cap, aes(transition, frac, color = ct, group = ct)) +
   geom_line(linewidth = 0.7) + geom_point(size = 1.6) +
   scale_color_manual(values = pal, name = NULL) +
-  labs(x = "CRN transition", y = "Stage-DEG carrier share",
-       title = "Carrier handoff: hepatocyte -> T-cell/fibroblast at F2->F3"))
+  labs(x = "CRN transition", y = "Stage-DEG carrier share"))
+message("[caption] Carrier handoff: hepatocyte -> T-cell/fibroblast at F2->F3")
 save_fig(p1a, file.path(OUT, "panel_1A_carrier_relay.pdf"), width = 4.2, height = 3)
 
 # ===================== 1B — stage-specific isoform switches ==================
@@ -40,8 +40,8 @@ p1b <- style(ggplot(sw, aes(max_abs_dprop, symbol, color = consequence)) +
   geom_segment(aes(x = 0, xend = max_abs_dprop, yend = symbol), linewidth = 0.5) +
   geom_point(size = 2) +
   scale_color_manual(values = consec, name = "Switch class") +
-  labs(x = "Max |dProportion| (stage DTU)", y = NULL,
-       title = "Top stage-specific isoform switches (732 confirmed)"))
+  labs(x = "Max |dProportion| (stage DTU)", y = NULL))
+message("[caption] Top stage-specific isoform switches (732 confirmed)")
 save_fig(p1b, file.path(OUT, "panel_1B_isoform_switches.pdf"), width = 4.8, height = 4)
 
 # ===================== 1C — credible master regulators ======================
@@ -53,8 +53,8 @@ p1c <- style(ggplot(mr, aes(mean_activity_diff, symbol, fill = dir)) +
   geom_col(width = 0.7) +
   geom_vline(xintercept = 0, color = CTRL, linewidth = 0.3) +
   scale_fill_manual(values = c(`Up in disease`="#C2185B", `Down in disease`="#1565C0"), name = NULL) +
-  labs(x = "Mean TF activity change (disease - control)", y = NULL,
-       title = "Cross-cell-type disease master-regulators (RUNX1, THRB anchors)"))
+  labs(x = "Mean TF activity change (disease - control)", y = NULL))
+message("[caption] Cross-cell-type disease master-regulators (RUNX1, THRB anchors)")
 save_fig(p1c, file.path(OUT, "panel_1C_master_regulators.pdf"), width = 4.6, height = 4)
 
 # ===================== 1E — reversal: resolution program ====================
@@ -68,8 +68,8 @@ p1e <- style(ggplot(top, aes(NES, pathway, fill = dirn)) +
   geom_col(width = 0.7) + geom_vline(xintercept = 0, color = CTRL, linewidth = 0.3) +
   scale_fill_manual(values = c("OFF in regression (disease program)"="#C2185B",
                                "ON in regression (metabolic identity)"="#2E7D32"), name = NULL) +
-  labs(x = "Regression-specific NES (Hallmark)", y = NULL,
-       title = "Fibrosis regression reverses the disease program"))
+  labs(x = "Regression-specific NES (Hallmark)", y = NULL))
+message("[caption] Fibrosis regression reverses the disease program")
 save_fig(p1e, file.path(OUT, "panel_1E_reversal_hallmark.pdf"), width = 5.2, height = 4)
 
 # 1E rewind scatter: regression-specific vs cross-sectional disease axis
@@ -84,8 +84,8 @@ p1e2 <- style(ggplot(m, aes(dis, reg)) +
   geom_hline(yintercept = 0, linewidth = 0.2, color = CTRL) +
   geom_vline(xintercept = 0, linewidth = 0.2, color = CTRL) +
   labs(x = "Disease axis logFC (canonical, disease vs control)",
-       y = "Regression-specific logFC",
-       title = sprintf("Rewind: regression vs disease axis (rho = %.2f)", rho)))
+       y = "Regression-specific logFC"))
+message(sprintf("[caption] Rewind: regression vs disease axis (rho = %.2f)", rho))
 save_fig(p1e2, file.path(OUT, "panel_1E_rewind_scatter.pdf"), width = 3.6, height = 3.4)
 
 cat("Wrote Tier-1 panels to", OUT, "\n"); print(list.files(OUT))

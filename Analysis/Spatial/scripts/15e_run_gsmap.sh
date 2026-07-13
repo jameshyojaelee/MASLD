@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=gsmap_run
+#SBATCH --job-name=gsmap
 #SBATCH --partition=cpu
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
-#SBATCH --time=12:00:00
-#SBATCH --array=1-15%4
+#SBATCH --mem=48G
+#SBATCH --time=02:00:00
+#SBATCH --array=1-15
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/logs/gsmap_run_%A_%a.out
 #SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/logs/gsmap_run_%A_%a.err
 ##############################################################################
 # 15e_run_gsmap.sh — Run gsMap quick_mode per sample (SLURM array).
 #
 # Array job: tasks 1-15 (5 GSE192741 + 10 Vu).
-# Each task runs gsMap quick_mode for one spatial sample with all 7 GWAS.
+# Each task runs gsMap quick_mode for one spatial sample with all configured GWAS.
 #
 # Prerequisites:
 #   - 15b: formatted .sumstats.gz + gwas_config.yaml

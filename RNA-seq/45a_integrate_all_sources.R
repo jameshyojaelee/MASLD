@@ -35,6 +35,7 @@ stopifnot(file.exists(ATLAS_FILE))
 # ============================================================================
 atlas <- fread(ATLAS_FILE)
 cat("Loaded atlas:", nrow(atlas), "genes x", ncol(atlas), "cols\n")
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 
 # ============================================================================
 # Part A: Merge Spatial Transcriptomics
@@ -194,7 +195,13 @@ if (file.exists(LIANA_FILE)) {
 
   liana_summary[, liana_is_diff_ligand := liana_n_as_ligand > 0]
   liana_summary[, liana_is_diff_receptor := liana_n_as_receptor > 0]
-  liana_summary[, liana_n_diff_interactions := liana_n_as_ligand + liana_n_as_receptor]
+  # `liana_n_diff_interactions` DROPPED 2026-07-04 (round-2 audit F1a): 0 atlas
+  # consumers, and the name is a misnomer — this pooled LIANA file is raw
+  # ligand-receptor connectivity, not a DIFFERENTIAL test (8,304 of its rows have
+  # score_diff == 0), so a "n_diff_interactions" count overstates it. The
+  # per-gene ligand/receptor connectivity is still available via
+  # liana_n_as_ligand / liana_n_as_receptor. Column drops on the next atlas rebuild.
+  # liana_summary[, liana_n_diff_interactions := liana_n_as_ligand + liana_n_as_receptor]
 
   cat("  Unique genes in LIANA:", nrow(liana_summary), "\n")
   cat("  Ligands:", sum(liana_summary$liana_is_diff_ligand), "\n")
@@ -210,7 +217,7 @@ if (file.exists(LIANA_FILE)) {
   # Merge by human_symbol
   atlas <- merge(atlas, liana_summary, by.x = "human_symbol", by.y = "gene", all.x = TRUE)
   cat("After LIANA merge:", nrow(atlas), "x", ncol(atlas), "\n")
-  cat("  Genes with LIANA data:", sum(!is.na(atlas$liana_n_diff_interactions)), "\n")
+  cat("  Genes with LIANA data:", sum(!is.na(atlas$liana_n_as_ligand)), "\n")
 } else {
   cat("WARNING: LIANA file not found:", LIANA_FILE, "\n")
 }
@@ -240,7 +247,7 @@ cat("\n--- Part D: Compute sources_active (canonical 7-channel + legacy v1) ---\
 
 # ----- Legacy v1 (pre-2026-05-22 permissive count) -----
 # Source 1: Human bulk transcriptomic
-atlas[, src1_human_bulk := !is.na(dream_padj) & dream_padj < 0.1]
+atlas[, src1_human_bulk := !is.na(bulk_padj) & bulk_padj < 0.1]
 
 # Source 2: Mouse bulk transcriptomic
 atlas[, src2_mouse_bulk := !is.na(mouse_meta_padj) & mouse_meta_padj < 0.1]
@@ -296,8 +303,12 @@ if ("cross_species_promoter_conserved" %in% names(atlas))
 atlas[, src6_spatial := !is.na(spatial_is_svg) & spatial_is_svg == TRUE]
 
 # Source 7: Single-cell transcriptomic
+# LIANA channel: `liana_n_diff_interactions` was dropped 2026-07-04 (audit F1a);
+# use the retained per-gene differential ligand/receptor flags (a differential
+# interaction == being a differential ligand OR receptor, the same set).
 atlas[, src7_singlecell := (!is.na(sc_best_padj) & sc_best_padj < 0.05) |
-                            (!is.na(liana_n_diff_interactions) & liana_n_diff_interactions > 0)]
+                            (!is.na(liana_is_diff_ligand) & liana_is_diff_ligand) |
+                            (!is.na(liana_is_diff_receptor) & liana_is_diff_receptor)]
 
 # Compute sources_active_legacy_v1 (0-7) — same algebra as pre-2026-05-22
 # T0.3 (2026-04-22): force integer output. NA booleans -> FALSE -> 0. Defensive
@@ -322,14 +333,13 @@ atlas[, sources_active_legacy_v1 := as.integer(round(
 # S7 proteomics (best_protein_padj < 0.05),
 # S8 mouse bulk (padj<0.05 & |LFC|>0.3).
 # S6 single-cell pseudobulk is DROPPED — see header comment.
-atlas[, c_s1 := !is.na(dream_padj) & dream_padj < 0.05 &
-                !is.na(dream_logFC) & abs(dream_logFC) > 0.3]
-# S2 INTACT: prefer intact_score_bulk > 0.5; fall back to strong COLOC PP4 > 0.8
-# or significant TWAS so that genes from cross-ancestry panels still count.
+atlas[, c_s1 := !is.na(bulk_padj) & bulk_padj < 0.05 &
+                !is.na(bulk_logFC) & abs(bulk_logFC) > 0.3]
+# S2 genetic-causal flag = strong COLOC PP4 > 0.8 OR significant TWAS (so genes
+# from cross-ancestry panels still count). INTACT dropped 2026-06-19 (the prior
+# intact_score_bulk branch was dead code — the atlas never carried that column).
+# Flag name c_s2_intact retained to avoid churning the schema; it is COLOC/TWAS-based.
 atlas[, c_s2_intact := FALSE]
-if ("intact_score_bulk" %in% names(atlas)) {
-  atlas[!is.na(intact_score_bulk) & intact_score_bulk > 0.5, c_s2_intact := TRUE]
-}
 for (.col in coloc_pp4_cols) {
   if (.col %in% names(atlas)) {
     atlas[, c_s2_intact := c_s2_intact | (!is.na(get(.col)) & get(.col) > 0.8)]

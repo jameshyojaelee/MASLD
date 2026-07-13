@@ -221,7 +221,7 @@ unified <- rbindlist(list(inhouse_meta, gse156918_meta, gse205974_meta, diet_met
                      use.names = TRUE, fill = TRUE)
 
 # Drop datasets excluded from YAML (commented out = no config entry)
-active_datasets <- names(config$datasets)
+active_datasets <- names(mouse_cfg$datasets)
 n_before <- nrow(unified)
 unified <- unified[dataset %in% active_datasets]
 if (nrow(unified) < n_before) {

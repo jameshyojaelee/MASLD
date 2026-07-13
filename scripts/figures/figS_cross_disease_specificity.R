@@ -8,7 +8,7 @@
 # to quantify disease specificity.
 #
 # Gene set sources:
-#   - MASLD DEGs: dream mega-analysis (padj<0.05, |logFC|>0.5)
+#   - MASLD DEGs: TREAT canonical Tier-1 (treat_fdr<0.05 at lfc=0.25)
 #   - ALD: Curated from Argemi et al. 2019 Hepatology + msigdbr CGP
 #   - HCV: Curated ISG signature + msigdbr WP_HEPATITIS_C pathway
 #   - Generic fibrosis: Govaere 25-gene panel + KEGG/Reactome ECM/collagen
@@ -46,16 +46,17 @@ dream_file <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integratio
 dream <- fread(dream_file)
 cat("Loaded dream results:", nrow(dream), "genes\n")
 
-# Define MASLD DEGs
-masld_degs <- dream[padj < 0.05 & abs(logFC) > 0.5, symbol]
+# Define MASLD DEGs (TREAT canonical Tier-1: treat_fdr<0.05 at lfc=0.25)
+deg_mask <- is_dream_deg(dream)
+masld_degs <- dream[deg_mask, symbol]
 masld_degs <- masld_degs[!is.na(masld_degs) & masld_degs != ""]
 masld_degs <- unique(masld_degs)
-cat("MASLD DEGs (padj<0.05, |logFC|>0.5):", length(masld_degs), "\n")
+cat("MASLD DEGs (TREAT FDR<0.05 at lfc=0.25):", length(masld_degs), "\n")
 
-# Also split by direction
-masld_up <- dream[padj < 0.05 & logFC > 0.5, symbol]
+# Also split by direction (logFC sign)
+masld_up <- dream[deg_mask & logFC > 0, symbol]
 masld_up <- unique(masld_up[!is.na(masld_up) & masld_up != ""])
-masld_dn <- dream[padj < 0.05 & logFC < -0.5, symbol]
+masld_dn <- dream[deg_mask & logFC < 0, symbol]
 masld_dn <- unique(masld_dn[!is.na(masld_dn) & masld_dn != ""])
 
 # Background: all tested genes
@@ -387,11 +388,11 @@ jac_long[, col := factor(col, levels = rev(names(sets)))]
 
 pb <- ggplot(jac_long, aes(x = row, y = col, fill = jaccard)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = label), size = 2.2, color = "black") +
+  geom_text(aes(label = label), size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_gradient2(low = "white", mid = "#F48FB1", high = "#880E4F",
                        midpoint = 0.15, limits = c(0, 1),
                        name = "Jaccard\nindex") +
-  labs(x = NULL, y = NULL, title = "Pairwise Jaccard similarity") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "right")
@@ -406,9 +407,7 @@ pc <- ggplot(top_specific, aes(x = reorder(gene, logFC), y = logFC,
   coord_flip() +
   scale_fill_manual(values = c("Up" = masld_colors$up, "Down" = masld_colors$down),
                     name = "Direction") +
-  labs(x = NULL, y = "logFC (dream)",
-       title = "Top 30 MASLD-specific DEGs",
-       subtitle = "Not in ALD, HCV, or fibrosis sets") +
+  labs(x = NULL, y = expression(log[2]~"FC")) +
   theme_masld() +
   theme(legend.position = "bottom")
 
@@ -447,10 +446,9 @@ spec_colors <- c(
 pd <- ggplot(cat_summary, aes(x = display, y = N, fill = display)) +
   geom_col(width = 0.7) +
   geom_text(aes(label = sprintf("%d\n(%.0f%%)", N, pct)),
-            vjust = -0.3, size = 2) +
+            vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = spec_colors, guide = "none") +
-  labs(x = NULL, y = "Number of MASLD DEGs",
-       title = "Disease specificity of MASLD DEGs") +
+  labs(x = NULL, y = "Number of MASLD DEGs") +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
@@ -472,14 +470,14 @@ upset_grob <- grid.grabExpr({
       height = unit(3, "cm"),
       annotation_name_side = "left",
       annotation_name_gp = gpar(fontsize = 6),
-      axis_param = list(gp = gpar(fontsize = 5))),
+      axis_param = list(gp = gpar(fontsize = 6))),
     left_annotation = upset_left_annotation(comb_mat_filtered,
       width = unit(2, "cm"),
       annotation_name_gp = gpar(fontsize = 6),
-      axis_param = list(gp = gpar(fontsize = 5))),
-    row_names_gp = gpar(fontsize = 7),
+      axis_param = list(gp = gpar(fontsize = 6))),
+    row_names_gp = gpar(fontsize = 6),
     column_title = "Gene set intersections",
-    column_title_gp = gpar(fontsize = 8, fontface = "bold")
+    column_title_gp = gpar(fontsize = 6, fontface = "plain")
   ))
 }, width = 5, height = 4)
 
@@ -489,7 +487,7 @@ pa_wrapped <- wrap_elements(upset_grob)
 fig <- (pa_wrapped | pb) /
        (pc | pd) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_pdf <- file.path(OUTDIR, "figS_cross_disease_specificity.pdf")
 save_fig(fig, out_pdf, width = fig_full_width, height = 8)

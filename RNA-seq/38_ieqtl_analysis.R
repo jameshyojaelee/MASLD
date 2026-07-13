@@ -292,13 +292,13 @@ cat("  Dream results:", nrow(dream), "genes\n")
 cat("  DEGs (padj <", DREAM_PADJ_THR, "):",
     sum(dream$padj < DREAM_PADJ_THR, na.rm = TRUE), "\n")
 
-# Build lookup: symbol -> dream stats
+# Build lookup: symbol -> bulk DEG stats
 dream_lookup <- dream[!is.na(symbol) & symbol != "",
-                      .(dream_logFC = logFC, dream_padj = padj,
-                        dream_tstat = t),
+                      .(bulk_logFC = logFC, bulk_padj = padj,
+                        bulk_tstat = t),
                       by = symbol]
 # Keep one entry per symbol (lowest padj)
-dream_lookup <- dream_lookup[order(dream_padj)]
+dream_lookup <- dream_lookup[order(bulk_padj)]
 dream_lookup <- dream_lookup[!duplicated(symbol)]
 
 # ==============================================================================
@@ -309,12 +309,15 @@ cat("\n--- Step 5: Loading consensus tier info ---\n")
 atlas_file <- file.path(BASE_DIR,
                         "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 if (file.exists(atlas_file)) {
+  # human_consensus_tier removed 2026-06-29 (legacy dream∩metafor tier); derive from bulk_sig (TREAT DEG)
   atlas <- fread(atlas_file,
-                 select = c("human_symbol", "human_consensus_tier"))
+                 select = c("human_symbol", "bulk_sig"))
   setnames(atlas, "human_symbol", "symbol")
   atlas <- atlas[!is.na(symbol) & symbol != ""]
   atlas <- atlas[!duplicated(symbol)]
-  cat("  Atlas loaded:", nrow(atlas), "genes with tier info\n")
+  atlas[, human_consensus_tier := fifelse(bulk_sig %in% TRUE, "TREAT_DEG", "Not_significant")]
+  atlas[, bulk_sig := NULL]
+  cat("  Atlas loaded:", nrow(atlas), "genes (DEG flag from bulk_sig)\n")
 } else {
   cat("  Multi-evidence atlas not found. Consensus tier will be NA.\n")
   atlas <- data.table(symbol = character(), human_consensus_tier = character())
@@ -368,7 +371,7 @@ setnames(ieqtl, "human_consensus_tier", "consensus_tier",
          skip_absent = TRUE)
 
 # Add flags
-ieqtl[, is_deg := !is.na(dream_padj) & dream_padj < DREAM_PADJ_THR]
+ieqtl[, is_deg := !is.na(bulk_padj) & bulk_padj < DREAM_PADJ_THR]
 ieqtl[, is_hep_intrinsic := gene %in% hep_intrinsic]
 ieqtl[, is_drug_target := gene %in% drug_genes]
 
@@ -376,7 +379,7 @@ ieqtl[, is_drug_target := gene %in% drug_genes]
 out_cols <- c("gene", "cell_type", "fdr_threshold_used",
               "interaction_beta", "interaction_pval",
               "interaction_fdr", "lrt_pval", "lrt_fdr", "n_snps_ieqtl",
-              "top_snp", "is_deg", "dream_logFC", "dream_padj",
+              "top_snp", "is_deg", "bulk_logFC", "bulk_padj",
               "consensus_tier", "is_hep_intrinsic", "is_drug_target")
 # Only keep columns that exist
 out_cols <- intersect(out_cols, names(ieqtl))
@@ -448,7 +451,7 @@ if (nrow(masld_hits) > 0) {
                 r$gene, r$cell_type, r$interaction_beta,
                 r$lrt_pval, r$lrt_fdr))
     if (r$is_deg) {
-      cat(sprintf(", DEG logFC = %.2f", r$dream_logFC))
+      cat(sprintf(", DEG logFC = %.2f", r$bulk_logFC))
     }
     cat("\n")
   }

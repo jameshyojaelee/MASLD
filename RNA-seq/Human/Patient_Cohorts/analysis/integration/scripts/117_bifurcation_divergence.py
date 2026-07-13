@@ -18,11 +18,26 @@ Input:
   - results/subtypes/nmf_assignments.csv (NMF k=2 subtypes)
 
 Output (all to results/progression/):
-  - bifurcation_analysis.csv       (bifurcation window, metrics)
-  - divergence_genes.csv           (genes with subtype-specific trajectories)
-  - fate_probabilities.csv         (per-sample probability of progression)
-  - bifurcation_clinical.csv       (clinical correlates of subtypes)
-  - bifurcation_summary.csv        (overview statistics)
+  - bifurcation_analysis.csv         (bifurcation window, metrics)
+  - divergence_genes.csv             (full-cohort S1-vs-S2 ranking; DESCRIPTIVE
+                                      ONLY — selected using every sample, so it
+                                      MUST NOT seed the predictor feature panel)
+  - divergence_genes_per_fold.csv    (LEAKAGE-FREE: S1-vs-S2 divergence ranking
+                                      recomputed once per LOCO outer fold using
+                                      TRAINING cohorts only; long format keyed by
+                                      `held_out_fold`. Canonical source for the
+                                      `div_*` prognosis feature panel.)
+  - fate_probabilities.csv           (per-sample probability of progression)
+  - bifurcation_clinical.csv         (clinical correlates of subtypes)
+  - bifurcation_summary.csv          (overview statistics)
+
+Leakage fix (2026-06-20, mega-review blocker A — S2-fate selection leak):
+  The `div_*` panel feeding the LOCO-CV prognosis predictors (Scripts 150 ->
+  160 -> 161/183/183v2) was previously selected from the FULL-cohort S1-vs-S2
+  contrast, then frozen inside LOCO-CV — selection saw held-out test folds. The
+  per-fold ranking (`divergence_genes_per_fold.csv`) recomputes the S1-vs-S2
+  divergence statistic separately for each LOCO fold using only the training
+  cohorts, so the held-out cohort never contributes to its own fold's panel.
 
 SLURM: cpu partition, 8 CPUs, 64G RAM, 48h
 Env:   micromamba activate rapids_singlecell
@@ -171,6 +186,68 @@ def sliding_window_divergence(pt, subtype, values, window_size=0.15, step=0.05):
             divergences.append(np.abs(np.mean(s1_vals) - np.mean(s2_vals)) / pooled_sd)
 
     return centers + window_size / 2, np.array(divergences)
+
+
+def detect_divergence_genes(expr, gene_names, s1_mask, s2_mask, min_per_group=5):
+    """
+    S1-vs-S2 divergence gene detection (Mann-Whitney + Cohen's d) on a *given*
+    sample subset defined by s1_mask / s2_mask.
+
+    This is the per-gene selection statistic used to build the `div_*` prognosis
+    feature panel. It is factored out so the SAME logic can be applied either to
+    the full cohort (descriptive bifurcation report) or to a single LOCO
+    training split (leakage-free per-fold feature selection).
+
+    Returns a DataFrame sorted by p-value with columns:
+      gene, pval, cohens_d, mean_S1, mean_S2, mean_diff, padj
+    Empty DataFrame if either group has < min_per_group samples.
+    """
+    if s1_mask.sum() < min_per_group or s2_mask.sum() < min_per_group:
+        return pd.DataFrame()
+
+    results = []
+    for g_idx, gene in enumerate(gene_names):
+        s1_expr = expr[s1_mask, g_idx]
+        s2_expr = expr[s2_mask, g_idx]
+
+        # Mann-Whitney U test
+        try:
+            stat, pval = mannwhitneyu(s1_expr, s2_expr, alternative="two-sided")
+        except ValueError:
+            continue
+
+        # Effect size (Cohen's d)
+        pooled_sd = np.sqrt((np.var(s1_expr) + np.var(s2_expr)) / 2)
+        if pooled_sd > 1e-10:
+            cohens_d = (np.mean(s1_expr) - np.mean(s2_expr)) / pooled_sd
+        else:
+            cohens_d = 0
+
+        results.append({
+            "gene": gene,
+            "pval": pval,
+            "cohens_d": cohens_d,
+            "mean_S1": np.mean(s1_expr),
+            "mean_S2": np.mean(s2_expr),
+            "mean_diff": np.mean(s1_expr) - np.mean(s2_expr),
+        })
+
+    if not results:
+        return pd.DataFrame()
+
+    out = pd.DataFrame(results)
+
+    # BH correction
+    from scipy.stats import false_discovery_control
+    try:
+        out["padj"] = false_discovery_control(out["pval"].values, method="bh")
+    except Exception:
+        # Manual BH
+        n = len(out)
+        ranks = out["pval"].rank()
+        out["padj"] = (out["pval"] * n / ranks).clip(upper=1.0)
+
+    return out.sort_values("pval").reset_index(drop=True)
 
 
 # ===========================================================================
@@ -401,67 +478,124 @@ def main():
     # -------------------------------------------------------------------
     log.info("\n=== Divergence Gene Detection ===")
 
+    in_bif_window = (pseudotime >= bif_start) & (pseudotime <= bif_end)
+
     if has_expr:
-        # In the bifurcation window, find genes where S1 and S2 differ
-        in_bif_window = (pseudotime >= bif_start) & (pseudotime <= bif_end)
+        # ---- Full-cohort divergence (DESCRIPTIVE ONLY) -------------------
+        # NOTE (leakage fix 2026-06-20): this full-cohort S1-vs-S2 ranking is
+        # retained ONLY for the descriptive bifurcation narrative. It selects
+        # genes using EVERY sample, including those that later land in held-out
+        # LOCO test folds, so it MUST NOT be used to build the `div_*`
+        # prognosis feature panel. The leakage-free selection that the
+        # predictor consumes is `divergence_genes_per_fold.csv`, computed
+        # below using training cohorts only. (Roadmap A: 117 S2-fate leak.)
         s1_bif = in_bif_window & (subtypes == "S1")
         s2_bif = in_bif_window & (subtypes == "S2")
 
         log.info(f"  Samples in bifurcation window: S1={s1_bif.sum()}, S2={s2_bif.sum()}")
 
-        divergence_results = []
-        if s1_bif.sum() >= 5 and s2_bif.sum() >= 5:
-            for g_idx, gene in enumerate(gene_names):
-                s1_expr = expr[s1_bif, g_idx]
-                s2_expr = expr[s2_bif, g_idx]
+        div_df = detect_divergence_genes(expr, gene_names, s1_bif, s2_bif, min_per_group=5)
 
-                # Mann-Whitney U test
-                try:
-                    stat, pval = mannwhitneyu(s1_expr, s2_expr, alternative="two-sided")
-                except ValueError:
-                    continue
-
-                # Effect size (Cohen's d)
-                pooled_sd = np.sqrt((np.var(s1_expr) + np.var(s2_expr)) / 2)
-                if pooled_sd > 1e-10:
-                    cohens_d = (np.mean(s1_expr) - np.mean(s2_expr)) / pooled_sd
-                else:
-                    cohens_d = 0
-
-                divergence_results.append({
-                    "gene": gene,
-                    "pval": pval,
-                    "cohens_d": cohens_d,
-                    "mean_S1": np.mean(s1_expr),
-                    "mean_S2": np.mean(s2_expr),
-                    "mean_diff": np.mean(s1_expr) - np.mean(s2_expr),
-                })
-
-            div_df = pd.DataFrame(divergence_results)
-
-            # BH correction
-            from scipy.stats import false_discovery_control
-            try:
-                div_df["padj"] = false_discovery_control(div_df["pval"].values, method="bh")
-            except Exception:
-                # Manual BH
-                n = len(div_df)
-                ranks = div_df["pval"].rank()
-                div_df["padj"] = div_df["pval"] * n / ranks
-                div_df["padj"] = div_df["padj"].clip(upper=1.0)
-
-            div_df = div_df.sort_values("pval")
-
+        if len(div_df) > 0:
             n_sig = (div_df["padj"] < 0.05).sum()
             n_strong = ((div_df["padj"] < 0.05) & (div_df["cohens_d"].abs() > 0.5)).sum()
-            log.info(f"  Divergence genes (padj<0.05): {n_sig}")
-            log.info(f"  Strong divergence (padj<0.05, |d|>0.5): {n_strong}")
-            log.info(f"\n  Top 20 divergence genes:")
+            log.info(f"  [DESCRIPTIVE, full-cohort] Divergence genes (padj<0.05): {n_sig}")
+            log.info(f"  [DESCRIPTIVE, full-cohort] Strong divergence (padj<0.05, |d|>0.5): {n_strong}")
+            log.info(f"\n  Top 20 divergence genes (full-cohort, descriptive):")
             for _, row in div_df.head(20).iterrows():
                 log.info(f"    {row['gene']}: d={row['cohens_d']:.2f}, padj={row['padj']:.2e}")
         else:
-            div_df = pd.DataFrame()
             log.warning("  Not enough samples in bifurcation window for divergence analysis")
+
+    # -------------------------------------------------------------------
+    # 4b. Fold-internal divergence selection (LEAKAGE-FREE)
+    # -------------------------------------------------------------------
+    # The `div_*` prognosis feature panel (Scripts 150 -> 160 -> 161/183/183v2)
+    # must be selected WITHOUT seeing the held-out LOCO test cohort, otherwise
+    # the S2-fate AUROC is inflated by selection leakage (mega-review blocker A:
+    # 117_bifurcation_divergence.py:404-438). Here we re-run the divergence
+    # detection once per LOCO outer fold, using ONLY the training cohorts
+    # (every fold except the held-out one), and emit a long-format ranking that
+    # downstream feature engineering (150) consumes per fold. The held-out
+    # cohort's samples never contribute to its own fold's selection statistic.
+    #
+    # Fold definition mirrors Script 161: `loco_fold_fibrosis` in
+    # modeling_metadata.csv, where each non-"excluded"/non-NA value names one
+    # leave-one-cohort-out fold.
+    div_fold_df = pd.DataFrame()
+    if has_expr:
+        log.info("\n=== Fold-internal Divergence Selection (leakage-free) ===")
+
+        # Align loco_fold_fibrosis to the `common` sample order. `meta` is
+        # already reset to `common` (set_index/loc/reset_index above), so its
+        # row order matches `expr`, `subtypes`, `pseudotime`.
+        if "loco_fold_fibrosis" in meta.columns:
+            fold_labels = meta["loco_fold_fibrosis"].astype("object").values
+        else:
+            log.warning(
+                "  'loco_fold_fibrosis' not in modeling_metadata; cannot do "
+                "fold-internal selection. div_*_per_fold.csv will be empty."
+            )
+            fold_labels = np.array([None] * len(meta), dtype=object)
+
+        # Valid outer folds = named cohorts (drop 'excluded' / NaN)
+        fold_names = sorted(
+            {
+                f for f in fold_labels
+                if isinstance(f, str) and f not in ("excluded", "nan", "")
+            }
+        )
+        log.info(f"  LOCO outer folds: {fold_names}")
+
+        per_fold_rows = []
+        for held_out in fold_names:
+            # Training split = all samples whose fold is a valid cohort AND is
+            # NOT the held-out cohort. 'excluded'/NaN samples (no F-stage) are
+            # left out of selection entirely, matching 161's valid-fold filter.
+            is_valid_fold = np.array(
+                [isinstance(f, str) and f in fold_names for f in fold_labels]
+            )
+            train_mask_fold = is_valid_fold & (fold_labels != held_out)
+
+            s1_train = in_bif_window & train_mask_fold & (subtypes == "S1")
+            s2_train = in_bif_window & train_mask_fold & (subtypes == "S2")
+
+            fold_div = detect_divergence_genes(
+                expr, gene_names, s1_train, s2_train, min_per_group=5
+            )
+            if len(fold_div) == 0:
+                log.warning(
+                    f"  Fold held-out={held_out}: insufficient S1/S2 in window "
+                    f"(S1={s1_train.sum()}, S2={s2_train.sum()}); skipped."
+                )
+                continue
+
+            fold_div = fold_div.copy()
+            fold_div["held_out_fold"] = held_out
+            fold_div["n_train_S1"] = int(s1_train.sum())
+            fold_div["n_train_S2"] = int(s2_train.sum())
+            fold_div["abs_cohens_d"] = fold_div["cohens_d"].abs()
+            # Per-fold rank by |Cohen's d| (the statistic 150 uses to pick top-N)
+            fold_div["rank"] = (
+                fold_div["abs_cohens_d"].rank(ascending=False, method="first").astype(int)
+            )
+            n_sig = (fold_div["padj"] < 0.05).sum()
+            log.info(
+                f"  Fold held-out={held_out}: train S1={s1_train.sum()}, "
+                f"S2={s2_train.sum()}; {len(fold_div)} genes, "
+                f"{n_sig} sig (padj<0.05)"
+            )
+            per_fold_rows.append(fold_div)
+
+        if per_fold_rows:
+            div_fold_df = pd.concat(per_fold_rows, ignore_index=True)
+            log.info(
+                f"  Assembled per-fold divergence table: "
+                f"{div_fold_df['held_out_fold'].nunique()} folds x "
+                f"{div_fold_df.groupby('held_out_fold').size().mean():.0f} genes (mean)"
+            )
+        else:
+            log.warning("  No fold produced a valid divergence ranking.")
 
     # -------------------------------------------------------------------
     # 5. Fate probabilities
@@ -568,10 +702,24 @@ def main():
     bif_df.to_csv(os.path.join(OUTDIR, "bifurcation_analysis.csv"), index=False)
     log.info(f"  Saved bifurcation_analysis.csv")
 
-    # Divergence genes
+    # Divergence genes (full-cohort, DESCRIPTIVE ONLY — see warning at the
+    # divergence-detection block; not a leakage-free predictor selection source)
     if has_expr and len(div_df) > 0:
         div_df.to_csv(os.path.join(OUTDIR, "divergence_genes.csv"), index=False)
-        log.info(f"  Saved divergence_genes.csv ({len(div_df)} genes)")
+        log.info(f"  Saved divergence_genes.csv ({len(div_df)} genes) [descriptive]")
+
+    # Fold-internal divergence ranking (LEAKAGE-FREE) — the canonical source for
+    # building the `div_*` prognosis feature panel. Long format: one block of
+    # rows per held-out LOCO fold, each block selected on training cohorts only.
+    if has_expr and len(div_fold_df) > 0:
+        div_fold_df.to_csv(
+            os.path.join(OUTDIR, "divergence_genes_per_fold.csv"), index=False
+        )
+        log.info(
+            f"  Saved divergence_genes_per_fold.csv "
+            f"({div_fold_df['held_out_fold'].nunique()} folds, "
+            f"{len(div_fold_df)} rows) [leakage-free]"
+        )
 
     # Fate probabilities + per-sample data
     fate_df = meta[["sample_id", "subtype", "pseudotime", "fibrosis_stage",
@@ -595,6 +743,7 @@ def main():
         "peak_divergence_score": peak_div,
         "n_divergence_genes_005": (div_df["padj"] < 0.05).sum() if has_expr and len(div_df) > 0 else 0,
         "n_strong_divergence": ((div_df["padj"] < 0.05) & (div_df["cohens_d"].abs() > 0.5)).sum() if has_expr and len(div_df) > 0 else 0,
+        "n_loco_folds_selected": int(div_fold_df["held_out_fold"].nunique()) if has_expr and len(div_fold_df) > 0 else 0,
     }
     pd.DataFrame([summary]).to_csv(os.path.join(OUTDIR, "bifurcation_summary.csv"), index=False)
     log.info(f"  Saved bifurcation_summary.csv")

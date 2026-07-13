@@ -103,13 +103,13 @@ bar_fm <- data.frame(
 )
 p_fm_b <- ggplot(bar_fm, aes(x = category, y = n, fill = category)) +
   geom_col(width = 0.55) +
-  geom_text(aes(label = n), vjust = -0.3, size = 9, fontface = "bold") +
+  geom_text(aes(label = n), vjust = -0.3, size = 9, fontface = "plain") +
   scale_fill_manual(values = c("#2CA02C", "#FF7F0E", "#9467BD"), guide = "none") +
   labs(x = NULL, y = "# variants at PIP > 0.5",
        title = sprintf("High-PIP variant reproducibility (%.1f%%)",
                        100 * cs_agree / (cs_agree + only_v1))) +
   theme_masld(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         axis.text.x = element_text(size = 18),
         axis.text.y = element_text(size = 16),
         axis.title.y = element_text(size = 20),
@@ -133,14 +133,14 @@ p_fm_c <- ggplot(cs_size, aes(x = cs_size_v1, y = cs_size_1kg)) +
   labs(x = "CS size — UKBB EUR", y = "CS size — 1KG EUR",
        title = "Credible set sizes per locus") +
   theme_masld(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         axis.title = element_text(size = 22),
         axis.text  = element_text(size = 18))
 
 fm_unique <- (p_fm_b | p_fm_c) +
   plot_annotation(
     title = "FM — UKBB vs 1KG (CS size + PIP>0.5 reproducibility)",
-    theme = theme(plot.title = element_text(size = 24, face = "bold"))
+    theme = theme(plot.title = element_text(size = 24, face = "plain"))
   )
 
 ggsave(file.path(OUT_DIR, "fm/cs_size_and_reproducibility.pdf"), fm_unique,
@@ -225,13 +225,13 @@ cs_cmp <- data.table(
 )
 p_sx_b <- ggplot(cs_cmp, aes(x = category, y = n, fill = category)) +
   geom_col(width = 0.55) +
-  geom_text(aes(label = n), vjust = -0.3, size = 9, fontface = "bold") +
+  geom_text(aes(label = n), vjust = -0.3, size = 9, fontface = "plain") +
   scale_fill_manual(values = c("#2CA02C", "#9467BD"), guide = "none") +
   labs(x = NULL, y = "# loci",
        title = sprintf("Top-PIP SNP reproducibility (%.1f%%)",
                        100 * same_top_snp / nrow(ag_m))) +
   theme_masld(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         axis.text.x = element_text(size = 18),
         axis.text.y = element_text(size = 16),
         axis.title.y = element_text(size = 20),
@@ -249,14 +249,14 @@ p_sx_c <- ggplot(ag_m, aes(x = n_cs_v1, y = n_cs_1kg, color = trait)) +
   labs(x = "# CS — UKBB EUR", y = "# CS — 1KG EUR",
        title = "Credible-set counts per locus") +
   theme_masld(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         axis.title = element_text(size = 22),
         axis.text  = element_text(size = 18))
 
 sx_unique <- (p_sx_b | p_sx_c) +
   plot_annotation(
     title = "SuSiEX — UKBB vs 1KG (top-SNP agreement + CS counts)",
-    theme = theme(plot.title = element_text(size = 24, face = "bold"))
+    theme = theme(plot.title = element_text(size = 24, face = "plain"))
   )
 
 ggsave(file.path(OUT_DIR, "susiex/top_snp_agreement_and_cs_counts.pdf"), sx_unique,

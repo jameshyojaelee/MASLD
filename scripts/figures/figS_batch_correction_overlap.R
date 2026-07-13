@@ -17,7 +17,7 @@
 #   n: line plot of |union per-study|, |dream|, |intersection| vs |logFC|
 #      cutoff, faceted by padj cutoff (0.05 / 0.10).
 #   o: heatmap of Jaccard(union per-study, dream) over a padj × |logFC| grid,
-#      with a marker on the canonical Tier-1 cutoff (padj<0.05, |LFC|>0.5).
+#      with a marker on the canonical Tier-1 floor (padj<0.05, |LFC|>0.3).
 #   p: stacked bar at the canonical cutoff showing how many integrated dream
 #      DEGs are recovered in ≥1, ≥2, ≥3 per-study cohorts vs dream-only and
 #      per-study-only.
@@ -48,12 +48,12 @@ dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 FIVE_COHORTS <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
 COHORT_LABEL <- c(
-  GSE126848 = "Suppli",  GSE130970 = "Hoang",   GSE135251 = "Govaere",
-  GSE162694 = "Bril",    GSE213621 = "Chen"
+  GSE126848 = "GSE126848",  GSE130970 = "GSE130970",   GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",  GSE213621 = "GSE213621"
 )
 
 PADJ_CANON <- 0.05
-LFC_CANON  <- 0.5
+LFC_CANON  <- 0.3   # canonical Tier-1 effect-size floor (2026-06-27); raw-LFC sweep axis
 
 PADJ_GRID  <- c(0.001, 0.01, 0.05, 0.10)
 LFC_GRID   <- c(0, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5)
@@ -82,11 +82,8 @@ if (!file.exists(dream_path))
   stop("dream_results.csv not found at ", dream_path)
 message(sprintf("Loading dream (unshrunk) from %s", dream_path))
 dream <- fread(dream_path)
-# Normalize column names (legacy file uses logFC/padj; some use dream_*)
-if ("dream_logFC" %in% names(dream) && !"logFC" %in% names(dream))
-  setnames(dream, "dream_logFC", "logFC")
-if ("dream_padj" %in% names(dream) && !"padj" %in% names(dream))
-  setnames(dream, "dream_padj", "padj")
+# canonical_deg_results.csv uses unprefixed logFC/padj
+stopifnot(all(c("padj", "logFC") %in% names(dream)))
 dream[, gene_clean := sub("\\..*", "", gene)]
 dream <- dream[!is.na(padj) & !is.na(logFC), .(gene_clean, logFC, padj)]
 
@@ -173,18 +170,16 @@ p_n <- ggplot(sweep_long, aes(x = lfc_cut, y = n, color = set)) +
   facet_wrap(~ padj_label, nrow = 1) +
   labs(x = "|log2 fold-change| cutoff",
        y = "DEG count",
-       title = "DEG counts: union per-study vs integrated dream",
        caption = paste0(
-         "Symmetric cutoff applied to both sides. Dashed = canonical Tier-1 cutoff (|LFC|>0.5).\n",
-         "Per-study union = ∪ over 5 mega-eligible cohorts (Suppli/Hoang/Govaere/Bril/Chen)."
+         "Symmetric cutoff applied to both sides. Dashed = canonical Tier-1 floor (|LFC|>0.3).\n",
+         "Per-study union = ∪ over 5 mega-eligible cohorts (GSE126848/GSE130970/GSE135251/GSE162694/GSE213621)."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title    = element_text(size = 8, face = "bold"),
-        plot.caption  = element_text(size = 6, color = "gray35", hjust = 0),
+  theme(plot.caption  = element_text(size = 6, color = "black", hjust = 0),
         legend.position = "top",
         legend.key.size = unit(0.28, "cm"),
         legend.text     = element_text(size = 6),
-        strip.text      = element_text(size = 7, face = "bold"))
+        strip.text      = element_text(size = 6, face = "plain"))
 
 save_fig(p_n, file.path(PANEL_DIR, "figS_batch_n_count_sweep.pdf"),
          width = fig_full_width * 0.7, height = 2.8)
@@ -211,9 +206,9 @@ grid_dt[, lfc_label := factor(sprintf("%.2g", lfc_cut),
 p_o <- ggplot(grid_dt, aes(x = lfc_label, y = padj_label, fill = jaccard)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = sprintf("%.2f", jaccard)),
-            size = 2.0, color = "gray15") +
+            size = GEOM_TEXT_6PT, color = "black") +
   geom_text(aes(label = sprintf("\n\n(%s)", comma(n_intersection))),
-            size = 1.6, color = "gray35") +
+            size = GEOM_TEXT_6PT, color = "black") +
   # Mark canonical Tier-1 cutoff (account for reversed y-axis via limits = rev)
   annotate("rect",
            xmin = which(LFC_GRID == LFC_CANON) - 0.5,
@@ -227,13 +222,11 @@ p_o <- ggplot(grid_dt, aes(x = lfc_label, y = padj_label, fill = jaccard)) +
   scale_x_discrete(expand = expansion(0)) +
   scale_y_discrete(expand = expansion(0), limits = rev) +
   labs(x = "|log2 fold-change| cutoff", y = "FDR cutoff",
-       title = "Jaccard(union per-study, dream) over cutoff grid",
        caption = paste0(
-         "Cell label = Jaccard; (n) = |intersection|. Black box = canonical Tier-1 (padj<0.05, |LFC|>0.5)."
+         "Cell label = Jaccard; (n) = |intersection|. Black box = canonical Tier-1 (padj<0.05, |LFC|>0.3)."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title    = element_text(size = 8, face = "bold"),
-        plot.caption  = element_text(size = 6, color = "gray35", hjust = 0),
+  theme(plot.caption  = element_text(size = 6, color = "black", hjust = 0),
         legend.key.size = unit(0.28, "cm"),
         legend.text     = element_text(size = 6),
         legend.title    = element_text(size = 6),
@@ -256,17 +249,15 @@ message("Composing combined overlap figure...")
 u_canon <- deg_per_study_union(PADJ_CANON, LFC_CANON)
 d_canon <- deg_dream(PADJ_CANON, LFC_CANON)
 
+message(sprintf(
+  "[caption] Per-study DEG union vs integrated dream DEGs across cutoffs. 5 mega-eligible cohorts (n = %s genes in common universe). Per-study = limma-voom, dream = unshrunk.",
+  comma(length(universe))))
+
 fig <- (p_n / p_o) +
   plot_layout(heights = c(1.0, 1.0)) +
   plot_annotation(
-    title    = "Per-study DEG union vs integrated dream DEGs across cutoffs",
-    subtitle = sprintf(
-      "5 mega-eligible cohorts (n = %s genes in common universe). Per-study = limma-voom, dream = unshrunk.",
-      comma(length(universe))),
     tag_levels = list(c("n", "o")),
-    theme = theme(plot.title    = element_text(size = 9, face = "bold"),
-                  plot.subtitle = element_text(size = 7, color = "gray35"),
-                  plot.tag      = element_text(size = 9, face = "bold"))
+    theme = theme(plot.tag = element_text(size = 6, face = "plain"))
   )
 
 out_pdf <- file.path(FIGS_BATCH_DIR, "figS_batch_overlap.pdf")

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { EvidenceFingerprint } from "@/components/evidence-fingerprint";
 import { getLayerColor } from "@/lib/network-data";
+import { dataUrl } from "@/lib/data-base";
 import type { CommunityData, GeneHalo, NetworkEdge, NetworkNode, EdgeLayer } from "@/lib/network-types";
 
 interface GeneDetailSidebarProps {
@@ -122,7 +123,7 @@ export function GeneDetailSidebar({
     }
 
     setHalo(null);
-    fetch(`/data/network/halos/${node.symbol.toUpperCase()}.json`)
+    fetch(dataUrl(`network/halos/${node.symbol.toUpperCase()}.json`))
       .then((r) => (r.ok ? (r.json() as Promise<GeneHalo>) : null))
       .then(setHalo)
       .catch(() => setHalo(null));
@@ -183,8 +184,8 @@ export function GeneDetailSidebar({
                 </p>
                 <p>
                   <span className="text-muted-foreground">logFC:</span>{" "}
-                  <span className={`font-mono font-medium ${logfcColor(node.dream_logfc)}`}>
-                    {formatLogFC(node.dream_logfc)}
+                  <span className={`font-mono font-medium ${logfcColor(node.bulk_logfc)}`}>
+                    {formatLogFC(node.bulk_logfc)}
                   </span>
                 </p>
               </div>
@@ -318,7 +319,7 @@ export function GeneDetailSidebar({
           variant="outline"
           size="sm"
           className="w-full"
-          render={<Link href={`/gene/${encodeURIComponent(node.symbol)}`} />}
+          render={<Link href={`#/gene?symbol=${encodeURIComponent(node.symbol)}`} />}
         >
           View full gene page
           <svg className="ml-1 size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

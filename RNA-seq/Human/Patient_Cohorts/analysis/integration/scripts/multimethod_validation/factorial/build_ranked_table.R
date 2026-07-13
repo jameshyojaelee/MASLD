@@ -102,6 +102,19 @@ DEGX_DIR <- args$dir
 CELLS_DIR <- file.path(DEGX_DIR, "cells")
 stopifnot(dir.exists(DEGX_DIR))
 
+# Per-cell calibration metrics + manifest shards may live in DEGX_DIR OR its
+# calib/ subdir: the permutation runner writes to calib/, while older/promoted
+# shards sit at the top level. Glob BOTH (newest-first, so the first-wins dedupe
+# downstream keeps the most-recent shard) so finished cells are never stranded by
+# the dir split. [2026-06-14 calib/ path fix -- previously top-level-only, which
+# silently hid 83 finished calibration cells that the runner had written to calib/.]
+list_degx <- function(pattern) {
+  dirs <- c(DEGX_DIR, file.path(DEGX_DIR, "calib"))
+  fs   <- unlist(lapply(dirs[dir.exists(dirs)],
+                        function(d) list.files(d, pattern = pattern, full.names = TRUE)))
+  if (length(fs)) fs[order(file.info(fs)$mtime, decreasing = TRUE)] else fs
+}
+
 cat("=== build_ranked_table.R (SELECTION scorer) ===\n")
 cat("dir      :", DEGX_DIR, "\n")
 cat("contrast :", CONTRAST, "\n")
@@ -124,9 +137,7 @@ read_csv_safe <- function(path, what) {
 # ---------------------------------------------------------------------------
 # 1. MERGE manifests (glob concurrent shards -> concat -> dedupe by cell_id)
 # ---------------------------------------------------------------------------
-manifest_glob <- list.files(DEGX_DIR,
-                            pattern = "^manifest_disease_vs_control.*\\.csv$",
-                            full.names = TRUE)
+manifest_glob <- list_degx("^manifest_disease_vs_control.*\\.csv$")
 if (length(manifest_glob) == 0) {
   stop("No manifest_disease_vs_control*.csv found in ", DEGX_DIR,
        " -- cannot enumerate cells. Run the engine factorial first.")
@@ -207,7 +218,7 @@ base <- ok[, ..id_cols]
 # existing graceful-degradation path (calib = NULL -> gate_status="pending").
 load_calibration_glob <- function() {
   pat  <- sprintf("^metrics_calibration_%s__.*\\.csv$", CONTRAST)
-  cfs  <- list.files(DEGX_DIR, pattern = pat, full.names = TRUE)
+  cfs  <- list_degx(pat)
   if (length(cfs) == 0) {
     cat(sprintf("[input] %-22s MISSING -> no metrics_calibration_%s__*.csv\n",
                 "calibration (GATE)", CONTRAST))

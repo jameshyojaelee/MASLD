@@ -1,5 +1,17 @@
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { categoricalColor, CONTROL } from "@/lib/palette";
+
+// LEGACY: this route is absorbed by /single-cell — retire after migration. Kept
+// live for now; changes here are correctness-only (no expanded surface).
+
+// Qualitative two-class palette (not directional): hepatocyte vs other, and the
+// male / female sex split. All routed through the palette authority.
+const HEPATO_COLOR = categoricalColor(0); // blue
+const MALE_COLOR = categoricalColor(0); // blue
+const FEMALE_COLOR = categoricalColor(3); // reddish purple
 
 // ---------------------------------------------------------------------------
 // Deconvolution stat cards
@@ -13,19 +25,19 @@ interface StatCard {
 
 const DECONV_CARDS: StatCard[] = [
   {
-    value: "1,918",
-    label: "Significant DEGs tested",
-    sublabel: "MuSiC deconvolution across 1,444 samples",
+    value: "1,497",
+    label: "Classifiable DEGs",
+    sublabel: "MuSiC deconvolution, pooled (cohort-adjusted) analysis",
   },
   {
-    value: "81.5%",
+    value: "65.1%",
     label: "Hepatocyte-intrinsic",
-    sublabel: "1,563 / 1,918 significant DEGs",
+    sublabel: "975 / 1,497 classifiable DEGs",
   },
   {
-    value: "18.5%",
+    value: "34.9%",
     label: "Immune / stromal-attributed",
-    sublabel: "355 / 1,918 significant DEGs",
+    sublabel: "522 / 1,497 classifiable DEGs",
   },
   {
     value: "0.931",
@@ -62,24 +74,19 @@ const REGULON_TABLE: RegulonRow[] = [
 
 const SEX_CARDS: StatCard[] = [
   {
-    value: "1,978",
-    label: "Female-biased DEGs",
-    sublabel: "Integrated interaction model (group × sex), padj < 0.05",
-  },
-  {
-    value: "675",
+    value: "7",
     label: "Male-biased DEGs",
-    sublabel: "Integrated interaction model (group × sex), padj < 0.05",
+    sublabel: "LVQW-fixed (C2) interaction model, padj < 0.05",
   },
   {
-    value: "427",
-    label: "Divergent DEGs",
-    sublabel: "Opposite direction between sexes",
+    value: "1",
+    label: "Female-biased DEGs",
+    sublabel: "LVQW-fixed (C2) interaction model, padj < 0.05",
   },
   {
-    value: "2.9:1",
-    label: "Female : Male ratio",
-    sublabel: "3,080 total sex-dimorphic (interaction padj < 0.05)",
+    value: "8",
+    label: "Total sex-dimorphic",
+    sublabel: "Down from 290 after fixing the dataset term (C2)",
   },
 ];
 
@@ -93,9 +100,9 @@ function DeconvDonut() {
   const cy = size / 2;
   const outerR = 85;
   const innerR = 55;
-  const hepatocyteFrac = 0.815;
+  const hepatocyteFrac = 0.651;
 
-  // Compute arc for hepatocyte segment (81.5%)
+  // Compute arc for hepatocyte segment (65.1%)
   const hepatoAngle = hepatocyteFrac * 2 * Math.PI;
   const startAngle = -Math.PI / 2; // start at top
 
@@ -110,7 +117,7 @@ function DeconvDonut() {
   const hepatoIX2 = cx + innerR * Math.cos(startAngle);
   const hepatoIY2 = cy + innerR * Math.sin(startAngle);
 
-  // Other arc (18.5%)
+  // Other arc (34.9%)
   const otherEndAngle = hepatoEndAngle + (1 - hepatocyteFrac) * 2 * Math.PI;
   const otherX2 = cx + outerR * Math.cos(otherEndAngle);
   const otherY2 = cy + outerR * Math.sin(otherEndAngle);
@@ -140,17 +147,17 @@ function DeconvDonut() {
       viewBox={`0 0 ${size} ${size}`}
       className="shrink-0"
       role="img"
-      aria-label="Donut chart: 81.5% hepatocyte-intrinsic, 18.5% immune/stromal"
+      aria-label="Donut chart: 65.1% hepatocyte-intrinsic, 34.9% immune/stromal"
     >
-      <path d={hepatoPath} fill="hsl(210 100% 56%)" opacity={0.85} />
-      <path d={otherPath} fill="hsl(var(--muted-foreground))" opacity={0.4} />
+      <path d={hepatoPath} fill={HEPATO_COLOR} opacity={0.85} />
+      <path d={otherPath} fill={CONTROL} opacity={0.55} />
       <text
         x={cx}
         y={cy - 6}
         textAnchor="middle"
         className="fill-foreground text-[22px] font-bold"
       >
-        81.5%
+        65.1%
       </text>
       <text
         x={cx}
@@ -180,9 +187,8 @@ function SexBarChart() {
   const gap = 16;
 
   const data = [
-    { label: "Female-biased", count: 1978, color: "#f472b6" },
-    { label: "Divergent", count: 427, color: "#a1a1aa" },
-    { label: "Male-biased", count: 675, color: "#60a5fa" },
+    { label: "Male-biased", count: 7, color: MALE_COLOR },
+    { label: "Female-biased", count: 1, color: FEMALE_COLOR },
   ];
 
   const maxCount = Math.max(...data.map((d) => d.count));
@@ -194,7 +200,7 @@ function SexBarChart() {
       viewBox={`0 0 ${svgW} ${svgH}`}
       className="w-full max-w-xl"
       role="img"
-      aria-label="Bar chart: 1,978 female-biased, 427 divergent, 675 male-biased DEGs (interaction model)"
+      aria-label="Bar chart: 7 male-biased, 1 female-biased DEGs (LVQW-fixed interaction model)"
     >
       {data.map((d, i) => {
         const y = padTop + i * (barH + gap);
@@ -234,7 +240,7 @@ function SexBarChart() {
         x2={svgW - padRight}
         y1={svgH - padBottom}
         y2={svgH - padBottom}
-        stroke="hsl(var(--border))"
+        stroke="var(--color-border)"
         strokeWidth={1}
       />
       <text
@@ -255,20 +261,14 @@ function SexBarChart() {
 
 export default function ResolutionPage() {
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <PageContainer>
       {/* ------------------------------------------------------------------ */}
       {/* Header                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Cell-Type &amp; Sex Resolution
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Deconvolution attribution, SCENIC+ regulon analysis, and sex-stratified
-          Integrated mega-analysis reveal cell-type-specific and sex-dimorphic disease
-          signatures.
-        </p>
-      </div>
+      <PageHeader
+        title="Cell-Type & Sex Resolution"
+        description="Deconvolution attribution, SCENIC+ regulon analysis, and a sex-stratified pooled (cohort-adjusted) analysis reveal cell-type-specific and sex-dimorphic disease signatures."
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Section 1: Deconvolution Attribution                                 */}
@@ -278,8 +278,8 @@ export default function ResolutionPage() {
           Deconvolution Attribution
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          MuSiC deconvolution across 1,444 samples reveals that 81.5%
-          (1,563/1,918) of significant DEGs are hepatocyte-intrinsic. BayesPrism
+          MuSiC deconvolution reveals that 65.1% (975/1,497) of classifiable
+          significant DEGs are hepatocyte-intrinsic. BayesPrism
           concordance Jaccard&nbsp;=&nbsp;0.931.
         </p>
 
@@ -308,27 +308,24 @@ export default function ResolutionPage() {
             <div className="flex items-center gap-2">
               <span
                 className="inline-block h-3 w-3 rounded-sm"
-                style={{ background: "hsl(210 100% 56%)", opacity: 0.85 }}
+                style={{ background: HEPATO_COLOR, opacity: 0.85 }}
               />
               <span>
                 <span className="font-semibold">Hepatocyte-intrinsic</span>{" "}
                 <span className="text-muted-foreground">
-                  &mdash; 1,563 DEGs (81.5%)
+                  &mdash; 975 DEGs (65.1%)
                 </span>
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span
                 className="inline-block h-3 w-3 rounded-sm"
-                style={{
-                  background: "hsl(var(--muted-foreground))",
-                  opacity: 0.4,
-                }}
+                style={{ background: CONTROL, opacity: 0.55 }}
               />
               <span>
                 <span className="font-semibold">Immune / stromal</span>{" "}
                 <span className="text-muted-foreground">
-                  &mdash; 355 DEGs (18.5%)
+                  &mdash; 522 DEGs (34.9%)
                 </span>
               </span>
             </div>
@@ -379,7 +376,7 @@ export default function ResolutionPage() {
                   >
                     <td className="px-4 py-2.5">
                       <Link
-                        href={`/gene/${encodeURIComponent(row.tf)}`}
+                        href={`#/gene?symbol=${encodeURIComponent(row.tf)}`}
                         className="font-mono text-xs font-semibold text-primary hover:underline"
                       >
                         {row.tf}
@@ -390,11 +387,11 @@ export default function ResolutionPage() {
                     </td>
                     <td className="px-4 py-2.5 text-right font-mono text-xs">
                       <span
-                        className={
-                          isUp
-                            ? "text-red-500 dark:text-red-400"
-                            : "text-blue-500 dark:text-blue-400"
-                        }
+                        style={{
+                          color: isUp
+                            ? "var(--color-effect-up)"
+                            : "var(--color-effect-down)",
+                        }}
                       >
                         {row.activity_diff >= 0 ? "+" : ""}
                         {row.activity_diff.toFixed(2)}
@@ -428,8 +425,11 @@ export default function ResolutionPage() {
           Sex Stratification
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
-          Sex-stratified Integrated interaction model (group_binary × inferred_sex)
-          across matched-dataset samples reveals 3,080 sex-dimorphic DEGs (interaction padj &lt; 0.05).
+          Sex-stratified interaction model (group_binary &times; inferred_sex),
+          LVQW-fixed with dataset as a fixed effect (C2), reveals 8
+          sex-dimorphic DEGs (interaction padj &lt; 0.05) &mdash; down from 290
+          before fixing the dataset term. Direction concordance with the prior
+          model is 0.80&ndash;0.84; only interaction significance collapses.
         </p>
 
         {/* Stat cards */}
@@ -455,30 +455,36 @@ export default function ResolutionPage() {
           <SexBarChart />
           <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-pink-400" />
-              Female-biased (1,978)
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: MALE_COLOR }}
+              />
+              Male-biased (7)
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-zinc-400" />
-              Divergent (427)
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-400" />
-              Male-biased (675)
+              <span
+                className="inline-block h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: FEMALE_COLOR }}
+              />
+              Female-biased (1)
             </span>
           </div>
         </div>
 
-        {/* Key finding callout */}
+        {/* Methodology note */}
         <div className="rounded-lg border border-amber-300 bg-amber-50 px-5 py-4 dark:border-amber-700 dark:bg-amber-950/30">
           <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
-            Key Finding
+            Methodology Note
           </p>
           <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
-            Female-biased DEGs are <strong>depleted</strong> for COLOC
-            (OR&nbsp;=&nbsp;0.64, padj&nbsp;=&nbsp;0.001), indicating female
-            transcriptomic effects are non-genetic. Male-biased DEGs show no
-            such depletion (OR&nbsp;=&nbsp;0.94, n.s.).
+            An earlier sex-stratified model (dream, random dataset effect)
+            reported 290 dimorphic genes with a female-enriched-progressor
+            narrative. Fixing the dataset term to match the canonical C2 bulk
+            model collapses this to 8 genes (7 male-biased / 1 female-biased).
+            That earlier narrative is retired &mdash; at n&nbsp;=&nbsp;8, no
+            COLOC-enrichment or -depletion claim can be made with statistical
+            power; see the gene page for each of the 8 genes&apos; individual
+            evidence.
           </p>
         </div>
       </section>
@@ -500,6 +506,6 @@ export default function ResolutionPage() {
           Causal Architecture &rarr;
         </Link>
       </div>
-    </div>
+    </PageContainer>
   );
 }

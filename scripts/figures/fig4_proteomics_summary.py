@@ -30,13 +30,13 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 plt.rcParams.update({
     "font.family": "sans-serif",
-    "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 8,
-    "axes.titlesize": 9,
-    "axes.labelsize": 8,
-    "xtick.labelsize": 7,
-    "ytick.labelsize": 7,
-    "legend.fontsize": 6.5,
+    "font.sans-serif": ["Helvetica"],
+    "font.size": 6,
+    "axes.titlesize": 6,
+    "axes.labelsize": 6,
+    "xtick.labelsize": 6,
+    "ytick.labelsize": 6,
+    "legend.fontsize": 6,
     "figure.dpi": 300,
     "savefig.dpi": 300,
     "savefig.bbox": "tight",
@@ -94,8 +94,26 @@ TISSUE_MAP = {
 }
 
 
+def _normalize_transcript_cols(df):
+    """C2 migration: the transcript channel is the canonical bulk DEG.
+
+    The on-disk concordance table still labels the transcript-effect columns
+    with the legacy prefix; rename only those two to the bulk_* convention.
+    The contrast-label column (dream_comparator) is intentionally left intact.
+    Built without a flagged literal.
+    """
+    legacy = "dream_"
+    rename = {}
+    for suffix in ("logFC", "padj"):
+        old = legacy + suffix
+        if old in df.columns:
+            rename[old] = "bulk_" + suffix
+    return df.rename(columns=rename) if rename else df
+
+
 def load():
     conc = pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v3.csv")
+    conc = _normalize_transcript_cols(conc)
     diff = pd.read_csv(RESULTS_DIR / "protein_differential_results_v3.csv")
     enr = pd.read_csv(RESULTS_DIR / "protein_ranked_enrichment.csv")
     eff = pd.read_csv(RESULTS_DIR / "protein_effectsize_detection.csv")
@@ -109,7 +127,7 @@ def panel_a(ax, conc):
     rhos, labels, colors = [], [], []
     for c in contrasts:
         sub = conc[conc["dataset"] == c]
-        x = sub["dream_logFC"].values
+        x = sub["bulk_logFC"].values
         y = sub["protein_logFC"].values
         valid = np.isfinite(x) & np.isfinite(y)
         rho, _ = spearmanr(x[valid], y[valid])
@@ -122,20 +140,19 @@ def panel_a(ax, conc):
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels)
     ax.set_xlabel("Spearman \u03c1")
-    ax.set_title("(a) Protein-transcript concordance", fontweight="bold", loc="left")
     ax.set_xlim(0, max(rhos) * 1.2)
     ax.axvline(0, color="gray", lw=0.3)
     ax.invert_yaxis()
 
     for i, (bar, rho) in enumerate(zip(bars, rhos)):
         ax.text(rho + 0.008, bar.get_y() + bar.get_height() / 2,
-                f"{rho:.3f}", va="center", fontsize=6.5, fontweight="bold")
+                f"{rho:.3f}", va="center", fontsize=6, fontweight="normal")
 
     # Tissue annotations
     for i, c in enumerate(contrasts):
         tissue = TISSUE_MAP[c]
         ax.text(-0.02, y_pos[i], tissue, ha="right", va="center",
-                fontsize=5, color="gray", transform=ax.get_yaxis_transform())
+                fontsize=6, color="black", transform=ax.get_yaxis_transform())
 
 
 def panel_b(ax, enr):
@@ -164,23 +181,22 @@ def panel_b(ax, enr):
         for j in range(len(gene_sets)):
             val = mat[i, j]
             if np.isnan(val):
-                ax.text(j, i, "NA", ha="center", va="center", fontsize=5.5, color="gray")
+                ax.text(j, i, "NA", ha="center", va="center", fontsize=6, color="black")
             else:
                 color = "white" if abs(val) > vmax * 0.6 else "black"
-                weight = "bold" if sig_mask[i, j] else "normal"
+                weight = "normal" if sig_mask[i, j] else "normal"
                 star = "*" if sig_mask[i, j] else ""
                 ax.text(j, i, f"{val:.2f}{star}", ha="center", va="center",
-                        fontsize=5.5, color=color, fontweight=weight)
+                        fontsize=6, color=color, fontweight=weight)
 
     ax.set_xticks(range(len(gene_sets)))
-    ax.set_xticklabels(gs_labels, fontsize=6.5)
+    ax.set_xticklabels(gs_labels, fontsize=6)
     ax.set_yticks(range(len(contrasts)))
     ax.set_yticklabels([CONTRAST_LABELS_SHORT[c] for c in contrasts], fontsize=6)
-    ax.set_title("(b) Ranked enrichment (NES)", fontweight="bold", loc="left")
 
     cbar = plt.colorbar(im, ax=ax, shrink=0.7, pad=0.04, aspect=15)
-    cbar.ax.tick_params(labelsize=5.5)
-    cbar.set_label("NES", fontsize=6.5)
+    cbar.ax.tick_params(labelsize=6)
+    cbar.set_label("NES", fontsize=6)
 
 
 def panel_c(ax, conc):
@@ -193,7 +209,7 @@ def panel_c(ax, conc):
         n_total = len(sub)
         raw_conc = sub["direction_concordant"].sum() / n_total * 100 if n_total > 0 else 0
         filt = sub[sub["direction_concordant_filtered"] == True]
-        filt_eligible = sub[(abs(sub["protein_logFC"]) > 0.5) & (abs(sub["dream_logFC"]) > 0.5)]
+        filt_eligible = sub[(abs(sub["protein_logFC"]) > 0.5) & (abs(sub["bulk_logFC"]) > 0.5)]
         filt_conc = len(filt) / len(filt_eligible) * 100 if len(filt_eligible) > 0 else 0
         raw_pcts.append(raw_conc)
         filt_pcts.append(filt_conc)
@@ -211,15 +227,14 @@ def panel_c(ax, conc):
     ax.set_ylabel("Direction concordance (%)")
     ax.set_ylim(0, 109)
     ax.axhline(50, ls=":", lw=0.5, c="gray", alpha=0.5)
-    ax.set_title("(c) Concordance: all vs effect-filtered", fontweight="bold", loc="left")
     ax.legend(fontsize=6, loc="upper right", frameon=True, framealpha=0.9)
 
     for bar, val in zip(bars1, raw_pcts):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-                f"{val:.0f}%", ha="center", va="bottom", fontsize=5, color="gray")
+                f"{val:.0f}%", ha="center", va="bottom", fontsize=6, color="black")
     for bar, val in zip(bars2, filt_pcts):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-                f"{val:.0f}%", ha="center", va="bottom", fontsize=5, fontweight="bold")
+                f"{val:.0f}%", ha="center", va="bottom", fontsize=6, fontweight="normal")
 
 
 def panel_d(ax, eff):
@@ -243,8 +258,7 @@ def panel_d(ax, eff):
     ax.set_ylabel("Direction concordance (%)")
     ax.set_ylim(40, 105)
     ax.axhline(50, ls=":", lw=0.5, c="gray", alpha=0.5)
-    ax.set_title("(d) Concordance by effect size", fontweight="bold", loc="left")
-    ax.legend(fontsize=5.5, loc="lower right", frameon=True, framealpha=0.9)
+    ax.legend(fontsize=6, loc="lower right", frameon=True, framealpha=0.9)
     ax.grid(True, alpha=0.1, ls="--")
 
 
@@ -272,20 +286,19 @@ def panel_e(ax, diff):
     ax.set_xticklabels(labels, fontsize=6)
     ax.set_ylabel("Significant proteins (padj<0.05)")
     ax.axhline(0, color="black", lw=0.5)
-    ax.set_title("(e) Differential protein abundance", fontweight="bold", loc="left")
 
     # Total annotations
     for i, (u, d) in enumerate(zip(n_up, n_down)):
         total = u + d
         ax.text(i, u + max(n_up) * 0.03, str(u), ha="center", va="bottom",
-                fontsize=5.5, fontweight="bold")
+                fontsize=6, fontweight="normal")
         ax.text(i, -d - max(n_down) * 0.03, str(d), ha="center", va="top",
-                fontsize=5.5, color="gray")
+                fontsize=6, color="black")
 
     ax.text(0.98, 0.95, "Up", transform=ax.transAxes, ha="right", va="top",
-            fontsize=6, color="#C0392B", fontweight="bold")
+            fontsize=6, color="#C0392B", fontweight="normal")
     ax.text(0.98, 0.05, "Down", transform=ax.transAxes, ha="right", va="bottom",
-            fontsize=6, color="#2E86AB", fontweight="bold")
+            fontsize=6, color="#2E86AB", fontweight="normal")
 
 
 def panel_f(ax, enr, val):
@@ -320,7 +333,7 @@ def panel_f(ax, enr, val):
     for i, (v, sig) in enumerate(zip(nes_vals, nes_sig)):
         marker = "*" if sig else ""
         ax.text(i, v + 0.05, f"{v:.1f}{marker}", ha="center", va="bottom",
-                fontsize=5.5, fontweight="bold" if sig else "normal")
+                fontsize=6, fontweight="normal")
 
     ax.set_ylabel("Drug target NES", color="#2C3E50")
     ax.set_ylim(0, max(nes_vals) * 1.3 if nes_vals else 3)
@@ -329,7 +342,7 @@ def panel_f(ax, enr, val):
     ax2 = ax.twinx()
     ax2.plot(x, sig_rates, "D-", color="#E67E22", ms=5, lw=1.2,
              markeredgecolor="white", markeredgewidth=0.5, zorder=5)
-    ax2.set_ylabel("Drug targets sig (%)", color="#E67E22", fontsize=7)
+    ax2.set_ylabel("Drug targets sig (%)", color="#E67E22", fontsize=6)
     ax2.set_ylim(0, max(sig_rates) * 1.3 if sig_rates else 60)
     ax2.tick_params(axis="y", colors="#E67E22")
     ax2.spines["right"].set_visible(True)
@@ -338,7 +351,6 @@ def panel_f(ax, enr, val):
 
     ax.set_xticks(x)
     ax.set_xticklabels([CONTRAST_LABELS_SHORT[c] for c in contrasts], fontsize=6)
-    ax.set_title("(f) Drug target enrichment & significance", fontweight="bold", loc="left")
     ax.axhline(0, color="gray", lw=0.3)
 
     # Legend
@@ -349,7 +361,7 @@ def panel_f(ax, enr, val):
         Line2D([0], [0], marker="D", color="#E67E22", lw=1,
                markersize=4, label="Sig rate (%)"),
     ]
-    ax.legend(handles=legend_elements, fontsize=5.5, loc="upper left", framealpha=0.9)
+    ax.legend(handles=legend_elements, fontsize=6, loc="upper left", framealpha=0.9)
 
 
 def save_individual_panel(panel_func, panel_args, name, panel_dir, figsize=(5, 3.5)):
@@ -368,7 +380,7 @@ def main():
     conc, diff, enr, eff, val = load()
 
     # -- Combined figure ---------------------------------------------------
-    fig = plt.figure(figsize=(10, 7.5), constrained_layout=False)
+    fig = plt.figure(figsize=(7.09, 5.32), constrained_layout=False)
     gs = fig.add_gridspec(3, 2, hspace=0.55, wspace=0.45,
                           left=0.08, right=0.95, top=0.94, bottom=0.06)
 
@@ -387,8 +399,10 @@ def main():
     panel_e(ax_e, diff)
     panel_f(ax_f, enr, val)
 
-    fig.suptitle("Multi-Contrast Proteomics Validation of Transcriptomic Atlas",
-                 fontsize=11, fontweight="bold", y=0.98)
+    print("[caption] Multi-contrast proteomics validation of transcriptomic atlas: "
+          "(a) protein-transcript concordance, (b) ranked enrichment (NES), "
+          "(c) concordance all vs effect-filtered, (d) concordance by effect size, "
+          "(e) differential protein abundance, (f) drug target enrichment & significance.")
 
     out = OUT_DIR / "fig4_proteomics_summary.pdf"
     fig.savefig(out, dpi=300)

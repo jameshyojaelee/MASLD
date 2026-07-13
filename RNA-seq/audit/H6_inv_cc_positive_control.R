@@ -260,14 +260,18 @@ prot_sum <- fread(file.path(BASE,
 # published number). Use the union of all rows to estimate rho.
 # The published rho=0.563 is from mrna_protein_concordance_stratified.csv for
 # stratum = "Conserved"; the underlying data is mrna_protein_concordance_summary.csv
-prot <- prot_sum[!is.na(dream_logFC) & !is.na(protein_logFC)]
+# NOTE: the mRNA effect column from mrna_protein_concordance_summary.csv (proteomics
+# area producer, not migrated to bulk_*) is the mRNA side of the mRNA-protein
+# concordance check, not the multi-evidence atlas. Reads below are kept against the
+# on-disk column name and flagged for the CI gate. # C2-OK-sensitivity
+prot <- prot_sum[!is.na(dream_logFC) & !is.na(protein_logFC)]  # C2-OK-sensitivity
 # Collapse duplicates (same gene, multiple datasets) -> take mean per gene
-prot_gene <- prot[, .(dream_logFC = mean(dream_logFC, na.rm = TRUE),
+prot_gene <- prot[, .(dream_logFC = mean(dream_logFC, na.rm = TRUE),  # C2-OK-sensitivity
                       protein_logFC = mean(protein_logFC, na.rm = TRUE),
                       is_conserved = any(isTRUE(is_conserved) |
                                               is_conserved %in% c("TRUE", TRUE, 1L))),
                   by = gene]
-prot_gene <- prot_gene[!is.na(dream_logFC) & !is.na(protein_logFC)]
+prot_gene <- prot_gene[!is.na(dream_logFC) & !is.na(protein_logFC)]  # C2-OK-sensitivity
 cat("  Proteomics genes available:", nrow(prot_gene), "\n")
 
 # Attach biotype
@@ -276,7 +280,7 @@ prot_gene <- merge(prot_gene, atlas[, .(human_symbol, biotype_class)],
 
 # (a) Published: CC subset rho
 cc_prot <- prot_gene[gene %in% cc_genes]
-rho_cc <- suppressWarnings(cor(cc_prot$dream_logFC, cc_prot$protein_logFC, method = "spearman"))
+rho_cc <- suppressWarnings(cor(cc_prot$dream_logFC, cc_prot$protein_logFC, method = "spearman"))  # C2-OK-sensitivity
 cat(sprintf("  (a) CC subset rho (n=%d): %.3f\n", nrow(cc_prot), rho_cc))
 
 # (b) Non-CC protein-coding — size-matched random draw (100 reps)
@@ -285,7 +289,7 @@ set.seed(42)
 rho_b_vec <- numeric(N_DRAWS)
 for (i in seq_len(N_DRAWS)) {
   smp <- nonCC_pc[sample(.N, min(nrow(cc_prot), .N))]
-  rho_b_vec[i] <- suppressWarnings(cor(smp$dream_logFC, smp$protein_logFC,
+  rho_b_vec[i] <- suppressWarnings(cor(smp$dream_logFC, smp$protein_logFC,  # C2-OK-sensitivity
                                         method = "spearman"))
 }
 cat(sprintf("  (b) Non-CC protein-coding size-matched rho median=%.3f, 2.5-97.5%% [%.3f, %.3f]\n",
@@ -308,7 +312,7 @@ for (i in seq_len(N_DRAWS)) {
     }
   }
   smp <- prot_gene[gene %in% drawn]
-  rho_c_vec[i] <- suppressWarnings(cor(smp$dream_logFC, smp$protein_logFC,
+  rho_c_vec[i] <- suppressWarnings(cor(smp$dream_logFC, smp$protein_logFC,  # C2-OK-sensitivity
                                         method = "spearman"))
 }
 cat(sprintf("  (c) Biotype-matched rho median=%.3f, 2.5-97.5%% [%.3f, %.3f]\n",

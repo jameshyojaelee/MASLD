@@ -80,15 +80,14 @@ pA <- ggplot(cs_long, aes(x = trait_label, y = n_cs, fill = CS_type)) +
                EAS_only = "EAS-specific")
   ) +
   labs(x = NULL, y = "Number of credible sets",
-       title = "Credible set architecture (MESuSiE)",
        fill = NULL) +
   theme_masld() +
   theme(
     legend.position = "top",
     legend.key.size = unit(0.3, "cm"),
-    legend.text = element_text(size = 7),
-    plot.title = element_text(size = 9, face = "bold")
+    legend.text = element_text(size = 6)
   )
+message("[caption] Panel A: Credible set architecture (MESuSiE)")
 
 # ===========================================================================
 # Panel B: Variant PIP scatter (MESuSiE vs SuSiEX)
@@ -146,24 +145,23 @@ pB <- ggplot(plot_dat, aes(x = mesusie_pip, y = susiex_pip, color = cs_label)) +
   )) +
   annotate("text", x = 0.05, y = 0.92,
            label = sprintf("rho==%.2f~~(all)", r_all),
-           parse = TRUE, size = 2.8, hjust = 0, color = "gray30") +
+           parse = TRUE, size = GEOM_TEXT_6PT, hjust = 0, color = "black") +
   annotate("text", x = 0.05, y = 0.82,
            label = sprintf("italic(r)==%.2f~~(PIP>0.1)", r_high),
-           parse = TRUE, size = 2.8, hjust = 0, color = shared_col) +
+           parse = TRUE, size = GEOM_TEXT_6PT, hjust = 0, color = shared_col) +
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25)) +
   labs(x = "MESuSiE PIP", y = "SuSiEX PIP",
-       title = "Variant PIP concordance",
        color = NULL) +
   theme_masld() +
   theme(
     legend.position = "top",
     legend.key.size = unit(0.3, "cm"),
-    legend.text = element_text(size = 7),
-    plot.title = element_text(size = 9, face = "bold"),
+    legend.text = element_text(size = 6),
     aspect.ratio = 1
   ) +
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)))
+message("[caption] Panel B: Variant PIP concordance")
 
 # ===========================================================================
 # Panel C: CS size distribution — MESuSiE shared CS vs trait
@@ -196,20 +194,19 @@ pC <- ggplot(total_cs, aes(x = category, y = n_cs,
                             fill = category)) +
   geom_col(width = 0.65, color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%d CS\n(%.0f vars)", n_cs, n_variants)),
-            vjust = -0.3, size = 2.5) +
+            vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c(
     "Shared\n(EUR+EAS)" = shared_col,
     "EUR-\nspecific" = eur_col,
     "EAS-\nspecific" = eas_col
   )) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.25))) +
-  labs(x = NULL, y = "Number of credible sets",
-       title = "Cross-ancestry signal decomposition") +
+  labs(x = NULL, y = "Number of credible sets") +
   theme_masld() +
   theme(
-    legend.position = "none",
-    plot.title = element_text(size = 9, face = "bold")
+    legend.position = "none"
   )
+message("[caption] Panel C: Cross-ancestry signal decomposition")
 
 # ===========================================================================
 # Panel D: Known MASLD gene concordance
@@ -262,7 +259,7 @@ gene_long[, is_shared := gene %in% shared_indicator$gene]
 pD <- ggplot(gene_long, aes(x = method, y = gene, fill = pip)) +
   geom_tile(color = "white", linewidth = 0.5) +
   geom_text(aes(label = ifelse(pip > 0, sprintf("%.2f", pip), "")),
-            size = 2.5, color = ifelse(gene_long$pip > 0.6, "white", "gray20")) +
+            size = GEOM_TEXT_6PT, color = ifelse(gene_long$pip > 0.6, "white", "black")) +
   # Mark shared CS genes
   geom_point(data = gene_long[is_shared == TRUE & method == "MESuSiE"],
              aes(x = method, y = gene),
@@ -272,19 +269,18 @@ pD <- ggplot(gene_long, aes(x = method, y = gene, fill = pip)) +
     midpoint = 0.5, limits = c(0, 1),
     name = "Max PIP"
   ) +
-  labs(x = NULL, y = NULL,
-       title = "Known MASLD gene fine-mapping") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
   theme(
     legend.position = "right",
     legend.key.size = unit(0.3, "cm"),
     legend.key.height = unit(0.8, "cm"),
-    legend.text = element_text(size = 7),
-    legend.title = element_text(size = 7),
-    plot.title = element_text(size = 9, face = "bold"),
-    axis.text.y = element_text(face = "italic", size = 7),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 6),
+    axis.text.y = element_text(face = "italic", size = 6),
     panel.grid = element_blank()
   )
+message("[caption] Panel D: Known MASLD gene fine-mapping")
 
 # ===========================================================================
 # Assemble composite figure
@@ -294,12 +290,12 @@ cat("Assembling composite figure...\n")
 composite <- (pA | pB) / (pC | pD) +
   plot_annotation(
     tag_levels = "A",
-    theme = theme(plot.tag = element_text(face = "bold", size = 11))
+    theme = theme(plot.tag = element_text(face = "plain", size = 11))
   )
 
 # Save composite
 pdf_path <- file.path(OUT_DIR, "panels", "figS09d_mesusie_susiex_comparison.pdf")
-ggsave(pdf_path, composite, width = 10, height = 8, device = cairo_pdf)
+ggsave(pdf_path, composite, width = fig_full_width, height = 8 * fig_full_width / 10, device = cairo_pdf)
 cat(sprintf("Saved: %s\n", pdf_path))
 
 # ===========================================================================

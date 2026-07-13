@@ -45,8 +45,8 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 if (!exists("placeholder")) {
   placeholder <- function(label) {
     ggplot() +
-      annotate("text", x = 0.5, y = 0.5, label = label, size = 2.5,
-               color = "gray50") +
+      annotate("text", x = 0.5, y = 0.5, label = label, size = GEOM_TEXT_6PT,
+               color = "black") +
       theme_void()
   }
 }
@@ -144,13 +144,11 @@ tryCatch({
     geom_tile(color = "white", linewidth = 0.6) +
     geom_tile(data = heat[is_current == TRUE],
               color = COL_CURRENT, fill = NA, linewidth = 1.2) +
-    geom_text(aes(label = n_genes), size = 2.2, fontface = "bold",
+    geom_text(aes(label = n_genes), size = GEOM_TEXT_6PT, fontface = "plain",
               color = ifelse(heat$n_genes > max(heat$n_genes) * 0.6, "white", "black")) +
     scale_fill_viridis_c(option = "mako", direction = -1,
                          name = "Unique\ngenes", labels = scales::comma) +
     labs(
-      title = "p12 prior sensitivity: gene counts",
-      subtitle = "Box = current setting (p12 = 5×10⁻⁶)",
       x = "p12 prior value",
       y = NULL
     ) +
@@ -163,6 +161,7 @@ tryCatch({
       legend.position = "right"
     )
 
+  message("[caption] Panel (a): p12 prior sensitivity, gene counts. Box = current setting (p12 = 5x10^-6).")
   cat("  Panel (a) built successfully.\n")
 }, error = function(e) {
   cat(sprintf("  Panel (a) FAILED: %s\n", conditionMessage(e)))
@@ -249,7 +248,7 @@ tryCatch({
                color = "grey40", linewidth = 0.3) +
     geom_text(data = annot_df,
               aes(x = 0.08, y = 0.91, label = label),
-              size = 2.2, color = "black", hjust = 0, inherit.aes = FALSE) +
+              size = GEOM_TEXT_6PT, color = "black", hjust = 0, inherit.aes = FALSE) +
     facet_wrap(~ comparison, nrow = 1) +
     scale_color_manual(values = color_map, name = NULL,
                        guide = guide_legend(override.aes = list(size = 2))) +
@@ -258,8 +257,6 @@ tryCatch({
     scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1),
                        labels = c("0", "0.5", "1")) +
     labs(
-      title = "PP.H4 rank stability across p12 priors",
-      subtitle = "x-axis: current (p12 = 5×10⁻⁶); dashed lines at PP.H4 = 0.5",
       x = "PP.H4 (current p12 = 5×10⁻⁶)",
       y = "PP.H4 (alternative p12)"
     ) +
@@ -267,6 +264,7 @@ tryCatch({
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"))
 
+  message("[caption] Panel (b): PP.H4 rank stability across p12 priors. x-axis = current (p12 = 5x10^-6); dashed lines at PP.H4 = 0.5.")
   cat("  Panel (b) built successfully.\n")
 }, error = function(e) {
   cat(sprintf("  Panel (b) FAILED: %s\n", conditionMessage(e)))
@@ -323,16 +321,15 @@ tryCatch({
     geom_point(size = 1.8) +
     geom_text(data = annot_snp,
               aes(x = min_snps, y = n_genes, label = n_genes, color = pp4_label),
-              size = 2.0, vjust = -0.9, fontface = "bold", show.legend = FALSE) +
+              size = GEOM_TEXT_6PT, vjust = -0.9, fontface = "plain", show.legend = FALSE) +
     annotate("text", x = current_snp, y = max(snp_dt$n_genes) * 0.97,
-             label = "current\n(n=100)", size = 1.9, color = "grey40",
+             label = "current\n(n=100)", size = GEOM_TEXT_6PT, color = "black",
              hjust = -0.05, lineheight = 0.85) +
     scale_color_manual(values = thr_pal, name = NULL) +
     scale_x_continuous(breaks = min_snp_grid,
                        labels = as.character(min_snp_grid)) +
     scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0.05, 0.12))) +
     labs(
-      title = "Sensitivity to minimum SNP count threshold",
       x = "Minimum SNPs per COLOC window",
       y = "Unique genes (any GWAS)"
     ) +
@@ -340,6 +337,7 @@ tryCatch({
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"))
 
+  message("[caption] Panel (c): sensitivity to minimum SNP count threshold per COLOC window.")
   cat("  Panel (c) built successfully.\n")
 }, error = function(e) {
   cat(sprintf("  Panel (c) FAILED: %s\n", conditionMessage(e)))
@@ -380,21 +378,20 @@ tryCatch({
     annotate("text",
              x = mean_pal + 0.3, y = Inf,
              label = sprintf("Mean: %.1f%%", mean_pal),
-             size = 2.0, color = COL_CURRENT, vjust = 1.4, hjust = 0,
-             fontface = "bold") +
+             size = GEOM_TEXT_6PT, color = COL_CURRENT, vjust = 1.4, hjust = 0,
+             fontface = "plain") +
     annotate("text",
              x = med_pal - 0.3, y = Inf,
              label = sprintf("Median: %.1f%%", med_pal),
-             size = 2.0, color = "grey40", vjust = 2.8, hjust = 1) +
+             size = GEOM_TEXT_6PT, color = "black", vjust = 2.8, hjust = 1) +
     scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.12))) +
     labs(
-      title = "Palindromic SNP burden per COLOC window",
-      subtitle = subtitle_text,
       x = "Palindromic SNPs (%)",
       y = "COLOC windows"
     ) +
     theme_masld(base_size = 7)
 
+  message(sprintf("[caption] Panel (d): palindromic SNP burden per COLOC window. %s", subtitle_text))
   cat("  Panel (d) built successfully.\n")
 }, error = function(e) {
   cat(sprintf("  Panel (d) FAILED: %s\n", conditionMessage(e)))
@@ -446,7 +443,7 @@ tryCatch({
                linewidth = 0.4, inherit.aes = FALSE) +
     geom_text(data = thr_lines,
               aes(x = xint, y = Inf, label = xint),
-              vjust = 1.4, size = 1.9, color = "black",
+              vjust = 1.4, size = GEOM_TEXT_6PT, color = "black",
               inherit.aes = FALSE) +
     scale_fill_manual(
       values = region_pal,
@@ -459,8 +456,6 @@ tryCatch({
     scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.12))) +
     scale_x_continuous(breaks = c(0, 0.25, 0.5, 0.75, 1.0)) +
     labs(
-      title = "PP.H4 distribution by region type",
-      subtitle = "Genes with best PP.H4 > 0.1; dashed lines at 0.5, 0.8, 0.9",
       x = "Best PP.H4 (any GWAS)",
       y = "Genes"
     ) +
@@ -468,6 +463,7 @@ tryCatch({
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"))
 
+  message("[caption] Panel (e): PP.H4 distribution by region type. Genes with best PP.H4 > 0.1; dashed lines at 0.5, 0.8, 0.9.")
   cat("  Panel (e) built successfully.\n")
 }, error = function(e) {
   cat(sprintf("  Panel (e) FAILED: %s\n", conditionMessage(e)))
@@ -526,10 +522,10 @@ tryCatch({
     geom_vline(xintercept = 100, linetype = "dashed",
                color = "black",  linewidth = 0.5) +
     annotate("text", x = 12, y = Inf,
-             label = "n=10\n(old)", size = 1.9, color = "grey40",
+             label = "n=10\n(old)", size = GEOM_TEXT_6PT, color = "black",
              vjust = 1.4, hjust = 0, lineheight = 0.85) +
     annotate("text", x = 103, y = Inf,
-             label = "n=100\n(current)", size = 1.9, color = "black",
+             label = "n=100\n(current)", size = GEOM_TEXT_6PT, color = "black",
              vjust = 1.4, hjust = 0, lineheight = 0.85) +
     scale_fill_manual(values  = group_pal, name = NULL) +
     scale_color_manual(values = group_pal, name = NULL, guide = "none") +
@@ -538,8 +534,6 @@ tryCatch({
     scale_y_continuous(labels = scales::comma,
                        expand = expansion(mult = c(0, 0.12))) +
     labs(
-      title = "SNP count distribution in COLOC windows",
-      subtitle = "Dashed = current threshold (n=100); dotted = old threshold (n=10)",
       x = "SNPs per COLOC window (trimmed at 99th pct.)",
       y = "Windows"
     ) +
@@ -547,6 +541,7 @@ tryCatch({
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"))
 
+  message("[caption] Panel (f): SNP count distribution in COLOC windows. Dashed = current threshold (n=100); dotted = old threshold (n=10).")
   cat("  Panel (f) built successfully.\n")
 }, error = function(e) {
   cat(sprintf("  Panel (f) FAILED: %s\n", conditionMessage(e)))
@@ -586,18 +581,16 @@ for (spec in panel_specs) {
 # Assemble combined figure with patchwork
 # ═══════════════════════════════════════════════════════════════════════════
 cat("Assembling composite figure...\n")
+message("[caption] COLOC threshold sensitivity analysis (panels a-f).")
 
 combined <- tryCatch({
   (p_a | p_b) /
   (p_c | p_d) /
   (p_e | p_f) +
     patchwork::plot_annotation(
-      title   = "COLOC threshold sensitivity analysis",
       tag_levels = "a",
       theme = theme(
-        plot.title = element_text(size = 9, face = "bold", hjust = 0,
-                                  family = "Helvetica"),
-        plot.tag   = element_text(size = 8, face = "bold", family = "Helvetica")
+        plot.tag   = element_text(size = 6, face = "plain", family = "Helvetica")
       )
     ) &
     theme(plot.margin = margin(3, 4, 3, 4))
@@ -615,14 +608,14 @@ tryCatch({
   pdf_dev <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
   if (!is.null(combined)) {
     ggplot2::ggsave(OUT, combined,
-                    width  = 12,
-                    height = 14,
+                    width  = fig_full_width,
+                    height = 8.27,
                     dpi    = 300,
                     device = pdf_dev)
-    cat(sprintf("SUCCESS: Composite figure saved (12 x 14 in).\n"))
+    cat(sprintf("SUCCESS: Composite figure saved (%.2f x 8.27 in).\n", fig_full_width))
   } else {
     # Fallback: save panels manually with pdf()
-    pdf_dev(OUT, width = 12, height = 14)
+    pdf_dev(OUT, width = fig_full_width, height = 8.27)
     gridExtra::grid.arrange(
       ggplotGrob(p_a), ggplotGrob(p_b),
       ggplotGrob(p_c), ggplotGrob(p_d),

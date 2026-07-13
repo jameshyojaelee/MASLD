@@ -61,15 +61,15 @@ message(sprintf("Plot data (PRJNA excluded): %s samples across %s cohorts",
 # Cohort labels (short names matching Fig 1 convention)
 # ----------------------------------------------------------------------------
 cohort_short <- c(
-  GSE126848   = "Suppli",
-  GSE130970   = "Hoang",
-  GSE135251   = "Govaere",
-  GSE162694   = "Bril",
-  GSE167523   = "Kozumi",
-  GSE174478   = "Kawamura",
-  GSE193066   = "Hoshida",
-  GSE213621   = "Chen",
-  GSE240729   = "Verschuren"
+  GSE126848   = "GSE126848",
+  GSE130970   = "GSE130970",
+  GSE135251   = "GSE135251",
+  GSE162694   = "GSE162694",
+  GSE167523   = "GSE167523",
+  GSE174478   = "GSE174478",
+  GSE193066   = "GSE193066",
+  GSE213621   = "GSE213621",
+  GSE240729   = "GSE240729"
 )
 plot_dt[, cohort := factor(cohort_short[dataset],
                            levels = unname(cohort_short))]
@@ -117,16 +117,16 @@ plot_dt[, unified_dx := factor(unified_dx, levels = c(
 # ----------------------------------------------------------------------------
 # 10-cohort palette — rotate Tab10-style hues
 cohort_colors <- c(
-  "Suppli"     = "#1F77B4",
-  "Hoang"      = "#FF7F0E",
-  "Govaere"    = "#2CA02C",
-  "Bril"       = "#D62728",
-  "Kozumi"     = "#9467BD",
-  "Kawamura"   = "#8C564B",
-  "Hoshida"    = "#E377C2",
-  "Chen"       = "#7F7F7F",
-  "Verschuren" = "#BCBD22",
-  "Gerhard"    = "#17BECF"
+  "GSE126848"   = "#1F77B4",
+  "GSE130970"   = "#FF7F0E",
+  "GSE135251"   = "#2CA02C",
+  "GSE162694"   = "#D62728",
+  "GSE167523"   = "#9467BD",
+  "GSE174478"   = "#8C564B",
+  "GSE193066"   = "#E377C2",
+  "GSE213621"   = "#7F7F7F",
+  "GSE240729"   = "#BCBD22",
+  "PRJNA512027" = "#17BECF"
 )
 
 # Control is always rendered in neutral gray across all panels (project
@@ -171,9 +171,8 @@ umap_xy <- function(p, ...) {
   p +
     coord_fixed() +
     labs(x = "UMAP 1", y = "UMAP 2", ...) +
-    theme_masld(base_size = 7) +
-    theme(plot.title = element_text(size = 8, face = "bold"),
-          legend.title = element_text(size = 6.5, face = "bold"),
+    theme_masld(base_size = 6) +
+    theme(legend.title = element_text(size = 6, face = "plain"),
           legend.text  = element_text(size = 6),
           legend.key.size = unit(0.28, "cm"))
 }
@@ -195,8 +194,7 @@ p1 <- umap_xy(
     rasterize_layer(geom_point(size = 0.35, alpha = 0.7, shape = 16)) +
     scale_color_manual(values = cohort_colors, name = "Cohort", drop = FALSE) +
     guides(color = guide_legend(ncol = 2,
-                                override.aes = list(size = 1.4, alpha = 1))),
-  title = "Cohort")
+                                override.aes = list(size = 1.4, alpha = 1))))
 
 # ----------------------------------------------------------------------------
 # Panel 2 — by disease state
@@ -206,8 +204,7 @@ p2 <- umap_xy(
     rasterize_layer(geom_point(size = 0.35, alpha = 0.7, shape = 16)) +
     scale_color_manual(values = disease_colors, name = "State",
                        na.value = "gray85") +
-    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))),
-  title = "Disease state")
+    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))))
 
 # ----------------------------------------------------------------------------
 # Panel 3 — by fibrosis stage (1,149 samples; rest gray)
@@ -218,9 +215,7 @@ p3 <- umap_xy(
     rasterize_layer(geom_point(size = 0.35, alpha = 0.75, shape = 16)) +
     scale_color_manual(values = fibrosis_stage_colors, name = "Fibrosis",
                        na.value = "gray85", drop = FALSE) +
-    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))),
-  title = sprintf("Fibrosis stage (n = %s)",
-                  comma(sum(!is.na(plot_dt$fib_factor)))))
+    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))))
 
 # ----------------------------------------------------------------------------
 # Panel 4 — by diagnosis (Control / NAFL / Borderline / NASH)
@@ -231,9 +226,7 @@ p4 <- umap_xy(
     rasterize_layer(geom_point(size = 0.35, alpha = 0.75, shape = 16)) +
     scale_color_manual(values = dx_colors, name = "Diagnosis",
                        na.value = "gray85", drop = FALSE) +
-    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))),
-  title = sprintf("Diagnosis (n = %s)",
-                  comma(sum(!is.na(plot_dt$dx)))))
+    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))))
 
 # ----------------------------------------------------------------------------
 # Panel 5 — by sex
@@ -245,9 +238,7 @@ p5 <- umap_xy(
     scale_color_manual(values = sex_colors, name = "Sex",
                        na.value = "gray85", drop = FALSE,
                        labels = c(F = "Female", M = "Male")) +
-    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))),
-  title = sprintf("Sex (n = %s)",
-                  comma(sum(!is.na(plot_dt$sex_factor)))))
+    guides(color = guide_legend(override.aes = list(size = 1.4, alpha = 1))))
 
 # ----------------------------------------------------------------------------
 # Panel 6 — by NAS score (continuous gradient)
@@ -260,9 +251,7 @@ p6 <- umap_xy(
       colors = c("#FFF8E1", "#FFD54F", "#F57F17", "#C9265E", "#A01753"),
       limits = c(0, 8), breaks = c(0, 2, 4, 6, 8),
       name = "NAS",
-      na.value = "gray85"),
-  title = sprintf("NAS score (n = %s)",
-                  comma(sum(!is.na(plot_dt$nas_num)))))
+      na.value = "gray85"))
 
 # ----------------------------------------------------------------------------
 # Panel 7 — unified condition (harmonized diagnosis + fibrosis-only fallback)
@@ -277,26 +266,24 @@ p7 <- umap_xy(
                        name = "Condition", na.value = "gray85",
                        drop = FALSE) +
     guides(color = guide_legend(ncol = 1,
-                                override.aes = list(size = 1.4, alpha = 1))),
-  title = sprintf("Unified condition (n = %s)",
-                  comma(sum(!is.na(plot_dt$unified_dx)))))
+                                override.aes = list(size = 1.4, alpha = 1))))
 
 # ----------------------------------------------------------------------------
 # Compose 2 x 4 (8th cell empty)
 # ----------------------------------------------------------------------------
 spacer <- patchwork::plot_spacer()
-fig <- (p1 | p7 | p2 | p5) / (p4 | p3 | p6 | spacer) +
-  plot_annotation(
-    title    = "Integrated atlas — UMAP of 1,259 QC-passing samples",
-    subtitle = "Harmony batch-corrected on dataset; 9 cohorts (PRJNA512027 excluded)",
-    theme = theme(plot.title    = element_text(size = 9, face = "bold",
-                                               family = "Helvetica"),
-                  plot.subtitle = element_text(size = 7, color = "gray35",
-                                               family = "Helvetica"))
-  )
+fig <- (p1 | p7 | p2 | p5) / (p4 | p3 | p6 | spacer)
+
+message(sprintf(
+  "[caption] Integrated atlas - UMAP of 1,259 QC-passing samples. Harmony batch-corrected on dataset; 9 cohorts (PRJNA512027 excluded). Panels: (1) Cohort; (2) Unified condition (n = %s); (3) Disease state; (4) Sex (n = %s); (5) Diagnosis (n = %s); (6) Fibrosis stage (n = %s); (7) NAS score (n = %s)",
+  comma(sum(!is.na(plot_dt$unified_dx))),
+  comma(sum(!is.na(plot_dt$sex_factor))),
+  comma(sum(!is.na(plot_dt$dx))),
+  comma(sum(!is.na(plot_dt$fib_factor))),
+  comma(sum(!is.na(plot_dt$nas_num)))))
 
 save_fig(fig, file.path(PANEL_DIR, "fig1_umap.pdf"),
-         width = fig_full_width * 1.6, height = 4.6)
+         width = fig_full_width, height = 4.6 / 1.6)
 
 fp <- file.path(PANEL_DIR, "fig1_umap.pdf")
 if (file.exists(fp)) {

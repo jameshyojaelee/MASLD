@@ -28,8 +28,8 @@ INT_RES <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/r
 OUTDIR  <- file.path(BASE, "RNA-seq/results/celltype_attribution")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
-message("[1] Loading bulk dream DE...")
-bulk <- fread(file.path(INT_RES, "dream_results_ashr.csv"),
+message("[1] Loading canonical bulk DE (limma-voom-qw C2)...")
+bulk <- fread(file.path(INT_RES, "canonical_deg_results.csv"),
               select = c("gene","symbol","logFC","t","padj"))
 bulk <- bulk[!is.na(symbol) & symbol != ""]
 bulk <- bulk[order(-abs(t))][!duplicated(symbol)]

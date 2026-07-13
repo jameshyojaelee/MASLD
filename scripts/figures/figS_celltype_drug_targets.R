@@ -33,13 +33,12 @@ pA <- ggplot(cur[!is.na(bulk_lfc_full)],
   geom_text(aes(label = sprintf("p=%.2g", bulk_padj_full),
                 x = bulk_lfc_full),
             hjust = ifelse(cur[!is.na(bulk_lfc_full)]$bulk_lfc_full > 0, -0.1, 1.1),
-            size = 2) +
+            size = GEOM_TEXT_6PT) +
   scale_fill_brewer(palette = "Set3", name = "Primary\ncelltype") +
   scale_x_continuous(expand = expansion(mult = 0.25)) +
-  labs(x = "Bulk dream logFC (ashr)", y = NULL,
-       title = "Curated MASLD drug targets: bulk DE + primary cell type") +
+  labs(x = "Bulk dream logFC (ashr)", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 5.8),
+  theme(axis.text.y = element_text(size = 6),
         legend.position = "right",
         legend.key.size = unit(3, "mm"),
         legend.text = element_text(size = 6))
@@ -53,12 +52,11 @@ ct_load[, primary_celltype := factor(primary_celltype,
 pB <- ggplot(ct_load, aes(n_target_hits, primary_celltype)) +
   geom_col(fill = "#4472C4", width = 0.6, color = "white") +
   geom_text(aes(label = sprintf("%d (%d drugs)", n_target_hits, n_distinct_drugs)),
-            hjust = -0.05, size = 2.2) +
+            hjust = -0.05, size = GEOM_TEXT_6PT) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.3))) +
-  labs(x = "Drug-target gene hits", y = NULL,
-       title = "Drug-target gene load per cell type (OpenTargets)") +
+  labs(x = "Drug-target gene hits", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 6.5))
+  theme(axis.text.y = element_text(size = 6))
 
 # Panel C: top drugs by primary celltype
 top_drugs <- drug_top[1:20]
@@ -66,18 +64,18 @@ top_drugs[, drug_name := factor(drug_name, levels = rev(drug_name))]
 pC <- ggplot(top_drugs, aes(N, drug_name, fill = primary_celltype)) +
   geom_col(width = 0.65, color = "white") +
   geom_text(aes(label = sprintf("%d (%s)", N, primary_celltype)),
-            hjust = -0.05, size = 2) +
+            hjust = -0.05, size = GEOM_TEXT_6PT) +
   scale_fill_brewer(palette = "Set3", guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.3))) +
-  labs(x = "Target gene hits in primary celltype", y = NULL,
-       title = "Top 20 OpenTargets drugs by primary cell type") +
+  labs(x = "Target gene hits in primary celltype", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 5.8))
+  theme(axis.text.y = element_text(size = 6))
 
 fig <- (pA | pB) / pC +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_F3_celltype_drug_targets.pdf")
-ggsave(out_path, fig, width = 14, height = 12)
+message("[caption] A: Curated MASLD drug targets, bulk DE + primary cell type. B: Drug-target gene load per cell type (OpenTargets). C: Top 20 OpenTargets drugs by primary cell type.")
+ggsave(out_path, fig, width = 7.09, height = 6.08)
 message("Saved: ", out_path)

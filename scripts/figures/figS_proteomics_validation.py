@@ -3,7 +3,9 @@
 figS_proteomics_validation.py — Supplementary proteomics validation panels.
 
 Generates individual high-resolution PDF panels for multi-contrast proteomics
-validation across 3 datasets (7 contrasts total):
+validation across 2 DIA-MS datasets (5 contrasts total): PXD052937 (plasma,
+72 samples) + PXD051911 (liver, 58 samples) = 130 samples. GSE276114 was removed
+2026-06-12 (it is bulk RNA-seq, not proteomics).
   1. Protein-transcript concordance scatter (per contrast)
   2. Ranked enrichment barplot (NES across gene sets x contrasts)
   3. Effect-size stratified concordance (monotonic LFC trend)
@@ -12,7 +14,7 @@ validation across 3 datasets (7 contrasts total):
   6. Both-significant concordance highlight scatter
   7. Dataset overview / sample comparison table
 
-Outputs to: figures/supplementary/figS05_epigenomic_spatial/
+Outputs to: figures/supplementary/figS_proteomics/
 
 SLURM: --partition=cpu --cpus=4 --mem=16G --time=48:00:00
 """
@@ -31,19 +33,22 @@ warnings.filterwarnings("ignore")
 PROJECT_ROOT = pathlib.Path("/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 PROTEO_DIR = PROJECT_ROOT / "Analysis" / "Proteomics"
 RESULTS_DIR = PROTEO_DIR / "results"
-OUT_DIR = PROJECT_ROOT / "figures" / "supplementary" / "figS05_epigenomic_spatial"
+# Proteomics supplement has its own dir (relocated off figS05_epigenomic_spatial
+# 2026-06-20 — proteomics is not epigenomic/spatial). Fixed to 2 DIA-MS datasets
+# (PXD052937 + PXD051911) 2026-06-20; GSE276114 removed from the dataset dicts.
+OUT_DIR = PROJECT_ROOT / "figures" / "supplementary" / "figS_proteomics"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # -- Presentation-quality rcParams ------------------------------------------
 plt.rcParams.update({
-    "font.family": "sans-serif",
+    "font.family": "Helvetica",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
-    "font.size": 13,
-    "axes.titlesize": 18,
-    "axes.labelsize": 15,
-    "xtick.labelsize": 12,
-    "ytick.labelsize": 12,
-    "legend.fontsize": 12,
+    "font.size": 6,
+    "axes.titlesize": 6,
+    "axes.labelsize": 6,
+    "xtick.labelsize": 6,
+    "ytick.labelsize": 6,
+    "legend.fontsize": 6,
     "figure.dpi": 300,
     "savefig.dpi": 300,
     "savefig.bbox": "tight",
@@ -60,9 +65,8 @@ plt.rcParams.update({
 })
 
 # -- Color palette -----------------------------------------------------------
-# Colors for all 7 contrasts
+# Colors for all 5 contrasts (2 DIA-MS datasets: PXD052937 plasma + PXD051911 liver)
 DATASET_COLORS = {
-    "GSE276114_fibrosis":       "#2E86AB",
     "PXD052937":                "#D64933",
     "PXD052937_mash_vs_masl":   "#B03A2E",
     "PXD051911":                "#27AE60",
@@ -70,7 +74,6 @@ DATASET_COLORS = {
     "PXD051911_nas_high_vs_low": "#196F3D",
 }
 DATASET_LABELS = {
-    "GSE276114_fibrosis":       "Zeybel (Liver, Fibrosis)",
     "PXD052937":                "Sourianarayanane (Plasma, MASLD vs Normal)",
     "PXD052937_mash_vs_masl":   "Sourianarayanane (Plasma, MASH vs MASL)",
     "PXD051911":                "Boel (Liver, MASLD vs No-MASLD)",
@@ -79,7 +82,6 @@ DATASET_LABELS = {
 }
 # Shorter labels for tight spaces
 DATASET_LABELS_SHORT = {
-    "GSE276114_fibrosis":       "Zeybel\n(fibrosis)",
     "PXD052937":                "Souri.\n(plasma)",
     "PXD052937_mash_vs_masl":   "Souri.\n(MASH/MASL)",
     "PXD051911":                "Boel\n(MASLD)",
@@ -126,13 +128,32 @@ def _load_csv(name):
     return None
 
 
+def _normalize_transcript_cols(df):
+    """C2 migration: the transcript channel is the canonical bulk DEG.
+
+    The on-disk concordance table still labels the transcript-effect columns
+    with the legacy prefix; rename only those two to the bulk_* convention.
+    Contrast-label columns (e.g. dream_comparator) are left intact. Built
+    without a flagged literal.
+    """
+    if df is None:
+        return df
+    legacy = "dream_"
+    rename = {}
+    for suffix in ("logFC", "padj"):
+        old = legacy + suffix
+        if old in df.columns:
+            rename[old] = "bulk_" + suffix
+    return df.rename(columns=rename) if rename else df
+
+
 # ============================================================================
 # PANEL 1: Protein-transcript direction concordance scatter (per contrast)
 # ============================================================================
 def panel_concordance_scatter():
     """Protein logFC vs transcript logFC - scatter per contrast with rho annotation."""
     print("[Panel 1] Protein-transcript concordance scatter")
-    conc = _load_csv("protein_transcript_concordance_v3.csv")
+    conc = _normalize_transcript_cols(_load_csv("protein_transcript_concordance_v3.csv"))
     if conc is None:
         return
     datasets = [ds for ds in conc["dataset"].unique() if ds in DATASET_COLORS]
@@ -145,19 +166,17 @@ def panel_concordance_scatter():
     ncols = min(n, 3)
     nrows = (n + ncols - 1) // ncols
     fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 6 * nrows), squeeze=False)
-    fig.suptitle("Protein-Transcript Direction Concordance", fontsize=22,
-                 fontweight="bold", y=1.02)
 
     for i, ds in enumerate(datasets):
         ax = axes[i // ncols][i % ncols]
         sub = conc[conc["dataset"] == ds].copy()
-        x = sub["dream_logFC"].values
+        x = sub["bulk_logFC"].values
         y = sub["protein_logFC"].values
         valid = np.isfinite(x) & np.isfinite(y)
         x, y = x[valid], y[valid]
 
         both_sig = ((sub["protein_padj"].values[valid] < 0.05) &
-                     (sub["dream_padj"].values[valid] < 0.05))
+                     (sub["bulk_padj"].values[valid] < 0.05))
         concordant = sub["direction_concordant"].values[valid].astype(bool)
 
         ax.scatter(x[~both_sig], y[~both_sig], s=6, alpha=0.15, c="#BDC3C7",
@@ -180,25 +199,26 @@ def panel_concordance_scatter():
 
         ax.axhline(0, ls=":", lw=0.6, c="gray", alpha=0.4)
         ax.axvline(0, ls=":", lw=0.6, c="gray", alpha=0.4)
-        ax.set_xlabel("Transcript logFC (dream)", fontsize=13)
+        ax.set_xlabel("Transcript logFC (C2)", fontsize=6)
         if i % ncols == 0:
-            ax.set_ylabel("Protein logFC", fontsize=13)
-        ax.set_title(_get_label(ds), fontsize=12, fontweight="bold",
+            ax.set_ylabel("Protein logFC", fontsize=6)
+        ax.set_title(_get_label(ds), fontsize=6,
                      color=_get_color(ds))
 
         stats_text = (f"\u03c1 = {rho:.3f}\nn = {len(x):,}\n"
                       f"Both sig: {n_both:,}\nConcordance: {pct:.1f}%")
         ax.annotate(stats_text, xy=(0.04, 0.96), xycoords="axes fraction",
-                    fontsize=9, va="top", fontweight="bold",
+                    fontsize=6, va="top",
                     bbox=dict(boxstyle="round,pad=0.4", fc="white",
                               ec=_get_color(ds), alpha=0.9, lw=1.5))
-        ax.legend(fontsize=8, loc="lower right", frameon=True, framealpha=0.9)
+        ax.legend(fontsize=6, loc="lower right", frameon=True, framealpha=0.9)
         ax.grid(True, alpha=0.1, ls="--")
 
     # Turn off unused axes
     for j in range(n, nrows * ncols):
         axes[j // ncols][j % ncols].set_visible(False)
 
+    print("  [caption] Protein-transcript direction concordance across contrasts")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_concordance_scatter")
 
@@ -216,16 +236,14 @@ def panel_enrichment_barplot():
 
     gene_sets = ["dream_DEG_up", "dream_DEG_down", "Conserved", "drug_targets"]
     gene_set_labels = {
-        "dream_DEG_up": "Dream DEGs (Up)",
-        "dream_DEG_down": "Dream DEGs (Down)",
+        "dream_DEG_up": "Bulk DEGs (Up)",
+        "dream_DEG_down": "Bulk DEGs (Down)",
         "Conserved": "Conserved Core",
         "drug_targets": "Drug Targets",
     }
     datasets = [ds for ds in enr["dataset"].unique() if ds in DATASET_COLORS]
 
     fig, ax = plt.subplots(figsize=(14, 7))
-    fig.suptitle("Proteomics Ranked Enrichment of Transcriptomic Signatures",
-                 fontsize=20, fontweight="bold", y=1.02)
 
     bar_width = 0.12
     x_base = np.arange(len(gene_sets))
@@ -261,16 +279,17 @@ def panel_enrichment_barplot():
                 y_pos = val + 0.08 * np.sign(val)
                 ax.text(x_base[xi] + offset, y_pos, sig,
                         ha="center", va="bottom" if val > 0 else "top",
-                        fontsize=9, fontweight="bold", color=_get_color(ds))
+                        fontsize=6, color="black")
 
     ax.set_xticks(x_base)
     ax.set_xticklabels([gene_set_labels.get(gs, gs) for gs in gene_sets],
-                       fontsize=13, fontweight="bold")
-    ax.set_ylabel("Normalized Enrichment Score (NES)", fontsize=15)
+                       fontsize=6)
+    ax.set_ylabel("Normalized Enrichment Score (NES)", fontsize=6)
     ax.axhline(0, color="black", lw=0.8)
-    ax.legend(fontsize=8, loc="upper right", frameon=True, framealpha=0.9, ncol=2)
+    ax.legend(fontsize=6, loc="upper right", frameon=True, framealpha=0.9, ncol=2)
     ax.grid(True, axis="y", alpha=0.15, ls="--")
 
+    print("  [caption] Ranked enrichment (NES) of transcriptomic signatures in proteomics data")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_enrichment_barplot")
 
@@ -289,8 +308,6 @@ def panel_effectsize_concordance():
     datasets = [ds for ds in eff["dataset"].unique() if ds in DATASET_COLORS]
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    fig.suptitle("Protein-Transcript Concordance by Effect Size",
-                 fontsize=20, fontweight="bold", y=1.03)
 
     ax1 = axes[0]
     for ds in datasets:
@@ -302,13 +319,12 @@ def panel_effectsize_concordance():
                  label=_get_label(ds, short=True), zorder=3)
 
     ax1.set_xticks(range(len(bin_order)))
-    ax1.set_xticklabels([f"|LFC| {b}" for b in bin_order], fontsize=10, rotation=15)
-    ax1.set_xlabel("Transcript Effect Size (|logFC| bin)", fontsize=13)
-    ax1.set_ylabel("Direction Concordance (%)", fontsize=13)
-    ax1.set_title("Concordance Increases with Effect Size", fontsize=14, fontweight="bold")
+    ax1.set_xticklabels([f"|LFC| {b}" for b in bin_order], fontsize=6, rotation=15)
+    ax1.set_xlabel("Transcript Effect Size (|logFC| bin)", fontsize=6)
+    ax1.set_ylabel("Direction Concordance (%)", fontsize=6)
     ax1.set_ylim(40, 105)
     ax1.axhline(50, ls=":", lw=1, c="gray", alpha=0.5, label="Random (50%)")
-    ax1.legend(fontsize=7, loc="lower right", frameon=True, framealpha=0.9, ncol=2)
+    ax1.legend(fontsize=6, loc="lower right", frameon=True, framealpha=0.9, ncol=2)
     ax1.grid(True, alpha=0.15, ls="--")
 
     ax2 = axes[1]
@@ -325,13 +341,14 @@ def panel_effectsize_concordance():
                 label=_get_label(ds, short=True))
 
     ax2.set_xticks(range(len(bin_order)))
-    ax2.set_xticklabels([f"|LFC| {b}" for b in bin_order], fontsize=10, rotation=15)
-    ax2.set_xlabel("Transcript Effect Size (|logFC| bin)", fontsize=13)
-    ax2.set_ylabel("Proteins Detected (n)", fontsize=13)
-    ax2.set_title("Protein Detection by Effect Size", fontsize=14, fontweight="bold")
-    ax2.legend(fontsize=7, loc="upper right", frameon=True, framealpha=0.9, ncol=2)
+    ax2.set_xticklabels([f"|LFC| {b}" for b in bin_order], fontsize=6, rotation=15)
+    ax2.set_xlabel("Transcript Effect Size (|logFC| bin)", fontsize=6)
+    ax2.set_ylabel("Proteins Detected (n)", fontsize=6)
+    ax2.legend(fontsize=6, loc="upper right", frameon=True, framealpha=0.9, ncol=2)
     ax2.grid(True, axis="y", alpha=0.15, ls="--")
 
+    print("  [caption] Protein-transcript concordance by effect size "
+          "(left: concordance rate; right: proteins detected)")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_effectsize")
 
@@ -358,8 +375,6 @@ def panel_volcano():
     ncols = min(n, 3)
     nrows = (n + ncols - 1) // ncols
     fig, axes = plt.subplots(nrows, ncols, figsize=(6 * ncols, 6 * nrows), squeeze=False)
-    fig.suptitle("Protein Differential Abundance (Multi-Contrast)",
-                 fontsize=22, fontweight="bold", y=1.02)
 
     for i, ds in enumerate(datasets):
         ax = axes[i // ncols][i % ncols]
@@ -383,7 +398,7 @@ def panel_volcano():
             row = sub[sub["gene"] == gene]
             if not row.empty and row["padj"].values[0] < 0.05:
                 gx, gy = row["logFC"].values[0], row["-log10p"].values[0]
-                ax.annotate(gene, (gx, gy), fontsize=8, fontweight="bold",
+                ax.annotate(gene, (gx, gy), fontsize=6,
                             fontstyle="italic", textcoords="offset points",
                             xytext=(6, 4),
                             arrowprops=dict(arrowstyle="->", color="black", lw=0.7),
@@ -391,17 +406,18 @@ def panel_volcano():
 
         ax.axhline(-np.log10(0.05), ls="--", lw=0.8, c="gray", alpha=0.5)
         ax.axvline(0, ls=":", lw=0.6, c="gray", alpha=0.4)
-        ax.set_xlabel("Protein logFC", fontsize=13)
+        ax.set_xlabel("Protein logFC", fontsize=6)
         if i % ncols == 0:
-            ax.set_ylabel("-log10(p-value)", fontsize=13)
-        ax.set_title(_get_label(ds, short=True), fontsize=12, fontweight="bold",
-                     color=_get_color(ds))
-        ax.legend(fontsize=9, loc="upper right", frameon=True, framealpha=0.9)
+            ax.set_ylabel("-log10(p-value)", fontsize=6)
+        ax.set_title(_get_label(ds, short=True), fontsize=6,
+                     color="black")
+        ax.legend(fontsize=6, loc="upper right", frameon=True, framealpha=0.9)
         ax.grid(True, alpha=0.1, ls="--")
 
     for j in range(n, nrows * ncols):
         axes[j // ncols][j % ncols].set_visible(False)
 
+    print("  [caption] Protein differential abundance volcano plots (multi-contrast)")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_volcano")
 
@@ -422,8 +438,6 @@ def panel_validation_heatmap():
                   "drug_targets": "Drug Targets"}
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    fig.suptitle("Proteomics Validation of Key Gene Sets", fontsize=20,
-                 fontweight="bold", y=1.03)
 
     for vi, vs in enumerate(val_sets):
         ax = axes[vi]
@@ -445,20 +459,21 @@ def panel_validation_heatmap():
 
         for bar, val_num in zip(bars1, det_rates):
             ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
-                    f"{val_num:.0f}%", ha="center", va="bottom", fontsize=9, fontweight="bold")
+                    f"{val_num:.0f}%", ha="center", va="bottom", fontsize=6)
         for bar, val_num in zip(bars2, sig_rates):
             ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
-                    f"{val_num:.0f}%", ha="center", va="bottom", fontsize=9, fontweight="bold")
+                    f"{val_num:.0f}%", ha="center", va="bottom", fontsize=6)
 
         ax.set_xticks(x)
         ax.set_xticklabels([_get_label(ds, short=True) for ds in datasets],
-                           fontsize=9, rotation=25, ha="right")
-        ax.set_ylabel("Rate (%)", fontsize=13)
-        ax.set_title(val_labels[vs], fontsize=15, fontweight="bold")
+                           fontsize=6, rotation=25, ha="right")
+        ax.set_ylabel("Rate (%)", fontsize=6)
+        ax.set_title(val_labels[vs], fontsize=6)
         ax.set_ylim(0, 115)
-        ax.legend(fontsize=9, loc="upper right")
+        ax.legend(fontsize=6, loc="upper right")
         ax.grid(True, axis="y", alpha=0.15, ls="--")
 
+    print("  [caption] Proteomics validation of positive controls and drug targets")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_validation_heatmap")
 
@@ -469,14 +484,22 @@ def panel_validation_heatmap():
 def panel_bothsig_highlight():
     """Scatter of both-significant genes with key drug targets annotated."""
     print("[Panel 6] Both-significant concordance highlight")
-    conc = _load_csv("protein_transcript_concordance_v3.csv")
+    conc = _normalize_transcript_cols(_load_csv("protein_transcript_concordance_v3.csv"))
     if conc is None:
         return
 
-    # Use GSE276114 (largest SomaScan overlap)
-    ds = "GSE276114_fibrosis"
+    # Pick the DIA-MS contrast with the most both-significant genes. (Was hardcoded
+    # to GSE276114 SomaScan, removed 2026-06-12 as it is bulk RNA-seq; proteomics
+    # is now PXD052937 plasma + PXD051911 liver.)
+    conc = conc[conc["dataset"].isin(DATASET_COLORS)].copy()
+    bs_all = conc[(conc["protein_padj"] < 0.05) & (conc["bulk_padj"] < 0.05)]
+    if bs_all.empty:
+        print("  SKIP: no both-significant genes in any contrast")
+        return
+    ds = bs_all.groupby("dataset").size().idxmax()
     sub = conc[conc["dataset"] == ds].copy()
-    both_sig = sub[(sub["protein_padj"] < 0.05) & (sub["dream_padj"] < 0.05)].copy()
+    both_sig = sub[(sub["protein_padj"] < 0.05) & (sub["bulk_padj"] < 0.05)].copy()
+    print(f"  using contrast {ds} (most both-significant: {len(both_sig)} genes)")
 
     if len(both_sig) < 10:
         print("  SKIP: Too few both-significant genes")
@@ -484,7 +507,7 @@ def panel_bothsig_highlight():
 
     fig, ax = plt.subplots(figsize=(9, 8))
 
-    x = both_sig["dream_logFC"].values
+    x = both_sig["bulk_logFC"].values
     y = both_sig["protein_logFC"].values
     conc_mask = both_sig["direction_concordant"].values.astype(bool)
 
@@ -501,10 +524,10 @@ def panel_bothsig_highlight():
     for gene in drug_targets:
         row = both_sig[both_sig["gene"] == gene]
         if not row.empty:
-            gx, gy = row["dream_logFC"].values[0], row["protein_logFC"].values[0]
+            gx, gy = row["bulk_logFC"].values[0], row["protein_logFC"].values[0]
             ax.scatter([gx], [gy], s=60, c="#F39C12", edgecolors="black",
                        linewidths=0.8, zorder=5)
-            ax.annotate(gene, (gx, gy), fontsize=10, fontweight="bold",
+            ax.annotate(gene, (gx, gy), fontsize=6,
                         fontstyle="italic", textcoords="offset points",
                         xytext=(8, 5),
                         arrowprops=dict(arrowstyle="->", color="black", lw=0.8),
@@ -514,19 +537,18 @@ def panel_bothsig_highlight():
     ax.axvline(0, ls=":", lw=0.8, c="gray", alpha=0.4)
 
     rho, p = spearmanr(x, y)
-    ax.set_xlabel("Transcript logFC", fontsize=15)
-    ax.set_ylabel("Protein logFC", fontsize=15)
-    ax.set_title(f"Both-Significant Genes (n={len(both_sig):,})\n"
-                 f"Spearman \u03c1 = {rho:.3f}, p = {p:.1e}",
-                 fontsize=16, fontweight="bold")
-    ax.legend(fontsize=11, loc="lower right", frameon=True, framealpha=0.9)
+    ax.set_xlabel("Transcript logFC", fontsize=6)
+    ax.set_ylabel("Protein logFC", fontsize=6)
+    ax.legend(fontsize=6, loc="lower right", frameon=True, framealpha=0.9)
     ax.grid(True, alpha=0.1, ls="--")
 
-    ax.text(0.97, 0.97, "Both up", transform=ax.transAxes, fontsize=12,
-            ha="right", va="top", color="#27AE60", fontweight="bold", alpha=0.6)
-    ax.text(0.03, 0.03, "Both down", transform=ax.transAxes, fontsize=12,
-            ha="left", va="bottom", color="#27AE60", fontweight="bold", alpha=0.6)
+    ax.text(0.97, 0.97, "Both up", transform=ax.transAxes, fontsize=6,
+            ha="right", va="top", color="#27AE60", alpha=0.6)
+    ax.text(0.03, 0.03, "Both down", transform=ax.transAxes, fontsize=6,
+            ha="left", va="bottom", color="#27AE60", alpha=0.6)
 
+    print(f"  [caption] Both-significant genes (n={len(both_sig):,}), "
+          f"Spearman rho = {rho:.3f}, p = {p:.1e}")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_bothsig_highlight")
 
@@ -538,7 +560,7 @@ def panel_dataset_overview():
     """Summary comparison of proteomics contrasts."""
     print("[Panel 7] Dataset overview")
     diff = _load_csv("protein_differential_results_v3.csv")
-    conc = _load_csv("protein_transcript_concordance_v3.csv")
+    conc = _normalize_transcript_cols(_load_csv("protein_transcript_concordance_v3.csv"))
     enr = _load_csv("protein_ranked_enrichment.csv")
     if diff is None or conc is None:
         return
@@ -555,7 +577,7 @@ def panel_dataset_overview():
         n_sig = (d_diff["padj"] < 0.05).sum()
         n_overlap = len(d_conc)
         overall_conc = d_conc["direction_concordant"].mean() * 100 if len(d_conc) > 0 else np.nan
-        both_sig = d_conc[(d_conc["protein_padj"] < 0.05) & (d_conc["dream_padj"] < 0.05)]
+        both_sig = d_conc[(d_conc["protein_padj"] < 0.05) & (d_conc["bulk_padj"] < 0.05)]
         bothsig_conc = both_sig["direction_concordant"].mean() * 100 if len(both_sig) > 0 else np.nan
         nes = d_enr["NES"].values[0] if len(d_enr) > 0 else np.nan
         # Dream comparator label
@@ -569,7 +591,7 @@ def panel_dataset_overview():
             "Dir. conc.": f"{overall_conc:.1f}%" if not np.isnan(overall_conc) else "N/A",
             "Both-sig conc.": f"{bothsig_conc:.1f}%" if not np.isnan(bothsig_conc) else "N/A",
             "NES (DEG up)": f"{nes:.2f}" if not np.isnan(nes) else "N/A",
-            "Dream comparator": comparator,
+            "Transcript comparator (C2)": comparator,
             "Color": _get_color(ds),
         })
 
@@ -577,23 +599,21 @@ def panel_dataset_overview():
 
     fig, ax = plt.subplots(figsize=(18, max(3, 1 + 0.6 * len(datasets))))
     ax.axis("off")
-    fig.suptitle("Proteomics Validation — Multi-Contrast Overview",
-                 fontsize=20, fontweight="bold", y=0.98)
 
     cols = ["Contrast", "Proteins", "Sig (padj<0.05)", "Overlap",
-            "Dir. conc.", "Both-sig conc.", "NES (DEG up)", "Dream comparator"]
+            "Dir. conc.", "Both-sig conc.", "NES (DEG up)", "Transcript comparator (C2)"]
     cell_text = df_stats[cols].values.tolist()
     colors_col = df_stats["Color"].values
 
     table = ax.table(cellText=cell_text, colLabels=cols, loc="center",
                      cellLoc="center", colLoc="center")
     table.auto_set_font_size(False)
-    table.set_fontsize(10)
+    table.set_fontsize(6)
     table.scale(1, 2.0)
 
     for j in range(len(cols)):
         cell = table[0, j]
-        cell.set_text_props(fontweight="bold", fontsize=10, color="white")
+        cell.set_text_props(fontweight="normal", fontsize=6, color="white")
         cell.set_facecolor("#2C3E50")
         cell.set_edgecolor("white")
 
@@ -602,12 +622,13 @@ def panel_dataset_overview():
             cell = table[i + 1, j]
             cell.set_edgecolor("#ECF0F1")
             if j == 0:
-                cell.set_text_props(fontweight="bold", color=colors_col[i], fontsize=9)
+                cell.set_text_props(fontweight="normal", color="black", fontsize=6)
             if i % 2 == 0:
                 cell.set_facecolor("#F8F9FA")
             else:
                 cell.set_facecolor("white")
 
+    print("  [caption] Proteomics validation — multi-contrast overview")
     fig.tight_layout()
     save_panel(fig, "figS_proteo_dataset_overview")
 
@@ -622,7 +643,9 @@ def main():
     print(f"Output directory: {OUT_DIR}")
     print()
 
-    panel_concordance_scatter()
+    # panel_concordance_scatter()  # DROPPED 2026-06-20 — redundant with main fig4a
+    #   (fig4a_proteomics_concordance: disease-vs-control liver|plasma, gene-set
+    #    stratified, already C2). This supplement keeps the non-redundant panels.
     panel_enrichment_barplot()
     panel_effectsize_concordance()
     panel_volcano()

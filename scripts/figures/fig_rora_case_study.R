@@ -25,14 +25,10 @@ COL_NS <- "#CFD8DC"
 
 PANEL_THEME <- theme_masld(base_size = 8) +
   theme(
-    plot.title       = element_text(size = 8.5, face = "bold", hjust = 0,
-                                    margin = margin(b = 3)),
-    plot.subtitle    = element_text(size = 6.8, colour = "#555555",
-                                    margin = margin(b = 5)),
-    axis.title       = element_text(size = 7.5),
-    axis.text        = element_text(size = 7),
-    legend.text      = element_text(size = 6.5),
-    legend.title     = element_text(size = 7),
+    axis.title       = element_text(size = 6),
+    axis.text        = element_text(size = 6),
+    legend.text      = element_text(size = 6),
+    legend.title     = element_text(size = 6),
     legend.key.size  = unit(0.32, "cm"),
     panel.grid.minor = element_blank()
   )
@@ -72,8 +68,8 @@ pB <- ggplot(coloc_raw, aes(x = ancestry, y = trait, fill = pp4)) +
   geom_tile(colour = "white", linewidth = 1.4) +
   geom_text(aes(label = label,
                 colour = pp4 > 0.5,
-                fontface = ifelse(!is.na(pp4) & pp4 >= 0.8, "bold", "plain")),
-            size = 2.7) +
+                fontface = "plain"),
+            size = GEOM_TEXT_6PT) +
   scale_fill_gradientn(
     colours = c("#FFFFFF", "#E3F2FD", "#90CAF9", BLUE, "#0D47A1"),
     values  = rescale(c(0, 0.3, 0.6, 0.8, 1)),
@@ -84,9 +80,7 @@ pB <- ggplot(coloc_raw, aes(x = ancestry, y = trait, fill = pp4)) +
                       guide = "none") +
   scale_x_discrete(labels = c(EUR = "EUR\n(UKBB)", EAS = "EAS\n(BBJ)",
                               CSA = "CSA\n(PanUKBB)", AFR = "AFR\n(PanUKBB)")) +
-  labs(x = NULL, y = "GWAS trait",
-       title = "Cross-trait, cross-ancestry colocalization",
-       subtitle = "Liver enzymes replicate in EUR; GGT replicates in 3 of 4 ancestries") +
+  labs(x = NULL, y = "GWAS trait") +
   coord_equal() +
   PANEL_THEME +
   theme(
@@ -97,6 +91,7 @@ pB <- ggplot(coloc_raw, aes(x = ancestry, y = trait, fill = pp4)) +
 
 ggsave(file.path(OUT_DIR, "rora_crossancestry_coloc_pp4.pdf"), pB,
        width = 4.5, height = 3.2, useDingbats = FALSE)
+message("[caption] Cross-trait, cross-ancestry colocalization: liver enzymes replicate in EUR; GGT replicates in 3 of 4 ancestries")
 cat("  Saved rora_crossancestry_coloc_pp4\n")
 
 # =============================================================================
@@ -129,7 +124,7 @@ pC <- ggplot(rora_m, aes(x = alleleDiff, y = snp_lab_f, fill = max_pip)) +
   geom_text(aes(x = ifelse(alleleDiff > 0, alleleDiff + 0.08, alleleDiff - 0.08),
                 label = sprintf("PIP %.3f", max_pip),
                 hjust = ifelse(alleleDiff > 0, 0, 1)),
-            size = 2.2, colour = "#333333") +
+            size = GEOM_TEXT_6PT, colour = "#333333") +
   scale_fill_gradientn(
     colours = c("#CFD8DC", "#90CAF9", BLUE),
     limits = c(0, 1), name = "GWAS\nmax PIP",
@@ -141,18 +136,17 @@ pC <- ggplot(rora_m, aes(x = alleleDiff, y = snp_lab_f, fill = max_pip)) +
     breaks = c(-2, -1, 0, 1, 2),
     labels = c("-2", "-1", "0", "+1", "+2")
   ) +
-  labs(x = "Motif score change (alt − ref allele)", y = NULL,
-       title = "MASLD variants disrupt RORA binding at distal loci",
-       subtitle = "3 credible MASLD variants (PIP >= 0.2, non-RORA loci) · regulon padj = 0.033") +
+  labs(x = "Motif score change (alt − ref allele)", y = NULL) +
   PANEL_THEME +
   theme(
-    axis.text.y    = element_text(size = 6.5, family = "mono"),
+    axis.text.y    = element_text(size = 6, family = "mono"),
     legend.position = c(0.95, 0.3),
     legend.background = element_blank()
   )
 
 ggsave(file.path(OUT_DIR, "rora_gwas_atac_motif.pdf"), pC,
        width = 4.5, height = 3.0, useDingbats = FALSE)
+message("[caption] MASLD variants disrupt RORA binding at distal loci: 3 credible MASLD variants (PIP >= 0.2, non-RORA loci); regulon padj = 0.033")
 cat("  Saved rora_gwas_atac_motif\n")
 
 # =============================================================================
@@ -185,22 +179,18 @@ pD <- ggplot(ct_df, aes(x = ave_expr, y = ct_clean,
   geom_col(width = 0.7, colour = NA) +
   geom_text(aes(label = sprintf("%.1f", ave_expr),
                 x = ave_expr + 0.15),
-            hjust = 0, size = 2.3, colour = "#333333") +
+            hjust = 0, size = GEOM_TEXT_6PT, colour = "#333333") +
   scale_fill_manual(values = c(`TRUE` = BLUE, `FALSE` = COL_NS),
                     guide = "none") +
   scale_x_continuous(limits = c(0, 13),
                      breaks = c(0, 3, 6, 9, 12),
                      expand = expansion(mult = c(0, 0.02))) +
-  labs(x = "RORA expression (scRNA pseudobulk, log-CPM)", y = NULL,
-       title = "Hepatocyte-dominant expression",
-       subtitle = "11 cell types from integrated liver scRNA atlas") +
+  labs(x = "RORA expression (scRNA pseudobulk, log-CPM)", y = NULL) +
   PANEL_THEME +
   theme(
     panel.grid.major.y = element_blank(),
-    axis.text.y = element_text(size = 6.8,
-                                face = ifelse(levels(ct_df$ct_clean)
-                                              == "Hepatocytes",
-                                              "bold", "plain"),
+    axis.text.y = element_text(size = 6,
+                                face = "plain",
                                 colour = ifelse(levels(ct_df$ct_clean)
                                                 == "Hepatocytes",
                                                 BLUE, "black"))
@@ -208,6 +198,7 @@ pD <- ggplot(ct_df, aes(x = ave_expr, y = ct_clean,
 
 ggsave(file.path(OUT_DIR, "rora_celltype_expression.pdf"), pD,
        width = 4.2, height = 3.2, useDingbats = FALSE)
+message("[caption] Hepatocyte-dominant expression: 11 cell types from integrated liver scRNA atlas")
 cat("  Saved rora_celltype_expression\n")
 
 # =============================================================================
@@ -241,18 +232,16 @@ pE_prog <- ggplot(prog_df, aes(x = group, y = logFC)) +
   geom_hline(yintercept = 0, linewidth = 0.4, colour = "black") +
   geom_col(fill = BLUE, width = 0.6, colour = NA) +
   geom_text(aes(label = stars, y = logFC - 0.015),
-            vjust = 1, size = 3.3, colour = "#333333") +
+            vjust = 1, size = GEOM_TEXT_6PT, colour = "#333333") +
   geom_text(aes(label = sprintf("%.2f", logFC),
                 y = 0.01),
-            vjust = 0, size = 2.4, colour = "#333333") +
+            vjust = 0, size = GEOM_TEXT_6PT, colour = "#333333") +
   scale_y_continuous(limits = c(-0.55, 0.08),
                      breaks = c(-0.5, -0.3, -0.1, 0),
                      expand = expansion(mult = c(0.02, 0.05))) +
-  labs(x = NULL, y = "log2 fold change",
-       title = "Disease progression",
-       subtitle = "NAFL/NASH vs Ctrl (4 cohorts)\nF2/Adv Fib (7 cohorts) · Cirrhosis (6 cohorts)") +
+  labs(x = NULL, y = "log2 fold change") +
   PANEL_THEME +
-  theme(axis.text.x = element_text(size = 6.8, lineheight = 0.9),
+  theme(axis.text.x = element_text(size = 6, lineheight = 0.9),
         panel.grid.major.x = element_blank())
 
 pE_sex <- ggplot(sex_df, aes(x = group, y = logFC,
@@ -260,17 +249,15 @@ pE_sex <- ggplot(sex_df, aes(x = group, y = logFC,
   geom_hline(yintercept = 0, linewidth = 0.4, colour = "black") +
   geom_col(width = 0.6, colour = NA) +
   geom_text(aes(label = sprintf("%.2f", logFC), y = 0.01),
-            vjust = 0, size = 2.4, colour = "#333333") +
+            vjust = 0, size = GEOM_TEXT_6PT, colour = "#333333") +
   scale_fill_manual(values = c(Female = COL_F, Male = COL_M),
                     guide = "none") +
   scale_y_continuous(limits = c(-0.55, 0.08),
                      breaks = c(-0.5, -0.3, -0.1, 0),
                      expand = expansion(mult = c(0.02, 0.05))) +
-  labs(x = NULL, y = NULL,
-       title = "Sex stratification",
-       subtitle = "delta = 0.22 (interaction p = 0.28)") +
+  labs(x = NULL, y = NULL) +
   PANEL_THEME +
-  theme(axis.text.x = element_text(size = 7),
+  theme(axis.text.x = element_text(size = 6),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         panel.grid.major.x = element_blank())
@@ -279,6 +266,7 @@ pE <- pE_prog + pE_sex + plot_layout(widths = c(5, 2))
 
 ggsave(file.path(OUT_DIR, "rora_progression_sex.pdf"), pE,
        width = 5.5, height = 3.0, useDingbats = FALSE)
+message("[caption] Disease progression (NAFL/NASH vs Ctrl, 4 cohorts; F2/Adv Fib, 7 cohorts; Cirrhosis, 6 cohorts) and sex stratification (delta = 0.22, interaction p = 0.28)")
 cat("  Saved rora_progression_sex\n")
 
 # =============================================================================
@@ -325,21 +313,15 @@ pF_spatial <- ggplot(vis_rep, aes(x = x_norm, y = y_norm, colour = expr_c)) +
   ) +
   facet_wrap(~ facet_lab, nrow = 1) +
   coord_equal() +
-  labs(title = "RORA expression in human liver Visium",
-       subtitle = "Patchy lobular hepatocyte expression · two independent cohorts") +
   theme_void(base_size = 8) +
   theme(
-    strip.text        = element_text(size = 7.5, face = "bold",
+    strip.text        = element_text(size = 6, face = "plain",
                                      margin = margin(b = 2)),
     legend.position   = "right",
-    legend.title      = element_text(size = 7, face = "bold"),
-    legend.text       = element_text(size = 6.5),
+    legend.title      = element_text(size = 6, face = "plain"),
+    legend.text       = element_text(size = 6),
     legend.key.height = unit(0.5, "cm"),
     legend.key.width  = unit(0.22, "cm"),
-    plot.title        = element_text(size = 8, face = "bold", hjust = 0.5,
-                                     margin = margin(b = 2)),
-    plot.subtitle     = element_text(size = 6.5, colour = "#555555", hjust = 0.5,
-                                     margin = margin(b = 4)),
     plot.background   = element_rect(fill = "white", colour = NA)
   )
 
@@ -365,13 +347,7 @@ pF_quant <- ggplot(sample_means, aes(x = cohort, y = mean_rora,
   scale_colour_manual(values = cohort_cols, guide = "none") +
   scale_size_continuous(range = c(1.5, 3.5), name = "n spots",
                         breaks = c(500, 1000, 2000)) +
-  labs(x = NULL, y = "Mean RORA per section",
-       title = "Per-section expression by cohort",
-       subtitle = sprintf(paste0("Localization only (n = %d sections) · ",
-                                  "cross-cohort difference is technical,\n",
-                                  "not a disease contrast; see Panel E for ",
-                                  "disease direction"),
-                          length(unique(visium$sample_id)))) +
+  labs(x = NULL, y = "Mean RORA per section") +
   PANEL_THEME +
   theme(
     panel.grid.major.x = element_blank(),
@@ -382,6 +358,10 @@ pF <- pF_spatial + pF_quant + plot_layout(widths = c(2, 1.3))
 
 ggsave(file.path(OUT_DIR, "rora_visium_spatial.pdf"), pF,
        width = 7.0, height = 3.2, useDingbats = FALSE)
+message(sprintf(paste0("[caption] RORA expression in human liver Visium: patchy lobular hepatocyte expression, ",
+                        "two independent cohorts. Per-section expression by cohort: localization only (n = %d sections); ",
+                        "cross-cohort difference is technical, not a disease contrast; see Panel E for disease direction"),
+                length(unique(visium$sample_id))))
 cat("  Saved rora_visium_spatial\n")
 
 # =============================================================================

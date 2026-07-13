@@ -49,10 +49,10 @@ atlas <- atlas[!is.na(human_symbol) & human_symbol != ""]
 # But dream has the authoritative DEG calls
 setkey(dream, symbol)
 
-# DEG definition: padj < 0.05, |logFC| > 0.5
-dream[, is_deg := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]
+# DEG definition: C2 canonical Tier-1 (TREAT FDR<0.05, lfc=0.25)
+dream[, is_deg := is_dream_deg(dream)]
 n_degs <- sum(dream$is_deg, na.rm = TRUE)
-cat("DEGs (padj<0.05, |logFC|>0.5):", n_degs, "\n")
+cat("DEGs (TREAT FDR<0.05, lfc=0.25):", n_degs, "\n")
 
 # Rank genes by absolute logFC (higher = better)
 dream[, abs_logFC := abs(logFC)]
@@ -245,7 +245,7 @@ cat("Unique discoveries (our DEGs not in any panel):", length(unique_discoveries
 # ---------------------------------------------------------------------------
 
 # Build matrix: rows = panels, cols = evidence layers
-evidence_layers <- c("DEG\n(padj<0.05,|LFC|>0.5)", "COLOC\n(PP4>0.5)",
+evidence_layers <- c("DEG\n(TREAT FDR<0.05, lfc=0.25)", "COLOC\n(PP4>0.5)",
                      "Conserved\nCore", "Any Atlas\nSupport")
 
 heatmap_data <- data.table()
@@ -288,11 +288,10 @@ p_a <- ggplot(heatmap_data, aes(x = layer, y = panel_short, fill = pct)) +
   geom_text(aes(label = sprintf("%d%%\n(%d/%d)",
                                 round(pct), n,
                                 as.integer(round(n * 100 / pct)))),
-            size = 2, color = "black", lineheight = 0.85) +
+            size = GEOM_TEXT_6PT, color = "black", lineheight = 0.85) +
   scale_fill_gradient(low = "white", high = masld_colors$up,
                       limits = c(0, 100), name = "Recovery (%)") +
-  labs(x = NULL, y = NULL,
-       title = "Recovery of published panels in our atlas") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size = 6),
         legend.position = "right")
@@ -303,12 +302,11 @@ heatmap_data[, n_panel := as.integer(round(n * 100 / ifelse(pct == 0, 1, pct)))]
 p_a <- ggplot(heatmap_data, aes(x = layer, y = panel_short, fill = pct)) +
   geom_tile(color = "white", linewidth = 0.5) +
   geom_text(aes(label = sprintf("%d%%\n(%d/%d)", round(pct), n, n_panel)),
-            size = 2, color = ifelse(heatmap_data$pct > 60, "white", "black"),
+            size = GEOM_TEXT_6PT, color = ifelse(heatmap_data$pct > 60, "white", "black"),
             lineheight = 0.85) +
   scale_fill_gradient(low = "white", high = masld_colors$up,
                       limits = c(0, 100), name = "Recovery (%)") +
-  labs(x = NULL, y = NULL,
-       title = "Recovery of published panels in our atlas") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 0, hjust = 0.5, size = 6),
         legend.position = "right")
@@ -374,9 +372,8 @@ p_b <- ggplot(rank_data, aes(x = panel, y = percentile, fill = panel)) +
             label = ifelse(p < 0.001, "***",
                     ifelse(p < 0.01, "**",
                     ifelse(p < 0.05, "*", "ns")))),
-            inherit.aes = FALSE, size = 2.5, vjust = 0) +
-  labs(x = NULL, y = "|logFC| percentile rank",
-       title = "Atlas rank distribution of published panel genes") +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, vjust = 0) +
+  labs(x = NULL, y = "|logFC| percentile rank") +
   theme_masld() +
   theme(legend.position = "none",
         axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
@@ -439,22 +436,22 @@ cat_colors <- c(
 p_c <- ggplot(overlap_summary, aes(x = panel, y = count, fill = category)) +
   geom_bar(stat = "identity", position = "stack", width = 0.7) +
   geom_text(aes(label = ifelse(count > 0, count, "")),
-            position = position_stack(vjust = 0.5), size = 2, color = "white") +
+            position = position_stack(vjust = 0.5), size = GEOM_TEXT_6PT, color = "white") +
   scale_fill_manual(values = cat_colors, name = NULL) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-  labs(x = NULL, y = "Gene count",
-       title = "Panel overlap with our atlas DEGs") +
+  labs(x = NULL, y = "Gene count") +
   theme_masld() +
   theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
         legend.position = "bottom",
-        legend.text = element_text(size = 5))
+        legend.text = element_text(size = 6))
 
 # ---------------------------------------------------------------------------
 # 8. Assemble and save
 # ---------------------------------------------------------------------------
+message("[caption] a: Recovery of published panels in our atlas. b: Atlas rank distribution of published panel genes. c: Panel overlap with our atlas DEGs.")
 fig <- p_a / (p_b | p_c) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 9, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_dir <- FIGS_SENS_DIR
 dir.create(file.path(out_dir, "panels"), showWarnings = FALSE, recursive = TRUE)

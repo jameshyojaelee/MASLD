@@ -47,9 +47,9 @@ os.makedirs(OUT, exist_ok=True)
 # ---------------------------------------------------------------------------
 plt.rcParams.update({
     "font.family": "Helvetica",
-    "font.size": 7,
-    "axes.titlesize": 8,
-    "axes.labelsize": 7,
+    "font.size": 6,
+    "axes.titlesize": 6,
+    "axes.labelsize": 6,
     "xtick.labelsize": 6,
     "ytick.labelsize": 6,
     "legend.fontsize": 6,
@@ -191,13 +191,13 @@ def panel_01_fragment_size(qc_df):
             alpha=0.8, density=True, linewidth=0)
     ax.set_xlabel("Fragment size (bp)")
     ax.set_ylabel("Density")
-    ax.set_title("Fragment size distribution")
+    print("  [caption] Fragment size distribution")
     ax.set_xlim(0, 1000)
 
     # Annotate nucleosome peaks
     for pos, label in [(150, "NFR"), (200, "Mono"), (400, "Di"), (600, "Tri")]:
         ax.axvline(pos, color=MASLD_NS, linestyle="--", linewidth=0.5, alpha=0.6)
-        ax.text(pos, ax.get_ylim()[1] * 0.95, label, ha="center", fontsize=5,
+        ax.text(pos, ax.get_ylim()[1] * 0.95, label, ha="center", fontsize=6,
                 color="#808080")
 
     save_panel(fig, "panel_01_fragment_size.pdf")
@@ -218,7 +218,7 @@ def panel_02_tss_enrichment(qc_df):
     ax.axvline(5, color=MASLD_UP, linestyle="--", linewidth=0.8, label="QC threshold (5)")
     ax.set_xlabel("TSS enrichment score")
     ax.set_ylabel("Number of cells")
-    ax.set_title("TSS enrichment score distribution")
+    print("  [caption] TSS enrichment score distribution")
     ax.legend(frameon=False)
 
     n_pass = (tsse >= 5).sum()
@@ -248,7 +248,7 @@ def panel_03_qc_scatter(qc_df):
     ax.axhline(5, color=MASLD_UP, linestyle="--", linewidth=0.5, alpha=0.7)
     ax.set_xlabel("Number of fragments")
     ax.set_ylabel("TSS enrichment score")
-    ax.set_title("QC: fragments vs TSS enrichment")
+    print("  [caption] QC: fragments vs TSS enrichment")
     ax.set_xscale("log")
 
     save_panel(fig, "panel_03_qc_scatter.pdf")
@@ -276,8 +276,8 @@ def panel_04_umap_celltype(obs_df):
 
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
-    ax.set_title("scATAC-seq: cell types (88,814 cells)")
-    ax.legend(markerscale=8, fontsize=5, frameon=False, loc="center left",
+    print("  [caption] scATAC-seq: cell types (88,814 cells)")
+    ax.legend(markerscale=8, fontsize=6, frameon=False, loc="center left",
               bbox_to_anchor=(1.0, 0.5), handletextpad=0.3)
 
     save_panel(fig, "panel_04_umap_celltype.pdf")
@@ -303,8 +303,8 @@ def panel_05_umap_donor(obs_df):
 
     ax.set_xlabel("UMAP 1")
     ax.set_ylabel("UMAP 2")
-    ax.set_title("scATAC-seq: donors (batch mixing)")
-    ax.legend(markerscale=8, fontsize=4, frameon=False, loc="center left",
+    print("  [caption] scATAC-seq: donors (batch mixing)")
+    ax.legend(markerscale=8, fontsize=6, frameon=False, loc="center left",
               bbox_to_anchor=(1.0, 0.5), ncol=1, handletextpad=0.3)
 
     save_panel(fig, "panel_05_umap_donor.pdf")
@@ -361,9 +361,9 @@ def panel_06_celltype_proportions(obs_df):
 
     ax.set_xticks(x)
     ax.set_xticklabels([ct.replace("_", "\n") for ct in cell_types],
-                       rotation=45, ha="right", fontsize=5)
+                       rotation=45, ha="right", fontsize=6)
     ax.set_ylabel("Proportion")
-    ax.set_title("Cell type proportions by condition")
+    print("  [caption] Cell type proportions by condition")
     ax.legend(frameon=False)
 
     save_panel(fig, "panel_06_celltype_proportions.pdf")
@@ -501,10 +501,10 @@ def panel_07_marker_dotplot(obs_df):
                        linewidths=0.3)
 
     ax.set_xticks(range(len(gene_order)))
-    ax.set_xticklabels(gene_order, rotation=90, ha="center", fontsize=5)
+    ax.set_xticklabels(gene_order, rotation=90, ha="center", fontsize=6)
     ax.set_yticks(range(len(ct_order)))
-    ax.set_yticklabels([ct.replace("_", " ") for ct in ct_order], fontsize=5)
-    ax.set_title("Gene activity scores: canonical liver markers")
+    ax.set_yticklabels([ct.replace("_", " ") for ct in ct_order], fontsize=6)
+    print("  [caption] Gene activity scores: canonical liver markers")
     ax.set_xlim(-0.5, len(gene_order) - 0.5)
     ax.set_ylim(-0.5, len(ct_order) - 0.5)
 
@@ -512,8 +512,8 @@ def panel_07_marker_dotplot(obs_df):
     for frac_val, label in [(0.25, "25%"), (0.5, "50%"), (0.75, "75%")]:
         ax.scatter([], [], s=frac_val * 200, c="#808080", edgecolors="#808080",
                    linewidths=0.3, label=label)
-    ax.legend(title="Frac. expr.", frameon=False, fontsize=5,
-              title_fontsize=5, loc="upper left", bbox_to_anchor=(1.01, 1))
+    ax.legend(title="Frac. expr.", frameon=False, fontsize=6,
+              title_fontsize=6, loc="upper left", bbox_to_anchor=(1.01, 1))
 
     save_panel(fig, "panel_07_marker_dotplot.pdf")
 
@@ -558,11 +558,11 @@ def panel_08_label_transfer(obs_df):
         bottom += vals
 
     ax.set_xticks(x)
-    ax.set_xticklabels(donors, rotation=45, ha="right", fontsize=5)
+    ax.set_xticklabels(donors, rotation=45, ha="right", fontsize=6)
     ax.set_ylabel("Proportion")
     ax.set_xlabel("Donor")
-    ax.set_title("Cell type composition per donor (label transfer)")
-    ax.legend(fontsize=4, frameon=False, loc="center left",
+    print("  [caption] Cell type composition per donor (label transfer)")
+    ax.legend(fontsize=6, frameon=False, loc="center left",
               bbox_to_anchor=(1.0, 0.5), ncol=1)
     ax.set_ylim(0, 1)
 

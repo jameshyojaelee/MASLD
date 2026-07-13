@@ -194,7 +194,7 @@ col_anno <- HeatmapAnnotation(
   `Cell type` = ct_present,
   col = list(`Cell type` = CT_COLORS[ct_present]),
   show_legend = FALSE,
-  annotation_name_gp = gpar(fontsize = 5, fontface = "bold"),
+  annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
   annotation_name_side = "right",
   simple_anno_size = unit(2.8, "mm"),
   border = FALSE
@@ -208,15 +208,15 @@ drug_anno <- rowAnnotation(
     border = FALSE,
     width = unit(2.8, "mm")
   ),
-  annotation_name_gp = gpar(fontsize = 5, fontface = "bold"),
+  annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
   annotation_name_side = "top",
   show_legend = FALSE
 )
 
-# Row label faces: bold italic for hepatocyte headline master regulators
+# Row label faces: italic for hepatocyte headline master regulators
 # (THRB/HNF4A/RORA/MLXIPL/MAX), regular italic otherwise.
 row_faces <- ifelse(rownames(mat_delta) %in% HEADLINE_TFS,
-                    "bold.italic", "italic")
+                    "italic", "italic")
 
 # ---------------------------------------------------------------------------
 # Build heatmap
@@ -231,9 +231,9 @@ ht <- Heatmap(
   row_dend_width  = unit(8, "mm"),
   column_dend_height = unit(8, "mm"),
   row_names_side = "left",
-  row_names_gp = gpar(fontsize = 7, fontface = row_faces,
+  row_names_gp = gpar(fontsize = 6, fontface = row_faces,
                       fontfamily = "Helvetica"),
-  column_names_gp = gpar(fontsize = 8, fontface = "bold",
+  column_names_gp = gpar(fontsize = 6, fontface = "plain",
                          fontfamily = "Helvetica"),
   column_names_rot = 45,
   top_annotation = col_anno,
@@ -245,8 +245,8 @@ ht <- Heatmap(
   border = FALSE,
   heatmap_legend_param = list(
     title = expression(Delta * " activity\n(MASLD - normal)"),
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2.2, "cm"),
     at = c(-clamp_range, -clamp_range/2, 0, clamp_range/2, clamp_range),
     labels = c(sprintf("<= -%.2f", clamp_range), sprintf("-%.2f", clamp_range/2),
@@ -264,6 +264,7 @@ pdf_w  <- 5.0
 
 cat(sprintf("Writing PDF (%d rows, %.2f x %.2f in): %s\n",
             n_rows, pdf_w, pdf_h, OUT_PDF))
+message("[caption] Regulon-activity effect size of cross-modality disease master regulators")
 
 pdf(OUT_PDF, width = pdf_w, height = pdf_h, useDingbats = FALSE)
 
@@ -277,8 +278,6 @@ pushViewport(viewport(layout = grid.layout(
 # --- Heatmap viewport ---
 pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 1))
 draw(ht,
-     column_title = "Regulon-activity effect size of cross-modality disease master regulators",
-     column_title_gp = gpar(fontsize = 7.5, fontface = "bold"),
      heatmap_legend_side = "right",
      annotation_legend_side = "right",
      padding = unit(c(2, 2, 6, 2), "mm"),
@@ -291,13 +290,13 @@ grid.text(
   paste0("Fill = SCENIC+ regulon-activity effect size (MASLD - normal); cross-modality master ",
          "regulators (hepatocyte regulon TFs that are bulk DEGs or COLOC hits)."),
   x = 0.02, y = 0.82, just = c("left", "top"),
-  gp = gpar(fontsize = 5.5, col = "grey25", fontface = "plain")
+  gp = gpar(fontsize = 6, col = "black", fontface = "plain")
 )
 grid.text(
   paste0("Effect-size display only; single-cohort donor-level regulon DE is underpowered (n=18). ",
-         "Bold italic = hepatocyte headline TFs (THRB, HNF4A, RORA, MLXIPL, MAX). Gray = TF absent in cell type."),
+         "Italic = hepatocyte headline TFs (THRB, HNF4A, RORA, MLXIPL, MAX). Gray = TF absent in cell type."),
   x = 0.02, y = 0.40, just = c("left", "top"),
-  gp = gpar(fontsize = 5.5, col = "grey45", fontface = "italic")
+  gp = gpar(fontsize = 6, col = "black", fontface = "plain")
 )
 upViewport()
 upViewport()

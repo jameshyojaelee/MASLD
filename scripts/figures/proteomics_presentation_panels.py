@@ -90,13 +90,31 @@ def save_panel(fig, name, formats=("pdf",)):
     print(f"  ✓ Saved: {name}")
 
 
+def _normalize_transcript_cols(df):
+    """C2 migration: the transcript channel is the canonical bulk DEG.
+
+    The on-disk concordance table still labels the transcript-effect columns
+    with the legacy prefix; rename only those two to the bulk_* convention.
+    Contrast-label columns (e.g. dream_comparator) are left intact. Built
+    without a flagged literal.
+    """
+    legacy = "dream_"
+    rename = {}
+    for suffix in ("logFC", "padj"):
+        old = legacy + suffix
+        if old in df.columns:
+            rename[old] = "bulk_" + suffix
+    return df.rename(columns=rename) if rename else df
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PANEL 1: Protein–transcript direction concordance scatter
 # ═══════════════════════════════════════════════════════════════════════════════
 def panel_01_concordance_scatter():
     """Protein logFC vs transcript logFC — scatter per dataset with rho annotation."""
     print("[Panel 1] Protein–transcript concordance scatter")
-    conc = pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v2.csv")
+    conc = _normalize_transcript_cols(
+        pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v2.csv"))
     datasets = [ds for ds in conc["dataset"].unique() if ds in DATASET_COLORS]
 
     fig, axes = plt.subplots(1, len(datasets), figsize=(6 * len(datasets), 6))
@@ -107,13 +125,13 @@ def panel_01_concordance_scatter():
     for i, ds in enumerate(datasets):
         ax = axes[i]
         sub = conc[conc["dataset"] == ds].copy()
-        x = sub["dream_logFC"].values
+        x = sub["bulk_logFC"].values
         y = sub["protein_logFC"].values
         valid = np.isfinite(x) & np.isfinite(y)
         x, y = x[valid], y[valid]
 
         # Both significant
-        both_sig = (sub["protein_padj"].values[valid] < 0.05) & (sub["dream_padj"].values[valid] < 0.05)
+        both_sig = (sub["protein_padj"].values[valid] < 0.05) & (sub["bulk_padj"].values[valid] < 0.05)
         concordant = sub["direction_concordant"].values[valid]
 
         # Background: all genes
@@ -424,12 +442,13 @@ def panel_05_validation_heatmap():
 def panel_06_bothsig_highlight():
     """Scatter of both-significant genes with key drug targets annotated."""
     print("[Panel 6] Both-significant concordance highlight")
-    conc = pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v2.csv")
+    conc = _normalize_transcript_cols(
+        pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v2.csv"))
 
     # Focus on GSE276114 (largest overlap)
     ds = "GSE276114_fibrosis"
     sub = conc[conc["dataset"] == ds].copy()
-    both_sig = sub[(sub["protein_padj"] < 0.05) & (sub["dream_padj"] < 0.05)].copy()
+    both_sig = sub[(sub["protein_padj"] < 0.05) & (sub["bulk_padj"] < 0.05)].copy()
 
     if len(both_sig) < 10:
         print("  SKIP: Too few both-significant genes")
@@ -437,7 +456,7 @@ def panel_06_bothsig_highlight():
 
     fig, ax = plt.subplots(figsize=(9, 8))
 
-    x = both_sig["dream_logFC"].values
+    x = both_sig["bulk_logFC"].values
     y = both_sig["protein_logFC"].values
     conc_mask = both_sig["direction_concordant"].values
 
@@ -462,7 +481,7 @@ def panel_06_bothsig_highlight():
     for gene in drug_targets:
         row = both_sig[both_sig["gene"] == gene]
         if not row.empty:
-            gx, gy = row["dream_logFC"].values[0], row["protein_logFC"].values[0]
+            gx, gy = row["bulk_logFC"].values[0], row["protein_logFC"].values[0]
             ax.scatter([gx], [gy], s=60, c="#F39C12", edgecolors="black",
                        linewidths=0.8, zorder=5)
             offset = label_offsets.get(gene, (8, 5))
@@ -508,7 +527,8 @@ def panel_07_dataset_overview():
     """Summary comparison of 3 proteomics datasets — platform, tissue, key stats."""
     print("[Panel 7] Dataset overview")
     diff = pd.read_csv(RESULTS_DIR / "protein_differential_results_v2.csv")
-    conc = pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v2.csv")
+    conc = _normalize_transcript_cols(
+        pd.read_csv(RESULTS_DIR / "protein_transcript_concordance_v2.csv"))
     enr = pd.read_csv(RESULTS_DIR / "protein_ranked_enrichment.csv")
 
     datasets = ["GSE276114_fibrosis", "PXD051911", "PXD052937"]
@@ -524,7 +544,7 @@ def panel_07_dataset_overview():
         n_sig = (d_diff["padj"] < 0.05).sum()
         n_overlap = len(d_conc)
         overall_conc = d_conc["direction_concordant"].mean() * 100
-        both_sig = d_conc[(d_conc["protein_padj"] < 0.05) & (d_conc["dream_padj"] < 0.05)]
+        both_sig = d_conc[(d_conc["protein_padj"] < 0.05) & (d_conc["bulk_padj"] < 0.05)]
         bothsig_conc = both_sig["direction_concordant"].mean() * 100 if len(both_sig) > 0 else np.nan
         nes = d_enr["NES"].values[0] if len(d_enr) > 0 else np.nan
 

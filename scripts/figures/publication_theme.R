@@ -196,19 +196,47 @@ drug_evidence_colors <- c(
 )
 
 # ---------------------------------------------------------------------------
+# House re-skin palette (2026-07-09, lncRNA-paper style handoff; PILOT scope =
+# Fig 4 only, see figures/layout_specs/STYLE_HANDOFF_lncRNA.md). ADDITIVE: does
+# NOT replace masld_colors / ct_palette / fig1_palette.py, which stay the
+# semantic system for disease-direction / control / modality colors project-
+# wide (control gray #9E9E9E is a separate, locked invariant from house_gray
+# below — see feedback_control_gray.md). Scripts opt in explicitly.
+# ---------------------------------------------------------------------------
+house_ink  <- "#231f20"   # near-black ink (vs pure #000000)
+house_gray <- "#bdbdbd"   # non-significant / "other" / generic background (NOT the control-gray role)
+# CB-safe categorical (7; Okabe-Ito) — chosen over the reference's raw Spectral
+# set per PI decision 2026-07-09 (accessibility over exact reference match).
+okabe_ito  <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442",
+                "#0072B2", "#D55E00", "#CC79A7")
+house_rdbu <- c(low = "#67001f", mid = "#f7f7f7", high = "#053061")  # diverging RdBu poles (exact)
+brand_pair <- c(primary = "#d7367a", secondary = "#ff9772")          # two-class contrast
+
+STROKE_HAIRLINE <- 0.25 / .pt   # 0.25pt hairline (ggplot linewidth units)
+STROKE_EMPHASIS <- 0.5  / .pt   # emphasis tier (genuine emphasis only)
+
+# ---------------------------------------------------------------------------
 # Theme
 # ---------------------------------------------------------------------------
-theme_masld <- function(base_size = 7, base_family = "Helvetica") {
+theme_masld <- function(base_size = 6, base_family = "Helvetica") {
+  # PROJECT STANDARD (2026-07-06): ALL figure text = 6 pt Helvetica, face = "plain".
+  # NO bold, NO italics (italics are applied per-mark only, on gene/module symbols,
+  # via element_text(face="italic") or fontface="italic" at the call site). The 6 pt
+  # size is forced on every text element regardless of `base_size` so the whole
+  # figure corpus is uniform. See feedback-figure-font-size-6 / feedback-no-colored-fonts.
   theme_classic(base_size = base_size, base_family = base_family) %+replace%
     theme(
-      plot.title   = element_text(size = base_size + 1, face = "bold", hjust = 0),
-      axis.title   = element_text(size = base_size),
+      text         = element_text(size = 6, family = base_family, face = "plain"),
+      plot.title   = element_text(size = 6, family = base_family, face = "plain", hjust = 0),
+      plot.subtitle= element_text(size = 6, family = base_family, face = "plain", hjust = 0),
+      plot.caption = element_text(size = 6, family = base_family, face = "plain", hjust = 0),
+      axis.title   = element_text(size = 6, family = base_family, face = "plain"),
       axis.title.y = element_text(angle = 90, margin = margin(r = 2)),
       axis.title.x = element_text(margin = margin(t = 2)),
-      axis.text    = element_text(size = max(base_size - 1, 6), color = "black"),
-      legend.title = element_text(size = base_size, face = "bold"),
-      legend.text  = element_text(size = max(base_size - 1, 6)),
-      strip.text   = element_text(size = base_size, face = "bold"),
+      axis.text    = element_text(size = 6, family = base_family, face = "plain", color = "black"),
+      legend.title = element_text(size = 6, family = base_family, face = "plain"),
+      legend.text  = element_text(size = 6, family = base_family, face = "plain"),
+      strip.text   = element_text(size = 6, family = base_family, face = "plain"),
       plot.margin  = margin(3, 3, 3, 3),
       legend.key.size    = unit(0.3, "cm"),
       panel.grid.major   = element_blank(),
@@ -220,29 +248,48 @@ theme_masld <- function(base_size = 7, base_family = "Helvetica") {
 }
 
 # ---------------------------------------------------------------------------
+# Compact uniform variant (2026-07-01) — ALL text exactly 6pt Helvetica, NO bold.
+# Used by the Fig 3 RNA-seq panels standardised to 6pt / plain / compact so text
+# stays legible at the small final panel size. For patchwork composites, also set
+# the plot_annotation title theme to element_text(size = 6, face = "plain"), and
+# set every geom_text/geom_text_repel `size` to 6/ggplot2::.pt (~2.13) for 6pt.
+# ---------------------------------------------------------------------------
+theme_masld_compact <- function(base_size = 6, base_family = "Helvetica") {
+  # theme_masld is now itself the uniform 6pt-plain standard; compact keeps the
+  # tighter legend key and stays as a named alias for the ~28 scripts using it.
+  theme_masld(base_size = base_size, base_family = base_family) %+replace%
+    theme(legend.key.size = unit(0.20, "cm"))
+}
+# 6pt in geom_text/geom_text_repel `size` units (ggplot uses mm; pt = size * .pt):
+GEOM_TEXT_6PT <- 6 / ggplot2::.pt
+
+# ---------------------------------------------------------------------------
 # Publication font sizes (apply on top of theme_masld via `+ theme_pub()`)
 # Equalises text across panels in a multi-panel main figure.
 # ---------------------------------------------------------------------------
-PUB_AXIS_TEXT  <- 5
+# PROJECT STANDARD (2026-07-06): every size = 6 pt, all faces plain (no bold),
+# all text black (no gray30/gray35 — see feedback-no-colored-fonts). In-plot
+# geom_text size uses ggplot "size" units: 6 pt = 6 / .pt (~2.13).
+PUB_AXIS_TEXT  <- 6
 PUB_AXIS_TITLE <- 6
-PUB_LEGEND     <- 5
+PUB_LEGEND     <- 6
 PUB_LEGEND_TIT <- 6
-PUB_TITLE      <- 7
+PUB_TITLE      <- 6
 PUB_SUBTITLE   <- 6
-PUB_GEOM_TEXT  <- 1.8     # in-plot text (geom_text) — unitless ggplot "size"
+PUB_GEOM_TEXT  <- 6 / ggplot2::.pt   # in-plot text (geom_text) = 6 pt in ggplot "size" units
 PUB_LEGEND_KEY <- unit(0.18, "cm")
 
 theme_pub <- function() {
   theme(
-    plot.title    = element_text(size = PUB_TITLE,    face = "bold"),
-    plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"),
-    plot.caption  = element_text(size = PUB_SUBTITLE - 1, color = "gray35", hjust = 0),
-    axis.title    = element_text(size = PUB_AXIS_TITLE),
-    axis.text     = element_text(size = PUB_AXIS_TEXT, color = "black"),
-    legend.title  = element_text(size = PUB_LEGEND_TIT, face = "bold"),
-    legend.text   = element_text(size = PUB_LEGEND),
+    plot.title    = element_text(size = PUB_TITLE,    face = "plain"),
+    plot.subtitle = element_text(size = PUB_SUBTITLE, face = "plain", color = "black"),
+    plot.caption  = element_text(size = PUB_SUBTITLE, face = "plain", color = "black", hjust = 0),
+    axis.title    = element_text(size = PUB_AXIS_TITLE, face = "plain"),
+    axis.text     = element_text(size = PUB_AXIS_TEXT,  face = "plain", color = "black"),
+    legend.title  = element_text(size = PUB_LEGEND_TIT, face = "plain"),
+    legend.text   = element_text(size = PUB_LEGEND,     face = "plain"),
     legend.key.size = PUB_LEGEND_KEY,
-    strip.text    = element_text(size = PUB_AXIS_TITLE, face = "bold")
+    strip.text    = element_text(size = PUB_AXIS_TITLE, face = "plain")
   )
 }
 

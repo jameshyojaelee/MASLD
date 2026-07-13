@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useHashNavigate } from "@/lib/hash-router";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { dataUrl } from "@/lib/data-base";
+import { categoricalColor, sequentialColor, CONTROL, MODALITY_HEX } from "@/lib/palette";
+import { CONVERGENCE_TIER1, COLOC_UNION, fmt } from "@/lib/atlas-constants";
 import {
   ModalityMatrix,
   type ConvergenceRow,
@@ -59,24 +64,25 @@ interface StatCard {
 
 const CONVERGENCE_STATS: StatCard[] = [
   {
-    value: "7",
-    label: "Modalities",
-    sublabel: "Transcriptomic, genetic, epigenomic, spatial, single-cell, essentiality, drug",
+    value: "6",
+    label: "Convergence channels",
+    sublabel:
+      "Bulk RNA-seq · GWAS–eQTL COLOC · regulatory/ATAC · spatial · single-cell · proteomics",
   },
   {
-    value: "2.6%",
-    label: "DEG-COLOC overlap",
-    sublabel: "Jaccard = 0.012, OR = 1.67",
+    value: fmt(CONVERGENCE_TIER1),
+    label: "Tier-1 convergence genes",
+    sublabel: "Genetically validated through the multi-evidence gate",
   },
   {
-    value: "123",
-    label: "Pan-evidence genes",
-    sublabel: "Active in all 7 sources",
+    value: "1.8%",
+    label: "DEG–COLOC overlap",
+    sublabel: "34 of 1,915 DEGs are Tier-1/2 COLOC (Jaccard 0.015, OR 1.08 n.s.)",
   },
   {
-    value: "18",
-    label: "Triple-convergent",
-    sublabel: "Transcriptomic + genetic + drug",
+    value: fmt(COLOC_UNION),
+    label: "COLOC effector genes",
+    sublabel: "SuSiE ∪ coloc.abf across 35 Tier-1/2 liver GWAS",
   },
 ];
 
@@ -107,25 +113,27 @@ const PW_CY = SVG_H - 50;
 // Node colors
 // ---------------------------------------------------------------------------
 
+// Gene evidence score (0–7) → sequential magnitude ramp. Score 0 = control
+// gray; higher scores read deeper. This is a data mark → palette authority.
+const MAX_EVIDENCE = 7;
 function geneColor(score: number): string {
-  // Gradient: gray (0) -> blue (3) -> purple (6)
-  if (score <= 0) return "hsl(220, 10%, 60%)";
-  if (score === 1) return "hsl(220, 30%, 58%)";
-  if (score === 2) return "hsl(225, 50%, 55%)";
-  if (score === 3) return "hsl(230, 65%, 52%)";
-  if (score === 4) return "hsl(250, 60%, 50%)";
-  if (score === 5) return "hsl(265, 55%, 48%)";
-  return "hsl(275, 60%, 45%)"; // 6+
+  if (score <= 0) return CONTROL;
+  const t = 0.25 + 0.75 * Math.min(score, MAX_EVIDENCE) / MAX_EVIDENCE;
+  return sequentialColor(t);
 }
 
-const DRUG_COLOR = "hsl(152, 55%, 42%)";
-const TF_COLOR = "hsl(30, 80%, 52%)";
-const PW_COLOR = "hsl(220, 15%, 55%)";
+// Node-type identities (qualitative → categorical palette). COLOC support is a
+// genetic annotation → genetic-modality color.
+const DRUG_COLOR = categoricalColor(2); // green
+const TF_COLOR = categoricalColor(1); // orange
+const PW_COLOR = CONTROL; // pathways = neutral context
+const COLOC_RING = MODALITY_HEX.s2_genetic; // genetic evidence ring
+const GENE_LEGEND_COLOR = sequentialColor(1); // deepest = highest evidence
 
 const EDGE_COLORS: Record<string, string> = {
-  drug_target: "hsl(152, 45%, 55%)",
-  regulon: "hsl(30, 60%, 60%)",
-  pathway_member: "hsl(220, 15%, 65%)",
+  drug_target: DRUG_COLOR,
+  regulon: TF_COLOR,
+  pathway_member: PW_COLOR,
 };
 
 // ---------------------------------------------------------------------------
@@ -226,7 +234,7 @@ function GeneCircle({
       r={isHighlighted ? r + 2 : r}
       fill={geneColor(node.evidence_score ?? 0)}
       opacity={isDimmed ? 0.15 : isHighlighted ? 1 : 0.8}
-      stroke={isHighlighted ? "hsl(0, 0%, 100%)" : node.is_coloc ? "hsl(45, 90%, 60%)" : "none"}
+      stroke={isHighlighted ? "var(--color-foreground)" : node.is_coloc ? COLOC_RING : "none"}
       strokeWidth={isHighlighted ? 2 : node.is_coloc ? 1.5 : 0}
       style={{ cursor: "pointer", transition: "opacity 0.15s, r 0.15s" }}
       onMouseEnter={onMouseEnter}
@@ -260,7 +268,7 @@ function DrugDiamond({
       points={points}
       fill={DRUG_COLOR}
       opacity={isDimmed ? 0.15 : isHighlighted ? 1 : 0.8}
-      stroke={isHighlighted ? "hsl(0, 0%, 100%)" : "none"}
+      stroke={isHighlighted ? "var(--color-foreground)" : "none"}
       strokeWidth={isHighlighted ? 2 : 0}
       style={{ cursor: "pointer", transition: "opacity 0.15s" }}
       onMouseEnter={onMouseEnter}
@@ -293,7 +301,7 @@ function TfTriangle({
       points={points}
       fill={TF_COLOR}
       opacity={isDimmed ? 0.15 : isHighlighted ? 1 : 0.8}
-      stroke={isHighlighted ? "hsl(0, 0%, 100%)" : "none"}
+      stroke={isHighlighted ? "var(--color-foreground)" : "none"}
       strokeWidth={isHighlighted ? 2 : 0}
       style={{ cursor: "pointer", transition: "opacity 0.15s" }}
       onMouseEnter={onMouseEnter}
@@ -330,7 +338,7 @@ function PathwayRect({
       rx={4}
       fill={PW_COLOR}
       opacity={isDimmed ? 0.15 : isHighlighted ? 1 : 0.7}
-      stroke={isHighlighted ? "hsl(0, 0%, 100%)" : "none"}
+      stroke={isHighlighted ? "var(--color-foreground)" : "none"}
       strokeWidth={isHighlighted ? 2 : 0}
       style={{ cursor: "pointer", transition: "opacity 0.15s" }}
       onMouseEnter={onMouseEnter}
@@ -350,7 +358,7 @@ interface KnowledgeGraphProps {
 }
 
 function KnowledgeGraph({ data }: KnowledgeGraphProps) {
-  const router = useRouter();
+  const navigate = useHashNavigate();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [visibleTypes, setVisibleTypes] = useState<Record<NodeType, boolean>>({
     gene: true,
@@ -432,7 +440,7 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-muted-foreground">Show:</span>
         {([
-          { type: "gene" as NodeType, label: "Genes", color: "hsl(275, 60%, 45%)", shape: "circle" },
+          { type: "gene" as NodeType, label: "Genes", color: GENE_LEGEND_COLOR, shape: "circle" },
           { type: "drug" as NodeType, label: "Drugs", color: DRUG_COLOR, shape: "diamond" },
           { type: "tf" as NodeType, label: "TFs", color: TF_COLOR, shape: "triangle" },
           { type: "pathway" as NodeType, label: "Pathways", color: PW_COLOR, shape: "rect" },
@@ -468,16 +476,16 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
           <rect width={SVG_W} height={SVG_H} className="fill-muted/20" rx={8} />
 
           {/* Region labels */}
-          <text x={DRUG_CX} y={30} textAnchor="middle" fontSize={10} fontWeight={600} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+          <text x={DRUG_CX} y={30} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-muted-foreground)" opacity={0.7}>
             DRUGS
           </text>
-          <text x={TF_CX} y={30} textAnchor="middle" fontSize={10} fontWeight={600} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+          <text x={TF_CX} y={30} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-muted-foreground)" opacity={0.7}>
             TRANSCRIPTION FACTORS
           </text>
-          <text x={PW_CX} y={SVG_H - 12} textAnchor="middle" fontSize={10} fontWeight={600} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+          <text x={PW_CX} y={SVG_H - 12} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-muted-foreground)" opacity={0.7}>
             PATHWAYS
           </text>
-          <text x={GENE_CX} y={GENE_CY - GENE_RY - 18} textAnchor="middle" fontSize={10} fontWeight={600} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+          <text x={GENE_CX} y={GENE_CY - GENE_RY - 18} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-muted-foreground)" opacity={0.7}>
             GENES ({positioned.filter((n) => n.type === "gene").length})
           </text>
 
@@ -495,7 +503,7 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
                 y1={src.y}
                 x2={tgt.x}
                 y2={tgt.y}
-                stroke={EDGE_COLORS[edge.type] ?? "hsl(var(--border))"}
+                stroke={EDGE_COLORS[edge.type] ?? "var(--color-border)"}
                 strokeWidth={highlighted ? 1.8 : 0.6}
                 opacity={dimmed ? 0.05 : highlighted ? 0.9 : 0.2}
                 style={{ transition: "opacity 0.15s, stroke-width 0.15s" }}
@@ -520,7 +528,7 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
                   isDimmed={dm}
                   onMouseEnter={enterHandler}
                   onMouseLeave={leaveHandler}
-                  onClick={() => router.push(`/gene/${encodeURIComponent(node.label)}`)}
+                  onClick={() => navigate(`#/gene?symbol=${encodeURIComponent(node.label)}`)}
                 />
               );
             }
@@ -587,7 +595,7 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
                 textAnchor={anchor}
                 fontSize={node.type === "gene" ? 9 : 8}
                 fontWeight={hl ? 700 : 500}
-                fill="hsl(var(--foreground))"
+                fill="var(--color-foreground)"
                 opacity={hl ? 1 : 0.7}
                 style={{ pointerEvents: "none", transition: "opacity 0.15s" }}
               >
@@ -605,11 +613,11 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
                 width={170}
                 height={20 + tip.lines.length * 14}
                 rx={4}
-                fill="hsl(var(--popover))"
-                stroke="hsl(var(--border))"
+                fill="var(--color-popover)"
+                stroke="var(--color-border)"
                 strokeWidth={1}
               />
-              <text x={tipX + 8} y={tipY + 15} fontSize={11} fontWeight={700} fill="hsl(var(--foreground))">
+              <text x={tipX + 8} y={tipY + 15} fontSize={11} fontWeight={700} fill="var(--color-foreground)">
                 {tip.title}
               </text>
               {tip.lines.map((line, i) => (
@@ -618,7 +626,7 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
                   x={tipX + 8}
                   y={tipY + 29 + i * 14}
                   fontSize={10}
-                  fill="hsl(var(--muted-foreground))"
+                  fill="var(--color-muted-foreground)"
                 >
                   {line}
                 </text>
@@ -631,19 +639,19 @@ function KnowledgeGraph({ data }: KnowledgeGraphProps) {
       {/* Legend row */}
       <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "hsl(275, 60%, 45%)" }} />
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: geneColor(7) }} />
           Gene (score 6-7)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "hsl(230, 65%, 52%)" }} />
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: geneColor(3) }} />
           Gene (score 3)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "hsl(220, 10%, 60%)" }} />
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: geneColor(0) }} />
           Gene (score 0)
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "hsl(45, 90%, 60%)", border: "1.5px solid hsl(45, 90%, 60%)" }} />
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: "transparent", border: `1.5px solid ${COLOC_RING}` }} />
           COLOC ring
         </span>
         <span className="ml-auto italic">Click a gene node to view profile</span>
@@ -743,7 +751,7 @@ function BayesianRankingTable({ data }: { data: BayesianRanking }) {
             <span key={g.symbol} className="font-mono text-xs">
               {i > 0 && <span className="mx-1.5 text-muted-foreground">·</span>}
               <Link
-                href={`/gene/${encodeURIComponent(g.symbol)}`}
+                href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
                 className="font-semibold text-primary hover:underline"
               >
                 {g.symbol}
@@ -836,7 +844,7 @@ function BayesianRankingTable({ data }: { data: BayesianRanking }) {
                 </td>
                 <td className="px-4 py-2">
                   <Link
-                    href={`/gene/${encodeURIComponent(g.symbol)}`}
+                    href={`#/gene?symbol=${encodeURIComponent(g.symbol)}`}
                     className="font-mono text-xs font-semibold text-primary hover:underline"
                   >
                     {g.symbol}
@@ -883,18 +891,18 @@ export default function TranslationPage() {
   const [tab, setTab] = useState<ConvergenceTab>("matrix");
 
   useEffect(() => {
-    fetch("/data/knowledge_graph.json")
+    fetch(dataUrl("knowledge_graph.json"))
       .then((res) => res.json())
       .then((data: GraphData) => {
         setGraphData(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-    fetch("/data/convergence_matrix.json")
+    fetch(dataUrl("convergence_matrix.json"))
       .then((res) => res.json())
       .then((data: ConvergenceRow[]) => setConvergence(data))
       .catch(() => setConvergence([]));
-    fetch("/data/bayesian_ranking.json")
+    fetch(dataUrl("bayesian_ranking.json"))
       .then((res) => res.json())
       .then((data: BayesianRanking) => setBayesian(data))
       .catch(() =>
@@ -908,24 +916,18 @@ export default function TranslationPage() {
   const TABS: { key: ConvergenceTab; label: string }[] = [
     { key: "matrix", label: "Convergence Matrix" },
     { key: "graph", label: "Knowledge Graph" },
-    { key: "bayesian", label: "Bayesian Ranking" },
+    { key: "bayesian", label: "Convergence Ranking" },
   ];
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
+    <PageContainer>
       {/* ------------------------------------------------------------------ */}
       {/* Header                                                               */}
       {/* ------------------------------------------------------------------ */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Convergence &amp; Translation
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Multi-evidence integration reveals that each source captures
-          non-overlapping biology — convergence, not any single analysis,
-          most reliably identifies therapeutic targets.
-        </p>
-      </div>
+      <PageHeader
+        title="Convergence & Translation"
+        description="Multi-evidence integration reveals that each source captures non-overlapping biology — convergence, not any single analysis, most reliably identifies therapeutic targets."
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Section 1: Convergence Overview                                      */}
@@ -951,10 +953,11 @@ export default function TranslationPage() {
           ))}
         </div>
         <p className="mt-4 text-sm text-muted-foreground">
-          Only 2.6% of DEGs have colocalization support, demonstrating that
-          transcriptomic and genetic evidence capture fundamentally different
-          biology. Multi-evidence convergence across 7 independent sources
-          provides the most reliable path to therapeutic target identification.
+          Only 1.8% of DEGs have Tier-1/2 colocalization support, demonstrating
+          that transcriptomic and genetic evidence capture fundamentally
+          different biology. Multi-evidence convergence across the six main
+          human channels provides the most reliable path to therapeutic target
+          identification.
         </p>
       </section>
 
@@ -1032,9 +1035,9 @@ export default function TranslationPage() {
         {tab === "bayesian" && (
           <div className="pt-4">
             <p className="mb-4 text-sm text-muted-foreground">
-              Cumulative enrichment, Bayesian posterior integration, and
-              network propagation (Scripts 46a/46b/46c) combine all 7
-              modalities into a unified gene ranking. Rank 1 = most evidence.
+              The canonical multi-evidence convergence ranking (Script 46d)
+              integrates the six main human channels into a unified gene
+              ranking. Rank 1 = strongest convergence.
             </p>
             {bayesian === null ? (
               <div className="flex h-[400px] items-center justify-center rounded-lg border border-border bg-muted/30 text-sm text-muted-foreground">
@@ -1056,25 +1059,26 @@ export default function TranslationPage() {
         </h2>
         <div className="rounded-lg border border-border bg-card px-5 py-4 shadow-sm">
           <p className="text-sm leading-relaxed text-foreground">
-            196 genes are both differentially expressed and have colocalization
-            support (OR&nbsp;=&nbsp;1.67, P&nbsp;=&nbsp;5.5&times;10
-            <sup>-6</sup>). While statistically significant, the Jaccard
-            index of 0.012 confirms that the two evidence layers are nearly
-            non-overlapping. This low overlap is not a weakness — it means
-            each modality captures biology invisible to the other.
+            Only 34 genes are both differentially expressed and Tier-1/2
+            COLOC-supported (OR&nbsp;=&nbsp;1.08, P&nbsp;=&nbsp;0.64,
+            Fisher&apos;s exact test — not statistically significant). The
+            Jaccard index of 0.015 confirms the two evidence layers are
+            nearly non-overlapping. This near-independence is not a weakness
+            — it means each modality captures biology invisible to the
+            other.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="outline" className="text-[10px]">
-              5,484 DEGs (transcriptomic)
+              1,915 DEGs (transcriptomic)
             </Badge>
             <Badge variant="outline" className="text-[10px]">
-              348 COLOC genes (genetic)
+              449 COLOC genes (genetic)
             </Badge>
             <Badge variant="outline" className="text-[10px]">
-              196 overlap (2.6%)
+              34 overlap (1.8%)
             </Badge>
             <Badge variant="outline" className="text-[10px]">
-              OR = 1.67
+              OR = 1.08 (n.s.)
             </Badge>
           </div>
         </div>
@@ -1085,10 +1089,10 @@ export default function TranslationPage() {
       {/* ------------------------------------------------------------------ */}
       <div className="flex flex-wrap gap-3 border-t border-border pt-6">
         <Link
-          href="/causal"
+          href="/genetics"
           className="rounded-md border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
         >
-          &larr; Causal Architecture
+          &larr; Genetics &amp; Ancestry
         </Link>
         <Link
           href="/drugs"
@@ -1103,6 +1107,6 @@ export default function TranslationPage() {
           Browse DEGs &rarr;
         </Link>
       </div>
-    </div>
+    </PageContainer>
   );
 }

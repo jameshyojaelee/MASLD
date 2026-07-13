@@ -92,7 +92,7 @@ print(f"  Disease vs Control: mega={ref_dvc['n_mega']:,}, meta={ref_dvc['n_meta'
 ref_nn = load_mega_meta(
     f"{DISEASE_SIG}/nafl_vs_nash_dream.csv",
     f"{DISEASE_SIG}/nafl_vs_nash_meta.csv",
-    'adj.P.Val', 'logFC', 'meta_padj', 'meta_logFC')
+    'padj', 'logFC', 'meta_padj', 'meta_logFC')  # this file's padj col = 'padj' (adv_vs_early below genuinely uses 'adj.P.Val')
 print(f"  NAFL vs NASH: mega={ref_nn['n_mega']:,}, meta={ref_nn['n_meta']:,}")
 
 ref_fib = load_mega_meta(
@@ -132,7 +132,7 @@ gse130970_lfc = dict(zip(gse130970_sig['gene_symbol'].astype(str),
                           gse130970_sig['range_log2FC'].astype(float)))
 gse130970_ensembl = symbols_to_ensembl(gse130970_symbols, ref_dvc['sym_map'])
 datasets['GSE130970'] = {
-    'label': 'Hoang 2019', 'n_samples': 78,
+    'label': 'GSE130970', 'n_samples': 78,
     'source': 'Published (ordinal)', 'contrast': 'Disease vs Control',
     'genes_ensembl': gse130970_ensembl,
     'n_study_degs': len(gse130970_ensembl),
@@ -146,7 +146,7 @@ gse135251_ps = pd.read_csv(f"{PER_STUDY}/GSE135251_de_results.csv")
 gse135251_ps['gene_base'] = gse135251_ps['gene'].str.replace(r'\.\d+$', '', regex=True)
 gse135251_sig = gse135251_ps[gse135251_ps['adj.P.Val'] < PERSTUDY_PADJ]
 datasets['GSE135251'] = {
-    'label': 'Govaere 2020', 'n_samples': 206,
+    'label': 'GSE135251', 'n_samples': 206,
     'source': 'Per-study (limma)', 'contrast': 'Disease vs Control',
     'genes_ensembl': set(gse135251_sig['gene_base']),
     'n_study_degs': len(gse135251_sig),
@@ -161,7 +161,7 @@ gse126848.index = gse126848.index.astype(str).str.replace('"', '')
 gse126848['gene_base'] = gse126848.index.str.replace(r'\.\d+$', '', regex=True)
 gse126848_sig = gse126848[gse126848['padj'] < 0.05].copy()
 datasets['GSE126848'] = {
-    'label': 'Suppli 2019', 'n_samples': 31,
+    'label': 'GSE126848', 'n_samples': 31,
     'source': 'Reproduced (DESeq2)', 'contrast': 'Disease vs Control',
     'genes_ensembl': set(gse126848_sig['gene_base']),
     'n_study_degs': len(gse126848_sig),
@@ -178,7 +178,7 @@ gse213621_ps = pd.read_csv(f"{PER_STUDY}/GSE213621_de_results.csv")
 gse213621_ps['gene_base'] = gse213621_ps['gene'].str.replace(r'\.\d+$', '', regex=True)
 gse213621_sig = gse213621_ps[gse213621_ps['adj.P.Val'] < PERSTUDY_PADJ]
 datasets['GSE213621'] = {
-    'label': 'Chen 2022', 'n_samples': 368,
+    'label': 'GSE213621', 'n_samples': 368,
     'source': 'Per-study (limma)', 'contrast': 'Disease vs Control',
     'genes_ensembl': set(gse213621_sig['gene_base']),
     'n_study_degs': len(gse213621_sig),
@@ -192,7 +192,7 @@ gse162694_ps = pd.read_csv(f"{PER_STUDY}/GSE162694_de_results.csv")
 gse162694_ps['gene_base'] = gse162694_ps['gene'].str.replace(r'\.\d+$', '', regex=True)
 gse162694_sig = gse162694_ps[gse162694_ps['adj.P.Val'] < PERSTUDY_PADJ]
 datasets['GSE162694'] = {
-    'label': 'Pantano 2021', 'n_samples': 143,
+    'label': 'GSE162694', 'n_samples': 143,
     'source': 'Per-study (limma)', 'contrast': 'Disease vs Control',
     'genes_ensembl': set(gse162694_sig['gene_base']),
     'n_study_degs': len(gse162694_sig),
@@ -210,7 +210,7 @@ gse167523_lfc = dict(zip(gse167523['symbol'].astype(str),
                          np.log2(gse167523['fold_change'].astype(float))))
 gse167523_ensembl = symbols_to_ensembl(gse167523_symbols, ref_nn['sym_map'])
 datasets['GSE167523'] = {
-    'label': 'Kodama 2021', 'n_samples': 98,
+    'label': 'GSE167523', 'n_samples': 98,
     'source': 'Published', 'contrast': 'NASH vs NAFL',
     'genes_ensembl': gse167523_ensembl,
     'n_study_degs': len(gse167523_ensembl),
@@ -230,7 +230,7 @@ gse174478_sub = fib_ps[fib_ps['dataset'] == 'GSE174478'].copy()
 gse174478_sub['gene_base'] = gse174478_sub['gene'].str.replace(r'\.\d+$', '', regex=True)
 gse174478_sig = gse174478_sub[gse174478_sub['adj.P.Val'] < PERSTUDY_PADJ]
 datasets['GSE174478'] = {
-    'label': 'Kawamura 2022', 'n_samples': 94,
+    'label': 'GSE174478', 'n_samples': 94,
     'source': 'Per-study (limma)', 'contrast': 'Adv vs Early Fib',
     'genes_ensembl': set(gse174478_sig['gene_base']),
     'n_study_degs': len(gse174478_sig),
@@ -244,7 +244,7 @@ gse193066_sub = fib_ps[fib_ps['dataset'] == 'GSE193066'].copy()
 gse193066_sub['gene_base'] = gse193066_sub['gene'].str.replace(r'\.\d+$', '', regex=True)
 gse193066_sig = gse193066_sub[gse193066_sub['adj.P.Val'] < PERSTUDY_PADJ]
 datasets['GSE193066'] = {
-    'label': 'Fujiwara 2022', 'n_samples': 164,
+    'label': 'GSE193066', 'n_samples': 164,
     'source': 'Per-study (limma)', 'contrast': 'Adv vs Early Fib',
     'genes_ensembl': set(gse193066_sig['gene_base']),
     'n_study_degs': len(gse193066_sig),
@@ -258,7 +258,7 @@ gse240729_sub = fib_ps[fib_ps['dataset'] == 'GSE240729'].copy()
 gse240729_sub['gene_base'] = gse240729_sub['gene'].str.replace(r'\.\d+$', '', regex=True)
 gse240729_sig = gse240729_sub[gse240729_sub['adj.P.Val'] < PERSTUDY_PADJ]
 datasets['GSE240729'] = {
-    'label': 'Verschuren 2024', 'n_samples': 67,
+    'label': 'GSE240729', 'n_samples': 67,
     'source': 'Per-study (limma)', 'contrast': 'Adv vs Early Fib',
     'genes_ensembl': set(gse240729_sig['gene_base']),
     'n_study_degs': len(gse240729_sig),
@@ -510,8 +510,8 @@ for idx, (_, row) in enumerate(df.iterrows()):
         ax.text(0.5, 0.5, 'N/A', transform=ax.transAxes,
                 ha='center', va='center', fontsize=6, color='#BDBDBD')
 
-    # Title colored by contrast
-    title_name = row['label'].split(' 20')[0]
+    # Title colored by contrast (accession label)
+    title_name = row['label']
     ax.set_title(title_name, fontsize=5.5, fontweight='bold', pad=2,
                  color=contrast_col)
     ax.tick_params(labelsize=4, length=1.5, width=0.2)

@@ -117,20 +117,20 @@ biotype_map <- biotype_map[!duplicated(ensembl_clean)]
 consensus <- merge(consensus, symbol_map, by = "ensembl_clean", all.x = TRUE)
 
 # Also pull in the human tier from consensus columns
-# dream_sig + dream_dir already exist; consensus tier comes from the full consensus file
+# bulk_sig + bulk_dir already exist; consensus tier comes from the full consensus file
 # If a separate tier column is needed, derive from the per_study overlap later
-# For now, keep bulk_logFC, bulk_padj, t-statistic, dream_sig, dream_dir
+# For now, keep bulk_logFC, bulk_padj, t-statistic, bulk_sig, bulk_dir
 
 cat("  Genes with HGNC symbol:", sum(!is.na(consensus$human_symbol)), "/", nrow(consensus), "\n")
 
 # ================================================================
 # Layer 1b: Human consensus tiers (if separate tier file exists)
 # ================================================================
-# The consensus_degs.csv only has dream results. The actual tier classification
+# The consensus_degs.csv only has bulk (limma-voom-qw C2) results. The actual tier classification
 # (Tier1_HighConfidence, Tier2_Moderate, Tier3_Exploratory) was computed in Script 07.
 # Check if it's present as a column or needs separate loading.
 tier_file <- file.path(RDIR, "consensus_degs.csv")
-# dream_sig column already indicates significance; we need the tier mapping
+# bulk_sig column already indicates significance; we need the tier mapping
 # from the existing multi_evidence_scored_genes.csv (which has human_tier)
 old_me_file <- file.path(OUTDIR, "multi_evidence_scored_genes.csv")
 if (file.exists(old_me_file)) {
@@ -275,6 +275,17 @@ if (file.exists(susie_gene_file)) {
   susie_gene <- fread(susie_gene_file)
   has_real_susie <- "coloc_best_susie_pp4" %in% names(susie_gene)
 
+  # Ancestry-provenance / confidence-tier / EUR-companion columns are written by
+  # Script 07 (ancestry-labeling edit, 2026-07). Add NA stubs if reading a
+  # pre-labeling gene_level_coloc.csv so the selects below never hard-error.
+  for (.c in c("coloc_abf_conf_tier","coloc_best_ancestry","coloc_abf_ancestry_matched",
+               "coloc_abf_headline_cross_anc","coloc_best_pp4_EUR","coloc_n_anc_h4_05",
+               "coloc_cross_ancestry_replicated","coloc_susie_conf_tier","coloc_best_susie_ancestry",
+               "coloc_susie_ancestry_matched","coloc_susie_headline_cross_anc",
+               "coloc_best_susie_pp4_EUR","coloc_n_anc_susie_h4_05")) {
+    if (!(.c %in% names(susie_gene))) susie_gene[[.c]] <- NA
+  }
+
   # ABF columns (always present)
   susie_layer <- susie_gene[gene != "", .(
     human_symbol            = gene,
@@ -285,6 +296,14 @@ if (file.exists(susie_gene_file)) {
     coloc_n_gwas_tested     = coloc_n_gwas_tested,
     coloc_n_groups_h4_05    = coloc_n_groups_h4_05,
     coloc_n_groups_h4_08    = coloc_n_groups_h4_08,
+    # provenance / confidence tier / EUR-only companion (ABF headline)
+    coloc_abf_conf_tier             = coloc_abf_conf_tier,
+    coloc_abf_best_ancestry         = coloc_best_ancestry,
+    coloc_abf_ancestry_matched      = coloc_abf_ancestry_matched,
+    coloc_abf_headline_cross_anc    = coloc_abf_headline_cross_anc,
+    coloc_abf_best_pp4_EUR          = coloc_best_pp4_EUR,
+    coloc_n_anc_h4_05               = coloc_n_anc_h4_05,
+    coloc_cross_ancestry_replicated = coloc_cross_ancestry_replicated,
     coloc_is_mhc            = is_mhc,
     coloc_ld_cluster_flag   = ld_cluster_flag
   )]
@@ -302,7 +321,14 @@ if (file.exists(susie_gene_file)) {
       coloc_susie_n_pairs_total  = coloc_susie_n_pairs_total,
       coloc_susie_success_rate   = coloc_susie_success_rate,
       coloc_n_groups_susie_h4_05 = coloc_n_groups_susie_h4_05,
-      coloc_n_groups_susie_h4_08 = coloc_n_groups_susie_h4_08
+      coloc_n_groups_susie_h4_08 = coloc_n_groups_susie_h4_08,
+      # provenance / confidence tier / EUR-only companion (SuSiE headline)
+      coloc_susie_conf_tier          = coloc_susie_conf_tier,
+      coloc_susie_best_ancestry      = coloc_best_susie_ancestry,
+      coloc_susie_ancestry_matched   = coloc_susie_ancestry_matched,
+      coloc_susie_headline_cross_anc = coloc_susie_headline_cross_anc,
+      coloc_susie_best_pp4_EUR       = coloc_best_susie_pp4_EUR,
+      coloc_n_anc_susie_h4_05        = coloc_n_anc_susie_h4_05
     )]
     susie_extra <- susie_extra[!duplicated(human_symbol)]
     susie_layer <- merge(susie_layer, susie_extra, by = "human_symbol", all.x = TRUE)
@@ -931,14 +957,16 @@ if (nrow(coloc_sources) > 0) {
 # Layer 5: Sex stratification
 # ================================================================
 cat("Loading Layer 5: Sex-stratified analysis...\n")
-# v3 fallback (added 2026-05-13): prefer mashr-based v3 classification when present.
-# v3 file (sex_v3/sex_deg_classification_v3.csv) is the canonical output of the
-# Module 06 (06_classify_v3.R) pipeline. v2 (sex_deg_classification.csv) is
-# retained as the legacy fallback; this preserves backward compatibility while
-# the v3 pipeline lands.
+# LVQW-canonical (C2 swap 2026-06-08): the limma-voom quality-weighted sex
+# classification (sex_v3/lvqw_staging/sex_deg_classification_v3.csv) is CANONICAL
+# — 8 sex-dimorphic genes (1 Female_biased / 7 Male_biased / 0 Divergent), matching
+# the manuscript. The parent sex_v3/sex_deg_classification_v3.csv (dream/mashr, ~50
+# dimorphic) and sex_deg_classification.csv (dream-290 v2) are RETIRED sensitivity
+# arms, used only as fallbacks if the LVQW output is absent. Provides logFC_M/F too.
+sex_lvqw_path <- file.path(RDIR, "sex_v3/lvqw_staging/sex_deg_classification_v3.csv")
 sex_v3_path <- file.path(RDIR, "sex_v3/sex_deg_classification_v3.csv")
 sex_v2_path <- file.path(RDIR, "sex_deg_classification.csv")
-sex_class_file <- if (file.exists(sex_v3_path)) sex_v3_path else sex_v2_path
+sex_class_file <- if (file.exists(sex_lvqw_path)) sex_lvqw_path else if (file.exists(sex_v3_path)) sex_v3_path else sex_v2_path
 message(sprintf("Atlas reading sex classification from: %s", basename(sex_class_file)))
 if (file.exists(sex_class_file)) {
   sex_class_dt <- fread(sex_class_file)
@@ -974,9 +1002,12 @@ if (file.exists(sex_class_file)) {
 # when available, falling back to the v2 file. Same pattern as the L942
 # sex classification fallback. v3 csv schema is a strict superset (extra
 # adj.P.Val + se_int columns) so the `padj` lookup on L988 works for both.
+# LVQW-canonical (C2 swap): prefer the limma-voom-qw interaction p-values to match
+# the LVQW sex classification above; parent v3 (dream) and v2 are retired fallbacks.
+sex_int_lvqw_path <- file.path(RDIR, "sex_v3/lvqw_staging/sex_interaction_dream_v3.csv")
 sex_int_v3_path <- file.path(RDIR, "sex_v3/sex_interaction_dream_v3.csv")
 sex_int_v2_path <- file.path(RDIR, "sex_interaction_dream.csv")
-sex_int_file <- if (file.exists(sex_int_v3_path)) sex_int_v3_path else sex_int_v2_path
+sex_int_file <- if (file.exists(sex_int_lvqw_path)) sex_int_lvqw_path else if (file.exists(sex_int_v3_path)) sex_int_v3_path else sex_int_v2_path
 message(sprintf("Atlas reading sex interaction from: %s", basename(sex_int_file)))
 if (file.exists(sex_int_file)) {
   sex_int <- fread(sex_int_file)
@@ -1226,7 +1257,7 @@ cat("\n=== Assembling unified atlas ===\n")
 atlas <- unique(consensus[!is.na(human_symbol) & human_symbol != "",
                            .(human_symbol, ensembl_id = ensembl_clean,
                              bulk_logFC, bulk_padj, bulk_tstat = t,
-                             bulk_shrunk_logFC, bulk_lfsr)])
+                             bulk_shrunk_logFC, bulk_lfsr, bulk_treat_fdr)])
 setorder(atlas, bulk_padj, na.last = TRUE)
 atlas <- atlas[!duplicated(human_symbol)]
 cat("Starting genes (from consensus):", nrow(atlas), "\n")
@@ -1241,9 +1272,9 @@ for (i in seq_len(min(5, nrow(bt_tab)))) {
   cat(sprintf("    %s: %d\n", bt_tab$gene_biotype[i], bt_tab$N[i]))
 }
 
-# Add human tier from old multi_evidence (meta-analysis columns removed)
-atlas <- merge(atlas, old_me[, .(ensembl_clean, human_consensus_tier = human_tier)],
-               by.x = "ensembl_id", by.y = "ensembl_clean", all.x = TRUE)
+# human_consensus_tier REMOVED 2026-06-29: it was the legacy "significant in BOTH dream
+# AND metafor" tier; both methods are retired, the tier no longer aligns with the canonical
+# TREAT DEG set, and it was a circular self-carry. Downstream readers use bulk_sig (treat_fdr<0.05).
 
 # Mouse ortholog from concordance
 mouse_ortho <- conc_layer[, .(human_symbol, mouse_ortholog = mouse_gene_id)]
@@ -1483,8 +1514,10 @@ cat("Atlas genes after all merges:", nrow(atlas), "\n")
 # Define what counts as "active" for each layer
 atlas[, layers_active := 0L]
 
-# L1: DEG significance — lfsr < 0.05 and |shrunk_logFC| > 0.5 (ashr canonical, 2026-06-02)
-atlas[, l1_active := !is.na(bulk_lfsr) & bulk_lfsr < 0.05 & abs(bulk_shrunk_logFC) > 0.5]
+# L1: DEG significance — canonical TREAT FDR < 0.05 (lfc=0.25; real limma::treat, 2026-06-29)
+# NOTE: same gate as 07_consensus_degs.R::bulk_sig (treat_fdr<0.05). Effect floor is in the treat lfc.
+atlas[, l1_active := !is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05]
+atlas[, bulk_sig := l1_active]  # persistent canonical DEG flag (TREAT treat_fdr<0.05, lfc=0.25); l1_active is dropped below after layers_active, bulk_sig is kept for downstream readers
 # L2: Mouse — EXCLUDED from layers_active (supplementary only)
 # L3: has concordance data
 atlas[, l3_active := !is.na(primary_category) & primary_category != "" & primary_category != "Not_Significant"]
@@ -1567,8 +1600,7 @@ priority_cols <- c(
   "human_symbol", "ensembl_id", "gene_biotype", "mouse_ortholog",
   # L1: Human DE
   "bulk_logFC", "bulk_padj", "bulk_tstat",
-  "bulk_shrunk_logFC", "bulk_lfsr",
-  "human_consensus_tier",
+  "bulk_shrunk_logFC", "bulk_lfsr", "bulk_treat_fdr", "bulk_sig",
   # L2: Mouse DE
   "mouse_meta_logFC", "mouse_meta_padj", "n_diets_sig", "mouse_consensus_tier",
   # L3: Cross-species concordance
@@ -1674,9 +1706,10 @@ if (file.exists(out_file)) {
   # so the re-run guard does NOT resurrect the stale dream-method values from the
   # prior atlas snapshot alongside the new bulk_* columns.
   renamed_legacy <- c("is_conserved_core",
-                      "dream_logFC", "dream_padj", "dream_tstat",
-                      "dream_shrunk_logFC", "dream_lfsr",
-                      "dream_logFC_M", "dream_logFC_F", "dream_robustness_flag")
+                      "human_consensus_tier",  # retired 2026-06-29: legacy dream∩metafor tier; use bulk_sig instead (block re-run-guard resurrection)
+                      "dream_logFC", "dream_padj", "dream_tstat",  # C2-OK-sensitivity (drop-list of retired names)
+                      "dream_shrunk_logFC", "dream_lfsr",  # C2-OK-sensitivity
+                      "dream_logFC_M", "dream_logFC_F", "dream_robustness_flag")  # C2-OK-sensitivity
   if (any(renamed_legacy %in% downstream_cols)) {
     cat(sprintf("  Dropping legacy renamed columns from prior: %s\n",
                 paste(intersect(renamed_legacy, downstream_cols), collapse = ", ")))
@@ -1733,9 +1766,9 @@ cat("\n=== Atlas Summary ===\n")
 cat("Total genes:", nrow(atlas), "\n\n")
 
 cat("Layer coverage (non-NA/non-zero genes):\n")
-cat(sprintf("  L1 Human DE (lfsr<0.05, |shrunk_logFC|>0.5): %d (%0.1f%%)\n",
-            sum(!is.na(atlas$bulk_lfsr) & atlas$bulk_lfsr < 0.05 & abs(atlas$bulk_shrunk_logFC) > 0.5),
-            100 * sum(!is.na(atlas$bulk_lfsr) & atlas$bulk_lfsr < 0.05 & abs(atlas$bulk_shrunk_logFC) > 0.5) / nrow(atlas)))
+cat(sprintf("  L1 Human DE (TREAT treat_fdr<0.05, lfc=0.25): %d (%0.1f%%)\n",
+            sum(!is.na(atlas$bulk_treat_fdr) & atlas$bulk_treat_fdr < 0.05),
+            100 * sum(!is.na(atlas$bulk_treat_fdr) & atlas$bulk_treat_fdr < 0.05) / nrow(atlas)))
 cat(sprintf("  L2 Mouse DE (mouse_meta_padj<0.1): %d (%0.1f%%)\n",
             sum(!is.na(atlas$mouse_meta_padj) & atlas$mouse_meta_padj < 0.1),
             100 * sum(!is.na(atlas$mouse_meta_padj) & atlas$mouse_meta_padj < 0.1) / nrow(atlas)))
@@ -1807,8 +1840,8 @@ if ("gene_biotype" %in% names(atlas)) {
   lnc <- atlas[gene_biotype == "lncRNA"]
   cat(sprintf("\nlncRNA verification:\n"))
   cat(sprintf("  lncRNAs in atlas: %d\n", nrow(lnc)))
-  cat(sprintf("  with dream DEG (lfsr<0.05, |shrunk_logFC|>0.5): %d\n",
-              sum(!is.na(lnc$bulk_lfsr) & lnc$bulk_lfsr < 0.05 & abs(lnc$bulk_shrunk_logFC) > 0.5)))
+  cat(sprintf("  with canonical DEG (TREAT treat_fdr<0.05): %d\n",
+              sum(!is.na(lnc$bulk_treat_fdr) & lnc$bulk_treat_fdr < 0.05)))
   cat(sprintf("  with Broadaway COLOC: %d\n",
               sum(!is.na(lnc$broadaway_coloc_pp4))))
   cat(sprintf("  with Broadaway PP.H4 > 0.5: %d\n",
@@ -1849,7 +1882,7 @@ cat("\nComputing layer correlations...\n")
 
 # Create continuous proxies for correlation
 cor_data <- atlas[, .(
-  L1 = -log10(pmax(bulk_lfsr, 1e-300, na.rm = TRUE)) * sign(bulk_shrunk_logFC),
+  L1 = -log10(pmax(bulk_treat_fdr, 1e-300, na.rm = TRUE)) * sign(bulk_logFC),  # TREAT canonical (2026-06-29; was ashr bulk_lfsr*sign(shrunk))
   L2 = ifelse(is.na(mouse_meta_logFC), 0, -log10(pmax(mouse_meta_padj, 1e-300, na.rm = TRUE)) * sign(mouse_meta_logFC)),
   L3 = ifelse(is.na(n_concordant_diets), 0, n_concordant_diets),
   L4 = ifelse(is.na(twas_z), 0, abs(twas_z)) +

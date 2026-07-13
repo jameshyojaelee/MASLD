@@ -21,10 +21,10 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang",
-                  GSE135251 = "Govaere", GSE162694 = "Bril", GSE213621 = "Chen")
-cohort_pal   <- c(Suppli = "#1F77B4", Hoang = "#FF7F0E", Govaere = "#2CA02C",
-                  Bril = "#D62728", Chen = "#9467BD")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970",
+                  GSE135251 = "GSE135251", GSE162694 = "GSE162694", GSE213621 = "GSE213621")
+cohort_pal   <- c(GSE126848 = "#1F77B4", GSE130970 = "#FF7F0E", GSE135251 = "#2CA02C",
+                  GSE162694 = "#D62728", GSE213621 = "#9467BD")
 N_HVG <- 2000L; NCOMP <- 2L
 
 # ---------------------------------------------------------------------------
@@ -114,10 +114,10 @@ base_theme <- function() {
   theme_masld(base_size = 7) +
     theme(axis.text = element_blank(), axis.ticks = element_blank(),
           panel.grid = element_blank(),
-          strip.text = element_text(size = 7, face = "bold"),
+          strip.text = element_text(size = 6, face = "plain"),
           strip.background = element_blank(),
           legend.position = "right",
-          legend.title = element_text(size = 6.5, face = "bold"),
+          legend.title = element_text(size = 6, face = "plain"),
           legend.text  = element_text(size = 6),
           legend.key.size = unit(0.25, "cm"))
 }
@@ -128,8 +128,7 @@ row_cohort <- ggplot(both, aes(Dim1, Dim2, colour = cohort)) +
   facet_wrap(~ method, nrow = 1, scales = "free") +
   scale_colour_manual(values = cohort_pal, name = "Cohort") +
   guides(colour = guide_legend(override.aes = list(size = 1.8, alpha = 1))) +
-  labs(x = NULL, y = NULL,
-       title = "Coloured by cohort — PCA mixes cohorts after correction; PLS focuses on disease") +
+  labs(x = NULL, y = NULL) +
   base_theme()
 
 # row 2 — coloured by disease
@@ -139,22 +138,18 @@ row_dis <- ggplot(both, aes(Dim1, Dim2, colour = disease)) +
   scale_colour_manual(values = c(Control = CTRL, Disease = masld_colors$nash),
                       name = "Disease") +
   guides(colour = guide_legend(override.aes = list(size = 1.8, alpha = 1))) +
-  labs(x = NULL, y = NULL,
-       title = "Coloured by disease — PLS-DA explicitly separates Control from Disease on axis 1") +
+  labs(x = NULL, y = NULL) +
   base_theme()
 
 fig <- (row_cohort / row_dis) +
-  plot_layout(heights = c(1, 1)) +
-  plot_annotation(
-    title    = "PCA (unsupervised) vs PLS-DA (supervised) — batch-corrected, 5 cohorts pooled",
-    subtitle = sprintf(
-      "Top-%d HVGs, within-cohort variance selection. Batch removed via limma::removeBatchEffect. PLS-DA is in-sample (not cross-validated) — see panelK for held-out AUROC.",
-      N_HVG),
-    theme = theme(plot.title    = element_text(size = 9, face = "bold"),
-                  plot.subtitle = element_text(size = 6.2, colour = "grey35")))
+  plot_layout(heights = c(1, 1))
+
+message(sprintf(
+  "[caption] PCA (unsupervised) vs PLS-DA (supervised) - batch-corrected, 5 cohorts pooled. Row 1: coloured by cohort - PCA mixes cohorts after correction; PLS focuses on disease. Row 2: coloured by disease - PLS-DA explicitly separates Control from Disease on axis 1. Top-%d HVGs, within-cohort variance selection. Batch removed via limma::removeBatchEffect. PLS-DA is in-sample (not cross-validated) - see panelK for held-out AUROC.",
+  N_HVG))
 
 ggsave(file.path(OUT, "panelJ_pls_pooled.pdf"), fig,
-       width = 8.0, height = 5.8, device = cairo_pdf)
+       width = 7.09, height = 5.14, device = cairo_pdf)
 fwrite(both[, .(sample_id, dataset, cohort, disease, method, Dim1, Dim2)],
        file.path(OUT, "panelJ_pls_pooled_data.csv"))
 cat("Wrote panelJ_pls_pooled.pdf\n")

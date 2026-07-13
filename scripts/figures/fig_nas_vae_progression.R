@@ -91,8 +91,7 @@ umap_theme <- theme_masld(base_size = 7) +
   theme(
     axis.text       = element_blank(),
     axis.ticks      = element_blank(),
-    axis.title      = element_text(size = 7),
-    plot.title      = element_text(size = 8, face = "bold"),
+    axis.title      = element_text(size = 6),
     legend.position = "right"
   )
 
@@ -124,7 +123,7 @@ p_a <- ggplot() +
                        name = "NAS") +
   guides(color = guide_colorbar(barwidth = unit(0.35, "cm"),
                                  barheight = unit(2.5, "cm"))) +
-  labs(title = "NAS score (0-8)", x = "UMAP 1", y = "UMAP 2") +
+  labs(x = "UMAP 1", y = "UMAP 2") +
   umap_theme
 
 # ============================================================
@@ -149,7 +148,7 @@ p_b <- ggplot() +
              size = 0.5, alpha = 0.7) +
   scale_color_manual(values = fib_pal, name = "Fibrosis") +
   guides(color = guide_legend(override.aes = list(size = 2.5, alpha = 1))) +
-  labs(title = "Fibrosis stage (F0-F4)", x = "UMAP 1", y = "UMAP 2") +
+  labs(x = "UMAP 1", y = "UMAP 2") +
   umap_theme
 
 # ============================================================
@@ -162,10 +161,10 @@ p_c <- ggplot(umap_dt, aes(x = UMAP1, y = UMAP2, color = dataset)) +
   scale_color_manual(values = dataset_pal, name = "Cohort") +
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1),
                                ncol = 2)) +
-  labs(title = "Cohort (batch check)", x = "UMAP 1", y = "UMAP 2") +
+  labs(x = "UMAP 1", y = "UMAP 2") +
   umap_theme +
-  theme(legend.text     = element_text(size = 5.5),
-        legend.title    = element_text(size = 6.5),
+  theme(legend.text     = element_text(size = 6),
+        legend.title    = element_text(size = 6),
         legend.key.size = unit(0.22, "cm"))
 
 # ============================================================
@@ -212,8 +211,7 @@ p_d <- ggplot() +
                        na.value = "gray80", name = "NAS") +
   guides(color = guide_colorbar(barwidth = unit(0.35, "cm"),
                                  barheight = unit(2.5, "cm"))) +
-  labs(title = "Progression velocity field (NAS)",
-       x = "UMAP 1", y = "UMAP 2") +
+  labs(x = "UMAP 1", y = "UMAP 2") +
   umap_theme
 
 # ============================================================
@@ -239,25 +237,23 @@ bif_plot[, bif_status := fifelse(is_bifurcation == TRUE | divergence_score >= 0.
 p_e <- ggplot(bif_plot, aes(x = stage_label, y = divergence_score, fill = bif_status)) +
   geom_col(width = 0.65) +
   geom_text(aes(label = sprintf("%.2f", divergence_score)),
-            vjust = -0.4, size = 2.2, fontface = "bold") +
+            vjust = -0.4, size = GEOM_TEXT_6PT, fontface = "plain") +
   # Annotate sample counts
   geom_text(aes(label = paste0("n=", n_samples), y = 0.03),
-            size = 1.8, color = "white", fontface = "bold") +
+            size = GEOM_TEXT_6PT, color = "white", fontface = "plain") +
   scale_fill_manual(
     values = c("Terminal" = "#b2182b", "Transitional" = "#42A5F5"),
     name = ""
   ) +
   scale_y_continuous(limits = c(0, 1.12), breaks = seq(0, 1, 0.25)) +
   facet_wrap(~ stage_axis, scales = "free_x", nrow = 1) +
-  labs(title = "Stage divergence score",
-       x = "", y = "Divergence score") +
+  labs(x = "", y = "Divergence score") +
   theme_masld(base_size = 7) +
   theme(
     axis.text.x     = element_text(angle = 40, hjust = 1, size = 6),
-    strip.text       = element_text(size = 7, face = "bold"),
+    strip.text       = element_text(size = 6, face = "plain"),
     legend.position  = "bottom",
-    legend.key.size  = unit(0.3, "cm"),
-    plot.title       = element_text(size = 8, face = "bold")
+    legend.key.size  = unit(0.3, "cm")
   )
 
 # ============================================================
@@ -309,22 +305,20 @@ p_f <- ggplot(comp, aes(x = value, y = model_short, fill = is_vae)) +
   geom_errorbar(aes(xmin = pmax(0, value - fifelse(is.na(value_sd), 0, value_sd)),
                      xmax = pmin(1, value + fifelse(is.na(value_sd), 0, value_sd))),
                  width = 0.2, linewidth = 0.3, orientation = "y") +
-  geom_text(aes(label = sprintf("%.3f", value)), hjust = -0.15, size = 2.2,
-            fontface = "bold") +
+  geom_text(aes(label = sprintf("%.3f", value)), hjust = -0.15, size = GEOM_TEXT_6PT,
+            fontface = "plain") +
   scale_fill_manual(values = c("FALSE" = "#42A5F5", "TRUE" = "#C2185B"),
                     labels = c("Other", "NAS-VAE"),
                     name = "") +
   scale_x_continuous(limits = c(0, 1.08), breaks = seq(0, 1, 0.2)) +
   facet_wrap(~ metric, ncol = 1, scales = "free_y") +
-  labs(title = "Model comparison (NAS targets)",
-       x = "Performance", y = "") +
+  labs(x = "Performance", y = "") +
   theme_masld(base_size = 7) +
   theme(
-    strip.text       = element_text(size = 7, face = "bold"),
+    strip.text       = element_text(size = 6, face = "plain"),
     axis.text.y      = element_text(size = 6),
     legend.position  = "bottom",
-    legend.key.size  = unit(0.3, "cm"),
-    plot.title       = element_text(size = 8, face = "bold")
+    legend.key.size  = unit(0.3, "cm")
   )
 
 # ============================================================
@@ -343,12 +337,13 @@ composite <- p_a + p_b + p_c + p_d + p_e + p_f +
   plot_annotation(
     tag_levels = "a",
     theme = theme(
-      plot.tag = element_text(face = "bold", size = 10)
+      plot.tag = element_text(face = "plain", size = 10)
     )
   )
 
 out_path <- file.path(OUTDIR, "fig_nas_vae_progression.pdf")
-ggsave(out_path, composite, width = 11, height = 13, device = cairo_pdf)
+ggsave(out_path, composite, width = fig_full_width, height = fig_full_width * 13 / 11,
+       device = cairo_pdf)
 cat("Saved composite:", out_path, "\n")
 cat("  File size:", format(file.info(out_path)$size, big.mark = ","), "bytes\n")
 

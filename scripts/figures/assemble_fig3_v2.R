@@ -6,15 +6,15 @@
 # pruned to 9 panels for compactness — legend panels (g) high-PIP TF list +
 # (i) D4 cell-type heritability remain in the figure narrative as inline
 # references; legend (j)/(k) are promoted into this composite as h/g):
-#   a: COLOC Manhattan          (fig3a.pdf)
-#   b: Top COLOC heatmap        (fig3b.pdf)
-#   c: sc-eQTL cell-type dot    (fig3c_sceqtl_dotplot.pdf)
-#   d: Causal method coverage   (fig3d_causal_coverage.pdf)
-#   e: ieQTL-DEG concordance    (fig3e_ieqtl_concordance.pdf)
-#   f: Multi-ancestry COLOC     (fig3f_multiancestry.pdf)
-#   g: GWAS-ATAC chain exemplar (fig3_panel_K_gwas_atac_chain.pdf)   [BOTTOM-UP]
-#   h: Disease regulons x CT    (fig3_panel_J_disease_regulons_celltype.pdf) [TOP-DOWN]
-#   i: Evidence funnel 24 -> 5  (fig3_panel_L_evidence_funnel.pdf)
+#   a: COLOC Manhattan          (pip_coloc_manhattan.pdf)
+#   b: Top COLOC heatmap        (ancestry_coloc_counts.pdf)
+#   c: sc-eQTL cell-type dot    (sceqtl_celltype_dotplot.pdf)
+#   d: Causal method coverage   (causal_coverage.pdf)
+#   e: ieQTL-DEG concordance    (ieqtl_concordance.pdf)
+#   f: Multi-ancestry COLOC     (multiancestry_coloc.pdf)
+#   g: GWAS-ATAC chain exemplar (fig3_panel_K_gwas_atac_chain.pdf)   [BOTTOM-UP; not produced in this dir — dangling]
+#   h: Disease regulons x CT    (disease_master_regulators_celltype.pdf) [TOP-DOWN]
+#   i: Evidence funnel 24 -> 5  (evidence_funnel.pdf)
 #
 # Legacy duplicates excluded:
 #   fig3a_hybrid.pdf, fig3a_hybrid_b.pdf, fig3a_coloc_manhattan.pdf
@@ -32,22 +32,27 @@ suppressPackageStartupMessages({
   library(gridExtra)
 })
 
+# DISABLED 2026-06-12: the Fig 2 (genetics) composite is retired — only the individual
+# panels are kept (per user). This assembler no longer generates genetics_composite.pdf.
+message("[assemble_fig3_v2] disabled — genetics_composite.pdf (Fig 2 composite) retired (2026-06-12)")
+quit(save = "no", status = 0)
+
 source("/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/scripts/figures/load_figure_data.R")
 
 PANEL_DIR <- file.path(FIG3_DIR, "panels")
-OUT_PDF   <- file.path(FIG3_DIR, "fig3_composite.pdf")
+OUT_PDF   <- file.path(FIG3_DIR, "genetics_composite.pdf")
 
 # Ordered (letter, file) tuples
 panels <- list(
-  a = "fig3a.pdf",
-  b = "fig3b.pdf",
-  c = "fig3c_sceqtl_dotplot.pdf",
-  d = "fig3d_causal_coverage.pdf",
-  e = "fig3e_ieqtl_concordance.pdf",
-  f = "fig3f_multiancestry.pdf",
+  a = "pip_coloc_manhattan.pdf",
+  b = "ancestry_coloc_counts.pdf",
+  c = "sceqtl_celltype_dotplot.pdf",
+  d = "causal_coverage.pdf",
+  e = "ieqtl_concordance.pdf",
+  f = "multiancestry_coloc.pdf",
   g = "fig3_panel_K_gwas_atac_chain.pdf",
-  h = "fig3_panel_J_disease_regulons_celltype.pdf",
-  i = "fig3_panel_L_evidence_funnel.pdf"
+  h = "disease_master_regulators_celltype.pdf",
+  i = "evidence_funnel.pdf"
 )
 
 # Sanity-check all panels exist
@@ -202,8 +207,8 @@ for (r in 0:(N_ROW-1)) {
               x = unit(x_in, "in"),
               y = unit(y_in, "in"),
               just = c("left", "top"),
-              gp = gpar(fontsize = 12, fontface = "bold",
-                        fontfamily = "sans"))
+              gp = gpar(fontsize = 12, fontface = "plain",
+                        fontfamily = "Helvetica"))
     idx_lin <- idx_lin + 1
   }
 }

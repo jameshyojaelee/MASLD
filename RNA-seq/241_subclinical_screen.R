@@ -9,7 +9,7 @@
 # Primary axis: NMF P_Pro_inflammatory_score (Spearman 0.472 with NAS in disease,
 # validated in pre-flight). Secondary axis: pseudo-NAS-component score from
 # nas_components_all.csv DE results projected onto each subject by the bulk
-# atlas dream_logFC anchors (only used if NMF coverage <50%).
+# atlas bulk_logFC anchors (only used if NMF coverage <50%).
 #
 # Outputs subclinical_screen.csv: per-subject screen labels for the 92 controls
 # plus 25 control-pool samples missing from NMF (handled as 'unscored').

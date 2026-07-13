@@ -27,17 +27,20 @@ if (!file.exists(canon_file)) {
   stop("canonical_deg_results.csv not found — run 05h_limma_voom_qw_canonical.R first")
 }
 deg <- fread(canon_file)
-stopifnot(all(c("shrunk_logFC", "lfsr") %in% names(deg)))
+stopifnot(all(c("shrunk_logFC", "lfsr", "treat_fdr") %in% names(deg)))
 cat("Loaded canonical (limma_voom_qw C2) results:", nrow(deg), "genes\n")
 
-# --- Significance: ashr lfsr + shrunk effect size (canonical) ---
-LFSR_THRESH <- 0.05
-LFC_THRESH  <- 0.5  # applied to ashr-shrunk effect size
-deg[, bulk_sig := lfsr < LFSR_THRESH & abs(shrunk_logFC) > LFC_THRESH]
-deg[, bulk_dir := sign(shrunk_logFC)]
+# --- Significance: TREAT FDR (canonical 2026-06-29) ---
+# treat_fdr = real limma::treat() FDR at lfc=0.25 (computed in 05h). FDR<0.05 IS the DEG
+# call: treat() tests H0:|true logFC|<=lfc, so the effect-size floor is folded INTO the
+# test and NO separate |logFC| filter is applied. Supersedes the ashr lfsr+|shrunk|>0.3 gate
+# (which is retained in the table as a reference column).
+TREAT_FDR_THRESH <- 0.05
+deg[, bulk_sig := treat_fdr < TREAT_FDR_THRESH]
+deg[, bulk_dir := sign(logFC)]   # TREAT tests raw logFC; direction = logFC sign
 
-cat("\n===== CANONICAL DE RESULTS (lfsr + shrunk_logFC) =====\n")
-cat("Threshold: lfsr <", LFSR_THRESH, "AND |shrunk_logFC| >", LFC_THRESH, "\n")
+cat("\n===== CANONICAL DE RESULTS (TREAT FDR, lfc =", deg$treat_lfc[1], ") =====\n")
+cat("Threshold: treat_fdr <", TREAT_FDR_THRESH, "\n")
 cat("Total genes:", nrow(deg), "\n\n")
 
 sig_genes <- deg[bulk_sig == TRUE]
@@ -56,6 +59,8 @@ setnames(deg, "logFC", "bulk_logFC")
 setnames(deg, "shrunk_logFC", "bulk_shrunk_logFC")
 setnames(deg, "padj", "bulk_padj")
 setnames(deg, "lfsr", "bulk_lfsr")
+if ("treat_fdr" %in% names(deg)) setnames(deg, "treat_fdr", "bulk_treat_fdr")
+if ("treat_p" %in% names(deg))   setnames(deg, "treat_p", "bulk_treat_p")
 if ("SE" %in% names(deg)) setnames(deg, "SE", "se")
 
 # --- Save ---

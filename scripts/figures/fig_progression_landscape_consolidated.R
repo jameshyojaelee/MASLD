@@ -154,7 +154,7 @@ c13_row <- deg_counts[contrast_id == "C13"]
 
 pA <- ggplot(deg_counts, aes(x = n_deg, y = label, fill = type)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = comma(n_deg)), hjust = -0.1, size = 2, family = "Helvetica") +
+  geom_text(aes(label = comma(n_deg)), hjust = -0.1, size = GEOM_TEXT_6PT, family = "Helvetica") +
   # Diamond callout for C13
 
   geom_point(data = c13_row, aes(x = n_deg + max(deg_counts$n_deg) * 0.06),
@@ -163,13 +163,12 @@ pA <- ggplot(deg_counts, aes(x = n_deg, y = label, fill = type)) +
            x = c13_row$n_deg + max(deg_counts$n_deg) * 0.09,
            y = c13_row$label,
            label = "Fibrosis-adjusted\nresidual",
-           hjust = 0, size = 1.8, fontface = "italic", family = "Helvetica",
+           hjust = 0, size = GEOM_TEXT_6PT, fontface = "plain", family = "Helvetica",
            color = "#e14b9d") +
   scale_fill_manual(values = contrast_type_colors, name = "Contrast type") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.25)),
                      labels = comma) +
-  labs(x = "Number of DEGs (padj < 0.1)", y = NULL,
-       title = "DEG yield across 15 progression contrasts") +
+  labs(x = "Number of DEGs (padj < 0.1)", y = NULL) +
   theme_masld(base_size = 7) +
   theme(legend.position = c(0.85, 0.25),
         legend.background = element_rect(fill = "white", color = "grey80",
@@ -243,12 +242,11 @@ rho_dt[, contrast2 := factor(contrast2, levels = clust_order)]
 pB <- ggplot(rho_dt, aes(x = contrast1, y = contrast2, fill = rho)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%.2f", rho)),
-            size = 1.6, family = "Helvetica") +
+            size = GEOM_TEXT_6PT, family = "Helvetica") +
   scale_fill_gradient2(low = "#4baeef", mid = "white", high = "#e14b9d",
                        midpoint = 0, limits = c(-0.5, 1),
                        name = expression(rho)) +
-  labs(x = NULL, y = NULL,
-       title = "Pairwise logFC correlation (Spearman)") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "right",
@@ -311,7 +309,7 @@ pC <- ggplot(class_dt, aes(x = n_genes, y = "All genes", fill = class_label)) +
   geom_col(position = "stack", width = 0.6) +
   geom_text(aes(label = bar_label),
             position = position_stack(vjust = 0.5),
-            size = 1.8, family = "Helvetica", color = "white") +
+            size = GEOM_TEXT_6PT, family = "Helvetica", color = "white") +
   coord_flip() +
   scale_fill_manual(
     values = setNames(class_colors[names(class_labels)],
@@ -319,8 +317,7 @@ pC <- ggplot(class_dt, aes(x = n_genes, y = "All genes", fill = class_label)) +
     name = "Gene class"
   ) +
   scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
-  labs(x = "Number of genes", y = NULL,
-       title = paste0("Gene classification (", comma(total_genes), " genes)")) +
+  labs(x = "Number of genes", y = NULL) +
   theme_masld(base_size = 7) +
   theme(legend.position = "right",
         legend.key.size = unit(0.25, "cm"),
@@ -330,6 +327,7 @@ pC <- ggplot(class_dt, aes(x = n_genes, y = "All genes", fill = class_label)) +
 
 save_fig(pC, file.path(PANEL_DIR, "panel_consolidated_c_classification.pdf"),
          width = 5, height = 4)
+message("[caption] Gene classification (", comma(total_genes), " genes)")
 
 # ===========================================================================
 # Panel D: Scatter of C4 logFC (x) vs C2 logFC (y)
@@ -419,11 +417,11 @@ pD <- ggplot(scatter_dt[order(sig_class)], aes(x = logFC_C4, y = logFC_C2,
   annotate("text", x = Inf, y = Inf,
            label = paste0("rho == ", round(rho_c4_c2, 3)),
            parse = TRUE, hjust = 1.1, vjust = 1.5,
-           size = 2.5, family = "Helvetica", fontface = "italic") +
+           size = GEOM_TEXT_6PT, family = "Helvetica", fontface = "plain") +
   # Label divergent genes
   geom_text_repel(data = label_genes,
                   aes(label = symbol),
-                  size = 2, family = "Helvetica",
+                  size = GEOM_TEXT_6PT, family = "Helvetica",
                   max.overlaps = 15, segment.size = 0.2,
                   min.segment.length = 0, seed = 42) +
   scale_color_manual(values = sig_colors, name = "Significant in") +
@@ -434,8 +432,7 @@ pD <- ggplot(scatter_dt[order(sig_class)], aes(x = logFC_C4, y = logFC_C2,
     alpha = c(0.3, 0.8, 0.8, 1.0)
   ))) +
   labs(x = "logFC: NAFL vs Control (C4, onset)",
-       y = "logFC: NASH vs NAFL (C2, progression)",
-       title = "Onset vs progression orthogonality") +
+       y = "logFC: NASH vs NAFL (C2, progression)") +
   theme_masld(base_size = 7) +
   theme(legend.position = c(0.15, 0.85),
         legend.background = element_rect(fill = alpha("white", 0.9),
@@ -504,14 +501,13 @@ gsea_plot[, short_id := factor(short_id, levels = contrast_display_order)]
 pE <- ggplot(gsea_plot, aes(x = short_id, y = pathway_clean, fill = NES)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%.1f", NES)),
-            size = 1.6, family = "Helvetica") +
+            size = GEOM_TEXT_6PT, family = "Helvetica") +
   scale_fill_gradient2(low = "#4baeef", mid = "white", high = "#e14b9d",
                        midpoint = 0, name = "NES") +
-  labs(x = NULL, y = NULL,
-       title = "Hallmark pathway NES across contrasts") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        axis.text.y = element_text(size = 5.5),
+        axis.text.y = element_text(size = 6),
         legend.position = "right",
         panel.grid = element_blank())
 
@@ -579,13 +575,12 @@ pF <- ggplot(deconv_long, aes(x = n_genes, y = contrast_label, fill = category))
   geom_col(position = "stack", width = 0.6) +
   geom_text(aes(label = pct_label),
             position = position_stack(vjust = 0.5),
-            size = 2, family = "Helvetica", color = "white") +
+            size = GEOM_TEXT_6PT, family = "Helvetica", color = "white") +
   scale_fill_manual(values = deconv_colors,
                     labels = deconv_labels_map,
                     name = "Attribution") +
   scale_x_continuous(labels = comma, expand = expansion(mult = c(0, 0.05))) +
-  labs(x = "Number of genes", y = NULL,
-       title = "Deconvolution attribution by contrast") +
+  labs(x = "Number of genes", y = NULL) +
   theme_masld(base_size = 7) +
   theme(legend.position = "right",
         legend.key.size = unit(0.25, "cm"),
@@ -603,13 +598,13 @@ composite <- (pA | pB) / (pC | pD) / (pE | pF) +
   plot_annotation(
     tag_levels = "a",
     theme = theme(
-      plot.tag = element_text(size = 10, face = "bold", family = "Helvetica")
+      plot.tag = element_text(size = 6, face = "plain", family = "Helvetica")
     )
   )
 
 save_fig(composite,
          file.path(OUT_DIR, "fig_progression_landscape_consolidated.pdf"),
-         width = 14, height = 12)
+         width = fig_full_width, height = fig_full_width * 12 / 14)
 
 cat("\n=== Done ===\n")
 cat("Composite:", file.path(OUT_DIR, "fig_progression_landscape_consolidated.pdf"), "\n")

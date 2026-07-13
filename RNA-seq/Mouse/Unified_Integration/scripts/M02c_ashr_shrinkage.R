@@ -26,10 +26,11 @@ DEDIR <- file.path(PROJECT, "RNA-seq/Mouse/Unified_Integration/results/per_diet"
 BK    <- file.path(DEDIR, "pre_ashr_backup")
 dir.create(BK, recursive = TRUE, showWarnings = FALSE)
 
-# Canonical diet axis = 4 groups (2026-05-29): NASH_diet + Western_diet merged
-# into one "Western" metabolic-overload group. NASH_diet/Western_diet still exist
-# on disk for provenance but are no longer the canonical replication axes.
-DIETS <- c("MCD", "CDAHFD", "Western", "HFD")
+# Canonical diet axis = 4 config-registered models (reverted 2026-06-16 to the
+# config/mouse_datasets.yaml roster; the Western/NASH metabolic-overload pools
+# from M02b were dropped when GAN/DIAMOND/FFC/GSE246088 were excluded — see the
+# mouse roster reconciliation in docs/manuscript/NUMBERS.md).
+DIETS <- c("MCD", "HFD", "CDAHFD", "FPC")
 
 run_ashr_one <- function(diet) {
   f <- file.path(DEDIR, paste0(diet, "_de_results.csv"))

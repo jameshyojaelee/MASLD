@@ -21,7 +21,7 @@ import os
 plt.rcParams.update({
     "font.family":      "sans-serif",
     "font.sans-serif":  ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size":        10,
+    "font.size":        6,
     "pdf.fonttype":     42,
     "ps.fonttype":      42,
     "axes.spines.top":  False,
@@ -125,7 +125,7 @@ def draw_tile(ax, x, y, w, h, mod_data):
 
     # Title
     ax.text(tx, y + h * 0.88, title,
-            fontsize=9, fontweight="bold", color=color,
+            fontsize=6, color=color,
             va="top", ha="left")
 
     # Species badges (top right)
@@ -143,22 +143,22 @@ def draw_tile(ax, x, y, w, h, mod_data):
         )
         ax.add_patch(badge)
         ax.text(bx + bw / 2, by + bh / 2, sp,
-                fontsize=5.5, color=fg_col, fontweight="bold",
+                fontsize=6, color=fg_col,
                 ha="center", va="center")
 
     # Big number + unit
     ax.text(tx, y + h * 0.55, num,
-            fontsize=18, fontweight="bold", color=TEXT_DARK,
+            fontsize=6, color=TEXT_DARK,
             va="center", ha="left")
     # Unit next to number
     num_width = len(num) * 0.035 * w + w * 0.02
     ax.text(tx + num_width, y + h * 0.55, unit,
-            fontsize=10, color=LABEL_GRAY,
+            fontsize=6, color=LABEL_GRAY,
             va="center", ha="left")
 
     # Detail line
     ax.text(tx, y + h * 0.30, detail,
-            fontsize=7, color="#888888",
+            fontsize=6, color="#888888",
             va="center", ha="left")
 
     # Tech line
@@ -168,20 +168,13 @@ def draw_tile(ax, x, y, w, h, mod_data):
 
 
 def main():
-    fig_w, fig_h = 11, 5.5
+    fig_w, fig_h = 7.09, 3.545
     fig, ax = plt.subplots(1, 1, figsize=(fig_w, fig_h))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_aspect("auto")
     ax.axis("off")
     fig.patch.set_facecolor("white")
-
-    # ── Title ────────────────────────────────────────────────────────────────
-    ax.text(0.5, 0.97,
-            "Multi-Modal Data Landscape \u2014 MASLD Transcriptomic Atlas",
-            fontsize=14, fontweight="bold", color=TEXT_DARK,
-            ha="center", va="top",
-            transform=ax.transAxes)
 
     # ── Grid layout (3 cols x 2 rows) ────────────────────────────────────────
     n_cols, n_rows = 3, 2
@@ -221,10 +214,10 @@ def main():
         cy = ribbon_y + ribbon_h / 2
 
         ax.text(cx, cy + 0.012, val,
-                fontsize=12, fontweight="bold", color="white",
+                fontsize=6, color="white",
                 ha="center", va="center")
         ax.text(cx, cy - 0.018, label,
-                fontsize=7, color="#BBBBBB",
+                fontsize=6, color="#BBBBBB",
                 ha="center", va="center")
 
         # Separator line (skip last)
@@ -244,6 +237,7 @@ def main():
     pdf_path = os.path.join(out_dir, "fig1a_data_landscape.pdf")
     fig.savefig(pdf_path, bbox_inches="tight", dpi=600, facecolor="white")
     plt.close(fig)
+    print("[caption] Multi-Modal Data Landscape — MASLD Transcriptomic Atlas")
     print(f"Saved: {pdf_path}")
 
 

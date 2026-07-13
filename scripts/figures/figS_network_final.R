@@ -215,23 +215,21 @@ p_a <- ggplot(layout_dt, aes(x = x, y = y, color = macro_label)) +
                  show.legend = FALSE) +
   geom_label_repel(data = centroids,
                    aes(x = cx, y = cy, label = label),
-                   size = 2.0, fontface = "bold",
+                   size = GEOM_TEXT_6PT, fontface = "plain",
                    label.padding = 0.12, box.padding = 0.5,
                    segment.size = 0.15, max.overlaps = 30,
                    inherit.aes = FALSE, fill = "white", alpha = 0.9) +
   scale_color_manual(values = pal_a, guide = "none") +
   scale_fill_manual(values = pal_a, guide = "none") +
-  labs(title = "Global community map (ForceAtlas2 layout)",
-       subtitle = sprintf("%d genes in %d macro-communities (>=%d genes)",
-                          nrow(layout_dt),
-                          length(unique(layout_dt[macro_label != "Other", macro_label])),
-                          MIN_COMM_SIZE),
-       x = "FA2 dim 1", y = "FA2 dim 2") +
+  labs(x = "FA2 dim 1", y = "FA2 dim 2") +
   theme_masld() +
   theme(axis.text = element_blank(), axis.ticks = element_blank(),
-        axis.line = element_blank(),
-        plot.subtitle = element_text(size = 6, color = "gray40"))
+        axis.line = element_blank())
 
+message(sprintf("[caption] Global community map (ForceAtlas2 layout): %d genes in %d macro-communities (>=%d genes)",
+                nrow(layout_dt),
+                length(unique(layout_dt[macro_label != "Other", macro_label])),
+                MIN_COMM_SIZE))
 out_a <- file.path(OUT_DIR, "figS_network_final_panel_A_community_map.pdf")
 save_fig(p_a, out_a, width = fig_full_width, height = 5.5)
 message("Panel A saved: ", out_a)
@@ -291,32 +289,31 @@ if (nrow(within) > 0 && length(layer_cols) > 0) {
                row_names_side = "left",
                column_names_side = "bottom",
                column_names_rot = 45,
-               row_names_gp = gpar(fontsize = 7),
-               column_names_gp = gpar(fontsize = 7),
+               row_names_gp = gpar(fontsize = 6),
+               column_names_gp = gpar(fontsize = 6),
                cell_fun = function(j, i, x, y, w, h, fill) {
                  v <- mat_mat[i, j]
                  if (!is.na(v) && v >= 0.01) {
                    grid.text(sprintf("%.2f", v), x, y,
-                             gp = gpar(fontsize = 5,
+                             gp = gpar(fontsize = 6,
                                        col = ifelse(v > 0.5, "white", "black")))
                  }
                },
                heatmap_legend_param = list(
-                 title_gp = gpar(fontsize = 6, fontface = "bold"),
-                 labels_gp = gpar(fontsize = 5),
+                 title_gp = gpar(fontsize = 6, fontface = "plain"),
+                 labels_gp = gpar(fontsize = 6),
                  legend_height = unit(3, "cm")
                ),
                row_title = "Macro community",
                column_title = "Modality layer",
-               row_title_gp = gpar(fontsize = 7, fontface = "bold"),
-               column_title_gp = gpar(fontsize = 7, fontface = "bold"))
+               row_title_gp = gpar(fontsize = 6, fontface = "plain"),
+               column_title_gp = gpar(fontsize = 6, fontface = "plain"))
 
+  message("[caption] Modality informativeness per community")
   out_b <- file.path(OUT_DIR, "figS_network_final_panel_B_informativeness.pdf")
   pdf(out_b, width = fig_col_width, height = 4.5)
   draw(h,
-       heatmap_legend_side = "right",
-       column_title = "Modality informativeness per community",
-       column_title_gp = gpar(fontsize = 8, fontface = "bold"))
+       heatmap_legend_side = "right")
   dev.off()
   message("Panel B saved: ", out_b)
 } else {
@@ -378,20 +375,18 @@ if (!file.exists(bench_path)) {
     geom_hline(yintercept = 1, linetype = "dashed", color = "gray40",
                linewidth = 0.3) +
     geom_text(aes(label = sig_star, y = fold_ci_hi_p + 1.2),
-              size = 2.2, vjust = 0) +
+              size = GEOM_TEXT_6PT, vjust = 0) +
     facet_wrap(~ gold_label, nrow = 1, scales = "free_y") +
     scale_fill_manual(values = c("TRUE" = "#C2185B", "FALSE" = "#42A5F5"),
                       labels = c("TRUE" = "Composite", "FALSE" = "Single layer"),
                       name = NULL) +
-    labs(title = "Gold-standard recovery: fold over null",
-         subtitle = "Bars capped at 50x; dashed line = null (1x). * p<0.05, ** p<0.01, *** p<0.001",
-         x = NULL, y = "Fold enrichment over null (+/- 95% CI)") +
+    labs(x = NULL, y = "Fold enrichment over null (+/- 95% CI)") +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
           legend.position = "top",
-          plot.subtitle = element_text(size = 6, color = "gray40"),
-          strip.text = element_text(size = 7, face = "bold"))
+          strip.text = element_text(size = 6, face = "plain"))
 
+  message("[caption] Gold-standard recovery: fold over null. Bars capped at 50x; dashed line = null (1x). * p<0.05, ** p<0.01, *** p<0.001")
   out_c <- file.path(OUT_DIR, "figS_network_final_panel_C_benchmark.pdf")
   save_fig(p_c, out_c, width = fig_full_width, height = 3.5)
   message("Panel C saved: ", out_c)
@@ -471,8 +466,8 @@ build_neighborhood_plot <- function(gene_sym) {
       geom_node_point(aes(size = k_multiplicity, fill = is_center),
                       shape = 21, stroke = 0.3, color = "gray30") +
       geom_node_text(aes(label = name,
-                         fontface = ifelse(is_center, "bold.italic", "plain")),
-                     size = 1.8, repel = TRUE, max.overlaps = 30,
+                         fontface = "italic"),
+                     size = GEOM_TEXT_6PT, repel = TRUE, max.overlaps = 30,
                      bg.color = "white", bg.r = 0.08) +
       scale_edge_color_manual(values = layer_colors, na.value = "#BDBDBD",
                               name = "Top layer",
@@ -481,12 +476,10 @@ build_neighborhood_plot <- function(gene_sym) {
       scale_fill_manual(values = c("TRUE" = "#FFD600", "FALSE" = "#ECEFF1"),
                         guide = "none") +
       scale_size_continuous(range = c(1.5, 4.5), name = "K_mult") +
-      labs(title = sprintf("%s  -  %s", gene_sym, center_label)) +
       theme_masld() +
       theme(axis.text = element_blank(), axis.ticks = element_blank(),
             axis.line = element_blank(), axis.title = element_blank(),
-            legend.position = "none",
-            plot.title = element_text(face = "bold", size = 7, hjust = 0.5))
+            legend.position = "none")
   }, error = function(e) {
     message("  error plotting ", gene_sym, ": ", conditionMessage(e))
     placeholder(paste0(gene_sym, "\n(plot error)"))
@@ -510,7 +503,7 @@ legend_plot <- ggplot(legend_df, aes(x, y, color = layer)) +
   theme(legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"),
         legend.text  = element_text(size = 6),
-        legend.title = element_text(size = 7, face = "bold"))
+        legend.title = element_text(size = 6, face = "plain"))
 
 extract_legend <- function(p) {
   gt <- ggplot_gtable(ggplot_build(p))
@@ -523,10 +516,10 @@ shared_leg <- extract_legend(legend_plot)
 p_d_grid <- wrap_plots(panels, ncol = 2, nrow = 2)
 p_d <- p_d_grid /
        wrap_elements(full = shared_leg) +
-       plot_layout(heights = c(10, 1)) +
-       plot_annotation(title = "Example gene neighborhoods (top-15 composite neighbors)",
-                       theme = theme(plot.title = element_text(size = 8, face = "bold")))
+       plot_layout(heights = c(10, 1))
 
+message("[caption] Example gene neighborhoods (top-15 composite neighbors): ",
+        paste(example_genes, collapse = ", "))
 out_d <- file.path(OUT_DIR, "figS_network_final_panel_D_neighborhoods.pdf")
 save_fig(p_d, out_d, width = fig_full_width, height = 6.5)
 message("Panel D saved: ", out_d)

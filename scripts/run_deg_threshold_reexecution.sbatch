@@ -67,7 +67,6 @@ run_script RNA-seq/27b_benchmark_presets.R
 echo "====== STEP 3: Figure scripts (DEG-dependent) ======"
 
 # Main figures
-run_script scripts/figures/fig1_integration_value_panels_v2.R
 run_script scripts/figures/fig5_translation.R
 run_script scripts/figures/fig5_causal_architecture.R
 # fig6_* scripts archived 2026-04-22 (6-fig → 5-fig restructure; content folded into fig5_convergence + figS_therapeutics)

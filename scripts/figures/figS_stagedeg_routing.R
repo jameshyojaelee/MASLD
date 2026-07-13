@@ -1,6 +1,18 @@
 #!/usr/bin/env Rscript
 # figS_stagedeg_routing.R
 # ---------------------------------------------------------------------------
+# PANEL C 4->10->16 WITHDRAWN (2026-07-12, donor-collapse remediation): the
+# "Fibroblast->Hepatocyte 4->10->16" coarse-LMM per-pair counts were
+# PSEUDOREPLICATION (run-level, not biological-donor). At true-donor resolution
+# the coarse CCC LMM is empty (Cirrhosis stratum = 9 GSE202379 donors <
+# MIN_DONORS_PER_STRATUM=10), so those per-pair counts are retracted. The
+# SURVIVING claim -- multi-cellular routing, hepatocyte->non-parenchymal
+# hand-off, 7/7 transitions multi_cellular, coarse-vs-fine direction-consistent
+# -- is carried by the canonical panel scripts/figures/stagedeg_carrier_routing.R.
+# This whole script is non-canonical (absent from run_pub_figures.sh; PDFs not
+# git-tracked). Do not present Panel C. Backup: results_gpu_v2/ccc/
+# stage_trajectory/prepromote_runlevel_2026-07-12/.
+# ---------------------------------------------------------------------------
 # Supplementary figure: three-axis stage-DEG cell-type routing + verdict.
 # The headline = MULTI-CELLULAR cascade with a carrier shift at F2->F3
 # (hepatocytes carry the early signal, non-parenchymal cells take over the

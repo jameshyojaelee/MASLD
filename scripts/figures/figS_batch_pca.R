@@ -20,13 +20,12 @@ meta_path <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration
 out_path <- file.path(BASE, "figures/supplementary/figS_batch_pca.pdf")
 
 # --- Publication theme (minimal) ---
-theme_pub <- theme_bw(base_size = 12) +
+theme_pub <- theme_bw(base_size = 6) +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey92", linewidth = 0.3),
     strip.background = element_blank(),
-    strip.text = element_text(face = "bold"),
-    plot.title = element_text(face = "bold", size = 13),
+    strip.text = element_text(face = "plain"),
     legend.position = "right",
     legend.background = element_blank()
   )
@@ -124,8 +123,7 @@ p_cohort <- ggplot(pca_df, aes(x = PC1, y = PC2, color = dataset)) +
   scale_color_manual(values = cohort_colors, name = "Cohort") +
   labs(
     x = sprintf("PC1 (%.1f%%)", var_explained[1]),
-    y = sprintf("PC2 (%.1f%%)", var_explained[2]),
-    title = "A  PCA by cohort"
+    y = sprintf("PC2 (%.1f%%)", var_explained[2])
   ) +
   theme_pub +
   guides(color = guide_legend(override.aes = list(size = 3, alpha = 1)))
@@ -136,8 +134,7 @@ p_group <- ggplot(pca_df, aes(x = PC1, y = PC2, color = group_binary)) +
   scale_color_manual(values = group_colors, name = "Status") +
   labs(
     x = sprintf("PC1 (%.1f%%)", var_explained[1]),
-    y = sprintf("PC2 (%.1f%%)", var_explained[2]),
-    title = "B  PCA by disease status"
+    y = sprintf("PC2 (%.1f%%)", var_explained[2])
   ) +
   theme_pub +
   guides(color = guide_legend(override.aes = list(size = 3, alpha = 1)))
@@ -145,8 +142,10 @@ p_group <- ggplot(pca_df, aes(x = PC1, y = PC2, color = group_binary)) +
 # --- Combine and save ---
 p_combined <- p_cohort + p_group + plot_layout(ncol = 2, widths = c(1, 1))
 
+message("[caption] Panel A: PCA by cohort. Panel B: PCA by disease status.")
+
 dir.create(dirname(out_path), showWarnings = FALSE, recursive = TRUE)
-ggsave(out_path, p_combined, width = 14, height = 6, device = cairo_pdf)
+ggsave(out_path, p_combined, width = 7.09, height = 3.04, device = cairo_pdf)
 cat(sprintf("\nSaved: %s\n", out_path))
 
 # --- Also save PCA coordinates for reference ---

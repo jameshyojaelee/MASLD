@@ -296,21 +296,19 @@ if (file.exists(concordance_file)) {
     }
 
     if ("human_symbol" %in% names(consensus)) {
-      # Accept C2-canonical (bulk_*), legacy raw (padj/logFC), or dream_* column names.
-      if (!"dream_padj" %in% names(consensus)) {
-        if ("bulk_padj" %in% names(consensus)) setnames(consensus, "bulk_padj", "dream_padj")
-        else if ("padj" %in% names(consensus)) setnames(consensus, "padj", "dream_padj")
+      # Accept C2-canonical (bulk_*) or legacy raw (padj/logFC) column names.
+      if (!"bulk_padj" %in% names(consensus) && "padj" %in% names(consensus)) {
+        setnames(consensus, "padj", "bulk_padj")
       }
-      if (!"dream_logFC" %in% names(consensus)) {
-        if ("bulk_logFC" %in% names(consensus)) setnames(consensus, "bulk_logFC", "dream_logFC")
-        else if ("logFC" %in% names(consensus)) setnames(consensus, "logFC", "dream_logFC")
+      if (!"bulk_logFC" %in% names(consensus) && "logFC" %in% names(consensus)) {
+        setnames(consensus, "logFC", "bulk_logFC")
       }
 
-      dream_degs <- consensus[!is.na(dream_padj) & dream_padj < 0.1 & abs(dream_logFC) >= 0.58]$human_symbol
+      bulk_degs <- consensus[!is.na(bulk_padj) & bulk_padj < 0.1 & abs(bulk_logFC) >= 0.58]$human_symbol
 
-      in_cc_dream <- sum(conserved %in% dream_degs)
+      in_cc_dream <- sum(conserved %in% bulk_degs)
       in_cc_not_dream <- length(conserved) - in_cc_dream
-      not_cc_dream <- sum(all_genes %in% dream_degs) - in_cc_dream
+      not_cc_dream <- sum(all_genes %in% bulk_degs) - in_cc_dream
       not_cc_not_dream <- length(all_genes) - in_cc_dream - in_cc_not_dream - not_cc_dream
 
       ft_dream <- fisher.test(matrix(c(in_cc_dream, not_cc_dream,

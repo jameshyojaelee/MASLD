@@ -233,8 +233,8 @@ def main():
         gene_atlas = atlas[atlas[sym_col] == gene]
         if len(gene_atlas) > 0:
             row_atlas = gene_atlas.iloc[0]
-            card["dream_logFC"] = row_atlas.get("dream_logFC", np.nan)
-            card["dream_padj"] = row_atlas.get("dream_padj", np.nan)
+            card["bulk_logFC"] = row_atlas.get("bulk_logFC", np.nan)
+            card["bulk_padj"] = row_atlas.get("bulk_padj", np.nan)
             card["is_conserved"] = row_atlas.get("is_conserved", False)
             card["is_druggable"] = gene in niche_druggable
             # mr_pval removed 2026-04-22 — MR ditched from paper.

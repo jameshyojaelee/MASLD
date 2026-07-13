@@ -5,11 +5,11 @@
 # No titles / subtitles — data speaks through design.
 #
 # Panels:
-#   fig3_scatter_coloc_vs_deg.pdf    — PP.H4 vs logFC
-#   fig3_atac_rora_thrb.pdf          — GWAS-ATAC motif disruption
-#   fig3_cross_ancestry_labeled.pdf  — EUR × EAS concordance
-#   fig3_cyp26a1_locus.pdf           — CYP26A1 EAS locus zoom
-#   fig3_regulon_tf_lollipop.pdf     — disease-regulon TF lollipop
+#   scatter_coloc_vs_deg.pdf    — PP.H4 vs logFC
+#   atac_rora_thrb.pdf          — GWAS-ATAC motif disruption
+#   cross_ancestry_labeled.pdf  — EUR × EAS concordance
+#   cyp26a1_locus.pdf           — CYP26A1 EAS locus zoom
+#   regulon_tf_lollipop.pdf     — disease-regulon TF lollipop
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -130,7 +130,7 @@ p1 <- ggplot() +
     data = fg[role %in% c("causal_supported","drug_unsupported","novel_coloc")],
     aes(x = bulk_logFC, y = pp4, label = gene,
         color = role),
-    size = 2.2, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     box.padding = 0.4, point.padding = 0.2,
     segment.size = 0.22, segment.color = "gray55",
     min.segment.length = 0, max.overlaps = Inf,
@@ -139,9 +139,9 @@ p1 <- ggplot() +
   ) +
   # Axis annotations (replace subtitle)
   annotate("text", x = Inf, y = 0.515, label = "PP.H4 = 0.5",
-           hjust = 1.05, size = 1.9, color = "gray50", fontface = "italic") +
+           hjust = 1.05, size = GEOM_TEXT_6PT, color = "gray50", fontface = "plain") +
   annotate("text", x = Inf, y = 0.915, label = "PP.H4 = 0.9",
-           hjust = 1.05, size = 1.9, color = "gray55", fontface = "italic") +
+           hjust = 1.05, size = GEOM_TEXT_6PT, color = "gray55", fontface = "plain") +
   scale_color_manual(values = role_cols, guide = "none") +
   scale_x_continuous(expand = expansion(mult = 0.06)) +
   scale_y_continuous(limits = c(-0.01, 1.05),
@@ -152,8 +152,12 @@ p1 <- ggplot() +
   theme(panel.border = element_rect(color = "gray70", fill = NA,
                                     linewidth = 0.3))
 
-save_panel(p1, "fig3_scatter_coloc_vs_deg.pdf",
-           width = fig_half_width + 0.4, height = 3.6)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover in fig2_genetics/panels/):
+# scatter_coloc_vs_deg.pdf. Panel p1 kept computed above for provenance; save disabled so it
+# is never regenerated. The other panels in this script (GWAS-ATAC, cross-ancestry, etc.) are
+# unaffected.
+# save_panel(p1, "scatter_coloc_vs_deg.pdf",
+#            width = fig_half_width + 0.4, height = 3.6)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -233,7 +237,7 @@ p2 <- ggplot(per_var, aes(x = max_pip, y = abs_diff)) +
   geom_text_repel(
     data = label_dt,
     aes(label = label, color = type),
-    size = 2.0, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     segment.size = 0.2, min.segment.length = 0.05,
     box.padding = 0.3, point.padding = 0.15,
     max.overlaps = Inf, seed = 42, bg.color = "white", bg.r = 0.1,
@@ -243,17 +247,17 @@ p2 <- ggplot(per_var, aes(x = max_pip, y = abs_diff)) +
   annotate("point", x = 0.98, y = max(per_var$abs_diff) * 0.98,
            color = COL_RORA, size = 2.4, shape = 16) +
   annotate("text",  x = 0.95, y = max(per_var$abs_diff) * 0.98,
-           label = "RORA motif", hjust = 1, size = 2.0,
-           color = COL_RORA, fontface = "italic") +
+           label = "RORA motif", hjust = 1, size = GEOM_TEXT_6PT,
+           color = COL_RORA, fontface = "plain") +
   annotate("point", x = 0.98, y = max(per_var$abs_diff) * 0.90,
            color = COL_THRB, size = 2.4, shape = 16) +
   annotate("text",  x = 0.95, y = max(per_var$abs_diff) * 0.90,
-           label = "THRB motif", hjust = 1, size = 2.0,
-           color = COL_THRB, fontface = "italic") +
+           label = "THRB motif", hjust = 1, size = GEOM_TEXT_6PT,
+           color = COL_THRB, fontface = "plain") +
   annotate("point", x = 0.98, y = max(per_var$abs_diff) * 0.82,
            color = COL_SHARED, size = 3.0, shape = 18) +
   annotate("text",  x = 0.95, y = max(per_var$abs_diff) * 0.82,
-           label = "RORA + THRB", hjust = 1, size = 2.0,
+           label = "RORA + THRB", hjust = 1, size = GEOM_TEXT_6PT,
            color = COL_SHARED, fontface = "italic") +
   scale_color_manual(values = type_cols, guide = "none") +
   scale_x_continuous(limits = c(0.18, 1.05),
@@ -263,8 +267,9 @@ p2 <- ggplot(per_var, aes(x = max_pip, y = abs_diff)) +
        y = "|Motif alleleDiff|") +
   theme_masld()
 
-save_panel(p2, "fig3_atac_rora_thrb.pdf",
-           width = fig_half_width + 0.6, height = 3.2)
+# RETIRED 2026-06-12 (not a Fig 2 panel): atac_rora_thrb.pdf
+# save_panel(p2, "atac_rora_thrb.pdf",
+#            width = fig_half_width + 0.6, height = 3.2)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -335,11 +340,11 @@ p3 <- ggplot() +
   # Count annotation in the corner
   annotate("text", x = 0.76, y = 0.54,
            label = sprintf("n = %d genes", n_both),
-           size = 2.2, color = COL_BOTH, fontface = "bold") +
+           size = GEOM_TEXT_6PT, color = COL_BOTH, fontface = "plain") +
   # RORA SAS callout
   annotate("text", x = 1.01, y = 0.535,
            label = sprintf("RORA: SAS PP.H4 = %.3f", rora_sas),
-           size = 1.8, color = COL_RORA, hjust = 1, fontface = "italic") +
+           size = GEOM_TEXT_6PT, color = COL_RORA, hjust = 1, fontface = "plain") +
   # Points
   rasterize(
     geom_point(data = gene_xa[tier == "bg"],
@@ -361,7 +366,7 @@ p3 <- ggplot() +
     data = label_dt,
     aes(x = EUR, y = EAS, label = gene),
     color = "gray15", fill = alpha("white", 0.90),
-    size = 2.1, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     label.size = 0.15, label.padding = unit(0.09, "lines"),
     label.r = unit(0.06, "lines"),
     box.padding = 0.5, point.padding = 0.25,
@@ -384,18 +389,19 @@ p3 <- ggplot() +
         legend.position  = c(0.08, 0.78),
         legend.background = element_blank(),
         legend.key.size  = unit(0.22, "cm"),
-        legend.title = element_text(size = 5.5, face = "plain"),
-        legend.text  = element_text(size = 5)) +
+        legend.title = element_text(size = 6, face = "plain"),
+        legend.text  = element_text(size = 6)) +
   guides(size = guide_legend(override.aes = list(color = COL_BOTH)))
 
-save_panel(p3, "fig3_cross_ancestry_labeled.pdf",
-           width = fig_half_width + 0.8, height = 3.6)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): cross_ancestry_labeled.pdf
+# save_panel(p3, "cross_ancestry_labeled.pdf",
+#            width = fig_half_width + 0.8, height = 3.6)
 
 # Sidecar CSV
 fwrite(gene_xa[tier == "both"][order(-(EUR + EAS)),
                .(gene, EUR_max_pp4 = round(EUR,4),
                  EAS_max_pp4 = round(EAS,4), n_phen)],
-       file.path(FIG3_DIR, "fig3g_cross_ancestry_pp4_table.csv"))
+       file.path(FIG3_DIR, "cross_ancestry_pp4_table_aligned.csv"))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -438,8 +444,8 @@ p4a <- ggplot(lz, aes(x = position, y = mlog10p)) +
   geom_point(data = lead, fill = COL_EAS, color = "gray10",
              size = 2.4, shape = 21, stroke = 0.4) +
   annotate("text", x = CYP_LEAD, y = GWS + 0.3,
-           label = expression(italic(CYP26A1)), size = 2.2,
-           color = COL_EAS, fontface = "bold") +
+           label = expression(italic(CYP26A1)), size = GEOM_TEXT_6PT,
+           color = COL_EAS, fontface = "plain") +
   scale_x_continuous(limits = c(CYP_LEAD - CYP_WIN, CYP_LEAD + CYP_WIN),
                      labels = function(x) paste0(round(x/1e6, 1), " Mb"),
                      expand = c(0, 0)) +
@@ -475,12 +481,13 @@ p4b <- ggplot() +
                      expand = c(0, 0)) +
   labs(x = sprintf("chr%d (hg19)", CYP_CHR), y = "PIP") +
   theme_masld() +
-  theme(axis.text.x = element_text(size = 5.5))
+  theme(axis.text.x = element_text(size = 6))
 
 p4 <- p4a / p4b + plot_layout(heights = c(2.4, 1))
 
-save_panel(p4, "fig3_cyp26a1_locus.pdf",
-           width = fig_half_width, height = 3.4)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): cyp26a1_locus.pdf
+# save_panel(p4, "cyp26a1_locus.pdf",
+#            width = fig_half_width, height = 3.4)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -521,7 +528,7 @@ p5 <- ggplot(reg_tfs, aes(y = tf_name, x = n_vars)) +
   geom_point(aes(color = color), size = 3.8, shape = 16) +
   # Count label
   geom_text(aes(label = n_vars, x = n_vars + 0.08),
-            hjust = 0, size = 2.2, fontface = "bold",
+            hjust = 0, size = GEOM_TEXT_6PT, fontface = "plain",
             color = "gray25") +
   scale_color_identity() +
   scale_x_continuous(limits = c(0, max(reg_tfs$n_vars) + 1.2),
@@ -532,7 +539,7 @@ p5 <- ggplot(reg_tfs, aes(y = tf_name, x = n_vars)) +
   theme_masld() +
   theme(
     axis.text.y = element_text(
-      size = 7, face = "italic",
+      size = 6, face = "italic",
       color = ifelse(levels(reg_tfs$tf_name) %in% c("HNF4A","RORA","THRB"),
                      "gray10", "gray40")
     ),
@@ -542,8 +549,9 @@ p5 <- ggplot(reg_tfs, aes(y = tf_name, x = n_vars)) +
     plot.margin  = margin(4, 8, 4, 4)
   )
 
-save_panel(p5, "fig3_regulon_tf_lollipop.pdf",
-           width = fig_half_width + 0.4, height = 3.2)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): regulon_tf_lollipop.pdf
+# save_panel(p5, "regulon_tf_lollipop.pdf",
+#            width = fig_half_width + 0.4, height = 3.2)
 
 
 cat("\n[fig3] Done. Panels in:", PANEL_DIR, "\n")

@@ -205,7 +205,7 @@ govaere_25 <- data.table(
 govaere_25[, gene_base := map_symbols(symbol)]
 g25 <- merge(govaere_25[!is.na(gene_base)],
              ps_135251[, .(gene_base, logFC, adj.P.Val)], by="gene_base", all.x=TRUE)
-g25 <- merge(g25, dream[, .(gene_base, dream_lfc=logFC, dream_padj=padj)],
+g25 <- merge(g25, dream[, .(gene_base, dream_lfc=logFC, dream_padj=padj)],  # C2-OK-sensitivity: dream_results.csv retired sensitivity arm, labeled "Dream" comparator
              by="gene_base", all.x=TRUE)
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -308,9 +308,9 @@ for (cn in names(contrast_labels)) {
 }
 
 # --- Row 5: 25-gene + Govaere correlation summary ---
-g25_plot <- melt(g25[, .(symbol, pub_dir, logFC, adj.P.Val, dream_lfc, dream_padj)],
+g25_plot <- melt(g25[, .(symbol, pub_dir, logFC, adj.P.Val, dream_lfc, dream_padj)],  # C2-OK-sensitivity: dream arm of published comparison figure
                  id.vars=c("symbol","pub_dir"),
-                 measure.vars=list(lfc=c("logFC","dream_lfc"), padj=c("adj.P.Val","dream_padj")))
+                 measure.vars=list(lfc=c("logFC","dream_lfc"), padj=c("adj.P.Val","dream_padj")))  # C2-OK-sensitivity
 g25_plot[, source := fifelse(variable==1, "Per-study","Dream")]
 g25_plot[, sig := padj < 0.05]
 g25_plot[, symbol := factor(symbol, levels=g25[order(logFC)]$symbol)]

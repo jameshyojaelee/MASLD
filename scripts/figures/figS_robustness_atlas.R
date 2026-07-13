@@ -28,24 +28,21 @@ e1_dt <- deg[, .N, by = n_pillars_passed]
 e1_dt[, pct := round(100 * N / sum(N), 1)]
 p1 <- ggplot(e1_dt, aes(x = factor(n_pillars_passed), y = N, fill = factor(n_pillars_passed))) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = sprintf("%s\n(%.1f%%)", comma(N), pct)), vjust = -0.3) +
+  geom_text(aes(label = sprintf("%s\n(%.1f%%)", comma(N), pct)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
-  labs(title = "E1 — Pillar-pass count among canonical DEGs",
-       subtitle = sprintf("Out of %s canonical DEGs (Pillar B is signature-level, not counted here)", comma(nrow(deg))),
-       x = "# Pillars passed (A, C, D)", y = "DEGs", fill = "") +
+  labs(x = "# Pillars passed (A, C, D)", y = "DEGs", fill = "") +
   theme_pub() + theme(legend.position = "none")
 
 # E2 — heat strip: genes × pillar pass
 deg[, sum_pass := as.integer(A_pass) + as.integer(C_pass) + as.integer(D_pass)]
-top200 <- deg[order(-sum_pass, -abs(dream_logFC))][1:min(200, nrow(deg))]
+top200 <- deg[order(-sum_pass, -abs(dream_logFC))][1:min(200, nrow(deg))]  # C2-OK-sensitivity
 top200[, gene_idx := seq_len(.N)]
 heat_long <- melt(top200[, .(gene_idx, A = A_pass, C = C_pass, D = D_pass)],
                   id.vars = "gene_idx", variable.name = "pillar", value.name = "pass")
 p2 <- ggplot(heat_long, aes(x = gene_idx, y = pillar, fill = pass)) +
   geom_tile() +
   scale_fill_manual(values = c("FALSE" = "grey92", "TRUE" = "#4B0082"), na.value = "grey95") +
-  labs(title = "E2 — Pillar membership: top 200 DEGs by joint pass",
-       x = "Gene rank (top 200)", y = "Pillar", fill = "Pass") +
+  labs(x = "Gene rank (top 200)", y = "Pillar", fill = "Pass") +
   theme_pub() + theme(axis.text.x = element_blank(),
                        axis.ticks.x = element_blank())
 
@@ -55,10 +52,9 @@ pat[, pat_str := paste0(ifelse(A, "A", "."), ifelse(C, "C", "."), ifelse(D, "D",
 ix <- pat[, .N, by = pat_str][order(-N)]
 p3 <- ggplot(ix, aes(x = reorder(pat_str, -N), y = N, fill = pat_str)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = comma(N)), vjust = -0.3) +
+  geom_text(aes(label = comma(N)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.15))) +
-  labs(title = "E3 — Pillar pass-pattern distribution",
-       x = "Pattern (A/C/D pass; '.' = no pass)", y = "DEGs", fill = "") +
+  labs(x = "Pattern (A/C/D pass; '.' = no pass)", y = "DEGs", fill = "") +
   theme_pub() + theme(legend.position = "none",
                        axis.text.x = element_text(family = "mono"))
 
@@ -90,14 +86,19 @@ hd_lines <- c(
 )
 p4 <- ggplot() +
   annotate("text", x = 0, y = seq_along(hd_lines),
-           label = rev(hd_lines), hjust = 0, family = "mono", size = 3.4) +
+           label = rev(hd_lines), hjust = 0, family = "mono", size = GEOM_TEXT_6PT) +
   xlim(-0.05, 1) + ylim(0, length(hd_lines) + 1) +
-  labs(title = "E4 — Headline numbers", x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   theme_pub() +
   theme(axis.text = element_blank(), axis.ticks = element_blank(),
         panel.grid = element_blank())
 
+message("[caption] E1 - Pillar-pass count among canonical DEGs, out of ", comma(nrow(deg)),
+        " canonical DEGs (Pillar B is signature-level, not counted here)")
+message("[caption] E2 - Pillar membership: top 200 DEGs by joint pass")
+message("[caption] E3 - Pillar pass-pattern distribution")
+message("[caption] E4 - Headline numbers")
 combined <- (p1 | p3) / (p2) / (p4) + plot_layout(heights = c(1, 0.8, 1.2))
 out_pdf <- file.path(OUT_DIR, "figS_robustness_atlas.pdf")
-ggsave(out_pdf, combined, width = 12, height = 12, device = cairo_pdf)
+ggsave(out_pdf, combined, width = fig_full_width, height = fig_full_width, device = cairo_pdf)
 cat("Saved:", out_pdf, "\n")

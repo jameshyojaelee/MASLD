@@ -64,6 +64,21 @@ dir.create(OUTDIR, showWarnings = FALSE, recursive = TRUE)
 
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+# Canonical limma-voom-QW (C2) engine helper: build_design_guarded()
+source(file.path(INT, "scripts/de_engine_lvqw.R"))
+
+# Two DEG gates are used here, by design:
+#  (1) PRIMARY canonical reference = TREAT (McCarthy & Smyth 2009): treat_fdr<0.05
+#      at lfc=0.25 — the paper-wide canonical (canonical_deg_results.csv), cited as
+#      the headline DEG count.
+#  (2) SUBSET-INTERNAL significance gate = padj<0.05 (no |logFC| floor), used for
+#      the unadjusted-vs-adjusted OVERLAP/Jaccard panels. TREAT@0.25 is underpowered
+#      on these small covariate subsets (N=76 steatosis / N=407 NAS) and collapses
+#      the overlap sets to 0; a plain significance gate keeps them interpretable.
+#      The robustness conclusion rests on the threshold-free logFC concordance (rho).
+TREAT_FDR_T <- 0.05   # (1) primary canonical TREAT gate
+SIG_P       <- 0.05   # (2) subset-internal overlap significance gate (padj only)
+
 FIGDIR <- FIGS_SENS_DIR
 dir.create(file.path(FIGDIR, "panels"), showWarnings = FALSE, recursive = TRUE)
 
@@ -96,8 +111,9 @@ cat("Loading primary dream results...\n")
 dream_primary <- fread(file.path(RDIR, "canonical_deg_results.csv"))
 if ("adj.P.Val" %in% names(dream_primary) && !"padj" %in% names(dream_primary))
   setnames(dream_primary, "adj.P.Val", "padj")
-cat("  Primary dream DEGs (padj<0.05, |logFC|>0.5):",
-    sum(dream_primary$padj < 0.05 & abs(dream_primary$logFC) > 0.5, na.rm = TRUE), "\n\n")
+stopifnot("treat_fdr" %in% names(dream_primary))  # canonical TREAT gate
+cat("  Primary canonical DEGs (TREAT FDR<0.05 @ lfc=0.25):",
+    sum(dream_primary$treat_fdr < TREAT_FDR_T, na.rm = TRUE), "\n\n")
 
 # ============================================================
 # STEATOSIS DATA AUDIT
@@ -195,45 +211,44 @@ run_dream_comparison <- function(dge, meta_matched, sample_ids, covar_name, cova
   dge_sub <- calcNormFactors(dge_sub, method = "RLE")
   cat("After expression filter:", nrow(dge_sub), "genes\n")
 
-  # --- Dream Run 1: WITHOUT covariate ---
-  cat("\n--- Dream: WITHOUT", covar_name, "---\n")
-  if (n_datasets > 1) {
-    form_base <- ~ group_binary + inferred_sex + (1|dataset)
+  # --- limma-voom QW Run 1: WITHOUT covariate (dataset FIXED when >1) ---
+  cat("\n--- limma-voom QW: WITHOUT", covar_name, "---\n")
+  base_terms <- if (n_datasets > 1) {
+    c("dataset", "group_binary", "inferred_sex")
   } else {
-    form_base <- ~ group_binary + inferred_sex
+    c("group_binary", "inferred_sex")
   }
-  cat("Formula:", deparse(form_base), "\n")
+  des_base <- build_design_guarded(info_sub, base_terms)
+  stopifnot("group_binaryDisease" %in% colnames(des_base$design))
+  cat("Design terms:", paste(base_terms, collapse = " + "), "\n")
 
-  v_base <- suppressWarnings(voomWithDreamWeights(dge_sub, form_base, info_sub, BPPARAM = param))
-  fit_base <- suppressWarnings(dream(v_base, form_base, info_sub, BPPARAM = param))
-  if (n_datasets == 1) fit_base <- eBayes(fit_base)
+  v_base <- limma::voomWithQualityWeights(dge_sub, des_base$design)
+  fit_base <- limma::eBayes(limma::lmFit(v_base, des_base$design))
   res_base <- topTable(fit_base, coef = "group_binaryDisease", number = Inf, sort.by = "none")
   res_base$gene <- rownames(res_base)
   res_base_dt <- as.data.table(res_base)
   if ("adj.P.Val" %in% names(res_base_dt)) setnames(res_base_dt, "adj.P.Val", "padj")
 
-  n_deg_base <- sum(res_base_dt$padj < 0.05 & abs(res_base_dt$logFC) > 0.5, na.rm = TRUE)
-  cat("DEGs (padj<0.05, |logFC|>0.5) without", covar_name, ":", n_deg_base, "\n")
+  n_deg_base <- sum(res_base_dt$padj < SIG_P, na.rm = TRUE)
+  cat("DEGs (padj<0.05 sig. gate) without", covar_name, ":", n_deg_base, "\n")
 
-  # --- Dream Run 2: WITH covariate ---
-  cat("\n--- Dream: WITH", covar_name, "---\n")
-  if (n_datasets > 1) {
-    form_adj <- ~ group_binary + inferred_sex + covar_scaled + (1|dataset)
-  } else {
-    form_adj <- ~ group_binary + inferred_sex + covar_scaled
-  }
-  cat("Formula:", deparse(form_adj), "\n")
+  # --- limma-voom QW Run 2: WITH covariate (dataset FIXED when >1) ---
+  cat("\n--- limma-voom QW: WITH", covar_name, "---\n")
+  adj_terms <- c(base_terms, "covar_scaled")
+  des_adj <- build_design_guarded(info_sub, adj_terms)
+  stopifnot("group_binaryDisease" %in% colnames(des_adj$design))
+  stopifnot("covar_scaled" %in% colnames(des_adj$design))
+  cat("Design terms:", paste(adj_terms, collapse = " + "), "\n")
 
-  v_adj <- suppressWarnings(voomWithDreamWeights(dge_sub, form_adj, info_sub, BPPARAM = param))
-  fit_adj <- suppressWarnings(dream(v_adj, form_adj, info_sub, BPPARAM = param))
-  if (n_datasets == 1) fit_adj <- eBayes(fit_adj)
+  v_adj <- limma::voomWithQualityWeights(dge_sub, des_adj$design)
+  fit_adj <- limma::eBayes(limma::lmFit(v_adj, des_adj$design))
   res_adj <- topTable(fit_adj, coef = "group_binaryDisease", number = Inf, sort.by = "none")
   res_adj$gene <- rownames(res_adj)
   res_adj_dt <- as.data.table(res_adj)
   if ("adj.P.Val" %in% names(res_adj_dt)) setnames(res_adj_dt, "adj.P.Val", "padj")
 
-  n_deg_adj <- sum(res_adj_dt$padj < 0.05 & abs(res_adj_dt$logFC) > 0.5, na.rm = TRUE)
-  cat("DEGs (padj<0.05, |logFC|>0.5) with", covar_name, ":", n_deg_adj, "\n")
+  n_deg_adj <- sum(res_adj_dt$padj < SIG_P, na.rm = TRUE)
+  cat("DEGs (padj<0.05 sig. gate) with", covar_name, ":", n_deg_adj, "\n")
 
   # Also extract covariate coefficient
   res_covar <- tryCatch({
@@ -262,8 +277,8 @@ run_dream_comparison <- function(dge, meta_matched, sample_ids, covar_name, cova
 
   dir_concord <- mean(sign(base_aligned$logFC) == sign(adj_aligned$logFC), na.rm = TRUE) * 100
 
-  degs_base <- base_aligned[padj < 0.05 & abs(logFC) > 0.5, gene]
-  degs_adj  <- adj_aligned[padj < 0.05 & abs(logFC) > 0.5, gene]
+  degs_base <- base_aligned[padj < SIG_P, gene]
+  degs_adj  <- adj_aligned[padj < SIG_P, gene]
   jaccard <- if (length(union(degs_base, degs_adj)) > 0) {
     length(intersect(degs_base, degs_adj)) / length(union(degs_base, degs_adj))
   } else 0
@@ -277,7 +292,7 @@ run_dream_comparison <- function(dge, meta_matched, sample_ids, covar_name, cova
   cat("Pearson r (logFC):", round(r_lfc, 4), "\n")
   cat("Spearman rho (t-stat):", round(rho_t, 4), "\n")
   cat("Direction concordance:", round(dir_concord, 1), "%\n")
-  cat("Jaccard (padj<0.05, |logFC|>0.5):", round(jaccard, 4), "\n")
+  cat("Jaccard (padj<0.05 sig. gate):", round(jaccard, 4), "\n")
   cat("DEGs unadjusted:", length(degs_base), " | adjusted:", length(degs_adj), "\n")
   cat("Gained:", length(gained), " | Lost:", length(lost), "\n")
   cat("Mean |logFC shift|:", round(mean(abs(lfc_shift), na.rm = TRUE), 4), "\n")
@@ -292,13 +307,13 @@ run_dream_comparison <- function(dge, meta_matched, sample_ids, covar_name, cova
     padj_adjusted = adj_aligned$padj,
     t_unadjusted = base_aligned$t,
     t_adjusted = adj_aligned$t,
-    sig_unadjusted = base_aligned$padj < 0.05 & abs(base_aligned$logFC) > 0.5,
-    sig_adjusted = adj_aligned$padj < 0.05 & abs(adj_aligned$logFC) > 0.5,
+    sig_unadjusted = base_aligned$padj < SIG_P,
+    sig_adjusted = adj_aligned$padj < SIG_P,
     status = ifelse(
-      base_aligned$padj < 0.05 & abs(base_aligned$logFC) > 0.5 &
-      adj_aligned$padj < 0.05 & abs(adj_aligned$logFC) > 0.5, "shared",
-      ifelse(base_aligned$padj < 0.05 & abs(base_aligned$logFC) > 0.5, "lost",
-      ifelse(adj_aligned$padj < 0.05 & abs(adj_aligned$logFC) > 0.5, "gained", "ns_both")))
+      base_aligned$padj < SIG_P &
+      adj_aligned$padj < SIG_P, "shared",
+      ifelse(base_aligned$padj < SIG_P, "lost",
+      ifelse(adj_aligned$padj < SIG_P, "gained", "ns_both")))
   )
   comparison_dt <- comparison_dt[order(abs(logFC_shift), decreasing = TRUE)]
 
@@ -308,7 +323,7 @@ run_dream_comparison <- function(dge, meta_matched, sample_ids, covar_name, cova
     metric = c("n_samples", "n_datasets", "n_genes_tested",
                "n_deg_unadjusted", "n_deg_adjusted",
                "spearman_rho_logFC", "pearson_r_logFC", "spearman_rho_tstat",
-               "direction_concordance_pct", "jaccard_padj005_lfc05",
+               "direction_concordance_pct", "jaccard_padj005",
                "n_gained", "n_lost",
                "mean_abs_lfc_shift", "median_abs_lfc_shift", "max_abs_lfc_shift",
                "n_covar_sig_genes"),
@@ -486,7 +501,7 @@ p_scatter_nas <- ggplot(nas_comp, aes(x = logFC_unadjusted, y = logFC_adjusted, 
   annotate("text", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.5, size = 2.2,
     label = sprintf("rho = %.3f\nr = %.3f\nDir. = %.1f%%", rho_nas, r_nas, dir_nas)) +
   labs(x = "logFC (unadjusted)", y = "logFC (NAS-adjusted)",
-       title = sprintf("NAS-adjusted dream (N=%s, %s datasets)",
+       title = sprintf("NAS-adjusted limma-voom QW (N=%s, %s datasets)",
          combined_metrics[analysis == "nas_score_N660" & metric == "n_samples", value],
          combined_metrics[analysis == "nas_score_N660" & metric == "n_datasets", value]),
        color = NULL) +
@@ -500,7 +515,7 @@ p_scatter_nas <- ggplot(nas_comp, aes(x = logFC_unadjusted, y = logFC_adjusted, 
 status_counts_nas <- nas_comp[, .N, by = status]
 status_counts_nas[, status := factor(status, levels = c("shared", "lost", "gained", "ns_both"))]
 
-jac_nas <- combined_metrics[analysis == "nas_score_N660" & metric == "jaccard_padj005_lfc05", as.numeric(value)]
+jac_nas <- combined_metrics[analysis == "nas_score_N660" & metric == "jaccard_padj005", as.numeric(value)]
 
 p_overlap <- ggplot(status_counts_nas[status != "ns_both"], aes(x = status, y = N, fill = status)) +
   geom_col(width = 0.6) +
@@ -577,7 +592,7 @@ p_combined <- (p_avail + p_steat_dist) / (p_scatter_nas + p_overlap) / (p_shifts
       rho_nas, jac_nas
     ),
     theme = theme(
-      plot.title = element_text(size = 9, face = "bold"),
+      plot.title = element_text(size = 9, face = "plain"),
       plot.subtitle = element_text(size = 6)
     )
   ) +
@@ -601,7 +616,7 @@ sm <- results_steat$metrics
 cat("   Spearman rho (logFC):", sm[metric == "spearman_rho_logFC", value], "\n")
 cat("   Pearson r (logFC):", sm[metric == "pearson_r_logFC", value], "\n")
 cat("   Direction concordance:", sm[metric == "direction_concordance_pct", value], "%\n")
-cat("   Jaccard (padj<0.05, |logFC|>0.5):", sm[metric == "jaccard_padj005_lfc05", value], "\n")
+cat("   Jaccard (padj<0.05 sig. gate):", sm[metric == "jaccard_padj005", value], "\n")
 cat("   DEGs unadjusted:", sm[metric == "n_deg_unadjusted", value],
     " | adjusted:", sm[metric == "n_deg_adjusted", value], "\n")
 cat("   Gained:", sm[metric == "n_gained", value],
@@ -612,7 +627,7 @@ nm <- results_nas$metrics
 cat("   Spearman rho (logFC):", nm[metric == "spearman_rho_logFC", value], "\n")
 cat("   Pearson r (logFC):", nm[metric == "pearson_r_logFC", value], "\n")
 cat("   Direction concordance:", nm[metric == "direction_concordance_pct", value], "%\n")
-cat("   Jaccard (padj<0.05, |logFC|>0.5):", nm[metric == "jaccard_padj005_lfc05", value], "\n")
+cat("   Jaccard (padj<0.05 sig. gate):", nm[metric == "jaccard_padj005", value], "\n")
 cat("   DEGs unadjusted:", nm[metric == "n_deg_unadjusted", value],
     " | adjusted:", nm[metric == "n_deg_adjusted", value], "\n")
 cat("   Gained:", nm[metric == "n_gained", value],
@@ -621,7 +636,7 @@ cat("   Genes with sig NAS effect:", nm[metric == "n_covar_sig_genes", value], "
 
 # Interpretation
 rho_val <- as.numeric(nm[metric == "spearman_rho_logFC", value])
-jac_val <- as.numeric(nm[metric == "jaccard_padj005_lfc05", value])
+jac_val <- as.numeric(nm[metric == "jaccard_padj005", value])
 
 cat("\nINTERPRETATION (NAS-adjusted, primary):\n")
 if (rho_val > 0.95 && jac_val > 0.80) {

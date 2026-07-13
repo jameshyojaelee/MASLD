@@ -34,14 +34,13 @@ pA <- ggplot(enr, aes(log10OR, test_label, fill = sig)) +
   geom_text(aes(label = sprintf("OR=%.2f, p=%.3g\n(%d/%d)",
                                 odds_ratio, pvalue, k, n_b)),
             hjust = ifelse(enr$log10OR > 0, -0.05, 1.05),
-            size = 2.1, color = "black") +
+            size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values = c("sig" = "#C0392B","ns" = "grey65"),
                     guide = "none") +
   scale_x_continuous(expand = expansion(mult = 0.4)) +
-  labs(x = "log2 OR (GWAS-ATAC vs CCC overlap)", y = NULL,
-       title = "GWAS-ATAC × LIANA CCC enrichment") +
+  labs(x = "log2 OR (GWAS-ATAC vs CCC overlap)", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 6.5))
+  theme(axis.text.y = element_text(size = 6))
 
 # ---- Panel C: top 20 priority axes -----------------------------------------
 top <- priority[!is.na(source)][1:min(20, .N)]
@@ -57,13 +56,12 @@ top[, disruption_type := fifelse(receptor_motif_disrupted & ligand_motif_disrupt
 pC <- ggplot(top, aes(score_diff, pair_label, fill = disruption_type)) +
   geom_col(width = 0.7, color = "white") +
   geom_text(aes(label = sprintf("%.3f", score_diff)),
-            hjust = -0.1, size = 2, color = "black") +
+            hjust = -0.1, size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_brewer(palette = "Set1", name = NULL) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
-  labs(x = "LIANA score_diff (MASLD - Control)", y = NULL,
-       title = sprintf("Top 20 variant-disrupted CCC axes (of %d)", nrow(priority))) +
+  labs(x = "LIANA score_diff (MASLD - Control)", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 5.5),
+  theme(axis.text.y = element_text(size = 6),
         legend.position = "bottom",
         legend.key.size = unit(3, "mm"),
         legend.text = element_text(size = 6))
@@ -76,17 +74,18 @@ ct_pairs[, pair := factor(pair, levels = rev(pair))]
 
 pD <- ggplot(ct_pairs, aes(n, pair)) +
   geom_col(fill = "#4472C4", width = 0.65, color = "white") +
-  geom_text(aes(label = n), hjust = -0.2, size = 2.4) +
+  geom_text(aes(label = n), hjust = -0.2, size = GEOM_TEXT_6PT) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
-  labs(x = "Variant-disrupted LR pairs", y = NULL,
-       title = "Cell-type pairs with most variant-perturbed CCC") +
+  labs(x = "Variant-disrupted LR pairs", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 6.5))
+  theme(axis.text.y = element_text(size = 6))
 
 fig <- (pA / pC) | (pD / plot_spacer())
 fig <- fig + plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_G2_chromatin_ccc_coupling.pdf")
-ggsave(out_path, fig, width = 14, height = 11)
+ggsave(out_path, fig, width = fig_full_width, height = fig_full_width * 11 / 14)
+message("[caption] A: GWAS-ATAC x LIANA CCC enrichment. C: Top 20 variant-disrupted CCC axes (of ",
+        nrow(priority), "). D: Cell-type pairs with most variant-perturbed CCC.")
 message("Saved: ", out_path)

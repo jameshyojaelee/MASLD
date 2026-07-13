@@ -10,6 +10,7 @@ Output: all_donor_lr_scores.tsv.gz
 """
 
 from __future__ import annotations
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -19,10 +20,19 @@ PROJECT_ROOT = Path(os.environ.get(
     "MASLD_PROJECT_ROOT",
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design",
 ))
-PER_DONOR = PROJECT_ROOT / "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/per_donor_lr"
-OUT_TSV   = PROJECT_ROOT / "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/all_donor_lr_scores.tsv.gz"
+DEFAULT_PER_DONOR = PROJECT_ROOT / "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/per_donor_lr"
+DEFAULT_OUT_TSV   = PROJECT_ROOT / "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/all_donor_lr_scores.tsv.gz"
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--in-dir", default=str(DEFAULT_PER_DONOR),
+                    help="dir of per-donor *_lr_scores.parquet files")
+    ap.add_argument("--out", default=str(DEFAULT_OUT_TSV),
+                    help="output gzipped TSV path")
+    args = ap.parse_args()
+    PER_DONOR = Path(args.in_dir)
+    OUT_TSV = Path(args.out)
+
     parquets = sorted(PER_DONOR.glob("*_lr_scores.parquet"))
     if not parquets:
         print("[345b] no per-donor parquets found", file=sys.stderr)

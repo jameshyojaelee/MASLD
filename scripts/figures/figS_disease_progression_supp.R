@@ -53,11 +53,10 @@ if (!is.null(fib_consec) && nrow(fib_consec) > 0) {
   if (nrow(trans_counts) > 0) {
     p_a <- ggplot(trans_counts, aes(x = contrast, y = N)) +
       geom_col(fill = masld_colors$mash, width = 0.7) +
-      geom_text(aes(label = N), vjust = -0.3, size = 2) +
-      labs(x = "Fibrosis transition", y = "Number of DEGs (padj < 0.05)",
-           title = "Fibrosis stage-transition DEG counts") +
+      geom_text(aes(label = N), vjust = -0.3, size = GEOM_TEXT_6PT) +
+      labs(x = "Fibrosis transition", y = "Number of DEGs (padj < 0.05)") +
       theme_masld() +
-      theme(axis.text.x = element_text(size = 5, angle = 45, hjust = 1))
+      theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1))
     cat("Panel a: Stage-transition heatmap — done\n")
   }
 }
@@ -131,8 +130,8 @@ if (!is.null(fib_el) && nrow(fib_el) > 0) {
       col = list(Trajectory = avail_colors),
       annotation_name_gp = gpar(fontsize = 6),
       annotation_legend_param = list(
-        title_gp = gpar(fontsize = 6, fontface = "bold"),
-        labels_gp = gpar(fontsize = 5)
+        title_gp = gpar(fontsize = 6, fontface = "plain"),
+        labels_gp = gpar(fontsize = 6)
       )
     )
 
@@ -148,17 +147,15 @@ if (!is.null(fib_el) && nrow(fib_el) > 0) {
       cluster_rows = FALSE,
       cluster_columns = FALSE,
       show_row_names = TRUE,
-      row_names_gp = gpar(fontsize = 3.5),
+      row_names_gp = gpar(fontsize = 6),
       column_names_gp = gpar(fontsize = 6),
       left_annotation = row_anno,
       row_split = factor(top_genes$cluster, levels = cluster_order),
       row_gap = unit(1, "mm"),
-      row_title_gp = gpar(fontsize = 5, fontface = "bold"),
-      column_title = "Fibrosis stage gene trajectories",
-      column_title_gp = gpar(fontsize = 7, fontface = "bold"),
+      row_title_gp = gpar(fontsize = 6, fontface = "plain"),
       heatmap_legend_param = list(
-        title_gp = gpar(fontsize = 6, fontface = "bold"),
-        labels_gp = gpar(fontsize = 5),
+        title_gp = gpar(fontsize = 6, fontface = "plain"),
+        labels_gp = gpar(fontsize = 6),
         legend_height = unit(2, "cm")
       ),
       width = unit(3, "cm"),
@@ -167,6 +164,7 @@ if (!is.null(fib_el) && nrow(fib_el) > 0) {
     )
 
     p_b <- wrap_elements(full = grid.grabExpr(draw(hm, merge_legend = TRUE)))
+    message("[caption] Fibrosis stage gene trajectories")
     cat("Panel b: Ordinal fibrosis gene trends — done\n")
   }
 }
@@ -178,7 +176,7 @@ mash_masl <- load_mash_vs_masl_results()
 nas_comp_f <- load_nas_components()
 
 if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
-  mash_masl[, neg_log10p := pmin(-log10(dream_padj), 50)]
+  mash_masl[, neg_log10p := pmin(-log10(padj), 50)]
   mash_masl[, component_driver := "No data"]
 
   if (!is.null(nas_comp_f) && nrow(nas_comp_f) > 0) {
@@ -197,7 +195,7 @@ if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
     mash_masl[dominant, component_driver := i.driver, on = "gene"]
   }
 
-  mash_masl[, sig := dream_padj < PADJ_THRESH & abs(dream_logFC) > LFC_THRESH]
+  mash_masl[, sig := padj < PADJ_THRESH & abs(logFC) > LFC_THRESH]
   mash_masl[, color_group := fifelse(!sig, "NS", component_driver)]
   color_order <- c("Steatosis", "Inflammation", "Fibrosis", "No data", "NS")
   mash_masl[, color_group := factor(color_group, levels = color_order)]
@@ -210,10 +208,10 @@ if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
     NS           = "#cccccc"
   )
 
-  top_label <- mash_masl[sig == TRUE][order(dream_padj)][1:min(20, sum(mash_masl$sig, na.rm = TRUE))]
+  top_label <- mash_masl[sig == TRUE][order(padj)][1:min(20, sum(mash_masl$sig, na.rm = TRUE))]
 
   p_c <- ggplot(mash_masl[order(-as.integer(color_group))],
-                aes(x = dream_logFC, y = neg_log10p, color = color_group)) +
+                aes(x = logFC, y = neg_log10p, color = color_group)) +
     rasterize_layer(geom_point(size = 0.3, alpha = 0.5, shape = 16)) +
     geom_hline(yintercept = -log10(PADJ_THRESH), linetype = "dashed",
                linewidth = 0.3, color = "gray50") +
@@ -222,20 +220,19 @@ if (!is.null(mash_masl) && nrow(mash_masl) > 0) {
     scale_color_manual(values = volcano_colors, name = "Component\nDriver",
                        drop = FALSE) +
     labs(x = expression(log[2]~"fold change (NASH vs NAFL)"),
-         y = expression(-log[10](p[adj])),
-         title = "NAFL vs NASH") +
+         y = expression(-log[10](p[adj]))) +
     theme_masld() +
     theme(legend.position = "right",
           legend.key.size = unit(0.25, "cm"),
-          legend.title = element_text(size = 5),
-          legend.text = element_text(size = 4))
+          legend.title = element_text(size = 6),
+          legend.text = element_text(size = 6))
 
   if (nrow(top_label) > 0 && "symbol" %in% names(top_label)) {
     p_c <- p_c +
       geom_text_repel(
         data = top_label,
         aes(label = symbol),
-        size = 1.8,
+        size = GEOM_TEXT_6PT,
         max.overlaps = 15,
         segment.size = 0.2,
         color = "black",
@@ -276,10 +273,9 @@ if (!is.null(fib_el) && nrow(fib_el) > 0 && "stage_class" %in% names(fib_el)) {
       scale_color_manual(values = c("Early-enriched" = masld_colors$control,
                                      "Late-enriched" = masld_colors$fibrosis),
                          name = NULL) +
-      labs(x = "Mean expression diff (Late - Early)", y = NULL,
-           title = "Early vs late fibrosis programs") +
+      labs(x = "Mean expression diff (Late - Early)", y = NULL) +
       theme_masld() +
-      theme(axis.text.y = element_text(size = 4, face = "italic"),
+      theme(axis.text.y = element_text(size = 6, face = "italic"),
             legend.position = "bottom",
             legend.key.size = unit(0.25, "cm"))
 
@@ -320,10 +316,9 @@ if (!is.null(nas_comp) && nrow(nas_comp) > 0) {
     geom_col(width = 0.7, show.legend = FALSE) +
     geom_hline(yintercept = 0, linewidth = 0.3) +
     scale_fill_manual(values = component_colors) +
-    labs(x = "Disease Transition", y = "Number of DEGs",
-         title = "NAS component decomposition") +
+    labs(x = "Disease Transition", y = "Number of DEGs") +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 5, lineheight = 0.9))
+    theme(axis.text.x = element_text(size = 6, lineheight = 0.9))
 
   cat("Panel e: NAS component decomposition — done\n")
 }
@@ -368,15 +363,14 @@ if (!is.null(fib_gsea) && nrow(fib_gsea) > 0) {
         midpoint = 0, name = "NES",
         limits = c(-max(abs(gsea_plot$NES)), max(abs(gsea_plot$NES)))
       ) +
-      labs(x = "Fibrosis Stage (vs F0)", y = NULL,
-           title = "Pathway switching across fibrosis") +
+      labs(x = "Fibrosis Stage (vs F0)", y = NULL) +
       theme_masld() +
       theme(
-        axis.text.y = element_text(size = 4.5),
+        axis.text.y = element_text(size = 6),
         legend.position = "right",
         legend.key.size = unit(0.25, "cm"),
-        legend.title = element_text(size = 5),
-        legend.text = element_text(size = 4)
+        legend.title = element_text(size = 6),
+        legend.text = element_text(size = 6)
       )
 
     cat("Panel f: Pathway switching dot plot — done\n")
@@ -393,7 +387,7 @@ fig <- (p_a | p_b) /
        (p_c | p_d) /
        (p_e | p_f) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
-save_fig_tall(fig, OUT, width = fig_full_width, height = 12, dpi = 300)
+save_fig_tall(fig, OUT, width = fig_full_width, height = 9.5, dpi = 300)
 cat("Supplementary Figure (disease progression) saved to:", OUT, "\n")

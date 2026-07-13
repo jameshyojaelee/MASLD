@@ -2,8 +2,9 @@
 ##############################################################################
 # figS_robust_perm_null.R  (new 2026-05-08)
 # Pillar C condensed: within-cohort case/control label permutation null.
-# KEY MESSAGE: Observed DEG count (1,885) is far above any permuted DEG count
-#              (max = 2 across B = 100 permutations); empirical FDR < 0.001.
+# KEY MESSAGE: Observed DEG count (read live from the permutation audit summary)
+#              is far above any permuted DEG count (max = 2 across B = 100
+#              permutations); empirical FDR < 0.001.
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -18,17 +19,13 @@ OUT_DIR <- file.path(FIG_SUPP, "figS_methods_validation/robustness")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "figS_robust_perm_null.pdf")
 
-theme_robust <- theme_minimal(base_size = 10) +
+theme_robust <- theme_minimal(base_size = 6) +
   theme(
     panel.grid.minor   = element_blank(),
     panel.grid.major.x = element_blank(),
     panel.grid.major.y = element_line(colour = "grey92", linewidth = 0.25),
     axis.line   = element_line(colour = "black", linewidth = 0.3),
     axis.ticks  = element_line(colour = "black", linewidth = 0.3),
-    plot.title    = element_text(face = "bold", size = 11,
-                                 margin = margin(b = 2)),
-    plot.subtitle = element_text(size = 9, colour = "grey30",
-                                 margin = margin(b = 6)),
     plot.margin = margin(8, 10, 8, 10)
   )
 
@@ -41,7 +38,7 @@ perm_max <- max(count_dt$n_deg_perm)
 perm_q95 <- sum_dt$perm_count_q95[1]
 
 # Plot the permutation histogram and put the observed value as an inset arrow
-# on the right (since 1885 vs <= 2 would compress the histogram to nothing).
+# on the right (since the observed count vs <= 2 would compress the histogram to nothing).
 p <- ggplot(count_dt, aes(x = n_deg_perm)) +
   geom_histogram(fill = "grey80", colour = "grey45",
                  linewidth = 0.25, bins = 4) +
@@ -49,21 +46,20 @@ p <- ggplot(count_dt, aes(x = n_deg_perm)) +
              colour = "grey25", linewidth = 0.4) +
   annotate("text", x = perm_q95, y = Inf, hjust = -0.15, vjust = 1.6,
            label = sprintf(" 95th percentile = %d", perm_q95),
-           size = 3, colour = "grey25") +
+           size = 6 / ggplot2::.pt, colour = "black") +
   annotate("text", x = perm_max * 0.5, y = Inf, hjust = 0.5, vjust = 4.0,
            label = sprintf("Observed = %s\nEmpirical FDR < %.3f\n(observed >> perm null)",
                            comma(n_obs), max(emp_fdr, 0.001)),
-           size = 3.6, colour = "#D55E00", fontface = "bold",
+           size = 6 / ggplot2::.pt, colour = "#D55E00", fontface = "plain",
            lineheight = 1.05) +
   scale_x_continuous(breaks = pretty_breaks(n = 4),
                      limits = c(-0.5, perm_max + 1)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.20))) +
-  labs(title = "Within-cohort permutation null",
-       subtitle = sprintf(paste0("B = %d label permutations preserving ",
-                                  "per-cohort case/control counts"), n_perm),
-       x = "Permuted DEG count (padj < 0.05, |LFC| > 0.3)",
+  labs(x = "Permuted DEG count (padj < 0.05, |LFC| > 0.3)",
        y = "Permutations") +
   theme_robust
 
 ggsave(OUT_PDF, p, width = 7, height = 4, device = cairo_pdf)
+message(sprintf(paste0("[caption] Within-cohort permutation null: B = %d label ",
+                       "permutations preserving per-cohort case/control counts"), n_perm))
 cat("Saved:", OUT_PDF, "\n")

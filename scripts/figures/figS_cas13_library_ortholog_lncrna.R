@@ -35,8 +35,14 @@ pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
 
 # -- Load data -----------------------------------------------------------------
 ortho <- fread(file.path(BASE, "data/external/orthologs/master_ortholog_table.tsv.gz"))
-lib   <- fread(file.path(BASE, "Cas13_Library_Design/data/cas13_library_v3.0.csv"))
+lib   <- fread(file.path(BASE, "Cas13_Library_Design/data/cas13_library.csv"))
 canon <- fread(file.path(BASE, "Cas13_Library_Design/results/ortholog_validation/canonical_lncrna_resolution.csv"))
+
+# miRNA is OUT of scope for the Cas13 library: RfxCas13d cannot knock down mature
+# ~22 nt miRNAs, and the miRNA tier was retired at v7 (library v8 = PC + lncRNA
+# only). Drop miRNA orthologs so this bridge figure reflects the in-scope biotypes;
+# the dedicated miRNA mapping layers (miRBase, MirGeneDB) are removed below.
+ortho <- ortho[mouse_biotype != "miRNA" & human_biotype != "miRNA"]
 
 # =============================================================================
 # FIGURE S_lib_4: Ortholog mapping
@@ -54,7 +60,6 @@ canon <- fread(file.path(BASE, "Cas13_Library_Design/results/ortholog_validation
 #     canonical lncRNAs — compositional similarity too weak to be useful here).
 layer_cols <- c(
   "tier_H_toga", "tier_H_biomart", "tier_H_orthofinder",
-  "tier_H_mirbase", "tier_H_mirgenedb",
   "tier_M_blast_rbh",
   "tier_M_mmseqs2_rbh", "tier_M_ortho2align",
   "tier_M_noncode"
@@ -64,8 +69,6 @@ layer_labels <- c(
   tier_H_toga           = "TOGA",
   tier_H_biomart        = "biomaRt",
   tier_H_orthofinder    = "OrthoFinder",
-  tier_H_mirbase        = "miRBase",
-  tier_H_mirgenedb      = "MirGeneDB",
   tier_M_blast_rbh      = "BLAST RBH",
   tier_M_mmseqs2_rbh    = "MMseqs2 RBH",
   tier_M_ortho2align    = "ortho2align",
@@ -84,18 +87,15 @@ for (col in layer_cols) {
 upset_df <- as.data.frame(ortho_dedup[, ..layer_cols])
 colnames(upset_df) <- layer_labels[layer_cols]
 
-highlight_colors <- c("#C9265E", "#1565C0", "#7B1FA2", "#00695C", "#F57F17")
-
 # ---- Panel B: Tier x biotype stacked bar -------------------------------------
 ortho_dedup[, biotype_group := fcase(
   mouse_biotype == "protein_coding", "Protein-coding",
   mouse_biotype == "lncRNA",         "lncRNA",
-  mouse_biotype == "miRNA",          "miRNA",
   default = "Other"
 )]
 ortho_dedup[, biotype_group := factor(biotype_group,
                                        levels = c("Protein-coding", "lncRNA",
-                                                  "miRNA", "Other"))]
+                                                  "Other"))]
 
 tier_bio <- ortho_dedup[, .N, by = .(confidence_tier, biotype_group)]
 tier_labels <- c("H" = "High", "M" = "Medium", "L" = "Low")
@@ -106,7 +106,6 @@ tier_totals <- tier_bio[, .(total = sum(N)), by = confidence_tier]
 biotype_pal <- c(
   "Protein-coding" = "#1565C0",
   "lncRNA"         = "#C9265E",
-  "miRNA"          = "#7B1FA2",
   "Other"          = "#9E9E9E"
 )
 
@@ -122,7 +121,7 @@ pB <- ggplot(tier_bio, aes(x = confidence_tier, y = N, fill = biotype_group)) +
             size = PUB_GEOM_TEXT, color = "white") +
   geom_text(data = tier_totals,
             aes(x = confidence_tier, y = total, label = scales::comma(total)),
-            vjust = -0.4, size = PUB_GEOM_TEXT + 0.3, fontface = "bold",
+            vjust = -0.4, size = PUB_GEOM_TEXT + 0.3, fontface = "plain",
             inherit.aes = FALSE) +
   scale_fill_manual(values = biotype_pal, name = "Biotype") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.08)),
@@ -130,7 +129,7 @@ pB <- ggplot(tier_bio, aes(x = confidence_tier, y = N, fill = biotype_group)) +
   labs(x = NULL, y = "Ortholog pairs", tag = "B") +
   theme_masld() + theme_pub() +
   theme(legend.position = "right",
-        plot.tag = element_text(size = 9, face = "bold"))
+        plot.tag = element_text(size = 9, face = "plain"))
 
 # ---- Panel C: Canonical lncRNA detection tile --------------------------------
 lnc_method_cols   <- c("tier_M_blast_rbh", "tier_M_mmseqs2_rbh",
@@ -160,11 +159,11 @@ pC <- ggplot(canon_melt, aes(x = method, y = human_symbol,
                     name = "") +
   labs(x = NULL, y = NULL, tag = "C") +
   theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-        axis.text.y = element_text(face = "italic", size = 5),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+        axis.text.y = element_text(face = "italic", size = 6),
         legend.position = "bottom",
         panel.grid = element_blank(),
-        plot.tag = element_text(size = 9, face = "bold"))
+        plot.tag = element_text(size = 9, face = "plain"))
 
 # ---- Compose S_lib_4 --------------------------------------------------------
 # UpSetR draws via base graphics and always emits a blank first page through
@@ -173,7 +172,7 @@ pC <- ggplot(canon_melt, aes(x = method, y = human_symbol,
 # render UpSet, then render B+C on a new page.
 p_BC <- pB + pC + plot_layout(widths = c(1.2, 1))
 
-out_path_slib4 <- file.path(OUT_DIR, "04_ortholog_mapping.pdf")
+out_path_slib4 <- file.path(OUT_DIR, "ortholog_mapping.pdf")
 pdf_device(out_path_slib4, width = fig_full_width, height = 4.2, onefile = TRUE)
 
 # Page 1: UpSet (UpSetR internally calls grid.newpage + grid.arrange)
@@ -286,12 +285,12 @@ evid_pal <- c(
 p7A <- ggplot(evid_counts, aes(x = N, y = evidence_cat, fill = evidence_cat)) +
   geom_col(width = 0.55) +
   geom_text(aes(label = N), hjust = -0.2, size = PUB_GEOM_TEXT + 0.5,
-            fontface = "bold") +
+            fontface = "plain") +
   scale_fill_manual(values = evid_pal, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
-  labs(x = "Gene count", y = NULL,
-       title = paste0("lncRNA library targets (n = ", total_lnc, ")")) +
+  labs(x = "Gene count", y = NULL) +
   theme_masld() + theme_pub()
+message("[caption] lncRNA library targets (n = ", total_lnc, ")")
 
 # ---- Panel B: Canonical lncRNA expanded annotation tile ----------------------
 # Get tier for each canonical lncRNA
@@ -404,14 +403,14 @@ p7B <- ggplot(all_tile, aes(x = feature, y = human_symbol, fill = fill_cat)) +
                                tier_L = "Tier L",
                                diets_pos = "Diets > 0"),
                     name = "") +
-  labs(x = NULL, y = NULL,
-       title = "Canonical lncRNA validation (expanded)") +
+  labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-        axis.text.y = element_text(face = "italic", size = 5),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+        axis.text.y = element_text(face = "italic", size = 6),
         legend.position = "bottom",
         legend.key.size = unit(0.25, "cm"),
         panel.grid = element_blank())
+message("[caption] Canonical lncRNA validation (expanded)")
 
 # ---- Compose S_lib_7 --------------------------------------------------------
 p_slib7 <- p7A / p7B +

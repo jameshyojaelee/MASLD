@@ -44,21 +44,35 @@ medians <- vp_long %>%
 pa <- ggplot(vp_long, aes(x = covariate, y = pct_variance)) +
   geom_violin(fill = "#E0E0E0", color = "black", linewidth = 0.3, scale = "width") +
   geom_text(data = medians, aes(x = covariate, y = med, label = sprintf("%.1f%%", med)),
-            vjust = -0.8, size = 2, fontface = "bold") +
-  labs(x = NULL, y = "Variance explained (%)",
-       title = "Variance partition (N = 1,128)") +
+            vjust = -0.8, size = GEOM_TEXT_6PT, fontface = "plain") +
+  labs(x = NULL, y = "Variance explained (%)") +
   theme_masld() +
   theme(axis.text.x = element_text(size = 6))
 
 # =========================================================================
 # (b) Forest plot — Spearman rho across sensitivity analyses
 # =========================================================================
-# Hard-code values from confirmed analyses
+# Values read LIVE from the sensitivity metrics CSVs (never hardcoded — Spearman
+# rho is threshold-free, identical regardless of the DEG gate). Age = C2 engine.
+agem <- read.csv(file.path(BASE,
+  "RNA-seq/results/audit_sensitivity/age_confounding_c2/age_sensitivity_metrics_c2.csv"),
+  stringsAsFactors = FALSE)
+stm <- read.csv(file.path(BASE,
+  "RNA-seq/results/audit_sensitivity/steatosis_sensitivity/steatosis_sensitivity_metrics.csv"),
+  stringsAsFactors = FALSE)
+g2 <- function(k) as.numeric(agem$value[agem$metric == k][1])
+g3 <- function(a, k) as.numeric(stm$value[stm$analysis == a & stm$metric == k][1])
+
+nas_rho <- g3("nas_score_N660", "spearman_rho_logFC")
 forest_df <- data.frame(
-  analysis = c("Age adjustment\n(N = 471, 4 cohorts)",
-               "Steatosis grade\n(N = 76, GSE130970)",
-               "NAS score\n(N = 660, 5 cohorts)"),
-  rho = c(0.998, 0.943, 0.765),
+  analysis = c(
+    sprintf("Age adjustment\n(N = %d, %d cohorts)", g2("n_subset_samples"), g2("n_datasets")),
+    sprintf("Steatosis grade\n(N = %d, GSE130970)", g3("steatosis_grade_N76", "n_samples")),
+    sprintf("NAS score\n(N = %d, %d cohorts)", g3("nas_score_N660", "n_samples"),
+            g3("nas_score_N660", "n_datasets"))),
+  rho = c(g2("spearman_rho_logFC"),
+          g3("steatosis_grade_N76", "spearman_rho_logFC"),
+          nas_rho),
   stringsAsFactors = FALSE
 ) %>%
   mutate(analysis = factor(analysis, levels = rev(analysis)),
@@ -70,16 +84,15 @@ pb <- ggplot(forest_df, aes(x = rho, y = analysis, color = color)) +
   geom_vline(xintercept = 0.95, linetype = "dashed", color = "gray50", linewidth = 0.3) +
   geom_point(size = 3) +
   geom_segment(aes(x = rho - 0.02, xend = rho + 0.02, yend = analysis), linewidth = 0.8) +
-  geom_text(aes(label = sprintf("%.3f", rho)), hjust = -0.4, size = 2.2, show.legend = FALSE) +
-  annotate("text", x = 0.765, y = 0.55, label = "NAS correlates with disease\nstatus \u2192 over-correction",
-           size = 1.8, color = "#C62828", hjust = 0.5, fontface = "italic") +
-  annotate("text", x = 0.95, y = 3.4, label = "high concordance", size = 1.6,
-           color = "gray50", hjust = 0.5) +
+  geom_text(aes(label = sprintf("%.3f", rho)), hjust = -0.4, size = GEOM_TEXT_6PT, show.legend = FALSE) +
+  annotate("text", x = nas_rho, y = 0.55, label = "NAS correlates with disease\nstatus \u2192 over-correction",
+           size = GEOM_TEXT_6PT, color = "#C62828", hjust = 0.5, fontface = "plain") +
+  annotate("text", x = 0.95, y = 3.4, label = "high concordance", size = GEOM_TEXT_6PT,
+           color = "black", hjust = 0.5) +
   scale_color_manual(values = rho_colors, guide = "none") +
-  scale_x_continuous(limits = c(0.7, 1.02), breaks = seq(0.7, 1.0, 0.1)) +
+  scale_x_continuous(limits = c(0.6, 1.03), breaks = seq(0.6, 1.0, 0.1)) +
   labs(x = expression("Spearman " * rho * " (logFC vs. unadjusted)"),
-       y = NULL,
-       title = "Covariate sensitivity") +
+       y = NULL) +
   theme_masld() +
   theme(axis.text.y = element_text(size = 6))
 
@@ -114,11 +127,10 @@ pc <- ggplot(steat, aes(x = logFC_unadjusted, y = logFC_adjusted, color = sig_ca
   annotate("text", x = min(steat$logFC_unadjusted, na.rm = TRUE) + 0.5,
            y = max(steat$logFC_adjusted, na.rm = TRUE) - 0.3,
            label = paste0("\u03c1 = ", sprintf("%.3f", rho_steat)),
-           size = 2.5, hjust = 0) +
+           size = GEOM_TEXT_6PT, hjust = 0) +
   scale_color_manual(values = sig_colors, name = "Significance") +
   labs(x = expression("logFC (unadjusted)"),
-       y = expression("logFC (steatosis-adjusted)"),
-       title = "Steatosis adjustment (N = 76, GSE130970)") +
+       y = expression("logFC (steatosis-adjusted)")) +
   theme_masld() +
   theme(legend.position = c(0.85, 0.2),
         legend.background = element_blank(),
@@ -129,7 +141,8 @@ pc <- ggplot(steat, aes(x = logFC_unadjusted, y = logFC_adjusted, color = sig_ca
 # =========================================================================
 fig <- pa | (pb / pc)
 fig <- auto_tag(fig) &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig(fig, OUT, width = 7, height = 4)
+message("[caption] (a) Variance partition (N = 1,128). (b) Covariate sensitivity: Spearman rho across sensitivity analyses. (c) Steatosis adjustment (N = 76, GSE130970).")
 cat("Saved:", OUT, "\n")

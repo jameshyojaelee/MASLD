@@ -1,19 +1,27 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: Cross-species conservation enriches for genes validated at the
-# protein level (Conserved_Core rho vs overall DEG rho), showing the
-# multi-evidence filter is not arbitrary — it preferentially marks robust biology.
-# NOTE (G9-012): the specific rho values are NOT hardcoded here — they are
-# computed at runtime from the concordance data read below. (Prior stale
-# header numbers were removed after the rebuild.)
+# KEY MESSAGE: Atlas transcriptional changes replicate at the protein level
+# across two independent DIA-MS platforms (PXD051911 liver tissue + PXD052937
+# plasma). Concordance strengthens as we restrict from all measured genes to
+# primary DEGs to cross-species-conserved genes, and among genes significant in
+# both layers directional agreement is 91.3%.
 #
-# Output: figures/main/fig4_validation/panels/fig4a_proteomics_overview.pdf
+# Numbers are sourced VERBATIM from the canonical stratified concordance table
+# (Analysis/Proteomics/results/mrna_protein_concordance_stratified.csv) so the
+# panel matches the manuscript text EXACTLY:
+#   All genes  rho = 0.31 (n = 3181)
+#   DEGs       rho = 0.51 (n = 328)
+#   Conserved  rho = 0.52 (n = 477)
+#   Both sig   23 genes, 91.3% directional concordance
+#   Per platform: plasma rho = 0.31, tissue rho = 0.34
+# Concordance is computed against the canonical limma-voom quality-weighted C2
+# differential expression (NOT the retired dream method).
+#
+# Output: figures/main/fig4_validation/proteomics_concordance.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({
   library(ggplot2)
   library(dplyr)
-  library(ggrepel)
-  library(ggrastr)  # rasterize background points; keeps PDF small
 })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
@@ -21,109 +29,100 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-# ── Data ──────────────────────────────────────────────────────────────────────
-atlas <- read.csv(file.path(BASE,
-  "Analysis/Spatial/results/integration/multi_evidence_atlas_with_spatial.csv"),
-  stringsAsFactors = FALSE)
+# ── Canonical stratified concordance ─────────────────────────────────────────
+# Read the on-disk canonical table and pull the three headline strata. Reading
+# (not recomputing) guarantees the panel never drifts from the manuscript text.
+strat <- read.csv(file.path(BASE,
+  "Analysis/Proteomics/results/mrna_protein_concordance_stratified.csv"),
+  stringsAsFactors = FALSE, check.names = FALSE)
 
-df <- atlas %>%
-  select(human_symbol, dream_logFC, dream_padj,
-         best_protein_logFC, best_protein_padj, is_conserved) %>%
-  filter(!is.na(best_protein_logFC), !is.na(best_protein_padj),
-         !is.na(dream_logFC), !is.na(dream_padj),
-         best_protein_padj < 0.05) %>%
-  mutate(
-    is_deg       = dream_padj < 0.05 & abs(dream_logFC) > 0.5,
-    is_conserved = as.logical(is_conserved),
-    point_class  = case_when(
-      is_conserved & is_deg  ~ "conserved",
-      is_deg                 ~ "deg",
-      TRUE                   ~ "ns"
-    )
-  )
+get_row <- function(label) {
+  hit <- strat[strat$stratum == label, , drop = FALSE]
+  if (nrow(hit) != 1L)
+    stop(sprintf("Expected exactly one '%s' row in stratified CSV (got %d)",
+                 label, nrow(hit)))
+  hit
+}
 
-# Spearman ρ
-r_all  <- round(cor(df$dream_logFC[df$is_deg],
-                    df$best_protein_logFC[df$is_deg],
-                    method = "spearman", use = "complete.obs"), 3)
-r_cons <- round(cor(df$dream_logFC[df$is_deg & df$is_conserved],
-                    df$best_protein_logFC[df$is_deg & df$is_conserved],
-                    method = "spearman", use = "complete.obs"), 3)
-n_deg  <- sum(df$is_deg, na.rm = TRUE)
-n_cons <- sum(df$is_deg & df$is_conserved, na.rm = TRUE)
+r_all  <- get_row("All genes")
+r_deg  <- get_row("DEGs (padj<0.05, |LFC|>0.3)")
+r_cons <- get_row("Conserved")
+r_both <- get_row("Both significant")
 
-# Genes to label — split HKDC1 out for manual nudging
-label_genes <- c("THRB", "SERPINE1", "CHI3L1", "GSN", "CAPN2", "HKDC1", "SOD2", "FADS2")
-df_label       <- df %>% filter(human_symbol %in% label_genes, human_symbol != "HKDC1", is_deg)
-df_label_hkdc1 <- df %>% filter(human_symbol == "HKDC1", is_deg)
-
-# ── Point colors ─────────────────────────────────────────────────────────────
-pt_colors <- c(
-  ns        = "#E8E8E8",
-  deg       = "#E91E63",   # bright magenta (Tier2 disease signal)
-  conserved = "#7B1FA2"    # violet/purple (cross-species confirmed)
+# Headline lollipop data: rho by stratum (least → most stringent filter).
+bar_df <- data.frame(
+  stratum = c("All genes", "Primary DEGs", "Conserved"),
+  rho     = c(r_all$rho, r_deg$rho, r_cons$rho),
+  n       = c(r_all$n,   r_deg$n,   r_cons$n),
+  stringsAsFactors = FALSE
 )
-pt_alpha  <- c(ns = 0.3, deg = 0.55, conserved = 0.90)
-pt_size   <- c(ns = 0.25, deg = 0.55, conserved = 0.9)
+# Plot bottom→top in increasing stringency, so "Conserved" sits at the top.
+bar_df$stratum <- factor(bar_df$stratum,
+                         levels = c("All genes", "Primary DEGs", "Conserved"))
 
-# ── Annotation positions ──────────────────────────────────────────────────────
-xlim_r <- max(abs(df$dream_logFC), na.rm = TRUE) * 1.05
-ylim_r <- max(abs(df$best_protein_logFC), na.rm = TRUE) * 1.05
+# Both-significant directional concordance (the panel's stated headline stat).
+both_n   <- as.integer(round(r_both$n))             # 23
+both_pct <- r_both$direction_pct                    # 91.3043...
 
-# ── Plot ──────────────────────────────────────────────────────────────────────
-p <- ggplot(df %>% arrange(point_class),  # ns → deg → conserved painted last
-            aes(x = dream_logFC, y = best_protein_logFC,
-                color = point_class, alpha = point_class, size = point_class)) +
-  geom_hline(yintercept = 0, linewidth = 0.25, color = "gray70") +
-  geom_vline(xintercept = 0, linewidth = 0.25, color = "gray70") +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed",
-              linewidth = 0.3, color = "gray50") +
-  rasterise(geom_point(data = filter(df, point_class == "ns"),   shape = 16), dpi = 300) +
-  rasterise(geom_point(data = filter(df, point_class == "deg"),  shape = 16), dpi = 300) +
-  geom_point(data = filter(df, point_class == "conserved"), shape = 16) +
-  scale_color_manual(values = pt_colors,
-                     labels  = c(ns = "Non-DEG", deg = "DEG", conserved = "Cross-species DEG"),
-                     name    = NULL) +
-  scale_alpha_manual(values = pt_alpha, guide = "none") +
-  scale_size_manual(values  = pt_size,  guide = "none") +
-  geom_text_repel(data = df_label,
-                  aes(label = human_symbol),
-                  size = PUB_GEOM_TEXT + 0.5, fontface = "bold.italic",
-                  box.padding = 0.5, point.padding = 0.4,
-                  force = 3, force_pull = 0.5,
-                  min.segment.length = 0,
-                  segment.size = 0.4, segment.color = "gray30",
-                  max.overlaps = Inf,
-                  bg.color = "white", bg.r = 0.12,
-                  color = "black") +
-  # HKDC1 nudged away from CHI3L1 cluster (upper-right)
-  geom_text_repel(data = df_label_hkdc1,
-                  aes(label = human_symbol),
-                  size = PUB_GEOM_TEXT + 0.5, fontface = "bold.italic",
-                  nudge_x = -0.55, nudge_y = 0.45,
-                  point.padding = 0.5,
-                  min.segment.length = 0,
-                  segment.size = 0.4, segment.color = "gray30",
-                  bg.color = "white", bg.r = 0.12,
-                  color = "black") +
-  # Correlation annotations — two lines in bottom-right
-  annotate("text", x = xlim_r, y = -ylim_r,
-           label = sprintf("All DEGs:              ρ = %.3f (n = %d)\nCross-species DEGs: ρ = %.3f (n = %d)",
-                           r_all, n_deg, r_cons, n_cons),
-           hjust = 1, vjust = 0, size = PUB_GEOM_TEXT + 0.3,
-           color = "gray20", fontface = "italic", lineheight = 1.3) +
-  coord_cartesian(xlim = c(-xlim_r, xlim_r), ylim = c(-ylim_r, ylim_r)) +
-  labs(x = "mRNA log₂FC (dream mega-analysis)",
-       y = "Protein log₂FC",
-       title = "mRNA–protein concordance") +
+# Per-platform rho. Tissue (PXD051911 MASLD-vs-ctrl) is in the stratified CSV;
+# plasma (PXD052937) is the canonical 0.31 reported in the manuscript and in
+# pxd052937_concordance_summary.csv (rho_overall). Hard-source both so the
+# values cannot drift.
+plat <- read.csv(file.path(BASE,
+  "Analysis/Proteomics/results/pxd052937_concordance_summary.csv"),
+  stringsAsFactors = FALSE)
+rho_plasma <- plat$value[plat$metric == "rho_overall"]          # 0.3065 -> 0.31
+tiss_row   <- strat[strat$stratum == "PXD051911 liver (MASLD vs ctrl)", ]
+rho_tissue <- tiss_row$rho[1]                                   # 0.3424 -> 0.34
+
+# Emit to stdout for caption cross-checking.
+message(sprintf("[fig4a] rho: all=%.2f (n=%d)  DEG=%.2f (n=%d)  cons=%.2f (n=%d)",
+                bar_df$rho[1], bar_df$n[1], bar_df$rho[2], bar_df$n[2],
+                bar_df$rho[3], bar_df$n[3]))
+message(sprintf("[fig4a] both-sig: n=%d, %.1f%% directional concordance",
+                both_n, both_pct))
+message(sprintf("[fig4a] per-platform rho: plasma=%.2f  tissue=%.2f",
+                rho_plasma, rho_tissue))
+message("[caption] Protein-level replication")
+
+# ── Colors ───────────────────────────────────────────────────────────────────
+# Stringency ramp: neutral gray (all) -> disease magenta (DEGs) -> teal
+# (conserved), matching the house concordance semantics.
+strat_cols <- c(
+  "All genes"    = masld_colors$ns,         # neutral gray
+  "Primary DEGs" = masld_colors$up,         # Liang deep magenta (DEG signal)
+  "Conserved"    = masld_colors$conserved   # deep teal (conserved)
+)
+
+# ── Headline lollipop: stratified rho ────────────────────────────────────────
+# Axis spans 0–0.6 (the data); extra blank space to the right of the axis (via
+# clip="off" + plot.margin) holds the value+n label so nothing is truncated.
+x_axis_max <- 0.6
+p <- ggplot(bar_df, aes(x = rho, y = stratum, color = stratum)) +
+  geom_segment(aes(x = 0, xend = rho, yend = stratum), linewidth = 1.1) +
+  geom_point(size = 2.6) +
+  geom_text(aes(label = sprintf("%.2f  (n=%s)", rho,
+                                formatC(n, big.mark = ",", format = "d"))),
+            hjust = 0, nudge_x = 0.022,
+            size = PUB_GEOM_TEXT, fontface = "plain", color = "black") +
+  scale_color_manual(values = strat_cols, guide = "none") +
+  scale_x_continuous(limits = c(0, x_axis_max),
+                     breaks = c(0, 0.2, 0.4, 0.6),
+                     expand = expansion(mult = c(0, 0))) +
+  labs(x = "mRNA-protein log2FC concordance (Spearman rho)",
+       y = NULL) +
+  # Both-significant directional concordance + per-platform agreement belong in
+  # the figure legend, not the panel (PI directive) — emitted to stdout above.
+  coord_cartesian(clip = "off") +
   theme_masld() + theme_pub() +
-  theme(legend.position = c(0.02, 0.98),
-        legend.justification = c(0, 1),
-        legend.background = element_blank())
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.text.y = element_text(face = "plain", size = PUB_AXIS_TITLE),
+        plot.margin = margin(5.5, 34, 5.5, 5.5))
 
-# ── Save ──────────────────────────────────────────────────────────────────────
-out <- file.path(FIG4_DIR, "panels", "fig4a_proteomics_overview.pdf")
-pdf(out, width = fig_half_width, height = fig_half_width, useDingbats = FALSE)
+# ── Save ─────────────────────────────────────────────────────────────────────
+out <- file.path(FIG4_DIR, "panels", "proteomics_concordance.pdf")
+pdf(out, width = fig_half_width, height = fig_half_width * 0.62, useDingbats = FALSE)
 print(p)
 dev.off()
 message("Saved: ", out)

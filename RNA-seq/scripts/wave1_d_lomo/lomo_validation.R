@@ -35,26 +35,27 @@ log_prior_odds <- log(pi_hat / (1 - pi_hat))
 cat(sprintf("  pi_hat = %.6f, log_prior_odds = %.4f\n", pi_hat, log_prior_odds))
 cat(sprintf("  convergence_evidence: %d genes x %d cols\n", nrow(ev), ncol(ev)))
 
-# Load atlas (only columns we need): for AveExpr decile + dream stats for sample-disjoint
-# Govaere reconstruction.
-atlas_cols <- c("human_symbol","ensembl_id","dream_logFC","dream_padj","dream_tstat",
+# Load atlas (only columns we need): for AveExpr decile + bulk DEG stats for sample-disjoint
+# Govaere reconstruction. (atlas human-bulk channel is bulk_* since the C2 swap.)
+atlas_cols <- c("human_symbol","ensembl_id","bulk_logFC","bulk_padj","bulk_tstat",
                 "nafl_vs_nash_logFC","nafl_vs_nash_padj","nafl_vs_nash_tstat",
                 "f2_inflection_logFC","f2_inflection_padj",
                 "adv_fib_logFC","adv_fib_padj",
-                "dream_logFC_F","dream_logFC_M","sex_interaction_padj")
+                "bulk_logFC_F","bulk_logFC_M","sex_interaction_padj")
 atlas <- fread(ATLAS_PATH, select = atlas_cols)
 cat(sprintf("  multi_evidence_atlas: %d rows\n", nrow(atlas)))
 
 # Match atlas -> convergence_evidence by symbol (both files share human_symbol column)
 m <- match(ev$human_symbol, atlas$human_symbol)
-ev[, dream_logFC := atlas$dream_logFC[m]]
-# AveExpr is not in atlas, pull from dream_results_ashr.csv
+ev[, bulk_logFC := atlas$bulk_logFC[m]]
+# AveExpr is not in atlas, pull from dream_results_ashr.csv (retired DREAM sensitivity
+# arm — only the AveExpr column is borrowed; effect sizes come from the C2 atlas above).
 dream_ashr <- fread(file.path(ROOT,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"))
+  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv"))  # C2-OK-sensitivity
 m2 <- match(ev$human_symbol, dream_ashr$symbol)
 ev[, AveExpr := dream_ashr$AveExpr[m2]]
-cat(sprintf("  matched %d/%d genes to dream_logFC, %d/%d to AveExpr\n",
-            sum(!is.na(ev$dream_logFC)), nrow(ev),
+cat(sprintf("  matched %d/%d genes to bulk_logFC, %d/%d to AveExpr\n",
+            sum(!is.na(ev$bulk_logFC)), nrow(ev),
             sum(!is.na(ev$AveExpr)), nrow(ev)))
 
 # Convert excluded_from_ranking to logical (data.table reads as char in some CSVs)
@@ -442,27 +443,27 @@ fwrite(res_part1, OUT_LOMO)
 # ============================================================================
 cat("\n--- Part 2: Expression-decile-matched permutation null ---\n")
 
-# Bin all evaluable atlas genes by dream_logFC into deciles. For each panel
+# Bin all evaluable atlas genes by bulk_logFC into deciles. For each panel
 # gene, sample a random gene from the same decile. Repeat N_PERM times.
 # Compute observed full-stack AUROC's percentile in this null.
 #
-# Per spec: bin by dream_logFC percentile decile. We use absolute(dream_logFC)
+# Per spec: bin by bulk_logFC percentile decile. We use absolute(bulk_logFC)
 # since the panels are interested in disease-perturbed genes regardless of
-# direction. We also report the alternative binning by signed dream_logFC.
+# direction. We also report the alternative binning by signed bulk_logFC.
 #
-# NOTE: spec literally says "dream_logFC percentile decile" which we take as
-# the SIGNED dream_logFC decile (matches 46d's expression-pervasive bias
+# NOTE: spec literally says "logFC percentile decile" which we take as
+# the SIGNED bulk_logFC decile (matches 46d's expression-pervasive bias
 # concern: high-magnitude up-regulated genes have higher posterior).
 
 # Restrict to evaluable scoring set
-keep <- non_excl & !is.na(score_full) & !is.na(ev$dream_logFC)
+keep <- non_excl & !is.na(score_full) & !is.na(ev$bulk_logFC)
 ev_eval_idx <- which(keep)
 sym_eval    <- sym[ev_eval_idx]
 score_eval  <- score_full[ev_eval_idx]
-lfc_eval    <- ev$dream_logFC[ev_eval_idx]
+lfc_eval    <- ev$bulk_logFC[ev_eval_idx]
 n_eval      <- length(ev_eval_idx)
 
-# Decile bins from dream_logFC quantiles (10 bins)
+# Decile bins from bulk_logFC quantiles (10 bins)
 brks <- quantile(lfc_eval, probs = seq(0, 1, length.out = 11), na.rm = TRUE)
 brks[1] <- brks[1] - 1e-9; brks[length(brks)] <- brks[length(brks)] + 1e-9
 dec <- cut(lfc_eval, breaks = brks, labels = FALSE, include.lowest = TRUE)

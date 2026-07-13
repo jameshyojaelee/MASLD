@@ -167,7 +167,7 @@ if (!"gene_sym" %in% names(dream_mapped)) {
 # Get logFC per gene (some genes may have multiple ENSEMBL IDs - take the one with smallest padj)
 dream_lfc <- dream_mapped[, {
   idx <- which.min(padj)
-  list(dream_logFC = logFC[idx], dream_padj = padj[idx])
+  list(logFC = logFC[idx], padj = padj[idx])
 }, by = gene_sym]
 setnames(dream_lfc, "gene_sym", "gene")
 
@@ -228,13 +228,13 @@ cat("  Heritability enrichment mapped for", nrow(herit_mapped), "cell types\n")
 dream_vec <- rep(NA_real_, nrow(mat))
 names(dream_vec) <- rownames(mat)
 m <- match(dream_lfc$gene, rownames(mat))
-dream_vec[m[!is.na(m)]] <- dream_lfc$dream_logFC[!is.na(m)]
+dream_vec[m[!is.na(m)]] <- dream_lfc$logFC[!is.na(m)]
 
 # Dream significance
 dream_sig_vec <- rep(NA_real_, nrow(mat))
 names(dream_sig_vec) <- rownames(mat)
 m2 <- match(dream_lfc$gene, rownames(mat))
-dream_sig_vec[m2[!is.na(m2)]] <- dream_lfc$dream_padj[!is.na(m2)]
+dream_sig_vec[m2[!is.na(m2)]] <- dream_lfc$padj[!is.na(m2)]
 
 lfc_max <- max(abs(dream_vec), na.rm = TRUE)
 lfc_cap <- min(lfc_max, 3)
@@ -393,7 +393,7 @@ ht <- Heatmap(
   # Legend
   heatmap_legend_param = list(
     title = "scTWAS\nsign(beta) x\n-log10(p)",
-    title_gp = gpar(fontsize = 5, fontface = "bold"),
+    title_gp = gpar(fontsize = 5, fontface = "plain"),
     labels_gp = gpar(fontsize = 5),
     legend_height = unit(3, "cm"),
     at = c(-10, -5, 0, 5, 10),
@@ -403,7 +403,7 @@ ht <- Heatmap(
   # Row split by k-means for visual grouping if many genes
   row_km = if (length(selected_genes) > 80) 4 else if (length(selected_genes) > 40) 3 else 2,
   row_km_repeats = 50,
-  row_title_gp = gpar(fontsize = 7, fontface = "bold"),
+  row_title_gp = gpar(fontsize = 7, fontface = "plain"),
   row_gap = unit(1, "mm"),
 
   # Width/height

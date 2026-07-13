@@ -149,8 +149,8 @@ def test_gene_index(data_dir: Path, result: TestResult):
         "symbol",
         "ensembl_id",
         "biotype",
-        "dream_logfc",
-        "dream_padj",
+        "bulk_logfc",
+        "bulk_padj",
         "evidence",
     }
     # Optional keys that may appear depending on the gene

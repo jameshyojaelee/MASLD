@@ -29,7 +29,7 @@ dir.create(MR_DATA, showWarnings = FALSE, recursive = TRUE)
 # ============================================================
 cat("Loading consensus DEGs...\n")
 degs <- fread(file.path(RES, "disease_signatures/unified_disease_signatures.csv"))
-target_genes <- degs[dvc_dream_sig == TRUE]
+target_genes <- degs[dvc_dream_sig == TRUE]  # C2-OK-sensitivity (RETIRED MR script; MR ditched 2026-04-22, not repointed)
 cat("Found", nrow(target_genes), "significant DEGs for MR testing\n")
 
 # ============================================================

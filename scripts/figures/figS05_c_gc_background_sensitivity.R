@@ -1,7 +1,12 @@
-# figS05 C: GC background sensitivity for motif disruption calls
-# Rows = disease regulon TFs, cols = uniform / genome / peak GC backgrounds
-# Side-bar = in-disease-regulon flag (warm magenta vs gray)
-# 4-way validated TFs (THRB, HNF4A, RORA, MLXIPL, MAX) labelled bold italic.
+# figS05 C: GC background sensitivity for motif-disruption PREDICTIONS.
+# Rows = disease regulon TFs, cols = uniform / genome / peak GC backgrounds.
+# Side-bar = in-disease-regulon flag (warm magenta vs gray).
+# The disease master-regulator TFs of interest (THRB, HNF4A, RORA, MLXIPL, MAX)
+# are labelled bold italic. NOTE: these are PUTATIVE motif-disruption predictions
+# (FIMO/motifbreakR) shown to be robust to GC-background choice — they are NOT
+# functionally validated. The one functional test (Currin caQTL) does NOT confirm
+# them (46.3% concordant, median 50%; only 2 four-way variants exist, in ZNF701 —
+# see figS05_scatac_caqtl_concordance). "4-way validated" wording removed 2026-06-19.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -33,12 +38,12 @@ dis_tfs_full <- unique(reg$tf_name)
 # Backup: also pull from tier file flag
 dis_tfs_full <- unique(c(dis_tfs_full, tier[in_disease_regulon == TRUE, tf_name]))
 
-# 4-way validated TFs (call out)
-four_way <- c("THRB", "HNF4A", "RORA", "MLXIPL", "MAX")
+# disease master-regulator TFs of interest (call out; putative predictions)
+callout_tfs <- c("THRB", "HNF4A", "RORA", "MLXIPL", "MAX")
 
 # Per the design brief, target ~18 TFs: disease-regulon TFs that survive in bg
 keep_tfs <- intersect(bg$tf_name, dis_tfs_full)
-keep_tfs <- union(keep_tfs, intersect(bg$tf_name, four_way))
+keep_tfs <- union(keep_tfs, intersect(bg$tf_name, callout_tfs))
 
 mat_dt <- bg[tf_name %in% keep_tfs, .(tf_name, uniform, genome, peak, total)]
 setorder(mat_dt, -total)
@@ -62,12 +67,12 @@ right_anno <- rowAnnotation(
     border = FALSE,
     width = unit(0.25, "cm")
   ),
-  annotation_name_gp = gpar(fontsize = 6, fontface = "bold"),
+  annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
   annotation_name_rot = 0
 )
 
-# row name face: 4-way validated TFs in bold italic
-row_face <- ifelse(tf_order %in% four_way, "bold.italic", "plain")
+# row name face: disease master-regulator TFs of interest in italic
+row_face <- ifelse(tf_order %in% callout_tfs, "italic", "plain")
 
 ht <- Heatmap(
   mat,
@@ -75,21 +80,21 @@ ht <- Heatmap(
   col = col_fun,
   cluster_rows = FALSE, cluster_columns = FALSE,
   row_names_side = "left",
-  row_names_gp = gpar(fontsize = 7, fontface = row_face),
+  row_names_gp = gpar(fontsize = 6, fontface = row_face),
   column_labels = c("Uniform", "Genome", "Peak"),
   column_names_rot = 0, column_names_centered = TRUE,
-  column_names_gp = gpar(fontsize = 7, fontface = "bold"),
+  column_names_gp = gpar(fontsize = 6, fontface = "plain"),
   cell_fun = function(j, i, x, y, w, h, fill) {
     v <- mat[i, j]
     grid.text(v, x, y,
               gp = gpar(fontsize = 6,
                         col = if (v > vmax * 0.6) "white" else "black",
-                        fontface = "bold"))
+                        fontface = "plain"))
   },
   right_annotation = right_anno,
   rect_gp = gpar(col = "white", lwd = 0.5),
   heatmap_legend_param = list(
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
     labels_gp = gpar(fontsize = 6),
     legend_height = unit(2, "cm")
   ),
@@ -101,15 +106,11 @@ out_pdf <- file.path(FIGS05_DIR, "figS05_c_gc_background_sensitivity.pdf")
 dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)
 pdf(out_pdf, width = 5, height = 6, useDingbats = FALSE)
 draw(ht,
-     column_title = "GC background sensitivity (disease regulon TFs)",
-     column_title_gp = gpar(fontsize = 9, fontface = "bold"),
      heatmap_legend_side = "right",
      annotation_legend_side = "right",
      padding = unit(c(4, 4, 4, 4), "mm"))
-grid.text("Bold italic = 4-way validated TF (THRB / HNF4A / RORA / MLXIPL / MAX)",
-          x = 0.5, y = 0.03,
-          gp = gpar(fontsize = 6, col = "gray30"))
 dev.off()
+message("[caption] GC background sensitivity (disease regulon TFs). Italic = disease master-regulator TF (putative motif-disruption prediction; not caQTL-validated)")
 message("Wrote: ", out_pdf)
 
 out_csv <- sub("\\.pdf$", ".csv", out_pdf)

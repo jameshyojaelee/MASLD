@@ -56,9 +56,9 @@ symbol_map <- symbol_map[!duplicated(ensembl_clean)]
 
 consensus <- merge(consensus, symbol_map, by = "ensembl_clean", all.x = TRUE)
 
-# Human DE score: -log10(dream_padj) * sign(dream_logFC), capped at 50
-consensus[, human_de_raw := ifelse(!is.na(dream_padj) & dream_padj > 0,
-                                    -log10(dream_padj) * sign(dream_logFC), 0)]
+# Human DE score: -log10(bulk_padj) * sign(bulk_logFC), capped at 50
+consensus[, human_de_raw := ifelse(!is.na(bulk_padj) & bulk_padj > 0,
+                                    -log10(bulk_padj) * sign(bulk_logFC), 0)]
 consensus[human_de_raw > 50, human_de_raw := 50]
 consensus[human_de_raw < -50, human_de_raw := -50]
 
@@ -77,8 +77,8 @@ mouse_map <- unique(ortho[!is.na(human_symbol) & human_symbol != "",
 mouse_map <- mouse_map[!duplicated(mouse_gene_id)]
 
 mouse <- merge(mouse, mouse_map, by.x = "ensembl_clean", by.y = "mouse_gene_id", all.x = TRUE)
-mouse[, mouse_de_raw := ifelse(!is.na(dream_padj) & dream_padj > 0,
-                                -log10(dream_padj) * sign(dream_logFC), 0)]
+mouse[, mouse_de_raw := ifelse(!is.na(dream_padj) & dream_padj > 0,  # C2-OK-sensitivity: MOUSE pipeline (mouse_consensus_degs.csv) still uses dream_* — not migrated
+                                -log10(dream_padj) * sign(dream_logFC), 0)]  # C2-OK-sensitivity: mouse consensus columns
 mouse[mouse_de_raw > 50, mouse_de_raw := 50]
 mouse[mouse_de_raw < -50, mouse_de_raw := -50]
 
@@ -217,7 +217,7 @@ cat("\nMerging layers...\n")
 # Start with all unique human symbols from consensus
 scored <- unique(consensus[!is.na(human_symbol) & human_symbol != "",
                            .(human_symbol, ensembl_clean, human_de_raw,
-                             dream_logFC, dream_padj)])
+                             bulk_logFC, bulk_padj)])
 scored <- scored[!duplicated(human_symbol)]
 
 scored <- merge(scored, mouse_layer, by = "human_symbol", all.x = TRUE)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useHashNavigate } from "@/lib/hash-router";
 import {
   Command,
   CommandEmpty,
@@ -23,7 +23,7 @@ import { searchGenes } from "@/lib/search-index";
 import type { GeneIndexEntry } from "@/lib/types";
 
 export function GeneSearch() {
-  const router = useRouter();
+  const navigate = useHashNavigate();
   const { commandOpen, setCommandOpen } = useAppStore();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeneIndexEntry[]>([]);
@@ -57,9 +57,9 @@ export function GeneSearch() {
     (symbol: string) => {
       setCommandOpen(false);
       setQuery("");
-      router.push(`/gene/${symbol}/`);
+      navigate(`#/gene?symbol=${encodeURIComponent(symbol)}`);
     },
-    [router, setCommandOpen]
+    [navigate, setCommandOpen]
   );
 
   return (
@@ -130,7 +130,7 @@ export function GeneSearch() {
               <CommandItem
                 onSelect={() => {
                   setCommandOpen(false);
-                  router.push("/");
+                  navigate("/");
                 }}
               >
                 Home
@@ -138,7 +138,7 @@ export function GeneSearch() {
               <CommandItem
                 onSelect={() => {
                   setCommandOpen(false);
-                  router.push("/explore/");
+                  navigate("/explore");
                 }}
               >
                 Gene Explorer
@@ -146,7 +146,7 @@ export function GeneSearch() {
               <CommandItem
                 onSelect={() => {
                   setCommandOpen(false);
-                  router.push("/downloads/");
+                  navigate("/downloads");
                 }}
               >
                 Downloads

@@ -23,11 +23,21 @@ from spatial_utils import (
 )
 from spatial_stats import morans_i_by_donor
 
-# Donor (slide) column. GSE192741 = JBO014/015/018/019/022 (n=5; 2 Healthy,
-# 3 Steatotic). Per-slice graphs are built within each sample_id so no spatial
-# edges cross physically distinct slides (F229), and Moran's I is aggregated to
-# the donor level (F009/F044/F183/C021 — fixes spot-level pseudoreplication).
-DONOR_COL = "sample_id"
+# Donor (INDIVIDUAL) column. GSE192741 has 5 slides (sample_id
+# JBO014/015/018/019/022) but only 4 distinct individuals: JBO014 and JBO015 are
+# both individual H35 (Steatotic), so slide-level counting double-counts H35 and
+# inflates the Steatotic unit n to 3. The true experimental units are 2 Healthy
+# (H36=JBO018, H38=JBO022) and 2 Steatotic (H35=JBO014+JBO015, H37=JBO019)
+# individuals — i.e. n=2-vs-2, not 2-vs-3 slides. Aggregating Moran's I to the
+# INDIVIDUAL (not the slide) fixes the remaining pseudoreplication
+# (F009/F044/F183/C021): the per-individual mean I and majority-significance vote
+# are now over biological replicates. NOTE: morans_i_by_donor groups by this
+# column and builds ONE generic-kNN graph per group; for H35 that pools spots
+# from the two physically distinct JBO014/JBO015 slides into a single graph (a
+# residual F229-style cross-slide-edge concern). The clean fix — build the
+# spatial graph per slide and aggregate to the individual — lives in
+# spatial_stats.morans_i_by_donor (outside this file's scope).
+DONOR_COL = "individual"
 
 
 def identify_svgs(adata, condition, config):
@@ -37,8 +47,9 @@ def identify_svgs(adata, condition, config):
     into ONE generic-kNN spatial graph (connecting spots across physically
     distinct slides whose coordinates share a frame) and tested thousands of
     non-independent spots as if independent (n=spots, not n=donors). We now
-    build the spatial graph WITHIN each slide (donor=sample_id) and aggregate
-    Moran's I across donors via spatial_stats.morans_i_by_donor.
+    aggregate Moran's I to the INDIVIDUAL (donor=individual; JBO014+JBO015 = one
+    individual H35, so the Steatotic unit n is 2 not 3) via
+    spatial_stats.morans_i_by_donor.
 
     Output column meanings CHANGED but names are preserved for the downstream
     atlas contract (06_integration.py maps 'I'->spatial_morans_i, 'svg'->

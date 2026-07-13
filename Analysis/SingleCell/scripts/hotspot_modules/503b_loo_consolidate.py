@@ -27,6 +27,25 @@ DATASETS = [
     "Liver_Atlas",
 ]
 
+# Post-2026-05-22 protocol-contamination remediation: the re-discovered non-hep
+# cell types (mac/fib/chol/tcells) were fit with GSE136103 + Liver_Atlas excluded,
+# and their clean LOO re-runs (503_loo_clean.sbatch) hold out only these 5. Reading
+# the stale/contaminated holdouts for those CTs would mis-pair pre- vs post-
+# remediation modules, so restrict them to the clean set. Hepatocytes were NOT
+# re-discovered and legitimately use the Liver_Atlas hepatocyte fraction
+# (GSE136103 contributes ~0 hep cells), so they keep the full dataset list.
+CLEAN_DATASETS = [
+    "GSE174748",
+    "GSE185477",
+    "GSE189600",
+    "GSE202379",
+    "GSE244832",
+]
+
+
+def datasets_for(ct: str) -> list[str]:
+    return DATASETS if ct == "hepatocytes" else CLEAN_DATASETS
+
 
 def top50(df: pd.DataFrame, module: int) -> set[str]:
     """Return the top-50 genes (by weight) for a given module."""
@@ -52,7 +71,7 @@ def main() -> None:
                 continue
 
             per_loo: dict[str, float] = {}
-            for ds in DATASETS:
+            for ds in datasets_for(ct):
                 loo_path = RESULTS / ct / "loo" / ds / "module_genes.tsv"
                 if not loo_path.exists():
                     per_loo[ds] = float("nan")

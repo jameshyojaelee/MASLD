@@ -140,12 +140,9 @@ p_A <- ggplot(var_dt, aes(x = PIP_v1, y = PIP_pf, color = conv_status)) +
                                  "Both not-converged" = "#D62728")) +
   coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
   labs(x = "PIP (sghatan UKBB v1)", y = "PIP (PolyFun)",
-       title = sprintf("PolyFun vs sghatan v1 (n=%s vars)",
-                       format(nrow(var_dt), big.mark=",")),
        color = NULL) +
   theme_masld(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"),
-        legend.position = "bottom")
+  theme(legend.position = "bottom")
 
 # ----------------------------------------------------------------------------
 # Panel B: per-locus Pearson r distribution
@@ -163,13 +160,11 @@ p_B <- ggplot(dt_v1, aes(x = r_pf_v1, fill = conv_status)) +
                                 "Both not-converged" = "#D62728")) +
   geom_vline(xintercept = 0.95, color = "darkgreen", linetype = "dashed", linewidth = 0.5) +
   annotate("text", x = 0.93, y = max(table(cut(dt_v1$r_pf_v1, seq(-0.05, 1.05, 0.05))))*0.9,
-           label = "r = 0.95", angle = 90, hjust = 1, vjust = -0.5, size = 3, color = "darkgreen") +
+           label = "r = 0.95", angle = 90, hjust = 1, vjust = -0.5, size = GEOM_TEXT_6PT, color = "darkgreen") +
   labs(x = "Per-locus Pearson r", y = "# loci",
-       title = sprintf("Per-locus PIP r (n=%d)", nrow(dt_v1)),
        fill = NULL) +
   theme_masld(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"),
-        legend.position = "bottom")
+  theme(legend.position = "bottom")
 
 # ----------------------------------------------------------------------------
 # Panel C: top-PIP per locus scatter
@@ -182,10 +177,9 @@ p_C <- ggplot(dt_v1, aes(x = top_v1_pip, y = top_pf_pip, color = conv_status)) +
                                  "Both not-converged" = "#D62728")) +
   coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
   labs(x = "Max PIP (sghatan v1)", y = "Max PIP (PolyFun)",
-       title = "Top-PIP per locus", color = NULL) +
+       color = NULL) +
   theme_masld(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"),
-        legend.position = "bottom")
+  theme(legend.position = "bottom")
 
 # ----------------------------------------------------------------------------
 # Panel D: convergence-stratified r summary
@@ -208,11 +202,9 @@ p_D <- ggplot(dt_v1, aes(x = conv_status, y = r_pf_v1, fill = conv_status)) +
                                 "Both not-converged" = "#D62728"),
                     guide = "none") +
   geom_hline(yintercept = 0.95, color = "darkgreen", linetype = "dashed") +
-  labs(x = NULL, y = "Per-locus PIP r",
-       title = "r vs convergence status") +
+  labs(x = NULL, y = "Per-locus PIP r") +
   theme_masld(base_size = 13) +
-  theme(plot.title = element_text(face = "bold"),
-        axis.text.x = element_text(angle = 20, hjust = 1))
+  theme(axis.text.x = element_text(angle = 20, hjust = 1))
 
 # ----------------------------------------------------------------------------
 # Panel E: example loci — one good (PNPLA3), one mediocre, one bad
@@ -251,10 +243,9 @@ p_E <- ggplot(ex_dt, aes(x = position, y = PIP, color = panel)) +
   rasterise(geom_point(alpha = 0.6, size = 1), dpi = 300) +
   scale_color_manual(values = c("PolyFun" = "#9467BD", "sghatan_v1" = "#1F77B4")) +
   facet_wrap(~ locus_label, ncol = 1, scales = "free") +
-  labs(x = "Genomic position", y = "PIP", title = "Example loci") +
+  labs(x = "Genomic position", y = "PIP") +
   theme_masld(base_size = 11) +
-  theme(plot.title = element_text(face = "bold"),
-        strip.text = element_text(size = 10, face = "bold"),
+  theme(strip.text = element_text(size = 6, face = "plain"),
         legend.position = "bottom")
 
 # ----------------------------------------------------------------------------
@@ -264,14 +255,11 @@ top_row <- p_A + p_B + plot_layout(widths = c(1, 1.1))
 mid_row <- p_C + p_D + plot_layout(widths = c(1, 1))
 final <- top_row / mid_row / p_E +
   plot_layout(heights = c(1, 1, 1.5)) +
-  plot_annotation(
-    title = "PolyFun vs sghatan v1 — fine-mapping concordance",
-    tag_levels = "A",
-    theme = theme(plot.title = element_text(face = "bold", size = 16))
-  )
+  plot_annotation(tag_levels = "A")
+message("[caption] PolyFun vs sghatan v1 -- fine-mapping concordance")
 
 OUTFILE <- file.path(OUT_DIR, "concordance_PolyFun_vs_sghatan_v1.pdf")
-ggsave(OUTFILE, final, width = 15, height = 18, device = cairo_pdf, limitsize = FALSE)
+ggsave(OUTFILE, final, width = 7.09, height = 8.5, device = cairo_pdf, limitsize = FALSE)
 cat(sprintf("\nWrote: %s\n", OUTFILE))
 cat(sprintf("Size: %s\n", system(paste("du -h", shQuote(OUTFILE), "| cut -f1"), intern = TRUE)))
 

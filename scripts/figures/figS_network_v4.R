@@ -56,7 +56,11 @@ panel_A <- function() {
         id   = c("STRING", "D-F2", "D-COLOC", "D-LR", "D-ceRNA", "D-XSpecies"),
         kind = c("backbone", rep("dedge", 5)),
         label = c(
-            "STRING v12 >=700\nbackbone\n115,020 S-only\n3,626 contested",
+            # Edge counts from the current network build (290_edge_annotation_atlas.py,
+            # edge_annotation_summary.csv: 118,791 STRING >=700 edges total; "contested"
+            # = STRING edge that also carries a disease-native D edge). The previous
+            # "115,020 / 3,626" pair was stale (3,626 coincided with an old DEG count).
+            "STRING v12 >=700\nbackbone\n104,389 S-only\n14,402 contested",
             "D-F2\nstage-stratified\ndelta-r coexpression\n3,260,461 edges",
             "D-COLOC\nGWAS locus pairs\n111 edges\n(annotation)",
             "D-LR\nLIANA F2-differential\n9 edges",
@@ -87,20 +91,20 @@ panel_A <- function() {
                    aes(x = x, y = y, fill = kind),
                    shape = 21, size = 16, color = "grey20", stroke = 0.8) +
         geom_text(data = nodes, aes(x = x, y = y, label = label),
-                  size = 2.3, lineheight = 0.95) +
+                  size = GEOM_TEXT_6PT, lineheight = 0.95) +
         geom_text(data = ann, aes(x = x, y = y, label = label),
-                  hjust = 0, size = 2.7, color = "grey15", fontface = "italic") +
+                  hjust = 0, size = GEOM_TEXT_6PT, color = "black") +
         scale_color_manual(values = edge_type_colors, name = "Edge type") +
         scale_fill_manual(values = c(backbone = "#E0E0E0", dedge = "#FFF3E0"),
                           guide = "none") +
         coord_fixed(xlim = c(-3.5, 3.5), ylim = c(-3.5, 3)) +
-        labs(title = "Architecture C: STRING backbone + 5 disease-native edge types",
-             subtitle = "Type-D edges carry biology STRING cannot have") +
         theme_masld() +
         theme(axis.text = element_blank(),
               axis.ticks = element_blank(),
               axis.title = element_blank(),
               panel.grid = element_blank())
+    message("[caption] Architecture C: STRING backbone + 5 disease-native edge types. ",
+            "Type-D edges carry biology STRING cannot have.")
     ggsave(file.path(OUT_DIR, "figS_network_A_architecture.pdf"), p,
            width = 180/25.4, height = 120/25.4, device = cairo_pdf)
     message("Wrote figS_network_A_architecture.pdf")
@@ -191,14 +195,14 @@ panel_B <- function() {
     p <- ggplot(prev, aes(x = edge_type, y = row, fill = frac)) +
         geom_tile(color = "white", linewidth = 0.3) +
         geom_text(aes(label = scales::percent(frac, accuracy = 0.1)),
-                  size = 2.2, color = "grey15") +
+                  size = GEOM_TEXT_6PT, color = "black") +
         scale_fill_gradient(low = "#F5F5F5", high = "#C2185B",
                             labels = percent_format(accuracy = 1),
                             name = "Fraction of\ninternal edges") +
-        labs(title = "Per-community edge-type prevalence (F3-F4 top 20)",
-             x = "Edge type", y = NULL) +
+        labs(x = "Edge type", y = NULL) +
         theme_masld() +
         theme(axis.text.x = element_text(angle = 30, hjust = 1))
+    message("[caption] Per-community edge-type prevalence (F3-F4 top 20)")
     ggsave(file.path(OUT_DIR, "figS_network_B_evidence_diversity.pdf"), p,
            width = 180/25.4, height = 160/25.4, device = cairo_pdf)
     message("Wrote figS_network_B_evidence_diversity.pdf")
@@ -224,17 +228,16 @@ panel_C <- function() {
                    linewidth = 0.8, linetype = "dotted") +
         annotate("text", x = med, y = Inf,
                  label = sprintf("median = %.3f", med),
-                 vjust = 2, hjust = -0.05, color = "#C2185B", size = 3) +
+                 vjust = 2, hjust = -0.05, color = "#C2185B", size = GEOM_TEXT_6PT) +
         annotate("text", x = 0.70, y = Inf,
                  label = sprintf("threshold = 0.70\n%.1f%% pass",
                                  100 * pass),
-                 vjust = 2, hjust = 1.05, color = "#1565C0", size = 3) +
-        labs(title = "LOCO replication of D-F2 edges",
-             subtitle = sprintf("%s edges across leave-one-cohort-out folds",
-                                format(length(frac), big.mark = ",")),
-             x = "Fraction of LOCO folds replicated",
+                 vjust = 2, hjust = 1.05, color = "#1565C0", size = GEOM_TEXT_6PT) +
+        labs(x = "Fraction of LOCO folds replicated",
              y = "Number of edges") +
         theme_masld()
+    message(sprintf("[caption] LOCO replication of D-F2 edges (%s edges across leave-one-cohort-out folds)",
+                    format(length(frac), big.mark = ",")))
     ggsave(file.path(OUT_DIR, "figS_network_C_loco_replication.pdf"), p,
            width = 140/25.4, height = 95/25.4, device = cairo_pdf)
     message("Wrote figS_network_C_loco_replication.pdf")
@@ -254,15 +257,14 @@ panel_D <- function() {
                    color = "#1565C0", linewidth = 0.7) +
         annotate("text", x = 1, y = 0.32,
                  label = "Threshold = 0.30 (pre-reg)",
-                 color = "#1565C0", size = 2.7, hjust = 0.5) +
+                 color = "#1565C0", size = GEOM_TEXT_6PT, hjust = 0.5) +
         annotate("text", x = 1, y = 0.02,
                  label = "0.0011 — D-F2 captures\nbiology STRING cannot",
-                 size = 2.7, hjust = 0.5, color = "grey15") +
+                 size = GEOM_TEXT_6PT, hjust = 0.5, color = "black") +
         scale_y_continuous(limits = c(0, 0.35), expand = expansion(0)) +
-        labs(title = "(i) D-F2 vs STRING overlap",
-             x = NULL, y = "Jaccard") +
+        labs(x = NULL, y = "Jaccard") +
         theme_masld() +
-        theme(axis.text.x = element_text(size = 8))
+        theme(axis.text.x = element_text(size = 6))
 
     bench <- read_csv(file.path(BENCH_DIR, "bench_per_layer.csv"),
                       show_col_types = FALSE)
@@ -278,15 +280,16 @@ panel_D <- function() {
                  color = "grey25", linewidth = 0.2) +
         geom_hline(yintercept = 1, linetype = "dotted", color = "grey40") +
         scale_fill_brewer(palette = "Set2", name = "Gold set") +
-        labs(title = "(ii) Per-layer fold-enrichment on MASLD gold sets",
-             subtitle = "STRING wins generic; D-layers win disease-native",
-             x = "Edge layer",
+        labs(x = "Edge layer",
              y = "Fold over degree-preserving null") +
         theme_masld() +
         theme(axis.text.x = element_text(angle = 30, hjust = 1),
               legend.position = "bottom")
 
     combined <- (p_jac | p_bench) + plot_layout(widths = c(0.6, 1.4))
+    message("[caption] (i) D-F2 vs STRING overlap. ",
+            "(ii) Per-layer fold-enrichment on MASLD gold sets — ",
+            "STRING wins generic; D-layers win disease-native.")
     ggsave(file.path(OUT_DIR, "figS_network_D_honest_benchmark.pdf"),
            combined, width = 180/25.4, height = 110/25.4, device = cairo_pdf)
     message("Wrote figS_network_D_honest_benchmark.pdf")
@@ -331,8 +334,7 @@ panel_E <- function() {
 
     render <- function(g, title_txt) {
         if (is.null(g)) {
-            return(ggplot() + theme_void() +
-                labs(title = paste(title_txt, "(no edges)")))
+            return(ggplot() + theme_void())
         }
         ggraph(g, layout = "fr") +
             geom_edge_link(alpha = 0.3, edge_width = 0.3, color = "#EF6C00") +
@@ -342,9 +344,8 @@ panel_E <- function() {
                             fill = "#E0E0E0", shape = 21, color = "grey30",
                             alpha = 0.7) +
             geom_node_text(aes(label = name, filter = hub),
-                           size = 2.3, repel = TRUE, color = "grey10") +
+                           size = GEOM_TEXT_6PT, repel = TRUE, color = "black") +
             scale_size(range = c(2, 7), guide = "none") +
-            labs(title = title_txt) +
             theme_masld() +
             theme(axis.text = element_blank(), axis.ticks = element_blank(),
                   axis.title = element_blank(), panel.grid = element_blank())
@@ -353,6 +354,7 @@ panel_E <- function() {
     p1 <- render(g_em,  "F2-emerging hubs (top 20)")
     p2 <- render(g_dis, "F2-dissolving hubs (top 20)")
     combined <- p1 | p2
+    message("[caption] Left: F2-emerging hubs (top 20). Right: F2-dissolving hubs (top 20).")
     ggsave(file.path(OUT_DIR, "figS_network_E_switch_hubs.pdf"),
            combined, width = 180/25.4, height = 110/25.4, device = cairo_pdf)
     message("Wrote figS_network_E_switch_hubs.pdf")
@@ -406,20 +408,18 @@ panel_F <- function() {
 
     panels <- purrr::map(exemplars, function(sym) {
         g <- build_one(sym)
-        if (is.null(g)) return(ggplot() + theme_void() +
-            labs(title = sprintf("%s (no data)", sym)))
+        if (is.null(g)) return(ggplot() + theme_void())
         ggraph(g, layout = "fr") +
             geom_edge_link(aes(color = type), edge_width = 0.5, alpha = 0.8) +
             geom_node_point(aes(fill = hub), shape = 21, size = 3.5,
                             color = "grey25") +
-            geom_node_text(aes(label = name), repel = TRUE, size = 2.1,
-                           color = "grey10") +
+            geom_node_text(aes(label = name), repel = TRUE, size = GEOM_TEXT_6PT,
+                           color = "black") +
             scale_edge_color_manual(values = edge_type_colors,
                                     name = "Edge type", drop = FALSE) +
             scale_fill_manual(values = c(`TRUE` = "#C2185B",
                                          `FALSE` = "#ECEFF1"),
                               guide = "none") +
-            labs(title = sym) +
             theme_masld() +
             theme(axis.text = element_blank(), axis.ticks = element_blank(),
                   axis.title = element_blank(), panel.grid = element_blank(),
@@ -427,9 +427,9 @@ panel_F <- function() {
     })
     combined <- wrap_plots(panels, ncol = 3) +
         plot_layout(guides = "collect") +
-        plot_annotation(
-            title = "Gene-neighborhood exemplars (top-25 partners)",
-            theme = theme(legend.position = "bottom"))
+        plot_annotation(theme = theme(legend.position = "bottom"))
+    message(sprintf("[caption] Gene-neighborhood exemplars (top-25 partners): %s",
+                    paste(exemplars, collapse = ", ")))
     ggsave(file.path(OUT_DIR, "figS_network_F_neighborhood_exemplars.pdf"),
            combined, width = 180/25.4, height = 180/25.4, device = cairo_pdf)
     message("Wrote figS_network_F_neighborhood_exemplars.pdf")
@@ -458,9 +458,7 @@ panel_G <- function() {
     p_thrb <- ggplot(top10,
         aes(x = reorder(partner, score), y = score)) +
         geom_col(fill = "#C2185B") + coord_flip() +
-        labs(title = sprintf("Q1. THRB neighborhood (n=%d edges)", n_total),
-             subtitle = "Top 10 STRING partners by score",
-             x = NULL, y = "STRING score") +
+        labs(x = NULL, y = "STRING score") +
         theme_masld()
 
     # Q2/Q3 genes are character vectors with `n` count
@@ -471,9 +469,7 @@ panel_G <- function() {
         df <- tibble(gene = top, rank = seq_along(top))
         ggplot(df, aes(x = reorder(gene, -rank), y = 1)) +
             geom_col(fill = color) + coord_flip() +
-            labs(title = sprintf("%s (n=%d genes)", label, n_tot),
-                 subtitle = "First 10 members",
-                 x = NULL, y = NULL) +
+            labs(x = NULL, y = NULL) +
             theme_masld() +
             theme(axis.text.x = element_blank(),
                   axis.ticks.x = element_blank())
@@ -481,8 +477,14 @@ panel_G <- function() {
     p_q2 <- mk_panel(q2, "#6A1B9A", "Q2. COLOC \u2229 mid-stage (F1-F3) inflection")
     p_q3 <- mk_panel(q3, "#2E7D32", "Q3. Fibrogenic druggable")
 
-    combined <- (p_thrb | p_q2 | p_q3) +
-        plot_annotation(title = "Portal-ready query bundles")
+    n2 <- q2$n %||% length(unlist(q2$genes) %||% character(0))
+    n3 <- q3$n %||% length(unlist(q3$genes) %||% character(0))
+    combined <- (p_thrb | p_q2 | p_q3)
+    message(sprintf(
+        "[caption] Portal-ready query bundles. Q1. THRB neighborhood (n=%d edges, top 10 STRING partners by score). ",
+        n_total),
+        sprintf("Q2. COLOC \u2229 mid-stage (F1-F3) inflection (n=%d genes, first 10 members). ", n2),
+        sprintf("Q3. Fibrogenic druggable (n=%d genes, first 10 members).", n3))
     ggsave(file.path(OUT_DIR, "figS_network_G_portal_queries.pdf"),
            combined, width = 180/25.4, height = 95/25.4, device = cairo_pdf)
     message("Wrote figS_network_G_portal_queries.pdf")

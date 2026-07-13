@@ -90,13 +90,16 @@ tag_program <- function(top50_syms, fgsea_tbl, stage_rho, switch_ratio, pct_dom)
   if (n_neut >= 3) return("Innate-immune-inflammation")
   if (n_vsmc_top50 >= 3 && n_hsc_col == 0) return("Vascular-smooth-muscle / pericyte")
   if (n_vsmc_top50 >= 2 && n_hsc_col >= 1) return("Activated-HSC / myofibroblast")
-  if (n_fib >= 3 && emt_NES >= 2 && !is.na(stage_rho) && stage_rho > 0.5) return("Fibrogenic")
+  # NOTE: "Fibrogenic" -> "Fibrotic-ECM" per 2026-06-24 pathway curation in 95d.
+  # 95d (the FINAL labeling authority in 44->95->95c->95d) overwrites these labels
+  # with CURATED_LABELS. Values here kept consistent so 95c standalone is coherent.
+  if (n_fib >= 3 && emt_NES >= 2 && !is.na(stage_rho) && stage_rho > 0.5) return("Fibrotic-ECM")
   if (is.na(stage_rho)) return("Unlabeled")
   if (stage_rho > 0.6) {
-    if (inf_NES >= 2) return("Progression-Inflammatory")
+    if (inf_NES >= 2) return("Inflammatory-EMT")
     return("Progression-Other")
   }
-  if (stage_rho < -0.6) return("Quiescent-Parenchyma")
+  if (stage_rho < -0.6) return("Hepatocyte-Metabolic")
   if (!is.na(switch_ratio) && switch_ratio > 1.3) return("Transition-Late")
   if (!is.na(switch_ratio) && switch_ratio < 0.77) return("Transition-Early")
   "Stable"
@@ -129,6 +132,8 @@ rows <- list()
 # Only applied when the cache being relabeled IS the canonical clean cache;
 # NMF program indices are permuted across fits, so the Px labels from the
 # canonical cache do not correspond to Px in protonly/nonprotonly caches.
+# NOTE: these are the historical pre-pathway-curation labels for audit; the
+# 2026-06-24 pathway-curated names are in 95d's CURATED_LABELS (the authority).
 HISTORICAL_PRIOR <- c(
   P1 = "Progression-Inflammatory",
   P2 = "Quiescent-Parenchyma_1",

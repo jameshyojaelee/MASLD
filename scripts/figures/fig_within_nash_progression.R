@@ -157,7 +157,7 @@ p_a <- ggplot(merged, aes(x = logFC_c3, y = logFC_c12)) +
   ) +
   theme_publication(base_size = 7) +
   theme(
-    plot.title = element_text(size = 10, face = "bold"),
+    plot.title = element_text(size = 10, face = "plain"),
     legend.position = "bottom",
     legend.key.size = unit(0.5, "lines")
   ) +
@@ -199,7 +199,7 @@ p_b <- ggplot(top20, aes(x = logFC_c12, y = symbol, color = direction)) +
   ) +
   theme_publication(base_size = 7) +
   theme(
-    plot.title = element_text(size = 10, face = "bold"),
+    plot.title = element_text(size = 10, face = "plain"),
     plot.subtitle = element_text(size = 6, face = "plain"),
     axis.text.y = element_text(face = "italic", size = 5.5),
     legend.position = "bottom",
@@ -272,7 +272,7 @@ p_c <- ggplot(c11, aes(x = logFC, y = neg_log10_padj)) +
   ) +
   theme_publication(base_size = 7) +
   theme(
-    plot.title = element_text(size = 10, face = "bold"),
+    plot.title = element_text(size = 10, face = "plain"),
     plot.subtitle = element_text(size = 6, face = "plain"),
     legend.position = "bottom",
     legend.key.size = unit(0.5, "lines")

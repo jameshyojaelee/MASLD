@@ -186,11 +186,13 @@ def load_evidence(ens_to_sym):
         log.warning("  Cell-type transition programs not found")
 
     # 5. Multi-evidence atlas -- human_symbol is the gene symbol column
-    #    Key columns: human_symbol, ensembl_id, dream_logFC, dream_padj,
+    #    Key columns: human_symbol, ensembl_id, bulk_logFC, bulk_padj,
     #    mr_*, twas_*, coloc_*, dgidb_druggable, is_conserved, etc.
     atlas_file = os.path.join(RESULTS, "multi_evidence/multi_evidence_atlas.csv")
     if os.path.exists(atlas_file):
         atlas = pd.read_csv(atlas_file)
+        assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), \
+            "C2: atlas missing bulk_* — rebuild 27a"
         # Rename for consistency
         atlas = atlas.rename(columns={"human_symbol": "gene_symbol"})
         evidence["atlas"] = atlas
@@ -332,7 +334,7 @@ def compute_driver_scores(evidence):
             tp = evidence["transitions"]
             tp_trans = tp[tp["transition"] == trans].copy()
             if len(tp_trans) > 0:
-                # Use actual column names from dream output
+                # Use actual column names from the transition-programs output
                 tp_sub = tp_trans[["gene_symbol", "logFC", "adj.P.Val", "tau"]].copy()
                 tp_sub = tp_sub.rename(columns={"logFC": "trans_logFC",
                                                 "adj.P.Val": "trans_padj"})
@@ -421,17 +423,17 @@ def compute_driver_scores(evidence):
             else:
                 scores["s2_genetic_causality"] = 0.0
 
-            # Also pull dream LFC and cross-species info
-            dream_cols = ["dream_logFC", "dream_padj", "is_conserved"]
-            avail_dream = [c for c in dream_cols if c in atlas.columns]
-            if avail_dream:
-                dream_sub = atlas[["gene_symbol"] + avail_dream].copy()
-                dream_sub = dream_sub.drop_duplicates("gene_symbol", keep="first")
+            # Also pull bulk LFC (C2 limma-voom-qw) and cross-species info
+            bulk_cols = ["bulk_logFC", "bulk_padj", "is_conserved"]
+            avail_bulk = [c for c in bulk_cols if c in atlas.columns]
+            if avail_bulk:
+                bulk_sub = atlas[["gene_symbol"] + avail_bulk].copy()
+                bulk_sub = bulk_sub.drop_duplicates("gene_symbol", keep="first")
                 # Only merge columns not already present
                 existing = set(scores.columns)
-                new_cols = [c for c in avail_dream if c not in existing]
+                new_cols = [c for c in avail_bulk if c not in existing]
                 if new_cols:
-                    scores = scores.merge(dream_sub[["gene_symbol"] + new_cols],
+                    scores = scores.merge(bulk_sub[["gene_symbol"] + new_cols],
                                           on="gene_symbol", how="left")
         else:
             scores["s2_genetic_causality"] = 0.0

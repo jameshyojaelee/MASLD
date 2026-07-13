@@ -84,20 +84,19 @@ if (file.exists(summary_path) && file.exists(lfc_path)) {
                size = 1.5, shape = 18, alpha = 0.7) +
     geom_text(aes(x = pmax(pct_mega, pct_meta) + 3, y = label_full,
                   label = format(n_study_degs, big.mark = ",")),
-              size = 1.7, color = "#616161", hjust = 0) +
+              size = GEOM_TEXT_6PT, color = "#616161", hjust = 0) +
     geom_vline(xintercept = median(deg_summary$pct_mega),
                linetype = "dashed", linewidth = 0.4, color = "#880E4F", alpha = 0.4) +
     scale_color_manual(values = source_colors, name = NULL) +
     scale_size_continuous(range = c(1.5, 7), guide = "none") +
     scale_x_continuous(limits = c(-3, 108), breaks = seq(0, 100, 25)) +
-    labs(x = "% Study DEGs recovered (padj < 0.1)", y = NULL,
-         title = "DEG recovery by matched contrast") +
+    labs(x = "% Study DEGs recovered (padj < 0.1)", y = NULL) +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.2, "cm"),
-          legend.text = element_text(size = 5),
-          axis.text.y = element_text(size = 6),
-          plot.title = element_text(size = 7))
+          legend.text = element_text(size = 6),
+          axis.text.y = element_text(size = 6))
+  message("[caption] DEG recovery by matched contrast")
 
   # ========================================================================
   # Panel (b): Stacked recovery bars
@@ -120,20 +119,20 @@ if (file.exists(summary_path) && file.exists(lfc_path)) {
     geom_text(data = deg_summary_f,
               aes(x = n_study_degs, y = label_f,
                   label = sprintf("%.0f%%", pct_mega), fill = NULL),
-              hjust = -0.15, size = 2, fontface = "bold", color = "#0D47A1") +
+              hjust = -0.15, size = GEOM_TEXT_6PT, fontface = "plain", color = "#0D47A1") +
     scale_fill_manual(values = c("In mega" = "#0D47A1",
                                   "In meta only" = "#7B1FA2",
                                   "Not recovered" = "#BDBDBD"),
                        name = NULL) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.15)),
                        labels = comma) +
-    labs(x = "Number of DEGs", y = NULL, title = "Recovery counts") +
+    labs(x = "Number of DEGs", y = NULL) +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.2, "cm"),
-          legend.text = element_text(size = 5),
-          axis.text.y = element_text(size = 6),
-          plot.title = element_text(size = 7))
+          legend.text = element_text(size = 6),
+          axis.text.y = element_text(size = 6))
+  message("[caption] Recovery counts")
 
   # ========================================================================
   # Panel (c): LFC concordance scatter grid — faceted, 2 rows x 5 cols
@@ -159,20 +158,19 @@ if (file.exists(summary_path) && file.exists(lfc_path)) {
                        guide = "none") +
     geom_text(data = lfc_stats,
               aes(x = -Inf, y = Inf, label = sprintf("r=%.2f", r)),
-              hjust = -0.1, vjust = 1.3, size = 2.2, fontface = "bold",
+              hjust = -0.1, vjust = 1.3, size = GEOM_TEXT_6PT, fontface = "plain",
               color = "#0D47A1", inherit.aes = FALSE) +
     geom_text(data = lfc_stats,
               aes(x = -Inf, y = Inf, label = sprintf("%.0f%% concordant", dir_pct)),
-              hjust = -0.1, vjust = 2.8, size = 1.8,
+              hjust = -0.1, vjust = 2.8, size = GEOM_TEXT_6PT,
               color = "#757575", inherit.aes = FALSE) +
     facet_wrap(~label, nrow = 2, ncol = 5, scales = "free") +
-    labs(x = expression(Study~log[2]~FC), y = expression(Mega~log[2]~FC),
-         title = "LFC concordance (study vs matched mega-analysis)") +
+    labs(x = expression(Study~log[2]~FC), y = expression(Mega~log[2]~FC)) +
     theme_masld() +
-    theme(strip.text = element_text(size = 5.5, face = "bold"),
-          axis.text = element_text(size = 4.5),
-          axis.title = element_text(size = 6),
-          plot.title = element_text(size = 7))
+    theme(strip.text = element_text(size = 6, face = "plain"),
+          axis.text = element_text(size = 6),
+          axis.title = element_text(size = 6))
+  message("[caption] LFC concordance (study vs matched mega-analysis)")
 
 } else {
   message("WARNING: Published DEG comparison CSVs not found. Run published_deg_comparison.py first.")
@@ -185,32 +183,34 @@ p_d <- placeholder("Panel d: Dream volcano")
 
 dream <- load_dream_results()
 if (!is.null(dream)) {
-  dream[, neg_log10_padj := -log10(pmin(dream_padj, 1))]
-  # Cap at 50 (max observed ~47)
-  padj_cap <- 50
-  dream[neg_log10_padj > padj_cap, neg_log10_padj := padj_cap]
+  dream[, neg_log10_treat := -log10(pmin(treat_fdr, 1))]
+  # Cap at 50 (max observed ~39)
+  treat_cap <- 50
+  dream[neg_log10_treat > treat_cap, neg_log10_treat := treat_cap]
 
-  dream[, sig := fifelse(dream_padj < 0.1 & abs(dream_logFC) > 0.5,
-                          fifelse(dream_logFC > 0, "Up", "Down"), "NS")]
+  # Canonical TREAT gate: treat_fdr<0.05 (lfc=0.25). The effect floor is in the
+  # test, so direction is taken from the (unshrunk) bulk logFC.
+  dream[, sig := fifelse(treat_fdr < 0.05,
+                          fifelse(bulk_logFC > 0, "Up", "Down"), "NS")]
 
   n_up   <- sum(dream$sig == "Up", na.rm = TRUE)
   n_down <- sum(dream$sig == "Down", na.rm = TRUE)
   n_total <- nrow(dream)
 
-  # Tight LFC range for compact display
+  # Tight LFC range for compact display (plot the bulk logFC)
   lfc_cap <- 4
-  dream[, logFC_plot := pmin(pmax(dream_logFC, -lfc_cap), lfc_cap)]
+  dream[, logFC_plot := pmin(pmax(bulk_logFC, -lfc_cap), lfc_cap)]
 
-  # Label top 5 genes per direction (by rank score = |LFC| * -log10p)
-  dream[, rank_score := abs(dream_logFC) * neg_log10_padj]
+  # Label top 5 genes per direction (by rank score = |logFC| * -log10 treat_fdr)
+  dream[, rank_score := abs(bulk_logFC) * neg_log10_treat]
   top_genes <- rbind(
     dream[sig == "Up"][order(-rank_score)][1:min(5, sum(dream$sig == "Up"))],
     dream[sig == "Down"][order(-rank_score)][1:min(5, sum(dream$sig == "Down"))]
   )
 
-  subtitle_text <- "padj < 0.1, |log2FC| > 0.5"
+  subtitle_text <- "TREAT FDR<0.05 (lfc=0.25)"
 
-  p_d <- ggplot(dream, aes(x = logFC_plot, y = neg_log10_padj, color = sig)) +
+  p_d <- ggplot(dream, aes(x = logFC_plot, y = neg_log10_treat, color = sig)) +
     rasterize_layer(
       geom_point(size = 0.1, alpha = 0.15, shape = 16)
     ) +
@@ -220,23 +220,21 @@ if (!is.null(dream)) {
                        name = NULL) +
     geom_text_repel(data = top_genes,
                     aes(label = symbol),
-                    size = 2.0, max.overlaps = 15,
+                    size = GEOM_TEXT_6PT, max.overlaps = 15,
                     segment.size = 0.15, min.segment.length = 0,
                     fontface = "italic", force = 2, box.padding = 0.12) +
-    geom_vline(xintercept = c(-0.5, 0.5), linetype = "dashed",
+    geom_vline(xintercept = c(-0.25, 0.25), linetype = "dashed",
                linewidth = 0.25, color = "gray60") +
-    geom_hline(yintercept = -log10(0.1), linetype = "dashed",
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed",
                linewidth = 0.25, color = "gray60") +
     coord_cartesian(xlim = c(-lfc_cap, lfc_cap)) +
-    labs(x = expression(log[2]~FC), y = expression(-log[10]~padj),
-         title = "MASLD vs Control", subtitle = subtitle_text) +
+    labs(x = expression(log[2]~FC), y = expression(-log[10]~"TREAT FDR")) +
     theme_masld() +
     theme(legend.position = "none",
-          plot.title = element_text(size = 7),
-          plot.subtitle = element_text(size = 5.5),
           axis.title = element_text(size = 6),
-          axis.text = element_text(size = 5.5),
+          axis.text = element_text(size = 6),
           plot.margin = margin(1, 1, 1, 1))
+  message("[caption] MASLD vs Control — ", subtitle_text)
 } else {
   message("WARNING: dream_results.csv not found, skipping volcano panel")
 }
@@ -269,7 +267,7 @@ DDD...
 figS1 <- p_a + p_b + p_c + p_d +
   plot_layout(design = design, heights = c(1.2, 1.0, 0.7)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig(figS1, OUT, height = 8.5)
 message("Fig S1 saved to ", OUT)

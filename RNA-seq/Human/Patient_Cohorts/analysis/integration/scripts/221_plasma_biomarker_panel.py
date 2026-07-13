@@ -9,7 +9,7 @@ protein selection for plasma-based fibrosis prediction (F3/F4 vs F0-2).
 Panels:
   A: All 1,461 Olink proteins (full discovery)
   B: Tissue-informed — proteins whose gene is a tissue DEG (812 genes)
-  C: Top-20 tissue-informed (ranked by |dream_logFC| among tissue DEGs in plasma)
+  C: Top-20 tissue-informed (ranked by |bridge logFC| among tissue DEGs in plasma)
   D: Random-20 baseline (100 draws from all 1,461 proteins)
 
 CV strategy:
@@ -261,7 +261,7 @@ log.info("  Bridge: %d genes", len(bridge))
 
 # Tissue-informed: is_deg & in_plasma
 tissue_degs_in_plasma = bridge[(bridge["is_deg"] == True) & (bridge["in_plasma"] == True)].copy()
-tissue_degs_in_plasma = tissue_degs_in_plasma.sort_values("dream_logFC", key=abs, ascending=False)
+tissue_degs_in_plasma = tissue_degs_in_plasma.sort_values("dream_logFC", key=abs, ascending=False)  # C2-OK-sensitivity (tissue_plasma_bridge.csv on-disk column)
 log.info("  Tissue DEGs also in plasma (Panel B candidates): %d", len(tissue_degs_in_plasma))
 
 # Map gene symbols to Olink column indices
@@ -279,7 +279,7 @@ panel_b_idx = np.array([protein_name_to_idx[s] for s in panel_b_symbols])
 log.info("  Panel A (all Olink): %d proteins", len(panel_a_idx))
 log.info("  Panel B (tissue-informed DEGs): %d proteins", len(panel_b_idx))
 
-# Panel C: top-20 tissue-informed by |dream_logFC|
+# Panel C: top-20 tissue-informed by |bridge logFC|
 panel_c_symbols = panel_b_symbols[:PANEL_SIZE]
 panel_c_idx = np.array([protein_name_to_idx[s] for s in panel_c_symbols])
 log.info("  Panel C (top-%d tissue-informed): %s", PANEL_SIZE, panel_c_symbols)
@@ -431,8 +431,8 @@ for i, pname in enumerate(protein_names):
     in_panel_c = pname in set(panel_c_symbols)
 
     bridge_row = bridge[bridge["human_symbol"] == pname]
-    dream_logfc = float(bridge_row["dream_logFC"].iloc[0]) if len(bridge_row) > 0 else np.nan
-    dream_padj = float(bridge_row["dream_padj"].iloc[0]) if len(bridge_row) > 0 else np.nan
+    dream_logfc = float(bridge_row["dream_logFC"].iloc[0]) if len(bridge_row) > 0 else np.nan  # C2-OK-sensitivity (bridge on-disk column)
+    dream_padj = float(bridge_row["dream_padj"].iloc[0]) if len(bridge_row) > 0 else np.nan  # C2-OK-sensitivity (bridge on-disk column)
     is_deg = bool(bridge_row["is_deg"].iloc[0]) if len(bridge_row) > 0 else False
     classification = bridge_row["classification"].iloc[0] if len(bridge_row) > 0 else "unknown"
 
@@ -443,8 +443,8 @@ for i, pname in enumerate(protein_names):
             "in_panel_b": in_panel_b,
             "in_panel_c": in_panel_c,
             "is_tissue_deg": is_deg,
-            "dream_logFC": dream_logfc,
-            "dream_padj": dream_padj,
+            "dream_logFC": dream_logfc,  # C2-OK-sensitivity (preserves bridge schema for 223)
+            "dream_padj": dream_padj,  # C2-OK-sensitivity (preserves bridge schema for 223)
             "tissue_classification": classification,
         }
     )

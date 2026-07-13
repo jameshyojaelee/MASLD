@@ -20,7 +20,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 FM <- file.path(BASE, "GWAS/finemapping")
 outdir <- FIGS05_DIR
-dir.create(file.path(FIGS05_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
+dir.create(FIGS05_DIR, showWarnings = FALSE, recursive = TRUE)
 grDevices::pdf.options(useDingbats = FALSE)
 
 # ---------------------------------------------------------------------------
@@ -188,13 +188,13 @@ pA <- ggplot(top_shared, aes(x = study_short, y = locus_label, fill = top_pip)) 
   scale_shape_manual(values = c("TRUE" = 16, "FALSE" = 4),
                      labels = c("TRUE" = "Converged", "FALSE" = "Not conv."),
                      name = "SuSiE") +
-  labs(x = NULL, y = NULL,
-       title = "Cross-study fine-mapping: top variant PIP per locus") +
-  theme_masld(base_size = 7) +
-  theme(axis.text.x = element_text(angle = 55, hjust = 1, size = 4.5),
-        axis.text.y = element_text(size = 5.5),
+  labs(x = NULL, y = NULL) +
+  theme_masld(base_size = 6) +
+  theme(axis.text.x = element_text(angle = 55, hjust = 1, size = 6),
+        axis.text.y = element_text(size = 6),
         legend.key.size = unit(0.25, "cm"),
         legend.position = "right")
+message("[caption] Cross-study fine-mapping: top variant PIP per locus")
 
 # ---------------------------------------------------------------------------
 # Panel B: Per-variant PIP concordance across study pairs at shared loci
@@ -265,10 +265,10 @@ pB <- ggplot(pair_cors, aes(x = r)) +
   geom_vline(xintercept = med_r, linetype = "dashed", color = "red", linewidth = 0.4) +
   annotate("text", x = med_r - 0.02, y = Inf, vjust = 1.5, hjust = 1,
            label = paste0("median r = ", round(med_r, 3)),
-           size = 2.2, color = "red") +
+           size = GEOM_TEXT_6PT, color = "red") +
   annotate("text", x = -0.15, y = Inf, vjust = 1.5, hjust = 0,
            label = paste0("n = ", nrow(pair_cors), " pairs"),
-           size = 2, color = "gray40") +
+           size = GEOM_TEXT_6PT, color = "gray40") +
   scale_fill_manual(values = c("Same phenotype" = "#1565C0",
                                 "Cross-phenotype" = "#F57F17"),
                     name = NULL) +
@@ -276,12 +276,12 @@ pB <- ggplot(pair_cors, aes(x = r)) +
                                  "Cross-phenotype" = "#F57F17"),
                      guide = "none") +
   scale_x_continuous(limits = c(-0.25, 1.05), breaks = seq(-0.2, 1, 0.2)) +
-  labs(x = "Pearson r (variant-level PIP)", y = "Number of study pairs",
-       title = "PIP concordance across study pairs at shared loci") +
-  theme_masld(base_size = 7) +
+  labs(x = "Pearson r (variant-level PIP)", y = "Number of study pairs") +
+  theme_masld(base_size = 6) +
   theme(legend.position = c(0.25, 0.85),
         legend.key.size = unit(0.2, "cm"),
         legend.background = element_blank())
+message("[caption] PIP concordance across study pairs at shared loci")
 
 # ---------------------------------------------------------------------------
 # Panel C: Credible set overlap at shared loci
@@ -339,7 +339,7 @@ cs_plot <- cs_per_locus[n_pairs >= 3]
 
 pC <- ggplot(cs_plot, aes(x = reorder(gene, median_jaccard), y = median_jaccard)) +
   geom_col(aes(fill = median_jaccard), width = 0.7) +
-  geom_text(aes(label = paste0("n=", n_pairs, " pairs")), hjust = -0.05, size = 1.8) +
+  geom_text(aes(label = paste0("n=", n_pairs, " pairs")), hjust = -0.05, size = GEOM_TEXT_6PT) +
   scale_fill_gradientn(
     colors = c("#FFCDD2", "#E53935", "#880E4F"),
     limits = c(0, 1), name = "Jaccard",
@@ -348,17 +348,16 @@ pC <- ggplot(cs_plot, aes(x = reorder(gene, median_jaccard), y = median_jaccard)
   geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray50", linewidth = 0.3) +
   scale_y_continuous(limits = c(0, 1.15), breaks = seq(0, 1, 0.25)) +
   coord_flip() +
-  labs(x = NULL, y = "Median Jaccard index (credible set overlap)",
-       title = "Credible set concordance across studies",
-       subtitle = paste0("Loci with \u22653 study pairs; ", nrow(cs_plot), " loci shown")) +
-  theme_masld(base_size = 7) +
-  theme(axis.text.y = element_text(size = 5.5),
-        plot.subtitle = element_text(size = 5.5, color = "gray40"))
+  labs(x = NULL, y = "Median Jaccard index (credible set overlap)") +
+  theme_masld(base_size = 6) +
+  theme(axis.text.y = element_text(size = 6))
+message("[caption] Credible set concordance across studies (loci with >=3 study pairs; ",
+        nrow(cs_plot), " loci shown)")
 
 # ---------------------------------------------------------------------------
 # Save individual panels
 # ---------------------------------------------------------------------------
-panels_dir <- file.path(outdir, "panels")
+panels_dir <- outdir
 save_fig(pB, file.path(panels_dir, "panel_G_pip_concordance.pdf"),
          width = fig_half_width, height = 3.5)
 cat("Saved: panels/panel_G_pip_concordance.pdf\n")

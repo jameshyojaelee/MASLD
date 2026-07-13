@@ -209,9 +209,9 @@ if (!is.null(ensembl_to_symbol) && nrow(ensembl_to_symbol) > 0) {
 # Subset consensus to GWAS genes
 if ("symbol" %in% names(consensus)) {
   consensus_gwas <- consensus[symbol %in% gwas_symbols,
-    .(symbol, dream_logFC, dream_padj, meta_logFC, meta_padj, tier)]
-  # De-duplicate: keep the entry with smallest dream_padj per symbol
-  consensus_gwas <- consensus_gwas[order(dream_padj)]
+    .(symbol, bulk_logFC, bulk_padj, meta_logFC, meta_padj, tier)]
+  # De-duplicate: keep the entry with smallest bulk_padj per symbol
+  consensus_gwas <- consensus_gwas[order(bulk_padj)]
   consensus_gwas <- consensus_gwas[!duplicated(symbol)]
 
   evidence <- merge(evidence, consensus_gwas,
@@ -219,7 +219,7 @@ if ("symbol" %in% names(consensus)) {
   cat(sprintf("    Merged consensus DEG tier for %d / %d GWAS-in-atlas genes\n",
               sum(!is.na(evidence$tier)), nrow(evidence)))
 } else {
-  evidence[, c("dream_logFC", "dream_padj", "meta_logFC", "meta_padj", "tier") :=
+  evidence[, c("bulk_logFC", "bulk_padj", "meta_logFC", "meta_padj", "tier") :=
              .(NA_real_, NA_real_, NA_real_, NA_real_, NA_character_)]
 }
 

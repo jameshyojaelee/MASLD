@@ -98,7 +98,7 @@ p_a <- ggplot(m, aes(x = pp4_ukbb, y = pp4_1kg)) +
              color = "black", size = 4) +
   geom_text_repel(data = lbl,
                   aes(x = pp4_ukbb, y = pp4_1kg, label = gene),
-                  size = 8, color = "black", fontface = "bold",
+                  size = 8, color = "black", fontface = "plain",
                   box.padding = 0.8, max.overlaps = 20,
                   segment.color = "grey30", segment.size = 0.4) +
   annotate("text", x = 0.05, y = 0.92,
@@ -112,7 +112,7 @@ p_a <- ggplot(m, aes(x = pp4_ukbb, y = pp4_1kg)) +
     title = "Gene-level SuSiE-COLOC concordance"
   ) +
   theme_masld(base_size = 20) +
-  theme(plot.title = element_text(size = 26, face = "bold"),
+  theme(plot.title = element_text(size = 26, face = "plain"),
         axis.title = element_text(size = 22),
         axis.text  = element_text(size = 18))
 
@@ -127,7 +127,7 @@ bar_dat <- data.frame(
 
 p_b <- ggplot(bar_dat, aes(x = category, y = n, fill = category)) +
   geom_col(width = 0.55) +
-  geom_text(aes(label = n), vjust = -0.3, size = 9, fontface = "bold") +
+  geom_text(aes(label = n), vjust = -0.3, size = 9, fontface = "plain") +
   scale_fill_manual(values = c("#7B1FA2", "#F4511E", "#42A5F5"), guide = "none") +
   labs(
     x = NULL, y = "# gene × GWAS at PP.H4 > 0.5",
@@ -135,7 +135,7 @@ p_b <- ggplot(bar_dat, aes(x = category, y = n, fill = category)) +
                     100 * both_hi / (both_hi + ukbb_only))
   ) +
   theme_masld(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         axis.text.x = element_text(size = 18),
         axis.text.y = element_text(size = 16),
         axis.title.y = element_text(size = 20),
@@ -157,7 +157,7 @@ hl_tbl <- hl_tbl[!is.na(gene)]
 
 p_c <- ggplot(hl_tbl) +
   geom_text(aes(x = 0, y = rev(seq_len(nrow(hl_tbl))), label = gene),
-            hjust = 0, size = 8, fontface = "bold") +
+            hjust = 0, size = 8, fontface = "plain") +
   geom_text(aes(x = 1.2, y = rev(seq_len(nrow(hl_tbl))), label = pp4_ukbb),
             hjust = 1, size = 7.5) +
   geom_text(aes(x = 2.4, y = rev(seq_len(nrow(hl_tbl))), label = pp4_1kg),
@@ -166,12 +166,12 @@ p_c <- ggplot(hl_tbl) +
             hjust = 1, size = 7, color = "grey40") +
   annotate("text", x = c(0, 1.2, 2.4, 3.3), y = nrow(hl_tbl) + 0.8,
            label = c("Gene", "UKBB v1", "1KG EUR", "Δ"),
-           hjust = c(0, 1, 1, 1), size = 8, fontface = "bold") +
+           hjust = c(0, 1, 1, 1), size = 8, fontface = "plain") +
   scale_x_continuous(limits = c(-0.1, 3.5)) +
   scale_y_continuous(limits = c(0.5, nrow(hl_tbl) + 1.3)) +
   labs(title = "Hallmark genes — identical PP.H4") +
   theme_void(base_size = 20) +
-  theme(plot.title = element_text(size = 24, face = "bold"),
+  theme(plot.title = element_text(size = 24, face = "plain"),
         plot.margin = margin(10, 10, 10, 10))
 
 # ---------------------------------------------------------------------------
@@ -180,7 +180,7 @@ p_c <- ggplot(hl_tbl) +
 composite <- (p_a | (p_b / p_c)) + plot_layout(widths = c(1.35, 1)) +
   plot_annotation(
     title = "1KG EUR reproduces sghatan UKBB fine-mapping",
-    theme = theme(plot.title = element_text(size = 30, face = "bold"))
+    theme = theme(plot.title = element_text(size = 30, face = "plain"))
   )
 
 # ---------------------------------------------------------------------------
@@ -225,8 +225,8 @@ if (!is.null(topld) && nrow(topld) > 0) {
       labs(x = "PP.H4 (panel on x)", y = "PP.H4 (panel on y)",
            title = "3-way LD-panel concordance (gene-level SuSiE-COLOC)") +
       theme_masld(base_size = 18) +
-      theme(plot.title  = element_text(size = 24, face = "bold"),
-            strip.text  = element_text(size = 16, face = "bold"),
+      theme(plot.title  = element_text(size = 24, face = "plain"),
+            strip.text  = element_text(size = 16, face = "plain"),
             axis.title  = element_text(size = 18),
             axis.text   = element_text(size = 14))
 

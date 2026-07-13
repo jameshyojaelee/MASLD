@@ -286,14 +286,15 @@ if (!is.null(tissue_proteins) && length(tissue_proteins) > 10) {
   npx_tissue <- npx_matched[, tissue_proteins, drop = FALSE]
   cat("  Using", ncol(npx_tissue), "tissue-informed proteins\n")
 } else {
-  # Fallback: load dream DEGs and intersect with Olink proteins
+  # Fallback: load C2 bulk DEGs (atlas bulk_*) and intersect with Olink proteins
   atlas_file <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
   if (file.exists(atlas_file)) {
-    atlas <- fread(atlas_file, select = c("human_symbol", "dream_padj"))
-    deg_genes <- atlas[dream_padj < 0.1 & !is.na(dream_padj), human_symbol]
+    atlas <- fread(atlas_file, select = c("human_symbol", "bulk_padj"))
+    stopifnot("bulk_padj" %in% names(atlas))
+    deg_genes <- atlas[bulk_padj < 0.1 & !is.na(bulk_padj), human_symbol]
     tissue_proteins <- intersect(deg_genes, colnames(npx_matched))
     npx_tissue <- npx_matched[, tissue_proteins, drop = FALSE]
-    cat("  Fallback: intersected", length(deg_genes), "dream DEGs with Olink ->",
+    cat("  Fallback: intersected", length(deg_genes), "bulk DEGs with Olink ->",
         ncol(npx_tissue), "proteins\n")
   } else {
     cat("  WARNING: No atlas or bridge file. Skipping Experiment B.\n")

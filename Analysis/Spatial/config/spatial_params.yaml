@@ -143,7 +143,9 @@ paths:
   spatial_root: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial
   reference_genome: /gpfs/commons/home/jameslee/reference_genome/cellranger/refdata-gex-GRCh38-2024-A
   scrna_atlas: Analysis/SingleCell/integration/output/human/scalesc_human_annotated_celltypist.h5ad
-  dream_results: RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv
+  # C2 swap 2026-06-08: repointed dream_results.csv -> canonical_deg_results.csv
+  # (canonical = limma-voom-qw C2). Key name kept for back-compat with loaders.
+  dream_results: RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv
   deconv_scores: RNA-seq/results/causal_inference/deconv_attribution_scores.csv
   multi_evidence_atlas: RNA-seq/results/multi_evidence/multi_evidence_atlas.csv
   sex_degs: RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/sex_deg_classification.csv

@@ -71,9 +71,7 @@ p_a <- ggplot(sex_dt, aes(DDX3Y_logcpm, XIST_logcpm, color = sex_inferred,
                      drop = FALSE, na.value = 1,
                      labels = c(F = "Female", M = "Male"),
                      na.translate = TRUE) +
-  labs(x = "DDX3Y log1p-CPM", y = "XIST log1p-CPM",
-       title = sprintf("XIST/DDX3Y k-means clustering (n=%s)",
-                       format(nrow(sex_dt), big.mark = ","))) +
+  labs(x = "DDX3Y log1p-CPM", y = "XIST log1p-CPM") +
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1)),
          shape = guide_legend(override.aes = list(size = 2, alpha = 1))) +
   theme_masld()
@@ -111,14 +109,13 @@ p_b <- ggplot(bar_dt, aes(x = dataset, y = N, fill = agreement)) +
                 label = ifelse(sex_source == "Inferred (k-means)",
                                "k-means used",
                                sprintf("%.0f%%", pct_concord))),
-            inherit.aes = FALSE, size = 2.4, hjust = 0) +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, hjust = 0) +
   coord_flip() +
   scale_fill_manual(values = c("Concordant" = "#26A69A",
                                 "Discordant" = "#E53935")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.30))) +
   labs(x = NULL, y = "Samples with stored sex label",
-       fill = NULL,
-       title = "Annotated vs k-means concordance per cohort") +
+       fill = NULL) +
   theme_masld() +
   theme(legend.position = "bottom")
 
@@ -129,6 +126,8 @@ fig <- (p_a | p_b) +
 
 out_pdf <- file.path(OUT_DIR, "figS01_sex_inference.pdf")
 out_csv <- file.path(FIGS01_DIR, "figS01_sex_inference_concordance.csv")
-ggsave(out_pdf, fig, width = 9.5, height = 4.0, device = cairo_pdf)
+ggsave(out_pdf, fig, width = fig_full_width, height = 4.0, device = cairo_pdf)
 fwrite(concord, out_csv)
+message(sprintf("[caption] a: XIST/DDX3Y k-means clustering (n=%s). b: Annotated vs k-means concordance per cohort.",
+                format(nrow(sex_dt), big.mark = ",")))
 cat("\nWrote:\n  ", out_pdf, "\n  ", out_csv, "\n", sep = "")

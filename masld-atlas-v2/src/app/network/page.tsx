@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useHashSearchParams, replaceHash } from "@/lib/hash-router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -163,8 +163,7 @@ const F_STAGE_OPTIONS: { value: FStageFilter; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 function NetworkPageInner() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+  const searchParams = useHashSearchParams();
 
   // URL state
   const urlGenes = useMemo(
@@ -311,9 +310,9 @@ function NetworkPageInner() {
         params.set(k, v);
       }
       const qs = params.toString();
-      router.replace(qs ? `/network?${qs}` : "/network", { scroll: false });
+      replaceHash(qs ? `/network?${qs}` : "/network");
     },
-    [router]
+    []
   );
 
   // ---------------------------------------------------------------------------
@@ -1069,21 +1068,66 @@ function NetworkPageInner() {
 // Page wrapper with Suspense for useSearchParams
 // ---------------------------------------------------------------------------
 
+/** Layout-shaped skeleton (top bar + filter rail + graph viewport). */
+function NetworkSkeleton() {
+  return (
+    <div className="flex h-screen flex-col overflow-hidden">
+      <div className="shrink-0 space-y-3 border-b border-border px-6 py-4">
+        <div className="flex items-center gap-4">
+          <div className="h-7 w-44 animate-pulse rounded bg-muted" />
+          <div className="h-9 w-80 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="h-8 w-full max-w-2xl animate-pulse rounded bg-muted/70" />
+      </div>
+      <div className="flex min-h-0 flex-1">
+        <div className="hidden w-64 shrink-0 space-y-3 border-r border-border bg-muted/20 p-4 sm:block">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-8 w-full animate-pulse rounded bg-muted" />
+          ))}
+        </div>
+        <div className="relative min-w-0 flex-1 overflow-hidden bg-card">
+          <svg
+            className="h-full w-full animate-pulse text-muted-foreground/40"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden
+          >
+            {[
+              [35, 30],
+              [66, 28],
+              [30, 62],
+              [70, 66],
+              [50, 72],
+              [20, 46],
+              [82, 48],
+            ].map(([x, y], i) => (
+              <line key={i} x1={50} y1={45} x2={x} y2={y} stroke="currentColor" strokeWidth={0.4} />
+            ))}
+            {[
+              [50, 45, 5],
+              [35, 30, 3],
+              [66, 28, 3.5],
+              [30, 62, 3],
+              [70, 66, 4],
+              [50, 72, 2.5],
+              [20, 46, 2.5],
+              [82, 48, 2.5],
+            ].map(([x, y, r], i) => (
+              <circle key={i} cx={x} cy={y} r={r} fill="currentColor" />
+            ))}
+          </svg>
+          <span className="absolute bottom-3 left-3 text-sm text-muted-foreground">
+            Loading network explorer…
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function NetworkPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex h-screen items-center justify-center text-muted-foreground">
-          <div className="flex flex-col items-center gap-3">
-            <svg className="size-8 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            <span className="text-sm">Loading network explorer...</span>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<NetworkSkeleton />}>
       <NetworkPageInner />
     </Suspense>
   );

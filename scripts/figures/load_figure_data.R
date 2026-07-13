@@ -31,6 +31,85 @@ SPATIAL_DIR    <- file.path(BASE, "Analysis/Spatial/results")
 NETWORK_DIR    <- file.path(BASE, "RNA-seq/results/network")
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GWAS registry ancestry / trait map — SINGLE SOURCE OF TRUTH (added 2026-07-05)
+# The 50-GWAS COLOC portfolio (23 legacy + 27 MVP strata; MVP integrated 2026-07-04)
+# enumerates ancestry + trait per study in gwas_registry.tsv. Fig 2 panels MUST
+# derive ancestry via gwas_ancestry() — NOT the legacy grepl() heuristic
+# (BBJ->EAS / PanUKBB_AFR->AFR / PanUKBB_CSA->SAS / else->EUR), which silently
+# misroutes EVERY MVP stratum (MVP_*_AMR/AFR/EAS/EUR) into EUR and has no AMR bin.
+# Verified 2026-07-05: all 50 susie_coloc_all_gwas `gwas_name` values match a
+# registry `study_name` exactly, so the strict join below never spuriously errors.
+# ═══════════════════════════════════════════════════════════════════════════════
+GWAS_REGISTRY <- file.path(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
+# Canonical ancestry factor order + colourblind-safe palette (EUR reference first,
+# then alphabetical). AMR added 2026-07-05 with MVP. Python panels that cannot
+# source this file should mirror these hex values.
+GWAS_ANCESTRY_LEVELS <- c("EUR", "AFR", "AMR", "EAS", "SAS")
+ANCESTRY_COLORS <- c(EUR = "#4C72B0", AFR = "#55A868", AMR = "#DD8452",
+                     EAS = "#C44E52", SAS = "#8172B3")
+
+.gwas_registry_cache <- NULL
+load_gwas_registry <- function() {
+  if (!is.null(.gwas_registry_cache)) return(.gwas_registry_cache)
+  if (!file.exists(GWAS_REGISTRY)) { message("WARNING: ", GWAS_REGISTRY, " not found"); return(NULL) }
+  .gwas_registry_cache <<- fread(GWAS_REGISTRY)
+  .gwas_registry_cache
+}
+
+# study_name -> ancestry via the registry. Strict by default: any unmapped name is
+# an ERROR (a new cohort must be registered, never silently defaulted to EUR).
+gwas_ancestry <- function(gwas_name, strict = TRUE) {
+  reg <- load_gwas_registry()
+  m <- reg$ancestry[match(as.character(gwas_name), reg$study_name)]
+  if (any(is.na(m))) {
+    miss <- unique(as.character(gwas_name)[is.na(m)])
+    msg <- sprintf("gwas_ancestry(): %d GWAS name(s) not in registry: %s",
+                   length(miss), paste(head(miss, 20), collapse = ", "))
+    if (strict) stop(msg) else message("WARNING: ", msg)
+  }
+  factor(m, levels = GWAS_ANCESTRY_LEVELS)
+}
+
+# study_name -> trait token (registry trait_type is only binary/quantitative, so the
+# trait label is parsed from the name). Covers legacy + MVP naming; longest/most
+# specific tokens first so e.g. "ALT" cannot pre-empt a longer match. Returns NA
+# (not a silent "NAFLD") for unmatched names.
+gwas_trait <- function(gwas_name) {
+  g <- as.character(gwas_name)
+  out <- rep(NA_character_, length(g))
+  toks <- c("ChronLiver", "Cirrhosis", "CHIRHEP", "Albumin", "Platelet", "PDFF",
+            "NAFLD", "NASH", "HCC", "ALT", "AST", "GGT", "cirrhosis")
+  for (t in toks) {
+    hit <- is.na(out) & grepl(t, g, fixed = TRUE)
+    out[hit] <- t
+  }
+  # normalize synonyms to display labels
+  out[out %in% c("ChronLiver")]            <- "Chronic liver disease"
+  out[out %in% c("CHIRHEP", "cirrhosis")]  <- "Cirrhosis"
+  out
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Cohort metadata edge-case guards — SINGLE SOURCE OF TRUTH (added 2026-06-24)
+# Any per-sample fibrosis_stage / NAS binning MUST route through staged_disease_meta()
+# / clean_nas_meta() (defined below) so contaminated cohorts can't silently enter
+# stage-stratified plots. The DEG/GSEA per-stage results (load_fibrosis_stage_dream
+# etc., from Script 14b) are already clean — these guards are for figures/analyses
+# that read RAW unified_metadata.csv and bin it.
+#   - GSE213621 (Chen): COARSE fibrosis — the study reports grouped bins (F0F1/F2/F3F4)
+#     and 00_harmonize_metadata.R maps F0F1->1, F2->2, F3F4->3. NOT true Kleiner F0-F4
+#     (no true F0/F4); largest cohort (~1/3 of all F1/F2/F3 disease samples).
+#   - PRJNA512027 (Gerhard): dropped 2026-05-15 (L0/S0 library-prep batch confound).
+#   - GSE135251/213621/240729: sex is INFERRED (XIST/DDX3Y k-means), not annotated.
+# STAGED_FIB_COHORTS mirrors the 14b DE allowlist (the 6 true-Kleiner cohorts).
+# ═══════════════════════════════════════════════════════════════════════════════
+COARSE_STAGE_COHORTS <- c("GSE213621")
+DROPPED_COHORTS      <- c("PRJNA512027")
+INFERRED_SEX_COHORTS <- c("GSE135251", "GSE213621", "GSE240729")
+STAGED_FIB_COHORTS   <- c("GSE130970", "GSE135251", "GSE162694",
+                          "GSE174478", "GSE193066", "GSE240729")
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Figure output directories — SINGLE SOURCE OF TRUTH
 # All figure scripts MUST use these constants. NEVER hardcode output paths.
 # To add a new directory, update this file AND figures/README.md.
@@ -54,8 +133,8 @@ FIGS_LFCSENS_DIR   <- file.path(FIGS_METHVAL_DIR, "lfc_sensitivity")
 
 # Main figures (Fig 1-5; reorganized 2026-04-15)
 FIG1_DIR  <- file.path(FIG_MAIN, "fig1_atlas_overview")           # Atlas + cohorts
-FIG2_DIR  <- file.path(FIG_MAIN, "fig2_progression_sex")          # Progression + sex-dimorphic programs (was fig2_f2_switch)
-FIG3_DIR  <- file.path(FIG_MAIN, "fig3_regulatory_architecture")  # Regulatory architecture / GWAS-eQTL (was fig4_causal_architecture)
+FIG2_DIR  <- file.path(FIG_MAIN, "fig3_RNAseq")                   # RNA-seq DEGs / progression (dir renamed from fig2_progression_sex -> fig3_RNAseq 2026-06-11; constant name FIG2_DIR kept for back-compat across ~32 consumer scripts). NB: distinct from FIG3_DIR below.
+FIG3_DIR  <- file.path(FIG_MAIN, "fig2_genetics")                 # Genetics / GWAS-eQTL (main Fig 2; dir renamed fig3_regulatory_architecture -> fig2_genetics 2026-06-12; constant name FIG3_DIR kept for back-compat across ~21 consumer scripts). NB: this is main Fig 2, distinct from FIG2_DIR (fig3_RNAseq) above.
 FIG4_DIR  <- file.path(FIG_MAIN, "fig4_validation")               # Proteomics + spatial validation
 FIG5_DIR  <- file.path(FIG_MAIN, "fig5_convergence")              # Convergence matrix (was fig6_therapeutic_windows)
 
@@ -85,6 +164,8 @@ FIGS_GRANULAR_DIR <- file.path(FIG_SUPP, "figS_granular_staging")  # Two-transit
 FIGS_SCDRS_DIR    <- file.path(FIG_SUPP, "figS_scdrs")           # Consolidated scDRS supp figs (bulk-DEG anchor + GWAS-anchored; 2026-05-12)
 FIGS_SCDRS_DATA_DIR <- file.path(FIGS_SCDRS_DIR, "panel_data")   # Per-panel CSVs for caption transparency
 FIGS_STAGECCC_DIR <- file.path(FIG_SUPP, "stage_ccc")            # Stage-stratified CCC trajectories (Scripts 349/349b/349c/351/352/353; 2026-05-13)
+FIGS_PROTEO_DIR   <- file.path(FIG_SUPP, "figS_proteomics")       # Proteomics supp (DIA-MS volcano/enrichment + liver->blood decoupling demoted from Fig 4, 2026-07-02)
+FIGS_GLP1RA_DIR   <- file.path(FIG_SUPP, "figS_glp1ra")          # GLP-1RA / incretin axis (mechanism-only; demoted from Fig 5, 2026-07-13)
 
 # Hotspot autocorrelation modules (Pipeline 14; 2026-05-17). FLAT layout —
 # all composites land directly under figS_hotspot/; all individual panels under
@@ -108,7 +189,7 @@ for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC,
             FIGS_NET_DIR, FIGS_RORA_DIR, FIGS_CELLTYPE_DIR, FIGS_MCP_DIR,
             FIGS_CONV_EVID_DIR, FIGS_HCAUDIT_DIR, FIGS_SEX_DIR, FIGS_BATCH_DIR,
             FIGS_GRANULAR_DIR, FIGS_SCDRS_DIR, FIGS_SCDRS_DATA_DIR,
-            FIGS_STAGECCC_DIR,
+            FIGS_STAGECCC_DIR, FIGS_PROTEO_DIR, FIGS_GLP1RA_DIR,
             FIGS_HOTSPOT_DIR, FIGS_HOTSPOT_PANELS_DIR, FIGS_HOTSPOT_DATA_DIR,
             FIGS_CAS13LIB_DIR,
             FIGS_QUANT_DIR,
@@ -181,42 +262,43 @@ load_dream_results <- function() {
   if (!is.null(.dream_cache)) return(.dream_cache)
   # Canonical DEG table (hard cutover 2026-06-08): canonical_deg_results.csv.
   # Schema: gene, logFC, SE, t, P.Value, padj, shrunk_logFC, lfsr, AveExpr, symbol.
-  # Output column names (dream_*) are preserved below so no figure script changes.
+  # C2 sweep (2026-06-08): output column names are emitted as bulk_* (matching
+  # the multi-evidence atlas S1 columns) so canonical-DEG and atlas figures share
+  # one naming. The retired dream_* aliases were dropped.
   f <- file.path(INT_RESULTS, "canonical_deg_results.csv")
   if (!file.exists(f)) {
     message("WARNING: ", f, " not found")
     return(NULL)
   }
   dt <- fread(f)
-  # Map ashr columns for backward compatibility
-  if ("shrunk_logFC" %in% names(dt) && !"dream_shrunk_logFC" %in% names(dt))
-    setnames(dt, "shrunk_logFC", "dream_shrunk_logFC")
-  if ("lfsr" %in% names(dt) && !"dream_lfsr" %in% names(dt))
-    setnames(dt, "lfsr", "dream_lfsr")
-  # Normalize legacy column names
-  if ("padj" %in% names(dt) && !"dream_padj" %in% names(dt))
-    setnames(dt, "padj", "dream_padj")
-  if ("logFC" %in% names(dt) && !"dream_logFC" %in% names(dt))
-    setnames(dt, "logFC", "dream_logFC")
+  # Map ashr columns to the bulk_* names
+  if ("shrunk_logFC" %in% names(dt) && !"bulk_shrunk_logFC" %in% names(dt))
+    setnames(dt, "shrunk_logFC", "bulk_shrunk_logFC")
+  if ("lfsr" %in% names(dt) && !"bulk_lfsr" %in% names(dt))
+    setnames(dt, "lfsr", "bulk_lfsr")
+  # Normalize canonical unprefixed column names to bulk_*
+  if ("padj" %in% names(dt) && !"bulk_padj" %in% names(dt))
+    setnames(dt, "padj", "bulk_padj")
+  if ("logFC" %in% names(dt) && !"bulk_logFC" %in% names(dt))
+    setnames(dt, "logFC", "bulk_logFC")
   dt <- add_symbols(dt, "gene")
   .dream_cache <<- dt
   dt
 }
 
 # --- DEG classification helper ---
-# Returns a logical vector: TRUE if gene passes canonical DEG threshold.
-# Canonical (2026-06-02): lfsr < 0.05 AND |shrunk_logFC| > 0.5 (ashr shrinkage).
-# `dt` must carry an lfsr + shrunk_logFC column. Accepts dream_* (load_dream_results
-# output, canonical-sourced), bulk_* (the C2 atlas, post 2026-06-08 rename), or plain
-# names — so the helper works whether called on the atlas or on load_dream_results().
+# Returns a logical vector: TRUE if gene passes the canonical DEG threshold.
+# Canonical (2026-06-29): TREAT FDR < 0.05 at lfc = 0.25 (real limma::treat, computed in
+# 05h). treat() tests H0:|true logFC|<=lfc, so the effect-size floor is folded INTO the
+# test -- there is NO separate |logFC|/|shrunk| filter. Supersedes the ashr lfsr+|shrunk|>0.3
+# gate (those columns are retained as reference). `dt` must carry a treat_fdr column;
+# accepts bulk_treat_fdr (atlas / consensus) or treat_fdr (canonical loader output).
 is_dream_deg <- function(dt) {
-  lfsr_col <- intersect(c("dream_lfsr", "bulk_lfsr", "lfsr"), names(dt))[1]
-  slfc_col <- intersect(c("dream_shrunk_logFC", "bulk_shrunk_logFC", "shrunk_logFC"), names(dt))[1]
-  if (is.na(lfsr_col) || is.na(slfc_col))
-    stop("is_dream_deg: need lfsr + shrunk_logFC (dream_/bulk_/plain); have: ",
+  tf_col <- intersect(c("bulk_treat_fdr", "treat_fdr"), names(dt))[1]
+  if (is.na(tf_col))
+    stop("is_dream_deg: need treat_fdr (bulk_treat_fdr/treat_fdr); have: ",
          paste(names(dt), collapse = ", "))
-  !is.na(dt[[lfsr_col]]) & dt[[lfsr_col]] < 0.05 &
-    !is.na(dt[[slfc_col]]) & abs(dt[[slfc_col]]) > 0.5
+  !is.na(dt[[tf_col]]) & dt[[tf_col]] < 0.05
 }
 
 # --- MASH vs MASL results ---
@@ -226,16 +308,16 @@ load_mash_vs_masl_results <- function() {
   f <- file.path(SIGS, "nafl_vs_nash_dream.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
-  # Normalize column names to the dream_* names downstream figures expect.
-  # Source file became limma-voom under the C2 swap (2026-06-08): it now ships
-  # `padj` (was adj.P.Val) + `shrunk_logFC`/`lfsr`, not adj.P.Val. Accept either.
-  if (!"dream_padj" %in% names(dt)) {
-    padj_src <- intersect(c("adj.P.Val", "padj"), names(dt))[1]
-    if (!is.na(padj_src)) setnames(dt, padj_src, "dream_padj")
+  # Normalize to unprefixed canonical names (MASH-vs-MASL contrast; not the main
+  # disease-vs-control bulk channel). Source became limma-voom under the C2 swap
+  # (2026-06-08): it ships `padj` (was adj.P.Val) + `logFC`/`shrunk_logFC`/`lfsr`.
+  if (!"padj" %in% names(dt)) {
+    padj_src <- intersect(c("adj.P.Val"), names(dt))[1]
+    if (!is.na(padj_src)) setnames(dt, padj_src, "padj")
   }
-  if (!"dream_logFC" %in% names(dt)) {
-    lfc_src <- intersect(c("logFC", "shrunk_logFC"), names(dt))[1]
-    if (!is.na(lfc_src)) setnames(dt, lfc_src, "dream_logFC")
+  if (!"logFC" %in% names(dt)) {
+    lfc_src <- intersect(c("shrunk_logFC"), names(dt))[1]
+    if (!is.na(lfc_src)) setnames(dt, lfc_src, "logFC")
   }
   dt <- add_symbols(dt, "gene")
   .mash_masl_cache <<- dt
@@ -278,21 +360,21 @@ load_consensus_degs <- function() {
     dt <- merge(dt, meta_slim, by = "gene", all.x = TRUE)
   }
 
-  # Determine significance flags
+  # Determine significance flags (consensus_degs.csv now carries bulk_* cols)
   padj_thr <- 0.1; lfc_thr <- 0.5
-  dream_padj_col <- intersect(c("dream_padj", "padj"), names(dt))[1]
-  dream_lfc_col  <- intersect(c("dream_logFC", "logFC"), names(dt))[1]
+  bulk_padj_col <- intersect(c("bulk_padj", "padj"), names(dt))[1]
+  bulk_lfc_col  <- intersect(c("bulk_logFC", "logFC"), names(dt))[1]
 
-  if (!is.na(dream_padj_col) && !is.na(dream_lfc_col)) {
-    dt[, dream_sig_tier := get(dream_padj_col) < padj_thr & abs(get(dream_lfc_col)) > lfc_thr]
+  if (!is.na(bulk_padj_col) && !is.na(bulk_lfc_col)) {
+    dt[, bulk_sig_tier := get(bulk_padj_col) < padj_thr & abs(get(bulk_lfc_col)) > lfc_thr]
   } else {
-    dt[, dream_sig_tier := FALSE]
+    dt[, bulk_sig_tier := FALSE]
   }
   if ("meta_padj" %in% names(dt) && "meta_logFC" %in% names(dt)) {
     dt[, meta_sig_tier := meta_padj < padj_thr & abs(meta_logFC) > lfc_thr]
     # Direction concordance
-    if (!is.na(dream_lfc_col)) {
-      dt[, dir_concordant := sign(get(dream_lfc_col)) == sign(meta_logFC) | is.na(meta_logFC)]
+    if (!is.na(bulk_lfc_col)) {
+      dt[, dir_concordant := sign(get(bulk_lfc_col)) == sign(meta_logFC) | is.na(meta_logFC)]
     } else {
       dt[, dir_concordant := TRUE]
     }
@@ -303,21 +385,21 @@ load_consensus_degs <- function() {
 
   # Assign tiers
   dt[, tier := "Not_Consensus"]
-  dt[dream_sig_tier == TRUE & meta_sig_tier == TRUE & dir_concordant == TRUE,
+  dt[bulk_sig_tier == TRUE & meta_sig_tier == TRUE & dir_concordant == TRUE,
      tier := "Tier1_HighConfidence"]
   dt[tier == "Not_Consensus" &
-     (dream_sig_tier == TRUE | meta_sig_tier == TRUE) &
+     (bulk_sig_tier == TRUE | meta_sig_tier == TRUE) &
      dir_concordant == TRUE,
      tier := "Tier2_Moderate"]
-  # Tier3 needs per-study counts (simplified: use dream_sig from consensus file)
-  if ("dream_sig" %in% names(dt)) {
+  # Tier3 needs per-study counts (simplified: use bulk_sig from consensus file)
+  if ("bulk_sig" %in% names(dt)) {
     # If n_studies column exists, use it
     if ("n_studies_sig" %in% names(dt)) {
       dt[tier == "Not_Consensus" & n_studies_sig >= 3, tier := "Tier3_Exploratory"]
     }
   }
   # Clean up temp columns
-  dt[, c("dream_sig_tier", "meta_sig_tier", "dir_concordant") := NULL]
+  dt[, c("bulk_sig_tier", "meta_sig_tier", "dir_concordant") := NULL]
   .consensus_cache <<- dt
   dt
 }
@@ -496,10 +578,15 @@ load_drug_targets <- function() {
 }
 
 # --- ComBat-seq sensitivity ---
+# Repointed 2026-07-04 (round-2 audit D2j) from Script 34 (dream, mis-scoped over
+# the full merged set) to Script 34c2 (`combat_seq_c2/`): C2-canonical LVQW engine
+# on the SAME 5 control-bearing cohorts (n=846) the canonical DE was fit on
+# (r=0.901 vs canonical; batch removal does not strip disease signal). Function
+# names kept for back-compat; they now serve the 34c2 (LVQW C2) outputs.
 .combat_dream_cache <- NULL
 load_combat_dream <- function() {
   if (!is.null(.combat_dream_cache)) return(.combat_dream_cache)
-  f <- file.path(AUDIT, "combat_seq", "dream_combat_seq_results.csv")
+  f <- file.path(AUDIT, "combat_seq_c2", "c2_combat_seq_results.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
   # Normalize adj.P.Val -> padj
@@ -513,9 +600,18 @@ load_combat_dream <- function() {
 .combat_concordance_cache <- NULL
 load_combat_concordance <- function() {
   if (!is.null(.combat_concordance_cache)) return(.combat_concordance_cache)
-  f <- file.path(AUDIT, "combat_seq", "combat_seq_concordance.csv")
+  f <- file.path(AUDIT, "combat_seq_c2", "combat_seq_concordance_c2.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
+  # 34c2 uses C2-canonical metric names; remap to the schema the figure expects
+  # (sig_primary/sig_combat/sig_overlap/jaccard). direction_concordance and
+  # lfc_pearson_r already match.
+  if ("metric" %in% names(dt)) {
+    remap <- c(sig_canon_p01 = "sig_primary", sig_combat_p01 = "sig_combat",
+               sig_overlap_p01 = "sig_overlap", jaccard_p01 = "jaccard")
+    hit <- dt$metric %in% names(remap)
+    dt$metric[hit] <- remap[dt$metric[hit]]
+  }
   .combat_concordance_cache <<- dt
   dt
 }
@@ -907,6 +1003,41 @@ load_fibrosis_stage_sample_sizes <- function() {
   dt
 }
 
+# --- Clean per-sample staged metadata (guards coarse/dropped cohorts) ------------
+# Use this INSTEAD of reading unified_metadata.csv + binning fibrosis_stage directly.
+# Returns per-sample metadata for the true-Kleiner-staged set with a ready `stage`
+# factor (F0..F4), excluding COARSE_STAGE_COHORTS (Chen) + DROPPED_COHORTS (Gerhard).
+.unified_meta_cache <- NULL
+load_unified_metadata <- function() {
+  if (!is.null(.unified_meta_cache)) return(.unified_meta_cache)
+  f <- file.path(INT_META, "unified_metadata.csv")
+  if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
+  .unified_meta_cache <<- fread(f)
+  .unified_meta_cache
+}
+
+staged_disease_meta <- function(meta = NULL, disease_only = TRUE) {
+  if (is.null(meta)) meta <- load_unified_metadata()
+  m <- copy(as.data.table(meta))
+  m[, .fib := suppressWarnings(as.integer(fibrosis_stage))]
+  m <- m[!dataset %in% c(COARSE_STAGE_COHORTS, DROPPED_COHORTS)]
+  m <- m[!is.na(.fib) & .fib %in% 0:4]
+  if (disease_only && "group_binary" %in% names(m)) m <- m[group_binary != "Control"]
+  m[, stage := factor(paste0("F", .fib), levels = paste0("F", 0:4))]
+  m[, .fib := NULL]
+  m[]
+}
+
+# NAS-stratified per-sample metadata. Drops NA-NAS (Bril's 26 unscored patients +
+# Chen's wholly-absent NAS) and dropped cohorts; `nas_num` is the numeric score.
+clean_nas_meta <- function(meta = NULL) {
+  if (is.null(meta)) meta <- load_unified_metadata()
+  m <- copy(as.data.table(meta))
+  m[, nas_num := suppressWarnings(as.numeric(nas_score))]
+  m <- m[!dataset %in% DROPPED_COHORTS][!is.na(nas_num)]
+  m[]
+}
+
 # --- Per-fibrosis-stage GSEA results (Script 14c) ---
 .fib_stage_gsea <- NULL
 load_fibrosis_stage_gsea <- function() {
@@ -1079,10 +1210,14 @@ load_hepatocyte_regulons <- function() {
 .chromvar_cache <- NULL
 load_chromvar_hepatocyte <- function() {
   if (!is.null(.chromvar_cache)) return(.chromvar_cache)
-  # Prefer label-transfer-corrected chromVAR v2; fall back to original
-  f <- file.path(ATAC_DIR, "results", "chromvar_v2", "chromvar_tf_activity.csv")
+  # A6 pseudoreplication fix (2026-06-20): serve the DONOR-LEVEL limma table
+  # (chromvar_limma_per_ct.csv: cell_type/TF/logFC/adj.P.Val; 110 sig genome-wide,
+  # 0 in hepatocytes) NOT the per-CELL Mann-Whitney table (chromvar_tf_activity.csv;
+  # 4,832 "sig" = n-of-cells inflation). fig3_epigenomic_panels.R Panel(h) has a
+  # schema shim that renames TF/logFC/adj.P.Val and zero-fills mean_deviation_*.
+  f <- file.path(ATAC_DIR, "results", "chromvar_v2", "chromvar_limma_per_ct.csv")
   if (!file.exists(f))
-    f <- file.path(ATAC_DIR, "results", "chromvar", "chromvar_tf_activity.csv")
+    f <- file.path(ATAC_DIR, "results", "chromvar_v2", "chromvar_tf_activity.csv")
   if (!file.exists(f)) { message("WARNING: ", f, " not found"); return(NULL) }
   dt <- fread(f)
   # Filter to hepatocyte rows (handle both naming conventions)

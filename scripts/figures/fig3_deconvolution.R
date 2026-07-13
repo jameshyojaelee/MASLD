@@ -102,7 +102,7 @@ if (has_cols) {
                color = "black", size = 1, shape = 21, fill = "yellow", stroke = 0.5) +
     geom_label_repel(data = top_labels_a,
                      aes(label = symbol),
-                     size = 1.6, max.overlaps = 50,
+                     size = GEOM_TEXT_6PT, max.overlaps = 50,
                      label.padding = 0.15, box.padding = 0.5,
                      segment.size = 0.15, show.legend = FALSE) +
     scale_color_manual(values = full_attrib_colors, name = "Attribution",
@@ -128,7 +128,7 @@ if (has_cols) {
                 aes(x = reorder(label, -N), y = N, fill = category)) +
     geom_col(width = 0.65) +
     geom_text(aes(label = paste0(format(N, big.mark = ","), "\n(", pct, ")")),
-              vjust = -0.3, size = 2.5) +
+              vjust = -0.3, size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = attribution_colors, guide = "none") +
     scale_y_continuous(expand = expansion(mult = c(0, 0.18))) +
     labs(x = NULL,
@@ -219,13 +219,11 @@ if (!is.null(xmethod) && all(c("bp_class", "music_class") %in% names(xmethod))) 
     geom_segment(aes(x = 0, xend = value, y = metric, yend = metric),
                  linewidth = 0.4, color = "gray60") +
     geom_point(size = 3, color = masld_colors$hep_intrinsic, shape = 16) +
-    geom_text(aes(label = label), hjust = -0.3, size = 2.2, fontface = "bold") +
+    geom_text(aes(label = label), hjust = -0.3, size = GEOM_TEXT_6PT, fontface = "plain") +
     scale_x_continuous(limits = c(0, 1.15), breaks = seq(0, 1, 0.25)) +
     labs(x = "Concordance score",
-         y = NULL,
-         title = "BayesPrism vs MuSiC") +
-    theme_masld() +
-    theme(plot.title = element_text(size = 7, face = "bold"))
+         y = NULL) +
+    theme_masld()
 }
 
 # ==========================================================================
@@ -250,12 +248,10 @@ if (has_cols) {
       geom_vline(xintercept = 0, linewidth = 0.3, color = "gray30") +
       scale_color_manual(values = dir_colors, name = "Direction") +
       labs(x = expression("Composition-adjusted log"[2]*"FC"),
-           y = NULL,
-           title = "Top 20 hepatocyte-intrinsic DEGs") +
+           y = NULL) +
       theme_masld() +
       theme(
         axis.text.y  = element_text(face = "italic", size = 6),
-        plot.title   = element_text(size = 7, face = "bold"),
         legend.position = c(0.85, 0.15),
         legend.background = element_rect(fill = "white", color = NA, linewidth = 0)
       )
@@ -270,7 +266,9 @@ row2 <- p_c + p_d + plot_layout(widths = c(1.5, 2))
 
 fig3 <- (row1 / row2) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 save_fig(fig3, OUT, width = fig_full_width, height = 7)
+message("[caption] Panel c: BayesPrism vs MuSiC cross-method concordance")
+message("[caption] Panel d: Top 20 hepatocyte-intrinsic DEGs")
 message("Fig 3 (Deconvolution Attribution) saved to ", OUT)

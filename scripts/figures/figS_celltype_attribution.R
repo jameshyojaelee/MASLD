@@ -34,11 +34,10 @@ classA[, attribution_class := factor(attribution_class, levels = attribution_cla
 
 pA <- ggplot(classA, aes(attribution_class, N)) +
   geom_col(fill = "#4472C4", color = "white", width = 0.65) +
-  geom_text(aes(label = N), vjust = -0.3, size = 2.5) +
-  labs(x = NULL, y = "DEG count",
-       title = "Bulk DEGs by primary-cell-type attribution") +
+  geom_text(aes(label = N), vjust = -0.3, size = GEOM_TEXT_6PT) +
+  labs(x = NULL, y = "DEG count") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 7))
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
 
 # ---- Panel B: top multi-celltype DEGs heatmap -------------------------------
 celltypes <- grep("^score_", names(dt), value = TRUE)
@@ -66,13 +65,12 @@ if (nrow(top_genes) > 0) {
     scale_fill_gradient2(low = "#2980B9", mid = "grey95", high = "#C0392B",
                          midpoint = 0, na.value = "grey85",
                          limits = c(-6, 6), name = "attribution\nscore (|t|)") +
-    labs(x = NULL, y = NULL,
-         title = sprintf("Top %d multi-celltype DEGs (concordant in >=3 types)", nrow(top_genes))) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6.5),
-          axis.text.y = element_text(size = 5.5))
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6))
 } else {
-  pB <- ggplot() + labs(title = "No multi-celltype DEGs") + theme_masld()
+  pB <- ggplot() + theme_masld()
 }
 
 # ---- Panel C: MuSiC agreement ------------------------------------------------
@@ -81,15 +79,14 @@ music_agree <- dt_deg[!is.na(music_category) & !is.na(primary_celltype),
 if (nrow(music_agree) > 0) {
   pC <- ggplot(music_agree, aes(primary_celltype, music_category, fill = log10(N + 1))) +
     geom_tile(color = "white", linewidth = 0.2) +
-    geom_text(aes(label = N), size = 2.2) +
+    geom_text(aes(label = N), size = GEOM_TEXT_6PT) +
     scale_fill_gradient(low = "grey95", high = "#27AE60", name = "log10(N+1)") +
     labs(x = "Primary celltype (this analysis)",
-         y = "MuSiC class (Script 25)",
-         title = "A1 attribution vs. existing MuSiC attribution") +
+         y = "MuSiC class (Script 25)") +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6.5))
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
 } else {
-  pC <- ggplot() + labs(title = "No MuSiC overlap") + theme_masld()
+  pC <- ggplot() + theme_masld()
 }
 
 # ---- Panel D: waterfall per primary celltype --------------------------------
@@ -106,17 +103,17 @@ pD <- ggplot(waterfall_dt, aes(rank, bulk_lfc, color = primary_celltype_label)) 
   geom_point(size = 0.35, alpha = 0.6) +
   geom_hline(yintercept = 0, linewidth = 0.3, color = "grey50") +
   facet_wrap(~ primary_celltype_label, scales = "free_x", nrow = 2) +
-  labs(x = "Rank within cell type", y = "Bulk dream logFC",
-       title = "Bulk DEG fold-change landscape by primary cell type") +
+  labs(x = "Rank within cell type", y = "Bulk dream logFC") +
   theme_masld() +
   theme(legend.position = "none",
-        strip.text = element_text(size = 6.5))
+        strip.text = element_text(size = 6))
 
 # ---- Assemble ---------------------------------------------------------------
+message("[caption] A: Bulk DEGs by primary-cell-type attribution. B: Top multi-celltype DEGs (concordant in >=3 types). C: A1 attribution vs. existing MuSiC attribution. D: Bulk DEG fold-change landscape by primary cell type.")
 fig <- (pA + pB) / (pC + pD) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_A1_celltype_attribution.pdf")
-ggsave(out_path, fig, width = 13, height = 10)
+ggsave(out_path, fig, width = fig_full_width, height = 10 * (fig_full_width / 13))
 message("Saved: ", out_path)

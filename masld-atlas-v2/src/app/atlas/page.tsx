@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useHashNavigate } from "@/lib/hash-router";
+import { HashLink as Link } from "@/components/hash-link";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { Volcano, type VolcanoPoint } from "@/components/charts";
+import { SkeletonBlock } from "@/components/states";
 import { getGeneIndex } from "@/lib/search-index";
+import { ATLAS_GENES, DEG_COUNT, DEG_GATE_LABEL, fmt } from "@/lib/atlas-constants";
 import type { GeneIndexEntry } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -83,16 +88,12 @@ const COHORTS: Cohort[] = [
     platform: "RNA-seq",
     reference: "Liu 2024",
   },
-  {
-    dataset: "PRJNA512027",
-    samples: 200,
-    condition: "NASH/Healthy",
-    platform: "RNA-seq",
-    reference: "Gerhard 2018",
-  },
 ];
 
-const TOTAL_SAMPLES = 1444;
+// PRJNA512027 (Gerhard 2018) collected but dropped from presentation for an
+// L0/S0 library-prep batch confound; retained in the pipeline config for
+// Script 05d provenance only, not shown here.
+const TOTAL_SAMPLES = 1244;
 
 // ---------------------------------------------------------------------------
 // Pipeline steps
@@ -114,19 +115,19 @@ const PIPELINE_STEPS: PipelineStep[] = [
   },
   {
     label: "Count Integration",
-    description: "Harmonized count matrix across 10 cohorts",
+    description: "Harmonized count matrix across 9 cohorts",
   },
   {
-    label: "Integrated Mega-Analysis",
-    description: "Mixed-model mega-analysis with repeated measures",
+    label: "Pooled (Cohort-Adjusted) Analysis",
+    description: "limma-voom quality-weighted, dataset as a fixed effect",
   },
   {
     label: "DEG Thresholding",
-    description: "Standard thresholds (padj < 0.05, |logFC| > 0.3)",
+    description: DEG_GATE_LABEL,
   },
   {
     label: "Consensus DEGs",
-    description: "5,484 DEGs with LOO-CV validation (88.1% mean recovery)",
+    description: `${fmt(DEG_COUNT)} DEGs, leave-one-out cross-validated`,
   },
 ];
 
@@ -142,373 +143,72 @@ interface ResultCard {
 
 const RESULT_CARDS: ResultCard[] = [
   {
-    value: "33,943",
+    value: fmt(ATLAS_GENES),
     label: "Genes tested",
     sublabel: "GENCODE v49 / GRCh38",
   },
   {
-    value: "5,484",
+    value: fmt(DEG_COUNT),
     label: "DEGs",
-    sublabel: "padj < 0.05, |logFC| > 0.3",
+    sublabel: "fdr < 0.05 at lfc = 0.25",
   },
   {
-    value: "88.1%",
+    value: "81.6%",
     label: "LOO-CV recovery",
-    sublabel: "rho = 0.959 across 10 folds",
+    sublabel: "rho = 0.952 · 5-fold leave-one-cohort-out",
   },
   {
-    value: "7,548",
+    value: "7,842",
     label: "Robust genes",
-    sublabel: "Present in 8/8 LOO folds",
+    sublabel: "Significant in all 5 of 5 LOO folds",
   },
 ];
-
-// ---------------------------------------------------------------------------
-// Volcano SVG component
-// ---------------------------------------------------------------------------
-
-const VOLCANO_W = 700;
-const VOLCANO_H = 480;
-const MARGIN = { top: 20, right: 20, bottom: 50, left: 55 };
-const INNER_W = VOLCANO_W - MARGIN.left - MARGIN.right;
-const INNER_H = VOLCANO_H - MARGIN.top - MARGIN.bottom;
-
-// Threshold lines
-const LFC_THRESH = 0.3;
-const PADJ_THRESH = 0.05;
-
-interface VolcanoPoint {
-  symbol: string;
-  x: number; // logFC
-  y: number; // -log10(padj)
-  color: "up" | "down" | "ns";
-}
-
-function buildVolcanoPoints(genes: GeneIndexEntry[]): VolcanoPoint[] {
-  const points: VolcanoPoint[] = [];
-  for (const g of genes) {
-    if (g.dream_logfc == null || g.dream_padj == null) continue;
-    const lfc = g.dream_logfc;
-    const padj = g.dream_padj;
-    const neglog = Math.min(-Math.log10(Math.max(padj, 1e-300)), 300);
-    let color: "up" | "down" | "ns" = "ns";
-    if (g.is_deg && lfc > 0) color = "up";
-    else if (g.is_deg && lfc < 0) color = "down";
-    points.push({ symbol: g.symbol, x: lfc, y: neglog, color });
-  }
-  return points;
-}
-
-function scaleX(val: number, xMin: number, xMax: number): number {
-  return ((val - xMin) / (xMax - xMin)) * INNER_W;
-}
-
-function scaleY(val: number, yMax: number): number {
-  return INNER_H - (val / yMax) * INNER_H;
-}
-
-interface VolcanoPlotProps {
-  genes: GeneIndexEntry[];
-}
-
-function VolcanoPlot({ genes }: VolcanoPlotProps) {
-  const router = useRouter();
-  const [tooltip, setTooltip] = useState<{
-    symbol: string;
-    lfc: number;
-    padj: number;
-    svgX: number;
-    svgY: number;
-  } | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  const points = buildVolcanoPoints(genes);
-
-  if (points.length === 0) {
-    return (
-      <div className="flex h-[480px] items-center justify-center rounded-lg border border-border bg-muted/30 text-sm text-muted-foreground">
-        Loading volcano plot...
-      </div>
-    );
-  }
-
-  const allX = points.map((p) => p.x);
-  const allY = points.map((p) => p.y);
-  const xMin = Math.min(...allX);
-  const xMax = Math.max(...allX);
-  const yMax = Math.max(...allY) || 10;
-
-  // Threshold line positions
-  const xThreshPos = scaleX(LFC_THRESH, xMin, xMax);
-  const xThreshNeg = scaleX(-LFC_THRESH, xMin, xMax);
-  const yThreshLine = scaleY(-Math.log10(PADJ_THRESH), yMax);
-
-  // X axis tick values
-  const xRange = xMax - xMin;
-  const xTickStep = xRange > 4 ? 2 : 1;
-  const xTicks: number[] = [];
-  for (
-    let t = Math.ceil(xMin / xTickStep) * xTickStep;
-    t <= xMax;
-    t += xTickStep
-  ) {
-    xTicks.push(parseFloat(t.toFixed(1)));
-  }
-
-  // Y axis tick values
-  const yTickMax = Math.floor(yMax / 50) * 50;
-  const yTicks: number[] = [0];
-  for (let t = 50; t <= yTickMax; t += 50) yTicks.push(t);
-
-  return (
-    <div className="relative">
-      <svg
-        ref={svgRef}
-        width={VOLCANO_W}
-        height={VOLCANO_H}
-        className="max-w-full overflow-visible"
-        style={{ fontFamily: "inherit" }}
-      >
-        <g transform={`translate(${MARGIN.left},${MARGIN.top})`}>
-          {/* Background */}
-          <rect width={INNER_W} height={INNER_H} className="fill-muted/20" rx={4} />
-
-          {/* Threshold lines */}
-          <line
-            x1={xThreshPos}
-            x2={xThreshPos}
-            y1={0}
-            y2={INNER_H}
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth={0.8}
-            strokeDasharray="4 3"
-            opacity={0.5}
-          />
-          <line
-            x1={xThreshNeg}
-            x2={xThreshNeg}
-            y1={0}
-            y2={INNER_H}
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth={0.8}
-            strokeDasharray="4 3"
-            opacity={0.5}
-          />
-          <line
-            x1={0}
-            x2={INNER_W}
-            y1={yThreshLine}
-            y2={yThreshLine}
-            stroke="hsl(var(--muted-foreground))"
-            strokeWidth={0.8}
-            strokeDasharray="4 3"
-            opacity={0.5}
-          />
-
-          {/* Points — render non-significant first, then colored on top */}
-          {points
-            .filter((p) => p.color === "ns")
-            .map((p, i) => {
-              const cx = scaleX(p.x, xMin, xMax);
-              const cy = scaleY(Math.min(p.y, yMax), yMax);
-              return (
-                <circle
-                  key={`ns-${i}`}
-                  cx={cx}
-                  cy={cy}
-                  r={1.5}
-                  fill="hsl(var(--muted-foreground))"
-                  opacity={0.45}
-                />
-              );
-            })}
-          {points
-            .filter((p) => p.color !== "ns")
-            .map((p, i) => {
-              const cx = scaleX(p.x, xMin, xMax);
-              const cy = scaleY(Math.min(p.y, yMax), yMax);
-              const fill =
-                p.color === "up"
-                  ? "hsl(var(--destructive))"
-                  : "hsl(210 100% 56%)";
-              return (
-                <circle
-                  key={`sig-${i}`}
-                  cx={cx}
-                  cy={cy}
-                  r={2.2}
-                  fill={fill}
-                  opacity={0.85}
-                  style={{ cursor: "pointer" }}
-                  onMouseEnter={() => {
-                    const gene = genes.find((g) => g.symbol === p.symbol);
-                    if (gene && gene.dream_logfc != null && gene.dream_padj != null) {
-                      setTooltip({
-                        symbol: p.symbol,
-                        lfc: gene.dream_logfc,
-                        padj: gene.dream_padj,
-                        svgX: cx,
-                        svgY: cy,
-                      });
-                    }
-                  }}
-                  onMouseLeave={() => setTooltip(null)}
-                  onClick={() =>
-                    router.push(`/gene/${encodeURIComponent(p.symbol)}`)
-                  }
-                />
-              );
-            })}
-
-          {/* X axis */}
-          <line x1={0} x2={INNER_W} y1={INNER_H} y2={INNER_H} stroke="hsl(var(--border))" strokeWidth={1} />
-          {xTicks.map((t) => {
-            const tx = scaleX(t, xMin, xMax);
-            return (
-              <g key={`xtick-${t}`}>
-                <line x1={tx} x2={tx} y1={INNER_H} y2={INNER_H + 4} stroke="hsl(var(--border))" strokeWidth={1} />
-                <text
-                  x={tx}
-                  y={INNER_H + 16}
-                  textAnchor="middle"
-                  fontSize={10}
-                  fill="hsl(var(--muted-foreground))"
-                >
-                  {t.toFixed(1)}
-                </text>
-              </g>
-            );
-          })}
-          <text
-            x={INNER_W / 2}
-            y={INNER_H + 38}
-            textAnchor="middle"
-            fontSize={11}
-            fill="hsl(var(--muted-foreground))"
-          >
-            log\u2082FC (disease vs healthy)
-          </text>
-
-          {/* Y axis */}
-          <line x1={0} x2={0} y1={0} y2={INNER_H} stroke="hsl(var(--border))" strokeWidth={1} />
-          {yTicks.map((t) => {
-            const ty = scaleY(t, yMax);
-            return (
-              <g key={`ytick-${t}`}>
-                <line x1={-4} x2={0} y1={ty} y2={ty} stroke="hsl(var(--border))" strokeWidth={1} />
-                <text
-                  x={-8}
-                  y={ty + 4}
-                  textAnchor="end"
-                  fontSize={10}
-                  fill="hsl(var(--muted-foreground))"
-                >
-                  {t}
-                </text>
-              </g>
-            );
-          })}
-          <text
-            x={-INNER_H / 2}
-            y={-40}
-            textAnchor="middle"
-            fontSize={11}
-            fill="hsl(var(--muted-foreground))"
-            transform="rotate(-90)"
-          >
-            -log\u2081\u2080(padj)
-          </text>
-
-          {/* Tooltip */}
-          {tooltip && (() => {
-            const tipW = 140;
-            const tipH = 52;
-            const tipX = tooltip.svgX + tipW > INNER_W ? tooltip.svgX - tipW - 6 : tooltip.svgX + 8;
-            const tipY = tooltip.svgY - tipH < 0 ? tooltip.svgY + 6 : tooltip.svgY - tipH - 4;
-            return (
-              <g style={{ pointerEvents: "none" }}>
-                <rect
-                  x={tipX}
-                  y={tipY}
-                  width={tipW}
-                  height={tipH}
-                  rx={4}
-                  fill="hsl(var(--popover))"
-                  stroke="hsl(var(--border))"
-                  strokeWidth={1}
-                />
-                <text x={tipX + 8} y={tipY + 17} fontSize={11} fontWeight={600} fill="hsl(var(--foreground))">
-                  {tooltip.symbol}
-                </text>
-                <text x={tipX + 8} y={tipY + 31} fontSize={10} fill="hsl(var(--muted-foreground))">
-                  logFC: {tooltip.lfc >= 0 ? "+" : ""}{tooltip.lfc.toFixed(3)}
-                </text>
-                <text x={tipX + 8} y={tipY + 44} fontSize={10} fill="hsl(var(--muted-foreground))">
-                  padj: {tooltip.padj < 1e-300 ? "<1e-300" : tooltip.padj.toExponential(1)}
-                </text>
-              </g>
-            );
-          })()}
-        </g>
-      </svg>
-
-      {/* Legend */}
-      <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "hsl(var(--destructive))", opacity: 0.75 }}
-          />
-          Up-regulated DEG
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "hsl(210 100% 56%)", opacity: 0.75 }}
-          />
-          Down-regulated DEG
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ background: "hsl(var(--muted-foreground))", opacity: 0.3 }}
-          />
-          Non-significant
-        </span>
-        <span className="ml-auto italic">Click a colored dot to view gene</span>
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export default function AtlasPage() {
+  const navigate = useHashNavigate();
   const [genes, setGenes] = useState<GeneIndexEntry[]>([]);
-  const [volcanoLoading, setVolcanoLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getGeneIndex().then((data) => {
       setGenes(data);
-      setVolcanoLoading(false);
+      setLoading(false);
     });
   }, []);
 
+  // Build the volcano dataset. Significance is the canonical DEG flag (the
+  // effect-size-aware interval-null gate), passed explicitly so the shared
+  // Volcano colors up = red / down = blue / non-sig = control gray.
+  const volcanoData = useMemo<VolcanoPoint[]>(() => {
+    const out: VolcanoPoint[] = [];
+    for (const g of genes) {
+      if (g.bulk_logfc == null || g.bulk_padj == null) continue;
+      out.push({
+        symbol: g.symbol,
+        logFC: g.bulk_logfc,
+        padj: g.bulk_padj,
+        sig: g.is_deg,
+      });
+    }
+    return out;
+  }, [genes]);
+
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      {/* ------------------------------------------------------------------ */}
-      {/* Header                                                               */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Atlas Construction</h1>
-        <p className="mt-2 text-muted-foreground">
-          10-cohort Integrated mega-analysis across 1,444 samples — 5,484 DEGs at
-          padj&nbsp;&lt;&nbsp;0.05, |logFC|&nbsp;&gt;&nbsp;0.3, validated by
-          leave-one-out cross-validation.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Atlas Construction"
+        description={
+          <>
+            5-cohort pooled (cohort-adjusted) analysis across 846 samples —{" "}
+            {fmt(DEG_COUNT)} DEGs by the {DEG_GATE_LABEL}, validated by
+            leave-one-out cross-validation.
+          </>
+        }
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* Section 1: Study Overview                                            */}
@@ -565,7 +265,7 @@ export default function AtlasPage() {
                   {TOTAL_SAMPLES.toLocaleString()}
                 </td>
                 <td colSpan={3} className="px-4 py-2.5 text-xs text-muted-foreground">
-                  10 independent cohorts
+                  9 independent cohorts
                 </td>
               </tr>
             </tbody>
@@ -618,9 +318,9 @@ export default function AtlasPage() {
           {RESULT_CARDS.map((card) => (
             <div
               key={card.label}
-              className="rounded-lg border border-border bg-card px-4 py-4 shadow-sm"
+              className="rounded-lg border border-border bg-card px-4 py-4 shadow-sm hover-lift"
             >
-              <p className="font-mono text-2xl font-bold text-primary">
+              <p className="font-numeric text-2xl font-bold text-primary">
                 {card.value}
               </p>
               <p className="mt-0.5 text-sm font-semibold">{card.label}</p>
@@ -637,30 +337,44 @@ export default function AtlasPage() {
       {/* ------------------------------------------------------------------ */}
       <section className="mb-10">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Volcano Plot
-          </h2>
-          {!volcanoLoading && (
+          <h2 className="text-xl font-semibold tracking-tight">Volcano Plot</h2>
+          {!loading && (
             <span className="text-xs text-muted-foreground">
-              {genes.filter((g) => g.dream_logfc != null && g.dream_padj != null).length.toLocaleString()} genes plotted
+              {volcanoData.length.toLocaleString()} genes plotted
             </span>
           )}
         </div>
         <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-          {volcanoLoading ? (
-            <div className="flex h-[480px] items-center justify-center text-sm text-muted-foreground">
-              Loading gene data&hellip;
+          {loading ? (
+            <div className="space-y-3">
+              <SkeletonBlock className="h-[420px] w-full rounded-lg" />
+              <div className="flex gap-4">
+                <SkeletonBlock className="h-3 w-28" />
+                <SkeletonBlock className="h-3 w-32" />
+                <SkeletonBlock className="h-3 w-24" />
+              </div>
             </div>
           ) : (
-            <VolcanoPlot genes={genes} />
+            <Volcano
+              data={volcanoData}
+              height={460}
+              ariaLabel="Volcano plot of disease vs healthy differential expression"
+              onPointClick={(sym) =>
+                navigate(`#/gene?symbol=${encodeURIComponent(sym)}`)
+              }
+              caption={
+                <>
+                  Direction by hue (red = up, blue = down) with significance by
+                  opacity; non-significant genes fall back to control gray.
+                  Dashed guides mark |logFC|&nbsp;=&nbsp;0.25 and
+                  FDR&nbsp;=&nbsp;0.05. Click any colored point to open the gene
+                  profile. Points at the top edge represent
+                  padj&nbsp;&lt;&nbsp;1e-300 (clamped for display).
+                </>
+              }
+            />
           )}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Dashed lines mark |logFC|&nbsp;=&nbsp;0.3 and padj&nbsp;=&nbsp;0.05
-          thresholds. Colored dots are significant DEGs. Click any colored dot
-          to view the gene profile. Points at y&nbsp;=&nbsp;300 represent
-          padj&nbsp;&lt;&nbsp;1e-300 (clamped for display).
-        </p>
       </section>
 
       {/* ------------------------------------------------------------------ */}
@@ -680,6 +394,6 @@ export default function AtlasPage() {
           Causal Architecture &rarr;
         </Link>
       </div>
-    </div>
+    </PageContainer>
   );
 }

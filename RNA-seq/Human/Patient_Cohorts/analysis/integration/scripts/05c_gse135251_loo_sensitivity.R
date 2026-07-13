@@ -345,7 +345,7 @@ if (!file.exists(conc_f)) {
       ds_conc <- disease_conc[dataset == ds]
       cat("\n  Dataset:", ds, "(", nrow(ds_conc), "genes in concordance table)\n")
 
-      # Replace dream_logFC/dream_padj with LOO values
+      # Replace dream_logFC/dream_padj with LOO values  # C2-OK-sensitivity
       if (!is.null(loo_mapped) && "symbol" %in% names(loo_mapped)) {
         loo_slim <- loo_mapped[!is.na(symbol) & symbol != "",
                                .(symbol, loo_shrunk = shrunk_logFC, loo_lfsr = lfsr,
@@ -364,11 +364,11 @@ if (!file.exists(conc_f)) {
           rho_loo <- cor(mapped$protein_logFC, mapped$loo_logFC,
                          method = "spearman", use = "complete.obs")
           # Concordance with original full-model logFC
-          rho_full <- cor(mapped$protein_logFC, mapped$dream_logFC,
+          rho_full <- cor(mapped$protein_logFC, mapped$dream_logFC,  # C2-OK-sensitivity
                           method = "spearman", use = "complete.obs")
 
           dir_loo  <- sum(sign(mapped$protein_logFC) == sign(mapped$loo_logFC), na.rm = TRUE)
-          dir_full <- sum(sign(mapped$protein_logFC) == sign(mapped$dream_logFC), na.rm = TRUE)
+          dir_full <- sum(sign(mapped$protein_logFC) == sign(mapped$dream_logFC), na.rm = TRUE)  # C2-OK-sensitivity
 
           cat("    Protein-transcript Spearman rho (full model):", round(rho_full, 4), "\n")
           cat("    Protein-transcript Spearman rho (LOO, excl GSE135251):", round(rho_loo, 4), "\n")
@@ -378,12 +378,12 @@ if (!file.exists(conc_f)) {
               "(", round(100 * dir_loo / nrow(mapped), 1), "%)\n")
 
           # Filtered concordance: |LFC| > 0.5 in both
-          filt_full <- abs(mapped$protein_logFC) > 0.5 & abs(mapped$dream_logFC) > 0.5
+          filt_full <- abs(mapped$protein_logFC) > 0.5 & abs(mapped$dream_logFC) > 0.5  # C2-OK-sensitivity
           filt_loo  <- abs(mapped$protein_logFC) > 0.5 & abs(mapped$loo_logFC) > 0.5
 
           if (sum(filt_full) > 0) {
-            filt_full_conc <- sum(sign(mapped$protein_logFC[filt_full]) ==
-                                 sign(mapped$dream_logFC[filt_full]))
+            filt_full_conc <- sum(sign(mapped$protein_logFC[filt_full]) ==  # C2-OK-sensitivity
+                                 sign(mapped$dream_logFC[filt_full]))  # C2-OK-sensitivity
             cat("    Filtered concordance (full, |LFC|>0.5 both):",
                 filt_full_conc, "/", sum(filt_full),
                 "(", round(100 * filt_full_conc / sum(filt_full), 1), "%)\n")

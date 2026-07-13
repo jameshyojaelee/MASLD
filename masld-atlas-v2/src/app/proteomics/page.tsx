@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
+import { SkeletonBlock } from "@/components/states";
+import { dataUrl } from "@/lib/data-base";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,7 +116,7 @@ export default function ProteomicsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   useEffect(() => {
-    fetch("/data/proteomics_summary.json")
+    fetch(dataUrl("proteomics_summary.json"))
       .then((r) => r.json())
       .then((d: ProteomicsSummary) => {
         setData(d);
@@ -162,45 +166,42 @@ export default function ProteomicsPage() {
   const sortIndicator = (key: SortKey) =>
     sortKey === key ? (sortDir === "asc" ? " \u25B2" : " \u25BC") : null;
 
+  const header = (
+    <PageHeader
+      title="Plasma + Liver Proteomics"
+      description="Protein-level evidence integrating Olink Explore 1536 plasma and DIA-MS liver proteomics, with mRNA-protein concordance across the MASLD atlas."
+    />
+  );
+
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Plasma + Liver Proteomics
-        </h1>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Loading proteomics data...
-        </p>
-      </div>
+      <PageContainer>
+        {header}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonBlock key={i} className="h-20 rounded-lg" />
+          ))}
+        </div>
+        <SkeletonBlock className="mt-10 h-64 w-full rounded-lg" />
+      </PageContainer>
     );
   }
 
   if (!data) {
     return (
-      <div className="mx-auto max-w-6xl px-6 py-10">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Plasma + Liver Proteomics
-        </h1>
-        <p className="mt-6 text-sm text-destructive">
+      <PageContainer>
+        {header}
+        <p className="text-sm text-destructive">
           Failed to load proteomics data.
         </p>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <PageContainer>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Plasma + Liver Proteomics
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Protein-level evidence integrating Olink Explore 3072 plasma and
-          DIA-MS liver proteomics, with mRNA-protein concordance across the
-          MASLD atlas.
-        </p>
-      </div>
+      {header}
 
       {/* Summary stats */}
       <div className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -237,10 +238,10 @@ export default function ProteomicsPage() {
       <div className="mb-10">
         <h2 className="mb-4 text-xl font-semibold">mRNA-Protein Concordance</h2>
         <p className="mb-3 text-sm text-muted-foreground">
-          Spearman correlation between dream logFC and protein logFC, stratified
-          by gene class. Both-significant genes reach &rho; = 0.77 with 98.9%
-          direction concordance, confirming protein-level support of the
-          transcriptomic atlas.
+          Spearman correlation between bulk logFC and protein logFC, stratified
+          by gene class. Both-significant genes (n&nbsp;=&nbsp;23) reach
+          &rho;&nbsp;=&nbsp;0.60 with 91.3% direction concordance, confirming
+          protein-level support of the transcriptomic atlas.
         </p>
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
@@ -344,7 +345,7 @@ export default function ProteomicsPage() {
                 >
                   <td className="px-3 py-1.5">
                     <Link
-                      href={`/gene/${encodeURIComponent(r.gene)}`}
+                      href={`#/gene?symbol=${encodeURIComponent(r.gene)}`}
                       className="font-mono font-semibold text-primary hover:underline"
                     >
                       {r.gene}
@@ -375,20 +376,23 @@ export default function ProteomicsPage() {
         <h3 className="mb-2 text-sm font-semibold">Data Provenance</h3>
         <ul className="space-y-1 text-xs text-muted-foreground">
           <li>
-            <span className="font-mono">PXD052937</span> &mdash; DIA-MS liver
-            proteomics, 72 samples
+            <span className="font-mono">PXD052937</span> &mdash; DIA-MS
+            plasma proteomics, 72 samples
           </li>
           <li>
-            <span className="font-mono">GSE276114</span> &mdash; liver fibrosis
-            proteomics cohort
+            <span className="font-mono">PXD051911</span> &mdash; DIA-MS
+            liver tissue proteomics, 58 samples
           </li>
-          <li>Olink Explore 3072 plasma panel (Phase VIII plasma sweep)</li>
+          <li>
+            Olink Explore 1536 plasma panel (Yang et al. 2025; supervised
+            results withdrawn &mdash; see review 2026-06-01)
+          </li>
           <li>
             Datasets included:{" "}
             <span className="font-mono">{data.datasets.join(", ")}</span>
           </li>
         </ul>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -10,6 +10,8 @@
 #   1. Run unadjusted dream (no deconv covariates) as baseline
 #   2. Compare adjusted (existing) vs unadjusted p-values → attribution scores
 #   3. Classify genes: Hepatocyte_intrinsic, Composition_driven, Unmasked, NS
+#      (enum strings are LEGACY identifiers; mediation decomposition of the total
+#       disease effect — corrected interpretation in §4 header)
 #   4. Run interaction DE: group_binary * Macrophages to find macrophage-
 #      dependent disease genes
 #   5. Generate 3 publication PDFs + 3 result CSVs
@@ -222,10 +224,11 @@ print(table(info$group_binary, info$dataset))
 
 # ============================================================
 #  2. Run ADJUSTED dream (with deconv covariates)
-# NOTE: This model asks "after controlling for cell composition,
-#       what disease-associated expression changes remain?"
-#       Hepatocyte fraction falls in disease (composition-driven signal),
-#       so DEGs that survive this adjustment are hepatocyte-intrinsic.
+# NOTE: This model asks "after conditioning on cell composition,
+#       what disease-associated expression change remains?" Composition itself
+#       shifts with disease (a mediator), so DEGs that survive this conditioning
+#       are the controlled-direct-effect (cell-autonomous) component of the total
+#       disease effect; those that attenuate are composition-mediated (indirect).
 #       GSE213621 lacks MuSiC data → those samples get median-imputed fractions.
 # ============================================================
 cat("\n===== ADJUSTED DREAM (with ALL 16 deconv covariates, T1.11) =====\n")
@@ -281,7 +284,7 @@ ashr_path <- file.path(RDIR, "dream_results_ashr.csv")
 if (file.exists(ashr_path)) {
   dt_unadj <- fread(ashr_path)
   # padj and logFC already exist as-is in the data
-  dt_unadj[, dream_sig := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]  # Migrated 0.3 -> 0.5 (LOO-CV stability)
+  dt_unadj[, dream_sig := !is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]  # Migrated 0.3 -> 0.5 (LOO-CV stability)  # C2-OK-sensitivity (dream-arm twin; canonical = 25_deconv_attribution_C2.R)
   cat("  Using dream results (padj-based significance)\n")
   USE_ASHR_UNADJ <- TRUE
 } else {
@@ -303,16 +306,27 @@ setkey(dt_adj_m, gene)
 
 # ============================================================
 #  4. Compute attribution scores and classify genes
-# Terminology:
-#   dt_adj_m   = ADJUSTED results (deconv-corrected, from this script)
-#   dt_unadj_m = UNADJUSTED results (primary dream, from script 05)
 #
-#   Hepatocyte_intrinsic: sig in BOTH adjusted AND unadjusted
-#     → gene survives deconv correction → genuine hepatocyte-driven signal
-#   Composition_driven: sig in UNADJUSTED only (disappears when deconv added)
-#     → gene is explained by cell-type composition change, not intrinsic expression
-#   Unmasked: sig in ADJUSTED only (newly significant when deconv added)
-#     → rare; gene was masked by composition variation, revealed by correction
+# D2i MEDIATION REFRAME (2026-07): cell composition is DOWNSTREAM of disease
+# (11/16 MuSiC cell types shift with disease status, per 83_composition_shifts.R),
+# so conditioning on it is a MEDIATION decomposition of the disease effect, NOT
+# confounder removal. The UNADJUSTED (total-effect) DEG set stays CANONICAL; the
+# adjusted arm partitions that total effect into a controlled-direct-effect
+# component and an indirect / composition-mediated component.
+#
+# Terminology (machine enum string [LEGACY, kept stable] → corrected D2i meaning):
+#   dt_adj_m   = ADJUSTED results (composition-conditioned; controlled direct effect)
+#   dt_unadj_m = UNADJUSTED results (total disease effect; primary dream, from script 05)
+#
+#   "Hepatocyte_intrinsic" = cell-autonomous:  sig in BOTH adjusted AND unadjusted
+#     → controlled direct effect: disease signal that persists after conditioning
+#       on cell composition (cell-intrinsic transcriptional change)
+#   "Composition_driven" = composition-MEDIATED:  sig in UNADJUSTED only (attenuated
+#       when composition added)
+#     → INDIRECT / composition-MEDIATED disease effect, NOT an artifact: the gene's
+#       total-effect signal is (partly) routed through disease-driven composition shifts
+#   Unmasked: sig in ADJUSTED only (newly significant when composition conditioned)
+#     → rare; total-effect signal was suppressed by composition variation
 # ============================================================
 cat("\nComputing attribution scores...\n")
 
@@ -333,9 +347,16 @@ attrib[is.nan(attribution_raw), attribution_raw := 1]
 attrib[attribution_raw > 1, attribution_raw := 1]
 attrib[attribution_raw < 0, attribution_raw := 0]
 
-# Gene classification: use padj for unadjusted (padj < 0.05, |logFC| > 0.5)
-# Adjusted model (this script) still uses padj since it has no ashr step
-attrib[, sig_adj   := padj_adj < 0.05 & abs(logFC_adj) > 0.5]
+# Gene classification.
+# UNADJUSTED (total-effect) arm = CANONICAL, unchanged: padj < 0.05, |logFC| > 0.5.
+# ADJUSTED (composition-conditioned) arm: significance by padj_adj < 0.05 ONLY.
+# D2i: the |logFC_adj| > 0.5 floor is DROPPED on the adjusted arm. The adjusted
+# coefficient is attenuated BY DESIGN (part of the total disease effect is mediated
+# by disease-driven composition shifts), so re-imposing a fixed LFC floor on the
+# attenuated estimate mislabels still-significant genes as composition-mediated.
+# The controlled-direct-effect call is the padj_adj test; the effect-size floor
+# stays only on the canonical total-effect (unadjusted) arm.
+attrib[, sig_adj   := padj_adj < 0.05]
 if (USE_ASHR_UNADJ) {
   # Unadjusted uses padj < 0.05, |logFC| > 0.5 (migrated 0.3 -> 0.5; LOO-CV stability)
   padj_vec <- dt_unadj_m[attrib$gene, padj]
@@ -344,9 +365,15 @@ if (USE_ASHR_UNADJ) {
   attrib[, sig_unadj := padj_unadj < 0.05 & abs(logFC_unadj) > 0.5]
 }
 
+# Machine enum strings 'Hepatocyte_intrinsic' / 'Composition_driven' are LEGACY
+# identifiers, kept unchanged for downstream data-contract stability (Scripts
+# 27a/38/80b/202, spatial 03c/09d, and figure scripts read them by name). Their
+# CORRECTED (D2i) interpretation: Hepatocyte_intrinsic = cell-autonomous
+# (controlled direct effect); Composition_driven = composition-MEDIATED (indirect,
+# NOT an artifact). See §4 header for the mediation reframe.
 attrib[, category := fcase(
-  sig_adj & sig_unadj,  "Hepatocyte_intrinsic",
-  !sig_adj & sig_unadj, "Composition_driven",
+  sig_adj & sig_unadj,  "Hepatocyte_intrinsic",  # = cell-autonomous (controlled direct effect)
+  !sig_adj & sig_unadj, "Composition_driven",    # = composition-MEDIATED (indirect, NOT an artifact)
   sig_adj & !sig_unadj, "Unmasked",
   default = "Not_significant"
 )]
@@ -366,23 +393,25 @@ cat("Saved: deconv_attribution_scores.csv (primary; 16-CT adjustment, T1.11)\n")
 fwrite(attrib, file.path(OUTDIR, "deconv_attribution_scores_16ct.csv"))
 cat("Saved: deconv_attribution_scores_16ct.csv (alias of primary, T1.11 tag)\n")
 
-# ---- T1.11 symmetric-threshold sensitivity attribution ----
-# Legacy call uses asymmetric thresholds (adj |LFC|>0.5, unadj |LFC|>0.3).
-# Post-migration, canonical is symmetric 0.5/0.5; sensitivity also runs at 0.3/0.3
-# for audit reproducibility (Team 1 §5 #2).
+# ---- symmetric-threshold sensitivity attribution ----
+# SENSITIVITY arm (NOT the D2i canonical call above): deliberately re-imposes a
+# SYMMETRIC |LFC| floor on BOTH arms to document how the split moves if the
+# adjusted (attenuated) coefficient is also floored. The canonical `category`
+# above drops the adjusted floor (padj_adj < 0.05 only); these _symLFC_ files
+# keep the floor purely for audit reproducibility (Team 1 §5 #2).
 for (lfc_thr in c(0.3, 0.5)) {
   tmp <- copy(attrib)
   tmp[, sig_adj   := padj_adj < 0.05 & abs(logFC_adj)   > lfc_thr]
   tmp[, sig_unadj := padj_unadj < 0.05 & abs(logFC_unadj) > lfc_thr]
   tmp[, category := fcase(
-    sig_adj & sig_unadj,  "Hepatocyte_intrinsic",
-    !sig_adj & sig_unadj, "Composition_driven",
+    sig_adj & sig_unadj,  "Hepatocyte_intrinsic",  # = cell-autonomous
+    !sig_adj & sig_unadj, "Composition_driven",    # = composition-MEDIATED
     sig_adj & !sig_unadj, "Unmasked",
     default = "Not_significant"
   )]
   fn <- sprintf("deconv_attribution_scores_16ct_symLFC_%.1f.csv", lfc_thr)
   fwrite(tmp, file.path(OUTDIR, fn))
-  cat(sprintf("Saved: %s (symmetric |LFC|>%.1f; %d intrinsic, %d composition)\n",
+  cat(sprintf("Saved: %s (symmetric |LFC|>%.1f; %d cell-autonomous, %d composition-mediated)\n",
               fn, lfc_thr,
               sum(tmp$category == "Hepatocyte_intrinsic"),
               sum(tmp$category == "Composition_driven")))
@@ -402,6 +431,10 @@ attrib_legacy[, attribution_raw := 1 - (padj_adj / padj_unadj)]
 attrib_legacy[is.nan(attribution_raw), attribution_raw := 1]
 attrib_legacy[attribution_raw > 1, attribution_raw := 1]
 attrib_legacy[attribution_raw < 0, attribution_raw := 0]
+# LEGACY arm: reproduces the old 2-CT (Hep+Mac) fit with the old asymmetric
+# thresholds (adj |LFC|>0.5, unadj |LFC|>0.3) for backward-compat audit; the
+# floor logic is intentionally preserved here (only the category vocabulary is
+# reframed to match the D2i canonical labels).
 attrib_legacy[, sig_adj   := padj_adj < 0.05 & abs(logFC_adj) > 0.5]
 if (USE_ASHR_UNADJ) {
   padj_vec <- dt_unadj_m[attrib_legacy$gene, padj]
@@ -410,8 +443,8 @@ if (USE_ASHR_UNADJ) {
   attrib_legacy[, sig_unadj := padj_unadj < 0.05 & abs(logFC_unadj) > 0.5]
 }
 attrib_legacy[, category := fcase(
-  sig_adj & sig_unadj,  "Hepatocyte_intrinsic",
-  !sig_adj & sig_unadj, "Composition_driven",
+  sig_adj & sig_unadj,  "Hepatocyte_intrinsic",  # = cell-autonomous
+  !sig_adj & sig_unadj, "Composition_driven",    # = composition-MEDIATED
   sig_adj & !sig_unadj, "Unmasked",
   default = "Not_significant"
 )]
@@ -522,15 +555,15 @@ n_unadj_only <- length(setdiff(sig_unadj_genes, sig_adj_genes))
 n_both       <- length(intersect(sig_adj_genes, sig_unadj_genes))
 
 cat("  Adjusted only (Unmasked):", n_adj_only, "\n")
-cat("  Unadjusted only (Composition-driven):", n_unadj_only, "\n")
-cat("  Both (Hepatocyte-intrinsic = survives deconv correction):", n_both, "\n")
+cat("  Unadjusted only (composition-mediated):", n_unadj_only, "\n")
+cat("  Both (cell-autonomous = controlled direct effect):", n_both, "\n")
 
 # Euler-style Venn using ggplot (no VennDiagram dependency)
 venn_df <- data.table(
   label = c(
     paste0("Adjusted only\n(Unmasked)\n", n_adj_only),
-    paste0("Both\n(Intrinsic)\n", n_both),
-    paste0("Unadjusted only\n(Composition)\n", n_unadj_only)
+    paste0("Both\n(Cell-autonomous)\n", n_both),
+    paste0("Unadjusted only\n(Composition-mediated)\n", n_unadj_only)
   ),
   x = c(-1.2, 0, 1.2),
   y = c(0, 0, 0),
@@ -558,14 +591,14 @@ p_venn <- ggplot() +
   annotate("text", x =  0.0, y = 0, label = n_both,     size = 6, fontface = "bold", color = "#333333") +
   annotate("text", x =  1.5, y = 0, label = n_unadj_only, size = 6, fontface = "bold", color = "#1E88E5") +
   annotate("text", x = -1.5, y = -0.5, label = "Unmasked", size = 3.5, color = "#D81B60") +
-  annotate("text", x =  0.0, y = -0.5, label = "Intrinsic", size = 3.5, color = "#333333") +
-  annotate("text", x =  1.5, y = -0.5, label = "Composition", size = 3.5, color = "#1E88E5") +
-  annotate("text", x = -0.7, y = 1.8, label = "Adjusted\n(w/ deconv)", size = 3.5, fontface = "italic") +
-  annotate("text", x =  0.7, y = 1.8, label = "Unadjusted\n(no deconv)", size = 3.5, fontface = "italic") +
+  annotate("text", x =  0.0, y = -0.5, label = "Cell-autonomous", size = 3.5, color = "#333333") +
+  annotate("text", x =  1.5, y = -0.5, label = "Composition-mediated", size = 3.5, color = "#1E88E5") +
+  annotate("text", x = -0.7, y = 1.8, label = "Adjusted\n(direct effect)", size = 3.5, fontface = "italic") +
+  annotate("text", x =  0.7, y = 1.8, label = "Unadjusted\n(total effect)", size = 3.5, fontface = "italic") +
   coord_fixed(xlim = c(-3, 3), ylim = c(-2, 2.5)) +
-  labs(title = "DEG Overlap: Deconvolution-Adjusted vs Unadjusted",
+  labs(title = "Disease-effect mediation: composition-conditioned vs total effect",
        subtitle = ifelse(USE_ASHR_UNADJ,
-                         "Unadjusted: padj < 0.05, |logFC| > 0.5; Adjusted: padj < 0.05, |logFC| > 0.5",
+                         "Unadjusted (total effect): padj < 0.05, |logFC| > 0.5; Adjusted (direct effect): padj < 0.05",
                          "Thresholds: padj < 0.05, |logFC| > 0.5")) +
   theme_void(base_size = 12) +
   theme(

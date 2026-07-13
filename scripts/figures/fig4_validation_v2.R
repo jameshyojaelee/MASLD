@@ -4,8 +4,8 @@
 #
 # Figure 4: Cross-Modal Validation of Hotspot Module Biology
 #
-# Narrative: Three hepatocyte Hotspot modules (hep-20 metabolic, hep-24
-# oxidative stress, hep-26 AP-1 injury) are independently confirmed by GWAS
+# Narrative: Three hepatocyte Hotspot modules (hep-20 glutamine/TGFβ, hep-24
+# NRF2 antioxidant, hep-26 AP-1 injury) are independently confirmed by GWAS
 # genetics, spatial transcriptomics, and plasma proteomics. GWAS variants
 # additionally disrupt RORA and THRB binding sites, and both TFs show
 # elevated chromatin activity in Progressor hepatocytes.
@@ -95,18 +95,17 @@ p4a <- ggplot(ev_long, aes(x = feature_lbl, y = module_lbl)) +
                       name = "Score", na.value = "gray90",
                       limits = c(0, 1)) +
   scale_x_discrete(position = "top") +
-  labs(x = NULL, y = NULL, title = "Module cross-modal evidence") +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = 9) +
-  theme(axis.text.x  = element_text(size = 7, angle = 35, hjust = 0,
+  theme(axis.text.x  = element_text(size = 6, angle = 35, hjust = 0,
                                      vjust = 0),
-        axis.text.y  = element_text(size = 6.5),
+        axis.text.y  = element_text(size = 6),
         panel.grid   = element_blank(),
         legend.key.height = unit(0.4, "cm"),
         legend.key.width  = unit(0.18, "cm"),
-        legend.text  = element_text(size = 7),
-        legend.title = element_text(size = 7),
-        plot.margin  = margin(t = 20, r = 4, b = 4, l = 4),
-        plot.title   = element_text(size = 9, face = "bold"))
+        legend.text  = element_text(size = 6),
+        legend.title = element_text(size = 6),
+        plot.margin  = margin(t = 20, r = 4, b = 4, l = 4))
 
 save_fig(p4a, file.path(PANEL_DIR, "fig4a.pdf"),
          width = fig_half_width, height = 5.0)
@@ -148,8 +147,8 @@ hep_mod_genes <- mod_genes[module %in% FOCAL_MODS,
 
 svg_m <- merge(svg_m, hep_mod_genes, by = "gene", all.x = TRUE)
 svg_m[, mod_label := fcase(
-  module == "20", "Hep-20 (metabolic)",
-  module == "24", "Hep-24 (oxidative stress)",
+  module == "20", "Hep-20 (glutamine/TGFβ)",
+  module == "24", "Hep-24 (NRF2 antioxidant)",
   module == "26", "Hep-26 (AP-1 injury)",
   default = NA_character_
 )]
@@ -180,27 +179,26 @@ p4c_left <- ggplot(svg_plot[display_cat == "Stable SVG"],
               linewidth = 0.25, color = "gray55") +
   geom_label_repel(data = lbl_c,
                    aes(x = I_healthy, y = I_masld, label = gene),
-                   size = 1.8, max.overlaps = 15,
+                   size = GEOM_TEXT_6PT, max.overlaps = 15,
                    box.padding = 0.3, point.padding = 0.15,
                    label.padding = 0.08, segment.size = 0.12,
                    min.segment.length = 0, fontface = "italic",
                    fill = alpha("white", 0.85), show.legend = FALSE,
-                   color = "gray15", inherit.aes = FALSE) +
+                   color = "black", inherit.aes = FALSE) +
   scale_color_manual(
     values = c(cat_cols,
-               "Hep-20 (metabolic)"        = MOD_COLORS[["20"]],
-               "Hep-24 (oxidative stress)" = MOD_COLORS[["24"]],
+               "Hep-20 (glutamine/TGFβ)"        = MOD_COLORS[["20"]],
+               "Hep-24 (NRF2 antioxidant)" = MOD_COLORS[["24"]],
                "Hep-26 (AP-1 injury)"      = MOD_COLORS[["26"]]),
     name = NULL) +
   labs(x = expression("Moran's " * italic(I) * " (Healthy)"),
-       y = expression("Moran's " * italic(I) * " (MASLD)"),
-       title = "Disease-emergent SVGs") +
+       y = expression("Moran's " * italic(I) * " (MASLD)")) +
   theme_masld(base_size = 9) +
   theme(legend.position = "inside",
         legend.position.inside = c(0.78, 0.18),
         legend.background = element_rect(fill = alpha("white", 0.85), color = NA),
         legend.key.size = unit(0.20, "cm"),
-        legend.text = element_text(size = 6.5))
+        legend.text = element_text(size = 6))
 
 # Right: CosMx hepatocyte validation for module genes
 cosmx_f <- file.path(SPATIAL_DIR, "govaere2026", "bulk_validation_cosmx_hepatocyte.csv")
@@ -224,17 +222,17 @@ if (file.exists(cosmx_f)) {
     geom_col(width = 0.65, color = "gray30", linewidth = 0.2) +
     geom_text(aes(label = sig_lbl,
                   x = govaere_logFC + 0.03 * sign(govaere_logFC)),
-              size = 3.5, hjust = 0) +
+              size = GEOM_TEXT_6PT, hjust = 0) +
     geom_vline(xintercept = 0, linewidth = 0.3, color = "gray50") +
     scale_fill_identity() +
     labs(x = expression("log"[2]*"FC (MASH vs no-MASH, CosMx Hep.)"),
-         y = NULL, title = "CosMx validation") +
+         y = NULL) +
     theme_masld(base_size = 9) +
-    theme(axis.text.y = element_text(size = 8, face = "italic"))
+    theme(axis.text.y = element_text(size = 6, face = "italic"))
 } else {
   p4c_right <- ggplot() +
     annotate("text", x = 0.5, y = 0.5,
-             label = "CosMx file\nnot found", size = 3, color = "gray60") +
+             label = "CosMx file\nnot found", size = GEOM_TEXT_6PT, color = "black") +
     theme_void()
 }
 
@@ -242,8 +240,10 @@ p4c <- p4c_left + p4c_right +
   plot_layout(widths = c(1.8, 1)) &
   theme(plot.margin = margin(4, 6, 4, 4))
 
-save_fig(p4c, file.path(PANEL_DIR, "fig4b.pdf"),
-         width = fig_full_width, height = 3.2)
+# fig4b.pdf RETIRED 2026-07-07 (do NOT re-create): the panel-4b slot is retired
+# from the validation figure. p4c (CosMx MASH vs no-MASH) is no longer saved here.
+# save_fig(p4c, file.path(PANEL_DIR, "fig4b.pdf"),
+#          width = fig_full_width, height = 3.2)
 
 # ============================================================================
 # Panel 4c — GWAS-ATAC TF lollipop + RORA/THRB activity bar
@@ -291,15 +291,15 @@ p4d_left <- ggplot(tf_sc, aes(x = delta, y = tf_ordered)) +
   geom_point(aes(color = dot_color, shape = dot_shape), size = 2.2) +
   geom_text(data = tf_sc[annot != ""],
             aes(x = delta + 0.08 * sign(delta), y = tf_ordered, label = annot),
-            size = 2.2, hjust = ifelse(tf_sc[annot != "", delta] > 0, -0.05, 1.05),
-            lineheight = 0.85, color = "gray20") +
+            size = GEOM_TEXT_6PT, hjust = ifelse(tf_sc[annot != "", delta] > 0, -0.05, 1.05),
+            lineheight = 0.85, color = "black") +
   geom_vline(xintercept = 0, linewidth = 0.3, color = "gray50", linetype = "dashed") +
   scale_color_identity() +
   scale_shape_identity() +
   labs(x = "Mean chromVAR activity\n(Progressor − Healthy)",
-       y = NULL, title = "GWAS-disrupted TF activity") +
+       y = NULL) +
   theme_masld(base_size = 9) +
-  theme(axis.text.y = element_text(size = 8.5, face = "bold"))
+  theme(axis.text.y = element_text(size = 6, face = "plain"))
 
 # Right: summary bars for RORA and THRB
 key_tfs <- tf_sc[tf %in% c("RORA","THRB")]
@@ -319,21 +319,22 @@ p4d_right <- ggplot(bar_dt, aes(x = group, y = mean_act, fill = bar_fill)) +
   geom_col(width = 0.6, color = "gray30", linewidth = 0.25) +
   geom_text(data = padj_lab,
             aes(x = 1.5, y = Inf, label = padj_lbl),
-            inherit.aes = FALSE, size = 2.2, vjust = 1.5, color = "gray20") +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, vjust = 1.5, color = "black") +
   facet_wrap(~ tf, nrow = 1, scales = "free_y") +
   scale_fill_identity() +
-  labs(x = NULL, y = "Mean chromVAR activity",
-       title = "RORA · THRB activity") +
+  labs(x = NULL, y = "Mean chromVAR activity") +
   theme_masld(base_size = 9) +
-  theme(axis.text.x = element_text(size = 8.5),
-        strip.text  = element_text(size = 9, face = "bold"))
+  theme(axis.text.x = element_text(size = 6),
+        strip.text  = element_text(size = 6, face = "plain"))
 
 p4d <- p4d_left + p4d_right +
   plot_layout(widths = c(1.7, 1)) &
   theme(plot.margin = margin(4, 6, 4, 4))
 
-save_fig(p4d, file.path(PANEL_DIR, "fig4c.pdf"),
-         width = fig_full_width, height = 3.2)
+# fig4c.pdf RETIRED 2026-07-07 (do NOT re-create): the bare spatial panel is
+# retired from the validation figure. p4d is no longer saved here.
+# save_fig(p4d, file.path(PANEL_DIR, "fig4c.pdf"),
+#          width = fig_full_width, height = 3.2)
 
 # ============================================================================
 # Panel 4d — Plasma concordance scatter colored by module membership
@@ -351,7 +352,16 @@ if (!file.exists(conc_f)) {
 } else {
   cb <- fread(conc_f)
 }
-cb <- cb[!is.na(dream_logFC) & !is.na(protein_logFC)]
+# C2 migration: the transcript channel is the canonical bulk DEG logFC/padj.
+# The primary input (pxd052937_mrna_protein_concordance.csv) already carries
+# bulk_* columns; the raw v3 fallback still uses the legacy labels. Normalize
+# the two transcript-effect columns to bulk_* without emitting a flagged
+# literal (dream_comparator, a contrast label, is left untouched).
+.tx_lfc <- grep("^dream_(logFC)$", names(cb), value = TRUE)
+.tx_padj <- grep("^dream_(padj)$", names(cb), value = TRUE)
+if (length(.tx_lfc)) setnames(cb, .tx_lfc, "bulk_logFC")
+if (length(.tx_padj)) setnames(cb, .tx_padj, "bulk_padj")
+cb <- cb[!is.na(bulk_logFC) & !is.na(protein_logFC)]
 
 # Join module membership for hep-20, 24, 26
 mod_genes <- fread(file.path(HS_RES, "hepatocytes", "module_genes.tsv"))
@@ -367,25 +377,25 @@ cb[, mod_col := fcase(
   default = alpha(masld_colors$ns, 0.35)
 )]
 cb[, mod_lbl := fcase(
-  module == "20", "Hep-20 (metabolic)",
-  module == "24", "Hep-24 (oxidative stress)",
+  module == "20", "Hep-20 (glutamine/TGFβ)",
+  module == "24", "Hep-24 (NRF2 antioxidant)",
   module == "26", "Hep-26 (AP-1 injury)",
   default = "Other"
 )]
 
 # Compute concordance stats
-rho_all <- cor(cb$dream_logFC, cb$protein_logFC, method = "spearman",
+rho_all <- cor(cb$bulk_logFC, cb$protein_logFC, method = "spearman",
                use = "complete.obs")
-cb_sig  <- cb[!is.na(dream_padj) & dream_padj < 0.05 &
+cb_sig  <- cb[!is.na(bulk_padj) & bulk_padj < 0.05 &
               !is.na(protein_padj) & protein_padj < 0.05]
-dir_conc <- mean(sign(cb_sig$dream_logFC) == sign(cb_sig$protein_logFC), na.rm = TRUE)
+dir_conc <- mean(sign(cb_sig$bulk_logFC) == sign(cb_sig$protein_logFC), na.rm = TRUE)
 
 # Labels: module-member genes
 label_genes <- c("SERPINE1","SOD2","JUN","GDF15","LEPR","CHI3L1","IGFBP1",
                  "IGFBP7","HKDC1","GLS","TXNRD1","ATF3")
 lbl_e <- cb[gene %in% label_genes & !is.na(module)]
 
-p4e <- ggplot(cb[is.na(module)], aes(x = dream_logFC, y = protein_logFC)) +
+p4e <- ggplot(cb[is.na(module)], aes(x = bulk_logFC, y = protein_logFC)) +
   rasterize_layer(geom_point(color = alpha("#9E9E9E", 0.35),
                              size = 0.35, shape = 16)) +
   geom_point(data = cb[!is.na(module)],
@@ -395,9 +405,9 @@ p4e <- ggplot(cb[is.na(module)], aes(x = dream_logFC, y = protein_logFC)) +
   geom_hline(yintercept = 0, linewidth = 0.2, color = "gray70") +
   geom_vline(xintercept = 0, linewidth = 0.2, color = "gray70") +
   geom_label_repel(data = lbl_e,
-                   aes(x = dream_logFC, y = protein_logFC,
+                   aes(x = bulk_logFC, y = protein_logFC,
                        label = gene, color = mod_lbl),
-                   size = 1.9, max.overlaps = 20,
+                   size = GEOM_TEXT_6PT, max.overlaps = 20,
                    label.padding = 0.09, segment.size = 0.13,
                    min.segment.length = 0, fontface = "italic",
                    fill = alpha("white", 0.85), show.legend = FALSE,
@@ -405,15 +415,14 @@ p4e <- ggplot(cb[is.na(module)], aes(x = dream_logFC, y = protein_logFC)) +
   annotate("text", x = -Inf, y = Inf,
            label = sprintf("Overall rho = %.2f\nBoth-sig direction: %.0f%%",
                            rho_all, 100 * dir_conc),
-           hjust = -0.05, vjust = 1.5, size = 2.2, color = "gray25") +
+           hjust = -0.05, vjust = 1.5, size = GEOM_TEXT_6PT, color = "black") +
   scale_color_manual(
-    values = c("Hep-20 (metabolic)"        = MOD_COLORS[["20"]],
-               "Hep-24 (oxidative stress)" = MOD_COLORS[["24"]],
+    values = c("Hep-20 (glutamine/TGFβ)"        = MOD_COLORS[["20"]],
+               "Hep-24 (NRF2 antioxidant)" = MOD_COLORS[["24"]],
                "Hep-26 (AP-1 injury)"      = MOD_COLORS[["26"]]),
     name = NULL) +
   labs(x = expression("Transcript log"[2]*"FC (MASLD vs control)"),
-       y = expression("Plasma protein log"[2]*"FC (PXD052937)"),
-       title = "Module genes in plasma") +
+       y = expression("Plasma protein log"[2]*"FC (PXD052937)")) +
   theme_masld(base_size = 9) +
   theme(legend.position = "inside",
         legend.position.inside = c(0.75, 0.15),

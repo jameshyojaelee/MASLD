@@ -1,10 +1,11 @@
 #!/usr/bin/env Rscript
 # figS_multimethod_batch_pca.R
-# Panel J (batch-model PCA) for the multi-method comparison: PCA of the pooled
+# Batch-model PCA for the multi-method comparison: PCA of the pooled
 # 5-cohort mega samples under each method's ACTUAL batch model, so the reader sees
-# how each DE method treats the dataset (cohort) axis. (panelA-I now belong to the
-# degx battery; this bespoke batch-handling diagnostic is panelJ.)
-#   panelJ_batch_model_pca.pdf
+# how each DE method treats the dataset (cohort) axis. (The power/calibration/
+# agreement panels belong to the degx battery; this is the bespoke batch-handling
+# diagnostic.)
+#   batch_model_pca.pdf  (was panelJ_batch_model_pca.pdf)
 #   Row 1 (coloured by COHORT)  : Raw | Fixed-effect (DESeq2 ~dataset) | Random-effect (dream (1|dataset))
 #   Row 2 (coloured by DISEASE) : same three corrections -> biology preserved
 #   Row 3 (metafor)             : 5 per-cohort PCAs -> metafor never pools (no joint matrix)
@@ -26,10 +27,10 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-                  GSE162694 = "Bril", GSE213621 = "Chen")
-cohort_pal <- c(Suppli = "#1F77B4", Hoang = "#FF7F0E", Govaere = "#2CA02C",
-                Bril = "#D62728", Chen = "#9467BD")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+                  GSE162694 = "GSE162694", GSE213621 = "GSE213621")
+cohort_pal <- c(GSE126848 = "#1F77B4", GSE130970 = "#FF7F0E", GSE135251 = "#2CA02C",
+                GSE162694 = "#D62728", GSE213621 = "#9467BD")
 
 # --- pooled counts: 5 mega cohorts only -------------------------------------
 dge <- load_merged_dge(); stopifnot(!is.null(dge))
@@ -102,21 +103,19 @@ ann <- pca[, .(lab = sprintf("PC1=%.0f%%  PC2=%.0f%%", unique(pc1), unique(pc2))
 base_pca <- function() theme_masld(base_size = 7) +
   theme(axis.text = element_blank(), axis.ticks = element_blank(),
         axis.title = element_text(size = 6), panel.grid = element_blank(),
-        strip.text = element_text(size = 6.6, face = "bold", lineheight = 0.9),
+        strip.text = element_text(size = 6, face = "plain", lineheight = 0.9),
         strip.background = element_blank(),
-        legend.position = "right", legend.title = element_text(size = 6.5, face = "bold"),
-        legend.text = element_text(size = 6), legend.key.size = unit(0.25, "cm"),
-        plot.title = element_text(size = 8, face = "bold"))
+        legend.position = "right", legend.title = element_text(size = 6, face = "plain"),
+        legend.text = element_text(size = 6), legend.key.size = unit(0.25, "cm"))
 
 row_cohort <- ggplot(pca, aes(PC1, PC2, colour = cohort)) +
   geom_point(size = 0.4, alpha = 0.7) +
   facet_wrap(~ model, nrow = 1, scales = "free") +
   geom_text(data = ann, aes(x = -Inf, y = Inf, label = lab), inherit.aes = FALSE,
-            hjust = -0.06, vjust = 1.4, size = 2.1, colour = "grey30") +
+            hjust = -0.06, vjust = 1.4, size = GEOM_TEXT_6PT, colour = "black") +
   scale_colour_manual(values = cohort_pal, name = "Cohort") +
   guides(colour = guide_legend(override.aes = list(size = 1.6, alpha = 1))) +
-  labs(x = "PC1", y = "PC2",
-       title = "Dataset (batch) axis: raw -> fixed-effect -> random-effect correction") +
+  labs(x = "PC1", y = "PC2") +
   base_pca()
 
 row_dis <- ggplot(pca, aes(PC1, PC2, colour = disease)) +
@@ -124,9 +123,9 @@ row_dis <- ggplot(pca, aes(PC1, PC2, colour = disease)) +
   facet_wrap(~ model, nrow = 1, scales = "free") +
   scale_colour_manual(values = c(Control = CTRL, Disease = masld_colors$nash), name = "Disease") +
   guides(colour = guide_legend(override.aes = list(size = 1.6, alpha = 1))) +
-  labs(x = "PC1", y = "PC2",
-       title = "Same projections coloured by disease (a minor axis ~0.9% of variance) - not expected to separate in PCA") +
+  labs(x = "PC1", y = "PC2") +
   base_pca()
+message("[caption] Same projections coloured by disease (a minor axis ~0.9% of variance) - not expected to separate in PCA")
 
 # --- (3) metafor: per-cohort PCAs (no pooled matrix) ------------------------
 percoh <- rbindlist(lapply(MEGA, function(d) {
@@ -147,12 +146,12 @@ row_meta <- ggplot(percoh, aes(PC1, PC2, colour = disease)) +
   geom_point(size = 0.4, alpha = 0.7) +
   facet_wrap(~ cohort, nrow = 1, scales = "free") +
   geom_text(data = pc_ann, aes(x = -Inf, y = Inf, label = lab), inherit.aes = FALSE,
-            hjust = -0.08, vjust = 1.4, size = 2.0, colour = "grey30") +
+            hjust = -0.08, vjust = 1.4, size = GEOM_TEXT_6PT, colour = "black") +
   scale_colour_manual(values = c(Control = CTRL, Disease = masld_colors$nash), name = "Disease") +
   guides(colour = guide_legend(override.aes = list(size = 1.6, alpha = 1))) +
-  labs(x = "PC1", y = "PC2",
-       title = "metafor: RAW within-cohort PCA (no cross-cohort batch to remove) - it never pools the samples, so there is no joint corrected matrix") +
+  labs(x = "PC1", y = "PC2") +
   base_pca()
+message("[caption] metafor: RAW within-cohort PCA (no cross-cohort batch to remove) - it never pools the samples, so there is no joint corrected matrix")
 
 # =============================================================================
 # Loadings analysis: what genes drive PC1/PC2 in the corrected space?
@@ -185,12 +184,11 @@ pLoad <- ggplot(top_loads, aes(loading, gene_fac, fill = loading > 0)) +
   geom_vline(xintercept = 0, linewidth = 0.3, colour = "grey50") +
   facet_wrap(~ pc, scales = "free") +
   scale_fill_manual(values = c("TRUE" = masld_colors$nash, "FALSE" = CTRL), guide = "none") +
-  labs(x = "PC loading", y = NULL,
-       title = sprintf("Top 30 genes driving PC1 (%.1f%% var) and PC2 (%.1f%% var) after batch correction",
-                       pve_load[1], pve_load[2]),
-       subtitle = "Positive loading = pushes samples rightward/upward on that PC; negative = opposite") +
+  labs(x = "PC loading", y = NULL) +
   theme_masld(base_size = 7) +
-  theme(axis.text.y = element_text(size = 5.5), strip.text = element_text(size = 7, face = "bold"))
+  theme(axis.text.y = element_text(size = 6), strip.text = element_text(size = 6, face = "plain"))
+message(sprintf("[caption] Top 30 genes driving PC1 (%.1f%% var) and PC2 (%.1f%% var) after batch correction. Positive loading = pushes samples rightward/upward on that PC; negative = opposite",
+                pve_load[1], pve_load[2]))
 
 # --- pathway enrichment: hypergeometric against MSigDB Hallmark --------------
 hall <- as.data.table(msigdbr(species = "Homo sapiens", collection = "H"))[, .(gs_name, gene_symbol)]
@@ -236,38 +234,33 @@ if (nrow(plot_enrich) > 0) {
     facet_wrap(~ pc, scales = "free_y", ncol = 1) +
     scale_colour_manual(values = c(positive = masld_colors$nash, negative = CTRL)) +
     scale_size_continuous(range = c(1.5, 4), name = "n genes") +
-    labs(x = "-log10(FDR)", y = NULL, colour = "Loading direction",
-         title = "Hallmark pathways enriched in top-200 PC loadings (FDR < 0.25)") +
+    labs(x = "-log10(FDR)", y = NULL, colour = "Loading direction") +
     theme_masld(base_size = 7) +
-    theme(axis.text.y = element_text(size = 5.5), strip.text = element_text(size = 7, face = "bold"))
+    theme(axis.text.y = element_text(size = 6), strip.text = element_text(size = 6, face = "plain"))
+  message("[caption] Hallmark pathways enriched in top-200 PC loadings (FDR < 0.25)")
 } else {
-  pEnrich <- ggplot() + annotate("text", 0, 0, label = "No Hallmark pathways at FDR<0.25") +
+  pEnrich <- ggplot() + annotate("text", 0, 0, label = "No Hallmark pathways at FDR<0.25", size = GEOM_TEXT_6PT) +
     theme_void()
   cat("No significant Hallmark enrichments — top PC loadings are not pathway-structured\n")
 }
 
-fig_loads <- (pLoad / pEnrich) + plot_layout(heights = c(1.2, 1)) +
-  plot_annotation(title = "PC loadings: what genes drive the top PCs after batch correction",
-    theme = theme(plot.title = element_text(size = 9, face = "bold")))
-ggsave(file.path(OUT, "panelJ_loadings.pdf"), fig_loads,
-       width = 9.0, height = 10.0, device = cairo_pdf)
+fig_loads <- (pLoad / pEnrich) + plot_layout(heights = c(1.2, 1))
+message("[caption] PC loadings: what genes drive the top PCs after batch correction")
+ggsave(file.path(OUT, "loadings.pdf"), fig_loads,
+       width = fig_full_width, height = 7.88, device = cairo_pdf)
 fwrite(loads[, .(gene, gene_name, PC1, PC2, PC3, PC4)],
-       file.path(OUT, "panelJ_loadings_data.csv"))
-fwrite(sig_enrich, file.path(OUT, "panelJ_loadings_enrichment.csv"))
-cat("Wrote panelJ_loadings.pdf\n")
+       file.path(OUT, "loadings_data.csv"))
+fwrite(sig_enrich, file.path(OUT, "loadings_enrichment.csv"))
+cat("Wrote loadings.pdf\n")
 
 fig <- (row_cohort / row_dis / row_meta) +
-  plot_layout(heights = c(1, 1, 1)) +
-  plot_annotation(
-    title = "Batch handling of the pooled mega samples, per DE method",
-    subtitle = sprintf("Top-2,000 most-variable log2-CPM; %d samples, 5 control-bearing mega cohorts. Fixed-effect = limma::removeBatchEffect (DESeq2 ~dataset); random-effect = per-gene lme4 (1|dataset) BLUP removal (dream). Disease is ~0.9%% of expression variance (vs dataset ~23%%) - never a dominant PC, so it does not separate in PCA by ANY method (PCA = batch diagnostic, not a disease classifier; for supervised disease separation see panelK).",
-                       ncol(dge)),
-    theme = theme(plot.title = element_text(size = 9.5, face = "bold"),
-                  plot.subtitle = element_text(size = 6.2, colour = "grey35")))
+  plot_layout(heights = c(1, 1, 1))
+message(sprintf("[caption] Batch handling of the pooled mega samples, per DE method. Top-2,000 most-variable log2-CPM; %d samples, 5 control-bearing mega cohorts. Fixed-effect = limma::removeBatchEffect (DESeq2 ~dataset); random-effect = per-gene lme4 (1|dataset) BLUP removal (dream). Disease is ~0.9%% of expression variance (vs dataset ~23%%) - never a dominant PC, so it does not separate in PCA by ANY method (PCA = batch diagnostic, not a disease classifier; for supervised disease separation see supervised_disease.pdf).",
+                ncol(dge)))
 
-ggsave(file.path(OUT, "panelJ_batch_model_pca.pdf"), fig,
-       width = 9.0, height = 8.2, device = cairo_pdf)
+ggsave(file.path(OUT, "batch_model_pca.pdf"), fig,
+       width = fig_full_width, height = 6.46, device = cairo_pdf)
 fwrite(pca[, .(sample_id, dataset, cohort, disease, model, PC1, PC2)],
-       file.path(OUT, "panelJ_batch_model_pca_data.csv"))
-cat("Wrote panelJ_batch_model_pca.pdf\n")
+       file.path(OUT, "batch_model_pca_data.csv"))
+cat("Wrote batch_model_pca.pdf\n")
 print(ann)

@@ -26,19 +26,17 @@ p <- ggplot(data.table(I2 = i2), aes(I2)) +
   geom_vline(xintercept = med, colour = "#D6604D", linewidth = 0.5) +
   annotate("text", x = c(12.5, 37.5, 62.5, 87.5), y = Inf,
            label = c("low", "moderate", "substantial", "considerable"),
-           vjust = 1.6, size = 2.0, colour = "grey45") +
+           vjust = 1.6, size = GEOM_TEXT_6PT, colour = "grey45") +
   annotate("text", x = med, y = Inf, label = sprintf("median %.0f%%", med),
-           vjust = 3.2, hjust = -0.08, size = 2.4, colour = "#D6604D", fontface = "bold") +
+           vjust = 3.2, hjust = -0.08, size = GEOM_TEXT_6PT, colour = "#D6604D", fontface = "plain") +
   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 25), expand = c(0, 0)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-  labs(x = expression(I^2 ~ "(%)"), y = "Genes",
-       title = "Cross-cohort heterogeneity at K=5",
-       subtitle = sprintf("%s genes | median I² %.0f%% | %.0f%% >50%% | %.0f%% >75%%  (genuine, not estimand)",
-                          format(length(i2), big.mark = ","), med, p50, p75)) +
-  theme_masld(base_size = 7) +
-  theme(plot.subtitle = element_text(size = 6, colour = "grey40"))
+  labs(x = expression(I^2 ~ "(%)"), y = "Genes") +
+  theme_masld(base_size = 6)
 
-ggsave(file.path(OUT, "panelE_i2_distribution.pdf"), p,
+message(sprintf("[caption] Cross-cohort heterogeneity at K=5 | %s genes | median I2 %.0f%% | %.0f%% >50%% | %.0f%% >75%% (genuine, not estimand)",
+                format(length(i2), big.mark = ","), med, p50, p75))
+ggsave(file.path(OUT, "i2_distribution.pdf"), p,
        width = 4.6, height = 3.0, useDingbats = FALSE)
-cat(sprintf("Wrote panelE_i2_distribution.pdf | n=%d median=%.1f%% >50=%.1f%% >75=%.1f%%\n",
+cat(sprintf("Wrote i2_distribution.pdf | n=%d median=%.1f%% >50=%.1f%% >75=%.1f%%\n",
             length(i2), med, p50, p75))

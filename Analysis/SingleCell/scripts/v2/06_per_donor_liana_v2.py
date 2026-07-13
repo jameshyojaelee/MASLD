@@ -12,9 +12,33 @@ full v2 atlas:
 
 A pure hepatocyte atlas (from Agent 3) is NOT sufficient for CCC.
 
+PSEUDOREPLICATION FIX (2026-07-12) — DONOR COLLAPSE
+  obs["sample"] in the v2 atlas is a SEQUENCING RUN (SRR / GSM), not a
+  biological donor. Five* datasets carry multiple runs per donor; the four
+  that survive LIANA gating here are:
+    GSE244832  117 runs ->  18 donors  (SRR-keyed; 82 present)
+    GSE202379   67 runs ->  46 donors  (SRR-keyed; 60 present)
+    GSE185477   21 runs ->   3 donors  (SRR-keyed; 21 present)
+    GSE136103   20 GSMs ->  10 donors  (GSM-keyed; CD45 sort fractions)
+  Previously this script ran LIANA once per RUN, so those datasets contributed
+  2-8x pseudo-independent points to every downstream per-donor statistic (the
+  stage LMM, the Fig3H L-R trajectory heatmap). We now POOL the cells across
+  all runs of a true donor into one AnnData subset and run LIANA ONCE per true
+  donor -- the single-cell analog of the raw-count pooling in the bulk
+  lib_donor_collapse: for single cells we take the UNION of the donor's cells
+  (each cell is its own observation) rather than summing counts. All other
+  datasets are 1 run = 1 donor and pass through unchanged. Donor IDs are
+  dataset-prefixed (e.g. "GSE202379_P3") via data/{GSE}/metadata/
+  donor_pairing.csv. This mirrors the v1 fix in 345_per_donor_liana.py.
+
+  Outputs go to a NEW dir (per_donor_lr_v2_dc) so the run-level "before"
+  artifacts (per_donor_lr_v2/, all_donor_lr_scores_v2.tsv.gz) are preserved
+  untouched for before/after comparison. The team lead promotes the _dc
+  outputs after review.
+
 Outputs:
-  Analysis/SingleCell/results_gpu_v2_phase05/ccc/stage_trajectory_v2/per_donor_lr_v2/{sample}_lr_scores.parquet
-  + a lineage_cell_counts_v2.tsv sidecar (donor x lineage) written once
+  Analysis/SingleCell/results_gpu_v2_phase05/ccc/stage_trajectory_v2/per_donor_lr_v2_dc/{donor}_lr_scores.parquet
+  + a lineage_cell_counts_v2_dc.tsv sidecar (donor x lineage) written once
 """
 
 from __future__ import annotations
@@ -61,8 +85,19 @@ V2_STAGE_DIR = (
     PROJECT_ROOT
     / "Analysis/SingleCell/results_gpu_v2_phase05/ccc/stage_trajectory_v2"
 )
-OUT_DIR = V2_STAGE_DIR / "per_donor_lr_v2"
-COUNTS_TSV = V2_STAGE_DIR / "lineage_cell_counts_v2.tsv"
+# Donor-collapsed outputs (do NOT clobber the run-level per_donor_lr_v2/).
+OUT_DIR = Path(
+    os.environ.get("PER_DONOR_LR_DIR", str(V2_STAGE_DIR / "per_donor_lr_v2_dc"))
+)
+COUNTS_TSV = V2_STAGE_DIR / "lineage_cell_counts_v2_dc.tsv"
+
+# Datasets whose obs["sample"] is a sequencing RUN, not a biological donor.
+DONOR_PAIRING_FILES = {
+    "GSE244832": PROJECT_ROOT / "data/GSE244832/metadata/donor_pairing.csv",
+    "GSE202379": PROJECT_ROOT / "data/GSE202379/metadata/donor_pairing.csv",
+    "GSE185477": PROJECT_ROOT / "data/GSE185477/metadata/donor_pairing.csv",
+    "GSE136103": PROJECT_ROOT / "data/GSE136103/metadata/donor_pairing.csv",
+}
 
 KEEP_LINEAGES = {
     "Hepatocytes",
@@ -91,24 +126,81 @@ def resolve_atlas() -> Path:
     )
 
 
-def get_donor_roster() -> pd.DataFrame:
-    """Prefer v2 donor metadata; fall back to v1 if not yet built."""
+def build_srr_to_donor() -> dict:
+    """Map each run ID (SRR or GSM) -> dataset-prefixed biological donor ID.
+
+    Reads data/{GSE}/metadata/donor_pairing.csv (column `rna_srrs` is a
+    semicolon-joined list of the runs -- SRR or GSM -- belonging to one
+    biological donor). Runs not covered pass through as their own donor
+    upstream (see build_donor_roster).
+    """
+    m = {}
+    for ds, fp in DONOR_PAIRING_FILES.items():
+        if not fp.exists():
+            print(
+                f"[srr-map] WARNING donor_pairing.csv missing for {ds}: {fp}",
+                file=sys.stderr,
+            )
+            continue
+        dp = pd.read_csv(fp, dtype=str)
+        for _, r in dp.iterrows():
+            donor_id = f"{ds}_{r['donor_id']}"
+            for srr in str(r["rna_srrs"]).split(";"):
+                srr = srr.strip()
+                if srr:
+                    m[srr] = donor_id
+    return m
+
+
+def get_run_roster() -> pd.DataFrame:
+    """Prefer v2 donor metadata; fall back to v1 if not yet built.
+
+    Returns the RUN-level roster (obs["sample"] == a sequencing run).
+    """
     if DONOR_META_V2.exists():
-        roster = pd.read_csv(DONOR_META_V2, sep="\t")
-        print(f"[roster] using v2 donor metadata: {len(roster)} donors")
+        roster = pd.read_csv(DONOR_META_V2, sep="\t", dtype={"sample": str})
+        print(f"[roster] using v2 donor metadata: {len(roster)} run-level samples")
     else:
-        roster = pd.read_csv(DONOR_META_V1, sep="\t")
-        print(f"[roster] v2 missing; falling back to v1: {len(roster)} donors")
+        roster = pd.read_csv(DONOR_META_V1, sep="\t", dtype={"sample": str})
+        print(
+            f"[roster] v2 missing; falling back to v1: {len(roster)} run-level samples"
+        )
     return roster
 
 
-def run_donor(adata_full: ad.AnnData, sample: str) -> dict:
+def build_donor_roster() -> list:
+    """Return an ordered list of (donor_id, dataset, [member_samples]).
+
+    The analysis universe is the run-level donor_metadata (obs["sample"]).
+    Runs belonging to the same biological donor (per donor_pairing.csv) are
+    grouped; all other samples become their own donor. Order is deterministic
+    (sorted by donor_id) so SLURM array slicing is stable across tasks.
+    """
+    dm = get_run_roster()
+    srr2donor = build_srr_to_donor()
+    dm["biological_donor"] = dm["sample"].map(lambda s: srr2donor.get(s, s))
+    roster = []
+    for donor_id, grp in dm.groupby("biological_donor"):
+        member_samples = grp["sample"].tolist()
+        dataset = str(grp["dataset"].iloc[0]) if "dataset" in grp.columns else "NA"
+        roster.append((donor_id, dataset, member_samples))
+    roster.sort(key=lambda x: x[0])
+    return roster
+
+
+def run_donor(
+    adata_full: ad.AnnData, donor_id: str, dataset: str, member_samples: list
+) -> dict:
+    """Run LIANA once for one TRUE donor, pooling cells across its runs."""
     t0 = time.time()
-    sub = adata_full[adata_full.obs["sample"] == sample].to_memory()
+    member_set = set(member_samples)
+    sub = adata_full[adata_full.obs["sample"].isin(member_set)].to_memory()
+    sample = donor_id  # output key = biological donor
     if "cell_type" not in sub.obs.columns:
         return {
             "sample": sample,
             "status": "missing_cell_type_col",
+            "n_runs": len(member_samples),
             "n_cells": int(sub.n_obs),
             "elapsed_s": time.time() - t0,
         }
@@ -117,6 +209,7 @@ def run_donor(adata_full: ad.AnnData, sample: str) -> dict:
         return {
             "sample": sample,
             "status": "skipped_total_cells",
+            "n_runs": len(member_samples),
             "n_cells": int(sub.n_obs),
             "elapsed_s": time.time() - t0,
         }
@@ -126,6 +219,7 @@ def run_donor(adata_full: ad.AnnData, sample: str) -> dict:
         return {
             "sample": sample,
             "status": "skipped_lineages",
+            "n_runs": len(member_samples),
             "n_cells": int(sub.n_obs),
             "n_lineages": len(keep_cts),
             "elapsed_s": time.time() - t0,
@@ -151,6 +245,7 @@ def run_donor(adata_full: ad.AnnData, sample: str) -> dict:
         return {
             "sample": sample,
             "status": f"liana_failed:{type(e).__name__}:{e}",
+            "n_runs": len(member_samples),
             "n_cells": int(sub.n_obs),
             "elapsed_s": time.time() - t0,
         }
@@ -160,16 +255,21 @@ def run_donor(adata_full: ad.AnnData, sample: str) -> dict:
         return {
             "sample": sample,
             "status": "empty_result",
+            "n_runs": len(member_samples),
             "n_cells": int(sub.n_obs),
             "elapsed_s": time.time() - t0,
         }
     res = res.copy()
-    res["sample"] = sample
+    res["sample"] = sample  # biological donor ID (join key)
+    res["biological_donor"] = donor_id
+    res["dataset"] = dataset
     ct_counts = counts.to_dict()
     res["n_source_cells"] = res["source"].map(ct_counts)
     res["n_target_cells"] = res["target"].map(ct_counts)
     keep_cols = [
         "sample",
+        "biological_donor",
+        "dataset",
         "source",
         "target",
         "ligand_complex",
@@ -185,6 +285,7 @@ def run_donor(adata_full: ad.AnnData, sample: str) -> dict:
     return {
         "sample": sample,
         "status": "ok",
+        "n_runs": len(member_samples),
         "n_cells": int(sub.n_obs),
         "n_lineages": len(keep_cts),
         "n_lr": int(len(res)),
@@ -213,8 +314,17 @@ def main():
         f"obs cols include cell_type={'cell_type' in adata_full.obs.columns}"
     )
 
-    roster = get_donor_roster()
-    all_donors = roster["sample"].astype(str).tolist()
+    roster = build_donor_roster()
+    roster_by_id = {
+        donor_id: (dataset, members) for donor_id, dataset, members in roster
+    }
+    all_donors = [d for d, _, _ in roster]
+    n_multi = sum(1 for _, _, m in roster if len(m) > 1)
+    print(
+        f"[roster] {len(roster)} TRUE donors "
+        f"(from {sum(len(m) for _, _, m in roster)} run-level samples); "
+        f"{n_multi} donors pool >1 run"
+    )
 
     if args.donor:
         donors = [args.donor]
@@ -234,13 +344,17 @@ def main():
     print(f"[main] processing {len(donors)} donors")
 
     if args.write_counts and "cell_type" in adata_full.obs.columns:
+        srr2donor = build_srr_to_donor()
         obs = adata_full.obs[["sample", "cell_type"]].copy()
+        obs["sample"] = obs["sample"].astype(str)
+        obs["biological_donor"] = obs["sample"].map(lambda s: srr2donor.get(s, s))
         obs = obs[obs["cell_type"].isin(KEEP_LINEAGES)]
         wide = (
-            obs.groupby(["sample", "cell_type"], observed=True)
+            obs.groupby(["biological_donor", "cell_type"], observed=True)
             .size()
             .unstack(fill_value=0)
             .reset_index()
+            .rename(columns={"biological_donor": "sample"})
         )
         wide.columns = [
             f"n_{c.replace(' ', '_')}" if c != "sample" else c
@@ -251,13 +365,15 @@ def main():
 
     log_rows = []
     for d in donors:
+        dataset, members = roster_by_id.get(d, ("NA", [d]))
         try:
-            row = run_donor(adata_full, d)
+            row = run_donor(adata_full, d, dataset, members)
         except Exception as e:
             row = {"sample": d, "status": f"unhandled:{type(e).__name__}:{e}"}
         print(
             f"[donor] {d}: {row.get('status')} "
-            f"({row.get('n_cells', '?')} cells, "
+            f"({row.get('n_runs', '?')} runs, "
+            f"{row.get('n_cells', '?')} cells, "
             f"{row.get('n_lr', '?')} LR, {row.get('elapsed_s', '?')} s)",
             flush=True,
         )

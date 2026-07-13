@@ -76,16 +76,57 @@ consensus <- merge(liana_agg, sq[, .(ligand, receptor,
                    by = c("ligand","receptor"), all = FALSE)
 message(sprintf("  LIANA ∩ squidpy spatial: %d LR pairs", nrow(consensus)))
 
+# --- A5 sign convention (CCC directional sign-inversion remediation) --------
+# CORRECTED CONVENTION (post-fix): liana_score_diff > 0 == stronger in MASLD.
+# This requires the producer (fig2_advanced_analyses.py, owned by team A6) to
+# emit score_diff = score_control - score_masld so that POSITIVE = MASLD-up,
+# bringing the LIANA axis into the SAME orientation as the squidpy
+# delta_mean_expr (mean_masld - mean_healthy, 05b) and the COMMOT
+# total_communication_delta (steatotic - healthy) axes used below — both of
+# which are already positive = MASLD-up.
+#
+# HISTORY OF THE BUG: the magnitude_rank score is rank-based (LOWER rank =
+# STRONGER interaction). The pre-fix producer wrote score_diff = score_masld -
+# score_control, so a NEGATIVE diff meant lower MASLD rank = stronger in MASLD.
+# Mapping `score_diff > 0 -> MASLD_up` against that pre-fix CSV therefore
+# selected the WEAKER-in-MASLD (Control-enriched) pairs and mislabeled them
+# "MASLD_up" — the 6.9:1 skew toward score_diff>0 systematically inverted the
+# disease direction. The fix flips the sign ONCE at the producer boundary
+# (team A6) so this consumer's `> 0 -> MASLD_up` mapping is correct.
+#
+# SIGN GUARD (distributional, robust): the score_diff sign is pinned at the
+# producer (fig2_advanced_analyses.py) by a formula-based regression assert. Here
+# we additionally detect a STALE pre-fix CSV: post-fix the producer emits
+# score_diff = score_control - score_masld, and because magnitude_rank saturation
+# makes most pairs weaker-in-MASLD, the corrected axis is skewed NEGATIVE on
+# aggregate (mean < 0); a stale pre-fix CSV (score_masld - score_control) would be
+# skewed POSITIVE. A single-pair BIOLOGICAL anchor is deliberately NOT used:
+# magnitude_rank is normalized WITHIN each condition, so canonical secreted
+# ligands (SPP1/TGFB1/TIMP1) are rank-saturated and do NOT robustly read MASLD-up
+# by this metric (only ECM-integrin axes do). Per the remediation roadmap, treat
+# these pooled-LIANA directional calls as VIZ-only and source quantitative
+# directional claims from the donor-level mixed-model stack (345 -> 346 -> 350).
+.liana_mean <- mean(liana_agg$liana_score_diff, na.rm = TRUE)
+if (!is.na(.liana_mean) && .liana_mean > 0.05) {
+  stop(sprintf(paste0("[A5 sign guard] mean liana_score_diff = %.3f > 0, i.e. the ",
+       "LIANA differential CSV looks PRE-FIX (score_masld - score_control). Re-run ",
+       "the producer fig2_advanced_analyses.py (score_diff = score_control - ",
+       "score_masld) before this consumer."), .liana_mean))
+}
+message(sprintf("  [A5 sign guard] mean liana_score_diff = %.3f (<= 0 as expected post-fix).",
+                .liana_mean))
+
 # Annotate
 # F113/F118: three-level direction. score_diff == 0 carries no direction (no
 # differential), so it is 'no_change' and excluded from concordance — assigning
 # it MASLD_down (the old fifelse) inflated one margin. The 'both_concordant'
-# rate is NOT a standalone validation rate: LIANA score_diff is overwhelmingly
-# positive and squidpy delta_mean_expr overwhelmingly negative, so the two
-# marginals are skewed in OPPOSITE directions and concordance is suppressed by
-# construction. We therefore benchmark the observed concordant fraction against
-# a label-permutation null (shuffle scRNA_direction within the consensus set)
-# and report both margins so the asymmetry is visible.
+# rate is NOT a standalone validation rate: under the corrected convention the
+# LIANA axis is heavily skewed toward MASLD_down (the bulk of pairs are weaker
+# in MASLD) while squidpy delta_mean_expr is skewed toward spatial_up, so the
+# two marginals are skewed in OPPOSITE directions and concordance is suppressed
+# by construction. We therefore benchmark the observed concordant fraction
+# against a label-permutation null (shuffle scRNA_direction within the consensus
+# set) and report both margins so the asymmetry is visible.
 consensus[, scRNA_direction := fifelse(liana_score_diff > 0, "MASLD_up",
                                 fifelse(liana_score_diff < 0, "MASLD_down", "no_change"))]
 consensus[, sq_direction := fifelse(sq_delta_expr > 0, "spatial_up",

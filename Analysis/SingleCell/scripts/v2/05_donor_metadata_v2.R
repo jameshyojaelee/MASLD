@@ -260,3 +260,77 @@ cat("\nDisease stage distribution:\n")
 print(donor[, .N, by = disease_stage_coarse])
 cat("\nF_stage_source_v2 distribution:\n")
 print(donor[, .N, by = F_stage_source_v2])
+
+# ============================================================================
+# 11. DONOR-COLLAPSE (pseudoreplication fix, 2026-07-12)
+#
+# obs["sample"] in the v2 atlas is a SEQUENCING RUN (SRR / GSM), not a
+# biological donor. The run-level donor_metadata_v2.tsv written above lets the
+# downstream stage-CCC chain (06/07/ccc_v3_panels) count runs as independent
+# donors -- pseudoreplication. We collapse runs -> biological donor here and
+# write a SECOND file keyed on the TRUE donor (sample := biological_donor),
+# matching the LIANA donor-collapse in 06_per_donor_liana_v2.py and mirroring
+# the v1 fix (345/346). The run-level file above is left intact for before/
+# after comparison.
+# ============================================================================
+DONOR_PAIRING <- c(
+  GSE244832 = file.path(BASE, "data/GSE244832/metadata/donor_pairing.csv"),
+  GSE202379 = file.path(BASE, "data/GSE202379/metadata/donor_pairing.csv"),
+  GSE185477 = file.path(BASE, "data/GSE185477/metadata/donor_pairing.csv"),
+  GSE136103 = file.path(BASE, "data/GSE136103/metadata/donor_pairing.csv")
+)
+srr2donor <- new.env(parent = emptyenv())
+for (ds in names(DONOR_PAIRING)) {
+  fp <- DONOR_PAIRING[[ds]]
+  if (!file.exists(fp)) {
+    cat(sprintf("[collapse] WARNING donor_pairing.csv missing for %s: %s\n", ds, fp))
+    next
+  }
+  dp <- fread(fp, colClasses = "character")
+  for (i in seq_len(nrow(dp))) {
+    did <- paste0(ds, "_", dp$donor_id[i])
+    runs <- trimws(strsplit(dp$rna_srrs[i], ";", fixed = TRUE)[[1]])
+    runs <- runs[nzchar(runs)]
+    for (r in runs) assign(r, did, envir = srr2donor)
+  }
+}
+map_donor <- function(s) {
+  s <- as.character(s)
+  vapply(s, function(x) if (exists(x, envir = srr2donor, inherits = FALSE))
+    get(x, envir = srr2donor) else x, character(1))
+}
+donor[, biological_donor := map_donor(sample)]
+
+# Report within-donor stage conflicts (should be zero; runs of a donor share a stage)
+conflicts <- donor[, .(n_stage = uniqueN(disease_stage_coarse)),
+                   by = biological_donor][n_stage > 1]
+if (nrow(conflicts) > 0) {
+  cat(sprintf("[collapse] WARNING %d donors carry >1 disease_stage_coarse across runs:\n",
+              nrow(conflicts)))
+  print(conflicts)
+} else {
+  cat("[collapse] no within-donor disease_stage_coarse conflicts\n")
+}
+
+first_non_na <- function(x) { x <- x[!is.na(x)]; if (length(x)) x[[1]] else x[NA_integer_] }
+num_cols <- setdiff(names(donor)[vapply(donor, is.numeric, logical(1))],
+                    "biological_donor")
+chr_cols <- setdiff(names(donor), c(num_cols, "biological_donor"))
+# numeric covariates -> donor mean (donor-invariant ones are unchanged);
+# categorical -> first non-NA (stage/dataset/F-stage source are donor-invariant)
+dc_num <- if (length(num_cols))
+  donor[, lapply(.SD, function(x) { m <- mean(x, na.rm = TRUE);
+        if (is.nan(m)) NA_real_ else m }),
+        by = biological_donor, .SDcols = num_cols] else
+  unique(donor[, .(biological_donor)])
+dc_chr <- donor[, lapply(.SD, first_non_na),
+                by = biological_donor, .SDcols = chr_cols]
+dc <- merge(dc_num, dc_chr, by = "biological_donor")
+dc[, sample := biological_donor]          # key on TRUE donor for downstream merges
+setcolorder(dc, c("sample", setdiff(names(dc), "sample")))
+OUT_DC <- file.path(OUT_DIR, "donor_metadata_v2_dc.tsv")
+fwrite(dc, OUT_DC, sep = "\t")
+cat(sprintf("\n[collapse] %d run-level rows -> %d donor-level rows -> %s\n",
+            nrow(donor), nrow(dc), OUT_DC))
+cat("\nDonor-collapsed disease stage distribution:\n")
+print(dc[, .N, by = disease_stage_coarse])

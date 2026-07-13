@@ -17,6 +17,15 @@ suppressPackageStartupMessages({
   library(patchwork)
 })
 
+# RETIRED 2026-07-07: both outputs of this script (panel_expression_pip_scatter.pdf,
+# panel_expression_coloc_scatter.pdf) are expression×COLOC/INTACT orthogonality scatters
+# that are NOT part of the Fig 2 (genetics) or FigS2 set — they were stale leftovers in
+# fig2_genetics/panels/ (the FIG3_DIR constant resolves there; INTACT was also retired
+# 2026-07-04). Retired wholesale (early quit) so they are never regenerated. Plotting code
+# kept for provenance.
+message("[fig4_expression_pip_scatter] RETIRED 2026-07-07 — outputs not in Fig2/FigS2 set; no panels written.")
+quit(save = "no", status = 0)
+
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
@@ -118,7 +127,7 @@ cat(sprintf("  MI = %.4f bits, Spearman rho = %.4f\n", mi_value, spearman_rho))
 # 4. Define quadrants and labels
 # ===========================================================================
 # Thresholds
-deg_thresh <- 0.5  # |logFC| > 0.5
+deg_thresh <- 0.3  # |logFC| > 0.3 (canonical effect-size floor, 2026-06-27)
 coloc_thresh <- 0.9  # PP.H4 > 0.9 (stringent)
 
 scatter[, quadrant := fcase(
@@ -138,7 +147,7 @@ priority <- c("PNPLA3", "TM6SF2", "HSD17B13", "MBOAT7", "GCKR",
               "THRB", "NR1H4", "MARC1")
 
 # Top convergent: high PP.H4 AND strong |logFC| — only label the best
-top_convergent <- scatter[coloc_pp4 > 0.9 & abs(logFC) > 0.5][
+top_convergent <- scatter[coloc_pp4 > 0.9 & abs(logFC) > 0.3][
   order(-coloc_pp4 * abs(logFC))][1:8]$gene_symbol
 
 label_genes <- unique(c(priority, top_convergent))
@@ -175,7 +184,7 @@ p_main <- ggplot(scatter, aes(x = logFC, y = coloc_pp4)) +
   geom_text_repel(
     data = scatter[show_label == TRUE],
     aes(label = gene_symbol),
-    size = 2, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     max.overlaps = 15, segment.size = 0.2,
     min.segment.length = 0.1, box.padding = 0.5,
     point.padding = 0.3, force = 3, force_pull = 0.5,
@@ -199,13 +208,13 @@ p_top <- ggplot(scatter, aes(x = logFC, fill = coloc_pp4 > coloc_thresh)) +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(),
         axis.ticks.x = element_blank(), axis.line.x = element_blank(),
         legend.position = c(0.02, 0.9), legend.justification = c(0, 1),
-        legend.key.size = unit(0.2, "cm"), legend.text = element_text(size = 5),
+        legend.key.size = unit(0.2, "cm"), legend.text = element_text(size = 6),
         legend.background = element_blank(),
         plot.margin = margin(2, 2, 0, 2))
 
 # Marginal right: proportion of DEGs at each PP.H4 bin (not raw counts)
 # Raw histogram fails because DEG counts are dwarfed by non-DEGs at low PP.H4
-scatter[, is_deg := padj < 0.1 & abs(logFC) > 0.5]
+scatter[, is_deg := padj < 0.1 & abs(logFC) > 0.3]
 scatter[, pp4_bin := cut(coloc_pp4, breaks = seq(0, 1, 0.05), include.lowest = TRUE)]
 pp4_prop <- scatter[!is.na(pp4_bin), .(
   prop_deg = mean(is_deg, na.rm = TRUE),
@@ -223,7 +232,7 @@ p_right <- ggplot(pp4_prop, aes(x = pp4_mid, y = prop_deg)) +
   theme_masld(base_size = 7) +
   theme(axis.title.y = element_blank(), axis.text.y = element_blank(),
         axis.ticks.y = element_blank(), axis.line.y = element_blank(),
-        axis.title.x = element_text(size = 5.5),
+        axis.title.x = element_text(size = 6),
         plot.margin = margin(2, 2, 2, 0))
 
 # Assemble with patchwork — wider marginals (2:5 ratio instead of 1:4)
@@ -272,7 +281,7 @@ if (has_susie && has_intact) {
     geom_text_repel(
       data = scatter_susie[gene_symbol %in% label_genes & susie_pp4 > 0.5],
       aes(label = gene_symbol), color = "black",
-      size = 2, fontface = "italic",
+      size = GEOM_TEXT_6PT, fontface = "italic",
       max.overlaps = 12, segment.size = 0.2,
       box.padding = 0.5, force = 3, seed = 42
     ) +
@@ -280,7 +289,7 @@ if (has_susie && has_intact) {
          y = "SuSiE-COLOC PP.H4 (fine-mapping)") +
     theme_masld(base_size = 7) +
     theme(legend.position = "bottom", legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 6))
 
   # Right: INTACT score × logFC
   scatter_intact <- scatter[!is.na(intact_ct)]
@@ -305,7 +314,7 @@ if (has_susie && has_intact) {
     geom_text_repel(
       data = scatter_intact[gene_symbol %in% label_genes & intact_ct > 0.3],
       aes(label = gene_symbol), color = "black",
-      size = 2, fontface = "italic",
+      size = GEOM_TEXT_6PT, fontface = "italic",
       max.overlaps = 12, segment.size = 0.2,
       box.padding = 0.5, force = 3, seed = 42
     ) +
@@ -313,7 +322,7 @@ if (has_susie && has_intact) {
          y = "Multi-INTACT score (bulk TWAS + scTWAS × COLOC)") +
     theme_masld(base_size = 7) +
     theme(legend.position = "bottom", legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 6))
 
   # Combined side-by-side
   p_combined <- p_susie + p_intact +

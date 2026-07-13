@@ -14,6 +14,6 @@ eval "$(/gpfs/commons/home/jameslee/.local/bin/micromamba shell hook --shell bas
 micromamba activate rnaseq
 
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
-mkdir -p logs figures/main/fig3_regulatory_architecture/panels
+mkdir -p logs figures/main/fig2_genetics/panels
 
 Rscript scripts/figures/fig3_panel_L_evidence_funnel.R

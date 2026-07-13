@@ -2,6 +2,8 @@ import { create } from "zustand";
 import type { AppState } from "./types";
 
 export const useAppStore = create<AppState>((set) => ({
+  // Transient default; the pre-hydration script + ThemeToggle set the real
+  // theme (dark-first) from localStorage on mount.
   theme: "light",
   setTheme: (theme) => {
     if (typeof document !== "undefined") {

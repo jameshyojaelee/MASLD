@@ -7,7 +7,9 @@
 #SBATCH --output=logs/steatosis_bmi_sensitivity_%j.log
 #SBATCH --error=logs/steatosis_bmi_sensitivity_%j.log
 
-set -euo pipefail
+# NOTE: no `-u` (nounset) — micromamba/conda activate.d scripts (binutils ADDR2LINE)
+# reference unset vars and abort the job under set -u before Rscript runs.
+set -eo pipefail
 
 echo "=== Steatosis/BMI Sensitivity Analysis ==="
 echo "Job ID: ${SLURM_JOB_ID}"

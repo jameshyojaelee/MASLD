@@ -83,15 +83,15 @@ p <- ggplot(d, aes(x = deg_logFC, y = da_logFC)) +
   geom_point(colour = GRAY, alpha = 0.35, size = 0.5, shape = 16) +
   geom_point(data = label_dt, colour = MAG, size = 1.5, shape = 16) +
   geom_text_repel(data = label_dt, aes(label = symbol),
-                  size = 2.4, colour = "black",
+                  size = GEOM_TEXT_6PT, colour = "black",
                   segment.colour = "gray50", segment.size = 0.25,
                   min.segment.length = 0, box.padding = 0.4,
                   max.overlaps = Inf) +
   scale_x_continuous(limits = c(-x_lim, x_lim),
-                     name = expression(bold("Bulk RNA-seq  "*log[2]*"FC"))) +
+                     name = expression("Bulk RNA-seq  "*log[2]*"FC")) +
   scale_y_continuous(limits = c(-y_lim, y_lim),
-                     name = expression(bold("Hep ATAC  "*log[2]*"FC"))) +
-  theme_masld(base_size = 7) +
+                     name = expression("Hep ATAC  "*log[2]*"FC")) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(panel.grid = element_blank(),
         plot.margin = margin(6, 6, 4, 4))

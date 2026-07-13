@@ -72,7 +72,7 @@ unified <- merge(unified, nas_wide, by = "gene", all.x = TRUE)
 
 # Add disease-vs-control info if available
 if (!is.null(disease_cons)) {
-  dvc_cols <- intersect(names(disease_cons), c("gene", "dream_logFC", "dream_padj", "dream_sig"))
+  dvc_cols <- intersect(names(disease_cons), c("gene", "bulk_logFC", "bulk_padj", "bulk_sig"))
   if (length(dvc_cols) >= 2) {
     dvc <- disease_cons[, ..dvc_cols]
     setnames(dvc, setdiff(dvc_cols, "gene"), paste0("dvc_", setdiff(dvc_cols, "gene")))

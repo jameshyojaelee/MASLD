@@ -33,11 +33,11 @@ theme_pub <- theme_minimal(base_size = 11) +
         axis.ticks = element_line(colour = "black", linewidth = 0.3),
         legend.background = element_blank(), legend.key = element_blank(),
         strip.background  = element_blank(),
-        strip.text  = element_text(face = "bold", size = 10),
-        plot.title  = element_text(face = "bold", size = 12),
-        axis.title  = element_text(size = 10),
-        axis.text   = element_text(size = 9),
-        legend.text = element_text(size = 9),
+        strip.text  = element_text(face = "plain", size = 6),
+        plot.title  = element_text(face = "plain", size = 6),
+        axis.title  = element_text(size = 6),
+        axis.text   = element_text(size = 6),
+        legend.text = element_text(size = 6),
         plot.margin = margin(8, 10, 8, 8))
 theme_set(theme_pub)
 
@@ -116,7 +116,7 @@ message(sprintf("  DEGs with median TPM ≥ 1: %d / %d (%.1f%%)",
 tpm_filter_tbl <- data.table(
   gene      = can_in_dge,
   direction = ifelse(can_in_dge %in% can_up, "Up", "Down"),
-  dream_logFC = dream$logFC[match(can_in_dge, dream$gene)],
+  logFC       = dream$logFC[match(can_in_dge, dream$gene)],
   median_tpm  = round(median_tpm, 3),
   tpm_pass    = can_in_dge %in% tpm_pass
 )
@@ -143,8 +143,7 @@ p_lcpm <- ggplot(lcpm_long, aes(x = logcpm, fill = direction, color = direction)
   scale_color_manual(values = dir_colors, name = NULL) +
   scale_x_continuous(breaks = seq(-4, 14, 2)) +
   labs(x = "log\u2082CPM (per disease patient, per gene)",
-       y = "Density",
-       title = "log\u2082CPM") +
+       y = "Density") +
   theme(legend.position = "top",
         legend.key.size = unit(0.3, "cm"))
 
@@ -156,26 +155,21 @@ p_tpm <- ggplot(tpm_long, aes(x = log2tpm1, fill = direction, color = direction)
              color = "grey40", linewidth = 0.45) +
   annotate("text", x = log2(2) + 0.1, y = Inf,
            label = "TPM = 1", hjust = 0, vjust = 1.5,
-           size = 2.8, color = "grey40") +
+           size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_manual(values  = dir_colors, name = NULL) +
   scale_color_manual(values = dir_colors, name = NULL) +
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   labs(x = "log\u2082(TPM + 1) (per disease patient, per gene)",
-       y = "Density",
-       title = "log\u2082(TPM + 1)") +
+       y = "Density") +
   theme(legend.position = "none")
 
-p_combined <- p_lcpm + p_tpm +
-  plot_annotation(
-    title    = "Expression distribution of canonical MASLD DEGs — disease patients",
-    subtitle = sprintf("%d DEGs (padj < 0.05, |log\u2082FC| > 0.5)  \u00B7  %d disease patients",
-                       length(can_in_dge), length(dis_sids)),
-    theme = theme(plot.title    = element_text(face = "bold", size = 11),
-                  plot.subtitle = element_text(size = 9, color = "grey40"))
-  )
+message(sprintf("[caption] Expression distribution of canonical MASLD DEGs, disease patients: %d DEGs (padj < 0.05, |log\u2082FC| > 0.5)  \u00B7  %d disease patients",
+                length(can_in_dge), length(dis_sids)))
+
+p_combined <- p_lcpm + p_tpm
 
 ggsave(file.path(OUTDIR, "deg_expression_distribution.pdf"),
-       p_combined, width = 9, height = 4, device = cairo_pdf)
+       p_combined, width = 7.09, height = 3.15, device = cairo_pdf)
 message("Saved: deg_expression_distribution.pdf")
 
 message(sprintf("\nTPM filter summary: %d / %d DEGs pass median TPM >= 1",

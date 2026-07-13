@@ -64,7 +64,7 @@ message("  logFC SD: ", round(human_sc_logfc_sd, 3))
 
 # ---------------------------------------------------------------------------
 # 2. Load multi-evidence atlas (cross-species bridge)
-#    Has: human_symbol, ensembl_id, mouse_ortholog, dream_logFC,
+#    Has: human_symbol, ensembl_id, mouse_ortholog, bulk_logFC,
 #         mouse_meta_logFC, mouse_meta_padj
 # ---------------------------------------------------------------------------
 atlas_path <- file.path(BASE,
@@ -75,10 +75,11 @@ if (!file.exists(atlas_path)) {
 
 atlas <- fread(atlas_path,
                select = c("human_symbol", "ensembl_id", "mouse_ortholog",
-                          "dream_logFC", "dream_padj", "dream_tstat",
+                          "bulk_logFC", "bulk_padj", "bulk_tstat",
                           "mouse_meta_logFC", "mouse_meta_padj",
                           "n_diets_sig", "is_conserved",
                           "primary_category"))
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
 message("Multi-evidence atlas: ", nrow(atlas), " genes")
 message("  Columns: ", paste(colnames(atlas), collapse = ", "))
 
@@ -87,8 +88,8 @@ atlas_mouse_sd <- sd(atlas$mouse_meta_logFC, na.rm = TRUE)
 atlas[, mouse_bulk_logFC_norm := mouse_meta_logFC / atlas_mouse_sd]
 
 # Also compute SD-normalized human bulk logFC for comparison
-atlas_human_sd <- sd(atlas$dream_logFC, na.rm = TRUE)
-atlas[, human_bulk_logFC_norm := dream_logFC / atlas_human_sd]
+atlas_human_sd <- sd(atlas$bulk_logFC, na.rm = TRUE)
+atlas[, human_bulk_logFC_norm := bulk_logFC / atlas_human_sd]
 
 message("  Mouse bulk logFC SD: ", round(atlas_mouse_sd, 3))
 message("  Human bulk logFC SD: ", round(atlas_human_sd, 3))
@@ -102,7 +103,7 @@ merged <- merge(
   human_sc[, .(human_symbol, human_sc_logFC, human_sc_logFC_norm,
                human_sc_padj)],
   atlas[, .(human_symbol, ensembl_id, mouse_ortholog,
-            dream_logFC, human_bulk_logFC_norm,
+            bulk_logFC, human_bulk_logFC_norm,
             mouse_meta_logFC, mouse_bulk_logFC_norm,
             mouse_meta_padj, n_diets_sig, is_conserved,
             primary_category)],
@@ -218,7 +219,7 @@ rho_main <- plot_scatter(
 
 # Supplementary: human bulk vs mouse bulk (both from atlas)
 plot_scatter(
-  df       = merged[!is.na(dream_logFC) & !is.na(mouse_meta_logFC)],
+  df       = merged[!is.na(bulk_logFC) & !is.na(mouse_meta_logFC)],
   x_col    = "human_bulk_logFC_norm",
   y_col    = "mouse_bulk_logFC_norm",
   x_label  = "Human bulk dream logFC (SD-normalized)",

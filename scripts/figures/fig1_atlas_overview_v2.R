@@ -39,17 +39,17 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG1_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
-# ---- Cohort name map (first author) ----
+# ---- Cohort name map (accession) ----
 STUDY_NAMES <- c(
-  GSE126848   = "Suppli",
-  GSE130970   = "Hoang",
-  GSE135251   = "Govaere",
-  GSE162694   = "Bril",
-  GSE167523   = "Pantano",
-  GSE174478   = "Kawamura",
-  GSE193066   = "Hoshida",
-  GSE213621   = "Chen",
-  GSE240729   = "Verschuren"
+  GSE126848   = "GSE126848",
+  GSE130970   = "GSE130970",
+  GSE135251   = "GSE135251",
+  GSE162694   = "GSE162694",
+  GSE167523   = "GSE167523",
+  GSE174478   = "GSE174478",
+  GSE193066   = "GSE193066",
+  GSE213621   = "GSE213621",
+  GSE240729   = "GSE240729"
 )
 # PRJNA512027 (Gerhard 2018) excluded from cohort presentation: L0/S0
 # library-prep batch perfectly confounded with diagnosis (all 34 controls
@@ -125,7 +125,7 @@ p_b <- ggplot(tm, aes(x = N, y = author_label, fill = stage)) +
   geom_text(data = tm[N >= 15],
             aes(label = N),
             position = position_stack(vjust = 0.5),
-            color = "white", size = PUB_GEOM_TEXT, fontface = "bold") +
+            color = "white", size = PUB_GEOM_TEXT, fontface = "plain") +
   scale_fill_manual(values = stage_palette,
                     name = "NAS-harmonised\ndiagnosis",
                     drop = FALSE,
@@ -138,11 +138,11 @@ p_b <- ggplot(tm, aes(x = N, y = author_label, fill = stage)) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.02)),
                      labels = comma,
                      breaks = pretty_breaks(n = 5)) +
-  labs(x = "QC-pass samples", y = NULL,
-       title = sprintf("9 cohorts  \u00b7  %s QC-pass samples  \u00b7  diagnosis composition",
-                       format(nrow(meta_qc), big.mark = ","))) +
+  labs(x = "QC-pass samples", y = NULL) +
   theme_masld() + theme_pub() +
   theme(legend.position = "right")
+message(sprintf("[caption] 9 cohorts \u00b7 %s QC-pass samples \u00b7 diagnosis composition",
+                format(nrow(meta_qc), big.mark = ",")))
 
 # DO NOT WRITE fig1b.pdf — the canonical 1b is the convergence-wheel sunburst
 # (scripts/figures/fig_sunburst.py). Cohort × stage stack moved to figS01.
@@ -208,11 +208,10 @@ p_c_heat <- ggplot(long, aes(x = field, y = author, fill = frac)) +
   scale_fill_gradient(low = "#F5F5F5", high = fig1_colors$up,
                       limits = c(0, 1), labels = percent_format(accuracy = 1),
                       name = "Annotation\navailable") +
-  labs(x = NULL, y = NULL,
-       title = "Per-cohort metadata availability",
-       subtitle = "615/892 fibrosis-annotated samples used for C1 fibrosis-adjusted contrast") +
+  labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
   theme(axis.text.x = element_text(angle = 0))
+message("[caption] Per-cohort metadata availability — 615/892 fibrosis-annotated samples used for C1 fibrosis-adjusted contrast")
 
 p_c_bar <- ggplot(avail, aes(x = n_samples, y = author)) +
   geom_col(fill = fig1_colors$down, width = 0.7) +
@@ -220,7 +219,7 @@ p_c_bar <- ggplot(avail, aes(x = n_samples, y = author)) +
             hjust = -0.15, size = PUB_GEOM_TEXT, color = "gray20") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.25)),
                      labels = comma) +
-  labs(x = "QC-pass samples", y = NULL, title = " ") +
+  labs(x = "QC-pass samples", y = NULL) +
   theme_masld() + theme_pub() +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
@@ -316,15 +315,15 @@ p_d_bars <- ggplot(top_ints, aes(x = rank, y = N)) +
             vjust = -0.3, size = PUB_GEOM_TEXT) +
   scale_x_continuous(limits = c(0.4, top_n + 0.6), expand = c(0, 0)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.10)), labels = comma) +
-  labs(y = "Intersection\nsize",
-       title = sprintf("Per-study vs integrated DEGs \u00b7 %s primary DEGs (padj<0.05, |logFC|>0.5)",
-                        format(set_sizes["Integrated"], big.mark = ","))) +
+  labs(y = "Intersection\nsize") +
   theme_masld() + theme_pub() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
         axis.line.x = element_blank(),
         plot.margin = margin(2, 5, 0, 5))
+message(sprintf("[caption] Per-study vs integrated DEGs \u00b7 %s integrated DEGs (TREAT FDR<0.05, lfc=0.25)",
+                format(set_sizes["Integrated"], big.mark = ",")))
 
 p_d_dots <- ggplot() +
   geom_segment(data = seg_data,
@@ -350,9 +349,11 @@ p_d_dots <- ggplot() +
 
 p_d <- p_d_bars / p_d_dots + plot_layout(heights = c(2, 1.4))
 
-save_fig(p_d, file.path(PANEL_DIR, "fig1d.pdf"),
+# fig1d.pdf relocated to the Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq,
+# back-compat constant name). All OTHER panels in this script still write to FIG1_DIR.
+save_fig(p_d, file.path(FIG2_DIR, "panels", "cohort_diagnosis_composition.pdf"),
          width = fig_col_width, height = 2.6)
-cat("  Saved fig1d.pdf\n")
+cat("  Saved cohort_diagnosis_composition.pdf\n")
 
 # =============================================================================
 # PANEL 1e: Per-study LOO-CV replication
@@ -389,11 +390,10 @@ p_e_rec <- ggplot(loo, aes(x = pct_full_recovered, y = author)) +
                      breaks = c(60, 70, 80, 90, 100),
                      labels = function(x) paste0(x, "%")) +
   labs(x = "DEG recovery (% of full model)",
-       y = "Held-out cohort",
-       title = sprintf("Per-study LOO-CV  \u00b7  range %.0f\u2013%.0f%%",
-                       rng_rec[1], rng_rec[2])) +
+       y = "Held-out cohort") +
   theme_masld() + theme_pub() +
   theme(legend.position = c(0.9, 0.2))
+message(sprintf("[caption] Per-study LOO-CV \u00b7 range %.0f-%.0f%%", rng_rec[1], rng_rec[2]))
 
 p_e_rho <- ggplot(loo, aes(x = spearman_rho, y = author)) +
   geom_segment(aes(x = 0.75, xend = spearman_rho,
@@ -409,13 +409,12 @@ p_e_rho <- ggplot(loo, aes(x = spearman_rho, y = author)) +
   scale_x_continuous(limits = c(0.75, 1.01),
                      breaks = c(0.8, 0.9, 1.0)) +
   labs(x = "Spearman \u03c1 vs full model",
-       y = NULL,
-       title = sprintf("GSE213621 weakest fold  \u00b7  %d%% / \u03c1 = %.2f",
-                       round(worst$pct_full_recovered),
-                       worst$spearman_rho)) +
+       y = NULL) +
   theme_masld() + theme_pub() +
   theme(axis.text.y = element_blank(),
         axis.ticks.y = element_blank())
+message(sprintf("[caption] GSE213621 weakest fold \u00b7 %d%% / rho = %.2f",
+                round(worst$pct_full_recovered), worst$spearman_rho))
 
 p_e <- p_e_rec + p_e_rho + plot_layout(widths = c(1.6, 1))
 

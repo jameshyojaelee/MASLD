@@ -26,19 +26,19 @@ meta <- fread(file.path(RDIR, "meta_analysis_results.csv"))
 
 # summary stats for labels
 n_both      <- nrow(conc)
-rho_val     <- cor(conc$dream_logFC, conc$meta_logFC, method = "spearman", use = "complete.obs")
-dream_degs  <- conc[dream_sig == TRUE, .N]
+rho_val     <- cor(conc$dream_logFC, conc$meta_logFC, method = "spearman", use = "complete.obs")  # C2-OK-sensitivity
+dream_degs  <- conc[dream_sig == TRUE, .N]  # C2-OK-sensitivity
 meta_degs   <- conc[meta_sig  == TRUE, .N]
-both_sig    <- conc[dream_sig == TRUE & meta_sig == TRUE, .N]
-union_n     <- conc[dream_sig == TRUE | meta_sig == TRUE, .N]
+both_sig    <- conc[dream_sig == TRUE & meta_sig == TRUE, .N]  # C2-OK-sensitivity
+union_n     <- conc[dream_sig == TRUE | meta_sig == TRUE, .N]  # C2-OK-sensitivity
 jaccard_val <- both_sig / union_n
-dir_conc    <- conc[dream_sig == TRUE & meta_sig == TRUE,
+dir_conc    <- conc[dream_sig == TRUE & meta_sig == TRUE,  # C2-OK-sensitivity
                     mean(direction_concordant, na.rm = TRUE)]
 
 # ── Panel D: scatter logFC coloured by I² ───────────────────────────────────
-lim <- max(abs(c(conc$dream_logFC, conc$meta_logFC)), na.rm = TRUE) * 1.05
+lim <- max(abs(c(conc$dream_logFC, conc$meta_logFC)), na.rm = TRUE) * 1.05  # C2-OK-sensitivity
 
-pD <- ggplot(conc, aes(dream_logFC, meta_logFC, colour = meta_I2)) +
+pD <- ggplot(conc, aes(dream_logFC, meta_logFC, colour = meta_I2)) +  # C2-OK-sensitivity
   geom_point(size = 0.25, alpha = 0.45) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed",
               colour = "#B0BEC5", linewidth = 0.4) +

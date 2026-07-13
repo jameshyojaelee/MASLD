@@ -3,7 +3,7 @@
 # Panel B0 (VISUAL methods primer) for the multi-method power analysis: SHOWS how
 # the known-truth NB simulation works, by actually simulating from the cached real
 # NB params and plotting the data — so panels B/B2 (the grid sweep) make sense.
-#   panelB0_power_design.pdf
+#   power_design.pdf  (was panelB0_power_design.pdf)
 #   A  the simulated cohort data: 10% of genes carry a planted Disease effect
 #   B  what tau2 does: cross-cohort consistency of the planted effect
 #   C  one run scored vs the known truth (volcano; planted DE vs null)
@@ -95,17 +95,13 @@ pA <- ggplot(dA, aes(samp, gene, fill = z)) +
   scale_fill_gradient2(low = "#1565C0", mid = "white", high = "#C2185B",
                        midpoint = 0, limits = c(-2, 2),
                        name = "expr (z)", breaks = c(-2, 0, 2)) +
-  labs(x = "samples  (5 cohorts x 20 per arm)", y = NULL,
-       title = "A. Simulated cohorts: 10% of genes carry a planted Disease effect",
-       subtitle = "Counts ~ NB anchored on real Control mean/dispersion; planted genes shift in Disease, null genes do not") +
+  labs(x = "samples  (5 cohorts x 20 per arm)", y = NULL) +
   th(base_size = 7) +
   theme(axis.text = element_blank(), axis.ticks = element_blank(),
         panel.grid = element_blank(), legend.position = "right",
         legend.key.height = unit(0.35, "cm"), legend.key.width = unit(0.25, "cm"),
         strip.text.y.left = element_text(angle = 0, size = 6),
-        strip.text.x = element_text(face = "bold", size = 7),
-        plot.title = element_text(size = 8, face = "bold"),
-        plot.subtitle = element_text(size = 5.8, colour = "grey40"),
+        strip.text.x = element_text(face = "plain", size = 6),
         panel.spacing = unit(0.06, "lines"))
 
 # ===========================================================================
@@ -131,17 +127,13 @@ dB[, tau_lab := factor(tau2, levels = tau_levels,
 pB <- ggplot(dB, aes(tau_lab, eff, colour = dir)) +
   geom_hline(yintercept = c(-1, 1), linetype = "dashed", colour = "grey55", linewidth = 0.3) +
   geom_jitter(width = 0.22, height = 0, size = 0.35, alpha = 0.45) +
-  annotate("text", x = 0.62, y = 1, label = "planted\n+1", size = 1.9, colour = "grey35", hjust = 1, lineheight = 0.8) +
-  annotate("text", x = 0.62, y = -1, label = "planted\n-1", size = 1.9, colour = "grey35", hjust = 1, lineheight = 0.8) +
+  annotate("text", x = 0.62, y = 1, label = "planted\n+1", size = GEOM_TEXT_6PT, colour = "grey35", hjust = 1, lineheight = 0.8) +
+  annotate("text", x = 0.62, y = -1, label = "planted\n-1", size = GEOM_TEXT_6PT, colour = "grey35", hjust = 1, lineheight = 0.8) +
   scale_colour_manual(values = c(up = UP, down = DOWN), guide = "none") +
   coord_cartesian(ylim = c(-2.6, 2.6), clip = "off") +
-  labs(x = NULL, y = "per-cohort effect (log2FC)",
-       title = "B. tau2 sets cross-cohort consistency",
-       subtitle = "Each point = one DE gene in one cohort; spread is what metafor's RE model must absorb") +
+  labs(x = NULL, y = "per-cohort effect (log2FC)") +
   th(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        plot.subtitle = element_text(size = 5.8, colour = "grey40"),
-        axis.text.x = element_text(size = 5.6, lineheight = 0.8),
+  theme(axis.text.x = element_text(size = 6, lineheight = 0.8),
         plot.margin = margin(4, 6, 4, 14))
 
 # ===========================================================================
@@ -168,20 +160,20 @@ pC <- ggplot(dC[order(truth)], aes(logFC, -log10(p), colour = truth)) +
   geom_hline(yintercept = -log10(pthr), linetype = "dashed", colour = "#D6604D", linewidth = 0.35) +
   geom_point(size = 0.5, alpha = 0.55) +
   scale_colour_manual(values = c("null" = NULLC, "planted DE" = UP), name = NULL) +
-  annotate("text", x = -Inf, y = Inf, hjust = -0.08, vjust = 1.4, size = 2.3, colour = "grey20",
+  annotate("text", x = -Inf, y = Inf, hjust = -0.08, vjust = 1.4, size = GEOM_TEXT_6PT, colour = "grey20",
            label = sprintf("power = %d%% of planted DE\nFDR = %d%% of calls", pw, fdr)) +
-  annotate("text", x = Inf, y = -log10(pthr), hjust = 1.05, vjust = -0.5, size = 1.9,
+  annotate("text", x = Inf, y = -log10(pthr), hjust = 1.05, vjust = -0.5, size = GEOM_TEXT_6PT,
            colour = "#D6604D", label = "FDR < 0.05") +
-  labs(x = "estimated log2FC", y = "-log10(p)",
-       title = "C. Each run scored vs the known truth",
-       subtitle = "One simulated run: planted-DE points recovered above the line = power; null points above = false discoveries") +
+  labs(x = "estimated log2FC", y = "-log10(p)") +
   th(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        plot.subtitle = element_text(size = 5.8, colour = "grey40"),
-        legend.position = c(0.99, 0.5), legend.justification = c(1, 0.5),
+  theme(legend.position = c(0.99, 0.5), legend.justification = c(1, 0.5),
         legend.text = element_text(size = 6), legend.key.size = unit(0.3, "cm"))
 
+message("[caption] A: Simulated cohorts - 10% of genes carry a planted Disease effect; counts ~ NB anchored on real Control mean/dispersion, planted genes shift in Disease, null genes do not.")
+message("[caption] B: tau2 sets cross-cohort consistency; each point = one DE gene in one cohort, spread is what metafor's RE model must absorb.")
+message("[caption] C: Each run scored vs the known truth; planted-DE points recovered above the line = power, null points above = false discoveries.")
+
 final <- pA / (pB | pC) + plot_layout(heights = c(1, 0.95))
-ggsave(file.path(OUT, "panelB0_power_design.pdf"), final,
-       width = 8.8, height = 6.6, device = cairo_pdf)
-cat(sprintf("Wrote panelB0_power_design.pdf  (run power=%d%% FDR=%d%%)\n", pw, fdr))
+ggsave(file.path(OUT, "power_design.pdf"), final,
+       width = fig_full_width, height = 6.6 * fig_full_width / 8.8, device = cairo_pdf)
+cat(sprintf("Wrote power_design.pdf  (run power=%d%% FDR=%d%%)\n", pw, fdr))

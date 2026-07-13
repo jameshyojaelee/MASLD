@@ -81,7 +81,7 @@ def main() -> None:
             "dominant_stage_S1": row["dominant_stage_S1"]
             if pd.notna(row["dominant_stage_S1"])
             else None,
-            "cross_species_concordant": bool(row["cross_species_concordant_S8"]),
+            # cross_species_concordant field REMOVED 2026-07-05 — no cross-species in atlas paper
             "druggability_tier": row["druggability_tier"],
             "coloc_best_gwas": row["coloc_best_gwas_S2a"]
             if pd.notna(row["coloc_best_gwas_S2a"])
@@ -118,8 +118,9 @@ def main() -> None:
             "n_genes": len(genes),
             "source": f"atlas file: {EV_CSV.relative_to(PROJECT_ROOT)}",
             "score_definition": (
-                "convergence_score = evidence-weighted ranking across 7 modalities. "
+                "convergence_score = evidence-weighted ranking across 6 active human evidence modalities. "
                 "NOT a Bayesian posterior (no prior or likelihood specified). "
+                "Mouse/cross-species evidence is excluded from the canonical score. "
                 "Unsupervised heuristic; calibrated empirically via permutation FDR. "
                 "Renamed from posterior_prob / bayesian_evidence on 2026-05-19."
             ),

@@ -17,7 +17,7 @@
 #   GWAS/finemapping/results/gwas_atac/currin_caqtl_per_tf.csv
 #
 # Output:
-#   figures/main/fig3_regulatory_architecture/panels/fig3_orthogonal_validation.pdf
+#   figures/main/fig2_genetics/panels/fig3_orthogonal_validation.pdf
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -122,17 +122,17 @@ p_A <- ggplot(plot_df, aes(x = N, y = y, fill = label)) +
                      breaks = c(0, 10, 20, 30),
                      labels = function(x) paste0(x)) +
   labs(tag = "a", x = "Variants in chromHMM state (n)", y = NULL) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(
     legend.position = "right",
     legend.justification = "top",
-    legend.title = element_text(size = PUB_LEGEND_TIT, face = "bold"),
+    legend.title = element_text(size = PUB_LEGEND_TIT, face = "plain"),
     legend.text  = element_text(size = PUB_LEGEND),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    axis.title.x = element_text(face = "bold"),
-    plot.tag = element_text(size = PUB_TITLE + 1, face = "bold"),
+    axis.title.x = element_text(face = "plain"),
+    plot.tag = element_text(size = PUB_TITLE, face = "plain"),
     plot.tag.position = c(0.02, 0.97),
     panel.grid = element_blank()
   )
@@ -203,14 +203,14 @@ p_B <- ggplot(caqtl_top, aes(y = tf_name)) +
   labs(tag = "b",
        x = "caQTL concordance (%)",
        y = NULL) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(
     legend.position = "none",
-    axis.text.y = element_text(face = "bold", size = PUB_AXIS_TEXT,
+    axis.text.y = element_text(face = "plain", size = PUB_AXIS_TEXT,
                                color = "black"),
-    axis.title.x = element_text(face = "bold"),
-    plot.tag = element_text(size = PUB_TITLE + 1, face = "bold"),
+    axis.title.x = element_text(face = "plain"),
+    plot.tag = element_text(size = PUB_TITLE, face = "plain"),
     plot.tag.position = c(0.02, 0.97),
     panel.grid = element_blank()
   )

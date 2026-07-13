@@ -14,7 +14,7 @@ micromamba activate rnaseq
 export MASLD_PROJECT_ROOT="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 cd "${MASLD_PROJECT_ROOT}"
 
-# Main Figure 4 spatial panels (f)-(h)
+# Main Figure 4 spatial panels (g)-(h); panel (f) retired 2026-07-07
 Rscript scripts/figures/fig4_spatial_panels.R
 
-echo "Done: fig4_spatial_panels.pdf + individual panels in figures/fig4_spatial_panels/"
+echo "Done: individual panels (g,h) in figures/main/fig4_validation/panels/"

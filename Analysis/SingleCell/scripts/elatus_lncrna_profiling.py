@@ -63,10 +63,13 @@ GENCODE_GTF = (
     "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/"
     "gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
 )
+# C2 swap 2026-06-08: repointed dream_results.csv -> canonical_deg_results.csv
+# (canonical bulk = limma-voom quality-weighted C2). Used here only for the
+# AveExpr baseline-expression lookup; both files carry gene + AveExpr.
 DREAM_RESULTS = os.path.join(
     BASE,
     "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/"
-    "integration/dream_results.csv",
+    "integration/canonical_deg_results.csv",
 )
 SCENIC_REGULONS = os.path.join(
     BASE,

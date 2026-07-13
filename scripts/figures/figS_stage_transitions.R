@@ -148,7 +148,7 @@ fig <- (p_a | p_b) / (p_c | p_d) +
   plot_annotation(
     title = "Cross-Cohort Transition Analysis (Integrated Mega-Analysis)",
     theme = theme(
-      plot.title = element_text(size = 10, face = "bold", hjust = 0.5)
+      plot.title = element_text(size = 10, face = "plain", hjust = 0.5)
     )
   )
 

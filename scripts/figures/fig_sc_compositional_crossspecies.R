@@ -83,11 +83,8 @@ panel_a <- ggplot(lmm, aes(x = beta, y = ct_label, color = color_group)) +
            y = 1.5,
            label = paste0("Hepatocytes\nbeta = ", round(lmm[cell_type == "Hepatocytes", beta], 3),
                           "\npadj = ", round(lmm[cell_type == "Hepatocytes", padj], 2)),
-           size = 2, hjust = 1, color = "grey30", fontface = "italic") +
+           size = GEOM_TEXT_6PT, hjust = 1, color = "black", fontface = "plain") +
   labs(
-    title    = "Cell type proportions: MASLD vs Healthy",
-    subtitle = paste0("CLR-LMM | dataset random effect | n=",
-                      lmm$n_samples[1], " samples"),
     x = "beta (CLR units; positive = increased in MASLD)",
     y = NULL
   ) +
@@ -141,7 +138,7 @@ panel_b <- ggplot(box_dt,
   geom_text(
     data = unique(box_dt[, .(cell_type, sig_label, y_max)]),
     aes(x = 1.5, y = y_max, label = sig_label),
-    inherit.aes = FALSE, size = 2.5, vjust = 0
+    inherit.aes = FALSE, size = GEOM_TEXT_6PT, vjust = 0
   ) +
   scale_fill_manual(
     values = c("Healthy" = masld_colors$control, "MASLD" = masld_colors$masld),
@@ -150,20 +147,19 @@ panel_b <- ggplot(box_dt,
   scale_x_discrete(labels = c("Healthy" = "Ctrl", "MASLD" = "MASLD")) +
   facet_wrap(~ cell_type, scales = "free_y", nrow = 1) +
   labs(
-    title    = "CLR-transformed cell type proportions",
-    subtitle = "* padj<0.05  ** padj<0.01  *** padj<0.001  ns = not significant",
     x = NULL, y = "CLR score"
   ) +
   theme_masld(base_size = 7) +
   theme(
     legend.position  = "none",
     strip.text       = element_text(size = 6),
-    axis.text.x      = element_text(size = 5.5)
+    axis.text.x      = element_text(size = 6)
   )
 
 ggsave(file.path(PANEL_DIR, "fig_sc_b_boxplot.pdf"),
        panel_b, width = 8, height = 3)
 message("Saved panel b")
+message("[caption] Panel b: * padj<0.05, ** padj<0.01, *** padj<0.001, ns = not significant")
 
 # ===========================================================================
 # Panel C — Sample PCA of CLR proportions
@@ -204,8 +200,6 @@ panel_c <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
     guide = "none"
   ) +
   labs(
-    title    = "Sample composition PCA",
-    subtitle = "CLR-transformed cell type proportions | × = centroid",
     x        = paste0("PC1 (", pvar[1], "%)"),
     y        = paste0("PC2 (", pvar[2], "%)")
   ) +
@@ -215,6 +209,7 @@ panel_c <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
 ggsave(file.path(PANEL_DIR, "fig_sc_c_pca.pdf"),
        panel_c, width = 4.5, height = 3.5)
 message("Saved panel c")
+message("[caption] Panel c: CLR-transformed cell type proportions; x = group centroid")
 
 # ===========================================================================
 # Panel D — Human sc hepatocyte vs Mouse bulk (SD-normalized)
@@ -243,10 +238,8 @@ panel_d <- ggplot(norm_ab, aes(x = human_sc_logFC_norm,
   annotate("text", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.4,
            label = sprintf("Spearman rho = %.3f\nn = %s genes\n%s%% concordant",
                            rho_d, format(n_d, big.mark = ","), conc_d),
-           size = 2, family = "mono") +
+           size = GEOM_TEXT_6PT, family = "Helvetica") +
   labs(
-    title    = "Human sc vs Mouse bulk (Hepatocytes)",
-    subtitle = "SD-normalized logFC | Red = Conserved (723 genes)",
     x = "Human sc hepatocyte logFC / SD",
     y = "Mouse bulk hepatocyte logFC / SD"
   ) +
@@ -255,6 +248,7 @@ panel_d <- ggplot(norm_ab, aes(x = human_sc_logFC_norm,
 ggsave(file.path(PANEL_DIR, "fig_sc_d_sc_vs_bulk.pdf"),
        panel_d, width = 3.5, height = 3.5)
 message("Saved panel d")
+message("[caption] Panel d: SD-normalized logFC (Human sc hepatocyte vs Mouse bulk); red = Conserved Core (723 genes)")
 
 # ===========================================================================
 # Panel E — Human bulk vs Mouse bulk (SD-normalized; reference comparison)
@@ -282,10 +276,8 @@ panel_e <- ggplot(norm_bb, aes(x = human_bulk_logFC_norm,
   annotate("text", x = -Inf, y = Inf, hjust = -0.1, vjust = 1.4,
            label = sprintf("Spearman rho = %.3f\nn = %s genes\n%s%% concordant",
                            rho_e, format(n_e, big.mark = ","), conc_e),
-           size = 2, family = "mono") +
+           size = GEOM_TEXT_6PT, family = "Helvetica") +
   labs(
-    title    = "Human bulk vs Mouse bulk (reference)",
-    subtitle = "SD-normalized integrated logFC | Red = Conserved",
     x = "Human bulk integrated logFC / SD",
     y = "Mouse bulk integrated logFC / SD"
   ) +
@@ -294,6 +286,7 @@ panel_e <- ggplot(norm_bb, aes(x = human_bulk_logFC_norm,
 ggsave(file.path(PANEL_DIR, "fig_sc_e_bulk_vs_bulk.pdf"),
        panel_e, width = 3.5, height = 3.5)
 message("Saved panel e")
+message("[caption] Panel e: SD-normalized integrated logFC (Human bulk vs Mouse bulk, reference); red = Conserved Core")
 
 # ===========================================================================
 # Panel F — Hepatocyte CLR score: Healthy vs MASLD (focused boxplot)
@@ -320,17 +313,12 @@ panel_f <- ggplot(hep_box, aes(x = condition, y = hep_clr, fill = condition)) +
                                "MASLD"   = "MASLD\n(n=188)")) +
   annotate("text", x = 1.5, y = max(hep_box$hep_clr) + 0.1,
            label = paste0("p = ", hep_p, "\n(t-test)"),
-           size = 2, hjust = 0.5) +
+           size = GEOM_TEXT_6PT, hjust = 0.5) +
   annotate("segment", x = 1, xend = 2,
            y = max(hep_box$hep_clr) + 0.05,
            yend = max(hep_box$hep_clr) + 0.05,
            linewidth = 0.3) +
   labs(
-    title    = "Hepatocyte proportion stable in MASLD",
-    subtitle = paste0("CLR score (beta = ",
-                      round(lmm[cell_type == "Hepatocytes", beta], 3),
-                      ", padj = ",
-                      round(lmm[cell_type == "Hepatocytes", padj], 2), ")"),
     x = NULL, y = "Hepatocyte CLR score"
   ) +
   theme_masld(base_size = 7)
@@ -348,14 +336,15 @@ combined <- (
   ((panel_c | panel_f) / (panel_d | panel_e))
 ) +
   plot_annotation(
-    title = "Single-Cell Compositional Analysis + Cross-Species Concordance",
     tag_levels = "a",
     theme = theme_masld(base_size = 8)
   ) &
-  theme(plot.tag = element_text(face = "bold", size = 8))
+  theme(plot.tag = element_text(face = "plain", size = 6))
 
-ggsave(OUT, combined, width = 10, height = 14)
-message("\nCombined figure saved: ", OUT)
+# RETIRED 2026-06-23 (user request): combined root-level fig_sc_compositional_crossspecies.pdf
+# no longer generated (the individual panels under figures/panels/ are retained above).
+# ggsave(OUT, combined, width = 10, height = 14)
+message("\nCombined fig_sc_compositional_crossspecies.pdf RETIRED 2026-06-23 (generation disabled).")
 
 # ===========================================================================
 # Summary table printed to console

@@ -1,4 +1,5 @@
 import * as duckdb from "@duckdb/duckdb-wasm";
+import { dataUrl } from "./data-base";
 
 let db: duckdb.AsyncDuckDB | null = null;
 let initPromise: Promise<duckdb.AsyncDuckDB> | null = null;
@@ -23,7 +24,7 @@ export async function getDuckDB(): Promise<duckdb.AsyncDuckDB> {
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
     URL.revokeObjectURL(worker_url);
 
-    const response = await fetch("/data/atlas.parquet");
+    const response = await fetch(dataUrl("atlas.parquet"));
     const buffer = await response.arrayBuffer();
     await db.registerFileBuffer("atlas.parquet", new Uint8Array(buffer));
 

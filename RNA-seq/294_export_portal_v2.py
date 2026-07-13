@@ -94,8 +94,8 @@ ATLAS_USECOLS = [
     "human_symbol",
     "ensembl_id",
     "gene_biotype",
-    "dream_logFC",
-    "dream_padj",
+    "bulk_logFC",
+    "bulk_padj",
     "is_deg",
     "coloc_susie_best_pp4",
     "is_conserved",
@@ -196,6 +196,7 @@ def load_gene_atlas() -> pd.DataFrame:
         log(f"  WARNING: atlas missing columns: {missing}")
     log(f"Loading multi-evidence atlas ({len(cols)} columns) ...")
     df = pd.read_csv(ATLAS_CSV, usecols=cols, low_memory=False)
+    assert {"bulk_padj", "bulk_logFC"} <= set(df.columns), "C2: atlas missing bulk_* — rebuild 27a"
     log(f"  Loaded {len(df):,} atlas rows")
     return df
 
@@ -534,8 +535,8 @@ def _build_single_gene(gene: str) -> tuple[str, int, str | None]:
             "biotype": meta.get("gene_biotype"),
             "attributes": {
                 "is_deg": meta.get("is_deg"),
-                "dream_logFC": meta.get("dream_logFC"),
-                "dream_padj": meta.get("dream_padj"),
+                "bulk_logFC": meta.get("bulk_logFC"),
+                "bulk_padj": meta.get("bulk_padj"),
                 "coloc_susie_best_pp4": meta.get("coloc_susie_best_pp4"),
                 "is_conserved": meta.get("is_conserved"),
                 "sex_class": meta.get("sex_class"),
@@ -761,7 +762,7 @@ def main() -> None:
     for _, row in nodes.iterrows():
         sym = str(row.get("human_symbol"))
         meta = gene_meta.setdefault(sym, {})
-        for col in ("ensembl_id", "gene_biotype", "dream_logFC", "dream_padj",
+        for col in ("ensembl_id", "gene_biotype", "bulk_logFC", "bulk_padj",
                     "is_deg", "coloc_susie_best_pp4", "is_conserved", "sex_class",
                     "zonation_class", "ferroptosis_class", "dgidb_druggable",
                     "attribution_class"):

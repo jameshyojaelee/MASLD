@@ -5,6 +5,21 @@
 Maps MASLD GWAS signal to individual cells and cell types via h5py direct read
 (bypasses anndata 'ordered' attribute bug). Runs on CPU partition.
 
+SIGNIFICANCE CAVEAT (2026-06-20, mega-review A6 pseudoreplication remediation):
+  Per-cell disease-relevance significance from this script is NOT a valid
+  statistical test of disease enrichment. Each donor contributes thousands of
+  cells, so any per-CELL test (the z-tail `scdrs_pvalue`, `prop_sig_005`, the
+  cell-permuted `mc_pvalue`/`fdr`, and the within-cell-type Mann-Whitney) treats
+  correlated cells from the same donor as independent observations
+  (pseudoreplication). With ~657K cells the Mann-Whitney p-values collapse to
+  exactly 0.0 (n inflated by ~3 orders of magnitude vs the ≤18-donor design) —
+  these are artifacts, not evidence. The CANONICAL, donor-correct disease-
+  relevance result is the MAGMA scDRS arm
+  (scripts/figures/figS_scdrs_magma_aggregate.py + figS_scdrs_magma.R), which
+  aggregates scores to the donor level before testing and reaches the opposite
+  (null) conclusion. The per-cell quantities below are retained for descriptive
+  cell-state ranking only; do NOT cite their p-values.
+
 SLURM: cpu partition, 16 CPUs, 128GB, 48h
 Environment: spatial
 """
@@ -174,15 +189,24 @@ else:
 
 f.close()
 
-# P-values
+# DESCRIPTIVE per-cell z-tail (NOT a significance test): used only to rank cell
+# states. It is NOT donor-corrected and must NOT be reported as a p-value
+# (pseudoreplication — see module docstring caveat). Canonical disease-relevance
+# significance = MAGMA donor arm (scripts/figures/figS_scdrs_magma_aggregate.py).
 scdrs_pvalue = stats.norm.sf(gwas_scores)
 print(f"  Mean score: {gwas_scores.mean():.3f} ± {gwas_scores.std():.3f}")
-print(f"  Cells with p < 0.05: {(scdrs_pvalue < 0.05).sum()} ({(scdrs_pvalue < 0.05).mean()*100:.1f}%)")
+print(f"  Cells in upper z-tail (<0.05, DESCRIPTIVE, not a donor-corrected p): "
+      f"{(scdrs_pvalue < 0.05).sum()} ({(scdrs_pvalue < 0.05).mean()*100:.1f}%)")
 
 # ===========================================================================
-# 4. Cell-type enrichment (Monte Carlo)
+# 4. Cell-type enrichment (DESCRIPTIVE ranking — see significance caveat in docstring)
 # ===========================================================================
-print("\n=== Cell-type enrichment ===")
+# NOTE (mega-review A6): the Monte Carlo below permutes individual CELLS, so its
+# `mc_pvalue`/`fdr` and `prop_sig_005` are pseudoreplicated and over-confident.
+# Use these columns to RANK cell states descriptively only. The donor-corrected
+# enrichment significance lives in the MAGMA scDRS arm
+# (scripts/figures/figS_scdrs_magma_aggregate.py + figS_scdrs_magma.R).
+print("\n=== Cell-type enrichment (descriptive ranking) ===")
 
 cell_types_arr = np.array(cell_types)
 n_mc = 1000
@@ -213,7 +237,7 @@ for ct in ct_cats:
         'prop_sig_005': float((scdrs_pvalue[ct_mask] < 0.05).mean())
     })
 
-    print(f"  {ct:30s}: mean={ct_mean:+.3f}, p={mc_p:.4f}, n={n_ct}")
+    print(f"  {ct:30s}: mean={ct_mean:+.3f}, p={mc_p:.4f} (cell-permuted, descriptive), n={n_ct}")
 
 ct_enrich_df = pd.DataFrame(ct_enrichment)
 ct_enrich_df['fdr'] = stats.false_discovery_control(ct_enrich_df['mc_pvalue'])
@@ -224,29 +248,36 @@ ct_enrich_df = ct_enrich_df.sort_values('mc_pvalue')
 # ===========================================================================
 within_ct = []
 if conditions is not None:
-    print("\n=== Within-cell-type disease stratification ===")
+    print("\n=== Within-cell-type disease stratification (descriptive Δmean only) ===")
     cond_arr = np.array(conditions)
 
+    # Disease vs control within each cell type — DESCRIPTIVE mean shift only.
+    # The former per-CELL Mann-Whitney here is the pseudoreplication artifact
+    # flagged in mega-review A6: with ~657K cells (thousands per donor) its
+    # p-values collapse to exactly 0.0 and DO NOT constitute a valid disease-
+    # enrichment test (cells are not independent — the design is ≤18 donors).
+    # The per-cell test is RETIRED. Report only the descriptive Δmean score; the
+    # CANONICAL donor-corrected significance is the MAGMA scDRS arm
+    # (scripts/figures/figS_scdrs_magma_aggregate.py + figS_scdrs_magma.R), which
+    # aggregates to donor level and reaches the opposite (null) conclusion.
     for ct in ct_cats:
         ct_mask = cell_types_arr == ct
         disease_mask = ct_mask & np.isin(cond_arr, ['MASLD', 'Disease', 'NASH', 'NAFLD', 'Cirrhosis'])
         control_mask = ct_mask & np.isin(cond_arr, ['Healthy', 'Control', 'Normal'])
 
         if disease_mask.sum() > 10 and control_mask.sum() > 10:
-            stat, p = stats.mannwhitneyu(
-                gwas_scores[disease_mask],
-                gwas_scores[control_mask],
-                alternative='two-sided'
-            )
+            mean_d = float(gwas_scores[disease_mask].mean())
+            mean_c = float(gwas_scores[control_mask].mean())
             within_ct.append({
                 'cell_type': ct,
                 'n_disease': int(disease_mask.sum()),
                 'n_control': int(control_mask.sum()),
-                'mean_disease': float(gwas_scores[disease_mask].mean()),
-                'mean_control': float(gwas_scores[control_mask].mean()),
-                'mannwhitney_p': float(p)
+                'mean_disease': mean_d,
+                'mean_control': mean_c,
+                'delta_mean_scdrs': mean_d - mean_c
             })
-            print(f"  {ct:30s}: D={disease_mask.sum()}, C={control_mask.sum()}, p={p:.4f}")
+            print(f"  {ct:30s}: D={disease_mask.sum()}, C={control_mask.sum()}, "
+                  f"Δmean={mean_d - mean_c:+.3f} (descriptive; p retired — see MAGMA donor arm)")
 
 # ===========================================================================
 # 6. Save results

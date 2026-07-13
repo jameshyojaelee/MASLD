@@ -17,7 +17,7 @@ suppressPackageStartupMessages({
   library(data.table)
   library(sva)
   library(edgeR)
-  library(variancePartition)
+  library(limma)
   library(ggplot2)
 })
 
@@ -25,6 +25,9 @@ BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 RDIR <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 OUTDIR <- file.path(BASE, "RNA-seq/results/audit_sensitivity/combat_seq")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
+
+# Canonical limma-voom-QW (C2) engine helper: build_design_guarded()
+source(file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/de_engine_lvqw.R"))
 
 cat("=== ComBat-seq Sensitivity Analysis ===\n")
 cat("Start time:", format(Sys.time()), "\n\n")
@@ -85,9 +88,9 @@ counts_adjusted <- tryCatch({
 cat("  ComBat-seq complete. Adjusted counts dimensions:", dim(counts_adjusted), "\n")
 
 # ================================================================
-# 3. Re-run dream on adjusted counts
+# 3. Re-run limma-voom QW (C2 canonical engine) on adjusted counts
 # ================================================================
-cat("\n--- Step 3: Re-running dream on ComBat-seq adjusted counts ---\n")
+cat("\n--- Step 3: Re-running limma-voom QW on ComBat-seq adjusted counts ---\n")
 
 # Create new DGEList with adjusted counts
 dge_adj <- DGEList(counts = counts_adjusted, samples = meta)
@@ -98,25 +101,20 @@ keep <- filterByExpr(dge_adj, group = meta[[condition_var]])
 dge_adj <- dge_adj[keep, , keep.lib.sizes = FALSE]
 cat("  Genes after filtering:", nrow(dge_adj), "\n")
 
-# Voom
-vobjDream <- voomWithDreamWeights(dge_adj,
-                                   formula = as.formula(paste0("~ ", condition_var, " + (1|dataset)")),
-                                   data = meta,
-                                   BPPARAM = BiocParallel::MulticoreParam(4))
+# Build LVQW design with dataset as a FIXED effect (was random (1|dataset) under dream)
+meta_df <- as.data.frame(meta)
+des <- build_design_guarded(meta_df, c("dataset", condition_var))
 
-# Fit dream (still with random intercept for dataset — should be much smaller now)
-cat("  Fitting dream model...\n")
-fit <- dream(vobjDream,
-             formula = as.formula(paste0("~ ", condition_var, " + (1|dataset)")),
-             data = meta,
-             BPPARAM = BiocParallel::MulticoreParam(4))
+# Disease coefficient = the non-reference (second) level of condition_var
+disease_lvl <- levels(droplevels(as.factor(meta[[condition_var]])))[2]
+coef_name <- paste0(condition_var, disease_lvl)
+stopifnot(coef_name %in% colnames(des$design))
+cat("  Design columns:", ncol(des$design), "| Using coefficient:", coef_name, "\n")
 
-# Extract results for disease condition
-coef_name <- grep("condition|disease", colnames(fit$coefficients), value = TRUE)
-if (length(coef_name) == 0) {
-  coef_name <- colnames(fit$coefficients)[2]  # Second coefficient is usually disease
-}
-cat("  Using coefficient:", coef_name[1], "\n")
+# limma-voom quality-weighted fit (replaces voomWithDreamWeights + dream)
+cat("  Fitting limma-voom QW model...\n")
+v   <- limma::voomWithQualityWeights(dge_adj, des$design)
+fit <- limma::eBayes(limma::lmFit(v, des$design))
 
 tt <- topTable(fit, coef = coef_name[1], number = Inf, sort.by = "none")
 tt_dt <- as.data.table(tt, keep.rownames = "gene")

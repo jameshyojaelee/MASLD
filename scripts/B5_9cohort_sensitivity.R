@@ -35,7 +35,7 @@ cohorts_6 <- c("GSE126848","GSE130970","GSE135251","GSE162694","PRJNA512027")
 # Chen = GSE126848? No. Per CLAUDE.md: Suppli=GSE130970, Hoang=GSE162694,
 # Govaere=GSE135251, Bril=?, Chen=GSE126848 (recheck — we'll use whatever the
 # canonical dream csv had). Use the dataset list actually present in the canonical run.
-canonical_csv <- file.path(RDIR, "dream_results.csv")
+canonical_csv <- file.path(RDIR, "dream_results.csv")  # C2-OK-sensitivity
 canonical <- fread(canonical_csv)
 cat("Canonical csv:", canonical_csv, "rows=", nrow(canonical), "\n")
 

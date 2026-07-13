@@ -25,7 +25,7 @@ dir.create(RDIR_OUT, recursive = TRUE, showWarnings = FALSE)
 # --- Load canonical dream + all sensitivity arms ---
 dream <- fread(file.path(INT, "results/integration/dream_results.csv"))
 setnames(dream, c("logFC","t","P.Value","padj"),
-                c("dream_logFC","dream_t","dream_P","dream_padj"))
+                c("dream_logFC","dream_t","dream_P","dream_padj"))  # C2-OK-sensitivity (multi-method concordance arm)
 
 eql <- fread(file.path(RDIR_IN, "edgeRql/ql_results.csv"))
 setnames(eql, c("logFC","F","P.Value","padj"),
@@ -89,7 +89,7 @@ elrt_present  <- !is.null(elrt)
 sva_present   <- !is.null(sva_a)
 
 # --- Left-join: dream is the anchor; arm columns become NA where genes filter out ---
-merged <- dream[, .(gene, dream_logFC, dream_t, dream_P, dream_padj)]
+merged <- dream[, .(gene, dream_logFC, dream_t, dream_P, dream_padj)]  # C2-OK-sensitivity
 merged <- merge(merged, eql[, .(gene, eqlogFC, eqt, eqP, eqpadj)],
                 by = "gene", all.x = TRUE)
 merged <- merge(merged, vlm[, .(gene, vlmlogFC, vlmt, vlmP, vlmpadj)],
@@ -122,7 +122,7 @@ if (sva_present)   cat("  with voom+SVA:",    sum(!is.na(merged$svpadj)), "\n")
 
 # --- Concordance matrices (grows with available arms; 4-8+) ---
 tstat_cols <- c("dream_t","eqt","vlmt","mfrt")
-lfc_cols   <- c("dream_logFC","eqlogFC","vlmlogFC","mfrlogFC")
+lfc_cols   <- c("dream_logFC","eqlogFC","vlmlogFC","mfrlogFC")  # C2-OK-sensitivity
 if (deseq_present) { tstat_cols <- c(tstat_cols, "dst"); lfc_cols <- c(lfc_cols, "dslogFC") }
 if (trend_present) { tstat_cols <- c(tstat_cols, "trt"); lfc_cols <- c(lfc_cols, "trlogFC") }
 if (dlrt_present)  { tstat_cols <- c(tstat_cols, "dlt"); lfc_cols <- c(lfc_cols, "dllogFC") }
@@ -139,7 +139,7 @@ fwrite(as.data.table(r_lfc, keep.rownames = "method"),
 
 # --- Jaccard on padj < 0.05 DEG sets ---
 deg_sets <- list(
-  dream = merged[!is.na(dream_padj) & dream_padj < 0.05, gene],
+  dream = merged[!is.na(dream_padj) & dream_padj < 0.05, gene],  # C2-OK-sensitivity
   eq    = merged[!is.na(eqpadj)     & eqpadj   < 0.05, gene],
   vlm   = merged[!is.na(vlmpadj)    & vlmpadj  < 0.05, gene],
   mfr   = merged[!is.na(mfrpadj)    & mfrpadj  < 0.05, gene]
@@ -162,13 +162,13 @@ fwrite(as.data.table(jacc, keep.rownames = "method"),
 union_sig <- Reduce(union, deg_sets)
 ds <- merged[gene %in% union_sig]
 dir_conc <- c(
-  dream_vs_eq  = mean(sign(ds$dream_logFC) == sign(ds$eqlogFC),  na.rm = TRUE),
-  dream_vs_vlm = mean(sign(ds$dream_logFC) == sign(ds$vlmlogFC), na.rm = TRUE),
-  dream_vs_mfr = mean(sign(ds$dream_logFC) == sign(ds$mfrlogFC), na.rm = TRUE)
+  dream_vs_eq  = mean(sign(ds$dream_logFC) == sign(ds$eqlogFC),  na.rm = TRUE),  # C2-OK-sensitivity
+  dream_vs_vlm = mean(sign(ds$dream_logFC) == sign(ds$vlmlogFC), na.rm = TRUE),  # C2-OK-sensitivity
+  dream_vs_mfr = mean(sign(ds$dream_logFC) == sign(ds$mfrlogFC), na.rm = TRUE)  # C2-OK-sensitivity
 )
 if (deseq_present) {
   dir_conc <- c(dir_conc,
-    dream_vs_deseq = mean(sign(ds$dream_logFC) == sign(ds$dslogFC), na.rm = TRUE))
+    dream_vs_deseq = mean(sign(ds$dream_logFC) == sign(ds$dslogFC), na.rm = TRUE))  # C2-OK-sensitivity
 }
 fwrite(as.data.table(dir_conc, keep.rownames = "pair"),
        file.path(RDIR_OUT, "direction_concordance.csv"))
@@ -186,13 +186,13 @@ if (deseq_present) {
   sens_sig <- sens_sig +
               with(merged, as.integer(!is.na(dspadj) & dspadj < 0.05))
 }
-dream_sig <- !is.na(merged$dream_padj) & merged$dream_padj < 0.05
+dream_sig <- !is.na(merged$dream_padj) & merged$dream_padj < 0.05  # C2-OK-sensitivity
 
-flag <- ifelse(dream_sig & sens_sig == n_voters,           "confirmed_all",
-        ifelse(dream_sig & sens_sig >= n_voters - 1L,      "confirmed_majority",
-        ifelse(dream_sig & sens_sig == 1L,                 "confirmed_minority",
-        ifelse(dream_sig & sens_sig == 0L,                 "primary_only",
-        ifelse(!dream_sig & sens_sig >= ceiling(n_voters/2),
+flag <- ifelse(dream_sig & sens_sig == n_voters,           "confirmed_all",  # C2-OK-sensitivity
+        ifelse(dream_sig & sens_sig >= n_voters - 1L,      "confirmed_majority",  # C2-OK-sensitivity
+        ifelse(dream_sig & sens_sig == 1L,                 "confirmed_minority",  # C2-OK-sensitivity
+        ifelse(dream_sig & sens_sig == 0L,                 "primary_only",  # C2-OK-sensitivity
+        ifelse(!dream_sig & sens_sig >= ceiling(n_voters/2),  # C2-OK-sensitivity
                                                             "discordant",
                                                             "ns")))))
 merged[, bulk_robustness_flag := factor(flag,
@@ -243,7 +243,7 @@ fwrite(atlas_cols, file.path(RDIR_OUT, "atlas_columns.tsv"),
        sep = "\t", na = "NA")
 
 # --- Robustness summary for manuscript ---
-tier1 <- merged[dream_sig & abs(dream_logFC) > 0.5]
+tier1 <- merged[dream_sig & abs(dream_logFC) > 0.5]  # C2-OK-sensitivity
 robust_summary <- data.table(
   flag = c("confirmed_all","confirmed_majority","confirmed_minority",
            "primary_only","discordant"),

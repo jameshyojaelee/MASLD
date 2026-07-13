@@ -40,19 +40,19 @@ PANEL_DIR <- file.path(FIGS_BATCH_DIR, "panels")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 COHORT_LABEL <- c(
-  GSE126848="Suppli", GSE130970="Hoang", GSE135251="Govaere", GSE162694="Bril",
-  GSE167523="Kozumi", GSE174478="Kawamura", GSE193066="Hoshida", GSE213621="Chen",
-  GSE240729="Verschuren", PRJNA512027="Gerhard"
+  GSE126848="GSE126848", GSE130970="GSE130970", GSE135251="GSE135251", GSE162694="GSE162694",
+  GSE167523="GSE167523", GSE174478="GSE174478", GSE193066="GSE193066", GSE213621="GSE213621",
+  GSE240729="GSE240729", PRJNA512027="PRJNA512027"
 )
 COHORT_COLORS <- c(
-  "Suppli"="#1F77B4","Hoang"="#FF7F0E","Govaere"="#2CA02C","Bril"="#D62728",
-  "Kozumi"="#9467BD","Kawamura"="#8C564B","Hoshida"="#E377C2","Chen"="#7F7F7F",
-  "Verschuren"="#BCBD22","Gerhard"="#17BECF"
+  "GSE126848"="#1F77B4","GSE130970"="#FF7F0E","GSE135251"="#2CA02C","GSE162694"="#D62728",
+  "GSE167523"="#9467BD","GSE174478"="#8C564B","GSE193066"="#E377C2","GSE213621"="#7F7F7F",
+  "GSE240729"="#BCBD22","PRJNA512027"="#17BECF"
 )
 disease_colors <- c(Control = masld_colors$control, Disease = masld_colors$nash)
 
-PADJ_INT <- 0.05
-LFC_INT  <- 0.5
+PADJ_INT <- 0.05   # per-cohort significance flag (panels I/K)
+LFC_INT  <- 0.3    # vestigial; Tier-1 gate is now TREAT (is_dream_deg) — see below. Unused.
 KNN_K    <- 30
 FIVE_COHORTS <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
 
@@ -77,10 +77,9 @@ plot_dt[, disease_state := factor(group, levels = c("Control", "Disease"))]
 
 dream <- load_dream_results()
 dream[, gene_clean := sub("\\..*", "", gene)]
-dream[, is_tier1 := !is.na(dream_padj) & dream_padj < PADJ_INT &
-                    !is.na(dream_logFC) & abs(dream_logFC) > LFC_INT]
+dream[, is_tier1 := is_dream_deg(dream)]   # canonical: TREAT fdr_treat<0.05 (lfc=0.25)
 n_tier1 <- sum(dream$is_tier1, na.rm = TRUE)
-message(sprintf("Tier 1 DEGs: %s", comma(n_tier1)))
+message(sprintf("Tier 1 DEGs (TREAT fdr<0.05, lfc=0.25): %s", comma(n_tier1)))
 
 # ----------------------------------------------------------------------------
 # PANEL H: Pre vs post Harmony — UMAP on the SAME PCs, both colorings
@@ -133,23 +132,23 @@ mk_umap_panel <- function(dt, x, y, color_var, palette, title,
     scale_color_manual(values = palette, name = NULL,
                        na.value = "gray85", drop = FALSE) +
     coord_fixed() +
-    labs(x = "UMAP 1", y = "UMAP 2", title = title) +
+    labs(x = "UMAP 1", y = "UMAP 2") +
     annotate("label",
              x = min(dt[[x]]) + 0.02 * diff(range(dt[[x]])),
              y = max(dt[[y]]) - 0.02 * diff(range(dt[[y]])),
-             label = lisi_text, hjust = 0, vjust = 1, size = 1.85,
+             label = lisi_text, hjust = 0, vjust = 1, size = GEOM_TEXT_6PT,
              color = "gray20",
              fill = scales::alpha("white", 0.85)) +
     theme_masld(base_size = 7) +
-    theme(plot.title = element_text(size = 7.5, face = "bold"),
-          legend.position = if (show_legend) "right" else "none",
-          legend.text = element_text(size = 5.8),
+    theme(legend.position = if (show_legend) "right" else "none",
+          legend.text = element_text(size = 6),
           legend.key.size = unit(0.2, "cm")) +
     guides(color = guide_legend(ncol = legend_ncol,
                                 override.aes = list(size = 1.2, alpha = 1)))
   p
 }
 
+message("[caption] Panel h, four sub-panels (clockwise from top-left): UMAP pre batch correction/cohort, UMAP post batch correction/cohort, UMAP pre batch correction/disease state, UMAP post batch correction/disease state; iLISI mixing scores annotated in-panel.")
 p_h_pre_cohort  <- mk_umap_panel(pre_dt, "pre_UMAP1", "pre_UMAP2", "cohort",
                                  COHORT_COLORS, "Pre batch correction · cohort",
                                  sprintf("cohort iLISI = %.2f / 10", pre_lisi_cohort),
@@ -180,7 +179,7 @@ p_h <- patchwork::wrap_plots(
          pre_lisi_disease, post_lisi_disease),
     theme = theme(plot.caption = element_text(size = 6, color = "gray35", hjust = 0)))
 save_fig(p_h, file.path(PANEL_DIR, "figS_batch_h_pre_post_harmony.pdf"),
-         width = fig_full_width * 1.1, height = 5.2)
+         width = fig_full_width, height = 5.2 / 1.1)
 
 # Save pre-Harmony UMAP coordinates for reproducibility
 fwrite(pre_dt, file.path(FIGS_BATCH_DIR, "figS_batch_h_pre_umap_data.csv"))
@@ -194,7 +193,7 @@ ps <- ps[dataset %in% FIVE_COHORTS]
 ps[, gene_clean := sub("\\..*", "", gene)]
 
 # Tier 1 DEG genes from integrated
-tier1_genes <- dream[is_tier1 == TRUE, .(gene_clean, dream_logFC, dream_padj)]
+tier1_genes <- dream[is_tier1 == TRUE, .(gene_clean, bulk_logFC, bulk_padj)]
 ps_t1 <- merge(ps[, .(gene_clean, dataset, ps_logFC = logFC, ps_padj = padj)],
                tier1_genes, by = "gene_clean")
 ps_t1[, cohort := factor(COHORT_LABEL[dataset],
@@ -204,9 +203,9 @@ ps_t1[, sig_flag := ps_padj < PADJ_INT]
 # Per-cohort summary stats
 cohort_stats <- ps_t1[, .(
   n = .N,
-  spearman = cor(ps_logFC, dream_logFC, method = "spearman", use = "complete.obs"),
-  pearson  = cor(ps_logFC, dream_logFC, method = "pearson", use = "complete.obs"),
-  pct_concordant = 100 * mean(sign(ps_logFC) == sign(dream_logFC), na.rm = TRUE)
+  spearman = cor(ps_logFC, bulk_logFC, method = "spearman", use = "complete.obs"),
+  pearson  = cor(ps_logFC, bulk_logFC, method = "pearson", use = "complete.obs"),
+  pct_concordant = 100 * mean(sign(ps_logFC) == sign(bulk_logFC), na.rm = TRUE)
 ), by = cohort]
 setorder(cohort_stats, -spearman)
 cohort_stats[, label := sprintf("rho==%.2f~ '|'~%.0f*'%%'~direction",
@@ -216,14 +215,14 @@ cohort_stats[, label := sprintf("rho==%.2f~ '|'~%.0f*'%%'~direction",
 ps_t1[, cohort := factor(cohort,
                          levels = cohort_stats$cohort)]
 xlim_i <- range(ps_t1$ps_logFC, na.rm = TRUE)
-ylim_i <- range(ps_t1$dream_logFC, na.rm = TRUE)
+ylim_i <- range(ps_t1$bulk_logFC, na.rm = TRUE)
 common_lim <- c(min(xlim_i[1], ylim_i[1]), max(xlim_i[2], ylim_i[2]))
 
-stats_pos <- ps_t1[, .(x = -2.5, y = max(dream_logFC, na.rm = TRUE) * 0.98),
+stats_pos <- ps_t1[, .(x = -2.5, y = max(bulk_logFC, na.rm = TRUE) * 0.98),
                    by = cohort]
 stats_pos <- merge(stats_pos, cohort_stats[, .(cohort, label)], by = "cohort")
 
-p_i <- ggplot(ps_t1, aes(x = ps_logFC, y = dream_logFC)) +
+p_i <- ggplot(ps_t1, aes(x = ps_logFC, y = bulk_logFC)) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "gray70", linewidth = 0.2) +
   geom_vline(xintercept = 0, linetype = "dotted", color = "gray70", linewidth = 0.2) +
   geom_abline(slope = 1, intercept = 0, color = "gray45",
@@ -236,7 +235,7 @@ p_i <- ggplot(ps_t1, aes(x = ps_logFC, y = dream_logFC)) +
   geom_text(data = stats_pos,
             aes(x = x, y = y, label = label),
             inherit.aes = FALSE, parse = TRUE,
-            size = 1.95, color = "gray15", hjust = 0, vjust = 1) +
+            size = GEOM_TEXT_6PT, color = "gray15", hjust = 0, vjust = 1) +
   scale_color_manual(values = c("FALSE" = "#BDBDBD", "TRUE" = "#1565C0"),
                      labels = c("FALSE" = "n.s. in cohort", "TRUE" = "padj<0.05 in cohort"),
                      name = NULL) +
@@ -244,20 +243,18 @@ p_i <- ggplot(ps_t1, aes(x = ps_logFC, y = dream_logFC)) +
   scale_y_continuous(limits = common_lim, breaks = scales::pretty_breaks(4)) +
   facet_wrap(~ cohort, nrow = 1) +
   labs(x = expression("Per-cohort log"[2]*" fold change"),
-       y = expression("Integrated log"[2]*" fold change"),
-       title = sprintf(
-         "Per-cohort vs integrated logFC concordance (Tier 1 DEGs, n = %s)",
-         comma(n_tier1))) +
+       y = expression("Integrated log"[2]*" fold change")) +
   theme_masld(base_size = 7) +
-  theme(plot.title = element_text(size = 8, face = "bold"),
-        strip.text = element_text(size = 6.8, face = "bold"),
+  theme(strip.text = element_text(size = 6, face = "plain"),
         legend.position = "top",
         legend.key.size = unit(0.25, "cm"),
         legend.text = element_text(size = 6),
         panel.spacing = unit(0.4, "lines"))
 
+message(sprintf("[caption] Panel i: per-cohort vs integrated logFC concordance (Tier 1 DEGs, n = %s).",
+                comma(n_tier1)))
 save_fig(p_i, file.path(PANEL_DIR, "figS_batch_i_percohort_logfc.pdf"),
-         width = fig_full_width * 1.1, height = 2.4)
+         width = fig_full_width, height = 2.4 / 1.1)
 
 # ----------------------------------------------------------------------------
 # PANEL J: PCA variance attribution per PC
@@ -335,14 +332,13 @@ p_j <- ggplot(attr_melt, aes(x = PC, y = pct, fill = covariate)) +
             aes(x = PC, y = 102,
                 label = sprintf("%.1f%%", pc_var)),
             inherit.aes = FALSE,
-            size = 1.7, color = "gray35", vjust = 0) +
+            size = GEOM_TEXT_6PT, color = "gray35", vjust = 0) +
   scale_fill_manual(values = covar_palette, name = NULL) +
   scale_y_continuous(labels = function(v) paste0(v, "%"),
                      limits = c(0, 115),
                      breaks = c(0, 25, 50, 75, 100),
                      expand = expansion(mult = c(0, 0.02))) +
   labs(x = NULL, y = "% PC variance explained",
-       title = "Variance attribution per PC (raw PCA, top 10 PCs)",
        caption = paste0(
          "Top of bar = % total expression variance captured by that PC.\n",
          "Joint sequential ANOVA (disease + fibrosis + sex + dataset).\n",
@@ -350,12 +346,12 @@ p_j <- ggplot(attr_melt, aes(x = PC, y = pct, fill = covariate)) +
          "Disease + fibrosis biology shows up cleanly from PC3 onward."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title    = element_text(size = 8, face = "bold"),
-        plot.caption  = element_text(size = 6, color = "gray35", hjust = 0),
+  theme(plot.caption  = element_text(size = 6, color = "gray35", hjust = 0),
         legend.position = "top",
         legend.key.size = unit(0.28, "cm"),
         legend.text = element_text(size = 6))
 
+message("[caption] Panel j: variance attribution per PC (raw PCA, top 10 PCs).")
 save_fig(p_j, file.path(PANEL_DIR, "figS_batch_j_pc_attribution.pdf"),
          width = fig_full_width * 0.7, height = 2.6)
 
@@ -366,9 +362,9 @@ message("Panel K: direction concordance per Tier 1 DEG...")
 # For each Tier 1 DEG, count how many of the 5 mega-eligible cohorts have
 # sign(per-cohort logFC) matching sign(integrated logFC).
 ps_dir <- ps_t1[, .(n_cohorts_concordant = sum(
-                       sign(ps_logFC) == sign(dream_logFC), na.rm = TRUE),
+                       sign(ps_logFC) == sign(bulk_logFC), na.rm = TRUE),
                     n_cohorts_tested = sum(!is.na(ps_logFC))),
-                by = .(gene_clean, dream_logFC)]
+                by = .(gene_clean, bulk_logFC)]
 # Restrict to the genes that have all 5 cohorts tested
 ps_dir <- ps_dir[n_cohorts_tested == 5]
 
@@ -385,7 +381,7 @@ p_k <- ggplot(dir_counts, aes(x = x_factor, y = pct)) +
   geom_col(fill = masld_colors$up, width = 0.7,
            color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%.1f%%\n(n=%s)", pct, comma(N))),
-            vjust = -0.2, size = 1.85, color = "gray15", lineheight = 0.85) +
+            vjust = -0.2, size = GEOM_TEXT_6PT, color = "gray15", lineheight = 0.85) +
   geom_segment(data = binom_exp,
                aes(x = as.numeric(x_factor) - 0.4,
                    xend = as.numeric(x_factor) + 0.4,
@@ -397,17 +393,15 @@ p_k <- ggplot(dir_counts, aes(x = x_factor, y = pct)) +
                      expand = expansion(mult = c(0, 0.18))) +
   labs(x = "Cohorts with logFC sign matching integrated direction",
        y = "% of Tier 1 DEGs",
-       title = sprintf(
-         "Direction concordance per Tier 1 DEG (n = %s tested in all 5 cohorts)",
-         comma(nrow(ps_dir))),
        caption = paste0(
          "Dashed line = expected fraction under independent 50/50 sign null.\n",
          "Most Tier 1 DEGs are 4/5 or 5/5 cohort-concordant by direction — far above random."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title   = element_text(size = 8, face = "bold"),
-        plot.caption = element_text(size = 6, color = "gray35", hjust = 0))
+  theme(plot.caption = element_text(size = 6, color = "gray35", hjust = 0))
 
+message(sprintf("[caption] Panel k: direction concordance per Tier 1 DEG (n = %s tested in all 5 cohorts).",
+                comma(nrow(ps_dir))))
 save_fig(p_k, file.path(PANEL_DIR, "figS_batch_k_direction_concordance.pdf"),
          width = fig_half_width * 1.1, height = 2.6)
 
@@ -459,21 +453,20 @@ p_l <- ggplot(plot_dt, aes(x = pmin(kbet_chi, chi_cap), y = cohort_ord,
              linetype = "dashed", color = "gray40", linewidth = 0.3) +
   annotate("text", x = overall_chi, y = 0.6,
            label = sprintf("overall median = %.0f", overall_chi),
-           hjust = -0.05, vjust = 0, size = 2.0, color = "gray25") +
+           hjust = -0.05, vjust = 0, size = GEOM_TEXT_6PT, color = "gray25") +
   scale_fill_manual(values = COHORT_COLORS, guide = "none") +
   scale_x_continuous(expand = expansion(mult = c(0, 0.02))) +
   labs(x = "kBET chi-square score (per-sample 30-NN mixing)\nlower = better cohort mixing",
        y = NULL,
-       title = "Per-cohort kBET-style mixing distribution",
        caption = paste0(
          "Per-sample chi-square of observed vs global cohort proportions in 30-NN\n",
          "UMAP windows. Lower scores = better cross-cohort mixing in that neighborhood.\n",
          "Cohorts ordered by median; values capped at 99th percentile for display."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title    = element_text(size = 8, face = "bold"),
-        plot.caption  = element_text(size = 6, color = "gray35", hjust = 0))
+  theme(plot.caption  = element_text(size = 6, color = "gray35", hjust = 0))
 
+message("[caption] Panel l: per-cohort kBET-style mixing distribution.")
 save_fig(p_l, file.path(PANEL_DIR, "figS_batch_l_kbet.pdf"),
          width = fig_half_width * 1.05, height = 2.6)
 
@@ -485,7 +478,7 @@ vp_path <- file.path(BASE,
                      "RNA-seq/results/audit_sensitivity/variance_partition_results.csv")
 vp <- fread(vp_path)
 vp[, gene_clean := sub("\\..*", "", gene)]
-vp <- merge(vp, dream[, .(gene_clean, is_tier1, dream_logFC, dream_padj)],
+vp <- merge(vp, dream[, .(gene_clean, is_tier1, bulk_logFC, bulk_padj)],
             by = "gene_clean", all.x = TRUE)
 vp[is.na(is_tier1), is_tier1 := FALSE]
 vp[, biology_var := pmax(0, fibrosis_stage) + pmax(0, group_binary)]
@@ -525,29 +518,28 @@ p_m <- ggplot(vp_plot, aes(x = 100 * dataset_var, y = 100 * biology_var,
                      expand = expansion(0)) +
   annotate("text", x = 8, y = 92,
            label = "biology > batch", hjust = 0, vjust = 1,
-           size = 2.0, color = "gray25", fontface = "italic") +
+           size = GEOM_TEXT_6PT, color = "gray25", fontface = "plain") +
   annotate("text", x = 92, y = 8,
            label = "batch > biology", hjust = 1, vjust = 0,
-           size = 2.0, color = "gray25", fontface = "italic") +
+           size = GEOM_TEXT_6PT, color = "gray25", fontface = "plain") +
   annotate("text", x = 95, y = 95,
            label = sprintf("Tier 1 above diag: %.1f%%\nNon-DEG above diag: %.1f%%",
                            above_t1, above_non),
-           hjust = 1, vjust = 1, size = 2.0, color = "gray15") +
+           hjust = 1, vjust = 1, size = GEOM_TEXT_6PT, color = "gray15") +
   coord_fixed() +
   labs(x = "% variance explained by dataset",
        y = "% variance explained by\ndisease + fibrosis",
-       title = "Per-gene biology vs batch variance",
        caption = paste0(
          "variancePartition (Hoffman & Schadt 2016) joint model:\n",
          "~ dataset + fibrosis + disease + sex + (1 | sample). Each dot = one gene."
        )) +
   theme_masld(base_size = 7) +
-  theme(plot.title    = element_text(size = 8, face = "bold"),
-        plot.caption  = element_text(size = 6, color = "gray35", hjust = 0),
+  theme(plot.caption  = element_text(size = 6, color = "gray35", hjust = 0),
         legend.position = "top",
         legend.key.size = unit(0.28, "cm"),
         legend.text     = element_text(size = 6))
 
+message("[caption] Panel m: per-gene biology vs batch variance.")
 save_fig(p_m, file.path(PANEL_DIR, "figS_batch_m_gene_variance_scatter.pdf"),
          width = fig_half_width * 1.0, height = 2.8)
 
@@ -568,16 +560,13 @@ extra_bot    <- (p_j | p_k | p_l | p_m) + plot_layout(widths = c(1.0, 0.85, 0.95
 fig_extra    <- extra_top / extra_mid / extra_bot +
   plot_layout(heights = c(1.0, 0.9, 1.0)) +
   plot_annotation(
-    title    = "Extended quantitative evidence: cohort separation in UMAP is biology, not residual batch",
-    subtitle = "10-cohort MASLD bulk RNA-seq atlas (n = 1,444) — supplementing figS_batch_correction panels a-g",
     tag_levels = list(c("h", "", "", "", "i", "j", "k", "l", "m")),
-    theme = theme(plot.title    = element_text(size = 9, face = "bold"),
-                  plot.subtitle = element_text(size = 7, color = "gray35"),
-                  plot.tag      = element_text(size = 9, face = "bold"))
+    theme = theme(plot.tag = element_text(size = 6, face = "plain"))
   )
 
+message("[caption] Extended quantitative evidence: cohort separation in UMAP is biology, not residual batch (10-cohort MASLD bulk RNA-seq atlas, n = 1,444) — supplementing figS_batch_correction panels a-g.")
 out_extra <- file.path(FIGS_BATCH_DIR, "figS_batch_correction_extra.pdf")
-save_fig(fig_extra, out_extra, width = fig_full_width * 1.4, height = 8.4)
+save_fig(fig_extra, out_extra, width = fig_full_width, height = 8.4 / 1.4)
 
 # Per-cohort logFC concordance CSV
 fwrite(cohort_stats, file.path(FIGS_BATCH_DIR, "figS_batch_i_concordance_stats.csv"))

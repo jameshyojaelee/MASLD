@@ -12,6 +12,6 @@ set -euo pipefail
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 mkdir -p Analysis/SingleCell/results_gpu_v2_phase05/logs
 
-echo "[$(date)] starting fig2_ccc_v3_panels on $(hostname)"
-micromamba run -n rnaseq Rscript scripts/figures/fig2_ccc_v3_panels.R
+echo "[$(date)] starting ccc_v3_panels on $(hostname)"
+micromamba run -n rnaseq Rscript scripts/figures/ccc_v3_panels.R
 echo "[$(date)] DONE"

@@ -1,4 +1,14 @@
 #!/bin/bash
+# =============================================================================
+# ⛔ RETIRED / DEAD — DO NOT RUN.
+# This script points at a non-existent `masld-atlas-portal/` directory and
+# invokes `python -m data.build_parquet`, a module that no longer exists.
+# It is SUPERSEDED by the single web-data orchestrator:
+#     scripts/portal/rebuild_web_data.sbatch
+# (which rebuilds the atlas + all portal data under one 7-phase DAG). For a
+# one-off atlas.parquet rebuild, run preprocess_atlas_data.py directly under
+# the `spatial` env. Kept only for provenance; retired 2026-07-08.
+# =============================================================================
 #SBATCH --partition=cpu
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=2

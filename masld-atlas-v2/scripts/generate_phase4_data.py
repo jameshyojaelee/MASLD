@@ -185,6 +185,9 @@ def generate_knowledge_graph(output_dir: Path):
         low_memory=False,
     )
     print(f"  Atlas: {len(atlas)} genes x {len(atlas.columns)} columns")
+    assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), (
+        "C2: atlas missing bulk_* — rebuild 27a"
+    )
 
     # --- Load drug validation ---
     drug_val = pd.read_csv(
@@ -228,7 +231,7 @@ def generate_knowledge_graph(output_dir: Path):
     # Helper to build a gene node from an atlas row
     def make_gene_node(row, symbol_override=None):
         symbol = symbol_override if symbol_override else row["human_symbol"]
-        padj = safe_float(row.get("dream_padj"))
+        padj = safe_float(row.get("bulk_padj"))
         is_deg = padj is not None and padj < 0.05
         is_coloc = False
         for cc in existing_coloc_cols:
@@ -244,7 +247,7 @@ def generate_knowledge_graph(output_dir: Path):
             "is_deg": is_deg,
             "is_coloc": is_coloc,
         }
-        lfc = safe_float(row.get("dream_logFC"))
+        lfc = safe_float(row.get("bulk_logFC"))
         if lfc is not None:
             node["logFC"] = round(lfc, 3)
         return node
@@ -551,8 +554,15 @@ def generate_pathway_genesets(output_dir: Path):
             })
             all_genes.update(genes)
 
-    # Universe size from atlas
-    atlas_genes = 33943  # from atlas dimensions documented in CLAUDE.md
+    # Universe size = current atlas gene count, derived dynamically (was
+    # hardcoded 33943, a stale pre-refresh value; current atlas = 27,187).
+    atlas_csv = PROJECT_ROOT / "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"
+    try:
+        atlas_genes = int(pd.read_csv(atlas_csv, usecols=["human_symbol"]).shape[0])
+    except Exception as e:
+        print(f"  [warn] could not read atlas universe size ({e}); using line count")
+        with open(atlas_csv) as _fh:
+            atlas_genes = sum(1 for _ in _fh) - 1
 
     output = {
         "collections": [

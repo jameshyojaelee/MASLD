@@ -256,7 +256,7 @@ pa <- ggplot(hm_gg_data, aes(x = trans_label, y = tf, fill = score)) +
 p_composite <- (pa | (pb / pc)) +
   plot_layout(widths = c(0.9, 1.1)) +
   plot_annotation(tag_levels = "a",
-                  theme = theme(plot.tag = element_text(size = 9, face = "bold", family = "Helvetica")))
+                  theme = theme(plot.tag = element_text(size = 9, face = "plain", family = "Helvetica")))
 
 save_fig(p_composite, OUT_FIG, width = fig_full_width, height = 5.5)
 cat(sprintf("Saved figure: %s\n", OUT_FIG))

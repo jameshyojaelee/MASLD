@@ -85,7 +85,6 @@ run_step "Benchmark (27b)" "cd ${BASE}/RNA-seq && Rscript 27b_benchmark_presets.
 echo ""
 echo "=== Phase 2: Publication Figures ==="
 
-run_step "Fig 1: Atlas"               "Rscript ${SCRIPT_DIR}/fig1_compact.R"
 run_step "Fig 2: Single-cell & Deconvolution" "Rscript ${SCRIPT_DIR}/fig2_compact.R"
 
 # Sub-panels (sourced by fig3/fig4 compact)

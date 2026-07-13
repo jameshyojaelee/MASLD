@@ -25,8 +25,8 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"; set.seed(42)
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang",
-                  GSE135251 = "Govaere", GSE162694 = "Bril", GSE213621 = "Chen")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970",
+                  GSE135251 = "GSE135251", GSE162694 = "GSE162694", GSE213621 = "GSE213621")
 N_HVG <- 2000L; NCOMP <- 3L
 
 # ---------------------------------------------------------------------------
@@ -131,11 +131,9 @@ pA <- ggplot(scores, aes(PLS1, PLS2, colour = disease)) +
   scale_colour_manual(values = c(Control = CTRL, Disease = masld_colors$nash),
                       name = NULL) +
   guides(colour = guide_legend(override.aes = list(size = 1.8, alpha = 1))) +
-  labs(x = "PLS component 1 (held-out)", y = "PLS component 2 (held-out)",
-       title = sprintf(
-         "PLS-DA (LOCO): held-out projections  —  pooled AUROC = %.2f", auc_all)) +
+  labs(x = "PLS component 1 (held-out)", y = "PLS component 2 (held-out)") +
   theme_masld(base_size = 7) +
-  theme(strip.text       = element_text(size = 6.5, face = "bold"),
+  theme(strip.text       = element_text(size = 6, face = "plain"),
         legend.position  = "top",
         panel.grid.minor = element_blank())
 
@@ -171,24 +169,20 @@ pC <- ggplot(roc_dt, aes(fpr, tpr)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed",
               colour = "grey70", linewidth = 0.3) +
   geom_path(colour = masld_colors$nash, linewidth = 0.7) +
-  annotate("text", x = 0.6, y = 0.18, size = 2.8, colour = "grey15",
+  annotate("text", x = 0.6, y = 0.18, size = GEOM_TEXT_6PT, colour = "black",
            label = sprintf("pooled held-out\nAUROC = %.2f", auc_all)) +
   coord_equal() +
-  labs(x = "false positive rate", y = "true positive rate",
-       title = "ROC (PLS1)") +
+  labs(x = "false positive rate", y = "true positive rate") +
   theme_masld(base_size = 7)
 
+message(sprintf(
+  "[caption] Supervised PLS-DA separates Control from Disease (LOCO cross-validation). NIPALS PLS, top-%d HVGs per training fold (within-cohort variance). n=%d held-out samples. Compare to unsupervised PCA (panelJ) where disease is invisible.",
+  N_HVG, nrow(scores)))
+
 fig <- (pA / (pB | pC)) +
-  plot_layout(heights = c(1.1, 1)) +
-  plot_annotation(
-    title    = "Supervised PLS-DA separates Control from Disease (LOCO cross-validation)",
-    subtitle = sprintf(
-      "NIPALS PLS, top-%d HVGs per training fold (within-cohort variance). n=%d held-out samples. Compare to unsupervised PCA (panelJ) where disease is invisible.",
-      N_HVG, nrow(scores)),
-    theme = theme(plot.title    = element_text(size = 9, face = "bold"),
-                  plot.subtitle = element_text(size = 6.2, colour = "grey35")))
+  plot_layout(heights = c(1.1, 1))
 
 ggsave(file.path(OUT, "panelJ_pls_disease_separation.pdf"), fig,
-       width = 9.0, height = 7.5, device = cairo_pdf)
+       width = fig_full_width, height = 5.9, device = cairo_pdf)
 fwrite(scores, file.path(OUT, "panelJ_pls_disease_separation_data.csv"))
 cat("Wrote panelJ_pls_disease_separation.pdf\n")

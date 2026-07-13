@@ -2,6 +2,15 @@
 """
 46c_network_propagation.py — Network Propagation with Source Convergence
 
+*** DEPRECATED 2026-07-04 (round-2 audit B5a). DO NOT RE-RUN INTO THE PAPER. ***
+The RWR convergence result this script produced ("123 genes at 7/7, OR=4.85")
+was RETRACTED 2026-05-22 (E2) as a dead pre-C2 7-source build; the live Fig5
+panel was replaced by the C2 convergence distribution (see
+scripts/figures/fig5_translation.R panel (e)). This script has 0 active
+consumers. Its outputs (network_propagation_scores.csv / network_modules.csv /
+network_rank_gainers.csv) were archived under
+data/archive/dead_rwr_output_2026-07-04/. Kept here for provenance only.
+
 Random walk with restart (RWR) from 6 source-specific seed vectors on STRING PPI.
 Tests whether independent evidence sources converge on the same network modules.
 
@@ -27,6 +36,8 @@ np.random.seed(42)
 # ── 1. Load atlas ───────────────────────────────────────────────────────────
 print("Loading atlas...")
 atlas = pd.read_csv(os.path.join(ME, "multi_evidence_atlas.csv"))
+assert {"bulk_padj", "bulk_logFC"} <= set(atlas.columns), \
+    "C2: atlas missing bulk_* — rebuild 27a"
 atlas_genes = set(atlas["human_symbol"].dropna().unique())
 N_atlas = len(atlas)
 print(f"  Atlas: {N_atlas} genes")
@@ -110,7 +121,7 @@ print("Computing source seed vectors...")
 seed_vectors = {}
 
 for si, (name, compute_fn) in enumerate({
-    "S1": lambda g: safe_neglog10(get_val(g, "dream_padj", 1.0)) * abs(get_val(g, "dream_logFC", 0.0)),
+    "S1": lambda g: safe_neglog10(get_val(g, "bulk_padj", 1.0)) * abs(get_val(g, "bulk_logFC", 0.0)),
     "S2": lambda g: max(
         get_val(g, "coloc_pp4"), get_val(g, "broadaway_coloc_pp4"),
         get_val(g, "best_liver_enzyme_pp4"), get_val(g, "ukbb_alt_coloc_pp4"),

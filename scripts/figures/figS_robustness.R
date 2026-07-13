@@ -52,11 +52,11 @@ theme_robust <- theme_minimal(base_size = 9) +
     legend.margin     = margin(b = -3),
     legend.title      = element_text(size = 8),
     legend.text       = element_text(size = 8),
-    plot.title        = element_text(face = "bold", size = 10,
+    plot.title        = element_text(face = "plain", size = 10,
                                      margin = margin(b = 2)),
     plot.subtitle     = element_text(size = 8, colour = "grey30",
                                      margin = margin(b = 4)),
-    plot.tag          = element_text(face = "bold", size = 11),
+    plot.tag          = element_text(face = "plain", size = 11),
     plot.margin       = margin(6, 8, 6, 8)
   )
 
@@ -153,7 +153,7 @@ p_c <- ggplot(count_dt, aes(x = n_deg_perm)) +
            hjust = 0, vjust = 3.0,
            label = sprintf("Observed = %s\nEmpirical FDR = %.3f",
                            comma(n_obs), emp_fdr),
-           size = 3.0, colour = "#D55E00", fontface = "bold") +
+           size = 3.0, colour = "#D55E00", fontface = "plain") +
   scale_x_continuous(labels = comma,
                      limits = c(0, max(perm_q95 + 2, max(count_dt$n_deg_perm)))) +
   labs(tag = "C",

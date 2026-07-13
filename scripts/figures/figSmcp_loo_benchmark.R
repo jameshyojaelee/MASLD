@@ -22,11 +22,11 @@ p_loo <- ggplot(loo[order(-jaccard_top100)],
   geom_hline(yintercept = 0.3, linetype = 3, color = "gray60") +
   scale_fill_manual(values = c(`TRUE` = masld_colors$up, `FALSE` = "gray70")) +
   labs(x = "cNMF program (full-atlas)", y = "Top-100 Jaccard vs LOO fit",
-       title = "LOO stability: GSE244832 excluded (62.5% of cells)",
        fill = "Jaccard ≥ 0.5") +
   coord_flip() +
-  theme_minimal(base_size = 8)
+  theme_minimal(base_size = 6)
 ggsave(file.path(OUT, "figSmcp_f_loo_stability.pdf"), p_loo, width = 6, height = 4, device = cairo_pdf)
+message("[caption] LOO stability: GSE244832 excluded (62.5% of cells)")
 cat("[figS] panel F (LOO) written\n")
 
 # Panel: Plain NMF vs cNMF
@@ -39,9 +39,9 @@ p_pn <- ggplot(cophenetics, aes(method, cophenetic)) +
   geom_col(fill = masld_colors$up, alpha = 0.7) +
   geom_hline(yintercept = 0.95, linetype = 2, color = "gray40") +
   coord_cartesian(ylim = c(0.9, 1.0)) +
-  labs(x = NULL, y = "Cophenetic correlation (k=16)",
-       title = "cNMF vs plain NMF at 20 replicates") +
-  theme_minimal(base_size = 8)
+  labs(x = NULL, y = "Cophenetic correlation (k=16)") +
+  theme_minimal(base_size = 6)
 ggsave(file.path(OUT, "figSmcp_g_cnmf_vs_plain.pdf"), p_pn, width = 4, height = 3, device = cairo_pdf)
+message("[caption] cNMF vs plain NMF at 20 replicates")
 cat("[figS] panel G (cNMF vs plain NMF) written\n")
 cat("[figSmcp_loo_benchmark] DONE\n")

@@ -25,10 +25,11 @@ cat("Atlas:", ATLAS_PATH, "\n\n")
 
 atlas <- fread(ATLAS_PATH)
 cat("Atlas loaded:", nrow(atlas), "genes x", ncol(atlas), "columns\n\n")
+stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 
 has_col <- function(x) x %in% names(atlas)
 
-crit_deg        <- !is.na(atlas$dream_padj) & atlas$dream_padj < 0.05
+crit_deg        <- !is.na(atlas$bulk_padj) & atlas$bulk_padj < 0.05
 crit_coloc      <- !is.na(atlas$coloc_susie_best_pp4) & atlas$coloc_susie_best_pp4 > 0.5
 crit_cc         <- !is.na(atlas$is_conserved) & atlas$is_conserved == TRUE
 crit_essential  <- !is.na(atlas$essentiality_chronos) & atlas$essentiality_chronos < -0.5
@@ -44,11 +45,11 @@ any_criterion <- crit_deg | crit_coloc | crit_cc | crit_essential | crit_liana |
 
 nodes <- atlas[any_criterion]
 
-nodes[, is_deg := !is.na(dream_padj) & dream_padj < 0.05 & !is.na(dream_logFC) & abs(dream_logFC) > 0.3]
+nodes[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & !is.na(bulk_logFC) & abs(bulk_logFC) > 0.3]
 
 keep_cols <- intersect(
-  c("human_symbol", "ensembl_id", "gene_biotype", "dream_logFC", "dream_padj",
-    "dream_tstat", "is_deg", "coloc_susie_best_pp4", "is_conserved",
+  c("human_symbol", "ensembl_id", "gene_biotype", "bulk_logFC", "bulk_padj",
+    "bulk_tstat", "is_deg", "coloc_susie_best_pp4", "is_conserved",
     "sex_class", "zonation_class", "ferroptosis_class", "dgidb_druggable",
     "n_coloc_sources", "attribution_class", "mouse_ortholog"),
   c(names(nodes), "is_deg")
@@ -59,7 +60,7 @@ fwrite(nodes, file.path(OUTDIR, "network_nodes.csv"))
 
 cat("--- Inclusion Criteria Breakdown ---\n")
 criteria <- data.table(
-  criterion = c("dream_padj < 0.05", "coloc_susie_best_pp4 > 0.5",
+  criterion = c("bulk_padj < 0.05", "coloc_susie_best_pp4 > 0.5",
                 "is_conserved", "essentiality_chronos < -0.5",
                 "liana_n_diff_interactions > 0", "spatial_sig",
                 "gwas_variant_in_peak",

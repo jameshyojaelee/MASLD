@@ -120,15 +120,29 @@ csa_sources <- list(
   "PanUKBB_CSA_GGT" = file.path(BASE, "RNA-seq/results/causal_inference/panukbb_csa_ggt/coloc_results.csv")
 )
 
+# --- MVP multi-ancestry COLOC (added 2026-07-04): per-stratum susie_coloc_combined.csv from
+#     the canonical finemapping-tier pipeline (07). load_coloc() handles the PP.H4.abf/susie
+#     schema + the `gene` (symbol) key. MVP-EUR joins the validated EUR arm; MVP-EAS joins EAS
+#     (same convention as BBJ); MVP-AFR joins AFR; MVP-AMR is a NEW exploratory bucket
+#     (non-EUR GWAS x EUR liver-eQTL, like AFR/CSA).
+mvp_combined <- function(name) file.path(BASE, "GWAS/finemapping/results/susie_coloc", name, "susie_coloc_combined.csv")
+for (n in c("MVP_NAFLD_EUR","MVP_Cirrhosis_EUR","MVP_ChronLiver_EUR","MVP_ALT_EUR","MVP_AST_EUR","MVP_Albumin_EUR","MVP_Platelet_EUR")) eur_sources[[n]] <- mvp_combined(n)
+for (n in c("MVP_NAFLD_EAS","MVP_ChronLiver_EAS","MVP_ALT_EAS","MVP_AST_EAS","MVP_Albumin_EAS","MVP_Platelet_EAS")) eas_sources[[n]] <- mvp_combined(n)
+for (n in c("MVP_NAFLD_AFR","MVP_Cirrhosis_AFR","MVP_ChronLiver_AFR","MVP_ALT_AFR","MVP_AST_AFR","MVP_Albumin_AFR","MVP_Platelet_AFR")) afr_sources[[n]] <- mvp_combined(n)
+mvp_amr_names <- c("MVP_NAFLD_AMR","MVP_Cirrhosis_AMR","MVP_ChronLiver_AMR","MVP_ALT_AMR","MVP_AST_AMR","MVP_Albumin_AMR","MVP_Platelet_AMR")
+amr_sources <- setNames(lapply(mvp_amr_names, mvp_combined), mvp_amr_names)
+
 eur_results <- rbindlist(lapply(names(eur_sources), function(n) load_coloc(eur_sources[[n]], n)), fill = TRUE)
 eas_results <- rbindlist(lapply(names(eas_sources), function(n) load_coloc(eas_sources[[n]], n)), fill = TRUE)
 afr_results <- rbindlist(lapply(names(afr_sources), function(n) load_coloc(afr_sources[[n]], n)), fill = TRUE)
 csa_results <- rbindlist(lapply(names(csa_sources), function(n) load_coloc(csa_sources[[n]], n)), fill = TRUE)
+amr_results <- rbindlist(lapply(names(amr_sources), function(n) load_coloc(amr_sources[[n]], n)), fill = TRUE)
 
 cat("\n  Total EUR results:", nrow(eur_results), "gene-source pairs\n")
 cat("  Total EAS results:", nrow(eas_results), "gene-source pairs\n")
 cat("  Total AFR results:", nrow(afr_results), "gene-source pairs\n")
 cat("  Total CSA results:", nrow(csa_results), "gene-source pairs\n")
+cat("  Total AMR results:", nrow(amr_results), "gene-source pairs\n")
 
 # ==============================================================================
 # 2. Per-ancestry best PP.H4 per gene
@@ -183,6 +197,18 @@ if (nrow(csa_results) > 0) {
                           n_csa_sources_sig = integer(), best_csa_source = character())
 }
 
+# American/Admixed (MVP AMR): best PP.H4 across MVP AMR sources (exploratory arm)
+if (nrow(amr_results) > 0) {
+  amr_best <- amr_results[, .(
+    best_pp4_amr = max(PP.H4, na.rm = TRUE),
+    n_amr_sources_sig = sum(PP.H4 > 0.5),
+    best_amr_source = source[which.max(PP.H4)]
+  ), by = gene]
+} else {
+  amr_best <- data.table(gene = character(), best_pp4_amr = numeric(),
+                          n_amr_sources_sig = integer(), best_amr_source = character())
+}
+
 cat("  EUR genes tested:", nrow(eur_best), "\n")
 cat("  EUR genes with PP.H4 > 0.5:", sum(eur_best$best_pp4_eur > 0.5), "\n")
 cat("  EAS genes tested:", nrow(eas_best), "\n")
@@ -191,6 +217,8 @@ cat("  AFR genes tested:", nrow(afr_best), "\n")
 cat("  AFR genes with PP.H4 > 0.5:", sum(afr_best$best_pp4_afr > 0.5), "\n")
 cat("  CSA genes tested:", nrow(csa_best), "\n")
 cat("  CSA genes with PP.H4 > 0.5:", sum(csa_best$best_pp4_csa > 0.5), "\n")
+cat("  AMR genes tested:", nrow(amr_best), "\n")
+cat("  AMR genes with PP.H4 > 0.5:", sum(amr_best$best_pp4_amr > 0.5), "\n")
 
 # ==============================================================================
 # 3. Cross-ancestry comparison
@@ -199,22 +227,31 @@ cat("\n--- Step 3: Cross-ancestry comparison (4-way) ---\n")
 
 # Merge all 4 ancestry best tables
 cross <- Reduce(function(a, b) merge(a, b, by = "gene", all = TRUE),
-                list(eur_best, eas_best, afr_best, csa_best))
+                list(eur_best, eas_best, afr_best, csa_best, amr_best))
 # Track which ancestries were actually tested (NA = untested, 0 = tested but no signal)
-for (col in c("best_pp4_eur", "best_pp4_eas", "best_pp4_afr", "best_pp4_csa")) {
+for (col in c("best_pp4_eur", "best_pp4_eas", "best_pp4_afr", "best_pp4_csa", "best_pp4_amr")) {
   if (!col %in% names(cross)) cross[, (col) := NA_real_]
 }
 cross[, n_ancestry_tested := (!is.na(best_pp4_eur)) + (!is.na(best_pp4_eas)) +
-                              (!is.na(best_pp4_afr)) + (!is.na(best_pp4_csa))]
+                              (!is.na(best_pp4_afr)) + (!is.na(best_pp4_csa)) +
+                              (!is.na(best_pp4_amr))]
 
 # Count how many ancestry groups have PP.H4 > 0.5 (NA-safe: untested counts as FALSE)
 cross[, n_ancestry_sig := (fifelse(is.na(best_pp4_eur), FALSE, best_pp4_eur > 0.5)) +
                            (fifelse(is.na(best_pp4_eas), FALSE, best_pp4_eas > 0.5)) +
                            (fifelse(is.na(best_pp4_afr), FALSE, best_pp4_afr > 0.5)) +
-                           (fifelse(is.na(best_pp4_csa), FALSE, best_pp4_csa > 0.5))]
+                           (fifelse(is.na(best_pp4_csa), FALSE, best_pp4_csa > 0.5)) +
+                           (fifelse(is.na(best_pp4_amr), FALSE, best_pp4_amr > 0.5))]
 # Validated ancestry count: EUR+EAS only (AFR/CSA are exploratory due to
 # low power and prior-driven posteriors — see 50c prior sensitivity analysis)
-cross[, n_validated_ancestry := (best_pp4_eur > 0.5) + (best_pp4_eas > 0.5)]
+# NA-safe (mirror the n_ancestry_sig fifelse above): an ancestry a gene was NOT
+# tested in must contribute 0, not NA. Otherwise every gene untested in EAS (327
+# of 19,281 rows) propagates NA into n_validated_ancestry, which (a) silently
+# demotes real EUR-only hits to class "Neither" and (b) blanks the downstream
+# multi_ancestry_validated_eur_eas / n_validated_ancestry_2 summary fields. (C9 fix
+# 2026-07-05 — see qa_campaign/C9_coverage_NOTES.md.)
+cross[, n_validated_ancestry := (fifelse(is.na(best_pp4_eur), FALSE, best_pp4_eur > 0.5)) +
+                                (fifelse(is.na(best_pp4_eas), FALSE, best_pp4_eas > 0.5))]
 
 # Classification — distinguish validated (EUR/EAS) from exploratory (AFR/CSA)
 cross[, class := "Neither"]
@@ -224,6 +261,39 @@ cross[n_validated_ancestry == 1 & best_pp4_eas > 0.5, class := "EAS_only"]
 # AFR/CSA-only genes (no EUR/EAS signal) are exploratory
 cross[n_validated_ancestry == 0 & best_pp4_afr > 0.5, class := "AFR_exploratory"]
 cross[n_validated_ancestry == 0 & best_pp4_csa > 0.5, class := "CSA_exploratory"]
+cross[n_validated_ancestry == 0 & best_pp4_amr > 0.5, class := "AMR_exploratory"]
+
+# ── C4: annotate cross-ancestry calls with lambda_s LD-reliability ────────────
+# The non-EUR arms (EAS/AFR/CSA/AMR) are fine-mapped against small 1000G LD
+# panels; where the LD reference does not match the GWAS (high lambda_s,
+# estimate_s_rss) the non-EUR PP.H4 — and any AFR/CSA/AMR-driven cross-ancestry
+# call — is LD-unreliable, not merely cross-ancestry. Join the gene-level
+# lambda_s reliability from the canonical finemapping-tier coloc
+# (gene_level_coloc.csv, populated by 07) so exploratory / cross-ancestry targets
+# carry an explicit LD-caution flag instead of being taken at face value.
+gene_coloc_f <- file.path(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv")
+if (file.exists(gene_coloc_f)) {
+  glc <- fread(gene_coloc_f)
+  ld_cols <- intersect(c("gene", "coloc_max_lambda_s", "coloc_best_ld_reliability",
+                         "coloc_cross_anc_ld_caution"), names(glc))
+  if (all(c("gene", "coloc_max_lambda_s") %in% ld_cols)) {
+    glc_ld <- unique(glc[, ..ld_cols], by = "gene")
+    cross <- merge(cross, glc_ld, by = "gene", all.x = TRUE)
+    if ("coloc_cross_anc_ld_caution" %in% names(cross)) {
+      cross[is.na(coloc_cross_anc_ld_caution), coloc_cross_anc_ld_caution := FALSE]
+      n_expl_caut <- cross[n_validated_ancestry == 0 & n_ancestry_sig >= 1 &
+                             coloc_cross_anc_ld_caution == TRUE, .N]
+      cat(sprintf("\n  C4 LD-reliability: %d exploratory (non-EUR-only) gene(s) rest on a high-lambda_s locus (LD-unreliable)\n",
+                  n_expl_caut))
+    }
+    cat(sprintf("  C4 LD-reliability joined; genes with coloc_max_lambda_s non-NA: %d/%d\n",
+                sum(!is.na(cross$coloc_max_lambda_s)), nrow(cross)))
+  } else {
+    cat("\n  C4 WARNING: gene_level_coloc.csv lacks lambda_s columns — run 07 first\n")
+  }
+} else {
+  cat("\n  C4 WARNING: gene_level_coloc.csv not found — cross-ancestry LD-reliability not annotated\n")
+}
 
 cat("\n  Cross-ancestry classification:\n")
 class_counts <- cross[, .N, by = class][order(-N)]
@@ -242,7 +312,7 @@ for (k in 0:2) {
 
 # Pairwise correlations among shared tested genes
 ancestry_cols <- c(EUR = "best_pp4_eur", EAS = "best_pp4_eas",
-                   AFR = "best_pp4_afr", CSA = "best_pp4_csa")
+                   AFR = "best_pp4_afr", CSA = "best_pp4_csa", AMR = "best_pp4_amr")
 cat("\n  Pairwise Spearman rho (among shared genes):\n")
 for (i in seq_along(ancestry_cols)) {
   for (j in seq_along(ancestry_cols)) {
@@ -281,8 +351,9 @@ for (g in anchor) {
     eas_val <- ifelse("best_pp4_eas" %in% names(row), round(row$best_pp4_eas[1], 3), NA)
     afr_val <- ifelse("best_pp4_afr" %in% names(row), round(row$best_pp4_afr[1], 3), NA)
     csa_val <- ifelse("best_pp4_csa" %in% names(row), round(row$best_pp4_csa[1], 3), NA)
-    cat(sprintf("    %s: EUR=%.3f, EAS=%.3f, AFR=%.3f, CSA=%.3f → %s (n_ancestry=%d)\n",
-                g, eur_val, eas_val, afr_val, csa_val,
+    amr_val <- ifelse("best_pp4_amr" %in% names(row), round(row$best_pp4_amr[1], 3), NA)
+    cat(sprintf("    %s: EUR=%.3f, EAS=%.3f, AFR=%.3f, CSA=%.3f, AMR=%.3f → %s (n_ancestry=%d)\n",
+                g, eur_val, eas_val, afr_val, csa_val, amr_val,
                 row$class[1], row$n_ancestry_sig[1]))
   } else {
     cat(sprintf("    %s: not tested in any COLOC\n", g))
@@ -455,36 +526,96 @@ eur_eas_rho <- ifelse(nrow(shared) > 5,
                       round(cor(shared$best_pp4_eur, shared$best_pp4_eas,
                                 method = "spearman"), 3), NA_real_)
 
+# --- C8: contextualise the EUR-EAS Spearman (do NOT report it as a bare number).
+# The rho is attenuated by (i) non-EUR power — EAS GWAS N is 1-2 orders of
+# magnitude below EUR — and (ii) an EUR-only liver eQTL panel (cross-ancestry LD
+# mismatch depresses non-EUR PP.H4). Emit the shared-N it is computed over and
+# the per-ancestry median GWAS N (from the finemapping registry) alongside it so
+# the number is interpretable, not hidden. See
+# GWAS/finemapping/results/qa_campaign/C8_control_recovery_NOTES.md.
+n_shared_eur_eas <- nrow(shared)
+reg_med_eur_n <- NA_integer_; reg_med_eas_n <- NA_integer_
+reg_f <- file.path(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
+if (file.exists(reg_f)) {
+  reg <- fread(reg_f)
+  if (all(c("ancestry", "N_tot") %in% names(reg))) {
+    reg_med <- reg[, .(med = as.integer(median(N_tot, na.rm = TRUE))), by = ancestry]
+    if ("EUR" %in% reg_med$ancestry) reg_med_eur_n <- reg_med[ancestry == "EUR", med]
+    if ("EAS" %in% reg_med$ancestry) reg_med_eas_n <- reg_med[ancestry == "EAS", med]
+  }
+}
+eur_eas_note <- paste0(
+  "EUR-EAS PP.H4 Spearman is a LOWER BOUND on cross-ancestry concordance: ",
+  "attenuated by non-EUR power (median GWAS N EUR=", reg_med_eur_n,
+  " vs EAS=", reg_med_eas_n, ") and an EUR-only liver eQTL panel ",
+  "(cross-ancestry LD mismatch depresses non-EUR PP.H4). ",
+  "Not a defect; see qa_campaign/C8_control_recovery_NOTES.md")
+cat(sprintf("\n  C8 cross-ancestry context: rho=%s over N=%d shared genes; median GWAS N EUR=%s EAS=%s\n",
+            eur_eas_rho, n_shared_eur_eas, reg_med_eur_n, reg_med_eas_n))
+
+# --- C9 (2026-07-05): the non-EUR sig-count fields (eas/afr/csa_genes_sig,
+# multi_ancestry_validated_eur_eas, n_validated_ancestry_2) were previously BLANK
+# because best_pp4_{eas,afr,csa} carry NA for untested genes and a bare
+# sum(col > 0.5) propagates NA. Fix = NA-safe sums (na.rm) + emit the tested
+# denominator (*_genes_tested) so "sig / tested" is interpretable, + a note that
+# the non-EUR arms run against the EUR liver-eQTL panel (cross-ancestry LD mismatch
+# => these counts are a LOWER BOUND, not a defect). AMR (MVP) added as an explicit
+# exploratory arm. See qa_campaign/C9_coverage_NOTES.md.
+nonEUR_fields_note <- paste0(
+  "Non-EUR sig counts (eas/afr/csa/amr_genes_sig) are counted among TESTED genes only ",
+  "(see *_genes_tested denominators): a gene untested in an ancestry is NA (not 0). ",
+  "AFR/CSA/AMR are EXPLORATORY (EUR-only liver eQTL x small out-of-sample 1kg LD => ",
+  "cross-ancestry LD mismatch depresses non-EUR PP.H4; these counts are a LOWER BOUND). ",
+  "multi_ancestry_validated_eur_eas / n_validated_ancestry_2 count genes with PP.H4>0.5 ",
+  "in BOTH validated arms (EUR AND EAS). These fields were previously blank from ",
+  "NA-propagation; populated 2026-07-05 (C9). See qa_campaign/C9_coverage_NOTES.md.")
+
 summary_dt <- data.table(
   metric = c(
     "total_genes_tested",
-    "eur_genes_sig", "eas_genes_sig", "afr_genes_sig", "csa_genes_sig",
+    "eur_genes_sig", "eas_genes_sig", "afr_genes_sig", "csa_genes_sig", "amr_genes_sig",
+    "eur_genes_tested", "eas_genes_tested", "afr_genes_tested", "csa_genes_tested", "amr_genes_tested",
     "multi_ancestry_validated_eur_eas",
     "multi_ancestry_any_2plus",
     "eur_only", "eas_only",
-    "afr_exploratory", "csa_exploratory",
+    "afr_exploratory", "csa_exploratory", "amr_exploratory",
     "n_ancestry_sig_2", "n_ancestry_sig_3", "n_ancestry_sig_4",
     "n_validated_ancestry_2",
-    "pp4_eur_eas_spearman"
+    "pp4_eur_eas_spearman",
+    "pp4_eur_eas_spearman_n_shared",
+    "eur_median_gwas_n", "eas_median_gwas_n",
+    "nonEUR_fields_note",
+    "pp4_eur_eas_interpretation"
   ),
-  value = c(
+  value = as.character(c(
     nrow(cross),
-    sum(cross$best_pp4_eur > 0.5),
-    sum(cross$best_pp4_eas > 0.5),
-    sum(cross$best_pp4_afr > 0.5),
-    sum(cross$best_pp4_csa > 0.5),
-    sum(cross$n_validated_ancestry >= 2),
+    sum(cross$best_pp4_eur > 0.5, na.rm = TRUE),
+    sum(cross$best_pp4_eas > 0.5, na.rm = TRUE),
+    sum(cross$best_pp4_afr > 0.5, na.rm = TRUE),
+    sum(cross$best_pp4_csa > 0.5, na.rm = TRUE),
+    sum(cross$best_pp4_amr > 0.5, na.rm = TRUE),
+    sum(!is.na(cross$best_pp4_eur)),
+    sum(!is.na(cross$best_pp4_eas)),
+    sum(!is.na(cross$best_pp4_afr)),
+    sum(!is.na(cross$best_pp4_csa)),
+    sum(!is.na(cross$best_pp4_amr)),
+    sum(cross$n_validated_ancestry >= 2, na.rm = TRUE),
     sum(cross$n_ancestry_sig >= 2),
     sum(cross$class == "EUR_only"),
     sum(cross$class == "EAS_only"),
     sum(cross$class == "AFR_exploratory"),
     sum(cross$class == "CSA_exploratory"),
+    sum(cross$class == "AMR_exploratory"),
     sum(cross$n_ancestry_sig == 2),
     sum(cross$n_ancestry_sig == 3),
     sum(cross$n_ancestry_sig == 4),
-    sum(cross$n_validated_ancestry == 2),
-    eur_eas_rho
-  )
+    sum(cross$n_validated_ancestry == 2, na.rm = TRUE),
+    eur_eas_rho,
+    n_shared_eur_eas,
+    reg_med_eur_n, reg_med_eas_n,
+    nonEUR_fields_note,
+    eur_eas_note
+  ))
 )
 fwrite(summary_dt, file.path(OUTDIR, "cross_ancestry_summary.csv"))
 cat("  Saved: cross_ancestry_summary.csv\n")

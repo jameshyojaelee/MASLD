@@ -17,7 +17,7 @@
 #                 - subtle "high-confidence corner" shading
 #                 - marginal rugs along top and right axes
 #
-# Output: figures/main/fig3_regulatory_architecture/panels/fig3a_hybrid.pdf
+# Output: figures/main/fig2_genetics/panels/coloc_deg_hybrid.pdf
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -226,7 +226,7 @@ p_sc <- ggplot() +
     data = gene_labels,
     aes(x = top_var_pp, y = max_pp4, label = best_gene),
     color = "gray10",
-    size = 2.6, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     box.padding = 0.5, point.padding = 0.3,
     segment.size = 0.2, segment.color = "gray45",
     min.segment.length = 0, force = 3, force_pull = 0.35,
@@ -244,39 +244,40 @@ p_sc <- ggplot() +
                      breaks = c(0.5, 0.7, 0.9, 1.0),
                      expand = c(0, 0)) +
   labs(x = "SuSiE fine-mapping PIP  (COLOC lead variant)",
-       y = "COLOC PP.H4  (best of SuSiE / ABF)",
-       title = "High-confidence variant-to-gene COLOC genes") +
+       y = "COLOC PP.H4  (best of SuSiE / ABF)") +
   theme_masld() +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "#EEEAE2", linewidth = 0.16),
     panel.border     = element_rect(color = "gray50", fill = NA,
                                     linewidth = 0.35),
-    axis.text        = element_text(size = 6.5),
-    axis.title       = element_text(size = 7),
+    axis.text        = element_text(size = 6),
+    axis.title       = element_text(size = 6),
     legend.position  = "right",
     legend.box       = "vertical",
     legend.key.size  = unit(0.28, "cm"),
     legend.text      = element_text(size = 6),
-    legend.title     = element_text(size = 6.5, face = "bold"),
-    plot.title       = element_text(size = 8.5, face = "bold")
+    legend.title     = element_text(size = 6, face = "plain")
   ) +
   guides(color = guide_legend(override.aes = list(size = 2.6, alpha = 0.9,
                                                    shape = 16)),
          size  = guide_legend(override.aes = list(color = "gray30",
                                                    alpha = 0.85)))
 
-out <- file.path(PANEL_DIR, "fig3a_hybrid.pdf")
-save_fig(p_sc, out, width = fig_full_width * 0.6, height = 3.6)
-cat("[fig3a-hybrid] Saved:", out, "\n")
+message("[caption] High-confidence variant-to-gene COLOC genes")
+out <- file.path(PANEL_DIR, "coloc_deg_hybrid.pdf")
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_deg_hybrid.pdf
+# save_fig(p_sc, out, width = fig_full_width * 0.6, height = 3.6)
+# cat("[fig3a-hybrid] Saved:", out, "\n")
 
 # Sidecar CSV: one row per corner gene
 corner_export <- gene_corner[, .(best_gene, top_var_pp, max_pp4,
                                   best_gwas, ancestry_class, n_gwas)
                             ][order(-max_pp4, -top_var_pp)]
-fwrite(corner_export,
-       file.path(PANEL_DIR, "fig3a_hybrid_corner_genes.csv"))
-cat("[fig3a-hybrid] Wrote sidecar CSV with", nrow(corner_export), "corner genes\n")
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_deg_hybrid_corner_genes.csv
+# fwrite(corner_export,
+#        file.path(PANEL_DIR, "coloc_deg_hybrid_corner_genes.csv"))
+# cat("[fig3a-hybrid] Wrote sidecar CSV with", nrow(corner_export), "corner genes\n")
 
 # ===========================================================================
 # Version B : ALL genes plotted (axes from 0 to 1), labels limited to the
@@ -352,7 +353,7 @@ p_sc_b <- ggplot() +
     data = labels_b,
     aes(x = top_var_pp, y = max_pp4, label = best_gene),
     color = "gray10",
-    size = 2.4, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     box.padding   = 0.45,
     point.padding = 0.25,
     segment.size  = 0.18,
@@ -372,26 +373,26 @@ p_sc_b <- ggplot() +
   coord_cartesian(xlim = c(-0.02, 1.02), ylim = c(-0.02, 1.02),
                   expand = FALSE, clip = "off") +
   labs(x = "SuSiE fine-mapping PIP  (COLOC lead variant)",
-       y = "COLOC PP.H4  (best of SuSiE / ABF)",
-       title = "All COLOC genes with fine-mapping coverage") +
+       y = "COLOC PP.H4  (best of SuSiE / ABF)") +
   theme_masld() +
   theme(
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "#EEEAE2", linewidth = 0.16),
     panel.border     = element_rect(color = "gray50", fill = NA,
                                     linewidth = 0.35),
-    axis.text        = element_text(size = 6.5),
-    axis.title       = element_text(size = 7),
+    axis.text        = element_text(size = 6),
+    axis.title       = element_text(size = 6),
     legend.position  = "right",
     legend.key.size  = unit(0.28, "cm"),
     legend.text      = element_text(size = 6),
-    legend.title     = element_text(size = 6.5, face = "bold"),
-    plot.title       = element_text(size = 8.5, face = "bold"),
+    legend.title     = element_text(size = 6, face = "plain"),
     plot.margin      = margin(t = 10, r = 14, b = 8, l = 14)
   ) +
   guides(color = guide_legend(override.aes = list(size = 2.4, alpha = 0.95,
                                                    shape = 16)))
 
-out_b <- file.path(PANEL_DIR, "fig3a_hybrid_b.pdf")
-save_fig(p_sc_b, out_b, width = fig_full_width * 0.85, height = 5.0)
-cat("[fig3a-hybrid] Saved version B (full-range, quadrant labels):", out_b, "\n")
+message("[caption] All COLOC genes with fine-mapping coverage")
+out_b <- file.path(PANEL_DIR, "coloc_deg_hybrid_b.pdf")
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_deg_hybrid_b.pdf
+# save_fig(p_sc_b, out_b, width = fig_full_width * 0.85, height = 5.0)
+# cat("[fig3a-hybrid] Saved version B (full-range, quadrant labels):", out_b, "\n")

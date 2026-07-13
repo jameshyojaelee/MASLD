@@ -19,7 +19,14 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
-CHROMVAR_CSV <- file.path(ATAC_DIR, "results/chromvar_v2/chromvar_tf_activity.csv")
+# Donor-level limma table (per cell type): the pseudoreplication-corrected fix.
+# Replaces the retired per-CELL Mann-Whitney table (chromvar_tf_activity.csv),
+# whose 4,832 "sig" hits were fabricated by treating each cell as an independent
+# replicate of an <=18-donor contrast. The donor-level limma yields 110 sig
+# (adj.P.Val < 0.05) genome-wide, ALL in the Low_confidence cell type; none of
+# the 4 displayed cell types carry a chromVAR-significant motif (see megareview
+# A6.1). Columns: cell_type, TF, logFC, P.Value, adj.P.Val, n_donors.
+CHROMVAR_CSV <- file.path(ATAC_DIR, "results/chromvar_v2/chromvar_limma_per_ct.csv")
 OUT_PDF      <- file.path(FIGS05_DIR, "figS05_scatac_chromvar_dotplot.pdf")
 dir.create(dirname(OUT_PDF), recursive = TRUE, showWarnings = FALSE)
 
@@ -34,7 +41,7 @@ TF_GROUPS <- list(
       FOXA1  = "FOXA1",  FOXA2 = "FOXA2"),
   `NR drug targets` =
     c(THRB   = "THRB",   NR1H4 = "Nr1H4",
-      PPARA  = "Ppara",  PPARG = "PPARG",
+      PPARA  = "Ppara",  PPARG = "Pparg::Rxra",
       RORA   = "RORA",   RXRA  = "Rxra"),
   `Metabolic` =
     c(MLXIPL = "MLXIPL", `NR1H3 (LXRα)` = "Nr1h3", KLF15 = "KLF15"),
@@ -58,6 +65,9 @@ tf_lookup <- rbindlist(lapply(names(TF_GROUPS), function(g) {
 # Load + filter
 # -----------------------------------------------------------------------------
 dt <- fread(CHROMVAR_CSV)
+# Donor-level limma columns -> harmonise to the names used downstream.
+setnames(dt, c("TF", "logFC", "adj.P.Val"),
+             c("tf_name", "logFC_deviation", "padj"))
 dt <- dt[cell_type %in% CT_KEEP]
 dt <- dt[order(padj)][!duplicated(dt[, .(tf_name, cell_type)])]
 
@@ -86,7 +96,7 @@ plot_dt[, is_sig        := padj < 0.05]
 y_levels <- levels(plot_dt$display)
 # strip any parenthetical for matching (e.g., "NR1H3 (LXRα)" -> "NR1H3")
 y_stem   <- sub(" \\(.*", "", y_levels)
-y_face   <- ifelse(y_stem %in% BOLD_TFS, "bold", "plain")
+y_face   <- ifelse(y_stem %in% BOLD_TFS, "italic", "plain")
 
 # -----------------------------------------------------------------------------
 # Group separators (horizontal lines between TF functional groups)
@@ -126,7 +136,7 @@ p <- ggplot(plot_dt,
   ) +
   scale_x_discrete(labels = function(x) gsub("_", " ", x)) +
   labs(x = NULL, y = NULL) +
-  theme_masld(base_size = 7) +
+  theme_masld(base_size = 6) +
   theme_pub() +
   theme(
     axis.text.x      = element_text(angle = 35, hjust = 1, vjust = 1,
@@ -139,7 +149,7 @@ p <- ggplot(plot_dt,
     legend.box       = "vertical",
     legend.spacing.y = unit(0.2, "cm"),
     legend.margin    = margin(l = 4, r = 0),
-    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "bold"),
+    legend.title     = element_text(size = PUB_LEGEND_TIT, face = "plain"),
     legend.text      = element_text(size = PUB_LEGEND),
     plot.margin      = margin(4, 6, 2, 4)
   ) +
@@ -173,10 +183,13 @@ message(sprintf("  Cell types       : %d  (%s)",
 message(sprintf("  Bold TFs         : %s",
                 paste(intersect(BOLD_TFS, y_stem), collapse = ", ")))
 
-# Source data CSV
+# Source data CSV (donor-level limma schema)
 out_csv <- sub("\\.pdf$", ".csv", OUT_PDF)
-fwrite(plot_dt[, .(display, group, cell_type, logFC_deviation, padj,
-                   mean_deviation_masld, mean_deviation_normal,
-                   n_masld, n_normal)],
+fwrite(plot_dt[, .(display, group, cell_type,
+                   logFC = logFC_deviation, P.Value, adj_P_Val = padj,
+                   n_donors)],
        out_csv)
+n_sig_plot <- plot_dt[is_sig == TRUE, .N]
 message(sprintf("  Source CSV       : %s", out_csv))
+message(sprintf("  Donor-level sig  : %d of %d dots (adj.P.Val < 0.05)",
+                n_sig_plot, plot_dt[, .N]))

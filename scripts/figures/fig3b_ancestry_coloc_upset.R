@@ -135,7 +135,7 @@ primary_colors <- c(
 
 p_top <- ggplot(intersections, aes(x = ix_label, y = n_genes, fill = primary)) +
   geom_col(width = 0.75, color = NA) +
-  geom_text(aes(label = n_genes), vjust = -0.3, size = 1.9, color = "gray20") +
+  geom_text(aes(label = n_genes), vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray20") +
   scale_fill_manual(values = primary_colors, name = NULL,
                     breaks = c("All 4", "3-way", "2-way",
                                "EUR only", "EAS only", "AFR only", "SAS only")) +
@@ -177,13 +177,13 @@ p_dots <- ggplot(dot_dt, aes(x = ix_label, y = ancestry)) +
   theme(panel.grid = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.text.y = element_text(face = "bold", size = 6.5),
+        axis.text.y = element_text(face = "plain", size = 6),
         plot.margin = margin(1, 4, 4, 4))
 
 # --- Bottom-left: per-ancestry set-size bar (rotated) ----------------------
 p_left <- ggplot(set_sizes, aes(y = ancestry, x = n_genes, fill = as.character(ancestry))) +
   geom_col(width = 0.7, color = NA) +
-  geom_text(aes(label = n_genes), hjust = 1.1, size = 1.9, color = "white") +
+  geom_text(aes(label = n_genes), hjust = 1.1, size = GEOM_TEXT_6PT, color = "white") +
   scale_fill_manual(values = ancestry_colors, guide = "none") +
   scale_x_reverse(expand = expansion(mult = c(0.05, 0))) +
   labs(x = "Set size", y = NULL) +
@@ -199,18 +199,15 @@ spacer <- plot_spacer()
 bottom <- p_left + p_dots + plot_layout(widths = c(1, 5))
 top    <- spacer + p_top + plot_layout(widths = c(1, 5))
 
-upset <- top / bottom +
-  plot_layout(heights = c(2.4, 1.0)) +
-  plot_annotation(
-    title = sprintf(
-      "Cross-ancestry COLOC eGene intersections (PP.H4 > %.1f)", PP4_THRESH),
-    subtitle = "23-GWAS portfolio: 14 EUR + 3 EAS + 3 AFR + 3 SAS Pan-UKBB; best SuSiE PP.H4 per gene (ABF fallback)",
-    theme = theme(plot.title = element_text(size = 8, face = "bold"),
-                  plot.subtitle = element_text(size = 6, color = "gray35"))
-  )
+message(sprintf(
+  "[caption] Cross-ancestry COLOC eGene intersections (PP.H4 > %.1f). 23-GWAS portfolio: 14 EUR + 3 EAS + 3 AFR + 3 SAS Pan-UKBB; best SuSiE PP.H4 per gene (ABF fallback).",
+  PP4_THRESH))
 
-out_pdf <- file.path(PANEL_DIR, "fig3b.pdf")
-out_csv <- file.path(FIG3_DIR, "fig3b_ancestry_coloc_upset.csv")
+upset <- top / bottom +
+  plot_layout(heights = c(2.4, 1.0))
+
+out_pdf <- file.path(PANEL_DIR, "ancestry_coloc_upset.pdf")
+out_csv <- file.path(FIG3_DIR, "ancestry_coloc_upset.csv")
 save_fig(upset, out_pdf, width = fig_full_width * 0.55, height = 3.2)
 
 # Persist intersection table for reviewers / caption

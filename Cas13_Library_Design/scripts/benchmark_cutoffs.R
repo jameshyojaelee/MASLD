@@ -27,7 +27,7 @@ DATDIR <- file.path(BASE, "Cas13_Library_Design/data")
 strip_v <- function(x) sub("[.][0-9]+$", "", x)
 
 # ---- 1. human DEG (v6: limma-voom+metafor ashr; was dream) + per-gene flags --
-d <- fread(file.path(INTDIR, "meta_results_ashr.csv"))   # has padj/se aliases for drop-in compat
+d <- fread(file.path(INTDIR, "canonical_deg_results.csv"))   # canonical limma-voom QW C2 (2026-06-24: was metafor meta_results_ashr.csv); se derived from logFC/t below
 if (!"se" %in% names(d)) d[, se := abs(logFC / t)]
 d[, gb := strip_v(gene)]
 d[, full_sign := sign(logFC)]
@@ -96,20 +96,20 @@ mk <- function(y, ytitle, title) ggplot(res, aes(cutoff, get(y), color = conditi
   scale_y_continuous(labels = pct) + labs(x = xlab, y = ytitle, title = title) + bt
 
 pA <- mk("recall_ot", "Recovery of OpenTargets MASLD genes",
-         sprintf("A  Recovery of OpenTargets MASLD genes (n=%d)", N_OT))
+         "A  OpenTargets recovery")
 
 pB <- ggplot(res, aes(cutoff, enrich_ot, color = condition)) +
   geom_hline(yintercept = 1, linetype = "dashed", color = "gray50", linewidth = 0.4) +
   geom_line(linewidth = 0.8) + geom_point(size = 2.2) +
   scale_color_manual(values = pal) + scale_x_continuous(breaks = CUTS) +
   labs(x = xlab, y = "Fold-enrichment vs genome",
-       title = sprintf("B  Enrichment for OpenTargets MASLD genes (baseline %.1f%%)", 100 * OT_BASE)) + bt
+       title = "B  OpenTargets enrichment") + bt
 
-pC <- mk("prec_mouse", "Fraction mouse-replicated", "C  Mouse cross-species precision")
-pD <- mk("loco", "Mean LOCO reproducibility", "D  Cross-cohort reproducibility (5-fold LOCO)")
+pC <- mk("prec_mouse", "Fraction mouse-replicated", "C  Mouse precision")
+pD <- mk("loco", "Mean LOCO reproducibility", "D  Cross-cohort reproducibility")
 
-panels <- list("07a_cutoff_recovery" = pA, "07b_cutoff_enrichment" = pB,
-               "07c_cutoff_mouse_precision" = pC, "07d_cutoff_loco_reproducibility" = pD)
+panels <- list("cutoff_recovery" = pA, "cutoff_enrichment" = pB,
+               "cutoff_mouse_precision" = pC, "cutoff_loco_reproducibility" = pD)
 dir.create(FIGDIR, showWarnings = FALSE, recursive = TRUE)
 for (nm in names(panels))
   ggsave(file.path(FIGDIR, paste0(nm, ".pdf")),

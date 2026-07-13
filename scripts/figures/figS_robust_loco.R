@@ -36,19 +36,15 @@ theme_robust <- theme_minimal(base_size = 10) +
     legend.position = "top",
     legend.title  = element_blank(),
     legend.margin = margin(b = -3),
-    legend.text   = element_text(size = 9),
-    plot.title    = element_text(face = "bold", size = 11,
-                                 margin = margin(b = 2)),
-    plot.subtitle = element_text(size = 9, colour = "grey30",
-                                 margin = margin(b = 6)),
+    legend.text   = element_text(size = 6),
     plot.margin   = margin(8, 10, 8, 10)
   )
 
 # Cohort first-author labels (match other supplementary figures)
 COHORT_LABELS <- c(
-  GSE126848 = "Suppli",  GSE130970 = "Hoang",
-  GSE135251 = "Govaere", GSE162694 = "Bril",
-  GSE213621 = "Chen"
+  GSE126848 = "GSE126848",  GSE130970 = "GSE130970",
+  GSE135251 = "GSE135251", GSE162694 = "GSE162694",
+  GSE213621 = "GSE213621"
 )
 
 dt <- fread(file.path(AUDIT, "pillar_B_loco_prediction.csv"))
@@ -77,7 +73,7 @@ p <- ggplot(dt, aes(y = cohort_lbl)) +
                  shape  = "Real DEG signature"),
              size = 3.4, stroke = 0) +
   geom_text(aes(x = auroc, label = sprintf("%.3f", auroc)),
-            hjust = -0.30, size = 3, colour = "grey15") +
+            hjust = -0.30, size = 6 / .pt, colour = "grey15") +
   scale_colour_manual(values = c("Null (shuffled labels)" = "grey45",
                                  "Real DEG signature"     = "#0072B2"),
                       breaks = c("Real DEG signature",
@@ -96,11 +92,11 @@ p <- ggplot(dt, aes(y = cohort_lbl)) +
   ) +
   scale_x_continuous(breaks = seq(0.4, 1, 0.1)) +
   coord_cartesian(xlim = c(0.4, 1.05)) +
-  labs(title = "Leave-one-cohort-out cross-validation",
-       subtitle = paste0("Train dream on 4 cohorts, score held-out 5th. ",
-                         "Whiskers = +/- SD over 100 random-label permutations."),
-       x = "AUROC (held-out cohort)", y = NULL) +
+  labs(x = "AUROC (held-out cohort)", y = NULL) +
   theme_robust
 
-ggsave(OUT_PDF, p, width = 7.5, height = 4, device = cairo_pdf)
+message("[caption] Leave-one-cohort-out cross-validation: train dream on 4 cohorts, ",
+        "score held-out 5th. Whiskers = +/- SD over 100 random-label permutations.")
+
+ggsave(OUT_PDF, p, width = 7.09, height = 3.78, device = cairo_pdf)
 cat("Saved:", OUT_PDF, "\n")

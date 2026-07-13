@@ -21,15 +21,23 @@ a noisy MASH-enrichment contrast, NOT a clean MASH-vs-normal contrast. The
 primary value lies in the per-cell-type direction + recovery of paper markers.
 
 Outputs (Analysis/Spatial/results/govaere2026/):
-  cosmx_de_<cell_type>_MASH_vs_noMASH.csv   — wilcoxon DE per cell type.
-      F148/F237 CAVEAT: pval/pval_adj are CELL-LEVEL Wilcoxon p-values. Disease
-      status is assigned at the slide level (3 MASH vs 1 no_MASH slide), so these
-      p-values are pseudoreplicated/anti-conservative and are NOT valid donor-level
-      significance. The defensible evidence is the slide-level direction columns
-      (slide_logfc / slide_direction_concordant / n_slides_*). The atlas
-      (06_integration.py → spatial_govaere2026_cosmx_*_padj) still reads pval_adj;
-      that column is a cell-level p-value, documented here, not a significance level.
-  cosmx_de_summary.tsv                       — per-contrast n_genes, n_sig
+  cosmx_de_<cell_type>_MASH_vs_noMASH.csv   — SLIDE-level direction per cell type.
+      A6 FIX (2026-06-20): the cell-level Wilcoxon over ~297K cells in a 3-vs-1
+      SLIDE design is pseudoreplicated (cells within a slide are not independent),
+      and produced 779-883 anti-conservative "sig" hep/KC genes. With a 3-vs-1
+      slide design NO inferential p-value is valid. We therefore NO LONGER write a
+      cell-level p-value column. The CSV now carries:
+        • logfoldchange  = SLIDE-level direction (mean MASH slides − mean no_MASH
+                           slides, log1p-CPM scale) — the experimental-unit effect.
+        • pval_adj       = all-NaN sentinel. The atlas consumer (06_integration.py
+                           → spatial_govaere2026_cosmx_<ct>_mash_padj) maps this
+                           column, so the atlas now carries the slide DIRECTION but
+                           never a threshold-passable significance value.
+        • slide_logfc / slide_direction_concordant / n_slides_*  = slide evidence.
+        • cell_logfoldchange / cell_score  = DESCRIPTIVE cell-level ranking only
+                           (drives the MetMac marker-recovery check); NOT significance.
+  cosmx_de_summary.tsv                       — per-contrast n_genes + slide-direction
+                                               up/down + cell/slide concordance
   cosmx_celltype_composition.tsv             — sample × cell_type cell counts + proportions
 
 Method:
@@ -129,7 +137,8 @@ def per_celltype_de(adata: ad.AnnData, cell_type: str,
     if n_total == 0:
         _log(f"  [{cell_type}] SKIP — 0 cells in atlas")
         return {"cell_type": cell_type, "skipped": True, "reason": "absent",
-                "n_cells_mash": 0, "n_cells_nomash": 0, "n_sig_padj05": 0}
+                "n_cells_mash": 0, "n_cells_nomash": 0,
+                "n_slide_up": 0, "n_slide_down": 0, "n_direction_concordant": 0}
     sub = adata[mask].copy()
     n_mash   = int((sub.obs["disease_stage"] == "MASH").sum())
     n_nomash = int((sub.obs["disease_stage"] == "no_MASH").sum())
@@ -138,7 +147,8 @@ def per_celltype_de(adata: ad.AnnData, cell_type: str,
     if n_mash < MIN_CELLS_PER_GROUP or n_nomash < MIN_CELLS_PER_GROUP:
         _log(f"  [{cell_type}] SKIP — group size below {MIN_CELLS_PER_GROUP}")
         return {"cell_type": cell_type, "skipped": True, "reason": "low_n",
-                "n_cells_mash": n_mash, "n_cells_nomash": n_nomash, "n_sig_padj05": 0}
+                "n_cells_mash": n_mash, "n_cells_nomash": n_nomash,
+                "n_slide_up": 0, "n_slide_down": 0, "n_direction_concordant": 0}
 
     # Use the log-normalised layer (per loader: target_sum=1e4 + log1p).
     if "lognorm" not in sub.layers:
@@ -167,20 +177,26 @@ def per_celltype_de(adata: ad.AnnData, cell_type: str,
     )
 
     rg = sub.uns["rank_genes_groups"]
+    # ── A6 pseudoreplication fix (2026-06-20) ────────────────────────────────
+    # The cell-level Wilcoxon is retained ONLY as a descriptive ranking signal
+    # (`cell_score` drives the marker-recovery validation block below). It is
+    # NOT written as a `pval`/`pval_adj` significance column, because disease
+    # status is assigned at the SLIDE level (3 MASH vs 1 no_MASH slide). With
+    # ~297K cells nested in 4 slides, cells within a slide are not independent;
+    # the cell-level Wilcoxon p-values are pseudoreplicated and anti-conservative
+    # (they returned 779-883 "sig" hep/KC genes, e.g. SERPINA1 padj≈0 while its
+    # SLIDE-level direction is the OPPOSITE sign). With a 3-vs-1 slide design no
+    # inferential test is valid at all. The honest, experimental-unit evidence is
+    # the slide-level direction (`logfoldchange` = slide_logfc /
+    # `slide_direction_concordant` / `n_slides_*`) computed below. The atlas-facing
+    # `pval_adj` column is therefore emitted as all-NaN (see below) so the atlas
+    # carries the slide-level DIRECTION but never a cell-level significance level.
     de_df = pd.DataFrame({
-        "gene":          rg["names"]["MASH"],
-        "logfoldchange": rg["logfoldchanges"]["MASH"],
-        "pval":          rg["pvals"]["MASH"],
-        # NOTE (F148/F237): pval/pval_adj are CELL-LEVEL Wilcoxon p-values. The
-        # disease label is assigned at the SLIDE level (3 MASH vs 1 no_MASH slide),
-        # so cells within a slide are not independent and these p-values are
-        # pseudoreplicated/anti-conservative — they are NOT donor-level significance.
-        # Column names are kept for the atlas consumer (06_integration.py), but the
-        # honest evidence is the slide-level direction (slide_logfc /
-        # slide_direction_concordant below). With a 3-vs-1 slide design no inferential
-        # test is valid; treat as descriptive.
-        "pval_adj":      rg["pvals_adj"]["MASH"],
-        "score":         rg["scores"]["MASH"],
+        "gene":             rg["names"]["MASH"],
+        # Descriptive cell-level ranking — kept under explicit `cell_*` names so
+        # it can never be mistaken for donor-level significance.
+        "cell_logfoldchange": rg["logfoldchanges"]["MASH"],
+        "cell_score":         rg["scores"]["MASH"],
     })
     if "pts" in rg:
         pts = rg["pts"]
@@ -210,9 +226,10 @@ def per_celltype_de(adata: ad.AnnData, cell_type: str,
         de_df["slide_logfc"] = slide_logfc.reindex(de_df["gene"]).values
         de_df["n_slides_MASH"]    = int(len(mash_slides))
         de_df["n_slides_no_MASH"] = int(len(nomash_slides))
-        # Does the slide-level direction agree with the cell-level logFC sign?
+        # Does the slide-level direction agree with the descriptive cell-level
+        # logFC sign? (A concordance QC of the cell ranking, not a test.)
         de_df["slide_direction_concordant"] = (
-            np.sign(de_df["slide_logfc"]) == np.sign(de_df["logfoldchange"]))
+            np.sign(de_df["slide_logfc"]) == np.sign(de_df["cell_logfoldchange"]))
         _log(f"  [{cell_type}] slide-level pseudobulk: "
              f"{len(mash_slides)} MASH vs {len(nomash_slides)} no_MASH slide(s); "
              f"direction-concordant genes = "
@@ -225,10 +242,27 @@ def per_celltype_de(adata: ad.AnnData, cell_type: str,
         de_df["n_slides_no_MASH"] = np.nan
         de_df["slide_direction_concordant"] = np.nan
 
-    n_sig = int((de_df["pval_adj"] < 0.05).sum())
-    n_sig_up   = int(((de_df["pval_adj"] < 0.05) & (de_df["logfoldchange"] > 0)).sum())
-    n_sig_down = int(((de_df["pval_adj"] < 0.05) & (de_df["logfoldchange"] < 0)).sum())
-    _log(f"  [{cell_type}] n_sig padj<0.05 = {n_sig}  (up={n_sig_up}, down={n_sig_down})")
+    # ── Atlas-facing columns (A6 fix) ────────────────────────────────────────
+    # `06_integration.py` reads `logfoldchange` + `pval_adj` from this CSV into
+    # spatial_govaere2026_cosmx_<ct>_mash_{logfc,padj}. We make BOTH honest:
+    #   • `logfoldchange` := the SLIDE-level direction (experimental-unit effect),
+    #     NOT scanpy's per-cell natural-log fold change.
+    #   • `pval_adj` := all-NaN. A 3-vs-1 slide design supports a direction only,
+    #     never a p-value, so we refuse to ship a significance number. The atlas
+    #     `*_mash_padj` column therefore carries no threshold-passable value; any
+    #     downstream significance gate on it is a guaranteed no-op (as intended).
+    de_df["logfoldchange"] = de_df["slide_logfc"]
+    de_df["pval_adj"]      = np.nan
+
+    # No valid cell-level significance exists; report the slide-level DIRECTION
+    # summary instead (n genes whose slide direction is up / down). This replaces
+    # the retired pseudoreplicated `n_sig padj<0.05` count.
+    n_slide_up   = int((de_df["slide_logfc"] > 0).sum())
+    n_slide_down = int((de_df["slide_logfc"] < 0).sum())
+    n_concordant = int(de_df["slide_direction_concordant"].fillna(False).sum())
+    _log(f"  [{cell_type}] NO cell-level p-value reported (3-vs-1 slide design). "
+         f"slide-direction up={n_slide_up} down={n_slide_down}; "
+         f"cell/slide direction-concordant={n_concordant}/{de_df.shape[0]}")
 
     out_path = out_dir / f"cosmx_de_{cell_type}_MASH_vs_noMASH.csv"
     de_df.to_csv(out_path, index=False)
@@ -240,9 +274,11 @@ def per_celltype_de(adata: ad.AnnData, cell_type: str,
         "n_cells_mash": n_mash,
         "n_cells_nomash": n_nomash,
         "n_genes_tested": int(de_df.shape[0]),
-        "n_sig_padj05": n_sig,
-        "n_sig_padj05_up": n_sig_up,
-        "n_sig_padj05_down": n_sig_down,
+        # A6 fix: no valid cell-level significance under a 3-vs-1 slide design.
+        # Report slide-level DIRECTION counts + cell/slide direction concordance.
+        "n_slide_up": n_slide_up,
+        "n_slide_down": n_slide_down,
+        "n_direction_concordant": n_concordant,
         "out_path": str(out_path),
         "de_df": de_df,
     }
@@ -296,12 +332,17 @@ def report_validation(de_results: List[Dict], comp: pd.DataFrame) -> None:
         _log("KC DE not available — cannot run MetMac marker recovery check.")
         return
     de_df = mac_result["de_df"].copy()
-    de_df_up = de_df[de_df["logfoldchange"] > 0].sort_values("score", ascending=False)
+    # Marker recovery ranks by the DESCRIPTIVE cell-level score/logFC (NOT a
+    # significance call); `pval_adj` is intentionally NaN (3-vs-1 slide design),
+    # so we report the slide-level direction-concordance flag instead.
+    de_df_up = de_df[de_df["cell_logfoldchange"] > 0].sort_values("cell_score", ascending=False)
     top10 = de_df_up.head(10)
-    _log("Top 10 MASH-up genes in KC cluster (macrophage lineage proxy):")
+    _log("Top 10 MASH-up genes in KC cluster (macrophage lineage proxy; cell-level ranking, descriptive only):")
     for _, row in top10.iterrows():
-        _log(f"  {row['gene']:>10}  lfc={row['logfoldchange']:+.3f}  "
-             f"padj={row['pval_adj']:.2e}  pct_MASH={row.get('pct_nz_MASH', float('nan')):.3f}")
+        _log(f"  {row['gene']:>10}  cell_lfc={row['cell_logfoldchange']:+.3f}  "
+             f"slide_lfc={row.get('slide_logfc', float('nan')):+.3f}  "
+             f"slide_concordant={row.get('slide_direction_concordant', float('nan'))}  "
+             f"pct_MASH={row.get('pct_nz_MASH', float('nan')):.3f}")
     # MetMac marker recovery
     de_df_up_50 = de_df_up.head(50)["gene"].tolist()
     found = [g for g in METMAC_MARKERS if g in de_df_up_50]
@@ -354,9 +395,12 @@ def main():
             "n_cells_MASH":      r.get("n_cells_mash", 0),
             "n_cells_no_MASH":   r.get("n_cells_nomash", 0),
             "n_genes_tested":    r.get("n_genes_tested", 0),
-            "n_sig_padj05":      r.get("n_sig_padj05", 0),
-            "n_sig_padj05_up":   r.get("n_sig_padj05_up", 0),
-            "n_sig_padj05_down": r.get("n_sig_padj05_down", 0),
+            # A6 fix: slide-level DIRECTION summary replaces the retired
+            # pseudoreplicated cell-level n_sig_padj05 counts (3-vs-1 slide design
+            # = direction only, no valid p-value).
+            "n_slide_up":            r.get("n_slide_up", 0),
+            "n_slide_down":          r.get("n_slide_down", 0),
+            "n_direction_concordant": r.get("n_direction_concordant", 0),
             "skipped":           r.get("skipped", False),
             "skip_reason":       r.get("reason", ""),
         })

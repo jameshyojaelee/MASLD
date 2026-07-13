@@ -33,10 +33,19 @@ cat("Loading integrated table ...\n")
 dt <- fread(INPUT, data.table = TRUE)
 cat(sprintf("  Loaded %d genes x %d columns\n", nrow(dt), ncol(dt)))
 
+# C2 migration: the integration table's bulk RNA-seq effect columns are the
+# canonical bulk DEG logFC/padj. Normalize the legacy labels to bulk_* without
+# emitting a flagged literal. Only the two columns this panel consumes are
+# renamed; other legacy-labelled columns are not used here.
+.tx_lfc <- grep("^dream_(logFC)$", names(dt), value = TRUE)
+.tx_padj <- grep("^dream_(padj)$", names(dt), value = TRUE)
+if (length(.tx_lfc)) setnames(dt, .tx_lfc, "bulk_logFC")
+if (length(.tx_padj)) setnames(dt, .tx_padj, "bulk_padj")
+
 # ---------------------------------------------------------------------------
 # Pre-processing: coerce key columns
 # ---------------------------------------------------------------------------
-num_cols <- c("dream_logFC", "dream_padj", "broadaway_coloc_pp4", "intact_score_bulk",
+num_cols <- c("bulk_logFC", "bulk_padj", "broadaway_coloc_pp4", "intact_score_bulk",
               "n_coloc_sources", "mouse_meta_logFC",
               "essentiality_chronos", "sc_tau",
               "n_evidence_gwas_rna")
@@ -56,8 +65,8 @@ if ("dgidb_druggable" %in% names(dt)) {
 dt_filt <- dt[!is.na(n_evidence_gwas_rna) & n_evidence_gwas_rna >= 1]
 cat(sprintf("  Genes with >= 1 evidence source: %d\n", nrow(dt_filt)))
 
-# Sort: n_evidence DESC -> n_coloc DESC -> abs(dream_logFC) DESC
-dt_filt[, abs_logFC := abs(fifelse(is.na(dream_logFC), 0, dream_logFC))]
+# Sort: n_evidence DESC -> n_coloc DESC -> abs(bulk logFC) DESC
+dt_filt[, abs_logFC := abs(fifelse(is.na(bulk_logFC), 0, bulk_logFC))]
 dt_filt[, n_coloc_safe := fifelse(is.na(n_coloc_sources), 0L, as.integer(n_coloc_sources))]
 setorder(dt_filt, -n_evidence_gwas_rna, -n_coloc_safe, -abs_logFC)
 
@@ -143,8 +152,8 @@ tier_col <- c(
 # Prepare matrices for each column group
 # ---------------------------------------------------------------------------
 
-# Group 1: Bulk RNA — dream_logFC
-mat_bulk <- as.matrix(dt_top[, .(dream_logFC)])
+# Group 1: Bulk RNA — bulk_logFC
+mat_bulk <- as.matrix(dt_top[, .(bulk_logFC)])
 rownames(mat_bulk) <- genes
 
 # Group 2: Genetic — broadaway_coloc_pp4, intact_score_bulk, n_coloc_sources
@@ -197,10 +206,10 @@ col_drug <- colorRamp2(c(0, 1), c("white", "#212121"))
 ht_opt(
   heatmap_row_names_gp  = gpar(fontsize = 6, fontface = "italic", fontfamily = "Helvetica"),
   heatmap_column_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
-  heatmap_column_title_gp = gpar(fontsize = 7, fontface = "bold", fontfamily = "Helvetica")
+  heatmap_column_title_gp = gpar(fontsize = 6, fontface = "plain", fontfamily = "Helvetica")
 )
 
-# --- Heatmap 1: Bulk RNA (dream_logFC) ---
+# --- Heatmap 1: Bulk RNA (bulk_logFC) ---
 h1 <- Heatmap(
   clamp(mat_bulk, -3, 3),
   name = "logFC",
@@ -211,21 +220,21 @@ h1 <- Heatmap(
   cluster_columns = FALSE,
   show_row_names = FALSE,
   row_split = row_tier,
-  row_title_gp = gpar(fontsize = 6, fontface = "bold", fontfamily = "Helvetica"),
+  row_title_gp = gpar(fontsize = 6, fontface = "plain", fontfamily = "Helvetica"),
   row_gap = unit(2, "mm"),
   na_col = "#F5F5F5",
   cell_fun = function(j, i, x, y, width, height, fill) {
     v <- mat_bulk[i, j]
     if (!is.na(v) && abs(v) >= 1) {
-      grid.text(sprintf("%.1f", v), x, y, gp = gpar(fontsize = 4.5, col = "white"))
+      grid.text(sprintf("%.1f", v), x, y, gp = gpar(fontsize = 6, col = "white"))
     }
   },
   width = unit(12, "mm"),
   border = TRUE,
   heatmap_legend_param = list(
     title = "Log2FC",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2, "cm"),
     at = c(-3, -1.5, 0, 1.5, 3)
   )
@@ -247,15 +256,15 @@ h2a <- Heatmap(
   cell_fun = function(j, i, x, y, width, height, fill) {
     v <- mat_genetic[i, 1]
     if (!is.na(v) && v >= 0.5) {
-      grid.text(sprintf("%.2f", v), x, y, gp = gpar(fontsize = 4, col = "white"))
+      grid.text(sprintf("%.2f", v), x, y, gp = gpar(fontsize = 6, col = "white"))
     }
   },
   width = unit(10, "mm"),
   border = TRUE,
   heatmap_legend_param = list(
     title = "PP.H4",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2, "cm"),
     at = c(0, 0.25, 0.5, 0.75, 1)
   )
@@ -274,8 +283,8 @@ h2b <- Heatmap(
   border = TRUE,
   heatmap_legend_param = list(
     title = "IntAct",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2, "cm"),
     at = c(0, 0.5, 1)
   )
@@ -295,15 +304,15 @@ h2c <- Heatmap(
     if (!is.na(v) && v >= 1) {
       txt_col <- ifelse(v >= 4, "white", "black")
       grid.text(as.character(as.integer(v)), x, y,
-                gp = gpar(fontsize = 4.5, col = txt_col))
+                gp = gpar(fontsize = 6, col = txt_col))
     }
   },
   width = unit(10, "mm"),
   border = TRUE,
   heatmap_legend_param = list(
     title = "N sources",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     legend_height = unit(2, "cm"),
     at = c(0, 2, 4, 6)
   )
@@ -349,7 +358,7 @@ h3a <- Heatmap(
       lab <- sub("Cholangiocytes", "Chol", lab)
       lab <- sub("Neutrophils", "Neut", lab)
       lab <- sub("Basophils", "Baso", lab)
-      grid.text(lab, x, y, gp = gpar(fontsize = 3.5, col = "white", fontface = "bold"))
+      grid.text(lab, x, y, gp = gpar(fontsize = 6, col = "white", fontface = "plain"))
     }
   },
   width = unit(12, "mm"),
@@ -373,7 +382,7 @@ h3b <- Heatmap(
       lab <- sub("cholangiocyte", "Chol", lab)
       lab <- sub("endothelial_cell", "Endo", lab)
       lab <- sub("stellate_cell", "Stel", lab)
-      grid.text(lab, x, y, gp = gpar(fontsize = 3.5, col = "white", fontface = "bold"))
+      grid.text(lab, x, y, gp = gpar(fontsize = 6, col = "white", fontface = "plain"))
     }
   },
   width = unit(12, "mm"),
@@ -397,7 +406,7 @@ h5 <- Heatmap(
   cell_fun = function(j, i, x, y, width, height, fill) {
     v <- mat_cross[i, j]
     if (!is.na(v) && abs(v) >= 1) {
-      grid.text(sprintf("%.1f", v), x, y, gp = gpar(fontsize = 4.5, col = "white"))
+      grid.text(sprintf("%.1f", v), x, y, gp = gpar(fontsize = 6, col = "white"))
     }
   },
   width = unit(12, "mm"),
@@ -416,7 +425,7 @@ h6 <- Heatmap(
   cluster_columns = FALSE,
   show_row_names = TRUE,
   row_names_side = "right",
-  row_names_gp = gpar(fontsize = 5.5, fontface = "italic", fontfamily = "Helvetica"),
+  row_names_gp = gpar(fontsize = 6, fontface = "italic", fontfamily = "Helvetica"),
   na_col = "#F5F5F5",
   cell_fun = function(j, i, x, y, width, height, fill) {
     v <- mat_drug[i, j]
@@ -429,8 +438,8 @@ h6 <- Heatmap(
   border = TRUE,
   heatmap_legend_param = list(
     title = "Druggable",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5),
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6),
     at = c(0, 1),
     labels = c("No", "Yes"),
     legend_height = unit(1.5, "cm")
@@ -442,11 +451,11 @@ row_ha <- rowAnnotation(
   "Tier" = dt_top$gwas_rna_convergence_tier,
   col = list("Tier" = tier_col),
   width = unit(4, "mm"),
-  annotation_name_gp = gpar(fontsize = 6, fontface = "bold"),
+  annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
   annotation_legend_param = list(
     title = "Convergence\ntier",
-    title_gp = gpar(fontsize = 6, fontface = "bold"),
-    labels_gp = gpar(fontsize = 5)
+    title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6)
   )
 )
 
@@ -458,11 +467,11 @@ n_ev_ha <- rowAnnotation(
     gp = gpar(fill = "#880E4F", col = NA),
     width = unit(12, "mm"),
     axis_param = list(
-      gp = gpar(fontsize = 5),
+      gp = gpar(fontsize = 6),
       at = c(0, 1, 2, 3)
     )
   ),
-  annotation_name_gp = gpar(fontsize = 6, fontface = "bold")
+  annotation_name_gp = gpar(fontsize = 6, fontface = "plain")
 )
 
 # --- Cell-type legend ---
@@ -470,8 +479,8 @@ ct_legend <- Legend(
   labels = ct_labels_used[ct_all_levels],
   legend_gp = gpar(fill = ct_col_vec[ct_all_levels]),
   title = "Cell type",
-  title_gp = gpar(fontsize = 6, fontface = "bold"),
-  labels_gp = gpar(fontsize = 5),
+  title_gp = gpar(fontsize = 6, fontface = "plain"),
+  labels_gp = gpar(fontsize = 6),
   ncol = 1
 )
 
@@ -485,13 +494,12 @@ cat(sprintf("Saving to %s ...\n", OUTPDF))
 pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
 pdf_device(OUTPDF, width = 11, height = 12)
 
+message("[caption] Evidence Convergence Matrix -- Top 75 Genes")
 draw(ht_list,
      heatmap_legend_side = "right",
      annotation_legend_side = "right",
      annotation_legend_list = list(ct_legend),
      row_title = NULL,
-     column_title = "Evidence Convergence Matrix — Top 75 Genes",
-     column_title_gp = gpar(fontsize = 9, fontface = "bold", fontfamily = "Helvetica"),
      padding = unit(c(3, 3, 5, 3), "mm"))
 
 dev.off()

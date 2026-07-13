@@ -2,7 +2,7 @@
 # DEG Threshold Landscape — pairwise similarity panels
 #
 # Two pairwise size-ratio matrices (no canonical anchor):
-#   (a2) Across padj thresholds at fixed |LFC| = 0.5
+#   (a2) Across padj thresholds at fixed |LFC| = 0.3 (canonical floor)
 #   (a3) Across |LFC| thresholds at fixed padj = 0.05
 #
 # Cell (i,j) = min(|A|,|B|) / max(|A|,|B|): what fraction of the larger
@@ -82,14 +82,14 @@ make_ratio_dt <- function(sets) {
 draw_ratio_heatmap <- function(dt, x_lab, y_lab, title, canonical_x = NULL) {
   p <- ggplot(dt, aes(x = x_fac, y = y_fac, fill = val)) +
     geom_tile(color = "white", linewidth = 0.4) +
-    geom_text(aes(label = label, fontface = ifelse(is_diag, "bold", "plain")),
-              size = 2.2, color = "gray10") +
+    geom_text(aes(label = label),
+              size = 6 / ggplot2::.pt, color = "gray10") +
     scale_fill_gradient(low = "#F5F9FB", high = "#C65B2E",
                         limits = c(0, 1), na.value = "white",
                         name = "Size\nratio") +
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0)) +
-    labs(x = x_lab, y = y_lab, title = title) +
+    labs(x = x_lab, y = y_lab) +
     theme_masld() +
     theme(panel.grid = element_blank(),
           axis.ticks = element_blank(),
@@ -109,16 +109,16 @@ draw_ratio_heatmap <- function(dt, x_lab, y_lab, title, canonical_x = NULL) {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Panel a2: size ratio across padj thresholds at fixed |LFC| = 0.5
+# Panel a2: size ratio across padj thresholds at fixed |LFC| = 0.3
 # ═══════════════════════════════════════════════════════════════════════════
-message("Panel a2: size ratio across padj thresholds (|LFC| = 0.5)...")
+message("Panel a2: size ratio across padj thresholds (|LFC| = 0.3)...")
 
 padj_labels <- ifelse(padj_vals < 0.001,
                       format(padj_vals, scientific = TRUE),
                       as.character(padj_vals))
 
 sets_padj <- setNames(
-  lapply(padj_vals, function(pa) dream[padj < pa & abs(logFC) >= 0.5, symbol]),
+  lapply(padj_vals, function(pa) dream[padj < pa & abs(logFC) >= 0.3, symbol]),
   padj_labels
 )
 
@@ -128,9 +128,9 @@ p_a2 <- draw_ratio_heatmap(
   dt_padj,
   x_lab       = "padj threshold",
   y_lab       = "padj threshold",
-  title       = "DEG-set size ratio across padj thresholds (|LFC| \u2265 0.5)",
   canonical_x = "0.05"
 )
+message("[caption] DEG-set size ratio across padj thresholds (|LFC| >= 0.3)")
 
 out_a2 <- file.path(PANEL_DIR, "deg_landscape_a_sizeratio_padj.pdf")
 save_fig(p_a2, out_a2, width = fig_half_width, height = fig_half_width)
@@ -154,9 +154,9 @@ p_a3 <- draw_ratio_heatmap(
   dt_lfc,
   x_lab       = "|log\u2082FC| threshold",
   y_lab       = "|log\u2082FC| threshold",
-  title       = "DEG-set size ratio across |LFC| thresholds (padj < 0.05)",
-  canonical_x = "0.5"
+  canonical_x = "0.3"
 )
+message("[caption] DEG-set size ratio across |LFC| thresholds (padj < 0.05)")
 
 out_a3 <- file.path(PANEL_DIR, "deg_landscape_a_sizeratio_lfc.pdf")
 save_fig(p_a3, out_a3, width = fig_half_width, height = fig_half_width)

@@ -188,7 +188,7 @@ draw_chordA <- function() {
     yl     <- get.cell.meta.data("ylim")
     circos.text(mean(xl), yl[2] + 2.0, sector,
                 facing = "clockwise", niceFacing = TRUE,
-                cex = 1.3, font = 2, col = "black")
+                cex = 1.3, font = 1, col = "black")
   }, bg.border = NA)
   # Title and legend handled in patchwork composition
 }
@@ -222,7 +222,7 @@ plot_A_strip <- ggplot(audit_plot_df,
   geom_point(aes(shape = glyph, fill = glyph),
              size = 1.8, stroke = 0.3, color = "grey25") +
   geom_text(aes(label = sprintf("%d/4", n_axes_tested)),
-            x = 0.15, hjust = 0, size = 1.7, color = "grey40",
+            x = 0.15, hjust = 0, size = GEOM_TEXT_6PT, color = "black",
             data = audit_plot_df[state != "absent_from_LIANA"]) +
   scale_shape_manual(values = c(sig = 21, ns = 21, absent = 23),
                      labels = c(sig = "tested, q<0.05",
@@ -238,16 +238,12 @@ plot_A_strip <- ggplot(audit_plot_df,
                      breaks = c(0, 1, -log10(0.05), 2, 3),
                      labels = c("0", "1", "1.3", "2", "3"),
                      expand = c(0, 0)) +
-  labs(y = NULL,
-       title = "B. Canonical MASLD pairs are NOT stage-progressive",
-       subtitle = "0 of 9 canonical pairs significant; 7/9 absent from LIANA universe") +
+  labs(y = NULL) +
   guides(fill = "none") +
   theme_masld(base_size = 7) +
   theme(legend.position = "bottom",
         legend.title = element_blank(),
-        legend.text = element_text(size = 5),
-        plot.title = element_text(size = 7, face = "bold"),
-        plot.subtitle = element_text(size = 5.5, color = "grey35"))
+        legend.text = element_text(size = 6))
 
 # Compose Panel A row: chord (left) + strip (right)
 panel_A <- (plot_A_chord | plot_A_strip) +
@@ -334,15 +330,11 @@ plot_B <- ggplot() +
                                Cirrhosis       = "Cirrhosis\u2020\n(n=19)")) +
   labs(x = NULL,
        y = expression(-log[10]("LIANA magnitude rank")),
-       title = "C. Per-donor LR signal across MASLD stages",
-       subtitle = "NAMPT\u2192INSR (Mac\u2192Hep) shows steepest slope \u2014 macrophage-adipokine \u2192 hepatocyte insulin axis",
        caption = "\u2020 Cirrhosis: n=19 donors, GSE202379 snRNA-seq (single dataset) \u2014 secondary validation axis.") +
   theme_masld(base_size = 7) +
   theme(legend.position = "right",
-        legend.text = element_text(size = 5),
-        plot.title = element_text(size = 7, face = "bold"),
-        plot.subtitle = element_text(size = 5.5, color = "grey35"),
-        plot.caption = element_text(size = 5, color = "grey50", hjust = 0),
+        legend.text = element_text(size = 6),
+        plot.caption = element_text(size = 6, color = "black", hjust = 0),
         axis.text.x = element_text(angle = 25, hjust = 1, vjust = 1))
 
 # ============================================================================
@@ -376,27 +368,23 @@ plot_C_hist <- ggplot(perm, aes(x = all3_jaccard)) +
   # Annotations placed in middle of histogram, BELOW the inset (left of arrow)
   annotate("text", x = x_max * 0.20, y = B * 0.55,
            label = sprintf("observed = %.3f", obs_all3),
-           color = masld_colors$nash, fontface = "bold", size = 2.3,
+           color = masld_colors$nash, fontface = "plain", size = GEOM_TEXT_6PT,
            hjust = 0) +
   annotate("text", x = x_max * 0.20, y = B * 0.47,
            label = paste(fold_str, "above null"),
-           color = masld_colors$nash, size = 2.1, hjust = 0) +
+           color = masld_colors$nash, size = GEOM_TEXT_6PT, hjust = 0) +
   annotate("text", x = x_max * 0.20, y = B * 0.39,
            label = paste(emp_p_str, "|", z_str),
-           color = masld_colors$nash, size = 2.0, hjust = 0) +
+           color = masld_colors$nash, size = GEOM_TEXT_6PT, hjust = 0) +
   annotate("text", x = x_max * 0.20, y = B * 0.31,
            label = sprintf("null mean = %.2e", null_mean),
-           color = "grey45", size = 1.9, hjust = 0) +
+           color = "black", size = GEOM_TEXT_6PT, hjust = 0) +
   scale_x_continuous(name = "Three-method (scVI ∩ Harmony ∩ Scanorama) Jaccard",
                      limits = c(-0.005, x_max),
                      expand = c(0, 0)) +
   scale_y_continuous(name = sprintf("Permutations (B=%d)", B),
                      expand = expansion(mult = c(0, 0.05))) +
-  labs(title = "D. Methods agree far more than chance",
-       subtitle = "B=1000 permutations of top-50 LR labels within each method") +
-  theme_masld(base_size = 7) +
-  theme(plot.title = element_text(size = 7, face = "bold"),
-        plot.subtitle = element_text(size = 5.5, color = "grey35"))
+  theme_masld(base_size = 7)
 
 # Inset: pairwise + ALL3 Jaccard bars with null reference line
 pair_jc <- jc[method_A != "ALL3",
@@ -419,7 +407,7 @@ plot_C_inset <- ggplot(pair_jc, aes(x = pair, y = jaccard)) +
   theme_masld(base_size = 6) +
   theme(plot.background = element_blank(),
         panel.background = element_blank(),
-        axis.text.x = element_text(size = 5, angle = 30, hjust = 1, vjust = 1))
+        axis.text.x = element_text(size = 6, angle = 30, hjust = 1, vjust = 1))
 
 panel_C <- plot_C_hist + inset_element(plot_C_inset,
                                        left = 0.55, bottom = 0.60,
@@ -431,54 +419,48 @@ panel_C <- plot_C_hist + inset_element(plot_C_inset,
 # ============================================================================
 cat("\n[compose] assembling figure\n")
 
-# Panel A title across the chord+strip row
-chord_title <- ggplot() +
-  annotate("text", x = 0, y = 0,
-           label = "A. Stage-progressive LR circuits among hepatic cell types",
-           hjust = 0, size = 2.7, fontface = "bold") +
-  annotate("text", x = 0, y = -0.4,
-           label = sprintf("8 paracrine pairs pass all gates; q_tippett < 0.05; ALL3 Jaccard %s above random",
-                           fold_str),
-           hjust = 0, size = 1.9, color = "grey35") +
-  theme_void() +
-  scale_y_continuous(limits = c(-1.0, 0.4)) +
-  scale_x_continuous(limits = c(0, 1))
-
 # Slope-direction + cell-type legend annotation
 legend_strip <- ggplot() +
   annotate("tile", x = 0.05, y = 1.0, width = 0.025, height = 0.5,
            fill = slope_pal["up_with_stage"]) +
   annotate("text", x = 0.075, y = 1.0, label = "↑ with stage",
-           hjust = 0, size = 1.9) +
+           hjust = 0, size = GEOM_TEXT_6PT) +
   annotate("tile", x = 0.22, y = 1.0, width = 0.025, height = 0.5,
            fill = slope_pal["down_with_stage"]) +
   annotate("text", x = 0.245, y = 1.0, label = "↓ with stage",
-           hjust = 0, size = 1.9) +
+           hjust = 0, size = GEOM_TEXT_6PT) +
   annotate("tile", x = 0.40, y = 1.0, width = 0.025, height = 0.5,
            fill = ct_short["Hep"]) +
   annotate("text", x = 0.425, y = 1.0, label = "Hep",
-           hjust = 0, size = 1.9) +
+           hjust = 0, size = GEOM_TEXT_6PT) +
   annotate("tile", x = 0.49, y = 1.0, width = 0.025, height = 0.5,
            fill = ct_short["Endo"]) +
   annotate("text", x = 0.515, y = 1.0, label = "Endo",
-           hjust = 0, size = 1.9) +
+           hjust = 0, size = GEOM_TEXT_6PT) +
   annotate("tile", x = 0.58, y = 1.0, width = 0.025, height = 0.5,
            fill = ct_short["Fib"]) +
   annotate("text", x = 0.605, y = 1.0, label = "Fib (HSC)",
-           hjust = 0, size = 1.9) +
+           hjust = 0, size = GEOM_TEXT_6PT) +
   annotate("tile", x = 0.70, y = 1.0, width = 0.025, height = 0.5,
            fill = ct_short["Mac"]) +
   annotate("text", x = 0.725, y = 1.0, label = "Mac",
-           hjust = 0, size = 1.9) +
+           hjust = 0, size = GEOM_TEXT_6PT) +
   scale_y_continuous(limits = c(0.5, 1.5)) +
   scale_x_continuous(limits = c(0, 1)) +
   theme_void()
 
-fig <- (chord_title /
-        panel_A /
+fig <- (panel_A /
         legend_strip /
         (plot_B | panel_C)) +
-  plot_layout(heights = c(0.6, 5.2, 0.4, 4.8))
+  plot_layout(heights = c(5.2, 0.4, 4.8))
+
+message(sprintf(paste(
+  "[caption] A: Stage-progressive LR circuits among hepatic cell types",
+  "(8 paracrine pairs pass all gates; q_tippett < 0.05; ALL3 Jaccard %s above random).",
+  "B: Canonical MASLD pairs are NOT stage-progressive (0/9 significant; 7/9 absent from LIANA universe).",
+  "C: Per-donor LR signal across MASLD stages (NAMPT->INSR, Mac->Hep, shows steepest slope).",
+  "D: Methods agree far more than chance (B=1000 permutations of top-50 LR labels per method)."),
+  fold_str))
 
 cat(sprintf("[save] -> %s\n", OUT_PDF))
 ggsave(OUT_PDF, fig,

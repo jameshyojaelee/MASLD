@@ -82,13 +82,13 @@ totals <- bar_dt[, .(total = sum(N)), by = dataset]
 p_a <- ggplot(bar_dt, aes(x = dataset, y = N, fill = qc_label)) +
   geom_col(width = 0.7) +
   geom_text(data = totals, aes(x = dataset, y = total + 2, label = total),
-            inherit.aes = FALSE, size = 1.8, vjust = 0) +
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, vjust = 0) +
   scale_fill_manual(values = c(Pass = masld_colors$down, Fail = "#E57373"),
                     name = "QC") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
-  labs(x = NULL, y = "Samples", title = "Samples per cohort") +
+  labs(x = NULL, y = "Samples") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
         legend.position = c(0.9, 0.85), legend.background = element_blank())
 
 # ---------------------------------------------------------------------------
@@ -106,9 +106,9 @@ p_b <- ggplot(fib_dt, aes(x = dataset, y = N, fill = fibrosis_stage)) +
   scale_fill_manual(values = fibrosis_stage_colors, name = "Stage",
                     na.value = "#EEEEEE") +
   scale_y_continuous(labels = percent_format(), expand = expansion(mult = c(0, 0.02))) +
-  labs(x = NULL, y = "Proportion", title = "Fibrosis stage distribution") +
+  labs(x = NULL, y = "Proportion") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
 
 # ---------------------------------------------------------------------------
 # Assemble (2-panel: samples-per-cohort | fibrosis-stage-per-cohort)
@@ -117,5 +117,6 @@ fig <- (p_a | p_b) +
   plot_annotation(tag_levels = "a",
                   theme = theme(plot.margin = margin(2, 2, 2, 2)))
 
+message("[caption] (a) Samples per cohort. (b) Fibrosis stage distribution.")
 save_fig(fig, OUT, width = fig_full_width, height = 3.5)
 cat("Saved:", OUT, "\n")

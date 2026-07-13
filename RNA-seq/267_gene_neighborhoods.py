@@ -65,7 +65,7 @@ MAX_HALO_NODES = 200  # cap on extended neighborhood size
 
 # Node attribute columns to include in per-gene JSON
 NODE_ATTRS = [
-    "is_deg", "dream_logFC", "dream_padj", "dream_tstat",
+    "is_deg", "bulk_logFC", "bulk_padj", "bulk_tstat",
     "gene_biotype", "sex_class", "is_conserved",
     "coloc_susie_best_pp4", "essentiality_chronos",
     "ferroptosis_class", "zonation_class", "layers_active",

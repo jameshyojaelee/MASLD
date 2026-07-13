@@ -8,9 +8,9 @@
 # each module's disease relevance is visible in the same panoramic view.
 #
 # Outputs (PDF only):
-#   figures/supplementary/figS_hotspot/figS_hotspot_heatmap.pdf  (main: global)
-#   figures/supplementary/figS_hotspot/panels/heatmap_<ct>.pdf   (7 per-CT)
-#   figures/supplementary/figS_hotspot/figS_hotspot_heatmap_atlas.pdf
+#   figures/supplementary/figS_hotspot/figs3_hotspot_heatmap.pdf  (main: global)
+#   figures/supplementary/figS_hotspot/panels/figs3_heatmap_<ct>.pdf   (7 per-CT)
+#   figures/supplementary/figS_hotspot/figs3_hotspot_heatmap_atlas.pdf
 #       (2x4 small-multiples atlas of all 7 cell-type heatmaps)
 # ============================================================================
 import os
@@ -19,9 +19,14 @@ from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
-matplotlib.rcParams["pdf.fonttype"] = 42        # Illustrator-editable
-matplotlib.rcParams["ps.fonttype"] = 42
-matplotlib.rcParams["font.family"] = "Helvetica"
+import matplotlib as mpl
+mpl.rcParams.update({
+    'font.size': 6, 'font.family': 'Helvetica', 'font.weight': 'normal',
+    'axes.titlesize': 6, 'axes.titleweight': 'normal', 'axes.labelsize': 6,
+    'axes.labelweight': 'normal', 'xtick.labelsize': 6, 'ytick.labelsize': 6,
+    'legend.fontsize': 6, 'legend.title_fontsize': 6, 'figure.titlesize': 6,
+    'figure.titleweight': 'normal', 'pdf.fonttype': 42, 'ps.fonttype': 42,
+})
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -34,9 +39,22 @@ ROOT = Path(os.environ.get(
     "MASLD_PROJECT_ROOT",
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"))
 HS = ROOT / "Analysis/SingleCell/results_gpu_v2/hotspot_modules"
-OUT = ROOT / "figures/supplementary/figS_hotspot"
-PANELS = OUT / "panels"
-DATA = PANELS / "data"
+
+# Output root is env-overridable so the same renderer can target either the
+# default supplementary location or a custom panels subdir (e.g. main Fig 3).
+# When HOTSPOT_FIG_OUT is set, the per-CT panels are written FLAT into that dir
+# (no nested panels/ subdir); otherwise the historical layout is preserved.
+_FIG_OUT_ENV = os.environ.get("HOTSPOT_FIG_OUT")
+if _FIG_OUT_ENV:
+    OUT = Path(_FIG_OUT_ENV)
+    if not OUT.is_absolute():
+        OUT = ROOT / OUT
+    PANELS = OUT
+    DATA = OUT / "data"
+else:
+    OUT = ROOT / "figures/supplementary/figS_hotspot"
+    PANELS = OUT / "panels"
+    DATA = PANELS / "data"
 for d in (OUT, PANELS, DATA): d.mkdir(parents=True, exist_ok=True)
 
 # Liang palette
@@ -55,8 +73,14 @@ CT_DISPLAY = {
     "cholangiocytes": "Cholangiocytes",
     "tcells": "T cells",
 }
-RUN_ORDER = ["global", "hepatocytes", "macrophages", "fibroblasts",
-             "endothelial_cells", "cholangiocytes", "tcells"]
+# Default = all 7 historical runs. HOTSPOT_RUN_CTS (comma-separated) overrides
+# the set/order — e.g. the 5 protocol-clean post-2026-05-22-remediation cell
+# types (global + endothelial_cells were deferred and have no clean current run).
+_DEFAULT_RUN_ORDER = ["global", "hepatocytes", "macrophages", "fibroblasts",
+                      "endothelial_cells", "cholangiocytes", "tcells"]
+_RUN_CTS_ENV = os.environ.get("HOTSPOT_RUN_CTS")
+RUN_ORDER = ([c.strip() for c in _RUN_CTS_ENV.split(",") if c.strip()]
+             if _RUN_CTS_ENV else _DEFAULT_RUN_ORDER)
 
 
 def load_run(ct):
@@ -76,6 +100,19 @@ def load_disease_beta():
 
 
 DISEASE_BETA = load_disease_beta()
+
+
+def load_names():
+    """module_names.tsv (from 509_module_pathway_names) → dict[(ct, int)] = name."""
+    p = HS / "module_names.tsv"
+    if not p.exists():
+        return {}
+    df = pd.read_csv(p, sep="\t")
+    return {(r["cell_type"], int(r["module"])): str(r["module_name"])
+            for _, r in df.iterrows()}
+
+
+NAMES = load_names()
 
 
 def module_palette(n):
@@ -206,7 +243,7 @@ def plot_heatmap(ct, ax_main, ax_mod_top, ax_dis_top, ax_mod_left,
                                 xy=(center, 1.0), xycoords=("data", "axes fraction"),
                                 xytext=(center, 1.85), textcoords=("data", "axes fraction"),
                                 ha="center", va="bottom",
-                                fontsize=6, fontweight="bold", color="black",
+                                fontsize=6, fontweight="normal", color="black",
                                 arrowprops=dict(arrowstyle="-", color="0.6",
                                                 lw=0.25, shrinkA=0, shrinkB=0))
         cum += cnt
@@ -214,8 +251,8 @@ def plot_heatmap(ct, ax_main, ax_mod_top, ax_dis_top, ax_mod_left,
     # Main colorbar
     if ax_cbar_main is not None:
         cbm = plt.colorbar(im, cax=ax_cbar_main, orientation="horizontal")
-        cbm.set_label("Local correlation Z", fontsize=5)
-        cbm.ax.tick_params(labelsize=4, length=2, width=0.3)
+        cbm.set_label("Local correlation Z", fontsize=6)
+        cbm.ax.tick_params(labelsize=6, length=2, width=0.3)
         cbm.outline.set_linewidth(0.3)
 
     # Disease β colorbar
@@ -226,12 +263,12 @@ def plot_heatmap(ct, ax_main, ax_mod_top, ax_dis_top, ax_mod_left,
             "div_liang", [DOWN_BLUE, "#FFFFFF", DISEASE_RED])
         sm = plt.cm.ScalarMappable(norm=norm_d, cmap=cmap_d)
         cbd = plt.colorbar(sm, cax=ax_cbar_dis, orientation="horizontal")
-        cbd.set_label("sign(β) × −log10(q_disease)", fontsize=5)
-        cbd.ax.tick_params(labelsize=4, length=2, width=0.3)
+        cbd.set_label("sign(β) × −log10(q_disease)", fontsize=6)
+        cbd.ax.tick_params(labelsize=6, length=2, width=0.3)
         cbd.outline.set_linewidth(0.3)
 
     if title:
-        ax_main.set_title(title, fontsize=7, fontweight="bold", pad=12)
+        ax_main.set_title(title, fontsize=6, fontweight="normal", pad=12)
 
     return n, len(ordered_idx), unique_mods, mods_ord
 
@@ -239,7 +276,7 @@ def plot_heatmap(ct, ax_main, ax_mod_top, ax_dis_top, ax_mod_left,
 def render_single(ct, outpath, with_colorbars=True):
     """Single CT figure: gene x gene heatmap + 2 sidebars + colorbars.
     Extra top whitespace is reserved for offset module-ID labels."""
-    fig = plt.figure(figsize=(5.4, 5.6))
+    fig = plt.figure(figsize=(3.24, 3.36))
     # GridSpec: [side ribbons] [heatmap] | colorbar row at bottom
     gs = gridspec.GridSpec(
         4, 4,
@@ -267,10 +304,7 @@ def render_single(ct, outpath, with_colorbars=True):
     n_mods, n_genes, uniq, mods_ord = plot_heatmap(
         ct, ax_main, ax_mod_top, ax_dis_top, ax_mod_left, ax_dis_left,
         ax_cbar, ax_cbar_dis, title=None)
-    # Use suptitle so it sits above the offset-label band, not on the strips
-    fig.suptitle(
-        f"{CT_DISPLAY[ct]} — {n_mods} modules, {n_genes} genes",
-        fontsize=8, fontweight="bold", y=0.96)
+    print(f"[caption] {CT_DISPLAY[ct]} — {n_mods} modules, {n_genes} genes")
     fig.savefig(outpath, format="pdf", bbox_inches="tight")
     plt.close(fig)
     # Side data: ordered modules + disease beta
@@ -288,7 +322,7 @@ def render_atlas_grid(outpath):
     """Small-multiples 2x4 atlas of all 7 cell-type heatmaps.
     Module-ID labels are dropped at this size — see per-CT panels in panels/
     for legible module labels. Legend at top of the figure."""
-    fig = plt.figure(figsize=(9.0, 5.6))
+    fig = plt.figure(figsize=(5.85, 3.64))
     # Generous hspace so the per-panel titles have headroom above the strips
     gs = gridspec.GridSpec(
         2, 4, wspace=0.20, hspace=0.85,
@@ -318,14 +352,41 @@ def render_atlas_grid(outpath):
         # the whole stack of ribbons + heatmap, never overlapping them.
         ax_mod_top.set_title(
             f"{CT_DISPLAY[ct]}\n{n_mods} modules · {n_genes} genes",
-            fontsize=7, fontweight="bold", pad=4)
+            fontsize=6, fontweight="normal", pad=4)
     # Top shared legend
     fig.text(0.04, 0.96,
              "Each panel: gene × gene local-autocorrelation Z. Top + left "
              "ribbons = module ID (cycling palette). Inner ribbons = signed "
-             "−log10(q_disease) per module. See panels/heatmap_<ct>.pdf for "
+             "−log10(q_disease) per module. See panels/figs3_heatmap_<ct>.pdf for "
              "labelled per-CT views.",
              fontsize=6, color="0.25", wrap=True)
+    fig.savefig(outpath, format="pdf", bbox_inches="tight")
+    plt.close(fig)
+
+
+def render_legend(ct, outpath):
+    """Companion module-ID -> curated-name legend for figs3_heatmap_<ct>.pdf, with a
+    color swatch matching the heatmap module ribbon palette and a ↑/↓ flag for
+    disease-significant modules (q_disease < 0.05)."""
+    modules, _ = load_run(ct)
+    uniq = sorted(int(m) for m in modules[modules > 0].unique())
+    pal = module_palette(len(uniq))
+    n = max(len(uniq), 1)
+    fig, ax = plt.subplots(figsize=(1.8, max(1.44, 0.102 * n)))
+    ax.axis("off")
+    print(f"[caption] {CT_DISPLAY.get(ct, ct)} — Hotspot modules")
+    for i, m in enumerate(uniq):
+        y = 1.0 - (i + 0.5) / n
+        nm = NAMES.get((ct, m), f"module {m}")
+        beta, q = DISEASE_BETA.get((ct, m), (float("nan"), float("nan")))
+        arrow = ""
+        if pd.notna(q) and q < 0.05:
+            arrow = "  ↑" if beta > 0 else "  ↓"
+        ax.add_patch(plt.Rectangle((0.0, y - 0.35 / n), 0.045, 0.7 / n,
+                                   color=pal[i], transform=ax.transAxes,
+                                   clip_on=False))
+        ax.text(0.08, y, f"{m}  {nm}{arrow}", fontsize=6,
+                va="center", ha="left", transform=ax.transAxes)
     fig.savefig(outpath, format="pdf", bbox_inches="tight")
     plt.close(fig)
 
@@ -333,22 +394,37 @@ def render_atlas_grid(outpath):
 # ----------------------------------------------------------------------------
 # Render everything
 # ----------------------------------------------------------------------------
+# Keep only cell types with a current local-correlation pickle on disk.
+# global + endothelial_cells were deferred at the 2026-05-22 protocol-
+# contamination remediation and have no clean post-fix run — silently
+# rendering their pre-fix pkls would present superseded, contaminated data
+# as current, so they are skipped with a notice rather than substituted.
+_present = []
+for ct in RUN_ORDER:
+    if (HS / ct / "hotspot_obj.pkl").exists():
+        _present.append(ct)
+    else:
+        print(f"[{ct}] SKIP — no current hotspot_obj.pkl on disk")
+RUN_ORDER = _present
+
 records = []
 for ct in RUN_ORDER:
-    out = PANELS / f"heatmap_{ct}.pdf"
+    out = PANELS / f"figs3_heatmap_{ct}.pdf"
     print(f"[{ct}] rendering -> {out}")
     rec = render_single(ct, out)
+    render_legend(ct, PANELS / f"figs3_heatmap_{ct}_legend.pdf")
     rec["cell_type"] = ct
     records.append(rec)
 
 pd.concat(records).to_csv(DATA / "heatmap_ordered_modules.csv", index=False)
 
-# Main composite: global as the comprehensive view
-print("rendering main composite (global)")
-render_single("global", OUT / "figS_hotspot_heatmap.pdf")
+# Main composite: global as the comprehensive view (only when global rendered)
+if "global" in RUN_ORDER:
+    print("rendering main composite (global)")
+    render_single("global", OUT / "figs3_hotspot_heatmap.pdf")
 
-# Atlas grid
+# Atlas grid (small-multiples of every rendered cell type)
 print("rendering atlas grid")
-render_atlas_grid(OUT / "figS_hotspot_heatmap_atlas.pdf")
+render_atlas_grid(OUT / "figs3_hotspot_heatmap_atlas.pdf")
 
 print("done")

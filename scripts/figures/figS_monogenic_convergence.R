@@ -73,12 +73,9 @@ p_a <- ggplot(fa_dat, aes(x = max_pp4, y = gene_label, color = has_pl)) +
   scale_size_manual("MAFLD/MASH\nP/LP",
                     values = c("TRUE" = 3, "FALSE" = 1.5),
                     labels = c("TRUE" = "Yes", "FALSE" = "No")) +
-  labs(y = NULL,
-       title = "(a) Common-variant COLOC across Okur 2026 panel genes",
-       subtitle = sprintf("%d of %d panel genes with atlas data; max PP.H4 ranked",
-                          nrow(fa_dat), length(panel_genes))) +
-  theme_masld(base_size = 8) +
-  theme(axis.text.y = element_text(size = 7),
+  labs(y = NULL) +
+  theme_masld(base_size = 6) +
+  theme(axis.text.y = element_text(size = 6),
         legend.position = "right")
 
 # ===========================================================================
@@ -101,14 +98,12 @@ p_b <- ggplot() +
              color = "#D62728", size = 1.6) +
   ggrepel::geom_text_repel(data = fb_label,
              aes(x = bulk_logFC, y = neg_log_padj, label = human_symbol),
-             size = 2.5, max.overlaps = 30, box.padding = 0.3) +
+             size = GEOM_TEXT_6PT, max.overlaps = 30, box.padding = 0.3) +
   geom_vline(xintercept = c(-0.3, 0.3), linetype = "dashed", color = "grey60", linewidth = 0.3) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey60", linewidth = 0.3) +
   labs(x = "dream logFC (NASH vs control)",
-       y = "-log10 dream padj",
-       title = "(b) Differential expression signal for panel genes",
-       subtitle = "Most monogenic genes show transcriptomic signal independent of COLOC") +
-  theme_masld(base_size = 8) +
+       y = "-log10 dream padj") +
+  theme_masld(base_size = 6) +
   coord_cartesian(xlim = c(-3, 3))
 
 # ===========================================================================
@@ -131,14 +126,12 @@ p_c <- ggplot() +
              color = "#D62728", size = 1.6) +
   ggrepel::geom_text_repel(data = fc_dat[in_panel == TRUE & (max_pp4 > 0.2 | abs_lfc > 0.5)],
              aes(x = max_pp4, y = abs_lfc, label = human_symbol),
-             size = 2.5, max.overlaps = 30, box.padding = 0.3) +
+             size = GEOM_TEXT_6PT, max.overlaps = 30, box.padding = 0.3) +
   geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey50", linewidth = 0.3) +
   geom_hline(yintercept = 0.3, linetype = "dashed", color = "grey50", linewidth = 0.3) +
   labs(x = "Max PP.H4 (any GWAS)",
-       y = "|dream logFC| (NASH vs control)",
-       title = "(c) Rare/common evidence are largely complementary",
-       subtitle = "Atlas-wide; panel genes (red) cluster at low PP.H4 but moderate-high |LFC|") +
-  theme_masld(base_size = 8) +
+       y = "|dream logFC| (NASH vs control)") +
+  theme_masld(base_size = 6) +
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 3.5))
 
 # ===========================================================================
@@ -160,28 +153,25 @@ fd_long[, evidence := factor(evidence, levels = c("best_PP4", "liver_enz_PP4", "
 
 p_d <- ggplot(fd_long, aes(x = evidence, y = human_symbol, fill = PP4)) +
   geom_tile(color = "white", linewidth = 0.3) +
-  geom_text(aes(label = sprintf("%.2f", PP4)), size = 3, color = "black") +
+  geom_text(aes(label = sprintf("%.2f", PP4)), size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_gradient2(low = "white", mid = "#FFE5B4", high = "#D62728",
                        midpoint = 0.25, limits = c(0, 1), na.value = "grey85",
                        name = "PP.H4") +
-  labs(x = NULL, y = NULL,
-       title = "(d) MAFLD/MASH subset (Okur 2026)",
-       subtitle = sprintf("%d genes with P/LP variants in the n=25 primary MAFLD subset", length(mafld_genes))) +
-  theme_masld(base_size = 8) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 8))
+  labs(x = NULL, y = NULL) +
+  theme_masld(base_size = 6) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
 
 # ===========================================================================
 # Compose
 # ===========================================================================
-composite <- (p_a | p_b) / (p_c | p_d) +
-  plot_annotation(
-    title = "Figure S | Convergence of common-variant SuSiE-COLOC and rare-variant monogenic evidence (Okur et al. 2026)",
-    subtitle = sprintf("Partial 90-gene panel (n=%d genes from PDF text + Table 3); full panel pending Zenodo embargo (2026-05-01)",
-                       length(panel_genes)),
-    theme = theme(plot.title = element_text(size = 11, face = "bold"),
-                  plot.subtitle = element_text(size = 8, color = "grey40"))
-  )
+composite <- (p_a | p_b) / (p_c | p_d)
+
+message("[caption] Figure S | Convergence of common-variant SuSiE-COLOC and rare-variant monogenic evidence (Okur et al. 2026). ",
+        sprintf("Partial 90-gene panel (n=%d genes from PDF text + Table 3); full panel pending Zenodo embargo (2026-05-01). ",
+                length(panel_genes)),
+        "(a) Common-variant COLOC across panel genes; (b) DEG signal for panel genes; ",
+        "(c) rare/common evidence complementarity; (d) MAFLD/MASH subset evidence summary.")
 
 dir.create(dirname(OUT_PDF), recursive = TRUE, showWarnings = FALSE)
-ggsave(OUT_PDF, composite, width = 12, height = 10, device = cairo_pdf)
+ggsave(OUT_PDF, composite, width = fig_full_width, height = 5.91, device = cairo_pdf)
 cat("Wrote:", OUT_PDF, "\n")

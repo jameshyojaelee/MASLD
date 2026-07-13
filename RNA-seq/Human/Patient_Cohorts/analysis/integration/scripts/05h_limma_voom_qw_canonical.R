@@ -38,12 +38,23 @@ coef_name <- "group_binaryDisease"
 stopifnot(coef_name %in% colnames(design))
 
 # ---- limma_voom_qw (benchmark-winning engine) ----
-v   <- voomWithQualityWeights(dge_mega, design)
-fit <- eBayes(lmFit(v, design))
-res <- topTable(fit, coef = coef_name, number = Inf, sort.by = "none")
+v    <- voomWithQualityWeights(dge_mega, design)
+fit0 <- lmFit(v, design)
+fit  <- eBayes(fit0)
+res  <- topTable(fit, coef = coef_name, number = Inf, sort.by = "none")
 res$gene <- rownames(res)
 dt <- as.data.table(res); setnames(dt, "adj.P.Val", "padj")
 dt[, SE := abs(logFC / t)]
+
+# ---- TREAT: canonical DEG significance gate (2026-06-29) ----
+# treat() tests H0: |true logFC| <= TREAT_LFC (McCarthy & Smyth 2009). FDR<0.05 on this
+# test IS the canonical DEG call -- the effect-size floor is folded INTO the test, so NO
+# separate |logFC| filter is applied downstream. Supersedes the ashr lfsr+|shrunk|>0.3 gate.
+TREAT_LFC <- as.numeric(Sys.getenv("CANONICAL_TREAT_LFC", "0.25"))
+ttm <- topTreat(treat(fit0, lfc = TREAT_LFC), coef = coef_name, number = Inf, sort.by = "none")
+dt[, treat_lfc := TREAT_LFC]
+dt[, treat_p   := ttm[gene, "P.Value"]]
+dt[, treat_fdr := ttm[gene, "adj.P.Val"]]
 
 # ---- ashr shrinkage (kept SIDE-BY-SIDE with raw) ----
 ok <- is.finite(dt$logFC) & is.finite(dt$SE) & dt$SE > 0
@@ -51,7 +62,7 @@ ash <- ashr::ash(dt$logFC[ok], dt$SE[ok], mixcompdist = "normal")
 dt[, shrunk_logFC := NA_real_][ok, shrunk_logFC := ash$result$PosteriorMean]
 dt[, lfsr := NA_real_][ok, lfsr := ash$result$lfsr]
 
-out <- dt[, .(gene, logFC, SE, t, P.Value, padj, shrunk_logFC, lfsr, AveExpr)]
+out <- dt[, .(gene, logFC, SE, t, P.Value, padj, shrunk_logFC, lfsr, treat_lfc, treat_p, treat_fdr, AveExpr)]
 
 # ---- symbol column (drop-in parity with dream_results_ashr.csv `symbol`) ----
 # Class-B downstream readers (e.g. 80_celltype_intrinsic_attribution.R, 310a) select
@@ -65,11 +76,13 @@ fwrite(out, file.path(RDIR, "limma_voom_qw_C2_results.csv"))
 # future method swap only re-touches 05h (the producer), not every consumer.
 fwrite(out, file.path(RDIR, "canonical_deg_results.csv"))
 
-# ---- Tier-1 DEG counts (both definitions) ----
+# ---- DEG counts: canonical TREAT + legacy reference definitions ----
+treat1 <- out[treat_fdr < 0.05]
 raw1 <- out[padj < 0.05 & abs(logFC) > 0.5]
 ash1 <- out[lfsr < 0.05 & abs(shrunk_logFC) > 0.5]
-cat(sprintf("\n[C2] genes=%d\n  RAW  Tier-1 (padj<.05 & |logFC|>.5)        : %d  (up %d / dn %d)\n  ashr Tier-1 (lfsr<.05 & |shrunk_logFC|>.5) : %d  (up %d / dn %d)\n",
-  nrow(out), nrow(raw1), sum(raw1$logFC>0), sum(raw1$logFC<0),
+cat(sprintf("\n[C2] genes=%d\n  CANONICAL TREAT (treat_fdr<.05, lfc=%.2f)  : %d  (up %d / dn %d)\n  RAW  ref (padj<.05 & |logFC|>.5)           : %d  (up %d / dn %d)\n  ashr ref (lfsr<.05 & |shrunk_logFC|>.5)    : %d  (up %d / dn %d)\n",
+  nrow(out), TREAT_LFC, nrow(treat1), sum(treat1$logFC>0), sum(treat1$logFC<0),
+  nrow(raw1), sum(raw1$logFC>0), sum(raw1$logFC<0),
   nrow(ash1), sum(ash1$shrunk_logFC>0), sum(ash1$shrunk_logFC<0)))
 
 # ======================= SANITY GATE (no overwrite) =======================

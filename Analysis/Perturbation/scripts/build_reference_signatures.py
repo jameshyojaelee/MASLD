@@ -23,7 +23,9 @@ from scipy.stats import ttest_ind_from_stats
 PROJECT = '/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design'
 H5AD = f'{PROJECT}/Analysis/SingleCell/results_gpu_v2/hepatocyte_subtypes/hepatocyte_atlas_annotated.h5ad'
 META_MAP_CSV = f'{PROJECT}/Analysis/SingleCell/results_gpu_v2/hepatocyte_subtypes/meta_subtype_mapping.csv'
-DREAM_CSV = f'{PROJECT}/RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv'
+# C2 swap 2026-06-08: repointed dream_results.csv -> canonical_deg_results.csv
+# (canonical disease-vs-control = limma-voom quality-weighted C2).
+DREAM_CSV = f'{PROJECT}/RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv'
 GENCODE_TSV = f'{PROJECT}/data/gencode_v49_gene_metadata.tsv.gz'
 OUT_DIR = f'{PROJECT}/Analysis/Perturbation/data/reference_signatures'
 

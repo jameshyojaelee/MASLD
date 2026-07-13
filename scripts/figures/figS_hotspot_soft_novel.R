@@ -2,15 +2,19 @@
 # ============================================================================
 # figS_hotspot_soft_novel.R
 #
-# KEY MESSAGE: Local-autocorrelation discovery surfaces two clinically
-# meaningful modules whose gene composition is distinct from cNMF / bulk NMF /
-# Hallmark / SCENIC+ / curated panels at the top-50 Jaccard level. mac__16 =
-# tissue-resident Kupffer attrition; hep__25 = UPR / ERN1 stress signature.
-# Both are gene-composition-novel (best Jaccard < 0.03 vs every reference
-# panel) yet emerge with disease-coherent direction.
+# KEY MESSAGE: Local-autocorrelation discovery surfaces a clinically
+# meaningful hepatocyte module whose gene composition is distinct from cNMF /
+# bulk NMF / Hallmark / SCENIC+ / curated panels at the top-50 Jaccard level:
+# hep__25 = UPR / ERN1 stress signature (best Jaccard 0.022 vs every reference
+# panel) emerging with disease-coherent direction (beta = +0.28, q = 4e-4).
 #
-# A — mac__16 Kupffer-loss hero (gene weights + F-stage trajectory)
-# B — hep__25 UPR / ERN1 hero (gene weights + F-stage trajectory)
+# NOTE (2026-06-30): the former macrophage "Kupffer-loss" hero (old mac__16)
+# was RETIRED — it did not survive the 2026-05-22 protocol-clean Hotspot
+# re-discovery (max top-50 Jaccard 0.143 to any current macrophage module;
+# likely a Liver_Atlas FACS-sorted-Kupffer contamination artifact). hep__25 is
+# the single surviving soft-novel hero.
+#
+# hep__25 UPR / ERN1 hero (gene weights + F-stage trajectory)
 # ============================================================================
 suppressPackageStartupMessages({
   library(data.table)
@@ -64,14 +68,14 @@ make_softnovel_hero <- function(ct, mod_int, header, n_genes = 14, bar_color) {
   g[, gene := factor(gene, levels = rev(gene))]
   m <- mods[cell_type == ct & module == mod_int]
 
+  message(sprintf("[caption] %s: best-jacc=%.3f vs %s",
+                  header, m$best_match_jaccard, m$best_match_program))
+
   p_genes <- ggplot(g, aes(weight, gene)) +
     geom_col(width = 0.7, fill = bar_color, color = "black", linewidth = 0.15) +
-    labs(x = "Hotspot weight (mean local-corr Z)", y = NULL,
-         subtitle = sprintf("%s\nbest-jacc=%.3f vs %s",
-                            header, m$best_match_jaccard,
-                            m$best_match_program)) +
+    labs(x = "Hotspot weight (mean local-corr Z)", y = NULL) +
     theme_masld() + theme_pub() +
-    theme(axis.text.y = element_text(size = 5, face = "bold"))
+    theme(axis.text.y = element_text(size = 6, face = "plain"))
 
   d <- ds[cell_type == ct & module_int == mod_int]
   d <- d[disease_stage_coarse %in% STAGE_LEVELS]
@@ -86,42 +90,33 @@ make_softnovel_hero <- function(ct, mod_int, header, n_genes = 14, bar_color) {
     stat_summary(fun = median, geom = "point", shape = 21, size = 1.1,
                  color = "black", fill = "white", stroke = 0.3) +
     scale_fill_manual(values = STAGE_COLORS, guide = "none") +
-    labs(x = NULL, y = "Module score (dataset-centered)",
-         subtitle = sprintf("β=%+0.2f  q=%.1e  stab=%.2f",
-                            m$disease_stage_beta, m$disease_stage_q,
-                            m$stability_score)) +
+    labs(x = NULL, y = "Module score (dataset-centered)") +
     theme_masld() + theme_pub() +
     theme(axis.text.x = element_text(angle = 30, hjust = 1))
+
+  message(sprintf("[caption] beta=%+0.2f  q=%.1e  stab=%.2f",
+                  m$disease_stage_beta, m$disease_stage_q, m$stability_score))
 
   list(genes = p_genes, traj = p_traj, gene_data = g, donor_data = d)
 }
 
-A_parts <- make_softnovel_hero("macrophages", 16,
-                               "Kupffer-loss soft-novel (mac__16)",
-                               n_genes = 14,
-                               bar_color = ct_palette[["Macrophages"]])
 B_parts <- make_softnovel_hero("hepatocytes", 25,
                                "UPR / ERN1 soft-novel (hep__25)",
                                n_genes = 14,
                                bar_color = ct_palette[["Hepatocytes"]])
 
-pA <- A_parts$genes | A_parts$traj
+# Single surviving soft-novel hero (hep__25). The macrophage Kupffer-loss panel
+# was retired 2026-06-30 (old mac__16 did not survive the protocol-clean
+# re-discovery — likely a Liver_Atlas FACS-sort artifact).
 pB <- B_parts$genes | B_parts$traj
 
-save_fig(pA, file.path(PANEL_DIR, paste0(PREFIX, "A_mac16_kupffer_loss.pdf")),
+save_fig(pB, file.path(PANEL_DIR, paste0(PREFIX, "hep25_upr.pdf")),
          width = fig_full_width, height = 2.5)
-save_fig(pB, file.path(PANEL_DIR, paste0(PREFIX, "B_hep25_upr.pdf")),
-         width = fig_full_width, height = 2.5)
-
-composite <- pA / pB +
-  patchwork::plot_annotation(tag_levels = "a")
-save_fig(composite,
+save_fig(pB,
          file.path(FIGS_HOTSPOT_DIR, "figS_hotspot_soft_novel.pdf"),
-         width = fig_full_width, height = 5.2)
+         width = fig_full_width, height = 2.5)
 
-fwrite(A_parts$gene_data, file.path(DATA_DIR, paste0(PREFIX, "A_mac16_genes.csv")))
-fwrite(A_parts$donor_data, file.path(DATA_DIR, paste0(PREFIX, "A_mac16_donors.csv")))
-fwrite(B_parts$gene_data, file.path(DATA_DIR, paste0(PREFIX, "B_hep25_genes.csv")))
-fwrite(B_parts$donor_data, file.path(DATA_DIR, paste0(PREFIX, "B_hep25_donors.csv")))
+fwrite(B_parts$gene_data, file.path(DATA_DIR, paste0(PREFIX, "hep25_genes.csv")))
+fwrite(B_parts$donor_data, file.path(DATA_DIR, paste0(PREFIX, "hep25_donors.csv")))
 
-cat("Wrote figS_hotspot_soft_novel: 2 panels + composite\n")
+cat("Wrote figS_hotspot_soft_novel: 1 hero panel (hep__25); mac__16 retired\n")

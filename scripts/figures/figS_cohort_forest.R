@@ -64,10 +64,10 @@ if (has_concordance) {
 # Panel a: Forest plot — top 15 upregulated genes
 # ==========================================================================
 # Select top 15 up from dream by absolute logFC * significance
-dream_sig <- dream[is_dream_deg(dream) & !grepl("^ENS", symbol)]
+bulk_sig <- dream[is_dream_deg(dream) & !grepl("^ENS", symbol)]
 
-top_up <- dream_sig[dream_logFC > 0][order(-dream_logFC)][1:min(15, .N)]
-top_down <- dream_sig[dream_logFC < 0][order(dream_logFC)][1:min(15, .N)]
+top_up <- bulk_sig[bulk_logFC > 0][order(-bulk_logFC)][1:min(15, .N)]
+top_down <- bulk_sig[bulk_logFC < 0][order(bulk_logFC)][1:min(15, .N)]
 
 make_forest <- function(top_genes, per_study_dt, direction_label) {
   # Get per-study data for selected genes
@@ -77,7 +77,7 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
   if (nrow(forest_dt) == 0) return(placeholder(paste("No per-study data for", direction_label)))
 
   # Add dream summary
-  dream_summary <- top_genes[, .(symbol, dream_logFC, dream_padj)]
+  dream_summary <- top_genes[, .(symbol, bulk_logFC, bulk_padj)]
   forest_dt <- merge(forest_dt, dream_summary, by = "symbol", all.x = TRUE)
 
   # Compute approximate 95% CI from t-statistic
@@ -91,7 +91,7 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
   }
 
   # Order genes by dream logFC
-  gene_order <- top_genes[order(dream_logFC)]$symbol
+  gene_order <- top_genes[order(bulk_logFC)]$symbol
   forest_dt[, symbol := factor(symbol, levels = gene_order)]
 
   # Color by significance
@@ -103,7 +103,7 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
                    linewidth = 0.3, color = "gray60") +
     geom_point(aes(color = sig, shape = dataset), size = 1.5, alpha = 0.8) +
     # Add dream summary as diamond
-    geom_point(data = top_genes, aes(x = dream_logFC, y = symbol),
+    geom_point(data = top_genes, aes(x = bulk_logFC, y = symbol),
                shape = 23, size = 2.5, fill = "black", color = "black", stroke = 0.5) +
     scale_color_manual(values = c("padj < 0.05" = masld_colors$up, "NS" = masld_colors$ns),
                        name = "Per-study") +
@@ -118,7 +118,6 @@ make_forest <- function(top_genes, per_study_dt, direction_label) {
            color = guide_legend(override.aes = list(size = 2))) +
     labs(x = expression("log"[2]*"FC (Disease vs Control)"),
          y = NULL,
-         title = paste0(direction_label, " DEGs across 9 cohorts"),
          shape = "Cohort")
 
   return(p)
@@ -149,7 +148,7 @@ if (has_concordance && "meta_I2" %in% names(conc)) {
     geom_histogram(binwidth = 5, boundary = 0, color = "white", linewidth = 0.2) +
     geom_vline(xintercept = median_i2, linetype = "dashed", linewidth = 0.4, color = "black") +
     annotate("text", x = median_i2, y = Inf, vjust = 1.5, hjust = -0.1,
-             label = sprintf("Median = %.0f%%", median_i2), size = 2.2) +
+             label = sprintf("Median = %.0f%%", median_i2), size = GEOM_TEXT_6PT) +
     scale_fill_manual(values = c(
       "Low (<25%)" = "#81D4FA",
       "Moderate (25-50%)" = "#42A5F5",
@@ -160,8 +159,7 @@ if (has_concordance && "meta_I2" %in% names(conc)) {
     theme_masld() +
     theme(legend.position = "right") +
     labs(x = expression(I^2 ~ "(%)"),
-         y = "Gene count",
-         title = "Cross-cohort heterogeneity distribution")
+         y = "Gene count")
 } else {
   p_c <- placeholder("I-squared data not available")
 }
@@ -190,15 +188,15 @@ p_d <- ggplot(deg_long, aes(x = n, y = dataset, fill = direction)) +
   scale_x_continuous(labels = function(x) format(abs(x), big.mark = ",")) +
   theme_masld() +
   theme(legend.position = "bottom") +
-  labs(x = "Number of DEGs (padj < 0.05)", y = NULL, fill = NULL,
-       title = "Per-cohort DE analysis")
+  labs(x = "Number of DEGs (padj < 0.05)", y = NULL, fill = NULL)
 
 # ==========================================================================
 # Assemble
 # ==========================================================================
 fig <- (p_a | p_b) / (p_c | p_d) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
-save_fig(fig, OUT, width = fig_full_width, height = 10)
+save_fig(fig, OUT, width = fig_full_width, height = 9.4)
+message("[caption] a: Top upregulated DEGs across 9 cohorts. b: Top downregulated DEGs across 9 cohorts. c: Cross-cohort heterogeneity distribution. d: Per-cohort DE analysis.")
 message("Cohort forest figure saved to ", OUT)

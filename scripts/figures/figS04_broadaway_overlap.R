@@ -94,20 +94,17 @@ pA <- ggplot() +
               colour = NA, alpha = 0.55, show.legend = FALSE) +
   scale_fill_manual(values = c(ours = COL_OURS, their = COL_THEIR)) +
   geom_text(data = lab, aes(x, y, label = txt),
-            size = PUB_GEOM_TEXT + 0.4, lineheight = 0.9, fontface = "bold",
-            colour = "grey15") +
+            size = PUB_GEOM_TEXT + 0.4, lineheight = 0.9, fontface = "plain",
+            colour = "black") +
   geom_text(data = set_lab, aes(x, y, label = txt),
-            size = PUB_GEOM_TEXT, lineheight = 0.9, colour = "grey25") +
+            size = PUB_GEOM_TEXT, lineheight = 0.9, colour = "black") +
   coord_fixed(xlim = c(-dd/2 - r*1.2, dd/2 + r*1.2),
               ylim = c(-r*1.25, r*1.45)) +
-  labs(title = "MASLD COLOC effector genes vs Broadaway 747",
-       subtitle = sprintf("Overlap %d genes (%.0f%% of ours, %.0f%% of theirs); PP.H4 > 0.5",
-                          n_shared, 100*n_shared/n_ours, 100*n_shared/n_their)) +
   theme_void(base_family = "Helvetica") +
-  theme(plot.title    = element_text(size = PUB_TITLE, face = "bold", hjust = 0.5),
-        plot.subtitle = element_text(size = PUB_SUBTITLE, hjust = 0.5,
-                                     margin = margin(b = 4)),
-        plot.margin   = margin(4, 4, 4, 4))
+  theme(plot.margin   = margin(4, 4, 4, 4))
+
+message(sprintf("[caption] MASLD COLOC effector genes vs Broadaway 747: overlap %d genes (%.0f%% of ours, %.0f%% of theirs); PP.H4 > 0.5",
+                n_shared, 100*n_shared/n_ours, 100*n_shared/n_their))
 
 ggsave(file.path(FIGS04_DIR, "broadaway_overlap_venn.pdf"),
        pA, width = 75, height = 70, units = "mm", useDingbats = FALSE)
@@ -130,17 +127,15 @@ bar[, pct := 100 * n / sum(n)]
 pB <- ggplot(bar, aes(cat, n, fill = cat)) +
   geom_col(width = 0.72, colour = NA) +
   geom_text(aes(label = sprintf("%d  (%.0f%%)", n, pct)),
-            hjust = -0.08, size = PUB_GEOM_TEXT + 0.3, colour = "grey15") +
+            hjust = -0.08, size = PUB_GEOM_TEXT + 0.3, colour = "black") +
   scale_fill_manual(values = setNames(bar$col, bar$cat), guide = "none") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.22))) +
   coord_flip() +
-  labs(title = "What distinguishes our 751 COLOC genes",
-       subtitle = "MASLD SuSiE/ABF-COLOC (PP.H4 > 0.5) vs Broadaway 747",
-       x = NULL, y = "eGenes") +
+  labs(x = NULL, y = "eGenes") +
   theme_masld() + theme_pub() +
-  theme(axis.text.y    = element_text(size = PUB_AXIS_TEXT, lineheight = 0.85),
-        plot.title     = element_text(size = PUB_TITLE, face = "bold"),
-        plot.subtitle  = element_text(size = PUB_SUBTITLE))
+  theme(axis.text.y    = element_text(size = PUB_AXIS_TEXT, lineheight = 0.85))
+
+message("[caption] What distinguishes our 751 COLOC genes: MASLD SuSiE/ABF-COLOC (PP.H4 > 0.5) vs Broadaway 747")
 
 ggsave(file.path(FIGS04_DIR, "broadaway_novel_source.pdf"),
        pB, width = 108, height = 55, units = "mm", useDingbats = FALSE)

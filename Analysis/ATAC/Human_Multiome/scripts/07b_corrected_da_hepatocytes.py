@@ -176,7 +176,7 @@ def fit_lm_vectorized(Y_log_cpm, x):
 
 def run_pseudobulk_da(X_hep, donor_array, peak_names, donor_is_masld,
                       peak_to_tile_S, min_donor_detect=3, min_total_reads=10,
-                      counts_export_dir=None):
+                      counts_export_dir=None, counts_basename="hep_pseudobulk"):
     """Donor-level pseudobulk DA for hepatocyte peaks.
 
     Parameters
@@ -272,7 +272,7 @@ def run_pseudobulk_da(X_hep, donor_array, peak_names, donor_is_masld,
             counts_int, index=list(donors), columns=peak_names_kept
         )
         counts_df.index.name = "donor_id"
-        counts_path = os.path.join(counts_export_dir, "hep_pseudobulk_counts.tsv.gz")
+        counts_path = os.path.join(counts_export_dir, f"{counts_basename}_counts.tsv.gz")
         counts_df.to_csv(counts_path, sep="\t", compression="gzip")
 
         coldata_df = pd.DataFrame({
@@ -280,7 +280,7 @@ def run_pseudobulk_da(X_hep, donor_array, peak_names, donor_is_masld,
             "condition": cond.astype(int),  # 1 = MASLD, 0 = NORMAL
             "libsize": libsize.astype(np.int64),
         })
-        coldata_path = os.path.join(counts_export_dir, "hep_pseudobulk_coldata.tsv")
+        coldata_path = os.path.join(counts_export_dir, f"{counts_basename}_coldata.tsv")
         coldata_df.to_csv(coldata_path, sep="\t", index=False)
         log.info(
             "  Exported pseudobulk COUNTS for edgeR: %s (%d donors x %d peaks) + %s",

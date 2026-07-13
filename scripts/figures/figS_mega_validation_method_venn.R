@@ -4,8 +4,8 @@
 #
 # Emits under figures/supplementary/figS_methods_validation/mega_validation/panels/:
 #   method_venn_padj05.pdf            — 4-set Euler at padj<0.05 (dream + 3 NB/voom)
-#   method_upset_tier1.pdf            — 4-set UpSet at Tier 1 (padj<0.05 & |LFC|>0.5)
-#                                       style matches fig2_panel_nas_stage_upset.pdf
+#   method_upset_tier1.pdf            — 4-set UpSet at Tier 1 (padj<0.05 & |LFC|>0.3)
+#                                       style matches nas_stage_upset.pdf
 #   method_venn_pairs_*.csv           — pairwise intersection summaries
 #
 # metafor-HKSJ removed from all comparisons (user request 2026-05-19): its
@@ -61,7 +61,7 @@ method_cols <- c(dream         = "#1b9e77",
 # ============================================================================
 set_padj05 <- lapply(arms, function(a) a$dt[!is.na(padj) & padj < 0.05, gene_clean])
 tier1_sets <- lapply(arms, function(a)
-  a$dt[!is.na(padj) & padj < 0.05 & abs(logFC) > 0.5, gene_clean])
+  a$dt[!is.na(padj) & padj < 0.05 & abs(logFC) > 0.3, gene_clean])
 
 # ============================================================================
 # Panel 1 — Euler at padj < 0.05 (eulerr ellipse mode handles up to ~8 sets,
@@ -74,20 +74,20 @@ save_euler <- function(set_list, filename, title,
   print(plot(fit,
              fills = list(fill = method_cols[names(set_list)], alpha = 0.55),
              edges = list(col = "white", lwd = 1.4),
-             labels = list(font = 2, cex = 0.75, col = "gray15"),
-             quantities = list(cex = 0.6, col = "gray10"),
-             main = list(label = title, cex = 1.0, font = 2)))
+             labels = list(font = 1, cex = 0.75, col = "black"),
+             quantities = list(cex = 0.6, col = "black")))
   dev.off()
   cat("Saved", filename, "  (sets:",
       paste(names(set_list), lengths(set_list), sep = "=", collapse = ", "),
       ")\n")
 }
+message("[caption] DEG overlap at padj < 0.05")
 save_euler(set_padj05, "method_venn_padj05.pdf",
            "DEG overlap at padj < 0.05")
 
 # ============================================================================
-# Panel 2 — UpSet at Tier 1 (padj<0.05 & |LFC|>0.5)
-# Style follows fig2_panel_nas_stage_upset.R: top intersection-size bar,
+# Panel 2 — UpSet at Tier 1 (padj<0.05 & |LFC|>0.3)
+# Style follows nas_stage_upset.R: top intersection-size bar,
 # bottom-right dot matrix with connecting segments, bottom-left set-size bar.
 # ============================================================================
 set_names <- names(tier1_sets)
@@ -132,7 +132,7 @@ BAR_FILL <- "#3a86ff"
 p_top <- ggplot(intersections, aes(x = ix_label, y = n_genes)) +
   geom_col(width = 0.75, fill = BAR_FILL, color = NA) +
   geom_text(aes(label = comma(n_genes)), vjust = -0.3,
-            size = 2.2, color = "gray20") +
+            size = 6 / ggplot2::.pt, color = "black") +
   scale_y_continuous(expand = expansion(mult = c(0.02, 0.20)), labels = comma) +
   labs(x = NULL, y = "DEGs (intersection size)") +
   theme_minimal(base_size = 9) +
@@ -166,14 +166,14 @@ p_dots <- ggplot(dot_dt, aes(x = ix_label, y = method)) +
   theme(panel.grid    = element_blank(),
         axis.text.x   = element_blank(),
         axis.ticks.x  = element_blank(),
-        axis.text.y   = element_text(face = "bold", size = 8),
+        axis.text.y   = element_text(face = "plain", size = 6),
         plot.margin   = margin(0, 4, 4, 4))
 
 # Bottom-left: set-size bar
 p_left <- ggplot(set_sizes,
                  aes(y = method, x = n_genes, fill = as.character(method))) +
   geom_col(width = 0.7, color = NA) +
-  geom_text(aes(label = comma(n_genes)), hjust = 1.1, size = 2.2,
+  geom_text(aes(label = comma(n_genes)), hjust = 1.1, size = 6 / ggplot2::.pt,
             color = "white") +
   scale_fill_manual(values = method_cols, guide = "none") +
   scale_x_reverse(expand = expansion(mult = c(0.20, 0.03)), labels = comma,
@@ -183,7 +183,7 @@ p_left <- ggplot(set_sizes,
   theme(panel.grid    = element_blank(),
         axis.text.y   = element_blank(),
         axis.ticks.y  = element_blank(),
-        axis.text.x   = element_text(size = 7, angle = 35, hjust = 1),
+        axis.text.x   = element_text(size = 6, angle = 35, hjust = 1),
         plot.margin   = margin(2, 4, 6, 14))
 
 aligned <- align_plots(p_top, p_dots, align = "v", axis = "lr")
@@ -194,7 +194,7 @@ upset_plot <- plot_grid(top_row, bottom_row, ncol = 1,
                          rel_heights = c(1.8, 1.0))
 
 ggsave(file.path(OUT_DIR, "method_upset_tier1.pdf"), upset_plot,
-       width = 8.5, height = 4.4, device = cairo_pdf)
+       width = 7.09, height = 3.67, device = cairo_pdf)
 cat("Saved method_upset_tier1.pdf  (",
     paste(set_names, lengths(tier1_sets), sep = "=", collapse = ", "),
     ")\n")

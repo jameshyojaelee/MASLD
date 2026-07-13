@@ -29,12 +29,12 @@ cat("Output:", FIGDIR, "\n\n")
 # --- Publication theme ---
 theme_pub <- theme_bw(base_size = 10) +
   theme(
-    plot.title = element_text(face = "bold", size = 11),
+    plot.title = element_text(face = "plain", size = 11),
     axis.title = element_text(size = 9),
     axis.text = element_text(size = 8),
     legend.text = element_text(size = 8),
     legend.title = element_text(size = 9),
-    strip.text = element_text(size = 9, face = "bold"),
+    strip.text = element_text(size = 9, face = "plain"),
     panel.grid.minor = element_blank(),
     plot.margin = margin(5, 10, 5, 5)
   )
@@ -317,7 +317,7 @@ if (length(panels) >= 2) {
       title = "MASLD Staging Classifier: Three-Plan Comparison",
       subtitle = "Ordinal (Plan 1) | Hierarchical (Plan 2) | DL Embedding (Plan 3)",
       theme = theme(
-        plot.title = element_text(face = "bold", size = 14),
+        plot.title = element_text(face = "plain", size = 14),
         plot.subtitle = element_text(size = 11, color = "gray30")
       )
     )

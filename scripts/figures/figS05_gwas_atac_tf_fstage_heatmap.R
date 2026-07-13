@@ -1,5 +1,10 @@
 #!/usr/bin/env Rscript
 # KEY MESSAGE: Cross-modality disease master-regulator TFs vs F0 baseline across F1-F4 stages; HNF4A, RORA, THRB anchor the largest motif-disruption load.
+# NOTE: "motif-disruption load" is a PUTATIVE computational prediction (FIMO/
+# motifbreakR on fine-mapped variants), NOT functionally validated -- the Currin
+# caQTL test does not confirm it (motif x caQTL 46.3%, median 50%; only 2 four-way
+# variants, in ZNF701; see figS05_scatac_caqtl_concordance). Report as PREDICTED
+# regulatory disruption, never "validated".
 # Mirrors figS05_gwas_atac_tf_transition_heatmap.R but uses F0 as the common reference instead of the prior stage.
 # Source: fibrosis_stage_dream.csv (dream mega F{1-4}_vs_F0) + DoRothEA A/B/C + decoupleR run_wmean.
 # TF panel: cross-modality disease master regulators = hepatocyte SCENIC+ regulon TFs that are
@@ -112,7 +117,7 @@ sig_fun <- function(j, i, x, y, w, h, fill) {
   if (is.na(f)) return(invisible(NULL))
   lab <- if (f < 0.01) "**" else if (f < 0.10) "*" else ""
   if (lab != "")
-    grid.text(lab, x, y, gp = gpar(fontsize = 9, fontface = "bold", col = "black"))
+    grid.text(lab, x, y, gp = gpar(fontsize = 6, fontface = "plain", col = "black"))
 }
 
 vmax <- max(abs(score_ord), na.rm = TRUE)
@@ -126,7 +131,7 @@ right_anno <- rowAnnotation(
     bar_width = 0.75,
     width = unit(2.0, "cm")
   ),
-  annotation_name_gp = gpar(fontsize = 8),
+  annotation_name_gp = gpar(fontsize = 6),
   annotation_name_rot = 0
 )
 
@@ -138,15 +143,15 @@ ht <- Heatmap(
   col = col_fun,
   na_col = "#F0F0F0",
   cluster_rows = FALSE, cluster_columns = FALSE,
-  row_names_side = "left", row_names_gp = gpar(fontsize = 9),
+  row_names_side = "left", row_names_gp = gpar(fontsize = 6),
   column_labels = col_labels, column_names_rot = 0,
-  column_names_gp = gpar(fontsize = 10),
+  column_names_gp = gpar(fontsize = 6),
   column_names_centered = TRUE,
   cell_fun = sig_fun,
   right_annotation = right_anno,
   rect_gp = gpar(col = "white", lwd = 0.6),
   heatmap_legend_param = list(
-    title_gp = gpar(fontsize = 8), labels_gp = gpar(fontsize = 8),
+    title_gp = gpar(fontsize = 6), labels_gp = gpar(fontsize = 6),
     legend_height = unit(2.5, "cm")
   ),
   width = unit(5.5, "cm"),
@@ -160,14 +165,13 @@ sig_legend <- Legend(
   type       = "points",
   pch        = NA,
   legend_gp  = gpar(col = "white"),
-  labels_gp  = gpar(fontsize = 8),
-  title_gp   = gpar(fontsize = 8, fontface = "bold")
+  labels_gp  = gpar(fontsize = 6),
+  title_gp   = gpar(fontsize = 6, fontface = "plain")
 )
 
+message("[caption] Cross-modality disease master regulators across fibrosis stages (vs F0)")
 pdf(out_pdf, width = 6.0, height = 8.0)
 draw(ht,
-     column_title = "Cross-modality disease master regulators across fibrosis stages (vs F0)",
-     column_title_gp = gpar(fontsize = 11, fontface = "bold"),
      heatmap_legend_side = "right",
      annotation_legend_list = list(sig_legend),
      padding = unit(c(4, 4, 4, 4), "mm"))

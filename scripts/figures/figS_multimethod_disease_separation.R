@@ -1,12 +1,13 @@
 #!/usr/bin/env Rscript
 # figS_multimethod_disease_separation.R
-# Panel K (supervised disease separation) — the companion to panelJ. Unsupervised
-# PCA (panelJ) does NOT separate Control/Disease because disease is <1% of variance.
+# Supervised disease separation — the companion to the batch-model PCA
+# (batch_model_pca.pdf), which does NOT separate Control/Disease because disease
+# is <1% of variance.
 # This panel shows the disease contrast IS recoverable on a SUPERVISED axis, with
 # NO double-dipping: a leave-one-cohort-out (LOCO) disease signature is trained on
 # 4 cohorts and projected onto the held-out 5th; the held-out samples never inform
 # their own signature or scaling.
-#   panelK_supervised_disease.pdf
+#   supervised_disease.pdf  (was panelK_supervised_disease.pdf)
 #   left  : held-out LOCO disease score per cohort, coloured by true label
 #   right : pooled held-out ROC (+ per-cohort AUROC)
 suppressPackageStartupMessages({
@@ -23,8 +24,8 @@ dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 CTRL <- "#9E9E9E"; set.seed(42)
 
 MEGA <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-                  GSE162694 = "Bril", GSE213621 = "Chen")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+                  GSE162694 = "GSE162694", GSE213621 = "GSE213621")
 TOPK <- 200L            # signature size (genes by |t| on the training cohorts)
 
 dge <- load_merged_dge(); stopifnot(!is.null(dge))
@@ -93,18 +94,16 @@ setorder(roc_dt, fpr, tpr)
 pR <- ggplot(roc_dt, aes(fpr, tpr)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey70", linewidth = 0.3) +
   geom_path(colour = masld_colors$nash, linewidth = 0.7) +
-  annotate("text", x = 0.6, y = 0.18, size = 2.8, colour = "grey15",
+  annotate("text", x = 0.6, y = 0.18, size = 6/ggplot2::.pt, colour = "grey15",
            label = sprintf("pooled held-out\nAUROC = %.2f", auc_all)) +
   coord_equal() +
   labs(x = "false positive rate", y = "true positive rate") +
   theme_masld(base_size = 7)
 
-fig <- (pL | pR) + plot_layout(widths = c(1.5, 1)) +
-  plot_annotation(
-    title = "Leave-one-cohort-out supervised disease score",
-    theme = theme(plot.title = element_text(size = 9, face = "bold")))
-ggsave(file.path(OUT, "panelK_supervised_disease.pdf"), fig,
-       width = 8.4, height = 4.2, device = cairo_pdf)
-fwrite(scores, file.path(OUT, "panelK_supervised_disease_data.csv"))
-fwrite(auc_by, file.path(OUT, "panelK_supervised_disease_auc.csv"))
-cat("Wrote panelK_supervised_disease.pdf\n")
+fig <- (pL | pR) + plot_layout(widths = c(1.5, 1))
+message("[caption] Leave-one-cohort-out supervised disease score")
+ggsave(file.path(OUT, "supervised_disease.pdf"), fig,
+       width = 7.09, height = 3.54, device = cairo_pdf)
+fwrite(scores, file.path(OUT, "supervised_disease_data.csv"))
+fwrite(auc_by, file.path(OUT, "supervised_disease_auc.csv"))
+cat("Wrote supervised_disease.pdf\n")

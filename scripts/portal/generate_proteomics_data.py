@@ -117,7 +117,6 @@ def main():
         "provenance": {
             "pxd052937": "PRIDE PXD052937 (DIA-MS plasma, 72 samples)",
             "pxd051911": "PRIDE PXD051911 (DIA-MS liver tissue, 58 samples)",
-            "gse276114": "GSE276114 (liver fibrosis cohort)",
             "olink": "Olink Explore 1536 plasma panel (Yang et al. 2025; supervised results withdrawn — see review 2026-06-01)",
         },
     }

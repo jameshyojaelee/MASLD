@@ -181,14 +181,15 @@ ce_lookup <- ce[, .(gene, convergence_rank)]
 ce_lookup <- ce_lookup[!duplicated(gene)]
 atlas_d2 <- merge(atlas_d2, ce_lookup, by = "gene", all.x = TRUE)
 atlas_d2 <- merge(atlas_d2, coloc_lookup, by = "gene", all.x = TRUE)
-# dream_logFC/padj already in atlas
-dream_lookup <- atlas[, .(gene, dream_logFC, dream_padj)]
+# bulk_logFC/padj already in atlas (C2 canonical = limma-voom-qw)
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
+dream_lookup <- atlas[, .(gene, bulk_logFC, bulk_padj)]
 dream_lookup <- dream_lookup[!duplicated(gene)]
 atlas_d2 <- merge(atlas_d2, dream_lookup, by = "gene", all.x = TRUE)
 atlas_d2[, atlas_in := TRUE]
 setcolorder(atlas_d2, c("gene", "ensembl_id", "gene_biotype", "atlas_in",
-                         "convergence_rank", "coloc_pp4", "dream_logFC",
-                         "dream_padj"))
+                         "convergence_rank", "coloc_pp4", "bulk_logFC",
+                         "bulk_padj"))
 fwrite(atlas_d2, file.path(HITS_DIR, "d2_reversal_hits.csv"))
 msg("  D2 wrote ", nrow(atlas_d2), " genes -> d2_reversal_hits.csv")
 n_d2 <- nrow(atlas_d2)
@@ -410,7 +411,7 @@ sources value vocabulary: `convergence_top500`, `coloc_pp4_gt_0.8`, `drug_target
 
 ## D2 reversal schema
 
-`gene`, `ensembl_id`, `gene_biotype`, `atlas_in`, `convergence_rank`, `coloc_pp4`, `dream_logFC`, `dream_padj`.
+`gene`, `ensembl_id`, `gene_biotype`, `atlas_in`, `convergence_rank`, `coloc_pp4`, `bulk_logFC`, `bulk_padj`.
 Includes all biotypes (protein-coding + lncRNA + pseudogene + other); downstream filters with `gene_biotype`.
 
 ## D3 synergy schema

@@ -36,9 +36,9 @@ OUT_RDS <- file.path(OUT_DIR,   "G_loo_cv_lines_pG.rds")
 
 # Cohort first-author labels (full atlas)
 ALL_STUDY_NAMES <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE174478 = "Kawamura", GSE193066 = "Hoshida",
-  GSE213621 = "Chen",   GSE240729 = "Verschuren"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE213621 = "GSE213621",   GSE240729 = "GSE240729"
 )
 ycfg_path <- file.path(BASE, "config/human_datasets.yaml")
 mega_cohorts <- names(Filter(function(d) isTRUE(d$de$include_in_mega),
@@ -132,7 +132,7 @@ p_top <- ggplot(sweep, aes(x = lfc_cutoff, y = n_fold,
   annotate("text", x = elbow_lfc,
            y = max(sweep$n_fold, na.rm = TRUE),
            label = sprintf("elbow |LFC| = %.2g", elbow_lfc),
-           hjust = -0.05, vjust = 1.1, size = 2.6, color = "#B26A00") +
+           hjust = -0.05, vjust = 1.1, size = GEOM_TEXT_6PT, color = "#B26A00") +
   scale_color_manual(values = COHORT_COLS, name = "Held-out cohort") +
   scale_x_continuous(breaks = LFC_GRID,
                      labels = sprintf("%.2g", LFC_GRID)) +
@@ -140,18 +140,13 @@ p_top <- ggplot(sweep, aes(x = lfc_cutoff, y = n_fold,
                      labels = label_comma(),
                      breaks = c(100, 300, 1000, 3000, 10000, 30000)) +
   labs(x = NULL,
-       y = "N DEGs in LOO fold\n(padj < 0.05, log10)",
-       title = "LOOCV DEG counts vs |log2FC| cutoff",
-       subtitle = sprintf("One line per held-out cohort · auto-elbow at |LFC| = %.2g",
-                          elbow_lfc)) +
+       y = "N DEGs in LOO fold\n(padj < 0.05, log10)") +
   theme_masld() + theme_pub() +
   theme(panel.grid.minor = element_blank(),
-        plot.title    = element_text(size = PUB_TITLE + 1, face = "bold"),
-        plot.subtitle = element_text(size = PUB_SUBTITLE + 1, color = "gray30"),
-        axis.text     = element_text(size = PUB_AXIS_TEXT + 1, color = "black"),
-        axis.title    = element_text(size = PUB_AXIS_TITLE + 1),
-        legend.title  = element_text(size = PUB_LEGEND_TIT + 1, face = "bold"),
-        legend.text   = element_text(size = PUB_LEGEND + 1),
+        axis.text     = element_text(size = PUB_AXIS_TEXT, color = "black"),
+        axis.title    = element_text(size = PUB_AXIS_TITLE),
+        legend.title  = element_text(size = PUB_LEGEND_TIT, face = "plain"),
+        legend.text   = element_text(size = PUB_LEGEND),
         legend.position = "right")
 
 # -----------------------------------------------------------------------------
@@ -168,14 +163,17 @@ p_curve <- ggplot(stab, aes(x = lfc_cutoff, y = 100 * cv_n_fold)) +
   labs(x = expression("|log"[2]*"FC| cutoff"),
        y = "Coefficient of variation\nof N DEGs") +
   theme_masld() + theme_pub() +
-  theme(axis.text  = element_text(size = PUB_AXIS_TEXT + 1, color = "black"),
-        axis.title = element_text(size = PUB_AXIS_TITLE + 1))
+  theme(axis.text  = element_text(size = PUB_AXIS_TEXT, color = "black"),
+        axis.title = element_text(size = PUB_AXIS_TITLE))
 
 # -----------------------------------------------------------------------------
 # Compose
 # -----------------------------------------------------------------------------
 p_g <- p_top / p_curve + plot_layout(heights = c(2.4, 1))
 
+message(sprintf(
+  "[caption] LOOCV DEG counts vs |log2FC| cutoff. One line per held-out cohort; auto-elbow at |LFC| = %.2g",
+  elbow_lfc))
 ggsave(OUT_PDF, p_g, width = 7.0, height = 5.5, device = cairo_pdf)
 saveRDS(p_g, OUT_RDS)
 cat("Saved: ", OUT_PDF, "\n", sep = "")

@@ -9,8 +9,21 @@
 # effects with per-cell expression changes. All-cell pseudobulk is the
 # apples-to-apples comparison and is expected to show substantially higher ρ.
 #
-# Outputs (in Analysis/SingleCell/results_gpu_v2/pseudobulk_de/):
-#   allcell_pseudobulk_de.csv        — limma-voom DE (all-cell aggregated)
+# Donor-collapse fix (2026-07-12): the per-cell-type pseudobulk matrices are
+# keyed on obs/sample = SEQUENCING RUN, not biological donor. For GSE244832
+# (117 runs -> 18 donors), GSE202379 (67 -> 46) and GSE185477 (21 -> 3) this
+# pseudoreplicates. We now collapse RUN -> DONOR (sum raw counts) via
+# lib_donor_collapse.R BEFORE summing across cell types, so DE n = donors.
+#
+# CAVEAT (does NOT fix the scientific confound): the MASLD group is entirely
+# SRR-named datasets and the Healthy anchors are partly GSM-named (megareview
+# V4-0077). The `~ condition` design has no dataset/batch covariate, so the
+# all-cell contrast tracks platform batch and the bulk-vs-allcell rho is
+# NEGATIVE. Donor-collapse reduces pseudoreplication but leaves this confound.
+# Do not treat allcell_pseudobulk_de.csv as a validated disease axis.
+#
+# Outputs (in Analysis/SingleCell/results_gpu_v2/pseudobulk_de/donor_collapsed/):
+#   allcell_pseudobulk_de.csv        — limma-voom DE (all-cell aggregated, donor-level)
 #   allcell_vs_bulk_comparison.csv   — per-gene: bulk_lfc, sc_allcell_lfc, sc_hep_lfc
 #   allcell_pseudobulk_summary.txt   — ρ comparison stats
 #
@@ -24,6 +37,7 @@ suppressPackageStartupMessages({
 
 BASE    <- Sys.getenv("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
 PSEUDO_DIR  <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk")
 SC_DE_DIR   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
 PROP_PATH   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/disease_signatures",
@@ -31,7 +45,8 @@ PROP_PATH   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/disease_signa
 DREAM_PATH  <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 
-out_dir <- SC_DE_DIR
+# Write to a NEW location so the pre-fix run-level output is preserved.
+out_dir <- file.path(SC_DE_DIR, "donor_collapsed")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 log_lines <- character()
@@ -59,13 +74,16 @@ add_log(sprintf("Found %d unique cell-type matrices: %s",
 # ---------------------------------------------------------------------------
 # 2. Load matrices, aggregate using union of donors
 # ---------------------------------------------------------------------------
-add_log("Loading pseudobulk matrices...")
+add_log("Loading pseudobulk matrices (collapsing run -> donor per cell type)...")
 mat_list <- lapply(pseudo_files, function(f) {
   dt <- fread(f)
   genes <- dt[[1]]
   mat   <- as.matrix(dt[, -1])
   rownames(mat) <- genes
-  mat
+  # Collapse SRR run columns to biological donor (sum raw counts); columns from
+  # 1-run-per-donor datasets pass through unchanged. Done BEFORE cross-cell-type
+  # summing so a donor's counts unify regardless of which cell type contributed.
+  collapse_counts_to_donor(mat, BASE)
 })
 names(mat_list) <- cell_types
 
@@ -91,9 +109,13 @@ common_donors <- all_donors
 # ---------------------------------------------------------------------------
 # 3. Condition metadata
 # ---------------------------------------------------------------------------
-add_log("Loading condition metadata...")
+add_log("Loading condition metadata (collapsing run -> donor)...")
 props <- fread(PROP_PATH, select = c("sample", "condition"))
-props <- unique(props)[condition %in% c("MASLD", "Healthy")]
+props <- unique(props)
+# Collapse run-level condition metadata to donor (majority-vote condition), so
+# `sample` here shares the donor namespace with the collapsed count columns.
+props <- collapse_sample_meta_to_donor(props, BASE)
+props <- props[condition %in% c("MASLD", "Healthy")]
 
 # Map common_donors to conditions
 sample_meta <- props[sample %in% common_donors]
@@ -178,6 +200,12 @@ fwrite(comparison, out_comp)
 add_log(sprintf("  Wrote comparison table: %s", out_comp))
 
 summary_lines <- c(
+  "[donor-collapsed run; ~condition design has NO dataset covariate]",
+  "[CAVEAT: MASLD=SRR datasets vs Healthy anchors partly GSM-named (megareview",
+  " V4-0077) => allcell contrast is batch-confounded; negative rho is expected",
+  " and is NOT rescued by donor-collapse. Hepatocyte-only ref below is the",
+  " pre-fix run-level Hepatocytes_de.csv (pending its own donor-collapse rerun).]",
+  "",
   sprintf("All-cell pseudobulk vs bulk:   ρ = %.3f  (n=%d)", rho_allcell, nrow(comparison)),
   sprintf("Hepatocyte-only  vs bulk:      ρ = %.3f  (n=%d)", rho_hep,     nrow(comparison)),
   sprintf("Direction concordance (bulk DEGs, n=%d):", nrow(bulk_degs)),

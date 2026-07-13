@@ -27,7 +27,12 @@ skipped_loci <- list()
 
 for (i in 1:nrow(REGISTRY)) {
   study <- REGISTRY$study_name[i]
-  ld_pop <- REGISTRY$ancestry[i]
+  anc <- REGISTRY$ancestry[i]
+  # FM output dir = the ld_panel subdir for NON-EUR (the fresh 1kg_<anc> runs from
+  # run_fm_nonEUR_expanded.sh -> 03); EUR canonical FM lives in <EUR>_0.5Mb. Using
+  # ancestry for all (prior behaviour) pointed non-EUR at <ANC>_0.5Mb, which is empty
+  # (MVP) or stale (BBJ/PanUKBB) -> the entire fresh non-EUR/MVP run was silently missed.
+  ld_pop <- if (anc == "EUR") anc else REGISTRY$ld_panel[i]
   window_mb <- REGISTRY$window_mb[i]
   out_base <- file.path(FM_DIR, "output", study, paste0(ld_pop, "_", window_mb, "Mb"))
 
@@ -128,7 +133,7 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
   # Join on variant position + study + locus
   susie_slim <- susie_combined %>%
     select(chromosome, position, allele1, allele2, locus, study, ancestry,
-           susie_pip = PIP, susie_cs = CS, susie_converged = converged)
+           susie_pip = PIP, susie_cs = CS, susie_converged = converged, lambda_s)
   carma_slim <- carma_combined %>%
     select(chromosome, position, allele1, allele2, locus, study, ancestry,
            carma_pip = PIP, carma_cs = CS, carma_outlier = outlier)
@@ -181,50 +186,105 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
   # ===========================================================================
   # Integrate cross-ancestry joint fine-mapping (SuSiEX + MESuSiE)
   # ===========================================================================
-  susiex_file <- file.path(RESULTS_DIR, "susiex", "susiex_variant_summary.csv")
-  mesusie_file <- file.path(RESULTS_DIR, "mesusie", "mesusie_variant_summary.csv")
+  # Union the legacy enzyme 2-way run (UKBB<->BBJ ALT/AST/GGT) with the within-MVP
+  # N-way cross-ancestry run (EUR/AFR/AMR/EAS; 7 traits, 411 loci; 2026-07-05). The
+  # _mvp file is schema-identical; the dedup below keeps max PIP per (variant, trait),
+  # so ALT/AST take the best of either run and GGT (legacy-only) / the MVP-only
+  # disease+biomarker traits are preserved.
+  susiex_files <- c(file.path(RESULTS_DIR, "susiex", "susiex_variant_summary.csv"),
+                    file.path(RESULTS_DIR, "susiex_mvp", "susiex_variant_summary_mvp.csv"))
+  susiex_files <- susiex_files[file.exists(susiex_files)]
 
-  if (file.exists(susiex_file)) {
-    cat("\n=== Integrating SuSiEX results ===\n")
-    susiex <- fread(susiex_file, select = c("chr", "pos", "a1", "a2", "OVRL_PIP"))
-    setnames(susiex, c("chr", "pos", "a1", "a2", "OVRL_PIP"),
-             c("chromosome", "position", "allele1", "allele2", "susiex_pip"))
+  if (length(susiex_files) > 0) {
+    cat("\n=== Integrating SuSiEX results (", length(susiex_files), "source(s):",
+        paste(basename(susiex_files), collapse = ", "), ") ===\n")
+    susiex <- rbindlist(lapply(susiex_files, function(f)
+      fread(f, select = c("chr", "pos", "a1", "a2", "OVRL_PIP", "trait_pair"))),
+      use.names = TRUE)
+    setnames(susiex, c("chr", "pos", "a1", "a2", "OVRL_PIP", "trait_pair"),
+             c("chromosome", "position", "allele1", "allele2", "susiex_pip", "trait"))
     susiex[, chromosome := as.integer(chromosome)]
     susiex[, position  := as.integer(position)]
-    # Deduplicate: keep max PIP per variant (same variant may appear across traits)
+    susiex[, trait     := toupper(trait)]
+    # Deduplicate WITHIN trait: a variant may recur across loci for the same
+    # trait, but we must NOT collapse across traits (that broadcast a
+    # liver-enzyme OVRL_PIP=1.0 onto disease-GWAS rows). Keep max PIP per
+    # (variant, trait); the join below is keyed on trait so each PIP stays with
+    # its own study.
     susiex <- susiex[, .(susiex_pip = max(susiex_pip, na.rm = TRUE)),
-                     by = .(chromosome, position, allele1, allele2)]
-    cat("  SuSiEX: ", nrow(susiex), " unique variants loaded\n")
+                     by = .(chromosome, position, allele1, allele2, trait)]
+    cat("  SuSiEX: ", nrow(susiex), " unique (variant, trait) entries loaded\n")
   } else {
-    cat("  SuSiEX summary not found at:", susiex_file, "\n")
+    cat("  SuSiEX summary not found (legacy or _mvp)\n")
     susiex <- NULL
   }
 
-  if (file.exists(mesusie_file)) {
-    cat("\n=== Integrating MESuSiE results ===\n")
-    mesusie <- fread(mesusie_file,
-                     select = c("chr", "pos", "a1", "a2", "pip", "in_cs", "cs_category"))
-    setnames(mesusie, c("chr", "pos", "a1", "a2", "pip"),
-             c("chromosome", "position", "allele1", "allele2", "mesusie_pip"))
+  mesusie_files <- c(file.path(RESULTS_DIR, "mesusie", "mesusie_variant_summary.csv"),
+                     file.path(RESULTS_DIR, "mesusie_mvp", "mesusie_variant_summary_mvp.csv"))
+  mesusie_files <- mesusie_files[file.exists(mesusie_files)]
+
+  if (length(mesusie_files) > 0) {
+    cat("\n=== Integrating MESuSiE results (", length(mesusie_files), "source(s):",
+        paste(basename(mesusie_files), collapse = ", "), ") ===\n")
+    mesusie <- rbindlist(lapply(mesusie_files, function(f)
+      fread(f, select = c("chr", "pos", "a1", "a2", "pip", "in_cs",
+                          "cs_category", "trait_pair"))), use.names = TRUE)
+    setnames(mesusie, c("chr", "pos", "a1", "a2", "pip", "trait_pair"),
+             c("chromosome", "position", "allele1", "allele2", "mesusie_pip", "trait"))
     mesusie[, chromosome := as.integer(chromosome)]
     mesusie[, position  := as.integer(position)]
-    mesusie[, mesusie_in_shared_cs := (in_cs == TRUE & grepl("EUR_EAS|shared", cs_category, ignore.case = TRUE))]
-    # Deduplicate: keep max PIP and any shared CS hit per variant
+    mesusie[, trait     := toupper(trait)]
+    # Shared CS = credible set spanning >=2 ancestries. Legacy encodes this as
+    # "EUR_EAS"/"shared"; the MVP N-way run encodes the ancestry combo directly
+    # (EUR_AFR, EAS_AFR_AMR, ...). Any underscore-joined multi-ancestry category
+    # (or the literal "shared") counts; a single-ancestry category (EUR, AFR, AMR)
+    # is ancestry-specific.
+    mesusie[, mesusie_in_shared_cs := (in_cs == TRUE & grepl("_|shared", cs_category, ignore.case = TRUE))]
+    # Deduplicate WITHIN trait (same broadcast hazard as SuSiEX): keep max PIP
+    # and any shared CS hit per (variant, trait). The join below is keyed on
+    # trait, so a PIP never lands on a different-trait GWAS row.
     mesusie <- mesusie[, .(mesusie_pip = max(mesusie_pip, na.rm = TRUE),
                            mesusie_in_shared_cs = any(mesusie_in_shared_cs, na.rm = TRUE)),
-                       by = .(chromosome, position, allele1, allele2)]
-    cat("  MESuSiE:", nrow(mesusie), "unique variants loaded\n")
+                       by = .(chromosome, position, allele1, allele2, trait)]
+    cat("  MESuSiE:", nrow(mesusie), "unique (variant, trait) entries loaded\n")
   } else {
-    cat("  MESuSiE summary not found at:", mesusie_file, "\n")
+    cat("  MESuSiE summary not found (legacy or _mvp)\n")
     mesusie <- NULL
   }
 
   # Left-join joint PIPs onto combined (handle allele flips by trying both orientations)
   combined <- as.data.table(combined)
 
+  # ---------------------------------------------------------------------------
+  # Trait key for the joint-PIP join.
+  #
+  # The joint fine-mappers (SuSiEX / MESuSiE) were only run on the liver-enzyme
+  # cross-ancestry meta-loci, keyed by `trait_pair` in {ALT, AST, GGT}. Disease /
+  # PDFF GWAS (NAFLD, NASH, PDFF) have NO joint fine-map. If we join joint PIPs to
+  # `combined` on coordinates alone, a liver-enzyme variant's OVRL_PIP (often 1.0)
+  # is broadcast onto every study's row at that position — including the
+  # disease-GWAS rows for PNPLA3 / TM6SF2, manufacturing a fake high PIP at the
+  # exact loci a genetics reviewer checks first. Keying the join on (coords, trait)
+  # confines each joint PIP to the matching liver-enzyme study and leaves disease
+  # rows as NA (no joint fine-map exists for them).
+  #
+  # Trait is the study_name token (UKBB_ALT, BBJ_GGT, MVP_Albumin_EUR,
+  # MVP_NAFLD_AMR, ...), matched case-insensitively and upper-cased to match the
+  # toupper'd trait_pair on the joint tables. The MVP N-way run (2026-07-05) added
+  # the Albumin/ChronLiver/Cirrhosis/NAFLD/Platelet traits, so they are matched too
+  # (a joint PIP still only attaches to same-trait studies). regmatches() drops
+  # non-matches, so derive per-row explicitly.
+  combined[, trait := vapply(study, function(s) {
+    m <- regmatches(s, regexpr("ALT|AST|GGT|Albumin|ChronLiver|Cirrhosis|NAFLD|NASH|Platelet|PDFF",
+                               s, ignore.case = TRUE))
+    if (length(m) == 0) NA_character_ else toupper(m)
+  }, character(1))]
+
   if (!is.null(susiex)) {
-    # Direct match
-    combined <- merge(combined, susiex, by = c("chromosome", "position", "allele1", "allele2"),
+    # Direct match — keyed on trait so liver-enzyme PIPs only attach to the
+    # matching liver-enzyme study (disease/PDFF rows have trait=NA -> no match).
+    combined <- merge(combined, susiex,
+                      by = c("chromosome", "position", "allele1", "allele2", "trait"),
                       all.x = TRUE)
     # Allele-flipped match for unmatched rows
     unmatched <- is.na(combined$susiex_pip)
@@ -233,7 +293,7 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
       setnames(susiex_flip, c("allele1", "allele2"), c("allele2", "allele1"))
       setnames(susiex_flip, "susiex_pip", "susiex_pip_flip")
       combined <- merge(combined, susiex_flip,
-                        by = c("chromosome", "position", "allele1", "allele2"),
+                        by = c("chromosome", "position", "allele1", "allele2", "trait"),
                         all.x = TRUE)
       combined[is.na(susiex_pip) & !is.na(susiex_pip_flip), susiex_pip := susiex_pip_flip]
       combined[, susiex_pip_flip := NULL]
@@ -244,8 +304,9 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
   }
 
   if (!is.null(mesusie)) {
-    # Direct match
-    combined <- merge(combined, mesusie, by = c("chromosome", "position", "allele1", "allele2"),
+    # Direct match — keyed on trait (same broadcast guard as SuSiEX).
+    combined <- merge(combined, mesusie,
+                      by = c("chromosome", "position", "allele1", "allele2", "trait"),
                       all.x = TRUE)
     # Allele-flipped match for unmatched rows
     unmatched <- is.na(combined$mesusie_pip)
@@ -255,7 +316,7 @@ if (nrow(susie_combined) > 0 && nrow(carma_combined) > 0) {
       setnames(mesusie_flip, c("mesusie_pip", "mesusie_in_shared_cs"),
                c("mesusie_pip_flip", "mesusie_shared_flip"))
       combined <- merge(combined, mesusie_flip,
-                        by = c("chromosome", "position", "allele1", "allele2"),
+                        by = c("chromosome", "position", "allele1", "allele2", "trait"),
                         all.x = TRUE)
       combined[is.na(mesusie_pip) & !is.na(mesusie_pip_flip),
                `:=`(mesusie_pip = mesusie_pip_flip,

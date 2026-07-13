@@ -76,7 +76,10 @@ def main():
     if missing:
         raise ValueError(f"Missing columns in liana_differential_interactions.csv: {missing}")
 
-    # MASLD-enriched = score_diff < 0 (lower rank = stronger signal)
+    # MASLD-enriched = score_diff > 0  (A5 convention, 2026-06-20: producer defines
+    # score_diff = score_control - score_masld where magnitude_rank is lower = stronger,
+    # so POSITIVE score_diff = stronger/enriched in MASLD). Larger score_diff = more
+    # strongly MASLD-enriched.
     # Filter: interactions targeting hepatocytes from key sender types
     SENDER_TYPES = ["Macrophages", "Fibroblasts", "Endothelial cells",
                     "Mono+mono derived cells", "Cholangiocytes"]
@@ -85,7 +88,7 @@ def main():
     hep_incoming = liana_diff[
         liana_diff["target"].isin(HEPATOCYTE_NAMES) &
         liana_diff["source"].isin(SENDER_TYPES) &
-        (liana_diff["score_diff"] < 0)
+        (liana_diff["score_diff"] > 0)
     ].copy()
     log.info("MASLD-enriched L-R pairs targeting hepatocytes: %d", len(hep_incoming))
 
@@ -93,17 +96,18 @@ def main():
     if len(hep_incoming) < 5:
         hep_incoming = liana_diff[
             liana_diff["target"].isin(HEPATOCYTE_NAMES) &
-            (liana_diff["score_diff"] < 0)
+            (liana_diff["score_diff"] > 0)
         ].copy()
         log.info("Relaxed sender filter: %d pairs", len(hep_incoming))
 
-    # Save filtered interactions as by_sample_lr (serves as cross-sample LR summary)
+    # Save filtered interactions as by_sample_lr (serves as cross-sample LR summary).
+    # Largest score_diff = most strongly MASLD-enriched.
     by_sample_out = os.path.join(OUT_DIR, "liana_by_sample_lr.csv")
-    hep_incoming.nsmallest(min(100, len(hep_incoming)), "score_diff").to_csv(by_sample_out, index=False)
+    hep_incoming.nlargest(min(100, len(hep_incoming)), "score_diff").to_csv(by_sample_out, index=False)
     log.info("Saved: %s", by_sample_out)
 
-    # Top interactions for causal links
-    top_interactions = hep_incoming.nsmallest(min(50, len(hep_incoming)), "score_diff")
+    # Top interactions for causal links (most strongly MASLD-enriched = largest score_diff)
+    top_interactions = hep_incoming.nlargest(min(50, len(hep_incoming)), "score_diff")
 
     # -----------------------------------------------------------------------
     # 2. Load TF activity (hepatocyte MASLD-upregulated TFs)

@@ -191,7 +191,7 @@ def build_drug_target_cards(sig_df, sig_genes):
         if len(gene_atlas) > 0:
             r = gene_atlas.iloc[0]
             # mr_pval removed 2026-04-22 — MR ditched from paper.
-            for col in ["dream_logFC", "dream_padj", "is_conserved",
+            for col in ["bulk_logFC", "bulk_padj", "is_conserved",
                          "twas_pval"]:
                 if col in r.index:
                     card[col] = r[col]

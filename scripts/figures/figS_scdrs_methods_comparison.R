@@ -78,13 +78,13 @@ LBL_SIZE  <- LBL_PT / ggplot2::.pt
 theme_scdrs <- function() {
   theme_masld(base_size = BASE_SIZE) +
     theme(
-      plot.title    = element_text(size = BASE_SIZE, face = "bold"),
+      plot.title    = element_text(size = BASE_SIZE, face = "plain"),
       plot.subtitle = element_text(size = BASE_SIZE - 1, colour = "grey25",
                                    lineheight = 1.05),
       legend.key.size = unit(0.3, "cm"),
       panel.grid    = element_blank(),
       strip.background = element_rect(fill = "grey96", colour = NA),
-      strip.text       = element_text(size = BASE_SIZE - 1, face = "bold")
+      strip.text       = element_text(size = BASE_SIZE - 1, face = "plain")
     )
 }
 
@@ -220,7 +220,7 @@ panel_B <- ggplot(B_data, aes(x = method, y = n_sig, colour = method)) +
   geom_segment(aes(xend = method, y = 0, yend = n_sig), linewidth = 0.6) +
   geom_point(size = 4) +
   geom_text(aes(label = n_sig), vjust = -1.1, size = LBL_SIZE * 1.2,
-            colour = "grey15", fontface = "bold") +
+            colour = "grey15", fontface = "plain") +
   scale_colour_manual(values = METHOD_COLORS, guide = "none") +
   scale_y_continuous(limits = c(0, max(B_data$n_sig) * 1.25),
                      expand = c(0, 0)) +
@@ -393,7 +393,7 @@ bot   <- panel_D
 full  <- top / mid / bot +
   plot_layout(heights = c(1.1, 1.0, 1.0)) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = BASE_SIZE + 2, face = "bold"))
+  theme(plot.tag = element_text(size = BASE_SIZE + 2, face = "plain"))
 
 out_pdf <- file.path(OUT_DIR, "figS_scdrs_methods_comparison.pdf")
 save_fig(full, out_pdf, width = 7.5, height = 11)

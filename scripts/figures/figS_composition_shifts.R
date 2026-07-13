@@ -41,12 +41,11 @@ pA <- ggplot(rep, aes(logit_diff, celltype, color = sig)) +
   scale_color_manual(values = c("sig" = "#C0392B", "ns" = "grey60"),
                      labels = c("sig" = "padj<0.05", "ns" = "ns"),
                      name = NULL) +
-  labs(x = "Logit shift (Disease - Control)", y = NULL,
-       title = "Cell-type composition shift: MASLD vs Healthy",
-       subtitle = sprintf("n = %d samples, %d cohorts; propeller-equivalent",
-                          rep$n[1], length(unique(props$dataset)))) +
+  labs(x = "Logit shift (Disease - Control)", y = NULL) +
   theme_masld() +
-  theme(axis.text.y = element_text(size = 6.5))
+  theme(axis.text.y = element_text(size = 6))
+message(sprintf("[caption] Panel A: Cell-type composition shift: MASLD vs Healthy; n = %d samples, %d cohorts; propeller-equivalent",
+                rep$n[1], length(unique(props$dataset))))
 
 # ---- Panel B: Proportion boxplots across F-stages ---------------------------
 key_cts <- c("Hepatocytes", "Macrophages", "Endothelial cells", "T cells")
@@ -68,12 +67,13 @@ if (length(key_cts) > 0 && "fibrosis_stage" %in% names(props)) {
                                  "Endothelial cells" = "#4472C4",
                                  "T cells" = "#F39C12"),
                       guide = "none") +
-    labs(x = "Fibrosis stage", y = "MuSiC-estimated proportion",
-         title = "Composition shift across fibrosis stages") +
+    labs(x = "Fibrosis stage", y = "MuSiC-estimated proportion") +
     theme_masld() +
-    theme(strip.text = element_text(size = 6.5))
+    theme(strip.text = element_text(size = 6))
+  message("[caption] Panel B: Composition shift across fibrosis stages")
 } else {
-  pB <- ggplot() + labs(title = "No fibrosis_stage available") + theme_masld()
+  pB <- ggplot() + theme_masld()
+  message("[caption] Panel B: No fibrosis_stage available")
 }
 
 # ---- Panel C: F2 inflection -------------------------------------------------
@@ -93,12 +93,13 @@ if (nrow(f2) > 0) {
     scale_color_manual(values = c("sig" = "#C0392B", "ns" = "grey60"),
                        labels = c("sig" = "padj<0.05", "ns" = "ns"),
                        name = NULL) +
-    labs(x = "Logit shift (F>=2 - F<=1)", y = NULL,
-         title = "F2 inflection: composition shift") +
+    labs(x = "Logit shift (F>=2 - F<=1)", y = NULL) +
     theme_masld() +
-    theme(axis.text.y = element_text(size = 6.5))
+    theme(axis.text.y = element_text(size = 6))
+  message("[caption] Panel C: F2 inflection: composition shift")
 } else {
-  pC <- ggplot() + labs(title = "No F-stage data") + theme_masld()
+  pC <- ggplot() + theme_masld()
+  message("[caption] Panel C: No F-stage data")
 }
 
 # ---- Panel D: A1 attribution count vs A2 composition t-stat -----------------
@@ -115,22 +116,23 @@ merge_dt <- merge(rep[, .(celltype = as.character(celltype), t_shift = t, padj)]
 if (nrow(merge_dt) > 0) {
   pD <- ggplot(merge_dt, aes(t_shift, n_attributed, label = celltype)) +
     geom_point(size = 2, color = "#4472C4") +
-    geom_text(size = 2, hjust = -0.1, vjust = -0.3) +
+    geom_text(size = GEOM_TEXT_6PT, hjust = -0.1, vjust = -0.3) +
     geom_hline(yintercept = 0, linewidth = 0.3, color = "grey50") +
     geom_vline(xintercept = 0, linewidth = 0.3, color = "grey50") +
     labs(x = "A2 composition shift t-stat (MASLD vs Healthy)",
-         y = "A1 DEGs attributed to cell type",
-         title = "Composition shift vs. intrinsic DEG load") +
+         y = "A1 DEGs attributed to cell type") +
     theme_masld()
+  message("[caption] Panel D: Composition shift vs. intrinsic DEG load")
 } else {
-  pD <- ggplot() + labs(title = "No overlap between A1 + A2 CT names") + theme_masld()
+  pD <- ggplot() + theme_masld()
+  message("[caption] Panel D: No overlap between A1 + A2 CT names")
 }
 
 # ---- Assemble ---------------------------------------------------------------
 fig <- (pA + pB) / (pC + pD) +
   plot_annotation(tag_levels = "A") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 6, face = "plain"))
 
 out_path <- file.path(FIGS_CELLTYPE_DIR, "figS_A2_composition_shifts.pdf")
-ggsave(out_path, fig, width = 13, height = 10)
+ggsave(out_path, fig, width = fig_full_width, height = 5.45)
 message("Saved: ", out_path)

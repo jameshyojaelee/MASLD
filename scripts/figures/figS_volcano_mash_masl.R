@@ -2,7 +2,8 @@
 # figS_volcano_mash_masl.R  (2026-05-13)
 #
 # Volcano plots for the 5 new contrasts (PRJNA512027 excluded), mirroring the
-# layout and style of fig1_volcano.pdf:
+# layout and style of fig3_deg_volcano.R (the canonical DEG volcano; was
+# fig1_volcano.pdf before the 2026-06-12 move to fig3_RNAseq):
 #   - MASH-vs-MASL primary (Borderline grouped)
 #   - MASH-vs-MASL strict (NAS >= 5)
 #   - MASH-vs-Healthy primary
@@ -41,14 +42,16 @@ CURATED <- c(
 
 # Contrast registry.
 #
-# Canonical Tier 1 cutoff: padj < 0.05 & |logFC| > 0.5 across ALL contrasts
-# (decision 2026-05-13). Same convention as the legacy Disease-vs-Control Tier 1.
-# The 5%-CV elbow analysis (figS_lfc_sensitivity_loo*) remains in the supplement
-# as STABILITY EVIDENCE — confirms |LFC|>0.5 is past each contrast's CV elbow.
+# These are Tier-2 progression contrasts (MASH-vs-MASL / MASH-vs-Healthy /
+# MASL-vs-Healthy). Per the CLAUDE.md Tier-2 convention they are gated at
+# padj < 0.05 with NO LFC floor — binary progression grouping dilutes per-gene
+# fold changes, so a |logFC| floor is not imposed (it WAS 0.5 here; removed
+# 2026-06-27 to match Tier-2). The 5%-CV elbow analysis (figS_lfc_sensitivity_loo*)
+# remains in the supplement as stability evidence.
 #
 # MASH definition: strict NAS >= 5 only (Borderline excluded). Primary-mode
 # (Borderline-grouped) figures deprecated; data CSVs preserved on disk.
-LFC_CUT_UNIFORM <- 0.5
+LFC_CUT_UNIFORM <- 0
 
 CONTRASTS <- list(
   mash_vs_masl_strict = list(
@@ -74,17 +77,16 @@ plot_volcano <- function(tag) {
   if (!file.exists(spec$csv)) stop("Missing dream CSV: ", spec$csv)
 
   dream <- fread(spec$csv)
-  setnames(dream, "adj.P.Val", "dream_padj", skip_absent = TRUE)
-  setnames(dream, "logFC",     "dream_logFC", skip_absent = TRUE)
+  setnames(dream, "adj.P.Val", "padj", skip_absent = TRUE)
   dream <- add_symbols(dream, gene_col = "gene")
 
-  volc <- dream[!is.na(dream_padj) & !is.na(dream_logFC),
-                .(symbol, dream_logFC, dream_padj)]
-  volc[, neglog10p := -log10(pmax(dream_padj, .Machine$double.xmin))]
+  volc <- dream[!is.na(padj) & !is.na(logFC),
+                .(symbol, logFC, padj)]
+  volc[, neglog10p := -log10(pmax(padj, .Machine$double.xmin))]
 
   volc[, status := fcase(
-    dream_padj < PADJ_CUT &  dream_logFC >  spec$lfc_cut, "Up",
-    dream_padj < PADJ_CUT &  dream_logFC < -spec$lfc_cut, "Down",
+    padj < PADJ_CUT &  logFC >  spec$lfc_cut, "Up",
+    padj < PADJ_CUT &  logFC < -spec$lfc_cut, "Down",
     default = "n.s.")]
   volc[, status := factor(status, levels = c("n.s.", "Down", "Up"))]
   setorder(volc, status)
@@ -96,7 +98,7 @@ plot_volcano <- function(tag) {
 
   sig_up   <- volc[status == "Up"   & symbol != "" & !grepl("^ENSG", symbol)]
   sig_down <- volc[status == "Down" & symbol != "" & !grepl("^ENSG", symbol)]
-  setorder(sig_up, dream_padj); setorder(sig_down, dream_padj)
+  setorder(sig_up, padj); setorder(sig_down, padj)
   top_up   <- head(sig_up,   N_TOP_DIR)
   top_down <- head(sig_down, N_TOP_DIR)
   curated_lbl <- volc[symbol %in% CURATED & status != "n.s." & !grepl("^ENSG", symbol)]
@@ -104,10 +106,10 @@ plot_volcano <- function(tag) {
 
   volc_colors <- c("Up" = masld_colors$up, "Down" = masld_colors$down,
                    "n.s." = "#D8D8D8")
-  x_lim <- max(abs(volc$dream_logFC), na.rm = TRUE) * 1.04
+  x_lim <- max(abs(volc$logFC), na.rm = TRUE) * 1.04
   y_lim <- max(volc$neglog10p, na.rm = TRUE) * 1.05
 
-  p <- ggplot(volc, aes(x = dream_logFC, y = neglog10p, color = status)) +
+  p <- ggplot(volc, aes(x = logFC, y = neglog10p, color = status)) +
     geom_hline(yintercept = -log10(PADJ_CUT),
                linetype = "dashed", color = "gray70", linewidth = 0.25) +
     (if (spec$lfc_cut > 0) geom_vline(xintercept = c(-spec$lfc_cut, spec$lfc_cut),
@@ -120,11 +122,11 @@ plot_volcano <- function(tag) {
     rasterize_layer(geom_point(data = volc[status != "n.s."],
                                size = 0.55, alpha = 0.85, shape = 16)) +
     geom_point(data = label_df,
-               aes(x = dream_logFC, y = neglog10p, fill = status),
+               aes(x = logFC, y = neglog10p, fill = status),
                color = "black", shape = 21, size = 1.25,
                stroke = 0.25, inherit.aes = FALSE) +
     geom_text_repel(data = label_df,
-                    aes(x = dream_logFC, y = neglog10p, label = symbol),
+                    aes(x = logFC, y = neglog10p, label = symbol),
                     inherit.aes = FALSE,
                     size = 2.2, color = "black", fontface = "italic",
                     segment.size = 0.2, segment.color = "gray45",
@@ -134,11 +136,11 @@ plot_volcano <- function(tag) {
                     show.legend = FALSE) +
     annotate("text", x = -x_lim * 0.98, y = y_lim * 0.97,
              label = sprintf("%s ↓", comma(n_down)),
-             hjust = 0, vjust = 1, size = 2.4, fontface = "bold",
+             hjust = 0, vjust = 1, size = 2.4, fontface = "plain",
              color = masld_colors$down) +
     annotate("text", x =  x_lim * 0.98, y = y_lim * 0.97,
              label = sprintf("%s ↑", comma(n_up)),
-             hjust = 1, vjust = 1, size = 2.4, fontface = "bold",
+             hjust = 1, vjust = 1, size = 2.4, fontface = "plain",
              color = masld_colors$up) +
     scale_color_manual(values = volc_colors, guide = "none") +
     scale_fill_manual(values = volc_colors, guide = "none") +
@@ -159,7 +161,7 @@ plot_volcano <- function(tag) {
     theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_line(linewidth = 0.18, color = "gray92"),
           legend.position  = "none",
-          plot.title       = element_text(size = 8, face = "bold"),
+          plot.title       = element_text(size = 8, face = "plain"),
           plot.subtitle    = element_text(size = 6.5, color = "gray30"),
           axis.title       = element_text(size = 7.5),
           plot.margin      = margin(4, 6, 2, 4))
@@ -168,7 +170,7 @@ plot_volcano <- function(tag) {
   save_fig(p, out_pdf, width = fig_half_width * 1.15, height = 3.4)
   message(sprintf("  Saved %s", out_pdf))
 
-  fwrite(label_df[, .(symbol, dream_logFC, dream_padj, status)],
+  fwrite(label_df[, .(symbol, logFC, padj, status)],
          file.path(OUT_DIR, sprintf("volcano_%s_labels.csv", tag)))
 }
 

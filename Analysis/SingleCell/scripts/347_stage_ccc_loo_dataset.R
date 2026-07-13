@@ -74,13 +74,13 @@ cat(sprintf("[filter] excluded %d rows (%d donors) flagged exclude_stage_analysi
 lr_long[, score := -log10(pmax(magnitude_rank, 1e-4))]
 lr_long[, disease_stage_coarse := factor(disease_stage_coarse,
         levels = c("Healthy", "Steatosis", "Steatohepatitis", "Cirrhosis"))]
-# Prefer the contamination-clean augmented F-stage; fall back to inferred.
-if ("F_stage_augmented_clean" %in% names(lr_long) &&
-    sum(!is.na(lr_long$F_stage_augmented_clean)) > 0) {
-  lr_long[, F_stage_numeric := as.numeric(F_stage_augmented_clean)]
-} else {
-  lr_long[, F_stage_numeric := as.numeric(F_stage_inferred)]
-}
+# Mega-review A7.2 (2026-06-13): route the F-stage axis through F_stage_inferred
+# (343b, bootstrap-gated), NOT the LEAKED F_stage_augmented(_clean) — augmented
+# QWK 0.74-0.76 collapses to jackknife 0.286 / held-out Andrews 0.0. Mirrors the
+# producer (346) so the LOO replication of the F-stage hits is gated on the same
+# axis it was fit on.
+lr_long[, F_stage_numeric := if ("F_stage_inferred" %in% names(lr_long))
+  as.numeric(F_stage_inferred) else NA_real_]
 lr_long_all <- copy(lr_long)
 lr_long <- lr_long[!is.na(disease_stage_coarse)]
 lr_long[, ct_pair := paste(source, target, sep = "->")]

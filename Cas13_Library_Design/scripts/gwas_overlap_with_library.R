@@ -19,7 +19,7 @@ MAIN_META <- file.path(BASE,"RNA-seq/Mouse/Unified_Integration/metadata/unified_
 ASHR  <- file.path(BASE,"RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results_ashr.csv")
 ORTHO <- file.path(BASE,"data/external/orthologs/master_ortholog_table.tsv.gz")
 MOUSE_META <- file.path(BASE,"Cas13_Library_Design/data/mouse_gencode_vM38_gene_metadata.csv")
-PERDIET <- file.path(BASE,"RNA-seq/Mouse/Unified_Integration/results/per_diet")
+PERDIET <- file.path(BASE,"RNA-seq/Mouse/Unified_Integration/results/per_diet_cas13")  # Cas13 library Western pool; decoupled from paper 4-model per_diet (2026-06-16)
 CAND_PC  <- file.path(BASE,"Cas13_Library_Design/data/candidates_pc_independent.csv")
 CAND_LNC <- file.path(BASE,"Cas13_Library_Design/data/candidates_lncrna_independent.csv")
 DATD <- file.path(BASE,"Cas13_Library_Design/data")

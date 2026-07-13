@@ -25,7 +25,32 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 OUTDIR <- FIG5_DIR
 PANDIR <- file.path(OUTDIR, "panels")
 dir.create(PANDIR, showWarnings = FALSE, recursive = TRUE)
-OUTPDF <- file.path(PANDIR, "fig5a.pdf")
+
+# Layout selector. The therapeutic_axes variant is canonical as of 2026-07-08;
+# the old evidence-ranked standard layout is retained only as an explicit
+# comparison render and no longer writes panels/fig5a.pdf.
+FIG5A_LAYOUT <- Sys.getenv("FIG5A_LAYOUT", "therapeutic_axes")
+VALID_LAYOUTS <- c("standard", "therapeutic_axes")
+if (!FIG5A_LAYOUT %in% VALID_LAYOUTS) {
+  stop(sprintf("Invalid FIG5A_LAYOUT='%s'; expected one of: %s",
+               FIG5A_LAYOUT, paste(VALID_LAYOUTS, collapse = ", ")))
+}
+OUTPDF <- file.path(
+  PANDIR,
+  if (FIG5A_LAYOUT == "therapeutic_axes") "fig5a_therapeutic_axes.pdf" else "fig5a_standard.pdf"
+)
+
+# Optional: render a truncated top-N variant with taller cells.
+# `FIG5A_LAYOUT=standard FIG5A_TOPN=20 Rscript fig5_convergence.R` -> panels/top20.pdf
+TOPN_ENV <- Sys.getenv("FIG5A_TOPN", "")
+TOPN     <- if (nzchar(TOPN_ENV)) as.integer(TOPN_ENV) else NA_integer_
+SQ_CELL_MM <- 8L  # uniform square cell size (mm) for the top-N variant
+if (FIG5A_LAYOUT == "therapeutic_axes" && !is.na(TOPN)) {
+  stop("FIG5A_LAYOUT=therapeutic_axes cannot be combined with FIG5A_TOPN")
+}
+if (!is.na(TOPN)) {
+  OUTPDF <- file.path(PANDIR, sprintf("top%d.pdf", TOPN))
+}
 
 # ── Per-phenotype-category max PP.H4 (ABF or SuSiE) ─────────────────────────
 # Reads per-GWAS susie_coloc/<GWAS>/susie_coloc_chr*.csv (each row has both
@@ -101,25 +126,7 @@ cat(sprintf("  Per-category PP4 merged (%d genes)\n",
                 !is.na(atlas$category_pp4_disease) |
                 !is.na(atlas$category_pp4_pdff))))
 
-# Load INTACT scores — prefer the newer intact_scores.csv (2026-05-06+),
-# fall back to convergence_summary.csv for older runs.
-intact_file <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/intact_scores.csv")
-conv_file   <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/convergence_summary.csv")
-if (file.exists(intact_file)) {
-  intact_dt <- fread(intact_file)
-  if ("intact_score_bulk" %in% names(intact_dt)) {
-    atlas <- merge(atlas, intact_dt[, .(gene, intact_score_bulk)],
-                   by.x = "human_symbol", by.y = "gene", all.x = TRUE)
-    cat("  INTACT scores merged from intact_scores.csv\n")
-  }
-} else if (file.exists(conv_file)) {
-  conv <- fread(conv_file)
-  if ("intact_score_bulk" %in% names(conv)) {
-    atlas <- merge(atlas, conv[, .(gene, intact_score_bulk)],
-                   by.x = "human_symbol", by.y = "gene", all.x = TRUE)
-    cat("  INTACT scores merged from convergence_summary.csv (legacy)\n")
-  }
-}
+# INTACT load removed 2026-06-19 (INTACT dropped; genetic signal = COLOC via rs_coloc/rs_susie).
 
 # Load progression driver data
 prog_file <- file.path(BASE, "RNA-seq/results/stratified_causal/progression_driver_genetics.csv")
@@ -249,6 +256,24 @@ if (file.exists(dis_reg_file)) {
   }
 }
 
+# Disrupted master-regulator targets (the dense ATAC/regulatory column, 2026-06-22):
+# # of disease master-regulators that are motif-disrupted by fine-mapped MASLD risk
+# variants (fig4 disease_master_regulators) AND regulate this gene (CollecTRI).
+# Precomputed by scripts/figures/compute_disrupted_mr_targets.R.
+mrt_file <- file.path(BASE, "RNA-seq/results/multi_evidence/disrupted_mr_targets.csv")
+if (file.exists(mrt_file)) {
+  mrt <- fread(mrt_file)[, .(human_symbol, n_disrupted_mr_targets)]
+  atlas <- merge(atlas, mrt, by = "human_symbol", all.x = TRUE)
+  atlas[is.na(n_disrupted_mr_targets), n_disrupted_mr_targets := 0L]
+  cat("  Disrupted master-regulator targets merged:", sum(atlas$n_disrupted_mr_targets > 0), "genes\n")
+}
+
+# Clinical drug-development status (replaces binary Druggable, 2026-06-22): the
+# atlas already carries drug_dev_status (same source as fig4c / fig5c) — use it.
+cat("  Clinical drug-dev status (atlas):",
+    sum(atlas$drug_dev_status %in% c("masld_approved","masld_clinical","masld_preclinical","masld_discontinued")),
+    "MASLD-pipeline genes\n")
+
 # Load clinical drug validation for target genes — prefer v2 (2026-04-24+).
 drug_val_v2 <- file.path(BASE, "RNA-seq/results/drug_repurposing/clinical_drug_validation_table_v2.csv")
 drug_val_v1 <- file.path(BASE, "RNA-seq/results/drug_repurposing/clinical_drug_validation_table.csv")
@@ -281,7 +306,7 @@ if (file.exists(pathway_file)) {
 
 # ── Gene selection ───────────────────────────────────────────────────────────
 # Must be DEG + have at least some causal evidence
-# Rank by composite: max COLOC PP.H4 + INTACT + dream significance
+# Rank by composite: max COLOC PP.H4 + INTACT + bulk DEG significance
 # ARCHIVED 2026-04-08: FinnGen COLOC columns removed
 coloc_pp4_cols <- intersect(c("broadaway_coloc_pp4", "ukbb_alt_coloc_pp4",
   "ast_coloc_pp4", "ggt_coloc_pp4", "pdff_coloc_pp4",
@@ -293,8 +318,7 @@ atlas[, max_coloc_pp4 := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = coloc_pp
 # Rank using available columns (some may not exist after atlas rebuild)
 # Build score component by component
 atlas[, rs_coloc := fifelse(is.na(max_coloc_pp4), 0, max_coloc_pp4) * 3]
-atlas[, rs_intact := fifelse(is.na(intact_score_bulk), 0, intact_score_bulk) * 2]
-atlas[, rs_deg := fifelse(is.na(bulk_padj) | bulk_padj >= 0.05 | abs(bulk_logFC) <= 0.5, 0, -log10(pmax(bulk_padj, 1e-300)) / 10)]
+atlas[, rs_deg := fifelse(is.na(bulk_treat_fdr) | bulk_treat_fdr >= 0.05, 0, -log10(pmax(bulk_padj, 1e-300)) / 10)]  # TREAT canonical; effect floor (lfc=0.25) IS in the test
 if ("coloc_susie_best_pp4" %in% names(atlas)) {
   atlas[, rs_susie := fifelse(is.na(coloc_susie_best_pp4), 0, coloc_susie_best_pp4)]
 } else {
@@ -306,23 +330,26 @@ if ("progression_composite" %in% names(atlas)) {
 } else {
   atlas[, rs_prog := 0]
 }
-atlas[, rank_score := rs_coloc + rs_intact + rs_deg + rs_susie + rs_prog]
-atlas[, c("rs_coloc", "rs_intact", "rs_deg", "rs_susie", "rs_prog") := NULL]
+atlas[, rank_score := rs_coloc + rs_deg + rs_susie + rs_prog]
+atlas[, c("rs_coloc", "rs_deg", "rs_susie", "rs_prog") := NULL]
 
 # ── Merge 46d convergence evidence ──────────────────────────────────────────
 # Coexists with the heuristic rank_score above. 46d's empirically-calibrated
-# posterior is used as the primary tie-breaker within each n_convergence level
+# convergence score is used as the primary tie-breaker within each n_convergence level
 # (replacing the legacy 46b archetype score), and tier + concordance state are
 # rendered as left-annotation stripes on the heatmap.
 bayev_f <- file.path(BASE, "RNA-seq/results/multi_evidence/convergence_evidence.csv")
 if (file.exists(bayev_f)) {
   bayev <- fread(bayev_f, select = c("human_symbol", "convergence_score",
                                        "convergence_rank", "tier",
-                                       "concordance_state", "dominant_stage_S1"))
+                                       "concordance_state", "dominant_stage_S1",
+                                       "n_modalities_active"))
   setnames(bayev, c("convergence_score","convergence_rank","tier",
-                     "concordance_state","dominant_stage_S1"),
+                     "concordance_state","dominant_stage_S1",
+                     "n_modalities_active"),
                   c("bayev_score","bayev_rank","bayev_tier",
-                     "bayev_state","bayev_stage"))
+                     "bayev_state","bayev_stage",
+                     "bayev_n_modalities"))
   atlas <- merge(atlas, bayev, by = "human_symbol", all.x = TRUE)
   cat(sprintf("  46d convergence evidence merged (%d genes have score)\n",
               sum(!is.na(atlas$bayev_score))))
@@ -333,6 +360,7 @@ if (file.exists(bayev_f)) {
   atlas[, bayev_tier  := NA_character_]
   atlas[, bayev_state := NA_character_]
   atlas[, bayev_stage := NA_character_]
+  atlas[, bayev_n_modalities := NA_integer_]
 }
 
 # ── Build GWAS-ATAC gene-level motif disruption from variant annotations ─────
@@ -375,10 +403,12 @@ notable <- c("THRB", "HKDC1", "RORA", "GCKR", "TM6SF2", "SLC39A8", "DGAT2",
              "ADCY8", "ID4", "FCN2", "LRRC1", "SH3YL1", "SEMA3G",
              "HSBP1L1", "CDH16", "GLS", "MGP",
              # Clinical drug target genes (from clinical_drug_validation_table)
-             "FGFR1", "GCGR", "GLP1R", "KLB", "PPARD", "PPARG", "SCD")
+             "FGFR1", "GCGR", "GLP1R", "KLB", "PPARD", "PPARG", "SCD", "LGALS3", "CCR2",
+             "HAL", "HGD", "ETNPPL", "C1QC", "CORO1A", "COL14A1", "EMILIN1",
+             "FASN", "KHK", "ACACA", "ACACB", "GHR", "HMGCR", "MAP3K5", "CNR1", "ADGRE5", "LOXL2", "ADORA3", "FGF21")
 
-# Determine DEG filter column
-deg_filter <- !is.na(atlas$bulk_padj) & atlas$bulk_padj < 0.05 & abs(atlas$bulk_logFC) > 0.5
+# Determine DEG filter column (canonical: bulk_treat_fdr<0.05; TREAT lfc=0.25, effect floor in test -> NO separate |shrunk_logFC| filter)
+deg_filter <- !is.na(atlas$bulk_treat_fdr) & atlas$bulk_treat_fdr < 0.05
 
 # Gene selection: ALL notable genes guaranteed, remaining slots filled by rank
 # 1. Get all notable genes first (bypass DEG filter)
@@ -401,7 +431,7 @@ if (nrow(atac_gene_dt) > 0) {
 # Define DEG contrast list here so it is available for both convergence scoring
 # and matrix construction below.
 deg_contrast_defs <- list(
-  list(lfc = "bulk_logFC",        padj = "bulk_padj",        lfc_thresh = 0.5, label = "MASLD\nvs Ctrl"),
+  list(lfc = "bulk_shrunk_logFC", padj = "bulk_treat_fdr",   lfc_thresh = 0.0, label = "MASLD\nvs Ctrl"),  # canonical: bulk_treat_fdr<0.05 (TREAT lfc=0.25; effect floor IN the test). lfc kept for z-score display only.
   list(lfc = "nafl_vs_ctrl_logFC", padj = "nafl_vs_ctrl_padj", lfc_thresh = 0.0, label = "MAFL\nvs Ctrl"),
   list(lfc = "nash_vs_ctrl_logFC", padj = "nash_vs_ctrl_padj", lfc_thresh = 0.0, label = "MASH\nvs Ctrl"),
   list(lfc = "nafl_vs_nash_logFC", padj = "nafl_vs_nash_padj", lfc_thresh = 0.0, label = "MASH\nvs MAFL"),  # coeff=nafl_nashNASH: positive = up in MASH
@@ -409,59 +439,139 @@ deg_contrast_defs <- list(
   list(lfc = "cirrhosis_logFC",    padj = "cirrhosis_padj",    lfc_thresh = 0.0, label = "Cirrhosis\n(F4)")
 )
 
-# ── Compute convergence score (N independent modalities with evidence) ──────
-# Max = 6. Each modality counted once (0 or 1).
-# Progression is excluded — it is derived from RNA, not an independent source.
-top_genes[, n_convergence := 0L]
-
-# 1. Human DEG: significant in ≥1 of the 6 RNA contrasts
-deg_any_sig <- Reduce(`|`, lapply(deg_contrast_defs, function(d) {
-  if (!d$lfc %in% names(top_genes)) return(rep(FALSE, nrow(top_genes)))
-  lfc  <- as.numeric(top_genes[[d$lfc]])
-  padj <- if (d$padj %in% names(top_genes)) as.numeric(top_genes[[d$padj]]) else rep(1, top_n)
-  !is.na(padj) & padj < 0.05 & abs(lfc) > d$lfc_thresh
-}))
-top_genes[, n_convergence := n_convergence + as.integer(deg_any_sig)]
-
-# 2. Mouse DEG
-if ("mouse_meta_padj" %in% names(top_genes)) {
-  top_genes[, n_convergence := n_convergence + fifelse(!is.na(mouse_meta_padj) & mouse_meta_padj < 0.05, 1L, 0L)]
-}
-# 3. Genetic causal (any COLOC PP.H4 > 0.8)
-top_genes[, n_convergence := n_convergence + fifelse(!is.na(max_coloc_pp4) & max_coloc_pp4 > 0.8, 1L, 0L)]
-# 4. Regulatory (ATAC motif disruption)
-if ("n_motifs_disrupted" %in% names(top_genes)) {
-  top_genes[, n_convergence := n_convergence + fifelse(!is.na(n_motifs_disrupted) & n_motifs_disrupted > 0, 1L, 0L)]
-}
-# 5. Proteomics validation
-if ("best_protein_logFC" %in% names(top_genes)) {
-  top_genes[, n_convergence := n_convergence + fifelse(!is.na(best_protein_logFC), 1L, 0L)]
-}
-# 6. Spatial
-if ("spatial_max_I" %in% names(top_genes)) {
-  top_genes[, n_convergence := n_convergence + fifelse(!is.na(spatial_max_I) & spatial_max_I > 0.05, 1L, 0L)]
-}
+# ── Displayed convergence tier ───────────────────────────────────────────────
+# Use 46d's canonical mouse-free n_modalities_active. Do not recompute this
+# locally from figure columns; the display must match convergence_evidence.csv
+# and Fig 5b exactly.
+top_genes[, n_convergence := as.integer(bayev_n_modalities)]
+top_genes[is.na(n_convergence), n_convergence := 0L]
 
 # Sort by convergence (descending), then by 46d convergence_score, falling back
 # to the heuristic rank_score for genes without a 46d posterior.
 top_genes <- top_genes[order(-n_convergence, -bayev_score, -rank_score,
                               na.last = TRUE)]
 
-# Keep only genes with ≥3 independent modalities converging
-top_genes <- top_genes[n_convergence >= 3]
+label_genes <- c("THRB", "HKDC1", "RORA", "DGAT2", "PPARA", "NR1H4", "PNPLA3",
+                 "HSD17B13", "GCKR",
+                 "MMP9", "FGFR1", "GLP1R", "PPARG", "KLB",
+                 "SCD", "LPL", "EPHA2", "AKR1B10", "FAP",
+                 "GAS6", "TM4SF4", "CDK6", "LGALS3", "CCR2",
+                 "HAL", "HGD", "ETNPPL", "C1QC", "CORO1A", "COL14A1", "EMILIN1",
+                 "FASN", "KHK", "ACACA", "ACACB", "GHR", "HMGCR", "MAP3K5", "CNR1", "ADGRE5", "LOXL2", "ADORA3", "FGF21")
+
+if (FIG5A_LAYOUT == "therapeutic_axes") {
+  axis_file <- file.path(BASE, "scripts/figures/fig5a_therapeutic_axes.tsv")
+  if (file.exists(axis_file)) {
+    label_genes <- unique(c(label_genes, fread(axis_file)$gene))
+  }
+}
+
+# Readability thinning (2026-06-22): the regulatory modality became dense, so the
+# conv==4 tier ballooned (~37 genes) and crowded the matrix. Keep only the genuinely
+# high-convergence tier (conv>=5) plus every labeled paper anchor at any tier.
+top_genes <- top_genes[n_convergence >= 3 | human_symbol %in% label_genes]
+top_genes <- top_genes[n_convergence >= 4 | human_symbol %in% label_genes]
+
+# Optional top-N truncation (genes already sorted by convergence/46d/rank above)
+if (!is.na(TOPN)) {
+  top_genes <- head(top_genes, TOPN)
+  cat(sprintf("FIG5A_TOPN set: truncating to top %d genes\n", TOPN))
+}
+
+# Optional row grouping by a single curated primary therapeutic axis. These
+# categories are interpretive therapeutic bins, not claims of exclusive
+# molecular-pathway membership. Preserve the existing convergence/rank order
+# within each axis.
+axis_levels <- c(
+  "Metabolic dysfunction & lipid handling",
+  "Hepatocellular injury & inflammation",
+  "Fibrogenesis & matrix remodeling"
+)
+axis_display <- c(
+  "Metabolic dysfunction\n& lipid handling",
+  "Hepatocellular injury\n& inflammation",
+  "Fibrogenesis\n& matrix remodeling"
+)
+axis_colors <- structure(
+  c("#E69F00", "#C9265E", "#7B1FA2"),
+  names = axis_levels
+)
+
+if (FIG5A_LAYOUT == "therapeutic_axes") {
+  axis_file <- file.path(BASE, "scripts/figures/fig5a_therapeutic_axes.tsv")
+  if (!file.exists(axis_file)) stop("Missing therapeutic-axis annotation: ", axis_file)
+
+  axis_annot <- fread(axis_file)
+  required_axis_cols <- c("gene", "primary_therapeutic_axis", "rationale")
+  missing_axis_cols <- setdiff(required_axis_cols, names(axis_annot))
+  if (length(missing_axis_cols)) {
+    stop("Therapeutic-axis annotation is missing columns: ",
+         paste(missing_axis_cols, collapse = ", "))
+  }
+  duplicate_axis_genes <- unique(axis_annot$gene[duplicated(axis_annot$gene)])
+  if (length(duplicate_axis_genes)) {
+    stop("Genes assigned more than once in therapeutic-axis annotation: ",
+         paste(duplicate_axis_genes, collapse = ", "))
+  }
+  invalid_axes <- setdiff(unique(axis_annot$primary_therapeutic_axis), axis_levels)
+  if (length(invalid_axes)) {
+    stop("Invalid primary therapeutic axes: ", paste(invalid_axes, collapse = ", "))
+  }
+  top_genes <- top_genes[human_symbol %in% axis_annot$gene]
+  unassigned_genes <- setdiff(top_genes$human_symbol, axis_annot$gene)
+  if (length(unassigned_genes)) {
+    stop("Displayed genes lack a primary therapeutic-axis assignment: ",
+         paste(unassigned_genes, collapse = ", "))
+  }
+
+  top_genes[, primary_therapeutic_axis :=
+    axis_annot$primary_therapeutic_axis[match(human_symbol, axis_annot$gene)]]
+
+  # Filter out genes missing MASLD Therapeutics info (not undetermined/other)
+  valid_statuses <- c("masld_approved", "masld_clinical", "masld_discontinued", "masld_preclinical", "discovery")
+  top_genes <- top_genes[drug_dev_status %in% valid_statuses]
+
+  # Prioritize approved, clinical, discontinued (failed), and discovery (novel) genes
+  top_genes[, is_priority_status := drug_dev_status %in% c("masld_approved", "masld_clinical", "masld_discontinued", "discovery")]
+
+  # Sort by priority status first, then by convergence and other scores
+  setorder(top_genes, -is_priority_status, -n_convergence, -bayev_score, -rank_score, na.last = TRUE)
+
+  # Equalize counts so that the difference is within +/- 3 genes
+  counts <- table(top_genes$primary_therapeutic_axis)
+  min_cnt <- min(counts)
+  max_allowed <- min_cnt + 3
+
+  # Take top max_allowed within each category
+  top_genes_list <- split(top_genes, top_genes$primary_therapeutic_axis)
+  top_genes_list <- lapply(top_genes_list, function(sub_dt) {
+    head(sub_dt, max_allowed)
+  })
+  top_genes <- rbindlist(top_genes_list)
+
+  top_genes[, is_priority_status := NULL]
+
+  top_genes[, primary_therapeutic_axis :=
+    factor(primary_therapeutic_axis, levels = axis_levels)]
+  setorder(top_genes, primary_therapeutic_axis, -n_convergence, -bayev_score, -rank_score, na.last = TRUE)
+
+  cat("Therapeutic-axis groups:\n")
+  print(table(top_genes$primary_therapeutic_axis, useNA = "ifany"))
+}
 
 top_n <- nrow(top_genes)
 genes <- top_genes$human_symbol
 convergence_scores <- top_genes$n_convergence
+therapeutic_axis_split <- if (FIG5A_LAYOUT == "therapeutic_axes") {
+  factor(as.character(top_genes$primary_therapeutic_axis),
+         levels = axis_levels, labels = axis_display)
+} else {
+  NULL
+}
 cat(sprintf("Selected %d genes (convergence >= 3; %d notable forced in)\n", top_n, sum(notable_rows$human_symbol %in% genes)))
 cat(sprintf("  Convergence range: %d - %d\n", min(convergence_scores), max(convergence_scores)))
-
-# Key genes to label (discussed in paper)
-label_genes <- c("THRB", "HKDC1", "RORA", "DGAT2", "PPARA", "NR1H4", "PNPLA3",
-                  "HSD17B13", "GCKR",
-                  "MMP9", "FGFR1", "GLP1R", "PPARG", "KLB",
-                  "SCD", "LPL", "EPHA2", "AKR1B10", "FAP",
-                  "GAS6", "TM4SF4", "CDK6")
+cat("  Displayed conv tiers:\n"); print(table(convergence_scores))
+cat(sprintf("  Labeled genes shown: %d / %d\n", sum(genes %in% label_genes), length(label_genes)))
 
 # ── Build matrices ───────────────────────────────────────────────────────────
 
@@ -521,22 +631,17 @@ mat_disease_pp4 <- matrix(get_cat("category_pp4_disease"), ncol = 1,
 mat_pdff        <- matrix(get_cat("category_pp4_pdff"),    ncol = 1,
                            dimnames = list(genes, "PDFF\nCOLOC"))
 
-# Ancestry classification: EUR only / EAS only / Both / None
-# ARCHIVED 2026-04-08: FinnGen COLOC columns removed from EUR classification
+# Ancestry COUNT: # of ancestries (EUR / EAS / AFR / CSA) with any COLOC PP.H4 > 0.5.
+# ARCHIVED 2026-04-08: FinnGen COLOC columns removed from EUR classification.
 eur_coloc_cols <- intersect(c("broadaway_coloc_pp4", "ukbb_alt_coloc_pp4", "ast_coloc_pp4",
-  "ggt_coloc_pp4", "pdff_coloc_pp4",
-  "decode_nafl_coloc_pp4"), names(top_genes))
+  "ggt_coloc_pp4", "pdff_coloc_pp4", "decode_nafl_coloc_pp4"), names(top_genes))
 eas_coloc_cols <- intersect(c("bbj_alt_coloc_pp4", "bbj_ast_coloc_pp4", "bbj_ggt_coloc_pp4"), names(top_genes))
-mat_ancestry <- matrix(NA_character_, nrow = top_n, ncol = 1, dimnames = list(genes, "Ancestry"))
-if (length(eur_coloc_cols) > 0 && length(eas_coloc_cols) > 0) {
-  eur_mat <- as.matrix(top_genes[, ..eur_coloc_cols])
-  eas_mat <- as.matrix(top_genes[, ..eas_coloc_cols])
-  has_eur <- apply(eur_mat, 1, function(x) any(!is.na(x) & x > 0.5))
-  has_eas <- apply(eas_mat, 1, function(x) any(!is.na(x) & x > 0.5))
-  mat_ancestry[has_eur & has_eas, 1]  <- "Both"
-  mat_ancestry[has_eur & !has_eas, 1] <- "EUR"
-  mat_ancestry[!has_eur & has_eas, 1] <- "EAS"
-}
+afr_coloc_cols <- intersect(c("panukbb_afr_alt_coloc_pp4", "panukbb_afr_ast_coloc_pp4", "panukbb_afr_ggt_coloc_pp4"), names(top_genes))
+csa_coloc_cols <- intersect(c("panukbb_csa_alt_coloc_pp4", "panukbb_csa_ast_coloc_pp4", "panukbb_csa_ggt_coloc_pp4"), names(top_genes))
+.has_anc <- function(cols) { if (!length(cols)) return(rep(FALSE, top_n))
+  apply(as.matrix(top_genes[, ..cols]), 1, function(x) any(!is.na(x) & x > 0.5)) }
+n_ancestry <- as.integer(.has_anc(eur_coloc_cols)) + as.integer(.has_anc(eas_coloc_cols)) +
+              as.integer(.has_anc(afr_coloc_cols)) + as.integer(.has_anc(csa_coloc_cols))
 
 # Column 7: Multi-ancestry gene-level finemapping max PIP
 # pmax over MESuSiE (multi-ancestry shared signal) and SuSiEx (multi-ancestry joint).
@@ -547,11 +652,6 @@ if ("susiex_max_pip"  %in% names(top_genes)) {
 }
 finemap_pip[is.infinite(finemap_pip)] <- NA
 mat_finemap <- matrix(finemap_pip, ncol = 1, dimnames = list(genes, "Finemap_PIP"))
-
-# Column 8: Multi-INTACT
-mat_intact <- matrix(
-  if ("intact_score_bulk" %in% names(top_genes)) as.numeric(top_genes$intact_score_bulk) else NA,
-  ncol = 1, dimnames = list(genes, "Multi_INTACT"))
 
 # Column 9: scEQTL COLOC (best PP.H4 across cell types)
 mat_sceqtl <- matrix(
@@ -569,10 +669,8 @@ mat_twas <- matrix(
   if ("twas_z" %in% names(top_genes)) as.numeric(top_genes$twas_z) else NA,
   ncol = 1, dimnames = list(genes, "TWAS_z"))
 
-# Column 10: Mouse logFC (z-score normalized, same scale as human)
-mat_mouse_z <- matrix(zscore_col(
-  if ("mouse_meta_logFC" %in% names(top_genes)) as.numeric(top_genes$mouse_meta_logFC) else rep(NA, top_n)),
-  ncol = 1, dimnames = list(genes, "mouse_logFC"))
+# (Mouse logFC column removed 2026-07-06 — convergence is human-only 6-channel;
+#  the mouse heatmap was already dead code, absent from both assembled ht_lists.)
 
 # Column 11: Progression score (composite: causal score where available, class-derived otherwise)
 mat_prog <- matrix(
@@ -588,16 +686,13 @@ if ("best_da_logFC" %in% names(top_genes)) {
   mat_da_lfc[sig_da, 1] <- as.numeric(top_genes$best_da_logFC[sig_da])
 }
 
-# N motifs disrupted (GWAS-ATAC, count)
-mat_motif <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "N motif\ndisrupted"))
-if ("n_motifs_disrupted" %in% names(top_genes)) {
-  mat_motif[, 1] <- as.numeric(top_genes$n_motifs_disrupted)
-}
-
-# Disease regulon target (binary)
-mat_reg <- matrix(0L, nrow = top_n, ncol = 1, dimnames = list(genes, "Disease\nregulon"))
-if ("is_disease_reg_target" %in% names(top_genes)) {
-  mat_reg[, 1] <- as.integer(top_genes$is_disease_reg_target == TRUE)
+# Disrupted master-regulator targets (count) — ONE dense regulatory column that
+# replaces the old sparse per-gene "N motif disrupted" + empty "Disease regulon".
+# = # of motif-disrupted disease master-regulators (CollecTRI) regulating the gene.
+mat_mrtarget <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "Targets of\ndisrupted TFs"))
+if ("n_disrupted_mr_targets" %in% names(top_genes)) {
+  v <- as.numeric(top_genes$n_disrupted_mr_targets)
+  mat_mrtarget[!is.na(v) & v > 0, 1] <- v[!is.na(v) & v > 0]   # 0 -> NA (white = no evidence)
 }
 
 # Proteomics: protein logFC (z-score normalized) + n_datasets validated
@@ -617,19 +712,16 @@ if ("spatial_max_I" %in% names(top_genes)) {
   mat_spatial[, 1] <- as.numeric(top_genes$spatial_max_I)
 }
 
-# Druggable (binary)
-# Druggable: combine DGIdb + OpenTargets + clinical drug validation targets
-mat_drug <- matrix(0L, nrow = top_n, ncol = 1, dimnames = list(genes, "Druggable"))
-if ("dgidb_druggable" %in% names(top_genes)) {
-  mat_drug[, 1] <- fifelse(top_genes$dgidb_druggable == TRUE & !is.na(top_genes$dgidb_druggable), 1L, 0L)
-}
-if ("opentargets_drug" %in% names(top_genes)) {
-  mat_drug[, 1] <- pmax(mat_drug[, 1], fifelse(top_genes$opentargets_drug == TRUE & !is.na(top_genes$opentargets_drug), 1L, 0L))
-}
-# Also mark clinical drug validation targets as druggable
-if (!is.null(drug_val_best)) {
-  clin_idx <- genes %in% drug_val_best$target_gene
-  mat_drug[clin_idx, 1] <- 1L
+# Clinical drug-development status (replaces binary Druggable; categories from fig4h)
+# 0: None, 1: Approved, 2: In trials, 3: Failed / discontinued, 4: Preclinical, 5: Discovery
+mat_drug <- matrix(0L, nrow = top_n, ncol = 1, dimnames = list(genes, "Clinical\nstatus"))
+if ("drug_dev_status" %in% names(top_genes)) {
+  s <- top_genes$drug_dev_status
+  mat_drug[!is.na(s) & s == "masld_approved",     1] <- 1L
+  mat_drug[!is.na(s) & s == "masld_clinical",      1] <- 2L
+  mat_drug[!is.na(s) & s == "masld_discontinued",  1] <- 3L
+  mat_drug[!is.na(s) & s == "masld_preclinical",   1] <- 4L
+  mat_drug[!is.na(s) & s == "discovery",           1] <- 5L
 }
 
 # Pathway memberships count
@@ -662,121 +754,138 @@ if (!is.null(drug_val_best)) {
 }
 
 # ── Significance vectors for DEG stars ───────────────────────────────────────
-# Human DEG significance: padj < 0.05 + |logFC| > 0.5
-human_sig <- !is.na(top_genes$bulk_padj) & top_genes$bulk_padj < 0.05 &
-             abs(top_genes$bulk_logFC) > 0.5
-# Mouse DEG significance
-mouse_sig <- if ("mouse_meta_padj" %in% names(top_genes)) {
-  !is.na(top_genes$mouse_meta_padj) & top_genes$mouse_meta_padj < 0.05
-} else { rep(FALSE, top_n) }
+# Human DEG significance: bulk_treat_fdr < 0.05 (canonical TREAT; lfc=0.25 floor in test)
+human_sig <- !is.na(top_genes$bulk_treat_fdr) & top_genes$bulk_treat_fdr < 0.05
 
 # ── Color scales (publication_color_themes.R gradients) ──────────────────────
 source(file.path(BASE, "scripts/publication_color_themes.R"))
 na_bg <- background1_gradient[1]  # light lavender-gray for NA cells
 
-# Sunset: Genetic causal (PP.H4), Clinical evidence — core causal (KEEP AS-IS)
-col_pp4     <- colorRamp2(c(0, 0.5, 1), c("white", sunset_gradient[4], sunset_gradient[11]))
-col_clin    <- colorRamp2(c(0, 1, 2, 3), c("white", sunset_gradient[2], sunset_gradient[6], sunset_gradient[11]))
+# Palette harmonization with Fig 4c (2026-07-09): Fig 4c reads as clean because it
+# commits to ONE muted diverging scale (Brewer RdBu softened to #2166AC/#B2182B —
+# the true Brewer extremes #67001f/#053061 read too dark) plus a small MUTED accent
+# family (#6E5AA5 purple, #4E9E76 green, #C79A3E gold). Fig 5a previously mixed a
+# teal↔magenta diverging with a two-hue white→orange→magenta PP.H4 ramp, reading as
+# rainbow/busy. Re-map each modality onto ONE clean single-hue ramp from that family:
+#   z-scores → blue↔red · Genetics → purple · Regulatory → gold · Spatial → green.
+fig4c_blue <- "#2166AC"; fig4c_red <- "#B2182B"
 
-# Sea/Sunset diverging: z-scores — brighter endpoints
-col_zscore  <- colorRamp2(c(-2.5, 0, 2.5), c(sea_gradient[9], "white", sunset_gradient[7]))
+# Muted diverging (Fig 4c main heatmap): blue ↔ white ↔ red
+col_zscore  <- colorRamp2(c(-2.5, 0, 2.5), c(fig4c_blue, "white", fig4c_red))
 col_twas    <- col_zscore  # share the same scale (TWAS z clamped to same range)
 
-# Progression score: green gradient (distinct from blue/purple/sunset)
+# Genetics COLOC PP.H4 / clinical evidence: single-hue muted PURPLE sequential
+# (was white→sunset-orange→magenta, a two-hue ramp). Purple is unique in the panel
+# — no categorical status uses it — so the genetic column reads cleanly.
+col_pp4     <- colorRamp2(c(0, 0.5, 1),    c("white", "#9E9AC8", "#54278F"))
+col_clin    <- colorRamp2(c(0, 1, 2, 3),   c("white", "#DADAEB", "#9E9AC8", "#54278F"))
+
+# Progression score: green gradient (kept; not drawn in the main assembled panel)
 col_prog    <- colorRamp2(c(0, 0.3, 1), c("white", green_gradient[4], green_gradient[10]))
-# Unified count scale: purple gradient for N pathways, N motifs, N datasets
-col_count <- colorRamp2(c(0, 5, 20), c("white", purple_gradient[3], purple_gradient[9]))
-col_morans  <- colorRamp2(c(0, 0.05, 0.15), c("white", forest_gradient[3], forest_gradient[9]))
+# Regulatory count (N disrupted-TF targets): single-hue GOLD/amber (Fig 4c gold #C79A3E)
+col_count   <- colorRamp2(c(0, 5, 20),      c("white", "#FDD49E", "#C79A3E"))
+# Spatial Moran's I: single-hue muted GREEN (Fig 4c detox #4E9E76), no longer yellow→green
+col_morans  <- colorRamp2(c(0, 0.05, 0.15), c("white", "#A1D99B", "#4E9E76"))
 
 # ATAC counts in purple; Drug/EAS stay gray
 col_binary  <- structure(c("white", gray_gradient[7]), names = c("0", "1"))
+# Clinical drug-development status: muted onto the Fig 4c family (red #B2182B, blue
+# #3B6EA5) so the categorical block ties into the diverging scale; discovery stays
+# house control-gray #9E9E9E. Order: none/approved/in-trials/failed/preclinical/discovery.
+clin_status_cols <- c("white", "#2E7D32", "#E0A94F", "#B2182B", "#3B6EA5", "#9E9E9E")
+clin_status_labs <- c("Approved", "In trials", "Failed / discontinued", "Preclinical", "Discovery")
 col_ancestry <- structure(c(blue_gradient[7], sunset_gradient[6], purple_gradient[8]), names = c("EUR", "EAS", "Both"))
 col_sex     <- structure(c(sunset_gradient[7], sea_gradient[9], purple_gradient[8]), names = c("F", "M", "D"))
 
 ht_opt(
-  heatmap_row_names_gp    = gpar(fontsize = 7, fontface = "italic", fontfamily = "Helvetica"),
-  heatmap_column_names_gp = gpar(fontsize = 7, fontfamily = "Helvetica"),
-  heatmap_column_title_gp = gpar(fontsize = 8, fontface = "bold", fontfamily = "Helvetica")
+  heatmap_row_names_gp    = gpar(fontsize = 6, fontface = "italic", fontfamily = "Helvetica"),
+  heatmap_column_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+  heatmap_column_title_gp = gpar(fontsize = 6, fontface = "plain", fontfamily = "Helvetica")
 )
 
 # mat_deg_z_sig already has NA for non-significant entries (built above)
 # mat_human_z_sig: first column of multi-contrast matrix for backward compat
 mat_human_z_sig <- mat_deg_z_sig[, 1, drop = FALSE]
-mat_mouse_z_sig <- mat_mouse_z
-mat_mouse_z_sig[!mouse_sig, 1] <- NA
 
-# ── Row annotations: convergence bar (left) + gene labels (right). ──────────
-ha_left <- rowAnnotation(
-  "Conv." = anno_barplot(convergence_scores,
-    width = unit(13, "mm"), border = FALSE,
-    gp = gpar(fill = gray_gradient[9], col = NA),
-    axis_param = list(gp = gpar(fontsize = 6), direction = "reverse"),
-    bar_width = 0.7, direction = "reverse"),
-  annotation_name_gp = gpar(fontsize = 6.5, fontface = "bold"),
-  annotation_name_rot = 90,
-  annotation_name_side = "top",
-  annotation_name_offset = unit(2, "mm"))
-
-# Right: selective gene labels using anno_mark
-label_idx <- which(genes %in% label_genes)
-ha_right <- rowAnnotation(
-  gene = anno_mark(at = label_idx, labels = genes[label_idx],
-    labels_gp = gpar(fontsize = 7.5, fontface = "italic", fontfamily = "Helvetica"),
-    link_width = unit(8, "mm"),
-    padding = unit(1, "mm"),
-    link_gp = gpar(lwd = 0.5, col = gray_gradient[7])))
+# ── Row annotations: convergence bar (left) + optional Primary axis (left). ──────────
+if (FIG5A_LAYOUT == "therapeutic_axes") {
+  ha_left <- rowAnnotation(
+    # 2026-07-08: one SOLID thin neutral bar per group. anno_block draws a single
+    # rectangle per row-split slice, so there are no per-row seams (the earlier
+    # simple-annotation strip looked dashed). The black row title already names
+    # each group, so no color or label is needed here.
+    " " = anno_block(gp = gpar(fill = "#4D4D4D", col = NA), width = unit(1, "mm")),
+    "Conv." = anno_barplot(convergence_scores,
+      width = unit(10, "mm"), border = FALSE,
+      gp = gpar(fill = gray_gradient[9], col = NA),
+      axis_param = list(gp = gpar(fontsize = 6), direction = "reverse"),
+      bar_width = 0.7, direction = "reverse"),
+    show_legend = FALSE,
+    annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
+    annotation_name_rot = 0,
+    annotation_name_side = "top",
+    annotation_name_offset = unit(2, "mm"))
+} else {
+  ha_left <- rowAnnotation(
+    "Conv." = anno_barplot(convergence_scores,
+      width = unit(13, "mm"), border = FALSE,
+      gp = gpar(fill = gray_gradient[9], col = NA),
+      axis_param = list(gp = gpar(fontsize = 6), direction = "reverse"),
+      bar_width = 0.7, direction = "reverse"),
+    annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
+    annotation_name_rot = 0,
+    annotation_name_side = "top",
+    annotation_name_offset = unit(2, "mm"))
+}
 
 # ── Build heatmaps — ALL COLUMNS FLAT (no group headers) ────────────────────
 
 # Human logFC (z-score, * for significant DEGs)
-# Combined RNA matrix: 6 DEG contrast cols
+# Consolidated 2026-06-22: show only 3 key contrasts (disease / steatohepatitis
+# progression / advanced fibrosis) instead of all 6 — the rest were redundant.
 mat_rna_combined <- clamp(mat_deg_z_sig, -2.5, 2.5)
-colnames(mat_rna_combined) <- sapply(deg_contrast_defs, `[[`, "label")
+rna_show <- c("MASLD\nvs Ctrl", "MASH\nvs MAFL", "Adv Fib\n(F3-F4)")
+mat_rna_combined <- mat_rna_combined[, intersect(rna_show, colnames(mat_rna_combined)), drop = FALSE]
 
 h_human <- Heatmap(mat_rna_combined, name = "z-score", col = col_zscore,
-  column_labels = colnames(mat_rna_combined), column_title = "RNA",
+  column_labels = colnames(mat_rna_combined), column_title = "Transcriptomics",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
+  row_split = therapeutic_axis_split,
+  cluster_row_slices = FALSE,
+  row_gap = if (FIG5A_LAYOUT == "therapeutic_axes") unit(2.2, "mm") else unit(0, "mm"),
+  row_title_gp = gpar(
+    fontsize = 6, fontface = "plain", fontfamily = "Helvetica",
+    col = "black"),
+  row_title_side = "left",
+  row_title_rot = 0,
   left_annotation = ha_left,
-  na_col = "white", width = unit(7 * ncol(mat_rna_combined), "mm"), border = TRUE,
-  heatmap_legend_param = list(title = "z-score", title_gp = gpar(fontsize = 7, fontface = "bold"),
-    labels_gp = gpar(fontsize = 6.5), legend_height = unit(2, "cm"), at = c(-2, 0, 2)))
+  na_col = "white",
+  width = unit((if (!is.na(TOPN)) SQ_CELL_MM else 6.5) * ncol(mat_rna_combined), "mm"),
+  height = if (!is.na(TOPN)) unit(top_n * SQ_CELL_MM, "mm") else NULL,
+  border = TRUE, show_heatmap_legend = FALSE,  # legend rebuilt manually below (2-col pack)
+  heatmap_legend_param = list(title = "z-score", title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6), legend_height = unit(2, "cm"), at = c(-2, 0, 2)))
 
-# Encode ancestry as integer so it can join the numeric mat_genetic matrix.
-# 0 = none, 1 = EUR, 2 = EAS, 3 = Both — rendered via cell_fun override.
-mat_ancestry_num <- matrix(0L, nrow = top_n, ncol = 1,
-                           dimnames = list(genes, "COLOC\nancestry"))
-if (!all(is.na(mat_ancestry[, 1]))) {
-  mat_ancestry_num[mat_ancestry[, 1] == "EUR",  1] <- 1L
-  mat_ancestry_num[mat_ancestry[, 1] == "EAS",  1] <- 2L
-  mat_ancestry_num[mat_ancestry[, 1] == "Both", 1] <- 3L
-}
-
-# Combine genetic columns: Enzyme COLOC | Disease COLOC | PDFF | SuSiE | INTACT | ieQTL | Ancestry
+# Consolidated 2026-06-22: 3 COLOC categories (enzyme/disease/PDFF) -> one best
+# PP.H4 column. Genetics block = COLOC | Finemap PIP.
+mat_coloc_best <- matrix(
+  suppressWarnings(pmax(mat_enzyme_pp4[, 1], mat_disease_pp4[, 1], mat_pdff[, 1], na.rm = TRUE)),
+  ncol = 1, dimnames = list(genes, "COLOC\n(PP.H4)"))
+mat_coloc_best[is.infinite(mat_coloc_best)] <- NA
 mat_genetic <- cbind(
-  clamp(mat_enzyme_pp4, 0, 1),
-  clamp(mat_disease_pp4, 0, 1),
-  clamp(mat_pdff, 0, 1),
-  clamp(mat_finemap, 0, 1),
-  mat_ancestry_num
+  clamp(mat_coloc_best, 0, 1),
+  clamp(mat_finemap, 0, 1)
 )
-genetic_labels <- c("ALT/AST/GGT\nCOLOC", "NAFLD/NASH\nCOLOC", "PDFF\nCOLOC",
-                     "Finemap\nPIP", "COLOC\nancestry")
+genetic_labels <- c("COLOC\n(PP.H4)", "Finemap\nPIP")
 
 h_genetic <- Heatmap(mat_genetic, name = "PP.H4", col = col_pp4,
-  column_labels = genetic_labels, column_title = "GWAS + eQTL",
+  column_labels = genetic_labels, column_title = "Genetics",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(8 * ncol(mat_genetic), "mm"), border = TRUE,
-  cell_fun = function(j, i, x, y, width, height, fill) {
-    v <- mat_genetic[i, j]
-    if (is.na(v)) return()
-    if (j == ncol(mat_genetic)) {
-      # Ancestry (last): categorical — overrides pp4 color scale
-      col_val <- if (v == 1) col_ancestry["EUR"] else if (v == 2) col_ancestry["EAS"] else if (v == 3) col_ancestry["Both"] else "white"
-      grid.rect(x, y, width, height, gp = gpar(fill = col_val, col = NA))
-    }
-  },
-  heatmap_legend_param = list(title = "PP.H4", title_gp = gpar(fontsize = 7, fontface = "bold"),
-    labels_gp = gpar(fontsize = 6.5), legend_height = unit(2, "cm"), at = c(0, 0.5, 1)))
+  na_col = "white",
+  width = unit((if (!is.na(TOPN)) SQ_CELL_MM else 7) * ncol(mat_genetic), "mm"),
+  border = TRUE, show_heatmap_legend = FALSE,  # legend rebuilt manually below (2-col pack)
+  heatmap_legend_param = list(title = "PP.H4", title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6), legend_height = unit(2, "cm"), at = c(0, 0.5, 1)))
 
 # TWAS: -log10(p) * sign(z) — significance-weighted direction
 mat_twas_signed <- matrix(NA, nrow = top_n, ncol = 1, dimnames = list(genes, "TWAS"))
@@ -790,37 +899,20 @@ h_twas <- Heatmap(clamp(mat_twas_signed, -10, 10), name = "TWAS", col = col_twas
   column_labels = "TWAS\n-log10(p)", column_title = "TWAS",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   na_col = "white", width = unit(10, "mm"), border = TRUE,
-  heatmap_legend_param = list(title = "TWAS", title_gp = gpar(fontsize = 7, fontface = "bold"),
-    labels_gp = gpar(fontsize = 6.5), legend_height = unit(1.5, "cm"), at = c(-10, 0, 10)))
+  heatmap_legend_param = list(title = "TWAS", title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6), legend_height = unit(1.5, "cm"), at = c(-10, 0, 10)))
 
-# Mouse logFC (z-score, * for significant)
-h_mouse <- Heatmap(clamp(mat_mouse_z_sig, -2.5, 2.5), name = "Mouse z", col = col_zscore,
-  column_labels = "Mouse\nlogFC (z)", column_title = "Mouse",
-  cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
-  show_heatmap_legend = FALSE)
+# (Mouse logFC heatmap removed 2026-07-06 — convergence is human-only 6-channel.)
 
-# GWAS-ATAC: motif disruption counts + regulon hits
-# Normalize motif count to max for color scale
-# Combined ATAC matrix: N motifs disrupted | Disease regulon — single box
-mat_atac_combined <- cbind(mat_motif, mat_reg)
-colnames(mat_atac_combined) <- c("N motif\ndisrupted", "Disease\nregulon")
+# ATAC/regulatory: ONE dense column — disrupted master-regulator targets (count).
+mat_atac_combined <- mat_mrtarget
 
 h_atac <- Heatmap(mat_atac_combined, name = "ATAC", col = col_count,
-  column_labels = colnames(mat_atac_combined), column_title = "ATAC",
+  column_labels = colnames(mat_atac_combined), column_title = "Regulatory",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(18, "mm"), border = TRUE,
-  cell_fun = function(j, i, x, y, width, height, fill) {
-    v <- mat_atac_combined[i, j]
-    if (is.na(v)) return()
-    if (j == 1) {
-      # N motifs: purple count scale (default)
-    } else {
-      # Disease regulon: binary gray
-      col_val <- if (v == 1) gray_gradient[7] else "white"
-      grid.rect(x, y, width, height, gp = gpar(fill = col_val, col = NA))
-    }
-  },
+  na_col = "white",
+  width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_atac_combined) else 10, "mm"),
+  border = TRUE,
   show_heatmap_legend = FALSE)  # uses unified Count legend
 
 # Proteomics validation (protein logFC z-score)
@@ -831,52 +923,175 @@ h_prot <- Heatmap(mat_prot_combined,
   column_labels = "Protein\nlogFC (z)",
   column_title = "Proteomics",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
+  na_col = "white",
+  width = unit(if (!is.na(TOPN)) SQ_CELL_MM * ncol(mat_prot_combined) else 9, "mm"),
+  border = TRUE,
   show_heatmap_legend = FALSE)  # shares z-score legend
 
 # Spatial validation (Moran's I)
 h_spatial <- Heatmap(mat_spatial, name = "Spatial", col = col_morans,
   column_labels = "Moran's I", column_title = "Spatial",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
-  heatmap_legend_param = list(title = "Moran's I", title_gp = gpar(fontsize = 7, fontface = "bold"),
-    labels_gp = gpar(fontsize = 6.5), legend_height = unit(1.5, "cm"), at = c(0, 0.05, 0.1, 0.15)))
+  na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 9, "mm"), border = TRUE,
+  show_heatmap_legend = FALSE,  # legend rebuilt manually below (2-col pack)
+  heatmap_legend_param = list(title = "Moran's I", title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6), legend_height = unit(1.5, "cm"), at = c(0, 0.05, 0.1, 0.15)))
 
 # Clinical drug validation level
 h_clin <- Heatmap(mat_clin, name = "ClinVal", col = col_clin,
   column_labels = "Clinical\nevidence", column_title = "Clinical",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   na_col = "white", width = unit(10, "mm"), border = TRUE,
-  heatmap_legend_param = list(title = "Clinical", title_gp = gpar(fontsize = 7, fontface = "bold"),
-    labels_gp = gpar(fontsize = 6.5), at = c(0, 2, 3),
+  heatmap_legend_param = list(title = "Clinical", title_gp = gpar(fontsize = 6, fontface = "plain"),
+    labels_gp = gpar(fontsize = 6), at = c(0, 2, 3),
     labels = c("Absent", "Moderate", "Strong"),
     legend_height = unit(1.5, "cm")))
 
-# Druggable (binary, rightmost — gene labels via anno_mark instead)
-h_drug <- Heatmap(mat_drug, name = "Binary", col = col_binary,
-  column_labels = "Druggable", column_title = "Drug",
+# Clinical status (rightmost). With the thinned, taller layout every gene fits,
+# so label ALL genes directly as right-side row names (no anno_mark leader lines).
+# Categorical fill via cell_fun (status colors); custom legend in annotation_legend_list.
+h_drug <- Heatmap(mat_drug, name = "Clinical", col = col_binary,
+  column_labels = "Clinical\nstatus", column_title = "Therapeutics",
   cluster_rows = FALSE, cluster_columns = FALSE,
-  show_row_names = FALSE,
-  na_col = "white", width = unit(10, "mm"), border = TRUE,
-  right_annotation = ha_right,
-  heatmap_legend_param = list(title = "Binary", title_gp = gpar(fontsize = 7, fontface = "bold"),
-    labels_gp = gpar(fontsize = 6.5), at = c(0, 1), labels = c("No", "Yes"),
-    legend_height = unit(1, "cm")))
+  show_row_names = TRUE, row_names_side = "right", row_labels = genes,
+  row_names_gp = gpar(fontsize = 6, fontface = "italic", fontfamily = "Helvetica"),
+  na_col = "white", width = unit(if (!is.na(TOPN)) SQ_CELL_MM else 9, "mm"), border = TRUE,
+  cell_fun = function(j, i, x, y, width, height, fill) {
+    v <- mat_drug[i, j]; if (is.na(v)) v <- 0
+    grid.rect(x, y, width, height, gp = gpar(fill = clin_status_cols[v + 1], col = NA))
+  },
+  show_heatmap_legend = FALSE)
 
 # ── Assemble ─────────────────────────────────────────────────────────────────
-# Order: RNA | Progression | Pathways | ATAC | Genetic Causal | Ancestry | TWAS | Proteomics | Spatial | Mouse RNA | Sex | Clinical | Drug
-ht_list <- h_human + h_atac + h_genetic + h_prot + h_spatial + h_mouse + h_drug
-
 cat(sprintf("Saving to %s ...\n", OUTPDF))
 pdf_device <- if (capabilities("cairo")) cairo_pdf else grDevices::pdf
-pdf_device(OUTPDF, width = 14, height = max(5, top_n * 0.038))
+
+if (!is.na(TOPN)) {
+  # ── Transposed layout (top-N variant) ──────────────────────────────────────
+  # Genes -> columns, modalities -> rows. Group names become horizontal row
+  # titles on the left (room for "GWAS + eQTL", "Proteomics"), and the gene
+  # names label the columns along the bottom.
+  cw    <- unit(SQ_CELL_MM * top_n, "mm")             # shared gene-axis width
+  rh    <- function(n) unit(SQ_CELL_MM * n, "mm")     # modality-block height
+  rt_gp <- gpar(fontsize = 6, fontface = "plain", fontfamily = "Helvetica")
+
+  # Convergence barplot now sits on top (per-gene = per-column)
+  ha_top <- HeatmapAnnotation(
+    "Conv." = anno_barplot(convergence_scores, height = unit(10, "mm"),
+      border = FALSE, gp = gpar(fill = gray_gradient[9], col = NA),
+      axis_param = list(gp = gpar(fontsize = 6)), bar_width = 0.7),
+    annotation_name_gp = gpar(fontsize = 6, fontface = "plain"),
+    annotation_name_side = "left")
+
+  # ── Per-modality row cap (transposed top-N variant): max 3 rows/modality ─────
+  # RNA and Genetics already consolidated to key cols; match those labels.
+  rna_keep_labels <- c("MASLD\nvs Ctrl", "MASH\nvs MAFL", "Adv Fib\n(F3-F4)")
+  gen_keep_labels <- c("COLOC\n(PP.H4)", "Finemap\nPIP")
+  rna_keep_idx <- match(rna_keep_labels, colnames(mat_rna_combined)); rna_keep_idx <- rna_keep_idx[!is.na(rna_keep_idx)]
+  gen_keep_idx <- match(gen_keep_labels, genetic_labels);             gen_keep_idx <- gen_keep_idx[!is.na(gen_keep_idx)]
+  mat_rna_sel    <- mat_rna_combined[, rna_keep_idx, drop = FALSE]
+  mat_gen_sel    <- mat_genetic[,      gen_keep_idx, drop = FALSE]
+  gen_labels_sel <- genetic_labels[gen_keep_idx]
+
+  t_rna <- t(mat_rna_sel)
+  th_rna <- Heatmap(t_rna, name = "z-score", col = col_zscore,
+    row_title = "Transcriptomics", top_annotation = ha_top, height = rh(nrow(t_rna)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    heatmap_legend_param = list(title = "z-score", title_gp = gpar(fontsize = 6, fontface = "plain"),
+      labels_gp = gpar(fontsize = 6), legend_height = unit(2, "cm"), at = c(-2, 0, 2)))
+
+  t_gen <- t(mat_gen_sel)
+  th_gen <- Heatmap(t_gen, name = "PP.H4", col = col_pp4,
+    row_title = "GWAS + eQTL", row_labels = gen_labels_sel, height = rh(nrow(t_gen)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    heatmap_legend_param = list(title = "PP.H4", title_gp = gpar(fontsize = 6, fontface = "plain"),
+      labels_gp = gpar(fontsize = 6), legend_height = unit(2, "cm"), at = c(0, 0.5, 1)))
+
+  t_prot <- t(mat_prot_combined)
+  th_prot <- Heatmap(t_prot, name = "Protein", col = col_zscore,
+    row_title = "Proteomics", row_labels = "Protein\nlogFC (z)", height = rh(nrow(t_prot)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw, show_heatmap_legend = FALSE)
+
+  t_atac <- t(mat_atac_combined)
+  th_atac <- Heatmap(t_atac, name = "ATAC", col = col_count,
+    row_title = "Regulatory", height = rh(nrow(t_atac)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    cell_fun = function(j, i, x, y, width, height, fill) {
+      v <- t_atac[i, j]
+      if (is.na(v)) return()
+      if (i == 2) {  # disease regulon row: binary gray
+        col_val <- if (v == 1) gray_gradient[7] else "white"
+        grid.rect(x, y, width, height, gp = gpar(fill = col_val, col = NA))
+      }
+    },
+    show_heatmap_legend = FALSE)
+
+  t_spa <- t(mat_spatial)
+  th_spa <- Heatmap(t_spa, name = "Moran's I", col = col_morans,
+    row_title = "Spatial", row_labels = "Moran's I", height = rh(nrow(t_spa)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+    show_column_names = FALSE, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    heatmap_legend_param = list(title = "Moran's I", title_gp = gpar(fontsize = 6, fontface = "plain"),
+      labels_gp = gpar(fontsize = 6), legend_height = unit(1.5, "cm"), at = c(0, 0.05, 0.1, 0.15)))
+
+  # (Mouse transposed heatmap removed 2026-07-06 — convergence is human-only 6-channel.)
+
+  t_dru <- t(mat_drug)
+  th_dru <- Heatmap(t_dru, name = "Clinical", col = col_binary,
+    row_title = "Therapeutics", row_labels = "Clinical\nstatus", height = rh(nrow(t_dru)),
+    cluster_rows = FALSE, cluster_columns = FALSE, row_names_side = "left",
+    row_names_gp = gpar(fontsize = 6, fontfamily = "Helvetica"),
+    show_column_names = TRUE, column_labels = genes, column_names_side = "bottom",
+    column_names_gp = gpar(fontsize = 6, fontface = "italic", fontfamily = "Helvetica"),
+    column_names_rot = 90, row_title_rot = 0, row_title_gp = rt_gp,
+    na_col = "white", border = TRUE, width = cw,
+    cell_fun = function(j, i, x, y, width, height, fill) {
+      v <- t_dru[i, j]; if (is.na(v)) v <- 0
+      grid.rect(x, y, width, height, gp = gpar(fill = clin_status_cols[v + 1], col = NA))
+    },
+    show_heatmap_legend = FALSE)
+
+  ht_list <- th_rna %v% th_gen %v% th_prot %v% th_spa %v% th_dru   # th_atac dropped 2026-07-09
+  total_rows <- nrow(t_rna) + nrow(t_gen) + nrow(t_prot) +
+                nrow(t_spa) + nrow(t_dru)
+  dev_w <- SQ_CELL_MM * top_n / 25.4 + 5.5
+  dev_h <- total_rows * SQ_CELL_MM / 25.4 + 3
+} else {
+  # Order: RNA | Genetic Causal | Proteomics | Spatial | Drug
+  # Regulatory/"Targets of disrupted TFs" (h_atac) column DROPPED 2026-07-09: it
+  # was built from the disease_master_regulators set (unselective — 72% of the
+  # SCENIC+ regulon universe passes — and keyed on each TF's OWN mRNA as a DEG,
+  # a weak proxy) and is now redundant with the properly-scoped figS4j motif panel.
+  ht_list <- h_human + h_genetic + h_prot + h_spatial + h_drug
+  dev_w <- if (FIG5A_LAYOUT == "therapeutic_axes") 6.24 else 7.0  # -0.39in (dropped 10mm Regulatory col)
+  # Taller gene boxes (2026-06-22): fixed per-gene row height + fixed margin so
+  # each box is the same height regardless of how many genes survive the filter.
+  # 2026-07-08: column cells narrowed (6.5/7/9/10mm) to fit the 6.63in canvas at 6pt.
+  dev_h <- top_n * 0.095 + if (FIG5A_LAYOUT == "therapeutic_axes") 1.27 else 1.0
+}
+
+pdf_device(OUTPDF, width = dev_w, height = dev_h)
 
 # Progression score legend (green)
 score_legend <- Legend(
   col_fun = col_prog,
   title = "Score",
-  title_gp = gpar(fontsize = 7, fontface = "bold"),
-  labels_gp = gpar(fontsize = 6.5),
+  title_gp = gpar(fontsize = 6, fontface = "plain"),
+  labels_gp = gpar(fontsize = 6),
   legend_height = unit(1.5, "cm"),
   at = c(0, 0.5, 1))
 
@@ -884,31 +1099,66 @@ score_legend <- Legend(
 count_legend <- Legend(
   col_fun = col_count,
   title = "Count",
-  title_gp = gpar(fontsize = 7, fontface = "bold"),
-  labels_gp = gpar(fontsize = 6.5),
+  title_gp = gpar(fontsize = 6, fontface = "plain"),
+  labels_gp = gpar(fontsize = 6),
   legend_height = unit(1.5, "cm"),
   at = c(0, 5, 10))
 
 ancestry_legend <- Legend(
-  labels = c("EUR only", "EAS only", "Both"),
-  legend_gp = gpar(fill = c(col_ancestry["EUR"], col_ancestry["EAS"], col_ancestry["Both"]), col = NA),
-  title = "COLOC ancestry",
-  title_gp = gpar(fontsize = 7, fontface = "bold"),
-  labels_gp = gpar(fontsize = 6.5),
+  labels = c("1", "2", "3", "4"),
+  legend_gp = gpar(fill = purple_gradient[c(3, 5, 7, 9)], col = NA),
+  title = "COLOC ancestry (n)",
+  title_gp = gpar(fontsize = 6, fontface = "plain"),
+  labels_gp = gpar(fontsize = 6),
   grid_height = unit(3, "mm"),
   grid_width = unit(3, "mm"))
 
-draw(ht_list,
-  heatmap_legend_side = "right",
-  annotation_legend_list = list(score_legend, count_legend, ancestry_legend),
-  column_title = "Multi-Modal Convergence Matrix",
-  column_title_gp = gpar(fontsize = 11, fontface = "bold", fontfamily = "Helvetica"),
-  padding = unit(c(3, 3, 5, 3), "mm"))
+clinical_legend <- Legend(
+  labels = clin_status_labs,
+  legend_gp = gpar(fill = clin_status_cols[2:6], col = NA),
+  title = "Clinical status",
+  title_gp = gpar(fontsize = 6, fontface = "plain"),
+  labels_gp = gpar(fontsize = 6),
+  grid_height = unit(3, "mm"),
+  grid_width = unit(3, "mm"))
+
+if (is.na(TOPN)) {
+  # Panel A: two explicit legend columns. The three continuous heatmap legends
+  # (z-score / PP.H4 / Moran's I) are rebuilt here (auto legends disabled above)
+  # so Count packs into a SECOND column alongside Clinical status, rather than
+  # Clinical status sitting alone (2026-07-08). Column 1 = z-score / PP.H4 /
+  # Moran's I; column 2 = Count / Clinical status.
+  lgd_gp    <- gpar(fontsize = 6)
+  lgd_ti_gp <- gpar(fontsize = 6, fontface = "plain")
+  lgd_zscore <- Legend(col_fun = col_zscore, title = "z-score", at = c(-2, 0, 2),
+    title_gp = lgd_ti_gp, labels_gp = lgd_gp, legend_height = unit(2, "cm"))
+  lgd_pp4 <- Legend(col_fun = col_pp4, title = "PP.H4", at = c(0, 0.5, 1),
+    title_gp = lgd_ti_gp, labels_gp = lgd_gp, legend_height = unit(2, "cm"))
+  lgd_morans <- Legend(col_fun = col_morans, title = "Moran's I",
+    at = c(0, 0.05, 0.1, 0.15),
+    title_gp = lgd_ti_gp, labels_gp = lgd_gp, legend_height = unit(1.5, "cm"))
+  lgd_col1 <- packLegend(lgd_zscore, lgd_pp4, lgd_morans,
+    direction = "vertical", gap = unit(4, "mm"))
+  lgd_col2 <- clinical_legend   # Count legend dropped with the Regulatory column (2026-07-09)
+  lgd_two_col <- packLegend(lgd_col1, lgd_col2,
+    direction = "horizontal", gap = unit(4, "mm"))
+  draw(ht_list,
+    heatmap_legend_side = "right",
+    merge_legends = FALSE,
+    annotation_legend_list = lgd_two_col,
+    padding = unit(c(3, 3, 5, 3), "mm"))
+} else {
+  draw(ht_list,
+    heatmap_legend_side = "right",
+    merge_legends = TRUE,
+    annotation_legend_list = list(clinical_legend),
+    padding = unit(c(3, 3, 5, 3), "mm"))
+}
 
 dev.off()
 ht_opt(RESET = TRUE)
 
-n_total_cols <- ncol(mat_genetic) + 1 + 1 + 1 + 1 + 1 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1  # genetic + EAS + prog + pathway + atac(2) + prot(2) + spatial + mouse + CC + sex + clin + drug
+n_total_cols <- ncol(mat_genetic) + 1 + 1 + 1 + 1 + 1 + 2 + 2 + 1 + 1 + 1 + 1 + 1      # genetic + EAS + prog + pathway + atac(2) + prot(2) + spatial + CC + sex + clin + drug  (mouse column removed 2026-07-06 — human-only)
 cat("Done.\n")
 cat(sprintf("  %d genes, %d evidence columns\n", top_n, n_total_cols))
 cat(sprintf("  Notable genes included: %s\n",

@@ -242,15 +242,21 @@ if (!is.null(prog_causal) && !is.null(program_labels_dt)) {
                                           dominant_program_logFC)],
                  by = "gene", all.x = TRUE)
 
-  # DEPRECATED ALIAS: s2_causal_score = Fibrogenic program column (if exists)
+  # DEPRECATED ALIAS: s2_causal_score = Fibrotic-ECM program column (P3, if exists)
   # T0.1 rename (2026-04-21): Fibrotic -> Fibrogenic; regex updated accordingly.
+  # !! ATLAS-COLUMN FLAG (2026-06-24): The on-disk multi_evidence_atlas.csv still carries
+  # !! columns named prog_Fibrogenic_* (old label). The regex below currently matches those
+  # !! stale column names. When the atlas is rebuilt (scripts 27a -> 75 -> 217), the column
+  # !! names will automatically update to prog_Fibrotic_ECM_* (derived from biological_label
+  # !! via label_clean). At that point the regex MUST be updated to "^prog_Fibrotic_ECM_".
+  # !! Renaming the atlas column encoding is a separate, larger surface; do not touch here.
   fib_col <- names(atlas)[grepl("^prog_Fibrogenic_", names(atlas)) &
                            grepl("_causal_score$", names(atlas))]
   if (length(fib_col) >= 1) {
     atlas[, s2_causal_score := atlas[[fib_col[1]]]]
     atlas[, subtype_coloc_enriched := fifelse(
       !is.na(s2_causal_score) & s2_causal_score > 0,
-      "Fibrogenic_program", NA_character_
+      "Fibrotic-ECM_program", NA_character_
     )]
   } else {
     atlas[, s2_causal_score := NA_real_]

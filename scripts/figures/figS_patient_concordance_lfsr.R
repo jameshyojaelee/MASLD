@@ -35,6 +35,23 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/lfc_sensitivity/patient_concordance_lfsr")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
+# ── Scale suffix (Agent C: raw vs ashr-shrunk split) ─────────────────────────
+# SHRUNK (PRIMARY) scale: DEG-selection gate = lfsr < 0.05 & |shrunk_logFC| > cut
+# (ashr-shrunk effect; aliased onto logFC/padj below). Every output basename gets
+# "_shrunk" inserted before the extension so it sits unambiguously beside the
+# "_raw" variant. cairo_pdf passed as a ggsave device is the REAL function (not
+# shadowed) -> no double-suffix.
+SCALE_SUFFIX <- "_shrunk"
+.add_suffix <- function(path) {
+  d <- dirname(path); b <- basename(path)
+  stem <- sub("\\.[^.]*$", "", b); ext <- sub("^.*\\.", "", b)
+  file.path(d, paste0(stem, SCALE_SUFFIX, ".", ext))
+}
+.ggsave_orig <- ggplot2::ggsave
+ggsave <- function(filename, ...) .ggsave_orig(.add_suffix(filename), ...)
+.fwrite_orig <- data.table::fwrite
+fwrite <- function(x, file = "", ...) .fwrite_orig(x, file = .add_suffix(file), ...)
+
 INT_RESULTS <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration")
 
 # ── Publication theme (matches existing panels in this project) ──────────────
@@ -47,13 +64,11 @@ theme_pub <- theme_minimal(base_size = 11) +
     legend.background  = element_blank(),
     legend.key         = element_blank(),
     strip.background   = element_blank(),
-    strip.text         = element_text(face = "bold", size = 10),
-    plot.title         = element_text(face = "bold", size = 12),
-    plot.subtitle      = element_text(size = 9, color = "grey40"),
-    axis.title         = element_text(size = 10),
-    axis.text          = element_text(size = 9),
-    legend.text        = element_text(size = 9),
-    legend.title       = element_text(size = 9),
+    strip.text         = element_text(face = "plain", size = 6),
+    axis.title         = element_text(size = 6),
+    axis.text          = element_text(size = 6),
+    legend.text        = element_text(size = 6),
+    legend.title       = element_text(size = 6),
     plot.margin        = margin(8, 10, 8, 8)
   )
 
@@ -78,15 +93,13 @@ ds_palette <- c(
 # ── Load data ────────────────────────────────────────────────────────────────
 message("Loading dream STAR results...")
 dream <- fread(file.path(INT_RESULTS, "canonical_deg_results.csv"))
-setnames(dream, "logFC", "dream_logFC", skip_absent = FALSE)
-setnames(dream, "padj",  "dream_padj",  skip_absent = FALSE)
 
-# === lfsr VARIANT: alias ashr columns so every downstream "dream_padj < 0.05" gate
-# becomes lfsr < 0.05 and every "dream_logFC" effect becomes the ashr-shrunk posterior,
+# === lfsr VARIANT: alias ashr columns so every downstream "padj < 0.05" gate
+# becomes lfsr < 0.05 and every "logFC" effect becomes the ashr-shrunk posterior,
 # WITHOUT editing the analytical body. (sign is preserved by ashr; magnitude shrinks.) ===
 stopifnot(all(c("shrunk_logFC","lfsr") %in% names(dream)))
-dream[, dream_logFC := shrunk_logFC]
-dream[, dream_padj  := lfsr]
+dream[, logFC := shrunk_logFC]
+dream[, padj  := lfsr]
 
 message("Loading patient LFC matrix (34k genes × 691 patients)...")
 lfc_mat <- fread(file.path(INT_RESULTS, "patient_lfc_matrix.csv.gz"))
@@ -121,8 +134,8 @@ lfc_cutoffs <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.2, 1.5, 2.0)
 message("Computing per-patient concordance across LFC cutoffs...")
 
 patient_results <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  up_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC > cut)
-  dn_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut)
+  up_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC > cut)
+  dn_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC < -cut)
   n_up <- length(up_idx)
   n_dn <- length(dn_idx)
   n_total <- n_up + n_dn
@@ -148,9 +161,9 @@ patient_results <- rbindlist(lapply(lfc_cutoffs, function(cut) {
   if (n_dn > 0) n_concordant <- n_concordant + colSums(lfc_m[dn_idx, , drop = FALSE] < 0)
   pct_combined <- n_concordant / n_total * 100
 
-  # Spearman rho per patient between dream_logFC and patient LFC (for this gene set)
+  # Spearman rho per patient between logFC and patient LFC (for this gene set)
   all_idx <- c(up_idx, dn_idx)
-  dream_lfc_sub <- dream_sub$dream_logFC[all_idx]
+  dream_lfc_sub <- dream_sub$logFC[all_idx]
   pat_lfc_sub   <- lfc_m[all_idx, , drop = FALSE]
   # rank dream LFC once (same for all patients)
   rk_dream <- rank(dream_lfc_sub)
@@ -209,12 +222,11 @@ pA <- ggplot(patient_results,
                      labels = paste0(c(0, 25, 50, 75, 100), "%")) +
   labs(
     x     = expression("|shrunk log"[2]*"FC| cutoff  (dream DEGs, lfsr < 0.05)"),
-    y     = "% of DEGs concordant per patient",
-    title = "A  Patient-level concordance with population DEG direction",
-    subtitle = sprintf("n = %d patients (5 cohorts with healthy controls)", n_patients)
+    y     = "% of DEGs concordant per patient"
   ) +
-  theme(axis.text.x = element_text(size = 9))
+  theme(axis.text.x = element_text(size = 6))
 
+message(sprintf("[caption] A Patient-level concordance with population DEG direction (n = %d patients, 5 cohorts with healthy controls)", n_patients))
 ggsave(file.path(OUTDIR, "patient_concordance_violins.pdf"),
        pA, width = 9, height = 4, device = cairo_pdf)
 message("Saved: A_patient_concordance_violin.pdf")
@@ -267,15 +279,12 @@ make_bc_panels <- function(pat_results, pct_col, title_tag, file_suffix) {
 
   pTop_loc <- ggplot(bc_wide_loc, aes(x = lfc_cutoff, y = n_total)) +
     geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey55", linewidth = 0.35) +
-    geom_segment(aes(xend = lfc_cutoff, y = 0, yend = n_total),
-                 color = col_combined, linewidth = 0.6, alpha = 0.8) +
-    geom_point(color = col_combined, size = 2.2) +
+    geom_col(fill = col_combined, width = 0.07, alpha = 0.9) +
     scale_x_continuous(breaks = c(0, 0.5, 1.0, 1.5, 2.0), expand = x_expand) +
     scale_y_continuous(labels = label_comma()) +
     annotate("text", x = 0.52, y = Inf, label = "|LFC| > 0.5",
-             hjust = 0, vjust = 1.4, size = 2.8, color = "grey40") +
-    labs(x = NULL, y = "Number of DEGs (lfsr < 0.05)",
-         title = paste("B ", title_tag)) +
+             hjust = 0, vjust = 1.4, size = GEOM_TEXT_6PT, color = "black") +
+    labs(x = NULL, y = "Number of DEGs (lfsr < 0.05)") +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
           plot.margin = margin(6, 10, 2, 8))
 
@@ -288,11 +297,11 @@ make_bc_panels <- function(pat_results, pct_col, title_tag, file_suffix) {
               color = "grey82", linewidth = 0.32, inherit.aes = FALSE) +
     geom_text(data = bc_inter_labels,
               aes(x = lfc_cutoff, y = pct_patients, label = inter_label),
-              hjust = -0.2, size = 2.3, color = "grey72", inherit.aes = FALSE) +
+              hjust = -0.2, size = GEOM_TEXT_6PT, color = "black", inherit.aes = FALSE) +
     geom_line(linewidth = 0.65) +
     geom_point(size = 1.6) +
     geom_text(data = bc_end_labels, aes(label = label),
-              hjust = -0.2, size = 2.8, fontface = "bold", show.legend = FALSE) +
+              hjust = -0.2, size = GEOM_TEXT_6PT, fontface = "plain", show.legend = FALSE) +
     scale_color_manual(values = thresh_colors3, guide = "none") +
     scale_x_continuous(breaks = c(0, 0.5, 1.0, 1.5, 2.0), expand = x_expand) +
     scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
@@ -308,7 +317,8 @@ make_bc_panels <- function(pat_results, pct_col, title_tag, file_suffix) {
   g1$widths <- g2$widths <- unit.pmax(g1$widths, g2$widths)
 
   outfile <- file.path(OUTDIR, paste0("deg_count_patient_concordance", file_suffix, ".pdf"))
-  cairo_pdf(outfile, width = 5, height = 5.5)
+  message(sprintf("[caption] B %s", title_tag))
+  cairo_pdf(.add_suffix(outfile), width = 5, height = 5.5)
   grid.arrange(g1, g2, ncol = 1, heights = c(1.1, 1))
   dev.off()
   message("Saved: ", basename(outfile))
@@ -325,8 +335,8 @@ PAT_THRESH <- 0.5
 
 message("Computing strict concordance (patient |LFC| >= 0.5 required)...")
 strict_results <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  up_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut)
-  dn_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut)
+  up_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC >  cut)
+  dn_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC < -cut)
   n_up <- length(up_idx); n_dn <- length(dn_idx)
   n_total <- n_up + n_dn
   if (n_total == 0) return(NULL)
@@ -375,11 +385,11 @@ pA_strict <- ggplot(strict_results[!is.na(pct_strict)],
                      labels = paste0(c(0, 25, 50, 75, 100), "%")) +
   labs(
     x     = expression("|shrunk log"[2]*"FC| cutoff  (dream DEGs, lfsr < 0.05)"),
-    y     = "% of DEGs concordant per patient",
-    title = "A  Patient-level concordance (patient |LFC| \u2265 0.5 required)"
+    y     = "% of DEGs concordant per patient"
   ) +
-  theme(axis.text.x = element_text(size = 9))
+  theme(axis.text.x = element_text(size = 6))
 
+message("[caption] A Patient-level concordance (patient |LFC| \u2265 0.5 required)")
 ggsave(file.path(OUTDIR, "patient_concordance_violins_strict.pdf"),
        pA_strict, width = 9, height = 4, device = cairo_pdf)
 message("Saved: A_patient_concordance_violin_strict05.pdf")
@@ -403,11 +413,11 @@ pD <- ggplot(pd_dat, aes(x = cutoff_label, y = spearman_rho)) +
                      labels = function(x) sprintf("%.1f", x)) +
   labs(
     x     = expression("|shrunk log"[2]*"FC| cutoff  (lfsr < 0.05)"),
-    y     = expression("Spearman "*rho),
-    title = expression("D  Per-patient rank concordance  "*rho)
+    y     = expression("Spearman "*rho)
   ) +
-  theme(axis.text.x = element_text(size = 9))
+  theme(axis.text.x = element_text(size = 6))
 
+message("[caption] D Per-patient rank concordance rho")
 ggsave(file.path(OUTDIR, "patient_spearman_rho_violins.pdf"),
        pD, width = 9, height = 4, device = cairo_pdf)
 message("Saved: D_spearman_rho_violin.pdf")
@@ -470,9 +480,9 @@ ctrl_sid_ds <- setNames(sinfo[sample_id %in% ctrl_sids, dataset],
 
 # ── Compute concordance for controls ─────────────────────────────────────────
 ctrl_concordance <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  up_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut &
+  up_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC >  cut &
                     dream_sub$gene %in% rownames(ctrl_lfc))
-  dn_idx <- which(dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut &
+  dn_idx <- which(dream_sub$padj < 0.05 & dream_sub$logFC < -cut &
                     dream_sub$gene %in% rownames(ctrl_lfc))
   n_up <- length(up_idx); n_dn <- length(dn_idx)
   n_total <- n_up + n_dn
@@ -534,7 +544,7 @@ make_a_with_ctrl <- function(dis_dat, ctrl_dat, pct_col, file_name) {
                        labels = paste0(c(0, 25, 50, 75, 100), "%")) +
     labs(x = expression("|shrunk log"[2]*"FC| cutoff  (dream DEGs, lfsr < 0.05)"),
          y = "% of DEGs concordant per patient") +
-    theme(axis.text.x = element_text(size = 8),
+    theme(axis.text.x = element_text(size = 6),
           legend.position = "top",
           legend.key.size = unit(0.35, "cm"))
 }
@@ -601,15 +611,12 @@ make_bc_with_ctrl <- function(dis_results, ctrl_results, pct_col,
 
   pTop_loc <- ggplot(bc_wide_loc, aes(x = lfc_cutoff, y = n_total)) +
     geom_vline(xintercept = 0.5, linetype = "dashed", color = "grey55", linewidth = 0.35) +
-    geom_segment(aes(xend = lfc_cutoff, y = 0, yend = n_total),
-                 color = col_combined, linewidth = 0.6, alpha = 0.8) +
-    geom_point(color = col_combined, size = 2.2) +
+    geom_col(fill = col_combined, width = 0.07, alpha = 0.9) +
     scale_x_continuous(breaks = c(0, 0.5, 1.0, 1.5, 2.0), expand = x_expand) +
     scale_y_continuous(labels = label_comma()) +
     annotate("text", x = 0.52, y = Inf, label = "|LFC| > 0.5",
-             hjust = 0, vjust = 1.4, size = 2.8, color = "grey40") +
-    labs(x = NULL, y = "Number of DEGs (lfsr < 0.05)",
-         title = paste("B ", title_tag)) +
+             hjust = 0, vjust = 1.4, size = GEOM_TEXT_6PT, color = "black") +
+    labs(x = NULL, y = "Number of DEGs (lfsr < 0.05)") +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
           plot.margin = margin(6, 10, 2, 8))
 
@@ -622,7 +629,7 @@ make_bc_with_ctrl <- function(dis_results, ctrl_results, pct_col,
               color = "grey82", linewidth = 0.32, inherit.aes = FALSE) +
     geom_text(data = bc_inter_labels,
               aes(x = lfc_cutoff, y = pct_patients, label = inter_label),
-              hjust = -0.2, size = 2.3, color = "grey72", inherit.aes = FALSE) +
+              hjust = -0.2, size = GEOM_TEXT_6PT, color = "black", inherit.aes = FALSE) +
     # Control lines (dashed, same palette, no points)
     geom_line(data = bc_ctrl,
               aes(x = lfc_cutoff, y = pct_patients, color = label, group = label),
@@ -630,12 +637,12 @@ make_bc_with_ctrl <- function(dis_results, ctrl_results, pct_col,
     geom_text(data = bc_ctrl_labels,
               aes(x = lfc_cutoff, y = pct_patients, label = paste0(label, "\u00B7ctrl"),
                   color = label),
-              hjust = -0.15, size = 2.2, inherit.aes = FALSE) +
+              hjust = -0.15, size = GEOM_TEXT_6PT, inherit.aes = FALSE) +
     # Disease lines (solid, with points)
     geom_line(linewidth = 0.65) +
     geom_point(size = 1.6) +
     geom_text(data = bc_end_labels, aes(label = label),
-              hjust = -0.15, size = 2.8, fontface = "bold", show.legend = FALSE) +
+              hjust = -0.15, size = GEOM_TEXT_6PT, fontface = "plain", show.legend = FALSE) +
     scale_color_manual(values = thresh_colors3, guide = "none") +
     scale_x_continuous(breaks = c(0, 0.5, 1.0, 1.5, 2.0), expand = x_expand) +
     scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
@@ -649,7 +656,8 @@ make_bc_with_ctrl <- function(dis_results, ctrl_results, pct_col,
   g1$widths <- g2$widths <- unit.pmax(g1$widths, g2$widths)
   outfile <- file.path(OUTDIR, paste0("deg_count_patient_concordance",
                                       file_suffix, "_with_controls.pdf"))
-  cairo_pdf(outfile, width = 5.5, height = 5.5)
+  message(sprintf("[caption] B %s", title_tag))
+  cairo_pdf(.add_suffix(outfile), width = 5.5, height = 5.5)
   grid.arrange(g1, g2, ncol = 1, heights = c(1.1, 1))
   dev.off()
   message("Saved: ", basename(outfile))
@@ -692,8 +700,8 @@ metric_dt <- rbindlist(lapply(lfc_cutoffs, function(cut) {
   rbindlist(lapply(grp_levels, function(grp) {
     mat <- mat_for[[grp]]
     gp  <- rownames(mat)
-    up_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut], gp)
-    dn_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut], gp)
+    up_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  cut], gp)
+    dn_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -cut], gp)
     n_up <- length(up_g); n_dn <- length(dn_g); n_total <- n_up + n_dn
     if (n_total == 0) return(NULL)
     ns <- ncol(mat)
@@ -740,14 +748,14 @@ mean_full <- sx / n_c
 sd_full   <- pmax(sqrt(pmax((sx2 - n_c * mean_full^2) / (n_c - 1), 0)), 0.1)  # sd floor 0.1
 loo_mean  <- (sx - ctrl_lfc) / (n_c - 1)                                       # genes x n_c
 loo_sd    <- pmax(sqrt(pmax((sx2 - ctrl_lfc^2 - (n_c - 1) * loo_mean^2) / (n_c - 2), 0)), 0.1)
-dsign_v   <- setNames(sign(dream_sub$dream_logFC), dream_sub$gene)[g_ctrl]     # +1/-1 per ctrl gene
+dsign_v   <- setNames(sign(dream_sub$logFC), dream_sub$gene)[g_ctrl]     # +1/-1 per ctrl gene
 
 # Oriented z: disease vs full control null; controls vs leave-one-out null
 dis_z  <- ((lfc_m[g_ctrl, , drop = FALSE] - mean_full) / sd_full) * dsign_v
 ctrl_z <- ((ctrl_lfc - loo_mean) / loo_sd) * dsign_v
 
 z_dt <- rbindlist(lapply(lfc_cutoffs, function(cut) {
-  deg_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & abs(dream_sub$dream_logFC) > cut], g_ctrl)
+  deg_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & abs(dream_sub$logFC) > cut], g_ctrl)
   if (length(deg_g) < 5) return(NULL)
   rbind(
     data.table(sample_id = colnames(lfc_m),    group = "Disease", lfc_cutoff = cut,
@@ -784,8 +792,8 @@ make_metric_violin <- function(dat, ylab, title, outfile,
     scale_fill_manual(values = group_colors, name = NULL) +
     scale_color_manual(values = group_colors, name = NULL) +
     labs(x = expression("|shrunk log"[2]*"FC| cutoff  (dream DEGs, lfsr < 0.05)"),
-         y = ylab, title = title) +
-    theme(axis.text.x = element_text(size = 8), legend.position = "top",
+         y = ylab) +
+    theme(axis.text.x = element_text(size = 6), legend.position = "top",
           legend.key.size = unit(0.35, "cm"))
   if (pct) {
     p <- p + scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
@@ -794,6 +802,7 @@ make_metric_violin <- function(dat, ylab, title, outfile,
     yl <- as.numeric(quantile(dat$value, c(0.005, 0.995), na.rm = TRUE))
     p <- p + coord_cartesian(ylim = yl)
   }
+  message(sprintf("[caption] %s", title))
   ggsave(outfile, p, width = width, height = 4, device = cairo_pdf)
   message("Saved: ", basename(outfile))
 }
@@ -815,11 +824,12 @@ make_metric_lines <- function(dat, ylab, title, outfile,
     scale_color_manual(values = group_colors, name = NULL) +
     scale_fill_manual(values = group_colors, name = NULL) +
     scale_x_continuous(breaks = c(0, 0.5, 1.0, 1.5, 2.0)) +
-    labs(x = expression("|shrunk log"[2]*"FC| cutoff  (lfsr < 0.05)"), y = ylab, title = title) +
+    labs(x = expression("|shrunk log"[2]*"FC| cutoff  (lfsr < 0.05)"), y = ylab) +
     theme(legend.position = "top", legend.key.size = unit(0.35, "cm"))
   if (pct)
     p <- p + scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
                                 labels = paste0(seq(0, 100, 25), "%"))
+  message(sprintf("[caption] %s", title))
   ggsave(outfile, p, width = width, height = 4.2, device = cairo_pdf)
   message("Saved: ", basename(outfile))
 }
@@ -833,13 +843,13 @@ make_metric_violin(
   a1_dat,
   ylab    = "% of DEGs recapitulated per individual",
   title   = "A1  Strict recall — fraction of signature reproduced (correct sign & |LFC| ≥ 0.5 ÷ all DEGs)",
-  outfile = file.path(NEWDIR, "A1_strict_recall.pdf"),
+  outfile = file.path(NEWDIR, "strict_recall.pdf"),
   pct = TRUE)
 make_metric_lines(
   a1_dat,
   ylab    = "Median % of DEGs recapitulated",
   title   = "A1  Strict recall (median ± IQR): disease high/rising; controls retain a noise floor (~30%)",
-  outfile = file.path(NEWDIR, "A1_strict_recall_lines.pdf"),
+  outfile = file.path(NEWDIR, "strict_recall_lines.pdf"),
   pct = TRUE)
 
 # ── A1b: Net recall (concordant − discordant) — count-based metric that ───────
@@ -849,13 +859,13 @@ make_metric_violin(
   a1b_dat,
   ylab    = "Net recall (%)",
   title   = "A1b  Net recall = (concordant − discordant at |LFC| ≥ 0.5) ÷ all DEGs — controls fall to ~0",
-  outfile = file.path(NEWDIR, "A1b_net_recall.pdf"),
+  outfile = file.path(NEWDIR, "net_recall.pdf"),
   yref = 0)
 make_metric_lines(
   a1b_dat,
   ylab    = "Median net recall (%)",
   title   = "A1b  Net recall (median ± IQR): controls ~0, disease high and rising",
-  outfile = file.path(NEWDIR, "A1b_net_recall_lines.pdf"),
+  outfile = file.path(NEWDIR, "net_recall_lines.pdf"),
   yref = 0)
 
 # ── A2: Threshold-free signature score ───────────────────────────────────────
@@ -864,7 +874,7 @@ make_metric_violin(
   a2_dat,
   ylab    = "Signature score",
   title   = "How strongly each patient reproduces the disease signature",
-  outfile = file.path(NEWDIR, "A2_signature_score.pdf"),
+  outfile = file.path(NEWDIR, "signature_score.pdf"),
   yref = 0)
 
 # ── A3: Control-standardized z (leave-one-out null) ──────────────────────────
@@ -872,7 +882,7 @@ make_metric_violin(
   z_dt[, .(sample_id, group, lfc_cutoff, cutoff_label, value)],
   ylab    = "Per-individual mean z vs control null",
   title   = "A3  Control-standardized z (oriented; LOO for controls) — healthy controls are the zero line",
-  outfile = file.path(NEWDIR, "A3_control_zscore.pdf"),
+  outfile = file.path(NEWDIR, "control_zscore.pdf"),
   yref = 0)
 
 # ── B: Per-patient threshold (tau) sweep, incl. tau = 1.0 (user request) ──────
@@ -881,8 +891,8 @@ tau_dt <- rbindlist(lapply(tau_set, function(tau) {
   rbindlist(lapply(lfc_cutoffs, function(cut) {
     rbindlist(lapply(grp_levels, function(grp) {
       mat <- mat_for[[grp]]; gp <- rownames(mat)
-      up_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  cut], gp)
-      dn_g <- intersect(dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -cut], gp)
+      up_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  cut], gp)
+      dn_g <- intersect(dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -cut], gp)
       nt <- length(up_g) + length(dn_g); if (nt == 0) return(NULL)
       nc <- numeric(ncol(mat))
       if (length(up_g)) nc <- nc + colSums(mat[up_g, , drop = FALSE] >  tau)
@@ -910,11 +920,11 @@ pB <- ggplot(tau_dt, aes(x = lfc_cutoff, y = value, color = group, fill = group)
   scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 25),
                      labels = paste0(seq(0, 100, 25), "%")) +
   labs(x = expression("shrunk dream |log"[2]*"FC| cutoff  (lfsr < 0.05)"),
-       y = "% of DEGs concordant per patient",
-       title = "B  Patient concordance by per-patient LFC requirement") +
+       y = "% of DEGs concordant per patient") +
   theme(legend.position = "top", legend.key.size = unit(0.35, "cm"),
-        axis.text.x = element_text(size = 8))
-ggsave(file.path(NEWDIR, "B_patient_threshold_sweep.pdf"),
+        axis.text.x = element_text(size = 6))
+message("[caption] B Patient concordance by per-patient LFC requirement")
+ggsave(file.path(NEWDIR, "patient_threshold_sweep.pdf"),
        pB, width = 12, height = 8, device = cairo_pdf)
 message("Saved: B_patient_threshold_sweep.pdf")
 
@@ -932,12 +942,10 @@ pC1top <- ggplot(cdm, aes(x = lfc_cutoff, y = pct, color = group, linetype = dir
   scale_linetype_manual(values = c("concordant" = "solid", "discordant" = "dotted"), name = NULL) +
   scale_x_continuous(breaks = c(0, 0.5, 1.0, 1.5, 2.0)) +
   scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  labs(x = NULL, y = "% of all DEGs at |LFC| ≥ 0.5",
-       title = "C1  Why the old strict ratio kept controls at ~50%",
-       subtitle = "Top: in controls, concordant ≈ discordant (|LFC|≥0.5 crossed in random directions)") +
+  labs(x = NULL, y = "% of all DEGs at |LFC| ≥ 0.5") +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
         legend.position = "top", legend.key.size = unit(0.35, "cm"),
-        legend.text = element_text(size = 7), plot.margin = margin(6, 10, 2, 8))
+        legend.text = element_text(size = 6), plot.margin = margin(6, 10, 2, 8))
 
 # Bottom: same data, two metrics. Conditional ratio (~50% for ctrl) vs strict recall (~0 for ctrl).
 cmp <- metric_dt[, .(`1 · conditional ratio (sign only ÷ n_expressed)` = median(cond_ratio, na.rm = TRUE),
@@ -956,23 +964,23 @@ pC1bot <- ggplot(cmpm, aes(x = lfc_cutoff, y = pct, color = group, linetype = me
   scale_y_continuous(breaks = seq(0, 100, 25), labels = paste0(seq(0, 100, 25), "%")) +
   coord_cartesian(ylim = c(-5, 100)) +
   labs(x = expression("shrunk dream |log"[2]*"FC| cutoff  (lfsr < 0.05)"),
-       y = "median % concordant",
-       subtitle = "Bottom: each refinement lowers the control floor (50% → ~31% → ~0); disease stays high") +
+       y = "median % concordant") +
   theme(legend.position = "right", legend.key.size = unit(0.35, "cm"),
-        legend.text = element_text(size = 7), plot.margin = margin(2, 10, 6, 8))
+        legend.text = element_text(size = 6), plot.margin = margin(2, 10, 6, 8))
 
 g1 <- ggplotGrob(pC1top); g2 <- ggplotGrob(pC1bot)
 g1$widths <- g2$widths <- unit.pmax(g1$widths, g2$widths)
-cairo_pdf(file.path(NEWDIR, "C1_why_controls_50pct.pdf"), width = 6.5, height = 6)
+message("[caption] C1 Why the old strict ratio kept controls at ~50% (top: in controls, concordant ≈ discordant, |LFC|≥0.5 crossed in random directions; bottom: each refinement lowers the control floor 50% → ~31% → ~0, disease stays high)")
+cairo_pdf(.add_suffix(file.path(NEWDIR, "why_controls_50pct.pdf")), width = 6.5, height = 6)
 grid.arrange(g1, g2, ncol = 1, heights = c(1, 1.1))
 dev.off()
 message("Saved: C1_why_controls_50pct.pdf")
 
 # ── C2: Per-patient robustness scatter grid (dream LFC vs each individual's LFC) ─
 # Representative individuals spanning the strict-recall distribution at |LFC|>0.5.
-deg05  <- dream_sub[dream_padj < 0.05 & abs(dream_logFC) > 0.5 & gene %in% g_ctrl]
+deg05  <- dream_sub[padj < 0.05 & abs(logFC) > 0.5 & gene %in% g_ctrl]
 gsel   <- deg05$gene
-dx     <- setNames(deg05$dream_logFC, gsel)
+dx     <- setNames(deg05$logFC, gsel)
 rec_d  <- metric_dt[group == "Disease" & lfc_cutoff == 0.5]
 rec_c  <- metric_dt[group == "Control" & lfc_cutoff == 0.5]
 pick_by_q <- function(tab, qs) {
@@ -1015,12 +1023,12 @@ pC2 <- ggplot(scat, aes(x = dream, y = patient, color = status)) +
                                 "sub-threshold (|LFC| < 0.5)" = "#D9D9D9"), name = NULL) +
   coord_cartesian(ylim = c(-3, 3)) +
   labs(x = expression("population (dream) log"[2]*"FC of DEGs  (|LFC| > 0.5)"),
-       y = expression("individual's log"[2]*"FC vs own-cohort control mean"),
-       title = "C2  Per-individual robustness: each disease patient reproduces the population signature") +
+       y = expression("individual's log"[2]*"FC vs own-cohort control mean")) +
   guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
   theme(legend.position = "top", legend.key.size = unit(0.35, "cm"),
-        strip.text = element_text(size = 8))
-ggsave(file.path(NEWDIR, "C2_robustness_scatter.pdf"),
+        strip.text = element_text(size = 6))
+message("[caption] C2 Per-individual robustness: each disease patient reproduces the population signature")
+ggsave(file.path(NEWDIR, "robustness_scatter.pdf"),
        pC2, width = 11, height = 5.2, device = cairo_pdf)
 message("Saved: C2_robustness_scatter.pdf")
 
@@ -1028,8 +1036,8 @@ message("Saved: C2_robustness_scatter.pdf")
 # x = patient log2FC = (sample − own-cohort control mean), for the canonical
 # |LFC| > 0.5 DEG set. Genes indexed by name (robust to disease/control gene-set diff).
 DTHR <- 0.5
-deg_u_all <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  DTHR]
-deg_d_all <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -DTHR]
+deg_u_all <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  DTHR]
+deg_d_all <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -DTHR]
 du_d <- intersect(deg_u_all, rownames(lfc_m));    dd_d <- intersect(deg_d_all, rownames(lfc_m))
 du_c <- intersect(deg_u_all, rownames(ctrl_lfc)); dd_c <- intersect(deg_d_all, rownames(ctrl_lfc))
 
@@ -1046,10 +1054,10 @@ pD1 <- ggplot(dens_or, aes(x = value, fill = group, color = group)) +
   scale_color_manual(values = group_colors, name = NULL) +
   coord_cartesian(xlim = c(-3, 3)) +
   labs(x = "patient log2FC oriented to dream direction  =  sign(dream) × (sample − cohort control mean)",
-       y = "density",
-       title = "Per-patient LFC distribution of dream DEGs, oriented to dream direction") +
+       y = "density") +
   theme(legend.position = "top", legend.key.size = unit(0.35, "cm"))
-ggsave(file.path(NEWDIR, "D1_density_oriented.pdf"), pD1, width = 8, height = 4.2, device = cairo_pdf)
+message("[caption] Per-patient LFC distribution of dream DEGs, oriented to dream direction")
+ggsave(file.path(NEWDIR, "density_oriented.pdf"), pD1, width = 8, height = 4.2, device = cairo_pdf)
 message("Saved: D1_density_oriented.pdf")
 
 # D2 — raw patient LFC (sample − cohort control mean), faceted by DEG direction
@@ -1068,17 +1076,17 @@ pD2 <- ggplot(dens_raw, aes(x = value, fill = group, color = group)) +
   scale_fill_manual(values = group_colors, name = NULL) +
   scale_color_manual(values = group_colors, name = NULL) +
   coord_cartesian(xlim = c(-3, 3)) +
-  labs(x = "patient log2FC  (sample − own-cohort control mean)", y = "density",
-       title = "Per-patient LFC distribution of dream DEGs") +
+  labs(x = "patient log2FC  (sample − own-cohort control mean)", y = "density") +
   theme(legend.position = "top", legend.key.size = unit(0.35, "cm"),
-        strip.text = element_text(face = "bold"))
-ggsave(file.path(NEWDIR, "D2_density_raw_updown.pdf"), pD2, width = 9, height = 4.2, device = cairo_pdf)
+        strip.text = element_text(face = "plain", size = 6))
+message("[caption] Per-patient LFC distribution of dream DEGs")
+ggsave(file.path(NEWDIR, "density_raw_updown.pdf"), pD2, width = 9, height = 4.2, device = cairo_pdf)
 message("Saved: D2_density_raw_updown.pdf")
 
 # D3 — per-individual RAW LFC HISTOGRAM over the dream DEG signature (lfsr < 0.05,
 # |LFC| > 0.5). 20 random disease + 20 random control. No recall metric or label.
-allu   <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC >  0.5]
-alld   <- dream_sub$gene[dream_sub$dream_padj < 0.05 & dream_sub$dream_logFC < -0.5]
+allu   <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC >  0.5]
+alld   <- dream_sub$gene[dream_sub$padj < 0.05 & dream_sub$logFC < -0.5]
 allu_d <- intersect(allu, rownames(lfc_m));    alld_d <- intersect(alld, rownames(lfc_m))
 allu_c <- intersect(allu, rownames(ctrl_lfc)); alld_c <- intersect(alld, rownames(ctrl_lfc))
 all_d  <- c(allu_d, alld_d); all_c <- c(allu_c, alld_c)
@@ -1104,11 +1112,11 @@ pD3 <- ggplot(d3, aes(x = value, fill = group, color = group)) +
   scale_fill_manual(values = group_colors, name = NULL) +
   scale_color_manual(values = group_colors, name = NULL) +
   coord_cartesian(xlim = c(-4, 4)) +
-  labs(x = "Patient-level log2FC  (patient − cohort control mean)", y = "Density",
-       title = "Per-individual LFC distribution over the disease signature") +
+  labs(x = "Patient-level log2FC  (patient − cohort control mean)", y = "Density") +
   theme(legend.position = "top", legend.key.size = unit(0.35, "cm"),
         strip.text = element_text(size = 6))
-ggsave(file.path(NEWDIR, "D3_per_patient_density_grid.pdf"), pD3,
+message("[caption] Per-individual LFC distribution over the disease signature")
+ggsave(file.path(NEWDIR, "per_patient_density_grid.pdf"), pD3,
        width = 16, height = 9, device = cairo_pdf)
 message("Saved: D3_per_patient_density_grid.pdf")
 
@@ -1132,11 +1140,11 @@ pD4 <- ggplot(d4, aes(x = value, fill = direction, color = direction)) +
   scale_fill_manual(values = c("Up" = col_up, "Down" = col_down), name = "Dream direction") +
   scale_color_manual(values = c("Up" = col_up, "Down" = col_down), name = "Dream direction") +
   coord_cartesian(xlim = c(-4, 4)) +
-  labs(x = "Patient-level log2FC  (patient − cohort control mean)", y = "Density",
-       title = "Per-individual LFC distribution by Dream direction") +
+  labs(x = "Patient-level log2FC  (patient − cohort control mean)", y = "Density") +
   theme(legend.position = "right", legend.key.size = unit(0.35, "cm"),
         strip.text = element_text(size = 6))
-ggsave(file.path(NEWDIR, "D4_per_patient_density_updown.pdf"), pD4,
+message("[caption] Per-individual LFC distribution by Dream direction")
+ggsave(file.path(NEWDIR, "per_patient_density_updown.pdf"), pD4,
        width = 16, height = 9, device = cairo_pdf)
 message("Saved: D4_per_patient_density_updown.pdf")
 
@@ -1174,21 +1182,20 @@ pD5 <- ggplot(d5, aes(x = value, fill = direction, color = direction)) +
   geom_histogram(aes(y = after_stat(density)), position = "identity",
                  bins = 50, alpha = 0.5, linewidth = 0.1) +
   geom_text(data = lab5, aes(x = -Inf, y = Inf, label = lab), inherit.aes = FALSE,
-            hjust = -0.05, vjust = 1.15, size = 1.8, lineheight = 0.85, color = "grey25") +
+            hjust = -0.05, vjust = 1.15, size = GEOM_TEXT_6PT, lineheight = 0.85, color = "black") +
   facet_grid(sevgroup ~ col_idx, switch = "y") +
   scale_fill_manual(values = c("Up" = col_up, "Down" = col_down), name = "Dream direction") +
   scale_color_manual(values = c("Up" = col_up, "Down" = col_down), name = "Dream direction") +
   coord_cartesian(xlim = c(-4, 4)) +
-  labs(x = "Patient-level log2FC  (patient − cohort control mean)", y = "Density",
-       title = "Per-individual LFC by fibrosis severity",
-       subtitle = "dream DEGs (lfsr < 0.05, |log2FC| > 0.5); Up/Down = dream-up / dream-down; 10 individuals per group") +
+  labs(x = "Patient-level log2FC  (patient − cohort control mean)", y = "Density") +
   theme(legend.position = "right", legend.key.size = unit(0.35, "cm"),
         strip.placement = "outside", strip.background = element_blank(),
-        strip.text.y.left = element_text(angle = 0, face = "bold", size = 9),
+        strip.text.y.left = element_text(angle = 0, face = "plain", size = 6),
         strip.text.x = element_blank(),
         panel.spacing.x = unit(0.1, "lines"),
         axis.title.y = element_text(margin = margin(r = 8)))
-ggsave(file.path(NEWDIR, "D5_per_patient_density_by_fibrosis.pdf"), pD5,
+message("[caption] Per-individual LFC by fibrosis severity (dream DEGs, lfsr < 0.05, |log2FC| > 0.5; Up/Down = dream-up / dream-down; 10 individuals per group)")
+ggsave(file.path(NEWDIR, "per_patient_density_by_fibrosis.pdf"), pD5,
        width = 16, height = 7.5, device = cairo_pdf)
 message("Saved: D5_per_patient_density_by_fibrosis.pdf")
 

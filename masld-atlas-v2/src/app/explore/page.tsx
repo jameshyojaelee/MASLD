@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import Link from "next/link";
+import { HashLink as Link } from "@/components/hash-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { EvidenceFingerprint } from "@/components/evidence-fingerprint";
 import { EnrichmentPanel } from "@/components/enrichment-panel";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { getGeneIndex } from "@/lib/search-index";
 import type { GeneIndexEntry } from "@/lib/types";
 
 type Preset = "all" | "deg" | "conserved" | "druggable";
 type SortKey =
   | "symbol"
-  | "dream_logfc"
-  | "dream_padj"
+  | "bulk_logfc"
+  | "bulk_padj"
   | "sex_class"
   | "layers_active";
 type SortDir = "asc" | "desc";
@@ -31,8 +33,8 @@ const PRESET_OPTIONS: { key: Preset; label: string }[] = [
 
 const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
   { key: "symbol", label: "Symbol" },
-  { key: "dream_logfc", label: "logFC", className: "text-right" },
-  { key: "dream_padj", label: "padj", className: "text-right" },
+  { key: "bulk_logfc", label: "logFC", className: "text-right" },
+  { key: "bulk_padj", label: "padj", className: "text-right" },
   { key: "sex_class", label: "Sex Class" },
   { key: "layers_active", label: "Layers", className: "text-right" },
 ];
@@ -62,10 +64,10 @@ function getSortValue(
   switch (key) {
     case "symbol":
       return gene.symbol;
-    case "dream_logfc":
-      return gene.dream_logfc ?? null;
-    case "dream_padj":
-      return gene.dream_padj ?? null;
+    case "bulk_logfc":
+      return gene.bulk_logfc ?? null;
+    case "bulk_padj":
+      return gene.bulk_padj ?? null;
     case "sex_class":
       return gene.sex_class ?? "";
     case "layers_active":
@@ -195,14 +197,12 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="w-full px-6 py-8">
+    <PageContainer>
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Gene Explorer</h1>
-        <p className="mt-2 text-muted-foreground">
-          Search, filter, and compare genes across 7 evidence layers.
-        </p>
-      </div>
+      <PageHeader
+        title="Gene Explorer"
+        description="Search, filter, and compare genes across 7 evidence layers."
+      />
 
       {/* Filter bar */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -380,7 +380,7 @@ export default function ExplorePage() {
                   {/* Symbol */}
                   <td className="px-3 py-1.5">
                     <Link
-                      href={`/gene/${encodeURIComponent(gene.symbol)}`}
+                      href={`#/gene?symbol=${encodeURIComponent(gene.symbol)}`}
                       className="font-mono font-semibold text-primary hover:underline"
                     >
                       {gene.symbol}
@@ -389,14 +389,14 @@ export default function ExplorePage() {
 
                   {/* logFC */}
                   <td
-                    className={`px-3 py-1.5 text-right font-mono text-xs ${logfcColor(gene.dream_logfc)}`}
+                    className={`px-3 py-1.5 text-right font-mono text-xs ${logfcColor(gene.bulk_logfc)}`}
                   >
-                    {formatLogFC(gene.dream_logfc)}
+                    {formatLogFC(gene.bulk_logfc)}
                   </td>
 
                   {/* padj */}
                   <td className="px-3 py-1.5 text-right font-mono text-xs text-muted-foreground">
-                    {formatPadj(gene.dream_padj)}
+                    {formatPadj(gene.bulk_padj)}
                   </td>
 
                   {/* Sex Class */}
@@ -474,6 +474,6 @@ export default function ExplorePage() {
           onClose={() => setShowEnrichment(false)}
         />
       )}
-    </div>
+    </PageContainer>
   );
 }

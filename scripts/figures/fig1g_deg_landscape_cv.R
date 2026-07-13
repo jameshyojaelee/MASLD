@@ -9,12 +9,17 @@ suppressPackageStartupMessages({
 })
 
 source("scripts/figures/publication_theme.R")
+source("scripts/figures/load_figure_data.R")  # provides FIG2_DIR (= fig3_RNAseq)
 
 PROJ <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 DREAM <- file.path(PROJ, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
 OUTDIR <- file.path(PROJ, "figures/main/fig1_atlas_overview/panels")
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
+# fig1g_figs3c_deg_landscape_cv.pdf + fig1g_deg_landscape_data.csv relocated to the
+# Figure-3 RNA-seq dir (FIG2_DIR = figures/main/fig3_RNAseq, back-compat constant name).
+FIG2_PANEL_DIR <- file.path(FIG2_DIR, "panels")
+dir.create(FIG2_PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 
 d <- fread(DREAM)
 cat("Loaded:", nrow(d), "genes\n")
@@ -44,14 +49,13 @@ cat("DEGs at padj<0.05, |LFC|>", first_below_10, ":", n_at_threshold, "\n")
 pA <- ggplot(grid, aes(x = factor(lfc), y = factor(padj), fill = n_DEG)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = formatC(n_DEG, format = "d", big.mark = ",")),
-            size = 2.2, color = "black") +
+            size = GEOM_TEXT_6PT, color = "black") +
   scale_fill_gradient2(low = "white", mid = "#4393C3", high = "#2166AC",
                        midpoint = max(grid$n_DEG) / 2, name = "DEGs") +
   geom_vline(xintercept = which(levels(factor(lfcs)) == as.character(first_below_10)),
              linetype = "dashed", color = "red", linewidth = 0.6) +
-  labs(x = "|log2FC| cutoff", y = "padj cutoff",
-       title = "DEG count by threshold") +
-  theme_minimal(base_size = 9) +
+  labs(x = "|log2FC| cutoff", y = "padj cutoff") +
+  theme_minimal(base_size = 6) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         panel.grid = element_blank())
 
@@ -66,24 +70,24 @@ pB <- ggplot(cv_dt, aes(x = lfc, y = cv)) +
            label = sprintf("|LFC| = %.2f\nCV = %.1f%%\n%s DEGs (padj<0.05)",
                            first_below_10, cv_at_threshold,
                            formatC(n_at_threshold, big.mark = ",")),
-           size = 2.5, hjust = 0, color = "red") +
-  annotate("text", x = 0.85, y = 11.5, label = "CV = 10%", size = 2.5,
+           size = GEOM_TEXT_6PT, hjust = 0, color = "red") +
+  annotate("text", x = 0.85, y = 11.5, label = "CV = 10%", size = GEOM_TEXT_6PT,
            color = "#999999") +
   scale_x_continuous(breaks = seq(0.1, 1.0, by = 0.1)) +
   labs(x = "|log2FC| cutoff",
-       y = "CV of DEG count\nacross padj thresholds (%)",
-       title = "Threshold stability") +
-  theme_minimal(base_size = 9)
+       y = "CV of DEG count\nacross padj thresholds (%)") +
+  theme_minimal(base_size = 6)
 
+message("[caption] Panel A: DEG count by threshold. Panel B: threshold stability (CV of DEG count across padj thresholds).")
 combined <- pA / pB + plot_layout(heights = c(2, 1))
 
-out_pdf <- file.path(OUTDIR, "fig1g_deg_landscape_cv.pdf")
+out_pdf <- file.path(FIG2_PANEL_DIR, "figs3c_deg_landscape_cv.pdf")
 ggsave(out_pdf, combined, width = 7, height = 6)
 cat("Saved:", out_pdf, "\n")
 
-out_csv <- file.path(OUTDIR, "fig1g_deg_landscape_data.csv")
+out_csv <- file.path(FIG2_PANEL_DIR, "deg_landscape_cv_data.csv")
 fwrite(grid, out_csv)
 
-out_cv <- file.path(OUTDIR, "fig1g_cv_data.csv")
+out_cv <- file.path(OUTDIR, "fig1g_cv_data.csv")  # not relocated; stays in fig1
 fwrite(cv_dt, out_cv)
 cat("Data:", out_csv, out_cv, "\n")

@@ -120,13 +120,12 @@ GDC_Z_MIN                  <- 2         # alternative: TWAS z
 # algorithmic state.
 INHIBITOR_CANDIDATE_Z_MIN  <- 2
 
-# Tier 1 thresholds (genetically validated). INTACT replaces S2a + S2b
-# additive sum, so the Tier 1 gate is now INTACT score > 0.5 (same threshold
-# Script 200 uses for "Bayesian-confirmed causal evidence"). Or, as a
-# back-compat alternative gate, the legacy S2a (PP4-derived BF) or S2b
-# (TWAS z) thresholds — kept so genes with strong COLOC or strong TWAS but
-# missing/sparse INTACT can still qualify.
-TIER1_INTACT_MIN   <- 0.5           # Multi-INTACT posterior > 0.5
+# Tier 1 thresholds (genetically validated). The genetic-causal channel is now
+# COLOC (INTACT dropped 2026-06-19), so the Tier 1 gate is COLOC PP.H4 > 0.5 —
+# evaluated via s2_coloc$score, which now carries COLOC PP.H4. The back-compat
+# S2a-BF and S2b-z clauses are retained (redundant with the COLOC primary gate,
+# but they also let strong-TWAS-only genes qualify).
+TIER1_INTACT_MIN   <- 0.5           # COLOC PP.H4 > 0.5 (genetic-causal gate; was Multi-INTACT)
 TIER1_S2A_BF_MIN   <- log(20)       # PP4 > ~0.95 (back-compat)
 TIER1_S2B_Z_MIN    <- 4             # back-compat
 
@@ -394,29 +393,66 @@ compute_s1_bf <- function(atlas) {
   out
 }
 s1 <- compute_s1_bf(atlas)
-cat(sprintf("  S1: 5 sub-contrasts, mean non-zero log-BF = %.3f\n",
-            mean(unlist(lapply(s1, function(x) x$log_bf[x$log_bf > LOG_BF_ACTIVE])), na.rm = TRUE)))
+# 4 disease-direction sub-contrasts are SCORED (overall, nafl_vs_nash,
+# f2_inflection, adv_fib); sex_interaction is built above but no longer consumed
+# (audit fix 2026-06-29). Diagnostic mean below is over the scored sub-contrasts.
+.s1_scored <- s1[c("overall","nafl_vs_nash","f2_inflection","adv_fib")]
+cat(sprintf("  S1: 4 sub-contrasts (sex_interaction dropped from score), mean non-zero log-BF = %.3f\n",
+            mean(unlist(lapply(.s1_scored, function(x) x$log_bf[x$log_bf > LOG_BF_ACTIVE])), na.rm = TRUE)))
 
-# --- S2a: COLOC PP4 (unweighted max across per-GWAS columns AND aggregated
-#   best-SuSiE / best-ABF columns). All GWAS are treated equally: liver-enzyme
-#   GWAS (ALT/AST/GGT/PDFF) are the most informative proxies for a liver
-#   disease study and should not be down-weighted. Prior 0.5x enzyme penalty
-#   removed per reviewer feedback [R1 C9, R2 #6].
-coloc_cols <- grep("_coloc_pp4$", names(atlas), value = TRUE)
-extra_cols <- intersect(c("coloc_susie_best_pp4","coloc_abf_best_pp4",
-                           "broadaway_coloc_pp4","sceqtl_coloc_best_pp4"),
-                        names(atlas))
-coloc_cols <- union(coloc_cols, extra_cols)
-
-pp4_mat <- as.matrix(atlas[, ..coloc_cols])
-pp4_max <- apply(pp4_mat, 1, function(x)
-  if (all(is.na(x))) NA_real_ else max(x, na.rm = TRUE))
-best_gwas <- apply(pp4_mat, 1, function(x) {
-  if (all(is.na(x))) return(NA_character_)
-  coloc_cols[which.max(ifelse(is.na(x), -Inf, x))]
-})
-cat(sprintf("  S2a: %d COLOC columns, all weighted equally (no enzyme down-weighting)\n",
-            length(coloc_cols)))
+# --- S2a: COLOC PP4 — REPOINTED to Tier-1/2 (liver-specific) COLOC (2026-07-06). ---
+# CHANGE 2026-07-06 (author decision): the genetic-causal gate is now sourced from
+# the Tier-1/2 (liver-specific) COLOC master rather than the full-portfolio (best
+# across ALL 50 GWAS) atlas posterior.
+#   Master: GWAS/finemapping/results/susie_coloc/gene_level_coloc_tier12.csv
+#   Per gene, Tier-1/2 genetic PP.H4 = max(coloc_best_susie_pp4, coloc_best_abf_pp4),
+#   where the master's two pp4 columns are ALREADY restricted to Tier-1/2
+#   (liver-relevant) GWAS traits (NAFLD / NASH / HCC / cirrhosis / liver-enzyme /
+#   PDFF / …) — NOT Tier-3/4 proxies (Platelet-, Albumin-, or generic-cirrhosis-only).
+# RATIONALE: a gene must NOT be called "genetically validated" on a Tier-3/4-only
+# colocalization. The previous full-portfolio gate (atlas coloc_susie_best_pp4 /
+# coloc_abf_best_pp4) was too permissive: 496 genes are `tier34_only` in the master
+# (they carry a full-portfolio coloc>0.5 but NO Tier-1/2 coloc>0.5). Those genes now
+# correctly FAIL the genetic gate. Genes absent from the Tier-1/2 master, or with
+# Tier-1/2 pp4 <= the gate, are NOT Genetic_validated.
+# JOIN: on ensembl_base (version-stripped ENSG; the master carries un-versioned
+# `ensembl`). Everything downstream (s2a$pp4 -> log_bf_S2_coloc, n_modalities_active,
+# tier1 gate, concordance, back-compat log_bf_S2a) flows from the vectors built here,
+# so repointing the source at this single point is sufficient.
+tier12_master <- fread(file.path(BASE,
+  "GWAS/finemapping/results/susie_coloc/gene_level_coloc_tier12.csv"))
+tier12_master <- tier12_master[!is.na(ensembl) & ensembl != ""]
+tier12_master <- unique(tier12_master, by = "ensembl")
+if (!all(c("coloc_best_susie_pp4", "coloc_best_abf_pp4") %in% names(tier12_master)))
+  stop("46d S2a: Tier-1/2 COLOC master lacks coloc_best_susie_pp4 / coloc_best_abf_pp4 — cannot build the genetic gate.")
+susie_col  <- "coloc_best_susie_pp4"   # provenance labels (Tier-1/2 master columns)
+abf_col    <- "coloc_best_abf_pp4"
+coloc_cols <- c(susie_col, abf_col)
+.m_t12     <- match(atlas$ensembl_base, tier12_master$ensembl)
+susie_vec  <- suppressWarnings(as.numeric(tier12_master[["coloc_best_susie_pp4"]][.m_t12]))
+abf_vec    <- suppressWarnings(as.numeric(tier12_master[["coloc_best_abf_pp4"]][.m_t12]))
+.t12_driving_gwas <- tier12_master[["driving_gwas"]][.m_t12]
+pp4_mat <- cbind(susie = susie_vec, abf = abf_vec)
+# Gate value = Tier-1/2 SuSiE-or-ABF best (per-gene max), NA where BOTH are NA
+# (this includes every atlas gene absent from the Tier-1/2 master).
+pp4_max <- pmax(susie_vec, abf_vec, na.rm = TRUE)
+pp4_max[is.na(susie_vec) & is.na(abf_vec)] <- NA_real_   # pmax(na.rm) returns -Inf for all-NA rows
+# best_gwas (provenance): the Tier-1/2 driving GWAS for this gene's winning coloc
+# (from the master), falling back to the winning method-column name if absent.
+best_gwas <- ifelse(
+  is.na(pp4_max), NA_character_,
+  ifelse(!is.na(.t12_driving_gwas), .t12_driving_gwas,
+         ifelse(!is.na(susie_vec) & susie_vec >= pp4_max - 1e-6, susie_col, abf_col)))
+# coloc_channel_source (per gene): did the winning Tier-1/2 gate value come from the
+# SuSiE posterior, or did ABF rescue it?
+#   NA             if pp4_max is NA (no Tier-1/2 COLOC at all);
+#   "susie"        if SuSiE is non-NA AND SuSiE >= pp4_max - 1e-6 (SuSiE IS the max);
+#   "abf_fallback" otherwise (ABF exceeded SuSiE, or SuSiE was NA).
+coloc_channel_source_vec <- ifelse(
+  is.na(pp4_max), NA_character_,
+  ifelse(!is.na(susie_vec) & susie_vec >= pp4_max - 1e-6, "susie", "abf_fallback"))
+cat(sprintf("  S2a: Tier-1/2 (liver-specific) COLOC gate from gene_level_coloc_tier12.csv (%d/%d atlas genes matched to master)\n",
+            sum(!is.na(.m_t12)), nrow(atlas)))
 s2a <- list(log_bf = coloc_posterior_upgrade(pp4_max),
             pp4    = pp4_max,
             best_gwas = best_gwas)
@@ -443,86 +479,54 @@ s2b <- list(log_bf = compute_twas_bf(atlas$twas_z),
 cat(sprintf("  S2b TWAS: %d genes with |z|>2 (of %d tested)\n",
             sum(abs(s2b$z) > 2, na.rm = TRUE), sum(!is.na(s2b$z))))
 
-# --- S2_INTACT: Okamoto 2023 INTACT replaces additive S2a+S2b. ---
-# Rationale (R5): the additive sum log_BF_S2a + log_BF_S2b double-counts
-# the same eQTL z-statistics — TWAS test statistic z and COLOC PP.H4 share
-# the same eQTL summary stats. INTACT (Okamoto 2023, AJHG, PMID 36608684)
-# integrates them under one coherent likelihood:
-#   posterior = sigmoid( prior_logit + 0.5 * z^2 * W/(1+W) + log(PP4/(1-PP4)) - log(prior_odds_coloc) )
-# Then the contribution to the multi-modal score is logit(posterior).
+# --- S2 genetic-causal channel = COLOC PP.H4 (INTACT DROPPED 2026-06-19). ---
+# HISTORY: this channel used to be Okamoto-2023 INTACT (a joint TWAS+COLOC
+# posterior that replaced the additive S2a+S2b sum to avoid double-counting the
+# shared eQTL summary stats). INTACT was DROPPED 2026-06-19 because the on-disk
+# Multi-INTACT score (Script 200) was NA/sparse precisely for the high-COLOC
+# marquee targets — THRB (PP4=0.9999), RORA (0.998) and HKDC1 (0.992) all
+# carried NA INTACT — since INTACT additionally requires a valid cis-TWAS
+# predicted-expression model, which this project de-emphasizes (cross-ancestry
+# LD mismatch; TWAS skipped for EAS/AFR/SAS). That silently (a) zeroed the
+# genetic channel's contribution to n_modalities_active and (b) dropped
+# THRB/RORA into Tier 4_Weak despite near-perfect colocalization.
 #
-# We prefer the on-disk Multi-INTACT score (Script 200) when available;
-# otherwise fall back to an inline approximation with the same form.
-intact_path <- file.path(BASE, "RNA-seq/results/gwas_rna_integration/intact_scores.csv")
-intact_score_bulk_vec <- rep(NA_real_, nrow(atlas))
-intact_source_vec <- rep(NA_character_, nrow(atlas))  # per-gene provenance (review A10#5)
-intact_source <- "fallback_inline"
-if (file.exists(intact_path)) {
-  intact_dt <- fread(intact_path)
-  if ("intact_score_bulk" %in% names(intact_dt) && "gene" %in% names(intact_dt)) {
-    m <- match(atlas$human_symbol, intact_dt$gene)
-    intact_score_bulk_vec <- intact_dt$intact_score_bulk[m]
-    # intact_score_bulk is now multi-product ONLY (NA for scTWAS-only genes); the
-    # single-product ct-INTACT score lives in intact_score_ct and never alone satisfies
-    # the Tier-1 gate below. Carry per-gene source if Script 200 emitted it.
-    if ("intact_score_source" %in% names(intact_dt)) intact_source_vec <- intact_dt$intact_score_source[m]
-    n_with_intact <- sum(!is.na(intact_score_bulk_vec))
-    if (n_with_intact > 100) {
-      intact_source <- "ondisk_multi_intact"
-      cat(sprintf("  S2_INTACT: loaded on-disk Multi-INTACT (Script 200): %d/%d genes matched\n",
-                  n_with_intact, nrow(atlas)))
-    }
-  }
-}
-if (intact_source == "fallback_inline") {
-  cat("  S2_INTACT: on-disk INTACT missing or sparse; computing inline approximation\n")
-  # Inline approximation: log_BF_intact = logit(PP4) - logit(prior_coloc)
-  #                                      + 0.5 * z^2 * W/(1+W)
-  # then convert to a posterior probability via sigmoid with a flat prior.
-  W <- W_WAKEFIELD_LOGODDS
-  shrink <- W / (1 + W)
-  pp4 <- s2a$pp4
-  z   <- s2b$z
-  log_bf_inline <- rep(0, nrow(atlas))
-  ok_pp4 <- !is.na(pp4) & pp4 > 0 & pp4 < 1
-  log_bf_inline[ok_pp4] <- log_bf_inline[ok_pp4] +
-    log(pp4[ok_pp4] / (1 - pp4[ok_pp4])) - log(COLOC_PRIOR_ODDS)
-  log_bf_inline[!is.na(pp4) & pp4 >= 1] <- log_bf_inline[!is.na(pp4) & pp4 >= 1] +
-    LOG_BF_CEIL
-  ok_z <- !is.na(z) & is.finite(z)
-  log_bf_inline[ok_z] <- log_bf_inline[ok_z] + 0.5 * z[ok_z]^2 * shrink
-  # Convert to probability with a uniform prior (logit^-1)
-  intact_score_bulk_vec <- 1 / (1 + exp(-log_bf_inline))
-}
+# The genetic-causal modality is now COLOC PP.H4 directly (the S2a channel built
+# above; log-BF via coloc_posterior_upgrade), which is well-covered (>500 genes
+# PP4>0.5) and fires on the hero targets. TWAS (S2b) is retained ONLY as a
+# diagnostic channel and as the genetic DIRECTION (sign) source — it no longer
+# enters the evidence sum.
+#
+# NAMING: variables and output columns are coloc_* (renamed from the legacy
+# intact_* in the 2026-06-19 Phase-2 rename, after INTACT was dropped). Output
+# columns: coloc_genetic_pp4 (== COLOC PP.H4, the genetic-causal score),
+# log_BF_S2_coloc (== COLOC log-BF), sign_S2_coloc (genetic direction from TWAS z),
+# coloc_channel_source (per gene: "susie" / "abf_fallback" / NA — which canonical
+#   posterior supplied the winning PP.H4; audit fix 2026-06-29, was "coloc_pp4_direct"),
+# coloc_best_gwas (best-COLOC GWAS).
+# Consumers updated in the same change: 46d_baselines_and_lomo, dump_canonical_numbers,
+# streamlit_convergence/app.py, fig5_convergence (fallback). 45a's intact branch was
+# dead code (atlas never carried intact_score_bulk) and was removed.
+coloc_genetic_pp4_vec <- s2a$pp4                 # genetic-causal SCORE = COLOC PP.H4
+log_bf_S2_coloc_pre  <- s2a$log_bf              # genetic-causal log-BF = COLOC BF (coloc_posterior_upgrade)
+# Per-gene channel provenance: "susie" if the winning PP.H4 came from the SuSiE
+# posterior, "abf_fallback" if from the ABF column, NA where no COLOC (built in
+# S2a above). Replaces the prior constant "coloc_pp4_direct".
+coloc_channel_source         <- coloc_channel_source_vec
+coloc_best_gwas_vec     <- s2a$best_gwas           # per-gene provenance = best-COLOC GWAS column
 
-# Convert INTACT probability to log-BF (logit), with floor/ceil to MOD_LOG_BF_CEIL.
-# Genes without INTACT (NA) get log-BF = 0.
-compute_intact_log_bf <- function(p) {
-  out <- rep(0, length(p))
-  ok <- !is.na(p) & p > 0 & p < 1
-  out[ok] <- log(p[ok] / (1 - p[ok]))   # logit
-  # Saturation
-  sat_hi <- !is.na(p) & p >= 1
-  out[sat_hi] <- MOD_LOG_BF_CEIL
-  pmin(pmax(out, LOG_BF_FLOOR), MOD_LOG_BF_CEIL)
-}
-log_bf_S2_intact_pre <- compute_intact_log_bf(intact_score_bulk_vec)
+cat(sprintf("  S2 genetic-causal (COLOC; INTACT dropped): %d genes PP4>0.5, %d>0.7, %d>0.9\n",
+            sum(coloc_genetic_pp4_vec > 0.5, na.rm = TRUE),
+            sum(coloc_genetic_pp4_vec > 0.7, na.rm = TRUE),
+            sum(coloc_genetic_pp4_vec > 0.9, na.rm = TRUE)))
 
-# Diagnostic: what fraction of genes have INTACT > 0.5 / 0.7 / 0.9?
-cat(sprintf("  S2_INTACT: %d genes with score>0.5, %d>0.7, %d>0.9 (source=%s)\n",
-            sum(intact_score_bulk_vec > 0.5, na.rm = TRUE),
-            sum(intact_score_bulk_vec > 0.7, na.rm = TRUE),
-            sum(intact_score_bulk_vec > 0.9, na.rm = TRUE),
-            intact_source))
-
-# Replace S2a / S2b channels with the unified INTACT channel.
+# The single genetic-causal channel in the score is log_bf_S2_coloc (= COLOC).
 # Keep s2a$pp4 / s2b$z accessible for state classification (genetic_up flag,
-# inhibitor_target_candidate sign), but the *evidence contribution* of the
-# genetic-causal modality is now SOLELY log_bf_S2_intact.
-s2_intact <- list(log_bf = log_bf_S2_intact_pre,
-                  score  = intact_score_bulk_vec,
-                  source = intact_source,
-                  source_vec = intact_source_vec)
+# inhibitor_target_candidate sign).
+s2_coloc <- list(log_bf = log_bf_S2_coloc_pre,
+                  score  = coloc_genetic_pp4_vec,
+                  source = coloc_channel_source,
+                  source_vec = coloc_best_gwas_vec)
 
 # --- S3: essentiality (Chronos 2-component GMM) ---
 s3_fit <- essentiality_gmm_bf(atlas$essentiality_chronos)
@@ -839,11 +843,16 @@ est_keff <- function(sub_contrast_mat, label) {
   list(K = ncol(mat), K_eff = keff, eigenvalues = lam, cor_mat = R, label = label)
 }
 
+# AUDIT FIX 2026-06-29: sex_interaction sub-contrast DROPPED from S1. It injected
+# an F-M sex axis into the disease-direction consensus sign for thousands of
+# genes, contradicting the canonical finding of only 8 sex-dimorphic genes. S1 is
+# now 4 disease-direction sub-contrasts. (s1$sex_interaction is still BUILT in
+# compute_s1_bf() but is no longer consumed by s1_mat / s1_eff_mat / stage_map.)
 s1_mat <- cbind(s1$overall$log_bf, s1$nafl_vs_nash$log_bf,
-                s1$f2_inflection$log_bf, s1$adv_fib$log_bf, s1$sex_interaction$log_bf)
-colnames(s1_mat) <- c("overall","nafl_vs_nash","f2_inflection","adv_fib","sex_interaction")
-s4_mat <- cbind(s4$hep_da$log_bf, s4$mouse_da$log_bf, s4$scenic$log_bf)
-colnames(s4_mat) <- c("hep_da","mouse_da","scenic")
+                s1$f2_inflection$log_bf, s1$adv_fib$log_bf)
+colnames(s1_mat) <- c("overall","nafl_vs_nash","f2_inflection","adv_fib")
+s4_mat <- cbind(s4$hep_da$log_bf, s4$scenic$log_bf)   # mouse_da DROPPED 2026-07-05 (no cross-species in atlas paper)
+colnames(s4_mat) <- c("hep_da","scenic")
 s6_mat <- cbind(s6$hep$log_bf, s6$best$log_bf)
 colnames(s6_mat) <- c("hep","best")
 
@@ -871,19 +880,31 @@ fwrite(keff_out, file.path(ME, sprintf("%s_kEff.csv", OUT_PREFIX)))
 # ============================================================================
 cat("\n--- 6. Within-modality aggregation ---\n")
 
-# log_BF_i = sum(sub-contrast log-BFs) / sqrt(K_eff)
+# log_BF_i = sum(sub-contrast log-BFs) / sqrt(K / K_eff)
+# B4a fix 2026-07-04 (round-2 audit; user-APPROVED 2026-07-04): the within-modality
+# redundancy divisor is sqrt(K/K_eff), NOT sqrt(K_eff). This matches the
+# cross-modality Brown discount at L~1109 (sqrt(brown_K / K_eff_global)):
+# independent sub-contrasts (K_eff->K) get divisor->1 (no discount, just the
+# log-BF sum), and fully-redundant ones (K_eff->1) get divisor->sqrt(K) (maximal
+# discount). The prior sqrt(K_eff) was directionally inverted -- it applied NO
+# discount at full redundancy and MAXIMAL discount at full independence. On this
+# atlas K_eff!=K (S1 2.23/4, S4 2.0/3), so this raises S1/S4 log-BFs +12-15% and
+# promotes 10 COLOC-validated genes (n_mod 1->2) into inclusive Tier-1 (1039->1049)
+# that the inverted discount had been under-counting. Held-patch + footprint retained
+# at RNA-seq/results/audit_round2/recompute/B4a_held/ for provenance.
 agg_modality <- function(sub_mat, keff) {
+  K <- ncol(sub_mat)
   rs <- rowSums(sub_mat)
-  pmin(rs / sqrt(keff), MOD_LOG_BF_CEIL)
+  pmin(rs / sqrt(K / keff), MOD_LOG_BF_CEIL)
 }
 
 log_bf_S1  <- agg_modality(s1_mat, keff_s1$K_eff)
-# Diagnostic-only channels (the *evidence sum* uses log_bf_S2_intact instead;
+# Diagnostic-only channels (the *evidence sum* uses log_bf_S2_coloc instead;
 # these are kept for downstream column-level reporting and back-compat).
 log_bf_S2a <- pmin(s2a$log_bf, MOD_LOG_BF_CEIL)
 log_bf_S2b <- pmin(s2b$log_bf, MOD_LOG_BF_CEIL)
 # UNIFIED genetic-causal channel — replaces both S2a and S2b in the score.
-log_bf_S2_intact <- pmin(s2_intact$log_bf, MOD_LOG_BF_CEIL)
+log_bf_S2_coloc <- pmin(s2_coloc$log_bf, MOD_LOG_BF_CEIL)
 log_bf_S3  <- pmin(s3$log_bf,  MOD_LOG_BF_CEIL)
 log_bf_S4  <- agg_modality(s4_mat, keff_s4$K_eff)
 log_bf_S5  <- pmin(s5$log_bf,  MOD_LOG_BF_CEIL)
@@ -902,9 +923,8 @@ modality_sign_from_subs <- function(sub_mat, effect_mat) {
 }
 
 s1_eff_mat <- cbind(s1$overall$effect, s1$nafl_vs_nash$effect,
-                    s1$f2_inflection$effect, s1$adv_fib$effect,
-                    s1$sex_interaction$effect)
-s4_eff_mat <- cbind(s4$hep_da$effect, s4$mouse_da$effect, s4$scenic$effect)
+                    s1$f2_inflection$effect, s1$adv_fib$effect)
+s4_eff_mat <- cbind(s4$hep_da$effect, s4$scenic$effect)   # mouse_da dropped 2026-07-05 (no cross-species)
 s6_eff_mat <- cbind(s6$hep$effect, s6$best$effect)
 
 sig_S1 <- modality_sign_from_subs(s1_mat, s1_eff_mat)
@@ -921,8 +941,7 @@ sign_S8 <- sign(s8$effect)
 stage_map <- c(overall = "early_disease",
                nafl_vs_nash = "nafl_to_nash",
                f2_inflection = "f2_switch",
-               adv_fib = "advanced_fibrosis",
-               sex_interaction = "sex_dimorphic")
+               adv_fib = "advanced_fibrosis")
 dominant_stage_S1 <- stage_map[best_contrast_S1]
 
 # Cross-species concordance flag (S8)
@@ -967,22 +986,33 @@ cat("\n--- 7. Concordance state classification ---\n")
 # THRB will FAIL this filter (TWAS sign is consistent with "disease lowers
 # THRB; agonist restores"); HSD17B13 should similarly fail.
 
-signed_names <- c("S1","S2_intact","S4","S6","S7","S8")
+signed_names <- c("S1","S2_coloc","S4","S6","S7")   # S8 (mouse bulk) DROPPED 2026-07-05 (no cross-species in atlas paper)
 n <- nrow(atlas)
 
 # Build matrices: bf_signed (n × 6) and sign_signed (n × 6).
-# Note: S2_intact replaces S2b — the magnitude is the INTACT log-BF (which
+# Note: S2_coloc replaces S2b — the magnitude is the INTACT log-BF (which
 # already integrates TWAS z + COLOC PP4 under one likelihood) and the sign
 # is sign(twas_z), preserving genetic direction for concordance classification.
-sign_S2_intact <- sign(s2b$z)
-sign_S2_intact[is.na(sign_S2_intact)] <- 0
-bf_signed <- cbind(log_bf_S1, log_bf_S2_intact, log_bf_S4, log_bf_S6, log_bf_S7, log_bf_S8)
-sn_signed <- cbind(sign_S1, sign_S2_intact, sign_S4, sign_S6, sign_S7, sign_S8)
+sign_S2_coloc <- sign(s2b$z)
+sign_S2_coloc[is.na(sign_S2_coloc)] <- 0
+bf_signed <- cbind(log_bf_S1, log_bf_S2_coloc, log_bf_S4, log_bf_S6, log_bf_S7)   # S8 dropped 2026-07-05
+sn_signed <- cbind(sign_S1, sign_S2_coloc, sign_S4, sign_S6, sign_S7)
 colnames(bf_signed) <- signed_names
 colnames(sn_signed) <- signed_names
 
 active_signed <- bf_signed > LOG_BF_ACTIVE
-# Zero-out signs for inactive modalities
+active_signed[is.na(active_signed)] <- FALSE
+# B4g fix 2026-07-04: a channel participates in the signed-concordance machinery
+# (BOTH the E_signed numerator AND the M_signed denominator) ONLY if it carries a
+# direction. A directionless-but-active channel -- most commonly S2_coloc when
+# twas_z is NA so sign(twas_z)=0 (COLOC evidence without a TWAS model) --
+# previously entered M_signed at full magnitude while contributing 0 to E_signed,
+# deflating concordance_ratio and mislabelling genuinely-concordant genes as
+# Conflicted. Requiring a non-zero sign drops such channels from BOTH terms
+# symmetrically.
+has_sign <- !is.na(sn_signed) & (sn_signed != 0)
+active_signed <- active_signed & has_sign
+# Zero-out signs/magnitudes for non-participating (inactive OR directionless) modalities
 sn_active <- sn_signed * active_signed
 bf_active <- bf_signed * active_signed
 bf_active[is.na(bf_active)] <- 0; sn_active[is.na(sn_active)] <- 0
@@ -993,7 +1023,7 @@ concordance_ratio <- ifelse(M_signed > 0, abs(E_signed) / M_signed, NA_real_)
 D_majority <- sign(E_signed)
 
 # Expression modalities subset (S1, S6, S7, S8) for LOF detection
-expr_idx <- which(signed_names %in% c("S1","S6","S7","S8"))
+expr_idx <- which(signed_names %in% c("S1","S6","S7"))
 bf_expr <- bf_active[, expr_idx, drop = FALSE]
 sn_expr <- sn_active[, expr_idx, drop = FALSE]
 E_signed_expr <- rowSums(sn_expr * bf_expr)
@@ -1050,31 +1080,31 @@ final_signed_evidence[conflicted]         <- abs(E_signed[conflicted])
 # not MASLD-specific evidence. Pan-essential cell-cycle genes were dominating
 # the top of the ranking when S3 was scored. S3 is still computed and
 # reported as a column for downstream druggability filtering.
-# NOTE 2: S2_intact (genetic-causal, replacing S2a+S2b) is now SIGNED and
+# NOTE 2: S2_coloc (genetic-causal, replacing S2a+S2b) is now SIGNED and
 # enters via final_signed_evidence — not E_unsigned — so we don't double-count.
 E_unsigned <- pmax(log_bf_S5, 0)
 
 # Total evidence (pre-Brown's-correction; corrected version computed below).
 evidence_total_pre_brown <- E_unsigned + final_signed_evidence
 
-# n_modalities_active: 7 canonical channels (S2a/S2b collapsed into S2_intact;
+# n_modalities_active: 6 canonical channels (S8 mouse-bulk DROPPED 2026-07-05 — no cross-species; S2a/S2b collapsed into S2_coloc;
 # S6 single-cell pseudobulk DROPPED 2026-05-22 — Wakefield-ABF prior W=0.04
 # yields max log-BF ~0.58, below Jeffreys log(3) threshold, so the channel
 # is mathematically unreachable. See phase5/editorial/E6_sources_definition/
 # ceiling_verification.md. S6 is retained downstream as a diagnostic log-BF
 # column (log_bf_S6) but does NOT enter n_modalities_active or the Brown's
-# correction. Effective ceiling is 7; previously-cited "8 channels" was the
+# correction. Effective ceiling is 6 (was 7 before the 2026-07-05 S8 mouse-bulk drop); previously-cited "8 channels" was the
 # constructed (not effective) ceiling.
-log_bf_all_mat <- cbind(log_bf_S1, log_bf_S2_intact, log_bf_S3,
-                        log_bf_S4, log_bf_S5, log_bf_S7, log_bf_S8)
-colnames(log_bf_all_mat) <- c("S1","S2_intact","S3","S4","S5","S7","S8")
+log_bf_all_mat <- cbind(log_bf_S1, log_bf_S2_coloc, log_bf_S3,
+                        log_bf_S4, log_bf_S5, log_bf_S7)   # S8 (mouse bulk) DROPPED 2026-07-05 (no cross-species)
+colnames(log_bf_all_mat) <- c("S1","S2_coloc","S3","S4","S5","S7")
 n_modalities_active <- rowSums(log_bf_all_mat > LOG_BF_ACTIVE, na.rm = TRUE)
 # Diagnostic-only matrix retaining S6 — used for evidence-card per-modality
 # log-BF tables and the S4S6 sensitivity sweep; NOT used for counting.
 log_bf_all_mat_with_s6 <- cbind(log_bf_all_mat, S6 = log_bf_S6)
 
 # n_signed_concordant: of active-signed modalities, how many agree with D_majority
-n_signed_concordant <- rowSums(sn_active == matrix(D_majority, nrow=n, ncol=6) & active_signed, na.rm = TRUE)
+n_signed_concordant <- rowSums(sn_active == matrix(D_majority, nrow=n, ncol=ncol(sn_active)) & active_signed, na.rm = TRUE)
 
 # ============================================================================
 # 7b. EMPIRICAL BROWN'S METHOD CORRECTION (Change #6)
@@ -1085,12 +1115,12 @@ n_signed_concordant <- rowSums(sn_active == matrix(D_majority, nrow=n, ncol=6) &
 # 2016, Bioinformatics, PMID 27587659) derives an effective DOF from the
 # empirical correlation matrix and adjusts the combined statistic accordingly.
 #
-# We adapt Brown's framework by computing K_eff_global from the 7-modality
-# log-BF correlation matrix (canonical channels; S6 dropped), then discounting
+# We adapt Brown's framework by computing K_eff_global from the 6-modality
+# log-BF correlation matrix (canonical channels; S6 dropped, S8-mouse dropped 2026-07-05), then discounting
 # evidence_total by sqrt(K/K_eff). This is the cross-modality analog of the
 # within-modality K_eff discount.
 cat("\n--- 7b. Brown's-method between-modality correction ---\n")
-brown_K <- ncol(log_bf_all_mat)   # 7 (canonical, S6 dropped 2026-05-22)
+brown_K <- ncol(log_bf_all_mat)   # 6 (canonical; S6 dropped 2026-05-22, S8-mouse dropped 2026-07-05)
 brown_mat <- log_bf_all_mat[!excluded, , drop = FALSE]
 # Spearman correlation across modalities
 brown_cor <- suppressWarnings(cor(brown_mat, method = "spearman", use = "pairwise.complete.obs"))
@@ -1230,15 +1260,16 @@ cat("\n--- 9. Tier assignment ---\n")
 iT <- function(x) ifelse(is.na(x), FALSE, x)
 
 tier <- rep("4_Weak", n)
-# Tier 1 (genetically validated): primary gate is INTACT > 0.5 (Multi-INTACT
-# posterior — joint TWAS+COLOC). Back-compat gates allow strong-COLOC-only
-# (S2a) or strong-TWAS-only (S2b) genes through to keep panel members like
-# GAS6 / HKDC1 in Tier 1 when INTACT is sparse.
-tier1 <- iT(s2_intact$score > TIER1_INTACT_MIN) |
+# Tier 1 (genetically validated): primary gate is COLOC PP.H4 > 0.5 (the
+# genetic-causal channel; s2_coloc$score now carries COLOC after the INTACT
+# drop, 2026-06-19). Back-compat clauses (S2a-BF redundant; S2b-z) also admit
+# strong-TWAS-only genes. This is what pulls THRB/RORA (PP4 ~0.998-1.0) back
+# into Tier 1 — INTACT had been NA for them, sinking them to 4_Weak.
+tier1 <- iT(s2_coloc$score > TIER1_INTACT_MIN) |
          iT(log_bf_S2a > TIER1_S2A_BF_MIN) |
          iT(abs(s2b$z) > TIER1_S2B_Z_MIN)
 # Require genetic evidence + at least 1 other active modality (i.e., 2 total
-# including S2_intact). Earlier ≥3 bar was too strict.
+# including S2_coloc). Earlier ≥3 bar was too strict.
 tier1 <- tier1 & iT(n_modalities_active >= 2) & !excluded
 tier[tier1] <- "1_Genetic_validated"
 tier2 <- !tier1 & iT(n_modalities_active >= 5) & iT(convergence_score > 0.9) &
@@ -1289,17 +1320,17 @@ debug_dump <- function(sym) {
   cat(sprintf("    S2b=%.2f (%s, z=%.2f) [diagnostic-only post-INTACT]\n",
     log_bf_S2b[idx], log_bf_S2b[idx] > LOG_BF_ACTIVE,
     ifelse(is.na(s2b$z[idx]),0,s2b$z[idx])))
-  cat(sprintf("    S2_intact=%.2f (%s, score=%.3f, sign=%s) [unified genetic-causal channel]\n",
-    log_bf_S2_intact[idx], log_bf_S2_intact[idx] > LOG_BF_ACTIVE,
-    ifelse(is.na(s2_intact$score[idx]),0,s2_intact$score[idx]),
-    sign_S2_intact[idx]))
+  cat(sprintf("    S2_coloc=%.2f (%s, score=%.3f, sign=%s) [unified genetic-causal channel]\n",
+    log_bf_S2_coloc[idx], log_bf_S2_coloc[idx] > LOG_BF_ACTIVE,
+    ifelse(is.na(s2_coloc$score[idx]),0,s2_coloc$score[idx]),
+    sign_S2_coloc[idx]))
   cat(sprintf("    S3=%.2f  S4=%.2f (sign=%s)  S5=%.2f\n",
     log_bf_S3[idx], log_bf_S4[idx], sign_S4[idx], log_bf_S5[idx]))
   cat(sprintf("    S6=%.2f (sign=%s)  S7=%.2f (sign=%s)  S8=%.2f (sign=%s)\n",
     log_bf_S6[idx], sign_S6[idx], log_bf_S7[idx], sign_S7[idx],
     log_bf_S8[idx], sign_S8[idx]))
-  cat(sprintf("    sub-contrast log_BFs S1: overall=%.2f nafl_vs_nash=%.2f f2=%.2f adv_fib=%.2f sex=%.2f\n",
-    s1_mat[idx,1], s1_mat[idx,2], s1_mat[idx,3], s1_mat[idx,4], s1_mat[idx,5]))
+  cat(sprintf("    sub-contrast log_BFs S1: overall=%.2f nafl_vs_nash=%.2f f2=%.2f adv_fib=%.2f\n",
+    s1_mat[idx,1], s1_mat[idx,2], s1_mat[idx,3], s1_mat[idx,4]))
   cat(sprintf("    n_signed_active=%d, E_signed=%.2f, M_signed=%.2f, ratio=%s\n",
     rowSums(active_signed)[idx], E_signed[idx], M_signed[idx],
     ifelse(is.na(concordance_ratio[idx]),"NA",sprintf("%.2f",concordance_ratio[idx]))))
@@ -1480,12 +1511,12 @@ out <- data.table(
   n_modalities_active     = n_modalities_active,
   n_signed_concordant     = n_signed_concordant,
   log_BF_S1               = log_bf_S1,
-  log_BF_S2_intact        = log_bf_S2_intact,
+  log_BF_S2_coloc        = log_bf_S2_coloc,
   log_BF_S2a_diag         = log_bf_S2a,   # diagnostic: legacy COLOC channel
   log_BF_S2b_diag         = log_bf_S2b,   # diagnostic: legacy TWAS channel
-  intact_score_bulk       = s2_intact$score,
-  intact_source           = s2_intact$source,
-  intact_score_source     = s2_intact$source_vec,  # per-gene multi vs ct_single (review A10#5)
+  coloc_genetic_pp4       = s2_coloc$score,
+  coloc_channel_source           = s2_coloc$source,
+  coloc_best_gwas     = s2_coloc$source_vec,  # per-gene multi vs ct_single (review A10#5)
   log_BF_S3               = log_bf_S3,
   log_BF_S4               = log_bf_S4,
   log_BF_S5               = log_bf_S5,
@@ -1493,7 +1524,7 @@ out <- data.table(
   log_BF_S7               = log_bf_S7,
   log_BF_S8               = log_bf_S8,
   sign_S1                 = sign_S1,
-  sign_S2_intact          = sign_S2_intact,
+  sign_S2_coloc          = sign_S2_coloc,
   sign_S4                 = sign_S4,
   sign_S6                 = sign_S6,
   sign_S7                 = sign_S7,
@@ -1516,6 +1547,27 @@ out <- data.table(
   convergence_rank_with_govaere2026   = convergence_rank_with_govaere2026,
   log_convergence_odds_with_govaere2026 = log_convergence_odds_with_govaere2026
 )
+
+# --- COLOC EUR-support provenance (label-not-gate; user decision 2026-07-04) ---
+# The genetic gate uses the loose inclusive coloc headline (pmax over ALL strata), so
+# MVP raised tier-1 "Genetic_validated" 513 -> 1039. We KEEP the inclusive tier (MAJOR-2
+# label-not-gate) but flag which tier-1 calls LACK a strong ancestry-matched EUR coloc,
+# using 07's EUR-companion columns (coloc_{abf,susie}_best_pp4_EUR = the best EUR-GWAS x
+# EUR-eQTL PP.H4). `atlas` and `out` are row-aligned (out$human_symbol = atlas$human_symbol),
+# so the atlas vectors index `out` directly (no join). NB the naive "ancestry of the
+# best-COLOC GWAS" flag is wrong here because the winning channel can flip abf<->susie;
+# EUR-companion support is the gate-consistent, defensible provenance.
+.eur_abf <- suppressWarnings(as.numeric(atlas$coloc_abf_best_pp4_EUR))
+.eur_sus <- suppressWarnings(as.numeric(atlas$coloc_susie_best_pp4_EUR))
+out[, coloc_best_pp4_EUR := pmax(.eur_abf, .eur_sus, na.rm = TRUE)]
+out[is.infinite(coloc_best_pp4_EUR), coloc_best_pp4_EUR := NA_real_]
+out[, coloc_abf_best_ancestry := atlas$coloc_abf_best_ancestry]
+out[, coloc_eur_supported := !is.na(coloc_best_pp4_EUR) & coloc_best_pp4_EUR >= 0.5]
+out[, tier1_no_eur_support := (tier == "1_Genetic_validated" & !coloc_eur_supported)]
+cat(sprintf("  EUR-support flag: %d/%d tier-1 genes lack a strong (>=0.5) ancestry-matched EUR coloc\n",
+            sum(out$tier1_no_eur_support, na.rm = TRUE),
+            sum(out$tier == "1_Genetic_validated", na.rm = TRUE)))
+
 # Backup prior CSV before overwriting (CLAUDE.md atlas-rebuild pattern).
 prior_csv <- file.path(ME, sprintf("%s.csv", OUT_PREFIX))
 if (file.exists(prior_csv)) {
@@ -1568,7 +1620,7 @@ cat(sprintf("\n--- 13. Permutation FDR (%d shuffles) ---\n", N_PERM))
 # directional agreement is random.
 
 permute_once <- function() {
-  n_signed_mods <- 6
+  n_signed_mods <- ncol(sn_signed)   # was hardcoded 6; S8 (mouse) dropped 2026-07-05
   sn_perm <- sn_signed
   for (j in seq_len(n_signed_mods)) {
     sn_perm[, j] <- sample(sn_signed[, j], length(sn_signed[, j]))
@@ -1617,6 +1669,86 @@ fdr_tbl <- data.table(
 fdr_tbl[, signif_vs_null := observed_cutoff > null_95pct_cutoff]
 fwrite(fdr_tbl, file.path(ME, sprintf("%s_permutation_fdr.csv", OUT_PREFIX)))
 print(fdr_tbl)
+
+# ============================================================================
+# 13b. PER-GENE DUAL-NULL PERMUTATION FDR (perm10k)  [env-gated PERM10K_DUAL]
+# ----------------------------------------------------------------------------
+# Recompute of the 2026-05-22 perm10k dual-null per-gene FDR (orig SLURM
+# 16205069), now on the cleaned-gate C2 universe. Two nulls, reusing the EXACT
+# simplified permuted-score formula from Section 13's permute_once():
+#   - sign-shuffle : permute effect SIGNS within each signed modality (keep
+#                    magnitude + gene->modality coupling). Production-legacy null.
+#   - gene-shuffle : permute ROW INDICES independently per modality (and the
+#                    unsigned S5 evidence) -> breaks gene<->modality coupling.
+#                    The honest stricter baseline.
+# Per-gene empirical p = (1 + #{perm score >= observed convergence_score}) /
+# (N_PERM + 1), BH-adjusted over non-excluded genes. Inserted AFTER the canonical
+# convergence_evidence.csv write (L1539) so its RNG draws cannot perturb the
+# headline table; whole script is set.seed(42) deterministic.
+# Run: PERM10K_DUAL=TRUE N_PERM=10000 Rscript 46d_convergence_evidence.R
+# ============================================================================
+if (toupper(Sys.getenv("PERM10K_DUAL", "FALSE")) == "TRUE") {
+  cat(sprintf("\n--- 13b. Per-gene DUAL-null FDR (sign + gene shuffle, %d perms) ---\n", N_PERM))
+  ng_all <- length(convergence_score)
+  n_sm   <- ncol(sn_signed)                      # 6 signed modalities
+  obs    <- convergence_score                    # canonical observed score
+  .score <- function(sn_m, act_m, bf_m, eu) {
+    sn_act <- sn_m * act_m; sn_act[is.na(sn_act)] <- 0
+    E_s <- rowSums(sn_act * bf_m)
+    1 / (1 + exp(-(log_prior_odds + (eu + abs(E_s)) / brown_discount)))
+  }
+  .sign_shuffle <- function() {
+    sn_p <- sn_signed
+    for (j in seq_len(n_sm)) sn_p[, j] <- sample(sn_signed[, j])
+    .score(sn_p, active_signed, bf_active, E_unsigned)
+  }
+  .gene_shuffle <- function() {
+    sn_p <- sn_signed; act_p <- active_signed; bf_p <- bf_active
+    for (j in seq_len(n_sm)) {
+      ix <- sample.int(ng_all)
+      sn_p[, j]  <- sn_signed[ix, j]
+      act_p[, j] <- active_signed[ix, j]
+      bf_p[, j]  <- bf_active[ix, j]
+    }
+    .score(sn_p, act_p, bf_p, sample(E_unsigned))
+  }
+  exc_sign <- integer(ng_all); exc_gene <- integer(ng_all)
+  for (p in seq_len(N_PERM)) {
+    exc_sign <- exc_sign + (.sign_shuffle() >= obs)
+    exc_gene <- exc_gene + (.gene_shuffle() >= obs)
+    if (p %% max(1, N_PERM %/% 10) == 0) cat(sprintf("    perm10k %d/%d\n", p, N_PERM))
+  }
+  sign_p <- (1 + exc_sign) / (N_PERM + 1)
+  gene_p <- (1 + exc_gene) / (N_PERM + 1)
+  ok <- !excluded
+  sign_padj <- rep(NA_real_, ng_all); gene_padj <- rep(NA_real_, ng_all)
+  sign_padj[ok] <- p.adjust(sign_p[ok], "BH")
+  gene_padj[ok] <- p.adjust(gene_p[ok], "BH")
+  perm10k <- data.table(
+    human_symbol      = atlas$human_symbol,
+    convergence_score = obs,
+    sign_shuffle_p    = sign_p,
+    gene_shuffle_p    = gene_p,
+    gene_shuffle_mc_se= sqrt(gene_p * (1 - gene_p) / N_PERM),
+    sign_shuffle_padj = sign_padj,
+    gene_shuffle_padj = gene_padj,
+    excluded          = excluded)
+  fwrite(perm10k, file.path(ME, "perm10k_fdr.csv"))
+  n_sign05 <- sum(sign_padj < 0.05, na.rm = TRUE)
+  n_gene05 <- sum(gene_padj < 0.05, na.rm = TRUE)
+  n_gene01 <- sum(gene_padj < 0.01, na.rm = TRUE)
+  perm10k_summary <- data.table(
+    metric = c("sign_shuffle_BH<0.05", "gene_shuffle_BH<0.05", "gene_shuffle_BH<0.01",
+               "n_tested_nonexcluded", "N_PERM", "universe_total"),
+    value  = c(n_sign05, n_gene05, n_gene01, sum(ok), N_PERM, ng_all))
+  fwrite(perm10k_summary, file.path(ME, "perm10k_summary.csv"))
+  top_gs <- perm10k[ok][order(gene_shuffle_padj, -convergence_score)][seq_len(min(15, sum(ok)))]
+  fwrite(top_gs, file.path(ME, "perm10k_top_gene_shuffle.csv"))
+  cat(sprintf("  perm10k C2: sign BH<.05=%d | gene-shuffle BH<.05=%d | BH<.01=%d  (n_tested=%d, universe=%d, N_PERM=%d)\n",
+              n_sign05, n_gene05, n_gene01, sum(ok), ng_all, N_PERM))
+  cat("  Top gene-shuffle survivors:\n")
+  print(top_gs[, .(human_symbol, convergence_score, gene_shuffle_p, gene_shuffle_padj)])
+}
 
 # ============================================================================
 # 14. HELD-OUT PANEL BENCHMARKS
@@ -1786,16 +1918,16 @@ compute_posterior_with <- function(pi_x, keff_s1_x, keff_s4_x, keff_s6_x,
   bf_S1 <- agg_modality(s1_mat, keff_s1_x)
   bf_S4 <- agg_modality(s4_mat, keff_s4_x)
   bf_S6 <- agg_modality(s6_mat, keff_s6_x)
-  mods <- list(S1 = bf_S1, S2_intact = log_bf_S2_intact,
+  mods <- list(S1 = bf_S1, S2_coloc = log_bf_S2_coloc,
                S3 = log_bf_S3, S4 = bf_S4, S5 = log_bf_S5,
                S6 = bf_S6, S7 = log_bf_S7, S8 = log_bf_S8)
   if (!is.null(skip_mod)) mods[[skip_mod]] <- rep(0, n)
 
-  # Mirror main score: E_unsigned = S5 (S2_intact is signed, joins below)
+  # Mirror main score: E_unsigned = S5 (S2_coloc is signed, joins below)
   E_unsigned_x <- pmax(mods$S5, 0)
 
-  # Rebuild signed bf matrix (6 channels: S1, S2_intact, S4, S6, S7, S8)
-  bf_sgn <- cbind(mods$S1, mods$S2_intact, mods$S4, mods$S6, mods$S7, mods$S8)
+  # Rebuild signed bf matrix (5 channels: S1, S2_coloc, S4, S6, S7; S8 mouse DROPPED 2026-07-05)
+  bf_sgn <- cbind(mods$S1, mods$S2_coloc, mods$S4, mods$S6, mods$S7)
   act <- bf_sgn > LOG_BF_ACTIVE
   sn_act <- sn_signed * act
   bf_act <- bf_sgn * act
@@ -1836,7 +1968,7 @@ for (mult in c(0.5, 1.5)) {
   sens_rows[[sprintf("keff_x%.1f", mult)]] <- stability_row(sprintf("keff_x%.1f", mult), pp_x)
 }
 # LOMO
-for (mod in c("S1","S2_intact","S3","S4","S5","S6","S7","S8")) {
+for (mod in c("S1","S2_coloc","S3","S4","S5","S6","S7")) {   # S8 (mouse) dropped 2026-07-05
   pp_x <- compute_posterior_with(pi_hat, keff_s1$K_eff, keff_s4$K_eff, keff_s6$K_eff,
                                   skip_mod = mod)
   sens_rows[[sprintf("LOMO_%s", mod)]] <- stability_row(sprintf("LOMO_%s", mod), pp_x)
@@ -1881,12 +2013,11 @@ write_card <- function(row_idx) {
     "|---|---|---|---|---|",
     sprintf("| S1 bulk      | %.2f | %s | %s | %s |",
             bf_i["S1"], sign_S1[row_idx], bf_i["S1"]>LOG_BF_ACTIVE, best_contrast_S1[row_idx]),
-    sprintf("| S2_intact    | %.2f | %s | %s | INTACT=%.3f, z=%.2f, PP4=%.3f, GWAS=%s |",
-            bf_i["S2_intact"], sign_S2_intact[row_idx],
-            bf_i["S2_intact"]>LOG_BF_ACTIVE,
-            ifelse(is.na(s2_intact$score[row_idx]),0,s2_intact$score[row_idx]),
+    sprintf("| S2 genetic (COLOC) | %.2f | %s | %s | COLOC PP.H4=%.3f, TWAS z=%.2f (dir only), GWAS=%s |",
+            bf_i["S2_coloc"], sign_S2_coloc[row_idx],
+            bf_i["S2_coloc"]>LOG_BF_ACTIVE,
+            ifelse(is.na(s2_coloc$score[row_idx]),0,s2_coloc$score[row_idx]),
             ifelse(is.na(s2b$z[row_idx]),0,s2b$z[row_idx]),
-            ifelse(is.na(s2a$pp4[row_idx]),0,s2a$pp4[row_idx]),
             ifelse(is.na(s2a$best_gwas[row_idx]),"NA",s2a$best_gwas[row_idx])),
     sprintf("| S3 essential | %.2f | — | %s | Chronos=%.3f |",
             bf_i["S3"], bf_i["S3"]>LOG_BF_ACTIVE,
@@ -1904,13 +2035,8 @@ write_card <- function(row_idx) {
     sprintf("| S7 protein   | %.2f | %s | %s | logFC=%.3f |",
             bf_i["S7"], sign_S7[row_idx], bf_i["S7"]>LOG_BF_ACTIVE,
             ifelse(is.na(atlas$best_protein_logFC[row_idx]),0,
-                    atlas$best_protein_logFC[row_idx])),
-    sprintf("| S8 mouse     | %.2f | %s | %s | logFC=%.3f ndiets=%d |",
-            bf_i["S8"], sign_S8[row_idx], bf_i["S8"]>LOG_BF_ACTIVE,
-            ifelse(is.na(atlas$mouse_meta_logFC[row_idx]),0,
-                    atlas$mouse_meta_logFC[row_idx]),
-            ifelse(is.na(atlas$n_diets_sig[row_idx]),0,
-                    as.integer(atlas$n_diets_sig[row_idx])))
+                    atlas$best_protein_logFC[row_idx]))
+    # S8 mouse evidence-card row REMOVED 2026-07-05 (no cross-species in atlas paper)
   )
   writeLines(lines, path)
 }
@@ -1956,8 +2082,8 @@ cat("\nGenetic+down-coherent top 10:\n")
 gdc_top <- out[concordance_state == "Genetic+down-coherent" & excluded_from_ranking == FALSE][
   order(-convergence_score)][1:min(10, .N),
   .(rank=convergence_rank, human_symbol, post=round(convergence_score,4),
-    n_mod=n_modalities_active, log_BF_S2_intact=round(log_BF_S2_intact,2),
-    intact=round(intact_score_bulk,3),
+    n_mod=n_modalities_active, log_BF_S2_coloc=round(log_BF_S2_coloc,2),
+    intact=round(coloc_genetic_pp4,3),
     coloc_pp4=round(coloc_best_pp4_S2a,3),
     inh_cand=inhibitor_target_candidate)]
 print(gdc_top)

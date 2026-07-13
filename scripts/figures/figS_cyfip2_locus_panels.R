@@ -36,7 +36,9 @@ theme_set(theme_masld())
 OUT_DIR <- file.path(FIG_SUPP, "figS_cyfip2_locus")
 dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 # Individual per-panel PDFs (no composite).
-OUT_A <- file.path(OUT_DIR, "cyfip2_a_locus_zoom.pdf")
+LOCUS_ZOOM_DIR <- file.path(FIG3_DIR, "locus_zoom")  # FIG3_DIR == figures/main/fig2_genetics
+dir.create(LOCUS_ZOOM_DIR, showWarnings = FALSE, recursive = TRUE)
+OUT_A <- file.path(LOCUS_ZOOM_DIR, "GGT_CYFIP2.pdf")  # 2026-07-01: moved out of OUT_DIR into the consolidated Fig2 locus_zoom/ dir
 OUT_B <- file.path(OUT_DIR, "cyfip2_b_motif_logos.pdf")
 OUT_C <- file.path(OUT_DIR, "cyfip2_c_effect_forest.pdf")
 OUT_D <- file.path(OUT_DIR, "cyfip2_d_schematic.pdf")
@@ -149,7 +151,7 @@ p_locus <- ggplot(fm_plot, aes(x = position / 1e6, y = plot_pip)) +
                         EX$hg38_chr,
                         format(position, big.mark = ","),
                         EX$ref, EX$alt, EX$coloc_pp4)),
-    nudge_y = 0.20, nudge_x = -0.05, size = 2.4, fontface = "bold",
+    nudge_y = 0.20, nudge_x = -0.05, size = 2.1,
     segment.size = 0.3, segment.color = "grey45",
     family = "Helvetica", lineheight = 0.95
   ) +
@@ -162,9 +164,9 @@ p_locus <- ggplot(fm_plot, aes(x = position / 1e6, y = plot_pip)) +
   labs(x = NULL, y = "PIP") +
   theme_masld() + theme_pub() +
   theme(
-    axis.title.y  = element_text(size = 8, face = "bold", color = "black",
+    axis.title.y  = element_text(size = 6, face = "plain", color = "black",
                                   angle = 90),
-    axis.text     = element_text(size = 7, color = "black"),
+    axis.text     = element_text(size = 6, color = "black"),
     axis.text.x   = element_blank(),
     axis.ticks.x  = element_blank(),
     panel.grid    = element_blank(),
@@ -218,8 +220,8 @@ p_genes <- ggplot() +
   labs(x = sprintf("%s position (Mb, hg19)", EX$hg38_chr), y = NULL) +
   theme_masld() + theme_pub() +
   theme(
-    axis.title.x = element_text(size = 8, face = "bold", color = "black"),
-    axis.text.x  = element_text(size = 7, color = "black"),
+    axis.title.x = element_text(size = 6, face = "plain", color = "black"),
+    axis.text.x  = element_text(size = 6, color = "black"),
     axis.text.y  = element_blank(),
     axis.ticks.y = element_blank(),
     axis.line.y  = element_blank(),
@@ -242,15 +244,15 @@ if (nrow(gene_strip) > 0) {
     geom_text_repel(
       data = gene_strip[!is.na(label)],
       aes(x = mid_hg19 / 1e6, y = 0.25, label = label,
-          fontface = ifelse(is_locus, "bold.italic", "italic")),
-      size = 2.3, family = "Helvetica",
+          fontface = "italic"),
+      size = 2.1, family = "Helvetica",
       color = ifelse(gene_strip[!is.na(label)]$is_locus, PURPLE, "grey20"),
       box.padding = 0.18, point.padding = 0.05,
       segment.size = 0.2, segment.color = "grey55",
       max.overlaps = 30,
       direction = "x", nudge_y = 0.20, ylim = c(0.22, 0.58)
     ) +
-    scale_fill_manual(values = c("TRUE" = PURPLE, "FALSE" = "grey75"),
+    scale_fill_manual(values = c("TRUE" = PURPLE, "FALSE" = "#9E9E9E"),
                       guide = "none") +
     scale_color_manual(values = c("TRUE" = "black", "FALSE" = "grey45"),
                        guide = "none")
@@ -329,12 +331,12 @@ p_logo <- ggplot() +
   geom_text(data = ann_data,
             aes(x = 0.6, y = 2.30, label = effect_lab),
             hjust = 0, vjust = 1, inherit.aes = FALSE,
-            size = 2.5, fontface = "bold", color = PURPLE,
+            size = GEOM_TEXT_6PT, fontface = "plain", color = PURPLE,
             family = "Helvetica") +
   geom_text(data = ann_data,
             aes(x = variant_x, y = -0.35,
                 label = sprintf("%s>%s", EX$ref, EX$alt)),
-            inherit.aes = FALSE, size = 2.3, fontface = "bold",
+            inherit.aes = FALSE, size = GEOM_TEXT_6PT, fontface = "plain",
             color = PURPLE, family = "Helvetica") +
   facet_wrap(~ seq_group, ncol = 1, scales = "free_x",
              strip.position = "left") +
@@ -343,11 +345,11 @@ p_logo <- ggplot() +
   scale_x_continuous(breaks = NULL, name = NULL) +
   theme_masld() + theme_pub() +
   theme(
-    axis.title.y      = element_text(size = 8, face = "bold", color = "black",
+    axis.title.y      = element_text(size = 6, face = "plain", color = "black",
                                       angle = 90),
-    axis.text.y       = element_text(size = 7, color = "black"),
+    axis.text.y       = element_text(size = 6, color = "black"),
     axis.line.x       = element_blank(),
-    strip.text.y.left = element_text(size = 8, face = "bold.italic",
+    strip.text.y.left = element_text(size = 6, face = "italic",
                                       color = "black", angle = 0,
                                       hjust = 1),
     strip.background  = element_blank(),
@@ -401,17 +403,17 @@ p_forest <- ggplot(forest, aes(x = beta, y = measurement)) +
   geom_point(shape = 21, fill = "white", color = PURPLE,
              size = 3.6, stroke = 0.9) +
   geom_text(aes(label = label),
-            hjust = -0.10, vjust = -0.8, size = 2.4,
-            color = INK, family = "Helvetica", fontface = "bold") +
+            hjust = -0.10, vjust = -0.8, size = GEOM_TEXT_6PT,
+            color = INK, family = "Helvetica", fontface = "plain") +
   facet_wrap(~ units, ncol = 1, scales = "free",
              strip.position = "top") +
   scale_x_continuous(expand = expansion(mult = c(0.30, 0.06))) +
   labs(x = "ALT-allele effect", y = NULL) +
   theme_masld() + theme_pub() +
   theme(
-    axis.title.x      = element_text(size = 8, face = "bold", color = "black"),
-    axis.text         = element_text(size = 7, color = "black"),
-    strip.text        = element_text(size = 7.5, face = "bold", color = "black"),
+    axis.title.x      = element_text(size = 6, face = "plain", color = "black"),
+    axis.text         = element_text(size = 6, color = "black"),
+    strip.text        = element_text(size = 6, face = "plain", color = "black"),
     strip.background  = element_blank(),
     panel.spacing.y   = unit(3, "mm"),
     panel.grid        = element_blank(),
@@ -451,13 +453,13 @@ p_flow <- ggplot() +
              shape = 21, color = "black", stroke = 0.6, size = 7) +
   geom_text(data = nodes,
             aes(x = x, y = y - 0.28, label = primary),
-            size = 2.3, family = "Helvetica",
-            fontface = "bold", color = INK,
+            size = GEOM_TEXT_6PT, family = "Helvetica",
+            fontface = "plain", color = INK,
             lineheight = 0.95) +
   geom_text(data = nodes,
             aes(x = x, y = y + 0.20, label = layer),
             size = 2.1, family = "Helvetica",
-            fontface = "italic", color = "grey35") +
+            fontface = "plain", color = "grey35") +
   scale_fill_identity() +
   coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
   theme_void() +
@@ -468,8 +470,9 @@ p_flow <- ggplot() +
 # Sizes chosen so each panel reads cleanly on its own without composite-grid
 # squeezing.
 # ---------------------------------------------------------------------------
+message(sprintf("[caption] Panel a: %s locus zoom (GGT GWAS)", EX$gene))
 cat("Saving panel a:", OUT_A, "\n")
-ggsave(OUT_A, panel_a,        width = 6.0, height = 3.6, device = cairo_pdf)
+ggsave(OUT_A, panel_a,        width = 4.6, height = 2.8, device = cairo_pdf)
 
 cat("Saving panel b:", OUT_B, "\n")
 ggsave(OUT_B, p_logo,         width = 5.0, height = 3.0, device = cairo_pdf)

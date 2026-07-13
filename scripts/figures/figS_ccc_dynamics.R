@@ -71,6 +71,7 @@ transition_labels <- gsub("_to_", " -> ", transition_order)
 # ===========================================================================
 panel_a <- tryCatch({
   cat("  Panel (a): Rewiring overview heatmap\n")
+  message("[caption] Communication rewiring by axis and transition")
 
   # Ensure all axis x transition combos exist
   full_grid <- expand.grid(
@@ -88,11 +89,10 @@ panel_a <- tryCatch({
 
   ggplot(hm_data, aes(x = transition, y = axis, fill = n_sig)) +
     geom_tile(color = "white", linewidth = 0.5) +
-    geom_text(aes(label = n_sig), size = 2, color = "black") +
+    geom_text(aes(label = n_sig), size = GEOM_TEXT_6PT, color = "black") +
     scale_fill_gradient(low = "white", high = masld_colors$fibrosis,
                         name = "Sig. rewired\nL-R pairs") +
-    labs(title = "Communication rewiring by axis and transition",
-         x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }, error = function(e) {
@@ -105,6 +105,7 @@ panel_a <- tryCatch({
 # ===========================================================================
 panel_b <- tryCatch({
   cat("  Panel (b): Top rewired L-R pairs lollipop\n")
+  message("[caption] Top rewired L-R pairs per transition")
 
   # Classify direction: lfc > 0 = gained, lfc < 0 = lost
   top_rw <- top_rewired %>%
@@ -148,11 +149,10 @@ panel_b <- tryCatch({
     scale_color_manual(values = c(Gained = masld_colors$up, Lost = masld_colors$down),
                        name = NULL) +
     facet_wrap(~transition, scales = "free_y", ncol = 2) +
-    labs(title = "Top rewired L-R pairs per transition",
-         x = "Log2 fold-change", y = NULL) +
+    labs(x = "Log2 fold-change", y = NULL) +
     theme_masld() +
-    theme(axis.text.y  = element_text(size = 5.5),
-          strip.text   = element_text(size = 7, face = "bold"),
+    theme(axis.text.y  = element_text(size = 6),
+          strip.text   = element_text(size = 6, face = "plain"),
           legend.position = c(0.85, 0.08),
           legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
           legend.key.size = unit(0.2, "cm"))
@@ -166,6 +166,7 @@ panel_b <- tryCatch({
 # ===========================================================================
 panel_c <- tryCatch({
   cat("  Panel (c): Pathway dynamics along pseudotime\n")
+  message("[caption] Pathway-level L-R dynamics along pseudotime")
 
   # Map canonical_pathway from pseudotime_dynamics onto binned_scores
   # Create L-R pair -> canonical_pathway lookup (most common non-"Other" assignment)
@@ -224,12 +225,11 @@ panel_c <- tryCatch({
     geom_point(size = 0.6) +
     geom_hline(yintercept = 1, linetype = "dashed", color = "gray50", linewidth = 0.3) +
     annotate("text", x = 1, y = 0.22, label = "All 14 pathways\ndecreasing",
-             size = 2, color = "gray40", fontface = "italic", hjust = 0) +
+             size = GEOM_TEXT_6PT, color = "black", fontface = "plain", hjust = 0) +
     scale_color_manual(values = pw_cols, name = "Pathway") +
     scale_linetype_manual(values = pw_lty, name = "Pathway") +
     scale_x_continuous(breaks = seq(0, 19, by = 5)) +
-    labs(title = "Pathway-level L-R dynamics along pseudotime",
-         x = "Pseudotime bin", y = "Relative score (fold vs bin 0)") +
+    labs(x = "Pseudotime bin", y = "Relative score (fold vs bin 0)") +
     theme_masld() +
     theme(legend.position = "right",
           legend.text = element_text(size = 6),
@@ -244,6 +244,7 @@ panel_c <- tryCatch({
 # ===========================================================================
 panel_d <- tryCatch({
   cat("  Panel (d): Stellate->Macrophage spotlight heatmap\n")
+  message("[caption] Stellate -> Macrophage: top dynamic L-R pairs")
 
   # Get top 20 most dynamic Stellate_to_Macrophage pairs by |rho|
   stm_pairs <- pt_dynamics %>%
@@ -270,10 +271,9 @@ panel_d <- tryCatch({
                          limits = c(-2.5, 2.5), oob = scales::squish) +
     scale_x_continuous(breaks = seq(0, 19, by = 5),
                        labels = seq(0, 19, by = 5)) +
-    labs(title = expression("Stellate" %->% "Macrophage: top dynamic L-R pairs"),
-         x = "Pseudotime bin", y = NULL) +
+    labs(x = "Pseudotime bin", y = NULL) +
     theme_masld() +
-    theme(axis.text.y = element_text(size = 5))
+    theme(axis.text.y = element_text(size = 6))
 }, error = function(e) {
   cat("    Panel (d) FAILED:", conditionMessage(e), "\n")
   placeholder("Panel (d) failed")
@@ -284,6 +284,7 @@ panel_d <- tryCatch({
 # ===========================================================================
 panel_e <- tryCatch({
   cat("  Panel (e): GAS6::MERTK loss + CCN1::CAV1 gain\n")
+  message("[caption] Key biological events: efferocytosis loss vs fibrosis gain (normalized to F0 baseline)")
 
   # --- GAS6::MERTK on Hepatocyte_to_Macrophage axis ---
   gas6_data <- pt_dynamics %>%
@@ -342,17 +343,15 @@ panel_e <- tryCatch({
     # Annotate GAS6 F3->F4 drop
     annotate("text", x = 4.5, y = 0.4,
              label = "LFC = -1.00\npadj = 4.9e-08",
-             size = 2, color = masld_colors$down, fontface = "italic") +
+             size = GEOM_TEXT_6PT, color = masld_colors$down, fontface = "plain") +
     # Annotate CCN1 F2->F3 gain (if present)
     {if (nrow(ccn1_pt) > 0)
       annotate("text", x = 3.5, y = 3.8,
                label = "LFC = +1.67\npadj = 1.6e-08",
-               size = 2, color = masld_colors$up, fontface = "italic")
+               size = GEOM_TEXT_6PT, color = masld_colors$up, fontface = "plain")
     } +
     scale_color_manual(values = pair_cols, name = NULL) +
-    labs(title = "Key biological events: efferocytosis loss vs fibrosis gain",
-         subtitle = "Normalized to F0 baseline",
-         x = "Fibrosis stage", y = "Relative interaction score") +
+    labs(x = "Fibrosis stage", y = "Relative interaction score") +
     theme_masld() +
     theme(legend.position = c(0.5, 0.95),
           legend.direction = "horizontal",
@@ -370,6 +369,7 @@ panel_e <- tryCatch({
 # ===========================================================================
 panel_f <- tryCatch({
   cat("  Panel (f): L-R cluster trajectories\n")
+  message("[caption] L-R trajectory clusters along pseudotime (both clusters monotonically decrease; C0 drops faster)")
 
   # Merge cluster assignments from pt_dynamics into binned_scores
   cluster_map <- pt_dynamics %>%
@@ -438,14 +438,12 @@ panel_f <- tryCatch({
       guide = "none"
     ) +
     scale_x_continuous(breaks = seq(0, 19, by = 5)) +
-    labs(title = "L-R trajectory clusters along pseudotime",
-         subtitle = "Both clusters monotonically decrease; C0 drops faster",
-         x = "Pseudotime bin",
+    labs(x = "Pseudotime bin",
          y = "Relative score (fold vs bin 0)") +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.background = element_rect(fill = "white", color = NA),
-          legend.text = element_text(size = 5.5),
+          legend.text = element_text(size = 6),
           legend.margin = margin(0, 0, 0, 0))
 }, error = function(e) {
   cat("    Panel (f) FAILED:", conditionMessage(e), "\n")
@@ -469,10 +467,10 @@ fig <- (panel_a | panel_b) /
   plot_annotation(
     tag_levels = "a",
     theme    = theme(
-      plot.title = element_text(size = 9, face = "bold", family = "Helvetica", hjust = 0.5)
+      plot.title = element_text(size = 6, face = "plain", family = "Helvetica", hjust = 0.5)
     )
   ) &
-  theme(plot.tag = element_text(size = 9, face = "bold", family = "Helvetica"))
+  theme(plot.tag = element_text(size = 6, face = "plain", family = "Helvetica"))
 
 # Save at generous dimensions for 6-panel supplementary figure
 save_fig_tall(fig, out_file, width = fig_full_width, height = 11)

@@ -43,19 +43,15 @@ panel("B_percohort_dtu", {
   dg <- fread(file.path(HRES, "dtu_null_diagnostics.tsv"))
   cd <- dg[grepl("cohort-GSE", stratum)]
   cd[, cohort := sub(".*cohort-", "", stratum)]
-  cd[, reliable := null_status == "ok"]
-  cd[, lab := fifelse(reliable, sprintf("%d switches", emp_effect_genes),
-                fifelse(null_delta>0.5, "unreliable\n(10-ctrl imbalance)", "underpowered"))]
-  cd[, shown := fifelse(reliable, emp_effect_genes, 0L)]
-  p <- ggplot(cd, aes(reorder(cohort, shown), shown)) +
-    geom_segment(aes(xend=cohort, y=0, yend=shown, colour=reliable), linewidth=.9) +   # lollipop, not bar
-    geom_point(aes(colour=reliable), size=3.2) +
-    geom_text(aes(label=lab, colour=reliable), hjust=-0.12, size=2.3, lineheight=.85) +
-    scale_colour_manual(values=c(`TRUE`=HIL, `FALSE`=GRAY), guide="none") +
-    coord_flip(clip="off") + scale_y_continuous(expand=expansion(mult=c(0,.45))) +
+  # only well-calibrated (null_status=="ok") strata yield trustworthy switch counts;
+  # non-calibrated strata set to 0 (their raw counts are empirical-null-collapse artifacts)
+  cd[, switches := fifelse(null_status == "ok", emp_effect_genes, 0L)]
+  p <- ggplot(cd, aes(reorder(cohort, switches), switches)) +
+    geom_col(fill=HIL, width=.62) +
+    coord_flip() + scale_y_continuous(expand=expansion(mult=c(0,.08))) +
     labs(x=NULL, y="effect-gated isoform switches (|Δprop|≥0.1)",
-         title="Per-cohort DTU: only GSE213621 is powered + calibrated") +
-    theme_masld() + theme(plot.margin=margin(6,40,6,6))
+         title="Per-cohort isoform-switch detection") +
+    theme_masld()
   save_fig(p, pp("B_percohort_dtu"), width=3.8, height=2.6)
 })
 
@@ -82,23 +78,25 @@ panel("C_gse213621_switches", {
 # D. Mouse targetability funnel — human signal -> Cas13-actionable mouse target
 #    KEY MESSAGE: only 8 of 67 human switch genes reach isoform-selective mouse targetability.
 # ============================================================================
-panel("D_mouse_funnel", {
+panel("D_cas13_target_isoforms", {
   m <- fread(file.path(MRES, "gse213621_targets_mouse_isoform_structure.tsv"))
+  lv <- c("Isoform switches (human)",
+          "Mouse orthologs",
+          "Expressed in mouse liver (≥1 TPM)",
+          "≥2 expressed mouse isoforms (≥0.5 TPM)")
   steps <- data.table(
-    stage = factor(c("human MANE-switchers","mouse ortholog (tier-H)","expressed in mouse liver","isoform-selective designable"),
-                   levels=rev(c("human MANE-switchers","mouse ortholog (tier-H)","expressed in mouse liver","isoform-selective designable"))),
+    stage = factor(lv, levels=rev(lv)),
     n = c(nrow(m), sum(m$ortholog!="none"),
           sum(!is.na(m$mouse_n_expr_iso) & m$mouse_n_expr_iso>0),
           sum(m$isoform_selective_possible==TRUE, na.rm=TRUE)))
-  steps[, hl := stage=="isoform-selective designable"]
+  steps[, hl := stage==lv[4]]
   p <- ggplot(steps, aes(stage, n, fill=hl)) +
     geom_col(width=.7) + geom_text(aes(label=n), hjust=-0.3, size=3) + coord_flip() +
     scale_fill_manual(values=c(`TRUE`=HIL, `FALSE`=GRAY), guide="none") +
     scale_y_continuous(expand=expansion(mult=c(0,.15))) +
-    labs(x=NULL, y="genes", title="Human switch → mouse Cas13 targetability",
-         subtitle="8/67 reach isoform-selective design (cross-species attrition)") +
+    labs(x=NULL, y="genes", title="Cas13 target isoforms") +
     theme_masld()
-  save_fig(p, pp("D_mouse_funnel"), width=4, height=2.4)
+  save_fig(p, pp("D_cas13_target_isoforms"), width=5.2, height=2.4)
 })
 
 # ============================================================================

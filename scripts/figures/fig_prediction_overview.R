@@ -3,14 +3,18 @@
 # fig_prediction_overview.R
 # Presentation-ready overview of Tier 1 + related Tier 2 prediction models.
 #
-# 6 standalone panels (each sized for a single slide):
+# Standalone panels (each sized for a single slide):
 #   A — Model landscape matrix    11 × 5"
 #   B — AUROC/QWK summary bars    12 × 6"
 #   C — Model 2 modality ladder    6 × 5.5"
 #   E — Model 3 ROC + null         9 × 4.5"
-#   F — Model 4 plasma             10 × 4.5"
 #   G — Model 10 sex gap           4.5 × 5"
 # M1 (Fibrogenic subtype) REMOVED — circular (expression predicts expression-derived label)
+# Panel F / F2 (Model 4 plasma) WITHDRAWN 2026-06-29 (AUDIT P0#4): plasma Olink
+#   AUROCs withdrawn — no per-subject Olink<->GSE276114 crosswalk (218 vs 177);
+#   labels cannot be validated. All plasma rows/panels removed; sweep artifacts
+#   archived to data/archive/withdrawn_olink_2026-06-01/. See
+#   STATISTICAL_AUDIT_2026-06-29.md P0#4.
 # =============================================================================
 
 suppressPackageStartupMessages({
@@ -34,10 +38,11 @@ dir.create(OUT_PNL, recursive = TRUE, showWarnings = FALSE)
 # ---------------------------------------------------------------------------
 # Presentation-scale constants
 # ---------------------------------------------------------------------------
-PB   <- 13        # base font size (pt) for theme_masld
-TXT  <- 4.2       # geom_text / annotate size for primary labels
-TXTs <- 3.6       # smaller annotation text
-TXTt <- 3.0       # tertiary text (fold counts, etc.)
+PB   <- 13        # base font size (pt) passed to theme_masld(); theme_masld
+                  # forces all text elements to 6pt regardless of base_size
+TXT  <- GEOM_TEXT_6PT   # geom_text / annotate size for primary labels (6pt house style)
+TXTs <- GEOM_TEXT_6PT   # smaller annotation text (6pt house style)
+TXTt <- GEOM_TEXT_6PT   # tertiary text (fold counts, etc.) (6pt house style)
 PT   <- 3.0       # geom_point size
 LW   <- 0.7       # primary linewidth
 LWt  <- 0.5       # thin linewidth (error bars, grids)
@@ -57,8 +62,8 @@ input_colors <- c(
   "Cell-type props"  = "#64B5F6",
   "TF activity"      = "#7B1FA2",
   "COLOC genes"      = "#00695C",
-  "Plasma proteins"  = "#F57F17",
   "Clinical"         = "#616161"
+  # "Plasma proteins" removed 2026-06-29 (AUDIT P0#4) — plasma classifier withdrawn
 )
 
 # ---------------------------------------------------------------------------
@@ -79,40 +84,31 @@ STAGING   <- file.path(BASE,
 # =============================================================================
 cat("--- Panel A: landscape matrix ---\n")
 
+# AUDIT 2026-06-29 (P0#4): all plasma rows + the "Plasma proteins" input
+# column removed (plasma Olink classifier withdrawn \u2014 no subject crosswalk).
 landscape_raw <- tribble(
   ~model_label,                        ~outcome,
   ~`Bulk expression`, ~`Cell-type props`, ~`TF activity`,
-  ~`COLOC genes`, ~`Plasma proteins`, ~Clinical,
+  ~`COLOC genes`, ~Clinical,
   # --- Tissue-based ---
   "Cell-type F\u22653",                "F\u22653 (binary)",
-  FALSE, TRUE,  FALSE, FALSE, FALSE, FALSE,
+  FALSE, TRUE,  FALSE, FALSE, FALSE,
   "Cross-ancestry COLOC F\u22653",     "F\u22653 (binary)",
-  TRUE,  FALSE, FALSE, TRUE,  FALSE, FALSE,
+  TRUE,  FALSE, FALSE, TRUE,  FALSE,
   "Expression F\u22653",               "F\u22653 (binary)",
-  TRUE,  FALSE, FALSE, FALSE, FALSE, FALSE,
+  TRUE,  FALSE, FALSE, FALSE, FALSE,
   "Sex-stratified F\u22653",           "F\u22653 (binary)",
-  TRUE,  FALSE, FALSE, FALSE, FALSE, TRUE,
+  TRUE,  FALSE, FALSE, FALSE, TRUE,
   "Fibrosis ordinal (expression)",     "Fibrosis F0\u2013F4",
-  TRUE,  FALSE, FALSE, FALSE, FALSE, FALSE,
+  TRUE,  FALSE, FALSE, FALSE, FALSE,
   "NAS ordinal (expression)",          "NAS 0\u20138",
-  TRUE,  FALSE, FALSE, FALSE, FALSE, FALSE,
+  TRUE,  FALSE, FALSE, FALSE, FALSE,
   "Severity ordinal (combined)",       "Severity 4-class",
-  TRUE,  TRUE,  TRUE,  TRUE,  FALSE, FALSE,
-  # --- Plasma-based ---
-  "Plasma MASLD binary",               "MASLD diagnosis",
-  FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE,
-  "Plasma F\u22653",                   "F\u22653 (binary)",
-  FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE,
-  "Plasma fibrosis ordinal",           "Fibrosis (ordinal)",
-  FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE,
-  "Plasma fibrosis continuous",        "Fibrosis (continuous)",
-  FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE,
-  "Plasma etiology 3-class",           "Etiology 3-class",
-  FALSE, FALSE, FALSE, FALSE, TRUE,  FALSE
+  TRUE,  TRUE,  TRUE,  TRUE,  FALSE
 )
 
 input_types <- c("Bulk expression","Cell-type props","TF activity",
-                 "COLOC genes","Plasma proteins","Clinical")
+                 "COLOC genes","Clinical")
 
 n_models <- nrow(landscape_raw)
 land_long <- landscape_raw %>%
@@ -132,8 +128,7 @@ pA <- ggplot(land_long, aes(x = input_type, y = model_label)) +
             aes(fill = input_type), color = "white", linewidth = 0.6,
             width = 0.88, height = 0.80) +
   scale_fill_manual(values = input_colors, name = "Input type") +
-  labs(title = "Prediction model landscape: inputs and outcomes",
-       x = NULL, y = NULL) +
+  labs(x = NULL, y = NULL) +
   theme_masld(base_size = PB) +
   theme(
     axis.text.x     = element_text(angle = 35, hjust = 1),
@@ -144,7 +139,8 @@ pA <- ggplot(land_long, aes(x = input_type, y = model_label)) +
     plot.margin     = margin(5, 5, 5, 5)
   )
 
-spf(pA, file.path(OUT_PNL, "figS_overview_panel_A.pdf"), w = 10, h = 5)
+spf(pA, file.path(OUT_PNL, "figS_overview_panel_A.pdf"), w = 7.09, h = 3.55)
+message("[caption] Prediction model landscape: inputs and outcomes")
 cat("  Written: panel A\n")
 
 # =============================================================================
@@ -155,12 +151,10 @@ cat("--- Panel B: AUROC summary ---\n")
 loco_sum  <- fread(file.path(PROGNOSIS, "nested_loco_summary.csv"))
 ca_res    <- fread(file.path(NOVEL_ML,
                "cross_ancestry_v2/cross_ancestry_staging_results.csv"))
-lb        <- fread(file.path(MPROG, "226f_sweep_leaderboard.csv"))
+# AUDIT 2026-06-29 (P0#4): 226f_sweep_leaderboard.csv (plasma) no longer read;
+# plasma classifier rows withdrawn. lb / lb_best helper removed.
 abl       <- fread(file.path(MPROG, "multiprogram_ablation.csv"))
 sex_auc   <- fread(file.path(STAGING, "sex_auroc_comparison.csv"))
-# Helper: extract best row from leaderboard
-lb_best <- function(tgt) lb[target == tgt][which.max(primary_metric_mean),
-  .(perf = primary_metric_mean, sd = primary_metric_sd)]
 
 # --- Tissue F>=3 binary ---
 m2_row  <- loco_sum[target == "fib_ge3" & config == "M2_celltype",
@@ -180,12 +174,7 @@ fib_coloc <- abl[task == "fibrosis" & modality == "coloc_genetics", .(perf = mea
 nas_expr  <- abl[task == "nas_composite" & modality == "expression",.(perf = mean_qwk, sd = std_qwk)]
 nas_comb  <- abl[task == "nas_composite" & modality == "combined",  .(perf = mean_qwk, sd = std_qwk)]
 sev_comb  <- abl[task == "severity" & modality == "combined",       .(perf = mean_qwk, sd = std_qwk)]
-# --- Plasma targets (all 5) ---
-pl_masld <- lb_best("T5_masld_binary")
-pl_fib3  <- lb_best("T1_binary")
-pl_ord   <- lb_best("T2_ordinal")
-pl_cont  <- lb_best("T3_continuous")
-pl_etio  <- lb_best("T4_etiology_3class")
+# --- Plasma targets WITHDRAWN 2026-06-29 (AUDIT P0#4) ---
 
 summary_dt <- rbindlist(list(
   # ---- F>=3 binary (AUROC) — tissue ----
@@ -219,23 +208,8 @@ summary_dt <- rbindlist(list(
              metric = "QWK",  input = "Bulk expression"),
   data.table(model = "Severity\ncombined",         group = "Tissue: ordinal",
              perf = sev_comb$perf, sd = sev_comb$sd,
-             metric = "QWK",  input = "Bulk expression"),
-  # ---- Plasma (all 5 targets) ----
-  data.table(model = "Plasma\nMASLD",              group = "Plasma",
-             perf = pl_masld$perf, sd = pl_masld$sd,
-             metric = "AUROC", input = "Plasma proteins"),
-  data.table(model = "Plasma\nF\u22653",          group = "Plasma",
-             perf = pl_fib3$perf,  sd = pl_fib3$sd,
-             metric = "AUROC", input = "Plasma proteins"),
-  data.table(model = "Plasma\nFib ordinal",        group = "Plasma",
-             perf = pl_ord$perf,   sd = pl_ord$sd,
-             metric = "QWK",  input = "Plasma proteins"),
-  data.table(model = "Plasma\nFib continuous",     group = "Plasma",
-             perf = pl_cont$perf,  sd = pl_cont$sd,
-             metric = "\u03C1",  input = "Plasma proteins"),
-  data.table(model = "Plasma\nEtiology 3-class",   group = "Plasma",
-             perf = pl_etio$perf,  sd = pl_etio$sd,
-             metric = "F1",   input = "Plasma proteins")
+             metric = "QWK",  input = "Bulk expression")
+  # ---- Plasma (all 5 targets) WITHDRAWN 2026-06-29 (AUDIT P0#4) ----
 ))
 
 summary_dt[, model := factor(model, levels = model)]
@@ -244,8 +218,9 @@ summary_dt[, metric_label := paste0(sprintf("%.2f", perf),
   fifelse(metric %in% c("AUROC"), "",
   paste0("\n", metric)))]
 
-# Group dividers: 5 tissue F>=3 | 5 tissue ordinal | 5 plasma
-div_x <- c(5.5, 10.5)
+# Group dividers: 5 tissue F>=3 | 5 tissue ordinal
+# (plasma group removed 2026-06-29 — AUDIT P0#4)
+div_x <- c(5.5)
 
 pB <- ggplot(summary_dt,
              aes(x = model, y = perf, fill = input)) +
@@ -254,29 +229,28 @@ pB <- ggplot(summary_dt,
                     ymax = pmin(1.06, perf + sd)),
                 width = 0.22, linewidth = LWt, color = "gray35") +
   geom_text(aes(y = label_y, label = metric_label),
-            size = TXTt, color = "gray20", lineheight = 0.9) +
+            size = TXTt, color = "black", lineheight = 0.9) +
   geom_vline(xintercept = div_x, linetype = "dashed",
              color = "gray75", linewidth = 0.35) +
   # Group headers
   annotate("text", x = 3,   y = 1.08, label = "Tissue (F\u22653)",
-           size = TXTs, color = "gray30", fontface = "bold") +
+           size = TXTs, color = "black", fontface = "plain") +
   annotate("text", x = 8,   y = 1.08, label = "Tissue (Ordinal)",
-           size = TXTs, color = "gray30", fontface = "bold") +
-  annotate("text", x = 13,  y = 1.08, label = "Plasma",
-           size = TXTs, color = "gray30", fontface = "bold") +
+           size = TXTs, color = "black", fontface = "plain") +
+  # "Plasma" group header removed 2026-06-29 (AUDIT P0#4)
   scale_fill_manual(values = input_colors, name = "Input type") +
   scale_y_continuous(limits = c(-0.05, 1.12),
                      breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1.0),
                      expand = expansion(mult = c(0, 0))) +
   labs(x = NULL,
-       y = "Performance (AUROC unless labelled)",
-       title = "Prediction model performance overview") +
+       y = "Performance (AUROC unless labelled)") +
   theme_masld(base_size = PB) +
   theme(axis.text.x     = element_text(angle = 40, hjust = 1, lineheight = 0.85),
         legend.position = "top",
         legend.key.size = unit(0.4, "cm"))
 
-spf(pB, file.path(OUT_PNL, "figS_overview_panel_B.pdf"), w = 15, h = 6)
+spf(pB, file.path(OUT_PNL, "figS_overview_panel_B.pdf"), w = 7.09, h = 2.84)
+message("[caption] Prediction model performance overview")
 cat("  Written: panel B\n")
 
 # =============================================================================
@@ -321,23 +295,22 @@ pC <- ggplot(ladder_dt, aes(x = config_label, y = mean_auroc, group = 1)) +
   geom_text(data = hl,
             aes(label = sprintf("%.3f  \u2190 headline", mean_auroc)),
             hjust = -0.08, vjust = 0.4, size = TXTs,
-            color = masld_colors$up, fontface = "bold") +
+            color = masld_colors$up, fontface = "plain") +
   # "fails random" badge on expression
   annotate("text", x = "Bulk\nexpression", y = 0.63,
            label = paste0("p = ", round(rp, 2), " vs\nrandom 500 genes"),
-           size = TXTt, color = masld_colors$down, fontface = "italic",
+           size = TXTt, color = masld_colors$down, fontface = "plain",
            lineheight = 0.9) +
   scale_color_manual(values = c("FALSE" = "gray40", "TRUE" = masld_colors$up),
                      guide = "none") +
   scale_y_continuous(limits = c(0.57, 0.99), breaks = c(0.6, 0.7, 0.8, 0.9)) +
   scale_x_discrete(expand = expansion(add = c(0.4, 1.2))) +
-  labs(x = NULL, y = "AUROC  (F\u22653, 6-fold LOCO-CV)",
-       title = "Model 2: cell-type deconvolution\nis the honest F\u22653 predictor") +
+  labs(x = NULL, y = "AUROC  (F\u22653, 6-fold LOCO-CV)") +
   theme_masld(base_size = PB) +
-  theme(axis.text.x = element_text(lineheight = 0.85),
-        plot.title  = element_text(lineheight = 1.1))
+  theme(axis.text.x = element_text(lineheight = 0.85))
 
 spf(pC, file.path(OUT_PNL, "figS_overview_panel_C.pdf"), w = 6, h = 5.5)
+message("[caption] Model 2: cell-type deconvolution is the honest F\u22653 predictor")
 cat("  Written: panel C\n")
 
 # Panel D — REMOVED (M1 Fibrogenic subtype was circular)
@@ -382,10 +355,8 @@ pE_roc <- ggplot() +
                            auc_p_e, obs_e$m, obs_e$s),
            lineheight = 0.95) +
   coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
-  labs(x = "False positive rate", y = "True positive rate",
-       title = "ROC\n(66 cross-ancestry COLOC genes)") +
-  theme_masld(base_size = PB) +
-  theme(plot.title = element_text(lineheight = 1.0))
+  labs(x = "False positive rate", y = "True positive rate") +
+  theme_masld(base_size = PB)
 
 perm_v  <- ca_perm$mean_auroc
 pval_e  <- mean(perm_v >= obs_e$m)
@@ -396,157 +367,31 @@ pE_perm <- ggplot(data.frame(auroc = perm_v), aes(x = auroc)) +
              color = masld_colors$conserved, linewidth = LW) +
   annotate("text", x = obs_e$m + 0.003, y = Inf,
            hjust = 0, vjust = 1.4, size = TXTs,
-           color = masld_colors$conserved, fontface = "bold",
+           color = masld_colors$conserved, fontface = "plain",
            label = sprintf("Observed\n%.3f\np = %.3f", obs_e$m, pval_e),
            lineheight = 0.9) +
-  labs(x = "AUROC (permuted labels)", y = "Count",
-       title = "Permutation null\n(n = 1,000)") +
-  theme_masld(base_size = PB) +
-  theme(plot.title = element_text(lineheight = 1.0))
+  labs(x = "AUROC (permuted labels)", y = "Count") +
+  theme_masld(base_size = PB)
 
-pE <- (pE_roc | pE_perm) +
-  plot_annotation(
-    title = "Model 3: cross-ancestry COLOC genes predict F\u22653",
-    theme = theme(plot.title = element_text(size = PB + 1, face = "bold",
-                                            hjust = 0, family = "Helvetica"))
-  )
+pE <- (pE_roc | pE_perm)
 
-spf(pE, file.path(OUT_PNL, "figS_overview_panel_E.pdf"), w = 9, h = 4.5)
+spf(pE, file.path(OUT_PNL, "figS_overview_panel_E.pdf"), w = 7.09, h = 3.55)
+message("[caption] Model 3: cross-ancestry COLOC genes predict F\u22653 ",
+        "(left: ROC, 66 cross-ancestry COLOC genes; right: permutation null, n = 1,000)")
 cat("  Written: panel E\n")
 
 # =============================================================================
-# Panel F — Model 4: plasma (panel-size curve | top proteins)
+# Panel F / F2 — Model 4: plasma — WITHDRAWN 2026-06-29 (AUDIT P0#4)
+#   The plasma Olink classifier panels (panel-size saturation curve + top-SHAP
+#   proteins, for the F>=3 and MASLD-diagnosis targets) were REMOVED: the plasma
+#   Olink AUROCs are withdrawn — no per-subject Olink<->GSE276114 crosswalk
+#   (218 plasma vs 177 liver), so the labels cannot be validated. The
+#   build_saturation() helper and the 226a_panel_curves.csv / 226a_protein_
+#   importance.csv reads lived only in these panels and were removed with them.
+#   See STATISTICAL_AUDIT_2026-06-29.md P0#4. Revive only after a real crosswalk.
 # =============================================================================
-cat("--- Panel F: plasma ---\n")
+cat("--- Panel F / F2: SKIPPED (plasma classifier withdrawn — AUDIT P0#4) ---\n")
 
-curves <- fread(file.path(MPROG, "226a_panel_curves.csv"))
-impt   <- fread(file.path(MPROG, "226a_protein_importance.csv"))
-
-# Helper: build saturation curve for one target
-build_saturation <- function(curves_dt, tgt, tgt_label) {
-  pc <- curves_dt[target == tgt & metric_name == "auroc"]
-
-  shap <- pc[is_random == FALSE,
-    .(mean_auc = mean(metric_value),
-      se_auc   = sd(metric_value) / sqrt(.N)),
-    by = panel_size]
-
-  rd <- pc[is_random == TRUE,
-    .(draw_auc = mean(metric_value)),
-    by = .(panel_size, draw_id)]
-  rs <- rd[,
-    .(mean_auc = mean(draw_auc),
-      lo_auc   = quantile(draw_auc, 0.025),
-      hi_auc   = quantile(draw_auc, 0.975)),
-    by = panel_size]
-
-  # Combine into plottable data with selection column for legend
-  shap[, selection := "SHAP-guided"]
-  rs[, selection := "Random (100 draws)"]
-  rd[, selection := "Random (100 draws)"]
-
-  p <- ggplot() +
-    geom_ribbon(data = rs,
-      aes(x = panel_size, ymin = lo_auc, ymax = hi_auc),
-      fill = "gray75", alpha = 0.35) +
-    geom_jitter(data = rd,
-      aes(x = panel_size, y = draw_auc),
-      width = 0.03, height = 0, size = 0.3, alpha = 0.10, color = "gray50") +
-    geom_line(data = rs,
-      aes(x = panel_size, y = mean_auc, color = selection, linetype = selection),
-      linewidth = LW) +
-    geom_point(data = rs,
-      aes(x = panel_size, y = mean_auc, color = selection),
-      size = PT - 0.5) +
-    geom_ribbon(data = shap,
-      aes(x = panel_size,
-          ymin = mean_auc - se_auc, ymax = mean_auc + se_auc),
-      fill = masld_colors$up, alpha = 0.15) +
-    geom_line(data = shap,
-      aes(x = panel_size, y = mean_auc, color = selection, linetype = selection),
-      linewidth = LW) +
-    geom_point(data = shap,
-      aes(x = panel_size, y = mean_auc, color = selection),
-      size = PT) +
-    scale_color_manual(values = c("SHAP-guided" = masld_colors$up,
-                                  "Random (100 draws)" = "gray50"),
-                       name = NULL) +
-    scale_linetype_manual(values = c("SHAP-guided" = "solid",
-                                     "Random (100 draws)" = "dashed"),
-                          name = NULL) +
-    scale_x_log10(breaks = c(2, 5, 10, 20, 50, 100, 200, 1461),
-                  labels = c("2","5","10","20","50","100","200","all")) +
-    scale_y_continuous(limits = c(0.45, 0.95)) +
-    labs(x = "Proteins in panel", y = "AUROC",
-         title = tgt_label) +
-    theme_masld(base_size = PB) +
-    theme(legend.position = "top", legend.key.size = unit(0.5, "cm"))
-
-  return(p)
-}
-
-pF_curve <- build_saturation(curves, "T1_binary",
-  "Panel-size saturation: F\u22653")
-
-top_prot <- impt[target == "T1_binary"][order(-mean_abs_shap)][1:12]
-top_prot[, protein := factor(protein, levels = rev(protein))]
-
-pF_shap <- ggplot(top_prot, aes(x = mean_abs_shap, y = protein,
-                                 fill = fold_stability)) +
-  geom_col(width = 0.74) +
-  scale_fill_gradient(low = "#FFCCBC", high = masld_colors$up,
-                      name = "Fold stability", limits = c(0, 1)) +
-  labs(x = "Mean |SHAP|", y = NULL,
-       title = "Top proteins by importance\n(F\u22653 target)") +
-  theme_masld(base_size = PB) +
-  theme(legend.position = "right",
-        legend.key.size = unit(0.4, "cm"),
-        plot.title      = element_text(lineheight = 1.0))
-
-pF <- (pF_curve | pF_shap) +
-  plot_annotation(
-    title = "Plasma F\u22653 classifier  (1,461 Olink proteins, 50-fold nested CV)",
-    theme = theme(plot.title = element_text(size = PB + 1, face = "bold",
-                                            hjust = 0, family = "Helvetica"))
-  )
-
-spf(pF, file.path(OUT_PNL, "figS_overview_panel_F.pdf"), w = 10, h = 4.5)
-cat("  Written: panel F\n")
-
-# =============================================================================
-# Panel F2 — MASLD binary saturation curve (separate)
-# =============================================================================
-cat("--- Panel F2: MASLD binary saturation ---\n")
-
-pF2_curve <- build_saturation(curves, "T5_etiology_binary",
-  "Panel-size saturation: MASLD diagnosis")
-
-# Top proteins for MASLD binary
-impt_masld <- impt[target == "T5_etiology_binary"][order(-mean_abs_shap)][1:min(12, .N)]
-if (nrow(impt_masld) > 0) {
-  impt_masld[, protein := factor(protein, levels = rev(protein))]
-  pF2_shap <- ggplot(impt_masld, aes(x = mean_abs_shap, y = protein,
-                                      fill = fold_stability)) +
-    geom_col(width = 0.74) +
-    scale_fill_gradient(low = "#FFCCBC", high = masld_colors$up,
-                        name = "Fold stability", limits = c(0, 1)) +
-    labs(x = "Mean |SHAP|", y = NULL,
-         title = "Top proteins (MASLD diagnosis)") +
-    theme_masld(base_size = PB) +
-    theme(legend.position = "right", legend.key.size = unit(0.4, "cm"))
-
-  pF2 <- (pF2_curve | pF2_shap) +
-    plot_annotation(
-      title = "Plasma MASLD diagnosis  (1,461 Olink proteins, 50-fold nested CV)",
-      theme = theme(plot.title = element_text(size = PB + 1, face = "bold",
-                                              hjust = 0, family = "Helvetica"))
-    )
-} else {
-  pF2 <- pF2_curve
-}
-
-spf(pF2, file.path(OUT_PNL, "figS_overview_panel_F2.pdf"), w = 10, h = 4.5)
-cat("  Written: panel F2\n")
 
 # =============================================================================
 # Panel G — Model 10: sex gap
@@ -582,11 +427,11 @@ pG <- ggplot(sex_dt, aes(x = sex, y = mean_auc, fill = sex)) +
            arrow = arrow(length = unit(2.0, "mm"), ends = "both"),
            linewidth = LWt, color = "gray30") +
   annotate("text", x = 1.48, y = mean(sex_dt$mean_auc),
-           vjust = 0.5, hjust = 0, size = TXTs, color = "gray30",
+           vjust = 0.5, hjust = 0, size = TXTs, color = "black",
            label = sprintf("\u0394 = %.3f", delta_g)) +
   annotate("text", x = 1.5, y = 0.72,
            label = "Zero gene overlap\nbetween sex-specific panels",
-           size = TXTs, color = masld_colors$down, fontface = "italic",
+           size = TXTs, color = masld_colors$down, fontface = "plain",
            hjust = 0.5, lineheight = 0.9) +
   scale_fill_manual(values = c("Female" = masld_colors$female,
                                 "Male"   = masld_colors$male),
@@ -594,14 +439,14 @@ pG <- ggplot(sex_dt, aes(x = sex, y = mean_auc, fill = sex)) +
   scale_y_continuous(limits = c(0.62, 1.02),
                      breaks = c(0.65, 0.75, 0.85, 0.95)) +
   scale_x_discrete(expand = expansion(add = c(0.5, 1.2))) +
-  labs(x = NULL, y = "AUROC  (F\u22653, sex-specific LOCO-CV)",
-       title = "Model 10: sex-specific F\u22653\nclassifiers diverge strongly") +
-  theme_masld(base_size = PB) +
-  theme(plot.title = element_text(lineheight = 1.1))
+  labs(x = NULL, y = "AUROC  (F\u22653, sex-specific LOCO-CV)") +
+  theme_masld(base_size = PB)
 
 spf(pG, file.path(OUT_PNL, "figS_overview_panel_G.pdf"), w = 4.5, h = 5)
+message("[caption] Model 10: sex-specific F\u22653 classifiers diverge strongly")
 cat("  Written: panel G\n")
 
 cat("\nDone. Individual panels in:\n")
-cat(" ", file.path(OUT_PNL, "figS_overview_panel_{A,B,C,E,F,G}.pdf"), "\n")
+cat(" ", file.path(OUT_PNL, "figS_overview_panel_{A,B,C,E,G}.pdf"), "\n")
 cat("  (Panel D removed — M1 Fibrogenic subtype was circular)\n")
+cat("  (Panel F / F2 withdrawn 2026-06-29 — plasma classifier, AUDIT P0#4)\n")

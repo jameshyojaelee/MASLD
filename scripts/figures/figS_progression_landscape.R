@@ -53,19 +53,17 @@ hm_theme <- theme_masld() +
   theme(legend.position = "right",
         legend.key.size = unit(0.3, "cm"),
         legend.title = element_text(size = 6),
-        legend.text = element_text(size = 5),
-        axis.text = element_text(size = 6),
-        plot.title = element_text(size = 7, face = "bold"))
+        legend.text = element_text(size = 6),
+        axis.text = element_text(size = 6))
 
 # --- Panel A: Sample Distribution ---
 p_a <- ggplot(dist_full, aes(x = nas_label, y = fib_label, fill = N)) +
   geom_tile(color = "white", linewidth = 0.5) +
   geom_text(data = dist_full[N > 0], aes(label = N),
-            size = 2.2, color = "gray20") +
+            size = GEOM_TEXT_6PT, color = "gray20") +
   scale_fill_gradient(low = "#FFF9C4", high = "#7B1FA2",
                       name = "n samples", na.value = "gray95") +
-  labs(x = "NAS Score", y = "Fibrosis Stage",
-       title = "A. Sample Distribution") +
+  labs(x = "NAS Score", y = "Fibrosis Stage") +
   hm_theme
 
 # --- Panel B: NAS Gene Signature ---
@@ -75,8 +73,7 @@ p_b <- ggplot(cells_full[!is.na(nas_sig_mean)],
   scale_fill_viridis_c(option = "inferno",
                         name = expression("Mean log"[2]*"(CPM+1)"),
                         na.value = "gray95") +
-  labs(x = "NAS Score", y = "Fibrosis Stage",
-       title = "B. NAS Gene Signature") +
+  labs(x = "NAS Score", y = "Fibrosis Stage") +
   hm_theme
 
 # --- Panel C: Fibrosis Gene Signature ---
@@ -87,8 +84,7 @@ p_c <- ggplot(cells_full[!is.na(fib_sig_mean)],
     colours = c("#FFF0F5", "#FFB6C1", "#FF69B4", "#C71585", "#800020"),
     name = expression("Mean log"[2]*"(CPM+1)"),
     na.value = "gray95") +
-  labs(x = "NAS Score", y = "Fibrosis Stage",
-       title = "C. Fibrosis Gene Signature") +
+  labs(x = "NAS Score", y = "Fibrosis Stage") +
   hm_theme
 
 # --- Panel D: NAS/Fibrosis Signature Ratio ---
@@ -101,8 +97,7 @@ p_d <- ggplot(cells_full[!is.na(ratio)],
   scale_fill_gradient2(low = "#1565C0", mid = "white", high = "#C62828",
                         midpoint = 1, name = "Ratio",
                         limits = c(1 - max_dev, 1 + max_dev)) +
-  labs(x = "NAS Score", y = "Fibrosis Stage",
-       title = "D. NAS/Fibrosis Signature Ratio") +
+  labs(x = "NAS Score", y = "Fibrosis Stage") +
   hm_theme
 
 # --- Summary text panel ---
@@ -126,7 +121,7 @@ summary_text <- paste0(
 
 p_summary <- ggplot() +
   annotate("text", x = 0, y = 0, label = summary_text,
-           hjust = 0, vjust = 0.5, size = 2.2, family = "mono",
+           hjust = 0, vjust = 0.5, size = GEOM_TEXT_6PT, family = "mono",
            lineheight = 1.2) +
   theme_void() +
   xlim(-0.1, 3) + ylim(-1, 1)
@@ -134,14 +129,12 @@ p_summary <- ggplot() +
 # --- Assembly ---
 fig <- ((p_a | p_b) / (p_c | p_d)) | p_summary
 fig <- fig +
-  plot_layout(widths = c(3, 1)) +
-  plot_annotation(
-    title = "Cross-Cohort Disease Progression Landscape (Integrated Mega-Analysis)",
-    theme = theme(
-      plot.title = element_text(size = 10, face = "bold", hjust = 0.5)
-    )
-  )
+  plot_layout(widths = c(3, 1))
+
+message("[caption] Cross-Cohort Disease Progression Landscape (Integrated Mega-Analysis). ",
+        "A: Sample Distribution. B: NAS Gene Signature. C: Fibrosis Gene Signature. ",
+        "D: NAS/Fibrosis Signature Ratio.")
 
 OUT_PDF <- file.path(FIGS02_DIR, "figS02_progression_landscape.pdf")
-save_fig_tall(fig, OUT_PDF, width = 10, height = 7, dpi = 300)
+save_fig_tall(fig, OUT_PDF, width = fig_full_width, height = fig_full_width * 0.7, dpi = 300)
 cat("Progression landscape saved to:", OUT_PDF, "\n")

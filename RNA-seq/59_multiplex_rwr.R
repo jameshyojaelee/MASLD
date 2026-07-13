@@ -1,10 +1,18 @@
 #!/usr/bin/env Rscript
 # ===========================================================================
-# Script 59: Multiplex Network Random Walk with Restart (RWR)
+# Script 59: Aggregated-Network Random Walk with Restart (RWR)
 # ===========================================================================
 # Purpose: Score ALL genes (including lncRNAs) by network proximity to
-#          high-confidence seed genes (DEG + COLOC overlap) using RWR
-#          across a multiplex network (PPI + coexpression + regulatory).
+#          high-confidence seed genes (DEG + COLOC overlap) using RWR on a
+#          single AGGREGATED network built by averaging three column-normalized
+#          layers (PPI + coexpression + regulatory).
+#
+# NOTE ON METHOD (corrected 2026-07-04, round-2 audit B5d): this is a MONOPLEX
+#   RWR on the per-column active-layer average of the three layers. It is NOT a
+#   true multiplex / supra-adjacency RWR (Valdeolivas et al. 2019) — there is no
+#   inter-layer coupling and no per-layer walker state; the layers are collapsed
+#   into one transition matrix before the walk. Earlier comments calling it
+#   "multiplex" / "supra-adjacency" were a misnomer and have been corrected.
 #
 # Layers:
 #   L1 — STRING PPI (combined_score > 700)
@@ -37,7 +45,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-cat("=== Script 59: Multiplex RWR ===\n")
+cat("=== Script 59: Aggregated-Network RWR (monoplex on layer-averaged graph) ===\n")
 cat("Start:", format(Sys.time()), "\n")
 
 # ---------------------------------------------------------------------------
@@ -53,11 +61,12 @@ out_pdf <- file.path(fig_dir, "figS_multiplex_rwr.pdf")
 # ---------------------------------------------------------------------------
 cat("\n--- Loading atlas ---\n")
 atlas <- fread(file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
+stopifnot(all(c("bulk_padj", "bulk_logFC") %in% names(atlas)))
 cat("Atlas:", nrow(atlas), "genes x", ncol(atlas), "columns\n")
 
 # Identify seed genes: DEG (padj<0.05, |logFC|>0.3) AND COLOC PP.H4>0.5
 # Use coloc_susie_best_pp4 (SuSiE-COLOC, active column with 577 genes > 0.5)
-atlas[, is_deg := !is.na(dream_padj) & dream_padj < 0.05 & abs(dream_logFC) > 0.3]
+atlas[, is_deg := !is.na(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.3]
 atlas[, has_coloc := !is.na(coloc_susie_best_pp4) & coloc_susie_best_pp4 > 0.5]
 atlas[, is_seed := is_deg & has_coloc]
 cat("DEGs:", sum(atlas$is_deg, na.rm = TRUE), "\n")
@@ -307,7 +316,11 @@ cat("Coexpression adjacency: nnz =", nnzero(A_coexpr), "\n")
 cat("Regulatory adjacency: nnz =", nnzero(A_reg), "\n")
 
 # ---------------------------------------------------------------------------
-# 7. Column-normalize each layer and combine (supra-adjacency)
+# 7. Column-normalize each layer and collapse to a single monoplex transition
+#    matrix (per-column active-layer average). NOTE: this is NOT a true multiplex
+#    supra-adjacency RWR (no inter-layer coupling, no per-layer walker state);
+#    the three layers are averaged into one aggregated network on which a plain
+#    (monoplex) RWR is run.
 # ---------------------------------------------------------------------------
 cat("\n--- Normalizing and combining layers ---\n")
 
@@ -319,16 +332,20 @@ col_normalize <- function(A) {
   return(A_norm)
 }
 
-# Normalize each layer
+# Normalize each layer (each active column now sums to 1; isolated-node columns
+# sum to 0).
 M_ppi    <- col_normalize(A_ppi)
 M_coexpr <- col_normalize(A_coexpr)
 M_reg    <- col_normalize(A_reg)
 
-# Count active layers per gene (for weighting)
-n_layers <- 3
-# Simple average across layers (equal weighting)
-# Genes present in multiple layers get information from all
-M <- (M_ppi + M_coexpr + M_reg) / n_layers
+# Average across the layers in which each gene is ACTIVE, i.e. divide column j by
+# k_j = #{layers with >=1 edge on gene j}, NOT by the constant n_layers=3.
+# Dividing by 3 made the column of any gene present in <3 layers sub-stochastic
+# (colSum = k_j/3 < 1), leaking probability mass in the walk. Dividing by k_j
+# restores a column-stochastic transition matrix for every non-isolated gene.
+k_active <- (colSums(M_ppi) > 0) + (colSums(M_coexpr) > 0) + (colSums(M_reg) > 0)
+inv_k    <- ifelse(k_active > 0, 1 / k_active, 0)  # isolated genes (k_j=0) -> 0 column
+M <- (M_ppi + M_coexpr + M_reg) %*% Diagonal(x = inv_k)
 
 cat("Combined transition matrix: dim =", dim(M), "\n")
 cat("Nonzeros in M:", nnzero(M), "\n")
@@ -389,7 +406,7 @@ rwr_dt <- data.table(
 # Atlas gene IDs are already unversioned (after rename above)
 atlas_slim <- atlas[, .(gene,
                         symbol, gene_biotype,
-                        dream_logFC, dream_padj,
+                        bulk_logFC, bulk_padj,
                         coloc_susie_best_pp4,
                         is_deg, has_coloc, is_seed,
                         is_conserved)]
@@ -412,7 +429,7 @@ rwr_dt[!is.na(gene_biotype), .(
 # Top lncRNAs
 cat("\nTop 20 lncRNAs by RWR score:\n")
 rwr_dt[gene_biotype == "lncRNA"][order(rwr_rank)][1:20,
-  .(rwr_rank, symbol, rwr_score, is_deg, dream_padj, coloc_susie_best_pp4)] |> print()
+  .(rwr_rank, symbol, rwr_score, is_deg, bulk_padj, coloc_susie_best_pp4)] |> print()
 
 # Save
 fwrite(rwr_dt[order(rwr_rank)], out_csv)

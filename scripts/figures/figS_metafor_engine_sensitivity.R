@@ -32,15 +32,14 @@ p <- ggplot(m, aes(lv_logFC, ds_logFC)) +
   scale_fill_viridis_c(trans = "log10", name = "genes", option = "mako", direction = -1) +
   coord_fixed(xlim = c(-lim, lim), ylim = c(-lim, lim)) +
   labs(x = "meta-log2FC  (limma-voom -> metafor)",
-       y = "meta-log2FC  (DESeq2 -> metafor)",
-       title = "metafor is robust to the per-study DE engine",
-       subtitle = sprintf("%s common genes | Spearman rho = %.3f, Pearson = %.3f | direction concordance %.0f%% (shared DEGs)\nper-cohort Stage-1 rho = 0.94-0.97 -> use limma-voom as the single metafor arm",
-                          format(nrow(m), big.mark = ","), rho, pr, 100 * dir_conc)) +
+       y = "meta-log2FC  (DESeq2 -> metafor)") +
   annotate("text", x = -lim * 0.95, y = lim * 0.9, hjust = 0,
-           label = sprintf("rho = %.3f", rho), size = 3, fontface = "bold", colour = "grey15") +
-  theme_masld(base_size = 7) +
-  theme(plot.subtitle = element_text(size = 5.6, colour = "grey40", lineheight = 1.1),
-        legend.position = "right", legend.key.width = unit(0.25, "cm"))
+           label = sprintf("rho = %.3f", rho), size = 6/ggplot2::.pt, fontface = "plain", colour = "black") +
+  theme_masld(base_size = 6) +
+  theme(legend.position = "right", legend.key.width = unit(0.25, "cm"))
+
+message(sprintf("[caption] metafor is robust to the per-study DE engine: %s common genes | Spearman rho = %.3f, Pearson = %.3f | direction concordance %.0f%% (shared DEGs); per-cohort Stage-1 rho = 0.94-0.97 -> use limma-voom as the single metafor arm",
+                format(nrow(m), big.mark = ","), rho, pr, 100 * dir_conc))
 
 ggsave(file.path(OUT, "panelF_metafor_engine_sensitivity.pdf"), p,
        width = 4.8, height = 4.4, useDingbats = FALSE)

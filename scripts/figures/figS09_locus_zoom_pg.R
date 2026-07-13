@@ -33,6 +33,10 @@ LOCUS_ID        <- if (length(args) >= 1) args[1] else "locus_GGT_chr15_60883281
 TRAIT_PAIR      <- if (length(args) >= 2) args[2] else sub("locus_([^_]+)_.*", "\\1", LOCUS_ID)
 FORCE_EQTL_GENE <- if (length(args) >= 3) args[3] else NA_character_
 OUT_OVERRIDE    <- if (length(args) >= 4) args[4] else NA_character_
+# SHOW_SAS: include the South Asian (PanUKBB CSA) track in the PLOT. Default OFF
+# (2026-06-19) — Fig 2 locus zooms are EUR+EAS only. Set env SHOW_SAS=1 to restore.
+# All SAS handling code below is retained; this only gates rendering.
+SHOW_SAS <- tolower(Sys.getenv("SHOW_SAS", "false")) %in% c("1", "true", "yes")
 
 cat(sprintf("Locus: %s | Trait: %s | eQTL gene: %s\n",
             LOCUS_ID, TRAIT_PAIR,
@@ -59,13 +63,34 @@ EAS_LD_BLOCKS <- file.path(EAS_LD_BASE, "approx_LD_blocks.txt")
 SAS_LD_BASE   <- tryCatch(get_ld_base_dir("SAS"), error = function(e) NA_character_)
 SAS_LD_BLOCKS <- if (!is.na(SAS_LD_BASE)) file.path(SAS_LD_BASE, "approx_LD_blocks.txt") else NA_character_
 
-OUT_DIR <- file.path(BASE, "figures/locus_zoom")
+OUT_DIR <- file.path(PROJ, "figures/main/fig2_genetics/locus_zoom")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
 # ── Locus metadata ────────────────────────────────────────────────────────────
 loci  <- fread(SHARED_LOCI)
 locus <- loci[locus_id == LOCUS_ID]
-if (nrow(locus) == 0) stop("Locus not found in shared_loci.csv: ", LOCUS_ID)
+if (nrow(locus) == 0) {
+  # LZ_* env fallback (2026-07-06): render a locus that has no SuSiEx EUR+EAS
+  # shared-locus row (e.g. FABP1/ALT, a EUR-only enzyme coloc). Supply the window
+  # + leads via env vars instead of mutating the canonical shared_loci.csv. Only
+  # chr / window / lead positions are consumed downstream; the sumstats are still
+  # derived from TRAIT_PAIR (UKBB_/BBJ_/PanUKBB_CSA_<trait>), so nothing else changes.
+  env_chr <- Sys.getenv("LZ_CHR", "")
+  if (nzchar(env_chr)) {
+    locus <- data.table(
+      locus_id     = LOCUS_ID,
+      chr          = as.integer(env_chr),
+      window_start = as.integer(Sys.getenv("LZ_WIN_START")),
+      window_end   = as.integer(Sys.getenv("LZ_WIN_END")),
+      eur_lead_pos = as.integer(Sys.getenv("LZ_EUR_LEAD")),
+      eas_lead_pos = as.integer(Sys.getenv("LZ_EAS_LEAD",
+                                           unset = Sys.getenv("LZ_EUR_LEAD"))))
+    cat(sprintf("  Locus absent from shared_loci.csv — using LZ_* env override: chr%s:%s-%s\n",
+                locus$chr, locus$window_start, locus$window_end))
+  } else {
+    stop("Locus not found in shared_loci.csv and no LZ_CHR env override: ", LOCUS_ID)
+  }
+}
 
 CHR          <- locus$chr
 WIN_START    <- locus$window_start
@@ -81,7 +106,11 @@ cat("Loading EUR sumstats...\n")
 eur_ss <- fread(EUR_SS,
                 select = c("chromosome","position","allele1","allele2","beta","se","pval"))
 eur_locus <- eur_ss[chromosome == CHR & position >= WIN_START & position <= WIN_END]
-eur_locus[, p := as.numeric(pval)]
+# floor: p as extreme as 1e-564 (e.g. ACADS/UKBB_GGT) underflows to literal 0.0 in
+# double precision -> -log10(0) = Inf -> invalid plotManhattan yscale. Floor at the
+# smallest representable positive double; purely a rendering fix, no effect on
+# significance calls (already far past any threshold at this magnitude).
+eur_locus[, p := pmax(as.numeric(pval), 1e-300)]
 eur_locus[, snp := paste(chromosome, position, allele1, allele2, sep = ":")]
 rm(eur_ss); gc(verbose = FALSE)
 cat("  EUR locus variants:", nrow(eur_locus), "\n")
@@ -91,7 +120,7 @@ cat("Loading EAS sumstats...\n")
 eas_ss <- fread(EAS_SS,
                 select = c("chromosome","position","allele1","allele2","beta","se","pval"))
 eas_locus <- eas_ss[chromosome == CHR & position >= WIN_START & position <= WIN_END]
-eas_locus[, p := as.numeric(pval)]
+eas_locus[, p := pmax(as.numeric(pval), 1e-300)]   # p-underflow floor (see EUR block)
 rm(eas_ss); gc(verbose = FALSE)
 cat("  EAS locus variants:", nrow(eas_locus), "\n")
 
@@ -101,12 +130,12 @@ cat("  EAS locus variants:", nrow(eas_locus), "\n")
 has_sas <- FALSE
 sas_locus <- data.table()
 SAS_LEAD_POS <- NA_integer_
-if (file.exists(SAS_SS)) {
+if (SHOW_SAS && file.exists(SAS_SS)) {
   cat("Loading SAS sumstats (PanUKBB CSA)...\n")
   sas_ss <- fread(SAS_SS,
                   select = c("chromosome","position","allele1","allele2","beta","se","pval"))
   sas_locus <- sas_ss[chromosome == CHR & position >= WIN_START & position <= WIN_END]
-  sas_locus[, p := as.numeric(pval)]
+  sas_locus[, p := pmax(as.numeric(pval), 1e-300)]   # p-underflow floor (see EUR block)
   rm(sas_ss); gc(verbose = FALSE)
   if (nrow(sas_locus[!is.na(p)]) > 0) {
     has_sas <- TRUE
@@ -125,7 +154,7 @@ if (file.exists(SAS_SS)) {
 # panels; otherwise uses TRAIT_PAIR directly as study name.
 fm_studies <- if (TRAIT_PAIR %in% c("ALT","AST","GGT")) {
   c(paste0("UKBB_", TRAIT_PAIR), paste0("BBJ_", TRAIT_PAIR),
-    paste0("PanUKBB_CSA_", TRAIT_PAIR))   # + SAS (South Asian) for 3-ancestry PIP track
+    if (SHOW_SAS) paste0("PanUKBB_CSA_", TRAIT_PAIR))   # SAS PIP lollipops only when SHOW_SAS
 } else {
   TRAIT_PAIR
 }
@@ -328,7 +357,7 @@ if (file.exists(eqtl_file)) {
       best_gene <- near_lead[which.min(PVAL), GeneSymbol]
     }
     eqtl_track <- eqtl_loc[GeneSymbol == best_gene]
-    eqtl_track[, p := as.numeric(PVAL)]
+    eqtl_track[, p := pmax(as.numeric(PVAL), 1e-300)]   # p-underflow floor (see EUR block)
     cat(sprintf("  eQTL track: %s (%d variants)\n", best_gene, nrow(eqtl_track)))
   }
 }
@@ -381,7 +410,9 @@ for (d in candidate_dirs) {
 #   otherwise (n.s. or no atlas data)      → grey ("not significantly changed")
 # This replaces the prior binary up/down classification; intensity of the
 # colour now encodes effect size rather than a hard threshold.
-LFC_SAT  <- 0.8  # saturation point for the color scale (95th-percentile shoulder)
+LFC_SAT  <- 0.5  # saturate at the Tier-1 DEG threshold (|log2FC|>=0.5) so DEGs render
+                 # at full color instead of near-white (2026-06-22; matches the disease
+                 # locus-zoom script figS09_locus_zoom_disease.R for cross-panel consistency)
 LFC_MIN  <- 0.05 # below this magnitude, treat as essentially no change
 
 gene_atlas <- if (file.exists(ATLAS_FILE)) {
@@ -390,12 +421,13 @@ gene_atlas <- if (file.exists(ATLAS_FILE)) {
                   bulk_logFC  = double(),
                   bulk_padj   = double())
 
-# Diverging palette: deep blue (down) → white → deep red (up)
+# Diverging palette: deep blue (down) → white → deep magenta (up) — house
+# semantic (up = #C9265E, down = #1565C0; was red #C62828, 2026-07-01 fix).
 deg_palette <- colorRampPalette(c("#1565C0", "#90CAF9", "#FFFFFF",
-                                   "#EF9A9A", "#C62828"))(101)
+                                   "#F48FB1", "#C9265E"))(101)
 lfc_to_color <- function(lfc, padj) {
   if (is.na(lfc) || is.na(padj) || padj >= 0.05 || abs(lfc) < LFC_MIN) {
-    return("#BDBDBD")  # n.s. / no data
+    return("#9E9E9E")  # n.s. / no data
   }
   v <- pmin(pmax(lfc / LFC_SAT, -1), 1)
   idx <- round((v + 1) * 50) + 1   # map [-1,1] → 1..101
@@ -409,17 +441,23 @@ out_path <- if (!is.na(OUT_OVERRIDE)) {
   dir.create(dirname(OUT_OVERRIDE), recursive = TRUE, showWarnings = FALSE)
   OUT_OVERRIDE
 } else {
-  file.path(OUT_DIR, paste0(LOCUS_ID, "_ld_zoom_pg.pdf"))
+  file.path(OUT_DIR, paste0(TRAIT_PAIR, "_",
+            if (!is.na(best_gene)) best_gene else
+            if (!is.na(FORCE_EQTL_GENE)) FORCE_EQTL_GENE else LOCUS_ID,
+            ".pdf"))
 }
 cat("Output:", out_path, "\n")
 
 # Page geometry (inches)
-PAGE_W <- 7.8
-H_SAS_TRACK <- 1.10                              # SAS Manhattan track height (mirrors EAS)
-SAS_BLOCK   <- if (has_sas) H_SAS_TRACK + 0.18 else 0   # track + the gap above it
-PAGE_H <- 8.4 + SAS_BLOCK   # 2026-06-07: grows when the SAS (3rd-ancestry) track is added
-MARGIN_L <- 0.95   # leaves room for y-axis labels
-MARGIN_R <- 1.35   # leaves room for legends + per-track right-margin labels
+# Compact main-text geometry (2026-07-06): ~4.4 x ~4.85 in (was 5.4 x 5.1) so the
+# 6pt font reads proportionally next to the other Fig 2 panels. Narrower page +
+# tightened per-track heights (below); MARGIN_R held at 1.00 for the legends.
+PAGE_W <- 4.4
+H_SAS_TRACK <- 0.70                              # SAS Manhattan track height (mirrors EAS)
+SAS_BLOCK   <- if (has_sas) H_SAS_TRACK + 0.10 else 0   # track + the gap above it
+PAGE_H <- 4.85 + SAS_BLOCK   # 6-track stack (EUR/EAS/PIP/eQTL/genes/ruler), font floor 6pt
+MARGIN_L <- 0.62   # leaves room for y-axis labels
+MARGIN_R <- 1.00   # leaves room for legends + per-track right-margin labels
 PLOT_X <- MARGIN_L
 PLOT_W <- PAGE_W - MARGIN_L - MARGIN_R
 
@@ -437,30 +475,43 @@ pageCreate(width = PAGE_W, height = PAGE_H,
 # plotgardener tracks use top-down inches; bare grid primitives use bottom-up.
 top_to_grid <- function(y_top) PAGE_H - y_top
 
-# LD palette for EUR Manhattan — 8-step gradient (grey → blue → green → yellow
-# → orange → red), set by user 2026-05-04. Lowest r² = grey, highest = deep red.
+# LD palette for EUR Manhattan — single-hue sequential gray->navy gradient
+# (2026-07-01, replaces the 2026-05-04 grey/blue/green/yellow/orange/red rainbow
+# per FIGURE_GUIDELINES.md "Never rainbow/jet — perceptually non-uniform and
+# inaccessible"). Lowest r² = neutral gray (uninformative), highest r² = the
+# house deep-blue anchor (blue_gradient dark stop).
 ld_palette <- colorRampPalette(c(
-  "#999999",  # 0.0  grey
-  "#0E5579",  # ~0.15 dark blue
-  "#0073B2",  # ~0.30 medium blue
-  "#009E73",  # ~0.45 green
-  "#9AD093",  # ~0.60 light green
-  "#F0E442",  # ~0.75 yellow
-  "#F19F3F",  # ~0.90 orange
-  "#B82725"   # 1.0  deep red
+  "#E6E6E5",  # 0.0  neutral gray (gray_gradient light anchor)
+  "#1B2F5B"   # 1.0  deep navy (blue_gradient dark anchor)
 ))
 
 track_label <- function(label, x = PAGE_W - MARGIN_R + 0.05, y) {
   plotText(label = label, x = x, y = y,
-           fontsize = 8, fontface = "bold",
+           fontsize = 6,
            just = c("left", "top"), default.units = "inches")
 }
 
 axis_label <- function(label, y, h) {
   plotText(label = label, rot = 90,
-           x = MARGIN_L - 0.55, y = y + h/2,
-           fontsize = 7, just = "center",
+           x = MARGIN_L - 0.42, y = y + h/2,
+           fontsize = 6, just = "center",
            default.units = "inches")
+}
+
+# Draws one point + label legend item at (x, y) inches-from-top and returns the
+# x position the NEXT item should start at, measuring the label's actual
+# rendered width (grid::grobWidth) instead of a hand-guessed offset — this is
+# what a fixed offset got wrong (2026-07-01: legend items were overlapping).
+legend_item <- function(x, y, col, label, fill = col, pch = 19, size = 0.07, gap = 0.14) {
+  grid.points(x = unit(x, "inches"), y = unit(top_to_grid(y), "inches"),
+              pch = pch, size = unit(size, "inches"),
+              gp = gpar(col = col, fill = fill, lwd = 0.5))
+  lab_x <- x + size / 2 + 0.05
+  plotText(label = label, x = lab_x, y = y, fontsize = 6, fontcolor = "black",
+           just = c("left", "center"), default.units = "inches")
+  txt_w <- convertWidth(grobWidth(textGrob(label, gp = gpar(fontsize = 6))),
+                        "inches", valueOnly = TRUE)
+  lab_x + txt_w + gap
 }
 
 # Draw left + bottom axis spines for a track at (y_top, h) inches-from-top.
@@ -482,8 +533,14 @@ draw_axis_spines <- function(y, h) {
     gp = gpar(col = "black", lwd = 0.5))
 }
 
+# Panel title removed (publication figure, not a slide); caption below records
+# the focal gene + GWAS trait it used to display.
+title_gene <- if (!is.na(best_gene)) best_gene else
+              if (!is.na(FORCE_EQTL_GENE)) FORCE_EQTL_GENE else LOCUS_ID
+message(sprintf("[caption] %s · %s (cross-ancestry)", title_gene, TRAIT_PAIR))
+
 # Track 1: EUR GWAS, LD-colored ───────────────────────────────────────────────
-y1 <- 0.45; h1 <- 1.45
+y1 <- 0.30; h1 <- 0.90
 eur_pg <- eur_locus[!is.na(p),
   .(chrom = paste0("chr", chromosome), pos = position, p = p, r2 = r2)]
 # Sort low → high r² so high-LD points draw on top.
@@ -526,26 +583,34 @@ grid.points(
   gp   = gpar(col = eur_pg_df$fill_col)
 )
 
-# Highlight lead SNP with a diamond marker
-lead_x <- mh_eur_pos_to_x(EUR_LEAD_POS)
-lead_p <- eur_pg_df$p[which.min(abs(eur_pg_df$pos - EUR_LEAD_POS))]
-lead_y <- mh_eur_p_to_y(lead_p)
-grid.points(
-  x = unit(lead_x, "inches"), y = unit(lead_y, "inches"),
-  pch = 23, size = unit(0.13, "inches"),
-  gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
-)
+# Lead-SNP diamond — drawn only if this ancestry carries a real signal in the
+# window (>= suggestive, p < 1e-5). Otherwise the "lead" is just the top of noise
+# and its diamond is misleading (e.g. South Asian at the CYP2A6 locus, peak
+# -log10p 2.5). NOTE: the strict genome-wide line (5e-8) would also drop genuine
+# sub-GW signals that still colocalize (e.g. RORA SAS, peak -log10p 7.2), so the
+# suggestive threshold is used.
+LEAD_SIG_P <- 1e-5
+if (min(eur_pg_df$p, na.rm = TRUE) < LEAD_SIG_P) {
+  lead_x <- mh_eur_pos_to_x(EUR_LEAD_POS)
+  lead_p <- eur_pg_df$p[which.min(abs(eur_pg_df$pos - EUR_LEAD_POS))]
+  lead_y <- mh_eur_p_to_y(lead_p)
+  grid.points(
+    x = unit(lead_x, "inches"), y = unit(lead_y, "inches"),
+    pch = 23, size = unit(0.13, "inches"),
+    gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+  )
+}
 
-annoYaxis(plot = mh_eur, at = pretty(c(0, max(-log10(eur_pg$p)))), fontsize = 7)
+annoYaxis(plot = mh_eur, at = pretty(c(0, max(-log10(eur_pg$p)))), fontsize = 6)
 draw_axis_spines(y1, h1)
 axis_label("-log10(p)", y1, h1)
-track_label("EUR GWAS", y = y1 + 0.02)
+track_label(paste0(TRAIT_PAIR, " · EUR"), y = y1 + 0.02)
 # Shared LD legend (5-bin r² + lead) — placed in the right margin centered
 # vertically on the seam between EUR and EAS Manhattans so it visually serves
 # both. (Drawn after Track 2 is defined; see block below the EAS track.)
 
 # Track 2: EAS GWAS, LD-colored to EAS lead (mirrors EUR track) ───────────────
-y2 <- y1 + h1 + 0.18; h2 <- 1.10
+y2 <- y1 + h1 + 0.10; h2 <- 0.70
 eas_pg <- eas_locus[!is.na(p),
   .(chrom = paste0("chr", chromosome), pos = position, p = p, r2 = r2)]
 if (nrow(eas_pg) > 0) {
@@ -578,33 +643,51 @@ if (nrow(eas_pg) > 0) {
     size = unit(0.07, "inches"),
     gp   = gpar(col = eas_pg_df$fill_col)
   )
-  # Highlight EAS lead SNP with a diamond
-  eas_lead_x <- mh_eas_pos_to_x(EAS_LEAD_POS)
-  eas_lead_p <- eas_pg_df$p[which.min(abs(eas_pg_df$pos - EAS_LEAD_POS))]
-  eas_lead_y <- mh_eas_p_to_y(eas_lead_p)
-  grid.points(
-    x = unit(eas_lead_x, "inches"), y = unit(eas_lead_y, "inches"),
-    pch = 23, size = unit(0.13, "inches"),
-    gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
-  )
-  annoYaxis(plot = mh_eas, at = pretty(c(0, max(-log10(eas_pg$p)))), fontsize = 7)
+  # Highlight EAS lead SNP with a diamond (only if a real signal is present)
+  if (min(eas_pg_df$p, na.rm = TRUE) < LEAD_SIG_P) {
+    eas_lead_x <- mh_eas_pos_to_x(EAS_LEAD_POS)
+    eas_lead_p <- eas_pg_df$p[which.min(abs(eas_pg_df$pos - EAS_LEAD_POS))]
+    eas_lead_y <- mh_eas_p_to_y(eas_lead_p)
+    grid.points(
+      x = unit(eas_lead_x, "inches"), y = unit(eas_lead_y, "inches"),
+      pch = 23, size = unit(0.13, "inches"),
+      gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+    )
+  }
+  # Mark the SuSiE-COLOC top variant on the EAS track too (gold diamond, matching
+  # the eQTL track) when it is a DISTINCT signal from the EAS lead. This makes a
+  # secondary-signal colocalization (e.g. CYP2A6, where the colocalizing EAS
+  # signal sits ~60 kb from the primary GWAS peak) visually self-evident: the
+  # gold diamond here aligns vertically with the gold diamond on the eQTL track.
+  # >20 kb apart = a genuinely distinct secondary signal (not the same LD block
+  # as the lead); only then is a separate marker informative.
+  if (!is.na(coloc_top_pos) && abs(coloc_top_pos - EAS_LEAD_POS) > 20000 &&
+      coloc_top_pos >= WIN_START && coloc_top_pos <= WIN_END) {
+    eas_coloc_p <- eas_pg_df$p[which.min(abs(eas_pg_df$pos - coloc_top_pos))]
+    grid.points(
+      x = unit(mh_eas_pos_to_x(coloc_top_pos), "inches"),
+      y = unit(mh_eas_p_to_y(eas_coloc_p),     "inches"),
+      pch = 23, size = unit(0.13, "inches"),
+      gp = gpar(col = "black", fill = "#FFD600", lwd = 0.8))
+  }
+  annoYaxis(plot = mh_eas, at = pretty(c(0, max(-log10(eas_pg$p)))), fontsize = 6)
   draw_axis_spines(y2, h2)
 } else {
   plotText(label = "(no EAS data in window)",
            x = PLOT_X + PLOT_W/2, y = y2 + h2/2,
-           fontsize = 8, fontcolor = "grey50",
+           fontsize = 6, fontcolor = "black",
            default.units = "inches")
 }
 axis_label("-log10(p)", y2, h2)
-track_label("EAS GWAS", y = y2 + 0.02)
+track_label(paste0(TRAIT_PAIR, " · EAS"), y = y2 + 0.02)
 
 # ── Shared LD legend (EUR + EAS) ─────────────────────────────────────────────
 # Placed horizontally in the right margin of the EUR GWAS track. This resolves
 # the awkward overlap with the "EAS GWAS" label below by keeping the legend
 # compact, modern, and perfectly aligned with the Genes log2FC scale bar.
 ld_x0 <- PAGE_W - MARGIN_R + 0.05
-ld_y  <- y1 + 0.35
-ld_w  <- 1.05
+ld_y  <- y1 + 0.28
+ld_w  <- 0.85
 
 # Horizontal color scale bar (50-step gradient for smooth transition)
 n_steps <- 50
@@ -625,18 +708,18 @@ for (k in 0:(n_steps - 1)) {
 # Scale endpoints + middle tick
 plotText(label = "0.0",
          x = ld_x0, y = ld_y + 0.10,
-         fontsize = 5.5, just = c("left", "top"), default.units = "inches")
+         fontsize = 6, just = c("left", "top"), default.units = "inches")
 plotText(label = "0.5",
          x = ld_x0 + ld_w/2, y = ld_y + 0.10,
-         fontsize = 5.5, just = c("center", "top"), default.units = "inches")
+         fontsize = 6, just = c("center", "top"), default.units = "inches")
 plotText(label = "1.0",
          x = ld_x0 + ld_w, y = ld_y + 0.10,
-         fontsize = 5.5, just = c("right", "top"), default.units = "inches")
+         fontsize = 6, just = c("right", "top"), default.units = "inches")
 
 # Scale title (above the bar)
 plotText(label = "r² to lead",
          x = ld_x0 + ld_w/2, y = ld_y - 0.10,
-         fontsize = 5.5, fontface = "italic", just = c("center", "bottom"),
+         fontsize = 6, fontface = "plain", just = c("center", "bottom"),
          default.units = "inches")
 
 # Lead SNP indicator (below the scale labels)
@@ -649,7 +732,7 @@ grid.points(
 )
 plotText(label = "Lead SNP",
          x = ld_x0 + 0.15, y = lead_y_offset,
-         fontsize = 5.5, just = c("left", "center"),
+         fontsize = 6, just = c("left", "center"),
          default.units = "inches")
 
 # Track 2.5 (LD triangular heatmap) dropped 2026-05-04 — user request.
@@ -768,12 +851,12 @@ if (n_snps >= 2) {
     )
   }
   plotText(label = "0",   x = ld_tri_x0,            y = ld_tri_y + 0.10,
-           fontsize = 5.5, just = c("left", "top"), default.units = "inches")
+           fontsize = 6, just = c("left", "top"), default.units = "inches")
   plotText(label = "1",   x = ld_tri_x0 + ld_tri_w, y = ld_tri_y + 0.10,
-           fontsize = 5.5, just = c("right", "top"), default.units = "inches")
+           fontsize = 6, just = c("right", "top"), default.units = "inches")
   plotText(label = "r²",  x = ld_tri_x0 + ld_tri_w/2,
            y = ld_tri_y - 0.10,
-           fontsize = 5.5, fontface = "italic",
+           fontsize = 6, fontface = "plain",
            just = c("centre", "bottom"), default.units = "inches")
 } else {
   cat("  too few LD variants for triangle — skipping.\n")
@@ -782,7 +865,7 @@ track_label("LD (EUR r²)", y = y_ld + 0.02)
 }  # end of dropped Track 2.5 block
 
 # Track 2b: SAS GWAS (PanUKBB CSA), LD-colored to SAS lead — optional 3rd ancestry
-y_sas <- y2 + h2 + 0.18; h_sas <- H_SAS_TRACK
+y_sas <- y2 + h2 + 0.10; h_sas <- H_SAS_TRACK
 if (has_sas) {
   sas_pg <- sas_locus[!is.na(p),
     .(chrom = paste0("chr", chromosome), pos = position, p = p, r2 = r2)]
@@ -813,27 +896,29 @@ if (has_sas) {
       pch = 19, size = unit(0.07, "inches"),
       gp = gpar(col = sas_pg_df$fill_col)
     )
-    sas_lead_x <- mh_sas_pos_to_x(SAS_LEAD_POS)
-    sas_lead_p <- sas_pg_df$p[which.min(abs(sas_pg_df$pos - SAS_LEAD_POS))]
-    sas_lead_y <- mh_sas_p_to_y(sas_lead_p)
-    grid.points(
-      x = unit(sas_lead_x, "inches"), y = unit(sas_lead_y, "inches"),
-      pch = 23, size = unit(0.13, "inches"),
-      gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
-    )
-    annoYaxis(plot = mh_sas, at = pretty(c(0, max(-log10(sas_pg$p)))), fontsize = 7)
+    if (min(sas_pg_df$p, na.rm = TRUE) < LEAD_SIG_P) {
+      sas_lead_x <- mh_sas_pos_to_x(SAS_LEAD_POS)
+      sas_lead_p <- sas_pg_df$p[which.min(abs(sas_pg_df$pos - SAS_LEAD_POS))]
+      sas_lead_y <- mh_sas_p_to_y(sas_lead_p)
+      grid.points(
+        x = unit(sas_lead_x, "inches"), y = unit(sas_lead_y, "inches"),
+        pch = 23, size = unit(0.13, "inches"),
+        gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8)
+      )
+    }
+    annoYaxis(plot = mh_sas, at = pretty(c(0, max(-log10(sas_pg$p)))), fontsize = 6)
     draw_axis_spines(y_sas, h_sas)
   } else {
     plotText(label = "(no SAS data in window)",
              x = PLOT_X + PLOT_W/2, y = y_sas + h_sas/2,
-             fontsize = 8, fontcolor = "grey50", default.units = "inches")
+             fontsize = 6, fontcolor = "black", default.units = "inches")
   }
   axis_label("-log10(p)", y_sas, h_sas)
-  track_label("SAS GWAS", y = y_sas + 0.02)
+  track_label(paste0(TRAIT_PAIR, " · SAS"), y = y_sas + 0.02)
 }
 
 # Track 3: PIP lollipop (EUR + EAS + SAS overlaid) ─────────────────────────────
-y3 <- (if (has_sas) y_sas + h_sas else y2 + h2) + 0.20; h3 <- 1.30
+y3 <- (if (has_sas) y_sas + h_sas else y2 + h2) + 0.12; h3 <- 0.78
 # Use grid primitives to draw lollipops on top of the genomic axis. grid is
 # bottom-up while plotgardener is top-down; helpers below convert.
 # Coordinates of the track in inches FROM TOP:
@@ -925,7 +1010,7 @@ draw_susie_pip(pips)
 axis_label("PIP", y3, h3)
 track_label("SuSiE finemap PIP", y = y3 + 0.02)
 
-# Inline mini-legend
+# Inline mini-legend — width-measured (legend_item()), not hand-guessed offsets.
 pip_legend_x <- PLOT_X + 0.10
 pip_legend_y <- y3 + 0.10
 present_studies <- unique(pips$study)
@@ -933,46 +1018,16 @@ ukbb_present <- any(grepl("^UKBB", present_studies))
 bbj_present  <- any(grepl("^BBJ_", present_studies))
 sas_present  <- any(grepl("^PanUKBB_CSA", present_studies))
 xc <- pip_legend_x
-if (ukbb_present) {
-  grid.points(x = unit(xc, "inches"),
-              y = unit(top_to_grid(pip_legend_y), "inches"),
-              pch = 19, size = unit(0.07, "inches"), gp = gpar(col = "#1565C0"))
-  plotText(label = "UKBB EUR (in CS)", x = xc + 0.06, y = pip_legend_y,
-           fontsize = 5.5, fontcolor = "grey25",
-           just = c("left", "center"), default.units = "inches")
-  xc <- xc + 0.95
-}
-if (bbj_present) {
-  grid.points(x = unit(xc, "inches"),
-              y = unit(top_to_grid(pip_legend_y), "inches"),
-              pch = 19, size = unit(0.07, "inches"), gp = gpar(col = "#D55E00"))
-  plotText(label = "BBJ EAS (in CS)", x = xc + 0.06, y = pip_legend_y,
-           fontsize = 5.5, fontcolor = "grey25",
-           just = c("left", "center"), default.units = "inches")
-  xc <- xc + 0.92
-}
-if (sas_present) {
-  grid.points(x = unit(xc, "inches"),
-              y = unit(top_to_grid(pip_legend_y), "inches"),
-              pch = 19, size = unit(0.07, "inches"), gp = gpar(col = "#7B1FA2"))
-  plotText(label = "PanUKBB SAS (in CS)", x = xc + 0.06, y = pip_legend_y,
-           fontsize = 5.5, fontcolor = "grey25",
-           just = c("left", "center"), default.units = "inches")
-  xc <- xc + 1.05
-}
-grid.points(x = unit(xc, "inches"),
-            y = unit(top_to_grid(pip_legend_y), "inches"),
-            pch = 21, size = unit(0.05, "inches"),
-            gp = gpar(col = "grey50", fill = "white", lwd = 0.5))
-plotText(label = "not in CS", x = xc + 0.06, y = pip_legend_y,
-         fontsize = 5.5, fontcolor = "grey25",
-         just = c("left", "center"), default.units = "inches")
+if (ukbb_present) xc <- legend_item(xc, pip_legend_y, "#1565C0", "UKBB EUR (in CS)")
+if (bbj_present)  xc <- legend_item(xc, pip_legend_y, "#D55E00", "BBJ EAS (in CS)")
+if (sas_present)  xc <- legend_item(xc, pip_legend_y, "#7B1FA2", "PanUKBB SAS (in CS)")
+xc <- legend_item(xc, pip_legend_y, "#9E9E9E", "not in CS", fill = "white", pch = 21, size = 0.05)
 
 # (Separate SuSiE-COLOC PP.H4 panel removed 2026-05-04 — diamond restored on
 #  the eQTL track below at the COLOC top variant.)
 
 # Track 4: eQTL Manhattan (focal gene) ────────────────────────────────────────
-y4 <- y3 + h3 + 0.18; h4 <- 0.95
+y4 <- y3 + h3 + 0.10; h4 <- 0.58
 if (!is.null(eqtl_track) && nrow(eqtl_track) > 0) {
   eqtl_pg <- eqtl_track[!is.na(p) & p > 0,
     .(chrom = paste0("chr", CHR), pos = POS, p = p)]
@@ -987,7 +1042,7 @@ if (!is.null(eqtl_track) && nrow(eqtl_track) > 0) {
     x = PLOT_X, width = PLOT_W,
     y = y4, height = h4, default.units = "inches"
   )
-  annoYaxis(plot = mh_eqtl, at = pretty(c(0, max(-log10(eqtl_pg$p)))), fontsize = 7)
+  annoYaxis(plot = mh_eqtl, at = pretty(c(0, max(-log10(eqtl_pg$p)))), fontsize = 6)
   draw_axis_spines(y4, h4)
   axis_label("-log10(p)", y4, h4)
   track_label(sprintf("eQTL: %s", best_gene), y = y4 + 0.02)
@@ -1009,14 +1064,14 @@ if (!is.null(eqtl_track) && nrow(eqtl_track) > 0) {
       gp = gpar(col = "black", fill = "#FFD600", lwd = 0.8))
     plotText(label = sprintf("COLOC top SNP\nPP4 = %.2f", coloc_pp4),
              x = coloc_x_in + 0.10, y = y4 + 0.10,
-             fontsize = 6, fontface = "italic",
+             fontsize = 6, fontface = "plain",
              just = c("left", "top"), default.units = "inches",
-             fontcolor = "grey20")
+             fontcolor = "black")
   }
 }
 
 # Track 5: gene track (plotgardener TxDb), colored by bulk dream logFC ────────
-y5 <- y4 + h4 + 0.20; h5 <- 1.00
+y5 <- y4 + h4 + 0.12; h5 <- 0.70
 
 # Pre-fetch the genes plotGenes will draw, so we can hand each a logFC color.
 locus_gr     <- GRanges(seqnames = paste0("chr", CHR),
@@ -1024,11 +1079,13 @@ locus_gr     <- GRanges(seqnames = paste0("chr", CHR),
 genes_in_win <- suppressMessages(genes(TxDb.Hsapiens.UCSC.hg19.knownGene,
                                        filter = list(tx_chrom = paste0("chr", CHR))))
 genes_in_win <- subsetByOverlaps(genes_in_win, locus_gr)
-gene_symbols <- suppressMessages(
-  mapIds(org.Hs.eg.db, keys = genes_in_win$gene_id,
-         column = "SYMBOL", keytype = "ENTREZID", multiVals = "first")
-)
-gene_symbols <- unique(gene_symbols[!is.na(gene_symbols)])
+# guard: some windows (distal-regulatory loci where the eQTL target sits outside
+# the credible-set window) contain no TxDb genes — mapIds errors on zero keys.
+gene_symbols <- if (length(genes_in_win) > 0) {
+  unique(na.omit(suppressMessages(
+    mapIds(org.Hs.eg.db, keys = genes_in_win$gene_id,
+           column = "SYMBOL", keytype = "ENTREZID", multiVals = "first"))))
+} else character(0)
 
 # Map each gene → continuous color via bulk_logFC + bulk_padj.
 gene_colors <- setNames(character(length(gene_symbols)), gene_symbols)
@@ -1036,30 +1093,70 @@ for (g in gene_symbols) {
   hit <- gene_atlas[human_symbol == g][1]
   gene_colors[g] <- if (nrow(hit) && !is.na(hit$bulk_logFC)) {
     lfc_to_color(hit$bulk_logFC, hit$bulk_padj)
-  } else "#BDBDBD"
+  } else "#9E9E9E"
 }
 gene_hl <- data.frame(gene  = names(gene_colors),
                       color = unname(gene_colors),
                       stringsAsFactors = FALSE)
 
-plotGenes(
-  chrom = paste0("chr", CHR), chromstart = WIN_START, chromend = WIN_END,
-  assembly = "hg19",
-  fill = c("#9E9E9E", "#9E9E9E"),
-  fontcolor = c("#424242", "#424242"),
-  geneHighlights = gene_hl,
-  geneBackground = "grey85",
-  fontsize = 7, strandLabels = TRUE,
-  x = PLOT_X, width = PLOT_W,
-  y = y5, height = h5, default.units = "inches"
-)
+# Custom transcript-style gene model (2026-06-19): exons = thick boxes, introns
+# = thin line, strand = chevrons — so intron stretches are unmistakable (the
+# default plotGenes() collapses the model and introns/exons look alike).
+xin <- function(p) PLOT_X + (pmax(WIN_START, pmin(WIN_END, p)) - WIN_START) /
+                   (WIN_END - WIN_START) * PLOT_W
+ex_by_gene <- suppressMessages(exonsBy(TxDb.Hsapiens.UCSC.hg19.knownGene, by = "gene"))
+gmod <- list()
+for (i in seq_along(genes_in_win)) {
+  gid <- as.character(genes_in_win$gene_id[i])
+  sym <- suppressMessages(mapIds(org.Hs.eg.db, gid, "SYMBOL", "ENTREZID"))
+  if (is.na(sym) || is.null(ex_by_gene[[gid]])) next
+  exr <- reduce(ex_by_gene[[gid]])
+  if (max(end(exr)) < WIN_START || min(start(exr)) > WIN_END) next
+  gmod[[length(gmod) + 1]] <- list(sym = sym, strand = as.character(strand(exr))[1],
+    gs = min(start(exr)), ge = max(end(exr)),
+    es = start(exr), ee = end(exr),
+    col = if (sym %in% names(gene_colors)) gene_colors[[sym]] else "#9E9E9E")
+}
+# greedy row-packing on genomic extent so overlapping genes stack
+if (length(gmod)) {
+  gmod <- gmod[order(sapply(gmod, `[[`, "gs"))]
+  row_end <- numeric(0)
+  for (j in seq_along(gmod)) {
+    gs <- max(WIN_START, gmod[[j]]$gs); placed <- FALSE
+    for (r in seq_along(row_end)) if (gs > row_end[r] + 0.02 * (WIN_END - WIN_START)) {
+      gmod[[j]]$row <- r; row_end[r] <- min(WIN_END, gmod[[j]]$ge); placed <- TRUE; break }
+    if (!placed) { row_end <- c(row_end, min(WIN_END, gmod[[j]]$ge)); gmod[[j]]$row <- length(row_end) }
+  }
+  nrows <- max(row_end_n <- length(row_end), 1)
+  row_gap <- min(0.30, (h5 - 0.20) / nrows)          # fit within fixed h5
+  for (g in gmod) {
+    yc <- y5 + 0.18 + (g$row - 1) * row_gap
+    yg <- top_to_grid(yc); x0 <- xin(g$gs); x1 <- xin(g$ge)
+    grid.lines(x = unit(c(x0, x1), "inches"), y = unit(yg, "inches"),
+               gp = gpar(col = g$col, lwd = 1.0))          # intron line
+    nch <- floor((x1 - x0) / 0.22)                          # strand chevrons
+    if (nch >= 1) {
+      chx <- seq(x0 + 0.06, x1 - 0.06, length.out = nch + 1)
+      for (cx in chx) grid.text(if (g$strand == "-") "<" else ">",
+        x = unit(cx, "inches"), y = unit(yg, "inches"), gp = gpar(col = g$col, fontsize = 6))
+    }
+    for (k in seq_along(g$es)) {                            # exon boxes
+      ex0 <- xin(g$es[k]); ex1 <- xin(g$ee[k])
+      grid.rect(x = unit(ex0, "inches"), y = unit(yg, "inches"),
+        width = unit(max(ex1 - ex0, 0.006), "inches"), height = unit(0.085, "inches"),
+        just = c("left", "center"), gp = gpar(col = NA, fill = g$col))
+    }
+    grid.text(g$sym, x = unit((x0 + x1) / 2, "inches"), y = unit(top_to_grid(yc + 0.11), "inches"),
+              gp = gpar(col = g$col, fontsize = 6, fontface = "italic"))
+  }
+}
 track_label("Genes", y = y5 + 0.02)
 
 # Inline horizontal logFC scale bar in the right margin
 # Place the logFC scale bar directly below the "Genes" track label.
 sb_x0 <- PAGE_W - MARGIN_R + 0.05
-sb_y  <- y5 + 0.32
-sb_w  <- 1.05
+sb_y  <- y5 + 0.26
+sb_w  <- 0.85
 n_steps <- 50
 for (k in 0:(n_steps - 1)) {
   step_w <- sb_w / n_steps
@@ -1077,15 +1174,15 @@ for (k in 0:(n_steps - 1)) {
 # Scale endpoints + zero tick
 plotText(label = sprintf("-%.1f", LFC_SAT),
          x = sb_x0, y = sb_y + 0.10,
-         fontsize = 5.5, just = c("left","top"), default.units = "inches")
+         fontsize = 6, just = c("left","top"), default.units = "inches")
 plotText(label = "0",
          x = sb_x0 + sb_w/2, y = sb_y + 0.10,
-         fontsize = 5.5, just = c("center","top"), default.units = "inches")
+         fontsize = 6, just = c("center","top"), default.units = "inches")
 plotText(label = sprintf("+%.1f", LFC_SAT),
          x = sb_x0 + sb_w, y = sb_y + 0.10,
-         fontsize = 5.5, just = c("right","top"), default.units = "inches")
+         fontsize = 6, just = c("right","top"), default.units = "inches")
 plotText(label = "log2FC", x = sb_x0 + sb_w/2, y = sb_y - 0.10,
-         fontsize = 5.5, fontface = "italic", just = c("center","bottom"),
+         fontsize = 6, fontface = "plain", just = c("center","bottom"),
          default.units = "inches")
 # Caveat: n.s. genes are grey (a single neutral indicator)
 grid.rect(
@@ -1094,11 +1191,11 @@ grid.rect(
   width  = unit(0.10, "inches"),
   height = unit(0.10, "inches"),
   just = c("left","center"),
-  gp = gpar(col = NA, fill = "#BDBDBD")
+  gp = gpar(col = NA, fill = "#9E9E9E")
 )
 plotText(label = "n.s.",
          x = sb_x0 + 0.13, y = sb_y + 0.30,
-         fontsize = 5.5, just = c("left","center"),
+         fontsize = 6, just = c("left","center"),
          default.units = "inches")
 
 # Track 6: genome label (Mb scale) ────────────────────────────────────────────
@@ -1107,7 +1204,7 @@ plotGenomeLabel(
   chrom = paste0("chr", CHR), chromstart = WIN_START, chromend = WIN_END,
   assembly = "hg19",
   scale = "Mb", commas = TRUE, sequence = FALSE,
-  fontsize = 8,
+  fontsize = 6,
   x = PLOT_X, y = y6, length = PLOT_W, default.units = "inches"
 )
 

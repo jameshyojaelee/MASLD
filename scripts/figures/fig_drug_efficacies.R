@@ -40,8 +40,6 @@ p <- ggplot(drug_data, aes(x = MASH_Improvement, y = Fibrosis_Improvement, color
   scale_color_manual(values = stage_colors) +
   scale_shape_manual(values = c(16, 17, 15)) +
   labs(
-    title = "Efficacy of MASLD/MASH Therapeutics",
-    subtitle = "Raw efficacy percentages for MASH resolution vs. Fibrosis improvement\n[#%] = Placebo-adjusted efficacy",
     x = "MASH Improvement (%)",
     y = "Fibrosis Improvement (%)"
   ) +
@@ -49,20 +47,21 @@ p <- ggplot(drug_data, aes(x = MASH_Improvement, y = Fibrosis_Improvement, color
   theme_pub() +
   theme(
     legend.position = "right",
-    legend.title = element_text(face = "bold")
+    legend.title = element_text(face = "plain")
   ) +
   xlim(15, 75) +
   ylim(15, 55)
 
 # Add text labels
 if (use_ggrepel) {
-  p <- p + geom_text_repel(aes(label = Label), size = PUB_GEOM_TEXT + 0.5, show.legend = FALSE, min.segment.length = 0.1, box.padding = 0.5)
+  p <- p + geom_text_repel(aes(label = Label), size = PUB_GEOM_TEXT, show.legend = FALSE, min.segment.length = 0.1, box.padding = 0.5)
 } else {
-  p <- p + geom_text(aes(label = Label), vjust = -1, size = PUB_GEOM_TEXT + 0.5, show.legend = FALSE)
+  p <- p + geom_text(aes(label = Label), vjust = -1, size = PUB_GEOM_TEXT, show.legend = FALSE)
 }
 
 # Save the plot using the theme's helper function
 output_file <- file.path(BASE, "docs/reference/fig_drug_efficacies.pdf")
 save_fig(p, output_file, width = fig_full_width, height = 5)
 
+message("[caption] Efficacy of MASLD/MASH Therapeutics: raw efficacy percentages for MASH resolution vs. fibrosis improvement; [#%] = placebo-adjusted efficacy.")
 cat("Successfully generated plot at:", output_file, "\n")

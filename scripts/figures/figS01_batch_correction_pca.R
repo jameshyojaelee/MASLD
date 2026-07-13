@@ -74,10 +74,10 @@ pca <- merge(pca, samp[, .(sample_id, dataset, group_binary, sex,
 
 # Short cohort labels (consistent with fig1_umap.R)
 cohort_short <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE167523 = "Kozumi", GSE174478 = "Kawamura",
-  GSE193066 = "Hoshida", GSE213621 = "Chen", GSE240729 = "Verschuren",
-  PRJNA512027 = "Gerhard"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE167523 = "GSE167523", GSE174478 = "GSE174478",
+  GSE193066 = "GSE193066", GSE213621 = "GSE213621", GSE240729 = "GSE240729",
+  PRJNA512027 = "PRJNA512027"
 )
 pca[, cohort  := factor(cohort_short[dataset], levels = unname(cohort_short))]
 pca[, disease := factor(group_binary, levels = c("Control", "Disease"))]
@@ -93,9 +93,9 @@ ann[, lab := sprintf("PC1=%.1f%%  PC2=%.1f%%", pc1, pc2)]
 
 # Palettes
 cohort_pal <- c(
-  Suppli="#1F77B4", Hoang="#FF7F0E", Govaere="#2CA02C", Bril="#D62728",
-  Kozumi="#9467BD", Kawamura="#8C564B", Hoshida="#E377C2",
-  Chen="#7F7F7F", Verschuren="#BCBD22", Gerhard="#17BECF"
+  GSE126848="#1F77B4", GSE130970="#FF7F0E", GSE135251="#2CA02C", GSE162694="#D62728",
+  GSE167523="#9467BD", GSE174478="#8C564B", GSE193066="#E377C2",
+  GSE213621="#7F7F7F", GSE240729="#BCBD22", PRJNA512027="#17BECF"
 )
 disease_pal <- c(Control = CONTROL_GRAY, Disease = masld_colors$nash)
 sex_pal     <- c(F = masld_colors$female, M = masld_colors$male)
@@ -107,13 +107,13 @@ compact_theme <- function() {
     theme(
       axis.text       = element_blank(),
       axis.ticks      = element_blank(),
-      axis.title      = element_text(size = 6.5),
-      strip.text      = element_text(size = 7, face = "bold"),
+      axis.title      = element_text(size = 6),
+      strip.text      = element_text(size = 6, face = "plain"),
       strip.background = element_blank(),
       plot.title      = element_blank(),
       legend.position  = "right",
-      legend.title     = element_text(size = 6.5, face = "bold"),
-      legend.text      = element_text(size = 5.8),
+      legend.title     = element_text(size = 6, face = "plain"),
+      legend.text      = element_text(size = 6),
       legend.key.size  = unit(0.22, "cm"),
       legend.margin    = margin(0, 0, 0, 0),
       legend.box.spacing = unit(0, "cm"),
@@ -140,7 +140,7 @@ make_row <- function(color_var, palette, legend_title, ncol_legend = 1,
   if (add_var_annot) {
     p <- p + geom_text(data = ann, aes(x = -Inf, y = Inf, label = lab),
                        inherit.aes = FALSE, hjust = -0.08, vjust = 1.4,
-                       size = 2.2, colour = "grey30")
+                       size = 6 / ggplot2::.pt, colour = "black")
   }
   p
 }
@@ -154,17 +154,13 @@ p4 <- make_row("fib",     fib_pal,     "Fibrosis",  ncol_legend = 1)
 fig <- p1 / p2 / p3 / p4 +
   plot_layout(heights = c(1, 1, 1, 1)) +
   plot_annotation(
-    title    = "PCA before vs after dataset batch correction",
-    subtitle = sprintf(
-      "Top 2,000 most-variable log2-CPM genes; %s samples · 10 cohorts · limma::removeBatchEffect proxy for dream `(1|dataset)`",
-      format(ncol(logcpm_top), big.mark = ",")),
     theme    = theme(
-      plot.title    = element_text(size = 9, face = "bold",
-                                   family = "Helvetica"),
-      plot.subtitle = element_text(size = 6.5, colour = "grey35",
-                                   family = "Helvetica"),
       plot.margin   = margin(2, 2, 2, 2))
   )
+
+message(sprintf(
+  "[caption] PCA before vs after dataset batch correction. Top 2,000 most-variable log2-CPM genes; %s samples, 10 cohorts, limma::removeBatchEffect proxy for dream `(1|dataset)`.",
+  format(ncol(logcpm_top), big.mark = ",")))
 
 out_pdf <- file.path(OUT_DIR, "figS01_batch_correction_pca.pdf")
 ggsave(out_pdf, fig, width = 6.8, height = 8.4, device = cairo_pdf)

@@ -5,21 +5,20 @@
 #   fig3h — Tier-1 DEG → COLOC funnel (F2)
 #   fig3i — DEG × COLOC scatter, fig3e style (F6)
 #
-# Consistent typography across panels:
-#   title       = 11 bold
-#   subtitle    = 9  grey30
-#   axis title  = 10
-#   axis text   = 9
-#   legend      = 8.5 (title) / 8 (text)
-#   data label  = 3.4 bold
-#   gene label  = 2.4 italic (text-repel)
+# Consistent typography across panels (house style 2026-07-06: 6pt everywhere):
+#   no in-plot title/subtitle (see message() captions)
+#   axis title  = 6
+#   axis text   = 6
+#   legend      = 6 (title) / 6 (text)
+#   data label  = 6pt (GEOM_TEXT_6PT)
+#   gene label  = 6pt italic (text-repel)
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(ggrepel); library(patchwork)
   library(scales)
 })
 
 BASE   <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-OUT    <- file.path(BASE, "figures/main/fig3_regulatory_architecture/panels")
+OUT    <- file.path(BASE, "figures/main/fig2_genetics/panels")
 DATDIR <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
@@ -47,14 +46,12 @@ coarse_pal <- c("coding" = "#C2185B", "non-coding" = "#42A5F5",
 
 base_theme <- theme_masld() +
   theme(
-    plot.title    = element_text(face = "bold", size = 11),
-    plot.subtitle = element_text(size = 9, color = "gray30"),
-    axis.title    = element_text(size = 10),
-    axis.text     = element_text(size = 9),
-    legend.title  = element_text(size = 8.5),
-    legend.text   = element_text(size = 8),
+    axis.title    = element_text(size = 6),
+    axis.text     = element_text(size = 6),
+    legend.title  = element_text(size = 6),
+    legend.text   = element_text(size = 6),
     legend.key.size = unit(0.32, "cm"),
-    strip.text    = element_text(size = 10, face = "bold"))
+    strip.text    = element_text(size = 6, face = "plain"))
 
 save_panel <- function(p, name, w, h) {
   ggsave(file.path(OUT, name), p, width = w, height = h, device = cairo_pdf)
@@ -71,18 +68,19 @@ f1_totals <- f1[, .(total = sum(n_genes)), by = method]
 fig3g <- ggplot(f1, aes(x = method, y = n_genes, fill = fine_class)) +
   geom_col(width = 0.62) +
   geom_text(data = f1_totals, aes(x = method, y = total, label = total),
-            inherit.aes = FALSE, vjust = -0.35, size = 3.4,
-            fontface = "bold") +
+            inherit.aes = FALSE, vjust = -0.35, size = GEOM_TEXT_6PT,
+            fontface = "plain") +
   scale_fill_manual(values = fine_pal, labels = fine_label, drop = FALSE,
                     name = "GWAS variant class") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12)),
                      labels = scales::label_comma()) +
-  labs(x = NULL, y = "# genes",
-       title = "COLOC genes by where the COLOC top-H4 SNP falls (PP.H4 ≥ 0.5)") +
+  labs(x = NULL, y = "# genes") +
   base_theme +
   theme(legend.position = "right")
+message("[caption] fig3g: COLOC genes by where the COLOC top-H4 SNP falls (PP.H4 >= 0.5)")
 
-save_panel(fig3g, "coloc_variant_class_split.pdf", w = 5.6, h = 4.2)
+# RETIRED 2026-06-12 (superseded by coding_noncoding_split.pdf): coloc_variant_class_split.pdf
+# save_panel(fig3g, "coloc_variant_class_split.pdf", w = 5.6, h = 4.2)
 
 # ===========================================================================
 # fig3h — Tier-1 DEG → COLOC cascade (F2)
@@ -105,21 +103,21 @@ fill_pal <- c("DEG total"     = "#37474F",
 fig3h <- ggplot(funnel, aes(x = count, y = step, fill = group)) +
   geom_col(width = 0.66) +
   geom_text(aes(label = scales::label_comma()(count)),
-            hjust = -0.18, size = 3.4, fontface = "bold") +
+            hjust = -0.18, size = GEOM_TEXT_6PT, fontface = "plain") +
   scale_x_continuous(labels = scales::label_comma(),
                      expand = expansion(mult = c(0, 0.18))) +
   scale_y_discrete(limits = rev) +
   scale_fill_manual(values = fill_pal, guide = "none") +
-  labs(x = "# genes", y = NULL,
-       title = sprintf(
-         "Tier-1 DEGs → COLOC: %d/%d DEG-COLOC have GWAS variant in CDS (vs %d/%d in all COLOC)",
-         hp$n_deg_coloc_coding[1], hp$n_deg_coloc[1],
-         hp$n_all_coloc_coding[1], hp$n_all_coloc[1])) +
+  labs(x = "# genes", y = NULL) +
   base_theme +
-  theme(axis.text.y = element_text(size = 8.5),
-        plot.title = element_text(face = "bold", size = 10.5))
+  theme(axis.text.y = element_text(size = 6))
+message(sprintf(
+  "[caption] fig3h: Tier-1 DEGs -> COLOC: %d/%d DEG-COLOC have GWAS variant in CDS (vs %d/%d in all COLOC)",
+  hp$n_deg_coloc_coding[1], hp$n_deg_coloc[1],
+  hp$n_all_coloc_coding[1], hp$n_all_coloc[1]))
 
-save_panel(fig3h, "deg_coloc_funnel.pdf", w = 7.0, h = 3.5)
+# RETIRED 2026-06-12 (not a Fig 2 panel): deg_coloc_funnel.pdf
+# save_panel(fig3h, "deg_coloc_funnel.pdf", w = 7.0, h = 3.5)
 
 # Drop the combined biotype panel from the previous iteration
 old_combined <- file.path(OUT, "fig3g_deg_coloc_biotypes.pdf")
@@ -181,7 +179,7 @@ fig3i <- ggplot(coloc_pts, aes(x = logFC, y = pp4_best, color = coarse_class)) +
              size = 2.2, alpha = 0.95) +
   ggrepel::geom_text_repel(
     data = labelled, aes(label = gene_symbol),
-    size = 2.3, max.overlaps = Inf, force = 3.5, force_pull = 0.8,
+    size = GEOM_TEXT_6PT, max.overlaps = Inf, force = 3.5, force_pull = 0.8,
     box.padding = 0.32, point.padding = 0.15,
     segment.size = 0.2, segment.color = "gray55",
     min.segment.length = 0, fontface = "italic",
@@ -195,20 +193,15 @@ fig3i <- ggplot(coloc_pts, aes(x = logFC, y = pp4_best, color = coarse_class)) +
                      labels = c("0.5","0.7","0.9","1")) +
   scale_x_continuous(expand = expansion(mult = c(0.06, 0.06))) +
   labs(x = expression("Bulk dream log"[2]*"FC (MASLD vs control)"),
-       y = "Best COLOC PP.H4",
-       title = "DEG vs. COLOC",
-       subtitle = sprintf(
-         paste0("%d COLOC genes (padj < 0.05; PP.H4 ≥ 0.5); dashed lines: |logFC| = 0.5 Tier-1 cutoff\n",
-                "Color = where the COLOC top-H4 SNP falls: ",
-                "coding (CDS) vs non-coding (intron / UTR / promoter / intergenic)"),
-         nrow(coloc_pts))) +
+       y = "Best COLOC PP.H4") +
   base_theme +
-  theme(legend.position = "bottom",
-        plot.subtitle = element_text(size = 8.5, color = "gray30",
-                                      lineheight = 1.1)) +
+  theme(legend.position = "bottom") +
   guides(color = guide_legend(override.aes = list(size = 2.5), nrow = 1))
 
-save_panel(fig3i, "deg_coloc_scatter.pdf", w = 6.4, h = 5.4)
+OUT_RNASEQ <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
+ggsave(file.path(OUT_RNASEQ, "deg_coloc_scatter.pdf"), fig3i,
+       width = 6.4, height = 5.4, device = cairo_pdf)
+cat(" wrote deg_coloc_scatter.pdf ->", OUT_RNASEQ, "\n")
 
 # Drop the temporary fig3h_deg_coloc_scatter.pdf from prior iteration
 old_h_scatter <- file.path(OUT, "fig3h_deg_coloc_scatter.pdf")

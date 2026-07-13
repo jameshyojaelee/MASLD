@@ -30,8 +30,8 @@ CTRL            <- "#9E9E9E"
 set.seed(42)
 
 MEGA         <- c("GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621")
-cohort_short <- c(GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-                  GSE162694 = "Bril",   GSE213621 = "Chen")
+cohort_short <- c(GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+                  GSE162694 = "GSE162694",   GSE213621 = "GSE213621")
 
 N_VALS      <- c(25L, 50L, 100L, 200L, 500L, 1000L, 2000L)
 N_RAND_REPS <- 100L
@@ -282,6 +282,18 @@ method_labels <- c(
 method_colors <- setNames(RColorBrewer::brewer.pal(6, "Set2"), METHOD_NAMES)
 
 # ── Part 1: LOCO sweep ───────────────────────────────────────────────────────────
+# Reuse-guard: the LOCO/train1 sweeps are expensive (dream fits ~85 min/fold).
+# When cached result CSVs exist we re-plot from them instead of recomputing — this
+# is what makes a label-only/cosmetic refresh cheap. Set SIGSWEEP_RECOMPUTE=TRUE to
+# force a full refit (e.g. after a DEG-method/data change).
+RECOMPUTE_SWEEP <- toupper(Sys.getenv("SIGSWEEP_RECOMPUTE", "FALSE")) %in% c("TRUE", "1", "YES")
+LOCO_CSV   <- file.path(OUT, "auroc_loco_sweep_data.csv")
+TRAIN1_CSV <- file.path(OUT, "auroc_train1_project4_data.csv")
+
+if (!RECOMPUTE_SWEEP && file.exists(LOCO_CSV)) {
+  cat("\n=== Part 1: reusing cached auroc_loco_sweep_data.csv (set SIGSWEEP_RECOMPUTE=TRUE to refit) ===\n")
+  results_loco <- fread(LOCO_CSV)
+} else {
 cat("\n=== Part 1: LOCO sweep (5 folds x 7 methods x 7 N + 100 null reps) ===\n")
 
 # Fixed gene universe for the random null (method-agnostic: random genes, no sign).
@@ -336,10 +348,15 @@ results_loco <- rbindlist(lapply(MEGA, function(test_cohort) {
   rbind(real_rows, null_rows)
 }))
 
-fwrite(results_loco, file.path(OUT, "auroc_loco_sweep_data.csv"))
+fwrite(results_loco, LOCO_CSV)
 cat("\nSaved auroc_loco_sweep_data.csv\n")
+}
 
 # ── Part 2: Train-on-1, project-to-4 ─────────────────────────────────────────────
+if (!RECOMPUTE_SWEEP && file.exists(TRAIN1_CSV)) {
+  cat("\n=== Part 2: reusing cached auroc_train1_project4_data.csv ===\n")
+  results_train1 <- fread(TRAIN1_CSV)
+} else {
 cat("\n=== Part 2: Train-on-1 cohort, project-to-4 (limma-voom) ===\n")
 
 results_train1 <- rbindlist(lapply(MEGA, function(train_cohort) {
@@ -367,8 +384,9 @@ results_train1 <- rbindlist(lapply(MEGA, function(train_cohort) {
   }))
 }))
 
-fwrite(results_train1, file.path(OUT, "auroc_train1_project4_data.csv"))
+fwrite(results_train1, TRAIN1_CSV)
 cat("\nSaved auroc_train1_project4_data.csv\n")
+}
 
 # ── Figures ───────────────────────────────────────────────────────────────────────
 cat("\n=== Generating figures ===\n")
@@ -410,14 +428,14 @@ p1 <- ggplot() +
   scale_color_manual(values = col_map, name = NULL) +
   coord_cartesian(ylim = c(0.45, 1.0)) +
   labs(x = "Gene signature size (N, log scale)",
-       y = "AUROC — 5-fold LOCO mean ± SD",
-       title = "Supervised disease separation: method × signature size") +
-  theme_masld(base_size = 7) +
+       y = "AUROC — 5-fold LOCO mean ± SD") +
+  theme_masld(base_size = 6) +
   theme(legend.position  = "right",
         panel.grid.minor = element_blank(),
         axis.text.x      = element_text(angle = 30, hjust = 1))
+message("[caption] Supervised disease separation: method x signature size")
 ggsave(file.path(OUT, "auroc_vs_N.pdf"), p1,
-       width = 8.4, height = 4.2, device = cairo_pdf)
+       width = 7.09, height = 3.55, device = cairo_pdf)
 cat("  auroc_vs_N.pdf\n")
 
 # ── Panel 2: Method x N heatmap ──────────────────────────────────────────────────
@@ -425,15 +443,15 @@ loco_sum[, N_lbl := factor(N, levels = N_VALS)]
 
 p2 <- ggplot(loco_sum, aes(x = N_lbl, y = method_lbl, fill = auroc_mean)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = sprintf("%.2f", auroc_mean)), size = 2.2, color = "grey15") +
+  geom_text(aes(label = sprintf("%.2f", auroc_mean)), size = GEOM_TEXT_6PT, color = "grey15") +
   scale_fill_gradient2(low = "#f7fbff", mid = "#6baed6", high = "#08306b",
                        midpoint = 0.75, limits = c(0.5, 1.0), na.value = "grey90",
                        name = "Mean\nAUROC") +
-  labs(x = "Gene signature size (N)", y = NULL,
-       title = "Mean AUROC (5-fold LOCO) by method and N") +
-  theme_masld(base_size = 7) +
+  labs(x = "Gene signature size (N)", y = NULL) +
+  theme_masld(base_size = 6) +
   theme(panel.grid = element_blank(),
         axis.text.x = element_text(angle = 30, hjust = 1))
+message("[caption] Mean AUROC (5-fold LOCO) by method and N")
 ggsave(file.path(OUT, "method_N_heatmap.pdf"), p2,
        width = 7.0, height = 3.2, device = cairo_pdf)
 cat("  method_N_heatmap.pdf\n")
@@ -446,14 +464,14 @@ p3 <- ggplot(p3_dt, aes(x = method_lbl, y = auroc, color = method_lbl)) +
   facet_wrap(~ cohort_lbl, nrow = 1) +
   scale_color_manual(values = col_map) +
   coord_cartesian(ylim = c(0.4, 1.0)) +
-  labs(x = NULL, y = "AUROC at N = 200", color = NULL,
-       title = "Per held-out cohort AUROC at N = 200") +
-  theme_masld(base_size = 7) +
+  labs(x = NULL, y = "AUROC at N = 200", color = NULL) +
+  theme_masld(base_size = 6) +
   theme(axis.text.x  = element_text(angle = 45, hjust = 1),
         legend.position = "none",
-        strip.text = element_text(size = 6.5))
+        strip.text = element_text(size = 6))
+message("[caption] Per held-out cohort AUROC at N = 200")
 ggsave(file.path(OUT, "per_cohort_N200.pdf"), p3,
-       width = 9.0, height = 3.5, device = cairo_pdf)
+       width = 7.09, height = 2.76, device = cairo_pdf)
 cat("  per_cohort_N200.pdf\n")
 
 # ── Panel 4: Null distribution vs real methods ───────────────────────────────────
@@ -473,12 +491,12 @@ p4 <- ggplot() +
   scale_color_manual(values = col_map, name = NULL) +
   coord_cartesian(ylim = c(0.35, 1.0)) +
   labs(x = "Gene signature size (N)",
-       y = "AUROC",
-       title = "Random null (grey box) vs. real method AUROCs (coloured points)") +
-  theme_masld(base_size = 7) +
+       y = "AUROC") +
+  theme_masld(base_size = 6) +
   theme(legend.position = "right")
+message("[caption] Random null (grey box) vs. real method AUROCs (coloured points)")
 ggsave(file.path(OUT, "null_vs_real.pdf"), p4,
-       width = 9.0, height = 4.0, device = cairo_pdf)
+       width = 7.09, height = 3.15, device = cairo_pdf)
 cat("  null_vs_real.pdf\n")
 
 # ── Panel 5: Train-on-1, project-to-4 heatmap (N=200) ────────────────────────────
@@ -488,15 +506,15 @@ p5_dt[, test_lbl  := factor(cohort_short[test_cohort],  levels = c_lvls)]
 
 p5 <- ggplot(p5_dt, aes(x = test_lbl, y = train_lbl, fill = auroc)) +
   geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = sprintf("%.2f", auroc)), size = 2.4, color = "grey15") +
+  geom_text(aes(label = sprintf("%.2f", auroc)), size = GEOM_TEXT_6PT, color = "grey15") +
   scale_fill_gradient(low = "#fff5eb", high = "#7f2704",
                       limits = c(0.5, 1.0), na.value = "grey92",
                       name = "AUROC") +
-  labs(x = "Test cohort (held-out)", y = "Training cohort",
-       title = "Train-on-1-cohort, project-to-4 (limma-voom, N = 200)") +
-  theme_masld(base_size = 7) +
+  labs(x = "Test cohort (held-out)", y = "Training cohort") +
+  theme_masld(base_size = 6) +
   theme(panel.grid   = element_blank(),
         axis.text.x  = element_text(angle = 45, hjust = 1))
+message("[caption] Train-on-1-cohort, project-to-4 (limma-voom, N = 200)")
 ggsave(file.path(OUT, "train1_project4.pdf"), p5,
        width = 4.5, height = 4.0, device = cairo_pdf)
 cat("  train1_project4.pdf\n")

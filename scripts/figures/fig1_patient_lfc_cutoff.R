@@ -77,17 +77,17 @@ fwrite(res, file.path(FIG1_DIR, "panels", "fig1_patient_lfc_cutoff_data.csv"))
 # -----------------------------------------------------------------------------
 p <- ggplot(res, aes(x = factor(cutoff), y = dataset, fill = pct)) +
   geom_tile(color = "white", linewidth = 0.3) +
-  geom_text(aes(label = sprintf("%.0f", pct)), size = 2.8, color = "white") +
+  geom_text(aes(label = sprintf("%.0f", pct)), size = 6/ggplot2::.pt, color = "white") +
   scale_fill_viridis(option = "mako", name = "% integrated\nDEGs recovered",
                      limits = c(0, 100)) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0)) +
   labs(x = expression("|log"[2]*"FC| cutoff"),
-       y = NULL,
-       title = "Per-cohort recovery of integrated DEGs across LFC cutoffs") +
+       y = NULL) +
   theme_masld() +
   theme(panel.grid = element_blank(),
         axis.ticks = element_blank())
 
 ggsave(OUT, p, width = 7.0, height = 4.2, device = cairo_pdf)
+message("[caption] Per-cohort recovery of integrated DEGs across LFC cutoffs")
 message("Wrote: ", OUT)

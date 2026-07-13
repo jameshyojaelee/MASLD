@@ -32,7 +32,12 @@ suppressPackageStartupMessages({
 
 BASE       <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-COHORT_TAG <- Sys.getenv("COHORT_TAG", "augmented")  # "augmented" or "documented"
+COHORT_TAG <- Sys.getenv("COHORT_TAG", "documented")  # "augmented" (LEAKED, do not default) or "documented"
+# A7.2 leakage fix (2026-06-20): default flipped "augmented" -> "documented". The
+# augmented F-stage axis (F_stage_augmented_clean) is leaked (jackknife QWK 0.286 /
+# Andrews held-out 0.0); 346/347 route to F_stage_inferred. 348b's switch supports
+# only documented (honest n=58 Andrews) / augmented — default to the honest axis so
+# an unset COHORT_TAG (run_348b_dream.sh passes none) no longer regresses on the leak.
 N_THREADS  <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "8"))
 MIN_DONORS_PER_STAGE <- as.integer(Sys.getenv("MIN_DONORS_PER_STAGE", "3"))
 MIN_CELLS_PER_DONOR  <- as.integer(Sys.getenv("MIN_CELLS_PER_DONOR", "30"))

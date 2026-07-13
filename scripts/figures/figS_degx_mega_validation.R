@@ -60,11 +60,10 @@ pA <- ggplot(long, aes(mi,mj,fill=rho)) +
   geom_tile(color="white", linewidth=0.3) +
   scale_fill_gradientn(colours=green_sc, limits=c(min(rho),1), oob=scales::squish, name="Spearman\nrho") +
   coord_fixed() +
-  labs(title="Effect-size concordance across methods (Spearman rho on log2FC)",
-       subtitle=sprintf("Full-data mega-analysis; all pairs >= %.2f -> methods agree on effect-size rank", min(rho[rho<1])),
-       x=NULL, y=NULL, caption=prov("15 methods, clustered")) +
+  labs(x=NULL, y=NULL, caption=prov("15 methods, clustered")) +
   theme_masld()+theme_pub()+
   theme(axis.text.x=element_text(angle=45,hjust=1), legend.position="right", legend.key.width=unit(0.18,"cm"))
+message(sprintf("[caption] Effect-size concordance across methods (Spearman rho on log2FC); full-data mega-analysis, all pairs >= %.2f -> methods agree on effect-size rank", min(rho[rho<1])))
 save_fig(pA, file.path(OUT,"panelI3_logfc_concordance.pdf"), width=6.6, height=6.2)
 mark(file.path(OUT,"panelI3_logfc_concordance.pdf"))
 
@@ -90,14 +89,16 @@ plot_consensus <- function(tb, ttl){
     scale_fill_manual(values = c(up = masld_colors$up, down = masld_colors$down),
                       name = NULL, labels = c(up = "up", down = "down")) +
     scale_x_continuous(breaks = 1:nM) +
-    labs(title = ttl, x = "# methods calling the gene a DEG", y = "# genes") +
+    labs(x = "# methods calling the gene a DEG", y = "# genes") +
     theme_masld() + theme_pub() + theme(legend.position = "top")
 }
 ds05     <- lapply(tabs, function(d) d$gene[!is.na(d$padj) & d$padj < 0.05])
 ds05_lfc <- lapply(tabs, function(d) d$gene[!is.na(d$padj) & d$padj < 0.05 & !is.na(d$logFC) & abs(d$logFC) > 0.2])
+message("[caption] Consensus DEGs (padj < 0.05)")
 save_fig(plot_consensus(consensus_tbl(ds05), "Consensus DEGs (padj < 0.05)"),
          file.path(OUT,"panelI4_consensus_core.pdf"), width=fig_col_width, height=3.6)
 mark(file.path(OUT,"panelI4_consensus_core.pdf"))
+message("[caption] Consensus DEGs (padj < 0.05, |log2FC| > 0.2)")
 save_fig(plot_consensus(consensus_tbl(ds05_lfc), "Consensus DEGs (padj < 0.05, |log2FC| > 0.2)"),
          file.path(OUT,"panelI4c_consensus_lfc02.pdf"), width=fig_col_width, height=3.6)
 mark(file.path(OUT,"panelI4c_consensus_lfc02.pdf"))
@@ -144,13 +145,12 @@ if (all(c("dream","metafor_voom_re") %in% meth)) {
   pC <- base + rasterize_layer(pt) +
     geom_abline(slope=1,intercept=0, linetype="dashed", linewidth=0.3, color="grey45") +
     coord_fixed(xlim=c(-lim,lim), ylim=c(-lim,lim)) +
-    annotate("text", x=-lim*0.95, y=lim*0.9, hjust=0, size=PUB_GEOM_TEXT+0.3,
+    annotate("text", x=-lim*0.95, y=lim*0.9, hjust=0, size=PUB_GEOM_TEXT,
              label=sprintf("Spearman rho = %.3f\nn = %s genes", rr, format(nrow(mg),big.mark=","))) +
-    labs(title="dream vs metafor random-effects: effect-size agreement",
-         subtitle="The conservative metafor-RE calls fewer DEGs but agrees with dream on log2FC",
-         x="dream log2FC", y="metafor voom (RE) log2FC", caption=prov("R-exact")) +
+    labs(x="dream log2FC", y="metafor voom (RE) log2FC", caption=prov("R-exact")) +
     theme_masld()+theme_pub()
   if (!is.null(i2)) pC <- pC + scale_color_gradientn(colours=colorRampPalette(c("#dae7c7","#193c1e"))(12), name="I2 (%)", na.value="grey85")
+  message("[caption] dream vs metafor random-effects: effect-size agreement; the conservative metafor-RE calls fewer DEGs but agrees with dream on log2FC")
   save_fig(pC, file.path(OUT,"panelI5_dream_vs_metafor.pdf"), width=fig_half_width, height=fig_half_width)
   mark(file.path(OUT,"panelI5_dream_vs_metafor.pdf"))
 }

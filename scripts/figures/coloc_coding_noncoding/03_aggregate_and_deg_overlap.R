@@ -23,14 +23,15 @@ v <- merge(vlong, ann, by = "variant_key", all.x = TRUE)
 # ---- DEG (Tier 1) -----------------------------------------------------------
 deg <- fread(file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
-  select = c("gene","logFC","padj","symbol"))
-deg_tier1 <- deg[!is.na(padj) & padj < 0.05 & abs(logFC) > 0.5]
-cat(sprintf("Tier 1 DEGs (padj<0.05 & |logFC|>0.5): %d (expected ~1,853, C2 canonical)\n",
+  select = c("gene","logFC","padj","symbol","treat_fdr","treat_p","treat_lfc"))
+deg_tier1 <- deg[!is.na(treat_fdr) & treat_fdr < 0.05]
+cat(sprintf("Tier 1 DEGs (TREAT FDR<0.05 at lfc=0.25): %d (expected 1,918 rows)\n",
             nrow(deg_tier1)))
-if (abs(nrow(deg_tier1) - 1853) > 200)
-  warning("Tier-1 DEG count drift >200 from expected 1,853")
+if (nrow(deg_tier1) != 1918L)
+  warning("TREAT Tier-1 DEG count differs from the frozen 1,918-row release")
 deg_tier1[, deg_direction := fifelse(logFC > 0, "up", "down")]
-setnames(deg_tier1, c("logFC","padj"), c("deg_logFC","deg_padj"))
+setnames(deg_tier1, c("logFC","padj","treat_fdr"),
+         c("deg_logFC","deg_padj","deg_treat_fdr"))
 # Keep one row per non-empty symbol (most-significant by padj)
 deg_tier1 <- deg_tier1[symbol != "" & !is.na(symbol)]
 setorder(deg_tier1, symbol, deg_padj)
@@ -134,7 +135,7 @@ deg_coloc_split <- defC_master[is_DEG == TRUE,
   .(n_genes = uniqueN(gene_symbol)), by = .(coarse_class, fine_class)]
 panel_F2 <- list(
   funnel = data.table(
-    step = c("Tier-1 DEGs (padj<0.05, |logFC|>0.5)",
+    step = c("Tier-1 DEGs (TREAT FDR<0.05; lfc=0.25)",
              "DEGs ∩ COLOC (PP.H4 >= 0.5)",
              "Coding among DEG-COLOC",
              "Non-coding among DEG-COLOC"),

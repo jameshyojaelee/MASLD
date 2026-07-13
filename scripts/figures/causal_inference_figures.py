@@ -9,10 +9,10 @@ import matplotlib as mpl
 mpl.rcParams['pdf.fonttype'] = 42
 mpl.rcParams['font.sans-serif'] = ["Helvetica", "Arial", "DejaVu Sans"]
 mpl.rcParams['font.family'] = "sans-serif"
-mpl.rcParams['axes.titlesize'] = 8
-mpl.rcParams['axes.labelsize'] = 8
-mpl.rcParams['font.size'] = 7
-mpl.rcParams['legend.fontsize'] = 7
+mpl.rcParams['axes.titlesize'] = 6
+mpl.rcParams['axes.labelsize'] = 6
+mpl.rcParams['font.size'] = 6
+mpl.rcParams['legend.fontsize'] = 6
 mpl.rcParams['xtick.labelsize'] = 6
 mpl.rcParams['ytick.labelsize'] = 6
 
@@ -54,7 +54,7 @@ NS_COLOR = '#BDBDBD'
 plt.figure(figsize=(5, 4))
 sns.histplot(data=df, x='twas_z', bins=50, color=TWAS_COLOR, alpha=0.6, kde=True)
 plt.axvline(0, color='black', linestyle='--', linewidth=0.5)
-plt.title('TWAS Liver Z-score Distribution')
+print("[caption] TWAS Liver Z-score Distribution")
 plt.xlabel('S-PrediXcan Z-score')
 plt.ylabel('Gene Count')
 plt.tight_layout()
@@ -69,7 +69,7 @@ plt.close()
 plt.figure(figsize=(5, 4))
 twas_sig = df['twas_fdr'] < 0.05
 sns.barplot(x=['TWAS Significant\n(FDR < 0.05)'], y=[twas_sig.sum()], palette=[TWAS_COLOR])
-plt.title('Causal Inference Hit Counts (TWAS only; MR ditched 2026-04-22)')
+print("[caption] Causal Inference Hit Counts (TWAS only; MR ditched 2026-04-22)")
 plt.ylabel('Number of Genes')
 plt.tight_layout()
 plt.savefig(os.path.join(OUTPUT_DIR, 'causal_4_hit_counts.pdf'), dpi=600)
@@ -88,10 +88,10 @@ plt.scatter(sig_twas['twas_z'], -np.log10(sig_twas['twas_p']), color=TWAS_COLOR,
 # Label top 3 TWAS per standard De-Clutter protocol
 top_3 = sig_twas.sort_values('twas_p').head(3)
 for _, row in top_3.iterrows():
-    plt.text(row['twas_z'] + 0.1, -np.log10(row['twas_p']), row['display_name'], fontsize=7)
+    plt.text(row['twas_z'] + 0.1, -np.log10(row['twas_p']), row['display_name'], fontsize=6)
 
 plt.axhline(-np.log10(max(sig_twas['twas_p'].max(), 1e-10)), color='black', linestyle='--', linewidth=0.5)
-plt.title('TWAS Liver Volcano Map')
+print("[caption] TWAS Liver Volcano Map")
 plt.xlabel('TWAS Z-score')
 plt.ylabel('-log10(p-value)')
 plt.tight_layout()

@@ -97,9 +97,44 @@ for (ds in valid_datasets) {
 
 cat("  Patient LFC matrix:", nrow(patient_lfc), "genes ×", ncol(patient_lfc), "patients\n")
 
-# --- Also load dream results for significance filter ---
-dream <- fread(file.path(RDIR, "dream_results.csv"))
+# --- Also load canonical DEG results (C2 limma-voom-qw) for significance filter ---
+dream <- fread(file.path(RDIR, "canonical_deg_results.csv"))
 setnames(dream, "adj.P.Val", "padj", skip_absent = TRUE)
+
+# --- Scale selector (Agent C: raw vs ashr-shrunk DEG-selection gate) ----------
+# The per-patient LFC matrix is RAW per-patient and scale-independent. Only the
+# DEG-selection gate (which genes count as "significant") differs:
+#   raw    : padj < 0.1 & raw   logFC   (default; preserves canonical behaviour)
+#   shrunk : lfsr < 0.1 & ashr-shrunk_logFC  (aliased onto logFC/padj below so the
+#            analytical body is unchanged — sign preserved by ashr, magnitude shrinks)
+# Figure + sweep/gene-summary outputs get a "_<scale>" suffix; the SHARED canonical
+# patient_lfc_matrix.csv.gz (read by 5 sibling figure scripts) stays unsuffixed and
+# is written only in raw mode.
+LFC_SCALE <- tolower(Sys.getenv("LFC_SCALE", "raw"))
+stopifnot(LFC_SCALE %in% c("raw", "shrunk"))
+if (LFC_SCALE == "shrunk") {
+  stopifnot(all(c("shrunk_logFC", "lfsr") %in% names(dream)))
+  dream[, logFC := shrunk_logFC]
+  dream[, padj  := lfsr]
+  GATE_LAB <- "lfsr < 0.1"; SCALE_LAB <- "ashr-shrunk log2FC"
+} else {
+  GATE_LAB <- "padj < 0.1"; SCALE_LAB <- "raw log2FC"
+}
+SCALE_SUFFIX <- paste0("_", LFC_SCALE)
+cat(sprintf("LFC_SCALE = %s  (gate %s, effect %s)\n", LFC_SCALE, GATE_LAB, SCALE_LAB))
+
+.add_suffix <- function(path) {
+  d <- dirname(path); b <- basename(path)
+  if (grepl("\\.csv\\.gz$", b)) {            # preserve compound .csv.gz extension
+    return(file.path(d, paste0(sub("\\.csv\\.gz$", "", b), SCALE_SUFFIX, ".csv.gz")))
+  }
+  stem <- sub("\\.[^.]*$", "", b); ext <- sub("^.*\\.", "", b)
+  file.path(d, paste0(stem, SCALE_SUFFIX, ".", ext))
+}
+.ggsave_orig <- ggplot2::ggsave
+ggsave <- function(filename, ...) .ggsave_orig(.add_suffix(filename), ...)
+.fwrite_orig <- data.table::fwrite
+fwrite <- function(x, file = "", ...) .fwrite_orig(x, file = .add_suffix(file), ...)
 
 # --- Sweep: LFC cutoffs × patient percentage thresholds ---
 lfc_cutoffs <- c(0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
@@ -150,11 +185,18 @@ print(sweep)
 fwrite(sweep, file.path(RDIR, "patient_lfc_sweep.csv"))
 cat("\nSaved:", file.path(RDIR, "patient_lfc_sweep.csv"), "\n")
 
-# --- Save compressed patient LFC matrix ---
-cat("Saving patient LFC matrix (compressed)...\n")
-lfc_dt <- as.data.table(patient_lfc, keep.rownames = "gene")
-fwrite(lfc_dt, file.path(RDIR, "patient_lfc_matrix.csv.gz"))
-cat("Saved:", file.path(RDIR, "patient_lfc_matrix.csv.gz"), "\n")
+# --- Save compressed patient LFC matrix (SHARED canonical; scale-independent) ---
+# Written only in raw mode and kept unsuffixed: 5 sibling figure scripts read this
+# exact path. The shrunk run reuses the identical matrix (sign/magnitude are the
+# raw per-patient LFCs regardless of the DEG-selection gate).
+if (LFC_SCALE == "raw") {
+  cat("Saving patient LFC matrix (compressed)...\n")
+  lfc_dt <- as.data.table(patient_lfc, keep.rownames = "gene")
+  .fwrite_orig(lfc_dt, file.path(RDIR, "patient_lfc_matrix.csv.gz"))
+  cat("Saved:", file.path(RDIR, "patient_lfc_matrix.csv.gz"), "\n")
+} else {
+  cat("Skipping patient_lfc_matrix.csv.gz (canonical raw copy retained; scale-independent)\n")
+}
 
 # --- Per-gene summary stats ---
 gene_summary <- data.table(
@@ -170,7 +212,7 @@ gene_summary <- data.table(
   pct_down_1.0 = rowSums(patient_lfc < -1.0) / n_patients * 100
 )
 # Merge dream stats
-gene_summary <- merge(gene_summary, dream[, .(gene, dream_logFC = logFC, dream_padj = padj)],
+gene_summary <- merge(gene_summary, dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
                       by = "gene", all.x = TRUE)
 fwrite(gene_summary, file.path(RDIR, "patient_lfc_gene_summary.csv"))
 cat("Saved:", file.path(RDIR, "patient_lfc_gene_summary.csv"), "\n")
@@ -225,7 +267,7 @@ p_heatmap_sig <- ggplot(sweep_long_sig, aes(x = factor(lfc_cutoff), y = factor(p
   scale_fill_viridis_c(option = "plasma", trans = "log1p", name = "Genes",
                         labels = scales::comma) +
   labs(x = expression("Log"[2]*"FC cutoff"), y = "% of patients",
-       title = "Integrated-significant genes (padj < 0.1): consistently dysregulated") +
+       title = sprintf("Integrated-significant genes (%s): consistently dysregulated", GATE_LAB)) +
   theme_pub
 
 # ---- Panel C: Line plot — gene count vs LFC cutoff, colored by patient % ----
@@ -254,11 +296,11 @@ top_lfc <- patient_lfc[top_genes, , drop = FALSE]
 top_lfc_long <- melt(as.data.table(top_lfc, keep.rownames = "gene"),
                      id.vars = "gene", variable.name = "sample", value.name = "lfc")
 # Add dream direction
-top_lfc_long <- merge(top_lfc_long, dream[, .(gene, dream_logFC = logFC)], by = "gene")
+top_lfc_long <- merge(top_lfc_long, dream[, .(gene, bulk_logFC = logFC)], by = "gene")
 top_lfc_long[, gene_label := factor(gene, levels = top_genes)]
 
-p_violin <- ggplot(top_lfc_long, aes(x = reorder(gene, -abs(dream_logFC)), y = lfc,
-                                      fill = ifelse(dream_logFC > 0, "Up", "Down"))) +
+p_violin <- ggplot(top_lfc_long, aes(x = reorder(gene, -abs(bulk_logFC)), y = lfc,
+                                      fill = ifelse(bulk_logFC > 0, "Up", "Down"))) +
   geom_violin(scale = "width", alpha = 0.7, linewidth = 0.3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
   scale_fill_manual(values = c("Up" = "#E41A1C", "Down" = "#377EB8"), name = "Integrated direction") +
@@ -270,7 +312,7 @@ p_violin <- ggplot(top_lfc_long, aes(x = reorder(gene, -abs(dream_logFC)), y = l
 # ---- Panel E: Scatter — dream LFC vs median patient LFC ----
 gene_summary_sig <- gene_summary[gene %in% dream[padj < 0.1, gene]]
 
-p_scatter <- ggplot(gene_summary_sig, aes(x = dream_logFC, y = median_lfc)) +
+p_scatter <- ggplot(gene_summary_sig, aes(x = bulk_logFC, y = median_lfc)) +
   geom_hex(bins = 80) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") +
   scale_fill_viridis_c(option = "inferno", trans = "log1p", name = "Genes") +
@@ -281,8 +323,8 @@ p_scatter <- ggplot(gene_summary_sig, aes(x = dream_logFC, y = median_lfc)) +
   theme_pub
 
 # ---- Panel F: Histogram of patient consistency (pct_up for upregulated DEGs) ----
-up_degs <- gene_summary[dream_padj < 0.1 & dream_logFC > 0]
-down_degs <- gene_summary[dream_padj < 0.1 & dream_logFC < 0]
+up_degs <- gene_summary[bulk_padj < 0.1 & bulk_logFC > 0]
+down_degs <- gene_summary[bulk_padj < 0.1 & bulk_logFC < 0]
 
 hist_data <- rbind(
   up_degs[, .(gene, pct = pct_up_any, direction = "Upregulated DEGs\n(% patients with LFC > 0)")],
@@ -323,10 +365,11 @@ ggsave(file.path(PANELS_DIR, "histogram_consistency.pdf"), p_hist,
 combined <- (p_heatmap_all | p_line) / (p_heatmap_sig | p_hist) / (p_scatter | p_violin) +
   plot_annotation(
     title = "Patient-level fold-change analysis: MASLD vs healthy controls",
-    subtitle = sprintf("%s disease patients across %d datasets | %s genes tested",
+    subtitle = sprintf("%s disease patients across %d datasets | %s genes tested | DEG gate: %s, %s",
                        format(n_patients, big.mark = ","),
                        length(valid_datasets),
-                       format(nrow(patient_lfc), big.mark = ",")),
+                       format(nrow(patient_lfc), big.mark = ","),
+                       GATE_LAB, SCALE_LAB),
     theme = theme(plot.title = element_text(face = "bold", size = 15),
                   plot.subtitle = element_text(size = 12, color = "grey30"))
   )
@@ -351,7 +394,7 @@ for (pct in c(50, 70, 90)) {
 }
 
 # Correlation between dream LFC and median patient LFC
-r <- cor(gene_summary$dream_logFC, gene_summary$median_lfc, use = "complete.obs", method = "spearman")
-cat(sprintf("\nSpearman rho (dream LFC vs median patient LFC): %.3f\n", r))
+r <- cor(gene_summary$bulk_logFC, gene_summary$median_lfc, use = "complete.obs", method = "spearman")
+cat(sprintf("\nSpearman rho (integrated bulk LFC vs median patient LFC): %.3f\n", r))
 
 cat("\nDone.\n")

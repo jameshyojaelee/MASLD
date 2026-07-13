@@ -4,7 +4,7 @@
 # 3 panels:
 #   (a) ABF vs SuSiE PP.H4 scatter (UKBB ALT, primary GWAS)
 #   (b) Concordance bar chart across 6 EUR GWAS
-#   (c) Multi-signal gene lollipop (genes with n_cs_pairs > 1)
+#   (c) Multi-signal gene bars: PP.H4 per GWAS (genes with n_cs_pairs > 1)
 #
 # Data: RNA-seq/results/causal_inference/susie_comparison/
 #   - susie_abf_comparison.csv  (per-gene, per-GWAS)
@@ -235,7 +235,7 @@ tryCatch({
 # Panel (c): Multi-Signal Gene Lollipop (n_cs_pairs > 1)
 # ═══════════════════════════════════════════════════════════════════════════
 tryCatch({
-  message("Panel (c): Multi-signal gene lollipop...")
+  message("Panel (c): Multi-signal gene bars (PP.H4 per GWAS)...")
   multi_f <- file.path(SUSIE_DIR, "susie_multi_signal_genes.csv")
   if (!file.exists(multi_f)) stop("susie_multi_signal_genes.csv not found")
 
@@ -288,32 +288,37 @@ tryCatch({
   gwas_pal <- c("#1565C0", "#C2185B", "#7B1FA2", "#E91E63", "#42A5F5", "#00695C")
   names(gwas_pal) <- gwas_levels[seq_len(min(length(gwas_levels), 6))]
 
-  # Cap display at top 30 genes if too many
-  if (length(gene_order_m$symbol) > 30) {
-    top_genes <- tail(gene_order_m$symbol, 30)
-    multi <- multi[symbol %in% top_genes]
-  }
+  # De-lollipop (2026-06-19): ONE horizontal BAR per gene = best (max) PP.H4.susie
+  # across GWAS, coloured by the supporting GWAS; the credible-set-pair count
+  # (the "multi-signal" metric) is annotated at the bar end. (Dodged per-GWAS bars
+  # render as unreadable hairlines at 30 genes x 4 GWAS — single best bar is the
+  # readable, faithful bar form.) Cap at top 24 genes by PP.H4.
+  best <- multi[multi[, .I[which.max(PP.H4.susie)], by = symbol]$V1]
+  ncs  <- multi[, .(n_cs = max(n_cs_pairs, na.rm = TRUE)), by = symbol]
+  best[, n_cs := ncs$n_cs[match(symbol, ncs$symbol)]]
+  setorder(best, PP.H4.susie)
+  best <- tail(best, 24)
+  best[, symbol := factor(symbol, levels = symbol)]
 
-  p_c <- ggplot(multi, aes(x = PP.H4.susie, y = symbol, color = gwas_label)) +
-    geom_segment(aes(x = 0, xend = PP.H4.susie, yend = symbol),
-                 linewidth = 0.3, alpha = 0.5, color = "gray70") +
-    geom_point(size = 1.5, alpha = 0.8) +
-    geom_text(aes(label = n_cs_pairs), size = 1.6, hjust = -0.6,
-              color = "gray30", show.legend = FALSE) +
+  p_c <- ggplot(best, aes(x = PP.H4.susie, y = symbol, fill = gwas_label)) +
+    geom_col(width = 0.74) +
     geom_vline(xintercept = 0.5, linetype = "dashed", color = "gray50",
                linewidth = 0.3) +
-    scale_color_manual(values = gwas_pal, name = "GWAS") +
-    scale_x_continuous(limits = c(0, 1.08), breaks = seq(0, 1, 0.25)) +
-    labs(x = "PP.H4 (SuSiE)", y = NULL,
-         title = "Multi-signal genes (credible set pairs > 1)") +
+    geom_text(aes(label = n_cs), hjust = -0.45, size = 1.7, color = "black") +
+    scale_fill_manual(values = gwas_pal, name = "Best GWAS") +
+    scale_x_continuous(limits = c(0, 1.1), breaks = seq(0, 1, 0.25),
+                       expand = expansion(mult = c(0, 0.04))) +
+    labs(x = "PP.H4 (SuSiE)  ·  number = credible-set pairs", y = NULL,
+         title = "Multi-signal genes (>1 credible-set pair)") +
     theme_masld() +
-    theme(axis.text.y = element_text(face = "italic", size = 5),
+    theme(axis.text.y = element_text(face = "italic", size = 5, color = "black"),
           legend.position = "right",
           legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5))
+          legend.text = element_text(size = 5),
+          panel.grid.major.y = element_blank())
 
-  message("  ", uniqueN(multi$symbol), " multi-signal genes; max n_cs_pairs=",
-          max(multi$n_cs_pairs))
+  message("  ", uniqueN(best$symbol), " multi-signal genes shown; max n_cs_pairs=",
+          max(best$n_cs))
 }, error = function(e) message("Panel (c) error: ", e$message))
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -323,7 +328,7 @@ message("Saving individual panels...")
 panel_list <- list(
   a_scatter     = p_a,
   b_concordance = p_b,
-  c_lollipop    = p_c
+  c_bars        = p_c
 )
 
 for (nm in names(panel_list)) {
@@ -339,7 +344,7 @@ message("Assembling composite figure...")
 fig <- (p_a | p_b) / p_c +
   plot_layout(heights = c(1, 1.2)) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig_tall(fig, OUT, height = 7)
 message("Saved composite: ", OUT)

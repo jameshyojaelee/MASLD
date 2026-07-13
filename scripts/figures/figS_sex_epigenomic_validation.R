@@ -25,7 +25,7 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 # I/O paths
 RESULTS_DIR <- file.path(BASE, "Analysis/ATAC/Human_Multiome/results/sex_validation")
 FIG_DIR     <- FIGS05_DIR
-dir.create(file.path(FIG_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
+dir.create(FIG_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # ---------------------------------------------------------------------------
 # Panel A: Sex inference scatter
@@ -50,7 +50,7 @@ plot_sex_inference <- function() {
     theme_masld() +
     theme(legend.position = "right")
 
-  out <- file.path(FIG_DIR, "panels", "panel_sex_validation_A.pdf")
+  out <- file.path(FIG_DIR, "panel_sex_validation_A.pdf")
   ggsave(out, p, width = fig_half_width, height = 3, device = cairo_pdf)
   message("Saved: ", out)
 }
@@ -101,7 +101,7 @@ plot_promoter_enrichment <- function() {
     theme_masld() +
     theme(axis.text.x = element_text(size = 6))
 
-  out <- file.path(FIG_DIR, "panels", "panel_sex_validation_B.pdf")
+  out <- file.path(FIG_DIR, "panel_sex_validation_B.pdf")
   ggsave(out, p, width = fig_half_width * 0.7, height = 3, device = cairo_pdf)
   message("Saved: ", out)
 }
@@ -159,7 +159,7 @@ plot_chromvar_sex <- function() {
     theme(axis.text.y = element_text(size = 5.5),
           legend.position = "right")
 
-  out <- file.path(FIG_DIR, "panels", "panel_sex_validation_C.pdf")
+  out <- file.path(FIG_DIR, "panel_sex_validation_C.pdf")
   ggsave(out, p, width = fig_half_width, height = 4.5, device = cairo_pdf)
   message("Saved: ", out)
 }
@@ -212,7 +212,7 @@ plot_concordance <- function() {
     theme_masld() +
     theme(legend.position = "right")
 
-  out <- file.path(FIG_DIR, "panels", "panel_sex_validation_D.pdf")
+  out <- file.path(FIG_DIR, "panel_sex_validation_D.pdf")
   ggsave(out, p, width = fig_half_width, height = 3.5, device = cairo_pdf)
   message("Saved: ", out)
 }

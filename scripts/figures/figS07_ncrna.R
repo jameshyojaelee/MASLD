@@ -87,7 +87,7 @@ if (file.exists(landscape_path)) {
   frac_labels <- landscape[, .(gene_biotype, label = sprintf("%.0f%%", 100 * frac_deg),
                                 y = n_tested)]
   pa <- pa + geom_text(data = frac_labels, aes(x = gene_biotype, y = y, label = label),
-                        inherit.aes = FALSE, size = 2, vjust = -0.3)
+                        inherit.aes = FALSE, size = GEOM_TEXT_6PT, vjust = -0.3)
 
   save_fig(pa, file.path(out_dir, "panels", "panel_a.pdf"), width = fig_half_width, height = 3)
   cat("  Saved panel_a.pdf\n")
@@ -118,7 +118,7 @@ if (nrow(degs) > 10) {
   wt <- wilcox.test(abs(degs[gene_biotype == "lncRNA"]$bulk_logFC),
                      abs(degs[gene_biotype == "protein_coding"]$bulk_logFC))
   pb <- pb + annotate("text", x = 1.5, y = quantile(abs(degs$bulk_logFC), 0.97),
-                       label = sprintf("p = %.2e", wt$p.value), size = 2.5)
+                       label = sprintf("p = %.2e", wt$p.value), size = GEOM_TEXT_6PT)
 
   save_fig(pb, file.path(out_dir, "panels", "panel_b.pdf"), width = fig_half_width * 0.6, height = 3)
   cat("  Saved panel_b.pdf\n")
@@ -362,27 +362,33 @@ cat("--- Panel (g): Known MASLD lncRNA forest plot ---\n")
 known_path <- file.path(ncrna_dir, "known_masld_lncrna_validation.csv")
 if (file.exists(known_path)) {
   known <- fread(known_path)
-  known <- known[in_atlas == TRUE & !is.na(dream_logFC)]
+  # The curated table is written by the ncRNA pipeline with legacy dream_* names;
+  # harmonize to the bulk_* convention used below (C2 canonical swap).
+  for (oc in c("dream_logFC", "dream_padj", "dream_tstat")) {
+    nc <- sub("^dream_", "bulk_", oc)
+    if (oc %in% names(known) && !(nc %in% names(known))) setnames(known, oc, nc)
+  }
+  known <- known[in_atlas == TRUE & !is.na(bulk_logFC)]
 
   if (nrow(known) > 0) {
     # Compute approximate 95% CI from t-statistic
     # SE = logFC / t; CI = logFC +/- 1.96*SE
-    known[, se := abs(dream_logFC / dream_tstat)]
-    known[, ci_lo := dream_logFC - 1.96 * se]
-    known[, ci_hi := dream_logFC + 1.96 * se]
-    # `known` is the curated lncRNA validation table — it carries dream_logFC/dream_padj
+    known[, se := abs(bulk_logFC / bulk_tstat)]
+    known[, ci_lo := bulk_logFC - 1.96 * se]
+    known[, ci_hi := bulk_logFC + 1.96 * se]
+    # `known` is the curated lncRNA validation table — it carries bulk_logFC/bulk_padj
     # (no lfsr/shrunk_logFC), so apply the raw padj/|logFC| DEG gate directly.
-    known[, sig_label := fifelse(!is.na(dream_padj) & dream_padj < 0.05 &
-                                   !is.na(dream_logFC) & abs(dream_logFC) > 0.5, "*", "")]
+    known[, sig_label := fifelse(!is.na(bulk_padj) & bulk_padj < 0.05 &
+                                   !is.na(bulk_logFC) & abs(bulk_logFC) > 0.3, "*", "")]
     known[, concordant := (dream_direction == literature_direction)]
 
     # Deduplicate genes (keep first occurrence = highest |logFC| per direction)
     known <- known[!duplicated(gene)]
     # Order by literature direction then LFC
-    setorder(known, literature_direction, -dream_logFC)
+    setorder(known, literature_direction, -bulk_logFC)
     known[, gene := factor(gene, levels = rev(unique(gene)))]
 
-    pg <- ggplot(known, aes(x = dream_logFC, y = gene)) +
+    pg <- ggplot(known, aes(x = bulk_logFC, y = gene)) +
       geom_vline(xintercept = 0, linetype = "dashed", color = "gray60", linewidth = 0.3) +
       geom_errorbarh(aes(xmin = ci_lo, xmax = ci_hi), height = 0.2, linewidth = 0.3) +
       geom_point(aes(color = concordant, shape = is_deg), size = 2) +

@@ -77,15 +77,15 @@ pa <- ggplot(ml, aes(k, value, color = metric_label)) +
              color = "#C2185B", linewidth = 0.4) +
   annotate("text", x = chosen_k + 0.15, y = 0.97,
            label = sprintf("chosen\nk = %d", chosen_k),
-           hjust = 0, size = 2.2, color = "#C2185B", fontface = "bold") +
+           hjust = 0, size = GEOM_TEXT_6PT, color = "#C2185B", fontface = "plain") +
   scale_x_continuous(breaks = metrics$k) +
   scale_y_continuous(limits = c(0.4, 1.0), breaks = seq(0.4, 1.0, 0.1)) +
   scale_color_manual(values = c("Cophenetic coefficient" = masld_colors$up,
                                 "Mean silhouette" = masld_colors$down)) +
-  labs(x = "Number of programs (k)", y = "Score", color = NULL,
-       title = "NMF rank survey (k sweep)") +
+  labs(x = "Number of programs (k)", y = "Score", color = NULL) +
   theme_masld() +
   theme(legend.position = c(0.7, 0.3), legend.background = element_blank())
+message("[caption] NMF rank survey (k sweep): cophenetic correlation and mean silhouette across k=3-10, chosen k highlighted.")
 save_fig(pa, file.path(out_dir, "panels", "panel_a.pdf"),
          width = fig_half_width, height = 2.8)
 
@@ -105,23 +105,30 @@ if (file.exists(pathways_path)) {
   hm[, pathway_short := gsub("^HALLMARK_", "", pathway)]
   hm[, pathway_short := gsub("_", " ", pathway_short)]
   hm[, pathway_short := tools::toTitleCase(tolower(pathway_short))]
-  # Order programs per labels
-  hm[, program_bio := factor(program_bio, levels = program_bios)]
+  # Order programs per labels. Derive program_bio from the STABLE program code
+  # (P1..Pk) via the canonical program_labels.csv map, NOT the text label that
+  # Script 44 wrote into subtype_pathways.csv — that text is not propagated by
+  # the 95d pathway rename, so factoring it against the new levels silently
+  # NA-collapses this panel (audit P2#16, 2026-06-30). Assert fails loud if a
+  # future NMF cache changes the program codes.
+  code2bio <- setNames(labels$biological_label, labels$program_code)
+  stopifnot(all(paths$program %in% names(code2bio)))
+  hm[, program_bio := factor(code2bio[program], levels = program_bios)]
 
   pb <- ggplot(hm, aes(program_bio, pathway_short, fill = NES)) +
     geom_tile(color = "white", linewidth = 0.15) +
     geom_text(aes(label = ifelse(padj < 0.05, sprintf("%.1f", NES), "")),
-              size = 1.8) +
+              size = GEOM_TEXT_6PT) +
     scale_fill_gradient2(low = masld_colors$down, mid = "grey95",
                          high = masld_colors$up, midpoint = 0, name = "NES") +
-    labs(x = NULL, y = NULL,
-         title = sprintf("NMF programs × Hallmark enrichment (k=%d)", chosen_k)) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 35, hjust = 1, size = 7),
-          axis.text.y = element_text(size = 6.5))
+    theme(axis.text.x = element_text(angle = 35, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6))
 } else {
-  pb <- ggplot() + labs(title = "(b) pathways file missing") + theme_masld()
+  pb <- ggplot() + theme_masld()
 }
+message(sprintf("[caption] NMF programs x Hallmark enrichment (k=%d).", chosen_k))
 save_fig(pb, file.path(out_dir, "panels", "panel_b.pdf"),
          width = fig_half_width, height = 5)
 
@@ -130,8 +137,10 @@ save_fig(pb, file.path(out_dir, "panels", "panel_b.pdf"),
 # ============================================================
 cat("\n--- Panel (c): dominant program × fibrosis stage ---\n")
 comp <- merge(assignments[, .(sample_id, dominant_program)],
-              meta[, .(sample_id, fibrosis_stage)], by = "sample_id")
-comp <- comp[!is.na(fibrosis_stage)]
+              meta[, .(sample_id, fibrosis_stage, dataset)], by = "sample_id")
+# Exclude coarse-staged GSE213621 (F0F1/F3F4 grouped, not true Kleiner F0-F4) +
+# dropped PRJNA512027 so stage bins are true individual stages (see load_figure_data.R).
+comp <- comp[!is.na(fibrosis_stage) & !dataset %in% c("GSE213621", "PRJNA512027")]
 comp[, fibrosis_label := paste0("F", fibrosis_stage)]
 prop_dt <- comp[, .N, by = .(fibrosis_label, dominant_program)]
 prop_dt[, total := sum(N), by = fibrosis_label]
@@ -144,11 +153,11 @@ pc <- ggplot(prop_dt, aes(fibrosis_label, pct, fill = dominant_program)) +
   scale_fill_manual(values = prog_palette, name = "Program") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.02)),
                      labels = function(x) paste0(x, "%")) +
-  labs(x = "Fibrosis stage", y = "Proportion",
-       title = sprintf("NMF program composition by fibrosis stage (k=%d)", chosen_k)) +
+  labs(x = "Fibrosis stage", y = "Proportion") +
   theme_masld() +
   theme(legend.position = "right",
-        legend.text = element_text(size = 7))
+        legend.text = element_text(size = 6))
+message(sprintf("[caption] NMF program composition by fibrosis stage (k=%d).", chosen_k))
 save_fig(pc, file.path(out_dir, "panels", "panel_c.pdf"),
          width = fig_half_width, height = 3.2)
 
@@ -173,12 +182,12 @@ pd <- ggplot(sw_wide, aes(switch_ratio, reorder(dominant_program, switch_ratio),
   geom_col(width = 0.7, color = "white") +
   geom_vline(xintercept = 1, linetype = "dashed", color = "grey40") +
   geom_text(aes(label = sprintf("%.2fx", switch_ratio)),
-            hjust = -0.15, size = 2.2) +
+            hjust = -0.15, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = prog_palette, guide = "none") +
   expand_limits(x = max(sw_wide$switch_ratio, na.rm = TRUE) * 1.2) +
-  labs(x = "F3-F4 vs F0-F2 dominance ratio", y = NULL,
-       title = "NMF program mid-stage (F1-F3) inflection") +
+  labs(x = "F3-F4 vs F0-F2 dominance ratio", y = NULL) +
   theme_masld()
+message("[caption] NMF program mid-stage (F1-F3) inflection ratio per program.")
 save_fig(pd, file.path(out_dir, "panels", "panel_d.pdf"),
          width = fig_half_width, height = 3)
 
@@ -251,9 +260,8 @@ pe <- tryCatch({
                        labels = bulk_nmf_legend, name = NULL,
                        guide = guide_legend(ncol = 1, keyheight = unit(8, "pt"))) +
     labs(x = NULL,
-         y = expression(Delta * " mean program z-score (vs Healthy)"),
-         title = "Bulk NMF program shift vs Healthy, by cell-type umbrella") +
-    theme_masld(base_size = 7) +
+         y = expression(Delta * " mean program z-score (vs Healthy)")) +
+    theme_masld(base_size = 6) +
     theme(axis.text.x = element_text(angle = 30, hjust = 1),
           strip.background = element_rect(fill = "gray95", color = NA),
           panel.spacing = unit(4, "pt"),
@@ -263,6 +271,7 @@ pe <- tryCatch({
   ggplot() + theme_void()
 })
 
+message("[caption] Bulk NMF program shift vs Healthy, by cell-type umbrella.")
 save_fig(pe, file.path(out_dir, "panels", "panel_e.pdf"),
          width = fig_full_width, height = 4)
 
@@ -272,7 +281,7 @@ save_fig(pe, file.path(out_dir, "panels", "panel_e.pdf"),
 tryCatch({
   composite <- ((pa | pb) / (pc | pd) / pe) +
     plot_annotation(tag_levels = "a") &
-    theme(plot.tag = element_text(size = 9, face = "bold"))
+    theme(plot.tag = element_text(size = 6, face = "plain"))
   save_fig(composite, file.path(out_dir, "figS08_nmf_subtyping.pdf"),
            width = fig_full_width, height = 12)
   cat("Saved figS08_nmf_subtyping.pdf\n")

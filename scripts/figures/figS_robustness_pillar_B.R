@@ -34,22 +34,20 @@ p1 <- ggplot(dt, aes(x = held_out, y = auroc, fill = method_lbl)) +
   geom_hline(yintercept = 0.5, linetype = "dotted", colour = "grey50") +
   geom_hline(yintercept = 0.80, linetype = "dashed", colour = "grey30") +
   scale_y_continuous(limits = c(0.4, 1.02), breaks = seq(0.4, 1, 0.1)) +
-  labs(title = "B1 — Cross-cohort disease prediction",
-       subtitle = "Train: dream LOO on 4 cohorts; Test: held-out 5th cohort. ✕ = random-label null mean (B = 100)",
-       x = "Held-out cohort", y = "AUROC", fill = "") +
+  labs(x = "Held-out cohort", y = "AUROC", fill = "") +
   theme_pub() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 # B2 — AUROC vs test n (sanity: not just sample-size driven)
 p2 <- ggplot(dt, aes(x = n_test, y = auroc, colour = method_lbl, label = held_out)) +
   geom_point(size = 3) +
-  ggrepel::geom_text_repel(size = 3, show.legend = FALSE) +
+  ggrepel::geom_text_repel(size = GEOM_TEXT_6PT, show.legend = FALSE) +
   geom_hline(yintercept = 0.80, linetype = "dashed", colour = "grey30") +
   scale_x_continuous(labels = comma) +
-  labs(title = "B2 — AUROC vs held-out cohort n",
-       x = "Held-out cohort sample size", y = "AUROC", colour = "") +
+  labs(x = "Held-out cohort sample size", y = "AUROC", colour = "") +
   theme_pub()
 
 combined <- p1 / p2 + plot_layout(heights = c(1.2, 1))
 out_pdf <- file.path(OUT_DIR, "figS_robustness_pillar_B.pdf")
-ggsave(out_pdf, combined, width = 9, height = 8, device = cairo_pdf)
+ggsave(out_pdf, combined, width = 7.09, height = 6.3, device = cairo_pdf)
 cat("Saved:", out_pdf, "\n")
+message("[caption] B1 — Cross-cohort disease prediction. Train: dream LOO on 4 cohorts; Test: held-out 5th cohort. X = random-label null mean (B = 100). B2 — AUROC vs held-out cohort n.")

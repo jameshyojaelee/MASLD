@@ -80,7 +80,7 @@ program_bios  <- prog_labels$biological_label
 cat(sprintf("  k = %d programs\n", K))
 
 # Identify Fibrogenic program (for deprecated-alias output)
-fib_code <- prog_labels$program_code[prog_labels$label_category == "Fibrogenic"]
+fib_code <- prog_labels$program_code[prog_labels$program_code == "P3"]  # was: label_category == "Fibrogenic"
 stopifnot(length(fib_code) == 1)
 if (length(fib_code) == 0) {
   cat("  NOTE: no Fibrogenic-labeled program — legacy S2 aliases will be empty.\n")

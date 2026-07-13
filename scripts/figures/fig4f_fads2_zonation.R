@@ -1,26 +1,34 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: FADS2 is pericentral-emergent in MASLD (Moran's I increases from
-# 0.034 to 0.054 in disease) and causally regulated by a BBJ East-Asian GWAS
-# variant (PP.H4=0.948) invisible in European analyses — demonstrating that
-# cross-ancestry GWAS reveals zonation-specific disease biology.
+# ============================================================================
+# ⛔ SUPERSEDED / RETIRED 2026-06-18 — DO NOT USE.
+# This script is WRONG: it claims FADS2 is East-Asian-specific by reading the
+# atlas `coloc_susie_best_pp4` column, which is method-inconsistent/corrupted
+# (see memory/reference-coloc-canonical-source-pitfall). The canonical
+# susie_coloc_all_gwas.csv shows FADS2 is CROSS-ANCESTRY: EUR UKBB-GGT SuSiE
+# 0.909 + EAS BBJ-ALT 0.948 (+ BBJ-AST 0.901); EAS BBJ-GGT = 0.003. The correct
+# panel is `fads2_cross_ancestry.R` (-> _supp/fads2_cross_ancestry.pdf). Output
+# below was repointed to a _superseded_ name so this can never overwrite the
+# canonical panel. Kept only for provenance.
+# ============================================================================
+# KEY MESSAGE (RETIRED — INCORRECT): FADS2 colocalises with East-Asian (BBJ) liver-enzyme GWAS
+# (SuSiE PP.H4 = 0.948, BBJ ALT) but is invisible to European, African, and
+# South-Asian scans — cross-ancestry GWAS reveals disease biology a single-
+# ancestry analysis misses.
 #
-# Panels:
-#   i.  Periportal vs pericentral zonation overview (top SVGs, colored by zone)
-#   ii. FADS2 zonation context (Moran's I healthy vs disease)
-#   iii. Cross-ancestry COLOC comparison (FADS2 EUR vs EAS PP.H4)
+# One compact panel: best SuSiE-COLOC PP.H4 per ancestry. Values are read from
+# the atlas (so they trace to disk); the East-Asian bar is the only one to clear
+# the 0.5 threshold. Supplementary cross-ancestry case for Figure 4.
 #
-# Note: Full Visium spot map can be rendered via fig4b_spatial_overview.py
-#       Locus zoom via: Rscript scripts/figures/figS09_locus_zoom.R <FADS2_locus_id>
+# (A prior zonation-landscape scatter was dropped — it highlighted CYP3A4, not
+#  FADS2, duplicating fig4f_cyp3a4_zonation.R. The cross-ancestry contrast is the
+#  FADS2 story.)
 #
-# Output: figures/main/fig4_validation/panels/fig4f_fads2_zonation.pdf
+# Output: figures/main/fig4_validation/fads2_cross_ancestry.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({
   library(ggplot2)
   library(dplyr)
-  library(patchwork)
-  library(ggrepel)
-  library(tidyr)
 })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
@@ -32,141 +40,48 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 atlas <- read.csv(file.path(BASE,
   "Analysis/Spatial/results/integration/multi_evidence_atlas_with_spatial.csv"),
   stringsAsFactors = FALSE)
+f <- atlas %>% filter(human_symbol == "FADS2")
+stopifnot(nrow(f) == 1)
 
-spatial_con <- read.csv(file.path(BASE,
-  "Analysis/Spatial/results/integration/spatial_consensus.csv"),
-  stringsAsFactors = FALSE)
+# Best liver-enzyme PP.H4 per ancestry (max across ALT/AST/GGT/PDFF where present).
+best <- function(...) {
+  v <- suppressWarnings(as.numeric(c(...)))
+  if (all(is.na(v))) return(NA_real_)
+  max(v, na.rm = TRUE)
+}
+eur <- best(f$ukbb_alt_coloc_pp4, f$ast_coloc_pp4, f$ggt_coloc_pp4,
+            f$pdff_coloc_pp4, f$coloc_best_pp4_polyfun)
+eas <- best(f$coloc_susie_best_pp4)                       # 0.948 (BBJ ALT, SuSiE)
+sas <- best(f$panukbb_csa_alt_coloc_pp4, f$panukbb_csa_ast_coloc_pp4,
+            f$panukbb_csa_ggt_coloc_pp4)
+afr <- best(f$panukbb_afr_alt_coloc_pp4, f$panukbb_afr_ast_coloc_pp4,
+            f$panukbb_afr_ggt_coloc_pp4)
 
-# Genes with spatial data + COLOC
-spatial_df <- atlas %>%
-  filter(!is.na(spatial_morans_i) | (!is.na(spatial_is_svg) & spatial_is_svg == "True")) %>%
-  mutate(
-    is_svg        = spatial_is_svg %in% c("True", TRUE),
-    morans_i      = as.numeric(spatial_morans_i),
-    zone          = case_when(
-      spatial_zonation_class == "Pericentral-enriched" ~ "Pericentral",
-      spatial_zonation_class == "Periportal-enriched"  ~ "Periportal",
-      spatial_zonation_class == "Pan-lobular"           ~ "Pan-lobular",
-      TRUE                                              ~ "Other"
-    ),
-    is_focal = human_symbol == "FADS2"
-  ) %>%
-  filter(!is.na(morans_i), !is.na(dream_logFC))
-
-# ── Panel i: Zonation landscape — COLOC PP.H4 vs Moran's I ───────────────────
-zone_colors <- c(
-  Pericentral = "#E65100",   # warm orange (pericentral metabolic zone)
-  Periportal  = "#1565C0",   # deep blue (periportal immune zone)
-  "Pan-lobular" = "#9E9E9E", # gray (pan-lobular)
-  Other        = "#E8E8E8"
+anc <- data.frame(
+  ancestry = c("European\n(UKBB)", "East Asian\n(BBJ)",
+               "South Asian\n(Pan-UKBB)", "African\n(Pan-UKBB)"),
+  pp4      = c(eur, eas, sas, afr),
+  is_eas   = c(FALSE, TRUE, FALSE, FALSE)
 )
+anc$ancestry <- factor(anc$ancestry, levels = anc$ancestry)
+anc$fill     <- ifelse(anc$is_eas, masld_colors[["up"]], "#BDBDBD")
 
-p_zone_landscape <- ggplot(
-  filter(spatial_df, is_svg | coloc_susie_best_pp4 > 0.5),
-  aes(x = morans_i, y = coloc_susie_best_pp4,
-      color = zone, size = is_focal, alpha = is_focal)) +
+message(sprintf("[fads2] best PP.H4 — EUR %.3f | EAS %.3f | SAS %.3f | AFR %.3f",
+                eur, eas, sas, afr))
+
+# ── Panel: cross-ancestry COLOC ──────────────────────────────────────────────
+p <- ggplot(anc, aes(x = ancestry, y = pp4, fill = fill)) +
+  geom_col(width = 0.62) +
   geom_hline(yintercept = 0.5, linewidth = 0.3, linetype = "dashed", color = "gray60") +
-  geom_vline(xintercept = 0.03, linewidth = 0.3, linetype = "dashed", color = "gray60") +
-  geom_point(shape = 16) +
-  geom_label_repel(
-    data = filter(spatial_df,
-                  (is_focal) |
-                  (coloc_susie_best_pp4 > 0.8 & is_svg) |
-                  (human_symbol %in% c("ADH4", "CYP3A4", "IGFBP1"))),
-    aes(label = human_symbol),
-    size = PUB_GEOM_TEXT, label.size = 0.1, box.padding = 0.3,
-    segment.size = 0.25, fill = "white",
-    fontface = ifelse(
-      filter(spatial_df,
-             (is_focal) | (coloc_susie_best_pp4 > 0.8 & is_svg) |
-             (human_symbol %in% c("ADH4", "CYP3A4", "IGFBP1")))$is_focal,
-      "bold.italic", "italic")
-  ) +
-  scale_color_manual(values = zone_colors, name = "Lobular zone") +
-  scale_size_manual(values = c(`TRUE` = 3.5, `FALSE` = 1.2), guide = "none") +
-  scale_alpha_manual(values = c(`TRUE` = 1, `FALSE` = 0.65), guide = "none") +
-  scale_y_continuous(limits = c(0, 1.1)) +
-  annotate("text", x = 0.04, y = 0.52,
-           label = "SVG + COLOC", size = PUB_GEOM_TEXT, color = "gray30",
-           hjust = 0, fontface = "italic") +
-  labs(x = "Spatial autocorrelation (Moran's I)",
-       y = "SuSiE-COLOC PP.H4",
-       title = "Spatial × genetic convergence") +
-  theme_masld() + theme_pub() +
-  theme(legend.position = "right")
-
-# ── Panel ii: FADS2 Moran's I in healthy vs disease ──────────────────────────
-fads2_moran <- data.frame(
-  condition = factor(c("Healthy", "Steatohepatitis"), levels = c("Healthy", "Steatohepatitis")),
-  morans_i  = c(0.034, 0.054),  # from text / spatial_consensus
-  fill_col  = c(masld_colors[["control"]], masld_colors[["up"]])
-)
-
-p_fads2_moran <- ggplot(fads2_moran, aes(x = condition, y = morans_i, fill = fill_col)) +
-  geom_col(width = 0.5) +
-  geom_hline(yintercept = 0.03, linewidth = 0.3, linetype = "dashed", color = "gray50") +
-  geom_text(aes(label = sprintf("%.3f", morans_i), y = morans_i + 0.002),
-            size = PUB_GEOM_TEXT + 0.3, fontface = "bold", vjust = 0) +
   scale_fill_identity() +
-  scale_y_continuous(limits = c(0, 0.065), breaks = c(0, 0.03, 0.06)) +
-  annotate("text", x = 1.5, y = 0.031, label = "SVG threshold", size = PUB_GEOM_TEXT,
-           color = "gray40", vjust = -0.3, fontface = "italic") +
-  labs(x = NULL, y = "Moran's I (pericentral)",
-       title = bquote(italic("FADS2") ~ "spatial emergence")) +
-  theme_masld() + theme_pub() +
-  theme(axis.text.x = element_text(size = PUB_AXIS_TEXT + 1))
-
-# ── Panel iii: Cross-ancestry COLOC (EUR vs EAS PP.H4) ───────────────────────
-# FADS2: EUR weak/absent, BBJ EAS = 0.948
-ancestry_df <- data.frame(
-  ancestry = factor(c("European\n(UKBB ALT/AST/GGT)", "East Asian\n(BBJ GGT)"),
-                    levels = c("European\n(UKBB ALT/AST/GGT)", "East Asian\n(BBJ GGT)")),
-  pp4      = c(
-    # EUR: use best available from atlas for FADS2; EAS = 0.948
-    ifelse(is.na(filter(atlas, human_symbol == "FADS2")$coloc_susie_best_pp4[1]),
-           0.05, filter(atlas, human_symbol == "FADS2")$coloc_susie_best_pp4[1]),
-    0.948
-  ),
-  is_significant = c(FALSE, TRUE),
-  fill_col = c("#BDBDBD", masld_colors[["up"]])
-)
-
-# If both come from the same coloc_susie_best_pp4 (which is max across GWAS),
-# annotate EAS explicitly
-p_coloc_anc <- ggplot(ancestry_df,
-                      aes(x = ancestry, y = pp4, fill = fill_col)) +
-  geom_col(width = 0.55) +
-  geom_hline(yintercept = 0.5, linewidth = 0.3, linetype = "dashed", color = "gray60") +
-  geom_text(aes(label = ifelse(pp4 > 0.1, sprintf("%.3f", pp4), "< 0.1"),
-                y = pp4 + 0.02),
-            size = PUB_GEOM_TEXT + 0.3, fontface = "bold", vjust = 0) +
-  annotate("text", x = 1, y = 0.52,
-           label = "PP.H4 > 0.5\nthreshold",
-           size = PUB_GEOM_TEXT, color = "gray40", fontface = "italic") +
-  scale_fill_identity() +
-  scale_y_continuous(limits = c(0, 1.1), breaks = c(0, 0.5, 1.0)) +
-  labs(x = NULL, y = "SuSiE-COLOC PP.H4 (BBJ GGT)",
-       title = "EAS-specific GWAS signal",
-       subtitle = "Same locus absent in EUR") +
+  scale_y_continuous(limits = c(0, 1.02), breaks = c(0, 0.5, 1.0),
+                     expand = expansion(mult = c(0, 0.02))) +
+  labs(x = NULL, y = "SuSiE-COLOC PP.H4") +
   theme_masld() + theme_pub() +
   theme(axis.text.x = element_text(size = PUB_AXIS_TEXT))
 
-# ── Assemble ──────────────────────────────────────────────────────────────────
-p_out <- (p_zone_landscape | (p_fads2_moran / p_coloc_anc)) +
-  plot_layout(widths = c(1.5, 1)) +
-  plot_annotation(
-    title    = "FADS2 — pericentral lipid metabolism, genetically encoded (EAS ancestry)",
-    subtitle = sprintf("Bulk mRNA logFC = %.2f | Protein logFC = %.2f | Pericentral SVG (n_cohorts = 2)",
-                       filter(atlas, human_symbol == "FADS2")$dream_logFC,
-                       filter(atlas, human_symbol == "FADS2")$best_protein_logFC),
-    theme    = theme(
-      plot.title    = element_text(size = PUB_TITLE + 1, face = "bold"),
-      plot.subtitle = element_text(size = PUB_SUBTITLE,  color = "gray30")
-    )
-  )
-
-out <- file.path(FIG4_DIR, "panels", "fig4f_fads2_zonation.pdf")
-pdf(out, width = fig_full_width, height = 3.0, useDingbats = FALSE)
-print(p_out)
+out <- file.path(FIG4_DIR, "_supp", "_superseded_fig4f_fads2_zonation.pdf")
+pdf(out, width = fig_half_width, height = fig_half_width * 0.72, useDingbats = FALSE)
+print(p)
 dev.off()
 message("Saved: ", out)

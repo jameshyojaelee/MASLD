@@ -37,7 +37,7 @@ cat(sprintf("lncRNA library: all %d have 0 human orthologs (mouse-only, not comp
             nrow(lib_lnc)))
 
 # --- 2. Read dream results ---
-dream <- fread("RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")
+dream <- fread("RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/dream_results.csv")  # C2-OK-sensitivity
 cat(sprintf("Dream results: %d genes total\n", nrow(dream)))
 
 # Strip version from Ensembl IDs

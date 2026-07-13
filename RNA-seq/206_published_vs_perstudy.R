@@ -356,7 +356,7 @@ g1_merge <- merge(govaere_25_mapped,
                   ps_135251[, .(gene_base, logFC, adj.P.Val)],
                   by = "gene_base", all.x = TRUE)
 g1_merge <- merge(g1_merge,
-                  dream[, .(gene_base, dream_logFC = logFC, dream_padj = padj)],
+                  dream[, .(gene_base, dream_logFC = logFC, dream_padj = padj)],  # C2-OK-sensitivity: dream_results.csv retired sensitivity arm, labeled "Dream" comparator
                   by = "gene_base", all.x = TRUE)
 g1_merge[, our_direction := ifelse(logFC > 0, "up", "down")]
 g1_merge[, direction_match := published_direction == our_direction]
@@ -364,7 +364,7 @@ cat(sprintf("  Direction: %d/%d (%.0f%%), sig per-study: %d, sig dream: %d\n",
             sum(g1_merge$direction_match, na.rm = TRUE), nrow(g1_merge),
             100 * mean(g1_merge$direction_match, na.rm = TRUE),
             sum(g1_merge$adj.P.Val < PADJ, na.rm = TRUE),
-            sum(g1_merge$dream_padj < DREAM_PADJ, na.rm = TRUE)))
+            sum(g1_merge$dream_padj < DREAM_PADJ, na.rm = TRUE)))  # C2-OK-sensitivity: dream arm of published comparison
 
 # G2-G7: Pairwise contrast comparisons (published vs our reproduced)
 govaere_compare_names <- intersect(names(govaere_supp), names(our_govaere))
@@ -471,10 +471,10 @@ for (i in seq_along(panel_contrasts)) {
 
 # 25-gene dot plot
 g1_plot <- melt(g1_merge[, .(symbol, published_direction, logFC, adj.P.Val,
-                              dream_logFC, dream_padj)],
+                              dream_logFC, dream_padj)],  # C2-OK-sensitivity: dream arm of published comparison figure
                 id.vars = c("symbol", "published_direction"),
-                measure.vars = list(lfc = c("logFC", "dream_logFC"),
-                                    padj = c("adj.P.Val", "dream_padj")))
+                measure.vars = list(lfc = c("logFC", "dream_logFC"),  # C2-OK-sensitivity
+                                    padj = c("adj.P.Val", "dream_padj")))  # C2-OK-sensitivity
 g1_plot[, source := fifelse(variable == 1, "Per-study", "Dream")]
 g1_plot[, sig := padj < 0.05]
 g1_plot[, symbol := factor(symbol, levels = g1_merge[order(logFC)]$symbol)]

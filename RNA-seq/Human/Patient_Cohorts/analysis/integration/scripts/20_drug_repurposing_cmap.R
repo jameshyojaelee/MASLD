@@ -24,13 +24,13 @@ dir.create(OUT, showWarnings = FALSE, recursive = TRUE)
 cat("Loading consensus DEGs...\n")
 degs <- fread(file.path(RES, "disease_signatures/unified_disease_signatures.csv"))
 
-# Filter to robust genes: significant DEGs, sorted by |dvc_dream_logFC|
-top_genes <- degs[dvc_dream_sig == TRUE]
-top_genes <- top_genes[order(-abs(dvc_dream_logFC))]
+# Filter to robust genes: significant DEGs, sorted by |dvc_bulk_logFC|
+top_genes <- degs[dvc_bulk_sig == TRUE]
+top_genes <- top_genes[order(-abs(dvc_bulk_logFC))]
 
 # 150 up, 150 down
-up_sig <- head(top_genes[dvc_dream_logFC > 0, symbol], 150)
-dn_sig <- head(top_genes[dvc_dream_logFC < 0, symbol], 150)
+up_sig <- head(top_genes[dvc_bulk_logFC > 0, symbol], 150)
+dn_sig <- head(top_genes[dvc_bulk_logFC < 0, symbol], 150)
 
 cat("Extracted", length(up_sig), "Up and", length(dn_sig), "Down genes for query.\n")
 

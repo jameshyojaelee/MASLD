@@ -22,7 +22,7 @@ import os
 plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Helvetica", "Arial", "DejaVu Sans"],
-    "font.size": 9,
+    "font.size": 6,
     "pdf.fonttype": 42, "ps.fonttype": 42,
     "axes.spines.top": False, "axes.spines.right": False,
     "figure.dpi": 150, "savefig.dpi": 300,
@@ -83,10 +83,10 @@ def main():
         for j in range(n):
             if i > j:
                 ax.text(j, i, f"{M[i, j]:+.02f}", ha="center", va="center",
-                        fontsize=7.2, color="#333333", zorder=3)
+                        fontsize=6, color="#333333", zorder=3)
             elif i == j:
                 ax.text(j, i, "1", ha="center", va="center",
-                        fontsize=7.5, color="white", fontweight="bold", zorder=3)
+                        fontsize=6, color="white", fontweight="normal", zorder=3)
     for x in np.arange(-0.5, n, 1):
         ax.axhline(x, color="white", lw=1.4, zorder=2)
         ax.axvline(x, color="white", lw=1.4, zorder=2)
@@ -96,28 +96,24 @@ def main():
                  facecolor="none", edgecolor="#2D3436", lw=1.8, zorder=4))
 
     ax.set_xticks(range(n)); ax.set_yticks(range(n))
-    ax.set_xticklabels([LABEL[s] for s in ORDER], fontsize=7.5, rotation=35, ha="right")
-    ax.set_yticklabels([LABEL[s] for s in ORDER], fontsize=7.5)
+    ax.set_xticklabels([LABEL[s] for s in ORDER], fontsize=6, rotation=35, ha="right")
+    ax.set_yticklabels([LABEL[s] for s in ORDER], fontsize=6)
     ax.tick_params(left=False, bottom=False)
     for sp in ax.spines.values():
         sp.set_visible(False)
     ax.set_xlim(-0.5, n - 0.5); ax.set_ylim(n - 0.5, -0.5)
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.04, ticks=[-1, -0.5, 0, 0.5, 1])
-    cbar.set_label("Spearman ρ", fontsize=7.5)
-    cbar.ax.tick_params(labelsize=7)
+    cbar.set_label("Spearman ρ", fontsize=6)
+    cbar.ax.tick_params(labelsize=6)
     cbar.outline.set_linewidth(0)
-
-    ax.text(0.0, 1.12, "Seven evidence sources are statistically independent",
-            transform=ax.transAxes, fontsize=10, fontweight="bold", color="#2D3436")
-    ax.text(0.0, 1.055,
-            f"Largest off-diagonal |ρ| = {abs(mx):.2f} (Proteomics vs Human bulk) — non-redundant, "
-            f"not one signal counted 7×",
-            transform=ax.transAxes, fontsize=6.8, color="#666666")
 
     fig.savefig(os.path.join(_root(), "figures/misc/fig1_C2_orthogonality.pdf"),
                 bbox_inches="tight", dpi=300, facecolor="white")
     plt.close(fig)
+    print("[caption] Seven evidence sources are statistically independent — "
+          f"largest off-diagonal |ρ| = {abs(mx):.2f} (Proteomics vs Human bulk), non-redundant, "
+          "not one signal counted 7x")
     print("Saved figures/misc/fig1_C2_orthogonality.pdf  (max |off-diag rho| = %.3f)" % abs(mx))
 
 

@@ -62,9 +62,10 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   hep_de <- fread(hep_de_file)
   hep_de <- add_symbols(hep_de, "gene")
 
-  # Keep lfsr + shrunk_logFC so is_dream_deg() can apply the canonical ashr gate.
-  dream_merge_cols <- intersect(c("symbol", "dream_logFC", "dream_padj",
-                                  "dream_shrunk_logFC", "dream_lfsr"), names(dream))
+  # Keep treat_fdr (+ lfsr/shrunk_logFC reference) so is_dream_deg() can apply the canonical TREAT gate.
+  dream_merge_cols <- intersect(c("symbol", "bulk_logFC", "bulk_padj",
+                                  "bulk_shrunk_logFC", "bulk_lfsr",
+                                  "bulk_treat_fdr", "treat_fdr"), names(dream))
   merged <- merge(
     dream[, ..dream_merge_cols],
     hep_de[, .(symbol, hep_logFC = logFC, hep_padj = padj)],
@@ -80,9 +81,9 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   )]
   merged[, bulk_sig := NULL]
 
-  rho <- cor(merged$dream_logFC, merged$hep_logFC,
+  rho <- cor(merged$bulk_logFC, merged$hep_logFC,
              use = "complete.obs", method = "spearman")
-  r <- cor(merged$dream_logFC, merged$hep_logFC,
+  r <- cor(merged$bulk_logFC, merged$hep_logFC,
            use = "complete.obs", method = "pearson")
   n_both <- sum(merged$sig_class == "Both significant")
   n_total <- nrow(merged)
@@ -90,7 +91,7 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   # Direction concordance for significant genes
   sig_both <- merged[sig_class == "Both significant"]
   dir_conc <- if (nrow(sig_both) > 0) {
-    mean(sign(sig_both$dream_logFC) == sign(sig_both$hep_logFC)) * 100
+    mean(sign(sig_both$bulk_logFC) == sign(sig_both$hep_logFC)) * 100
   } else NA
 
   merged[, sig_class := factor(sig_class,
@@ -105,14 +106,14 @@ if (file.exists(hep_de_file) && !is.null(dream)) {
   )
 
   # Label top discordant/concordant genes
-  top_genes <- merged[sig_class == "Both significant"][order(-abs(dream_logFC))][1:min(15, .N)]
+  top_genes <- merged[sig_class == "Both significant"][order(-abs(bulk_logFC))][1:min(15, .N)]
 
-  p_a <- ggplot(merged, aes(x = dream_logFC, y = hep_logFC, color = sig_class)) +
+  p_a <- ggplot(merged, aes(x = bulk_logFC, y = hep_logFC, color = sig_class)) +
     rasterize_layer(geom_point(size = 0.15, alpha = 0.3, stroke = 0, shape = 16)) +
     scale_color_manual(values = sig_colors) +
     geom_abline(slope = 1, intercept = 0, linetype = "dashed",
                 linewidth = 0.3, color = "grey40") +
-    geom_smooth(data = merged, aes(x = dream_logFC, y = hep_logFC),
+    geom_smooth(data = merged, aes(x = bulk_logFC, y = hep_logFC),
                 method = "lm", linewidth = 0.4, color = "black",
                 se = FALSE, inherit.aes = FALSE) +
     geom_text_repel(data = top_genes, aes(label = symbol),
@@ -197,15 +198,16 @@ if (length(de_files) > 0 && !is.null(dream)) {
     # (e.g. allcell_pseudobulk_de.csv uses `lfc` + a wide cell-type matrix).
     if (!all(c("logFC", "padj") %in% names(dt))) return(NULL)
     dt <- add_symbols(dt, "gene")
-    dream_cols <- intersect(c("symbol", "dream_logFC", "dream_padj",
-                              "dream_shrunk_logFC", "dream_lfsr"), names(dream))
+    dream_cols <- intersect(c("symbol", "bulk_logFC", "bulk_padj",
+                              "bulk_shrunk_logFC", "bulk_lfsr",
+                              "bulk_treat_fdr", "treat_fdr"), names(dream))
     m <- merge(dt[, .(symbol, ct_logFC = logFC, ct_padj = padj)],
                dream[, ..dream_cols],
                by = "symbol")
     shared <- m[ct_padj < 0.05 & is_dream_deg(m)]
     if (nrow(shared) == 0) return(NULL)
-    rho <- cor(shared$ct_logFC, shared$dream_logFC, method = "spearman")
-    dir_agree <- mean(sign(shared$ct_logFC) == sign(shared$dream_logFC)) * 100
+    rho <- cor(shared$ct_logFC, shared$bulk_logFC, method = "spearman")
+    dir_agree <- mean(sign(shared$ct_logFC) == sign(shared$bulk_logFC)) * 100
     data.table(cell_type = ct_clean, rho = rho, dir_concordance = dir_agree,
                n_shared = nrow(shared))
   }))
@@ -302,7 +304,7 @@ if (file.exists(sc_props_file)) {
 # ==========================================================================
 fig <- (p_a | p_b) / (p_c | p_d) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig(fig, OUT, width = fig_full_width, height = 8)
 message("Single-cell validation figure saved to ", OUT)

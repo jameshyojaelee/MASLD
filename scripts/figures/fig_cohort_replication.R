@@ -36,7 +36,9 @@ per_study_dir <- file.path(project_root,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/per_study")
 files <- list.files(per_study_dir, pattern = "_de_results\\.csv$", full.names = TRUE)
 cat("Loading per-study DE files...\n")
-all_de <- rbindlist(lapply(files, fread))
+# fill = TRUE: per-study schemas are heterogeneous (the excluded PRJNA512027 ships
+# a 9-col legacy table vs 14 cols for the active cohorts); mirrors load_per_study_de().
+all_de <- rbindlist(lapply(files, fread), fill = TRUE)
 all_de <- all_de[dataset %in% mega_cohorts]
 cat("  Total rows (6 mega cohorts):", nrow(all_de), "\n")
 cat("  Unique genes:", uniqueN(all_de$gene), "\n")
@@ -65,15 +67,15 @@ gene_rep <- all_de[, .(
 
 # Merge with dream
 gene_rep <- merge(gene_rep,
-  dream[, .(gene, dream_logFC = logFC, dream_padj = padj)],
+  dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   by = "gene", all.x = TRUE)
-gene_rep[, dream_sig := !is.na(dream_padj) & dream_padj < 0.1]
+gene_rep[, bulk_sig := !is.na(bulk_padj) & bulk_padj < 0.1]
 
 cat("\n--- Replication summary ---\n")
 cat("Genes tested in all", n_cohorts, "cohorts:", sum(gene_rep$n_tested == n_cohorts), "\n")
 cat("Genes tested in >=4 cohorts:", sum(gene_rep$n_tested >= 4), "\n")
 cat("Dream DEGs significant in 0 per-study cohorts:",
-    sum(gene_rep$dream_sig & gene_rep$n_sig == 0), "\n")
+    sum(gene_rep$bulk_sig & gene_rep$n_sig == 0), "\n")
 
 # =============================================================================
 # 4. Panel A: Cumulative gene counts at each threshold
@@ -123,7 +125,7 @@ pA <- ggplot(cum_adj, aes(x = min_cohorts, y = n_genes, color = direction)) +
   geom_text(data = cum_adj[min_cohorts %in% c(1, 3, 5) & direction == "Either direction"],
             aes(label = format(n_genes, big.mark = ",")),
             vjust = -0.8, hjust = 0.5, size = PUB_GEOM_TEXT, show.legend = FALSE,
-            fontface = "bold") +
+            fontface = "plain") +
   scale_x_continuous(breaks = 1:n_cohorts, labels = 1:n_cohorts) +
   scale_y_continuous(labels = comma) +
   scale_color_manual(values = c(
@@ -134,12 +136,11 @@ pA <- ggplot(cum_adj, aes(x = min_cohorts, y = n_genes, color = direction)) +
   labs(
     x = "Minimum cohorts with significant DE",
     y = "Number of genes",
-    title = "Genes reaching per-study significance across cohorts",
-    subtitle = "Per-study padj < 0.1 | No logFC threshold",
     color = "Direction"
   ) +
   theme_masld() + theme_pub() +
   theme(legend.position = "bottom")
+message("[caption] Panel A: Genes reaching per-study significance across cohorts (per-study padj < 0.1, no logFC threshold)")
 
 # =============================================================================
 # 5. Panel B: Marginal genes gained per step decrease
@@ -153,7 +154,7 @@ pB <- ggplot(marginal[!is.na(genes_gained)],
   geom_col(position = position_dodge(width = 0.7), width = 0.6) +
   geom_text(aes(label = format(genes_gained, big.mark = ",")),
             position = position_dodge(width = 0.7),
-            vjust = -0.4, size = PUB_GEOM_TEXT, fontface = "bold") +
+            vjust = -0.4, size = PUB_GEOM_TEXT, fontface = "plain") +
   scale_fill_manual(values = c(
     "Upregulated"   = fig1_colors$up,
     "Downregulated" = fig1_colors$down
@@ -162,50 +163,63 @@ pB <- ggplot(marginal[!is.na(genes_gained)],
   labs(
     x = "Cohort threshold relaxed from N \u2192 N\u22121",
     y = "Genes gained",
-    title = "Marginal genes gained per threshold decrease",
-    subtitle = "padj < 0.1 | Each bar = additional genes from relaxing by one cohort",
     fill = "Direction"
   ) +
   theme_masld() + theme_pub() +
   theme(legend.position = "bottom")
+message("[caption] Panel B: Marginal genes gained per threshold decrease (padj < 0.1; each bar = additional genes from relaxing by one cohort)")
 
 # =============================================================================
-# 6. Panel C: Dream DEG replication distribution (Fig 1F).
+# 6. Panel C: Integrated DEG replication distribution (Fig 1F).
 # Uses the canonical project DEG thresholds — same convention as Fig 1h:
-#   integrated: padj < 0.05 AND |logFC| > 0.5  (consensus_degs.csv definition)
-#   per-study:  padj < 0.05 AND same direction as integrated
+#   integrated: TREAT FDR < 0.05 at lfc = 0.25  (canonical Tier-1, 2026-06-29; via
+#               is_dream_deg, which now returns treat_fdr<0.05)
+#   per-study:  per-cohort TREAT FDR < 0.05 (lfc=0.25) AND same direction
 # Note: panels A/B/D above retain padj < 0.1 (no LFC, no direction) on purpose;
 # they answer different questions and live in the supplementary figure.
 # =============================================================================
-PADJ_INT_C    <- 0.05
-LFC_INT_C     <- 0.5
-PADJ_COHORT_C <- 0.05
+TREAT_FDR_CUT <- 0.05
+TREAT_LFC     <- 0.25   # treat() effect-size offset (folded into the test)
+INT_DEF_LABEL <- "TREAT FDR < 0.05 (lfc = 0.25)"
 
-# Per-gene direction-aware concordance count using per-study DE.
-# We must recompute from raw per-study rows because gene_rep$n_up/n_down
-# count direction within a cohort, not concordance with the integrated effect.
+# Per-gene direction-aware concordance count using per-study DE. We recompute from
+# raw per-study rows because gene_rep$n_up/n_down count direction within a cohort,
+# not concordance with the integrated effect. Per-cohort significance = analytical
+# TREAT (limma::treat reconstructed from logFC+SE+df.total, BH within cohort).
+all_de[, treat_fdr := NA_real_]
+for (co in unique(all_de$dataset)) {
+  idx <- which(all_de$dataset == co & is.finite(all_de$logFC) &
+               is.finite(all_de$SE) & all_de$SE > 0)
+  if (!length(idx)) next
+  p_treat <- pt((abs(all_de$logFC[idx]) - TREAT_LFC) / all_de$SE[idx],
+                df = all_de$df.total[idx], lower.tail = FALSE) +
+             pt((abs(all_de$logFC[idx]) + TREAT_LFC) / all_de$SE[idx],
+                df = all_de$df.total[idx], lower.tail = FALSE)
+  set(all_de, i = idx, j = "treat_fdr", value = p.adjust(p_treat, method = "BH"))
+}
 ps_with_dream <- merge(
-  all_de[, .(gene, dataset, ps_logFC = logFC, ps_padj = adj.P.Val)],
-  dream[, .(gene, dream_logFC = logFC, dream_padj = padj)],
+  all_de[, .(gene, dataset, ps_logFC = logFC, ps_treat_fdr = treat_fdr)],
+  dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   by = "gene", all.x = FALSE
 )
-ps_with_dream[, concordant_sig := !is.na(ps_padj) & ps_padj < PADJ_COHORT_C]
+ps_with_dream[, concordant_sig := !is.na(ps_treat_fdr) & ps_treat_fdr < TREAT_FDR_CUT &
+                                  !is.na(ps_logFC) & !is.na(bulk_logFC) &
+                                  sign(ps_logFC) == sign(bulk_logFC)]
 fig1f_concord <- ps_with_dream[, .(n_cohorts_concordant = sum(concordant_sig, na.rm = TRUE)),
                                by = gene]
 
-# Integrated DEGs at canonical threshold
+# Integrated DEGs at canonical Tier-1 threshold (TREAT FDR<0.05 at lfc=0.25)
 dream_genes_C <- merge(
-  dream[!is.na(padj) & padj < PADJ_INT_C & abs(logFC) > LFC_INT_C,
-        .(gene, dream_logFC = logFC, dream_padj = padj)],
+  dream[is_dream_deg(dream),
+        .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   fig1f_concord, by = "gene", all.x = TRUE)
 dream_genes_C[is.na(n_cohorts_concordant), n_cohorts_concordant := 0L]
-dream_genes_C[, dir := fifelse(dream_logFC > 0,
+dream_genes_C[, dir := fifelse(bulk_logFC > 0,
                                "Integrated upregulated",
                                "Integrated downregulated")]
 
-cat("\nFig 1F integrated DEGs (padj <", PADJ_INT_C, ", |logFC| >", LFC_INT_C,
-    "):", nrow(dream_genes_C), "\n")
-cat("  Replication counts (per-study padj <", PADJ_COHORT_C, "):\n")
+cat("\nFig 1F integrated DEGs (", INT_DEF_LABEL, "):", nrow(dream_genes_C), "\n")
+cat("  Replication counts (per-study TREAT FDR <", TREAT_FDR_CUT, ", same direction):\n")
 print(dream_genes_C[, .N, by = n_cohorts_concordant][order(n_cohorts_concordant)])
 
 # Distribution for stacked bar
@@ -219,7 +233,7 @@ pC <- ggplot(rep_dist_C,
     data = totals_C,
     aes(x = factor(n_cohorts_concordant), y = total,
         label = format(total, big.mark = ","), fill = NULL),
-    vjust = -0.4, size = 2.0, fontface = "bold", inherit.aes = FALSE
+    vjust = -0.4, size = PUB_GEOM_TEXT, fontface = "plain", inherit.aes = FALSE
   ) +
   # Liang et al. 2025 Fig 1E palette: soft magenta + warm peach.
   # Lower-chroma than the volcano's #C9265E / #1565C0 pair so the panel
@@ -231,31 +245,22 @@ pC <- ggplot(rep_dist_C,
   scale_x_discrete(limits = as.character(0:n_cohorts)) +
   scale_y_continuous(labels = comma, expand = expansion(mult = c(0, 0.12))) +
   labs(
-    x = paste0("Cohorts significant (padj < ", PADJ_COHORT_C, ")"),
+    x = paste0("Cohorts significant (FDR < ", TREAT_FDR_CUT, ", same direction)"),
     y = "Number of integrated DEGs",
-    title = "Per-study replication of integrated DEGs",
-    subtitle = paste0(
-      format(nrow(dream_genes_C), big.mark = ","),
-      " integrated DEGs (padj < ", PADJ_INT_C,
-      ", |logFC| > ", LFC_INT_C, ")"
-    ),
     fill = "Direction"
   ) +
   theme_masld() + theme_pub() +
-  # Bump fonts a notch above theme_pub baseline so labels read at fig1f scale.
   theme(legend.position = "bottom",
-        plot.title    = element_text(size = PUB_TITLE + 1, face = "bold"),
-        plot.subtitle = element_text(size = PUB_SUBTITLE + 1, color = "gray30"),
-        axis.title    = element_text(size = PUB_AXIS_TITLE + 1),
-        axis.text     = element_text(size = PUB_AXIS_TEXT + 2),
-        legend.title  = element_text(size = PUB_LEGEND_TIT + 1, face = "bold"),
-        legend.text   = element_text(size = PUB_LEGEND + 2))
+        axis.title    = element_text(size = PUB_AXIS_TITLE, face = "plain"),
+        axis.text     = element_text(size = PUB_AXIS_TEXT, face = "plain"),
+        legend.title  = element_text(size = PUB_LEGEND_TIT, face = "plain"),
+        legend.text   = element_text(size = PUB_LEGEND, face = "plain"))
 
 # =============================================================================
 # 7. Panel D: Dream-rescued genes (dream-sig but per-study non-sig)
 # =============================================================================
 # Genes significant in dream but in 0 individual cohorts
-rescued <- gene_rep[dream_sig == TRUE & n_sig == 0]
+rescued <- gene_rep[bulk_sig == TRUE & n_sig == 0]
 cat("Dream-rescued genes (0 per-study sig):", nrow(rescued), "\n")
 
 # For these genes, show nominal replication
@@ -263,14 +268,11 @@ rescued_dist <- rescued[, .(count = .N), by = n_nominal]
 
 pD <- ggplot(rescued_dist, aes(x = factor(n_nominal), y = count)) +
   geom_col(fill = fig1_colors$mixed, width = 0.7) +
-  geom_text(aes(label = count), vjust = -0.4, size = PUB_GEOM_TEXT, fontface = "bold") +
+  geom_text(aes(label = count), vjust = -0.4, size = PUB_GEOM_TEXT, fontface = "plain") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   labs(
     x = "Number of cohorts with nominal significance (P < 0.05)",
     y = "Number of genes",
-    title = "Integration-rescued genes: nominal replication",
-    subtitle = paste0(format(nrow(rescued), big.mark = ","),
-                      " integrated DEGs with 0 per-study padj < 0.1"),
     fill = NULL
   ) +
   theme_masld() + theme_pub()
@@ -281,21 +283,18 @@ pD <- ggplot(rescued_dist, aes(x = factor(n_nominal), y = count)) +
 # (see Fig 1 panel promotion below); including it here would duplicate that
 # panel within the supplement.
 # =============================================================================
+message("[caption] Cross-cohort replication of MASLD disease-vs-control DEGs: ",
+        n_cohorts, " Disease-vs-Control cohorts | ",
+        format(uniqueN(gene_rep$gene), big.mark = ","),
+        " genes tested | Panel C = Fig 1F")
+
 fig <- (pA | pB) / (pD | plot_spacer()) +
   plot_annotation(
-    title = "Cross-cohort replication of MASLD disease-vs-control DEGs",
-    subtitle = paste0(n_cohorts, " Disease-vs-Control cohorts | ",
-                      format(uniqueN(gene_rep$gene), big.mark = ","),
-                      " genes tested | Panel C = Fig 1F"),
-    tag_levels = list(c("A", "B", "C")),
-    theme = theme(
-      plot.title    = element_text(size = PUB_TITLE + 1, face = "bold", family = "Helvetica"),
-      plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray35", family = "Helvetica")
-    )
+    tag_levels = list(c("A", "B", "C"))
   )
 
 ggsave(file.path(out_dir, "cohort_replication.pdf"), fig,
-       width = 9, height = 7.5, device = cairo_pdf)
+       width = fig_full_width, height = fig_full_width * 7.5 / 9, device = cairo_pdf)
 cat("\nSaved:", file.path(out_dir, "cohort_replication.pdf"), "\n")
 
 # Individual panels → panels/ subdirectory

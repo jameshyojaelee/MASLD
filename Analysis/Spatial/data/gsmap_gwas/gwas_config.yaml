@@ -5,3 +5,14 @@ ukbb_ggt: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/S
 pdff: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/pdff.sumstats.gz
 finngen_nafld: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/finngen_nafld.sumstats.gz
 finngen_nash: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/finngen_nash.sumstats.gz
+mvp_nafld: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/mvp_nafld.sumstats.gz
+mvp_alt: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/mvp_alt.sumstats.gz
+mvp_ast: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/mvp_ast.sumstats.gz
+decode_nafld: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/decode_nafld.sumstats.gz
+ukbb2023_nafld: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/ukbb2023_nafld.sumstats.gz
+intermtn_nafld: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/intermtn_nafld.sumstats.gz
+anstee2020_nafld: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/anstee2020_nafld.sumstats.gz
+nafld_2019: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/nafld_2019.sumstats.gz
+pdff_2021a: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/pdff_2021a.sumstats.gz
+pdff_2021b: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/pdff_2021b.sumstats.gz
+pdff_2022: /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/data/gsmap_gwas/pdff_2022.sumstats.gz

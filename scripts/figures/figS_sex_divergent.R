@@ -92,7 +92,7 @@ if (!is.null(sex_perm) && !is.null(lfc_diff_col)) {
 # ---- Assemble ----
 figS3 <- (p_a | p_b | p_c) +
   plot_annotation(tag_levels = "a") &
-  theme(plot.tag = element_text(size = 8, face = "bold"))
+  theme(plot.tag = element_text(size = 8, face = "plain"))
 
 save_fig(figS3, OUT, height = 4)
 message("FigS3 saved to ", OUT)

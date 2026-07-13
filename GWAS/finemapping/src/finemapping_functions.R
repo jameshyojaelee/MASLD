@@ -41,6 +41,7 @@ get_ld_base_dir <- function(ancestry = "EUR") {
     "EUR" = "UKBB_LD_DIR",
     "EAS" = "EAS_LD_DIR",
     "AFR" = "AFR_LD_DIR",
+    "AMR" = "AMR_LD_DIR",
     "SAS" = "SAS_LD_DIR",
     stop(paste("Unsupported ancestry:", ancestry)))
   override_path <- Sys.getenv(override_env, unset = "")
@@ -282,18 +283,47 @@ run_susie <- function(sumstats, LDmat, N_tot, N_cases, sumstats_name, ld_pop,
     # LD ridge regularization to ensure positive-definiteness
     R_mat <- as.matrix(LDmat) + 1e-6 * diag(nrow(LDmat))
 
+    # C6 (2026-07-05): effective sample size for case-control (log-OR) strata.
+    #   N_eff = 4 / (1/N_cases + 1/N_ctrl)  (Willer 2010; Kanai 2022 SuSiE-RSS).
+    # Quantitative strata (N_cases is NA) -> N_eff == N_tot. Matches the GWAS-side
+    # SuSiE-COLOC arm in 06_susie_coloc.R (gwas_n_eff). Keeping N_tot over-states the
+    # information under case:control imbalance (e.g. deCODE NAFLD N_eff/N_tot=0.009).
+    N_eff <- if (!is.na(N_cases) && N_cases > 0 && (N_tot - N_cases) > 0) {
+      4 / (1/N_cases + 1/(N_tot - N_cases))
+    } else {
+      N_tot
+    }
+
+    # LD-consistency diagnostic (Zou 2022 SuSiE-RSS; Kanai 2022): estimate the
+    # inconsistency parameter s between the z-scores and the (out-of-sample /
+    # small-panel) LD reference. High s flags loci where the reference LD does not
+    # match the GWAS -> credible sets are unreliable (the false-credible-set risk
+    # for small non-EUR 1000G panels: AMR n~347, EAS 504, AFR ~660). Recorded on
+    # every output row so aggregation (04) can gate/label exploratory loci; it
+    # never blocks the run.
+    lambda_s <- tryCatch(
+      as.numeric(susieR::estimate_s_rss(z = sumstats$beta / sumstats$se,
+                                        R = R_mat, n = N_eff)),
+      error = function(e) NA_real_
+    )
+    cat("  LD-consistency lambda_s:",
+        ifelse(is.na(lambda_s), "NA", round(lambda_s, 4)), "\n")
+    sumstats$lambda_s <- lambda_s
+
     if (is.na(N_cases)) {
-      susie_output <- susieR::susie_rss(R = R_mat, n = N_tot,
+      # quantitative: N_eff == N_tot; bhat/shat mode unchanged.
+      set.seed(42)  # C7 reproducibility: deterministic FM-master susie_rss (quant branch)
+      susie_output <- susieR::susie_rss(R = R_mat, n = N_eff,
                                         bhat = sumstats$beta, shat = sumstats$se,
                                         coverage = coverage)
     } else {
-      phi <- N_cases / N_tot
-      # FIX (review/IND-3): the susieR formal is `var_y` (not `vary_y`, which was silently
-      # absorbed into ... and ignored), and var(Y) for a 0/1 trait is phi*(1-phi), not its
-      # reciprocal. Previously the cc and quant branches behaved identically (var_y=1 default).
-      susie_output <- susieR::susie_rss(R = R_mat, n = N_tot,
-                                        var_y = phi * (1 - phi),
-                                        bhat = sumstats$beta, shat = sumstats$se,
+      # binary (log-OR): standardized z-score representation scaled by N_eff (C6,
+      # 2026-07-05). Supersedes the linear-on-0/1 var_y = phi*(1-phi) approximation,
+      # which is mis-specified for logistic (SAIGE/REGENIE log-OR) effect sizes and
+      # now matches the GWAS-side SuSiE-COLOC arm.
+      set.seed(42)  # C7 reproducibility: deterministic FM-master susie_rss (case-control branch)
+      susie_output <- susieR::susie_rss(R = R_mat, n = N_eff,
+                                        z = sumstats$beta / sumstats$se,
                                         coverage = coverage)
     }
 
@@ -348,6 +378,7 @@ run_CARMA <- function(sumstat, ld, sumstats_name, ld_pop, window_mb, locus,
     ld.list[[1]] <- as.matrix(ld)
     lambda.list[[1]] <- 1
 
+    set.seed(42)  # C7 reproducibility: deterministic FM-master CARMA fine-mapping
     CARMA.results <- CARMA::CARMA(z.list, ld.list, lambda.list = lambda.list,
                                    outlier.switch = TRUE, rho.index = 0.95)
 

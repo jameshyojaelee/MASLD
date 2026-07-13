@@ -94,14 +94,18 @@ echo "256 spat/cos/xsp: ${J256}  (after 250)"
 # ── Stage 2: Bayesian calibration ──
 EDGE_DEPS="${J251}:${J252}:${J253}:${J254}:${J255}:${J256}"
 J260=$(submit_py 260 permnull gpu 64G 8 260_permutation_nulls.py       "${EDGE_DEPS}" gpu)
-J261=$(submit_py 261 nulldens cpu 16G 4 261_null_density_estimation.py  "${J260}")
-J262=$(submit_py 262 postcomp gpu 32G 4 262_compute_posteriors.py       "${J261}" gpu)
+# 261 (KDE null density) + 262 (KDE two-group posteriors) RETIRED 2026-07-04
+# (round-2 audit B4d): the KDE-lfdr posterior was degenerate (pi0->0.99,
+# posteriors->0; see posterior_summary.csv) and is superseded by 262c direct
+# confidence scores. Scripts + degenerate outputs archived under
+# data/archive/kde_lfdr_retired_2026-07-04/. 262c reads the raw stage-1 edges
+# and writes the same posterior_edges/ filenames 263 consumes.
+J262=$(submit_py 262c confid   cpu 32G 4 262c_confidence_scores.py      "${J260}")
 J263=$(submit_py 263 noisyor  cpu 32G 8 263_noisy_or_composite.py       "${J262}")
 J264=$(submit_py 264 diagnost cpu 16G 4 264_bayesian_diagnostics.py     "${J263}")
 echo "260 permnull:    ${J260}  (after 251-256)"
-echo "261 nulldens:    ${J261}  (after 260)"
-echo "262 posteriors:  ${J262}  (after 261)"
-echo "263 noisy-or:    ${J263}  (after 262)"
+echo "262c confidence: ${J262}  (after 260; replaces retired 261+262 KDE-lfdr)"
+echo "263 noisy-or:    ${J263}  (after 262c)"
 echo "264 diagnostics: ${J264}  (after 263)"
 
 # ── Stage 3: Graph assembly ──

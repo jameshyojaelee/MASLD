@@ -210,7 +210,7 @@ if (have_precomputed && file.exists(precomputed_files["sex_enrich"]) &&
         }
       }
       # Legacy aliases: S2 = Fibrotic program, S1 = all other programs collapsed
-      fib_pc <- prog_lbls$program_code[prog_lbls$label_category == "Fibrogenic"]
+      fib_pc <- prog_lbls$program_code[prog_lbls$program_code == "P3"]  # was: label_category == "Fibrogenic"
       if (length(fib_pc) >= 1) {
         s2_up <- markers_dt[program_code == fib_pc[1] & direction == "up" & padj < 0.05,
                             unique(ensembl_clean)]

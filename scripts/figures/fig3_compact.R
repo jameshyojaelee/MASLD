@@ -27,7 +27,9 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT <- file.path(FIG3_DIR, "fig3_compact.pdf")
+# RETIRED 2026-06-12: Fig 2 composite retired — fig3_compact.R writes individual panels only
+# (this OUT was already never saved; kept commented to make the no-composite intent explicit).
+# OUT <- file.path(FIG3_DIR, "genetics_compact.pdf")
 dir.create(file.path(FIG3_DIR, "panels"), showWarnings = FALSE, recursive = TRUE)
 
 # Pre-initialize all panels with placeholders
@@ -68,23 +70,40 @@ gwas_colors <- c(
 # Panel (a): COLOC Manhattan — PP.H4 vs chromosome across 4 GWAS
 #   Alternating chromosome shading, point size ~ #GWAS, labels prioritized
 # ==========================================================================
+# C2 canonical SuSiE-COLOC source (replaces the stale 2026-03 ABF-only per-GWAS
+# coloc_results.csv files under RNA-seq/results/causal_inference/). One aggregated
+# table (gene x gwas_name); unified PP.H4 = SuSiE-preferred, ABF fallback, taking
+# the per-gene best across the requested GWAS name(s).
+.susie_all_path <- file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")
+.susie_all <- if (file.exists(.susie_all_path)) fread(.susie_all_path) else NULL
+coloc_canonical <- function(gwas_str) {
+  if (is.null(.susie_all)) return(NULL)
+  names_v <- trimws(strsplit(gwas_str, ";", fixed = TRUE)[[1]])
+  d <- .susie_all[gwas_name %in% names_v]
+  if (nrow(d) == 0) return(NULL)
+  # Canonical primary metric = SuSiE PP.H4 (rigorous); ABF (PP.H4.abf) is the
+  # separate permissive sensitivity arm and is NOT used in this main panel.
+  d <- d[!is.na(`PP.H4.susie`)]
+  if (nrow(d) == 0) return(NULL)
+  d[, PP.H4 := `PP.H4.susie`]
+  d[order(-PP.H4), .SD[1L], by = gene, .SDcols = c("PP.H4", "chr")]
+}
+
+# Canonical gwas_name(s) per figure label (PDFF = 3 EUR PDFF studies)
 broadaway_dirs <- c(
-  "ALT" = "broadaway_ukbb",
-  "AST" = "broadaway_ukbb_ast",
-  "GGT" = "broadaway_ukbb_ggt",
-  "PDFF" = "broadaway_pdff"
+  "ALT"  = "UKBB_ALT",
+  "AST"  = "UKBB_AST",
+  "GGT"  = "UKBB_GGT",
+  "PDFF" = "2021_34128465_PDFF_EUR;2021_34957434_PDFF_EUR;2022_36402844_PDFF_EUR"
 )
 
 coloc_parts_a <- list()
 for (gwas_label in names(broadaway_dirs)) {
-  f <- file.path(CAUSAL, broadaway_dirs[[gwas_label]], "coloc_results.csv")
-  if (file.exists(f)) {
-    tmp <- fread(f)
-    if (nrow(tmp) > 0 && "PP.H4" %in% names(tmp)) {
-      tmp[, gwas := gwas_label]
-      tmp <- add_symbols(tmp, "gene")
-      coloc_parts_a[[gwas_label]] <- tmp
-    }
+  tmp <- coloc_canonical(broadaway_dirs[[gwas_label]])
+  if (!is.null(tmp) && nrow(tmp) > 0) {
+    tmp[, gwas := gwas_label]
+    tmp <- add_symbols(tmp, "gene")
+    coloc_parts_a[[gwas_label]] <- tmp
   }
 }
 
@@ -151,7 +170,7 @@ if (length(coloc_parts_a) > 0) {
       geom_label_repel(
         data = label_dt_a,
         aes(label = symbol),
-        size = 1.7, max.overlaps = 15,
+        size = GEOM_TEXT_6PT, max.overlaps = 15,
         label.padding = 0.1, segment.size = 0.15,
         min.segment.length = 0, fontface = "italic",
         color = "black", show.legend = FALSE
@@ -163,16 +182,14 @@ if (length(coloc_parts_a) > 0) {
                          expand = expansion(mult = 0.01)) +
       scale_y_continuous(limits = c(0.3, 1.02), expand = c(0, 0)) +
       labs(x = "Chromosome",
-           y = "PP.H4 (colocalization probability)",
-           title = "Broadaway eQTL \u00d7 UKBB GWAS colocalization",
-           subtitle = paste0(n_total_genes, " genes PP.H4 > 0.5; ",
-                             n_high_genes, " PP.H4 > 0.8; ",
-                             n_replicated_3, " in 3+ GWAS")) +
+           y = "PP.H4 (colocalization probability)") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.2, "cm"),
-            legend.margin = margin(0, 0, 0, 0),
-            plot.subtitle = element_text(size = 5, color = "gray40"))
+            legend.margin = margin(0, 0, 0, 0))
+    message("[caption] Broadaway eQTL x UKBB GWAS colocalization: ",
+            n_total_genes, " genes PP.H4 > 0.5; ",
+            n_high_genes, " PP.H4 > 0.8; ", n_replicated_3, " in 3+ GWAS")
   }
 }
 
@@ -215,7 +232,7 @@ if (length(coloc_parts_a) > 0) {
                "EFHD1", "PNPLA3", "TM6SF2", "THRB", "PPARG", "MBOAT7",
                "DGAT2", "SLC39A8", "SORT1", "CELSR2", "CDK6", "MARC1",
                "GCKR", "SAMM50", "CHEK2")
-  y_faces_b <- ifelse(gene_order_b %in% known_b, "bold.italic", "italic")
+  y_faces_b <- ifelse(gene_order_b %in% known_b, "italic", "italic")
   names(y_faces_b) <- gene_order_b
 
   # N genes replicated across GWAS
@@ -230,32 +247,30 @@ if (length(coloc_parts_a) > 0) {
     geom_tile(aes(fill = PP.H4), color = "white", linewidth = 0.3) +
     scale_fill_gradient(low = "white", high = "#9C27B0",
                         limits = c(0, 1), name = "PP.H4") +
-    labs(x = NULL, y = NULL,
-         title = paste0("COLOC across GWAS (",
-                        n_replicated, " genes in 2+ GWAS)")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5.5),
-          axis.text.y = element_text(size = 5, face = y_faces_b),
-          plot.title = element_text(size = 7))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6, face = y_faces_b))
+  message("[caption] COLOC across GWAS: ", n_replicated, " genes in 2+ GWAS")
 
   # Side annotation strip: # GWAS with PP.H4 > 0.5
   p_b_strip <- ggplot(n_gwas_side_b, aes(x = "#GWAS", y = symbol,
                                            fill = n_gwas_coloc)) +
     geom_tile(color = "white", linewidth = 0.3) +
-    geom_text(aes(label = n_gwas_coloc), size = 1.8, color = "white",
-              fontface = "bold") +
+    geom_text(aes(label = n_gwas_coloc), size = GEOM_TEXT_6PT, color = "white",
+              fontface = "plain") +
     scale_fill_gradient(low = "#CE93D8", high = "#4A148C",
                         limits = c(1, 4), name = "#GWAS\nsig") +
     labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(size = 4.5, angle = 45, hjust = 1),
+    theme(axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
           axis.text.y = element_blank(),
           axis.ticks.y = element_blank(),
           axis.line.y = element_blank(),
           plot.margin = margin(2, 2, 2, 1),
           legend.key.size = unit(0.25, "cm"),
-          legend.text = element_text(size = 5),
-          legend.title = element_text(size = 5))
+          legend.text = element_text(size = 6),
+          legend.title = element_text(size = 6))
 
   p_b <- wrap_elements(full =
     p_b_main + p_b_strip +
@@ -319,7 +334,7 @@ if (nrow(ct_coloc) > 0) {
   known_masld_c <- c("HSD17B13", "PNPLA3", "TM6SF2", "MBOAT7", "GCKR",
                      "CIDEC", "PPARG", "COL1A1", "THRB", "EFHD1",
                      "FABP1", "RORA", "HKDC1", "SPTLC3")
-  y_faces_c <- ifelse(gene_order_c %in% known_masld_c, "bold.italic", "italic")
+  y_faces_c <- ifelse(gene_order_c %in% known_masld_c, "italic", "italic")
   names(y_faces_c) <- gene_order_c
 
   p_c <- ggplot(dot_grid_c[PP.H4 > 0], aes(x = cell_type_clean, y = gene)) +
@@ -328,15 +343,15 @@ if (nrow(ct_coloc) > 0) {
                           breaks = c(0.3, 0.5, 0.8, 1.0),
                           name = "PP.H4") +
     scale_color_manual(values = celltype_colors, name = "Cell type") +
-    labs(x = NULL, y = NULL,
-         title = paste0("sc-eQTL COLOC (MASLD eQTL x Ghodsian/UKBB, ",
-                        length(top_c_genes), " genes)")) +
+    labs(x = NULL, y = NULL) +
     theme_masld() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-          axis.text.y = element_text(size = 5, face = y_faces_c),
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+          axis.text.y = element_text(size = 6, face = y_faces_c),
           legend.position = "right",
           legend.key.size = unit(0.25, "cm"),
           plot.margin = margin(2, 2, 2, 2))
+  message("[caption] sc-eQTL COLOC (MASLD eQTL x Ghodsian/UKBB, ",
+          length(top_c_genes), " genes)")
 }
 
 # ==========================================================================
@@ -348,7 +363,8 @@ if (nrow(ct_coloc) > 0) {
 me <- load_multi_evidence()
 
 if (!is.null(me) && nrow(me) > 0) {
-  dream_degs <- me[bulk_padj < 0.1 & abs(bulk_logFC) > 0.5, human_symbol]
+  # Canonical DEG gate (2026-06-29): TREAT FDR < 0.05 at lfc=0.25 (is_dream_deg).
+  dream_degs <- me[is_dream_deg(me), human_symbol]
 
   # --- COLOC (Broadaway): union across 4 GWAS ---
   coloc_cols <- c("ukbb_alt_coloc_pp4", "ast_coloc_pp4",
@@ -468,24 +484,22 @@ if (!is.null(me) && nrow(me) > 0) {
     geom_text(data = method_stats,
               aes(x = n_sig + max(method_stats$n_sig) * 0.04,
                   y = method_f, label = paste0(n_sig, " / ", n_tested)),
-              inherit.aes = FALSE, size = 1.7, hjust = 0, color = "gray30") +
+              inherit.aes = FALSE, size = GEOM_TEXT_6PT, hjust = 0, color = "black") +
     scale_fill_manual(
       values = c("Sig & DEG overlap" = masld_colors$up,
                  "Sig (not DEG)"     = masld_colors$twas),
       name = NULL
     ) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.3))) +
-    labs(x = "Number of genes", y = NULL,
-         title = "Causal method coverage (S3)",
-         subtitle = paste0("Significant / tested; S3 total: ",
-                           s3_pct, "% of atlas genes")) +
+    labs(x = "Number of genes", y = NULL) +
     theme_masld() +
     theme(legend.position = "inside",
           legend.position.inside = c(0.75, 0.15),
           legend.background = element_blank(),
           legend.key = element_blank(),
-          legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 5))
+          legend.key.size = unit(0.25, "cm"))
+  message("[caption] Causal method coverage (S3): significant / tested; S3 total: ",
+          s3_pct, "% of atlas genes")
 
   # Clean up temporary columns
   me[, c("coloc_any_pp4", "has_s3") := NULL]
@@ -496,9 +510,15 @@ if (!is.null(me) && nrow(me) > 0) {
 #   + quadrant annotations + both Pearson r and Spearman rho
 # ==========================================================================
 ieqtl <- load_ieqtl()
+# The ieQTL CSV ships the bulk DEG effect under legacy dream_* column names;
+# normalize the dream_* prefix to the C2 bulk_* naming used everywhere downstream.
+if (!is.null(ieqtl)) {
+  .legacy_ie <- grep("^dream_", names(ieqtl), value = TRUE)
+  if (length(.legacy_ie)) setnames(ieqtl, .legacy_ie, sub("^dream_", "bulk_", .legacy_ie))
+}
 
 if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
-  ieqtl_plot <- ieqtl[!is.na(interaction_beta) & !is.na(dream_logFC)]
+  ieqtl_plot <- ieqtl[!is.na(interaction_beta) & !is.na(bulk_logFC)]
 
   if (nrow(ieqtl_plot) > 0) {
     # Best (most significant) interaction per gene
@@ -508,9 +528,9 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
 
     # Quadrant classification
     ieqtl_best[, quadrant := fifelse(
-      interaction_beta > 0 & dream_logFC > 0, "Concordant Up",
-      fifelse(interaction_beta < 0 & dream_logFC < 0, "Concordant Down",
-              fifelse(interaction_beta > 0 & dream_logFC < 0, "Discordant",
+      interaction_beta > 0 & bulk_logFC > 0, "Concordant Up",
+      fifelse(interaction_beta < 0 & bulk_logFC < 0, "Concordant Down",
+              fifelse(interaction_beta > 0 & bulk_logFC < 0, "Discordant",
                       "Discordant"))
     )]
 
@@ -521,22 +541,22 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
     pct_conc <- round(100 * n_concordant / n_ie, 1)
 
     # Both correlation metrics
-    rho_ie <- cor(ieqtl_best$interaction_beta, ieqtl_best$dream_logFC,
+    rho_ie <- cor(ieqtl_best$interaction_beta, ieqtl_best$bulk_logFC,
                   method = "spearman", use = "complete.obs")
-    r_ie <- cor(ieqtl_best$interaction_beta, ieqtl_best$dream_logFC,
+    r_ie <- cor(ieqtl_best$interaction_beta, ieqtl_best$bulk_logFC,
                 method = "pearson", use = "complete.obs")
 
     # Quadrant annotation positions (corners of the plot)
-    x_range <- range(ieqtl_best$dream_logFC, na.rm = TRUE)
+    x_range <- range(ieqtl_best$bulk_logFC, na.rm = TRUE)
     y_range <- range(ieqtl_best$interaction_beta, na.rm = TRUE)
     x_pad <- diff(x_range) * 0.05
     y_pad <- diff(y_range) * 0.05
 
     # Compute per-quadrant counts directly from ieqtl_best
-    n_disc_ul <- ieqtl_best[interaction_beta > 0 & dream_logFC < 0, .N]
-    n_disc_lr <- ieqtl_best[interaction_beta < 0 & dream_logFC > 0, .N]
-    n_conc_ur <- ieqtl_best[interaction_beta > 0 & dream_logFC > 0, .N]
-    n_conc_ll <- ieqtl_best[interaction_beta < 0 & dream_logFC < 0, .N]
+    n_disc_ul <- ieqtl_best[interaction_beta > 0 & bulk_logFC < 0, .N]
+    n_disc_lr <- ieqtl_best[interaction_beta < 0 & bulk_logFC > 0, .N]
+    n_conc_ur <- ieqtl_best[interaction_beta > 0 & bulk_logFC > 0, .N]
+    n_conc_ll <- ieqtl_best[interaction_beta < 0 & bulk_logFC < 0, .N]
 
     quad_labels_simple <- data.table(
       x = c(x_range[2] - x_pad, x_range[1] + x_pad,
@@ -559,7 +579,7 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
     label_dt_e <- label_dt_e[, .SD[which.min(interaction_pval)], by = gene]
     if (nrow(label_dt_e) > 15) label_dt_e <- head(label_dt_e[order(interaction_pval)], 15)
 
-    p_e <- ggplot(ieqtl_best, aes(x = dream_logFC, y = interaction_beta,
+    p_e <- ggplot(ieqtl_best, aes(x = bulk_logFC, y = interaction_beta,
                                     color = cell_type_clean)) +
       rasterize_layer(
         geom_point(size = 0.5, alpha = 0.5, shape = 16)
@@ -571,10 +591,10 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
       # Quadrant annotations
       geom_text(data = quad_labels_simple,
                 aes(x = x, y = y, label = label, hjust = hjust, vjust = vjust),
-                inherit.aes = FALSE, size = 1.5, color = "gray50",
-                fontface = "italic", lineheight = 0.85) +
+                inherit.aes = FALSE, size = GEOM_TEXT_6PT, color = "black",
+                fontface = "plain", lineheight = 0.85) +
       geom_text_repel(data = label_dt_e,
-                      aes(label = gene), size = 1.7,
+                      aes(label = gene), size = GEOM_TEXT_6PT,
                       max.overlaps = 20, segment.size = 0.2,
                       min.segment.length = 0, box.padding = 0.3,
                       color = "black") +
@@ -584,11 +604,10 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
                               "; r = ", round(r_ie, 3),
                               "\nn = ", comma(n_ie),
                               "\n", pct_conc, "% concordant"),
-               hjust = 1.1, vjust = -0.3, size = 2, fontface = "italic",
+               hjust = 1.1, vjust = -0.3, size = GEOM_TEXT_6PT, fontface = "plain",
                lineheight = 0.85) +
       labs(x = "Integrated logFC (disease vs control)",
-           y = "ieQTL interaction beta",
-           title = "ieQTL x DEG directional concordance") +
+           y = "ieQTL interaction beta") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.2, "cm"),
@@ -604,107 +623,92 @@ if (!is.null(ieqtl) && nrow(ieqtl) > 0) {
 ancestry_sources <- list()
 
 # BBJ liver enzyme COLOC (East Asian x Broadaway eQTLs)
-bbj_dirs <- c("BBJ ALT" = "bbj_alt", "BBJ AST" = "bbj_ast", "BBJ GGT" = "bbj_ggt")
+bbj_dirs <- c("BBJ ALT" = "BBJ_ALT", "BBJ AST" = "BBJ_AST", "BBJ GGT" = "BBJ_GGT")
 bbj_genes_05 <- list()
 for (gwas_label in names(bbj_dirs)) {
-  f <- file.path(CAUSAL, bbj_dirs[[gwas_label]], "coloc_results.csv")
-  if (file.exists(f)) {
-    tmp <- fread(f)
-    if (nrow(tmp) > 0 && "PP.H4" %in% names(tmp)) {
-      tmp <- add_symbols(tmp, "gene")
-      ancestry_sources[[gwas_label]] <- data.table(
-        gwas = gwas_label,
-        ancestry = "East Asian (BBJ)",
-        n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
-      )
-      bbj_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
-    }
+  tmp <- coloc_canonical(bbj_dirs[[gwas_label]])
+  if (!is.null(tmp) && nrow(tmp) > 0) {
+    tmp <- add_symbols(tmp, "gene")
+    ancestry_sources[[gwas_label]] <- data.table(
+      gwas = gwas_label,
+      ancestry = "East Asian (BBJ)",
+      n_tested = nrow(tmp),
+      n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
+    )
+    bbj_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
   }
 }
 
 # RESTORED 2026-04-09: FinnGen COLOC (FinnGen_NAFLD, FinnGen_NASH verified R12)
 # FinnGen_HCC dropped 2026-06-06 (cirrhosis/HCC GWAS removed from canonical portfolio)
-finngen_dirs <- c("FinnGen NAFLD" = "finngen_nafld",
-                  "FinnGen NASH"  = "finngen_nash")
+finngen_dirs <- c("FinnGen NAFLD" = "FinnGen_NAFLD",
+                  "FinnGen NASH"  = "FinnGen_NASH")
 finngen_genes_05 <- list()
 for (gwas_label in names(finngen_dirs)) {
-  f <- file.path(CAUSAL, finngen_dirs[[gwas_label]], "coloc_results.csv")
-  if (file.exists(f)) {
-    tmp <- fread(f)
-    if (nrow(tmp) > 0 && "PP.H4" %in% names(tmp)) {
-      tmp <- add_symbols(tmp, "gene")
-      ancestry_sources[[gwas_label]] <- data.table(
-        gwas = gwas_label,
-        ancestry = "European (FinnGen)",
-        n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
-      )
-      finngen_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
-    }
+  tmp <- coloc_canonical(finngen_dirs[[gwas_label]])
+  if (!is.null(tmp) && nrow(tmp) > 0) {
+    tmp <- add_symbols(tmp, "gene")
+    ancestry_sources[[gwas_label]] <- data.table(
+      gwas = gwas_label,
+      ancestry = "European (FinnGen)",
+      n_tested = nrow(tmp),
+      n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
+    )
+    finngen_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
   }
 }
 
 # Pan-UKBB AFR COLOC (African, exploratory — underpowered)
-panukbb_afr_dirs <- c("PanUKBB AFR ALT" = "panukbb_afr_alt",
-                      "PanUKBB AFR AST" = "panukbb_afr_ast",
-                      "PanUKBB AFR GGT" = "panukbb_afr_ggt")
+panukbb_afr_dirs <- c("PanUKBB AFR ALT" = "PanUKBB_AFR_ALT",
+                      "PanUKBB AFR AST" = "PanUKBB_AFR_AST",
+                      "PanUKBB AFR GGT" = "PanUKBB_AFR_GGT")
 for (gwas_label in names(panukbb_afr_dirs)) {
-  f <- file.path(CAUSAL, panukbb_afr_dirs[[gwas_label]], "coloc_results.csv")
-  if (file.exists(f)) {
-    tmp <- fread(f)
-    if (nrow(tmp) > 0 && "PP.H4" %in% names(tmp)) {
-      tmp <- add_symbols(tmp, "gene")
-      ancestry_sources[[gwas_label]] <- data.table(
-        gwas = gwas_label,
-        ancestry = "African (PanUKBB)",
-        n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
-      )
-    }
+  tmp <- coloc_canonical(panukbb_afr_dirs[[gwas_label]])
+  if (!is.null(tmp) && nrow(tmp) > 0) {
+    tmp <- add_symbols(tmp, "gene")
+    ancestry_sources[[gwas_label]] <- data.table(
+      gwas = gwas_label,
+      ancestry = "African (PanUKBB)",
+      n_tested = nrow(tmp),
+      n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
+    )
   }
 }
 
 # Pan-UKBB CSA COLOC (Central/South Asian, exploratory — underpowered)
-panukbb_csa_dirs <- c("PanUKBB CSA ALT" = "panukbb_csa_alt",
-                      "PanUKBB CSA AST" = "panukbb_csa_ast",
-                      "PanUKBB CSA GGT" = "panukbb_csa_ggt")
+panukbb_csa_dirs <- c("PanUKBB CSA ALT" = "PanUKBB_CSA_ALT",
+                      "PanUKBB CSA AST" = "PanUKBB_CSA_AST",
+                      "PanUKBB CSA GGT" = "PanUKBB_CSA_GGT")
 for (gwas_label in names(panukbb_csa_dirs)) {
-  f <- file.path(CAUSAL, panukbb_csa_dirs[[gwas_label]], "coloc_results.csv")
-  if (file.exists(f)) {
-    tmp <- fread(f)
-    if (nrow(tmp) > 0 && "PP.H4" %in% names(tmp)) {
-      tmp <- add_symbols(tmp, "gene")
-      ancestry_sources[[gwas_label]] <- data.table(
-        gwas = gwas_label,
-        ancestry = "C/S Asian (PanUKBB)",
-        n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
-      )
-    }
+  tmp <- coloc_canonical(panukbb_csa_dirs[[gwas_label]])
+  if (!is.null(tmp) && nrow(tmp) > 0) {
+    tmp <- add_symbols(tmp, "gene")
+    ancestry_sources[[gwas_label]] <- data.table(
+      gwas = gwas_label,
+      ancestry = "C/S Asian (PanUKBB)",
+      n_tested = nrow(tmp),
+      n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
+    )
   }
 }
 
 # Broadaway European COLOC (primary) for reference
-broadaway_eu_dirs <- c("UKBB ALT" = "broadaway_ukbb",
-                       "UKBB AST" = "broadaway_ukbb_ast",
-                       "UKBB GGT" = "broadaway_ukbb_ggt",
-                       "PDFF"     = "broadaway_pdff")
+broadaway_eu_dirs <- c("UKBB ALT" = "UKBB_ALT",
+                       "UKBB AST" = "UKBB_AST",
+                       "UKBB GGT" = "UKBB_GGT",
+                       "PDFF"     = "2021_34128465_PDFF_EUR;2021_34957434_PDFF_EUR;2022_36402844_PDFF_EUR")
 eu_genes_05 <- list()
 for (gwas_label in names(broadaway_eu_dirs)) {
-  f <- file.path(CAUSAL, broadaway_eu_dirs[[gwas_label]], "coloc_results.csv")
-  if (file.exists(f)) {
-    tmp <- fread(f)
-    if (nrow(tmp) > 0 && "PP.H4" %in% names(tmp)) {
-      tmp <- add_symbols(tmp, "gene")
-      ancestry_sources[[gwas_label]] <- data.table(
-        gwas = gwas_label,
-        ancestry = "European (UKBB)",
-        n_tested = nrow(tmp),
-        n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
-      )
-      eu_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
-    }
+  tmp <- coloc_canonical(broadaway_eu_dirs[[gwas_label]])
+  if (!is.null(tmp) && nrow(tmp) > 0) {
+    tmp <- add_symbols(tmp, "gene")
+    ancestry_sources[[gwas_label]] <- data.table(
+      gwas = gwas_label,
+      ancestry = "European (UKBB)",
+      n_tested = nrow(tmp),
+      n_coloc = sum(tmp$PP.H4 > 0.5, na.rm = TRUE)
+    )
+    eu_genes_05[[gwas_label]] <- tmp[PP.H4 > 0.5, unique(symbol)]
   }
 }
 
@@ -757,27 +761,25 @@ if (length(ancestry_sources) > 0) {
   p_f <- ggplot(anc_dt, aes(x = n_coloc, y = trait, fill = ancestry)) +
     geom_bar(stat = "identity", width = 0.6) +
     geom_text(aes(label = n_coloc),
-              hjust = -0.15, size = 1.3, color = "gray30", show.legend = FALSE) +
+              hjust = -0.15, size = GEOM_TEXT_6PT, color = "black", show.legend = FALSE) +
     facet_grid(source ~ ., scales = "free_y", space = "free_y", switch = "y") +
     scale_fill_manual(values = ancestry_fill, name = NULL,
                       guide = guide_legend(nrow = 2)) +
     scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
     labs(x = "Genes (PP.H4 > 0.5)",
-         y = NULL,
-         title = "Multi-ancestry COLOC (Broadaway eQTLs)") +
+         y = NULL) +
     theme_masld() +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.15, "cm"),
-          legend.text = element_text(size = 4.5),
+          legend.text = element_text(size = 6),
           legend.margin = margin(0, 0, 0, 0),
           legend.spacing.x = unit(0.1, "cm"),
-          plot.title = element_text(size = 7),
           plot.margin = margin(2, 2, 2, 2),
-          axis.text.y = element_text(size = 5),
-          axis.text.x = element_text(size = 5),
+          axis.text.y = element_text(size = 6),
+          axis.text.x = element_text(size = 6),
           axis.title.x = element_text(size = 6),
           strip.placement = "outside",
-          strip.text.y.left = element_text(size = 5, angle = 0, hjust = 1),
+          strip.text.y.left = element_text(size = 6, angle = 0, hjust = 1),
           strip.background = element_blank(),
           panel.spacing.y = unit(0.1, "cm"))
 }
@@ -830,20 +832,19 @@ if (!is.null(twas_combined) && nrow(twas_combined) > 0) {
       geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50",
                    linewidth = 0.3) +
       geom_text_repel(data = label_genes,
-                       aes(label = symbol), size = 1.8, max.overlaps = 20,
+                       aes(label = symbol), size = GEOM_TEXT_6PT, max.overlaps = 20,
                        segment.size = 0.2, min.segment.length = 0.3,
-                       color = "gray20", fontface = "italic") +
+                       color = "black", fontface = "italic") +
       scale_color_manual(values = sig_colors, name = NULL) +
       labs(x = "TWAS z-score (Ghodsian NAFLD)",
-           y = "TWAS z-score (Chen NAFLD)",
-           title = paste0("TWAS cross-GWAS concordance (rho=",
-                           round(rho, 2), ", n=", n_both_sig, " both sig)")) +
+           y = "TWAS z-score (Chen NAFLD)") +
       theme_masld() +
       theme(legend.position = "bottom",
             legend.key.size = unit(0.15, "cm"),
-            legend.text = element_text(size = 5),
-            plot.title = element_text(size = 7),
+            legend.text = element_text(size = 6),
             axis.title = element_text(size = 6))
+    message("[caption] TWAS cross-GWAS concordance (rho=",
+            round(rho, 2), ", n=", n_both_sig, " both sig)")
 
     cat("Panel g: TWAS Ghodsian vs Chen scatter — done\n")
   }
@@ -909,7 +910,7 @@ if (file.exists(sceqtl_twas_f)) {
     known_sc <- c("HSD17B13", "PNPLA3", "TM6SF2", "MBOAT7", "GCKR",
                    "CIDEC", "PPARG", "COL1A1", "THRB", "EFHD1",
                    "FABP1", "RORA", "HKDC1", "SPTLC3")
-    y_faces_i <- ifelse(gene_order_i %in% known_sc, "bold.italic", "italic")
+    y_faces_i <- ifelse(gene_order_i %in% known_sc, "italic", "italic")
     names(y_faces_i) <- gene_order_i
 
     p_i <- ggplot(dot_grid_i[best_fdr < 1], aes(x = cell_type_clean, y = symbol)) +
@@ -918,16 +919,15 @@ if (file.exists(sceqtl_twas_f)) {
                              breaks = c(1, 2, 5, 10),
                              name = expression(-log[10](FDR))) +
       scale_color_manual(values = celltype_colors, name = "Cell type") +
-      labs(x = NULL, y = NULL,
-           title = paste0("sc-TWAS by cell type (",
-                           length(top_sc_genes), " genes, MASLD eQTLs)")) +
+      labs(x = NULL, y = NULL) +
       theme_masld() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
-            axis.text.y = element_text(size = 5, face = y_faces_i),
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+            axis.text.y = element_text(size = 6, face = y_faces_i),
             legend.position = "right",
             legend.key.size = unit(0.25, "cm"),
-            plot.title = element_text(size = 7),
             plot.margin = margin(2, 2, 2, 2))
+    message("[caption] sc-TWAS by cell type (",
+            length(top_sc_genes), " genes, MASLD eQTLs)")
 
     cat("Panel i: sc-TWAS cell-type dot plot — done\n")
   }
@@ -948,12 +948,19 @@ row4 <- p_g + p_h + p_i + plot_layout(widths = c(1, 0.8, 0.8))
 # Save individual panels with clear descriptive names (no fig3 prefix)
 panel_dir <- file.path(FIG3_DIR, "panels")
 save_fig(p_a, file.path(panel_dir, "coloc_manhattan.pdf"), height = 3.5)
-save_fig(p_b, file.path(panel_dir, "coloc_gene_gwas_heatmap.pdf"), height = 3.5)
-save_fig(p_c, file.path(panel_dir, "sceqtl_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
-save_fig(p_d, file.path(panel_dir, "causal_coverage.pdf"), height = 3.5)
-save_fig(p_e, file.path(panel_dir, "ieqtl_concordance.pdf"), height = 3.5)
-save_fig(p_f, file.path(panel_dir, "multiancestry_coloc.pdf"), width = fig_half_width, height = 2.8)
-save_fig(p_g, file.path(panel_dir, "twas_concordance.pdf"), height = 3.5)
-save_fig(p_i, file.path(panel_dir, "sctwas_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
+# RETIRED 2026-06-12 (not a Fig 2 panel): coloc_gene_gwas_heatmap.pdf
+# save_fig(p_b, file.path(panel_dir, "coloc_gene_gwas_heatmap.pdf"), height = 3.5)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover): sceqtl_celltype_dotplot.pdf
+# save_fig(p_c, file.path(panel_dir, "sceqtl_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
+# RETIRED 2026-06-12 (not a Fig 2 panel): causal_coverage.pdf
+# save_fig(p_d, file.path(panel_dir, "causal_coverage.pdf"), height = 3.5)
+# RETIRED 2026-06-12 (no longer a Fig 2 panel): ieqtl_concordance.pdf
+# save_fig(p_e, file.path(panel_dir, "ieqtl_concordance.pdf"), height = 3.5)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover): multiancestry_coloc.pdf
+# save_fig(p_f, file.path(panel_dir, "multiancestry_coloc.pdf"), width = fig_half_width, height = 2.8)
+# RETIRED 2026-06-12 (not a Fig 2 panel): twas_concordance.pdf
+# save_fig(p_g, file.path(panel_dir, "twas_concordance.pdf"), height = 3.5)
+# RETIRED 2026-07-07 (not a Fig 2 / FigS2 panel — stale leftover): sctwas_celltype_dotplot.pdf
+# save_fig(p_i, file.path(panel_dir, "sctwas_celltype_dotplot.pdf"), width = fig_half_width, height = 3.5)
 
 message("COLOC/regulatory panels saved to ", panel_dir)

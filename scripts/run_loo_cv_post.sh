@@ -26,8 +26,4 @@ echo "=== Step 2: Cross-study AUROC prediction ==="
 Rscript scripts/cross_study_auroc.R
 
 echo ""
-echo "=== Step 3: Generating figure panels ==="
-Rscript scripts/figures/fig1_loo_cv_panels.R
-
-echo ""
 echo "=== All post-LOO-CV processing complete ==="

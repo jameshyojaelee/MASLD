@@ -5,6 +5,15 @@ Inputs:
   --smoke    (subsample to 5K cells for fast iteration)
   --loo-dataset NAME   (exclude one dataset; used by 503)
   --exclude-datasets NAME [NAME ...]   (exclude one or more datasets; protocol-contamination remediation)
+  --exclude-stage STAGE [STAGE ...]    (drop cells whose donor maps to one of these
+                     disease_stage_coarse values, e.g. --exclude-stage Cirrhosis;
+                     donor->stage map comes from hotspot_io.load_donor_metadata()).
+                     This filters at the DONOR/STAGE level, not the dataset level
+                     (GSE202379 carries both cirrhosis and non-cirrhosis donors).
+  --out-suffix STR   (append STR to the cell-type output dir name, e.g.
+                     "_nocirrhosis" -> results/hotspot_modules/hepatocytes_nocirrhosis/.
+                     Auto-defaults to "_nocirrhosis" when --exclude-stage contains
+                     Cirrhosis and no suffix is given.)
 
 Env vars (tuning):
   HOTSPOT_MAX_GENES  Cap on autocorr-significant genes carried into local
@@ -39,6 +48,7 @@ import scanpy as sc
 sys.path.insert(0, str(Path(__file__).parent))
 from hotspot_io import (
     load_atlas, load_gene_biotypes, hotspot_outdir, RUN_ORDER,
+    load_donor_metadata, DONOR_META_EXTENDED,
 )
 
 CONFOUNDER_PREFIXES = ("RPS", "RPL", "MT-", "MRPS", "MRPL")
@@ -162,14 +172,78 @@ def aggregate_donor(cell_scores: pd.DataFrame, obs: pd.DataFrame) -> pd.DataFram
     )
 
 
+def filter_excluded_stages(
+    adata: ad.AnnData, exclude_stage: list[str]
+) -> ad.AnnData:
+    """Drop cells whose donor maps to disease_stage_coarse in `exclude_stage`.
+
+    Filters at the DONOR/STAGE level (not the dataset level): GSE202379 carries
+    both cirrhosis and non-cirrhosis donors, so the cirrhosis donors must be
+    removed by their per-donor stage. donor->stage comes from
+    hotspot_io.load_donor_metadata() (`sample` + `disease_stage_coarse`).
+    """
+    excl = set(exclude_stage)
+    # IMPORTANT: source disease_stage_coarse from the EXTENDED donor metadata.
+    # The base donor_metadata.tsv (and therefore load_donor_metadata(), whose
+    # merge keeps the base copy of the shared column) labels the 19 GSE202379
+    # cirrhosis donors as NA — only the extended table resolves them as
+    # "Cirrhosis". Using the extended stage map is what makes "cirrhosis excluded"
+    # actually true (28 cirrhosis donors total: 19 GSE202379 + 9 GSE136103).
+    dm = load_donor_metadata()  # validates the loader path / base table
+    if "sample" not in dm.columns or "disease_stage_coarse" not in dm.columns:
+        raise RuntimeError(
+            "donor metadata lacks 'sample'/'disease_stage_coarse' — cannot apply --exclude-stage"
+        )
+    ext = pd.read_csv(DONOR_META_EXTENDED, sep="\t")
+    if "disease_stage_coarse" not in ext.columns:
+        raise RuntimeError(
+            f"{DONOR_META_EXTENDED} lacks 'disease_stage_coarse' — cannot apply --exclude-stage"
+        )
+    # Extended map first (authoritative for stage), then fill any gaps from base.
+    base_map = (
+        dm.dropna(subset=["sample"]).drop_duplicates(subset=["sample"])
+        .set_index("sample")["disease_stage_coarse"].to_dict()
+    )
+    stage_map = dict(base_map)
+    ext_map = (
+        ext.dropna(subset=["sample", "disease_stage_coarse"])
+        .drop_duplicates(subset=["sample"])
+        .set_index("sample")["disease_stage_coarse"].to_dict()
+    )
+    stage_map.update(ext_map)  # extended is authoritative where it has a non-NA stage
+    if "sample" not in adata.obs.columns:
+        raise RuntimeError("adata.obs has no 'sample' column — cannot map donor stage")
+    samp = adata.obs["sample"].astype(str)
+    stage = samp.map(stage_map)
+    drop_mask = stage.isin(excl).to_numpy()
+    n_cells_before = adata.n_obs
+    donors_before = samp.nunique()
+    excluded_donors = sorted(set(samp[drop_mask]))
+    # NA-stage donors (not in donor metadata) are NOT dropped — only explicit matches.
+    adata = adata[~drop_mask].copy()
+    donors_after = adata.obs["sample"].astype(str).nunique()
+    print(
+        f"[501] exclude_stage filter {sorted(excl)}: "
+        f"cells {n_cells_before:,} -> {adata.n_obs:,} "
+        f"(dropped {n_cells_before - adata.n_obs:,}); "
+        f"donors {donors_before} -> {donors_after} "
+        f"(dropped {len(excluded_donors)})"
+    )
+    print(f"[501] excluded donors ({len(excluded_donors)}): {excluded_donors}")
+    return adata
+
+
 def main(
     cell_type: str,
     smoke: bool,
     loo_dataset: str | None,
     exclude_datasets: list[str] | None = None,
+    exclude_stage: list[str] | None = None,
+    out_suffix: str | None = None,
 ) -> None:
     assert cell_type in RUN_ORDER, f"Unknown cell_type: {cell_type}"
-    print(f"[1/6] Loading {cell_type} (smoke={smoke}, loo={loo_dataset}, exclude={exclude_datasets})")
+    print(f"[1/6] Loading {cell_type} (smoke={smoke}, loo={loo_dataset}, "
+          f"exclude_datasets={exclude_datasets}, exclude_stage={exclude_stage})")
     adata = load_atlas(cell_type, smoke=smoke)
     # Apply LOO filter (single dataset) and/or exclude-datasets filter (multiple)
     if loo_dataset is not None:
@@ -181,6 +255,8 @@ def main(
         excl = set(exclude_datasets)
         adata = adata[~adata.obs["dataset"].isin(excl)].copy()
         print(f"[501] exclude_datasets filter: removed {n_before - adata.n_obs} cells from {sorted(excl)}")
+    if exclude_stage:
+        adata = filter_excluded_stages(adata, exclude_stage)
 
     print(f"[2/6] Gene filtering")
     adata = strip_confounders(adata)
@@ -222,7 +298,11 @@ def main(
 
     donor_scores = aggregate_donor(cell_scores_long, adata.obs)
 
-    outdir = hotspot_outdir(cell_type)
+    # Route output. An --out-suffix (explicit, or auto-derived from --exclude-stage)
+    # appends to the cell-type dir name so a stage-restricted re-run writes to a
+    # SEPARATE directory (e.g. hepatocytes_nocirrhosis/) and never touches the
+    # canonical cirrhosis-included outputs in hepatocytes/.
+    outdir = hotspot_outdir(cell_type + (out_suffix or ""))
     if loo_dataset:
         outdir = outdir / "loo" / loo_dataset
         outdir.mkdir(parents=True, exist_ok=True)
@@ -243,6 +323,8 @@ def main(
         "cell_type": cell_type,
         "loo_dataset": loo_dataset,
         "exclude_datasets": exclude_datasets,
+        "exclude_stage": exclude_stage,
+        "out_suffix": out_suffix or "",
         "smoke": smoke,
         "n_cells": int(adata.n_obs),
         "n_genes_kept": int(adata.n_vars),
@@ -272,5 +354,37 @@ if __name__ == "__main__":
         help="Exclude one or more datasets from the cell selection (e.g., --exclude-datasets GSE136103 Liver_Atlas). "
              "Mutually compatible with --loo-dataset (both apply). Used for protocol-contamination remediation.",
     )
+    ap.add_argument(
+        "--exclude-stage",
+        nargs="+",
+        default=None,
+        help="Drop cells whose donor maps to one of these disease_stage_coarse values "
+             "(e.g., --exclude-stage Cirrhosis). Filters at the DONOR/STAGE level via "
+             "hotspot_io.load_donor_metadata(), not the dataset level. When set (and "
+             "--out-suffix is not given) the output dir auto-suffixes to '<cell_type>_nocirrhosis' "
+             "if Cirrhosis is among the excluded stages.",
+    )
+    ap.add_argument(
+        "--out-suffix",
+        default=None,
+        help="Append this suffix to the cell-type output dir name so a stage-restricted "
+             "re-run writes to a SEPARATE directory (e.g., '_nocirrhosis'). Leaves the "
+             "canonical cirrhosis-included outputs untouched.",
+    )
     args = ap.parse_args()
-    main(args.cell_type, args.smoke, args.loo_dataset, exclude_datasets=args.exclude_datasets)
+    # Auto-derive an output suffix so the re-run never collides with the canonical
+    # cirrhosis-included dir, even if the caller forgets --out-suffix.
+    out_suffix = args.out_suffix
+    if out_suffix is None and args.exclude_stage:
+        if any(s.lower() == "cirrhosis" for s in args.exclude_stage):
+            out_suffix = "_nocirrhosis"
+        else:
+            out_suffix = "_excl_" + "_".join(sorted(s.lower() for s in args.exclude_stage))
+    main(
+        args.cell_type,
+        args.smoke,
+        args.loo_dataset,
+        exclude_datasets=args.exclude_datasets,
+        exclude_stage=args.exclude_stage,
+        out_suffix=out_suffix,
+    )

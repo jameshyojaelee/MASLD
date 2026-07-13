@@ -21,6 +21,12 @@ import {
 } from "react";
 import dynamic from "next/dynamic";
 import { getLayerColor } from "@/lib/network-data";
+import {
+  categoricalColor,
+  divergingColor,
+  sequentialColor,
+  CONTROL,
+} from "@/lib/palette";
 import type { Thresholds } from "@/components/network/controls-panel";
 import type {
   EdgeLayer,
@@ -127,49 +133,43 @@ function edgeVisible(
 // Color helpers
 // ---------------------------------------------------------------------------
 
-const COMMUNITY_PALETTE = [
-  "#e74c3c", "#3498db", "#2ecc71", "#f39c12", "#9b59b6",
-  "#1abc9c", "#e67e22", "#34495e", "#e91e63", "#607d8b",
-  "#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#ffeaa7",
-];
-
-const SEX_CLASS_COLORS: Record<string, string> = {
-  Female_biased: "#e74c3c",
-  Male_biased: "#3498db",
-  Divergent: "#9b59b6",
-  Concordant: "#95a5a6",
+// Class-based color modes index into the palette's colorblind-safe categorical
+// ramp; the "concordant" / absent buckets fall back to control gray (never a
+// distinct hue). All node colors route through @/lib/palette so the canvas
+// agrees with every SVG legend.
+const SEX_CLASS_INDEX: Record<string, number> = {
+  Female_biased: 3, // reddish purple
+  Male_biased: 0, // blue
+  Divergent: 4, // vermillion
 };
-
-const PROGRESSION_COLORS: Record<string, string> = {
-  onset: "#f39c12",
-  progression: "#e74c3c",
-  late: "#9b59b6",
+const PROGRESSION_INDEX: Record<string, number> = {
+  onset: 1, // orange
+  progression: 4, // vermillion
+  late: 8, // muted purple
 };
 
 function getNodeColor(node: NetworkNode, colorBy: NodeColorBy): string {
   switch (colorBy) {
     case "community":
-      return COMMUNITY_PALETTE[node.community_macro % COMMUNITY_PALETTE.length];
+      return categoricalColor(node.community_macro);
     case "layers":
-      // Gradient from gray (0) to primary blue (7)
-      return `hsl(220, ${Math.round((node.layers_active / 7) * 80)}%, ${60 - Math.round((node.layers_active / 7) * 20)}%)`;
-    case "sex_class":
-      return SEX_CLASS_COLORS[node.sex_class ?? ""] ?? "#95a5a6";
-    case "progression":
-      return PROGRESSION_COLORS[node.progression_class ?? ""] ?? "#95a5a6";
-    case "logfc": {
-      if (node.dream_logfc == null) return "#95a5a6";
-      if (node.dream_logfc > 0) {
-        const intensity = Math.min(1, Math.abs(node.dream_logfc) / 2);
-        return `hsl(0, ${Math.round(intensity * 80)}%, ${60 - Math.round(intensity * 15)}%)`;
-      }
-      const intensity = Math.min(1, Math.abs(node.dream_logfc) / 2);
-      return `hsl(220, ${Math.round(intensity * 80)}%, ${60 - Math.round(intensity * 15)}%)`;
+      // Sequential magnitude over the count of active evidence layers (0..7).
+      return sequentialColor(Math.min(1, (node.layers_active ?? 0) / 7));
+    case "sex_class": {
+      const i = SEX_CLASS_INDEX[node.sex_class ?? ""];
+      return i == null ? CONTROL : categoricalColor(i);
     }
+    case "progression": {
+      const i = PROGRESSION_INDEX[node.progression_class ?? ""];
+      return i == null ? CONTROL : categoricalColor(i);
+    }
+    case "logfc":
+      // Diverging blue(down) / gray / red(up) by bulk logFC; null → control gray.
+      return node.bulk_logfc == null ? CONTROL : divergingColor(node.bulk_logfc);
     case "druggability":
-      return node.dgidb_druggable ? "#2ecc71" : "#95a5a6";
+      return node.dgidb_druggable ? categoricalColor(2) : CONTROL; // green vs gray
     default:
-      return "#95a5a6";
+      return CONTROL;
   }
 }
 
@@ -179,20 +179,56 @@ function getNodeSize(node: NetworkNode): number {
   return 2 + Math.log2(Math.max(1, node.degree)) * 0.9;
 }
 
+/** Endpoint id of a link whose source/target may be an id string or a node. */
+const endId = (x: unknown): string =>
+  typeof x === "object" && x !== null ? (x as NetworkNode).id : (x as string);
+
+/** Stable key for a link (order-independent) used for hovered-edge emphasis. */
+const edgeKey = (l: NetworkEdge): string =>
+  [endId(l.source), endId(l.target)].sort().join("|") + "|" + l.layer;
+
 // ---------------------------------------------------------------------------
 // Skeleton placeholder
 // ---------------------------------------------------------------------------
 
+/** Graph-viewport-shaped skeleton (faux nodes + links) — no spinner pop-in. */
 function GraphSkeleton() {
+  const nodes = [
+    { cx: 50, cy: 45, r: 5 },
+    { cx: 35, cy: 30, r: 3 },
+    { cx: 66, cy: 28, r: 3.5 },
+    { cx: 30, cy: 62, r: 3 },
+    { cx: 70, cy: 66, r: 4 },
+    { cx: 50, cy: 72, r: 2.5 },
+    { cx: 20, cy: 46, r: 2.5 },
+    { cx: 82, cy: 48, r: 2.5 },
+  ];
   return (
-    <div className="flex h-full w-full items-center justify-center bg-card">
-      <div className="flex flex-col items-center gap-3 text-muted-foreground">
-        <svg className="size-8 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-        </svg>
-        <span className="text-sm">Loading network graph...</span>
-      </div>
+    <div className="relative h-full w-full overflow-hidden bg-card">
+      <svg
+        className="h-full w-full animate-pulse text-muted-foreground/40"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden
+      >
+        {nodes.slice(1).map((n, i) => (
+          <line
+            key={i}
+            x1={nodes[0].cx}
+            y1={nodes[0].cy}
+            x2={n.cx}
+            y2={n.cy}
+            stroke="currentColor"
+            strokeWidth={0.4}
+          />
+        ))}
+        {nodes.map((n, i) => (
+          <circle key={i} cx={n.cx} cy={n.cy} r={n.r} fill="currentColor" />
+        ))}
+      </svg>
+      <span className="absolute bottom-3 left-3 text-xs text-muted-foreground">
+        Loading network graph…
+      </span>
     </div>
   );
 }
@@ -221,6 +257,14 @@ export function ForceGraph({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fgRef = useRef<any>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [hoveredEdgeKey, setHoveredEdgeKey] = useState<string | null>(null);
+  // Ego-isolation focus (null = full network). Set on node click in the
+  // neighborhood / compare modes; cleared by "Back to full network" / bg click.
+  const [isolatedId, setIsolatedId] = useState<string | null>(null);
+  // Canvas cannot resolve CSS custom properties, so read the computed
+  // foreground color from the container and recompute it whenever the theme
+  // class flips (fixes the always-white, invisible-in-light-mode label bug).
+  const [labelColor, setLabelColor] = useState("#e5e7eb");
   const [dimensions, setDimensions] = useState({ w: width ?? 800, h: height ?? 600 });
 
   // Measure container
@@ -251,6 +295,25 @@ export function ForceGraph({
 
     return () => observer.disconnect();
   }, [width, height]);
+
+  // Resolve the label/outline color from the DOM (canvas can't read CSS vars)
+  // and keep it in sync with the light/dark theme toggle on <html>.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof window === "undefined") return;
+    const read = () => {
+      const c = getComputedStyle(el).color;
+      if (c) setLabelColor(c);
+    };
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "data-theme", "style"],
+    });
+    return () => mo.disconnect();
+  }, []);
+
 
   // Filter links by selected edge layer + F-stage filter. Threshold dispatch
   // is handled in paintLink via edgeVisible() — below-threshold edges dim
@@ -315,11 +378,69 @@ export function ForceGraph({
     return nodes.filter((n) => visibleNodeIds.has(n.id));
   }, [nodes, visibleNodeIds, viewMode]);
 
+  // Undirected adjacency over the visible edges — powers hover-neighbor
+  // highlighting and click-to-isolate ego extraction. Built from ids (stable
+  // even after d3-force mutates source/target into node objects).
+  const adjacency = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const l of filteredLinks) {
+      const s = endId(l.source);
+      const t = endId(l.target);
+      if (!m.has(s)) m.set(s, new Set());
+      if (!m.has(t)) m.set(t, new Set());
+      m.get(s)!.add(t);
+      m.get(t)!.add(s);
+    }
+    return m;
+  }, [filteredLinks]);
+
+  // Ego focus is honored only if the isolated node is still in the current
+  // graph and we're not in community mode — so a new query / mode switch
+  // silently drops a stale focus (deriving it avoids a reset effect + flash).
+  const egoFocusId = useMemo(
+    () =>
+      isolatedId && viewMode !== "community" && adjacency.has(isolatedId)
+        ? isolatedId
+        : null,
+    [isolatedId, viewMode, adjacency]
+  );
+
+  // Ego set = the focused node + its 1-hop neighbors (null when not isolating).
+  const egoIds = useMemo(() => {
+    if (!egoFocusId) return null;
+    const s = new Set<string>([egoFocusId]);
+    for (const nb of adjacency.get(egoFocusId) ?? []) s.add(nb);
+    return s;
+  }, [egoFocusId, adjacency]);
+
+  // Displayed graph = full filtered graph, or just the ego subgraph when isolated.
+  const displayNodes = useMemo(
+    () => (egoIds ? filteredNodes.filter((n) => egoIds.has(n.id)) : filteredNodes),
+    [filteredNodes, egoIds]
+  );
+  const displayLinks = useMemo(
+    () =>
+      egoIds
+        ? filteredLinks.filter(
+            (l) => egoIds.has(endId(l.source)) && egoIds.has(endId(l.target))
+          )
+        : filteredLinks,
+    [filteredLinks, egoIds]
+  );
+
   // Build graph data object for ForceGraph2D
   const graphData = useMemo(
-    () => ({ nodes: filteredNodes, links: filteredLinks }),
-    [filteredNodes, filteredLinks]
+    () => ({ nodes: displayNodes, links: displayLinks }),
+    [displayNodes, displayLinks]
   );
+
+  // Active set while hovering a node = the node + its neighbors (rest fades).
+  const hoverActive = useMemo(() => {
+    if (!hoveredNode) return null;
+    const s = new Set<string>([hoveredNode]);
+    for (const nb of adjacency.get(hoveredNode) ?? []) s.add(nb);
+    return s;
+  }, [hoveredNode, adjacency]);
 
   /**
    * Node-label policy: always label (a) queried genes, (b) highlight/center,
@@ -331,13 +452,13 @@ export function ForceGraph({
     if (highlightNodeId) ids.add(highlightNodeId);
     if (queriedIds) for (const q of queriedIds) ids.add(q);
     if (labelTopK > 0) {
-      const sorted = [...filteredNodes]
+      const sorted = [...displayNodes]
         .sort((a, b) => (b.degree ?? 0) - (a.degree ?? 0))
         .slice(0, labelTopK);
       for (const n of sorted) ids.add(n.id);
     }
     return ids;
-  }, [filteredNodes, labelTopK, highlightNodeId, queriedIds]);
+  }, [displayNodes, labelTopK, highlightNodeId, queriedIds]);
 
   // Precompute neighbor-sharedCount lookups. `sharedCount` is attached to the
   // merged node by the parent page during multi-gene merge; we read it here
@@ -358,13 +479,29 @@ export function ForceGraph({
     [onNodeHover]
   );
 
-  // Handle click
+  // Handle click — focus the ego network AND open the detail sidebar.
   const handleNodeClick = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (node: any) => {
-      onNodeClick(node as NetworkNode);
+      const n = node as NetworkNode;
+      if (viewMode !== "community") setIsolatedId(n.id);
+      onNodeClick(n);
     },
-    [onNodeClick]
+    [onNodeClick, viewMode]
+  );
+
+  // Clicking empty canvas exits ego-isolation (back to full network).
+  const handleBackgroundClick = useCallback(() => {
+    setIsolatedId(null);
+  }, []);
+
+  // Hovered-edge emphasis.
+  const handleLinkHover = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (link: any) => {
+      setHoveredEdgeKey(link ? edgeKey(link as NetworkEdge) : null);
+    },
+    []
   );
 
   // Node rendering
@@ -382,10 +519,14 @@ export function ForceGraph({
       // also full; otherwise fade to 0.4 when the user is running a multi-gene
       // query (so shared neighbors pop). If no queriedIds, default behavior.
       const hasQuery = !!queriedIds && queriedIds.size > 0;
-      const nodeAlpha = !hasQuery || isQueried || shared >= 2 ? 1.0 : 0.4;
+      let nodeAlpha = !hasQuery || isQueried || shared >= 2 ? 1.0 : 0.4;
+      // Focus+context: while hovering a node, fade everything outside its
+      // 1-hop neighborhood.
+      const inHoverFocus = hoverActive?.has(n.id) ?? false;
+      if (hoverActive && !inHoverFocus) nodeAlpha = Math.min(nodeAlpha, 0.12);
 
-      // Label dispatch: always-label set + hover.
-      const showLabel = alwaysLabeledIds.has(n.id) || isHovered;
+      // Label dispatch: always-label set + hover + hovered node's neighbors.
+      const showLabel = alwaysLabeledIds.has(n.id) || isHovered || inHoverFocus;
 
       // Draw node circle
       ctx.save();
@@ -395,29 +536,31 @@ export function ForceGraph({
       ctx.fillStyle = getNodeColor(n, colorBy);
       ctx.fill();
 
-      // Outline: queried genes get a bold 3px ring; highlight/hover still shown.
+      // Outline: queried genes get a bold ring; highlight/hover still shown. Ring
+      // color is the resolved foreground (visible in both light and dark).
       if (isQueried) {
-        ctx.strokeStyle = "#ffffff";
+        ctx.strokeStyle = labelColor;
         ctx.lineWidth = 3;
         ctx.stroke();
       } else if (isHighlighted || isHovered) {
-        ctx.strokeStyle = isHighlighted ? "#ffffff" : "rgba(255,255,255,0.6)";
+        ctx.strokeStyle = labelColor;
+        ctx.globalAlpha = isHighlighted ? nodeAlpha : nodeAlpha * 0.6;
         ctx.lineWidth = isHighlighted ? 2 : 1;
         ctx.stroke();
       }
       ctx.restore();
 
-      // Label (rendered at full alpha)
+      // Label (rendered at full alpha, resolved foreground color)
       if (showLabel) {
         const fontSize = Math.max(6, Math.min(10, 9 / globalScale));
         ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
-        ctx.fillStyle = "var(--color-foreground, #ffffff)";
+        ctx.fillStyle = labelColor;
         ctx.fillText(n.symbol, node.x!, node.y! + r + 1);
       }
     },
-    [colorBy, highlightNodeId, hoveredNode, queriedIds, sharedCountOf, alwaysLabeledIds]
+    [colorBy, highlightNodeId, hoveredNode, queriedIds, sharedCountOf, alwaysLabeledIds, hoverActive, labelColor]
   );
 
   // Link rendering. Below-threshold edges dim to alpha 0.15 instead of being
@@ -436,16 +579,37 @@ export function ForceGraph({
 
       const { dim } = edgeVisible(edge, thresholds);
 
+      // Focus+context: while hovering a node, fade edges not incident to it and
+      // emphasize the ones that are; a directly hovered edge is brightest.
+      const srcId = endId(link.source);
+      const tgtId = endId(link.target);
+      const incidentToHover =
+        hoveredNode != null && (srcId === hoveredNode || tgtId === hoveredNode);
+      const isHoveredEdge = hoveredEdgeKey != null && edgeKey(edge) === hoveredEdgeKey;
+
+      let alpha = dim ? 0.12 : 0.25 + edge.posterior * 0.35;
+      let lw = dim ? 0.2 : 0.3 + edge.posterior * 0.8;
+      if (hoveredNode && !incidentToHover) {
+        alpha = 0.05;
+      } else if (incidentToHover) {
+        alpha = Math.max(alpha, 0.7);
+        lw = Math.max(lw, 1.2);
+      }
+      if (isHoveredEdge) {
+        alpha = 0.95;
+        lw = Math.max(lw, 1.6);
+      }
+
       ctx.beginPath();
       ctx.moveTo(src.x, src.y);
       ctx.lineTo(tgt.x, tgt.y);
       ctx.strokeStyle = getLayerColor(edge.layer);
-      ctx.globalAlpha = dim ? 0.12 : 0.25 + edge.posterior * 0.35;
-      ctx.lineWidth = dim ? 0.2 : 0.3 + edge.posterior * 0.8;
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = lw;
       ctx.stroke();
       ctx.globalAlpha = 1;
     },
-    [thresholds]
+    [thresholds, hoveredNode, hoveredEdgeKey]
   );
 
   // d3-force configuration
@@ -479,19 +643,20 @@ export function ForceGraph({
     if (!fg || viewMode === "community") return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (fg as any).d3ReheatSimulation?.();
-  }, [filteredNodes, filteredLinks, viewMode]);
+  }, [displayNodes, displayLinks, viewMode]);
 
-  // Zoom to fit on data change
+  // Zoom to fit on data change (incl. entering/leaving ego-isolation) so the
+  // transition to the focused subgraph reads smoothly.
   useEffect(() => {
     const fg = fgRef.current;
-    if (!fg || filteredNodes.length === 0) return;
+    if (!fg || displayNodes.length === 0) return;
 
     const timer = setTimeout(() => {
       fg.zoomToFit(400, 40);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [filteredNodes.length]);
+  }, [displayNodes.length, egoFocusId]);
 
   // For community map mode, fix nodes to their FA2 positions
   const nodePositionFix = viewMode === "community"
@@ -506,7 +671,7 @@ export function ForceGraph({
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden rounded-lg border border-border bg-card">
       {/* Empty state */}
-      {filteredNodes.length === 0 && (
+      {displayNodes.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <svg className="mx-auto size-10 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -517,7 +682,7 @@ export function ForceGraph({
         </div>
       )}
 
-      {filteredNodes.length > 0 && (
+      {displayNodes.length > 0 && (
         <ForceGraph2D
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ref={fgRef as any}
@@ -539,6 +704,8 @@ export function ForceGraph({
           linkCanvasObject={paintLink}
           onNodeClick={handleNodeClick}
           onNodeHover={handleNodeHover}
+          onLinkHover={handleLinkHover}
+          onBackgroundClick={handleBackgroundClick}
           cooldownTicks={viewMode === "community" ? 0 : 100}
           enableNodeDrag={viewMode !== "community"}
           backgroundColor="transparent"
@@ -546,11 +713,25 @@ export function ForceGraph({
         />
       )}
 
+      {/* Back-to-full-network affordance while an ego network is isolated */}
+      {egoFocusId && (
+        <button
+          type="button"
+          onClick={handleBackgroundClick}
+          className="absolute right-3 top-3 z-10 rounded-md border border-border bg-card/90 px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-muted"
+        >
+          ← Back to full network
+        </button>
+      )}
+
       {/* Stats overlay (bottom-left) */}
-      {filteredNodes.length > 0 && (
+      {displayNodes.length > 0 && (
         <div className="absolute bottom-3 left-3 rounded-md bg-card/80 px-2.5 py-1.5 text-[10px] text-muted-foreground backdrop-blur-sm">
-          {filteredNodes.length.toLocaleString()} nodes &middot;{" "}
-          {filteredLinks.length.toLocaleString()} edges
+          {egoFocusId && (
+            <span className="mr-1 font-medium text-foreground">Ego · </span>
+          )}
+          {displayNodes.length.toLocaleString()} nodes &middot;{" "}
+          {displayLinks.length.toLocaleString()} edges
         </div>
       )}
     </div>

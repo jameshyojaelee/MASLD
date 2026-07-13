@@ -196,7 +196,7 @@ draw_stage_unique_heatmap <- function(mat, row_split, out_file, title) {
     row_gap = unit(1.5, "mm"),
     border = TRUE,
     column_title = title,
-    column_title_gp = gpar(fontsize = 11, fontface = "bold"),
+    column_title_gp = gpar(fontsize = 11, fontface = "plain"),
     use_raster = nrow(mat_cap) > 50,
     raster_quality = 4,
     heatmap_legend_param = list(

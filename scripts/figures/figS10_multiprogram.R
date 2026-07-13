@@ -85,14 +85,14 @@ if (file.exists(ablation_file)) {
       limits = c(0, max(abl$mean_qwk, na.rm = TRUE) * 1.05),
       name = "QWK"
     ) +
-    labs(x = NULL, y = NULL,
-         title = "Modality ablation: ordinal QWK") +
+    labs(x = NULL, y = NULL) +
     theme_masld(base_size = 7) +
     theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
           axis.text.y = element_text(size = 6),
           legend.position = "right",
           legend.key.height = unit(0.5, "cm"),
           legend.key.width  = unit(0.25, "cm"))
+  message("[caption] Panel A: Modality ablation: ordinal QWK")
 } else {
   pA <- placeholder("Panel A: multiprogram_ablation.csv not found")
 }
@@ -143,14 +143,12 @@ if (file.exists(random_file)) {
                shape = 18, size = 3.5, color = masld_colors$up) +
     geom_text(data = pvals,
               aes(x = target, y = max(rand$mean_qwk) * 1.08, label = p_label),
-              size = 2.2, color = "gray30", fontface = "italic") +
+              size = 2.2, color = "black", fontface = "plain") +
     scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-    labs(x = NULL, y = "QWK (100 random gene draws)",
-         title = "Random-gene ceiling test",
-         subtitle = "Diamond = curated expression features") +
+    labs(x = NULL, y = "QWK (100 random gene draws)") +
     theme_masld(base_size = 7) +
-    theme(plot.subtitle = element_text(size = 5.5, color = "gray40"),
-          axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
+    theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
+  message("[caption] Panel B: Random-gene ceiling test. Diamond = curated expression features")
 } else {
   pB <- placeholder("Panel B: multiprogram_random_baselines.csv not found")
 }
@@ -198,19 +196,17 @@ if (file.exists(genetics_file) && file.exists(genetics_rand)) {
     geom_col(position = position_dodge(width = 0.7), width = 0.6) +
     geom_text(data = gen_p,
               aes(x = target, y = max(bar_data$qwk) * 1.1, label = p_label),
-              size = 2.2, color = "gray30", fontface = "italic",
+              size = 2.2, color = "black", fontface = "plain",
               inherit.aes = FALSE) +
     scale_fill_manual(values = bar_colors, name = NULL) +
     scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
-    labs(x = NULL, y = "QWK",
-         title = "COLOC genetics arm",
-         subtitle = paste0("n=", gen_sub$n_genes[1],
-                           " COLOC genes (PP.H4 > 0.5) vs matched random")) +
+    labs(x = NULL, y = "QWK") +
     theme_masld(base_size = 7) +
     theme(legend.position = "bottom",
           legend.key.size = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 5.5, color = "gray40"),
           axis.text.x = element_text(angle = 30, hjust = 1, size = 6))
+  message("[caption] Panel C: COLOC genetics arm. n=", gen_sub$n_genes[1],
+          " COLOC genes (PP.H4 > 0.5) vs matched random")
 } else {
   pC <- placeholder("Panel C: genetics data files not found")
 }
@@ -281,16 +277,14 @@ if (file.exists(concept_file)) {
       name = "Attribution\nscore",
       limits = c(0, NA)
     ) +
-    labs(x = NULL, y = NULL,
-         title = "Concept bottleneck: feature attribution",
-         subtitle = "Top 20 concepts by max attribution across targets") +
+    labs(x = NULL, y = NULL) +
     theme_masld(base_size = 7) +
     theme(axis.text.x = element_text(angle = 30, hjust = 1, size = 6),
-          axis.text.y = element_text(size = 4.5),
+          axis.text.y = element_text(size = 6),
           legend.position = "right",
           legend.key.height = unit(0.5, "cm"),
-          legend.key.width  = unit(0.25, "cm"),
-          plot.subtitle = element_text(size = 5.5, color = "gray40"))
+          legend.key.width  = unit(0.25, "cm"))
+  message("[caption] Panel D: Concept bottleneck: feature attribution. Top 20 concepts by max attribution across targets")
 } else {
   pD <- placeholder("Panel D: multiprogram_concept_attribution.csv not found")
 }
@@ -303,7 +297,7 @@ combined <- plot_grid(
   pC, pD,
   labels = c("a", "b", "c", "d"),
   label_size = 9,
-  label_fontface = "bold",
+  label_fontface = "plain",
   ncol = 2,
   rel_widths  = c(1, 1),
   rel_heights = c(0.9, 1.1)

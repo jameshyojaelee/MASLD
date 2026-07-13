@@ -26,6 +26,15 @@ cat(sprintf("Samples in H ∩ meta: %d\n", length(common)))
 H_match <- H[, common, drop = FALSE]
 meta_match <- meta[match(common, meta$sample_id), ]
 
+# Exclude coarse-staged GSE213621 (study reports grouped F0F1/F2/F3F4, mapped F0F1->1,
+# F3F4->3 — NOT true Kleiner F0-F4) + dropped PRJNA512027, so the per-stage bins below
+# are true individual stages (mirrors the 14b per-stage DE allowlist). 2026-06-24.
+keep_clean <- !meta_match$dataset %in% c("GSE213621", "PRJNA512027")
+cat(sprintf("Excluding coarse/dropped cohorts: %d -> %d samples\n",
+            length(common), sum(keep_clean)))
+H_match    <- H_match[, keep_clean, drop = FALSE]
+meta_match <- meta_match[keep_clean, ]
+
 prog_names <- paste0("P", seq_len(nrow(H_match)))
 rows <- list()
 for (s in 0:4) {

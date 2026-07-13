@@ -11,7 +11,7 @@
 #   Integration: convergence scoring, MR overlap, composite supplementary figure
 #
 # Inputs:
-#   - dream_results.csv          (dream mega-analysis)
+#   - canonical_deg_results.csv  (limma-voom-qw C2 mega-analysis)
 #   - consensus_degs.csv         (tiered consensus DEGs)
 #   - causal_inference_summary.csv (MR + TWAS results)
 #   - human_ensg_to_symbol.tsv   (annotation cache)
@@ -64,10 +64,10 @@ FIG_DIR     <- file.path(BASE_DIR, "figures")
 INT_DIR     <- file.path(RNASEQ_DIR,
   "Human/Patient_Cohorts/analysis/integration/results/integration")
 
-# NOTE: Uses original dream_results.csv for t-statistic ranking (fgsea + LINCS).
-# t-statistics are unchanged by ashr shrinkage. DEG significance comes from
-# consensus_degs.csv dream_sig column (padj < 0.05, |logFC| > 0.5).
-DREAM_FILE     <- file.path(INT_DIR, "dream_results.csv")
+# NOTE: Uses canonical_deg_results.csv (limma-voom-qw C2) for t-statistic ranking
+# (fgsea + LINCS). t-statistics drive the disease query signature. DEG significance
+# comes from consensus_degs.csv bulk_sig column (canonical: lfsr < 0.05, |shrunk_logFC| > 0.3; 2026-06-27).
+DREAM_FILE     <- file.path(INT_DIR, "canonical_deg_results.csv")
 CONSENSUS_FILE <- file.path(INT_DIR, "consensus_degs.csv")
 MR_FILE        <- file.path(RNASEQ_DIR, "results/causal_inference/causal_inference_summary.csv")
 ANN_CACHE_PATH <- file.path(RNASEQ_DIR,
@@ -181,10 +181,10 @@ if (HAS_ORGDB) {
 cat("  Loading consensus DEGs...\n")
 consensus <- fread(CONSENSUS_FILE)
 cat("  Consensus DEGs:", nrow(consensus), "total\n")
-cat("    Significant DEGs:", nrow(consensus[dream_sig == TRUE]), "\n")
+cat("    Significant DEGs:", nrow(consensus[bulk_sig == TRUE]), "\n")
 
-# Upregulated highly significant DEGs (dream_dir == 1)
-up_consensus <- consensus[dream_sig == TRUE & dream_dir == 1]
+# Upregulated highly significant DEGs (bulk_dir == 1)
+up_consensus <- consensus[bulk_sig == TRUE & bulk_dir == 1]
 cat("  Upregulated Significant DEGs:", nrow(up_consensus), "genes\n")
 
 # Map to symbols
@@ -744,9 +744,9 @@ cat("\n--- Part F: Integration Layer ---\n")
 master <- data.table(
   ensembl_id = up_with_sym$ensembl_id,
   symbol     = up_with_sym$symbol,
-  dream_sig  = up_with_sym$dream_sig,
-  dream_logFC = up_with_sym$dream_logFC,
-  dream_padj  = up_with_sym$dream_padj
+  bulk_sig   = up_with_sym$bulk_sig,
+  bulk_logFC = up_with_sym$bulk_logFC,
+  bulk_padj  = up_with_sym$bulk_padj
 )
 master <- master[!is.na(symbol) & symbol != ""]
 master <- master[!duplicated(ensembl_id)]
@@ -1011,10 +1011,10 @@ if (nrow(dgidb_results) > 0) {
   # Summarize interaction types by DEG direction
   dgidb_tier <- merge(
     dgidb_results[, .(gene, interaction_type)],
-    master[, .(symbol, dream_dir = fifelse(dream_logFC > 0, "Up", "Down"))],
+    master[, .(symbol, bulk_dir = fifelse(bulk_logFC > 0, "Up", "Down"))],
     by.x = "gene", by.y = "symbol", all.x = TRUE
   )
-  dgidb_tier[is.na(dream_dir), dream_dir := "Unknown"]
+  dgidb_tier[is.na(bulk_dir), bulk_dir := "Unknown"]
 
   # Clean interaction types
   dgidb_tier[, itype_clean := fifelse(
@@ -1025,9 +1025,9 @@ if (nrow(dgidb_results) > 0) {
     fifelse(grepl("antibody", interaction_type, ignore.case = TRUE), "Antibody",
     "Other")))))]
 
-  itype_counts <- dgidb_tier[, .N, by = .(dream_dir, itype_clean)]
+  itype_counts <- dgidb_tier[, .N, by = .(bulk_dir, itype_clean)]
 
-  pb <- ggplot(itype_counts, aes(x = dream_dir, y = N, fill = itype_clean)) +
+  pb <- ggplot(itype_counts, aes(x = bulk_dir, y = N, fill = itype_clean)) +
     geom_col(width = 0.7, position = "stack") +
     scale_fill_brewer(palette = "Set2", name = "Interaction") +
     theme_masld() +
@@ -1208,10 +1208,10 @@ composite <- (pa | pb) / (pc | pd | pe) +
   ) +
   plot_layout(heights = c(1, 1))
 
-fig_path <- file.path(FIG_DIR, "figS_pharmacotranscriptomics.pdf")
-save_fig(composite, fig_path, width = fig_full_width, height = 10)
-cat("  Saved:", fig_path, "\n")
-cat("  Saved:", sub("\\.pdf$", ".png", fig_path), "\n")
+# fig_path <- file.path(FIG_DIR, "figS_pharmacotranscriptomics.pdf")
+# save_fig(composite, fig_path, width = fig_full_width, height = 10)
+# cat("  Saved:", fig_path, "\n")
+# cat("  Saved:", sub("\\.pdf$", ".png", fig_path), "\n")
 
 
 # ==============================================================================

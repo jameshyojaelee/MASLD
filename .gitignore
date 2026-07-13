@@ -40,6 +40,9 @@
 !requirements.txt
 !environment.yml
 
+# Curated figure configuration (small, hand-maintained source table)
+!scripts/figures/fig5a_therapeutic_axes.tsv
+
 # 6) Re-include named config JSON / manifests only (NOT all *.json — results are json)
 !package.json
 !package-lock.json
@@ -77,6 +80,9 @@
 /.firecrawl/
 /.review/
 /.envs/
+
+# 7a) Docs are entirely private and ignored.
+/docs/
 
 # 7b) Hard-exclude language/package environments & caches ANYWHERE
 #     (these contain thousands of library .py/.R/.sh files the whitelist would grab)

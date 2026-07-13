@@ -40,9 +40,9 @@ OUT_JAC   <- file.path(OUT_DIR,   "loo_cv_concordance_jaccard.csv")
 OUT_UPSET <- file.path(OUT_DIR,   "loo_cv_upset_intersections.csv")
 
 ALL_STUDY_NAMES <- c(
-  GSE126848 = "Suppli", GSE130970 = "Hoang", GSE135251 = "Govaere",
-  GSE162694 = "Bril",   GSE174478 = "Kawamura", GSE193066 = "Hoshida",
-  GSE213621 = "Chen",   GSE240729 = "Verschuren"
+  GSE126848 = "GSE126848", GSE130970 = "GSE130970", GSE135251 = "GSE135251",
+  GSE162694 = "GSE162694",   GSE174478 = "GSE174478", GSE193066 = "GSE193066",
+  GSE213621 = "GSE213621",   GSE240729 = "GSE240729"
 )
 mega_cohorts <- names(Filter(function(d) isTRUE(d$de$include_in_mega),
                              yaml::read_yaml(file.path(BASE,
@@ -157,42 +157,33 @@ jac[, label_j := factor(label_j, levels = fold_lvls)]
 p_jac <- ggplot(jac, aes(x = label_j, y = label_i, fill = jaccard)) +
   geom_tile(color = "white", linewidth = 0.3) +
   geom_text(aes(label = sprintf("%.2f", jaccard)),
-            size = 1.9, color = "gray15") +
+            size = GEOM_TEXT_6PT, color = "gray15") +
   scale_fill_gradient(low = "#F5F9FB", high = "#9CC2D6",
                       limits = c(0, 1), name = "Jaccard") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_discrete(expand = c(0, 0), limits = rev) +
   coord_equal() +
-  labs(x = NULL, y = NULL,
-       title = "DEG set similarity (Jaccard)",
-       subtitle = sprintf("padj < %.2f, |log2FC| > %.1f", PADJ_CUTOFF, LFC_CUTOFF)) +
+  labs(x = NULL, y = NULL) +
   theme_masld() + theme_pub() +
   theme(panel.grid    = element_blank(),
         axis.ticks    = element_blank(),
         axis.text.x   = element_text(angle = 30, hjust = 1,
                                      size = PUB_AXIS_TEXT, color = "black"),
-        axis.text.y   = element_text(size = PUB_AXIS_TEXT, color = "black"),
-        plot.title    = element_text(size = PUB_TITLE, face = "bold"),
-        plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"))
+        axis.text.y   = element_text(size = PUB_AXIS_TEXT, color = "black"))
 
 # UpSet bar (intersection size)
 p_bar <- ggplot(pat_top, aes(x = rank, y = n_genes)) +
   geom_col(fill = "#37474F", width = 0.7) +
   geom_text(aes(label = format(n_genes, big.mark = ",")),
-            vjust = -0.3, size = 1.7, color = "gray15") +
+            vjust = -0.3, size = GEOM_TEXT_6PT, color = "gray15") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.18)),
                      labels = scales::label_comma()) +
-  labs(x = NULL, y = "Intersection size",
-       title = "UpSet of fold DEG sets",
-       subtitle = sprintf("Top %d intersections (padj < %.2f, |log2FC| > %.1f)",
-                          TOP_K, PADJ_CUTOFF, LFC_CUTOFF)) +
+  labs(x = NULL, y = "Intersection size") +
   theme_masld() + theme_pub() +
   theme(axis.text.x   = element_blank(),
         axis.ticks.x  = element_blank(),
         panel.grid.major.x = element_blank(),
-        panel.grid.minor   = element_blank(),
-        plot.title    = element_text(size = PUB_TITLE, face = "bold"),
-        plot.subtitle = element_text(size = PUB_SUBTITLE, color = "gray30"))
+        panel.grid.minor   = element_blank())
 
 # UpSet dot matrix
 # vertical segment connecting min/max in_set dots in each column. Compute
@@ -229,6 +220,10 @@ p_upset <- p_bar / p_dots + plot_layout(heights = c(2.2, 1.4))
 
 p_h <- p_jac | p_upset
 p_h <- p_h + plot_layout(widths = c(1, 1.3))
+
+message(sprintf(
+  "[caption] Left: DEG set similarity (Jaccard), padj < %.2f, |log2FC| > %.1f. Right: UpSet of fold DEG sets, top %d intersections (padj < %.2f, |log2FC| > %.1f).",
+  PADJ_CUTOFF, LFC_CUTOFF, TOP_K, PADJ_CUTOFF, LFC_CUTOFF))
 
 ggsave(OUT_PDF, p_h, width = 7.0, height = 3.4, device = cairo_pdf)
 cat("Saved: ", OUT_PDF, "\n", sep = "")

@@ -353,6 +353,95 @@ run_metafor <- function(per_study_list, K = length(per_study_list), bp = bp_para
 }
 
 # ===========================================================================
+# METHOD RUNNERS: limma family (voom / voom+QW / trend) and edgeR family
+# (QLF / QLF-robust / LRT). All share the canonical C2 FIXED-effect design
+#   ~ dataset + inferred_sex + group_binary,  coef "group_binaryDisease"
+# fit INSIDE the training split (leakage-safe filterByExpr + TMM), matching the
+# DESeq2 runner's cohort-fixed-effect estimand (so they are head-to-head with
+# dream's (1|dataset) on the identical split). Each returns the COMMON SCHEMA
+#   data.table(gene, logFC, stat, padj, method)  with NA-padj rows retained.
+#
+# Shared scaffold: build a TMM-normalized, filterByExpr-ed DGEList + C2 design
+# on the training split. `inferred_sex` is dropped only if degenerate (single
+# level) — LOO never triggers this; bootstrap subsamples might.
+# ===========================================================================
+.c2_dge_design <- function(counts, meta) {
+  stopifnot(all(meta$sample_id == colnames(counts)))
+  dge <- DGEList(counts = counts)
+  dge$samples$dataset      <- droplevels(factor(meta$dataset))
+  dge$samples$inferred_sex <- droplevels(factor(meta$inferred_sex))
+  dge$samples$group_binary <- factor(meta$group_binary, levels = c("Control", "Disease"))
+  if (nlevels(dge$samples$dataset) < 2)
+    stop(".c2_dge_design: need >= 2 datasets; got ", nlevels(dge$samples$dataset))
+
+  design <- if (nlevels(dge$samples$inferred_sex) >= 2)
+              model.matrix(~ dataset + inferred_sex + group_binary, data = dge$samples)
+            else
+              model.matrix(~ dataset + group_binary, data = dge$samples)
+  stopifnot("group_binaryDisease" %in% colnames(design))
+
+  keep <- filterByExpr(dge, design = design, group = dge$samples$group_binary)
+  dge  <- dge[keep, , keep.lib.sizes = FALSE]
+  dge  <- calcNormFactors(dge, method = "TMM")
+  list(dge = dge, design = design, coef = "group_binaryDisease")
+}
+
+# --- limma-voom (plain voom -> lmFit -> eBayes) -----------------------------
+run_limma_voom <- function(counts, meta, bp = bp_param()) {
+  cd  <- .c2_dge_design(counts, meta)
+  v   <- voom(cd$dge, cd$design, plot = FALSE)
+  fit <- eBayes(lmFit(v, cd$design))
+  tt  <- topTable(fit, coef = cd$coef, number = Inf, sort.by = "none")
+  data.table(gene = rownames(tt), logFC = tt$logFC, stat = tt$t,
+             padj = tt$adj.P.Val, method = "limma_voom")
+}
+
+# --- limma-voom quality-weighted (CANONICAL C2 engine) ----------------------
+run_limma_voom_qw <- function(counts, meta, bp = bp_param()) {
+  cd  <- .c2_dge_design(counts, meta)
+  v   <- voomWithQualityWeights(cd$dge, cd$design, plot = FALSE)
+  fit <- eBayes(lmFit(v, cd$design))
+  tt  <- topTable(fit, coef = cd$coef, number = Inf, sort.by = "none")
+  data.table(gene = rownames(tt), logFC = tt$logFC, stat = tt$t,
+             padj = tt$adj.P.Val, method = "limma_voom_qw")
+}
+
+# --- limma-trend (logCPM -> lmFit -> eBayes(trend=TRUE)) ---------------------
+run_limma_trend <- function(counts, meta, bp = bp_param()) {
+  cd     <- .c2_dge_design(counts, meta)
+  logcpm <- edgeR::cpm(cd$dge, log = TRUE, prior.count = 3)
+  fit    <- eBayes(lmFit(logcpm, cd$design), trend = TRUE)
+  tt     <- topTable(fit, coef = cd$coef, number = Inf, sort.by = "none")
+  data.table(gene = rownames(tt), logFC = tt$logFC, stat = tt$t,
+             padj = tt$adj.P.Val, method = "limma_trend")
+}
+
+# --- edgeR QLF (glmQLFit + glmQLFTest; estimateDisp robust) -----------------
+run_edger_qlf <- function(counts, meta, bp = bp_param(), robust = FALSE) {
+  cd  <- .c2_dge_design(counts, meta)
+  dge <- estimateDisp(cd$dge, cd$design, robust = robust)
+  fit <- glmQLFit(dge, cd$design, robust = robust)
+  qlf <- glmQLFTest(fit, coef = cd$coef)
+  tt  <- edgeR::topTags(qlf, n = Inf, sort.by = "none")$table
+  data.table(gene = rownames(tt), logFC = tt$logFC, stat = tt$F,
+             padj = tt$FDR, method = if (robust) "edger_qlf_robust" else "edger_qlf")
+}
+
+run_edger_qlf_robust <- function(counts, meta, bp = bp_param())
+  run_edger_qlf(counts, meta, bp, robust = TRUE)
+
+# --- edgeR LRT (glmFit + glmLRT) --------------------------------------------
+run_edger_lrt <- function(counts, meta, bp = bp_param()) {
+  cd  <- .c2_dge_design(counts, meta)
+  dge <- estimateDisp(cd$dge, cd$design, robust = TRUE)
+  fit <- glmFit(dge, cd$design)
+  lrt <- glmLRT(fit, coef = cd$coef)
+  tt  <- edgeR::topTags(lrt, n = Inf, sort.by = "none")$table
+  data.table(gene = rownames(tt), logFC = tt$logFC, stat = tt$LR,
+             padj = tt$FDR, method = "edger_lrt")
+}
+
+# ===========================================================================
 # Storey pi1 (= 1 - pi0). Uses qvalue smoother; falls back to lambda=0.5 closed
 # form when qvalue errors or n < 20 (matches dream_loo_cv_v2.R fallback).
 # ===========================================================================

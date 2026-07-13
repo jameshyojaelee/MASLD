@@ -51,14 +51,15 @@ bar_dt[, label := factor(label, levels = bar_dt[order(type, -n_deg), label])]
 
 pa <- ggplot(bar_dt, aes(x = label, y = n_deg, fill = type)) +
   geom_col(width = 0.7) +
-  geom_text(aes(label = scales::comma(n_deg)), vjust = -0.3, size = 2) +
+  geom_text(aes(label = scales::comma(n_deg)), vjust = -0.3, size = GEOM_TEXT_6PT) +
   scale_fill_manual(values = c(Binary = masld_colors$deg,
                                Adjacent = "#F57F17"),
                     name = "Contrast type") +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.15))) +
-  labs(x = NULL, y = "DEGs (padj < 0.05)", title = "DEG counts per contrast") +
+  labs(x = NULL, y = "DEGs (padj < 0.05)") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6))
+message("[caption] Panel a: DEG counts per contrast")
 
 # ---------------------------------------------------------------------------
 # (b) Pairwise correlation heatmap — binary contrasts
@@ -102,14 +103,15 @@ cor_dt <- as.data.table(reshape2::melt(cor_mat, varnames = c("x", "y"),
 
 pb <- ggplot(cor_dt, aes(x = x, y = y, fill = rho)) +
   geom_tile(color = "white", linewidth = 0.3) +
-  geom_text(aes(label = sprintf("%.2f", rho)), size = 1.8) +
+  geom_text(aes(label = sprintf("%.2f", rho)), size = GEOM_TEXT_6PT) +
   scale_fill_gradient2(low = masld_colors$down, mid = "white",
                        high = masld_colors$up, midpoint = 0,
                        limits = c(-1, 1), name = "Spearman \u03C1") +
-  labs(x = NULL, y = NULL, title = "Pairwise logFC correlation") +
+  labs(x = NULL, y = NULL) +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 4.5),
-        axis.text.y = element_text(size = 4.5))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
+        axis.text.y = element_text(size = 6))
+message("[caption] Panel b: Pairwise logFC correlation")
 
 # ---------------------------------------------------------------------------
 # (c) Top pathway enrichment per fibrosis transition — run fgsea on the fly
@@ -161,11 +163,11 @@ if (nrow(top5) > 0) {
                          name = "-log10(padj)") +
     scale_size_continuous(range = c(1, 3.5), name = "Gene set size") +
     facet_wrap(~ transition_label, scales = "free_y", ncol = 2) +
-    labs(x = "Normalized enrichment score", y = NULL,
-         title = "Top Hallmark pathways per fibrosis transition") +
+    labs(x = "Normalized enrichment score", y = NULL) +
     theme_masld() +
-    theme(axis.text.y = element_text(size = 4.5),
+    theme(axis.text.y = element_text(size = 6),
           strip.text = element_text(size = 6))
+  message("[caption] Panel c: Top Hallmark pathways per fibrosis transition")
 } else {
   pc <- placeholder("No fgsea results — check gene ID matching")
 }
@@ -204,7 +206,7 @@ pd <- ggplot(volc_dt, aes(x = logFC, y = neg_log10p, color = sig)) +
   rasterize_layer(geom_point(size = 0.2, alpha = 0.4)) +
   geom_text_repel(data = top_genes,
                   aes(label = symbol),
-                  size = 1.8, max.overlaps = 15,
+                  size = GEOM_TEXT_6PT, max.overlaps = 15,
                   segment.size = 0.2, color = "black",
                   min.segment.length = 0) +
   scale_color_manual(values = c(DEG = masld_colors$up, NS = masld_colors$ns),
@@ -212,10 +214,10 @@ pd <- ggplot(volc_dt, aes(x = logFC, y = neg_log10p, color = sig)) +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", linewidth = 0.3,
              color = "grey50") +
   facet_wrap(~ transition_label, ncol = 2, scales = "free") +
-  labs(x = "logFC", y = expression(-log[10](P)),
-       title = "Adjacent fibrosis transition volcanos") +
+  labs(x = "logFC", y = expression(-log[10](P))) +
   theme_masld() +
   theme(legend.position = "bottom")
+message("[caption] Panel d: Adjacent fibrosis transition volcanos")
 
 # ---------------------------------------------------------------------------
 # (e) Threshold comparison — grouped bars
@@ -249,12 +251,12 @@ pe <- ggplot(thresh_m, aes(x = contrast, y = n_deg, fill = Threshold)) +
                                `padj < 0.05` = masld_colors$deg,
                                `padj < 0.05 + |LFC| > 0.5` = masld_colors$fibrosis)) +
   scale_y_continuous(labels = scales::comma, expand = expansion(mult = c(0, 0.08))) +
-  labs(x = NULL, y = "Number of DEGs",
-       title = "Two-tier threshold comparison") +
+  labs(x = NULL, y = "Number of DEGs") +
   theme_masld() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 6),
         legend.position = "bottom",
-        legend.text = element_text(size = 5))
+        legend.text = element_text(size = 6))
+message("[caption] Panel e: Two-tier threshold comparison")
 
 # ---------------------------------------------------------------------------
 # Composite assembly

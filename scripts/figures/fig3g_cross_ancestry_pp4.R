@@ -94,6 +94,9 @@ gene_xa[, tier := fcase(
   default                  = "background"
 )]
 
+message(sprintf(
+  "[caption] Cross-ancestry colocalization concordance: %d genes replicate in both EUR and EAS at PP.H4 >= 0.5",
+  sum(gene_xa$tier == "both")))
 cat(sprintf("Genes tested in both ancestries: %d\n", nrow(gene_xa)))
 cat(sprintf("  Cross-ancestry (both >= 0.5):  %d\n",
             sum(gene_xa$tier == "both")))
@@ -153,7 +156,7 @@ p <- ggplot() +
     data = both_lab,
     aes(x = EUR, y = EAS, label = gene),
     color = "gray10", fill = alpha("white", 0.85),
-    size = 2.5, fontface = "italic",
+    size = GEOM_TEXT_6PT, fontface = "italic",
     label.size = 0.18, label.padding = unit(0.12, "lines"),
     label.r = unit(0.08, "lines"),
     box.padding = 0.6, point.padding = 0.3,
@@ -175,30 +178,26 @@ p <- ggplot() +
   scale_y_continuous(limits = c(0, 1.02), breaks = seq(0, 1, 0.25),
                      expand = c(0, 0)) +
   labs(x = "max PP.H4  (14 EUR GWAS)",
-       y = "max PP.H4  (3 EAS GWAS)",
-       title = "Cross-ancestry colocalization concordance",
-       subtitle = sprintf("%d genes replicate in both EUR and EAS at PP.H4 >= 0.5",
-                          sum(gene_xa$tier == "both"))) +
+       y = "max PP.H4  (3 EAS GWAS)") +
   theme_masld() +
   theme(
     panel.grid       = element_blank(),
     panel.border     = element_rect(color = "gray50", fill = NA, linewidth = 0.35),
-    axis.text        = element_text(size = 6.5),
-    axis.title       = element_text(size = 7),
+    axis.text        = element_text(size = 6),
+    axis.title       = element_text(size = 6),
     legend.position  = "right",
-    legend.title     = element_text(size = 6.5, face = "bold"),
+    legend.title     = element_text(size = 6, face = "plain"),
     legend.text      = element_text(size = 6),
-    legend.key.size  = unit(0.28, "cm"),
-    plot.title       = element_text(size = 8.5, face = "bold"),
-    plot.subtitle    = element_text(size = 7, color = "gray35")
+    legend.key.size  = unit(0.28, "cm")
   ) +
   guides(color = guide_legend(order = 1, override.aes = list(size = 2.2)),
          size  = guide_legend(order = 2,
                               override.aes = list(color = COL_BOTH)))
 
-out_pdf <- file.path(FIG3_DIR, "cross_ancestry_pp4.pdf")
-save_fig(p, out_pdf, width = fig_full_width * 0.6, height = 3.6)
-cat("Saved:", out_pdf, "\n")
+# RETIRED 2026-06-12 (cross_ancestry_pp4.pdf no longer a Fig 2 panel; sidecar CSV below is kept):
+# out_pdf <- file.path(FIG3_DIR, "cross_ancestry_pp4.pdf")
+# save_fig(p, out_pdf, width = fig_full_width * 0.6, height = 3.6)
+# cat("Saved:", out_pdf, "\n")
 
 # Sidecar CSV: cross-ancestry replicators for caption / supplement
 out_tbl <- gene_xa[tier == "both",

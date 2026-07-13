@@ -14,10 +14,10 @@
 #   * Per-cell-type COARSE stage DE (disease_stage_coarse bins):
 #       pseudobulk_de/{CT}_{Steatosis_vs_Healthy|Steatohepatitis_vs_Steatosis|
 #                          Cirrhosis_vs_Steatohepatitis}_de.csv
-#   * Per-cell-type FINE/augmented stage DE (F_stage_augmented transitions,
-#     348b dream output):
+#   * Per-cell-type FINE stage DE (documented F-stage transitions, honest
+#     Andrews n=58 axis; 348b dream COHORT_TAG=documented output):
 #       disease_signatures/celltype_fstage_dream/
-#         per_celltype_per_transition_logFC_augmented.csv
+#         per_celltype_per_transition_logFC_documented.csv
 #
 # Tiering logic reused verbatim from RNA-seq/80_celltype_intrinsic_attribution.R
 # (signed_score = sign(bulk_stage_lfc) * scRNA_celltype_t; sig_concordant =
@@ -55,8 +55,12 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 DS_DIR   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/disease_signatures")
 ROUT_DIR <- file.path(DS_DIR, "stagedeg_routing")
 PB_DE    <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
+# A7.2/M5 leakage fix (2026-06-21): repoint the FINE stage axis off the LEAKED
+# augmented arm (F_stage_augmented_clean; jackknife QWK 0.286 / Andrews held-out
+# 0.0) to the honest documented arm (n=58 Andrews, 348b COHORT_TAG=documented,
+# now the 348b default). The documented CSV is produced by run_348b_dream.sh.
 FINE_DE  <- file.path(DS_DIR, "celltype_fstage_dream",
-                      "per_celltype_per_transition_logFC_augmented.csv")
+                      "per_celltype_per_transition_logFC_documented.csv")
 stopifnot(dir.exists(ROUT_DIR), dir.exists(PB_DE), file.exists(FINE_DE))
 
 # Thresholds (mirror Script 80) ------------------------------------------------
