@@ -125,7 +125,10 @@ if (file.exists(da_file)) {
     theme(legend.position = "none")
 
   message("  [caption] Hepatocyte Differential Accessibility: ", subtitle_text)
-  save_panel(p9, "panel_09_scatac_da_volcano.pdf", w = fig_half_width, h = 3.5)
+  # panel_09 REMOVED 2026-07-14: stale (reads the old l8_annotated DA table, megareview
+  # V6-0049) AND redundant with figS05_scatac_disease_vs_control (the current deduped,
+  # donor-level per-cell-type DA volcanoes). Left the p9 build in place but no longer saved.
+  # save_panel(p9, "panel_09_scatac_da_volcano.pdf", w = fig_half_width, h = 3.5)
 } else {
   message("  WARNING: ", da_file, " not found, skipping panel 09")
 }

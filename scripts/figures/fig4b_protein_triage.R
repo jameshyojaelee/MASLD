@@ -13,6 +13,7 @@
 # Output: figures/main/fig4_validation/panels/fig4b_protein_triage.pdf
 # Env: rnaseq
 # ==============================================================================
+# KEY MESSAGE: Adjusted liver DIA-MS resolves a small protein-confirmed core while most measured prioritized genes remain below the protein significance gate.
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(patchwork) })
 set.seed(42)
 FAM  <- "Helvetica"
@@ -20,9 +21,20 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-# ── data: liver DIA-MS mRNA↔protein concordance, prioritized universe ─────────
-con <- fread(file.path(BASE, "Analysis/Proteomics/results/protein_transcript_concordance_v3.csv"))
-con <- unique(con[dataset == "PXD051911" & is.finite(bulk_logFC) & is.finite(protein_logFC)], by = "gene")
+# ── data: current adjusted liver DIA-MS model + canonical bulk atlas ──────────
+# Protein estimates use quantile-normalized PXD051911 liver DIA-MS with
+# acquisition-batch, age, BMI, and sex adjustment. The atlas provides one
+# canonical bulk effect per HGNC symbol, avoiding ambiguous transcript collapse.
+prot <- fread(file.path(
+  BASE, "Analysis/Multimodal_Program_Projection/results/proteomics/protein_de_adjusted.tsv"
+))[, .(gene, protein_logFC = logFC, protein_padj = padj)]
+bulk <- fread(
+  file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
+  select = c("human_symbol", "bulk_logFC", "bulk_padj")
+)[, .(gene = human_symbol, bulk_logFC, bulk_padj)]
+stopifnot(!anyDuplicated(prot$gene), !anyDuplicated(bulk$gene))
+con <- merge(prot, bulk, by = "gene", all = FALSE, sort = FALSE)
+con <- con[is.finite(bulk_logFC) & is.finite(protein_logFC)]
 uni <- trimws(readLines(file.path(BASE, "Analysis/Spatial/results/universe_validation/prioritized_universe_FINAL.txt")))
 uni <- uni[uni != ""]
 con[, in_uni := gene %in% uni]
@@ -49,9 +61,25 @@ cat(sprintf("[fig4b-triage] measured=%d (universe=%d, rest=%d) | full rho=%.3f c
             nrow(con), n_uni, n_rest, rho_full, 100*conc_full, rho_uni, 100*conc_uni))
 cat(sprintf("[fig4b-triage] 3-way (universe): confirmed=%d (%.1f%%) not_corroborated=%d (%.1f%%) discordant=%d (%.1f%%)\n",
             n_conf, 100*n_conf/n_uni, n_notc, 100*n_notc/n_uni, n_disc, 100*n_disc/n_uni))
+summary_out <- data.table(
+  protein_model = "PXD051911_quantile_batch_age_bmi_sex_adjusted",
+  bulk_source = "multi_evidence_atlas_unique_hgnc_symbol",
+  n_full_measured = nrow(con),
+  n_prioritized_measured = n_uni,
+  rho_full = rho_full,
+  direction_full = conc_full,
+  rho_prioritized = rho_uni,
+  direction_prioritized = conc_uni,
+  n_significant_concordant = n_conf,
+  n_significant_discordant = n_disc,
+  n_not_significant = n_notc
+)
+summary_path <- file.path(FIG4_DIR, "panels", "data", "fig4b_protein_triage_summary.tsv")
+dir.create(dirname(summary_path), recursive = TRUE, showWarnings = FALSE)
+fwrite(summary_out, summary_path, sep = "\t", quote = FALSE)
 
 # colours / draw order / point styling per class
-COL <- c(rest = "#E0E0E0", not_corr = "#9E9E9E", confirmed = "#00695C", discordant = "#E91E63")
+COL <- c(rest = "#E0E0E0", not_corr = "#9E9E9E", confirmed = "#00695C", discordant = "#D97706")
 SZ  <- c(rest = 0.45,      not_corr = 0.7,       confirmed = 1.15,      discordant = 1.15)
 AL  <- c(rest = 0.35,      not_corr = 0.55,      confirmed = 0.95,      discordant = 0.95)
 lab_map <- c(rest = "Background proteome", not_corr = "Not significant",
@@ -121,7 +149,7 @@ bp <- ggplot(bar) +
            size = 6/.pt, family = FAM, colour = house_ink, hjust = 0, vjust = 0.5, lineheight = 0.9) +
   # tiny discordant: leader from segment mid out to spread-out label
   annotate("segment", x = 1, xend = lead_x, y = bar[cls=="discordant", mid], yend = y_disc,
-           linewidth = 0.25, colour = "#E91E63") +
+           linewidth = 0.25, colour = "#D97706") +
   annotate("text", x = lab_x, y = y_disc, label = bar_lab["discordant"],
            size = 6/.pt, family = FAM, colour = house_ink, hjust = 0, vjust = 0.5, lineheight = 0.9) +
   scale_x_continuous(limits = c(0, 2.55), expand = c(0, 0)) +
@@ -142,20 +170,20 @@ ggsave(out, p, width = 3.56, height = 2.13, device = grDevices::cairo_pdf)
 cat("[fig4b-triage] saved:", out, "\n")
 
 message(sprintf(paste0(
-  "CAPTION (Fig 4b, HEADLINE): Protein-layer triage of the prioritized MASLD target set in an INDEPENDENT liver ",
-  "proteomics cohort (PXD051911 liver DIA-MS, n=58 patients — a DIFFERENT cohort from the bulk RNA-seq, so the ",
+  "CAPTION (Fig 4b): Protein-layer triage of the prioritized MASLD target set in an independent liver ",
+  "proteomics cohort (PXD051911 liver DIA-MS, n=58 patients). Protein effects use quantile-normalized intensities ",
+  "with acquisition-batch, age, BMI, and sex adjustment. This is a different cohort from the bulk RNA-seq, so the ",
   "mRNA-vs-protein log2FC correlation is attenuated by cross-cohort measurement noise ON TOP OF any real ",
   "post-transcriptional regulation). Each point is a gene measured at both layers; x = mRNA log2FC (pooled bulk ",
   "RNA-seq), y = protein log2FC (PXD051911). Across the full measured proteome (n=%s) Spearman rho=%.2f and %.0f%% ",
   "of genes agree in direction; restricted to the prioritized universe (n=%s measured of the %s-gene shared Fig 4 ",
-  "target set = transcriptomic 8,088 union genetic 3,038) rho=%.2f and %.0f%% agree ",
-  "-- both WELL ABOVE the 50%% chance level, so real shared mRNA->protein signal exists even though it is weak, ",
-  "but mRNA rank only partially predicts protein rank. The prioritized measured set partitions into: ",
+  "target set) rho=%.2f and %.0f%% agree. mRNA rank therefore only partially predicts protein rank across cohorts. ",
+  "The prioritized measured set partitions into: ",
   "protein-confirmed = direction-concordant AND protein FDR<0.05 (n=%d, %.1f%%, handed forward as the ",
   "protein-corroborated core); discordant = opposite direction AND protein-significant (n=%d, %.1f%%); and ",
   "'not yet protein-corroborated' = the majority (n=%s, %.0f%%) -- buffering AND/OR below DIA-MS detection depth, ",
-  "NOT evidence the target is wrong (this is a triage, not a pass/fail filter). Fig 4c independently shows these ",
-  "liver protein measurements track histological severity, confirming the protein layer is biologically real."),
+  "NOT evidence the target is wrong (this is a triage, not a pass/fail filter). Fig 4c provides a separate ",
+  "selection-conditioned description of protein abundance, histology, and mRNA/protein effects in PXD051911."),
   format(nrow(con), big.mark=","), rho_full, 100*conc_full,
   format(n_uni, big.mark=","), format(length(uni), big.mark=","), rho_uni, 100*conc_uni,
   n_conf, 100*n_conf/n_uni, n_disc, 100*n_disc/n_uni, format(n_notc, big.mark=","), 100*n_notc/n_uni))

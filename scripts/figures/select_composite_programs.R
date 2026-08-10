@@ -1,6 +1,9 @@
 #!/usr/bin/env Rscript
-# select_composite_programs.R — data-driven, significance + concordance-aware program/gene selection
-# feeding FIG 4c (composite_mrna_protein.R). Replaces the previous hand-curated candidate lists + top-6
+# select_composite_programs.R — HISTORICAL exploratory row-selection producer.
+# The main Figure 4C row identities are now versioned at
+# Analysis/Multimodal_Program_Projection/config/panel4c_fixed_rows.tsv and this
+# script must not be rerun during production. It is retained only for provenance.
+# The original data-driven selection replaced hand-curated candidate lists + top-6
 # by |protein_logFC| rule, which admitted non-significant (GSTM1 padj 0.56, FASN 0.055) and
 # direction-discordant (NID2 mRNA-/protein+) picks.
 #
@@ -17,10 +20,18 @@
 # individually significant, well-quantified, concordant protein representatives in this DIA-MS — forcing
 # gene rows yields up/discordant picks. It is shown honestly as a pathway-level NES bar instead.
 #
-# Outputs (read by composite_mrna_protein.R): FIG4_DIR/data/{composite_program_genes,composite_program_enrichment}.csv
+# Historical outputs: FIG4_DIR/data/{composite_program_genes,composite_program_enrichment}.csv.
+# The production composite no longer reads either file.
 suppressPackageStartupMessages({ library(data.table); library(msigdbr); library(fgsea) })
 set.seed(42)
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
+if (toupper(Sys.getenv("ALLOW_PANEL4C_RESELECTION", "FALSE")) != "TRUE") {
+  stop(
+    "Panel 4C selection is frozen. Production reads ",
+    "Analysis/Multimodal_Program_Projection/config/panel4c_fixed_rows.tsv. ",
+    "Set ALLOW_PANEL4C_RESELECTION=TRUE only for an explicitly versioned exploratory reselection."
+  )
+}
 DATA_DIR <- file.path(BASE, "figures/main/fig4_validation/data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 N_PER <- 5L

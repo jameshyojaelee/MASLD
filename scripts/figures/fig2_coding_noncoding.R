@@ -5,9 +5,13 @@
 # Answers the draft's Fig 2C placeholder "[How many noncoding vs coding variants?]".
 # Single horizontal stacked bar over the de-duplicated SuSiE-OR-ABF colocalization set
 # (best PP.H4 > 0.5 per gene), segmented by the VEP CONSEQUENCE of that gene's strongest
-# COLOC lead SNP (NOT a TSS-distance cut). Headline (MAIN, Tier-1/2): only ~34/1,031 (~3%)
-# colocalizing genes are coding-led; ~97% act through non-coding regulatory sequence ->
-# motivates the expression-mediated effector model (coding class deferred to later figs).
+# COLOC lead SNP (NOT a TSS-distance cut). Descriptive locus annotation (MAIN, Tier-1/2):
+# only ~34/1,030 (~3%) colocalizing genes have a CODING strongest lead SNP; for the large
+# majority the top lead variant falls in non-coding sequence. This describes where the
+# strongest lead variant sits -- it is NOT a genome-wide inherited-risk architecture claim
+# (reliable credible-set coverage reaches only 75/473 primary genes = 15.9%, so the
+# noncoding-vs-coding split of total heritability is not estimated here; coding class
+# deferred to later figs).
 #
 # 2026-06-25: switched from SuSiE-only to the de-duped SuSiE-OR-ABF union so the
 #             denominator MATCHES Fig2G (ancestry specificity, also SuSiE/ABF). Per-gene
@@ -16,6 +20,10 @@
 # 2026-07-06: scoped to the Tier-1/2 MAIN strata only (placement=="main"); union drops from
 #             the full-portfolio 1,527 to the MAIN 1,031 (coding 59->34). All counts recomputed
 #             from disk, so the plot tracks the restriction automatically.
+# 2026-07-13: retired the "~97% act through non-coding regulatory sequence" architecture
+#             framing -> descriptive lead-variant-location wording (panel data/trend unchanged);
+#             dropped the 1 blank-symbol row so the denominator is the 1,030 NAMED SuSiE-or-ABF
+#             union (matches the Fig2 Results prose; retires the 1,031 count).
 # Data: RNA-seq/results/coloc_variant_classes/coloc_variant_annotation.csv (per-gene/GWAS,
 #       carries pp4_susie/pp4_abf/pp4_best + fine_class/coarse_class).
 # Out : figures/main/fig2_genetics/panels/Fig2C_coding_noncoding_split.pdf (+ source CSV)
@@ -39,6 +47,7 @@ MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.t
 av <- av[study %in% MAIN_STUDIES]
 setorder(av, gene_symbol, -pp4_best)
 best <- av[, .SD[1], by = gene_symbol][pp4_best > 0.5]
+best <- best[!is.na(gene_symbol) & gene_symbol != ""]   # drop 1 blank-symbol row -> 1,030 named union (matches Fig2 prose; retires 1,031)
 # Merge the single spliceSite gene (1 gene) into coding to simplify the legend and bar
 best[fine_class == "spliceSite", fine_class := "coding"]
 best[fine_class %in% c("fiveUTR", "threeUTR"), fine_class := "UTR"]   # clump 5'/3' UTR into one group
@@ -74,7 +83,7 @@ p <- ggplot(f1, aes(x = method, y = n_genes, fill = fine_class)) +
   geom_text(data = tot, aes(x = method, y = n, label = n),
             inherit.aes = FALSE, vjust = -0.6, hjust = 0.5, size = GEOM_TEXT_6PT, fontface = "plain") +
   # coding/non-coding bracket labels dropped for the slim 0.97in-wide column (no room
-  # for side labels); the split (non-coding 997 / coding 34) is in the caption. Visually:
+  # for side labels); the split (non-coding 996 / coding 34) is in the caption. Visually:
   # coding = the magenta sliver at top, everything below = non-coding.
   scale_fill_manual(values = cls_cols, labels = unname(labs[present_lev]),
                     name = NULL, breaks = present_lev) +
@@ -102,5 +111,5 @@ out <- merge(f1[, .(method, consequence = as.character(fine_class), coarse_class
 fwrite(out, file.path(PANEL_DIR, "Fig2C_coding_noncoding_source.csv"))
 cat(sprintf("[fig2C] wrote Fig2C_coding_noncoding_split.pdf  (SuSiE-or-ABF coding-led = %d/%d = %.1f%%)\n",
             ann$coding, ann$n, ann$pct))
-message(sprintf("CAPTION (Fig2C): Consequence class of each colocalizing gene's strongest COLOC lead SNP (best PP.H4 > 0.5, SuSiE or ABF; de-duplicated; same %d-gene set as Fig2G). Only %d (%.1f%%) are coding-led; %.0f%% act through non-coding regulatory sequence.",
+message(sprintf("CAPTION (Fig2C): Consequence class of each colocalizing gene's strongest COLOC lead SNP (best PP.H4 > 0.5, SuSiE or ABF; de-duplicated %d-gene named union). Only %d (%.1f%%) have a coding strongest lead SNP; for the remaining %.0f%% it falls in non-coding sequence (descriptive locus annotation, not a genome-wide noncoding-vs-coding heritability split).",
                 ann$n, ann$coding, ann$pct, 100 - ann$pct))

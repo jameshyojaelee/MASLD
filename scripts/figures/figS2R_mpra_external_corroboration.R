@@ -107,7 +107,7 @@ fwrite(src[, .(gene, group, zhu_mpra = zlab, our_genetic_direct_pph4 = gdir,
                our_genetic_enzyme_pph4 = genz, our_disease_state = deg_txt,
                relationship, verdict = vtext, caveat)],
        file.path(out_dir, "FigS2R_mpra_external_corroboration_source.csv"))
-save_fig(p, out_pdf, width = 6.6, height = 0.13 * nrow(src) + 1.4)
+save_fig(p, out_pdf, width = 5.5, height = 0.13 * nrow(src) + 1.4)
 message("Wrote ", out_pdf)
 message("CAPTION: External experimental variant-function corroboration (Zhu, Hu et al. 2026, ",
         "Nat Genet; MASLD MPRA in HepG2/LX-2 + sc-CRISPRi). Tiles = our colocalization PP.H4 ",

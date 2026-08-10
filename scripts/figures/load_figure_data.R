@@ -28,6 +28,7 @@ FIG_OUT     <- file.path(BASE, "figures")
 PROTEOMICS_DIR <- file.path(BASE, "Analysis/Proteomics/results")
 ATAC_DIR       <- file.path(BASE, "Analysis/ATAC/Human_Multiome")
 SPATIAL_DIR    <- file.path(BASE, "Analysis/Spatial/results")
+PROGRAM_CONTEXT_DIR <- file.path(BASE, "Analysis/Multimodal_Program_Projection/results")
 NETWORK_DIR    <- file.path(BASE, "RNA-seq/results/network")
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -117,6 +118,12 @@ STAGED_FIB_COHORTS   <- c("GSE130970", "GSE135251", "GSE162694",
 FIG_MAIN  <- file.path(FIG_OUT, "main")
 FIG_SUPP  <- file.path(FIG_OUT, "supplementary")
 FIG_MISC  <- file.path(FIG_OUT, "misc")
+FIG_ARCHIVE <- file.path(FIG_OUT, "archive")
+
+# Deprecated deconvolution-attribution diagnostics retained for provenance.
+# These are not manuscript-facing figure directories.
+FIG_DECONV_C2_ARCHIVE   <- file.path(FIG_ARCHIVE, "c2_deconv_raw_reference")
+FIG_DECONV_RECT_ARCHIVE <- file.path(FIG_ARCHIVE, "rectangle_deconv_sensitivity")
 
 # Consolidated methods-validation / robustness / QC parent (2026-06-04).
 # Ten formerly-scattered validation/robustness/QC supp dirs now live as
@@ -181,7 +188,8 @@ FIGS_CAS13LIB_DIR <- file.path(BASE, "Cas13_Library_Design", "figures")
 FIGS_QUANT_DIR <- file.path(FIGS_METHVAL_DIR, "quantification")  # was figS_quantification (consolidated 2026-06-04)
 
 # Create all directories
-for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC,
+for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC, FIG_ARCHIVE,
+            FIG_DECONV_C2_ARCHIVE, FIG_DECONV_RECT_ARCHIVE,
             FIG1_DIR, FIG2_DIR, FIG3_DIR, FIG4_DIR, FIG5_DIR,
             FIGS01_DIR, FIGS02_DIR, FIGS03_DIR, FIGS04_DIR, FIGS05_DIR,
             FIGS06_DIR, FIGS07_DIR, FIGS08_DIR, FIGS09_DIR, FIGS10_DIR,

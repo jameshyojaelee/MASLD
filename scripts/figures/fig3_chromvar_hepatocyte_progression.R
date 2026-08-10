@@ -213,9 +213,13 @@ p <- ggplot(bin_stats,
 # -----------------------------------------------------------------------------
 # Save
 # -----------------------------------------------------------------------------
-ggsave(OUT_PDF, p,
-       width = 3.6, height = 3.6,
-       device = cairo_pdf)
+# RETIRED 2026-07-14 (chromVAR panel consolidation): this hepatocyte-only progression
+# view is the hepatocyte slice of the comprehensive TF × (cell type × condition) heatmap
+# figS05_scatac_chromvar_celltype_progression.pdf, so it is fully redundant. Output
+# suppressed; plot `p` still built above if needed. (Kept #1 heatmap + #3 significance dotplot.)
+# ggsave(OUT_PDF, p,
+#        width = 3.6, height = 3.6,
+#        device = cairo_pdf)
 
 # -----------------------------------------------------------------------------
 # Source CSV

@@ -3,6 +3,13 @@
 # (NORMAL / MASL / MASH) = 12 columns.  Reveals the cellular regulatory
 # cascade: which TF programs activate / deactivate in which cell type
 # at which stage of progression.
+#
+# CONSOLIDATED 2026-07-14: this is now the single chromVAR panel. It folds in the
+# donor-level significance from the retired TF×cell-type dotplot (chromvar_limma_per_ct;
+# asterisk where adj.P.Val<0.05) and supersedes the retired hepatocyte-progression slice.
+# Honest result: NO TF is significant in the 4 displayed cell types (all 110 sig hits are
+# in Low_confidence; n=18 multiome underpowered) -> no asterisks; the panel is a
+# descriptive deviation map on pre-selected TFs, not a discovery claim.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -167,6 +174,20 @@ row_split <- factor(row_group,
 # -----------------------------------------------------------------------------
 # Heatmap
 # -----------------------------------------------------------------------------
+# --- fold in donor-level significance from the retired TF×cell-type dotplot (#3) ---
+# limma per (cell_type, TF); mark cells with adj.P.Val < 0.05 with an asterisk. This
+# consolidates the chromVAR trio into ONE panel (deviation colour + significance mark).
+# NOTE: donor-level limma finds significance ONLY in Low_confidence (n=110); NONE of the
+# 4 displayed cell types carry a chromVAR-significant motif (n=18 multiome underpowered),
+# so no asterisks appear here — the machinery is honest, and the absence IS the result.
+CHROMVAR_LIMMA <- file.path(ATAC_DIR, "results/chromvar_v2/chromvar_limma_per_ct.csv")
+sig_key <- character(0)
+if (file.exists(CHROMVAR_LIMMA)) {
+  lim <- fread(CHROMVAR_LIMMA)
+  sig_key <- toupper(paste(lim[adj.P.Val < 0.05]$cell_type, lim[adj.P.Val < 0.05]$TF))
+}
+row_tf_sym <- toupper(tf_lookup$motif[match(rownames(mat_plot), tf_lookup$display)])
+
 col_z <- colorRamp2(c(-z_clip, 0, z_clip),
                     c("#1565C0", "#FFFFFF", "#C9265E"))
 
@@ -194,6 +215,10 @@ ht <- Heatmap(
   border = TRUE,
   border_gp = gpar(col = "black", lwd = 0.4),
   rect_gp   = gpar(col = "#FFFFFF", lwd = 0.25),
+  cell_fun = function(j, i, x, y, width, height, fill) {
+    if (toupper(paste(col_ct[j], row_tf_sym[i])) %in% sig_key)
+      grid.text("*", x, y, gp = gpar(fontsize = 7, col = "black"))
+  },
   heatmap_legend_param = list(
     title = "Motif deviation z",
     title_gp = gpar(fontsize = 6, fontface = "plain"),

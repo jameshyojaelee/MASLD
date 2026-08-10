@@ -85,7 +85,7 @@ p <- ggplot(counts, aes(x = xpos, y = n, fill = method, alpha = provenance)) +
                      labels = levels(counts$threshold)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(x = NULL, y = "Colocalizing genes") +
-  theme_masld(base_size = 9) +
+  theme_masld(base_size = 6) +
   theme(legend.position = c(0.98, 0.97), legend.justification = c(1, 1),
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA))
 

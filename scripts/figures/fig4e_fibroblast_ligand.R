@@ -17,7 +17,8 @@
 #
 # Panel: fibroblast-derived ligands, bulk log2FC (x) x LIANA ligand score (y);
 #        FOCAL the hero. Bulk = canonical limma-voom-qw C2 (`bulk_lfc`).
-# Output: figures/main/fig4_validation/panels/fig4e_fibroblast_ligand.pdf (canonical main 4e; FOCAL=THBS2)
+# Historical output target: figures/main/fig4_validation/panels/fig4e_fibroblast_ligand.pdf
+# This script is retired and writes no panel; no Panel 4E design is approved.
 # Env:    rnaseq
 # ==============================================================================
 

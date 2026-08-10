@@ -13,7 +13,7 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
-RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-10-r1")
+RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-15-r2")
 RELEASE_DIR <- file.path(BASE, "RNA-seq/results/manuscript_release", RELEASE_ID)
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
@@ -59,14 +59,14 @@ view <- rbind(
     n = c(overlap, primary$n_genetic_joint - overlap)
   ),
   data.table(
-    map = "Canonical TREAT DEGs",
+    map = "Canonical DEGs\n(interval-null FDR gate)",
     segment = c("convergent", "disease_state_only"),
     n = c(overlap, primary$n_treat_deg_joint - overlap)
   )
 )
 view[, fraction := n / sum(n), by = map]
 view[, label := sprintf("%s\n%s", comma(n), percent(fraction, accuracy = 0.1))]
-view[, map := factor(map, levels = c("Canonical TREAT DEGs", "Primary SuSiE genes"))]
+view[, map := factor(map, levels = c("Canonical DEGs\n(interval-null FDR gate)", "Primary SuSiE genes"))]
 
 p1b <- ggplot(view, aes(x = fraction, y = map, fill = segment)) +
   geom_col(width = 0.56, color = "white", linewidth = 0.35) +
@@ -77,7 +77,6 @@ p1b <- ggplot(view, aes(x = fraction, y = map, fill = segment)) +
   labs(x = "Fraction of jointly tested map", y = NULL) +
   theme_masld(base_size = 6) +
   theme(
-    axis.text.y = element_text(face = "bold"),
     panel.grid.major.y = element_blank(),
     legend.position = "bottom",
     legend.key.width = unit(0.38, "cm")
@@ -107,7 +106,7 @@ p1c <- ggplot(trait, aes(x = N, y = label, fill = label)) +
   scale_x_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(x = "Primary SuSiE genes", y = NULL) +
   theme_masld(base_size = 6) +
-  theme(panel.grid.major.y = element_blank(), axis.text.y = element_text(face = "bold"))
+  theme(panel.grid.major.y = element_blank())
 
 ggsave(file.path(FIG1_DIR, "fig1c_genetic_trait_scope.pdf"), p1c,
        width = 4.0, height = 2.25, device = cairo_pdf, bg = "white")
@@ -165,6 +164,41 @@ p4b <- ggplot(adjusted, aes(x = odds_ratio, y = endpoint_label,
         panel.background = element_rect(fill = "white", color = NA))
 
 ggsave(file.path(FIG4_DIR, "fig4b_evidence_class_adjusted_or.pdf"), p4b,
+       width = 5.2, height = 3.0, device = cairo_pdf, bg = "white")
+
+# Figure 4C: convergent-versus-single-map comparisons -- the honest "no universal
+# convergence advantage" result. The convergent class is not detectably superior to
+# disease-state-only genes in any modality (all BH q>0.05); it exceeds genetic-only
+# only weakly. Denominators (small convergent n) are printed so the null reads as an
+# underpowered honest-negative, not a proven equivalence.
+pair <- fread(file.path(RELEASE_DIR, "evidence_class_validation_pairwise.tsv"))
+pair[, endpoint_label := factor(endpoint,
+  levels = c("single_cell", "spatial_svg", "proteomics"),
+  labels = c("Single-cell", "Spatial SVG", "Proteomics"))]
+pair[, comp_class := fifelse(comparison == "convergent_vs_disease_state_only",
+                             "disease_state_only", "genetic_only")]
+pair[, point_label := sprintf("q=%.2f (n=%d vs %d)", q_value, n_convergent, n_comparator)]
+
+p4c <- ggplot(pair, aes(x = odds_ratio, y = endpoint_label, color = comp_class)) +
+  geom_vline(xintercept = 1, linetype = 2, color = "grey55", linewidth = 0.35) +
+  geom_point(position = position_dodge(width = 0.55), size = 1.9) +
+  geom_text(aes(label = point_label), position = position_dodge(width = 0.55),
+            hjust = -0.12, size = 5 / .pt, color = "grey25", show.legend = FALSE) +
+  scale_color_manual(
+    values = c(genetic_only = class_colors[["genetic_only"]],
+               disease_state_only = class_colors[["disease_state_only"]]),
+    labels = c(genetic_only = "vs genetic-only",
+               disease_state_only = "vs disease-state-only"),
+    name = NULL) +
+  scale_x_log10(breaks = c(0.5, 1, 2, 5, 10), limits = c(0.5, 30),
+                expand = expansion(mult = c(0.02, 0))) +
+  labs(x = "Convergent-class odds ratio vs single-map class (log scale)", y = NULL) +
+  theme_masld(base_size = 6) +
+  theme(legend.position = "bottom", panel.grid.major.y = element_blank(),
+        plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white", color = NA))
+
+ggsave(file.path(FIG4_DIR, "fig4c_convergence_comparison.pdf"), p4c,
        width = 5.2, height = 3.0, device = cairo_pdf, bg = "white")
 
 cat(sprintf("[release %s] Figure 1/4 evidence-class panels written\n", RELEASE_ID))

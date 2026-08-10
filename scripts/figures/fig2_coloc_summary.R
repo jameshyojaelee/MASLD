@@ -124,7 +124,7 @@ pB <- ggplot(gm, aes(gx, best)) +
             inherit.aes = FALSE, fill = "grey95") +
   geom_hline(yintercept = c(0.8, 0.9), linetype = "22", linewidth = 0.25, color = "grey70") +
   geom_point(aes(color = class, size = n_anc5), alpha = 0.85) +
-  geom_text_repel(aes(label = lab, color = class), size = GEOM_TEXT_6PT, fontface = "italic",
+  geom_text_repel(aes(label = lab), color = "black", size = GEOM_TEXT_6PT, fontface = "italic",
                   max.overlaps = 20, segment.size = 0.15, min.segment.length = 0.2,
                   box.padding = 0.2, show.legend = FALSE) +
   scale_color_manual(values = c("non-coding" = "#1565C0", "coding" = "#C9265E"),
@@ -133,7 +133,7 @@ pB <- ggplot(gm, aes(gx, best)) +
   scale_x_continuous(breaks = axis_df$center, labels = axis_df$chr, expand = c(0.01, 0)) +
   scale_y_continuous(limits = c(0.48, 1.02), breaks = c(0.5,0.7,0.9), expand = c(0, 0)) +
   labs(x = "Chromosome", y = expression("Best PP.H"[4]*" (SuSiE-coloc)")) +
-  theme_masld(base_size = 8) +
+  theme_masld(base_size = 6) +
   theme(panel.grid = element_blank(),
         legend.position = c(0.99, 0.02), legend.justification = c(1, 0),
         legend.direction = "horizontal", legend.box = "horizontal",
@@ -143,5 +143,5 @@ pB <- ggplot(gm, aes(gx, best)) +
 message(sprintf("[caption] Colocalization landscape: %d SuSiE-coloc effector genes (PP.H4 > 0.5)", nrow(gm)))
 
 save_fig(pB, file.path(PANEL_DIR, "FigS2I_coloc_summary_manhattan.pdf"),
-         width = fig_full_width * 0.92, height = 3.0)
+         width = fig_full_width * 0.776, height = 3.0)   # 5.50in = house maximum (was 0.92 -> 6.52in)
 cat(sprintf("[summary B] manhattan: %d genes >0.5 plotted\n", nrow(gm)))

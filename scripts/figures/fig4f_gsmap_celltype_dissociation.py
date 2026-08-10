@@ -1,6 +1,8 @@
 #!/usr/bin/env python
-"""Fig 4f-i — MASLD trait groups partition their spatial genetic risk across cell
-types (grouped bars; two Visium cohorts pooled).
+"""Supplementary exploratory gsMap cell-type dissociation panel.
+
+MASLD trait groups partition their spatial genetic risk across cell types
+(grouped bars; two Visium cohorts pooled).
 
 Bar = does a trait's genetic risk concentrate in spots where a cell type lives?
 i.e. the spatial partial correlation between gsMap per-spot GWAS-heritability
@@ -14,8 +16,10 @@ Macrophages, away from Fibroblasts & B cells; liver-fat PDFF (MAGENTA) REVERSES 
 the hepatocyte↔fibroblast axis.
 
 Input:  Analysis/Spatial/results/gsmap/gsmap_celltype_localization.csv  (15m, CLR)
-Output: figures/main/fig4_validation/panels/fig4f_gsmap_celltype_dissociation.pdf
+Output: figures/main/fig4_validation/panels/figS4_gsmap_celltype_dissociation_exploratory.pdf
 Env: rnaseq or spatial (matplotlib/pandas).
+Demoted from main Figure 4 on 2026-08-06 because these descriptive partial
+correlations do not validate the frozen Figure 3 programs.
 """
 import os
 import numpy as np
@@ -34,7 +38,10 @@ matplotlib.rcParams.update({
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 CSV = os.path.join(BASE, "Analysis/Spatial/results/gsmap/gsmap_celltype_localization.csv")
-OUT = os.path.join(BASE, "figures/main/fig4_validation/panels/fig4f_gsmap_celltype_dissociation.pdf")
+OUT = os.path.join(
+    BASE,
+    "figures/main/fig4_validation/panels/figS4_gsmap_celltype_dissociation_exploratory.pdf",
+)
 
 CELLS = ["Hepatocytes", "Fibroblasts", "Macrophages"]           # cell2location atlas labels
 # biologically-precise display names (verified by reference markers):

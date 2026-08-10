@@ -322,7 +322,7 @@ p_d_bars <- ggplot(top_ints, aes(x = rank, y = N)) +
         axis.ticks.x = element_blank(),
         axis.line.x = element_blank(),
         plot.margin = margin(2, 5, 0, 5))
-message(sprintf("[caption] Per-study vs integrated DEGs \u00b7 %s integrated DEGs (TREAT FDR<0.05, lfc=0.25)",
+message(sprintf("[caption] Per-study vs integrated DEGs \u00b7 %s integrated DEGs (effect-size-aware interval-null FDR gate, FDR<0.05 at lfc=0.25)",
                 format(set_sizes["Integrated"], big.mark = ",")))
 
 p_d_dots <- ggplot() +

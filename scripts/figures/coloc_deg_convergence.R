@@ -172,7 +172,7 @@ p <- ggplot() +
 
 # Convergence count annotation (Euler-style summary) — placed in the open
 # lower-center band, clear of the labeled convergent points at the top.
-conv_lab <- sprintf("SuSiE-COLOC (%d)  ∩  Tier-1 DEG (%d, TREAT)  =  %d convergent",
+conv_lab <- sprintf("SuSiE-COLOC (%d)  ∩  Tier-1 DEG (%d)  =  %d convergent",
                     n_susie, n_deg, n_convergent)
 p <- p +
   annotate("text", x = 0, y = 0.59, label = conv_lab,
@@ -206,7 +206,7 @@ for (i in which(dat$convergent)) {
   message(sprintf("  %-9s  PP.H4=%.3f  log2FC=%+.3f  (%s)",
                   dat$symbol[i], dat$coloc_pp4[i], dat$logFC[i], dat$best_gwas[i]))
 }
-message(sprintf("\nRORA: SuSiE PP.H4=%.3f, logFC=%.3f, treat_fdr=%.3f — TREAT Tier-1 DEG (convergent).",
+message(sprintf("\nRORA: SuSiE PP.H4=%.3f, logFC=%.3f, treat_fdr=%.3f — Tier-1 DEG (convergent).",
                 coloc[gene == "RORA", coloc_best_susie_pp4],
                 deg[symbol == "RORA", logFC], deg[symbol == "RORA", treat_fdr]))
 message(sprintf("Saved: %s", out_pdf))

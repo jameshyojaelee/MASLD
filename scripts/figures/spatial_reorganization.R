@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # ─────────────────────────────────────────────────────────────────────────────
-# Fig 4e — "disease reorganizes liver space", ONE merged panel:
+# Supplementary descriptive spatial reorganization panel:
 #
 #  LEFT:  SVG dynamics bar chart — how many genes gained / maintained / lost
 #         spatial structure in MASLD (GSE192741, donor-blocked Moran's I).
@@ -10,10 +10,9 @@
 #         Identity diagonal (y = x) marks no change; above = gained, below = lost.
 #
 # Data: Analysis/Spatial/results/svg/differential_svgs.csv
-# Output: figures/main/fig4_validation/panels/fig4e_spatial_reorganization.pdf
-# (relettered to 4e 2026-07-08: Fig4 rebuilt around "physical corroboration", then
-# plasma-translation + spatial-CCC demoted to supp, shifting this panel 4f->4e —
-# protein/chromatin layers now precede this panel in the lineup)
+# Output: figures/main/fig4_validation/panels/figS4_spatial_reorganization_descriptive.pdf
+# Demoted from main Figure 4 on 2026-08-06 when actual frozen-program maps
+# became Panel 4E.
 # Env:    rnaseq
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -144,7 +143,7 @@ p_b <- ggplot(svg, aes(morans_I_healthy, morans_I_masld,
 # apply. p_b uses coord_equal() (square), so it is height-limited: give it the
 # larger width share AND a taller canvas so the Moran's I scatter renders large.
 fig <- (p_a | p_b) + plot_layout(widths = c(0.85, 1))
-out <- file.path(FIG4_DIR, "panels", "fig4e_spatial_reorganization.pdf")
+out <- file.path(FIG4_DIR, "panels", "figS4_spatial_reorganization_descriptive.pdf")
 # Sized to the Fig4 layout slot (panel E, 3.46x1.88in; 2026-07-08).
 save_fig(fig, out, width = 3.46, height = 1.88)
 message("Saved: ", out)

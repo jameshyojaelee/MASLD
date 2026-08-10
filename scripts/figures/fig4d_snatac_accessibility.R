@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 # ==============================================================================
-# Fig 4d — CROSS-LINEAGE open-chromatin corroboration of prioritized targets.
+# Fig 4d — CROSS-LINEAGE open-chromatin context for prioritized targets.
+# KEY MESSAGE: Fine-mapped liver-trait variants intersect open chromatin across several liver lineages but provide regulatory context rather than functional validation.
 # Reframe of the retired hepatocyte-only panel (archived under
 # _supp/snatac_accessibility_hepatocyte_only_superseded.pdf). The claim is SCOPE,
 # not a single lineage: fine-mapped GWAS credible-set variants of prioritized
@@ -127,8 +128,8 @@ dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
 ggsave(out, p, width = 3.13, height = 1.88, device = grDevices::cairo_pdf)
 cat("[fig4d-snatac] saved:", out, "\n")
 
-message(sprintf(paste0("CAPTION (Fig 4d): Cross-lineage open-chromatin corroboration of prioritized targets. ",
-  "From the %s-gene prioritized universe shared across all Fig 4 panels (transcriptomic 8,088 union genetic 3,038), ",
+message(sprintf(paste0("CAPTION (Fig 4d): Cross-lineage open-chromatin context for prioritized targets. ",
+  "From the current %s-gene prioritized universe, ",
   "%d targets carry a fine-mapped credible-set variant inside an open snATAC peak (any biotype); restricting to ",
   "protein-coding (%d) and removing %d artifact-looking symbols yields the set shown. ",
   "Of %d canonical protein-coding prioritized MASLD targets whose fine-mapped GWAS credible-set variant lies inside an ",
@@ -139,10 +140,10 @@ message(sprintf(paste0("CAPTION (Fig 4d): Cross-lineage open-chromatin corrobora
   "credible-set variant; fill = COLOC PP.H4; black ring = the variant also disrupts a TF motif (motifbreakR, PUTATIVE, not ",
   "validated). IMPORTANT: this is STATIC accessibility (a variant sits ",
   "in an open peak), NOT disease-state differential accessibility — the GSE244832 disease-DA contrast (5 controls, caQTL ",
-  "anti-concordant, p=1.6e-4) is an established liability and is EXCLUDED. Peaks are accessible-IN-a-lineage, not ",
-  "lineage-EXCLUSIVE (a gene can be open across several lineages). Broad cross-lineage regulatory potential alongside narrow ",
-  "eQTL colocalization is consistent with, and reinforces, the paper's non-parenchymal-genetics vs hepatocyte-expression ",
-  "disconnect (Fig 2/Fig 3); its statistics are not re-derived here."),
+  "anti-concordant, p=1.6e-4) is an established liability and is EXCLUDED. The gene-level display does not require PIP, ",
+  "PP.H4, and motif status to arise from the same variant/trait locus. Peaks are accessible-IN-a-lineage, not lineage-EXCLUSIVE ",
+  "(a gene can be open across several lineages). The panel is regulatory context rather than functional validation; its ",
+  "statistics are not re-derived here."),
   format(length(uni), big.mark=","), n_inpeak_any, n_inpeak_pc, n_inpeak_pc - nrow(d),
   nrow(d), res[lineage=="Hepatocytes", n_genes], res[lineage=="Fibroblasts", n_genes],
   res[lineage=="Macrophages", n_genes], res[lineage=="Cholangiocytes", n_genes],

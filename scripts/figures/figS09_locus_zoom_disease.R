@@ -37,6 +37,24 @@ suppressPackageStartupMessages({
   library(Matrix)
 })
 
+# ── plotgardener: plain chromosome label on the genome ruler ──────────────────
+# plotgardener hardcodes `object$gp$fontface <- "bold"` on the chrN label inside
+# the non-exported plotChromGenomeLabel(); no argument of plotGenomeLabel() can
+# reach it (setGP's fontface is overwritten downstream). Project style is 6 pt
+# plain for every text element, so patch that one assignment. Face only — no
+# position, size, or content changes.
+local({
+  ns <- asNamespace("plotgardener")
+  src <- deparse(get("plotChromGenomeLabel", envir = ns))
+  n_bold <- sum(grepl('object$gp$fontface <- "bold"', src, fixed = TRUE))
+  stopifnot(n_bold > 0L)
+  src <- gsub('object$gp$fontface <- "bold"', 'object$gp$fontface <- "plain"',
+              src, fixed = TRUE)
+  f <- eval(parse(text = paste(src, collapse = "\n")))
+  environment(f) <- ns
+  assignInNamespace("plotChromGenomeLabel", f, ns = "plotgardener")
+})
+
 # ── Per-gene config ───────────────────────────────────────────────────────────
 # Each entry: the colocalizing EUR disease/PDFF GWAS, its hg19 sumstats file, the
 # coloc lead (hg19), the focal eQTL gene, and a human-readable trait label. All

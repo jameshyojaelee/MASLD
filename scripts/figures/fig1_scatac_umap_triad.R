@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
-# Fig 1 — scATAC UMAP triad (cell_type | F_stage_augmented | condition)
+# Fig 1 — scATAC UMAP triad (cell_type | donor | condition)
+# (F_stage_augmented panel retired 2026-07-14 — circular/non-cross-cohort-validated axis;
+#  replaced with donor as a valid integration-QC view.)
 #
 # Inputs:
 #   Analysis/ATAC/Human_Multiome/results/snapatac2/umap_export.tsv.gz
@@ -179,16 +181,20 @@ p_ct <- make_umap(
   legend_nrow = 3
 )
 
-p_fs <- make_umap(
-  dat_sub[!is.na(F_stage_augmented)],
-  color_col   = "F_stage_augmented",
-  color_scale = scale_color_manual(values = fstage_colors,
-                                   labels = paste0("F", fstage_levels),
-                                   drop = TRUE,
-                                   na.value = "#E0E0E0"),
+# F_stage panel SWAPPED 2026-07-14: F_stage_augmented is a circular / not-cross-cohort-
+# validated axis (memory: anchor-excluded rho=0.247), so it was dropped from the integrated
+# triad and is retired here too. Replaced with DONOR (n=18) — a valid integration-QC view:
+# donors co-mingle across cell-state territories (no single-donor blocks). Legend suppressed
+# (18 donors); the panel title identifies it.
+dat_sub[, donor := factor(donor)]
+p_donor <- make_umap(
+  dat_sub[!is.na(donor)],
+  color_col   = "donor",
+  color_scale = scale_color_discrete(na.value = "#E0E0E0"),
   tag         = "b",
   legend_nrow = 1
-)
+) + guides(color = "none") + labs(title = "Donor (n = 18)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 6))   # centered, clear of the "b" tag
 
 cond_present <- intersect(names(cond_colors),
                           unique(as.character(dat_sub$condition)))
@@ -207,7 +213,7 @@ p_cond <- make_umap(
 # ---------------------------------------------------------------------------
 # Compose with patchwork (~7.2in x 2.5in)
 # ---------------------------------------------------------------------------
-combo <- (p_ct | p_fs | p_cond) +
+combo <- (p_ct | p_donor | p_cond) +
   plot_layout(ncol = 3, guides = "keep") &
   theme(plot.tag = element_text(size = 7, face = "plain"))
 

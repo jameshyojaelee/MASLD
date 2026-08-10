@@ -166,9 +166,12 @@ p <- ggplot(plot_dt,
 # -----------------------------------------------------------------------------
 # Save
 # -----------------------------------------------------------------------------
-ggsave(OUT_PDF, p,
-       width = 4.0, height = 3.6,
-       device = cairo_pdf)
+# RETIRED 2026-07-14 (chromVAR panel consolidation): the significance dimension this
+# dotplot carried (donor-level limma adj.P.Val) is now folded into the single
+# figS05_scatac_chromvar_celltype_progression heatmap as asterisks. Output suppressed.
+# ggsave(OUT_PDF, p,
+#        width = 4.0, height = 3.6,
+#        device = cairo_pdf)
 
 # -----------------------------------------------------------------------------
 # Verification
