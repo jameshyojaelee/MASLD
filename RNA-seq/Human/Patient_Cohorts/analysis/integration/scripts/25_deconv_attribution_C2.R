@@ -14,15 +14,15 @@
 #       disease effect — corrected interpretation in §4 header)
 #   4. Run interaction DE: group_binary * Macrophages to find macrophage-
 #      dependent disease genes
-#   5. Generate 3 publication PDFs + 3 result CSVs
+#   5. Generate 3 archived diagnostic PDFs + result CSVs
 #
 # Input:  merged_dge.rds, meta_matched.rds, MuSiC deconv proportions
 # Output: results/causal_inference/deconv_attribution_scores.csv
 #         results/causal_inference/interaction_de_results.csv
 #         results/causal_inference/dream_results_unadjusted.csv
-#         figures/deconv_venn.pdf
-#         figures/deconv_attribution_heatmap.pdf
-#         figures/deconv_interaction_volcano.pdf
+#         figures/archive/c2_deconv_raw_reference/deconv_venn.pdf
+#         figures/archive/c2_deconv_raw_reference/deconv_attribution_heatmap.pdf
+#         figures/archive/c2_deconv_raw_reference/deconv_interaction_volcano.pdf
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({
@@ -55,15 +55,22 @@ suppressPackageStartupMessages({
 # ============================================================
 #  Paths
 # ============================================================
-BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts"
+PROJECT_ROOT <- Sys.getenv(
+  "MASLD_PROJECT_ROOT",
+  "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
+)
+source(file.path(PROJECT_ROOT, "scripts/figures/load_figure_data.R"))
+
+BASE <- file.path(PROJECT_ROOT, "RNA-seq/Human/Patient_Cohorts")
 INT  <- file.path(BASE, "analysis/integration")
 RDIR <- file.path(INT, "results/integration")
 
-# C2 RECOUNT (2026-06-08): unadjusted source = C2 canonical (limma-voom-qw),
-# not dream. Outputs written to a C2 subdir so the dream-canonical
-# deconv_attribution_scores.csv is NOT overwritten.
-OUTDIR <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/results/causal_inference/c2_recount"
-FIGDIR <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/figures/c2_deconv_recount"
+# C2 RAW-REFERENCE RECOUNT (2026-06-08): unadjusted source table = the C2
+# limma-voom-qw model, not dream. Its raw padj/LFC DEG gate is noncanonical after
+# the TREAT cutover, so figures are archived; result tables stay in a dedicated
+# C2 subdir so the dream-era deconv_attribution_scores.csv is NOT overwritten.
+OUTDIR <- file.path(PROJECT_ROOT, "RNA-seq/results/causal_inference/c2_recount")
+FIGDIR <- FIG_DECONV_C2_ARCHIVE
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIGDIR, recursive = TRUE, showWarnings = FALSE)
 

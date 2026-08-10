@@ -5,7 +5,7 @@
 #
 # Dataset: GSE174478 — paired-end RNA-seq (Illumina), 94 liver biopsy samples
 # Library layout: PAIRED-END
-# Quantification: STAR 2.7.11b → featureCounts 2.1.1 (bulk, unstranded)
+# Quantification: STAR 2.7.11b → featureCounts 2.1.1 (bulk, reverse-stranded)
 #
 # Original execution: shared/Snakefile via submit_pipeline.sh + cluster jobs,
 #   with a standalone run_featurecounts.sh for the bulk featureCounts step.
@@ -16,7 +16,7 @@
 #        --twopassMode Basic --quantMode GeneCounts
 #        --limitBAMsortRAM 30000000000
 # featureCounts command (from gene_counts.txt header):
-#   featureCounts -T 8 -p --countReadPairs -s 2 -a {GTF} -o gene_counts.txt {BAMs...}
+#   featureCounts -T 8 -p --countReadPairs -B -s 2 -a {GTF} -o gene_counts.txt {BAMs...}
 # =============================================================================
 
 from pathlib import Path
@@ -101,16 +101,10 @@ rule run_star:
         "--twopassMode Basic --quantMode GeneCounts --limitBAMsortRAM 30000000000 > {log} 2>&1"
 
 rule featurecounts:
-    input:
-        expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES)
-    output:
-        counts=FEATURECOUNTS_DIR / "gene_counts.txt",
-        summary=FEATURECOUNTS_DIR / "gene_counts.txt.summary"
-    threads: THREADS['featurecounts']
-    log: PIPELINE_LOG_DIR / "featurecounts.log"
     shell:
-        "mkdir -p {FEATURECOUNTS_DIR} $(dirname {log}) && "
-        "featureCounts -T {threads} -p --countReadPairs -s 2 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
+        "echo 'ERROR: live GSE174478 counting is disabled; use "
+        "scripts/bg001_remediation/recount_array.sbatch with a frozen BAM manifest and candidate run root.' >&2; "
+        "exit 64"
 
 rule multiqc:
     input:

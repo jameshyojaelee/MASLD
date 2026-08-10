@@ -8,6 +8,9 @@
 #SBATCH --output=logs/featurecounts_s2/PRJNA512027_%j.out
 #SBATCH --error=logs/featurecounts_s2/PRJNA512027_%j.err
 
+echo "ERROR: PRJNA512027 is retired/noncanonical (L0/S0 library-preparation confound); recount is prohibited." >&2
+exit 64
+
 set -eo pipefail
 
 eval "$(micromamba shell hook --shell=bash)"

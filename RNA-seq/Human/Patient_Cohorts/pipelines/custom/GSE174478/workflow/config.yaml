@@ -23,6 +23,6 @@ threads:
 
 params:
   featurecounts:
-    strandedness: 0   # 0=unstranded, 1=stranded, 2=reverse-stranded
+    strandedness: 2   # Reverse-stranded; matches the shipped matrix and BG-001 contract
 
 pipeline_logs: logs

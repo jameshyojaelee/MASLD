@@ -7,6 +7,9 @@
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
 
+echo "ERROR: PRJNA512027 is retired/noncanonical; pipeline launch is prohibited." >&2
+exit 64
+
 echo "Pipeline launcher started."
 # Ensure MICROMAMBA is available
 MICROMAMBA="/gpfs/commons/home/jameslee/.local/bin/micromamba"

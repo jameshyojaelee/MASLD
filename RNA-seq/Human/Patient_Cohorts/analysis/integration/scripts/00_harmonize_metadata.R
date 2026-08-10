@@ -47,6 +47,31 @@ sra <- lapply(names(datasets_cfg), function(ds) {
 names(sra) <- names(datasets_cfg)
 sra <- sra[!sapply(sra, is.null)]
 
+# --- BG-002 fail-closed gate (2026-08-07) ---------------------------------
+# Datasets flagged include_in_mega define the canonical pooled estimand. A
+# missing SraRunTable, an absent harmonize() case, or a harmonize() error used
+# to warn and silently drop the cohort, letting a partial substrate through
+# with a valid-looking unified_metadata.csv. Non-mega datasets keep the
+# permissive behaviour; mega datasets now fail closed.
+mega_datasets <- names(datasets_cfg)[vapply(
+  names(datasets_cfg),
+  function(ds) isTRUE(datasets_cfg[[ds]]$de$include_in_mega),
+  logical(1)
+)]
+if (!length(mega_datasets)) {
+  stop("No include_in_mega datasets found in config/human_datasets.yaml")
+}
+cat("include_in_mega datasets (", length(mega_datasets), "):",
+    paste(mega_datasets, collapse = ", "), "\n\n")
+
+missing_sra <- setdiff(mega_datasets, names(sra))
+if (length(missing_sra)) {
+  stop("Missing SraRunTable for include_in_mega dataset(s): ",
+       paste(missing_sra, collapse = ", "),
+       "\n  These define the canonical pooled analysis and may not be dropped.",
+       "\n  Fix the sra_table_path in config/human_datasets.yaml or restore the file.")
+}
+
 # --- Apply excluded samples from config ---
 for (ds in names(sra)) {
   excl <- datasets_cfg[[ds]]$excluded_samples
@@ -282,6 +307,18 @@ harmonized <- harmonized[!sapply(harmonized, is.null)]
 
 if (length(harmonized) == 0) stop("No datasets harmonized successfully.")
 
+# --- BG-002 fail-closed gate (2026-08-07) ---------------------------------
+# A missing switch() case or a harmonize() error above only warns. For
+# include_in_mega cohorts that would silently shrink the canonical estimand,
+# so refuse rather than emit a partial substrate.
+dropped_mega <- setdiff(mega_datasets, names(harmonized))
+if (length(dropped_mega)) {
+  stop("harmonize() produced no rows for include_in_mega dataset(s): ",
+       paste(dropped_mega, collapse = ", "),
+       "\n  Check for a missing switch() case in harmonize() or an error warned above.",
+       "\n  Canonical pooled cohorts may not be silently dropped.")
+}
+
 unified <- rbindlist(harmonized, use.names = TRUE, fill = TRUE)
 
 # --- Compute diagnosis_harmonized column ---
@@ -344,7 +381,21 @@ cat("\nNAS score available:\n")
 print(unified[, .(has_nas = sum(!is.na(nas_score)), total = .N), by = dataset])
 
 # --- Write output ---
+# BG-002 (2026-08-07): every include_in_mega cohort must still be represented
+# in the emitted table, and the write is atomic so a failure cannot leave a
+# truncated unified_metadata.csv in place of the previous valid one.
+absent_mega <- setdiff(mega_datasets, unique(as.character(unified$dataset)))
+if (length(absent_mega)) {
+  stop("Unified metadata lacks rows for include_in_mega dataset(s): ",
+       paste(absent_mega, collapse = ", "))
+}
+
 outfile <- file.path(OUT, "unified_metadata.csv")
-fwrite(unified, outfile)
+tmpfile <- file.path(OUT, paste0(".unified_metadata.csv.", Sys.getpid(), ".tmp"))
+fwrite(unified, tmpfile)
+if (!file.rename(tmpfile, outfile)) {
+  unlink(tmpfile)
+  stop("Atomic rename of unified metadata failed: ", tmpfile, " -> ", outfile)
+}
 cat("\nWritten:", outfile, "\n")
 cat("Samples:", nrow(unified), " | Columns:", ncol(unified), "\n")

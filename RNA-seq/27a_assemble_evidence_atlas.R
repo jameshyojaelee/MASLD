@@ -1185,6 +1185,18 @@ if (file.exists(prot_path)) {
   # (see mrna_protein_concordance.R header). Restrict to PRIDE DIA-MS datasets so
   # the proteomics evidence layer never counts an RNA-seq cohort as a protein dataset.
   prot_raw <- prot_raw[grepl("^PXD", dataset)]
+  # 2026-08-03 PERMANENT (liver-only proteomics): PXD052937 (plasma) is EXCLUDED from the
+  # proteomics evidence layer. Its per-sample disease labels are FABRICATED from group sizes
+  # (A/B/C/D -> Normal/MASL/MASH/Cirrhosis) and refuted by the source (Sourianarayanane 2024,
+  # PMID 39073724 / DOI 10.1002/prca.202300236 = 64-patient BINARY MASH-vs-nonMASH, not a
+  # 4-way 72-sample staging). They contaminated ~27.6% of the significant best_protein_padj
+  # endpoint (76/275 genes plasma-sourced). The proteomics endpoint is the LIVER cohort
+  # (PXD051911, authentic NAS-stage labels) ONLY. This is a settled scientific decision, NOT
+  # a placeholder: do NOT re-enable plasma without an explicit new decision (the authors'
+  # tube-ID->diagnosis key was never requested and is not being pursued).
+  # See recover_proteomics_metadata.R and
+  # docs/manuscript/reviews/2026-07-15_fig4_reconciliation_roadmap.md.
+  prot_raw <- prot_raw[!grepl("^PXD052937", dataset)]
   # Aggregate to gene level: n_prot_datasets, best_protein_logFC, best_protein_padj
   #
   # FIX 2026-06-01 (review G8-002/003/007):

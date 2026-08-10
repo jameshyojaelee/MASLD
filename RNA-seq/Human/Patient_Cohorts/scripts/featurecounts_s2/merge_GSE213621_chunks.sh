@@ -8,6 +8,9 @@
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/logs/featurecounts_s2/GSE213621_merge_%j.out
 #SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/logs/featurecounts_s2/GSE213621_merge_%j.err
 
+echo "ERROR: positional canonical merge is disabled; use bg001_remediation/merge_validate.sbatch." >&2
+exit 64
+
 set -euo pipefail
 
 OUT_DIR="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/results/GSE213621/counts/featurecounts"

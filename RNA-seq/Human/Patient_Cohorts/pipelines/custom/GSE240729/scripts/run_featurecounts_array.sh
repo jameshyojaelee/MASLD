@@ -7,6 +7,9 @@
 #SBATCH --array=1-66
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/pipelines/custom/GSE240729/logs/fc_array_%A_%a.log
 
+echo "ERROR: legacy live per-sample recount is disabled; use the BG-001 immutable recount array." >&2
+exit 64
+
 set -euo pipefail
 
 eval "$(micromamba shell hook -s bash)"
@@ -24,8 +27,8 @@ echo "Task ${SLURM_ARRAY_TASK_ID}: ${SAMPLE}"
 
 featureCounts \
     -T 4 \
-    -p --countReadPairs \
-    -s 0 \
+    -p --countReadPairs -B \
+    -s 2 \
     -a "${GTF}" \
     -o "${OUTDIR}/per_sample/${SAMPLE}.counts.txt" \
     "${BAM}"

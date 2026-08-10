@@ -8,6 +8,9 @@
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/logs/featurecounts_s2/PRJNA512027_merge_%j.out
 #SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/logs/featurecounts_s2/PRJNA512027_merge_%j.err
 
+echo "ERROR: PRJNA512027 is retired/noncanonical; merging or relaunching it is prohibited." >&2
+exit 64
+
 set -euo pipefail
 
 OUT_DIR="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/results/PRJNA512027/counts/featurecounts"

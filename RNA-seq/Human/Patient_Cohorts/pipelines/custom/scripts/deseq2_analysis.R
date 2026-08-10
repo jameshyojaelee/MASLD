@@ -15,7 +15,14 @@ option_list <- list(
   make_option(c("-c", "--counts"), type="character", help="Path to featureCounts output (gene_counts.txt)"),
   make_option(c("-m", "--metadata"), type="character", help="Path to sample sheet (metadata)"),
   make_option(c("-o", "--output"), type="character", help="Output directory"),
-  make_option(c("-d", "--design"), type="character", default="~ condition", help="Design formula (e.g. '~ condition')")
+  make_option(c("-d", "--design"), type="character", default="~ condition", help="Design formula (e.g. '~ condition')"),
+  # BG-005 (2026-08-09): a contrast is now MANDATORY. Previously the script called
+  # results(dds) with no argument, which silently returns DESeq2's default -- the LAST
+  # coefficient in resultsNames(dds). For any multi-level condition that is an
+  # arbitrary pairwise comparison, not the registry contrast, and it looks entirely
+  # plausible in the output table. Supply factor,numerator,denominator.
+  make_option(c("-k", "--contrast"), type="character", default=NULL,
+              help="REQUIRED. Contrast as 'factor,numerator,denominator' (e.g. 'condition,NASH,NAFL')")
 )
 
 opt_parser <- OptionParser(option_list=option_list)
@@ -24,6 +31,20 @@ opt <- parse_args(opt_parser)
 if (is.null(opt$counts) || is.null(opt$metadata) || is.null(opt$output)) {
   print_help(opt_parser)
   stop("Missing required arguments")
+}
+if (is.null(opt$contrast)) {
+  print_help(opt_parser)
+  stop("--contrast is required (BG-005). Refusing to fall back to DESeq2's default\n",
+       "  last-coefficient result, which silently reports an unintended comparison.\n",
+       "  Note: the canonical per-study human DE is limma-voom via\n",
+       "  analysis/integration/scripts/02_per_study_de.R, driven by the de: block in\n",
+       "  config/human_datasets.yaml. Use that unless you specifically need DESeq2.",
+       call. = FALSE)
+}
+contrast_parts <- trimws(strsplit(opt$contrast, ",", fixed = TRUE)[[1]])
+if (length(contrast_parts) != 3L || any(!nzchar(contrast_parts))) {
+  stop("--contrast must have exactly 3 comma-separated parts ",
+       "'factor,numerator,denominator'; got: ", opt$contrast, call. = FALSE)
 }
 
 # Create output dir
@@ -121,8 +142,22 @@ p <- ggplot(pca_data, aes(PC1, PC2, color=group)) +
 
 ggsave(file.path(opt$output, "pca_plot.pdf"), plot=p)
 
-# Write results for first coefficient or contrast
-res <- results(dds)
+# Write results for the EXPLICIT contrast only (BG-005). Validate the factor and both
+# levels against the fitted object before asking DESeq2 for the comparison, so a typo
+# fails here rather than silently resolving to something else.
+cf <- contrast_parts[1]; num <- contrast_parts[2]; den <- contrast_parts[3]
+if (!cf %in% colnames(colData(dds))) {
+  stop("Contrast factor '", cf, "' is not a column of colData(dds). Available: ",
+       paste(colnames(colData(dds)), collapse = ", "), call. = FALSE)
+}
+lv <- levels(factor(colData(dds)[[cf]]))
+missing_lv <- setdiff(c(num, den), lv)
+if (length(missing_lv)) {
+  stop("Contrast level(s) not present in '", cf, "': ", paste(missing_lv, collapse = ", "),
+       "\n  Observed levels: ", paste(lv, collapse = ", "), call. = FALSE)
+}
+cat("Contrast:", cf, num, "vs", den, "\n")
+res <- results(dds, contrast = c(cf, num, den))
 write.csv(as.data.frame(res), file.path(opt$output, "deseq2_results_table.csv"))
 
 cat("Analysis complete. Results saved to", opt$output, "\n")

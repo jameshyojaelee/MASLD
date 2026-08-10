@@ -7,6 +7,9 @@
 #SBATCH --mem=1500GB
 #SBATCH --time=48:00:00
 
+echo "ERROR: PRJNA512027 is retired/noncanonical; pipeline submission is prohibited." >&2
+exit 64
+
 set -euo pipefail
 
 # 1. Activate Environment

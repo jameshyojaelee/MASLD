@@ -9,6 +9,9 @@
 #SBATCH --account=nslab
 #SBATCH --qos=nslab
 
+echo "ERROR: PRJNA512027 is retired/noncanonical; resubmission is prohibited." >&2
+exit 64
+
 set -euo pipefail
 
 # ── Environment ──────────────────────────────────────────────

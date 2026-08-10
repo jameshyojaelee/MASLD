@@ -1,0 +1,174 @@
+symbol	source_path	source_line	context	baseline_status
+ACADS	docs/manuscript/NUMBERS.md	230	explicit novel-gene example	testable
+ACTG1	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+ADAMTS6	docs/manuscript/NUMBERS.md	810	explicit screened-candidate gene	testable
+AHR	docs/manuscript/NUMBERS.md	1745	named regulon/GWAS TF	testable
+AKR1B10	docs/manuscript/NUMBERS.md	803	named preclinical target	testable
+ALB	docs/manuscript/NUMBERS.md	512	ambient-RNA marker gene	testable
+APOA5	docs/manuscript/working/key_points_by_section.md	85	reporter-supported gene/honest gap	testable
+APOC3	docs/manuscript/NUMBERS.md	1336	ligand-receptor gene pair	testable
+ARHGEF39	docs/manuscript/NUMBERS.md	810	explicit screened-candidate gene	testable
+ASS1	docs/manuscript/NUMBERS.md	661	explicit sex-DE classification gene	testable
+ATP6V1E1	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+BRAF	docs/manuscript/NUMBERS.md	501	explicit top-convergence gene	testable
+CASP1	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+CAV1	docs/manuscript/NUMBERS.md	1339	ligand-receptor gene pair	testable
+CCN1	docs/manuscript/NUMBERS.md	1339	ligand-receptor gene pair	testable
+CD151	docs/manuscript/NUMBERS.md	501	explicit 4/6 convergence-gene list; Tier-1 genetic-validated	testable
+CD2BP2	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+CD36	docs/manuscript/NUMBERS.md	1347	ligand-receptor gene pair	testable
+CDH11	docs/manuscript/NUMBERS.md	1232	named divergence gene	testable
+CDH16	docs/manuscript/NUMBERS.md	1303	named progression driver	testable
+CDT1	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+CEBPA	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+CEBPB	docs/manuscript/NUMBERS.md	1546	named TF/regulator	testable
+CFHR1	docs/manuscript/NUMBERS.md	230	explicit novel-gene example	testable
+CHI3L1	docs/manuscript/NUMBERS.md	1069	named protein/gene	testable
+CIDEC	docs/manuscript/NUMBERS.md	1883	named ranked gene	testable
+CIITA	docs/manuscript/NUMBERS.md	810	explicit screened-candidate gene	testable
+CLEC4G	docs/manuscript/working/key_points_by_section.md	133	endothelial marker gene	NOT_TESTABLE
+CLEC4M	docs/manuscript/NUMBERS.md	230	explicit novel-gene example	testable
+COL14A1	docs/manuscript/NUMBERS.md	1655	named ECM connector gene	testable
+COL15A1	docs/manuscript/NUMBERS.md	1230	named divergence gene	testable
+COL1A1	docs/manuscript/NUMBERS.md	1347	ligand-receptor gene pair	testable
+COL25A1	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+COL5A2	docs/manuscript/NUMBERS.md	1655	named ECM connector gene	testable
+CUX2	docs/paper_outline.md	276	named disease-state gene	testable
+CXCL8	docs/manuscript/NUMBERS.md	1340	ligand-receptor gene pair	testable
+CXCR4	docs/manuscript/NUMBERS.md	1344	ligand-receptor gene pair	testable
+CYP26A1	docs/manuscript/NUMBERS.md	1522	named convergence gene	testable
+CYP2E1	docs/manuscript/NUMBERS.md	525	pericentral marker gene	testable
+DGAT2	docs/manuscript/NUMBERS.md	498	named drug target	testable
+DPP4	docs/manuscript/working/key_points_by_section.md	135	named transcript/drug-axis gene	testable
+E2F1	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+E2F4	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+EEF1A2	docs/manuscript/NUMBERS.md	1638	named mRNA/protein-discordant gene	testable
+EFHD1	docs/manuscript/working/key_points_by_section.md	87	named enzyme-anchored gene	testable
+ELN	docs/manuscript/NUMBERS.md	1655	named ECM connector gene	testable
+ENG	docs/manuscript/NUMBERS.md	1345	ligand-receptor gene pair	testable
+EPB41L4B	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+ERLIN1	docs/manuscript/working/key_points_by_section.md	146	named protein-QTL effector	testable
+ERN1	docs/manuscript/NUMBERS.md	106	named UPR module gene	testable
+ESRP2	docs/manuscript/NUMBERS.md	810	explicit screened-candidate gene	testable
+FABP4	docs/manuscript/NUMBERS.md	415	named NASH-core gene	testable
+FABP5	docs/manuscript/NUMBERS.md	1343	ligand-receptor gene pair	testable
+FADS2	docs/manuscript/NUMBERS.md	852	named convergence gene	testable
+FCGR2B	docs/manuscript/working/key_points_by_section.md	87	named enzyme-anchored gene	testable
+FCN2	docs/manuscript/NUMBERS.md	1334	ligand-receptor gene pair	testable
+FN1	docs/manuscript/NUMBERS.md	99	named fibroblast module gene	testable
+FOS	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+FOXA1	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+FOXA2	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+FOXN3	docs/manuscript/NUMBERS.md	810	explicit screened/convergence gene	testable
+FOXO1	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+GAS6	docs/manuscript/NUMBERS.md	1333	ligand-receptor gene pair	testable
+GATA2	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+GATA3	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+GATAD2A	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+GCAT	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+GCG	docs/manuscript/NUMBERS.md	1082	named metabolic protein/ligand	NOT_TESTABLE
+GCGR	docs/manuscript/working/key_points_by_section.md	135	named receptor transcript	testable
+GCKR	docs/manuscript/working/key_points_by_section.md	147	named genetic/protein-QTL effector	testable
+GDF15	docs/manuscript/NUMBERS.md	930	named protein benchmark gene in withdrawn claim	testable
+GGT1	docs/manuscript/NUMBERS.md	702	named cross-ancestry gene	testable
+GIP	docs/manuscript/NUMBERS.md	515	named biological ligand in receptor axis	NOT_TESTABLE
+GIPR	docs/manuscript/working/key_points_by_section.md	134	named receptor/drug-target gene	testable
+GLP1R	docs/manuscript/working/key_points_by_section.md	138	named receptor/boundary gene	NOT_TESTABLE
+GLUL	docs/manuscript/NUMBERS.md	525	pericentral marker gene	testable
+GOT2	docs/manuscript/NUMBERS.md	230	explicit novel-gene example	testable
+GSDMD	docs/manuscript/NUMBERS.md	230	explicit inflammasome gene	NOT_TESTABLE
+GSN	docs/manuscript/NUMBERS.md	1234	named divergence gene	testable
+HGF	docs/manuscript/NUMBERS.md	1350	named signaling-pathway gene	testable
+HKDC1	docs/manuscript/working/key_points_by_section.md	138	named marquee/convergent gene	testable
+HNF1A	docs/manuscript/NUMBERS.md	1745	named regulon/GWAS TF	testable
+HNF1B	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+HNF4A	docs/manuscript/NUMBERS.md	1468	named TF/regulator	testable
+HSD17B13	docs/manuscript/working/fig5_discussion.md	17	named coding/splice boundary gene	testable
+HSP90B1	docs/manuscript/NUMBERS.md	1084	named protein/gene	testable
+IKZF5	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+IL18R1	docs/manuscript/NUMBERS.md	230	explicit inflammasome-related gene	testable
+IL1B	docs/manuscript/NUMBERS.md	416	named inflammatory gene	testable
+ITGA1	docs/manuscript/NUMBERS.md	1337	receptor-complex gene	testable
+ITGAV	docs/manuscript/NUMBERS.md	1342	ligand-receptor gene pair	testable
+ITGB1	docs/manuscript/NUMBERS.md	1337	receptor-complex gene	testable
+JUN	docs/manuscript/NUMBERS.md	1468	named TF/regulator	testable
+KDM7A	docs/manuscript/NUMBERS.md	859	named genetic-tier gene	testable
+KLF4	docs/manuscript/NUMBERS.md	1466	named TF/GWAS bridge	testable
+KLF6	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+KPNA2	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+KRT8	docs/manuscript/working/key_points_by_section.md	87	named enzyme-anchored gene	testable
+LGALS1	docs/manuscript/working/key_points_by_section.md	146	named protein-QTL effector	testable
+LIG3	docs/manuscript/NUMBERS.md	859	named genetic-tier gene	testable
+LINC01561	docs/manuscript/NUMBERS.md	1682	named lncRNA	testable
+LIPC	docs/manuscript/NUMBERS.md	1335	ligand-receptor gene pair	testable
+LPL	docs/manuscript/working/key_points_by_section.md	85	named reporter-supported gene	testable
+LRP1	docs/manuscript/NUMBERS.md	1334	receptor gene in ligand-receptor pair	testable
+LTBP2	docs/manuscript/NUMBERS.md	1233	named divergence gene	testable
+MAX	docs/manuscript/NUMBERS.md	1520	named validated TF; genuine symbol	testable
+MBOAT7	docs/manuscript/NUMBERS.md	713	named coding-architecture gene	testable
+MERTK	docs/manuscript/NUMBERS.md	1333	ligand-receptor gene pair	testable
+MET	docs/manuscript/NUMBERS.md	1350	named HGF/MET pathway gene	testable
+MLX	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+MLXIPL	docs/manuscript/NUMBERS.md	1520	named validated TF	testable
+MMP9	docs/manuscript/NUMBERS.md	416	named inflammatory gene	testable
+MT1E	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+MTARC1	docs/manuscript/working/key_points_by_section.md	138	named protein-level boundary gene	testable
+MTTP	docs/manuscript/working/key_points_by_section.md	146	named protein-QTL effector	testable
+NFASC	docs/manuscript/NUMBERS.md	930	named protein benchmark gene in withdrawn claim	testable
+NFKB1	docs/manuscript/NUMBERS.md	1457	named activated TF	testable
+NPY	docs/manuscript/NUMBERS.md	1080	named metabolic protein/gene	NOT_TESTABLE
+NR1H4	docs/manuscript/NUMBERS.md	802	named drug target	testable
+OAT	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+OCEL1	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+OIT3	docs/manuscript/working/key_points_by_section.md	133	endothelial marker gene	testable
+PC	docs/manuscript/NUMBERS.md	501	explicitly listed among 16 genes; genuine symbol here	testable
+PCOLCE2	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+PLIN2	docs/manuscript/NUMBERS.md	501	explicit top-convergence gene	testable
+PNPLA3	docs/manuscript/working/key_points_by_section.md	83	named coding-boundary gene	testable
+PPARA	docs/manuscript/NUMBERS.md	1468	named TF/regulator	testable
+PPARD	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+PPARG	docs/manuscript/NUMBERS.md	1469	named TF/regulator	testable
+PPP1R3B	docs/paper_outline.md	276	named genetic hit	testable
+PRKCQ	docs/manuscript/NUMBERS.md	1083	named metabolic protein/gene	testable
+RAPH1	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+RELA	docs/manuscript/NUMBERS.md	1468	named TF/regulator	testable
+RELB	docs/paper_outline.md	276	named disease-state gene	testable
+REN	docs/manuscript/NUMBERS.md	1081	named metabolic protein/gene	testable
+REXO5	docs/manuscript/NUMBERS.md	859	named genetic-tier gene	testable
+RFC2	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+RHOBTB3	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+RORA	docs/manuscript/working/key_points_by_section.md	138	named marquee/genetic gene	testable
+RPP14	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+RXRA	docs/manuscript/NUMBERS.md	1343	named receptor/TF gene	testable
+SAE1	docs/manuscript/NUMBERS.md	876	named convergence gene	testable
+SCD	docs/manuscript/NUMBERS.md	1884	named ranked gene	testable
+SDC2	docs/manuscript/NUMBERS.md	1340	ligand-receptor gene pair	testable
+SDS	docs/manuscript/NUMBERS.md	525	periportal marker gene	testable
+SH3YL1	docs/manuscript/NUMBERS.md	810	explicit screened-candidate gene	testable
+SLC22A3	docs/manuscript/working/key_points_by_section.md	85	named reporter-supported gene	testable
+SLC39A8	docs/manuscript/NUMBERS.md	714	named COLOC-success gene	testable
+SLC50A1	docs/manuscript/NUMBERS.md	1506	named variant-to-gene target	testable
+SLC5A2	docs/manuscript/NUMBERS.md	800	named drug target	testable
+SMAD3	docs/manuscript/NUMBERS.md	1456	named TF/regulator	testable
+SORT1	docs/manuscript/NUMBERS.md	714	named COLOC-success gene	testable
+SREBF1	docs/manuscript/NUMBERS.md	1484	named TF/regulator	testable
+STAB2	docs/manuscript/working/key_points_by_section.md	133	endothelial marker gene	testable
+STAT1	docs/manuscript/NUMBERS.md	1468	named TF/regulator	testable
+TCF7L2	docs/manuscript/NUMBERS.md	454	named master-regulator TF	testable
+TGFB1	docs/manuscript/NUMBERS.md	1345	ligand-receptor gene pair	testable
+TGFBR3	docs/manuscript/NUMBERS.md	1346	ligand-receptor gene pair	testable
+THRB	docs/manuscript/working/key_points_by_section.md	138	named marquee/genetic target	testable
+TM6SF2	docs/manuscript/NUMBERS.md	466	named COLOC/coding-boundary gene	testable
+TMEM178B	docs/manuscript/NUMBERS.md	1231	named divergence gene	testable
+TMEM184B	docs/manuscript/NUMBERS.md	809	explicit prospective candidate	testable
+TP53	docs/manuscript/NUMBERS.md	1465	named TF/GWAS bridge	testable
+TREM2	docs/manuscript/NUMBERS.md	415	named NASH-core gene	testable
+TRPS1	docs/manuscript/working/key_points_by_section.md	87	named enzyme-anchored gene	testable
+TUBB4B	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+TUSC3	docs/manuscript/NUMBERS.md	810	explicit screened-candidate gene	testable
+VCAM1	docs/manuscript/NUMBERS.md	1656	named inflammatory connector gene	testable
+VCAN	docs/manuscript/NUMBERS.md	99	named fibroblast module gene	testable
+VOPP1	docs/manuscript/NUMBERS.md	860	named convergence gene	testable
+VPS41	docs/manuscript/NUMBERS.md	501	explicit convergence-gene list	testable
+XIST	docs/manuscript/NUMBERS.md	863	named excluded/confounder gene	testable
+ZNF701	docs/manuscript/NUMBERS.md	1506	named variant-to-gene target	testable

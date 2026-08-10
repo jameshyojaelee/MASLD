@@ -70,6 +70,9 @@ Thumbs.db
 !samplesheet.csv
 !**/metadata/*.csv
 !**/metadata/*.tsv
+!scripts/bg001_remediation/dependency_retirement_registry.tsv
+!scripts/bg001_remediation/protected_named_genes.tsv
+!scripts/bg001_remediation/protected_figure_genes.tsv
 
 # Keep configuration and code files regardless of location
 !*.nf

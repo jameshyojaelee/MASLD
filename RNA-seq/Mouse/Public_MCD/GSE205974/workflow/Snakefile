@@ -99,7 +99,7 @@ rule featurecounts:
     log: PIPELINE_LOG_DIR / "featurecounts.log"
     shell:
         "mkdir -p {FEATURECOUNTS_DIR} $(dirname {log}) && "
-        "featureCounts -T {threads} -p -s 0 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
+        "featureCounts -T {threads} -p --countReadPairs -s 0 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
 rule salmon_quant:
     input:
         r1=lambda wc: fastq(wc.sample, 'R1'),

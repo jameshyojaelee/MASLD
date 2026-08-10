@@ -1,3 +1,7 @@
+raise ValueError(
+    "PRJNA512027 is retired/noncanonical because of the L0/S0 library-preparation confound; recounting is prohibited"
+)
+
 from pathlib import Path
 import csv
 
@@ -121,7 +125,7 @@ rule featurecounts:
     log: PIPELINE_LOG_DIR / "featurecounts.log"
     shell:
         "mkdir -p {FEATURECOUNTS_DIR} $(dirname {log}) && "
-        "featureCounts -T {threads} -p -B -s 2 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
+        "featureCounts -T {threads} -p --countReadPairs -B -s 2 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
 
 rule multiqc:
     input:

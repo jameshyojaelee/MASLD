@@ -10,6 +10,8 @@
 
 from pathlib import Path
 import csv
+import subprocess
+import sys
 
 root        = Path(config["project_root"]).resolve()
 samplesheet = Path(config["samplesheet"]).resolve()
@@ -62,6 +64,37 @@ STAR_INDEX       = Path(config["indices"]["star"])
 GTF              = Path(config["reference"]["gtf"])
 THREADS          = config["threads"]
 LOG_DIR          = root / config["pipeline_logs"]
+EXACT_FC_MERGER  = Path(__file__).resolve().parent / "scripts" / "merge_featurecounts_exact.py"
+
+# These existing cohorts are under the BG-001 immutable recount contract.  The
+# shared workflow remains usable for their upstream FASTQ/STAR/QC rules and is a
+# no-op when the aggregate counts already exist, but a forced/missing count rule
+# must not rediscover BAMs or write a live canonical matrix.
+BG001_AFFECTED_DATASETS = {
+    "GSE130970", "GSE135251", "GSE174478", "GSE213621", "GSE240729",
+}
+DATASET_ID = root.name
+BG001_RECOUNT_REQUIRED = DATASET_ID in BG001_AFFECTED_DATASETS
+BG001_RECOUNT_REFUSAL = (
+    f"ERROR: live {DATASET_ID} counting is disabled; use "
+    "scripts/bg001_remediation/recount_array.sbatch with a frozen BAM manifest "
+    "and candidate run root."
+)
+BG001_AGGREGATE_COUNTS = FEATURECOUNTS_DIR / "gene_counts.txt"
+BG001_AGGREGATE_SUMMARY = FEATURECOUNTS_DIR / "gene_counts.txt.summary"
+BG001_COUNTS_PRESENT = BG001_AGGREGATE_COUNTS.is_file() and BG001_AGGREGATE_SUMMARY.is_file()
+# With a complete existing aggregate, no guarded rule claims its paths, keeping
+# the count subgraph out of an ordinary DAG.  If either file is absent, the
+# refusal rule claims both aggregate paths and fails immediately without BAM
+# discovery or upstream dependencies.
+BG001_PER_SAMPLE_GUARD_OUTPUTS = () if BG001_COUNTS_PRESENT else (
+    str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
+    str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt.summary"),
+)
+BG001_MERGE_GUARD_OUTPUTS = () if BG001_COUNTS_PRESENT else (
+    str(BG001_AGGREGATE_COUNTS),
+    str(BG001_AGGREGATE_SUMMARY),
+)
 
 # ---------------------------------------------------------------------------
 # Rule: all
@@ -122,78 +155,61 @@ rule star:
         "{params.extra} > {log} 2>&1"
 
 # ---------------------------------------------------------------------------
-# Rule: featureCounts — per-sample (runs in parallel via cluster)
+# Rules: featureCounts + merge. For affected cohorts, existing complete
+# aggregates remain external inputs, whereas missing or explicitly forced count
+# targets fail with a BG-001 refusal. Unrelated datasets retain the live workflow.
 # ---------------------------------------------------------------------------
-rule featurecounts_per_sample:
-    input:
-        bam = str(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam")
-    output:
-        counts  = str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
-        summary = str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt.summary")
-    params:
-        gtf    = str(GTF),
-        strand = config.get("params", {}).get("featurecounts", {}).get("strandedness", "0"),
-        pe_flag = lambda wc: "-p --countReadPairs" if is_paired(wc.sample) else ""
-    threads: THREADS["featurecounts"]
-    log: str(LOG_DIR / "featurecounts" / "{sample}.log")
-    shell:
-        "mkdir -p $(dirname {output.counts}) $(dirname {log}) && "
-        "featureCounts -T {threads} {params.pe_flag} -s {params.strand} "
-        "-a {params.gtf} -o {output.counts} {input.bam} > {log} 2>&1"
+if BG001_RECOUNT_REQUIRED:
+    rule featurecounts_per_sample:
+        output: BG001_PER_SAMPLE_GUARD_OUTPUTS
+        shell:
+            "echo '{BG001_RECOUNT_REFUSAL}' >&2; exit 64"
 
-# ---------------------------------------------------------------------------
-# Rule: merge per-sample featureCounts into single matrix
-# ---------------------------------------------------------------------------
-rule merge_featurecounts:
-    input:
-        counts = expand(str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
-                        sample=SAMPLES)
-    output:
-        merged  = str(FEATURECOUNTS_DIR / "gene_counts.txt"),
-        summary = str(FEATURECOUNTS_DIR / "gene_counts.txt.summary")
-    params:
-        per_sample_dir = str(FEATURECOUNTS_DIR / "per_sample"),
-        n_samples = len(SAMPLES)
-    log: str(LOG_DIR / "merge_featurecounts.log")
-    run:
-        import pandas as pd
-        from pathlib import Path
+    rule merge_featurecounts:
+        output: BG001_MERGE_GUARD_OUTPUTS
+        shell:
+            "echo '{BG001_RECOUNT_REFUSAL}' >&2; exit 64"
+else:
+    rule featurecounts_per_sample:
+        input:
+            bam = str(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam")
+        output:
+            counts  = str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
+            summary = str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt.summary")
+        params:
+            gtf    = str(GTF),
+            strand = config.get("params", {}).get("featurecounts", {}).get("strandedness", "0"),
+            pe_flag = lambda wc: "-p --countReadPairs -B" if is_paired(wc.sample) else ""
+        threads: THREADS["featurecounts"]
+        log: str(LOG_DIR / "featurecounts" / "{sample}.log")
+        shell:
+            "mkdir -p $(dirname {output.counts}) $(dirname {log}) && "
+            "featureCounts -T {threads} {params.pe_flag} -s {params.strand} "
+            "-a {params.gtf} -o {output.counts} {input.bam} > {log} 2>&1"
 
-        per_sample_dir = Path(params.per_sample_dir)
-        count_files = sorted(per_sample_dir.glob("*.counts.txt"))
-
-        # Read first file to get annotation columns
-        first = pd.read_csv(count_files[0], sep="\t", comment="#")
-        annot_cols = first.columns[:6].tolist()  # Geneid, Chr, Start, End, Strand, Length
-        merged = first[annot_cols].copy()
-
-        # Add count column from each sample
-        for cf in count_files:
-            df = pd.read_csv(cf, sep="\t", comment="#")
-            sample_col = df.columns[-1]  # last column is the count
-            sample_name = Path(cf).stem.replace(".counts", "")
-            merged[sample_name] = df.iloc[:, -1]
-
-        # Write header comment (featureCounts format compatibility)
-        with open(str(output.merged), "w") as fh:
-            fh.write(f"# Program:featureCounts v2.1.1; Merged from {params.n_samples} per-sample runs\n")
-        merged.to_csv(str(output.merged), sep="\t", index=False, mode="a")
-
-        # Merge summary files
-        summary_files = sorted(per_sample_dir.glob("*.counts.txt.summary"))
-        if summary_files:
-            first_summary = pd.read_csv(summary_files[0], sep="\t")
-            merged_summary = first_summary.iloc[:, :1].copy()
-            for sf in summary_files:
-                df = pd.read_csv(sf, sep="\t")
-                sample_name = Path(sf).stem.replace(".counts.txt", "")
-                merged_summary[sample_name] = df.iloc[:, -1]
-            merged_summary.to_csv(str(output.summary), sep="\t", index=False)
-
-        with open(str(log), "w") as fh:
-            fh.write(f"Merged {len(count_files)} per-sample count files\n")
-            fh.write(f"Output: {output.merged}\n")
-            fh.write(f"Dimensions: {merged.shape[0]} genes x {merged.shape[1] - 6} samples\n")
+    rule merge_featurecounts:
+        input:
+            counts = expand(str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt"),
+                            sample=SAMPLES),
+            summaries = expand(str(FEATURECOUNTS_DIR / "per_sample" / "{sample}.counts.txt.summary"),
+                               sample=SAMPLES)
+        output:
+            merged  = str(FEATURECOUNTS_DIR / "gene_counts.txt"),
+            summary = str(FEATURECOUNTS_DIR / "gene_counts.txt.summary")
+        params:
+            per_sample_dir = str(FEATURECOUNTS_DIR / "per_sample")
+        log: str(LOG_DIR / "merge_featurecounts.log")
+        run:
+            command = [
+                sys.executable, str(EXACT_FC_MERGER),
+                "--per-sample-dir", str(params.per_sample_dir),
+                "--output", str(output.merged),
+                "--summary", str(output.summary),
+                "--log", str(log),
+            ]
+            for sample in SAMPLES:
+                command.extend(("--sample-id", sample))
+            subprocess.run(command, check=True)
 
 # ---------------------------------------------------------------------------
 # Rule: MultiQC

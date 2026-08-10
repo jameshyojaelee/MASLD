@@ -7,6 +7,9 @@
 #SBATCH --mem=96G
 #SBATCH --time=2:00:00
 
+echo "ERROR: merge-and-auto-launch is disabled; use bg001_remediation/merge_validate.sbatch and the separate analysis approval gate." >&2
+exit 64
+
 # =============================================================================
 # Merge parallel featureCounts batches → gene_counts.txt
 # Then submit the remaining Snakemake steps (multiqc + deseq2) and the

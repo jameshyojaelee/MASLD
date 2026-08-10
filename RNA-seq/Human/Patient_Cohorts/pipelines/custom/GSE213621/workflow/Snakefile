@@ -53,8 +53,12 @@ rule all:
         expand(FASTQC_DIR / "{sample}_1_fastqc.html", sample=SAMPLES),
         MULTIQC_DIR / "multiqc_report.html",
         expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES),
-        FEATURECOUNTS_DIR / "gene_counts.txt",
-        root / "deseq2" / "deseq2_results.rds"
+        FEATURECOUNTS_DIR / "gene_counts.txt"
+        # BG-005 (2026-08-09): deseq2_results.rds removed from the default targets.
+        # The rule below passed '~ diet', a variable that does not exist in this
+        # cohort's samplesheet, so the target could never be built and the workflow
+        # could never complete. Canonical per-study human DE is registry-driven
+        # limma-voom: analysis/integration/scripts/02_per_study_de.R.
 
 rule run_deseq2:
     input:
@@ -63,15 +67,22 @@ rule run_deseq2:
     output:
         rds=root / "deseq2" / "deseq2_results.rds",
         results_dir=directory(root / "deseq2")
-    params:
-        script="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/pipelines/custom/scripts/deseq2_analysis.R",
-        contrast="diet", # Adjust based on metadata
-        ref_level="Control" # Adjust
     threads: 1
     log: PIPELINE_LOG_DIR / "deseq2.log"
     shell:
-        "mkdir -p {output.results_dir} $(dirname {log}) && "
-        "Rscript {params.script} --counts {input.counts} --metadata {input.samplesheet} --output {output.results_dir} --design '~ diet' > {log} 2>&1"
+        # BG-005 (2026-08-09): refuse rather than run. The previous invocation passed
+        # --design '~ diet' (no such column here; the string was copied from the mouse
+        # diet pipelines) and let deseq2_analysis.R call results(dds) with no contrast,
+        # which returns DESeq2's default LAST coefficient -- an arbitrary pairwise
+        # comparison that looks plausible. No deseq2_results.rds has ever been produced.
+        "echo 'ERROR: per-dataset DESeq2 is disabled for this cohort (BG-005). "
+        "Canonical per-study human DE is limma-voom driven by the de: block in "
+        "config/human_datasets.yaml via "
+        "analysis/integration/scripts/02_per_study_de.R. To run DESeq2 deliberately, "
+        "call scripts/deseq2_analysis.R with an explicit --design and --contrast.' >&2; "
+        "exit 64"
+
+
 
 
 rule run_fastqc:
@@ -112,16 +123,10 @@ rule run_star:
         "--twopassMode Basic --quantMode GeneCounts --limitBAMsortRAM 30000000000 > {log} 2>&1"
 
 rule featurecounts:
-    input:
-        expand(STAR_OUT / "{sample}" / "{sample}.Aligned.sortedByCoord.out.bam", sample=SAMPLES)
-    output:
-        counts=FEATURECOUNTS_DIR / "gene_counts.txt",
-        summary=FEATURECOUNTS_DIR / "gene_counts.txt.summary"
-    threads: THREADS['featurecounts']
-    log: PIPELINE_LOG_DIR / "featurecounts.log"
     shell:
-        "mkdir -p {FEATURECOUNTS_DIR} $(dirname {log}) && "
-        "featureCounts -T {threads} -p -s 2 -a {GTF} -o {output.counts} {input} > {log} 2>&1"
+        "echo 'ERROR: live GSE213621 counting is disabled; use "
+        "scripts/bg001_remediation/recount_array.sbatch with a frozen BAM manifest and candidate run root.' >&2; "
+        "exit 64"
 
 rule multiqc:
     input:

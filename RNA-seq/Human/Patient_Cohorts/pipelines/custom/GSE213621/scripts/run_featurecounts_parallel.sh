@@ -8,6 +8,9 @@
 #SBATCH --time=2:00:00
 #SBATCH --array=0-19
 
+echo "ERROR: legacy canonical featureCounts batches are disabled; use bg001_remediation/recount_array.sbatch." >&2
+exit 64
+
 # =============================================================================
 # Parallel featureCounts — Array Job (20 batches of ~18 BAMs each)
 # =============================================================================
@@ -58,8 +61,8 @@ BATCH_OUT="$OUTDIR/batches/batch_${BATCH_ID}_counts.txt"
 
 featureCounts \
     -T ${SLURM_CPUS_PER_TASK} \
-    -p \
-    -s 0 \
+    -p --countReadPairs -B \
+    -s 2 \
     -a "$GTF" \
     -o "$BATCH_OUT" \
     $BATCH_BAMS

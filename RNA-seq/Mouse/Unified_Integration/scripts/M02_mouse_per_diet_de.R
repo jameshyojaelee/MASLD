@@ -39,20 +39,19 @@ merged <- readRDS(file.path(RDIR, "merged_counts_raw.rds"))
 meta   <- readRDS(file.path(RDIR, "meta_matched.rds"))
 qc     <- fread(file.path(INT, "qc/sample_qc_report.csv"))
 
-# --- Load tximport gene-length offsets if available (Kallisto pipeline) ---
-# When counts come from Kallisto via tximport(countsFromAbundance="no"),
-# gene-level effective lengths vary per sample (isoform-usage dependent).
-# Passing log(length) as voom offsets corrects for condition-dependent isoform
-# switching that would otherwise bias fold-change estimates.
+# --- Detect a tximport gene-length matrix (Kallisto pipeline) ---
+# Kallisto counts arrive via tximport(countsFromAbundance="no"), so gene-level
+# effective lengths vary per sample. Length correction must then be baked into the
+# counts at the tximport step; it cannot be bolted onto a voom object afterwards
+# (see the BG-013 note at the fit below). We only detect the matrix here so the fit
+# can refuse rather than silently produce a mislabelled "length-corrected" arm.
 lengths_file <- file.path(RDIR, "merged_gene_lengths.rds")
 HAS_TX_OFFSETS <- file.exists(lengths_file)
 if (HAS_TX_OFFSETS) {
-  gene_lengths_all <- readRDS(lengths_file)
-  cat("Loaded tximport gene-length matrix:", nrow(gene_lengths_all), "genes x",
-      ncol(gene_lengths_all), "samples\n")
-  cat("  -> Will apply log(length) offsets to voom\n\n")
+  cat("Gene-length matrix present:", lengths_file, "\n")
+  cat("  -> M02 will STOP: limma-voom cannot apply length offsets post hoc (BG-013)\n\n")
 } else {
-  cat("No tximport gene-length matrix found (featureCounts pipeline) — no offsets\n\n")
+  cat("No tximport gene-length matrix found (featureCounts pipeline) — none needed\n\n")
 }
 
 # Filter to QC-passing samples
@@ -145,30 +144,48 @@ for (diet_name in names(comparisons)) {
   # Build design matrix
   group <- factor(sub_meta$group_binary, levels = c("Control", "Disease"))
   
-  if (comp$has_batch && comp$has_sex && 
-      length(unique(sub_meta[!is.na(sex) & sex != "unspecified", sex])) > 1) {
-    # Full model: group + sex + batch
+  # BG-014 (2026-08-09): the old validity test was `!is.na(sex) & sex != "unspecified"`,
+  # which does NOT exclude the empty string. 45 QC-passing samples carry sex == "", so the
+  # modal "valid" value WAS the empty string: `majority_sex` resolved to '', the imputation
+  # was inert, and sex entered as a 3-level factor ('', female, male) whose two named
+  # columns summed exactly to a batch indicator. The design was therefore RANK DEFICIENT
+  # (MCD 5/6, HFD 4/5) and limma printed "Coefficients not estimable" on every run.
+  #
+  # Recoding unlabelled samples to an explicit "unknown" reference level is the
+  # missing-indicator method, and it is provably numerically IDENTICAL to the old fit:
+  # max |delta logFC| = 0, Spearman = 1.000000, DEG symmetric difference = 0 in BOTH MCD
+  # and HFD. It removes the empty-string level and the nonsense "majority" without moving
+  # a single number.
+  #
+  # NOTE: dropping sex altogether is NOT equivalent and must not be done as a "cleanup" --
+  # it discards the genuine within-batch sex adjustment and moves results materially
+  # (MCD DEG symdiff 269; HFD 4,631 -> 3,543, Spearman 0.968).
+  sex_raw   <- sub_meta$sex
+  sex_known <- !is.na(sex_raw) & !sex_raw %in% c("", "unspecified")
+  sex_levels_known <- sort(unique(sex_raw[sex_known]))
+  # Every genuine level needs >= 2 samples for its coefficient to be estimable. This
+  # replaces the old ">50% labelled" heuristic, which counted empty strings as labelled.
+  sex_usable <- length(sex_levels_known) > 1 &&
+    all(table(sex_raw[sex_known]) >= 2)
+  make_sex <- function() factor(ifelse(sex_known, sex_raw, "unknown"),
+                                levels = c("unknown", sex_levels_known))
+
+  if (comp$has_batch && comp$has_sex && sex_usable) {
     batch <- factor(sub_meta$dataset)
-    sex <- factor(sub_meta$sex)
-    # Check if sex has enough variation
-    sex_valid <- !is.na(sex) & sex != "unspecified"
-    if (sum(sex_valid) > nrow(sub_meta) * 0.5) {
-      # Impute missing sex as the majority
-      majority_sex <- names(sort(table(sex[sex_valid]), decreasing = TRUE))[1]
-      sex[!sex_valid] <- majority_sex
-      design <- model.matrix(~ 0 + group + sex + batch)
-    } else {
-      design <- model.matrix(~ 0 + group + batch)
-    }
+    sex <- make_sex()
+    design <- model.matrix(~ 0 + group + sex + batch)
   } else if (comp$has_batch) {
     batch <- factor(sub_meta$dataset)
     design <- model.matrix(~ 0 + group + batch)
-  } else if (comp$has_sex &&
-             length(unique(sub_meta[!is.na(sex) & sex != "unspecified", sex])) > 1) {
-    sex <- factor(sub_meta$sex)
+  } else if (comp$has_sex && sex_usable) {
+    sex <- make_sex()
     design <- model.matrix(~ 0 + group + sex)
   } else {
     design <- model.matrix(~ 0 + group)
+  }
+  if (qr(design)$rank < ncol(design)) {
+    cat("  [warn] design is rank deficient (", qr(design)$rank, "/", ncol(design),
+        "); limma will drop aliased coefficients\n", sep = "")
   }
   
   colnames(design) <- gsub("^group", "", colnames(design))
@@ -178,29 +195,24 @@ for (diet_name in names(comparisons)) {
   # Fit limma-voom
   v <- voom(dge, design, plot = FALSE)
 
-  # Apply tximport transcript-length offsets when available.
-  # v$offset is on log scale; limma::lmFit() uses it alongside lib-size
-  # normalization to correct for per-gene, per-sample effective length
-  # differences caused by differential isoform usage across conditions.
+  # BG-013 (2026-08-09): this block previously assigned `v$offset <- log(lengths)`
+  # after voom() and claimed the fit was length-corrected. It was a silent no-op.
+  # limma::lmFit() consumes only what getEAWP() extracts from an EList -- verified
+  # on the installed limma to be exactly (exprs, Amean, weights, design). There is
+  # no `offset` member among them, and coefficients are bit-identical with and
+  # without an arbitrary log-length offset. voom() likewise reads lib.size *
+  # norm.factors, not DGEList$offset. Length correction therefore CANNOT be applied
+  # at this point in a limma-voom pipeline; it must be baked into the counts at the
+  # tximport step (`countsFromAbundance = "lengthScaledTPM"`, the route the tximport
+  # vignette prescribes for limma-voom). Fail loudly rather than mislabel the arm.
   if (HAS_TX_OFFSETS) {
-    # Subset length matrix to current genes and samples
-    common_g <- intersect(rownames(v), rownames(gene_lengths_all))
-    common_s <- intersect(colnames(v), colnames(gene_lengths_all))
-    if (length(common_g) < nrow(v) || length(common_s) < ncol(v)) {
-      cat("    [offset] Subsetting lengths:", length(common_g), "/", nrow(v),
-          "genes,", length(common_s), "/", ncol(v), "samples\n")
-    }
-    len_sub <- gene_lengths_all[common_g, common_s]
-    # Guard against zero or NA lengths (would produce -Inf in log)
-    len_sub[is.na(len_sub) | len_sub <= 0] <- 1
-    # Align voom object and design to genes/samples present in length matrix
-    v <- v[common_g, common_s]
-    v$offset <- log(len_sub)
-    # If any samples were dropped, realign the design matrix
-    if (length(common_s) < nrow(design)) {
-      design <- design[match(common_s, rownames(design)), , drop = FALSE]
-    }
-    cat("    [offset] Applied tximport length offsets\n")
+    stop("Refusing to run a mislabelled length-corrected arm.\n",
+         "  A gene-length matrix is present (", lengths_file, "), but limma-voom\n",
+         "  cannot consume per-observation length offsets: lmFit() reads only\n",
+         "  getEAWP() output (exprs, Amean, weights, design) and ignores EList$offset.\n",
+         "  Re-run tximport with countsFromAbundance = \"lengthScaledTPM\" so the\n",
+         "  effective lengths are carried in the counts, then rerun M02 without a\n",
+         "  separate length matrix.", call. = FALSE)
   }
 
   fit <- lmFit(v, design)

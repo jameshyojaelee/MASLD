@@ -4,14 +4,14 @@
 # RECTANGLE VARIANT of 25_deconv_attribution_C2.R (byte-for-byte clone except
 # the deconvolution proportions source + output dirs). This exists so the
 # composition-adjusted attribution can be recomputed with Rectangle proportions
-# and compared, drop-in, against the MuSiC (c2_recount) canonical.
+# and compared, drop-in, against the MuSiC C2 raw-reference arm.
 #   ONLY differences vs 25_deconv_attribution_C2.R:
 #     (1) per-dataset proportions input:
 #           {dataset}_music_prop_weighted.tsv -> {dataset}_rectangle_proportions.tsv
 #           (same dir Analysis/Deconvolution/results/{dataset}/, same read logic)
 #     (2) output dirs: OUTDIR -> RNA-seq/results/causal_inference/rectangle/
-#                      FIGDIR -> figures/rectangle_deconv_recount/ (NEW; so the
-#                      c2_deconv_recount figures are NOT overwritten)
+#                      FIGDIR -> figures/archive/rectangle_deconv_sensitivity/
+#                      (so the C2 raw-reference figures are NOT overwritten)
 #   Everything else (model, 16-CT covariate handling, Hepatocytes-as-reference,
 #   unit-SD scaling, low-mean filter, TREAT-independent unadjusted C2 baseline,
 #   Macrophage interaction fit, thresholds, output FILENAMES incl. the legacy
@@ -35,15 +35,15 @@
 #       disease effect — corrected interpretation in §4 header)
 #   4. Run interaction DE: group_binary * Macrophages to find macrophage-
 #      dependent disease genes
-#   5. Generate 3 publication PDFs + 3 result CSVs
+#   5. Generate 3 archived diagnostic PDFs + result CSVs
 #
 # Input:  merged_dge.rds, meta_matched.rds, MuSiC deconv proportions
 # Output: results/causal_inference/deconv_attribution_scores.csv
 #         results/causal_inference/interaction_de_results.csv
 #         results/causal_inference/dream_results_unadjusted.csv
-#         figures/deconv_venn.pdf
-#         figures/deconv_attribution_heatmap.pdf
-#         figures/deconv_interaction_volcano.pdf
+#         figures/archive/rectangle_deconv_sensitivity/deconv_venn.pdf
+#         figures/archive/rectangle_deconv_sensitivity/deconv_attribution_heatmap.pdf
+#         figures/archive/rectangle_deconv_sensitivity/deconv_interaction_volcano.pdf
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({
@@ -76,7 +76,13 @@ suppressPackageStartupMessages({
 # ============================================================
 #  Paths
 # ============================================================
-BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts"
+PROJECT_ROOT <- Sys.getenv(
+  "MASLD_PROJECT_ROOT",
+  "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
+)
+source(file.path(PROJECT_ROOT, "scripts/figures/load_figure_data.R"))
+
+BASE <- file.path(PROJECT_ROOT, "RNA-seq/Human/Patient_Cohorts")
 INT  <- file.path(BASE, "analysis/integration")
 RDIR <- file.path(INT, "results/integration")
 
@@ -85,8 +91,8 @@ RDIR <- file.path(INT, "results/integration")
 # deconv_attribution_scores.csv is NOT overwritten.
 # RECTANGLE VARIANT: write to a dedicated rectangle/ subdir so the MuSiC-based
 # c2_recount outputs are NOT overwritten (drop-in comparable filenames).
-OUTDIR <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/results/causal_inference/rectangle"
-FIGDIR <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/figures/rectangle_deconv_recount"
+OUTDIR <- file.path(PROJECT_ROOT, "RNA-seq/results/causal_inference/rectangle")
+FIGDIR <- FIG_DECONV_RECT_ARCHIVE
 dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(FIGDIR, recursive = TRUE, showWarnings = FALSE)
 

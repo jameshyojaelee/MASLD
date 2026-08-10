@@ -10,6 +10,17 @@
 # Unified Mouse Integration Pipeline (M00 → M04)
 # Runs after Phase A recount completes (dependency set at submission time)
 
+# BG-012 disable (2026-08-07): this legacy wrapper runs the retired M02b before
+# M03. M02b OVERWRITES per_diet/HFD_de_results.csv with pooled Western-diet
+# content under the same canonical filename, so the M03 diet-manifest gate
+# cannot detect it (the file name remains an expected model). That silently
+# changes the canonical mouse meta-analysis. The canonical four-model wrapper
+# run_integration_4model.sh deliberately SKIPS M02b and archives per_diet first.
+echo "ERROR: run_integration_slurm.sh is retired; it runs M02b, which overwrites" >&2
+echo "       per_diet/HFD_de_results.csv with pooled Western-diet content." >&2
+echo "       Use run_integration_4model.sh (canonical 4-model MCD/HFD/CDAHFD/FPC)." >&2
+exit 64
+
 set -euo pipefail
 
 eval "$(/gpfs/commons/home/jameslee/.local/bin/micromamba shell hook --shell bash)"

@@ -19,28 +19,70 @@ PROJECT_ROOT <- Sys.getenv(
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
 BASE <- file.path(PROJECT_ROOT, "RNA-seq/Human/Patient_Cohorts")
-INT  <- file.path(BASE, "analysis/integration")
-QC   <- file.path(INT, "qc")
+SOURCE_INT <- file.path(BASE, "analysis/integration")
+RUN_ROOT <- Sys.getenv("MASLD_RUN_ROOT", "")
+REMEDIATION_MODE <- nzchar(RUN_ROOT)
+if (REMEDIATION_MODE) {
+  RUN_ROOT <- normalizePath(RUN_ROOT, mustWork = TRUE)
+  if (!file.exists(file.path(RUN_ROOT, ".bg001_candidate_root"))) {
+    stop("MASLD_RUN_ROOT lacks .bg001_candidate_root sentinel: ", RUN_ROOT)
+  }
+  forbidden <- c(
+    normalizePath(SOURCE_INT, mustWork = TRUE),
+    normalizePath(file.path(BASE, "results"), mustWork = FALSE)
+  )
+  if (RUN_ROOT %in% forbidden) stop("Refusing canonical remediation output root: ", RUN_ROOT)
+  INT <- RUN_ROOT
+} else {
+  INT <- SOURCE_INT
+}
+QC <- file.path(INT, "qc")
 dir.create(QC, recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(INT, "results/integration"), recursive = TRUE, showWarnings = FALSE)
 
 # --- Load dataset config ---
 # Count file paths are auto-derived from config so new datasets are picked up
 # automatically when added to config/human_datasets.yaml.
-cfg_path <- file.path(PROJECT_ROOT, "config/human_datasets.yaml")
+cfg_path <- Sys.getenv("MASLD_CONFIG_PATH", file.path(PROJECT_ROOT, "config/human_datasets.yaml"))
 if (!file.exists(cfg_path)) stop("Config not found: ", cfg_path)
 cfg <- yaml.load_file(cfg_path)$datasets
 
 # --- Load metadata ---
-meta <- fread(file.path(INT, "metadata/unified_metadata.csv"), na.strings = c("", "NA"))
+metadata_path <- Sys.getenv("MASLD_METADATA_PATH", file.path(SOURCE_INT, "metadata/unified_metadata.csv"))
+meta <- fread(metadata_path, na.strings = c("", "NA"))
 cat("Loaded metadata:", nrow(meta), "samples\n")
 
 # --- Load count matrices (auto-derived from config) ---
 count_files <- lapply(cfg, function(ds) file.path(BASE, ds$counts_path))
 names(count_files) <- names(cfg)
 
+count_overrides_path <- Sys.getenv("MASLD_COUNT_OVERRIDES", "")
+if (nzchar(count_overrides_path)) {
+  overrides <- fread(count_overrides_path)
+  required_override_cols <- c("dataset", "count_path")
+  if (!all(required_override_cols %in% names(overrides))) {
+    stop("MASLD_COUNT_OVERRIDES requires columns: ", paste(required_override_cols, collapse = ", "))
+  }
+  if (anyDuplicated(overrides$dataset) || any(!overrides$dataset %in% names(cfg))) {
+    stop("Count overrides contain duplicate or unknown datasets")
+  }
+  if (any(!grepl("^/", overrides$count_path)) || any(!file.exists(overrides$count_path))) {
+    stop("Every count override must be an existing absolute path")
+  }
+  for (i in seq_len(nrow(overrides))) count_files[[overrides$dataset[[i]]]] <- overrides$count_path[[i]]
+}
+if (REMEDIATION_MODE) {
+  if (!exists("overrides") || !setequal(overrides$dataset, names(cfg))) {
+    stop("Remediation mode requires frozen overrides for every active dataset")
+  }
+}
+
 # Keep only datasets present in metadata (skip if counts not yet generated)
 datasets_in_meta <- unique(meta$dataset)
 count_files <- count_files[names(count_files) %in% datasets_in_meta]
+if (REMEDIATION_MODE && any(!file.exists(unlist(count_files, use.names = FALSE)))) {
+  stop("Remediation mode requires every effective count matrix to exist")
+}
 
 cat("Datasets to load (in metadata):", paste(names(count_files), collapse = ", "), "\n")
 
@@ -54,6 +96,12 @@ load_counts <- function(path) {
   rownames(counts_mat) <- genes
   # Clean column names — featureCounts uses full BAM paths as column names
   colnames(counts_mat) <- gsub(".*/", "", gsub("\\.Aligned\\.sortedByCoord\\.out\\.bam$", "", colnames(counts_mat)))
+  if (anyDuplicated(genes) || anyDuplicated(colnames(counts_mat))) {
+    stop("Duplicate gene or cleaned sample ID in count matrix: ", path)
+  }
+  if (REMEDIATION_MODE && nrow(counts_mat) != 86369L) {
+    stop("Remediation count matrix does not contain exactly 86,369 genes: ", path)
+  }
   counts_mat
 }
 
@@ -75,6 +123,7 @@ common_genes <- Reduce(intersect, lapply(counts_list, rownames))
 cat("Common genes across datasets:", length(common_genes), "\n")
 
 merged <- do.call(cbind, lapply(counts_list, function(m) m[common_genes, , drop = FALSE]))
+if (anyDuplicated(colnames(merged))) stop("Merged count matrices contain duplicate sample IDs")
 
 # Match metadata to count columns
 sample_ids_in_counts <- colnames(merged)
@@ -83,6 +132,51 @@ cat("Samples in counts AND metadata:", nrow(meta_matched), "\n")
 
 # Align
 merged <- merged[, meta_matched$sample_id]
+
+if (REMEDIATION_MODE) {
+  provenance_dir <- file.path(RUN_ROOT, "provenance")
+  dir.create(provenance_dir, recursive = TRUE, showWarnings = FALSE)
+  effective_sources <- data.table(
+    dataset = names(count_files),
+    count_path = unlist(count_files, use.names = FALSE),
+    overridden = names(count_files) %in% if (exists("overrides")) overrides$dataset else character()
+  )
+  effective_sources[, size_bytes := file.info(count_path)$size]
+  effective_sources[, mtime_utc := format(file.info(count_path)$mtime, tz = "UTC", usetz = TRUE)]
+  hash_file <- function(path) {
+    output <- system2("sha256sum", path, stdout = TRUE, stderr = TRUE)
+    status <- attr(output, "status")
+    if (!is.null(status) && status != 0L) stop("sha256sum failed for ", path)
+    strsplit(output[[1]], "[[:space:]]+")[[1]][[1]]
+  }
+  effective_sources[, sha256 := vapply(count_path, hash_file, character(1))]
+  fwrite(effective_sources, file.path(provenance_dir, "effective_count_sources.tsv"), sep = "\t")
+}
+
+qc_mode <- Sys.getenv("MASLD_QC_MODE", "recompute")
+if (!qc_mode %in% c("locked", "recompute")) stop("MASLD_QC_MODE must be locked or recompute")
+if (qc_mode == "locked") {
+  if (!REMEDIATION_MODE) stop("MASLD_QC_MODE=locked is remediation-only")
+  locked_qc_path <- Sys.getenv("MASLD_LOCKED_QC", file.path(SOURCE_INT, "qc/sample_qc_report.csv"))
+  locked_meta_path <- Sys.getenv("MASLD_LOCKED_META", file.path(SOURCE_INT, "results/integration/meta_matched.rds"))
+  locked_qc <- fread(locked_qc_path)
+  locked_meta <- as.data.table(readRDS(locked_meta_path))
+  if (!setequal(colnames(merged), locked_meta$sample_id) || !setequal(colnames(merged), locked_qc$sample_id)) {
+    stop("Locked QC/meta sample set does not match effective count matrices")
+  }
+  locked_meta <- locked_meta[match(colnames(merged), sample_id)]
+  locked_qc <- locked_qc[match(colnames(merged), sample_id)]
+  if (anyNA(locked_meta$sample_id) || anyNA(locked_qc$sample_id)) stop("Locked sample alignment failed")
+  locked_qc[, canonical_total_counts := total_counts]
+  locked_qc[, candidate_total_counts := as.numeric(colSums(merged))[match(sample_id, colnames(merged))]]
+  dir.create(file.path(INT, "results/integration"), recursive = TRUE, showWarnings = FALSE)
+  fwrite(locked_qc, file.path(QC, "sample_qc_report.csv"))
+  saveRDS(merged, file.path(INT, "results/integration/merged_counts_raw.rds"))
+  saveRDS(locked_meta, file.path(INT, "results/integration/meta_matched.rds"))
+  writeLines(capture.output(sessionInfo()), file.path(QC, "session_info.txt"))
+  cat("Locked QC/meta preserved; candidate count totals recorded.\n")
+  quit(save = "no", status = 0L)
+}
 
 # ===== 1. SEX CHECK =====
 cat("\n===== SEX CHECK =====\n")
@@ -313,4 +407,5 @@ cat("  sex_source='inferred_kmeans':", sum(meta_matched$sex_source == "inferred_
 # Also save the merged count matrix and matched metadata for downstream use
 saveRDS(merged, file.path(INT, "results/integration/merged_counts_raw.rds"))
 saveRDS(meta_matched, file.path(INT, "results/integration/meta_matched.rds"))
+if (REMEDIATION_MODE) writeLines(capture.output(sessionInfo()), file.path(QC, "session_info.txt"))
 cat("Saved merged counts and matched metadata as RDS\n")

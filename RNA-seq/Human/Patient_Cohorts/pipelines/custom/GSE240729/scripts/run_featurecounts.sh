@@ -6,6 +6,9 @@
 #SBATCH --time=12:00:00
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/Human/Patient_Cohorts/pipelines/custom/GSE240729/logs/featurecounts_%j.log
 
+echo "ERROR: direct live recount is disabled; use scripts/bg001_remediation/recount_array.sbatch with an immutable run root." >&2
+exit 64
+
 set -euo pipefail
 
 eval "$(micromamba shell hook -s bash)"
@@ -31,8 +34,8 @@ echo "Output: ${OUTDIR}/gene_counts.txt"
 
 featureCounts \
     -T 8 \
-    -p --countReadPairs \
-    -s 0 \
+    -p --countReadPairs -B \
+    -s 2 \
     -a "${GTF}" \
     -o "${OUTDIR}/gene_counts.txt" \
     "${BAMS[@]}"

@@ -4,9 +4,12 @@
 #SBATCH --qos=nslab
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --time=4:00:00
+#SBATCH --time=48:00:00
 #SBATCH --output=logs/featurecounts_s2/GSE130970_%j.out
 #SBATCH --error=logs/featurecounts_s2/GSE130970_%j.err
+
+echo "ERROR: direct canonical recount is disabled; use scripts/bg001_remediation/recount_array.sbatch with an immutable run root." >&2
+exit 64
 
 set -eo pipefail
 
@@ -42,7 +45,7 @@ echo "Found ${N_BAMS} BAM files"
 # Run featureCounts — PE mode (-p -B -s 2 reverse-stranded)
 featureCounts \
     -T 8 \
-    -p -B \
+    -p --countReadPairs -B \
     -s 2 \
     -a "${GTF}" \
     -o "${OUT_FILE}" \

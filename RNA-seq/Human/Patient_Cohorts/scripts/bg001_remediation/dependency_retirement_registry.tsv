@@ -1,0 +1,10 @@
+path_glob	reason
+RNA-seq/Human/Patient_Cohorts/pipelines/custom/PRJNA512027/**	PRJNA512027 is retired/noncanonical for the L0/S0 preparation confound
+RNA-seq/Human/Patient_Cohorts/scripts/featurecounts_s2/*PRJNA512027*	PRJNA512027 counting launchers are retired and fail closed
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/*dream*	dream is a retired sensitivity method, not the canonical pooled producer
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/sex_v3/*dream*	dream sex analyses are retired/sensitivity-only
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/run_full_5cohort_slurm.sh	stale wrapper omits canonical 05h and invokes retired dream
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/run_6cohort_integration_slurm.sh	retired six-cohort integration wrapper
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/run_10cohort_parallel.sh	retired ten-cohort integration wrapper
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/run_10cohort_integration.sh	retired ten-cohort integration wrapper
+RNA-seq/Human/Patient_Cohorts/analysis/integration/scripts/run_staging_classifier.sbatch	legacy staging classifier is retired
