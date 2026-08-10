@@ -21,7 +21,9 @@ suppressPackageStartupMessages({
 
 FM_DIR    <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/GWAS/finemapping"
 EQTL_DIR  <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/data/broadaway_eqtl"
-OUTPUT_DIR <- file.path(FM_DIR, "results/eqtl_susie")
+# Env-overridable so a regenerated set can be written side-by-side instead of
+# overwriting the RDS that canonical COLOC currently reads.
+OUTPUT_DIR <- Sys.getenv("EQTL_SUSIE_DIR", unset = file.path(FM_DIR, "results/eqtl_susie"))
 
 EQTL_N        <- 1183L
 SUSIE_L        <- 10L
@@ -243,6 +245,18 @@ for (i in start_idx:n_genes) {
   }
 
   # ---- (m) Save RDS ----
+  # Stamp the LD provenance into the object.  coloc.susie() assumes the GWAS-side
+  # and eQTL-side LBF matrices derive from a COMMON LD reference; the previous
+  # fits (2026-04-10/12) predate the production PolyFun layout (2026-04-28) and
+  # recorded nothing, so the mismatch was undetectable. Extra list elements are
+  # ignored by susieR/coloc.
+  s$ld_provenance <- list(
+    ld_panel      = Sys.getenv("LD_PANEL", unset = "polyfun"),
+    ld_base_dir   = get_ld_base_dir("EUR"),
+    ld_regularize = LD_REGULARIZE,
+    generated_at_utc = format(Sys.time(), tz = "UTC", usetz = TRUE),
+    script        = "08_run_eqtl_susie.R"
+  )
   saveRDS(s, rds_path)
 
   # ---- (n) Append to summary log ----

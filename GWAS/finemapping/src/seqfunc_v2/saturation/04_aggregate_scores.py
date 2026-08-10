@@ -79,6 +79,23 @@ def main():
                          "n_scored":len(observed),"status":"PASS","score_sha256":sha256(result)})
     if len(score_by_id)!=sum(int(x["n_variants"]) for x in shards): raise SystemExit("global unique score count failure")
 
+    # 1503 was hardcoded here.  It is window x 3 substitutions per position and
+    # is independent of the anchor count, so it would NOT have aborted on a
+    # changed anchor set -- but it silently encodes the window, so derive it.
+    seq_contract=read_json(seq/"sequence_contract.json")
+    window=int(seq_contract.get("sequence_window") or seq_contract.get("window_bp") or 501)
+    expected_per_target=window*3
+    # Integrity: the shards must have been generated from the anchor manifest
+    # that is on disk now.  Nothing verified this before.
+    anchor_manifest=Path(str(seq).replace("/sequences","/anchors"))/"anchor_manifest.tsv"
+    recorded=seq_contract.get("anchor_manifest_sha256")
+    if recorded and anchor_manifest.is_file():
+        actual=sha256(anchor_manifest)
+        if actual!=recorded:
+            raise SystemExit(
+                "anchor_manifest.tsv has changed since the shards were generated "
+                f"({actual[:12]} != {recorded[:12]}); re-run 02_generate_substitutions.py")
+
     metric_names=["count_effect_signed","count_effect_abs","profile_jsd"]
     global_sorted={m:sorted(x[m] for x in score_by_id.values()) for m in metric_names}
     by_target=defaultdict(list)
@@ -97,7 +114,7 @@ def main():
         writer=csv.DictWriter(handle,fieldnames=detail_fields,delimiter="\t");writer.writeheader()
         for target in sorted(by_target,key=lambda x:int(by_target[x][0]["anchor_rank"])):
             rows=by_target[target]
-            if len(rows)!=1503: raise SystemExit(f"target {target} has {len(rows)} rather than 1503 substitutions")
+            if len(rows)!=expected_per_target: raise SystemExit(f"target {target} has {len(rows)} rather than {expected_per_target} substitutions")
             vals=[]
             for row in rows:
                 z=dict(row); z.update(score_by_id[row["genomic_variant_id"]]); vals.append(z)

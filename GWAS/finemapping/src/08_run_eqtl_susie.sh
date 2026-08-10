@@ -18,6 +18,11 @@ mkdir -p logs
 eval "$(micromamba shell hook -s bash)"
 micromamba activate rnaseq
 
+# Pin the LD panel explicitly.  Without this the fits used whatever
+# finemapping_functions.R defaulted to at run time, which is how the
+# 2026-04 fits ended up on a retired layout with no record of it.
+export LD_PANEL="${LD_PANEL:-polyfun}"
+echo "LD_PANEL=${LD_PANEL}  EQTL_SUSIE_DIR=${EQTL_SUSIE_DIR:-<default>}"
 export CHR=${SLURM_ARRAY_TASK_ID}
 echo "Running eQTL SuSiE for chr${CHR}"
 echo "Start: $(date)"

@@ -2,8 +2,14 @@
 #SBATCH --job-name=SuSiE
 #SBATCH --cpus-per-task=1
 #SBATCH --time=72:00:00
-#SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/GWAS/finemapping/runs/uniform35_v2_2026-07-13/logs/susie_%A_%a.out
-#SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/GWAS/finemapping/runs/uniform35_v2_2026-07-13/logs/susie_%A_%a.err
+# Log paths are RELATIVE and resolved against the submission working
+# directory, which submit_uniform35_v2.sh sets to $UNIFORM35_RUN_ROOT.
+# They were absolute paths into runs/uniform35_v2_2026-07-13/logs/, which
+# SLURM evaluates before the script body exports the env var -- so a v3 run
+# silently wrote its logs into the v2 run directory.  The submit script also
+# passes --output/--error explicitly, which overrides these.
+#SBATCH --output=logs/susie_%A_%a.out
+#SBATCH --error=logs/susie_%A_%a.err
 
 set -euo pipefail
 

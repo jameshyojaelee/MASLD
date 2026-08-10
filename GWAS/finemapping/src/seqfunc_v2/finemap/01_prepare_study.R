@@ -24,6 +24,13 @@ ss <- fread(study$sumstats_abs, na.strings = c("", "NA", "NaN", "Inf", "-Inf"), 
 required <- c("chromosome", "position", "allele1", "allele2", "beta", "se", "pval")
 assert_true(all(required %in% names(ss)), "Summary-statistic schema mismatch for %s", study$study_name)
 
+# `af` is carried through as a mandatory column that MAY be NA: three studies in
+# the portfolio have no allele frequency in any on-disk source, and those rely on
+# the study strand certificate instead.  Sources are routed here by
+# config/gwas_af_sources.tsv (built by 00b_build_study_af.R).
+if (!"af" %in% names(ss)) ss[, af := NA_real_] else ss[, af := suppressWarnings(as.numeric(af))]
+ss[!is.finite(af) | af < 0 | af > 1, af := NA_real_]
+
 ss[, chromosome := normalize_chr(chromosome)]
 ss[, position := suppressWarnings(as.integer(position))]
 ss[, `:=`(
@@ -41,7 +48,7 @@ setorder(ss, variant_key, pval)
 ss <- ss[!duplicated(variant_key)]
 
 signals <- ss[pval < GWS_P, .(
-  chromosome, position, allele1, allele2, beta, se, pval, variant_key
+  chromosome, position, allele1, allele2, beta, se, pval, variant_key, af
 )]
 setorder(signals, chromosome, position, pval)
 
@@ -68,6 +75,23 @@ blocks <- blocks[, .(
   chromosome = as.integer(chr), block_start = as.integer(start), block_stop = as.integer(stop),
   ancestry, ld_panel_id, ld_panel_n, block_prefix, bim_exists, ld_exists
 )]
+study_ld_panel <- as.character(blocks$ld_panel_id[[1L]])
+assert_true(uniqueN(blocks$ld_panel_id) == 1L,
+            "%s maps to more than one LD panel", study$study_name)
+# Strand certificate: derived from NON-palindromic SNVs against the panel AF
+# sidecar, so it is independent of the palindrome resolution it later supports.
+cert <- compute_strand_certificate(ss, study_ld_panel)
+cat(sprintf("  strand certificate: %s (same=%d opp=%d, opp_fraction=%.2e)\n",
+            cert$strand_certificate, cert$n_same, cert$n_opp, cert$opp_fraction))
+immutable_fwrite(data.table(
+  study_index = study_index, study_name = study$study_name,
+  ld_panel_id = study_ld_panel, strand_certificate = cert$strand_certificate,
+  n_same = cert$n_same, n_opp = cert$n_opp, opp_fraction = cert$opp_fraction,
+  n_informative = cert$n_informative,
+  af_present = sum(!is.na(ss$af)) > 0L,
+  af_na_fraction = mean(is.na(ss$af))
+), file.path(fragment_dir, sprintf("study_%02d_strand.tsv", study_index)))
+
 blocks[, `:=`(query_start = block_start, query_stop = block_stop - 1L)]
 signal_ranges <- signals[, .(chromosome, query_start = position, query_stop = position, signal_row = .I)]
 setkey(blocks, chromosome, query_start, query_stop)
@@ -103,7 +127,7 @@ for (i in seq_len(nrow(locus_defs))) {
   locus_id <- sprintf("%s__chr%d__%d_%d", study$study_name, loc$chromosome, loc$block_start, loc$block_stop)
   locus_ss <- ss[
     chromosome == loc$chromosome & position >= loc$block_start & position < loc$block_stop,
-    .(chromosome, position, allele1, allele2, beta, se, pval, variant_key)
+    .(chromosome, position, allele1, allele2, beta, se, pval, variant_key, af)
   ]
   setorder(locus_ss, position, allele1, allele2)
   ss_path <- file.path(summary_dir, paste0(locus_id, ".tsv.gz"))

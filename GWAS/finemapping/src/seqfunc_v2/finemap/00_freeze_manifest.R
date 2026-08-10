@@ -38,10 +38,22 @@ observed_tier <- table(manifest$tier)
 assert_true(identical(as.integer(observed_tier[names(expected_tier)]), as.integer(expected_tier)),
             "Tier count mismatch; observed: %s", paste(names(observed_tier), observed_tier, collapse = ", "))
 
+# The shipped 1000G `.ld` files were built with `plink --r square`, whose
+# estimator is not a Gram matrix and is indefinite: measured minimum eigenvalue
+# -0.189664 on an AFR block, requiring ridge 0.300 and thereby excluding EVERY
+# AFR/AMR/SAS locus from anchor eligibility.  Rebuilding the same genotypes as a
+# mean-imputed dosage correlation gives -0.000000 and ridge 0.001 on all 219
+# blocks.  Set LD_1KG_SUFFIX=_gram to use the rebuilt panels (00c_rebuild_1kg_ld.R).
+# Default is empty so existing runs are unaffected, and the originals stay in
+# place because canonical COLOC shares them.
+ld_1kg_suffix <- Sys.getenv("LD_1KG_SUFFIX", unset = "")
 panel_dir <- c(
-  EUR = "polyfun_eur", AFR = "1kg_afr", AMR = "1kg_amr",
-  EAS = "1kg_eas", SAS = "1kg_sas"
+  EUR = "polyfun_eur",
+  AFR = paste0("1kg_afr", ld_1kg_suffix), AMR = paste0("1kg_amr", ld_1kg_suffix),
+  EAS = paste0("1kg_eas", ld_1kg_suffix), SAS = paste0("1kg_sas", ld_1kg_suffix)
 )
+cat(sprintf("1000G LD construction: %s\n",
+            if (nzchar(ld_1kg_suffix)) "mean-imputed Gram (rebuilt)" else "as shipped (plink --r square)"))
 panel_id <- c(
   EUR = "polyfun_ukbb_eur_337k", AFR = "1kg_phase3_afr",
   AMR = "1kg_phase3_amr", EAS = "1kg_phase3_eas", SAS = "1kg_phase3_sas"
@@ -50,6 +62,30 @@ panel_n <- c(EUR = 337000L, AFR = 661L, AMR = 347L, EAS = 504L, SAS = 489L)
 
 manifest[, study_index := .I]
 manifest[, sumstats_abs := normalizePath(file.path(FM_ROOT, sumstats_path), mustWork = TRUE)]
+
+# Route to the allele-frequency-augmented copies where they exist.  These are
+# LEFT-JOIN products of the registry files (00b_build_study_af.R), so the seven
+# core columns are unchanged by construction and `data/sumstats/` -- which the
+# canonical COLOC pipeline reads -- is never touched.  The override is optional:
+# without it the run still proceeds, with palindromes resolved by the study
+# strand certificate alone.
+af_sources_path <- file.path(FM_ROOT, "config", "gwas_af_sources.tsv")
+manifest[, af_source_mode := NA_character_]
+manifest[, af_coverage := NA_real_]
+if (file.exists(af_sources_path)) {
+  af_src <- fread(af_sources_path)
+  assert_true(all(c("study_name", "af_sumstats_path", "mode") %in% names(af_src)),
+              "gwas_af_sources.tsv schema mismatch")
+  af_src <- af_src[file.exists(af_sumstats_path)]
+  manifest[af_src, on = "study_name",
+           `:=`(sumstats_abs = i.af_sumstats_path, af_source_mode = i.mode,
+                af_coverage = i.af_coverage)]
+  cat(sprintf("AF override applied to %d/%d studies\n",
+              sum(!is.na(manifest$af_source_mode)), nrow(manifest)))
+} else {
+  cat("No gwas_af_sources.tsv found; proceeding without allele frequencies\n")
+}
+assert_true(all(file.exists(manifest$sumstats_abs)), "An AF-augmented sumstats path is missing")
 manifest[, source_leads_abs := normalizePath(file.path(FM_ROOT, leadsnps_path), mustWork = TRUE)]
 manifest[, ld_panel_id_v2 := unname(panel_id[ancestry])]
 manifest[, ld_panel_n_v2 := unname(panel_n[ancestry])]
@@ -67,7 +103,8 @@ manifest_cols <- c(
   "study_index", "study_name", "trait", "tier", "tier_label", "placement",
   "ancestry", "trait_type", "N_tot", "N_cases", "sumstats_abs", "sumstats_sha256",
   "source_leads_abs", "source_leads_sha256", "primary_locus_source", "genome_build",
-  "ld_panel_id_v2", "ld_panel_n_v2", "ld_panel_n_registry", "ld_root", "block_manifest", "block_manifest_sha256"
+  "ld_panel_id_v2", "ld_panel_n_v2", "ld_panel_n_registry", "ld_root", "block_manifest", "block_manifest_sha256",
+  "af_source_mode", "af_coverage"
 )
 manifest <- manifest[, ..manifest_cols]
 
@@ -106,6 +143,8 @@ provenance <- list(
   }),
   counts = list(studies = nrow(manifest), tier1 = sum(manifest$tier == 1L), tier2 = sum(manifest$tier == 2L)),
   panel_size_note = "AFR registry metadata says 660; v2 freezes 661 observed .fam/sample rows. EUR 337000 is PolyFun/UKBB metadata.",
+  ld_1kg_construction = if (nzchar(ld_1kg_suffix)) "mean_imputed_gram_matrix" else "plink_r_square_as_shipped",
+  ld_1kg_suffix = ld_1kg_suffix,
   note = "Standalone uniform-prior SuSiE sensitivity branch; no canonical promotion."
 )
 immutable_json(provenance, file.path(RUN_ROOT, "config", "provenance.json"))

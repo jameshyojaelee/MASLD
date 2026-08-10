@@ -60,10 +60,22 @@ def main() -> None:
         default=Path(os.environ.get("MASLD_PROJECT_ROOT", Path(__file__).resolve().parents[4])),
     )
     parser.add_argument("--release-id", default=RELEASE_ID)
+    parser.add_argument("--finemap-root", type=Path, default=None)
+    parser.add_argument("--saturation-root", type=Path, default=None)
+    parser.add_argument("--chrombpnet-root", type=Path, default=None)
+    parser.add_argument("--force", action="store_true",
+                        help="overwrite an existing release directory (destroys a frozen artifact)")
     args = parser.parse_args()
     root = args.root.resolve()
     fm = root / "GWAS/finemapping"
     out = fm / "results/seqfunc/releases" / args.release_id
+    # exist_ok=True meant re-running with an existing id silently overwrote that
+    # release's manifests.  Frozen releases stay authoritative for their name.
+    if out.exists() and not args.force:
+        raise SystemExit(
+            f"Release {args.release_id} already exists at {out}. "
+            "Choose a new --release-id, or pass --force to overwrite a frozen artifact."
+        )
     out.mkdir(parents=True, exist_ok=True)
 
     tier_path = fm / "config/gwas_trait_tier.tsv"
@@ -188,11 +200,16 @@ def main() -> None:
         "chrombpnet_fold_type": "chromosome_heldout_not_donor_heldout",
         "second_seed_requires_user_review": True,
         "paths": {
-            "finemap": str(fm / "runs/uniform35_v2_2026-07-13"),
+            # Env/CLI aware.  This was a hardcoded v2 path, so a release frozen
+            # after a rerun silently pointed at the OLD finemapping run.
+            "finemap": str(args.finemap_root or Path(os.environ.get(
+                "UNIFORM35_RUN_ROOT", fm / "runs/uniform35_v2_2026-07-13"))),
             "splicing": str(fm / "results/seqfunc/disease_splicing/joint_v2"),
             "mpra": str(fm / "results/seqfunc/mpra_benchmark/v2"),
-            "chrombpnet": str(fm / "results/seqfunc/adult_liver_chrombpnet/hepatocyte_5fold_v2"),
-            "saturation": str(fm / "results/seqfunc/haplotype_saturation/v2"),
+            "chrombpnet": str(args.chrombpnet_root or Path(os.environ.get(
+                "ADULT_CHROMBPNET_ROOT", fm / "results/seqfunc/adult_liver_chrombpnet/hepatocyte_5fold_v2"))),
+            "saturation": str(args.saturation_root or Path(os.environ.get(
+                "SATURATION_V2_ROOT", fm / "results/seqfunc/haplotype_saturation/v2"))),
             "variant_to_gene": str(fm / "results/seqfunc/variant_to_gene/v2"),
         },
     }

@@ -33,14 +33,18 @@ add_check("unique_study_blocks", !anyDuplicated(loci[, .(study_name, chromosome,
 add_check("all_loci_accounted", nrow(status) == nrow(loci) && all(status$status %in% c(terminal_statuses, "missing")),
           "hard", sprintf("status=%d expected=%d", nrow(status), nrow(loci)))
 add_check("no_silent_missing", !any(status$status == "missing"), "hard", sum(status$status == "missing"))
-# A non-positive-definite source LD matrix is an explicit, expected terminal
-# substrate limitation under the frozen 1e-3 ridge contract; it must never be
-# silently repaired or treated as a completed locus. Unexpected model failures
-# remain hard pipeline failures.
 add_check("no_model_failures", !any(status$status == "model_failure"), "hard",
           sum(status$status == "model_failure"))
-add_check("ld_failures_explicit", TRUE, "report",
-          sprintf("%d explicit terminal LD failures", sum(status$status == "ld_failure")))
+# Previously this was `add_check("ld_failures_explicit", TRUE, "report", ...)` --
+# hardcoded TRUE at report severity, rationalised as an "expected terminal
+# substrate limitation under the frozen 1e-3 ridge contract".  That comment is
+# exactly what let a 19% ridge-failure rate ship as a passing run.  With the
+# escalating ridge ladder a non-PD matrix is now a genuine outlier, so this is a
+# hard budget instead of a tautology.
+n_ld_fail <- sum(status$status == "ld_failure")
+add_check("ld_failures_within_budget", n_ld_fail <= MAX_LD_FAILURE_FRACTION * nrow(status), "hard",
+          sprintf("%d/%d = %.3f (max %.3f)", n_ld_fail, nrow(status),
+                  n_ld_fail / nrow(status), MAX_LD_FAILURE_FRACTION))
 add_check("convergence", !any(status$status == "nonconverged"), "release", sum(status$status == "nonconverged"))
 add_check("gws_signal_accounting",
           sum(status$n_gws_variants) == sum(status$n_gws_positionally_represented + status$n_gws_positionally_unrepresented),
@@ -75,6 +79,109 @@ for (s in c("MVP_ALT_EUR", "MVP_AST_EUR", "MVP_NAFLD_EUR")) {
   add_check(paste0("terminal_coverage_", s), nrow(x) == 1L && x$expected_loci > 0L && x$terminal_loci == x$expected_loci,
             "hard", if (nrow(x)) sprintf("%d/%d", x$terminal_loci, x$expected_loci) else "absent")
 }
+
+# ---------------------------------------------------------------------------
+# Yield gates.
+#
+# Every check above is structural: manifest shape, accounting identities, and
+# per-locus properties that only apply to loci which actually completed.  None
+# of them asks whether the run produced anything, which is why the v2 run
+# self-reported pipeline_complete=true having modelled 17 of 1,950 loci.
+# ---------------------------------------------------------------------------
+# Tolerate a locus_summary written by an older aggregate (its absence of the v3
+# columns is itself a hard failure, below) so the yield checks that CAN be
+# evaluated still run instead of the audit crashing.
+scol <- function(nm, default = NA) if (nm %in% names(status)) status[[nm]] else rep(default, nrow(status))
+v3_cols <- c("ridge_lambda", "ridge_severe", "n_gws", "n_gws_matched",
+             "n_gws_absent_from_panel", "n_gws_allele_mismatch",
+             "n_gws_unresolvable_palindrome", "n_gws_removed_nonfinite",
+             "n_palindromic_candidates", "n_palindromic_resolved", "n_strand_conflicts",
+             "n_af_letters_tested", "n_af_letters_agree", "study_strand_certificate")
+missing_cols <- setdiff(v3_cols, names(status))
+add_check("locus_summary_schema_current", length(missing_cols) == 0L, "hard",
+          if (length(missing_cols)) paste("missing:", paste(missing_cols, collapse = ",")) else "all v3 columns present")
+
+n_loci <- nrow(status)
+n_modelled <- sum(status$status %in% c("completed", "nonconverged"))
+completion_rate <- if (n_loci) n_modelled / n_loci else 0
+add_check("terminal_completion_rate", completion_rate >= MIN_COMPLETION_RATE, "hard",
+          sprintf("%d/%d = %.3f (min %.2f)", n_modelled, n_loci, completion_rate, MIN_COMPLETION_RATE))
+
+# No single non-completing status may dominate.  A mass failure concentrated in
+# one mode is the signature of a pipeline defect, not of difficult substrate.
+fail_modes <- status[!status %in% c("completed", "nonconverged"), .N, by = status]
+worst_mode <- if (nrow(fail_modes)) fail_modes[which.max(N)] else data.table(status = NA_character_, N = 0L)
+add_check("no_mass_single_failure_mode",
+          worst_mode$N <= MAX_SINGLE_FAILURE_FRACTION * n_loci, "hard",
+          sprintf("%s=%d/%d = %.3f (max %.2f)", worst_mode$status, worst_mode$N, n_loci,
+                  worst_mode$N / n_loci, MAX_SINGLE_FAILURE_FRACTION))
+
+# Tier-1 is the disease substrate the campaign exists to characterise.  Its
+# collapse is the specific failure that produced the retired "zero tier-1 loci"
+# claim, so it gets its own gate rather than being averaged away.
+t1 <- status[tier == 1L]
+t1_rate <- if (nrow(t1)) sum(t1$status %in% c("completed", "nonconverged")) / nrow(t1) else 0
+add_check("tier1_completion",
+          nrow(t1) > 0L && sum(t1$status == "completed") >= 1L && t1_rate >= MIN_TIER1_COMPLETION_RATE, "hard",
+          sprintf("%d completed of %d tier-1 loci; rate %.3f (min %.2f)",
+                  sum(t1$status == "completed"), nrow(t1), t1_rate, MIN_TIER1_COMPLETION_RATE))
+
+# A study with real power must not come back completely empty.
+empty_studies <- study_summary[expected_loci >= 5L & completed == 0L, study_name]
+add_check("study_completion_floor", length(empty_studies) == 0L, "hard",
+          if (length(empty_studies)) paste(empty_studies, collapse = ",") else "no study with >=5 loci is empty")
+
+# Every GWS variant carries exactly one reason code.
+acc <- status[!is.na(scol("n_gws"))]
+if (nrow(acc)) {
+  parts <- acc$n_gws_matched + acc$n_gws_absent_from_panel + acc$n_gws_allele_mismatch +
+    acc$n_gws_unresolvable_palindrome + acc$n_gws_removed_nonfinite
+  bad <- sum(parts != acc$n_gws, na.rm = TRUE)
+  add_check("gws_resolution_accounting", bad == 0L, "hard",
+            sprintf("%d/%d loci where the five reason codes do not sum to n_gws", bad, nrow(acc)))
+}
+
+# Inversion gate.  On non-palindromic variants the orientation is known from
+# letters, so this comparison is not circular; an inverted panel AF sidecar
+# collapses it from ~1.000 to ~0.000.
+tested <- sum(scol("n_af_letters_tested"), na.rm = TRUE)
+agreed <- sum(scol("n_af_letters_agree"), na.rm = TRUE)
+af_rate <- if (tested > 0L) agreed / tested else NA_real_
+add_check("af_orientation_ground_truth",
+          is.na(af_rate) || af_rate >= MIN_AF_LETTERS_AGREEMENT, "hard",
+          if (is.na(af_rate)) "no AF available on either side; certificate-only run"
+          else sprintf("%d/%d = %.5f (min %.3f)", agreed, tested, af_rate, MIN_AF_LETTERS_AGREEMENT))
+
+# Every study contributing loci must have certified a strand.
+cert <- scol("study_strand_certificate", NA_character_)
+modelled_idx <- status$status %in% c("completed", "nonconverged")
+cert_missing <- unique(status$study_name[modelled_idx & (is.na(cert) | cert == "indeterminate")])
+add_check("strand_certificates_present", length(cert_missing) == 0L, "hard",
+          if (length(cert_missing)) paste(cert_missing, collapse = ",") else "all contributing studies certified")
+
+rl <- scol("ridge_lambda", NA_real_)[modelled_idx]
+add_check("ridge_lambda_recorded",
+          length(rl) == 0L || all(is.finite(rl)), "hard",
+          sprintf("%d modelled loci without a finite ridge_lambda", sum(!is.finite(rl))))
+
+# A truncated check list must never be able to pass vacuously.
+add_check("checks_present", length(checks) >= 20L, "hard", sprintf("%d checks", length(checks) + 1L))
+
+# --- release-severity: reported, not fatal ---------------------------------
+pal_cand <- sum(scol("n_palindromic_candidates"), na.rm = TRUE)
+pal_res <- sum(scol("n_palindromic_resolved"), na.rm = TRUE)
+add_check("palindrome_resolution_rate",
+          pal_cand == 0L || pal_res / pal_cand >= MIN_PALINDROME_RESOLUTION_RATE, "release",
+          sprintf("%d/%d = %s", pal_res, pal_cand,
+                  if (pal_cand) sprintf("%.3f", pal_res / pal_cand) else "n/a"))
+add_check("ridge_severe_count", sum(scol("ridge_severe"), na.rm = TRUE) == 0L, "release",
+          sprintf("%d loci above ridge_lambda %.3g", sum(scol("ridge_severe"), na.rm = TRUE),
+                  RIDGE_LAMBDA_PRIMARY_MAX))
+# AF disagreeing with the study certificate on palindromes indicates mixed-strand
+# harmonisation (non-palindromes oriented to the reference, palindromes left
+# alone).  AF wins per-variant; this reports how often that happened.
+add_check("strand_conflict_rate", sum(scol("n_strand_conflicts"), na.rm = TRUE) == 0L, "release",
+          sprintf("%d AF-over-certificate resolutions", sum(scol("n_strand_conflicts"), na.rm = TRUE)))
 
 audit <- rbindlist(checks)
 hard_pass <- all(audit[severity == "hard", pass])

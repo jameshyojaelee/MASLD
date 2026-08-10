@@ -65,6 +65,21 @@ def main():
             check("uniform35_exact_terminal_accounting", exact,
                   f"expected={len(expected)} observed={len(observed)} terminal={sum(x.get('status') in terminal for x in observed)}")
 
+            # Terminal is not the same as successful.  The accounting check above
+            # passes when every locus reached SOME terminal status, including
+            # mass failure -- which is how a run that modelled 17 of 1,950 loci
+            # unlocked GPU scoring.  Gate on yield explicitly, as defence in
+            # depth behind the audit's own gates (04_audit.R).
+            MIN_COMPLETION_RATE = 0.90
+            modelled = sum(x.get("status") in {"completed", "nonconverged"} for x in observed)
+            rate = (modelled / len(observed)) if observed else 0.0
+            check("uniform35_yield", rate >= MIN_COMPLETION_RATE,
+                  f"{modelled}/{len(observed)} = {rate:.3f} (min {MIN_COMPLETION_RATE})")
+            tier1 = [x for x in observed if str(x.get("tier")) == "1"]
+            tier1_done = sum(x.get("status") == "completed" for x in tier1)
+            check("uniform35_tier1_yield", len(tier1) > 0 and tier1_done >= 1,
+                  f"{tier1_done} completed of {len(tier1)} tier-1 loci")
+
     if not args.chrombpnet_gate.is_file():
         check("chrombpnet_gate_exists", False, args.chrombpnet_gate)
     else:

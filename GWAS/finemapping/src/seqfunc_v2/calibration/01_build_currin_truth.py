@@ -67,15 +67,17 @@ def positive_rows(path: Path, scale: str) -> tuple[list[dict], int]:
                 if {ea, nea} != {ref, alt}:
                     excluded += 1
                     continue
-                if ea == alt:
-                    beta_alt = beta
-                    orientation = "effect_alt"
-                elif ea == ref:
-                    beta_alt = -beta
-                    orientation = "effect_ref_flipped_to_alt"
-                else:
-                    excluded += 1
-                    continue
+                # Currin's FastQTL beta is the slope for ALT-allele dosage.
+                # EA/NEA annotate the accessibility-increasing/decreasing
+                # alleles; they do not define the dosage orientation of beta.
+                beta_alt = beta
+                expected_ea = alt if beta > 0 else ref if beta < 0 else ""
+                if expected_ea and ea != expected_ea:
+                    raise SystemExit(
+                        f"Currin direction contract mismatch for {chrom}:{pos}:{ref}:{alt}: "
+                        f"beta={beta}, EA={ea}, expected EA={expected_ea}"
+                    )
+                orientation = f"source_fastqtl_alt_dosage;accessibility_increasing_allele={ea}"
             else:
                 # The 1-Mb source omits EA/NEA. Keep source beta but do not use it
                 # for signed calibration; magnitude/discrimination remain valid.
@@ -155,10 +157,15 @@ def main() -> None:
         type=Path,
         default=Path(os.environ.get("MASLD_PROJECT_ROOT", Path(__file__).resolve().parents[5])),
     )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        help="Output directory; defaults to the canonical v2_truth directory.",
+    )
     args = parser.parse_args()
     root = args.root.resolve()
     src = root / "GWAS/finemapping/data/seqfunc_external/currin2025_caqtl_v1"
-    out = root / "GWAS/finemapping/results/seqfunc/chrombpnet_caqtl/v2_truth"
+    out = args.out.resolve() if args.out else root / "GWAS/finemapping/results/seqfunc/chrombpnet_caqtl/v2_truth"
     out.mkdir(parents=True, exist_ok=True)
     files = {
         "positive_1kb": src / "liver_significant_caQTL_leadVariants_1kb_analysis_with_populationAlleleFrequencies.bed.gz",
@@ -170,6 +177,13 @@ def main() -> None:
     p1, p1_ex = positive_rows(files["positive_1kb"], "1kb")
     pm, pm_ex = positive_rows(files["positive_1mb"], "1mb")
     neg, neg_ex = negative_rows(files["negative"])
+    n_positive_beta = sum(float(row["beta_alt"]) > 0 for row in p1)
+    n_negative_beta = sum(float(row["beta_alt"]) < 0 for row in p1)
+    if not n_positive_beta or not n_negative_beta:
+        raise SystemExit(
+            "Currin signed truth must contain both positive and negative ALT-dosage effects; "
+            f"observed positive={n_positive_beta}, negative={n_negative_beta}"
+        )
     pfields = list(p1[0])
     nfields = list(neg[0])
     write_gzip_tsv(out / "currin_positive_1kb.tsv.gz", p1, pfields)
@@ -186,7 +200,9 @@ def main() -> None:
         "n_positive_1mb": len(pm),
         "n_source_background": len(neg),
         "excluded_parse_or_orientation": {"1kb": p1_ex, "1mb": pm_ex, "background": neg_ex},
-        "signed_primary_orientation": "beta_alt: positive means alternate allele increases accessibility",
+        "signed_primary_orientation": "source FastQTL beta retained as ALT-dosage slope; beta_alt>0 means ALT increases accessibility",
+        "n_beta_alt_positive_1kb": n_positive_beta,
+        "n_beta_alt_negative_1kb": n_negative_beta,
         "one_mb_signed_use": False,
         "input_sha256": {key: sha256(path) for key, path in files.items()},
     }

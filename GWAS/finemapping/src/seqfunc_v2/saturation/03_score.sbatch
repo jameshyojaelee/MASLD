@@ -5,8 +5,12 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=96G
 #SBATCH --time=90:00:00
-#SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/GWAS/finemapping/results/seqfunc/haplotype_saturation/v2/logs/score_%A_%a.out
-#SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/GWAS/finemapping/results/seqfunc/haplotype_saturation/v2/logs/score_%A_%a.err
+# Relative, resolved against the submission working directory, which
+# submit_saturation_v2.sh sets to $SATURATION_V2_ROOT.  These were absolute
+# paths into haplotype_saturation/v2/logs/, so a v3 saturation run would have
+# written its logs into the v2 tree that the frozen release still references.
+#SBATCH --output=logs/score_%A_%a.out
+#SBATCH --error=logs/score_%A_%a.err
 set -euo pipefail
 ROOT=${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}
 OUT=${SATURATION_V2_ROOT:-$ROOT/GWAS/finemapping/results/seqfunc/haplotype_saturation/v2}
@@ -18,10 +22,10 @@ import json,sys
 x=json.load(open(sys.argv[1]))
 if not x.get("saturation_submission_allowed",False): raise SystemExit("upstream gate BLOCKED")
 PY
-ROW=$(awk -F '\t' -v i="$SLURM_ARRAY_TASK_ID" 'NR==i+2{print;exit}' "$SHARDS")
+ROW=$(awk -F '\t' -v i="$SLURM_ARRAY_TASK_ID" 'NR==i+2{print;exit}' "$SHARDS" | tr -d '\r')
 test -n "$ROW" || { echo "FATAL no shard row $SLURM_ARRAY_TASK_ID"; exit 2; }
 IFS=$'\t' read -r IDX SHARD FOLD TEST_CHROMS NVAR TABLE LIST <<< "$ROW"
-MROW=$(awk -F '\t' -v f="$FOLD" 'NR>1&&$1==f{print;exit}' "$MODELS")
+MROW=$(awk -F '\t' -v f="$FOLD" 'NR>1&&$1==f{print;exit}' "$MODELS" | tr -d '\r')
 test -n "$MROW" || { echo "FATAL no locked model for $FOLD"; exit 2; }
 IFS=$'\t' read -r MFOLD MTEST MODEL MODEL_SHA PEAKS PEAKS_SHA FOLD_JSON FOLD_SHA REFERENCE_FASTA LOCKED_CHROMSIZES LOCKED_SIZES_SHA <<< "$MROW"
 for f in "$MODEL" "$PEAKS" "$FOLD_JSON" "$LIST"; do test -s "$f" || { echo "FATAL missing $f"; exit 2; }; done

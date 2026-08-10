@@ -5,6 +5,11 @@ set -euo pipefail
 ROOT=${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}
 SRC=$ROOT/GWAS/finemapping/src/seqfunc_v2/saturation
 OUT=${SATURATION_V2_ROOT:-$ROOT/GWAS/finemapping/results/seqfunc/haplotype_saturation/v2}
+mkdir -p "$OUT/logs"
+# The sbatch files declare RELATIVE log paths; cd so they resolve into THIS
+# saturation root rather than whichever one was hardcoded.
+cd "$OUT"
+echo "saturation_root=$OUT"
 MODE=${1:-gate}
 case "$MODE" in
   gate)

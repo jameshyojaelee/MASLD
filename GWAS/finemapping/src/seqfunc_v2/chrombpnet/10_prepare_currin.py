@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import gzip
 import json
@@ -19,11 +20,18 @@ FASTA = Path("/gpfs/commons/home/jameslee/reference_genome/cellranger-atac/refda
 
 
 def main() -> None:
-    out = BASE / "currin_calibration"
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--base", type=Path, default=BASE)
+    ap.add_argument("--truth", type=Path, default=TRUTH)
+    ap.add_argument("--calibration-dir", type=Path)
+    args = ap.parse_args()
+    base = args.base.resolve()
+    truth = args.truth.resolve()
+    out = args.calibration_dir.resolve() if args.calibration_dir else base / "currin_calibration"
     inputs = out / "inputs"
     inputs.mkdir(parents=True, exist_ok=True)
-    pos = pd.read_csv(TRUTH / "currin_positive_1kb.tsv.gz", sep="\t", dtype={"chr": str})
-    neg = pd.read_csv(TRUTH / "currin_source_background.tsv.gz", sep="\t", dtype={"chr": str})
+    pos = pd.read_csv(truth / "currin_positive_1kb.tsv.gz", sep="\t", dtype={"chr": str})
+    neg = pd.read_csv(truth / "currin_source_background.tsv.gz", sep="\t", dtype={"chr": str})
     source_counts = {"positive_rows": len(pos), "background_rows": len(neg)}
     pos = pos.loc[pos["variant_class"].eq("SNV")].copy()
     neg = neg.loc[neg["variant_class"].eq("SNV")].copy()
@@ -53,7 +61,7 @@ def main() -> None:
     combined = combined.loc[combined["reference_match"]].copy()
 
     fold_map = {}
-    with (BASE / "fold_manifest.tsv").open() as handle:
+    with (base / "fold_manifest.tsv").open() as handle:
         for row in csv.DictReader(handle, delimiter="\t"):
             for chrom in row["test_chromosomes"].split(","):
                 if chrom in fold_map:
@@ -83,6 +91,7 @@ def main() -> None:
         "background_unique_snvs": int((combined["label"] == 0).sum()),
         "fold_counts": fold_counts,
         "fold_rule": "score each variant exactly once with the model whose test group contains its chromosome",
+        "truth_root": str(truth),
     }
     with (out / "input_contract.json").open("w") as handle:
         json.dump(report, handle, indent=2, sort_keys=True)
@@ -92,4 +101,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

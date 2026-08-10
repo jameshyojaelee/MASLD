@@ -88,12 +88,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstraps", type=int, default=1000)
     ap.add_argument("--workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "32")))
+    ap.add_argument("--base", type=Path, default=BASE)
+    ap.add_argument("--calibration-dir", type=Path)
+    ap.add_argument("--scores-dir", type=Path)
+    ap.add_argument("--peak-file", type=Path)
     args = ap.parse_args()
-    out = BASE / "currin_calibration"
+    base = args.base.resolve()
+    out = args.calibration_dir.resolve() if args.calibration_dir else base / "currin_calibration"
+    scores_dir = args.scores_dir.resolve() if args.scores_dir else out / "scores"
+    peak_file = args.peak_file.resolve() if args.peak_file else base / "hepatocyte.idr_pooled_summit.narrowPeak"
     meta = pd.read_csv(out / "currin_scoring_metadata.tsv.gz", sep="\t")
     score_frames = []
     for fold in range(5):
-        path = out / f"scores/fold{fold}.variant_scores.tsv"
+        path = scores_dir / f"fold{fold}.variant_scores.tsv"
         frame = pd.read_csv(path, sep="\t")
         frame["heldout_fold_scored"] = fold
         score_frames.append(frame)
@@ -105,7 +112,7 @@ def main():
         raise SystemExit(f"Currin score completeness failure: {data['logfc'].isna().sum()} missing")
     if not (data["heldout_fold"] == data["heldout_fold_scored"]).all():
         raise SystemExit("one or more Currin variants was scored by a non-held-out chromosome model")
-    peaks = peak_index(BASE / "hepatocyte.idr_pooled_summit.narrowPeak")
+    peaks = peak_index(peak_file)
     data["model_peak_overlap"] = [in_peak(peaks, c, p) for c, p in zip(data["chr_x"], data["pos_hg38"])]
     data.to_csv(out / "currin_scored_primary.tsv.gz", sep="\t", index=False, compression="gzip")
 
@@ -167,6 +174,8 @@ def main():
         "point_estimates": points,
         "bootstrap_intervals": intervals,
         "effect_orientation": "ChromBPNet logFC and Currin beta_alt are both ALT versus REF",
+        "scores_dir": str(scores_dir),
+        "peak_file": str(peak_file),
     }
     with (out / "currin_external_calibration.json").open("w") as handle:
         json.dump(verdict, handle, indent=2, sort_keys=True)

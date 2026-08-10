@@ -19,6 +19,25 @@ assert_true(nrow(study_status) == 35L && uniqueN(study_status$study_name) == 35L
             "Preparation did not produce one status row per frozen study")
 immutable_fwrite(study_status, file.path(RUN_ROOT, "config", "preparation_study_status.tsv"))
 
+# Strand certificates.  A study with no genome-wide-significant signal exits
+# before this fragment is written and contributes no loci, so a missing fragment
+# is expected and is simply absent from the table rather than an error.
+strand_paths <- file.path(fragment_dir, sprintf("study_%02d_strand.tsv", manifest$study_index))
+strand_paths <- strand_paths[file.exists(strand_paths)]
+strand <- if (length(strand_paths)) rbindlist(lapply(strand_paths, fread), fill = TRUE) else data.table()
+if (nrow(strand)) {
+  # Recompute the label from the stored counts rather than trusting the one the
+  # fragment was written with.  The counts are the measurement; the label is a
+  # thresholded interpretation of it, so re-calibrating STRAND_CERT_MAX_OPP must
+  # not require re-running the expensive per-study preparation.
+  strand[, strand_certificate := mapply(strand_certificate_label, n_same, n_opp)]
+  setorder(strand, study_index)
+}
+immutable_fwrite(strand, file.path(RUN_ROOT, "config", "strand_certificates.tsv"))
+cat(sprintf("Strand certificates: %d studies (%s)\n", nrow(strand),
+            if (nrow(strand)) paste(names(table(strand$strand_certificate)),
+                                    table(strand$strand_certificate), sep = "=", collapse = " ") else "none"))
+
 locus_parts <- lapply(locus_paths, function(p) {
   x <- fread(p)
   if (nrow(x) == 0L) return(NULL)
@@ -56,6 +75,9 @@ summary <- list(
   missing_bim = sum(!loci$bim_exists), missing_ld = sum(!loci$ld_exists),
   truncated_panel_blocks = sum(loci$panel_truncated, na.rm = TRUE),
   gws_positionally_unrepresented = sum(loci$n_gws_positionally_unrepresented),
+  strand_certificates = if (nrow(strand)) as.list(table(strand$strand_certificate)) else list(),
+  studies_with_af = if (nrow(strand)) sum(strand$af_present) else 0L,
+  studies_indeterminate_strand = if (nrow(strand)) sum(strand$strand_certificate == "indeterminate") else NA_integer_,
   canonical_outputs_mutated = FALSE
 )
 immutable_json(summary, file.path(RUN_ROOT, "config", "preparation_summary.json"))

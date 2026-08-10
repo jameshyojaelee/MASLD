@@ -87,7 +87,7 @@ def main():
                 })
     if rejected:
         with (args.out_dir / "anchor_rejections.tsv").open("w", newline="") as handle:
-            w = csv.DictWriter(handle, fieldnames=list(rejected[0]), delimiter="\t"); w.writeheader(); w.writerows(rejected)
+            w = csv.DictWriter(handle, fieldnames=list(rejected[0]), delimiter="\t", lineterminator="\n"); w.writeheader(); w.writerows(rejected)
         raise SystemExit(f"hard sequence gate failed for {len(rejected)} anchors")
     expected = len(anchors) * args.window * 3
     if len(target_map) != expected:
@@ -96,7 +96,7 @@ def main():
     map_path = args.out_dir / "target_variant_map.tsv.gz"
     tmp = map_path.with_suffix(".tmp.gz")
     with gzip.open(tmp, "wt", newline="") as handle:
-        w = csv.DictWriter(handle, fieldnames=list(target_map[0]), delimiter="\t"); w.writeheader(); w.writerows(target_map)
+        w = csv.DictWriter(handle, fieldnames=list(target_map[0]), delimiter="\t", lineterminator="\n"); w.writeheader(); w.writerows(target_map)
     os.replace(tmp, map_path)
 
     ordered = sorted(genomic.items(), key=lambda z: (int(z[1][0][3:]), z[1][1], z[1][2], z[1][3]))
@@ -110,7 +110,7 @@ def main():
             tab = args.out_dir / f"{shard_id}.variants.tsv"
             cbp = args.out_dir / f"{shard_id}.chrombpnet.tsv"
             with tab.open("w", newline="") as ht, cbp.open("w") as hc:
-                w = csv.writer(ht, delimiter="\t"); w.writerow(["chrom","pos_hg38","ref","alt","variant_id","model_fold_id"])
+                w = csv.writer(ht, delimiter="\t", lineterminator="\n"); w.writerow(["chrom","pos_hg38","ref","alt","variant_id","model_fold_id"])
                 for gid, (chrom, pos, ref, alt, observed_fold) in values[start:start + args.shard_size]:
                     if observed_fold != fold: raise RuntimeError("fold routing invariant failed")
                     w.writerow([chrom,pos,ref,alt,gid,fold]); hc.write(f"{chrom}\t{pos}\t{ref}\t{alt}\t{gid}\n")
@@ -119,7 +119,7 @@ def main():
                                "n_variants": len(values[start:start + args.shard_size]),
                                "variant_table": str(tab.resolve()), "scorer_list": str(cbp.resolve())})
     with (args.out_dir / "scoring_shards.tsv").open("w", newline="") as handle:
-        w = csv.DictWriter(handle, fieldnames=list(shard_rows[0]), delimiter="\t"); w.writeheader(); w.writerows(shard_rows)
+        w = csv.DictWriter(handle, fieldnames=list(shard_rows[0]), delimiter="\t", lineterminator="\n"); w.writeheader(); w.writerows(shard_rows)
     atomic_json({
         "status": "PASS", "anchors": len(anchors), "sequence_window": args.window,
         "target_substitution_rows": len(target_map), "maximum_allowed": 751500,

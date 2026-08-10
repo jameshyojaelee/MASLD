@@ -47,6 +47,8 @@ def extract_donor(donor: dict[str, str], part_dir: str) -> dict[str, object]:
          gzip.open(frag_path, "wt", compresslevel=6) as frag_out, \
          gzip.open(tag_path, "wt", compresslevel=6) as tag_out:
         for line in source:
+            if line.startswith("#"):
+                continue
             n_total += 1
             fields = line.rstrip("\n").split("\t")
             if len(fields) < 5:
@@ -97,6 +99,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=OUT)
     ap.add_argument("--workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "16")))
+    ap.add_argument("--expected-donors", type=int, default=18)
     args = ap.parse_args()
     out = args.out.resolve()
     manifest = out / "donor_manifest.tsv"
@@ -104,14 +107,14 @@ def main() -> None:
         raise SystemExit("run 00_preflight.py first")
     with manifest.open() as handle:
         donors = list(csv.DictReader(handle, delimiter="\t"))
-    if len(donors) != 18:
-        raise SystemExit("expected 18 donors")
+    if len(donors) != args.expected_donors:
+        raise SystemExit(f"expected {args.expected_donors} donors, found {len(donors)}")
 
     frag_dir = out / "fragments"
     part_dir = frag_dir / "donor_parts"
     part_dir.mkdir(parents=True, exist_ok=True)
     # Stale partials cannot be mistaken for completed donor products.
-    for path in part_dir.glob("D*.*.gz"):
+    for path in part_dir.glob("*.*.gz"):
         path.unlink()
     results = []
     with ProcessPoolExecutor(max_workers=min(args.workers, len(donors))) as pool:
