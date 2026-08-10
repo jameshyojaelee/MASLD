@@ -20,6 +20,7 @@
 !Snakefile
 !Makefile
 !*.pl
+!*.cpp
 
 # 4) Re-include web-portal source
 !*.ts
@@ -42,6 +43,29 @@
 
 # Curated figure configuration (small, hand-maintained source table)
 !scripts/figures/fig5a_therapeutic_axes.tsv
+!Analysis/Multimodal_Program_Projection/config/*.tsv
+
+# Genetics-context v2 uses small, hand-maintained source contracts and test
+# fixtures; keep these auditable while candidate result tables remain ignored.
+!Analysis/Multimodal_Program_Projection/scripts/genetics_context_v2/README.md
+!Analysis/Multimodal_Program_Projection/scripts/genetics_context_v2/config/*.tsv
+!Analysis/Multimodal_Program_Projection/scripts/genetics_context_v2/tests/fixtures/*.csv
+!Analysis/Multimodal_Program_Projection/candidates/program-context-v2-candidate-2026-08-07/genetics_context/logs/.gitkeep
+
+# Myojin Plan-40 firewall keeps only its hand-maintained contracts and
+# synthetic fixtures in git; authenticated source and candidate tables remain
+# ignored under the default-deny policy.
+!Analysis/Multimodal_Program_Projection/scripts/myojin_hlf/README.md
+!Analysis/Multimodal_Program_Projection/scripts/myojin_hlf/OUTPUT_CONTRACT.md
+!Analysis/Multimodal_Program_Projection/scripts/myojin_hlf/tests/README.md
+!Analysis/Multimodal_Program_Projection/scripts/myojin_hlf/tests/fixtures/*.csv
+!Analysis/Multimodal_Program_Projection/candidates/program-context-v2-candidate-2026-08-07/myojin_hlf/logs/.gitkeep
+!Analysis/Multimodal_Program_Projection/candidates/program-context-v2-candidate-2026-08-07/myojin_hlf/work/.gitkeep
+
+# Plan 43 keeps its small, outcome-blind source registry and promotion contract
+# auditable in git. Public source payloads and candidate results remain ignored.
+!Analysis/Multimodal_Program_Projection/scripts/chronic_state_risk_bridge/README.md
+!Analysis/Multimodal_Program_Projection/scripts/chronic_state_risk_bridge/config/*.tsv
 
 # 6) Re-include named config JSON / manifests only (NOT all *.json — results are json)
 !package.json
@@ -83,6 +107,11 @@
 
 # 7a) Docs are entirely private and ignored.
 /docs/
+
+# 7c) Cas13 library design is a separate line of work (active owner: vpassanisi)
+#     and is not versioned by this repository. Its files remain on disk; they
+#     were untracked here via `git rm -r --cached Cas13_Library_Design`.
+/Cas13_Library_Design/
 
 # 7b) Hard-exclude language/package environments & caches ANYWHERE
 #     (these contain thousands of library .py/.R/.sh files the whitelist would grab)
