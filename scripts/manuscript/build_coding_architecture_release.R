@@ -10,7 +10,7 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
-RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-10-r1")
+RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-15-r2")
 OUT <- file.path(BASE, "RNA-seq/results/manuscript_release", RELEASE_ID)
 DOC <- file.path(BASE, "docs/manuscript/release")
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)

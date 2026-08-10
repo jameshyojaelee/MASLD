@@ -3,7 +3,7 @@
 #
 # Join the external Elison/Gaulton et al. 2025 single-cell-chromatin / cell-type
 # regulatory calls to our FROZEN expression-QTL + disease-state evidence-class
-# table (2026-07-10-r1) and quantify, per gene, how the single-cell chromatin
+# table (2026-07-15-r2) and quantify, per gene, how the single-cell chromatin
 # layer relates to our genetic + disease-state classes. ADDITIVE / external
 # annotation only -- does NOT mutate the frozen release and is NOT an input to the
 # convergence/heuristic score. See data/external/elison2025_sc_chromatin/README.md
@@ -22,7 +22,7 @@ suppressPackageStartupMessages(library(data.table))
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 elison_f <- file.path(BASE, "data/external/elison2025_sc_chromatin/elison2025_sc_chromatin_calls.csv")
-frozen_f <- file.path(BASE, "RNA-seq/results/manuscript_release/2026-07-10-r1/evidence_class_table.tsv")
+frozen_f <- file.path(BASE, "RNA-seq/results/manuscript_release/2026-07-15-r2/evidence_class_table.tsv")
 out_dir  <- file.path(BASE, "RNA-seq/results/multi_evidence/external_scchromatin")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 

@@ -19,7 +19,7 @@ ROOT = Path(os.environ.get(
     "MASLD_PROJECT_ROOT",
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design",
 ))
-RELEASE_ID = os.environ.get("MANUSCRIPT_RELEASE_ID", "2026-07-10-r1")
+RELEASE_ID = os.environ.get("MANUSCRIPT_RELEASE_ID", "2026-07-15-r2")
 OUT = ROOT / "RNA-seq/results/manuscript_release" / RELEASE_ID
 PCC_FILE = ROOT / "Analysis/Spatial/results/gsmap/gsmap_pcc_by_trait.csv"
 N_PERM = 10000

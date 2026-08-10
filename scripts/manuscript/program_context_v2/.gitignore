@@ -1,0 +1,8 @@
+# The repository defaults to ignoring non-code files. These are source
+# documentation and deliberately tiny synthetic contract fixtures, not results.
+!README.md
+!tests/
+!tests/fixtures/
+!tests/fixtures/payloads/
+!tests/fixtures/payloads/*.json
+!tests/fixtures/payloads/*.tsv

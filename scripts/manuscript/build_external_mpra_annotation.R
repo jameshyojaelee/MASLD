@@ -3,7 +3,7 @@
 #
 # Join the external Zhu / Hu et al. 2026 (Nat Genet; DOI 10.1038/s41588-026-02617-8)
 # MASLD MPRA differential-activity-variant (DAV) + featured target-gene calls to our
-# FROZEN expression-QTL + disease-state evidence-class table (2026-07-10-r1) and
+# FROZEN expression-QTL + disease-state evidence-class table (2026-07-15-r2) and
 # quantify, per gene, how the experimental variant-function layer relates to our
 # genetic + disease-state classes. ADDITIVE / external annotation only -- does NOT
 # mutate the frozen release and is NOT an input to the convergence/heuristic score.
@@ -27,7 +27,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 sub_f    <- file.path(BASE, "GWAS/finemapping/results/seqfunc/mpra_benchmark/mpra_substrate_truth.tsv")
 gencode_f<- file.path(BASE, "data/gencode_v49_gene_metadata.tsv.gz")
-frozen_f <- file.path(BASE, "RNA-seq/results/manuscript_release/2026-07-10-r1/evidence_class_table.tsv")
+frozen_f <- file.path(BASE, "RNA-seq/results/manuscript_release/2026-07-15-r2/evidence_class_table.tsv")
 calls_dir<- file.path(BASE, "data/external/zhu2026_masld_mpra")
 out_dir  <- file.path(BASE, "RNA-seq/results/multi_evidence/external_mpra")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)

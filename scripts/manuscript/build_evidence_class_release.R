@@ -12,7 +12,7 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
-RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-10-r1")
+RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-15-r2")
 PP4_THRESHOLDS <- c(0.5, 0.7, 0.9)
 
 paths <- list(

@@ -2,7 +2,7 @@
 # build_external_pqtl_annotation.R
 #
 # Join the external Gobeil et al. 2026 liver-pQTL causal calls to our FROZEN
-# expression-QTL evidence-class table (2026-07-10-r1) and quantify, per gene,
+# expression-QTL evidence-class table (2026-07-15-r2) and quantify, per gene,
 # how the protein-genetic layer relates to our expression-genetic + disease-state
 # classes. ADDITIVE / external annotation only -- this does NOT mutate the frozen
 # release and is NOT an input to the convergence/heuristic score. See
@@ -16,7 +16,7 @@ suppressPackageStartupMessages(library(data.table))
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 gobeil_f <- file.path(BASE, "data/external/gobeil2026_liver_pqtl/gobeil2026_liver_pqtl_causal.csv")
-frozen_f <- file.path(BASE, "RNA-seq/results/manuscript_release/2026-07-10-r1/evidence_class_table.tsv")
+frozen_f <- file.path(BASE, "RNA-seq/results/manuscript_release/2026-07-15-r2/evidence_class_table.tsv")
 out_dir  <- file.path(BASE, "RNA-seq/results/multi_evidence/external_pqtl")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 

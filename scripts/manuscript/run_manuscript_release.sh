@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BASE="${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}"
-RELEASE_ID="${MANUSCRIPT_RELEASE_ID:-2026-07-10-r1}"
+RELEASE_ID="${MANUSCRIPT_RELEASE_ID:-2026-07-15-r2}"
 R_BIN="${RNASEQ_RSCRIPT:-/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript}"
 PY_BIN="${SPATIAL_PYTHON:-/gpfs/commons/home/jameslee/micromamba/envs/spatial/bin/python}"
 
