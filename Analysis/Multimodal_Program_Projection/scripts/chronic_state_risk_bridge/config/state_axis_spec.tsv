@@ -1,0 +1,14 @@
+parameter	value	rationale
+reference_standardization	baseline_or_control_only	prevents intervention/follow-up outcomes from changing the scoring transform
+minimum_gene_sd	1e-8	drop genes with degenerate reference variation
+minimum_mapped_genes_per_program	8	frozen Plan 41 testability rule
+minimum_retained_l1_weight	0.20	frozen Plan 41 testability rule
+minimum_testable_programs	90	Plan 43 dataset-level coverage gate
+minimum_retained_axis_mass	0.80	Plan 43 dataset-level coverage gate
+primary_program_loading	L1_normalized_stage_beta	all 117 frozen Plan 20 stage coefficients without significance selection
+sign_loading	sign_stage_beta	sensitivity
+lineage_balanced_loading	equal_absolute_weight_per_lineage	sensitivity
+equal_gene_weight	equal_weights_over_mapped_members	sensitivity
+leave_top_gene	remove_highest_original_l1_weight_mapped_gene	sensitivity
+overlap_family_threshold	weighted_jaccard_ge_0.20	connected components are frozen from membership only; each family receives equal absolute loading
+program_landscape_multiplicity	BH_117	complete secondary registry; cannot replace global axis

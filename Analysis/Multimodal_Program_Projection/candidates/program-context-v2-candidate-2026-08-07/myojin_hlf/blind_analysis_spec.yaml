@@ -1,0 +1,150 @@
+# Outcome-blind specification; no Myojin genome-wide outcome value was read.
+release_id: program-context-v2-candidate-2026-08-07
+specification_status: sealed_ready_for_unseal
+external_outcomes_read: false
+question: "Do frozen evidence classes or hepatocyte programs differ in HLF knockout survival under 200 uM palmitate relative to vehicle?"
+interpretation: phenotype_specific_compatibility_or_falsification_not_generic_functional_validation
+source:
+  paper: "Myojin et al., Hepatology Communications 2026, e0884"
+  supplemental_table_url: "https://links.lww.com/HC9/C218"
+  primary_contrast: "Palmitic acid vs Vehicle"
+  direct_vehicle_contrast_used: true
+  actual_vehicle_fitness_observed: false
+  raw_T0_counts_publicly_recovered: false
+  T0_status: T0_coverage_source_QC_only
+depmap:
+  required_release: "DepMap Public 24Q4"
+  doi: "10.25452/figshare.plus.27993248.v1"
+  model_id: ACH-000393
+  model_identity: HLF_hepatocellular_carcinoma_not_HLF_a
+  complete_version_matched_triplet_ready: true
+  expression_file: OmicsExpressionProteinCodingGenesTPMLogp1.csv
+  expression_unit: log2_TPM_plus_1
+  chronos_role: generic_HLF_fitness_covariate_not_Myojin_vehicle_effect
+  cross_matrix_entrez_conflict_policy: blank_both_covariates_mark_mapping_ambiguous_and_untestable
+  pinned_cross_matrix_entrez_conflicts:
+    MEF2B: {expression: 4207, Chronos: 100271849}
+    RLN2: {expression: 6013, Chronos: 6019}
+eligible_universe:
+  identifier: unique_unambiguous_GENCODE_v49_symbol_and_nonconflicting_DepMap_Entrez
+  biotype: protein_coding
+  classes: [neither, genetic_only, disease_state_only, convergent]
+  primary_result_presence: direct_PA_vs_vehicle_score_p_fdr_lfc_all_nonmissing
+  guide_count_definition: min_num_across_D21_vs_D0_and_PA_vs_vehicle
+  primary_guide_floor: 4
+  sensitivity_guide_floor: 5
+  expression_floor_TPM: 1.0
+  primary_covariates_complete: [log1p_HLF_TPM, guide_count_min, HLF_Chronos]
+  nonreference_class_covariate_coverage_gate: 0.80
+  covariate_coverage_definition: finite_numeric_TPM_and_Chronos_before_expression_floor
+  expression_floor_role: primary_eligibility_and_testability_only_not_missingness
+  prohibited_eligibility_fields: [goodsgrna, MAGeCK_p, MAGeCK_FDR, MAGeCK_rank, PA_vs_D0_LFC, PA_vs_vehicle_LFC]
+evidence_classes:
+  source_release: 2026-07-15-r2
+  reference: neither
+  tested: [genetic_only, disease_state_only, convergent]
+  hypothesis: omnibus_difference_not_ordered_superiority
+programs:
+  source: Plan20_external_test_eligible_hepatocyte_programs
+  minimum_unique_genes: 8
+  minimum_retained_original_L1_weight: 0.20
+  primary_weight: frozen_positive_original_L1_weight_renormalized_over_eligible_genes
+  sensitivities: [equal_weight, leave_highest_original_weight_out]
+primary_outcomes:
+  continuous: PA_vs_vehicle_positive_selection_LFC
+  binary: "PA_vs_vehicle_positive_selection_FDR < 0.05 AND LFC >= 0.25"
+  negative_lfc_policy: continuous_direction_only_never_source_significant_sensitizing_hit
+class_model:
+  formula: "PA_vs_vehicle_pos_lfc ~ evidence_class + log1p_HLF_TPM + guide_count_min + HLF_Chronos"
+  reduced_formula_for_permutation: "PA_vs_vehicle_pos_lfc ~ log1p_HLF_TPM + guide_count_min + HLF_Chronos"
+  primary_population: complete_case
+  coefficient_estimator: OLS
+  coefficient_confidence_interval: HC3_robust_Wald_95pct
+  omnibus_statistic: partial_F_for_three_class_indicators
+  standardized_pairwise_effect: adjusted_class_coefficient_divided_by_full_model_residual_SD
+  residual_SD_definition: sqrt_full_model_RSS_divided_by_n_minus_full_model_rank
+  design_rank_gate: full_and_reduced_designs_must_be_full_column_rank_else_block
+  pairwise_contrasts: [genetic_only_vs_neither, disease_state_only_vs_neither, convergent_vs_neither]
+  permutation: Freedman_Lane_residual
+  permutation_pvalue: "(1 + count(null_statistic >= observed_statistic)) / (accepted_draws + 1)"
+  accepted_draws: 100000
+  seed: 2026080740
+  strata:
+    guide_count: [4, 5, 6, 7, 8_or_more]
+    expression: frozen_quintiles_on_primary_eligible_universe
+    chronos_missingness: preserved
+  quintile_assignment: rank_first_after_sorting_by_value_then_gene_symbol
+  singleton_strata: fixed_not_moved
+  invalid_draw_policy: deterministic_next_seeded_draw_until_accepted_count
+binary_model:
+  estimates: [risk_difference, odds_ratio]
+  risk_difference_estimator: shared_strata_size_weighted_class_minus_neither_difference_in_proportions
+  odds_ratio_estimator: Mantel_Haenszel_over_strata_containing_both_groups
+  inference: stratified_label_permutation
+  confirmatory_statistic: absolute_risk_difference
+  permutation_unit: evidence_class_label_within_frozen_stratum_preserving_class_counts
+  zero_cell_policy: no_class_deletion_or_hit_continuity_filter_permutation_p_remains_primary
+  permutation_pvalue: "(1 + count(abs(null_RD) >= abs(observed_RD))) / (accepted_draws + 1)"
+  accepted_draws: 100000
+  seed: 2026080741
+program_model:
+  gene_outcome_transform: zscore_within_primary_eligible_universe
+  zscore_definition: subtract_universe_mean_divide_by_universe_sample_SD
+  observed_statistic: frozen_stage_direction_times_weighted_mean_gene_zscore
+  effect: observed_signed_statistic_minus_mean_matched_null_signed_statistic
+  null_draws: 10000
+  seed: 2026080742
+  null_pool: primary_eligible_genes_excluding_members_of_the_program_being_tested
+  exact_match_cells:
+    guide_count: [4, 5, 6, 7, 8_or_more]
+    expression: frozen_quintiles
+    HLF_Chronos: frozen_quintiles
+    chronos_missingness: exact
+  draw_rule: one_control_per_program_member_without_replacement_within_draw
+  matched_control_weight: inherit_the_corresponding_program_member_frozen_weight
+  control_reuse_between_draws: allowed
+  empirical_pvalue: "(1 + count(null_signed_statistic >= observed_signed_statistic)) / (null_draws + 1)"
+  insufficient_exact_cell_policy: program_untestable_no_relaxation
+multiplicity:
+  class_omnibus: one_primary_test_no_adjustment
+  class_continuous_pairwise: BH_across_three
+  class_binary_pairwise: BH_across_three
+  programs: BH_across_complete_testable_external_hepatocyte_family
+known_hit_sensitivity:
+  canonical_symbols: [ACSL3, INSIG1, NF2, CASP8, GPAT3, RNF213]
+  alias_note: AGPAT9_is_GPAT3_in_GENCODE_v49
+  primary_includes_known_hits: true
+  mandatory_remove_all_known_hits: true
+  mandatory_remove_ACSL3_only: true
+figure_gate:
+  alpha: 0.05
+  class_minimum_standardized_pairwise_effect: 0.20
+  class_magnitude_metric: adjusted_class_coefficient_divided_by_full_model_residual_SD
+  program_minimum_signed_standardized_effect: 0.20
+  program_magnitude_metric: observed_signed_statistic_minus_mean_matched_null_signed_statistic
+  qualifying_direction_class: positive_class_minus_neither_KO_survival_compatibility
+  qualifying_direction_program: positive_after_multiplying_by_frozen_stage_direction
+  require_known_hit_exclusion_survival: true
+  require_program_weight_sensitivity_survival_when_program_branch_used: true
+  main_figure_default_if_any_component_fails: false
+mandatory_sensitivities:
+  - guide_floor_5
+  - missing_Chronos_indicator_plus_within_missingness_stratified_permutation
+  - remove_all_publication_known_hits
+  - remove_ACSL3_only
+  - PA_D21_vs_D0_combined_survival_selection
+  - absolute_LFC_nondirectional_exploratory
+  - positive_selection_FDR_hit_without_LFC_floor
+missing_chronos_sensitivity:
+  population: otherwise_primary_eligible_including_missing_HLF_Chronos
+  imputation: median_HLF_Chronos_from_complete_primary_universe
+  added_model_term: HLF_Chronos_missing_indicator
+  permutation: within_frozen_guide_expression_and_Chronos_missingness_strata
+  interpretation: sensitivity_only_primary_remains_complete_case
+prohibited:
+  - outcome_driven_gene_universe_tuning
+  - use_goodsgrna_rank_p_or_FDR_as_detectability_covariates
+  - reconstruct_vehicle_fitness_by_subtracting_MAGeCK_contrasts
+  - analyze_CRISPR_effects_as_expression_profiles
+  - call_negative_LFC_source_significant_sensitizing_without_negative_selection_statistics
+  - modify_classes_programs_thresholds_or_significance_families_after_unseal

@@ -1,0 +1,6 @@
+case,HLF_TPM,HLF_Chronos,depmap_entrez_conflict,complete_numeric_covariates,expression_floor_pass
+low_but_observed,0.25,-0.4,FALSE,TRUE,FALSE
+missing_expression,,-0.4,FALSE,FALSE,FALSE
+missing_chronos,2.0,,FALSE,FALSE,TRUE
+entrez_conflict,2.0,-0.4,TRUE,FALSE,TRUE
+eligible,2.0,-0.4,FALSE,TRUE,TRUE

@@ -1,0 +1,4 @@
+ensembl,coloc_best_susie_pp4,coloc_best_abf_pp4,driving_gwas,driving_trait
+ENSG000001,0.8,0.7,DIRECT,MASLD
+ENSG000002,0,0.6,ENZYME,ALT
+ENSG000003,,0.9,ENZYME,GGT

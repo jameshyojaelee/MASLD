@@ -1,0 +1,3 @@
+ModelID,CellLineName,StrippedCellLineName,OncotreeLineage,DepmapModelType,OncotreePrimaryDisease,CCLEName,RRID
+ACH-000393,HLF,HLF,Liver,HCC,Hepatocellular Carcinoma,HLF_LIVER,CVCL_2947
+ACH-000797,HLF-a,HLFA,Fibroblast,ZFIBLUN,Non-Cancerous,HLFA_FIBROBLAST,CVCL_2255

@@ -43,10 +43,18 @@ cat("── Part 2: PXD052937 (DIA plasma proteomics) ────────�
 # │   C (38 samples) = MASH/Steatohepatitis                                    │
 # │   D (10 samples) = Cirrhosis/Advanced fibrosis                             │
 # │                                                                            │
-# │ ACTION REQUIRED: verify the letter->condition assignment against          │
-# │   Niu et al. 2024 (PRIDE PXD052937) — the sample/condition table in the   │
-# │   source publication — BEFORE using these labels in any analysis.          │
-# │ A runtime warning() is emitted below whenever this mapping is applied.     │
+# │ RESOLVED 2026-07-15 / SETTLED 2026-08-03 — THE MAPPING IS WRONG.           │
+# │   The source is Sourianarayanane et al. 2024 (PMID 39073724 /              │
+# │   DOI 10.1002/prca.202300236) — NOT "Niu et al." — and it is a             │
+# │   64-patient BINARY MASH-vs-nonMASH study, which refutes this 72-sample    │
+# │   4-way staging map on both count AND structure. No per-sample key exists  │
+# │   on disk, in the PRIDE/MassIVE deposit (processed matrices only), or on   │
+# │   the ProteomeXchange page.                                                │
+# │ DECISION: PXD052937 is PERMANENTLY EXCLUDED from the proteomics evidence   │
+# │   layer (27a filters it; canonical endpoint = liver PXD051911 only). These │
+# │   labels are retained ONLY so legacy plasma-sweep outputs remain           │
+# │   reproducible — they are NOT a disease axis and must never be used for a  │
+# │   manuscript claim. A runtime warning() is emitted below on every use.     │
 # └──────────────────────────────────────────────────────────────────────────┘
 
 # Read existing metadata

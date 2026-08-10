@@ -1,0 +1,6 @@
+gate_order	gate_id	required_for_full_escalation	rule
+1	HUMAN_REVERSAL	true	all three cohort effects expected direction; at least two p<0.05 including one outcome-unseen cohort; equal-cohort Stouffer p<0.01; every leave-one-cohort-out p<0.05
+2	REGULATORY_PERTURBATION	true	at least eight oriented Tier-1/2 loci and three per orientation; global permutation p<0.01; median positive; >=75% loci and guide pairs agree
+3	PROTEIN_TRANSLATION	true	PXD052787 q<0.05; PXD051911 same direction; equal-cohort p<0.01; abundance and bulk-effect sensitivities survive
+4	SPATIAL_LINEAGE	true	disease-state physical organization exceeds genetic-only after observability and lineage matching
+5	PROVENANCE	true	no participant cell guide spot program gene or source-owned headline is misrepresented as an independent biological replicate or discovery

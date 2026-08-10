@@ -274,8 +274,13 @@ def run_macs3(dataset, adata, output_dir: Path):
                     continue
                 if len(peaks_df) > 0:
                     bed_path = peak_dir / f"{group_name}_peaks.bed"
-                    peaks_df.iloc[:, :3].to_csv(bed_path, sep="\t", header=False, index=False)
-                    peak_counts[group_name] = len(peaks_df)
+                    # DEDUPE: macs3 groupby can emit coordinate-duplicate intervals
+                    # (~24% for abundant cell types); writing them verbatim inflates
+                    # every downstream peak-count and FDR denominator. Keep unique
+                    # (chr,start,end) only.
+                    bed3 = peaks_df.iloc[:, :3].drop_duplicates()
+                    bed3.to_csv(bed_path, sep="\t", header=False, index=False)
+                    peak_counts[group_name] = len(bed3)
                     log.info("  %s: %d peaks -> %s", group_name, len(peaks_df), bed_path)
         else:
             log.warning("peaks_data is not a dict: %s", type(peaks_data))
@@ -295,12 +300,17 @@ def run_macs3(dataset, adata, output_dir: Path):
             if n_peaks == 0:
                 continue
             bed_path = peak_dir / f"{ct_name}_peaks.bed"
+            _seen = set()
             with open(np_file) as fin, open(bed_path, "w") as fout:
                 for line in fin:
                     parts = line.strip().split("\t")
                     if len(parts) >= 3:
+                        key = (parts[0], parts[1], parts[2])
+                        if key in _seen:          # dedupe coordinate-duplicate intervals
+                            continue
+                        _seen.add(key)
                         fout.write(f"{parts[0]}\t{parts[1]}\t{parts[2]}\n")
-            peak_counts[ct_name] = n_peaks
+            peak_counts[ct_name] = len(_seen)
             log.info("  %s: %d peaks -> %s", ct_name, n_peaks, bed_path)
 
     # Remove Low_confidence and Unassigned peak sets (not biologically meaningful)

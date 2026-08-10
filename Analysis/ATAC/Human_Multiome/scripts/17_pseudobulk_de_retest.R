@@ -64,6 +64,23 @@ CELLMAP_PATH <- file.path(SNAP_DIR, "cell_donor_condition_map.tsv.gz")  # from 0
 # Arm (c) input
 CHROMVAR_PER_DONOR <- file.path(CHROMVAR_DIR, "chromvar_per_donor.tsv.gz")
 
+# FAST wide-matrix reader: read.delim takes ~30-40 min on the ~200K-COLUMN
+# pseudobulk TSV (per-column type inference); the matrix is only ~18 rows, so
+# readLines+strsplit is ~1000x faster. Identical output to
+# read.delim(path, row.names = 1, check.names = FALSE).
+fast_read_counts <- function(path) {
+  con <- gzfile(path, "r"); L <- readLines(con); close(con)
+  peaks <- strsplit(L[1], "\t", fixed = TRUE)[[1]][-1]
+  body  <- L[-1]; nd <- length(body)
+  donors <- character(nd); mat <- matrix(0, nrow = nd, ncol = length(peaks))
+  for (i in seq_len(nd)) {
+    f <- strsplit(body[i], "\t", fixed = TRUE)[[1]]
+    donors[i] <- f[1]; mat[i, ] <- as.numeric(f[-1])
+  }
+  rownames(mat) <- donors; colnames(mat) <- peaks
+  as.data.frame(mat, check.names = FALSE)
+}
+
 # Outputs
 OUT_A <- file.path(SNAP_DIR, "scatac_da_corrected_hep_edger.csv")
 OUT_B <- file.path(SCENIC_DIR, "disease_regulons_limma.csv")
@@ -110,7 +127,7 @@ run_arm_a <- function() {
 
   # counts: rows = donors, cols = peaks (donor_id index col). edgeR wants
   # features (peaks) as ROWS and samples (donors) as COLUMNS -> transpose.
-  counts_in <- read.delim(COUNTS_PATH, row.names = 1, check.names = FALSE)
+  counts_in <- fast_read_counts(COUNTS_PATH)
   coldata   <- read.delim(COLDATA_PATH, stringsAsFactors = FALSE)
   msg("  Loaded counts: %d donors x %d peaks", nrow(counts_in), ncol(counts_in))
 

@@ -1,0 +1,26 @@
+program	prog_order	gene_order	gene
+Lipid droplet	1	1	PLIN2
+Lipid droplet	1	2	ABHD5
+Lipid droplet	1	3	PLIN4
+Lipid droplet	1	4	PLIN1
+Lipid droplet	1	5	ACLY
+ECM / BM	2	1	P4HA2
+ECM / BM	2	2	AGRN
+ECM / BM	2	3	LAMA5
+ECM / BM	2	4	LAMB2
+ECM / BM	2	5	CD151
+Immune / inflammation	3	1	CAPG
+Immune / inflammation	3	2	CASP1
+Immune / inflammation	3	3	CORO1A
+Immune / inflammation	3	4	CD74
+Immune / inflammation	3	5	HLA-DQA1
+Detox	4	1	GGT1
+Detox	4	2	MAT1A
+Detox	4	3	ADH1B
+Detox	4	4	CYP4A11
+Detox	4	5	CYP2C19
+AA catabolism	5	1	AASS
+AA catabolism	5	2	HGD
+AA catabolism	5	3	ACADSB
+AA catabolism	5	4	HAL
+AA catabolism	5	5	GNMT

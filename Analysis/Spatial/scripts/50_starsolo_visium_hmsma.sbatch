@@ -3,7 +3,7 @@
 #SBATCH --partition=cpu
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
-#SBATCH --time=12:00:00
+#SBATCH --time=48:00:00
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/logs/starsolo_hmsma_%A_%a.out
 #SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/Spatial/logs/starsolo_hmsma_%A_%a.out
 set -euo pipefail
@@ -39,6 +39,7 @@ STAR --runMode alignReads \
   --soloType CB_UMI_Simple \
   --soloCBwhitelist "$WL" \
   --soloCBstart 1 --soloCBlen 16 --soloUMIstart 17 --soloUMIlen 12 \
+  --soloBarcodeReadLength 0 \
   --soloFeatures Gene \
   --soloCBmatchWLtype 1MM_multi \
   --soloUMIdedup 1MM_All \

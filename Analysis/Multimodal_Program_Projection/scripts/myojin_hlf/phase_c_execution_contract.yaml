@@ -1,0 +1,105 @@
+contract_id: myojin-hlf-phase-c-v1
+core_specification_sha256: 1f99b7a7a95d9aebbbb911bc2317860f4a3fada0d1da2a4932d5c1ab190c4cdd
+release_id: program-context-v2-candidate-2026-08-07
+outcome_access: one_pass_only
+environment:
+  micromamba_environment: rnaseq
+  python: "3.10"
+  numpy: "2.2.6"
+  pandas: "2.3.3"
+  scipy: "1.15.2"
+  statsmodels: "0.14.5"
+source:
+  expected_rows: 18343
+  workbook_sha256: 2663a811676a1abe2778375e6d28f6397eaded1f895d274f3c241733669c1c66
+  primary_block: Palmitic_acid_vs_Vehicle
+  sensitivity_block: Palmitic_acid_D21_vs_D0
+class_continuous:
+  class_order: [neither, genetic_only, disease_state_only, convergent]
+  pairwise_order: [genetic_only_vs_neither, disease_state_only_vs_neither, convergent_vs_neither]
+  observed_confidence_interval: HC3_robust_Wald_95pct
+  omnibus_statistic: classical_partial_F_full_vs_reduced
+  pairwise_permutation_statistic: absolute_OLS_class_coefficient
+  pairwise_pvalue: "(1 + count(abs(null_beta) >= abs(observed_beta))) / (accepted_draws + 1)"
+  omnibus_pvalue: "(1 + count(null_F >= observed_F)) / (accepted_draws + 1)"
+  accepted_draws: 100000
+  seed: 2026080740
+  seed_reuse_across_prespecified_variants: true
+  invalid_draw_policy: continue_same_rng_stream_until_accepted_count
+  expression_quintiles: rank_first_after_sort_by_value_then_gene_symbol
+  sensitivity_subset_strata: inherit_primary_universe_bins_without_reranking
+  residual_permutation: within_guide_expression_missingness_stratum
+class_binary:
+  pairwise_order: [genetic_only_vs_neither, disease_state_only_vs_neither, convergent_vs_neither]
+  risk_difference: shared_stratum_size_weighted_class_minus_neither
+  risk_difference_interval: stratum_weighted_Wald_95pct
+  odds_ratio: Mantel_Haenszel_pooled
+  odds_ratio_interval: statsmodels_StratifiedTable_95pct
+  permutation_statistic: absolute_risk_difference
+  permutation_sampler: exact_stratum_hypergeometric_equivalent_to_label_permutation
+  accepted_draws: 100000
+  seed: 2026080741
+  seed_reuse_across_prespecified_variants: true
+  rng_substreams: numpy_SeedSequence_spawn_in_fixed_pairwise_order
+programs:
+  primary_pvalue_tail: one_sided_frozen_stage_direction
+  score_standardization: sample_SD_within_each_variant_universe
+  match_quintiles: rank_first_after_sort_by_value_then_gene_symbol
+  match_cell: guide_bin_x_expression_quintile_x_Chronos_quintile_x_missingness
+  draws: 10000
+  seed: 2026080742
+  rng_substreams: numpy_SeedSequence_spawn_by_lexical_analysis_variant_then_weight_mode_then_program_uid
+  null_pool: eligible_genes_excluding_frozen_members_of_the_program_currently_being_tested
+  draw_without_replacement_within_set: true
+  control_reuse_between_draws: true
+  matched_control_weight: inherit_target_member_weight
+  pvalue: "(1 + count(null_signed_score >= observed_signed_score)) / (draws + 1)"
+  effect: observed_signed_score_minus_mean_null_signed_score
+  variants:
+    - primary_original_weight
+    - primary_equal_weight
+    - primary_leave_highest_weight_out
+    - guide_floor_5_original_weight
+    - remove_all_known_hits_original_weight
+    - remove_ACSL3_original_weight
+sensitivities:
+  class_variants:
+    - primary
+    - guide_floor_5
+    - remove_all_known_hits
+    - remove_ACSL3
+    - missing_Chronos_indicator
+    - PA_D21_vs_D0
+    - absolute_PA_vs_vehicle_LFC
+  binary_variants:
+    - primary_protective_hit
+    - guide_floor_5
+    - remove_all_known_hits
+    - remove_ACSL3
+    - missing_Chronos_indicator
+    - positive_selection_FDR_without_LFC_floor
+  missing_Chronos_imputation: median_from_complete_primary_universe
+  missing_Chronos_expression_bins: complete_rows_inherit_primary_bins_added_missing_rows_ranked_within_missing_group
+  missing_Chronos_Chronos_bin: zero_reserved_for_missing_rows
+  D21_missing_policy: primary_eligible_complete_case_for_D21_LFC
+  multiplicity: BH_within_each_three_pair_family_or_program_variant_family
+release:
+  screen_result_rows: 18343
+  primary_eligible_rows: 7762
+  negative_LFC_source_label: continuous_negative_only_not_source_significant_sensitizing
+  software_acceptance_requires_biological_positivity: false
+  canonical_writes: false
+figure_gate:
+  alpha: 0.05
+  class_minimum_standardized_effect: 0.20
+  program_minimum_signed_effect: 0.20
+  known_hit_survival_requires_same_significance_direction_and_magnitude: true
+  class_known_hit_survival_requires_remove_all_known_hits_omnibus_p_lt_alpha: true
+  program_equal_and_leave_top_require_same_positive_sign: true
+  source_gate_required: true
+prohibited:
+  - endpoint_threshold_or_universe_changes
+  - outcome_driven_reruns
+  - goodsgrna_rank_or_source_pvalue_as_covariate
+  - source_significant_sensitizing_call_from_positive_selection_only
+  - canonical_output_writes

@@ -1,0 +1,5 @@
+gene,symbol,logFC,t,AveExpr,treat_lfc,treat_fdr
+ENSG000001.1,GENEA,0.5,4.0,6.0,0.25,0
+ENSG000001.2,GENEA,0.1,1.0,5.0,0.25,0.2
+ENSG000002.1,GENEB,-0.2,-2.0,4.0,0.25,0.1
+ENSG000004.1,,0.8,5.0,3.0,0.25,0.01

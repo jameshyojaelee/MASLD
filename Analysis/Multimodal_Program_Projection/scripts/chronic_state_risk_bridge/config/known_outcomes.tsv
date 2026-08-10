@@ -1,0 +1,12 @@
+dataset_id	outcome_access_status	role	frozen_interpretation
+GSE106737	inspected_before_plan43	discovery	Plan41 two-program reversal nonconfirmatory; whole-registry geometry hypothesis is retrospective
+GSE200418	inspected_before_plan43	discovery_context	acute lipid addition did not induce the two frozen programs; culture time increased both
+GSE207889	inspected_before_plan43	discovery_context	one-line organoid responses were injury and lineage dependent
+GSE253380	inspected_before_plan43	nonconfirmatory_boundary	model-specific ACMSD result cannot support generalized rescue
+CLCC1	inspected_before_plan43	nonconfirmatory_boundary	Plan42 primary locus result invalidated by driver provenance; all-gene result nonconfirmatory
+GSE313544	inspected_before_plan43	nonconfirmatory_boundary	PNPLA3 dosage-by-palmitate state alignment nonconfirmatory
+GSE158182	inspected_before_plan43	nonconfirmatory_boundary	PNPLA3 I148M stress response nonconfirmatory and source dependent
+GSE83452	not_inspected_at_plan43_freeze	external_replication	pairing metadata only inspected
+GSE48452	not_inspected_at_plan43_freeze	external_replication	pairing metadata only inspected
+GSE281160	not_inspected_at_plan43_freeze	external_perturbation	study headline and source design known; frozen state-axis projection unseen
+PXD052787	not_inspected_at_plan43_freeze	external_protein_replication	source headline known; evidence-class projection unseen

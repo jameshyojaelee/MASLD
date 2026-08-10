@@ -1,0 +1,9 @@
+source_value,expected_status,expected_normalized
+1_150553568_G_C_hg38,accepted,1_150553568_G_C_hg38
+chr1_150553568_G_C_hg38,accepted,1_150553568_G_C_hg38
+chr1:150553568:G:C,accepted,1_150553568_G_C_hg38
+chr1:150553568:GC,accepted,1_150553568_G_C_hg38
+1_150553568_G_C_hg19,rejected,
+1_150553568_G_C_custom,rejected,
+1_150553568_G_C_hg38_extra,rejected,
+chr1:150553568:G:C:hg38,rejected,

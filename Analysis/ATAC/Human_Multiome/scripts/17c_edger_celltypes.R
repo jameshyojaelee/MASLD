@@ -29,6 +29,23 @@ LABELS <- c("stellate", "macrophage", "cholangiocyte")
 
 msg <- function(...) cat(sprintf(...), "\n", sep = "")
 
+# FAST wide-matrix reader: read.delim takes ~30-40 min on these ~200K-COLUMN
+# pseudobulk TSVs (per-column type inference); the matrix is only ~18 rows, so
+# readLines+strsplit is ~1000x faster. Output is identical to
+# read.delim(gzfile(path), row.names = 1, check.names = FALSE).
+fast_read_counts <- function(path) {
+  con <- gzfile(path, "r"); L <- readLines(con); close(con)
+  peaks <- strsplit(L[1], "\t", fixed = TRUE)[[1]][-1]
+  body  <- L[-1]; nd <- length(body)
+  donors <- character(nd); mat <- matrix(0, nrow = nd, ncol = length(peaks))
+  for (i in seq_len(nd)) {
+    f <- strsplit(body[i], "\t", fixed = TRUE)[[1]]
+    donors[i] <- f[1]; mat[i, ] <- as.numeric(f[-1])
+  }
+  rownames(mat) <- donors; colnames(mat) <- peaks
+  as.data.frame(mat, check.names = FALSE)
+}
+
 run_edger <- function(label) {
   counts_path  <- file.path(SNAP_DIR, sprintf("%s_pseudobulk_counts.tsv.gz", label))
   coldata_path <- file.path(SNAP_DIR, sprintf("%s_pseudobulk_coldata.tsv", label))
@@ -39,7 +56,7 @@ run_edger <- function(label) {
     return(invisible(NULL))
   }
 
-  counts_in <- read.delim(gzfile(counts_path), row.names = 1, check.names = FALSE)
+  counts_in <- fast_read_counts(counts_path)
   coldata   <- read.delim(coldata_path, stringsAsFactors = FALSE)
   rownames(coldata) <- as.character(coldata$donor_id)
   coldata <- coldata[rownames(counts_in), , drop = FALSE]

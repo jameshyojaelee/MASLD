@@ -28,6 +28,23 @@ NORMAL_SET <- c("NORMAL","HEALTHY","CONTROL","0")
 to01 <- function(x){ xu<-toupper(trimws(as.character(x))); o<-rep(NA_real_,length(xu))
   o[xu %in% MASLD_SET]<-1; o[xu %in% NORMAL_SET]<-0; o }
 
+# FAST wide-matrix reader. read.delim is O(30-40 min) on these 200K-COLUMN TSVs
+# (per-column type inference); the matrix is only 12-18 rows, so readLines+strsplit
+# on the body is ~1000x faster. Returns donors(rows) x peaks(cols) numeric data.frame,
+# identical structure to read.delim(row.names=1, check.names=FALSE).
+fast_read_counts <- function(path){
+  con <- gzfile(path, "r"); L <- readLines(con); close(con)
+  peaks <- strsplit(L[1], "\t", fixed=TRUE)[[1]][-1]        # drop index-name header field
+  body  <- L[-1]; nd <- length(body)
+  donors <- character(nd); mat <- matrix(0, nrow=nd, ncol=length(peaks))
+  for (i in seq_len(nd)){
+    f <- strsplit(body[i], "\t", fixed=TRUE)[[1]]
+    donors[i] <- f[1]; mat[i,] <- as.numeric(f[-1])
+  }
+  rownames(mat) <- donors; colnames(mat) <- peaks
+  as.data.frame(mat, check.names=FALSE)
+}
+
 # per-cohort voom-QW fit -> per-peak logFC + moderated SE (for that cohort's depth)
 cohort_fit <- function(counts_donor_x_peak, cond01){
   mat <- t(as.matrix(counts_donor_x_peak)); storage.mode(mat) <- "double"  # peaks x donors
@@ -54,9 +71,21 @@ for (ct in CTS){
   cd281 <- file.path(G281, sprintf("%s_pseudobulk_coldata_GSE281367.tsv", ct))
   if (!all(file.exists(cf244,cd244,cf281,cd281))){ msg("[SKIP] %s", ct); next }
 
-  a <- read.delim(cf244, row.names=1, check.names=FALSE); ca <- read.delim(cd244);
+  # reuse already-computed cell types (load per-ct result from disk, summarize, skip refit)
+  outcsv <- file.path(OUT, sprintf("meta_da_%s.csv", ct))
+  if (file.exists(outcsv)){
+    res <- read.csv(outcsv)
+    n_meta <- sum(res$FDR<0.05, na.rm=TRUE); n_honest <- sum(res$FDR<0.05 & res$same_sign, na.rm=TRUE)
+    n_hetero <- sum(res$FDR<0.05 & res$I2>50, na.rm=TRUE)
+    rl <- suppressWarnings(cor(res$logFC_244, res$logFC_281, use="complete.obs"))
+    msg("=== %s === [loaded from disk] meta-sig=%d honest=%d hetero=%d", ct, n_meta, n_honest, n_hetero)
+    summ[[ct]] <- data.frame(cell_type=ct, n_peaks=nrow(res), n_meta_sig=n_meta,
+      n_honest_concordant=n_honest, n_hetero=n_hetero, r_logfc=round(rl,3)); next
+  }
+
+  a <- fast_read_counts(cf244); ca <- read.delim(cd244);
   rownames(ca)<-ca$donor_id; ca<-ca[rownames(a),]; conda<-to01(ca$condition)
-  b <- read.delim(cf281, row.names=1, check.names=FALSE); cb <- read.delim(cd281)
+  b <- fast_read_counts(cf281); cb <- read.delim(cd281)
   rownames(cb)<-cb$donor_id; cb<-cb[rownames(b),]; condb<-to01(cb$condition)
 
   # DEDUPE peaks: the GSE244832 cell_type_peak_sets_v2 BEDs carry ~24% coordinate-
