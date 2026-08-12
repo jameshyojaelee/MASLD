@@ -113,6 +113,10 @@
 # 7a) Docs are entirely private and ignored.
 /docs/
 
+# 7d) Web portals and streamlit apps are ignored
+/masld-atlas-v2/
+/streamlit_convergence/
+
 # 7c) Cas13 library design is a separate line of work (active owner: vpassanisi)
 #     and is not versioned by this repository. Its files remain on disk; they
 #     were untracked here via `git rm -r --cached Cas13_Library_Design`.
