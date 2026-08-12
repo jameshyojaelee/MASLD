@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# LEGACY 2026-07 evidence-class release. It builds the retired class-validation,
+# gsMap, drug-benchmark, and old Figure 1/4 package; it is not the Plan 60
+# standalone Resource release and must not overwrite current manuscript state.
+if [[ "${ALLOW_LEGACY_MANUSCRIPT_RELEASE:-false}" != "true" ]]; then
+  echo "REFUSED: legacy manuscript release is outside the standalone Resource contract." >&2
+  echo "Use Plan 60; set ALLOW_LEGACY_MANUSCRIPT_RELEASE=true only for provenance-only regeneration." >&2
+  exit 64
+fi
+
 BASE="${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}"
 RELEASE_ID="${MANUSCRIPT_RELEASE_ID:-2026-07-15-r2}"
 R_BIN="${RNASEQ_RSCRIPT:-/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript}"

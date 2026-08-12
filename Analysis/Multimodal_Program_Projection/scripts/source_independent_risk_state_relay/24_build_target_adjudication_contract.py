@@ -29,7 +29,7 @@ STAGE_A_TEMPLATE_ROOT = (
 )
 PLAN = (
     PROJECT_ROOT
-    / "docs/plans/2026-08-07_paper_program/"
+    / "docs/archive/plans/2026-08-07_paper_program/"
     "45_SOURCE_INDEPENDENT_RISK_TO_STATE_RELAY.md"
 )
 SCRIPT_ROOT = Path(__file__).resolve().parent

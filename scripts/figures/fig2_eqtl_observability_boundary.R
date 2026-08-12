@@ -11,7 +11,7 @@
 #     fig2K  phenotype provenance of the 35 Tier-1/2 GWAS strata, split by whether
 #            the regulatory (eQTL) side is ancestry-matched
 #
-# Authority / hard constraints (docs/plans/2026-08-07_paper_program/30_GENETICS_CONTEXT_AND_FIG3.md)
+# Historical method constraints: docs/archive/plans/2026-08-07_paper_program/30_GENETICS_CONTEXT_AND_FIG3.md
 #   Plan 30 closed as `coverage_limited_terminal`. Seal GEN_TERMINAL_CLOSURE_READY
 #   carries context_rescue_authorized=false and negative_claim_authorized=false.
 #   AUTHORIZED here: phenotype provenance, POSITIVE-ONLY Broadaway/eGene

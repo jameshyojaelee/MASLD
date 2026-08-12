@@ -22,8 +22,8 @@ SOURCE_FILES = (
     "data/published_gene_panels/govaere_2020_panel.tsv",
     "data/published_gene_panels/niddk_pipeline_2024.tsv",
     "data/published_gene_panels/opentargets_masld_2025.tsv",
-    "docs/manuscript/NUMBERS.md",
-    "docs/paper_outline.md",
+    "docs/archive/documentation_consolidation_2026-08-11/originals/docs/manuscript/NUMBERS.md",
+    "docs/archive/documentation_consolidation_2026-08-11/originals/docs/paper_outline.md",
     "figures/README.md",
     "figures/main/fig3_RNAseq/README.md",
     "figures/main/fig4_validation/README.md",
@@ -47,7 +47,7 @@ SOURCE_FILES = (
     "RNA-seq/results/validation/positive_control_validation.csv",
 )
 SOURCE_GLOBS = (
-    "docs/manuscript/working/**/*.md",
+    "docs/archive/documentation_consolidation_2026-08-11/originals/docs/manuscript/working/**/*.md",
     "scripts/figures/**/*.R",
     "RNA-seq/46d*.R",
     "RNA-seq/Human/Patient_Cohorts/scripts/featurecounts_s2/*.sh",

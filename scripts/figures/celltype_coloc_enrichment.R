@@ -19,7 +19,7 @@
 #   RNA-seq/results/gwas_rna_integration/celltype_heritability_results.csv
 #   columns: cell_type, fold_enrichment_coloc, wilcox_p_coloc, fdr_coloc, ...
 #
-# HONESTY (mirrors docs/manuscript/NUMBERS.md §368 RE-CORRECTED 2026-06-22):
+# HONESTY (mirrors docs/technical/NUMBERS_HISTORY.md, corrected 2026-06-22):
 #   - The ROBUST claim is immune / non-parenchymal enrichment (fold > 1).
 #   - The HEPATOCYTE fold is VERSION-UNSTABLE (1.16× ↔ 0.93×, near 1.0) and is
 #     NOT load-bearing. We show it as the lowest/borderline lineage but do NOT

@@ -11,7 +11,9 @@
 ##SBATCH --partition=bigmem
 ##SBATCH --qos=interactive
 # =============================================================================
-# rebuild_web_data.sbatch  —  single orchestrator for ALL MASLD atlas web data
+# LEGACY PRE-RESOURCE web-data orchestrator. It emits rank-first convergence,
+# progression, and Cas13-adjacent objects that are not part of the MASLD Gene Catalog
+# contract. It fails closed unless explicitly invoked for provenance.
 # =============================================================================
 # Regenerates every artifact the public portal (masld-atlas-v2/) serves, from
 # the current canonical results, in one re-runnable 7-phase DAG. Supersedes the
@@ -39,6 +41,12 @@
 # =============================================================================
 
 set -eo pipefail   # NOT -u: micromamba/conda activation references unbound vars
+
+if [[ "${ALLOW_LEGACY_PORTAL_REBUILD:-false}" != "true" ]]; then
+  echo "REFUSED: legacy portal rebuild is outside the standalone Resource contract."
+  echo "Use Plan 50/60; set ALLOW_LEGACY_PORTAL_REBUILD=true only for provenance-only regeneration."
+  exit 64
+fi
 
 # ---------------------------------------------------------------------------
 # Config / env-var contract

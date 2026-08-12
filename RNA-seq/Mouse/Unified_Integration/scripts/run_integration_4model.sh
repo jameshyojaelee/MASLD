@@ -26,7 +26,7 @@
 #   - M02c DIETS reverted to c("MCD","HFD","CDAHFD","FPC").
 # M02 needs no change (it is config-driven and splits CDAHFD_FPC -> CDAHFD+FPC).
 #
-# See docs/manuscript/NUMBERS.md "Mouse roster reconciliation (2026-06-16)".
+# See docs/technical/NUMBERS_HISTORY.md for the mouse roster reconciliation.
 # =============================================================================
 
 # NOTE: activate the env BEFORE `set -u`. The conda binutils activation script

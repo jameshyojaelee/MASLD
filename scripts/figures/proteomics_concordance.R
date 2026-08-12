@@ -28,7 +28,7 @@
 #
 # Output: figures/main/fig4_validation/panels/figS4a.pdf (renamed 2026-07-07;
 #         was fig4a_proteomics_concordance.pdf; also serves as Supp Fig 4a —
-#         see docs/paper_outline.md Fig S4)
+#         see docs/PAPER.md and archived Fig S4 rationale)
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

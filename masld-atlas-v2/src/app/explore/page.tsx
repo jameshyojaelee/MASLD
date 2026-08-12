@@ -18,8 +18,7 @@ type SortKey =
   | "symbol"
   | "bulk_logfc"
   | "bulk_padj"
-  | "sex_class"
-  | "layers_active";
+  | "sex_class";
 type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 50;
@@ -36,7 +35,6 @@ const COLUMNS: { key: SortKey; label: string; className?: string }[] = [
   { key: "bulk_logfc", label: "logFC", className: "text-right" },
   { key: "bulk_padj", label: "padj", className: "text-right" },
   { key: "sex_class", label: "Sex Class" },
-  { key: "layers_active", label: "Layers", className: "text-right" },
 ];
 
 function formatPadj(val: number | null | undefined): string {
@@ -70,8 +68,6 @@ function getSortValue(
       return gene.bulk_padj ?? null;
     case "sex_class":
       return gene.sex_class ?? "";
-    case "layers_active":
-      return gene.layers_active ?? 0;
   }
 }
 
@@ -111,8 +107,8 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [preset, setPreset] = useState<Preset>("all");
-  const [sortKey, setSortKey] = useState<SortKey>("layers_active");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortKey, setSortKey] = useState<SortKey>("symbol");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState(0);
 
   // Enrichment & gene list state
@@ -402,14 +398,6 @@ export default function ExplorePage() {
                   {/* Sex Class */}
                   <td className="px-3 py-1.5 text-xs text-muted-foreground">
                     {gene.sex_class ?? "\u2014"}
-                  </td>
-
-                  {/* Layers */}
-                  <td className="px-3 py-1.5 text-right font-mono text-xs">
-                    <span className="text-foreground">
-                      {gene.layers_active ?? 0}
-                    </span>
-                    <span className="text-muted-foreground">/7</span>
                   </td>
 
                   {/* Tags */}

@@ -108,6 +108,36 @@ interface SexSummary {
   genes: SexGene[];
   note: string;
 }
+interface SpatialProgramCoverageRow {
+  release_id: string;
+  dataset_id: string;
+  assay_id: string;
+  program_uid: string;
+  program_label: string;
+  n_program_genes: number;
+  n_genes_measured: number;
+  retained_l1_weight: number;
+  coverage_status: string;
+  testability_reason: string;
+  dataset_gate: string;
+  biological_unit: string;
+  biological_unit_resolution: string;
+  source_dependence: string;
+}
+interface SpatialProgramEffectRow {
+  release_id: string;
+  dataset_id: string;
+  assay_id: string;
+  program_uid: string;
+  estimand: string;
+  effect_unit: string;
+  estimate: number | null;
+  qvalue: number | null;
+  n_biological: number | null;
+  n_technical: number | null;
+  evidence_state: string;
+  testability_reason: string;
+}
 
 // ---------------------------------------------------------------------------
 // Constants + small helpers
@@ -676,11 +706,179 @@ function SexTab({ data }: { data: SexSummary }) {
 }
 
 // ---------------------------------------------------------------------------
+// Spatial observability tab
+// ---------------------------------------------------------------------------
+
+function SpatialProgramsTab({
+  coverage,
+  effects,
+  unavailable,
+}: {
+  coverage: SpatialProgramCoverageRow[];
+  effects: SpatialProgramEffectRow[];
+  unavailable: boolean;
+}) {
+  const programOptions = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          coverage.map((row) => [
+            row.program_uid,
+            { uid: row.program_uid, label: row.program_label },
+          ])
+        ).values()
+      ).sort((a, b) => a.label.localeCompare(b.label)),
+    [coverage]
+  );
+  const [programUid, setProgramUid] = useState("");
+  const selectedUid = programOptions.some((row) => row.uid === programUid)
+    ? programUid
+    : programOptions[0]?.uid ?? "";
+  const selectedCoverage = coverage.filter((row) => row.program_uid === selectedUid);
+  const selectedEffects = effects.filter((row) => row.program_uid === selectedUid);
+
+  if (unavailable || coverage.length === 0) {
+    return (
+      <EmptyState
+        title="Spatial Resource tables are not staged"
+        description="The portal consumer is ready, but categorical spatial tables remain in the isolated candidate until synchronized Resource promotion."
+      />
+    );
+  }
+
+  const coverageCols: DataTableColumn<SpatialProgramCoverageRow>[] = [
+    { key: "dataset_id", header: "Dataset", sortable: true },
+    {
+      key: "coverage_status",
+      header: "Coverage",
+      sortable: true,
+      render: (r) => <ProgramChip label={r.coverage_status.replace(/_/g, " ")} />,
+    },
+    { key: "n_genes_measured", header: "Genes", numeric: true, sortable: true },
+    {
+      key: "retained_l1_weight",
+      header: "Retained L1",
+      numeric: true,
+      sortable: true,
+      render: (r) => r.retained_l1_weight.toFixed(3),
+    },
+    {
+      key: "biological_unit_resolution",
+      header: "Unit resolution",
+      sortable: true,
+      render: (r) => r.biological_unit_resolution.replace(/_/g, " "),
+    },
+    {
+      key: "dataset_gate",
+      header: "Dataset gate",
+      sortable: true,
+      render: (r) => r.dataset_gate.replace(/_/g, " "),
+    },
+    {
+      key: "testability_reason",
+      header: "Reason",
+      render: (r) => r.testability_reason.replace(/_/g, " "),
+    },
+  ];
+  const effectCols: DataTableColumn<SpatialProgramEffectRow>[] = [
+    { key: "dataset_id", header: "Dataset", sortable: true },
+    {
+      key: "evidence_state",
+      header: "Evidence state",
+      sortable: true,
+      render: (r) => <ProgramChip label={r.evidence_state.replace(/_/g, " ")} />,
+    },
+    {
+      key: "estimate",
+      header: "Estimate",
+      numeric: true,
+      sortable: true,
+      render: (r) => (r.estimate == null ? "—" : r.estimate.toFixed(4)),
+    },
+    { key: "effect_unit", header: "Effect unit" },
+    {
+      key: "qvalue",
+      header: "q",
+      numeric: true,
+      sortable: true,
+      render: (r) => (r.qvalue == null ? "—" : r.qvalue.toPrecision(3)),
+    },
+    {
+      key: "n_biological",
+      header: "Biological n",
+      numeric: true,
+      render: (r) => r.n_biological ?? "—",
+    },
+    {
+      key: "n_technical",
+      header: "Technical n",
+      numeric: true,
+      render: (r) => r.n_technical ?? "—",
+    },
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+        All 117 frozen programs receive outcome-free coverage. Confirmatory inference is
+        restricted to the two predeclared robust-display programs. Indeterminate and
+        untestable states are retained; Moran&apos;s I is spatial organization, not disease direction.
+      </div>
+      <label className="block max-w-xl text-sm font-medium">
+        Frozen program
+        <select
+          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+          value={selectedUid}
+          onChange={(event) => setProgramUid(event.target.value)}
+        >
+          {programOptions.map((row) => (
+            <option key={row.uid} value={row.uid}>
+              {row.label} · {row.uid}
+            </option>
+          ))}
+        </select>
+      </label>
+      <section>
+        <h2 className="mb-1 text-lg font-semibold">Assay observability</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Release {selectedCoverage[0]?.release_id}. Biological-unit resolution and source gates
+          determine whether coverage can support inference.
+        </p>
+        <DataTable
+          data={selectedCoverage}
+          columns={coverageCols}
+          pageSize={0}
+          initialSort={{ key: "dataset_id", dir: "asc" }}
+          rowKey={(r) => `${r.dataset_id}:${r.assay_id}:${r.program_uid}`}
+        />
+      </section>
+      <section>
+        <h2 className="mb-1 text-lg font-semibold">Confirmatory spatial effects</h2>
+        {selectedEffects.length > 0 ? (
+          <DataTable
+            data={selectedEffects}
+            columns={effectCols}
+            pageSize={0}
+            initialSort={{ key: "dataset_id", dir: "asc" }}
+            rowKey={(r) => `${r.dataset_id}:${r.assay_id}:${r.program_uid}`}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Coverage only. This program was not part of the sealed two-program confirmatory family.
+          </p>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Root client
 // ---------------------------------------------------------------------------
 
 const TABS = [
   { id: "programs", label: "Programs" },
+  { id: "spatial", label: "Spatial observability" },
   { id: "sex", label: "Sex-biased" },
 ];
 
@@ -689,6 +887,9 @@ export function ProgramsClient() {
   const [programs, setPrograms] = useState<ProgramsSummary | null>(null);
   const [sex, setSex] = useState<SexSummary | null>(null);
   const [topGenes, setTopGenes] = useState<Record<string, MembershipRow[]>>({});
+  const [spatialCoverage, setSpatialCoverage] = useState<SpatialProgramCoverageRow[]>([]);
+  const [spatialEffects, setSpatialEffects] = useState<SpatialProgramEffectRow[]>([]);
+  const [spatialUnavailable, setSpatialUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -753,6 +954,38 @@ export function ProgramsClient() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      queryParquet<SpatialProgramCoverageRow>(
+        "spatial_program_coverage.parquet",
+        `SELECT release_id, dataset_id, assay_id, program_uid, program_label,
+                n_program_genes, n_genes_measured, retained_l1_weight,
+                coverage_status, testability_reason, dataset_gate, biological_unit,
+                biological_unit_resolution, source_dependence
+           FROM spatial_program_coverage`
+      ),
+      queryParquet<SpatialProgramEffectRow>(
+        "spatial_program_effects.parquet",
+        `SELECT release_id, dataset_id, assay_id, program_uid, estimand, effect_unit,
+                estimate, qvalue, n_biological, n_technical, evidence_state,
+                testability_reason
+           FROM spatial_program_effects`
+      ),
+    ])
+      .then(([coverageRows, effectRows]) => {
+        if (cancelled) return;
+        setSpatialCoverage(coverageRows);
+        setSpatialEffects(effectRows);
+      })
+      .catch(() => {
+        if (!cancelled) setSpatialUnavailable(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <div className="mt-6">
       <TabBar
@@ -784,6 +1017,12 @@ export function ProgramsClient() {
         ) : (
           <EmptyState title="No program data" />
         )
+      ) : tab === "spatial" ? (
+        <SpatialProgramsTab
+          coverage={spatialCoverage}
+          effects={spatialEffects}
+          unavailable={spatialUnavailable}
+        />
       ) : sex ? (
         <SexTab data={sex} />
       ) : (

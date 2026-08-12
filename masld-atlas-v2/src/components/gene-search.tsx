@@ -119,7 +119,7 @@ export function GeneSearch() {
                         </Badge>
                       )}
                       <span className="text-xs text-muted-foreground">
-                        {gene.layers_active || 0}/7
+                        {gene.layers_active || 0}/6 non-spatial
                       </span>
                     </div>
                   </CommandItem>

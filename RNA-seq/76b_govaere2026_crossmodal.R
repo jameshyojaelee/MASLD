@@ -8,7 +8,7 @@
 #   1. Hepatocyte Progressor subtype signature vs Govaere GeoMx SH-vs-LS
 #      (DE file from Spatial pipeline W3.A1, plus Sup Table 11 lookup).
 #   2. Macrophage pseudotime late genes vs Govaere MetMac/LAM/GPNMB panels.
-#   3. IL32 axis panel: per-gene atlas + Govaere signature column table.
+#   3. IL32 axis panel: Gene Catalog record + Govaere signature column table.
 #   4. Bulk dream DEGs vs Sup Table 11 (snRNA GPNMB+ MASH-vs-noMASH).
 #
 # Reads (relative to MASLD_PROJECT_ROOT):

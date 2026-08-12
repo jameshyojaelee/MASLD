@@ -10,10 +10,10 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------
-# L8 ATAC-seq Integration into Multi-Evidence Atlas (Script 35)
+# L8 ATAC-seq integration into the MASLD Gene Catalog (Script 35)
 #
 # Merges chromatin accessibility evidence from Modules 1-3 into
-# the multi-evidence atlas as Layer 8. Handles missing modules
+# the MASLD Gene Catalog as Layer 8. Handles missing modules
 # gracefully — safe to run even if upstream results are partial.
 #
 # Usage:

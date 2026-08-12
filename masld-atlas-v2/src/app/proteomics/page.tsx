@@ -169,7 +169,7 @@ export default function ProteomicsPage() {
   const header = (
     <PageHeader
       title="Plasma + Liver Proteomics"
-      description="Protein-level evidence integrating Olink Explore 1536 plasma and DIA-MS liver proteomics, with mRNA-protein concordance across the MASLD atlas."
+      description="Protein-level results integrating Olink Explore 1536 plasma and DIA-MS liver proteomics, with mRNA-protein concordance across the MASLD Gene Catalog."
     />
   );
 

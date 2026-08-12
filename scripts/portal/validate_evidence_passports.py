@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""PASS-01 fixtures plus PASS-06 evidence-passport release validation."""
+"""PASS-01 fixtures plus PASS-06 MASLD Gene Catalog release validation.
+
+Legacy ``passport_*`` identifiers remain part of the sealed v1 file contract.
+"""
 
 from __future__ import annotations
 
@@ -255,7 +258,7 @@ def check_identity(bundle: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFra
     ):
         raise PassportValidationError(
             "NONDETERMINISTIC_KEY_ORDER",
-            "gene index must use stable passport-ID order, never an effect-derived order",
+            "gene index must use stable Catalog-entry ID order, never an effect-derived order",
         )
     invalid = [
         value
@@ -269,7 +272,7 @@ def check_identity(bundle: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFra
     )
     if not expected_passports.equals(genes["passport_id"].astype(str)):
         raise PassportValidationError(
-            "PASSPORT_ID_DERIVATION", "passport ID must be release:Ensembl"
+            "PASSPORT_ID_DERIVATION", "Catalog entry ID must be release:Ensembl"
         )
     actual_collision = genes["symbol"].duplicated(keep=False)
     if not actual_collision.equals(genes["symbol_collision"].astype(bool)):
@@ -860,7 +863,7 @@ def check_rulebook_and_experiments(bundle: Path, genes: pd.DataFrame) -> None:
         genes["passport_id"]
     ):
         raise PassportValidationError(
-            "EXPERIMENT_GENE_REFERENCE", "one experiment per passport"
+            "EXPERIMENT_GENE_REFERENCE", "one experiment per Gene Catalog entry"
         )
     gene_map = genes.set_index("passport_id").to_dict("index")
     for row in experiments:
@@ -1309,7 +1312,7 @@ def check_candidate_ui(
         raise PassportValidationError("UI_VISIBLE_SEMANTICS", str(missing_tokens))
     if "data-symbol=" in index_text or "find(g=>g.symbol===" in index_text:
         raise PassportValidationError(
-            "UI_IDENTITY_NAVIGATION", "general navigation must be passport-ID based"
+            "UI_IDENTITY_NAVIGATION", "general navigation must use Catalog entry IDs"
         )
     if re.search(r"https?://", index_text, re.IGNORECASE):
         raise PassportValidationError(
@@ -1344,7 +1347,7 @@ def check_candidate_ui(
     observed_ids = [str(row.get("passportId", "")) for row in payload_genes]
     expected_ids = ordered_source["passport_id"].astype(str).tolist()
     if observed_ids != expected_ids or len(observed_ids) != len(set(observed_ids)):
-        raise PassportValidationError("UI_GENE_ALPHABETICAL_ORDER", "passport IDs")
+        raise PassportValidationError("UI_GENE_ALPHABETICAL_ORDER", "Catalog entry IDs")
 
     evidence = pd.read_parquet(
         bundle / "passport_evidence_long.parquet", engine="pyarrow"

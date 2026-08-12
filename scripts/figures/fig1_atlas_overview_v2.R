@@ -235,7 +235,8 @@ p_c <- p_c_heat + p_c_bar + plot_layout(widths = c(2.2, 1.1))
 
 # =============================================================================
 # PANEL 1d: UpSet — per-study DEGs vs integrated DEGs
-#  Headline: primary DEGs (padj<0.05, |logFC|>0.5); ashr supplementary
+#  Both arms share one effect-size floor (0.25): per-study padj<0.05 &
+#  |logFC|>0.25, integrated treat_fdr<0.05 (interval null at lfc=0.25).
 # =============================================================================
 cat("\n── Panel 1d: UpSet per-study vs integrated DEGs ──\n")
 
@@ -247,9 +248,14 @@ upset_studies <- c("GSE126848", "GSE130970", "GSE135251",
                    "GSE162694", "GSE213621")
 upset_names <- STUDY_NAMES[upset_studies]
 
-# Threshold: primary (padj<0.05, |logFC|>0.5)
+# Effect-size floor must MATCH the integrated arm, which uses is_dream_deg()
+# = treat_fdr < 0.05, an interval-null test against |logFC| <= 0.25. Holding the
+# per-study arms at 0.5 (as this panel did until 2026-08-11) barred every gene
+# with 0.25 < |logFC| < 0.5 from all five per-study sets while admitting it to
+# the integrated set, so such genes could only ever land in "Integrated only" —
+# the very bar this panel headlines. Both arms now use the same 0.25 floor.
 padj_thr <- 0.05
-lfc_thr  <- 0.5
+lfc_thr  <- 0.25
 
 deg_lists <- list()
 for (ds in upset_studies) {
@@ -322,8 +328,15 @@ p_d_bars <- ggplot(top_ints, aes(x = rank, y = N)) +
         axis.ticks.x = element_blank(),
         axis.line.x = element_blank(),
         plot.margin = margin(2, 5, 0, 5))
-message(sprintf("[caption] Per-study vs integrated DEGs \u00b7 %s integrated DEGs (effect-size-aware interval-null FDR gate, FDR<0.05 at lfc=0.25)",
-                format(set_sizes["Integrated"], big.mark = ",")))
+message(sprintf(paste0(
+  "[caption] Per-study vs integrated DEGs. The integrated set (%s genes) uses the ",
+  "canonical effect-size-aware interval-null FDR gate (FDR<0.05 at lfc=0.25); each ",
+  "per-study set uses padj<0.05 with the SAME %.2f effect-size floor, so no gene is ",
+  "admitted to one arm by a threshold that excludes it from the other. The ",
+  "\"Integrated only\" bar (%s genes) is therefore a property of pooling, not of a ",
+  "gate mismatch between the arms."),
+  format(set_sizes["Integrated"], big.mark = ","), lfc_thr,
+  format(sum(int_counts[int_key == int_only_key, N]), big.mark = ",")))
 
 p_d_dots <- ggplot() +
   geom_segment(data = seg_data,

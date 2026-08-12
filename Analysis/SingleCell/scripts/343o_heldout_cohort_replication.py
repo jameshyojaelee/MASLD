@@ -5,7 +5,7 @@
 Held-out cohort replication of the augmented F-stage classifier (Script 343m).
 
 Per `docs/archive/single_cell_pre_remediation_2026-05-22/scrna_pipeline_rigor_plan.md`
-Phase 7.4 (superseded by docs/single_cell_analysis.md) — the strongest external
+Phase 7.4 (historical context in docs/technical/SINGLE_CELL_HISTORY.md) — the strongest external
 validation. Hold out ALL donors from one dataset at a time, refit the
 augmented scVI ordinal classifier on the remaining 5 cohorts' anchors, and
 predict F-stage on the held-out dataset. Pre-registered threshold per

@@ -298,8 +298,8 @@ function ComparisonTable({
           : "N/A",
     },
     {
-      label: "Modalities",
-      render: (g) => `${g.layers_active}/7`,
+      label: "Non-spatial modalities",
+      render: (g) => `${g.layers_active}/6`,
     },
     {
       label: "DEG",

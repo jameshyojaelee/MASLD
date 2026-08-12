@@ -43,7 +43,7 @@ cat("=== Differential Proteomics Analysis (v3 — multi-contrast) ===\n")
 cat("Time:", as.character(Sys.time()), "\n\n")
 
 # ---------------------------------------------------------------------------
-# Helper: symbol mapping via multi-evidence atlas
+# Helper: symbol mapping via the MASLD Gene Catalog
 # ---------------------------------------------------------------------------
 atlas_f <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 gene_map <- NULL

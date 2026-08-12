@@ -1,5 +1,9 @@
 # Program-context v2 release scaffold
 
+The public product is the **MASLD Gene Catalog**. Internal `passport_*` paths,
+columns, and artifact IDs below belong to the sealed v1 machine contract and
+are retained only so existing candidates remain verifiable.
+
 This directory implements the candidate-only Plan 60 `REL-00` through `REL-05`
 release boundary. Real scientific assembly remains blocked until all upstream
 workstreams close. The included REL-02--04 implementation is exercised only on

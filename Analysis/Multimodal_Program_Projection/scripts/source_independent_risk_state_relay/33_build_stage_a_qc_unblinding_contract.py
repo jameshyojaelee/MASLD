@@ -159,7 +159,7 @@ def main() -> None:
         "guide_response_q_threshold": 0.05,
         "guide_response_abs_effect_threshold": 0.25,
         "minimum_backgrounds_per_claim_bearing_comparison": 2,
-        "governing_plan_path": "docs/plans/2026-08-07_paper_program/45_SOURCE_INDEPENDENT_RISK_TO_STATE_RELAY.md",
+        "governing_plan_path": "docs/archive/plans/2026-08-07_paper_program/45_SOURCE_INDEPENDENT_RISK_TO_STATE_RELAY.md",
         "governing_plan_integrity_bound": False,
         "output_sha256": {path.name: sha256_file(path) for path in outputs},
     }

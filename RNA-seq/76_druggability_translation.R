@@ -106,7 +106,7 @@ out[is.na(clintrial_max_phase), clintrial_max_phase := NA_real_]
 #     Genome-wide drug_dev_status (OpenTargets + DGIdb + Pharos + CT.gov +
 #     curated MASH pipeline). MASLD-specific status comes from curated + CT.gov.
 #     OUTER-joined so every classified gene is represented in the output.
-#     See docs/manuscript/working/drug_dev_status_reframe_spec.md.
+#     See docs/archive/relocated_2026-07-08/manuscript/working/drug_dev_status_reframe_spec.md.
 # ---------------------------------------------------------------------------
 dds_path <- file.path(EXT, "drug_targets/drug_target_classification.tsv")
 if (file.exists(dds_path)) {

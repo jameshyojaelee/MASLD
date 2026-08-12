@@ -149,8 +149,8 @@ export function directionArrow(v: number | null | undefined): string {
 /**
  * Per-modality strengths in [0, 1] for the header EvidenceBar. Only the
  * modalities that atlas_core actually measures are populated (human bulk,
- * genetic, essentiality, spatial); the rest are left unset so the bar honestly
- * reflects what the compact table carries.
+ * genetic, essentiality). Spatial context is categorical and dataset-qualified,
+ * so it is deliberately excluded from this numeric evidence-strength object.
  */
 export function evidenceStrengths(
   r: AtlasCoreRow
@@ -173,11 +173,6 @@ export function evidenceStrengths(
     : chronos != null
       ? clamp01(-chronos) * 0.5
       : 0;
-
-  // S5 spatial (spatially variable gene → Moran's I)
-  s.s5_spatial = r.spatial_is_svg
-    ? clamp01(Math.max(0.3, num(r.spatial_morans_i) ?? 0))
-    : 0;
 
   return s;
 }

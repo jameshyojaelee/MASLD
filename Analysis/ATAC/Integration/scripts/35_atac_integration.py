@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-35_atac_integration.py — L8 ATAC-seq Integration into Multi-Evidence Atlas
+35_atac_integration.py — L8 ATAC-seq integration into the MASLD Gene Catalog
 
 Integrates chromatin accessibility evidence from three upstream ATAC-seq modules
-into the multi-evidence atlas as Layer 8 (L8_chromatin):
+into the MASLD Gene Catalog as Layer 8 (L8_chromatin):
 
   Module 1 (Mouse bulk ATAC): Promoter accessibility, differential accessibility
   Module 2 (Human scATAC):    Per-cell-type DA, chromVAR TF motif enrichment
@@ -721,7 +721,7 @@ def generate_summary(l8, atlas, outpath):
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description="L8 ATAC-seq integration into multi-evidence atlas",
+        description="L8 ATAC-seq integration into the MASLD Gene Catalog",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--atlas", default=str(DEFAULT_ATLAS),

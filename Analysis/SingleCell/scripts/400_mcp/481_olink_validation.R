@@ -19,7 +19,7 @@ olink_candidates <- c(
 )
 olink_f <- olink_candidates[file.exists(olink_candidates)][1]
 if (is.na(olink_f)) {
-  cat("[481] No Olink data file found -- see docs/paper_outline.md / memory for path\n")
+  cat("[481] No Olink data file found -- see docs/technical/DATASETS_AND_PIPELINES.md\n")
   quit(status = 0)
 }
 cat(sprintf("[481] Loading Olink: %s\n", olink_f))

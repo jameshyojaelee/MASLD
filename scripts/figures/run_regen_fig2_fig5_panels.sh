@@ -7,11 +7,19 @@
 #SBATCH --time=48:00:00
 #SBATCH --output=scripts/figures/logs/regen_fig2_fig5_panels_%j.out
 #SBATCH --error=scripts/figures/logs/regen_fig2_fig5_panels_%j.err
-# Regenerate INDIVIDUAL PANELS for fig3_RNAseq + fig5_convergence on the
-# current -s2 data, into figures/main/. PANELS ONLY — NO composite/assembler runs.
+# LEGACY PRE-RESOURCE regeneration path. It writes retired Figure 5 convergence
+# panels and therefore fails closed by default. The directory name
+# `fig5_convergence` is retained only for backward compatibility; current
+# Figure 5 is the MASLD Gene Catalog.
 # Excludes: fig2_progression.R, assemble_*, fig5_causal_architecture.R,
 #   fig5_translation.R, fig5_convergence_legacy.R, *_compact. Composite byproducts
 #   are purged at the end (explicit filenames only, to protect real panels).
+if [[ "${ALLOW_LEGACY_FIGURE_REGEN:-false}" != "true" ]]; then
+  echo "REFUSED: this script regenerates retired convergence panels."
+  echo "Use Plan 60 for the Resource release; set ALLOW_LEGACY_FIGURE_REGEN=true only for provenance-only regeneration."
+  exit 64
+fi
+
 set +e
 BASE=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 cd "$BASE" || exit 1

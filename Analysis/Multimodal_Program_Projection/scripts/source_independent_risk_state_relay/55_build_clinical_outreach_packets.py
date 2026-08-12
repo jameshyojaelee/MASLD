@@ -14,7 +14,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 SCRIPT_ROOT = Path(__file__).resolve().parent
-PLAN = PROJECT_ROOT / "docs/plans/2026-08-07_paper_program/46A_CLINICAL_COLLABORATOR_ROUTING_AND_OUTREACH.md"
+PLAN = PROJECT_ROOT / "docs/archive/plans/2026-08-07_paper_program/46A_CLINICAL_COLLABORATOR_ROUTING_AND_OUTREACH.md"
 PARENT_ROOT = PROJECT_ROOT / "Analysis/Multimodal_Program_Projection/candidates/source-independent-risk-state-relay-clinical-data-handoff-v1-2026-08-10"
 PARENT_SEAL = PARENT_ROOT / "CLINICAL_DATA_HANDOFF_SEALED.json"
 ROOT = PROJECT_ROOT / "Analysis/Multimodal_Program_Projection/candidates/source-independent-risk-state-relay-clinical-outreach-v1-2026-08-10"

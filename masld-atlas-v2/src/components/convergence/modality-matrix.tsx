@@ -17,8 +17,8 @@ import { sequentialColor } from "@/lib/palette";
 
 export interface ConvergenceRow {
   gene: string;
-  modalities: number[]; // length 6: [bulk, coloc, atac, spatial, singlecell, proteomics]
-  count: number; // # of the 6 channels active (> 0.1) — internally consistent with the dots
+  modalities: number[]; // legacy length 6: [bulk, coloc, atac, spatial, singlecell, proteomics]
+  count: number; // legacy count; never used because it includes numeric spatial evidence
   tier?: number; // 1 = genetically validated … 4 = weak; 0 = excluded
   tier_label?: string;
   score?: number | null;
@@ -33,16 +33,22 @@ interface ModalityMatrixProps {
   onRowClick?: (gene: string) => void;
 }
 
-// Channel headers — order matches `modalities[]`. The six MAIN human modalities.
+// Spatial is deliberately omitted: the legacy array retains a numeric spatial
+// value for one compatibility release, but it cannot affect display, filtering,
+// counts, or sorting. sourceIndex maps the remaining assay-native channels.
 const MODALITY_HEADERS = [
-  { key: "bulk", label: "Bulk", title: "Bulk RNA-seq (disease logFC)" },
-  { key: "coloc", label: "COLOC", title: "GWAS–eQTL colocalization (SuSiE PP.H4)" },
-  { key: "atac", label: "ATAC", title: "Regulatory / ATAC accessibility" },
-  { key: "spatial", label: "Spatial", title: "Spatial (Moran's I / SVG)" },
-  { key: "sc", label: "scRNA", title: "Single-cell (cross-cell-type DE)" },
-  { key: "prot", label: "Protein", title: "Proteomics (best protein logFC)" },
+  { key: "bulk", sourceIndex: 0, label: "Bulk", title: "Bulk RNA-seq (disease logFC)" },
+  { key: "coloc", sourceIndex: 1, label: "COLOC", title: "GWAS–eQTL colocalization (SuSiE PP.H4)" },
+  { key: "atac", sourceIndex: 2, label: "ATAC", title: "Regulatory / ATAC accessibility" },
+  { key: "sc", sourceIndex: 4, label: "scRNA", title: "Single-cell (cross-cell-type DE)" },
+  { key: "prot", sourceIndex: 5, label: "Protein", title: "Proteomics (best protein logFC)" },
 ];
-const N_CHANNELS = MODALITY_HEADERS.length; // 6
+const N_CHANNELS = MODALITY_HEADERS.length;
+
+const displayedModalities = (row: ConvergenceRow): number[] =>
+  MODALITY_HEADERS.map((header) => row.modalities[header.sourceIndex] ?? 0);
+const displayedCount = (row: ConvergenceRow): number =>
+  displayedModalities(row).filter((value) => value > 0.1).length;
 
 const ROW_HEIGHT = 18;
 const ROW_LABEL_WIDTH = 92;
@@ -59,7 +65,7 @@ function cellFill(v: number): string {
   return sequentialColor(Math.min(Math.max(v, 0), 1));
 }
 
-type SortMode = "count" | "alpha" | "bulk" | "coloc" | "rank";
+type SortMode = "count" | "alpha" | "bulk" | "coloc";
 
 type MatrixTip =
   | { kind: "cell"; gene: string; mod: number; v: number }
@@ -70,7 +76,7 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
   const [query, setQuery] = useState("");
   const [minCount, setMinCount] = useState(0);
   const [requiredModality, setRequiredModality] = useState<number | null>(null);
-  const [sortMode, setSortMode] = useState<SortMode>("rank");
+  const [sortMode, setSortMode] = useState<SortMode>("count");
   const [showAll, setShowAll] = useState(false);
   const [hover, setHover] = useState<{ gene: string | null; col: number } | null>(
     null
@@ -84,10 +90,11 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
       rows = rows.filter((r) => r.gene.toUpperCase().includes(q));
     }
     if (minCount > 0) {
-      rows = rows.filter((r) => r.count >= minCount);
+      rows = rows.filter((r) => displayedCount(r) >= minCount);
     }
     if (requiredModality !== null) {
-      rows = rows.filter((r) => (r.modalities[requiredModality] ?? 0) > 0.1);
+      const sourceIndex = MODALITY_HEADERS[requiredModality].sourceIndex;
+      rows = rows.filter((r) => (r.modalities[sourceIndex] ?? 0) > 0.1);
     }
     // Sort
     const sorted = [...rows];
@@ -101,15 +108,9 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
       case "coloc":
         sorted.sort((a, b) => (b.modalities[1] ?? 0) - (a.modalities[1] ?? 0));
         break;
-      case "rank":
-        sorted.sort(
-          (a, b) =>
-            (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER)
-        );
-        break;
       case "count":
       default:
-        sorted.sort((a, b) => b.count - a.count || a.gene.localeCompare(b.gene));
+        sorted.sort((a, b) => displayedCount(b) - displayedCount(a) || a.gene.localeCompare(b.gene));
     }
     return sorted;
   }, [data, query, minCount, requiredModality, sortMode]);
@@ -117,13 +118,13 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
   const totalGenes = data.length;
   const displayedRows = showAll ? filtered : filtered.slice(0, DEFAULT_TOP_N);
   const maxCount = useMemo(
-    () => data.reduce((m, r) => (r.count > m ? r.count : m), 0),
+    () => data.reduce((maximum, row) => Math.max(maximum, displayedCount(row)), 0),
     [data]
   );
   const countHistogram = useMemo(() => {
     const h = new Array(N_CHANNELS + 1).fill(0);
     data.forEach((r) => {
-      h[Math.min(r.count, N_CHANNELS)] += 1;
+      h[Math.min(displayedCount(r), N_CHANNELS)] += 1;
     });
     return h;
   }, [data]);
@@ -165,8 +166,8 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
             .map((n, i) => (n > 0 ? `${i}/${N_CHANNELS}=${n.toLocaleString()}` : null))
             .filter(Boolean)
             .join(" · ")}
-          . Essentiality and cross-species are supplementary, not convergence
-          channels.
+          . Spatial, essentiality, and cross-species are categorical or
+          supplementary context, not numeric convergence channels.
         </p>
       </div>
 
@@ -199,7 +200,6 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
             onChange={(e) => setSortMode(e.target.value as SortMode)}
             className="h-8 rounded-md border border-border bg-background px-2 text-xs"
           >
-            <option value="rank">Convergence rank</option>
             <option value="count">Channel count</option>
             <option value="alpha">Gene (A–Z)</option>
             <option value="bulk">Bulk DE</option>
@@ -343,7 +343,7 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
                       show(e, {
                         kind: "row",
                         gene: r.gene,
-                        count: r.count,
+                        count: displayedCount(r),
                         tier: r.tier,
                         tierLabel: r.tier_label,
                       });
@@ -368,7 +368,7 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
                     </text>
                   </a>
                   {/* Channel cells */}
-                  {r.modalities.slice(0, N_CHANNELS).map((v, i) => (
+                  {displayedModalities(r).map((v, i) => (
                     <rect
                       key={i}
                       x={ROW_LABEL_WIDTH + i * COL_WIDTH + 1}
@@ -393,7 +393,7 @@ export function ModalityMatrix({ data, onRowClick }: ModalityMatrixProps) {
                     fontFamily="var(--font-mono)"
                     fill="var(--color-muted-foreground)"
                   >
-                    {r.count}
+                    {displayedCount(r)}
                   </text>
                 </g>
               );

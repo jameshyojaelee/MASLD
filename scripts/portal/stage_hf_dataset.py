@@ -2,6 +2,11 @@
 """
 Phase-7 packaging for the MASLD atlas web refresh (data contract §7).
 
+LEGACY PRE-RESOURCE PRODUCER. It is blocked by default because the staged
+rank-first schema is not the MASLD Gene Catalog contract. Set
+ALLOW_LEGACY_PORTAL_REBUILD=true only for provenance-only regeneration; never
+use that opt-in as publication or deployment authorization.
+
 Assembles a Hugging Face **Dataset** staging folder from the built web-data dir
 (`masld-atlas-v2/public/data`) using a strict ALLOW-LIST: loose parquet (→ Git
 LFS) + compact JSON + the `network/portal_export_v2/` tree (minus its
@@ -146,7 +151,7 @@ def _readme_card() -> str:
     gen = date.today().isoformat()
     front = f"""---
 license: cc-by-4.0
-pretty_name: MASLD Multi-Evidence Atlas
+pretty_name: MASLD Gene Catalog
 tags:
   - genomics
   - MASLD
@@ -160,11 +165,11 @@ configs:
 ---
 """
     body = f"""
-# MASLD Multi-Evidence Atlas — web data
+# MASLD Gene Catalog web data
 
 Backing data for the MASLD atlas web portal (Hugging Face Static Space). A
 **human-only** metabolic-dysfunction-associated steatotic liver disease (MASLD)
-transcriptomic + multi-omic evidence atlas. Disease effects are framed in human
+transcriptomic and multi-omic MASLD Gene Catalog. Disease effects are framed in human
 tissue only; **cross-ancestry** genetics (EUR / AFR / EAS / AMR / SAS) is
 first-class. Mouse content is retained solely for the Cas13 perturbation-library
 design and is never used to make disease claims.
@@ -177,7 +182,7 @@ UI labels never reproduce internal statistical shorthand.
 | Layer | Source (project-relative) | Canonical date | Headline |
 |---|---|---|---|
 | Bulk RNA-seq DEG | `canonical_deg_results.csv` (pooled limma-voom-qw, C2 design) | 2026-06-29 | 1,918 DEGs via the effect-size-aware interval-null FDR gate (`fdr < 0.05` at `lfc = 0.25`, McCarthy & Smyth 2009) |
-| Multi-evidence atlas | `multi_evidence_atlas.csv` | 2026-07-06 | 27,187 genes × 443 evidence columns |
+| MASLD Gene Catalog | `multi_evidence_atlas.csv` | 2026-07-06 | 27,187 genes × 443 evidence columns |
 | Convergence ranking | `convergence_evidence.csv` (46d) | 2026-07-06 | Tier-1 = 677 (evidence-weighted rank, not a posterior) |
 | Genetics / COLOC | `susie_coloc/` (SuSiE + ABF, PolyFun EUR LD) | 2026-07-06 | 50-GWAS / 5-ancestry portfolio; 473 SuSiE / 1,031 union effector genes (main Tier-1/2) |
 | Single-cell | `Analysis/SingleCell/results_gpu_v2/` | 2026 | ~1.23M cells; 16 cell types; pseudobulk + hepatocyte subtypes |
@@ -241,6 +246,11 @@ JSON is plain git.
 
 
 def main() -> int:
+    if os.environ.get("ALLOW_LEGACY_PORTAL_REBUILD", "false").lower() != "true":
+        raise SystemExit(
+            "REFUSED: legacy HF staging is outside the standalone Resource "
+            "contract. Use Plans 50/60."
+        )
     ap = argparse.ArgumentParser()
     ap.add_argument("--web-dir", default="masld-atlas-v2/public/data")
     ap.add_argument("--stage-dir", default="masld-atlas-v2/hf_dataset_stage")

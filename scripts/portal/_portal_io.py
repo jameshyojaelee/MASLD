@@ -100,7 +100,7 @@ def strip_version(s):
 
 
 def load_ensembl_symbol_map(root: Path) -> dict:
-    """version-stripped ensembl_id -> human_symbol from the multi-evidence atlas."""
+    """Version-stripped Ensembl ID to symbol mapping from the MASLD Gene Catalog."""
     atlas = root / "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"
     a = pd.read_csv(atlas, usecols=["human_symbol", "ensembl_id"], low_memory=False)
     a = a.dropna(subset=["ensembl_id", "human_symbol"])

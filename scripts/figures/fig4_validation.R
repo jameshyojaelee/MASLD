@@ -12,7 +12,7 @@
 #        control). Rewired 2026-04-22: previously used GSE276114
 #        which is RNA-seq (not proteomics) — see T0.6 correction.
 #        Output renamed panels/figS4b.pdf 2026-07-07 (also serves as
-#        Supp Fig 4b; see docs/paper_outline.md Fig S4).
+#        Supp Fig 4b; see docs/PAPER.md and docs/archive/ for historical Fig S4 rationale).
 #   4b — mRNA-protein concordance scatter (bulk dream logFC vs      [F2 SILVER]
 #        PXD052937 plasma DIA-MS logFC). ρ computed inline from
 #        PXD052937 subset of protein_transcript_concordance_v3.csv.

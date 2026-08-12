@@ -154,7 +154,7 @@ function getNodeColor(node: NetworkNode, colorBy: NodeColorBy): string {
       return categoricalColor(node.community_macro);
     case "layers":
       // Sequential magnitude over the count of active evidence layers (0..7).
-      return sequentialColor(Math.min(1, (node.layers_active ?? 0) / 7));
+      return sequentialColor(Math.min(1, (node.layers_active ?? 0) / 6));
     case "sex_class": {
       const i = SEX_CLASS_INDEX[node.sex_class ?? ""];
       return i == null ? CONTROL : categoricalColor(i);

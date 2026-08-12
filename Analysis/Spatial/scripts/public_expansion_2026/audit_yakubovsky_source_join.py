@@ -13,7 +13,7 @@ continuous-lipid join: the pinned public code must also document how the lipid
 measurement was attached to the barcode.  The separately documented Loupe
 barcode path is audited as a binary lipid-zone fallback and never interpreted
 as a gradient.  These distinctions implement the source gate fixed in
-docs/plans/2026-08-07_paper_program/10_SPATIAL_ACQUISITION_AND_SOURCE_GATES.md.
+docs/archive/plans/2026-08-07_paper_program/10_SPATIAL_ACQUISITION_AND_SOURCE_GATES.md.
 """
 
 from __future__ import annotations

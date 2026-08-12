@@ -307,7 +307,7 @@ export function GeneticsClient() {
     // Canonical Tier-1/2 effector flags (pre-computed on gene_level_coloc_tier12.csv,
     // intersected with the atlas universe by be-kickoff). Atlas-present ceilings are
     // 449 SuSiE / 975 union (the 473/1,031 headline also counts coloc-only genes
-    // outside the 27,187-gene atlas — surfaced as the hero tiles + table caption).
+    // outside the 27,187-gene catalog (surfaced as the hero tiles and table caption).
     const where = effMode === "union" ? "coloc_tier12_union" : "coloc_tier12_pass";
     queryParquet<EffRow>(
       "atlas_core.parquet",

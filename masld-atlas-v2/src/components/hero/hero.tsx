@@ -91,11 +91,11 @@ export function Hero() {
 
       <div className="mx-auto max-w-3xl px-6 pt-28 pb-20 text-center sm:pt-36 sm:pb-24">
         <h1 className="text-gradient font-display text-display-xl font-semibold tracking-tight text-balance">
-          MASLD Atlas
+          MASLD Gene Catalog
         </h1>
         <p className="mx-auto mt-5 max-w-xl text-lg text-muted-foreground">
-          A multi-modal atlas for metabolic dysfunction-associated steatotic
-          liver disease
+          Genetic susceptibility and established tissue remodeling across
+          human metabolic liver disease
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
           <Button size="lg" onClick={() => setCommandOpen(true)}>

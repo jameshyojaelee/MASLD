@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(os.environ.get("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"))
 # No default release root.  This used to default to 2026-07-13-r1, so running
 # the gate bare rewrote that FROZEN release's verdict in place -- and it is the
-# older, FAILed release, which docs/CODEBASE_CURRENT_STATE.md cites as a re-entry
+# older, FAILed release, which docs/STATUS.md cites as a re-entry
 # check.  --release-root is now required.
 RELEASE = None
 

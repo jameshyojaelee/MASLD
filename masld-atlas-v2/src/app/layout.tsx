@@ -28,9 +28,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "MASLD Atlas",
+  title: "MASLD Gene Catalog — legacy pre-Resource preview",
   description:
-    "Multi-evidence transcriptomic atlas for metabolic dysfunction-associated steatotic liver disease",
+    "Legacy pre-Resource implementation; publication deployment is closed pending the MASLD Gene Catalog release",
 };
 
 /**
@@ -62,6 +62,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MotionProvider>
           <HashRouterProvider>
             <AppShell>
+              <div
+                role="alert"
+                className="border-b border-amber-500/50 bg-amber-500/10 px-4 py-2 text-center text-xs text-amber-200"
+              >
+                Legacy pre-Resource preview — not publication-ready. Causal-gene,
+                longitudinal-progression, universal-ranking, and Cas13-target
+                views are retired; the publication portal will default to
+                the MASLD Gene Catalog and gene-specific follow-up guidance.
+              </div>
               <RouteSwitch>{children}</RouteSwitch>
             </AppShell>
             <GeneComparePanel />

@@ -29,7 +29,7 @@ dir.create(BK, recursive = TRUE, showWarnings = FALSE)
 # Canonical diet axis = 4 config-registered models (reverted 2026-06-16 to the
 # config/mouse_datasets.yaml roster; the Western/NASH metabolic-overload pools
 # from M02b were dropped when GAN/DIAMOND/FFC/GSE246088 were excluded — see the
-# mouse roster reconciliation in docs/manuscript/NUMBERS.md).
+# mouse roster reconciliation in docs/technical/NUMBERS_HISTORY.md).
 DIETS <- c("MCD", "HFD", "CDAHFD", "FPC")
 
 run_ashr_one <- function(diet) {

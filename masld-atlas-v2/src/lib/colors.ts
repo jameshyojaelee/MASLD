@@ -31,13 +31,6 @@ export const EVIDENCE_SOURCES: EvidenceSource[] = [
     description: "SCENIC+ regulons + scATAC DA peaks",
   },
   {
-    key: "s5_spatial",
-    label: "Spatial",
-    short: "Spatial",
-    color: "var(--color-s5-spatial)",
-    description: "Spatially variable genes + zonation",
-  },
-  {
     key: "s6_singlecell",
     label: "Single-Cell",
     short: "scRNA",

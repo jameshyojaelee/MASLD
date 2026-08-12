@@ -98,7 +98,8 @@ targets <- pipe[, .(status = status[1], max_phase = max(max_phase, na.rm = TRUE)
                     mech_class = mech_class[1]), by = .(human_symbol = gene_symbol)]
 
 # Authority: the systematic drug_dev_status table is the single source of truth
-# for drug-development status (spec docs/manuscript/working/drug_dev_status_reframe_spec.md).
+# for drug-development status (archived spec:
+# docs/archive/relocated_2026-07-08/manuscript/working/drug_dev_status_reframe_spec.md).
 # Override the pipeline best-outcome collapse for any gene it flags
 # masld_discontinued, so e.g. NR1H4 (obeticholic acid, discontinued at the gene
 # level) renders as 'discontinued' rather than picking up a later active FXR

@@ -7,9 +7,16 @@
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/logs/all_figures_%j.out
 #SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/RNA-seq/logs/all_figures_%j.err
 
-# run_all_figures.sbatch — Master orchestrator for all publication figures
-# Runs scripts sequentially within each group, capturing per-script pass/fail.
-# Usage: sbatch scripts/figures/run_all_figures.sbatch
+# LEGACY PRE-RESOURCE orchestrator. Its groups encode retired
+# progression/causal/convergence figure semantics and are not the current
+# manuscript workflow. Plan 60 owns the new immutable Resource release.
+# Emergency provenance-only use requires an explicit opt-in.
+
+if [[ "${ALLOW_LEGACY_FIGURE_REGEN:-false}" != "true" ]]; then
+  echo "REFUSED: legacy figure workflow is outside the standalone Resource contract."
+  echo "Use docs/PAPER.md and docs/ROADMAP.md; set ALLOW_LEGACY_FIGURE_REGEN=true only for provenance-only regeneration."
+  exit 64
+fi
 
 BASE=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 FIG_SCRIPTS="${BASE}/scripts/figures"

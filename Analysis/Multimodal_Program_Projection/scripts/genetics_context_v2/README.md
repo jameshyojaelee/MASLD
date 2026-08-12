@@ -1,7 +1,9 @@
 # Genetics/context v2: source and power preflight
 
 This directory implements the Wave-2, claim-independent portion of
-`docs/plans/2026-08-07_paper_program/30_GENETICS_CONTEXT_AND_FIG3.md`.
+`docs/archive/plans/2026-08-07_paper_program/30_GENETICS_CONTEXT_AND_FIG3.md`.
+Current paper authority is `docs/PAPER.md`; the archived plan is retained for
+method-level provenance only.
 It freezes and re-derives the static genetics/state contract, audits the 35
 primary GWAS phenotypes, and records what the deposited Broadaway liver-eQTL
 lead table can and cannot establish. It also contains an isolated,

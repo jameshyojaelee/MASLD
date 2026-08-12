@@ -17,7 +17,7 @@ export function SidebarBrand() {
       <div className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-xs font-bold">
         M
       </div>
-      <span className="text-sm font-semibold tracking-tight">MASLD Atlas</span>
+      <span className="text-sm font-semibold tracking-tight">MASLD Gene Catalog</span>
     </Link>
   );
 }

@@ -1,10 +1,10 @@
-/** 8-axis evidence strength for a gene (0-1 normalized) */
+/** Numeric evidence strengths. Spatial context is categorical and release-linked. */
 export interface EvidenceStrengths {
   s1_human: number;      // Human Bulk RNA-seq
   s2_genetic: number;    // Genetic Causal (COLOC/TWAS)
   s3_essential: number;  // Essentiality (DepMap)
   s4_epigenomic: number; // Epigenomic (SCENIC+/ATAC)
-  s5_spatial: number;    // Spatial (SVG/Moran's I)
+  s5_spatial: number;    // Legacy compatibility only; excluded from evidence strength UI
   s6_singlecell: number; // Single-Cell (pseudobulk)
   s7_mouse: number;      // Mouse concordance
   s8_proteomics: number; // Proteomics (Olink plasma + DIA-MS liver)

@@ -67,6 +67,11 @@
 !Analysis/Multimodal_Program_Projection/scripts/chronic_state_risk_bridge/README.md
 !Analysis/Multimodal_Program_Projection/scripts/chronic_state_risk_bridge/config/*.tsv
 
+# Spatial Resource v2 keeps its manifest-driven source contract and routing
+# documentation auditable; immutable candidate outputs remain ignored.
+!Analysis/Multimodal_Program_Projection/scripts/spatial_context_v2/README.md
+!Analysis/Multimodal_Program_Projection/scripts/spatial_context_v2/spatial_resource_datasets.tsv
+
 # 6) Re-include named config JSON / manifests only (NOT all *.json — results are json)
 !package.json
 !package-lock.json
@@ -152,6 +157,9 @@ micromamba
 **/out/
 **/coverage/
 **/public/data/
+# Downloaded external source material (papers, Zenodo payloads, cloned repos).
+# An embedded git clone here was accidentally staged as a bare gitlink 2026-08-10.
+**/work/public_sources/
 
 # 9) Stray junk
 /scratch.R

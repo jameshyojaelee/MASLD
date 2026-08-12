@@ -111,15 +111,20 @@ export const MODALITIES: Modality[] = [
   { key: "s2_genetic", label: "Genetic", cssVar: "var(--color-s2-genetic)", hex: "#5888fc" },
   { key: "s3_essential", label: "Essentiality", cssVar: "var(--color-s3-essential)", hex: "#e85a48" },
   { key: "s4_epigenomic", label: "Epigenomic", cssVar: "var(--color-s4-epigenomic)", hex: "#b16ae0" },
-  { key: "s5_spatial", label: "Spatial", cssVar: "var(--color-s5-spatial)", hex: "#df6900" },
   { key: "s6_singlecell", label: "Single-cell", cssVar: "var(--color-s6-singlecell)", hex: "#00adba" },
   { key: "s7_mouse", label: "Mouse", cssVar: "var(--color-s7-mouse)", hex: "#db589e" },
   { key: "s8_proteomics", label: "Proteomics", cssVar: "var(--color-s8-proteomics)", hex: "#b59f00" },
 ];
 
-export const MODALITY_HEX: Record<ModalityKey, string> = Object.fromEntries(
-  MODALITIES.map((m) => [m.key, m.hex])
-) as Record<ModalityKey, string>;
+export const MODALITY_HEX: Record<ModalityKey, string> = {
+  ...(Object.fromEntries(MODALITIES.map((m) => [m.key, m.hex])) as Omit<
+    Record<ModalityKey, string>,
+    "s5_spatial"
+  >),
+  // Compatibility color only. Numeric spatial evidence is deliberately absent
+  // from MODALITIES, so evidence bars cannot render missingness as zero.
+  s5_spatial: "#df6900",
+};
 
 // ---------------------------------------------------------------------------
 // Drug development-stage palette  (Approved -> Preclinical; Preclinical = gray)

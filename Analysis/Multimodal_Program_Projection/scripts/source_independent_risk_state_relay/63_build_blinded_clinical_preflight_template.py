@@ -13,10 +13,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 SCRIPT_ROOT = Path(__file__).resolve().parent
-PLAN43 = PROJECT_ROOT / "docs/plans/2026-08-07_paper_program/43_CHRONIC_STATE_REVERSAL_AND_REGULATORY_RISK_BRIDGE.md"
-PLAN46 = PROJECT_ROOT / "docs/plans/2026-08-07_paper_program/46_FULL_GOAL_COMPLETION_NEW_DATA_PROTOCOL.md"
-PLAN46B = PROJECT_ROOT / "docs/plans/2026-08-07_paper_program/46B_CLINICAL_RESPONSE_INTAKE_AND_TWO_COHORT_GATE.md"
-PLAN46C = PROJECT_ROOT / "docs/plans/2026-08-07_paper_program/46C_BLINDED_CLINICAL_PREFLIGHT_AND_MODEL_FREEZE.md"
+PLAN43 = PROJECT_ROOT / "docs/archive/plans/2026-08-07_paper_program/43_CHRONIC_STATE_REVERSAL_AND_REGULATORY_RISK_BRIDGE.md"
+PLAN46 = PROJECT_ROOT / "docs/archive/plans/2026-08-07_paper_program/46_FULL_GOAL_COMPLETION_NEW_DATA_PROTOCOL.md"
+PLAN46B = PROJECT_ROOT / "docs/archive/plans/2026-08-07_paper_program/46B_CLINICAL_RESPONSE_INTAKE_AND_TWO_COHORT_GATE.md"
+PLAN46C = PROJECT_ROOT / "docs/archive/plans/2026-08-07_paper_program/46C_BLINDED_CLINICAL_PREFLIGHT_AND_MODEL_FREEZE.md"
 STATE_ROOT = PROJECT_ROOT / "Analysis/Multimodal_Program_Projection/candidates/chronic-state-risk-bridge-2026-08-09"
 STATE_AXIS = STATE_ROOT / "frozen_state_axis.tsv"
 STATE_SPEC = STATE_ROOT / "frozen_spec/state_axis_spec.tsv"

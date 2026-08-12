@@ -125,6 +125,18 @@ pb <- ggplot(d, aes(x = pip, y = yj)) +
 p <- pa + pb + plot_layout(widths = c(0.8, 1.9))
 out <- file.path(FIG4_DIR, "panels", "fig4d_snatac_accessibility.pdf")
 dir.create(dirname(out), recursive = TRUE, showWarnings = FALSE)
+source_path <- file.path(FIG4_DIR, "data", "fig4d_snatac_accessibility_source.tsv")
+dir.create(dirname(source_path), recursive = TRUE, showWarnings = FALSE)
+source_rows <- rbindlist(list(
+  res[, .(row_type = "lineage_summary", row_id = as.character(lineage),
+          lineage = as.character(lineage), n_genes, n_coloc,
+          gene = NA_character_, pip = NA_real_, pp4 = NA_real_,
+          motif = NA, cell_types = NA_character_)],
+  d[, .(row_type = "gene_point", row_id = gene,
+        lineage = NA_character_, n_genes = NA_integer_, n_coloc = NA_integer_,
+        gene, pip, pp4, motif, cell_types = cts)]
+), use.names = TRUE)
+fwrite(source_rows, source_path, sep = "\t", quote = FALSE, na = "")
 ggsave(out, p, width = 3.13, height = 1.88, device = grDevices::cairo_pdf)
 cat("[fig4d-snatac] saved:", out, "\n")
 

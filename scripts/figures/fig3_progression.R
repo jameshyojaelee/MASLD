@@ -442,7 +442,7 @@ tryCatch({
   pb_dir <- file.path(BASE,
     "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
 
-  # Curated 8-gene panel — see docs/paper_outline.md / memory rationale.
+  # Curated 8-gene panel — see docs/PAPER.md and archived planning rationale.
   # category: "masked" = bulk fails padj<0.05 OR |logFC|<0.5;
   #           "amplified" = bulk significant but CT logFC much larger.
   exemplars <- data.table::data.table(

@@ -19,7 +19,7 @@ interface DownloadResource {
 
 const DOWNLOAD_RESOURCES: DownloadResource[] = [
   {
-    name: "Multi-Evidence Atlas",
+    name: "MASLD Gene Catalog",
     description:
       "27,187 genes x 446 columns with 7 independent modalities, causal inference, and derived annotations.",
     format: "Parquet",
@@ -72,6 +72,42 @@ const DOWNLOAD_RESOURCES: DownloadResource[] = [
     href: dataUrl("knowledge_graph.json"),
     note: null,
   },
+  {
+    name: "Spatial Dataset Registry",
+    description:
+      "Release-linked source, assay, biological/technical unit, metadata-join, permitted-claim, and source-dependence contracts.",
+    format: "JSON",
+    size: "release-linked",
+    href: dataUrl("spatial_dataset_registry.json"),
+    note: null,
+  },
+  {
+    name: "Spatial Gene Context",
+    description:
+      "Gene-by-dataset measurement, detection, testability, assay-native context fields, evidence state, effect unit, and provenance.",
+    format: "Parquet",
+    size: "release-linked",
+    href: dataUrl("spatial_gene_context.parquet"),
+    note: null,
+  },
+  {
+    name: "Spatial Program Coverage",
+    description:
+      "Outcome-free observability for all 117 frozen programs by assay, including measured genes, retained L1 weight, and testability reason.",
+    format: "Parquet",
+    size: "release-linked",
+    href: dataUrl("spatial_program_coverage.parquet"),
+    note: null,
+  },
+  {
+    name: "Spatial Program Effects",
+    description:
+      "Assay-native results for the two predeclared confirmatory programs, with donor resolution, source dependence, null dispersion, and categorical evidence state.",
+    format: "Parquet",
+    size: "release-linked",
+    href: dataUrl("spatial_program_effects.parquet"),
+    note: null,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -120,7 +156,7 @@ const EVIDENCE_SOURCES: EvidenceSource[] = [
     name: "Spatial Transcriptomics",
     abbrev: "S6",
     description:
-      "Visium spatial transcriptomics (GSE192741) with spatially variable gene detection, hepatocyte-dominant spatial domains, and zonation classification (pericentral/periportal). 150 SVGs with BH FDR correction.",
+      "Release-linked spatial transportability and observability across retained, source-dependent, metadata-pending, skipped, and dropped sources. Moran's I is spatial organization, not disease direction or a strength percentage.",
   },
   {
     name: "Single-Cell (Pseudobulk + LIANA)",
@@ -142,7 +178,7 @@ export default function DownloadsPage() {
       {/* ------------------------------------------------------------------ */}
       <PageHeader
         title="Downloads & Documentation"
-        description="Full multi-evidence atlas, gene profiles, and supplementary data. All resources are served as static files for programmatic access."
+        description="Full MASLD Gene Catalog, gene records, and supplementary data. All resources are served as static files for programmatic access."
       />
 
       {/* ------------------------------------------------------------------ */}
@@ -196,7 +232,7 @@ export default function DownloadsPage() {
           ))}
         </div>
         <p className="mt-4 text-xs text-muted-foreground">
-          The full multi-evidence atlas CSV (~15 MB) is available from the{" "}
+          The full MASLD Gene Catalog CSV (~15 MB) is available from the{" "}
           <a
             href="https://github.com/sanjana-lab/masld-atlas"
             target="_blank"
@@ -221,8 +257,8 @@ export default function DownloadsPage() {
           <div className="rounded-lg border border-border px-4 py-3">
             <p className="text-sm font-semibold">Reference</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Lee J et al. A multi-evidence transcriptomic atlas reveals a
-              multi-step metabolic-to-inflammatory progression in MASLD.{" "}
+              Lee J et al. The MASLD Gene Catalog: regulatory susceptibility
+              and tissue remodeling in context.{" "}
               <span className="italic">In preparation</span> (2026).
             </p>
           </div>
@@ -268,8 +304,8 @@ export default function DownloadsPage() {
         <div className="overflow-x-auto rounded-lg border border-border bg-muted/30 p-4">
           <pre className="text-xs leading-relaxed text-foreground">
 {`@article{lee2026masld,
-  title={A multi-evidence transcriptomic atlas reveals a multi-step
-         metabolic-to-inflammatory progression in MASLD},
+  title={The MASLD Gene Catalog: regulatory susceptibility and
+         tissue remodeling in context},
   author={Lee, James and others},
   journal={In preparation},
   year={2026}

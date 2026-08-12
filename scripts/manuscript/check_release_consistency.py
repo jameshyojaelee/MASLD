@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when the active manuscript diverges from the frozen release outputs."""
+"""Audit the historical July manuscript against its frozen release outputs."""
 
 from __future__ import annotations
 
@@ -19,15 +19,19 @@ RELEASE_ID = os.environ.get("MANUSCRIPT_RELEASE_ID", "2026-07-15-r2")
 OUT = ROOT / "RNA-seq/results/manuscript_release" / RELEASE_ID
 DOC_RELEASE = ROOT / "docs/manuscript/release"
 
+HISTORICAL_DOC_ROOT = (
+    ROOT
+    / "docs/archive/documentation_consolidation_2026-08-11/originals/docs"
+)
 ACTIVE_DOCS = [
-    ROOT / "docs/paper_outline.md",
-    ROOT / "docs/manuscript/working/abstract.md",
-    ROOT / "docs/manuscript/working/01_intro.md",
-    ROOT / "docs/manuscript/working/fig2.md",
-    ROOT / "docs/manuscript/working/fig3.md",
-    ROOT / "docs/manuscript/working/fig4.md",
-    ROOT / "docs/manuscript/working/fig5_discussion.md",
-    ROOT / "docs/manuscript/working/METHODS.md",
+    HISTORICAL_DOC_ROOT / "paper_outline.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/abstract.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/01_intro.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/fig2.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/fig3.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/fig4.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/fig5_discussion.md",
+    HISTORICAL_DOC_ROOT / "manuscript/working/METHODS.md",
 ]
 
 
@@ -145,7 +149,9 @@ def main() -> None:
     )
 
     combined = "\n".join(path.read_text(encoding="utf-8") for path in ACTIVE_DOCS)
-    abstract = (ROOT / "docs/manuscript/working/abstract.md").read_text(encoding="utf-8")
+    abstract = (HISTORICAL_DOC_ROOT / "manuscript/working/abstract.md").read_text(
+        encoding="utf-8"
+    )
     for token in ["473", "447", "34", "92.4%"]:
         audit.require(token in abstract, f"Abstract is missing frozen token {token}")
     audit.require("1,031" not in abstract, "Abstract contains retired blank-row union count 1,031")

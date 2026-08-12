@@ -800,7 +800,7 @@ def fixture_payloads(root: Path, variant: str = "positive") -> tuple[Path, Path]
             "signed_by": "PASS02_06_SYNTHETIC_FIXTURE",
             "signed_at_utc": "2026-08-08T00:00:00Z",
             "decision_register_id": "FIXTURE_PASS02_06",
-            "authority_document": "docs/plans/2026-08-07_paper_program/50_EVIDENCE_PASSPORTS_AND_PORTAL.md",
+            "authority_document": "docs/PAPER.md",
             "fixture_only": True,
             "coordinator_attested": False,
             "analysis_release_id": "fixture-pass02-06-v1",
@@ -1250,7 +1250,7 @@ def run_suite() -> Path:
                 f'data-view="{expected_view}"' not in rendered
                 or rendered_main is None
                 or expected_heading not in rendered_main.group(1)
-                or "Gene passport filters" in rendered_main.group(1)
+                or "Gene Catalog filters" in rendered_main.group(1)
             ):
                 raise contract.PassportContractError(
                     "UI_NATIVE_ROUTE_FALSE_PASS", route

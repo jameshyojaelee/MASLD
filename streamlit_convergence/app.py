@@ -1,6 +1,10 @@
 """
-MASLD Multi-Evidence Convergence Dashboard
+Historical MASLD convergence dashboard
 ===========================================
+RETIRED LEGACY DEMO. This universal-ranking/Cas13-routing interface is not the
+standalone Resource portal and is blocked by default. Set
+ALLOW_LEGACY_PORTAL_DEMO=true only for local provenance inspection.
+
 Standalone Streamlit app (does NOT touch the archived DEG explorer or the
 Next.js portal). Surfaces, per gene and globally:
   - the convergence ranking + per-source evidence (S1-S8 log Bayes factors)
@@ -11,11 +15,26 @@ Next.js portal). Surfaces, per gene and globally:
 Run:  micromamba run -n rnaseq streamlit run streamlit_convergence/app.py
 """
 from __future__ import annotations
+import os
 from pathlib import Path
+
+if os.environ.get("ALLOW_LEGACY_PORTAL_DEMO", "false").lower() != "true":
+    raise SystemExit(
+        "REFUSED: legacy convergence dashboard is outside the standalone "
+        "Resource scope. Use the MASLD Gene Catalog portal candidate."
+    )
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
+
+if os.environ.get("ALLOW_LEGACY_PORTAL_DEMO", "false").lower() != "true":
+    st.error(
+        "This legacy convergence dashboard is outside the standalone Resource "
+        "scope. Use the MASLD Gene Catalog portal candidate."
+    )
+    st.stop()
 
 # ---------------------------------------------------------------- paths
 APP_DIR = Path(__file__).resolve().parent
@@ -40,7 +59,7 @@ SOURCE_LABELS = {
     "log_BF_S8": "S8 Cross-species",
 }
 
-st.set_page_config(page_title="MASLD Convergence Atlas", layout="wide", page_icon="🧬")
+st.set_page_config(page_title="MASLD Gene Catalog (legacy demo)", layout="wide", page_icon="🧬")
 
 # ---------------------------------------------------------------- loaders
 @st.cache_data(show_spinner=False)
@@ -85,7 +104,7 @@ dgidb_map = dict(zip(dgidb["gene_name"], zip(dgidb.get("n_drugs", 0), dgidb.get(
 atlas_map = atlas.set_index(atlas["human_symbol"].str.upper())
 
 # ---------------------------------------------------------------- header
-st.title("🧬 MASLD Multi-Evidence Convergence Atlas")
+st.title("🧬 MASLD Gene Catalog (legacy demo)")
 st.caption(
     "Per-gene evidence cards across 8 orthogonal sources, druggability (genome-wide DGIdb), "
     "and the evidence-orthogonality view. Convergence is rare *because* sources are near-independent — "

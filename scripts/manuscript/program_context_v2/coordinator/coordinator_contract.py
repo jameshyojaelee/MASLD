@@ -2034,7 +2034,7 @@ def build_cohort_overview_rows(
         "Established-state transcriptomics",
         "Physical context",
         "Prespecified functional challenge",
-        "Evidence passports",
+        "MASLD Gene Catalog",
     )
     for order, label in enumerate(roles, 1):
         rows.append(
@@ -3475,13 +3475,13 @@ def validate_passport_negative_semantics(
         if state == "tested_negative":
             if str(row.get("testability_state", "")) != "testable":
                 raise CoordinatorContractError(
-                    f"passport tested_negative row is not testable: {row.get('evidence_result_id')}"
+                    f"Gene Catalog tested_negative row is not testable: {row.get('evidence_result_id')}"
                 )
             boundary_value = parse_float(
-                boundary, f"passport {row.get('evidence_result_id')} negative boundary"
+                boundary, f"Gene Catalog {row.get('evidence_result_id')} negative boundary"
             )
             margin_value = parse_float(
-                margin, f"passport {row.get('evidence_result_id')} negative margin"
+                margin, f"Gene Catalog {row.get('evidence_result_id')} negative margin"
             )
             if (
                 not rule
@@ -3490,11 +3490,11 @@ def validate_passport_negative_semantics(
                 or margin_value is None
             ):
                 raise CoordinatorContractError(
-                    f"passport tested_negative row lacks a complete passing rule: {row.get('evidence_result_id')}"
+                    f"Gene Catalog tested_negative row lacks a complete passing rule: {row.get('evidence_result_id')}"
                 )
             if margin_value < 0:
                 raise CoordinatorContractError(
-                    f"passport tested_negative row has a negative adequacy margin: {row.get('evidence_result_id')}"
+                    f"Gene Catalog tested_negative row has a negative adequacy margin: {row.get('evidence_result_id')}"
                 )
         elif (
             rule
@@ -3503,7 +3503,7 @@ def validate_passport_negative_semantics(
             or passed not in {None, False}
         ):
             raise CoordinatorContractError(
-                f"passport non-negative row carries reserved negative metadata: {row.get('evidence_result_id')}"
+                f"Gene Catalog non-negative row carries reserved negative metadata: {row.get('evidence_result_id')}"
             )
 
 
@@ -3558,7 +3558,7 @@ def passport_evidence_graph_refs(
     source_node = str(result.get("source_node_id") or "")
     if source_node not in nodes:
         raise CoordinatorContractError(
-            f"passport evidence {result_id} lacks a valid source_node_id"
+            f"Gene Catalog entry {result_id} lacks a valid source_node_id"
         )
     matches = [
         (edge_id, edge)
@@ -3568,7 +3568,7 @@ def passport_evidence_graph_refs(
     ]
     if not matches:
         raise CoordinatorContractError(
-            f"passport evidence {result_id} has no exact tested_by source-graph edge"
+            f"Gene Catalog entry {result_id} has no exact tested_by source-graph edge"
         )
     refs = {source_node}
     for edge_id, edge in matches:
@@ -3584,7 +3584,7 @@ def passport_coverage_graph_refs(
     source_release = str(coverage.get("source_release_id") or "")
     if not source_release:
         raise CoordinatorContractError(
-            f"passport coverage {coverage.get('coverage_result_id')} lacks source_release_id"
+            f"Gene Catalog coverage {coverage.get('coverage_result_id')} lacks source_release_id"
         )
     matched_nodes = {
         node_id
@@ -3593,7 +3593,7 @@ def passport_coverage_graph_refs(
     }
     if not matched_nodes:
         raise CoordinatorContractError(
-            f"passport coverage source release is absent from the source graph: {source_release}"
+            f"Gene Catalog coverage source release is absent from the source graph: {source_release}"
         )
     refs = set(matched_nodes)
     for edge_id, edge in edges.items():
@@ -3612,7 +3612,7 @@ def passport_vignette_dependency(
     evaluation = tuple(sorted(set(graph_refs)))
     if not evaluation:
         raise CoordinatorContractError(
-            "passport vignette has no exact source-graph references"
+            "Gene Catalog example has no exact source-graph references"
         )
     return source_dependency(
         "source_dependent",
@@ -3623,7 +3623,7 @@ def passport_vignette_dependency(
             f"the underlying source row retains provenance_state={source_provenance_state}, "
             "but the vignette reuses the exact named Plan50 source nodes/edges."
         ),
-        "Figure5 is an illustrative mechanism passport, not held-out target discovery or independent validation.",
+        "Figure 5 contains illustrative Gene Catalog entries, not held-out target discovery or independent validation.",
     )
 
 
@@ -3676,7 +3676,7 @@ def build_passport_rows(
         passport = str(row["passport_id"])
         if passport in experiment_by_passport:
             raise CoordinatorContractError(
-                f"duplicate passport next experiment: {passport}"
+                f"duplicate Gene Catalog next experiment: {passport}"
             )
         experiment_by_passport[passport] = row
     output: list[dict[str, object]] = []
@@ -3685,42 +3685,42 @@ def build_passport_rows(
         matches = by_symbol.get(symbol, [])
         if len(matches) != 1:
             raise CoordinatorContractError(
-                f"passport hero symbol {symbol} maps to {len(matches)} rows"
+                f"Gene Catalog example symbol {symbol} maps to {len(matches)} rows"
             )
         gene = matches[0]
         passport = str(gene["passport_id"])
         ensembl = str(gene["ensembl_id"])
         if not re.fullmatch(r"ENSG\d+(?:\.\d+)?", ensembl):
             raise CoordinatorContractError(
-                f"passport hero {symbol} lacks Ensembl-first identity"
+                f"Gene Catalog example {symbol} lacks Ensembl-first identity"
             )
         if ensembl in hero_ensembl_ids:
             raise CoordinatorContractError(
-                f"passport hero Ensembl identity is duplicated: {ensembl}"
+                f"Gene Catalog example Ensembl identity is duplicated: {ensembl}"
             )
         hero_ensembl_ids.add(ensembl)
         if gene.get("symbol_collision") is not False:
             raise CoordinatorContractError(
-                f"passport hero {symbol} has an unresolved symbol collision"
+                f"Gene Catalog example {symbol} has an unresolved symbol collision"
             )
         evidence = evidence_by_passport.get(passport, [])
         if not evidence:
             raise CoordinatorContractError(
-                f"passport hero {symbol} has no gene-level evidence rows"
+                f"Gene Catalog example {symbol} has no gene-level evidence rows"
             )
         if any(str(row["ensembl_id"]) != ensembl for row in evidence):
             raise CoordinatorContractError(
-                f"passport hero {symbol} evidence identity drift"
+                f"Gene Catalog example {symbol} evidence identity drift"
             )
         coverage = coverage_by_passport.get(passport, [])
         if not coverage or any(str(row["ensembl_id"]) != ensembl for row in coverage):
             raise CoordinatorContractError(
-                f"passport hero {symbol} coverage identity drift"
+                f"Gene Catalog example {symbol} coverage identity drift"
             )
         experiment = experiment_by_passport.get(passport)
         if experiment is None or str(experiment["ensembl_id"]) != ensembl:
             raise CoordinatorContractError(
-                f"passport hero {symbol} lacks an Ensembl-linked next experiment"
+                f"Gene Catalog example {symbol} lacks an Ensembl-linked next experiment"
             )
         provenance = sorted({str(row["provenance_state"]) for row in evidence})
         provenance_text = provenance[0] if len(provenance) == 1 else "mixed"
@@ -3743,8 +3743,8 @@ def build_passport_rows(
             "value": "1",
             "numerator": "",
             "denominator": "",
-            "unit": "fixed display-only passport example indicator; not a score or rank",
-            "biological_unit": "Ensembl-identified gene passport",
+            "unit": "fixed display-only Gene Catalog example indicator; not a score or rank",
+            "biological_unit": "Ensembl-identified gene",
             "effect_unit": "not an effect",
             "p_value": "",
             "q_value": "",
@@ -3767,9 +3767,9 @@ def build_passport_rows(
                 label=f"{symbol} ({ensembl})",
                 number_role="categorical_passport_example",
                 display_value=str(gene["primary_evidence_class"]),
-                model_contrast="source-preserving evidence passport display",
-                allowed_wording="representative source-preserving passport with visible testability and provenance",
-                claim_text=f"{symbol} is shown as a fixed representative passport without a combined score or rank.",
+                model_contrast="source-preserving MASLD Gene Catalog display",
+                allowed_wording="representative source-preserving Gene Catalog entry with visible testability and provenance",
+                claim_text=f"{symbol} is shown as a fixed representative Gene Catalog entry without a combined score or rank.",
                 next_experiment=str(experiment["primary_readout"]),
             )
         )
@@ -3905,7 +3905,7 @@ def build_passport_rows(
                 display_value=str(experiment["primary_readout"]),
                 model_contrast="falsifiable next-experiment rulebook",
                 allowed_wording="next discriminating experiment with explicit falsifying outcome",
-                claim_text=f"The {symbol} passport names a discriminating experiment and a falsifying outcome.",
+                claim_text=f"The {symbol} Gene Catalog entry names a discriminating experiment and a falsifying outcome.",
                 next_experiment=(
                     f"{experiment['perturbation']}; readout: {experiment['primary_readout']}; "
                     f"falsifier: {experiment['falsifying_outcome']}"
@@ -4160,7 +4160,7 @@ def closure_rows(
             "true",
             "true",
             "figure_5_passports",
-            "source-preserving passports and falsifiable next experiments",
+            "source-preserving Gene Catalog entries and falsifiable next experiments",
             "score; rank; treatment recommendation; program-to-gene expansion",
             "",
         ),
@@ -4209,7 +4209,7 @@ def coordinator_signature(
         "signed_by": coordinator,
         "signed_at_utc": signed_at_utc,
         "decision_register_id": decision_register_id,
-        "authority_document": "docs/plans/2026-08-07_paper_program/60_FIGURE_MANUSCRIPT_AND_RELEASE.md",
+        "authority_document": "docs/ROADMAP.md",
         "canonical_promotion_authorized": False,
     }
 

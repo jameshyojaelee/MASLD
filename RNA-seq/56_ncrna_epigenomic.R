@@ -8,6 +8,12 @@
 # epigenomic accessibility.
 # =============================================================================
 
+# HISTORICAL ONLY. This live-query and mixed-ncRNA workflow is not part of the
+# standalone MASLD Resource production path.
+if (Sys.getenv("ALLOW_HISTORICAL_NCRNA_PIPELINE") != "1") {
+  stop("Retired Resource workflow. Set ALLOW_HISTORICAL_NCRNA_PIPELINE=1 only for provenance recovery.")
+}
+
 suppressPackageStartupMessages({
   library(data.table)
   library(dplyr, warn.conflicts = FALSE)

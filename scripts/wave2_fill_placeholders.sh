@@ -8,6 +8,12 @@
 set -eo pipefail
 cd "${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}"
 
+if [[ "${ALLOW_LEGACY_PLACEHOLDER_FILL:-false}" != "true" ]]; then
+  echo "ERROR: retired placeholder filler; current manuscript authority is docs/README.md." >&2
+  echo "Set ALLOW_LEGACY_PLACEHOLDER_FILL=true only to reproduce the archived pre-Resource draft." >&2
+  exit 2
+fi
+
 ME="RNA-seq/results/multi_evidence"
 LOMO_F="$ME/bayesian_evidence_lomo_validation.csv"
 PERM_F="$ME/bayesian_evidence_permutation_null_matched.csv"
@@ -44,9 +50,6 @@ FILES=(
   docs/manuscript/04_methods.md
   docs/manuscript/05_figure_legends.md
   docs/manuscript/FIGURE_PLAN_REVISED.md
-  docs/manuscript/NUMBERS.md
-  docs/paper_outline.md
-  docs/progress.md
   CLAUDE.md
 )
 

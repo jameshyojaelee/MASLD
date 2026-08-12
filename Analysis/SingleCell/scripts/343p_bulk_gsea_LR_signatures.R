@@ -6,7 +6,7 @@
 # Score the stage-progressive LR ligand/receptor signatures (derived from sc-LMM)
 # in the bulk Dream mega-analysis output as an orthogonal validation.
 #
-# Pre-registered threshold: NES > 1.5, p < 0.05 (per docs/archive/single_cell_pre_remediation_2026-05-22/scrna_pipeline_rigor_plan.md; superseded by docs/single_cell_analysis.md).
+# Pre-registered threshold: NES > 1.5, p < 0.05 (per docs/archive/single_cell_pre_remediation_2026-05-22/scrna_pipeline_rigor_plan.md; current history in docs/technical/SINGLE_CELL_HISTORY.md).
 #
 # Gene sets (per axis):
 #   * `progressive_up`   = ligand∪receptor symbols of LR pairs with Estimate>0 AND padj_within_ct<0.10

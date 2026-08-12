@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Evidence-passport schema, rulebook, signed-selection gate, and fixtures.
+"""MASLD Gene Catalog schema, rulebook, signed-selection gate, and fixtures.
+
+Legacy ``passport_*`` identifiers remain part of the sealed v1 file contract.
 
 PASS-01 owns the shared contract. Real PASS-02--PASS-06 assembly is delegated
 to ``build_evidence_passport_bundle.py`` and remains impossible without a
@@ -153,7 +155,7 @@ INCLUSION_DESTINATIONS = OrderedDict(
     [
         ("main", "Eligible for a main-text candidate view."),
         ("supplement", "Eligible for supplementary presentation."),
-        ("passport_only", "Eligible only for provenance-preserving passport display."),
+        ("passport_only", "Eligible only for provenance-preserving Gene Catalog display."),
         ("exclude", "Retained in audit but excluded from gene-level evidence."),
     ]
 )
@@ -977,7 +979,7 @@ def _storage_type(value: pa.DataType | str) -> str:
 
 def data_dictionary_rows(include_production: bool = False) -> list[dict[str, str]]:
     important_metadata = {
-        "passport_id": ("", "never null", "Passport ID", "Stable release-plus-Ensembl key."),
+        "passport_id": ("", "never null", "Catalog entry ID", "Stable release-plus-Ensembl key."),
         "ensembl_id": ("", "never null", "Ensembl gene ID", "Version-stripped human Ensembl primary key."),
         "symbol": ("", "nullable display alias", "Gene symbol", "Display/search alias; not a database key."),
         "call_state": ("call_state", "never null", "Assay call", "Exact frozen upstream assay verdict."),
@@ -1016,7 +1018,7 @@ def data_dictionary_rows(include_production: bool = False) -> list[dict[str, str
         for column, arrow_type in schema.items():
             vocab, nulls, label, description = important_metadata.get(
                 column,
-                ("", "nullable only when source semantics permit", column.replace("_", " ").title(), "Provenance-preserving passport field."),
+                ("", "nullable only when source semantics permit", column.replace("_", " ").title(), "Provenance-preserving Gene Catalog field."),
             )
             unit = "native assay unit" if column in {"estimate", "standard_error", "ci_lower", "ci_upper"} else "not applicable"
             rows.append(
@@ -1038,7 +1040,7 @@ def data_dictionary_rows(include_production: bool = False) -> list[dict[str, str
         for column in columns:
             vocab, nulls, label, description = important_metadata.get(
                 column,
-                ("", "empty only where contract permits", column.replace("_", " ").title(), "Provenance-preserving passport field."),
+                ("", "empty only where contract permits", column.replace("_", " ").title(), "Provenance-preserving Gene Catalog field."),
             )
             rows.append(
                 {
@@ -1242,7 +1244,7 @@ def write_fixture_selection(bundle: Path, source_path: Path) -> tuple[Path, Path
             "signed_by": "PASS01_SYNTHETIC_FIXTURE",
             "signed_at_utc": FIXTURE_SIGNED_AT,
             "decision_register_id": "FIXTURE_DECISION_001",
-            "authority_document": "docs/plans/2026-08-07_paper_program/50_EVIDENCE_PASSPORTS_AND_PORTAL.md",
+            "authority_document": "docs/PAPER.md",
             "fixture_only": True,
             "coordinator_attested": False,
             "analysis_release_id": ANALYSIS_RELEASE_ID,

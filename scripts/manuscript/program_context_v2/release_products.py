@@ -354,7 +354,7 @@ EXPECTED_FIGURE_TITLES = {
     "Figure2": "Sample- and donor-resolved established-state transcriptomics",
     "Figure3": "Genetics and regulatory context",
     "Figure4": "Physical context, assay observability, and prespecified external challenges",
-    "Figure5": "Evidence passports and translational boundaries",
+    "Figure5": "MASLD Gene Catalog and translational boundaries",
 }
 EXPECTED_SUPPLEMENTARY_FIGURES = ("FigureS1", "FigureS2")
 EXPECTED_SUPPLEMENTARY_FIGURE_TITLES = {

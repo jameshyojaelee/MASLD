@@ -58,7 +58,7 @@ SECTION_TITLES = {
         "Physical context, assay observability, and prespecified external challenges"
     ),
     "evidence_passports": (
-        "Evidence passports turn heterogeneous support into discriminating experiments"
+        "The MASLD Gene Catalog connects heterogeneous results to discriminating experiments"
     ),
 }
 RETIRED_PHRASES = (
@@ -129,7 +129,7 @@ def build_manuscript_text(
         "We organize inherited regulatory evidence and established disease-state "
         "programs as complementary, coverage-dependent evidence roles. Donor-resolved "
         "transcriptomic programs, phenotype-aware genetics, assay-native physical "
-        "context, and provenance-preserving evidence passports define what is supported, "
+        "context, and the provenance-preserving MASLD Gene Catalog defines what is supported, "
         "indeterminate, or untestable. The resulting resource prioritizes falsifiable "
         "next experiments without collapsing modalities into a universal rank."
     )
@@ -271,7 +271,7 @@ def build_manuscript_text(
             "## Translational boundaries",
             "",
             (
-                "Evidence passports report support, discordance, tested negatives only "
+                "MASLD Gene Catalog entries report support, discordance, tested negatives only "
                 "under an explicit adequacy criterion, indeterminate results, untestable "
                 "assays, and next experiments. They are not probabilities, leaderboards, "
                 "treatment recommendations, or prospectively validated clinical tools."
@@ -283,7 +283,7 @@ def build_manuscript_text(
             "2. Established-state transcriptomics.",
             "3. Genetics and regulatory context.",
             "4. Physical context, assay observability, and prespecified external challenges.",
-            "5. Evidence passports and translational boundaries.",
+            "5. MASLD Gene Catalog and translational boundaries.",
             "",
         ]
     )

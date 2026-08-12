@@ -3,7 +3,7 @@
 
 This helper records an attestation; it does not substitute for scientific or UI
 review.  Every manual-review confirmation must be supplied explicitly on the
-command line, and the exact passport analysis release ID is frozen.
+command line, and the exact MASLD Gene Catalog analysis release ID is frozen.
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ def parse_args() -> argparse.Namespace:
     selection.add_argument("--decision-register-id", required=True)
     selection.add_argument(
         "--authority-document",
-        default="docs/plans/2026-08-07_paper_program/00_INDEX_AND_ORCHESTRATION.md",
+        default="docs/PAPER.md",
     )
     selection.add_argument("--gen-terminal-closure-input-id", required=True)
     selection.add_argument("--gen-terminal-ready-input-id", required=True)

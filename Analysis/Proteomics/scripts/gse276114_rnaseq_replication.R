@@ -140,7 +140,7 @@ dream <- fread(dream_f)
 
 # The dream file is keyed by Ensembl IDs with optional 'symbol' column. Map.
 if (!"symbol" %in% names(dream)) {
-  # Try to map via multi-evidence atlas
+  # Try to map via the MASLD Gene Catalog
   atlas_f <- file.path(BASE,
     "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
   if (file.exists(atlas_f)) {

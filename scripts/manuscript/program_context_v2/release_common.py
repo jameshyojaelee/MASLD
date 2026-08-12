@@ -140,7 +140,7 @@ PLAN50_MANIFEST_PRODUCER_PATHS = (
 PLAN50_FROZEN_PRODUCER_PATHS = (
     *PLAN50_MANIFEST_PRODUCER_PATHS,
     "scripts/portal/generate_evidence_passports.py",
-    "scripts/portal/run_evidence_passports.sbatch",
+    "scripts/portal/run_gene_catalog.sbatch",
     "scripts/portal/run_gen_identity_adjudication.sbatch",
     "scripts/portal/test_evidence_passport_bundle.py",
 )
@@ -160,7 +160,13 @@ REQUIRED_CANDIDATE_DIRS = (
 )
 FORBIDDEN_WRITE_RELS = (
     Path("figures/main"),
+    Path("docs/PAPER.md"),
+    Path("docs/STATUS.md"),
+    Path("docs/RESULTS.md"),
+    Path("docs/ROADMAP.md"),
     Path("docs/manuscript/release"),
+    Path("docs/manuscript/draft"),
+    Path("docs/manuscript/METHODS.md"),
     Path("docs/manuscript/working"),
     Path("RNA-seq/results/manuscript_release/2026-07-10-r1"),
     Path("RNA-seq/results/manuscript_release/2026-07-15-r2"),

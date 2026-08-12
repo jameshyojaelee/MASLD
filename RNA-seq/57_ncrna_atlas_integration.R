@@ -4,9 +4,15 @@
 # Module 6: ncRNA Atlas Integration
 #
 # Merges ncRNA-specific evidence (ceRNA, synteny, cell-type specificity,
-# epigenomic regulation) into the multi-evidence atlas as 8 new columns.
+# epigenomic regulation) into the MASLD Gene Catalog as 8 new columns.
 # Produces an ncRNA-only evidence summary table.
 # =============================================================================
+
+# HISTORICAL ONLY. This outcome-selected integration is not part of the
+# standalone MASLD Resource production path.
+if (Sys.getenv("ALLOW_HISTORICAL_NCRNA_PIPELINE") != "1") {
+  stop("Retired Resource workflow. Set ALLOW_HISTORICAL_NCRNA_PIPELINE=1 only for provenance recovery.")
+}
 
 suppressPackageStartupMessages({
   library(data.table)

@@ -434,6 +434,21 @@ interface ZonationRow {
   svg_category: string | null;
 }
 
+interface SpatialGeneContextRow {
+  release_id: string;
+  dataset_id: string;
+  assay_id: string;
+  measured: boolean;
+  detected: boolean;
+  testable: boolean;
+  testability_reason: string;
+  evidence_state: string;
+  dataset_gate: string;
+  source_dependence: string;
+  biological_unit: string;
+  biological_unit_resolution: string;
+}
+
 const ZONE_ORDER: { key: keyof ZonationRow; label: string }[] = [
   { key: "mean_PP1", label: "Periportal" },
   { key: "mean_PP2", label: "PP2" },
@@ -443,52 +458,125 @@ const ZONE_ORDER: { key: keyof ZonationRow; label: string }[] = [
 ];
 
 export function SpatialSection({ symbol }: { symbol: string }) {
+  const context = useParquetRows<SpatialGeneContextRow>(
+    "spatial_gene_context.parquet",
+    `SELECT release_id, dataset_id, assay_id, measured, detected, testable,
+            testability_reason, evidence_state, dataset_gate, source_dependence,
+            biological_unit, biological_unit_resolution
+       FROM spatial_gene_context ${where("gene_symbol", symbol)}
+       ORDER BY dataset_id, assay_id`
+  );
   const zon = useParquetRows<ZonationRow>(
     "spatial_zonation.parquet",
     `SELECT * FROM spatial_zonation ${where("symbol", symbol)}`
   );
 
+  const contextColumns: DataTableColumn<SpatialGeneContextRow>[] = [
+    { key: "dataset_id", header: "Dataset", sortable: true },
+    { key: "assay_id", header: "Assay", sortable: true },
+    {
+      key: "evidence_state",
+      header: "Evidence state",
+      sortable: true,
+      render: (r) => <ProgramChip label={r.evidence_state.replace(/_/g, " ")} />,
+    },
+    {
+      key: "testable",
+      header: "Testable",
+      sortable: true,
+      render: (r) => (r.testable ? "yes" : "no"),
+    },
+    {
+      key: "biological_unit",
+      header: "Biological unit",
+      sortable: true,
+      render: (r) => r.biological_unit.replace(/_/g, " "),
+    },
+    {
+      key: "biological_unit_resolution",
+      header: "Unit resolution",
+      sortable: true,
+      render: (r) => r.biological_unit_resolution.replace(/_/g, " "),
+    },
+    {
+      key: "dataset_gate",
+      header: "Dataset gate",
+      sortable: true,
+      render: (r) => r.dataset_gate.replace(/_/g, " "),
+    },
+    {
+      key: "testability_reason",
+      header: "Reason",
+      render: (r) => r.testability_reason.replace(/_/g, " "),
+    },
+  ];
+
   return (
-    <Panel
-      title="Hepatic zonation"
-      description="Zonal expression profile from periportal (PP) to pericentral (PC) and spatial autocorrelation."
-    >
-      <QueryBlock q={zon} empty="This gene was not spatially profiled.">
-        {(rows) => {
-          const r = rows[0];
-          const cells: HeatmapCell[] = ZONE_ORDER.map((z) => ({
-            row: symbol,
-            col: z.label,
-            value: num(r[z.key]) ?? 0,
-          }));
-          return (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                {r.zonation_class && <StageChip stage={r.zonation_class} />}
-                {r.svg_category && (
-                  <ProgramChip label={`SVG: ${r.svg_category}`} />
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatTile label="Spearman ρ" value={fmtLogFC(r.spearman_rho)} />
-                <StatTile label="Moran's I (healthy)" value={fmtPP4(r.morans_i_healthy)} />
-                <StatTile label="Moran's I (MASLD)" value={fmtPP4(r.morans_i_masld)} />
-                <StatTile label="ΔI" value={fmtLogFC(r.delta_i)} />
-              </div>
-              <Heatmap
-                data={cells}
-                colorScale="sequential"
-                showValues
-                valueFormat={(v) => v.toFixed(2)}
-                caption="Mean zonal expression (periportal → pericentral)."
-                height={110}
-                ariaLabel={`Zonation profile for ${symbol}`}
+    <div className="space-y-4">
+      <Panel
+        title="Spatial observability by source"
+        description="Release-linked measurement, testability, biological-unit resolution, and source dependence. Missing coverage is untestable or indeterminate—not negative evidence."
+      >
+        <QueryBlock q={context} empty="No registered spatial assay measured this gene.">
+          {(rows) => (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Release {rows[0].release_id}. Moran&apos;s I, where present in source-native products,
+                describes spatial organization rather than disease direction or percentage strength.
+              </p>
+              <DataTable
+                data={rows}
+                columns={contextColumns}
+                pageSize={10}
+                initialSort={{ key: "dataset_id", dir: "asc" }}
+                dense
               />
             </div>
-          );
-        }}
-      </QueryBlock>
-    </Panel>
+          )}
+        </QueryBlock>
+      </Panel>
+
+      <Panel
+        title="Source-native hepatic zonation"
+        description="Descriptive zonal expression profile from periportal (PP) to pericentral (PC). This legacy source view is not a cross-dataset validation score."
+      >
+        <QueryBlock q={zon} empty="This gene has no source-native zonation profile.">
+          {(rows) => {
+            const r = rows[0];
+            const cells: HeatmapCell[] = ZONE_ORDER.map((z) => ({
+              row: symbol,
+              col: z.label,
+              value: num(r[z.key]) ?? 0,
+            }));
+            return (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  {r.zonation_class && <StageChip stage={r.zonation_class} />}
+                  {r.svg_category && (
+                    <ProgramChip label={`SVG: ${r.svg_category}`} />
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatTile label="Spearman ρ" value={fmtLogFC(r.spearman_rho)} />
+                  <StatTile label="Moran's I (healthy)" value={fmtPP4(r.morans_i_healthy)} />
+                  <StatTile label="Moran's I (MASLD)" value={fmtPP4(r.morans_i_masld)} />
+                  <StatTile label="ΔI" value={fmtLogFC(r.delta_i)} />
+                </div>
+                <Heatmap
+                  data={cells}
+                  colorScale="sequential"
+                  showValues
+                  valueFormat={(v) => v.toFixed(2)}
+                  caption="Mean zonal expression (periportal → pericentral)."
+                  height={110}
+                  ariaLabel={`Zonation profile for ${symbol}`}
+                />
+              </div>
+            );
+          }}
+        </QueryBlock>
+      </Panel>
+    </div>
   );
 }
 

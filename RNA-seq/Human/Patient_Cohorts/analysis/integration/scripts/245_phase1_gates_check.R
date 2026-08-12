@@ -266,6 +266,6 @@ if (!all_pass) {
   failing <- gates_df$gate[!gates_df$passes & gates_df$gate != "OVERALL"]
   cat("Failing gate(s):", paste(failing, collapse = ", "), "\n")
   cat("Action: fall back to supporting-evidence supplementary in Approach A scope.\n")
-  cat("Document failure mode in docs/manuscript/NUMBERS.md.\n")
+  cat("Document failure mode in docs/RESULTS.md and docs/technical/NUMBERS_HISTORY.md.\n")
 }
 cat("==\n")

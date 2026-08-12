@@ -3,7 +3,7 @@ import { PageContainer } from "@/components/page-container";
 import { ProgramsClient } from "./programs-client";
 
 export const metadata = {
-  title: "Molecular Programs — MASLD Atlas",
+  title: "Molecular Programs — MASLD Gene Catalog",
 };
 
 export default function ProgramsPage() {

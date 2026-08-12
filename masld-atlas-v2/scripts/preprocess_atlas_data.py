@@ -2,6 +2,11 @@
 """
 preprocess_atlas_data.py
 ========================
+LEGACY PRE-RESOURCE PRODUCER. This rank-first data model is blocked by default;
+set ALLOW_LEGACY_PORTAL_REBUILD=true only for provenance-only regeneration.
+Publication data must come from the MASLD Gene Catalog contract and final
+promotion.
+
 Reads source CSVs from the MASLD project and produces the web-app data files
 for the MASLD Atlas v2 web application:
 
@@ -24,6 +29,15 @@ import math
 import os
 import sys
 from pathlib import Path
+
+if (
+    __name__ == "__main__"
+    and os.environ.get("ALLOW_LEGACY_PORTAL_REBUILD", "false").lower() != "true"
+):
+    raise SystemExit(
+        "REFUSED: legacy atlas preprocessing is outside the standalone "
+        "Resource contract. Use Plans 50/60."
+    )
 
 import numpy as np
 import pandas as pd
@@ -289,15 +303,10 @@ def compute_evidence_strengths(atlas: pd.DataFrame) -> pd.DataFrame:
     else:
         evidence["s4_epigenomic"] = 0.0
 
-    # S5 Spatial: binary from zonation_class being non-null
-    if "zonation_class" in atlas.columns:
-        evidence["s5_spatial"] = (
-            atlas["zonation_class"].notna()
-            & (atlas["zonation_class"].astype(str).str.strip() != "")
-            & (atlas["zonation_class"].astype(str).str.lower() != "nan")
-        ).astype(float)
-    else:
-        evidence["s5_spatial"] = 0.0
+    # S5 Spatial is retained for one compatibility release only. Spatial
+    # evidence is categorical and dataset-qualified in the new release tables;
+    # it must not contribute a numeric strength or an active-layer vote.
+    evidence["s5_spatial"] = 0.0
 
     # S6 Single-Cell: binary from sceqtl_n_cell_types > 0
     if "sceqtl_n_cell_types" in atlas.columns:
@@ -854,6 +863,11 @@ def build_featured_genes(
 
 
 def main():
+    if os.environ.get("ALLOW_LEGACY_PORTAL_REBUILD", "false").lower() != "true":
+        raise SystemExit(
+            "REFUSED: legacy atlas preprocessing is outside the standalone "
+            "Resource contract. Use Plans 50/60."
+        )
     parser = argparse.ArgumentParser(
         description="Preprocess MASLD atlas data for the web application."
     )
@@ -898,6 +912,12 @@ def main():
     # Compute evidence strengths
     print("Computing evidence strengths ...")
     evidence = compute_evidence_strengths(atlas)
+    atlas["layers_active"] = (
+        evidence[[
+            "s1_human", "s2_genetic", "s3_essential", "s4_epigenomic",
+            "s6_singlecell", "s7_mouse",
+        ]] > 0
+    ).sum(axis=1)
 
     # 1. atlas.parquet (full, /downloads)
     build_atlas_parquet(atlas, output_dir)

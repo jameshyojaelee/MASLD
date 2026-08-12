@@ -31,7 +31,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 N_TABLE_PATH = OUT_DIR / "_N_table.tsv"
 
 # (gwas_id, sumstats filename stem (no _reformatted_hg19.tsv), N_total, family)
-# Documented sample sizes from docs/manuscript/working/numbers_cheatsheet.md
+# Historical sample-size record: docs/archive/relocated_2026-07-08/manuscript/working/numbers_cheatsheet.md
 # and Pan-UKBB README. BS/M/F PanUKBB strata are skipped (undocumented).
 GWAS_TABLE = [
     # gwas_id,             sumstats_stem,                       N,          family

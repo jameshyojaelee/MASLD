@@ -188,7 +188,7 @@ def production_rows() -> list[dict[str, Any]]:
             GEN_ID_ROOT / "gen_identity_quarantine.tsv", adjudicator, PASSPORT_RELEASE,
             "include", "GEN_ID_READY",
             "Source rows excluded for identity ambiguity, absent-v49 ID, or call conflict.",
-            "Excluded rows never create passports or negative calls.", "GEN_frozen_interface",
+            "Excluded rows never create Gene Catalog entries or negative calls.", "GEN_frozen_interface",
             "", "PASS GEN identity adjudication", "", "source row", "reused_source",
             "source_provenance_only", "passport_only", "GEN_ID_READY",
         ),

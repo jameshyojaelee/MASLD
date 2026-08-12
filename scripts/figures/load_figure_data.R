@@ -24,7 +24,7 @@ VALIDATION  <- file.path(BASE, "RNA-seq/results/validation")
 AUDIT       <- file.path(BASE, "RNA-seq/results/audit_sensitivity")
 PER_STUDY   <- file.path(INTEGRATION, "results/per_study")
 SIGS        <- file.path(INTEGRATION, "results/disease_signatures")
-FIG_OUT     <- file.path(BASE, "figures")
+FIG_OUT     <- Sys.getenv("MASLD_FIGURE_OUTPUT_ROOT", file.path(BASE, "figures"))
 PROTEOMICS_DIR <- file.path(BASE, "Analysis/Proteomics/results")
 ATAC_DIR       <- file.path(BASE, "Analysis/ATAC/Human_Multiome")
 SPATIAL_DIR    <- file.path(BASE, "Analysis/Spatial/results")
@@ -138,12 +138,13 @@ FIGS_INTVAL_DIR    <- file.path(FIGS_METHVAL_DIR, "integration_value")
 FIGS_ROBUST_DIR    <- file.path(FIGS_METHVAL_DIR, "robustness")
 FIGS_LFCSENS_DIR   <- file.path(FIGS_METHVAL_DIR, "lfc_sensitivity")
 
-# Main figures (Fig 1-5; reorganized 2026-04-15)
+# Main-figure directory compatibility constants. Final semantic placement is
+# governed by docs/PAPER.md and docs/ROADMAP.md, not these legacy names.
 FIG1_DIR  <- file.path(FIG_MAIN, "fig1_atlas_overview")           # Atlas + cohorts
-FIG2_DIR  <- file.path(FIG_MAIN, "fig3_RNAseq")                   # RNA-seq DEGs / progression (dir renamed from fig2_progression_sex -> fig3_RNAseq 2026-06-11; constant name FIG2_DIR kept for back-compat across ~32 consumer scripts). NB: distinct from FIG3_DIR below.
+FIG2_DIR  <- file.path(FIG_MAIN, "fig3_RNAseq")                   # Final Fig 3: cross-sectional established-state transcriptomics; FIG2_DIR retained only for back-compat.
 FIG3_DIR  <- file.path(FIG_MAIN, "fig2_genetics")                 # Genetics / GWAS-eQTL (main Fig 2; dir renamed fig3_regulatory_architecture -> fig2_genetics 2026-06-12; constant name FIG3_DIR kept for back-compat across ~21 consumer scripts). NB: this is main Fig 2, distinct from FIG2_DIR (fig3_RNAseq) above.
-FIG4_DIR  <- file.path(FIG_MAIN, "fig4_validation")               # Proteomics + spatial validation
-FIG5_DIR  <- file.path(FIG_MAIN, "fig5_convergence")              # Convergence matrix (was fig6_therapeutic_windows)
+FIG4_DIR  <- file.path(FIG_MAIN, "fig4_validation")               # Final Fig 4: assay-native molecular and physical context; directory name is compatibility-only.
+FIG5_DIR  <- file.path(FIG_MAIN, "fig5_convergence")              # Final Fig 5: MASLD Gene Catalog; directory name is compatibility-only.
 
 # Supplementary figures (S1-S10 + sensitivity + therapeutics)
 FIGS01_DIR    <- file.path(FIGS_METHVAL_DIR, "qc_validation")  # was figS01_qc_validation (consolidated 2026-06-04)
@@ -181,7 +182,8 @@ FIGS_HOTSPOT_DIR         <- file.path(FIG_SUPP, "figS_hotspot")
 FIGS_HOTSPOT_PANELS_DIR  <- file.path(FIGS_HOTSPOT_DIR, "panels")
 FIGS_HOTSPOT_DATA_DIR    <- file.path(FIGS_HOTSPOT_PANELS_DIR, "data")
 
-# Cas13 library design supplementary figures (ortholog mapping, lncRNA targets)
+# Separate future Cas13-screen-paper figures. This constant is not part of the
+# standalone Resource manuscript or its release graph.
 FIGS_CAS13LIB_DIR <- file.path(BASE, "Cas13_Library_Design", "figures")
 
 # Quantification comparison (STAR vs Kallisto sensitivity)

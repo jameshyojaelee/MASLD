@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Build PASS-02--PASS-05 evidence-passport candidate products.
+"""Build PASS-02--PASS-05 MASLD Gene Catalog candidate products.
+
+Legacy ``passport_*`` identifiers remain part of the sealed v1 file contract.
 
 The builder is intentionally a pure adapter/reshaping layer.  It consumes only
 artifacts named by a signed PASS-00 selection, preserves source calls verbatim,
@@ -1109,7 +1111,7 @@ def _validate_gen_identity_adjudication(
     if raw_legacy and not allow_fixture:
         raise contract.PassportContractError(
             "RAW_GEN_IDENTITY_UNADJUDICATED",
-            "production passports require the outcome-blind GENCODE-v49 adjudicated GEN artifact",
+            "production Gene Catalog entries require the outcome-blind GENCODE-v49 adjudicated GEN artifact",
         )
     if raw_legacy and adjudicated:
         raise contract.PassportContractError(

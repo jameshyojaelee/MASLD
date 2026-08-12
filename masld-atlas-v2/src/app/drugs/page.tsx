@@ -66,7 +66,6 @@ interface HeatRow {
   coloc_abf_best_pp4: number | null;
   twas_z: number | null;
   essentiality_chronos: number | null;
-  spatial_morans_i: number | null;
   pharos_tdl: string | null;
   max_phase_masld: number | null;
 }
@@ -162,11 +161,6 @@ const EVIDENCE_COLUMNS: {
       r.essentiality_chronos == null ? null : clamp01(-r.essentiality_chronos),
   },
   {
-    col: "Spatial",
-    get: (r) =>
-      r.spatial_morans_i == null ? null : clamp01(r.spatial_morans_i / 0.5),
-  },
-  {
     col: "Druggability",
     get: (r) => {
       const phase = r.max_phase_masld ? r.max_phase_masld / 4 : null;
@@ -227,22 +221,21 @@ export default function DrugsPage() {
         .then((rows) => rows[0]?.n ?? null)
         .catch(() => null);
 
-      // Target × evidence heatmap rows: DE-supported druggable targets, ranked
-      // by breadth of evidence (layers_active), then convergence.
+      // Target × evidence heatmap rows. Legacy numeric spatial scores and
+      // convergence/layer ranks are deliberately excluded from selection.
       const heatPromise = queryParquet<HeatRow>(
         "atlas_core.parquet",
         (t) =>
           `SELECT human_symbol, bulk_shrunk_logFC,
                   coloc_best_susie_pp4, coloc_abf_best_pp4, twas_z,
-                  essentiality_chronos, spatial_morans_i, pharos_tdl, max_phase_masld
+                  essentiality_chronos, pharos_tdl, max_phase_masld
            FROM ${t}
            WHERE is_deg
              AND (dgidb_druggable
                   OR pharos_tdl IN ('Tclin','Tchem')
                   OR max_phase_masld > 0
                   OR drug_dev_status LIKE 'masld_%')
-           ORDER BY layers_active DESC, convergence_score DESC,
-                    ABS(bulk_shrunk_logFC) DESC
+           ORDER BY ABS(bulk_shrunk_logFC) DESC, human_symbol
            LIMIT 24`
       ).catch(() => [] as HeatRow[]);
 
@@ -558,7 +551,7 @@ export default function DrugsPage() {
         </h2>
         <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
           Signature-reversal compounds ranked by composite score, clinical-stage
-          MASLD drugs with atlas transcriptomic support, and per-target LINCS
+          MASLD drugs with Gene Catalog transcriptomic support, and per-target LINCS
           reversal hits.
         </p>
 

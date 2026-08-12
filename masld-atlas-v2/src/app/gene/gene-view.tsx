@@ -194,23 +194,14 @@ export function GeneView({ symbol }: { symbol: string }) {
             sublabel={row.coloc_best_susie_gwas ?? "no colocalization"}
           />
           <StatTile
-            label="Convergence rank"
-            value={num(row.convergence_rank) != null ? String(num(row.convergence_rank)) : DASH}
-            sublabel={
-              row.convergence_score != null
-                ? `score ${fmtLogFC(row.convergence_score)}`
-                : undefined
-            }
-          />
-          <StatTile
             label="Essentiality"
             value={fmtLogFC(row.essentiality_chronos)}
             sublabel="DepMap CHRONOS"
           />
           <StatTile
-            label="Active layers"
+            label="Non-spatial layers"
             value={num(row.layers_active) != null ? String(num(row.layers_active)) : DASH}
-            sublabel="evidence modalities"
+            sublabel="of 6 numeric modalities"
           />
         </div>
 

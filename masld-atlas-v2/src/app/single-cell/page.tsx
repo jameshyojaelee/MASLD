@@ -11,7 +11,8 @@
  *   gene_pseudobulk_de.parquet   per-cell-type DE (contrast-picked)
  *   sc_pseudobulk_de.parquet     all-cell pseudobulk DE
  *   sc_hep_markers.parquet       hepatocyte subtype markers (dot plot)
- *   spatial_summary.json         zonation + SVG summaries (single-cohort)
+ *   spatial_dataset_registry.json release-linked source and unit contracts
+ *   spatial_summary.json         legacy source-native zonation + SVG summaries
  *   spatial_zonation.parquet     per-gene zone-bin means (heatmap)
  */
 
@@ -106,6 +107,26 @@ interface SpatialSummary {
     category: string;
   }[];
 }
+interface SpatialDatasetRecord {
+  dataset_id: string;
+  assay_id: string;
+  record_type: string;
+  decision: string;
+  paper_role: string;
+  dataset_gate: "pass" | "source_dependent" | "metadata_pending" | "skipped" | "dropped";
+  source_dependence: string;
+  biological_unit: string;
+  biological_unit_resolution: string;
+  n_biological: number | string | null;
+  technical_unit: string;
+  n_technical: number | string | null;
+  permitted_estimands: string;
+  prohibited_claims: string;
+}
+interface SpatialRegistry {
+  release_id: string;
+  datasets: SpatialDatasetRecord[];
+}
 
 type TabId = "composition" | "umap" | "de" | "spatial";
 
@@ -118,6 +139,7 @@ const NBSP_DASH = "—";
 export default function SingleCellPage() {
   const [summary, setSummary] = useState<ScSummary | null>(null);
   const [spatial, setSpatial] = useState<SpatialSummary | null>(null);
+  const [spatialRegistry, setSpatialRegistry] = useState<SpatialRegistry | null>(null);
   const [tab, setTab] = useState<TabId>("composition");
   // Cross-tab jump: a UMAP lasso can pre-set the Cell-type DE tab's cell type.
   const [dePreset, setDePreset] = useState<string | null>(null);
@@ -131,6 +153,10 @@ export default function SingleCellPage() {
       .then((r) => r.json())
       .then(setSpatial)
       .catch(() => setSpatial(null));
+    fetch(dataUrl("spatial_dataset_registry.json"))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("candidate registry unavailable"))))
+      .then(setSpatialRegistry)
+      .catch(() => setSpatialRegistry(null));
   }, []);
 
   return (
@@ -179,7 +205,7 @@ export default function SingleCellPage() {
       {tab === "de" && (
         <CellTypeDeTab cellTypes={summary?.cell_types ?? []} initialCellType={dePreset} />
       )}
-      {tab === "spatial" && <SpatialTab spatial={spatial} />}
+      {tab === "spatial" && <SpatialTab spatial={spatial} registry={spatialRegistry} />}
     </div>
   );
 }
@@ -701,8 +727,9 @@ const ZONE_COLS: { key: keyof ZonationRow; label: string }[] = [
   { key: "mean_PC1", label: "PC1" },
 ];
 
-function SpatialTab({ spatial }: { spatial: SpatialSummary | null }) {
+function SpatialTab({ spatial, registry }: { spatial: SpatialSummary | null; registry: SpatialRegistry | null }) {
   const [zon, setZon] = useState<ZonationRow[] | null>(null);
+  const [dataset, setDataset] = useState<string>("All sources");
 
   useEffect(() => {
     queryParquet<ZonationRow>(
@@ -747,15 +774,68 @@ function SpatialTab({ spatial }: { spatial: SpatialSummary | null }) {
     [zon]
   );
 
+  const physicalSources = useMemo(
+    () => registry?.datasets.filter((row) => row.record_type === "dataset" || row.record_type === "context_assay") ?? [],
+    [registry]
+  );
+  const datasetOptions = useMemo(
+    () => ["All sources", ...physicalSources.map((row) => row.dataset_id)],
+    [physicalSources]
+  );
+  const visibleSources = useMemo(
+    () => physicalSources.filter((row) => dataset === "All sources" || row.dataset_id === dataset),
+    [physicalSources, dataset]
+  );
+
   return (
     <div className="space-y-8">
-      {/* Single-cohort caveat */}
+      {/* Source and claim contract */}
       <div className="rounded-lg border border-amber-500/40 bg-amber-50/60 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-        Spatial zonation is derived from a <strong>single Visium cohort</strong>
-        {spatial ? ` (${spatial.datasets.join(", ")}, ${spatial.n_samples} samples)` : ""} with a
-        known batch confound. Patterns are shown <strong>descriptively</strong> (periportal ↔
-        pericentral organization) and are <strong>not</strong> a disease-direction claim.
+        Spatial evidence is dataset-qualified. Moran&apos;s I describes <strong>spatial organization</strong>,
+        not disease direction or percentage strength. Missing coverage renders untestable or
+        indeterminate, never automatically negative. The zonation panels below remain a source-native
+        descriptive view of {spatial?.datasets.join(", ") || "the legacy Visium cohort"}.
       </div>
+
+      {registry && (
+        <section>
+          <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold">Spatial source capability audit</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Release {registry.release_id}. Biological and technical units are reported separately.
+              </p>
+            </div>
+            <Picker value={dataset} onChange={setDataset} options={datasetOptions} label="Dataset" />
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50 text-xs text-muted-foreground">
+                  <th className="px-3 py-2 text-left font-medium">source</th>
+                  <th className="px-3 py-2 text-left font-medium">gate</th>
+                  <th className="px-3 py-2 text-left font-medium">biological unit</th>
+                  <th className="px-3 py-2 text-right font-medium">biological n</th>
+                  <th className="px-3 py-2 text-left font-medium">technical unit</th>
+                  <th className="px-3 py-2 text-right font-medium">technical n</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleSources.map((row) => (
+                  <tr key={`${row.dataset_id}-${row.assay_id}`} className="border-b border-border/50">
+                    <td className="px-3 py-2 font-medium">{row.dataset_id}</td>
+                    <td className="px-3 py-2 text-xs">{row.dataset_gate.replaceAll("_", " ")}</td>
+                    <td className="px-3 py-2 text-xs">{row.biological_unit.replaceAll("_", " ")}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs">{row.n_biological ?? NBSP_DASH}</td>
+                    <td className="px-3 py-2 text-xs">{row.technical_unit.replaceAll("_", " ")}</td>
+                    <td className="px-3 py-2 text-right font-mono text-xs">{row.n_technical ?? NBSP_DASH}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Summary tiles */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

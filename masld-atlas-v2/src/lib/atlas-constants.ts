@@ -1,5 +1,5 @@
 /**
- * Canonical headline numbers for the MASLD atlas portal.
+ * Canonical headline numbers for the MASLD Gene Catalog portal.
  *
  * Every number that appears in portal copy MUST be imported from here so a
  * results refresh is a one-file edit. Sources (as of 2026-07-08):

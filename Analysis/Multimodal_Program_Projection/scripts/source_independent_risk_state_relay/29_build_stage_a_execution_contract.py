@@ -255,7 +255,7 @@ def main() -> None:
         "required_primary_phenotypes": 2,
         "required_min_backgrounds": 3,
         "required_min_differentiations_per_background_condition": 2,
-        "governing_plan_path": "docs/plans/2026-08-07_paper_program/45_SOURCE_INDEPENDENT_RISK_TO_STATE_RELAY.md",
+        "governing_plan_path": "docs/archive/plans/2026-08-07_paper_program/45_SOURCE_INDEPENDENT_RISK_TO_STATE_RELAY.md",
         "governing_plan_integrity_bound": False,
         "output_sha256": {path.name: sha256_file(path) for path in output_paths},
     }

@@ -70,7 +70,7 @@ export function FeaturedGenes() {
                 <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
                   {Math.abs(gene.bulk_logfc) < 0.2 ? (
                     <span>
-                      <span className="font-mono">{gene.layers_active}</span> evidence layers
+                      <span className="font-mono">{gene.layers_active}</span> non-spatial evidence layers
                     </span>
                   ) : (
                     <span>

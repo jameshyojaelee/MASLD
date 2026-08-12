@@ -154,7 +154,7 @@ def parquet_records(path: Path) -> list[dict[str, object]]:
         import pyarrow.parquet as pq
     except ImportError as error:
         raise ScientificValidationError(
-            "scientific passport validation requires the existing pyarrow environment"
+            "scientific Gene Catalog validation requires the existing pyarrow environment"
         ) from error
     return pq.read_table(path).to_pylist()
 
@@ -823,7 +823,7 @@ def check_passports(
                 str(row.get("analysis_release_id", "")) == PLAN50_ANALYSIS_RELEASE_ID
                 for row in records
             ),
-            f"passport {name} table has nested analysis-release drift",
+            f"Gene Catalog {name} table has nested analysis-release drift",
         )
     validate_passport_negative_semantics(evidence)
     validate_passport_negative_semantics(contexts)
@@ -834,18 +834,18 @@ def check_passports(
         and len(edges) == len(source_edges)
         and nodes
         and edges,
-        "passport source graph has duplicate or empty node/edge IDs",
+        "Gene Catalog source graph has duplicate or empty node/edge IDs",
     )
     for edge_id, edge in edges.items():
         require(
             edge["from_node_id"] in nodes and edge["to_node_id"] in nodes,
-            f"passport source edge references an unknown node: {edge_id}",
+            f"Gene Catalog source edge references an unknown node: {edge_id}",
         )
     for result in evidence:
         result_id = str(result["evidence_result_id"])
         require(
             str(result.get("source_node_id") or "") in nodes,
-            f"passport evidence lacks a graph-resolved source node: {result_id}",
+            f"Gene Catalog entry lacks a graph-resolved source node: {result_id}",
         )
         require(
             any(
@@ -853,7 +853,7 @@ def check_passports(
                 and edge.get("evidence_result_id") == result_id
                 for edge in source_edges
             ),
-            f"passport evidence lacks an exact tested_by edge: {result_id}",
+            f"Gene Catalog entry lacks an exact tested_by edge: {result_id}",
         )
     source_releases = {
         str(node.get("source_release_id") or "") for node in source_nodes
@@ -863,7 +863,7 @@ def check_passports(
             str(row.get("source_release_id") or "") in source_releases
             for row in coverage
         ),
-        "passport coverage references a release absent from the source graph",
+        "Gene Catalog coverage references a release absent from the source graph",
     )
     require(
         all(row["gene_call_expansion_authorized"] is False for row in contexts),
@@ -888,7 +888,7 @@ def check_passports(
         fields = set(records[0]) if records else set()
         require(
             not (fields & forbidden_columns),
-            f"passport {name} table contains score/rank columns: {fields & forbidden_columns}",
+            f"Gene Catalog {name} table contains score/rank columns: {fields & forbidden_columns}",
         )
     by_symbol = defaultdict(list)
     for row in genes:
@@ -1082,7 +1082,7 @@ def check_null_compatibility(
         and not any(
             row["section_id"] == "supplementary_myojin" for row in figure5_main
         ),
-        "null Myojin branch displaces passport Figure5",
+        "null Myojin branch displaces the Gene Catalog in Figure 5",
     )
     return {
         "synthetic_all_nonpositive_spatial_rows": len(null_rows),

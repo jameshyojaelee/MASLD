@@ -109,7 +109,7 @@ def read_parquet_records(path: Path) -> list[dict[str, object]]:
         import pyarrow.parquet as pq
     except ImportError as error:
         raise CoordinatorContractError(
-            "real passport adaptation requires the existing portal/spatial pyarrow environment"
+            "real MASLD Gene Catalog adaptation requires the existing portal/spatial pyarrow environment"
         ) from error
     table = pq.read_table(path)
     return table.to_pylist()

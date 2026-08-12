@@ -3,6 +3,10 @@
 Generate convergence_ranking.json for the portal from
 RNA-seq/results/multi_evidence/convergence_evidence.csv (output of 46d).
 
+LEGACY PRE-RESOURCE PRODUCER. Universal ranking is not the publication portal
+default. Execution is blocked unless ALLOW_LEGACY_PORTAL_REBUILD=true is set for
+provenance-only regeneration.
+
 NOTE: The score is an evidence-weighted convergence ranking (NOT a Bayesian
 posterior — no prior or likelihood is specified). Renamed from
 bayesian_evidence_ranking / bayesian_ranking on 2026-05-19.
@@ -16,6 +20,15 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+
+if (
+    __name__ == "__main__"
+    and os.environ.get("ALLOW_LEGACY_PORTAL_REBUILD", "false").lower() != "true"
+):
+    raise SystemExit(
+        "REFUSED: legacy convergence export is outside the standalone "
+        "Resource contract. Use Plans 50/60."
+    )
 
 import pandas as pd
 
@@ -32,6 +45,11 @@ OUT = PROJECT_ROOT / "masld-atlas-v2/public/data/convergence_ranking.json"
 
 
 def main() -> None:
+    if os.environ.get("ALLOW_LEGACY_PORTAL_REBUILD", "false").lower() != "true":
+        raise SystemExit(
+            "REFUSED: legacy convergence export is outside the standalone "
+            "Resource contract. Use Plans 50/60."
+        )
     if not EV_CSV.exists():
         raise SystemExit(f"Missing {EV_CSV}. Run 46d first.")
 

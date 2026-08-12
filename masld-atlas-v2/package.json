@@ -6,10 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "build:cdn": "npm run build && node scripts/prune-out-data.mjs",
-    "prebuild": "npm run check:banned",
+    "prebuild": "npm run check:resource-gate && npm run check:banned",
     "start": "next start",
     "lint": "eslint",
     "check:banned": "node scripts/check-no-banned-term.mjs",
+    "check:resource-gate": "node scripts/check-resource-release-gate.mjs",
     "pretest": "npm run check:banned",
     "test": "echo \"No unit tests configured\" && exit 0"
   },

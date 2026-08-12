@@ -52,8 +52,8 @@ function buildNarration(
   const key = EVIDENCE_SOURCES[stepIndex]?.key;
   const val = key ? evidence[key] : 0;
 
-  switch (stepIndex) {
-    case 0: {
+  switch (key) {
+    case "s1_human": {
       const logfc = profile?.expression?.bulk_logfc;
       const padj = profile?.expression?.bulk_padj;
       if (val === 0) {
@@ -75,7 +75,7 @@ function buildNarration(
         detail: `${dir.charAt(0).toUpperCase() + dir.slice(1)} across 5 cohorts (846 samples). ${lfcStr}${lfcStr && padjStr ? ", " : ""}${padjStr}`,
       };
     }
-    case 1: {
+    case "s2_genetic": {
       const pp4 = profile?.causal?.coloc_pp4_max;
       if (val === 0) {
         return {
@@ -91,42 +91,35 @@ function buildNarration(
         detail: `${strength.charAt(0).toUpperCase() + strength.slice(1)} genetic colocalization with MASLD GWAS. ${pp4Str}`,
       };
     }
-    case 2:
+    case "s3_essential":
       return val === 0
         ? { headline: "Essentiality", detail: "Not classified as essential in liver cell lines (DepMap CHRONOS)." }
         : {
             headline: "Essentiality",
             detail: `Liver-relevant essentiality signal detected (DepMap CHRONOS score: ${(val * 100).toFixed(0)}th percentile).`,
           };
-    case 3:
+    case "s4_epigenomic":
       return val === 0
         ? { headline: "Epigenomic", detail: "No epigenomic regulation detected (SCENIC+ / scATAC-seq)." }
         : {
             headline: "Epigenomic",
             detail: `Epigenomic regulation confirmed. Active in SCENIC+ regulons and/or scATAC differential peaks. Strength: ${(val * 100).toFixed(0)}%.`,
           };
-    case 4:
-      return val === 0
-        ? { headline: "Spatial", detail: "Not spatially variable in Visium liver sections." }
-        : {
-            headline: "Spatial",
-            detail: `Spatially variable gene in Visium liver sections (Moran's I signal). Spatial score: ${(val * 100).toFixed(0)}%.`,
-          };
-    case 5:
+    case "s6_singlecell":
       return val === 0
         ? { headline: "Single-Cell", detail: "Not differentially expressed in pseudobulk single-cell analysis." }
         : {
             headline: "Single-Cell",
             detail: `Significant in pseudobulk DE across cell types. Cell-type resolution score: ${(val * 100).toFixed(0)}%.`,
           };
-    case 6:
+    case "s7_mouse":
       return val === 0
         ? { headline: "Mouse Concordance", detail: "No concordant signal across mouse diet models." }
         : {
             headline: "Mouse Concordance",
             detail: `Cross-species concordance confirmed across 5 mouse diet models. Concordance score: ${(val * 100).toFixed(0)}%.`,
           };
-    case 7: {
+    case "s8_proteomics": {
       const lfc = profile?.proteomics?.logfc;
       const padj = profile?.proteomics?.padj;
       if (val === 0) {

@@ -24,6 +24,28 @@ library(data.table)
 library(coloc)
 library(susieR)
 source(file.path(FM_DIR, "src/finemapping_functions.R"))
+# PERF (2026-08-11): memoize the LD block load + assemble it dense instead of via
+# bdiag(). Shadows get_ld_per_locus() from the line above; nothing else changes.
+# Measured 3.04x end-to-end (20,545 s -> 6,754 s on 2021_34128465_PDFF_EUR chr21).
+# Justification, all measured rather than assumed:
+#   * Rprof on a real chr1 run: get_ld_per_locus = 72.3% of CPU, of which bdiag
+#     alone is 52.5% -- coercing to sparse a matrix measured at 0.0% sparse.
+#     susie_rss, the actual fine-mapping, is 8.8%; coloc.* is 0.05%.
+#   * Consecutive eGenes share an LD block (run lengths median 6, mean 9.8), so a
+#     one-slot cache cuts loads ~10x. It returns a BIT-IDENTICAL matrix and
+#     summary-stat table (max|diff| exactly 0, identical() TRUE on 6/6 windows;
+#     src/perf/discriminate_cache_identity.R).
+#   * Full-chromosome A/B against an unpatched control that reproduced its
+#     reference byte-for-byte: of 25 columns, only lambda_s_locus moves, by
+#     <= 4.1e-14, arising downstream in estimate_s_rss (eigen + a Brent optimiser
+#     with finite tolerance), NOT from changed data. Every PP, count, top_snp and
+#     palindrome column is bit-identical.
+#   * lambda_s enters the pipeline only as `> LAMBDA_S_HIGH` (0.20). Across all
+#     138,083 values produced so far the maximum is 0.0975 and the closest
+#     approach to the gate is 0.1025 -- a 2.5e12x margin over the perturbation.
+# Tasks already completed under the pre-edit code are therefore NOT re-run; see
+# docs/archive/progress/2026-08-11_coloc_ld_cache.md.
+source(file.path(FM_DIR, "src/perf/get_ld_per_locus_cached.R"))
 
 # --- 1000G panel allele frequencies, for the palindrome strand check ---------
 # Built by src/seqfunc_v2/finemap/00a_build_panel_af.R (110 sidecars,

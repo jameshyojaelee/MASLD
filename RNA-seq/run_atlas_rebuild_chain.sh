@@ -4,7 +4,8 @@
 # expansion (7 new layers merged in 27a). Linear afterok chain:
 #   27a (assemble + merge 7 new layers) -> 75 (causal) -> 217 (stratified)
 #   -> 46d (convergence heuristic, unchanged axes) -> 46e (Fisher, +3 new axes)
-#   -> 27b (benchmark presets) -> portal JSON
+#   -> 27b (benchmark presets). The historical rank-first portal export is
+#   disabled by default and is not the MASLD Gene Catalog release.
 # Submits and returns immediately; monitor with: squeue --name=rebuild -u $USER
 set -euo pipefail
 BASE=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
@@ -34,8 +35,12 @@ J217=$(sub 217   "$J75"  4 48G  cpu    nslab "$RS RNA-seq/217_stratified_causal_
 J46d=$(sub 46d   "$J217" 16 192G cpu    nslab "$RS RNA-seq/46d_convergence_evidence.R")  # cpu, not bigmem: bigmem enforces a 500G min (QOSMinMemory); 192G fits the cpu 210G cap
 J46e=$(sub 46e   "$J46d" 4 48G  cpu    nslab "$RS RNA-seq/46e_fisher_combined_test.R")
 J27b=$(sub 27b   "$J46e" 4 32G  cpu    nslab "$RS RNA-seq/27b_benchmark_presets.R")
-Jport=$(sub portal "$J27b" 2 16G cpu    nslab "$PY scripts/portal/generate_convergence_evidence_json.py")
+Jport="SKIPPED_LEGACY_PORTAL"
+if [[ "${ALLOW_LEGACY_PORTAL_REBUILD:-false}" == "true" ]]; then
+  Jport=$(sub portal "$J27b" 2 16G cpu nslab \
+    "ALLOW_LEGACY_PORTAL_REBUILD=true $PY scripts/portal/generate_convergence_evidence_json.py")
+fi
 
 echo "REBUILD CHAIN SUBMITTED (job-name=rebuild):"
-echo "  27a=$J27a -> 45a=$J45a -> 75=$J75 -> 217=$J217 -> 46d=$J46d -> 46e=$J46e -> 27b=$J27b -> portal=$Jport"
+echo "  27a=$J27a -> 45a=$J45a -> 75=$J75 -> 217=$J217 -> 46d=$J46d -> 46e=$J46e -> 27b=$J27b; legacy portal=$Jport"
 echo "$J27a $J45a $J75 $J217 $J46d $J46e $J27b $Jport" > "$LOGS/last_chain_jobids.txt"

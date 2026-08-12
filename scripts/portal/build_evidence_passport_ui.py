@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Build the local-only evidence-passport review interface.
+"""Build the local-only MASLD Gene Catalog review interface.
 
-This is a presentation adapter over the frozen Plan 50 candidate tables.  It
+This is a presentation adapter over the frozen candidate tables. Legacy
+``passport_*`` field and file names are read unchanged because they belong to
+an already sealed candidate; they are not the public name of the product. It
 does not calculate, merge, or reinterpret a scientific call.  The resulting
 HTML is self-contained so the review copy can be opened from an immutable
 release without a server or network connection.
@@ -323,19 +325,19 @@ def build_payload(bundle: Path, *, fixture_mode: bool = False) -> dict[str, Any]
 
     release_id = _release_id((genes, evidence, coverage, experiments, domains))
     if genes["passport_id"].duplicated().any():
-        raise PassportUIError("gene index contains duplicate passport IDs")
+        raise PassportUIError("gene index contains duplicate Gene Catalog entry IDs")
     if experiments["passport_id"].duplicated().any():
-        raise PassportUIError("next-experiment table contains duplicate passport IDs")
+        raise PassportUIError("next-experiment table contains duplicate Gene Catalog entry IDs")
     if set(genes["passport_id"].astype(str)) != set(experiments["passport_id"].astype(str)):
         raise PassportUIError("next-experiment table does not match the gene universe")
     if not set(evidence["passport_id"].astype(str)).issubset(
         set(genes["passport_id"].astype(str))
     ):
-        raise PassportUIError("evidence table references an unknown passport")
+        raise PassportUIError("evidence table references an unknown Gene Catalog entry")
     if not set(coverage["passport_id"].astype(str)).issubset(
         set(genes["passport_id"].astype(str))
     ):
-        raise PassportUIError("coverage table references an unknown passport")
+        raise PassportUIError("coverage table references an unknown Gene Catalog entry")
 
     evidence_by_passport: dict[str, list[dict[str, Any]]] = {}
     for row in evidence.sort_values(
@@ -402,7 +404,7 @@ def build_payload(bundle: Path, *, fixture_mode: bool = False) -> dict[str, Any]
             hero_rows[symbol] = fixture_fallback_passports[hero_index]
         else:
             raise PassportUIError(
-                f"hero gene {symbol} must map to exactly one frozen passport"
+                f"hero gene {symbol} must map to exactly one frozen Gene Catalog entry"
             )
 
     domain_rows = []
@@ -468,7 +470,7 @@ def _page(payload_json: str, release_id: str) -> str:
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>MASLD evidence passports — local candidate review</title>
+<title>MASLD Gene Catalog — local candidate review</title>
 <style>
 :root{{--ink:#17212b;--muted:#586570;--paper:#f5f2ec;--card:#fffefa;--line:#d7d2c8;--blue:#146b8c;--magenta:#a33b68;--gray:#707982;--pale:#e9f1f3;--warn:#f5e8df}}
 *{{box-sizing:border-box}} body{{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}}
@@ -498,7 +500,7 @@ button.card{{text-align:left;border:1px solid var(--line);border-radius:12px;pad
 </style>
 </head>
 <body data-ui-contract="{UI_CONTRACT_VERSION}" data-ready="false">
-<header><div class="eyebrow">Candidate review · local only</div><h1>Evidence passports</h1><p>Source-preserving gene views with explicit testability, provenance, biological grain, limitations, and a discriminating next experiment.</p></header>
+<header><div class="eyebrow">Candidate review · local only</div><h1>MASLD Gene Catalog</h1><p>Gene entries with explicit testability, provenance, biological grain, limitations, and an appropriate follow-up experiment.</p></header>
 <main id="app" aria-live="polite"></main>
 <footer>Frozen analysis release: <span id="release-footer">{escaped_release}</span>. Candidate review artifact; no canonical promotion is authorized.</footer>
 <script id="passport-data" type="application/json">{payload_json}</script>
@@ -520,7 +522,7 @@ function renderOverview(){{
   const prov=[...new Set(DATA.genes.flatMap(g=>g.provenance))].sort();
   APP.innerHTML=`<div class="notice" data-review-field="gene_grain_boundary"><strong>Interpretation boundary.</strong> Gene evidence is shown only at gene grain. Program and assay records remain separate and never create a member-gene call.</div>
   <section class="native-nav" data-review-field="native_grain_navigation" aria-label="Native-grain evidence views"><button class="nav-card" id="program-context-view"><strong>Program Context · ${{DATA.programContextRecords.length}} records</strong><span>Spatial, protein, and chromatin contexts at their native program grain.</span></button><button class="nav-card" id="assay-record-view"><strong>Assay / Class · ${{DATA.assayGrainRecords.length}} records</strong><span>Functional challenge status at assay, class, or program grain.</span></button></section>
-  <section class="toolbar" aria-label="Gene passport filters"><label>Search gene or Ensembl ID<input id="search" type="search" autocomplete="off" placeholder="e.g. HKDC1 or ENSG…"></label>
+  <section class="toolbar" aria-label="Gene Catalog filters"><label>Search gene or Ensembl ID<input id="search" type="search" autocomplete="off" placeholder="e.g. HKDC1 or ENSG…"></label>
   <label>Call<select id="call"><option value="">All calls</option>${{calls.map(v=>`<option value="${{esc(v)}}">${{esc(label(v))}}</option>`).join("")}}</select></label>
   <label>Testability<select id="test"><option value="">All states</option>${{tests.map(v=>`<option value="${{esc(v)}}">${{esc(label(v))}}</option>`).join("")}}</select></label>
   <label>Provenance<select id="prov"><option value="">All provenance</option>${{prov.map(v=>`<option value="${{esc(v)}}">${{esc(label(v))}}</option>`).join("")}}</select></label></section>
@@ -529,7 +531,7 @@ function renderOverview(){{
   const update=()=>{{const q=document.getElementById("search").value.trim().toLowerCase(),call=document.getElementById("call").value,test=document.getElementById("test").value,prov=document.getElementById("prov").value;
     const found=DATA.genes.filter(g=>(!q||g.symbol.toLowerCase().includes(q)||g.ensembl.toLowerCase().includes(q))&&(!call||g.calls.includes(call))&&(!test||g.testability.includes(test))&&(!prov||g.provenance.includes(prov)));
     document.getElementById("match-count").textContent=`${{found.length.toLocaleString()}} matching genes`;
-    document.getElementById("gene-grid").innerHTML=found.slice(0,200).map(g=>`<button class="card" data-passport="${{esc(g.passportId)}}" aria-label="Open ${{esc(g.symbol)}} (${{esc(g.ensembl)}}) evidence passport"><span class="symbol">${{esc(g.symbol)}}</span><div class="ensembl">${{esc(g.ensembl)}}</div><div class="chips"><span class="chip">${{esc(label(g.primaryClass))}}</span>${{chips(g.calls,"call")}}${{chips(g.testability,"test")}}</div><div>${{esc(g.claim)}}</div></button>`).join("")||`<div class="empty">No gene matches these filters.</div>`;
+    document.getElementById("gene-grid").innerHTML=found.slice(0,200).map(g=>`<button class="card" data-passport="${{esc(g.passportId)}}" aria-label="Open ${{esc(g.symbol)}} (${{esc(g.ensembl)}}) Gene Catalog entry"><span class="symbol">${{esc(g.symbol)}}</span><div class="ensembl">${{esc(g.ensembl)}}</div><div class="chips"><span class="chip">${{esc(label(g.primaryClass))}}</span>${{chips(g.calls,"call")}}${{chips(g.testability,"test")}}</div><div>${{esc(g.claim)}}</div></button>`).join("")||`<div class="empty">No gene matches these filters.</div>`;
     document.querySelectorAll("button.card").forEach(b=>b.addEventListener("click",()=>goGene(b.dataset.passport)));
   }};
   document.getElementById("program-context-view").addEventListener("click",()=>goView("program-context"));
@@ -546,12 +548,12 @@ function renderDetail(passportId,heroSymbol){{
   const heroPassport=heroSymbol?DATA.heroPassports[heroSymbol]:null;
   const requestedPassport=passportId||heroPassport;
   const gene=DATA.genes.find(g=>g.passportId===requestedPassport);
-  const requestedLabel=heroSymbol||passportId||"unknown passport";
+  const requestedLabel=heroSymbol||passportId||"unknown gene entry";
   if(!gene){{APP.innerHTML=`<section class="identity"><button class="back" onclick="goHome()">← All genes</button><h2>${{esc(requestedLabel)}}</h2><div class="empty">This identity is not present in the frozen candidate gene universe.</div></section>`;return}}
   const ev=gene.evidence.map(e=>`<article><div class="chips"><span class="chip">gene grain</span><span class="chip">${{esc(label(e.domain))}}</span><span class="chip call">${{esc(label(e.call))}}</span><span class="chip test">${{esc(label(e.testability))}}</span></div><h3>${{esc(e.assay)}}</h3><dl><dt>Dataset</dt><dd>${{esc(e.dataset)}}</dd><dt>Phenotype</dt><dd>${{esc(e.phenotype)}}</dd><dt>Context</dt><dd>${{esc(e.context)}}</dd><dt>Biological unit</dt><dd>${{esc(e.grain)}}</dd><dt>Contrast</dt><dd>${{esc(e.contrast)}}</dd><dt>Estimate</dt><dd>${{esc(fmt(e.estimate))}} ${{esc(e.unit)}}</dd><dt>Adjusted p</dt><dd>${{esc(fmt(e.q))}}</dd><dt>Direction</dt><dd>${{esc(label(e.direction))}}</dd><dt>Testability reason</dt><dd>${{esc(e.testabilityReason)}}</dd><dt>Provenance</dt><dd>${{esc(label(e.provenance))}} · ${{e.sourceDependent?"source dependent":"independent"}}</dd><dt>Source release</dt><dd>${{esc(e.sourceRelease)}}</dd></dl><div class="claim">${{esc(e.wording)}}</div><div class="limit">${{esc(e.limitation)}}</div></article>`).join("");
   const reviewEv=gene.evidence.map(e=>`<article><strong>${{esc(e.assay)}}</strong><p>${{esc(label(e.call))}} · ${{esc(label(e.testability))}}</p><p>${{esc(e.testabilityReason)}}</p><p>${{esc(label(e.provenance))}} · ${{e.sourceDependent?"source dependent":"independent"}}</p></article>`).join("");
   const x=gene.experiment;
-  APP.innerHTML=`<div class="detail-head"><div><div class="eyebrow">Gene-grain passport</div><h1>${{esc(gene.symbol)}}</h1><div class="ensembl">${{esc(gene.ensembl)}}</div></div><button class="back" onclick="goHome()">← All genes</button></div>
+  APP.innerHTML=`<div class="detail-head"><div><div class="eyebrow">MASLD Gene Catalog entry</div><h1>${{esc(gene.symbol)}}</h1><div class="ensembl">${{esc(gene.ensembl)}}</div></div><button class="back" onclick="goHome()">← All genes</button></div>
   <section class="identity"><div class="chips"><span class="chip">${{esc(label(gene.primaryClass))}}</span><span class="chip">${{esc(label(gene.role))}}</span><span data-review-field="call">${{chips(gene.calls,"call")}}</span><span data-review-field="testability">${{chips(gene.testability,"test")}}</span><span data-review-field="provenance">${{chips(gene.provenance)}}</span><span data-review-field="source_dependence">${{chips(gene.sourceDependence)}}</span></div><div class="claim-grid"><div class="claim" data-review-field="claim"><h3>Source-authorized claim</h3>${{esc(gene.claim)}}</div><div class="limit" data-review-field="limitation"><h3>Limitation</h3>${{esc(gene.limitation)}}</div></div><div class="review-summary" data-review-field="testability_reason">${{reviewEv}}</div><p class="grain" data-review-field="grain_boundary"><strong>Grain boundary:</strong> ${{esc(DATA.grainBoundary.gene)}} ${{esc(DATA.grainBoundary.program)}} ${{esc(DATA.grainBoundary.assay)}}</p></section>
   <section class="section experiment" data-review-field="next_experiment"><h2>Next discriminating experiment</h2><dl><dt>Model</dt><dd>${{esc(x.model)}}</dd><dt>Context</dt><dd>${{esc(x.context)}}</dd><dt>Perturbation</dt><dd>${{esc(x.perturbation)}}</dd><dt>Primary readout</dt><dd>${{esc(x.readout)}}</dd><dt>Falsifying outcome</dt><dd data-review-field="falsifier">${{esc(x.falsifier)}}</dd></dl><p class="grain">${{esc(x.disclaimer)}}</p></section>
   <section class="section"><h2>Testability, call, and provenance</h2><div class="evidence">${{ev||`<div class="empty">No accepted gene-grain evidence rows.</div>`}}</div><p class="grain"><strong>Grain boundary:</strong> ${{esc(DATA.grainBoundary.gene)}} ${{esc(DATA.grainBoundary.program)}} ${{esc(DATA.grainBoundary.assay)}}</p></section>

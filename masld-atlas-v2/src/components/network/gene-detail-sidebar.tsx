@@ -176,7 +176,7 @@ export function GeneDetailSidebar({
               <div className="space-y-0.5 text-xs">
                 <p>
                   <span className="text-muted-foreground">Layers:</span>{" "}
-                  <span className="font-mono font-medium">{node.layers_active}/7</span>
+                  <span className="font-mono font-medium">{node.layers_active}/6 non-spatial</span>
                 </p>
                 <p>
                   <span className="text-muted-foreground">Degree:</span>{" "}

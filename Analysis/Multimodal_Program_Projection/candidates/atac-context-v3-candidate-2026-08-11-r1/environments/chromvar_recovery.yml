@@ -1,0 +1,19 @@
+channels:
+  - conda-forge
+  - bioconda
+channel_priority: strict
+dependencies:
+  - r-base=4.5
+  - r-biocmanager
+  - r-data.table
+  - r-digest
+  - r-matrix
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
+  - bioconductor-biocversion=3.22
+  - bioconductor-chromvar
+  - bioconductor-genomicranges
+  - bioconductor-jaspar2024
+  - bioconductor-limma
+  - bioconductor-motifmatchr
+  - bioconductor-summarizedexperiment
+  - bioconductor-tfbstools

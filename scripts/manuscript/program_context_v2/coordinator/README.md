@@ -1,5 +1,8 @@
 # Plan 60 real-release coordinator
 
+The public product is the **MASLD Gene Catalog**. Internal `passport_*` paths,
+columns, and artifact IDs below are legacy names in the sealed v1 contract.
+
 This directory prepares and audits candidate-only inputs for the Plan 60
 `REL-00`--`REL-05` pipeline. It does not overwrite an upstream workstream,
 write a canonical result, authorize promotion, or manufacture a workstream
@@ -32,7 +35,7 @@ The locked branch is a five-main-figure Cell Genomics Resource posture with
 | Figure 2 | 2A--2C | Cross-sectional established-state transcriptomics |
 | Figure 3 | 3A--3B | Genetics, phenotype provenance, and eQTL observability |
 | Figure 4 | 4A--4B | Assay-native physical context and zonation-adjusted lipid challenge |
-| Figure 5 | 5A--5B | Evidence passports and next discriminating experiments |
+| Figure 5 | 5A--5B | MASLD Gene Catalog and next discriminating experiments |
 | Figure S1 | S1A--S1B | Complete nonconfirmatory Myojin HLF stress test |
 | Figure S2 | S2A--S2B | Continuous k4/k6 NMF axes and factor-stability audit |
 
@@ -347,7 +350,7 @@ Key fail-closed checks include:
   donor/technical-unit annotations, and separate Yakubovsky directions;
 - the BBJ EAS-GWAS/EUR-eQTL limitation and the nonenriched genetic/state
   interface result;
-- Plan 50 graph-resolved passport semantics, exact Figure 5 graph references,
+- Plan 50 graph-resolved Gene Catalog semantics, exact Figure 5 graph references,
   and post-results hero-gene selection;
 - exact figure-source-to-PDF/manuscript number linkage;
 - three-way clean-rebuild identity and producer bindings; and

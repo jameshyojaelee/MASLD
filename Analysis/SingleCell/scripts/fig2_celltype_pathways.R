@@ -29,7 +29,7 @@ pathways <- split(msig$gene_symbol, msig$gs_name)
 message("  ", length(pathways), " Hallmark pathways loaded")
 
 # --------------------------------------------------------------------------
-# Gene symbol mapping from multi-evidence atlas
+# Gene symbol mapping from the MASLD Gene Catalog
 # --------------------------------------------------------------------------
 atlas_path <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 gene_map <- NULL

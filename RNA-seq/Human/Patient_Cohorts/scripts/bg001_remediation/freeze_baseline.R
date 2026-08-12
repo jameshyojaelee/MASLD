@@ -200,9 +200,9 @@ fwrite(susie, file.path(frozen, "finite_susie_447.tsv"), sep = "\t")
 # genes testable in the old 27,638-gene universe are protected; unmatched names
 # are retained separately so the scope is auditable rather than silently lost.
 text_sources <- unique(c(
-  file.path(snapshot_root, "docs/manuscript/NUMBERS.md"),
-  file.path(snapshot_root, "docs/paper_outline.md"),
-  list.files(file.path(snapshot_root, "docs/manuscript/working"), pattern = "[.]md$", full.names = TRUE, recursive = TRUE),
+  file.path(snapshot_root, "docs/archive/documentation_consolidation_2026-08-11/originals/docs/manuscript/NUMBERS.md"),
+  file.path(snapshot_root, "docs/archive/documentation_consolidation_2026-08-11/originals/docs/paper_outline.md"),
+  list.files(file.path(snapshot_root, "docs/archive/documentation_consolidation_2026-08-11/originals/docs/manuscript/working"), pattern = "[.]md$", full.names = TRUE, recursive = TRUE),
   list.files(file.path(snapshot_root, "scripts/figures"), pattern = "[.]R$", full.names = TRUE, recursive = TRUE),
   Sys.glob(file.path(snapshot_root, "RNA-seq/46d*.R"))
 ))
