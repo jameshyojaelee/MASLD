@@ -255,7 +255,9 @@ def main() -> int:
     status = texts[contract["status_document"]]
     for marker in (
         "Validated update selected for the paper",
-        "Corrected rerun active",
+        # Updated 2026-08-17: the corrected COLOC rerun completed and was
+        # promoted to canonical, so the marker pins the promoted state.
+        "Corrected rerun PROMOTED to canonical 2026-08-17",
         "Five-cohort synchronized candidate",
         "117 program memberships",
         "Separate future paper",
@@ -273,8 +275,11 @@ def main() -> int:
         "| TREAT DEGs (sensitivity arm) | 1,918 | 1,616 |",
         "complete 23,370-gene Benjamini–Hochberg families",
         "| Prespecified Hotspot programs | 117 |",
-        "| Non-overlap | 94.9% |",
-        "corrected 50-study × 22-chromosome COLOC rerun is in progress",
+        # Updated 2026-08-17: recomputed on the promoted COLOC release
+        # (437 jointly testable genetic genes, 20 overlapping, 14,920 background).
+        "| Non-overlap | **95.4%** |",
+        "| Primary SuSiE-nominated genes | **462** |",
+        "COLOC rerun is COMPLETE and PROMOTED to canonical",
         "| CosMx complete-program observability | 12 / 117 programs |",
         "| ATAC `indeterminate` peaks | 38,066 / 39,914 |",
         "| Catalog strict `tested_negative` calls | 0 |",
