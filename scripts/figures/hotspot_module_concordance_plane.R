@@ -5,7 +5,7 @@
 # module's genes. Extends the hepatocyte-only N=30 scatter to every cell type.
 # Original hep_module_sc_vs_bulk_concordance_scatter.R UNTOUCHED.
 #
-# Output: FIG2_DIR/panels/hotspot_module_concordance.pdf (exploratory; no Fig-3 letter)
+# Output: FIG4_SC_DIR/panels/hotspot_module_concordance.pdf (exploratory)
 
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(ggrepel) })
 set.seed(42)
@@ -13,7 +13,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG2_DIR, "panels"); DATA_DIR <- file.path(PANEL_DIR, "data")
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "supplementary"); DATA_DIR <- file.path(PANEL_DIR, "data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 lab_size <- 6 / ggplot2::.pt
 

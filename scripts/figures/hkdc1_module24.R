@@ -8,7 +8,7 @@
 #   size = -log10(bulk_padj)
 # HKDC1 labeled in bold. Top genes labeled with ggrepel.
 #
-# Output: figures/main/fig3_RNAseq/panels/figs3i_hkdc1_module24.pdf
+# Output: figures/main/fig4_singlecell_programs/panels/supplementary/figs3i_hkdc1_module24.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -21,7 +21,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT_PDF <- file.path(FIG2_DIR, "panels", "figs3i_hkdc1_module24.pdf")
+OUT_PDF <- file.path(FIG4_SC_DIR, "panels", "supplementary", "figs3i_hkdc1_module24.pdf")
 
 # ── data ──────────────────────────────────────────────────────────────────────
 mod_genes <- fread(file.path(BASE,

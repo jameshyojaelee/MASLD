@@ -100,7 +100,7 @@ message("CAPTION: The fig5c calibration plane (x = COLOC PP.H4, y = canonical ra
         "HEPATOCYTE single-cell mean CPM (log10; human liver scRNA pseudobulk). ",
         "Expression spans ~6 orders of magnitude so the colour scale is log. ",
         "Near-zero hepatocyte expression floored at 0.01 CPM. Dashed y guides mark ",
-        "the TREAT lfc=0.25 interval-null bound; significance is treat_fdr<0.05. ",
+        "the canonical |log2FC|>0.5 effect-size floor; significance is padj<0.05. ",
         "Drug-development stage and DEG significance are shown in panel 5c.")
 
 # ── Audit CSV of plotted values ──────────────────────────────────────────────

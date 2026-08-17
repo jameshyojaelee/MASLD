@@ -5,7 +5,7 @@
 # Full LIANA communication-network chord for the single-cell CCC analysis.
 # Does NOT touch the canonical ccc_v3_panels.R outputs (the stage-gated chord).
 #
-# Output (figures/main/fig3_RNAseq/panels/):
+# Output (figures/main/fig4_singlecell_programs/panels/supplementary/):
 #   figs3_ccc_chord_all_lr.pdf   (supp; was fig3g, demoted 2026-07-02)
 #      FULL LIANA communication network. Every directed sender->receiver
 #      cell-type pair across all 9 cell types. Ribbon width = number of
@@ -34,7 +34,7 @@ V2_DIR <- file.path(BASE,
 META_V2 <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2_phase05/mcp/inputs/donor_metadata_v2.tsv")
 
-PANEL_DIR <- file.path(FIG2_DIR, "panels")   # FIG2_DIR == .../fig3_RNAseq
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "supplementary")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 

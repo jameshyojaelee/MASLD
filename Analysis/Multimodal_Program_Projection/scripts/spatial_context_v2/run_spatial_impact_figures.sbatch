@@ -11,7 +11,7 @@ set -euo pipefail
 
 PROJECT_ROOT="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 SCRIPT_ROOT="${PROJECT_ROOT}/Analysis/Multimodal_Program_Projection/scripts/spatial_context_v2"
-OUTPUT_ROOT="${PROJECT_ROOT}/Analysis/Multimodal_Program_Projection/candidates/spatial-impact-figures-candidate-2026-08-11"
+OUTPUT_ROOT="${PROJECT_ROOT}/Analysis/Multimodal_Program_Projection/candidates/spatial-impact-figures-candidate-2026-08-12"
 PYTHON_BIN="/gpfs/commons/home/jameslee/micromamba/envs/spatial/bin/python"
 
 export PYTHONDONTWRITEBYTECODE=1

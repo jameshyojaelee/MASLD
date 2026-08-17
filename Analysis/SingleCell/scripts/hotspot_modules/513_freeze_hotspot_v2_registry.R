@@ -13,10 +13,12 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
-RELEASE_ID <- "program-context-v2-candidate-2026-08-07"
-release_override <- Sys.getenv("HOTSPOT_V2_RELEASE_ID", unset = "")
-if (nzchar(release_override) && release_override != RELEASE_ID) {
-  stop("HOTSPOT_V2_RELEASE_ID must equal the ratified ID: ", RELEASE_ID)
+RELEASE_ID <- Sys.getenv(
+  "HOTSPOT_V2_RELEASE_ID",
+  unset = "program-context-v2-candidate-2026-08-07"
+)
+if (!grepl("^[A-Za-z0-9][A-Za-z0-9._-]+$", RELEASE_ID)) {
+  stop("HOTSPOT_V2_RELEASE_ID contains unsafe path characters", call. = FALSE)
 }
 
 OUT <- file.path(
@@ -535,10 +537,12 @@ environment_sha <- sha256_file(file.path(OUT, "environment_record.tsv"))
 producer_paths <- file.path(
   SCRIPT_DIR,
   c(
+    "511_pooled_cell_donor_scores.py",
     "512_hotspot_v2_donor_refit.R",
     "513_freeze_hotspot_v2_registry.R",
     "514_validate_hotspot_v2_registry.R",
-    "run_hotspot_v2_candidate.sbatch"
+    "515_correct_stage_metadata.R",
+    Sys.getenv("HOTSPOT_V2_SBATCH_NAME", unset = "run_hotspot_v2_candidate.sbatch")
   )
 )
 environment_path <- file.path(OUT, "environment_record.tsv")

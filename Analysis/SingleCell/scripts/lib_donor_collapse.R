@@ -15,9 +15,11 @@
 # dataset; the collapse is by string match on the atlas sample ID, so SRR vs GSM is
 # transparent. Summing a patient's per-cell-type counts across sort fractions is
 # correct: sort gate changes WHICH cells are captured, not per-cell expression.
-# All remaining datasets pass through unchanged (each ingested sample = 1 distinct
-# donor in the CURRENT atlas): GSE174748 4->4, GSE189600 4->4, Liver_Atlas 40->40
-# (analyzed pseudobulk roster = 273 samples -> 125 donors total across 7 datasets).
+# GSE174748 and the two analyzed GSE189600 libraries pass through 1:1. Liver Atlas
+# is resolved separately. Its source authority contains 48 human runs from 38
+# assay samples and 19 biological donors; the canonical atlas contains 42 of
+# those runs. Two low-cell GSE189600 libraries remain descriptive-only. The resulting
+# rosters are 273 libraries -> 102 analyzed donors and 275 -> 104 descriptive donors.
 # ⚠ LATENT RISK (GSE189600): the raw ENA has genuine run-PAIRS per replicate (e.g.
 # SRR22677586 & SRR22677587 are both "human_healthy_rep1"); the current atlas ingests
 # only ONE run per replicate (587/589/593/595), so 1 run/donor pass-through is benign
@@ -61,8 +63,40 @@ build_srr_to_donor_map <- function(base_dir) {
       pairs[[length(pairs) + 1]] <- setNames(rep(donor_id, length(srrs)), srrs)
     }
   }
+  liver_runs_path <- file.path(base_dir, "Liver_Atlas/metadata/SraRunTable.csv")
+  liver_samples_path <- file.path(
+    base_dir, "Liver_Atlas/metadata/GSE192740_sampleInfo_scRNAseq.tsv")
+  if (!file.exists(liver_runs_path) || !file.exists(liver_samples_path)) {
+    warning("Liver Atlas run/sample authorities are missing -- refusing to infer run-level donors")
+  } else {
+    liver_runs <- fread(liver_runs_path, colClasses = "character")
+    liver_samples <- fread(liver_samples_path, sep = "\t", colClasses = "character")
+    short_col <- "characteristics: shortFileName"
+    if (!all(c("Run", "shortfilename") %in% names(liver_runs)) ||
+        !all(c(short_col, "title") %in% names(liver_samples))) {
+      stop("Liver Atlas donor authorities lack required columns", call. = FALSE)
+    }
+    liver_join <- merge(
+      liver_runs[, .(Run, shortfilename)],
+      liver_samples[, .(shortfilename = get(short_col), title)],
+      by = "shortfilename", all = FALSE)
+    liver_join[, donor_short := ifelse(
+      grepl("H[0-9]+", title),
+      sub(".*?(H[0-9]+).*", "\\1", title, perl = TRUE),
+      NA_character_)]
+    liver_join <- liver_join[!is.na(donor_short) & nzchar(donor_short)]
+    if (uniqueN(liver_join$Run) != 48L || uniqueN(liver_join$donor_short) != 19L) {
+      stop("Liver Atlas source run-to-donor cardinality drift", call. = FALSE)
+    }
+    pairs[[length(pairs) + 1]] <- setNames(
+      paste0("Liver_Atlas_", liver_join$donor_short), liver_join$Run)
+  }
   if (length(pairs) == 0) return(character(0))
-  do.call(c, pairs)
+  result <- do.call(c, pairs)
+  if (anyDuplicated(names(result))) {
+    stop("A sequencing library maps to more than one biological donor", call. = FALSE)
+  }
+  result
 }
 
 #' Collapse a run-level sample_meta table (one row per SRR run) to donor-level

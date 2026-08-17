@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""fig2_ancestry_unique_coloc_gated.py  (2026-06-25)  -- Fig 2G (GWS-gated variants)
+"""fig2_ancestry_unique_coloc_gated.py  (2026-06-25)  -- Fig 2E (GWS-gated variants)
 
 Honest variants of Fig2G that gate the "non-EUR-unique" colocalizing genes on the
 genome-wide significance of their colocalizing lead variant in the non-European GWAS
 (audit: scripts/figures/audit_noneur_gws.R -> noneur_gws_audit.csv).
 
-COLOC SET (2026-07-06): SuSiE-PRIMARY. Colocalization is defined as PP.H4.susie > 0.5
+COLOC SET: multi-signal COLOC. Colocalization is defined as PP.H4.susie > 0.5
 ONLY (the 473-gene SuSiE-COLOC set), NOT the SuSiE-OR-ABF union that this script used
 before. The ancestry partition (EUR-only / shared / non-EUR-unique) is recomputed on the
 SuSiE set, so the counts here are SMALLER than the retired union panel.
@@ -13,8 +13,8 @@ SuSiE set, so the counts here are SMALLER than the retired union panel.
 The ungated Fig2G base panel (fig2_ancestry_unique_coloc.py) is RETIRED 2026-07-06
 (indefensible without a non-EUR significance gate); this script produces the gated
 SuSiE-COLOC companions that supersede it:
-  GATE=gws         -> p<5e-8   -> Fig2G_ancestry_unique_coloc_GWS.pdf
-  GATE=suggestive  -> p<1e-6   -> Fig2G_ancestry_unique_coloc_suggestive.pdf
+  GATE=gws         -> p<5e-8   -> Fig2E_ancestry_unique_coloc_GWS.pdf
+  GATE=suggestive  -> p<1e-6   -> Fig2E_ancestry_unique_coloc_suggestive.pdf
 Genes that fail the gate stay SuSiE-coloc genes but move to a grey
 "non-EUR sub-threshold" tile (they are NOT genome-wide-significant discoveries).
 
@@ -31,6 +31,7 @@ Run: GATE=gws        ~/micromamba/envs/rnaseq/bin/python scripts/figures/fig2_an
      GATE=suggestive ~/micromamba/envs/rnaseq/bin/python scripts/figures/fig2_ancestry_unique_coloc_gated.py
 """
 import os
+import csv
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -49,14 +50,22 @@ GATE = os.environ.get("GATE", "gws")
 THRESH = {"gws": 5e-8, "suggestive": 1e-6}[GATE]
 GLAB = {"gws": "GWS-gated (p < 5×10⁻⁸)", "suggestive": "suggestive-gated (p < 10⁻⁶)"}[GATE]
 ULAB = {"gws": "non-EUR\nGWS-unique", "suggestive": "non-EUR\nsuggestive-unique"}[GATE]
-OUT  = {"gws": "Fig2D_ancestry_unique_coloc_GWS.pdf",
-        "suggestive": "Fig2D_ancestry_unique_coloc_suggestive.pdf"}[GATE]
+OUT  = {"gws": "Fig2E_ancestry_unique_coloc_GWS.pdf",
+        "suggestive": "Fig2E_ancestry_unique_coloc_suggestive.pdf"}[GATE]
 
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-PANEL_DIR = os.path.join(BASE, "figures/main/fig2_genetics/panels")
-SC = os.path.join(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")
-AUD = os.path.join(BASE, "RNA-seq/results/coloc_variant_classes/noneur_gws_audit.csv")
+PANEL_DIR = os.environ.get(
+    "FIG2_CANDIDATE_DIR", os.path.join(BASE, "figures/main/fig2_genetics/panels")
+)
+SC = os.environ.get(
+    "FIG2_COLOC_INPUT",
+    os.path.join(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"),
+)
+AUD = os.environ.get(
+    "FIG2_NONEUR_AUDIT",
+    os.path.join(BASE, "RNA-seq/results/coloc_variant_classes/noneur_gws_audit.csv"),
+)
 REG = os.path.join(BASE, "GWAS/finemapping/config/gwas_registry.tsv")
 TIER = os.path.join(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv")
 
@@ -135,7 +144,7 @@ cols  = ["#D6DBDE", "#A7B6BE", "#E9ECEE", "#F79268"]   # grey, grey-blue, light-
 W, H = 100.0, 64.0
 rects = squarify.squarify(squarify.normalize_sizes(sizes, W, H), 0, 0, W, H)
 
-fig, ax = plt.subplots(figsize=(2.75, 2.44))   # exact Fig2D contract size (D-slot: ancestry mosaic)
+fig, ax = plt.subplots(figsize=(2.75, 2.44))   # exact Fig2E contract size (ancestry mosaic)
 labels = [("EUR-only", f"{n_eur} ({pct(n_eur):.0f}%)"),
           ("shared", f"{n_shared} ({pct(n_shared):.0f}%)"),
           ("non-EUR\nsub-threshold", f"{n_fail} ({pct(n_fail):.0f}%)"),
@@ -144,17 +153,23 @@ for i, (r, c, (name, sub)) in enumerate(zip(rects, cols, labels)):
     ax.add_patch(mpatches.Rectangle((r["x"], r["y"]), r["dx"], r["dy"],
                  facecolor=c, edgecolor="white", linewidth=1.4))
     # inside-label the three context tiles only; the discovery tile is small -> leader
-    if i < 3 and r["dx"] * r["dy"] >= 32:
+    if i < 2 and r["dx"] * r["dy"] >= 32:
         ax.text(r["x"] + r["dx"] / 2, r["y"] + r["dy"] / 2, f"{name}\n{sub}",
                 ha="center", va="center", color=TXT, fontsize=BODY_FS, linespacing=1.25)
 
-# always leader the (small) discovery tile to the right margin
+# Leader the two small tiles into separate whitespace regions.
+rf = rects[2]
+ax.annotate(f"non-EUR sub-threshold\n{n_fail} ({pct(n_fail):.0f}%)",
+            xy=(rf["x"] + rf["dx"] / 2, rf["y"] + rf["dy"] / 2),
+            xytext=(rf["x"] + rf["dx"] / 2, H + 2.2), ha="center", va="top",
+            fontsize=BODY_FS, color=TXT,
+            arrowprops=dict(arrowstyle="-", lw=0.7, color="black"))
 rp = rects[3]
 ax.annotate(f"{ULAB}\n{n_pass} ({pct(n_pass):.0f}%)", xy=(rp["x"] + rp["dx"] / 2, rp["y"] + rp["dy"] / 2),
             xytext=(W + 3, rp["y"] + rp["dy"] / 2), ha="left", va="center",
             fontsize=BODY_FS, color=TXT,
             arrowprops=dict(arrowstyle="-", lw=0.7, color="black"))
-ax.text(W / 2, H + 5.5, f"surviving non-EUR discoveries: {comp_str}",
+ax.text(W / 2, H + 9.2, f"multi-signal COLOC · non-EUR GWS: {comp_str}",
         ha="center", va="top", fontsize=BODY_FS, color=TXT)
 
 ax.set_xlim(0, W + 30)
@@ -167,10 +182,19 @@ out = os.path.join(PANEL_DIR, OUT)
 fig.tight_layout()
 fig.savefig(out)   # NO bbox_inches="tight": exact figsize for place-at-100%
 plt.close(fig)
-print(f"[fig2D/{GATE}] wrote {OUT} | SuSiE-COLOC (PP.H4.susie>0.5): EUR-only {n_eur}, "
+source_out = os.path.join(PANEL_DIR, "Fig2E_ancestry_unique_coloc_GWS_source.tsv")
+with open(source_out, "w", newline="") as handle:
+    writer = csv.writer(handle, delimiter="\t")
+    writer.writerow(["category", "n_genes", "percent_of_multi_signal_coloc", "threshold"])
+    for category, count in zip(
+        ["EUR_only", "shared", "non_EUR_sub_threshold", "non_EUR_GWS_unique"], sizes
+    ):
+        writer.writerow([category, count, f"{pct(count):.6f}",
+                         "SuSiE PP.H4 > 0.5; non-EUR GWS p < 5e-8"])
+print(f"[fig2E/{GATE}] wrote {OUT} | multi-signal COLOC (SuSiE PP.H4>0.5): EUR-only {n_eur}, "
       f"shared {n_shared}, non-EUR sub-threshold {n_fail}, non-EUR-unique(gated) {n_pass} [{comp_str}]")
-print(f"CAPTION: Non-EUR-unique SuSiE-COLOC genes (PP.H4.susie > 0.5) gated on {GLAB} of the "
+print(f"CAPTION: Non-EUR-unique multi-signal COLOC genes (SuSiE PP.H4 > 0.5) gated on {GLAB} of the "
       f"colocalizing lead variant in the non-European GWAS (35 Tier-1/2 liver-specific GWAS incl. "
       f"MVP NAFLD/ALT/AST). Of {len(nonEUR_genes)} non-EUR-unique genes, {n_pass} survive "
-      f"({comp_str}); the remaining {n_fail} are sub-threshold (SuSiE-coloc but the non-EUR lead "
+      f"({comp_str}); the remaining {n_fail} are sub-threshold (multi-signal COLOC but the non-EUR lead "
       f"variant is not genome-wide significant).")

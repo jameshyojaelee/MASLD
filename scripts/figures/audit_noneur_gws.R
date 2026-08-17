@@ -1,12 +1,12 @@
 #!/usr/bin/env Rscript
-# Audit: of the non-EUR-unique colocalizing genes (Fig2G), how many reach genome-wide
+# Audit: of the non-EUR-unique colocalizing genes (Fig2E), how many reach genome-wide
 # significance (p < 5e-8) at their colocalizing lead variant in a non-European GWAS?
 # Matches coloc top_snp (hg19 chr:pos) -> the SAME reformatted-hg19 sumstats the
 # finemapping/COLOC pipeline ran on -> p_value (col 7).
 #
 # COLOC SET (2026-07-06): SuSiE-PRIMARY. Colocalization is defined as PP.H4.susie > 0.5
 # ONLY (the 473-gene SuSiE-COLOC set), NOT the former SuSiE-OR-ABF union. This matches the
-# gated Fig2G SuSiE-COLOC panels (fig2_ancestry_unique_coloc_gated.py); the non-EUR-unique
+# gated Fig2E multi-signal COLOC panel (fig2_ancestry_unique_coloc_gated.py); the non-EUR-unique
 # gene set is therefore SMALLER than the retired union audit.
 #
 # ANCESTRY (2026-07-05, MVP-fix): registry-driven via gwas_ancestry() from
@@ -22,7 +22,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))  # gwas_ancestry() + load_gwas_registry()
 reg <- load_gwas_registry()
 # MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): audit only the placement=="main"
-# strata so the non-EUR-unique gene set MATCHES the MAIN-scoped Fig2G ancestry panel.
+# strata so the non-EUR-unique gene set matches the main-scoped Fig2E ancestry panel.
 MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
   placement == "main", study_name]
 co <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
@@ -88,7 +88,7 @@ print(pg[tier=="GWS (<5e-8)"][order(min_p), .(gene, bin, min_p, max_pp4=round(ma
 cat(sprintf("\n--- all %d non-EUR-unique, sorted by p (top 25 shown) ---\n", nrow(pg)))
 print(head(pg[order(min_p), .(gene, bin, min_p, max_pp4=round(max_pp4,2), best_gwas, tier)], 25))
 
-# GWS / suggestive counts by ancestry bin (for the report + Fig2G caption)
+# GWS / suggestive counts by ancestry bin (for the report + Fig2E caption)
 cat("\nGWS (<5e-8) count by bin:\n")
 print(pg[tier=="GWS (<5e-8)", .N, by=bin][order(-N)])
 cat("\nsuggestive (5e-8..1e-6) count by bin:\n")

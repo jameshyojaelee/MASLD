@@ -44,9 +44,9 @@ network_nodes.csv predates the 2026-06-08 C2 canonical swap: it carries retired
 to `bulk_logFC/bulk_padj/bulk_tstat`. To also resolve the value-staleness trap
 (contract Section 8 item 9 -- "ideally regenerate from the current atlas"), the
 renamed columns and `is_deg` are REFRESHED from the canonical
-multi_evidence_atlas.csv (bulk_* + effect-size-aware interval-null FDR gate
-`bulk_treat_fdr < 0.05`), falling back to the CSV value only for genes absent
-from the atlas. No `dream_*` column name survives.
+multi_evidence_atlas.csv (bulk_* + the canonical 2026-08-12 gate
+`bulk_padj < 0.05 and |bulk_logFC| > 0.50`), falling back to the CSV value only
+for genes absent from the atlas. No `dream_*` column name survives.
 """
 
 from __future__ import annotations
@@ -284,9 +284,11 @@ def build_nodes(nodes_raw: pd.DataFrame, atlas: pd.DataFrame) -> pd.DataFrame:
     for c in ("bulk_logFC", "bulk_padj", "bulk_tstat"):
         df[c] = pd.to_numeric(a[c], errors="coerce").reindex(df["symbol"]).to_numpy()
 
-    # canonical is_deg = effect-size-aware interval-null FDR gate (< 0.05); NaN -> False.
-    treat = pd.to_numeric(a["bulk_treat_fdr"], errors="coerce")
-    df["is_deg"] = (treat < 0.05).reindex(df["symbol"]).fillna(False).to_numpy().astype(bool)
+    # canonical is_deg (2026-08-12) = padj < 0.05 AND |log2FC| > 0.5; NaN -> False.
+    padj = pd.to_numeric(a["bulk_padj"], errors="coerce")
+    lfc = pd.to_numeric(a["bulk_logFC"], errors="coerce")
+    deg = (padj < 0.05) & (lfc.abs() > 0.5)
+    df["is_deg"] = deg.reindex(df["symbol"]).fillna(False).to_numpy().astype(bool)
     print(f"  [nodes] {n_absent:,} network genes absent from atlas -> NaN bulk_* (no stale dream fallback)")
 
     df["is_conserved_core"] = as_bool(df["is_conserved_core"]).astype(bool)

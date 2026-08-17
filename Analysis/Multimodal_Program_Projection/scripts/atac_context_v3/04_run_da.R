@@ -178,6 +178,7 @@ g244_metadata <- fread(G244_META, select = c("donor_id", "batch_mm"))
 joined_results <- list()
 lineage_summary <- list()
 model_qc_rows <- list()
+filter_qc_rows <- list()
 
 for (lineage in LINEAGES) {
   message("[DA] ", lineage)
@@ -191,7 +192,47 @@ for (lineage in LINEAGES) {
   keep244 <- condition_blind_filter(x244$counts)
   keep281 <- condition_blind_filter(x281$counts)
   common <- intersect(colnames(x244$counts)[keep244], colnames(x281$counts)[keep281])
-  if (length(common) == 0L) stop("No jointly testable peaks for ", lineage)
+  filter_qc_rows[[lineage]] <- data.table(
+    release_id = RELEASE_ID,
+    lineage = lineage,
+    filter_method = "edgeR_filterByExpr_default_intercept_only",
+    n_filter_retained_gse244832 = sum(keep244),
+    n_filter_retained_gse281367 = sum(keep281),
+    n_jointly_testable = length(common),
+    n_normal_gse244832 = x244$n_normal,
+    n_mash_gse244832 = x244$n_mash,
+    n_normal_gse281367 = x281$n_normal,
+    n_mash_gse281367 = x281$n_mash
+  )
+  if (length(common) == 0L) {
+    empty <- data.table(
+      peak_coordinate = character(), logFC = numeric(), standard_error = numeric(),
+      pvalue = numeric(), qvalue = numeric()
+    )
+    fwrite(empty, file.path(OUT, paste0("cohort_primary_GSE244832_", lineage, ".tsv")), sep = "\t")
+    fwrite(empty, file.path(OUT, paste0("cohort_primary_GSE281367_", lineage, ".tsv")), sep = "\t")
+    lineage_summary[[lineage]] <- data.table(
+      release_id = RELEASE_ID,
+      lineage = lineage,
+      lineage_state = "untestable",
+      untestable_reason = "no_jointly_testable_peaks_after_default_filterByExpr",
+      n_normal_gse244832 = x244$n_normal,
+      n_mash_gse244832 = x244$n_mash,
+      n_normal_gse281367 = x281$n_normal,
+      n_mash_gse281367 = x281$n_mash,
+      n_jointly_testable = 0L,
+      n_sig_gse244832 = 0L,
+      n_sig_gse281367 = 0L,
+      n_supported = 0L,
+      n_discordant = 0L,
+      pearson_effect_correlation = NA_real_,
+      spearman_effect_correlation = NA_real_,
+      n_gse281367_discovery = 0L,
+      n_direction_concordant = 0L,
+      directional_binomial_pvalue = 1.0
+    )
+    next
+  }
   counts244 <- x244$counts[, common, drop = FALSE]
   counts281 <- x281$counts[, common, drop = FALSE]
   fit244 <- fit_voom(counts244, x244$donors)
@@ -277,6 +318,12 @@ for (lineage in LINEAGES) {
   lineage_summary[[lineage]] <- data.table(
     release_id = RELEASE_ID,
     lineage = lineage,
+    lineage_state = "testable",
+    untestable_reason = "",
+    n_normal_gse244832 = x244$n_normal,
+    n_mash_gse244832 = x244$n_mash,
+    n_normal_gse281367 = x281$n_normal,
+    n_mash_gse281367 = x281$n_mash,
     n_jointly_testable = nrow(joined),
     n_sig_gse244832 = sum(joined$qvalue_gse244832 < 0.05),
     n_sig_gse281367 = sum(joined$qvalue_gse281367 < 0.05),
@@ -293,6 +340,7 @@ for (lineage in LINEAGES) {
 all_joined <- rbindlist(joined_results, fill = TRUE)
 setcolorder(all_joined, c("lineage", "peak_coordinate", setdiff(names(all_joined), c("lineage", "peak_coordinate"))))
 fwrite(all_joined, file.path(OUT, "da_peak_results.tsv.gz"), sep = "\t")
+fwrite(rbindlist(filter_qc_rows), file.path(OUT, "primary_peak_filter_qc.tsv"), sep = "\t")
 
 summary <- rbindlist(lineage_summary)
 summary[, directional_binomial_qvalue := p.adjust(directional_binomial_pvalue, method = "BH")]
@@ -301,6 +349,7 @@ stability <- all_joined[, .(
     all(sensitivity_no_reversal[evidence_state == "supported"])
 ), by = lineage]
 summary[stability, on = "lineage", supported_sensitivity_stable := i.supported_sensitivity_stable]
+summary[is.na(supported_sensitivity_stable), supported_sensitivity_stable := FALSE]
 summary[, dynamic_main_eligible := n_supported > 0L & directional_binomial_qvalue < 0.05 &
   supported_sensitivity_stable]
 fwrite(summary, file.path(OUT, "da_lineage_summary.tsv"), sep = "\t")
@@ -324,7 +373,20 @@ if (dir.exists(legacy_root)) {
     keep244 <- condition_blind_filter(legacy244$counts)
     keep281 <- condition_blind_filter(legacy281$counts)
     common <- intersect(colnames(legacy244$counts)[keep244], colnames(legacy281$counts)[keep281])
-    if (length(common) == 0L) next
+    if (length(common) == 0L) {
+      legacy_rows[[lineage]] <- data.table(
+        release_id = RELEASE_ID,
+        lineage = lineage,
+        state = "untestable",
+        reason = "no_jointly_testable_peaks_after_default_filterByExpr",
+        n_jointly_testable = 0L,
+        pearson_effect_correlation = NA_real_,
+        spearman_effect_correlation = NA_real_,
+        n_same_direction = 0L,
+        n_supported = 0L
+      )
+      next
+    }
     a <- fit_voom(legacy244$counts[, common, drop = FALSE], legacy244$donors)
     b <- fit_voom(legacy281$counts[, common, drop = FALSE], legacy281$donors)
     joined <- merge(a, b, by = "peak_coordinate", suffixes = c("_gse244832", "_gse281367"))
@@ -344,6 +406,8 @@ if (dir.exists(legacy_root)) {
     legacy_rows[[lineage]] <- data.table(
       release_id = RELEASE_ID,
       lineage = lineage,
+      state = "testable",
+      reason = "",
       n_jointly_testable = nrow(joined),
       pearson_effect_correlation = cor(joined$logFC_gse244832, joined$logFC_gse281367),
       spearman_effect_correlation = cor(joined$logFC_gse244832, joined$logFC_gse281367, method = "spearman"),

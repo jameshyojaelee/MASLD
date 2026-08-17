@@ -22,7 +22,7 @@
 # acquisition-batch-aware source-compatible normalization.
 # Acquisition batch remains in every adjusted model and diagnostic sidecar but
 # is intentionally not displayed as an annotation strip.
-# Output: FIG4_DIR/panels/fig4c_mrna_protein_composite.pdf
+# Output: FIG5_CONTEXT_DIR/panels/fig5c_mrna_protein_composite.pdf
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(patchwork) })
 set.seed(42)
 FAM <- "Helvetica"   # PROJECT STANDARD: every text element in this figure is 6pt Helvetica, face "plain"
@@ -32,7 +32,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 source(file.path(BASE, "scripts/figures/composite_helpers.R"))
-DATA_DIR <- file.path(FIG4_DIR, "data")
+DATA_DIR <- file.path(FIG5_CONTEXT_DIR, "data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 PROTEIN_CONTEXT <- file.path(PROGRAM_CONTEXT_DIR, "proteomics")
 
@@ -53,6 +53,10 @@ ord <- sel$gene; genes <- ord; group_of <- setNames(sel$program, sel$gene)
 gl <- unique(sel$program)                                  # program display order (top -> bottom)
 stopifnot(all(ord %in% rownames(abmat)))                   # every selected protein has an abundance row
 cand <- con[gene %in% genes]
+# The frozen source table's bulk_sig column was written under the retired TREAT
+# gate. Recompute it from bulk_padj/bulk_logFC so this panel follows the
+# canonical 2026-08-12 definition rather than a stale stored flag.
+cand[, bulk_sig := is_canonical_deg(cand)]
 cand[, both_sig := bulk_sig & protein_sig]
 n <- length(ord); ytop <- n + 4.2                          # genes 1..n; NAS/fibrosis strips n+2:n+3
 g <- unname(group_of[ord]); bnd <- which(g[-1] != g[-n])
@@ -180,8 +184,8 @@ hp <- ggplot() +
 # Under plain cartesian the panel FILLS its cell exactly like the heatmap/lollipop (alignment guaranteed);
 # each wedge's x/y radius is scaled by RX/RY so the pies still render circular (RY/RX = cell aspect; tune).
 nf <- length(feat_levels)
-RY <- 0.46; ASP <- 2.36; RX <- RY / ASP                    # RY≈half a row; ASP = (row height : col width),
-                                                            # retuned 1.94 -> 2.36 for the 5.5in canvas (height unchanged at 2.83in),
+RY <- 0.46; ASP <- 1.94; RX <- RY / ASP                    # RY≈half a row; ASP = (row height : col width),
+                                                            # tuned for the 6.63 x 2.83in panel contract,
                                                             # which narrows each column while row height is fixed
 mkcirc <- function(cx, cy, np = 44) { th <- seq(0, 2 * pi, length.out = np)
   data.table(x = cx + RX * cos(th), y = cy + RY * sin(th)) }
@@ -255,7 +259,7 @@ dot_panel <- function(dt, item_col, ord, est1, est2, est1_lab, est2_lab, xlab,
 
 lxmin <- min(cand$bulk_logFC, cand$protein_logFC, na.rm = TRUE)   # left edge for the inline legend
 lxmax <- max(cand$bulk_logFC, cand$protein_logFC, na.rm = TRUE)
-sig_key_x <- lxmax - 1.85   # 1.65 -> 1.85: keeps the key box off the panel edge at the 5.5in canvas
+sig_key_x <- lxmax - 1.65
 lp <- dot_panel(cand, "gene", ord, est1 = "bulk_logFC", est2 = "protein_logFC",
                 est1_lab = "mRNA log2FC", est2_lab = "protein log2FC",
                 xlab = "log2 FC", group_of = group_of,   # 2026-07-09: plotmath expression() was the DejaVuSans leak source (plain string is font-safe)
@@ -287,17 +291,17 @@ lp <- dot_panel(cand, "gene", ord, est1 = "bulk_logFC", est2 = "protein_logFC",
 # PANEL 4 (former far-right fgsea NES bar column) REMOVED 2026-07-09 — pathway-level NES now rides on the
 # LEFT program brackets as up/down arrow glyphs (see `chev` build above; enr read moved up to feed `bands`).
 # Mito/OXPHOS stays documented in the caption. hp absorbs the freed 0.65 width unit (2.65 -> 3.30).
-# 2026-08-08: canvas narrowed 6.63 -> 5.5 in (house maximum) at unchanged height; RY/ASP below retuned
-# so the pies stay circular at the new cell aspect.
+# 2026-08-12: restored the established 6.63 x 2.83in Figure 5C contract; RY/ASP
+# and the inline significance key return to their corresponding full-width settings.
 
 # NOT collected: each colorbar stays under its OWN panel (z-score under heatmap, histology-r under pie),
 # so the two similar blue-red scales are spatially tied to their data and separated (mRNA key is inline).
 comp <- hp + pp + lp + plot_layout(widths = c(3.30, 0.62, 1.02))
-out <- file.path(FIG4_DIR, "panels", "fig4c_mrna_protein_composite.pdf")
+out <- file.path(FIG5_CONTEXT_DIR, "panels", "fig5c_mrna_protein_composite.pdf")
 dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
-ggsave(out, comp, width = 5.5, height = 2.83, device = grDevices::cairo_pdf)
-cat("[fig4c] saved:", out, "\n[fig4c]", n, "proteins x", np, "patients;", length(gl), "gene-row programs (NES on program brackets)\n")
-message("CAPTION (Fig 4c full-row proteomics composite): the shared 25-protein axis (five selected MASLD ",
+ggsave(out, comp, width = 6.63, height = 2.83, device = grDevices::cairo_pdf)
+cat("[fig5c] saved:", out, "\n[fig5c]", n, "proteins x", np, "patients;", length(gl), "gene-row programs (NES on program brackets)\n")
+message("CAPTION (Fig 5C full-row proteomics composite): the shared 25-protein axis (five selected MASLD ",
         "process sets) was originally chosen in PXD051911 using protein significance and mRNA/protein direction ",
         "concordance, then fixed before this batch-aware re-estimation in the same liver DIA-MS cohort ",
         "(n=58). Protein-group intensities were log2 transformed and quantile normalized. MASLD-vs-control protein ",

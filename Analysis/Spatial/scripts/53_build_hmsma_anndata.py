@@ -51,6 +51,22 @@ OUT_DIR = PROJ / "Analysis/Spatial/results/preprocessed/HRA007511_starsolo"
 
 VISIUM_V1_N_SPOTS = 4992
 
+# Visium v1 is a hexagonal lattice and its array indices are ANISOTROPIC. Within a
+# row, adjacent spots are 2 array_col units apart at a 100 um centre-to-centre
+# pitch, so one col unit is 50 um. Adjacent rows are 1 array_row unit apart and
+# offset by 1 col unit, so the diagonal neighbour distance sqrt(50^2 + r^2) = 100
+# gives one row unit = 100*sqrt(3)/2 um.
+#
+# Left as raw indices, the six true neighbours are NOT equidistant: the diagonals
+# land at 1.414 and the (col +/- 2) pair at 2.0, which ties against the
+# (row +/- 2) spots — a full row-pair away and not neighbours at all. A
+# 6-nearest-neighbour graph then breaks that tie arbitrarily and silently swaps
+# real neighbours for spots ~173 um away. Emitting micrometres makes all six true
+# neighbours land at exactly 100 um and the next shell at 173 um.
+VISIUM_V1_SPOT_PITCH_UM = 100.0
+COL_UNIT_UM = VISIUM_V1_SPOT_PITCH_UM / 2.0
+ROW_UNIT_UM = VISIUM_V1_SPOT_PITCH_UM * np.sqrt(3.0) / 2.0
+
 
 def load_coordinates() -> pd.DataFrame:
     """barcode -> (array_row, array_col) for the fixed Visium v1 layout."""
@@ -116,9 +132,11 @@ def build_sample(sample: str, coords: pd.DataFrame, min_umi: int) -> ad.AnnData 
     )
     a.obs["array_row"] = coords.loc[a.obs_names, "array_row"].values
     a.obs["array_col"] = coords.loc[a.obs_names, "array_col"].values
-    # squidpy/scanpy convention: obsm['spatial'] as (x, y)
+    # squidpy/scanpy convention: obsm['spatial'] as (x, y), here in micrometres so
+    # that Euclidean distance is physical and the hex neighbourhood is recovered.
     a.obsm["spatial"] = np.column_stack(
-        [a.obs["array_col"].values, a.obs["array_row"].values]
+        [a.obs["array_col"].values * COL_UNIT_UM,
+         a.obs["array_row"].values * ROW_UNIT_UM]
     ).astype(float)
 
     a.obs["sample_id"] = sample
@@ -142,6 +160,10 @@ def main() -> None:
     ap.add_argument("--out-dir", type=Path, default=OUT_DIR)
     args = ap.parse_args()
 
+    # Sealed candidates (the program arm and the mask-sensitivity diagnostic) read
+    # the existing build directly, so a rebuild must land somewhere new.
+    if args.out_dir.exists() and any(args.out_dir.iterdir()):
+        raise SystemExit(f"refusing to overwrite populated build directory: {args.out_dir}")
     args.out_dir.mkdir(parents=True, exist_ok=True)
     coords = load_coordinates()
     samples = [s.strip() for s in SAMPLES_TXT.read_text().split() if s.strip()]
@@ -164,6 +186,11 @@ def main() -> None:
     merged.uns["dataset"] = "HRA007511_HMSMA"
     merged.uns["processing"] = "STARsolo (GENCODE v49) — matches the bulk RNA-seq reference"
     merged.uns["coordinate_source"] = "visium-v1_coordinates.txt (fixed slide layout; no H&E)"
+    merged.uns["coordinate_units"] = (
+        f"micrometres; array indices rescaled to the physical hex lattice "
+        f"(col x {COL_UNIT_UM:g}, row x {ROW_UNIT_UM:.4f}) so that all six "
+        f"neighbours sit at {VISIUM_V1_SPOT_PITCH_UM:g} um"
+    )
     merged.uns["tissue_mask"] = f"UMI>={args.min_umi} proxy — analysis choice, NOT imaging-derived"
     merged.uns["phenotype_key_available"] = False
     merged.uns["phenotype_key_note"] = (

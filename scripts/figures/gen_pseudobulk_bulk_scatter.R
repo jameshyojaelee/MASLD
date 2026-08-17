@@ -9,7 +9,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT_PDF <- file.path(FIG2_DIR, "panels", "pseudobulk_bulk.pdf")
+OUT_PDF <- file.path(FIG4_SC_DIR, "panels", "supplementary", "pseudobulk_bulk.pdf")
 dir.create(dirname(OUT_PDF), recursive = TRUE, showWarnings = FALSE)
 
 scvi_dir <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2")

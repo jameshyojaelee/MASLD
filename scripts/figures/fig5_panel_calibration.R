@@ -207,7 +207,7 @@ dt[, score_convergence_full := convergence_score]
 for (cc in bf_cols) dt[is.na(get(cc)) | get(cc) < 0, (cc) := 0]
 dt[, score_convergence_lomo_s1 := rowSums(.SD), .SDcols = bf_cols]
 
-dt[, score_top_logFC := fifelse(!is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05,
+dt[, score_top_logFC := fifelse(is_canonical_deg(dt),
                                 abs(bulk_logFC), 0)]
 dt[is.na(score_top_logFC), score_top_logFC := 0]
 dt[, score_top_pp4 := pmax(coloc_susie_best_pp4, coloc_abf_best_pp4, na.rm = TRUE)]

@@ -39,7 +39,7 @@ fit_biotype_association <- function(gene_table) {
     model_data = model_data,
     result = data.table::data.table(
       comparison = "lncRNA_vs_protein_coding",
-      outcome = "all_gene_TREAT_FDR_below_0.05",
+      outcome = "all_gene_padj_below_0.05_and_abs_log2FC_above_0.50",
       n_genes = nrow(model_data),
       n_lncrna = sum(model_data$is_lncrna == 1L),
       n_protein_coding = sum(model_data$is_lncrna == 0L),

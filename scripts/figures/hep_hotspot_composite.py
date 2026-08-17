@@ -12,7 +12,7 @@
 #   DOWN = hep__19 Fatty-acid/peroxisomal (FAO) (beta = -0.63, q = 1e-8)
 #
 # Individual PDFs (assembled in Illustrator) ->
-#   figures/main/fig3_RNAseq/panels/figs3_hep_hotspot_composite/
+#   figures/main/fig4_singlecell_programs/panels/figs3_hep_hotspot_composite/
 #     A_local_corr_triangle.pdf   gene x gene local-autocorr, lower triangle
 #     B_umap_stage.pdf            hep UMAP colored by disease stage
 #     C_umap_up_hep20.pdf         hep UMAP colored by hep__20 score (up-hero)
@@ -53,7 +53,7 @@ ROOT = Path(os.environ.get(
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"))
 HS = ROOT / "Analysis/SingleCell/results_gpu_v2/hotspot_modules"
 HEPA = ROOT / "Analysis/SingleCell/results_gpu_v2/hepatocyte_subtypes/hepatocyte_atlas_annotated.h5ad"
-OUT = ROOT / "figures/main/fig3_RNAseq/panels/figs3_hep_hotspot_composite"
+OUT = ROOT / "figures/main/fig4_singlecell_programs/panels/supplementary/figs3_hep_hotspot_composite"
 DATA = OUT / "data"
 for d in (OUT, DATA):
     d.mkdir(parents=True, exist_ok=True)

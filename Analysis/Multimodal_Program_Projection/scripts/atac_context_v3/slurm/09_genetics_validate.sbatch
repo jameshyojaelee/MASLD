@@ -12,11 +12,19 @@ ROOT=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 PACKAGE=${ROOT}/Analysis/Multimodal_Program_Projection/scripts/atac_context_v3
 MAMBA=/gpfs/commons/home/jameslee/.local/bin/micromamba
 eval "$(${MAMBA} shell hook --shell bash)"
+set +u
 micromamba activate rnaseq
+set -u
 Rscript "${PACKAGE}/08_liftover_variants.R"
+set +u
 micromamba activate snapatac2
+set -u
 python "${PACKAGE}/09_aggregate_genetic_context.py"
+set +u
 micromamba activate rnaseq
+set -u
 Rscript "${PACKAGE}/13_render_genetic.R"
+set +u
 micromamba activate snapatac2
+set -u
 python "${PACKAGE}/11_validate_genetics.py"

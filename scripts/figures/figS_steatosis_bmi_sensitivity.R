@@ -76,7 +76,8 @@ source(file.path(INT, "scripts/de_engine_lvqw.R"))
 #      on these small covariate subsets (N=76 steatosis / N=407 NAS) and collapses
 #      the overlap sets to 0; a plain significance gate keeps them interpretable.
 #      The robustness conclusion rests on the threshold-free logFC concordance (rho).
-TREAT_FDR_T <- 0.05   # (1) primary canonical TREAT gate
+TREAT_FDR_T <- 0.05   # (1) primary canonical gate: padj cut
+CANON_LFC_T <- 0.50   # (1) primary canonical gate: effect-size floor (2026-08-12)
 SIG_P       <- 0.05   # (2) subset-internal overlap significance gate (padj only)
 
 FIGDIR <- FIGS_SENS_DIR
@@ -113,7 +114,7 @@ if ("adj.P.Val" %in% names(dream_primary) && !"padj" %in% names(dream_primary))
   setnames(dream_primary, "adj.P.Val", "padj")
 stopifnot("treat_fdr" %in% names(dream_primary))  # canonical TREAT gate
 cat("  Primary canonical DEGs (TREAT FDR<0.05 @ lfc=0.25):",
-    sum(dream_primary$treat_fdr < TREAT_FDR_T, na.rm = TRUE), "\n\n")
+    sum(dream_primary$padj < TREAT_FDR_T & abs(dream_primary$logFC) > CANON_LFC_T, na.rm = TRUE), "\n\n")
 
 # ============================================================
 # STEATOSIS DATA AUDIT

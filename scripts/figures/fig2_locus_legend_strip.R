@@ -1,19 +1,19 @@
 #!/usr/bin/env Rscript
 # fig2_locus_legend_strip.R
-# Shared horizontal legend for the Fig2F / Fig2G locus-zoom pair (the legend elements
-# were stripped from Fig2G and consolidated here). One row, left-to-right:
+# Shared horizontal legend for the Fig2G / Fig2H locus-zoom pair (the legend elements
+# were stripped from Fig2H and consolidated here). One row, left-to-right:
 #   r² gradient bar | Lead SNP diamond | EUR-in-CS / not-in-CS / coloc-shared-variant
 #   markers | log2FC gradient bar | n.s. swatch
 # 6pt Helvetica, cairo_pdf (embeds Helvetica), fixed page (no bbox trim). ~6.5 x 0.45 in.
-# Output: figures/main/fig2_genetics/panels/Fig2H_locus_legend.pdf
+# Output: figures/main/fig2_genetics/panels/Fig2I_locus_legend.pdf
 suppressPackageStartupMessages({ library(plotgardener); library(grid) })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-OUT  <- file.path(BASE, "figures/main/fig2_genetics/panels/Fig2H_locus_legend.pdf")
+OUT  <- file.path(BASE, "figures/main/fig2_genetics/panels/Fig2I_locus_legend.pdf")
 dir.create(dirname(OUT), showWarnings = FALSE, recursive = TRUE)
 
-PAGE_W <- 6.61; PAGE_H <- 0.44   # = Fig2F (3.10) + Fig2G (3.50) combined width
+PAGE_W <- 6.61; PAGE_H <- 0.44   # = Fig2G (3.10) + Fig2H (3.50) combined width
 YC <- PAGE_H / 2                       # single-row vertical centre
 t2g <- function(y) PAGE_H - y          # top-origin -> grid bottom-origin
 

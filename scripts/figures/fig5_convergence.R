@@ -318,7 +318,7 @@ atlas[, max_coloc_pp4 := do.call(pmax, c(.SD, na.rm = TRUE)), .SDcols = coloc_pp
 # Rank using available columns (some may not exist after atlas rebuild)
 # Build score component by component
 atlas[, rs_coloc := fifelse(is.na(max_coloc_pp4), 0, max_coloc_pp4) * 3]
-atlas[, rs_deg := fifelse(is.na(bulk_treat_fdr) | bulk_treat_fdr >= 0.05, 0, -log10(pmax(bulk_padj, 1e-300)) / 10)]  # TREAT canonical; effect floor (lfc=0.25) IS in the test
+atlas[, rs_deg := fifelse(is_canonical_deg(atlas), -log10(pmax(bulk_padj, 1e-300)) / 10, 0)]  # canonical 2026-08-12: padj<0.05 & |log2FC|>0.5
 if ("coloc_susie_best_pp4" %in% names(atlas)) {
   atlas[, rs_susie := fifelse(is.na(coloc_susie_best_pp4), 0, coloc_susie_best_pp4)]
 } else {
@@ -407,8 +407,8 @@ notable <- c("THRB", "HKDC1", "RORA", "GCKR", "TM6SF2", "SLC39A8", "DGAT2",
              "HAL", "HGD", "ETNPPL", "C1QC", "CORO1A", "COL14A1", "EMILIN1",
              "FASN", "KHK", "ACACA", "ACACB", "GHR", "HMGCR", "MAP3K5", "CNR1", "ADGRE5", "LOXL2", "ADORA3", "FGF21")
 
-# Determine DEG filter column (canonical: bulk_treat_fdr<0.05; TREAT lfc=0.25, effect floor in test -> NO separate |shrunk_logFC| filter)
-deg_filter <- !is.na(atlas$bulk_treat_fdr) & atlas$bulk_treat_fdr < 0.05
+# Canonical DEG filter (2026-08-12): padj<0.05 AND |log2FC|>0.5
+deg_filter <- is_canonical_deg(atlas)
 
 # Gene selection: ALL notable genes guaranteed, remaining slots filled by rank
 # 1. Get all notable genes first (bypass DEG filter)
@@ -431,7 +431,7 @@ if (nrow(atac_gene_dt) > 0) {
 # Define DEG contrast list here so it is available for both convergence scoring
 # and matrix construction below.
 deg_contrast_defs <- list(
-  list(lfc = "bulk_shrunk_logFC", padj = "bulk_treat_fdr",   lfc_thresh = 0.0, label = "MASLD\nvs Ctrl"),  # canonical: bulk_treat_fdr<0.05 (TREAT lfc=0.25; effect floor IN the test). lfc kept for z-score display only.
+  list(lfc = "bulk_logFC",        padj = "bulk_padj",        lfc_thresh = 0.5, label = "MASLD\nvs Ctrl"),  # canonical 2026-08-12: padj<0.05 & |log2FC|>0.5. Unshrunk logFC is the statistic the floor applies to.
   list(lfc = "nafl_vs_ctrl_logFC", padj = "nafl_vs_ctrl_padj", lfc_thresh = 0.0, label = "MAFL\nvs Ctrl"),
   list(lfc = "nash_vs_ctrl_logFC", padj = "nash_vs_ctrl_padj", lfc_thresh = 0.0, label = "MASH\nvs Ctrl"),
   list(lfc = "nafl_vs_nash_logFC", padj = "nafl_vs_nash_padj", lfc_thresh = 0.0, label = "MASH\nvs MAFL"),  # coeff=nafl_nashNASH: positive = up in MASH
@@ -754,8 +754,8 @@ if (!is.null(drug_val_best)) {
 }
 
 # ── Significance vectors for DEG stars ───────────────────────────────────────
-# Human DEG significance: bulk_treat_fdr < 0.05 (canonical TREAT; lfc=0.25 floor in test)
-human_sig <- !is.na(top_genes$bulk_treat_fdr) & top_genes$bulk_treat_fdr < 0.05
+# Human DEG significance: canonical 2026-08-12 (padj<0.05 & |log2FC|>0.5)
+human_sig <- is_canonical_deg(top_genes)
 
 # ── Color scales (publication_color_themes.R gradients) ──────────────────────
 source(file.path(BASE, "scripts/publication_color_themes.R"))

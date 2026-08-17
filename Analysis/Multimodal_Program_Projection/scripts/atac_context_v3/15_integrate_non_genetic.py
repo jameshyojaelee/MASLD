@@ -44,9 +44,28 @@ def write(path: Path, fields: tuple[str, ...] | list[str], rows: list[dict[str, 
         writer.writerows(rows)
 
 
+def validate_non_genetic_gate() -> dict[str, str]:
+    gate = read(CANDIDATE / "NON_GENETIC_READY")
+    if not gate:
+        raise RuntimeError("NON_GENETIC_READY is empty")
+    hashes = {}
+    for row in gate:
+        if row["release_id"] != RELEASE_ID or row["gate"] != "NON_GENETIC_READY":
+            raise RuntimeError("NON_GENETIC_READY release or gate mismatch")
+        if row["status"] != "READY":
+            raise RuntimeError("NON_GENETIC_READY contains a non-ready artifact")
+        artifact = (CANDIDATE / row["artifact"]).resolve()
+        if CANDIDATE.resolve() not in artifact.parents or not artifact.is_file():
+            raise RuntimeError(f"unsafe or missing sealed artifact: {artifact}")
+        observed = sha256(artifact)
+        if observed != row["sha256"]:
+            raise RuntimeError(f"sealed artifact hash drift: {row['artifact']}")
+        hashes[row["artifact"]] = observed
+    return hashes
+
+
 def main() -> None:
-    if not (CANDIDATE / "NON_GENETIC_READY").is_file():
-        raise RuntimeError("NON_GENETIC_READY is required for candidate integration")
+    validate_non_genetic_gate()
     out = CANDIDATE / "integration"
     if out.exists():
         raise RuntimeError(f"refusing to overwrite candidate integration: {out}")
@@ -65,8 +84,16 @@ def main() -> None:
         fields = next(csv.reader(handle, delimiter="\t"))
 
     program_rows = read(CANDIDATE / "programs/program_atac_results.tsv")
+    coverage_rows = read(CANDIDATE / "programs/program_measurement_coverage.tsv")
+    coverage_by_key = {
+        (row["cohort"], row["program_uid"]): row for row in coverage_rows
+    }
+    if len(program_rows) != 234 or len(coverage_by_key) != 234:
+        raise RuntimeError("ATAC program integration requires 234 unique cohort-program rows")
     appended = []
+    state_rows = []
     for row in program_rows:
+        coverage = coverage_by_key[(row["cohort"], row["program_uid"])]
         contrast = row["contrast_testable"] == "TRUE"
         measured = row["program_score_testable"] == "TRUE"
         effect = float(row["effect"]) if row["effect"] not in {"", "NA", "NaN"} else None
@@ -119,6 +146,25 @@ def main() -> None:
             json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
         ).hexdigest()
         appended.append(payload)
+        state_rows.append({
+            "release_id": RELEASE_ID,
+            "cohort": row["cohort"],
+            "program_uid": row["program_uid"],
+            "membership_sha256": row["membership_sha256"],
+            "lineage": row["lineage"],
+            "n_program_genes": coverage["n_program_genes"],
+            "n_promoter_measured_genes": row["n_measured_genes"],
+            "retained_l1_weight": row["retained_l1_weight"],
+            "promoter_measurement_state": (
+                "observed" if int(row["n_measured_genes"]) > 0 else "unobserved"
+            ),
+            "program_score_state": "testable" if measured else "untestable",
+            "contrast_state": "testable" if contrast else "untestable",
+            "within_source_state": row["within_source_state"],
+            "cross_cohort_state": row["cross_cohort_state"],
+            "lineage_observability_state": row["lineage_observability_state"],
+            "testability_reason": row["testability_reason"],
+        })
 
     extended = out / "fig4f_source_matrix_with_atac_v3.tsv"
     extended.write_bytes(original_bytes)
@@ -127,29 +173,33 @@ def main() -> None:
         writer.writerows(appended)
     if extended.read_bytes()[: len(original_bytes)] != original_bytes:
         raise RuntimeError("existing spatial/protein/v2 rows were not preserved byte-for-byte")
+    state_path = out / "fig4f_atac_v3_state_contract.tsv"
+    write(state_path, tuple(state_rows[0]), state_rows)
 
     da = read(CANDIDATE / "da/da_peak_results.tsv.gz")
-    priority = {"supported": 4, "discordant": 3, "source_dependent": 2, "indeterminate": 1}
-    promoter: dict[tuple[str, str], dict[str, object]] = {}
+    promoter: dict[tuple[str, str, str], dict[str, object]] = {}
     for row in da:
         for gene in filter(None, row["promoter_genes"].split(";")):
-            key = (gene, row["lineage"])
-            candidate = {
-                "release_id": RELEASE_ID,
-                "gene_symbol": gene,
-                "lineage": row["lineage"],
-                "promoter_da_state": row["evidence_state"],
-                "n_overlapping_tested_peaks": 1,
-                "source_dependence": row["evidence_state"] == "source_dependent",
-            }
+            key = (gene, row["lineage"], row["evidence_state"])
             if key not in promoter:
-                promoter[key] = candidate
+                promoter[key] = {
+                    "release_id": RELEASE_ID,
+                    "gene_symbol": gene,
+                    "lineage": row["lineage"],
+                    "promoter_da_state": row["evidence_state"],
+                    "n_overlapping_tested_peaks": 1,
+                    "source_dependence": str(
+                        row["evidence_state"] == "source_dependent"
+                    ).upper(),
+                }
             else:
                 promoter[key]["n_overlapping_tested_peaks"] = int(promoter[key]["n_overlapping_tested_peaks"]) + 1
-                if priority[row["evidence_state"]] > priority[str(promoter[key]["promoter_da_state"])]:
-                    promoter[key]["promoter_da_state"] = row["evidence_state"]
-                promoter[key]["source_dependence"] = bool(promoter[key]["source_dependence"]) or row["evidence_state"] == "source_dependent"
-    promoter_rows = sorted(promoter.values(), key=lambda row: (str(row["gene_symbol"]), str(row["lineage"])))
+    promoter_rows = sorted(
+        promoter.values(),
+        key=lambda row: (
+            str(row["gene_symbol"]), str(row["lineage"]), str(row["promoter_da_state"])
+        ),
+    )
     write(
         out / "gene_catalog_promoter_da_adapter.tsv",
         (
@@ -172,19 +222,46 @@ def main() -> None:
                 "program_uid": member["program_uid"],
                 "cohort": cohort,
                 "lineage": result["lineage"],
-                "program_atac_measurement_state": "measured" if result["program_score_testable"] == "TRUE" else "untestable",
+                "program_atac_promoter_coverage_state": (
+                    "observed" if int(result["n_measured_genes"]) > 0 else "unobserved"
+                ),
+                "program_atac_score_state": (
+                    "testable" if result["program_score_testable"] == "TRUE" else "untestable"
+                ),
                 "program_atac_contrast_state": result["within_source_state"],
                 "program_atac_cross_cohort_state": result["cross_cohort_state"],
                 "testability_reason": result["testability_reason"],
             })
     write(out / "gene_catalog_program_atac_adapter.tsv", tuple(program_gene_rows[0]), program_gene_rows)
+    artifacts = (
+        original_copy, extended, state_path, out / "gene_catalog_promoter_da_adapter.tsv",
+        out / "gene_catalog_program_atac_adapter.tsv",
+    )
     write(
         out / "integration_manifest.tsv",
-        ("release_id", "artifact", "sha256"),
-        [{"release_id": RELEASE_ID, "artifact": path.name, "sha256": sha256(path)} for path in (
-            original_copy, extended, out / "gene_catalog_promoter_da_adapter.tsv",
-            out / "gene_catalog_program_atac_adapter.tsv",
-        )],
+        ("release_id", "role", "artifact", "sha256"),
+        [
+            {
+                "release_id": RELEASE_ID,
+                "role": "integration_artifact",
+                "artifact": path.name,
+                "sha256": sha256(path),
+            }
+            for path in artifacts
+        ] + [
+            {
+                "release_id": RELEASE_ID,
+                "role": "sealed_non_genetic_input_manifest",
+                "artifact": "input_manifest.tsv",
+                "sha256": sha256(CANDIDATE / "input_manifest.tsv"),
+            },
+            {
+                "release_id": RELEASE_ID,
+                "role": "post_gate_integration_producer",
+                "artifact": str(Path(__file__).resolve().relative_to(ROOT)),
+                "sha256": sha256(Path(__file__).resolve()),
+            },
+        ],
     )
     print(f"Appended {len(appended)} ATAC v3 program rows while preserving the protected source prefix")
 

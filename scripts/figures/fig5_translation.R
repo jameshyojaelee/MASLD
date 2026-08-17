@@ -65,7 +65,7 @@ if (!is.null(drug_val) && !is.null(atlas)) {
   # S1: Transcriptomic — canonical Tier-1 DEG gate (TREAT FDR < 0.05 at lfc=0.25;
   # 2026-06-29 migration off the ashr lfsr/|shrunk|>0.3 gate — the effect floor is
   # folded into the test), then score by -log10 padj magnitude.
-  gene_dt[, S1 := ifelse(!is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05,
+  gene_dt[, S1 := ifelse(is_canonical_deg(gene_dt),
                           pmin(-log10(pmax(bulk_padj, 1e-300)) / 30, 1), 0)]
 
   # S2: Genetic/Causal — max across COLOC PP4s + TWAS score

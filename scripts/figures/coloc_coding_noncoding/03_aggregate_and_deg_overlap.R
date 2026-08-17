@@ -24,8 +24,8 @@ v <- merge(vlong, ann, by = "variant_key", all.x = TRUE)
 deg <- fread(file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
   select = c("gene","logFC","padj","symbol","treat_fdr","treat_p","treat_lfc"))
-deg_tier1 <- deg[!is.na(treat_fdr) & treat_fdr < 0.05]
-cat(sprintf("Tier 1 DEGs (TREAT FDR<0.05 at lfc=0.25): %d (expected 1,918 rows)\n",
+deg_tier1 <- deg[!is.na(padj) & !is.na(logFC) & padj < 0.05 & abs(logFC) > 0.5]
+cat(sprintf("Tier 1 DEGs (canonical 2026-08-12: padj<0.05 & |log2FC|>0.5): %d (expected 1,853 rows)\n",
             nrow(deg_tier1)))
 if (nrow(deg_tier1) != 1918L)
   warning("TREAT Tier-1 DEG count differs from the frozen 1,918-row release")

@@ -28,8 +28,11 @@ OUT_CSV <- file.path(DATA_DIR,  "fib_stage_upset_intersections.csv")
 FIB_STAGE <- file.path(BASE,
   "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/disease_signatures/fibrosis_stage_dream.csv")
 
-TREAT_LFC <- 0.25  # canonical TREAT effect-size offset (folded into the test; 2026-06-29)
-FDR_THR   <- 0.05  # treat_fdr cutoff (BH within each stage contrast)
+# CANONICAL 2026-08-12: padj < 0.05 AND |log2FC| > 0.5, BH within each stage contrast.
+# Supersedes the per-contrast analytical TREAT at lfc=0.25 (canonical 2026-06-29..2026-08-12).
+CANON_LFC <- 0.50
+FDR_THR   <- 0.05
+TREAT_LFC <- 0.25  # retained: sensitivity arm only, via add_treat_fdr() below
 TOP_N     <- 11L
 
 BAR_FILL <- "#546E7A"   # single neutral color for intersection bars
@@ -64,8 +67,9 @@ de <- fread(FIB_STAGE)
 stopifnot(all(c("logFC", "SE", "t", "P.Value", "contrast") %in% names(de)))
 de <- de[!is.na(logFC) & !is.na(SE)]
 # Per-contrast analytical TREAT (each stage-vs-F0 contrast is its own test family)
-de <- rbindlist(lapply(split(de, by = "contrast"), add_treat_fdr, lfc = TREAT_LFC))
-de_sig <- de[fdr_treat < FDR_THR, .(gene, contrast)]
+# CANONICAL 2026-08-12: padj<0.05 & |log2FC|>0.5, per contrast family.
+de[, padj := p.adjust(P.Value, method = "BH"), by = contrast]
+de_sig <- de[padj < FDR_THR & abs(logFC) > CANON_LFC, .(gene, contrast)]
 
 stage_labels <- paste0("F", 1:4)
 contrast_to_stage <- setNames(stage_labels, paste0("F", 1:4, "_vs_F0"))

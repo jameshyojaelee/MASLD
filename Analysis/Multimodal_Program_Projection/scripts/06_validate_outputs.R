@@ -10,7 +10,7 @@ BASE <- Sys.getenv(
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
 RESULTS <- file.path(BASE, "Analysis/Multimodal_Program_Projection/results")
-FIG4 <- file.path(BASE, "figures/main/fig4_validation")
+FIG5 <- file.path(BASE, "figures/main/fig5_molecular_context")
 
 assert <- function(ok, message) {
   if (!isTRUE(ok)) stop(message, call. = FALSE)
@@ -109,20 +109,20 @@ if (nrow(hits)) {
 }
 
 panel4c <- fread(file.path(RESULTS, "proteomics/panel4c_mrna_protein.tsv"))
-assert(nrow(panel4c) == 25L, "Protected Panel 4C must contain 25 protein rows")
+assert(nrow(panel4c) == 25L, "Protected Panel 5C must contain 25 protein rows")
 assert(
   all(panel4c$selection_conditioned == TRUE) &&
     all(panel4c$interpretation == "descriptive_same_cohort_reestimate"),
-  "Panel 4C must remain explicitly labeled as selection-conditioned and descriptive"
+  "Panel 5C must remain explicitly labeled as selection-conditioned and descriptive"
 )
 panel4c_contract <- fread(file.path(RESULTS, "proteomics/panel4c_contract_audit.tsv"))
-assert(nrow(panel4c_contract) == 1L && panel4c_contract$contract_match, "Panel 4C row contract drifted")
-panel4c_sidecar <- fread(file.path(FIG4, "data/composite_mrna_protein_corrected.csv"))
+assert(nrow(panel4c_contract) == 1L && panel4c_contract$contract_match, "Panel 5C row contract drifted")
+panel4c_sidecar <- fread(file.path(FIG5, "data/composite_mrna_protein_corrected.csv"))
 assert(
   nrow(panel4c_sidecar) == 25L &&
     all(panel4c_sidecar$selection_conditioned == TRUE) &&
     all(panel4c_sidecar$interpretation == "descriptive_same_cohort_reestimate"),
-  "Rendered Panel 4C sidecar lost its selection-conditioned provenance"
+  "Rendered Panel 5C sidecar lost its selection-conditioned provenance"
 )
 module_dia <- fread(file.path(RESULTS, "proteomics/module_protein_results.tsv"))
 assert(sum(module_dia$testable) == 17L, "Current frozen-input DIA coverage must contain 17 testable programs")
@@ -375,16 +375,16 @@ assert(
   "Context matrix no-overlap states must represent exact zero counts"
 )
 
-firewall <- fread(file.path(FIG4, "panels/data/fig4a_input_firewall.tsv"))
+firewall <- fread(file.path(FIG5, "panels/data/fig5a_input_firewall.tsv"))
 assert(
   nrow(firewall) == 3L &&
     setequal(firewall$branch, c(
-      "prioritized_gene_context", "frozen_program_projection", "fixed_protein_display"
+      "prioritized_gene_context", "prespecified_program_projection", "fixed_protein_display"
     )),
-  "Panel 4A input-firewall sidecar is incomplete"
+  "Panel 5A input-firewall sidecar is incomplete"
 )
 
-protein_triage <- fread(file.path(FIG4, "panels/data/fig4b_protein_triage_summary.tsv"))
+protein_triage <- fread(file.path(FIG5, "panels/data/fig5b_protein_triage_summary.tsv"))
 protein_check <- fread(file.path(
   RESULTS, "proteomics/protein_de_adjusted.tsv"
 ))[, .(gene, protein_logFC = logFC, protein_padj = padj)]
@@ -442,19 +442,19 @@ assert(
       ),
       logical(1)
     )),
-  "Panel 4B sidecar does not rederive from the adjusted protein and bulk inputs"
+  "Panel 5B sidecar does not rederive from the adjusted protein and bulk inputs"
 )
 
-map_selection <- fread(file.path(FIG4, "panels/data/fig4e_spatial_program_maps_selection.tsv"))
+map_selection <- fread(file.path(FIG5, "panels/data/fig5f_spatial_program_maps_selection.tsv"))
 assert(
   nrow(map_selection) == 4L &&
     setequal(map_selection$program_id, c("hepatocytes::14", "fibroblasts::6")) &&
     setequal(map_selection$dataset, c("GSE192741", "Vu_et_al_2025")) &&
     all(map_selection[, uniqueN(sample_id), by = dataset]$V1 == 1L),
-  "Panel 4E map selection must contain two prespecified programs on one median section per cohort"
+  "Panel 5F map selection must contain two prespecified programs on one median section per cohort"
 )
 
-summary_selection <- fread(file.path(FIG4, "panels/data/fig4f_multimodal_program_summary_selection.tsv"))
+summary_selection <- fread(file.path(FIG5, "panels/data/fig5e_multimodal_program_summary_selection.tsv"))
 summary_expected <- merge(
   context[, .(
     program_id,
@@ -481,22 +481,22 @@ assert(
     all(summary_selection$selection_rule == paste0(
       "open_promoter_gene OR robust_histology_burden OR robust_spatial_in_both"
     )),
-  "Panel 4F display universe does not rederive from its assay-native inclusion rule"
+  "Panel 5E display universe does not rederive from its assay-native inclusion rule"
 )
 
-pdfs <- file.path(FIG4, c(
-  "panels/fig4a_overview_cascade.pdf",
-  "panels/fig4b_protein_triage.pdf",
-  "panels/fig4c_mrna_protein_composite.pdf",
-  "panels/fig4d_snatac_accessibility.pdf",
-  "panels/fig4e_spatial_program_maps.pdf",
-  "panels/fig4f_multimodal_program_summary.pdf"
+pdfs <- file.path(FIG5, c(
+  "panels/fig5a_input_firewall.pdf",
+  "panels/fig5b_protein_triage.pdf",
+  "panels/fig5c_mrna_protein_composite.pdf",
+  "panels/fig5d_snatac_accessibility.pdf",
+  "panels/fig5e_multimodal_program_summary.pdf",
+  "panels/fig5f_spatial_program_maps.pdf"
 ))
-assert(all(file.exists(pdfs)), "One or more final Figure 4 PDFs are missing")
-assert(all(file.info(pdfs)$size > 1000), "One or more final Figure 4 PDFs are empty")
+assert(all(file.exists(pdfs)), "One or more final Figure 5 PDFs are missing")
+assert(all(file.info(pdfs)$size > 1000), "One or more final Figure 5 PDFs are empty")
 assert(
-  length(list.files(file.path(FIG4, "panels"), pattern = "[.]png$", full.names = TRUE, recursive = TRUE)) == 0L,
-  "Figure 4 panels directory must remain PDF-only"
+  length(list.files(file.path(FIG5, "panels"), pattern = "[.]png$", full.names = TRUE, recursive = TRUE)) == 0L,
+  "Figure 5 panels directory must remain PDF-only"
 )
 for (pdf in pdfs) {
   info <- system2("pdfinfo", pdf, stdout = TRUE, stderr = TRUE)
@@ -504,19 +504,19 @@ for (pdf in pdfs) {
   assert(length(pages) == 1L && grepl("Pages:[[:space:]]+1$", pages), paste("Expected one-page PDF:", basename(pdf)))
 }
 
-release <- fread(file.path(FIG4, "CANONICAL_MAIN_PANELS.tsv"))
+release <- fread(file.path(FIG5, "CANONICAL_MAIN_PANELS.tsv"))
 assert(
-  nrow(release) == 6L && identical(release$callout, paste0("4", LETTERS[1:6])) &&
+  nrow(release) == 6L && identical(release$callout, paste0("5", LETTERS[1:6])) &&
     all(release$source != release$filename),
-  "Canonical Figure 4 manifest must map six panels to real generator scripts"
+  "Canonical Figure 5 manifest must map six panels to real generator scripts"
 )
-release_paths <- file.path(FIG4, release$filename)
+release_paths <- file.path(FIG5, release$filename)
 release_sha <- vapply(
   release_paths, digest, character(1), algo = "sha256", file = TRUE, serialize = FALSE
 )
 assert(
   identical(unname(release_sha), release$sha256) && all(file.info(release_paths)$size == release$bytes),
-  "Canonical Figure 4 manifest checksums or byte counts do not match the rendered PDFs"
+  "Canonical Figure 5 manifest checksums or byte counts do not match the rendered PDFs"
 )
 
 cat("[validate] PASS: pinned inputs, corrected proteomics/histology inference, lineage-matched spatial audit, sidecars, and six canonical PDFs\n")

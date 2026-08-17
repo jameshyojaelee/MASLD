@@ -45,28 +45,37 @@ de:
 
 # ---------------------------------------------------------------------------
 # Consensus DEG thresholds
-# CANONICAL (2026-06-29): the DEG definition is TREAT FDR (real limma::treat), NOT ashr/raw.
-#   canonical DEG = treat_fdr < 0.05 at lfc = 0.25  (~1,918 DEGs; ~1,419 up / ~499 down)
-# treat() tests H0:|true logFC| <= lfc, so the effect-size floor is folded INTO the test and
-# there is NO separate |logFC|/|shrunk| filter (McCarthy & Smyth 2009 — coherent significance
-# x effect-size; supersedes the post-hoc ashr lfsr+|shrunk|>0.3 double-gate).
-# treat_fdr is produced by 05h_limma_voom_qw_canonical.R into canonical_deg_results.csv.
-# Source-of-truth: 05h (lfc) + 07 (bulk_sig) + 27a (l1_active) + load_figure_data.R::is_dream_deg() must match.
-# The ashr and raw blocks below are now LEGACY/REFERENCE (sensitivity only).
+# CANONICAL (2026-08-12): the DEG definition is the conventional adjusted-p + effect-size gate.
+#   canonical DEG = padj < 0.05 AND |log2FC| > 0.50  (~1,853 DEGs on the read-count substrate)
+# Chosen for comparability with the published RNA-seq literature. The 0.50 floor is deliberate:
+# floors of 0.25-0.30 push the genetic-overlap test into nominally significant DEPLETION
+# (Fisher p = 0.042 / 0.030), a harder claim than the orthogonality the paper argues.
+# CAVEAT (must appear in Methods): the effect-size filter is applied AFTER FDR adjustment
+# rather than folded into the test, so the adjusted p-value does not carry a calibrated error
+# rate for the filtered set (McCarthy & Smyth 2009). Report the TREAT arm as the comparator.
+# SUPERSEDES the TREAT interval-null gate (canonical 2026-06-29 .. 2026-08-12; ~1,918 DEGs).
+# treat_* columns are RETAINED in canonical_deg_results.csv as the sensitivity arm and back the
+# sealed F_five / lncRNA candidate drift assertions — do NOT remove them.
+# Source-of-truth: 05h (columns) + 07 (bulk_sig) + 27a (l1_active) +
+# load_figure_data.R::is_canonical_deg() must match.
 # ---------------------------------------------------------------------------
 consensus:
-  # Canonical: TREAT FDR (real limma::treat on the limma-voom-qw C2 fit)
+  # CANONICAL (2026-08-12): conventional adjusted-p + effect-size floor.
+  canonical_conventional:
+    padj: 0.05
+    lfc: 0.5                           # 2026-08-12: canonical DEG = padj<0.05 & |log2FC|>0.5 (~1,853). See header for why 0.5 and not a minimal floor.
+  # TREAT (RETIRED AS CANONICAL 2026-08-12; retained as the calibrated sensitivity arm)
   canonical_treat:
     treat_fdr: 0.05
-    treat_lfc: 0.25                    # 2026-06-29: TREAT lfc bound. FDR<0.05 on the interval-null test is the DEG call. Env override: CANONICAL_TREAT_LFC in 05h.
+    treat_lfc: 0.25                    # Was canonical 2026-06-29..2026-08-12 (~1,918 DEGs). Columns retained; still backs sealed candidate drift assertions. Env override: CANONICAL_TREAT_LFC in 05h.
   # ashr (LEGACY/REFERENCE sensitivity): shrunk effect + lfsr sign-error gate
   canonical_ashr:
     lfsr: 0.05
-    shrunk_lfc: 0.3                    # LEGACY reference (was canonical 2026-06-27..06-29; ~3,626 DEGs). NOT canonical — canonical is consensus.canonical_treat above.
-  # Dream (LEGACY/RAW sensitivity reference): standard padj + logFC thresholds
+    shrunk_lfc: 0.3                    # LEGACY reference (was canonical 2026-06-27..06-29; ~3,626 DEGs). NOT canonical.
+  # Dream (LEGACY alias of the now-canonical raw thresholds; kept for back-compat readers)
   dream:
     padj: 0.05
-    lfc: 0.5                           # LEGACY/RAW reference (~1,853 DEGs at padj<0.05, |logFC|>0.5). NOT canonical — canonical is consensus.canonical_ashr above.
+    lfc: 0.5                           # Same numbers as canonical_conventional above; retained so legacy consumers keying on `dream` do not silently diverge.
 
   # Human Tier 1: significant in BOTH dream AND meta-analysis (legacy reference)
   tier1:

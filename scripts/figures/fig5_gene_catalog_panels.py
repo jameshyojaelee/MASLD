@@ -34,7 +34,7 @@ LEGACY_CATALOG_DIR = os.path.join(
     "RNA-seq/results/evidence_passports/candidates",
     "program-context-v2-candidate-2026-08-07",
 )
-OUT_DIR = os.path.join(BASE, "figures/main/fig5_convergence/data")
+OUT_DIR = os.path.join(BASE, "figures/main/fig6_gene_catalog/data")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # The bundle is sealed; refuse to proceed if the seal is absent.

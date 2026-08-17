@@ -6,6 +6,7 @@ suppressPackageStartupMessages({
   library(BSgenome.Hsapiens.UCSC.hg38)
   library(chromVAR)
   library(data.table)
+  library(digest)
   library(JASPAR2024)
   library(limma)
   library(Matrix)
@@ -64,23 +65,51 @@ load_counts <- function(cohort, lineage) {
   list(counts = counts, donors = donors, peaks = peaks)
 }
 
+jaspar_object <- JASPAR2024()
+jaspar_sqlite <- db(jaspar_object)
+if (!file.exists(jaspar_sqlite)) stop("JASPAR2024 SQLite database is unavailable")
 motifs <- getMatrixSet(
-  JASPAR2024,
+  jaspar_sqlite,
   opts = list(collection = "CORE", tax_group = "vertebrates", all_versions = FALSE)
 )
 if (length(motifs) == 0L) stop("JASPAR2024 CORE vertebrate motif universe is empty")
 motif_ids <- names(motifs)
 if (anyDuplicated(motif_ids)) stop("Duplicated JASPAR2024 motif IDs")
+fwrite(data.table(
+  release_id = RELEASE_ID,
+  jaspar_package = "JASPAR2024",
+  database_path = jaspar_sqlite,
+  database_sha256 = digest(jaspar_sqlite, algo = "sha256", file = TRUE, serialize = FALSE),
+  collection = "CORE",
+  tax_group = "vertebrates",
+  all_versions = FALSE,
+  n_motifs = length(motifs)
+), file.path(OUT, "jaspar_database.tsv"), sep = "\t")
 
 coverage_rows <- list()
 deviation_rows <- list()
 result_rows <- list()
 model_qc_rows <- list()
+peak_filter_rows <- list()
 
 for (cohort in c("GSE244832", "GSE281367")) {
   for (lineage in c("hepatocyte", "stellate", "macrophage", "cholangiocyte", "t_nk")) {
     message("[chromVAR] ", cohort, " / ", lineage)
     input <- load_counts(cohort, lineage)
+    n_input_peaks <- ncol(input$counts)
+    nonzero_library <- Matrix::colSums(input$counts) > 0
+    if (!any(nonzero_library)) stop("No nonzero-library peaks for ", cohort, "/", lineage)
+    input$counts <- input$counts[, nonzero_library, drop = FALSE]
+    input$peaks <- input$peaks[nonzero_library]
+    peak_filter_rows[[paste(cohort, lineage, sep = "::")]] <- data.table(
+      release_id = RELEASE_ID,
+      cohort = cohort,
+      lineage = lineage,
+      filter_method = "condition_blind_nonzero_total_donor_count",
+      n_consensus_peaks = n_input_peaks,
+      n_zero_library_peaks_excluded = n_input_peaks - ncol(input$counts),
+      n_chromvar_input_peaks = ncol(input$counts)
+    )
     row_ranges <- parse_peaks(colnames(input$counts))
     names(row_ranges) <- colnames(input$counts)
     se <- SummarizedExperiment(
@@ -124,18 +153,13 @@ for (cohort in c("GSE244832", "GSE281367")) {
         ifelse(matched_peaks[motif_ids] < 10L, "fewer_than_10_matched_peaks", "zero_donor_variance")
       )
     )
-    deviation_rows[[paste(cohort, lineage, sep = "::")]] <- as.data.table(
-      as.table(scores),
-      keep.rownames = FALSE
-    )[, `:=`(
+    deviation_rows[[paste(cohort, lineage, sep = "::")]] <- data.table(
+      motif_id = rep(rownames(scores), times = ncol(scores)),
+      donor_id = rep(colnames(scores), each = nrow(scores)),
+      deviation_z = as.numeric(scores),
       release_id = RELEASE_ID,
       cohort = cohort,
       lineage = lineage
-    )]
-    setnames(
-      deviation_rows[[paste(cohort, lineage, sep = "::")]],
-      c("Var1", "Var2", "N"),
-      c("motif_id", "donor_id", "deviation_z")
     )
 
     match_dir <- file.path(OUT, "motif_matches", cohort, lineage)
@@ -150,7 +174,13 @@ for (cohort in c("GSE244832", "GSE281367")) {
     n_mash <- sum(fit_donors$condition == "MASH")
     contrast_testable <- n_normal >= 4L && n_mash >= 4L
     tested_ids <- motif_ids[motif_testable]
-    fit_table <- data.table()
+    fit_table <- data.table(
+      motif_id = character(),
+      effect = numeric(),
+      standard_error = numeric(),
+      pvalue = numeric(),
+      qvalue = numeric()
+    )
     if (contrast_testable && length(tested_ids) > 0L) {
       design <- model.matrix(~ factor(fit_donors$condition, levels = c("NORMAL", "MASH")))
       if (qr(design)$rank != ncol(design)) stop("chromVAR design is not full rank")
@@ -205,6 +235,7 @@ coverage <- rbindlist(coverage_rows, fill = TRUE)
 deviation_table <- rbindlist(deviation_rows, fill = TRUE)
 results <- rbindlist(result_rows, fill = TRUE)
 model_qc <- rbindlist(model_qc_rows, fill = TRUE)
+peak_filter <- rbindlist(peak_filter_rows, fill = TRUE)
 wide <- dcast(results, lineage + motif_id ~ cohort, value.var = c("effect", "qvalue", "contrast_testable"))
 wide[, replicated :=
   contrast_testable_GSE244832 & contrast_testable_GSE281367 &
@@ -231,5 +262,6 @@ fwrite(coverage, file.path(OUT, "motif_measurement_coverage.tsv.gz"), sep = "\t"
 fwrite(deviation_table, file.path(OUT, "donor_deviations.tsv.gz"), sep = "\t")
 fwrite(results, file.path(OUT, "chromvar_results.tsv.gz"), sep = "\t")
 fwrite(model_qc, file.path(OUT, "chromvar_model_qc.tsv"), sep = "\t")
+fwrite(peak_filter, file.path(OUT, "chromvar_peak_filter_qc.tsv"), sep = "\t")
 writeLines(capture.output(sessionInfo()), file.path(OUT, "sessionInfo.txt"))
 message("[chromVAR] Wrote ", OUT)

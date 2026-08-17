@@ -76,7 +76,8 @@ source(file.path(INT, "scripts/de_engine_lvqw.R"))
 #      small sensitivity subsets (N~40-80) and collapses those overlap sets to 0;
 #      a plain significance gate keeps the overlap comparison interpretable. The
 #      robustness conclusion itself rests on the threshold-free logFC concordance.
-TREAT_FDR_T <- 0.05   # (1) primary canonical TREAT gate
+TREAT_FDR_T <- 0.05   # (1) primary canonical gate: padj cut
+CANON_LFC_T <- 0.50   # (1) primary canonical gate: effect-size floor (2026-08-12)
 SIG_P       <- 0.05   # (2) subset-internal overlap significance gate (padj only)
 
 FIGDIR <- FIGS_SENS_DIR
@@ -119,7 +120,7 @@ if ("adj.P.Val" %in% names(dream_primary) && !"padj" %in% names(dream_primary))
 stopifnot("treat_fdr" %in% names(dream_primary))  # canonical TREAT gate
 cat("  Primary canonical genes:", nrow(dream_primary), "\n")
 cat("  Primary DEGs (TREAT FDR<0.05 @ lfc=0.25):",
-    sum(dream_primary$treat_fdr < TREAT_FDR_T, na.rm = TRUE), "\n\n")
+    sum(dream_primary$padj < TREAT_FDR_T & abs(dream_primary$logFC) > CANON_LFC_T, na.rm = TRUE), "\n\n")
 
 # Load LOO results if available (Analysis D)
 loo_file <- file.path(RDIR, "loo_cv_metrics.csv")
@@ -359,7 +360,7 @@ disease_sets <- c(
 )
 
 # Define canonical DEGs at the TREAT gate
-dream_degs <- dream_primary[treat_fdr < TREAT_FDR_T, gene]
+dream_degs <- dream_primary[padj < TREAT_FDR_T & abs(logFC) > CANON_LFC_T, gene]
 all_tested <- dream_primary$gene
 cat("Canonical DEGs:", length(dream_degs), "of", length(all_tested), "tested\n")
 

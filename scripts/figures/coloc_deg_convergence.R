@@ -5,7 +5,7 @@
 #
 # Shows the intersection of the SuSiE-COLOC gene set (368 genes,
 # gene_level_coloc.csv coloc_best_susie_pp4 > 0.5) with the bulk Tier-1 DEGs
-# (TREAT canonical, canonical_deg_results.csv treat_fdr<0.05 at lfc=0.25).
+# (canonical 2026-08-12: canonical_deg_results.csv padj<0.05 & |log2FC|>0.5).
 #
 #   x = bulk logFC (canonical effect-size axis)
 #   y = COLOC PP.H4 (SuSiE-best; axis labeled "COLOC PP.H4" because the
@@ -51,7 +51,7 @@ deg   <- fread(deg_f)
 # 2. Define the two evidence sets (ledger-verified counts)
 # ===========================================================================
 SUSIE_CUT <- 0.5    # SuSiE canonical PP.H4 threshold (ledger: 368 genes)
-LFC_GUIDE <- 0.25   # TREAT lfc null (|logFC|<=0.25); drawn as +/- reference guides only
+LFC_GUIDE <- 0.50   # canonical effect-size floor; here it IS a membership boundary
 
 # Caveat counts over the FULL table (matches the ledger exactly; one abf-only
 # hit carries an empty symbol). SuSiE = 368 canonical; abf fallback = 618.
@@ -60,21 +60,21 @@ n_abf   <- sum(coloc$coloc_best_pp4       > SUSIE_CUT, na.rm = TRUE)   # 618 (fa
 
 # gene_level_coloc.csv `gene` column IS the HGNC symbol; drop the empty-symbol row
 coloc <- coloc[gene != "" & !is.na(gene)]
-# Tier-1 = TREAT canonical (treat_fdr<0.05 at lfc=0.25). treat() folds the
-# effect-size floor into the test, so membership needs no separate |logFC| filter;
-# the +/-0.25 guides are a reference for the TREAT lfc null, not a membership gate.
-deg[, is_tier1 := !is.na(treat_fdr) & treat_fdr < 0.05]
-n_deg      <- sum(deg$is_tier1, na.rm = TRUE)                              # 1,918 (TREAT)
+# Tier-1 = canonical 2026-08-12 (padj<0.05 AND |log2FC|>0.5). Unlike the retired
+# TREAT gate, the effect-size floor here is a post-hoc filter, so the +/-0.50
+# guides ARE the membership boundary and every convergent point lies outside them.
+deg[, is_tier1 := is_canonical_deg(deg)]
+n_deg      <- sum(deg$is_tier1, na.rm = TRUE)                              # 1,853 (canonical)
 n_deg_up   <- sum(deg$is_tier1 & deg$logFC > 0, na.rm = TRUE)
 n_deg_down <- sum(deg$is_tier1 & deg$logFC < 0, na.rm = TRUE)
 
 # A handful of HGNC symbols map to >1 Ensembl row in the canonical DEG table
 # (e.g. CFHR5, HLA-DPB1) — collapse to one row per symbol BEFORE the COLOC join
-# so each gene plots once. Prefer the most-significant row (lowest treat_fdr),
+# so each gene plots once. Prefer the most-significant row (lowest padj),
 # tie-broken by the strongest |logFC|. This picks the Tier-1 row when any
 # duplicate qualifies (convergent count recomputed live below).
 deg[, abs_lfc := abs(logFC)]
-setorder(deg, treat_fdr, -abs_lfc)
+setorder(deg, padj, -abs_lfc)
 deg <- deg[!duplicated(symbol)]
 
 # ===========================================================================
@@ -109,8 +109,10 @@ n_conv_down  <- sum(dat$status == "Convergent (down)")
 # 4. Label set: all convergent genes + sub-threshold case studies
 # ===========================================================================
 # Convergent genes worth naming (top by PP.H4 * |effect|, plus key case studies).
-# RORA (SuSiE 0.998, logFC -0.381, treat_fdr 0.041) is a TREAT Tier-1 DEG and thus
-# a convergent hit.
+# NOTE 2026-08-12: RORA (SuSiE 0.998, logFC -0.381) was convergent under TREAT but
+# FAILS the canonical |log2FC|>0.5 floor, so it is no longer a Tier-1 DEG. It is
+# retained in the label list only so the panel still names it as COLOC-only; do
+# not describe it as convergent in the legend or text.
 case_convergent <- c("HKDC1", "FADS2", "SORT1", "CETP", "CFHR5", "EFHD1", "RORA")
 dat[, rank_score := coloc_pp4 * abs(logFC)]
 setorder(dat, -rank_score)
@@ -193,7 +195,7 @@ message(sprintf("SuSiE-COLOC genes (gene_level_coloc.csv, coloc_best_susie_pp4>%
                 SUSIE_CUT, n_susie))
 message(sprintf("  CAVEAT: SuSiE is canonical (%d genes); coloc.abf fallback calls %d at PP.H4>%.1f.",
                 n_susie, n_abf, SUSIE_CUT))
-message(sprintf("Bulk Tier-1 DEGs (canonical_deg_results.csv, treat_fdr<0.05 at lfc=0.25): %d (%d up / %d down)",
+message(sprintf("Bulk Tier-1 DEGs (canonical_deg_results.csv, padj<0.05 & |log2FC|>0.5): %d (%d up / %d down)",
                 n_deg, n_deg_up, n_deg_down))
 message(sprintf("CONVERGENT (SuSiE-COLOC AND Tier-1 DEG): %d genes (%d up / %d down)",
                 n_convergent, n_conv_up, n_conv_down))

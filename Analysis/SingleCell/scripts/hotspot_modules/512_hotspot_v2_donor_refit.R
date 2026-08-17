@@ -17,10 +17,12 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
-RELEASE_ID <- "program-context-v2-candidate-2026-08-07"
-release_override <- Sys.getenv("HOTSPOT_V2_RELEASE_ID", unset = "")
-if (nzchar(release_override) && release_override != RELEASE_ID) {
-  stop("HOTSPOT_V2_RELEASE_ID must equal the ratified ID: ", RELEASE_ID)
+RELEASE_ID <- Sys.getenv(
+  "HOTSPOT_V2_RELEASE_ID",
+  unset = "program-context-v2-candidate-2026-08-07"
+)
+if (!grepl("^[A-Za-z0-9][A-Za-z0-9._-]+$", RELEASE_ID)) {
+  stop("HOTSPOT_V2_RELEASE_ID contains unsafe path characters", call. = FALSE)
 }
 
 OUT <- file.path(
@@ -35,13 +37,19 @@ CHECK_ONLY <- "--check-only" %in% commandArgs(trailingOnly = TRUE) ||
 HS <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/hotspot_modules")
 SCRIPT_DIR <- file.path(BASE, "Analysis/SingleCell/scripts/hotspot_modules")
 
-PRIMARY_SCORE_FILE <- file.path(HS, "donor_collapse/donor_scores_all_weighted.tsv")
+PRIMARY_SCORE_FILE <- Sys.getenv(
+  "HOTSPOT_POOLED_SCORE_FILE",
+  unset = file.path(HS, "donor_collapse/donor_scores_all_weighted.tsv")
+)
 EQUAL_RUN_FILE <- file.path(HS, "donor_scores_all.tsv")
 LOO_FILE <- file.path(HS, "loo_stability.tsv")
 NAME_FILE <- file.path(HS, "module_names.tsv")
-META_FILE <- file.path(
-  BASE,
-  "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/donor_metadata_extended.tsv"
+META_FILE <- Sys.getenv(
+  "HOTSPOT_V2_METADATA_FILE",
+  unset = file.path(
+    BASE,
+    "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/donor_metadata_extended.tsv"
+  )
 )
 FSTAGE_FILE <- file.path(
   BASE,
@@ -708,10 +716,12 @@ pairing_paths <- file.path(
 )
 membership_paths <- file.path(HS, CELL_TYPES, "module_genes.tsv")
 producer_path <- file.path(SCRIPT_DIR, "512_hotspot_v2_donor_refit.R")
+metadata_producer_path <- file.path(SCRIPT_DIR, "515_correct_stage_metadata.R")
+score_producer_path <- file.path(SCRIPT_DIR, "511_pooled_cell_donor_scores.py")
 input_paths <- c(
   PRIMARY_SCORE_FILE, EQUAL_RUN_FILE, LOO_FILE, NAME_FILE, META_FILE,
   FSTAGE_FILE, GENCODE_FILE, DONOR_LIB, pairing_paths, membership_paths,
-  producer_path
+  producer_path, metadata_producer_path, score_producer_path
 )
 input_manifest <- add_tabular_counts(
   manifest_for(input_paths, "input"), input_paths

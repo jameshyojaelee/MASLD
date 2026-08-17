@@ -7,6 +7,8 @@ import argparse
 import bisect
 import csv
 import gzip
+import math
+import os
 from collections import defaultdict
 from pathlib import Path
 
@@ -21,15 +23,11 @@ from atac_context_v3_lib import (
     candidate_root,
     classify_genetic,
     default_candidate_root,
+    project_root,
+    sha256_file,
     write_tsv,
 )
 from genetics_context import normalize_against_reference
-
-
-HG38_FASTA = Path(
-    "/gpfs/commons/home/jameslee/reference_genome/cellranger-atac/"
-    "refdata-cellranger-arc-GRCh38-2024-A/fasta/genome.fa"
-)
 
 
 def arguments() -> argparse.Namespace:
@@ -82,17 +80,43 @@ def main() -> None:
     out = root / "genetics/context"
     if out.exists():
         raise ContractError(f"refusing to overwrite genetics context: {out}")
-    out.mkdir(parents=True)
+    stale_pending = sorted((root / "genetics").glob(".context.pending.*"))
+    if stale_pending:
+        raise ContractError(f"unresolved prior genetics context stage: {stale_pending}")
+    pending = root / f"genetics/.context.pending.{os.getpid()}"
+    if pending.exists() or pending.is_symlink():
+        raise ContractError(f"pending genetics context exists: {pending}")
+    pending.mkdir(parents=True)
 
     rows = read_rows(source)
     peaks = read_rows(peak_path)
+    if not rows or not peaks:
+        raise ContractError("liftover posterior or consensus peak table is empty")
+    frozen = read_rows(root / "input_manifest.tsv")
+    fasta_rows = [row for row in frozen if row["role"] == "hg38_fasta"]
+    if len(fasta_rows) != 1:
+        raise ContractError("frozen hg38 FASTA is not unique")
+    fasta_path = Path(fasta_rows[0]["relative_or_absolute_path"])
+    if not fasta_path.is_absolute():
+        fasta_path = project_root() / fasta_path
+    if not fasta_path.is_file() or sha256_file(fasta_path) != fasta_rows[0]["sha256"]:
+        raise ContractError("frozen hg38 FASTA hash mismatch")
     index244 = PeakIndex(peaks, "supported_gse244832")
     index281 = PeakIndex(peaks, "supported_gse281367")
-    fasta = pysam.FastaFile(str(HG38_FASTA))
+    fasta = pysam.FastaFile(str(fasta_path))
     audit = []
     grouped: dict[tuple[str, str, int], list[dict[str, object]]] = defaultdict(list)
+    posterior_keys: set[tuple[str, str, int, str]] = set()
     for number, row in enumerate(rows, start=1):
         posterior = float(row["SNP.PP.H4"])
+        if not math.isfinite(posterior) or not 0 <= posterior <= 1:
+            raise ContractError("variant posterior contains an invalid probability")
+        posterior_key = (
+            row["gwas_name"], row["ensembl"], int(row["signal_pair_index"]), row["snp"]
+        )
+        if posterior_key in posterior_keys:
+            raise ContractError(f"duplicated variant posterior row: {posterior_key}")
+        posterior_keys.add(posterior_key)
         status = "mapped"
         normalized = None
         if row.get("unique_liftover", "").upper() != "TRUE":
@@ -139,13 +163,24 @@ def main() -> None:
     fasta.close()
 
     summaries: dict[tuple[str, str, int], dict[str, str]] = {}
-    for path in sorted((root / "genetics/replay_exports").glob("*/chr*/*/signal_pairs.tsv")):
+    for path in sorted((root / "genetics/replay_execution").glob(
+        "batch_*/exports/*/chr*/*/signal_pairs.tsv"
+    )):
         for row in read_rows(path):
             key = (row["gwas_name"], row["ensembl"], int(row["signal_pair_index"]))
+            if key in summaries:
+                raise ContractError(f"duplicated signal-pair summary: {key}")
             summaries[key] = row
-    if set(grouped) - set(summaries):
-        raise ContractError("variant posterior rows lack signal-pair summaries")
-    plan_rows = read_rows(root / "genetics/replay_plan.tsv")
+    if set(grouped) != set(summaries):
+        raise ContractError("signal-pair summaries and variant posterior families differ")
+    plan_rows = read_rows(root / "genetics/prepared/replay_plan.tsv")
+    if not plan_rows or {row["trait_class"] for row in plan_rows} != {
+        "direct_MASLD", "liver_enzyme"
+    }:
+        raise ContractError("replay plan lacks both prespecified trait classes")
+    plan_keys = [(row["gwas_name"], row["ensembl"]) for row in plan_rows]
+    if len(plan_keys) != len(set(plan_keys)):
+        raise ContractError("replay plan contains duplicated gene-study pairs")
     pair_metadata = {
         (row["gwas_name"], row["ensembl"]): row
         for row in plan_rows
@@ -206,8 +241,12 @@ def main() -> None:
                 "lost_posterior_mass": 1.0 - mapped,
                 "gse244832_accessible_mass": mass244,
                 "gse281367_accessible_mass": mass281,
+                "gse244832_unique_accessible_mass": mass244 - shared,
+                "gse281367_unique_accessible_mass": mass281 - shared,
                 "shared_accessible_mass": shared,
                 "any_accessible_mass": any_mass,
+                "joint_gse244832_accessible_mass": pp_h4 * mass244,
+                "joint_gse281367_accessible_mass": pp_h4 * mass281,
                 "joint_any_accessible_mass": pp_h4 * any_mass,
                 "joint_shared_accessible_mass": pp_h4 * shared,
                 "evidence_state": classify_genetic(mapped, shared, mass244, mass281),
@@ -232,10 +271,35 @@ def main() -> None:
             int(row["signal_pair_index"]) == primary_index[(str(row["gwas_name"]), str(row["ensembl"]))]
         ).upper()
 
-    write_tsv(out / "variant_liftover_audit.tsv", tuple(audit[0]), audit)
-    write_tsv(out / "genetic_lineage_context_all_pairs.tsv", tuple(lineage_rows[0]), lineage_rows)
+    planned_pairs = {(row["gwas_name"], row["ensembl"]) for row in plan_rows}
+    observed_pairs = {(key[0], key[1]) for key in grouped}
+    if observed_pairs != planned_pairs:
+        raise ContractError("replay exports do not cover every planned gene-study pair")
+    if not audit or not lineage_rows:
+        raise ContractError("genetics aggregation produced no biological rows")
+    write_tsv(pending / "variant_liftover_audit.tsv", tuple(audit[0]), audit)
+    write_tsv(
+        pending / "genetic_lineage_context_all_pairs.tsv",
+        tuple(lineage_rows[0]),
+        lineage_rows,
+    )
     primary = [row for row in lineage_rows if row["primary_signal_pair"] == "TRUE"]
-    write_tsv(out / "genetic_lineage_context_primary_pairs.tsv", tuple(primary[0]), primary)
+    write_tsv(
+        pending / "genetic_lineage_context_primary_pairs.tsv",
+        tuple(primary[0]),
+        primary,
+    )
+    write_tsv(
+        pending / "genetics_context_input_manifest.tsv",
+        ("release_id", "role", "path", "sha256"),
+        [{
+            "release_id": RELEASE_ID,
+            "role": "hg38_fasta",
+            "path": str(fasta_path),
+            "sha256": fasta_rows[0]["sha256"],
+        }],
+    )
+    os.replace(pending, out)
     print(f"Aggregated {len(grouped)} signal pairs across {len(LINEAGES)} lineages")
 
 

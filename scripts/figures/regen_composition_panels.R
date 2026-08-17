@@ -211,7 +211,7 @@ p2f <- ggplot() +
 
 # save_fig(p2f, file.path(PANEL_DIR, "celltype_composition_shift.pdf"),
 #          width = fig_half_width * 1.05, height = 3.4)
-fwrite(stage_summary, file.path(PANEL_DIR, "celltype_composition_shift_data.csv"))
+fwrite(stage_summary, file.path(PANEL_DIR, "data", "celltype_composition_shift_data.csv"))
 # message(sprintf("Saved %s", file.path(PANEL_DIR, "celltype_composition_shift.pdf")))
 
 # ============================================================================

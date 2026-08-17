@@ -58,17 +58,16 @@ cg <- coloc[!is.na(coloc_pp4), .(gene, coloc_pp4, coloc_meth)]
 
 # ── 2. Essentiality (Chronos) + canonical bulk DEG status from the atlas ──────
 atl <- fread(ATLAS_CSV,
+  # bulk_padj added 2026-08-12 for the canonical gate.
   select = c("human_symbol", "essentiality_chronos", "is_essential",
-             "bulk_logFC", "bulk_treat_fdr"))
+             "bulk_logFC", "bulk_padj", "bulk_treat_fdr"))
 atl <- atl[!is.na(essentiality_chronos) & !is.na(human_symbol) & human_symbol != ""]
 
 # ── 3. Join: genes with BOTH a COLOC PP.H4 and a Chronos score ────────────────
 d <- merge(cg, atl, by.x = "gene", by.y = "human_symbol")
 d <- unique(d, by = "gene")
-d[, bulk_status := fifelse(!is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05 &
-                            !is.na(bulk_logFC) & bulk_logFC > 0, "DEG up",
-                    fifelse(!is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05 &
-                              !is.na(bulk_logFC) & bulk_logFC < 0, "DEG down",
+d[, bulk_status := fifelse(is_canonical_deg(d) & bulk_logFC > 0, "DEG up",
+                    fifelse(is_canonical_deg(d) & bulk_logFC < 0, "DEG down",
                             "Not DEG"))]
 d[, bulk_status := factor(bulk_status,
                            levels = c("DEG up", "DEG down", "Not DEG"))]

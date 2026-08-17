@@ -104,6 +104,14 @@ class ContractTests(unittest.TestCase):
             self.assertTrue(gate.is_file())
             self.assertIn("blocked", result.stdout.lower())
             self.assertFalse((root / "genetics/replay_plan.tsv").exists())
+            original = gate.read_bytes()
+            subprocess.run(
+                [sys.executable, str(script), "--candidate-root", str(root), "--fixture-mode"],
+                text=True,
+                capture_output=True,
+                check=True,
+            )
+            self.assertEqual(gate.read_bytes(), original)
 
     def test_replay_runner_patch_is_isolated(self) -> None:
         module_path = SCRIPT_DIR / "07_prepare_genetic_replay.py"
@@ -115,6 +123,8 @@ class ContractTests(unittest.TestCase):
             source = Path(tmp) / "source.R"
             destination = Path(tmp) / "runner" / "copy.R"
             source.write_text(
+                "library(susieR)\n"
+                'registry <- read.delim("config/gwas_registry.tsv", stringsAsFactors = FALSE)\n'
                 'OUT_DIR <- file.path(FM_DIR, paste0("results/susie_coloc", OUT_SUFFIX), gwas_name)\n'
                 "egenes <- unique(eqtl_all$ENSG)\n"
                 'susie_method <- "susie"\n',
@@ -125,7 +135,9 @@ class ContractTests(unittest.TestCase):
             self.assertEqual(source.read_bytes(), original)
             patched = destination.read_text(encoding="utf-8")
             self.assertIn("ATAC_V3_REPLAY_GENE_FILTER", patched)
-            self.assertIn("variant_posteriors.tsv.gz", patched)
+            self.assertIn("export_coloc_susie_result", patched)
+            self.assertIn("ATAC_V3_GWAS_REGISTRY", patched)
+            self.assertTrue((destination.parent / "genetics_export_helpers.R").is_file())
 
 
 if __name__ == "__main__":

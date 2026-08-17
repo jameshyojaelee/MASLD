@@ -85,7 +85,7 @@ out_pdf <- file.path(FIG2_PANEL_DIR, "figs3c_deg_landscape_cv.pdf")
 ggsave(out_pdf, combined, width = 7, height = 6)
 cat("Saved:", out_pdf, "\n")
 
-out_csv <- file.path(FIG2_PANEL_DIR, "deg_landscape_cv_data.csv")
+out_csv <- file.path(FIG2_PANEL_DIR, "data", "deg_landscape_cv_data.csv")
 fwrite(grid, out_csv)
 
 out_cv <- file.path(OUTDIR, "fig1g_cv_data.csv")  # not relocated; stays in fig1

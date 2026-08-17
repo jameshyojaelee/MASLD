@@ -35,9 +35,9 @@ cd "$PROJECT_ROOT"
   --project-root "$PROJECT_ROOT" --candidate-root "$CANDIDATE_ROOT"
 
 export MASLD_FIGURE_OUTPUT_ROOT="$CANDIDATE_ROOT/figures"
-"$R_BIN" "$PROJECT_ROOT/scripts/figures/fig4b_protein_triage.R"
+"$R_BIN" "$PROJECT_ROOT/scripts/figures/fig5b_protein_triage.R"
 "$R_BIN" "$PROJECT_ROOT/scripts/figures/composite_mrna_protein.R"
-"$R_BIN" "$PROJECT_ROOT/scripts/figures/fig4d_snatac_accessibility.R"
+"$R_BIN" "$PROJECT_ROOT/scripts/figures/fig5d_snatac_accessibility.R"
 "$PYTHON_BIN" -B "$SCRIPT_ROOT/26_render_resource_figure4.py" \
   --project-root "$PROJECT_ROOT" --candidate-root "$CANDIDATE_ROOT"
 "$PYTHON_BIN" -B "$SCRIPT_ROOT/27_validate_resource_figure4.py" \

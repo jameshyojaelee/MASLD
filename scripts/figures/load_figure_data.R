@@ -141,10 +141,13 @@ FIGS_LFCSENS_DIR   <- file.path(FIGS_METHVAL_DIR, "lfc_sensitivity")
 # Main-figure directory compatibility constants. Final semantic placement is
 # governed by docs/PAPER.md and docs/ROADMAP.md, not these legacy names.
 FIG1_DIR  <- file.path(FIG_MAIN, "fig1_atlas_overview")           # Atlas + cohorts
-FIG2_DIR  <- file.path(FIG_MAIN, "fig3_RNAseq")                   # Final Fig 3: cross-sectional established-state transcriptomics; FIG2_DIR retained only for back-compat.
-FIG3_DIR  <- file.path(FIG_MAIN, "fig2_genetics")                 # Genetics / GWAS-eQTL (main Fig 2; dir renamed fig3_regulatory_architecture -> fig2_genetics 2026-06-12; constant name FIG3_DIR kept for back-compat across ~21 consumer scripts). NB: this is main Fig 2, distinct from FIG2_DIR (fig3_RNAseq) above.
-FIG4_DIR  <- file.path(FIG_MAIN, "fig4_validation")               # Final Fig 4: assay-native molecular and physical context; directory name is compatibility-only.
-FIG5_DIR  <- file.path(FIG_MAIN, "fig5_convergence")              # Final Fig 5: MASLD Gene Catalog; directory name is compatibility-only.
+FIG2_DIR  <- file.path(FIG_MAIN, "fig3_bulk_transcriptomics")     # Final Fig 3: cross-sectional established-state transcriptomics; FIG2_DIR retained only for back-compat.
+FIG3_BULK_DIR <- file.path(FIG_MAIN, "fig3_bulk_transcriptomics") # Current Figure 3 authority directory.
+FIG4_SC_DIR <- file.path(FIG_MAIN, "fig4_singlecell_programs")    # Current Figure 4 single-cell authority directory.
+FIG3_DIR  <- file.path(FIG_MAIN, "fig2_genetics")                 # Genetics / GWAS-eQTL (main Fig 2; dir renamed fig3_regulatory_architecture -> fig2_genetics 2026-06-12; constant name FIG3_DIR kept for back-compat across ~21 consumer scripts). NB: this is main Fig 2, distinct from FIG2_DIR above.
+FIG5_CONTEXT_DIR <- file.path(FIG_MAIN, "fig5_molecular_context")  # Current Figure 5 assay-native molecular/physical context authority.
+FIG4_DIR  <- FIG5_CONTEXT_DIR                                      # Deprecated compatibility alias for historical producers.
+FIG5_DIR  <- file.path(FIG_MAIN, "fig6_gene_catalog")              # Final Fig 6; constant name retained for back-compat across producer scripts.
 
 # Supplementary figures (S1-S10 + sensitivity + therapeutics)
 FIGS01_DIR    <- file.path(FIGS_METHVAL_DIR, "qc_validation")  # was figS01_qc_validation (consolidated 2026-06-04)
@@ -192,7 +195,8 @@ FIGS_QUANT_DIR <- file.path(FIGS_METHVAL_DIR, "quantification")  # was figS_quan
 # Create all directories
 for (d in c(FIG_MAIN, FIG_SUPP, FIG_MISC, FIG_ARCHIVE,
             FIG_DECONV_C2_ARCHIVE, FIG_DECONV_RECT_ARCHIVE,
-            FIG1_DIR, FIG2_DIR, FIG3_DIR, FIG4_DIR, FIG5_DIR,
+            FIG1_DIR, FIG2_DIR, FIG3_BULK_DIR, FIG4_SC_DIR, FIG3_DIR,
+            FIG5_CONTEXT_DIR, FIG4_DIR, FIG5_DIR,
             FIGS01_DIR, FIGS02_DIR, FIGS03_DIR, FIGS04_DIR, FIGS05_DIR,
             FIGS06_DIR, FIGS07_DIR, FIGS08_DIR, FIGS09_DIR, FIGS10_DIR,
             FIGS_SENS_DIR, FIGS_HEPSUB_DIR, FIGS_THERA_DIR,
@@ -297,18 +301,57 @@ load_dream_results <- function() {
 }
 
 # --- DEG classification helper ---
-# Returns a logical vector: TRUE if gene passes the canonical DEG threshold.
-# Canonical (2026-06-29): TREAT FDR < 0.05 at lfc = 0.25 (real limma::treat, computed in
-# 05h). treat() tests H0:|true logFC|<=lfc, so the effect-size floor is folded INTO the
-# test -- there is NO separate |logFC|/|shrunk| filter. Supersedes the ashr lfsr+|shrunk|>0.3
-# gate (those columns are retained as reference). `dt` must carry a treat_fdr column;
-# accepts bulk_treat_fdr (atlas / consensus) or treat_fdr (canonical loader output).
-is_dream_deg <- function(dt) {
+# THE single definition of the canonical bulk DEG call. Every figure, table, and
+# release number must route through this function; do not re-derive a gate inline.
+#
+# Canonical (2026-08-12): conventional adjusted p-value plus effect-size floor,
+#   padj < 0.05 AND |log2FC| > 0.50   (~1,853 genes on the read-count substrate)
+# Chosen for comparability with the published RNA-seq literature. The 0.50 floor is
+# deliberate: floors of 0.25-0.30 put the genetic-overlap test into nominally
+# significant depletion (Fisher p = 0.042 / 0.030), which is a harder claim to
+# defend than the orthogonality the paper actually argues.
+#
+# SUPERSEDES the TREAT interval-null gate (treat_fdr < 0.05 at lfc = 0.25, canonical
+# 2026-06-29 .. 2026-08-12, ~1,918 genes). The treat_* columns are RETAINED in
+# canonical_deg_results.csv as the reference sensitivity arm and still back the
+# sealed F_five / lncRNA candidate drift assertions -- do not remove them. Jaccard
+# between the two sets is 0.658 (1,497 shared, 421 TREAT-only, 356 conventional-only).
+#
+# Caveat that must stay in the Methods: because the effect-size filter is applied
+# after FDR adjustment rather than folded into the test, the adjusted p-value does
+# not carry a calibrated error rate for the filtered set (McCarthy & Smyth 2009).
+# Report the TREAT arm alongside as the calibrated comparator.
+#
+# `dt` must carry an adjusted p-value and a log fold change; accepts the bulk_*
+# (atlas / consensus) or unprefixed (canonical loader output) naming.
+CANONICAL_DEG_PADJ <- 0.05
+CANONICAL_DEG_LFC  <- 0.50
+
+is_canonical_deg <- function(dt,
+                             padj_cut = CANONICAL_DEG_PADJ,
+                             lfc_cut  = CANONICAL_DEG_LFC) {
+  p_col <- intersect(c("bulk_padj", "padj", "adj.P.Val"), names(dt))[1]
+  l_col <- intersect(c("bulk_logFC", "logFC"), names(dt))[1]
+  if (is.na(p_col) || is.na(l_col))
+    stop("is_canonical_deg: need an adjusted p-value (bulk_padj/padj/adj.P.Val) and a ",
+         "log fold change (bulk_logFC/logFC); have: ", paste(names(dt), collapse = ", "))
+  !is.na(dt[[p_col]]) & !is.na(dt[[l_col]]) &
+    dt[[p_col]] < padj_cut & abs(dt[[l_col]]) > lfc_cut
+}
+
+# Back-compatible alias. Retained so the ~24 scripts that already call the shared
+# helper follow the canonical definition automatically; new code should call
+# is_canonical_deg() directly.
+is_dream_deg <- function(dt) is_canonical_deg(dt)
+
+# The retired interval-null gate, kept callable for the sensitivity arm and for
+# panels that explicitly contrast the two definitions. NOT the canonical call.
+is_treat_deg <- function(dt, fdr_cut = 0.05) {
   tf_col <- intersect(c("bulk_treat_fdr", "treat_fdr"), names(dt))[1]
   if (is.na(tf_col))
-    stop("is_dream_deg: need treat_fdr (bulk_treat_fdr/treat_fdr); have: ",
+    stop("is_treat_deg: need treat_fdr (bulk_treat_fdr/treat_fdr); have: ",
          paste(names(dt), collapse = ", "))
-  !is.na(dt[[tf_col]]) & dt[[tf_col]] < 0.05
+  !is.na(dt[[tf_col]]) & dt[[tf_col]] < fdr_cut
 }
 
 # --- MASH vs MASL results ---
@@ -401,7 +444,9 @@ load_consensus_degs <- function() {
      (bulk_sig_tier == TRUE | meta_sig_tier == TRUE) &
      dir_concordant == TRUE,
      tier := "Tier2_Moderate"]
-  # Tier3 needs per-study counts (simplified: use bulk_sig from consensus file)
+  # Tier3 keys off per-study counts only. The bulk_sig presence check below is a
+  # vestigial guard: no bulk_sig VALUE is read, so the stale TREAT-era stored
+  # column cannot leak into the tier call.
   if ("bulk_sig" %in% names(dt)) {
     # If n_studies column exists, use it
     if ("n_studies_sig" %in% names(dt)) {

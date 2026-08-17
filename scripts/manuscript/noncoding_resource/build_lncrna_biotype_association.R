@@ -122,7 +122,8 @@ for (cohort in LNCRNA_COHORTS) {
 gene_table <- data.table(
   gene_id_versioned = rownames(dge),
   gene_type = identity$gene_type,
-  treat_positive = primary$treat_fdr < LNCRNA_FDR,
+  # CANONICAL 2026-08-12: padj<0.05 & |log2FC|>0.50 (field name kept for schema stability)
+  treat_positive = primary$padj < LNCRNA_FDR & abs(primary$logFC) > LNCRNA_LFC,
   direction = fifelse(primary$logFC > 0, "up", fifelse(primary$logFC < 0, "down", "zero")),
   AveExpr = primary$AveExpr,
   expression_variability = expression_variability,
@@ -145,9 +146,12 @@ counts[, display_order := match(
 )]
 setorder(counts, display_order)
 counts[, display_order := NULL]
-if (sum(counts$n_tested) != 23370L || sum(counts$n_treat_positive) != 1616L ||
+# CANONICAL 2026-08-12 (padj<0.05 & |log2FC|>0.50): 1,347 positives overall,
+# 402 of them lncRNA. The tested universe is gate-independent and unchanged.
+# Comparator arm under TREAT was 1,616 overall / 434 lncRNA.
+if (sum(counts$n_tested) != 23370L || sum(counts$n_treat_positive) != 1347L ||
     counts[display_biotype == "lncRNA", n_tested] != 6249L ||
-    counts[display_biotype == "lncRNA", n_treat_positive] != 434L) {
+    counts[display_biotype == "lncRNA", n_treat_positive] != 402L) {
   fail("Biotype count rederivation failed")
 }
 

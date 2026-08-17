@@ -8,7 +8,7 @@
 #SBATCH --error=scripts/figures/logs/coloc_figs_refresh_%j.err
 # Regenerate the 11 ATLAS-INDEPENDENT genetics/COLOC figures on the 2026-07-05
 # MVP 50-GWAS COLOC master (gene_level_coloc.csv / susie_coloc_all_gwas.csv).
-# The 7 atlas/convergence-dependent figures (Fig2F, Fig5A, figS09 locus-zooms,
+# The 7 atlas/convergence-dependent figures (Fig2G, Fig5A, figS09 locus-zooms,
 # figS_convergence_evidence, convergence_evidence_matrix) are DEFERRED until the
 # concurrent-session atlas resync (C10: 27a -> 75 -> 217) lands.
 set -o pipefail   # NOT -u: micromamba/conda activate scripts reference unbound vars (ADDR2LINE)

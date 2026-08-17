@@ -17,6 +17,7 @@ Output (NEW path, does not touch canonical donor_scores_all.tsv):
 """
 from __future__ import annotations
 import os
+import re
 from pathlib import Path
 import pandas as pd
 
@@ -25,8 +26,8 @@ BASE = Path(os.environ.get(
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design",
 ))
 RES = BASE / "Analysis/SingleCell/results_gpu_v2/hotspot_modules"
-OUT = RES / "donor_collapse"
-OUT.mkdir(parents=True, exist_ok=True)
+DEFAULT_OUTPUT = RES / "donor_collapse/donor_scores_all_weighted.tsv"
+OUTPUT = Path(os.environ.get("HOTSPOT_POOLED_SCORE_FILE", str(DEFAULT_OUTPUT)))
 
 # Mirror lib_donor_collapse.R::build_srr_to_donor_map in python. Keys = raw atlas
 # sample ids (SRR run id, or GSM for GSE136103); values = "{dataset}_{donor_id}".
@@ -49,10 +50,35 @@ def build_sample_to_donor() -> dict[str, str]:
                 srr = srr.strip()
                 if srr:
                     m[srr] = donor
+
+    run_file = BASE / "Liver_Atlas/metadata/SraRunTable.csv"
+    sample_file = BASE / "Liver_Atlas/metadata/GSE192740_sampleInfo_scRNAseq.tsv"
+    runs = pd.read_csv(run_file, dtype=str, usecols=["Run", "shortfilename"])
+    samples = pd.read_csv(
+        sample_file,
+        sep="\t",
+        dtype=str,
+        usecols=["characteristics: shortFileName", "title"],
+    ).rename(columns={"characteristics: shortFileName": "shortfilename"})
+    liver = runs.merge(samples, on="shortfilename", how="inner")
+    liver["donor_short"] = liver["title"].map(
+        lambda value: (match.group(0) if (match := re.search(r"H[0-9]+", value)) else None)
+    )
+    liver = liver.dropna(subset=["donor_short"])
+    if liver["Run"].nunique() != 48 or liver["donor_short"].nunique() != 19:
+        raise RuntimeError("Liver Atlas source run-to-donor cardinality drift")
+    liver_map = dict(zip(liver["Run"], "Liver_Atlas_" + liver["donor_short"]))
+    overlap = set(m).intersection(liver_map)
+    if overlap:
+        raise RuntimeError("A sequencing library maps to more than one biological donor")
+    m.update(liver_map)
     return m
 
 
 def main() -> None:
+    if OUTPUT.exists():
+        raise FileExistsError(f"Refusing to overwrite pooled-cell score file: {OUTPUT}")
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     s2d = build_sample_to_donor()
     print(f"[511py] sample->donor map: {len(s2d)} run ids")
 
@@ -74,8 +100,8 @@ def main() -> None:
     donor = (cs.groupby(["cell_type", "module", "donor"], as_index=False)["score"]
                .mean()
                .rename(columns={"donor": "sample"}))
-    donor.to_csv(OUT / "donor_scores_all_weighted.tsv", sep="\t", index=False)
-    print(f"[511py] wrote {OUT/'donor_scores_all_weighted.tsv'} "
+    donor.to_csv(OUTPUT, sep="\t", index=False)
+    print(f"[511py] wrote {OUTPUT} "
           f"({len(donor):,} rows, {donor['sample'].nunique()} donors)")
 
 

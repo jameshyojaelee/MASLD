@@ -172,8 +172,8 @@ def main() -> None:
     figure_paths = [
         ROOT / "figures/main/fig1_atlas_overview/fig1b_complementary_maps.pdf",
         ROOT / "figures/main/fig1_atlas_overview/fig1c_genetic_trait_scope.pdf",
-        ROOT / "figures/main/fig4_validation/fig4a_evidence_class_positive_rates.pdf",
-        ROOT / "figures/main/fig4_validation/fig4b_evidence_class_adjusted_or.pdf",
+        ROOT / "figures/main/fig5_molecular_context/fig5a_evidence_class_positive_rates.pdf",
+        ROOT / "figures/main/fig5_molecular_context/fig5b_evidence_class_adjusted_or.pdf",
     ]
     for path in figure_paths:
         audit.require(path.exists() and path.stat().st_size > 1000, f"Missing/empty figure: {path}")

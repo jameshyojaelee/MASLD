@@ -13,7 +13,7 @@
 # protocol and are excluded. Cirrhosis biology is presented as a supplementary
 # panel with explicit n=19 Andrews/Gribben single-dataset caveat (separate task).
 #
-# Output: FIG2_DIR/panels/figs3_hotspot_cascade.pdf
+# Output: FIG4_SC_DIR/panels/figs3_hotspot_cascade.pdf
 # ============================================================================
 suppressPackageStartupMessages({
   library(data.table)
@@ -28,7 +28,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG2_DIR, "panels")
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "supplementary")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)

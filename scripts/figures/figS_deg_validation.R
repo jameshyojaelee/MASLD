@@ -188,9 +188,9 @@ if (!is.null(dream)) {
   treat_cap <- 50
   dream[neg_log10_treat > treat_cap, neg_log10_treat := treat_cap]
 
-  # Canonical TREAT gate: treat_fdr<0.05 (lfc=0.25). The effect floor is in the
-  # test, so direction is taken from the (unshrunk) bulk logFC.
-  dream[, sig := fifelse(treat_fdr < 0.05,
+  # Canonical gate (2026-08-12): padj<0.05 & |log2FC|>0.5. Direction from the
+  # (unshrunk) bulk logFC, the same statistic the floor is applied to.
+  dream[, sig := fifelse(is_canonical_deg(dream),
                           fifelse(bulk_logFC > 0, "Up", "Down"), "NS")]
 
   n_up   <- sum(dream$sig == "Up", na.rm = TRUE)

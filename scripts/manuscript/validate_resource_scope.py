@@ -14,6 +14,60 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = ROOT / "config/resource_paper_scope.config.json"
+EXEMPTION_PATH = ROOT / "config/method_exemptions.json"
+
+# The five human authorities. A method exemption licenses retired ordering
+# vocabulary inside its own workstream; it must never license that vocabulary in
+# a Resource-level document, and no Resource document may cite a path produced
+# under an exemption. Without this firewall an exemption granted for a benchmark
+# would silently become a Resource claim, which is how these terms leaked back
+# into the project before.
+RESOURCE_AUTHORITIES = [
+    "docs/README.md",
+    "docs/PAPER.md",
+    "docs/STATUS.md",
+    "docs/RESULTS.md",
+    "docs/ROADMAP.md",
+]
+
+
+def load_exemptions() -> tuple[list[str], list[str]]:
+    """Return (exempt_terms, scope_paths) across every active exemption.
+
+    A missing config means no exemptions exist, so nothing is firewalled and
+    nothing is licensed. Fail closed in both directions.
+    """
+    if not EXEMPTION_PATH.is_file():
+        return [], []
+    config = json.loads(EXEMPTION_PATH.read_text())
+    terms: list[str] = []
+    scopes: list[str] = []
+    for entry in config.get("exemptions", []):
+        if entry.get("status") != "active":
+            continue
+        terms.extend(entry.get("terms", []))
+        scopes.extend(entry.get("scope_paths", []))
+    return sorted(set(terms)), sorted(set(scopes))
+
+
+def check_claim_firewall(errors: list[str]) -> None:
+    exempt_terms, scope_paths = load_exemptions()
+    if not exempt_terms and not scope_paths:
+        return
+    for relative in RESOURCE_AUTHORITIES:
+        path = ROOT / relative
+        if not path.is_file():
+            continue
+        lowered = path.read_text(errors="replace").lower()
+        for term in exempt_terms:
+            # Bare mentions inside a fenced code block or a path are unavoidable
+            # when the document explains the exemption itself; require the term
+            # to be absent from prose by checking word-ish boundaries.
+            if re.search(rf"(?<![\w/-]){re.escape(term.lower())}(?![\w/-])", lowered):
+                errors.append(f"exempt_term_in_resource_authority:{relative}:{term}")
+        for scope in scope_paths:
+            if scope.lower() in lowered:
+                errors.append(f"exempt_scope_cited_by_resource:{relative}:{scope}")
 
 
 def normalized(text: str) -> str:
@@ -47,6 +101,35 @@ def require_order(text: str, tokens: list[str], label: str, errors: list[str]) -
 def main() -> int:
     errors: list[str] = []
     contract = json.loads(CONTRACT_PATH.read_text())
+    if len(contract.get("main_figure_roles", [])) != 6:
+        errors.append("main_figure_role_count_drift:expected_6")
+    if contract.get("central_scientific_contribution") != (
+        "inherited_genetic_variation_and_multicellular_disease_remodeling"
+    ):
+        errors.append("central_scientific_contribution_drift")
+    expected_states = {
+        "supported",
+        "discordant",
+        "tested_negative",
+        "untestable",
+        "not_applicable",
+        "source_dependent",
+        "indeterminate",
+    }
+    if set(contract.get("evidence_state_vocabulary", [])) != expected_states:
+        errors.append("evidence_state_vocabulary_drift")
+    required_decision_fields = {
+        "claim",
+        "assay_applicability",
+        "biological_unit",
+        "coverage_and_join_gate",
+        "evidence_state",
+        "state_reason",
+        "unresolved_alternative",
+        "next_discriminating_experiment_rule_id",
+    }
+    if set(contract.get("figure_decision_contract", [])) != required_decision_fields:
+        errors.append("figure_decision_contract_drift")
 
     required_documents = [
         "docs/README.md",
@@ -62,6 +145,7 @@ def main() -> int:
         "docs/manuscript/draft/fig2.md",
         "docs/manuscript/draft/fig3.md",
         "docs/manuscript/draft/fig4.md",
+        "docs/manuscript/draft/fig5.md",
         "docs/manuscript/draft/fig5_discussion.md",
         "docs/manuscript/METHODS.md",
         "docs/manuscript/05_figure_legends.md",
@@ -72,45 +156,107 @@ def main() -> int:
         "docs/archive/INDEX.md",
         "figures/main/fig1_atlas_overview/README.md",
         "figures/main/fig2_genetics/README.md",
-        "figures/main/fig3_RNAseq/README.md",
-        "figures/main/fig4_validation/README.md",
-        "figures/main/fig5_convergence/README.md",
+        "figures/main/INDEX.md",
+        "figures/main/fig3_bulk_transcriptomics/README.md",
+        "figures/main/fig3_bulk_transcriptomics/CANDIDATE_PANEL_INDEX.tsv",
+        "figures/main/fig4_singlecell_programs/README.md",
+        "figures/main/fig4_singlecell_programs/CANDIDATE_PANEL_INDEX.tsv",
+        "figures/main/fig5_molecular_context/README.md",
+        "figures/main/fig5_molecular_context/CANDIDATE_PANEL_INDEX.tsv",
+        "figures/main/fig6_gene_catalog/README.md",
+        "figures/main/fig6_gene_catalog/CANDIDATE_PANEL_INDEX.tsv",
         "masld-atlas-v2/README.md",
         "docs/manuscript/release/README.md",
     ]
     texts = {name: read(name, errors) for name in required_documents}
 
+    reader_facing_documents = (
+        "docs/README.md",
+        contract["authority_document"],
+        contract["status_document"],
+        contract["results_document"],
+        contract["roadmap_document"],
+        "docs/manuscript/README.md",
+        "docs/manuscript/METHODS.md",
+        "docs/manuscript/05_figure_legends.md",
+        "docs/manuscript/draft/title.md",
+        "docs/manuscript/draft/abstract.md",
+        "docs/manuscript/draft/01_intro.md",
+        "docs/manuscript/draft/fig1.md",
+        "docs/manuscript/draft/fig2.md",
+        "docs/manuscript/draft/fig3.md",
+        "docs/manuscript/draft/fig4.md",
+        "docs/manuscript/draft/fig5.md",
+        "docs/manuscript/draft/fig5_discussion.md",
+    )
+    for relative in reader_facing_documents:
+        text = texts[relative] if relative in texts else read(relative, errors)
+        for term in ("frozen", "progression", "cascade"):
+            if re.search(rf"\b{term}\b", text, flags=re.IGNORECASE):
+                errors.append(f"retired_reader_term:{relative}:{term}")
+
     paper = texts[contract["authority_document"]]
     if normalized(contract["ultimate_goal"]) not in normalized(paper):
         errors.append("ultimate_goal_drift:docs/PAPER.md")
+    require(
+        normalized(paper),
+        contract["paper_title"],
+        "paper_binding_title",
+        errors,
+    )
     for marker in (
         "## Ultimate goal",
         "## The central scientific contribution",
-        "## Five-figure story",
+        "## Six-figure story",
         "## Claims we can make",
         "## Claims we cannot make",
         "## Two-paper firewall",
         "## Release acceptance",
     ):
         require(paper, marker, "paper", errors)
+    require(
+        normalized(paper),
+        "The paper connects **inherited genetic variation** to **multicellular disease remodeling** in human MASLD.",
+        "paper_central_scientific_contribution",
+        errors,
+    )
     require_order(
         paper,
         [
-            "1. Resource design and observability",
-            "2. Regulatory genetics",
-            "3. Established disease state",
-            "4. Molecular and physical context",
-            "5. MASLD Gene Catalog",
+            "1. A multimodal human MASLD Resource",
+            "2. Inherited genetic variation",
+            "3. Multicohort disease remodeling",
+            "4. Multicellular programs",
+            "5. Molecular and physical tissue context",
+            "6. MASLD Gene Catalog",
         ],
         "paper_figure_spine",
         errors,
     )
 
+    figure_contract_markers = {
+        "docs/manuscript/draft/fig1.md": "next discriminating experiment",
+        "docs/manuscript/draft/fig2.md": "next discriminating experiment",
+        "docs/manuscript/draft/fig3.md": "next discriminating experiment",
+        "docs/manuscript/draft/fig4.md": "next discriminating experiment",
+        "docs/manuscript/draft/fig5.md": "next discriminating experiment",
+        "docs/manuscript/draft/fig5_discussion.md": "deterministic next-experiment rule",
+        "docs/manuscript/05_figure_legends.md": "machine-readable evidence state",
+        "figures/main/INDEX.md": "Shared Figure 1–6 decision contract",
+    }
+    for relative, marker in figure_contract_markers.items():
+        require(
+            normalized(texts[relative]),
+            marker,
+            f"figure_evidence_contract:{relative}",
+            errors,
+        )
+
     status = texts[contract["status_document"]]
     for marker in (
         "Validated update selected for the paper",
         "Corrected rerun active",
-        "Fragment-native candidate validated",
+        "Five-cohort synchronized candidate",
         "117 program memberships",
         "Separate future paper",
     ):
@@ -120,19 +266,18 @@ def main() -> int:
     for marker in (
         "| Pooled samples | 846 | 844 |",
         "| Genes tested | 27,638 | 23,370 |",
-        "| TREAT DEGs | 1,918 | 1,616 |",
-        # Stage contrast totals. Pinned per contrast since 2026-08-11 so that the
-        # earlier-arm counts and cohorts-per-contrast are covered too; the old
-        # single "313 / 361 / 306 / 149" row hid why 149 != 132 + 42.
-        "| F1 vs F0 | 126 | 187 | 313 | 6 | 8 |",
-        "| F2 vs F1 | 187 | 174 | 361 | 6 | 8 |",
-        "| F3 vs F2 | 174 | 132 | 306 | 6 | 8 |",
-        "| F4 vs F3 | **107** | 42 | 149 | **5** | 7 |",
-        "| F1 vs F0 | 313 | 6 | 905 | 717 | 168 | 20 | 165 |",
-        "| F4 vs F3 | 149 | 5 | 435 | 365 | 55 | 15 | 52 |",
-        "| Frozen Hotspot programs | 117 |",
-        "| Non-overlap | 92.4% |",
+        # Canonical DEG gate migrated 2026-08-12 from TREAT (interval null at
+        # lfc=0.25) to the conventional padj<0.05 & |log2FC|>0.50. Both rows are
+        # pinned so neither the canonical nor the retained comparator can drift.
+        "| Canonical DEGs | 1,853 |",
+        "| TREAT DEGs (sensitivity arm) | 1,918 | 1,616 |",
+        "complete 23,370-gene Benjamini–Hochberg families",
+        "| Prespecified Hotspot programs | 117 |",
+        "| Non-overlap | 94.9% |",
         "corrected 50-study × 22-chromosome COLOC rerun is in progress",
+        "| CosMx complete-program observability | 12 / 117 programs |",
+        "| ATAC `indeterminate` peaks | 38,066 / 39,914 |",
+        "| Catalog strict `tested_negative` calls | 0 |",
     ):
         require(results, marker, "results", errors)
 
@@ -144,6 +289,7 @@ def main() -> int:
         "Plans 45–46C",
         "No Cas13 result",
         "user explicitly approves promotion",
+        "every main figure must expose the claim",
     ):
         require(roadmap, marker, "roadmap", errors)
 
@@ -184,11 +330,11 @@ def main() -> int:
     for relative, marker in guard_markers.items():
         require(read(relative, errors), marker, relative, errors)
 
-    fig5_manifest = read("figures/main/fig5_convergence/CANDIDATE_MAIN_PANELS.tsv", errors)
-    require(fig5_manifest, "candidate_not_promoted", "figure5_manifest", errors)
+    fig6_manifest = read("figures/main/fig6_gene_catalog/CANDIDATE_MAIN_PANELS.tsv", errors)
+    require(fig6_manifest, "candidate_not_promoted", "figure6_manifest", errors)
     for retired in ("therapeutic_axes", "calibration", "top10", "top20"):
-        if retired in fig5_manifest:
-            errors.append(f"retired_figure5_panel_in_candidate_manifest:{retired}")
+        if retired in fig6_manifest:
+            errors.append(f"retired_figure6_panel_in_candidate_manifest:{retired}")
 
     require(
         texts["masld-atlas-v2/README.md"],
@@ -236,7 +382,7 @@ def main() -> int:
         "masld-atlas-v2/src/app/downloads/page.tsx",
         "masld-atlas-v2/src/components/sidebar.tsx",
         "masld-atlas-v2/src/components/hero/hero.tsx",
-        "figures/main/fig5_convergence/README.md",
+        "figures/main/fig6_gene_catalog/README.md",
     )
     retired_product_names = (
         "MASLD Atlas",
@@ -250,6 +396,8 @@ def main() -> int:
         for retired in retired_product_names:
             if retired.lower() in text.lower():
                 errors.append(f"retired_public_product_name:{relative}:{retired}")
+
+    check_claim_firewall(errors)
 
     if errors:
         print("RESOURCE_SCOPE_VALIDATION\tFAIL")

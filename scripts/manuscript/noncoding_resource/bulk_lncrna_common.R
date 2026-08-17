@@ -9,8 +9,24 @@ suppressPackageStartupMessages({
 LNCRNA_COHORTS <- c(
   "GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE213621"
 )
-LNCRNA_TREAT_LFC <- 0.25
+LNCRNA_TREAT_LFC <- 0.25   # retained: interval-null comparator arm only
 LNCRNA_FDR <- 0.05
+# CANONICAL 2026-08-12: padj < 0.05 AND |log2FC| > 0.50, one floor for every
+# biotype. A biotype-specific floor was considered and rejected: lncRNAs are
+# lower-expressed, so their logFC estimates are noisier, and a hard floor on the
+# point estimate already admits them ABOVE their share of the tested universe
+# (29.8% of positives vs 26.7% of genes at 0.50, rising to 32.1% at 0.20).
+# Loosening the lncRNA floor would amplify that, and a class-specific filter
+# would make the biotype comparison circular by construction.
+LNCRNA_LFC <- 0.50
+
+# Canonical positive call. Accepts either adjusted-p column name: the pooled
+# primary table uses `padj`, fit_disease_contrast() emits `FDR`.
+lncrna_canonical_positive <- function(dt, fdr = LNCRNA_FDR, lfc = LNCRNA_LFC) {
+  p_col <- intersect(c("padj", "FDR", "adj.P.Val"), names(dt))[1L]
+  if (is.na(p_col)) stop("lncrna_canonical_positive: no adjusted p-value column", call. = FALSE)
+  !is.na(dt[[p_col]]) & !is.na(dt$logFC) & dt[[p_col]] < fdr & abs(dt$logFC) > lfc
+}
 
 fail <- function(...) stop(..., call. = FALSE)
 
@@ -142,7 +158,7 @@ direction_code <- function(value) {
 
 derive_high_confidence <- function(primary, cohort_long, loco_long, equal_weight) {
   required_primary <- c(
-    "gene_id_versioned", "logFC", "treat_fdr", "is_canonical_chromosome",
+    "gene_id_versioned", "logFC", "padj", "treat_fdr", "is_canonical_chromosome",
     "mapping_status", "main_text_eligible"
   )
   assert_true(all(required_primary %in% names(primary)), "Primary high-confidence fields missing")
@@ -190,13 +206,15 @@ derive_high_confidence <- function(primary, cohort_long, loco_long, equal_weight
   loco[, direction_agrees := direction_code(logFC) == pooled_direction]
   loco_summary <- loco[, .(
     loco_direction_agreement_n = sum(direction_agrees),
-    loco_treat_fdr_lt_0.05_n = sum(treat_fdr < LNCRNA_FDR)
+    loco_canonical_positive_n = sum(FDR < LNCRNA_FDR & abs(logFC) > LNCRNA_LFC),
+    loco_treat_fdr_lt_0.05_n = sum(treat_fdr < LNCRNA_FDR)   # comparator arm
   ), by = gene_id_versioned]
 
   equal <- merge(
     equal_weight[, .(
       gene_id_versioned,
       equal_weight_logFC = logFC,
+      equal_weight_FDR = FDR,
       equal_weight_treat_p = treat_p,
       equal_weight_treat_fdr = treat_fdr
     )],
@@ -215,20 +233,22 @@ derive_high_confidence <- function(primary, cohort_long, loco_long, equal_weight
       equal[, setdiff(names(equal), "pooled_direction"), with = FALSE]
     )
   )
-  result[, primary_treat_positive := treat_fdr < LNCRNA_FDR]
+  result[, primary_canonical_positive := lncrna_canonical_positive(result)]
+  result[, primary_treat_positive := treat_fdr < LNCRNA_FDR]   # comparator arm
   result[, genomic_mapping_eligible :=
            is_canonical_chromosome == "true" &
            mapping_status == "mapping_unambiguous" &
            main_text_eligible == "true"]
   result[, high_confidence :=
-           primary_treat_positive &
+           primary_canonical_positive &
            genomic_mapping_eligible &
            cohort_direction_agreement_n >= 4L &
            cohort_materially_opposite_n == 0L &
            cohort_all_finite &
            loco_direction_agreement_n == 5L &
-           loco_treat_fdr_lt_0.05_n >= 4L &
+           loco_canonical_positive_n >= 4L &
            equal_weight_direction_agrees &
-           equal_weight_treat_fdr < LNCRNA_FDR]
+           equal_weight_FDR < LNCRNA_FDR &
+           abs(equal_weight_logFC) > LNCRNA_LFC]
   result[]
 }

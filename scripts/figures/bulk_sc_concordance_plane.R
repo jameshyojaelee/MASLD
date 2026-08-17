@@ -9,7 +9,7 @@
 # concordance; anchors = the Fig 2/3/4 cast, marks coloured concordant/discordant,
 # TEXT black. Original celltype_concordance.R panel is UNTOUCHED.
 #
-# Output (PDF only): FIG2_DIR/panels/bulk_sc_concordance_hep.pdf (exploratory; no Fig-3 letter)
+# Output (PDF only): FIG4_SC_DIR/panels/bulk_sc_concordance_hep.pdf (exploratory)
 
 suppressPackageStartupMessages({
   library(data.table); library(ggplot2); library(ggrepel); library(ggrastr)
@@ -19,7 +19,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG2_DIR, "panels"); DATA_DIR <- file.path(PANEL_DIR, "data")
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "supplementary"); DATA_DIR <- file.path(PANEL_DIR, "data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 lab_size <- 6 / ggplot2::.pt
 

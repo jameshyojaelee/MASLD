@@ -237,10 +237,9 @@ if ("condition" %in% names(donor)) {
   donor[disease_stage_coarse == "" | is.na(disease_stage_coarse),
         disease_stage_coarse := fcase(
           grepl("healthy|control", condition, ignore.case = TRUE), "Healthy",
-          !is.na(F_stage_documented) & F_stage_documented == 0L, "Steatosis",
-          !is.na(F_stage_documented) & F_stage_documented %in% 1:3, "Steatohepatitis",
           !is.na(F_stage_documented) & F_stage_documented == 4L, "Cirrhosis",
-          grepl("masld|nafld|nash|steatohepatitis", condition,
+          grepl("nafld|masl", condition, ignore.case = TRUE), "Steatosis",
+          grepl("nash|mash|steatohepatitis", condition,
                 ignore.case = TRUE), "Steatohepatitis",
           default = NA_character_
         )]

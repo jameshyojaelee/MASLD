@@ -31,8 +31,8 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-DATA_DIR  <- file.path(BASE, "figures/main/fig5_convergence/data")
-PANEL_DIR <- file.path(BASE, "figures/main/fig5_convergence/panels")
+DATA_DIR  <- file.path(BASE, "figures/main/fig6_gene_catalog/data")
+PANEL_DIR <- file.path(BASE, "figures/main/fig6_gene_catalog/panels")
 dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 
 PT <- 6 / ggplot2::.pt   # geom_text size for 6 pt

@@ -78,14 +78,18 @@ def fragment_path(cohort: str, donor: str) -> Path:
     return PROJECT / f"Analysis/ATAC/Human_External/cellranger/{donor}/outs/fragments.tsv.gz"
 
 
-def direct_count(path: Path, chrom: str, start0: int, end: int, barcodes: set[str]) -> int:
-    total = 0
+def direct_counts(
+    path: Path, chrom: str, start0: int, end: int, barcodes: set[str]
+) -> tuple[int, int]:
+    records = 0
+    multiplicity = 0
     with pysam.TabixFile(str(path)) as tabix:
         for record in tabix.fetch(chrom, start0, end):
             fields = record.split("\t")
             if int(fields[1]) < end and int(fields[2]) > start0 and fields[3] in barcodes:
-                total += int(fields[4]) if len(fields) > 4 else 1
-    return total
+                records += 1
+                multiplicity += int(fields[4]) if len(fields) > 4 else 1
+    return records, multiplicity
 
 
 def main() -> None:
@@ -118,7 +122,7 @@ def main() -> None:
             start0, end = map(int, interval.split("-"))
             donor = donors[donor_index]["donor_id"]
             expected = int(matrix[donor_index, peak_index])
-            observed = direct_count(
+            observed_records, observed_multiplicity = direct_counts(
                 fragment_path(cohort, donor), chrom, start0, end, cells[(donor, lineage)]
             )
             audit.append({
@@ -127,17 +131,23 @@ def main() -> None:
                 "lineage": lineage,
                 "donor_id": donor,
                 "peak_coordinate": coordinate,
+                "counting_unit": "deduplicated_fragment_record",
                 "matrix_count": expected,
-                "direct_fragment_count": observed,
-                "exact_match": str(expected == observed).upper(),
+                "direct_fragment_records": observed_records,
+                "direct_fragment_multiplicity": observed_multiplicity,
+                "record_count_match": str(expected == observed_records).upper(),
+                "multiplicity_count_match": str(expected == observed_multiplicity).upper(),
             })
-    if any(row["exact_match"] != "TRUE" for row in audit):
-        raise RuntimeError("at least one direct fragment recount disagrees with the matrix")
     path = out / "exact_fragment_recount.tsv"
     with path.open("x", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=tuple(audit[0]), delimiter="\t", lineterminator="\n")
         writer.writeheader()
         writer.writerows(audit)
+    if any(row["record_count_match"] != "TRUE" for row in audit):
+        raise RuntimeError(
+            "at least one direct deduplicated-fragment-record recount disagrees with the matrix; "
+            f"diagnostics preserved at {path}"
+        )
     print(f"Exact fragment recount passed for {len(audit)} donor-peak combinations")
 
 

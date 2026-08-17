@@ -189,10 +189,16 @@ assert_true(
   identical(primary_all$gene, rownames(dge_five)),
   "Validated primary/DGE order drift"
 )
+# TREAT check retained: it validates that the SEALED input table is unchanged.
 assert_true(
   sum(primary_all$treat_fdr < LNCRNA_FDR) == 1616L &&
     all(primary_all$treat_lfc == LNCRNA_TREAT_LFC),
   "Validated primary TREAT family drift"
+)
+# CANONICAL 2026-08-12 family on the same table.
+assert_true(
+  sum(lncrna_canonical_positive(primary_all)) == 1347L,
+  "Validated primary canonical family drift"
 )
 
 identity_tested <- identity[match(rownames(dge_five), gene_id_versioned)]
@@ -279,6 +285,7 @@ primary <- merge(
 )
 assert_true(nrow(primary) == 6249L, "Primary lncRNA join drift")
 assert_true(sum(primary$treat_fdr < LNCRNA_FDR) == 434L, "Primary lncRNA TREAT count drift")
+assert_true(sum(lncrna_canonical_positive(primary)) == 402L, "Primary lncRNA canonical count drift")
 
 bulk_results <- derive_high_confidence(
   primary,
@@ -300,15 +307,24 @@ stage_results <- data.table(
     "effect, P value, FDR, or count is authorized."
   )
 )
+# Every count is computed live and carries its gate in the metric name. The
+# hardcoded 1616/434 that used to sit here were TREAT values printed next to a
+# live high_confidence count, so a single table mixed the two arms.
 verdict <- data.table(
   metric = c(
-    "source_gate", "tested_all_genes", "tested_lncrna", "primary_treat_all_genes",
-    "primary_treat_lncrna", "high_confidence_lncrna",
+    "source_gate", "tested_all_genes", "tested_lncrna",
+    "primary_canonical_all_genes", "primary_canonical_lncrna",
+    "high_confidence_lncrna_canonical",
+    "primary_treat_all_genes", "primary_treat_lncrna",
     "complete_case_sensitivity", "stage_analysis"
   ),
   value = c(
-    "pass", "23370", "6249", "1616", "434",
+    "pass", "23370", "6249",
+    as.character(sum(lncrna_canonical_positive(primary_all))),
+    as.character(sum(bulk_results$primary_canonical_positive)),
     as.character(sum(bulk_results$high_confidence)),
+    as.character(sum(primary_all$treat_fdr < LNCRNA_FDR)),
+    as.character(sum(bulk_results$primary_treat_positive)),
     "identical_to_primary_844_of_844_complete",
     "blocked_no_fragment_native_stage_model"
   ),
@@ -316,9 +332,11 @@ verdict <- data.table(
     "Claim-bearing lncRNA analysis was permitted by the source gate.",
     "Frozen all-gene BH family.",
     "GENCODE v49 lncRNAs in the frozen tested universe.",
-    "Validated pooled all-gene TREAT family at |logFC|>0.25 and BH FDR<0.05.",
+    "CANONICAL 2026-08-12 pooled all-gene family at padj<0.05 and |log2FC|>0.50.",
     "lncRNA subdivision of the same all-gene family; no lncRNA-only BH.",
-    "Deterministic cohort, LOCO, mapping, and equal-library-weight rules.",
+    "Deterministic cohort, LOCO, mapping, and equal-library-weight rules, all on the canonical gate.",
+    "COMPARATOR ARM: interval-null TREAT family at lfc=0.25 and BH FDR<0.05. Not the canonical gate.",
+    "COMPARATOR ARM: lncRNA subdivision of the TREAT family. Do not report beside canonical counts without the label.",
     "All 844 primary-model samples have complete dataset, inferred-sex, and disease fields; a separate complete-case fit would be identical.",
     "No fragment-native stage inference has been run."
   )

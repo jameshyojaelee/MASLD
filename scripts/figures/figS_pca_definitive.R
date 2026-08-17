@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# KEY MESSAGE: The five-cohort bulk expression structure separates control from aggregate disease while preserving cohort-aware participant units.
 # figS_pca_definitive.R
 # Definitive disease-vs-control PCA, with intermediates projected onto the
 # definitive-derived axes.
@@ -13,7 +14,7 @@
 # Definitive control  = NAS==0 & F0 (biopsy) | Control label (Suppli/Chen), unless
 #                       already disease.  Everything else = intermediate.
 #
-# Outputs (main Fig 3 — figures/main/fig3_RNAseq/panels/, Fig S3U):
+# Outputs (main Fig 3 — figures/main/fig3_bulk_transcriptomics/panels/, Fig S3U):
 #   figs3u_pca_definitive_control_vs_disease.pdf  (2x3: raw | corrected x Disease/NAS/Fibrosis)
 #   figs3u_pca_definitive_raw_nas_fib.pdf         (compact 1x3: raw Disease | corrected NAS | corrected Fibrosis)
 #   data/pca_definitive_counts.csv                (per-cohort class counts)
@@ -29,8 +30,112 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 # Output to main Fig 3 (RNA-seq) panels dir (moved here 2026-06-18; was the
-# multimethod_validation/panels/pca QC dir). FIG2_DIR resolves to fig3_RNAseq.
-OUT      <- file.path(FIG2_DIR, "panels")
+# multimethod_validation/panels/pca QC dir). FIG2_DIR resolves to fig3_bulk_transcriptomics.
+CANDIDATE_ROOT <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
+COLOR_CANDIDATE_ROOT <- Sys.getenv("FIG3D_COLOR_CANDIDATE_ROOT", "")
+OUT <- if (nzchar(CANDIDATE_ROOT)) {
+  file.path(CANDIDATE_ROOT, "figure3", "panels")
+} else if (nzchar(COLOR_CANDIDATE_ROOT)) {
+  file.path(COLOR_CANDIDATE_ROOT, "figure3", "panels")
+} else {
+  file.path(FIG2_DIR, "panels")
+}
+dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
+
+if (nzchar(CANDIDATE_ROOT)) {
+  suppressPackageStartupMessages({ library(edgeR); library(limma); library(patchwork) })
+  STAGE_ROOT <- normalizePath(Sys.getenv("STAGE_RELEASE_ROOT", ""), mustWork = TRUE)
+  model_manifest <- fread(file.path(STAGE_ROOT, "model_input_manifest.tsv"))
+  if (nrow(model_manifest) != 1L || model_manifest$n_cohorts != 5L ||
+      model_manifest$n_samples != 844L || model_manifest$n_control != 157L ||
+      model_manifest$n_disease != 687L) {
+    stop("STAGE_RELEASE_ROOT is not the validated five-cohort release", call. = FALSE)
+  }
+  dge <- readRDS(model_manifest$dge_path)
+  if (ncol(dge) != 844L) stop("Expected 844 DGE columns", call. = FALSE)
+  meta_all <- as.data.table(readRDS(model_manifest$meta_path))
+  meta <- meta_all[match(colnames(dge), sample_id)]
+  if (anyNA(meta$sample_id) || !identical(meta$sample_id, colnames(dge)) ||
+      uniqueN(meta$dataset) != 5L ||
+      !identical(meta[, .N, by = group_binary][order(group_binary)]$N,
+                 c(157L, 687L))) {
+    stop("Five-cohort metadata alignment or group census failed", call. = FALSE)
+  }
+  meta[, plot_class := factor(group_binary, levels = c("Control", "Disease"))]
+  design_keep <- model.matrix(~ plot_class, data = meta)
+  design_full <- model.matrix(~ dataset + inferred_sex + plot_class, data = meta)
+  transformed <- voomWithQualityWeights(dge, design_full, plot = FALSE)
+  adjusted <- removeBatchEffect(transformed$E, batch = meta$dataset,
+                                covariates = model.matrix(~ inferred_sex, meta)[, -1, drop = FALSE],
+                                design = design_keep)
+  variance <- apply(adjusted, 1, var)
+  pca <- prcomp(t(adjusted[order(variance, decreasing = TRUE)[seq_len(min(5000L, length(variance)))], ]),
+                center = TRUE, scale. = FALSE)
+  if (mean(pca$x[meta$plot_class == "Disease", 1]) <
+      mean(pca$x[meta$plot_class == "Control", 1])) {
+    pca$x[, 1] <- -pca$x[, 1]
+  }
+  dt <- cbind(meta, data.table(PC1 = pca$x[, 1], PC2 = pca$x[, 2]))
+  pve <- 100 * pca$sdev^2 / sum(pca$sdev^2)
+  fibrosis_ramp <- colorRampPalette(c(red_gradient[[1L]], masld_colors$mash))(5)
+  aggregate_disease <- masld_colors$mash
+  density <- ggplot(dt, aes(PC1, color = plot_class, fill = plot_class)) +
+    geom_density(alpha = 0.25, linewidth = 0.4) +
+    scale_color_manual(values = c(Control = "#9E9E9E", Disease = aggregate_disease), guide = "none") +
+    scale_fill_manual(values = c(Control = "#9E9E9E", Disease = aggregate_disease), guide = "none") +
+    labs(x = NULL, y = NULL) + theme_masld(base_size = 6) +
+    theme(axis.title = element_blank(), axis.text = element_blank(), axis.ticks = element_blank(),
+          panel.grid = element_blank(), plot.margin = margin(1, 1, 0, 1))
+  dt[, fibrosis_for_rho := fifelse(plot_class == "Control", 0, as.numeric(fibrosis_stage))]
+  ctrl_centroid <- colMeans(dt[plot_class == "Control", .(PC1, PC2)])
+  disease_centroid <- colMeans(dt[plot_class == "Disease", .(PC1, PC2)])
+  disease_axis <- disease_centroid - ctrl_centroid
+  disease_axis <- disease_axis / sqrt(sum(disease_axis^2))
+  axis_score <- as.vector(sweep(as.matrix(dt[, .(PC1, PC2)]), 2, ctrl_centroid, "-") %*%
+                            disease_axis)
+  rho_keep <- is.finite(axis_score) & is.finite(dt$fibrosis_for_rho)
+  rho <- suppressWarnings(cor(axis_score[rho_keep], dt$fibrosis_for_rho[rho_keep],
+                              method = "spearman"))
+  rho_p <- suppressWarnings(cor.test(axis_score[rho_keep], dt$fibrosis_for_rho[rho_keep],
+                                     method = "spearman", exact = FALSE)$p.value)
+  rho_label <- sprintf("PC1/2 rho = %.2f (n=%d)\n%s", rho, sum(rho_keep),
+                       ifelse(rho_p < 0.001, "p < 0.001", sprintf("p = %.3f", rho_p)))
+  x_pos <- min(dt$PC1) + diff(range(dt$PC1)) * 0.05
+  y_pos <- max(dt$PC2) - diff(range(dt$PC2)) * 0.05
+  scatter <- ggplot() +
+    geom_point(data = dt[plot_class == "Control"],
+               aes(PC1, PC2, shape = "Control"),
+               fill = "white", color = "#9E9E9E", size = 0.85, stroke = 0.3,
+               alpha = 0.55) +
+    geom_point(data = dt[plot_class == "Disease" & !is.na(fibrosis_stage)],
+               aes(PC1, PC2, color = fibrosis_stage),
+               size = 0.85, alpha = 0.55) +
+    annotate("text", x = x_pos, y = y_pos, label = rho_label,
+             size = 6 / ggplot2::.pt, color = "black", lineheight = 0.85,
+             hjust = 0, vjust = 1) +
+    scale_color_gradientn(colors = fibrosis_ramp, limits = c(0, 4), name = "Fibrosis") +
+    scale_shape_manual(name = NULL, values = c(Control = 1)) +
+    guides(color = guide_colorbar(order = 1, barwidth = 0.4, barheight = 2.4),
+           shape = guide_legend(order = 2, override.aes = list(size = 1.6))) +
+    labs(x = sprintf("PC1 (%.1f%%)", pve[[1L]]), y = sprintf("PC2 (%.1f%%)", pve[[2L]])) +
+    theme_masld(base_size = 6) +
+    theme(legend.position = "right", axis.text = element_text(size = 6, face = "plain"),
+          legend.title = element_text(size = 6, face = "plain"),
+          legend.text = element_text(size = 6, face = "plain"),
+          legend.key.size = unit(0.22, "cm"))
+  panel <- (density / scatter) + plot_layout(heights = c(1, 4))
+  ggsave(file.path(OUT, "fig3d_pca_fibrosis_gradient.pdf"), panel,
+         width = 2.42, height = 2.23, device = cairo_pdf)
+  src_dir <- file.path(CANDIDATE_ROOT, "source_tables")
+  dir.create(src_dir, recursive = TRUE, showWarnings = FALSE)
+  fwrite(dt[, .(sample_id, dataset, inferred_sex, group_binary, plot_class,
+                fibrosis_stage, nas_score, PC1, PC2)],
+         file.path(src_dir, "fig3d_pca_coordinates.tsv"), sep = "\t")
+  fwrite(dt[, .(n = .N, fibrosis_stage_available = sum(!is.na(fibrosis_stage))),
+            by = .(dataset, plot_class)],
+         file.path(src_dir, "fig3d_pca_census.tsv"), sep = "\t")
+  quit(save = "no", status = 0)
+}
 DATA_DIR <- file.path(OUT, "data")
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 dir.create(DATA_DIR, recursive = TRUE, showWarnings = FALSE)
@@ -278,7 +383,7 @@ pnas <- function(dt, p1, p2, ttl) {
 }
 # by Fibrosis — controls = grey OPEN circles; disease coloured by stage on a
 # continuous blue gradient BAR (matches the NAS colourbar convention); no Unknown
-pfib <- function(dt, p1, p2, ttl) {
+pfib <- function(dt, p1, p2, ttl, colours = blue_gradient) {
   dt_local <- copy(dt)
   dt_local[, def_class := droplevels(def_class)]
   dt_local[, fib_num := NA_integer_]
@@ -301,7 +406,7 @@ pfib <- function(dt, p1, p2, ttl) {
     annotate("text", x = x_pos, y = y_pos, label = label_str,
              size = 6 / ggplot2::.pt, colour = "black", lineheight = 0.85,
              hjust = 0, vjust = 1) +
-    scale_colour_gradientn(name = "Fibrosis", colours = blue_gradient, limits = c(0, 4)) +
+    scale_colour_gradientn(name = "Fibrosis", colours = colours, limits = c(0, 4)) +
     scale_shape_manual(name = NULL, values = c(Control = 1)) +
     guides(colour = guide_colourbar(order = 1, barwidth = 0.4, barheight = 2.4),
            shape  = guide_legend(order = 2, override.aes = list(size = 1.8, colour = "grey30"))) +
@@ -334,7 +439,7 @@ cat("Wrote figs3u_pca_definitive_control_vs_disease.pdf\n")
 # 8b. MAIN Fig 3 panel 4 — distilled fibrosis-gradient scatter on the definitive
 #     PCA (control NAS0/F0 vs disease NAS>=5|F>=3), covariate-adjusted
 #     (~dataset+sex+group; group-PROTECTED `dt_prot`). Disease points are
-#     coloured by fibrosis stage (F0->F4 blue ramp) so severity resolves along
+#     coloured by fibrosis stage (F0->F4 red/magenta ramp) so severity resolves along
 #     the disease axis, foreshadowing the stage cascade in panel 5; controls are
 #     grey open circles. NOTE: this PCA is a SEPARATION VISUAL on the clean
 #     extremes and does NOT define the DEG set -- the canonical bulk DEG set
@@ -343,13 +448,13 @@ cat("Wrote figs3u_pca_definitive_control_vs_disease.pdf\n")
 #     the binary Control/Disease label; the extremes-vs-pooled concordance is the
 #     05i sensitivity arm). Individual panel, house style.
 # ---------------------------------------------------------------------------
-# Top PC1 marginal-density strip = the BINARY axis (Control grey vs Disease
-# magenta, the Liang disease colour) on the SAME group-protected PC1, so it reads
-# as a distinct layer from the blue fibrosis-severity gradient in the scatter
-# below (binary shift on top; within-disease severity structure beneath).
+# Top PC1 marginal-density strip = the binary axis on the same group-protected
+# PC1. Control stays gray and aggregate disease uses the original Liang disease
+# magenta. The scatter uses a light-to-magenta ramp with the same endpoint.
 pc1_rng  <- range(dt_prot$PC1, na.rm = TRUE)
 x_expand <- ggplot2::expansion(mult = 0.03)
 dprot_d  <- copy(dt_prot); dprot_d[, def_class := droplevels(def_class)]
+main_fibrosis_ramp <- colorRampPalette(c(red_gradient[[1L]], DIS))(length(red_gradient))
 top_dens <- ggplot(dprot_d, aes(PC1, colour = def_class, fill = def_class)) +
   geom_density(alpha = 0.25, linewidth = 0.4) +
   scale_colour_manual(values = c(Control = CTRL, Disease = DIS), guide = "none") +
@@ -360,7 +465,8 @@ top_dens <- ggplot(dprot_d, aes(PC1, colour = def_class, fill = def_class)) +
   theme(axis.title = element_blank(), axis.text = element_blank(),
         axis.ticks = element_blank(), panel.grid = element_blank(),
         plot.margin = margin(1, 1, 0, 1))
-fib_scatter <- pfib(dt_prot, pve_prot[1], pve_prot[2], "") +   # title lifted to composite top
+fib_scatter <- pfib(dt_prot, pve_prot[1], pve_prot[2], "",
+                    colours = main_fibrosis_ramp) +   # title lifted to composite top
   scale_x_continuous(limits = pc1_rng, expand = x_expand)
 fig_fibgrad <- ((top_dens / fib_scatter) +
   plot_layout(heights = c(1, 4), guides = "collect")) &

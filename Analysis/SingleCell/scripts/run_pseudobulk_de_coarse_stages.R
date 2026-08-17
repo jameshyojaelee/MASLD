@@ -39,6 +39,7 @@ pb_dir <- file.path(scvi_dir, "pseudobulk")
 # directory so the legacy run-level coarse _de.csv files are not clobbered.
 out_dir <- file.path(scvi_dir, "pseudobulk_de/coarse_stage_donorcollapsed")
 donor_pairing_file <- file.path(BASE, "data/GSE244832/metadata/donor_pairing.csv")
+gse202379_pairing_file <- file.path(BASE, "data/GSE202379/metadata/donor_pairing.csv")
 
 # Shared donor-collapse utility (SRR run -> biological donor for GSE244832 /
 # GSE185477 / GSE202379). Makes donor-level DE the default going forward.
@@ -116,6 +117,26 @@ cond_to_stage <- c(
   "Cirrhotic" = "Cirrhosis"
 )
 sample_meta[, disease_stage_coarse := cond_to_stage[condition]]
+
+# Recover GSE202379 from its published diagnosis field. Fibrosis stage is a
+# separate axis and must not be used to redefine NAFLD/NASH diagnosis groups.
+if (file.exists(gse202379_pairing_file)) {
+  dp <- fread(gse202379_pairing_file)
+  g202_map <- c(
+    "Healthy control" = "Healthy",
+    "NAFLD" = "Steatosis",
+    "NASH w/o cirrhosis" = "Steatohepatitis",
+    "NASH with cirrhosis" = "Cirrhosis",
+    "end stage" = "Cirrhosis"
+  )
+  for (i in seq_len(nrow(dp))) {
+    stage_label <- unname(g202_map[dp$condition[i]])
+    if (is.na(stage_label)) next
+    runs <- trimws(strsplit(dp$rna_srrs[i], ";", fixed = TRUE)[[1]])
+    sample_meta[dataset == "GSE202379" & sample %in% runs,
+                disease_stage_coarse := stage_label]
+  }
+}
 
 # Recover GSE244832 stages via SRR -> condition mapping
 if (file.exists(donor_pairing_file)) {

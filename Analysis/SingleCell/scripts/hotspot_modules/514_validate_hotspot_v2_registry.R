@@ -11,7 +11,13 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
-RELEASE_ID <- "program-context-v2-candidate-2026-08-07"
+RELEASE_ID <- Sys.getenv(
+  "HOTSPOT_V2_RELEASE_ID",
+  unset = "program-context-v2-candidate-2026-08-07"
+)
+if (!grepl("^[A-Za-z0-9][A-Za-z0-9._-]+$", RELEASE_ID)) {
+  stop("HOTSPOT_V2_RELEASE_ID contains unsafe path characters", call. = FALSE)
+}
 OUT <- file.path(
   BASE, "Analysis/Multimodal_Program_Projection/candidates",
   RELEASE_ID, "hotspot"
@@ -586,9 +592,9 @@ assert_true(
   "Independent refits/stability do not reproduce all HS-03 states"
 )
 expected_external <- state_check[
-  expected_external_test_eligible == TRUE, sort(program_uid)
+  expected_external_test_eligible == TRUE, sort(as.character(program_uid))
 ]
-assert_true(identical(sort(external$program_uid), expected_external) &&
+assert_true(identical(sort(as.character(external$program_uid)), expected_external) &&
               all(external$cell_type == "hepatocytes"),
             "External-test file is not the independently rederived hepatocyte subset")
 
@@ -691,7 +697,10 @@ assert_true(!any(grepl("/gate_status\\.tsv$", manifest$relative_path)),
             "Release manifest must exclude the last-written freezer gate")
 environment_manifest <- manifest[
   role == "environment" & relative_path ==
-    "Analysis/Multimodal_Program_Projection/candidates/program-context-v2-candidate-2026-08-07/hotspot/environment_record.tsv"
+    file.path(
+      "Analysis/Multimodal_Program_Projection/candidates", RELEASE_ID,
+      "hotspot/environment_record.tsv"
+    )
 ]
 assert_true(nrow(environment_manifest) == 1L &&
               environment_manifest$sha256 ==

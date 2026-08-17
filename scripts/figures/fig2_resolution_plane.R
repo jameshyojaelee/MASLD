@@ -1,4 +1,6 @@
 #!/usr/bin/env Rscript
+# KEY MESSAGE: Variant localization and multi-signal colocalization resolve
+# complementary parts of the inherited liver-trait architecture.
 # fig2_resolution_plane.R  (2026-06-12)
 # Fig 2 HERO panel — "the resolution plane".
 #
@@ -26,14 +28,16 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG3_DIR, "panels")          # FIG3_DIR == figures/main/fig2_genetics
+PANEL_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # ---------------------------------------------------------------------------
 # 1. Per-gene colocalization (y) + coloc-lead variants
 # ---------------------------------------------------------------------------
-coloc <- fread(file.path(BASE,
-  "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+COLOC_INPUT <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+coloc <- fread(COLOC_INPUT)
 # MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): keep only placement=="main"
 # strata (NAFLD/NASH/PDFF + ALT/AST/GGT); Tier-3/4 supp strata move to a supplementary
 # full-portfolio figure. y (max PP.H4.susie) is thus computed over the MAIN strata only.
@@ -148,7 +152,7 @@ dt[, class := factor(class, levels = c("Non-coding","Both","Coding"))]
 plot_long <- dt[!is.na(pp4_susie) & is.finite(causal_pip),
                 .(gene, pp4_gwas = susie_gwas, x_top_snp, causal_pip,
                   x_source, class, pp4 = pmax(pp4_susie, 0))]
-plot_long[, `:=`(method = "SuSiE-coloc",
+plot_long[, `:=`(method = "SuSiE",
                  x_plot = causal_pip,
                  y_plot = pmax(pp4, 0))]
 
@@ -239,13 +243,13 @@ p <- ggplot(plot_dt, aes(x = x_plot, y = y_plot)) +
     force = 1.5, force_pull = 1.0, max.iter = 50000, max.time = 3,
     direction = "both", segment.size = 0.15, segment.color = "grey55",
     segment.alpha = 0.9, seed = 1, bg.color = "white", bg.r = 0.12) +
-  scale_color_manual(values = class_cols) +
+  scale_color_manual(values = class_cols, name = "Lead variant") +
   scale_x_continuous(limits = c(0, 1.03), breaks = seq(0, 1, 0.25),
                      expand = expansion(mult = c(0.01, 0.02))) +
   scale_y_continuous(limits = c(-0.02, 1.03), breaks = seq(0, 1, 0.25),
                      expand = expansion(mult = c(0.01, 0.02))) +
   labs(x = "Fine-mapping PIP",
-       y = expression("Colocalization posterior  PP.H"[4])) +
+       y = "Multi-signal COLOC posterior PP.H4") +
   theme_masld(base_size = 6) +
   theme(legend.position = "top", legend.justification = "center",
         plot.title = element_blank(),
@@ -258,10 +262,9 @@ p <- ggplot(plot_dt, aes(x = x_plot, y = y_plot)) +
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA)) +
   guides(color = guide_legend(order = 1, override.aes = list(size = 1.8, alpha = 0.95), ncol = 3))
 
-source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))   # save_panel(): exact contract size + cairo_pdf
-save_panel(p, "main/fig2_genetics/panels/Fig2B_PIP_vs_SuSiE-coloc.pdf",
-           read_sizes(file.path(BASE, "figures/layout_specs/figure2_panel_sizes.tsv")),
-           file.path(BASE, "figures"))
+out_pdf <- file.path(PANEL_DIR, "Fig2B_PIP_vs_SuSiE-coloc.pdf")
+ggsave(out_pdf, p, width = 2.49, height = 2.49, units = "in",
+       device = cairo_pdf, family = "Helvetica")
 
 # ---------------------------------------------------------------------------
 # 6. Freeze source CSV (so the cited numbers are reproducible). Record ALL

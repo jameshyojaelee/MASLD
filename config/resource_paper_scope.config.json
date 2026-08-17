@@ -1,17 +1,39 @@
 {
-  "contract_id": "standalone-masld-resource-2026-08-11-docs-consolidated",
+  "contract_id": "standalone-masld-resource-2026-08-13-inherited-variation-remodeling",
   "status": "active_scope_authority_mirror",
   "authority_document": "docs/PAPER.md",
   "status_document": "docs/STATUS.md",
   "results_document": "docs/RESULTS.md",
   "roadmap_document": "docs/ROADMAP.md",
-  "ultimate_goal": "The goal is to publish a standalone human MASLD Resource that makes a large, heterogeneous evidence landscape usable: separate inherited liver-trait regulatory evidence from the established disease-state transcriptome; show where each is observable across donor-aware cell, protein, chromatin, and spatial assays; distinguish noncoding regulatory DNA from lncRNA transcription and the mature RNA molecule; and organize the results in a transparent MASLD Gene Catalog that records limitations and appropriate follow-up experiments. The paper must be scientifically useful without Cas13 results; the future Cas13 screen prospectively tests Resource nominations but cannot redefine its classes, figures, or claims.",
+  "paper_title": "A multimodal human MASLD Resource maps inherited genetic variation and multicellular disease remodeling",
+  "ultimate_goal": "The goal is to publish a standalone human MASLD Resource that maps two linked dimensions of human disease biology: inherited genetic variation relevant to MASLD and liver traits, and multicellular remodeling in established disease. The Resource connects those maps to donor-aware cell programs and protein, chromatin, and spatial tissue context, then organizes the results in a transparent MASLD Gene Catalog with appropriate follow-up experiments. It distinguishes protein-altering variation, supported regulatory relationships, unresolved noncoding signals, lncRNA transcription, and the mature RNA molecule rather than assuming that all inherited variation is regulatory. The paper must be scientifically useful without Cas13 results; the future Cas13 screen prospectively tests Resource nominations but cannot redefine its classes, figures, or claims.",
   "paper_identity": "standalone_human_masld_resource_and_analytical_framework",
+  "central_scientific_contribution": "inherited_genetic_variation_and_multicellular_disease_remodeling",
+  "figure_decision_contract": [
+    "claim",
+    "assay_applicability",
+    "biological_unit",
+    "coverage_and_join_gate",
+    "evidence_state",
+    "state_reason",
+    "unresolved_alternative",
+    "next_discriminating_experiment_rule_id"
+  ],
+  "evidence_state_vocabulary": [
+    "supported",
+    "discordant",
+    "tested_negative",
+    "untestable",
+    "not_applicable",
+    "source_dependent",
+    "indeterminate"
+  ],
   "main_figure_roles": [
-    "resource_design_coverage_observability",
-    "phenotype_ancestry_aware_regulatory_genetics",
-    "cross_sectional_established_state_transcriptomics",
-    "assay_native_molecular_physical_context",
+    "multimodal_human_masld_resource",
+    "inherited_genetic_variation",
+    "multicohort_disease_remodeling",
+    "donor_aware_multicellular_programs",
+    "molecular_physical_tissue_context",
     "masld_gene_catalog"
   ],
   "resource_terminal_supplementary_plans": [
@@ -34,7 +56,7 @@
   "portal_default": "masld_gene_catalog_not_universal_ranking",
   "canonical_promotion_owner": "docs/ROADMAP.md#final-release-checklist",
   "cas13_directionality": {
-    "resource_to_prospectively_frozen_screen_hypotheses": true,
+    "resource_to_prespecified_screen_hypotheses": true,
     "screen_outcomes_to_resource_classes_figures_or_claims": false
   }
 }

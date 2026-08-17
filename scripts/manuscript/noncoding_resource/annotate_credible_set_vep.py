@@ -16,7 +16,9 @@ import urllib.request
 
 SERVER = "https://grch37.rest.ensembl.org"
 ENDPOINT = "/vep/homo_sapiens/region"
+SEQUENCE_ENDPOINT = "/sequence/region/human"
 MAX_BATCH = 200
+SEQUENCE_MAX_BATCH = 50
 MAX_ATTEMPTS = 8
 
 SEVERITY = {
@@ -97,14 +99,13 @@ def read_variants(path: Path) -> list[dict[str, str]]:
 
 
 def vcf_line(row: dict[str, str]) -> str:
-    # Upstream fine-mapping convention is allele1=effect/ALT, allele2=other/REF.
     return " ".join(
         (
             row["chromosome"],
             row["position"],
             row["variant_id"],
-            row["allele2"],
-            row["allele1"],
+            row["reference_allele"],
+            row["alternate_allele"],
             ".",
             ".",
             ".",
@@ -112,10 +113,12 @@ def vcf_line(row: dict[str, str]) -> str:
     )
 
 
-def post_batch(variants: list[str]) -> tuple[list[dict[str, object]], str]:
-    body = json.dumps({"variants": variants}, separators=(",", ":")).encode()
+def post_json(
+    endpoint: str, payload: dict[str, list[str]]
+) -> tuple[list[dict[str, object]], str]:
+    body = json.dumps(payload, separators=(",", ":")).encode()
     request = urllib.request.Request(
-        SERVER + ENDPOINT,
+        SERVER + endpoint,
         data=body,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
         method="POST",
@@ -124,14 +127,89 @@ def post_batch(variants: list[str]) -> tuple[list[dict[str, object]], str]:
         try:
             with urllib.request.urlopen(request, timeout=180) as response:
                 raw = response.read()
-                return json.loads(raw), response.headers.get("X-RateLimit-Remaining", "")
+                return json.loads(raw), response.headers.get(
+                    "X-RateLimit-Remaining", ""
+                )
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as error:
             if attempt + 1 == MAX_ATTEMPTS:
-                raise RuntimeError(f"VEP request failed after {MAX_ATTEMPTS} attempts") from error
-            retry_after = getattr(error, "headers", {}).get("Retry-After") if hasattr(error, "headers") else None
+                raise RuntimeError(
+                    f"VEP request failed after {MAX_ATTEMPTS} attempts"
+                ) from error
+            retry_after = (
+                getattr(error, "headers", {}).get("Retry-After")
+                if hasattr(error, "headers")
+                else None
+            )
             delay = float(retry_after) if retry_after else min(60.0, 2.0**attempt)
             time.sleep(delay)
     raise AssertionError("unreachable")
+
+
+def orient_variants(variants: list[dict[str, str]]) -> list[dict[str, str]]:
+    regions = sorted(
+        {
+            f"{row['chromosome']}:{row['position']}..{int(row['position']) + max(len(row['allele1']), len(row['allele2'])) - 1}:1"
+            for row in variants
+        }
+    )
+    sequence_by_region: dict[str, str] = {}
+    for start in range(0, len(regions), SEQUENCE_MAX_BATCH):
+        batch = regions[start : start + SEQUENCE_MAX_BATCH]
+        response, _ = post_json(SEQUENCE_ENDPOINT, {"regions": batch})
+        for item in response:
+            query = str(item.get("query", ""))
+            sequence = str(item.get("seq", "")).upper()
+            if query in sequence_by_region:
+                raise RuntimeError(f"duplicate reference-sequence response: {query}")
+            sequence_by_region[query] = sequence
+        if set(batch) != set(sequence_by_region).intersection(batch):
+            raise RuntimeError("reference-sequence response identity mismatch")
+    oriented = []
+    complement = str.maketrans("ACGTacgt", "TGCAtgca")
+    for source in variants:
+        row = dict(source)
+        region = (
+            f"{row['chromosome']}:{row['position']}.."
+            f"{int(row['position']) + max(len(row['allele1']), len(row['allele2'])) - 1}:1"
+        )
+        sequence = sequence_by_region[region]
+        allele1_matches = sequence.startswith(row["allele1"].upper())
+        allele2_matches = sequence.startswith(row["allele2"].upper())
+        allele1_oriented = row["allele1"]
+        allele2_oriented = row["allele2"]
+        input_strand = "forward"
+        if not allele1_matches and not allele2_matches:
+            allele1_oriented = row["allele1"].translate(complement)[::-1]
+            allele2_oriented = row["allele2"].translate(complement)[::-1]
+            allele1_matches = sequence.startswith(allele1_oriented.upper())
+            allele2_matches = sequence.startswith(allele2_oriented.upper())
+            input_strand = "reverse_complemented"
+        if (
+            allele1_matches
+            and allele2_matches
+            and len(allele1_oriented) != len(allele2_oriented)
+        ):
+            # In a left-normalized deletion both alleles share the anchor base;
+            # the longer allele is the reference sequence at this position.
+            allele1_matches = len(allele1_oriented) > len(allele2_oriented)
+            allele2_matches = len(allele2_oriented) > len(allele1_oriented)
+        if allele1_matches == allele2_matches:
+            raise RuntimeError(
+                f"cannot orient alleles against GRCh37 reference: {row['variant_id']} "
+                f"reference={sequence}"
+            )
+        if allele1_matches:
+            row["reference_allele"] = allele1_oriented
+            row["alternate_allele"] = allele2_oriented
+            row["reference_orientation"] = "allele1_is_reference"
+        else:
+            row["reference_allele"] = allele2_oriented
+            row["alternate_allele"] = allele1_oriented
+            row["reference_orientation"] = "allele2_is_reference"
+        row["input_strand"] = input_strand
+        row["reference_sequence"] = sequence
+        oriented.append(row)
+    return oriented
 
 
 def classify(consequences: set[str]) -> tuple[str, str]:
@@ -164,7 +242,9 @@ def classify(consequences: set[str]) -> tuple[str, str]:
     return ",".join(ordered), source_class
 
 
-def write_tsv(path: Path, rows: list[dict[str, object]], fields: tuple[str, ...]) -> None:
+def write_tsv(
+    path: Path, rows: list[dict[str, object]], fields: tuple[str, ...]
+) -> None:
     with path.open("x", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fields, delimiter="\t", lineterminator="\n")
         writer.writeheader()
@@ -177,7 +257,7 @@ def main() -> None:
         raise RuntimeError(f"output exists: {args.output_dir}")
     if not 1 <= args.batch_size <= 300:
         raise RuntimeError("batch size must be in [1,300]")
-    variants = read_variants(args.members)
+    variants = orient_variants(read_variants(args.members))
     temporary = args.output_dir.with_name(
         f".{args.output_dir.name}.tmp.{os.environ.get('SLURM_JOB_ID', os.getpid())}"
     )
@@ -185,15 +265,19 @@ def main() -> None:
     try:
         records: list[dict[str, object]] = []
         batch_manifest: list[dict[str, object]] = []
-        for batch_index, start in enumerate(range(0, len(variants), args.batch_size), 1):
+        for batch_index, start in enumerate(
+            range(0, len(variants), args.batch_size), 1
+        ):
             batch = variants[start : start + args.batch_size]
             submitted = [vcf_line(row) for row in batch]
-            response, remaining = post_batch(submitted)
+            response, remaining = post_json(ENDPOINT, {"variants": submitted})
             by_id = {str(item.get("id", "")): item for item in response}
             if set(by_id) != {row["variant_id"] for row in batch}:
                 missing = sorted({row["variant_id"] for row in batch} - set(by_id))
                 extra = sorted(set(by_id) - {row["variant_id"] for row in batch})
-                raise RuntimeError(f"VEP response identity mismatch; missing={missing[:3]} extra={extra[:3]}")
+                raise RuntimeError(
+                    f"VEP response identity mismatch; missing={missing[:3]} extra={extra[:3]}"
+                )
             for row in batch:
                 item = by_id[row["variant_id"]]
                 transcript_terms = {
@@ -206,7 +290,9 @@ def main() -> None:
                     for consequence in item.get("regulatory_feature_consequences", [])
                     for term in consequence.get("consequence_terms", [])
                 }
-                intergenic_terms = set(item.get("most_severe_consequence", "").split("&"))
+                intergenic_terms = set(
+                    item.get("most_severe_consequence", "").split("&")
+                )
                 consequences = transcript_terms | regulatory_terms | intergenic_terms
                 consequences.discard("")
                 consequence, source_class = classify(consequences)
@@ -215,10 +301,17 @@ def main() -> None:
                         "variant_id": row["variant_id"],
                         "chromosome": row["chromosome"],
                         "position": row["position"],
-                        "effect_allele": row["allele1"],
-                        "other_allele": row["allele2"],
+                        "stored_allele1": row["allele1"],
+                        "stored_allele2": row["allele2"],
+                        "reference_allele": row["reference_allele"],
+                        "alternate_allele": row["alternate_allele"],
+                        "reference_orientation": row["reference_orientation"],
+                        "input_strand": row["input_strand"],
+                        "reference_sequence": row["reference_sequence"],
                         "vep_allele_string": item.get("allele_string", ""),
-                        "most_severe_consequence": item.get("most_severe_consequence", ""),
+                        "most_severe_consequence": item.get(
+                            "most_severe_consequence", ""
+                        ),
                         "Consequence": consequence,
                         "class": source_class,
                         "annotation_source": "Ensembl_GRCh37_REST_VEP",
@@ -233,7 +326,10 @@ def main() -> None:
                 }
             )
             if batch_index % 10 == 0:
-                print(f"VEP_PROGRESS\t{min(start + args.batch_size, len(variants))}/{len(variants)}", flush=True)
+                print(
+                    f"VEP_PROGRESS\t{min(start + args.batch_size, len(variants))}/{len(variants)}",
+                    flush=True,
+                )
 
         records.sort(key=lambda row: str(row["variant_id"]))
         write_tsv(
@@ -243,8 +339,13 @@ def main() -> None:
                 "variant_id",
                 "chromosome",
                 "position",
-                "effect_allele",
-                "other_allele",
+                "stored_allele1",
+                "stored_allele2",
+                "reference_allele",
+                "alternate_allele",
+                "reference_orientation",
+                "input_strand",
+                "reference_sequence",
                 "vep_allele_string",
                 "most_severe_consequence",
                 "Consequence",
@@ -267,7 +368,7 @@ def main() -> None:
                     "server": SERVER,
                     "endpoint": ENDPOINT,
                     "n_unique_variants": len(variants),
-                    "allele_convention": "allele2=REF;allele1=ALT",
+                    "allele_convention": "unordered upstream alleles oriented against Ensembl GRCh37 reference sequence",
                 }
             ],
             (
@@ -280,7 +381,9 @@ def main() -> None:
                 "allele_convention",
             ),
         )
-        with (temporary / "execution_manifest.json").open("x", encoding="utf-8") as handle:
+        with (temporary / "execution_manifest.json").open(
+            "x", encoding="utf-8"
+        ) as handle:
             json.dump(
                 {
                     "producer": str(Path(__file__).resolve()),
@@ -290,6 +393,7 @@ def main() -> None:
                     "batch_size": args.batch_size,
                     "server": SERVER,
                     "endpoint": ENDPOINT,
+                    "sequence_endpoint": SEQUENCE_ENDPOINT,
                 },
                 handle,
                 indent=2,
@@ -315,7 +419,11 @@ def main() -> None:
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
-    print(json.dumps({"output": str(args.output_dir), "n_variants": len(records)}, sort_keys=True))
+    print(
+        json.dumps(
+            {"output": str(args.output_dir), "n_variants": len(records)}, sort_keys=True
+        )
+    )
 
 
 if __name__ == "__main__":

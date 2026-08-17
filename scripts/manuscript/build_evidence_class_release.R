@@ -72,7 +72,9 @@ deg[, symbol := clean_symbol(symbol)]
 deg <- deg[!is.na(symbol)]
 setorder(deg, symbol, treat_fdr, treat_p)
 deg <- deg[!duplicated(symbol)]
-deg[, in_treat_deg := !is.na(treat_fdr) & treat_fdr < 0.05]
+# Canonical 2026-08-12: padj<0.05 & |log2FC|>0.5. Column name kept for schema
+# stability; it now carries the conventional-gate call, not the TREAT call.
+deg[, in_treat_deg := !is.na(padj) & !is.na(logFC) & padj < 0.05 & abs(logFC) > 0.5]
 deg <- deg[, .(
   symbol,
   ensembl_bulk = sub("\\..*$", "", gene),

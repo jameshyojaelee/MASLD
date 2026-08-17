@@ -235,18 +235,16 @@ if (file.exists(BULK_META)) {
 # from Liver_Atlas / GSE136103) have a blank `disease_stage_coarse` field in
 # the upstream donor_metadata.tsv. Backfill rules:
 #   condition == "Healthy"                       -> "Healthy"
-#   condition matches MASLD/NAFL  & F_stage == 0 -> "Steatosis"
-#   condition matches MASLD/NAFL  & F_stage 1-3  -> "Steatohepatitis"
+#   source diagnosis NAFLD/MASL                    -> "Steatosis"
+#   source diagnosis NASH/MASH                     -> "Steatohepatitis"
 #   condition matches MASLD/NAFL  & F_stage == 4 -> "Cirrhosis"
-#   condition matches MASLD/NAFL  & F_stage NA   -> "Steatohepatitis" (most
-#                                                   common middle assignment)
+# Generic MASLD is not itself a stage label and is not backfilled from fibrosis.
 donor[disease_stage_coarse == "" | is.na(disease_stage_coarse),
       disease_stage_coarse := fcase(
         grepl("healthy|control", condition, ignore.case = TRUE), "Healthy",
-        !is.na(F_stage_documented) & F_stage_documented == 0L, "Steatosis",
-        !is.na(F_stage_documented) & F_stage_documented %in% 1:3, "Steatohepatitis",
         !is.na(F_stage_documented) & F_stage_documented == 4L, "Cirrhosis",
-        grepl("masld|nafld|nash|steatohepatitis", condition,
+        grepl("nafld|masl", condition, ignore.case = TRUE), "Steatosis",
+        grepl("nash|mash|steatohepatitis", condition,
               ignore.case = TRUE), "Steatohepatitis",
         default = NA_character_)]
 donor[disease_stage_coarse == "Healthy",       disease_stage_numeric := 0]

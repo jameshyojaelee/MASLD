@@ -200,7 +200,8 @@ viewer above is configured to preview it. Column families:
 
 - **Identity**: `human_symbol`, `ensembl_id`, `gene_biotype`, `mouse_ortholog`.
 - **Bulk DE (pooled C2 limma-voom-qw)**: `bulk_logFC`, `bulk_padj`, `bulk_tstat`,
-  `bulk_shrunk_logFC`, `bulk_lfsr`, `bulk_sig`, `is_deg` (interval-null FDR gate),
+  `bulk_shrunk_logFC`, `bulk_lfsr`, `bulk_sig`, `is_deg` (canonical 2026-08-12 gate:
+  padj<0.05 and |log2FC|>0.50; `bulk_sig` in the stored atlas is still TREAT-era),
   plus interval-null estimate columns and sex-stratified `bulk_logFC_M/F`,
   `sex_class`, `sex_interaction_padj`.
 - **Genetics / COLOC**: `coloc_best_susie_pp4`, `coloc_best_susie_gwas`,

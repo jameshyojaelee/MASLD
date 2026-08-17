@@ -29,7 +29,7 @@ source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
 HS        <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/hotspot_modules")
 ALL_MOD   <- file.path(HS, "donor_collapse/all_modules_donor.tsv")   # donor-level selection stats
 META_F    <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/ccc/stage_trajectory/donor_metadata_extended.tsv")
-PANEL_DIR <- file.path(FIG2_DIR, "panels")
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "_legacy_direct_render")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
 OUT_MAIN  <- file.path(PANEL_DIR, "fig3g_singlecell_module_heatmap_DONORLEVEL.pdf")
 OUT_SUPP  <- file.path(PANEL_DIR, "figs3_singlecell_module_heatmap_full_DONORLEVEL.pdf")

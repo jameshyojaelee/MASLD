@@ -1,10 +1,11 @@
 #!/usr/bin/env Rscript
+# KEY MESSAGE: The integrated single-cell atlas resolves directly labeled liver lineages while disease density is averaged at the biological-donor level.
 # gen_scrna_umap_embeddable.R
-# Generates fig3f_scrna_umap_embeddable.pdf — fully vectorized (NO ggrastr rasterization)
+# Generates fig4b_scrna_umap_embeddable.pdf — fully vectorized (NO ggrastr rasterization)
 # for direct editing in Illustrator. Uses the same data / layout as scrna_umap.pdf
 # but skips rasterize_layer() so every element is an editable vector object.
 #
-# Output: figures/main/fig3_RNAseq/panels/fig3f_scrna_umap_embeddable.pdf
+# Output: figures/main/fig4_singlecell_programs/panels/fig4b_scrna_umap_embeddable.pdf
 # Does NOT overwrite scrna_umap.pdf (the rasterized compositor panel).
 # ============================================================================
 
@@ -22,11 +23,22 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
 
-PANEL_DIR  <- file.path(FIG2_DIR, "panels")
+CANDIDATE_ROOT <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
+PANEL_DIR  <- if (nzchar(CANDIDATE_ROOT)) {
+  file.path(CANDIDATE_ROOT, "figure4", "panels")
+} else {
+  file.path(FIG4_SC_DIR, "panels")
+}
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 ATLAS_UMAP <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2/atlas_umap_for_fig2.csv.gz")
-OUT_PDF    <- file.path(PANEL_DIR, "fig3f_scrna_umap_embeddable.pdf")
+OUT_PDF    <- file.path(PANEL_DIR, if (nzchar(CANDIDATE_ROOT)) {
+  "fig4b_scrna_umap_embeddable.pdf"
+} else {
+  "fig4b_scrna_umap_embeddable.pdf"
+})
 
 # Style constants (mirror archive script)
 BASE_SIZE <- 6
@@ -84,19 +96,53 @@ umbrella_palette <- c(
 # Load UMAP data
 message("[load] ", ATLAS_UMAP)
 umap_df <- fread(ATLAS_UMAP)
+integrated_n_cells <- nrow(umap_df)
+integrated_n_libraries <- uniqueN(umap_df$sample)
+# These two GSE189600 libraries contain only 13 and 20 annotated cells. They
+# are present in the integrated object but are outside the prespecified
+# 273-library analyzed atlas documented in METHODS.md.
+excluded_low_cell_libraries <- c("SRR22677589", "SRR22677593")
+excluded_library_audit <- umap_df[sample %in% excluded_low_cell_libraries,
+  .(dataset = unique(dataset), n_cells = .N), by = sample]
+if (nzchar(CANDIDATE_ROOT) &&
+    (!setequal(excluded_library_audit$sample, excluded_low_cell_libraries) ||
+     !identical(sort(excluded_library_audit$n_cells), c(13L, 20L)))) {
+  stop("Analyzed-atlas exclusion roster drift", call. = FALSE)
+}
+umap_df <- umap_df[!sample %in% excluded_low_cell_libraries]
 n_total <- nrow(umap_df)
-message(sprintf("[cells] %s", comma(n_total)))
+message(sprintf("[cells] %s analyzed (%s integrated)",
+                comma(n_total), comma(integrated_n_cells)))
+srr_to_donor <- build_srr_to_donor_map(BASE)
+umap_df[, donor := fifelse(sample %in% names(srr_to_donor),
+                           unname(srr_to_donor[sample]), sample)]
+stage_metadata_file <- Sys.getenv("SINGLECELL_STAGE_METADATA_FILE", "")
+if (nzchar(stage_metadata_file)) {
+  stage_metadata <- fread(
+    stage_metadata_file,
+    select = c("sample", "disease_stage_coarse")
+  )
+  if (anyDuplicated(stage_metadata$sample)) {
+    stop("Stage metadata contains duplicate library IDs", call. = FALSE)
+  }
+  umap_df[stage_metadata, on = "sample",
+          disease_stage_coarse := i.disease_stage_coarse]
+}
+if (nzchar(CANDIDATE_ROOT) &&
+    (uniqueN(umap_df$sample) != 273L || uniqueN(umap_df$donor) != 102L)) {
+  stop("Analyzed atlas library/donor cardinality drift", call. = FALSE)
+}
 
 umap_df[, cell_group := umbrella_map[cell_type]]
 
 set.seed(42)
-umap_sub <- if (n_total > 150000) umap_df[sample(.N, 150000)] else copy(umap_df)
+umap_sub <- if (n_total > 50000) umap_df[sample(.N, 50000)] else copy(umap_df)
 group_present       <- intersect(names(umbrella_palette), unique(umap_df$cell_group))
 umbrella_palette_use <- umbrella_palette[group_present]
 umap_sub[, cell_group := factor(cell_group, levels = group_present)]
 umap_sub <- umap_sub[sample(.N)]
 
-# Disease-enrichment density (MASH / Healthy log2 ratio)
+# Disease-enrichment density (Steatohepatitis / Healthy log2 ratio)
 ALLOWED_PREP        <- c("unsorted", "nuclei")
 EXCLUDE_KDE_DATASETS <- c("GSE136103", "Liver_Atlas")
 umap_pf <- umap_df[
@@ -110,11 +156,11 @@ pad  <- 0.5
 xlim <- range(umap_df$umap_1) + c(-pad, pad)
 ylim <- range(umap_df$umap_2) + c(-pad, pad)
 
-per_sample_avg_density <- function(df, n = 2000, min_cells = 100) {
-  samples <- unique(df$sample)
+per_donor_avg_density <- function(df, n = 400, min_cells = 100) {
+  donors <- unique(df$donor)
   z_acc <- NULL; grid_x <- NULL; grid_y <- NULL; n_used <- 0L
-  for (s in samples) {
-    cells <- df[sample == s]
+  for (donor_id in donors) {
+    cells <- df[donor == donor_id]
     if (nrow(cells) < min_cells) next
     kde <- MASS::kde2d(cells$umap_1, cells$umap_2, n = n, lims = c(xlim, ylim))
     if (is.null(z_acc)) {
@@ -127,11 +173,14 @@ per_sample_avg_density <- function(df, n = 2000, min_cells = 100) {
   list(z = z_acc / n_used, x = grid_x, y = grid_y, n_samples = n_used)
 }
 
-kde_h <- per_sample_avg_density(healthy_df)
-kde_a <- per_sample_avg_density(adv_df)
-message(sprintf("KDE: Healthy n=%d, MASH n=%d", kde_h$n_samples, kde_a$n_samples))
-message(sprintf("[KDE] Healthy donors used: %d; MASH donors used: %d",
+kde_h <- per_donor_avg_density(healthy_df)
+kde_a <- per_donor_avg_density(adv_df)
+message(sprintf("KDE: Healthy n=%d, Steatohepatitis n=%d", kde_h$n_samples, kde_a$n_samples))
+message(sprintf("[KDE] Healthy donors used: %d; Steatohepatitis donors used: %d",
                 kde_h$n_samples, kde_a$n_samples))
+if (nzchar(CANDIDATE_ROOT) && (kde_h$n_samples < 2L || kde_a$n_samples < 2L)) {
+  stop("Disease-density donor support is insufficient", call. = FALSE)
+}
 
 joint  <- kde_h$z + kde_a$z
 floor_ <- 0.001 * max(joint)
@@ -176,9 +225,7 @@ p2e <- ggplot() +
                        guide = guide_colorbar(barwidth = 0.3, barheight = 3, order = 1)) +
   scale_color_manual(values = umbrella_palette_use, na.value = "grey80",
                      drop = FALSE,
-                     guide = guide_legend(
-                       override.aes = list(size = 1.5, alpha = 1, shape = 16),
-                       ncol = 1, keyheight = unit(7, "pt"), order = 2)) +
+                     guide = "none") +
   labs(x = "UMAP 1", y = "UMAP 2", color = NULL) +
   theme_fig2() +
   theme(axis.text  = element_blank(),
@@ -189,5 +236,31 @@ p2e <- ggplot() +
 
 message("[save] ", OUT_PDF)
 save_fig(p2e, OUT_PDF, width = 3.10, height = 2.43, dpi = 600)
+if (nzchar(CANDIDATE_ROOT)) {
+  SRC_DIR <- file.path(CANDIDATE_ROOT, "source_tables")
+  dir.create(SRC_DIR, recursive = TRUE, showWarnings = FALSE)
+  donor_summary <- rbind(
+    umap_df[, .(n_cells = .N, n_runs = uniqueN(sample)), by = .(dataset, donor, disease_stage_coarse)],
+    data.table(dataset = "ALL", donor = "ALL", disease_stage_coarse = "ALL",
+               n_cells = nrow(umap_df), n_runs = uniqueN(umap_df$sample))
+  )
+  donor_summary[, `:=`(
+    integrated_n_cells = integrated_n_cells,
+    integrated_n_libraries = integrated_n_libraries,
+    analyzed_n_cells = nrow(umap_df),
+    analyzed_n_libraries = uniqueN(umap_df$sample),
+    atlas_n_donors = uniqueN(umap_df$donor),
+    plotted_cells = nrow(umap_sub),
+    healthy_density_donors = kde_h$n_samples,
+    steatohepatitis_density_donors = kde_a$n_samples,
+    density_grid_n = 400L,
+    density_unit = "biological donor"
+  )]
+  fwrite(donor_summary, file.path(SRC_DIR, "fig4b_umap_donor_summary.tsv"), sep = "\t")
+  excluded_library_audit[, exclusion_reason :=
+    "prespecified low-cell library outside 273-library analyzed atlas"]
+  fwrite(excluded_library_audit,
+         file.path(SRC_DIR, "fig4b_umap_excluded_libraries.tsv"), sep = "\t")
+}
 message(sprintf("[done] %s (%.0f KB)", OUT_PDF,
                 file.info(OUT_PDF)$size / 1024))

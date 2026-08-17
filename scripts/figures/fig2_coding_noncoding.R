@@ -14,7 +14,7 @@
 # deferred to later figs).
 #
 # 2026-06-25: switched from SuSiE-only to the de-duped SuSiE-OR-ABF union so the
-#             denominator MATCHES Fig2G (ancestry specificity, also SuSiE/ABF). Per-gene
+#             denominator matches Fig2E (ancestry partition, also SuSiE/ABF). Per-gene
 #             consequence = the fine_class of the gene's max-PP.H4 colocalization.
 # 2026-07-04: portfolio rebuilt with MVP (23->50 GWAS).
 # 2026-07-06: scoped to the Tier-1/2 MAIN strata only (placement=="main"); union drops from
@@ -41,7 +41,7 @@ av <- fread(file.path(DAT, "coloc_variant_annotation.csv"))[!is.na(pp4_best)]
 # MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): keep only variant/gene rows
 # whose driving `study` is a placement=="main" stratum (NAFLD/NASH/PDFF + ALT/AST/GGT);
 # Tier-3/4 supp strata move to a supplementary full-portfolio figure. Keeps the denominator
-# aligned with the MAIN-restricted Fig2G ancestry-specificity panel.
+# aligned with the main-restricted Fig2E ancestry-partition panel.
 MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
   placement == "main", study_name]
 av <- av[study %in% MAIN_STUDIES]

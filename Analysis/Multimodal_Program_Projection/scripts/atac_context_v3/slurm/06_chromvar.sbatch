@@ -17,8 +17,11 @@ if [[ ! -x "${PREFIX}/bin/Rscript" || ! -f "${PREFIX}/chromvar.explicit.txt" ]];
   exit 1
 fi
 if [[ -e "${CANDIDATE}/environments/chromvar.explicit.txt" ]]; then
-  echo "Refusing to overwrite candidate chromVAR lock" >&2
-  exit 1
+  if ! cmp -s "${PREFIX}/chromvar.explicit.txt" "${CANDIDATE}/environments/chromvar.explicit.txt"; then
+    echo "Candidate chromVAR lock differs from the pinned environment" >&2
+    exit 1
+  fi
+else
+  cp "${PREFIX}/chromvar.explicit.txt" "${CANDIDATE}/environments/chromvar.explicit.txt"
 fi
-cp "${PREFIX}/chromvar.explicit.txt" "${CANDIDATE}/environments/chromvar.explicit.txt"
 "${PREFIX}/bin/Rscript" "${PACKAGE}/06_run_chromvar.R"

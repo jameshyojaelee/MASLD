@@ -40,6 +40,8 @@ PYTHONPATH="${PROJECT_ROOT}/scripts/portal" \
   'parse(file="scripts/figures/noncoding_resource_lncrna_supplement.R")'
 "${RSCRIPT}" --vanilla -e \
   'parse(file="scripts/figures/noncoding_resource_plot_upgrade.R")'
+"${RSCRIPT}" --vanilla -e \
+  'parse(file="scripts/figures/noncoding_dna_plot_upgrade.R")'
 for retired_script in \
   RNA-seq/53_ncrna_landscape.R \
   RNA-seq/55_ncrna_conservation.R \
@@ -62,7 +64,10 @@ done
   scripts/portal/validate_gene_catalog_v2_contract.py \
   scripts/portal/gene_catalog_observability.py \
   scripts/portal/test_gene_catalog_observability.py \
-  scripts/figures/validate_noncoding_resource_plot_upgrade.py
+  scripts/figures/validate_noncoding_resource_plot_upgrade.py \
+  scripts/manuscript/noncoding_resource/annotate_credible_set_vep.py \
+  scripts/manuscript/noncoding_resource/build_noncoding_dna_candidate.py \
+  scripts/manuscript/noncoding_resource/validate_noncoding_dna_candidate.py
 "${RUFF}" format --check \
   scripts/manuscript/noncoding_resource \
   scripts/portal/gene_catalog_v2.py \
@@ -71,5 +76,8 @@ done
   scripts/portal/validate_gene_catalog_v2_contract.py \
   scripts/portal/gene_catalog_observability.py \
   scripts/portal/test_gene_catalog_observability.py \
-  scripts/figures/validate_noncoding_resource_plot_upgrade.py
+  scripts/figures/validate_noncoding_resource_plot_upgrade.py \
+  scripts/manuscript/noncoding_resource/annotate_credible_set_vep.py \
+  scripts/manuscript/noncoding_resource/build_noncoding_dna_candidate.py \
+  scripts/manuscript/noncoding_resource/validate_noncoding_dna_candidate.py
 "${PYTHON}" scripts/manuscript/validate_resource_scope.py

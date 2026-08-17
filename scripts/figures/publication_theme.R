@@ -72,6 +72,18 @@ masld_colors <- list(
   pathway = "#F48FB1"   # Soft pink
 )
 
+# Reader-facing cross-cohort disease-state vocabulary. Source-native labels
+# (for example NAFLD/NASH or MASL/MASH) stay in provenance tables and captions;
+# harmonized axes use these full labels without abbreviations.
+coarse_stage_levels <- c("Healthy", "Steatosis", "Steatohepatitis", "Cirrhosis")
+coarse_stage_labels <- setNames(coarse_stage_levels, coarse_stage_levels)
+coarse_stage_colors <- c(
+  Healthy = "#9E9E9E",
+  Steatosis = "#F4A674",
+  Steatohepatitis = "#C9265E",
+  Cirrhosis = "#6E0B36"
+)
+
 # Consensus DEG tier colors
 tier_consensus_colors <- c(
   Tier1_HighConfidence = "#880E4F",  # Dark magenta

@@ -27,19 +27,48 @@ SOURCE <- file.path(CANDIDATE, "genetics/context/genetic_lineage_context_primary
 if (!file.exists(SOURCE)) stop("Primary variant-consistent lineage table is absent")
 OUT <- file.path(CANDIDATE, "genetics/figures")
 if (dir.exists(OUT)) stop("Refusing to overwrite genetic figure output")
-dir.create(file.path(OUT, "source_tables"), recursive = TRUE, showWarnings = FALSE)
-dir.create(file.path(OUT, "panels"), recursive = TRUE, showWarnings = FALSE)
+PENDING <- file.path(
+  CANDIDATE, "genetics", paste0(".figures.pending.", Sys.getpid())
+)
+stale_pending <- Sys.glob(file.path(CANDIDATE, "genetics", ".figures.pending.*"))
+if (length(stale_pending) > 0L) stop("Unresolved prior genetic figure stage: ", stale_pending[[1L]])
+if (dir.exists(PENDING) || file.exists(PENDING)) stop("Pending genetic figure path exists")
+dir.create(file.path(PENDING, "source_tables"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(PENDING, "panels"), recursive = TRUE, showWarnings = FALSE)
 grDevices::pdf.options(useDingbats = FALSE)
 source(file.path(Sys.getenv("HOME"), "publication_color_themes.R"))
 
 context <- fread(SOURCE)
-counts <- context[, .(n_pairs = .N), by = .(trait_class, lineage, evidence_state)]
+expected_states <- c(
+  "replicated_accessible", "source_dependent", "partial", "indeterminate", "untestable"
+)
+expected_lineages <- c("hepatocyte", "stellate", "macrophage", "cholangiocyte", "t_nk")
+expected_trait_classes <- c("direct_MASLD", "liver_enzyme")
+if (!all(context$lineage %in% expected_lineages) ||
+    !all(context$evidence_state %in% expected_states) ||
+    !all(context$trait_class %in% expected_trait_classes)) {
+  stop("Primary genetic context contains an invalid lineage or evidence state")
+}
+observed_counts <- context[, .(n_pairs = .N),
+  by = .(trait_class, lineage, evidence_state)]
 denominators <- unique(context[, .(trait_class, lineage, gwas_name, ensembl)])[,
   .(denominator = .N), by = .(trait_class, lineage)
 ]
-counts <- merge(counts, denominators, by = c("trait_class", "lineage"), all.x = TRUE)
+grid <- CJ(
+  trait_class = expected_trait_classes,
+  lineage = expected_lineages,
+  evidence_state = expected_states,
+  unique = TRUE
+)
+counts <- merge(grid, observed_counts,
+  by = c("trait_class", "lineage", "evidence_state"), all.x = TRUE)
+counts[is.na(n_pairs), n_pairs := 0L]
+counts <- merge(counts, denominators,
+  by = c("trait_class", "lineage"), all.x = TRUE)
+counts[is.na(denominator), denominator := 0L]
+if (nrow(counts) != 50L) stop("Figure 4D grid must contain 50 state cells")
 setorder(counts, trait_class, lineage, evidence_state)
-source_path <- file.path(OUT, "source_tables", "fig4d_variant_consistent_lineage_counts.tsv")
+source_path <- file.path(PENDING, "source_tables", "fig4d_variant_consistent_lineage_counts.tsv")
 fwrite(counts, source_path, sep = "\t")
 
 counts[, lineage := factor(
@@ -77,16 +106,17 @@ plot <- ggplot(counts, aes(lineage, evidence_state, size = n_pairs, color = evid
     legend.text = element_text(size = 6, face = "plain"),
     legend.position = "bottom"
   )
-pdf_path <- file.path(OUT, "panels", "fig4d_variant_consistent_lineage_context.pdf")
+pdf_path <- file.path(PENDING, "panels", "fig4d_variant_consistent_lineage_context.pdf")
 device <- if (capabilities("cairo")) cairo_pdf else pdf
 ggsave(pdf_path, plot, width = 5.4, height = 2.8, device = device)
 manifest <- data.table(
   release_id = RELEASE_ID,
   panel = "fig4d_variant_consistent_lineage_context",
-  pdf = substring(pdf_path, nchar(CANDIDATE) + 2L),
-  source_table = substring(source_path, nchar(CANDIDATE) + 2L),
+  pdf = "genetics/figures/panels/fig4d_variant_consistent_lineage_context.pdf",
+  source_table = "genetics/figures/source_tables/fig4d_variant_consistent_lineage_counts.tsv",
   pdf_sha256 = digest(pdf_path, algo = "sha256", file = TRUE, serialize = FALSE),
   source_sha256 = digest(source_path, algo = "sha256", file = TRUE, serialize = FALSE)
 )
-fwrite(manifest, file.path(OUT, "figure_manifest.tsv"), sep = "\t")
-writeLines(capture.output(sessionInfo()), file.path(OUT, "sessionInfo.txt"))
+fwrite(manifest, file.path(PENDING, "figure_manifest.tsv"), sep = "\t")
+writeLines(capture.output(sessionInfo()), file.path(PENDING, "sessionInfo.txt"))
+if (!file.rename(PENDING, OUT)) stop("Atomic genetic figure stage rename failed")

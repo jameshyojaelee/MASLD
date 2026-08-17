@@ -1,11 +1,12 @@
 #!/usr/bin/env Rscript
+# KEY MESSAGE: Documented fibrosis stage and NAS group coverage define the participant support for each cross-sectional contrast.
 # ============================================================================
 # nas_fib_grid.R
 # Fig 3 panel (figs3b) — Fibrosis x NAS staged-sample grid with marginal totals.
 # Square cells (coord_fixed), gapped marginal band, contrast-aware labels.
 # Restored from archive/legacy_pre_redesign_2026-05-17/fig2a.pdf (2026-05-19).
 # Output: FIG2_DIR/panels/fig3b_nas_fib_grid.pdf
-#   (FIG2_DIR resolves to figures/main/fig3_RNAseq — known back-compat misnomer)
+#   (FIG2_DIR resolves to figures/main/fig3_bulk_transcriptomics.)
 # ============================================================================
 
 suppressPackageStartupMessages({
@@ -19,7 +20,12 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG2_DIR, "panels")   # main fig3_RNAseq
+if (nzchar(Sys.getenv("FIGURE_CANDIDATE_ROOT", ""))) {
+  source(file.path(BASE, "scripts/figures/render_pi_bulk_opening_panels.R"), local = TRUE)
+  quit(save = "no", status = 0)
+}
+
+PANEL_DIR <- file.path(FIG2_DIR, "panels")   # main Figure 3
 DATA_DIR  <- file.path(PANEL_DIR, "data")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(DATA_DIR,  showWarnings = FALSE, recursive = TRUE)

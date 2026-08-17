@@ -4,7 +4,7 @@
 # fgsea NES heatmap: 12 passing hepatocyte Hotspot modules vs Hallmark gene sets.
 # Module gene weights used as ranking statistic.
 #
-# Output: figures/main/fig3_RNAseq/panels/figs3_hotspot_geneset_correlation.pdf
+# Output: figures/main/fig4_singlecell_programs/panels/supplementary/figs3_hotspot_geneset_correlation.pdf
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -18,7 +18,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 HS_RES    <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/hotspot_modules")
-PANEL_DIR <- file.path(FIG2_DIR, "panels")
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "supplementary")
 OUT_PDF   <- file.path(PANEL_DIR, "figs3_hotspot_geneset_correlation.pdf")
 
 # ── passing modules ───────────────────────────────────────────────────────────

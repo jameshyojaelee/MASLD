@@ -178,8 +178,11 @@ message("[caption] Panel B: Marginal genes gained per threshold decrease (padj <
 # Note: panels A/B/D above retain padj < 0.1 (no LFC, no direction) on purpose;
 # they answer different questions and live in the supplementary figure.
 # =============================================================================
+# CANONICAL 2026-08-12: padj<0.05 & |log2FC|>0.5 per cohort, matching the
+# integrated arm. TREAT_LFC is retained only for the comparator column.
 TREAT_FDR_CUT <- 0.05
-TREAT_LFC     <- 0.25   # treat() effect-size offset (folded into the test)
+CANON_LFC_CUT <- 0.50
+TREAT_LFC     <- 0.25   # retained: interval-null comparator arm only
 INT_DEF_LABEL <- "TREAT FDR < 0.05 (lfc = 0.25)"
 
 # Per-gene direction-aware concordance count using per-study DE. We recompute from
@@ -198,11 +201,13 @@ for (co in unique(all_de$dataset)) {
   set(all_de, i = idx, j = "treat_fdr", value = p.adjust(p_treat, method = "BH"))
 }
 ps_with_dream <- merge(
-  all_de[, .(gene, dataset, ps_logFC = logFC, ps_treat_fdr = treat_fdr)],
+  all_de[, .(gene, dataset, ps_logFC = logFC, ps_treat_fdr = treat_fdr,
+             ps_padj = if ("padj" %in% names(all_de)) padj else adj.P.Val)],
   dream[, .(gene, bulk_logFC = logFC, bulk_padj = padj)],
   by = "gene", all.x = FALSE
 )
-ps_with_dream[, concordant_sig := !is.na(ps_treat_fdr) & ps_treat_fdr < TREAT_FDR_CUT &
+ps_with_dream[, concordant_sig := !is.na(ps_padj) & !is.na(ps_logFC) &
+                                  ps_padj < TREAT_FDR_CUT & abs(ps_logFC) > CANON_LFC_CUT &
                                   !is.na(ps_logFC) & !is.na(bulk_logFC) &
                                   sign(ps_logFC) == sign(bulk_logFC)]
 fig1f_concord <- ps_with_dream[, .(n_cohorts_concordant = sum(concordant_sig, na.rm = TRUE)),
@@ -219,7 +224,7 @@ dream_genes_C[, dir := fifelse(bulk_logFC > 0,
                                "Integrated downregulated")]
 
 cat("\nFig 1F integrated DEGs (", INT_DEF_LABEL, "):", nrow(dream_genes_C), "\n")
-cat("  Replication counts (per-study TREAT FDR <", TREAT_FDR_CUT, ", same direction):\n")
+cat("  Replication counts (per-study padj <", TREAT_FDR_CUT, "& |log2FC| >", CANON_LFC_CUT, ", same direction):\n")
 print(dream_genes_C[, .N, by = n_cohorts_concordant][order(n_cohorts_concordant)])
 
 # Distribution for stacked bar

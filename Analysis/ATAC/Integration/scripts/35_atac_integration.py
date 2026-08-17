@@ -28,6 +28,7 @@ Outputs:
 """
 
 import argparse
+import hashlib
 import logging
 import os
 import shutil
@@ -94,6 +95,19 @@ L8_COLUMNS = {
     "cross_species_promoter_conserved": (bool, False),
 }
 
+ATAC_V3_RELEASE_ID = "atac-context-v3-candidate-2026-08-11-r1"
+ATAC_V3_COLUMNS = (
+    "atac_v3_release_id",
+    "atac_v3_promoter_da_states",
+    "atac_v3_promoter_da_source_dependent",
+    "atac_v3_program_uids",
+    "atac_v3_program_promoter_coverage_states",
+    "atac_v3_program_score_states",
+    "atac_v3_program_contrast_states",
+    "atac_v3_program_cross_cohort_states",
+    "atac_v3_testability_reasons",
+)
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -118,6 +132,158 @@ def load_if_exists(path, description):
         return df
     logging.warning("%s not found at %s — skipping", description, path)
     return None
+
+
+def sha256_file(path):
+    """Return a streaming SHA256 for a file."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def validate_atac_v3_root(path):
+    """Validate the fixed candidate root, readiness seal, and adapter hashes."""
+    supplied = Path(path)
+    root = supplied.resolve()
+    expected = (
+        BASE
+        / "Analysis/Multimodal_Program_Projection/candidates"
+        / ATAC_V3_RELEASE_ID
+    ).resolve()
+    if root != expected or supplied.is_symlink():
+        raise RuntimeError(f"unsafe ATAC v3 candidate root: {root}")
+
+    gate_path = root / "NON_GENETIC_READY"
+    gate = pd.read_csv(gate_path, sep="\t", dtype=str, keep_default_na=False)
+    if gate.empty or set(gate["release_id"]) != {ATAC_V3_RELEASE_ID}:
+        raise RuntimeError("invalid ATAC v3 NON_GENETIC_READY release")
+    if set(gate["gate"]) != {"NON_GENETIC_READY"} or set(gate["status"]) != {"READY"}:
+        raise RuntimeError("ATAC v3 NON_GENETIC_READY is not fully ready")
+    for row in gate.to_dict("records"):
+        artifact = (root / row["artifact"]).resolve()
+        if root not in artifact.parents or not artifact.is_file():
+            raise RuntimeError(f"unsafe or missing sealed ATAC v3 artifact: {artifact}")
+        if sha256_file(artifact) != row["sha256"]:
+            raise RuntimeError(f"sealed ATAC v3 artifact hash drift: {row['artifact']}")
+
+    integration = pd.read_csv(
+        root / "integration/integration_manifest.tsv",
+        sep="\t",
+        dtype=str,
+        keep_default_na=False,
+    )
+    if integration.empty or set(integration["release_id"]) != {ATAC_V3_RELEASE_ID}:
+        raise RuntimeError("invalid ATAC v3 integration manifest")
+    for row in integration.to_dict("records"):
+        if row["role"] == "integration_artifact":
+            artifact = (root / "integration" / row["artifact"]).resolve()
+        elif row["role"] == "sealed_non_genetic_input_manifest":
+            artifact = (root / row["artifact"]).resolve()
+        elif row["role"] == "post_gate_integration_producer":
+            artifact = (BASE / row["artifact"]).resolve()
+        else:
+            raise RuntimeError(f"unknown ATAC v3 integration role: {row['role']}")
+        if not artifact.is_file() or sha256_file(artifact) != row["sha256"]:
+            raise RuntimeError(f"ATAC v3 integration artifact hash drift: {row['artifact']}")
+    return root
+
+
+def add_atac_v3_columns(l8, root):
+    """Add candidate-only observability fields without changing evidence-layer votes."""
+    integration = root / "integration"
+    promoter = pd.read_csv(
+        integration / "gene_catalog_promoter_da_adapter.tsv",
+        sep="\t",
+        dtype=str,
+        keep_default_na=False,
+    )
+    programs = pd.read_csv(
+        integration / "gene_catalog_program_atac_adapter.tsv",
+        sep="\t",
+        dtype=str,
+        keep_default_na=False,
+    )
+    required_promoter = {
+        "release_id", "gene_symbol", "lineage", "promoter_da_state",
+        "n_overlapping_tested_peaks", "source_dependence",
+    }
+    required_program = {
+        "release_id", "gene_symbol", "program_uid", "cohort", "lineage",
+        "program_atac_promoter_coverage_state", "program_atac_score_state",
+        "program_atac_contrast_state", "program_atac_cross_cohort_state",
+        "testability_reason",
+    }
+    if not required_promoter.issubset(promoter.columns):
+        raise RuntimeError("ATAC v3 promoter adapter schema mismatch")
+    if not required_program.issubset(programs.columns):
+        raise RuntimeError("ATAC v3 program adapter schema mismatch")
+    if set(promoter["release_id"]) != {ATAC_V3_RELEASE_ID}:
+        raise RuntimeError("ATAC v3 promoter adapter release mismatch")
+    if set(programs["release_id"]) != {ATAC_V3_RELEASE_ID}:
+        raise RuntimeError("ATAC v3 program adapter release mismatch")
+
+    for column in ATAC_V3_COLUMNS:
+        l8[column] = ""
+    atlas_genes = set(l8["human_symbol"])
+    promoter = promoter[promoter["gene_symbol"].isin(atlas_genes)].copy()
+    programs = programs[programs["gene_symbol"].isin(atlas_genes)].copy()
+
+    promoter["state_token"] = (
+        promoter["lineage"] + ":" + promoter["promoter_da_state"]
+        + ":n=" + promoter["n_overlapping_tested_peaks"]
+    )
+    promoter_states = promoter.groupby("gene_symbol")["state_token"].apply(
+        lambda values: ";".join(sorted(set(values)))
+    ).to_dict()
+    source_dependent = promoter.groupby("gene_symbol")["source_dependence"].apply(
+        lambda values: "TRUE" if "TRUE" in set(values) else "FALSE"
+    ).to_dict()
+
+    def program_tokens(frame, value_column):
+        tokens = (
+            frame["cohort"] + ":" + frame["lineage"] + ":" + frame[value_column]
+        )
+        return tokens.groupby(frame["gene_symbol"]).apply(
+            lambda values: ";".join(sorted(set(values)))
+        ).to_dict()
+
+    program_uids = programs.groupby("gene_symbol")["program_uid"].apply(
+        lambda values: ";".join(sorted(set(values)))
+    ).to_dict()
+    reasons = programs[programs["testability_reason"].ne("")].groupby("gene_symbol")[
+        "testability_reason"
+    ].apply(lambda values: ";".join(sorted(set(values)))).to_dict()
+
+    mappings = {
+        "atac_v3_promoter_da_states": promoter_states,
+        "atac_v3_promoter_da_source_dependent": source_dependent,
+        "atac_v3_program_uids": program_uids,
+        "atac_v3_program_promoter_coverage_states": program_tokens(
+            programs, "program_atac_promoter_coverage_state"
+        ),
+        "atac_v3_program_score_states": program_tokens(
+            programs, "program_atac_score_state"
+        ),
+        "atac_v3_program_contrast_states": program_tokens(
+            programs, "program_atac_contrast_state"
+        ),
+        "atac_v3_program_cross_cohort_states": program_tokens(
+            programs, "program_atac_cross_cohort_state"
+        ),
+        "atac_v3_testability_reasons": reasons,
+    }
+    touched = set(promoter["gene_symbol"]) | set(programs["gene_symbol"])
+    l8.loc[l8["human_symbol"].isin(touched), "atac_v3_release_id"] = ATAC_V3_RELEASE_ID
+    for column, mapping in mappings.items():
+        mask = l8["human_symbol"].isin(mapping)
+        l8.loc[mask, column] = l8.loc[mask, "human_symbol"].map(mapping)
+    logging.info(
+        "ATAC v3 candidate fields: %d catalog genes; no layers_active vote added",
+        len(touched),
+    )
+    return l8
 
 
 def load_ortholog_map(path):
@@ -740,6 +906,8 @@ def parse_args():
                    help="Path to ortholog comparison CSV")
     p.add_argument("--outdir", default=str(OUTDIR),
                    help="Output directory for L8 columns and summary")
+    p.add_argument("--atac-v3-root", default=None,
+                   help="Sealed candidate-only ATAC Context v3 root")
     p.add_argument("--dry-run", action="store_true",
                    help="Show what would be merged without modifying the atlas")
     p.add_argument("--force", action="store_true",
@@ -762,6 +930,18 @@ def main():
     logging.info("Dry run:       %s", args.dry_run)
     logging.info("Force:         %s", args.force)
 
+    atac_v3_root = None
+    if args.atac_v3_root:
+        if not args.dry_run:
+            logging.error("ATAC v3 candidate mode requires --dry-run; canonical writes are disabled")
+            sys.exit(1)
+        atac_v3_root = validate_atac_v3_root(args.atac_v3_root)
+        outdir_resolved = Path(args.outdir).resolve()
+        if atac_v3_root not in outdir_resolved.parents:
+            logging.error("ATAC v3 candidate outputs must remain beneath %s", atac_v3_root)
+            sys.exit(1)
+        logging.info("ATAC v3 root:  %s", atac_v3_root)
+
     # Validate atlas exists
     if not Path(args.atlas).exists():
         logging.error("Atlas file not found: %s", args.atlas)
@@ -781,6 +961,8 @@ def main():
         enhancer_path=args.enhancer_links,
         ortholog_path=args.ortholog_map,
     )
+    if atac_v3_root is not None:
+        l8 = add_atac_v3_columns(l8, atac_v3_root)
 
     # Save L8 columns as standalone file
     l8_out = outdir / "l8_atac_columns.csv"
@@ -793,9 +975,16 @@ def main():
 
     # --- Merge into atlas ---
     if args.dry_run:
-        logging.info("DRY RUN: would merge %d L8 columns into atlas (%d genes)", len(L8_COLUMNS), len(atlas))
+        n_candidate_columns = len(ATAC_V3_COLUMNS) if atac_v3_root is not None else 0
+        logging.info(
+            "DRY RUN: would merge %d L8 columns%s into atlas (%d genes)",
+            len(L8_COLUMNS),
+            f" plus {n_candidate_columns} candidate-only ATAC v3 fields"
+            if n_candidate_columns else "",
+            len(atlas),
+        )
         logging.info("DRY RUN: atlas would go from %d to %d columns",
-                     len(atlas.columns), len(atlas.columns) + len(L8_COLUMNS))
+                     len(atlas.columns), len(atlas.columns) + len(L8_COLUMNS) + n_candidate_columns)
         # Check how many genes would get L8 evidence
         l8_active = l8.apply(count_l8_active, axis=1)
         logging.info("DRY RUN: %d genes would have active L8 evidence", l8_active.sum())

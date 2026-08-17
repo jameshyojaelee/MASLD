@@ -46,7 +46,7 @@ dream_file <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integratio
 dream <- fread(dream_file)
 cat("Loaded dream results:", nrow(dream), "genes\n")
 
-# Define MASLD DEGs (TREAT canonical Tier-1: treat_fdr<0.05 at lfc=0.25)
+# Define MASLD DEGs (canonical Tier-1, 2026-08-12: padj<0.05 & |log2FC|>0.5)
 deg_mask <- is_dream_deg(dream)
 masld_degs <- dream[deg_mask, symbol]
 masld_degs <- masld_degs[!is.na(masld_degs) & masld_degs != ""]

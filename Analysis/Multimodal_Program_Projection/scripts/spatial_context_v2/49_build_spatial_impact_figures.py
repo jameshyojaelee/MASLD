@@ -41,7 +41,7 @@ import pandas as pd
 from spatial_resource_lib import SpatialResourceError, sha256_file
 
 
-RELEASE_ID = "spatial-impact-figures-candidate-2026-08-11"
+RELEASE_ID = "spatial-impact-figures-candidate-2026-08-12"
 R4_RELEASE_ID = "spatial-publication-figures-candidate-2026-08-11-r4"
 PROGRAM_RELEASE_ID = "program-context-v2-candidate-2026-08-07"
 CYAN = "#007C91"
@@ -157,7 +157,15 @@ def build_profile(project: Path) -> tuple[pd.DataFrame, dict[str, Path]]:
     profile["program_short"] = profile["program_id"].map({PROGRAMS[0]: "IGFBP7", PROGRAMS[1]: "BICC1"})
     profile["within_source_call"] = np.where(profile["primary_evidence_state"].isin(["supported", "source_dependent"]), "supported", "indeterminate")
     profile["display_state"] = profile["within_source_call"] + np.where(profile["dataset"] == "Vu_et_al_2025", "*", "")
-    profile["unit_sign_label"] = profile["n_positive_units"].astype(str) + "/" + profile["n_reporting_units"].astype(str) + " " + profile["reporting_unit_label"] + " +"
+    # Raw sign of the UNCALIBRATED statistic. Spelled out as "I > 0" rather than a
+    # bare "+": every row reads positive here, and only the matched-null column
+    # separates the programs. A bare plus sign beside an evidence state invites
+    # exactly the inference this figure exists to refute.
+    profile["unit_sign_label"] = (
+        profile["n_positive_units"].astype(str) + "/"
+        + profile["n_reporting_units"].astype(str) + " "
+        + profile["reporting_unit_label"] + " I > 0"
+    )
     profile["claim_boundary"] = np.where(
         profile["program_id"] == PROGRAMS[0],
         "exceeds matched-gene spatial background; composition-linked, not cell-autonomous",
@@ -246,10 +254,16 @@ def render_discrimination(profile: pd.DataFrame, path: Path) -> pd.DataFrame:
         ax.text(0.305, yy, row.unit_sign_label, ha="left", va="center", color=DARK_GRAY)
         supported = row.within_source_call == "supported"
         ax.text(0.445, yy, row.display_state, ha="right", va="center", color=CYAN if supported else DARK_GRAY)
+    # Column headers make the two text columns readable as a sequence: the raw
+    # sign is uniformly positive, the matched-null comparison is what splits them.
+    ax.text(0.305, 3.78, "before calibration", ha="left", va="center",
+            color=DARK_GRAY, style="italic")
+    ax.text(0.445, 3.78, "after calibration", ha="right", va="center",
+            color=DARK_GRAY, style="italic")
     ax.set_yticks(y, labels)
     ax.set_xlabel("Residual Moran's I")
     ax.set_xlim(-0.02, 0.46)
-    ax.set_ylim(-0.55, 3.75)
+    ax.set_ylim(-0.55, 4.15)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_visible(False)
@@ -318,6 +332,7 @@ def build(project: Path, output: Path) -> Path:
             ("allowed", "IGFBP7 organization is composition-linked but persists after modeled all-cell adjustment"),
             ("allowed", "BICC1 is spatially indeterminate, not spatially negative"),
             ("prohibited", "BICC1 is not spatial"),
+            ("prohibited", "a positive per-unit Moran sign is evidence of program-specific organization"),
             ("prohibited", "IGFBP7 organization is cell autonomous or causal"),
             ("prohibited", "Vu provides donor-level replication"),
             ("prohibited", "the spatial result proves a fibrosis mechanism"),

@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: Dysregulation ACCELERATES across BOTH severity axes — fibrosis stage (Kleiner F0->F4) AND NAS activity (NAS0->NAS5-8) — and the DRIVING COMPARTMENT HANDS OFF hepatocyte->non-parenchymal, shown on three orthogonal readouts per axis: stage DEG counts grow, the NMF program mix shifts from quiescent to inflammatory/fibrogenic, and the cellular compartment tips hepatocyte->non-parenchymal. Two matched columns (fibrosis left, NAS right) demonstrate the multi-step cellular cascade thesis on both axes at once.
+# KEY MESSAGE: Adjacent-stage expression burden and continuous bulk program activity describe cross-sectional remodeling along fibrosis and NAS axes.
 # ============================================================================
-# progression_cascade.R  — Figure 3E (combined disease-progression cascade)
+# progression_cascade.R  — Figure 3E (cross-sectional stage remodeling)
 #
 # Two-column layout sharing three matched track types:
 #   LEFT  column — fibrosis stage (Kleiner F0..F4), built inline here
@@ -16,7 +16,7 @@
 # 2026-07-02 combined NAS|fibrosis cascade as the main panel (fibrosis-left).
 #
 # Output: FIG2_DIR/panels/fig3e_progression_cascade.pdf  (Fig 3E; combined axes)
-#   (FIG2_DIR resolves to figures/main/fig3_RNAseq — back-compat constant name.)
+#   (FIG2_DIR resolves to figures/main/fig3_bulk_transcriptomics.)
 # ============================================================================
 suppressPackageStartupMessages({
   library(data.table)
@@ -30,6 +30,131 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+
+# Candidate six-figure layout. This branch uses the synchronized fragment-count
+# release and continuous prespecified P1-P6 axes. The legacy renderer below is
+# retained only for reproducibility of the existing main-figure PDF.
+CANDIDATE_ROOT <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
+if (nzchar(CANDIDATE_ROOT)) {
+  STAGE_ROOT <- normalizePath(Sys.getenv("STAGE_RELEASE_ROOT", ""), mustWork = TRUE)
+  EXT_ROOT <- file.path(CANDIDATE_ROOT, "analysis", "stage_extensions")
+  OUT_DIR <- file.path(CANDIDATE_ROOT, "figure3", "panels")
+  SUPP_DIR <- file.path(CANDIDATE_ROOT, "supplementary", "figureS3", "panels")
+  SRC_DIR <- file.path(CANDIDATE_ROOT, "source_tables")
+  dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
+  dir.create(SUPP_DIR, recursive = TRUE, showWarnings = FALSE)
+  dir.create(SRC_DIR, recursive = TRUE, showWarnings = FALSE)
+
+  adjacent <- fread(file.path(EXT_ROOT, "stage_all_gene_results.tsv"))
+  extension <- fread(file.path(EXT_ROOT, "stage_extension_all_gene_results.tsv"))
+  activity <- fread(file.path(EXT_ROOT, "prespecified_nmf_program_activity.tsv"))
+  audit <- fread(file.path(EXT_ROOT, "stage_extension_design_audit.tsv"))
+  expected_family <- unique(audit$bh_family_size)
+  if (length(expected_family) != 1L ||
+      any(adjacent[, uniqueN(gene_id_versioned), by = contrast]$V1 != expected_family) ||
+      any(audit$bh_family_size != expected_family)) stop("Incomplete stage BH family", call. = FALSE)
+
+  adjacent[, axis := "fibrosis"]
+  adjacent[, display := factor(contrast, levels = c("F0_to_F1", "F1_to_F2", "F2_to_F3", "F3_to_F4"),
+                               labels = c("F0→F1", "F1→F2", "F2→F3", "F3→F4"))]
+  nas <- extension[axis == "NAS"]
+  nas[, display := factor(contrast,
+    levels = c("NAS1_2_vs_NAS0", "NAS3_4_vs_NAS1_2", "NAS5_8_vs_NAS3_4"),
+    labels = c("0→1–2", "1–2→3–4", "3–4→5–8"))]
+  counts <- rbind(
+    adjacent[FDR < 0.05,
+      .(n = .N), by = .(axis, display, direction = fifelse(logFC > 0, "Higher", "Lower"))],
+    nas[FDR < 0.05,
+      .(n = .N), by = .(axis, display, direction = fifelse(logFC > 0, "Higher", "Lower"))]
+  )
+  counts[, signed_n := fifelse(direction == "Lower", -n, n)]
+  counts[, direction := factor(direction, levels = c("Higher", "Lower"))]
+
+  count_plot <- function(axis_id, xlab) {
+    ggplot(counts[axis == axis_id], aes(display, signed_n, fill = direction)) +
+      geom_col(width = 0.68) +
+      geom_hline(yintercept = 0, linewidth = 0.25) +
+      scale_fill_manual(values = c(Higher = masld_colors$mash, Lower = masld_colors$down), guide = "none") +
+      scale_y_continuous(labels = abs, expand = expansion(mult = c(0.13, 0.16))) +
+      labs(x = xlab, y = "DEGs") + theme_masld_compact() +
+      theme(axis.text.x = element_text(size = 6, face = "plain"),
+            plot.margin = margin(2, 2, 1, 2))
+  }
+  program_colors <- setNames(cat_palette[seq_len(6)], paste0("P", 1:6))
+  program_plot <- function(axis_id, groups, labels, xlab) {
+    d <- activity[axis == axis_id]
+    d[, group := factor(group, levels = groups, labels = labels)]
+    ggplot(d, aes(group, centered_activity, group = program, color = program)) +
+      geom_hline(yintercept = 0, color = "grey75", linewidth = 0.25) +
+      geom_line(linewidth = 0.55) + geom_point(size = 1.05) +
+      scale_color_manual(values = program_colors, guide = guide_legend(nrow = 2)) +
+      labs(x = xlab, y = "Program activity", color = NULL) + theme_masld_compact() +
+      theme(axis.text.x = element_text(size = 6, face = "plain"),
+            legend.position = "bottom", legend.key.width = unit(8, "pt"),
+            plot.margin = margin(1, 2, 2, 2))
+  }
+  fib_count <- count_plot("fibrosis", "Adjacent fibrosis stage")
+  nas_count <- count_plot("NAS", "Adjacent NAS group")
+  fib_program <- program_plot("fibrosis", paste0("F", 0:4), paste0("F", 0:4), "Fibrosis stage")
+  # Only one NAS0 donor on the synchronized fragment substrate has a
+  # prespecified NMF score, so program activity begins at NAS1–2. Do not imply
+  # a supported NAS0 program estimate; the adjacent NAS0-versus-NAS1–2 DEG
+  # contrast still uses all eligible bulk donors.
+  nas_program <- program_plot("NAS", c("NAS1-2", "NAS3-4", "NAS5-8"),
+                              c("1–2", "3–4", "5–8"), "NAS group")
+  main <- (fib_count | nas_count) / (fib_program | nas_program) +
+    plot_layout(heights = c(1, 1.05), guides = "collect") &
+    theme(legend.position = "bottom")
+  ggsave(file.path(OUT_DIR, "fig3e_stage_remodeling.pdf"), main,
+         width = 7.1, height = 3.25, device = cairo_pdf)
+
+  # Composition remains supplementary. Each biopsy is one participant-level
+  # unit under the validated crosswalk; no library or cell is treated as n.
+  comp <- fread(file.path(
+    BASE,
+    "RNA-seq/results/manuscript_release/candidates/resource-f-five-coloc-v6-candidate-2026-08-10/",
+    "workstreams/BULK-PROGRAM-MAP-v9/precontract/composition_acceptance/accepted_composition.tsv.gz"
+  ))
+  stage_samples <- unique(fread(file.path(EXT_ROOT, "stage_sample_manifest.tsv"))[, .(
+    sample_id, analysis_unit_id, fibrosis_stage
+  )], by = "analysis_unit_id")
+  stage_samples[, group := paste0("F", fibrosis_stage)]
+  nas_samples <- fread(file.path(EXT_ROOT, "stage_extension_sample_manifest.tsv"))[axis == "NAS"]
+  nas_samples[, group := fifelse(grepl("NAS0", contrast) & group == "NAS0", "NAS0", group)]
+  composition_summary <- function(samples, axis_id, groups) {
+    d <- merge(comp, unique(samples[, .(sample_id, analysis_unit_id, group)], by = "analysis_unit_id"), by = "sample_id")
+    cell_cols <- setdiff(names(comp), c("sample_id", "dataset"))
+    d[, hepatocyte := Hepatocytes]
+    d[, non_parenchymal := rowSums(.SD, na.rm = TRUE), .SDcols = setdiff(cell_cols, "Hepatocytes")]
+    z <- melt(d, id.vars = c("analysis_unit_id", "group"), measure.vars = c("hepatocyte", "non_parenchymal"),
+              variable.name = "compartment", value.name = "fraction")
+    z[, axis := axis_id]
+    z[, .(mean = mean(fraction), SE = sd(fraction) / sqrt(.N), n_participants = .N),
+      by = .(axis, group = factor(group, levels = groups), compartment)]
+  }
+  comp_sum <- rbind(
+    composition_summary(stage_samples, "fibrosis", paste0("F", 0:4)),
+    composition_summary(nas_samples, "NAS", c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8"))
+  )
+  comp_plot <- function(axis_id, xlab) ggplot(comp_sum[axis == axis_id],
+      aes(group, mean, color = compartment, group = compartment)) +
+    geom_line(linewidth = 0.65) + geom_point(size = 1.1) +
+    geom_errorbar(aes(ymin = mean - SE, ymax = mean + SE), width = 0.1, linewidth = 0.3) +
+    scale_color_manual(values = c(hepatocyte = "#9E9E9E", non_parenchymal = cat_palette[[3]]),
+                       labels = c("Hepatocyte", "Non-parenchymal"), name = NULL) +
+    labs(x = xlab, y = "Estimated fraction") + theme_masld_compact() +
+    theme(axis.text.x = element_text(size = 6, face = "plain"), legend.position = "bottom")
+  full <- (fib_count | nas_count) / (fib_program | nas_program) /
+    (comp_plot("fibrosis", "Fibrosis stage") | comp_plot("NAS", "NAS group")) +
+    plot_layout(heights = c(1, 1.05, 0.9), guides = "collect") & theme(legend.position = "bottom")
+  ggsave(file.path(SUPP_DIR, "figs3_stage_remodeling_full.pdf"), full,
+         width = 7.1, height = 4.8, device = cairo_pdf)
+
+  fwrite(counts, file.path(SRC_DIR, "fig3e_adjacent_deg_counts.tsv"), sep = "\t")
+  fwrite(activity, file.path(SRC_DIR, "fig3e_prespecified_nmf_activity.tsv"), sep = "\t")
+  fwrite(comp_sum, file.path(SRC_DIR, "figs3_composition_summary.tsv"), sep = "\t")
+  quit(save = "no", status = 0)
+}
 
 PANEL_DIR <- file.path(FIG2_DIR, "panels")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
@@ -46,13 +171,16 @@ PANEL_HEIGHT_IN <- 2.27
 # cascade and the rest of the paper. Env overrides exist for sensitivity only:
 #   "treat"   — TREAT interval-null FDR at lfc=LFC (default, canonical).
 #   "sig"     — significance only: padj < FDR, NO effect-size floor.
-#   "default" — legacy gate: padj < FDR & |shrunk_logFC| > LFC.
-DEG_METHOD <- tolower(Sys.getenv("PROG_CASCADE_DEG_METHOD", "treat"))
+#   "default" — CANONICAL from 2026-08-12: padj < FDR & |raw log2FC| > LFC.
+# Canonical gate migrated 2026-08-12 from TREAT (lfc=0.25) to the conventional
+# adjusted-p + effect-size floor. The floor applies to the RAW logFC, the same
+# statistic the paper-wide canonical uses; shrunk_logFC is kept for direction only.
+DEG_METHOD <- tolower(Sys.getenv("PROG_CASCADE_DEG_METHOD", "default"))
 FDR_CUTOFF <- as.numeric(Sys.getenv("PROG_CASCADE_FDR", "0.05"))
-LFC_CUTOFF <- as.numeric(Sys.getenv("PROG_CASCADE_LFC", "0.25"))
+LFC_CUTOFF <- as.numeric(Sys.getenv("PROG_CASCADE_LFC", "0.5"))
 stopifnot(DEG_METHOD %in% c("treat", "sig", "default"))
 # The canonical run writes the plain back-compat filename; sensitivity arms get a tag.
-is_canonical <- DEG_METHOD == "treat" && LFC_CUTOFF == 0.25 && FDR_CUTOFF == 0.05
+is_canonical <- DEG_METHOD == "default" && LFC_CUTOFF == 0.5 && FDR_CUTOFF == 0.05
 file_tag <- if (is_canonical) "" else switch(DEG_METHOD,
   sig     = "_sig",
   treat   = sprintf("_treat_lfc%s", gsub("[.]", "p", format(LFC_CUTOFF, trim = TRUE))),
@@ -91,7 +219,8 @@ if (DEG_METHOD == "treat") {
 } else if (DEG_METHOD == "sig") {
   deg_sig <- deg[padj < FDR_CUTOFF]                        # significance only
 } else {
-  deg_sig <- deg[padj < FDR_CUTOFF & abs(eff) > LFC_CUTOFF]   # legacy
+  # CANONICAL 2026-08-12: floor on the RAW logFC, matching is_canonical_deg().
+  deg_sig <- deg[padj < FDR_CUTOFF & abs(logFC) > LFC_CUTOFF]
 }
 deg_counts <- deg_sig[, .(
     up   = sum(eff > 0, na.rm = TRUE),

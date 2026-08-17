@@ -13,7 +13,7 @@ source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 fig2_data <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/fig2_data")
-panel_dir <- file.path(FIG2_DIR, "panels")
+panel_dir <- file.path(FIG4_SC_DIR, "panels", "supplementary")
 dir.create(panel_dir, recursive = TRUE, showWarnings = FALSE)
 
 liana_links_file <- file.path(fig2_data, "liana_ligand_tf_links.csv")

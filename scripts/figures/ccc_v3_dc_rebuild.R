@@ -27,9 +27,9 @@
 # Outputs:
 #   - stage_trajectory_v2/stage_lr_lmm_coarse_v2_dc.tsv        (DC family-wide LMM)
 #   - stage_trajectory_v2/stage_lr_lmm_coarse_v2_runrefit.tsv  (run-level refit)
-#   - figures/main/fig3_RNAseq/panels/data/ccc_trajectories_data_dc.csv
-#   - figures/main/fig3_RNAseq/panels/data/fig3h_liana_matrix_dc.csv
-#   - figures/main/fig3_RNAseq/panels/fig3h_ccc_lr_heatmap_dc.pdf
+#   - figures/main/fig4_singlecell_programs/panels/_legacy_direct_render/data/ccc_trajectories_data_dc.csv
+#   - figures/main/fig4_singlecell_programs/panels/_legacy_direct_render/data/fig3h_liana_matrix_dc.csv
+#   - figures/main/fig4_singlecell_programs/panels/_legacy_direct_render/fig3h_ccc_lr_heatmap_dc.pdf
 #   - stage_trajectory_v2/ccc_dc_before_after_report.tsv
 # ============================================================================
 
@@ -56,20 +56,40 @@ V3_DIR <- file.path(BASE,
 MCP <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2_phase05/mcp/inputs")
 
 LR_DC    <- file.path(V2_STAGE, "all_donor_lr_scores_v2_dc.tsv.gz")
-META_DC  <- file.path(MCP, "donor_metadata_v2_dc.tsv")
+stage_metadata_file <- Sys.getenv("SINGLECELL_STAGE_METADATA_FILE", "")
+stage_donor_metadata_file <- Sys.getenv("SINGLECELL_STAGE_DONOR_METADATA_FILE", "")
+META_DC  <- if (nzchar(stage_donor_metadata_file)) {
+  stage_donor_metadata_file
+} else {
+  file.path(MCP, "donor_metadata_v2_dc.tsv")
+}
 LR_RUN   <- file.path(V2_STAGE, "all_donor_lr_scores_v2.tsv.gz")
-META_RUN <- file.path(MCP, "donor_metadata_v2.tsv")
+META_RUN <- if (nzchar(stage_metadata_file)) {
+  stage_metadata_file
+} else {
+  file.path(MCP, "donor_metadata_v2.tsv")
+}
 
-PANEL_DIR <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
-DATA_DIR  <- file.path(PANEL_DIR, "data")
+candidate_root <- Sys.getenv("CCC_CANDIDATE_ROOT", "")
+PANEL_DIR <- if (nzchar(candidate_root)) {
+  file.path(candidate_root, "figure4", "panels")
+} else {
+  file.path(BASE, "figures/main/fig4_singlecell_programs/panels/_legacy_direct_render")
+}
+DATA_DIR <- if (nzchar(candidate_root)) {
+  file.path(candidate_root, "source_tables")
+} else {
+  file.path(PANEL_DIR, "data")
+}
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
+dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
-OUT_TRAJ_DC <- file.path(DATA_DIR, "ccc_trajectories_data_dc.csv")
-OUT_MAT_DC  <- file.path(DATA_DIR, "fig3h_liana_matrix_dc.csv")
-OUT_FIG_DC  <- file.path(PANEL_DIR, "fig3h_ccc_lr_heatmap_dc.pdf")
-OUT_LMM_DC  <- file.path(V2_STAGE, "stage_lr_lmm_coarse_v2_dc.tsv")
-OUT_LMM_RUN <- file.path(V2_STAGE, "stage_lr_lmm_coarse_v2_runrefit.tsv")
-OUT_REPORT  <- file.path(V2_STAGE, "ccc_dc_before_after_report.tsv")
+OUT_TRAJ_DC <- file.path(DATA_DIR, "fig4d_communication_trajectories.tsv")
+OUT_MAT_DC  <- file.path(DATA_DIR, "fig4d_communication_matrix.tsv")
+OUT_FIG_DC  <- file.path(PANEL_DIR, "fig4d_communication_direct.pdf")
+OUT_LMM_DC  <- file.path(DATA_DIR, "fig4d_lmm_donor_collapsed.tsv")
+OUT_LMM_RUN <- file.path(DATA_DIR, "fig4d_lmm_run_refit.tsv")
+OUT_REPORT  <- file.path(DATA_DIR, "fig4d_communication_audit.tsv")
 
 STAGES       <- c("Healthy", "Steatosis", "Steatohepatitis")           # Fig3H axis
 STAGE_LEVELS <- c("Healthy", "Steatosis", "Steatohepatitis", "Cirrhosis")
@@ -253,7 +273,10 @@ cat(sprintf("[output] %s  (%d L-R pairs)\n", OUT_FIG_DC, ncol(lmat)))
 # 5. BEFORE / AFTER report
 # ============================================================================
 # (a) Fig3H z-matrix concordance before vs after (aligned on tidy label)
-before_mat <- fread(file.path(DATA_DIR, "fig3h_liana_matrix.csv"))
+before_mat <- fread(file.path(
+  BASE,
+  "figures/main/fig4_singlecell_programs/source_tables/legacy_from_fig3/fig3h_liana_matrix.csv"
+))
 after_mat  <- fread(OUT_MAT_DC)
 mm <- merge(before_mat, after_mat, by = "headline_label", suffixes = c("_before", "_after"))
 vb <- as.matrix(mm[, .(Healthy_before, Steatosis_before, Steatohepatitis_before)])

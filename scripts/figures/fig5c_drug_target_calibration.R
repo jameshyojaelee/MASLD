@@ -91,12 +91,11 @@ dt <- merge(dt, deg, by = "gene", all.x = TRUE)
 dt <- dt[order(-coloc)][!duplicated(gene)]
 dt[, abs_lfc := fifelse(is.na(logFC), 0, abs(logFC))]
 dt[, plot_lfc := fifelse(is.na(logFC), 0, logFC)]
-# TREAT DEG = the paper's canonical bar (treat_fdr < 0.05 at lfc=0.25). The effect floor
-# is IN the TREAT test, so there is NO separate post-hoc |logFC| filter. Used both for
-# reservoir INCLUSION below (the paper-wide dual-evidence gate) AND for the glyph outline.
-dt[, is_deg := !is.na(treat_fdr) & treat_fdr < 0.05]
-# BORDER/COLOUR = bulk-DEG significance = the SAME TREAT canonical (treat_fdr < 0.05).
-# Genes with no DEG data (treat_fdr NA, e.g. GLP1R) are not significant and have no outline.
+# Canonical DEG (2026-08-12) = padj < 0.05 AND |log2FC| > 0.5. Used both for reservoir
+# INCLUSION below (the paper-wide dual-evidence gate) AND for the glyph outline.
+dt[, is_deg := is_canonical_deg(dt)]
+# BORDER/COLOUR = bulk-DEG significance = the SAME canonical gate.
+# Genes with no DEG data (padj/logFC NA, e.g. GLP1R) are not significant and have no outline.
 dt[, is_sig := is_deg]
 dt[, sig_class := fifelse(is_sig, "DEG", "n.s.")]
 dt[, sig_class := factor(sig_class, levels = c("DEG", "n.s."))]

@@ -28,8 +28,14 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 PANEL_DIR <- file.path(FIG2_DIR, "panels")   # relocated fig1 -> fig3_RNAseq (mirrors fig1h_optionb.R)
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
-TREAT_FDR_CUT  <- 0.05   # integrated + per-cohort canonical TREAT DEG FDR cutoff
-LFC_TREAT      <- 0.25   # treat() effect-size offset (H0:|logFC|<=lfc), folded into the test
+# CANONICAL 2026-08-12: padj<0.05 & |log2FC|>0.5, applied identically to the
+# integrated arm and to every per-cohort arm. Keep them in lockstep -- a stricter
+# per-cohort floor barred mid-effect genes from all cohort sets while admitting
+# them to the integrated set, manufacturing "integration-only" hits.
+CANON_PADJ_CUT <- 0.05
+CANON_LFC_CUT  <- 0.50
+TREAT_FDR_CUT  <- 0.05   # retained: interval-null comparator arm only
+LFC_TREAT      <- 0.25   # retained: interval-null comparator arm only
 # Integrated DEG = canonical TREAT (treat FDR<0.05 at lfc=0.25): the effect floor is
 # folded INTO the test, so it replaces the old "lfsr<0.05 (no |shrunk| cut)" inclusion.
 # The x-axis uses the LOOSER per-cohort FDR (adj.P.Val<0.05) so integration-only genes
@@ -76,19 +82,22 @@ for (co in FIVE_COHORTS) {
   set(ps, i = idx, j = "treat_sig",
       value = p.adjust(p_treat, method = "BH") < TREAT_FDR_CUT)
 }
+# Canonical per-cohort call (2026-08-12) -- this, not treat_sig, drives the panel.
+ps[, canon_sig := !is.na(padj) & !is.na(logFC) &
+                  padj < CANON_PADJ_CUT & abs(logFC) > CANON_LFC_CUT]
 message(sprintf("Per-cohort TREAT applied to %d of %d cohort-gene rows (%.1f%%).",
                 sum(ps$treat_sig), nrow(ps), 100 * mean(ps$treat_sig)))
 
-dream_lookup <- dream[, .(gene_clean, bulk_logFC, bulk_padj, treat_fdr)]
+dream_lookup <- dream[, .(gene_clean, bulk_logFC, bulk_padj, treat_fdr)]  # treat_fdr kept for the comparator arm
 
-ps_join <- merge(ps[, .(gene_clean, dataset, logFC, eff, sig, treat_sig)],
+ps_join <- merge(ps[, .(gene_clean, dataset, logFC, eff, sig, treat_sig, canon_sig)],
                  dream_lookup, by = "gene_clean", all.x = FALSE)
 # x-axis: cohorts with concordant FDR significance (adj.P.Val<0.05 + same direction)
 ps_join[, concordant_sig := sig & !is.na(eff) & !is.na(bulk_logFC) &
                             sign(eff) == sign(bulk_logFC) & sign(eff) != 0]
 # color: cohorts meeting the canonical per-cohort TREAT DEG gate
 # (treat FDR<0.05 at lfc=0.25 + same direction)
-ps_join[, canonical_deg := treat_sig & !is.na(eff) & !is.na(bulk_logFC) &
+ps_join[, canonical_deg := canon_sig & !is.na(eff) & !is.na(bulk_logFC) &
                            sign(eff) == sign(bulk_logFC) & sign(eff) != 0]
 
 concordance <- ps_join[, .(
@@ -102,8 +111,8 @@ panel_df[is.na(n_cohorts_canonical),  n_cohorts_canonical := 0L]
 
 # Restrict the panel to canonical integrated DEGs (TREAT FDR<0.05 at lfc=0.25).
 # Non-DEGs are not part of the question.
-panel_df <- panel_df[!is.na(bulk_logFC) & !is.na(treat_fdr) &
-                     treat_fdr < TREAT_FDR_CUT]
+panel_df <- panel_df[!is.na(bulk_logFC) & !is.na(bulk_padj) &
+                     bulk_padj < CANON_PADJ_CUT & abs(bulk_logFC) > CANON_LFC_CUT]
 
 # Integration-only = no cohort meets the canonical per-cohort TREAT DEG gate for
 # this gene (treat FDR<0.05 at lfc=0.25 AND same direction). Genes can still be

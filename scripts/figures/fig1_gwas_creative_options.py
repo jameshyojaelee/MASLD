@@ -65,11 +65,14 @@ _ROOT          = os.environ.get("MASLD_PROJECT_ROOT", _project_root())
 _REGISTRY_TSV  = os.path.join(_ROOT, "GWAS/finemapping/config/gwas_registry.tsv")
 _TIER_TSV      = os.path.join(_ROOT, "GWAS/finemapping/config/gwas_trait_tier.tsv")
 _STUDY_SUMMARY = os.path.join(_ROOT, "GWAS/finemapping/results/study_summary.csv")
-# Per-gene-per-GWAS long coloc table. We recompute each gene's single best coloc over the
+# Per-gene-per-GWAS long COLOC table. Override only with an audited, promoted release.
 # MAIN strata directly from here: the pre-aggregated wide gene_level_coloc.csv and even the
 # gene_level_coloc_tier12.csv `driving_gwas` are FULL-portfolio drivers (a MAIN-union gene
 # can still be driven by a Tier-3/4 stratum), which would reintroduce the supp traits.
-_GENE_COLOC    = os.path.join(_ROOT, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")
+_GENE_COLOC    = os.environ.get(
+    "FIG2_COLOC_INPUT",
+    os.path.join(_ROOT, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"),
+)
 # Per-variant credible sets: source of the UNIQUE physical fine-mapped loci (Change 1). We merge
 # per-(study,locus) credible-set windows across ALL MAIN strata so the same physical locus tagged
 # by several correlated enzymes/ancestries is counted ONCE (the old cascade summed per-study
@@ -774,8 +777,14 @@ def build_cascade(path, extra_paths=None):
     susie_y0, susie_y1 = 0.0, SUSIE_GENES * gscale
     abf_y0,   abf_y1   = susie_y1 + METHOD_GAP, susie_y1 + METHOD_GAP + ABF_ONLY_GENES * gscale
 
-    fig, ax = plt.subplots(figsize=(4.9, 3.16))  # compact: 6pt text reads larger vs canvas (trims to ~4.3x2.8)
-    ax.set_xlim(-0.58, 3*SEC + 1.15); ax.set_ylim(-0.6, H + 1.5); ax.invert_yaxis(); ax.axis("off")
+    candidate_mode = bool(os.environ.get("FIG2_CANDIDATE_DIR"))
+    figure_size = (4.03, 2.49) if candidate_mode else (4.9, 3.16)
+    fig, ax = plt.subplots(figsize=figure_size)
+    if candidate_mode:
+        fig.subplots_adjust(left=0.09, right=0.98, bottom=0.22, top=0.98)
+    x_left = -1.05 if candidate_mode else -0.58
+    x_right = 3 * SEC + (2.55 if candidate_mode else 1.15)
+    ax.set_xlim(x_left, x_right); ax.set_ylim(-0.6, H + 1.5); ax.invert_yaxis(); ax.axis("off")
 
     # Ancestry column (x=0)
     anc_tot = {a: sum(DAT[k][0] for k in DAT if k[0] == a) for a in ANCESTRIES}
@@ -798,7 +807,7 @@ def build_cascade(path, extra_paths=None):
         ax.text(x, H + 0.12, hdr, ha="right", va="top",
                 rotation=45, rotation_mode="anchor", fontsize=6, color="black")
     # genes-column angled header (the split totals are labelled on the blocks themselves)
-    ax.text(xg, H + 0.12, "coloc genes", ha="right", va="top",
+    ax.text(xg, H + 0.12, "COLOC genes", ha="right", va="top",
             rotation=45, rotation_mode="anchor", fontsize=6, color="black")
     # trait name + dataset count ABOVE each trait block, e.g. "NAFLD (11)"
     for t in r_order:
@@ -830,10 +839,11 @@ def build_cascade(path, extra_paths=None):
         hh = cnt*gscale
         ax.add_patch(mpatches.Rectangle((xg-BW/2, yy), BW, hh, facecolor=col,
                                         edgecolor="white", lw=0.25, zorder=5))
-        ax.text(xg+BW/2+0.03, yy+hh/2, lab, ha="left", va="center", fontsize=5, color="black", zorder=8)
+        ax.text(xg+BW/2+0.03, yy+hh/2, lab, ha="left", va="center", fontsize=6, color="black", zorder=8)
         yy += hh
-    # prominent aggregate label beside the solid dark block — the eye lands here
-    ax.text(xg+BW/2+0.60, (susie_y0+susie_y1)/2, f"SuSiE-COLOC\n{SUSIE_GENES}",
+    # Main-text terminology describes the signal model. Method names remain in
+    # the legend/Methods so "fallback" is not mistaken for weaker evidence by definition.
+    ax.text(xg+BW/2+0.60, (susie_y0+susie_y1)/2, f"Multi-signal COLOC\n{SUSIE_GENES}",
             ha="left", va="center", fontsize=6, color="black", zorder=8)
     # ABF-only fallback block: 3 PP.H4 tints (dark->light) mirroring the SuSiE gradient, but in the
     # faded/hatched GREY hue so the hierarchy holds (SuSiE = blue prominent; ABF = grey subordinate).
@@ -848,18 +858,18 @@ def build_cascade(path, extra_paths=None):
         hh = cnt*gscale
         ax.add_patch(mpatches.Rectangle((xg-BW/2, yy), BW, hh, facecolor=col,
                                         edgecolor="#6B7280", lw=0.3, hatch="////", alpha=0.35, zorder=5))
-        ax.text(xg+BW/2+0.03, yy+hh/2, lab, ha="left", va="center", fontsize=5, color="black", zorder=8)
+        ax.text(xg+BW/2+0.03, yy+hh/2, lab, ha="left", va="center", fontsize=6, color="black", zorder=8)
         yy += hh
     # subordinate aggregate label (pushed right, mirroring the SuSiE label placement)
-    ax.text(xg+BW/2+0.60, (abf_y0+abf_y1)/2, f"ABF-fallback\n(exploratory)\n{ABF_ONLY_GENES}",
+    ax.text(xg+BW/2+0.60, (abf_y0+abf_y1)/2, f"Single-signal\nCOLOC only\n{ABF_ONLY_GENES}",
             ha="left", va="center", fontsize=6, color="black", zorder=8)
     # small union annotation above the column top (kept subordinate to the SuSiE 473)
     ax.text(xg-BW/2, susie_y0-0.30, f"union {UNION_GENES:,}", ha="left", va="bottom",
-            fontsize=5, color="black", zorder=8)
+            fontsize=6, color="black", zorder=8)
     # shared PP.H4 legend (both blocks use PP4_TINTS; ranges shown ONCE here, not per-band)
     _pp4_leg = [mpatches.Patch(facecolor=PP4_TINTS[i], edgecolor="none", label=lab)
                 for i, lab in enumerate(["PP.H4 > 0.9", "0.8-0.9", "0.5-0.8"])]
-    _lg = ax.legend(handles=_pp4_leg, fontsize=5.5, loc="lower right", frameon=False,
+    _lg = ax.legend(handles=_pp4_leg, fontsize=6, loc="lower right", frameon=False,
                     handlelength=0.9, handletextpad=0.35, labelspacing=0.25, borderaxespad=0.1)
     ax.add_artist(_lg)
 
@@ -906,20 +916,23 @@ def build_cascade(path, extra_paths=None):
                         ABF_COLOR, alpha=0.16*amult)
                 ay += na*gscale
 
-    fig.savefig(path, bbox_inches="tight", pad_inches=0.02, dpi=300, facecolor="white")
+    save_args = {"dpi": 300, "facecolor": "white"}
+    if not candidate_mode:
+        save_args.update({"bbox_inches": "tight", "pad_inches": 0.02})
+    fig.savefig(path, **save_args)
     print(f"Saved: {path}")
     if extra_paths:
         for ep in extra_paths:
-            fig.savefig(ep, bbox_inches="tight", pad_inches=0.02, dpi=300, facecolor="white"); print(f"Saved: {ep}")
+            fig.savefig(ep, **save_args); print(f"Saved: {ep}")
     print(f"CAPTION (Fig2A cascade): GWAS evidence cascade — {N_GWAS} Tier-1/2 (liver-specific) "
           f"GWAS datasets ({N_STUDIES} distinct studies; {len(ANCESTRIES)} ancestries x {len(TRAITS)} "
           f"liver-disease/enzyme traits, MVP NAFLD/ALT/AST included) -> {tot['loci']} per-trait fine-mapped "
           f"loci ({N_UNIQUE_LOCI} globally unique; merged credible-set windows within each trait, +/-250 kb; "
           "a physical locus tagged by several enzymes recurs across those traits) -> colocalising genes. The "
-          f"genes endpoint is split by method/confidence: the confident primary block = {SUSIE_GENES} "
-          "SuSiE-COLOC genes shaded by PP.H4 (dark->light for >0.9 / 0.8-0.9 / 0.5-0.8 = "
-          f"{b9} / {b89} / {b58}); the subordinate faded/hatched block = {ABF_ONLY_GENES} ABF-only fallback "
-          "genes (exploratory: ABF PP.H4>0.5 but not SuSiE), shaded the same way in grey (>0.9 / 0.8-0.9 / "
+          f"genes endpoint is split by signal model: the multi-signal COLOC block = {SUSIE_GENES} "
+          "genes analyzed with SuSiE, shaded by PP.H4 (dark->light for >0.9 / 0.8-0.9 / 0.5-0.8 = "
+          f"{b9} / {b89} / {b58}); the faded/hatched block = {ABF_ONLY_GENES} single-signal COLOC-only "
+          "genes (ABF PP.H4>0.5 without multi-signal support), shaded the same way in grey (>0.9 / 0.8-0.9 / "
           f"0.5-0.8 = {ab9} / {ab89} / {ab58} — bottom-heavy, mostly low-confidence); union = {UNION_GENES:,}. "
           "Stages 1-3 are coloured by ancestry; loci->gene ribbons are recoloured into the SuSiE (blue) vs "
           "ABF-only (grey, faint) groups. European GWAS contribute few loci yet most SuSiE-confident coloc "
@@ -1030,6 +1043,15 @@ def build_study_bars(path, extra_paths=None):
 
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    candidate_dir = os.environ.get("FIG2_CANDIDATE_DIR")
+    panel_mode = os.environ.get("FIG2_PANEL", "all")
+    if candidate_dir:
+        os.makedirs(candidate_dir, exist_ok=True)
+        if panel_mode not in ("all", "cascade"):
+            raise SystemExit("FIG2_PANEL must be 'all' or 'cascade'")
+        build_cascade(os.path.join(candidate_dir, "fig2A_gwas_cascade.pdf"))
+        raise SystemExit(0)
+
     build_A(_out_path("gwas_creative_A_binary_grid.pdf"))
     PANELS = os.path.join(_project_root(), "figures", "main", "fig2_genetics", "panels")
     build_B(_out_path("gwas_creative_B_alluvial.pdf"),

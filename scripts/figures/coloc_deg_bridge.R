@@ -62,7 +62,7 @@ atlas <- atlas[!is.na(bulk_logFC)]
 
 # Primary-DEG flag (Tier-1, TREAT canonical: treat_fdr<0.05 at lfc=0.25; the
 # effect-size floor is folded into the test, so there is no separate |logFC| filter).
-atlas[, is_deg := !is.na(bulk_treat_fdr) & bulk_treat_fdr < 0.05]
+atlas[, is_deg := is_canonical_deg(atlas)]
 
 # Named genes (manuscript). THRB/RORA = high PP.H4 + concordant suppression
 # (THRB = resmetirom, the approved MASH target). FASN/SCD/FGF21 = leading MASLD

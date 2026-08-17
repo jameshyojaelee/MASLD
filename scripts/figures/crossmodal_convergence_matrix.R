@@ -48,7 +48,10 @@ coloc <- fread(file.path(BASE,
 # INTEGRITY regression check
 stopifnot(max(coloc$coloc_best_pp4, na.rm = TRUE) <= 1)
 
-acols <- c("human_symbol", "bulk_shrunk_logFC", "bulk_treat_fdr", "mouse_meta_logFC",
+# bulk_padj + bulk_logFC added 2026-08-12: the canonical gate needs the raw
+# logFC and adjusted p, not the shrunk effect and treat FDR.
+acols <- c("human_symbol", "bulk_logFC", "bulk_padj",
+           "bulk_shrunk_logFC", "bulk_treat_fdr", "mouse_meta_logFC",
            "n_diets_sig", "sc_hepatocyte_logFC", "hotspot_n_modules")
 m <- merge(atlas[, ..acols], coloc[, .(human_symbol = gene, coloc_best_pp4)],
            by = "human_symbol")
@@ -56,7 +59,7 @@ m <- merge(atlas[, ..acols], coloc[, .(human_symbol = gene, coloc_best_pp4)],
 # ---------------------------------------------------------------------------
 # Convergent core: robust bulk DEG AND strong hepatic COLOC
 # ---------------------------------------------------------------------------
-core <- m[bulk_treat_fdr < 0.05 & coloc_best_pp4 > 0.5]   # TREAT canonical; effect floor (lfc=0.25) IS in the test -> NO separate |shrunk_logFC| filter
+core <- m[is_canonical_deg(m) & coloc_best_pp4 > 0.5]   # canonical 2026-08-12: padj<0.05 & |log2FC|>0.5
 
 # Per-modality "lit" flags
 core[, lit_bulk    := TRUE]                                   # core defn

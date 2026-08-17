@@ -16,7 +16,7 @@ import pandas as pd
 from spatial_resource_lib import SpatialResourceError, sha256_file
 
 
-RELEASE_ID = "spatial-impact-figures-candidate-2026-08-11"
+RELEASE_ID = "spatial-impact-figures-candidate-2026-08-12"
 R4_RELEASE_ID = "spatial-publication-figures-candidate-2026-08-11-r4"
 PROGRAM_RELEASE_ID = "program-context-v2-candidate-2026-08-07"
 PROGRAMS = [
@@ -200,7 +200,7 @@ def validate_retained(project: Path, output: Path) -> None:
 
 def validate_claim_contract(output: Path) -> None:
     contract = pd.read_csv(output / "impact_claim_contract.tsv", sep="\t")
-    if contract["claim_class"].value_counts().to_dict() != {"allowed": 4, "prohibited": 4}:
+    if contract["claim_class"].value_counts().to_dict() != {"allowed": 4, "prohibited": 5}:
         raise SpatialResourceError("impact claim contract is incomplete")
     joined = "\n".join(text(path) for path in sorted((output / "panels").glob("*.pdf"))).lower()
     for prohibited in ("bicc1 is not spatial", "cell autonomous", "causal", "donor-level replication"):

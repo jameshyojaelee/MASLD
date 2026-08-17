@@ -23,8 +23,10 @@ dir.create(DATA_DIR, recursive = TRUE, showWarnings = FALSE)
 GROUPS <- c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8")
 # CANONICAL = treat @ lfc=0.25 (repo-wide TREAT definition; McCarthy & Smyth
 # 2009). ashr / raw / sig remain as env-selectable sensitivity arms only.
-DEG_METHOD <- tolower(Sys.getenv("NAS_CASCADE_DEG_METHOD", "treat"))
-LFC_CUTOFF <- as.numeric(Sys.getenv("NAS_CASCADE_LFC", "0.25"))
+# Canonical 2026-08-12: conventional padj + effect-size floor ("raw" branch).
+# Was "treat" at lfc=0.25 from 2026-06-29 until the gate migration.
+DEG_METHOD <- tolower(Sys.getenv("NAS_CASCADE_DEG_METHOD", "raw"))
+LFC_CUTOFF <- as.numeric(Sys.getenv("NAS_CASCADE_LFC", "0.5"))
 FDR_CUTOFF <- as.numeric(Sys.getenv("NAS_CASCADE_FDR", "0.05"))
 stopifnot(DEG_METHOD %in% c("ashr", "raw", "treat", "sig"))
 X_EXPAND <- expansion(mult = c(0.04, 0.04))

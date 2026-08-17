@@ -634,13 +634,8 @@ save_fig(p_alluv,
          width = fig_half_width + 1.6, height = fig_half_width + 0.5)
 message("[caption] Per-cohort DEG overlap")
 message("  Saved Fig3C_overlap_alluvial.pdf (supplementary source copy)")
-# RESTORED 2026-07-02 (A–J layout): replicate into the main Fig 3 panels dir as
-# panel 3C (top row); the supplementary copy above is the canonical source.
-fig3_panels <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
-dir.create(fig3_panels, recursive = TRUE, showWarnings = FALSE)
-file.copy(file.path(PANEL_DIR, "Fig3C_overlap_alluvial.pdf"),
-          file.path(fig3_panels, "fig3c_overlap_alluvial.pdf"), overwrite = TRUE)
-message("  Replicated -> main Fig 3 panels as fig3c_overlap_alluvial.pdf (3C)")
+# The membership alluvial is supplementary. Main Figure 3C is now the
+# synchronized cohort-direction and leave-one-cohort-out robustness panel.
 
 # ============================================================================
 # PANEL C — Direction-concordance volcano (Idea 3)

@@ -6,7 +6,7 @@
 # chord on Apr-17 pre-v3-hardening CCC data) with three stage-progressive CCC
 # panels reflecting the 2026-05-16 master review + 2026-05-17 final headline.
 #
-# Outputs (figures/main/fig3_RNAseq/panels/):
+# Outputs (figures/main/fig4_singlecell_programs/panels/supplementary/):
 #   1. figs3_ccc_chord.pdf
 #      Chord diagram of the stage-progressive paracrine LR pairs (13 pairs
 #      passing all 4 statistical gates) across Hep / Endo / Fib / Mac / Chol
@@ -56,7 +56,7 @@ LR_V2  <- file.path(V2_DIR, "all_donor_lr_scores_v2_dc.tsv.gz")
 META_V2 <- file.path(BASE,
   "Analysis/SingleCell/results_gpu_v2_phase05/mcp/inputs/donor_metadata_v2_dc.tsv")
 
-PANEL_DIR <- file.path(FIG2_DIR, "panels")
+PANEL_DIR <- file.path(FIG4_SC_DIR, "panels", "supplementary")
 DATA_DIR  <- file.path(PANEL_DIR, "data")
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)

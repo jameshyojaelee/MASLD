@@ -12,7 +12,7 @@
 # Data: Analysis/Spatial/results/svg/differential_svgs.csv
 # Output: figures/main/fig4_validation/panels/figS4_spatial_reorganization_descriptive.pdf
 # Demoted from main Figure 4 on 2026-08-06 when actual frozen-program maps
-# became Panel 4E.
+# became Panel 4F.
 # Env:    rnaseq
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ PT_SIZE    <- 0.5   # all dots identical size (no size mapping)
 # stable anchors give the labels spatial spread AND mark where zonation persists.
 #   Maintained-zonation landmarks (Stable category, gray):
 #     CYP3A4 (0.567→0.546, on diagonal)              — pericentral drug metabolism; own Fig4 zonation panel
-#     FABP1  (0.337→0.212, below diagonal, weakened) — fatty-acid binding; Fig2E locus-zoom
+#     FABP1  (0.337→0.212, below diagonal, weakened) — fatty-acid binding; Fig2H locus zoom
 #   Gained spatial structure (disease_emergent_SVG, magenta):
 #     LDLR   (0.016→0.163) — LDL uptake
 #     HMGCS1 (0.031→0.115) — cholesterol synthesis

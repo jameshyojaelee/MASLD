@@ -35,29 +35,24 @@ dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 suppressWarnings(tryCatch(source(file.path(BASE, "scripts/figures/publication_theme.R")),
                           error = function(e) NULL))
 
-TREAT_FDR_CUT <- 0.05
-TREAT_LFC     <- 0.25   # canonical Tier-1 TREAT DEG definition: treat FDR<0.05 at lfc=0.25
+# Canonical DEG definition (2026-08-12): padj < 0.05 AND |log2FC| > 0.5.
+# BOTH arms of this UpSet use the same padj cut and the same effect-size floor.
+# Do not let them drift apart: if the per-cohort arms are held to a stricter floor
+# than the integrated arm, every gene between the two floors is barred from all
+# per-cohort sets while being admitted to the integrated set, and can therefore
+# only land in "Integrated only" — manufacturing the panel's headline.
+CANON_PADJ_CUT <- 0.05
+CANON_LFC_CUT  <- 0.50
 strip_ver <- function(x) sub("\\.[0-9]+$", "", as.character(x))
 
-# Analytical TREAT (identical to limma::treat; reconstructed from the moderated-t
-# stat) — same engine as Cas13 rebuild_cas13_library.R::add_treat_fdr.
-.infer_df <- function(dt) {
-  pr <- dt[is.finite(t) & is.finite(P.Value) & P.Value > 0 & P.Value < 1 & abs(t) > 1e-6]
-  idx <- unique(round(seq(1, nrow(pr), length.out = min(nrow(pr), 12))))
-  median(vapply(idx, function(i)
-    uniroot(function(df) 2 * pt(-abs(pr$t[i]), df = df) - pr$P.Value[i], c(0.1, 1e6))$root,
-    numeric(1)))
-}
-# Per-cohort analytical TREAT: returns a data.table of DEG gene + effect SIGN at
-# treat FDR<TREAT_FDR_CUT (lfc=TREAT_LFC). Uses each cohort's own SE + df.total.
-treat_degs <- function(d) {
-  ok <- is.finite(d$logFC) & is.finite(d$SE) & d$SE > 0
-  d  <- d[ok]
-  dfu <- if ("df.total" %in% names(d)) d$df.total else .infer_df(d)
-  d[, p_treat := pt((abs(logFC) - TREAT_LFC) / SE, df = dfu, lower.tail = FALSE) +
-                 pt((abs(logFC) + TREAT_LFC) / SE, df = dfu, lower.tail = FALSE)]
-  d[, fdr_treat := p.adjust(p_treat, method = "BH")]
-  sig <- d[fdr_treat < TREAT_FDR_CUT]
+# Per-cohort canonical DEGs: returns gene + effect SIGN under the same gate the
+# integrated arm uses. (Superseded the per-cohort analytical TREAT reconstruction
+# on 2026-08-12, when TREAT stopped being the canonical definition.)
+canonical_degs <- function(d) {
+  p <- intersect(c("padj", "adj.P.Val"), names(d))[1]
+  if (is.na(p)) stop("canonical_degs: no adjusted p-value column")
+  sig <- d[!is.na(get(p)) & !is.na(logFC) &
+             get(p) < CANON_PADJ_CUT & abs(logFC) > CANON_LFC_CUT]
   unique(sig[, .(gene = strip_ver(gene), sign = sign(logFC))], by = "gene")
 }
 
@@ -69,27 +64,21 @@ cohorts <- data.table(
 
 # ── Integrated pooled limma-voom-qw C2 (canonical treat_fdr) ─────────────────
 can <- fread(file.path(INT, "integration/canonical_deg_results.csv"))
-can_dt <- unique(can[!is.na(treat_fdr) & treat_fdr < TREAT_FDR_CUT,
+can_dt <- unique(can[!is.na(padj) & !is.na(logFC) &
+                       padj < CANON_PADJ_CUT & abs(logFC) > CANON_LFC_CUT,
                      .(gene = strip_ver(gene), sign = sign(logFC))], by = "gene")
 can_deg <- can_dt$gene
 can_sign <- setNames(can_dt$sign, can_dt$gene)
-cat(sprintf("Integrated (limma-voom-qw C2): %d DEG at TREAT FDR<%.2f (lfc=%.2f)\n",
-            length(can_deg), TREAT_FDR_CUT, TREAT_LFC))
+cat(sprintf("Integrated (limma-voom-qw C2): %d DEG at padj<%.2f & |log2FC|>%.2f\n",
+            length(can_deg), CANON_PADJ_CUT, CANON_LFC_CUT))
 
-# ── Per-study limma-voom-qw + per-cohort analytical TREAT (same gate) ────────
+# ── Per-study limma-voom-qw, SAME canonical gate as the integrated arm ───────
 sets <- list(Integrated = can_deg)
 cohort_sign <- list()   # gene -> effect sign, per cohort (for direction-matched support)
 for (i in seq_len(nrow(cohorts))) {
   f <- file.path(PER, paste0(cohorts$gse[i], "_de_results.csv"))
   d <- fread(f)
-  if (!all(c("logFC", "SE") %in% names(d))) {
-    warning(cohorts$gse[i], ": no SE column — falling back to raw padj<0.05 & |logFC|>0.25")
-    sig <- unique(d[!is.na(adj.P.Val) & !is.na(logFC) &
-                    adj.P.Val < TREAT_FDR_CUT & abs(logFC) > TREAT_LFC,
-                    .(gene = strip_ver(gene), sign = sign(logFC))], by = "gene")
-  } else {
-    sig <- treat_degs(d)
-  }
+  sig <- canonical_degs(d)
   sets[[cohorts$label[i]]] <- sig$gene
   cohort_sign[[cohorts$label[i]]] <- setNames(sig$sign, sig$gene)
   cat(sprintf("  %-8s (%s): %d DEG (analytical TREAT)\n",

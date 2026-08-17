@@ -1,15 +1,7 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: Four independent modalities converge on ONE regulatory logic across
-# fibrosis stages, and colour groups them by PATHWAY so the same biology seen in two
-# modalities shares one hue: the metabolic-identity program (HNF4A TF activity +
-# fatty-acid/peroxisomal (FAO) Hotspot module + THRB/RORA expression) is lost [BLUE], the
-# fibrogenic/disease-driver program (SMAD3 TF activity + ductular-injury (BICC1) Hotspot
-# module) is gained [ORANGE],
-# NF-kB inflammation (RELA) is gained [MAGENTA], and T2D/Wnt (TCF7L2) is gained [GOLD].
-# Each line is nominated by an orthogonal modality (GWAS motif-disruption, COLOC,
-# SCENIC+ regulon, scRNA Hotspot), named in the caption (not on-panel).
+# KEY MESSAGE: Robust recurrent regulators rise across fibrosis stages while the prespecified hepatic-identity regulator HNF4A falls.
 # ============================================================================
-# tf_convergence_vsF0.R  — Fig 3I (cross-modal convergence, vs F0)
+# tf_convergence_vsF0.R  — Figure 4F (inferred TF activity, vs F0)
 #
 # Three line-tracks sharing the fig3e F0..F4 (Kleiner) stage axis. Colour = PATHWAY
 # (shared across tracks); the nominating modality is named in the caption.
@@ -25,7 +17,7 @@
 #   Track 3 (expression)       shrunk log2FC vs F0 for THRB + RORA (COLOC anchors with
 #                              no DoRothEA regulon; THRB = resmetirom target).
 #
-# Output: FIG2_DIR/panels/fig3i_tf_convergence_vsF0.pdf   (FIG2_DIR = fig3_RNAseq;
+# Output: Figure 4 candidate package or the Figure 4 legacy direct-render area;
 #   Fig 3I in the A-I layout; shares the Kleiner F0-F4 x-axis with the
 #   progression cascade (now 3E))
 # Cache : RNA-seq/results/stratified_causal/stage_vs_f0_tf_activity.csv
@@ -39,7 +31,127 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR   <- file.path(FIG2_DIR, "panels")
+# Candidate Figure 4F. TF activity is rendered alone and recomputed from the
+# synchronized fragment-native F-versus-F0 statistics. BH adjustment is over
+# every tested TF within each contrast before display selection. The display
+# contains induced TFs that have the same activity direction in all four
+# contrasts, BH q<0.05 in at least three, and mean absolute activity >=5, plus
+# the three strongest directionally consistent reduced TFs with support in at
+# least two contrasts. Direction is separated explicitly and the trajectory
+# forest plot has no per-cell significance glyphs.
+CANDIDATE_ROOT <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
+if (nzchar(CANDIDATE_ROOT)) {
+  suppressPackageStartupMessages({ library(decoupleR); library(dorothea) })
+  set.seed(42)
+  EXT_ROOT <- normalizePath(Sys.getenv("STAGE_RELEASE_ROOT", ""), mustWork = TRUE)
+  OUT_DIR <- file.path(CANDIDATE_ROOT, "figure4", "panels")
+  SRC_DIR <- file.path(CANDIDATE_ROOT, "source_tables")
+  dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
+  dir.create(SRC_DIR, recursive = TRUE, showWarnings = FALSE)
+  stage_stats <- fread(file.path(EXT_ROOT, "stage_extension_all_gene_results.tsv"))[axis == "fibrosis"]
+  if (any(stage_stats[, uniqueN(gene_id_versioned), by = contrast]$V1 != unique(stage_stats$bh_family_size))) {
+    stop("Incomplete F-versus-F0 BH family", call. = FALSE)
+  }
+  stage_stats <- stage_stats[!is.na(gene_name) & gene_name != ""][order(-abs(t))]
+  stage_stats <- stage_stats[!duplicated(paste(contrast, gene_name))]
+  regulon <- as.data.table(dorothea_hs)[confidence %in% c("A", "B", "C"), .(tf, target, mor)]
+  regulon_sizes <- regulon[, .(regulon_size = uniqueN(target)), by = tf]
+  activity_all <- rbindlist(lapply(unique(stage_stats$contrast), function(contrast_id) {
+    d <- stage_stats[contrast == contrast_id]
+    matrix <- matrix(d$t, ncol = 1L, dimnames = list(d$gene_name, contrast_id))
+    result <- as.data.table(run_wmean(
+      matrix, net = as.data.frame(regulon), .source = "tf", .target = "target",
+      .mor = "mor", times = 1000, minsize = 5
+    ))[statistic == "norm_wmean"]
+    setnames(result, "source", "tf")
+    result[, contrast := contrast_id]
+    result
+  }))
+  activity_all[, bh_q := p.adjust(p_value, method = "BH"), by = contrast]
+  activity_all <- merge(activity_all, regulon_sizes, by = "tf", all.x = TRUE)
+  activity_all[, `:=`(seed = 42L, permutations = 1000L, confidence_levels = "A/B/C",
+                      bh_family_size = .N), by = contrast]
+  tf_summary <- activity_all[, .(
+    n_bh = sum(bh_q < 0.05, na.rm = TRUE),
+    min_bh_q = min(bh_q, na.rm = TRUE),
+    mean_score = mean(score, na.rm = TRUE),
+    mean_abs_score = mean(abs(score), na.rm = TRUE),
+    same_direction = all(score > 0) || all(score < 0),
+    max_abs_score = max(abs(score), na.rm = TRUE)
+  ), by = tf]
+  induced_tfs <- tf_summary[
+    n_bh >= 3L & same_direction & mean_score > 0 & mean_abs_score >= 5, tf
+  ]
+  reduced_tfs <- tf_summary[
+    n_bh >= 2L & same_direction & mean_score < 0
+  ][order(-mean_abs_score)][1:3, tf]
+  display_tfs <- unique(c(induced_tfs, reduced_tfs))
+  if (length(induced_tfs) != 17L || length(reduced_tfs) != 3L ||
+      length(display_tfs) != 20L ||
+      !setequal(reduced_tfs, c("ZEB2", "HNF4A", "SIX5"))) {
+    stop("TF display roster drift: expected 17 induced plus ZEB2/HNF4A/SIX5", call. = FALSE)
+  }
+  display <- merge(activity_all[tf %in% display_tfs], tf_summary, by = "tf")
+  display[, selection_reason := fifelse(
+    tf %in% reduced_tfs,
+    "Three strongest same-direction reductions with BH q<0.05 in >=2 contrasts",
+    "Same-direction induction; BH q<0.05 in >=3 contrasts; mean |activity| >=5"
+  )]
+  display[, stage := factor(sub("_vs_F0", "", contrast), levels = paste0("F", 1:4))]
+  display[, direction := factor(fifelse(mean_score < 0, "Reduced", "Increased"),
+                                levels = c("Increased", "Reduced"))]
+  tf_order <- unique(display[, .(tf, direction, mean_abs_score)])[
+    order(direction, mean_abs_score), tf
+  ]
+  display[, tf := factor(tf, levels = tf_order)]
+  display[, `:=`(
+    supported = bh_q < 0.05,
+    stage_index = as.integer(stage)
+  )]
+  display[, `:=`(
+    plot_score = abs(score)
+  )]
+  setorder(display, direction, tf, stage_index)
+  activity_limit <- ceiling(max(display$plot_score, na.rm = TRUE))
+  panel <- ggplot(display, aes(plot_score, tf, group = tf)) +
+    geom_path(color = "#BDBDBD", linewidth = 0.35) +
+    geom_point(aes(fill = stage), shape = 21, size = 1.25,
+               stroke = 0.2, color = "white") +
+    scale_fill_manual(values = fibrosis_stage_colors[paste0("F", 1:4)],
+                      name = NULL, drop = FALSE) +
+    scale_x_continuous(limits = c(0, activity_limit),
+                       breaks = scales::pretty_breaks(n = 4),
+                       expand = expansion(mult = c(0, 0.01))) +
+    scale_y_discrete(drop = TRUE, expand = expansion(add = 0.35)) +
+    facet_grid(direction ~ ., scales = "free_y", space = "free_y") +
+    labs(x = "Absolute TF activity vs F0 (z)", y = NULL) +
+    theme_masld_compact() +
+    theme(axis.text.x = element_text(size = 6, face = "plain"),
+          axis.text.y = element_text(size = 6, face = "italic"),
+          axis.title.x = element_text(size = 6),
+          axis.ticks.y = element_blank(), axis.line.y = element_blank(),
+          strip.text.y = element_text(size = 6, face = "plain", angle = 0),
+          strip.background = element_blank(),
+          legend.position = "bottom", legend.direction = "horizontal",
+          legend.text = element_text(size = 6),
+          legend.key.width = unit(3.5, "mm"), legend.key.height = unit(2.5, "mm"),
+          legend.margin = margin(0, 0, 0, 0),
+          legend.box.spacing = unit(0.5, "mm"),
+          plot.margin = margin(1, 1, 1, 1))
+  ggsave(file.path(OUT_DIR, "fig4f_tf_activity.pdf"), panel,
+         width = 3.05, height = 3.35, device = cairo_pdf)
+  fwrite(activity_all, file.path(SRC_DIR, "fig4f_all_tf_activity.tsv"), sep = "\t")
+  fwrite(display[, .(
+    tf, direction, stage, contrast, score, plot_score, p_value, bh_q,
+    supported, regulon_size,
+    n_bh, min_bh_q, mean_score, mean_abs_score, same_direction,
+    max_abs_score, selection_reason,
+    seed, permutations, confidence_levels, bh_family_size
+  )], file.path(SRC_DIR, "fig4f_display_tf_activity.tsv"), sep = "\t")
+  quit(save = "no", status = 0)
+}
+
+PANEL_DIR   <- file.path(FIG4_SC_DIR, "panels", "_legacy_direct_render")
 DATA_DIR    <- file.path(PANEL_DIR, "data")
 OUT_PDF     <- file.path(PANEL_DIR, "fig3i_tf_convergence_vsF0.pdf")
 ACT_CSV     <- file.path(BASE, "RNA-seq/results/stratified_causal/stage_vs_f0_tf_activity.csv")

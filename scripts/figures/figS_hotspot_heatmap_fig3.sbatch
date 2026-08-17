@@ -13,7 +13,7 @@
 set -euo pipefail
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 
-export HOTSPOT_FIG_OUT="figures/main/fig3_RNAseq/panels/hotspot_module_heatmaps"
+export HOTSPOT_FIG_OUT="figures/main/fig4_singlecell_programs/panels/supplementary/hotspot_module_heatmaps"
 export HOTSPOT_RUN_CTS="hepatocytes,macrophages,fibroblasts,cholangiocytes,tcells"
 
 micromamba run -n rapids_singlecell python scripts/figures/figS_hotspot_heatmap.py

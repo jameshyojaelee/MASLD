@@ -111,7 +111,7 @@ CONFIG <- list(
     gwas_label = "MVP NAFLD diagnosis (EUR)", short_lab = "NAFLD GWAS", trait = "NAFLD diagnosis"),
   # FABP1 (2026-07-07): UKBB ALT (liver enzyme) EUR coloc — EUR-only effector at 2p11.
   # gene_level_coloc PP.H4.susie 0.998 (UKBB_ALT); Broadaway FABP1 cis-eQTL present on
-  # chr2 (~88.24 Mb). Rendered with the SAME compact layout as fig2D (3.26 x 3.54,
+  # chr2 (~88.24 Mb). Rendered with the same compact layout as the main locus panels,
   # cairo_pdf/Helvetica). Lead 2:88,424,066 (hg19); default +/-200 kb window.
   FABP1 = list(
     eur_ss = "UKBB_ALT_reformatted_hg19.tsv",            study = "UKBB_ALT",
@@ -122,7 +122,7 @@ CONFIG <- list(
 HALF_WIN <- 200000L   # +/- window around the lead (hg19 bp)
 
 args <- commandArgs(trailingOnly = TRUE)
-# Paired-panel label sharing (fig2D left / fig2E right): draw the y-axis TITLES on
+# Paired-panel label sharing (Fig2G left / Fig2H right): draw the y-axis titles on
 # the LEFT panel only, the shared right-side LEGEND on the RIGHT panel only. Numeric
 # ticks + per-locus titles stay on both. Set via env at render time.
 NO_YTITLE <- nzchar(Sys.getenv("LZ_NO_YTITLE"))       # suppress the left-edge y-axis TITLES (-log10(p)/PIP)
@@ -315,7 +315,7 @@ cat("Output:", out_path, "\n")
 # Compact main-text geometry (2026-07-06): ~4.4 x ~4.66 in (was 5.4 x 4.21) so the
 # 6pt font reads proportionally next to the other Fig 2 panels. Narrower page +
 # tightened per-track heights/gaps; MARGIN_R held at 1.00 for the right-margin legends.
-# Sized to the Fig2 contract (figure2_panel_sizes.tsv): 3.26 x ~3.54 in, so fig2D/E
+# Sized to the Figure 2 contract (figure2_panel_sizes.tsv), so Fig2G/H
 # place at 100% next to the other Fig2 panels. Tracks compressed ~0.69x vs the 4.4x4.66 version.
 MARGIN_L <- 0.62
 # Right margin holds the shared legend and/or the track-type labels. Shrink it when

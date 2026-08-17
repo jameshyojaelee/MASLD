@@ -10,10 +10,11 @@
 set -euo pipefail
 
 BASE="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-PANEL_DIR="${BASE}/figures/main/fig3_RNAseq/panels"
-SRC="${PANEL_DIR}/scrna_umap.pdf"
-OUT="${PANEL_DIR}/fig3f_scrna_umap_embeddable.pdf"
+PANEL_DIR="${BASE}/figures/main/fig4_singlecell_programs/panels"
+SRC="${PANEL_DIR}/fig4b_scrna_umap_embeddable.pdf"
+OUT="${PANEL_DIR}/_legacy_direct_render/fig4b_scrna_umap_rasterized.pdf"
 TMP=$(mktemp -d)
+mkdir -p "$(dirname "${OUT}")"
 
 echo "[$(date)] rasterizing ${SRC} → ${OUT}"
 echo "[tmp] ${TMP}"

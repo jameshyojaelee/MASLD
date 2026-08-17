@@ -10,6 +10,8 @@ import hashlib
 import json
 import math
 import os
+import re
+import shutil
 import subprocess
 import tempfile
 from collections import Counter, defaultdict
@@ -210,7 +212,11 @@ def validate_peaks_and_counts(root: Path) -> dict[str, object]:
                 raise ValidationFailure(f"legacy count dimension mismatch: {cohort}/{lineage}")
             matrix_count += 1
     recount = read_tsv(root / "recount/exact_fragment_recount.tsv")
-    if len(recount) != 10 or any(row["exact_match"] != "TRUE" for row in recount):
+    if len(recount) != 10 or any(
+        row.get("counting_unit") != "deduplicated_fragment_record"
+        or row.get("record_count_match") != "TRUE"
+        for row in recount
+    ):
         raise ValidationFailure("seed-fixed direct fragment recount is incomplete or failed")
     return {
         "n_consensus_peaks": len(peaks), "n_count_matrices": matrix_count,
@@ -239,9 +245,30 @@ def validate_da(root: Path) -> dict[str, object]:
             raise ValidationFailure("lineage directional BH mismatch")
     if len(summary) != 3:
         raise ValidationFailure("DA lineage family must contain three lineages")
+    untestable = [row for row in summary if row["lineage_state"] == "untestable"]
+    for row in untestable:
+        if int(row["n_jointly_testable"]) != 0 or not row["untestable_reason"]:
+            raise ValidationFailure("untestable DA lineage lacks an explicit zero-denominator reason")
+    if any(row["lineage_state"] not in {"testable", "untestable"} for row in summary):
+        raise ValidationFailure("invalid DA lineage testability state")
     model_qc = read_tsv(da_root / "da_model_qc.tsv")
-    if len(model_qc) != 76:
-        raise ValidationFailure(f"expected 76 primary DA donor-model rows, observed {len(model_qc)}")
+    expected_model_rows = sum(
+        int(row["n_normal_gse244832"]) + int(row["n_mash_gse244832"]) +
+        int(row["n_normal_gse281367"]) + int(row["n_mash_gse281367"])
+        for row in summary if row["lineage_state"] == "testable"
+    )
+    if len(model_qc) != expected_model_rows:
+        raise ValidationFailure(
+            f"expected {expected_model_rows} testable-lineage DA donor-model rows, observed {len(model_qc)}"
+        )
+    expected_families = {
+        (cohort, row["lineage"])
+        for row in summary if row["lineage_state"] == "testable"
+        for cohort in ("GSE244832", "GSE281367")
+    }
+    observed_families = {(row["cohort"], row["lineage"]) for row in model_qc}
+    if observed_families != expected_families:
+        raise ValidationFailure("DA model families do not match testable lineage states")
     if any(row["condition"] == "MASL" for row in model_qc):
         raise ValidationFailure("GSE244832 MASL donor entered a primary DA model")
     if any(row["design_rank"] != row["n_model_columns"] for row in model_qc):
@@ -317,7 +344,22 @@ def validate_chromvar(root: Path) -> dict[str, object]:
     for row in model_qc:
         if row["contrast_testable"] == "TRUE" and row["design_rank"] != row["n_model_columns"]:
             raise ValidationFailure("chromVAR design is not full rank")
-    return {"n_chromvar_rows": len(rows), "n_chromvar_tests": tested, "n_chromvar_models": len(model_qc)}
+    peak_filter = read_tsv(chromvar / "chromvar_peak_filter_qc.tsv")
+    if len(peak_filter) != 10:
+        raise ValidationFailure("chromVAR peak-filter QC must contain ten cohort-lineage rows")
+    for row in peak_filter:
+        if row["filter_method"] != "condition_blind_nonzero_total_donor_count":
+            raise ValidationFailure("chromVAR peak filter is not the frozen condition-blind rule")
+        if int(row["n_chromvar_input_peaks"]) <= 0:
+            raise ValidationFailure("chromVAR lineage retained no measurable peaks")
+        if int(row["n_consensus_peaks"]) != (
+            int(row["n_zero_library_peaks_excluded"]) + int(row["n_chromvar_input_peaks"])
+        ):
+            raise ValidationFailure("chromVAR peak-filter denominator mismatch")
+    return {
+        "n_chromvar_rows": len(rows), "n_chromvar_tests": tested,
+        "n_chromvar_models": len(model_qc), "n_chromvar_peak_filter_families": len(peak_filter),
+    }
 
 
 def validate_figures(root: Path) -> dict[str, object]:
@@ -332,8 +374,21 @@ def validate_figures(root: Path) -> dict[str, object]:
         info = subprocess.run(["pdfinfo", str(pdf)], text=True, capture_output=True, check=True).stdout
         if "Pages:           1" not in info or "Page size:" not in info:
             raise ValidationFailure(f"PDF page count or dimensions invalid: {row['panel']}")
-        fonts = subprocess.run(["pdffonts", str(pdf)], text=True, capture_output=True, check=True).stdout
-        if "Type 3" in fonts or "Type3" in fonts:
+        pdffonts = shutil.which("pdffonts")
+        if pdffonts:
+            fonts = subprocess.run(
+                [pdffonts, str(pdf)], text=True, capture_output=True, check=True
+            ).stdout
+            has_type3 = "Type 3" in fonts or "Type3" in fonts
+        else:
+            raw_pdf = pdf.read_bytes()
+            font_subtypes = re.findall(rb"/Subtype\s*/([A-Za-z0-9]+)", raw_pdf)
+            if not font_subtypes:
+                raise ValidationFailure(
+                    f"cannot inspect PDF fonts without pdffonts: {row['panel']}"
+                )
+            has_type3 = b"Type3" in font_subtypes
+        if has_type3:
             raise ValidationFailure(f"PDF contains a Type 3 font: {row['panel']}")
     return {"n_candidate_pdfs": len(manifest)}
 

@@ -71,7 +71,7 @@ REFERENCES = {
 
 EXISTING_INTEGRATION_TARGETS = (
     ROOT / "Analysis/ATAC/Integration/scripts/35_atac_integration.py",
-    ROOT / "scripts/figures/fig4d_snatac_accessibility.R",
+    ROOT / "scripts/figures/fig5d_snatac_accessibility.R",
 )
 
 

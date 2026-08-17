@@ -4,11 +4,11 @@
 #
 # Purpose
 #   Define what the expression-QTL layer of the genetic arm DOES and DOES NOT
-#   represent. Three panels:
-#     fig2I  positive-only source liver cis-eGene observability across the frozen
-#            gene sets; the complement is INDETERMINATE, never negative
-#     fig2J  the three prespecified eQTL power universes and their constructibility
-#     fig2K  phenotype provenance of the 35 Tier-1/2 GWAS strata, split by whether
+#   represent. Two main panels and one supplementary boundary panel:
+#     Fig2J  positive-only source liver cis-eGene observability; the complement
+#            is INDETERMINATE, never negative
+#     FigS2  the three prespecified eQTL power universes and their constructibility
+#     Fig2K  phenotype provenance of the 35 Tier-1/2 GWAS strata, split by whether
 #            the regulatory (eQTL) side is ancestry-matched
 #
 # Historical method constraints: docs/archive/plans/2026-08-07_paper_program/30_GENETICS_CONTEXT_AND_FIG3.md
@@ -74,7 +74,7 @@ COL_MATCHED       <- "#4C72B0"   # eQTL side ancestry-matched (EUR GWAS)
 COL_XANC          <- "#DD8452"   # cross-ancestry eQTL-limited
 
 # ===========================================================================
-# PANEL fig2I — positive-only source liver cis-eGene observability
+# PANEL Fig2J — positive-only source liver cis-eGene observability
 # ===========================================================================
 obs <- fread(file.path(GEN, "gene_observability.tsv"),
              select = c("gene_symbol", "joint_testable", "primary_genetic",
@@ -146,12 +146,12 @@ p_obs <- ggplot(long_obs, aes(x = frac, y = label, fill = state)) +
         text = element_text(colour = "black", face = "plain"),
         axis.text = element_text(colour = "black"))
 
-save_fig(p_obs, file.path(OUT, "fig2I_eqtl_observability.pdf"),
+save_fig(p_obs, file.path(OUT, "Fig2J_eqtl_observability.pdf"),
          width = 4.4, height = 2.5)
-fwrite(d_obs, file.path(OUT, "fig2I_eqtl_observability_source.csv"))
+fwrite(d_obs, file.path(OUT, "Fig2J_eqtl_observability_source.csv"))
 
 message(sprintf(
-  paste0("CAPTION fig2I: Positive-only expression-QTL observability across the frozen ",
+  paste0("CAPTION Fig2J: Positive-only expression-QTL observability across the selected ",
          "gene sets. Coloured segments are genes with a source-defined liver cis-eGene ",
          "call in the Broadaway liver eQTL meta-analysis (N = 1,183, European); grey ",
          "segments are genes for which observability is INDETERMINATE because the source ",
@@ -175,8 +175,9 @@ message(sprintf(
   d_obs[set == "Established-state associated", n_total]))
 
 # ===========================================================================
-# PANEL fig2J — the three prespecified eQTL power universes and what is
-# constructible. This is the structural boundary: 2 of 3 cannot be built.
+# SUPPLEMENTARY BOUNDARY — the three prespecified eQTL power universes and what
+# is constructible. This panel was replaced in the main figure by the
+# PIP-composition Figure 2D on 2026-08-13.
 # ===========================================================================
 pw <- fread(file.path(GEN, "power_stratified_interface.tsv"))
 stopifnot(nrow(pw) == 3L)
@@ -232,14 +233,14 @@ p_pw <- ggplot(d_pw, aes(x = 1, y = universe, fill = status)) +
         legend.key.size = unit(2.4, "mm"),
         text = element_text(colour = "black", face = "plain"))
 
-save_fig(p_pw, file.path(OUT, "fig2J_eqtl_power_universes.pdf"),
+save_fig(p_pw, file.path(OUT, "FigS2_eqtl_power_universes.pdf"),
          width = 4.8, height = 1.9)
 fwrite(cbind(d_pw[, .(universe = as.character(universe), status, n_genes)],
              pw[, .(reason)]),
-       file.path(OUT, "fig2J_eqtl_power_universes_source.csv"))
+       file.path(OUT, "FigS2_eqtl_power_universes_source.csv"))
 
 message(paste0(
-  "CAPTION fig2J: Only one of the three prespecified expression-QTL power universes ",
+  "CAPTION FigS2: Only one of the three prespecified expression-QTL power universes ",
   "can be constructed from the deposited source. The bulk-expressed/eQTL-tested and ",
   "source-significant-with-covariates universes are coverage-limited: the liver eQTL ",
   "source deposits significant leads but not its complete tested-gene universe, source ",
@@ -249,7 +250,7 @@ message(paste0(
   "regulatory genetic effects."))
 
 # ===========================================================================
-# PANEL fig2K — phenotype provenance of the 35 Tier-1/2 strata, split by
+# PANEL Fig2K — phenotype provenance of the 35 Tier-1/2 strata, split by
 # whether the regulatory (eQTL) side is ancestry-matched.
 # ===========================================================================
 reg <- fread(file.path(GEN, "phenotype_registry.tsv"))
@@ -292,13 +293,13 @@ p_reg <- ggplot(d_reg, aes(x = N, y = stratum, fill = anc)) +
         text = element_text(colour = "black", face = "plain"),
         axis.text = element_text(colour = "black", lineheight = 1.05))
 
-save_fig(p_reg, file.path(OUT, "fig2K_phenotype_provenance.pdf"),
+save_fig(p_reg, file.path(OUT, "Fig2K_phenotype_provenance.pdf"),
          width = 4.4, height = 2.0)
 fwrite(d_reg[, .(phenotype_stratum, regulatory_ancestry_status, n_studies = N)],
-       file.path(OUT, "fig2K_phenotype_provenance_source.csv"))
+       file.path(OUT, "Fig2K_phenotype_provenance_source.csv"))
 
 message(sprintf(
-  paste0("CAPTION fig2K: Phenotype provenance of the %d prespecified Tier-1/2 GWAS strata. ",
+  paste0("CAPTION Fig2K: Phenotype provenance of the %d prespecified Tier-1/2 GWAS strata. ",
          "%d strata are liver-enzyme traits (ALT/AST/GGT), %d are direct MASLD/MASH ",
          "diagnoses and %d are MRI-PDFF/histologic steatosis, so most of the genetic map ",
          "is anchored on enzyme proxies rather than on diagnosed disease. Every stratum is ",

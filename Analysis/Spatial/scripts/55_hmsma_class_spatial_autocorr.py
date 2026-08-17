@@ -206,6 +206,8 @@ def main() -> None:
     ap.add_argument("--n-null", type=int, default=9999)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out-dir", type=Path, default=OUT_DIR)
+    ap.add_argument("--in-dir", type=Path, default=IN_DIR,
+                    help="directory of per-array h5ad objects to recompute from")
     ap.add_argument("--from-per-gene", type=Path, default=None,
                     help="reuse a stored per_gene_morans_i.tsv.gz instead of "
                          "recomputing Moran's I from the h5ad objects")
@@ -228,13 +230,13 @@ def main() -> None:
         import anndata as ad
 
         per_gene = {}
-        for path in sorted(IN_DIR.glob("HRA_*.h5ad")):
+        for path in sorted(args.in_dir.glob("HRA_*.h5ad")):
             df = per_sample_moran(ad.read_h5ad(path), args.min_detect_frac)
             if df.empty:
                 print(f"  {path.stem}: SKIP (too few genes)", flush=True)
                 continue
             per_gene[path.stem] = df
-        source = f"recomputed from {IN_DIR}"
+        source = f"recomputed from {args.in_dir}"
     samples = sorted(per_gene)
     print(f"arrays: {len(samples)} ({source})", flush=True)
 

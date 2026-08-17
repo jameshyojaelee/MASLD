@@ -235,8 +235,7 @@ p_c <- p_c_heat + p_c_bar + plot_layout(widths = c(2.2, 1.1))
 
 # =============================================================================
 # PANEL 1d: UpSet — per-study DEGs vs integrated DEGs
-#  Both arms share one effect-size floor (0.25): per-study padj<0.05 &
-#  |logFC|>0.25, integrated treat_fdr<0.05 (interval null at lfc=0.25).
+#  Both arms share one canonical gate (2026-08-12): padj<0.05 & |log2FC|>0.5.
 # =============================================================================
 cat("\n── Panel 1d: UpSet per-study vs integrated DEGs ──\n")
 
@@ -248,14 +247,14 @@ upset_studies <- c("GSE126848", "GSE130970", "GSE135251",
                    "GSE162694", "GSE213621")
 upset_names <- STUDY_NAMES[upset_studies]
 
-# Effect-size floor must MATCH the integrated arm, which uses is_dream_deg()
-# = treat_fdr < 0.05, an interval-null test against |logFC| <= 0.25. Holding the
-# per-study arms at 0.5 (as this panel did until 2026-08-11) barred every gene
-# with 0.25 < |logFC| < 0.5 from all five per-study sets while admitting it to
-# the integrated set, so such genes could only ever land in "Integrated only" —
-# the very bar this panel headlines. Both arms now use the same 0.25 floor.
-padj_thr <- 0.05
-lfc_thr  <- 0.25
+# Effect-size floor must MATCH the integrated arm, which uses is_dream_deg() ->
+# is_canonical_deg() = padj < 0.05 AND |log2FC| > 0.5 (canonical 2026-08-12).
+# If the per-study arms are held to a different floor than the integrated arm,
+# every gene between the two floors is barred from all five per-study sets while
+# being admitted to the integrated set, so it can only ever land in "Integrated
+# only" — the very bar this panel headlines. Keep these two in lockstep.
+padj_thr <- CANONICAL_DEG_PADJ
+lfc_thr  <- CANONICAL_DEG_LFC
 
 deg_lists <- list()
 for (ds in upset_studies) {
@@ -329,13 +328,13 @@ p_d_bars <- ggplot(top_ints, aes(x = rank, y = N)) +
         axis.line.x = element_blank(),
         plot.margin = margin(2, 5, 0, 5))
 message(sprintf(paste0(
-  "[caption] Per-study vs integrated DEGs. The integrated set (%s genes) uses the ",
-  "canonical effect-size-aware interval-null FDR gate (FDR<0.05 at lfc=0.25); each ",
-  "per-study set uses padj<0.05 with the SAME %.2f effect-size floor, so no gene is ",
-  "admitted to one arm by a threshold that excludes it from the other. The ",
-  "\"Integrated only\" bar (%s genes) is therefore a property of pooling, not of a ",
-  "gate mismatch between the arms."),
-  format(set_sizes["Integrated"], big.mark = ","), lfc_thr,
+  "[caption] Per-study vs integrated DEGs. Both arms use the canonical gate ",
+  "(padj<0.05 and |log2FC|>%.2f): the integrated set has %s genes, and each ",
+  "per-study set is called identically, so no gene is admitted to one arm by a ",
+  "threshold that excludes it from the other. The \"Integrated only\" bar (%s ",
+  "genes) is therefore a property of pooling, not of a gate mismatch."),
+  lfc_thr,
+  format(set_sizes["Integrated"], big.mark = ","),
   format(sum(int_counts[int_key == int_only_key, N]), big.mark = ",")))
 
 p_d_dots <- ggplot() +

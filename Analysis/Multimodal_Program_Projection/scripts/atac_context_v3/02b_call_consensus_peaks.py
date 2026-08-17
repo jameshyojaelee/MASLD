@@ -78,6 +78,41 @@ def normalize_peak_frame(frame: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+def merge_input_frame(frame: pl.DataFrame) -> pl.DataFrame:
+    """Translate the v3 BED-style coordinate schema at the SnapATAC2 boundary."""
+    normalized = normalize_peak_frame(frame)
+    if "start" in normalized.columns:
+        raise ContractError("ambiguous merge schema contains both start and start0")
+    return normalized.rename({"start0": "start"}).with_columns(
+        pl.col("start").cast(pl.UInt64),
+        pl.col("end").cast(pl.UInt64),
+        pl.col("score").cast(pl.UInt16),
+        pl.col("signal_value").cast(pl.Float64),
+        pl.col("p_value").cast(pl.Float64),
+        pl.col("q_value").cast(pl.Float64),
+        pl.col("peak").cast(pl.UInt64),
+    )
+
+
+def normalize_merged_peak_frame(frame: pl.DataFrame) -> pl.DataFrame:
+    """Convert SnapATAC2's range strings to the v3 500-bp BED schema."""
+    if "Peaks" not in frame.columns:
+        raise ContractError("SnapATAC2 merged output is missing Peaks")
+    parsed = frame.with_columns(
+        pl.col("Peaks").str.extract(r"^([^:]+):(\d+)-(\d+)$", 1).alias("chrom"),
+        pl.col("Peaks").str.extract(r"^([^:]+):(\d+)-(\d+)$", 2).cast(pl.UInt64).alias("start0"),
+        pl.col("Peaks").str.extract(r"^([^:]+):(\d+)-(\d+)$", 3).cast(pl.UInt64).alias("raw_end"),
+    )
+    if parsed.select(
+        pl.any_horizontal(pl.col(["chrom", "start0", "raw_end"]).is_null()).any()
+    ).item():
+        raise ContractError("failed to parse SnapATAC2 merged peak coordinates")
+    parsed = parsed.with_columns((pl.col("start0") + 500).alias("end"))
+    if parsed.filter(pl.col("raw_end") - pl.col("start0") != 501).height:
+        raise ContractError("SnapATAC2 returned a clipped or non-501-bp merged peak")
+    return parsed.select(["chrom", "start0", "end"]).sort(["chrom", "start0", "end"])
+
+
 def write_native(path: Path, frame: pl.DataFrame) -> None:
     require_new_path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -267,11 +302,11 @@ def main() -> None:
     blacklist = load_blacklist()
     manifest_rows = []
     for lineage in LINEAGES:
-        merged = normalize_peak_frame(
+        merged = normalize_merged_peak_frame(
             snap.tl.merge_peaks(
                 {
-                    "GSE244832": native[("GSE244832", lineage)],
-                    "GSE281367": native[("GSE281367", lineage)],
+                    "GSE244832": merge_input_frame(native[("GSE244832", lineage)]),
+                    "GSE281367": merge_input_frame(native[("GSE281367", lineage)]),
                 },
                 snap.genome.hg38,
                 half_width=250,

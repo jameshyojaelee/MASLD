@@ -4233,7 +4233,7 @@ def protected_scope_rows(project_root: Path) -> list[dict[str, str]]:
     for scope_id, relative in (
         ("program_v1_results", "Analysis/Multimodal_Program_Projection/results"),
         ("program_v1_config", "Analysis/Multimodal_Program_Projection/config"),
-        ("program_v1_figure4", "figures/main/fig4_validation"),
+        ("program_v1_figure5", "figures/main/fig5_molecular_context"),
     ):
         root = project / relative
         if not root.is_dir() or root.is_symlink():
