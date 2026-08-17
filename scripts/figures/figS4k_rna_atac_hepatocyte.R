@@ -35,7 +35,7 @@
 #           scatac_da_gene_annotated.csv  (donor-pseudobulk Hep DA, 07b)
 #         canonical_deg_results.csv  (bulk RNA-seq logFC, C2)
 #         prioritized_universe_FINAL.txt  (fig4a/4d shared target set)
-# Output: figures/main/fig4_validation/panels/figS4k.pdf   (PDF only)
+# Output: figures/main/fig5_molecular_context/panels/figS4k.pdf   (PDF only)
 # Env:    rnaseq
 # ==============================================================================
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(patchwork) })

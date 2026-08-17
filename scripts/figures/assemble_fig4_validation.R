@@ -3,7 +3,7 @@
 # assemble_fig4_validation.R
 # ---------------------------------------------------------------------
 # Compose the CURRENT Fig 4 (validation) from the standalone panel PDFs in
-# figures/main/fig4_validation/ (flat, descriptive names — no fig-number
+# figures/main/fig5_molecular_context/ (flat, descriptive names — no fig-number
 # prefix; user organizes main/supp in Illustrator). This is a convenience
 # montage, not the final layout.
 #
@@ -20,7 +20,7 @@
 #   Row 1: a | b   Row 2: c   Row 3: d | e   Row 4: CYP3A4
 #   Row 5: FADS2   Row 6: cross-modal evidence matrix (synthesis)
 #
-# Output: figures/main/fig4_validation/validation_composite.pdf
+# Output: figures/main/fig5_molecular_context/validation_composite.pdf
 # Env:    rnaseq (uses ghostscript + magick, like assemble_fig4.R; rnaseq
 #         lacks pdftools so we raster each page via gs then read with magick)
 # =====================================================================

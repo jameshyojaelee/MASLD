@@ -23,7 +23,7 @@
 #   ii. CYP3A4 periportal → pericentral expression gradient (two Visium cohorts)
 #   iii. mRNA vs protein logFC concordance for CYP3A4
 #
-# Output: figures/main/fig4_validation/cyp3a4_zonation.pdf
+# Output: figures/main/fig5_molecular_context/cyp3a4_zonation.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

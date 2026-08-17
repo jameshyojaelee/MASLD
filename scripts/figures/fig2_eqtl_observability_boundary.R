@@ -1,21 +1,16 @@
 #!/usr/bin/env Rscript
 # ==============================================================================
-# Figure 2 — expression-QTL observability boundary (NEW, 2026-08-08)
+# Figure 2 phenotype provenance and supplementary eQTL boundary
 #
 # Purpose
-#   Define what the expression-QTL layer of the genetic arm DOES and DOES NOT
-#   represent. Two main panels and one supplementary boundary panel:
-#     Fig2J  positive-only source liver cis-eGene observability; the complement
-#            is INDETERMINATE, never negative
-#     FigS2  the three prespecified eQTL power universes and their constructibility
-#     Fig2K  phenotype provenance of the 35 Tier-1/2 GWAS strata, split by whether
-#            the regulatory (eQTL) side is ancestry-matched
+#   Render phenotype provenance as Figure 2J and retain the supplementary
+#   deposited-data boundary showing which eQTL power universes are constructible.
 #
 # Historical method constraints: docs/archive/plans/2026-08-07_paper_program/30_GENETICS_CONTEXT_AND_FIG3.md
 #   Plan 30 closed as `coverage_limited_terminal`. Seal GEN_TERMINAL_CLOSURE_READY
 #   carries context_rescue_authorized=false and negative_claim_authorized=false.
-#   AUTHORIZED here: phenotype provenance, POSITIVE-ONLY Broadaway/eGene
-#   observability, and the 34/447 descriptive interface.
+#   AUTHORIZED here: phenotype provenance and coverage of the prespecified
+#   eQTL power universes.
 #   PROHIBITED and deliberately absent from this script: context-rescued fractions,
 #   enrichment claims or tests, matched-rescue analyses, matched nulls, and any
 #   genetic or context NEGATIVE claim. No Fisher/OR/p-value is computed or drawn.
@@ -29,7 +24,7 @@
 #   6,583 as a count of unique source eGenes.
 #
 # Inputs: signed 15-row Plan 60 handoff only (plan60_terminal_artifacts.tsv).
-# Outputs: figures/main/fig2_genetics/panels/  (FIG3_DIR == fig2_genetics)
+# Outputs: Figure 2J and FigS2_eqtl_power_universes.pdf
 # Run: sbatch scripts/figures/run_fig2_eqtl_observability.sbatch
 # ==============================================================================
 
@@ -45,7 +40,8 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 GEN <- file.path(BASE, "Analysis/Multimodal_Program_Projection/candidates",
                  "program-context-v2-candidate-2026-08-07/genetics_context")
-OUT <- file.path(FIG3_DIR, "panels")   # FIG3_DIR = figures/main/fig2_genetics
+candidate_out <- Sys.getenv("FIG2_CANDIDATE_DIR", "")
+OUT <- if (nzchar(candidate_out)) candidate_out else file.path(FIG3_DIR, "panels")
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 
 # ---------------------------------------------------------------------------
@@ -55,12 +51,6 @@ seal <- fread(file.path(GEN, "GEN_TERMINAL_CLOSURE_READY"))
 stopifnot(seal$status == "coverage_limited_terminal_validated")
 stopifnot(identical(tolower(as.character(seal$context_rescue_authorized)), "false"))
 stopifnot(identical(tolower(as.character(seal$negative_claim_authorized)),  "false"))
-SOURCE_WIDE_EGENES <- as.integer(seal$source_wide_unique_source_defined_egenes)  # 6564
-MAPPED_SYMBOL_ROWS <- as.integer(seal$mapped_symbol_annotation_rows)             # 6583
-REPRESENTED_ENSG   <- as.integer(seal$represented_unique_source_ensgs)           # 6562
-stopifnot(SOURCE_WIDE_EGENES == 6564L, MAPPED_SYMBOL_ROWS == 6583L,
-          REPRESENTED_ENSG == 6562L)
-
 manifest <- fread(file.path(GEN, "plan60_terminal_artifacts.tsv"))
 stopifnot(nrow(manifest) == 15L, uniqueN(manifest$artifact_id) == 15L)
 message("Seal OK: ", seal$release_id, " / ", seal$status)
@@ -68,111 +58,10 @@ message("Seal OK: ", seal$release_id, " / ", seal$status)
 # ---------------------------------------------------------------------------
 # Colours. Control / no-information grey is locked to #9E9E9E.
 # ---------------------------------------------------------------------------
-COL_POSITIVE      <- "#4C72B0"   # source-positive liver cis-eGene (observed)
+COL_POSITIVE      <- "#4C72B0"   # constructible universe
 COL_INDETERMINATE <- "#9E9E9E"   # observability indeterminate (NOT a negative)
 COL_MATCHED       <- "#4C72B0"   # eQTL side ancestry-matched (EUR GWAS)
 COL_XANC          <- "#DD8452"   # cross-ancestry eQTL-limited
-
-# ===========================================================================
-# PANEL Fig2J — positive-only source liver cis-eGene observability
-# ===========================================================================
-obs <- fread(file.path(GEN, "gene_observability.tsv"),
-             select = c("gene_symbol", "joint_testable", "primary_genetic",
-                        "established_state_associated", "source_defined_egene",
-                        "source_egene_absence_interpretation",
-                        "adequate_static_eqtl_negative_authorized"))
-lgl <- function(x) tolower(as.character(x)) == "true"
-
-# Hard guard: no row anywhere may authorise a source-eQTL negative.
-stopifnot(!any(lgl(obs$adequate_static_eqtl_negative_authorized)))
-# Hard guard: the only two absence interpretations are positive / indeterminate.
-stopifnot(setequal(unique(obs$source_egene_absence_interpretation),
-                   c("source_positive",
-                     "indeterminate_complete_tested_universe_not_deposited")))
-
-obs[, `:=`(jt = lgl(joint_testable),
-           pg = lgl(primary_genetic),
-           es = lgl(established_state_associated),
-           eg = lgl(source_defined_egene))]
-
-# Re-derive the frozen contract before plotting anything.
-stopifnot(sum(obs$jt) == 14931L)
-stopifnot(sum(obs$pg) == 473L, sum(obs$pg & obs$jt) == 447L)
-stopifnot(sum(obs$es) == 1915L, sum(obs$es & obs$jt) == 1261L)
-stopifnot(sum(obs$pg & obs$es) == 34L, sum(obs$pg & obs$es & obs$jt) == 34L)
-stopifnot(sum(obs$eg) == MAPPED_SYMBOL_ROWS)
-message("Frozen contract re-derived: 14,931 joint / 447 genetic / 1,261 state / 34 both")
-
-sets <- list(
-  "All jointly testable"        = obs[jt == TRUE],
-  "Genetically anchored"        = obs[jt == TRUE & pg == TRUE],
-  "Established-state associated"= obs[jt == TRUE & es == TRUE],
-  "Both"                        = obs[jt == TRUE & pg == TRUE & es == TRUE]
-)
-
-d_obs <- rbindlist(lapply(names(sets), function(nm) {
-  s <- sets[[nm]]
-  data.table(set = nm, n_total = nrow(s),
-             n_positive = sum(s$eg), n_indeterminate = sum(!s$eg))
-}))
-d_obs[, label := sprintf("%s\n(n = %s)", set, trimws(format(n_total, big.mark = ",")))]
-d_obs[, label := factor(label, levels = rev(label))]
-
-long_obs <- melt(d_obs, id.vars = c("set", "label", "n_total"),
-                 measure.vars = c("n_positive", "n_indeterminate"),
-                 variable.name = "state", value.name = "n")
-long_obs[, state := factor(
-  fifelse(state == "n_positive",
-          "Source-positive liver cis-eGene",
-          "Observability indeterminate (source tested universe not deposited)"),
-  levels = c("Source-positive liver cis-eGene",
-             "Observability indeterminate (source tested universe not deposited)"))]
-long_obs[, frac := n / n_total]
-
-p_obs <- ggplot(long_obs, aes(x = frac, y = label, fill = state)) +
-  geom_col(width = 0.62, position = position_stack(reverse = TRUE)) +
-  geom_text(aes(label = trimws(format(n, big.mark = ","))),
-            position = position_stack(vjust = 0.5, reverse = TRUE),
-            size = GEOM_TEXT_6PT, colour = "black", fontface = "plain") +
-  scale_fill_manual(values = c(COL_POSITIVE, COL_INDETERMINATE), name = NULL) +
-  scale_x_continuous(labels = function(x) paste0(x * 100, "%"),
-                     expand = expansion(mult = c(0, 0.02))) +
-  guides(fill = guide_legend(ncol = 1)) +
-  labs(x = "Share of gene set", y = NULL) +
-  theme_masld(base_size = 6) +
-  theme(plot.title = element_blank(), plot.subtitle = element_blank(),
-        legend.position = "bottom", legend.title = element_blank(),
-        legend.key.size = unit(2.4, "mm"),
-        text = element_text(colour = "black", face = "plain"),
-        axis.text = element_text(colour = "black"))
-
-save_fig(p_obs, file.path(OUT, "Fig2J_eqtl_observability.pdf"),
-         width = 4.4, height = 2.5)
-fwrite(d_obs, file.path(OUT, "Fig2J_eqtl_observability_source.csv"))
-
-message(sprintf(
-  paste0("CAPTION Fig2J: Positive-only expression-QTL observability across the selected ",
-         "gene sets. Coloured segments are genes with a source-defined liver cis-eGene ",
-         "call in the Broadaway liver eQTL meta-analysis (N = 1,183, European); grey ",
-         "segments are genes for which observability is INDETERMINATE because the source ",
-         "did not deposit its complete tested-gene universe. Grey is not a negative and ",
-         "no gene in this figure is called tested_negative. Counts are mapped gene-symbol ",
-         "annotation rows (%s rows across the whole table; the source-wide count of unique ",
-         "source-defined Ensembl eGenes is %s and the number of unique source Ensembl ",
-         "identifiers represented by the symbol rows is %s - these units are not ",
-         "interchangeable). Genetically anchored genes are eGene-positive almost by ",
-         "construction (%d/%d) because SuSiE colocalization requires an eQTL signal at the ",
-         "locus; that is a definitional property of the map, not a result. For the ",
-         "established-state set, %d of %d genes have unknown eQTL observability, so the ",
-         "question 'does this disease-state gene carry a regulatory genetic effect' is ",
-         "unanswerable from the deposited source rather than answered in the negative."),
-  format(MAPPED_SYMBOL_ROWS, big.mark = ","),
-  format(SOURCE_WIDE_EGENES, big.mark = ","),
-  format(REPRESENTED_ENSG, big.mark = ","),
-  d_obs[set == "Genetically anchored", n_positive],
-  d_obs[set == "Genetically anchored", n_total],
-  d_obs[set == "Established-state associated", n_indeterminate],
-  d_obs[set == "Established-state associated", n_total]))
 
 # ===========================================================================
 # SUPPLEMENTARY BOUNDARY — the three prespecified eQTL power universes and what
@@ -250,12 +139,12 @@ message(paste0(
   "regulatory genetic effects."))
 
 # ===========================================================================
-# PANEL Fig2K — phenotype provenance of the 35 Tier-1/2 strata, split by
+# PANEL Fig2J — phenotype provenance of the 35 Tier-1/2 strata, split by
 # whether the regulatory (eQTL) side is ancestry-matched.
 # ===========================================================================
 reg <- fread(file.path(GEN, "phenotype_registry.tsv"))
 stopifnot(nrow(reg) == 35L, all(reg$placement == "main"))
-stopifnot(uniqueN(reg$eqtl_panel) == 1L)          # single EUR eQTL panel for all 35
+stopifnot(uniqueN(reg$eqtl_panel) == 1L)
 EQTL_PANEL <- unique(reg$eqtl_panel)
 
 strat_label <- c(
@@ -267,8 +156,7 @@ anc_label <- c(
   cross_ancestry_eqtl_limited = "Cross-ancestry eQTL-limited (non-European GWAS, European eQTL)")
 
 d_reg <- reg[, .N, by = .(phenotype_stratum, regulatory_ancestry_status)]
-d_reg[, stratum := factor(strat_label[phenotype_stratum],
-                          levels = rev(strat_label))]
+d_reg[, stratum := factor(strat_label[phenotype_stratum], levels = rev(strat_label))]
 d_reg[, anc := factor(anc_label[regulatory_ancestry_status], levels = anc_label)]
 d_reg[, tot := sum(N), by = stratum]
 
@@ -282,8 +170,7 @@ p_reg <- ggplot(d_reg, aes(x = N, y = stratum, fill = anc)) +
   geom_text(aes(label = N), position = position_stack(vjust = 0.5, reverse = TRUE),
             size = GEOM_TEXT_6PT, colour = "black", fontface = "plain") +
   scale_fill_manual(values = c(COL_MATCHED, COL_XANC), name = NULL, drop = FALSE) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.04)),
-                     breaks = seq(0, 20, 5)) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.04)), breaks = seq(0, 20, 5)) +
   guides(fill = guide_legend(ncol = 1)) +
   labs(x = "GWAS strata (35 prespecified Tier-1/2)", y = NULL) +
   theme_masld(base_size = 6) +
@@ -293,19 +180,17 @@ p_reg <- ggplot(d_reg, aes(x = N, y = stratum, fill = anc)) +
         text = element_text(colour = "black", face = "plain"),
         axis.text = element_text(colour = "black", lineheight = 1.05))
 
-save_fig(p_reg, file.path(OUT, "Fig2K_phenotype_provenance.pdf"),
+save_fig(p_reg, file.path(OUT, "Fig2J_phenotype_provenance.pdf"),
          width = 4.4, height = 2.0)
 fwrite(d_reg[, .(phenotype_stratum, regulatory_ancestry_status, n_studies = N)],
-       file.path(OUT, "Fig2K_phenotype_provenance_source.csv"))
+       file.path(OUT, "Fig2J_phenotype_provenance_source.csv"))
 
 message(sprintf(
-  paste0("CAPTION Fig2K: Phenotype provenance of the %d prespecified Tier-1/2 GWAS strata. ",
-         "%d strata are liver-enzyme traits (ALT/AST/GGT), %d are direct MASLD/MASH ",
-         "diagnoses and %d are MRI-PDFF/histologic steatosis, so most of the genetic map ",
-         "is anchored on enzyme proxies rather than on diagnosed disease. Every stratum is ",
-         "colocalized against a single European liver eQTL panel (%s); the %d non-European ",
-         "strata are therefore cross-ancestry eQTL-limited and show locus-level replication, ",
-         "NOT ancestry-matched regulatory validation."),
+  paste0("CAPTION Fig2J: Phenotype provenance of the %d prespecified Tier-1/2 GWAS strata. ",
+         "%d strata are liver-enzyme traits, %d are direct MASLD/MASH diagnoses and %d are ",
+         "MRI-PDFF/histologic steatosis. Every stratum is colocalized against one European ",
+         "liver eQTL panel (%s); the %d non-European strata are therefore cross-ancestry ",
+         "eQTL-limited, not ancestry-matched regulatory validation."),
   nrow(reg),
   d_reg[phenotype_stratum == "alt_ast_or_ggt", sum(N)],
   d_reg[phenotype_stratum == "direct_masld_mash_diagnosis", sum(N)],
@@ -313,4 +198,4 @@ message(sprintf(
   EQTL_PANEL,
   d_reg[regulatory_ancestry_status == "cross_ancestry_eqtl_limited", sum(N)]))
 
-message("DONE. Wrote 3 panels + 3 source CSVs to ", OUT)
+message("DONE. Wrote the supplementary eQTL-boundary panel and Figure 2J to ", OUT)

@@ -4,8 +4,21 @@
 The published candidate reports credible-set-instance-weighted means. Instances are
 study-by-locus units, so a locus discovered by many studies is counted many times.
 This script reproduces the published instance-weighted values as an assertion, then
-re-estimates every quantity with independent loci as the unit and a cluster bootstrap
-over loci for uncertainty.
+re-estimates every quantity with operational 1-Mb clusters as the unit and a cluster
+bootstrap over them for uncertainty.
+
+NAMING (2026-08-17). These groups are OPERATIONAL CLUSTERS, not independent loci. No
+LD is consulted in forming them, a 1-Mb window can span more than one independent
+signal, and long-range LD can link clusters. The function name
+`assign_independent_loci` and the `locus_id` column are retained so existing outputs
+stay joinable, but no output of this script may be described as an independent locus.
+
+MULTIPLICITY (2026-08-17). The six direct-vs-enzyme comparisons this script feeds
+(coding mass plus five noncoding context categories) are one family and are corrected
+together in `fig2_multiplicity_correction.py`. Note also that `p_two_sided_diff_gt0`
+below is a BOOTSTRAP p, asking whether a difference clears zero, not whether the
+trait-class grouping produces it. It is not the right test for a group contrast on its
+own; see `GWAS/finemapping/results/fig2_multiplicity/20260817T161128Z/MULTIPLICITY.md`.
 
 Read-only inputs. Writes source tables for the Figure 2 companion panels.
 """
@@ -224,7 +237,7 @@ def locus_weighted_point(frame: pd.DataFrame, cols: list[str]) -> dict[str, floa
 
 def locus_bootstrap(frame: pd.DataFrame, cols: list[str], rng: np.random.Generator
                     ) -> dict[str, tuple[float, float]]:
-    """Cluster bootstrap resampling independent loci with replacement."""
+    """Cluster bootstrap resampling operational clusters with replacement."""
     per_locus = frame.groupby("locus_id")[cols].mean()
     mat = per_locus.to_numpy()
     n = mat.shape[0]

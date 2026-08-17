@@ -41,6 +41,6 @@ echo "[OK] 4B spatial overview"
 
 echo ""
 echo "=== All panels complete ==="
-echo "Outputs: $BASE/figures/main/fig4_validation/panels/"
-ls -lh "$BASE/figures/main/fig4_validation/panels/"*.pdf 2>/dev/null || echo "(no PDFs yet)"
+echo "Outputs: $BASE/figures/main/fig5_molecular_context/panels/"
+ls -lh "$BASE/figures/main/fig5_molecular_context/panels/"*.pdf 2>/dev/null || echo "(no PDFs yet)"
 echo "Finished: $(date)"

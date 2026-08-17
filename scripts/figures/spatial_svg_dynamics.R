@@ -25,7 +25,7 @@
 #       zonation_class == "Pericentral-enriched" = 8 genes
 #       zonation_class == "Periportal-enriched"  = 4 genes
 #
-# Output: figures/main/fig4_validation/spatial_svg_dynamics.pdf
+# Output: figures/main/fig5_molecular_context/spatial_svg_dynamics.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

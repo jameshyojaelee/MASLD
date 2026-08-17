@@ -2,7 +2,7 @@
 
 # Figure 4 honesty reframe (2026-08-08).
 #
-# Two new panels for figures/main/fig4_validation/:
+# Two new panels for figures/main/fig5_molecular_context/:
 #
 #   (1) fig4c_convergence_or_ci_power.pdf
 #       Convergent class vs each single-map class, across the three atlas
@@ -47,7 +47,7 @@ OUT_DIR  <- FIG4_DIR
 DATA_DIR <- file.path(OUT_DIR, "data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 
-stopifnot(basename(OUT_DIR) == "fig4_validation")
+stopifnot(basename(OUT_DIR) == "fig5_molecular_context")
 
 # ---------------------------------------------------------------------------
 # 0. Load the frozen release tables

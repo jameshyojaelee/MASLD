@@ -30,7 +30,7 @@
 # hardcoded as a claim (the few literals below are echoed back from the data and
 # re-validated with stopifnot()).
 #
-# Output: figures/main/fig4_validation/fig4c_atac_rora_motif.pdf
+# Output: figures/main/fig5_molecular_context/fig4c_atac_rora_motif.pdf
 # Run:    ~/micromamba/envs/rnaseq/bin/Rscript scripts/figures/atac_rora_motif.R
 
 suppressPackageStartupMessages({
@@ -56,7 +56,7 @@ PEAK_DIR  <- file.path(PROJ,
   "Analysis/ATAC/Human_Multiome/results/label_transfer/cell_type_peak_sets_v2")
 GTF_PATH  <- "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
 
-OUT_DIR <- file.path(PROJ, "figures/main/fig4_validation", "_supp")   # DEMOTED from main 4c (2026-07-07): chromatin unvalidated (caQTL n.s.); regulatory/motif content lives in Fig 2
+OUT_DIR <- file.path(PROJ, "figures/main/fig5_molecular_context", "_supp")   # DEMOTED from main 4c (2026-07-07): chromatin unvalidated (caQTL n.s.); regulatory/motif content lives in Fig 2
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF <- file.path(OUT_DIR, "atac_rora_motif.pdf")
 

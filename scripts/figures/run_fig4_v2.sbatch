@@ -21,5 +21,5 @@ micromamba run -n rnaseq Rscript scripts/figures/fig4_module_evidence_scan.R
 echo "[$(date)] Step 2/2: Main figure panels"
 micromamba run -n rnaseq Rscript scripts/figures/fig4_validation_v2.R
 
-echo "[$(date)] Done. Panels in figures/main/fig4_validation/panels/"
-echo "Composite: figures/main/fig4_validation/fig4_validation.pdf"
+echo "[$(date)] Done. Panels in figures/main/fig5_molecular_context/panels/"
+echo "Composite: figures/main/fig5_molecular_context/fig4_validation.pdf"

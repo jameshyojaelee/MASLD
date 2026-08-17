@@ -21,7 +21,7 @@
 #   exception (delta_I = -0.081). The "all 12 rise" framing in the prose/ledger
 #   is softened here to "11 of 12 (MT-ATP8 excepted)" — we plot what the file says.
 #
-# Output: figures/main/fig4_validation/mito_spatial_clustering.pdf
+# Output: figures/main/fig5_molecular_context/mito_spatial_clustering.pdf
 ##############################################################################
 
 suppressPackageStartupMessages({

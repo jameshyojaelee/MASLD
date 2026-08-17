@@ -36,7 +36,7 @@ High-level, counts-only overviews (Fig 2A aesthetic: normalized-height alluvial,
 ribbons colored by modality, counts at every stage, NO gene names). Every mark
 encodes a real count. ALL text black, font size 6, NO bold; color on marks only.
 
-  build_cascade -> fig4a_overview_cascade.pdf   (Fig 2A-style alluvial funnel).
+  build_cascade -> fig5a_overview_cascade_candidate.pdf   (Fig 2A-style alluvial funnel).
   This is the SELECTED Fig 4A overview; the rings / upset / pyramid / funnel
   candidates were cut 2026-07-02 (user chose the alluvial cascade).
 
@@ -62,7 +62,10 @@ BASE = os.environ.get(
     "MASLD_PROJECT_ROOT",
     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design",
 )
-OUT_DIR   = os.path.join(BASE, "figures/main/fig4_validation", "panels")
+OUT_DIR   = os.path.join(
+    BASE, "figures/main/fig5_molecular_context", "panels", "candidates",
+    "historical_evidence_overview",
+)
 ATLAS     = os.path.join(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
 DEG_CSV   = os.path.join(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/"
                                "results/integration/canonical_deg_results.csv")
@@ -638,7 +641,7 @@ def build_cascade(d):
     # Stage headers (Prioritized / Modality / Dataset / Outcome) removed per PI
     # (2026-07-07) — the stages read from the node labels + caption.
 
-    _save(fig, "fig4a_overview_cascade.pdf")
+    _save(fig, "fig5a_overview_cascade_candidate.pdf")
     # printed caption (no on-panel subtitle, per house style)
     print(f"[caption:cascade] Fig 4 opener. PRIORITIZED universe = {d['universe']:,} genes = "
           f"transcriptomic candidates {d['substrate']:,} (all bulk + single-cell DE contrasts at the "
@@ -851,7 +854,7 @@ def build_upset(d, stats):
     for s in ("top", "right", "bottom", "left"):
         ax_set.spines[s].set_visible(False)
 
-    _save(fig, "figS4f.pdf")   # demoted from main Fig 4a to Supp Fig S4F (2026-07-07)
+    _save(fig, "figS5f_overview_upset_candidate.pdf")
     # caption fully live (no hard-coded counts): the exclusive P∩S bar = PS - all3,
     # matching both the panel bar and the permutation stat (which is computed on the
     # exclusive intersection); all-3 is reported live with its own chance expectation.

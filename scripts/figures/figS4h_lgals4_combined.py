@@ -16,7 +16,7 @@ spatial images illustrate it. No COLOC (atlas 0.92 is an off-trait platelet GWAS
 
 Convention: 6 pt text, black, gene symbol italic, caption to stdout. control=#9E9E9E, up/sig=#E65100.
 
-Output: figures/main/fig4_validation/panels/figS4h.pdf
+Output: figures/main/fig5_molecular_context/panels/figS4h.pdf
 """
 import os, json
 import numpy as np, pandas as pd, scanpy as sc
@@ -27,7 +27,7 @@ BASE  = os.environ.get("MASLD_PROJECT_ROOT",
                        "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 SR    = os.path.join(BASE, "Analysis/Spatial/results/spaceranger/GSE192741")
 ATLAS = os.path.join(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
-OUT   = os.path.join(BASE, "figures/main/fig4_validation/panels/figS4h.pdf")
+OUT   = os.path.join(BASE, "figures/main/fig5_molecular_context/panels/figS4h.pdf")
 GENE  = "LGALS4"
 # one section per patient: H36, H38 (Healthy); H35->JBO014, H37 (MASLD)
 IMAGES = [[("JBO018", "Healthy"), ("JBO022", "Healthy")],

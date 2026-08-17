@@ -118,7 +118,7 @@ save_fig(pC, file.path(SUPP, "figS_crossmod_cascade_modules.pdf"), width = 5.4, 
 # ── captions ──────────────────────────────────────────────────────────────────
 message(sprintf(paste0(
   "\n[figS_crossmodal_module_proteomics] enrichment(A)+cascade(C) -> %s; ",
-  "concordance(B) PROMOTED -> fig4_validation/panels/figS4m.pdf\n",
+  "concordance(B) PROMOTED -> fig5_molecular_context/panels/figS5m.pdf\n",
   "A enrichment: %d disease-significant Hotspot modules; %d with protein NES padj<0.05.\n",
   "B concordance: Spearman rho=%.2f, p=%.3f over %d modules; %.0f%% sign-concordant. ",
   "Quadrants show transcript->protein propagation vs buffering. beta_scRNA is within-cell-type ",

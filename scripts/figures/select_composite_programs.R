@@ -32,7 +32,7 @@ if (toupper(Sys.getenv("ALLOW_PANEL4C_RESELECTION", "FALSE")) != "TRUE") {
     "Set ALLOW_PANEL4C_RESELECTION=TRUE only for an explicitly versioned exploratory reselection."
   )
 }
-DATA_DIR <- file.path(BASE, "figures/main/fig4_validation/data")
+DATA_DIR <- file.path(BASE, "figures/main/fig5_molecular_context/data")
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 N_PER <- 5L
 

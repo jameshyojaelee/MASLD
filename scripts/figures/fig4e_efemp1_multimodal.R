@@ -7,7 +7,7 @@
 # (liver DIA-MS + plasma DIA-MS), and it is spatially structured (Visium Moran's I).
 # The load-bearing point is cross-MODALITY replication (RNA inference -> protein),
 # not more transcriptomics. Positive control — no genetic pillar (COLOC ~0.01).
-# Output: figures/main/fig4_validation/panels/fig4e_efemp1_multimodal.pdf
+# Output: figures/main/fig5_molecular_context/panels/fig4e_efemp1_multimodal.pdf
 # Env: rnaseq
 # ==============================================================================
 suppressPackageStartupMessages({ library(data.table); library(ggplot2) })

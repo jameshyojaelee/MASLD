@@ -11,5 +11,5 @@ set -e
 eval "$(/gpfs/commons/home/jameslee/.local/bin/micromamba shell hook --shell bash)"
 micromamba activate rnaseq
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
-mkdir -p logs figures/main/fig4_validation
+mkdir -p logs figures/main/fig5_molecular_context
 Rscript scripts/figures/assemble_fig4.R

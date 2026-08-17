@@ -17,4 +17,4 @@ cd "${MASLD_PROJECT_ROOT}"
 # Main Figure 4 spatial panels (g)-(h); panel (f) retired 2026-07-07
 Rscript scripts/figures/fig4_spatial_panels.R
 
-echo "Done: individual panels (g,h) in figures/main/fig4_validation/panels/"
+echo "Done: individual panels (g,h) in figures/main/fig5_molecular_context/panels/"

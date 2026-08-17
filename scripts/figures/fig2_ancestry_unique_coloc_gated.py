@@ -6,7 +6,7 @@ genome-wide significance of their colocalizing lead variant in the non-European 
 (audit: scripts/figures/audit_noneur_gws.R -> noneur_gws_audit.csv).
 
 COLOC SET: multi-signal COLOC. Colocalization is defined as PP.H4.susie > 0.5
-ONLY (the 473-gene SuSiE-COLOC set), NOT the SuSiE-OR-ABF union that this script used
+ONLY (462 named genes in the promoted 2026-08-17 release), NOT the SuSiE-OR-ABF union that this script used
 before. The ancestry partition (EUR-only / shared / non-EUR-unique) is recomputed on the
 SuSiE set, so the counts here are SMALLER than the retired union panel.
 
@@ -21,11 +21,9 @@ Genes that fail the gate stay SuSiE-coloc genes but move to a grey
 ANCESTRY (2026-07-05): now registry-driven (mirrors gwas_ancestry() in
 load_figure_data.R), covering the 50-GWAS MVP portfolio incl. AMR.
 
-STALE-AUDIT GUARD (2026-07-05): noneur_gws_audit.csv is produced by the NON-owned,
-pre-MVP audit_noneur_gws.R (same retired ancestry heuristic; reads only BBJ/PanUKBB
-sumstat paths, so it cannot resolve MVP GWS p-values). Until that audit is regenerated
-for the 50-GWAS portfolio it covers only a fraction of the current non-EUR-unique
-genes; this script REFUSES to write a gated panel from a stale audit (see guard below).
+RELEASE GUARD (2026-08-17): the GWS audit gene set must exactly match the
+non-EUR-unique set derived from the supplied promoted COLOC table. Coverage-only
+agreement is insufficient because membership changed at promotion.
 
 Run: GATE=gws        ~/micromamba/envs/rnaseq/bin/python scripts/figures/fig2_ancestry_unique_coloc_gated.py
      GATE=suggestive ~/micromamba/envs/rnaseq/bin/python scripts/figures/fig2_ancestry_unique_coloc_gated.py
@@ -90,11 +88,11 @@ df = pd.read_csv(SC)
 df = df[df["gwas_name"].isin(MAIN_STUDIES)].copy()   # MAIN (Tier-1/2) strata only
 df["ancestry"] = df["gwas_name"].map(ancestry)
 df = df[df["ancestry"].notna()].copy()
-# SuSiE-PRIMARY (2026-07-06): coloc set = PP.H4.susie > 0.5 ONLY (473-gene SuSiE-COLOC
-# set), NOT the former SuSiE-OR-ABF union. NaN PP.H4.susie (SuSiE non-convergence) is
-# excluded by the > 0.5 comparison.
+# Multi-signal COLOC: PP.H4.susie > 0.5 in the promoted input, not the
+# historical 473-gene July set. NaN PP.H4.susie is excluded by the comparison.
 df["pp4_best"] = df["PP.H4.susie"]
 sig = df[df["pp4_best"] > 0.5]
+sig = sig[sig["gene"].notna() & sig["gene"].astype(str).str.strip().ne("")]
 by_gene = sig.groupby("gene")["ancestry"].apply(set)
 
 def binof(a):
@@ -112,21 +110,18 @@ n_total = int(by_gene.shape[0])
 # ---- apply the GWS / suggestive gate to the non-EUR-unique genes ------------
 aud = pd.read_csv(AUD).set_index("gene")
 
-# STALE-AUDIT GUARD: the audit must cover the CURRENT non-EUR-unique gene set. If it
-# was generated on an older (pre-MVP) portfolio it will be missing most genes, and
-# every missing gene would be silently dumped into "sub-threshold" -> a wrong panel.
+# Release guard: exact gene-set agreement is required, not merely high coverage.
 import sys
-covered = sum(1 for g in nonEUR_genes if g in aud.index)
-frac = covered / max(len(nonEUR_genes), 1)
-if frac < 0.9:
-    print(f"WARNING/SKIP [{GATE}]: noneur_gws_audit.csv covers only {covered}/"
-          f"{len(nonEUR_genes)} ({100*frac:.0f}%) of the current non-EUR-unique genes -- "
-          f"it is STALE (pre-MVP). Its generator scripts/figures/audit_noneur_gws.R has "
-          f"NOT been re-run for the 50-GWAS MVP portfolio (same retired ancestry heuristic; "
-          f"reads only BBJ/PanUKBB sumstat paths, so it cannot resolve MVP GWS p-values). "
-          f"Refusing to write {OUT} from a stale audit -- regenerate the audit first.",
+audit_genes = set(aud.index.astype(str))
+missing = sorted(nonEUR_genes - audit_genes)
+extra = sorted(audit_genes - nonEUR_genes)
+if missing or extra:
+    print(f"ERROR [{GATE}]: non-EUR GWS audit does not exactly match the promoted "
+          f"non-EUR-unique set (missing={len(missing)}, extra={len(extra)}). "
+          "Regenerate it with audit_noneur_gws.R against the same FIG2_COLOC_INPUT. "
+          f"Missing examples: {missing[:5]}; extra examples: {extra[:5]}",
           file=sys.stderr)
-    sys.exit(0)
+    sys.exit(1)
 
 minp = aud["min_p"].to_dict()
 pass_genes = [g for g in nonEUR_genes if pd.notna(minp.get(g)) and minp[g] < THRESH]
@@ -144,7 +139,7 @@ cols  = ["#D6DBDE", "#A7B6BE", "#E9ECEE", "#F79268"]   # grey, grey-blue, light-
 W, H = 100.0, 64.0
 rects = squarify.squarify(squarify.normalize_sizes(sizes, W, H), 0, 0, W, H)
 
-fig, ax = plt.subplots(figsize=(2.75, 2.44))   # exact Fig2E contract size (ancestry mosaic)
+fig, ax = plt.subplots(figsize=(2.00, 2.10))
 labels = [("EUR-only", f"{n_eur} ({pct(n_eur):.0f}%)"),
           ("shared", f"{n_shared} ({pct(n_shared):.0f}%)"),
           ("non-EUR\nsub-threshold", f"{n_fail} ({pct(n_fail):.0f}%)"),
@@ -157,29 +152,31 @@ for i, (r, c, (name, sub)) in enumerate(zip(rects, cols, labels)):
         ax.text(r["x"] + r["dx"] / 2, r["y"] + r["dy"] / 2, f"{name}\n{sub}",
                 ha="center", va="center", color=TXT, fontsize=BODY_FS, linespacing=1.25)
 
-# Leader the two small tiles into separate whitespace regions.
+# Leader the two small tiles into separate whitespace regions below the mosaic.
 rf = rects[2]
 ax.annotate(f"non-EUR sub-threshold\n{n_fail} ({pct(n_fail):.0f}%)",
             xy=(rf["x"] + rf["dx"] / 2, rf["y"] + rf["dy"] / 2),
-            xytext=(rf["x"] + rf["dx"] / 2, H + 2.2), ha="center", va="top",
+            xytext=(27, H + 4.0), ha="center", va="top",
             fontsize=BODY_FS, color=TXT,
-            arrowprops=dict(arrowstyle="-", lw=0.7, color="black"))
+            arrowprops=dict(arrowstyle="-", lw=0.45, color="black",
+                            shrinkA=0, shrinkB=0))
 rp = rects[3]
 ax.annotate(f"{ULAB}\n{n_pass} ({pct(n_pass):.0f}%)", xy=(rp["x"] + rp["dx"] / 2, rp["y"] + rp["dy"] / 2),
-            xytext=(W + 3, rp["y"] + rp["dy"] / 2), ha="left", va="center",
+            xytext=(75, H + 4.0), ha="center", va="top",
             fontsize=BODY_FS, color=TXT,
-            arrowprops=dict(arrowstyle="-", lw=0.7, color="black"))
-ax.text(W / 2, H + 9.2, f"multi-signal COLOC · non-EUR GWS: {comp_str}",
-        ha="center", va="top", fontsize=BODY_FS, color=TXT)
+            arrowprops=dict(arrowstyle="-", lw=0.45, color="black",
+                            shrinkA=0, shrinkB=0))
+ax.text(W / 2, H + 13.0, f"multi-signal COLOC\nnon-EUR GWS: {comp_str}",
+        ha="center", va="top", fontsize=BODY_FS, linespacing=1.1, color=TXT)
 
-ax.set_xlim(0, W + 30)
-ax.set_ylim(0, H + 12)
+ax.set_xlim(0, W)
+ax.set_ylim(0, H + 19)
 ax.invert_yaxis()
 ax.axis("off")
 
 os.makedirs(PANEL_DIR, exist_ok=True)
 out = os.path.join(PANEL_DIR, OUT)
-fig.tight_layout()
+fig.subplots_adjust(left=0.04, right=0.96, top=0.97, bottom=0.03)
 fig.savefig(out)   # NO bbox_inches="tight": exact figsize for place-at-100%
 plt.close(fig)
 source_out = os.path.join(PANEL_DIR, "Fig2E_ancestry_unique_coloc_GWS_source.tsv")

@@ -23,7 +23,7 @@
 #  FADS2, duplicating fig4f_cyp3a4_zonation.R. The cross-ancestry contrast is the
 #  FADS2 story.)
 #
-# Output: figures/main/fig4_validation/fads2_cross_ancestry.pdf
+# Output: figures/main/fig5_molecular_context/fads2_cross_ancestry.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

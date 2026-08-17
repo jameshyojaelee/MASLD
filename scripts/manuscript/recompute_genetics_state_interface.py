@@ -128,12 +128,23 @@ def threshold_free(jt: pd.DataFrame, col: str) -> dict:
     absol = np.abs(signed)
     rs, ps = stats.spearmanr(x, signed)
     ra, pa = stats.spearmanr(x, absol)
+    m_raw = jt[col].notna() & jt["logFC"].notna()
+    x_raw = jt.loc[m_raw, col].to_numpy()
+    signed_raw = jt.loc[m_raw, "logFC"].to_numpy()
+    absol_raw = np.abs(signed_raw)
+    rs_raw, ps_raw = stats.spearmanr(x_raw, signed_raw)
+    ra_raw, pa_raw = stats.spearmanr(x_raw, absol_raw)
     return {"pp4_column": col, "n_pairs": int(m.sum()),
             "spearman_signed": rs, "p_signed": ps,
-            "spearman_absolute": ra, "p_absolute": pa}
+            "spearman_absolute": ra, "p_absolute": pa,
+            "n_pairs_raw": int(m_raw.sum()),
+            "spearman_signed_raw": rs_raw, "p_signed_raw": ps_raw,
+            "spearman_absolute_raw": ra_raw, "p_absolute_raw": pa_raw}
 
 
-def matched_ladder(jt: pd.DataFrame, genetic: pd.Series, rng: np.random.Generator) -> pd.DataFrame:
+def matched_ladder(
+    jt: pd.DataFrame, genetic: pd.Series, rng: np.random.Generator
+) -> tuple[pd.DataFrame, dict, pd.DataFrame]:
     """Expression-matched McNemar ladder.
 
     The unmatched ladder declines with the |log2FC| floor because colocalized
@@ -142,11 +153,11 @@ def matched_ladder(jt: pd.DataFrame, genetic: pd.Series, rng: np.random.Generato
     Matching on AveExpr removes that, and the ladder is then scored WITHIN pairs
     so the discordant-pair test is the estimand the ladder actually makes.
     """
-    d = jt.dropna(subset=["AveExpr", "logFC", "padj"]).copy()
+    d = jt.dropna(subset=["AveExpr", "logFC", "padj", "treat_fdr"]).copy()
     cases = d[genetic.reindex(d.index).fillna(False)]
     pool = d[~genetic.reindex(d.index).fillna(False)]
     if len(cases) < 20 or len(pool) < len(cases):
-        return pd.DataFrame()
+        return pd.DataFrame(), {}, pd.DataFrame()
 
     caliper = CALIPER_SD * d["AveExpr"].std(ddof=1)
     used: set[int] = set()
@@ -167,7 +178,7 @@ def matched_ladder(jt: pd.DataFrame, genetic: pd.Series, rng: np.random.Generato
             pairs.append((i, cand))
             break
     if not pairs:
-        return pd.DataFrame()
+        return pd.DataFrame(), {}, pd.DataFrame()
 
     ci = [p[0] for p in pairs]
     co = [p[1] for p in pairs]
@@ -188,7 +199,41 @@ def matched_ladder(jt: pd.DataFrame, genetic: pd.Series, rng: np.random.Generato
                      "n_case_de": int(ca.sum()), "n_control_de": int(co_.sum()),
                      "discordant_case_only": b, "discordant_control_only": c,
                      "mcnemar_or": orr, "mcnemar_p": p})
-    return pd.DataFrame(rows)
+    case_treat = (case_d["treat_fdr"] < 0.05).to_numpy()
+    ctrl_treat = (ctrl_d["treat_fdr"] < 0.05).to_numpy()
+    case_only = int((case_treat & ~ctrl_treat).sum())
+    control_only = int((~case_treat & ctrl_treat).sum())
+    both = int((case_treat & ctrl_treat).sum())
+    neither = int((~case_treat & ~ctrl_treat).sum())
+    treat_or = np.nan if control_only == 0 else case_only / control_only
+    treat_p = (stats.binomtest(case_only, case_only + control_only, 0.5).pvalue
+               if (case_only + control_only) else np.nan)
+    treat_summary = {
+        "n_pairs": len(pairs),
+        "match_smd_aveexpr": smd,
+        "treat_lfc": float(case_d["treat_lfc"].iloc[0]),
+        "n_case_treat": int(case_treat.sum()),
+        "n_control_treat": int(ctrl_treat.sum()),
+        "discordant_case_only": case_only,
+        "discordant_control_only": control_only,
+        "both_treat": both,
+        "neither_treat": neither,
+        "mcnemar_or": treat_or,
+        "mcnemar_p": treat_p,
+    }
+    pair_table = pd.DataFrame({
+        "genetic_gene": case_d["g"].to_numpy(),
+        "matched_control_gene": ctrl_d["g"].to_numpy(),
+        "genetic_AveExpr": case_d["AveExpr"].to_numpy(),
+        "matched_control_AveExpr": ctrl_d["AveExpr"].to_numpy(),
+        "genetic_logFC": case_d["logFC"].to_numpy(),
+        "matched_control_logFC": ctrl_d["logFC"].to_numpy(),
+        "genetic_treat_fdr": case_d["treat_fdr"].to_numpy(),
+        "matched_control_treat_fdr": ctrl_d["treat_fdr"].to_numpy(),
+        "genetic_treat_supported": case_treat,
+        "matched_control_treat_supported": ctrl_treat,
+    })
+    return pd.DataFrame(rows), treat_summary, pair_table
 
 
 def main() -> int:
@@ -203,7 +248,7 @@ def main() -> int:
     manifest = [{"role": "coloc_tier12", "path": str(COLOC), "sha256": sha256(COLOC),
                  "n_genes": int(coloc["g"].nunique())}]
 
-    ov_rows, tf_rows, ladders = [], [], []
+    ov_rows, tf_rows, ladders, treat_rows, pair_tables = [], [], [], [], []
     for arm, path in BULK.items():
         if not path.exists():
             print(f"SKIP {arm}: {path} absent", file=sys.stderr)
@@ -226,11 +271,17 @@ def main() -> int:
                   f"overlap {r['n_overlap_observed']} vs expected {r['n_overlap_expected']:.1f}, "
                   f"OR {r['fisher_or']:.3f} p {r['fisher_p']:.3g}")
 
-            lad = matched_ladder(jt, mask, rng)
+            lad, treat_summary, pair_table = matched_ladder(jt, mask, rng)
             if not lad.empty:
                 lad["bulk_arm"] = arm
                 lad["genetic_definition"] = label
                 ladders.append(lad)
+                treat_summary["bulk_arm"] = arm
+                treat_summary["genetic_definition"] = label
+                treat_rows.append(treat_summary)
+                pair_table["bulk_arm"] = arm
+                pair_table["genetic_definition"] = label
+                pair_tables.append(pair_table)
 
         for col in ("susie", "abf"):
             t = threshold_free(jt, col)
@@ -238,12 +289,18 @@ def main() -> int:
             tf_rows.append(t)
             print(f"  threshold-free {col}: rho_signed {t['spearman_signed']:.4f} "
                   f"(p {t['p_signed']:.3g}), rho_abs {t['spearman_absolute']:.4f} "
-                  f"(p {t['p_absolute']:.3g}), n {t['n_pairs']}")
+                  f"(p {t['p_absolute']:.3g}), n {t['n_pairs']}; "
+                  f"raw rho_signed {t['spearman_signed_raw']:.4f} "
+                  f"(p {t['p_signed_raw']:.3g})")
 
     pd.DataFrame(ov_rows).to_csv(out / "overlap_by_arm.tsv", sep="\t", index=False)
     pd.DataFrame(tf_rows).to_csv(out / "threshold_free_by_arm.tsv", sep="\t", index=False)
     if ladders:
         pd.concat(ladders).to_csv(out / "matched_ladder_by_arm.tsv", sep="\t", index=False)
+        pd.DataFrame(treat_rows).to_csv(
+            out / "matched_treat_by_arm.tsv", sep="\t", index=False)
+        pd.concat(pair_tables).to_csv(
+            out / "matched_pairs_by_arm.tsv", sep="\t", index=False)
     (out / "input_manifest.json").write_text(json.dumps(manifest, indent=2))
     (out / "environment.txt").write_text(
         f"python {sys.version}\nnumpy {np.__version__}\npandas {pd.__version__}\n"

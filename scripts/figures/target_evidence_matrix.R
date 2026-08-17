@@ -25,7 +25,7 @@
 # are rendered as a light grey "x", NEVER as a zero/minimum-strength dot —
 # that would falsely imply measured-but-absent.
 #
-# Output: figures/main/fig4_validation/target_evidence_matrix.pdf
+# Output: figures/main/fig5_molecular_context/target_evidence_matrix.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

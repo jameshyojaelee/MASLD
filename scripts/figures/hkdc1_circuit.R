@@ -21,7 +21,7 @@
 # (susie_coloc_all_gwas.csv), NOT the method-inconsistent atlas *_coloc_pp4
 # convenience columns (HARD GATE).
 #
-# Output: figures/main/fig4_validation/fig4g_hkdc1_circuit.pdf
+# Output: figures/main/fig5_molecular_context/fig4g_hkdc1_circuit.pdf
 # (relettered e->g 2026-07-08: now sits after both cyp3a4 panels, per the Fig4 lineup)
 # Env:    rnaseq
 

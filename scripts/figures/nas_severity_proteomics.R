@@ -21,7 +21,7 @@
 # under-powering. Severity axes differ by compartment (liver = NAS grade; plasma
 # = MASH vs MASL, its only severity contrast).
 #
-# Output: figures/main/fig4_validation/fig4c_nas_severity_proteomics.pdf
+# Output: figures/main/fig5_molecular_context/fig4c_nas_severity_proteomics.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

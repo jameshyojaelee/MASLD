@@ -21,7 +21,7 @@ confirmation (single cohort), not the primary evidence.
 Convention: 6 pt text, black, no bold, no colored/stat-laden title, gene symbol italic,
 caption emitted to stdout (PI directive). PDF only.
 
-Output: figures/main/fig4_validation/panels/figS4h.pdf
+Output: figures/main/fig5_molecular_context/panels/figS4h.pdf
 """
 import os, json
 import numpy as np, pandas as pd, scanpy as sc
@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 SR   = os.path.join(BASE, "Analysis/Spatial/results/spaceranger/GSE192741")
-OUT  = os.path.join(BASE, "figures/main/fig4_validation/panels/figS4h.pdf")
+OUT  = os.path.join(BASE, "figures/main/fig5_molecular_context/panels/figS4h.pdf")
 GENE = "LGALS4"
 # All 5 condition-labeled GSE192741 sections (2 Healthy, 3 MASLD), ordered low->high
 # expression within each row. Showing every section (nothing dropped) makes the

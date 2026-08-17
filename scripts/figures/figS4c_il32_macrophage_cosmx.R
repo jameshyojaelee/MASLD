@@ -21,7 +21,7 @@
 # Main-text companion: fig4h_spatial_ccc_consensus.R (Visium spot-adjacency, GSE192741).
 #
 # Data: Analysis/Spatial/results/govaere2026/il32_colocalization/il32_coloc_per_slide.csv
-# Output: figures/main/fig4_validation/panels/figS4c.pdf
+# Output: figures/main/fig5_molecular_context/panels/figS4c.pdf
 # Env: rnaseq
 # ==============================================================================
 suppressPackageStartupMessages({

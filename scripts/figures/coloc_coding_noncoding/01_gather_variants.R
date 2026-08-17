@@ -5,7 +5,7 @@
 # Three operational definitions of the "lead variant":
 #   A. Lead causal (GWAS lead)        — pre-finemapping; data/lead_snps/*.tsv
 #   B. Top finemapped causal          — credible_sets_1kg.csv, max recommended_pip
-#   C. Top gene-level COLOC           — per-study susie_coloc_chr*.csv
+#   C. Top gene-level COLOC           — promoted aggregate COLOC release
 #
 # Outputs (RNA-seq/results/coloc_variant_classes/):
 #   variants_long.csv      — stacked rows from A, B, C with variant_key
@@ -15,20 +15,26 @@ suppressPackageStartupMessages({
 })
 
 BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-OUT  <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+OUT  <- Sys.getenv(
+  "FIG2_VARIANT_CLASS_DIR",
+  file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+)
 dir.create(OUT, showWarnings = FALSE, recursive = TRUE)
 
 POLYFUN_DIR <- file.path(BASE, "GWAS/finemapping/results/susie_coloc_polyfun")
 KG_DIR      <- file.path(BASE, "GWAS/finemapping/results/susie_coloc_1kg")
 OTHER_DIR   <- file.path(BASE, "GWAS/finemapping/results/susie_coloc")
+COLOC_FILE  <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(OTHER_DIR, "susie_coloc_all_gwas.csv")
+)
 LEAD_DIR    <- file.path(BASE, "GWAS/finemapping/data/lead_snps")
 CS_FILE     <- file.path(BASE, "GWAS/finemapping/results/credible_sets.csv")
 
-# Active studies present in either canonical dir (excluding archived ones)
-studies_polyfun <- list.dirs(POLYFUN_DIR, recursive = FALSE, full.names = FALSE)
-studies_kg      <- list.dirs(KG_DIR,      recursive = FALSE, full.names = FALSE)
-studies_other   <- list.dirs(OTHER_DIR,   recursive = FALSE, full.names = FALSE)
-active_studies  <- unique(c(studies_polyfun, studies_kg, studies_other))
+# Active studies are defined by the promoted aggregate, not by leftover
+# per-study directories from older releases.
+stopifnot(file.exists(COLOC_FILE))
+active_studies <- unique(fread(COLOC_FILE, select = "gwas_name")$gwas_name)
 
 # ---- Canonical study → method/ancestry/trait map ---------------------------
 # LD-panel priority (per Phase 10 swap, 2026-05-06): PolyFun > 1kg > other.
@@ -81,36 +87,22 @@ ancestry_of <- function(s) {
 
 # ---- 1. Definition C: top gene-level COLOC variant per (gene, GWAS) ---------
 gather_definition_C <- function() {
-  # All studies present in either canonical dir
-  studies_polyfun <- list.dirs(POLYFUN_DIR, recursive = FALSE, full.names = FALSE)
-  studies_kg      <- list.dirs(KG_DIR,      recursive = FALSE, full.names = FALSE)
-  studies_other   <- list.dirs(OTHER_DIR,   recursive = FALSE, full.names = FALSE)
-
-  rows <- list()
-  for (s in unique(c(studies_polyfun, studies_kg, studies_other))) {
-    # Pick the right dir per canonical policy: PolyFun is the production EUR LD
-    # reference, so any study with PolyFun output uses PolyFun first.
-    if (s %in% studies_polyfun)          dir <- POLYFUN_DIR
-    else if (s %in% studies_kg)          dir <- KG_DIR
-    else                                 dir <- OTHER_DIR
-    files <- list.files(file.path(dir, s), pattern = "^susie_coloc_chr.*csv$",
-                        full.names = TRUE)
-    if (!length(files)) next
-    d <- rbindlist(lapply(files, fread), fill = TRUE, use.names = TRUE)
-    keep <- intersect(c("gene","ensembl","chr","gwas_name",
-                        "PP.H4.abf","PP.H4.susie","n_cs_pairs","n_snps",
-                        "method","top_snp","top_snp_PP"), names(d))
-    d <- d[, ..keep]
-    d[, pp4_best := pmax(PP.H4.susie, PP.H4.abf, na.rm = TRUE)]
-    d <- d[is.finite(pp4_best) & pp4_best >= 0.5]
-    if (!nrow(d)) next
-    setorder(d, gene, -pp4_best)
-    d <- d[!duplicated(d, by = c("gene","gwas_name"))]
-    d[, study := s]
-    rows[[s]] <- d
-  }
-  out <- rbindlist(rows, fill = TRUE)
+  d <- fread(COLOC_FILE)
+  required <- c("gene", "ensembl", "chr", "gwas_name", "PP.H4.abf",
+                "PP.H4.susie", "top_snp", "top_snp_PP")
+  stopifnot(all(required %in% names(d)))
+  d[, `:=`(
+    PP.H4.susie = suppressWarnings(as.numeric(PP.H4.susie)),
+    PP.H4.abf = suppressWarnings(as.numeric(PP.H4.abf))
+  )]
+  d[, pp4_best := pmax(PP.H4.susie, PP.H4.abf, na.rm = TRUE)]
+  d[!is.finite(pp4_best), pp4_best := NA_real_]
+  d <- d[is.finite(pp4_best) & pp4_best > 0.5 &
+         !is.na(gene) & gene != "" & !is.na(top_snp) & top_snp != ""]
+  setorder(d, gene, gwas_name, -pp4_best, -top_snp_PP)
+  out <- d[!duplicated(d, by = c("gene", "gwas_name"))]
   if (!nrow(out)) return(data.table())
+  out[, study := gwas_name]
   out[, ancestry  := ancestry_of(study)]
   out[, trait_cat := trait_of(study)]
   out[, definition := "C_coloc_top"]

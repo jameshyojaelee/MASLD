@@ -31,7 +31,7 @@
 #     the SuSiE (allows multiple causal signals) calls are the robust ones
 #   - the SAS Pan-UKBB scan never reached SuSiE convergence (abf only, low PP)
 #
-# Output: figures/main/fig4_validation/fads2_cross_ancestry.pdf
+# Output: figures/main/fig5_molecular_context/fads2_cross_ancestry.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

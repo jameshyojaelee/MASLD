@@ -10,7 +10,7 @@
 # same way, and the plasma "all-genes" rho reproduces the canonical 0.31 (text);
 # liver reproduces 0.34. Source: protein_transcript_concordance_v3.csv.
 #
-# Output: figures/main/fig4_validation/mrna_protein_scatter.pdf
+# Output: figures/main/fig5_molecular_context/mrna_protein_scatter.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

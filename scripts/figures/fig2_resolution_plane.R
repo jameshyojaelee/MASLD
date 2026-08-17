@@ -30,6 +30,9 @@ source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
 PANEL_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
+PDF_REL <- "main/fig2_genetics/panels/Fig2B_PIP_vs_SuSiE-coloc.pdf"
+SIZE_FILE <- file.path(BASE, "figures/layout_specs/figure2_panel_sizes.tsv")
+EXPECTED_SIZE <- c(width_in = 1.80, height_in = 2.35)
 
 # ---------------------------------------------------------------------------
 # 1. Per-gene colocalization (y) + coloc-lead variants
@@ -115,19 +118,22 @@ gene_x <- coloc_match[order(gene, -causal_pip, x_source),
 # ---------------------------------------------------------------------------
 # 3. Lead-variant class (coding / non-coding) per gene
 # ---------------------------------------------------------------------------
-ann <- fread(file.path(BASE,
-  "RNA-seq/results/coloc_variant_classes/coloc_variant_annotation.csv"))
+VARIANT_CLASS_DIR <- Sys.getenv(
+  "FIG2_VARIANT_CLASS_DIR",
+  file.path(BASE, "RNA-seq/results/coloc_variant_classes"))
+ann <- fread(file.path(VARIANT_CLASS_DIR, "coloc_variant_annotation.csv"))
 ann[, pp4_best := suppressWarnings(as.numeric(pp4_best))]
 ann <- ann[!is.na(gene_symbol) & gene_symbol != ""]
 gene_cls <- ann[order(-pp4_best)][, .(coarse_class = coarse_class[1]), by = gene_symbol]
 setnames(gene_cls, "gene_symbol", "gene")
 
-# Curated label roster (panel_F7_canonical + the MASLD coding-locus literature).
-# Label only the genes discussed in the Fig 2 text (keeps the panel uncluttered).
+# Curated class overrides remain broader than the label roster so unlabeled
+# literature anchors retain their correct lead-variant class.
 coding_genes  <- c("PNPLA3","HSD17B13","MBOAT7","MTARC1")
 straddle_genes<- c("TM6SF2","GCKR")
 expr_genes    <- c("RORA","GGT1","EPHA2","HKDC1")
-roster <- c(coding_genes, straddle_genes, expr_genes)
+# Five labels is the maximum readable at the contracted 1.80-in width.
+roster <- c("HSD17B13", "TM6SF2", "MBOAT7", "GCKR", "RORA")
 
 # ---------------------------------------------------------------------------
 # 4. Assemble plot table
@@ -145,7 +151,7 @@ dt[, class := fifelse(gene %in% coding_genes, "Coding",
               fifelse(coarse_class == "coding", "Coding",
                       "Non-coding"))))]
 dt[is.na(class), class := "Non-coding"]
-dt[, class := factor(class, levels = c("Non-coding","Both","Coding"))]
+dt[, class := factor(class, levels = c("Non-coding","Coding","Both"))]
 
 # One SuSiE-coloc point per gene. ABF is intentionally not plotted or used as a
 # fallback here; genes with no SuSiE posterior are absent from this panel.
@@ -222,7 +228,7 @@ str_lab <- lab_dt[class == "Both"][order(y_plot)]
 if (nrow(str_lab)) {
   lab_dt[str_lab, on = "gene",
          `:=`(tx = pmax(0.40, x_plot - 0.14),
-              ty = seq(0.30, 0.62, length.out = nrow(str_lab)))]
+              ty = seq(0.28, 0.45, length.out = nrow(str_lab)))]
 }
 lab_dt[, nudge_x := tx - x_plot]
 lab_dt[, nudge_y := ty - y_plot]
@@ -243,28 +249,49 @@ p <- ggplot(plot_dt, aes(x = x_plot, y = y_plot)) +
     force = 1.5, force_pull = 1.0, max.iter = 50000, max.time = 3,
     direction = "both", segment.size = 0.15, segment.color = "grey55",
     segment.alpha = 0.9, seed = 1, bg.color = "white", bg.r = 0.12) +
-  scale_color_manual(values = class_cols, name = "Lead variant") +
-  scale_x_continuous(limits = c(0, 1.03), breaks = seq(0, 1, 0.25),
+  scale_color_manual(values = class_cols, name = NULL,
+                     breaks = c("Non-coding", "Coding", "Both")) +
+  scale_x_continuous(limits = c(0, 1.03), breaks = c(0, 0.5, 1.0),
                      expand = expansion(mult = c(0.01, 0.02))) +
-  scale_y_continuous(limits = c(-0.02, 1.03), breaks = seq(0, 1, 0.25),
+  scale_y_continuous(limits = c(-0.02, 1.03), breaks = c(0, 0.5, 1.0),
                      expand = expansion(mult = c(0.01, 0.02))) +
   labs(x = "Fine-mapping PIP",
-       y = "Multi-signal COLOC posterior PP.H4") +
+       y = "Multi-signal COLOC PP.H4") +
+  coord_fixed(ratio = 1, clip = "off") +
   theme_masld(base_size = 6) +
-  theme(legend.position = "top", legend.justification = "center",
+  theme(legend.position = c(0.48, 0.64),
+        legend.justification = "center",
+        legend.direction = "horizontal",
         plot.title = element_blank(),
+        plot.margin = margin(10, 1, 3, 3, "pt"),
+        axis.ticks.length = unit(2, "pt"),
         axis.title = element_text(size = 6, face = "plain"),
+        axis.title.y = element_text(margin = margin(r = 0.5, unit = "pt")),
         axis.text = element_text(size = 6, face = "plain", color = "black"),
-        legend.key.size = unit(0.18, "cm"),
-        legend.spacing.y = unit(0.01, "cm"),
-        legend.title = element_text(size = 6, face = "plain"),
+        axis.text.y = element_text(margin = margin(r = 0.5, unit = "pt")),
+        legend.key.size = unit(5, "pt"),
+        legend.spacing.x = unit(1, "pt"),
+        legend.margin = margin(0, 0, 0, 0),
         legend.text = element_text(size = 6, face = "plain"),
         legend.background = element_rect(fill = scales::alpha("white", 0.7), color = NA)) +
-  guides(color = guide_legend(order = 1, override.aes = list(size = 1.8, alpha = 0.95), ncol = 3))
+  guides(color = guide_legend(order = 1,
+                              override.aes = list(size = 1.8, alpha = 0.95),
+                              nrow = 1, byrow = TRUE))
 
-out_pdf <- file.path(PANEL_DIR, "Fig2B_PIP_vs_SuSiE-coloc.pdf")
-ggsave(out_pdf, p, width = 2.49, height = 2.49, units = "in",
-       device = cairo_pdf, family = "Helvetica")
+source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))
+sizes <- read_sizes(SIZE_FILE)
+contract <- sizes[sizes$pdf == PDF_REL, , drop = FALSE]
+stopifnot(nrow(contract) == 1L)
+if (!isTRUE(all.equal(unname(as.numeric(unlist(contract[1, c("width_in", "height_in")]))),
+                            unname(EXPECTED_SIZE), tolerance = 1e-12))) {
+  stop("Figure 2B size contract must be 1.80 x 2.35 in before rendering")
+}
+if (nzchar(Sys.getenv("FIG2_CANDIDATE_DIR"))) {
+  contract$pdf <- basename(PDF_REL)
+  save_panel(p, basename(PDF_REL), contract, PANEL_DIR)
+} else {
+  save_panel(p, PDF_REL, sizes, file.path(BASE, "figures"))
+}
 
 # ---------------------------------------------------------------------------
 # 6. Freeze source CSV (so the cited numbers are reproducible). Record ALL

@@ -13,7 +13,7 @@
 # Sources:
 #   GSE : Analysis/Spatial/results/immune_exclusion/celltype_cooccurrence_spearman.csv (Hep-Fib = -0.562)
 #   Vu  : Analysis/Spatial/results/immune_exclusion/vu/{hepfib_cooccurrence_per_section,celltype_mean_by_spot_class}.csv
-# Output: figures/main/fig4_validation/spatial_hepfib_replication_vu.pdf
+# Output: figures/main/fig5_molecular_context/spatial_hepfib_replication_vu.pdf
 # Env: rnaseq
 suppressPackageStartupMessages({ library(ggplot2); library(dplyr); library(patchwork) })
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",

@@ -14,7 +14,7 @@ Summarized over the liver-enzyme traits (ALT/AST/GGT), median OR + across-trait
 range, per Visium cohort.
 
 Input:  Analysis/Spatial/results/gsmap/arm_decomposition_spatial_risk.csv
-Output: figures/main/fig4_validation/panels/figS4l.pdf
+Output: figures/main/fig5_molecular_context/panels/figS4l.pdf
 Env: rnaseq or spatial (matplotlib/pandas).
 """
 import os
@@ -34,7 +34,7 @@ matplotlib.rcParams.update({
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 CSV = os.path.join(BASE, "Analysis/Spatial/results/gsmap/arm_decomposition_spatial_risk.csv")
-OUT = os.path.join(BASE, "figures/main/fig4_validation/panels/figS4l.pdf")
+OUT = os.path.join(BASE, "figures/main/fig5_molecular_context/panels/figS4l.pdf")
 
 ENZYME = ["ukbb_alt", "ukbb_ast", "ukbb_ggt"]
 ARMS = ["Convergent", "Transcriptomic-only", "Genetic-only"]   # top -> bottom

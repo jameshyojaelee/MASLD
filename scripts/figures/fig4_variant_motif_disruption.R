@@ -33,7 +33,7 @@
 # Filter: motif_in_disease_regulon == TRUE, restricted to the disease master-
 #   regulator TFs HNF4A, RORA, THRB, TCF7L2 (Fig 2/Fig 3 hits).
 #
-# Output: figures/main/fig4_validation/fig4b_variant_motif_disruption.pdf (PDF only)
+# Output: figures/main/fig5_molecular_context/fig4b_variant_motif_disruption.pdf (PDF only)
 # ============================================================================
 
 suppressMessages({
@@ -46,7 +46,7 @@ BASE_DIR <- Sys.getenv("MASLD_PROJECT_ROOT",
 
 MOTIF_FILE <- file.path(BASE_DIR,
   "GWAS/finemapping/results/gwas_atac/motif_disruption_scores.csv")
-OUT_DIR <- file.path(BASE_DIR, "figures/main/fig4_validation/_supp")  # demoted to supp (2026-06-22): redundant with atac_rora_motif
+OUT_DIR <- file.path(BASE_DIR, "figures/main/fig5_molecular_context/_supp")  # demoted to supp (2026-06-22): redundant with atac_rora_motif
 OUT_PDF <- file.path(OUT_DIR, "fig4b_variant_motif_disruption.pdf")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 

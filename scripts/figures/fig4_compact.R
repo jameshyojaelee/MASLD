@@ -12,7 +12,7 @@
 #   - fig4_spatial_panels.R    → p_f, p_g, p_h  (relettered to f,g,h in assembly)
 # Proteomics row: 2026-05-28 (P0-H) the former fig4_proteomics_panels.R source
 # was removed (deleted 2026-04-23, superseded by fig4_validation.R, run first).
-# The canonical proteomics panels are figures/main/fig4_validation/panels/
+# The canonical proteomics panels are figures/main/fig5_molecular_context/panels/
 # fig4{a,b,c}.pdf (the fig4_validation.pdf composite was retired 2026-07-07);
 # see the proteomics block below.
 ##############################################################################
@@ -97,7 +97,7 @@ pharma <- source_panels(
 # concordance). The old panels (e/f/g) also relied on GSE276114, which the
 # T0.6 correction flagged as RNA-seq mislabeled as proteomics. The source()
 # call is removed so the runner no longer silently skips a missing script;
-# the canonical proteomics composite is figures/main/fig4_validation/
+# the canonical proteomics composite is figures/main/fig5_molecular_context/
 # fig4_validation.pdf. The compact wrapper marks these slots as a pointer.
 proteo <- list(
   e = placeholder("Proteomics: see fig4_validation.pdf (4a/4b)"),

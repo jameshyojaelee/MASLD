@@ -19,7 +19,7 @@
 # Tier B = 2 features (supplementary)
 # Tier C = ≤1 feature (context only)
 #
-# Output: figures/main/fig4_validation/panels/data/module_evidence_matrix.csv
+# Output: figures/main/fig5_molecular_context/panels/data/module_evidence_matrix.csv
 # Runtime: ~1 min on login node
 # ============================================================================
 suppressPackageStartupMessages({

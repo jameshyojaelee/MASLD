@@ -7,7 +7,7 @@
 #SBATCH --output=logs/fig4_spatial_candidates_%j.out
 #SBATCH --error=logs/fig4_spatial_candidates_%j.err
 # Render the full Fig 4 spatial candidate gallery (GSE192741 + Vu + CosMx).
-# Output: figures/main/fig4_validation/spatial/_candidates/
+# Output: figures/main/fig5_molecular_context/spatial/_candidates/
 # If cpu is busy, resubmit with: --qos=interactive (bypasses nslab 7TB cap; max 4 jobs)
 
 set -euo pipefail

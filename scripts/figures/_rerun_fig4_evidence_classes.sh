@@ -39,16 +39,16 @@ set -e
 echo "rc=$rc"
 
 echo "=== Figure 4 evidence-class outputs ==="
-ls -la --time-style=full-iso figures/main/fig4_validation/*.pdf || true
-sha256sum figures/main/fig4_validation/*.pdf || true
+ls -la --time-style=full-iso figures/main/fig5_molecular_context/*.pdf || true
+sha256sum figures/main/fig5_molecular_context/*.pdf || true
 
 echo "=== Figure 1 collision check (expect unchanged content) ==="
 sha256sum figures/main/fig1_atlas_overview/fig1b_complementary_maps.pdf \
           figures/main/fig1_atlas_overview/fig1c_genetic_trait_scope.pdf || true
 
 echo "=== archived r2 reference hashes (for diff) ==="
-sha256sum figures/main/fig4_validation/_legacy/2026-08-06_preconsolidation/fig4a_evidence_class_positive_rates.pdf \
-          figures/main/fig4_validation/_legacy/2026-08-06_preconsolidation/fig4b_evidence_class_adjusted_or.pdf \
-          figures/main/fig4_validation/_legacy/2026-08-06_preconsolidation/fig4c_convergence_comparison.pdf || true
+sha256sum figures/main/fig5_molecular_context/_legacy/2026-08-06_preconsolidation/fig4a_evidence_class_positive_rates.pdf \
+          figures/main/fig5_molecular_context/_legacy/2026-08-06_preconsolidation/fig4b_evidence_class_adjusted_or.pdf \
+          figures/main/fig5_molecular_context/_legacy/2026-08-06_preconsolidation/fig4c_convergence_comparison.pdf || true
 
 echo "=== DONE $(date) ==="

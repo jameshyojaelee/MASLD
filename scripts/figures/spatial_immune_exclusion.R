@@ -25,7 +25,7 @@
 #   celltype_mean_by_spot_class.csv     -> lymphoid depletion / macrophage rise
 #   immune_exclusion_summary.txt        -> 314/6546 excluded spots, 5 donors
 #
-# Output: figures/main/fig4_validation/spatial_immune_exclusion.pdf  (flat name)
+# Output: figures/main/fig5_molecular_context/spatial_immune_exclusion.pdf  (flat name)
 # Env:    rnaseq
 # Ledger: row "immune_exclusion" (hep-fib rho -0.562 descriptive; 314/6546=4.8%
 #         excluded; CXCL12 +0.312 NOT sig p=.0625/padj .19; scooped Karpova 2026,

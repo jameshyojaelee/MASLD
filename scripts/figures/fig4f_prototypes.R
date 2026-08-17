@@ -5,7 +5,7 @@
 # Gene universe: 8 clinical anchors + 11 novel druggable genes with
 # SuSiE PP4 >= 0.5 from the 50-GWAS SuSiE-COLOC portfolio (MVP 5-ancestry expansion; was 23-GWAS pre-2026-07-05).
 #
-# Outputs (figures/main/fig4_validation/panels/):
+# Outputs (figures/main/fig5_molecular_context/panels/):
 #   fig4f_opt1_lollipop.pdf  -- lollipop by best SuSiE PP4
 #   fig4f_opt2_scatter.pdf   -- dream logFC vs PP4 scatter
 #   fig4f_opt3_forest.pdf    -- per-GWAS PP4 forest/heatmap

@@ -28,6 +28,13 @@ BASE <- Sys.getenv(
 )
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
+CANDIDATE_ROOT <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
+OUTPUT_DIR <- if (nzchar(CANDIDATE_ROOT)) {
+  file.path(CANDIDATE_ROOT, "figure5", "panels")
+} else {
+  file.path(FIG5_CONTEXT_DIR, "panels")
+}
+dir.create(file.path(OUTPUT_DIR, "data"), recursive = TRUE, showWarnings = FALSE)
 
 FS <- 6
 FAM <- "Helvetica"
@@ -99,11 +106,19 @@ setorder(selected, display_order)
 selected[, y := .N:1L]
 stopifnot(nrow(selected) > 0L, uniqueN(selected$program_id) == nrow(selected))
 
+# Parenthetical gene symbols are registry provenance, not the unit scored by
+# any Figure 5E track. Preserve the frozen name in the sidecar while using a
+# program-level display label in both the PDF and its display-facing field.
+selected[, source_program_name := program_name]
+selected[, program_name := sub(" \\([^()]+\\)$", "", program_name)]
+
 selection_sidecar <- selected[, .(
-  program_id, display_order, cell_type, module, program_name, stability_fail,
+  program_id, display_order, cell_type, module, program_name,
+  source_program_name, stability_fail,
   open_promoter_genes, histology_burden_robust, spatial_shared,
   displayed_n = .N,
   frozen_universe_n = nrow(wide),
+  inference_unit = "frozen weighted program; not parenthetical named-gene expression",
   selection_rule = paste0(
     "open_promoter_gene OR robust_histology_burden OR ",
     "robust_spatial_in_both"
@@ -111,12 +126,12 @@ selection_sidecar <- selected[, .(
 )]
 fwrite(
   selection_sidecar,
-  file.path(FIG5_CONTEXT_DIR, "panels", "data", "fig5e_multimodal_program_summary_selection.tsv"),
+  file.path(OUTPUT_DIR, "data", "fig5e_multimodal_program_summary_selection.tsv"),
   sep = "\t",
   quote = FALSE
 )
 
-selected[, short_name := sub(" \\([^()]+\\)$", "", program_name)]
+selected[, short_name := program_name]
 selected[short_name == "Fatty-acid / peroxisomal metab",
          short_name := "FA / peroxisomal metabolism"]
 selected[short_name == "Glucocorticoid resp",
@@ -438,7 +453,7 @@ p_spatial <- ggplot() +
 candidate <- p_labels + p_genetic + p_hist + p_spatial +
   plot_layout(widths = c(1.52, 0.94, 1.28, 1.30))
 
-out <- file.path(FIG5_CONTEXT_DIR, "panels", "fig5e_multimodal_program_summary.pdf")
+out <- file.path(OUTPUT_DIR, "fig5e_multimodal_program_summary.pdf")
 ggsave(
   out,
   candidate,

@@ -20,7 +20,7 @@
 #   - Mac/Chol  : underpowered (r=0.03 / 0.21) -> shown for transparency, flagged.
 # Each cohort fit SEPARATELY (limma voom-QW; per-cohort dispersion). Peaks deduped
 # (24% coordinate-duplicate intervals in the canonical peak set).
-# Env: rnaseq.  Output: figures/main/fig4_validation/panels/figS4o.pdf (promoted 2026-07-14;
+# Env: rnaseq.  Output: figures/main/fig5_molecular_context/panels/figS4o.pdf (promoted 2026-07-14;
 #   supplementary corroboration panel for Fig4, sits with figS4g/figS4h etc.)
 # ==============================================================================
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(ggrastr) })

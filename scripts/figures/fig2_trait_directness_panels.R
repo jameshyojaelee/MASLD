@@ -1,9 +1,20 @@
 #!/usr/bin/env Rscript
 # Panel A KEY MESSAGE: the closer a liver phenotype sits to the molecular lesion,
 # the more of its fine-mapped heritability is protein-coding.
-# Panel B KEY MESSAGE: within the noncoding remainder the annotation gap is
-# specific to distal enhancer-gene maps - direct-trait posterior mass is
-# promoter-proximal yet essentially absent from liver ABC enhancers.
+# Panel B KEY MESSAGE (revised 2026-08-17 after family multiplicity correction):
+# within the noncoding remainder, direct-trait posterior mass is promoter-proximal
+# and better resolved overall. It is NOT that the gap is specific to distal
+# enhancer-gene maps.
+#
+# The earlier message, "essentially absent from liver ABC enhancers", is RETIRED.
+# Across the family of six direct-vs-enzyme tests on these groups, ABC depletion
+# has permutation p = 0.398 (BH q = 0.398) and generic liver accessibility
+# p = 0.185 (q = 0.222); neither survives. What survives is promoter proximity
+# (3.92x, q = 0.0042), unresolved context (0.53x, q = 6.0e-4) and resolved-no-
+# context (2.06x, q = 0.0085). The ABC row is still drawn, because showing the
+# non-surviving comparison beside the surviving ones is the honest display, but
+# it may not be described as a depletion.
+# Source: GWAS/finemapping/results/fig2_multiplicity/20260817T161128Z/
 #
 # Both panels use 1-Mb genomic-region groups as the unit, not credible-set
 # instances. The grouping prevents repeated recovery of one region from
@@ -18,6 +29,7 @@ BASE <- Sys.getenv(
   "MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
+source(file.path(BASE, "scripts/figures/fig2_consequence_palette.R"))
 STATS_DIR <- Sys.getenv("FIG2_TRAIT_DIRECTNESS_STATS")
 OUT_DIR <- Sys.getenv("FIG2_TRAIT_DIRECTNESS_OUT")
 stopifnot(nzchar(STATS_DIR), nzchar(OUT_DIR))
@@ -93,23 +105,28 @@ ci_row <- function(r, y, col, to_x, tick_h = 0.033, pt = 0.080) {
 # ---------------------------------------------------------------- Panel A ----
 # Complete mutually exclusive consequence composition. This answers what the
 # protein-altering share is relative to, without mixing in lead-SNP counts.
-PA_W <- 2.10
-PA_H <- 2.44
+PA_W <- 1.85
+PA_H <- 2.10
 pa_pdf <- file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness.pdf")
 open_page(pa_pdf, PA_W, PA_H)
 
 comp_cats <- c("protein_altering_pip_mass", "canonical_splice_pip_mass",
                "synonymous_or_utr_pip_mass", "other_noncoding_pip_mass")
-comp_lab <- c("Protein-altering", "Canonical splice", "Synonymous / UTR",
+comp_lab <- c("Protein-altering", "Canonical splice", "Synonymous/UTR",
               "Other noncoding")
-comp_fill <- c("#C9265E", "#F48FB1", "#4DB6AC", "#B0BEC5")
+# Match the Figure 2C sequence palette wherever the classes correspond.
+# Canonical splice uses the same dark blue reserved for a distinct sequence
+# annotation class in C; the other three mappings are exact semantic matches.
+fig2_sequence_palette <- FIG2_CONSEQUENCE_PALETTE[
+  c("protein_altering", "canonical_splice", "synonymous_or_utr", "other_noncoding")]
+comp_fill <- unname(fig2_sequence_palette)
 
-plot_x0 <- 0.43
-plot_y0 <- 0.72
-plot_y1 <- 2.27
+plot_x0 <- 0.36
+plot_y0 <- 0.43
+plot_y1 <- 1.93
 plot_h <- plot_y1 - plot_y0
-bar_w <- 0.42
-bar_x <- c(0.66, 1.33)
+bar_w <- 0.20
+bar_x <- c(0.59, 0.96)
 for (i in seq_along(row_scope)) {
   values <- vapply(comp_cats, function(category) {
     get_est(row_scope[i], category)$locus_weighted_fraction
@@ -138,10 +155,10 @@ enzyme_mid <- vapply(seq_along(enzyme_values), function(j) {
   plot_y0 + plot_h * (below + enzyme_values[j] / 2)
 }, numeric(1))
 for (j in c(1, 3)) {
-  label_y <- if (j == 1) 2.31 else 2.18
-  seg(bar_x[2] + bar_w / 2, enzyme_mid[j], 1.74, label_y,
+  label_y <- if (j == 1) 1.84 else 1.70
+  seg(bar_x[2] + bar_w / 2, enzyme_mid[j], 1.09, label_y,
       col = "#555555", lwd = 0.45)
-  txt(sprintf("%.1f", 100 * enzyme_values[j]), 1.78, label_y,
+  txt(sprintf("%.1f", 100 * enzyme_values[j]), 1.11, label_y,
       just = "left", size = 6, col = "#333333")
 }
 
@@ -151,17 +168,18 @@ for (tick in c(0, 50, 100)) {
   seg(plot_x0 - 0.04, yy, plot_x0, yy, lwd = 0.5)
   txt(sprintf("%d", tick), plot_x0 - 0.07, yy, just = "right", size = 6)
 }
-txt("Fine-mapping probability (%)", 0.10, (plot_y0 + plot_y1) / 2,
+txt("Fine-mapping probability (%)", 0.075, (plot_y0 + plot_y1) / 2,
     size = 6, rot = 90)
-txt("Direct MASLD /\nliver fat", bar_x[1], 0.60, size = 6)
-txt("Liver\nenzymes", bar_x[2], 0.60, size = 6)
+txt("Direct MASLD /\nliver fat", bar_x[1], 0.30, size = 6)
+txt("Liver\nenzymes", bar_x[2], 0.30, size = 6)
 
-# Two-column legend. These four classes are mutually exclusive and exhaustive.
-legend_x <- c(0.18, 1.08, 0.18, 1.08)
-legend_y <- c(0.34, 0.34, 0.15, 0.15)
+# One right-hand legend column. These four classes are mutually exclusive and
+# exhaustive; moving it beside the bars preserves the plot height at 2.10 in.
+legend_x <- rep(1.15, 4)
+legend_y <- c(1.55, 1.28, 1.01, 0.74)
 for (j in seq_along(comp_cats)) {
-  bar(legend_x[j], legend_y[j], 0.075, 0.075, comp_fill[j])
-  txt(comp_lab[j], legend_x[j] + 0.10, legend_y[j], just = "left", size = 6,
+  bar(legend_x[j], legend_y[j], 5 / 72, 5 / 72, comp_fill[j])
+  txt(comp_lab[j], legend_x[j] + 0.095, legend_y[j], just = "left", size = 6,
       col = "#4D4D4D")
 }
 popViewport()
@@ -269,9 +287,16 @@ cap_b <- paste(
   "unresolved deposited context. Only 7.87% and 4.46%, respectively, lies within 2 kb",
   "of a GENCODE TSS; 7.32% and 4.15% is open in an available liver lineage; and 0.23%",
   "and 1.57% overlaps a liver ABC enhancer. Positive context categories overlap and must",
-  "not be summed. Independent-locus bootstrap contrasts and sensitivity estimates remain",
-  "in the source tables. Regulatory-DNA context is separate from colocalized-transcript",
-  "biotype; unresolved loci should not be assigned automatically to the nearest gene."
+  "not be summed. Across the family of six direct-versus-enzyme tests on these groups,",
+  "corrected by Benjamini-Hochberg, the promoter-proximal difference survives (3.92-fold,",
+  "q=0.0042) as does the unresolved-context difference (0.53-fold, q=6.0e-4); the liver",
+  "ABC enhancer difference does not (q=0.398), nor does generic liver accessibility",
+  "(q=0.222). The ABC and accessibility rows are shown for completeness and must not be",
+  "described as depletion or enrichment. Groups are operational 1-Mb clusters, not",
+  "independent loci: no LD was consulted in forming them. Contrasts and sensitivity",
+  "estimates remain in the source tables. Regulatory-DNA context is separate from",
+  "colocalized-transcript biotype; unresolved loci should not be assigned automatically",
+  "to the nearest gene."
 )
 writeLines(cap_a, file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness_caption.txt"))
 writeLines(cap_b, file.path(OUT_DIR, "Fig2_companion_noncoding_annotation_gap_caption.txt"))

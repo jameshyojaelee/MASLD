@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Fig 4 spatial — finalize the chosen candidate panels to publication spec,
-written into the spatial panel dir:  figures/main/fig4_validation/panels/spatial/
+written into the spatial panel dir:  figures/main/fig5_molecular_context/panels/spatial/
 
   1. fig4_spatial_cyp3a4_he      — CYP3A4 over H&E, Healthy (JBO018) | Steatotic
                                     (JBO019), shared color scale (drug-target loss)
@@ -42,7 +42,7 @@ import fig4_spatial_candidates as G   # loaders + constants (module-level is saf
 
 BASE = G.BASE
 SPA  = G.SPA
-OUT  = os.path.join(BASE, "figures/main/fig4_validation/panels/spatial")
+OUT  = os.path.join(BASE, "figures/main/fig5_molecular_context/panels/spatial")
 os.makedirs(OUT, exist_ok=True)
 
 CMAP_EXPR  = G.CMAP_EXPR     # magma
@@ -199,7 +199,7 @@ def panel_cyp3a4():
     fig.savefig(os.path.join(OUT, "fig4_spatial_cyp3a4_he.pdf"), bbox_inches="tight")
     # PROMOTED to a MAIN panel (2026-07-07); relettered e (2026-07-08, H&E leads the
     # Fig4 lineup's cyp3a4 pair, immediately followed by cyp3a4_zonation/f).
-    fig.savefig(os.path.join(BASE, "figures/main/fig4_validation/panels", "fig4e_cyp3a4_he.pdf"), bbox_inches="tight")
+    fig.savefig(os.path.join(BASE, "figures/main/fig5_molecular_context/panels", "fig4e_cyp3a4_he.pdf"), bbox_inches="tight")
     plt.close(fig)
     print("  saved fig4_spatial_cyp3a4_he.pdf + panels/fig4e_cyp3a4_he.pdf (main)", flush=True)
 

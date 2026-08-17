@@ -54,29 +54,44 @@ if (nzchar(CANDIDATE_ROOT)) {
       any(adjacent[, uniqueN(gene_id_versioned), by = contrast]$V1 != expected_family) ||
       any(audit$bh_family_size != expected_family)) stop("Incomplete stage BH family", call. = FALSE)
 
-  adjacent[, axis := "fibrosis"]
-  adjacent[, display := factor(contrast, levels = c("F0_to_F1", "F1_to_F2", "F2_to_F3", "F3_to_F4"),
-                               labels = c("F0→F1", "F1→F2", "F2→F3", "F3→F4"))]
+  # The main fibrosis bars use the same F0 reference as the centered NMF
+  # activity tracks. Adjacent-stage contrasts remain available in the source
+  # release but are not mixed with the common-reference display.
+  fibrosis_vs_f0 <- extension[axis == "fibrosis"]
+  fibrosis_vs_f0[, display := comparison]
   nas <- extension[axis == "NAS"]
-  nas[, display := factor(contrast,
-    levels = c("NAS1_2_vs_NAS0", "NAS3_4_vs_NAS1_2", "NAS5_8_vs_NAS3_4"),
-    labels = c("0→1–2", "1–2→3–4", "3–4→5–8"))]
+  nas[, display := comparison]
   counts <- rbind(
-    adjacent[FDR < 0.05,
+    fibrosis_vs_f0[FDR < 0.05,
       .(n = .N), by = .(axis, display, direction = fifelse(logFC > 0, "Higher", "Lower"))],
+    data.table(axis = "fibrosis", display = "F0",
+               direction = c("Higher", "Lower"), n = 0L),
     nas[FDR < 0.05,
-      .(n = .N), by = .(axis, display, direction = fifelse(logFC > 0, "Higher", "Lower"))]
+      .(n = .N), by = .(axis, display, direction = fifelse(logFC > 0, "Higher", "Lower"))],
+    data.table(axis = "NAS", display = "NAS0",
+               direction = c("Higher", "Lower"), n = 0L)
   )
   counts[, signed_n := fifelse(direction == "Lower", -n, n)]
   counts[, direction := factor(direction, levels = c("Higher", "Lower"))]
 
-  count_plot <- function(axis_id, xlab) {
-    ggplot(counts[axis == axis_id], aes(display, signed_n, fill = direction)) +
-      geom_col(width = 0.68) +
+  count_plot <- function(axis_id, groups, xlab, ylab, labels = groups) {
+    d <- copy(counts[axis == axis_id])
+    d[, display := factor(display, levels = groups, labels = labels)]
+    # A group whose contrast returns a handful of genes draws a bar too short to
+    # see against a several-thousand-gene axis, which reads as missing data
+    # rather than as a near-null step. Print the count for any non-zero bar
+    # under 2% of the panel maximum. The definitional zero at the reference
+    # group stays unlabelled.
+    tiny <- d[n > 0 & n < 0.02 * max(abs(d$signed_n))]
+    ggplot(d, aes(display, signed_n, fill = direction)) +
+      geom_col(width = 0.44) +
       geom_hline(yintercept = 0, linewidth = 0.25) +
+      geom_text(data = tiny, aes(label = n,
+                                 vjust = ifelse(direction == "Higher", -0.5, 1.4)),
+                size = 6 / .pt, show.legend = FALSE) +
       scale_fill_manual(values = c(Higher = masld_colors$mash, Lower = masld_colors$down), guide = "none") +
       scale_y_continuous(labels = abs, expand = expansion(mult = c(0.13, 0.16))) +
-      labs(x = xlab, y = "DEGs") + theme_masld_compact() +
+      labs(x = xlab, y = ylab) + theme_masld_compact() +
       theme(axis.text.x = element_text(size = 6, face = "plain"),
             plot.margin = margin(2, 2, 1, 2))
   }
@@ -88,25 +103,43 @@ if (nzchar(CANDIDATE_ROOT)) {
       geom_hline(yintercept = 0, color = "grey75", linewidth = 0.25) +
       geom_line(linewidth = 0.55) + geom_point(size = 1.05) +
       scale_color_manual(values = program_colors, guide = guide_legend(nrow = 2)) +
-      labs(x = xlab, y = "Program activity", color = NULL) + theme_masld_compact() +
+      # drop = FALSE keeps a group with no estimate as an empty tick so the two
+      # rows of a column stay on the same x geometry.
+      scale_x_discrete(drop = FALSE) +
+      labs(x = xlab, y = "NMF activity", color = NULL) + theme_masld_compact() +
       theme(axis.text.x = element_text(size = 6, face = "plain"),
             legend.position = "bottom", legend.key.width = unit(8, "pt"),
             plot.margin = margin(1, 2, 2, 2))
   }
-  fib_count <- count_plot("fibrosis", "Adjacent fibrosis stage")
-  nas_count <- count_plot("NAS", "Adjacent NAS group")
+  fib_count <- count_plot("fibrosis", paste0("F", 0:4), "Fibrosis stage", "DEGs vs F0")
+  # NAS uses the same common-reference estimand as the fibrosis column: each
+  # activity group against strict NAS0, with NAS0 itself the definitional zero.
+  # The adjacent NAS chain stays on axis "NAS_adjacent" for the supplement.
+  nas_count <- count_plot("NAS", c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8"),
+                          "NAS group", "DEGs vs NAS0",
+                          labels = c("0", "1–2", "3–4", "5–8"))
   fib_program <- program_plot("fibrosis", paste0("F", 0:4), paste0("F", 0:4), "Fibrosis stage")
   # Only one NAS0 donor on the synchronized fragment substrate has a
-  # prespecified NMF score, so program activity begins at NAS1–2. Do not imply
-  # a supported NAS0 program estimate; the adjacent NAS0-versus-NAS1–2 DEG
-  # contrast still uses all eligible bulk donors.
-  nas_program <- program_plot("NAS", c("NAS1-2", "NAS3-4", "NAS5-8"),
-                              c("1–2", "3–4", "5–8"), "NAS group")
-  main <- (fib_count | nas_count) / (fib_program | nas_program) +
-    plot_layout(heights = c(1, 1.05), guides = "collect") &
-    theme(legend.position = "bottom")
+  # prespecified NMF score, so program activity begins at NAS1–2 and is centred
+  # there, not on NAS0. The NAS0 tick is carried as an empty position to hold
+  # the column geometry; do not imply a supported NAS0 program estimate. The
+  # DEG track above is unaffected and uses all 46 eligible NAS0 donors.
+  nas_program <- program_plot("NAS", c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8"),
+                              c("0", "1–2", "3–4", "5–8"), "NAS group")
+  # Main panel is two matched columns: fibrosis (F0 + 4 groups) left, NAS
+  # (NAS0 + 3 groups) right. Flat 2x2 so plot_layout() widths apply to the real
+  # columns; the NAS column is proportionally narrower for its one fewer group
+  # rather than stretched to match. The right program plot drops its duplicated
+  # y title only (ticks stay) because both program tracks are in the same
+  # centered NMF-activity units.
+  main <- fib_count + nas_count +
+    fib_program + (nas_program + labs(y = NULL)) +
+    plot_layout(ncol = 2, heights = c(1, 1.05), widths = c(1, 0.85),
+                guides = "collect") &
+    theme(legend.position = "bottom", legend.margin = margin(0, 0, 0, 0),
+          legend.box.spacing = unit(2, "pt"))
   ggsave(file.path(OUT_DIR, "fig3e_stage_remodeling.pdf"), main,
-         width = 7.1, height = 3.25, device = cairo_pdf)
+         width = 5.00, height = 2.27, device = cairo_pdf)
 
   # Composition remains supplementary. Each biopsy is one participant-level
   # unit under the validated crosswalk; no library or cell is treated as n.
@@ -150,7 +183,7 @@ if (nzchar(CANDIDATE_ROOT)) {
   ggsave(file.path(SUPP_DIR, "figs3_stage_remodeling_full.pdf"), full,
          width = 7.1, height = 4.8, device = cairo_pdf)
 
-  fwrite(counts, file.path(SRC_DIR, "fig3e_adjacent_deg_counts.tsv"), sep = "\t")
+  fwrite(counts, file.path(SRC_DIR, "fig3e_deg_counts.tsv"), sep = "\t")
   fwrite(activity, file.path(SRC_DIR, "fig3e_prespecified_nmf_activity.tsv"), sep = "\t")
   fwrite(comp_sum, file.path(SRC_DIR, "figs3_composition_summary.tsv"), sep = "\t")
   quit(save = "no", status = 0)

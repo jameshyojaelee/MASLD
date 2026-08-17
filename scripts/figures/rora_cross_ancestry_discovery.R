@@ -19,7 +19,7 @@
 #   top_snp_PP, PP.H4.susie). bulk from canonical_deg_results.csv (C2). NEVER the
 #   atlas *_coloc_pp4 convenience columns.
 #
-# Output: figures/main/fig4_validation/fig4c_rora_cross_ancestry_discovery.pdf
+# Output: figures/main/fig5_molecular_context/fig4c_rora_cross_ancestry_discovery.pdf
 # Env:    rnaseq
 # ─────────────────────────────────────────────────────────────────────────────
 

@@ -543,28 +543,35 @@ bridge[, program_short := factor(
   levels = c("ECM / IGFBP7", "Ductular / BICC1")
 )]
 
+# Keep the untestable LAMC3→DAG1 pair in the planned family and source table,
+# but omit it from the compact display because neither program has an estimate.
+bridge_display <- copy(bridge[testable == TRUE])
+bridge_display[, pair_plotmath := droplevels(pair_plotmath)]
+assert_that(
+  "compact_screen_12_testable_pairs",
+  nrow(bridge_display) == 24L &&
+    uniqueN(bridge_display[, .(ct_pair, lr_pair)]) == 12L,
+  sprintf(
+    "rows=%d;pairs=%d",
+    nrow(bridge_display), uniqueN(bridge_display[, .(ct_pair, lr_pair)])
+  )
+)
+
 association_limit <- max(abs(bridge$beta), na.rm = TRUE)
 if (!is.finite(association_limit) || association_limit == 0) association_limit <- 1
 
-p_screen <- ggplot(bridge, aes(program_short, pair_plotmath)) +
+p_screen <- ggplot(bridge_display, aes(program_short, pair_plotmath)) +
   geom_point(
-    data = bridge[testable == TRUE],
     aes(color = beta), shape = 16, size = 1.8
   ) +
   geom_point(
-    data = bridge[supported_both == TRUE],
-    shape = 1, color = "black",
-    size = 2.8, stroke = 0.7
-  ) +
-  geom_point(
-    data = bridge[testable == FALSE],
-    shape = 4, color = "#9E9E9E",
-    size = 1.6, stroke = 0.5
+    data = bridge_display[supported_both == TRUE],
+    aes(color = beta), shape = 16, size = 2.8
   ) +
   scale_color_gradient2(
     low = masld_colors$down, mid = "#9E9E9E", high = masld_colors$mash,
     midpoint = 0, limits = c(-association_limit, association_limit),
-    oob = scales::squish, name = expression("Program association " * beta),
+    oob = scales::squish, name = expression(beta),
     breaks = c(-association_limit, 0, association_limit),
     labels = sprintf("%.2f", c(-association_limit, 0, association_limit)),
     guide = guide_colorbar(
@@ -573,21 +580,18 @@ p_screen <- ggplot(bridge, aes(program_short, pair_plotmath)) +
   ) +
   scale_x_discrete(
     labels = expression(
-      "★ Hep 8\nECM / " * italic("IGFBP7"),
-      "★ Hep 20\nDuctular / " * italic("BICC1")
-    )
+      "ECM / " * italic("IGFBP7"),
+      "Ductular / " * italic("BICC1")
+    ),
+    expand = expansion(add = c(1.25, 1.25))
   ) +
   scale_y_discrete(labels = function(value) parse(text = value)) +
-  labs(
-    x = NULL, y = NULL,
-    title = "Screen of 4C's two starred programs",
-    subtitle = sprintf("%d/26 donor-level tests supported", n_supported)
-  ) +
+  labs(x = NULL, y = NULL) +
   theme_masld_compact() +
   theme(
     text = element_text(size = 6, face = "plain"),
     axis.text = element_text(size = 6, face = "plain"),
-    axis.text.x = element_text(size = 6, face = "plain", angle = 28, hjust = 1),
+    axis.text.x = element_text(size = 6, face = "plain", angle = 22, hjust = 1),
     legend.position = "bottom",
     legend.title = element_text(size = 6, face = "plain"),
     legend.text = element_text(size = 6, face = "plain"),
@@ -597,14 +601,8 @@ p_screen <- ggplot(bridge, aes(program_short, pair_plotmath)) +
   )
 
 hero_stats <- sprintf(
-  paste0(
-    "β=%.2f\n",
-    "BH q=%.1e; HC3 q=%.1e\n",
-    "LODO: 4/4 positive; β %.2f–%.2f"
-  ),
-  supported_bridge$beta, supported_bridge$qvalue,
-  supported_bridge$hc3_qvalue, supported_bridge$lodo_beta_min,
-  supported_bridge$lodo_beta_max
+  "n=60   β=%.2f\nq=%.1e   q[HC3]=%.1e",
+  supported_bridge$beta, supported_bridge$qvalue, supported_bridge$hc3_qvalue
 )
 
 p_hit <- ggplot(hit_data, aes(adjusted_program, adjusted_ccc)) +
@@ -623,12 +621,10 @@ p_hit <- ggplot(hit_data, aes(adjusted_program, adjusted_ccc)) +
     family = "Helvetica", lineheight = 0.95, color = "#252525"
   ) +
   labs(
-    x = "Program score (adjusted)",
-    y = "CCC score (adjusted)",
-    title = "Supported association across 60 donors",
-    subtitle = expression(
-      "Ductular / " * italic("BICC1") * "  ↔  " *
-        italic("CDH1") * "→" * italic("PTPRM") * "  (Hep→Endo)"
+    x = "Program (adjusted)",
+    y = "CCC (adjusted)",
+    title = expression(
+      italic("BICC1") * "  ↔  " * italic("CDH1") * "→" * italic("PTPRM")
     )
   ) +
   theme_masld_compact() +
@@ -637,31 +633,15 @@ p_hit <- ggplot(hit_data, aes(adjusted_program, adjusted_ccc)) +
     axis.title = element_text(size = 6, face = "plain"),
     axis.text = element_text(size = 6, face = "plain"),
     plot.title = element_text(size = 6, face = "plain"),
-    plot.subtitle = element_text(size = 6, face = "plain", lineheight = 0.95),
     plot.margin = margin(2, 2, 2, 2)
   )
 
 panel_d <- (p_screen | p_hit) +
-  plot_layout(widths = c(1.38, 1)) +
-  plot_annotation(
-    title = "One CCC signal covaries with the starred ductular program",
-    caption = paste0(
-      "Adjusted for disease stage, dataset, and sender/receiver cell counts. ",
-      "Ring = model-based and HC3 BH q<0.05; × = untestable.\n",
-      "Original donor-stage CCC screen: 0/13 FDR-supported. ",
-      "Same-atlas co-variation; not a signaling mechanism."
-    ),
-    theme = theme(
-      plot.title = element_text(size = 6, face = "plain", hjust = 0),
-      plot.caption = element_text(size = 6, face = "plain", hjust = 0,
-                                  color = "#5A5A5A", lineheight = 0.95),
-      plot.margin = margin(2, 2, 2, 2)
-    )
-  )
+  plot_layout(widths = c(1.15, 1))
 
 ggsave(
   file.path(PANEL_DIR, "fig4d_program_linked_communication.pdf"),
-  panel_d, width = 6.8, height = 3.25, units = "in", device = cairo_pdf
+  panel_d, width = 5.15, height = 2.45, units = "in", device = cairo_pdf
 )
 
 stage_out <- add_contract(
@@ -707,7 +687,7 @@ caption <- c(
   "**(C)** Existing thirty-program Hotspot stage heatmap, unchanged. Asterisks retain their existing meaning: complete-family BH q<0.05. The two starred hepatocyte-labelled programs are Hep 8 ECM/*IGFBP7* and Hep 20 ductular-injury/*BICC1*.",
   sprintf(
     paste0(
-      "**(D)** Left, donor-matched screen of the two starred programs against the complete fixed 13-pair CCC roster. Models adjust for disease stage, dataset, and sender/receiver cell counts; BH correction covers all 26 planned program-pair tests. ",
+      "**(D)** Left, donor-matched screen of the two starred programs against the 12 estimable pairs in the fixed 13-pair CCC roster. The untestable *LAMC3*→*DAG1* row remains in the planned 26-test family and source table but is omitted from the graphic. Models adjust for disease stage, dataset, and sender/receiver cell counts; BH correction covers all 26 planned program-pair tests. ",
       "%d of 26 associations passes both model-based and HC3 BH q<0.05: ductular-injury/*BICC1* with hepatocyte→endothelial *CDH1*→*PTPRM*. Right, partial residuals show the 60 biological donors underlying that adjusted coefficient; its direction is retained in all four leave-one-dataset-out fits. ",
       "No ECM-program association passes both families. The original donor-stage CCC family remains zero of 13 supported and its complete stage heatmap remains in Figure S4. This is a same-atlas contextual association, not evidence of ligand secretion, receptor activation, or mechanism."
     ),

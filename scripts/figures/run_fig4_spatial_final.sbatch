@@ -6,7 +6,7 @@
 #SBATCH --time=48:00:00
 #SBATCH --output=logs/fig4_spatial_final_%j.out
 #SBATCH --error=logs/fig4_spatial_final_%j.err
-# Finalize the chosen panels into figures/main/fig4_validation/spatial/.
+# Finalize the chosen panels into figures/main/fig5_molecular_context/spatial/.
 
 set -euo pipefail
 cd "${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}"

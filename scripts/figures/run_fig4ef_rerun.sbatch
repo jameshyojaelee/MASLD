@@ -22,4 +22,4 @@ micromamba run -n spatial python "$SCRIPTS/fig4b_spatial_overview.py"
 echo "[OK] 4B"
 
 echo "Done. PDFs:"
-ls -lh "$BASE/figures/main/fig4_validation/panels/"*.pdf 2>/dev/null
+ls -lh "$BASE/figures/main/fig5_molecular_context/panels/"*.pdf 2>/dev/null

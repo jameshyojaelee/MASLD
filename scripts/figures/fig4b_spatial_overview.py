@@ -6,7 +6,7 @@ Fig 4B — Spatial overview (two panels):
   Right:  Disease-emergent SVG score distribution across ALL spots from
           both cohorts (GSE192741 + Vu et al.), split by condition
 
-Output: figures/main/fig4_validation/spatial_zonation.pdf
+Output: figures/main/fig5_molecular_context/spatial_zonation.pdf
 Environment: spatial (conda)
 """
 import os, sys
@@ -31,7 +31,7 @@ sc.settings.verbosity = 0
 sys.path.insert(0, os.path.join(BASE, "Analysis/Spatial/scripts"))
 from spatial_stats import ensure_lognorm
 
-OUT_DIR      = os.path.join(BASE, "figures/main/fig4_validation", "panels")
+OUT_DIR      = os.path.join(BASE, "figures/main/fig5_molecular_context", "panels")
 DATA_DIR     = os.path.join(BASE, "Analysis/Spatial/data/gsmap_input")
 SVG_CSV      = os.path.join(BASE, "Analysis/Spatial/results/integration/spatial_consensus.csv")
 # Real disease-emergent SVG call (F250/F196): genes that gained spatial structure

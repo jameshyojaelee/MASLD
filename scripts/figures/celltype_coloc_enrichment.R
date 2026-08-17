@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # Fig 4 (validation) panel — Cell-type COLOC-marker enrichment
-# Output: figures/main/fig4_validation/fig4g_celltype_coloc.pdf
+# Output: figures/main/fig5_molecular_context/fig4g_celltype_coloc.pdf
 # =============================================================================
 # KEY MESSAGE:
 #   GWAS-colocalized signal is IMMUNE / NON-PARENCHYMAL-leaning across liver

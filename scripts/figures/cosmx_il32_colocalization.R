@@ -19,7 +19,7 @@
 # claim. Leuven_2 is a mixed-Normal slide (shown faded, not in the concordance).
 #
 # Source: Analysis/Spatial/results/govaere2026/il32_colocalization/il32_coloc_per_slide.csv
-# Output: figures/main/fig4_validation/cosmx_il32_colocalization.pdf
+# Output: figures/main/fig5_molecular_context/cosmx_il32_colocalization.pdf
 # Env: rnaseq
 suppressPackageStartupMessages({ library(ggplot2); library(dplyr); library(patchwork) })
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",

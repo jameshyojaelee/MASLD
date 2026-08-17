@@ -17,7 +17,7 @@
 #   GSE : Analysis/Spatial/results/svg/svgs_{Steatotic,Healthy}.csv (morans_i_mean, svg)
 #         Analysis/Spatial/results/svg/differential_svgs.csv (category == disease_emergent_SVG)
 #
-# Output: figures/main/fig4_validation/spatial_svg_replication_vu.pdf
+# Output: figures/main/fig5_molecular_context/spatial_svg_replication_vu.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

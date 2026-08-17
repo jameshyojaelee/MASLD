@@ -24,7 +24,7 @@
 #   to stdout); compact/dense; PDF only (cairo_pdf). 6 case-study genes are the
 #   only labels (fixed 6 pt, italic black); points show canonical DEG status.
 #
-# Output: figures/main/fig4_validation/fig4j_essentiality_control.pdf
+# Output: figures/main/fig5_molecular_context/fig4j_essentiality_control.pdf
 # Env:    rnaseq
 # Run:    ~/micromamba/envs/rnaseq/bin/Rscript scripts/figures/essentiality_control.R
 # ==============================================================================

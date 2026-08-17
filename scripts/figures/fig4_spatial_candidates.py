@@ -5,7 +5,7 @@ Fig 4 spatial candidate gallery — render EVERY on-tissue / single-cell map opt
 Exploration deliverable (NOT wired into the live figure). Produces a large set of
 candidate spatial panels so the user can flip through and pick the strongest one(s)
 for main Fig 4. Nothing in the live Fig 4 is modified; all output lands under
-  figures/main/fig4_validation/panels/spatial/_candidates/
+  figures/main/fig5_molecular_context/panels/spatial/_candidates/
 
 Cohorts (user-selected this session): GSE192741 human Visium + Vu 2025 human Visium
 + Govaere CosMx single-cell. Visium maps are rendered BOTH over the registered H&E
@@ -43,7 +43,7 @@ BASE = os.environ.get("MASLD_PROJECT_ROOT",
 SPA  = os.path.join(BASE, "Analysis/Spatial/results")
 SR   = os.path.join(SPA, "spaceranger")
 GSM  = os.path.join(BASE, "Analysis/Spatial/data/gsmap_input")
-OUT  = os.path.join(BASE, "figures/main/fig4_validation/panels/spatial/_candidates")
+OUT  = os.path.join(BASE, "figures/main/fig5_molecular_context/panels/spatial/_candidates")
 DIR_GSE = os.path.join(OUT, "visium_gse192741")
 DIR_VU  = os.path.join(OUT, "visium_vu")
 DIR_COS = os.path.join(OUT, "cosmx")

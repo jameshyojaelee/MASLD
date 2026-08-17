@@ -22,7 +22,7 @@
 # narrower single-mechanism deep-dive better suited to supplement than main text).
 #
 # Data: Analysis/Spatial/results/spatial_ccc_multimethod/scRNA_spatial_LR_consensus.csv
-# Output: figures/main/fig4_validation/panels/figS4e.pdf (supp; kept in panels/ per figS4 convention)
+# Output: figures/main/fig5_molecular_context/panels/figS4e.pdf (supp; kept in panels/ per figS4 convention)
 # Env: rnaseq
 # ==============================================================================
 suppressPackageStartupMessages({

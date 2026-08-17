@@ -19,7 +19,10 @@ suppressPackageStartupMessages({
 })
 
 BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-OUT  <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+OUT  <- Sys.getenv(
+  "FIG2_VARIANT_CLASS_DIR",
+  file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+)
 
 vlong <- fread(file.path(OUT, "variants_long.csv"))
 cat(sprintf("Loaded variants_long.csv: %d rows | %d unique variant_keys\n",
@@ -28,6 +31,15 @@ cat(sprintf("Loaded variants_long.csv: %d rows | %d unique variant_keys\n",
 # Build de-duplicated GRanges over (chr, pos_hg19)
 uniq <- unique(vlong[, .(chr, pos_hg19, variant_key)])
 uniq <- uniq[!is.na(chr) & !is.na(pos_hg19)]
+input_variant_keys <- uniq$variant_key
+# Keep the historical intergenic sentinel as a classifier fixture even when it
+# is absent from the promoted release. It is removed before the output table is
+# written, so the release universe remains exactly input-derived.
+uniq <- unique(rbind(
+  uniq,
+  data.table(chr = 10L, pos_hg19 = 101193937L,
+             variant_key = "10:101193937")
+))
 uniq[, seqnames := paste0("chr", chr)]
 gr <- GRanges(seqnames = uniq$seqnames,
               ranges   = IRanges(start = uniq$pos_hg19, end = uniq$pos_hg19),
@@ -176,6 +188,7 @@ verify("15:60883281", c("intron"))      # RORA region (hg19)
 verify("10:102757934", c("promoter"))   # LZTS2 promoter sentinel
 verify("10:101193937", c("intergenic")) # intergenic sentinel (3.4 kb from GOT1 TSS)
 
+class_dt <- class_dt[variant_key %in% input_variant_keys]
 fwrite(class_dt, file.path(OUT, "variant_classification.csv"))
 cat("\n--- Class distribution ---\n")
 print(class_dt[, .(n = .N), by = .(coarse_class, fine_class)][order(coarse_class, -n)])

@@ -10,7 +10,7 @@
 #         Identity diagonal (y = x) marks no change; above = gained, below = lost.
 #
 # Data: Analysis/Spatial/results/svg/differential_svgs.csv
-# Output: figures/main/fig4_validation/panels/figS4_spatial_reorganization_descriptive.pdf
+# Output: figures/main/fig5_molecular_context/panels/figS4_spatial_reorganization_descriptive.pdf
 # Demoted from main Figure 4 on 2026-08-06 when actual frozen-program maps
 # became Panel 4F.
 # Env:    rnaseq

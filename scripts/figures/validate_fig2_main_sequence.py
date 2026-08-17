@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the indexed working-main Figure 2 A-K panel sequence."""
+"""Validate the indexed working-main Figure 2 A-J panel sequence."""
 
 from __future__ import annotations
 
@@ -42,9 +42,9 @@ def main() -> int:
         Path(row["pdf"]).name: (float(row["width_in"]), float(row["height_in"]))
         for row in rows
     }
-    indexed = sorted(expected)
-    if len(indexed) != 11:
-        errors.append(f"size index has {len(indexed)} panels, expected 11")
+    indexed = list(expected)
+    if len(indexed) != 10:
+        errors.append(f"size index has {len(indexed)} panels, expected 10")
 
     for name, (want_w, want_h) in expected.items():
         path = PANELS / name
@@ -71,6 +71,7 @@ def main() -> int:
             errors.append(f"{name}: Ghostscript parse failed")
 
     required_sources = (
+        "fig2A_gwas_cascade_source.tsv",
         "Fig2B_PIP_vs_SuSiE-coloc_source.csv",
         "Fig2C_coding_noncoding_source.csv",
         "Fig2D_pip_architecture_by_trait_directness_source.tsv",
@@ -78,12 +79,65 @@ def main() -> int:
         "Fig2F_crossancestry_coloc_source.tsv",
         "Fig2G_RORA_NAFLD_source.csv",
         "Fig2H_FABP1_ALT_source.csv",
-        "Fig2J_eqtl_observability_source.csv",
-        "Fig2K_phenotype_provenance_source.csv",
+        "Fig2J_phenotype_provenance_source.csv",
     )
     for name in required_sources:
         if not (PANELS / name).exists():
             errors.append(f"missing source sidecar {name}")
+
+    fig2a_source = PANELS / "fig2A_gwas_cascade_source.tsv"
+    if fig2a_source.exists():
+        with fig2a_source.open(newline="") as handle:
+            fig2a_rows = list(csv.DictReader(handle, delimiter="\t"))
+        study_rows = [row for row in fig2a_rows if row["record_type"] == "study_registry"]
+        if len(study_rows) != 35 or len({row["study"] for row in study_rows}) != 35:
+            errors.append("Fig2A source does not contain 35 unique GWAS strata")
+        summaries = {
+            row["metric"]: int(row["value"])
+            for row in fig2a_rows if row["record_type"] == "global_summary"
+        }
+        expected_summaries = {
+            "gwas_strata": 35,
+            "globally_unique_fine_mapped_loci": 265,
+            "multi_or_single_signal_coloc_gene_union": 1013,
+        }
+        if summaries != expected_summaries:
+            errors.append(f"Fig2A global summaries disagree: {summaries}")
+        band_totals: dict[str, int] = {}
+        for model in ("multi_signal", "single_signal_only"):
+            band_totals[model] = sum(
+                int(row["value"]) for row in fig2a_rows
+                if row["record_type"] == "posterior_band" and row["signal_model"] == model
+            )
+        if band_totals != {"multi_signal": 462, "single_signal_only": 551}:
+            errors.append(f"Fig2A signal-model totals disagree: {band_totals}")
+        routed_totals: dict[str, int] = {}
+        for model in ("multi_signal", "single_signal_only"):
+            routed_totals[model] = sum(
+                int(row["value"]) for row in fig2a_rows
+                if row["record_type"] == "ancestry_trait_posterior_band"
+                and row["signal_model"] == model
+            )
+        if routed_totals != band_totals:
+            errors.append(
+                f"Fig2A routed PP.H4 bands {routed_totals} disagree with endpoints {band_totals}"
+            )
+
+    fig2j_source = PANELS / "Fig2J_phenotype_provenance_source.csv"
+    if fig2j_source.exists():
+        with fig2j_source.open(newline="") as handle:
+            fig2j_rows = list(csv.DictReader(handle))
+        phenotype_totals: dict[str, int] = {}
+        for row in fig2j_rows:
+            key = row["phenotype_stratum"]
+            phenotype_totals[key] = phenotype_totals.get(key, 0) + int(row["n_studies"])
+        expected_phenotypes = {
+            "alt_ast_or_ggt": 20,
+            "direct_masld_mash_diagnosis": 12,
+            "mri_pdff_or_histologic_steatosis": 3,
+        }
+        if phenotype_totals != expected_phenotypes:
+            errors.append(f"Fig2J phenotype totals disagree: {phenotype_totals}")
 
     fig2f_source = PANELS / "Fig2F_crossancestry_coloc_source.tsv"
     fig2f_pdf = PANELS / "Fig2F_crossancestry_coloc.pdf"
@@ -107,11 +161,18 @@ def main() -> int:
     else:
         with REINDEX_MANIFEST.open(newline="") as handle:
             manifest_rows = list(csv.DictReader(handle, delimiter="\t"))
-        if [row["panel"] for row in manifest_rows] != list("ABCDEFGHIJK"):
-            errors.append("reindex manifest does not contain ordered panels A-K")
+        if [row["panel"] for row in manifest_rows] != list("ABCDEFGHIJ"):
+            errors.append("reindex manifest does not contain ordered panels A-J")
+        manifest_names = [row["canonical_pdf"] for row in manifest_rows]
+        if manifest_names != indexed:
+            errors.append(
+                f"manifest filenames disagree with size index: {manifest_names} versus {indexed}"
+            )
         for row in manifest_rows:
             path = PANELS / row["canonical_pdf"]
-            if path.exists() and sha256(path) != row["sha256"]:
+            if not path.exists():
+                errors.append(f"manifest target is missing: {row['canonical_pdf']}")
+            elif sha256(path) != row["sha256"]:
                 errors.append(f"{row['canonical_pdf']}: hash disagrees with reindex manifest")
 
     stale = (
@@ -123,6 +184,11 @@ def main() -> int:
         "fig2I_eqtl_observability.pdf",
         "Fig2J_pip_architecture_by_trait_directness.pdf",
         "fig2K_phenotype_provenance.pdf",
+        "Fig2J_eqtl_observability.pdf",
+        "Fig2J_eqtl_observability_source.csv",
+        "Fig2K_phenotype_provenance.pdf",
+        "Fig2K_phenotype_provenance_source.csv",
+        "fig2A_gwas_alluvial.pdf",
     )
     for name in stale:
         if (PANELS / name).exists():

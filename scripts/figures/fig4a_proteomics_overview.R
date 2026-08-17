@@ -16,7 +16,7 @@
 # Concordance is computed against the canonical limma-voom quality-weighted C2
 # differential expression (NOT the retired dream method).
 #
-# Output: figures/main/fig4_validation/proteomics_concordance.pdf
+# Output: figures/main/fig5_molecular_context/proteomics_concordance.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

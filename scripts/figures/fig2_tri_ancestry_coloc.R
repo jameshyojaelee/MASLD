@@ -59,6 +59,7 @@ sc[, trait := gwas_trait(gwas_name)]
 # displayed state follows a fixed hierarchy, but both maxima and their provenance
 # are retained in the source table.
 d <- sc[ancestry %in% ANC]
+d <- d[!is.na(gene) & nzchar(trimws(gene))]
 best_susie <- d[is.finite(PP.H4.susie), .SD[which.max(PP.H4.susie)],
   by = .(gene, ancestry)][, .(
     gene, ancestry, multi_pp4 = PP.H4.susie, multi_study = gwas_name,
@@ -115,9 +116,9 @@ state_cols <- c(
   evaluated_no_support = "#B0BEC5",
   not_evaluable = "white")
 state_labs <- c(
-  multi_signal = "Multi-signal COLOC",
-  single_signal_only = "Single-signal COLOC only",
-  evaluated_no_support = "Evaluated, PP.H4 ≤ 0.5",
+  multi_signal = "multi-signal",
+  single_signal_only = "single-signal only",
+  evaluated_no_support = "evaluated, PP.H4 ≤ 0.5",
   not_evaluable = "□ Not evaluable")
 
 # Circle area reports the posterior used for the displayed evidence state.
@@ -144,7 +145,7 @@ hatch <- m[evidence_state == "not_evaluable", .(
 
 p <- ggplot(m, aes(x = ancestry, y = gene)) +
   geom_tile(width = 0.92, height = 0.88, fill = "white",
-            colour = "#E0E0E0", linewidth = 0.25) +
+            colour = "#F2F2F2", linewidth = 0.12) +
   geom_point(data = m[is.finite(display_pp4)],
              aes(size = display_pp4, fill = evidence_state),
              shape = 21, colour = "#4D4D4D", stroke = 0.25) +
@@ -155,9 +156,9 @@ p <- ggplot(m, aes(x = ancestry, y = gene)) +
   scale_fill_manual(values = state_cols, labels = state_labs, name = NULL,
                     drop = TRUE,
                     guide = guide_legend(
-                      order = 1, ncol = 1,
-                      override.aes = list(size = 2.5))) +
-  scale_size_area(name = "PP.H4", max_size = 3.6, limits = c(0, 1),
+                      order = 1, nrow = 1, byrow = TRUE,
+                      override.aes = list(size = 2.2))) +
+  scale_size_area(name = "PP.H4", max_size = 3.1, limits = c(0, 1),
                   breaks = c(0.25, 0.50, 0.75, 1.00),
                   labels = c("0.25", "0.50", "0.75", "1.00"),
                   guide = guide_legend(order = 2, nrow = 1)) +
@@ -173,17 +174,20 @@ p <- ggplot(m, aes(x = ancestry, y = gene)) +
         plot.title = element_blank(),
         legend.position = "bottom",
         legend.box = "vertical",
+        legend.direction = "horizontal",
+        legend.box.spacing = unit(0, "pt"),
+        legend.spacing.x = unit(0.5, "pt"),
         legend.text = element_text(size = 6, face = "plain"),
         legend.title = element_text(size = 6, face = "plain"),
-        legend.key.width = unit(0.22, "cm"),
-        legend.key.height = unit(0.16, "cm"),
-        legend.spacing.y = unit(0.01, "cm"),
-        legend.margin = margin(t = 1, b = 0),
-        plot.margin = margin(2, 3, 2, 3))
+        legend.key.width = unit(0.14, "cm"),
+        legend.key.height = unit(0.10, "cm"),
+        legend.spacing.y = unit(0, "pt"),
+        legend.margin = margin(t = 0, b = 0),
+        plot.margin = margin(2, 2, 0, 2))
 
 source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))   # save_panel(): exact contract size + cairo_pdf
 out_pdf <- file.path(OUT_DIR, "Fig2F_crossancestry_coloc.pdf")
-ggsave(out_pdf, p, width = 2.76, height = 2.44, units = "in",
+ggsave(out_pdf, p, width = 2.58, height = 2.10, units = "in",
        device = cairo_pdf, family = "Helvetica")
 
 # Caption (house style: no in-plot title/subtitle) -> stdout

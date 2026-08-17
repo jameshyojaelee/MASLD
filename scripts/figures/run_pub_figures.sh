@@ -172,7 +172,7 @@ for script_name in "${FIG3_RNASEQ_PANELS[@]}"; do
 done
 
 # ---------- Fig 4 (spatial/zonation) panels relocated from fig3 (2026-06-18) ----------
-# Render to figures/main/fig4_validation/ (scripts repointed to FIG4_DIR); moved
+# Render to figures/main/fig5_molecular_context/ (scripts repointed to FIG4_DIR); moved
 # out of fig3 under the "all spatial -> Fig 4" rule.
 FIG4_SPATIAL_PANELS=(
   "zonation_directional_polarity.R"

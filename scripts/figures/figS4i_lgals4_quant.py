@@ -23,7 +23,7 @@ Deliberately NOT shown:
 
 Convention: 6 pt text, black, no bold, gene symbol italic, caption to stdout. up/sig = #E65100.
 
-Output: figures/main/fig4_validation/panels/figS4i.pdf
+Output: figures/main/fig5_molecular_context/panels/figS4i.pdf
 """
 import os
 import numpy as np, pandas as pd
@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 BASE  = os.environ.get("MASLD_PROJECT_ROOT",
                        "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 ATLAS = os.path.join(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
-OUT   = os.path.join(BASE, "figures/main/fig4_validation/panels/figS4i.pdf")
+OUT   = os.path.join(BASE, "figures/main/fig5_molecular_context/panels/figS4i.pdf")
 GENE  = "LGALS4"
 DARK, LIGHT = "#E65100", "#FFB74D"   # significant / n.s.
 

@@ -48,5 +48,5 @@ for s in "${SCRIPTS[@]}"; do
 done
 
 echo "[$(date '+%H:%M:%S')] DONE"
-ls -la --time-style=full-iso "${BASE}/figures/main/fig4_validation/"*.pdf \
-  "${BASE}/figures/main/fig4_validation/panels/"*.pdf 2>/dev/null
+ls -la --time-style=full-iso "${BASE}/figures/main/fig5_molecular_context/"*.pdf \
+  "${BASE}/figures/main/fig5_molecular_context/panels/"*.pdf 2>/dev/null

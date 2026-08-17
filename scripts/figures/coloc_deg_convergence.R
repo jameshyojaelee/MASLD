@@ -24,7 +24,7 @@
 #   RNA-seq/.../integration/results/integration/canonical_deg_results.csv
 # NEVER from atlas *_coloc_pp4 convenience columns.
 #
-# Output: figures/main/fig4_validation/coloc_deg_convergence.pdf
+# Output: figures/main/fig5_molecular_context/coloc_deg_convergence.pdf
 # -----------------------------------------------------------------------------
 
 suppressPackageStartupMessages({

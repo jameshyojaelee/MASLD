@@ -5,7 +5,7 @@ candidates (see docs/plan: figures-main-fig4-validation-panels-fig4-concurrent).
 
 Why this module exists
 ----------------------
-The PI rejected the current Sankey (`fig4a_overview_cascade.pdf`) because it
+The PI rejected the current Sankey (`fig5a_overview_cascade_candidate.pdf`) because it
 DISPLAYS the whole evidence base without ASSERTING a claim. The 5 v2 candidates
 each weld an honest claim onto the geometry. They MUST all speak the same data +
 style so they are interchangeable at the data layer and obey house style.
@@ -84,7 +84,7 @@ plt.rcParams.update({
 })
 
 # v2 candidates render to a dedicated subdir so they never touch the live panel.
-OUT_DIR = os.path.join(BASE, "figures/main/fig4_validation", "panels", "candidates")
+OUT_DIR = os.path.join(BASE, "figures/main/fig5_molecular_context", "panels", "candidates")
 
 
 # -- Data ---------------------------------------------------------------------

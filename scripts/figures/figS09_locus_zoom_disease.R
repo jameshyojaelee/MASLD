@@ -128,6 +128,16 @@ args <- commandArgs(trailingOnly = TRUE)
 NO_YTITLE <- nzchar(Sys.getenv("LZ_NO_YTITLE"))       # suppress the left-edge y-axis TITLES (-log10(p)/PIP)
 NO_LEGEND <- nzchar(Sys.getenv("LZ_NO_LEGEND"))       # suppress the shared right-margin legend (r²/Lead SNP/PIP keys/log2FC)
 NO_TRACKLABEL <- nzchar(Sys.getenv("LZ_NO_TRACKLABEL")) # suppress the right-edge track-type labels (GWAS/SuSiE PIP/eQTL/Genes)
+# Opt-in Figure 2 G/H layout. This keeps the general-purpose locus renderer
+# backward compatible while making the two main panels geometrically identical.
+# The shared keys live in Figure 2I, so matched-main panels never reserve an
+# internal legend or right-hand track-label strip.
+MATCHED_MAIN <- nzchar(Sys.getenv("LZ_MATCHED_MAIN"))
+if (MATCHED_MAIN) {
+  NO_YTITLE <- FALSE
+  NO_LEGEND <- TRUE
+  NO_TRACKLABEL <- TRUE
+}
 GENE <- if (length(args) >= 1) args[1] else "IL18R1"
 if (!GENE %in% names(CONFIG)) stop("Unknown gene: ", GENE, " (have: ",
                                    paste(names(CONFIG), collapse = ", "), ")")
@@ -281,7 +291,9 @@ if (file.exists(eqtl_file)) {
 # is typically far sharper than the GWAS-alone SuSiE PIP (which LD smears),
 # because conditioning on the eQTL concentrates the shared-variant posterior.
 coloc_top_pos <- NA_integer_; coloc_pp4 <- NA_real_; coloc_top_pp <- NA_real_
-for (d in c("susie_coloc_polyfun","susie_coloc_1kg","susie_coloc")) {
+# The promoted canonical merge is authoritative. Method-specific directories
+# are retained only as fallbacks for loci absent from that release.
+for (d in c("susie_coloc","susie_coloc_polyfun","susie_coloc_1kg")) {
   f <- file.path(BASE, "results", d, STUDY, sprintf("susie_coloc_chr%d.csv", CHR))
   if (!file.exists(f)) next
   tt <- fread(f)
@@ -317,32 +329,43 @@ cat("Output:", out_path, "\n")
 # tightened per-track heights/gaps; MARGIN_R held at 1.00 for the right-margin legends.
 # Sized to the Figure 2 contract (figure2_panel_sizes.tsv), so Fig2G/H
 # place at 100% next to the other Fig2 panels. Tracks compressed ~0.69x vs the 4.4x4.66 version.
-MARGIN_L <- 0.62
+MARGIN_L <- if (MATCHED_MAIN) 0.68 else 0.62
 # Right margin holds the shared legend and/or the track-type labels. Shrink it when
 # those are stripped (F: neither; G: labels only) so the plot expands into the freed
 # width and the page tightens naturally. Plot region (PLOT_W) is constant so F/G tracks align.
-MARGIN_R <- if (NO_LEGEND && NO_TRACKLABEL) 0.15 else if (NO_LEGEND) 0.55 else 1.00
-PLOT_W  <- 2.33   # F -> 3.10in (MARGIN_R 0.15), G -> 3.50in (MARGIN_R 0.55); same plot width so F|G align
+MARGIN_R <- if (MATCHED_MAIN) 0.10 else if (NO_LEGEND && NO_TRACKLABEL) 0.15 else if (NO_LEGEND) 0.55 else 1.00
+PLOT_W  <- if (MATCHED_MAIN) 2.48 else 2.33
 PLOT_X  <- MARGIN_L; PAGE_W <- MARGIN_L + PLOT_W + MARGIN_R
 # track layout (inches from top); font floor 6pt
-y1 <- 0.32; h1 <- 0.76                       # EUR GWAS (top room for the per-panel header)
-y3 <- y1 + h1 + 0.12; h3 <- 0.62             # PIP
-y4 <- y3 + h3 + 0.09; h4 <- 0.62             # eQTL (taller -> scatter spreads out)
-y5 <- y4 + h4 + 0.12; h5 <- 0.54             # genes (room for 2-tier de-collided labels)
-y6 <- y5 + h5 + 0.05                         # ruler
-PAGE_H <- y6 + 0.30                          # ~3.54 in (tighter top/bottom whitespace)                          # ~3.53 in
+if (MATCHED_MAIN) {
+  # Exact 3.26 x 3.10-in main-panel geometry. Height is removed from the PIP
+  # track and inter-track gaps; the GWAS and eQTL clouds retain their heights.
+  y1 <- 0.10; h1 <- 0.76
+  y3 <- y1 + h1 + 0.08; h3 <- 0.38
+  y4 <- y3 + h3 + 0.06; h4 <- 0.62
+  y5 <- y4 + h4 + 0.08; h5 <- 0.54
+  y6 <- y5 + h5 + 0.04
+  PAGE_H <- 3.10
+} else {
+  y1 <- 0.32; h1 <- 0.76                       # EUR GWAS (top room for the per-panel header)
+  y3 <- y1 + h1 + 0.12; h3 <- 0.62             # PIP
+  y4 <- y3 + h3 + 0.09; h4 <- 0.62             # eQTL (taller -> scatter spreads out)
+  y5 <- y4 + h4 + 0.12; h5 <- 0.54             # genes (room for 2-tier de-collided labels)
+  y6 <- y5 + h5 + 0.05                         # ruler
+  PAGE_H <- y6 + 0.30
+}
 
 cairo_pdf(out_path, width = PAGE_W, height = PAGE_H, family = "Helvetica")   # embeds real Helvetica (plain pdf() did not; family= needed so grid text isn't Nimbus)
 pageCreate(width = PAGE_W, height = PAGE_H, default.units = "inches",
            showGuides = FALSE, xgrid = 0, ygrid = 0)
 top_to_grid <- function(y_top) PAGE_H - y_top
 
-# Per-panel header (locus identity), shown on BOTH panels: gene symbol (italic) +
-# GWAS trait + ancestry. Replaces the per-locus right-margin track titles; the
-# generic track-type labels (GWAS/PIP/eQTL/Genes) are shared once on the left panel.
-local({
-  hg <- EQTL_GENE                                        # gene symbol -> italic
-  hr <- paste0("  ·  ", TRAIT_TOKEN, " (EUR)")      # trait + ancestry -> roman
+# The compact main panels are title-free for publication. Locus identity remains
+# in the caption and source sidecar. General-purpose outputs retain their
+# historical inline header.
+if (!MATCHED_MAIN) local({
+  hg <- EQTL_GENE
+  hr <- paste0("  ·  ", TRAIT_TOKEN, " (EUR)")
   plotText(hg, x = PLOT_X, y = 0.15, fontsize = 6, fontface = "italic",
            just = c("left", "center"), default.units = "inches")
   gw <- convertWidth(grobWidth(textGrob(hg, gp = gpar(fontsize = 6, fontface = "italic"))),
@@ -362,7 +385,8 @@ track_label <- function(label, x = PAGE_W - MARGIN_R + 0.05, y)
            just = c("left","top"), default.units = "inches")
 axis_label <- function(label, y, h) {
   if (NO_YTITLE) return(invisible())   # right panel shares the left panel's y-axis titles
-  plotText(label = label, rot = 90, x = MARGIN_L - 0.42, y = y + h/2,
+  xoff <- if (MATCHED_MAIN) 0.49 else 0.42
+  plotText(label = label, rot = 90, x = MARGIN_L - xoff, y = y + h/2,
            fontsize = 6, just = "center", default.units = "inches")
 }
 # Draws one point + label legend item at (x, y) inches-from-top and returns the
@@ -410,7 +434,7 @@ lead_p <- eur_pg_df$p[which.min(abs(eur_pg_df$pos - EUR_LEAD_POS))]
 grid.points(unit(pos_to_x(EUR_LEAD_POS),"inches"), unit(eur_p_to_y(lead_p),"inches"),
             pch = 23, size = unit(0.085,"inches"), gp = gpar(col = "black", fill = "#C2185B", lwd = 0.8))
 annoYaxis(plot = mh_eur, at = pretty(c(0, max(-log10(eur_pg$p)))), fontsize = 6)
-draw_axis_spines(y1, h1); axis_label("-log10(p)", y1, h1)
+draw_axis_spines(y1, h1); axis_label(if (MATCHED_MAIN) "GWAS −log10 p" else "-log10(p)", y1, h1)
 if (!NO_TRACKLABEL) track_label("GWAS", y = y1 + 0.02)   # generic track type; locus/trait is in the header. Shared once on left panel.
 
 # shared LD legend (right margin) — drawn once across the D|E pair (skipped on the left panel)
@@ -465,11 +489,13 @@ if (!is.na(coloc_top_pos) && !is.na(coloc_top_pp) &&
               gp = gpar(col = "black", fill = "#FFD600", lwd = 0.8))
   lab_left <- coloc_top_pos > (WIN_START + 0.6 * (WIN_END - WIN_START))
   plotText(sprintf("coloc shared variant\nSNP.PP.H4 = %.2f", coloc_top_pp),
-           x = if (lab_left) cx - 0.10 else cx + 0.10, y = y3 + 0.14,
-           fontsize = 6, just = c(if (lab_left) "right" else "left","top"),
+           x = if (MATCHED_MAIN) PLOT_X + PLOT_W - 0.03 else if (lab_left) cx - 0.10 else cx + 0.10,
+           y = if (MATCHED_MAIN) y3 + 0.03 else y3 + 0.14,
+           fontsize = 6, just = c(if (MATCHED_MAIN || lab_left) "right" else "left","top"),
            default.units = "inches", fontcolor = "#8D6E00")
 }
-axis_label("PIP", y3, h3); if (!NO_TRACKLABEL) track_label("SuSiE PIP", y = y3 + 0.02)
+axis_label(if (MATCHED_MAIN) "SuSiE PIP" else "PIP", y3, h3)
+if (!NO_TRACKLABEL) track_label("SuSiE PIP", y = y3 + 0.02)
 # mini legend — width-measured (legend_item()), not hand-guessed offsets. Shared across D|E (skip on left panel).
 if (!NO_LEGEND) {
 xc <- legend_item(PLOT_X + 0.10, y3 + 0.10, "#1565C0", "EUR (in CS)")
@@ -486,7 +512,7 @@ if (!is.null(eqtl_track) && nrow(eqtl_track) > 0) {
     fill = "#E07B39", pch = 19, cex = 0.16, sigVal = 1e-5, sigLine = FALSE,
     range = c(0, eqtl_y_max), x = PLOT_X, width = PLOT_W, y = y4, height = h4, default.units = "inches")
   annoYaxis(plot = mh_eqtl, at = pretty(c(0, max(-log10(eqtl_pg$p)))), fontsize = 6)
-  draw_axis_spines(y4, h4); axis_label("-log10(p)", y4, h4)
+  draw_axis_spines(y4, h4); axis_label(if (MATCHED_MAIN) "eQTL −log10 p" else "-log10(p)", y4, h4)
   if (!NO_TRACKLABEL) track_label("eQTL", y = y4 + 0.02)   # generic; focal gene is in the header + pink in the gene track
   if (!is.na(coloc_top_pos) && coloc_top_pos >= WIN_START && coloc_top_pos <= WIN_END) {
     coloc_p <- eqtl_pg$p[which.min(abs(eqtl_pg$pos - coloc_top_pos))]
@@ -494,8 +520,11 @@ if (!is.null(eqtl_track) && nrow(eqtl_track) > 0) {
     cy <- cyb + (-log10(coloc_p)) / eqtl_y_max * (cyt - cyb)
     grid.points(unit(pos_to_x(coloc_top_pos),"inches"), unit(cy,"inches"),
                 pch = 23, size = unit(0.085,"inches"), gp = gpar(col = "black", fill = "#FFD600", lwd = 0.8))
-    plotText(sprintf("COLOC top SNP\nPP4 = %.2f", coloc_pp4), x = pos_to_x(coloc_top_pos) + 0.10, y = y4 + 0.10,
-             fontsize = 6, just = c("left","top"), default.units = "inches", fontcolor = "grey20")
+    plotText(sprintf("COLOC top SNP\nPP4 = %.2f", coloc_pp4),
+             x = if (MATCHED_MAIN) PLOT_X + PLOT_W - 0.03 else pos_to_x(coloc_top_pos) + 0.10,
+             y = if (MATCHED_MAIN) y4 + 0.03 else y4 + 0.10,
+             fontsize = 6, just = c(if (MATCHED_MAIN) "right" else "left","top"),
+             default.units = "inches", fontcolor = "grey20")
   }
 } else {
   plotText(sprintf("(no %s eQTL in window)", EQTL_GENE), x = PLOT_X + PLOT_W/2, y = y4 + h4/2,
@@ -569,6 +598,7 @@ if (length(gmod)) {
               gp = gpar(col = L$col, fontsize = 6, fontface = "italic"))
   }
 }
+if (MATCHED_MAIN) axis_label("Genes", y5, h5)
 if (!NO_TRACKLABEL) track_label("Genes", y = y5 + 0.02)
 # logFC scale bar — shared legend, drawn once across the D|E pair (skipped on the left panel)
 if (!NO_LEGEND) {

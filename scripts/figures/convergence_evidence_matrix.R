@@ -44,7 +44,7 @@
 #    these genes => every other gene is NOT MEASURED for spatial (x).
 #  - ATAC motif, bulk, protein, mouse, COLOC numbers all trace to ledger rows.
 #
-# Output: figures/main/fig4_validation/_supp/convergence_evidence_matrix.pdf
+# Output: figures/main/fig5_molecular_context/_supp/convergence_evidence_matrix.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

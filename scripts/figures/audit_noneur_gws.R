@@ -25,7 +25,10 @@ reg <- load_gwas_registry()
 # strata so the non-EUR-unique gene set matches the main-scoped Fig2E ancestry panel.
 MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
   placement == "main", study_name]
-co <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+COLOC_INPUT <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+co <- fread(COLOC_INPUT)
 co <- co[gwas_name %in% MAIN_STUDIES]                            # keep MAIN (Tier-1/2) strata only
 co[, ancestry := as.character(gwas_ancestry(gwas_name))]         # registry-driven EUR/AFR/AMR/EAS/SAS
 co[, pp4 := PP.H4.susie]                                         # SuSiE-PRIMARY (2026-07-06): SuSiE only, no ABF union
@@ -95,7 +98,9 @@ cat("\nsuggestive (5e-8..1e-6) count by bin:\n")
 print(pg[tier=="suggestive (5e-8..1e-6)", .N, by=bin][order(-N)])
 
 # Canonical output consumed by scripts/figures/fig2_ancestry_unique_coloc_gated.py
-outdir <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+outdir <- Sys.getenv(
+  "FIG2_VARIANT_CLASS_DIR",
+  file.path(BASE, "RNA-seq/results/coloc_variant_classes"))
 dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
 outfile <- file.path(outdir, "noneur_gws_audit.csv")
 fwrite(pg[order(min_p)], outfile)

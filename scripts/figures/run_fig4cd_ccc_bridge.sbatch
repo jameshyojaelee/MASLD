@@ -13,7 +13,7 @@ set -euo pipefail
 umask 027
 
 PROJECT_ROOT="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-CANDIDATE_ROOT="${PROJECT_ROOT}/figures/candidates/fig4cd-ccc-bridge-2026-08-15-v10"
+CANDIDATE_ROOT="${PROJECT_ROOT}/figures/candidates/fig4cd-ccc-bridge-2026-08-17-v13"
 PROGRAM_ROOT="${PROJECT_ROOT}/Analysis/Multimodal_Program_Projection/candidates/program-context-v2-stage-corrected-candidate-2026-08-13-v3/hotspot"
 CURRENT_4C="${PROJECT_ROOT}/figures/main/fig4_singlecell_programs/panels/fig4c_hotspot_stage_heatmap.pdf"
 RNASEQ_RSCRIPT="/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript"

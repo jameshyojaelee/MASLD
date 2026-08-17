@@ -26,7 +26,7 @@
 # liver tissue measures the biology directly; plasma is the non-invasive
 # biomarker complement.
 #
-# Output: figures/main/fig4_validation/panels/figS4a.pdf (renamed 2026-07-07;
+# Output: figures/main/fig5_molecular_context/panels/figS4a.pdf (renamed 2026-07-07;
 #         was fig4a_proteomics_concordance.pdf; also serves as Supp Fig 4a —
 #         see docs/PAPER.md and archived Fig S4 rationale)
 # Env:    rnaseq

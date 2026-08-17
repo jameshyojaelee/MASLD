@@ -24,7 +24,7 @@
 #   HIF3A              logFC = +0.180179  adj.P.Val = 0.929998   (opening)
 # Minimum adj.P.Val across ALL 993 hepatocyte motifs = 0.93 -> 0 pass FDR<0.05.
 #
-# Output: figures/main/fig4_validation/fig4d_chromvar_metabolic_nr.pdf
+# Output: figures/main/fig5_molecular_context/fig4d_chromvar_metabolic_nr.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

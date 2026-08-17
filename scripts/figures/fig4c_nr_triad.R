@@ -5,7 +5,7 @@
 # development stage so the panel reads as "the prioritiser recovers established
 # and emerging targets," not an arbitrary gene key.
 #
-# Output: figures/main/fig4_validation/nuclear_receptor_triad.pdf
+# Output: figures/main/fig5_molecular_context/nuclear_receptor_triad.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

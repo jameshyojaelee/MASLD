@@ -2,7 +2,7 @@
 # assemble_fig4.R
 # ---------------------------------------------------------------------
 # Compose Fig 4 (Proteomics + Spatial + Plasma + Pharma validation) from
-# the 6 canonical sub-panel PDFs in figures/main/fig4_validation/panels/.
+# the 6 canonical sub-panel PDFs in figures/main/fig5_molecular_context/panels/.
 #
 # Canonical letter order (per docs/manuscript/05_figure_legends.md
 # Figure 4 + figures/README.md Fig 4 section):
@@ -13,7 +13,7 @@
 #   F  drug-target pharma panels            fig4_pharma_panels.pdf
 #
 # Layout: 3 rows x 2 cols (Liang aesthetic).
-# Output: figures/main/fig4_validation/fig4_composite.pdf
+# Output: figures/main/fig5_molecular_context/fig4_composite.pdf
 # =====================================================================
 
 suppressPackageStartupMessages({

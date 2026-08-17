@@ -38,7 +38,7 @@
 # PER-CONDITION Moran autocorr (Healthy->Steatotic gain), NOT the atlas
 # single-value spatial_morans_i column (ledger row 32 flags it: "do not cite").
 #
-# Output: figures/main/fig4_validation/convergence_evidence_matrix_v2.pdf
+# Output: figures/main/fig5_molecular_context/convergence_evidence_matrix_v2.pdf
 # Env:    rnaseq
 # ─────────────────────────────────────────────────────────────────────────────
 

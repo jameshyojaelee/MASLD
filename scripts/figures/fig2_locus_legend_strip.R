@@ -10,10 +10,12 @@ suppressPackageStartupMessages({ library(plotgardener); library(grid) })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-OUT  <- file.path(BASE, "figures/main/fig2_genetics/panels/Fig2I_locus_legend.pdf")
+args <- commandArgs(trailingOnly = TRUE)
+OUT  <- if (length(args) >= 1) args[1] else
+  file.path(BASE, "figures/main/fig2_genetics/panels/Fig2I_locus_legend.pdf")
 dir.create(dirname(OUT), showWarnings = FALSE, recursive = TRUE)
 
-PAGE_W <- 6.61; PAGE_H <- 0.44   # = Fig2G (3.10) + Fig2H (3.50) combined width
+PAGE_W <- 6.61; PAGE_H <- 0.28
 YC <- PAGE_H / 2                       # single-row vertical centre
 t2g <- function(y) PAGE_H - y          # top-origin -> grid bottom-origin
 
@@ -46,8 +48,18 @@ put_gradbar <- function(x, palfun, w = 0.5, h = 0.11) {
               just = c("left", "center"), gp = gpar(col = NA, fill = cols[k + 1]))
   x + w
 }
-GAP <- 0.16   # gap between legend groups
-cur <- 0.10
+GAP <- 0.10
+# Centre the measured one-row legend rather than anchoring it to a guessed left
+# margin. Fixed advances below exactly mirror the drawing calls.
+content_w <-
+  txt_w("r² to lead") + 0.06 + txt_w("0") + 0.03 + 0.50 + 0.03 + txt_w("1") + GAP +
+  0.11 + 0.05 + txt_w("Lead SNP") + GAP +
+  0.09 + 0.05 + txt_w("EUR (in CS)") + 0.11 +
+  0.07 + 0.05 + txt_w("not in CS") + 0.11 +
+  0.10 + 0.05 + txt_w("coloc shared variant") + GAP +
+  txt_w("log2FC") + 0.06 + txt_w("−0.3") + 0.03 + 0.50 + 0.03 + txt_w("+0.3") + GAP +
+  0.12 + txt_w("n.s.")
+cur <- max(0.02, (PAGE_W - content_w) / 2)
 
 # 1) r² to lead gradient
 cur <- put_txt("r² to lead", cur) + 0.06
@@ -62,7 +74,7 @@ cur <- put_txt("Lead SNP", cur) + GAP
 # 3) SuSiE PIP markers
 cur <- put_marker(cur, 19, "#1565C0", col = "#1565C0", size = 0.09) + 0.05
 cur <- put_txt("EUR (in CS)", cur) + 0.11
-cur <- put_marker(cur, 21, "white", col = "#9E9E9E", size = 0.07) + 0.05
+cur <- put_marker(cur, 21, "white", col = "#1565C0", size = 0.07) + 0.05
 cur <- put_txt("not in CS", cur) + 0.11
 cur <- put_marker(cur, 23, "#FFD600", size = 0.10, lwd = 0.7) + 0.05
 cur <- put_txt("coloc shared variant", cur) + GAP

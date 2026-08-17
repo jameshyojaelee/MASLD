@@ -8,7 +8,10 @@ suppressPackageStartupMessages({
 })
 
 BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
-OUT  <- file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+OUT  <- Sys.getenv(
+  "FIG2_VARIANT_CLASS_DIR",
+  file.path(BASE, "RNA-seq/results/coloc_variant_classes")
+)
 
 vlong <- fread(file.path(OUT, "variants_long.csv"))
 ann   <- fread(file.path(OUT, "variant_classification.csv"))

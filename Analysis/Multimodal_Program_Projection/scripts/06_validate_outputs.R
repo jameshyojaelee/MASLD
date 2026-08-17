@@ -16,6 +16,48 @@ assert <- function(ok, message) {
   if (!isTRUE(ok)) stop(message, call. = FALSE)
 }
 
+retired_panel_dir <- file.path(BASE, "figures/main/fig4_validation/panels")
+assert(
+  !dir.exists(retired_panel_dir),
+  paste("Retired Figure 4 panel directory was recreated:", retired_panel_dir)
+)
+retired_hmsma_panel_artifacts <- file.path(BASE, c(
+  "figures/main/fig5_molecular_context/panels/fig5_hmsma_class_spatial.pdf",
+  "figures/main/fig5_molecular_context/panels/data/fig5_hmsma_class_spatial_source.csv",
+  "figures/main/fig5_molecular_context/panels/data/fig5_hmsma_class_spatial_summary.csv",
+  "figures/main/fig5_molecular_context/panels/data/fig5_hmsma_class_spatial_contrast.csv",
+  "scripts/figures/fig5_hmsma_class_spatial.R",
+  "Analysis/Spatial/scripts/56_render_class_spatial_panel.sbatch"
+))
+assert(
+  !any(file.exists(retired_hmsma_panel_artifacts)),
+  paste(
+    "Retired HMSMA class-spatial panel or producer was recreated:",
+    paste(retired_hmsma_panel_artifacts[file.exists(retired_hmsma_panel_artifacts)], collapse = ", ")
+  )
+)
+figure_producers <- list.files(
+  file.path(BASE, "scripts/figures"), recursive = TRUE, full.names = TRUE
+)
+figure_producers <- figure_producers[
+  !grepl("/(?:archive|_legacy|_retired[^/]*)/", figure_producers, perl = TRUE) &
+    grepl("[.](?:R|py|sh|sbatch)$", figure_producers)
+]
+retired_path_refs <- vapply(
+  figure_producers,
+  function(path) any(grepl(
+    "figures/main/fig4_validation", readLines(path, warn = FALSE), fixed = TRUE
+  )),
+  logical(1)
+)
+assert(
+  !any(retired_path_refs),
+  paste(
+    "Runnable figure producers still reference the retired Figure 4 output root:",
+    paste(basename(figure_producers[retired_path_refs]), collapse = ", ")
+  )
+)
+
 same_numeric <- function(x, y, tolerance = 1e-12) {
   same_na <- is.na(x) == is.na(y)
   all(same_na) && all(abs(x[!is.na(x)] - y[!is.na(y)]) <= tolerance)
@@ -448,10 +490,38 @@ assert(
 map_selection <- fread(file.path(FIG5, "panels/data/fig5f_spatial_program_maps_selection.tsv"))
 assert(
   nrow(map_selection) == 4L &&
-    setequal(map_selection$program_id, c("hepatocytes::14", "fibroblasts::6")) &&
+    setequal(map_selection$program_id, c("hepatocytes::8", "hepatocytes::20")) &&
     setequal(map_selection$dataset, c("GSE192741", "Vu_et_al_2025")) &&
-    all(map_selection[, uniqueN(sample_id), by = dataset]$V1 == 1L),
-  "Panel 5F map selection must contain two prespecified programs on one median section per cohort"
+    identical(
+      map_selection[, unique(sample_id), by = dataset][order(dataset)]$V1,
+      c("JBO019", "VLP115_A")
+    ) &&
+    all(map_selection[, uniqueN(sample_id), by = dataset]$V1 == 1L) &&
+    all(map_selection$program_outcomes_used_for_selection == FALSE) &&
+    all(map_selection$selection_rule == paste0(
+      "closest_to_dataset_median_source_spot_count_then_lexical_",
+      "reporting_unit_id"
+    )) &&
+    setequal(
+      map_selection$display_name,
+      c("Stromal ECM program", "Ductular injury program")
+    ) &&
+    all(!grepl("IGFBP7|BICC1", map_selection$display_name)) &&
+    setequal(map_selection$program_n_genes, c(49L, 22L)) &&
+    same_numeric(
+      unique(map_selection[program_id == "hepatocytes::8"]$named_gene_l1_weight),
+      0.0247414433914627,
+      tolerance = 1e-12
+    ) &&
+    same_numeric(
+      unique(map_selection[program_id == "hepatocytes::20"]$named_gene_l1_weight),
+      0.0543594280513238,
+      tolerance = 1e-12
+    ),
+  paste(
+    "Panel 5F must show two prespecified program-level maps on one",
+    "outcome-blind median-size section per source"
+  )
 )
 
 summary_selection <- fread(file.path(FIG5, "panels/data/fig5e_multimodal_program_summary_selection.tsv"))
@@ -478,6 +548,10 @@ assert(
     nrow(summary_selection) == nrow(summary_expected) &&
     all(summary_selection$displayed_n == nrow(summary_expected)) &&
     all(summary_selection$frozen_universe_n == 22L) &&
+    all(!grepl("[()]", summary_selection$program_name)) &&
+    summary_selection[program_id == "hepatocytes::8", source_program_name] ==
+      "Stromal ECM (IGFBP7)" &&
+    all(grepl("frozen weighted program", summary_selection$inference_unit, fixed = TRUE)) &&
     all(summary_selection$selection_rule == paste0(
       "open_promoter_gene OR robust_histology_burden OR robust_spatial_in_both"
     )),

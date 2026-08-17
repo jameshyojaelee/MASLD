@@ -23,7 +23,7 @@
 # NOT a CCC panel (LIANA is provenance only, kept out of Fig4's spine) and NOT a
 # tile/heatmap matrix. Row-aligned lollipops.
 #
-# Output: figures/main/fig4_validation/panels/figS4d.pdf (supp; kept in panels/ per figS4 convention)
+# Output: figures/main/fig5_molecular_context/panels/figS4d.pdf (supp; kept in panels/ per figS4 convention)
 # Env: rnaseq
 # ==============================================================================
 suppressPackageStartupMessages({ library(data.table); library(ggplot2); library(patchwork) })

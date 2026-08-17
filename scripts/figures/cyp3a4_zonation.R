@@ -29,7 +29,7 @@
 #   - Drug-clearance consequences are substrate-specific (CYP3A4 metabolizes ~50%
 #     of drugs but the impact varies by compound).
 #
-# Output: figures/main/fig4_validation/fig4f_cyp3a4_zonation.pdf   (flat, no fig-# prefix;
+# Output: figures/main/fig5_molecular_context/fig4f_cyp3a4_zonation.pdf   (flat, no fig-# prefix;
 # relettered g->f 2026-07-08 so it sits directly after cyp3a4_he/e in the Fig4 lineup)
 # Env:    rnaseq
 # ──────────────────────────────────────────────────────────────────────────────

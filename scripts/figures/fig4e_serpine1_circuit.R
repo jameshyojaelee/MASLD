@@ -17,7 +17,7 @@
 # Bulk numbers are the canonical limma-voom quality-weighted C2 (bulk_*), NOT the
 # retired dream method. Stats live in the figure legend (emitted to stdout).
 #
-# Output: figures/main/fig4_validation/serpine1_ligand.pdf
+# Output: figures/main/fig5_molecular_context/serpine1_ligand.pdf
 # Env:    rnaseq
 
 suppressPackageStartupMessages({

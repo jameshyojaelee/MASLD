@@ -34,7 +34,7 @@
 #         + gwas_atac_variant_annotation.csv (variant→cis-gene)
 #         + susie_coloc/gene_level_coloc.csv (gene-level COLOC PP.H4)
 #         + prioritized_universe_FINAL.txt (fig4a/4d)
-# Output: figures/main/fig4_validation/panels/figS4j.pdf   (PDF only)
+# Output: figures/main/fig5_molecular_context/panels/figS4j.pdf   (PDF only)
 # Env:    rnaseq  (pure plotting from CSVs — no motifbreakR rerun)
 # ==============================================================================
 suppressPackageStartupMessages({
