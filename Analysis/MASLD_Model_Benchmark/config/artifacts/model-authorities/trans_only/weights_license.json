@@ -1,0 +1,9 @@
+{
+  "authority": "weights_license",
+  "declared_license": "not_applicable_classical",
+  "derivative_redistribution_allowed": true,
+  "model_id": "trans_only",
+  "redistribution_allowed": true,
+  "schema_version": "masld-bench-license-authority-v1",
+  "use_allowed": true
+}

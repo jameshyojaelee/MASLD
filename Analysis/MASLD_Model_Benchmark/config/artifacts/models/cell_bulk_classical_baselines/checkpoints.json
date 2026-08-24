@@ -1,0 +1,450 @@
+{
+  "bundle_id": "cell_bulk_classical_baselines",
+  "checkpoint_position": {
+    "biological_pretrained_checkpoints": "none",
+    "package_code_is_not_a_biological_checkpoint": true,
+    "policy": "Every fitted classifier, latent model, centroid, projection, calibration model, or assay summary is a fold-local state derived from admitted training donors. No state may be carried across outer folds or updated with withheld features.",
+    "sealed_data_in_any_fitted_state": false
+  },
+  "registry_binding": {
+    "coverage": "exactly_the_thirteen_registry_rows_listed_here",
+    "registry_model_ids": [
+      "hvg_pca_nearest_centroid",
+      "hvg_pca_knn",
+      "hvg_pca_logistic",
+      "hvg_pca_elastic_net",
+      "hvg_pca_linear_svm",
+      "harmony_logistic",
+      "scvi_baseline",
+      "scanvi_baseline",
+      "celltypist_baseline",
+      "pca_procrustes",
+      "cca",
+      "mean_expression_bulk",
+      "assay_native_pseudobulk"
+    ],
+    "source": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+    "source_size_bytes": 59115
+  },
+  "shared_hvg_pca_execution": {
+    "adapter": {
+      "path": "Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py",
+      "sha256": "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "supported_actions": [
+        "prepare",
+        "fit",
+        "predict"
+      ]
+    },
+    "applies_to": [
+      "hvg_pca_nearest_centroid",
+      "hvg_pca_knn",
+      "hvg_pca_logistic",
+      "hvg_pca_elastic_net",
+      "hvg_pca_linear_svm"
+    ],
+    "executable_tasks": [
+      "cell_state_mapping"
+    ],
+    "input_contract": {
+      "feature_id": "versionless Ensembl gene ID",
+      "label": "frozen broad_liver_five_v1 class",
+      "matrix": "nonnegative integer raw counts",
+      "row_id": "globally unique source observation name",
+      "unit": "dataset-view donor_id admitted as cohort_family_id plus person_key"
+    },
+    "preprocessing": {
+      "authority_path": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",
+      "authority_sha256": "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c",
+      "feature_selection": "Training-only rank-binned normalized dispersion with 20 mean bins, top 2000 genes, and Ensembl-ID tie breaking.",
+      "normalization": "Per-cell library-size scaling to 10000 followed by log1p.",
+      "pca": "Training-only centered full SVD with at most 50 components.",
+      "split": "SHA256(split_seed NUL donor_id), first 8 bytes big-endian modulo 5.",
+      "training_weights": "Equal class mass, then equal donor mass within class, rescaled to the training-cell count."
+    },
+    "runtime": {
+      "environment_lock_path": "Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json",
+      "environment_lock_sha256": "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298",
+      "environment_lock_size_bytes": 1205,
+      "python": "CPython 3.10.18",
+      "runtime_id": "cpu_baseline_smoke",
+      "scikit_learn": "1.7.2"
+    },
+    "scope_limit": "The authority and adapter implement cell_state_mapping only. Registry declarations for bulk_state_transfer are not executable implementations."
+  },
+  "models": {
+    "assay_native_pseudobulk": {
+      "admission_blocking": true,
+      "checkpoint_revision": "UNRESOLVED",
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "unknown",
+      "implementation_identity": "UNRESOLVED_no_repo_local_algorithm_or_adapter",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "potentially_inductive_but_not_defined",
+      "input_contract": {
+        "bulk_state_transfer": "Aggregate only observed RNA or protein within each participant and assay using a modality-native rule. Independent RNA and protein cohorts remain unpaired.",
+        "rna_conditioned_atac": "Training ATAC may be aggregated by donor and cell state, but observed held-donor ATAC is evaluator-only and cannot enter a prediction feature, normalization reference, target-derived peak filter, or fallback."
+      },
+      "license_status": "UNRESOLVED",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Freeze a project implementation and license, assay-specific aggregation and normalization, predictive rule, fold-local artifacts, missing-state behavior, and hashes.",
+      "runtime_status": "blocked_no_implementation_or_environment",
+      "supported_tasks": [
+        "rna_conditioned_atac",
+        "bulk_state_transfer"
+      ],
+      "task_status": {
+        "bulk_state_transfer": "registered_mandatory_baseline_not_runnable",
+        "rna_conditioned_atac": "registered_mandatory_baseline_not_runnable"
+      }
+    },
+    "cca": {
+      "admission_blocking": true,
+      "checkpoint_revision": "UNRESOLVED",
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "unknown",
+      "implementation_identity": "UNRESOLVED_no_repo_local_algorithm_or_adapter",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "unresolved; a jointly fitted train-query CCA is transductive and ineligible for a sealed champion",
+      "input_contract": "Single-cell or single-nucleus RNA only; exact gene universe, scaling, regularization, anchor or pairing rule, projection direction, and classifier head are unresolved.",
+      "license_status": "UNRESOLVED",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Freeze a training-only implementation, package or source revision, license, feature and pairing contract, seed, fitted state, and query projection that never refits on held cells.",
+      "runtime_status": "blocked_no_implementation_or_environment",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "registry_supported_but_absent_from_current_TaskSpec_baseline_roster"
+    },
+    "celltypist_baseline": {
+      "admission_blocking": true,
+      "checkpoint_revision": "Teichlab/celltypist@fe357564a6625d3b1732a022fd39f18e55696e80:celltypist==1.7.1",
+      "checkpoint_sha256": "NOT_APPLICABLE_train_locally",
+      "code_identity": {
+        "commit": "fe357564a6625d3b1732a022fd39f18e55696e80",
+        "package": "celltypist==1.7.1",
+        "pypi_sdist_sha256": "6ffaebc0f296d24785ffce25951ad70a00553bd8d06aff2f55f98251b739ce00",
+        "pypi_wheel_sha256": "3953f96a4476ed1dd2807446d97d3945e8905bbdac6bfef0d20b84a9a00d1101",
+        "release_date": "2025-06-25"
+      },
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "train_locally",
+      "inductive_status": "The fold-trained logistic classifier is inductive only when query-dependent majority voting or clustering is disabled. Any majority-vote diagnostic is transductive and must be reported separately.",
+      "input_contract": "Fold-local custom model using the training donor RNA matrix and frozen broad labels. AnnData input is log1p normalized to 10000 counts per cell; feature axis, centering, solver, regularization, balancing, calibration, and seed remain to be frozen.",
+      "license_status": "MIT",
+      "pretrained_weights": false,
+      "pretrained_weight_policy": "Do not download, select, ensemble, or use built-in CellTypist classifiers. Only a new classifier fit inside the outer training fold is admissible.",
+      "registry_status": "candidate",
+      "release_condition": "The package is permissively licensed, but an open champion additionally requires a frozen runtime, project-generated fitted-state hash, safe loading policy, input-data release review, and the sealed task gate.",
+      "runtime_status": "blocked_celltypist_1.7.1_absent_from_the_only_frozen_classical_runtime",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "registered_mandatory_baseline_not_runnable"
+    },
+    "harmony_logistic": {
+      "admission_blocking": true,
+      "checkpoint_revision": "slowkow/harmonypy@a770f2dd3b724a7b5dae811357bd157cedacc195:v0.0.10",
+      "checkpoint_sha256": "NOT_APPLICABLE_no_weights",
+      "code_identity": {
+        "commit": "a770f2dd3b724a7b5dae811357bd157cedacc195",
+        "package": "harmonypy==0.0.10",
+        "pypi_sdist_sha256": "27bd39a6f9ada1708ffa577e46c9b7363d1e2fd62740e477ce11fd61819a54df",
+        "pypi_wheel_sha256": "dab528052f909204e521c9c2bd980221c64003538b0c0fe25be2e43c1199282b",
+        "release_date": "2024-07-04"
+      },
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "transductive_diagnostic_only; released harmonypy 0.0.10 jointly estimates cell-specific correction and has no registered frozen-reference held-query transform",
+      "input_contract": "Normalized expression or PCA plus batch metadata. Any PCA, normalization, Harmony fit, and logistic head would have to be fit without held cells.",
+      "license_status": "GPL-3.0-or-later",
+      "pretrained_weights": false,
+      "registry_status": "deferred",
+      "release_condition": "Not champion-eligible in the current contract. A later implementation would require a prespecified transductive diagnostic TaskSpec or a validated frozen-reference transform, plus GPL-compliant release.",
+      "runtime_status": "harmonypy_0.0.10_present_in_locked_python_3.10_runtime_but_scientifically_blocked",
+      "supported_tasks": [],
+      "task_status": "unscheduled"
+    },
+    "hvg_pca_elastic_net": {
+      "admission_blocking": false,
+      "algorithm": "Multinomial elastic-net logistic regression; C=1; l1_ratio=0.5; SAGA; max_iter=5000.",
+      "checkpoint_revision": "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "checkpoint_sha256": "NOT_APPLICABLE_no_pretrained_weights",
+      "execution_contract": "shared_hvg_pca_execution",
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "inductive_after_training-only_normalization_HVG_PCA_and_fit",
+      "license_status": "project_owned",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Open for the cell-state task under existing project authorities after task selection lock and sealed success. The declared bulk role requires a separate donor-level bulk implementation before use.",
+      "runtime_status": "ready_for_cell_state_mapping_only",
+      "supported_tasks": [
+        "bulk_state_transfer",
+        "cell_state_mapping"
+      ],
+      "task_status": {
+        "bulk_state_transfer": "declared_but_not_executable",
+        "cell_state_mapping": "executable"
+      }
+    },
+    "hvg_pca_knn": {
+      "admission_blocking": false,
+      "algorithm": "15-neighbor Euclidean vote in PCA space with donor/class-balanced training weights and canonical-row tie breaking.",
+      "checkpoint_revision": "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "checkpoint_sha256": "NOT_APPLICABLE_no_pretrained_weights",
+      "execution_contract": "shared_hvg_pca_execution",
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "inductive_after_training-only_normalization_HVG_PCA_and_fit",
+      "license_status": "project_owned",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Open for the cell-state task under existing project authorities after task selection lock and sealed success.",
+      "runtime_status": "ready_for_cell_state_mapping_only",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "executable"
+    },
+    "hvg_pca_linear_svm": {
+      "admission_blocking": false,
+      "algorithm": "Linear SVM; C=1; donor-grouped three-fold out-of-fold calibration by multinomial L2 logistic regression.",
+      "checkpoint_revision": "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "checkpoint_sha256": "NOT_APPLICABLE_no_pretrained_weights",
+      "execution_contract": "shared_hvg_pca_execution",
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "inductive_after_training-only_normalization_HVG_PCA_fit_and_inner-fold_calibration",
+      "license_status": "project_owned",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Open for the cell-state task under existing project authorities after task selection lock and sealed success. The declared bulk role requires a separate donor-level bulk implementation before use.",
+      "runtime_status": "ready_for_cell_state_mapping_only",
+      "supported_tasks": [
+        "bulk_state_transfer",
+        "cell_state_mapping"
+      ],
+      "task_status": {
+        "bulk_state_transfer": "declared_but_not_executable",
+        "cell_state_mapping": "executable"
+      }
+    },
+    "hvg_pca_logistic": {
+      "admission_blocking": false,
+      "algorithm": "Multinomial L2 logistic regression; C=1; LBFGS; max_iter=5000.",
+      "checkpoint_revision": "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "checkpoint_sha256": "NOT_APPLICABLE_no_pretrained_weights",
+      "execution_contract": "shared_hvg_pca_execution",
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "inductive_after_training-only_normalization_HVG_PCA_and_fit",
+      "license_status": "project_owned",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Open for the cell-state task under existing project authorities after task selection lock and sealed success.",
+      "runtime_status": "ready_for_cell_state_mapping_only",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "executable"
+    },
+    "hvg_pca_nearest_centroid": {
+      "admission_blocking": false,
+      "algorithm": "Donor/class-weighted class centroids; squared Euclidean distance; training-derived softmax temperature.",
+      "checkpoint_revision": "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "checkpoint_sha256": "NOT_APPLICABLE_no_pretrained_weights",
+      "execution_contract": "shared_hvg_pca_execution",
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "inductive_after_training-only_normalization_HVG_PCA_centroids_and_temperature",
+      "license_status": "project_owned",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Open for the cell-state task under existing project authorities after task selection lock and sealed success. The declared bulk role requires a separate donor-level bulk implementation before use.",
+      "runtime_status": "ready_for_cell_state_mapping_only",
+      "supported_tasks": [
+        "bulk_state_transfer",
+        "cell_state_mapping"
+      ],
+      "task_status": {
+        "bulk_state_transfer": "declared_but_not_executable",
+        "cell_state_mapping": "executable"
+      }
+    },
+    "mean_expression_bulk": {
+      "admission_blocking": true,
+      "checkpoint_revision": "UNRESOLVED",
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "unknown",
+      "implementation_identity": "UNRESOLVED_no_repo_local_algorithm_or_adapter",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "potentially_inductive_if_every_reference_mean_and_transform_is_training-only_but_not_defined",
+      "input_contract": "Participant-level assay-native bulk RNA or bulk proteomics. The exact feature universe, cohort scaling, covariate treatment, mean predictor, program projection, and output are unresolved.",
+      "license_status": "UNRESOLVED",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Freeze a project implementation and license, participant-level input contract, training-only cohort transform and mean, covariates, missing states, seed, and fitted/output hashes.",
+      "runtime_status": "blocked_no_implementation_or_environment",
+      "supported_tasks": [
+        "bulk_state_transfer"
+      ],
+      "task_status": "registered_mandatory_baseline_not_runnable"
+    },
+    "pca_procrustes": {
+      "admission_blocking": true,
+      "checkpoint_revision": "UNRESOLVED",
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "unknown",
+      "implementation_identity": "UNRESOLVED_no_repo_local_algorithm_or_adapter",
+      "implementation_type": "classical_baseline",
+      "inductive_status": "unresolved; fitting an alignment with held-query geometry or anchors is transductive and ineligible for a sealed champion",
+      "input_contract": "Single-cell or single-nucleus RNA only; exact gene universe, scaling, PCA, anchor correspondence, Procrustes transform, classifier, and query policy are unresolved.",
+      "license_status": "UNRESOLVED",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Freeze a training-only implementation, package or source revision, license, features, anchors, seed, fitted state, and query transform that never learns from held geometry.",
+      "runtime_status": "blocked_no_implementation_or_environment",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "registry_supported_but_absent_from_current_TaskSpec_baseline_roster"
+    },
+    "scanvi_baseline": {
+      "admission_blocking": true,
+      "checkpoint_revision": "scverse/scvi-tools@dc95497+PyPI:scvi-tools==1.4.2",
+      "checkpoint_sha256": "NOT_APPLICABLE_train_locally",
+      "code_identity": {
+        "github_release_commit": "dc95497",
+        "package": "scvi-tools==1.4.2",
+        "pypi_attested_publication_commit": "b35cb7d3868ea110f60e0fb260d94fe054ea0470",
+        "pypi_sdist_sha256": "c3d2e6e4cd7d41fccdaeead63c72a4d9a1681bb51f2ace107461217a182eb6e2",
+        "pypi_wheel_sha256": "c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5",
+        "release_date": "2026-02-26"
+      },
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "train_locally",
+      "inductive_status": "unresolved_and_blocked; official reference mapping can train a query model on held features, which is transductive domain adaptation and conflicts with the current training-partition-only contract",
+      "input_contract": "Raw UMI counts with a frozen Ensembl gene universe and broad-label ontology. Count layer, batch and biological covariates, unlabeled category, SCVI initialization, classifier architecture, query mapping, seeds, early stopping, and calibration remain to be frozen.",
+      "license_status": "BSD-3-Clause",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Package terms permit redistribution with notices, but a champion requires a Python 3.11+ lock, training-only query policy, fold-generated weights, dependency and input-data review, fitted-state hashes, and sealed success.",
+      "runtime_status": "blocked_registered_1.4.2_requires_python_3.11_or_newer;_locked_classical_runtime_is_python_3.10.18_and_contains_nonadmissible_scvi-tools_0.14.6",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "registered_mandatory_baseline_not_runnable"
+    },
+    "scvi_baseline": {
+      "admission_blocking": true,
+      "checkpoint_revision": "scverse/scvi-tools@dc95497+PyPI:scvi-tools==1.4.2",
+      "checkpoint_sha256": "NOT_APPLICABLE_train_locally",
+      "code_identity": {
+        "github_release_commit": "dc95497",
+        "package": "scvi-tools==1.4.2",
+        "pypi_attested_publication_commit": "b35cb7d3868ea110f60e0fb260d94fe054ea0470",
+        "pypi_sdist_sha256": "c3d2e6e4cd7d41fccdaeead63c72a4d9a1681bb51f2ace107461217a182eb6e2",
+        "pypi_wheel_sha256": "c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5",
+        "release_date": "2026-02-26"
+      },
+      "exposure_status": "target_label_unexposed",
+      "implementation_type": "train_locally",
+      "inductive_status": "unresolved_and_blocked; either define a frozen encoder path with no query update or classify official query training as a separately reported transductive diagnostic",
+      "input_contract": "Raw UMI counts with a frozen Ensembl gene universe. Count layer, batch and biological covariates, latent dimension, likelihood, downstream classifier head, query mapping, seeds, early stopping, and calibration remain to be frozen.",
+      "license_status": "BSD-3-Clause",
+      "pretrained_weights": false,
+      "registry_status": "candidate",
+      "release_condition": "Package terms permit redistribution with notices, but a champion requires a Python 3.11+ lock, training-only query policy, fold-generated weights, dependency and input-data review, fitted-state hashes, and sealed success.",
+      "runtime_status": "blocked_registered_1.4.2_requires_python_3.11_or_newer;_locked_classical_runtime_is_python_3.10.18_and_contains_nonadmissible_scvi-tools_0.14.6",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ],
+      "task_status": "registered_mandatory_baseline_not_runnable"
+    }
+  },
+  "package_identity_findings": {
+    "celltypist": "PyPI 1.7.1 and Git commit fe357564a6625d3b1732a022fd39f18e55696e80 agree on version 1.7.1. The exact wheel and sdist hashes are recorded; neither artifact was downloaded.",
+    "harmonypy": "GitHub release v0.0.10 resolves to a770f2d and PyPI 0.0.10 publishes exact wheel and sdist hashes under GPL-3.0-or-later. A later release exists, so latest is prohibited.",
+    "scvi_tools": "GitHub release 1.4.2 identifies dc95497. PyPI publishes a wheel hash matching the registry and attests the release workflow at b35cb7d3868ea110f60e0fb260d94fe054ea0470. The tag, package version, and wheel hash are separate frozen identity fields; none is inferred from another."
+  },
+  "safe_artifact_contract": {
+    "network_at_runtime": "prohibited",
+    "project_generated_state": "Load only a bounded, schema-validated fold artifact whose source model, code, environment, training rows, feature axis, parameters, and SHA-256 are registered.",
+    "serialized_python_objects": "Do not deserialize downloaded or untrusted pickle or torch objects. CellTypist state must be generated locally and hashed; scvi-tools state must use a pinned safe-loading policy and remain project-generated.",
+    "weights_downloaded_for_this_audit": false
+  },
+  "schema_version": "masld-bench-grouped-model-preflight-v1",
+  "source_records": [
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+      "size_bytes": 59115
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",
+      "sha256": "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c",
+      "size_bytes": 1872
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py",
+      "sha256": "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "size_bytes": 47913
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json",
+      "sha256": "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298",
+      "size_bytes": 1205
+    }
+  ],
+  "upstream_primary_sources": [
+    {
+      "facts": "scvi-tools 1.4.2 release date, Python >=3.11, BSD-3-Clause, wheel and sdist hashes, and publication attestation commit",
+      "url": "https://pypi.org/project/scvi-tools/1.4.2/"
+    },
+    {
+      "facts": "scvi-tools 1.4.2 GitHub release commit dc95497",
+      "url": "https://github.com/scverse/scvi-tools/releases/tag/1.4.2"
+    },
+    {
+      "facts": "BSD-3-Clause license at the registered scvi-tools release commit",
+      "url": "https://raw.githubusercontent.com/scverse/scvi-tools/dc95497/LICENSE"
+    },
+    {
+      "facts": "scvi-tools requires raw UMI count input and registers count layer and covariates",
+      "url": "https://docs.scvi-tools.org/en/1.4.2/tutorials/notebooks/dev/data_tutorial.html"
+    },
+    {
+      "facts": "Official SCANVI reference mapping trains a query model after load_query_data",
+      "url": "https://docs.scvi-tools.org/en/1.4.2/tutorials/notebooks/multimodal/scarches_scvi_tools.html"
+    },
+    {
+      "facts": "CellTypist 1.7.1 release date and exact wheel and sdist hashes",
+      "url": "https://pypi.org/project/celltypist/1.7.1/"
+    },
+    {
+      "facts": "CellTypist commit fe357564a6625d3b1732a022fd39f18e55696e80 sets version 1.7.1",
+      "url": "https://github.com/Teichlab/celltypist/commit/fe357564a6625d3b1732a022fd39f18e55696e80"
+    },
+    {
+      "facts": "MIT license at the registered CellTypist commit",
+      "url": "https://raw.githubusercontent.com/Teichlab/celltypist/fe357564a6625d3b1732a022fd39f18e55696e80/LICENSE"
+    },
+    {
+      "facts": "CellTypist custom training input normalization and tunable classifier parameters",
+      "url": "https://celltypist.readthedocs.io/en/stable/celltypist.train.html"
+    },
+    {
+      "facts": "harmonypy 0.0.10 release date, GPL-3.0-or-later, and exact wheel and sdist hashes",
+      "url": "https://pypi.org/project/harmonypy/0.0.10/"
+    },
+    {
+      "facts": "harmonypy v0.0.10 release commit a770f2d",
+      "url": "https://github.com/slowkow/harmonypy/releases/tag/v0.0.10"
+    }
+  ],
+  "verified_date": "2026-08-22"
+}

@@ -1,9 +1,8 @@
 #!/usr/bin/env Rscript
 # figS_mesusie_shared.R  (2026-07-05)  — Fig 2 supplement (defends para 4)
-# Multi-ancestry joint fine-mapping (meSuSiE) distinguishes causal credible sets
-# SHARED across ancestries from ancestry-SPECIFIC ones. Most loci carry a shared
-# signal, but a substantial minority are ancestry-restricted — discoverable only
-# with multi-ancestry inference. All numbers from disk.
+# Multi-ancestry joint fine-mapping (meSuSiE) assigns credible sets to
+# model-shared or ancestry-restricted components. These are model assignments,
+# not proof of ancestry-specific biology. All numbers are read from disk.
 #
 # SOURCE (2026-07-05): repointed from the retired enzyme-only EUR/EAS 2-way run
 # (mesusie/mesusie_locus_summary.csv) to the within-MVP N-way cross-ancestry run
@@ -19,12 +18,13 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+PANEL_DIR <- Sys.getenv("FIG2_SUPP_OUT_DIR", unset = file.path(FIG3_DIR, "panels"))
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 
 ml <- fread(file.path(BASE, "GWAS/finemapping/results/mesusie_mvp/mesusie_locus_summary_mvp.csv"))
 ml <- ml[converged == TRUE]
 
-# --- split n_cs_<combo> columns into single-ancestry-specific vs multi-ancestry shared
+# --- split n_cs_<combo> columns into ancestry-restricted vs model-shared
 ncs_cols  <- grep("^n_cs_", names(ml), value = TRUE)
 n_token   <- vapply(sub("^n_cs_", "", ncs_cols),
                     function(x) length(strsplit(x, "_")[[1]]), integer(1))
@@ -47,9 +47,9 @@ spec_anc  <- sub("^n_cs_", "", spec_cols)                       # EUR / AFR / AM
 tot       <- sh + sum(spec_tot)
 
 dec <- rbindlist(c(
-  list(data.table(type = "Shared (≥2 ancestries)", n = sh, key_anc = "Shared")),
+  list(data.table(type = "Model-shared (≥2 ancestries)", n = sh, key_anc = "Shared")),
   lapply(seq_along(spec_cols), function(i)
-    data.table(type = paste0(spec_anc[i], "-specific"), n = spec_tot[i], key_anc = spec_anc[i]))
+    data.table(type = paste0(spec_anc[i], "-restricted"), n = spec_tot[i], key_anc = spec_anc[i]))
 ))
 dec[, pct := 100 * n / tot]
 # order: single-ancestry bars first (ascending n), Shared last -> plotted at the
@@ -78,7 +78,7 @@ save_fig(p, file.path(PANEL_DIR, "FigS2M_mesusie_shared_specific.pdf"),
 
 fwrite(dec[order(-n), .(type, n, pct = round(pct, 1))],
        file.path(PANEL_DIR, "FigS2M_mesusie_shared_specific_source.csv"))
-message("[caption] Shared vs ancestry-specific causal signals")
+message("[caption] meSuSiE model-assigned shared and ancestry-restricted credible sets; these categories do not prove ancestry-specific biology.")
 cat(sprintf("[figS meSuSiE MVP] shared CS=%d (%.0f%%); specific CS: %s\n",
             sh, 100 * sh / tot,
             paste(sprintf("%s=%d", spec_anc, spec_tot), collapse = " ")))

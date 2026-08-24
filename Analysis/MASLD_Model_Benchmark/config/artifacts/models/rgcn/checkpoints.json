@@ -1,0 +1,151 @@
+{
+  "algorithm_contract": {
+    "aggregation_default": "mean",
+    "basis_decomposition": "optional_num_bases_not_frozen",
+    "block_diagonal_decomposition": "optional_num_blocks_not_frozen_and_mutually_exclusive_with_num_bases",
+    "implementation_primitive": "torch_geometric.nn.conv.RGCNConv",
+    "message_equation": "root-transformed node feature plus relation-specific transformed neighbor features normalized within relation",
+    "model_family": "relational_graph_convolution",
+    "node_representation_modes": {
+      "feature_based": "floating-point node features with a common frozen dimensionality",
+      "node_index_based": "integer node indices or x=None are treated as trainable entity embeddings tied to the fitted node universe"
+    },
+    "paper": {
+      "doi": "10.1007/978-3-319-93417-4_38",
+      "title": "Modeling Relational Data with Graph Convolutional Networks",
+      "url": "https://doi.org/10.1007/978-3-319-93417-4_38"
+    },
+    "relation_contract": "edge_type is a one-dimensional integer relation ID in [0,num_relations). Direction and inverse direction require separately frozen relation IDs.",
+    "unresolved_project_hyperparameters": [
+      "node_feature_schema",
+      "relation_and_inverse_relation_order",
+      "layer_count",
+      "hidden_dimension",
+      "num_bases_or_num_blocks",
+      "dropout",
+      "sampler_or_full_batch_mode",
+      "source_agnostic_decoder",
+      "negative_sampling",
+      "optimizer",
+      "early_stopping",
+      "calibration",
+      "five_fixed_seeds"
+    ]
+  },
+  "checkpoint_contract": {
+    "checkpoint_sha256": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS",
+    "fitted_artifact": "project-generated per outer split, held-source role, and seed; not yet created",
+    "fitted_artifact_status": "BLOCKED_GRAPH_SNAPSHOT_AND_ARCHITECTURE_NOT_FROZEN",
+    "implementation_type": "train_locally",
+    "pretrained_checkpoint_available": false,
+    "upstream_example_weights": "none_admitted",
+    "warning": "The pinned PyG object is a convolution layer, not a trained R-GCN model. A decoder, loss, graph construction, and calibration are separate project artifacts."
+  },
+  "held_source_output_contract": {
+    "admissible_output": "one source-agnostic continuous candidate-gene score per frozen row, later calibrated without the held source",
+    "held_relation_parameter_rule": "If one evidence source is encoded as its own relation, removing every edge of that relation leaves its RGCN transformation and any relation-specific decoder embedding untrained. Those parameters cannot be used to claim recovery of the unseen source.",
+    "native_layer_output": "one embedding tensor for graph nodes",
+    "not_native": [
+      "candidate_gene_probability",
+      "held_source_edge_probability",
+      "calibrated_brier_probability",
+      "causal_gene_score",
+      "evidence_observability_state"
+    ],
+    "required_decoder": "A frozen source-agnostic gene-ranking decoder trained on eligible labels from remaining development sources only. It may not receive a held-source ID, relation embedding, observability mask, or outcome-derived candidate universe.",
+    "task_interpretation": "Recovery means cross-source prioritization after complete source removal, not completion of an unseen relation type."
+  },
+  "implementation": {
+    "commit_date": "2025-10-14",
+    "package": "torch-geometric",
+    "package_version": "2.7.0",
+    "repository": "pyg-team/pytorch_geometric",
+    "repository_revision": "76ff9c2ce18c8cebf52122b57e2aeadce9793d10",
+    "revision_status": "exact_signed_release_commit_registered",
+    "source_code_run": false,
+    "source_url": "https://github.com/pyg-team/pytorch_geometric/tree/76ff9c2ce18c8cebf52122b57e2aeadce9793d10"
+  },
+  "inductive_transductive_contract": {
+    "feature_based_operator": "Conditionally inductive for new nodes when their features are produced by a frozen source-independent transform and all relation IDs and dimensions were trained.",
+    "node_index_mode": "Transductive. Learned entity embeddings cannot score a node absent from the fitted graph snapshot.",
+    "official_link_prediction_example": "Transductive: it allocates one learned embedding per node and one DistMult embedding per relation.",
+    "project_default": "Use feature-based mode for any unseen-node claim. A transductive fixed-node-universe lane may be reported separately but cannot imply induction to a new gene, locus, node type, or relation.",
+    "source_only_node_rule": "A node whose existence is learned only from the held source cannot remain as an input node. Retaining it leaks held-source coverage even if incident edges are deleted."
+  },
+  "input_contract": {
+    "continuous_edge_features": "unsupported_by_RGCNConv_forward; the API accepts edge_index and edge_type but no per-edge weight or feature tensor",
+    "edge_direction": "native through directed edge_index; reverse messages require explicit inverse relation types",
+    "evidence_values": "Continuous assay strength, provenance confidence, tested-negative status, and missingness are not natively consumed as edge attributes. Any encoding as node features or relation bins is a separately frozen project design.",
+    "graph": "one split-safe relation-labeled graph built only from permitted training sources and loci",
+    "node_features": "source-independent or remaining-source features fit inside the outer training role; no held-source outcomes, observability, degree, or coverage indicators",
+    "node_types": "RGCNConv uses one node tensor, not type-specific feature spaces. Node type must be represented by frozen features or relation structure without outcome leakage."
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED",
+    "optional_kernels": "PyG documents pyg-lib, torch-scatter, torch-sparse, torch-cluster, and torch-spline-conv as optional; the exact installed path changes kernels and must be frozen.",
+    "python_requirement": ">=3.10",
+    "pytorch_version": "UNPINNED_BY_PYG_PROJECT_METADATA",
+    "required_probe": "CPU_or_L40S_import_forward_backward_local_fit_tensor_only_save_resume_deterministic_seed_relation_order_sampler_and_cross_device_tolerance",
+    "slurm_rule": "No runtime or model probe before an approved campaign."
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only",
+    "format": "safetensors_or_equivalent_tensor_only_state_plus_separate_JSON_architecture_and_graph_receipts",
+    "no_runtime_network": true,
+    "required_receipts": [
+      "source_and_environment_lock",
+      "graph_snapshot_hash",
+      "held_source_id",
+      "node_and_relation_schema_hash",
+      "feature_transform_hash",
+      "training_and_negative_row_hashes",
+      "architecture_and_seed",
+      "tensor_names_shapes_dtypes_and_SHA256",
+      "calibrator_hash",
+      "prediction_hash"
+    ],
+    "state_dict_rule": "Strict-load only project-generated tensor state into the frozen architecture. Do not deserialize arbitrary pickle-backed PyTorch objects."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The R-GCN paper, exact PyG 2.7.0 release commit, RGCNConv source, official link-prediction example, package metadata, and MIT license were inspected online on 2026-08-22. No package, graph, checkpoint, or weights were downloaded, installed, or run.",
+  "source_records": [
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:LICENSE",
+      "sha256": "89cfb6edc309735916a0c1189dccf761add4af6062ddb34b5a26f60d3efadfea",
+      "size_bytes": 1067,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/LICENSE"
+    },
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:pyproject.toml",
+      "sha256": "a3f39e5d750a86aa0bb9e89ad4da16d79ca86c4aefd011ba4c2cf40ee4cfe398",
+      "size_bytes": 5839,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/pyproject.toml"
+    },
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:torch_geometric/nn/conv/rgcn_conv.py",
+      "sha256": "2d4dd243733846cdd8bf576aa6c688a7d1b18994406711f2de85c630aa2953b5",
+      "size_bytes": 15700,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/torch_geometric/nn/conv/rgcn_conv.py"
+    },
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:examples/rgcn_link_pred.py",
+      "sha256": "7aa69fe474a2ddd30cb3837d9400a2c51069baf738720274811c9dde5fdf9829",
+      "size_bytes": 6606,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/examples/rgcn_link_pred.py"
+    }
+  ],
+  "task_fit": {
+    "causal_gene_inference": "not_supported",
+    "held_source_recovery": "conditionally_supported_with_source_agnostic_decoder_and_complete_pre_fit_source_removal",
+    "native_output": "typed_relation_aware_node_embeddings",
+    "task_role": "development_only_graph_prioritization_comparator",
+    "typed_evidence_graph": "blocked_until_promoted_graph_snapshot_schema_decoder_and_split_fixtures_exist"
+  },
+  "terms_audit": {
+    "code_license": "MIT",
+    "project_weight_redistribution": "Code terms permit redistribution with notice, but a fitted artifact may encode project graph data. Release requires source-data rights review and the benchmark's dataset-level derivative-use review.",
+    "result": "open_source_code_preflight_pass_no_upstream_weights_local_artifacts_not_yet_created"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+}

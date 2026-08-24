@@ -1,0 +1,270 @@
+{
+  "architecture_contract": {
+    "family": "GO_and_Gene2Vec_informed_dual_Performer_single_cell_expression_model",
+    "registered_scale": "approximately_1_billion_parameters",
+    "gene_count": 27874,
+    "base_embedding_dimension": 200,
+    "high_expression_path": {
+      "selection": "top_4096_genes_ranked_by_expression_per_cell",
+      "layers": 42,
+      "attention_heads": 32,
+      "hidden_dimension": 1280,
+      "output_dimension": 200
+    },
+    "low_expression_path": {
+      "selection": "remaining_23778_genes",
+      "layers": 2,
+      "attention_heads": 8,
+      "hidden_dimension": 200,
+      "output_dimension": 200
+    },
+    "full_length_path": {
+      "sequence_length": 27874,
+      "layers": 2,
+      "attention_heads": 8,
+      "hidden_dimension": 200
+    },
+    "gene_encoder": "Gene2Vec 200-dimensional initialization plus a one-layer GCN over a Gene Ontology similarity graph connecting each gene to its top 20 Jaccard-similar genes.",
+    "pretraining_objective": "Mask 15 percent of nonzero expression values and minimize MSE of gene-specific reconstructed values.",
+    "warning": "Exact executable architecture values also depend on the unpinned pickle hyperparameter object distributed beside the checkpoint. Paper and source descriptions cannot substitute for that object's hash and parsed schema."
+  },
+  "checkpoint_contract": {
+    "registered_identity": "BaiDing1234/scLong@41b72021540918e4386c4f2264351d7a6cbeed99+sharepoint-folder:EpvKzQW4hI5Bnb88-iM7vE0B_e2_U5r_ZGXb_FILCLTw3Q:gocont_4096_48m_pretrain_1b_mix_2024-02-05_16-23-37.pth",
+    "filename": "gocont_4096_48m_pretrain_1b_mix_2024-02-05_16-23-37.pth",
+    "format": "pickle_backed_PyTorch_checkpoint_dictionary",
+    "sha256": "UNRESOLVED",
+    "size_bytes": "UNRESOLVED",
+    "immutable_object_revision": "UNRESOLVED_mutable_folder_link_and_filename_only",
+    "sharepoint_folder": "https://mbzuaiac-my.sharepoint.com/:f:/g/personal/ding_bai_mbzuai_ac_ae/EpvKzQW4hI5Bnb88-iM7vE0B_e2_U5r_ZGXb_FILCLTw3Q",
+    "availability_check": "The official folder link redirected to the scLong OneDrive folder and then returned HTTP 403 during this audit on 2026-08-22.",
+    "filename_timestamp_warning": "The 2024-02-05 timestamp embedded in the filename is not a cryptographically bound training cutoff, upload date, or immutable version.",
+    "status": "blocked_checkpoint_bytes_terms_size_hash_and_availability_unresolved",
+    "weight_content_downloaded": false
+  },
+  "required_external_payloads": {
+    "selected_gene2vec_27k.npy": {
+      "purpose": "Gene2Vec initialization",
+      "sha256": "UNRESOLVED",
+      "size_bytes": "UNRESOLVED",
+      "terms": "UNRESOLVED"
+    },
+    "selected_genes_27k.txt": {
+      "purpose": "Exact 27,874-gene Ensembl ID order",
+      "sha256": "UNRESOLVED",
+      "size_bytes": "UNRESOLVED",
+      "terms": "UNRESOLVED"
+    },
+    "human_ens_gene2go_graph.csv": {
+      "purpose": "Gene Ontology-derived graph input",
+      "sha256": "UNRESOLVED",
+      "size_bytes": "UNRESOLVED",
+      "GO_release": "UNRESOLVED",
+      "terms": "UNRESOLVED"
+    },
+    "gocont_4096_48m_pretrain_1b_mix.pkl": {
+      "purpose": "Executable model hyperparameters including the GO graph payload",
+      "sha256": "UNRESOLVED",
+      "size_bytes": "UNRESOLVED",
+      "format": "Python_pickle",
+      "terms": "UNRESOLVED"
+    },
+    "admission": "All four payloads are required and blocking. A matching filename is not an identity."
+  },
+  "code_contract": {
+    "repository": "BaiDing1234/scLong",
+    "revision": "41b72021540918e4386c4f2264351d7a6cbeed99",
+    "tag": "v1.0",
+    "tag_target": "41b72021540918e4386c4f2264351d7a6cbeed99",
+    "revision_date_utc": "2025-11-03T06:53:06Z",
+    "git_tree": "ff5b096110f4a2e4dd0b2af95a3e9832fb40799f",
+    "revision_verification": "GitHub reports a valid verified commit",
+    "zenodo_record": "17510567",
+    "zenodo_doi": "10.5281/zenodo.17510567",
+    "zenodo_version": "v1.0",
+    "zenodo_file": "BaiDing1234/scLong-v1.0.zip",
+    "zenodo_file_size_bytes": 338293,
+    "zenodo_reported_md5": "282eeecbee2919bdd7b5cc9fd70913d8",
+    "zenodo_file_sha256": "UNRESOLVED_archive_not_downloaded",
+    "status": "exact_source_commit_and_archival_record_pinned_not_cloned_or_downloaded"
+  },
+  "input_contract": {
+    "canonical_assays": [
+      "scRNA_expression",
+      "snRNA_expression_after_distribution_and_preprocessing_audit"
+    ],
+    "required_container": "H5AD",
+    "gene_identifiers": "Exact Ensembl IDs in adata.var.index, mapped into selected_genes_27k.txt order.",
+    "gene_order_status": "UNRESOLVED_until_selected_genes_27k.txt_is_hashed",
+    "released_embed_requirement": "The README and embed.py require log1p-normalized expression and use zero fill for model genes absent from the input.",
+    "paper_pretraining_transform": "The paper says raw counts are log1p transformed using its reported rule, then each cell is clipped or rescaled so its maximum expression value is 10.",
+    "preprocessing_discrepancy": "embed.py applies no normalization, maximum-10 scaling, or clipping and assumes the H5AD already satisfies the required scale. The exact inference transform remains blocking until a checkpoint-compatible fixture is defined.",
+    "unsupported_inputs": [
+      "bulk_RNA_without_a_separate_native_contract",
+      "gene_symbols_without_frozen_Ensembl_mapping",
+      "negative_or_integrated_expression",
+      "native_joint_RNA_ATAC_or_other_multimodal_input"
+    ],
+    "missingness": "Zero-filled model genes require a separate observed or structural-missing mask. Missing Ensembl features cannot silently become measured biological zeros."
+  },
+  "embedding_contract": {
+    "released_embed_output": "merged_decodings reindexed to the input gene order, with shape cells by input_genes by 200; genes outside the model list receive a mean-filled representation in the source helper.",
+    "paper_cell_representation": "The paper describes concatenating each gene's 200-dimensional contextual representation with its reconstructed value and sum-pooling across the 201 feature columns, yielding a per-gene vector rather than a conventional scalar pooled cell token.",
+    "cell_pooling_status": "UNRESOLVED_no_single_unambiguous_official_cell_embedding_recipe_for_cell_state_mapping",
+    "common_lane_rule": "Before screening, freeze one task-valid pooling from the exact per-gene output, layer or output field, gene universe, treatment of nonmodel genes, mask, numeric precision, and identical project head without held-label selection.",
+    "native_lane": "No head, adapter, LoRA, or full fine-tune is admitted until checkpoint and derivative terms are obtained."
+  },
+  "registry_binding": {
+    "artifact_bundle_id": "sclong",
+    "registry_model_id": "sclong",
+    "mapping": "exact_1B_mixed_pretraining_filename_but_remote_bytes_unresolved"
+  },
+  "release": {
+    "paper": "scLong: a billion-parameter foundation model for capturing long-range gene context in single-cell transcriptomics",
+    "paper_doi": "10.1038/s41467-026-69102-y",
+    "paper_url": "https://www.nature.com/articles/s41467-026-69102-y",
+    "paper_publication_date": "2026-02-05",
+    "code_archive_url": "https://zenodo.org/records/17510567",
+    "code_archive_publication_date": "2025-11-03"
+  },
+  "pretraining_contract": {
+    "retained_unique_cells": 48024242,
+    "genes": 27874,
+    "declared_species": "human",
+    "declared_tissues": "more_than_50",
+    "declared_sources": [
+      "CELLxGENE",
+      "Cell_BLAST",
+      "Human_Cell_Atlas"
+    ],
+    "initial_collection": "More than 60 million cells from approximately 1,600 datasets.",
+    "retained_datasets_reported_in_methods": 848,
+    "figure_dataset_count": 1618,
+    "dataset_count_warning": "Figure 1 describes the 48-million-cell corpus as derived from 1,618 datasets, while Methods says 848 datasets remained after filtering. This may distinguish acquired from retained sources, but no exact roster resolves the wording.",
+    "deduplication": "The paper says duplicate cells were removed before retaining 48,024,242 cells; the fingerprints and retained-cell roster are not published in the source manifest.",
+    "checkpoint_bound_inventory": "UNRESOLVED_no_accession_release_alias_donor_cell_or_label_roster",
+    "source_payload_availability": "The repository links preprocessed chunks in the same SharePoint folder, which was inaccessible during this audit."
+  },
+  "runtime_contract": {
+    "repository_environment_sha256": "c99843f3776d375e27f3d8dd6fd9b362fd7ca29b5cef636497f72f2c2011c044",
+    "environment_selected_versions": {
+      "python": "3.9.19",
+      "pytorch": "2.3.1",
+      "pytorch_cuda": "11.8",
+      "numpy": "1.26.4",
+      "scipy": "1.11.4",
+      "pandas": "2.2.1",
+      "scanpy": "1.10.1",
+      "anndata": "0.10.8",
+      "torch_geometric": "2.5.3",
+      "pickle5": "0.0.11"
+    },
+    "environment_conflicts": [
+      "sclong.yml declares CUDA runtime 11.8 packages and cuda-version=12.5 in the same environment.",
+      "README lists an older Python 3.7.16, NumPy 1.21.5, SciPy 1.7.3, Scanpy 1.9.3, and PyTorch Geometric 2.3.0 recipe that does not match sclong.yml.",
+      "embed.py appends an author-specific absolute filesystem path before importing the bundled model code."
+    ],
+    "environment_status": "UNRESOLVED_no_explicit_artifact_lock_and_conflicting_release_recipes",
+    "target_hardware_status": "L40S_and_B6K_not_probed; 1B_full_length_output_memory_is_unmeasured",
+    "required_probe": "After terms and artifact acquisition only: isolated no-network import, payload schema inspection, safe tensor conversion if permitted, exact load, deterministic preprocessing, per-gene forward output, frozen pooling, row-order and batch-size invariance, memory profile, checkpoint resume if adapting, and numeric tolerance.",
+    "scheduling_status": "blocked"
+  },
+  "safe_loading_contract": {
+    "checkpoint_downloaded": false,
+    "risks": [
+      "embed.py loads the checkpoint with torch.load, permitting pickle-backed code execution.",
+      "embed.py loads the model hyperparameter object with pickle5.load.",
+      "The auxiliary Gene2Vec, gene list, GO graph, and hyperparameter objects have no hashes or terms.",
+      "The source script fills representations for input genes absent from the model with a mean vector, which must not erase missingness."
+    ],
+    "required_path": [
+      "Do not acquire or load any payload until written weight, prior-payload, and derivative terms are obtained.",
+      "Require immutable filenames, byte sizes, SHA-256 values, and provenance for the checkpoint and every auxiliary object.",
+      "Inspect pickle objects only in a disposable no-network environment with no mounted project data or credentials.",
+      "If terms permit, extract recognized state_dict tensors and plain hyperparameters into bounded non-executable formats and compare numeric parity.",
+      "Freeze tensor names, shapes, dtypes, gene order, GO release, Gene2Vec source, preprocessing, output schema, and a fixed-fixture digest."
+    ]
+  },
+  "terms_audit": {
+    "github_root_license": "NO_ROOT_LICENSE_DETECTED_at_41b72021540918e4386c4f2264351d7a6cbeed99",
+    "zenodo_code_record_license": "CC-BY-4.0_for_the_exact_v1.0_software_archive_metadata",
+    "zenodo_code_scope_warning": "The GitHub tree has no root license, and bundled or adapted third-party code may retain separate terms. The Zenodo metadata supports attribution-based use of the archived release but does not establish every transitive component's rights.",
+    "GRN_subdirectory_license": "MIT_applies_only_to_GRN_inference_and_does_not_license_the_scLong_base_code_or_weights",
+    "checkpoint_terms": "UNRESOLVED_no_license_detected_for_the_SharePoint_weight",
+    "auxiliary_payload_terms": "UNRESOLVED",
+    "derivative_weights_terms": "UNRESOLVED",
+    "output_and_embedding_terms": "UNRESOLVED",
+    "use_without_written_terms": "prohibited",
+    "open_champion_eligible": false,
+    "result": "blocked_restricted_comparator_only_after_written_terms"
+  },
+  "task_fit": {
+    "cell_state_mapping": "blocked_restricted_comparator_until_exact_checkpoint_auxiliary_terms_exposure_preprocessing_pooling_runtime_and_capability_gates",
+    "conditional_masld_model": "prohibited_as_backbone_context_teacher_or_feature_training_source_without_weight_output_derivative_and_corpus_clearance",
+    "perturbation_response": "not_admitted_by_the_base_checkpoint; the bundled GEARS route is a separately trained system requiring its own complete manifest",
+    "rna_atac_integration": "not_native",
+    "bulk_state_transfer": "not_admitted_by_the_released_single_cell_input_recipe"
+  },
+  "source_records": [
+    {
+      "identity": "BaiDing1234/scLong@41b72021:git_tree",
+      "git_tree": "ff5b096110f4a2e4dd0b2af95a3e9832fb40799f",
+      "url": "https://github.com/BaiDing1234/scLong/tree/41b72021540918e4386c4f2264351d7a6cbeed99"
+    },
+    {
+      "identity": "scLong@41b72021:README.md",
+      "sha256": "1e04da85b80686fb23adddf48dbc9c23abc9f6fe06417440f0c8229e2852e3d3",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/README.md"
+    },
+    {
+      "identity": "scLong@41b72021:embed.py",
+      "sha256": "630b4eaaf85b24f149bb69de9a207ff368343de4a91d8d4ed3a0a9af26a6761e",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/embed.py"
+    },
+    {
+      "identity": "scLong@41b72021:preprocess.py",
+      "sha256": "1477e47f8b10860ec3f880479b68092837f7c4dfda09e5d8487bd3df8efea0dd",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/preprocess.py"
+    },
+    {
+      "identity": "scLong@41b72021:pretrain_dual_4096_all_1b_mix.py",
+      "sha256": "3ceeda402a6d10f0a4ef8bb8d708fdf9d991c5faff340cec4297e8072cfb06db",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/pretrain_dual_4096_all_1b_mix.py"
+    },
+    {
+      "identity": "scLong@41b72021:performer_pytorch_cont/ding_models.py",
+      "sha256": "1bb4a28c3a0f4b40c63b0e805ec27e28a0a40d13cc433c9a4ecfd8c0c43dc1d9",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/performer_pytorch_cont/ding_models.py"
+    },
+    {
+      "identity": "scLong@41b72021:performer_pytorch_cont/performer_pytorch.py",
+      "sha256": "d22f85ed2e74f162d9a76c122de19a12d07f9be2863ac4f2ecb826ad47a6cef9",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/performer_pytorch_cont/performer_pytorch.py"
+    },
+    {
+      "identity": "scLong@41b72021:utils.py",
+      "sha256": "267fa396fa421ffe3111a3f516bf00987c012cc3a380ee48d7465159fafc3218",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/utils.py"
+    },
+    {
+      "identity": "scLong@41b72021:sclong.yml",
+      "sha256": "c99843f3776d375e27f3d8dd6fd9b362fd7ca29b5cef636497f72f2c2011c044",
+      "url": "https://github.com/BaiDing1234/scLong/blob/41b72021540918e4386c4f2264351d7a6cbeed99/sclong.yml"
+    },
+    {
+      "identity": "Zenodo:17510567:BaiDing1234/scLong-v1.0.zip",
+      "reported_md5": "282eeecbee2919bdd7b5cc9fd70913d8",
+      "sha256": "UNRESOLVED_archive_not_downloaded",
+      "size_bytes": 338293,
+      "url": "https://zenodo.org/records/17510567"
+    },
+    {
+      "identity": "SharePoint:EpvKzQW4hI5Bnb88-iM7vE0B_e2_U5r_ZGXb_FILCLTw3Q:gocont_4096_48m_pretrain_1b_mix_2024-02-05_16-23-37.pth",
+      "sha256": "UNRESOLVED",
+      "size_bytes": "UNRESOLVED",
+      "url": "https://mbzuaiac-my.sharepoint.com/:f:/g/personal/ding_bai_mbzuai_ac_ae/EpvKzQW4hI5Bnb88-iM7vE0B_e2_U5r_ZGXb_FILCLTw3Q"
+    }
+  ],
+  "source_evidence": "The Nature Communications paper, exact verified GitHub v1.0 commit and source objects, Zenodo software metadata, repository SharePoint locator, and live link status were inspected on 2026-08-22. No repository, source archive, checkpoint, auxiliary payload, package, or dataset was downloaded, installed, or deserialized.",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

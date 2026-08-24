@@ -1,0 +1,25 @@
+schema_version = "masld-bench-task-v1"
+task_id = "typed_evidence_graph"
+status = "blocked"
+unit_of_inference = "independent_locus"
+input_modalities = ["typed_evidence_graph", "gwas_summary_statistics", "colocalization", "enhancer_gene_links", "functional_assay"]
+endpoint = "Rank genetically anchored candidate genes while preserving evidence type, provenance, observability, and unsupported-versus-untestable distinctions."
+metrics = ["held_source_auprc", "brier_score", "locus_macro_mrr", "locus_macro_hits_at_10"]
+datasets_train = ["current_coloc_gwas"]
+datasets_development = ["gse281364", "gse281160"]
+datasets_sealed = []
+split_id = "evidence_graph_outer"
+required_pairing_levels = []
+missingness_policy = "explicit_state_and_mask"
+admission_gates = ["Promote the corrected 50-study COLOC release.", "Freeze evidence schema and source provenance.", "Remove held-locus incident edges and split-safe graph neighborhoods before training.", "Use colocalized or genetically anchored candidate language, never causal gene from COLOC alone."]
+baseline_model_ids = ["evidence_count", "nearest_gene", "graph_degree", "graph_source_count", "regularized_linear_evidence"]
+uncertainty_method = "paired_ld_and_gene_block_bootstrap"
+resampling_units = ["ld_block", "gene_block"]
+bootstrap_replicates = 10000
+multiplicity_family = "secondary_typed_evidence_graph_family"
+multiplicity_method = "bh_q0.05_secondary_no_champion_without_seal"
+promotion_gate_id = "typed_evidence_graph_promotion_v1"
+promotion_gate_config_sha256 = "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a"
+primary_evaluator_id = "graph_ld_block_auprc_gain_v1"
+evaluator_parameters = {}
+claim_gate = "No champion without a wholly sealed evidence source. With one, require held-source AUPRC gain >=0.03 over degree, source-count, nearest-gene, and regularized evidence baselines, lower bound above zero, and Brier no worse by >0.01; this supports prioritization, not causality."

@@ -1,0 +1,411 @@
+schema_version = "masld-bench-variant-capability-v1"
+registry_id = "variant_to_regulation_model_capability"
+task_id = "variant_to_regulation"
+primary_endpoint_id = "signed_cell_type_eqtl_effect"
+primary_evaluator_id = "variant_ld_block_fisher_z_spearman_gain_v1"
+sealed_available_context = ["dna_sequence", "single_nucleus_rna"]
+sealed_unavailable_context = ["cell_type_eqtl_summary", "interaction_eqtl_summary", "single_nucleus_atac"]
+endpoint_ids = ["accessibility_delta", "allelic_direction", "enhancer_gene_link", "eqtl_retrieval", "mpra_activity", "signed_cell_type_eqtl_effect"]
+role_ids = ["baseline", "conditional_only", "link_only", "negative_control", "observed_context_only", "primary_candidate", "representation_only", "secondary_only"]
+admission_blocking = true
+blockers = ["Every variant model must emit only its registered native outputs and may be scored only on its registered endpoints; accessibility, reporter activity, enhancer-gene links, and learned representations are not signed cell-type eQTL/ieQTL effects.", "Primary eligibility requires a frozen gene and lineage output crosswalk, REF/ALT orientation, and inference from DNA sequence plus allowed sealed RNA context without observed target ATAC or outcome summaries.", "A fitted head may use only outer-training assay-native RNA, ATAC, or locus-cross-fitted MPRA targets. No eQTL/ieQTL-specific fitted head or calibration is permitted until a nonsealed signed-effect source is registered before selection lock.", "Mandatory baselines remain endpoint-specific: nearest-gene, ABC, and rE2G guard retrieval/linking; accessibility and MPRA models guard their assay-native endpoints; only records with primary_eligible=true enter the signed-effect leaderboard."]
+
+[[models]]
+model_id = "abc"
+role = "link_only"
+native_outputs = ["enhancer_gene_link_score"]
+allowed_endpoints = ["enhancer_gene_link", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "alphagenome"
+role = "secondary_only"
+native_outputs = ["accessibility_delta", "gene_expression_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "borzoi_ensemble"
+role = "primary_candidate"
+native_outputs = ["accessibility_delta", "gene_expression_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "signed_cell_type_eqtl_effect"]
+primary_eligible = true
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "bpnet"
+role = "baseline"
+native_outputs = ["accessibility_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "caduceus"
+role = "representation_only"
+native_outputs = ["representation", "sequence_score"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "chrombert"
+role = "representation_only"
+native_outputs = ["representation"]
+allowed_endpoints = ["eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "chrombpnet"
+role = "baseline"
+native_outputs = ["accessibility_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "chromdragonn"
+role = "secondary_only"
+native_outputs = ["accessibility_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "context_borzoi"
+role = "conditional_only"
+native_outputs = ["accessibility_delta", "gene_expression_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "signed_cell_type_eqtl_effect"]
+primary_eligible = true
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "context_only"
+role = "baseline"
+native_outputs = ["zero_delta"]
+allowed_endpoints = ["accessibility_delta"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "corgi_regular"
+role = "primary_candidate"
+native_outputs = ["accessibility_delta", "rna_coverage_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "signed_cell_type_eqtl_effect"]
+primary_eligible = true
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "decima"
+role = "secondary_only"
+native_outputs = ["gene_expression_delta"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "deltasvm"
+role = "secondary_only"
+native_outputs = ["accessibility_delta", "activity_delta", "sequence_score"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "dnabert2"
+role = "representation_only"
+native_outputs = ["representation", "sequence_score"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "enformer"
+role = "secondary_only"
+native_outputs = ["accessibility_delta", "gene_expression_delta", "regulatory_class_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "epcotv2"
+role = "observed_context_only"
+native_outputs = ["gene_expression_delta", "regulatory_class_delta"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = true
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "epibert"
+role = "observed_context_only"
+native_outputs = ["accessibility_delta", "rna_coverage_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = true
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "epibrain"
+role = "secondary_only"
+native_outputs = ["accessibility_delta", "regulatory_class_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "epinformer"
+role = "link_only"
+native_outputs = ["enhancer_gene_link_score"]
+allowed_endpoints = ["enhancer_gene_link", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "evo"
+role = "representation_only"
+native_outputs = ["representation", "sequence_score"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "get"
+role = "observed_context_only"
+native_outputs = ["gene_expression_delta", "regulatory_class_delta"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = true
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "gkmsvm"
+role = "secondary_only"
+native_outputs = ["accessibility_delta", "activity_delta", "sequence_score"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "hyenadna"
+role = "representation_only"
+native_outputs = ["representation", "sequence_score"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "mean_track"
+role = "baseline"
+native_outputs = ["zero_delta"]
+allowed_endpoints = ["accessibility_delta"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "mpralegnet"
+role = "secondary_only"
+native_outputs = ["activity_delta"]
+allowed_endpoints = ["allelic_direction", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "nearest_context"
+role = "baseline"
+native_outputs = ["accessibility_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "nearest_gene"
+role = "baseline"
+native_outputs = ["enhancer_gene_link_score"]
+allowed_endpoints = ["enhancer_gene_link", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "nearest_regulatory_feature"
+role = "baseline"
+native_outputs = ["enhancer_gene_link_score"]
+allowed_endpoints = ["enhancer_gene_link", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "nucleotide_transformer"
+role = "representation_only"
+native_outputs = ["representation", "sequence_score"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "re2g"
+role = "link_only"
+native_outputs = ["enhancer_gene_link_score"]
+allowed_endpoints = ["enhancer_gene_link", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "scooby_epicardioids"
+role = "observed_context_only"
+native_outputs = ["accessibility_delta", "rna_coverage_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = true
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "scooby_neurips"
+role = "observed_context_only"
+native_outputs = ["accessibility_delta", "rna_coverage_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = true
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "scooby_onek1k"
+role = "secondary_only"
+native_outputs = ["rna_coverage_delta"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "sei"
+role = "secondary_only"
+native_outputs = ["accessibility_delta", "regulatory_class_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval"]
+primary_eligible = false
+requires_fitted_head = false
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "sequence_cnn_control"
+role = "baseline"
+native_outputs = ["accessibility_delta", "activity_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "sequence_only"
+role = "baseline"
+native_outputs = ["accessibility_delta", "gene_expression_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "mpra_activity", "signed_cell_type_eqtl_effect"]
+primary_eligible = true
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "sequence_transformer_control"
+role = "baseline"
+native_outputs = ["accessibility_delta", "activity_delta"]
+allowed_endpoints = ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "shuffled_context"
+role = "baseline"
+native_outputs = ["gene_expression_delta"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "signed_cell_type_eqtl_effect"]
+primary_eligible = true
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true
+
+[[models]]
+model_id = "shuffled_outcome"
+role = "negative_control"
+native_outputs = ["shuffled_score"]
+allowed_endpoints = ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = false
+
+[[models]]
+model_id = "trans_only"
+role = "baseline"
+native_outputs = ["zero_delta"]
+allowed_endpoints = ["accessibility_delta"]
+primary_eligible = false
+requires_fitted_head = true
+requires_observed_target_context = false
+is_mandatory_baseline = true

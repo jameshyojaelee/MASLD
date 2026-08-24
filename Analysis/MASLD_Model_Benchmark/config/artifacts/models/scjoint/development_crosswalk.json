@@ -1,0 +1,33 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["cell_state_mapping"]},
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Blocked pending terms. If resolved, training-only RNA and ATAC gene-activity populations may be integrated without false cell pairing; a held aliquot must be a frozen query and cannot participate in either training stage.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No held rows in co-training, cross-modality loss, KNN pseudo-labels, feature intersection, head fitting, or calibration."
+    },
+    "gse289173": {
+      "allowed_use": "Blocked pending terms. In principle, one-time RNA-only frozen-encoder cell-state mapping after selection lock; not RNA-to-ATAC translation.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA only through a new frozen query adapter."
+    },
+    "gse296875": {
+      "allowed_use": "Blocked pending terms. If resolved, outer-training RNA and ATAC gene-activity populations may be used; same-nucleus pairing supplies no native paired objective and must not cross donor folds.",
+      "exposure_state": "continual_seen",
+      "model_access": "Held donors excluded from both stages, KNN pseudo-labeling, feature construction, and checkpoint selection."
+    }
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot represented as distinct unpaired populations",
+    "gse289173": "RNA_only sealed query",
+    "gse296875": "same_nucleus identity retained in metadata but not required or exploited by the model"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells and KNN neighbours are not replicates.",
+    "profile_rule": "No scJoint output may be scored as an ATAC peak profile.",
+    "query_isolation": "Official co-training is prohibited for held donors; only a separately validated frozen encoder is admissible if terms resolve.",
+    "terms_gate": "No execution, adaptation, checkpoint load, or redistribution before written permission."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

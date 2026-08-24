@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse242934"
+title = "Primary mouse embryonic-hepatocyte CRISPRa Perturb-seq"
+role = "technical_pilot"
+status = "available"
+species = "mouse"
+accession = ["GSE242934", "PRJNA1015558"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "primary_hepatocyte_pool"
+expected_biological_units = 1
+native_genome_build = "mm39_Cell_Ranger_7.0.0"
+native_annotation_release = "frozen_deposited_32289_feature_axis_reference_provenance_unresolved"
+modalities = ["single_cell_rna", "crispra_guide_assignment", "gene_target"]
+pairing_levels = ["same_cell"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Only one Perturb-seq transcriptome library and one guide-amplicon library are deposited; this is a single primary-hepatocyte pool, not a replicated evaluation cohort.", "Resolve the discrepancy between GEO's G4 mESC source label and the paper's purified embryonic-hepatocyte protocol, and freeze embryo/mouse pooling ancestry.", "Keep CRISPRa separate from CRISPRi and knockout tasks: perturbation direction is part of the target identity and models without a direction input must be trained and evaluated within this source only.", "The deposited 124-guide library, exact guide-to-gene crosswalk, and 32,289-feature mm39 axis are frozen; authoritative provenance for the Cell Ranger feature reference and rights for model-input or aggregate redistribution remain unresolved."]
+notes = "The deposited raw counts and guide calls are materialized without normalization. This open source adds a liver-native CRISPRa direction for training or descriptive development only. It cannot support biological-replicate inference or be pooled with knockdown/knockout responses as if direction were exchangeable."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE242934"
+verified_date = "2026-08-24"
+local_exposure = "Primary GEO metadata, the exact 124-guide crosswalk, raw expression counts, and guide calls were materialized into a one-pool raw pseudobulk; no normalization or outcome model was fit."
+
+[split]
+group_key = "cohort_family_id+hepatocyte_pool+perturbation_direction+target_gene+guide_family"
+outer_role = "train"
+label_visibility = "development_visible"

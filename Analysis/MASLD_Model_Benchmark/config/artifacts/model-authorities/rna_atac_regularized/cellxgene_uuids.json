@@ -1,0 +1,8 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "cellxgene_uuids",
+  "model_ids": ["shrunken_pseudobulk", "shuffled_context", "trans_only"],
+  "cellxgene_uuids": [],
+  "cellxgene_snapshot": "not_applicable_project_owned_fold_local_training",
+  "notes": "No CELLxGENE corpus or pretrained cell encoder is used."
+}

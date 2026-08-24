@@ -1,0 +1,62 @@
+{
+  "current_task_admission": {
+    "decision": "blocked",
+    "primary_reason": "The registered training source contains CRISPRi guide perturbations of noncoding variant loci, while GEARS requires a queried perturbed gene symbol in both the expression and GO graph vocabularies.",
+    "prohibited_workaround": "nearest_gene_colocalized_gene_or_MPRA_linked_gene_substitution",
+    "task_id": "perturbation_transfer"
+  },
+  "gene_perturbation_task_admission": {
+    "decision": "blocked_conditional_native_applicability",
+    "dataset_id": "gse238219",
+    "native_endpoint": "unseen_exact_gene_target_response_prediction",
+    "primary_reason": "The target interface is native, but independent culture ancestry, dataset activation, exact expression/GO vocabulary joins, safe prior conversion, fold-local controls, and full adapter runtime are unresolved.",
+    "task_id": "gene_perturbation_response"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "conditional_future_gene_perturbation_stress_only",
+      "required_resolution": ["mouse_reference", "target_and_guide_identity", "cell_to_animal_join", "RNA_to_perturbation_pairing", "gene_symbol_orthology_policy"],
+      "reason": "GEARS could only be assessed for gene targets after every cell and target is assigned without crossing animals; the current same_study_unpaired topology and unresolved joins fail admission."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_current_task",
+      "reason": "Twenty MPRA-selected noncoding variant loci with guide pseudo-genes are not GEARS gene perturbation identities; the six sequencing lanes are technical, not biological replicates."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_direct_model_input_or_query",
+      "reason": "The model is single-cell gene-perturbation-native; these are 33 bulk RNA libraries across four insulin/condition arms with no matching genetic target vocabulary."
+    },
+    "gse238219": {
+      "biological_unit": "five_author_designated_replicate_samples_independent_culture_ancestry_UNRESOLVED",
+      "exposure": "downstream_demo_genetically_prioritized_targets",
+      "fit": "conditionally_native_unseen_gene_target_development_only",
+      "reason": "Eleven CRISPRi gene targets match the GEARS query class. Author metadata separates five replicate sample rows and nests sequencing lanes within them, but independent culture/transduction ancestry and the paper's two-replicate analysis discrepancy remain unresolved."
+    }
+  },
+  "held_target_leakage_contract": {
+    "control_construction": "training_role_and_context_matched_controls_only",
+    "external_GO_prior": "fixed_before_splits_and_independent_of_project_outcomes_but_separately_licensed_and_hashed",
+    "gene_and_target_mapping": "frozen_before_fit_without_using_held_expression_outcomes",
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "training_coexpression": "outer_training_cells_only",
+    "upstream_incident": "the_pinned_code_creates_self.ctrl_adata_from_all_controls_before_split_and_randomly_samples_it_for_training_and_prediction"
+  },
+  "replication_and_export_contract": {
+    "adapter_export": "absolute_post_perturbation_expression_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "no_pseudoreplication": "cells_guides_targets_and_lanes_are_not_independent_replicates",
+    "prediction_aggregation": "pseudobulk_each_replicate_before_evaluator_metrics"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "conditional_on_a_valid_gene_perturbation_task_and_absolute_expression_export",
+    "centroid_accuracy": "independent_evaluator_compares_each_predicted_replicate_aggregated_centroid_to_its_correct_observed_perturbation_centroid_and_all_other_eligible_test_centroids_using_the_frozen_distance",
+    "perturbed_reference": "O_pert_is_the_unweighted_average_of_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Systema_is_evaluator_only_and_cannot_make_a_model_capable_of_querying_an_unsupported_noncoding_target"
+  },
+  "verified_date": "2026-08-24"
+}

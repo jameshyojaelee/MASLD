@@ -1,0 +1,71 @@
+{
+  "architecture_contract": {
+    "method": "shared 64-dimensional feed-forward encoder trained semi-supervised on labeled scRNA expression and unlabeled scATAC gene-activity matrices, followed by a cell classifier and KNN label transfer",
+    "default_embedding_dimension": 64,
+    "default_knn_neighbors": 30,
+    "training_stages": "Stage 1 co-trains RNA and ATAC with classification and cross-modality embedding losses. Stage 3 re-trains using KNN pseudo-labels for ATAC."
+  },
+  "code_license": "NO_LICENSE_DETECTED",
+  "implementation": {
+    "checkpoint_policy": "No checkpoint is admitted. A repository-bundled demonstration checkpoint exists but has no stated weight terms, is configuration-specific, and must not be fetched or loaded.",
+    "repository": "SydneyBioX/scJoint",
+    "repository_revision": "cbbfa5d7e7faa35f3d725bd5257507a01a22810f",
+    "repository_revision_date": "2023-07-12T23:04:41-04:00",
+    "release_tags": "none_detected"
+  },
+  "inductive_inference_contract": {
+    "native_behavior": "The official pipeline co-trains the encoder on every supplied RNA and ATAC dataset, creates ATAC pseudo-labels, and then retrains. It is transductive with respect to target cells.",
+    "required_if_terms_resolve": "Implement a frozen encoder/head query path fit only on outer-training donors. Held cells may only be forwarded in eval/no-grad mode after all feature alignment and normalization are frozen.",
+    "forbidden": "Do not include held or sealed cells in either training stage, KNN pseudo-label generation, feature intersection, normalization, checkpoint selection, or calibration.",
+    "sealed_modality_limit": "The released transfer direction is labeled RNA to ATAC gene activity. GSE289173 is RNA-only, so its clean use is at most frozen RNA-encoder cell-state mapping, not the method's native target-modality experiment."
+  },
+  "input_contract": {
+    "atac": "gene-activity matrix with exactly the same ordered genes as RNA; this is not a peak matrix",
+    "pairing": "RNA and ATAC cells need not be paired; the method treats modality datasets as separate populations",
+    "reference": "GENCODE v49 gene identifiers; any peak-to-gene activity construction must be frozen from outer-training data and declared",
+    "rna": "raw or normalized expression is accepted upstream without a single normative transform; benchmark preprocessing must therefore be specified and training-only",
+    "supported_pairing_topologies": ["same_study_unpaired", "same_sample_different_aliquot_as_distinct_cells", "same_cell_as_separate_modality_rows", "same_nucleus_as_separate_modality_rows"]
+  },
+  "missingness_contract": {
+    "model_semantics": "The method ingests separate RNA and ATAC datasets and therefore tolerates dataset-level absent modalities without zero filling. It does not carry project missing-state masks.",
+    "project_mapping": "Preserve all project missingness states outside the model; construct no zero assay blocks."
+  },
+  "output_contract": {
+    "admitted": ["normalized_64d_embedding", "cell_class_probabilities", "KNN_label_probabilities"],
+    "profile_status": "latent_only",
+    "not_admitted": "scJoint has no peak decoder and cannot emit an RNA-conditioned ATAC peak profile. Gene-activity embeddings or class probabilities are not accessibility profiles."
+  },
+  "runtime_contract": {
+    "declared": "Developed with PyTorch 1.0.0 and reported tested with 1.0.0 and 1.4.0; exact Python and dependency locks are undeclared.",
+    "environment_status": "BLOCKED_BY_TERMS_AND_UNRESOLVED_LEGACY_RUNTIME"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded_for_use": false,
+    "checkpoint_permitted": false,
+    "reason": "No code or checkpoint license was detected. Upstream uses unrestricted torch.load.",
+    "future_requirement": "Written permission plus CPU-first restricted inspection, exact hash/key/shape/dtype manifest, and safe local state-dict loading."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The exact repository tree and small public source text were inspected on 2026-08-22. No license file or repository license declaration was detected. No package was installed and no checkpoint was deserialized or executed.",
+  "source_records": [
+    {"identity": "scJoint:README.md", "sha256": "7ee0642b6e7c167787dd2539c82435b4a972bb162b42eeb554f748d09e2ebaeb", "size_bytes": 6960},
+    {"identity": "scJoint:config.py", "sha256": "1a3e04f38be60c1c41d2d4d71c38255071cc0f773d995e753a164fafd902d236", "size_bytes": 4867},
+    {"identity": "scJoint:main.py", "sha256": "9aeee52e3d7cec602e66ecf07aa5aaad673e8f229ce5985b359bd14864d219cd", "size_bytes": 1614},
+    {"identity": "scJoint:util/dataloader_stage1.py", "sha256": "4ba8d2dc12f50e9ba5683aa210299590973f5581da1d9b764dda24c2ff972559", "size_bytes": 10696},
+    {"identity": "scJoint:util/dataloader_stage3.py", "sha256": "d6cdf022f1c4aa348b0c3393cfb183e3ee01c819b592f8e92ef34beb8546d5e1", "size_bytes": 11267},
+    {"identity": "scJoint:util/model_regress.py", "sha256": "0d1f1cab2f815bd384679d26264fecc203222b94278ce389a0e3b61248640abe", "size_bytes": 805},
+    {"identity": "scJoint:util/trainingprocess_stage1.py", "sha256": "6428eb3e8e3cbb36fe7593fd41b4e14bad3f521d7a3c26e15093394487ffbb6d", "size_bytes": 11769},
+    {"identity": "scJoint:util/trainingprocess_stage3.py", "sha256": "4ae6cd46759f6b1d2744f84bacb475031449aee0104c4e47052d5836d588d63d", "size_bytes": 12576}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Blocked until written code/checkpoint terms exist. If resolved, only a newly implemented frozen-query outer-fold wrapper is eligible.",
+    "rna_conditioned_atac": "Ineligible and latent-only: no peak decoder or peak-profile output.",
+    "variant_to_regulation": "Ineligible because the model has no sequence or allele-effect mechanism."
+  },
+  "terms_audit": {
+    "checkpoint_terms": "absent",
+    "repository_license": "absent",
+    "result": "blocked_no_detected_license"
+  },
+  "weight_license": "UNDECLARED"
+}

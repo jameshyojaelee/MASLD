@@ -1,0 +1,107 @@
+{
+  "architecture_contract": {
+    "activation": "SiLU",
+    "blocks": "stem convolution followed by four efficient convolution, squeeze-excitation, residual-concatenation, projection, and max-pooling stages",
+    "declared_cell_line": "HepG2",
+    "input_channels": 4,
+    "input_length_bp": 230,
+    "output": "one uncalibrated scalar lentiMPRA reporter-expression score per sequence",
+    "pool_sizes": [2, 2, 2, 2],
+    "stem_channels": 64,
+    "stem_kernel": 11,
+    "stage_channels": [80, 96, 112, 128],
+    "warning": "The exact Hugging Face artifact is one HepG2 file named test1_val2, not the ten-model cross-validation ensemble described by the author repository. Fold identity is inferred from the filename because no training receipt is bundled."
+  },
+  "checkpoint": {
+    "artifact_provenance": "third_party_Hugging_Face_repackaging_of_the_author_architecture; equality to an author-released Zenodo checkpoint is unresolved",
+    "declared_cell_line": "HepG2",
+    "filename": "weights/hepg2_best_model_test1_val2.safetensors",
+    "git_lfs_pointer_sha256": "3095213ca3425c3063f57b03b961d54e972b697779ec6633c202b32b337c21f7",
+    "lfs_oid_sha256": "470dc7bfd3f0912c91f307a5f4019598072b8786294c46fc501b826c030cbe39",
+    "repository": "Ni-os/MPRALegNet",
+    "revision": "bba3b416a1450f1186b2ec3112b728650568a686",
+    "size_bytes": 5335404,
+    "status": "exact_pointer_registered_checkpoint_not_acquired"
+  },
+  "code": {
+    "author_repository": "autosome-ru/human_legnet",
+    "author_revision": "a20dbc7d0b08daae3af1aebcfb8a71d9f198ab5d",
+    "author_revision_date": "2024-10-21",
+    "hugging_face_model_py_matches_author_sha256": true,
+    "license": "MIT"
+  },
+  "input_contract": {
+    "alphabet_and_channel_order": "A,G,C,T; N is encoded as 0.25 in every channel",
+    "canonical_project_reference": "GRCh38.p14 with REF-allele and coordinate validation before sequence construction",
+    "gse281364_native_lane": "Prefer the deposited assay oligo sequence only after its allele, orientation, adapter, barcode, and 230-bp construction are validated. A genomic window is a separately labeled transfer lane.",
+    "indel_status": "deferred until a length-preserving oligo construction and allele alignment fixture is frozen",
+    "sequence_length": "exactly 230 bp; reject silent truncation, padding, or mixed lengths",
+    "snp_window": "For coordinate-only transfer, use 115 upstream bases, the validated allele, and 114 downstream bases so the allele is at zero-based index 115",
+    "strand_contract": "score forward and reverse-complement sequences, then average scalar outputs; preserve ALT-minus-REF orientation",
+    "training_domain": "human lentiMPRA sequences in K562, HepG2, and WTC11; endogenous genomic-window inference is out-of-domain transfer",
+    "warning": "The checkpoint has four input channels and therefore does not use the optional reverse-orientation channel described by the author training code. No shift or primer sequence is added at inference."
+  },
+  "representation_and_task_contract": {
+    "admitted_task": "variant_to_regulation",
+    "gse281364_assay_native_diagnostic": "ALT-minus-REF reporter score and allelic-direction agreement in HepG2 only. The same sequence score is repeated across control and PAOA and cannot predict a treatment interaction. LX-2 is an out-of-domain diagnostic, not a matched checkpoint result.",
+    "native_output": "scalar reporter-expression activity",
+    "not_supported": [
+      "enhancer_gene_link_prediction",
+      "signed_cell_type_eqtl_or_ieqtl_effect_prediction",
+      "donor_conditioning",
+      "treatment_conditioning",
+      "LX2_native_prediction"
+    ],
+    "sealed_component_lane": "A frozen ALT-minus-REF activity score may enter a separately named composite with an independently frozen enhancer-gene link and direction rule.",
+    "standalone_primary_endpoint_status": "ineligible because a reporter activity delta does not identify a target gene or a signed cell-type eQTL/ieQTL effect",
+    "variant_primary_score": "mean_orientation_ALT_minus_REF_scalar"
+  },
+  "runtime_contract": {
+    "author_environment": {
+      "biopython": "1.81",
+      "lightning": "2.0.3",
+      "numpy": "1.25.0",
+      "python": "3.11.4",
+      "pytorch": "2.0.0_cuda112",
+      "pytorch_lightning": "2.0.3"
+    },
+    "environment_status": "UNRESOLVED_L40S_COMPATIBILITY_PROBE_REQUIRED",
+    "required_probe": "isolated_L40S_import_safetensors_load_strict_state_dict_forward_reverse_complement_determinism_and_cross_device_tolerance",
+    "source_code_run": false
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "deserialized": false,
+    "format": "safetensors",
+    "network_during_load": false,
+    "require_author_release_equivalence_or_explicit_third_party_provenance_acceptance": true,
+    "require_eval_mode_for_batch_normalization": true,
+    "require_exact_lfs_oid_and_size": true,
+    "require_state_dict_key_shape_dtype_manifest": true,
+    "vendor_model_source_by_hash": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The author repository, its Zenodo record 10558183, and the exact Hugging Face revision were queried on 2026-08-22. Public source text, repository metadata, and the 132-byte Git LFS pointer were read. No checkpoint, package, training data, or assay data was downloaded, and no model code was executed.",
+  "source_records": [
+    {"identity": "human_legnet:LICENSE", "sha256": "a43c0517b34d46afbb75b48bee74c0e52ae3612f9b860a81d566320ea49c0f15", "size_bytes": 1070},
+    {"identity": "human_legnet:README.md", "sha256": "7410126d8d2f1771a59e48018ae1c4147aa0ce71086fbf4e507bf8c3d7c9ece9", "size_bytes": 5974},
+    {"identity": "human_legnet:model.py", "sha256": "8a5650b788662db07fda0e82566697b0aa1b81a1e6ff7a53448f138d00c40975", "size_bytes": 6400},
+    {"identity": "human_legnet:dataset.py", "sha256": "52eafb4a5d2d3830b852ded6119380e13d22865fd3f07497a859cd0a5cf2abd7", "size_bytes": 5461},
+    {"identity": "human_legnet:utils.py", "sha256": "88304f6235a39eb83dad805d30175e4d97ef8a695eabf032303d6536a1db0fae", "size_bytes": 2403},
+    {"identity": "human_legnet:fasta_predict.py", "sha256": "703402fc5f2425bdb184addc2908f9ce0226e65b9d1d16870f1a0a9c6ae54e00", "size_bytes": 3037},
+    {"identity": "human_legnet:envs/environment.yml", "sha256": "90e8df5ce9e0649a1596723067db14ae855d6ff69d379a3efd36614d8a766d0f", "size_bytes": 7275},
+    {"identity": "HF:README.md", "sha256": "d8d7a46d41a1a37fe4f0a5f637bf55c649310185329127d8a2204632e480be17", "size_bytes": 24},
+    {"identity": "HF:model.py", "sha256": "8a5650b788662db07fda0e82566697b0aa1b81a1e6ff7a53448f138d00c40975", "size_bytes": 6400},
+    {"identity": "HF:config.json", "sha256": "19f9ebececfe7627f20e9ce1e5be28634f9e6c3bd5fe75847cc4457e0b5bdf09", "size_bytes": 230},
+    {"identity": "HF:cell_type_configs/hepg2_config.json", "sha256": "6617738400d4b442c737b9ff81f1bfe26531fd41a9d6b1cf4ee1c1d89bc3af28", "size_bytes": 153},
+    {"identity": "HF:weights/hepg2_best_model_test1_val2.safetensors.lfs_pointer", "sha256": "3095213ca3425c3063f57b03b961d54e972b697779ec6633c202b32b337c21f7", "size_bytes": 132}
+  ],
+  "terms_audit": {
+    "author_code_license": "MIT",
+    "author_zenodo_record_license": "CC-BY-4.0",
+    "checkpoint_model_card_license": "MIT",
+    "derivative_weight_redistribution": "provisionally_permitted_by_the_checkpoint_model_card_but_author_checkpoint_equivalence_is_unresolved",
+    "result": "conditional_open_artifact_pending_provenance_equivalence_or_explicit_acceptance_of_third_party_weights"
+  },
+  "weight_license": "MIT_declared_by_checkpoint_model_card"
+}

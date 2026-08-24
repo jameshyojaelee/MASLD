@@ -1,0 +1,34 @@
+{
+  "adapter_sha256": "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+  "algorithms": {
+    "hvg_pca_elastic_net": "multinomial elastic-net logistic regression; C=1; l1_ratio=0.5; SAGA; max_iter=5000",
+    "hvg_pca_knn": "15-neighbor Euclidean vote in PCA space; votes use donor/class-balanced training weights; canonical-row tie break",
+    "hvg_pca_linear_svm": "linear SVM; C=1; donor-grouped three-fold out-of-fold score calibration by multinomial L2 logistic regression",
+    "hvg_pca_logistic": "multinomial L2 logistic regression; C=1; LBFGS; max_iter=5000",
+    "hvg_pca_nearest_centroid": "donor/class-weighted class centroids; squared Euclidean distance; training-derived softmax temperature"
+  },
+  "common_preprocessing": {
+    "feature_selection": "training-only rank-binned normalized dispersion; 20 mean bins; top 2000; Ensembl-ID tie break",
+    "normalization": "per-cell library-size scaling to 10000 followed by log1p",
+    "pca": "training-only centered full SVD; at most 50 components",
+    "prediction": "held-donor fold only; complete class probabilities; no observed label",
+    "split": "SHA256(split_seed NUL donor_id), first 8 bytes big-endian modulo 5",
+    "training_weights": "equal class mass, then equal donor mass within class, rescaled to training cell count"
+  },
+  "input_contract": {
+    "feature_id": "versionless Ensembl gene ID",
+    "label": "frozen broad_liver_five_v1 cell class",
+    "matrix": "nonnegative integer raw counts",
+    "row_id": "globally unique Atlas obs_names",
+    "unit": "dataset-view donor_id admitted as cohort_family_id+person_key"
+  },
+  "model_ids": [
+    "hvg_pca_elastic_net",
+    "hvg_pca_knn",
+    "hvg_pca_linear_svm",
+    "hvg_pca_logistic",
+    "hvg_pca_nearest_centroid"
+  ],
+  "schema_version": "masld-bench-preprocessing-authority-v1",
+  "scope": "cell_state_mapping only"
+}

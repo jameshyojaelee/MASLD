@@ -1,0 +1,48 @@
+{
+  "current_task_admission": {
+    "decision": "deferred",
+    "primary_reason": "The frozen categorical CPA path learns an embedding only for perturbation atoms represented in training and has no validated encoding for a wholly unseen noncoding target locus or guide family.",
+    "prohibited_workaround": "include_test_target_categories_in_the_setup_vocabulary_and_treat_random_untrained_embeddings_as_predictions",
+    "task_id": "perturbation_transfer"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "future_seen_target_held_combination_or_context_only",
+      "required_resolution": ["mouse_reference", "target_and_guide_identity", "cell_to_animal_join", "RNA_to_perturbation_pairing", "categorical_target_vocabulary"],
+      "reason": "CPA can compose only target atoms learned in training; current joins are unresolved and animal-level replication remains four."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_wholly_unseen_target",
+      "reason": "A separate learned category per locus or guide cannot extrapolate to a category excluded by the target_locus split; no approved locus-sequence embedding is registered."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_direct_model_input_or_query",
+      "reason": "The released implementation is single-cell-native, and the bulk chip arms do not share the genetic perturbation vocabulary learned from GSE281160."
+    }
+  },
+  "held_target_leakage_contract": {
+    "covariate_vocabulary": "outer_training_values_only_with_unknown_test_value_rejection",
+    "DE_metadata": "none_from_outer_evaluation_outcomes",
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "perturbation_vocabulary": "outer_training_atoms_only",
+    "upstream_incident": "setup_anndata_enumerates_perturbations_from_the_full_AnnData_before_the_model_split_and_can_allocate_embeddings_for_OOD_categories"
+  },
+  "replication_and_export_contract": {
+    "adapter_export": "absolute_expression_mean_and_variance_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "no_pseudoreplication": "cells_guides_targets_and_lanes_are_not_independent_replicates",
+    "prediction_aggregation": "aggregate_the_predictive_distribution_within_each_replicate_before_evaluator_metrics"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "valid_only_for_future_seen_atom_held_combination_dose_or_context_tasks",
+    "centroid_accuracy": "independent_evaluator_uses_prediction_means_and_frozen_Euclidean_distance_on_replicate_aggregated_centroids",
+    "perturbed_reference": "O_pert_is_computed_from_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Do_not_use_test_categories_or_test_perturbed_profiles_to_define_embeddings_reference_or_uncertainty"
+  },
+  "verified_date": "2026-08-22"
+}

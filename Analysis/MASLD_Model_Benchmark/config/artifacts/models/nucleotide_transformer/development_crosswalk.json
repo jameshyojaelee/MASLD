@@ -1,0 +1,45 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_content": "human_reference_genome_only",
+    "assembly": "GCA_000001405.15_GRCh38",
+    "mitochondrial_sequence": "excluded",
+    "chunking": "6100_bp_overlapping_chunks_with_random_0_to_100_bp_epoch_offset_then_1000_tokens",
+    "training_labels_used": false,
+    "reference_sequence_exposure": "genome_wide_encoder_seen"
+  },
+  "crosswalk_scope": {
+    "admitted_task": "variant_to_regulation",
+    "project_reference": "GRCh38.p14",
+    "registered_development_signed_effect_source": null,
+    "project_sealed_source": "GSE289173"
+  },
+  "findings": {
+    "GRCh38.p14_project_reference": {
+      "exposure_state": "encoder_seen",
+      "evidence": "The model was pretrained across the GRCh38 human reference. Patch-level and contig differences from the project GRCh38.p14 reference require explicit sequence normalization."
+    },
+    "GSE289173_reference_allele_windows": {
+      "exposure_state": "encoder_seen",
+      "evidence": "Reference-like windows are part of the declared genome-wide human-reference corpus."
+    },
+    "GSE289173_observed_variant_alleles": {
+      "exposure_state": "clean_declared",
+      "evidence": "This checkpoint used the reference genome rather than the separate 1000 Genomes corpus, so alternate population haplotypes were not declared as training data."
+    },
+    "GSE289173_eQTL_ieQTL_effects": {
+      "exposure_state": "target_label_unexposed",
+      "evidence": "The pinned base checkpoint predates the 2025-02-12 public release and was pretrained without functional labels."
+    },
+    "GRASP_eQTL_and_meQTL_variant_labels": {
+      "exposure_state": "downstream_demo",
+      "evidence": "The paper fit downstream variant classifiers on GRASP eQTL and meQTL labels. Those fitted heads are not part of the registered base checkpoint, but the task family is not novel to model selection."
+    }
+  },
+  "task_data_gate": {
+    "common_frozen_embedding_lane": "blocked_for_supervised_signed_effect_fit_until_a_nonsealed_development_label_source_is_registered",
+    "native_zero_shot_lane": "admissible_as_a_restricted_sequence_only_comparator",
+    "sealed_rule": "No GSE289173 outcome can choose layer, 6-mer phase, strand aggregation, pooling window, calibration, threshold, or head parameters."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

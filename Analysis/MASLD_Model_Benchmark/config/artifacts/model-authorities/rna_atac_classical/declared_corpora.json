@@ -1,0 +1,14 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "declared_corpora",
+  "model_ids": [
+    "assay_native_pseudobulk",
+    "mean_track",
+    "nearest_context"
+  ],
+  "pretraining_corpora": [],
+  "project_fit_source": "GSE296875 development-only outer-training donors",
+  "project_query_source": "GSE296875 held outer-fold donor RNA only",
+  "sealed_sources_used": [],
+  "external_claim_eligible": false
+}

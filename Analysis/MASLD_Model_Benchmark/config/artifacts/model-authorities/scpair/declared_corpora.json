@@ -1,0 +1,12 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "declared_corpora",
+  "model_ids": ["scpair"],
+  "pretrained_corpora": [],
+  "upstream_checkpoint_used": false,
+  "fold_local_training_source": "gse296875_rna_atac_smoke_1000_v1",
+  "pairing_level": "same_nucleus",
+  "sealed_sources": [],
+  "external_labels_used": false,
+  "notes": "Each state dict is fit from scratch inside one outer donor-training partition."
+}

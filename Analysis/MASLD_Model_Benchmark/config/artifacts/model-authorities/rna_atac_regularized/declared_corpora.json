@@ -1,0 +1,10 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "declared_corpora",
+  "model_ids": ["shrunken_pseudobulk", "shuffled_context", "trans_only"],
+  "pretrained_corpora": [],
+  "fold_local_training_source": "gse296875_rna_atac_smoke_1000_v1",
+  "sealed_sources": [],
+  "external_labels_used": false,
+  "notes": "Project-owned task-native baselines fit from scratch inside each donor outer fold."
+}

@@ -37,7 +37,7 @@ if (!FIG5A_LAYOUT %in% VALID_LAYOUTS) {
 }
 OUTPDF <- file.path(
   PANDIR,
-  if (FIG5A_LAYOUT == "therapeutic_axes") "fig5a_therapeutic_axes.pdf" else "fig5a_standard.pdf"
+  if (FIG5A_LAYOUT == "therapeutic_axes") "fig6_therapeutic_axes.pdf" else "fig5a_standard.pdf"
 )
 
 # Optional: render a truncated top-N variant with taller cells.

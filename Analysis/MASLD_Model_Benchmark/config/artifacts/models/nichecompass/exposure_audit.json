@@ -1,0 +1,71 @@
+{
+  "audit_scope": {
+    "candidate": "NicheCompass_0.3.3_train_locally",
+    "candidate_sources": [
+      "gse192741",
+      "gse292268",
+      "hra007511",
+      "vu2025"
+    ],
+    "code": "Lotfollahi-lab/nichecompass@5bf7d2a09e70bd490c59e978e37f4df30f812994",
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "admitted_upstream_checkpoint": "none",
+    "checkpoint_exposure_state": "not_applicable_no_upstream_model_state",
+    "project_trained_state": "not_created",
+    "project_state_exposure": "unknown_until_a_future_fold_specific_training_receipt_exists",
+    "rule": "A future local model is target_label_unexposed only when its weights, normalization, graph, gene programs, priors, clustering, and task head are fit exclusively within the registered training donors."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "candidate_MASLD_spatial_sources_native_topology_graph_leakage_held_donor_lanes_and_activation_gate",
+    "sha256": "c056d732d6b332d6d1f74786f5b23b8412ebc470802caf77462f10b323ae9694"
+  },
+  "input_eligibility": {
+    "gse192741": "Native spatial RNA is possible only as a future technical pilot. Four donors, exposed outcomes, and unresolved native annotation make it ineligible for training or a superiority claim.",
+    "gse292268": "Ineligible until the slide and field-of-view donor join is authoritative. Four donors remain insufficient for a champion endpoint.",
+    "hra007511": "Potential future spatial-RNA input only after controlled-data, participant-join, training, and derivative-weight permissions. H&E and MALDI are non-native; adjacent-section MALDI cannot create a paired node.",
+    "vu2025": "Ineligible until the DSA, barcode-to-participant boundary map, and spatial registrations are admitted. Graphs must be built within biopsy and participant, not across VLP arrays.",
+    "optional_RNA_ATAC": "No admitted candidate supplies same-cell or same-nucleus paired RNA-ATAC. Same-donor or adjacent-section measurements cannot activate this path."
+  },
+  "exposure_and_leakage_findings": {
+    "graph": "The spatial adjacency is supplied to the model and can leak donors or tissue islands before training. It must be constructed inside authoritative participant and section boundaries and hashed as an input artifact.",
+    "held_donor": "Frozen weights may operate on an unseen query graph, but native reference mapping, new sample embeddings, query fine-tuning, or held-feature clustering are transductive or query-adaptive and require a separate lane.",
+    "preprocessing": "Feature selection, normalization, program construction and pruning, graph hyperparameters, clustering, label mapping, and calibration are training-donor operations.",
+    "priors": "Dynamic NicheNet, OmniPath, CollecTRI, ortholog, and metabolite resources are external training evidence. Mutable network retrieval is prohibited; versions, terms, identifiers, and hashes must be frozen.",
+    "hotspot_programs": "The Atlas's frozen 117 Hotspot programs cannot be training targets, model-selection endpoints, or optimized prior features."
+  },
+  "known_incidents_and_biases": [
+    "The package checks that an adjacency exists and is symmetric but does not establish a project-safe donor and section graph construction policy.",
+    "Spatial graph smoothness can make spot-level validation look strong while donor-level transfer fails; nodes and edges are not biological replicates.",
+    "Optional sample covariate embeddings create an unresolved policy for a genuinely unseen donor in a frozen lane.",
+    "Native reference mapping can use query features and must not be relabeled as frozen zero-shot transfer.",
+    "The native loader uses torch.load and pickle.load and only warns on variable-name mismatch; untrusted serialized objects and warning-only gene order are unacceptable.",
+    "Dynamic prior retrieval changes the effective model and can import outcome-adjacent information after a split or selection lock.",
+    "NicheCompass does not natively encode H&E, CODEX, or MALDI even when those assays can be stored beside RNA in AnnData."
+  ],
+  "license_disposition": {
+    "code": "BSD-3-Clause_at_the_pinned_revision",
+    "upstream_checkpoint": "none",
+    "prior_assets": "UNRESOLVED_source_specific_terms",
+    "candidate_data": "GSE192741_and_GSE292268_source_terms_apply; HRA007511_permission_required; vu2025_DSA_required",
+    "local_derivative_weights": "conditional_on_every_training_data_and_prior_asset_right",
+    "open_champion": "ineligible_no_rights_cleared_powered_source_or_model_artifact"
+  },
+  "remaining_blockers": [
+    "Activate an authoritative, rights-cleared donor-level spatial RNA source with participant and section joins, adequate prospective donor power, and explicit model-training and derivative-weight terms.",
+    "Register a spatial TaskSpec with a donor-level endpoint, transcript-native baselines, frozen versus query-adaptive lanes, uncertainty, multiplicity family, external source, and champion gate.",
+    "Freeze an outcome-blind per-participant graph builder including coordinate units, physical scale, boundary masks, neighbors or radius, symmetry, self loops, isolated nodes, and adjacency and distance hashes.",
+    "Freeze an offline terms-cleared prior bundle. Keep the 117 Hotspot programs outside training and selection.",
+    "Define an unseen-donor sample-covariate policy and prove the frozen lane does not learn held-donor embeddings, clusters, prototypes, or mappings.",
+    "Replace unrestricted serialized-object loading with a strictly validated tensor-only state plus JSON contract and exact gene and program order checks.",
+    "Create an exact environment lock, then pass L40S import, graph, forward, backward, resume, deterministic-seed, order-invariance, donor-block, no-network, and cross-device probes through an approved SLURM campaign.",
+    "Hash every fold- and seed-specific trained artifact and contamination receipt before any selection or evaluation."
+  ],
+  "interpretation": "NicheCompass has a reproducible BSD-licensed source revision but no upstream biological checkpoint and no eligible MASLD training substrate. Its decisive contamination risks are locally constructed: cross-participant graph edges, target-fitted programs or preprocessing, mutable priors, and query-adaptive reference mapping. Because no spatial task or project-sealed spatial source exists, it remains a deferred method rather than a v1 benchmark participant.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_registered_spatial_task_no_project_seal_no_powered_rights_cleared_dataset_and_no_trained_artifact",
+  "verified_date": "2026-08-22"
+}

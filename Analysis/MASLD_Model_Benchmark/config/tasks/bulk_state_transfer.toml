@@ -1,0 +1,25 @@
+schema_version = "masld-bench-task-v1"
+task_id = "bulk_state_transfer"
+status = "candidate"
+unit_of_inference = "donor"
+input_modalities = ["single_cell_rna", "single_nucleus_rna", "bulk_rna", "bulk_proteomics"]
+endpoint = "Transfer frozen cell-state or program representations to donor-level bulk RNA and independent-cohort liver proteomics, and quantify cross-sectional MASLD stage-associated remodeling without inventing RNA-protein pairs."
+metrics = ["participant_spearman_fibrosis_nas", "paired_rank_correlation_gain", "calibration_slope", "protein_program_rank_transportability"]
+datasets_train = ["resource_atlas_current", "bulk_five_cohort"]
+datasets_development = ["gse249997", "gse256398", "pxd051911"]
+datasets_sealed = ["gse267031"]
+split_id = "donor_outer"
+required_pairing_levels = ["same_study_unpaired"]
+missingness_policy = "explicit_state_and_mask"
+admission_gates = ["Use donors or participants, never cells or samples, as inferential units.", "Freeze pseudobulk construction and cohort-held folds before tuning.", "Keep assay-native effect units and adjust the declared participant-level covariates.", "PXD051911 participants are independent of transcriptomic cohorts; evaluate only cohort-level protein transportability and never paired RNA-protein learning.", "Use GSE249997 only for early-MASLD bulk-domain transport after resolving its 77-sample versus 70-participant mapping; it has no control or staged phenotype endpoint.", "Do not tune frozen Resource programs using outcome data."]
+baseline_model_ids = ["hvg_pca_nearest_centroid", "hvg_pca_elastic_net", "hvg_pca_linear_svm", "mean_expression_bulk", "assay_native_pseudobulk"]
+uncertainty_method = "paired_donor_cluster_bootstrap"
+resampling_units = ["donor"]
+bootstrap_replicates = 10000
+multiplicity_family = "confirmatory_external_champion_family_1"
+multiplicity_method = "holm_fwer_0.05_primary_and_bh_q0.05_secondary"
+promotion_gate_id = "bulk_state_transfer_promotion_v1"
+promotion_gate_config_sha256 = "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a"
+primary_evaluator_id = "bulk_paired_spearman_gain_v1"
+evaluator_parameters = {}
+claim_gate = "Before any GSE267031 outcome is read, freeze the paired development variance and test prospective 80% power for the prespecified 0.05 rank-correlation gain. Activate confirmatory evaluation only if that exact effect has at least 80% power; then require observed rank-correlation gain >=0.05, paired lower bound above zero, and no direction reversal. Otherwise do not unblind and downgrade the endpoint; any later separately authorized exploratory use is CI-only descriptive consistency and cannot support a champion claim. Do not assume the power gate is reachable. Use cross-sectional stage-associated remodeling only."

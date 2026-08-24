@@ -6,7 +6,7 @@ FIG2_CONSEQUENCE_PALETTE <- c(
   UTR = "#4DB6AC",
   synonymous_or_utr = "#4DB6AC",
   promoter = "#1565C0",
-  canonical_splice = "#1565C0",
+  canonical_splice = "#8E3B76",
   intron = "#64B5F6",
   intergenic = "#B0BEC5",
   other_noncoding = "#B0BEC5"

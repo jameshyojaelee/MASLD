@@ -17,16 +17,24 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+PANEL_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
+COLOC_INPUT <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+VARIANT_ANNOTATION <- Sys.getenv(
+  "FIG2_VARIANT_ANNOTATION",
+  file.path(BASE, "RNA-seq/results/coloc_variant_classes/coloc_variant_annotation.csv"))
 
 # ── assemble per-gene table ──────────────────────────────────────────────────
-sc <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
+sc <- fread(COLOC_INPUT)
 # MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): keep only placement=="main"
 # strata (NAFLD/NASH/PDFF + ALT/AST/GGT); the Tier-3/4 supp strata (MVP Cirrhosis/
 # ChronLiver/Albumin/Platelet) move to a supplementary full-portfolio figure.
 MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.tsv"))[
   placement == "main", study_name]
 sc <- sc[gwas_name %in% MAIN_STUDIES]
+sc <- sc[!is.na(gene) & nzchar(trimws(gene))]
 # ancestry from the GWAS registry (Tier-1/2 portfolio incl. MVP NAFLD/ALT/AST AMR/AFR/EAS/
 # EUR strata) — NOT the retired grepl() heuristic, which misrouted every MVP stratum into EUR.
 sc[, ancestry := as.character(gwas_ancestry(gwas_name))]
@@ -43,7 +51,7 @@ g[, n_anc := rowSums(.SD > 0.9, na.rm = TRUE), .SDcols = GWAS_ANCESTRY_LEVELS]
 g[, n_anc5 := rowSums(.SD > 0.5, na.rm = TRUE), .SDcols = GWAS_ANCESTRY_LEVELS]
 
 # class (coding / non-coding)
-cva <- fread(file.path(BASE, "RNA-seq/results/coloc_variant_classes/coloc_variant_annotation.csv"))
+cva <- fread(VARIANT_ANNOTATION)
 cls <- cva[!is.na(gene_symbol) & gene_symbol != ""][order(-pp4_best),
         .(coarse_class = coarse_class[1]), by = gene_symbol]
 g <- merge(g, cls, by.x = "gene", by.y = "gene_symbol", all.x = TRUE)
@@ -59,10 +67,16 @@ g[, deg_dir := fifelse(!is.na(padj) & padj < 0.05 & logFC > 0, "Up",
 g[, chr := as.integer(chr)]
 setorder(g, chr, pos)
 
-fwrite(g[best > 0.5, .(gene, chr, pos, EUR = round(EUR,3), AFR = round(AFR,3),
+source_summary <- g[best > 0.5, .(gene, chr, pos, EUR = round(EUR,3), AFR = round(AFR,3),
         AMR = round(AMR,3), EAS = round(EAS,3), SAS = round(SAS,3),
         best = round(best,3), n_anc_gt0.9 = n_anc,
-        class = coarse_class, deg_dir)],
+        class = coarse_class, deg_dir)]
+source_summary[, `:=`(
+  multi_signal_gt0.5_n = nrow(source_summary),
+  multi_signal_gt0.9_n = nrow(g[best > 0.9]),
+  coloc_input = COLOC_INPUT,
+  variant_annotation_input = VARIANT_ANNOTATION)]
+fwrite(source_summary,
        file.path(PANEL_DIR, "FigS2H_coloc_summary_source.csv"))   # shared source for FigS2H (heatmap) + FigS2I (manhattan)
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -88,9 +102,7 @@ ht <- Heatmap(M, name = "PP.H4", col = col_pp4, na_col = "grey94",
   cluster_rows = FALSE, cluster_columns = FALSE, show_row_names = FALSE,
   column_names_gp = gpar(fontsize = 6, fontface = "plain"), column_names_rot = 0,
   column_names_centered = TRUE,
-  row_title = sprintf("%d high-confidence genes (PP.H4 > 0.9; subset of %d at > 0.5), by chromosome",
-                      nrow(M), nrow(g[best > 0.5])),
-  row_title_gp = gpar(fontsize = 6),
+  row_title = NULL,
   left_annotation = left_anno, right_annotation = right_mark,
   heatmap_legend_param = list(title_gp = gpar(fontsize = 6), labels_gp = gpar(fontsize = 6),
                               at = c(0.5, 0.75, 1.0)),
@@ -132,7 +144,7 @@ pB <- ggplot(gm, aes(gx, best)) +
   scale_size_continuous(range = c(0.8, 2.6), breaks = c(1,2,3,4,5), name = "# ancestries") +
   scale_x_continuous(breaks = axis_df$center, labels = axis_df$chr, expand = c(0.01, 0)) +
   scale_y_continuous(limits = c(0.48, 1.02), breaks = c(0.5,0.7,0.9), expand = c(0, 0)) +
-  labs(x = "Chromosome", y = expression("Best PP.H"[4]*" (SuSiE-coloc)")) +
+  labs(x = "Chromosome", y = expression("Best multi-signal PP.H"[4])) +
   theme_masld(base_size = 6) +
   theme(panel.grid = element_blank(),
         legend.position = c(0.99, 0.02), legend.justification = c(1, 0),
@@ -140,7 +152,7 @@ pB <- ggplot(gm, aes(gx, best)) +
         legend.key.size = unit(0.2, "cm"), legend.title = element_text(size = 6),
         legend.text = element_text(size = 6),
         axis.text.x = element_text(size = 6))
-message(sprintf("[caption] Colocalization landscape: %d SuSiE-coloc effector genes (PP.H4 > 0.5)", nrow(gm)))
+message(sprintf("[caption] Colocalization landscape: %d genes with multi-signal COLOC PP.H4 > 0.5", nrow(gm)))
 
 save_fig(pB, file.path(PANEL_DIR, "FigS2I_coloc_summary_manhattan.pdf"),
          width = fig_full_width * 0.776, height = 3.0)   # 5.50in = house maximum (was 0.92 -> 6.52in)

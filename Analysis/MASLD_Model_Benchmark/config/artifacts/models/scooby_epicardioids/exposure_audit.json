@@ -1,0 +1,42 @@
+{
+  "audit_scope": {
+    "checkpoint": "lauradmartens_epicardioids_scooby_model_safetensors",
+    "development_sources": "registered_variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "epicardioids": {
+      "checkpoint_identity": "lauradmartens/epicardioids-scooby@cefc3a626f5080baaf83878754ea924df6bd7e8d:model.safetensors sha256 f945e1937a46ddd5cb31249ef71e721e7a7b1381aa207fb2de449f23ac75a9e8",
+      "corpus": "Epicardioid unpaired RNA/ATAC pseudo-multiome profiles plus inherited Borzoi replicate 0",
+      "corpus_annotation_state": "source accessions are explicit; exact scGLUE and inherited-base artifacts are not checkpoint-bound",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {"path": "development_crosswalk.json", "scope": "registered_variant_and_regulatory_sources", "sha256": "32a6e8c2eef0de1004719cfc1b41c93609ad9adc75e7d2911502e34456994c52"},
+  "input_eligibility": {
+    "gse289173": "Ineligible. The sealed source exposes snRNA but no ATAC, while the checkpoint requires coordinates from an exact 50-D scGLUE space built jointly with observed ATAC. The embedding encoder is not bundled and cardiac organoid states are out of liver domain.",
+    "gse296875": "Same-nucleus RNA/ATAC can support a new liver adaptation inside donor-by-genomic folds, but training a new scGLUE space does not preserve the checkpoint decoder coordinate system. An explicit bridge or decoder adaptation is required and must be reported as a new fitted model.",
+    "rna_conditioned_atac": "Fails the no-observed-ATAC inference gate because ATAC contributed to the cell context. Masking ATAC after computing the embedding does not remove that leakage."
+  },
+  "interpretation": "GSE289173 target labels are provisionally unexposed, but Epicardioids cannot run on the sealed feature topology or compete for RNA-conditioned ATAC. Its inputs are cardiac, ATAC-conditioned and dependent on an unbundled scGLUE encoder; upstream Borzoi terms and exact runtime also remain unresolved.",
+  "license_disposition": {
+    "code": "MIT",
+    "open_champion_eligibility": "ineligible_until_inherited_Borzoi_weight_authority_and_derivative_terms_are_cleared",
+    "weights": "MIT_declared_on_the_scooby_HF_card_with_unresolved_inherited_Borzoi_terms"
+  },
+  "remaining_blockers": [
+    "Resolve inherited Borzoi weight authority and derivative redistribution.",
+    "Bind the checkpoint to exact scooby, borzoi-pytorch, adapted-peft, transformers, torch and CUDA revisions.",
+    "Recover and hash the exact scGLUE encoder, guidance graph, retained genes/peaks, preprocessing, pseudo-match table and query transform.",
+    "After campaign approval, verify safetensors SHA-256 and exact tensor schema under cell_emb_dim=50, n_tracks=3 and use_transform_borzoi_emb=true.",
+    "Resolve native FASTA, sequence BED, GENCODE v32 and post-release sequence-window behavior against project GRCh38.p14/v49 fixtures.",
+    "Reproduce RNA squashed-scale inversion, ATAC x20 inversion, strand/ATAC reverse-complement restoration and motif-effect fixtures.",
+    "Keep the underlying epicardioid assays labeled same-study unpaired; do not treat scGLUE pseudo-matches as biological pairs.",
+    "Remove this frozen object from RNA-conditioned ATAC scheduling unless a separate no-ATAC context path passes the fixed capability fixture before selection lock.",
+    "Run L40S import, forward/backward, strict restoration, deterministic-seed and numeric-tolerance probes through SLURM only after all input artifacts are frozen."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_ATAC_conditioned_context_missing_on_sealed_source",
+  "verified_date": "2026-08-22"
+}

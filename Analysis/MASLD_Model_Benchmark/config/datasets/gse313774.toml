@@ -1,0 +1,48 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse313774"
+title = "Human liver-chip intervention transcriptomic stress test"
+role = "mechanistic_diagnostic"
+status = "available"
+species = "human_liver_chip"
+accession = ["GSE313774"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "PREDICTION_FIRST_WITHHELD"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "independent_experimental_batch"
+expected_biological_units = 3
+native_genome_build = "GRCh38_Eurofins_pipeline_UNRESOLVED"
+native_annotation_release = "UNRESOLVED_Eurofins_gene_annotation"
+modalities = ["bulk_rna", "intervention_identity"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "target_label_unexposed"
+admission_blocking = true
+blockers = ["Freeze the mapping of all 33 deposited libraries to the three source batch fields and to Condition 1 or Condition 2, with or without insulin, before inference.", "Treat the three independent batches, not the 33 libraries, as the biological replication level.", "The deposited RNA arms contain no resmetirom treatment; do not claim resmetirom-response validation or interpret CXCL1 or IL8 as resmetirom-response endpoints.", "Liver-chip batches are experimental units, not human donors or clinical validation.", "GEO identifies GRCh38 and an external Eurofins preparation/conversion pipeline, but not aligner, annotation, or quantifier versions. Freeze deposited feature identity and a project-reference crosswalk before prediction-first activation."]
+notes = "Thirty-three deposited RNA libraries span three independent batches and only Condition 1 or Condition 2, with or without insulin. The inferential n is three batches."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE313774"
+verified_date = "2026-08-21"
+local_exposure = "No outcome download is registered; activation requires a fresh exposure audit."
+
+[split]
+group_key = "cohort_family_id+batch_id"
+outer_role = "development"
+label_visibility = "prediction_first_outcomes_withheld"
+
+[prediction_first_outcome]
+schema_version = "masld-bench-prediction-first-outcome-v1"
+policy_id = "gse313774_genome_wide_stress_v1"
+scope = "non_champion_stress_only"
+design_visibility = "development_visible"
+outcome_visibility = "withheld_until_prediction_commit"
+prediction_scope = "genome_wide"
+unit_of_replication = "independent_experimental_batch"
+prediction_universe_sha256 = "UNRESOLVED"
+prediction_universe_role = "prediction_universe:gse313774"
+excluded_endpoint_ids = ["CXCL1", "IL8"]
+forbid_fit = true
+forbid_model_selection = true
+require_prediction_commit = true

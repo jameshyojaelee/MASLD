@@ -1,9 +1,8 @@
 #!/usr/bin/env Rscript
-# fig2_f2rl1_spotlight.R  (2026-06-17)  — Fig 2 (novel-discovery spotlight)
-# F2RL1 / PAR2: a novel MASLD effector. Colocalizes with serum GGT and is
-# strongly INDUCED in disease. Doubles as a SuSiE-coloc methods point: classical
-# coloc.abf gives PP.H4 = 0.002 at the EUR signal that SuSiE-coloc resolves to
-# 0.954 (a multi-credible-set signal abf collapses). PAR2 is druggable.
+# fig2_f2rl1_spotlight.R — Fig 2 supplementary method-resolution example.
+# F2RL1 / PAR2 colocalizes with serum GGT and is induced in the disease-state
+# map. The comparison is multi-signal versus single-signal COLOC; neither model
+# alone establishes a causal gene.
 # All values read from disk.
 #
 # Out: figures/main/fig2_genetics/panels/FigS2L_f2rl1_spotlight.pdf (+ source CSV)
@@ -15,7 +14,8 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+PANEL_DIR <- Sys.getenv("FIG2_SUPP_OUT_DIR", unset = file.path(FIG3_DIR, "panels"))
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 
 sc  <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
 deg <- fread(file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"))
@@ -23,12 +23,12 @@ deg <- fread(file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration
 f <- sc[gene == "F2RL1"]
 get1 <- function(gw, col) f[gwas_name == gw, get(col)][1]
 co <- data.table(
-  label  = c("EUR GGT\ncoloc.abf", "EUR GGT\nSuSiE-coloc", "SAS GGT\ncoloc.abf"),
+  label  = c("EUR GGT\nsingle-signal", "EUR GGT\nmulti-signal", "SAS GGT\nsingle-signal"),
   pp4    = c(get1("UKBB_GGT", "PP.H4.abf"), get1("UKBB_GGT", "PP.H4.susie"),
              get1("PanUKBB_CSA_GGT", "PP.H4.abf")),
-  method = c("coloc.abf", "SuSiE-coloc", "coloc.abf"))
+  method = c("single-signal COLOC", "multi-signal COLOC", "single-signal COLOC"))
 co[, label := factor(label, levels = rev(label))]
-mcols <- c("coloc.abf" = "#90A4AE", "SuSiE-coloc" = "#1565C0")
+mcols <- c("single-signal COLOC" = "#90A4AE", "multi-signal COLOC" = "#1565C0")
 
 pA <- ggplot(co, aes(pp4, label, fill = method)) +
   geom_col(width = 0.66) +
@@ -65,11 +65,12 @@ save_fig(p, file.path(PANEL_DIR, "FigS2L_f2rl1_spotlight.pdf"),
          width = fig_col_width * 1.25, height = 2.5)
 
 fwrite(rbind(
-  co[, .(evidence = "coloc", detail = gsub("\n", " ", label), value = round(pp4, 4))],
+  co[, .(evidence = "coloc", detail = gsub("\n", " ", label),
+         signal_model = method, value = round(pp4, 4))],
   data.table(evidence = "DEG", detail = "disease vs control log2FC",
-             value = round(d$logFC[1], 3))),
+             signal_model = NA_character_, value = round(d$logFC[1], 3))),
   file.path(PANEL_DIR, "FigS2L_f2rl1_spotlight_source.csv"))
 cat(sprintf("[fig2 F2RL1] wrote FigS2L_f2rl1_spotlight.pdf | EUR abf=%.3f susie=%.3f, SAS abf=%.3f | logFC=%.2f padj=%.1e\n",
             co$pp4[1], co$pp4[2], co$pp4[3], d$logFC[1], d$padj[1]))
-message(sprintf("CAPTION (Fig2G): F2RL1/PAR2, a druggable novel MASLD effector. Colocalizes with serum GGT and is induced in disease. SuSiE-coloc resolves the EUR GGT signal to PP.H4 %.3f where coloc.abf collapses it to %.3f (a multi-credible-set signal); disease log2FC +%.2f (padj %.0e).",
+message(sprintf("CAPTION: F2RL1/PAR2 is a GGT-colocalized candidate that is induced in the current disease-state map. Multi-signal COLOC resolves the EUR GGT signal to PP.H4 %.3f, whereas the single-signal model gives %.3f; disease log2FC +%.2f (padj %.0e). COLOC is shared-signal evidence, not causal-gene proof.",
                 co$pp4[2], co$pp4[1], d$logFC[1], d$padj[1]))

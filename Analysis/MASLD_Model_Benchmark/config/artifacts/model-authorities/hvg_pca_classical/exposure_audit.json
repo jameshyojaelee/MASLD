@@ -1,0 +1,15 @@
+{
+  "checkpoint_exposure": "target_label_unexposed",
+  "checkpoint_sha256": "NOT_APPLICABLE",
+  "model_ids": [
+    "hvg_pca_elastic_net",
+    "hvg_pca_knn",
+    "hvg_pca_linear_svm",
+    "hvg_pca_logistic",
+    "hvg_pca_nearest_centroid"
+  ],
+  "pretrained": false,
+  "schema_version": "masld-bench-model-exposure-audit-v1",
+  "target_labels_before_fold_fit": false,
+  "training_boundary": "Training labels are read only for non-held donors after the deterministic donor split is frozen. Linear-SVM probability calibration uses donor-grouped inner folds inside the outer training partition."
+}

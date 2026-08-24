@@ -1,0 +1,1 @@
+{"primary_evaluator_id":"cell_donor_balanced_macro_f1_v1","roster":["cholangiocyte","endothelial","hepatocyte","immune","mesenchymal_stromal"],"roster_field":"class_roster","schema_version":"masld-bench-evaluator-roster-v1","task_id":"cell_state_mapping"}

@@ -1,0 +1,12 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "bigmem_preprocess"
+status = "candidate"
+purpose = "Preprocessing whose measured memory requirement exceeds 210 GB"
+scheduler = "slurm"
+resource_profile = "bigmem_preprocess"
+environment_lock = "UNRESOLVED"
+container_digest = "UNRESOLVED"
+modules = []
+command_prefix = ["UNRESOLVED"]
+admission_blocking = true
+blockers = ["Demonstrate a measured memory need above 210 GB, then freeze environment, command, and total resource ask."]

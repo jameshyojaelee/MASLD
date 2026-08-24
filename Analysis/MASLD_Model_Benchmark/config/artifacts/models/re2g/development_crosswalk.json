@@ -1,0 +1,61 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_content": "K562 CRISPR enhancer-gene validation labels with ABC-derived chromatin and contact features",
+    "deployment_model": "full logistic regression fit on all declared training chromosomes",
+    "development_predictions": "author workflow reports leave-one-chromosome-out predictions for its K562 CRISPR training data",
+    "exact_row_and_label_inventory": "UNRESOLVED",
+    "historical_checkpoint_identity_date": "2024-06-04",
+    "selected_checkpoint": "atac_megamap",
+    "warning": "MPRA reporter labels are not enhancer-gene link labels and cannot be used to refit this classifier."
+  },
+  "crosswalk_scope": {
+    "development_sources": ["gse281364", "gse296875"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49",
+    "sealed_source": "gse289173",
+    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+  },
+  "endpoint_eligibility": {
+    "allelic_direction_accuracy": "ineligible because rE2G does not consume REF or ALT sequence",
+    "eqtl_retrieval_auprc": "eligible as a continuous unsigned variant-element-gene link baseline",
+    "mean_fisher_z_celltype_spearman": "ineligible standalone; any signed effect is a separately named composite",
+    "typed_evidence_graph": "eligible as a typed enhancer-to-gene edge source, but the current graph task has no seal and therefore no champion"
+  },
+  "findings": {
+    "gse281364": {
+      "allowed_use": "Development-only orthogonal activity evidence and overlap audit. Reporter output cannot validate an endogenous enhancer-gene link, and no rE2G model, threshold, or feature set may be selected using these outcomes.",
+      "checkpoint_exposure_state": "clean_declared",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16",
+      "reason": "The exact model Git blob was already present in the 2024 v1.0.0 release."
+    },
+    "gse289173": {
+      "allowed_use": "One-time overlap of sealed variant positions with a precommitted cell-state link atlas. No QTL outcome, lineage result, threshold, or calibration enters feature construction or selection.",
+      "checkpoint_exposure_state": "clean_declared",
+      "held_query_behavior": "static_development_link_atlas_only",
+      "public_date": "2025-02-12",
+      "reason": "The exact model blob predates the GEO release and declares K562 CRISPR link training rather than MASLD QTL outcomes."
+    },
+    "gse296875": {
+      "allowed_use": "Generate donor-held ATAC and ABC features for liver-domain development evaluation. The fixed K562 classifier is not refit; every upstream feature remains inside donor and genomic folds.",
+      "checkpoint_exposure_state": "clean_declared",
+      "project_feature_state": "continual_seen_after_fold_specific_feature_generation",
+      "public_date": "2025-10-01",
+      "reason": "The exact model blob predates the GEO release by more than one year."
+    }
+  },
+  "reference_and_topology_contract": {
+    "gse281364": "Same-sample different-aliquot reporter counts provide no endogenous enhancer-gene pairing.",
+    "gse289173": "RNA and QTL summaries are same-study unpaired; rE2G receives no sealed ATAC and produces no donor-conditioned link.",
+    "gse296875": "Same-nucleus provenance is retained, but the link features use donor-by-cell-state ATAC pseudobulk. Donors, not nuclei or peaks, are biological replicates.",
+    "gene_authority": "The upstream RefSeq-curated 2017 TSS/promoter features require an auditable crosswalk to GENCODE v49. Unmatched genes and promoter classes are explicit missing observations.",
+    "missingness": "Preflight must distinguish an actual numeric zero from absent assay, unresolved join, below-QC, or missing reference annotation before any transform."
+  },
+  "split_and_leakage_rules": {
+    "donors": "All nuclei and wells from a GSE296875 donor stay in one outer fold. Candidate peaks, accessibility, qnorm, gene filters, and feature aggregation are fit only from outer-training donors.",
+    "genomics": "Cross donor folds with native-build merged LD/locus blocks. Candidate elements, contact lookups, genes, and feature neighborhoods that touch a held block cannot leak into training calibration.",
+    "liver_refit": "No liver classifier refit is permitted without matched liver CRISPR enhancer-gene labels. GSE281364 MPRA is the wrong modality for that fit.",
+    "sealed_atlas": "After selection, rebuild the named cell-state atlas from all admitted development donors, convert and freeze the classifier, hash all features and outputs, and lock before sealed variants are opened."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

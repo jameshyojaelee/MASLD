@@ -1,0 +1,77 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse281160", "gse281364", "gse296875", "current_coloc_gwas"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49",
+    "sealed_source": "gse289173",
+    "task": "variant_to_regulation"
+  },
+  "endpoint_eligibility": {
+    "accessibility_delta": "eligible as a secondary assay-native endpoint after local training and fixed sign fixtures",
+    "allelic_direction_accuracy": "eligible for locus-cross-fitted GSE281364 reporter direction and other assay-native diagnostics; not equivalent to eQTL direction",
+    "eqtl_retrieval_auprc": "eligible only as a variant-prior component after a separately frozen variant-to-gene mapper",
+    "mean_fisher_z_celltype_spearman": "ineligible standalone because deltaSVM supplies neither a target gene nor a signed cell-type expression effect",
+    "typed_evidence_graph": "activity-delta evidence edge only; never an enhancer-to-gene or causal edge"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Development-only retrieval/error audit after the corrected graph snapshot is frozen. COLOC memberships cannot train the LS-GKM classifier, select peak backgrounds, set a delta threshold, or assign a gene direction.",
+      "project_source_state": "downstream_demo"
+    },
+    "gse244832": {
+      "allowed_use": "Donor-compatible external-development accessibility diagnostics only. RNA and ATAC arise from different aliquots; no cell-level pair or RNA-conditioned delta is created. No GSE244832 row or peak may enter a model scored on this source.",
+      "model_access": "held_from_fit_for_its_development_score",
+      "pairing": "same_sample_different_aliquot",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "allowed_use": "Development-only direction diagnostic for the 20 MPRA-selected noncoding targets. Experimental replicate is the unit; cells and guides are not biological replicates. The conditional target set cannot select models or support a general superiority claim.",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "allowed_use": "Fit or assess only an assay-native MPRA activity/direction transform out of fold by merged locus, exact sequence, and reverse-complement identity. Replicate libraries are not donors. This source cannot fit an eQTL/ieQTL effect head.",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "allowed_use": "One-time SNP sequence inference with the selection-locked project model. Only evaluator-approved coordinates and alleles enter the sequence builder. No cell-state QTL effect, retrieval label, threshold, calibration, or target-gene outcome enters fitting.",
+      "held_query_behavior": "sequence_only_activity_delta",
+      "project_checkpoint_exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "allowed_use": "Outer-training donor-by-cell-state ATAC supplies local peak versus matched-nonpeak labels. Peak calling, accessibility summaries, matching, duplicate grouping, and every LS-GKM artifact remain inside crossed donor and genomic folds.",
+      "model_input_status": "same_nucleus_ATAC_pseudobulked_by_donor_and_cell_state",
+      "project_source_state": "continual_seen",
+      "public_date": "2025-10-01"
+    }
+  },
+  "local_model_roster": {
+    "cell_states": ["cholangiocyte", "endothelial_cell", "hepatocyte", "stellate_cell"],
+    "donor_pooling": "Pseudobulk fragments within donor and cell state for QC, then pool only outer-training donors to call each training peak universe. Donor is the inferential unit.",
+    "genomic_split": "Cross outer donor folds with native-build merged LD/locus blocks. A 300-bp model boundary buffer is the minimum; use the campaign-wide larger buffer when another compared model requires it.",
+    "seeds": [11, 29, 47, 71, 101],
+    "state_absence": "If a canonical state cannot be resolved or passes insufficient QC, mark it structurally_missing. Do not substitute the nearest cell state."
+  },
+  "reference_topology_and_missingness": {
+    "gse244832": "Distinct RNA and ATAC aliquot row IDs; donor-by-cell-state comparison only.",
+    "gse281160": "Same-cell guide and RNA observations aggregate first to experimental replicate and target family.",
+    "gse281364": "DNA and RNA barcode counts are same-sample different aliquots; a missing oligo/allele/context join is not zero activity.",
+    "gse289173": "RNA and QTL summaries are same-study unpaired. The model consumes sequence only and emits no donor-conditioned prediction.",
+    "gse296875": "Same-nucleus provenance is retained, but LS-GKM consumes training-fold donor-state ATAC peak labels rather than individual nuclei.",
+    "missingness": "Missing peaks, failed REF matches, absent states, untestable variants, and withheld outcomes use explicit states and are never encoded as zero."
+  },
+  "split_and_leakage_rules": {
+    "donors": "All nuclei and wells from one person remain in one outer fold; well is a technical batch, not a replicate.",
+    "genomics": "Merge native-build LD r2>=0.8 blocks, loci within 1 Mb, exact sequence identities, and reverse-complement identities before splitting. Neither positives nor matched negatives may cross a held block or buffer.",
+    "preprocessing": "Fit ATAC QC, peak calls, accessibility deciles, matching pools, sequence filters, k-mer tables, any MPRA transform, and thresholds inside the applicable outer-training partition.",
+    "sealed_rule": "After selection, refit the named local model on all admitted development data, hash model and k-mer tables, lock signs and thresholds, then score anonymized sealed variants once."
+  },
+  "relationship_to_gkmsvm": {
+    "shared_weights": "Use identical model artifact IDs and hashes in both adapters.",
+    "distinct_outputs": "gkmsvm reports full-window raw decision scores and ALT-minus-REF decision deltas; deltaSVM reports the published local overlapping-k-mer proxy-weight sum in native REF-minus-ALT orientation.",
+    "statistical_rule": "Do not count both outputs as independent models, evidence sources, or biological replicates."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

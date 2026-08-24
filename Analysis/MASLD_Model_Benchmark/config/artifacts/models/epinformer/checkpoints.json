@@ -1,0 +1,121 @@
+{
+  "architecture_contract": {
+    "selected_model": "EPInformer_v2 HepG2 RNA f3 with the matching fold-specific HepG2 enhancer encoder",
+    "enhancer_encoder": {
+      "input_length_bp": 256,
+      "pretraining_target": "log2(0.1 + sqrt(H3K27ac_RPM * DNase_RPM))",
+      "sequence_encoder": "one stem convolution followed by four residual convolution/max-pooling stages",
+      "status_in_expression_model": "pretrained_and_frozen"
+    },
+    "expression_model": {
+      "candidate_enhancers_per_gene": 60,
+      "expression_target": "HepG2 RNA expression",
+      "input_shape": [61, 2000, 4],
+      "interaction_encoder": "three transformer encoder layers with four attention heads and promoter-enhancer-only attention masking",
+      "sequence_slots": "one 2-kb promoter plus up to sixty 2-kb ABC-nominated enhancer slots",
+      "upstream_cross_validation": "twelve leave-two-chromosomes-out folds with separate train, validation, and test chromosome assignments"
+    },
+    "f3_features": ["absolute_enhancer_to_TSS_distance", "enhancer_activity", "Hi-C_contact", "promoter_activity", "eight_Xpresso_mRNA_features"],
+    "source_cell_context": "HepG2 transformed hepatoblastoma cell line; not a MASLD donor, primary hepatocyte, stellate cell, or disease state"
+  },
+  "checkpoint_set": {
+    "downloaded": false,
+    "expression_assay": "RNA",
+    "feature_configuration": "f3",
+    "hugging_face_repository": "JiecongLin/EPInformer",
+    "hugging_face_revision": "667a74e6a1358bee35fd1951570839bdeb5dec24",
+    "last_modified": "2026-07-15T08:56:01Z",
+    "member_count": 24,
+    "ordered_manifest_format": "For fold 1 through 12, enhancer path TAB LFS SHA-256 TAB size NEWLINE, followed by expression path TAB LFS SHA-256 TAB size NEWLINE.",
+    "ordered_manifest_sha256": "d9c393599aef0de71ddbe71c1e274d8a16a8f254dd2dc05ebd4a1ad977705bd2",
+    "status": "exact_Git_LFS_content_identities_registered_bytes_not_acquired"
+  },
+  "enhancer_encoder_checkpoints": [
+    {"fold": 1, "path": "enhancer_encoders/HepG2/fold_1.pt", "lfs_oid_sha256": "fb89f74bcd64fa5e3beed63802ba215fd1e485c39a6624433f4c4a88f04ed25e", "size_bytes": 3239785, "pointer_sha256": "d070411fb4a92fa1d31588afb4d1ae800576b85b839234144db08337ac4ac57d"},
+    {"fold": 2, "path": "enhancer_encoders/HepG2/fold_2.pt", "lfs_oid_sha256": "7ce9a900274b3aa782da4d367ced0855b384ee3877c2a36ee616cb3f77467f66", "size_bytes": 3239785, "pointer_sha256": "b0903a5545c69206ee058e6b9043953833c97495bd4caefb3c1fe7dbe53e95b1"},
+    {"fold": 3, "path": "enhancer_encoders/HepG2/fold_3.pt", "lfs_oid_sha256": "8220ee1e4ec6d3b8954d0108bd28e99c16e7ad9bd82876c5623cb8c37facfc00", "size_bytes": 3239785, "pointer_sha256": "df30286a74d4baf59b662466fba3eac160d96adbcad14f55258a8e6a82e91a06"},
+    {"fold": 4, "path": "enhancer_encoders/HepG2/fold_4.pt", "lfs_oid_sha256": "04ffdf196c1055fad24edace4ebb6371b962122b5eb4766e50dfbbcae8f448f7", "size_bytes": 3239785, "pointer_sha256": "3bad8cc5b6e6f7541bade5bc1124bbd363d442929a5f08aa3648d282e198874e"},
+    {"fold": 5, "path": "enhancer_encoders/HepG2/fold_5.pt", "lfs_oid_sha256": "9bfe3d23a22311f0f5c659c6ac63534463a92e3f003a3d5627ca619f4c2d5b77", "size_bytes": 3239785, "pointer_sha256": "84683f0b23294264e2e8b3485fdd2fdb8688f41c02b22bd84987d873f795f03a"},
+    {"fold": 6, "path": "enhancer_encoders/HepG2/fold_6.pt", "lfs_oid_sha256": "c3e70df476392e2fc93222d54d0a2cdce5ba24532b19c2023bebb194a33a8b99", "size_bytes": 3239785, "pointer_sha256": "ae6b0017f0a792fbc6c521b5e5bfd7f1dc22e8e3c1848e44ac0f216ee2db8cb6"},
+    {"fold": 7, "path": "enhancer_encoders/HepG2/fold_7.pt", "lfs_oid_sha256": "e38b48f3a0d134da670f57274020d4aab5d18be45cdd2c0b103cca1d9110713e", "size_bytes": 3239785, "pointer_sha256": "3f45213c94cb0d373ff443cd26fcbc992593032d750b38972c0494e5ad202b5b"},
+    {"fold": 8, "path": "enhancer_encoders/HepG2/fold_8.pt", "lfs_oid_sha256": "e13f2eb51fc7ddcf33b596d4f799afc97570750a9f77b4d7c571759d68aa9949", "size_bytes": 3239785, "pointer_sha256": "4d67ccaf52c8af3d9d016101d9da40fa77b4596e7a18eee4a7eabaf134ae4512"},
+    {"fold": 9, "path": "enhancer_encoders/HepG2/fold_9.pt", "lfs_oid_sha256": "acc27953ed377bfab1cb31c817bb25ab996bec70ff4b8836e8ad97f411945447", "size_bytes": 3239785, "pointer_sha256": "a0aac216575d419de1eace3311efdccedc09f8dd68048f2efa4bceac7da955b6"},
+    {"fold": 10, "path": "enhancer_encoders/HepG2/fold_10.pt", "lfs_oid_sha256": "3a2266c77f6164ec674882eed006af81cfbeb50e09f5b57ba62baa265d129ad2", "size_bytes": 3239845, "pointer_sha256": "d078a758f4cd431ee2010a9d7ae4fc3156819426489d2e50a32a4e17a63f55a0"},
+    {"fold": 11, "path": "enhancer_encoders/HepG2/fold_11.pt", "lfs_oid_sha256": "e3b1cf52601c8f1d19319bf712fc4296cbd298b34673d5319a779bcfb5410a48", "size_bytes": 3239845, "pointer_sha256": "e0fdca5a424cb0e80403736f66b6210b31fd02704bd41e06b1f8b85c252ec19b"},
+    {"fold": 12, "path": "enhancer_encoders/HepG2/fold_12.pt", "lfs_oid_sha256": "b5e99aef94f1697f4d6276ad3c0198940ff5dc94ac1f706e2276f06e809c516f", "size_bytes": 3239845, "pointer_sha256": "859c9d7c8556091ae018699c3d22fd7d3afe55eb91793a0a9f130730683fca9d"}
+  ],
+  "expression_checkpoints": [
+    {"fold": 1, "path": "expression_models/HepG2/RNA/f3/fold_1_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "f7a9adf3e4ff9d35efe2052465764d827b37f38478ddd168133d097aaeeb100c", "size_bytes": 1842701, "pointer_sha256": "e80ff3be5d76e7798185041ec1d0ec19b8b16c8fd8149736f6ab701f670b3f42"},
+    {"fold": 2, "path": "expression_models/HepG2/RNA/f3/fold_2_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "c460aa2a98ead271078be23bde7177caba3543fdf8b831e253dfa936555ca57f", "size_bytes": 1842701, "pointer_sha256": "ffc75d274ec4cb36b55a847a1f32cd8ed9d0758384bb47ad75364447f4e0e4ee"},
+    {"fold": 3, "path": "expression_models/HepG2/RNA/f3/fold_3_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "a4814bdf42db3be7e16a07444dc7ce4543916217b60315cddd59236b757b5ab8", "size_bytes": 1842701, "pointer_sha256": "686365c28eb90587d8893f82517f74e66640ead2ac8888bd2b6c2de24be0e84c"},
+    {"fold": 4, "path": "expression_models/HepG2/RNA/f3/fold_4_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "17fbf9ed8a8353d8b23caaacd8d02a8f488d71de97aad877951cdb378cb9b372", "size_bytes": 1842701, "pointer_sha256": "986a66d2cc05fe6c2718d0a6c24669332cbd7e50694c91e70e3675e841a95672"},
+    {"fold": 5, "path": "expression_models/HepG2/RNA/f3/fold_5_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "a025eb07c50ee194e03e652c17a81c9fb4550739352c3a2daf57d925c809e1f9", "size_bytes": 1842701, "pointer_sha256": "3e210352ae02bbb957e168c8205273bb4cfd5e8494ad512a6daa40c2ef52bbd8"},
+    {"fold": 6, "path": "expression_models/HepG2/RNA/f3/fold_6_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "1fa8ed0135033922e2829d5268901a1c4ddc3d302f3c2df4dbd5abbd781ebfa4", "size_bytes": 1842701, "pointer_sha256": "ad6dc5053915e404ecaac13998c791d2314c360ab5183f8c9bd5205816d356c5"},
+    {"fold": 7, "path": "expression_models/HepG2/RNA/f3/fold_7_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "1dfe2f24d456ab17ae43c82ebb11e3c083251e4e3df1dff1451c382d9b6a7ec9", "size_bytes": 1842701, "pointer_sha256": "44949e03125c580d11e38453dfcb4b9890e478e78adc20c5bd976ee8d6ee8483"},
+    {"fold": 8, "path": "expression_models/HepG2/RNA/f3/fold_8_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "56db33df606924b777b4f0024a66e67e8d9aff781db36fe438fbe2ca42169646", "size_bytes": 1842701, "pointer_sha256": "2f28e5cc2fbbb1c61bc34bf0b0471113064bcd469cf179d803c506c374bfe1ce"},
+    {"fold": 9, "path": "expression_models/HepG2/RNA/f3/fold_9_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "1a9f22ad7ac446fdf180b2c25990be98bdf8862b7f74195e55e6581107d200dc", "size_bytes": 1842701, "pointer_sha256": "a134cf6cf5e964ccf8cb1ea089de9ba8f0b4750f5a879a687169bac0717ce288"},
+    {"fold": 10, "path": "expression_models/HepG2/RNA/f3/fold_10_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "5a61b3e0ef251bd416e9abb395518ba0f45516a724fb6e89bd393e1ad5f2add2", "size_bytes": 1842801, "pointer_sha256": "eb0039a0217d36ad66896bdb8bb93936898a0ec1fbe95106e3dec9daf41445e7"},
+    {"fold": 11, "path": "expression_models/HepG2/RNA/f3/fold_11_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "d859bcbbeaec588a815a773006c59b6657630323743bca434c86629fa68b5f30", "size_bytes": 1842801, "pointer_sha256": "599fce433a38ec4f281493305ce37656077e892b5a3191e06efb51102e20e746"},
+    {"fold": 12, "path": "expression_models/HepG2/RNA/f3/fold_12_best_EPInformerV2.preTrainedConv.HepG2.RNA.60enhs.3feats.rnafeats.prmsig.nonrmprmseq.100kb2TSS_checkpoint.pt", "lfs_oid_sha256": "56c3c58c57c95a53327bc52835b87488f90c7b01adbffca4efc7b8c3d61b5a62", "size_bytes": 1842801, "pointer_sha256": "152f1b051fe6cf6f637526660c46cc053d30fc6042a607418f9de0b0dca9ad37"}
+  ],
+  "implementation": {
+    "code_repository": "pinellolab/EPInformer",
+    "code_revision": "ddba0b657516950c0dacbb26759f2cfa7ea3c15b",
+    "code_revision_date": "2026-07-17",
+    "paper": "https://doi.org/10.1038/s41467-026-70535-8",
+    "source_code_run": false,
+    "weight_repository_card_warning": "The model card usage example names JiecongLin/EPInformer-pipeline although the exact inspected repository identity is JiecongLin/EPInformer; resolve this documentation mismatch before acquisition or loading."
+  },
+  "input_contract": {
+    "candidate_nomination": "ABC-nominated open-chromatin elements within 100 kb of the target TSS, capped at 60 in a fixed order",
+    "enhancer_activity": "HepG2 H3K27ac/DNase-derived activity from the upstream pipeline; no GSE289173 ATAC exists and missing activity cannot be replaced with zero",
+    "gene_authority": "The checkpoint was trained on an upstream 18,377-protein-coding-gene/Xpresso roster and TSS/split authority. A GENCODE v49 remap changes candidates and is not silently equivalent.",
+    "hic": "The HepG2 pipeline documents cell-specific or ABC average Hi-C depending on available input. The exact per-gene contact artifact and source must be frozen and hashed before use.",
+    "promoter_and_enhancer_sequence": "2-kb one-hot A/C/G/T sequence per slot; N is all-zero and absent enhancer slots are zero-padded. Structural absence must remain masked rather than interpreted as biological inactivity.",
+    "reverse_complement": "The enhancer encoder's published evaluation averages forward and reverse-complement predictions, while expression HDF5 construction includes strand handling. Exact f3 expression and attention behavior must be reproduced and frozen before a variant fixture.",
+    "sealed_context": "Only a precommitted native HepG2/reference link atlas can be queried at GSE289173. No sealed donor expression, eQTL outcome, or missing donor ATAC may be converted into f3 features."
+  },
+  "output_and_task_contract": {
+    "admitted_output": "Per-promoter relative enhancer attention score, normalized over the frozen candidate enhancer set",
+    "attention_interpretation": "Unsigned prioritization score for a candidate enhancer-to-gene relationship; it is not a calibrated probability and changes when the candidate set or upstream features change.",
+    "native_model_output": "The expression head predicts a HepG2 RNA expression scalar, but that scalar is not admitted as a signed variant effect in this task.",
+    "not_supported": ["MASLD_cell_state_conditioning", "signed_REF_or_ALT_gene_expression_effect", "cell_type_eqtl_or_ieqtl_effect", "donor_specific_link", "causal_gene_inference"],
+    "task_role": "link_only comparator for enhancer-gene retrieval and optional component of a separately frozen variant activity plus link composite",
+    "variant_rule": "A sealed variant can overlap a precommitted candidate enhancer and inherit its frozen link score. Sequence substitution, in-silico perturbation, or expression-delta scoring is not admitted under the current link-only capability and unresolved code terms."
+  },
+  "runtime_contract": {
+    "declared_environment": "Python 3.10 with unpinned PyTorch and scientific/ABC dependencies in environment.yml",
+    "environment_status": "BLOCKED_TERMS_AND_UNRESOLVED_L40S_PYTORCH_RUNTIME",
+    "execution_target_if_unblocked": "L40S_gpu_after_import_load_forward_reverse_complement_determinism_and_cross_device_probes",
+    "gpu_required": "upstream pipeline uses GPU; small inference may be CPU-capable but is not assumed without a fixture"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "deserialized": false,
+    "format": "PyTorch .pt pickle container",
+    "official_loader": "torch.load(..., weights_only=False) followed by model_state_dict loading",
+    "required_if_terms_clear": ["campaign approval before acquisition", "verify every LFS SHA-256 and size", "static pickle opcode/global audit", "attempt weights_only=True in an isolated no-network process", "extract and vendor tensor-only state dictionaries once", "freeze tensor key/shape/dtype manifest", "strict fold-paired encoder and expression loading", "reject extra objects and executable globals"],
+    "network_during_load": false
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The primary Nature Communications paper, exact GitHub commit, Zenodo record metadata, exact Hugging Face revision, model card, and all 24 Git LFS pointers were queried on 2026-08-22. Public source text and pointer metadata were inspected. No checkpoint bytes, input data, package, or runtime were downloaded or executed.",
+  "source_records": [
+    {"identity": "EPInformer:README.md", "sha256": "79b92a0f9419199addb68625d61c3e2b6d60a674c86ec0cb05625cc4cb9f5799", "size_bytes": 15425},
+    {"identity": "EPInformer:PIPELINE.md", "sha256": "099dae61f8d8a52bdb56e7ea67f7f50e573f18368fb0ff181aed06da9cc94525", "size_bytes": 25217},
+    {"identity": "EPInformer:environment.yml", "sha256": "1cdc60df0e03fbeb9d4dbad225446821d6a9921a2012a58541d92307ddc22f32", "size_bytes": 1570},
+    {"identity": "EPInformer:EPInformer/models.py", "sha256": "e9544cc2b4db6337c850e4ddba142ddb917fa82680c8bfc58b8a26a2d0f4425d", "size_bytes": 13514},
+    {"identity": "EPInformer:train_EPInformer.py", "sha256": "6aabfe03bb6e94adf3f76327fadce2bd5e8b3e19275567311bd353ae7c4fca1b", "size_bytes": 60023},
+    {"identity": "EPInformer:evaluate.py", "sha256": "aa0a6b8438126273a0b21cb645b7be542b7f9a810cc68547b3afdbed12fb71c7", "size_bytes": 11795},
+    {"identity": "EPInformer:config/config.yaml", "sha256": "b0d6f22d0498bf46c38dc7f998b0724a4017248c6bcd6e8c7e9246ed7898fdec", "size_bytes": 2648},
+    {"identity": "HF:README.md", "sha256": "e218f078ce85e82659b45df4b7b2aa3d7746ee81953d4e863261be29592df1f7", "size_bytes": 3015}
+  ],
+  "terms_audit": {
+    "code_license": "UNRESOLVED",
+    "code_license_evidence": "The paper states that release v0.1.1 is under MIT, but neither that tag nor the selected later commit contains a LICENSE/COPYING/NOTICE file. The Zenodo concept currently resolves to v0.3.0 metadata marked CC-BY-4.0, which is not the selected commit. These conflicting and non-commit-bound statements do not license the exact selected code with sufficient certainty.",
+    "code_result": "blocked_from_reuse_execution_adaptation_or_redistribution_pending_upstream_license_or_written_permission",
+    "derivative_weight_redistribution": "provisionally_MIT_per_Hugging_Face_model_card_but_requires_checkpoint_to_code_and_training_input_terms_review",
+    "paper_code_availability_statement": "MIT_for_release_v0.1.1",
+    "weight_license": "MIT_declared_by_Hugging_Face_model_card"
+  },
+  "weight_license": "MIT_declared_by_Hugging_Face_model_card"
+}

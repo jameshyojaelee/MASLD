@@ -9,8 +9,8 @@
 #   tile 2 = our genetic map, ENZYME-trait colocalization (max SuSiE/ABF PP.H4)
 #            -- side by side to keep trait-anchoring transparent
 #   text   = Zhu MPRA layer (cell model + allelic direction) | our DEG | verdict
-# Rows grouped: featured targets | corroborated DAVs (our genetic/disease map) |
-# expression-miss (Zhu MPRA-functional where our expression-genetics is null).
+# Rows grouped: featured targets | support in an evaluated Resource map |
+# no current COLOC or canonical bulk call.
 # EXTERNAL, cited annotation -- NOT re-derived, NOT a convergence-score input.
 #
 # Conventions: PDF, 6pt, all TEXT black, gene names italic, no title/subtitle
@@ -25,21 +25,39 @@ suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
+source(file.path(BASE, "scripts/figures/fig2_promoted_coloc_context.R"))
 
 src <- fread(file.path(BASE,
   "RNA-seq/results/multi_evidence/external_mpra/figS2R_source.tsv"))
 num <- function(v) suppressWarnings(as.numeric(v))
+src <- merge(src, load_fig2_promoted_context(BASE, src$gene), by = "gene", all.x = TRUE)
+deg <- load_fig2_current_deg_by_symbol(BASE, src$gene)
+src <- merge(src, deg[, .(gene = gene_symbol, current_deg_ensembl = gene,
+                          current_logFC = logFC, current_padj = padj,
+                          current_is_deg)],
+             by = "gene", all.x = TRUE)
 
 # ---- our genetic tiles: direct-MASLD vs enzyme-trait max PP.H4 ------------------
-src[, gdir := pmax(fcoalesce(num(our_susie_direct),0), fcoalesce(num(our_abf_direct),0))]
-src[, genz := pmax(fcoalesce(num(our_susie_enzyme),0), fcoalesce(num(our_abf_enzyme),0))]
+src[, gdir := direct_best]
+src[, genz := enzyme_best]
+
+src[, current_relationship := fifelse(
+  direct_support %chin% c("multi-signal COLOC", "single-signal COLOC only"),
+  "direct_or_liver_fat_coloc", fifelse(current_is_deg %in% TRUE,
+  "canonical_disease_state", fifelse(
+  enzyme_support %chin% c("multi-signal COLOC", "single-signal COLOC only"),
+  "liver_enzyme_coloc", fifelse(
+  direct_support == "not evaluable" & enzyme_support == "not evaluable",
+  "expression_qtl_not_evaluable", fifelse(is.na(current_is_deg),
+  "disease_state_not_evaluable", "no_pph4_support_in_evaluated_map")))))]
 
 # ---- row groups (featured always top; then corroborated; then gaps) ------------
 G1 <- "Featured\ntargets"
-G2 <- "Corroborated\n(our genetic /\ndisease map)"
-G3 <- "Expression-miss\n(their MPRA,\nour maps null)"
+G2 <- "Support in\nevaluated maps"
+G3 <- "No current\nCOLOC / bulk call"
 src[, group := fifelse(zhu_finding_type == "featured_target", G1,
-                fifelse(relationship == "expression_miss", G3, G2))]
+                fifelse(current_relationship %chin% c("expression_qtl_not_evaluable",
+                                                      "no_pph4_support_in_evaluated_map"), G3, G2))]
 src[, group := factor(group, levels = c(G1, G2, G3))]
 
 # order within group: featured by curated order; others by direct then enzyme coloc
@@ -57,16 +75,19 @@ src[, zlab := fifelse(zhu_finding_type == "featured_target", "featured DAV targe
                        num(zhu_mpra_log2fc)))]
 
 # ---- our disease-state DEG text ------------------------------------------------
-src[, deg_txt := fifelse(our_is_deg == TRUE,
-    sprintf("DEG %s (%.0e)", fifelse(num(our_bulk_logFC) > 0, "↑", "↓"),
-            num(our_bulk_treat_fdr)), "n.s.")]
+src[, deg_txt := fifelse(is.na(current_is_deg), "bulk map not evaluable",
+    fifelse(current_is_deg,
+      sprintf("DEG %s (%.0e)", fifelse(num(current_logFC) > 0, "↑", "↓"),
+              num(current_padj)), "no canonical DEG call"))]
 
 # ---- short verdict -------------------------------------------------------------
-vlab <- c(corroborated_genetic_direct = "direct-MASLD coloc",
-          corroborated_genetic_enzyme = "enzyme-trait coloc",
-          corroborated_disease_state  = "disease-state DEG",
-          expression_miss             = "gap: MPRA adds signal")
-src[, vtext := vlab[relationship]]
+vlab <- c(direct_or_liver_fat_coloc = "direct/liver-fat COLOC",
+          liver_enzyme_coloc = "liver-enzyme COLOC",
+          canonical_disease_state = "canonical disease-state DEG",
+          expression_qtl_not_evaluable = "expression-QTL not evaluable",
+          disease_state_not_evaluable = "bulk map not evaluable",
+          no_pph4_support_in_evaluated_map = "no PP.H4 > 0.5 support")
+src[, vtext := vlab[current_relationship]]
 
 # ---- layout --------------------------------------------------------------------
 fmt <- function(v) fifelse(v >= 0.995, "1.00",
@@ -78,44 +99,55 @@ tiles <- rbindlist(list(
 TXT_Z <- 2.85; TXT_DEG <- 5.35; TXT_V <- 7.15
 p <- ggplot() +
   geom_tile(data = tiles, aes(xk, gene, fill = value), colour = "white", linewidth = 0.5) +
-  geom_text(data = tiles, aes(xk, gene, label = lab), size = 1.9, colour = "black") +
-  geom_text(data = src, aes(TXT_Z,   gene, label = zlab),    hjust = 0, size = 1.9, colour = "black") +
-  geom_text(data = src, aes(TXT_DEG, gene, label = deg_txt), hjust = 0, size = 1.9, colour = "black") +
-  geom_text(data = src, aes(TXT_V,   gene, label = vtext),   hjust = 0, size = 1.9, colour = "black") +
+  geom_text(data = tiles, aes(xk, gene, label = lab), size = GEOM_TEXT_6PT, colour = "black") +
+  geom_text(data = src, aes(TXT_Z, gene, label = zlab), hjust = 0,
+            size = GEOM_TEXT_6PT, colour = "black") +
+  geom_text(data = src, aes(TXT_DEG, gene, label = deg_txt), hjust = 0,
+            size = GEOM_TEXT_6PT, colour = "black") +
+  geom_text(data = src, aes(TXT_V, gene, label = vtext), hjust = 0,
+            size = GEOM_TEXT_6PT, colour = "black") +
   scale_fill_gradient(low = "#f3eef2", high = "#c0508d", limits = c(0, 1),
                       breaks = c(0, 0.5, 1), name = "our coloc PP.H4") +
   scale_x_continuous(breaks = c(1, 2),
-                     labels = c("direct\nMASLD", "enzyme\ntrait"),
+                     labels = c("direct /\nliver fat", "liver\nenzyme"),
                      limits = c(0.5, 9.2), expand = expansion(mult = 0),
                      sec.axis = sec_axis(~ ., breaks = c(1.5, TXT_Z + 0.3, TXT_DEG + 0.3, TXT_V + 0.3),
                        labels = c("our coloc", "Zhu MPRA", "our DEG", "verdict"))) +
   facet_grid(group ~ ., scales = "free_y", space = "free_y", switch = "y") +
-  labs(x = "our genetic map (colocalization)", y = NULL) +
+  labs(x = "promoted expression-QTL COLOC", y = NULL) +
   theme_masld(base_size = 6) +
   theme(axis.text.y = element_text(face = "italic"),
         axis.line = element_blank(), axis.ticks = element_blank(),
         panel.grid = element_blank(),
-        axis.title.x = element_text(size = 5.5, hjust = 0.06),
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, size = 5),
+        axis.title.x = element_text(size = 6, hjust = 0.06),
+        strip.text.y.left = element_text(angle = 0, hjust = 0.5, size = 6),
         strip.placement = "outside", panel.spacing = unit(2, "mm"),
         legend.key.size = unit(3, "mm"), legend.position = "bottom")
 
-out_dir <- file.path(BASE, "figures/main/fig2_genetics/panels")
+out_dir <- Sys.getenv("FIG2_SUPP_OUT_DIR",
+  unset = file.path(BASE, "figures/main/fig2_genetics/panels"))
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 out_pdf <- file.path(out_dir, "FigS2R_mpra_external_corroboration.pdf")
 fwrite(src[, .(gene, group, zhu_mpra = zlab, our_genetic_direct_pph4 = gdir,
                our_genetic_enzyme_pph4 = genz, our_disease_state = deg_txt,
-               relationship, verdict = vtext, caveat)],
+               current_bulk_ensembl = current_deg_ensembl,
+               current_bulk_logFC = current_logFC,
+               current_bulk_padj = current_padj,
+               current_bulk_is_deg = current_is_deg,
+               zhu_finding_type, zhu_celltype, zhu_direction, zhu_mpra_log2fc,
+               direct_multi_signal_pph4 = direct_susie,
+               direct_single_signal_pph4 = direct_abf,
+               direct_support_state = direct_support,
+               enzyme_multi_signal_pph4 = enzyme_susie,
+               enzyme_single_signal_pph4 = enzyme_abf,
+               enzyme_support_state = enzyme_support,
+               relationship = current_relationship, verdict = vtext)],
        file.path(out_dir, "FigS2R_mpra_external_corroboration_source.csv"))
 save_fig(p, out_pdf, width = 5.5, height = 0.13 * nrow(src) + 1.4)
 message("Wrote ", out_pdf)
-message("CAPTION: External experimental variant-function corroboration (Zhu, Hu et al. 2026, ",
-        "Nat Genet; MASLD MPRA in HepG2/LX-2 + sc-CRISPRi). Tiles = our colocalization PP.H4 ",
-        "anchored on direct-MASLD vs liver-enzyme traits (side by side to show trait anchoring); ",
-        "text = Zhu's MPRA differential-activity call (cell model + allelic direction), our ",
-        "canonical DEG, and verdict. Featured targets: LPL corroborates our disease-state map ",
-        "(DEG logFC +2.8), SLC22A3 our enzyme-anchored genetic map; APOA5 and ANGPTL3 are ",
-        "expression-miss gaps where the MPRA flags cis-regulatory function our expression-genetics ",
-        "is null on. MPRA/CRISPRi are cell-line reporter assays (not primary-tissue), and the gene ",
-        "label on a DAV row is our finemapping/coloc locus assignment (the DAV and log2FC are ",
-        "Zhu's). Cited external annotation, not a convergence-score input.")
+message("CAPTION: Source-reported MPRA/CRISPRi annotations from Zhu/Hu et al. are ",
+        "cross-referenced to the promoted expression-QTL COLOC portfolio and current canonical ",
+        "bulk gate. Direct/liver-fat and liver-enzyme posteriors remain separate. A functional ",
+        "reporter result without PP.H4 > 0.5 support is retained as complementary evidence, not ",
+        "called an expression-genetic null. External cell-model annotation; not a Resource ",
+        "evidence-class input.")

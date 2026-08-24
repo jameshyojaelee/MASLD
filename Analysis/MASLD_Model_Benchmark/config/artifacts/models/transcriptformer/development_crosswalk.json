@@ -1,0 +1,43 @@
+{
+  "corpus": {
+    "declared_cell_total": 57000000,
+    "declared_dataset_count": 644,
+    "inventory_granularity": "CELLxGENE dataset UUID",
+    "source_record_identity": "Pearce_et_al_2025_Extended_Data_Table_1_media-3.xlsx",
+    "source_record_sha256": "UNRESOLVED",
+    "source_record_status": "official_link_resolved_but_body_returned_HTTP_403_or_429_on_2026-08-22",
+    "source_record_url": "https://www.biorxiv.org/content/biorxiv/early/2025/04/29/2025.04.25.650731/DC3/embed/media-3.xlsx?download=true"
+  },
+  "corroborating_live_catalog": {
+    "dataset_records": 2216,
+    "gse289173_accession_or_title_matches": 0,
+    "interpretation": "Absence from the mutable 2026 catalog does not prove absence from the frozen pretraining corpus and is not used to upgrade exposure.",
+    "queried_date": "2026-08-22",
+    "response_sha256": "21630c20bb4aa68e4eb72cc5744db6b51ff874cc9f51ff4b3551aec3e3d720b5",
+    "url": "https://api.cellxgene.cziscience.com/curation/v1/datasets"
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"],
+    "scope_limit": "Cell-state task only. Sources public on or before the versioned archive date remain unknown until the complete declared UUID table is hash-verified and crosswalked."
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the immutable archive object was created.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"article_title": "Single-cell eQTL analysis identifies genetic variation underlying metabolic dysfunction-associated steatohepatitis", "evidence": "GEO became public 57 days before the immutable archive object was created. The current CELLxGENE catalog has no accession or title match, but the complete frozen pretraining table could not be retrieved; sealed exposure therefore remains unknown.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after the immutable archive object was created.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "post_archive": "A source first public after 2025-04-10 is clean_declared for this exact versioned archive unless another training declaration names it.",
+    "pre_archive": "A source public on or before 2025-04-10 remains unknown until the exact declared UUID inventory is checked; a current catalog is not a historical substitute."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

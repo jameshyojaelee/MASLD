@@ -1,0 +1,173 @@
+schema_version = "masld-bench-checkpoint-census-v1"
+census_id = "lead_regulatory_2026_08_21"
+verified_date = "2026-08-21"
+
+[[artifacts]]
+artifact_id = "corgi_regular"
+code_repository = "https://github.com/ekinda/corgi"
+code_commit = "d84c00082da3d04eb05169e290e53f1c7da2b9c5"
+weight_url = "https://zenodo.org/records/18630048/files/corgi_model.pt"
+weight_size_bytes = 2350451066
+weight_md5 = "b10ddca8bb32eae3b67116242cfe1871"
+weight_sha256 = "UNRESOLVED_DOWNLOAD_REQUIRED"
+code_license = "CONFLICT_top_level_Apache-2.0_pyproject_MIT"
+weight_license = "CC-BY-4.0"
+exposure = ["ENCODE", "FANTOM5", "Tabula_Sapiens", "CATlas", "multiome_training_sources"]
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "borzoi_calico_official_human_ensemble"
+code_repository = "https://github.com/calico/borzoi"
+code_commit = "9736924e6c861f0d71978cc3012ff8d76d6fa91f"
+weight_repository = "https://storage.googleapis.com/seqnn-share/borzoi/"
+code_license = "Apache-2.0"
+weight_license = "UNDECLARED_BLOCKED"
+exposure = ["ENCODE", "GTEx_v8_recount3", "FANTOM5", "Roadmap", "CATlas"]
+ensemble_rule = "arithmetic_mean_of_four_same_split_training_replicates_after_reverse_complement_and_track_restoration"
+member_relationship = "same_fold3_test_fold4_validation_random_initialization_and_sequence_order_replicates_not_cross_validation_folds"
+checkpoint_sha256 = "UNRESOLVED_DOWNLOAD_REQUIRED"
+admission_blocking = true
+
+[[artifacts.members]]
+path = "borzoi/f0/model0_best.h5"
+gcs_generation = "1691539358988138"
+md5 = "ef83ad59b43765413f73767d87a717df"
+sha256 = "UNRESOLVED_DOWNLOAD_REQUIRED"
+size_bytes = 744112468
+
+[[artifacts.members]]
+path = "borzoi/f1/model0_best.h5"
+gcs_generation = "1691539419241923"
+md5 = "3bd16acb7283387be2fdb84edca847f5"
+sha256 = "UNRESOLVED_DOWNLOAD_REQUIRED"
+size_bytes = 744112468
+
+[[artifacts.members]]
+path = "borzoi/f2/model0_best.h5"
+gcs_generation = "1691539441571542"
+md5 = "129888a9826e02092536c153cb7ee921"
+sha256 = "UNRESOLVED_DOWNLOAD_REQUIRED"
+size_bytes = 744112468
+
+[[artifacts.members]]
+path = "borzoi/f3/model0_best.h5"
+gcs_generation = "1691539462862235"
+md5 = "bb7cf57a9363d24bf99aeb6d92f454f2"
+sha256 = "UNRESOLVED_DOWNLOAD_REQUIRED"
+size_bytes = 744112468
+
+[[artifacts]]
+artifact_id = "borzoi_genentech_grelu_conversion"
+code_repository = "https://github.com/Genentech/gReLU"
+code_commit = "c5a1970"
+weight_repository = "https://huggingface.co/Genentech/borzoi-model"
+weight_revision = "9d9e6915f21aba8bfeccca4af2c72deef291af8d"
+code_license = "MIT"
+weight_license = "MIT_repository_metadata_derivative_terms_pending_audit"
+exposure = ["ENCODE", "GTEx", "CATlas", "FANTOM5"]
+ensemble_rule = "arithmetic_mean_of_four_human_replicates"
+ordered_composite_serialization = "For each declared member in order: path, TAB, sha256, TAB, decimal size_bytes, LF. Concatenate as UTF-8 with a terminal LF."
+ordered_composite_sha256 = "75bf9ee19c41575747850b6c5aae6836a206b04985fe3da0f39f4ed813db1921"
+admission_blocking = true
+
+[[artifacts.members]]
+path = "human_rep0.ckpt"
+sha256 = "dd294dd588f0d9b481a10bc25dd56ff4cc1c3ba58b7f9f92aacd072fe6b5b2ae"
+size_bytes = 746371522
+
+[[artifacts.members]]
+path = "human_rep1.ckpt"
+sha256 = "0282dc7be3a5ed92245918aef186ab51fda21b51ef067f0690f3479c5943f1b5"
+size_bytes = 746371522
+
+[[artifacts.members]]
+path = "human_rep2.ckpt"
+sha256 = "24020ec9b946e514fa5c5a64021a1a4996849c1cab56f2d1be08dd32ae5ca777"
+size_bytes = 746371522
+
+[[artifacts.members]]
+path = "human_rep3.ckpt"
+sha256 = "41921e517e5c0cbb19b0ad8a9715dd629eca0bd2554ae82baf0dd91a5174996d"
+size_bytes = 746371522
+
+[[artifacts]]
+artifact_id = "scooby_onek1k"
+code_repository = "https://github.com/gagneurlab/scooby"
+code_commit = "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471"
+weight_repository = "https://huggingface.co/lauradmartens/onek1k-scooby"
+weight_revision = "dd7a2b7be54c906b43de4bc0159b169caaf057c5"
+weight_path = "model.safetensors"
+weight_sha256 = "2ae335c651182040462d965bb879118be40a6cb174550a3686fb10b04a74f7cb"
+weight_size_bytes = 765092032
+code_license = "MIT"
+weight_license = "MIT_declared_with_unresolved_inherited_Borzoi_authority"
+exposure = ["OneK1K", "SRP359840", "inherited_Borzoi_corpora"]
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "scooby_epicardioids"
+code_repository = "https://github.com/gagneurlab/scooby"
+code_commit = "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471"
+weight_repository = "https://huggingface.co/lauradmartens/epicardioids-scooby"
+weight_revision = "cefc3a626f5080baaf83878754ea924df6bd7e8d"
+weight_path = "model.safetensors"
+weight_sha256 = "f945e1937a46ddd5cb31249ef71e721e7a7b1381aa207fb2de449f23ac75a9e8"
+weight_size_bytes = 772988628
+code_license = "MIT"
+weight_license = "MIT_declared_with_unresolved_inherited_Borzoi_authority"
+exposure = ["SRP359249", "SRP359250", "inherited_Borzoi_corpora"]
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "scooby_neurips"
+code_repository = "https://github.com/gagneurlab/scooby"
+code_commit = "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471"
+weight_repository = "https://huggingface.co/johahi/neurips-scooby"
+weight_revision = "1591d15696c65f14053e4495e52c74812a86fd8d"
+weight_path = "model.safetensors"
+weight_sha256 = "8f2e2de3e86016378116c90accf94572e75963d5445beb6cabd585c8372170dd"
+weight_size_bytes = 772970196
+code_license = "MIT"
+weight_license = "UNDECLARED_BLOCKED"
+exposure = ["GSE194122", "SRP356158", "NeurIPS_2021_AWS_multiome", "inherited_Borzoi_corpora"]
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "chrombpnet_1_0_1"
+code_repository = "https://github.com/kundajelab/ChromBPNet"
+code_commit = "eaa0fe5"
+pypi_url = "https://pypi.org/project/chrombpnet/1.0.1/"
+pypi_wheel_sha256 = "fc2986a04d9cb0c0e4737c823b056ddd97edc77fac9b495fe0db9963531aad59"
+code_license = "MIT"
+checkpoint = "NOT_APPLICABLE_train_bias_and_task_models_inside_training_donors"
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "scvi_tools_1_5_0_post1"
+code_repository = "https://github.com/scverse/scvi-tools"
+code_commit = "56520c713eb1d2b245c72a0f60bc393b74198c91"
+pypi_url = "https://pypi.org/project/scvi-tools/1.5.0.post1/"
+pypi_wheel_sha256 = "d868c86332f819b8d79846ea0e36ec6eef26c3fafeb03ce7a239f1ddefb1c976"
+code_license = "BSD-3-Clause"
+checkpoint = "NOT_APPLICABLE_fit_inside_training_donors"
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "scvi_tools_1_4_2"
+code_repository = "https://github.com/scverse/scvi-tools"
+code_commit = "dc95497"
+pypi_url = "https://pypi.org/project/scvi-tools/1.4.2/"
+pypi_wheel_sha256 = "c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5"
+code_license = "BSD-3-Clause"
+checkpoint = "NOT_APPLICABLE_legacy_scvi_scanvi_baseline_runtime_only"
+admission_blocking = true
+
+[[artifacts]]
+artifact_id = "scikit_learn_1_9_0_cp311_linux_x86_64"
+code_repository = "https://github.com/scikit-learn/scikit-learn"
+code_commit = "77def0e"
+pypi_url = "https://pypi.org/project/scikit-learn/1.9.0/"
+pypi_wheel_sha256 = "f7e254636164090da847715a27f8e5478feb98c40a9e0ee90cbd277de9e5ceb8"
+code_license = "BSD-3-Clause"
+checkpoint = "NOT_APPLICABLE_fit_inside_training_donors"
+admission_blocking = true

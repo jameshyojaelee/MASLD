@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "hra007511"
+title = "Human MASLD single-cell, spatial transcriptomic, histology, and MALDI atlas"
+role = "deferred"
+status = "deferred"
+species = "human"
+accession = ["HRA007511"]
+access_tier = "controlled"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "no_redistribution_without_permission"
+license_status = "permission_required"
+biological_unit = "participant"
+expected_biological_units = 61
+native_genome_build = "GRCh38"
+native_annotation_release = "UNRESOLVED"
+modalities = ["single_cell_rna", "visium_rna", "histology_he", "maldi_imaging"]
+pairing_levels = ["adjacent_section", "same_study_unpaired"]
+modality_status_default = "unavailable_permission"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Processed spatial, H&E, and MALDI assets require source permission.", "Training and model-weight redistribution rights require written approval.", "Only authoritative participant-level joins may create cross-modal edges."]
+notes = "The union is 61 participants: 29 scRNA, 35 spatial, only 3 participants overlapping scRNA and spatial; 27 of 35 spatial samples have MALDI. Normalize MASL/MASLD labels without changing source values."
+
+[provenance]
+source_url = "https://ngdc.cncb.ac.cn/gsa-human/browse/HRA007511"
+verified_date = "2026-08-21"
+local_exposure = "Metadata and some analyses are exposed locally; controlled image and MALDI assets are not admitted."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "deferred"
+label_visibility = "unavailable_permission"

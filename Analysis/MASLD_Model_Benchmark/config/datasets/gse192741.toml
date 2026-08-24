@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse192741"
+title = "Human liver Visium with registered histology"
+role = "technical_pilot"
+status = "available"
+species = "human"
+accession = ["GSE192741"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 4
+native_genome_build = "hg19_Space_Ranger_1.0"
+native_annotation_release = "UNRESOLVED_Space_Ranger_1.0_hg19_gene_annotation"
+modalities = ["visium_rna", "histology_he"]
+pairing_levels = ["same_section"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence.", "GEO human sample records specify Space Ranger 1.0 and hg19, not GRCh38, but do not identify the exact annotation package. Freeze feature identity and an hg19-to-GRCh38.p14 gene/coordinate crosswalk before technical-pilot admission."]
+notes = "Five sections from four donors; one donor has two sections. Suitable for registration and pipeline tests, not donor-held pathology claims. HEST-1k copies are duplicates, not new observations. Human Visium was processed with Space Ranger 1.0 against hg19."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE192741"
+verified_date = "2026-08-21"
+local_exposure = "Source files and outcomes are already used locally."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "development"
+label_visibility = "development_visible"

@@ -1,0 +1,153 @@
+{
+  "architecture_contract": {
+    "embedding_dimension": 960,
+    "global_encoder": "Convolutional processing followed by six relative-position transformer encoder layers; pairwise 2D representations feed the chromatin-organization head and refine 1D representations.",
+    "input_bins": 600,
+    "input_length_bp": 600000,
+    "local_encoder": "Each 1-kb bin is padded by 300 bp on both sides. Sequence and observed ATAC pass through separate convolutional paths in the first two blocks; the ATAC path also uses bidirectional LSTMs. The streams are summed, followed by a third convolutional/transformer block and attention pooling.",
+    "model_family": "multitask_sequence_plus_observed_ATAC_genomic_imputation_model",
+    "output_bins": 500,
+    "output_span_bp": 500000,
+    "parameter_count": "UNRESOLVED_until_strict_checkpoint_load",
+    "primary_output_resolution_bp": 1000
+  },
+  "canonical_checkpoint": {
+    "canonical_origin": "Paper-linked Hugging Face Space luosanj/EPCOTv2",
+    "file": {
+      "git_lfs_oid_sha256": "b824a80ed238e64e15c5a6eeae91329d24f04825c62d2a9dd328658822aba45d",
+      "git_oid": "ade5143e70ae7a8d689d389b4ef2147c7412f19e",
+      "last_commit": "d622761e411e46198fb101d8db195318ef5cfb18",
+      "last_commit_date": "2025-03-03T00:38:27.000Z",
+      "name": "models/human_model.pt",
+      "size_bytes": 468200299,
+      "url": "https://huggingface.co/spaces/luosanj/EPCOTv2/resolve/f93a2a944a49797a111f0294709416d38bedbcbe/models/human_model.pt"
+    },
+    "identity_status": "FILE_FROZEN_STATE_SCHEMA_NOT_INSPECTED",
+    "paper_linked_space_revision": "f93a2a944a49797a111f0294709416d38bedbcbe",
+    "weight_format": "PyTorch pickle-backed state_dict"
+  },
+  "code_license": {
+    "exact_space_loader_and_architecture_snapshot": "UNDECLARED",
+    "publication_code_release": "MIT"
+  },
+  "input_contract": {
+    "accessibility": {
+      "native_measurement": "observed cell-type or tissue ATAC-seq, DNase-seq, or pseudobulk scATAC-seq coverage",
+      "native_processing": "The v1.0.0 source documents deepTools bamCoverage with RPGC normalization, effectiveGenomeSize 2913022398, Offset 1, 1-bp bins and the released blacklist, followed by conversion to sparse per-chromosome arrays.",
+      "required": true,
+      "tensor_channel": "one signal channel for each 1600-bp padded 1-kb bin"
+    },
+    "canonical_tensor": "float tensor shaped batch_by_600_bins_by_5_channels_by_1600_positions",
+    "sequence": {
+      "channels": "A,C,G,T one-hot",
+      "required": true,
+      "window_bp": 600000
+    },
+    "target_leakage_rule": "Observed ATAC is privileged held-context evidence. It must be available under the same topology at inference, processed without outcome labels and supplied to matched baselines. It cannot be described as RNA conditioning or hidden inside a multimodal label."
+  },
+  "license_audit": {
+    "code_finding": "The publication's GitHub V1.0.0 and Zenodo 17297585 snapshots are MIT licensed. The exact paper-linked Hugging Face Space snapshot that constructs this checkpoint has no license metadata and includes architecture code not byte-identical to src/model.py.",
+    "open_champion_terms_status": "BLOCKED_PENDING_EXPLICIT_SPACE_CODE_AND_WEIGHT_TERMS_OR_LEGAL_DETERMINATION",
+    "reference_data_finding": "The required luosanj/epcotv2_data reference repository also declares no license.",
+    "weight_finding": "Neither the paper-linked Space model card nor the LFS object declares weight terms. MIT terms on the separate publication-code archive cannot be assumed to license the checkpoint."
+  },
+  "mirror_evidence": {
+    "finding": "drjieliu/EPCOTv2-app@f3052c0cd693e7608f16fe3a007508a00bd83bc0 contains a byte-identical human_model.pt with the same LFS SHA-256 and size. It is a later mirror, not the canonical origin.",
+    "mirror_revision": "f3052c0cd693e7608f16fe3a007508a00bd83bc0",
+    "mirror_weight_sha256": "b824a80ed238e64e15c5a6eeae91329d24f04825c62d2a9dd328658822aba45d"
+  },
+  "native_scoring_contract": {
+    "common_lane": "EPCOTv2 cannot enter a sequence-only or RNA-context common lane as its native model because observed ATAC is a required fifth input channel. Any sequence-only, ATAC-masked or RNA-to-context modification is a separately trained adaptation.",
+    "published_eqtl_path": "The paper's eQTL system combines REF-versus-ALT local-encoder differences, learned variant-to-TSS 2D features and prompt features including Borzoi scores in a trained classifier. The released human_model.pt is the upstream multitask model; no frozen paper eQTL classifier checkpoint was found in the admitted release.",
+    "variant_ablation_rule": "For REF/ALT comparisons, keep the observed ATAC input identical between alleles and prespecify whether the variant-containing ATAC bin is masked. Report masked and unmasked analyses separately because observed accessibility may already encode the variant's regulatory effect.",
+    "variant_effect_semantics": "The released heads predict functional genomic profiles or representations, not signed donor-level eQTL/ieQTL betas. A benchmark head must be fit only on development folds and evaluated against sequence, nearest-gene and expression-only baselines."
+  },
+  "output_contract": {
+    "one_dimensional": {
+      "bru_bruuv_bruchase": [500, 3],
+      "cage_total_rna_polya_rna": [500, 3],
+      "epigenome_logits": [500, 247],
+      "external_tf_logits": [500, 708],
+      "grocap": [500, 4],
+      "groseq": [500, 2],
+      "netcage": [500, 2],
+      "proseq": [500, 3],
+      "rna_strand": [500, 2],
+      "starr": [500, 1],
+      "ttseq": [500, 2]
+    },
+    "output_scale": "RNA-family heads use softplus in the released architecture; epigenome, external TF, nascent-RNA external and STARR heads expose raw head values. Exact assay-specific transformations and inverse transforms must be frozen from training code before scoring.",
+    "two_dimensional": {
+      "hic_5kb": [100, 100, 3],
+      "intact_hic_1kb": [500, 500, 2],
+      "microc_1kb": [500, 500, 2]
+    }
+  },
+  "pretraining_contract": {
+    "core_cell_lines": ["GM12878", "K562", "HepG2", "MCF-7", "H1", "HFFc6", "A549", "HCT116", "IMR-90", "CD8_T", "B"],
+    "genomic_regions": "11123 released 600-kb windows; the v1.0.0 train code shuffles window indices with seed 24 and uses 80 percent for training while retaining a separate tail after 90 percent as validation. Exact checkpoint-to-split binding and the unused middle partition require reconstruction.",
+    "human_tissue_contexts": ["gastrocnemius_medialis_f53", "transverse_colon_f53", "spleen_f51", "stomach_f53", "adrenal_gland_m54", "right_lobe_of_liver_f53", "tibial_nerve_f51", "heart_left_ventricle_f51"],
+    "objective": "Staged supervised multi-task training across epigenomic, mature/nascent RNA and chromatin-contact outputs",
+    "training_manifest": "data/accession_number.xlsx in the V1.0.0 publication code records assay accessions but is not cryptographically bound to the March checkpoint."
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "benchmark_rule": "Regenerate sequence from the project FASTA only after exact equality to the frozen EPCOTv2 one-hot reference on primary-contig fixtures, coordinate, strand, REF-allele and boundary checks. Patch/haplotype scaffolds are out of domain.",
+    "inference_reference_dataset": {
+      "license": "UNDECLARED",
+      "repository": "luosanj/epcotv2_data",
+      "revision": "f445058917800811cb82c38b2c806674cc02b47f",
+      "status": "The Space code downloads unpinned main-branch per-chromosome NPZ objects; benchmark use must pin this revision."
+    },
+    "native_build": "hg38",
+    "native_fasta_identity": "UNRESOLVED: only derived sparse one-hot chromosome objects are published",
+    "sequence_buffer_bp": 600000
+  },
+  "release": {
+    "code_archive_doi": "10.5281/zenodo.17297585",
+    "code_archive_md5": "54cf04d2964816a2a3605533bb9897a6",
+    "code_archive_name": "liu-bioinfo-lab/general_AI_model-V1.0.0.zip",
+    "code_archive_size_bytes": 72129948,
+    "publication_date": "2025-11-24",
+    "publication_doi": "10.1093/nar/gkaf1269",
+    "repository": "liu-bioinfo-lab/general_AI_model",
+    "revision": "f20362ab5139ac53448745cdca3480f952db5cf1",
+    "tag": "V1.0.0"
+  },
+  "runtime_contract": {
+    "exact_checkpoint_training_runtime": "UNRESOLVED",
+    "github_v1_requirements": "Python 3.9; torch 1.10.1; torchvision 0.11.2; numpy 1.19.5",
+    "paper_linked_space_requirements": "torch 2.2.1; numpy 1.26.4; scipy 1.13.1; einops 0.8.1",
+    "status": "UNTESTED_AND_RUNTIME_DIVERGENT",
+    "warning": "The publication training environment and paper-linked inference Space use substantially different PyTorch/numpy stacks. Both require isolated parity probes; neither may silently represent the other."
+  },
+  "safe_loading_contract": {
+    "checkpoint_downloaded": false,
+    "format_risk": "The official loader calls torch.load on a pickle-backed .pt object; Hugging Face reports only OrderedDict and tensor storage rebuild imports, but that scan is not a trust boundary.",
+    "input_risk": "The public Space also unpickles uploaded ATAC files. The benchmark adapter must reject pickle inputs and use a validated internal array format.",
+    "loading_rule": "After campaign approval, fetch by immutable revision and SHA-256, scan in an isolated no-network runtime, then load tensors with a weights-only restricted path where compatible and require exact state_dict keys, shapes and dtypes. Never execute the public Space loader on untrusted files.",
+    "numeric_parity": "Reproduce official output tensors for all 14 modality groups on fixed hg38 plus ATAC fixtures under both the paper-linked Space stack and the selected project runtime before admission."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nucleic Acids Research article, official V1.0.0 GitHub/Zenodo release, paper-linked Hugging Face Space, byte-identical later mirror, Hugging Face reference dataset and small public text/config/accession metadata were queried on 2026-08-22. No checkpoint or reference array was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:LICENSE", "sha256": "2aff8b165075fc1c015e2b0f9df0adb319e965ab51cf3806c9f99dadec797b7e", "size_bytes": 1072},
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:README.md", "sha256": "738e2190e60e5217a6076c5b014114025c280685946c746127de7a19ba89fd05", "size_bytes": 3023},
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:requirements.txt", "sha256": "2bb2625debe9305e5a88ff7decd54e6c57c237e858191834b4db81d06c16dc1c", "size_bytes": 147},
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:data/accession_number.xlsx", "sha256": "022b45f98b625f4544407c7493c174dbc8a808987ff3225c8c4542cf2cbf999d", "size_bytes": 40888},
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:data/input_region_600kb.bed", "sha256": "d6991d59eb7469d014be9583e15d6d2799ef3af83154e4eea7648932193605d7", "size_bytes": 265898},
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:src/model.py", "sha256": "853ebbb51c4f68dbf0d6189218a18aec6961afdc83957973b049958efb37143a", "size_bytes": 24755},
+    {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:src/train.py", "sha256": "b44ff8c6a0db1873ca339454e51fdbac80f70b199f6f4a3853ef59ff7aaeb40d", "size_bytes": 30293},
+    {"identity": "luosanj/EPCOTv2@f93a2a9:curriculum/lora_prompt_model.py", "sha256": "afdaeef02743cfb9626f7a8deaef39daf4a13679f3e182744d8fd51444c6b7d6", "size_bytes": 33032},
+    {"identity": "luosanj/EPCOTv2@f93a2a9:func_gradio.py", "sha256": "529796f944c49d8aa056cd06d249c24d7449da938386daebea545936f4adc419", "size_bytes": 5052},
+    {"identity": "luosanj/EPCOTv2@f93a2a9:erna/input_region_600kb.bed", "sha256": "302557ff2cbc6cd09829afc1dc97e702e42818645ac533070f51c1bba1fcd103", "size_bytes": 265897},
+    {"identity": "luosanj/EPCOTv2@f93a2a9:models/human_model.pt", "sha256": "b824a80ed238e64e15c5a6eeae91329d24f04825c62d2a9dd328658822aba45d", "size_bytes": 468200299}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported: observed ATAC is an input and ATAC is not an output head",
+    "unified_model": "restricted observed-ATAC component only; open use is blocked by exact Space code, checkpoint and reference-data terms",
+    "variant_to_regulation": "development-only observed-ATAC comparator. The released checkpoint can provide allele-delta and variant-to-TSS representations but not signed eQTL effects; the published downstream classifier is not part of the admitted checkpoint. Native sealed evaluation is impossible without a frozen topology-matched ATAC input."
+  },
+  "weight_license": "UNDECLARED"
+}

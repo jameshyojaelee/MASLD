@@ -1,0 +1,12 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "contract_validation"
+status = "candidate"
+purpose = "Standard-library registry parsing and contract tests"
+scheduler = "slurm"
+resource_profile = "cpu_contract"
+environment_lock = "module:python/3.11.5-GCCcore-13.2.0;stdlib-only;source-tree-hash-bound"
+container_digest = "NOT_APPLICABLE"
+modules = ["python/3.11.5-GCCcore-13.2.0"]
+command_prefix = ["python"]
+admission_blocking = false
+blockers = []

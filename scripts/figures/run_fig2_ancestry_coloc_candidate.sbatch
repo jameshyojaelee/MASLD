@@ -11,7 +11,7 @@ set -euo pipefail
 
 project_root="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 python_bin="/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/python"
-rscript_bin="/gpfs/commons/home/jameslee/micromamba/envs/rnaseq_r44/bin/Rscript"
+rscript_bin="/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript"
 stamp="$(date +%Y%m%d_%H%M%S)"
 candidate_dir="${project_root}/figures/candidates/fig2_ancestry_coloc_${stamp}_${SLURM_JOB_ID}"
 

@@ -1,0 +1,39 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["cell_state_mapping"]},
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development RNA-only cell-state mapping through an scMVP RNA encoder trained on permitted paired data elsewhere.",
+      "exposure_state": "downstream_demo",
+      "model_access": "Different-aliquot RNA and ATAC rows are never paired. Neither held modality enters fitting, feature selection, GMM initialization, head fitting, or calibration."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only cell-state mapping through the frozen RNA encoder and common head after selection lock.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA only; no ATAC tensor, model fitting, feature selection, GMM update, head fitting, or calibration."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-training same-nucleus RNA-ATAC pairs and donor-held RNA-encoder development mapping after activation and exact-row-join gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Gene/peak features, model, GMM state, early stopping, head, and calibration use outer-training donors only. Held ATAC remains evaluator-only and is not required for mapping."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_fitted_scmvp_per_outer_fold_seed_gene_peak_inventory_and_gmm_state",
+    "common_lane": "frozen RNA-encoder posterior mean plus identical benchmark head",
+    "native_lane": "joint latent and optional classifier only as paired development diagnostics, never sealed RNA-only mapping",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; never row-paired",
+    "gse289173": "RNA_only sealed query",
+    "gse296875": "same_nucleus; exact shared-row joins permitted only within outer-training donors"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells and latent samples are not replicates.",
+    "profile_rule": "No scMVP output may be scored as an RNA-conditioned ATAC profile because released ATAC inference consumes observed ATAC.",
+    "query_isolation": "Force eval/no-grad and call only the RNA encoder for held RNA queries.",
+    "transform_contract": "Training-only gene/peak inventories, model/GMM state, head, calibration, and five seeds."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

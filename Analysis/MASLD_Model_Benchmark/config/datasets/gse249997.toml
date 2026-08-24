@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse249997"
+title = "Human early-MASLD liver bulk RNA cohort"
+role = "external_development"
+status = "available"
+species = "human"
+accession = ["GSE249997", "PRJNA1051582"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "participant"
+expected_biological_units = 77
+native_genome_build = "GRCh38"
+native_annotation_release = "GENCODE_v29"
+modalities = ["bulk_rna"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "target_label_unexposed"
+admission_blocking = true
+blockers = ["Resolve the 77 GEO samples versus 70 participants reported in the associated publication and freeze a one-row-per-participant deduplication map before any split or metric.", "Resolve whether participant-level histology and fibrosis fields can be joined without ambiguity; until then this cohort has no stage endpoint.", "The GEO samples are labeled early MASLD and provide neither healthy controls nor a broad stage range; use only for early-MASLD domain transport and never as a diagnostic, case-control, or progression cohort.", "Freeze an auditable GENCODE v29-to-v49 gene crosswalk; an unmapped gene is missing and must not be encoded as zero.", "Freeze rights, labels, QC, reference, exposure, and artifact-manifest authorities before activation."]
+notes = "GEO deposits 77 processed human liver bulk RNA samples labeled early MASLD and a merged HTSeq count matrix aligned to GRCh38 with GENCODE v29. The associated report describes 70 participants, so samples are not assumed to be independent people. This source can test representation transport into an early-MASLD bulk domain after deduplication, but it cannot establish stage discrimination or supply controls."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE249997"
+verified_date = "2026-08-22"
+local_exposure = "No local outcome analysis found at registry creation; external development only."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "development"
+label_visibility = "development_visible"

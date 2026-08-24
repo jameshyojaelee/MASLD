@@ -1,0 +1,83 @@
+{
+  "architecture_contract": {
+    "architecture": "BERT_encoder_with_ALiBi_and_GLU",
+    "declared_parameter_scale": "117M",
+    "hidden_dimension": 768,
+    "intermediate_dimension": 3072,
+    "layers": 12,
+    "attention_heads": 12,
+    "pretraining_objective": "masked_language_modeling_at_15_percent_independent_token_masking",
+    "pretraining_sequence_length": "128_BPE_tokens_from_approximately_700_bp",
+    "released_alibi_starting_size_tokens": 512,
+    "released_max_position_embeddings_field": 512,
+    "warning": "ALiBi permits extrapolation beyond the pretraining length, but arbitrary-length wording is not an empirical guarantee. The common lane must freeze a tested sequence length and reject any tokenizer overflow or silent truncation."
+  },
+  "checkpoint": {
+    "repository": "zhihan1996/DNABERT-2-117M",
+    "revision": "7bce263b15377fc15361f52cfab88f8b586abda0",
+    "filename": "pytorch_model.bin",
+    "sha256": "7ff39ec77a484dd01070a41bfd6e95cdd7247bec80fe357ab43a4be33687aeba",
+    "size_bytes": 468354983,
+    "status": "exact_base_checkpoint_registered"
+  },
+  "code": {
+    "repository": "MAGICS-LAB/DNABERT_2",
+    "revision": "f25bed9ee20db966dff39e5c1571249d04e36404",
+    "license": "Apache-2.0",
+    "custom_huggingface_code": true
+  },
+  "input_contract": {
+    "alphabet": "DNA_sequence",
+    "canonical_project_reference": "GRCh38.p14",
+    "tokenization": "SentencePiece_style_nonoverlapping_byte_pair_encoding",
+    "vocabulary_size": 4096,
+    "mean_bp_per_token_reported": "approximately_5",
+    "variant_window": "fixed_6000_bp_SNP_centered_window_with_REF_match_before_tokenization",
+    "strand_contract": "evaluate_forward_and_reverse_complement_then_average_aligned_features",
+    "supported_primary_variant_type": "biallelic_SNP",
+    "indel_status": "deferred_until_length_normalized_scoring_and_coordinate_alignment_are_fixture_validated",
+    "boundary_warning": "A single allele change can alter BPE segmentation. Token offsets must be recovered for each allele and mapped back to base coordinates; token indices cannot be assumed comparable."
+  },
+  "representation_and_task_contract": {
+    "admitted_task": "variant_to_regulation",
+    "common_lane": "Map final-layer token states to covered bases, mean-pool a fixed 1536-bp variant-centered region for REF and ALT, average forward and reverse-complement representations after coordinate realignment, and pass the frozen REF, ALT, ALT-minus-REF, and absolute-difference vector to the identical linear and two-layer heads.",
+    "native_zero_shot_lane": "Length-normalized masked pseudo-log-likelihood difference for ALT versus REF, reported separately because allele-dependent BPE segmentation can confound the score.",
+    "signed_effect_limit": "Sequence likelihood does not identify the direction of a cell-type eQTL or ieQTL effect. A supervised signed-effect head requires a separately registered development label source; GSE289173 cannot be used for fitting or calibration.",
+    "not_supported": ["cell_state_mapping", "RNA_conditioned_ATAC", "bulk_state_transfer", "perturbation_transfer"]
+  },
+  "runtime_contract": {
+    "declared_python": "3.8",
+    "declared_torch": "1.13.1",
+    "declared_transformers": "4.29.2",
+    "declared_peft": "0.3.0",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "isolated_L40S_import_tokenize_checkpoint_load_forward_backward_LoRA_resume_determinism_and_long_window_numeric_tolerance",
+    "warning": "The Hugging Face object executes pinned custom code and includes a Triton FlashAttention implementation. No trust_remote_code fetch is allowed during a run; reviewed files must be vendored and hashed."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format": "PyTorch_pickle_container",
+    "deserialized": false,
+    "require_restricted_no_network_inspection": true,
+    "require_state_dict_only_conversion_to_safetensors": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The ICLR 2024 paper, pinned official code, and exact Hugging Face revision were queried on 2026-08-22. Only public text, configuration, tokenizer metadata, and file metadata were read; checkpoint bytes were not downloaded or deserialized.",
+  "source_records": [
+    {"identity": "DNABERT_2:LICENSE", "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4", "size_bytes": 11357},
+    {"identity": "DNABERT_2:README.md", "sha256": "734a8cec5f667d74d421bf3b273ad7e256216109636da45aa7ceba21cd34de16", "size_bytes": 9791},
+    {"identity": "DNABERT_2:requirements.txt", "sha256": "1eada4a225a61e9afcc0e9f02079f6f0f92d7498f65966f58c2bb008b8c176ad", "size_bytes": 133},
+    {"identity": "HF:config.json", "sha256": "ba9bdafaff0cc3e30556927474d4a179519a9864012bed2628e9f1bc23c84bfd", "size_bytes": 904},
+    {"identity": "HF:tokenizer.json", "sha256": "5d178e8ce2ba55df97fff197f4b30f40133b95d7096be398c2df6b526c5d8cd3", "size_bytes": 167908},
+    {"identity": "HF:bert_layers.py", "sha256": "317ad7e9667980ac724c07f0174ba265c8446ca5230f6b473068ff1b911edcf9", "size_bytes": 40690},
+    {"identity": "HF:flash_attn_triton.py", "sha256": "568d1ac3beca0b5e1df528a1f136aa19b6489a616fcf3784f33336a50bb1de81", "size_bytes": 42737}
+  ],
+  "terms_audit": {
+    "repository_code_license": "Apache-2.0",
+    "checkpoint_repository_license_file": "Apache-2.0",
+    "derivative_weight_redistribution": "permitted_subject_to_Apache-2.0_notice_and_dependency_audit",
+    "result": "terms_pass_preflight"
+  },
+  "weight_license": "Apache-2.0"
+}

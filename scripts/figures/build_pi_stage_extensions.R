@@ -179,12 +179,21 @@ nas_samples <- nas_samples[!is.na(nas_group), .(
 )]
 if (anyDuplicated(nas_samples$analysis_unit_id)) fail("NAS biological unit is not unique")
 nas_pairs <- list(c("NAS0", "NAS1-2"), c("NAS1-2", "NAS3-4"), c("NAS3-4", "NAS5-8"))
-nas_results <- lapply(nas_pairs, function(pair) {
+nas_adjacent_results <- lapply(nas_pairs, function(pair) {
   contrast_id <- paste0(gsub("-", "_", pair[[2L]]), "_vs_", gsub("-", "_", pair[[1L]]))
-  fit_contrast(nas_samples, "nas_group", pair[[1L]], pair[[2L]], contrast_id, "NAS")
+  fit_contrast(nas_samples, "nas_group", pair[[1L]], pair[[2L]], contrast_id, "NAS_adjacent")
 })
 
-all_fits <- c(adjacent_results, f0_results, nas_results)
+# Common-reference NAS models against strict NAS0, mirroring the F-versus-F0
+# set above so the two staging axes carry the same estimand where the figures
+# place them side by side. The adjacent chain is retained on its own axis label
+# and stays available to the supplement.
+nas0_results <- lapply(c("NAS1-2", "NAS3-4", "NAS5-8"), function(comparison) {
+  fit_contrast(nas_samples, "nas_group", "NAS0", comparison,
+               paste0(gsub("-", "_", comparison), "_vs_NAS0"), "NAS")
+})
+
+all_fits <- c(adjacent_results, f0_results, nas_adjacent_results, nas0_results)
 write_tsv_once(rbindlist(lapply(all_fits, `[[`, "result")), file.path(out_root, "stage_extension_all_gene_results.tsv"))
 write_tsv_once(rbindlist(lapply(all_fits, `[[`, "audit")), file.path(out_root, "stage_extension_design_audit.tsv"))
 write_tsv_once(rbindlist(lapply(all_fits, `[[`, "samples")), file.path(out_root, "stage_extension_sample_manifest.tsv"))

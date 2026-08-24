@@ -1,0 +1,83 @@
+{
+  "architecture_contract": {
+    "architecture": "ESM_style_encoder_only_transformer",
+    "declared_parameter_count": 485729545,
+    "hidden_dimension": 1280,
+    "intermediate_dimension": 5120,
+    "layers": 24,
+    "attention_heads": 20,
+    "pretraining_objective": "masked_language_modeling",
+    "pretraining_tokens": 50000000000,
+    "maximum_tokens_including_special_positions": 1002,
+    "maximum_DNA_tokens": 1000,
+    "maximum_nominal_bp": 6000
+  },
+  "checkpoint": {
+    "repository": "InstaDeepAI/nucleotide-transformer-500m-human-ref",
+    "revision": "f87b5d7233295242e79c951873d290f4cf992045",
+    "filename": "pytorch_model.bin",
+    "sha256": "971cb721bd8cc8134d3665b5d94b195fffb18a1480ad5925d6dcc9290bf1c17f",
+    "size_bytes": 1942934337,
+    "status": "exact_human_reference_checkpoint_registered"
+  },
+  "code": {
+    "implementation": "Hugging_Face_Transformers_EsmForMaskedLM",
+    "checkpoint_declared_transformers_version": "4.29.0.dev0",
+    "exact_upstream_code_revision": "UNRESOLVED",
+    "custom_huggingface_code": false,
+    "license": "Apache-2.0_for_Transformers_code_only"
+  },
+  "input_contract": {
+    "canonical_project_reference": "GRCh38.p14",
+    "pretraining_reference": "GCA_000001405.15_GRCh38_genomic_no_mito_upper_N.filtered",
+    "tokenization": "nonoverlapping_6mers_with_single_base_fallback_for_N_or_terminal_remainder",
+    "released_vocabulary_size": 4105,
+    "paper_vocabulary_size": 4104,
+    "vocabulary_discrepancy": "The pinned vocabulary contains unk, pad, mask, cls, 4096 six-mers, A/T/C/G/N, eos, and bos for 4105 entries; the paper describes 4104. The released files control execution.",
+    "variant_window": "fixed_6000_bp_SNP_centered_window_with_REF_match_before_tokenization",
+    "strand_contract": "evaluate_forward_and_reverse_complement_then_average_aligned_features",
+    "phase_contract": "Common lane freezes one base-coordinate window. Native zero-shot sensitivity additionally evaluates all six tokenization phases without selecting a phase from outcomes.",
+    "supported_primary_variant_type": "biallelic_SNP",
+    "indel_status": "deferred_because_nonoverlapping_6mer_phase_and_length_change_require_a_separate_prespecified_score"
+  },
+  "representation_and_task_contract": {
+    "admitted_task": "variant_to_regulation",
+    "common_lane": "Map final hidden states to the six covered bases, mean-pool a fixed 1536-bp region around the variant for REF and ALT, average forward and reverse-complement features after coordinate realignment, and fit the identical linear and two-layer heads to REF, ALT, ALT-minus-REF, and absolute-difference features.",
+    "native_zero_shot_lane": "Mask the allele-containing six-mer and compare normalized ALT and REF reconstruction losses across six fixed tokenization phases and both strands; report separately from common embeddings.",
+    "signed_effect_limit": "The zero-shot score captures sequence plausibility, not the direction of a cell-type regulatory effect. A supervised head requires nonsealed signed-effect development labels.",
+    "not_supported": ["cell_state_mapping", "RNA_conditioned_ATAC", "bulk_state_transfer", "perturbation_transfer"]
+  },
+  "runtime_contract": {
+    "checkpoint_declared_transformers": "4.29.0.dev0",
+    "standard_loader": "AutoModelForMaskedLM_without_trust_remote_code",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "isolated_L40S_import_tokenize_checkpoint_load_forward_backward_IA3_or_head_tuning_resume_determinism_and_numeric_tolerance",
+    "warning": "The exact development build recorded in the checkpoint is not a stable package pin. The runtime must either recover its source revision or establish a numerically validated replacement before admission."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format": "PyTorch_pickle_container",
+    "deserialized": false,
+    "require_restricted_no_network_inspection": true,
+    "require_state_dict_only_conversion_to_safetensors": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods paper and exact Hugging Face revision were queried on 2026-08-22. Only public text, small configuration/vocabulary metadata, and file metadata were read; checkpoint bytes were not downloaded or deserialized.",
+  "source_records": [
+    {"identity": "HF:README.md", "sha256": "87bbf555ab11881485fe738e4a09c1ae498e796b8ec3e8f0474ce4288ff4ab6c", "size_bytes": 5790},
+    {"identity": "HF:config.json", "sha256": "715b4de1c0a3c36ee417cde99640876e024c25afe50c85427ea0317559350cdb", "size_bytes": 706},
+    {"identity": "HF:tokenizer_config.json", "sha256": "e516a38aaf16ce0e84ce178e5f23b98f8b9993bea1a0e2166326efb4e8440214", "size_bytes": 129},
+    {"identity": "HF:special_tokens_map.json", "sha256": "d6dc30bf018166daab248b0abf7efda6fd1b1e0a2d1bee5b31b23db2ebdaee77", "size_bytes": 101},
+    {"identity": "HF:vocab.txt", "sha256": "f1b544e27897936b50bbd925850fa8a08b421c33bb9c26e3711c140c061d0d4c", "size_bytes": 28718},
+    {"identity": "HF:jax_model/hyperparams.json", "sha256": "bcee2b20e71efbb5cc0542f2b0226b74c96d7158574ebb67343f9c626b77db96", "size_bytes": 815}
+  ],
+  "terms_audit": {
+    "checkpoint_license": "CC-BY-NC-SA-4.0",
+    "commercial_use": "prohibited",
+    "share_alike": true,
+    "open_champion_status": "ineligible_under_current_terms",
+    "result": "restricted_comparator_only"
+  },
+  "weight_license": "CC-BY-NC-SA-4.0"
+}

@@ -59,10 +59,10 @@ def main() -> int:
         size = re.search(r"^Page size:\s+([\d.]+) x ([\d.]+) pts", info, re.M)
         if not pages or pages.group(1) != "1":
             errors.append("promoted PDF is not one page")
-        if not size or abs(float(size.group(1)) / 72 - 2.10) > 0.015 or abs(
-            float(size.group(2)) / 72 - 2.44
+        if not size or abs(float(size.group(1)) / 72 - 1.85) > 0.015 or abs(
+            float(size.group(2)) / 72 - 2.10
         ) > 0.015:
-            errors.append("promoted PDF is not 2.10 x 2.44 inches")
+            errors.append("promoted PDF is not 1.85 x 2.10 inches")
         text = subprocess.check_output(["pdftotext", str(PDF), "-"], text=True)
         prohibited = (
             "Share of fine-mapping probability by variant consequence",
@@ -111,7 +111,7 @@ def main() -> int:
             errors.append("source-table hash disagrees with manifest")
 
     size_spec = (ROOT / "figures/layout_specs/figure2_panel_sizes.tsv").read_text()
-    if "Fig2D_pip_architecture_by_trait_directness.pdf\t2.10\t2.44" not in size_spec:
+    if "Fig2D_pip_architecture_by_trait_directness.pdf\t1.85\t2.10" not in size_spec:
         errors.append("Figure 2D is absent from the panel-size index")
 
     if errors:

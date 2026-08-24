@@ -1,0 +1,64 @@
+{
+  "audit_scope": {
+    "artifact_bundle_id": "scfoundation",
+    "development_encoder_overlap": "all_registered_cell_state_sources_retained_as_unknown",
+    "registry_model_id": "scfoundation_heads",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "registered_scfoundation_base_and_heads": {
+      "checkpoint_identity": "biomap-research/scFoundation@397631c495eddf9ad6644fc00c6ea8139e651245+sharepoint-folder:IgBlEJ72TBE5Q76AmgXbgjXiAR69fzcrgzqgUYdSThPLrqk",
+      "checkpoint_object_status": "unresolved_mutable_folder_not_an_immutable_weight_object",
+      "corpus": "more than 50 million human single-cell transcriptomes; no checkpoint-bound accession, donor, retained-cell, or release-alias roster is available",
+      "exposure_state": "unknown",
+      "head_status": "base_and_task_head_objects_are_not_separately_inventoried_or_hashed",
+      "sha256": "UNRESOLVED"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "5be876f9cffb14588af89891370ed09cb985fa7a81ec9da05bc719feed2673aa"
+  },
+  "interpretation": "Neither the 2024 paper date nor the mutable SharePoint folder proves which base or task-head bytes are selected or when their training data were frozen. All development sources and project-sealed GSE289173 therefore remain exposure-unknown. The custom model license independently prevents an open champion and redistribution of the base or derived heads.",
+  "preprocessing_and_evaluation_findings": [
+    {
+      "benchmark_action": "freeze_before_screening",
+      "finding": "The official embedding path exposes multiple resolution and pooling choices, including all and max pooling. Layer, pooling, and read-depth-token semantics are hyperparameters, not post hoc choices."
+    },
+    {
+      "benchmark_action": "validate_with_assay_native_fixture",
+      "finding": "The native input is a fixed 19,264-gene single-cell vector with model-specific count normalization and two read-depth tokens. Bulk RNA and normalization of unknown provenance are not equivalent inputs."
+    },
+    {
+      "benchmark_action": "preserve_missingness_outside_native_tensor",
+      "finding": "The official alignment pads genes absent from the incoming matrix with zero. The benchmark must distinguish assayed biological zero from structurally unassayed genes and reject inputs whose coverage contract is unsupported."
+    },
+    {
+      "benchmark_action": "prohibit_direct_untrusted_load",
+      "finding": "The pinned official loader uses unrestricted torch.load before moving the model to CUDA. Exact bytes require isolated inspection and tensor-only conversion before runtime."
+    }
+  ],
+  "published_downstream_components": {
+    "cell_annotation": "A released annotation recipe or head is a task-specific fitted component. It cannot be treated as the base representation or used without its own data, fold, seed, license, and exposure record.",
+    "perturbation_GEARS": "The repository includes a GEARS integration, but this separately trained perturbation system is not admitted by the scfoundation_heads cell-state registry entry."
+  },
+  "remaining_blockers": [
+    "Inventory the official SharePoint folder and freeze one exact 100M base checkpoint with immutable object identity, byte size, timestamp, and SHA-256.",
+    "Inventory every task head separately and bind it to its base, configuration, training data, folds, seeds, and terms.",
+    "Obtain a checkpoint-bound accession, release-alias, donor, and retained-cell corpus inventory, including any continual or downstream training sources.",
+    "Freeze the exact 19,264-gene order, count normalization, read-depth tokens, selected layer, and pooling behavior.",
+    "Inspect the Torch object in a disposable no-network environment, convert recognized tensors to a non-executable form, and freeze keys, shapes, dtypes, and numeric parity.",
+    "Validate import, load, deterministic forward, memory, and numeric tolerance on the intended L40S runtime.",
+    "Do not schedule adaptation until the exact object and terms are accepted. If approved for internal noncommercial research, keep adapted weights and heads restricted and do not redistribute them."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_due_unknown_exposure_unresolved_checkpoint_identity_and_restrictive_model_terms",
+  "task_disposition": {
+    "cell_state_mapping": "admission_blocked_restricted_comparator",
+    "conditional_masld_model": "not_admitted_for_an_open_model; any_project_internal_noncommercial_use_requires_a_separate_written_derivative_and_release_determination",
+    "perturbation_response": "not_admitted_without_a_separate_exact_GEARS_head_manifest",
+    "released_open_champion": "ineligible"
+  },
+  "verified_date": "2026-08-22"
+}

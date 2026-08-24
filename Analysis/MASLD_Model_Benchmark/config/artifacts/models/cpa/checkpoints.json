@@ -1,0 +1,61 @@
+{
+  "architecture_contract": {
+    "input": "single_cell_expression_plus_categorical_perturbation_dose_and_optional_categorical_covariates",
+    "native_output": "predicted_absolute_expression_mean_and_variance_on_the_selected_Gaussian_NB_or_ZINB_scale",
+    "prediction_mechanism": "basal_expression_latent_plus_learned_dose_response_perturbation_embeddings_plus_covariate_embeddings_with_adversarial_disentanglement",
+    "published_task": "compositional_prediction_for_seen_atomic_perturbations_in_unseen_dose_covariate_or_combination_contexts"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "implementation_type": "train_locally",
+    "registered_identity": "theislab/cpa@fbd7c0250edc23eff003a10c99655579c53afd63",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "input_and_fit_contract": {
+    "control_rule": "control_group_is_an_explicit_category_and_query_expression_must_come_from_controls_in_an_allowed_fold_and_context",
+    "deg_rule": "do_not_register_or_use_a_deg_uns_key_computed_from_full_data; DE endpoints are evaluator_only_and_training_fold_specific",
+    "feature_and_scale_rule": "freeze_gene_order_matrix_layer_count_or_log_scale_and_reconstruction_likelihood_before_training",
+    "replication_rule": "cells_train_the_model_but_all_benchmark_scoring_and_bootstrap_use_experimental_replicate_or_animal_pseudobulk",
+    "split_rule": "construct_grouped_outer_and_inner_splits_before_setup_anndata; do_not_allow_random_cell_splitting"
+  },
+  "query_contract": {
+    "current_task_result": "deferred_incompatible_with_wholly_unseen_perturbation",
+    "finding": "setup_anndata creates integer embeddings for categorical perturbation atoms. The released categorical path can compose atoms learned in training, but it has no representation for a wholly unseen target locus or guide family.",
+    "identity_leakage_rule": "build_the_perturbation_vocabulary_from_outer_training_targets_only_and_reject_unknown_test_atoms; the upstream full_AnnData setup can enumerate OOD categories and would leave a random untrained embedding",
+    "molecular_embedding_scope": "The paper discusses extensible molecular representations for unseen drugs, but no prespecified validated noncoding_locus_or_guide_sequence_encoder exists in this frozen genetic task.",
+    "valid_future_use": "held_combination_dose_or_context_task_where_every_atomic_perturbation_was_observed_in_training"
+  },
+  "repository": "theislab/cpa",
+  "repository_revision": "fbd7c0250edc23eff003a10c99655579c53afd63",
+  "runtime_contract": {
+    "declared_package_version": "0.8.8",
+    "declared_python": ">=3.9,<3.11",
+    "key_requirements": ["scvi-tools>=0.20.3,<1.0", "anndata>=0.9,<0.10", "torch>1.8,<=2.0.1", "numpy>=1.22.4,<1.24", "scipy>=1.12,<1.13", "jax>=0.4.16,<0.4.24"],
+    "runtime_status": "UNRESOLVED_legacy_narrow_stack",
+    "required_probe": "isolated_Python3.10_L40S_import_fit_predict_save_resume_and_distribution_parameter_probe"
+  },
+  "safe_loading_contract": {
+    "canonical_external_weight": false,
+    "project_rule": "save_and_load_only_project_created_state_dicts_and_manifested_scvi_artifacts_after_runtime_probe"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository and Molecular Systems Biology paper were inspected on 2026-08-22; no package, weight, or data artifact was downloaded or loaded.",
+  "source_records": [
+    {"identity": "CPA:LICENSE", "sha256": "9eaad59a80a87d0a3b2029b10584a1e3e3d0aa83a8b3dfb71acf43b3a2918ef3", "size_bytes": 1537},
+    {"identity": "CPA:README.md", "sha256": "8d4b8bf455ab08d365b8c967924d7250576c73724c8b1656a7463a4f990f4514", "size_bytes": 8886},
+    {"identity": "CPA:pyproject.toml", "sha256": "cf4cf935043725f276cf265fa5277730cf9fc50cbb2b82ecb2f4f2214f1af3cd", "size_bytes": 1438},
+    {"identity": "CPA:cpa/_api.py", "sha256": "56d50507ca7e043398d1d53e6bb23794143b8715227cd2280e097d245e9e63e7", "size_bytes": 44350},
+    {"identity": "CPA:cpa/_data.py", "sha256": "340552d355ed4f14f674ca88c5ce4dddc549d5f6d78d65ed46d46622fa30eac9", "size_bytes": 2296},
+    {"identity": "CPA:cpa/_model.py", "sha256": "eb45cd988b9b54d7736bb3aba21d8935726e12d3b477ff129bf897921b5d95cc", "size_bytes": 38493},
+    {"identity": "CPA:cpa/_module.py", "sha256": "4cb563a51c0cead37a2c03a72323e0b1e7310929e7ebd1a2a0bed7d79ac2358a", "size_bytes": 19354},
+    {"identity": "CPA:cpa/_task.py", "sha256": "95c4563296b10a50814ed7a4f28b7de7248caef3c518110d70c119a324b9d225", "size_bytes": 27718},
+    {"identity": "CPA:cpa/_metrics.py", "sha256": "90103d486344d5b0778256d14061688b664b2a39aab409c4cacad1cefd2a3c1a", "size_bytes": 2691}
+  ],
+  "terms_audit": {
+    "license_file": "BSD-3-Clause",
+    "package_metadata_license": "MIT",
+    "result": "blocked_license_metadata_conflict",
+    "rule": "Treat the repository LICENSE as controlling for internal audit, but resolve the contradictory package metadata before an open champion release."
+  }
+}

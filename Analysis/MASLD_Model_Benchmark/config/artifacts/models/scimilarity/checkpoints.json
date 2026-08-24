@@ -1,0 +1,52 @@
+{
+  "architecture_contract": {
+    "hidden_dimensions": [1024, 1024, 1024],
+    "hidden_dropout": 0.5,
+    "input_dimension": 28231,
+    "input_dropout": 0.4,
+    "latent_dimension": 128,
+    "output_normalization": "unit_L2_hypersphere"
+  },
+  "archive": {
+    "name": "model_v1.1.tar.gz",
+    "record_doi": "10.5281/zenodo.10685499",
+    "sha256": "UNRESOLVED",
+    "size_bytes": 30310810843,
+    "source_md5": "546251b7c435f3b1dbe38e2e420ad57f",
+    "url": "https://zenodo.org/api/records/10685499/files/model_v1.1.tar.gz/content"
+  },
+  "code_license": "Apache-2.0",
+  "input_contract": {
+    "alignment": "exact_archive_gene_order_with_zero_fill_for_unobserved_genes",
+    "canonical_matrix": "raw_unselected_nonnegative_single_cell_or_single_nucleus_UMI_counts",
+    "duplicate_gene_symbols": "sum_before_alignment",
+    "feature_identifier": "gene_symbol",
+    "minimum_gene_overlap": 5000,
+    "normalization": "per_cell_total_10000_then_natural_log1p",
+    "training_assay": "10x_Chromium_scRNA_or_snRNA",
+    "zero_fill_warning": "Genes absent from the assay are structural missingness before alignment, not observed biological zeros. The adapter records overlap and the aligned-zero mask even though the released network requires a dense 28,231-gene vector."
+  },
+  "repository": "Genentech/scimilarity",
+  "repository_revision": "3ce3ec81e122a115eb3e667706725120f7ee252d",
+  "release": "model_v1.1",
+  "safe_loading_contract": {
+    "archive_is_not_extracted_during_acquisition": true,
+    "released_loader_uses_weights_only_false": true,
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_traversal_safe_archive_staging": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The pinned official repository, Nature Methods/architecture text, complete Supplementary Table 1, and Zenodo record 10685499 were queried on 2026-08-22. The 30.3-GB archive body was not downloaded, extracted, or deserialized, so SHA-256, internal paths, layer-size files, and exact gene order remain unresolved.",
+  "source_records": [
+    {"identity": "scimilarity:LICENSE", "sha256": "938fb579905acc3f45d10f20cd18da74f2e754300220f9669d0e5c5698f85cac", "size_bytes": 556},
+    {"identity": "scimilarity:README.rst", "sha256": "8f546d0cd763fcefb966d7694902af859897549f3cc5c37a8c9aea02699ea9f1", "size_bytes": 1853},
+    {"identity": "scimilarity:pyproject.toml", "sha256": "6c1b8ded44241f8225197eadc2d67a1677fe5428f3a039844a620b7735f3407b", "size_bytes": 355},
+    {"identity": "scimilarity:src/scimilarity/utils.py", "sha256": "77247fcfcea374ce867ed594ba2f08a5af61760fdb47402e63cb6fde8e80d24c", "size_bytes": 44343},
+    {"identity": "scimilarity:src/scimilarity/nn_models.py", "sha256": "5b3edf1a57ae653202d9655e049b516ec31cfa14e81daaab7c96b647fec6c110", "size_bytes": 6240},
+    {"identity": "scimilarity:src/scimilarity/cell_embedding.py", "sha256": "1ace7cbe780057630346a2e57b1438276ce7b7d274acba2acc836b14d8c67c81", "size_bytes": 5447},
+    {"identity": "Zenodo_10685499_API_response_queried_2026-08-22", "sha256": "1b0553fcaa905a0b29047b83d438f389ec6694b05b48fb9b6c8b5c5c4904049a", "size_bytes": 5335},
+    {"identity": "Heimberg_et_al_2024_Supplementary_Table_1", "sha256": "3363c906dd5368dcc1f740fb7ec872d34b0875425e1c68db3cb6406a2c847792", "size_bytes": 329148, "url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-024-08411-y/MediaObjects/41586_2024_8411_MOESM3_ESM.xlsx"}
+  ],
+  "weight_content_downloaded": false,
+  "weight_license": "CC-BY-SA-4.0"
+}

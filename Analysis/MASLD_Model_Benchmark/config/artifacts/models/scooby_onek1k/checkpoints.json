@@ -1,0 +1,116 @@
+{
+  "admission_status": "BLOCKED_PENDING_EMBEDDING_ENCODER_CODE_BINDING_RUNTIME_AND_INHERITED_TERMS",
+  "architecture_contract": {
+    "base_model": "Borzoi replicate 0 converted to PyTorch, with the original species heads removed",
+    "cell_decoder": "A 10-dimensional cell embedding is mapped by an MLP to cell-specific 1x1 convolution weights and biases over 1,920-dimensional sequence embeddings.",
+    "decoder_tracks": 2,
+    "input_length_bp": 524288,
+    "lora": "Rank-8 LoRA was trained across convolutional layers and transformer query, value and MLP projections, then merged into the released full checkpoint.",
+    "output_central_bins": 6144,
+    "output_length_bp": 196608,
+    "output_resolution_bp": 32,
+    "parameter_count_from_hugging_face_safetensors_metadata": 191267298,
+    "sequence_embedding_dim": 1920,
+    "transform_borzoi_embedding": true
+  },
+  "checkpoint": {
+    "created": "2025-05-26T13:02:48Z",
+    "filename": "model.safetensors",
+    "format": "safetensors_F32",
+    "hugging_face_repository": "lauradmartens/onek1k-scooby",
+    "revision": "dd7a2b7be54c906b43de4bc0159b169caaf057c5",
+    "sha256": "2ae335c651182040462d965bb879118be40a6cb174550a3686fb10b04a74f7cb",
+    "size_bytes": 765092032,
+    "weight_downloaded": false
+  },
+  "code_identity": {
+    "checkpoint_bound_revision": "UNRESOLVED",
+    "frozen_adapter_revision": "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471",
+    "frozen_adapter_revision_date": "2026-08-10",
+    "finding": "The nearest pre-upload source revision is 81e5f89fc378c79c2403632d0392e46e2300927f from 2025-05-22. Its scooby/modeling/scooby.py is byte-identical to the frozen adapter revision, but data-loader code changed after the weight release, including a July 2025 sequence-window fix. The Hugging Face commit does not bind a scooby source revision.",
+    "release_era_model_sha256": "6b003b4cad458a2a270e4870b8bd159cd051bb368c7703170af5231fa86533d8"
+  },
+  "held_donor_contract": {
+    "published_evidence": "The paper holds genomic fold3/fold4 sequences and demonstrates projection of a withheld but closely related normoblast state in the NeurIPS system. It explicitly does not expect transfer to drastically different cell types.",
+    "status": "NO_PUBLISHED_HELD_DONOR_OR_CROSS_STUDY_INDUCTIVE_VALIDATION_FOR_ONEK1K",
+    "benchmark_rule": "Do not call the frozen model donor-inductive. A MASLD adaptation must train every embedding model, latent bridge, normalization step and decoder update inside outer training donors and project held donors without ATAC or labels."
+  },
+  "input_contract": {
+    "cell_context": "10-dimensional scPoli latent trained on OneK1K RNA counts, using donor sample as condition and cell_label as supervised cell-type key after excluding genes overlapping Borzoi validation/test regions.",
+    "cell_context_encoder_status": "NOT_BUNDLED_IN_THE_HUGGING_FACE_CHECKPOINT; the released object consumes latent vectors, not raw RNA counts.",
+    "domain": "PBMC immune cells from OneK1K; platelets and erythrocytes were removed.",
+    "sequence": "One-hot hg38 DNA, 524288 bp.",
+    "warning": "A newly trained 10-dimensional scPoli or PCA space is not coordinate-compatible with the checkpoint decoder. Arbitrary MASLD liver embeddings cannot be supplied."
+  },
+  "license_audit": {
+    "code": "MIT",
+    "inherited_base": "The checkpoint contains a fine-tuned and merged conversion of Borzoi replicate 0. johahi/borzoi-replicate-0 declares CC-BY-4.0, while the canonical Calico GCS weight object has no explicit weight terms. A converter's card does not resolve upstream authority.",
+    "open_champion_eligibility": "INELIGIBLE_UNTIL_INHERITED_BORZOI_WEIGHT_AUTHORITY_AND_DERIVATIVE_REDISTRIBUTION_ARE_CLEARED",
+    "weight_card": "MIT is declared in the Hugging Face repository front matter, but the card contains no provenance or inherited-license explanation.",
+    "weight_status": "DECLARED_MIT_WITH_UNRESOLVED_INHERITED_BORZOI_TERMS"
+  },
+  "native_variant_scoring": {
+    "paper_readout": "For PIP>=0.9 SNVs, center REF and ALT windows on the eSNP, sum natural-scale stranded RNA predictions over target-gene exons per cell, aggregate cells within cell type and compute log2((ALT+1)/(REF+1)). Reverse-complement predictions are restored and averaged.",
+    "scope": "The checkpoint was evaluated on OneK1K cell-type eQTLs and GTEx whole-blood eQTLs. This fixes a blood-domain native comparator, not a MASLD context or signed-effect calibration.",
+    "warning": "The paper reports underestimation for distal eQTLs. Sequence context does not supply a liver cell-state embedding or donor-specific trans environment."
+  },
+  "output_contract": {
+    "activation": "softplus",
+    "profiles": ["rna_plus", "rna_minus"],
+    "rna_inverse_transform": "Undo the Borzoi-like single-cell squashed scale with clip_soft=5 before natural-scale count aggregation.",
+    "status": "RNA_ONLY; this checkpoint has no ATAC output head."
+  },
+  "pretraining_and_adaptation": {
+    "base_corpora": "Inherited Borzoi human and mouse reference sequence plus its functional-genomics target corpus.",
+    "cell_dataset": "OneK1K scRNA-seq, SRP359840 and CELLxGENE collection dde06e0f-ab3b-46be-96a2-a8082383c4a1.",
+    "cell_scale": "More than 1 million PBMCs from 982 donors.",
+    "eQTL_labels": "OneK1K and GTEx eQTL/fine-mapping outcomes were used for downstream evaluation, not declared profile-training targets.",
+    "genomic_split": "Borzoi fold3 test and fold4 validation; genes overlapping validation/test regions were removed before scPoli embedding construction.",
+    "objective": "single-cell stranded RNA coverage profile prediction",
+    "training_unit": "Cells are profile targets, not biological replicates; the publication evaluation is sequence-held rather than donor-held."
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "native_annotation": "GENCODE v32",
+    "native_build": "Cell Ranger refdata-gex-GRCh38-2020-A plus a released-but-unhashed genome_human.fa and Borzoi sequence BED",
+    "rule": "Require primary-contig sequence, coordinate, strand, exon aggregation and v32-to-v49 fixtures. Preserve a 524288-bp genomic holdout buffer. The July 2025 data-loader window fix must be parity-tested against weight-era inference."
+  },
+  "release": {
+    "article_doi": "10.1038/s41592-025-02854-5",
+    "article_publication_date": "2025-10-22",
+    "code_repository": "https://github.com/gagneurlab/scooby",
+    "reproducibility_repository": "https://github.com/gagneurlab/scooby_reproducibility",
+    "training_data_doi": "10.5281/zenodo.15517072"
+  },
+  "runtime_contract": {
+    "checkpoint_config_transformers": "4.45.2",
+    "current_setup": "Python tested at 3.9; accelerate>=0.24.1; enformer-pytorch>=0.8.10; borzoi-pytorch>=0.4.0; multiple unbounded packages; peft from an unpinned Git URL.",
+    "paper_runtime": "PyTorch 2.1.0, adapted peft 0.10.1, Borzoi-PyTorch described as 0.0.2, mixed precision on A40 GPUs.",
+    "status": "UNRESOLVED_AND_VERSION_DIVERGENT",
+    "warning": "Freeze the exact borzoi-pytorch, peft, transformers, enformer-pytorch, torch and CUDA revisions. Current package floors do not reconstruct the training environment."
+  },
+  "safe_loading_contract": {
+    "format_risk": "Safetensors is non-pickle, but header size, tensor names, shapes, dtypes and total byte spans must still be validated before allocation.",
+    "loading_rule": "After campaign approval, download by immutable Hugging Face revision, verify the registered SHA-256, inspect the safetensors header in an isolated no-network runtime and require zero missing, unexpected or mismatched tensors with constructor arguments cell_emb_dim=10, n_tracks=2 and use_transform_borzoi_emb=true.",
+    "numeric_parity": "Reproduce sequence crop, cell-decoder outputs, squashed-scale inversion, exon aggregation, strand restoration, reverse-complement averaging and REF/ALT scores on fixed fixtures.",
+    "weight_downloaded": false
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods article, immutable Hugging Face metadata/config, gagneurlab/scooby at dbfe6cd150d018d46a6d24ffa0406d7f2e89b471, release-era git history, gagneurlab/scooby_reproducibility at 8f4eefbecf15e2e2a3cef433893086bc18505c40 and Zenodo metadata were queried on 2026-08-22. No model, embedding, training-data archive, package or reference was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "gagneurlab/scooby@dbfe6cd:LICENSE", "sha256": "0a09080986ba1b09bc670290c172fc831a1f73dff1f0c6ab23039b79f80d8ed3", "size_bytes": 1068},
+    {"identity": "gagneurlab/scooby@dbfe6cd:setup.py", "sha256": "f6065c400a68ca64553c60dd170de24deffcf6a1afdc475c9b7b1cbfd956b034", "size_bytes": 704},
+    {"identity": "gagneurlab/scooby@dbfe6cd:scooby/modeling/scooby.py", "sha256": "6b003b4cad458a2a270e4870b8bd159cd051bb368c7703170af5231fa86533d8", "size_bytes": 9374},
+    {"identity": "gagneurlab/scooby_reproducibility@8f4eefb:scripts/training_onek1k/config_rna_only.yaml", "sha256": "0c60bece96b2d7f675a339c3bf7a80c74c538e044f3188dafa90b2144950ba51", "size_bytes": 1011},
+    {"identity": "lauradmartens/onek1k-scooby@dd7a2b7:config.json", "sha256": "e4802fb5c2d5c74a4f3fc852436c3cb5a5f41ded5c80a4e2b1dcc43a0d3f47d9", "size_bytes": 405},
+    {"identity": "lauradmartens/onek1k-scooby@dd7a2b7:README.md", "sha256": "d8d7a46d41a1a37fe4f0a5f637bf55c649310185329127d8a2204632e480be17", "size_bytes": 24},
+    {"identity": "lauradmartens/onek1k-scooby@dd7a2b7:model.safetensors", "sha256": "2ae335c651182040462d965bb879118be40a6cb174550a3686fb10b04a74f7cb", "size_bytes": 765092032}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported; scooby consumes rather than learns the supplied checkpoint-specific cell embedding at inference",
+    "rna_conditioned_atac": "not_supported; the OneK1K checkpoint emits RNA only",
+    "unified_model": "blood-domain RNA/variant negative control only until an inductive embedding path and inherited terms are resolved",
+    "variant_to_regulation": "blood-domain downstream-demo comparator. No frozen MASLD/liver cell context is available, so it cannot earn the GSE289173 sealed champion claim without a development-only liver adaptation."
+  },
+  "weight_license": "MIT_DECLARED_WITH_UNRESOLVED_INHERITED_BORZOI_AUTHORITY"
+}

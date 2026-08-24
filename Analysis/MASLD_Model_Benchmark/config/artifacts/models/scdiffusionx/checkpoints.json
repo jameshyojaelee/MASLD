@@ -1,0 +1,100 @@
+{
+  "architecture_contract": {
+    "autoencoder": "modality-specific MLP encoders and decoders; released medium defaults use RNA dimensions [512, 300, 100] and ATAC dimensions [1024, 512, 100] after the input dimension",
+    "diffusion_mapping": {"audio": "ATAC latent", "video": "RNA latent"},
+    "method": "paired latent diffusion with a dual-cross-attention multimodal backbone and modality-specific autoencoder",
+    "native_atac_target": "Bernoulli accessibility probabilities when is_binarized=true; Poisson means otherwise",
+    "native_rna_target": "negative-binomial raw UMI counts",
+    "published_translation": "encode the observed source modality, replace its noisy latent at each reverse DDPM step with its forward-diffused value, sample the target latent, undo training-frozen latent scaling, and decode through the target modality decoder",
+    "training_requirement": "The released autoencoder and diffusion loaders index RNA and ATAC by the same row without asserting ordered observation identity. Exact same-cell or same-nucleus row validation is mandatory before training."
+  },
+  "code_license": "MIXED_ROOT_MIT_AND_NESTED_SCDIFFUSIONX_BSD-3-CLAUSE",
+  "implementation": {
+    "checkpoint_policy": "Do not admit the MiniAtlas checkpoint. Train one project autoencoder and unconditional diffusion state-dict bundle inside each outer donor fold and seed using validated outer-training same-nucleus pairs only.",
+    "implementation_type": "train_locally_from_exact_source_commit_with_direct_tensor_adapter",
+    "primary_paper": "https://doi.org/10.1038/s41467-026-71744-x",
+    "repository": "EperLuo/scDiffusion-X",
+    "repository_revision": "d60d928b635ab7a52ace030a641efd02137c193f",
+    "repository_revision_date": "2026-05-19T15:56:51Z",
+    "repository_tag": "none; exact commit is one commit after tag Latest at 7d1342e4bc3b76f3449dc0ef292f9e4ce877c7f0",
+    "upstream_checkpoint_catalog": {
+      "record": "https://doi.org/10.6084/m9.figshare.28582061.v3",
+      "record_license": "CC-BY-4.0",
+      "status": "not_admitted_not_downloaded_not_loaded",
+      "weights": [
+        {"file": "last.ckpt", "md5": "e16dec7166806010c0fb1e81a3480dc1", "size_bytes": 4540020204},
+        {"file": "model1000000.pt", "md5": "0c9bbf710694fda039297acb8a678cf4", "size_bytes": 22054268},
+        {"file": "ema_0.9999_1000000.pt", "md5": "e982cc66f6eb2a484fcdda5180c9124b", "size_bytes": 22054268},
+        {"file": "norm_factor.npz", "md5": "512b63bdcb621873d2535570780ac372", "size_bytes": 524}
+      ]
+    }
+  },
+  "inductive_inference_contract": {
+    "allowed_wrapper": "Align raw held RNA counts to frozen training genes; call only the frozen RNA MLP encoder in eval/no-grad mode; divide by the outer-training rna_std factor; condition a freshly initialized unconditional DDPM replacement loop on that RNA latent; multiply the generated ATAC latent by frozen atac_std; call only the frozen ATAC decoder; return sigmoid peak probabilities.",
+    "cell_embedding": "Use the deterministic frozen RNA autoencoder latent with the outer-training scaling recorded in RunSpec and an identical common-lane head.",
+    "frozen_raw_rna_to_atac_path": true,
+    "forbidden": "Do not use the released high-level translation script on held or sealed data. Do not read or construct held ATAC, fit Leiden or any query label encoder, use donor or target labels, update normalization factors, call target-library scaling, or fit any held parameter.",
+    "sampler_rule": "Use conditional DDPM only. In the exact translation script, the DPM-Solver and DPM-Solver++ branches create random RNA and ATAC latents and do not pass the source-latent model_kwargs to the solver, so those branches are not translation paths.",
+    "unconditional_rule": "Train the diffusion backbone without class conditioning. The released script is not a valid unconditional entry point because classes_all is referenced outside the class_cond block and n_cat is hard-coded to 36.",
+    "upstream_api_audit": "The released script reads both RNA and ATAC, encodes both, fits a LabelEncoder on query labels, loads query-derived conditions, mutates model_kwargs by pop, and saves latent rather than assay-native predictions. Lower-level encoder, conditional DDPM, and decoder modules permit a source-only direct adapter."
+  },
+  "input_contract": {
+    "atac_training_input": "binary observed accessibility on a GRCh38.p14 outer-training-only peak inventory for the admitted Bernoulli lane",
+    "feature_alignment": "Frozen ordered GENCODE v49 gene IDs and GRCh38.p14 0-based half-open peaks. Held donors cannot affect feature selection, order, filtering, latent dimensions, or output metadata.",
+    "normalization": "The exact binarized multimodal loader feeds raw RNA and binary ATAC directly as X_norm. The diffusion loader reads .X rather than X_counts; the project tensor adapter must make the raw-count/binary representation explicit and identical across both stages.",
+    "rna_query_input": "raw nonnegative integer UMI counts aligned to the frozen training gene order",
+    "supported_training_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_training_topologies": ["same_sample_different_aliquot_as_cell_pair", "same_study_unpaired_as_cell_pair", "same_donor_different_tissue_as_cell_pair"]
+  },
+  "missingness_contract": {
+    "direct_adapter": "ATAC is absent for an RNA-only query. The adapter constructs only an RNA source tensor and a random target latent; it never constructs a zero or observed ATAC feature tensor.",
+    "project_mapping": "Retain all eight project missingness states outside scDiffusion-X. Only observed paired assays enter autoencoder and diffusion training tensors.",
+    "upstream_limitation": "The released translation script assumes a MuData object containing both modality matrices and has no explicit missing-modality mask."
+  },
+  "output_contract": {
+    "cell_embedding": "frozen RNA MLP latent, with the exact pre- or post-rna_std convention frozen before screening",
+    "primary_atac_output": "sigmoid-valued Bernoulli accessibility probability for every frozen peak after target-latent decoding; no target ATAC size factor is required in the binarized lane",
+    "profile_scoring": "Bernoulli probabilities are assay-native for binary cross-entropy and rank metrics. If TaskSpec requires a multinomial profile, row-normalize nonnegative probabilities using a training-frozen rule applied identically to baselines; no held-ATAC calibration is allowed.",
+    "profile_validity": "The lower-level frozen modules can emit a held-RNA-to-ATAC peak profile without observed target ATAC, target placeholders, query labels, or held fitting. This remains unverified until a direct adapter and fixed no-target fixture pass.",
+    "stochasticity": "Freeze diffusion schedule, sampler, class_scale, clip rule, training seeds, inference seeds, and number of translation draws. Average a prespecified number of draws per model seed; randomness and seeds are not biological replicates.",
+    "training_latent_scale": "rna_std and atac_std are each the modality latent standard deviation averaged across dimensions and multiplied by 10 in the release. Recompute them on outer-training pairs only and bind them to every checkpoint."
+  },
+  "runtime_contract": {
+    "declared_python": "3.8",
+    "dependency_conflict": "Root requirements pins scvi-tools==0.12.0, while nested pyproject allows scvi-tools<=1.0.0. Both require pytorch_lightning<1.9.0 and torch>=2.1.2 without a complete immutable solver lock.",
+    "environment_status": "UNRESOLVED_MIXED_LICENSE_DEPENDENCY_LOCK_L40S_IMPORT_AUTOENCODER_AND_DIFFUSION_FORWARD_BACKWARD_CONDITIONAL_DDPM_STATE_DICT_RESUME_DETERMINISM_MEMORY_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED",
+    "memory_warning": "Released loaders densify complete modality matrices with todense or toarray, and the published MiniAtlas Lightning checkpoint is 4.54 GB. A bounded sparse batching adapter and measured L40S memory envelope are mandatory."
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "upstream_risk": "The translation path loads Lightning and diffusion checkpoints through unrestricted torch.load; the repository also includes built wheel and source archives that were not inspected or installed as packages.",
+    "required_adapter": "Reconstruct the audited architecture and restore project-controlled tensor state only, validating exact keys, shapes, dtypes, configuration, norm factors, genes, peaks, fold, seed, sampler, and SHA-256 receipts. Never deserialize Figshare weights."
+  },
+  "scheduling_disposition": "RETAIN_AS_DIRECT_PROFILE_CANDIDATE_BUT_BLOCK_SMOKE_UNTIL_LICENSE_REGISTRY_DIRECT_RNA_ONLY_ADAPTER_PAIRING_PROFILE_STATE_DICT_RUNTIME_AND_QUERY_INVARIANCE_GATES_PASS",
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact scDiffusion-X commit, root MIT license, nested BSD-3-Clause license, package metadata, configs, translation entry point, autoencoder, paired loader, conditional DDPM implementation, evaluation notebook, primary paper, and Figshare v3 metadata were inspected on 2026-08-22. No package, dependency, checkpoint, weight, dataset, archive, built distribution, serialized object, model code, or test was downloaded, installed, loaded, trained, or executed.",
+  "source_records": [
+    {"identity": "scDiffusion-X:LICENSE", "sha256": "93dd8cd0d5b21a2e6ad33d129df06cab6ad2ceb58fda201ee6c8394a1959b919", "size_bytes": 1066},
+    {"identity": "scDiffusion-X:README.md", "sha256": "02d099da9cb6f91e4bd0bfc39a55fcd19763aab983cb6f670392476ba52a3a5a", "size_bytes": 4726},
+    {"identity": "scDiffusion-X:requirements.txt", "sha256": "bbed2dd6b1ce4077503d4740afac28662100a0b68f4bff02808d9c36cf200488", "size_bytes": 393},
+    {"identity": "scDiffusion-X:scdiffusionX/LICENSE", "sha256": "da5604a7a0f36f3a8c8df5afb59a2d05ddc9fd65e673702ca2befaf79b0a39f3", "size_bytes": 1495},
+    {"identity": "scDiffusion-X:scdiffusionX/pyproject.toml", "sha256": "c92227db40c4cd82a7f9e66d646fee1f67688d147b3b8e3d02202a54c81516c3", "size_bytes": 1150},
+    {"identity": "scDiffusion-X:script/training_autoencoder/configs/encoder/encoder_multimodal.yaml", "sha256": "9ccd2f294ca93d555941791c6cae1d1157ee1a88ad22dbc798eb696a2f6b0d49", "size_bytes": 546},
+    {"identity": "scDiffusion-X:script/training_autoencoder/configs/dataset/openproblem.yaml", "sha256": "3fe9b5b65a599d52cfe6c95b3742a576c4e3adaee74d8022205d480651ccd0cc", "size_bytes": 575},
+    {"identity": "scDiffusion-X:scdiffusionX/src/scdiffusionX/Autoencoder/data/scrnaseq_loader.py", "sha256": "1b3c40d517b2ffc679dc9884e90e6db02cf78d0819b4cdf6c48ea5912c5becb9", "size_bytes": 6458},
+    {"identity": "scDiffusion-X:scdiffusionX/src/scdiffusionX/Autoencoder/models/base/encoder_model.py", "sha256": "3a263cca68ba7b300fbc953215ddd6f07e6e9c8f9b4620737546f5b434b9bd05", "size_bytes": 12241},
+    {"identity": "scDiffusion-X:scdiffusionX/src/scdiffusionX/DiffusionBackbone/multimodal_datasets.py", "sha256": "8dcde61ea22483b4bb08ca5ca0d39a4bbd9f5672ee7a7f1208e82e7e71b07223", "size_bytes": 6964},
+    {"identity": "scDiffusion-X:scdiffusionX/src/scdiffusionX/DiffusionBackbone/multimodal_gaussian_diffusion.py", "sha256": "b8e1e55df7c5b4cdecdefd0b124cb1b5ae3c5c9e446f12ab3b6b6af19982b448", "size_bytes": 50911},
+    {"identity": "scDiffusion-X:scdiffusionX/src/scdiffusionX/DiffusionBackbone/dist_util.py", "sha256": "006a433e78c00491097a1ab35d7b136a200b14b9dc50b6d39e47626ac3fd679c", "size_bytes": 2351},
+    {"identity": "scDiffusion-X:script/training_diffusion/py_scripts/multimodal_translation.py", "sha256": "6d7cec9002cadd115a3da99e3ad5f2a62d7b0c6c370b33206277d10eda993186", "size_bytes": 10320},
+    {"identity": "scDiffusion-X:evaluation_script/translation_multi_diff.ipynb", "sha256": "9256eeb1ecb03eae4f7b16ab75997baee5a3f7b60bc9d47ffdaa032582bd37e5", "size_bytes": 638343}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Eligible in principle through a locally trained frozen RNA MLP encoder and identical common head after license, direct-query, pairing, state, runtime, and leakage fixtures pass.",
+    "rna_conditioned_atac": "Direct-profile candidate in retrospective development through unconditional conditional-DDPM translation and the Bernoulli ATAC decoder. No sealed ATAC champion is possible with GSE289173 alone.",
+    "variant_to_regulation": "Ineligible because scDiffusion-X has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_FITTED_STATE_DICT; PUBLISHED_FIGSHARE_BUNDLE_CC-BY-4.0_NOT_ADMITTED"
+}

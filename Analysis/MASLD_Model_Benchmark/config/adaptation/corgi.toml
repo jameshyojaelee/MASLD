@@ -1,0 +1,66 @@
+schema_version = "masld-bench-adaptation-v1"
+adaptation_id = "corgi_regular"
+model_id = "corgi_regular"
+sequence_window_bp = 524288
+
+ladder = ["zero_shot", "new_assay_head", "film_plus_head", "upper_transformer_blocks_plus_film_head", "lora_adapters_plus_head", "full_finetune"]
+
+[trans_input]
+released_inference_contract = "order_2891_trans_regulators_then_rank_quantile_normalize_to_packaged_tf_reference"
+atlas_umi_equivalent_assumed = false
+mapper_fit_scope = "inner_training_partition_only"
+candidate_mappers = ["released_rank_quantile_from_counts", "length_adjusted_tpm_then_released_rank_quantile", "learned_count_to_rank_context_encoder"]
+redundant_mappers_excluded = ["cpm_before_released_rank_quantile", "log_cpm_before_released_rank_quantile", "custom_monotone_quantile_before_released_rank_quantile"]
+redundancy_reason = "Strictly monotone transforms preserve within-cell gene ranks and therefore produce the same released rank-quantile vector; they are not independent adaptation arms."
+context_width = 2891
+context_gene_order_hgnc_sha256 = "1c5d718a25ed1c89898d727a293b36fb694589977a4b88bb7b333513f36fb770"
+context_gene_order_ensembl_sha256 = "544bbd49775a43cdda0b990a5f04774bda300938bb77166c59c31c87328ba2e4"
+released_reference_sha256 = "95041201bacaa6a77f0cf8c6db29a628b47249edcc0ee69579d04d49b6b2381d"
+runtime_probe_artifacts_sha256 = "09d8811b612cba4f75361feeba29bd0676efde83f0e4785a37990c2d2f52a0a2"
+observed_zero_rule = "A zero is biological only when the gene is in the admitted feature universe and the donor-by-cell-state pseudobulk assay observed zero counts."
+missing_gene_rule = "Absent, unmapped, below-QC, permission-blocked, join-unresolved and sealed genes retain explicit masks and are never silently set to zero."
+fit_unit = "outer_training_donor_by_cell_state_pseudobulk"
+inference_independence = "Each donor-by-cell-state context is mapped independently after all learned parameters are frozen; held-query composition and order cannot change another context."
+selection_endpoints = ["rna_conditioned_atac_profile_deviance", "rna_conditioned_atac_regional_count_rank", "development_variant_cross_assay_proxy"]
+sealed_selection_forbidden = true
+native_numeric_parity_required_before_native_lane_claim = true
+
+[trans_input.arm_contracts.released_rank_quantile_from_counts]
+learned_parameters = "none"
+input = "training-fold donor-by-cell-state UMI pseudobulk over the exact 2891-gene order"
+transform = "stable within-vector ranks mapped to the sorted packaged tf_reference values"
+missingness_gate = "requires all 2891 genes to be assay-observable or an upstream-certified missing-gene policy; no imputation is inferred from the released helper"
+role = "released_inference_mapper_comparator"
+
+[trans_input.arm_contracts.length_adjusted_tpm_then_released_rank_quantile]
+learned_parameters = "training-fold transcript-length aggregation and identifier crosswalk only"
+input = "training-fold donor-by-cell-state pseudobulk counts with GENCODE-v49 effective lengths"
+transform = "length-adjusted TPM followed by the exact released rank-to-reference mapping"
+distinctness = "Gene-specific length adjustment can change within-vector ranks and is therefore not redundant with count, CPM or log-CPM ranking."
+role = "paper_context_approximation_comparator"
+
+[trans_input.arm_contracts.learned_count_to_rank_context_encoder]
+learned_parameters = "fit inside each inner training partition only"
+input = "counts, library size, observed-gene mask and cell-state covariates from training donors only"
+output = "2891-value context plus explicit missingness mask"
+loss_scope = "development RNA-ATAC objectives only; no sealed outcomes, frozen Hotspot programs or test-role ATAC"
+query_fit_forbidden = true
+role = "learned_mapper_candidate"
+
+[trans_input.controls]
+required = ["training_fold_mean_context", "nearest_training_context", "permuted_context_within_training_fold", "trans_only", "sequence_only"]
+permutation_unit = "donor_by_cell_state_context"
+held_context_as_normalization_reference = false
+
+[trans_input.promotion]
+minimum_seeds = 3
+finalist_seeds = 5
+selection_rule = "one-standard-error rule on donor-balanced valid-role development endpoints, preferring the simpler mapper on a tie"
+required_stability = "same gain direction in at least four of five finalist seeds"
+test_role_used_for_selection = false
+sealed_data_used_for_selection = false
+
+[ablations]
+required = ["sequence_only", "trans_only", "permuted_context", "reverse_complement", "matched_shuffle"]
+assay_heads = ["atac_profile", "atac_count", "rna_coverage"]
+forbidden_heads = ["masld_histone"]

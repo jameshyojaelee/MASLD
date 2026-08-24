@@ -4,8 +4,9 @@
 # Matches coloc top_snp (hg19 chr:pos) -> the SAME reformatted-hg19 sumstats the
 # finemapping/COLOC pipeline ran on -> p_value (col 7).
 #
-# COLOC SET (2026-07-06): SuSiE-PRIMARY. Colocalization is defined as PP.H4.susie > 0.5
-# ONLY (the 473-gene SuSiE-COLOC set), NOT the former SuSiE-OR-ABF union. This matches the
+# COLOC SET: multi-signal COLOC. Colocalization is defined as PP.H4.susie > 0.5
+# only (462 named genes in the promoted 2026-08-17 Tier-1/2 release), not the
+# multi-signal-or-single-signal union. This matches the
 # gated Fig2E multi-signal COLOC panel (fig2_ancestry_unique_coloc_gated.py); the non-EUR-unique
 # gene set is therefore SMALLER than the retired union audit.
 #

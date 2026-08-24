@@ -1,0 +1,69 @@
+{
+  "audit_scope": {
+    "artifact_type": "gated_official_AlphaGenome_all_folds_checkpoint",
+    "development_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "sealed_source": "gse289173",
+    "task_id": "variant_to_regulation"
+  },
+  "checkpoint_findings": {
+    "alphagenome_all_folds": {
+      "checkpoint_identity": "google/alphagenome-all-folds@a8f293a76ee73d5b57f3bf2ae146510589fcf187 with frozen 12-object inventory and three LFS SHA-256 values",
+      "checkpoint_release_relation": "GSE289173 was public before the checkpoint repository revision",
+      "corpus": "Declared ENCODE, GTEx, FANTOM5, and 4DN functional-genomics tracks; no donor-expression input",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "reason": "No GSE289173 cell-state label, eQTL, or interaction-eQTL target is declared. A checkpoint-bound accession, BioProject, SRA, donor-alias, and sample manifest is unavailable, so clean_declared is not justified.",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_MASLD_cell_regulatory_and_variant_sources",
+    "sha256": "720c5451eef80715e21eafc826db6a6df43553d8e8e3498134000a24651a67aa"
+  },
+  "input_eligibility": {
+    "gse281364": "Eligible only as a retrospective static sequence MPRA direction and rank diagnostic after artifact admission. MPRA outcomes may not select output tracks, genes, windows, or aggregation.",
+    "gse289173": "DNA can be scored after admission and selection lock. Single-nucleus RNA is unused because AlphaGenome has no expression-context input. Predictions are donor-invariant at an identical allele, window, and fixed output track.",
+    "gse296875": "Eligible as a static sequence comparator only. Same-nucleus RNA and ATAC cannot be supplied as new AlphaGenome contexts.",
+    "observed_context_requirement": "none_supported; fixed training tracks are output identities, not observed sealed contexts"
+  },
+  "interpretation": "The exact checkpoint is provisionally target-label-unexposed for GSE289173, but it is not a complete primary endpoint model. Its fixed RNA ontology lacks cholangiocyte and hepatic stellate RNA tracks and does not accept sealed RNA. Current model terms also bar an open champion.",
+  "license_disposition": {
+    "code": "Apache-2.0",
+    "derivative_and_output_trained_models": "subject_to_the_noncommercial_model_terms",
+    "open_champion_eligibility": "ineligible_under_current_terms",
+    "weights": "gated_noncommercial"
+  },
+  "remaining_blockers": [
+    "Obtain institutionally authorized access to the exact frozen Hugging Face revision without using the unpinned helper; verify every object, compute missing SHA-256 values, and freeze the complete OCDBT tensor inventory.",
+    "Inspect gated checkpoint metadata to resolve fold identity, checkpoint-producing code, calibration dependencies, and any undeclared continual-training corpus.",
+    "Resolve explicit permission for adaptation, derivative weights, output-trained models, and redistribution. Current terms make an open champion ineligible.",
+    "Complete accession, BioProject, SRA, CELLxGENE UUID, donor-alias, and cohort-family checks. GSE289173 appears in at least one 2026 scBaseCount snapshot; any checkpoint trained on that snapshot or a later undeclared corpus is ineligible for sealed evaluation.",
+    "Freeze and test the GRCh38.p13-to-p14 and GENCODE v46-to-v49 crosswalk, primary-contig sequence identity, coordinates, REF alleles, gene masks, output-track order, reverse-complement behavior, and ALT-minus-REF sign.",
+    "Do not admit AlphaGenome to the four-lineage primary endpoint unless a prespecified output ontology provides defensible signed gene-expression effects for cholangiocyte, endothelial cell, hepatocyte, and stellate cell. The pinned metadata currently fails this gate.",
+    "Lock a no-network runtime and pass import, strict restore, inference, variant scoring, deterministic-seed, and L40S numeric-tolerance probes through SLURM after campaign approval."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_current_terms_and_incomplete_four_lineage_output_roster",
+  "sealed_output_gate": {
+    "cholangiocyte": "missing_RNA_SEQ",
+    "endothelial_cell": "generic_non_liver_RNA_SEQ_only",
+    "hepatocyte": "supported_fixed_RNA_SEQ_track",
+    "primary_roster_complete": false,
+    "stellate_cell": "DNASE_only_no_RNA_SEQ"
+  },
+  "task_disposition": {
+    "allele_effect": "eligible_after_admission_as_signed_ALT_minus_REF_for_prespecified_fixed_tracks",
+    "rna_conditioned_atac": "static_sequence_baseline_only",
+    "signed_eqtl_ieqtl": "secondary_supported_track_analysis_only_not_complete_four_lineage_primary_endpoint",
+    "variant_to_regulation": "restricted_static_sequence_comparator_not_open_champion"
+  },
+  "verified_date": "2026-08-22"
+}

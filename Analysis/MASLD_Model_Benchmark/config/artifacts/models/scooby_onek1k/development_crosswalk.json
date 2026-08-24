@@ -1,0 +1,51 @@
+{
+  "crosswalk_scope": {
+    "project_sources": ["resource_atlas_current", "gse244832", "gse281160", "gse281364", "gse289173", "gse296875", "current_coloc_gwas"],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "upstream_cell_source": "OneK1K_SRP359840"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "The scooby paper designed and evaluated the exact native REF/ALT exon-sum readout on fine-mapped OneK1K and GTEx whole-blood eQTLs. MASLD GWAS and project COLOC memberships were not profile-training targets, but overlapping GTEx/eQTL Catalog outcomes and score choices are downstream-demo evidence.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "evidence": "GSE244832 is a liver stellate-cell study and is absent from the exact OneK1K PBMC adaptation source. The inherited Borzoi object predates it.",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {"evidence": "The source became public after the immutable May 2025 checkpoint and perturbation profiles were not scooby training targets.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "gse281364": {"evidence": "The MPRA source became public after the immutable May 2025 checkpoint and is absent from its profile-training corpus.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "gse289173": {
+      "evidence": "GSE289173 became public before the May 2025 weight, but the complete cell adaptation source is the unrelated OneK1K PBMC cohort. Neither GSE289173 MASLD labels nor its donor cell-type eQTL/interaction-eQTL outcomes were declared training targets. Confidence is medium because the checkpoint postdates GEO and the exact base-conversion revision is unresolved.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public after the May 2025 checkpoint. Its liver same-nucleus RNA/ATAC, donor QTL and histopathology fields were not exposed.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "resource_atlas_current": {
+      "evidence": "No Resource donor labels, MASLD phenotypes or frozen programs were OneK1K scooby targets. Generic liver functional-genomics tracks are inherited only through Borzoi; the learned cell decoder is PBMC-specific.",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "interpretation": "OneK1K scooby is a blood-domain RNA profile and eQTL comparator. Its project target labels are unexposed, but this does not make its 10-D PBMC scPoli context transferable to liver. Exposure eligibility and input/domain eligibility are separate gates.",
+  "rules": {
+    "cell_embedding": "Do not substitute a newly trained latent with the same dimension. Recover the exact scPoli model, feature set and query transform or classify frozen inference as unavailable.",
+    "genome_overlap": "Cross donor folds with chromosome/LD blocks and a 524288-bp buffer for any local adaptation.",
+    "held_donor": "The upstream checkpoint used genomic holdouts, not a donor-held outer evaluation. All project embedding and adaptation steps remain inside donor folds.",
+    "sealed_rule": "No GSE289173 label or QTL outcome may select embeddings, cell contexts, readout spans, calibration or thresholds."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "adaptation_modality": "single-cell stranded RNA coverage",
+    "cell_context": "10-D scPoli RNA latent with donor and cell-type supervision",
+    "cell_source": "OneK1K PBMC, more than 1 million cells from 982 donors",
+    "inherited_base": "Borzoi replicate 0 human/mouse sequence-to-profile corpus",
+    "topology": "RNA-only cells; donor identities were modeled as scPoli conditions but were not held out for scooby evaluation"
+  },
+  "verified_date": "2026-08-22"
+}

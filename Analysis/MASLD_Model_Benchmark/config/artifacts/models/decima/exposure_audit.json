@@ -1,0 +1,86 @@
+{
+  "audit_scope": {
+    "artifact_type": "official_four_member_Decima_Zenodo_ensemble_with_separate_Hugging_Face_safetensors_identity",
+    "development_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "sealed_source": "gse289173",
+    "task_id": "variant_to_regulation"
+  },
+  "checkpoint_findings": {
+    "registered_zenodo_ensemble": {
+      "checkpoint_identity": "Zenodo 15092691 rep0.ckpt through rep3.ckpt, each frozen by filename, 2260600894-byte size, and MD5; loaded only with Genentech/decima@5e2439a63effe12b33e9b624dabf8b577a409d75 v0.7.2",
+      "corpus": "More than 22 million scRNA or snRNA cells from declared SCimilarity, brain, skin, and retina collections; Borzoi initialization; fixed 8856 output tasks",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "reason": "The original preprint predates GSE289173 and the declared sources do not name it, but the first immutable weight record follows the GEO release and a checkpoint-bound sample manifest is unavailable.",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    },
+    "separate_huggingface_safetensors": {
+      "checkpoint_identity": "Genentech/decima-model@bd12cada26a69c54f223791e1072ab76a3ffe7b4 rep0 through rep3 safetensors with frozen LFS SHA-256 values",
+      "equivalence_to_registered_ensemble": "UNRESOLVED",
+      "exposure_state": "inherits_registered_target_label_status_only_after_tensor_and_numeric_parity",
+      "rule": "A converted or repackaged checkpoint cannot improve the registered checkpoint's exposure class and is a separate artifact until parity is established."
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_MASLD_cell_regulatory_and_variant_sources",
+    "sha256": "b1d6b97ee23ef2597495d256420f143f94bc4a949ebaa10810cfed64b6242ca3"
+  },
+  "downstream_demo_resolution": {
+    "claimed_overlap_with_seal": false,
+    "published_eqtl_study": "eQTL_Catalogue_QTS000038",
+    "resolved_accession": "GSE196830",
+    "resolved_cohort": "OneK1K_PBMC",
+    "rule": "This published eQTL evaluation makes the task family downstream-demo evidence but does not expose GSE289173 outcomes."
+  },
+  "input_eligibility": {
+    "gse281364": "Retrospective gene-linked MPRA direction and rank diagnostic after artifact admission and a development-frozen gene and task mapping.",
+    "gse289173": "DNA plus a frozen gene mask can be scored. Single-nucleus RNA is unused because Decima cannot accept a query expression context. Predictions are donor-invariant at an identical allele, gene, mask, and fixed task.",
+    "gse296875": "Static gene-centered sequence comparator only. Same-nucleus RNA and ATAC do not define new Decima tasks.",
+    "observed_context_requirement": "none_supported; query context is selected from the fixed 8856-task catalog"
+  },
+  "interpretation": "Decima is provisionally target-label-unexposed for GSE289173 and has a native signed gene-expression VEP. It is not yet eligible for the primary sealed endpoint because the exact 8856-task metadata has not been acquired or crosswalked to all four required liver lineages. Its noncommercial code and Zenodo weight terms also make it ineligible as an open champion.",
+  "license_disposition": {
+    "code": "Genentech_Non-Commercial_Software_License_1.0",
+    "huggingface_model_card": "declares_MIT_but_does_not_override_conflicting_authoritative_records",
+    "open_champion_eligibility": "ineligible_pending_authoritative_terms_resolution",
+    "registered_zenodo_weights": "CC-BY-NC-4.0"
+  },
+  "remaining_blockers": [
+    "Acquire the exact registered Zenodo artifacts only after campaign approval, verify size and MD5, compute SHA-256, isolate pickle inspection, and convert recognized tensors to a safe format.",
+    "Acquire the exact pinned 3.27-GB metadata artifact or an authoritative compact task table; freeze all 8856 task identities and prove an ontology-only mapping for cholangiocyte, endothelial cell, hepatocyte, and stellate cell without sealed outcomes.",
+    "Prove the Hugging Face safetensors and registered Zenodo checkpoints are tensor- and numerically equivalent before substituting the safer format.",
+    "Resolve the conflicting GitHub noncommercial code license, Zenodo CC-BY-NC-4.0 weight license, and Hugging Face MIT model-card declaration for use, adaptation, derivative weights, and redistribution.",
+    "Complete accession, BioProject, SRA, CELLxGENE UUID, donor-alias, SCimilarity-source, and cohort-family checks. GSE289173 appears in at least one 2026 scBaseCount snapshot; any continual checkpoint trained on that snapshot is ineligible.",
+    "Freeze the GRCh38.p14 sequence and GENCODE v49 gene crosswalk, gene and transcript choice, gene-body masks, strand handling, contig boundaries, REF alleles, output-task order, and ALT-minus-REF fixtures.",
+    "Use v0.7.2 or later fixed-axis inference only and confirm the four-model ensemble preserves allele and variant dimensions before averaging.",
+    "Lock a no-network runtime and pass import, strict tensor load, four-model forward, VEP axis, reverse-complement, gene-strand, deterministic-seed, and L40S numeric-tolerance probes through SLURM after campaign approval."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_current_terms_and_blocked_until_complete_four_lineage_task_roster",
+  "sealed_output_gate": {
+    "metadata_revision": "Genentech/decima-data@71e6ef93e9ac581b5788d9bf135c4358a765fbb4",
+    "metadata_status": "not_acquired",
+    "primary_roster_complete": "UNRESOLVED",
+    "required_lineages": [
+      "cholangiocyte",
+      "endothelial_cell",
+      "hepatocyte",
+      "stellate_cell"
+    ]
+  },
+  "task_disposition": {
+    "allele_effect": "eligible_after_admission_as_signed_ALT_minus_REF_for_prespecified_fixed_tasks",
+    "rna_conditioned_atac": "static_sequence_gene_expression_comparator_only",
+    "signed_eqtl_ieqtl": "conditional_on_complete_prespecified_four_lineage_task_roster",
+    "variant_to_regulation": "restricted_conditional_sequence_comparator_not_open_champion"
+  },
+  "verified_date": "2026-08-22"
+}

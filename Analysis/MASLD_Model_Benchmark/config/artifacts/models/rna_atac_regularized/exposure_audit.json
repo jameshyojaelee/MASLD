@@ -1,0 +1,31 @@
+{
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "verified_date": "2026-08-23",
+  "artifact_bundle_id": "rna_atac_regularized",
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "bc505b5f577e537a01c91d7240316251c5d86a62edb9a31126a19c6c43e0931d"
+  },
+  "checkpoint_exposure": {
+    "pretrained_checkpoint": "none",
+    "declared_corpora": [],
+    "class": "target_label_unexposed"
+  },
+  "project_fit_exposure": {
+    "outer_training_RNA": "continual_seen",
+    "outer_training_ATAC": "continual_seen",
+    "query_RNA": "observed_inference_input_only",
+    "query_ATAC": "withheld_from_fit_and_predict",
+    "sealed_sources": "not_seen"
+  },
+  "leakage_controls": {
+    "outer_split": "all modalities from one donor remain in one fold",
+    "inner_selection": "all transforms and hyperparameter selection fit inside grouped training donors",
+    "peak_selection": "SHA256 rank of stable peak IDs without ATAC values",
+    "shuffled_control": "outcome-blind deterministic within-lineage training-donor derangement",
+    "outcome_join": "independent evaluator only"
+  },
+  "sealed_champion_eligibility": "blocked_until_an_eligible_external_RNA_ATAC_seal_activates_and_the_precommitted_gate_passes",
+  "open_release_eligibility": "project_owned_code_and_derivative_state_may_be_released_after_final_selection_and_reproduction",
+  "clinical_claim_eligibility": "prohibited"
+}

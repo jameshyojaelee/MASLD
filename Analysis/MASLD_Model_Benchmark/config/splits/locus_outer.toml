@@ -1,0 +1,19 @@
+schema_version = "masld-bench-split-v1"
+split_id = "locus_outer"
+entity = "independent_locus"
+group_keys = ["native_build", "ld_block_id", "locus_id", "sequence_identity_group"]
+roles = ["train", "development", "withheld_sealed"]
+seed = 20260821
+locus_grouping = "Group variants by ancestry-matched native-build LD block, declared locus, exact sequence identity, near-identity threshold, and reverse-complement identity before splitting."
+label_policy = "All alleles, assay contexts, guides, enhancer-gene edges, and derived windows from one locus remain in one outer role."
+exposure_policy = "Random-variant splits are prohibited; pretrained genomic model exposure is recorded but cannot be assumed absent."
+admission_gates = ["Compute LD on the native genome build before liftover.", "Require unique one-to-one liftover, reference-allele match, left normalization, and preserved native coordinates.", "Freeze the window extractor, prohibit overlap across outer roles, and remove a boundary buffer equal to the largest receptive field of every model admitted to the comparison.", "Commit predictions before accessing any future held-locus outcomes."]
+
+[locus_controls]
+schema_version = "masld-bench-locus-split-controls-v1"
+block_merge_rule = "within_distance_or_ld_threshold"
+merge_distance_bp = 1000000
+ld_r2_threshold = 0.8
+ld_ancestry_rule = "any_represented_ancestry"
+sequence_identity_grouping = ["exact_forward_identity", "exact_reverse_complement_identity"]
+boundary_buffer_policy = "exclude_each_outer_boundary_by_largest_admitted_model_receptive_field"

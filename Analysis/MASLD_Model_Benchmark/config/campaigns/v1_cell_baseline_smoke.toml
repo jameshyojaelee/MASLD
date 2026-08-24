@@ -1,0 +1,47 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-cell-baseline-smoke"
+description = "Completed first donor-held-out logistic baseline on the frozen 1,000-cell Resource Atlas compatibility view; retained as an immutable historical campaign authority"
+wave = "smoke"
+status = "blocked_completed"
+prerequisites = ["Completed as SLURM job 20998457 under candidate manifest 71b87d9b6867ab182d4d5324489b477c0d527cd153e8bcdf6f398f05c58ab657; initial submission is single-use."]
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["cell_state_mapping"]
+dataset_view_ids = ["resource_atlas_geneformer_smoke_1000_v1"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate"]
+model_ids = ["hvg_pca_logistic"]
+include_mandatory_baselines = false
+
+[execution]
+default_resource_profile = "cpu_baseline_smoke"
+runtime_id = "cpu_baseline_smoke"
+seeds = [1103]
+folds = [0]
+cell_budget = 1000
+adaptation_regimes = ["native_lane"]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0
+
+[execution.hyperparameters]
+hvg_mean_bins = 20
+join_namespace = "resource_atlas_current:cell_state_mapping:donor_outer:v1"
+logistic_c = 1.0
+logistic_max_iter = 2000
+normalization_target_sum = 10000.0
+n_pca_components = 50
+n_top_hvg = 2000
+outer_folds = 5
+pca_svd_solver = "full"
+training_weight_policy = "donor_class_balanced_rescaled_to_n_cells"
+
+[execution.adapter_request]
+input_matrix = "raw_unselected_counts"
+row_id_source = "obs_names"
+unit_id_source = "obs.donor_id"
+label_source = "obs.broad_label"
+dataset_view_id = "resource_atlas_geneformer_smoke_1000_v1"

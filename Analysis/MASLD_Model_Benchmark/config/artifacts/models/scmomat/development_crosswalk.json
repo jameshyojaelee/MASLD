@@ -1,0 +1,42 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["future_nonpromotable_transductive_rna_atac_integration"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Future descriptive transductive unpaired integration only. RNA and ATAC aliquots must be separate batches with None in the other modality.",
+      "exposure_state": "continual_seen_if_included_in_transductive_factorization",
+      "model_access": "Because scMoMaT must optimize coordinates for supplied cells, it cannot treat GSE244832 as a held external evaluation while also embedding it."
+    },
+    "gse289173": {
+      "allowed_use": "None. Optimizing sealed-cell coordinates or including sealed RNA in a transductive factorization is prohibited.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No features, labels, outcomes, or transductive coordinate fitting."
+    },
+    "gse296875": {
+      "allowed_use": "Future descriptive same-nucleus and mosaic integration diagnostics only after activation gates and a nonpromotable TaskSpec.",
+      "exposure_state": "continual_seen",
+      "model_access": "All included donor cells are fitted coordinates. Results cannot be called held-donor inductive performance."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_transductive_factorization_tied_to_exact_cell_and_feature_rows",
+    "seeds": [11, 29, 47, 71, 101],
+    "status": "deferred_until_nonpromotable_development_only_TaskSpec"
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; distinct modality batches and None placeholders",
+    "gse296875": "same_nucleus; parallel matrices allowed only after exact ordered row-ID validation",
+    "gse289173": "RNA_only sealed rows are excluded entirely"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; optimized cell factors are not independent replicates.",
+    "feature_contract": "All batches in a modality share an identical ordered training/development feature inventory. Peak remapping cannot use a held evaluation source.",
+    "no_champion": "A transductive scMoMaT result is descriptive and cannot earn a sealed champion claim.",
+    "preprocessing": "Quantile normalization, maximum scaling, graph post-processing, clustering, and any marker retraining are fitted only within the declared descriptive analysis population."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,130 @@
+{
+  "algorithm_contract": {
+    "algorithm_id": "masld_nearest_gene_tss_v1",
+    "candidate_pair_rule": "Score only a selection-locked variant-gene or locus-gene candidate table created without held outcomes. Candidate generation is not part of the distance scorer.",
+    "gene_identity": "GENCODE v49 Ensembl gene_id with version; an unversioned Ensembl ID is accepted only through a frozen one-to-one version-stripping crosswalk. Gene symbols never define identity.",
+    "locus_gene_score": "negative minimum TSS distance across the selection-locked variants assigned to that locus",
+    "model_family": "deterministic_genomic_distance_baseline",
+    "pair_score": "negative integer distance in bp between the normalized variant anchor and the closest annotated transcript TSS for the candidate gene; larger is better",
+    "ties": "Emit equal scores for equal distances. Do not use gene symbols, held labels, or random jitter to break ties.",
+    "transcript_policy": "Use every GENCODE v49 transcript row retained on analysis contigs and take the minimum distance for its gene. Do not choose a canonical transcript from outcomes or expression.",
+    "tss_coordinate": "Convert GTF 1-based closed transcript coordinates to zero-based anchors: start-1 on '+' and end-1 on '-'.",
+    "variant_anchor": "After left normalization and REF validation, use VCF POS-1, the zero-based anchor of the leftmost REF base. Structural or unresolved variants are ineligible."
+  },
+  "checkpoint_contract": {
+    "annotation_artifact": "development-built_GENCODE_v49_primary-analysis-contig_TSS_table_not_yet_created",
+    "annotation_artifact_sha256": "UNRESOLVED",
+    "checkpoint_revision": "NOT_APPLICABLE_DETERMINISTIC_ALGORITHM",
+    "checkpoint_sha256": "NOT_APPLICABLE_NO_WEIGHTS",
+    "implementation_type": "classical_baseline",
+    "pretrained_checkpoint_available": false,
+    "status": "algorithm_and_reference_frozen_derived_annotation_and_implementation_not_admitted"
+  },
+  "input_contract": {
+    "annotation": {
+      "format": "GENCODE_v49_comprehensive_GTF_gzip",
+      "path": "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz",
+      "sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+      "size_bytes": 97570076
+    },
+    "analysis_contigs": [
+      "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY", "chrM"
+    ],
+    "candidate_rows": "Canonical variant_id, gene_id, native_build, GRCh38.p14 coordinate or frozen unique one-to-one liftover, LD block, locus, and row hash",
+    "excluded_annotation": "patch, haplotype, alternate, scaffold, and non-analysis contig genes are not silently projected to primary contigs",
+    "genome": "GRCh38.p14",
+    "liftover": "For non-GRCh38 native inputs, retain native coordinates and LD grouping, require a frozen unique one-to-one GRCh38.p14 mapping and REF match, then compute distance. Failed or ambiguous mappings are untestable, not distant.",
+    "runtime_lookups": "No Ensembl, UCSC, NCBI, HGNC, expression, disease, eQTL, or internet lookup at inference."
+  },
+  "output_contract": {
+    "allele_effect": "none; REF and ALT at one anchor receive the same proximity score",
+    "cell_or_lineage_context": "none",
+    "native_output": "unsigned TSS-proximity enhancer_gene_link_score plus distance_bp and selected TSS/gene identifiers",
+    "not_supported": [
+      "signed_eQTL_effect",
+      "signed_interaction_eQTL_effect",
+      "allelic_direction",
+      "cell_type_specific_effect",
+      "donor_context",
+      "causal_gene"
+    ],
+    "ranking": "closer TSS ranks first within the exact frozen candidate denominator",
+    "task_roles": ["mandatory_eQTL_retrieval_baseline", "mandatory_typed_graph_prioritization_baseline"]
+  },
+  "inductive_and_held_source_contract": {
+    "fitting": "none",
+    "held_source_behavior": "Compute distance from anonymized selection-locked coordinates and gene IDs without held outcomes. The method has no source-specific parameter.",
+    "inductive_behavior": "Scores any valid new variant-gene pair represented in the frozen annotation and coordinate contract.",
+    "source_removal": "A graph held source may not select locus anchors, variants, genes, candidate radius, transcripts, or ties. Source-specific observability and outcomes remain evaluator-only.",
+    "warning": "If the held source defines which gene pairs exist, scoring only those pairs leaks its assay coverage. Candidate rows must be source-independent or supplied as anonymized evaluator features under a precommitted roster."
+  },
+  "implementation": {
+    "algorithm_version": "1",
+    "repository": "repo_local_masld_bench",
+    "repository_revision": "UNRESOLVED_no_implementation_exists",
+    "source_code_present": false,
+    "source_code_run": false
+  },
+  "runtime_and_artifact_contract": {
+    "execution": "CPU deterministic coordinate join",
+    "seed": "not_applicable",
+    "tss_artifact_receipt": "Record source GTF hash, accepted feature types and contigs, gene/transcript parsing counts, duplicate IDs, coordinate examples on both strands, version crosswalk, sorted rows, size, and SHA-256.",
+    "output_receipt": "Hash algorithm ID, TSS artifact, candidate table, coordinate and liftover receipts, distances, ties, row order, and PredictionBundle."
+  },
+  "safe_loading_contract": {
+    "model_loader": "none",
+    "no_runtime_network": true,
+    "serialized_inputs": "schema-validated plain text or columnar project artifacts only",
+    "untrusted_object_deserialization": "prohibited"
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The project reference, coordinate, variant capability, graph, and locus split contracts plus official GENCODE release history, data-access, and GTF-format pages were inspected on 2026-08-22. No upstream software, alternate annotation, model, or weights were downloaded or run.",
+  "source_records": [
+    {
+      "identity": "GENCODE_v49_local_comprehensive_GTF",
+      "sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+      "size_bytes": 97570076,
+      "url": "https://www.gencodegenes.org/human/releases.html"
+    },
+    {
+      "identity": "GENCODE_official_data_access",
+      "url": "https://www.gencodegenes.org/pages/data_access.html"
+    },
+    {
+      "identity": "GENCODE_official_GTF_format",
+      "url": "https://www.gencodegenes.org/pages/data_format.html"
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+      "size_bytes": 59115
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/variant_to_regulation.toml",
+      "sha256": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233",
+      "size_bytes": 4879
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/locus_outer.toml",
+      "sha256": "649db9e4f265e96b5bc134494027ebfcd21038f9db819f81740470e4cbfedd2e",
+      "size_bytes": 1564
+    }
+  ],
+  "task_fit": {
+    "causal_gene_inference": "not_supported",
+    "enhancer_gene_link": "eligible_as_unsigned_distance_baseline",
+    "eqtl_retrieval": "eligible_mandatory_baseline",
+    "signed_cell_type_eqtl_ieqtl": "ineligible",
+    "typed_evidence_graph": "eligible_after_TSS_candidate_graph_and_implementation_locks",
+    "variant_to_regulation": "secondary_retrieval_only"
+  },
+  "terms_audit": {
+    "annotation_access": "GENCODE states its project data are open access",
+    "algorithm": "mathematical_distance_no_upstream_software",
+    "project_implementation_license": "UNRESOLVED_repository_root_license_not_located_and_code_not_written",
+    "redistribution": "Release the derived TSS and prediction artifacts only after preserving GENCODE attribution and reviewing project source and evaluator-row terms.",
+    "result": "reference_open_access_no_weight_license_project_code_and_output_review_pending"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NOT_APPLICABLE_NO_WEIGHTS"
+}

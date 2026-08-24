@@ -1,0 +1,48 @@
+{
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-23",
+  "artifact_bundle_id": "rna_atac_regularized",
+  "models": {
+    "shrunken_pseudobulk": {
+      "task": "rna_conditioned_atac",
+      "role": "task_native_regularized_baseline",
+      "input": "outer-training ATAC plus no query assay input",
+      "output": "donor-by-lineage positive ATAC profile"
+    },
+    "shuffled_context": {
+      "task": "rna_conditioned_atac",
+      "role": "negative_context_control",
+      "input": "outer-training RNA permuted across donors within lineage plus unpermuted query RNA",
+      "output": "donor-by-lineage positive ATAC profile"
+    },
+    "trans_only": {
+      "task": "rna_conditioned_atac",
+      "role": "task_native_rna_context_baseline",
+      "input": "outer-training RNA and ATAC plus observed query RNA",
+      "output": "donor-by-lineage positive ATAC profile"
+    }
+  },
+  "dataset_crosswalk": {
+    "gse296875_rna_atac_smoke_1000_v1": {
+      "role": "project_exposed_development_smoke",
+      "pairing": "same_nucleus",
+      "replication_unit": "donor",
+      "held_query_atac": "withheld_from_fit_and_predict",
+      "champion_eligible": false
+    },
+    "fnih_86_liver": {
+      "role": "conditional_future_external_seal",
+      "activation": "not_currently_eligible",
+      "used": false
+    }
+  },
+  "claims": {
+    "allowed": "retrospective development profile comparison",
+    "forbidden": [
+      "MASLD diagnosis",
+      "clinical prediction",
+      "external champion",
+      "causal regulatory mechanism"
+    ]
+  }
+}

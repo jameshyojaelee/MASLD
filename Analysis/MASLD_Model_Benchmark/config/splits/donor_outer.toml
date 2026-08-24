@@ -1,0 +1,10 @@
+schema_version = "masld-bench-split-v1"
+split_id = "donor_outer"
+entity = "person"
+group_keys = ["cohort_family_id", "person_key"]
+roles = ["train", "development", "withheld_sealed"]
+seed = 20260821
+locus_grouping = "not_applicable"
+label_policy = "All libraries, tissues, timepoints, sections, images, spots, cells, and modalities from one person remain in one outer role. Labels are visible only for train and development roles."
+exposure_policy = "A project-sealed study is distinct from a checkpoint-clean study; upstream checkpoint exposure is audited separately."
+admission_gates = ["Resolve accession, BioProject, run, DOI, and cohort aliases into cohort_family_id.", "Run consent-compatible cross-study genotype fingerprint checks where raw reads permit.", "Check recruitment site, dates, demographics, matrix hashes, and image hashes for duplicate participants or specimens.", "Salt genotype signatures and never redistribute participant genotypes."]

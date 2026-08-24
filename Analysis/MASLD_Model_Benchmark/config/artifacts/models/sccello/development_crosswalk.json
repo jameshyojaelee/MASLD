@@ -1,0 +1,36 @@
+{
+  "corpus": {
+    "cell_dataset_id_available": true,
+    "cells": 22316072,
+    "hf_dataset_commit": "e04dea678784a0e59639bd15e3c024c190904aed",
+    "hf_dataset_repository": "katarinayuan/scCello_pretrain_unsplitted",
+    "hf_shards": 1050,
+    "immutable_manifest_status": "available_but_source_accession_crosswalk_not_yet_resolved",
+    "source": "CELLxGENE",
+    "supervised_metadata": ["cell_type", "cell_ontology", "disease", "assay", "donor", "tissue", "development_stage"],
+    "warning": "The released corpus has immutable shards and cell_dataset_id values, but accession-to-CELLxGENE-UUID mapping for pre-cutoff project cohorts has not yet been completed."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before the model/corpus freeze; accession-to-cell_dataset_id membership is unresolved.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before the model/corpus freeze; accession-to-cell_dataset_id membership is unresolved.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before the model/corpus freeze; accession-to-cell_dataset_id membership is unresolved.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before the model/corpus freeze; accession-to-cell_dataset_id membership is unresolved.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Public before the model/corpus freeze; accession-to-cell_dataset_id membership is unresolved.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO first became public after NeurIPS acceptance fixed the trained model and shortly before the immutable corpus upload.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO first became public after the immutable model checkpoint was uploaded.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the immutable model checkpoint was uploaded.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO first became public after the immutable model checkpoint was uploaded; neither features nor labels could have entered that object.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after the immutable model checkpoint was uploaded.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Public before the model/corpus freeze; accession-to-cell_dataset_id membership is unresolved.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "post_checkpoint": "Sources first public after the immutable January 2025 checkpoint are clean_declared; the sealed source is target_label_unexposed.",
+    "pre_freeze": "Sources public before model/corpus freeze remain unknown until accession aliases are mapped to the immutable cell_dataset_id inventory."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

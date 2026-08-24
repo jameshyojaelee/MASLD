@@ -1,0 +1,46 @@
+{
+  "audit_scope": {
+    "checkpoint": "johahi_neurips_scooby_model_safetensors",
+    "development_sources": "registered_variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "neurips": {
+      "checkpoint_identity": "johahi/neurips-scooby@1591d15696c65f14053e4495e52c74812a86fd8d:model.safetensors sha256 8f2e2de3e86016378116c90accf94572e75963d5445beb6cabd585c8372170dd",
+      "corpus": "NeurIPS bone-marrow same-nucleus multiome profiles plus inherited Borzoi replicate 0",
+      "corpus_annotation_state": "cell source explicit; checkpoint-bound source/runtime and exact context encoder unavailable",
+      "exposure_confidence": "high",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {"path": "development_crosswalk.json", "scope": "registered_variant_and_regulatory_sources", "sha256": "40e38d4c6a21da89b1c3dc4bc12812ba5ed8df679baa45ca4e02c786018d9672"},
+  "input_eligibility": {
+    "gse289173": "Currently ineligible. Although checkpoint chronology is clean, sealed GSE289173 supplies snRNA only and the published 14-D context was computed from both RNA and ATAC. The exact Poisson-MultiVI encoder/query model is not bundled.",
+    "gse296875": "Development-only same-nucleus RNA/ATAC can support reconstruction diagnostics or a new liver adaptation. For the RNA-conditioned ATAC endpoint, held-donor ATAC cannot enter context construction, neighbors, query fitting or calibration.",
+    "rna_only_query_condition": "Reconsider only if the exact historical Poisson-MultiVI artifact is recovered and an RNA-only query posterior can project held liver donors without ATAC or held-donor fitting. This path must pass the project's fixed no-ATAC profile fixture before selection lock."
+  },
+  "interpretation": "The NeurIPS weight predates GSE289173 and is target-label-unexposed with high confidence. It still cannot compete in the current sealed or RNA-conditioned ATAC tracks: weight terms are undeclared, the checkpoint-specific context encoder is absent, published context uses observed ATAC, and held-donor/cross-tissue induction is unvalidated.",
+  "license_disposition": {
+    "code": "MIT",
+    "open_champion_eligibility": "ineligible",
+    "weights": "UNDECLARED; no Hugging Face card license, plus unresolved inherited canonical Borzoi terms"
+  },
+  "noncanonical_checkpoint_findings": {
+    "johahi_neurips_scooby_rna": "A separate MIT-tagged RNA-only checkpoint exists, but it has two RNA output tracks and is not the registered NeurIPS multiome object. It cannot silently replace this checkpoint or supply an ATAC output.",
+    "retrained_project_latent": "Training a new MultiVI/Poisson-MultiVI model on project data creates a new coordinate system. It requires a fitted bridge or decoder adaptation and must be registered as a new adaptation rather than called frozen NeurIPS inference."
+  },
+  "remaining_blockers": [
+    "Obtain explicit weight terms and resolve inherited canonical Borzoi authority before any checkpoint use or redistribution.",
+    "Bind the weight to the historical Scooby source and exact borzoi-pytorch, adapted-peft, custom scvi-tools, transformers, torch and CUDA runtime.",
+    "Recover and hash the exact Poisson-MultiVI model, retained RNA/peak features, sample batches, preprocessing and query projection.",
+    "Prove an RNA-only held-donor query path that never touches observed ATAC or ATAC-derived neighbors; otherwise remove scooby_neurips from RNA-conditioned ATAC scheduling.",
+    "After terms and campaign approval, verify safetensors SHA-256 and exact state schema under cell_emb_dim=14, n_tracks=3 and use_transform_borzoi_emb=true.",
+    "Resolve native FASTA, sequence BED, GENCODE v32 and the post-checkpoint sequence-window correction against project GRCh38.p14/v49.",
+    "Reproduce central crop, RNA/ATAC inverse transforms, strand/ATAC reverse complement and profile fixtures under historical and frozen adapter code.",
+    "Do not infer held-donor or cross-tissue generalization from the paper's within-dataset withheld normoblast interpolation.",
+    "Run L40S import, forward/backward, strict restoration, deterministic-seed and numeric-tolerance probes through SLURM only after terms/runtime/context artifacts are resolved."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_current_context_and_terms_contract",
+  "verified_date": "2026-08-22"
+}

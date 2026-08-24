@@ -1,0 +1,141 @@
+{
+  "crosswalk_scope": {
+    "model_id": "seurat_wnn",
+    "registered_identity": "satijalab/seurat@4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a+CRAN:Seurat==5.5.1",
+    "candidate_tasks": ["cell_state_mapping", "rna_conditioned_atac"],
+    "current_status": "deferred_latent_only_no_registered_task",
+    "core_rule": "Native WNN integrates observed modalities for the same rows and fits cell-specific weights and graph geometry on the supplied object. It is not a frozen pretrained transform or an RNA-to-ATAC predictor."
+  },
+  "topology_matrix": {
+    "same_nucleus": {
+      "native_WNN": "supported_when_every_row_has_both_admitted_modalities_and_exact_ordered_identity_is_proven",
+      "example": "gse296875_after_well_namespaced_barcode_to_donor_join_validation"
+    },
+    "same_cell": {
+      "native_WNN": "supported_when_every_row_has_both_admitted_modalities_and_exact_ordered_identity_is_proven"
+    },
+    "same_sample_different_aliquot": {
+      "native_WNN": "unsupported",
+      "example": "gse244832",
+      "reason": "RNA and ATAC measure different nuclei. Donor identity does not establish a row-level multimodal pair."
+    },
+    "same_donor_unpaired": {
+      "native_WNN": "unsupported",
+      "reason": "Donor-level matching does not produce cell-specific modality weights or neighbors."
+    },
+    "same_study_unpaired": {
+      "native_WNN": "unsupported"
+    },
+    "RNA_only": {
+      "native_WNN": "unsupported",
+      "example": "gse289173",
+      "reason": "The required observed query ATAC reduction is absent. Missing ATAC cannot be encoded as zero."
+    }
+  },
+  "dataset_findings": {
+    "resource_atlas_current": {
+      "topology": "single_cell_RNA_only_same_study_unpaired",
+      "native_WNN_use": "none",
+      "reason": "The 102-donor Atlas supplies RNA only under the registered manifest. It cannot fit RNA-ATAC WNN or create a frozen multimodal reference by itself."
+    },
+    "gse296875": {
+      "topology": "same_nucleus_RNA_ATAC",
+      "native_WNN_use": "development_only_observed_both_modality_latent_or_retrieval_diagnostic_after_new_TaskSpec",
+      "conditions": [
+        "freeze_the_authoritative_well_namespaced_barcode_to_donor_join",
+        "keep_all_modalities_from_one_donor_in_one_outer_fold",
+        "fit_RNA_and_ATAC_preprocessing_and_reductions_inside_each_training_partition",
+        "label_WNN_on_held_rows_as_transductive_if_their_observed_modalities_enter_weight_or_neighbor_estimation",
+        "do_not_call_histology_fields_MASLD_or_MASH_diagnoses"
+      ],
+      "current_task_result": "not_scheduled_latent_only_and_no_profile_decoder"
+    },
+    "gse244832": {
+      "topology": "same_sample_different_aliquot_RNA_and_ATAC",
+      "native_WNN_use": "none",
+      "reason": "Separate nuclei cannot occupy one Seurat row for cell-specific WNN. Never match cells by donor, cluster, nearest neighbor, row order, or expression-accessibility similarity and call them paired.",
+      "possible_future_use": "A donor-by-cell-state aggregate integration method would be nonnative, must retain assay-specific uncertainty, and requires its own model_id and TaskSpec. It is not seurat_wnn."
+    },
+    "gse256398": {
+      "topology": "single_nucleus_RNA_only",
+      "native_WNN_use": "none",
+      "reason": "The external-development rows lack observed paired ATAC. A WNN graph learned after adding these RNA-only rows is undefined without a separate mapping method."
+    },
+    "gse281367": {
+      "topology": "single_nucleus_ATAC_only_same_study_unpaired",
+      "native_WNN_use": "none",
+      "reason": "The source lacks paired RNA and is outside the RNA-only row universe required by cell_state_mapping."
+    },
+    "gse289173": {
+      "topology": "RNA_only_with_same_study_unpaired_QTL_summaries",
+      "native_WNN_use": "none",
+      "reason": "The jointly sealed cell-state input is RNA only. Native WNN has no frozen RNA-only query transform and no observed ATAC may be introduced.",
+      "sealed_result": "ineligible"
+    },
+    "fnih_86_liver": {
+      "topology": "registered_as_same_study_unpaired_and_current_permission_state_unavailable",
+      "native_WNN_use": "none_unless_a_future_activation_manifest_proves_same_cell_or_same_nucleus_pairing",
+      "reason": "Study-level coavailability is not row-level pairing, and current files and rights are not admitted."
+    }
+  },
+  "method_boundary_matrix": {
+    "native_WNN": {
+      "identity": "FindMultiModalNeighbors_plus_modality_weight_and_multimodal_neighbor_functions",
+      "query_modalities": "all_modalities_observed",
+      "geometry": "fit_on_every_supplied_row",
+      "classification": "transductive_or_target_fitted_when_held_query_rows_enter_the_object",
+      "can_emit_ATAC_profile": false
+    },
+    "Seurat_multimodal_reference_mapping": {
+      "identity": "separate_FindTransferAnchors_MapQuery_supervised_PCA_workflow",
+      "query_modalities": "can_map_a_single_assay_query_to_a_multimodal_reference_under_a_separate_contract",
+      "geometry": "reference_can_be_fixed_but_query_features_and_anchor_geometry_participate",
+      "classification": "reference_fixed_query_adaptive_until_separately_registered_and_composition_invariance_is_proven",
+      "inherit_seurat_wnn_identity": false,
+      "can_emit_ATAC_profile": false
+    },
+    "Seurat_bridge_integration": {
+      "identity": "separate_FindBridgeIntegrationAnchors_workflow",
+      "query_modalities": "query_plus_true_multimodal_bridge_reference",
+      "geometry": "anchor_and_mapping_operations_use_query_and_bridge_geometry",
+      "classification": "query_adaptive_not_a_frozen_native_WNN_transform",
+      "pairing_requirement": "the_bridge_modalities_must_be_true_same_cell_or_same_nucleus_measurements",
+      "inherit_seurat_wnn_identity": false,
+      "can_emit_ATAC_profile": false
+    },
+    "observed_query_ATAC_WNN": {
+      "identity": "native_WNN_with_query_ATAC_in_reduction_and_weight_estimation",
+      "classification": "observed_target_modality_integration",
+      "allowed_for_rna_conditioned_atac": false,
+      "reason": "The endpoint requires predicting ATAC from RNA/context without exposing observed ATAC at inference."
+    }
+  },
+  "task_admission": {
+    "cell_state_mapping": {
+      "decision": "deferred",
+      "reason": "Native WNN cannot score the sealed RNA-only row universe. Reference mapping is a different query-adaptive method and has not been registered, frozen, or tested for query-composition invariance.",
+      "prohibited_workaround": "run_WNN_on_development_or_sealed_query_rows_with_observed_ATAC_or_call_reference_mapping_native_WNN"
+    },
+    "rna_conditioned_atac": {
+      "decision": "deferred_latent_only_unschedulable",
+      "reason": "WNN emits neighborhood geometry, not ATAC peak profiles or counts, and requires observed query ATAC for native multimodal weights.",
+      "capability_registry": "seurat_wnn_is_listed_in_latent_only_models",
+      "prohibited_workaround": "score_neighbors_embeddings_or_observed_ATAC_reconstruction_as_RNA_conditioned_ATAC_profile_prediction"
+    }
+  },
+  "split_and_leakage_contract": {
+    "donor_grouping": "All cells, nuclei, aliquots, libraries, modalities, reductions, and derived graph rows from one donor remain in one outer fold.",
+    "training_only_operations": ["feature_selection", "normalization", "dimensional_reduction", "modality_scaling", "neighbor_parameters", "label_transfer_supervision", "calibration", "hyperparameter_selection"],
+    "held_query_geometry": "If held-query rows enter modality-weight, nearest-neighbor, anchor, bridge, or mapping calculations, report the method as transductive or query-adaptive and exclude it from any frozen-inductive claim.",
+    "no_false_pairs": "Never merge RNA and ATAC rows from separate aliquots, donors, sections, or studies into a multimodal cell by row order, cluster label, nearest neighbor, optimal transport, or aggregate identity.",
+    "missingness": "Missing assays retain explicit states and masks; an all-zero ATAC assay is neither a biological measurement nor a valid WNN modality."
+  },
+  "output_and_replication_contract": {
+    "biological_unit": "donor",
+    "not_independent": ["cells", "nuclei", "neighbors", "edges", "peaks", "modality_weights", "random_seeds"],
+    "fit_artifact_manifest": "Record ordered row IDs, donor IDs, modality and reduction hashes, dimensions, WNN parameters, seeds, threads, neighbor/index implementation, software lock, modality weights, graph edge list, and export hashes.",
+    "claim_boundary": "A native GSE296875 WNN fit may describe observed paired-modality geometry only under a new nonpromotable development TaskSpec. It cannot establish RNA-to-ATAC prediction, frozen transfer, a sealed champion, MASLD diagnosis, or clinical utility."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

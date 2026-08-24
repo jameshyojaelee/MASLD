@@ -1,0 +1,129 @@
+{
+  "architecture_contract": {
+    "attention_heads": 12,
+    "base_hidden_dimension": 768,
+    "base_layer_count": 12,
+    "family": "modified_BERT_rank_value_gene_sequence_with_cross_species_prior_knowledge",
+    "maximum_sequence_length": 2048,
+    "prior_knowledge_channels": ["promoter_sequence", "gene_family", "coexpression", "PECA2_gene_regulatory_network"],
+    "species": ["human", "mouse"],
+    "warning": "The paper calls the corpus scCompass-126M and says more than 120 million cells, while its stated human and mouse counts sum to 101,768,420. Preserve the discrepancy until the immutable training inventory resolves it."
+  },
+  "checkpoint_contract": {
+    "registered_identity": "xCompass-AI/GeneCompass@66ab82f90fa94f88613df7d89a2fb38165e2a82f+ScienceDB:anonymous/SUZOdk1y:Base",
+    "registered_sha256": "UNRESOLVED",
+    "science_db_portal": "https://www.scidb.cn/en/anonymous/SUZOdk1y",
+    "status": "blocked_mutable_anonymous_portal_label_is_not_an_exact_checkpoint_object",
+    "required_resolution": [
+      "Obtain an immutable file manifest for the object labeled Base with filename, byte size, timestamp, and SHA-256.",
+      "Inventory and hash every required tokenizer, gene median, vocabulary, and prior-knowledge payload, including Git LFS and externally hosted objects.",
+      "Bind the selected Base object to an exact training cutoff and corpus inventory.",
+      "Do not infer object identity from the portal token or the UI label Base."
+    ],
+    "weight_content_downloaded": false
+  },
+  "embedding_contract": {
+    "candidate_cell_representation": "768d_frozen_base_cell_sequence_representation",
+    "common_lane_rule": "Freeze one layer and pooling operation before screening; no downstream label may select the layer, pooling, token length, or rank-value transformation.",
+    "official_native_lane": "full_model_fine_tuning_with_a_task_head",
+    "native_lane_status": "blocked_by_absent_terms_and_unresolved_checkpoint"
+  },
+  "input_contract": {
+    "canonical_assays": ["scRNA_UMI_counts", "snRNA_UMI_counts"],
+    "gene_identifier_contract": "Ensembl_gene_ids_mapped_to_the_exact_human_or_mouse_vocabulary",
+    "human_gene_list_length": 28291,
+    "mouse_gene_list_length": 27443,
+    "maximum_expressed_gene_tokens": 2048,
+    "normalization": "expression_adjusted_by_the_released_gene_median_then_nonzero_genes_ranked_descending",
+    "sequence_fields": ["input_ids", "values", "length", "species"],
+    "structural_missingness_rule": "Do not rank structurally unassayed genes as biological zeros. Preserve assay observability and reject an input whose raw-count, Ensembl mapping, gene-median, or species contract cannot be reproduced.",
+    "unsupported_inputs": ["bulk_RNA", "native_joint_RNA_ATAC", "gene_symbols_without_frozen_Ensembl_mapping"]
+  },
+  "prior_knowledge_contract": {
+    "external_payload_status": "INCOMPLETE",
+    "known_small_objects": [
+      {"name": "prior_knowledge/human_mouse_tokens.pickle", "size_bytes": 1144041},
+      {"name": "repository_homologous_human_mouse_mapping", "size_bytes": 104655},
+      {"line_count": 28291, "name": "repository_human_gene_list", "size_bytes": 210932},
+      {"line_count": 27443, "name": "repository_mouse_gene_list", "size_bytes": 199461}
+    ],
+    "blocking_finding": "Several checked-in prior-knowledge paths are Git LFS pointer stubs, and the repository also directs users to a mutable external folder. Pointer hashes are not payload hashes."
+  },
+  "registry_binding": {
+    "artifact_bundle_id": "genecompass",
+    "registry_model_id": "genecompass",
+    "mapping": "exact"
+  },
+  "repository": "xCompass-AI/GeneCompass",
+  "repository_revision": "66ab82f90fa94f88613df7d89a2fb38165e2a82f",
+  "release": {
+    "paper": "GeneCompass: deciphering universal gene regulatory mechanisms with a knowledge-informed cross-species foundation model",
+    "paper_doi": "10.1038/s41422-024-01034-y",
+    "paper_online_date": "2024-10-08",
+    "preprint_doi": "10.1101/2023.09.26.559542"
+  },
+  "runtime_contract": {
+    "declared_cuda": "11.7",
+    "declared_pytorch": "1.13.1",
+    "declared_transformers": "4.30.0",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "isolated_L40S_import_exact_checkpoint_and_prior_payload_load_fixed_preprocessing_forward_backward_if_licensed_deterministic_seed_resume_and_numeric_tolerance",
+    "scheduling_status": "blocked_until_terms_checkpoint_prior_payload_and_runtime_are_resolved"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "risks": [
+      "The preprocessing path loads Python pickle token, median, and prior-knowledge objects.",
+      "The model path may load a pickle-backed PyTorch or Hugging Face checkpoint from an unresolved portal object."
+    ],
+    "required_path": [
+      "Obtain written terms and immutable hashes before acquisition.",
+      "Inspect pickle and checkpoint content only in a disposable no-network environment.",
+      "Convert approved plain data structures and recognized tensors to non-executable formats.",
+      "Freeze tokenizer, gene medians, prior matrices, tensor names, shapes, dtypes, and fixed-fixture numeric parity."
+    ]
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Cell Research paper, pinned official repository, Git tree and raw source objects, and live official ScienceDB portal were checked on 2026-08-22. No checkpoint, Git LFS payload, prior-knowledge bundle, supplement, or dataset artifact was downloaded or deserialized.",
+  "source_records": [
+    {
+      "identity": "GeneCompass@66ab82f9:README.md",
+      "sha256": "e3b12260777ea9193c9d9135de56050439d2fcd6fb9ee8cc991be8f7ac96717b",
+      "url": "https://github.com/xCompass-AI/GeneCompass/blob/66ab82f90fa94f88613df7d89a2fb38165e2a82f/README.md"
+    },
+    {
+      "identity": "GeneCompass@66ab82f9:requirements.txt",
+      "url": "https://github.com/xCompass-AI/GeneCompass/blob/66ab82f90fa94f88613df7d89a2fb38165e2a82f/requirements.txt"
+    },
+    {
+      "identity": "GeneCompass@66ab82f9:preprocess/preprocess.py",
+      "url": "https://github.com/xCompass-AI/GeneCompass/blob/66ab82f90fa94f88613df7d89a2fb38165e2a82f/preprocess/preprocess.py"
+    },
+    {
+      "identity": "GeneCompass@66ab82f9:pretrain/pretrain_base.py",
+      "url": "https://github.com/xCompass-AI/GeneCompass/blob/66ab82f90fa94f88613df7d89a2fb38165e2a82f/pretrain/pretrain_base.py"
+    },
+    {
+      "identity": "GeneCompass@66ab82f9:repository_tree",
+      "url": "https://github.com/xCompass-AI/GeneCompass/tree/66ab82f90fa94f88613df7d89a2fb38165e2a82f"
+    },
+    {
+      "identity": "ScienceDB:anonymous/SUZOdk1y",
+      "url": "https://www.scidb.cn/en/anonymous/SUZOdk1y"
+    }
+  ],
+  "task_fit": {
+    "cell_state_mapping": "blocked_restricted_comparator_until_written_terms_exact_base_prior_payload_runtime_input_and_exposure_gates",
+    "masld_adaptation": "No probe, fine-tuning, LoRA, adapter, distillation, or release is admitted without written code, weight, tokenizer, and prior-knowledge terms.",
+    "perturbation_response": "not_admitted_by_the_base_checkpoint; the published GEARS-style experiment is a separately trained downstream system and requires its own exact head, splits, seeds, terms, and audit",
+    "rna_atac_integration": "not_native",
+    "bulk_state_transfer": "not_admitted"
+  },
+  "terms_audit": {
+    "repository_license_detected": false,
+    "checkpoint_terms_detected": false,
+    "prior_knowledge_payload_terms_detected": false,
+    "open_champion_eligible": false,
+    "result": "no_use_until_written_permission_and_terms_are_obtained"
+  }
+}

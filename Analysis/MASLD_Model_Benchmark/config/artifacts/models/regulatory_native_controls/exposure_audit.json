@@ -1,0 +1,153 @@
+{
+  "audit_scope": {
+    "candidate": "regulatory_native_controls_exact_nine_role_suite",
+    "registry_ids": [
+      "mean_track",
+      "context_only",
+      "sequence_only",
+      "trans_only",
+      "nearest_regulatory_feature",
+      "nearest_context",
+      "shuffled_context",
+      "sequence_cnn_control",
+      "sequence_transformer_control"
+    ],
+    "registered_tasks": [
+      "rna_conditioned_atac",
+      "variant_to_regulation"
+    ]
+  },
+  "suite_finding": {
+    "admitted_upstream_checkpoint": "none",
+    "implementation_state": "not_created_for_all_nine_roles",
+    "checkpoint_exposure_state": "not_applicable_for_standalone_controls_and_unresolved_for_parent_bound_ablations",
+    "project_fit_exposure_state": "unknown_until_fold_specific_artifacts_exist",
+    "admission": "blocked",
+    "reason": "Project-local specifications are now explicit, but exact code, architecture or deterministic algorithm artifacts, environments, fit receipts, fixtures, and release terms remain unresolved."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "nine_control_task_dataset_topology_split_sign_missingness_and_claim_crosswalk",
+    "sha256": "9f58cfeda210fd439da630a86848dbd1d3cb9cee93345cd577aa81c283eb9e9f"
+  },
+  "model_findings": {
+    "mean_track": {
+      "upstream_exposure": "none",
+      "fit_exposure": "continual_seen_for_outer_training_donors_and_features_once_fitted",
+      "held_eligibility": "target_label_unexposed only when the donor-balanced mean, transform, feature axis, masks, and denominator receipt are frozen before held inference",
+      "principal_leakage_risk": "Computing a global or cell-weighted mean using held donors, held ATAC, or post-QC outcome-dependent exclusions.",
+      "identity_disposition": "standalone_true_baseline_no_backbone"
+    },
+    "context_only": {
+      "upstream_exposure": "none unless a concrete parent-bound realization reuses an artifact, in which case the strictest parent exposure applies",
+      "fit_exposure": "continual_seen_for_outer_training_donors_and_context_targets_once_fitted",
+      "held_eligibility": "target_label_unexposed only with training-only context normalization, features, mapper, head, and calibration",
+      "principal_leakage_risk": "Encoding locus or target identity through coordinates, fitting context transforms on held donors, or presenting a parent-model ablation as an independent model.",
+      "identity_disposition": "ablation_no_inherited_backbone_or_champion"
+    },
+    "sequence_only": {
+      "upstream_exposure": "inherits_the_strictest_exposure_class_of_the_exact_reused_parent_artifact",
+      "fit_exposure": "inherits parent exposure plus continual_seen for any project-fitted outer-training head or adapter",
+      "held_eligibility": "requires a concrete parent receipt, training-only reference context, eligible gene and lineage crosswalk, and no held-target adaptation",
+      "principal_leakage_risk": "Using a reference context computed from held RNA, allowing homologous sequence across blocks, or claiming the generic role as the parent's checkpoint or champion.",
+      "identity_disposition": "parent_bound_ablation_generic_ID_unschedulable"
+    },
+    "trans_only": {
+      "upstream_exposure": "inherits_the_strictest_exposure_class_of_the_exact_reused_parent_artifact",
+      "fit_exposure": "inherits parent exposure plus continual_seen for any project-fitted outer-training trans mapper or head",
+      "held_eligibility": "requires exact parent trans-vector order and mapper with all statistics frozen in the outer-training partition",
+      "principal_leakage_risk": "Batch correction or quantile mapping with held donors, accidental target/locus encoding, or borrowing the parent's independent identity.",
+      "identity_disposition": "parent_bound_ablation_no_allelic_sign"
+    },
+    "nearest_regulatory_feature": {
+      "upstream_exposure": "reference_only_for_an_exactly_registered_external_feature_table; none for project code",
+      "fit_exposure": "no outcome fit, but the frozen feature universe and link table are exposed to their source cohorts and derivations",
+      "held_eligibility": "target_label_unexposed only when feature intervals, gene links, build, source release, score, and tie rule are frozen before held labels are accessed",
+      "principal_leakage_risk": "Using features or links derived from the sealed target, choosing a feature source after outcomes, or coercing unsigned distance into allelic direction.",
+      "identity_disposition": "standalone_unsigned_distance_baseline"
+    },
+    "nearest_context": {
+      "upstream_exposure": "none",
+      "fit_exposure": "continual_seen_for_every_donor_and_target used to construct the outer-training prototype bank",
+      "held_eligibility": "target_label_unexposed only when normalization, metric, bank, targets, tie rule, and missingness handling are frozen without held ATAC or outcomes",
+      "principal_leakage_risk": "Populating the bank with held donors, selecting neighbors using held target profiles, or widening strata after observing errors.",
+      "identity_disposition": "standalone_true_retrieval_baseline"
+    },
+    "shuffled_context": {
+      "upstream_exposure": "inherits_the_strictest_exposure_class_of_the_exact_parent_artifact",
+      "fit_exposure": "inherits parent exposure; permutation assignments add no training exposure only if built outcome blind inside legal partitions",
+      "held_eligibility": "requires a committed parent artifact, permutation universe, legal strata, stable row IDs, fixed seed, assignment hash, and no outcome-dependent redraw",
+      "principal_leakage_risk": "Permuting across donors, folds, loci, lineages, assays, or missingness states; using target outcomes to select a favorable seed; or labeling the negative control as an independent model.",
+      "identity_disposition": "parent_bound_negative_control_never_independent_champion"
+    },
+    "sequence_cnn_control": {
+      "upstream_exposure": "none_random_initialization",
+      "fit_exposure": "continual_seen_for_outer_training_donors_loci_sequences_and_targets_once_trained",
+      "held_eligibility": "target_label_unexposed only with an immutable architecture, receptive field, train split, seed, head, and artifact receipt before held inference",
+      "principal_leakage_risk": "Architecture or parameter-budget tuning on held outcomes, near-identical sequence across blocks, REF/ALT errors, or boundary buffers smaller than the largest admitted model.",
+      "identity_disposition": "standalone_true_scratch_baseline_eligible_only_under_own_artifact"
+    },
+    "sequence_transformer_control": {
+      "upstream_exposure": "none_random_initialization",
+      "fit_exposure": "continual_seen_for_outer_training_donors_loci_sequences_and_targets_once_trained",
+      "held_eligibility": "target_label_unexposed only with immutable tokenization, positional encoding, architecture, receptive field, train split, seed, head, and artifact receipt",
+      "principal_leakage_risk": "Unreported pretrained initialization, architecture tuning on held outcomes, homologous sequence across blocks, REF/ALT errors, or an undersized shared boundary buffer.",
+      "identity_disposition": "standalone_true_scratch_baseline_eligible_only_under_own_artifact"
+    }
+  },
+  "contamination_and_leakage_findings": {
+    "upstream_corpora": "Standalone controls have no pretrained corpus. This removes checkpoint-corpus contamination, not project-data leakage.",
+    "parent_bound_ablations": "context_only when parent-bound, sequence_only, trans_only, and shuffled_context inherit the strictest checkpoint exposure, license, data, and derivative restrictions of every artifact they reuse. They do not inherit a clean exposure class merely because one input pathway is removed.",
+    "project_training": "A fit is continual_seen for all training donors, loci, outcomes, and annotations used directly or through derived features. Only a different held source can be target_label_unexposed, supported by complete receipts.",
+    "means_and_prototypes": "Means, reference contexts, nearest-neighbor banks, distance metrics, feature rosters, and target summaries are fitted state. Building them from the full campaign is leakage even when no neural weights are learned.",
+    "sequence": "Cross donor folds with held genomic or ancestry-matched native-build LD blocks; group exact, near-identical, and reverse-complement sequences; apply the largest admitted receptive-field buffer.",
+    "sealed": "GSE289173 labels and effect summaries stay evaluator-only. Opening features permits only locked inference and cannot update means, context normalization, prototype banks, permutation assignments, heads, or calibration.",
+    "task_specific": "RNA-conditioned ATAC currently lacks an eligible seal unless FNIH activates. Variant confirmation exists only for endpoints with complete eligible GSE289173 summaries."
+  },
+  "sign_strand_and_output_findings": {
+    "canonical_sign": "All signed allele effects are ALT minus REF after forward-reference validation. REF/ALT swap must negate the result.",
+    "reverse_complement": "Reverse-complement evaluation transforms both allele windows, restores output position, strand, and channel, and retains ALT-minus-REF sign.",
+    "zero_delta": "mean_track, context_only, and trans_only have zero delta by construction. Zero is a control output, not support for an observed null or correct direction.",
+    "unsigned": "nearest_regulatory_feature is a proximity score and cannot be treated as a signed variant effect.",
+    "profile": "Every applicable RNA-conditioned ATAC control must emit a complete finite profile without observed query ATAC. An embedding or target-assisted reconstruction fails capability."
+  },
+  "known_incidents_and_biases": [
+    "All nine registry entries currently have unresolved source, revision, license, runtime, and fixed-fixture evidence; the specification bundle does not admit them for execution.",
+    "A simple mean, context prototype, or nearest-neighbor bank can leak held donors just as a trained model can.",
+    "Cell-weighted means let large cell yields dominate donors. The frozen specification therefore uses donor-level assay-native profiles and equal donor weights.",
+    "Same-donor RNA and ATAC from GSE244832 are not same-cell pairs. Any cell-to-cell pairing would be fabricated.",
+    "The generic sequence_only and shuffled_context capability rows can emit primary-compatible values, but output compatibility is not admission, independence, or champion eligibility.",
+    "Parent ablations may retain pretrained-corpus contamination and redistribution restrictions even when the ablated pathway no longer consumes the corresponding input.",
+    "An unsigned nearest-feature score and a zero-delta control can look numerically well calibrated under imbalanced negatives while carrying no allelic-direction information.",
+    "Cells, nuclei, peaks, variants, loci, permutation rows, and seeds are not independent biological donors."
+  ],
+  "runtime_disposition": {
+    "current": "unresolved_no_environment_or_implementation_artifact_for_any_role",
+    "no_action": "No dependency was installed, no artifact downloaded, no job submitted, and no code or model test run for this audit.",
+    "future_cpu": "Mean, distance, retrieval, and deterministic permutation construction should pass CPU SLURM fixtures unless their concrete parent requires GPU inference.",
+    "future_gpu": "Scratch CNN or transformer and parent-bound neural ablations require runtime-specific import, forward/backward where trained, checkpoint resume, deterministic seed, and numeric-tolerance receipts.",
+    "safe_state": "Prefer JSON, Parquet, safetensors, or another bounded non-executable format with hashes. Untrusted pickle, joblib, torch.load of unrestricted objects, RDS, or AnnData model-state loading is not admitted."
+  },
+  "license_and_release_disposition": {
+    "project_implementation_license": "UNRESOLVED_no_code_artifact",
+    "standalone_upstream_weights": "none",
+    "parent_bound_terms": "strictest parent code, weight, derivative, data, and redistribution conditions apply to reused artifacts",
+    "input_and_output_rights": "unresolved_per_dataset_annotation_regulatory_feature_table_and_derived_output",
+    "open_champion": "blocked_until_an_exact_self_owned_implementation_runtime_rights_and_endpoint_specific_sealed_gate_pass",
+    "identity": "No control may be released or cited under a model backbone, checkpoint, or champion name that its own immutable receipt does not implement."
+  },
+  "remaining_blockers": [
+    "Implement each selected standalone control or parent-specific ablation under a unique immutable implementation ID and source hash; do not reuse the nine generic registry IDs as executable identities.",
+    "Freeze architecture, deterministic algorithm, preprocessing, output axes, model-state format, runtime, dependencies, seeds, and licenses for each implementation.",
+    "For parent-bound ablations, bind the exact parent checkpoint, preprocessing, receptive field, input mapper, trainable parameters, data exposure, and redistribution terms.",
+    "Register fold-specific donor-balanced means, reference contexts, prototype banks, feature tables, and permutation assignment hashes before held inference.",
+    "Pass donor-by-genomic split, native-build LD, exact and reverse-complement identity, largest-receptive-field buffer, REF/ALT, strand, indel, missingness, and row-order fixtures.",
+    "Pass full-profile no-observed-query-ATAC capability for every RNA-conditioned ATAC control and endpoint-specific output capability for variant scoring.",
+    "Keep zero-delta, unsigned, ablation, negative-control, and true-baseline claims distinct in evaluation and publication.",
+    "Use a project-sealed source only once after selection lock; do not promote an RNA-conditioned ATAC champion unless the conditional FNIH or an equivalent eligible seal activates."
+  ],
+  "interpretation": "These controls have no standalone pretrained-checkpoint contamination, but they are not exposure-free. Fold-derived means, prototypes, feature universes, output heads, and permutations are learned or selected state. Parent-bound ablations also carry their parent's checkpoint exposure and terms. The audit therefore blocks all nine until each has an exact implementation and receipt, while preserving the scientific distinction between simple baselines, pathway ablations, and a shuffled-context negative control.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_pending_exact_implementation_runtime_rights_capability_and_endpoint_specific_seal",
+  "verified_date": "2026-08-22"
+}

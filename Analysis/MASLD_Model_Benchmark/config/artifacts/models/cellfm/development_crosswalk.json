@@ -1,0 +1,37 @@
+{
+  "corpus": {
+    "declared_cells": 102304686,
+    "declared_samples": 19914,
+    "declared_species": "human",
+    "declared_sources": ["GEO", "ENA", "GSA", "ImmPort", "SynEcoSys_processed_collection"],
+    "exact_accession_donor_and_cell_inventory_status": "UNRESOLVED",
+    "supplementary_inventory_locator": "Nature_Communications_2025_Supplementary_Metadata_information.xlsx",
+    "source_evidence": "Nature Communications paper and official model card",
+    "warning": "The published source categories and totals do not exclude accession overlap. The accession-level supplement was not acquired under this metadata-only audit, and no retained-cell or release-alias roster is bound to the exact checkpoint."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before the registered base checkpoint; membership cannot be excluded until the accession, release-alias, donor, and retained-cell inventory is parsed and bound.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before the registered base checkpoint; membership cannot be excluded until the accession, release-alias, donor, and retained-cell inventory is parsed and bound.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before the registered base checkpoint; membership cannot be excluded until the accession, release-alias, donor, and retained-cell inventory is parsed and bound.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before the registered base checkpoint; membership cannot be excluded until the accession, release-alias, donor, and retained-cell inventory is parsed and bound.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Public before the registered base checkpoint; membership cannot be excluded until the accession, release-alias, donor, and retained-cell inventory is parsed and bound.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO became public before the exact base_weight.ckpt file revision, so chronology does not exclude training exposure.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO public release postdates the checkpoint file revision, but the biological data or labels may have existed privately and no checkpoint-bound accession, donor, or retained-cell inventory excludes them.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO public release postdates the checkpoint file revision, but the biological data or labels may have existed privately and no checkpoint-bound accession, donor, or retained-cell inventory excludes them.", "exposure_state": "unknown", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO public release on 2025-02-12 postdates the checkpoint file revision, but public chronology alone does not prove the biological data or target labels were unavailable privately before training. The checkpoint-bound corpus inventory is unresolved.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO public release postdates the checkpoint file revision, but the biological data or labels may have existed privately and no checkpoint-bound accession, donor, or retained-cell inventory excludes them.", "exposure_state": "unknown", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Public before the registered base checkpoint; membership cannot be excluded until the accession, release-alias, donor, and retained-cell inventory is parsed and bound.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "public_chronology": "A GEO public-release date after the exact checkpoint file revision is insufficient for clean_declared or target_label_unexposed status because the biological data and labels may have existed privately before release.",
+    "inventory_requirement": "Every source remains unknown until a checkpoint-bound accession, release-alias, donor, retained-cell, and target-label inventory excludes it or establishes the allowed exposure class.",
+    "head_scope": "These findings apply only to the exact frozen base checkpoint. They do not transfer to any separately trained annotation, GEARS, CellOT, or drug-response component.",
+    "terms_scope": "A clean exposure state does not override CC-BY-NC-ND restrictions or create open-champion eligibility."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

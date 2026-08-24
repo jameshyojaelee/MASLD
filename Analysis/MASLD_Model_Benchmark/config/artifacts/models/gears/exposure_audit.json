@@ -1,0 +1,63 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_future_project_trained_weights",
+    "development_sources": ["gse238219", "gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_ids": ["gene_perturbation_response", "perturbation_transfer"]
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_checkpoint": false,
+    "code_identity": "snap-stanford/GEARS@f374e43e197b295016d80395d7a54ddb81cc6769",
+    "declared_algorithm_exposure_state": "target_label_unexposed",
+    "future_project_fit_rule": "A fit on GSE281160 is continual_seen for that dataset and cannot later be described as zero-shot or external. Each fit records the exact training target loci, guides, replicates, expression rows, GO prior, coexpression graph, and split hashes."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "366d4277ffbf3e40f058bbae757d9d84d374f35c495bd2be320faa66a8ed4451"
+  },
+  "external_prior_exposure": {
+    "GO_graph": "reference_only_if_terms_and_identity_clear",
+    "automatic_gene2go_pickle": "blocked_unhashed_unlicensed_and_unsafe_loader",
+    "essential_gene_pickle": "blocked_unhashed_unlicensed_and_unsafe_loader"
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {
+      "benchmark_action": "replace",
+      "finding": "The pinned PertData object creates ctrl_adata from all controls before task splitting, and graph construction and prediction randomly draw controls from this global pool."
+    },
+    {
+      "benchmark_action": "replace",
+      "finding": "Upstream custom and cached splits are pickle files and are not grouped by project biological replicate, target locus, and guide family."
+    },
+    {
+      "benchmark_action": "freeze_and_hash",
+      "finding": "The coexpression graph is intended to use training conditions, but its filename does not bind the full grouped project split and retained row inventory."
+    },
+    {
+      "benchmark_action": "reject_current_task",
+      "finding": "The query API requires perturbed genes present in expression and graph vocabularies; current perturbations are noncoding loci and guide pseudo-genes."
+    }
+  ],
+  "prediction_first_rule": {
+    "gse313774": "The adapter cannot directly query these bulk intervention arms. No output may be stretched into a stress prediction unless an evaluator-level gene-program mapping and prediction universe are frozen before outcomes are opened; CXCL1 and IL8 remain excluded."
+  },
+  "remaining_blockers": [
+    "Do not schedule GEARS on GSE281160 unless a new gene-perturbation task is registered; locus-to-gene mapping changes the scientific question.",
+    "For GSE238219, resolve independent culture/transduction ancestry and the five deposited replicate rows versus two-replicate paper analysis before scoring.",
+    "Freeze the exact GSE238219 expression-gene, target-gene, and safe GO-node vocabulary intersection without nearest-gene or outcome-based substitution.",
+    "Resolve GSE281160 biological replicates, custom reference, guide-to-locus table, matrix layer, and gene symbols.",
+    "Inventory the exact GO and essential-gene artifacts, terms, source release, sizes, checksums, and safely converted non-pickle forms.",
+    "Implement deterministic fold-local context-matched control sampling and a split-hash-bound coexpression cache.",
+    "Freeze model configuration, loss, optimizer, seeds, output scale, and trained weight hashes.",
+    "The isolated GEARS_Model CPU core forward/backward passed on job 21067574; the project dataset adapter, fold-local control, numeric parity, checkpoint-resume, and grouped leakage fixtures remain."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_and_current_target_identity_is_unsupported",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "not_currently_evaluable",
+    "rule": "The independent evaluator computes O_pert only from training perturbation-specific replicate centroids. Reference shifting never changes model admission or supplies an unsupported target representation."
+  },
+  "terms_result": "code_MIT_external_prior_terms_UNRESOLVED",
+  "verified_date": "2026-08-24"
+}

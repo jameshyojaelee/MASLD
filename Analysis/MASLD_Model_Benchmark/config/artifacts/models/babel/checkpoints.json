@@ -1,0 +1,72 @@
+{
+  "architecture_contract": {
+    "atac_decoder": "chromosome-factorized decoder with sigmoid output interpreted as per-peak accessibility probability",
+    "latent_dimension_candidates_in_loader": [16, 32],
+    "model": "asymmetric spliced autoencoder with RNA and chromosome-factorized ATAC encoders/decoders and four reconstruction/cross-translation paths",
+    "native_losses": "negative-binomial RNA loss plus binary-cross-entropy ATAC loss, including RNA-to-ATAC and ATAC-to-RNA cross losses",
+    "pretrained_feature_claim_from_paper": {"genes": 34861, "peaks": 223897},
+    "warning": "The historical training script preprocesses and clusters the full dataset before its internal split. That path is leakage-incompatible and cannot be used unchanged for donor-held benchmarking."
+  },
+  "code_license": "NO_LICENSE_FILE_OR_REPOSITORY_LICENSE_DETECTED_BLOCKED",
+  "implementation": {
+    "checkpoint_identity": {
+      "archive_basename": "babel_human_v1.1.tar.gz",
+      "google_drive_file_id": "1uJDbiDrBb5M0d9I5hjj2Ext-N08CXESS",
+      "md5_declared_by_authors": "5e2f68466a1460a36e39a45229b21b1b",
+      "model_directory_declared_by_loader": "cv_logsplit_01_model_only",
+      "status": "REGISTERED_NOT_DOWNLOADED_UNVERIFIED_SHA256_SIZE_AND_ARCHIVE_CONTENTS"
+    },
+    "pretraining_corpus_declared_by_authors": "paired human 10x Multiome PBMC plus COLO-320DM and COLO-320HSR colorectal cell lines",
+    "repository": "wukevin/babel",
+    "repository_revision": "55742e4c704eb0e1e81569c7caeceb0a516bd90b",
+    "repository_tag": null,
+    "revision_date": "2023-07-16T19:11:10-07:00"
+  },
+  "inductive_inference_contract": {
+    "designed_behavior": "A frozen BABEL model accepts RNA rows and emits ATAC probabilities in its exact frozen peak order without observed ATAC or model updating.",
+    "feature_constraint": "The hosted v1.1 checkpoint requires its exact rna_genes.txt and atac_bins.txt registries; intersection, padding, duplicate-gene policy, genome build, and coverage must pass a fixed fixture.",
+    "liver_domain_warning": "The declared checkpoint corpus is PBMC and colorectal cell lines, not liver or MASLD. Domain shift must be reported and cannot be repaired on held donors.",
+    "pretrained_status": "Blocked from execution until code and weight permissions, SHA-256, size, archive inventory, safe-loading inspection, and runtime fixtures pass."
+  },
+  "input_contract": {
+    "atac_training_input": "raw paired ATAC counts, binarized to x greater than zero by the native loader",
+    "feature_alignment": "Exact ordered genes and chromosome-sorted peaks; any local implementation must use training-only features mapped to GENCODE v49 and GRCh38.p14",
+    "rna_input": "raw RNA counts; the native loader derives size-normalized targets and log-normalized encoder inputs",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_pairing_topologies": ["same_study_unpaired_for_training", "same_sample_different_aliquot_for_training", "same_donor_different_tissue_for_training"],
+    "warning": "BABEL training is supervised on paired modalities. GSE244832 cannot be used as paired training data."
+  },
+  "output_contract": {
+    "rna_to_atac": "probability between zero and one for every frozen checkpoint peak; upstream warns probabilities are not guaranteed calibrated",
+    "rna_reconstruction": "continuous expression in linear, not log, space",
+    "uncertainty": "The published loader exposes one checkpoint. Project five-seed uncertainty applies only to separately permitted local training; it cannot be invented from a single hosted model."
+  },
+  "runtime_contract": {
+    "declared_environment": "Python 3.7, PyTorch 1.3, CUDA 10.1, anndata 0.6.22, scanpy 1.4.4, numpy 1.17, pandas 0.25, scikit-learn 0.21, skorch 0.7",
+    "environment_status": "LEGACY_STACK_UNRESOLVED_L40S_COMPATIBILITY_SAFE_LOADING_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "archive_downloaded": false,
+    "automatic_download_forbidden": true,
+    "risk": "gdown extracts an external archive and skorch load_params ultimately deserializes PyTorch checkpoint material. Neither archive paths nor serialized objects have been inspected.",
+    "required_before_acquisition": "Written authorization, exact redistribution/use terms, immutable download receipt, declared MD5 plus computed SHA-256 and size, path-traversal-safe archive inventory, and offline safe-deserialization review."
+  },
+  "schema_version": "masld-bench-external-checkpoint-preflight-v1",
+  "source_evidence": "The exact public repository revision, README, environment, model loader, data loader, training/prediction scripts, architecture, and losses were inspected as text on 2026-08-22. The repository has no license file. No package, checkpoint, archive, or weights were downloaded, installed, extracted, deserialized, or executed.",
+  "source_records": [
+    {"identity": "babel:README.md", "sha256": "8aee388cc6dff07b61d147ba7e655cecb8fa075435730c178d604f1aba530c18", "size_bytes": 9700},
+    {"identity": "babel:environment_minimal.yml", "sha256": "00dbf36a3d62d19930430e7ea0ff1f25029bf8dc1f001a900253f9a019c3cbf0", "size_bytes": 634},
+    {"identity": "babel:babel/model_utils.py", "sha256": "a182e02b6094ea662379bdf04ed63bee9d66b08d1fba9cca9da43500f26a818f", "size_bytes": 8390},
+    {"identity": "babel:babel/sc_data_loaders.py", "sha256": "b81f1f8bbe1f2fdc80991f3c23c0faf94afc250d0cea6a58972ce0e45e6c1a92", "size_bytes": 74921},
+    {"identity": "babel:babel/models/autoencoders.py", "sha256": "f30974a875f63a6360b512ac22b8d3261466d1e20a143f090a4dbfdb105a58e9", "size_bytes": 52906},
+    {"identity": "babel:babel/loss_functions.py", "sha256": "fb76d588a4ffe2a2330c1c672f37639a905378c583dc5f13d93a91ed5576e4f8", "size_bytes": 20771},
+    {"identity": "babel:bin/train_model.py", "sha256": "0f439d9875dfa5cf8ea92edeeb9f17badf5739a64217f0cd5020d861d84ff72c", "size_bytes": 19094},
+    {"identity": "babel:bin/predict_model.py", "sha256": "e023c611fd7fdcb9053d0f785364710348c70dfecd2b72d7818a42e66e4e0c8d", "size_bytes": 22146}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Not admitted. The hosted model is a translation checkpoint, and its unlicensed code/weights and legacy stack fail current gates.",
+    "rna_conditioned_atac": "Scientifically direct-fit because RNA-only inference emits a peak profile, but operationally blocked by permissions, identity, safe-loading, legacy runtime, feature-build, and domain-shift gates.",
+    "variant_to_regulation": "Ineligible because BABEL has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NO_SEPARATE_CHECKPOINT_TERMS_DETECTED_BLOCKED"
+}

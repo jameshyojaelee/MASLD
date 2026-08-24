@@ -1,0 +1,45 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse281160", "gse281364", "gse296875", "current_coloc_gwas"],
+    "implementation": "Dongwon-Lee/lsgkm@d7ef90f7cb326b190619c51a13843da48c99e239",
+    "sealed_dataset_id": "gse289173",
+    "task": "variant_to_regulation"
+  },
+  "checkpoint_finding": {
+    "checkpoint_identity": "project_trained_per_outer_fold_cell_state_seed_and_genomic_split; not_yet_created",
+    "declared_training_corpus": "Only registered outer-training donor-state ATAC peak and matched-nonpeak sequences from allowed genomic blocks",
+    "gse289173_target_exposure": "target_label_unexposed",
+    "gse296875_project_exposure": "continual_seen_for_each_training_partition",
+    "historical_and_bundled_models": "excluded",
+    "overall_exposure_state": "target_label_unexposed",
+    "source_revision_date": "2026-05-23",
+    "source_revision_warning": "The selected code postdates the GEO releases but carries no admitted biological weights. Project training receipts and sealed chronology determine label exposure.",
+    "upstream_pretraining": "none"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "local_training_crosswalk_output_role_and_shared_weight_identity",
+    "sha256": "6a8b9e167b858fa000e429feb30806c2de1b6f1fa3deccb39736a7b3b2412d67"
+  },
+  "interpretation": "gkm-SVM is a mandatory task-native sequence/accessibility baseline, trained from scratch within crossed donor and genomic folds. It avoids foundation-checkpoint corpus contamination, but it remains highly vulnerable to local leakage through peak calling, background matching, duplicate sequence handling, and fold construction. Its raw score and ALT-minus-REF decision delta describe resemblance to an accessibility-positive class, not a signed target-gene effect.",
+  "known_incidents_and_biases": [
+    "The source repository bundles a historical NFE2H test model and FASTA/prediction fixtures. Those artifacts are software tests only and are prohibited as biological baselines.",
+    "The source reader can truncate overlength FASTA records after warning. The adapter must fail before native execution.",
+    "Raw decision-value sign depends on the positive/negative label and LIBSVM class ordering; a fixed positive-peak and allele-delta fixture is required.",
+    "The project seed affects background sampling and record order; LS-GKM -r is not a general fitting seed.",
+    "Thread counts 1, 4, and 16 are implemented separately and can change floating-point reduction order; -T 1 is the frozen reference lane.",
+    "Direct gkm-SVM and deltaSVM share the same model weights and are related ablations, not independent evidence.",
+    "Accessibility direction does not establish enhancer-gene linkage or the direction of gene expression."
+  ],
+  "remaining_blockers": [
+    "Compile the exact source only under an approved CPU SLURM campaign and freeze the compiler/runtime/binary hashes; pass forward score, training save/load, gzip, deterministic ordering, thread tolerance, malformed model, and checkpoint-restart fixtures.",
+    "Activate GSE296875 only after its donor/barcode/well, fragment, cell-state, reference, peak, QC, missingness, pathology, and rights contracts pass.",
+    "Freeze each fold/state/seed positive and matched-negative roster, exact 300-bp sequences, matching diagnostics, model command, logs, text-model SHA-256, and prediction hashes.",
+    "Pass SNP-only 300-bp REF/ALT centering, REF match, ALT-minus-REF sign, reverse-complement, boundary, N-rejection, and raw positive-class fixtures.",
+    "Keep GSE244832 held from fit for its donor-compatible development score and reject any false cell-level pairing.",
+    "Keep any MPRA activity transform, enhancer-gene link, and expression-direction rule separately registered and frozen before sealed inference."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_as_a_standalone_signed_variant_to_regulation_champion; conditionally_eligible_after_data_runtime_artifact_and_sign_locks_as_a_mandatory_secondary_sequence_accessibility_baseline_or_composite_component",
+  "verified_date": "2026-08-22"
+}

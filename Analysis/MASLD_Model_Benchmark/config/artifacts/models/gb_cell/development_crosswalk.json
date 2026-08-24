@@ -1,0 +1,151 @@
+{
+  "corpus": {
+    "declared_cells": 50000000,
+    "declared_species": "human",
+    "declared_tissues": "more_than_100",
+    "declared_sources": [
+      "GEO",
+      "DISCO",
+      "hECA",
+      "Single_Cell_Portal",
+      "other_sources_from_the_scFoundation_supplementary_list"
+    ],
+    "declared_selection_rule": "The model card and paper say GB.Cell followed the dataset list curated by scFoundation.",
+    "exact_accession_release_alias_donor_cell_label_and_cutoff_inventory": "UNRESOLVED",
+    "checkpoint_binding": "No exact retained-source manifest is bound to model.safetensors SHA-256 4602f09951c5a2f8cb814363f68cd63d8d7bd145e02560b852f6652df78bec77.",
+    "source_evidence": "Official GB.Cell model card and primary paper",
+    "warning": "A reference to another model's supplementary list is not a checkpoint-specific corpus declaration. It does not prove inclusion, exclusion, deduplication, label use, or training cutoff for any Atlas source."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_task": "cell_state_mapping",
+    "registered_cell_state_sources": [
+      "GSE136103",
+      "GSE174748",
+      "GSE185477",
+      "GSE189600",
+      "GSE202379",
+      "GSE244832",
+      "GSE256398",
+      "GSE281367",
+      "GSE289173",
+      "GSE296875",
+      "Liver_Atlas"
+    ]
+  },
+  "findings": {
+    "GSE136103": {
+      "evidence": "The source was public before the original GB.Cell weight release and may fall within the broad GEO/scFoundation-derived corpus. No exact checkpoint-bound accession, release-alias, donor, or retained-cell inventory proves inclusion or exclusion.",
+      "exposure_state": "unknown",
+      "public_date": "2019-09-12"
+    },
+    "GSE174748": {
+      "evidence": "The source was public before the original GB.Cell weight release and may fall within the broad GEO/scFoundation-derived corpus. No exact checkpoint-bound accession, release-alias, donor, or retained-cell inventory proves inclusion or exclusion.",
+      "exposure_state": "unknown",
+      "public_date": "2022-05-01"
+    },
+    "GSE185477": {
+      "evidence": "The source was public before the original GB.Cell weight release and may fall within the broad GEO/scFoundation-derived corpus. No exact checkpoint-bound accession, release-alias, donor, or retained-cell inventory proves inclusion or exclusion.",
+      "exposure_state": "unknown",
+      "public_date": "2021-10-13"
+    },
+    "GSE189600": {
+      "evidence": "The source was public before the original GB.Cell weight release and may fall within the broad GEO/scFoundation-derived corpus. No exact checkpoint-bound accession, release-alias, donor, or retained-cell inventory proves inclusion or exclusion.",
+      "exposure_state": "unknown",
+      "public_date": "2023-02-08"
+    },
+    "GSE202379": {
+      "evidence": "The source was public before the exact safetensors conversion and close to the underlying model's 2024 release window. No checkpoint-bound corpus and cutoff inventory excludes its data, aliases, donors, cells, or labels.",
+      "exposure_state": "unknown",
+      "public_date": "2024-04-04"
+    },
+    "GSE244832": {
+      "evidence": "GEO became public before the exact safetensors conversion. The conversion does not establish when the underlying model stopped training, and no retained-source inventory excludes this study.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13"
+    },
+    "GSE256398": {
+      "evidence": "GEO public release postdates the original GB.Cell repository release, but public chronology alone does not prove that the biological data, aliases, or labels were unavailable privately. The checkpoint-bound corpus inventory is unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2025-03-03"
+    },
+    "GSE281367": {
+      "evidence": "The public release postdates the weight and safetensors conversion, but no checkpoint-bound declaration establishes private-data exclusion or target-label nonexposure.",
+      "exposure_state": "unknown",
+      "public_date": "2026-03-16"
+    },
+    "GSE289173": {
+      "evidence": "GEO became public after the original weight release and before the safetensors conversion. A format conversion is not a new training cutoff, and public chronology does not exclude private biological-data or label exposure. The exact corpus roster is absent.",
+      "exposure_state": "unknown",
+      "public_date": "2025-02-12"
+    },
+    "GSE296875": {
+      "evidence": "The public release postdates the underlying weight and conversion, but no checkpoint-bound declaration establishes private-data exclusion or target-label nonexposure.",
+      "exposure_state": "unknown",
+      "public_date": "2025-10-01"
+    },
+    "Liver_Atlas": {
+      "evidence": "The liver source was public before training and may fall within the broad GEO, HCA, atlas, or scFoundation-derived corpus. No accession, release-alias, donor, or retained-cell roster resolves overlap.",
+      "exposure_state": "unknown",
+      "public_date": "2018-10-22"
+    }
+  },
+  "task_and_topology_crosswalk": {
+    "cell_state_mapping": {
+      "status": "structurally_applicable_but_admission_blocked",
+      "input": "Single-cell or single-nucleus nonnegative raw RNA counts aligned to the exact 19,264-gene order.",
+      "output": "A frozen 640-dimensional cell embedding followed by the campaign's identical common-lane head, or a separately licensed native head.",
+      "biological_unit": "donor",
+      "row_universe": "Use the identical eligible GSE289173 snRNA rows and frozen five-class ontology as every sealed cell-state candidate.",
+      "split": "All cells, nuclei, libraries, tissues, aliquots, timepoints, and modalities from one person remain in one donor outer fold.",
+      "held_fit": "Gene alignment is deterministic, but every learned probe, feature selection, batch correction, calibration, threshold, and native adaptation is fit inside training donors."
+    },
+    "conditional_masld_model": {
+      "status": "prohibited_under_current_terms",
+      "reason": "The license treats embeddings and gradients as outputs and restricts their use to train similar models except GenBio Materials or their downstream Derivative Works. The independent conditional MASLD model is not admitted as such a derivative."
+    },
+    "perturbation_response": {
+      "status": "not_admitted_by_base_checkpoint",
+      "reason": "Published perturbation experiments use task-specific fitting. The frozen base embedding object is not a complete perturbation predictor."
+    },
+    "rna_atac_integration": "not_native_single_cell_RNA_encoder_only",
+    "bulk_state_transfer": "not_admitted_raw_single_cell_count_and_depth_contract_does_not_define_bulk_input"
+  },
+  "dataset_role_crosswalk": {
+    "resource_atlas_current": "project_exposed_training_only; fit probes and any project adaptation inside donor folds",
+    "GSE296875": "project_exposed_training; same-nucleus RNA-ATAC topology does not make GB.Cell multimodal and donor remains the replicate",
+    "GSE244832": "project_exposed_training_or_donor-level_development; same donor is not same-cell pairing",
+    "GSE256398": "external development and selection, including alcohol-associated etiology challenge; not a sealed source",
+    "GSE281367": "external development and selection; not sealed",
+    "GSE289173": "project-sealed final only if the checkpoint can become target-label-unexposed and all other gates pass; currently exposure unknown"
+  },
+  "input_and_missingness_firewall": {
+    "raw_counts": "Reject log-normalized, batch-corrected, integrated, negative, or bulk matrices in the native input lane. Reject zero-total or nonfinite rows before the official division by total count.",
+    "gene_identifiers": "Freeze a one-to-one project identifier mapping into the exact gene_name axis. Duplicates, aliases, version suffixes, and ambiguous symbols are resolved without held labels.",
+    "native_zero_mask": "The official helper inserts zeros for model genes absent from the assay and supplies an attention mask. Preserve the project missingness state outside the tensor so structural panel absence is not recast as a measured biological zero.",
+    "cell_zero": "An assayed count of zero remains a native observed zero. Cell-specific dropout is not retrospectively relabeled from outcomes.",
+    "depth": "Both depth values derive from raw total counts. Downsampled, normalized-only, or reconstructed matrices cannot silently supply fabricated raw depth."
+  },
+  "fit_and_selection_firewall": {
+    "common_lane": "Freeze the exact checkpoint, source revision, gene order, raw-count preprocessing, attention mask, last layer, inclusion of depth positions, mean pooling, common head, label budget, folds, seeds, early stopping, and calibration before screening.",
+    "native_lane": "No fine-tuning, LoRA, adapter, or checkpoint modification before institutional terms confirmation. Report native results separately from representation probes.",
+    "held_donors": "Held and sealed donors cannot set normalization alternatives, identifier mapping choices, pooling, head architecture, calibration, exclusions, or thresholds.",
+    "labels": "The sealed GSE289173 label ontology and outcomes remain evaluator-only; commit standardized predictions before joining labels.",
+    "replication": "Donors are inferential units. Cells, nuclei, genes, batches, seeds, and model layers are not independent donors."
+  },
+  "rules": {
+    "all_unknown_fail_closed": "Every target source remains unknown until the exact 50-million-cell checkpoint corpus is resolved to accession, release alias, donor, retained-cell, label-use, and training-cutoff records.",
+    "chronology": "A public date after an original weight upload or before a later safetensors conversion does not prove private-data exclusion. A conversion commit is not evidence of retraining.",
+    "exposure_vs_terms": "Even a future clean or target-label-unexposed classification would not override the noncommercial, revocable, output-training, or redistribution restrictions.",
+    "source_owned_results": "The paper's zero-shot, annotation, and perturbation results are prior work, not discoveries or external validation of this benchmark."
+  },
+  "claim_boundary": {
+    "current": "No MASLD cell-state champion, no sealed external claim, and no conditional-model contribution.",
+    "future_comparator": "If institutional terms, exact corpus, runtime, input, and capability gates pass, GB.Cell may be reported as a restricted frozen comparator with donor-level metrics.",
+    "open_champion": "ineligible_under_current_GenBio_terms",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "interpretation": "GB.Cell is technically relevant to cell-state mapping because it consumes transcriptome-scale single-cell counts and exposes a deterministic pooled embedding recipe. It is not admitted now. The 50-million-cell corpus lacks a checkpoint-bound source inventory, all Atlas overlaps remain unknown, the runtime is not locked, and the license restricts noncommercial use, distribution, and training similar models from embeddings or other outputs.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

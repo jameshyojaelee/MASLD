@@ -1,0 +1,119 @@
+{
+  "audit_scope": {
+    "models": ["control_mean", "perturbed_mean", "ridge_perturbation", "bilinear_perturbation", "systema"],
+    "task": "perturbation_transfer",
+    "train_sources": ["gse281160"],
+    "development_sources": ["gse275483", "gse313774"],
+    "sealed_sources": []
+  },
+  "checkpoint_findings": {
+    "control_mean": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "admissible_future_exposure": "target_label_unexposed_for_each_held_role_only_after_fold_local_fit_receipts"
+    },
+    "perturbed_mean": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "admissible_future_exposure": "target_label_unexposed_for_each_held_role_only_after_fold_local_fit_receipts"
+    },
+    "ridge_perturbation": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "admissible_future_exposure": "target_label_unexposed_only_if_feature_scaling_regularization_and_coefficients_are_fit_inside_outer_training"
+    },
+    "bilinear_perturbation": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "admissible_future_exposure": "target_label_unexposed_only_if_both_feature_paths_interactions_regularization_and_coefficients_are_fit_inside_outer_training"
+    },
+    "systema": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "target_label_unexposed",
+      "scientific_spec": "official paper plus mlbio-epfl/systema revision aaf5b5353993b48b78543f2f93b3e18ca65df515",
+      "code_use": "prohibited_no_detected_upstream_license; independent_equation_implementation_only"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "five_perturbation_baselines_assay_native_units_splits_Systema_centering_and_dataset_applicability",
+    "sha256": "eb7ed82273fa360a9ce824e44fd1d3ad1a2a93eb7ec02c46c3fcfded3654b125"
+  },
+  "data_exposure_findings": {
+    "gse281160": {
+      "exposure": "downstream_demo",
+      "use": "outer-training and development-visible only",
+      "consequence": "Its MPRA-selected noncoding targets, guide responses, and expression profiles cannot support an unbiased or external claim. A fold-local model can be outcome-unexposed only to its held target groups."
+    },
+    "gse275483": {
+      "exposure": "target_label_unexposed_at_registry_creation_but_registered_as_development_visible",
+      "use": "n=4 animal cross-species stress after activation",
+      "consequence": "Opening outcomes makes this exposed development evidence. No threshold, target mapping, ortholog rule, or model selection may then be repaired against the same animals."
+    },
+    "gse313774": {
+      "exposure": "target_label_unexposed_prediction_first_outcomes_withheld",
+      "use": "n=3 independent-batch stress only",
+      "consequence": "Commit the full prediction universe and predictions first. Outcome-derived scale mapping, intervention mapping, calibration, gene filtering, pathway selection, or model repair is prohibited."
+    }
+  },
+  "Systema_leakage_finding": {
+    "matching_mean": "A baseline constructed from outer-training perturbation means. For unseen single-component targets it is the perturbed mean.",
+    "strict_center": "Subtract one outer-training perturbed centroid from both prediction and observation. The same fixed vector is used for all held rows.",
+    "outcome_center": "A center computed from evaluation outcomes is transductive evaluator state. It cannot be returned to the model or used for selection.",
+    "not_a_correction": "Centering does not remove batch, guide, context, composition, species, assay, target-selection, or confounding bias. It cannot legitimize a target prediction learned from held outcomes."
+  },
+  "known_leakage_and_bias_routes": [
+    "Computing pseudobulk, normalization, gene selection, centroids, target features, context encodings, regularization, or Systema references with held target outcomes.",
+    "Splitting guides from one target locus, cells from one experimental replicate, technical lanes from one sample, or libraries from one liver-chip batch across roles.",
+    "Treating cells, guides, targets, libraries, genes, or random seeds as biological replicates.",
+    "Using target IDs, nearest genes, linked genes, observed response embeddings, or post-outcome vocabulary extensions as held-noncoding-target features.",
+    "Subtracting a held-target centroid and describing the resulting correlation as prediction of a wholly unseen target.",
+    "Estimating the Systema center from held outcomes and feeding it into fitting, calibration, thresholding, model selection, or prediction repair.",
+    "Pooling raw counts, log expression, fold change, DE statistics, mouse ortholog summaries, single-cell pseudobulk, and bulk liver-chip profiles on one numerical axis.",
+    "Using GSE281160's MPRA-selected targets as an unbiased target sample.",
+    "Using one fasting mouse or three liver-chip batches to support a population treatment-response claim.",
+    "Selecting genes or pathways from the abstract-highlighted GSE313774 CXCL1 or IL8 results after outcome access."
+  ],
+  "pseudoreplication_disposition": {
+    "gse281160": "Experimental replicate is the inferential unit; target-locus pseudobulks remain nested outcomes. The replicate count must be resolved before fitting.",
+    "gse275483": "Animal is the inferential unit, n=4. Cells and perturbation labels are nested within animal.",
+    "gse313774": "Independent experimental batch is the inferential unit, n=3. The 33 libraries are nested condition measurements, not n=33.",
+    "uncertainty": "Paired cluster bootstrap resamples the declared biological units 10000 times and preserves nested rows."
+  },
+  "calibration_and_selection_disposition": {
+    "native_calibration": "not_applicable_continuous_expression_outputs",
+    "future_calibration": "Any categorical or probability endpoint requires a separately registered calibrator fit only on cross-fitted outer-training predictions.",
+    "model_selection": "All feature, scale, regularization, matching, and pathway choices are locked before development outcome scoring; GSE313774 forbids fit and selection.",
+    "Systema_family": "For the registered single-component task, Systema matching mean and perturbed_mean count once for family selection, multiplicity, complementarity, and evidence.",
+    "champion": "ineligible_no_sealed_perturbation_source"
+  },
+  "license_and_release_disposition": {
+    "control_mean_perturbed_mean_ridge_bilinear": "No upstream code or weights. Project code license remains unresolved because no implementation and no repository-root license have been admitted.",
+    "systema": "No detected license for the exact official repository revision. Independently implement the paper equation without code reuse; do not redistribute upstream code.",
+    "fitted_state": "Project-created centroids and coefficients are not third-party weights but remain subject to input-data and project output terms.",
+    "data_outputs": "GEO-derived rows and predictions remain source-reference-only unless source-specific redistribution review permits more.",
+    "open_champion": "ineligible_currently; source release also waits for project license and reproducibility receipts"
+  },
+  "remaining_blockers": [
+    "Resolve GSE281160 experimental replicates, controls, custom reference and guide-feature crosswalk; GSE275483 reference and animal joins; and GSE313774 batch, condition, and gene identities.",
+    "Freeze assay-native response scales, gene axes, target/context feature manifests, missingness, control hierarchies, and cross-species or cross-assay mappings before fitting.",
+    "Implement the five formulas under immutable repo-local identities; do not reuse unlicensed Systema source code.",
+    "Freeze inner grouped folds, solver and numerical tolerance, the declared regularization grid, one-standard-error selection, coefficient formats, and resource estimate.",
+    "Pass approved CPU-SLURM fixtures for replicate-first pseudobulk, target and guide grouping, train-only transforms, deterministic centroids and linear fits, Systema single-target equivalence, missing-control failure, serialization, and output reproduction.",
+    "Commit GSE313774 genome-wide predictions before outcome access and retain the terminal result without model repair.",
+    "Keep all results exploratory and nonclinical until a separately registered and powered sealed perturbation source exists."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_perturbation_source_and_no_admitted_implementation",
+  "verified_date": "2026-08-22"
+}

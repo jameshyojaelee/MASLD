@@ -1,0 +1,59 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not install, train, screen, cluster, map, promote, or compare GraphST in v1.",
+    "minimum_future_evidence": "Clarified exact-code terms plus a rights-cleared powered donor-level spatial RNA source, section-safe graph adapter, registered endpoint, mandatory baselines, and external evaluation.",
+    "task_gate": "Explicitly classify the task as target-transductive spatial domain discovery or frozen donor transfer; do not compare those lanes as if they answer the same question."
+  },
+  "crosswalk_scope": {
+    "candidate": "GraphST_1.1.1_source_at_d62b0b7b_train_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors and 5 Visium sections",
+      "native_fit": "Visium RNA and coordinates match the named 10X path in principle.",
+      "status": "technical_pilot_only",
+      "why": "The source is exposed, annotation identity is unresolved, one donor has two sections, and four donors cannot support superiority."
+    },
+    "gse292268": {
+      "biological_units": "4 donors and CosMx cell-level RNA",
+      "native_fit": "CosMx is not a declared GraphST datatype in the selected implementation and cannot silently use the 10X path.",
+      "status": "blocked_join_unresolved_underpowered"
+    },
+    "hra007511": {
+      "biological_units": "35 spatial participants",
+      "native_fit": "Visium RNA is native; H&E and MALDI are not GraphST inputs.",
+      "status": "deferred_controlled_access",
+      "why": "Permission, participant joins, training rights, and derivative-weight rights are unresolved; outcomes are project-exposed."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants",
+      "native_fit": "Visium RNA is native; CODEX and H&E are not inputs to the registered model.",
+      "status": "blocked_DSA_and_barcode_join",
+      "why": "VLP arrays contain multiple participants and cannot receive one pooled graph."
+    }
+  },
+  "graph_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "section_rule": "Build and hash one graph per participant and section or core, then combine block-diagonally. All sections from a participant stay in one fold.",
+    "vu_rule": "Do not build a graph on a VLP array until barcode and tissue-island participant maps exist.",
+    "query_rule": "Official GraphST is fit on each target graph and is transductive. A strict frozen lane cannot refit encoder, PCA, clusterer, cluster count, resolution, or refinement on held donors.",
+    "uncertainty": "Participants are inferential units; spots and edges are not."
+  },
+  "preprocessing_and_selection_firewall": {
+    "training_only": "HVGs, expression normalization, scaling, PCA, graph K, epochs, clustering method, cluster count, resolution search, refinement neighborhood, and deconvolution reference and mapping choices.",
+    "target_clustering": "If a future task intentionally permits transductive clustering, cluster count and parameter grid must be locked without target labels and the claim is cohort partitioning, not donor prediction.",
+    "deconvolution": "Same-study or external scRNA labels form a reference model with their own exposure and donor split. The target-specific mapping matrix cannot be evaluated as frozen transfer."
+  },
+  "missingness": {
+    "non_RNA": "H&E, CODEX, MALDI, and ATAC are not applicable.",
+    "features": "Unmeasured panel genes, mapping failures, and unavailable permissions are not zeros.",
+    "reconstruction": "A reconstructed expression matrix is a model output and never substituted for observed counts in differential testing."
+  },
+  "interpretation": "GraphST is a legitimate future target-transductive Visium comparator, but not a pretrained spatial model. The native workflow refits representation, PCA, clusters, and optional refinement on the target. Current sources do not provide a sealed powered task, and the selected repository has conflicting AGPL and MIT declarations. It remains unschedulable and deferred.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

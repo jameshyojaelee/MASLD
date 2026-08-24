@@ -1,0 +1,20 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["rna_conditioned_atac", "variant_to_regulation"]},
+  "findings": {
+    "gse244832": {"allowed_use": "Donor-compatible external-development profile evaluation only; no fit or calibration on its score.", "exposure_state": "downstream_demo"},
+    "gse289173": {"allowed_use": "One-time sealed sequence inference after selection lock; no labels or eQTL/ieQTL outcomes enter the model.", "exposure_state": "target_label_unexposed"},
+    "gse296875": {"allowed_use": "Outer-fold local model training and donor-held retrospective profile evaluation.", "exposure_state": "continual_seen"}
+  },
+  "local_model_roster": {
+    "cell_states": ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"],
+    "donor_pooling": "Use the identical donor-state pseudobulk profiles and outer-training donor pools frozen for the ChromBPNet comparison.",
+    "genomic_split": "Cross donor folds with chromosome/merged-LD blocks and a 2,114-bp boundary buffer.",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "rules": {
+    "comparison": "BPNet and ChromBPNet share sequence windows, profiles, peaks, negatives, folds, and seeds; architecture and bias factorization are the intended differences.",
+    "missingness": "Missing or low-depth donor-state profiles are explicit missing observations, never zero profiles."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

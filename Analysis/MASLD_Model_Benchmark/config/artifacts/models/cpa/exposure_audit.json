@@ -1,0 +1,56 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_future_project_trained_weights",
+    "development_sources": ["gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_id": "perturbation_transfer"
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_checkpoint": false,
+    "code_identity": "theislab/cpa@fbd7c0250edc23eff003a10c99655579c53afd63",
+    "declared_algorithm_exposure_state": "target_label_unexposed",
+    "future_project_fit_rule": "A fit on GSE281160 is continual_seen for its retained cells, targets, guides, covariates, and expression outcomes. Only compositions, doses, or contexts whose atomic perturbations were learned in the outer training role may be queried."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "41777bf4e42ae19adb2bfb5d75ae0cc1be7a3ee9066263f5a139b23f5a30d265"
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {
+      "benchmark_action": "replace",
+      "finding": "setup_anndata enumerates perturbation atoms and covariate categories from the entire AnnData before the model's train/validation/OOD split."
+    },
+    {
+      "benchmark_action": "reject_unknown_atoms",
+      "finding": "A held target included only as an OOD category receives an untrained categorical embedding; this is not a learned unseen-target representation."
+    },
+    {
+      "benchmark_action": "disable_full_data_DE_metadata",
+      "finding": "The setup path can register differential-expression metadata; benchmark DE features and endpoints must not be derived from outer evaluation outcomes."
+    },
+    {
+      "benchmark_action": "reject_current_task",
+      "finding": "The frozen categorical genetic path has no noncoding sequence or guide encoder and therefore cannot represent a wholly unseen target locus."
+    }
+  ],
+  "prediction_first_rule": {
+    "gse313774": "Bulk liver-chip libraries cannot be passed as single cells or matched to the GSE281160 locus vocabulary. No CPA stress score is allowed without a new assay-native and perturbation-matched preregistration before outcome opening."
+  },
+  "remaining_blockers": [
+    "Keep CPA unscheduled for the current held-target task; register a seen-atom held-combination, dose, or context task before fitting.",
+    "Build perturbation and covariate vocabularies from outer-training data only and reject unknown atoms.",
+    "Resolve biological replicates, matrix layer, likelihood, gene order, control category, dose coding, and covariates.",
+    "Freeze architecture, adversarial schedule, optimizer, seeds, predictive sampling rule, output scale, and trained weight hashes.",
+    "Resolve the BSD-3-Clause LICENSE versus MIT pyproject metadata conflict before open derivative release.",
+    "Pass isolated legacy scvi runtime, save/resume, grouped split, and unknown-target rejection fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_and_current_task_has_unknown_perturbation_atoms",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "future_seen_atom_tasks_only",
+    "rule": "Compute O_pert from training perturbation-specific replicate centroids in the independent evaluator. Predictive samples do not count as biological replicates."
+  },
+  "terms_result": "blocked_BSD3_LICENSE_file_conflicts_with_MIT_package_metadata",
+  "verified_date": "2026-08-22"
+}

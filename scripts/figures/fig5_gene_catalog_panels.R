@@ -5,14 +5,14 @@
 # KEY MESSAGE: what an absence MEANS depends on whether the gene was testable.
 # Two panels, no score, no rank, no leaderboard, no default ordering by count.
 #
-#   fig5_gene_catalog_state.pdf
+#   fig6_gene_catalog_state.pdf
 #       Joint assay-call matrix (genetics call x transcriptomics call) over the
 #       whole accepted gene universe. Fill encodes only whether an inferential
 #       result EXISTS (both layers testable) or not. The `tested_negative` row
 #       and column are drawn EMPTY, at n = 0, so the reader sees that this
 #       release contains no informative negative anywhere.
 #
-#   fig5_gene_catalog_next_experiment.pdf
+#   fig6_gene_catalog_next_experiment.pdf
 #       The one deterministic discriminating experiment each class routes to,
 #       with the outcome that would falsify it. Bars are gene counts, ordered by
 #       evidence-class semantics, NOT by magnitude.
@@ -94,7 +94,7 @@ p1 <- ggplot(m, aes(transcriptomics_call, genetics_call)) +
         axis.text.x.top = element_text(angle = 0, vjust = 0),
         plot.margin = margin(3, 3, 3, 3))
 
-save_fig(p1, file.path(PANEL_DIR, "fig5_gene_catalog_state.pdf"),
+save_fig(p1, file.path(PANEL_DIR, "fig6_gene_catalog_state.pdf"),
          width = 4.2, height = 3.6)
 
 # CAPTION via message() — never a plot subtitle.
@@ -142,7 +142,7 @@ p2 <- ggplot(nx, aes(n_genes, row_lab)) +
   theme(axis.text.y = element_text(hjust = 0, lineheight = 1.15),
         axis.line.y = element_blank(), axis.ticks.y = element_blank())
 
-save_fig(p2, file.path(PANEL_DIR, "fig5_gene_catalog_next_experiment.pdf"),
+save_fig(p2, file.path(PANEL_DIR, "fig6_gene_catalog_next_experiment.pdf"),
          width = 5.0, height = 3.0)
 
 message(sprintf(

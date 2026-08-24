@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+candidates/
+executions/
+results/
+selections/
+releases/
+!README.md
+!PLAN_REVIEW_2026-08-21.md
+
+# The parent repository defaults to ignoring every JSON file.  These are
+# hand-maintained checkpoint, exposure, and dataset-crosswalk authorities, not
+# generated results, so keep the benchmark audit bundles versionable.
+!config/
+!config/artifacts/
+!config/artifacts/**/
+!config/artifacts/**/*.json

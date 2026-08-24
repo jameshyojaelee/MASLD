@@ -1,0 +1,63 @@
+{
+  "audit_scope": {
+    "checkpoint": "theislab/Nicheformer@0ba4ba162f9ad3d6c8b713761954c31be2fa69ed",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "checkpoint_identity": "model.safetensors_sha256_65fff02ac9bdd978cbb06b158a60d94ec59a96f30e706aed2c56d213d582e603_at_immutable_Hugging_Face_revision",
+    "declared_corpus": "SpatialCorpus-110M with more than 110 million human and mouse observations, including 53.83 million image-based spatial observations across 73 organs or tissues",
+    "generic_liver_exposure": "encoder_seen",
+    "MASLD_target_label_exposure": "not_declared",
+    "checkpoint_specific_accession_and_donor_manifest": "unavailable",
+    "overall_exposure_state": "unknown",
+    "reason": "The published corpus and downstream tasks establish liver and spatial task-family exposure, but the exact checkpoint is not bound to an accession, sample, donor-alias, and corpus-version receipt sufficient to exclude the project cohorts. Unknown checkpoints cannot earn a champion claim."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "checkpoint_corpus_spatial_input_semantics_cross_resolution_mapping_and_activation_gate",
+    "sha256": "6abd43f69c03ca69a2ed72531a8a537b64545878432af3e0762a118f4cf9182e"
+  },
+  "input_eligibility": {
+    "gse192741": "Visium spots are cross-resolution relative to the checkpoint's image-based single-cell spatial corpus. Four donors and unresolved hg19 annotation permit technical diagnostics only after admission.",
+    "gse292268": "CosMx matches an image-based platform family, but the slide, field-of-view, and region-to-donor map is unresolved and four donors are underpowered.",
+    "hra007511": "Visium RNA could be tokenized only after permission, participant joins, identifier mapping, and rights clear. H&E and MALDI are not base-encoder inputs.",
+    "vu2025": "Visium RNA could be tokenized only after the DSA and participant map clear. CODEX, H&E, coordinates, and graph structure are not base-encoder inputs."
+  },
+  "exposure_and_leakage_findings": {
+    "base_input": "The base encoder consumes one expression observation plus species, assay, and modality tokens. It does not consume coordinates, neighboring expression, a graph, or an image.",
+    "spatial_claim": "Published neighborhood and niche tasks use coordinate- or label-derived downstream targets and heads. Those results do not make the frozen base representation a coordinate-aware spatial predictor.",
+    "strict_lane": "Per-observation frozen encoding can be participant-inductive only after the gene and metadata mapper and downstream head are frozen on development participants.",
+    "downstream_head": "Any neighborhood target construction, coordinate graph, target normalization, head fitting, calibration, or label mapping must remain inside development participants.",
+    "cross_resolution": "Image-based cells and Visium spots are different biological observation units and require separate strata and spot-native baselines."
+  },
+  "known_incidents_and_biases": [
+    "The selected model card points example loading code at a different Hugging Face namespace, so mutable helper-based loading is prohibited.",
+    "The model card states a 25,000-token vocabulary while config and vocabulary artifacts indicate approximately 20,340 token IDs; exact tensor and token ranges require fixture validation.",
+    "The conversion requires custom remote code and dynamically fetches model.h5ad from name_or_path. Source must be vendored and network access disabled.",
+    "The card references technology_mean.npy, but that artifact is absent from the selected repository revision.",
+    "No fixed-fixture parity receipt binds the Hugging Face conversion to the original published Mendeley Lightning weights.",
+    "The custom model sets padding_idx=1 while the vocabulary maps PAD to 0 and MASK to 1.",
+    "The helper can remove the first three sequence positions and assumes all metadata tokens are present; unknown metadata can map to PAD.",
+    "The tokenizer uses the first row's special-token presence mask for a batch, which requires a homogeneous validated batch or a corrected independently verified adapter."
+  ],
+  "license_disposition": {
+    "selected_source": "BSD-3-Clause",
+    "selected_Hugging_Face_checkpoint": "MIT_as_declared_by_the_model_repository",
+    "training_corpus_assets": "source-level_reuse_and_derivative_rights_unresolved",
+    "open_champion": "ineligible_unknown_exposure_and_no_registered_spatial_task_or_seal"
+  },
+  "remaining_blockers": [
+    "Obtain a checkpoint-specific accession, corpus version, sample and donor-alias receipt sufficient to classify exposure as clean_declared or target_label_unexposed; audit GSE and CELLxGENE aliases explicitly.",
+    "Resolve the Hugging Face conversion against the original published weights, including model.h5ad, config, vocabulary, metadata means, token IDs, padding, special-token layout, and a fixed-fixture numeric parity test.",
+    "Vendor the exact reviewed custom source, prohibit trust_remote_code and runtime downloads, and verify the four registered artifacts by size and SHA-256 only after activation and campaign approval.",
+    "Register an endpoint that distinguishes base expression embeddings from a separately trained coordinate-aware niche head, with participant folds and expression-only and spot-native baselines.",
+    "Obtain a powered rights-cleared donor-linked spatial source and genuinely external evaluation. Resolve cross-resolution behavior before using Visium.",
+    "Pass SLURM strict-load, tokenizer, unknown-metadata, heterogeneous-batch, cell-order, frozen-head, no-network, deterministic-seed, and L40S numeric-tolerance fixtures."
+  ],
+  "interpretation": "Nicheformer is an admissible research candidate only after its exact conversion and exposure are resolved. Its frozen base checkpoint is an expression transformer with spatial assay metadata, not a graph or coordinate encoder. Generic liver and downstream spatial-task exposure are definite, exact project-cohort exposure is unknown, and there is no active spatial task or seal, so it remains outside v1 and cannot earn a champion claim.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_unknown_checkpoint_exposure_no_registered_spatial_task_no_seal_and_unresolved_conversion_runtime",
+  "verified_date": "2026-08-22"
+}

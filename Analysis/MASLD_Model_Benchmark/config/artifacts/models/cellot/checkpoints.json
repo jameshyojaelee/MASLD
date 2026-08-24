@@ -1,0 +1,74 @@
+{
+  "architecture_contract": {
+    "input": "unpaired_control_and_observed_perturbed_single_cell_expression_distributions_or_training_only_autoencoder_latents",
+    "native_output": "transported_control_cells_in_expression_or_autoencoder_latent_space",
+    "pairing_semantics": "distribution_level_unpaired; an optimal_transport_match_is_not_a_same_cell_pair_or_individual_causal_effect",
+    "prediction_mechanism": "input_convex_neural_network_optimal_transport_map_from_one_source_distribution_to_one_target_distribution",
+    "published_task": "transfer_the_effect_of_an_observed_perturbation_to_held_cells_patients_or_species_contexts"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "fit_granularity": "one_source_to_one_target_transport_map_per_perturbation_task",
+    "implementation_type": "train_locally",
+    "registered_identity": "bunnech/cellot@522d2b953da8ad244fcf36f64521487fdf763788",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "frozen_native_defaults": {
+    "g_frobenius_penalty": 1,
+    "hidden_units": [64, 64, 64, 64],
+    "latent_dim_config_field": 50,
+    "optimizer": "Adam",
+    "optimizer_beta1": 0.5,
+    "optimizer_beta2": 0.9,
+    "optimizer_learning_rate": 0.0001,
+    "training_iterations": 100000,
+    "training_inner_iterations": 10
+  },
+  "input_and_fit_contract": {
+    "autoencoder_rule": "if_gene_space_is_reduced_train_the_autoencoder_inside_each_outer_training_fold_and_freeze_gene_order_normalization_and_decoder; no_full_dataset_PCA_or_AE",
+    "checkpoint_selection_rule": "the pinned trainer selects model.pt by MMD on its loader.test split; map this only to an inner-training validation partition and keep outer evaluation entirely outside the loader",
+    "normalization_rule": "freeze_the_exact_expression_layer_and_scale_before_fitting; standardized_exports_must_be_decoded_absolute_gene_profiles",
+    "replication_rule": "cells_sample_distributions_but_do_not_define_folds_or_uncertainty; score_replicate_or_animal_pseudobulk",
+    "split_rule": "do_not_use_default_cell_level_train_test_split; assign immutable biological_replicate_or_animal groups before any reduction or fit"
+  },
+  "query_contract": {
+    "current_task_result": "deferred_incompatible_with_wholly_unseen_perturbation",
+    "finding": "CellOT learns its map from the observed target distribution for a specified perturbation. It can transport new control cells through that learned map, but perturbation identity is not a model input and it cannot construct a map for a held target without seeing that target's outcomes.",
+    "test_outcome_rule": "held_target_perturbed_cells_may_never_enter_the_transport_fit_autoencoder_or_checkpoint_selection",
+    "valid_future_use": "known_perturbation_held_donor_or_held_context_distributional_task"
+  },
+  "repository": "bunnech/cellot",
+  "repository_revision": "522d2b953da8ad244fcf36f64521487fdf763788",
+  "runtime_contract": {
+    "declared_package_version": "0.1",
+    "declared_python": "UNSPECIFIED",
+    "key_requirements": ["setuptools==49.6.0", "numpy==1.19.5", "scanpy==1.8.1", "anndata==0.7.6", "torch==1.11"],
+    "runtime_status": "UNRESOLVED_legacy_stack",
+    "required_probe": "isolated_legacy_environment_L40S_import_fit_transport_decode_save_resume_and_numeric_probe"
+  },
+  "safe_loading_contract": {
+    "canonical_external_weight": false,
+    "finding": "The pinned implementation restores checkpoints through unrestricted torch.load.",
+    "project_rule": "save_and_load_only_project_created_validated_state_dicts; do_not_load_upstream_example_checkpoints"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository and Nature Methods paper were inspected on 2026-08-22; no package, weight, or data artifact was downloaded or loaded.",
+  "source_records": [
+    {"identity": "CellOT:LICENSE", "sha256": "ea0dff735cfa39c5f27aede63af23438f2eaf90b71edb439b089d4faca6f0a86", "size_bytes": 1543},
+    {"identity": "CellOT:README.md", "sha256": "bf4f0c674cee33042d9a842d589e4639e54e2e347f42b74e20597569dd73944a", "size_bytes": 4502},
+    {"identity": "CellOT:requirements.txt", "sha256": "a6c44732098990a4c80d1ef9399d726cc100afb333aca5fcffb33d65bf045167", "size_bytes": 272},
+    {"identity": "CellOT:setup.py", "sha256": "cb9119d9df84b9f548f01e431f5ec7879ff31ebb36773e55eabb963d9cad07e2", "size_bytes": 638},
+    {"identity": "CellOT:cellot/data/cell.py", "sha256": "1532196fe5174df046a51b3085f35637770487599f7caef5a50c5ca21deb144d", "size_bytes": 10199},
+    {"identity": "CellOT:cellot/models/ae.py", "sha256": "10f2f83d0181645bfca8d63abb2028135d9fc60e4a4ed14c37325504a7263640", "size_bytes": 6844},
+    {"identity": "CellOT:cellot/models/cellot.py", "sha256": "15235c303567291e775ad32eeb2e9c3260ef4adc9014b40d256e56b0355660f2", "size_bytes": 3947},
+    {"identity": "CellOT:cellot/train/train.py", "sha256": "050d060db66b9c6fa3ab9f8168bff7b04294ade2664a1e3e182880d953daef81", "size_bytes": 11111},
+    {"identity": "CellOT:cellot/utils/transport.py", "sha256": "711c9e9bc3b83c71b2fc37449d31064ace42b7fa2cb3b03dbf64c2bac3f0dc36", "size_bytes": 1742},
+    {"identity": "CellOT:configs/models/cellot.yaml", "sha256": "f3391c6b3a3bf59bdc91b899cdb8bf1530ebe6844f6286e38fa7ad83d55711fb", "size_bytes": 360}
+  ],
+  "terms_audit": {
+    "code_license": "BSD-3-Clause",
+    "project_trained_weight_terms": "project_owned_subject_to_input_data_terms",
+    "result": "code_admissible"
+  }
+}

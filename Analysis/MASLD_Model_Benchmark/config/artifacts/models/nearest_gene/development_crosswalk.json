@@ -1,0 +1,87 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse244832", "gse281160", "gse281364", "gse296875"],
+    "graph_sealed_sources": [],
+    "sealed_variant_source": "gse289173",
+    "tasks": ["typed_evidence_graph", "variant_to_regulation"]
+  },
+  "endpoint_eligibility": {
+    "allelic_direction": "ineligible because REF and ALT share one coordinate score",
+    "causal_gene": "ineligible",
+    "enhancer_gene_link": "eligible unsigned secondary baseline",
+    "eqtl_retrieval_auprc": "eligible mandatory baseline",
+    "graph_held_source_auprc": "eligible retrospective development-only after source-independent locus and candidate construction",
+    "signed_cell_type_eqtl_effect": "ineligible and prohibited from the primary leaderboard"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Development-only locus and variant coordinates after corrected COLOC promotion. COLOC membership, posterior, candidate gene, and effect direction cannot alter TSS selection or distance.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "allowed_use": "none required for distance computation; RNA, ATAC, donor labels, and same-sample different-aliquot topology are excluded from the baseline",
+      "exposure_state": "target_label_unexposed"
+    },
+    "gse281160": {
+      "allowed_use": "Development-only retrieval diagnostic on the precommitted locus and candidate roster. CROP-seq outcomes cannot choose a gene, transcript, TSS, anchor, or radius.",
+      "exposure_state": "downstream_demo",
+      "warning": "The 20 targets are MPRA-selected and do not form an unbiased external source."
+    },
+    "gse281364": {
+      "allowed_use": "Development-only retrieval diagnostic. MPRA activity and reporter-gene design cannot choose the nearest endogenous gene or distance definition.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse289173": {
+      "allowed_use": "One-time unsigned scoring of anonymized selection-locked variant-gene rows after the TSS artifact and algorithm are hashed. eQTL and interaction-eQTL effects, labels, lineages, calibration, and candidate construction remain evaluator-only.",
+      "annotation_exposure": "reference_only",
+      "exposure_state": "target_label_unexposed",
+      "output_scope": "eqtl_retrieval_only_not_signed_effect"
+    },
+    "gse296875": {
+      "allowed_use": "none required for distance computation; same-nucleus RNA, ATAC, donor, pathology, and QTL outcomes are excluded",
+      "exposure_state": "target_label_unexposed"
+    },
+    "gencode_v49": {
+      "allowed_use": "Frozen development-built transcript TSS annotation only",
+      "exposure_state": "reference_only",
+      "release": "GENCODE 49 on GRCh38.p14",
+      "warning": "Later annotation releases, browser canonical transcript choices, gene symbols, and online lookups are prohibited after the TSS artifact freeze."
+    },
+    "resource_gene_catalog_current": {
+      "allowed_use": "No Gene Catalog membership, evidence class, threshold, program, hero-gene status, or source finding may choose candidate genes or TSSs.",
+      "exposure_state": "downstream_demo"
+    }
+  },
+  "graph_held_source_protocol": {
+    "candidate_universe": "Freeze genes and locus variants independently of the removed source. A source-only assayed gene or variant remains evaluator-only.",
+    "distance_input": "Use only frozen coordinates and GENCODE TSSs. Held-source observability, positive/tested-negative status, provenance, and outcome are unavailable to the scorer.",
+    "locus_aggregation": "For each candidate gene, use the minimum TSS distance over the precommitted remaining-source or source-independent locus variant roster.",
+    "removal": "Remove any held-source-selected lead variant, credible-set member, locus boundary, gene, transcript, or candidate row before distance aggregation.",
+    "seal_status": "No graph source is sealed; a leakage-safe result remains retrospective."
+  },
+  "variant_and_ld_leakage_contract": {
+    "candidate_pairs": "The evaluator or a pre-seal development artifact supplies the complete pair denominator. Positive eQTL pairs cannot define which genes are scored.",
+    "duplicate_variants": "Exact, near-identical, reverse-complement, and LD-linked variants stay in one outer role and do not count as independent retrieval examples.",
+    "liftover": "Compute ancestry-matched LD on native build before liftover. Only unique one-to-one GRCh38.p14 mappings with REF match receive distances.",
+    "locus_grouping": "Merge variants within 1 Mb or r2>=0.8 in any represented ancestry before split; retain locus IDs in predictions and bootstrap LD blocks.",
+    "no_sign": "Distance contains no allele, lineage, donor, or effect-direction information. Never multiply proximity by a held eQTL beta or infer sign from the nearest gene."
+  },
+  "observability_and_degree_audit": {
+    "gene_density": "Dense gene regions make nearest-TSS retrieval easier and create many close alternatives. Report distance and candidate-count strata.",
+    "held_observability": "Do not use which genes have eQTL, MPRA, CROP-seq, or graph measurements to define candidates or ties.",
+    "locus_size": "Report candidate denominator and number of variants per locus; large loci and credible sets can reduce minimum distances by construction.",
+    "tie_rule": "Preserve equal distance scores. Evaluator tie handling is frozen independently of labels."
+  },
+  "reproducibility_contract": {
+    "annotation_receipt": "Hash source GTF, contig filter, parsed transcript TSS table, gene-version crosswalk, strand fixtures, and rejected records.",
+    "prediction_receipt": "Hash candidate table, normalized/lifted coordinates, LD and locus assignments, TSS join, distances, locus aggregation, ties, row order, and output.",
+    "task_contract_hashes": {
+      "locus_outer_toml": "649db9e4f265e96b5bc134494027ebfcd21038f9db819f81740470e4cbfedd2e",
+      "typed_evidence_graph_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "variant_to_regulation_toml": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"
+    },
+    "unit_of_inference": "independent locus; variants, candidate genes, transcripts, TSSs, cells, and seeds are not independent replicates"
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

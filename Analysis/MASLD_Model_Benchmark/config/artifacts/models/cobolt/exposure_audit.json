@@ -1,0 +1,29 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping and development-only RNA-conditioned ATAC"
+  },
+  "checkpoint_findings": {
+    "cobolt_local": {
+      "checkpoint_identity": "project_fitted_cobolt_v1_0_1_per_outer_fold_seed_feature_order_and_no_dataset_adjustment",
+      "corpus": "No upstream checkpoint; declared outer-training count matrices only",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "barcode_pairing_missingness_frozen_query_decoder_and_profile_scale_contract",
+    "sha256": "b77ed82249ff372a93418d55871590c09ea3579a077e2bcfefa85840225be6f7"
+  },
+  "interpretation": "Cobolt has no upstream corpus contamination when fit locally. The project adapter now supplies structural ATAC absence without a zero tensor, forces eval/no-grad, uses the deterministic RNA posterior, disables dataset slope/intercept adjustments, omits query-fitted XGBoost correction, and decodes a depth-free multinomial ATAC composition on the frozen peak order. Exact source, runtime, equation-parity, tensor-state, query-invariance, and real donor-held profile fixtures passed. GSE289173 can seal cell-state mapping but not RNA-conditioned ATAC because it has no ATAC truth.",
+  "remaining_blockers": [
+    "The current smoke peak inventory was discovered from all source donors, so this view cannot support a champion claim.",
+    "An eligible external RNA-ATAC seal is not active.",
+    "GSE289173 can support cell-state mapping only and must never be represented as an ATAC seal."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "rna_conditioned_atac_ineligible_from_current_source_wide_peak_smoke_view_and_without_an_external_ATAC_seal; eligible in principle for sealed cell-state mapping only after a separate cell-state selection lock",
+  "verified_date": "2026-08-24"
+}

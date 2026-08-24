@@ -17,7 +17,7 @@ cd "$MASLD_PROJECT_ROOT"
 "$R_BIN" scripts/figures/fig5b_protein_triage.R
 "$R_BIN" scripts/figures/composite_mrna_protein.R
 "$R_BIN" scripts/figures/fig5d_snatac_accessibility.R
-"$PY_BIN" scripts/figures/fig5f_spatial_program_maps.py
+"$PY_BIN" scripts/figures/fig5f_spatial_program_calibration.py
 "$R_BIN" scripts/figures/fig5e_multimodal_program_summary.R
 "$R_BIN" scripts/figures/update_fig4_manifest.R
 "$R_BIN" Analysis/Multimodal_Program_Projection/scripts/06_validate_outputs.R

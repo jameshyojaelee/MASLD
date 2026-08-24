@@ -1,0 +1,61 @@
+{
+  "audit_scope": {
+    "candidate": "GraphST_1.1.1_at_d62b0b7b_train_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "code": "JinmiaoChenLab/GraphST@d62b0b7b6cd38ee285f3ac8cd67b7341a10bcc74",
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "admitted_upstream_checkpoint": "none",
+    "checkpoint_exposure_state": "not_applicable_no_upstream_model_state",
+    "project_trained_state": "not_created",
+    "project_state_exposure": "unknown_until_a_future_participant_fold_training_receipt_exists",
+    "rule": "A future local state is target-label-unexposed only when expression preprocessing, graph construction, contrastive fitting, PCA or clustering, refinement, and any deconvolution reference are restricted to the registered participant split."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "source_identity_license_conflict_transductive_graph_deconvolution_donor_boundaries_and_activation_gate",
+    "sha256": "0b10e91ec4b9913c4624aeeadd547d83a7aa3a3f35203fb75b601529069e96c4"
+  },
+  "input_eligibility": {
+    "gse192741": "Visium expression and coordinates are structurally compatible, but four donors and unresolved hg19 annotation permit only future technical fixtures.",
+    "gse292268": "CosMx expression and coordinates are structurally compatible as a separate resolution stratum, but donor joins are unresolved and four donors are underpowered.",
+    "hra007511": "Visium RNA could be used only after permission, participant and section joins, rights, and runtime admission. H&E and adjacent-section MALDI are not native inputs.",
+    "vu2025": "Visium RNA could be used only after the DSA and participant map clear. Graphs may not span the multiple participants sharing one VLP array."
+  },
+  "exposure_and_leakage_findings": {
+    "native_fit": "GraphST trains an autoencoder and contrastive objective on the supplied target expression and coordinate graph, then usually fits PCA and a partition on the target. This is transductive.",
+    "preprocessing": "The source can normalize, log-transform, choose HVGs, and scale the supplied target when HVGs are absent. Those operations cannot precede participant splitting.",
+    "graph": "The graph must be participant- and section-blocked. Concatenating coordinates can connect donors or tissue sections.",
+    "clustering": "PCA, mclust, Leiden or Louvain, cluster number or resolution, and spatial refinement are target-fit choices and cannot use held labels.",
+    "deconvolution": "The deconvolution path jointly learns a mapping between target spots and a single-cell reference. It is transductive and does not create observed cell-to-spot pairs."
+  },
+  "known_incidents_and_biases": [
+    "The pinned repository contains AGPL-3.0 license text while setup.py and PyPI metadata declare MIT. Execution, adaptation, and redistribution are blocked pending rightsholder clarification.",
+    "PyPI 1.1.1 artifacts do not bind the selected 2024 source commit.",
+    "The GitHub V1.0.0 release and linked Zenodo record identify DeepST rather than the selected GraphST implementation and cannot serve as its archive receipt.",
+    "The 10x graph builder computes dense all-pairs distances and adjacency, creating quadratic memory risk.",
+    "There is no pretrained state, frozen held-donor adapter, or complete native export contract.",
+    "Target refinement and deconvolution can make a strong in-sample partition without demonstrating participant-held transfer."
+  ],
+  "license_disposition": {
+    "repository_LICENSE": "AGPL-3.0_text",
+    "setup_and_PyPI_metadata": "MIT",
+    "status": "conflicting_block_execute_adapt_and_redistribute_pending_rightsholder_clarification",
+    "upstream_checkpoint": "none",
+    "open_champion": "ineligible"
+  },
+  "remaining_blockers": [
+    "Obtain written rightsholder clarification identifying the license for the exact selected revision and obligations for execution, modification, trained state, and redistribution.",
+    "Obtain a rights-cleared powered participant-linked spatial RNA dataset, registered endpoint, transcript-native baselines, and external source.",
+    "Define separate native-transductive and benchmark-defined frozen lanes. Freeze preprocessing, participant-blocked graphs, feature order, cluster selection, refinement, and reference deconvolution inside development partitions.",
+    "Replace or bound the dense all-pairs graph path and prove numeric parity on a fixed fixture before admitting large sections.",
+    "Resolve a complete exact environment and safe tensor-only state export; do not use untrusted serialized objects.",
+    "After rights and data activation plus campaign approval, pass SLURM import, graph-boundary, memory, forward, backward, resume, deterministic seed, node-order, no-network, and cross-device fixtures."
+  ],
+  "interpretation": "GraphST is a future target-fitted spatial RNA comparator rather than a pretrained inductive model. Its contamination surface is local preprocessing, graph construction, target training, clustering, refinement, and optional deconvolution. A direct license conflict blocks even execution, and no eligible spatial task or seal exists.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_conflicting_source_terms_no_registered_task_no_sealed_source_and_no_verified_runtime",
+  "verified_date": "2026-08-22"
+}

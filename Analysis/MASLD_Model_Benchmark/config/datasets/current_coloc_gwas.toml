@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "current_coloc_gwas"
+title = "Current MASLD genetics and COLOC evidence layer"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["MULTI_SOURCE_50_STUDY_COLOC"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "aggregate_only"
+license_status = "source_terms_apply"
+biological_unit = "study"
+expected_biological_units = 50
+native_genome_build = "mixed_native_builds"
+native_annotation_release = "not_applicable_summary_statistics"
+modalities = ["gwas_summary_statistics", "colocalization"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Corrected 50-study COLOC rerun must be promoted before memberships or labels are frozen."]
+notes = "Existing genetics evidence is development-only. Native-build LD must be computed before any liftover."
+
+[provenance]
+source_url = "../../../docs/STATUS.md"
+verified_date = "2026-08-21"
+local_exposure = "Current memberships and examples are already exposed and remain provisional."
+
+[split]
+group_key = "cohort_family_id+locus_id"
+outer_role = "train"
+label_visibility = "development_visible"

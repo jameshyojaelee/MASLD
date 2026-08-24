@@ -1,0 +1,25 @@
+schema_version = "masld-bench-task-v1"
+task_id = "rna_conditioned_atac"
+status = "candidate"
+unit_of_inference = "donor"
+input_modalities = ["single_nucleus_rna", "single_nucleus_atac", "dna_sequence"]
+endpoint = "Predict donor-by-cell-state ATAC accessibility profiles from DNA sequence and observed RNA/context without exposing observed ATAC at inference, while distinguishing same-nucleus from donor-matched separate-nucleus supervision."
+metrics = ["conditional_multinomial_profile_deviance_skill", "donor_peak_auprc", "donor_profile_spearman", "development_histology_stratified_deviance_interaction"]
+datasets_train = ["gse296875"]
+datasets_development = ["gse244832"]
+datasets_sealed = ["fnih_86_liver"]
+split_id = "donor_outer"
+required_pairing_levels = ["same_nucleus", "same_sample_different_aliquot"]
+missingness_policy = "explicit_state_and_mask"
+admission_gates = ["Do not admit GSE296875 until its well-namespaced barcode-to-donor map is frozen and a leave-one-well-out sensitivity analysis is prespecified.", "Use GSE296875 donor-linked steatosis and fibrosis only for a cross-fitted, donor-level development error audit of histology-dependent profile skill; freeze missingness and covariate sensitivities and do not call the fields MASLD or MASH diagnoses.", "Never create cell-to-cell pairs in GSE244832.", "Evaluate GSE244832 only at the donor-compatible resolution.", "Freeze peak universe, strand/Tn5 processing, checkpoint provenance, and reference hashes.", "Apply config/evaluation/rna_conditioned_atac_capabilities.toml: every scored model must pass the fixed RNA/context-only profile fixture, and no inference request may expose observed ATAC.", "Latent-only integration models are not scheduled on this profile task; register any later retrieval analysis as a separate nonpromotable TaskSpec."]
+baseline_model_ids = ["assay_native_pseudobulk", "bpnet", "chrombpnet", "context_only", "mean_track", "nearest_context", "scbasset", "sequence_cnn_control", "sequence_only", "sequence_transformer_control", "shrunken_pseudobulk", "shuffled_context", "trans_only"]
+uncertainty_method = "paired_two_way_donor_genomic_block_bootstrap"
+resampling_units = ["donor", "genomic_block"]
+bootstrap_replicates = 10000
+multiplicity_family = "confirmatory_external_champion_family_1"
+multiplicity_method = "holm_fwer_0.05_primary_and_bh_q0.05_secondary"
+promotion_gate_id = "rna_conditioned_atac_promotion_v1"
+promotion_gate_config_sha256 = "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a"
+primary_evaluator_id = "rna_atac_two_way_deviance_reduction_v1"
+evaluator_parameters = { strata = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"], roster_authority = { path = "artifacts/evaluator_rosters/rna_conditioned_atac.json", sha256 = "13db978583d66b41dff71995eff2dcab91f54ae2cd95fc08e2baec295dcdf370", size_bytes = 249, media_type = "application/json", role = "task_evaluator_roster:rna_conditioned_atac" } }
+claim_gate = "A development winner requires >=5% relative deviance reduction over the strongest admitted profile specialist or baseline, improvement in at least four of five major lineages, and no lineage worse by >2%. Latent integration and retrieval are outside this TaskSpec and cannot support an ATAC-profile winner claim. The result remains retrospective unless FNIH becomes an eligible public seal before selection lock."

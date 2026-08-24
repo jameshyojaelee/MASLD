@@ -1,0 +1,77 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not install, transform, cluster, screen, promote, or compare BANKSY in v1.",
+    "minimum_future_evidence": "A rights-cleared powered participant-level spatial expression source with authoritative coordinates and section-to-participant joins, a registered spatial endpoint, transcript-native baselines, and an external source.",
+    "task_gate": "Prespecify whether the target is transductive spatial domain discovery or frozen participant-held prediction; neither can be relabeled as the other after evaluation."
+  },
+  "crosswalk_scope": {
+    "candidate": "Banksy_py_1.3.5_at_9278996c_transform_and_cluster_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors represented by 5 Visium sections; one donor contributes 2 sections",
+      "native_fit": "Visium RNA and coordinates are native in principle; H&E is not an input to this lane.",
+      "status": "technical_pilot_only",
+      "why": "Four donors, project-exposed outcomes, and unresolved hg19 annotation identity preclude superiority or champion claims."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per CosMx slide",
+      "native_fit": "CosMx expression and cell coordinates are structurally compatible, but panel depth and single-cell resolution require a separate assay stratum.",
+      "status": "blocked_join_unresolved_and_underpowered",
+      "why": "The slide, field-of-view, and region-to-donor mapping is unresolved and four donors cannot support donor-level superiority."
+    },
+    "hra007511": {
+      "biological_units": "61-participant union with 35 spatial participants",
+      "native_fit": "Visium RNA is native; H&E and adjacent-section MALDI are not inputs to this transcriptomic lane.",
+      "status": "deferred_permission_and_output_rights_unresolved",
+      "why": "Spatial files and participant joins are not admitted, reuse and derived-output rights require resolution, and the source is already project-exposed."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants distributed across 10 VLP technical arrays",
+      "native_fit": "Visium RNA is native; CODEX proteins and H&E are not inputs to this lane.",
+      "status": "blocked_DSA_and_participant_boundaries_unresolved",
+      "why": "Each array contains four to five participants. A data-sharing agreement, barcode-to-biopsy map, and authoritative transforms are required before any graph."
+    }
+  },
+  "graph_and_coordinate_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "boundaries": "Build one graph per participant and section or core. Combine graphs block-diagonally, and keep all sections from one participant in one outer fold.",
+    "coordinates": "Freeze coordinate source, units, scaling, x/y order, orientation, reflections, section boundaries, K, weighting function, and sparse edge and weight hashes.",
+    "azimuthal_terms": "BANKSY's first-order neighborhood components are orientation-sensitive. Coordinate rotations or reflections are preprocessing choices and require fixed-fixture tests.",
+    "vu2025": "An array is a technical carrier, not a donor. No graph can be built until every barcode or tissue island is assigned to a biopsy and participant.",
+    "replication": "Participants are biological replicates; cells, spots, sections, graph nodes, edges, clusters, and lambda values are not."
+  },
+  "held_donor_and_selection_firewall": {
+    "native_lane": "Native BANKSY is transductive because neighbor features, standardization, PCA, and clustering are calculated on the supplied target observations.",
+    "strict_lane": "A benchmark-defined strict lane must freeze the feature roster, training transforms, PCA, graph recipe, task head, calibration, and thresholds using development participants, then process each held participant without fitting on other held participants.",
+    "training_only": "Normalization, HVGs, variance balancing, lambda, K, m-order, PCA dimensions, Harmony, cluster algorithm, resolution, cluster number, annotation mapping, and exclusion rules.",
+    "held_labels": "ARI or any outcome-derived agreement may score a locked partition only. It cannot choose features, graphs, lambda, K, PCA, Harmony, resolution, cluster number, or tissue exclusions.",
+    "multi_sample": "Harmony or jointly fitted partitions across held participants are cohort-transductive and must be reported separately."
+  },
+  "assay_and_missingness_firewall": {
+    "RNA": "Use RNA-native normalization and score participant-level endpoints. Do not infer count likelihoods from BANKSY's standardized continuous features.",
+    "CODEX": "A separate protein-feature BANKSY analysis could be registered in the future, but it is not the transcript-native lane and cannot substitute a protein null model with an RNA one.",
+    "MALDI_and_H&E": "Not native matrix inputs to this selected lane. Registration or adjacent-section availability does not make them RNA features.",
+    "missingness": "Preserve observed, structurally_missing, not_applicable, below_qc, unavailable_permission, join_unresolved, withheld_sealed, and derivable_not_processed; never encode missing evidence as zero."
+  },
+  "training_and_exposure_crosswalk": {
+    "upstream_biological_checkpoint": "none",
+    "upstream_training_corpus": "none",
+    "project_trained_state": "not_created",
+    "eligible_development_source": "none_currently",
+    "eligible_external_source": "none_currently",
+    "exposure_rule": "A future local state is outcome-unexposed for held participants only when every feature, graph, transform, hyperparameter, partition, and mapping is fit without held labels and according to the registered transductive or frozen task."
+  },
+  "implementation_selection": {
+    "selected": "GPL-3.0 Python source at exact commit 9278996c39e376277d57ef95278000447ba6c57c",
+    "not_selected_PyPI": "The 1.3.5 package artifacts predate same-version source fixes and do not bind the selected implementation.",
+    "not_selected_R": "The canonical R package has custom academic-use terms and is not eligible as an open champion under current terms."
+  },
+  "interpretation": "BANKSY is an important future transcript-native spatial baseline because it combines expression with section-local neighborhood features without a large pretrained model. It is nevertheless target-fitted and transductive by default, and the current MASLD spatial sources do not supply a rights-cleared, powered, donor-linked task plus external seal. It remains deferred.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

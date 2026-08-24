@@ -1,0 +1,12 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "gpu_geneformer"
+status = "blocked"
+purpose = "Pinned Geneformer V1/V2 tokenization, embedding extraction, common heads, and licensed adaptation on one L40S"
+scheduler = "slurm"
+resource_profile = "gpu_single"
+environment_lock = "UNRESOLVED"
+container_digest = "UNRESOLVED"
+modules = ["UNRESOLVED"]
+command_prefix = ["UNRESOLVED"]
+admission_blocking = true
+blockers = ["Production dependency installation requires user approval.", "Resolve a fully explicit environment from the upstream 04c2b2e revision and transformers 4.46, then freeze conda explicit and pip-freeze locks.", "Pass an L40S probe for CUDA import, all three checkpoint loads, V1/V2 tokenizer dictionaries, one forward/backward step where applicable, deterministic-repeat tolerance, and checkpoint resume."]

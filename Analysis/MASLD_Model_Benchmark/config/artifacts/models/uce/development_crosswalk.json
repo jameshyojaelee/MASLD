@@ -1,0 +1,76 @@
+{
+  "corpus": {
+    "declared_cell_total": 36238416,
+    "declared_dataset_rows": 998,
+    "inventory_granularity": "CELLxGENE dataset UUID and dataset/collection title, or non-CELLxGENE source and URL",
+    "source_record_identity": "Rosen_et_al_2026_Supplementary_Table_16",
+    "source_record_sha256": "9a5117a0ae2ca6c8dba9a7cc45a926ed836de0c4e9d94528aed4bda08296a811",
+    "source_record_url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-026-10689-z/MediaObjects/41586_2026_10689_MOESM4_ESM.xlsx"
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": [
+      "GSE136103", "GSE174748", "GSE185477", "GSE189600",
+      "GSE202379", "GSE244832", "GSE256398", "GSE281367",
+      "GSE289173", "GSE296875", "Liver_Atlas"
+    ],
+    "scope_limit": "Cell-state task only. Exact article titles from PubMed and accession aliases were checked against the complete declared training table."
+  },
+  "findings": {
+    "GSE136103": {
+      "article_title": "Resolving the fibrotic niche of human liver cirrhosis at single-cell level",
+      "evidence": "No accession or exact article-title match in the complete declared training table.",
+      "exposure_state": "clean_declared",
+      "public_date": "2019-09-12"
+    },
+    "GSE174748": {
+      "article_title": "Opposing roles of hepatic stellate cell subpopulations in hepatocarcinogenesis",
+      "evidence": "No accession or exact article-title match in the complete declared training table.",
+      "exposure_state": "clean_declared",
+      "public_date": "2022-05-01"
+    },
+    "GSE185477": {
+      "article_title": "Single-Cell, Single-Nucleus, and Spatial RNA Sequencing of the Human Liver Identifies Cholangiocyte and Mesenchymal Heterogeneity",
+      "evidence": "Declared CELLxGENE dataset ddb22b3d-a75c-4dd1-9730-dff7fc8ca530, Healthy human liver: integrated, 69,905 cells.",
+      "exposure_state": "encoder_seen",
+      "matched_records": [{"cells": 69905, "dataset_id": "ddb22b3d-a75c-4dd1-9730-dff7fc8ca530"}],
+      "public_date": "2021-10-13"
+    },
+    "GSE189600": {
+      "article_title": "Hepatocytes demarcated by EphB2 contribute to the progression of nonalcoholic steatohepatitis",
+      "evidence": "No accession or exact article-title match in the complete declared training table.",
+      "exposure_state": "clean_declared",
+      "public_date": "2023-02-08"
+    },
+    "GSE202379": {
+      "article_title": "Acquisition of epithelial plasticity in human chronic liver disease",
+      "evidence": "No accession or exact article-title match in the complete declared training table; GEO became public after both weight records were published.",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-04-04"
+    },
+    "GSE244832": {
+      "article_title": "Multi-modal analysis of human hepatic stellate cells identifies novel therapeutic targets for metabolic dysfunction-associated steatotic liver disease",
+      "evidence": "No accession or exact article-title match in the complete declared training table; GEO became public after both weight records were published.",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-11-13"
+    },
+    "GSE256398": {"evidence": "GEO became public after both weight records were published.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO became public after both weight records were published.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {
+      "article_title": "Single-cell eQTL analysis identifies genetic variation underlying metabolic dysfunction-associated steatohepatitis",
+      "evidence": "GEO was submitted and made public after both weight records were published; its frozen cell-state and eQTL/ieQTL outcomes were not training labels.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "GSE296875": {"evidence": "GEO became public after both weight records were published.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {
+      "article_title": "Single cell RNA sequencing of human liver reveals distinct intrahepatic macrophage populations",
+      "evidence": "Declared CELLxGENE dataset a43aa46b-bd16-47fe-bc3e-19a052624e79, Liver, 5,312 cells.",
+      "exposure_state": "encoder_seen",
+      "matched_records": [{"cells": 5312, "dataset_id": "a43aa46b-bd16-47fe-bc3e-19a052624e79"}],
+      "public_date": "2018-10-22"
+    }
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

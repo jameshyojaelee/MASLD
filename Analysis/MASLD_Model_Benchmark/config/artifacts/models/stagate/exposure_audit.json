@@ -1,0 +1,60 @@
+{
+  "audit_scope": {
+    "candidate": "STAGATE_pyG_1.0.0_at_ae1158ca_train_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "code": "QIFEIDKN/STAGATE_pyG@ae1158ca8cf1eb6bb8ee198298552d44c9ac21db",
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "admitted_upstream_checkpoint": "none",
+    "checkpoint_exposure_state": "not_applicable_no_upstream_model_state",
+    "project_trained_state": "not_created",
+    "project_state_exposure": "unknown_until_a_future_participant_fold_graph_and_training_receipt_exists",
+    "rule": "A future state is target-label-unexposed only when expression preprocessing, graph construction, autoencoder fit, reconstruction choices, clustering, and label mapping are restricted to the registered participant split."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "local_graph_training_cross_section_edges_reconstruction_transduction_and_activation_gate",
+    "sha256": "fbd4e1a1d0b6198a4ce83f4c0b07edc516c6d9d0a29cbabc160f0457c0995bec"
+  },
+  "input_eligibility": {
+    "gse192741": "Visium expression and coordinates are structurally compatible, but four donors and unresolved hg19 annotation permit only technical fixtures.",
+    "gse292268": "CosMx expression and coordinates are structurally compatible as a separate single-cell panel stratum, but donor joins are unresolved and four donors are underpowered.",
+    "hra007511": "Visium RNA could be used only after permission, participant and section joins, rights, and runtime admission. H&E and MALDI are not inputs.",
+    "vu2025": "Visium RNA could be used only after the DSA and participant map clear. Graphs may not span participants sharing a VLP array."
+  },
+  "exposure_and_leakage_findings": {
+    "native_fit": "STAGATE trains a graph-attention autoencoder on the supplied target expression and graph and commonly clusters its target embedding. This is transductive.",
+    "preprocessing": "Normalization, log transform, HVGs, feature order, scaling, graph radius or K, architecture, epochs, and clustering must stay inside development participants unless a transductive task explicitly permits target fitting.",
+    "graph": "Two-dimensional graphs must be participant- and section-blocked. A technical array or shared coordinate range cannot define biological adjacency.",
+    "three_dimensional": "The source can add cross-section edges using section order and distance. This is prohibited absent same-participant sections, authoritative registration and physical spacing, and a precommitted 3D objective.",
+    "reconstruction": "Mean-squared reconstructed normalized expression is model-derived continuous output, not observed counts or additional biological replicates."
+  },
+  "known_incidents_and_biases": [
+    "The selected PyTorch Geometric implementation states that the published cell-type-aware module is unsupported.",
+    "The PyG converter densifies the expression matrix and can exceed memory on high-resolution sections.",
+    "The source sets cudnn deterministic and benchmark flags together, so deterministic behavior is not established.",
+    "The official workflow has no pretrained checkpoint, complete model export, or native frozen held-donor predictor.",
+    "The Zenodo publication archive is the TensorFlow reference implementation rather than the selected PyG source.",
+    "Target-fitted reconstruction and clustering can improve in-sample structure without demonstrating participant-held transfer."
+  ],
+  "license_disposition": {
+    "selected_PyG_source": "MIT",
+    "upstream_checkpoint": "none",
+    "training_data_and_outputs": "unresolved_until_future_source_and_annotation_rights_clear",
+    "open_champion": "ineligible"
+  },
+  "remaining_blockers": [
+    "Obtain a rights-cleared powered participant-linked spatial RNA dataset, registered endpoint, transcript-native baselines, and external source.",
+    "Implement separate native-transductive and benchmark-defined strict lanes with participant-blocked graphs and training-only preprocessing and clustering choices.",
+    "Keep the 3D graph path disabled unless authoritative same-participant section topology, registration, physical spacing, and a precommitted objective pass admission.",
+    "Replace the dense expression conversion with a memory-safe path and demonstrate fixed-fixture parity.",
+    "Resolve an exact runtime, deterministic policy, and safe tensor-only state export that binds feature and graph order.",
+    "After activation and campaign approval, pass SLURM import, sparse-memory, graph-boundary, 3D prohibition, forward, backward, resume, deterministic seed, node-order, section-order, no-network, and cross-device fixtures."
+  ],
+  "interpretation": "STAGATE is a future target-fitted graph autoencoder baseline. It has no pretrained-corpus contamination, but local split, graph, preprocessing, reconstruction, clustering, memory, and determinism risks remain. No eligible spatial task or external source exists, so it remains deferred.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_registered_task_no_sealed_source_no_verified_memory_safe_runtime_or_frozen_inference_contract",
+  "verified_date": "2026-08-22"
+}

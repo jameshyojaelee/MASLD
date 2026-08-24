@@ -1,0 +1,35 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping and development-only RNA-conditioned ATAC"
+  },
+  "checkpoint_findings": {
+    "scbutterfly_local": {
+      "checkpoint_identity": "project_fitted_scbutterfly_b_per_outer_fold_seed_gene_inventory_peak_inventory_and_preprocessing_state",
+      "corpus": "No upstream checkpoint; exact outer-training same-cell or same-nucleus RNA-ATAC pairs only",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "pairing_preprocessing_inductive_query_and_profile_scale_contract",
+    "sha256": "b5d4ac72aa8368e0997c5e2e73c2f432c835051c20087d0560e314fdf0bf296c"
+  },
+  "interpretation": "scButterfly has no upstream corpus contamination when trained locally, but its released high-level workflow is not leakage-safe: it preprocesses the full supplied RNA and ATAC objects before train/test IDs, requires both modalities, and runs bidirectional test loaders. RNA-conditioned ATAC is admissible only through a new frozen RNA-only adapter. Decoder values are continuous training-target scores; inverse TF-IDF is prohibited because it needs query-ATAC-derived library and frequency quantities. GSE289173 can seal cell-state mapping but cannot seal RNA-conditioned ATAC because it has no ATAC truth.",
+  "remaining_blockers": [
+    "Implement a prepare/fit/predict adapter that fits HVGs, peaks, ATAC IDF/global scale, chromosome order, model state, and calibration on outer-training donors only and accepts RNA-only query tensors.",
+    "Bypass the high-level Butterfly.test_model bidirectional loader, force every module to eval mode, use no-grad inference, and prove adding, removing, or permuting query cells cannot change model state or another query prediction.",
+    "Ignore the upstream ATAC_data_var assignment from RNA_data.var and attach the independently frozen GRCh38.p14 peak table; test exact peak order and chromosome counts.",
+    "Define the primary profile endpoint on direct continuous decoder scores. Do not use inverse TF-IDF counts, predicted fragments, or calibrated accessibility probabilities unless a training-only calibration is prespecified and validated.",
+    "Validate same-nucleus joins for GSE296875. Reject GSE244832 different-aliquot rows as pairs and restrict its profile evaluation to donor-by-cell-state aggregation.",
+    "Freeze scButterfly-B as the common architecture. Treat C/T/TC augmentation as separate native lanes and prove no held labels, ATAC, or cells enter augmentation.",
+    "Replace unrestricted torch.load with a project-controlled local state-dict loader and record exact hashes plus key/shape/dtype manifests.",
+    "Validate the legacy scvi-tools 0.19.0, SciPy 1.9.3, EpiScanpy 0.3.2, Torch, CUDA, BatchNorm, deterministic-seed, resume, and memory behavior on an approved L40S smoke job.",
+    "Prove GSE289173 receives only anonymized RNA after selection lock and cannot influence preprocessing, adaptation, head fitting, or calibration before prediction hashes are committed."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_pending_frozen_rna_only_adapter_training_only_preprocessing_profile_scale_pairing_runtime_and_leakage_fixtures; eligible in principle for sealed cell-state mapping only",
+  "verified_date": "2026-08-22"
+}

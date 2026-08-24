@@ -1,0 +1,62 @@
+{
+  "audit_scope": {
+    "artifact_type": "official_GET_code_plus_unresolved_Requester_Pays_S3_checkpoint",
+    "development_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "sealed_source": "gse289173",
+    "task_id": "variant_to_regulation"
+  },
+  "checkpoint_findings": {
+    "registered_get_s3_prefix": {
+      "checkpoint_identity": "GET-Foundation/get_model@fb05735325350d83c104b5020e50b8ae8ebf13cb plus unresolved s3://2023-get-xf2217/get_demo/ object",
+      "corpus": "Reported pretraining on 1.3 million normal fetal and adult nuclei across 213 cell contexts using observed scATAC accessibility and motif features",
+      "exposure_confidence": "medium_pending_exact_object_and_checkpoint_bound_manifest",
+      "exposure_state": "target_label_unexposed",
+      "identity_status": "inadmissible_mutable_prefix_no_object_version_size_etag_or_hash",
+      "reason": "GSE289173 labels and QTL effects are not declared training targets, but the exact weight object, date, and corpus manifest cannot be audited."
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_MASLD_cell_regulatory_and_variant_sources",
+    "sha256": "60ba35912a1f4b317ea74d7929ce1b7ba04c50f78a40c30da51487c210370b13"
+  },
+  "input_eligibility": {
+    "gse244832": "Development-only observed ATAC context with RNA evaluated at donor-by-cell-state pseudobulk. Distinct aliquot cells are never row-paired.",
+    "gse281364": "No native sequence-only score. A motif perturbation diagnostic requires a prespecified development-derived observed accessibility context.",
+    "gse289173": "Ineligible. The seal has DNA and single-nucleus RNA but no observed ATAC. Binary-ATAC mode still requires the observed accessible-region universe, and missing ATAC cannot be encoded as zero or inferred from sealed RNA.",
+    "gse296875": "Eligible for donor-grouped development because same-nucleus RNA and ATAC are observed. It cannot supply external confirmation because it is project-exposed.",
+    "observed_context_requirement": "observed_cell_context_ATAC_accessible_regions_and_accessibility_values"
+  },
+  "interpretation": "GET's exposure status is provisional because no immutable checkpoint object can be audited. More decisively, the released model is structurally ineligible for the GSE289173 signed-effect endpoint: its context is observed ATAC, while the seal contains RNA but no ATAC. An RNA-to-ATAC proxy would be a separate model and could not make this native GET inference.",
+  "license_disposition": {
+    "code_license_file": "absent_at_frozen_revision",
+    "open_champion_eligibility": "ineligible_under_current_noncommercial_declarations_and_incomplete_weight_terms",
+    "repository_metadata": "README_and_pyproject_declare_CC-BY-NC-4.0",
+    "weights": "UNRESOLVED_no_exact_object_or_terms_record"
+  },
+  "remaining_blockers": [
+    "Select the exact pretraining or expression-fine-tuned checkpoint; with explicit user approval for Requester Pays cost, acquire immutable object metadata, version or equivalent identity, size, ETag, SHA-256, and checkpoint-bound configuration.",
+    "Resolve a complete license grant for code, weights, adaptation, derivatives, and redistribution. The frozen repository has no LICENSE file and only noncommercial metadata declarations.",
+    "Inspect the pickle-backed .pth only in an isolated no-network environment, convert recognized tensors to a safe tensor artifact, and freeze tensor names, shapes, dtypes, and strict-load parity.",
+    "Resolve the paper's 200-region contract against the pinned YAML's 900-region contract, plus motif-cluster identity, feature order, peak selection, expression head, positive and negative strand order, GENCODE v40-to-v49 mapping, and reference coordinates.",
+    "Complete accession, BioProject, SRA, CELLxGENE UUID, donor-alias, and cohort-family checks. GSE289173 appears in at least one 2026 scBaseCount snapshot; any later continual checkpoint trained on that snapshot is ineligible.",
+    "Do not schedule GET for sealed GSE289173 inference under the current task because observed ATAC is structurally missing. Do not replace missing evidence with zeros or a sealed-derived RNA-to-ATAC proxy.",
+    "Lock a no-network runtime and pass safe load, import, forward, backward, resume, deterministic-seed, and L40S numeric-tolerance probes through SLURM after campaign approval."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_missing_native_ATAC_input_unresolved_checkpoint_and_noncommercial_terms",
+  "task_disposition": {
+    "allele_effect": "development_only_motif_perturbation_inside_prespecified_observed_accessible_peaks",
+    "rna_conditioned_atac": "not_supported_GET_uses_ATAC_to_predict_expression_or_regulatory_features",
+    "signed_eqtl_ieqtl": "ineligible_from_sealed_DNA_plus_RNA",
+    "variant_to_regulation": "observed_context_only_development_comparator_not_sealed_champion"
+  },
+  "verified_date": "2026-08-22"
+}

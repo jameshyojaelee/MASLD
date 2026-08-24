@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "cra009621_oscar"
+title = "OSCAR mouse liver-organoid gene-knockout CROP-seq"
+role = "cross_species_stress"
+status = "available"
+species = "mouse"
+accession = ["PRJCA014442", "CRA009621"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "mouse_of_origin_or_independent_organoid_culture"
+expected_biological_units = "UNRESOLVED"
+native_genome_build = "mm10_Cell_Ranger_3.1.0"
+native_annotation_release = "UNRESOLVED_mm10_feature_reference"
+modalities = ["single_cell_rna", "crispr_knockout_guide_assignment", "gene_target", "culture_context"]
+pairing_levels = ["same_cell"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Resolve mouse-of-origin and independent organoid-culture ancestry. The three EM and six DM production accessions correspond to approximately 10,000-cell Chromium lanes and are not automatically biological replicates.", "Freeze the 236 targeting and 10 non-targeting sgRNA crosswalk, unique-guide filter, per-guide cell missingness, and the exact mm10 feature reference.", "Keep guide identities nested within target gene and culture; do not estimate uncertainty from cells, organoids, or sequencing lanes when independent cultures are absent.", "The 79 candidate genes were selected from liver-development knowledge and bulk contrasts, so the screen is conditional follow-up and cross-species stress evidence."]
+notes = "The production screen contains 79 targets, generally three sgRNAs per gene, in expansion and differentiation media. It is native for mouse gene-target model development and descriptive known-target context transfer, but inferential admission awaits source-unit resolution."
+
+[provenance]
+source_url = "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA014442"
+verified_date = "2026-08-24"
+local_exposure = "Primary NGDC project metadata and the CC-BY-4.0 source article were inspected; no model fitting was performed."
+
+[split]
+group_key = "cohort_family_id+mouse_or_culture_id+culture_context+target_gene+guide_family"
+outer_role = "development"
+label_visibility = "development_visible"

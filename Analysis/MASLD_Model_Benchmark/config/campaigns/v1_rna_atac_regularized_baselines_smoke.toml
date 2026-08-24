@@ -1,0 +1,42 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-rna-atac-regularized-baselines-smoke"
+description = "Five-fold donor-held-out six-model RNA-to-ATAC screen on the frozen 1,000-nucleus GSE296875 view, adding nested-CV shrinkage, transcription-only ridge, and shuffled-context control to the completed classical baselines; smoke metrics are descriptive and cannot support a champion"
+wave = "smoke"
+status = "ready"
+prerequisites = []
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = true
+task_ids = ["rna_conditioned_atac"]
+dataset_view_ids = ["gse296875_rna_atac_smoke_1000_v1"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate"]
+model_ids = ["assay_native_pseudobulk", "mean_track", "nearest_context", "shrunken_pseudobulk", "shuffled_context", "trans_only"]
+include_mandatory_baselines = false
+
+[execution]
+default_resource_profile = "cpu_baseline_smoke"
+runtime_id = "cpu_baseline_smoke"
+seeds = [1103]
+folds = [0, 1, 2, 3, 4]
+cell_budget = 1000
+genomic_budget = "2000_atac_blind_sha256_ranked_peaks"
+adaptation_regimes = ["native_lane"]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0
+
+[execution.hyperparameters]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.adapter_request]
+dataset_view_id = "gse296875_rna_atac_smoke_1000_v1"
+withheld_input_roles_by_action = { fit = ["dataset_view_data:gse296875_rna_atac_smoke_1000_v1"], predict = ["dataset_view_data:gse296875_rna_atac_smoke_1000_v1"] }

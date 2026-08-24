@@ -1,0 +1,69 @@
+schema_version = "masld-bench-model-v1"
+family_id = "dna_language"
+modality = ["dna_sequence"]
+status = "candidate"
+
+[[models]]
+model_id = "dnabert2"
+display_name = "DNABERT-2"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "MAGICS-LAB/DNABERT_2@f25bed9ee20db966dff39e5c1571249d04e36404+zhihan1996/DNABERT-2-117M@7bce263b15377fc15361f52cfab88f8b586abda0:pytorch_model.bin"
+checkpoint_sha256 = "7ff39ec77a484dd01070a41bfd6e95cdd7247bec80fe357ab43a4be33687aeba"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact checkpoint was safely converted and the common representation fixture passed under ARTIFACTS a0324f4b774c0af4d8bfbdc9bb4ce4514d62e704e4f0ae34bf8cd8d2c67f9545: 117,074,176 parameters, 768-dimensional pooled features, REF/ALT/RC coordinate mapping, deterministic repeat, tied-decoder validation, and no outcomes. The archived Triton kernel is incompatible with Triton 2.3, so the fixture uses the upstream explicit PyTorch attention fallback. Before task execution, activate the locus-grouped GSE281364 MPRA source and freeze identical cross-fitted heads/evaluator artifacts. Reference sequence is encoder-seen while GSE289173 effects are target-label-unexposed. Native likelihood is not a cell-type effect sign. Common heads may learn cross-fitted MPRA activity/direction only; do not fit or label an eQTL/ieQTL-specific supervised head until a nonsealed signed-effect source is registered."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "nucleotide_transformer"
+display_name = "Nucleotide Transformer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "InstaDeepAI/nucleotide-transformer-500m-human-ref@f87b5d7233295242e79c951873d290f4cf992045:pytorch_model.bin"
+checkpoint_sha256 = "971cb721bd8cc8134d3665b5d94b195fffb18a1480ad5925d6dcc9290bf1c17f"
+license_status = "CC-BY-NC-SA-4.0"
+exposure_status = "target_label_unexposed"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The restricted common representation fixture passed under ARTIFACTS f0c65ebdb5880b9392dfd131e43b3f320df88cd8eccb7accf1f7cc9dd358e325 with 485,699,306 executable learned parameters, 1,280-dimensional six-phase pooled features, deterministic repeat, and no outcomes. The exact converted checkpoint contains 485,700,308 tensor elements: the learned parameters plus a validated 1,002-element legacy position_ids buffer that is nonpersistent in the executable runtime. The upstream JAX metadata separately declares 485,729,545 parameters, 30,239 more than the executable learned checkpoint; its component census is unavailable, so both counts remain distinctly labeled. CC-BY-NC-SA-4.0 terms keep this a restricted nonchampion comparator. Before task execution, activate locus-grouped GSE281364 and freeze identical cross-fitted heads/evaluator artifacts. Reference sequence and the downstream task family were exposed, while GSE289173 effect labels remain unexposed. Native likelihood is not a cell-type effect sign; no eQTL/ieQTL-specific supervised head is permitted without a registered nonsealed signed-effect source."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "hyenadna"
+display_name = "HyenaDNA"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "HazyResearch/hyena-dna@d553021b483b82980aa4b868b37ec2d4332e198a+LongSafari/hyenadna-large-1m-seqlen-hf@0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446:model.safetensors"
+checkpoint_sha256 = "deafb53209bfafb314d14bd81108546a34d473c07ed7ab7a355674376b56ad12"
+license_status = "code_Apache-2.0_weight_BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact safetensors checkpoint, Apache-2.0 code and BSD-3-Clause weights are frozen, and the common representation fixture passed under ARTIFACTS 9deb82d5faae1636cb6129ce6d30b70b8264c6cc30313caa8fb7506293aa12b6 with 6,554,624 parameters, 256-dimensional pooled features, affected-suffix native scores, mandatory RC averaging, deterministic repeat, and no outcomes. Before task execution, activate locus-grouped GSE281364 and freeze identical cross-fitted heads/evaluator artifacts; longer-context throughput remains a native-lane gate. Reference sequence is encoder-seen, with chr14/X held out during pretraining; GSE289173 effects are target-label-unexposed. Native likelihood is not a cell-type effect sign; no eQTL/ieQTL-specific supervised head is permitted without a nonsealed signed-effect source."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "caduceus"
+display_name = "Caduceus"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "kuleshov-group/caduceus@0060a6d8079b6a040fc55d505e15972a327b70a6+kuleshov-group/caduceus-ps_seqlen-131k_d_model-256_n_layer-16@d89eeb853136ea64da7feb3d0c8e909771b17ae6:model.safetensors"
+checkpoint_sha256 = "a3e6976fe90460ff5d90d371b457d0263dc65e156ea5651b4a452e98228daef2"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact Caduceus-PS safetensors checkpoint and Apache-2.0 terms are frozen. With approved acquisition, vendor pinned custom code, freeze the runtime and state schema, and verify RCPS channel realignment/equivariance, 131-kb context, alternate placement, padding, 1,536-bp pooling, MLM scoring, and identical heads. Reference sequence is encoder-seen and an independent eQTL classifier is downstream-demo exposure; GSE289173 effect labels remain unexposed. Published VEP classification is not signed cell-type eQTL prediction. Common heads may learn cross-fitted MPRA activity/direction only; no eQTL/ieQTL-specific supervised head is permitted without a nonsealed signed-effect source."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "evo"
+display_name = "Evo 2 7B"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ArcInstitute/evo2@53f195997257c56c00e5ef8d33a54f5baad143a6+arcinstitute/evo2_7b@bda0089f92582d5baabf0f22d9fc85f3588f6b58:evo2_7b.pt"
+checkpoint_sha256 = "c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact 13,766,621,200-byte Evo 2 7B checkpoint and Apache-2.0 terms are frozen. After campaign approval, inspect the pickle-backed .pt object without network access and convert a restricted state dict; resolve the exact Vortex revision, freeze kernels/runtime, and pass likelihood, alternate-placement, strand, context/chunking, block-28 versus final pooling, identical-head, memory, and resume fixtures. Human reference sequence is encoder-seen and ClinVar/BRCA/DART-QTL are downstream demos; declared training excluded human variation and functional genomics, so GSE289173 effect labels remain unexposed. Common heads may learn cross-fitted MPRA activity/direction only; no eQTL/ieQTL-specific supervised head is permitted without a nonsealed signed-effect source."]
+supported_tasks = ["variant_to_regulation"]

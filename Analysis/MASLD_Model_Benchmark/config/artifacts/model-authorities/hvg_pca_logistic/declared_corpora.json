@@ -1,0 +1,7 @@
+{
+  "declared_pretraining_corpora": [],
+  "fit_data_policy": "Only RunSpec datasets in the fit partition; only training donors inside the frozen outer fold.",
+  "model_id": "hvg_pca_logistic",
+  "pretrained": false,
+  "schema_version": "masld-bench-declared-corpora-authority-v1"
+}

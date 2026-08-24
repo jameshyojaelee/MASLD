@@ -1,0 +1,59 @@
+{
+  "checkpoint_training_corpus": {
+    "human_examples": {"test": 1937, "training": 34021, "validation": 2213},
+    "human_targets": {"CAGE": 638, "DNase_or_ATAC": 684, "histone_ChIP_seq": 1860, "TF_ChIP_seq": 2131},
+    "reference": "hg38",
+    "split_method": "Human and mouse genomes were divided into 1-Mb regions, syntenically connected components were assigned to train, validation, or test, and 196608-bp examples were derived from those partitions.",
+    "training_regime": "Cross-species pretraining followed by 30000 human-only fine-tuning steps",
+    "upstream_sources": ["ENCODE", "FANTOM5", "Basenji2_processed_targets"]
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "2022-05-24",
+    "project_sources": ["gse281364", "gse289173", "gse296875", "current_coloc_gwas"],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "Enformer was evaluated after training against GTEx v7 summary statistics and GTEx v8 fine-mapped eQTLs, and the paper fit downstream eQTL classifiers. Project GTEx-derived genetic outcomes therefore belong to the downstream-demo task family even though project COLOC memberships were not checkpoint targets.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse281364": {
+      "evidence": "GSE281364 became public on 2026-03-16, almost four years after the immutable native weight objects. Its HepG2/LX-2 MPRA allele activities and MASLD study labels were not Enformer training targets. Reference sequence at those loci and generic HepG2 tracks were available upstream.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    },
+    "gse289173": {
+      "evidence": "GSE289173 became public on 2025-02-12, after the 2022 native checkpoint. Its 48 donor cell states and signed cell-type eQTL/ieQTL effects were not training targets. hg38 reference windows at its loci and generic liver or hepatocyte tracks may have been seen.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public on 2025-10-01, after the 2022 checkpoint. Its 39-donor same-nucleus RNA/ATAC measurements and QTL outcomes were not checkpoint targets. The public GEO record describes a cardiometabolic liver multiome cohort but does not provide a MASLD diagnosis or histology phenotype for model supervision.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-10-01",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    }
+  },
+  "held_out_behavior": {
+    "donor": "Enformer has no donor input. Native predictions are identical for every donor at the same allele and window. Donor grouping applies to any development-fitted track combiner, calibration, enhancer-gene link, or signed-effect head.",
+    "locus": "The pretrained model saw broad hg38 reference sequence, except the native syntenic validation/test components. This is encoder exposure, not outcome-label exposure. Project evaluation still crosses donor folds with merged chromosome/LD blocks and a 196608-bp boundary buffer.",
+    "sealed": "GSE289173 may not choose tracks, bins, TSS anchors, aggregation, link models, direction rules, calibration, or thresholds."
+  },
+  "interpretation": "Enformer is a sequence-only functional-genomics prior, not a MASLD or donor-context model. All three named project sources postdate the immutable native checkpoint, so their target labels are unexposed. Reference loci and generic liver/HepG2 biology remain exposed and must be handled by genomic blocks and honest domain-language rather than called pristine.",
+  "rules": {
+    "checkpoint_chronology": "A donor or experimental outcome public after the immutable 2022 GCS objects is target-label-unexposed unless an upstream source contains the same outcome under another identifier.",
+    "conversion_inheritance": "A faithful conversion inherits native corpus exposure. Until parity is proven, it also carries conversion uncertainty and cannot improve its exposure classification.",
+    "genome_overlap": "Reference sequence overlap is encoder exposure. It is controlled with held genomic/LD blocks and the full-window boundary buffer, not misclassified as donor-label contamination.",
+    "track_selection": "Static liver, HepG2, CAGE, DNase, or ATAC tracks are prespecified with development data only. No sealed label can select or weight a track.",
+    "trans_context": "Enformer accepts no expression vector. A fixed training track is not observed MASLD context and cannot satisfy an RNA-conditioned endpoint."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "task_data_gate": {
+    "gse281364": "Retrospective MPRA direction and rank diagnostic only, with locus-cross-fitted feature selection.",
+    "gse289173": "Eligible for one-time sequence inference after selection lock only if checkpoint and terms gates pass; signed eQTL/ieQTL effects remain evaluator-only.",
+    "gse296875": "Eligible as development data for static sequence-track baselines or a separately named fitted head; it cannot turn Enformer itself into RNA-conditioned ATAC."
+  },
+  "verified_date": "2026-08-22"
+}

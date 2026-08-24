@@ -1,0 +1,15 @@
+{
+  "authority": "weights_license",
+  "declared_license": "not_applicable_classical",
+  "derivative_redistribution_allowed": true,
+  "model_ids": [
+    "hvg_pca_elastic_net",
+    "hvg_pca_knn",
+    "hvg_pca_linear_svm",
+    "hvg_pca_logistic",
+    "hvg_pca_nearest_centroid"
+  ],
+  "redistribution_allowed": true,
+  "schema_version": "masld-bench-license-authority-v1",
+  "use_allowed": true
+}

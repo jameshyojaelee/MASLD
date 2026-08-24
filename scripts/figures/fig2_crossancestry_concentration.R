@@ -2,8 +2,9 @@
 # fig2_crossancestry_concentration.R  (2026-07-05)
 # Fig 2 (main) panel — "cross-ancestry probability-mass concentration".
 #
-# Supports the manuscript claim (fig2.md para 4): joint cross-ancestry
-# fine-mapping shifts probability mass toward the true causal variant.
+# Illustrates how joint cross-ancestry fine-mapping redistributes posterior
+# probability relative to an EUR-specific model. It is a model-resolution
+# comparison, not identification of the causal variant.
 #
 # SOURCE (2026-07-05): rebuilt on the within-MVP N-way cross-ancestry run
 #   (SuSiEx + meSuSiE; EUR/AFR/AMR/EAS; 7 MVP traits; 411 shared loci) that
@@ -15,7 +16,7 @@
 # WHAT THIS PANEL SHOWS (and why it is the HONEST metric):
 #   One horizontal dumbbell per established MASLD / liver locus (canonical set;
 #   the full per-gene record is written to the source CSV).
-#     left point  = EUR-specific lead PIP  = best PIP in a EUR-ancestry-specific
+#     left point  = EUR-specific lead PIP  = best PIP in an EUR-restricted
 #                   meSuSiE credible set (max_pip_EUR) — the within-MVP EUR-only
 #                   signal for that locus.
 #     right point = joint lead PIP         = best PIP in a cross-ancestry SHARED
@@ -42,7 +43,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-PANEL_DIR <- file.path(FIG3_DIR, "panels")          # FIG3_DIR == figures/main/fig2_genetics
+PANEL_DIR <- Sys.getenv("FIG2_SUPP_OUT_DIR", unset = file.path(FIG3_DIR, "panels"))
 dir.create(PANEL_DIR, showWarnings = FALSE, recursive = TRUE)
 
 # ---------------------------------------------------------------------------
@@ -56,7 +57,7 @@ mg <- fread(file.path(BASE, "GWAS/finemapping/results/mesusie_mvp/mesusie_gene_s
 gs <- gs[GeneSymbol != "" & !is.na(GeneSymbol)]
 mg <- mg[GeneSymbol != "" & !is.na(GeneSymbol)]
 
-# meSuSiE per-ancestry-combo PIP columns. Split into single-ancestry-SPECIFIC
+# meSuSiE per-ancestry-combo PIP columns. Split into single-ancestry-restricted
 # (1 token, e.g. max_pip_EUR) vs cross-ancestry SHARED (>=2 tokens, e.g.
 # max_pip_EUR_AFR_AMR). The honest concentration test compares the EUR-SPECIFIC
 # credible-set PIP against the best SHARED credible-set PIP: these are DIFFERENT
@@ -183,7 +184,7 @@ if (nrow(gckr) == 1)
                     size = PUB_GEOM_TEXT, color = "#00695C", vjust = -1.3, hjust = 1.08)
 
 message(sprintf(
-  "[caption] Joint fine-mapping concentrates probability mass. MVP cross-ancestry (EUR/AFR/AMR/EAS): joint inference raised the lead-variant PIP above the EUR-specific signal at %d of %d MASLD loci; %d lowered, %d unchanged.",
+  "[caption] Joint fine-mapping redistributes probability mass. MVP cross-ancestry (EUR/AFR/AMR/EAS): joint inference raised the lead-variant PIP above the EUR-specific model at %d of %d displayed MASLD/liver loci; %d lowered, %d unchanged. This is method-resolution evidence, not proof of the causal variant or ancestry-specific biology.",
   n_gain, n_eur, sum(pl$delta < -0.005), sum(abs(pl$delta) <= 0.005)))
 
 save_fig(p, file.path(PANEL_DIR, "FigS2J_crossancestry_pip_concentration.pdf"),

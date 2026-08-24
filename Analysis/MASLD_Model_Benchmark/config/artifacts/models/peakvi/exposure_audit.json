@@ -1,0 +1,32 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "development-only ATAC representation/integration"
+  },
+  "checkpoint_findings": {
+    "peakvi": {
+      "checkpoint_identity": "project_trained_per_outer_fold_seed_and_training_only_region_inventory",
+      "corpus": "No upstream checkpoint or pretraining corpus; only declared outer-training donor ATAC matrices",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "task_specific_local_training_and_sealed_modality",
+    "sha256": "ff6f58b28ec2ce3c1a61c5cf33ca6988e181c8ea8a39696835e3c8058b969fb4"
+  },
+  "interpretation": "PeakVI has no foundation-checkpoint contamination because every admitted model is trained locally within outer folds. Its leakage risks are training-plus-held peak unions, region filtering, data-dependent model dimensions, covariates, early stopping, query adaptation, and downstream heads. It is an ATAC latent/accessibility model, not an RNA-conditioned profile or allele-effect model, so it cannot enter the current sealed endpoints.",
+  "remaining_blockers": [
+    "Activate GSE296875 only after its donor/barcode/well/reference/peak/QC/missingness authorities pass and freeze same-nucleus rows without using held donors.",
+    "Freeze explicit hidden and latent dimensions after the training-only peak contract; do not allow implicit square-root defaults to alter capacity by fold.",
+    "Freeze donor-grouped training/validation splits, peak coordinates/order, covariates, five seeds, early stopping, posterior-mean extraction, normalized-accessibility options, and local artifact hashes.",
+    "Prohibit load_query_data or any other held-row adaptation unless a separate outcome-blind lane is prospectively frozen.",
+    "Validate scvi-tools 1.5.0.post1 import, sparse data path, forward/backward, checkpoint resume, deterministic seeds, and cross-device tolerances on L40S.",
+    "Create a separate nonpromotable ATAC representation/integration TaskSpec with assay-native baselines before scheduling."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_for_current_sealed_tasks_due_to_modality; eligible_only_for_a_separately_registered_development_atac_task_after_local_runtime_and_data_locks",
+  "verified_date": "2026-08-22"
+}

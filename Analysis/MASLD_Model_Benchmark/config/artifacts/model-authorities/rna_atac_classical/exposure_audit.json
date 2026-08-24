@@ -1,0 +1,18 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "exposure_audit",
+  "model_ids": [
+    "assay_native_pseudobulk",
+    "mean_track",
+    "nearest_context"
+  ],
+  "checkpoint_exposure": "not_applicable_classical",
+  "project_fit_exposure": "outer_training_donors_only",
+  "held_outer_fold_atac_exposure": false,
+  "held_outer_fold_rna_exposure": "prediction_input_only",
+  "gse296875_status_after_fit": "continual_seen_development_only",
+  "gse289173_target_labels_exposed": false,
+  "fnih_target_labels_exposed": false,
+  "champion_claim": "development smoke cannot support a champion; FNIH is the conditional external seal for this task",
+  "audit_code_sha256": "5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+}

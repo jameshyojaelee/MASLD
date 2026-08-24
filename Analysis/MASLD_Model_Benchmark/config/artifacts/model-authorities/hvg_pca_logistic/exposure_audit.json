@@ -1,0 +1,9 @@
+{
+  "checkpoint_exposure": "target_label_unexposed",
+  "checkpoint_sha256": "NOT_APPLICABLE",
+  "model_id": "hvg_pca_logistic",
+  "pretrained": false,
+  "schema_version": "masld-bench-model-exposure-audit-v1",
+  "target_labels_before_fold_fit": false,
+  "training_boundary": "Training labels are read only for non-held donors after the deterministic donor split is frozen."
+}

@@ -1,0 +1,54 @@
+{
+  "checkpoint_training_corpus": {
+    "biological_source": "mouse_liver_hepatocyte_and_liver_cell_type_accessible_regions",
+    "input_regions": 219823,
+    "output_topics": 82,
+    "reference": "mm10",
+    "task": "multilabel_regulatory_topic_classification_from_500bp_sequence"
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "2025-01-09_registered_conversion_last_modified",
+    "project_sources": ["gse281364", "gse289173", "gse296875"],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "gse281364": {
+      "evidence": "GSE281364 became public on 2026-03-16, after the registered converted archive. Its human HepG2 and LX-2 MPRA outcomes were not mouse DeepLiver training targets. The model reference and outputs are incompatible with the human source.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16",
+      "species_domain": "incompatible_human_source"
+    },
+    "gse289173": {
+      "evidence": "The converted archive was last modified on 2025-01-09, before GSE289173 became public on 2025-02-12. Its 48 human donor cell states and signed liver cell-type eQTL and ieQTL outcomes were not mouse topic targets. No native GRCh38 or human gene-effect output exists.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "species_domain": "incompatible_human_source"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public on 2025-10-01, after the archive. Its human same-nucleus RNA and ATAC measurements were not mouse topic targets, and the model cannot consume observed expression context.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-10-01",
+      "species_domain": "incompatible_human_source"
+    }
+  },
+  "held_out_behavior": {
+    "donor": "DeepLiver Accessibility has no donor input. Native predictions are identical for every donor at the same 500-bp mouse sequence.",
+    "human_locus": "There is no valid GRCh38 inference path. Liftover cannot transform a human allele into an mm10-trained example or map 82 mouse topic scores to signed human gene effects.",
+    "mouse_locus": "The publication used held training, validation, and test sequence regions, but this does not create a held-human-locus contract. Any future mouse diagnostic must freeze homolog selection and sequence windows without human outcomes.",
+    "sealed": "GSE289173 cannot select mouse topics, orthologs, lifted regions, output combinations, links, directions, calibration, or thresholds."
+  },
+  "interpretation": "The registered archive predates the named project targets and is target-label-unexposed, but that fact does not make it relevant. DeepLiver Accessibility is a restricted mm10 mouse-topic classifier with approximate Keras-port parity. It has no active v1 task and remains a future cross-species mechanistic diagnostic only.",
+  "rules": {
+    "conversion": "The converted Keras artifact inherits the original mouse training exposure but adds conversion uncertainty; approximate correlation cannot establish signed-delta identity.",
+    "species": "Coordinate liftover does not repair species, training-distribution, topic-semantic, or gene-direction mismatch.",
+    "trans_context": "DeepLiver accepts only sequence. A mouse liver topic is a fixed output class, not observed human donor RNA context.",
+    "variant_direction": "A REF-versus-ALT change in an 82-topic score is not a signed eQTL or ieQTL effect and has no native enhancer-gene link."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "task_data_gate": {
+    "gse281364": "No active use. At most a future explicitly cross-species mouse-topic diagnostic after terms and conversion parity are resolved.",
+    "gse289173": "Not eligible for sealed inference or champion selection because the model has the wrong species, reference, context, and endpoint.",
+    "gse296875": "Not eligible for RNA-conditioned ATAC; it neither consumes RNA nor predicts an ATAC profile."
+  },
+  "verified_date": "2026-08-22"
+}

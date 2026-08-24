@@ -1,0 +1,84 @@
+{
+  "audit_scope": {
+    "checkpoint": "prism-oncology/novae-human-0@b8c0a5d7612bac6bc719ab57ed3cd16ad814728c:model.safetensors_sha256_7d1e4a051469d14e796994faa34a41556183e78757f5dc70a99dbd9f6a19ce87",
+    "candidate_sources": [
+      "gse192741",
+      "gse292268",
+      "hra007511",
+      "vu2025"
+    ],
+    "code": "prism-oncology/novae@b71c2234c2d1c8e88981297dfdcb8b61b42c03c0",
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "checkpoint_blob_date": "2024-09-10",
+    "checkpoint_identity": "model.safetensors_128175588_bytes_sha256_7d1e4a051469d14e796994faa34a41556183e78757f5dc70a99dbd9f6a19ce87",
+    "checkpoint_specific_corpus_receipt": "UNRESOLVED",
+    "declared_corpus": "78 image-based spatial samples, 28,909,516 cells, 18 tissues, including 6 human normal or cancer liver samples with 2,373,073 cells",
+    "exposure_confidence": "high_for_generic_liver_encoder_exposure_low_to_medium_for_exact_project_accession_aliases",
+    "generic_liver_exposure": "encoder_seen",
+    "masld_target_supervision_declared": false,
+    "overall_project_exposure_state": "unknown",
+    "reason": "The publication declares liver pretraining context but the exact checkpoint bytes are not bound to a complete accession, donor-alias, and source-version manifest. Later target chronology alone cannot resolve older sources or aliases."
+  },
+  "project_source_findings": {
+    "gse192741": "Unknown checkpoint exposure because the public source predates the 2024 blobs and no exact alias crosswalk to the 78 samples is frozen. It is project-exposed downstream and cannot be a seal regardless.",
+    "gse292268": "Target labels are temporally unexposed to the 2024 weight blobs, but exact donor and source aliases remain unaudited. The source is blocked and too small.",
+    "hra007511": "Unknown until source aliases and checkpoint corpus membership are resolved. Controlled access and project exposure independently prevent a pristine claim.",
+    "vu2025": "Target labels are temporally unexposed to the 2024 weight blobs, but exact aliases remain unaudited. The source is DSA- and join-blocked.",
+    "generic_liver": "The encoder has definite normal and cancer liver context exposure. This is representation exposure, not MASLD endpoint supervision."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "checkpoint_corpus_candidate_MASLD_sources_native_transduction_strict_frozen_lane_graph_leakage_and_activation_gate",
+    "sha256": "44ca7ad4341e49ee3eda73e1f6a1b493ea5ad85f61da0f1881095719ceb48846"
+  },
+  "held_donor_finding": {
+    "frozen_encoder": "Potentially inductive only with a development-frozen gene policy, graph recipe, task head or prototypes, domain mapping, and no access to other held donors' features.",
+    "native_zero_shot": "Transductive. zero_shot=True refits K-means prototypes on selected target or reference latent representations and overwrites the checkpoint's prototype behavior.",
+    "reference_all": "Cross-donor transductive because it pools evaluation-cohort features.",
+    "target_preprocessing": "Automatic HVG fitting and slide-level gene mean and standard-deviation estimation use held features. Disable or disclose them; they are not strict frozen preprocessing.",
+    "fine_tuning": "Query-adaptive and a new artifact identity, never synonymous with zero-shot."
+  },
+  "spatial_leakage_finding": {
+    "graph": "Generic Delaunay construction without a locked radius can bridge tissue islands. Graph each authoritative participant, core, and section independently and hash the adjacency and distance matrices.",
+    "vu2025": "A capture array mixes four to five participants. No graph is allowed until barcode and tissue-island participant boundaries are frozen.",
+    "slide_ids": "The native default can use process-local Python object IDs. Supply globally unique immutable section IDs to make graphs, batching, queues, and receipts reproducible.",
+    "domain_selection": "Hierarchy level, number of domains, Leiden resolution, leaf mapping, and calibration are development-only choices.",
+    "replication": "Nodes, spots, cells, edges, prototypes, leaves, sections, and arrays are not biological replicates."
+  },
+  "known_incidents_and_biases": [
+    "The Hugging Face checkpoint repository declares neither a license field nor a license file; BSD source-code terms do not grant weight use, adaptation, or redistribution rights.",
+    "The current source tag postdates the 2024 weight blobs and has no checkpoint-producing environment or fixed-fixture numeric parity receipt.",
+    "The published corpus has definite normal and cancer liver exposure, while checkpoint-specific accession and donor aliases are not bound to the weights.",
+    "The official zero-shot API name obscures target K-means refitting and can create cross-donor transduction with reference='all'.",
+    "Automatic HVGs and slide statistics can be estimated on target features before evaluation.",
+    "The model was pretrained on image-based single-cell assays; Visium evaluation is cross-resolution and can fail for reasons hidden by domain-level metrics.",
+    "The optional H&E code path and gated CONCH weights are a separate composite with separate terms; the canonical checkpoint is transcriptomic.",
+    "Default Delaunay graphs can join disconnected tissue islands, and default slide IDs can depend on process memory identity.",
+    "The newer Novae-scConcept checkpoint is a separate non-admitted composite with 2025/2026 corpus exposure and a 6.7-GB Lightning parent checkpoint; it cannot inherit this audit."
+  ],
+  "license_disposition": {
+    "code": "BSD-3-Clause_at_v1.1.1",
+    "checkpoint": "UNRESOLVED_no_declared_model_license",
+    "aggregate_training_dataset_card": "BSD-3-Clause_tag_but_underlying_source_terms_not_replaced",
+    "optional_H&E_weights": "gated_separate_terms_not_admitted",
+    "fine_tuned_or_derivative_weights": "not_authorized",
+    "open_champion": "ineligible"
+  },
+  "remaining_blockers": [
+    "Obtain written terms for use, adaptation, and derivative-weight redistribution of the exact canonical checkpoint. Audit underlying training-source rights rather than relying on the aggregate dataset-card tag.",
+    "Obtain or reconstruct a checkpoint-bound training manifest with accessions, donor aliases, source versions, platform, tissue, release date, and inclusion receipt; resolve every candidate MASLD cohort alias before assigning an eligible exposure state.",
+    "Activate a rights-cleared, adequately powered donor-level spatial RNA source and register a spatial TaskSpec with native baselines, external source, power, uncertainty, multiplicity, and champion gate.",
+    "Freeze a strict held-donor adapter that disables target-fit HVGs, defines any transferable expression scaling, uses a section-local outcome-blind graph, and fits heads, prototypes, hierarchy, domains, and calibration on development donors only.",
+    "Register the native zero-shot path separately as transductive, prohibit reference='all' in strict held-donor evaluation, and assign new identities to all query-fine-tuned states.",
+    "Freeze globally unique section IDs, coordinate units, scale-to-microns, participant and core boundaries, graph implementation and hyperparameters, and adjacency and distance hashes.",
+    "After rights and campaign approval, acquire only immutable checkpoint and config blobs, verify SHA-256 and size, enforce safetensors and schema-validated JSON loading offline, and prove exact vocabulary and tensor restoration.",
+    "Create an exact runtime lock and pass L40S load, preprocessing, graph boundary, frozen inference, native transductive inference, forward, backward, resume, deterministic-seed, node- and section-order invariance, no-network, and cross-device tolerance probes through SLURM."
+  ],
+  "interpretation": "Novae's public checkpoint is technically addressable and its code is BSD-licensed, but the model itself is not campaign-ready. Weight terms are absent, the corpus has known liver encoder exposure without a checkpoint-bound alias receipt, and its native zero-shot path refits query prototypes. No current MASLD spatial source supplies a rights-cleared, adequately powered, project-sealed donor endpoint. Novae therefore remains deferred and cannot enter v1 or earn a champion claim.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_registered_spatial_task_no_project_seal_no_powered_rights_cleared_dataset_missing_checkpoint_terms_unknown_project_alias_exposure_and_native_zero_shot_is_transductive",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,9 @@
+{
+  "authority": "derivative_weights_license",
+  "declared_license": "project_owned",
+  "derivative_redistribution_allowed": true,
+  "model_id": "scpair",
+  "redistribution_allowed": true,
+  "schema_version": "masld-bench-license-authority-v1",
+  "use_allowed": true
+}

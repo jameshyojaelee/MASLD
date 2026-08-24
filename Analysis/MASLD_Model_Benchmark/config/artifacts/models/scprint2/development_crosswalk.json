@@ -1,0 +1,64 @@
+{
+  "corpus": {
+    "declared_components": ["CELLxGENE", "Tahoe", "scBaseCount"],
+    "declared_scale_cells": "more_than_350_million",
+    "declared_scale_datasets": "more_than_22000",
+    "declared_species": 16,
+    "exact_snapshot_status": "UNRESOLVED",
+    "source_evidence": "README, config/base_v2.yml collection name, and preprint-linked repository",
+    "warning": "scBaseCount is continually expanding. Neither an immutable scBaseCount manifest nor exact CELLxGENE/Tahoe snapshot is bound to the released checkpoint."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the original checkpoint object was uploaded.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO became public before checkpoint upload. The initial scBaseCount release predates GEO, but scBaseCount was continually expanding and the checkpoint has no immutable source snapshot.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Public before checkpoint upload; exact three-source corpus snapshot unresolved.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "identity_scope": {
+    "corpus_and_findings": "The existing corpus and findings objects apply only to scprint2_small_v2.",
+    "non_substitution_rule": "scprint2_medium cannot inherit the small-v2 corpus, release date, post-artifact findings, or the scPRINT v1/v1.5 medium corpus and exposure audit.",
+    "registered_model_ids": ["scprint2_small_v2", "scprint2_medium"]
+  },
+  "medium_corpus": {
+    "declared_components": "UNRESOLVED_NO_RELEASED_scPRINT-2_MEDIUM_CHECKPOINT",
+    "exact_snapshot_status": "UNRESOLVED",
+    "inherited_from_scprint2_small_v2": false,
+    "inherited_from_scprint_v1_or_v1_5": false,
+    "model_id": "scprint2_medium"
+  },
+  "medium_findings": {
+    "GSE136103": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "The source postdates small-v2, but no scPRINT-2 medium artifact date exists; small-v2 chronology cannot be inherited.", "exposure_state": "unknown", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "No scPRINT-2 medium checkpoint or corpus receipt exists. Do not infer sealed cleanliness from small-v2, legacy medium, or an unreleased architecture name.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "No scPRINT-2 medium checkpoint, release date, declared corpus, or immutable training membership exists to audit.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "model_task_disposition": {
+    "scprint2_medium": {"champion_eligibility": "ineligible", "exposure_state": "unknown", "status": "deferred_no_checkpoint", "supported_task": "cell_state_mapping"},
+    "scprint2_small_v2": {"champion_eligibility": "ineligible_while_exposure_unknown", "exposure_state": "unknown", "status": "candidate", "supported_task": "cell_state_mapping"}
+  },
+  "rules": {
+    "post_artifact": "A source first public after the immutable checkpoint upload is clean_declared unless another declared corpus names it.",
+    "pre_artifact": "A source public before upload remains unknown until exact CELLxGENE, Tahoe, and scBaseCount manifests plus retained/holdout membership are frozen.",
+    "scprint2_medium": "All sources remain unknown until an upstream-released medium identity, immutable artifact date, exact corpus and membership, code/config/runtime, and separate terms are frozen."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

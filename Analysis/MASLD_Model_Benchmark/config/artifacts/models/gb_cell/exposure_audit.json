@@ -1,0 +1,97 @@
+{
+  "audit_scope": {
+    "artifact_bundle_id": "gb_cell",
+    "registry_model_id": "gb_cell",
+    "checkpoint": "genbio-ai/GB.Cell-100M@a983b388e1025860f2c413ecef60e76078253c24:model.safetensors",
+    "development_encoder_overlap": "all_registered_cell_state_sources_retained_as_unknown",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "gb_cell_100m": {
+      "checkpoint_identity": "genbio-ai/GB.Cell-100M@a983b388e1025860f2c413ecef60e76078253c24:model.safetensors",
+      "checkpoint_object_status": "exact_remote_safetensors_object_pinned_not_downloaded",
+      "sha256": "4602f09951c5a2f8cb814363f68cd63d8d7bd145e02560b852f6652df78bec77",
+      "size_bytes": 399481732,
+      "corpus": "50 million human cells from more than 100 tissues, described as following the scFoundation supplementary dataset list across GEO, DISCO, hECA, Single Cell Portal, and other sources",
+      "corpus_inventory_status": "no_checkpoint_bound_accession_release_alias_donor_retained_cell_label_or_cutoff_roster",
+      "exposure_state": "unknown"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "15a57bb3e8d46408747501b521047015e68e2b68646b1328e3957a26754930ec"
+  },
+  "interpretation": "The checkpoint bytes are pinned exactly and the safetensors format provides a safe acquisition target, but the training corpus is not accession-resolved or bound to those bytes. All Atlas sources, including project-sealed GSE289173, remain exposure-unknown. The GenBio AI Community License independently prevents open-champion status and prohibits using embeddings, gradients, or other outputs to train the independently implemented conditional MASLD model.",
+  "preprocessing_and_evaluation_findings": [
+    {
+      "benchmark_action": "freeze_exact_gene_and_count_contract",
+      "finding": "The pinned standalone implementation expects nonnegative raw counts aligned to an exact 19,264-name order, normalizes to log1p counts per 10,000, appends two raw-depth values, clips at 20, and rejects zero-total or nonfinite rows."
+    },
+    {
+      "benchmark_action": "preserve_structural_missingness",
+      "finding": "The upstream helper inserts zero for assay-absent model genes and supplies a mask. The project must retain explicit missingness outside the tensor so panel absence is not an observed biological zero."
+    },
+    {
+      "benchmark_action": "freeze_pooling_and_model_scale",
+      "finding": "The official standalone embedding example performs attention-mask-weighted mean pooling over the last hidden state and includes two depth positions, but defaults to GB.Cell-3M. The GB.Cell-100M handle, layer, masks, depth-token inclusion, and 640-dimensional output must be explicit."
+    },
+    {
+      "benchmark_action": "resolve_documentation_conflict",
+      "finding": "The exact config and paper specify hidden size 640; the current model-card table says 650. The config controls execution and the discrepancy remains documented."
+    },
+    {
+      "benchmark_action": "runtime_probe_before_scheduling",
+      "finding": "The standalone package uses loose dependency ranges, config metadata cites Transformers 4.38.0.dev0, FlashAttention is optional, and neither L40S nor B6K has an immutable tested runtime receipt."
+    }
+  ],
+  "contamination_findings": {
+    "declared_corpus": "The paper and model card declare source categories and a scFoundation-derived list but not the exact retained inputs for this checkpoint.",
+    "public_chronology": "Some Atlas sources predate the original weight release; others postdate it or the safetensors conversion. None can be promoted from unknown using public dates alone because private access, release aliases, label use, and exact training cutoff are unrecorded.",
+    "format_conversion": "The May 2025 safetensors conversion is a packaging event, not evidence of training or a new corpus cutoff.",
+    "sealed_source": "GSE289173 remains unknown, not target_label_unexposed. It cannot score a champion while this checkpoint is selected.",
+    "future_project_heads": "Any project head is continual_seen for the development donors and labels used to fit it. It does not repair encoder exposure."
+  },
+  "terms_findings": {
+    "checkpoint_license": "GenBio AI Community License Agreement",
+    "repository_root_license": "GenBio AI Community License Agreement",
+    "nested_package_conflict": "The standalone pyproject metadata says Apache-2.0, but the repository root license defines all GenBio Materials broadly and no nested license text supersedes it. Apply the stricter GenBio terms unless clarified in writing.",
+    "use": "Noncommercial only under a nontransferable, nonsublicensable, revocable limited grant.",
+    "outputs": "The definition expressly includes activations, attention maps, gradients, and embeddings.",
+    "similar_model_training": "Outputs or output derivatives cannot train or improve similar models except the GenBio Materials themselves or downstream Derivative Works of them.",
+    "distribution": "License copy, prescribed notice, Powered by GenBio AI display, and modification notice are required where applicable.",
+    "derivative_weights": "Restricted noncommercial GenBio derivative works only; not unrestricted open weights.",
+    "institutional_confirmation": "required_before_execution_even_as_a_frozen_comparator"
+  },
+  "safe_loading_findings": {
+    "preferred_object": "model.safetensors only",
+    "rejected_object": "pytorch_model.bin because it is pickle-backed and unnecessary",
+    "offline_rule": "Acquire approved exact files, verify SHA-256 and size before parsing, then load from a no-network local path without remote code resolution.",
+    "source_rule": "Use only the pinned ModelGenerator implementation and gene-list bytes; mutable main branches and latest tags are prohibited.",
+    "fixture_rule": "Freeze parameter names, shapes, dtypes, configuration, gene order, preprocessing, pooling, row-order invariance, CPU or GPU tolerance, and output digest before any screen."
+  },
+  "published_downstream_components": {
+    "cell_annotation": "The paper reports zero-shot and fine-tuned cell tasks, but no published result identifies a project-ready MASLD annotation head or changes the base checkpoint's unknown corpus exposure.",
+    "perturbation": "Published perturbation modeling is a downstream fitted system, not a perturbation head contained in the frozen base checkpoint.",
+    "conditional_context": "The license blocks using base outputs to train the independent conditional MASLD model under the current project interpretation."
+  },
+  "remaining_blockers": [
+    "Obtain institutional confirmation that the intended benchmark inference, project probe, publication, and release of predictions comply with the GenBio AI Community License.",
+    "Obtain a checkpoint-bound accession, release-alias, donor, retained-cell, label-use, and training-cutoff roster for the 50-million-cell corpus and resolve every Atlas overlap.",
+    "Freeze the exact 19,264-name mapping, duplicate and alias policy, nonnegative raw-count validation, depth values, mask semantics, last layer, pooling, and 100M model handle.",
+    "Resolve the root GenBio license versus nested Apache-2.0 metadata conflict in writing; retain the stricter terms until then.",
+    "Build an immutable runtime lock and pass no-network CPU fallback and L40S fixtures for import, exact safetensors load, preprocessing, deterministic forward, row order, memory, and numeric tolerance after campaign approval.",
+    "Pass the cell-state capability fixture with the identical sealed GSE289173 row universe and donor-grouped prediction bundle.",
+    "Do not use embeddings, gradients, attention maps, or predictions to train the independent conditional MASLD model."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_due_unknown_exposure_and_GenBio_noncommercial_revocable_output_training_and_distribution_terms",
+  "task_disposition": {
+    "cell_state_mapping": "admission_blocked_restricted_frozen_representation_comparator",
+    "conditional_masld_model": "prohibited_as_backbone_context_teacher_or_feature_training_source_under_current_terms",
+    "perturbation_response": "not_admitted_without_a_separate_exact_fitted_system_manifest",
+    "bulk_state_transfer": "not_admitted",
+    "released_open_champion": "ineligible"
+  },
+  "verified_date": "2026-08-22"
+}

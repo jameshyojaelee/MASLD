@@ -1,0 +1,60 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_future_project_trained_weights",
+    "development_sources": ["gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_id": "perturbation_transfer"
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_checkpoint": false,
+    "code_identity": "bunnech/cellot@522d2b953da8ad244fcf36f64521487fdf763788",
+    "declared_algorithm_exposure_state": "target_label_unexposed",
+    "future_project_fit_rule": "A transport map is outcome-exposed to every control and perturbed distribution used in its fit, and any autoencoder is encoder_seen for its training cells. A map fit to GSE281160 target cells cannot be evaluated as an unseen-target prediction for that target."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "3e23b10ef1912e69701b1d01ec7991c48ab14b14797158625cf84131c25a851a"
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {
+      "benchmark_action": "replace",
+      "finding": "Default split utilities divide cells, not biological replicates or animals, and can place cells from one experimental unit across train and evaluation."
+    },
+    {
+      "benchmark_action": "isolate_as_inner_validation",
+      "finding": "The trainer selects model.pt using MMD on loader.test. The benchmark outer test must never occupy this upstream test role."
+    },
+    {
+      "benchmark_action": "fit_inside_outer_training",
+      "finding": "PCA or autoencoder representations loaded before transport can expose evaluation expression unless fitted and frozen within outer training."
+    },
+    {
+      "benchmark_action": "reject_current_task",
+      "finding": "A perturbation's observed target distribution is required to learn the transport map; CellOT has no target identity input for a wholly unseen perturbation."
+    },
+    {
+      "benchmark_action": "preserve_topology",
+      "finding": "Optimal transport couples unpaired distributions; transported source rows are not biological pairs with target cells."
+    }
+  ],
+  "prediction_first_rule": {
+    "gse313774": "The 33 bulk RNA libraries cannot be treated as cells or distributions of cells. No direct CellOT stress prediction is valid on this source."
+  },
+  "remaining_blockers": [
+    "Keep CellOT unscheduled for the current held-target task; register a known-perturbation held-donor or held-context distributional task before fitting.",
+    "Resolve biological replicates and pairing, then assign grouped outer and inner roles before all preprocessing.",
+    "Fit PCA or autoencoder only on outer-training cells and export decoded absolute gene profiles.",
+    "Use inner validation rather than outer evaluation for the pinned trainer's MMD checkpoint selection.",
+    "Freeze each source-target perturbation map, context, normalization, genes, architecture, optimizer, seeds, and artifact hashes.",
+    "Pass isolated legacy runtime, safe state-dict resume, grouped split, and no-held-target-distribution fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_and_current_task_requires_the_held_target_distribution",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "future_known_perturbation_tasks_only",
+    "rule": "Decode transported cells to the frozen gene space, aggregate by biological replicate, and compute O_pert from training perturbation centroids only. OT sample couplings do not become replicates."
+  },
+  "terms_result": "code_BSD-3-Clause",
+  "verified_date": "2026-08-22"
+}

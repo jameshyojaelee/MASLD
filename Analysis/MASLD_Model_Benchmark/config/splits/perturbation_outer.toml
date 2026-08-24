@@ -1,0 +1,10 @@
+schema_version = "masld-bench-split-v1"
+split_id = "perturbation_outer"
+entity = "perturbation_target"
+group_keys = ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"]
+roles = ["train", "development", "withheld_sealed"]
+seed = 20260821
+locus_grouping = "All guides and target windows for one target locus remain in one outer role."
+label_policy = "Single cells inherit their experimental-replicate or animal split; cells never define independent folds."
+exposure_policy = "MPRA-selected CROP-seq targets are exposed conditional follow-up and cannot be described as unbiased validation."
+admission_gates = ["Group all guides targeting the same locus.", "Group all cells by biological replicate or animal.", "Keep synchronous or repeated specimens together.", "Evaluate mouse data only with animal-held summaries."]

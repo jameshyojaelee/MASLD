@@ -1,0 +1,53 @@
+{
+  "current_task_admission": {
+    "decision": "blocked",
+    "primary_reason": "Released LPM learns symbolic P/R/C vocabularies from training data and cannot represent a wholly unseen held noncoding perturbation symbol.",
+    "prohibited_workaround": "unknown_perturbation_to_control_outcome_informed_vocabulary_extension_or_nearest_gene_substitution",
+    "task_id": "perturbation_transfer"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "blocked_current_topology",
+      "reason": "LPM records require an authoritative P/R/C-to-animal join. The current same-study-unpaired topology and unresolved target mapping do not preserve animal-level replication."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_current_task",
+      "reason": "Held noncoding loci and guide-family perturbation symbols are absent from a training-only vocabulary. Upstream encode_data would silently encode an unknown perturbation as control, which the project must reject."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_prediction_first_stress",
+      "reason": "The liver-chip condition identities are unseen C symbols and its intervention arms do not match training perturbation P symbols. Adding them to the fitted vocabulary would require opening target outcomes."
+    }
+  },
+  "held_target_leakage_contract": {
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "context", "biological_replicate"],
+    "normalization_and_HVG": "outer_training_partition_only",
+    "split_order": "group_before_normalization_HVG_aggregation_vocabulary_construction_or_fit",
+    "vocabulary": "outer_training_symbols_only_with_strict_unknown_rejection",
+    "upstream_incidents": [
+      "default_transcriptomics_preprocessing_normalizes_log_transforms_and_selects_HVGs_on_the_full_AnnData_before_a_later_group_split",
+      "default_preprocessing_mean_aggregates_by_perturbation_context_and_split_and_can_erase_biological_replicate_identity",
+      "the_fallback_split_groups_perturbation_symbols_but_not_project_target_locus_guide_family_and_replicate",
+      "unknown_perturbations_are_mapped_to_the_control_code_by_default"
+    ]
+  },
+  "representation_and_export_contract": {
+    "adapter_export": "reconstructed_absolute_expression_vectors_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "model_record_unit": "each_P_R_C_scalar_is_a_training_record_not_an_independent_biological_replicate",
+    "no_pseudoreplication": "readouts_genes_cells_guides_targets_and_lanes_are_not_independent_replicates",
+    "prediction_aggregation": "pseudobulk_within_biological_replicate_before_long_form_P_R_C_conversion_and_preserve_replicate_ID_for_evaluation"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "conditional_on_supported_in_vocabulary_P_and_C_symbols_and_reconstruction_of_a_complete_absolute_expression_vector",
+    "centroid_accuracy": "the_evaluator_compares_each_replicate_aggregated_prediction_to_the_correct_observed_perturbation_centroid_and_all_other_eligible_test_centroids",
+    "perturbed_reference": "O_pert_is_the_unweighted_average_of_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Systema_is_evaluator_only_and_does_not_turn_an_unknown_P_or_C_symbol_into_a_valid_query"
+  },
+  "verified_date": "2026-08-22"
+}

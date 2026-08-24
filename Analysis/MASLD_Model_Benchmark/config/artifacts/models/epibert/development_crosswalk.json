@@ -1,0 +1,80 @@
+{
+  "crosswalk_scope": {
+    "project_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse289173",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "upstream_manifests": [
+      "naumanjaved/EpiBERT@dae61b4:all_cell_types_map.tsv",
+      "paper STAR Methods corpus description"
+    ]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "EpiBERT was evaluated post-training on caQTL collections, including a legacy bulk-liver caQTL cohort, and developed its native variant statistic on those downstream data. Any overlapping GTEx, eQTL Catalogue or caQTL-derived project outcome is downstream-demo evidence, not pristine model-selection evidence.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "evidence": "GSE244832 became public on 2024-11-13, before the 2024-12-17 checkpoint archive. The released EpiBERT context map records cell-context names but not an accession/run alias for every ATAC input, so absence of the literal accession cannot exclude an aliased exposure.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "evidence": "This project perturbation source postdates the immutable December 2024 checkpoint archive and is not a declared EpiBERT training or model-selection source.",
+      "exposure_state": "clean_declared"
+    },
+    "gse281364": {
+      "evidence": "This project MPRA source postdates the immutable December 2024 checkpoint archive and is not a declared EpiBERT training or model-selection source.",
+      "exposure_state": "clean_declared"
+    },
+    "gse289173": {
+      "evidence": "GSE289173 became public on 2025-02-12, after the EpiBERT archive was fixed on 2024-12-17. Its donors, snRNA cell states, eQTLs and interaction-eQTLs could not have been checkpoint targets. Reference sequence at the loci and generic liver accessibility contexts were available upstream.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public after the December 2024 archive. Its same-nucleus donor RNA/ATAC and MASLD outcomes were not checkpoint targets. Use of its ATAC at inference is still observed held-donor evidence and must be declared, masked and confined to development.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "resource_atlas_current": {
+      "evidence": "No project Resource donor labels or MASLD phenotypes are declared in EpiBERT training. The upstream corpus does contain normal liver, hepatocyte, fetal hepatoblast, fetal hepatic immune/endothelial and liver-associated fibroblast accessibility contexts, so it has substantial liver-domain prior exposure.",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "interpretation": "EpiBERT is not MASLD-pretrained. The sealed GSE289173 labels are chronologically unexposed, while generic liver accessibility and reference sequence are expected priors. The remaining important contamination uncertainty concerns project development sources that were already public before December 2024 and the incomplete accession-level EpiBERT corpus manifest.",
+  "rules": {
+    "checkpoint_chronology": "A source public after the immutable 2024-12-17 archive is target-label-unexposed unless another declared upstream source contains the same outcomes.",
+    "genome_overlap": "The model saw hg38 windows broadly. Hold donor and chromosome/LD blocks jointly, with at least a 524288-bp boundary buffer; sequence overlap is distinct from donor-label exposure.",
+    "input_availability": "Observed ATAC and motif enrichments are mandatory native inputs. A dataset lacking a topology-valid ATAC context cannot receive a proxy selected using its outcomes and cannot be evaluated as native EpiBERT.",
+    "masked_target": "For accessibility prediction, scored ATAC bins must be absent from the input under a frozen mask. Nearby unmasked ATAC is privileged observed evidence and must be matched in every baseline.",
+    "upstream_aliases": "Cell-context names without accession/run/donor identifiers do not establish accession absence. Pre-archive sources remain unknown until the publication supplement and released cloud objects are crosswalked."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "accession_manifest_status": "INCOMPLETE",
+    "declared_sources": ["ENCODE", "CATlas", "GEO"],
+    "exact_cell_context_map_status": "FROZEN_FROM_V1.0.0",
+    "liver_domain_prior": [
+      "fetal_hepatoblast",
+      "fetal_hepatic_endothelium",
+      "fetal_hepatic_macrophage",
+      "hepatocyte",
+      "adult_liver_tissue",
+      "embryonic_liver_cell",
+      "liver_or_adrenal_fibroblast"
+    ],
+    "pretraining_context_counts": {
+      "test": 17,
+      "training": 738,
+      "validation": 17
+    }
+  },
+  "verified_date": "2026-08-22"
+}

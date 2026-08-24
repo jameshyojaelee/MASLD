@@ -1,0 +1,110 @@
+{
+  "architecture_contract": {
+    "attention_heads": 8,
+    "hidden_dimension": 768,
+    "input_tokens_per_human_region": 6391,
+    "model_family": "BERT_encoder_over_cistrome_binding_status_tokens",
+    "pretraining_mask_fraction": 0.15,
+    "region_resolution_bp": 1000,
+    "transformer_blocks": 8,
+    "warning": "A genomic region is represented by its ordered Cistrome binding-status tokens and positional identities. ChromBERT does not consume nucleotide sequence, REF or ALT alleles, raw RNA counts, or an ATAC profile."
+  },
+  "input_contract": {
+    "canonical_input": "one_ordered_binding_status_token_per_Cistrome_Human_6K_profile_for_one_prespecified_hg38_1kb_bin_plus_position_ids",
+    "donor_or_cell_context": "none_in_the_registered_base_checkpoint",
+    "required_companions": {
+      "mask_matrix": {
+        "filename": "hg38_6k_mask_matrix.tsv",
+        "sha256": "0f821595609c475270ccddfa453f49a27e050104c3ebe4b9b6d7961c222904f6",
+        "size_bytes": 13792343
+      },
+      "region_bed": {
+        "filename": "hg38_6k_1kb_region.bed",
+        "sha256": "3007901fbbdf4d2c608fc87f905007fcba8911ec4486d3f85aa7f5507f7fd192",
+        "size_bytes": 67111077
+      },
+      "regulator_and_cistrome_order": "REQUIRED_but_not_checkpoint_embedded_or_admitted",
+      "status": "companion_bundle_incomplete"
+    },
+    "variant_limit": "REF and ALT alleles in the same 1-kb bin produce the same native base representation. The paper's variant-aware eQTL classifier adds a DNABERT-2 sequence prompt and a fitted classifier; neither is part of this checkpoint.",
+    "window_boundary_rule": "Any project-fitted sequence prompt or locus head must use explicit GRCh38.p14 coordinates and the full receptive-field buffer of that added model."
+  },
+  "output_contract": {
+    "native_output": "contextual_TRN_embedding_and_per_cistrome_or_regulator_embeddings_for_a_fixed_1kb_region",
+    "native_regulatory_track": false,
+    "native_signed_allele_effect": false,
+    "native_spatial_ATAC_profile": false,
+    "pretraining_objective": "reconstruct_randomly_masked_cistrome_binding_statuses",
+    "warning": "Published downstream probabilities, regressions, cistrome imputations, and eQTL classifications require separately trained prompt and decoder checkpoints. They are not outputs of hg38_6k_1kb_pretrain.ckpt."
+  },
+  "post_census_alternate": {
+    "checkpoint": "model.safetensors",
+    "hf_repository": "TongjiZhanglab/chrombert-human-1kb",
+    "hf_revision": "40e0a0d292af0546e2e97a862896a1df329284a8",
+    "license_declared_by_model_card": "MIT",
+    "release_date": "2026-04-02",
+    "sha256": "2af530544a2e6b61a319fd8665f98d257e2a55344134dd1b58a687220cf6c4a3",
+    "size_bytes": 199241680,
+    "status": "separate_post_seal_identity_not_admitted",
+    "warning": "No checkpoint-producing conversion receipt or numeric parity report binds this 2026 safetensors artifact to the registered 2024 PyTorch checkpoint. Its model card license cannot retroactively resolve the registered source and checkpoint term conflict."
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_genome": "hg38",
+    "reference_gate": "Freeze an exact primary-contig crosswalk from every project locus to the original 1-kb region roster. Patch, alternate, missing, blacklisted, or non-roster bins are out of domain and never mapped to a nearest bin."
+  },
+  "registered_checkpoint": {
+    "filename": "hg38_6k_1kb_pretrain.ckpt",
+    "format": "PyTorch_state_dict_pickle",
+    "hf_dataset": "TongjiZhanglab/chrombert",
+    "hf_revision": "721c67aecb0789c4eb204bc304f21779de7cd201",
+    "hf_upload_commit": "7950e9801122e6ce04e6e161050df25ffee5ef96",
+    "hf_upload_date": "2024-07-09",
+    "repository": "TongjiZhanglab/ChromBERT",
+    "repository_revision": "10589002597a9ef06613ed41b6ee83e8dd565c25",
+    "sha256": "1d0d9165f425987268f137b336bdb3ecf19f68e3503100db197cb71fffba62e5",
+    "size_bytes": 228036486,
+    "status": "exact_bytes_addressable_but_admission_blocked"
+  },
+  "release": {
+    "publication_doi": "10.1016/j.xgen.2025.101130",
+    "publication_title": "ChromBERT: A foundation model for learning interpretable representations for context-specific transcriptional regulatory networks"
+  },
+  "runtime_contract": {
+    "declared_range": "Python_3.9_or_newer_and_PyTorch_2.0_through_2.4_with_FlashAttention_2",
+    "environment_status": "UNRESOLVED_no_exact_lock",
+    "required_probe": "isolated_L40S_import_strict_state_dict_restore_forward_backward_resume_deterministic_seed_embedding_order_and_cross_device_tolerance"
+  },
+  "safe_loading_contract": {
+    "checkpoint_downloaded": false,
+    "native_risk": "Pinned source calls torch.load without weights_only. Do not deserialize the checkpoint in a general environment even though the host's static scan listed only tensor-storage and OrderedDict pickle globals.",
+    "required_path": "After campaign approval, acquire by exact Hugging Face revision, verify SHA-256 and size, inspect in an isolated no-network environment, extract a tensor-only manifest, construct trusted pinned source locally, and require strict key, shape, dtype, and finite-value restoration.",
+    "remote_code": "The 2026 alternate uses custom Hugging Face code. Never enable unpinned trust_remote_code; vendor and hash every required source file before any future admission."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The X Genomics paper, pinned official GitHub repository, immutable Hugging Face dataset and model revisions, and Hugging Face file metadata were queried on 2026-08-22. No checkpoint, package, or data bytes were downloaded or executed.",
+  "source_records": [
+    {"identity": "TongjiZhanglab/ChromBERT@10589002:README.md", "sha256": "6f590e19897864cc8e3ea3dda9975975b968906b45e7361ac1c9a17bea85973b", "size_bytes": 8021},
+    {"identity": "TongjiZhanglab/ChromBERT@10589002:pyproject.toml", "sha256": "a57eb119b3497a2c97480c2d3070cac85b725a1eba6ec45fab12d2989b882f8c", "size_bytes": 1907},
+    {"identity": "TongjiZhanglab/ChromBERT@10589002:chrombert/base/model.py", "sha256": "7fe3f56bd335b82347766f7d732122f0df11760ad8698440c41a4adf004aeaf3", "size_bytes": 4483},
+    {"identity": "TongjiZhanglab/ChromBERT@10589002:chrombert/base/model_config.py", "sha256": "a9c3091991212d16426bd888f7b564974ff00b207235283a2745243925b7e468", "size_bytes": 3531},
+    {"identity": "TongjiZhanglab/chrombert_dataset@721c67:README.md", "sha256": "32a08bb84b73a42a23c4edd0a63d768c0f84a37980c54a1ce440bc1c1ebf80b8", "size_bytes": 1373},
+    {"identity": "TongjiZhanglab/chrombert-human-1kb@40e0a0d:README.md", "sha256": "2ef69c05c4c655ba6ed41116833928c4f87a68540c54ae6998233602698e593e", "size_bytes": 907}
+  ],
+  "task_fit": {
+    "allele_effect": "not_native_no_nucleotide_or_allele_input",
+    "rna_conditioned_atac": "ineligible_representation_only_no_observed_RNA_context_or_ATAC_profile",
+    "signed_eqtl_ieqtl": "ineligible_without_a_separately_registered_allele_encoder_gene_link_direction_head_and_training_receipt",
+    "variant_to_regulation": "representation_only_secondary_component"
+  },
+  "terms_audit": {
+    "hf_dataset_card": "GPLv3_badge_without_license_metadata_or_a_license_text",
+    "post_census_model_card": "MIT_front_matter_for_the_separate_2026_Hugging_Face_model_repository",
+    "repository": "no_LICENSE_file; README_GPLv3_badge; pyproject_has_only_a_commented_MIT_field",
+    "result": "blocked_conflicting_or_missing_license"
+  },
+  "weight_license": "UNRESOLVED_FOR_REGISTERED_2024_CHECKPOINT"
+}

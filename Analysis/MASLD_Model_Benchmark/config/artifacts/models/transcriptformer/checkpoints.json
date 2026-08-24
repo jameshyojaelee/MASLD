@@ -1,0 +1,61 @@
+{
+  "architecture_contract": {
+    "assay_token_count": 1,
+    "attention_heads": 16,
+    "context_genes": 2047,
+    "hidden_dimension": 2048,
+    "transformer_layers": 12,
+    "trainable_parameters": 368000000,
+    "frozen_embedding_parameters": 61000000,
+    "vocabulary_size": 23829
+  },
+  "archive": {
+    "etag": "a841d3efcfc21eb14c41c6151bc39b73-217",
+    "last_modified_utc": "2025-04-10T16:17:31Z",
+    "name": "tf_sapiens.tar.gz",
+    "s3_version_id": "P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU",
+    "sha256": "UNRESOLVED",
+    "size_bytes": 1819975447,
+    "url": "https://czi-transcriptformer.s3.amazonaws.com/weights/tf_sapiens.tar.gz?versionId=P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU"
+  },
+  "code_license": "MIT",
+  "extraction_contract": {
+    "archive_is_not_extracted_during_acquisition": true,
+    "reject_absolute_paths": true,
+    "reject_device_fifo_and_socket_members": true,
+    "reject_hardlinks_and_symlinks": true,
+    "reject_parent_traversal": true,
+    "upstream_cli_is_admission_safe": false,
+    "upstream_issue": "The pinned cli/download_artifacts.py calls tar.extract(member, path=...) without validating member paths or link targets. Benchmark staging must use an independently tested traversal-safe extractor."
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unselected_nonnegative_single_cell_or_single_nucleus_counts",
+    "count_clip": 30,
+    "feature_identifier": "Ensembl_gene_stable_id",
+    "feature_annotation_declared_for_pretraining": "Ensembl_v113",
+    "filter_to_vocabulary": true,
+    "inference_default_gene_order": "input_feature_order_of_expressed_genes",
+    "inference_default_randomize_genes": false,
+    "inference_default_sort_genes": false,
+    "normalization_scale": 0,
+    "training_gene_order": "random_permutation_of_expressed_genes_each_batch",
+    "ordering_warning": "The autoregressive representation is order-sensitive. Official inference preserves input feature order and truncates beyond the context, while training randomized order. Native and common-lane ordering policies must be frozen separately; dataset-specific var order is not accepted as an implicit common-lane policy."
+  },
+  "repository": "czi-ai/transcriptformer",
+  "repository_revision": "c943a89a4de9511a8ab1010715bf1cfa8827cc99",
+  "release": "v0.6.0",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The pinned official repository, official Virtual Cells model card, and versioned public S3 object metadata were queried on 2026-08-22. The archive body was not downloaded or extracted, so its SHA-256 and internal file roster remain unresolved.",
+  "source_records": [
+    {"identity": "transcriptformer:LICENSE.md", "sha256": "aaf473b176a223eeccd843bad7d5453501d826f6f939d44f8957b8f6f2e5cc81", "size_bytes": 1083},
+    {"identity": "transcriptformer:README.md", "sha256": "15d1a28e0af8565e2337ef8fda144444b9c0518f1fb4f8bb66e3da8aac7431f0", "size_bytes": 19729},
+    {"identity": "transcriptformer:pyproject.toml", "sha256": "20c8bc58a9069b2835b08a5c35ce906740aad923519aeb9e1e97f75689a96583", "size_bytes": 3133},
+    {"identity": "transcriptformer:src/transcriptformer/cli/download_artifacts.py", "sha256": "45f51bbcb76fcc6a1454fd8f249c814070b05020bee16ab9dc6f823e24ed4c29", "size_bytes": 5981},
+    {"identity": "transcriptformer:src/transcriptformer/data/dataloader.py", "sha256": "4e8b3b04e3ede56c548e3eacfcb5ece22232835606424fa3efc21f78bf7eccb7", "size_bytes": 23564},
+    {"identity": "transcriptformer:conf/inference_config.yaml", "sha256": "45ea496cfb7203eb6f7f4f262f9502e5b2986b7349b7261d4bef67ca870dda0a", "size_bytes": 1927},
+    {"identity": "Virtual_Cells_TranscriptFormer_model_card_queried_2026-08-22", "sha256": "4b140e987d42ea7390442c6c680062c04dcf25541417e6e3947028de1e238240", "size_bytes": 298159, "url": "https://virtualcellmodels.cziscience.com/model/transcriptformer"},
+    {"identity": "czi-transcriptformer_S3_bucket_inventory_queried_2026-08-22", "sha256": "b0db2728c060e6bf7b5aecd90c4966146af7a90c1c905c3cbf162eeb8111085d", "size_bytes": 1532, "url": "https://czi-transcriptformer.s3.amazonaws.com/?list-type=2&max-keys=1000"}
+  ],
+  "weight_content_downloaded": false,
+  "weight_license": "MIT"
+}

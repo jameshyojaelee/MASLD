@@ -1,0 +1,108 @@
+schema_version = "masld-bench-model-v1"
+family_id = "regulatory_local"
+modality = ["dna_sequence", "chromatin_profile", "enhancer_gene_links"]
+status = "candidate"
+
+[[models]]
+model_id = "chrombpnet"
+display_name = "ChromBPNet"
+implementation_type = "train_locally"
+checkpoint_revision = "kundajelab/ChromBPNet@eaa0fe58b6a43da62ea23b75cfc2bef4ecd3550c+PyPI:chrombpnet==1.0.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The full source commit, PyPI 1.0.1 wheel metadata, MIT terms, 2,114-bp sequence/1,000-bp profile architecture, +4/-4 ATAC insertion convention, local-training exposure, and common/native score contract are frozen. Verify wheel SHA-256 fc2986a04d9cb0c0e4737c823b056ddd97edc77fac9b495fe0db9963531aad59 in an approved runtime; freeze fold-specific donor-state fragments, peaks, matched nonpeaks, bias models, crossed donor/genomic partitions, five seeds, and trained-artifact SHA-256 values. ChromBPNet is sequence-only at inference and uses the bias-free ALT-minus-REF log-count score. It cannot independently predict enhancer-gene links or signed expression effects; any such composite must be separately frozen and named."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "bpnet"
+display_name = "BPNet"
+implementation_type = "train_locally"
+checkpoint_revision = "kundajelab/bpnet@f4593eedca51741f25b8c5cc0c0d647faf8c8a3c+PyPI:bpnet==2.0.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact source commit, PyPI 2.0.0 wheel metadata, MIT terms, TensorFlow 2.4.1 runtime, 2,114-bp sequence/1,000-bp profile architecture, local-training exposure, and ALT-minus-REF score are frozen. Verify wheel SHA-256 dccff1bfe7c1d726967e95e270b712a9eacd580756d80f6c19ae55ea1be43633 in an approved runtime; freeze the same donor-state profiles, peaks, matched backgrounds, crossed donor/genomic partitions, reverse-complement policy, and five seeds used for ChromBPNet, plus every trained-artifact hash. This prespecified BPNet arm has no control/bias input, is sequence-only at inference, and cannot independently predict enhancer-gene links or signed expression effects."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "mpralegnet"
+display_name = "MPRA-LegNet HepG2"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "autosome-ru/human_legnet@a20dbc7d0b08daae3af1aebcfb8a71d9f198ab5d+Ni-os/MPRALegNet@bba3b416a1450f1186b2ec3112b728650568a686:weights/hepg2_best_model_test1_val2.safetensors"
+checkpoint_sha256 = "470dc7bfd3f0912c91f307a5f4019598072b8786294c46fc501b826c030cbe39"
+license_status = "code_MIT_weights_MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact 5,335,404-byte HepG2 safetensors LFS SHA-256, source revisions, architecture, 230-bp input, target-label-unexposed exposure state, and component-only endpoint role are frozen under config/artifacts/models/mpralegnet. The artifact is a third-party single-fold test1/validation2 repackaging whose equality to an author Zenodo checkpoint is unresolved. After campaign approval, verify the registered bytes and strict tensor schema; freeze SNP-only allele centering, oligo-versus-genomic construction, A/G/C/T channel order, N handling, REF match, reverse-complement averaging, BatchNorm eval mode, runtime parity, and the fixed HepG2 fixture. K562 and WTC11 are separate checkpoints and cannot be selected after outcomes. MPRALegNet emits reporter activity only: it cannot independently supply a target gene, donor context, treatment interaction, or signed cell-type eQTL/ieQTL effect."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "deltasvm"
+display_name = "deltaSVM"
+implementation_type = "train_locally"
+checkpoint_revision = "Dongwon-Lee/lsgkm@d7ef90f7cb326b190619c51a13843da48c99e239+project_owned_ref_alt_score_difference"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact GPL-3.0 LS-GKM source revision, per-fold/state/seed local-training contract, 300-bp peak/nonpeak training windows, matched-negative rules, L=11/k=7/d=3 kernel, 21-bp SNP context, native REF-minus-ALT proxy-k-mer equation, canonical ALT-minus-REF sign conversion, safe text-model policy, and secondary accessibility/activity role are frozen under config/artifacts/models/deltasvm. deltaSVM reuses the exact fold/state/seed LS-GKM weights registered for gkm-SVM; it is a deterministic readout, not an independently trained model or independent evidence. Before execution, activate donor-state ATAC, implement and hash the clean-room wrapper, compile the pinned source in an isolated CPU runtime, freeze every trained model and 11-mer table receipt, reject non-ACGT/overlength/indel inputs, and pass coordinate, REF, sign, reverse-complement, hand-calculated delta, deterministic-seed, resume, and parser-safety fixtures. Historical cell-line weights are prohibited."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "gkmsvm"
+display_name = "gkmSVM"
+implementation_type = "train_locally"
+checkpoint_revision = "Dongwon-Lee/lsgkm@d7ef90f7cb326b190619c51a13843da48c99e239"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact GPL-3.0 LS-GKM source revision, per-fold/state/seed local-training contract, 300-bp peak/nonpeak and allele windows, GC/mappability/accessibility/TSS-distance/repeat-matched negatives, L=11/k=7/d=3 kernel, canonical ALT-minus-REF full-window decision delta, safe text-model policy, and mandatory secondary accessibility role are frozen under config/artifacts/models/gkmsvm. Its trained artifacts are the same fold/state/seed weights consumed by deltaSVM, so the two scores are related readouts and cannot be counted as independent evidence. Before execution, activate donor-state ATAC, compile the pinned source in an isolated CPU runtime, freeze all training receipts and model hashes, reject non-ACGT/overlength/indel inputs, and pass coordinate, REF, strand, reverse-complement, fixed-score, deterministic-seed, resume, and native-parser fixtures. Bundled or historical biological weights are prohibited."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "abc"
+display_name = "Activity-by-Contact"
+implementation_type = "classical_baseline"
+checkpoint_revision = "broadinstitute/ABC-Enhancer-Gene-Prediction@d5976ee642edf94de54b1d694c29477983f88df2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "reference_only"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact MIT source revision, deterministic no-weight algorithm, unsigned enhancer-gene output, ATAC-only activity lane, five-megabase neighborhood, power-law contact defaults, reference-only exposure state, and link-only endpoint role are frozen under config/artifacts/models/abc. Activate only after the GSE296875 donor/fragment/peak authorities, GENCODE-v49 TSS derivation, outer-training peak and quantile-normalization states, no-H3K27ac missingness lane, genomic blocks, runtime fixture, continuous output schema, and every artifact hash are frozen. Do not call the upstream shell-based getVariantOverlap.py helper: it changes regions and thresholds. ABC cannot produce allele-specific activity or a signed expression effect; sealed use is a precommitted development-built static link atlas for retrieval or a separately named composite."]
+supported_tasks = ["variant_to_regulation", "typed_evidence_graph"]
+
+[[models]]
+model_id = "re2g"
+display_name = "ENCODE-rE2G"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "EngreitzLab/ENCODE_rE2G@d039062b7092de338ed10a77ea208b3d5b06e89c:models/atac_megamap/model.pkl+feature_table.tsv"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "MIT"
+exposure_status = "clean_declared"
+status = "candidate"
+admission_blocking = true
+blockers = ["The ATAC-plus-MegaMap model is selected at the exact MIT source revision; its 1,013-byte model Git blob is content-identical to the 2024 v1.0.0 release, its 602-byte feature table has SHA-256 fc4d831be3692162bc45dc20558cd3cc0e3546d1acddadbc6003f31efbfb7d5c, threshold 0.179 is frozen, and its clean chronology and link-only role are audited under config/artifacts/models/re2g. After campaign approval, acquire the pickle, verify Git identity, compute SHA-256, statically audit it, and convert once without network access to non-executable coefficients; prove parity on a complete finite fixture. Audit the exact MegaMap artifact and terms, freeze GENCODE-v49-to-RefSeq/TSS mapping, donor-state ATAC/ABC features, missing-state handling, genomic blocks, static link atlas, and output hashes. Never use the upstream missing-feature-as-zero path. rE2G is an unsigned enhancer-gene link probability, not a standalone signed allelic-effect model."]
+supported_tasks = ["variant_to_regulation", "typed_evidence_graph"]
+
+[[models]]
+model_id = "epinformer"
+display_name = "EPInformer HepG2 RNA f3 ensemble"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "pinellolab/EPInformer@ddba0b657516950c0dacbb26759f2cfa7ea3c15b+JiecongLin/EPInformer@667a74e6a1358bee35fd1951570839bdeb5dec24:HepG2/RNA/f3"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_NO_LICENSE_DETECTED_weights_MIT"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The exact source and Hugging Face revisions, ordered 24-member LFS manifest containing twelve HepG2 RNA-f3 expression models plus twelve fold-matched enhancer encoders, 2-kb promoter/enhancer slots, ABC-nominated 100-kb candidate set, activity/contact/promoter/Xpresso inputs, target-label-unexposed chronology, and link-only role are frozen under config/artifacts/models/epinformer. The selected code commit has no operative license despite conflicting paper and Zenodo statements, so do not acquire, execute, adapt, or redistribute it without an upstream license or written permission. If terms clear, approve acquisition, verify every LFS object, export tensor-only state, resolve the repository-card identity mismatch, freeze the exact 18,377-gene/TSS/candidate/feature/contact authorities and missing-slot masks, reproduce fold and reverse-complement behavior, and pass isolated runtime fixtures. The admitted output is unsigned relative enhancer attention in fixed HepG2 context; it is not a donor-specific link or signed variant expression effect."]
+supported_tasks = ["variant_to_regulation", "typed_evidence_graph"]

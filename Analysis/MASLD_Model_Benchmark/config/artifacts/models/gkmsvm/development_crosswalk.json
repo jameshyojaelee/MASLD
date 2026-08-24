@@ -1,0 +1,77 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse281160", "gse281364", "gse296875", "current_coloc_gwas"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49",
+    "sealed_source": "gse289173",
+    "task": "variant_to_regulation"
+  },
+  "endpoint_eligibility": {
+    "accessibility_delta": "eligible as a secondary endpoint using the frozen ALT-minus-REF raw decision difference",
+    "allelic_direction_accuracy": "eligible for assay-native diagnostics after locus-cross-fitted construction; not an eQTL direction endpoint",
+    "eqtl_retrieval_auprc": "eligible only as a variant-prior component paired with a separately registered gene mapper",
+    "mean_fisher_z_celltype_spearman": "ineligible standalone because no target gene or signed expression-effect model exists",
+    "typed_evidence_graph": "sequence/accessibility evidence only"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Development-only retrieval audit after graph freeze; no GWAS or COLOC membership can label training sequences, set backgrounds, tune C/kernel/window choices, or supply effect direction.",
+      "project_source_state": "downstream_demo"
+    },
+    "gse244832": {
+      "allowed_use": "Held donor-compatible accessibility transfer. Different RNA and ATAC aliquots are never treated as paired cells, and no held-source peak or transform enters the fitted model.",
+      "model_access": "held_from_fit_for_its_development_score",
+      "pairing": "same_sample_different_aliquot",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "allowed_use": "Development-only direction check on the preselected 20 loci. Aggregate by experimental replicate and target family; cells/guides are not independent replicates and cannot tune the model.",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "allowed_use": "Out-of-fold assay-native MPRA activity/direction comparison grouped by merged locus, exact sequence, and reverse-complement identity. It cannot train a signed eQTL/ieQTL head.",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "allowed_use": "One-time scoring of evaluator-approved SNP allele windows with selection-locked project models. Outcomes, target genes, thresholds, calibrators, and retrieval labels remain evaluator-only.",
+      "held_query_behavior": "sequence_only_raw_score_and_activity_delta",
+      "project_checkpoint_exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "allowed_use": "Train local state-specific peak-versus-matched-background classifiers inside crossed donor and genomic partitions. All fragments, peaks, negatives, sequence filters, and artifacts stay within the outer-training role.",
+      "model_input_status": "same_nucleus_ATAC_pseudobulked_by_donor_and_cell_state",
+      "project_source_state": "continual_seen",
+      "public_date": "2025-10-01"
+    }
+  },
+  "local_model_roster": {
+    "cell_states": ["cholangiocyte", "endothelial_cell", "hepatocyte", "stellate_cell"],
+    "donor_pooling": "Pseudobulk fragments by donor and state for QC; pool only outer-training donors for peak calling and classifier fitting.",
+    "genomic_split": "Cross donor folds with native-build merged LD/locus blocks and at least a 300-bp boundary buffer; honor any larger campaign-wide buffer.",
+    "seeds": [11, 29, 47, 71, 101],
+    "state_absence": "Unresolved or QC-failed states are structurally_missing, never replaced by a neighboring lineage."
+  },
+  "reference_topology_and_missingness": {
+    "gse244832": "Same donor, different aliquots; distinct RNA/ATAC row identities and donor-compatible aggregation only.",
+    "gse281160": "Guide and RNA are same cell but inference aggregates to biological experimental replicate.",
+    "gse281364": "DNA/RNA counts are same-sample different aliquots and failed joins are explicit missing states.",
+    "gse289173": "Sequence-only query; RNA and QTL summaries are same-study unpaired and never model context.",
+    "gse296875": "Same-nucleus provenance is retained, but cell/nucleus count is not the replication unit.",
+    "missingness": "Absent states, untestable windows, REF mismatches, held assays, and failed QC are not zero scores."
+  },
+  "split_and_leakage_rules": {
+    "donors": "All wells and nuclei from one donor remain together; well is a technical batch.",
+    "genomics": "Merge native-build LD r2>=0.8, loci within 1 Mb, exact sequences, and reverse-complement sequences before split. Positives, backgrounds, and any MPRA rows honor the same groups.",
+    "preprocessing": "Peak calling, ATAC summaries, GC/mappability/accessibility/distance matching, deduplication, model fitting, and any calibration are fit only on the appropriate training partition.",
+    "sealed_rule": "Freeze and hash every final project model, allele-window rule, sign, seed, and threshold before anonymized sealed variants are opened."
+  },
+  "relationship_to_deltasvm": {
+    "shared_weights": "The same fold/state/seed LS-GKM model artifacts and hashes back both adapters.",
+    "distinct_outputs": "gkmSVM uses full 300-bp raw decision values; deltaSVM uses the overlapping 11-mer proxy-weight sum.",
+    "statistical_rule": "Report both as related ablations and never count them as independent evidence."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

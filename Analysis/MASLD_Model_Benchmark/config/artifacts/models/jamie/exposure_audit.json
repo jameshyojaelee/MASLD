@@ -1,0 +1,39 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping, development integration, and secondary RNA-to-ATAC rank diagnostics; primary ATAC profile task excluded"
+  },
+  "checkpoint_findings": {
+    "jamie_local": {
+      "checkpoint_identity": "project_fitted_jamie_per_outer_fold_seed_training_only_feature_preprocessing_and_correspondence_contract",
+      "corpus": "No upstream checkpoint or pretraining corpus; declared outer-training modality matrices and correspondence information only",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    },
+    "pypi_name_collision": {
+      "checkpoint_identity": "PyPI JAMIE 0.1.3 from PotatoXi/Jamie",
+      "exposure_state": "reference_only",
+      "status": "unrelated_package_not_admitted_not_installed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "explicit_correspondence_frozen_raw_rna_query_and_unbounded_profile_exclusion",
+    "sha256": "f151a6664c6e6d8dcecd46716ba0156ab55256ee32cdba5276d9bf7388d71635"
+  },
+  "interpretation": "Locally trained JAMIE has no foundation-checkpoint contamination and provides a genuine frozen RNA-only transform and opposite-decoder path when eval mode and all preprocessing state are fixed. Its main leakage hazards are the equal-row identity default, training/query correspondence estimation, fold-external PCA or scaling, BatchNorm/dropout state, and unrestricted whole-object loading. Its inverse-PCA ATAC prediction is unbounded and can be negative, so JAMIE must be removed from the primary profile leaderboard and retained only for cell mapping, development integration, and prespecified secondary rank diagnostics. GSE289173 can seal cell-state mapping only.",
+  "remaining_blockers": [
+    "Correct the shared model registry license to GPL-3.0-only for the exact source revision; remove the unsupported MIT package-metadata conflict and never install the unrelated PyPI JAMIE package.",
+    "Remove JAMIE from primary rna_conditioned_atac scheduling. Add an approved secondary rank/correlation TaskSpec before retaining any cross-modal ATAC diagnostic.",
+    "Implement a raw-RNA held-query adapter that freezes genes, per-cell assay transform, PCA, preclass moments, feature order, architecture, calls model.eval, and uses transform_one or modal_predict without a second modality.",
+    "Require an explicit P for every known pair. Validate exact GSE296875 same-nucleus ordered IDs and reject GSE244832 different aliquots as identity pairs regardless of equal row counts.",
+    "Prove held rows cannot enter pairwise distances, correspondence estimation, PCA/scaling, early stopping, head fitting, projection, or calibration and that query composition cannot alter BatchNorm or another prediction.",
+    "Replace whole-model torch.save/torch.load with project-controlled tensor state plus exact architecture, PCA, moments, feature orders, key/shape/dtype, fold, seed, GPL release obligations, and SHA-256 manifests.",
+    "Validate the Python 3.9, Torch 1.9.1, CUDA, UnionCom 0.4.0, deprecated NumPy aliases, pairwise-distance memory, forward/backward, resume, deterministic seed, and cross-device numeric behavior on L40S before scheduling.",
+    "Confirm GSE289173 receives anonymized raw RNA only after selection lock and cannot influence correspondence, preprocessing, adaptation, heads, or calibration before prediction hashes are committed."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_pending_license_registry_correction_raw_rna_query_adapter_explicit_pairing_state_dict_runtime_and_leakage_fixtures; eligible in principle for sealed cell-state mapping only and ineligible for the primary RNA-conditioned ATAC profile task",
+  "verified_date": "2026-08-22"
+}

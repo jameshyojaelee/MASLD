@@ -1,0 +1,106 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-rna-atac-cobolt-5seed-smoke-v1"
+description = "Five-seed donor-held Cobolt RNA-to-ATAC stability screen preserving the original seed, model adapter, evaluator firewall, frozen 1,000-nucleus GSE296875 view, task-native baselines, and source-wide consensus-peak smoke limitation"
+wave = "smoke"
+status = "ready"
+prerequisites = []
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = true
+task_ids = ["rna_conditioned_atac"]
+dataset_view_ids = ["gse296875_rna_atac_smoke_1000_v1"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate"]
+model_ids = ["cobolt"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_rna_atac_smoke"
+runtime_id = "gpu_rna_atac_torch_smoke"
+seeds = [1103, 2107, 3109, 4111, 5113]
+folds = [0, 1, 2, 3, 4]
+cell_budget = 1000
+genomic_budget = "2000_source_fixed_sha256_ranked_consensus_peaks_smoke_only"
+adaptation_regimes = ["native_lane"]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0
+
+[execution.hyperparameters_by_model.cobolt]
+alpha = 5.0
+annealing_epochs = 30
+batch_size = 128
+early_stopping_patience = 20
+hidden_dims = [128, 64]
+inference_batch_size = 1
+intercept_adjustment = false
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+learning_rate = 0.005
+max_epochs = 100
+n_hvg = 2000
+n_latent = 10
+n_smoke_peaks = 2000
+outer_folds = 5
+slope_adjustment = false
+split_seed = 20260821
+validation_fraction = 0.2
+
+[execution.hyperparameters_by_model.assay_native_pseudobulk]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.hyperparameters_by_model.mean_track]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.hyperparameters_by_model.nearest_context]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.hyperparameters_by_model.shrunken_pseudobulk]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.hyperparameters_by_model.shuffled_context]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.hyperparameters_by_model.trans_only]
+join_namespace = "gse296875:rna_conditioned_atac:donor_outer:smoke:v1"
+normalization_target_sum = 10000.0
+n_context_hvg = 2000
+n_smoke_peaks = 2000
+outer_folds = 5
+profile_pseudocount = 0.00000001
+split_seed = 20260821
+
+[execution.adapter_request]
+dataset_view_id = "gse296875_rna_atac_smoke_1000_v1"
+withheld_input_roles_by_action = { fit = ["dataset_view_data:gse296875_rna_atac_smoke_1000_v1"], predict = ["dataset_view_data:gse296875_rna_atac_smoke_1000_v1"] }

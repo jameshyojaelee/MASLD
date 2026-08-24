@@ -1,0 +1,36 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "preprocessing",
+  "model_ids": [
+    "assay_native_pseudobulk",
+    "mean_track",
+    "nearest_context"
+  ],
+  "task_id": "rna_conditioned_atac",
+  "dataset_view_id": "gse296875_rna_atac_smoke_1000_v1",
+  "unit_of_inference": "donor",
+  "pairing_level": "same_nucleus",
+  "split": {
+    "entity": "donor",
+    "outer_folds": 5,
+    "seed": 20260821,
+    "rule": "sha256(seed NUL donor_id) modulo five",
+    "all_modalities_one_fold": true
+  },
+  "profile_target": "raw integer ATAC counts summed within donor by frozen broad lineage",
+  "profile_scale": "each training donor-lineage pseudobulk is depth-normalized before equal-donor averaging",
+  "mean_track": "one equal-donor mean composition across all observed training donor-lineage strata",
+  "assay_native_pseudobulk": "one equal-donor mean composition for each of five frozen lineages",
+  "nearest_context": "same-lineage training donor selected by squared Euclidean distance on training-z-scored log1p CPM over training-selected HVGs; profile is that donor-lineage ATAC composition",
+  "smoke_peak_universe": "2000 peaks selected by SHA-256 ranking of stable peak identifiers only; ATAC values and outcomes are not used",
+  "pseudocount": 1e-08,
+  "held_atac_firewall": "prepare exports training RNA and ATAC plus query RNA; fit and predict requests withhold the original paired HDF5 and no query ATAC artifact is produced",
+  "missingness": {
+    "query_rna": "observed",
+    "query_atac": "withheld_sealed",
+    "missing_encoded_as_zero": false
+  },
+  "cells_are_replicates": false,
+  "well_is_replicate": false,
+  "code_sha256": "5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+}

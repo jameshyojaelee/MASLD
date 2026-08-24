@@ -1,0 +1,130 @@
+{
+  "audit_scope": {
+    "model_id": "seurat_wnn",
+    "artifact_type": "pinned_algorithm_revision_plus_future_project_fitted_multimodal_graph",
+    "candidate_tasks": ["cell_state_mapping", "rna_conditioned_atac"],
+    "development_sources": ["resource_atlas_current", "gse296875", "gse244832", "gse256398", "gse281367"],
+    "sealed_sources": ["gse289173", "fnih_86_liver"]
+  },
+  "algorithm_and_fit_exposure": {
+    "code_revision": {
+      "identity": "satijalab/seurat@4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a+CRAN:Seurat==5.5.1",
+      "pretrained_biological_state": false,
+      "declared_corpus": "not_applicable",
+      "exposure_state": "target_label_unexposed_as_algorithm_code_only"
+    },
+    "future_native_WNN_fit": {
+      "exists": false,
+      "post_fit_exposure": "continual_seen_for_every_row_modality_feature_reduction_and_geometry_used_to_estimate_modality_weights_or_neighbors",
+      "label_exposure": "depends_on_the_outer_fold_and_any_downstream_supervision; labels_must_remain_training_only",
+      "important_distinction": "A graph can be target-label-unexposed yet still be target-feature-fitted and transductive. The former does not justify a frozen-inductive claim."
+    },
+    "future_reference_mapping": {
+      "registered_under_seurat_wnn": false,
+      "expected_exposure_if_a_query_enters_anchor_or_mapping_geometry": "encoder_seen",
+      "classification": "reference_fixed_query_adaptive_not_native_WNN",
+      "rule": "A separately registered method must prove that no labels or target modalities leak and must report query-composition dependence."
+    }
+  },
+  "dataset_exposure_and_capability": {
+    "resource_atlas_current": {
+      "algorithm_exposure": "target_label_unexposed",
+      "fit_state": "not_applicable_RNA_only",
+      "capability": "native_WNN_inapplicable"
+    },
+    "gse296875": {
+      "algorithm_exposure": "target_label_unexposed",
+      "fit_state": "continual_seen_for_each_project_training_or_joint_graph_partition",
+      "capability": "same_nucleus_observed_both_modality_development_only_after_join_validation",
+      "held_donor_rule": "If held-donor RNA or ATAC enters WNN weighting or graph construction, the held representation is transductive. Observed held ATAC is forbidden for rna_conditioned_atac."
+    },
+    "gse244832": {
+      "algorithm_exposure": "target_label_unexposed",
+      "fit_state": "not_applicable_native_pairing_invalid",
+      "capability": "same_sample_different_aliquot_cannot_form_WNN_rows"
+    },
+    "gse256398": {
+      "algorithm_exposure": "target_label_unexposed",
+      "fit_state": "not_applicable_native_WNN_RNA_only",
+      "capability": "RNA_only_external_development"
+    },
+    "gse281367": {
+      "algorithm_exposure": "target_label_unexposed",
+      "fit_state": "not_applicable_native_WNN_ATAC_only",
+      "capability": "ATAC_only_and_outside_cell_state_RNA_row_universe"
+    },
+    "gse289173": {
+      "algorithm_exposure": "target_label_unexposed",
+      "fit_state": "must_remain_withheld_sealed",
+      "capability": "native_WNN_inapplicable_RNA_only",
+      "sealed_result": "ineligible"
+    },
+    "fnih_86_liver": {
+      "algorithm_exposure": "target_label_unexposed_as_code_only",
+      "fit_state": "unavailable_permission_and_pairing_unresolved",
+      "capability": "ineligible_until_future_manifest_proves_true_row_level_pairing_and_an_active_latent_task_exists"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "pairing_topology_native_WNN_reference_mapping_bridge_query_geometry_and_current_task_boundaries",
+    "sha256": "a2193e6b55b56d8d48a83523897bf0cf0bd5ca2c69eccd9d84757e9d04f4f4ce"
+  },
+  "leakage_and_identity_incidents": [
+    {
+      "finding": "FindMultiModalNeighbors estimates cell-specific modality weights and neighbor graphs from the rows and modality reductions in the supplied object.",
+      "benchmark_action": "classify_any_held_query_in_the_fit_object_as_transductive_target_feature_exposure",
+      "prohibited_claim": "frozen_inductive_transfer"
+    },
+    {
+      "finding": "Native WNN requires the same ordered cells or nuclei to have every modality used for weighting and neighbor construction.",
+      "benchmark_action": "reject_GSE244832_cell_pairing_and_every_donor_cluster_nearest_neighbor_or_row_order_substitute",
+      "prohibited_claim": "same_cell_or_same_nucleus_integration_for_separate_aliquots"
+    },
+    {
+      "finding": "Native WNN uses observed query ATAC when ATAC is one of the query reductions.",
+      "benchmark_action": "exclude_from_rna_conditioned_atac_and_never_score_graph_retrieval_as_a_profile_prediction",
+      "prohibited_claim": "RNA_only_ATAC_prediction"
+    },
+    {
+      "finding": "Seurat multimodal reference mapping and bridge integration use separate functions and query/anchor geometry.",
+      "benchmark_action": "register_each_as_a_separate_method_and_report_reference_fixed_query_adaptive_behavior",
+      "prohibited_claim": "native_WNN_or_frozen_query_transform"
+    },
+    {
+      "finding": "A missing ATAC modality can be represented in a matrix as zeros even though no assay was observed.",
+      "benchmark_action": "reject_missing_as_zero_before_Seurat_object_construction",
+      "prohibited_claim": "observed_multimodal_query"
+    }
+  ],
+  "safe_artifact_result": {
+    "upstream_checkpoint": "not_applicable",
+    "upstream_code_archive": "not_downloaded_or_executed",
+    "project_R_objects": "not_yet_created_and_R_native_serialization_not_an_admitted_exchange_format",
+    "required_export": "bounded_plain_row_modality_weight_reduction_and_edge_artifacts_plus_parameters_runtime_and_hashes",
+    "external_RDS_RData_Seurat_or_Annoy_objects": "prohibited_without_a_separate_trusted_provenance_and_safe_loading_review",
+    "status": "no_execution_until_runtime_and_TaskSpec_gates_pass"
+  },
+  "terms_result": {
+    "code": "MIT_plus_package_LICENSE",
+    "weights": "not_applicable",
+    "derivative_code": "MIT_conditions_apply",
+    "fitted_graph_and_outputs": "project_and_source_data_terms_apply; donor_derived_geometry_and_embeddings_are_not_automatically_redistributable",
+    "dependencies": "separate_license_audit_unresolved",
+    "open_champion": "code_terms_not_the_blocker_but_no_current_supported_or_sealed_endpoint",
+    "legal_status": "research_audit_not_legal_advice"
+  },
+  "remaining_blockers": [
+    "Keep seurat_wnn unscheduled for rna_conditioned_atac because it is latent-only and exposes observed query ATAC rather than predicting a profile.",
+    "Keep seurat_wnn out of sealed cell_state_mapping because GSE289173 is RNA only and native WNN has no frozen RNA-only transform.",
+    "Register any multimodal reference-mapping, bridge, donor-aggregate, latent-retrieval, or label-transfer analysis as a distinct method and nonpromotable TaskSpec before fitting.",
+    "Validate the exact well-namespaced GSE296875 same-nucleus barcode-to-donor join; reject all false GSE244832 cell or nucleus pairs.",
+    "Freeze outer-donor preprocessing, feature sets, reductions, dimensions, WNN parameters, row order, approximate-neighbor implementation, seeds, threads, output schema, and dependency lock.",
+    "Pass CPU-SLURM row-permutation, donor-fold isolation, missing-modality, false-pair, query-composition, deterministic-neighbor, export/reload, and memory fixtures after explicit campaign approval.",
+    "Audit dependency and project-output redistribution terms before releasing any fitted graph, reduction, embedding, or index."
+  ],
+  "sealed_champion_eligibility": "ineligible_no_pretrained_inductive_transform_no_RNA_to_ATAC_decoder_native_query_requires_observed_paired_modalities_and_no_current_supported_task",
+  "claim_boundary": "No frozen transfer, RNA-to-ATAC prediction, MASLD champion, diagnosis, prognosis, treatment-response, clinical-decision, or deployment claim.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,38 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["future_nonpromotable_development_integration"]},
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Future development-only factor analysis at an explicit donor-by-cell-state pseudobulk unit. Different aliquots may share that aggregate sample label only when the topology is recorded; never pair individual cells.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No champion or sealed evaluation. All included pseudobulk samples participate in the fitted factorization and are therefore transductively exposed."
+    },
+    "gse289173": {
+      "allowed_use": "None. MOFA+ has no frozen assay-to-factor transform for an unseen RNA-only donor, and this sealed source cannot be inserted or refit.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No features, rows, labels, covariates, or outcomes may enter a MOFA+ fit."
+    },
+    "gse296875": {
+      "allowed_use": "Future nonpromotable development-only same-nucleus or donor-by-cell-state factor analysis after activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Any included sample has a fitted Z and is transductively exposed. Donor-grouped descriptive resampling cannot convert this into inductive evaluation."
+    }
+  },
+  "local_model_roster": {
+    "artifact_identity": "project_fitted_mofapy2_0_7_4_hdf5_per_development_campaign_feature_order_likelihood_and_seed",
+    "status": "deferred_until_separate_nonpromotable_task_spec",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "different aliquots may align only at a declared donor-by-cell-state pseudobulk sample unit",
+    "gse289173": "RNA_only sealed source excluded from MOFA+",
+    "gse296875": "same_nucleus rows or declared donor-by-cell-state pseudobulk samples"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, fitted factor rows, and missing entries are not replicates.",
+    "missingness": "Use NaN plus MOFA mask for absent assays; never zero. Preserve project missingness reasons externally.",
+    "profile_rule": "WZ imputation for fitted samples is not an inductive RNA-conditioned ATAC profile.",
+    "sealed_rule": "No refitting, latent optimization, or masked-row insertion for GSE289173."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

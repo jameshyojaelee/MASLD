@@ -1,0 +1,102 @@
+{
+  "architecture_contract": {
+    "default_decoder": {
+      "latent_dimension": 20,
+      "shared_hidden_layers": 2,
+      "modality_hidden_layers": 3,
+      "hidden_units": 100
+    },
+    "encoder": "none",
+    "method": "decoder-only deep generative model with one optimized latent representation per cell, a Gaussian-mixture latent prior, a shared decoder trunk, and modality-specific negative-binomial branches",
+    "native_atac_target": "negative-binomial raw accessibility counts over the training-frozen peak inventory",
+    "native_rna_target": "negative-binomial raw UMI counts",
+    "published_missing_modality_inference": "initialize candidate query representations from the fitted Gaussian mixture, choose the best candidates by partial likelihood of the observed modality, then optimize one new latent parameter vector per query cell while holding the decoder and original mixture fixed",
+    "training_requirement": "The exact release trains the joint decoder on aligned multimodal rows. Its mosaic switch is hard-coded false, so different-aliquot or unpaired modality sets are not an admitted training topology."
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No upstream checkpoint is admitted. No project model is scheduled in the strict frozen-query tournament because the architecture has no inductive encoder. A future separately named query-optimization diagnostic would fit one local model inside each outer donor fold and seed.",
+    "implementation_type": "deferred_noninductive_query_optimization_comparator",
+    "primary_paper": "https://doi.org/10.1038/s41467-024-53340-z",
+    "repository": "Center-for-Health-Data-Science/multiDGD",
+    "repository_revision": "acc9edb212c554d693739890b23a6d209e15ecfa",
+    "repository_revision_date": "2024-07-10T14:04:30Z",
+    "repository_tag": "v0.0.1",
+    "source_release": "https://doi.org/10.5281/zenodo.13303992",
+    "upstream_checkpoint_catalog": {
+      "record": "https://doi.org/10.6084/m9.figshare.23796198.v1",
+      "record_license": "CC-BY-4.0",
+      "status": "reference_only_not_downloaded_not_loaded",
+      "weights": [
+        {"corpus": "human bone marrow; GSE194122", "file": "dgd_human_bonemarrow.pt", "md5": "59d417c6681421c13c1bc8cc5a223379", "size_bytes": 171976481},
+        {"corpus": "human brain; GSE162170", "file": "dgd_human_brain.pt", "md5": "d5c49a818c98ec5ce59744cbcd527957", "size_bytes": 127067033},
+        {"corpus": "mouse gastrulation; GSE205117", "file": "dgd_mouse_gastrulation.pt", "md5": "b228ff9e23927af7a584e45c1464ad07", "size_bytes": 84287087}
+      ]
+    }
+  },
+  "inductive_inference_contract": {
+    "frozen_raw_rna_to_atac_path": false,
+    "frozen_cell_embedding": "absent; every unseen cell needs a newly optimized RepresentationLayer parameter",
+    "native_path": "RNA-only partial-likelihood fitting can produce a query latent vector and then an ATAC decoder output, but this is held-query optimization, not a frozen forward transform.",
+    "query_state_mutation": "predict_new assigns test_rep, can fit a new correction-mixture component for unseen covariates, marks test_representation in param_dict, and calls save after query fitting.",
+    "release_entrypoint_defect": "Static inspection of the exact revision shows predict_new(testdata=...) calling self._init_test_set, while the class defines init_test_set and no _init_test_set method. The released new-data entry point therefore needs an independently reviewed patch even for a nonpromotable diagnostic.",
+    "strict_benchmark_disposition": "ineligible for common-lane, sealed, champion, and direct-profile scheduling because held RNA changes fitted model state",
+    "possible_future_lane": "A prospectively registered outcome-blind query-optimization diagnostic could optimize each held cell from RNA alone, with correction covariates disabled and no ATAC access. It must be labeled noninductive and cannot compete for a frozen-query champion."
+  },
+  "input_contract": {
+    "atac_training_input": "raw nonnegative accessibility counts over a GRCh38.p14 outer-training-only peak inventory",
+    "feature_alignment": "Frozen ordered GENCODE v49 gene IDs and GRCh38.p14 0-based half-open peaks. Held donors cannot define feature selection, order, filtering, or output metadata.",
+    "rna_query_input_if_diagnostic_approved": "raw nonnegative integer UMI counts aligned to the frozen training gene order",
+    "supported_training_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_training_topologies": ["same_sample_different_aliquot_as_cell_pair", "same_study_unpaired_as_cell_pair", "same_donor_different_tissue_as_cell_pair"],
+    "upstream_memory_warning": "The exact dataset adapter densifies AnnData or MuData matrices unless the row count exceeds one million; a bounded sparse project adapter would be mandatory."
+  },
+  "missingness_contract": {
+    "native_inference": "A source-only query is represented as one observed modality and scored through modality_translator; no target ATAC zero vector is mathematically required.",
+    "project_mapping": "Retain all eight project missingness states outside multiDGD. Structural ATAC absence is never encoded as observed zeros.",
+    "strict_gate": "Support for partial likelihood does not make the method inductive: the source-only query is used to fit its latent representation."
+  },
+  "output_contract": {
+    "cell_embedding": "No admissible frozen query embedding. A fitted query RepresentationLayer vector is available only in the future nonpromotable diagnostic lane.",
+    "count_scale": "Multiplying the ATAC softmax output by an ATAC library scalar yields a negative-binomial mean count vector, but an RNA-only query has no observed target ATAC library size and none may be inferred from sealed ATAC.",
+    "native_atac_profile": "The ATAC decoder branch returns a nonnegative softmax mean-fraction vector that sums to one and is a technically valid peak profile after RNA-only latent optimization.",
+    "profile_validity": "The release cannot emit that profile from raw held RNA through frozen parameters alone. The direct-profile condition fails even though no observed ATAC is needed after query optimization.",
+    "uncertainty": "If a diagnostic is approved, five separately fitted outer-fold seeds and prespecified query initializations measure computational stability, not biological replication."
+  },
+  "runtime_contract": {
+    "declared_anndata": "0.8.0",
+    "declared_mudata": "0.2.1",
+    "declared_python": ">=3.8",
+    "declared_scanpy": "1.9.1",
+    "declared_torch": "1.13.1",
+    "paper_runtime_note": "The paper reports Python >=3.9.12 and PyTorch 1.10, which differs from the exact package lock and must not silently substitute for it.",
+    "environment_status": "DEFERRED_NONINDUCTIVE_PLUS_EXACT_SOURCE_ENTRYPOINT_PATCH_LEGACY_RUNTIME_L40S_IMPORT_FORWARD_BACKWARD_STATE_DICT_RESUME_DETERMINISM_DENSE_MEMORY_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only_if_diagnostic_activated": true,
+    "upstream_risk": "save writes the full module state_dict, including row-specific train, validation, and later test representations, and load uses unrestricted torch.load. predict_new also persists query-fitted state automatically.",
+    "required_adapter": "Never load published .pt files. If a diagnostic is approved, reconstruct the audited architecture, restore project-controlled tensor state only, exclude query representations from reusable checkpoints, and bind keys, shapes, dtypes, genes, peaks, folds, seeds, and SHA-256 receipts."
+  },
+  "scheduling_disposition": "REMOVE_FROM_ACTIVE_FROZEN_QUERY_AND_DIRECT_RNA_TO_ATAC_TOURNAMENT; OPTIONAL_NONPROMOTABLE_DEVELOPMENT_QUERY_OPTIMIZATION_DIAGNOSTIC_ONLY_AFTER_SEPARATE_TASKSPEC",
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact multiDGD v0.0.1 tag, immutable source, MIT license, package lock, primary paper, and Figshare v1 metadata were inspected on 2026-08-22. Static source inspection established the absence of an encoder, query-parameter optimization, automatic query-state saving, normalized negative-binomial outputs, disabled mosaic training path, and the _init_test_set naming defect. No package, dependency, checkpoint, weight, dataset, archive, serialized object, model code, or test was downloaded, installed, loaded, trained, or executed.",
+  "source_records": [
+    {"identity": "multiDGD:LICENSE", "sha256": "46a9c8141c0231021798acdf0bd03559917965f69b90a5285e224dfaad71ccfd", "size_bytes": 1073},
+    {"identity": "multiDGD:README.md", "sha256": "94f10bc8ad6d5972b500b79de9e9f4d16552a7f96d408ceed45b540d1bd059d1", "size_bytes": 2104},
+    {"identity": "multiDGD:pyproject.toml", "sha256": "f2f09e489e40eb4a00bae56798c98ce5d229409973c2d31f2ea277073f8c4ac7", "size_bytes": 1879},
+    {"identity": "multiDGD:src/multiDGD/_dgd.py", "sha256": "aef70b8e7efc3d9170692a0936b9c49d49de6b51561c048327dc74d3add6555e", "size_bytes": 44423},
+    {"identity": "multiDGD:src/multiDGD/functions/_predict.py", "sha256": "410cc6bb465cce4008ad850fc0e84d930ef562519cc07012dd2e36c78a7a13b6", "size_bytes": 25647},
+    {"identity": "multiDGD:src/multiDGD/dataset/_dataset.py", "sha256": "5db68212c723793a70151f1813a53c381a30cc3df167c2c0f8614ce50cbf2267", "size_bytes": 16291},
+    {"identity": "multiDGD:src/multiDGD/latent/_representation.py", "sha256": "dd7e94572c5bffb5d827a4085e2bcf5f38eaccbed663678457515472be9ccea9", "size_bytes": 2497},
+    {"identity": "multiDGD:src/multiDGD/nn/_decoder.py", "sha256": "9cf440252e9bc6bed9b1d1ee4481a3fe6c449b4ed52de06b81d994a4deff9587", "size_bytes": 7148},
+    {"identity": "multiDGD:src/multiDGD/nn/_outputmodules.py", "sha256": "d54fe4c668c8bef5587520686d0dca147a7d45e88c84307c04272a0fa96be5b0", "size_bytes": 6835}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Ineligible in the frozen common and sealed lanes because there is no raw-RNA-to-latent forward transform. Query-fitted latent vectors may be reported only in a separately registered nonpromotable development diagnostic.",
+    "rna_conditioned_atac": "Ineligible for the primary direct-profile tournament. A normalized ATAC profile is available only after fitting a new latent vector to held RNA.",
+    "variant_to_regulation": "Ineligible because multiDGD has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_MODEL_NOT_SCHEDULED; PUBLISHED_FIGSHARE_WEIGHTS_CC-BY-4.0_REFERENCE_ONLY"
+}

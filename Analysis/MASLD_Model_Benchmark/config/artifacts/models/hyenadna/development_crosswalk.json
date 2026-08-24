@@ -1,0 +1,46 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_content": "single_human_hg38_reference_genome",
+    "interval_source": "Basenji_Enformer_sequences_human.bed",
+    "training_objective": "autoregressive_next_nucleotide",
+    "training_tokens_for_1M_model": 2000000000000,
+    "training_steps": "10000_to_20000",
+    "declared_holdout": "paper_states_chromosomes_14_and_X_are_test_only",
+    "interval_inventory_note": "The public BED contains train, valid, and test labels across many chromosomes; train rows exclude chromosomes 14 and X. Exact checkpoint locus exposure must be computed from train rows and the released sampling transformation rather than inferred from chromosome name alone."
+  },
+  "crosswalk_scope": {
+    "admitted_task": "variant_to_regulation",
+    "project_reference": "GRCh38.p14",
+    "registered_development_signed_effect_source": null,
+    "project_sealed_source": "GSE289173"
+  },
+  "findings": {
+    "GRCh38.p14_project_reference": {
+      "exposure_state": "encoder_seen",
+      "evidence": "The checkpoint was pretrained on hg38 reference intervals. Build patch differences and declared chromosome holdouts require locus-level qualification."
+    },
+    "GSE289173_reference_allele_windows": {
+      "exposure_state": "encoder_seen",
+      "evidence": "Most autosomal reference sequence is within the declared corpus; exact interval membership remains derivable only after the source FASTA and sampling recipe are frozen."
+    },
+    "GSE289173_chr14_or_chrX_reference_windows": {
+      "exposure_state": "reference_only",
+      "evidence": "The paper declares chromosomes 14 and X as test-only. This is a pretraining reference holdout, not a project-sealed outcome holdout."
+    },
+    "GSE289173_observed_variant_alleles": {
+      "exposure_state": "clean_declared",
+      "evidence": "Pretraining used one reference genome and did not declare population haplotypes."
+    },
+    "GSE289173_eQTL_ieQTL_effects": {
+      "exposure_state": "target_label_unexposed",
+      "evidence": "The 2023 checkpoint was trained without functional labels and predates the sealed source's 2025-02-12 public release."
+    }
+  },
+  "task_data_gate": {
+    "common_frozen_embedding_lane": "blocked_for_supervised_signed_effect_fit_until_a_nonsealed_development_label_source_is_registered",
+    "native_zero_shot_lane": "admissible_as_a_sequence_only_comparator",
+    "sealed_rule": "The seal cannot choose context length, affected suffix, layer, strand aggregation, calibration, or head parameters."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

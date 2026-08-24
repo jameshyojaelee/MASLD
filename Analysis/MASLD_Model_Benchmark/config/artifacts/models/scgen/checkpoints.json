@@ -1,0 +1,62 @@
+{
+  "architecture_contract": {
+    "default_dropout_rate": 0.2,
+    "default_hidden_dimension": 800,
+    "default_latent_dimension": 100,
+    "default_layers": 2,
+    "input": "normalized_log1p_single_cell_expression",
+    "native_output": "decoded_expression_on_the_fitted_input_scale",
+    "prediction_mechanism": "mean_latent_stimulated_minus_control_vector_added_to_query_control_latents",
+    "published_task": "transfer_an_observed_perturbation_across_cell_types_species_or_contexts"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "implementation_type": "train_locally",
+    "registered_identity": "theislab/scgen@d79e1f04233c30f9a4eb5b8d57718127909807d7",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "input_and_fit_contract": {
+    "feature_rule": "select_and_freeze_HVGs_inside_outer_training_replicates_only; project smoke should compare the README_recommended_approximately_7000_HVG_recipe_with_a_frozen_common_gene_panel",
+    "normalization_rule": "fit_library_size_normalization_on_raw_nonnegative_counts_then_natural_log1p_once; record_the_exact_layer_and_target_sum",
+    "replication_rule": "cells_train_the_VAE_but_do_not_define_folds_or_uncertainty; all scoring uses experimental_replicate_or_animal_pseudobulk",
+    "split_rule": "exclude_all_cells_from_held_target_locus_guide_family_and_biological_replicate_before_normalization_HVG_selection_training_or_latent_delta_estimation"
+  },
+  "query_contract": {
+    "current_task_result": "deferred_incompatible_with_wholly_unseen_perturbation",
+    "finding": "predict computes a delta from observed cells carrying both ctrl_key and stim_key in the model AnnData. It can transfer that known delta to another context but cannot derive the response vector for a target with no stimulated training cells.",
+    "randomness_rule": "replace_np.random.choice_balancing_with_fixed_seed_fold_local_sampling_and_record_selected_row_IDs",
+    "test_outcome_rule": "stimulated cells for a held target may never be used to estimate the delta",
+    "valid_future_use": "known_perturbation_held_context_or_held_donor_task"
+  },
+  "repository": "theislab/scgen",
+  "repository_revision": "d79e1f04233c30f9a4eb5b8d57718127909807d7",
+  "runtime_contract": {
+    "declared_package_version": "2.1.1",
+    "declared_python": ">=3.8",
+    "key_requirements": ["scvi-tools>=0.20.0", "scanpy>=1.6", "anndata>=0.7.5"],
+    "runtime_status": "UNRESOLVED_unbounded_dependency_ranges",
+    "required_probe": "isolated_L40S_import_fit_predict_save_resume_and_fixed_seed_delta_probe"
+  },
+  "safe_loading_contract": {
+    "canonical_external_weight": false,
+    "project_rule": "save_and_load_only_project_created_state_dicts_and_manifested_scvi_artifacts_after_runtime_probe"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository and Nature Methods paper were inspected on 2026-08-22; no package, weight, or data artifact was downloaded or loaded.",
+  "source_records": [
+    {"identity": "scGen:LICENSE", "sha256": "963392e038d7bea128e55cc67dd691c204593db3527060667f0c82f0f0a1be64", "size_bytes": 32422},
+    {"identity": "scGen:README.md", "sha256": "0755101d23880f69c37c89f85c04b5acb0bac1e73a0ee90cb246e8fb898c31bc", "size_bytes": 2839},
+    {"identity": "scGen:pyproject.toml", "sha256": "8a9e3c2f8186664846f9b8c247d808e69a0cc7fd85a28247185baa0a996206f2", "size_bytes": 2711},
+    {"identity": "scGen:scgen/_scgen.py", "sha256": "298e068be72c82e408d7ff925d9c006b175ec51bb77d24a427f8bb4876dc6aa1", "size_bytes": 29807},
+    {"identity": "scGen:scgen/_scgenvae.py", "sha256": "ce2bc7768ac9500ec98bf0234a379631943be946852d0b6e2b7d9bb772e065b2", "size_bytes": 4830},
+    {"identity": "scGen:scgen/_base_components.py", "sha256": "25822b5b1d20f5b6e536e073ae0a827ee39db7af7abe75e5ac24dc90b25194a6", "size_bytes": 2260},
+    {"identity": "scGen:scgen/_utils.py", "sha256": "ca2690c3179d307e62af543684554031bef1ce1d5d5607966301a4b2b3bb63d6", "size_bytes": 3018}
+  ],
+  "terms_audit": {
+    "license_file": "GPL-3.0",
+    "package_metadata_license": "MIT",
+    "result": "blocked_license_metadata_conflict",
+    "rule": "Treat the repository LICENSE as controlling for internal audit, but do not release derivative code or claim clean terms until the contradictory package metadata is resolved."
+  }
+}

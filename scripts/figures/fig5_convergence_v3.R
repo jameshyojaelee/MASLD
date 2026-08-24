@@ -8,10 +8,10 @@
 #
 # Panels:
 #   5a  therapeutic-axis multi-evidence matrix heatmap
-#       (written directly by fig5_convergence.R → panels/fig5a_therapeutic_axes.pdf)
+#       (written directly by fig5_convergence.R → panels/fig6_therapeutic_axes.pdf)
 #   5b  atlas convergence modality-count histogram
 #
-# Output: $FIG5_DIR/panels/fig5b.pdf + $FIG5_DIR/fig5b_convergence_histogram.csv
+# Output: $FIG5_DIR/panels/fig6_convergence_funnel.pdf + $FIG5_DIR/fig5b_convergence_histogram.csv
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -33,7 +33,7 @@ OUTDIR  <- FIG5_DIR
 PANDIR  <- file.path(OUTDIR, "panels")
 dir.create(PANDIR, recursive = TRUE, showWarnings = FALSE)
 
-# panels/fig5a_therapeutic_axes.pdf is written directly by fig5_convergence.R — no copy needed here.
+# panels/fig6_therapeutic_axes.pdf is written directly by fig5_convergence.R — no copy needed here.
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Load atlas
@@ -114,9 +114,9 @@ p5b <- ggplot(cum, aes(x = n_ge, y = lab)) +
         panel.grid.major.y = element_blank(),
         plot.margin = margin(3, 6, 3, 3))
 
-ggsave(file.path(PANDIR, "fig5b.pdf"), p5b,
+ggsave(file.path(PANDIR, "fig6_convergence_funnel.pdf"), p5b,
        width = 3.24, height = 2.22, device = cairo_pdf)
-cat("Saved: panels/fig5b.pdf\n")
+cat("Saved: panels/fig6_convergence_funnel.pdf\n")
 message(sprintf(paste0("[fig5b caption] Cumulative convergence funnel: genes ",
   "reaching >=k active evidence modalities (canonical 46d; mouse/cross-species ",
   "excluded), out of %s non-excluded genes tested. Green = >=3 modalities ",

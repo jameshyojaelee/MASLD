@@ -1,0 +1,59 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "preprocessing",
+  "model_ids": [
+    "shrunken_pseudobulk",
+    "shuffled_context",
+    "trans_only"
+  ],
+  "task_id": "rna_conditioned_atac",
+  "dataset_view_id": "gse296875_rna_atac_smoke_1000_v1",
+  "unit_of_inference": "donor",
+  "pairing_level": "same_nucleus",
+  "split": {
+    "entity": "donor",
+    "outer_folds": 5,
+    "seed": 20260821,
+    "all_modalities_one_fold": true
+  },
+  "inner_selection": {
+    "entity": "donor",
+    "folds": 3,
+    "seed": 20260823,
+    "metric": "equal-donor-lineage multinomial cross-entropy",
+    "fit_all_transforms_inside_inner_training": true
+  },
+  "shrunken_pseudobulk": {
+    "profiles": "equal-donor depth-free ATAC compositions",
+    "candidate_lineage_weights": [0.0, 0.1, 0.25, 0.5, 0.75, 1.0],
+    "prediction": "convex mixture of the training global mean and training lineage mean",
+    "tie_break": "smaller lineage weight"
+  },
+  "trans_only": {
+    "rna": "training-selected HVGs from log1p counts per 10000, training standardized",
+    "pca_rank_grid": [4, 8, 16],
+    "ridge_lambda_grid": [0.1, 1.0, 10.0, 100.0],
+    "design": "five frozen lineage indicators plus RNA principal components",
+    "target": "log1p of depth-free ATAC composition times 10000",
+    "output": "clipped inverse-log prediction renormalized to a positive composition",
+    "tie_break": "lower PCA rank then larger ridge penalty"
+  },
+  "shuffled_context": {
+    "architecture": "identical to trans_only",
+    "permutation": "deterministic no-fixed-point permutation of training RNA across donors within each lineage",
+    "permutation_seed": 20260824,
+    "query_rna": "unpermuted",
+    "lineage_indicators": "unpermuted"
+  },
+  "smoke_peak_universe": "2000 peaks selected by SHA-256 ranking of stable peak identifiers only",
+  "profile_pseudocount": 1e-08,
+  "held_atac_firewall": "prepare exports training RNA and ATAC plus query RNA; fit and predict withhold the original paired HDF5 and no query ATAC artifact is produced",
+  "missingness": {
+    "query_rna": "observed",
+    "query_atac": "withheld_sealed",
+    "missing_encoded_as_zero": false
+  },
+  "cells_are_replicates": false,
+  "well_is_replicate": false,
+  "code_sha256": "690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+}

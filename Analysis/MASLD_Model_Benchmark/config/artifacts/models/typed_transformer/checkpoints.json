@@ -1,0 +1,135 @@
+{
+  "architecture_contract": {
+    "architecture_status": "UNRESOLVED_BLOCKING",
+    "exact_external_method_identity": "none_registered",
+    "implementation_status": "No class, module, repository, package, paper-specific architecture, or training entry point named typed_transformer exists in the project tree.",
+    "model_family": "project_proposed_typed_evidence_graph_transformer",
+    "nonbinding_design_references": [
+      {
+        "doi": "10.1145/3366423.3380027",
+        "reason": "HGT is a typed-attention reference, not the identity of this unresolved project model.",
+        "title": "Heterogeneous Graph Transformer",
+        "url": "https://doi.org/10.1145/3366423.3380027"
+      },
+      {
+        "doi": "10.1007/978-3-319-93417-4_38",
+        "reason": "R-GCN is a relation-aware comparator, not the identity of this unresolved project model.",
+        "title": "Modeling Relational Data with Graph Convolutional Networks",
+        "url": "https://doi.org/10.1007/978-3-319-93417-4_38"
+      }
+    ],
+    "required_before_implementation": [
+      "node_and_edge_type_ontology",
+      "tokenization_and_canonical_order",
+      "direction_and_inverse_relation_encoding",
+      "continuous_evidence_value_encoding",
+      "provenance_and_observability_masks",
+      "attention_scope_and_mask",
+      "structural_or_positional_encoding",
+      "source_independent_node_features",
+      "layer_count_hidden_dimension_heads_and_dropout",
+      "source_agnostic_candidate_gene_decoder",
+      "negative_sampling_and_loss",
+      "optimizer_early_stopping_and_calibration",
+      "inductive_query_transform",
+      "five_fixed_seeds",
+      "source_code_license"
+    ],
+    "selection_rule": "Do not infer an architecture from the display name. Any selected graph transformer becomes a new immutable model identity with its own source, license, semantics, and audit."
+  },
+  "checkpoint_contract": {
+    "checkpoint_revision": "UNRESOLVED",
+    "checkpoint_sha256": "UNRESOLVED",
+    "fitted_artifact": "not_created",
+    "implementation_type": "train_locally",
+    "pretrained_checkpoint_available": false,
+    "status": "not_runnable_or_admissible",
+    "upstream_weights": "none_registered"
+  },
+  "held_source_output_contract": {
+    "admissible_future_output": "one source-agnostic continuous candidate-gene score per frozen row, calibrated without the evaluated source",
+    "held_source_token_rule": "A source ID, source token, source-specific decoder, source observability mask, or positional encoding derived from the held source cannot be present at prediction time.",
+    "native_output": "UNRESOLVED",
+    "relation_identifiability": "A completely unseen source type cannot have a learned source-specific output parameter. Recovery must be source-agnostic cross-source prioritization.",
+    "status": "blocked_until_output_head_and_semantics_are_frozen"
+  },
+  "implementation": {
+    "package": "UNRESOLVED",
+    "repository": "UNRESOLVED",
+    "repository_revision": "UNRESOLVED",
+    "runtime": "UNRESOLVED",
+    "source_code_present": false,
+    "source_code_run": false
+  },
+  "inductive_transductive_contract": {
+    "inductive_status": "UNRESOLVED",
+    "minimum_inductive_requirement": "No per-entity learned ID embedding; frozen feature transforms for a new node of an existing type; trained parameters for every admitted type; and no graph-wide preprocessing refit on query nodes or held edges.",
+    "new_relation": "unsupported_without_a_frozen_relation-composition_rule_that_was_trained_without_the_held_source",
+    "transductive_risk": "Entity-ID embeddings, a fixed graph token table, graph-wide attention over the complete node universe, or positional encodings fit on the full graph make the model transductive.",
+    "unseen_node_claim": "prohibited_until_a_fixed_feature_based_query_fixture_passes"
+  },
+  "input_and_leakage_contract": {
+    "attention_mask": "Must be built after held-source and held-locus removal. A mask derived from the full graph leaks topology even if held edge values are hidden.",
+    "continuous_evidence": "Must preserve assay-native units or an explicitly frozen training-only transform. Evidence absence is not zero.",
+    "graph_position": "Laplacian eigenvectors, random-walk statistics, centrality, shortest paths, metapaths, degree encodings, source counts, and graph token order are graph-derived features and must be recomputed from the split-safe training graph.",
+    "missingness": "Preserve supported, discordant, tested-negative, untestable, not-applicable, source-dependent, and indeterminate states with explicit masks.",
+    "node_universe": "Must be source-independent. Nodes whose existence or type is disclosed only by the held source remain evaluator-only.",
+    "provenance": "Source labels and assay observability are inputs only for remaining evidence. The removed source's provenance and eligibility are withheld with its outcomes."
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED",
+    "required_probe": "not_defined_until_implementation_revision_dependencies_architecture_and_execution_device_are_frozen",
+    "slurm_rule": "No job, test, or implementation probe may be scheduled for this unresolved model."
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only_after_architecture_admission",
+    "format": "tensor_only_state_plus_separate_JSON_architecture_graph_tokenizer_and_training_receipts",
+    "no_runtime_network": true,
+    "required_receipts": [
+      "implementation_source_and_license",
+      "environment_lock",
+      "graph_snapshot_and_held_source_hash",
+      "ontology_tokenizer_order_and_attention_mask_hashes",
+      "feature_and_positional_transform_hashes",
+      "training_and_negative_row_hashes",
+      "architecture_seed_and_optimizer",
+      "tensor_names_shapes_dtypes_and_SHA256",
+      "calibrator_and_prediction_hashes"
+    ],
+    "status": "future_contract_only_no_loader_is_admitted"
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact project registry, task, and split contracts were inspected on 2026-08-22. The project source tree contains no typed_transformer implementation. Primary R-GCN and HGT papers were reviewed only to delimit related named architectures; neither identifies this proposed model. No package, checkpoint, graph, data, or weights were downloaded, installed, or run.",
+  "source_records": [
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/models/evidence_graph.toml",
+      "sha256": "926641e4df3746e5497b91f8518565b259ebc7fa41837f36f5e021d5ee83ae10",
+      "size_bytes": 7325
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/typed_evidence_graph.toml",
+      "sha256": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "size_bytes": 1955
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/evidence_graph_outer.toml",
+      "sha256": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "size_bytes": 961
+    }
+  ],
+  "task_fit": {
+    "causal_gene_inference": "not_supported",
+    "held_source_recovery": "not_yet_supported_no_model_exists",
+    "native_output": "unresolved",
+    "task_role": "proposed_development_only_graph_prioritization_comparator",
+    "typed_evidence_graph": "blocked"
+  },
+  "terms_audit": {
+    "code_license": "UNRESOLVED_NO_IMPLEMENTATION",
+    "open_champion_eligibility": "ineligible_no_model_and_no_graph_seal",
+    "project_weight_redistribution": "UNRESOLVED until implementation terms and every graph source's derivative-use rights are reviewed",
+    "result": "fail_closed"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NOT_APPLICABLE_NO_WEIGHTS"
+}

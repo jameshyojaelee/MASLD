@@ -1,0 +1,95 @@
+schema_version = "masld-bench-model-v1"
+family_id = "chromatin"
+modality = ["single_nucleus_atac", "dna_sequence"]
+status = "candidate"
+
+[[models]]
+model_id = "epiagent"
+display_name = "EpiAgent"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "xy-chen16/EpiAgent@9c4b7902537b14871bdb13d2fad43bff9974310a:pretrained_EpiAgent.pth:gdrive:1Swr4FZFcOmJQnR8ljjbzw4JBteMf_hUn"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_UNDECLARED"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The current 5,801,822,387-byte Google Drive object has no digest, explicit terms, or public version history and was modified after GSE289173, so its exposure is unknown. It consumes observed single-cell ATAC over an exact 1,355,445-cCRE vocabulary and is incompatible with the current RNA-only sealed cell task and RNA-conditioned-ATAC profile input. Register a separate nonpromotable ATAC-cell-representation TaskSpec before use. If activated, obtain terms and object identity, preserve the exact cCRE and corrected document-frequency assets, use deterministic 512-dimensional CLS embeddings, freeze row-stable sparse tokenization, and pass restricted loading, donor-safe, held-query, runtime, and memory fixtures."]
+supported_tasks = []
+
+[[models]]
+model_id = "peakvi"
+display_name = "PeakVI"
+implementation_type = "train_locally"
+checkpoint_revision = "scverse/scvi-tools@56520c713eb1d2b245c72a0f60bc393b74198c91+PyPI:scvi-tools==1.5.0.post1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["PeakVI has no pretrained zero-shot checkpoint and consumes observed ATAC rather than RNA. It requires a separate nonpromotable ATAC-cell-representation/integration TaskSpec before use. If activated, verify the scvi-tools 1.5.0.post1 wheel SHA-256 d868c86332f819b8d79846ea0e36ec6eef26c3fafeb03ce7a239f1ddefb1c976; freeze an outer-training-only peak universe, explicit latent dimensions, covariates, donor folds, initialization, seeds, Bernoulli accessibility semantics, query policy, and artifact hashes. Sealed query fitting is prohibited unless prospectively authorized and outcome-blind."]
+supported_tasks = []
+
+[[models]]
+model_id = "scbasset"
+display_name = "scBasset"
+implementation_type = "train_locally"
+checkpoint_revision = "calico/scBasset@aed3a6f713091fd988196b297e9c06e092ff1d22"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Train locally only. Freeze the 1,344-bp sequence window, training-only peak universe and cell-state labels, binary-accessibility target, donor and genomic splits, deterministic ambiguous-base policy, validation criterion, initialization, seeds, legacy TensorFlow runtime, and artifact hashes. scBasset's 32-dimensional cell embedding is a transductive output-layer weight for training cells and is unavailable for held cells. For RNA-conditioned ATAC it is admitted only as a sequence-only profile baseline: average sequence-to-training-cell predictions within outer-training cell states, repeat them across held donors, reject held-donor ATAC at inference, and label the output as having no donor context."]
+supported_tasks = ["rna_conditioned_atac"]
+
+[[models]]
+model_id = "chrombert"
+display_name = "ChromBERT"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "TongjiZhanglab/ChromBERT@10589002597a9ef06613ed41b6ee83e8dd565c25+TongjiZhanglab/chrombert@721c67aecb0789c4eb204bc304f21779de7cd201:hg38_6k_1kb_pretrain.ckpt"
+checkpoint_sha256 = "1d0d9165f425987268f137b336bdb3ecf19f68e3503100db197cb71fffba62e5"
+license_status = "blocked_conflicting_or_missing_license"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The registered 2024 checkpoint, exact 228,036,486-byte SHA-256, Cistrome-token architecture, incomplete regulator/region companion roster, conflicting source terms, and target-label-unexposed chronology are frozen under config/artifacts/models/chrombert. It consumes one ordered binding-status token per Cistrome profile for a fixed hg38 1-kb bin; REF and ALT alleles have the same native representation, and it emits region/regulator representations rather than genomic profiles or signed effects. Keep it representation-only and out of RNA-conditioned ATAC. Any sequence prompt, allele direction, enhancer-gene link, or signed-effect head is a separately named locus-cross-fitted composite. Before any run, obtain written code/weight/derivative terms, approve acquisition, verify the exact checkpoint, safely export tensor-only state, freeze the full Cistrome/regulator/mask/region order and GRCh38.p14 bin crosswalk, and pass isolated runtime and invariance fixtures. The distinct 2026 safetensors release is post-seal, exposure-unknown, and cannot substitute for this checkpoint."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "cistopic"
+display_name = "cisTopic"
+implementation_type = "classical_baseline"
+checkpoint_revision = "aertslab/cisTopic@8514bdd11713da86cfe712c4234645c6b4973353+R:cisTopic==0.3.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact GPL-3.0 cisTopic 0.3.0 source and local-training contract are frozen under config/artifacts/models/cistopic. It has no upstream checkpoint or corpus, but the released R implementation is transductive: topic-by-cell probabilities exist only for cells in the LDA fit and there is no inductive held-cell transform. Never append, jointly fit, or refit held or sealed cells. Retain it only for training-partition diagnostics or a separately approved nonpromotable development TaskSpec that makes no held-cell or champion claim. Before any fit, freeze outer-training-only peaks and filters, topic grid and selection, WarpLDA settings, seeds, downstream head, project artifact hashes, missingness semantics, and a reproducible deprecated-R SLURM runtime."]
+supported_tasks = []
+
+[[models]]
+model_id = "lsi"
+display_name = "TF-IDF plus LSI"
+implementation_type = "classical_baseline"
+checkpoint_revision = "stuart-lab/signac@12d1ff82774890b08e55b3101f36fab83e674b88:RunTFIDF_method_1+scikit-learn/scikit-learn@77def0ed6e3beab57244885d2a584470e96c103d+PyPI:scikit-learn==1.9.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact local baseline is Signac method-1 TF-IDF at 12d1ff82774890b08e55b3101f36fab83e674b88 followed by scikit-learn 1.9.0 TruncatedSVD at 77def0ed6e3beab57244885d2a584470e96c103d. Its registered CPython 3.11 manylinux wheel SHA-256 is f7e254636164090da847715a27f8e5478feb98c40a9e0ee90cbd277de9e5ceb8. It requires observed query ATAC and cannot enter the RNA-only sealed cell task or RNA-conditioned ATAC profile task. Activate only under a separate nonpromotable observed-ATAC TaskSpec. Freeze outer-training-only peaks and filters, the exact log1p(10000*TF*IDF) sparse formula and training IDF, component count, explicit randomized-SVD seed/settings, first-component exclusion, sign orientation, classifier/calibration, transform-only query path, missingness, and every fitted-artifact hash. Do not replace Signac's count-row-sum IDF with an undocumented document-frequency formula."]
+supported_tasks = []
+
+[[models]]
+model_id = "epifoundation"
+display_name = "EpiFoundation"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "UCSC-VLAA/EpiFoundation@a459bb7829ef80a37499aae01a21f00a0b50a782:pretrain.pth+code@0c2c50479ae62dc3bbc0abf17fd47bc558a8f9b7"
+checkpoint_sha256 = "2da08ff4572738d90fd70d38d792850821bb21c2cf52838286537542b991ab59"
+license_status = "code_license_UNDECLARED_weight_Apache-2.0"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact 3,606,582,266-byte pretrain.pth SHA-256, Hugging Face and code revisions, six companion vocabulary hashes, paired RNA-ATAC input path, and fail-closed audit are frozen under config/artifacts/models/epifoundation. The weight card declares Apache-2.0, but the pinned code repository has no detected license; do not execute, adapt, or redistribute that code without written permission. The checkpoint-bound architecture is ambiguous because released pretraining and evaluation configs differ, and its unmanifested corpus leaves GSE244832, GSE281367, GSE289173, and GSE296875 exposure unknown; public-release chronology alone is insufficient. Native CLS embeddings require observed ATAC, so it cannot enter the current RNA-only sealed cell task, RNA-conditioned ATAC profile task, or signed variant task. Any future nonpromotable observed-ATAC TaskSpec also requires restricted networkless pickle inspection with weights-only loading and no fallback, tensor-only safetensors conversion, exact vocabulary/reference crosswalks, deterministic tokenization, and L40S runtime fixtures."]
+supported_tasks = []

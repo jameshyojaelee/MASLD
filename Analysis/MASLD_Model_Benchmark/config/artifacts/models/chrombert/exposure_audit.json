@@ -1,0 +1,58 @@
+{
+  "audit_scope": {
+    "checkpoint": "TongjiZhanglab_chrombert_hg38_6k_1kb_pretrain_ckpt",
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_source": "gse289173",
+    "task_id": "variant_to_regulation"
+  },
+  "checkpoint_findings": {
+    "registered_2024_base_checkpoint": {
+      "checkpoint_identity": "TongjiZhanglab/chrombert dataset@721c67aecb0789c4eb204bc304f21779de7cd201:hg38_6k_1kb_pretrain.ckpt sha256 1d0d9165f425987268f137b336bdb3ecf19f68e3503100db197cb71fffba62e5",
+      "corpus": "Cistrome-Human-6K pooled binding-status matrix over 2,137,894 hg38 1-kb bins",
+      "exposure_confidence": "high_for_named_post_checkpoint_labels_medium_for_upstream_profile_aliases",
+      "exposure_state": "target_label_unexposed",
+      "reference_and_generic_profile_exposure": "encoder_seen_or_possible"
+    },
+    "post_census_2026_safetensors": {
+      "checkpoint_identity": "TongjiZhanglab/chrombert-human-1kb@40e0a0d292af0546e2e97a862896a1df329284a8:model.safetensors sha256 2af530544a2e6b61a319fd8665f98d257e2a55344134dd1b58a687220cf6c4a3",
+      "conversion_or_training_receipt": "UNRESOLVED",
+      "exposure_state": "unknown",
+      "rule": "This artifact was released after GSE289173 and is not admitted as a conversion of the registered checkpoint without parity and corpus evidence."
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_region_representation_and_variant_sources",
+    "sha256": "357090da3ef00a50c3bbd07a2a86141fa6fb715e3d21d9b50749415e357c49f9"
+  },
+  "input_eligibility": {
+    "gse281364": "The base representation can be associated with a 1-kb region only after an exact roster crosswalk, but it cannot distinguish the MPRA REF and ALT alleles. Retrospective representation diagnostics require a separately frozen allele encoder and head.",
+    "gse289173": "Native sealed variant inference is ineligible. The registered checkpoint has no nucleotide input, donor context, gene link, or sign output; REF and ALT at one bin produce the same representation.",
+    "gse296875": "Development-only region or regulator probing may be possible after terms and companion-file gates. The model cannot consume same-nucleus RNA as context or emit an ATAC profile.",
+    "observed_context_requirement": "none_supported_by_the_registered_base_checkpoint"
+  },
+  "interpretation": "The exact registered base bytes predate GSE289173 and are target-label-unexposed, but that does not make ChromBERT a variant model. It is a pooled Cistrome representation encoder with broad locus and regulatory-profile exposure. The separately released 2026 safetensors identity is post-seal and remains unknown-exposure until a conversion and corpus receipt exists.",
+  "license_disposition": {
+    "post_census_safetensors": "MIT_declared_on_its_separate_Hugging_Face_model_card",
+    "registered_checkpoint": "HF_dataset_card_has_a_GPLv3_badge_but_no_license_metadata_or_text",
+    "registered_source": "no_LICENSE_README_GPLv3_badge_and_commented_MIT_pyproject_field",
+    "open_champion_eligibility": "ineligible_conflicting_or_missing_terms_and_non_native_endpoint"
+  },
+  "remaining_blockers": [
+    "Obtain written license and derivative-weight terms for the registered source and 2024 checkpoint. Do not infer a grant from a badge or commented package field.",
+    "After campaign approval, acquire the exact registered checkpoint, verify SHA-256 and size, isolate PyTorch pickle inspection, export a tensor-only manifest, and require strict restoration against pinned trusted source.",
+    "Freeze and hash the exact cistrome, regulator, mask, region, and position order plus a GRCh38.p14-to-native-bin crosswalk; reject non-roster or ambiguous loci.",
+    "Prove cell-order and regulator-order invariance fixtures and prevent any held source from selecting regulator subsets, pooled representations, or prompts.",
+    "Do not register native allele effects. Any DNABERT-2 or other REF/ALT prompt, decoder, enhancer-gene link, or direction model is a separate composite checkpoint trained only inside donor and genomic folds.",
+    "Keep ChromBERT out of the RNA-conditioned ATAC primary endpoint; it has neither observed RNA context nor a genomic ATAC profile head.",
+    "Run isolated L40S import, strict restore, forward, backward, resume, deterministic-seed, and cross-device tolerance probes through SLURM only after terms and the artifact bundle are frozen."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_representation_only_no_native_allele_or_signed_effect_and_terms_blocked",
+  "task_disposition": {
+    "rna_conditioned_atac_primary": "ineligible",
+    "signed_variant_primary": "ineligible",
+    "variant_to_regulation_secondary": "frozen_region_representation_component_only_after_terms"
+  },
+  "verified_date": "2026-08-22"
+}

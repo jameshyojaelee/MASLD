@@ -1,0 +1,73 @@
+{
+  "audit_scope": {
+    "algorithm": "masld_nearest_gene_tss_v1",
+    "development_sources": ["current_coloc_gwas", "gse244832", "gse281160", "gse281364", "gse296875"],
+    "graph_sealed_sources": [],
+    "sealed_variant_source": "gse289173",
+    "tasks": ["typed_evidence_graph", "variant_to_regulation"]
+  },
+  "checkpoint_finding": {
+    "annotation_exposure": "reference_only",
+    "biological_pretraining": "none",
+    "checkpoint_identity": "not_applicable_deterministic_distance",
+    "gse289173_target_exposure": "target_label_unexposed",
+    "implementation_identity": "UNRESOLVED_no_code_exists",
+    "overall_status": "blocked_until_development_TSS_artifact_candidate_contract_implementation_and_fixtures_exist",
+    "weights": "none"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "reference_variant_graph_retrieval_sign_and_leakage_contract",
+    "sha256": "ee70f1b4b33e6aef97c9aa51ff6cd02f15a043bf9119f45225cb381d20a909f3"
+  },
+  "held_source_feasibility": {
+    "graph_answer": "conditionally_yes_for_retrospective_unsigned_retrieval_if_locus_variants_and_candidate_genes_are_source-independent",
+    "signed_effect_answer": "no_distance_has_no_REF_ALT_lineage_donor_or_effect_direction_information",
+    "variant_seal": "Can score anonymized selection-locked GSE289173 variant-gene features once. It remains a mandatory secondary retrieval comparator, never a primary signed-effect model.",
+    "graph_seal_status": "No current graph source is sealed, so graph retrieval cannot earn a champion."
+  },
+  "known_biases_and_leakage_routes": [
+    "Scoring only gene pairs present in a held eQTL, MPRA, CROP-seq, or evidence source and thereby leaking its assay coverage or positives.",
+    "Using a held-source lead variant, credible set, locus boundary, gene, transcript, expression level, eQTL beta, or interaction label to choose the coordinate or candidate roster.",
+    "Selecting canonical transcripts, GENCODE releases, protein-coding filters, distance radius, gene symbols, tie rules, or liftover behavior after outcome inspection.",
+    "Querying Ensembl, UCSC, NCBI, HGNC, disease databases, expression atlases, or online annotations after the development TSS artifact is frozen.",
+    "Splitting LD-linked variants, one locus, exact or reverse-complement sequence groups, or variant-gene derivatives across roles.",
+    "Treating ambiguous liftover, missing annotation, non-analysis contigs, REF mismatch, or unresolved gene IDs as a large distance instead of untestable.",
+    "Using proximity as an allele effect, signed eQTL or interaction-eQTL prediction, cell-type effect, or causal-gene assertion.",
+    "Counting variants, genes, transcripts, TSSs, or candidate pairs as independent biological replicates."
+  ],
+  "confounding_disposition": {
+    "candidate_count": "Report the exact candidate denominator per locus; a smaller outcome-derived denominator can inflate retrieval.",
+    "gene_density": "Report performance by local TSS density and nearest-distance strata.",
+    "ld_block": "Bootstrap and compare at LD/locus blocks, not variant-gene rows. Multiple linked anchors cannot supply independent evidence.",
+    "observability": "Held-source gene and assay observability is evaluator-only and cannot define candidates or ties."
+  },
+  "license_disposition": {
+    "annotation": "GENCODE official data-access page states project data are open access",
+    "algorithm": "no upstream software",
+    "graph_open_champion_eligibility": "ineligible_no_wholly_sealed_graph_source",
+    "project_code": "UNRESOLVED_no_repository_root_license_and_no_implementation",
+    "variant_open_champion_eligibility": "ineligible_link_and_retrieval_only_not_primary_signed_effect",
+    "weights": "not_applicable"
+  },
+  "remaining_blockers": [
+    "Create and hash the development-built GENCODE v49 transcript-TSS artifact from the admitted 73bbbb... GTF, with primary analysis contigs, gene-version crosswalk, both-strand fixtures, duplicate handling, rejection counts, and no online lookups.",
+    "Freeze the source-independent variant-gene and locus-gene candidate contract, including any generation radius, variant roster, gene universe, row hashes, and evaluator-only eligibility.",
+    "Implement normalized VCF anchor, native-build retention, unique one-to-one liftover, REF match, TSS distance, locus minimum, equal ties, and explicit untestable states under a frozen project revision.",
+    "Prove plus- and minus-strand TSS coordinates, insertion and deletion anchors, contig boundaries, PAR and duplicate gene IDs, version stripping, equal-distance ties, ambiguous lift rejection, and candidate-order invariance.",
+    "Demonstrate that REF and ALT scores are identical and reject any attempt to populate signed eQTL, interaction-eQTL, allelic-direction, lineage, or primary endpoint fields.",
+    "For graph use, remove every held-source-selected variant, gene, candidate, locus boundary, and observability field before distance aggregation.",
+    "Freeze input annotation, candidate rows, coordinates, LD and locus groups, distance outputs, ties, and PredictionBundle hashes before sealed variant inference.",
+    "Keep graph results development-only and nearest-gene results restricted to unsigned retrieval and link comparison."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "graph_ineligible_no_sealed_source;_variant_ineligible_for_primary_signed_effect_but_mandatory_secondary_retrieval_baseline_after_reference_candidate_and_implementation_gates",
+  "task_disposition": {
+    "causal_gene": "prohibited",
+    "enhancer_gene_link": "conditional_unsigned_secondary",
+    "eqtl_retrieval": "mandatory_secondary_baseline",
+    "signed_eqtl_ieqtl": "ineligible",
+    "typed_evidence_graph": "conditional_development_only"
+  },
+  "verified_date": "2026-08-22"
+}

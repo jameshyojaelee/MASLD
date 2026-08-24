@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# KEY MESSAGE: Inherited regulatory susceptibility and established disease-state
+# KEY MESSAGE: Inherited regulatory susceptibility and established RNA-seq
 # remodeling are complementary, without evidence of biological antagonism.
 
 suppressPackageStartupMessages({
@@ -40,10 +40,10 @@ interface <- merge(
   by = "gene_id", all = FALSE
 )
 interface[, genetic := is.finite(susie_pp4) & susie_pp4 >= 0.5]
-interface[, disease_state := is.finite(treat_fdr) & treat_fdr < 0.05]
-interface[, state := fifelse(genetic & disease_state, "Both",
+interface[, rna_sig := is.finite(treat_fdr) & treat_fdr < 0.05]
+interface[, state := fifelse(genetic & rna_sig, "Both",
                       fifelse(genetic, "Genetics sig.",
-                        fifelse(disease_state, "Transcriptomics sig.", "Neither")))]
+                        fifelse(rna_sig, "Transcriptomics sig.", "Neither")))]
 scatter <- interface[is.finite(susie_pp4) & is.finite(logFC)]
 rho_test <- cor.test(scatter$logFC, scatter$susie_pp4,
                      method = "spearman", exact = FALSE)
@@ -55,7 +55,7 @@ stopifnot(nrow(interface) == 14112L, nrow(scatter) == 3617L,
           nrow(threshold_free) == 1L,
           all(interface$treat_lfc == 0.25),
           sum(interface$genetic) == 428L,
-          sum(interface$genetic & interface$disease_state) == 30L,
+          sum(interface$genetic & interface$rna_sig) == 30L,
           threshold_free$n_pairs_raw == nrow(scatter),
           abs(rho - threshold_free$spearman_signed_raw) < 1e-10)
 scatter[, state := factor(state, levels = c(
@@ -65,20 +65,20 @@ setorder(scatter, state)
 
 state_colors <- c(
   Neither = "#D8D8D8",
-  `Transcriptomics sig.` = masld_colors$mash,
+  `Transcriptomics sig.` = masld_colors$human_enriched,
   `Genetics sig.` = masld_colors$down,
-  Both = masld_colors$masl
+  Both = cat_palette[9]
 )
 p_scatter <- ggplot(scatter, aes(logFC, susie_pp4)) +
   geom_hline(yintercept = 0.5, color = "grey72", linewidth = 0.25,
              linetype = "22") +
   geom_vline(xintercept = 0, color = "grey82", linewidth = 0.25) +
-  geom_point(aes(color = state), size = 0.4, alpha = 0.58, stroke = 0) +
-  annotate("text", x = -Inf, y = Inf,
-           label = sprintf("ρ = %.03f; P = %.02f", rho, rho_test$p.value),
-           hjust = -0.05, vjust = 1.25, size = 6 / .pt, family = "Helvetica") +
+  geom_point(data = scatter[state != "Both"], aes(color = state),
+             size = 0.65, alpha = 0.58, stroke = 0) +
+  geom_point(data = scatter[state == "Both"], aes(color = state),
+             size = 0.65, alpha = 0.95, stroke = 0) +
   scale_color_manual(values = state_colors, drop = FALSE, name = NULL) +
-  guides(color = guide_legend(nrow = 1, byrow = TRUE,
+  guides(color = guide_legend(ncol = 2, byrow = TRUE,
                               override.aes = list(size = 1.4, alpha = 1))) +
   coord_cartesian(ylim = c(0, 1)) +
   scale_x_continuous(expand = expansion(mult = c(0.03, 0.03))) +
@@ -135,13 +135,16 @@ p_matrix <- ggplot(pair_matrix, aes(control_rna, genetics_rna)) +
         axis.text = element_text(size = 6, face = "plain"),
         plot.margin = margin(1, 4, 2, 4))
 
-panel <- p_scatter / p_matrix + plot_layout(heights = c(4.1, 1.7))
-out_dir <- file.path(candidate_root, "figure3", "panels")
+main_out_dir <- file.path(candidate_root, "figure3", "panels")
+supp_out_dir <- file.path(candidate_root, "figureS3", "panels")
 src_dir <- file.path(candidate_root, "source_tables")
-dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(main_out_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(supp_out_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(src_dir, recursive = TRUE, showWarnings = FALSE)
-out <- file.path(out_dir, "fig3g_genetic_state_complementarity.pdf")
-ggsave(out, panel, width = 4.0, height = 2.85, device = cairo_pdf)
+out <- file.path(main_out_dir, "fig3g_genetic_state_complementarity.pdf")
+supp_out <- file.path(supp_out_dir, "figs3g_expression_matched_pairs.pdf")
+ggsave(out, p_scatter, width = 2.45, height = 2.45, device = cairo_pdf)
+ggsave(supp_out, p_matrix, width = 2.45, height = 2.15, device = cairo_pdf)
 
 fwrite(scatter[, .(gene_id, symbol, logFC, treat_lfc, treat_fdr,
                    susie_pp4, state)],
@@ -152,9 +155,9 @@ summary <- data.table(
   n_finite_susie_pairs = nrow(scatter),
   spearman_rho = rho,
   spearman_p = rho_test$p.value,
-  n_treat_supported_joint = sum(interface$disease_state),
+  n_treat_supported_joint = sum(interface$rna_sig),
   n_genetically_anchored_joint = sum(interface$genetic),
-  n_genetically_anchored_treat = sum(interface$genetic & interface$disease_state),
+  n_genetically_anchored_treat = sum(interface$genetic & interface$rna_sig),
   n_expression_matched_pairs = matched$n_pairs,
   genetic_only_treat_pairs = matched$discordant_case_only,
   matched_control_only_treat_pairs = matched$discordant_control_only,

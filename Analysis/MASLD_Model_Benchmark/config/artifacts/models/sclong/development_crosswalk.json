@@ -1,0 +1,159 @@
+{
+  "corpus": {
+    "declared_name": "scLong_48M",
+    "retained_unique_cells": 48024242,
+    "declared_species": "human",
+    "genes": 27874,
+    "declared_sources": [
+      "CELLxGENE",
+      "Cell_BLAST",
+      "Human_Cell_Atlas"
+    ],
+    "initial_collection": "more_than_60_million_cells_from_approximately_1600_datasets",
+    "methods_retained_dataset_count": 848,
+    "figure_dataset_count": 1618,
+    "dataset_count_interpretation": "The counts may describe acquisition versus retained training inputs, but no accession roster resolves which 848 or 1,618 identities bind to the checkpoint.",
+    "exact_accession_release_alias_donor_cell_label_and_cutoff_inventory": "UNRESOLVED",
+    "checkpoint_binding": "No corpus manifest is bound to immutable checkpoint bytes because the SharePoint object has no verified size or SHA-256 and was inaccessible during this audit.",
+    "source_evidence": "Nature Communications paper and official repository",
+    "warning": "Released per-cell chunks, if reacquired later, would still need provenance back to source accessions, donors, retained cells, labels, and deduplication signatures."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_task": "cell_state_mapping",
+    "registered_cell_state_sources": [
+      "GSE136103",
+      "GSE174748",
+      "GSE185477",
+      "GSE189600",
+      "GSE202379",
+      "GSE244832",
+      "GSE256398",
+      "GSE281367",
+      "GSE289173",
+      "GSE296875",
+      "Liver_Atlas"
+    ]
+  },
+  "findings": {
+    "GSE136103": {
+      "evidence": "The source predates the timestamp embedded in the checkpoint filename and could appear through CELLxGENE, Cell BLAST, HCA, or release aliases. No checkpoint-bound accession, donor, or retained-cell roster resolves overlap.",
+      "exposure_state": "unknown",
+      "public_date": "2019-09-12"
+    },
+    "GSE174748": {
+      "evidence": "The source predates the timestamp embedded in the checkpoint filename and could appear through CELLxGENE, Cell BLAST, HCA, or release aliases. No checkpoint-bound accession, donor, or retained-cell roster resolves overlap.",
+      "exposure_state": "unknown",
+      "public_date": "2022-05-01"
+    },
+    "GSE185477": {
+      "evidence": "The source predates the timestamp embedded in the checkpoint filename and could appear through CELLxGENE, Cell BLAST, HCA, or release aliases. No checkpoint-bound accession, donor, or retained-cell roster resolves overlap.",
+      "exposure_state": "unknown",
+      "public_date": "2021-10-13"
+    },
+    "GSE189600": {
+      "evidence": "The source predates the timestamp embedded in the checkpoint filename and could appear through CELLxGENE, Cell BLAST, HCA, or release aliases. No checkpoint-bound accession, donor, or retained-cell roster resolves overlap.",
+      "exposure_state": "unknown",
+      "public_date": "2023-02-08"
+    },
+    "GSE202379": {
+      "evidence": "GEO public release postdates the filename timestamp, but the checkpoint object, upload date, training cutoff, and corpus roster are not immutable or verified. Public chronology cannot establish clean status.",
+      "exposure_state": "unknown",
+      "public_date": "2024-04-04"
+    },
+    "GSE244832": {
+      "evidence": "GEO public release postdates the filename timestamp, but the checkpoint object, upload date, training cutoff, and corpus roster are not immutable or verified. Public chronology cannot establish clean status.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13"
+    },
+    "GSE256398": {
+      "evidence": "The public release postdates the filename timestamp, but no immutable checkpoint object or source inventory excludes private data, labels, donors, or aliases.",
+      "exposure_state": "unknown",
+      "public_date": "2025-03-03"
+    },
+    "GSE281367": {
+      "evidence": "The public release postdates the filename timestamp and source release, but the mutable inaccessible weight object has no verified cutoff or corpus binding. Target exposure remains unknown.",
+      "exposure_state": "unknown",
+      "public_date": "2026-03-16"
+    },
+    "GSE289173": {
+      "evidence": "GEO became public after the filename timestamp, but a filename is not an immutable training cutoff and the SharePoint object has no verified hash or timestamp. Private biological-data or target-label exposure cannot be excluded.",
+      "exposure_state": "unknown",
+      "public_date": "2025-02-12"
+    },
+    "GSE296875": {
+      "evidence": "The public release postdates the filename timestamp, but the mutable inaccessible weight object has no verified cutoff or corpus binding. Target exposure remains unknown.",
+      "exposure_state": "unknown",
+      "public_date": "2025-10-01"
+    },
+    "Liver_Atlas": {
+      "evidence": "The liver source predates the nominal checkpoint filename and could occur through CELLxGENE, HCA, Cell BLAST, or aliases. No accession, donor, or retained-cell roster resolves overlap.",
+      "exposure_state": "unknown",
+      "public_date": "2018-10-22"
+    }
+  },
+  "task_and_topology_crosswalk": {
+    "cell_state_mapping": {
+      "status": "conceptually_applicable_but_admission_blocked",
+      "input": "Single-cell or single-nucleus expression in H5AD, exact Ensembl IDs, and a checkpoint-compatible log1p and maximum-scale transform after the preprocessing discrepancy is resolved.",
+      "native_output": "Per-gene 200-dimensional merged_decodings, not a predeclared scalar cell embedding or classifier.",
+      "required_project_output": "A frozen cell representation and identical common-lane head; pooling cannot be chosen from held-label performance.",
+      "biological_unit": "donor",
+      "row_universe": "Use the identical eligible GSE289173 snRNA rows and frozen five-class ontology as every sealed cell-state candidate if exposure ever clears.",
+      "split": "All cells, nuclei, libraries, tissues, aliquots, timepoints, and modalities from one person remain in one donor outer fold."
+    },
+    "conditional_masld_model": {
+      "status": "prohibited_without_checkpoint_output_derivative_and_exposure_clearance",
+      "reason": "No weight, output, or derivative terms were detected, and the encoder corpus is exposure-unknown."
+    },
+    "perturbation_response": {
+      "status": "not_admitted_by_base_checkpoint",
+      "reason": "The repository's GEARS directory trains a separate perturbation system on the Norman dataset. It is not a capability of the base checkpoint alone."
+    },
+    "rna_atac_integration": "not_native_single_cell_RNA_encoder_only",
+    "bulk_state_transfer": "not_admitted_the_released_embed_recipe_is_single_cell_and_per_gene"
+  },
+  "dataset_role_crosswalk": {
+    "resource_atlas_current": "project_exposed training only; any pooling or probe is selected within donor folds",
+    "GSE296875": "project-exposed training; same-nucleus RNA-ATAC topology does not make scLong multimodal and donor remains the replicate",
+    "GSE244832": "project-exposed training or donor-level development; same donor does not create cell pairing",
+    "GSE256398": "external development and selection, including alcohol-associated etiology challenge; not a sealed source",
+    "GSE281367": "external development and selection; not sealed",
+    "GSE289173": "project-sealed final only if exact checkpoint exposure becomes eligible; currently unknown and therefore blocked"
+  },
+  "input_and_missingness_firewall": {
+    "preprocessing": "Do not choose between the paper's raw-count transform and the embed script's already-log1p assumption using held performance. Freeze one checkpoint-compatible path through development-only fixtures.",
+    "gene_identifiers": "Map project identifiers one-to-one into the exact selected_genes_27k.txt Ensembl order only after that payload is hashed. Version suffixes, duplicates, aliases, and unmapped genes receive explicit states.",
+    "zero_fill": "Model-list genes absent from the assay cannot be treated as assayed zero without an observed mask. Preserve structural absence outside the native tensor.",
+    "mean_fill": "The released embed helper mean-fills representations for input genes absent from the model list. Those rows are derivations, not measured or model-native gene embeddings, and cannot silently enter pooling.",
+    "quality": "Reject nonfinite values, unresolved normalization, incompatible gene coverage, and unsupported assay topology before model execution."
+  },
+  "fit_and_selection_firewall": {
+    "common_lane": "Freeze the exact checkpoint and all auxiliary hashes, preprocessing, gene order, merged_decodings field, pooling, missingness, common head, label budget, folds, seeds, early stopping, and calibration before screening.",
+    "native_lane": "No head, adapter, LoRA, or full fine-tune without written checkpoint and derivative terms. Report any later native result separately from a frozen probe.",
+    "held_donors": "Held and sealed donors cannot set preprocessing, identifier mappings, pooling, gene inclusion, head architecture, exclusions, calibration, or thresholds.",
+    "labels": "The sealed GSE289173 labels remain evaluator-only; commit standardized predictions before joining outcomes.",
+    "replication": "Donors are inferential units. Cells, nuclei, genes, expression elements, seeds, and perturbations are not independent donors."
+  },
+  "runtime_and_loading_firewall": {
+    "pickle": "Both the .pth checkpoint and .pkl hyperparameter object can execute code during deserialization. No direct load is permitted.",
+    "isolation": "After written terms and immutable hashes, inspect in a disposable no-network runtime without credentials or mounted project data, then convert approved tensors and plain parameters only if derivative terms permit.",
+    "environment": "The README recipe and sclong.yml conflict, sclong.yml mixes CUDA 11.8 components with cuda-version 12.5, and embed.py contains an author-local absolute path. A rebuilt immutable L40S environment is required.",
+    "memory": "Full 27,874-gene by 200 output for a one-billion-parameter model requires a measured batch and memory contract. Published source defaults do not establish L40S viability."
+  },
+  "rules": {
+    "all_unknown_fail_closed": "Every target source remains unknown until checkpoint bytes, upload and training cutoff, and the full accession, release-alias, donor, retained-cell, label-use, and deduplication roster are bound together.",
+    "filename": "A timestamp-like checkpoint filename is not an immutable object date or proof of nonexposure.",
+    "archive": "The exact Zenodo source archive does not contain or license the separately hosted checkpoint and auxiliary payloads.",
+    "source_owned_results": "Published perturbation, drug-response, GRN, and integration evaluations are prior work and separate downstream fitted systems."
+  },
+  "claim_boundary": {
+    "current": "No execution, MASLD cell-state champion, sealed external claim, perturbation champion, or conditional-model contribution.",
+    "future_comparator": "If exact bytes, written terms, corpus, preprocessing, pooling, runtime, and capability gates clear, scLong may enter as a restricted frozen cell-state comparator.",
+    "open_champion": "ineligible_while_weight_output_and_derivative_terms_and_exposure_are_unresolved",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "interpretation": "scLong is scientifically relevant because it models all 27,874 genes using high- and low-expression Performer paths and GO-informed gene embeddings. It is not executable for this campaign. The checkpoint and four required payloads lack immutable hashes and terms, the official folder is inaccessible, preprocessing and cell pooling are ambiguous, all Atlas exposure is unknown, and the released runtime conflicts internally.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

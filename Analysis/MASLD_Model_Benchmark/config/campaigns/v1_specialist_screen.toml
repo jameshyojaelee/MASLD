@@ -1,0 +1,26 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-specialist-screen"
+description = "Full specialist screen for top-two, Pareto, and one-SE candidates"
+wave = "full_specialist_screen"
+status = "blocked_prerequisites"
+prerequisites = ["v1-frozen-screen complete", "frozen finalist allowlist"]
+finalist_allowlist_sha256 = "UNRESOLVED"
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["cell_state_mapping", "variant_to_regulation", "rna_conditioned_atac", "bulk_state_transfer", "typed_evidence_graph", "perturbation_transfer"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate", "restricted_comparator"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_single"
+runtime_id = "gpu_finetune"
+seeds = [1103, 2909, 4721, 6673, 8111]
+data_budget = "full_development"
+adaptation_regime = "common_and_native"
+retries_on_resource_failure = 1
+retries_on_software_failure = 0

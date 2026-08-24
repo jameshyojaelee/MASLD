@@ -34,10 +34,29 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 
-OUT_DIR <- file.path(FIG3_DIR, "panels")   # fig2_genetics/panels (co-located with FigS2A-M)
+candidate_dir <- Sys.getenv("FIG2_SUPP_OUT_DIR", unset = "")
+OUT_DIR <- if (nzchar(candidate_dir)) candidate_dir else file.path(FIG3_DIR, "panels")
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 OUT_PDF  <- file.path(OUT_DIR, "FigS2N_progression_driver_coloc_phenotype_class_heatmap.pdf")
 DATA_CSV <- file.path(OUT_DIR, "FigS2N_progression_driver_coloc_phenotype_class_heatmap_source.csv")
+
+# Fail closed. The promoted 35-stratum Figure 2 registry contains direct
+# MASLD/MASH diagnosis, MRI-PDFF/histologic steatosis, and ALT/AST/GGT strata;
+# it has no separate progression-GWAS stratum. The stored May 2026 table used a
+# superseded ABF-first classification and cannot be relabelled as current COLOC.
+if (nzchar(candidate_dir)) {
+  fwrite(data.table(
+    panel = "FigS2N_progression_driver_coloc_phenotype_class_heatmap",
+    status = "blocked_retired",
+    promoted_registry_strata = 35L,
+    reason = paste(
+      "The promoted registry has direct diagnosis, liver-fat, and enzyme strata",
+      "but no separate progression-GWAS stratum; the May 2026 ABF-first input is superseded"
+    )
+  ), file.path(candidate_dir,
+    "FigS2N_progression_driver_coloc_phenotype_class_heatmap_BLOCKED.tsv"), sep = "\t")
+}
+stop("FigS2N retired: progression_driver_genetics.csv is not derivable from the promoted 35-stratum Figure 2 registry.")
 
 # ---------------------------------------------------------------------------
 # Load + dedup per gene (file is per-transition; per-gene PP.H4 cols are

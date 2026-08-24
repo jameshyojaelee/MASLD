@@ -1,0 +1,63 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "preprocessing",
+  "model_ids": ["cobolt"],
+  "task_id": "rna_conditioned_atac",
+  "dataset_view_id": "gse296875_rna_atac_smoke_1000_v1",
+  "scope": "retrospective_smoke_only",
+  "unit_of_inference": "donor",
+  "pairing_level": "same_nucleus",
+  "split": {
+    "entity": "donor",
+    "outer_folds": 5,
+    "seed": 20260821,
+    "all_modalities_one_fold": true
+  },
+  "inner_validation": {
+    "entity": "donor",
+    "fraction": 0.2,
+    "seed_source": "RunSpec training seed",
+    "metric": "ATAC fragment-weighted multinomial negative log likelihood from RNA-only posterior",
+    "query_donors_excluded": true
+  },
+  "architecture": {
+    "upstream_revision": "cf5a448c6539025346a6393c215ba329cb3a0183",
+    "release_tag": "v1.0.1",
+    "hidden_dims": [128, 64],
+    "n_latent": 10,
+    "alpha": 5.0,
+    "activation": "leaky_relu",
+    "normalization": "batch_norm_training_frozen_eval_inference",
+    "dataset_intercept_adjustment": false,
+    "dataset_slope_adjustment": false,
+    "query_fitted_xgboost_correction": false,
+    "training_combinations": ["ATAC_only", "RNA_only", "same_nucleus_joint"]
+  },
+  "rna": {
+    "input": "raw_nonnegative_integer_UMI_counts",
+    "selection": "2000_outer_training_HVGs",
+    "model_transform": "log1p_inside_frozen_RNA_encoder",
+    "query_transform": "training_frozen_gene_order_only"
+  },
+  "atac": {
+    "training_target": "raw_nonnegative_integer_fragment_counts_with_multinomial_decoder",
+    "smoke_peak_universe": "2000 peaks selected by SHA-256 ranking of stable source identifiers",
+    "query_status": "withheld_sealed",
+    "query_tensor_created": false,
+    "output_profile": "donor_lineage_mean_RNA_posterior_ATAC_multinomial_composition"
+  },
+  "held_atac_firewall": "prepare exports paired outer-training RNA/ATAC counts plus query RNA only; fit and predict cannot access the source HDF5 or query ATAC",
+  "safe_loading": "project-controlled tensor-only state_dict restored with weights_only=true and exact key-shape-dtype manifest",
+  "query_composition_policy": "fixed inference batch size one, eval/no-grad, no query-fitted state",
+  "missingness": {
+    "query_rna": "observed",
+    "query_atac": "withheld_sealed",
+    "missing_encoded_as_zero": false
+  },
+  "champion_claim_allowed": false,
+  "champion_blockers": [
+    "The smoke peak inventory was discovered in the source study using all donors.",
+    "No eligible external RNA-ATAC seal is active."
+  ],
+  "adapter_sha256": "d4b4a0c60c1388edafbe1c3db91c2370598515083d6d84d1ad23a14df907e4f9"
+}

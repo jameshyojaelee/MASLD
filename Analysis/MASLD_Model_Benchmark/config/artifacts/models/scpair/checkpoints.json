@@ -1,0 +1,80 @@
+{
+  "architecture_contract": {
+    "default_hidden_layers": [900, 40],
+    "default_input_dropout": 0.1,
+    "default_normalization": "layer_normalization_enabled_and_batch_normalization_disabled",
+    "method": "two directional feed-forward encoder-decoder networks trained on row-paired modalities, followed by separately trained bidirectional latent-state maps",
+    "native_atac_target": "Bernoulli accessibility over the training-frozen peak inventory",
+    "native_rna_target": "zero-inflated negative binomial raw UMI counts",
+    "rna_cell_embedding": "last hidden representation of the RNA-to-ATAC input module; 40 dimensions under upstream defaults",
+    "training_requirement": "Feature prediction and latent mapping require exact same-cell or same-nucleus RNA-ATAC training rows. The optional atlas augmentation stage is a further encoder-fitting procedure, not an inference transform."
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No upstream checkpoint is admitted. Fit one project state-dict bundle inside each outer donor fold and seed from validated outer-training same-cell or same-nucleus pairs.",
+    "implementation_type": "train_locally_from_exact_source_tag",
+    "primary_paper": "https://doi.org/10.1038/s41467-024-53971-2",
+    "repository": "quon-titative-biology/scPair",
+    "repository_revision": "52d1ca1e26c8127b2023f3d80cfd1c140a0ea80a",
+    "repository_revision_date": "2024-07-12T19:59:57Z",
+    "repository_tag": "v0.1"
+  },
+  "inductive_inference_contract": {
+    "allowed_wrapper": "Align held raw RNA UMI counts to the frozen training gene order, call the frozen RNA-to-ATAC input module in eval/no-grad mode, and pass its representation plus inferred latent library scalar directly to the frozen ATAC Bernoulli decoder. No held ATAC is required.",
+    "cell_embedding": "Return the deterministic frozen RNA encoder representation to the identical common-lane head; no mapping or query fitting is needed.",
+    "covariate_rule": "Use cov=None in the common and sealed lanes. Any native covariate lane must freeze categories and continuous scaling on outer-training donors and must not encode donor identity.",
+    "forbidden": "Do not call data_loader_builder, run, predict, or augment on a train-plus-query object. Do not provide zero-filled or observed held ATAC, refit the encoder, derive covariate dummies or moments from queries, or train the atlas augmentation encoder on held or sealed rows.",
+    "upstream_api_audit": "The high-level object slices both modalities from one combined AnnData for every split, densifies the matrix, and derives categorical dummies and continuous scaling from the entire supplied object. Its predict path also indexes target-modality covariates. A project direct-tensor adapter is therefore mandatory."
+  },
+  "input_contract": {
+    "atac_input": "binary observed accessibility on a GRCh38.p14 training-only peak inventory",
+    "feature_alignment": "Frozen ordered GENCODE v49 gene IDs and GRCh38.p14 0-based half-open peaks. Held donors cannot affect feature selection, order, filtering, or output metadata.",
+    "pairing_warning": "merge_paired_data concatenates modality matrices without asserting identical ordered observation IDs. Equal row counts are not proof of pairing; the project adapter must reject any row-ID mismatch before training.",
+    "rna_input": "raw nonnegative integer UMI counts; no target ATAC tensor is constructed for held RNA-only inference",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_as_cell_pair", "same_study_unpaired_as_cell_pair", "same_donor_different_tissue_as_cell_pair"]
+  },
+  "missingness_contract": {
+    "inference": "ATAC is absent for an RNA-only query. Structural missingness is carried in the project manifest and is never represented by an observed all-zero ATAC vector.",
+    "project_mapping": "Retain all eight project missingness states outside scPair. Only observed paired assays enter training tensors.",
+    "upstream_limitation": "The released high-level object has no explicit missing-modality mask and assumes both modality blocks exist for every row."
+  },
+  "output_contract": {
+    "cell_embedding": "frozen RNA-to-ATAC encoder hidden representation with the exact layer and dimension recorded in RunSpec",
+    "primary_atac_output": "Use decoder output_px, a sigmoid-valued Bernoulli probability for each frozen peak. Do not call output_result a count: under defaults it multiplies every peak probability by a source-RNA-inferred sample scalar.",
+    "profile_scoring": "Bernoulli peak probabilities are valid for assay-native binary cross-entropy and rank metrics. If the TaskSpec requires a multinomial profile, row normalization of nonnegative output_px must be frozen before evaluation and applied identically to baselines; no held-ATAC calibration is allowed.",
+    "profile_validity": "The direct RNA encoder plus ATAC decoder can produce a nonnegative held-query peak profile without observed held ATAC, target placeholders, target fitting, or query optimization.",
+    "uncertainty": "Five fixed training seeds are stability estimates, not biological replicates."
+  },
+  "runtime_contract": {
+    "declared_anndata": "0.10.6",
+    "declared_python": "3.10.14",
+    "declared_scanpy": "1.10.0",
+    "declared_torch": "2.0.1+cu118",
+    "environment_status": "VALIDATED_L40S_TORCH_2_3_1_CUDA_12_1_IMPORT_FORWARD_BACKWARD_TENSOR_STATE_DICT_RESUME_AND_DETERMINISTIC_REPLAY"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "upstream_risk": "The release saves complete encoder, decoder, mapping, and augmentation modules with torch.save, which uses pickle-compatible object deserialization.",
+    "required_adapter": "Export and restore project-controlled tensor state only, with architecture, key/shape/dtype, gene, peak, preprocessing, fold, seed, and SHA-256 manifests. Never load external whole-module files."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact scPair v0.1 tag, immutable source, MIT license, declared environment, and primary paper were inspected. A project direct-tensor implementation passed the fixed RNA-only profile fixture and L40S deterministic tensor-state restore on 2026-08-23. No upstream checkpoint or serialized model object was downloaded or loaded.",
+  "source_records": [
+    {"identity": "scPair:LICENSE", "sha256": "fa9134d3d8e33953e3a80a4457180205ff9fe96876a2adf4df52d76441a300c0", "size_bytes": 1078},
+    {"identity": "scPair:README.md", "sha256": "454a3864d6671f19a2d869fb1fe9f53262190ae862972ca2f5aa71c8bdad97cc", "size_bytes": 2515},
+    {"identity": "scPair:requirements.txt", "sha256": "996c348f20cf90618d194b288850acdaba864274c577f07620f4a9cfc9c05315", "size_bytes": 2953},
+    {"identity": "scPair:scpair/model.py", "sha256": "3c63923558356115fec573d4e6254d018ceddb45a0c00d7cfe17d61bf3e73c70", "size_bytes": 56637},
+    {"identity": "scPair:scpair/pairedVAE.py", "sha256": "4ba89e4f300b80b62f30019a76589fcce7d05243a62315c0641fd3c2fd9f5bf9", "size_bytes": 8932},
+    {"identity": "scPair:scpair/utils.py", "sha256": "830ca428cc152f43986309a56c65b3933bdc0829d53d1ede990103877095f5c2", "size_bytes": 19206},
+    {"identity": "scPair:tutorials/README.md", "sha256": "c2b8746edd418d3110ab97da6c572a47ea1e166ad12c739f485d0fdcd4561335", "size_bytes": 4403}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Eligible in principle through a locally trained frozen RNA encoder and identical common head after direct-query, pairing, state, runtime, and leakage fixtures pass.",
+    "rna_conditioned_atac": "Direct-profile candidate in retrospective development. Use output_px from the frozen RNA-to-ATAC network; no observed held ATAC or query fitting is permitted.",
+    "variant_to_regulation": "Ineligible because scPair has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_FITTED_STATE_DICT"
+}

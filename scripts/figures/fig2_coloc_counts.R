@@ -19,7 +19,14 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+PANEL_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
+COLOC_GENE_INPUT <- Sys.getenv(
+  "FIG2_COLOC_GENE_INPUT",
+  file.path(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv"))
+COLOC_LONG_INPUT <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"))
 
 # ── MAIN (Tier-1/2, liver-specific) restriction (2026-07-06) ──────────────────
 # Scoped to the Tier-1/2 MAIN strata (placement=="main" in the tier map); the Tier-3/4
@@ -32,11 +39,11 @@ MAIN_STUDIES <- fread(file.path(BASE, "GWAS/finemapping/config/gwas_trait_tier.t
   placement == "main", study_name]
 # cis-eQTL gene universe (denominator) is a property of the Broadaway EUR eQTL panel,
 # independent of the GWAS tiering — read its row count once.
-n_genes <- nrow(fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/gene_level_coloc.csv"),
-                      select = "gene"))
-sc <- fread(file.path(BASE, "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"),
+n_genes <- nrow(fread(COLOC_GENE_INPUT, select = "gene")[!is.na(gene) & nzchar(trimws(gene))])
+sc <- fread(COLOC_LONG_INPUT,
             select = c("gwas_name", "gene", "PP.H4.susie", "PP.H4.abf"))
 sc <- sc[gwas_name %in% MAIN_STUDIES]
+sc <- sc[!is.na(gene) & nzchar(trimws(gene))]
 sc[, ancestry := as.character(gwas_ancestry(gwas_name))]
 sc[, `:=`(PP.H4.abf   = suppressWarnings(as.numeric(PP.H4.abf)),
           PP.H4.susie = suppressWarnings(as.numeric(PP.H4.susie)))]
@@ -56,21 +63,21 @@ su_xa  <- !is.na(d$su_anc)  & d$su_anc  != "EUR"
 ths <- c(0.5, 0.8, 0.9)
 mk <- function(t) data.table(
   threshold  = sprintf("PP.H4 > %.1f", t),
-  method     = c("coloc.abf (baseline)", "coloc.abf (baseline)",
-                 "SuSiE-coloc (primary)", "SuSiE-coloc (primary)"),
+  method     = c("Single-signal COLOC", "Single-signal COLOC",
+                 "Multi-signal COLOC", "Multi-signal COLOC"),
   provenance = c("EUR", "cross-ancestry", "EUR", "cross-ancestry"),
   n          = c(sum(abf > t & !abf_xa, na.rm = TRUE), sum(abf > t & abf_xa, na.rm = TRUE),
                  sum(su  > t & !su_xa,  na.rm = TRUE), sum(su  > t & su_xa,  na.rm = TRUE)))
 counts <- rbindlist(lapply(ths, mk))
 counts[, threshold := factor(threshold, levels = sprintf("PP.H4 > %.1f", ths))]
-counts[, method := factor(method, levels = c("coloc.abf (baseline)", "SuSiE-coloc (primary)"))]
+counts[, method := factor(method, levels = c("Single-signal COLOC", "Multi-signal COLOC"))]
 # EUR at the base, cross-ancestry stacked on top (first level draws on top)
 counts[, provenance := factor(provenance, levels = c("cross-ancestry", "EUR"))]
 # grouped (dodge by method) + stacked (by provenance): numeric x offset per method
-counts[, xpos := as.integer(threshold) + ifelse(method == "coloc.abf (baseline)", -0.19, 0.19)]
+counts[, xpos := as.integer(threshold) + ifelse(method == "Single-signal COLOC", -0.19, 0.19)]
 totals <- counts[, .(n = sum(n)), by = .(threshold, method, xpos)]  # bar-top labels
 
-method_cols <- c("coloc.abf (baseline)" = "#90A4AE", "SuSiE-coloc (primary)" = "#1565C0")
+method_cols <- c("Single-signal COLOC" = "#90A4AE", "Multi-signal COLOC" = "#1565C0")
 
 p <- ggplot(counts, aes(x = xpos, y = n, fill = method, alpha = provenance)) +
   geom_col(width = 0.34) +
@@ -92,10 +99,13 @@ p <- ggplot(counts, aes(x = xpos, y = n, fill = method, alpha = provenance)) +
 save_fig(p, file.path(PANEL_DIR, "FigS2G_coloc_method_counts.pdf"),
          width = fig_col_width * 1.05, height = 2.9)
 
-fwrite(dcast(counts, threshold ~ method + provenance, value.var = "n"),
-       file.path(PANEL_DIR, "FigS2G_coloc_method_counts_source.csv"))
+source_counts <- dcast(counts, threshold ~ method + provenance, value.var = "n")
+source_counts[, `:=`(
+  evaluated_named_eqtl_genes = n_genes,
+  coloc_long_input = COLOC_LONG_INPUT)]
+fwrite(source_counts, file.path(PANEL_DIR, "FigS2G_coloc_method_counts_source.csv"))
 message("CAPTION: GWAS-eQTL colocalization across the 35 Tier-1/2 (liver-specific) GWAS ",
-        "(Broadaway EUR liver cis-eQTLs). coloc.abf (baseline) vs SuSiE-coloc (primary); ",
+        "(Broadaway EUR liver cis-eQTLs). Single-signal versus multi-signal COLOC; ",
         "bar height = colocalizing genes at each PP.H4 threshold, split into EUR-headline ",
         "(solid) vs cross-ancestry-headline (faded, headline PP.H4 from a non-EUR GWAS). ",
         "Because the eQTL panel is EUR, cross-ancestry headlines hold a lower evidentiary bar.")

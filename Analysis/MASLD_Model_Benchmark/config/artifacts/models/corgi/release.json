@@ -1,0 +1,31 @@
+{
+  "code_commit": "d84c00082da3d04eb05169e290e53f1c7da2b9c5",
+  "code_license_conflict": {
+    "root_license": "Apache-2.0",
+    "root_license_blob": "5613a5f39caf1229d0de79dd9d4b8277ae1c1077",
+    "pyproject_blob": "804e835d3f8ea4f657dd65dc557db1b8d7f23a2f",
+    "pyproject_license": "MIT"
+  },
+  "normalization_implementation": {
+    "predict_blob": "5ac54aa8ec2456c6f99d1fffa1a311e1f7cf5d18",
+    "trans_regulators_blob": "0251f7a61dea626047d602dc741554b7c48b7e40",
+    "verified_behavior": "Order 2,891 trans regulators, then map within-vector ranks to the sorted packaged tf_reference.npy values."
+  },
+  "repository": "https://github.com/ekinda/corgi",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_artifacts": {
+    "acquisition_artifacts_sha256": "73aad9ab9ad3e080a2ccaa0cee1a1d727d126a454f0e69f74f343a900b168c0f",
+    "l40s_native_runtime_probe_artifacts_sha256": "09d8811b612cba4f75361feeba29bd0676efde83f0e4785a37990c2d2f52a0a2",
+    "native_numeric_parity_performed": false,
+    "schema_artifacts_sha256": "312bb3c90ae6da3eff20f43d920b03fbf6a5b05b2b480bbc98d24aaad71d868e",
+    "safe_weights_only_schema_inventory": true,
+    "strict_architecture_restore_performed": true
+  },
+  "weight": {
+    "filename": "corgi_model.pt",
+    "md5": "b10ddca8bb32eae3b67116242cfe1871",
+    "sha256": "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4",
+    "size_bytes": 2350451066,
+    "zenodo_doi": "10.5281/zenodo.18630048"
+  }
+}

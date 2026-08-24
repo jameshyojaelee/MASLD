@@ -1,0 +1,31 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-conditional-context-model"
+description = "At most one gated context-conditioned regulatory model"
+wave = "conditional_model"
+status = "blocked_trigger"
+prerequisites = ["error-audit complementarity trigger passed", "architecture spec frozen"]
+conditional_model_spec_sha256 = "UNRESOLVED"
+# Set to the absolute frozen context-model-spec directory only after the
+# complementarity trigger passes. A ready conditional campaign fails closed
+# without this recursively verified authority.
+conditional_model_spec_path = "UNRESOLVED"
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate"]
+model_ids = ["context_borzoi"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_single"
+runtime_id = "gpu_finetune"
+seeds = [1103, 2909, 4721, 6673, 8111]
+data_budget = "full_development"
+architecture_count_cap = 1
+retries_on_resource_failure = 1
+retries_on_software_failure = 0

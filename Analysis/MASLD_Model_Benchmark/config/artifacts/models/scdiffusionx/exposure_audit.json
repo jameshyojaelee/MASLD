@@ -1,0 +1,44 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping and retrospective direct RNA-conditioned ATAC through locally fitted weights only"
+  },
+  "checkpoint_findings": {
+    "scdiffusionx_local": {
+      "checkpoint_identity": "project_fitted_scdiffusionx_autoencoder_unconditional_diffusion_per_outer_fold_seed_training_only_feature_latent_scale_and_sampler_contract",
+      "corpus": "No upstream checkpoint or pretraining corpus; exact declared outer-training same-cell or same-nucleus RNA-ATAC rows only",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    },
+    "miniatlas_figshare_v3": {
+      "checkpoint_identity": "Figshare 28582061 v3: last.ckpt md5 e16dec7166806010c0fb1e81a3480dc1; model1000000.pt md5 0c9bbf710694fda039297acb8a678cf4; ema_0.9999_1000000.pt md5 e982cc66f6eb2a484fcdda5180c9124b; norm_factor.npz md5 512b63bdcb621873d2535570780ac372",
+      "corpus": "The paper and README call the released model MiniAtlas-pretrained, but the inspected source and Figshare metadata do not provide an accession-level corpus roster, donor aliases, file-to-run receipt, or evidence excluding GSE289173 and its cohort family.",
+      "exposure_state": "unknown",
+      "status": "not_admitted_not_downloaded_not_deserialized_CC-BY-4.0_bundle_unrestricted_torch_load_and_contamination_receipt_unresolved"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "same_nucleus_training_direct_source_only_ddpm_profile_scale_query_label_and_false_pairing_contract",
+    "sha256": "f534b9a264b3e695712e123f2a8688e8d39ddd3bfedbfb7d8899b481291b5eb5"
+  },
+  "interpretation": "The MiniAtlas checkpoint is ineligible because its accession-level exposure is unknown and it is not safely loadable under the project contract. A locally trained model avoids that contamination. Lower-level exact-source modules do provide a genuine frozen route from raw held RNA to a Bernoulli ATAC peak profile: RNA encoder, training-only latent scaling, source-replacement conditional DDPM, target latent unscaling, and ATAC sigmoid decoder. The released translation script is not an admissible implementation of that route because it reads both assays, fits query labels, hard-codes class state, and its DPM-Solver branches ignore source conditioning. GSE296875 is the only admitted same-nucleus training source; GSE244832 remains different-aliquot external development. GSE289173 can seal cell-state mapping only and remains target-label unexposed.",
+  "remaining_blockers": [
+    "Correct the shared registry's single MIT license statement before scheduling: the repository root is MIT, while the nested scdiffusionX package and source tree carry BSD-3-Clause. Preserve both notices and audit derivative-weight release obligations.",
+    "Implement a direct tensor-only RNA query adapter that never calls the released translation script, reads only frozen-order raw RNA, invokes the RNA encoder in eval/no-grad, uses training-only rna_std and atac_std, runs conditional DDPM, and calls only the ATAC sigmoid decoder.",
+    "Train the diffusion model unconditionally. Prove no Leiden, query LabelEncoder, class label, donor identity, condition category, target assay, query-batch moment, or held fitting enters common, development, or sealed inference.",
+    "Exclude DPM-Solver and DPM-Solver++ translation branches because the exact entry point does not pass source conditioning to them. Freeze conditional-DDPM replacement or gradient method, class_scale, clip rule, schedule, steps, draw count, and row-keyed inference seeds inside training folds.",
+    "Validate exact ordered same-nucleus IDs before every GSE296875 paired tensor. Reject GSE244832 different-aliquot rows as pairs regardless of equal dimensions, donor IDs, or labels.",
+    "Freeze outer-training genes, peaks, raw-RNA and binary-ATAC representation, layer-normalized autoencoder architecture, latent dimensions, rna_std, atac_std, heads, calibration, profile row normalization, folds, and five training seeds.",
+    "Prove held-query order, batching, addition, or removal cannot change another prediction or any persistent state. Use fresh model_kwargs because the conditional sampler pops modality keys in place.",
+    "Validate a fixed no-target-ATAC fixture from raw RNA through sigmoid probabilities, including finite [0,1] output, exact peak order, reverse-complement-not-applicable declaration, profile row normalization if registered, and reproducible stochastic draw aggregation.",
+    "Replace unrestricted Lightning and diffusion torch.load calls with project-controlled tensor-state restoration and exact key, shape, dtype, architecture, norm-factor, feature-order, fold, seed, sampler, and SHA-256 manifests. Never load the Figshare or bundled distribution artifacts.",
+    "Resolve Python 3.8, root versus nested scvi-tools constraints, Lightning<1.9, Torch>=2.1.2, MPI, dense-memory, L40S import, autoencoder and diffusion forward/backward, checkpoint resume, deterministic random streams, and cross-device tolerance on an approved smoke job.",
+    "Confirm GSE289173 receives anonymized raw RNA only after selection lock and is evaluated for cell-state mapping only; no ATAC champion, query clustering, adaptation, calibration, or repair is permitted on that seal."
+  ],
+  "scheduling_disposition": "retain_direct_profile_candidate_but_block_smoke_pending_license_direct_adapter_unconditional_pairing_sampler_state_dict_runtime_query_invariance_and_profile_fixtures",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_pending_all_preflight_gates; eligible_in_principle_for_sealed_cell_state_mapping_only, with_rna_conditioned_atac_retrospective_until_a_separate_atac_seal_exists",
+  "verified_date": "2026-08-22"
+}

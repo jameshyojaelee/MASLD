@@ -1,0 +1,133 @@
+{
+  "crosswalk_scope": {
+    "candidate": "control_mean_perturbed_mean_ridge_bilinear_and_Systema_matching_mean_suite",
+    "task": "perturbation_transfer",
+    "train_sources": ["gse281160"],
+    "development_sources": ["gse275483", "gse313774"],
+    "sealed_sources": [],
+    "status": "blocked_dataset_and_implementation_contracts_unresolved"
+  },
+  "task_role_matrix": {
+    "control_mean": {
+      "role": "mandatory_task_native_no_response_baseline",
+      "eligible_metrics": ["systema_delta_profile_correlation", "systema_centroid_accuracy", "de_direction_rank", "pathway_recovery", "replicate_pseudobulk_spearman"],
+      "restriction": "Absolute-profile metrics require a training-derived assay-compatible control centroid; zero-delta comparisons remain distinct."
+    },
+    "perturbed_mean": {
+      "role": "mandatory_population_mean_baseline",
+      "eligible_metrics": ["systema_delta_profile_correlation", "systema_centroid_accuracy", "de_direction_rank", "pathway_recovery", "replicate_pseudobulk_spearman"],
+      "restriction": "Requires a training-derived perturbed centroid on the same frozen gene and response scale as the evaluated output."
+    },
+    "ridge_perturbation": {
+      "role": "mandatory_additive_target_transfer_baseline",
+      "eligible_metrics": ["systema_delta_profile_correlation", "systema_centroid_accuracy", "de_direction_rank", "pathway_recovery", "replicate_pseudobulk_spearman"],
+      "restriction": "Requires one target feature interface that is computable for every held noncoding or intervention target without nearest-gene substitution or target outcomes."
+    },
+    "bilinear_perturbation": {
+      "role": "mandatory_context_by_target_interaction_baseline",
+      "eligible_metrics": ["systema_delta_profile_correlation", "systema_centroid_accuracy", "de_direction_rank", "pathway_recovery", "replicate_pseudobulk_spearman"],
+      "restriction": "Requires held-capable context and target vectors plus a prospectively affordable exact Kronecker design."
+    },
+    "systema": {
+      "role": "mandatory_published_matching_mean_comparator_and_evaluation_reference",
+      "eligible_metrics": ["systema_delta_profile_correlation", "systema_centroid_accuracy", "de_direction_rank", "pathway_recovery", "replicate_pseudobulk_spearman"],
+      "restriction": "For the registered single-component target task its prediction equals perturbed_mean and is one fitted-model family, not an additional independent win."
+    }
+  },
+  "dataset_findings": {
+    "gse281160": {
+      "role": "outer_training_and_development_visible_mechanistic_diagnostic",
+      "species_and_assay": "human HepG2 single-cell RNA with CRISPRi guide assignment",
+      "topology": "same_cell guide and RNA; six sequencing lanes are technical; experimental replicate is the biological unit",
+      "replication": "UNRESOLVED_expected_biological_unit_count",
+      "target_design": "20 MPRA-selected noncoding target loci with top two guides; conditional follow-up, not an unbiased target sample",
+      "eligible_after_activation": {
+        "control_mean": "yes if a frozen control-guide definition and experimental-replicate pseudobulk exist",
+        "perturbed_mean": "yes after target-locus and guide-family holdout",
+        "ridge_perturbation": "conditional on an outcome-independent sequence or target feature manifest for every held noncoding locus",
+        "bilinear_perturbation": "conditional on the same held-capable target features and a context vector defined without target outcomes",
+        "systema": "yes as the independently implemented matching mean; identical to perturbed_mean for this single-component task"
+      },
+      "blocking": [
+        "Freeze biological replicate identities and counts; cells, guides, and six sequencing lanes are not replicates.",
+        "Freeze the custom GRCh38 plus sgRNA-pseudogene reference, base gene annotation, guide-to-target crosswalk, and feature IDs.",
+        "Freeze control guides, target-level pseudobulk, QC denominators, gene scale, and target feature interface before fitting."
+      ]
+    },
+    "gse275483": {
+      "role": "cross_species_stress_only",
+      "species_and_assay": "mouse pooled mosaic liver perturbation single-cell RNA plus unpaired imaging",
+      "topology": "same-study unpaired modalities; animal is the biological unit",
+      "replication": "n=4 animals, three ad-libitum and one fasting",
+      "eligibility": "Conditional descriptive stress use only after mouse reference, target and guide identities, RNA-to-animal joins, controls, and a training-only ortholog/output crosswalk are frozen. All five baselines are otherwise not runnable.",
+      "prohibition": "Approximately 103000 hepatocytes cannot be used as independent replication, and the one fasting animal does not estimate a fasting population effect."
+    },
+    "gse313774": {
+      "role": "prediction_first_nonchampion_human_liver_chip_stress",
+      "species_and_assay": "human liver-chip bulk RNA and intervention identities",
+      "topology": "33 libraries nested in n=3 independent experimental batches; libraries are not cells or biological replicates",
+      "outcome_visibility": "withheld_until_genome_wide_prediction_commit",
+      "eligible_now": {
+        "control_mean": "Only a precommitted zero-change delta is structurally valid without reading chip outcomes. An absolute control centroid cannot be fitted from withheld chip expression.",
+        "perturbed_mean": "not currently assay- or intervention-matched",
+        "ridge_perturbation": "not currently target-interface matched",
+        "bilinear_perturbation": "not currently target-interface matched",
+        "systema": "not currently component matched and no chip outcome may construct the strict reference"
+      },
+      "activation_conditions": [
+        "Freeze the 33 library-to-batch and Condition 1 or Condition 2, with or without insulin, assignments.",
+        "Freeze the deposited gene identity and a project-reference crosswalk.",
+        "If a cross-assay delta or gene-program output is proposed, freeze its gene universe, transform, intervention mapping, and missingness before opening outcomes.",
+        "Commit predictions before outcomes are joined; never use CXCL1 or IL8 as confirmation endpoints.",
+        "No deposited resmetirom RNA arm exists."
+      ]
+    }
+  },
+  "split_and_fit_firewall": {
+    "outer_split": "Group cohort_family_id, target_locus, guide_family, and biological_replicate before any fitting.",
+    "inner_split": "Ridge and bilinear selection repeats target-locus, guide-family, and biological-unit grouping inside outer training.",
+    "train_only_state": [
+      "control and perturbed centroids",
+      "gene and target feature rosters",
+      "normalization and scaling",
+      "context encoding",
+      "ortholog and intervention crosswalks",
+      "regularization selection",
+      "Systema component matches and strict reference",
+      "calibration if a future probabilistic endpoint is registered"
+    ],
+    "held_features": "A held target's outcome-independent sequence or design features may be transformed by a frozen mapper. Held expression, guide response, DE ranking, and pathways cannot fit or repair that mapper.",
+    "gse313774": "Design can be visible, but all 33 expression profiles remain evaluator-only until the prediction commit. No target-scale mapping may be invented after outcome opening."
+  },
+  "Systema_interpretation": {
+    "matching_mean": "A published predictive baseline. It falls back to the training perturbed mean for unseen perturbation components and is exactly that baseline for the current single-component task.",
+    "strict_reference": "Subtract the same outer-training perturbed centroid from predicted and observed profiles. This changes the origin and emphasizes deviations from a population perturbation mean.",
+    "not_removed": ["batch effects", "cell composition", "guide efficiency", "target selection bias", "species differences", "assay differences", "unmeasured confounding", "held-target leakage"],
+    "transductive_variant": "A reference estimated from evaluation outcomes is an evaluator-only transductive diagnostic. It is never returned to models and cannot alter selection or claims.",
+    "language": "Call this linear re-referencing or centering. Do not call it deconfounding, leakage correction, residual causal effect, or a separate learned model."
+  },
+  "assay_native_and_missingness_crosswalk": {
+    "single_cell": "Sum raw gene counts to target-locus by experimental-replicate pseudobulk before normalization. Preserve cell and guide counts only as QC denominators.",
+    "bulk_chip": "Keep each library's bulk count scale and batch design. Do not feed libraries into single-cell adapters or convert 33 libraries to n=33.",
+    "mouse": "Keep mouse gene IDs and expression units until a frozen one-to-one ortholog output is created; ambiguous or absent orthologs are explicit missing states.",
+    "states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "rule": "A missing control, target feature, gene, ortholog, guide join, or profile never becomes zero response."
+  },
+  "uncertainty_and_claims": {
+    "resampling": "Use 10000 paired cluster bootstrap replicates at experimental replicate, independent liver-chip batch, or animal level. Preserve every target and gene row nested within a sampled unit.",
+    "multiplicity": "BH q<0.05 inside the exploratory perturbation-transfer endpoint family; cells, guides, targets, genes, libraries, and seeds are not independent tests or replicates.",
+    "selection": "A deep model must beat control_mean, perturbed_mean, ridge_perturbation, and bilinear_perturbation on an applicable assay-native comparison. Systema does not double-count perturbed_mean for single-component targets.",
+    "champion": "No sealed perturbation source exists, so no model in this track can earn an open MASLD champion claim.",
+    "clinical": "No treatment-response, diagnostic, prognostic, or clinical validation claim."
+  },
+  "reproducibility_contract": {
+    "required_receipt": "For each fold and model, hash biological-unit pseudobulk rows, controls, gene scale, context and target features, masks, weights, centroids, split groups, inner folds, selected regularization, coefficients, Systema matches and reference, predictions, and evaluator input.",
+    "task_contract_hashes": {
+      "perturbation_transfer_toml": "c44ab6f4b19c54dad8df6a498aa5a2f34bc40811eda6afd7e8bd6745e5574a05",
+      "perturbation_outer_toml": "99a15115a9eb43672577c422a42eeb306e33ba9497b949e466ce51c7e886b275"
+    },
+    "unit_of_inference": "experimental replicate, independent experimental batch, or animal"
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

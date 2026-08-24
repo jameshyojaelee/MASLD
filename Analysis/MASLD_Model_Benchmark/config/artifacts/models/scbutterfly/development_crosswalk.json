@@ -1,0 +1,39 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["cell_state_mapping", "rna_conditioned_atac"]},
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development RNA-query profiling and cell-state robustness after a model is fit elsewhere. The RNA and ATAC aliquots may be compared only after donor-by-cell-state aggregation.",
+      "exposure_state": "downstream_demo",
+      "model_access": "Different aliquots are never row-paired. Query ATAC cannot enter fitting, preprocessing, feature selection, calibration, augmentation, or inference."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only cell-state mapping after selection lock. No RNA-conditioned ATAC champion claim is possible because this source has no observed ATAC endpoint.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA only through the frozen RNA-query adapter; no fitting, feature selection, normalization statistics, calibration, or batch-state update."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-training same-nucleus RNA-ATAC pairs and donor-held development evaluation after activation and exact-row-join gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "HVGs, peaks, IDF, scale, augmentation, model state, early stopping, and calibration are fit only on outer-training donors. Held-donor ATAC is evaluator-only."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_fitted_scbutterfly_b_per_outer_fold_seed_gene_inventory_peak_inventory_and_preprocessing_state",
+    "common_lane": "scButterfly-B frozen RNA path plus identical benchmark head",
+    "native_lane": "B adaptation and separately named C/T/TC augmentation variants using outer-training data only",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; donor-level evaluation only, never paired cells",
+    "gse289173": "RNA_only sealed query",
+    "gse296875": "same_nucleus; exact shared-nucleus row joins permitted only after validation"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells and predicted peaks are not replicates.",
+    "profile_scale": "Score frozen decoder values directly as continuous peak scores unless training-only calibration is prespecified; never use query-dependent inverse TF-IDF.",
+    "query_isolation": "Prediction code receives RNA query tensors and frozen transforms only. Observed query ATAC remains in the evaluator.",
+    "transform_contract": "Training-only gene/peak inventories, ATAC IDF/global scale, chromosome order, state dict, head, and calibration."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

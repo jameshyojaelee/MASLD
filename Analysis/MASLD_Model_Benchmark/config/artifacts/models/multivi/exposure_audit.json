@@ -1,0 +1,33 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping and retrospective RNA-conditioned ATAC"
+  },
+  "checkpoint_findings": {
+    "multivi_local": {
+      "checkpoint_identity": "project_trained_per_outer_fold_seed_training_only_gene_inventory_and_peak_inventory",
+      "corpus": "No upstream pretraining corpus; only declared outer-training donor RNA/ATAC matrices",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "task_specific_local_training_pairing_and_held_donor_behavior",
+    "sha256": "b893ff9e8f5ba82574f3982a8731b045de84d9b8e1816373150b1f422bbd66f8"
+  },
+  "interpretation": "Locally trained MultiVI avoids foundation-checkpoint contamination if every fitted object stays inside its outer donor fold. The dominant leakage risks are held-donor peak unions, gene/region filtering, data-dependent dimensions, categorical batches, query updating, early stopping, calibration, and confusing structural missingness with zero. Unmodified scvi-tools infers modality presence from nonzero row sums, which violates the explicit-mask project contract.",
+  "remaining_blockers": [
+    "Implement and review an explicit missing-modality-mask adapter or obtain a documented project contract exception; prove observed all-zero and structurally missing rows remain distinguishable.",
+    "Activate GSE296875 only after donor/barcode/well/reference/peak/QC and same-nucleus joins pass.",
+    "Freeze outer-training-only genes, peaks, preprocessing, explicit hidden/latent dimensions, modality weights, allowed covariates, heads, early stopping, calibration, and five seeds.",
+    "Prohibit cell modality weights and load_query_data on held or sealed rows; prevent donor IDs from becoming unseen batch categories.",
+    "Prove the RNA-only profile fixture passes no observed held-row ATAC to prepare, fit, predict, or calibration code.",
+    "Validate scvi-tools 1.5.0.post1 import, sparse MuData path, forward/backward, checkpoint resume, deterministic seeds, cross-device tolerance, and memory on L40S.",
+    "Confirm that GSE289173 RNA features can be aligned without any sealed-label or checkpoint exposure and that no ATAC claim is made on this RNA-only seal."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_pending_explicit_mask_data_runtime_and_profile_fixtures; cell-state eligible in principle on GSE289173, RNA-conditioned ATAC remains retrospective without an ATAC seal",
+  "verified_date": "2026-08-22"
+}

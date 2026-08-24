@@ -1,0 +1,86 @@
+{
+  "architecture_contract": {
+    "default_gene_likelihood": "zinb",
+    "default_hidden_dimension": "min(128, floor(sqrt(number_of_regions))) when ATAC regions are present; otherwise min(128, floor(sqrt(number_of_genes)))",
+    "default_latent_dimension": "floor(sqrt(hidden_dimension))",
+    "default_layers_decoder": 2,
+    "default_layers_encoder": 2,
+    "default_modality_penalty": "Jeffreys",
+    "default_modality_weights": "equal",
+    "dropout_rate": 0.1,
+    "rna_likelihoods": ["zinb", "nb", "poisson"],
+    "atac_likelihood": "Bernoulli_on_x_greater_than_zero_with_cell_depth_and_region_factors",
+    "warning": "Implicit hidden and latent dimensions depend on the fold-specific feature inventory. The campaign must freeze explicit dimensions after training-only genes and peaks are fixed."
+  },
+  "code_license": "BSD-3-Clause",
+  "implementation": {
+    "checkpoint_policy": "No universal upstream MultiVI checkpoint is admitted. Train one model inside each outer donor fold and hash every local artifact.",
+    "implementation_type": "train_locally",
+    "pypi_release": {
+      "filename": "scvi_tools-1.5.0.post1-py3-none-any.whl",
+      "sha256": "d868c86332f819b8d79846ea0e36ec6eef26c3fafeb03ce7a239f1ddefb1c976",
+      "size_bytes": 711159,
+      "upload_time": "2026-07-09T17:34:46.962571Z",
+      "version": "1.5.0.post1"
+    },
+    "repository": "scverse/scvi-tools",
+    "repository_revision": "56520c713eb1d2b245c72a0f60bc393b74198c91",
+    "repository_tag": "1.5.0.post1"
+  },
+  "inductive_inference_contract": {
+    "allowed": "A trained model may encode held RNA-only rows and call get_normalized_accessibility without optimization when the frozen gene/peak registries and known covariate categories match.",
+    "forbidden": "load_query_data, scArches updating, calibration, or any other parameter/prototype fitting on held or sealed rows unless a distinct outcome-blind lane was prospectively registered.",
+    "modality_weight_rule": "Use equal in the common lane. The cell option rejects held-out data in the official API and is ineligible; universal may be evaluated only as a separately frozen native lane.",
+    "unseen_batch_rule": "Do not encode donor identity as a batch category. A held donor is not an allowed unseen categorical batch level."
+  },
+  "input_contract": {
+    "api": "MULTIVI.setup_mudata in scvi-tools 1.5.0.post1; setup_anndata is deprecated and unsupported for this campaign",
+    "atac_input": "nonnegative snATAC/scATAC peak counts or binary accessibility in MuData with a frozen ordered region inventory",
+    "feature_alignment": "Identical ordered gene and region inventories at training and inference; genes map to GENCODE v49 IDs and regions to GRCh38.p14 0-based half-open coordinates",
+    "peak_definition": "training-partition-only consensus peaks; held donors cannot affect peak calling, filtering, frequency estimates, or order",
+    "rna_input": "raw nonnegative UMI counts in MuData",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus", "same_study_unpaired", "same_sample_different_aliquot_as_separate_unpaired_rows"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_as_cell_pairs", "same_donor_different_tissue_as_cell_pairs"],
+    "warning": "The upstream module infers assay presence from whether each modality block has a nonzero row sum. It does not accept the project's explicit missing-state mask, so unmodified upstream MultiVI fails the missingness admission contract."
+  },
+  "missingness_contract": {
+    "admission_status": "BLOCKED_PENDING_EXPLICIT_MASK_ADAPTER_OR_APPROVED_CONTRACT_EXCEPTION",
+    "project_required_states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "upstream_behavior": "mask_expr, mask_acc, and mask_pro are computed from modality row sums greater than zero, conflating structural absence with an all-zero biological observation.",
+    "required_fixture": "Prove that held RNA-only rows use an explicit structurally_missing ATAC mask, never observed ATAC, and cannot be confused with observed all-zero rows."
+  },
+  "output_contract": {
+    "common_embedding": "posterior mean from RNA-only held rows with identical common-lane head",
+    "rna_to_atac": "get_normalized_accessibility probabilities over the training-frozen peak inventory without observed held-row ATAC",
+    "uncertainty": "Five fixed seeds are separate stability estimates, not biological replicates; any posterior sampling option must be frozen separately."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.12",
+    "declared_scvi_tools": "1.5.0.post1",
+    "declared_torch": "unbounded_project_dependency_to_be_frozen",
+    "environment_status": "UNRESOLVED_L40S_IMPORT_FORWARD_BACKWARD_RESUME_DETERMINISM_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "require_project_sha256_and_training_receipt": true,
+    "require_registry_feature_order_and_explicit_mask_manifest": true,
+    "require_state_dict_only_restore_where_supported": true
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact scvi-tools 1.5.0.post1 tag, source, documentation, license, and PyPI metadata were inspected on 2026-08-22. The package was not installed and no weights were downloaded, loaded, or trained.",
+  "source_records": [
+    {"identity": "scvi-tools:LICENSE", "sha256": "66399db0284d2539790efb348886ab0c1f745bbe5fea6ac38a00465a14adc8f5", "size_bytes": 1549},
+    {"identity": "scvi-tools:pyproject.toml", "sha256": "c2e82908f8d8a2019cc471316b53b902593f54230fa4cd251ce0866101f06906", "size_bytes": 7000},
+    {"identity": "scvi-tools:src/scvi/model/_multivi.py", "sha256": "aaa4720b72cf8c89c474d9a99768dfe11ae03c3210340a252c5277dfbdfecd52", "size_bytes": 50583},
+    {"identity": "scvi-tools:src/scvi/module/_multivae.py", "sha256": "3b824705873b17388234daa78060eccfe16cbc748e5d7ef742887b5f037da75d", "size_bytes": 40965},
+    {"identity": "scvi-tools:docs/user_guide/models/multivi.md", "sha256": "bb23aaf95bc39f543d059360a57a0576b2d39c6a1aeb9882d6975afe835b87c8", "size_bytes": 9861}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Eligible in principle as a locally trained RNA-only inductive embedding plus common head, but no sealed champion admission until explicit missing masks and all data/runtime fixtures pass.",
+    "rna_conditioned_atac": "Direct profile candidate after the explicit-mask fixture proves no held-row ATAC use and the peak inventory is training-only.",
+    "variant_to_regulation": "Ineligible standalone because MultiVI has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

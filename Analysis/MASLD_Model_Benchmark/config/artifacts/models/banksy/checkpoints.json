@@ -1,0 +1,112 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "BANKSY is a target-fitted spatial feature transform and clustering workflow with no pretrained checkpoint, and no rights-cleared powered spatial endpoint is registered.",
+    "v1_training_or_clustering": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "spatial_neighborhood_feature_augmentation_and_clustering",
+    "selected_implementation": "Python_Banksy_py",
+    "native_input": "one cell- or spot-by-feature matrix plus two-dimensional coordinates",
+    "native_transform": "A section-local weighted neighbor graph yields the zeroth-order neighbor mean and first-order azimuthal Gabor components; these are combined with the observation's own features using lambda, standardized, and reduced before clustering.",
+    "native_outputs": ["target_fitted_BANKSY_feature_embedding", "target_fitted_spatial_partition"],
+    "native_assays": "Spatial RNA is the registered lane. Protein features can be analyzed as a separately named assay-native lane, but H&E pixels and MALDI intensities are not native inputs to this selected transcriptomic workflow.",
+    "statistical_identity": "BANKSY is not a probabilistic count model and does not provide a pretrained encoder or an out-of-sample biological prediction head."
+  },
+  "implementation": {
+    "package": "pybanksy",
+    "repository": "prabhakarlab/Banksy_py",
+    "repository_revision": "9278996c39e376277d57ef95278000447ba6c57c",
+    "source_version": "1.3.5",
+    "revision_date": "2026-07-04",
+    "source_license": "GPL-3.0",
+    "publication_doi": "10.1038/s41588-024-01664-3",
+    "publication_title": "BANKSY unifies cell typing and tissue domain segmentation for scalable spatial omics data analysis",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "package_artifacts": {
+    "pypi_release": "1.3.5",
+    "wheel": {
+      "filename": "pybanksy-1.3.5-py3-none-any.whl",
+      "sha256": "5a4038d51828a31b21e1a76cdeaa5a777b3d68854bf60b782cdcfc148523efd7",
+      "size_bytes": 83269
+    },
+    "sdist": {
+      "filename": "pybanksy-1.3.5.tar.gz",
+      "sha256": "24adff98ece5cc94cea7e1fe59919ea87f83de3453c8a4ec63dc6ffe318cb407",
+      "size_bytes": 79197
+    },
+    "admission_status": "not_selected",
+    "reason": "The package upload preceded three same-version source fixes at the selected revision, including parameter alignment, plotting, and integer-lambda handling fixes. The package artifacts are therefore not byte-equivalent to the selected source identity."
+  },
+  "nonselected_R_implementation": {
+    "package": "Banksy",
+    "bioconductor_release": "3.23",
+    "version": "1.8.1",
+    "source_md5_reported": "de5c1fe73a079a9a994e2c5143c25389",
+    "sha256": "UNRESOLVED_archive_not_downloaded",
+    "terms": "Custom academic-use grant with commercial use requiring a separate agreement.",
+    "status": "not_selected_and_ineligible_as_the_open_champion_under_current_terms",
+    "warning": "The R package and the selected Python implementation are separate software identities. The R license cannot be used to characterize the Python source, or vice versa."
+  },
+  "checkpoint_contract": {
+    "admitted_upstream_checkpoint": "none",
+    "project_trained_state": "not_created",
+    "native_export": "BANKSY computes target-specific features and partitions rather than restoring a frozen biological checkpoint.",
+    "required_future_identity": "Every participant fold and seed must bind the raw feature roster, normalization, graph, coordinate transform, BANKSY matrices, lambda, PCA, neighbor graph, clusterer, resolution or cluster count, environment, code, and output SHA-256."
+  },
+  "preprocessing_contract": {
+    "RNA": "Use assay-native RNA counts and fit normalization, log transform, HVGs, scaling, and any variance balancing only within the permitted training or explicitly transductive partition.",
+    "feature_order": "Freeze gene identifiers, duplicate resolution, feature order, panel intersection, and missingness. Panel absence is not a measured zero.",
+    "BANKSY_hyperparameters": "Freeze lambda, neighborhood size K, weighting function, m-order roster, number of principal components, graph construction, cluster algorithm, resolution or number of clusters, seed, and any Harmony settings.",
+    "coordinate_system": "Freeze source coordinate columns, units, axis order, orientation, reflection, scale, and section boundary. First-order azimuthal components change when coordinate orientation changes.",
+    "label_selection": "The upstream workflow can calculate annotation agreement such as ARI. Held labels may only score a locked partition and must never choose lambda, K, PCA, resolution, cluster number, or exclusions."
+  },
+  "graph_and_topology_contract": {
+    "cross_donor_edges": "forbidden",
+    "construction": "Build every spatial graph independently within an authoritative participant and section or core boundary, then combine block-diagonally.",
+    "multi_section_risk": "Concatenated sections with overlapping coordinate ranges can create biologically impossible edges unless boundaries are enforced.",
+    "vu2025": "Never treat a VLP array as one tissue or donor. Each array contains biopsies from four to five participants, so barcode-to-biopsy and participant joins must precede graph construction.",
+    "Harmony": "Multi-sample Harmony is a jointly fitted, cohort-transductive correction. It must be fit inside the registered partition and reported separately from a strict donor-inductive lane.",
+    "required_lock": "Hash the participant and section map, coordinate transform, distance matrix policy, KNN indices, weights, self-edge policy, disconnected components, and final sparse graph."
+  },
+  "held_donor_capability": {
+    "official_lane": "Transductive: BANKSY features, standardization, PCA, neighbor graph, and clustering are fitted using the supplied target observations.",
+    "strict_frozen_lane": "Not provided as a native end-to-end predictor. A future adapter could freeze a feature roster, scalar transforms, PCA, graph recipe, and development-trained prediction head, while constructing only a locked within-donor graph for the query; this would be a benchmark-defined derivative lane.",
+    "query_adaptation": "Any target-specific feature selection, variance balancing, PCA refit, Harmony fit, clustering, lambda or K choice, cluster-number selection, or label-guided refinement is transductive or query-adaptive.",
+    "claim_rule": "Target-fitted tissue partitioning and frozen held-donor prediction are different tasks and cannot share a zero-shot label."
+  },
+  "safe_loading_contract": {
+    "upstream_state": "No learned checkpoint is admitted.",
+    "required_path": "Vendor only the pinned reviewed source and verified package dependencies after activation. Serialize derived arrays in bounded non-executable formats and any future estimator as validated parameter arrays rather than unrestricted pickle or joblib input.",
+    "network": "Production and evaluation runs must be no-network and may not resolve mutable package aliases."
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED_pyproject_dependency_ranges_are_not_an_exact_environment_lock",
+    "selected_install_source": "pinned_Git_revision_not_the_same_version_PyPI_artifacts",
+    "required_probe": "After data activation and campaign approval only: CPU SLURM import, exact source build, section-blocked graph, coordinate rotation and reflection fixtures, integer and floating lambda parity, sparse-memory behavior, deterministic feature and clustering seeds, node-order and section-order invariance, no-network, and serialized-output round trip."
+  },
+  "terms_and_release_contract": {
+    "selected_Python_source": "GPL-3.0",
+    "selected_source_commit": "9278996c39e376277d57ef95278000447ba6c57c",
+    "nonselected_R_package": "academic_only_custom_terms_with_commercial_restriction",
+    "upstream_checkpoint": "none",
+    "project_outputs": "Release of derived features, partitions, or future weights remains conditional on every input dataset and annotation right.",
+    "open_champion": "ineligible_until_a_registered_external_spatial_task_and_rights_cleared_source_exist"
+  },
+  "source_evidence": "The Nature Genetics article, official Python repository and pinned raw files, official PyPI metadata, and official Bioconductor package metadata were inspected online on 2026-08-22. No archive, package, checkpoint, model, or dataset was downloaded, installed, or executed.",
+  "source_records": [
+    {"identity": "prabhakarlab/Banksy_py@9278996c:LICENSE.md", "sha256": "585e25ef8f5946a52bf2aed68d5becfc38be94a8663aa01c1b31d88aa57f1de3", "size_bytes": 34904},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:README.md", "sha256": "7c194556a0d61d20e54086df08a5a6405882d3663d737e5b4af8fa6b27d1c3a7", "size_bytes": 12511},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:pyproject.toml", "sha256": "922bdbc58ffebd979e1b45d708993156704000433b8fb524e1091ada16789121", "size_bytes": 2538},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:banksy/initialize_banksy.py", "sha256": "25e2ca4c1ad1d5f05ebfd44e235b050decee72cf3bedf489c808908bffe201a5", "size_bytes": 3674},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:banksy/embed_banksy.py", "sha256": "2063a352320d1bd19d675ed009204b17ead0118f719914d21006037af8501617", "size_bytes": 10148},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:banksy/main.py", "sha256": "87c3dc0b90b77ad13ec3002641d5619a10e82836c614da07202ae493c1e2c131", "size_bytes": 22909},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:banksy/run_banksy.py", "sha256": "fc46b6e7d2e4c283b2d00503962f63e193d036ee2647b1f1810b32d1b3a66593", "size_bytes": 5432},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:banksy/cluster_methods.py", "sha256": "67cd08c4a1f5c9a2293a7adb410260068697c5bd488dc82659d42ec2f40f9eb2", "size_bytes": 17533},
+    {"identity": "prabhakarlab/Banksy_py@9278996c:banksy_utils/preprocessing.py", "sha256": "b3cbced851141cb24ccae9280ccc0268e079d0f6033a7ac84758ba676c3b73c6", "size_bytes": 1117}
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

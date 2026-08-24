@@ -1,0 +1,155 @@
+{
+  "architecture_authority": {
+    "architecture_count_cap": 1,
+    "authority_path": "src/masld_bench/conditional_model.py",
+    "authority_sha256": "169ec2acbf895974b126435a849e482506f4e38bc1a606e5fabd1ad210dd72f8",
+    "competing_context_path": "training_fold_hvg_pseudobulk_encoder",
+    "conditioning": ["gated_film", "lora_adapters"],
+    "forbidden_heads": ["masld_histone"],
+    "heads": ["atac_profile", "atac_count", "rna_coverage"],
+    "missing_modality_masks": true,
+    "outputs": ["gene_score", "peak_score", "variant_score", "five_seed_uncertainty"],
+    "required_ablations": ["sequence_only", "trans_only", "permuted_context", "reverse_complement", "matched_shuffle"],
+    "retrospective_diagnostics": ["mpra", "crop_seq"],
+    "status": "specified_but_not_implemented",
+    "uses_frozen_hotspot_117": "read_only_post_hoc_projection_only"
+  },
+  "authorization_contract": {
+    "campaign_id": "v1-conditional-context-model",
+    "campaign_path": "config/campaigns/v1_conditional_model.toml",
+    "campaign_sha256": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c",
+    "campaign_status": "blocked_trigger",
+    "required_evidence": {
+      "best_open_models_compared": true,
+      "cross_fitted_nonnegative_stack": true,
+      "evaluated_seed_count": 5,
+      "gain_persists_in_at_least_seeds": 4,
+      "minimum_qualifying_mechanistic_endpoints": 2,
+      "minimum_studies": 2,
+      "qualifying_absolute_correlation_or_f1_gain": 0.02,
+      "qualifying_relative_deviance_gain": 0.05,
+      "residual_correlation_strictly_below": 0.8
+    },
+    "selection_rule": "Choose the highest-scoring open long-range sequence backbone within one standard error, using lower compute only after score ordering, plus the highest-ranked admitted clean open cell-state encoder.",
+    "trigger_result": "NOT_EVALUATED",
+    "build_authorized": false
+  },
+  "checkpoint": {
+    "artifact_exists": false,
+    "checkpoint_revision": "UNRESOLVED_UNSELECTED_UNIMPLEMENTED_COMPONENTS",
+    "checkpoint_sha256": "NOT_APPLICABLE",
+    "configuration_identity": "UNRESOLVED_NO_SELECTED_COMPONENT_SPEC",
+    "format": "UNRESOLVED",
+    "local_state_dict_identity": "UNRESOLVED_NO_TRAINED_STATE",
+    "weight_downloaded": false
+  },
+  "component_selection": {
+    "base_sequence_backbone": "UNSELECTED_PENDING_TRIGGER_AND_DEVELOPMENT_RANKING",
+    "base_sequence_checkpoint": "UNBOUND",
+    "cell_state_encoder": "UNSELECTED_PENDING_TRIGGER_AND_CLEAN_OPEN_ADMISSION",
+    "cell_state_encoder_checkpoint": "UNBOUND",
+    "hvg_pseudobulk_competing_encoder": "SPECIFIED_NOT_FIT",
+    "selection_lock": "ABSENT"
+  },
+  "identity": {
+    "display_name": "Conditional MASLD context model (legacy context_borzoi ID)",
+    "implementation_type": "train_locally",
+    "model_id": "context_borzoi",
+    "registry_checkpoint_revision": "UNRESOLVED_UNSELECTED_UNIMPLEMENTED_COMPONENTS",
+    "registry_path": "config/models/regulatory_sequence.toml",
+    "registry_sha256": "866a53b7fd5e0222482d291e4af8419d31d7f6baa2d0773b7ff9c40d518dff50",
+    "status": "deferred_conditional_only",
+    "warning": "The legacy model_id identifies only the single generic conditional slot. It does not identify or bind Borzoi, another sequence backbone, a cell encoder, an implementation, or a trained artifact."
+  },
+  "input_contract": {
+    "allowed_inference_inputs": ["dna_sequence", "single_nucleus_rna_or_training_fold_context", "explicit_missing_modality_masks"],
+    "atac_inference_input": "forbidden",
+    "context_mapper": "UNIMPLEMENTED_AND_UNFIT",
+    "genome_build": "GRCh38.p14_after_reference_admission_checks",
+    "gene_annotation": "GENCODE_v49_after_crosswalk_admission_checks",
+    "pairing_topologies": {
+      "gse244832": "same_sample_different_aliquot_at_donor_compatible_resolution_only",
+      "gse296875": "same_nucleus_training_only_after_exact_join_validation"
+    },
+    "sealed_outcome_inputs": "forbidden",
+    "sequence_window": "UNRESOLVED_UNTIL_BACKBONE_SELECTION_LOCK"
+  },
+  "license_and_release_contract": {
+    "base_code": {
+      "identity": "UNSELECTED",
+      "license": "UNRESOLVED",
+      "status": "BLOCKED_UNTIL_COMPONENT_SELECTION_AND_TERMS_AUDIT"
+    },
+    "base_weights": {
+      "identity": "UNSELECTED",
+      "license": "UNRESOLVED",
+      "status": "BLOCKED_UNTIL_COMPONENT_SELECTION_AND_TERMS_AUDIT"
+    },
+    "derivative_weights": {
+      "license": "UNRESOLVED_NO_DERIVATIVE_EXISTS",
+      "redistribution_status": "INELIGIBLE",
+      "status": "BLOCKED_UNTIL_BASE_TERMS_AND_BUILT_ARTIFACT_LICENSE_DECISION"
+    },
+    "project_context_code": {
+      "license": "UNRESOLVED_NO_IMPLEMENTATION_EXISTS",
+      "redistribution_status": "INELIGIBLE",
+      "status": "NOT_IMPLEMENTED"
+    },
+    "open_champion_eligibility": false
+  },
+  "noninheritance_contract": {
+    "borzoi_checkpoint_bytes_inherited": false,
+    "borzoi_checkpoint_generations_or_hashes_inherited": false,
+    "borzoi_exposure_classification_inherited": false,
+    "borzoi_open_release_eligibility_inherited": false,
+    "borzoi_runtime_validation_inherited": false,
+    "rule": "The legacy ID confers no Borzoi identity. This project-unimplemented slot must acquire its own selected-component identities, training receipt, exposure audit, terms decision, runtime, outputs, and final artifact hashes."
+  },
+  "output_and_task_contract": {
+    "rna_conditioned_atac": {
+      "capability_registry_path": "config/evaluation/rna_conditioned_atac_capabilities.toml",
+      "capability_registry_sha256": "c233a982a48c1bf827ce9f64d894ce3c6d6af3e11a20e39cf03df3920fae6330",
+      "role": "conditional_profile_candidate",
+      "status": "blocked_no_implementation_and_no_profile_fixture"
+    },
+    "variant_to_regulation": {
+      "allowed_endpoints": ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "signed_cell_type_eqtl_effect"],
+      "capability_registry_path": "config/evaluation/variant_to_regulation_capabilities.toml",
+      "capability_registry_sha256": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63",
+      "requires_fitted_head": true,
+      "role": "conditional_only",
+      "status": "blocked_no_fitted_head_or_frozen_output_crosswalk"
+    }
+  },
+  "runtime_contract": {
+    "declared_campaign_runtime_id": "gpu_finetune",
+    "deterministic_seed_set": [1103, 2909, 4721, 6673, 8111],
+    "environment_lock": "UNRESOLVED",
+    "gpu_compatibility": "UNTESTED",
+    "implementation_import": "NOT_AVAILABLE",
+    "resume_contract": "UNRESOLVED",
+    "status": "BLOCKED"
+  },
+  "safe_loading_contract": {
+    "allow_unrestricted_deserialization": false,
+    "base_checkpoint_rule": "No base weight may be acquired or opened until its exact immutable identity and terms are approved. Then inspect it in an isolated read-only runtime, reject external HDF5 links and unexpected objects, and require strict architecture restoration and native numeric parity.",
+    "current_loading_action": "NONE_NO_CHECKPOINT_EXISTS",
+    "local_checkpoint_rule": "A future local state must use a frozen tensor/schema inventory, reject missing or surplus parameters, and bind component/config/code/data/runtime hashes before any prediction.",
+    "weight_downloaded": false
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Project authorities were checked on 2026-08-23. The complementarity, stacking-evidence, frozen context-spec, and planner authorization control plane now exists, but no selected component configuration, trained architecture weight, or selection lock exists, and no candidate checkpoint identity is bound by this bundle.",
+  "source_records": [
+    {"identity": "src/masld_bench/conditional_model.py", "sha256": "169ec2acbf895974b126435a849e482506f4e38bc1a606e5fabd1ad210dd72f8"},
+    {"identity": "src/masld_bench/stacking.py", "sha256": "933c52c62982e01e957399bc5c995a39c67c03c07b8a71d52ec7e682b1acd6af"},
+    {"identity": "src/masld_bench/context_spec.py", "sha256": "098f1f2b6ef8c7101301d7e6ef1b83d9ec5dba4191b61a3c368d02a265248a9f"},
+    {"identity": "src/masld_bench/planner.py", "sha256": "c0bfa239d6db1af4d34c34a5bfd58c60cfd0494fa6527679e8407c74c19acc10"},
+    {"identity": "src/masld_bench/evaluators/endpoint_power.py", "sha256": "01371765f3a5978abb9d4bed87d2d3c574711f126e15d25395e8e479409aa45a"},
+    {"identity": "config/campaigns/v1_conditional_model.toml", "sha256": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c"},
+    {"identity": "config/models/regulatory_sequence.toml", "sha256": "866a53b7fd5e0222482d291e4af8419d31d7f6baa2d0773b7ff9c40d518dff50"},
+    {"identity": "config/evaluation/variant_to_regulation_capabilities.toml", "sha256": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63"},
+    {"identity": "config/evaluation/rna_conditioned_atac_capabilities.toml", "sha256": "c233a982a48c1bf827ce9f64d894ce3c6d6af3e11a20e39cf03df3920fae6330"},
+    {"identity": "config/tasks/variant_to_regulation.toml", "sha256": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"},
+    {"identity": "config/tasks/rna_conditioned_atac.toml", "sha256": "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0"}
+  ]
+}

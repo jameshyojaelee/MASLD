@@ -1,0 +1,121 @@
+schema_version = "masld-bench-model-v1"
+family_id = "spatial_and_pathology"
+modality = ["spatial_rna", "histology_he", "maldi_imaging", "codex_proteomics"]
+status = "deferred"
+
+[[models]]
+model_id = "novae"
+display_name = "Novae"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "prism-oncology/novae@b71c2234c2d1c8e88981297dfdcb8b61b42c03c0:v1.1.1+prism-oncology/novae-human-0@b8c0a5d7612bac6bc719ab57ed3cd16ad814728c:model.safetensors"
+checkpoint_sha256 = "7d1e4a051469d14e796994faa34a41556183e78757f5dc70a99dbd9f6a19ce87"
+license_status = "code_BSD-3-Clause_checkpoint_terms_UNRESOLVED"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact v1.1.1 source and 128,175,588-byte safetensors checkpoint are pinned, but checkpoint terms, source-to-checkpoint parity, training-source rights and the accession/donor alias manifest are unresolved; generic liver encoder exposure is known and project-cohort exposure remains unknown. No powered rights-cleared donor-level spatial task or seal exists. Native zero-shot refits query prototypes, while automatic HVGs and slide statistics use held features, so it is transductive rather than strict donor transfer. Any future frozen lane must lock training-derived features and heads, build graphs within authoritative participant/core/section boundaries, prohibit pooled reference='all', exclude optional gated H&E weights, and pass offline runtime fixtures. No v1 inference, adaptation, conditional-model use or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "nichecompass"
+display_name = "NicheCompass"
+implementation_type = "train_locally"
+checkpoint_revision = "Lotfollahi-lab/nichecompass@5bf7d2a09e70bd490c59e978e37f4df30f812994:0.3.3+PyPI:nichecompass==0.3.3"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "code_BSD-3-Clause_prior_and_training_asset_terms_source_specific"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact BSD-3-Clause 0.3.3 source is pinned and no upstream biological checkpoint exists, but no project model or eligible powered rights-cleared donor-level spatial task or seal exists. Future local states must bind training participants, gene/program rosters, prior assets, graphs, unseen-sample covariates, seeds and hashes; dynamic OmniPath/NicheNet/CollecTRI-style priors require immutable terms-cleared snapshots, and the frozen 117 Hotspot programs cannot be trained on or optimized. Reference mapping, new sample embeddings and held-feature fine-tuning or clustering are transductive or query-adaptive, not zero-shot. RNA-ATAC requires same-cell or same-nucleus pairing, missing genes cannot be zero-filled, and every graph must be participant- and section-blocked. No v1 training or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "spatialmeta"
+display_name = "SpatialMETA"
+implementation_type = "train_locally"
+checkpoint_revision = "WanluLiuLab/SpatialMETA@909844e03c2ddffa331e8c45212830f8ffc85553+PyPI:spatialMETA==0.0.3.0+Zenodo:16750012:SpatialMETA-0.0.3.zip"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "top_level_BSD-3-Clause_vendored_STalign_GPL-3.0_patent_and_asset_terms_UNRESOLVED"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact 0.0.3.0 source and wheel are pinned and no upstream checkpoint exists, but the reported patent, modified STalign GPL-3.0 chain, vendored-code notices, HMDB asset, derivative-weight rights and exact runtime remain unresolved. SpatialMETA is assay-native to spatial RNA counts plus spatial metabolite intensities; CODEX protein, H&E and RNA-only sources are not substitutes. HRA007511 is the only plausible MASLD substrate, but it is controlled, adjacent-section rather than paired, rights-blocked and not a project seal. Registration, KNN reassignment and unseen-batch handling are query-transductive unless prospectively frozen, all sections and modalities from one participant stay in one fold, and unmeasured features remain missing. No v1 training or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "spamosaic"
+display_name = "SpaMosaic"
+implementation_type = "train_locally"
+checkpoint_revision = "JinmiaoChenLab/SpaMosaic@cc1336755de8d1ddd1337b3cd67c9d41a61c2cb4:v1.0.3+PyPI:spamosaic==1.0.3"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact MIT v1.0.3 source is pinned and no upstream checkpoint exists, but no powered rights-cleared MASLD mosaic dataset supplies an authoritative row-aligned molecular bridge, external task or seal. Same-study, same-donor different-aliquot and adjacent-section assays cannot be relabeled as paired observations; missing modalities remain structural. Native cross-batch MNN construction, latent alignment, imputation and joint fitting use query molecular features and are transductive, while no strict frozen fit-predict interface or complete runtime/export lock exists. Future graphs must be participant- and section-blocked, bridge observation IDs and row order must be authoritative and unique, and a no-query-MNN lane must be separate from query-reference mapping. No v1 training or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "nicheformer"
+display_name = "Nicheformer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "theislab/nicheformer@485cadbc5caa15119adfd54228f8a8af835fcabc:0.0.1+theislab/Nicheformer@0ba4ba162f9ad3d6c8b713761954c31be2fa69ed:model.safetensors"
+checkpoint_sha256 = "65fff02ac9bdd978cbb06b158a60d94ec59a96f30e706aed2c56d213d582e603"
+license_status = "source_BSD-3-Clause_HuggingFace_code_and_weights_MIT_training_assets_source_specific"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact BSD-3-Clause source and 195,851,648-byte MIT-declared safetensors checkpoint are pinned, but conversion parity, checkpoint-specific corpus aliases and project exposure remain unknown despite known generic liver and downstream spatial-task exposure. The Hugging Face conversion has vocabulary and padding inconsistencies, points to another model alias, lacks the required technology_mean.npy, and requires pinned offline custom code. The base encoder consumes expression plus assay/species/modality tokens, not coordinates or graphs; every niche or neighborhood head is separately trained, and Visium use is cross-resolution transfer. No powered rights-cleared donor-level spatial task or seal exists. Freeze the mapper and development-only head before held-donor use; no v1 inference, fine-tuning or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "graphst"
+display_name = "GraphST"
+implementation_type = "train_locally"
+checkpoint_revision = "JinmiaoChenLab/GraphST@d62b0b7b6cd38ee285f3ac8cd67b7341a10bcc74+PyPI:GraphST==1.1.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "repository_AGPL-3.0_setup_and_PyPI_MIT_conflict_UNRESOLVED"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact source and PyPI identities are pinned and no upstream checkpoint exists, but the selected repository contains AGPL-3.0 text while setup and PyPI declare MIT; execution, adaptation and redistribution are blocked pending rightsholder clarification, and the package bytes are not proven equivalent to the selected source commit. Native GraphST fits preprocessing, a graph encoder, PCA or clustering, refinement and optional deconvolution on the target, so it is transductive and exposes no strict frozen held-donor interface. Future graphs must be participant- and section-blocked, assay flags and cross-resolution strata must be validated, and the dense all-pairs graph path needs a memory-safe parity-proven replacement. No powered rights-cleared spatial task or seal exists and no v1 execution or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "stagate"
+display_name = "STAGATE"
+implementation_type = "train_locally"
+checkpoint_revision = "QIFEIDKN/STAGATE_pyG@ae1158ca8cf1eb6bb8ee198298552d44c9ac21db:1.0.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact MIT PyG source revision containing the upstream memory fix is pinned and no upstream checkpoint exists, but no project state, strict export, powered rights-cleared spatial task or seal exists. Native STAGATE trains its graph autoencoder and clustering on target nodes and is transductive; a future strict lane must persist a development-frozen feature mapper, encoder, head and graph recipe without query refit. Graphs must be participant- and section-blocked, Visium spots and image-based cells remain separate strata, and the 3D edge path is prohibited without same-participant registered sections, physical spacing and a precommitted objective. A memory-safe expression path, exact runtime and tensor-only export remain unresolved. No v1 training or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "banksy"
+display_name = "BANKSY"
+implementation_type = "train_locally"
+checkpoint_revision = "prabhakarlab/Banksy_py@9278996c39e376277d57ef95278000447ba6c57c:1.3.5"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0_selected_Python_source"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact GPL-3.0 Python source is pinned and no upstream checkpoint exists, but same-version PyPI artifacts predate selected source fixes and are not admitted; the separately licensed R package is not substituted. BANKSY's native neighborhood features, scaling, PCA, optional Harmony and clustering are target-fitted and transductive, not a frozen held-donor predictor. A future derivative lane must freeze normalization, feature order, coordinate orientation and scale, participant- and section-blocked graphs, lambda, K, variance balance, PCA, clustering and mappings on development participants. No powered rights-cleared spatial task or seal exists, output rights and an exact CPU runtime remain unresolved, and no v1 execution or champion claim is admitted."]
+supported_tasks = []
+
+[[models]]
+model_id = "spatial_transcript_native_baselines"
+display_name = "Transcript-native spatial baselines"
+implementation_type = "classical_baseline"
+checkpoint_revision = "PyPI:scanpy==1.12.3+squidpy==1.8.3+scikit-learn==1.9.0+leidenalg==0.12.0+igraph==1.0.0+Bioconductor:BayesSpace==1.22.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause_components_plus_GPL_Leiden_and_igraph_plus_BayesSpace_MIT_plus_file"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact top-level Scanpy, Squidpy, scikit-learn, Leiden, igraph and BayesSpace releases are registered and no upstream checkpoint exists, but their complete Python/R/native transitive runtime, assembled distribution obligations, project-fitted states and output rights remain unresolved. No powered rights-cleared participant-linked spatial RNA task, external source or seal exists, so the mandatory baseline suite is deferred in v1. A future task must separate development-frozen supervised transfer from target-fitted K-means, Leiden or BayesSpace partitions, build all graphs and lattices within participant and section boundaries, keep Visium spots and image-based cells in assay-native strata, and exclude H&E, CODEX, MALDI and modeled BayesSpace subspots from transcript-native truth. These baselines are mandatory if spatial activates, but no v1 execution or champion claim is admitted."]
+supported_tasks = []

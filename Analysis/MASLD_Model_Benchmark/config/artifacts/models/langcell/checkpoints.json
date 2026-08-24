@@ -1,0 +1,157 @@
+{
+  "architecture_contract": {
+    "cell_encoder": {
+      "attention_heads": 8,
+      "hidden_dimension": 512,
+      "intermediate_dimension": 1024,
+      "maximum_tokens_including_cls": 2048,
+      "transformer_layers": 12,
+      "vocabulary_size": 25427
+    },
+    "cell_projection_dimension": 256,
+    "pretraining_objectives": [
+      "masked_gene_modeling",
+      "cell_cell_contrastive",
+      "cell_text_contrastive",
+      "cell_text_matching"
+    ],
+    "text_encoder": {
+      "attention_heads": 12,
+      "hidden_dimension": 768,
+      "maximum_tokens": 512,
+      "transformer_layers": 12,
+      "vocabulary_size": 30524
+    }
+  },
+  "checkpoint_bundle": {
+    "folder_id": "1cuhVG9v0YoAnjW-t_WMpQQguajumCBTp",
+    "modules": [
+      {
+        "file_id": "119ic1oiZr6Lxa5Bguv240L-OL5lPGEAq",
+        "module": "cell_bert",
+        "name": "cell_bert/pytorch_model.bin",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 157274017,
+        "source_modified_time": "2024-05-15T15:42:36.613Z"
+      },
+      {
+        "file_id": "1F8rIavbUzF3xqLjGDMhZTBHNl01mhc-q",
+        "module": "cell_bert_config",
+        "name": "cell_bert/config.json",
+        "sha256": "aea9ca5f130ef3370d4ad40e173578929232fa4cb7058e1900ac23f84d719ef6",
+        "size_bytes": 620,
+        "source_modified_time": "2024-05-15T15:41:46.576Z"
+      },
+      {
+        "file_id": "1euTzbl3jHirjwDyTLhprdmjD25w7YwzC",
+        "module": "cell_projection",
+        "name": "cell_proj.bin",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 526383,
+        "source_modified_time": "2024-05-15T15:41:45.538Z"
+      },
+      {
+        "file_id": "1HXP5blzlJ5sVNGBjBOUvdoLAU985zrfW",
+        "module": "text_bert",
+        "name": "text_bert/pytorch_model.bin",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 532629833,
+        "source_modified_time": "2024-05-15T15:45:39.520Z"
+      },
+      {
+        "file_id": "1hAdGHUw9nibnCmWd_p6LM2QnmRFJt7hw",
+        "module": "text_bert_config",
+        "name": "text_bert/config.json",
+        "sha256": "34c09ace9b1ca1d72790e5b2a484843d20ed8fbdab77a782ecec5d2d117c7061",
+        "size_bytes": 722,
+        "source_modified_time": "2024-05-15T15:41:46.576Z"
+      },
+      {
+        "file_id": "1_4gLPOPGZBxvddEwYpIlrAhVl10Lf9Er",
+        "module": "text_projection",
+        "name": "text_proj.bin",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 788527,
+        "source_modified_time": "2024-05-15T15:41:46.710Z"
+      },
+      {
+        "file_id": "1t2x9dN8ifwVyMAvixYpxMxrGzbsR9I5P",
+        "module": "cell_text_matching_head",
+        "name": "ctm_head.bin",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 7211,
+        "source_modified_time": "2024-05-15T15:41:46.710Z"
+      },
+      {
+        "file_id": "1JhWEnLOb9Nl8pCztncx6_A6WyW_subgh",
+        "module": "root_cell_config",
+        "name": "config.json",
+        "sha256": "7ef7a16acd4a993b7efa73b876d79420d54ea4d99edde5c069cad93c53aa49c5",
+        "size_bytes": 566,
+        "source_modified_time": "2024-05-15T15:41:46.710Z"
+      }
+    ],
+    "provider": "Google_Drive",
+    "terms": "UNDECLARED",
+    "warning": "Google Drive file IDs, sizes, and modification timestamps identify the live public objects, but the provider exposes no immutable content digest in this listing. Every executable module remains hash-unresolved until an approved acquisition."
+  },
+  "code_license": "MIT",
+  "embedding_contract": {
+    "common_lane_candidate": "raw_final_layer_cls_from_cell_bert_before_projection_and_l2_normalization",
+    "common_lane_dimension": 512,
+    "native_cell_only_candidate": "released_cell_projection_of_cls_followed_by_l2_normalization",
+    "native_cell_only_dimension": 256,
+    "native_supervised_candidate": "LangCell_CE_with_a_classification_head_fit_only_on_outer_training_donors",
+    "native_zero_shot_candidate": "prespecified_class_description_similarity_with_optional_cell_text_matching",
+    "selection_rule": "The common lane never loads the text encoder, class descriptions, projection, or CTM head. The projected cell-only, LangCell-CE, and text-aware zero-shot recipes are separately named native runs. Candidate label descriptions must be frozen before sealed inference and cannot be generated from sealed examples or outcomes."
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unintegrated_nonnegative_single_cell_or_single_nucleus_UMI_counts_with_Ensembl_gene_ids",
+    "feature_alignment": "vendored_Geneformer_0.0.1_protein_coding_and_miRNA_gene_median_and_token_dictionaries",
+    "normalization": "divide_each_gene_count_by_cell_total_multiply_by_10000_then_divide_by_Genecorpus_30M_nonzero_gene_median",
+    "sequence": "rank_nonzero_genes_descending_by_normalized_value_then_prepend_cls_and_truncate_total_sequence_to_2048",
+    "supported_assays": ["scRNA_UMI", "snRNA_UMI"],
+    "warning": "Counts, donor partitions, Ensembl mapping, and zero-count semantics must remain assay-native. The released tokenizer densifies an AnnData slice and requires a memory-safe equivalent with exact-order parity before full-scale use."
+  },
+  "repository": "PharMolix/LangCell",
+  "repository_revision": "69e41ef2fae485b67703294b50f3150bb1d5bb9b",
+  "runtime_contract": {
+    "declared_datasets": "2.14.0",
+    "declared_geneformer": "0.0.1_plus_vendored_source",
+    "declared_numpy": "1.23.4",
+    "declared_python": "UNDECLARED",
+    "declared_torch": "2.0.1",
+    "declared_transformers": "4.39.1",
+    "environment_status": "UNRESOLVED"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "configuration_files_downloaded": true,
+    "format_declared_by_provider": "application/x-zip_for_bin_modules",
+    "require_explicit_weight_terms_before_download": true,
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The pinned repository, ICML 2024 paper, Hugging Face scLibrary metadata, and public Google Drive folder metadata were queried on 2026-08-22. Only small JSON configuration and vendored tokenizer dictionary files were downloaded for hashing; no checkpoint module was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "ICML_2024_paper:2405.06708", "sha256": "c7b9166aff046da65f379b324ad20f200d4216a0f5a03c6f34e094647c755b21", "size_bytes": 3690515},
+    {"identity": "LangCell:LICENSE", "sha256": "977b27236abe19a9c740cf39549567516d4ff37dd3869a1d37979133e286448f", "size_bytes": 1068},
+    {"identity": "LangCell:README.md", "sha256": "55ebbed308f83aed41e6856e63687c3c9c9ebc55f933158d0ffbab6dd7fe38c1", "size_bytes": 6368},
+    {"identity": "LangCell:requirements.txt", "sha256": "502d55c5d2c70e96e9aec42aed097a58f1457478ff90f6982dfb4cdceea73f3f", "size_bytes": 164},
+    {"identity": "LangCell:LangCell-annotation-zeroshot/utils.py", "sha256": "ec7a0ec57dbc3865d5ebe0212713cb3654cb92462c5c0488cb688bd44aababfa", "size_bytes": 46539},
+    {"identity": "LangCell:data_preprocess/preprocess.py", "sha256": "9a508dc7b7b094006d369a4c78cd4cd41bef7271cd02144dbd77234613f09310", "size_bytes": 480},
+    {"identity": "LangCell:LangCell-annotation-zeroshot/zero-shot.ipynb", "sha256": "1e8514d35427a4e12a2efb267ff150b48bb8174818bc90e3d5a9db871e155dce", "size_bytes": 434254},
+    {"identity": "LangCell:geneformer_001/geneformer/tokenizer.py", "sha256": "5a793c4605fed77a434c075f38bb190b81b85da8201c06141bf5cf7911aed5b2", "size_bytes": 9318},
+    {"identity": "LangCell:geneformer_001/geneformer/gene_median_dictionary.pkl", "sha256": "b3b589bb5ec75040d05fc44dd6bf0184cf87f3c362cf158d196a6ed3b7fe5f39", "size_bytes": 940965},
+    {"identity": "LangCell:geneformer_001/geneformer/gene_name_id_dict.pkl", "sha256": "55e67962e79c0039a6c32d43c5c99f38e51964bbcfa32f736150ee1e285c438c", "size_bytes": 1117117},
+    {"identity": "LangCell:geneformer_001/geneformer/token_dictionary.pkl", "sha256": "ab9dc40973fa5224d77b793e2fd114cacf3d08423ed9c4c49caf0ba9c7f218f1", "size_bytes": 788424}
+  ],
+  "terms_audit": {
+    "google_drive_checkpoint_terms": "absent",
+    "repository_license": "MIT",
+    "result": "blocked_weight_terms_undeclared",
+    "scope_rule": "The repository MIT license governs repository files; it is not treated as a grant for separately hosted checkpoint modules without an explicit statement from the rights holder."
+  },
+  "weight_license": "UNDECLARED"
+}

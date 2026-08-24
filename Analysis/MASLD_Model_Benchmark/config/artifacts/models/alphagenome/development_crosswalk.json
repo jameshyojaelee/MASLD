@@ -1,0 +1,106 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_sources": ["ENCODE", "GTEx", "FANTOM5", "4DN"],
+    "exact_accession_and_donor_manifest_status": "UNRESOLVED",
+    "label_scope": "multimodal genomic tracks; no donor MASLD phenotype, cell-state label, eQTL, or interaction-eQTL target is declared",
+    "reference": "GRCh38.p13"
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "2026-01-27",
+    "project_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse289173",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "AlphaGenome was trained on GTEx functional-genomics data and the paper evaluates variant effects against QTL tasks. Project COLOC memberships were not declared checkpoint targets, but GTEx-derived outcomes and task-specific score choices are downstream-demo evidence rather than pristine model-selection evidence.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "evidence": "GSE244832 was public before the checkpoint and has not been exhaustively resolved against ENCODE, GTEx, FANTOM5, or 4DN donor and sample aliases. Its project RNA and ATAC outcomes are not declared AlphaGenome targets.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13",
+      "topology": "same_sample_different_aliquot; no false cell-level RNA-ATAC pairing"
+    },
+    "gse281160": {
+      "evidence": "GSE281160 became public after the frozen weight revision. Its same-cell guide and expression perturbation outcomes were not checkpoint targets.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16",
+      "topology": "same_cell guide and RNA; biological inference aggregates to experimental replicate and target family"
+    },
+    "gse281364": {
+      "evidence": "GSE281364 became public after the frozen weight revision. Its HepG2 and LX-2 MPRA allele activities were not checkpoint targets, although the model may have generic HepG2 and reference-locus priors.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    },
+    "gse289173": {
+      "evidence": "GSE289173 was public before the checkpoint, but its 48-donor cell states and signed cell-type eQTL and interaction-eQTL outcomes are absent from the declared functional-genomics target description. Exact upstream donor and accession aliases remain unresolved, so this is target-label-unexposed with medium confidence, not clean-declared.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "reference_locus_exposure": "encoder_seen_or_possible",
+      "topology": "single-nucleus RNA plus evaluator-only cell-type eQTL and interaction-eQTL summaries; no ATAC"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public before the checkpoint. It is not a declared named training source, but the checkpoint-bound accession and donor manifest is incomplete. Its same-nucleus RNA and ATAC outcomes remain development-only and cannot be used as sealed evidence.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-10-01",
+      "topology": "same_nucleus RNA and ATAC; 39 donors"
+    },
+    "resource_atlas_current": {
+      "evidence": "Resource donor labels, MASLD phenotypes, and the frozen 117 programs are not declared training targets. Generic liver, hepatocyte, endothelial, and disease-adjacent functional-genomics tracks provide biological prior exposure but no native Resource donor context.",
+      "exposure_state": "target_label_unexposed",
+      "topology": "single-cell RNA; donor-grouped"
+    }
+  },
+  "held_out_behavior": {
+    "context": "AlphaGenome has no donor or expression input. At the same allele, reference, window, and output track, every donor receives the same prediction.",
+    "locus": "Reference sequence and broad functional-genomics tracks are encoder exposure. Variant evaluation still crosses donor folds with merged chromosome or LD blocks and a boundary buffer equal to the 1048576-bp receptive field.",
+    "sealed": "GSE289173 labels may not select tracks, ontology terms, genes, windows, aggregation, calibration, thresholds, or a lineage mapping."
+  },
+  "interpretation": "AlphaGenome is a static sequence-to-track comparator, not an RNA-conditioned MASLD model. Its released RNA output ontology covers hepatocyte and a generic endothelial context but not cholangiocyte or hepatic stellate RNA, so it cannot enter the primary four-lineage signed-effect test as a complete model.",
+  "rules": {
+    "checkpoint_chronology": "Post-publication checkpoint timing alone cannot establish clean exposure. A complete checkpoint-bound accession, donor, and sample alias audit is required for clean_declared.",
+    "fixed_track_ontology": "A fixed output track is eligible only for its released ontology identity. Generic endothelial, bulk liver, DNase-only stellate, or disease-adjacent tracks cannot be relabeled to fill a missing RNA lineage.",
+    "genome_overlap": "Reference sequence overlap is encoder exposure and is controlled through held genomic or LD blocks and the full receptive-field boundary buffer.",
+    "sealed_rna": "The model cannot consume sealed RNA. Sealed RNA may not be used to choose or weight AlphaGenome tracks unless a separately named development-trained model and locked rule exists before unblinding.",
+    "variant_sign": "Use the benchmark ALT-minus-REF convention and prove it on fixed synthetic fixtures before admission."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "sealed_output_roster": {
+    "cholangiocyte": {
+      "native_signed_gene_expression_effect": false,
+      "reason": "no matching RNA_SEQ track in pinned metadata"
+    },
+    "endothelial_cell": {
+      "native_signed_gene_expression_effect": true,
+      "qualification": "generic CL:0000115 endothelial RNA_SEQ only; not liver-specific and not donor-conditioned"
+    },
+    "hepatocyte": {
+      "native_signed_gene_expression_effect": true,
+      "qualification": "CL:0000182 hepatocyte RNA_SEQ; not MASLD or donor-conditioned"
+    },
+    "stellate_cell": {
+      "native_signed_gene_expression_effect": false,
+      "reason": "hepatic stellate CL:0000632 is represented only by DNASE, not RNA_SEQ"
+    }
+  },
+  "task_data_gate": {
+    "current_coloc_gwas": "Downstream-demo genetic evidence only; never sealed confirmation.",
+    "gse281160": "Exploratory perturbation direction diagnostic only; AlphaGenome does not model guide or RNA context.",
+    "gse281364": "Retrospective sequence-only MPRA direction and rank diagnostic with held locus blocks.",
+    "gse289173": "Ineligible for the primary full-roster endpoint. After admission and selection lock, may be a secondary supported-track sequence comparator for prespecified hepatocyte and generic-endothelial analyses only.",
+    "gse296875": "Static sequence comparator only. Same-nucleus RNA and ATAC cannot turn AlphaGenome into an RNA-conditioned model.",
+    "resource_atlas_current": "May support development-only task heads or error analysis, but any fitted component must be separately named, cross-fitted by donor and locus, and cannot repair missing sealed lineage outputs."
+  },
+  "verified_date": "2026-08-22"
+}

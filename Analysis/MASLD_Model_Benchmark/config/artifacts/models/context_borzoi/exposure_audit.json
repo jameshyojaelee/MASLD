@@ -1,0 +1,70 @@
+{
+  "audit_scope": {
+    "development_sources": ["resource_atlas_current", "current_coloc_gwas", "gse244832", "gse281160", "gse281364", "gse296875"],
+    "future_sealed_source": "fnih_86_liver",
+    "model_id": "context_borzoi",
+    "project_sealed_source": "gse289173",
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "checkpoint_findings": {
+    "context_borzoi": {
+      "checkpoint_identity": "UNRESOLVED_UNSELECTED_UNIMPLEMENTED_COMPONENTS",
+      "component_bundle_identity": "UNRESOLVED_NO_COMPONENTS_SELECTED",
+      "corpus": "UNRESOLVED_NO_LOCAL_TRAINING_RECEIPT",
+      "corpus_annotation_state": "UNRESOLVED",
+      "exposure_state": "unknown",
+      "finding": "No implementation, built architecture spec, selected base, selected cell encoder, context mapper, fitted head, trained state, runtime receipt, or selection lock exists."
+    }
+  },
+  "component_audit": {
+    "cell_encoder": "UNSELECTED; must be admitted, clean_declared, open-champion eligible, and bound by an immutable license-decision hash.",
+    "hvg_pseudobulk_encoder": "Specified as a competing training-fold-only context path but not fit.",
+    "legacy_id_scope": "context_borzoi names only the generic conditional slot and binds no Borzoi or other candidate component.",
+    "selected_sequence_backbone": "UNSELECTED; must be open-champion eligible and within one standard error of the best development score.",
+    "strict_noninheritance": "No Borzoi checkpoint identity, exposure state, runtime result, or release eligibility is inherited."
+  },
+  "checkpoint_manifest_record": {
+    "path": "checkpoints.json",
+    "sha256": "2dc646c677c3b8d08a5be62a119f6b20859f0e6386fd5c88491ddcce762e3906"
+  },
+  "conditional_status": {
+    "architecture_count_cap": 1,
+    "build_authorized": false,
+    "campaign_status": "blocked_trigger",
+    "common_zero_shot_lane": "ineligible",
+    "required_trigger": "Held residual correlation below 0.80 plus cross-fitted nonnegative-stack gain on at least two mechanistic endpoints, across at least two studies, in at least four of exactly five frozen seeds, comparing the best open sequence and context models.",
+    "trigger_result": "NOT_EVALUATED"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "all_registered_context_model_development_and_sealed_sources",
+    "sha256": "da4cc2b60bfd77f2181ae2e2dc1d2cd3ecf1028297302754b8f759bbfe05df12"
+  },
+  "interpretation": "context_borzoi is a conditional project concept, not a released or locally trained model. Exposure is unknown for every project source. Chronology or cleanliness established for an official Borzoi checkpoint cannot be transferred to a future composite that may select different components and will fit project RNA, ATAC, MPRA, or regulatory evidence. A task-specific sealed classification can be assigned only after the trigger passes and a complete immutable component, training, runtime, and selection receipt is locked before outcomes are opened.",
+  "license_disposition": {
+    "selected_base_code": "UNRESOLVED_NO_COMPONENT_SELECTED",
+    "selected_base_weights": "UNRESOLVED_NO_COMPONENT_SELECTED",
+    "derivative_weights": "UNRESOLVED_NO_DERIVATIVE_EXISTS",
+    "open_champion_eligibility": "ineligible",
+    "project_context_code": "UNRESOLVED_NO_IMPLEMENTATION_EXISTS"
+  },
+  "remaining_blockers": [
+    "Pass the prespecified complementarity trigger using only development data and freeze its evidence receipt.",
+    "Select one eligible open long-range sequence backbone within one standard error and one admitted clean open cell-state encoder; bind their immutable code, weight, config, vocabulary, corpus, exposure, and license-decision hashes.",
+    "For every candidate backbone, resolve exact code and weight terms and clear every native parity, reference, inverse-transform, runtime, and strict-loading blocker before selection.",
+    "Implement and hash the context mapper, explicit missing-modality masks, gated FiLM and LoRA attachment points, ATAC profile/count and RNA coverage heads, output crosswalks, and all required ablations.",
+    "Freeze donor, chromosome and merged LD-block splits, a boundary buffer equal to the selected backbone's largest receptive field, topology-valid training rows, reference crosswalks, feature universes, calibration, thresholds, and five seeds.",
+    "Produce an immutable local training receipt and trained-state SHA-256 without using GSE289173 labels/QTL outcomes or conditional FNIH outcomes.",
+    "Pass the RNA/context-only ATAC profile fixture without observed target ATAC and the variant capability fixture without observed target context or outcome summaries.",
+    "Assign separate project-code, base-weight, and derivative-weight terms and approve redistribution before any open champion or release claim.",
+    "Lock predictions and artifact hashes before the one evaluator-only GSE289173 label join; activate FNIH only if its independent rights, data, donor joins, and power gates pass before selection lock."
+  ],
+  "safe_loading_disposition": "No checkpoint exists and no loading is authorized. A future base must undergo isolated strict inspection and numeric parity; a future local state must bind tensor names, shapes, dtypes, component hashes, and configuration without unrestricted deserialization.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_model_exposure_unknown_trigger_not_passed",
+  "task_disposition": {
+    "rna_conditioned_atac": "conditional_only_and_blocked; no implementation has emitted the required donor-by-cell-state peak profile from sequence plus RNA/context without observed ATAC, and no eligible external seal is active",
+    "variant_to_regulation": "conditional_only_and_blocked; no fitted head, frozen gene/lineage output crosswalk, component identity, training receipt, or sealed prediction exists"
+  },
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,56 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_future_project_trained_weights",
+    "development_sources": ["gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_id": "perturbation_transfer"
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_checkpoint": false,
+    "code_identity": "theislab/scgen@d79e1f04233c30f9a4eb5b8d57718127909807d7",
+    "declared_algorithm_exposure_state": "target_label_unexposed",
+    "future_project_fit_rule": "A VAE fit on GSE281160 is continual_seen for that dataset. A target-specific delta is target-outcome-exposed to every cell used to compute it and can be evaluated only in a separately registered held-context split."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "352ae2e6b5603b1f4d16510b5de8dfe52dde47af0f1f231d486624acf46c29c8"
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {
+      "benchmark_action": "prohibit_for_held_target",
+      "finding": "predict directly reads stimulated cells from the model AnnData to estimate the perturbation delta. Using cells from a held target leaks the outcome being predicted."
+    },
+    {
+      "benchmark_action": "make_deterministic",
+      "finding": "predict balances and randomly subsamples control and stimulated cells using global NumPy randomness without recording selected row IDs."
+    },
+    {
+      "benchmark_action": "fit_inside_outer_training",
+      "finding": "Library normalization, log1p, HVG selection, VAE fitting, and any latent arithmetic must exclude held replicates and target loci."
+    },
+    {
+      "benchmark_action": "reject_current_task",
+      "finding": "The method transfers an observed perturbation effect to another context but cannot identify a response vector for a wholly unseen perturbation."
+    }
+  ],
+  "prediction_first_rule": {
+    "gse313774": "Bulk liver-chip profiles cannot enter the single-cell model. No direct stress prediction exists unless a new assay-native aggregation and matched perturbation contract is preregistered before the three-batch outcomes are opened."
+  },
+  "remaining_blockers": [
+    "Keep scGen unscheduled for the current held-target task; register a known-perturbation held-context task before any fit.",
+    "Resolve biological replicate identities and require replicate-grouped splits before preprocessing.",
+    "Replace stochastic global latent-delta estimation with fixed-seed training-role-only row manifests.",
+    "Freeze matrix layer, normalization target, HVG set, architecture, training parameters, seeds, output scale, and trained weight hashes.",
+    "Resolve the GPL-3.0 LICENSE versus MIT pyproject metadata conflict before open derivative release.",
+    "Pass isolated scvi runtime, save/resume, and no-held-outcome delta fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_and_current_task_requires_an_unavailable_held_target_delta",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "future_known_perturbation_tasks_only",
+    "rule": "O_pert uses training perturbation-specific replicate centroids only. The evaluator must reject a prediction if the held target's observed cells contributed to scGen's delta."
+  },
+  "terms_result": "blocked_GPL3_LICENSE_file_conflicts_with_MIT_package_metadata",
+  "verified_date": "2026-08-22"
+}

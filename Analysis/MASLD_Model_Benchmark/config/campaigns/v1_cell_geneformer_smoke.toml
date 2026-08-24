@@ -1,0 +1,40 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-cell-geneformer-smoke"
+description = "First executable cell-state lane: exact Geneformer V1 10M, V2 104M, and V2 316M checkpoints against every mandatory cell baseline"
+wave = "smoke"
+status = "blocked_environment_and_checkpoints"
+prerequisites = ["With explicit approval, obtain all three Geneformer checkpoint trees and materialize them through the offline restricted-pickle staging command.", "Pinned Geneformer environment passes one L40S import, tokenize, forward, deterministic-repeat, and resume probe.", "The frozen seven-source smoke-view crosswalk is enforced: declared encoder-seen sources are reported separately and unmatched sources remain unknown rather than clean."]
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["cell_state_mapping"]
+dataset_view_ids = ["resource_atlas_geneformer_smoke_1000_v1"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate"]
+model_ids = ["geneformer_v1_10m", "geneformer_v2_104m", "geneformer_v2_316m"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_single"
+runtime_id = "gpu_geneformer"
+seeds = [1103]
+folds = [0]
+cell_budget = 1000
+adaptation_regimes = ["common_lane"]
+common_head_ids = ["linear", "two_layer_mlp"]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0
+
+[execution.hyperparameters]
+cell_state_ontology_id = "broad_liver_five_v1"
+embedding_policy = "last_hidden_state_mean_over_non_special_nonpadding_tokens"
+head_policy = "separate_training_only_linear_and_two_layer_mlp_runs"
+common_head_contract_id = "cell_state_common_heads_v1"
+label_budget_policy = "identical_donor_grouped_training_subset"
+
+[execution.adapter_request]
+input_matrix = "raw_unselected_counts"
+retain_metadata = ["cohort_family_id", "person_key", "library_id", "cell_type"]

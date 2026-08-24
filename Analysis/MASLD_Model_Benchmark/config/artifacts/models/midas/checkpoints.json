@@ -1,0 +1,79 @@
+{
+  "architecture_contract": {
+    "atac_decoder": "Bernoulli with binary ATAC input and chromosome-factorized pre-encoder/post-decoder when dims_x supplies chromosome chunks",
+    "batch_model": "technical latent and discriminator/reconstruction terms use categorical modality and joint batch indices",
+    "default_biological_latent_dimension": 32,
+    "default_technical_latent_dimension": 2,
+    "rna_decoder": "Poisson with log1p encoder transform and inverse transform after decoding",
+    "shared_decoder_dimensions": [128, 1024],
+    "shared_encoder_dimensions": [1024, 128],
+    "warning": "The high-level integrate defaults are explicitly toy-tuned. The benchmark must freeze real-data hyperparameters and explicit chromosome chunks rather than use those defaults."
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No upstream MIDAS checkpoint is admitted. Train one model inside each outer donor fold and hash every local artifact.",
+    "implementation_type": "train_locally",
+    "pypi_release": {
+      "sdist": {"filename": "scmidas-0.3.0.tar.gz", "sha256": "ef4da333c81dd8535f67148ae0fae30eb603349bbd79e234c64a53e306c9cab4", "size_bytes": 504312, "upload_time": "2026-05-09T10:39:03.629209Z"},
+      "version": "0.3.0",
+      "wheel": {"filename": "scmidas-0.3.0-py3-none-any.whl", "sha256": "24df81372decc6d3edf6c2481d7b0c58f4685386d2ac938564946916f1bd9522", "size_bytes": 535457, "upload_time": "2026-05-09T10:39:01.814385Z"}
+    },
+    "repository": "labomics/midas",
+    "repository_revision": "95651c03c7600e632fba9e8a9d91505e376d9d99",
+    "repository_tag": "v0.3.0"
+  },
+  "inductive_inference_contract": {
+    "designed_output": "A trained model can decode every registered modality from the latent conditioned on the modalities observed for a batch, including RNA-only to ATAC imputation.",
+    "official_loader_gap": "MIDAS.load accepts a query MuData in documentation, but setup.json stores dimensions rather than ordered feature identifiers and the loader rebuilds batch dimensions from the query before loading the state dict.",
+    "required_adapter": "Instantiate the frozen training architecture from a project manifest, enforce exact ordered genes/peaks and chromosome chunks, map an RNA-only query to a prospectively frozen training-known technical category, attach no ATAC rows, load tensor state only, and perform no optimization.",
+    "query_fitting": "Any reference-to-query fine-tuning or knowledge transfer is model fitting and is prohibited on held/sealed rows unless separately prospectively registered."
+  },
+  "input_contract": {
+    "atac": "raw nonnegative peak counts, binarized by the native v0.3 MuData path; peaks use training-only GRCh38.p14 0-based half-open coordinates split into a frozen chromosome order",
+    "feature_masks": "Per-batch feature masks are supported separately from batch-level modality absence",
+    "rna": "raw nonnegative UMI counts with training-frozen GENCODE v49 gene order",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus", "same_study_unpaired_as_distinct_modality_batches", "same_sample_different_aliquot_as_distinct_modality_batches"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_in_one_multimodal_batch", "same_donor_different_tissue_in_one_multimodal_batch"],
+    "warning": "MultiModalDataset indexes every modality in one batch by the same row position and chooses its length from the first modality without validating ordered cell identifiers. The adapter must require identical ordered obs IDs for a paired batch."
+  },
+  "missingness_contract": {
+    "admission_status": "SUPPORTED_IN_PRINCIPLE_PENDING_STATE_AND_QUERY_FIXTURES",
+    "batch_level": "A modality absent from a batch is omitted from that batch combination, not encoded as an all-zero biological observation.",
+    "feature_level": "The native e mask gates feature reconstruction losses.",
+    "project_mapping": "Retain all eight project missing states in the adapter. Only eligible structural assay absence maps to an omitted modality; below-QC, unresolved joins, withheld data, and permissions states remain excluded and distinguishable."
+  },
+  "output_contract": {
+    "common_embedding": "biological latent z_c from RNA-only held rows with an identical common head",
+    "rna_to_atac": "deterministic x_impt or translation output on the training-frozen peak inventory with no observed held-row ATAC",
+    "uncertainty": "Five fixed local seeds; seeds are stability estimates rather than biological replicates."
+  },
+  "runtime_contract": {
+    "declared_lightning": ">=2.4,<2.7",
+    "declared_python": ">=3.10",
+    "declared_torch": ">=2.5,<2.11",
+    "environment_status": "UNRESOLVED_L40S_IMPORT_FORWARD_BACKWARD_RESUME_DDP_DETERMINISM_NUMERIC_TOLERANCE_AND_MEMORY_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "upstream_risk": "MIDAS.load calls torch.load(weights_only=False). The legacy load_checkpoint path uses weights_only=True.",
+    "required_adapter": "Use a project-controlled tensor-only state dict plus architecture, ordered features, chromosome chunks, missingness, batch mapping, preprocessing, and training receipt. Never call MIDAS.load on external or untrusted files."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact MIDAS v0.3.0 tag, source, MIT license, PyPI metadata, architecture, MuData handling, checkpoint code, and inference paths were inspected as public text on 2026-08-22. No package, checkpoint, or weights were installed, downloaded, deserialized, or executed.",
+  "source_records": [
+    {"identity": "midas:LICENSE", "sha256": "d9b9bdb8569b419dd891bfd269253fb946c08f6fa1b5ce96250992ffae6a0f4d", "size_bytes": 1073},
+    {"identity": "midas:pyproject.toml", "sha256": "ad31dc374647c37ce7d4f7ceb294339bfbf9b7321ab74a80df2b037aa4f1c0cd", "size_bytes": 3139},
+    {"identity": "midas:README.md", "sha256": "b6a493f87fbb21fae77a3a172cb83dfcd9eaad288b60bb79e8691674300befa7", "size_bytes": 5540},
+    {"identity": "midas:src/scmidas/model.py", "sha256": "5038b64fe9911737c8bdefc03b986ce58e69073f884c4bf256f5338d70f8f295", "size_bytes": 120556},
+    {"identity": "midas:src/scmidas/data.py", "sha256": "48773ac14a046b68065d863f7e617e76fa74cece2abc0a3fb13e8039870afcaa", "size_bytes": 25896},
+    {"identity": "midas:src/scmidas/config.py", "sha256": "9fe321f02818388d2a27928de1b4bf3f119312c3a919d795e65a0637be1679bf", "size_bytes": 4022}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Eligible in principle as a locally trained frozen RNA-only biological embedding after the query adapter and all fixtures pass.",
+    "rna_conditioned_atac": "Direct profile candidate in principle because RNA-only batches can decode ATAC, but blocked until the no-held-ATAC, saved-architecture, feature-order, batch-category, and safe-loading fixtures pass.",
+    "variant_to_regulation": "Ineligible standalone because MIDAS has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

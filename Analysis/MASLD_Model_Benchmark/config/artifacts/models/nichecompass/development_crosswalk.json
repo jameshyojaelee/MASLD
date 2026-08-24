@@ -1,0 +1,83 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not train, screen, promote, or compare NicheCompass in v1.",
+    "minimum_future_evidence": "An authoritative, rights-cleared donor-level spatial RNA dataset with reusable counts, coordinates, donor and section joins, outcome-independent boundary masks, weight-redistribution permission, and enough donors for a predeclared held-donor design.",
+    "task_gate": "Register a spatial task, endpoint, biological unit, mandatory transcript-native baselines, power analysis, and external source before any superiority or champion claim."
+  },
+  "crosswalk_scope": {
+    "candidate_model": "nichecompass_0.3.3_train_locally",
+    "candidate_sources": [
+      "gse192741",
+      "gse292268",
+      "hra007511",
+      "vu2025"
+    ],
+    "registered_benchmark_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors represented by 5 sections; one donor contributes 2 sections",
+      "model_modality_fit": "Native Visium RNA input is possible in principle after exact feature and coordinate admission.",
+      "pairing": "same_section_Visium_RNA_and_H&E_but_H&E_is_not_a_native_NicheCompass_input",
+      "project_role": "technical_pilot_development_visible",
+      "reference_issue": "Space Ranger 1.0 hg19 was declared, but the exact annotation package and GRCh38.p14 gene crosswalk are unresolved.",
+      "status": "blocked_for_training_and_ineligible_for_donor_held_superiority",
+      "why": "Four donors cannot support the planned external donor-level claim. Source outcomes are already exposed, and HEST-1k copies are duplicate representations, not additional donors."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per slide",
+      "model_modality_fit": "CosMx RNA is a native spatial-transcript count modality in principle, subject to assay-specific feature and count handling.",
+      "pairing": "same_study_unpaired_until_authoritative_slide_FOV_region_to_donor_join",
+      "status": "blocked",
+      "why": "Slides and fields of view are technical units, not donors. The donor map and morphology asset are unresolved, and four donors cannot support superiority."
+    },
+    "hra007511": {
+      "biological_units": "61-participant union; 35 spatial participants; only 3 participants overlap the scRNA and spatial subsets",
+      "model_modality_fit": "Spatial RNA alone is native. H&E and MALDI are not native NicheCompass observations. Optional RNA-ATAC is not supplied by this source.",
+      "pairing": "adjacent_section_or_same_study_unpaired; authoritative participant joins only",
+      "status": "deferred_controlled_access",
+      "why": "Processed spatial assets require permission, weight-redistribution rights require written approval, and participant-level joins are not admitted."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants; one participant contributes two synchronous cores",
+      "model_modality_fit": "Visium RNA is native in principle. CODEX and H&E are not native NicheCompass observations.",
+      "pairing": "Ten VLP capture arrays each hold biopsies from four to five participants; barcode-to-biopsy and participant boundaries are unresolved.",
+      "status": "blocked_controlled_access_and_join_unresolved",
+      "why": "A data-sharing agreement is required, public CODEX-to-Visium transforms are incomplete, and a graph built across a capture array would create cross-participant edges."
+    }
+  },
+  "donor_and_graph_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "multiple_sections": "All sections, cores, fields, and arrays from one participant remain in one outer fold.",
+    "technical_units": "Spot, cell, field of view, section, core, slide, capture array, run, and graph node are not biological replicates.",
+    "graph_scope": "Build graphs within authoritative participant and section boundaries, then use block-diagonal batching. No cross-participant, cross-core, cross-section, or cross-slide edge is allowed by default.",
+    "query_graph": "A held donor's coordinates may form its own graph under a precommitted outcome-blind rule. Graph construction from pooled train and held coordinates is prohibited.",
+    "preprocessing": "Gene filtering, normalization parameters, program selection, graph hyperparameters, clustering, label mapping, calibration, and any reference atlas are fit inside training donors only.",
+    "inference_unit": "Inferential uncertainty resamples donors or participants, not nodes."
+  },
+  "topology_and_missingness": {
+    "allowed_pairing": "Optional RNA-ATAC objectives require same-cell or same-nucleus observations. None of the four current spatial candidates supplies an admitted same-observation RNA-ATAC topology.",
+    "histology": "Presence of a registered H&E image is separate observed evidence, not a NicheCompass feature unless a new, explicitly audited image encoder is added.",
+    "maldi": "Adjacent-section MALDI cannot be entered as if measured on a transcriptomic spot.",
+    "codex": "CODEX proteins cannot be filled into an RNA or ATAC channel and unresolved registration remains join_unresolved.",
+    "missing_states": "Use observed, structurally_missing, not_applicable, below_qc, unavailable_permission, join_unresolved, withheld_sealed, and derivable_not_processed. Never encode unavailable assays, genes, priors, or joins as biological zero."
+  },
+  "held_donor_evaluation": {
+    "frozen_lane": "Freeze weights, gene and prior-program orders, normalization, graph recipe, sample-covariate policy, prototype or cluster mapping, and all hyperparameters before encoding a held donor.",
+    "query_adaptive_lane": "Any query fine-tuning, reference mapping update, new sample embedding, prototype adaptation, or clustering using held features is a separately reported transductive lane.",
+    "labels": "Held disease, fibrosis, niche, cell-type, or outcome labels cannot affect graph construction, training, clustering resolution, mapping, thresholding, or calibration.",
+    "claim_limit": "No current source supplies a project-sealed, adequately powered donor-level endpoint. Therefore no NicheCompass result can be a v1 champion result."
+  },
+  "training_corpus_and_prior_crosswalk": {
+    "upstream_checkpoint": "none",
+    "project_trained_state": "not_created",
+    "external_prior_assets": "UNRESOLVED; NicheNet, OmniPath, CollecTRI, ortholog, and metabolite tables must each be frozen and terms-audited before use.",
+    "masld_hotspot_programs": "prohibited_as_training_or_selection_inputs; read-only post hoc projections only",
+    "target_exposure_interpretation": "A correctly donor-folded local model could be target_label_unexposed for its held donors, but no such model or eligible dataset exists."
+  },
+  "interpretation": "NicheCompass is scientifically relevant for a future donor-resolved spatial RNA niche track, not for the active v1 tournament. Its spatial graph is an input with its own leakage surface, its optional RNA-ATAC path requires true same-observation pairing, and its priors are versioned external evidence rather than free model metadata. The current MASLD spatial sources are too small, controlled, join-unresolved, exposed, or non-native for a sealed superiority claim.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

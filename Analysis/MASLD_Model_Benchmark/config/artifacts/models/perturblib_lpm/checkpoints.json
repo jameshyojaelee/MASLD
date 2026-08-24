@@ -1,0 +1,74 @@
+{
+  "architecture_contract": {
+    "canonical_model": "decoder_only_Latent_Perturbation_Model",
+    "input": "symbolic_perturbation_P_readout_R_and_context_C_identifiers",
+    "native_output": "one_scalar_response_for_each_P_R_C_record",
+    "network": "EmbeddingBag_for_P_plus_Embedding_for_R_plus_Embedding_for_C_concatenated_into_an_MLP_trained_with_MSE",
+    "published_scope": "unseen_combinations_of_symbols_already_present_in_the_training_vocabulary",
+    "unseen_symbol_scope": "unsupported_without_explicit_external_embeddings"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "implementation_type": "train_locally",
+    "registered_identity": "perturblib/perturblib@9e79ae328ab532aa9de76a3586be93554d72fb4f",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "external_resource_contract": {
+    "available_library_resources": ["Achilles", "STRING", "Gene2vec", "pathway_embeddings"],
+    "core_LPM_binding": "NONE; the released LPM constructor creates learned symbolic embeddings and has no external-embedding initialization path",
+    "canonical_paper_corpora": ["LINCS_L1000", "Replogle_2022_K562", "Replogle_2022_RPE1"],
+    "corpus_terms_and_hashes": "UNRESOLVED; admit_each_dataset_separately_before_use",
+    "proprietary_feature_requirement": false
+  },
+  "fit_contract": {
+    "canonical_lincs": {"batch_size": 1000, "dropout": 0.1, "embedding_dimension": 128, "epochs": 50, "hidden_dimension": 256, "layers": 2, "learning_rate": 0.002, "learning_rate_decay": 0.97, "optimizer": "AdamW", "seeds": [13, 14, 15, 16, 17]},
+    "canonical_replogle": {"batch_size": 5000, "dropout": 0.0, "embedding_dimension": 32, "epochs": 50, "hidden_dimension": 512, "layers": 2, "optimizer": "AdamW", "seeds": [13, 14, 15, 16, 17]},
+    "fold_rule": "split_target_locus_guide_family_context_and_biological_replicate_before_normalization_HVG_aggregation_vocabulary_or_fit",
+    "replicate_rule": "pseudobulk_within_biological_replicate_then_retain_replicate_ID_for_evaluation; do_not_mean_aggregate_replicates_into_one_P_C_record",
+    "unknown_symbol_rule": "reject_every_unknown_P_R_or_C_symbol",
+    "upstream_incident": "encode_data_maps_an_unknown_perturbation_to_the_control_code_by_default"
+  },
+  "query_contract": {
+    "current_task_result": "blocked_unseen_symbol_mismatch",
+    "reason": "Held GSE281160 noncoding locus and guide symbols are absent from a training-only LPM vocabulary. The released model cannot encode a wholly unseen perturbation symbol, and its fallback silently maps that symbol to control.",
+    "prohibited_behaviors": ["unknown_perturbation_to_control", "outcome_informed_vocabulary_extension", "nearest_gene_substitution", "count_readout_scalars_as_replicates"],
+    "valid_future_use": "a_separately_registered_missing_combination_task_where_P_R_and_C_are_all_observed_in_training"
+  },
+  "repository": "perturblib/perturblib",
+  "repository_revision": "9e79ae328ab532aa9de76a3586be93554d72fb4f",
+  "runtime_contract": {
+    "declared_package_version": "0.1.0",
+    "declared_python": "3.12.4",
+    "key_requirements": ["numpy==1.26.4", "pandas^2.2.2", "polars[pyarrow]^1.23", "pytorch-lightning^2.2.5", "scanpy^1.11", "scikit-learn^1.5", "scipy^1.15.2", "torch^2.6"],
+    "runtime_status": "DECLARED_NOT_PROBED",
+    "required_probe": "isolated_L40S_import_fit_predict_checkpoint_resume_unknown_symbol_rejection_and_fixed_seed_numeric_probe"
+  },
+  "safe_loading_contract": {
+    "unrestricted_torch_load_prohibited": true,
+    "project_action": "train_project_weights_locally_and_load_only_verified_state_dicts_with_frozen_model_and_vocabulary_metadata"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository, paper, and paper configurations were inspected on 2026-08-22; no package, data, or checkpoint was downloaded or loaded.",
+  "source_records": [
+    {"identity": "perturblib:README.md", "sha256": "7628816e72c8f6b4c686d3c96ded2ae879371107c5dd5d6b74c7b24efdee30e1", "size_bytes": 3743},
+    {"identity": "perturblib:pyproject.toml", "sha256": "6dd626b163983e00175a6f8807fb606ac245a12c8aad07027bcf9a70600f8dcc", "size_bytes": 3171},
+    {"identity": "perturblib:LICENSE.txt", "sha256": "152044c4cad0476d83290d4bf5a7692703dd7f7c1f37910d3fb4f41d8472b799", "size_bytes": 11350},
+    {"identity": "perturblib:perturb_lib/models/collection/lpm.py", "sha256": "ff1c0bccd1aead364fe631577776d03142b9aacac19ae92fa649f2b5e4db8be0", "size_bytes": 17558},
+    {"identity": "perturblib:perturb_lib/data/access.py", "sha256": "bbe9baaa834f2a727e00f80393bee876a904e78afab921d8d0463e7c872ea031", "size_bytes": 23420},
+    {"identity": "perturblib:perturb_lib/data/preprocesing.py", "sha256": "35efc5d543ff4b3941c614a2dd403fe492d89a76571a0f5222eec08b9d84048a", "size_bytes": 4091},
+    {"identity": "perturblib:perturb_lib/data/utils.py", "sha256": "608acfd6b8e1b6e2d0333e1e6644939bd02285c9fa3d6438cf54d89208fbf02d", "size_bytes": 11659},
+    {"identity": "perturblib:perturb_lib/models/access.py", "sha256": "f45c7ec3979bb8f9b739ab7d8e28d30669bb6371edee6116593874ddfe29ab04", "size_bytes": 3911},
+    {"identity": "perturblib:perturb_gym/training.py", "sha256": "3f52b412e0060c981fa42ffaaa351827ea87a0863de075091470ee302c5010a6"},
+    {"identity": "perturblib:perturb_gym/evaluation.py", "sha256": "31974653a08d2436b5355c178ecfe916e0ba4cda58248a90f40dfdc03b1bfed3"},
+    {"identity": "perturblib:paper_config_LINCS", "sha256": "bb38f3d511a0a8bc0596b967127fa674f7d8837f60eb351a0f51a35c3b1d6bdb", "size_bytes": 1551},
+    {"identity": "perturblib:paper_config_Replogle_K562", "sha256": "c73ef14e8580b77a30dbaf437dc9b3111edbddb9e59e7f86775ee27a3a1175d9", "size_bytes": 766},
+    {"identity": "perturblib:paper_config_Replogle_RPE1", "sha256": "f9634ad4ff0fa75adeb111abfbc5aab6817921fc036399cf16c9a09962767755", "size_bytes": 766}
+  ],
+  "terms_audit": {
+    "code_license": "Apache-2.0",
+    "paper_source_archive": "Zenodo_DOI_10.5281/zenodo.15671137",
+    "project_trained_weight_terms": "project_owned_subject_to_each_training_dataset_terms",
+    "result": "code_admissible_training_corpora_require_separate_admission"
+  }
+}

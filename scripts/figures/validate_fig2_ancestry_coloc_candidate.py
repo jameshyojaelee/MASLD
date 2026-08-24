@@ -12,17 +12,17 @@ from pathlib import Path
 
 
 EXPECTED = {
-    "fig2A_gwas_cascade.pdf": (4.03, 2.49),
-    "Fig2B_PIP_vs_SuSiE-coloc.pdf": (2.49, 2.49),
-    "Fig2E_ancestry_unique_coloc_GWS.pdf": (2.75, 2.44),
-    "Fig2F_crossancestry_coloc.pdf": (2.76, 2.44),
+    "fig2A_gwas_cascade.pdf": (3.53, 2.35),
+    "Fig2B_PIP_vs_SuSiE-coloc.pdf": (1.80, 2.35),
+    "Fig2E_ancestry_unique_coloc_GWS.pdf": (2.00, 2.10),
+    "Fig2F_crossancestry_coloc.pdf": (2.58, 2.10),
 }
 PROHIBITED = ("ABF-fallback", "exploratory", "causal gene", "ancestry-specific")
 REQUIRED_TERMS = {
     "fig2A_gwas_cascade.pdf": ("Multi-signal COLOC", "Single-signal", "COLOC only"),
     "Fig2B_PIP_vs_SuSiE-coloc.pdf": ("Multi-signal COLOC",),
     "Fig2E_ancestry_unique_coloc_GWS.pdf": ("multi-signal COLOC",),
-    "Fig2F_crossancestry_coloc.pdf": ("Multi-signal COLOC", "Single-signal COLOC only"),
+    "Fig2F_crossancestry_coloc.pdf": ("multi-signal", "single-signal only"),
 }
 TOLERANCE_IN = 0.015
 

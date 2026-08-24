@@ -1,0 +1,99 @@
+{
+  "architecture_contract": {
+    "attention_heads": 2,
+    "cell_embedding_style": "cls",
+    "expression_embedding_style": "continuous",
+    "hidden_dimension": 256,
+    "maximum_genes_per_cell": 2200,
+    "transformer_layers": 8
+  },
+  "checkpoint": {
+    "current_path_is_immutable_identity": false,
+    "hf_commit": "f60c87152e83fedb932a84f8ba850fbf489a5a86",
+    "hf_repository": "jkobject/scPRINT",
+    "lfs_blob_id": "3b2de60f9914875f3595d4571122f780da8ddcd0",
+    "name": "v2-medium.ckpt",
+    "sha256": "a4cf0753270d4ff451a5dbddadd4c59a53e10e4c3e96a8af0db407ad893c36c5",
+    "size_bytes": 221775592,
+    "upload_date": "2025-03-04T16:17:01Z",
+    "url": "https://huggingface.co/jkobject/scPRINT/resolve/f60c87152e83fedb932a84f8ba850fbf489a5a86/v2-medium.ckpt"
+  },
+  "code_license": "MIT",
+  "embedding_contract": {
+    "common_lane_candidate": "cell_type_ontology_term_id_disentangled_embedding_with_identical_training_only_head",
+    "default_embedder_labels": [
+      "cell_type_ontology_term_id",
+      "disease_ontology_term_id",
+      "self_reported_ethnicity_ontology_term_id",
+      "sex_ontology_term_id"
+    ],
+    "official_predict_yaml_labels": ["cell_type_ontology_term_id"],
+    "output_dimension": 256,
+    "row_identity_rule": "The adapter carries immutable input row IDs through every batch and joins outputs by those IDs. It does not trust generated AnnData observation names or output file order.",
+    "selection_rule": "The exact common and native embedding variants must be frozen before smoke and may not be chosen from evaluation performance. Released pretrained label logits are native outputs, not common-lane embeddings."
+  },
+  "historical_alias": {
+    "hf_commit": "fed0f6bbc9aba1c648df7442e93fe41ded0175bb",
+    "lfs_blob_id": "3b2de60f9914875f3595d4571122f780da8ddcd0",
+    "name": "medium-v1.5.ckpt",
+    "operation": "rename_only",
+    "rename_date": "2025-12-11T15:48:24Z",
+    "sha256": "a4cf0753270d4ff451a5dbddadd4c59a53e10e4c3e96a8af0db407ad893c36c5",
+    "size_bytes": 221775592
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unintegrated_nonnegative_single_cell_or_single_nucleus_UMI_counts",
+    "collation": "weighted_random_sampling_of_expressed_genes_in_training; official embedding default_random_expr",
+    "feature_alignment": "checkpoint_gene_vocabulary_and_organism_ontology; exact vocabulary remains inside the uninspected checkpoint",
+    "maximum_genes_per_cell": 2200,
+    "normalization": "model_internal_sum_depth_scaling_and_log_expression_encoding; do_not_pre_normalize_or_integrate",
+    "sampling_warning": "random expr is stochastic when more than 2,200 eligible genes are expressed. The common lane derives every sampling seed from the immutable row ID and must pass cell-order invariance; native stochastic behavior is reported separately.",
+    "supported_assays": ["scRNA_UMI", "snRNA_UMI"]
+  },
+  "replacement_warning": {
+    "eligibility": "ineligible",
+    "hf_commit": "8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed",
+    "lfs_blob_id": "952a00797afa5f239e38fcd08d8fe5971d245ec6",
+    "name": "medium-v1.5.ckpt",
+    "reason": "The same path was replaced with a different object after the sealed source was public. The replacement's training corpus and relationship to the published model are undeclared.",
+    "replacement_date": "2026-05-05T13:08:34Z",
+    "sha256": "96ff7c5d9e1ad5076e818bde3c38f498c95cd354cc42029d90691b5ba2964ff8",
+    "size_bytes": 221742980
+  },
+  "repository": "cantinilab/scPRINT",
+  "repository_revision": "6bbe1a7cfebb557dc745e23d1ddf5be6e38daf3f",
+  "release": "1.6.4",
+  "runtime_contract": {
+    "declared_python": ">=3.10",
+    "declared_scDataLoader": ">=1.6.4",
+    "declared_torch": "2.2.0",
+    "environment_status": "UNRESOLVED",
+    "gpu_path": "flashattention_runtime_requires_compatibility_probe",
+    "non_flash_fallback": "load_from_checkpoint_transformer_normal"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "hugging_face_security_scan_at_original_revision": "safe_pickle_imports_only_but_not_a_substitute_for_local_inspection",
+    "released_loader": "lightning_scPrint_load_from_checkpoint",
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_state_dict_and_hyperparameter_schema_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The published Nature Communications paper, code tag 1.6.4, exact Hugging Face commit history, blob-expanded APIs, and historical CELLxGENE release manifest were queried on 2026-08-22. No checkpoint body was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "scPRINT:LICENSE", "sha256": "a8097fc7d8d99729eed5748d72d31b17529109ce74f977c7ac3f62db904755c4", "size_bytes": 1104},
+    {"identity": "scPRINT:README.md", "sha256": "fa9f69ae695fd510c44cdc1bbddb2d45fdcc9c14b6f7d509da4777e0df0d1462", "size_bytes": 15607},
+    {"identity": "scPRINT:pyproject.toml", "sha256": "71546a7a1244ba4117d03d3a302be9b761c25d263718670aeb9555cceb320277", "size_bytes": 2578},
+    {"identity": "scPRINT:config/base.yml", "sha256": "dc0cab6d6cbcd99743f32f2c1522468d2af653bb104648cba8d87474dbfb5c64", "size_bytes": 2972},
+    {"identity": "scPRINT:config/pretrain_medium.yml", "sha256": "86983c140683819c6bda9fd970265f80aa373bc46498d51e027ebd504517cfbf", "size_bytes": 129},
+    {"identity": "scPRINT:config/predict.yml", "sha256": "fef770a7b672abdf043f7196d1e5d0acfe0545db5dc113dcf53b952929e05cbf", "size_bytes": 471},
+    {"identity": "scPRINT:docs/pretrain.md", "sha256": "8a72153c91884d5ce959a16a80e2d0e21eaed3419a59e8060f2f6084f0bb91c0", "size_bytes": 5870},
+    {"identity": "scPRINT:scprint/tasks/cell_emb.py", "sha256": "1a9aaa4d9fbad71df6f0da7089cf00367a85c05f0abf0647b30a0490532b56b6", "size_bytes": 22605},
+    {"identity": "scPRINT:scprint/model/model.py", "sha256": "d6d3c0590e66ff98a748dd464ba4a63baf050467704defb1288728f639d5e3cb", "size_bytes": 58278},
+    {"identity": "HF_API_f60c87152e83fedb932a84f8ba850fbf489a5a86_blobs_queried_2026-08-22", "sha256": "d9a7c62d6d6f127d72cd206fe6156070d5c45df2011672f6641f62853ec0212f", "size_bytes": 3393},
+    {"identity": "HF_API_fed0f6bbc9aba1c648df7442e93fe41ded0175bb_blobs_queried_2026-08-22", "sha256": "6dd513a5eecd0266fa623ff0866fc60f40d2db938c8f322394e7c90fefa2a921", "size_bytes": 4070},
+    {"identity": "HF_API_8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed_blobs_queried_2026-08-22", "sha256": "fb9b9ff0dfa88d58f8da388261c421b96a15358af17968c96bfea2c0355d67e2", "size_bytes": 17889},
+    {"identity": "CELLxGENE_Census_release_manifest_queried_2026-08-22", "sha256": "409739c0a0d385b16b3b9dd1b6abdc68a59232dc23d6b1d0b4ec57401fa3f191"}
+  ],
+  "weight_license": "Apache-2.0"
+}

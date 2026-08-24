@@ -1,0 +1,65 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not train, screen, impute, promote, or compare SpaMosaic in v1.",
+    "minimum_future_evidence": "A rights-cleared participant-level spatial multi-omics collection with authoritative observation and section joins, at least one true bridge topology, enough participants for grouped evaluation, an external source, and derivative-weight permission.",
+    "task_gate": "Register modality-native integration and imputation endpoints, donor-level uncertainty, mandatory unimodal and multimodal baselines, transductive versus frozen lanes, prospective power, and a champion gate."
+  },
+  "crosswalk_scope": {
+    "candidate": "SpaMosaic_v1.0.3_train_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_tasks": [],
+    "status": "deferred_no_active_spatial_multiomics_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors and 5 Visium sections",
+      "modalities": "same-section Visium RNA and H&E",
+      "native_fit": "RNA is native; H&E pixels are not a SpaMosaic omic feature matrix in the registered implementation.",
+      "status": "technical_pilot_only",
+      "why": "There is no native multi-omics bridge, the source is exposed, the hg19 annotation is unresolved, and four donors cannot support superiority."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per CosMx slide",
+      "modalities": "CosMx RNA only",
+      "native_fit": "Unimodal RNA does not test mosaic integration or missing-modality transfer.",
+      "status": "blocked",
+      "why": "The slide and field-of-view donor map is unresolved and the donor count is inadequate."
+    },
+    "hra007511": {
+      "biological_units": "35 spatial participants; 27 reportedly have MALDI",
+      "modalities": "Visium RNA, H&E, and MALDI on adjacent sections or same-study records",
+      "native_fit": "MALDI intensity has no audited SpaMosaic preprocessing or assay likelihood, and adjacent-section observations cannot be treated as row-paired bridge modalities.",
+      "status": "deferred_controlled_access",
+      "why": "Permission, participant and section joins, registration, training rights, and derivative-weight rights are unresolved."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants",
+      "modalities": "Visium RNA, H&E, and CODEX protein images",
+      "native_fit": "SpaMosaic can process protein abundance matrices, but CODEX cells and Visium spots are not identical observations. They require an authoritative transform and aggregation receipt before forming a bridge batch.",
+      "status": "blocked_DSA_and_join_unresolved",
+      "why": "VLP arrays mix participants, barcode boundaries are missing, CODEX registration is incomplete, and a DSA is required."
+    }
+  },
+  "pairing_and_missingness": {
+    "bridge_rule": "Only same-cell, same-spot, or an explicitly registered and uncertainty-tagged common observation grid may populate two modality rows in one bridge batch.",
+    "adjacent_sections": "Adjacent-section values remain derived estimates after registration and never become observed same-section measurements.",
+    "mosaic_missingness": "A batch lacking an assay is structurally_missing. Permission blocks, failed joins, unprocessed derivations, and assay non-applicability keep their distinct states.",
+    "imputation": "SpaMosaic outputs are derivable_not_observed with source-donor, reference-pool, neighbor, and uncertainty provenance; they cannot replace measured evidence in evaluation."
+  },
+  "donor_and_graph_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "sample_scope": "All sections, cores, arrays, fields, modalities, transforms, graphs, MNNs, and imputations from one participant remain in one fold.",
+    "spatial_graph": "Construct within participant and section or core only. No edge crosses donors or unregistered sections.",
+    "MNN": "Strict held-donor evaluation prohibits cross-batch query MNNs. A separate transductive mapping lane may connect one held donor to development bridges without labels and never to other held donors.",
+    "training_only": "Feature selection, normalization, PCA or LSI, Harmony, smoothing, bridge selection, MNN hyperparameters, outlier filtering, latent training, imputation K, clustering, and calibration are selected with development participants."
+  },
+  "held_donor_behavior": {
+    "official_workflow": "Joint and transductive; non-bridge query batches participate in MNN construction and graph-encoder training.",
+    "frozen_lane": "Not supplied by the official interface and cannot be claimed until a fixed fit-predict adapter passes section-isolation and numeric fixtures.",
+    "claim_limit": "No candidate is a project-sealed, powered spatial multi-omics source. No v1 SpaMosaic endpoint or champion exists."
+  },
+  "interpretation": "SpaMosaic is a future mosaic-integration candidate, not an active MASLD model. The current public cohorts are unimodal or too small, and the richer HRA and Vu assets are controlled, unjoined, and not natively row-paired. Its official use is a transductive joint graph fit, so held-donor mapping must never be mislabeled as inductive generalization.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

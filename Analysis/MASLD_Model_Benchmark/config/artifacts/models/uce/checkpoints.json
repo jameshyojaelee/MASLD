@@ -1,0 +1,87 @@
+{
+  "architecture_contract": {
+    "common": {
+      "chromosome_token_offset": 143574,
+      "cls_token_index": 3,
+      "d_hid": 5120,
+      "d_model": 1280,
+      "dropout": 0.05,
+      "n_heads": 20,
+      "output_dim": 1280,
+      "pad_length": 1536,
+      "sample_size": 1024,
+      "token_dim": 5120
+    },
+    "uce_33l": {"n_layers": 33},
+    "uce_4l": {"n_layers": 4}
+  },
+  "auxiliary_artifacts": [
+    {
+      "figshare_file_id": 42706555,
+      "name": "species_offsets.pkl",
+      "size_bytes": 139,
+      "source_md5": "ddf9143508857e62607f323b338ff383"
+    },
+    {
+      "figshare_file_id": 42706558,
+      "name": "species_chrom.csv",
+      "size_bytes": 4097781,
+      "source_md5": "42a9b5871b1ed955fd05414b3ab89081"
+    },
+    {
+      "figshare_file_id": 42706585,
+      "name": "all_tokens.torch",
+      "size_bytes": 2979205876,
+      "source_md5": "3523ea431c403f95701b6eeb0c30b997"
+    },
+    {
+      "figshare_file_id": 42715213,
+      "name": "protein_embeddings.tar.gz",
+      "size_bytes": 2735410523,
+      "source_md5": "6756d7fa8348e0f70b5e5b11e324f023"
+    }
+  ],
+  "code_license": "MIT",
+  "input_contract": {
+    "canonical_matrix": "raw_unselected_nonnegative_single_cell_or_single_nucleus_counts",
+    "cell_filter": "at_least_25_genes_when_official_additional_filter_is_enabled",
+    "embedding": "L2_normalized_cls_decoder_output",
+    "gene_filter": "protein_embedding_available_and_at_least_10_cells_when_official_additional_filter_is_enabled",
+    "gene_identifier": "gene_symbol_not_ensembl_id",
+    "sampling": "1024 genes with replacement weighted by normalized log1p count; chromosome order shuffled; genes sorted by genomic start within chromosome",
+    "sampling_warning": "The official evaluator uses NumPy global randomness for gene sampling and chromosome shuffling. Common-lane adapters must derive a per-cell seed from the immutable row ID so embeddings are cell-order invariant; native-lane official behavior is reported separately."
+  },
+  "repository": "snap-stanford/UCE",
+  "repository_revision": "9c416007be15ad6753dc84af4468c1dc10421ab9",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The pinned official repository, Figshare version APIs, and the paper's complete Supplementary Table 16 were queried on 2026-08-22. Weight bodies and large auxiliary bodies were not downloaded; SHA-256 values remain unresolved.",
+  "source_records": [
+    {"identity": "UCE:README.md", "sha256": "4454680cbe611ede29c2d19da3a000d874ec145ca3f36be9659545c0e5015101"},
+    {"identity": "UCE:LICENSE", "sha256": "bf068012efcf3a796af03889d4214df435bc1220ac97981c77a14f14c5070cde"},
+    {"identity": "UCE:requirements.txt", "sha256": "90aea1e37aa9e02f996dfa6efd47c275984c7d6ed3a7893849da7ec21c3d15cc"},
+    {"identity": "UCE:model.py", "sha256": "4c0e8509bcca1055dc16396676900c6d4a019cda71815f87be36e7846dc715d8"},
+    {"identity": "UCE:eval_data.py", "sha256": "f0adfa2171a91302e56dc7609bde5bc4c41bfba3fea8fc30bfbaeb9a8e0af313"},
+    {"identity": "UCE:evaluate.py", "sha256": "d5325c4991ff2d337a70cb07508c1b1fb01d89e85db4b9f1df6fd170ec6b6054"},
+    {"identity": "Rosen_et_al_2026_Supplementary_Table_16", "sha256": "9a5117a0ae2ca6c8dba9a7cc45a926ed836de0c4e9d94528aed4bda08296a811"}
+  ],
+  "weight_artifacts": {
+    "uce_33l": {
+      "figshare_file_id": 43423236,
+      "figshare_record_doi": "10.6084/m9.figshare.24320806.v5",
+      "name": "33l_8ep_1024t_1280.torch",
+      "sha256": "UNRESOLVED",
+      "size_bytes": 5686283829,
+      "source_md5": "eed62d4fe51873c87bcf9660faa07707"
+    },
+    "uce_4l": {
+      "figshare_file_id": 42706576,
+      "figshare_record_doi": "10.6084/m9.figshare.24320806.v4",
+      "name": "4layer_model.torch",
+      "sha256": "UNRESOLVED",
+      "size_bytes": 3403514339,
+      "source_md5": "3e2f59d6da6eaa5396aa297edfcec08f"
+    }
+  },
+  "weight_content_downloaded": false,
+  "weight_license": "CC-BY-4.0"
+}

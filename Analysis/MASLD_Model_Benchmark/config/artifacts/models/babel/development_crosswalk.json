@@ -1,0 +1,42 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["rna_conditioned_atac"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Donor-level external-development RNA-to-ATAC profile evaluation only after all admission gates. It cannot train paired BABEL because its assays are different aliquots, not the same cell or nucleus.",
+      "exposure_state": "target_label_unexposed_for_historical_v1_1_if_checkpoint_identity_verifies",
+      "model_access": "No GSE244832 matrices, labels, target ATAC, preprocessing statistics, model fitting, feature changes, or calibration may enter a model scored on it."
+    },
+    "gse289173": {
+      "allowed_use": "None for BABEL's active profile task because the sealed cohort has RNA but no ATAC truth.",
+      "exposure_state": "target_label_unexposed_for_historical_v1_1_if_checkpoint_identity_verifies",
+      "model_access": "No outcomes or labels are available. Modality incompatibility prevents profile confirmation."
+    },
+    "gse296875": {
+      "allowed_use": "Same-nucleus outer-fold local BABEL training and donor-held RNA-to-ATAC evaluation only if written code permission permits it and the loader is replaced with leakage-safe preprocessing.",
+      "exposure_state": "continual_seen_for_local_models; target_label_unexposed_for_historical_v1_1",
+      "model_access": "Only outer-training donors define genes, peaks, normalization, model weights, hyperparameters, early stopping, or calibration. Held donors provide RNA only when RNA-to-ATAC is scored."
+    }
+  },
+  "historical_checkpoint": {
+    "chronology": "The checkpoint was documented by October 2021 and its declared PBMC/colorectal corpus predates GSE244832, GSE296875, and GSE289173 releases.",
+    "eligibility": "Chronology supports target-label-unexposed status only after the archive MD5 matches and immutable object identity is recorded. It does not cure absent code or weight terms.",
+    "feature_contract": "Use only the checkpoint's exact rna_genes.txt and atac_bins.txt after genome-build and feature-coverage validation; no held-source union or refit."
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; evaluation at donor/cell-state pseudobulk only, never paired training",
+    "gse296875": "same_nucleus; paired training allowed only after join validation and permissions",
+    "gse289173": "RNA_only; no ATAC truth"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; nuclei and peaks are not independent biological replicates.",
+    "local_training": "The upstream full-data normalization, clustering, and split path is prohibited. A permitted adapter must fit every transform inside outer-training donors.",
+    "missingness": "RNA-only inference is a designed source-to-target call and must not fabricate an all-zero ATAC input. Other missing states remain explicit in project manifests.",
+    "status": "No BABEL campaign may be scheduled until written permissions and all technical blockers are closed."
+  },
+  "schema_version": "masld-bench-external-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

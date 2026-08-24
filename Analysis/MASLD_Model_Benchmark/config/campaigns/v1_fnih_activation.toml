@@ -1,0 +1,24 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-fnih-activation"
+description = "Audit-only activation path for the conditional FNIH 86-liver source; this template does not activate or download it"
+wave = "fnih_activation_audit"
+status = "blocked_data_access"
+prerequisites = ["Open download and reuse terms verified without a DUA.", "Immutable donor-linked 86-liver file manifest and hashes frozen.", "Participant joins, genome build, endpoint definitions, export rules, and repeated-specimen donor grouping frozen.", "Dataset role and status transition reviewed and committed before SelectionLock.", "RNA-conditioned ATAC and unified-model task contracts reviewed after manifest validation."]
+activation_manifest_sha256 = "UNRESOLVED"
+selection_lock_id = "UNRESOLVED"
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["rna_conditioned_atac", "unified_model"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate", "restricted_comparator"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "cpu_contract"
+seeds = [20260821]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0

@@ -1,0 +1,84 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_cell_lines": ["K562", "GM12878", "H1", "HepG2", "HUVEC", "NHEK"],
+    "declared_modalities": ["DNA_sequence", "DNase", "H3K27ac", "Hi-C", "RNA_expression", "CAGE_expression", "Xpresso_mRNA_features", "ABC_candidate_links"],
+    "selected_context": "HepG2 RNA f3",
+    "selected_checkpoint_revision_date": "2026-07-15",
+    "selected_code_revision_date": "2026-07-17",
+    "masld_donor_or_qtl_labels_declared": false,
+    "warning": "HepG2 is a transformed cell line. Generic liver relevance does not create MASLD, donor, stellate-cell, or disease-state context."
+  },
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse281160", "gse281364", "gse296875", "current_coloc_gwas"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49",
+    "sealed_source": "gse289173",
+    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+  },
+  "endpoint_eligibility": {
+    "allelic_direction_accuracy": "ineligible under the frozen link-only capability; attention has no allele-effect sign",
+    "enhancer_gene_link": "conditionally eligible only after code terms, native input artifacts, fold routing, and runtime are resolved",
+    "eqtl_retrieval_auprc": "conditionally eligible as an unsigned static HepG2 link comparator",
+    "mean_fisher_z_celltype_spearman": "ineligible; neither attention nor the HepG2 expression scalar is an admitted signed cell-type eQTL/ieQTL effect",
+    "typed_evidence_graph": "unsigned HepG2 enhancer-to-gene evidence edge only; the current graph task has no sealed source and cannot award a champion"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Development-only link-retrieval audit after the corrected graph snapshot is frozen. Fine-mapped eQTLs and CRISPR links were upstream evaluation sources, so related link outcomes are downstream-demo evidence, not clean selection targets.",
+      "checkpoint_exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "allowed_use": "No native EPInformer inference from its unpaired RNA/ATAC aliquots. A future development-built HepG2-to-liver transfer is a separate adaptation and remains prohibited while code terms are unresolved.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "pairing": "same_sample_different_aliquot",
+      "public_date": "2024-11-13",
+      "reason": "The selected weights postdate the GEO release but declare ENCODE/Roadmap/Xpresso cell-line inputs rather than these donor labels. Clean chronology is not claimed."
+    },
+    "gse281160": {
+      "allowed_use": "Development-only link-direction diagnostic after aggregation to experimental replicate. It cannot fit or calibrate EPInformer, and its 20 MPRA-selected loci are conditional follow-up rather than an unbiased link benchmark.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "allowed_use": "Retrospective overlap/retrieval diagnostic only. MPRA reporter activity does not establish the endogenous enhancer-to-gene target of an EPInformer attention edge and cannot calibrate a link threshold.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "allowed_use": "Map evaluator-approved variant positions onto a selection-locked native HepG2 enhancer-to-gene attention atlas. No sealed expression, eQTL/ieQTL outcome, donor feature, threshold, or calibration value may enter model inputs or candidate construction.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "exact_reference_sequence_overlap": "expected_generic_reference_overlap_but_not_target_label_supervision",
+      "held_query_behavior": "static_unsigned_HepG2_link_prior_only",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "allowed_use": "No current model access. Rebuilding candidate links or f3 activity with donor-state ATAC would be a project adaptation, must stay within donor/genomic folds, and is blocked until code terms and exact input construction are resolved.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "model_input_status": "not_used_by_the_frozen_pretrained_HepG2_lane",
+      "public_date": "2025-10-01"
+    }
+  },
+  "native_input_and_fold_contract": {
+    "candidate_set": "Freeze the exact upstream HepG2 100-kb-to-TSS ABC candidate roster, order, padding mask, enhancer activity, promoter activity, Hi-C/contact, Xpresso features, sequence build, and gene/TSS authority. Attention is relative to this roster.",
+    "chromosome_routing": "Acquire and hash the exact leave_chrom_out_crossvalidation_split_18377genes.csv only after campaign approval. Route each gene/variant chromosome to the checkpoint whose test split contains it; do not average models that trained on that chromosome and call the result out-of-fold.",
+    "ensemble_definition": "The registered 12-fold set is one routed out-of-fold predictor. Five biological seeds do not exist for these released weights, and the twelve chromosome folds are not seed replicates.",
+    "reference_mismatch": "Upstream Xpresso/TSS and enhancer authorities are not silently interchangeable with GENCODE v49. Unmatched genes or candidates are missing, not zero.",
+    "reverse_complement": "Freeze expression-HDF5 strand handling and any forward/RC aggregation only after reproducing fixed upstream outputs. Do not infer a policy from the enhancer-encoder metric alone."
+  },
+  "reference_topology_and_missingness": {
+    "gse244832": "Different aliquots cannot fill same-cell promoter/enhancer activity inputs.",
+    "gse281160": "Same-cell guide/RNA data aggregate to experimental replicates and do not supply endogenous link truth for all candidates.",
+    "gse281364": "Same-sample different-aliquot reporter counts measure construct activity, not endogenous enhancer-gene pairing.",
+    "gse289173": "RNA and QTL summaries are same-study unpaired; no ATAC or Hi-C exists for a donor-specific f3 query.",
+    "gse296875": "Same-nucleus RNA/ATAC can support a separately trained project adaptation only after activation; it is not substituted into the frozen HepG2 checkpoint post hoc.",
+    "missingness": "Absent candidates, activity, contact, gene mappings, padding slots, and permissions remain distinct missing states. Never replace unavailable HepG2 or MASLD features with zeros except the model's native, explicitly masked padding slots."
+  },
+  "role_and_sign_contract": {
+    "admitted_score": "Normalized enhancer attention for one promoter and fixed candidate set",
+    "sign": "unsigned_nonnegative_relative_priority",
+    "variant_mapping": "interval overlap to a precommitted enhancer followed by its frozen gene attention score",
+    "prohibited_inference": "Do not label attention as activation, repression, ALT-minus-REF effect, eQTL beta, ieQTL beta, or causal evidence.",
+    "composite_rule": "Any variant activity score, allelic sign, or cell-state context must be a separately named, precommitted component with its own exposure and uncertainty audit."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

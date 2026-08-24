@@ -1,0 +1,106 @@
+{
+  "audit_scope": {
+    "model_id": "arc_state",
+    "artifact_type": "pinned_code_plus_base_state_embedding_plus_hepg2_fewshot_state_transition",
+    "task_id": "perturbation_transfer",
+    "project_train_sources": ["gse281160"],
+    "project_development_sources": ["gse275483", "gse313774"],
+    "project_sealed_sources": [],
+    "additional_sealed_exposure_check": "gse289173_for_any_future_SE_600M_embedding_use"
+  },
+  "component_exposure_findings": {
+    "code_revision": {
+      "identity": "ArcInstitute/state@9bbfe78a434a55205e4de834e1ea99f85f7a3add",
+      "biological_checkpoint": false,
+      "exposure_state": "target_label_unexposed_as_algorithm_code_only"
+    },
+    "se_600m": {
+      "identity": "arcinstitute/SE-600M@5a9a80f44f7ce32ce57059933ef0d735d7c10ce5:model.safetensors",
+      "declared_corpus": "scbasecamp-cellxgene-tahoe-filtered; 36,238,464 cells and 14,420 datasets in the released config",
+      "missing_evidence": "No immutable accession, CELLxGENE collection UUID, dataset version, donor, row, release, or cutoff roster is public in the pinned artifact.",
+      "exposure_state": "unknown_for_every_registered_project_dataset",
+      "champion_consequence": "ineligible"
+    },
+    "st_se_replogle_hepg2_fewshot": {
+      "identity": "arcinstitute/ST-SE-Replogle@e324967ff4cea5ec199e29bcbb5c1f00e5b9d69c:fewshot/hepg2/checkpoints/final.ckpt",
+      "declared_corpus": "Replogle-family transition training with a HepG2 few-shot configuration",
+      "missing_evidence": "No immutable cell, donor, guide, target, accession, release, or complete ordered perturbation-map manifest was available without unsafe artifact loading.",
+      "exposure_state": "unknown_for_every_registered_project_dataset_and_target",
+      "gse281160_specific_result": "Unknown corpus and target overlap, plus an incompatible categorical interface for wholly unseen noncoding loci. Do not schedule."
+    },
+    "project_trained_or_adapted_state": {
+      "exists": false,
+      "exposure_state": "not_applicable",
+      "future_rule": "Any project fit is continual_seen for every donor, cell, target, guide, context, label, and outcome entering preprocessing, training, selection, or calibration."
+    }
+  },
+  "registered_dataset_result": {
+    "crosswalk_rule": "Every dataset in config/datasets is unknown for both upstream biological artifact layers until an immutable row-level corpus roster and alias-resolved cohort-family crosswalk prove otherwise.",
+    "clean_declared_count": 0,
+    "target_label_unexposed_count": 0,
+    "unknown_count": 22,
+    "sealed_incident": "GSE289173 appears in at least one 2026 scBaseCount snapshot. An SE-600M checkpoint trained on that snapshot, a later snapshot, or an undeclared corpus is not eligible for its one-time sealed evaluation; the current artifact cannot establish absence.",
+    "result": "fail_closed_no_project_sealed_or_champion_evaluation"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "all_registered_project_dataset_exposure_task_topology_unseen_target_and_claim_boundaries",
+    "sha256": "9bcc3a310d98d4253a667c8984078c0c326e7c76b155d7c0644310ddf43fbe6d"
+  },
+  "inference_and_leakage_incidents": [
+    {
+      "finding": "The official pinned inference path substitutes the non-targeting control vector for an unknown perturbation after a warning.",
+      "benchmark_action": "reject_unknown_perturbation_before_model_execution",
+      "scientific_risk": "An unsupported target would be mislabeled as a valid control-like prediction."
+    },
+    {
+      "finding": "The official pinned inference path maps an unknown batch label to index zero after a warning.",
+      "benchmark_action": "reject_unknown_batch_before_model_execution",
+      "scientific_risk": "Evaluation context would be silently reassigned to an arbitrary learned batch."
+    },
+    {
+      "finding": "The official path loads mappings with unrestricted PyTorch deserialization and pickle-compatible objects, and its prediction path restores data_module.torch.",
+      "benchmark_action": "prohibit_upstream_loading_and_require_isolated_no_network_weights_only_inspection_plus_plain_format_conversion_after_terms_approval",
+      "scientific_risk": "Executable serialization and unbound companion state prevent a reproducible safe checkpoint identity."
+    },
+    {
+      "finding": "Control cells are sampled with replacement and therefore can vary with eligible-row construction and RNG state.",
+      "benchmark_action": "freeze_training_only_control_pool_order_row_ids_seed_draws_cell_sets_and_replicate_aggregation",
+      "scientific_risk": "Row leakage or nonreproducible control sampling can change predicted response."
+    },
+    {
+      "finding": "The base SE artifact and HepG2 transition artifact implement different actions and were trained on different layers of data.",
+      "benchmark_action": "keep_separate_model_and_prediction_identities",
+      "scientific_risk": "A base embedding could otherwise inherit transition performance, or a transition head could be reported as a general cell-state encoder."
+    }
+  ],
+  "safe_artifact_result": {
+    "model_safetensors": "provider_hash_and_size_registered_but_not_downloaded_or_loaded",
+    "final_ckpt": "provider_hash_and_size_registered_but_unsafe_until_isolated_tensor_only_conversion",
+    "pert_onehot_map_pt": "provider_hash_and_size_registered_but_unsafe_and_not_inventoried",
+    "pkl_and_torch_companions": "registered_where_provider_metadata_allowed_but_unsafe_and_not_admitted",
+    "status": "blocked"
+  },
+  "terms_result": {
+    "code": "CC-BY-NC-SA-4.0",
+    "weights": "Arc_State_Model_Non_Commercial_License_plus_Model_Acceptable_Use_Policy",
+    "derivatives": "Fine-tuning, adjusted weights, additional training, pruning, distillation, integration, and use as a prior are explicitly treated as Derivative Works under upstream model terms.",
+    "outputs": "Outputs are explicitly within the model-license and acceptable-use contract and require applicable notices and paper citation; project-data terms remain separate.",
+    "redistribution": "Do not redistribute upstream or derivative weights. Institutional review must establish noncommercial eligibility and exact obligations before any acquisition or execution.",
+    "open_champion": "ineligible",
+    "legal_status": "research_audit_not_legal_advice"
+  },
+  "remaining_blockers": [
+    "Obtain an immutable accession, collection UUID, dataset-version, donor, cell-row, release, and cutoff roster for SE-600M and crosswalk every alias and cohort family.",
+    "Obtain an immutable Replogle transition-training roster and safely inventory the entire ordered perturbation, batch, cell-context, and gene vocabularies.",
+    "Prove that any proposed evaluation target is a learned supported category; the current wholly unseen noncoding-target task remains incompatible by design.",
+    "Receive institutional confirmation that planned acquisition, internal execution, outputs, derivatives, and publication satisfy the noncommercial model and acceptable-use terms.",
+    "After approval only, acquire artifacts under immutable receipts, validate provider hashes and byte sizes, and safely convert executable serialized state to project-controlled tensor and plain-data formats.",
+    "Freeze an exact runtime and pass isolated L40S import, base-embedding, transition-forward, unknown-category rejection, deterministic control sampling, output-scale, pseudobulk-export, resume, and numeric-tolerance fixtures.",
+    "Register a compatible seen-target or held-context TaskSpec before any future diagnostic; do not modify the current perturbation_transfer split to accommodate this model."
+  ],
+  "sealed_champion_eligibility": "ineligible_restricted_terms_unknown_corpus_exposure_no_current_supported_task_and_no_project_sealed_perturbation_source",
+  "claim_boundary": "No open MASLD champion, unseen-target, diagnosis, prognosis, treatment-response, clinical-decision, or deployment claim.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "verified_date": "2026-08-22"
+}

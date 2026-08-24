@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "authority": "reference",
+  "evidence": {
+    "coordinate_use": "not_applicable_no_sequence_extraction",
+    "gene_axis": "versionless_ensembl_gene_id",
+    "gene_axis_sha256": "8598c8316dd65eceb48b10048e1b38dfde920d87dbd8f23c7cd68a9a4a4323f3",
+    "native_build": "mixed_source_normalized_to_GRCh38",
+    "reference_scope": "gene_identifier_only",
+    "unique_gene_ids": 37533
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

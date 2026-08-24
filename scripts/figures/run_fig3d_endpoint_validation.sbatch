@@ -34,10 +34,11 @@ analysis="${FIGURE_CANDIDATE_ROOT}/analysis/endpoint_validation"
 panel="${FIGURE_CANDIDATE_ROOT}/figure3/panels/fig3d_pca_fibrosis_gradient.pdf"
 supp="${FIGURE_CANDIDATE_ROOT}/supplementary/figureS3/panels/figs3_endpoint_deg_concordance.pdf"
 all_sample_supp="${FIGURE_CANDIDATE_ROOT}/supplementary/figureS3/panels/figs3d_pca_all_samples.pdf"
-fig3c="${FIGURE_CANDIDATE_ROOT}/figure3/panels/fig3c_cohort_robustness.pdf"
+figs3c="${FIGURE_CANDIDATE_ROOT}/supplementary/figureS3/panels/figs3c_cohort_robustness.pdf"
 
 # Re-index the immutable all-sample PCA candidate as supplementary. The endpoint
-# script rebuilds Figure 3C from synchronized per-cohort effects plus fresh LOO fits.
+# script rebuilds supplementary Figure S3C from synchronized per-cohort effects
+# plus fresh leave-one-cohort-out fits.
 all_sample_root="${project_root}/figures/candidates/fig3d-all-samples-2026-08-14-v2"
 cp "${all_sample_root}/figure3/panels/fig3d_pca_fibrosis_gradient.pdf" \
   "${all_sample_supp}"
@@ -59,14 +60,14 @@ stopifnot(nrow(roster) == 418L, uniqueN(roster$dataset) == 4L,
           sum(roster$endpoint_code == "StrictControl") == 115L,
           nrow(de) == 23370L, audit$bh_family_size == 23370L,
           identical(audit$canonical_write, FALSE))
-fig3c <- fread(file.path(root, "source_tables", "fig3c_cohort_robustness.tsv"))
+fig3c <- fread(file.path(root, "source_tables", "figs3c_cohort_robustness.tsv"))
 stopifnot(nrow(fig3c) == 5L, all(fig3c$canonical_genes == 1347L),
           all(is.finite(fig3c$same_direction_fraction)),
           all(is.finite(fig3c$all_gene_spearman)))
 cat("FIG3D_ENDPOINT_CONTRACT PASS: 418 participants, 4 matched cohorts, 23,370 genes\n")
 RS
 
-for pdf in "${panel}" "${supp}" "${all_sample_supp}" "${fig3c}"; do
+for pdf in "${panel}" "${supp}" "${all_sample_supp}" "${figs3c}"; do
   test "$(pdfinfo "${pdf}" | awk '/^Pages:/ {print $2}')" = "1"
   if strings "${pdf}" | grep -q '/Subtype /Type3'; then
     echo "Type 3 font detected: ${pdf}" >&2

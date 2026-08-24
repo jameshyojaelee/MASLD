@@ -1,0 +1,32 @@
+schema_version = "masld-bench-cell-state-ontology-v1"
+ontology_id = "broad_liver_five_v1"
+primary_class_roster = ["cholangiocyte", "endothelial", "hepatocyte", "immune", "mesenchymal_stromal"]
+freeze_basis = "Development cohorts and established broad liver biology only; no GSE289173 cell-state outcomes were opened."
+unknown_label_policy = "not_evaluable_never_remap_after_selection_lock"
+
+[source_maps.resource_atlas_current]
+"B cells" = "immune"
+"Basophils" = "immune"
+"Cholangiocytes" = "cholangiocyte"
+"Circulating NK/NKT" = "immune"
+"Endothelial cells" = "endothelial"
+"Fibroblasts" = "mesenchymal_stromal"
+"Hepatocytes" = "hepatocyte"
+"Macrophages" = "immune"
+"Mono+mono derived cells" = "immune"
+"Neutrophils" = "immune"
+"Plasma cells" = "immune"
+"Resident NK" = "immune"
+"T cells" = "immune"
+"cDC1s" = "immune"
+"cDC2s" = "immune"
+"pDCs" = "immune"
+
+[source_maps.gse296875]
+"B cells" = "immune"
+"Cholangiocytes" = "cholangiocyte"
+"Hepatocytes" = "hepatocyte"
+"Kupffer" = "immune"
+"LSEC" = "endothelial"
+"Mesenchymal" = "mesenchymal_stromal"
+"NK-T" = "immune"

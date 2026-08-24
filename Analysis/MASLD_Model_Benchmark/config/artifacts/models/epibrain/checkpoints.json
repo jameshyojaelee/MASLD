@@ -1,0 +1,98 @@
+{
+  "architecture_contract": {
+    "backbone": "Borzoi_CNN_transformer_and_upsampling_architecture",
+    "checkpoint_receipt_cell_type_embedding_dimension": 6,
+    "input_length_bp": 524288,
+    "model_family": "sequence_to_fixed_cell_type_multimodal_profile",
+    "output_resolution_bp": 32,
+    "output_tracks": ["ATAC", "H3K27ac", "H3K27me3", "H3K9me3", "RNA_plus", "RNA_minus"],
+    "paper_cell_type_embedding_dimension": 8,
+    "published_cell_types": 37,
+    "published_profile_bins": 16320,
+    "warning": "Cell-type heads are fixed learned brain subclasses. The model does not accept a donor-expression vector or other observed target context at inference. The paper reports an 8-dimensional cell embedding, while the committed run receipt linked to the 37-cell checkpoint records 6 despite an experiment-directory name containing dim8; exact checkpoint architecture is unresolved."
+  },
+  "checkpoint_artifacts": {
+    "published_subclasses_ge_1000_cells": {
+      "checkpoint_filename": "chk_epoch_20.pt",
+      "google_drive_id": "10NjxkEaKsDdOX8WhOU8KdYIEx8XganNw",
+      "model_receipt": "37 fixed brain cell types, 199 available regression tracks, six possible modalities, 16320 output bins",
+      "sha256": "UNRESOLVED",
+      "size_bytes": 2060708233,
+      "status": "live_link_but_not_immutable_or_admitted"
+    },
+    "repository_full_atlas_extension": {
+      "checkpoint_filename": "chk_epoch_17.pt",
+      "google_drive_id": "1MgT3n1ufZP4Wxci3h_4Kr0JPVa18nTmF",
+      "model_receipt": "70 fixed brain cell types, 386 available regression tracks, six possible modalities",
+      "sha256": "UNRESOLVED",
+      "size_bytes": 2068500169,
+      "status": "live_link_separate_extension_not_paper_primary_and_not_admitted"
+    }
+  },
+  "input_contract": {
+    "canonical_tensor": "float_one_hot_hg38_DNA_in_A_C_G_T_order",
+    "donor_or_cell_context": "none",
+    "observed_atac_required": false,
+    "observed_rna_required": false,
+    "sequence_window": "524288_bp_centered_on_a_prespecified_locus_or_variant",
+    "window_boundary_rule": "Require explicit N padding near primary-contig boundaries and a held-block boundary buffer of at least 524288 bp."
+  },
+  "output_contract": {
+    "native_scale": "nonnegative_32bp_brain_cell_type_profiles_trained_with_a_Poisson_multinomial_objective",
+    "observed_context_conditioning": false,
+    "published_variant_score": "wildtype_and_reverse_complement_average_versus_mutant_and_reverse_complement_average_summarized_by_the_Borzoi_L2_metric",
+    "signed_effect_limit": "The published L2 score is a magnitude summary. Direct per-track ALT-minus-REF profiles would require a separately frozen sign and orientation contract and still refer only to fixed brain heads.",
+    "track_counts": "Not every cell type has every modality; checkpoint-specific ordered track receipts are required before inference."
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_genome": "hg38",
+    "reference_gate": "Prove primary-contig sequence identity, REF alleles, center/crop coordinates, track strand restoration, and GENCODE crosswalk before any future sequence inference."
+  },
+  "release": {
+    "publication_doi": "10.64898/2026.02.03.703645",
+    "publication_title": "Single-cell Multiome Analysis of Chromatin State and Transcriptome in the Human Basal Ganglia",
+    "repository": "zhongguojie1998/EpiBRAIN",
+    "repository_revision": "ada90b066832cf313ef2df0e4ef4ddebeb1f8ba5"
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED_no_package_or_environment_lock",
+    "framework": "PyTorch_with_custom_Borzoi_implementation",
+    "inherited_backbone": "Initialized from Borzoi weights, but the repository's referenced Chk/borzoi_pretrain/README.md is absent from the immutable tree.",
+    "required_probe": "isolated_L40S_source_import_tensor_inventory_strict_restore_forward_backward_resume_deterministic_seed_crop_reverse_complement_and_numeric_tolerance"
+  },
+  "safe_loading_contract": {
+    "checkpoint_downloaded": false,
+    "format_risk": "The final artifacts are PyTorch .pt zip containers with no published SHA-256 or tensor manifest. Repository conversion code uses torch.load with weights_only=False.",
+    "required_path": "Do not fetch while terms are blocked. If written permission is obtained, acquire through an immutable artifact host or escrow receipt, verify size and cryptographic hash, inspect without network in isolation, export a tensor-only inference bundle, and require exact key, shape, dtype, and finite-value restoration.",
+    "source_execution": "No code from the repository may be imported or executed before a valid license and exact environment are frozen."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The primary preprint, pinned official GitHub repository, committed run receipts, and public Google Drive viewer metadata were queried on 2026-08-22. No checkpoint, data, package, or source code was downloaded or executed.",
+  "source_records": [
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:README.md", "sha256": "4c29e0dd897f19863a217894280a69f73bdfa2cfd6fb69bee357a4bfd434588c", "size_bytes": 10236},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:Model/model/model.py", "sha256": "2c2955250d93784aa17b63593701797a4044ea45b3d4cceb6fa0777afaed8378", "size_bytes": 10667},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:Config/model/default.yaml", "sha256": "4dcefb65fce2072d14345cbd108cacd59c5c73e8d9db7d430bd44d9f513ef714", "size_bytes": 6246},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:Config/data/default.yaml", "sha256": "7e6726eb7907095ef276b84743c7e423c08095b7f926b2e5cb6df26bd10782b9", "size_bytes": 3979},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:logs/full_finetune_original_loss_celltype_head_dim8_linear/overall_setting.yaml", "sha256": "f1585d63d0c0e8c308845ad161eb1d877829a1a52d61830c74e8f5eb13c2ad35", "size_bytes": 3771},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:logs/full_finetune_original_loss_celltype_head_dim8_linear/regression_label_meta.csv", "sha256": "98bff341baccadb07ce7216cde60d84f062294d696c6c15a84202f88a955599e", "size_bytes": 39512},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:Chk/full_finetune_original_loss_celltype_head_dim8_linear/README.md", "sha256": "858287296c711d5d2467cd5baa0f77f01ffbe41508b6bdc7c0af69d82529490f", "size_bytes": 97},
+    {"identity": "zhongguojie1998/EpiBRAIN@ada90b06:Chk/full_finetune_original_loss_celltype_head_dim8_linear_full_atlas/README.md", "sha256": "2a5a7be89a66ee0eba7a421f1d334e09e9277de6e4f5e673ea6a83b3c761e64b", "size_bytes": 97}
+  ],
+  "task_fit": {
+    "allele_effect": "brain_head_sequence_effect_magnitude_only_after_terms_checkpoint_runtime_and_sign_gates",
+    "rna_conditioned_atac": "not_supported_fixed_brain_heads_are_not_observed_donor_RNA_context",
+    "signed_eqtl_ieqtl": "not_native_for_MASLD_and_published_variant_metric_is_not_a_signed_liver_gene_effect",
+    "variant_to_regulation": "brain_domain_secondary_diagnostic_only"
+  },
+  "terms_audit": {
+    "code": "NO_LICENSE_FILE_OR_PACKAGE_LICENSE_AT_PINNED_REVISION",
+    "inherited_borzoi_weights": "UNRESOLVED",
+    "weights": "NO_TERMS_OR_DERIVATIVE_REDISTRIBUTION_GRANT_ATTACHED_TO_GOOGLE_DRIVE_ARTIFACTS",
+    "result": "blocked_no_license"
+  },
+  "weight_license": "UNDECLARED"
+}

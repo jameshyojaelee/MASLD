@@ -1,0 +1,35 @@
+{
+  "corpus": {
+    "declared_cells": "more_than_50_million",
+    "declared_modality": "human_single_cell_transcriptomes",
+    "exact_accession_donor_and_cell_inventory_status": "UNRESOLVED",
+    "labels_used_for_pretraining": "UNRESOLVED_at_exact_source_level",
+    "source_evidence": "Nature Methods paper and pinned official repository",
+    "warning": "The publication-level corpus description is not an accession-complete roster, and the registered mutable SharePoint folder does not bind one selected checkpoint to a training cutoff."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "The source predates the paper, and exact corpus membership cannot be excluded without an accession and retained-cell inventory for one exact checkpoint.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "The source predates the paper, and exact corpus membership cannot be excluded without an accession and retained-cell inventory for one exact checkpoint.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "The source predates the paper, and exact corpus membership cannot be excluded without an accession and retained-cell inventory for one exact checkpoint.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "The source predates the paper, and exact corpus membership cannot be excluded without an accession and retained-cell inventory for one exact checkpoint.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Publication chronology alone cannot establish absence because the registered SharePoint folder is mutable and no selected weight object or training cutoff is frozen.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "Publication chronology alone cannot establish absence because the registered SharePoint folder is mutable and no selected weight object or training cutoff is frozen.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "This source postdates the paper but not a verified immutable checkpoint object; the mutable folder chronology is insufficient for clean_declared status.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "This source postdates the paper but not a verified immutable checkpoint object; the mutable folder chronology is insufficient for clean_declared status.", "exposure_state": "unknown", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO became public after the paper, but the registered folder is mutable and contains unresolved base and task-head objects. Neither feature nor target-label non-exposure can be bound to the selected bytes.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "This source postdates the paper but not a verified immutable checkpoint object; the mutable folder chronology is insufficient for clean_declared status.", "exposure_state": "unknown", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "The source predates the paper, and exact corpus membership cannot be excluded without an accession and retained-cell inventory for one exact checkpoint.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "exact_object_first": "A paper date or mutable folder URL cannot substitute for the selected checkpoint object's immutable identity and training cutoff.",
+    "post_publication_sources": "Do not mark a source clean_declared until the selected checkpoint and every task head are proven to predate it.",
+    "pre_publication_sources": "Retain unknown unless an accession, release-alias, donor, and retained-cell inventory excludes the source.",
+    "sealed_source": "GSE289173 remains unknown rather than target_label_unexposed until exact base and head chronology is proven."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

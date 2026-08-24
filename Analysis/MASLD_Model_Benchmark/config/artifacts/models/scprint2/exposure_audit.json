@@ -1,0 +1,68 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_for_all_registered_cell_state_sources_with_unknown_retained",
+    "model_identities": ["scprint2_small_v2", "scprint2_medium"],
+    "non_substitution_rule": "Every finding is identity-scoped. No small-v2 or scPRINT v1/v1.5 medium fact may satisfy a scprint2_medium gate.",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "scprint2_medium": {
+      "checkpoint_identity": "UNRESOLVED_NO_RELEASED_scPRINT-2_MEDIUM_OBJECT_IDENTIFIED",
+      "corpus": "UNRESOLVED_DO_NOT_INHERIT_SMALL-v2_OR_scPRINT-v1/v1.5",
+      "corpus_annotation_state": "UNRESOLVED",
+      "exposure_state": "unknown",
+      "release_state": "deferred_no_checkpoint"
+    },
+    "scprint2_small_v2": {
+      "checkpoint_identity": "jkobject/scPRINT@d02d4aa684a8422d8bfdc1dbb521a85c773a2772:18hebyht-final-small.ckpt",
+      "corpus": "CELLxGENE plus Tahoe plus continually expanding scBaseCount; exact snapshots unresolved",
+      "corpus_annotation_state": "raw_counts_plus_supervised_cell_state_and_metadata_objectives",
+      "exposure_state": "unknown"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "2ac7927f82804a0140c39368c382f0b47d2c7cc6361a73d43414c7ee32e7853b"
+  },
+  "interpretation": "The original small-v2 object and code release are identifiable, but GSE289173 predates the checkpoint and the continuously updated scBaseCount/CELLxGENE/Tahoe inputs are not version-bound. Sealed exposure is therefore unknown, not target_label_unexposed. scprint2_medium is a separate deferred census identity: official scPRINT-2 materials identify only small-v2 and route larger models to the previous scPRINT-1 generation, so no medium checkpoint, architecture, corpus, runtime, license bundle, or exposure result exists to audit. Legacy medium-v1/v1.5 objects are not substitutes.",
+  "license_disposition_by_identity": {
+    "scprint2_medium": {
+      "code": "UNRESOLVED_NO_EXECUTABLE_MEDIUM_RELEASE_BOUND",
+      "derivative_weights": "UNRESOLVED_NO_WEIGHT_EXISTS",
+      "open_champion_eligibility": "ineligible",
+      "weights": "UNRESOLVED_NO_RELEASED_scPRINT-2_MEDIUM_OBJECT_IDENTIFIED"
+    },
+    "scprint2_small_v2": {
+      "code": "GPL-3.0-or-later",
+      "derivative_weights": "UNRESOLVED_REQUIRES_SEPARATE_DECISION_BEFORE_ADAPTATION_RELEASE",
+      "open_champion_eligibility": "ineligible_while_exposure_unknown",
+      "weights": "Apache-2.0"
+    }
+  },
+  "remaining_blockers": [
+    "Freeze the exact CELLxGENE, Tahoe, and scBaseCount manifests and retained train/validation/test membership used by the checkpoint.",
+    "Obtain and hash-verify the original checkpoint only with approval, then inspect it without unrestricted pickle loading.",
+    "Freeze checkpoint architecture, vocabulary, ontology decoders, neighbor construction, row identity, and executable Torch 2.8 runtime.",
+    "Prevent KNN/metacell inputs from crossing donor, study, or outer-fold boundaries and retain a no-neighbor common lane.",
+    "For scprint2_medium, obtain a primary-source release that explicitly identifies a scPRINT-2 medium checkpoint; do not substitute small-v2, medium-v1, medium-v1.5, v2-medium.ckpt, or a mutable same-path replacement.",
+    "For scprint2_medium, bind the exact repository commit, configuration, checkpoint revision, byte size, immutable digest, architecture, vocabulary, ontology, and declared training-corpus membership.",
+    "For scprint2_medium, audit code, weight, and derivative-weight terms separately and establish an executable safe-loading/runtime contract.",
+    "For scprint2_medium, rebuild every development and sealed-source exposure classification from its own artifact chronology and corpus receipt; all entries remain unknown until then."
+  ],
+  "safe_loading_by_identity": {
+    "scprint2_medium": "No checkpoint exists, so loading is not authorized. A future artifact requires isolated restricted inspection, tensor/schema inventory, strict restore, and executable parity before use.",
+    "scprint2_small_v2": "The checkpoint was not downloaded. Obtain only with approval and inspect without unrestricted pickle loading before freezing state_dict, hyperparameters, vocabulary, ontologies, and loader/runtime."
+  },
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_while_exposure_unknown",
+  "sealed_champion_eligibility_by_identity": {
+    "scprint2_medium": "ineligible_no_checkpoint_and_exposure_unknown",
+    "scprint2_small_v2": "ineligible_while_exposure_unknown"
+  },
+  "task_disposition": {
+    "scprint2_medium": "deferred distinct cell_state_mapping identity; not runnable and not substitutable",
+    "scprint2_small_v2": "candidate cell_state_mapping comparator after safe-loading, runtime, leakage, and corpus gates; sealed champion use remains ineligible while exposure is unknown"
+  },
+  "verified_date": "2026-08-22"
+}

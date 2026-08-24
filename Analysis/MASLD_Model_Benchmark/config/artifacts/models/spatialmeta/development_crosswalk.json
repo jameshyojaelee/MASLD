@@ -1,0 +1,101 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not download, train, screen, promote, or compare SpatialMETA in v1.",
+    "minimum_future_evidence": "Rights-cleared, participant-linked spatial transcriptomics and spatial metabolomics with authoritative section adjacency, coordinates, registration inputs, assay metadata, enough donors for grouped outer evaluation, and permission for training and derivative-weight redistribution.",
+    "task_gate": "Register a modality-native cross-modal endpoint, independent alignment protocol, biological unit, baselines, power analysis, and genuinely external source before any superiority or champion claim."
+  },
+  "crosswalk_scope": {
+    "candidate_model": "spatialMETA_0.0.3.0_train_locally",
+    "candidate_sources": [
+      "gse192741",
+      "gse292268",
+      "hra007511",
+      "vu2025"
+    ],
+    "registered_benchmark_tasks": [],
+    "status": "deferred_no_active_spatial_or_spatial_metabolomics_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors represented by 5 Visium sections",
+      "available_modalities": [
+        "visium_RNA",
+        "same_section_H&E"
+      ],
+      "native_cross_modal_fit": "not_applicable_no_spatial_metabolomics",
+      "status": "technical_pilot_only",
+      "why": "It can test spatial-RNA or registration plumbing but cannot exercise SpatialMETA's transcriptome-metabolome objective and cannot support donor-held superiority."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per CosMx slide",
+      "available_modalities": [
+        "cosmx_RNA"
+      ],
+      "native_cross_modal_fit": "not_applicable_no_spatial_metabolomics",
+      "status": "blocked_join_unresolved",
+      "why": "No metabolite imaging is registered, the slide and field-of-view donor map is unresolved, and four donors cannot support the planned claim."
+    },
+    "hra007511": {
+      "biological_units": "61-participant union; 35 spatial participants; 27 of 35 spatial samples reportedly have MALDI; only 3 participants overlap scRNA and spatial",
+      "available_modalities": [
+        "visium_RNA",
+        "H&E",
+        "MALDI_imaging"
+      ],
+      "native_cross_modal_fit": "only_plausible_registered_MASLD_source_for_the_native_ST_plus_SM_design",
+      "pairing": "adjacent_section_or_same_study_unpaired_pending_authoritative_participant_and_section_joins",
+      "status": "deferred_controlled_access",
+      "why": "Processed images and MALDI require permission, training and derivative-weight rights require written approval, section transforms and participant joins are not admitted, and outcomes are project-exposed."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants",
+      "available_modalities": [
+        "visium_RNA",
+        "H&E",
+        "CODEX_proteomics"
+      ],
+      "native_cross_modal_fit": "not_applicable_CODEX_proteins_are_not_spatial_metabolite_intensity_inputs",
+      "status": "blocked_controlled_access_and_join_unresolved",
+      "why": "No MALDI or DESI metabolomics is registered. A data-sharing agreement, barcode-to-participant map, and complete transforms are also missing."
+    }
+  },
+  "topology_contract": {
+    "hra007511": "Retain adjacent_section for spatial RNA and MALDI unless the source explicitly proves same-section measurement. Registration creates a transform and derivation, not a new observed topology.",
+    "same_participant": "All sections, modalities, aliquots, transforms, and derived common-grid values from one participant remain in one outer fold.",
+    "same_study_unpaired": "Do not create a cross-modal pair from two source records merely because they share a study accession or disease stage.",
+    "registration_uncertainty": "Record mapping distance, transform identity, unmapped status, interpolation or aggregation, and uncertainty for each derived cross-modal observation.",
+    "biological_replication": "Participants are replicates. Spots, pixels, ion peaks, sections, images, and KNN links are not independent participants."
+  },
+  "held_donor_and_leakage_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "training_only": "Gene and metabolite feature selection, scaling, batch categories, latent dimensions, loss weights, early stopping, spatial-variable statistics, and model selection are fit using training participants only.",
+    "query_registration": "A held participant may receive an outcome-blind transform under a locked algorithm, but this is query-specific transductive preprocessing and must be disclosed.",
+    "circularity": "Alignment and evaluation cannot optimize and score the same signals. Use outline or histology-only alignment, or a precommitted disjoint feature split.",
+    "manual_steps": "A held participant's fibrosis, inflammation, niche, molecular program, model residual, or endpoint cannot guide landmarks, transform choice, K, distance threshold, feature roster, or exclusion.",
+    "unseen_batch": "The frozen-lane policy for a held participant absent from decoder batch categories must be defined and tested before activation."
+  },
+  "assay_native_contract": {
+    "RNA": "Model and score counts with the registered RNA likelihood and donor-aware units. Do not analyze metabolite intensities with the RNA count null.",
+    "metabolites": "Model and score predeclared intensity transformations with Gaussian or zero-inflated Gaussian assumptions as appropriate. Record below-detection separately from structural missingness.",
+    "CODEX": "Protein intensity is a distinct assay. It is not a metabolite channel without a new protein-specific measurement model and task specification.",
+    "H&E": "Histology may supply outcome-independent registration information but is not a native decoded omic modality in the registered core model.",
+    "missingness": "Use observed, structurally_missing, not_applicable, below_qc, unavailable_permission, join_unresolved, withheld_sealed, and derivable_not_processed. A missing modality or failed registration is never a zero-valued biological measurement."
+  },
+  "training_and_exposure_crosswalk": {
+    "upstream_biological_checkpoint": "none",
+    "upstream_training_corpus": "none_for_a_local_model",
+    "project_trained_state": "not_created",
+    "eligible_development_source": "none_currently",
+    "eligible_external_source": "none_currently",
+    "target_exposure_interpretation": "A future model trained only inside participant folds could be target_label_unexposed for held participants. HRA007511 outcomes already exposed to the project cannot become a pristine external source."
+  },
+  "claim_boundary": {
+    "allowed_if_future_gate_passes": "Cross-modal reconstruction, alignment robustness, participant-held representation transfer, or spatial program association using assay-native endpoints and independent baselines.",
+    "prohibited_now": "Any v1 training result, model superiority statement, MASLD spatial-metabolomic champion, biological discovery, or claim that adjacent sections provide same-location paired truth.",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "interpretation": "SpatialMETA is a modality-matched future candidate only for participant-linked spatial RNA plus spatial metabolomics. Among registered MASLD sources, HRA007511 is the sole plausible substrate, but it is controlled, project-exposed, rights-blocked, and adjacent-section. The other spatial cohorts lack metabolomics and are not valid substitutes. SpatialMETA therefore remains deferred and cannot participate in the v1 tournament or earn a champion claim.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

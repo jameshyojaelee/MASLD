@@ -1,0 +1,12 @@
+schema_version = "masld-bench-cell-state-capability-v1"
+registry_id = "cell_state_mapping_model_capability"
+task_id = "cell_state_mapping"
+sealed_dataset_id = "gse289173"
+sealed_input_modalities = ["single_nucleus_rna"]
+sealed_output_definition = "Every scored model emits the frozen broad-label probability vector for every eligible GSE289173 nucleus using RNA features only; candidate and baseline use the identical row universe."
+rna_candidate_families = ["cell_foundation", "mandatory_baselines", "multimodal_integration", "restricted_unclear"]
+rna_baseline_models = ["celltypist_baseline", "hvg_pca_elastic_net", "hvg_pca_knn", "hvg_pca_linear_svm", "hvg_pca_logistic", "hvg_pca_nearest_centroid", "scanvi_baseline", "scvi_baseline"]
+atac_only_development_models = ["cistopic", "epiagent", "epifoundation", "lsi", "peakvi"]
+atac_only_status = "registered_not_schedulable_on_sealed_rna_task"
+admission_blocking = true
+blockers = ["The GSE289173 sealed cohort exposes single-nucleus RNA, not an ATAC row universe. Models whose registered cell representation requires observed ATAC cannot earn or compete for the cell_state_mapping sealed champion.", "Do not pool RNA and ATAC rows in one macro-F1 calculation or compare candidate and baseline on different nuclei.", "Activate ATAC-dependent models only after a separate development-only ATAC TaskSpec freezes assay-native inputs, identical candidate/baseline rows, donor-level inference, baselines, and a no-champion claim boundary. cisTopic 0.3.0 additionally lacks an inductive held-cell transform, so creating that TaskSpec does not by itself make held-cell scoring valid."]

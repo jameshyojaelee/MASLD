@@ -1,0 +1,81 @@
+{
+  "crosswalk_scope": {
+    "graph_development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "graph_sealed_sources": [],
+    "tasks": ["typed_evidence_graph", "unified_model"],
+    "unified_development_sources": ["resource_atlas_current", "gse296875", "gse244832", "bulk_five_cohort", "current_coloc_gwas", "gse256398", "gse281364", "gse281160"],
+    "unified_declared_sealed_sources": ["gse289173", "gse267031", "fnih_86_liver"]
+  },
+  "endpoint_eligibility": {
+    "causal_gene": "ineligible",
+    "graph_brier_and_auprc": "eligible retrospectively only when all component predictions share a source-removed calibrated binary contract",
+    "graph_open_champion": "ineligible because no sealed graph source exists",
+    "unified_endpoint_noninferiority": "blocked until every specialist and endpoint-specific component roster is frozen",
+    "unified_open_champion": "ineligible under the current blocked TaskSpec without the required eligible independent external source families"
+  },
+  "component_and_selection_protocol": {
+    "calibration": "Each component is calibrated inside its own training folds before fusion. Fusion fits no weight and never recalibrates on sealed or evaluated-source labels.",
+    "family_roster": "One selection-locked artifact per admitted component family and endpoint. Correlated seeds, checkpoints, or readouts from one family do not receive multiple votes unless a prespecified family-level average was already frozen.",
+    "leakage_inheritance": "Any component with donor, locus, source, assay, outcome, or checkpoint contamination invalidates that row's fusion. Averaging cannot wash out leakage.",
+    "missingness": "Average available admissible components and emit the availability pattern. No-component rows are structurally_missing. Report every pattern and denominator.",
+    "same_endpoint_only": "Do not average expression effects with accessibility, reporter activity, links, ranks, embeddings, disease scores, or predictions from another lineage or assay.",
+    "selection": "Freeze components before fusion and use only development-visible out-of-fold predictions. Sealed labels cannot choose components or family count."
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Development-only graph or variant component predictions after corrected release promotion. Fusion does not receive COLOC membership directly unless that is the declared endpoint input.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse281160": {
+      "allowed_use": "Development-only component evaluation and calibration within its registered task. Cells and guides are not independent rows for fusion fitting.",
+      "exposure_state": "downstream_demo",
+      "warning": "Its 20 MPRA-selected targets are not a sealed source."
+    },
+    "gse281364": {
+      "allowed_use": "Development-only out-of-fold MPRA component predictions under locus and sequence grouping; not a signed eQTL calibration source.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse289173": {
+      "allowed_use": "Only anonymized component predictions and masks after every variant or cell specialist and the fusion manifest are selection-locked. Labels and QTL outcomes remain evaluator-only.",
+      "exposure_state": "target_label_unexposed",
+      "warning": "It is a seal for eligible specialist endpoints, not a graph source seal."
+    },
+    "gse267031": {
+      "allowed_use": "Only if its conditional bulk seal passes donor deduplication, endpoint completeness, and prospective power before outcomes are read. Otherwise no sealed fusion row is allowed.",
+      "exposure_state": "target_label_unexposed"
+    },
+    "fnih_86_liver": {
+      "allowed_use": "None unless an openly downloadable rights-cleared release is activated before selection lock. Do not delay development or infer eligibility from the publication.",
+      "exposure_state": "unknown"
+    },
+    "resource_and_project_development": {
+      "allowed_use": "Only immutable out-of-fold component predictions from registered train/development roles. Frozen 117 programs and current Resource claims remain read-only and cannot be fusion features or selection endpoints.",
+      "exposure_state": "continual_seen_for_any_component_fitted_on_these_rows"
+    }
+  },
+  "graph_held_source_protocol": {
+    "candidate_universe": "Every component uses the identical source-independent row roster. Fusion cannot outer-join held-source-only candidates into existence.",
+    "component_receipt": "Bind the same held-source removal hash for every graph component. A component trained with the source is excluded rather than masked.",
+    "degree_and_observability": "Report component and fused performance within remaining-source degree, source-count, and observability strata. Held-source observability remains evaluator-only.",
+    "removal": "No component or fusion join may contain held-source nodes, edges, inverses, aliases, labels, tested status, coverage, missingness, graph statistics, prevalence, or deterministic derivatives.",
+    "seal_status": "No current graph source is sealed; clean construction does not create an external claim."
+  },
+  "variant_gene_and_ld_contract": {
+    "block_alignment": "Component rows must share native-build LD block, locus, sequence identity group, variant, gene, and direction identities. A mismatched join fails rather than averaging across related variants.",
+    "gene_mapping": "A link-only or nearest-gene prediction remains an unsigned retrieval component. It cannot supply a signed gene effect to a primary fusion endpoint.",
+    "no_duplicate_votes": "Multiple variants in one LD block, related model seeds, or duplicate source releases cannot become independent fusion components or inferential units.",
+    "unit": "Resample LD and gene blocks for graph endpoints and the TaskSpec's biological units for other endpoints."
+  },
+  "reproducibility_contract": {
+    "fusion_receipt": "Hash ordered component IDs, family identities, RunSpecs, PredictionBundles, calibration artifacts, endpoint contracts, exact row joins, availability masks, arithmetic precision, outputs, and exclusions.",
+    "task_contract_hashes": {
+      "evidence_graph_outer_toml": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "typed_evidence_graph_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "unified_model_toml": "69e6a5e51281516bfd950838b2d973f17b7383a265f11663af4521dd4532407c",
+      "unified_nested_toml": "26bc8482381bb55358a5b6c20396036736bb9f1b2ca75da46e5bdda04e9d7028"
+    },
+    "zero_fit_rule": "Equal weights are mathematical constants. Any optimized, stacked, gated, or source-specific weights define a different model and require a new audit."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -14,8 +14,9 @@ candidate_root <- normalizePath(Sys.getenv("FIGURE_CANDIDATE_ROOT", ""), mustWor
 if (!exists("theme_masld") || !exists("cat_palette")) {
   source(file.path(base, "scripts/figures/publication_theme.R"))
 }
-source_path <- file.path(candidate_root, "source_tables", "fig3c_cohort_robustness.tsv")
-out_path <- file.path(candidate_root, "figure3", "panels", "fig3c_cohort_robustness.pdf")
+source_path <- file.path(candidate_root, "source_tables", "figs3c_cohort_robustness.tsv")
+out_path <- file.path(candidate_root, "supplementary", "figureS3", "panels", "figs3c_cohort_robustness.pdf")
+dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
 fig3c_source <- fread(source_path)
 stopifnot(nrow(fig3c_source) == 5L, all(fig3c_source$canonical_genes == 1347L))
 
@@ -46,4 +47,4 @@ p_loo <- ggplot(fig3c_source,
         axis.text.x = element_text(size = 6, face = "plain"), panel.grid.major.y = element_blank())
 fig3c_panel <- p_direction | p_loo
 ggsave(out_path, fig3c_panel, width = 2.65, height = 2.15, device = cairo_pdf)
-cat("FIG3C_RENDER_COMPLETE", out_path, "\n")
+cat("FIGS3C_RENDER_COMPLETE", out_path, "\n")

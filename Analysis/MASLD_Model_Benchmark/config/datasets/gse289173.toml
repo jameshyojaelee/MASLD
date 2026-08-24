@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse289173"
+title = "Human MASLD and control snRNA eQTL cohort"
+role = "withheld_sealed"
+status = "withheld_sealed"
+species = "human"
+accession = ["GSE289173", "PRJNA1221860"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "WITHHELD_SEALED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 48
+native_genome_build = "GRCh38_10x_2020-A"
+native_annotation_release = "GENCODE_v32_filtered_10x_2020-A"
+modalities = ["single_nucleus_rna", "cell_type_eqtl_summary", "interaction_eqtl_summary"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "withheld_sealed"
+exposure_status = "target_label_unexposed"
+admission_blocking = true
+blockers = ["Primary cell-state labels and eQTL/ieQTL outcomes remain outside campaign planning and model selection.", "Archive-level evaluator preflight froze Zenodo DOI 10.5281/zenodo.14586466 and its ZIP central-directory inventory without opening outcome tables. Named summary files exist, but schema, completeness, harmonization, and usable denominators remain evaluator-only admission checks; filenames alone cannot establish task eligibility.", "GSE289173 appears in at least one 2026 scBaseCount snapshot; checkpoints trained on that snapshot, later snapshots, or undeclared corpora are ineligible for this sealed evaluation.", "Upstream foundation-model corpus exposure is unresolved until checkpoint admission.", "A 2026-08-21 development-operator GEO SOFT query exposed disease-group and sex metadata for two samples. Disease/control AUROC is no longer sealed-eligible. Primary cell-state and variant-effect endpoints remain conditional on pseudonymized features and an isolated evaluator.", "Before evaluator admission, freeze the deposited refdata-gex-GRCh38-2020-A feature identity and an evaluator-only GENCODE v32-to-v49 crosswalk without exposing sealed labels or outcomes."]
+notes = "Contains 25 MASLD and 23 control donors. Cell-state labels and complete cell-type eQTL/ieQTL summaries, if obtainable, are task-specific outcomes inside one jointly sealed evaluator bundle and one co-unblinding event. The GEO deposit and linked Zenodo archive cannot be treated as independent seals. This is analyst-separated and task-outcome-sealed, not globally untouched or pristine. No outcome-download URL may be registered."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE289173"
+verified_date = "2026-08-21"
+local_exposure = "No local outcome analysis was found at seal declaration. On 2026-08-21, a GEO SOFT metadata query exposed disease-group and sex fields for two samples to the development operator; no cell-state or eQTL/ieQTL outcome table was opened."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "withheld_sealed"
+label_visibility = "withheld_sealed"

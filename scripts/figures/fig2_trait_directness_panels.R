@@ -51,6 +51,19 @@ FS <- 6
 
 grDevices::pdf.options(useDingbats = FALSE)
 
+normalize_page <- function(path, w, h) {
+  python <- Sys.getenv(
+    "MASLD_FIGURE_PYTHON",
+    "/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/python"
+  )
+  status <- system2(
+    python,
+    c(shQuote(file.path(BASE, "scripts/figures/normalize_pdf_page_box.py")),
+      shQuote(path), format(w, trim = TRUE), format(h, trim = TRUE))
+  )
+  if (!identical(status, 0L)) stop("Could not normalize PDF page box: ", path)
+}
+
 get_est <- function(scope, cat) {
   row <- est[trait_scope == scope & category == cat]
   stopifnot(nrow(row) == 1L)
@@ -112,11 +125,9 @@ open_page(pa_pdf, PA_W, PA_H)
 
 comp_cats <- c("protein_altering_pip_mass", "canonical_splice_pip_mass",
                "synonymous_or_utr_pip_mass", "other_noncoding_pip_mass")
-comp_lab <- c("Protein-altering", "Canonical splice", "Synonymous/UTR",
-              "Other noncoding")
-# Match the Figure 2C sequence palette wherever the classes correspond.
-# Canonical splice uses the same dark blue reserved for a distinct sequence
-# annotation class in C; the other three mappings are exact semantic matches.
+comp_lab <- c("Protein-alt.", "Splice", "Syn. / UTR", "Noncoding")
+# Match Figure 2C where the classes correspond. Splice retains its earlier
+# distinct pink hue rather than borrowing the blue used for promoter in C.
 fig2_sequence_palette <- FIG2_CONSEQUENCE_PALETTE[
   c("protein_altering", "canonical_splice", "synonymous_or_utr", "other_noncoding")]
 comp_fill <- unname(fig2_sequence_palette)
@@ -126,7 +137,7 @@ plot_y0 <- 0.43
 plot_y1 <- 1.93
 plot_h <- plot_y1 - plot_y0
 bar_w <- 0.20
-bar_x <- c(0.59, 0.96)
+bar_x <- c(0.55, 1.05)
 for (i in seq_along(row_scope)) {
   values <- vapply(comp_cats, function(category) {
     get_est(row_scope[i], category)$locus_weighted_fraction
@@ -156,9 +167,9 @@ enzyme_mid <- vapply(seq_along(enzyme_values), function(j) {
 }, numeric(1))
 for (j in c(1, 3)) {
   label_y <- if (j == 1) 1.84 else 1.70
-  seg(bar_x[2] + bar_w / 2, enzyme_mid[j], 1.09, label_y,
+  seg(bar_x[2] + bar_w / 2, enzyme_mid[j], 1.16, label_y,
       col = "#555555", lwd = 0.45)
-  txt(sprintf("%.1f", 100 * enzyme_values[j]), 1.11, label_y,
+  txt(sprintf("%.1f", 100 * enzyme_values[j]), 1.18, label_y,
       just = "left", size = 6, col = "#333333")
 }
 
@@ -175,15 +186,47 @@ txt("Liver\nenzymes", bar_x[2], 0.30, size = 6)
 
 # One right-hand legend column. These four classes are mutually exclusive and
 # exhaustive; moving it beside the bars preserves the plot height at 2.10 in.
-legend_x <- rep(1.15, 4)
-legend_y <- c(1.55, 1.28, 1.01, 0.74)
+legend_x <- rep(1.18, 4)
+legend_y <- 1.48 - 0.20 * (0:3)
+legend_label_x <- legend_x + 0.095
 for (j in seq_along(comp_cats)) {
   bar(legend_x[j], legend_y[j], 5 / 72, 5 / 72, comp_fill[j])
-  txt(comp_lab[j], legend_x[j] + 0.095, legend_y[j], just = "left", size = 6,
+  txt(comp_lab[j], legend_label_x[j], legend_y[j], just = "left", size = 6,
       col = "#4D4D4D")
 }
+
+# Enforce the requested physical layout rather than relying on visual judgment.
+text_width_in <- function(label, size = 6) {
+  max(vapply(strsplit(label, "\n", fixed = TRUE)[[1]], function(line) {
+    convertWidth(grobWidth(textGrob(line, gp = gpar(
+      fontfamily = "Helvetica", fontsize = size))), "inches", valueOnly = TRUE)
+  }, numeric(1)))
+}
+legend_right <- max(legend_label_x + vapply(comp_lab, text_width_in, numeric(1)))
+right_clearance_in <- PA_W - legend_right
+x_label_width <- c(text_width_in("Direct MASLD /\nliver fat"),
+                   text_width_in("Liver\nenzymes"))
+x_label_gap_in <- (bar_x[2] - x_label_width[2] / 2) -
+                  (bar_x[1] + x_label_width[1] / 2)
+# Fail closed WITHOUT leaving an artifact: aborting here with cairo_pdf still
+# open leaves a truncated candidate PDF that the downstream pdfinfo/gs/pdftotext
+# gates would then read as a real panel. (on.exit does not fire at top level.)
+if (!(right_clearance_in >= 0.03 && x_label_gap_in >= 0.03)) {
+  try(dev.off(), silent = TRUE)
+  unlink(pa_pdf)
+  stop(sprintf(
+    "Fig2D Panel A layout clearance failed (right=%.4f in, x-label gap=%.4f in; both must be >= 0.03); no PDF written",
+    right_clearance_in, x_label_gap_in))
+}
+fwrite(data.table(
+  measurement = c("right_artwork_clearance_in", "x_label_horizontal_gap_in",
+                  "legend_center_spacing_in"),
+  value = c(right_clearance_in, x_label_gap_in, abs(diff(legend_y)[1])),
+  required_minimum = c(0.03, 0.03, NA_real_)
+), file.path(OUT_DIR, "Fig2D_layout_measurements.tsv"), sep = "\t")
 popViewport()
 dev.off()
+normalize_page(pa_pdf, PA_W, PA_H)
 
 # ---------------------------------------------------------------- Panel B ----
 # One visual claim: deposited liver maps leave most noncoding mass unresolved.
@@ -258,12 +301,35 @@ txt("Regulatory DNA context ≠ colocalized transcript biotype  |  context categ
 
 popViewport()
 dev.off()
+normalize_page(pb_pdf, PB_W, PB_H)
 
 for (f in c("pip_architecture_estimates.tsv", "trait_class_contrasts.tsv",
             "portfolio_independence.tsv", "direct_trait_coding_concentration.tsv",
             "input_manifest.tsv", "environment.txt")) {
   file.copy(file.path(STATS_DIR, f), file.path(OUT_DIR, f), overwrite = TRUE)
 }
+# Canonical panel-scoped sidecars. Keep the generic analysis products above for
+# provenance, but make the Figure 2D source contract self-contained after a
+# candidate is promoted or reindexed.
+# Historical analysis products used n_independent_loci_1mb for these groups.
+# The grouping never consulted LD, so the panel sidecar uses the scientifically
+# accurate operational-region name even when rendering a frozen analysis table.
+panel_est <- copy(est)
+if ("n_independent_loci_1mb" %in% names(panel_est)) {
+  setnames(panel_est, "n_independent_loci_1mb", "n_operational_regions_1mb")
+}
+fwrite(panel_est,
+       file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness_source.tsv"),
+       sep = "\t")
+file.copy(file.path(STATS_DIR, "trait_class_contrasts.tsv"),
+          file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness_contrasts.tsv"),
+          overwrite = TRUE)
+file.copy(file.path(STATS_DIR, "portfolio_independence.tsv"),
+          file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness_region_grouping.tsv"),
+          overwrite = TRUE)
+file.copy(file.path(STATS_DIR, "input_manifest.tsv"),
+          file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness_input_manifest.tsv"),
+          overwrite = TRUE)
 
 cap_a <- paste(
   "Distribution of fine-mapping posterior inclusion probability across four mutually",

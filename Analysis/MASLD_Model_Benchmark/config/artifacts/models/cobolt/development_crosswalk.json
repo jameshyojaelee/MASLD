@@ -1,0 +1,39 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["cell_state_mapping", "rna_conditioned_atac"]},
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development unpaired integration and donor-by-cell-state RNA-to-ATAC profile comparison after fitting on outer-training bridge data.",
+      "exposure_state": "downstream_demo",
+      "model_access": "RNA and ATAC aliquots use distinct barcodes. Neither held modality enters training, feature intersection, XGBoost correction, model selection, or calibration."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only cell-state mapping after selection lock. It cannot confirm RNA-to-ATAC because no observed ATAC endpoint exists.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA only through a frozen eval-mode encoder; dataset-specific adjustments disabled and no query rows appended to training."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-training same-nucleus multimodal bridge plus donor-held development cell-state and RNA-conditioned ATAC evaluation after activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Feature inventories, model, batch policy, optional training-only latent correction, head, and calibration use outer-training donors only; held ATAC is evaluator-only."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_fitted_cobolt_v1_0_1_per_outer_fold_seed_feature_order_and_no_dataset_adjustment",
+    "common_lane": "raw deterministic posterior-mean embedding plus identical common head",
+    "native_lane": "training-only latent correction and native clustering reported separately; no held-query correction fit",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot with distinct barcodes and structural modality absence",
+    "gse289173": "RNA_only sealed query",
+    "gse296875": "same_nucleus exact shared barcode only after join validation"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, topics, and peaks are not replicates.",
+    "profile_scale": "ATAC decoder output is a depth-free multinomial feature composition on frozen peaks.",
+    "query_isolation": "Force eval/no-grad, use posterior mean, disable dataset adjustments, and never fit latent correction on held rows.",
+    "transform_contract": "Training-only gene/peak intersections and order, model state, head, and calibration."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

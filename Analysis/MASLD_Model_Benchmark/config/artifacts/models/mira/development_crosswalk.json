@@ -1,0 +1,39 @@
+{
+  "crosswalk_scope": {"development_sources": ["gse244832", "gse296875"], "sealed_source": "gse289173", "tasks": ["cell_state_mapping"]},
+  "findings": {
+    "gse244832": {
+      "allowed_use": "If complete license terms are resolved, external-development RNA-only topic mapping. Independent ATAC topic diagnostics may be reported, but no joint cell embedding is allowed across aliquots.",
+      "exposure_state": "downstream_demo",
+      "model_access": "Different aliquots are not shared cells. Held data cannot fit topics, topic count, learning rates, features, LSI, covariates, topic alignment, head, or calibration."
+    },
+    "gse289173": {
+      "allowed_use": "If terms are resolved, one-time RNA-only topic prediction and cell-state mapping after selection lock.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA only through the frozen expression topic encoder; no paired or joint representation, fitting, feature selection, tuning, or calibration."
+    },
+    "gse296875": {
+      "allowed_use": "If terms are resolved, outer-training RNA and ATAC topic models, paired joint-topic development diagnostics, and donor-held RNA-only mapping after activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Exact same-nucleus joins only. Topic number, HVGs/peaks, LSI, covariates, models, paired topic diagnostics, head, and calibration use outer-training donors only."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_fitted_mira_2_1_1_rna_and_atac_topic_models_per_outer_fold_seed_and_feature_state",
+    "common_lane": "frozen RNA topic proportions or prespecified ILR features plus identical benchmark head",
+    "native_lane": "paired concatenated RNA/ATAC ILR topics as development-only diagnostics",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; independent topic models only, never shared-cell joint representation",
+    "gse289173": "RNA_only sealed query",
+    "gse296875": "same_nucleus; exact shared IDs permitted for outer-training joint diagnostics"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, topics, and peaks are not replicates.",
+    "profile_rule": "Within-modality imputation and paired topic concatenation are latent-only and cannot be scored as RNA-conditioned ATAC.",
+    "query_isolation": "Predict held RNA with frozen features, encoder, covariate transforms, and head; no held influence on any fitted choice.",
+    "terms_gate": "Do not execute, adapt, or redistribute MIRA until a complete BSD license text or written rights confirmation is frozen."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

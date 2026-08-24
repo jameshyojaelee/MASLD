@@ -1,0 +1,80 @@
+{
+  "architecture_contract": {
+    "method": "separate amortized probabilistic topic models for RNA and ATAC with CODAL covariate correction; joint representation is concatenation of modality-specific ILR topic embeddings for exactly shared cells",
+    "rna_encoder": "Expression encoder maps raw count features, log read depth, frozen covariates, and optional extra features to a logistic-normal topic posterior",
+    "atac_encoder": "Accessibility encoders support DAN, skipDAN, or training-fitted TF-IDF/LSI light mode and a binary or count multinomial topic decoder",
+    "joint_limitation": "make_joint_representation intersects cell IDs and horizontally concatenates two already-computed embeddings. It is not a cross-modal translator."
+  },
+  "code_license": "BSD3_DECLARED_IN_PACKAGE_METADATA_LICENSE_TEXT_NOT_DETECTED",
+  "implementation": {
+    "checkpoint_policy": "No upstream checkpoint is admitted. Fit separate local RNA and ATAC topic models per outer fold and seed where the topology supports them.",
+    "pypi_release": {
+      "python_requires": ">=3.6,<3.12",
+      "sdist": {"filename": "mira-multiome-2.1.1.tar.gz", "sha256": "f981bc40542097c3892cb02efca0c25766dfa0bbafcbd4e94ea18b3e5e27157b", "size_bytes": 41634829},
+      "version": "2.1.1",
+      "wheel": {"filename": "mira_multiome-2.1.1-py3-none-any.whl", "sha256": "49eb6d49f5ca8a8047c0e3ae8fdb78c94b3c0f40ed14763f54afe410de1db5c1", "size_bytes": 662412}
+    },
+    "repository": "AllenWLynch/MIRA",
+    "repository_release_revision": "6a2a22edf7724883ab0b481d7dd125e466e23b0f",
+    "repository_release_revision_date": "2024-02-12T06:55:30-05:00",
+    "release_tags": "no_2.1.1_tag_detected"
+  },
+  "inductive_inference_contract": {
+    "allowed_wrapper": "A fitted RNA topic model may predict topic compositions for unseen RNA cells using its frozen feature order, highly-variable mask, encoder, covariate encoders, and parameters. The source calls eval before prediction.",
+    "forbidden": "Held cells cannot enter topic-number tuning, learning-rate range tests, feature/HVG choice, TF-IDF/LSI fitting, covariate category/scaler fitting, model fitting, topic alignment, or head calibration.",
+    "joint_query_limit": "A joint RNA-ATAC embedding requires observed topic embeddings from both assays for the same cell identity. An RNA-only sealed query receives only the RNA topic embedding.",
+    "profile_limit": "Each modality decoder can impute its own feature frequencies from that modality's topic composition. The independent RNA topic vector is not an input to the ATAC decoder, and no frozen RNA-to-ATAC topic map is released."
+  },
+  "input_contract": {
+    "atac": "raw integer accessibility counts; default accessibility preprocessing binarizes counts and may encode accessed peak indices, while light mode fits TF-IDF plus TruncatedSVD",
+    "pairing_requirement": "Joint representation and cross-topic diagnostics require shared cell IDs. Same-cell or same-nucleus joins are valid; different aliquots are not shared cells.",
+    "reference": "GENCODE v49 gene identifiers and GRCh38.p14 peak coordinates with frozen feature arrays and assay namespaces",
+    "rna": "raw integer transcript counts in a declared AnnData counts layer; endogenous/HVG and exogenous/predicted feature masks are training-only",
+    "supported_joint_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_joint_topologies": ["same_sample_different_aliquot_as_shared_cell", "same_study_unpaired_as_shared_cell"]
+  },
+  "missingness_contract": {
+    "native": "RNA and ATAC topic models are independent and each consumes one observed modality. Joint utilities subset to shared cells rather than representing a missing modality.",
+    "project_mapping": "Preserve project missingness states outside MIRA. Missing assays are absent objects, never zero matrices; RNA-only queries use only the RNA model."
+  },
+  "output_contract": {
+    "cell_embedding": "RNA topic proportions or ILR-transformed RNA topic features for RNA-only queries; joint concatenated features only for validated paired development cells",
+    "profile_status": "latent_only",
+    "not_admitted": "MIRA's within-modality ATAC imputation and paired joint topics do not constitute an RNA-conditioned ATAC peak profile"
+  },
+  "runtime_contract": {
+    "declared": {"python": ">=3.6,<3.12", "torch": ">=1.8.0,<=2.0.0", "pyro-ppl": ">=1.5.2,<2", "networkx": ">=2.3,<=2.5", "scipy": "<=1.10.2", "scikit-learn": ">=0.24,<1.4"},
+    "environment_status": "UNRESOLVED_LEGACY_PYTHON_TORCH_CUDA_L40S_BATCHNORM_MONTE_CARLO_DETERMINISM_AND_MEMORY_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "warning": "Upstream BaseModel.load uses unrestricted torch.load and on-disk datasets use pickle. Use project-controlled local state dicts plus plain feature/covariate metadata; do not accept external serialized models or dataset caches."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact 2.1.1 release commit, public PyPI JSON metadata, package configuration, and relevant source text were inspected on 2026-08-22. No complete BSD license text was detected in the exact repository tree or PyPI metadata. Distributions, packages, caches, checkpoints, and weights were not downloaded, installed, deserialized, or executed.",
+  "source_records": [
+    {"identity": "MIRA:README.rst", "sha256": "2117af3b1977364b65b0c23335d0718ba4b6be72f039649339f6b8e132dc9241", "size_bytes": 4449},
+    {"identity": "MIRA:setup.cfg", "sha256": "8377eac7380ae73a0f5b6e42357e8977224de8188c5671bdd2496405fe131b1e", "size_bytes": 1516},
+    {"identity": "MIRA:pyproject.toml", "sha256": "4c1b7ddc975d1c9e260372030088b8e93d1e4d72c28b510f4cf89fa1a3aa1530", "size_bytes": 146},
+    {"identity": "MIRA:mira/__init__.py", "sha256": "5f8382fda18a4662ebcaabeba4f696f3cea6f1c3b4088767f1f0bdb945348d91", "size_bytes": 413},
+    {"identity": "MIRA:mira/topic_model/base.py", "sha256": "6fa4bf27c477c2e8883609bfed26869dfbc07b67e66237042480fa1d1442dba6", "size_bytes": 63880},
+    {"identity": "MIRA:mira/topic_model/modality_mixins/expression_model.py", "sha256": "893c615585a26496faaa333191f33092f4cec043e52c67539839f22fa8b2bed2", "size_bytes": 18976},
+    {"identity": "MIRA:mira/topic_model/modality_mixins/accessibility_model.py", "sha256": "11ca02fe3274f203b4ac919099c80637a8fd625e1624797ab43247b1d5de1a30", "size_bytes": 17254},
+    {"identity": "MIRA:mira/adata_interface/topic_model.py", "sha256": "62d9d3b4d8ab00fa77f9c14859b7469a123412213a0ff5eb101b9861b26f0a5a", "size_bytes": 14635},
+    {"identity": "MIRA:mira/tools/joint.py", "sha256": "72378d88cb28e4500ad128083b58c4ebdf3fee3b83f3e811e7ca002e2305e73f", "size_bytes": 5697}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Technically suitable through the frozen RNA topic encoder, but execution and champion eligibility require resolution of the missing complete license text plus query/runtime fixtures.",
+    "rna_conditioned_atac": "Ineligible and latent-only: paired topic concatenation and within-ATAC imputation are not RNA-to-ATAC prediction.",
+    "variant_to_regulation": "The optional regulatory-potential workflows are not allele-effect sequence models; MIRA is ineligible for the benchmark variant endpoint."
+  },
+  "terms_audit": {
+    "pypi_and_setup_declaration": "BSD3 License / BSD License classifier",
+    "license_expression": "absent",
+    "license_file": "not detected in exact release repository or PyPI metadata",
+    "result": "blocked_pending_complete_license_text_or_written_confirmation"
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_FITTED_STATE_DICT"
+}

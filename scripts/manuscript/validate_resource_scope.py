@@ -31,15 +31,19 @@ RESOURCE_AUTHORITIES = [
 ]
 
 
-def load_exemptions() -> tuple[list[str], list[str]]:
-    """Return (exempt_terms, scope_paths) across every active exemption.
+def load_scope_policy() -> dict:
+    """Return the method-exemption policy, or an empty fail-closed policy.
 
     A missing config means no exemptions exist, so nothing is firewalled and
     nothing is licensed. Fail closed in both directions.
     """
     if not EXEMPTION_PATH.is_file():
-        return [], []
-    config = json.loads(EXEMPTION_PATH.read_text())
+        return {}
+    return json.loads(EXEMPTION_PATH.read_text())
+
+
+def active_exemption_terms(config: dict) -> tuple[list[str], list[str]]:
+    """Return (exempt_terms, scope_paths) across active method exemptions."""
     terms: list[str] = []
     scopes: list[str] = []
     for entry in config.get("exemptions", []):
@@ -51,15 +55,91 @@ def load_exemptions() -> tuple[list[str], list[str]]:
 
 
 def check_claim_firewall(errors: list[str]) -> None:
-    exempt_terms, scope_paths = load_exemptions()
+    config = load_scope_policy()
+    exempt_terms, scope_paths = active_exemption_terms(config)
     if not exempt_terms and not scope_paths:
         return
+    never_exemptible = {
+        term.lower() for term in config.get("never_exemptible_terms", [])
+    }
+    approved_by_document: dict[str, set[str]] = {}
+    for approval in config.get("resource_language_approvals", []):
+        if approval.get("status") != "active":
+            continue
+        approval_id = approval.get("approval_id", "missing_id")
+        decision_record = approval.get("decision_record", "")
+        if not decision_record or not (ROOT / decision_record).is_file():
+            errors.append(f"missing_language_approval_decision:{approval_id}")
+        approved_terms = {
+            term.lower() for term in approval.get("terms", [])
+        }
+        unknown_terms = sorted(
+            approved_terms - {term.lower() for term in exempt_terms}
+        )
+        for term in unknown_terms:
+            errors.append(f"language_approval_without_method_exemption:{approval_id}:{term}")
+        forbidden = sorted(approved_terms & never_exemptible)
+        for term in forbidden:
+            errors.append(f"never_exemptible_language_approval:{approval_id}:{term}")
+        for relative in approval.get("scope_documents", []):
+            if relative not in RESOURCE_AUTHORITIES:
+                errors.append(
+                    f"language_approval_non_authority_scope:{approval_id}:{relative}"
+                )
+                continue
+            approved_by_document.setdefault(relative, set()).update(approved_terms)
+        citation_marker = approval.get("required_citation_marker", "")
+        if not citation_marker:
+            errors.append(f"missing_language_approval_citation_marker:{approval_id}")
+        for relative in approval.get("citation_documents", []):
+            path = ROOT / relative
+            if not path.is_file():
+                errors.append(
+                    f"missing_language_approval_citation_document:{approval_id}:{relative}"
+                )
+            elif citation_marker and citation_marker not in path.read_text(
+                errors="replace"
+            ):
+                errors.append(
+                    f"missing_language_approval_citation:{approval_id}:{relative}"
+                )
+        for requirement in approval.get("required_routing_markers", []):
+            relative = requirement.get("document", "")
+            marker = requirement.get("marker", "")
+            path = ROOT / relative
+            if not relative or not marker:
+                errors.append(f"invalid_language_approval_routing_marker:{approval_id}")
+            elif not path.is_file():
+                errors.append(
+                    f"missing_language_approval_routing_document:{approval_id}:{relative}"
+                )
+            elif marker not in path.read_text(errors="replace"):
+                errors.append(
+                    f"missing_language_approval_routing_marker:{approval_id}:{relative}:{marker}"
+                )
+        for relative in approval.get("required_artifacts", []):
+            path = ROOT / relative
+            if not path.is_file() or path.stat().st_size == 0:
+                errors.append(
+                    f"missing_language_approval_artifact:{approval_id}:{relative}"
+                )
+            elif path.name == "validation_summary.json":
+                summary = json.loads(path.read_text())
+                passed = summary.get("status") == "PASS" or summary.get(
+                    "validation_pass"
+                ) is True
+                if not passed:
+                    errors.append(
+                        f"failed_language_approval_artifact:{approval_id}:{relative}"
+                    )
     for relative in RESOURCE_AUTHORITIES:
         path = ROOT / relative
         if not path.is_file():
             continue
         lowered = path.read_text(errors="replace").lower()
         for term in exempt_terms:
+            if term.lower() in approved_by_document.get(relative, set()):
+                continue
             # Bare mentions inside a fenced code block or a path are unavoidable
             # when the document explains the exemption itself; require the term
             # to be absent from prose by checking word-ish boundaries.

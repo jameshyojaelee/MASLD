@@ -1,0 +1,46 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["deferred_cell_state_mapping", "deferred_rna_conditioned_atac", "release_fidelity_audit"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "None while the release-fidelity gate is unresolved. If a separately named released-code comparator is approved, evaluate frozen RNA queries and donor-by-cell-state ATAC profiles only; the two aliquots remain unpaired modality sets.",
+      "exposure_state": "target_label_unexposed_while_excluded",
+      "model_access": "No GSE244832 rows, graph, preprocessing, labels, ATAC, fitting, early stopping, projection, or calibration before a distinct comparator and TaskSpec are approved."
+    },
+    "gse289173": {
+      "allowed_use": "None under the current Monae identity. Conditional one-time RNA-only cell-state mapping is possible only after architecture fidelity is resolved, a frozen raw-RNA-to-X_pre adapter passes, and selection is relocked.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No sealed features, labels, outcomes, graph insertion, representation learning, query fitting, head fitting, or calibration while the model is deferred."
+    },
+    "gse296875": {
+      "allowed_use": "No active training while fidelity is unresolved. If activated as a renamed released-code comparator, use outer-training modality rows as unpaired sets and keep donor-held RNA and ATAC isolated for prediction and evaluation.",
+      "exposure_state": "target_label_unexposed_while_excluded; continual_seen_if_a_local_outer_fold_model_is_later_approved",
+      "model_access": "A future approved run may let only outer-training donors define genes, peaks, X_pre transforms, guidance graph, model state, early stopping, heads, or calibration. Same-nucleus row order is never treated as a pairing signal by this release."
+    }
+  },
+  "local_model_roster": {
+    "candidate_identity": "deferred_pending_author_clarification_or_explicitly_renamed_monae_release_covel_comparator",
+    "common_lane_if_activated": "original X_pre lane only, with frozen raw-RNA preprocessing and RNA posterior-mean embedding",
+    "excluded_lane": "Monae-E X_init because new held cells require transductive graph/entity embedding",
+    "profile_lane_if_activated": "experimental NB decode_data with frozen graph, target_libsize=1.0, no target batch, and RNA only",
+    "seeds": [11, 29, 47, 71, 101],
+    "status": "deferred_release_fidelity_gate"
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; separate unpaired modality sets and donor-by-cell-state evaluation only",
+    "gse289173": "RNA_only sealed rows excluded while deferred; never add them to a Monae-E graph",
+    "gse296875": "same_nucleus metadata retained, but released CoVELModel modalities are trained as unpaired sets and row order supplies no objective"
+  },
+  "rules": {
+    "architecture_identity": "No result may be labeled Monae until a paper-faithful immutable implementation is verified. A run of the current tag requires a distinct released-code comparator name and explicit methods disclosure.",
+    "biological_unit": "Donors are inferential units; cells, graph nodes, predicted peaks, and seeds are not biological replicates.",
+    "feature_and_graph_contract": "Genes, peaks, X_pre transformations, graph vertices/edges/signs/weights, target library size, and target batch are frozen inside outer-training donors.",
+    "no_false_pairing": "Monae is unpaired. Never pair GSE244832 aliquots or infer same-nucleus pairing from row order; exact GSE296875 identities remain metadata/evaluator checks only.",
+    "query_contract": "Original-lane held queries may use a frozen raw-count-to-X_pre transform. Monae-E graph/entity fitting on held or sealed rows is prohibited."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

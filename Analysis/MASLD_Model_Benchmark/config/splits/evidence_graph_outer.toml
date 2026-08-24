@@ -1,0 +1,10 @@
+schema_version = "masld-bench-split-v1"
+split_id = "evidence_graph_outer"
+entity = "independent_locus"
+group_keys = ["graph_snapshot_id", "native_build", "ld_block_id", "locus_id"]
+roles = ["train", "development", "withheld_sealed"]
+seed = 20260821
+locus_grouping = "Group all variants and evidence edges within an ancestry-aware locus before graph construction."
+label_policy = "Held-locus labels and every edge derived from them are removed before message passing, embedding precomputation, negative sampling, and feature normalization."
+exposure_policy = "The current Gene Catalog and COLOC memberships are exposed development evidence, not sealed graph labels."
+admission_gates = ["Freeze one promoted graph snapshot and evidence ontology.", "Record provenance and observability for every typed edge.", "Generate split-safe negative edges within the eligible evidence family.", "Audit external knowledge graphs for outcome-derived edges before admission."]

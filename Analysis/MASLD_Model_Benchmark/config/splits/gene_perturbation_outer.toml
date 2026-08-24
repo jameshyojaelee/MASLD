@@ -1,0 +1,10 @@
+schema_version = "masld-bench-split-v1"
+split_id = "gene_perturbation_outer"
+entity = "biological_replicate_or_target_gene"
+group_keys = ["cohort_family_id", "perturbation_direction", "target_gene", "guide_family", "biological_replicate", "culture_context"]
+roles = ["train", "development", "withheld_sealed"]
+seed = 20260821
+locus_grouping = "All guides for one gene target remain together for unseen-target folds; all cells from one biological culture, animal, or donor remain together for held-replicate/context folds."
+label_policy = "Cells inherit the role of their biological culture, animal, donor, and target. Technical capture groups remain nested metadata and never define inferential folds."
+exposure_policy = "Genetically or literature-prioritized liver targets are conditional development evidence; no registered source is a sealed unbiased target-discovery cohort."
+admission_gates = ["Freeze perturbation direction, target gene, guide family, control identity, and biological-unit ancestry before normalization or feature selection.", "Use unseen-target folds only for GEARS, GenePert, and the scGPT perturbation head; no outcome from the held gene may enter controls, coexpression, differential-expression genes, embeddings, or tuning.", "Use held-biological-replicate or held-context folds with already observed perturbations for scGen and CellOT.", "Use CPA and perturblib only where every evaluation atom is in the training vocabulary; reject unknown categories rather than mapping them to control.", "Pseudobulk and resample independent cultures, animals, or donors. Cells, guides, GEM groups, lanes, wells, organoids, and libraries are not independent biological replicates.", "Keep CRISPRa, CRISPRi, and knockout response directions separate unless the model explicitly encodes direction and the cross-direction task is prospectively registered."]

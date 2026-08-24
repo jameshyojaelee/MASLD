@@ -1,0 +1,32 @@
+{
+  "schema_version": "masld-bench-local-model-suite-preflight-v1",
+  "verified_date": "2026-08-23",
+  "registry_binding": {
+    "artifact_bundle_id": "rna_atac_regularized",
+    "registry_model_ids": [
+      "shrunken_pseudobulk",
+      "shuffled_context",
+      "trans_only"
+    ]
+  },
+  "implementation": {
+    "source_path": "Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_regularized.py",
+    "source_sha256": "690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34",
+    "upstream_checkpoint": "NOT_APPLICABLE_PROJECT_OWNED_FOLD_LOCAL_MODELS",
+    "code_license": "project_owned",
+    "weights_license": "not_applicable_classical",
+    "derivative_weights_license": "project_owned"
+  },
+  "activation_disposition": {
+    "admission_status": "ready_for_rna_conditioned_atac_smoke_only",
+    "variant_to_regulation": "not_executable_under_this_artifact",
+    "external_champion": "blocked_without_an_eligible_external_seal",
+    "clinical_use": "prohibited"
+  },
+  "verification_receipts": {
+    "unit_job": "21047447",
+    "unit_result": "14_passed_across_control_and_scientific_environments",
+    "real_one_fold_job": "21047497",
+    "real_one_fold_result": "three_models_each_emitted_110000_predictions_without_query_ATAC"
+  }
+}

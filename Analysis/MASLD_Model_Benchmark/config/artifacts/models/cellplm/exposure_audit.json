@@ -1,0 +1,58 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_for_all_registered_cell_state_sources_with_unknown_retained",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "cellplm_20230926_documented": {
+      "checkpoint_identity": "Dropbox:content_revision:016213c1be94746000000029e76cf71:20230926_85M.best.ckpt",
+      "corpus": "11.4 million unlabeled human scRNA/snRNA and single-cell-resolution CosMx profiles; paper names source groups but does not bind the released object to an immutable 484-dataset and cell roster",
+      "exposure_state": "target_label_unexposed",
+      "latent_prior": "16_component_Gaussian_mixture",
+      "release_status": "documented_by_repository_README_and_published_architecture"
+    },
+    "cellplm_20231027_registered": {
+      "checkpoint_identity": "Dropbox:content_revision:016213c1be94747000000029e76cf71:20231027_85M.best.ckpt",
+      "corpus": "configuration retains the same 19,374-gene, 484-dataset, and 12,596-batch footprint, but exact training provenance is not documented",
+      "exposure_state": "target_label_unexposed",
+      "latent_prior": "plain_VAE",
+      "release_status": "used_by_zero_shot_embedding_tutorial_but_not_declared_as_latest_or_explained_in_README_or_paper"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "b5156f78e91d18ff443f2aad27ab4d1877708d549529eaacae335ef6e67de865"
+  },
+  "interpretation": "Both current Dropbox revision timestamps predate GSE289173 by more than fifteen months, so its features and target labels were unexposed. This chronology does not make either checkpoint admissible. Checkpoint terms are undeclared, SHA-256 values are unresolved, and the census currently names an undocumented plain-VAE variant instead of the repository-documented Gaussian-mixture release.",
+  "preprocessing_and_evaluation_incidents": [
+    {
+      "benchmark_action": "replace_with_donor_safe_adapter",
+      "finding": "The paper requires library-size normalization plus log1p, whereas the released pipeline only applies log1p internally and does not establish whether incoming AnnData is raw or normalized."
+    },
+    {
+      "benchmark_action": "prohibit",
+      "finding": "CellEmbeddingPipeline.score searches Leiden resolutions using the evaluation labels and reports the best ARI/NMI."
+    },
+    {
+      "benchmark_action": "prohibit",
+      "finding": "The released annotation tutorial concatenates train and test data before the pipeline selects HVGs, and the pipeline performs HVG selection before applying its split field."
+    },
+    {
+      "benchmark_action": "freeze_context_topology",
+      "finding": "CellPLM embeddings depend on every other cell in the transformer context. If batch labels are absent, the released dataset treats all input cells as one sample; changing inference batch size also changes context."
+    }
+  ],
+  "remaining_blockers": [
+    "Obtain explicit checkpoint terms; BSD-2-Clause repository code is not assumed to license separately hosted Dropbox weights or derivatives.",
+    "Resolve the frozen census to the documented 20230926 Gaussian-mixture release or register the 20230926 and undocumented 20231027 VAE objects separately.",
+    "With approval, acquire only the selected object, verify SHA-256 and its matching configuration, and inspect the Torch checkpoint without unrestricted pickle execution.",
+    "Freeze state-dict keys, shapes, dtypes, the exact 19,374-gene order, and reconcile that universe with the paper's 13,500 common scRNA genes.",
+    "Recover the exact 484-dataset accession/alias and retained-cell inventory for pre-checkpoint development cohorts.",
+    "Implement donor-local deterministic context blocks, a single normalization path, training-only HVGs, and evaluation independent of upstream oracle-resolution scoring.",
+    "Validate the Python 3.9/Torch 1.13/CUDA 11.7/RAPIDS/Flowformer runtime and both the 1,024-dimensional common and separately named 512-dimensional native representations on L40S."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_while_checkpoint_terms_identity_and_census_release_are_unresolved",
+  "verified_date": "2026-08-22"
+}

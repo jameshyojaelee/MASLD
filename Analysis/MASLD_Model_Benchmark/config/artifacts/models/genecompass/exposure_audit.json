@@ -1,0 +1,64 @@
+{
+  "audit_scope": {
+    "artifact_bundle_id": "genecompass",
+    "development_encoder_overlap": "all_registered_cell_state_sources_retained_as_unknown",
+    "registry_model_id": "genecompass",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "genecompass_base": {
+      "checkpoint_identity": "xCompass-AI/GeneCompass@66ab82f90fa94f88613df7d89a2fb38165e2a82f+ScienceDB:anonymous/SUZOdk1y:Base",
+      "checkpoint_object_status": "unresolved_mutable_portal_label_not_an_immutable_weight_object",
+      "corpus": "cross-species human and mouse corpus called scCompass-126M; the paper's stated 53,568,337 human and 48,200,083 mouse counts sum to 101,768,420, and the exact accession and retained-cell roster is unresolved",
+      "exposure_state": "unknown",
+      "prior_knowledge_status": "required_token_median_and_prior_payload_roster_is_incomplete",
+      "sha256": "UNRESOLVED"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "160094a240d7be1d491085468e0c7ba3186dbbd93226c3542e575559919bb6aa"
+  },
+  "interpretation": "The pinned code revision is reproducible as source, but the ScienceDB label Base is not an immutable checkpoint identity and no checkpoint-bound corpus inventory exists. Paper chronology cannot establish clean or target-label-unexposed status for any Atlas source. No repository, checkpoint, or prior-payload license was detected, so use and adaptation remain blocked rather than merely nonredistributable.",
+  "preprocessing_and_evaluation_findings": [
+    {
+      "benchmark_action": "freeze_all_input_payloads",
+      "finding": "The rank-value sequence depends on exact Ensembl mapping, human or mouse vocabulary, gene medians, species flag, top-2,048 selection, and several prior-knowledge matrices. Some repository paths are Git LFS pointers or mutable external resources rather than pinned payloads."
+    },
+    {
+      "benchmark_action": "preserve_missingness_outside_native_tensor",
+      "finding": "A structurally unassayed gene cannot be ranked as an observed biological zero. The adapter must reject unsupported assay coverage and preserve the observability state."
+    },
+    {
+      "benchmark_action": "prohibit_direct_untrusted_load",
+      "finding": "The official path uses Python pickle objects for token, median, and prior knowledge and may use a pickle-backed PyTorch checkpoint. These require isolated inspection and conversion before execution."
+    },
+    {
+      "benchmark_action": "do_not_recast_downstream_demos_as_pretraining",
+      "finding": "The published human-liver annotation and GEARS perturbation results use downstream fitting. They are not zero-shot evidence and do not identify the pretraining corpus."
+    }
+  ],
+  "published_downstream_components": {
+    "human_liver_annotation": "The Sharma et al. human-liver experiment is source-owned downstream demonstration evidence and requires accession-alias resolution before any overlap interpretation.",
+    "perturbation_GEARS": "The GeneCompass paper replaces or augments GEARS gene representations for a separately fitted Norman-dataset experiment. The Base checkpoint alone is not a perturbation predictor."
+  },
+  "remaining_blockers": [
+    "Obtain written code, checkpoint, tokenizer, gene-median, and prior-knowledge payload terms.",
+    "Inventory and hash the exact ScienceDB Base object and every required Git LFS or externally hosted payload.",
+    "Reconcile the scCompass-126M label with the paper's 101,768,420-cell component sum and bind the selected bytes to an accession, release-alias, donor, retained-cell, and training-cutoff roster.",
+    "Resolve the published human-liver downstream dataset accession and aliases separately from the pretraining inventory.",
+    "Freeze Ensembl mapping, human and mouse vocabularies, gene medians, species flag, rank-value encoding, maximum sequence length, layer, and pooling.",
+    "Inspect all pickle and model objects in a disposable no-network environment, convert approved plain data and tensors to non-executable formats, and freeze schemas and numeric parity.",
+    "Validate the PyTorch 1.13.1, CUDA 11.7, and Transformers 4.30.0 stack on L40S before scheduling."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_due_unknown_exposure_unresolved_checkpoint_and_prior_payloads_and_no_detected_license",
+  "task_disposition": {
+    "cell_state_mapping": "admission_blocked_restricted_comparator",
+    "conditional_masld_model": "prohibited_as_backbone_context_teacher_or_feature_training_source_without_written_terms",
+    "perturbation_response": "not_admitted_without_a_separate_exact_GEARS_system_manifest",
+    "released_open_champion": "ineligible"
+  },
+  "verified_date": "2026-08-22"
+}

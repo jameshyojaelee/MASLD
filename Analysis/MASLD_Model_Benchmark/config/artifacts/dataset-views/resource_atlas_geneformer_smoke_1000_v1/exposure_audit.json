@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "authority": "exposure_audit",
+  "evidence": {
+    "development_only": true,
+    "exposure_status": "downstream_demo",
+    "globally_pristine": false,
+    "sealed_outcomes_used": false,
+    "selection_outcomes_used": false,
+    "sealed_test_eligible": false
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

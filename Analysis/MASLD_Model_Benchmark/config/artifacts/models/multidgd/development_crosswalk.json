@@ -1,0 +1,48 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["noninductive_query_optimization_audit", "deferred_cell_state_mapping", "deferred_rna_conditioned_atac"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "None in the active frozen-query tournament. If a separate nonpromotable diagnostic is approved, fit each RNA-only query representation without ATAC and compare only donor-by-cell-state aggregate predictions against the different-aliquot ATAC assay.",
+      "exposure_state": "target_label_unexposed_while_excluded",
+      "model_access": "No GSE244832 RNA, ATAC, rows, latent fitting, feature selection, labels, early stopping, projection, or calibration before a separate TaskSpec is approved. RNA and ATAC aliquots are never identity-paired."
+    },
+    "gse289173": {
+      "allowed_use": "None. The current model has no frozen RNA encoder, so it cannot enter the one-time sealed cell-state mapping evaluation.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No sealed features, labels, eQTL or ieQTL outcomes, representation fitting, correction-mixture fitting, head fitting, projection, or calibration."
+    },
+    "gse296875": {
+      "allowed_use": "None in the active strict tournament. A future diagnostic may train on outer-training same-nucleus pairs and optimize each donor-held representation from RNA alone while held ATAC remains evaluator-only.",
+      "exposure_state": "target_label_unexposed_while_excluded; continual_seen_if_a_future_outer_fold_diagnostic_is_approved",
+      "model_access": "Only a future approved diagnostic may let outer-training donors define genes, peaks, decoder, mixture, representations, early stopping, or output scale. Donor-held RNA may affect only its own query-specific latent vector; donor-held ATAC is evaluator-only."
+    }
+  },
+  "local_model_roster": {
+    "candidate_identity": "no_active_frozen_query_candidate",
+    "excluded_common_lane": "No inductive raw-RNA encoder exists.",
+    "future_diagnostic_identity": "project_fitted_multidgd_per_outer_fold_seed_plus_outcome_blind_per_query_rna_latent_optimization",
+    "profile_lane": "nonpromotable normalized ATAC softmax profile after RNA-only latent optimization",
+    "scheduling_disposition": "remove_from_active_common_native_sealed_and_direct_profile_runs",
+    "seeds_if_diagnostic_approved": [11, 29, 47, 71, 101],
+    "status": "deferred_noninductive"
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; never train as paired rows and never use observed ATAC to fit an RNA query representation",
+    "gse289173": "RNA-only project seal remains inaccessible because query fitting is not an admitted sealed transform",
+    "gse296875": "same_nucleus; exact ordered row IDs must be validated before any future paired training, with donor-held ATAC isolated from representation fitting"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, optimized latent vectors, peaks, and seeds are not biological replicates.",
+    "feature_contract": "Genes, peaks, raw-count recipes, mixture components, decoder architecture, and output profile definition must be frozen inside outer-training donors.",
+    "missingness": "Missing ATAC remains structurally_missing and is never supplied as an observed zero vector.",
+    "profile_rule": "The decoder softmax may be called a normalized peak profile. A count mean requires a prospectively frozen target-depth rule and cannot use observed held ATAC depth.",
+    "query_fitting_label": "Any future result must state that each held RNA profile was used to optimize a new cell parameter. It cannot be compared as frozen representation learning or promoted to a sealed champion.",
+    "release_patch_rule": "The exact source's _init_test_set naming defect and automatic query-state save must be resolved in a documented project patch before even a diagnostic run; the patch cannot add an encoder or change the scientific identity."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

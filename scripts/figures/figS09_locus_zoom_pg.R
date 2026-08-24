@@ -375,37 +375,39 @@ if (file.exists(eqtl_file)) {
 coloc_top_pos <- NA_integer_
 coloc_top_pp  <- NA_real_
 coloc_pp4     <- NA_real_
-# BASE points at GWAS/finemapping (see line 42).
-candidate_dirs <- c(
-  file.path(BASE, "results/susie_coloc_polyfun"),
-  file.path(BASE, "results/susie_coloc_1kg"),
-  file.path(BASE, "results/susie_coloc"))
-candidate_studies <- c(
-  if (TRAIT_PAIR %in% c("ALT","AST","GGT"))
-       c(paste0("UKBB_", TRAIT_PAIR), paste0("BBJ_", TRAIT_PAIR)),
-  TRAIT_PAIR)  # fallback: trait-name doubles as study
-for (d in candidate_dirs) {
-  for (s in candidate_studies) {
-    f <- file.path(d, s, sprintf("susie_coloc_chr%d.csv", CHR))
-    if (!file.exists(f)) next
-    tt <- fread(f)
-    hit <- tt[gene == best_gene & method == "susie" &
-              !is.na(PP.H4.susie) & PP.H4.susie >= 0.5]
-    if (!nrow(hit)) next
-    # Best CS-pair top variant by joint posterior
-    setorder(hit, -top_snp_PP)
-    pos <- as.integer(sub("^[0-9]+:", "", hit$top_snp[1]))
-    if (!is.na(pos)) {
-      coloc_top_pos <- pos
-      coloc_top_pp  <- hit$top_snp_PP[1]
-      coloc_pp4     <- hit$PP.H4.susie[1]
-      cat(sprintf("  COLOC top SNP (%s × %s, %s): chr%d:%d  PP4=%.3f  topPP=%.3f\n",
-                  best_gene, s, basename(d), CHR, coloc_top_pos,
-                  coloc_pp4, coloc_top_pp))
-      break
-    }
+# Read the single promoted long table. Scanning per-study directories allowed a
+# pre-promotion chromosome file to supply a stale posterior after the canonical
+# aggregate changed. LZ_COLOC_STUDY pins an ancestry-specific worked example.
+COLOC_INPUT <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(BASE, "results/susie_coloc/susie_coloc_all_gwas.csv"))
+COLOC_STUDY <- Sys.getenv("LZ_COLOC_STUDY", "")
+REQUIRE_MULTI_SIGNAL <- tolower(Sys.getenv("LZ_REQUIRE_MULTI_SIGNAL", "false")) %in%
+  c("1", "true", "yes")
+candidate_studies <- if (nzchar(COLOC_STUDY)) COLOC_STUDY else c(
+  if (TRAIT_PAIR %in% c("ALT", "AST", "GGT"))
+    c(paste0("UKBB_", TRAIT_PAIR), paste0("BBJ_", TRAIT_PAIR)),
+  TRAIT_PAIR)
+co <- fread(COLOC_INPUT, select = c(
+  "gwas_name", "gene", "chr", "PP.H4.susie", "method", "top_snp", "top_snp_PP",
+  "ancestry", "ld_panel", "ld_panel_n", "stratum_ld_reliability", "ld_reliability"))
+hit <- co[gene == best_gene & chr == CHR & gwas_name %in% candidate_studies &
+          method == "susie" & is.finite(PP.H4.susie) & PP.H4.susie > 0.5]
+if (nrow(hit)) {
+  setorder(hit, -PP.H4.susie, -top_snp_PP, gwas_name)
+  pos <- as.integer(sub("^[0-9]+:", "", hit$top_snp[1]))
+  if (!is.na(pos)) {
+    coloc_top_pos <- pos
+    coloc_top_pp <- hit$top_snp_PP[1]
+    coloc_pp4 <- hit$PP.H4.susie[1]
+    COLOC_STUDY <- hit$gwas_name[1]
+    cat(sprintf("  promoted COLOC top SNP (%s × %s): chr%d:%d  PP4=%.3f  topPP=%.3f\n",
+                best_gene, COLOC_STUDY, CHR, coloc_top_pos, coloc_pp4, coloc_top_pp))
   }
-  if (!is.na(coloc_top_pos)) break
+}
+if (REQUIRE_MULTI_SIGNAL && is.na(coloc_pp4)) {
+  stop(sprintf("No promoted multi-signal COLOC support for %s in %s",
+               best_gene, paste(candidate_studies, collapse = ", ")))
 }
 
 # ── Atlas: bulk_logFC + bulk_padj for continuous gene-track coloring ───────
@@ -1246,5 +1248,19 @@ plotGenomeLabel(
 
 pageGuideHide()
 dev.off()
+
+fwrite(data.table(
+  locus_id = LOCUS_ID,
+  trait = TRAIT_PAIR,
+  gene = best_gene,
+  coloc_study = if (nzchar(COLOC_STUDY)) COLOC_STUDY else NA_character_,
+  multi_signal_pp_h4 = coloc_pp4,
+  shared_variant = if (!is.na(coloc_top_pos)) paste0(CHR, ":", coloc_top_pos) else NA_character_,
+  shared_variant_pp_h4 = coloc_top_pp,
+  chromosome = CHR,
+  window_start = WIN_START,
+  window_end = WIN_END,
+  coloc_input = COLOC_INPUT
+), sub("\\.pdf$", "_source.tsv", out_path), sep = "\t")
 
 cat("\nDone:", out_path, "\n")

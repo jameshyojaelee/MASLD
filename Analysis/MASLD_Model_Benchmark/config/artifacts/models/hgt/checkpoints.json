@@ -1,0 +1,150 @@
+{
+  "algorithm_contract": {
+    "attention": "multi-head typed attention with node-type-specific K/Q/V and output projections plus edge-type-specific key/value transformations and attention priors",
+    "aggregation": "add after attention softmax over incoming messages",
+    "implementation_primitive": "torch_geometric.nn.conv.HGTConv",
+    "metadata": "ordered node-type strings and ordered (source_type,relation_type,destination_type) triplets",
+    "model_family": "heterogeneous_graph_transformer",
+    "paper": {
+      "doi": "10.1145/3366423.3380027",
+      "title": "Heterogeneous Graph Transformer",
+      "url": "https://doi.org/10.1145/3366423.3380027"
+    },
+    "pyg_implementation_scope": "The pinned HGTConv implements typed attention. Its forward signature has no temporal input and does not implement the paper's relative temporal encoding as a query field.",
+    "unresolved_project_hyperparameters": [
+      "node_and_edge_type_ontology",
+      "metadata_order",
+      "source_independent_node_feature_schema_per_type",
+      "input_projection_dimensions",
+      "layer_count",
+      "hidden_dimension",
+      "attention_heads",
+      "dropout",
+      "sampler_or_full_batch_mode",
+      "source_agnostic_decoder",
+      "negative_sampling",
+      "optimizer",
+      "early_stopping",
+      "calibration",
+      "five_fixed_seeds"
+    ]
+  },
+  "checkpoint_contract": {
+    "checkpoint_sha256": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS",
+    "fitted_artifact": "project-generated per outer split, held-source role, and seed; not yet created",
+    "fitted_artifact_status": "BLOCKED_GRAPH_SNAPSHOT_AND_ARCHITECTURE_NOT_FROZEN",
+    "implementation_type": "train_locally",
+    "pretrained_checkpoint_available": false,
+    "upstream_example_weights": "none_admitted",
+    "warning": "HGTConv is an encoder layer. PyG's pinned DBLP example supplies a node-classification head, not an evidence-graph link or gene-ranking model."
+  },
+  "held_source_output_contract": {
+    "admissible_output": "one source-agnostic continuous candidate-gene score per frozen row, later calibrated without the held source",
+    "held_edge_type_rule": "A source encoded as a unique edge type owns HGT relation priors and key/value transformations. If every edge of that type is removed, those parameters receive no task evidence and cannot be used to score the unseen source.",
+    "native_layer_output": "a dictionary of node-type embedding tensors; a type that receives no messages may have no output",
+    "not_native": [
+      "candidate_gene_probability",
+      "held_source_edge_probability",
+      "calibrated_brier_probability",
+      "causal_gene_score",
+      "continuous_evidence_weight",
+      "evidence_observability_state"
+    ],
+    "required_decoder": "A frozen source-agnostic gene-ranking decoder trained on eligible labels from remaining development sources only. It may not receive a held-source ID, held edge type, held observability, or outcome-derived node coverage.",
+    "task_interpretation": "Recovery is transfer from remaining typed evidence to evaluator-only support in a removed source, not inference with an untrained edge-type parameter."
+  },
+  "implementation": {
+    "commit_date": "2025-10-14",
+    "package": "torch-geometric",
+    "package_version": "2.7.0",
+    "repository": "pyg-team/pytorch_geometric",
+    "repository_revision": "76ff9c2ce18c8cebf52122b57e2aeadce9793d10",
+    "revision_status": "exact_signed_release_commit_registered",
+    "source_code_run": false,
+    "source_url": "https://github.com/pyg-team/pytorch_geometric/tree/76ff9c2ce18c8cebf52122b57e2aeadce9793d10"
+  },
+  "inductive_transductive_contract": {
+    "feature_based_operator": "Conditionally inductive to new nodes of already trained node types when their feature transforms and incident relation types are frozen and available without held outcomes.",
+    "new_edge_type": "Unsupported. HGTConv metadata allocates edge-type-specific parameters at construction; an unseen type has no trained transformation.",
+    "new_node_type": "Unsupported. Node-type-specific projections and skip parameters are allocated from frozen metadata.",
+    "official_example": "Transductive node classification on one DBLP HeteroData graph with full graph features and split masks. It does not establish unseen-node or link-prediction behavior for this task.",
+    "project_default": "Use feature-based node inputs and a frozen type schema. Report any fixed-universe transductive lane separately.",
+    "source_only_node_rule": "A held-source-only node or node type cannot remain in the model input merely to preserve shape; its existence and type leak source coverage."
+  },
+  "input_contract": {
+    "continuous_edge_features": "unsupported_by_HGTConv_forward; the API accepts edge_index_dict but no per-edge weight or feature dictionary",
+    "edge_direction": "native in ordered source-relation-destination triplets; reverse flow requires an explicit inverse triplet",
+    "evidence_values": "The operator learns one scalar attention prior per edge type and head. It does not consume assay strength, provenance confidence, tested-negative status, or missingness per edge.",
+    "graph": "one split-safe HeteroData-equivalent graph built only from permitted training sources and loci",
+    "metadata_order_rule": "Freeze exact list order as well as names. PyG maps edge triplets to parameter indices in metadata order.",
+    "node_features": "one floating-point feature tensor per node type, produced by source-independent or remaining-source transforms inside the outer training role"
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED",
+    "optional_kernels": "PyG documents pyg-lib and sparse extension packages as optional. Freeze the actual message-passing and sampling backend because kernel choice can affect runtime and numerical order.",
+    "python_requirement": ">=3.10",
+    "pytorch_version": "UNPINNED_BY_PYG_PROJECT_METADATA",
+    "required_probe": "CPU_or_L40S_import_forward_backward_local_fit_tensor_only_save_resume_deterministic_seed_metadata_order_empty_relation_sampler_and_cross_device_tolerance",
+    "slurm_rule": "No runtime or model probe before an approved campaign."
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only",
+    "format": "safetensors_or_equivalent_tensor_only_state_plus_separate_JSON_architecture_metadata_and_graph_receipts",
+    "no_runtime_network": true,
+    "required_receipts": [
+      "source_and_environment_lock",
+      "graph_snapshot_hash",
+      "held_source_id",
+      "node_type_and_edge_triplet_order_hash",
+      "feature_transform_hashes_by_node_type",
+      "training_and_negative_row_hashes",
+      "architecture_and_seed",
+      "tensor_names_shapes_dtypes_and_SHA256",
+      "calibrator_hash",
+      "prediction_hash"
+    ],
+    "state_dict_rule": "Strict-load only project-generated tensor state into the frozen architecture. Do not deserialize arbitrary pickle-backed PyTorch objects."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The HGT paper, exact PyG 2.7.0 release commit, HGTConv source, official DBLP example, package metadata, and MIT license were inspected online on 2026-08-22. No package, graph, checkpoint, or weights were downloaded, installed, or run.",
+  "source_records": [
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:LICENSE",
+      "sha256": "89cfb6edc309735916a0c1189dccf761add4af6062ddb34b5a26f60d3efadfea",
+      "size_bytes": 1067,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/LICENSE"
+    },
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:pyproject.toml",
+      "sha256": "a3f39e5d750a86aa0bb9e89ad4da16d79ca86c4aefd011ba4c2cf40ee4cfe398",
+      "size_bytes": 5839,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/pyproject.toml"
+    },
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:torch_geometric/nn/conv/hgt_conv.py",
+      "sha256": "954853594328bccb67f7247f6f6fa42cd2ea1c28463949763ad5c16084a207c8",
+      "size_bytes": 9038,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/torch_geometric/nn/conv/hgt_conv.py"
+    },
+    {
+      "identity": "pyg-team/pytorch_geometric@76ff9c2:examples/hetero/hgt_dblp.py",
+      "sha256": "1e8fc4ce10cb89899e234f2b2317932af6a1db429bd3b2975808972838d0ec05",
+      "size_bytes": 2673,
+      "url": "https://raw.githubusercontent.com/pyg-team/pytorch_geometric/76ff9c2ce18c8cebf52122b57e2aeadce9793d10/examples/hetero/hgt_dblp.py"
+    }
+  ],
+  "task_fit": {
+    "causal_gene_inference": "not_supported",
+    "held_source_recovery": "conditionally_supported_with_source_agnostic_decoder_and_complete_pre_fit_source_removal",
+    "native_output": "node_type_and_edge_type_aware_node_embeddings",
+    "task_role": "development_only_graph_prioritization_comparator",
+    "typed_evidence_graph": "blocked_until_promoted_graph_snapshot_metadata_decoder_and_split_fixtures_exist"
+  },
+  "terms_audit": {
+    "code_license": "MIT",
+    "project_weight_redistribution": "Code terms permit redistribution with notice, but a fitted artifact may encode project graph data. Release requires source-data rights review and the benchmark's dataset-level derivative-use review.",
+    "result": "open_source_code_preflight_pass_no_upstream_weights_local_artifacts_not_yet_created"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+}

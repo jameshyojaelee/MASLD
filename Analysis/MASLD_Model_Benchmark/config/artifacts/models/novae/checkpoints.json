@@ -1,0 +1,206 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "The canonical transcriptomic checkpoint is byte-addressable, but weight terms, checkpoint-specific corpus aliases, strict held-donor preprocessing, task and split definitions, and a rights-cleared donor-level MASLD spatial dataset are unresolved.",
+    "v1_training_or_fine_tuning": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "checkpoint_configuration": {
+      "embedding_size": 512,
+      "heads": 16,
+      "hidden_size": 128,
+      "n_hops_local": 2,
+      "n_hops_view": 2,
+      "num_layers": 10,
+      "num_prototypes": 512,
+      "output_size": 64,
+      "temperature": 0.1,
+      "vocabulary_entries_including_special_tokens": 60697
+    },
+    "model_family": "graph_transformer_foundation_model_for_image_based_spatial_transcriptomics",
+    "native_input": "cell_or_spot_expression_plus_two_dimensional_spatial_coordinates_and_a_section_scoped_neighbor_graph",
+    "native_output": "node_representations_and_prototype_based_hierarchical_spatial_domain_assignments",
+    "pretraining_objective": "self_supervised_neighborhood_representation_learning_with_swapped_prototype_assignments",
+    "resolution_warning": "The canonical human checkpoint was trained on image-based single-cell spatial assays. Applying it to Visium spots is cross-resolution transfer and requires spot-native baselines.",
+    "non_native_modalities": "CODEX proteins and MALDI metabolites are not native inputs to the canonical checkpoint. The optional source-code H&E path does not prove that the registered transcriptomic checkpoint was H&E-trained."
+  },
+  "implementation": {
+    "package": "novae",
+    "repository": "prism-oncology/novae",
+    "repository_revision": "b71c2234c2d1c8e88981297dfdcb8b61b42c03c0",
+    "release_tag": "v1.1.1",
+    "release_date": "2026-07-08",
+    "source_license": "BSD-3-Clause",
+    "publication_doi": "10.1038/s41592-025-02899-6",
+    "publication_title": "Novae: a graph-based foundation model for spatial transcriptomics data",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "package_artifacts": {
+    "python_requires": ">=3.11",
+    "pypi_release": "1.1.1",
+    "sdist": {
+      "filename": "novae-1.1.1.tar.gz",
+      "sha256": "425e03184c106a16e89943ceb6eef5dab1f4871f65b6dc99bd1a21e2d62fc131",
+      "size_bytes": 59517
+    },
+    "wheel": {
+      "filename": "novae-1.1.1-py3-none-any.whl",
+      "sha256": "6788eccfda4ee71b7906f1c7c1e6030610d6c1743649a0d5a23a5cecd8576e1a",
+      "size_bytes": 77486
+    },
+    "status": "metadata_registered_packages_not_downloaded_or_installed"
+  },
+  "registered_checkpoint": {
+    "configuration": {
+      "filename": "config.json",
+      "sha256": "71070bb73a5f252ad2394a1b7132ff92b2a3833e6f4420640aa8a48ffc39a62f",
+      "size_bytes": 1025622
+    },
+    "filename": "model.safetensors",
+    "format": "safetensors",
+    "huggingface_repository": "prism-oncology/novae-human-0",
+    "huggingface_revision": "b8c0a5d7612bac6bc719ab57ed3cd16ad814728c",
+    "original_blob_upload_commit": "c363a48221b0710f62941df720b423454ddfba8b",
+    "original_blob_upload_date": "2024-09-10",
+    "parameter_count_from_tensor_metadata": 32041793,
+    "sha256": "7d1e4a051469d14e796994faa34a41556183e78757f5dc70a99dbd9f6a19ce87",
+    "size_bytes": 128175588,
+    "status": "exact_bytes_addressable_not_downloaded_and_admission_blocked",
+    "warning": "The immutable repository revision is pinned, but the model repository declares no license field or license file. Later card edits did not change the registered config or weight blobs."
+  },
+  "checkpoint_code_alignment": {
+    "finding": "The selected v1.1.1 source postdates the 2024 checkpoint bytes. It is the current official loading implementation, not a demonstrated archive of the checkpoint-producing environment.",
+    "status": "UNRESOLVED_no_fixed_fixture_numeric_parity_or_exact_training_environment_receipt",
+    "required_gate": "Prove strict tensor restoration and fixed-fixture representation parity before treating the source and checkpoint as one executable identity."
+  },
+  "input_and_preprocessing_contract": {
+    "counts": "The native automatic path may copy raw integer counts, normalize library totals, and log-transform expression.",
+    "feature_vocabulary": "Intersect query genes with the 60,697-entry checkpoint vocabulary under a frozen identifier and case policy; preserve the exact ordered intersection and out-of-vocabulary mask.",
+    "highly_variable_genes": "Automatic HVG discovery may fit the target slide or concatenated query objects. It must be disabled for a strict held-donor lane and replaced by a development-frozen feature policy.",
+    "slide_statistics": "Native preparation computes gene means and standard deviations from the supplied slide data. This uses held-donor features and is transductive even without labels.",
+    "slide_identity": "Always supply an immutable globally unique section key. The default can derive IDs from Python object identity and is not stable across processes.",
+    "spatial_scale": "Freeze the conversion from native coordinate units to microns. Pixel, array-grid, and micron distances are not interchangeable.",
+    "missingness": "Out-of-vocabulary, unmeasured, below-QC, and structurally absent genes are distinct states; do not silently treat absence from a panel as measured zero."
+  },
+  "spatial_graph_contract": {
+    "native_builder": "novae.spatial_neighbors adapted from Squidpy",
+    "generic_default": "Delaunay graph unless overridden; without a frozen radius, long edges may bridge disconnected tissue islands or biopsy cores.",
+    "visium_default": "Grid graph with six neighbors unless overridden by the pinned implementation's declared technology-specific rule.",
+    "cross_donor_edges": "forbidden",
+    "construction": "Build the graph independently within an authoritative participant, core, and section boundary, then combine blocks. Never graph pooled coordinates across donors, capture arrays, slides, or fields of view.",
+    "required_lock": "Freeze code revision, technology, coordinate source and units, scale-to-microns, neighbor or radius rule, Delaunay or grid choice, rings, percentile pruning, diagonal policy, tissue boundary masks, and adjacency and distance SHA-256 values.",
+    "vu2025_rule": "A VLP array contains four to five participants. No graph may be constructed until each barcode or tissue island is mapped to a biopsy and participant; an array ID is never a donor ID.",
+    "held_donor_rule": "A held donor may have a within-donor graph constructed from unlabeled coordinates under the selection-locked rule. Labels, outcomes, residuals, or outcome-guided tissue boundaries cannot influence it."
+  },
+  "held_donor_capability": {
+    "frozen_encoder_lane": "Potentially supported: freeze checkpoint, feature policy, preprocessing, graph recipe, and a development-fit task head or prototype mapping, then encode a new donor's within-donor graph. This lane has not been fixture-verified.",
+    "native_zero_shot_lane": "Transductive, not strict donor-inductive. In the pinned implementation, compute_representations with zero_shot=True calls target/reference K-means prototype fitting and overwrites prototype assignments using query latent features.",
+    "native_reference_all_risk": "Using reference='all' pools evaluation-cohort features to refit prototypes and creates cross-donor transduction even when graphs remain section-blocked.",
+    "fine_tuning_lane": "Query fine-tuning updates model state and prototypes from held features. It is a separately reported query-adaptive lane and cannot be called zero-shot or used for a sealed champion unless explicitly authorized by a prespecified transductive task.",
+    "domain_assignment": "Prototype hierarchy, number of domains, Leiden resolution, leaf-to-domain mapping, and label mapping must be chosen on development donors before held-donor evaluation."
+  },
+  "training_corpus_contract": {
+    "declared_cells": 28909516,
+    "declared_image_based_samples": 78,
+    "declared_tissues": 18,
+    "platform_counts": {
+      "CosMx": 3,
+      "MERSCOPE": 18,
+      "Xenium": 57
+    },
+    "human_liver_cells": 2373073,
+    "human_liver_samples": 6,
+    "liver_contexts": [
+      "two_MERSCOPE_liver_cancer_samples",
+      "CosMx_normal_liver",
+      "CosMx_liver_cancer",
+      "Xenium_normal_liver",
+      "Xenium_liver_cancer"
+    ],
+    "masld_supervision_declared": false,
+    "receipt_source": "Published Supplementary Data 1 for DOI 10.1038/s41592-025-02899-6",
+    "warning": "Liver and cancer-context encoder exposure is definite. The model card does not bind a checkpoint-specific accession and donor-alias manifest to the exact registered bytes, so project-cohort exposure cannot be called clean_declared."
+  },
+  "safe_loading_contract": {
+    "checkpoint_format": "safetensors_tensor_only_container",
+    "configuration_risk": "The JSON contains a 60,697-entry gene vocabulary and must be size-bounded and schema-validated before allocation.",
+    "required_path": "After rights clearance and campaign approval, acquire only the exact immutable revision, verify filename, size, and SHA-256, mirror locally, disable network access, instantiate pinned trusted source, and require exact keys, shapes, dtypes, finite values, and vocabulary order.",
+    "mutable_aliases": "Never load latest, main, an organization alias, or an unpinned Hugging Face identifier during a campaign.",
+    "remote_code": "Do not enable trust_remote_code."
+  },
+  "runtime_contract": {
+    "selected_declared_dependencies": [
+      "torch>=2.2.1",
+      "torch-geometric>=2.5.2",
+      "lightning>=2.2.1",
+      "huggingface-hub",
+      "safetensors",
+      "scanpy"
+    ],
+    "environment_status": "UNRESOLVED_dependency_ranges_not_an_exact_environment_lock",
+    "required_probe": "After all activation gates and campaign approval only: isolated L40S import, no-network strict load, raw-count and preprocessed fixtures, graph boundary and distance fixtures, frozen representation, native transductive zero-shot, forward, fine-tune backward, resume, deterministic seed, cell-order permutation, section-order permutation, and cross-device numeric-tolerance probes through SLURM."
+  },
+  "terms_and_release_contract": {
+    "code": "BSD-3-Clause at the pinned v1.1.1 source revision.",
+    "checkpoint": "UNRESOLVED; the canonical Hugging Face model repository has neither a license field nor a license file.",
+    "training_data": "The aggregate dataset card's BSD tag does not by itself replace the terms of underlying 10x Genomics, Vizgen, NanoString, and study-owned sources. Source-level training and derivative-weight rights remain to be audited.",
+    "optional_H&E": "The source-code image path depends on separately gated CONCH weights and terms and is not admitted for the canonical transcriptomic checkpoint.",
+    "adaptation": "No checkpoint use, fine-tuning, derivative-weight release, or open champion is authorized until written weight terms and all relevant upstream data rights are resolved.",
+    "open_champion": "ineligible_missing_weight_terms_unknown_project_alias_exposure_and_no_eligible_spatial_task_or_dataset"
+  },
+  "non_admitted_alternate": {
+    "name": "novae-scConcept-multi-species",
+    "novae_checkpoint_revision": "2c5c79bee28c9ebf263af6ba62c764e90b78f0cc",
+    "novae_safetensors_sha256": "40313ffaa8dd4eda5d5227feb8726d655a4aacc3547c3a91280392374720fb69",
+    "parent_model": "scConcept_corpus360M_multi-species_model170M",
+    "parent_revision": "10ed3ec8f35249247c33e1835e381a4c935ee26f",
+    "parent_checkpoint_sha256": "85e6ee29cb4f5b7b5c850f5278f9bbcde58a127f331101400c5a375cf4f0fb07",
+    "status": "not_admitted_separate_composite_identity_unknown_CELLxGENE_2026_and_scBaseCount_2025_exposure_and_unresolved_model_weight_terms"
+  },
+  "source_evidence": "The Nature Methods article and Supplementary Data 1, official v1.1.1 GitHub release and raw source, official PyPI metadata, and immutable Hugging Face model metadata were inspected online on 2026-08-22. No package, checkpoint, model, dataset, or source archive was downloaded, installed, or executed.",
+  "source_records": [
+    {
+      "identity": "prism-oncology/novae@b71c2234:LICENSE",
+      "sha256": "d4e7bc2152c6bab3dfc804ad10dff66c37b21b361c52077c5622cd6613929c08",
+      "size_bytes": 1523
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:README.md",
+      "sha256": "51f4900e3232009cc4b7d53b8924956ffb99ca507cfc45c570d2f957a4f357c8",
+      "size_bytes": 3850
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:pyproject.toml",
+      "sha256": "d520fede920765b6677efa8a136dd6f6f46dd3c1389961b7fdf358f2247b8dcc",
+      "size_bytes": 3278
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:novae/model.py",
+      "sha256": "a009447f4edbb5c8dc62b679ab3353ab04324a867bd7ba98d4ab916da23babe9",
+      "size_bytes": 32693
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:novae/data/dataset.py",
+      "sha256": "e5e9de5ce2337c5765a02e72be025ce341afee63efd859dd492c63427b15c433",
+      "size_bytes": 11112
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:novae/data/preprocess.py",
+      "sha256": "7ff9832e4a25606b88c16545d9af252e52dd39de8544b046aa6e8e8a2c043ec4",
+      "size_bytes": 1453
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:novae/utils/build.py",
+      "sha256": "52b344303964ef1458e520ad8cc15a71d12dc450268ebb76ffcaa7446edbc519",
+      "size_bytes": 14253
+    },
+    {
+      "identity": "prism-oncology/novae@b71c2234:novae/utils/_validate.py",
+      "sha256": "740ce11c01c957ef46e1b215f96ec04987848675ef1e569c2c9ad008ca47187a",
+      "size_bytes": 12419
+    }
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

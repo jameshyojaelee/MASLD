@@ -1,0 +1,103 @@
+{
+  "algorithm_contract": {
+    "accessibility_threshold": 1,
+    "default_alpha": 50,
+    "default_alpha_by_topic": true,
+    "default_beta": 0.1,
+    "default_iterations": 500,
+    "default_seed": 123,
+    "default_topic_grid": [2, 10, 20, 30, 40, 50],
+    "engine": "WarpLDA through text2vec for the registered screening implementation",
+    "model": "latent_Dirichlet_allocation_on_a_binary_region_by_cell_matrix",
+    "model_selection": [
+      "training_only_log_likelihood",
+      "training_only_second_derivative",
+      "training_only_perplexity_for_WarpLDA"
+    ],
+    "warning": "The defaults document the pinned upstream implementation, not an activated benchmark recipe. The topic grid, selection rule, seed roster, filtering, and head remain blocked until a separate TaskSpec freezes them without held-donor access."
+  },
+  "code_license": "GPL-3.0",
+  "embedding_contract": {
+    "common_lane_candidate": "none_under_current_tasks",
+    "native_output": "topic_by_cell_posterior_probabilities_for_the_exact_cells_used_in_the_fit",
+    "query_behavior": "transductive_only_in_the_pinned_R_release",
+    "warning": "No predict method or inductive held-cell transform was found in the pinned R implementation. Appending held cells and refitting LDA would fit on the evaluation rows and is prohibited."
+  },
+  "implementation": {
+    "deprecated_by_upstream": true,
+    "implementation_type": "train_locally",
+    "package": "cisTopic",
+    "package_version": "0.3.0",
+    "release_date": "2019-12-20",
+    "repository": "aertslab/cisTopic",
+    "repository_revision": "8514bdd11713da86cfe712c4234645c6b4973353",
+    "upstream_replacement_notice": "The repository directs new users to pycisTopic; that distinct implementation is not substituted into this registry entry."
+  },
+  "input_contract": {
+    "canonical_matrix": "region_by_cell_or_nucleus_ATAC_overlap_counts",
+    "native_binarization": "1_if_count_greater_than_or_equal_to_1_else_0",
+    "native_defaults": {
+      "minimum_cells_per_region": 1,
+      "minimum_regions_per_cell": 1
+    },
+    "peak_policy": "Define and order the consensus region universe using outer-training donors only. Project held observed-ATAC rows to that frozen universe only for methods with a valid inductive transform; cisTopic 0.3.0 itself has none.",
+    "supported_assays": ["scATAC_region_counts", "snATAC_region_counts"],
+    "unsupported_inputs": ["RNA_only", "RNA_conditioned_ATAC_without_observed_query_ATAC", "variant_sequence"],
+    "warning": "A region absent because an assay, reference crosswalk, or permission is unavailable is missing evidence, not a measured zero. GSE244832 RNA and ATAC nuclei are not cell-paired."
+  },
+  "leakage_contract": {
+    "fit_scope": "outer_training_donors_only",
+    "forbidden_held_operations": [
+      "peak_calling_or_region_filtering",
+      "topic_number_selection",
+      "LDA_refit_or_joint_fit",
+      "label_or_prototype_fit",
+      "calibration_or_early_stopping"
+    ],
+    "inference_consequence": "Because the registered implementation has no inductive transform, it cannot produce a score for a genuinely held cell. It may be used only for training-partition diagnostics or a prospectively defined transductive development analysis that makes no external or champion claim."
+  },
+  "runtime_contract": {
+    "declared_r": ">=3.4",
+    "execution_class": "CPU",
+    "environment_status": "UNRESOLVED_DEPRECATED_R_DEPENDENCIES_AND_REPRODUCIBLE_SLURM_RUNTIME",
+    "required_record": "Freeze the exact R package closure, R sessionInfo(), seeds, sparse-matrix implementation, CPU/BLAS details, and project artifact hashes before any run."
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "require_project_sha256_and_training_receipt": true,
+    "restore_policy": "Restore only project-generated objects. Validate expected class and slots, region and cell identifiers, topic dimensions, finite values, nonnegativity, and probability normalization before use.",
+    "warning": "Do not accept an external RDS/RData object or execute code embedded in an untrusted serialized workspace."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact cisTopic commit, its DESCRIPTION and model source, the upstream deprecation notice, and the 2019 primary article were checked on 2026-08-22. No package was installed and no model was trained or loaded.",
+  "source_records": [
+    {
+      "identity": "aertslab/cisTopic repository",
+      "revision": "8514bdd11713da86cfe712c4234645c6b4973353",
+      "url": "https://github.com/aertslab/cisTopic/tree/8514bdd11713da86cfe712c4234645c6b4973353"
+    },
+    {
+      "identity": "cisTopic DESCRIPTION at the pinned revision",
+      "url": "https://raw.githubusercontent.com/aertslab/cisTopic/8514bdd11713da86cfe712c4234645c6b4973353/DESCRIPTION"
+    },
+    {
+      "identity": "cisTopic model-fitting source at the pinned revision",
+      "url": "https://github.com/aertslab/cisTopic/blob/8514bdd11713da86cfe712c4234645c6b4973353/R/runModels.R"
+    },
+    {
+      "doi": "10.1038/s41592-019-0367-1",
+      "identity": "cisTopic primary article",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6517279/"
+    }
+  ],
+  "task_fit": {
+    "active_tasks": [],
+    "development_only_candidate": "Training-partition ATAC topic diagnostics after a separate nonpromotable ATAC-representation TaskSpec; it is not a held-cell benchmark until an independently audited inductive implementation is registered.",
+    "rna_conditioned_atac": "ineligible because the model consumes observed target-cell ATAC and does not predict an ATAC profile from RNA/context",
+    "sealed_cell_state_mapping": "ineligible because GSE289173 exposes RNA-only nuclei and cisTopic lacks an RNA input",
+    "variant_to_regulation": "ineligible because there is no nucleotide-sequence or allele-effect mechanism"
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

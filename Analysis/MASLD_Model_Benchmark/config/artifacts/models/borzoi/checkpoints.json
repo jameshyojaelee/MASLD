@@ -1,0 +1,167 @@
+{
+  "architecture_contract": {
+    "declared_parameter_count": "UNRESOLVED_until_strict_checkpoint_load",
+    "human_output_tracks": 7611,
+    "input_length_bp": 524288,
+    "input_resolution_bp": 1,
+    "model_family": "Enformer_style_convolution_tower_plus_eight_self_attention_blocks_plus_two_U_net_upsampling_blocks",
+    "output_activation": "softplus",
+    "output_resolution_bp": 32,
+    "receptive_field_contract": "Self-attention makes the theoretical receptive field the full 524288-bp input. The trained loss was restricted to the central 196608 bp; the publication reports enhancer scoring out to 262 kb. Treat boundary reliability and effective influence as empirical properties, not as a guaranteed 524288-bp usable span.",
+    "self_attention_heads": 8,
+    "self_attention_key_size": 64,
+    "self_attention_layers": 8,
+    "self_attention_resolution_bp": 128,
+    "shared_trunk_terminal_channels": 1920
+  },
+  "canonical_ensemble": {
+    "ensemble_size": 4,
+    "member_relationship": "Four random-initialization and sequence-order replicates trained on the same genomic split: test fold3 and validation fold4. These are not four genomic cross-validation folds.",
+    "members": [
+      {
+        "crc32c_base64": "S/RrhQ==",
+        "gcs_generation": "1691539358988138",
+        "gcs_metageneration": "1",
+        "md5": "ef83ad59b43765413f73767d87a717df",
+        "name": "borzoi/f0/model0_best.h5",
+        "object_created": "2023-08-09T00:02:39.014Z",
+        "replicate": 0,
+        "sha256": "UNRESOLVED",
+        "size_bytes": 744112468,
+        "url": "https://storage.googleapis.com/seqnn-share/borzoi/f0/model0_best.h5"
+      },
+      {
+        "crc32c_base64": "FseOnA==",
+        "gcs_generation": "1691539419241923",
+        "gcs_metageneration": "1",
+        "md5": "3bd16acb7283387be2fdb84edca847f5",
+        "name": "borzoi/f1/model0_best.h5",
+        "object_created": "2023-08-09T00:03:39.266Z",
+        "replicate": 1,
+        "sha256": "UNRESOLVED",
+        "size_bytes": 744112468,
+        "url": "https://storage.googleapis.com/seqnn-share/borzoi/f1/model0_best.h5"
+      },
+      {
+        "crc32c_base64": "2LE3+w==",
+        "gcs_generation": "1691539441571542",
+        "gcs_metageneration": "1",
+        "md5": "129888a9826e02092536c153cb7ee921",
+        "name": "borzoi/f2/model0_best.h5",
+        "object_created": "2023-08-09T00:04:01.595Z",
+        "replicate": 2,
+        "sha256": "UNRESOLVED",
+        "size_bytes": 744112468,
+        "url": "https://storage.googleapis.com/seqnn-share/borzoi/f2/model0_best.h5"
+      },
+      {
+        "crc32c_base64": "3+xKdQ==",
+        "gcs_generation": "1691539462862235",
+        "gcs_metageneration": "1",
+        "md5": "bb7cf57a9363d24bf99aeb6d92f454f2",
+        "name": "borzoi/f3/model0_best.h5",
+        "object_created": "2023-08-09T00:04:22.893Z",
+        "replicate": 3,
+        "sha256": "UNRESOLVED",
+        "size_bytes": 744112468,
+        "url": "https://storage.googleapis.com/seqnn-share/borzoi/f3/model0_best.h5"
+      }
+    ],
+    "ordered_member_rule": "replicate_0,replicate_1,replicate_2,replicate_3",
+    "released_total_size_bytes": 2976449872,
+    "weight_format": "Keras_HDF5_weights"
+  },
+  "code_license": "Apache-2.0",
+  "ensemble_contract": {
+    "common_lane": "For each REF and ALT allele, predict each member in forward and reverse-complement orientation, restore strand-paired target order, inverse-transform each member's tracks with the exact released target metadata, then arithmetic-mean the eight orientation-by-member predictions before deriving the prespecified identical downstream features/head.",
+    "member_uncertainty_rule": "The four members are correlated training replicates and are not biological or genomic-split replicates. Preserve member-level predictions for stability diagnostics; do not use n=4 as inferential replication.",
+    "native_lane": "Preserve the paper's four-member plus reverse-complement workflow. Evaluate frozen logSUM, gene-specific logSED, and log-L2-style variant statistics separately; any learned combination of tracks is fit only inside the development split.",
+    "shift_rule": "Zero shift is the release-script default and the benchmark default. Any multi-shift ensemble is a separately named native adaptation and cannot be mixed into common-lane results.",
+    "strand_rule": "Reverse-complement predictions must restore genomic orientation and remap every track through the released strand_pair column before averaging."
+  },
+  "input_contract": {
+    "allele_checks": "Require GRCh38 REF matching before sequence extraction; preserve VCF 1-based and BED 0-based-half-open conventions explicitly; reject unresolved multiallelic normalization or reference mismatch.",
+    "canonical_tensor": "float32_one_hot_DNA_with_A_C_G_T_channels",
+    "sequence_window": "524288_bp_centered_on_the_scored_variant_or_prespecified_target_anchor",
+    "unknown_base_policy": "UNRESOLVED_until_native_loader_parity_is_frozen",
+    "variant_scope": "The publication's primary QTL scoring was restricted to SNVs because indels introduce shifted-boundary artifacts. Admit indels only in a separately validated indel path.",
+    "window_boundary_rule": "Holdout and training genomic blocks require a buffer of at least 524288 bp. Predictions near contig boundaries require a prespecified N-padding mask and cannot be silently dropped."
+  },
+  "license_audit": {
+    "code_finding": "The pinned borzoi and borzoi-paper repositories each contain Apache-2.0 LICENSE text.",
+    "weight_finding": "The official Google Cloud Storage weight objects expose no license metadata, and the repository does not explicitly attach its Apache-2.0 grant to the separately hosted trained parameters.",
+    "weight_use_status": "BLOCKED_PENDING_EXPLICIT_WEIGHT_TERMS_OR_INSTITUTIONAL_LEGAL_DETERMINATION"
+  },
+  "output_contract": {
+    "assay_track_counts_from_released_manifest": {
+      "ATAC": 232,
+      "CAGE": 1276,
+      "CHIP": 3886,
+      "DNASE": 674,
+      "RNA": 1543
+    },
+    "full_track_manifest": "data/targets_human.txt.gz at the pinned code release",
+    "liver_native_tracks": "The released manifest contains three GTEx liver RNA tracks plus ENCODE liver/hepatocyte RNA, CAGE, accessibility and chromatin tracks. These are reference tissue outputs, not MASLD-state or donor-conditioned outputs.",
+    "raw_scale": "softplus predictions on the training squashed scale",
+    "transform_contract": "Track-specific clip, clip_soft, scale, sum_stat and strand_pair fields are part of the checkpoint. Native count-space scores must reproduce the released old inverse-transform path before replacement transforms are considered.",
+    "window_length_discrepancy": "The paper writes the uncropped human tensor as 16384 x 7611. Training params crop 5120 output bins per side, yielding the central 6144 bins or 196608 bp used for loss. Released params_pred crop 16 output bins per side, yielding 16352 bins or 523264 bp. Do not collapse these contracts; parity-test both and freeze one per endpoint."
+  },
+  "reference_contract": {
+    "annotation_for_gene_statistics": "GENCODE_v41 in the publication analyses",
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "benchmark_rule": "Use the project reference for inference only after primary-contig sequence identity, contig naming, REF alleles and all annotation crosswalks pass. Patch/haplotype scaffolds absent from the native training split are out of domain.",
+    "native_build": "UCSC_hg38",
+    "native_training_fasta": "hg38.ml.fa",
+    "native_training_fasta_identity": "UNRESOLVED: the currently linked GCS object was created in 2024 after the 2023 weights and is not proven byte-identical to the training FASTA.",
+    "prediction_helper_fasta": "The release download script instead fetches UCSC hg38.fa for inference; native training/reference parity therefore requires an explicit fixture."
+  },
+  "release": {
+    "borzoi_paper_repository": "calico/borzoi-paper",
+    "borzoi_paper_revision": "b107b4f13f7a7d82f768d3a002b84c93f80c0e3a",
+    "borzoi_paper_tag": "v1.0.0",
+    "borzoi_repository": "calico/borzoi",
+    "borzoi_revision": "9736924e6c861f0d71978cc3012ff8d76d6fa91f",
+    "borzoi_tag": "v1.0.0",
+    "publication_doi": "10.1038/s41588-024-02053-6",
+    "publication_date": "2025-01-08",
+    "weight_object_date": "2023-08-09"
+  },
+  "runtime_contract": {
+    "checkpoint_bound_baskerville_revision": "UNRESOLVED",
+    "checkpoint_bound_westminster_revision": "UNRESOLVED",
+    "paper_training_runtime": "TensorFlow_2.11",
+    "release_runtime": "Python_3.10_and_TensorFlow_2.15.x",
+    "status": "UNRESOLVED",
+    "warning": "The v1.0.0 repository does not pin the Baskerville or Westminster commits that construct and train the network. Exact native reproducibility is therefore blocked even though the Borzoi scripts and parameter files are pinned."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format_risk": "HDF5 is not a pickle, but it invokes a complex native parser and can contain links. Inspect in an isolated read-only runtime, reject external links and unexpected objects, and load weights only into the exact frozen architecture.",
+    "member_integrity": "Download by immutable GCS generation, verify size plus GCS MD5/CRC32C, compute SHA-256, and reject any changed generation or metadata before opening.",
+    "strict_restore": "Freeze every HDF5 path, tensor shape and dtype. Reject missing, surplus or shape-mismatched tensors. Never use skip_mismatch or unchecked by_name restoration; TensorFlow can silently leave layers unloaded.",
+    "weight_parity": "Before admission, reproduce official replicate-0 forward and reverse-complement outputs, strand restoration, inverse transforms and variant statistics on fixed GRCh38 fixtures, then check all four members."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Genetics article, official v1.0.0 Borzoi and Borzoi-paper repositories, their released target/parameter/split files, and Google Cloud Storage object metadata were queried on 2026-08-22. No checkpoint weight was downloaded or opened.",
+  "source_records": [
+    {"identity": "calico/borzoi@9736924:LICENSE", "sha256": "3760a0dba24568a5b4a4e41e8aabe5e5e23d81422f26e7623c8ba5cf13ef6c05", "size_bytes": 9138},
+    {"identity": "calico/borzoi@9736924:README.md", "sha256": "7ce184d5c4428833346bb2f05f1155263415af6fd06f4a71293da3b2462f9dbb", "size_bytes": 10964},
+    {"identity": "calico/borzoi@9736924:download_models.sh", "sha256": "626efd8f6c42eae2646de11e47e0d98a81d089e27822e5362b37724e20a4e9c3", "size_bytes": 3025},
+    {"identity": "calico/borzoi@9736924:pyproject.toml", "sha256": "f870b6c67e6f14a444875a9387517e25a4df8de19e066245d2401e5aafc6cd06", "size_bytes": 1110},
+    {"identity": "calico/borzoi@9736924:data/targets_human.txt.gz", "sha256": "8f67ef43b914e42d7a7dafb8d621190cafe84a167bc4c9eb1aa781ee694d6d32", "size_bytes": 182824},
+    {"identity": "calico/borzoi@9736924:data/sequences_human.bed.gz", "sha256": "13724966c9378c2fd024c62e6bb72b94850e12d96d23a419f60040ae50b98ba3", "size_bytes": 578904},
+    {"identity": "calico/borzoi@9736924:examples/params.json", "sha256": "c19278bbbc2c77e3ae16faa77622148248ec4b3ad479a3d7ae5a030a6f5f008c", "size_bytes": 2382},
+    {"identity": "calico/borzoi@9736924:examples/params_pred.json", "sha256": "247b6eaadda8a2721c4baeda7716201ffaa2aa133a969576086164e1c61a094d", "size_bytes": 2406},
+    {"identity": "calico/borzoi@9736924:examples/targets_gtex_liver.txt", "sha256": "630e268b94851161865b96fe7f9378adf174e9a6ec79324df25a632a4672f3e8", "size_bytes": 549},
+    {"identity": "calico/borzoi-paper@b107b4f:model/train.sh", "sha256": "cab785534538b99696fe85162c7eb1fd17f9f7471198895080cd2d38d6b8b30a", "size_bytes": 149},
+    {"identity": "calico/borzoi-paper@b107b4f:data/training/Makefile", "sha256": "91fc2722fccb7d2c6b4b505374d2050cad3bd853b5c104731c1bed60531d4763", "size_bytes": 1968},
+    {"identity": "GCS:seqnn-share/borzoi/params.json:generation:1699567843281710", "md5": "01997d254633d6129e742d92864bd212", "sha256": "f6af5594818e7afe0378c6aba87aa87b66917c96c81f1feb38afe354b33a3311", "size_bytes": 2081}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "The frozen model is sequence-only. Its native ATAC tracks may serve only as a static sequence baseline. A new GSE296875-fitted ATAC head or context module is an adaptation, not zero-shot Borzoi.",
+    "unified_model": "eligible_only_as_a_sequence_component_after_all_terms_and_runtime_gates",
+    "variant_to_regulation": "primary_supported_task; freeze liver and cell-type track selection without sealed labels and compare native logSUM/logSED/L2 features against identical-head common features and task-native baselines"
+  },
+  "weight_license": "UNDECLARED"
+}

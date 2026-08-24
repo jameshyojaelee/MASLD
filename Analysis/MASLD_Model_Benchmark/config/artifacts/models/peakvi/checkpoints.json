@@ -1,0 +1,74 @@
+{
+  "architecture_contract": {
+    "default_hidden_dimension": "floor(sqrt(number_of_regions))",
+    "default_latent_dimension": "floor(sqrt(hidden_dimension))",
+    "default_layers_decoder": 2,
+    "default_layers_encoder": 2,
+    "dropout_rate": 0.1,
+    "latent_distribution": "normal",
+    "likelihood": "Bernoulli_on_binary_accessibility_x_greater_than_zero_with_cell_depth_and_region_factors",
+    "model_depth": true,
+    "region_factors": true,
+    "warning": "The official hidden and latent defaults change with the fold-specific region count. The campaign must freeze explicit dimensions after the training-only peak contract is fixed; it cannot allow fold or model-specific implicit defaults to alter capacity silently."
+  },
+  "code_license": "BSD-3-Clause",
+  "embedding_contract": {
+    "common_lane_candidate": "outer_fold_trained_posterior_mean_q_z_with_explicit_frozen_dimensions_and_identical_common_head",
+    "native_lane_candidates": ["posterior_mean_q_z", "normalized_accessibility", "native_differential_accessibility", "preauthorized_scarches_query_mapping"],
+    "selection_rule": "PeakVI has no universal upstream checkpoint and therefore no zero-shot representation lane. Its common representation is a locally trained, fold-confined posterior mean. Native accessibility and transfer functions are reported separately.",
+    "warning": "load_query_data updates a reference model on query features. It is forbidden for sealed evaluation unless query adaptation is prospectively authorized, outcome-blind, and applied identically to all eligible methods."
+  },
+  "implementation": {
+    "checkpoint_policy": "No upstream PeakVI checkpoint is admitted. Every model is initialized and trained inside the outer donor partition; every local artifact receives a project SHA-256.",
+    "implementation_type": "train_locally",
+    "pypi_release": {
+      "filename": "scvi_tools-1.5.0.post1-py3-none-any.whl",
+      "sha256": "d868c86332f819b8d79846ea0e36ec6eef26c3fafeb03ce7a239f1ddefb1c976",
+      "size_bytes": 711159,
+      "upload_time": "2026-07-09T17:34:46.962571Z",
+      "version": "1.5.0.post1"
+    },
+    "repository": "scverse/scvi-tools",
+    "repository_revision": "56520c713eb1d2b245c72a0f60bc393b74198c91",
+    "repository_tag": "1.5.0.post1"
+  },
+  "input_contract": {
+    "canonical_matrix": "nonnegative_single_cell_or_single_nucleus_ATAC_region_by_cell_counts_in_AnnData_cells_by_regions",
+    "feature_alignment": "identical ordered region inventory for reference and query; region identity is a frozen GRCh38.p14 coordinate tuple plus project row ID",
+    "likelihood_use": "Counts are accepted but the reconstruction target is x>0, so count magnitude is discarded by the native likelihood.",
+    "peak_definition": "training-partition-only consensus peaks with held donors excluded from peak calling, filtering, region-frequency estimates, and feature selection",
+    "reference": "GRCh38.p14 for all benchmark interoperability even though PeakVI itself consumes a matrix rather than nucleotide sequence",
+    "supported_assays": ["scATAC_peak_counts", "snATAC_peak_counts"],
+    "warning": "A union peak set defined using held donors leaks their assay features. Query matrices may be projected only to the training-frozen region inventory; absent and structurally unavailable regions remain explicit missingness states before any supported projection."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.12",
+    "declared_scvi_tools": "1.5.0.post1",
+    "declared_torch": "unbounded_project_dependency_to_be_frozen",
+    "environment_status": "UNRESOLVED_L40S_COMPATIBILITY_AND_DETERMINISM_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "require_project_sha256_and_training_receipt": true,
+    "require_saved_registry_region_order_and_state_dict_manifest": true,
+    "require_state_dict_only_restore_where_supported": true
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact scvi-tools 1.5.0.post1 tag, source, license, official PeakVI documentation, and PyPI metadata were queried on 2026-08-22. The package was not installed and no model was trained or loaded.",
+  "source_records": [
+    {"identity": "scvi-tools:LICENSE", "sha256": "66399db0284d2539790efb348886ab0c1f745bbe5fea6ac38a00465a14adc8f5", "size_bytes": 1549},
+    {"identity": "scvi-tools:pyproject.toml", "sha256": "c2e82908f8d8a2019cc471316b53b902593f54230fa4cd251ce0866101f06906", "size_bytes": 7000},
+    {"identity": "scvi-tools:src/scvi/model/_peakvi.py", "sha256": "4fd3c7ab4bc0ffd32fb928c37d3451ba69882c1518ee23aa688ba782bd3b6386", "size_bytes": 25929},
+    {"identity": "scvi-tools:src/scvi/module/_peakvae.py", "sha256": "e07cee86940b5b096e7371a7a65b3a46eed61c66f67d2a41a8fafd10d72dd5d8", "size_bytes": 12700}
+  ],
+  "task_fit": {
+    "active_tasks": [],
+    "development_only_candidate": "ATAC cell-representation and donor-compatible integration benchmark after a separate TaskSpec freezes rows, region inventory, labels, metrics, and no-champion scope",
+    "rna_conditioned_atac": "ineligible for the current profile endpoint because native inference consumes observed ATAC rather than RNA/context-only input",
+    "sealed_cell_state_mapping": "ineligible because GSE289173 exposes RNA-only rows",
+    "variant_to_regulation": "ineligible as a standalone sequence or signed regulatory-effect model because PeakVI has no nucleotide input and no allele-effect mechanism"
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

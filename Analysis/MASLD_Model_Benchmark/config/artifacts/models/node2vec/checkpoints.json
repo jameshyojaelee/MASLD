@@ -1,0 +1,83 @@
+{
+  "algorithm_contract": {
+    "decoder": "Raw symmetric dot product of the two learned 128-dimensional node embeddings. A separate evaluator may fit one logistic calibration only on inner pseudo-held evidence sources; neither held-source nor held-block outcomes may fit the decoder or calibrator.",
+    "edge_projection": "Project all retained typed evidence to one unweighted undirected simple graph. Canonicalize non-self pairs, collapse duplicate retained-source edges, then emit both directions in edge_index. Relation, direction, evidence-source count, and source-native weight are deliberately discarded and cannot be claimed as modeled.",
+    "native_method": "PyG Node2Vec learns a node-indexed embedding table from random-walk contexts with negative sampling. It consumes topology only and has no node-feature transform.",
+    "node_identity": "UTF-8 typed IDs with required namespace prefixes; bytewise sort to a contiguous integer map and freeze the exact map. Unnamespaced identifiers, type collisions, self-evidence, and mutable node numbering are rejected.",
+    "training_graph": "Construct after the whole held evidence source, deterministic derivatives, held LD/locus/gene blocks, and boundary-linked edges are removed. Random walks, node universe, negative sampling, and model initialization use only this retained graph."
+  },
+  "implementation": {
+    "checkpoint_policy": "No upstream biological checkpoint is admitted. Train a new embedding inside every held-source by held-block split and seed and hash the graph, node map, recipe, runtime, state dictionary, and exported embedding.",
+    "implementation_type": "train_locally_from_exact_library_class",
+    "primary_paper": "https://doi.org/10.1145/2939672.2939754",
+    "primary_preprint": "https://arxiv.org/abs/1607.00653v1",
+    "repository": "pyg-team/pytorch_geometric",
+    "repository_revision": "76ff9c2ce18c8cebf52122b57e2aeadce9793d10",
+    "release_tag": "2.7.0",
+    "release_date": "2025-10-15",
+    "selected_class": "torch_geometric.nn.models.Node2Vec",
+    "source_code_run": false,
+    "upstream_checkpoint": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+  },
+  "local_training_identity": {
+    "batch_size": 128,
+    "context_size": 10,
+    "embedding_dim": 128,
+    "epochs": 100,
+    "loader_num_workers": 0,
+    "num_negative_samples": 1,
+    "optimizer": "torch.optim.SparseAdam",
+    "optimizer_learning_rate": 0.01,
+    "p": 1.0,
+    "q": 1.0,
+    "seeds": [11, 29, 47, 71, 101],
+    "shuffle": true,
+    "sparse": true,
+    "status": "project_frozen_screening_recipe_based_on_the_exact_upstream_example_with_num_workers_zero_for_auditable_ordering",
+    "walk_length": 20,
+    "walks_per_node": 10
+  },
+  "native_assumptions_and_limits": {
+    "closed_world": "The Embedding parameter has one row per training node. A node absent from the retained graph has no learned representation; adding it after fitting is impossible without a new model.",
+    "negative_sampling": "PyG draws negative context nodes uniformly with torch.randint over the training node universe. It does not enforce node-type compatibility and can sample false negatives. Do not inspect held outcomes to remove them; constrain only evaluator candidates by typed endpoint family and disclose the mismatch.",
+    "p_q_interpretation": "The frozen p=q=1 recipe uses unbiased second-order walks. It is the exact upstream example setting and does not test a BFS- or DFS-favoring node2vec sweep.",
+    "pyg_walk_requirement": "At p=q=1, the selected class requires either pyg-lib or torch-cluster. Non-unit p or q would require torch-cluster specifically.",
+    "typed_graph_status": "relation_agnostic_homogeneous_projection_baseline",
+    "weighted_graph_status": "unsupported_by_selected_PyG_class"
+  },
+  "runtime_contract": {
+    "core_package": "torch-geometric==2.7.0 from PyPI wheel sha256 6e0cd3ad824d484651ef5d308fc66c687bfcf5ba040d56d1e0fe0f81f365e292",
+    "environment_status": "UNRESOLVED_CPU_L40S_EXTENSION_IMPORT_RANDOM_WALK_DETERMINISM_SAVE_LOAD_AND_NUMERIC_PROBES_REQUIRED",
+    "execution_target": "CPU SLURM is the compatibility default for admission; L40S may be used only after the exact PyTorch, CUDA, pyg-lib or torch-cluster wheel matrix passes import, random-walk, sparse-gradient, resume, and tolerance probes.",
+    "python_requirement": ">=3.10",
+    "seed_wrapper": "Set Python, NumPy, torch CPU, and all CUDA seeds before graph shuffling and model creation; freeze integer edge order, generator states, worker count zero, device, deterministic settings, and one artifact per seed.",
+    "torch_requirement": "Not declared by the torch-geometric wheel. Freeze an exact PyTorch build, CUDA runtime, extension build, and hashes before execution.",
+    "work_status": "No package, extension, graph, or model was installed or executed during this audit."
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only",
+    "embedding_export": "Export a row-major float32 NumPy array with allow_pickle=false plus a separate bounded UTF-8 JSON node roster. Require shape [frozen_num_nodes,128], exact row-map hash, finite values, expected dtype/endian, and file SHA-256.",
+    "external_pytorch_objects": "prohibited",
+    "model_state": "Save only the Node2Vec state_dict and a JSON architecture receipt. Reload with torch.load(weights_only=true,map_location='cpu') in the frozen modern PyTorch runtime, reconstruct the exact class, and require strict keys, shape, dtype, finiteness, and num_nodes checks before device transfer.",
+    "require_no_network_execution": true,
+    "untrusted_graph_objects": "Do not load pickled Data objects. Rebuild edge_index from bounded, hashed plain edge and node-map artifacts and validate index range, symmetry, uniqueness, and held-edge absence."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The KDD paper metadata and arXiv v1 record, immutable PyG 2.7.0 tag, MIT text, package metadata, exact Node2Vec source, and exact upstream example were inspected on 2026-08-22. No code archive, wheel, extension, graph, or weights were downloaded to disk; no model was installed or executed.",
+  "source_records": [
+    {"identity": "pytorch_geometric:LICENSE", "sha256": "89cfb6edc309735916a0c1189dccf761add4af6062ddb34b5a26f60d3efadfea", "size_bytes": 1067},
+    {"identity": "pytorch_geometric:pyproject.toml", "sha256": "a3f39e5d750a86aa0bb9e89ad4da16d79ca86c4aefd011ba4c2cf40ee4cfe398", "size_bytes": 5839},
+    {"identity": "pytorch_geometric:torch_geometric/nn/models/node2vec.py", "sha256": "f352aee11a782302c4032d3a284809d9f62d5d754bfeebff1dbf2506be985eb1", "size_bytes": 7664},
+    {"identity": "pytorch_geometric:examples/node2vec.py", "sha256": "8fd95c42ba90b12f6aedab4f05ec6094839d1caea1691cd9a7234fa775806853", "size_bytes": 1971},
+    {"identity": "PyPI:torch_geometric-2.7.0-py3-none-any.whl", "sha256": "6e0cd3ad824d484651ef5d308fc66c687bfcf5ba040d56d1e0fe0f81f365e292", "size_bytes": 1275346},
+    {"identity": "PyPI:torch_geometric-2.7.0.tar.gz", "sha256": "f9099e4aece1a9f618c84dbaac33a77f43139736698c7e8bddf3301ef1f2e8d4", "size_bytes": 876725}
+  ],
+  "terms_audit": {
+    "code_license": "MIT",
+    "derivative_weight_redistribution": "The software license does not impose a separate learned-weight restriction. Release of project embeddings remains conditional on input evidence-source terms because a transductive table can encode graph structure; with restricted sources, release recipes, hashes, and evaluator predictions instead.",
+    "license_file_inspected": true,
+    "notice_obligation": "Retain the PyTorch Geometric copyright and MIT permission notice in redistributed source or substantial portions.",
+    "result": "open_source_code_preflight_pass_no_upstream_weights_local_embeddings_not_yet_created"
+  },
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+}

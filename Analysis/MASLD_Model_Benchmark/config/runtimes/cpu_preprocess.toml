@@ -1,0 +1,12 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "cpu_preprocess"
+status = "candidate"
+purpose = "Reference validation, metadata lineage, pseudobulk, and non-neural preprocessing"
+scheduler = "slurm"
+resource_profile = "cpu_preprocess"
+environment_lock = "UNRESOLVED"
+container_digest = "UNRESOLVED"
+modules = []
+command_prefix = ["UNRESOLVED"]
+admission_blocking = true
+blockers = ["Freeze environment lock, container digest, command, and exact resource total before submission."]

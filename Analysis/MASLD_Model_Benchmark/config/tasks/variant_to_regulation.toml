@@ -1,0 +1,25 @@
+schema_version = "masld-bench-task-v1"
+task_id = "variant_to_regulation"
+status = "candidate"
+unit_of_inference = "independent_locus"
+input_modalities = ["dna_sequence", "single_nucleus_rna", "single_nucleus_atac", "chromatin_profile", "enhancer_gene_links", "gwas_summary_statistics", "mpra_counts"]
+endpoint = "Predict assay-native regulatory activity, allelic direction, and variant-to-gene evidence without converting missing assays into negative labels."
+metrics = ["mean_fisher_z_celltype_spearman", "eqtl_retrieval_auprc", "major_lineage_signed_effect_spearman", "allelic_direction_accuracy", "calibration_error"]
+datasets_train = ["current_coloc_gwas", "gse244832", "gse281364", "gse296875"]
+datasets_development = ["gse281160"]
+datasets_sealed = ["gse289173"]
+split_id = "locus_outer"
+required_pairing_levels = ["same_nucleus", "same_sample_different_aliquot", "same_cell"]
+missingness_policy = "explicit_state_and_mask"
+admission_gates = ["Complete the corrected 50-study COLOC rerun and promote a frozen graph snapshot.", "Train assay-profile models only on donor-held GSE296875/GSE244832 RNA-ATAC inputs; never expose held-donor ATAC to an RNA-conditioned inference request.", "For identical downstream heads on general sequence encoders, treat GSE281364 as a locus-cross-fitted training source: every reported MPRA prediction must be out-of-fold by merged locus, sequence identity, and reverse-complement identity. Never fit a head on all MPRA outcomes and score those same rows.", "GSE281364 supports an assay-native MPRA activity or allelic-direction head, not a supervised cell-type eQTL/ieQTL effect head. No nonsealed signed eQTL/ieQTL development source is currently registered; until one is added before selection lock, eQTL-specific head fitting and calibration are disabled, while zero-shot/native scores and frozen cross-assay MPRA transfer remain eligible.", "The frozen variant capability registry is binding: only primary-eligible gene-level signed outputs enter Fisher-z cell-type effect scoring; accessibility, MPRA, representation, and enhancer-gene-link outputs remain on their assay-native secondary endpoints.", "Nearest-gene, ABC, and rE2G are retrieval/link baselines and cannot be treated as signed-effect baselines; context-only, trans-only, and mean-track null allele deltas remain ablations, not evidence of effect direction.", "deltaSVM and direct gkm-SVM consume the same fold/state/seed LS-GKM weights. Report their distinct score definitions, but group them as one fitted-model family for selection, uncertainty, multiplicity, complementarity, and evidence counting.", "Keep GSE281160 CROP-seq as a development-only direction diagnostic; guides and cells are not biological replicates and its 20 MPRA-selected targets are not an unbiased test set.", "Group variants by LD block, locus, sequence identity, and reverse-complement identity.", "Compute native-build LD before liftover and retain native coordinates.", "Resolve model licenses, hashes, exposure, allele orientation, and reference compatibility."]
+baseline_model_ids = ["mean_track", "context_only", "sequence_only", "trans_only", "nearest_regulatory_feature", "nearest_gene", "nearest_context", "shuffled_context", "sequence_cnn_control", "sequence_transformer_control", "chrombpnet", "bpnet", "deltasvm", "gkmsvm", "abc", "re2g"]
+uncertainty_method = "paired_ld_block_bootstrap"
+resampling_units = ["ld_block"]
+bootstrap_replicates = 10000
+multiplicity_family = "confirmatory_external_champion_family_1"
+multiplicity_method = "holm_fwer_0.05_primary_and_bh_q0.05_secondary"
+promotion_gate_id = "variant_to_regulation_promotion_v1"
+promotion_gate_config_sha256 = "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a"
+primary_evaluator_id = "variant_ld_block_fisher_z_spearman_gain_v1"
+evaluator_parameters = { strata = ["cholangiocyte", "endothelial_cell", "hepatocyte", "stellate_cell"], roster_authority = { path = "artifacts/evaluator_rosters/variant_to_regulation.json", sha256 = "06ad087e77e3f7851aa6e2170d8bb5f922bfa26d92577146c89e7ca7355b159d", size_bytes = 254, media_type = "application/json", role = "task_evaluator_roster:variant_to_regulation" } }
+claim_gate = "Only complete task-specific GSE289173 eQTL/ieQTL summaries inside the one jointly sealed outcome bundle permit a champion. On signed cell-type effects, compare only capability-registered primary outputs and require mean Fisher-z Spearman gain >=0.03 over the strongest primary-eligible sequence/context baseline, paired lower bound above zero, and no major lineage worse by >0.03. Separately require eQTL-retrieval AUPRC noninferiority against nearest-gene, ABC, rE2G, and other retrieval-eligible baselines. Link-only, accessibility-only, MPRA-only, observed-target-context, representation-only, and negative-control records cannot win the signed-effect endpoint; otherwise no champion."

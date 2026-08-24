@@ -1,0 +1,204 @@
+{
+  "admission_disposition": {
+    "status": "restricted_deferred",
+    "downloads_installs_jobs_or_tests_performed": false,
+    "reason": "The exact code, base SE state, HepG2 few-shot transition state, and major companion artifacts are pinned, but corpus membership, target vocabulary, safe conversion, complete runtime, institutional noncommercial eligibility, and current-task compatibility are unresolved.",
+    "current_task": "Do not schedule for perturbation_transfer. The registered task holds out wholly unseen noncoding target loci, while this released transition state uses a saved categorical one-hot perturbation map.",
+    "open_champion": "ineligible_restricted_noncommercial_model_and_output_terms_and_no_current_supported_task"
+  },
+  "registered_identity": {
+    "model_id": "arc_state",
+    "display_name": "Arc State ST-SE Replogle HepG2 few-shot",
+    "implementation_type": "pretrained_adapter",
+    "registry_revision": "ArcInstitute/state@9bbfe78a434a55205e4de834e1ea99f85f7a3add+arcinstitute/SE-600M@5a9a80f44f7ce32ce57059933ef0d735d7c10ce5:model.safetensors+arcinstitute/ST-SE-Replogle@e324967ff4cea5ec199e29bcbb5c1f00e5b9d69c:fewshot/hepg2/checkpoints/final.ckpt",
+    "registry_checkpoint_sha256": "9e39d5c8e8176eb80bdcab958dec9dd0bbe24aef6156fc2a5319d44d14104654",
+    "registry_status": "deferred",
+    "registry_exposure_status": "unknown",
+    "registry_supported_tasks": []
+  },
+  "identity_layers": {
+    "code": {
+      "repository": "ArcInstitute/state",
+      "revision": "9bbfe78a434a55205e4de834e1ea99f85f7a3add",
+      "tree": "50a994e0689354ef7103252f3b35b408e6971f86",
+      "commit_verified_signature": true,
+      "commit_date": "2026-07-24T00:53:03Z",
+      "declared_package": "arc-state==0.11.3",
+      "role": "implementation_only_not_a_biological_checkpoint"
+    },
+    "base_state_embedding": {
+      "repository": "arcinstitute/SE-600M",
+      "revision": "5a9a80f44f7ce32ce57059933ef0d735d7c10ce5",
+      "revision_last_modified": "2026-02-24T02:44:12Z",
+      "artifact": "model.safetensors",
+      "artifact_sha256": "3ebec58bd9e9c07f0a76de25b900dad13d015768fbff1e68e5dcbdfb3b2245de",
+      "artifact_size_bytes": 2860276816,
+      "huggingface_reported_safetensors_parameters": 715062442,
+      "protein_embeddings": {
+        "artifact": "protein_embeddings.pt",
+        "sha256": "a210e1cc7901513999b2bca3836ba9e2f203cd008be4e9a9d6412a2267de9748",
+        "size_bytes": 410886729
+      },
+      "role": "Produces X_state basal cell embeddings; it is not itself the HepG2 perturbation-response predictor and cannot inherit that checkpoint's results."
+    },
+    "hepg2_fewshot_transition": {
+      "repository": "arcinstitute/ST-SE-Replogle",
+      "revision": "e324967ff4cea5ec199e29bcbb5c1f00e5b9d69c",
+      "revision_last_modified": "2026-05-29T00:33:02Z",
+      "artifact": "fewshot/hepg2/checkpoints/final.ckpt",
+      "artifact_sha256": "9e39d5c8e8176eb80bdcab958dec9dd0bbe24aef6156fc2a5319d44d14104654",
+      "artifact_size_bytes": 510112715,
+      "role": "HepG2-specific Replogle few-shot state-transition checkpoint consuming X_state plus a categorical perturbation vector and emitting gene-space predictions."
+    }
+  },
+  "transition_companion_artifacts": {
+    "fewshot/hepg2/config.yaml": {
+      "sha256": "083ee7bee18a852f343666b54ed61a6a39c18606fdf38259e9a6d2f50cf6ca7a",
+      "size_bytes": 2758,
+      "loading": "plain_yaml_after_schema_validation"
+    },
+    "fewshot/hepg2/pert_onehot_map.pt": {
+      "sha256": "f5621cab243a5135014af3867f63f8bf75cff19aee06d0f29a1bdecd2dbf47d0",
+      "size_bytes": 16746593,
+      "loading": "unsafe_PyTorch_serialization_not_inventoried_or_admitted"
+    },
+    "fewshot/hepg2/var_dims.pkl": {
+      "sha256": "f7446d88ec457cf174b0bb97384c49b7b0f8254a94b7aaf61c0275289cbf63f9",
+      "size_bytes": 155642,
+      "loading": "unsafe_pickle_not_inventoried_or_admitted"
+    },
+    "fewshot/hepg2/batch_onehot_map.pkl": {
+      "sha256": "58cd7cad4587396be7b054823987638a1d5eb2cd6bfe08c9fe63cf0fa482c0ac",
+      "size_bytes": 721431,
+      "loading": "unsafe_pickle_not_inventoried_or_admitted"
+    },
+    "fewshot/hepg2/cell_type_onehot_map.pkl": {
+      "sha256": "16db8a41a16b33237b9f0ae45cc1d97a1634b67df7ce555e7c909fbc54e0fa63",
+      "size_bytes": 1799,
+      "loading": "unsafe_pickle_not_inventoried_or_admitted"
+    },
+    "fewshot/hepg2/data_module.torch": {
+      "git_blob_id": "0b6dda95014f8f0f20c07237d92d0b25d7df5799",
+      "size_bytes": 1901,
+      "sha256": "UNRESOLVED_not_downloaded",
+      "loading": "unsafe_PyTorch_serialization_not_admitted"
+    },
+    "identity_rule": "The transition checkpoint is not runnable or reproducible from final.ckpt alone. Every companion artifact, ordered gene universe, and serialized-map schema must be safely inventoried and bound to one composite artifact manifest."
+  },
+  "declared_base_corpus": {
+    "config_identity": "arcinstitute/SE-600M@5a9a80f44f7ce32ce57059933ef0d735d7c10ce5:config.yaml",
+    "config_sha256": "807d9f741a7b3c1243f361fa5672c92b3d7f775fccf890136cd8bff41618881a",
+    "config_size_bytes": 4597,
+    "declared_current_profile": "scbasecamp-cellxgene-tahoe-filtered",
+    "declared_cells": 36238464,
+    "declared_datasets": 14420,
+    "declared_source_names": ["scbasecamp", "CELLxGENE", "Tahoe"],
+    "declared_gene_embeddings": 19790,
+    "declared_gene_embedding_width": 5120,
+    "declared_sequence_pad_length": 2048,
+    "missing_disclosure": "The released config contains internal file paths but no immutable accession, CELLxGENE collection UUID, dataset-version, donor, date-cutoff, or row-level corpus roster. Every project-target exposure therefore remains unknown until an exact roster is supplied and crosswalked."
+  },
+  "base_architecture_contract": {
+    "model_name": "vci",
+    "input": "single-cell expression plus dataset and protein-derived gene embeddings under the released profile",
+    "model_width": 2048,
+    "layers": 16,
+    "attention_heads": 16,
+    "counts": true,
+    "dataset_correction": true,
+    "training_seed": 42,
+    "native_output": "cell embedding X_state",
+    "separation_rule": "A base SE embedding result must be labeled SE-600M. It is not a State Transition prediction and is not registered here as a cell-state champion candidate."
+  },
+  "hepg2_transition_contract": {
+    "training_family": "Replogle",
+    "cell_context": "HepG2",
+    "input_embedding_key": "X_state",
+    "output_space": "gene",
+    "perturbation_representation": "onehot",
+    "perturbation_features_file": null,
+    "control_label": "non-targeting",
+    "cell_type_key": "cell_line",
+    "batch_key": "gem_group",
+    "cell_set_length": 64,
+    "hidden_dimension": 328,
+    "transformer_layers": 8,
+    "predict_residual": true,
+    "batch_encoder": true,
+    "training_seed": 42,
+    "training_max_steps": 100000,
+    "native_output": "predicted post-perturbation gene-expression cell set on the checkpoint's frozen gene scale",
+    "categorical_target_boundary": "The exact categorical vocabulary lives in pert_onehot_map.pt and is not yet safely inventoried. A target absent from that map has no learned perturbation representation."
+  },
+  "current_upstream_inference_incidents": {
+    "unknown_perturbation": "At the pinned commit, the official infer path substitutes the saved control one-hot vector for an unmapped perturbation and prints a warning. This silently predicts control for an unsupported target and is prohibited.",
+    "unknown_batch": "The official infer path maps an unrecognized batch label to index zero after a warning. This fallback is prohibited for benchmark inference.",
+    "unsafe_loading": "The official infer path calls torch.load with weights_only=False for maps and supports pickle files. The official predict path restores data_module.torch. Neither path may touch project data.",
+    "control_sampling": "The official infer path samples control cells with replacement using a seed. A future diagnostic must freeze eligible training/query-control rows, biological-replicate grouping, sampled row IDs, cell-set construction, and aggregation.",
+    "adapter_rule": "Implement a fail-closed project adapter that rejects unknown perturbations, batches, cell contexts, genes, dimensions, and map keys. Never reinterpret an unsupported noncoding locus as control, a pad token, a random vector, or a nearby gene."
+  },
+  "task_capability": {
+    "perturbation_transfer": "Deferred and incompatible with the current wholly unseen noncoding-target endpoint. A future separately registered seen-target or held-context diagnostic may be possible only when the exact target symbol is already in the safely inventoried map and every other gate passes.",
+    "cell_state_mapping": "The base SE encoder can emit embeddings, but that is a separate unregistered artifact identity. The registered Arc State composite has no supported cell-state task, and unknown base-corpus exposure blocks sealed use.",
+    "rna_conditioned_atac": "ineligible_no_ATAC_profile_decoder",
+    "variant_to_regulation": "ineligible_no_DNA_allele_or_regulatory_effect_interface",
+    "bulk_state_transfer": "ineligible_single_cell_input_and_no_assay_native_bulk_interface",
+    "clinical": "No diagnosis, prognosis, treatment-response, clinical-decision, or deployment claim. The upstream AUP states the model is not intended for diagnosis, cure, mitigation, treatment, or prevention of disease."
+  },
+  "replication_and_output_contract": {
+    "biological_unit": "experimental replicate or animal under a future compatible TaskSpec",
+    "not_replicates": ["cells", "cell-set tokens", "guides", "targets", "genes", "batches", "random seeds"],
+    "aggregation": "Pseudobulk predictions and observations to the declared biological unit before every inferential metric.",
+    "uncertainty": "Five fixed seeds can measure implementation stability only. Biological uncertainty must resample experimental replicates or animals."
+  },
+  "safe_loading_contract": {
+    "base_weight": "model.safetensors is the only directly tensor-safe released weight container identified.",
+    "protein_embeddings": "Load only with a non-executable tensor-only method after key, shape, dtype, finite-value, size, and hash validation; current safety is unverified.",
+    "transition_checkpoint": "Do not call Lightning load_from_checkpoint or unrestricted torch.load. In an isolated no-network conversion step after terms approval, attempt weights-only inspection, validate expected tensor-only state, and export a project-controlled safetensors state plus key/shape/dtype manifest. Abort if executable globals are required.",
+    "maps": "Do not load upstream pickle, .pt, or .torch mappings in the benchmark runtime. Convert only after isolated inspection and terms approval to bounded JSON, TSV, NPZ, or safetensors with stable ordered vocabularies and hashes.",
+    "runtime_network": "prohibited",
+    "upstream_outputs": "Do not load released evaluation AnnData, CSV, RDS, or other result artifacts; they are unnecessary and can expose source outcomes."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.11,<3.13",
+    "declared_package_version": "0.11.3",
+    "key_unbounded_dependencies": ["torch>=2.7.0", "transformers>=4.52.3", "cell-load>=0.10.4", "cell-eval>=0.8.1", "anndata>=0.11.4", "scanpy>=1.11.2", "geomloss>=0.2.6"],
+    "environment_status": "UNRESOLVED_no_exact_lock_or_GPU_fixture",
+    "required_probe": "After institutional and campaign approval only: isolated L40S import, safe state conversion, base embedding, transition forward, gene and target map validation, unknown-target and unknown-batch rejection, deterministic row-keyed control sampling, cell-set order sensitivity, pseudobulk export, resume, memory, and cross-device tolerance."
+  },
+  "terms_audit": {
+    "code": "ArcInstitute/state LICENSE is CC-BY-NC-SA-4.0. Code use and sharing require attribution, noncommercial purpose, and ShareAlike for adapted material.",
+    "base_and_transition_weights": "Arc Research Institute State Model Non-Commercial License plus the Model Acceptable Use Policy. Use requires eligible noncommercial entity and purpose; institutional eligibility must be confirmed before download or execution.",
+    "derivative_weights": "The model license explicitly defines fine-tuning, adjusted weights, additional training, pruning, distillation, integration, and use as a prior as Derivative Works. Noncommercial restrictions and redistribution conditions apply.",
+    "outputs": "The model license defines Outputs and permits distribution subject to its conditions, including prominent paper citation. The AUP separately governs model, derivatives, and outputs and includes safety, privacy, misinformation, endorsement, and medical-use restrictions. Project data terms also apply.",
+    "redistribution": "Redistributed State Model or derivatives must include the complete model license and notices; State Model, derivatives, and outputs require the State paper citation. Do not redistribute upstream weights in this project.",
+    "commercial_and_open_champion": "Restricted noncommercial code/model conditions are incompatible with the project's open-champion release criterion. Arc State may at most be an internally authorized restricted comparator.",
+    "legal_status": "research_audit_not_legal_advice; institutional_confirmation_required"
+  },
+  "source_evidence": "Official immutable GitHub source, official Hugging Face revision metadata and text files, and the official State preprint link were inspected on 2026-08-22. Artifact hashes and sizes are provider metadata; no code archive, package, checkpoint, mapping, dataset, or model output was downloaded, installed, deserialized, executed, or tested.",
+  "source_records": [
+    {"identity": "State:LICENSE", "sha256": "e66c269d4819aaab34b49ef5220c4ddab6756f21bb5180761a4eb8561f2b7bbd", "size_bytes": 20850},
+    {"identity": "State:MODEL_LICENSE.md", "sha256": "5f2422e25c47f3c0ffa1eb563ab8e3e708a357b5fe81594eef4ed3d298b21ca4", "size_bytes": 9865},
+    {"identity": "State:MODEL_ACCEPTABLE_USE_POLICY.md", "sha256": "9e4d733b1523d3fe415afaa0c7d6ebbfd01be9248b6a953aecf468def3dee7ab", "size_bytes": 5131},
+    {"identity": "State:README.md", "sha256": "568c0b4f9d93374f7ebc7467c226fdde0050abfd60147bce0b316163bf4199d6", "size_bytes": 9208},
+    {"identity": "State:pyproject.toml", "sha256": "cc295230d32c167d1da4de99d42ad707e5def90b9a29a58e27237d607293b585", "size_bytes": 1397},
+    {"identity": "State:src/state/configs/model/state.yaml", "sha256": "aac8e39088d81e02b680311d64a8c62a34f3bdc932d51f9ae22375a5b8fd535c", "size_bytes": 1494},
+    {"identity": "State:src/state/configs/data/perturbation.yaml", "sha256": "1082b019b1cf6b2ad7ec2b4ec3fc78aa3bd62c19601612a16328abe40e8ecd48", "size_bytes": 721},
+    {"identity": "State:src/state/_cli/_tx/_infer.py", "sha256": "dffe0684e93dbacbb1b6ad1c29325da215ba78a46eeb424e87b916990cd2262a", "size_bytes": 41900},
+    {"identity": "State:src/state/tx/models/state_transition.py", "sha256": "45828e6f5ec4da52d1980fd54881e095ad1e8aaece4689c303fe10a671a57b63", "size_bytes": 36471},
+    {"identity": "SE-600M:config.yaml", "sha256": "807d9f741a7b3c1243f361fa5672c92b3d7f775fccf890136cd8bff41618881a", "size_bytes": 4597},
+    {"identity": "SE-600M:MODEL_LICENSE.md", "sha256": "513add0eb2b35e59ce7cd7ff1249b9104794f5fb879ec287a4a9a52e4a96b7a5", "size_bytes": 9859},
+    {"identity": "SE-600M:MODEL_ACCEPTABLE_USE_POLICY.md", "sha256": "6eb675a79981d59923be82e3931ef45187b373d7dff04ec7497c897d17d35c51", "size_bytes": 5130},
+    {"identity": "ST-SE-Replogle:fewshot/hepg2/config.yaml", "sha256": "083ee7bee18a852f343666b54ed61a6a39c18606fdf38259e9a6d2f50cf6ca7a", "size_bytes": 2758},
+    {"identity": "ST-SE-Replogle:MODEL_LICENSE.md", "sha256": "dc8c48e55fc4e4ecfb02cb2a1c592067d460466ac57679569501f50f112d8947", "size_bytes": 9864},
+    {"identity": "ST-SE-Replogle:MODEL_ACCEPTABLE_USE_POLICY.md", "sha256": "6eb675a79981d59923be82e3931ef45187b373d7dff04ec7497c897d17d35c51", "size_bytes": 5130}
+  ],
+  "primary_sources": [
+    "https://github.com/ArcInstitute/state/tree/9bbfe78a434a55205e4de834e1ea99f85f7a3add",
+    "https://huggingface.co/arcinstitute/SE-600M/tree/5a9a80f44f7ce32ce57059933ef0d735d7c10ce5",
+    "https://huggingface.co/arcinstitute/ST-SE-Replogle/tree/e324967ff4cea5ec199e29bcbb5c1f00e5b9d69c/fewshot/hepg2",
+    "https://www.biorxiv.org/content/10.1101/2025.06.26.661135v2"
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

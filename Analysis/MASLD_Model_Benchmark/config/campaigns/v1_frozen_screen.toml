@@ -1,0 +1,27 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-frozen-screen"
+description = "Three-seed common-lane frozen screen"
+wave = "frozen_screen"
+status = "blocked_prerequisites"
+prerequisites = ["v1-smoke terminal dispositions", "frozen common preprocessing and heads"]
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["cell_state_mapping", "variant_to_regulation", "rna_conditioned_atac", "bulk_state_transfer", "typed_evidence_graph", "perturbation_transfer"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate", "restricted_comparator"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_single"
+runtime_id = "gpu_inference"
+seeds = [1103, 2909, 4721]
+cell_budget = 50000
+genomic_budget = "fixed_screen_subset"
+adaptation_regime = "common_lane"
+common_head_ids = ["linear", "two_layer_mlp"]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0

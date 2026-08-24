@@ -1,0 +1,138 @@
+{
+  "crosswalk_scope": {
+    "candidate": "graph_degree_graph_source_count_and_regularized_linear_evidence_suite",
+    "task": "typed_evidence_graph",
+    "train_sources": ["current_coloc_gwas"],
+    "development_sources": ["gse281364", "gse281160"],
+    "sealed_sources": [],
+    "graph_status": "BLOCKED_corrected_50_study_COLOC_release_and_promoted_graph_snapshot_absent"
+  },
+  "endpoint_eligibility": {
+    "graph_degree": {
+      "held_source_auprc": "eligible development-only after complete held-source and held-block removal",
+      "brier_score": "blocked_until_a_source-blind_cross-fitted_degree_calibrator_is_registered",
+      "locus_macro_mrr": "eligible development-only",
+      "locus_macro_hits_at_10": "eligible development-only"
+    },
+    "graph_source_count": {
+      "held_source_auprc": "eligible development-only after complete held-source and held-block removal",
+      "brier_score": "blocked_until_a_source-blind_cross-fitted_count_calibrator_is_registered",
+      "locus_macro_mrr": "eligible development-only",
+      "locus_macro_hits_at_10": "eligible development-only"
+    },
+    "regularized_linear_evidence": {
+      "held_source_auprc": "eligible development-only after nested cross-source and LD/gene-block fitting",
+      "brier_score": "eligible for the native frozen development-mixture sigmoid probability; no held-source prevalence recalibration",
+      "locus_macro_mrr": "eligible development-only",
+      "locus_macro_hits_at_10": "eligible development-only"
+    },
+    "causal_gene": "ineligible_for_all_three",
+    "open_champion": "ineligible_no_wholly_sealed_graph_source"
+  },
+  "dataset_findings": {
+    "current_coloc_gwas": {
+      "role": "provisional_outer_training_graph_evidence",
+      "biological_unit": "study; expected n=50 source studies after corrected promotion",
+      "exposure": "downstream_demo",
+      "allowed_use": "Only after the corrected 50-study COLOC release and immutable graph snapshot, native-build LD blocks, loci, source families, statuses, observability, and candidate universe are promoted.",
+      "restrictions": [
+        "Current memberships, examples, and Gene Catalog content are exposed and provisional.",
+        "Compute ancestry-aware LD on each native build before liftover.",
+        "A study, cohort release, accession alias, and derivative table from one underlying source form one source_family_id.",
+        "COLOC alone supports colocalized or genetically anchored candidate language, not causal gene."
+      ]
+    },
+    "gse281364": {
+      "role": "development-only_candidate_removed_source",
+      "biological_unit": "experimental replicate; n=16 across HepG2 control/PAOA and LX-2 control/TGF-beta contexts",
+      "topology": "MPRA DNA and RNA counts are same-sample different aliquots",
+      "exposure": "downstream_demo",
+      "allowed_use": "Reporter evidence may define an assay-native activity or allelic-direction source after locus-cross-fitted aggregation and threshold/status rules are frozen without the evaluated rows.",
+      "restrictions": [
+        "Four replicates per context do not become four evidence source families.",
+        "Technical rows, barcodes, alleles, and constructs do not become independent source support.",
+        "MPRA activity alone is not an endogenous enhancer-gene link or causal-gene label.",
+        "Missing oligo, allele, context, DNA, or RNA joins are explicit missing states, not negative activity."
+      ]
+    },
+    "gse281160": {
+      "role": "development-only_candidate_removed_source",
+      "biological_unit": "experimental replicate; count unresolved",
+      "topology": "guide and RNA are same cell; six sequencing lanes are technical",
+      "exposure": "downstream_demo",
+      "allowed_use": "A functional source only after target-locus, guide-family, experimental-replicate, response-gene, status, and evidence-unit rules are frozen and all scoring aggregates to biological replicates.",
+      "restrictions": [
+        "The 20 targets were selected from MPRA and are not an unbiased graph seal.",
+        "Cells, guides, target loci, sequencing lanes, and genes are not independent source families or biological replicates.",
+        "A perturbation response can support only the exact locus-gene or program relation registered by the evidence ontology; it cannot be expanded by nearest-gene assignment."
+      ]
+    },
+    "gse289173": {
+      "role": "not_a_graph_source_or_graph_seal",
+      "exposure": "target_label_unexposed_for_its_separate_joint_sealed_evaluator",
+      "allowed_use": "none for this typed-evidence graph task",
+      "reason": "Its cell-state and QTL outcomes belong to the separately sealed cell and variant evaluator. They cannot define graph edges, labels, features, calibration, thresholds, or source observability."
+    },
+    "resource_gene_catalog_current": {
+      "role": "read_only_exposed_authority",
+      "allowed_use": "Only as exposed development content after immutable graph promotion.",
+      "restriction": "Existing Resource evidence classes, claims, Gene Catalog, and frozen 117 programs cannot be changed, relabeled, optimized, or used as a pseudo-seal based on model output."
+    }
+  },
+  "held_source_protocol": {
+    "candidate_universe": "Freeze source-independent native-build variants, ancestry-aware LD blocks, loci, and genes before seeing held-source eligibility. Held-source-only candidates remain evaluator-only.",
+    "complete_removal": "Delete held-source aliases, nodes, edges, inverse edges, provenance, coverage, observability, tested status, missingness, deterministic derivatives, aggregates, paths, degrees, source counts, candidate-universe contributions, and normalization before any baseline feature is calculated.",
+    "held_block": "Remove every edge incident to an outer-held locus before graph construction, feature aggregation, cross-source training examples, and calibration. Merge loci within 1 Mb or r2 >= 0.8 in any represented ancestry, then preserve gene blocks.",
+    "training_labels": "Regularized linear evidence learns from pseudo-held development sources. For each pseudo-source, support is positive and explicit tested-negative eligibility is negative; all other statuses are excluded from the binary loss and retained in masks.",
+    "evaluator_only": ["evaluated_source_support_labels", "evaluated_source_tested_negative_labels", "evaluated_source_eligibility", "evaluated_source_observability", "evaluated_source_prevalence"],
+    "success_interpretation": "Remaining-source study intensity or typed evidence predicts support in an already exposed removed source. This is cross-source prioritization, not causal recovery."
+  },
+  "baseline_specific_crosswalk": {
+    "graph_degree": {
+      "question": "Does a gene rank well merely because it has many remaining evidence-bearing graph connections?",
+      "bias_audit": "Report total, in-, and out-degree distributions; AUPRC within remaining-source observability and degree strata; and correlation with evidence_count and graph_source_count.",
+      "unit_warning": "Edges and genes do not supply independent inference. Bootstrap native LD and gene blocks."
+    },
+    "graph_source_count": {
+      "question": "Does breadth across distinct remaining source families explain apparent recovery?",
+      "bias_audit": "Report per-source contribution, alias collapse, source concentration, and performance within remaining-source observability strata.",
+      "unit_warning": "Experimental replicates, technical releases, accessions, and papers from one source do not create extra source families."
+    },
+    "regularized_linear_evidence": {
+      "question": "Can a transparent cross-source weighted combination of typed evidence match graph neural models?",
+      "bias_audit": "Report coefficients with raw source and assay units, feature missingness, source-held performance, calibration by source and observability, and leave-one-feature-family-out sensitivity.",
+      "unit_warning": "Candidate rows share locus, gene, and source dependence. Fit and uncertainty use grouped source, LD, and gene blocks rather than row-level independence."
+    }
+  },
+  "assay_native_missingness_and_observability": {
+    "raw_units": "Keep colocalization statistics, MPRA activity/effect, CROP-seq response, distance, and counts in separately identified columns with source, metric, unit, direction, and provenance. A linear model may training-standardize a column but cannot pool incompatible units first.",
+    "statuses": ["supported", "discordant", "tested_negative", "untestable", "not_applicable", "source_dependent", "indeterminate"],
+    "missing_states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "zero": "Degree or count zero means an observed applicable remaining graph with no qualifying edge or source. If no remaining source is applicable or observable, emit structurally_missing.",
+    "linear_model": "A masked numeric channel plus full state indicators preserves the difference between measured zero, absence of support, tested negative, assay untestability, and unavailable data."
+  },
+  "calibration_and_uncertainty": {
+    "graph_degree": "Native score is an integer count, not a probability. Brier is blocked until a source-blind cross-fitted one-dimensional calibrator is separately frozen.",
+    "graph_source_count": "Native score is an integer count, not a probability. Brier is blocked until a source-blind cross-fitted one-dimensional calibrator is separately frozen.",
+    "regularized_linear_evidence": "The native sigmoid is calibrated only to its frozen equal-source and equal-block development training mixture. Report calibration by source and observability; never adapt to held-source prevalence.",
+    "bootstrap": "Use 10000 paired two-way native-build LD-block and gene-block bootstrap replicates. Candidate genes, variants, graph edges, evidence rows, and source records stay nested.",
+    "seeds": "Deterministic graph aggregation has no seed. Linear solver or fold-tie randomness uses the RunSpec seed; seeds measure stability and are not independent biological evidence."
+  },
+  "claim_and_selection_boundary": {
+    "selection": "Every graph model must beat graph_degree, graph_source_count, nearest_gene, evidence_count, and regularized_linear_evidence where their registered outputs are applicable. Transparent baseline success is an accepted result.",
+    "multiplicity": "BH q<0.05 within the secondary typed-evidence-graph source and endpoint family.",
+    "champion": "No wholly sealed evidence source exists. No graph champion can be declared, regardless of development AUPRC.",
+    "causality": "Scores prioritize genetically anchored candidates. They do not establish causal genes, pathways, disease mechanisms, diagnosis, prognosis, or treatment response."
+  },
+  "reproducibility_contract": {
+    "graph_receipt": "Hash the promoted graph snapshot, source taxonomy, ontology, native coordinates, LD and gene blocks, candidate universe, canonical edges, statuses, observability, held-source removal, held-block removal, deduplication, feature rows, and labels.",
+    "baseline_receipt": "Hash each algorithm ID, edge direction and type roster, source-family map, exact feature lexicon, assay-unit manifest, masks, training transformations, grouped folds, weights, regularization, coefficients, calibration decision, ties, row order, and predictions.",
+    "task_contract_hashes": {
+      "typed_evidence_graph_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "evidence_graph_outer_toml": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e"
+    },
+    "unit_of_inference": "independent native-build LD locus with gene-block dependence retained in uncertainty"
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

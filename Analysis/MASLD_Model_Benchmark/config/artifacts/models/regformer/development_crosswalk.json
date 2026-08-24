@@ -1,0 +1,35 @@
+{
+  "corpus": {
+    "declared_database": "CZ_CELLxGENE",
+    "declared_scale_cells": 25000000,
+    "declared_tissues": 45,
+    "exact_collection_and_dataset_inventory_status": "UNRESOLVED",
+    "logged_training_cells": 24627572,
+    "logged_validation_cells": 599926,
+    "source_evidence": "Nature Communications methods plus the canonical Figshare v2 training log",
+    "warning": "Neither an immutable CELLxGENE snapshot nor the exact collection/dataset UUID manifest and retained split are bound to the checkpoint. The article's Supplementary Data 1 lists downstream benchmark datasets, not the pretraining corpus."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the immutable canonical checkpoint file was uploaded.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO became public before the canonical checkpoint upload and after the 22-million-cell preprint corpus was described. The final checkpoint declares an expanded 25-million-cell corpus without an immutable source manifest.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after the immutable canonical checkpoint file was uploaded.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Public before the canonical checkpoint upload; exact CELLxGENE corpus membership is unresolved.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "post_artifact": "A source first public after the immutable checkpoint upload is clean_declared unless another declared corpus names it.",
+    "pre_artifact": "A source public before upload remains unknown until the exact CELLxGENE snapshot, collection/dataset UUID manifest, and retained split are frozen."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

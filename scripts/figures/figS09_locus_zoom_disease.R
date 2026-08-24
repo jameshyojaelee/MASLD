@@ -160,6 +160,22 @@ cat(sprintf("Gene: %s | GWAS: %s | chr%d:%d-%d | lead %d | eQTL %s\n",
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/GWAS/finemapping"
 PROJ <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
+COLOC_INPUT <- Sys.getenv(
+  "FIG2_COLOC_INPUT",
+  file.path(BASE, "results/susie_coloc/susie_coloc_all_gwas.csv")
+)
+normalize_page <- function(path, w, h) {
+  python <- Sys.getenv(
+    "MASLD_FIGURE_PYTHON",
+    "/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/python"
+  )
+  status <- system2(
+    python,
+    c(shQuote(file.path(PROJ, "scripts/figures/normalize_pdf_page_box.py")),
+      shQuote(path), format(w, trim = TRUE), format(h, trim = TRUE))
+  )
+  if (!identical(status, 0L)) stop("Could not normalize PDF page box: ", path)
+}
 EUR_SS     <- file.path(BASE, "data/sumstats", cfg$eur_ss)
 EQTL_DIR   <- file.path(PROJ, "data/broadaway_eqtl")
 ATLAS_FILE <- file.path(PROJ, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
@@ -290,20 +306,85 @@ if (file.exists(eqtl_file)) {
 # resolves WHICH variant is shared. The latter is plotted on the PIP track: it
 # is typically far sharper than the GWAS-alone SuSiE PIP (which LD smears),
 # because conditioning on the eQTL concentrates the shared-variant posterior.
-coloc_top_pos <- NA_integer_; coloc_pp4 <- NA_real_; coloc_top_pp <- NA_real_
-# The promoted canonical merge is authoritative. Method-specific directories
-# are retained only as fallbacks for loci absent from that release.
-for (d in c("susie_coloc","susie_coloc_polyfun","susie_coloc_1kg")) {
-  f <- file.path(BASE, "results", d, STUDY, sprintf("susie_coloc_chr%d.csv", CHR))
-  if (!file.exists(f)) next
-  tt <- fread(f)
-  hit <- tt[gene == EQTL_GENE & method == "susie" & !is.na(PP.H4.susie) & PP.H4.susie >= 0.5]
-  if (!nrow(hit)) next
-  setorder(hit, -top_snp_PP)
-  pos <- as.integer(sub("^[0-9]+:", "", hit$top_snp[1]))
-  if (!is.na(pos)) { coloc_top_pos <- pos; coloc_pp4 <- hit$PP.H4.susie[1]; coloc_top_pp <- hit$top_snp_PP[1]
-    cat(sprintf("  COLOC top SNP (%s x %s, %s): chr%d:%d  PP4=%.3f  SNP.PP.H4=%.3f\n",
-                EQTL_GENE, STUDY, d, CHR, coloc_top_pos, coloc_pp4, coloc_top_pp)); break }
+coloc_top_pos <- NA_integer_; coloc_pp4 <- NA_real_; coloc_abf_pp4 <- NA_real_
+coloc_top_pp <- NA_real_; coloc_method <- NA_character_
+coloc_gwas_ancestry <- NA_character_; coloc_ld_panel <- NA_character_
+coloc_ld_panel_n <- NA_real_; coloc_ld_reliability <- NA_character_
+coloc_locus_lambda_s <- NA_real_; coloc_provenance <- NA_character_
+
+# Main Figure 2 must read the synchronized promoted aggregate, not a per-study
+# method directory that can predate promotion. The latter remains a legacy
+# fallback only for general-purpose supplementary renders.
+if (file.exists(COLOC_INPUT)) {
+  required_coloc <- c(
+    "gwas_name", "gene", "PP.H4.susie", "PP.H4.abf", "top_snp",
+    "top_snp_PP", "method", "ancestry", "ld_panel", "ld_panel_n",
+    "ld_reliability", "locus_lambda_s"
+  )
+  tt <- fread(COLOC_INPUT, select = required_coloc)
+  if (!all(required_coloc %in% names(tt))) {
+    stop("Promoted COLOC table lacks required columns: ",
+         paste(setdiff(required_coloc, names(tt)), collapse = ", "))
+  }
+  hit <- tt[
+    gwas_name == STUDY & gene == EQTL_GENE &
+      is.finite(PP.H4.susie) & PP.H4.susie > 0.5
+  ]
+  if (MATCHED_MAIN && nrow(hit) != 1L) {
+    stop("Expected exactly one promoted multi-signal row for ", EQTL_GENE,
+         " x ", STUDY, "; found ", nrow(hit))
+  }
+  if (nrow(hit)) {
+    setorder(hit, -PP.H4.susie, -top_snp_PP)
+    hit <- hit[1]
+    pos <- as.integer(sub("^[0-9]+:", "", hit$top_snp))
+    if (!is.na(pos)) {
+      coloc_top_pos <- pos
+      coloc_pp4 <- hit$PP.H4.susie
+      coloc_abf_pp4 <- hit$PP.H4.abf
+      coloc_top_pp <- hit$top_snp_PP
+      coloc_method <- hit$method
+      coloc_gwas_ancestry <- hit$ancestry
+      coloc_ld_panel <- hit$ld_panel
+      coloc_ld_panel_n <- hit$ld_panel_n
+      coloc_ld_reliability <- hit$ld_reliability
+      coloc_locus_lambda_s <- hit$locus_lambda_s
+      coloc_provenance <- normalizePath(COLOC_INPUT)
+      cat(sprintf(
+        "  COLOC top SNP (%s x %s, promoted aggregate): chr%d:%d  PP4=%.3f  SNP.PP.H4=%.3f\n",
+        EQTL_GENE, STUDY, CHR, coloc_top_pos, coloc_pp4, coloc_top_pp
+      ))
+    }
+  }
+}
+if (is.na(coloc_top_pos) && MATCHED_MAIN) {
+  stop("No promoted multi-signal COLOC row for ", EQTL_GENE, " x ", STUDY,
+       " in ", COLOC_INPUT)
+}
+if (is.na(coloc_top_pos)) {
+  for (d in c("susie_coloc", "susie_coloc_polyfun", "susie_coloc_1kg")) {
+    f <- file.path(BASE, "results", d, STUDY, sprintf("susie_coloc_chr%d.csv", CHR))
+    if (!file.exists(f)) next
+    tt <- fread(f)
+    hit <- tt[gene == EQTL_GENE & method == "susie" &
+                is.finite(PP.H4.susie) & PP.H4.susie > 0.5]
+    if (!nrow(hit)) next
+    setorder(hit, -top_snp_PP)
+    pos <- as.integer(sub("^[0-9]+:", "", hit$top_snp[1]))
+    if (!is.na(pos)) {
+      coloc_top_pos <- pos
+      coloc_pp4 <- hit$PP.H4.susie[1]
+      coloc_abf_pp4 <- hit$PP.H4.abf[1]
+      coloc_top_pp <- hit$top_snp_PP[1]
+      coloc_method <- hit$method[1]
+      coloc_provenance <- normalizePath(f)
+      cat(sprintf(
+        "  COLOC top SNP (%s x %s, legacy %s): chr%d:%d  PP4=%.3f  SNP.PP.H4=%.3f\n",
+        EQTL_GENE, STUDY, d, CHR, coloc_top_pos, coloc_pp4, coloc_top_pp
+      ))
+      break
+    }
+  }
 }
 
 # ── Atlas logFC for gene-track coloring ──────────────────────────────────────
@@ -580,21 +661,20 @@ if (length(gmod)) {
         height = unit(0.085,"inches"), just = c("left","center"), gp = gpar(col = NA, fill = g$col)) }
     glab[[length(glab)+1]] <- list(sym = g$sym, xmid = (x0+x1)/2, col = g$col, yc = yc, row = g$row)
   }
-  # De-collide gene-symbol labels: measure each label's width and greedily bump a
-  # colliding neighbour to a 2nd tier (per body row) so clustered genes don't
-  # overprint (e.g. KRCC1/SMYD1/FABP1/THNSL2) at the 3.26in panel width.
+  # De-collide gene-symbol labels in three global vertical lanes. Per-body-row
+  # tiers can coincide across adjacent rows (the former MIR4780/FABP1 collision),
+  # so lane occupancy must be tracked across the complete gene track.
   for (i in seq_along(glab)) glab[[i]]$w <- convertWidth(grobWidth(textGrob(
     glab[[i]]$sym, gp = gpar(fontsize = 6, fontface = "italic"))), "inches", valueOnly = TRUE)
   glab <- glab[order(sapply(glab, `[[`, "xmid"))]
-  TIER_DY <- c(0.11, 0.25)                    # label offset (in) above the gene line, per tier
-  redge <- list()                             # per-row right edge at each tier
+  LABEL_Y <- y5 + c(0.06, 0.265, 0.48)
+  redge <- rep(-Inf, length(LABEL_Y))
   for (L in glab) {
-    rk <- as.character(L$row)
-    if (is.null(redge[[rk]])) redge[[rk]] <- c(-Inf, -Inf)
     lft <- L$xmid - L$w/2
-    t <- if (lft > redge[[rk]][1] + 0.02) 1L else if (lft > redge[[rk]][2] + 0.02) 2L else which.min(redge[[rk]])
-    redge[[rk]][t] <- L$xmid + L$w/2
-    grid.text(L$sym, unit(L$xmid,"inches"), unit(top_to_grid(L$yc + TIER_DY[t]),"inches"),
+    available <- which(lft > redge + 0.02)
+    t <- if (length(available)) available[1] else which.min(redge)
+    redge[t] <- L$xmid + L$w/2
+    grid.text(L$sym, unit(L$xmid,"inches"), unit(top_to_grid(LABEL_Y[t]),"inches"),
               gp = gpar(col = L$col, fontsize = 6, fontface = "italic"))
   }
 }
@@ -621,13 +701,24 @@ plotGenomeLabel(chrom = paste0("chr", CHR), chromstart = WIN_START, chromend = W
   assembly = "hg19", scale = "Mb", commas = TRUE, sequence = FALSE, fontsize = 6,
   x = PLOT_X, y = y6, length = PLOT_W, default.units = "inches")
 
-pageGuideHide(); dev.off()
+# Guides are already disabled in pageCreate(). Calling pageGuideHide() here
+# invokes a grid removal pass that plotgardener documents as creating a second
+# PDF page, so close the device directly.
+dev.off()
+normalize_page(out_path, PAGE_W, PAGE_H)
 
 # ── sidecar source CSV ────────────────────────────────────────────────────────
 src <- data.table(gene = GENE, eqtl_gene = EQTL_GENE, gwas = STUDY, trait = cfg$trait,
   chr = CHR, lead_pos_hg19 = LEAD_POS, win_start = WIN_START, win_end = WIN_END,
   coloc_top_snp_pos = coloc_top_pos, coloc_PP4_susie = round(coloc_pp4, 4),
+  coloc_PP4_abf = round(coloc_abf_pp4, 4), coloc_method = coloc_method,
   coloc_shared_variant_PP = round(coloc_top_pp, 4),
+  coloc_input = coloc_provenance, gwas_ancestry = coloc_gwas_ancestry,
+  coloc_ld_panel = coloc_ld_panel, coloc_ld_panel_n = coloc_ld_panel_n,
+  coloc_ld_reliability = coloc_ld_reliability,
+  coloc_locus_lambda_s = coloc_locus_lambda_s,
+  eqtl_source = "Broadaway liver eQTL", eqtl_ancestry = "EUR",
+  plot_ld_source = normalizePath(LD_BASE),
   n_pip_variants = nrow(pips), pip_source = pip_source)
 fwrite(src, sub("\\.pdf$", "_source.csv", out_path))
 cat("\nDone:", out_path, "\n")

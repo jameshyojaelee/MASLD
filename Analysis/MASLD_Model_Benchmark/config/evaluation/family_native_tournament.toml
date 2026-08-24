@@ -1,0 +1,194 @@
+schema_version = "masld-bench-family-native-tournament-v1"
+registry_id = "family_native_multimodal_tournament"
+objective = "Find the strongest externally transferable MASLD research model or task-specific model set by evaluating every family on native biological endpoints with donor-safe, locus-safe, contamination-audited comparisons."
+rna_conditioned_atac_is_universal_objective = false
+universal_scalar_leaderboard_allowed = false
+observed_query_atac_allowed_only_on_task = "observed_multiome"
+restricted_model_may_be_open_champion = false
+blocked_family_must_receive_terminal_disposition = true
+active_task_ids = ["bulk_state_transfer", "cell_state_mapping", "perturbation_transfer", "rna_conditioned_atac", "typed_evidence_graph", "variant_to_regulation"]
+task_ids_to_register = ["histone_regulatory", "methylation_regulatory", "observed_multiome", "protein_transport", "sequence_native_regulatory"]
+conditional_model_ids = ["context_borzoi"]
+conditional_full_training_trigger = "locked_residual_complementarity_gate"
+universal_claim_gate = "Noninferior to every eligible specialist and superior on at least two independent source families after multiplicity correction, including one appropriate genuinely external source."
+
+[split_contract]
+biological_outer_unit = "donor_or_independent_locus"
+donor_grouping_required = true
+same_person_modalities_same_outer_fold = true
+cohort_family_deduplication_required = true
+leave_one_study_out_when_three_compatible_families = true
+explicit_cross_study_transport_when_two_compatible_families = true
+single_cohort_result_is_internal_development_only = true
+cohort_balanced_training_and_reporting = true
+gse296875_is_topology_anchor_not_sole_population = true
+gse296875_masld_diagnosis_assumed = false
+genomic_block_grouping_required = true
+ld_grouping_required = true
+reverse_complement_identity_grouping_required = true
+largest_receptive_field_boundary_buffer_required = true
+all_preprocessing_fit_inside_training_partition = true
+sealed_outcomes_available_to_model_jobs = false
+
+[dataset_portfolio]
+cross_cohort_expansion_path = "config/evaluation/cross_cohort_expansion.toml"
+candidate_source_is_active_without_dataset_manifest = false
+same_accession_may_count_as_independent_cohort_twice = false
+same_superseries_subseries_may_cross_outer_folds = false
+missing_modality_encoded_as_zero = false
+assay_native_heads_required = true
+
+[task.sequence_native_regulatory]
+status = "planned_registration"
+held_query_modalities = ["dna_sequence"]
+endpoint_families = ["accessibility_profile", "assay_matched_coverage", "regulatory_class", "rna_coverage", "splice_usage"]
+primary_models = ["alphagenome", "borzoi_ensemble", "chrombpnet", "bpnet", "enformer", "scbasset", "sei", "sequence_cnn_control", "sequence_transformer_control"]
+representation_models_with_identical_heads = ["caduceus", "dnabert2", "evo", "hyenadna", "nucleotide_transformer"]
+mandatory_baselines = ["mean_track", "gc_kmer_control", "deltasvm", "gkmsvm", "nearest_regulatory_feature", "sequence_cnn_control", "sequence_transformer_control"]
+external_claim_requires = "An assay-, lineage-, and reference-compatible external dataset not used for fitting, preprocessing, head selection, or calibration."
+
+[task.variant_to_regulation]
+status = "active"
+held_query_modalities = ["ref_dna_sequence", "alt_dna_sequence", "native_model_context_if_available"]
+endpoint_families = ["accessibility_delta", "allelic_direction", "enhancer_gene_link", "eqtl_retrieval", "mpra_activity", "signed_cell_type_eqtl_effect"]
+primary_models = ["alphagenome", "borzoi_ensemble", "corgi_regular", "enformer", "sei", "scooby_epicardioids", "scooby_neurips", "scooby_onek1k"]
+representation_models_with_identical_heads = ["caduceus", "dnabert2", "evo", "hyenadna", "nucleotide_transformer"]
+mandatory_baselines = ["zero_allele_delta", "mean_track", "nearest_regulatory_feature", "nearest_gene", "deltasvm", "gkmsvm", "abc", "re2g", "assay_native_linear_head"]
+output_semantics_must_remain_separate = true
+
+[task.rna_conditioned_atac]
+status = "active"
+held_query_modalities = ["dna_sequence", "single_nucleus_rna_or_training_frozen_context"]
+forbidden_held_query_modalities = ["single_nucleus_atac", "atac_derived_neighbors", "atac_derived_query_normalization"]
+endpoint_families = ["donor_cell_state_atac_count", "donor_cell_state_atac_profile"]
+primary_models = ["corgi_regular", "corgi_plus", "context_borzoi"]
+translator_models = ["cobolt", "multivi", "scbutterfly", "scpair"]
+mandatory_baselines = ["mean_track", "assay_native_pseudobulk", "shrunken_pseudobulk", "chrombpnet", "bpnet", "scbasset", "sequence_cnn_control", "sequence_transformer_control", "context_only", "trans_only", "shuffled_context", "nearest_context"]
+
+[task.observed_multiome]
+status = "planned_registration"
+held_query_modalities = ["dna_sequence", "explicitly_observed_single_nucleus_atac", "single_nucleus_rna_where_native"]
+endpoint_families = ["masked_accessibility", "functional_genomic_track", "paired_modality_reconstruction", "native_joint_representation"]
+primary_models = ["epibert", "epcotv2", "scooby_epicardioids", "scooby_neurips"]
+additional_native_models = ["get", "multivi", "peakvi"]
+mandatory_baselines = ["observed_atac_glm", "observed_atac_only", "sequence_only", "rna_only", "lsi", "peakvi", "seurat_wnn", "assay_native_pseudobulk", "shuffled_modality", "masked_modality"]
+same_nucleus_dataset_ids = ["gse296875"]
+same_donor_different_aliquot_dataset_ids = ["gse244832"]
+false_cell_pairing_forbidden = true
+rna_conditioned_atac_claim_allowed = false
+champion_claim_requires_external_seal = true
+
+[task.histone_regulatory]
+status = "planned_activation_audit"
+held_query_modalities = ["dna_sequence", "rna_context_only_where_native", "observed_atac_only_on_observed_multiome_subtask"]
+endpoint_families = ["h3k27ac_profile", "h3k27ac_count", "signed_disease_associated_h3k27ac_delta"]
+candidate_dataset_families = ["gse267145_znf469_human_liver"]
+primary_models = ["alphagenome", "borzoi_ensemble", "corgi_plus", "corgi_regular", "enformer", "epibert", "sei"]
+mandatory_baselines = ["mean_track", "sequence_only_cnn", "gc_kmer_control", "assay_native_glm", "nearest_regulatory_feature"]
+activation_requires = "Frozen participant-level GSE269412-GSE267119 join, repeated-library structure, rights, GRCh38 coordinate contract, and outcome-firewalled donor-safe splits."
+single_cohort_external_claim_allowed = false
+
+[task.methylation_regulatory]
+status = "planned_activation_audit"
+held_query_modalities = ["dna_sequence", "liver_zone", "rna_context_only_where_native"]
+endpoint_families = ["rrbs_cpg_methylation", "zone_associated_methylation", "rna_methylation_transport"]
+candidate_dataset_families = ["gse105127_zonated_rna_rrbs"]
+primary_models = ["alphagenome", "corgi_regular", "enformer"]
+mandatory_baselines = ["training_zone_mean", "cpg_context_glm", "gc_cpg_kmer_control", "sequence_cnn_control", "assay_native_linear_head"]
+activation_requires = "Frozen donor-zone RNA-RRBS topology, hg19-to-GRCh38 remap with allele and coordinate checks, coverage-aware RRBS likelihood, and donor-safe folds."
+single_cohort_external_claim_allowed = false
+
+[task.protein_transport]
+status = "planned_registration"
+held_query_modalities = ["liver_proteomics", "adipose_proteomics_where_native"]
+endpoint_families = ["protein_rank_transport", "cross_tissue_program_transport"]
+candidate_dataset_families = ["pxd051911"]
+primary_models = ["assay_native_protein_encoder", "calibrated_late_fusion"]
+mandatory_baselines = ["protein_mean", "protein_pca", "elastic_net", "assay_native_program_projection"]
+rna_protein_pair_assumed = false
+champion_claim_requires_external_protein_cohort = true
+
+[[required_family_disposition]]
+model_id = "corgi_regular"
+required_tasks = ["rna_conditioned_atac", "variant_to_regulation"]
+disposition_rule = "execute_native_or_record_admission_failure"
+
+[[required_family_disposition]]
+model_id = "corgi_plus"
+required_tasks = ["rna_conditioned_atac"]
+disposition_rule = "attempt_complete_release_binding; execute_only_if_portable_loader_and_input_semantics_pass; otherwise_terminal_blocked"
+
+[[required_family_disposition]]
+model_id = "borzoi_ensemble"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_native_or_record_terms_runtime_or_reference_failure"
+
+[[required_family_disposition]]
+model_id = "enformer"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_native_or_record_terms_runtime_or_reference_failure"
+
+[[required_family_disposition]]
+model_id = "alphagenome"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_supported_tracks_as_restricted_comparator; never_open_champion_under_current_terms"
+
+[[required_family_disposition]]
+model_id = "sei"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_native_or_record_safe_loading_runtime_failure"
+
+[[required_family_disposition]]
+model_id = "dnabert2"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_identical_cross_fitted_heads_after_safe_weight_staging"
+
+[[required_family_disposition]]
+model_id = "nucleotide_transformer"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_identical_cross_fitted_heads_as_restricted_comparator"
+
+[[required_family_disposition]]
+model_id = "hyenadna"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_identical_cross_fitted_heads_after_runtime_fixture"
+
+[[required_family_disposition]]
+model_id = "caduceus"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_identical_cross_fitted_heads_and_label_prior_eqtl_demo_exposure"
+
+[[required_family_disposition]]
+model_id = "evo"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_eligible_checkpoint_after_safe_staging_and_dependency_lock"
+
+[[required_family_disposition]]
+model_id = "epibert"
+required_tasks = ["observed_multiome", "variant_to_regulation"]
+disposition_rule = "execute_only_with_observed_atac_on_observed_multiome_or_native_observed_context_variant_diagnostic"
+
+[[required_family_disposition]]
+model_id = "epcotv2"
+required_tasks = ["observed_multiome", "variant_to_regulation"]
+disposition_rule = "execute_native_observed_accessibility_outputs; do_not_invent_missing_eqtl_classifier"
+
+[[required_family_disposition]]
+model_id = "scooby_onek1k"
+required_tasks = ["sequence_native_regulatory", "variant_to_regulation"]
+disposition_rule = "execute_released_checkpoint_only_on_supported_rna_and_domain_labeled_variant_outputs"
+
+[[required_family_disposition]]
+model_id = "scooby_epicardioids"
+required_tasks = ["observed_multiome", "variant_to_regulation"]
+disposition_rule = "execute_with_exact_released_observed_context_topology_or_record_missing_context_encoder"
+
+[[required_family_disposition]]
+model_id = "scooby_neurips"
+required_tasks = ["observed_multiome", "variant_to_regulation"]
+disposition_rule = "execute_with_exact_released_observed_context_topology_or_record_terms_or_encoder_failure"
+
+[[required_family_disposition]]
+model_id = "context_borzoi"
+required_tasks = ["rna_conditioned_atac", "variant_to_regulation"]
+disposition_rule = "run_outcome_firewalled_compatibility_probe; full_training_only_after_locked_complementarity_trigger"

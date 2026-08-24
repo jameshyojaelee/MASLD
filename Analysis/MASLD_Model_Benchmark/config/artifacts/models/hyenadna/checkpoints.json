@@ -1,0 +1,82 @@
+{
+  "architecture_contract": {
+    "architecture": "decoder_only_causal_Hyena_long_convolution_language_model",
+    "declared_trainable_parameter_count": 6600000,
+    "hidden_dimension": 256,
+    "inner_dimension": 1024,
+    "layers": 8,
+    "hyena_order": 2,
+    "filter_order": 64,
+    "pretraining_objective": "next_nucleotide_prediction",
+    "maximum_context_tokens": 1000002,
+    "nucleotide_resolution": true,
+    "warning": "The 218 MB safetensors object includes long-context buffers in addition to the paper's 6.6M trainable parameters; exact state keys, shapes, buffers, and trainable count remain to be frozen after approved acquisition."
+  },
+  "checkpoint": {
+    "repository": "LongSafari/hyenadna-large-1m-seqlen-hf",
+    "revision": "0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446",
+    "filename": "model.safetensors",
+    "sha256": "deafb53209bfafb314d14bd81108546a34d473c07ed7ab7a355674376b56ad12",
+    "size_bytes": 218252304,
+    "status": "exact_1M_context_checkpoint_registered"
+  },
+  "code": {
+    "repository": "HazyResearch/hyena-dna",
+    "revision": "d553021b483b82980aa4b868b37ec2d4332e198a",
+    "repository_license": "Apache-2.0",
+    "custom_huggingface_code": true
+  },
+  "input_contract": {
+    "canonical_project_reference": "GRCh38.p14",
+    "pretraining_reference": "hg38.ml.fa_from_basenji_barnyard2",
+    "tokenization": "single_nucleotide_character_tokens",
+    "released_vocabulary_size": 12,
+    "variant_window": "fixed_6000_bp_SNP_centered_window_for_common_lane; longer_contexts_are_native_lane_only_and_must_be_prespecified",
+    "strand_contract": "score_forward_and_reverse_complement_then_average_after_base-coordinate realignment",
+    "supported_primary_variant_type": "biallelic_SNP",
+    "indel_status": "conditional_native_zero_shot_only_after_length_normalization_and_alignment_fixtures"
+  },
+  "representation_and_task_contract": {
+    "admitted_task": "variant_to_regulation",
+    "common_lane": "Mean-pool final hidden states over the fixed 1536-bp variant-centered region for REF and ALT, repeat on reverse complements, realign coordinates, average orientations, and fit identical linear and two-layer heads to REF, ALT, ALT-minus-REF, and absolute-difference features.",
+    "native_zero_shot_lane": "Compute ALT-minus-REF autoregressive sequence log-likelihood over matched affected suffixes, repeat on reverse complements, average orientations, and normalize by the fixed number of scored nucleotides.",
+    "causal_warning": "A forward causal score only uses left context. Reverse-complement averaging is mandatory and must use matched scored bases; whole-sequence sums with unequal lengths are not comparable.",
+    "signed_effect_limit": "Autoregressive likelihood is not a cell-type regulatory direction. Supervised signed-effect heads require nonsealed development outcomes.",
+    "not_supported": ["cell_state_mapping", "RNA_conditioned_ATAC", "bulk_state_transfer", "perturbation_transfer"]
+  },
+  "runtime_contract": {
+    "repository_declared_python": "3.8_or_newer",
+    "repository_declared_torch": "1.13.0",
+    "repository_declared_cuda": "11.7",
+    "checkpoint_declared_transformers": "4.35.0.dev0",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "isolated_L40S_import_tokenize_safetensors_load_forward_backward_resume_determinism_context_scaling_and_cross_device_tolerance",
+    "warning": "The exact Hugging Face development-build dependency is unresolved, and million-base inference is not assumed to fit or be numerically stable on L40S. Context length is a campaign resource variable, not an automatic default."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format": "safetensors",
+    "deserialized": false,
+    "require_offline_vendored_custom_code": true,
+    "require_state_dict_key_shape_dtype_and_buffer_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The NeurIPS 2023 paper, pinned official code, exact Hugging Face revision, and public Basenji interval metadata were queried on 2026-08-22. No checkpoint bytes were downloaded or loaded.",
+  "source_records": [
+    {"identity": "hyena-dna:LICENSE", "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4", "size_bytes": 11357},
+    {"identity": "hyena-dna:README.md", "sha256": "2b551789c76b8a552c1d989b194ef72a4cd83790d06bc2a8ac2af6ebee92e8db", "size_bytes": 35655},
+    {"identity": "hyena-dna:configs/dataset/hg38.yaml", "sha256": "caa188829237a3c5f21521d23ab16e380e740a115dbc8c63d4287c1f9612fa43", "size_bytes": 349},
+    {"identity": "hyena-dna:src/dataloaders/datasets/hg38_dataset.py", "sha256": "d529ecce6a98fab9a1192953eb9fa69a882407c4b6952a64c63e5c9ebfd0e97c", "size_bytes": 6869},
+    {"identity": "basenji_barnyard2:sequences_human.bed", "sha256": "42a81b3240ad9e7868053101f166b71f1da8db6c757abb8bb407b9d7cb2024c2", "size_bytes": 1139472},
+    {"identity": "HF:config.json", "sha256": "e63e0dcb3bc0ff6f5207b3e0dbad48f6f0933dde42a47872cf1ab86e4b43f038", "size_bytes": 982},
+    {"identity": "HF:modeling_hyena.py", "sha256": "d78029cacea2c9259f1293fdb50b60f90872089469185e27d5c769086c475607", "size_bytes": 22584},
+    {"identity": "HF:tokenization_hyena.py", "sha256": "d424da2f794958b0360e033bbf5edc9ee4e3e3126e883093621348f07761e408", "size_bytes": 4057}
+  ],
+  "terms_audit": {
+    "repository_code_license": "Apache-2.0",
+    "checkpoint_license": "BSD-3-Clause",
+    "derivative_weight_redistribution": "permitted_subject_to_BSD-3-Clause_notices_and_dependency_audit",
+    "result": "terms_pass_preflight"
+  },
+  "weight_license": "BSD-3-Clause"
+}

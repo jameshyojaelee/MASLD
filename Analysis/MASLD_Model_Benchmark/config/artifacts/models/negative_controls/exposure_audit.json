@@ -1,0 +1,100 @@
+{
+  "audit_scope": {
+    "model": "shuffled_outcome",
+    "supported_tasks": ["variant_to_regulation", "typed_evidence_graph", "perturbation_transfer"],
+    "scientific_role": "parent_bound_negative_control_only",
+    "sealed_sources_used_for_fit": []
+  },
+  "checkpoint_finding": {
+    "generic_upstream_checkpoint": "none",
+    "generic_pretraining_corpus": "none",
+    "generic_project_state": "not_created",
+    "current_registry_exposure": "unknown",
+    "future_parent_checkpoint_exposure": "inherit_the_most_restrictive_parent_checkpoint_and_corpus_classification",
+    "future_shuffled_fit_exposure": "deliberately_seen_permuted_outer_training_outcomes_only; true_held_outcomes_must_remain_target_label_unexposed",
+    "identity": "A realization is not identified by shuffled_outcome alone. It requires task, exact parent artifact, fold, adaptation regime, permutation index, mapping receipt, and fitted-state hash."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "parent_bound_negative_control_task_dataset_exchangeability_missingness_and_selection_firewalls",
+    "sha256": "3544b1d48986a0cddce6316dd26722baeaa9483430333657b85a8878ec75e2ba"
+  },
+  "current_admission_finding": {
+    "answer": "not_runnable",
+    "reasons": [
+      "No current TaskSpec lists shuffled_outcome among mandatory baseline_model_ids.",
+      "No exact parent estimator and parent fitted-artifact hash is bound.",
+      "No per-task permutation count and index roster is frozen.",
+      "No implementation, runtime lock, mapping receipt, fitted state, or fixed-fixture result exists.",
+      "Some potential parents are themselves task-incompatible, license-blocked, or not admitted."
+    ],
+    "scientific_consequence": "This absence does not block a scientific baseline or champion because the role is diagnostic only. It blocks only claims that a shuffled-label leakage control was run."
+  },
+  "known_leakage_routes": [
+    "Shuffling outcomes before the outer split, allowing a true outcome bundle or correlated derivative to cross train, development, or sealed roles.",
+    "Permuting rows instead of complete LD-locus, graph LD plus gene-block, or perturbation target plus biological-unit bundles.",
+    "Splitting variants within LD blocks, genes within protected gene blocks, guides within target families, cells within biological replicates, or libraries within experimental batches.",
+    "Constructing exchangeability strata from held outcomes, held-source observability, evaluated-source eligibility, target response magnitude, DE genes, pathways, or real-model residuals.",
+    "Relaxing strata, dropping hard rows, changing the permutation index, or increasing the number of permutations after seeing scores.",
+    "Reusing a supervised head, selected features, regularization, early stopping, threshold, or calibrator fitted on true labels instead of refitting every outcome-dependent step on shuffled training labels.",
+    "Using held labels to choose a parent, permutation, mapping, hyperparameter, calibrator, or stopping rule.",
+    "Shuffling missing values as zeros or separating outcome values from their eligibility and missing-state masks.",
+    "Calling a shuffled parent target-label-unexposed without inheriting upstream checkpoint contamination, local feature exposure, and parent fitted-state exposure.",
+    "Treating unexpectedly strong negative-control performance as model evidence rather than halting for leakage and confounding audit."
+  ],
+  "task_specific_exposure_findings": {
+    "variant_to_regulation": {
+      "allowed": "Only secondary allelic-direction, retrieval, and MPRA endpoints already allowed by the capability registry.",
+      "blocked": "Primary signed cell-type eQTL effects. No nonsealed signed-effect training labels exist, and GSE289173 is jointly sealed.",
+      "data_exposure": "GSE281364 and GSE281160 are exposed development outcomes. GSE244832, GSE296875, and current genetics inputs are exposed development features."
+    },
+    "typed_evidence_graph": {
+      "allowed": "Future retrospective parent-bound control after corrected graph promotion and complete pseudo-held-source plus LD/gene-block removal.",
+      "blocked": "No graph, explicit negative denominator, parent binding, or sealed source exists.",
+      "data_exposure": "Current COLOC, Gene Catalog, GSE281364, and GSE281160 are exposed or provisional development evidence."
+    },
+    "perturbation_transfer": {
+      "allowed": "Future target-bundle control fitted only on GSE281160 outer-training roles for an actually held-target-capable parent.",
+      "blocked": "Most registered perturbation parents cannot encode the current wholly unseen noncoding target. GSE313774 forbids fit and has no matching target interface.",
+      "data_exposure": "GSE281160 is exposed conditional follow-up; GSE275483 is development stress; GSE313774 remains prediction-first outcome-withheld."
+    }
+  },
+  "pseudoreplication_and_uncertainty_disposition": {
+    "permutation_unit": "task-specific complete exchangeability bundle, not an inferential replicate",
+    "biological_units": "donor where applicable, experimental replicate for GSE281160, animal for GSE275483, independent batch for GSE313774, and native-build LD locus plus gene-block dependence for graph or variant tasks",
+    "not_replicates": ["cells", "nuclei", "guides", "targets", "variants", "genes", "edges", "libraries", "sections", "permutation indices", "model seeds"],
+    "uncertainty": "Use the task's ordinary clustered biological bootstrap within each realized control. Keep permutation-null variation separate and visibly labeled.",
+    "permutation_p_value": "not_registered_and_prohibited_until_count_tail_statistic_exchangeability_inapplicable_handling_and_plus_one_correction_are_precommitted"
+  },
+  "calibration_and_use_disposition": {
+    "parent_calibration": "Refit on cross-fitted shuffled training predictions and labels only if the parent endpoint requires probabilities.",
+    "real_model_calibration": "The negative control never calibrates, thresholds, selects, repairs, or normalizes the real model.",
+    "held_prevalence": "never_used",
+    "leaderboard": "separate_negative_control_diagnostic_only",
+    "baseline": "permanently_excluded",
+    "strongest_baseline": "permanently_excluded",
+    "promotion_or_champion": "permanently_excluded",
+    "conditional_model_trigger_or_stack": "permanently_excluded"
+  },
+  "license_runtime_and_release_disposition": {
+    "generic_algorithm": "project-owned deterministic mathematical specification with no upstream code or weight",
+    "project_code": "UNRESOLVED_no_repository_root_license_and_no_implementation",
+    "parent_terms": "Inherit all code, package, checkpoint, trained-weight, data, output, attribution, noncommercial, and redistribution constraints from the bound parent.",
+    "runtime": "Inherit the parent's approved environment and compute class. No import, fit, resume, deterministic mapping, or cross-device fixture has run.",
+    "safe_loading": "Inherit the parent safe-loading contract and persist the mapping in bounded non-executable form. Runtime network and untrusted deserialization are prohibited.",
+    "release": "A released diagnostic must carry parent, exposure, split, permutation, mapping, and terms receipts and a conspicuous negative-control label. It is not a redistributable standalone checkpoint.",
+    "open_champion": "permanently_ineligible"
+  },
+  "remaining_blockers": [
+    "Choose an exact admitted parent estimator and immutable fitted-artifact identity for each task-specific realization; do not wrap an incompatible parent merely to produce a control row.",
+    "Freeze permutation count, indices, task-specific exchangeability strata, outcome bundle schema, handling of small strata, and any permutation-null statistic before outcomes or scores are inspected.",
+    "Implement the language-independent SHA-256 derangement and prove no fixed group, forbidden boundary crossing, or missing-state corruption on synthetic fixtures.",
+    "Prove every outcome-dependent parent step is refit from shuffled outer-training labels and no true-label head, feature selection, early stopping, threshold, or calibration state is reused.",
+    "Pass the exact parent runtime through an approved SLURM fixture and reproduce mappings and predictions from frozen receipts.",
+    "Keep the control out of baseline, selection, complementarity, stacking, promotion, and champion code paths by schema-enforced exclusion flags.",
+    "If a control performs materially above its preregistered null expectation, stop that task for leakage and exchangeability audit rather than tuning or reporting a biological result."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "permanently_ineligible_negative_control",
+  "verified_date": "2026-08-22"
+}

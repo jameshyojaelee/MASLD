@@ -1,0 +1,123 @@
+schema_version = "masld-bench-model-v1"
+family_id = "evidence_graph"
+modality = ["typed_evidence_graph"]
+status = "candidate"
+
+[[models]]
+model_id = "node2vec"
+display_name = "node2vec"
+implementation_type = "graph_baseline"
+checkpoint_revision = "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:Node2Vec"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Promote and freeze the corrected COLOC graph snapshot, source families, typed node map, native-build LD/locus/gene blocks, candidate denominator, and missingness states before constructing the relation-agnostic undirected graph.",
+  "Freeze the PyTorch/PyG random-walk runtime and create five split-local states with safe tensor-only loading and leakage fixtures. Node2vec remains a transductive common-support comparator; source-only and isolated held-block nodes are untestable.",
+  "No wholly sealed graph source is registered, so node2vec remains development-only and cannot earn a graph champion claim.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "bionic"
+display_name = "BIONIC"
+implementation_type = "graph_baseline"
+checkpoint_revision = "bowang-lab/BIONIC@b74e117602a9573a72edd1f53400243d567ca373:v0.2.6"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Promote and freeze the corrected COLOC graph snapshot, source families, typed node map, native-build blocks, candidate denominator, and one split-local undirected binary network per retained evidence source.",
+  "Freeze the legacy runtime and create five split-local project artifacts with safe tabular feature loading and held-source/block leakage fixtures. BIONIC is homogeneous, undirected, closed-world, and transductive; unsupported nodes are untestable.",
+  "No wholly sealed graph source is registered, so BIONIC remains a development common-support comparator and cannot earn a graph champion claim.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "graphsage"
+display_name = "GraphSAGE"
+implementation_type = "graph_baseline"
+checkpoint_revision = "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:SAGEConv"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Promote and freeze the corrected COLOC graph snapshot, source-independent candidate roster, split-local type/source/degree feature schema, relation-agnostic undirected projection, typed negatives, and feature scaling.",
+  "Freeze the PyTorch/PyG sampler runtime and create five split-local states with fixtures proving that held-source, held-block, and validation edges never enter features, negatives, caches, or message passing.",
+  "No wholly sealed graph source is registered. Root-feature-only queries must be reported separately, so GraphSAGE remains development-only and cannot earn a current graph champion claim.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "rgcn"
+display_name = "R-GCN"
+implementation_type = "graph_baseline"
+checkpoint_revision = "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:RGCNConv"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Promote and freeze the corrected COLOC graph snapshot, source-independent node features, relation and inverse-relation order, architecture, generic source-agnostic decoder, negatives, calibration, and five seeds.",
+  "Implement complete held-source and held-block removal before graph construction and pass tensor-only loading, unseen-node, relation-order, sampler, runtime, and leakage fixtures.",
+  "R-GCN cannot directly complete a wholly unseen relation type, and no sealed graph source is registered; it remains a retrospective development prioritization comparator with no causal or champion claim.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "hgt"
+display_name = "Heterogeneous Graph Transformer"
+implementation_type = "graph_baseline"
+checkpoint_revision = "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:HGTConv"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Promote and freeze the corrected COLOC graph snapshot, ordered node/edge metadata, source-independent features by node type, architecture, generic source-agnostic decoder, negatives, calibration, and five seeds.",
+  "Implement complete held-source and held-block removal before metadata, features, attention, sampling, or fitting and pass tensor-only loading, empty-relation, metadata-order, runtime, and leakage fixtures.",
+  "HGT cannot score a wholly unseen node or edge type through untrained type parameters, and no sealed graph source is registered; it remains development-only with no causal or champion claim.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "typed_transformer"
+display_name = "Typed-evidence transformer"
+implementation_type = "train_locally"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "No typed_transformer implementation, source revision, architecture, tokenizer, decoder, runtime, or license is registered; select one immutable model identity before writing or comparing code.",
+  "Promote and freeze the corrected COLOC graph snapshot, ontology, source-independent node universe, token and mask construction, positional features, negatives, calibration, and five seeds before any implementation is admitted.",
+  "No wholly sealed graph source is registered. The unresolved model remains blocked, development-only, and ineligible for causal or champion claims.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "late_fusion"
+display_name = "Calibrated late-fusion baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_equal_weight_calibrated_late_fusion_v1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "component_and_project_terms_UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Implement the deterministic float64 equal-weight, endpoint-matched row join and freeze one out-of-fold calibrated component artifact per family, exact component order, masks, terms, and output hashes.",
+  "Reject mismatched endpoints, units, directions, rows, source-removal receipts, in-sample predictions, duplicate-family votes, restricted derivatives, and missing-as-zero behavior in fixed fixtures.",
+  "Late fusion inherits the strictest component exposure and terms; no graph seal exists and the unified external-family gate is blocked, so it is not currently runnable or champion-eligible.",
+]
+supported_tasks = ["typed_evidence_graph", "unified_model"]

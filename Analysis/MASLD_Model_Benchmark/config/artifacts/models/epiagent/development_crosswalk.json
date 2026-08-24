@@ -1,0 +1,40 @@
+{
+  "checkpoint_chronology": {
+    "current_drive_object_modified": "2025-08-09T15:33:55.105Z",
+    "historical_preprint_checkpoint_announced": "2024-12-28",
+    "human_scatac_corpus_first_collection_complete": "2023-11-30",
+    "manifest_state": "The paper declares approximately five million cells, 35 billion cCRE tokens, 28 dataset collections and 31 tissues for pretraining. The current Human-scATAC-Corpus v1.0.0 is larger, with more than 5.4 million cells and 35 datasets. No immutable checkpoint-bound accession and sample manifest was recovered."
+  },
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["development_only_atac_representation"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Same-donor, different-aliquot ATAC representation diagnostics only after a separate development TaskSpec; never create cell-to-cell RNA-ATAC pairs.",
+      "evidence": "GSE244832 became public on 2024-11-13, before the historical checkpoint announcement and current Drive object. The exact checkpoint-bound Human-scATAC-Corpus accession manifest is unavailable.",
+      "exposure_state": "unknown",
+      "model_access": "No use in fitting, prototype construction, calibration, or model selection for a GSE244832 external-development score."
+    },
+    "gse289173": {
+      "allowed_use": "None for EpiAgent under the current sealed tasks because the evaluator exposes RNA-only nuclei and eQTL/ieQTL summaries, not ATAC cCRE tokens.",
+      "evidence": "GSE289173 became public on 2025-02-12. It postdates the historical checkpoint announcement but predates the current mutable Drive object's modification time; no digest or version history binds the current object to the historical weights.",
+      "exposure_state": "unknown",
+      "model_access": "No sealed feature or outcome access; model is modality-ineligible independently of contamination status."
+    },
+    "gse296875": {
+      "allowed_use": "Same-nucleus ATAC representation diagnostics within outer donor folds after its donor/well/reference authorities and a separate ATAC TaskSpec pass.",
+      "evidence": "GSE296875 first became public on 2025-10-01, after the current Drive object's 2025-08-09 modification time.",
+      "exposure_state": "clean_declared",
+      "model_access": "Outer-training donors only may contribute any fine-tuning, heads, prototypes, normalization beyond the frozen corpus TF-IDF, or early stopping."
+    }
+  },
+  "rules": {
+    "checkpoint_identity": "Chronology cannot substitute for a content hash. Any acquired object remains exposure-unknown for pre-modification datasets until its digest and version provenance are frozen.",
+    "modality": "ATAC-only models cannot enter the RNA-only sealed cell-state task or an RNA-conditioned profile task whose inference contract forbids observed ATAC.",
+    "pairing": "GSE296875 is same-nucleus. GSE244832 is same-sample different aliquot and permits donor-compatible comparison only."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

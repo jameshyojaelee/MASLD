@@ -282,8 +282,8 @@ def _load_manifest():
     abf_b9 = abf_b89 = abf_b58 = 0         # ABF-only PP.H4 confidence bands (same cut-points)
     for gene in set(g_bs) | set(g_ba):
         # Rows whose gene symbol is blank collapse into a single empty-string key
-        # and are not a gene. Counting it inflated the union to 1,031; the
-        # canonical union is 1,030. (It is ABF-only, so SuSiE=473 is unaffected.)
+        # and are not a named gene. Exclude them before deriving every release-specific
+        # endpoint count; no historical union literal belongs in this data-driven path.
         if not gene.strip():
             continue
         su, abf = g_bs.get(gene, 0.0), g_ba.get(gene, 0.0)
@@ -936,7 +936,7 @@ def build_cascade(path, extra_paths=None):
     endpoint_bracket(susie_y0, susie_y1, f"Multi-signal\nCOLOC {SUSIE_GENES}")
     endpoint_bracket(abf_y0, abf_y1,
                      f"Single-signal\nonly {ABF_ONLY_GENES}")
-    # small union annotation above the column top (kept subordinate to the SuSiE 473)
+    # Small union annotation above the column top, subordinate to the multi-signal total.
     ax.text(xg-BW/2, susie_y0-0.30, f"union {UNION_GENES:,}", ha="left", va="bottom",
             fontsize=6, color="black", zorder=8)
     # Shared PP.H4 legend in one compact horizontal row at the bottom-left.
@@ -1084,6 +1084,22 @@ def build_study_bars(path, extra_paths=None):
                      key=lambda z: -z[3])
         ROWS.extend(rws)
 
+    def _write_source(pdf_path):
+        source_path = os.path.splitext(pdf_path)[0] + "_source.tsv"
+        with open(source_path, "w", newline="") as handle:
+            writer = _csv.writer(handle, delimiter="\t")
+            writer.writerow([
+                "study_label", "ancestry", "fine_mapped_loci", "coloc_genes",
+                "coloc_definition", "main_gwas_strata", "displayed_studies",
+                "coloc_input",
+            ])
+            for label, ancestry, loci, genes in ROWS:
+                writer.writerow([
+                    label, ancestry, loci, genes,
+                    "named gene; multi-signal or single-signal-only PP.H4 > 0.5",
+                    N_GWAS, len(ROWS), _GENE_COLOC,
+                ])
+
     n = len(ROWS); ys = list(range(n-1, -1, -1))  # first row at top
     loci_mx  = max(r[2] for r in ROWS) * 1.35
     genes_mx = max(r[3] for r in ROWS) * 1.12
@@ -1120,12 +1136,15 @@ def build_study_bars(path, extra_paths=None):
             ax.axhline(n-1-b, color="#CCCCCC", lw=0.5, zorder=1)
 
     fig.savefig(path, bbox_inches="tight", dpi=300, facecolor="white")
+    _write_source(path)
     print(f"Saved: {path}")
     if extra_paths:
         for ep in extra_paths:
             fig.savefig(ep, bbox_inches="tight", dpi=300, facecolor="white"); print(f"Saved: {ep}")
+            _write_source(ep)
     print(f"CAPTION (Fig2A per-study): Fine-mapped loci (log scale) and colocalising genes "
-          f"(union SuSiE-or-ABF PP.H4>0.5) per Tier-1/2 (liver-specific) GWAS study, for the {n} "
+          f"(multi-signal or single-signal-only COLOC, PP.H4>0.5) per Tier-1/2 "
+          f"(liver-specific) GWAS study, for the {n} "
           f"MAIN studies carrying a fine-mapping summary, grouped by {len(ANCESTRIES)} ancestries "
           "(incl. MVP NAFLD/ALT/AST AFR/AMR/EAS). The loci-vs-genes contrast exposes the "
           "European-eQTL ancestry bottleneck at the study level: non-European studies (MVP/BBJ/"
@@ -1142,9 +1161,12 @@ if __name__ == "__main__":
     panel_mode = os.environ.get("FIG2_PANEL", "cascade")
     if candidate_dir:
         os.makedirs(candidate_dir, exist_ok=True)
-        if panel_mode != "cascade":
-            raise SystemExit("FIG2_PANEL must be 'cascade'; Figure 2A has no alluvial mode")
-        build_cascade(os.path.join(candidate_dir, "fig2A_gwas_cascade.pdf"))
+        if panel_mode not in ("cascade", "perstudy", "all"):
+            raise SystemExit("FIG2_PANEL must be 'cascade', 'perstudy', or 'all'")
+        if panel_mode in ("cascade", "all"):
+            build_cascade(os.path.join(candidate_dir, "fig2A_gwas_cascade.pdf"))
+        if panel_mode in ("perstudy", "all"):
+            build_study_bars(os.path.join(candidate_dir, "FigS2A_gwas_perstudy.pdf"))
         raise SystemExit(0)
 
     build_A(_out_path("gwas_creative_A_binary_grid.pdf"))

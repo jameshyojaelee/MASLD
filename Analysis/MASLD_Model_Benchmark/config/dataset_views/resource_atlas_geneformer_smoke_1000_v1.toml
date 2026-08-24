@@ -1,0 +1,34 @@
+schema_version = "masld-bench-dataset-view-v1"
+view_id = "resource_atlas_geneformer_smoke_1000_v1"
+parent_dataset_id = "resource_atlas_current"
+parent_registry_sha256 = "ce711352dbeb1c95fb997d615308bbfcf7f08d23aed67622a584f99785ae2baa"
+purpose = "compatibility_smoke"
+allowed_waves = ["smoke"]
+row_count = 1000
+biological_unit_count = 102
+modalities = ["single_cell_rna"]
+pairing_levels = ["same_study_unpaired"]
+label_visibility = "development_visible"
+selection_policy = "donor_round_robin_then_sha256_cell_priority"
+selection_seed = 20260821
+selection_outcomes_used = false
+sealed_outcomes_used = false
+class_counts = { cholangiocyte = 200, endothelial = 200, hepatocyte = 200, immune = 200, mesenchymal_stromal = 200 }
+ready = true
+
+artifact_manifest = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/resource-atlas-smoke-20260821T221938Z-20984634/subset/ARTIFACTS.json", sha256 = "c1af73e26701eaca874ac8f6ee99bed9eac39ccde51a39b3723719177cd9bb88", size_bytes = 956, media_type = "application/json", role = "dataset_view_manifest:resource_atlas_geneformer_smoke_1000_v1" }
+complete_receipt = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/resource-atlas-smoke-20260821T221938Z-20984634/subset/COMPLETE", sha256 = "10aaf3f31e6df91504353ca6926896ab8fb300c04a6d5a86d5a1d8955c5b874a", size_bytes = 162, media_type = "application/json", role = "dataset_view_complete:resource_atlas_geneformer_smoke_1000_v1" }
+data_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/resource-atlas-smoke-20260821T221938Z-20984634/subset/resource_atlas_geneformer_smoke_1000.h5ad", sha256 = "d59c85b4fb0a1352a427de3b2a587c30aac12891a8d753e10d4442fc719c985f", size_bytes = 8860728, media_type = "application/x-hdf5", role = "dataset_view_data:resource_atlas_geneformer_smoke_1000_v1" }
+selection_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/resource-atlas-smoke-20260821T221938Z-20984634/subset/selection.tsv", sha256 = "adeaacd9d28142a5fb6b860ef8dfbf4cf8013671dc6a863055ed2c323c92c46d", size_bytes = 146059, media_type = "text/tab-separated-values", role = "dataset_view_selection:resource_atlas_geneformer_smoke_1000_v1" }
+ontology_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/resource-atlas-smoke-20260821T221938Z-20984634/subset/broad_liver_five_v1.json", sha256 = "42351e02ea9e2fc29aff972a0dc95b7398ba1162561ebb75c08d2acbe60996d7", size_bytes = 778, media_type = "application/json", role = "dataset_view_ontology:resource_atlas_geneformer_smoke_1000_v1" }
+derivation_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/resource-atlas-smoke-20260821T221938Z-20984634/subset/smoke_subset_manifest.json", sha256 = "740a7a0e953356aae36e878922ebb2495bcf6306b145ab04c7a995ffa52d24b0", size_bytes = 3949, media_type = "application/json", role = "dataset_view_derivation:resource_atlas_geneformer_smoke_1000_v1" }
+
+authority_artifacts = [
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/rights.json", sha256 = "561aa9cf78be62b4dafd599aece2285ef6e5e71eb0be510f902f672a920e6cf0", size_bytes = 489, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:rights" },
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/topology.json", sha256 = "8b7f008573116a3af7d278225f933b31d06c1c30ef48c2276529a90cef3311f1", size_bytes = 469, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:topology" },
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/donor_join.json", sha256 = "87d87339c05fe0a35f5bc7da30cc1528a04ebf2dc6dc54e1d22f35ffa1f8c82e", size_bytes = 485, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:donor_join" },
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/labels.json", sha256 = "faaf20d18653d18f9562019fe837365bb9dffaf954949308ff4f2505fd911f5b", size_bytes = 581, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:labels" },
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/qc.json", sha256 = "afd7d2a39ac8d0df77a7e508291a343d5c99a17fa0d717ae3b9b3d1fb0ab5ce6", size_bytes = 517, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:qc" },
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/reference.json", sha256 = "d0c3cee6114d3ec2062b6f028b28ad6331f68be9f04b3b467337b8d656bb0325", size_bytes = 574, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:reference" },
+  { path = "artifacts/dataset-views/resource_atlas_geneformer_smoke_1000_v1/exposure_audit.json", sha256 = "497ca8e2a9997620634d32014a7360597bfdf52302e6a54e7521594c59b56321", size_bytes = 454, media_type = "application/json", role = "dataset_view_authority:resource_atlas_geneformer_smoke_1000_v1:exposure_audit" },
+]

@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "authority": "donor_join",
+  "evidence": {
+    "all_rows_joined": true,
+    "biological_units": 102,
+    "group_key": "cohort_family_id+person_key",
+    "libraries": 213,
+    "rows": 1000,
+    "selection_manifest_sha256": "adeaacd9d28142a5fb6b860ef8dfbf4cf8013671dc6a863055ed2c323c92c46d"
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

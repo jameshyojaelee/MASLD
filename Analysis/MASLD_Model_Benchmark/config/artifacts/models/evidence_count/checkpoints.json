@@ -1,0 +1,119 @@
+{
+  "algorithm_contract": {
+    "algorithm_id": "masld_evidence_count_v1",
+    "deduplication_key": [
+      "source_family_id",
+      "evidence_type",
+      "evidence_unit_id",
+      "native_build",
+      "locus_id",
+      "gene_id",
+      "direction"
+    ],
+    "definition": "For each frozen locus-gene candidate, count distinct remaining-source evidence units whose explicit evidence_status is supported after canonical alias and deterministic-derivative deduplication.",
+    "fitting": "none_for_native_count",
+    "model_family": "deterministic_count_baseline",
+    "score": "integer support_edge_count >= 0",
+    "status_handling": {
+      "discordant": "retained_in_a_separate_mask_and_does_not_increment",
+      "indeterminate": "retained_in_a_separate_mask_and_does_not_increment",
+      "not_applicable": "retained_in_a_separate_mask_and_does_not_increment",
+      "source_dependent": "retained_in_a_separate_mask_and_does_not_increment",
+      "supported": "increments_once_per_deduplicated_evidence_unit",
+      "tested_negative": "retained_in_a_separate_mask_and_does_not_increment",
+      "untestable": "retained_in_a_separate_mask_and_does_not_increment"
+    },
+    "zero_interpretation": "Zero means no remaining-source supported evidence unit among the explicitly represented applicable inputs. It is not a biological negative and is accompanied by source observability and missing-state masks.",
+    "zero_observation_rule": "If no remaining source is applicable or observable for a candidate, emit structurally_missing rather than numeric zero."
+  },
+  "checkpoint_contract": {
+    "checkpoint_revision": "NOT_APPLICABLE_DETERMINISTIC_ALGORITHM",
+    "checkpoint_sha256": "NOT_APPLICABLE_NO_WEIGHTS",
+    "fitted_artifact": "none_for_count;_optional_calibrator_not_yet_frozen",
+    "implementation_type": "classical_baseline",
+    "pretrained_checkpoint_available": false,
+    "status": "algorithm_frozen_implementation_graph_and_calibration_not_admitted"
+  },
+  "distinction_from_other_baselines": {
+    "graph_degree": "Counts all admitted incident graph edges under its own direction rule; evidence_count counts only deduplicated supporting evidence units for the candidate.",
+    "graph_source_count": "Counts distinct source families with support; evidence_count can count multiple independent evidence units within one source family.",
+    "regularized_linear_evidence": "Learns weights; evidence_count assigns every qualifying unit exactly one count.",
+    "warning": "Evidence count can reproduce degree and study-intensity biases. It is a guard baseline, not a mechanistic model."
+  },
+  "held_source_contract": {
+    "candidate_universe": "Frozen source-independent variant, locus, and gene entities only",
+    "inductive_behavior": "Deterministically scores a new candidate when canonical IDs and remaining-source evidence are available. It fits no entity embeddings and does not require the candidate to appear in a training graph.",
+    "removal_rule": "Remove the evaluated source, aliases, inverse edges, source nodes, observability, coverage, tested status, missingness, derivatives, aggregates, and candidate-universe contributions before deduplication and counting.",
+    "wholly_removed_source": "Supported for retrospective source-agnostic recovery because the algorithm has no source-specific learned parameter. Held-source outcomes and eligibility remain evaluator-only."
+  },
+  "input_contract": {
+    "canonical_rows": "One promoted immutable graph snapshot with typed directed evidence rows, canonical node IDs, source_family_id, evidence_type, evidence_unit_id, status, provenance, native build, locus, gene, and explicit observability.",
+    "continuous_scores": "ignored_by_v1; no assay-native value is thresholded into support after outcome inspection",
+    "direction": "Direction is part of the deduplication key and must be frozen by evidence type. Opposite directed edges are not silently merged.",
+    "graph_snapshot_status": "UNAVAILABLE_not_yet_promoted",
+    "negative_labels": "No training negatives are needed for the native count. Evaluator negatives must be explicit tested negatives within the held source's eligible universe."
+  },
+  "output_contract": {
+    "calibrated_probability": "not_native; Brier scoring requires a separately registered monotone one-dimensional count calibrator fit only on remaining-source development folds",
+    "causal_interpretation": "prohibited",
+    "native_output": "support_edge_count and explicit source-observability/status summary masks",
+    "ranking": "higher_count_ranks_first; preserve ties in the PredictionBundle and let the frozen evaluator apply its registered tie rule",
+    "task_role": "mandatory transparent typed-evidence-graph baseline"
+  },
+  "implementation": {
+    "algorithm_version": "1",
+    "repository": "repo_local_masld_bench",
+    "repository_revision": "UNRESOLVED_no_implementation_exists",
+    "source_code_present": false,
+    "source_code_run": false
+  },
+  "runtime_and_artifact_contract": {
+    "execution": "CPU deterministic sorted aggregation",
+    "fitted_weight": "none",
+    "output_receipt": "Hash algorithm ID, graph snapshot, removed source, canonical input rows, deduplication groups, status and observability masks, counts, row order, and PredictionBundle.",
+    "seed": "not_applicable_for_native_count;_any_calibrator_seed_must_be_frozen_separately"
+  },
+  "safe_loading_contract": {
+    "model_loader": "none",
+    "no_runtime_network": true,
+    "serialized_inputs": "bounded schema-validated project manifests and graph rows only",
+    "untrusted_object_deserialization": "prohibited"
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The project model registry, typed-evidence TaskSpec, evidence-graph split, evidence-state contract, and promotion gate were inspected on 2026-08-22. No upstream package, model, data, or weights are used or were downloaded.",
+  "source_records": [
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+      "size_bytes": 59115
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/typed_evidence_graph.toml",
+      "sha256": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "size_bytes": 1955
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/evidence_graph_outer.toml",
+      "sha256": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "size_bytes": 961
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/resources.toml",
+      "sha256": "fabdee11b41930cfc29ff73da47e221902d9fc3fc717e8afc7832733eeb94e3a",
+      "size_bytes": 4303
+    }
+  ],
+  "task_fit": {
+    "causal_gene_inference": "not_supported",
+    "held_source_recovery": "supported_retrospectively_after_complete_source_removal",
+    "typed_evidence_graph": "mandatory_baseline_blocked_until_graph_schema_implementation_and_optional_calibration_are_frozen"
+  },
+  "terms_audit": {
+    "algorithm": "mathematical_count_no_upstream_implementation",
+    "project_implementation_license": "UNRESOLVED_repository_root_license_not_located_and_code_not_written",
+    "redistribution": "No weights exist. Counts and graph-derived outputs remain subject to every input source's redistribution terms and the project aggregate-only policy.",
+    "result": "no_upstream_license_dependency_but_project_source_and_data_release_review_required"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NOT_APPLICABLE_NO_WEIGHTS"
+}

@@ -1,0 +1,34 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse281367", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "future_development_only_observed_ATAC_representation_and_integration"
+  },
+  "checkpoint_findings": {
+    "lsi": {
+      "checkpoint_identity": "project_trained_per_outer_fold_seed_and_training_only_peak_inventory",
+      "corpus": "No upstream checkpoint or biological pretraining corpus; only declared outer-training donor ATAC matrices contribute fitted state.",
+      "exposure_state": "target_label_unexposed",
+      "formula_identity": "Signac RunTFIDF method 1 at 12d1ff82774890b08e55b3101f36fab83e674b88 plus scikit-learn 1.9.0 TruncatedSVD at 77def0ed6e3beab57244885d2a584470e96c103d",
+      "local_fit_state": "continual_seen_only_for_the_declared_outer_training_rows",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "local_ATAC_fit_query_transform_pairing_and_sealed_modality",
+    "sha256": "0b33820bfffdd9d4e82e9df465739af26a335fea070f3c418cdcc242e71471d3"
+  },
+  "interpretation": "TF-IDF plus LSI has no checkpoint-corpus contamination and, unlike the pinned cisTopic release, supports an inductive transform for observed held ATAC rows. Leakage can still enter through the peak universe, Signac IDF, component count and exclusion, SVD fit/signs, labels, classifier, or calibration. The exact Signac method-1 formula is training-frozen and must not be replaced by a document-frequency variant. LSI remains ineligible for current sealed tasks because GSE289173 is RNA-only and LSI has neither RNA-conditioned ATAC generation nor a sequence/allele mechanism.",
+  "remaining_blockers": [
+    "Create a separate nonpromotable observed-ATAC representation/integration TaskSpec with donor-level inference and assay-native baselines before activation.",
+    "Freeze the outer-training-only peak calling, merge, frequency filter, coordinate/order, cell-depth handling, exact Signac method-1 sparse fixture, and missingness semantics.",
+    "Freeze the number of SVD components, first-component exclusion, explicit integer seed roster, randomized-SVD settings, sign-orientation rule, downstream head, calibration, and early-stopping policy before held evaluation.",
+    "Activate GSE244832, GSE281367, and GSE296875 only after their donor, topology, reference, feature, fragment, QC, rights, and missingness gates pass; never create false GSE244832 cell pairs.",
+    "If package acquisition is later approved, verify the exact scikit-learn 1.9.0 CPython 3.11 manylinux wheel SHA-256 and pass CPU sparse-matrix, determinism, transform, memory, and numeric-tolerance fixtures on a SLURM node.",
+    "Persist non-executable arrays and JSON where possible. Do not accept external pickle/joblib objects; hash and validate every project-fitted peak, IDF, SVD, orientation, and head artifact."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_for_current_sealed_tasks_due_to_ATAC_only_observed_query_modality; eligible_only_for_a_separately_registered_development_task_after_formula_runtime_and_data_locks",
+  "verified_date": "2026-08-22"
+}

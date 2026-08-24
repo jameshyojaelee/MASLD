@@ -1,0 +1,49 @@
+{
+  "audit_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "implementation": "bowang-lab/BIONIC@b74e117602a9573a72edd1f53400243d567ca373:v0.2.6",
+    "sealed_dataset_id": "NONE_REGISTERED",
+    "task": "typed_evidence_graph"
+  },
+  "checkpoint_finding": {
+    "checkpoint_identity": "project_trained_per_held_source_held_block_and_seed; not_yet_created",
+    "declared_training_corpus": "Only retained, registered training evidence sources outside the held native-build LD/locus/gene blocks",
+    "development_source_exposure": "continual_seen_only_within_each_permitted_outer_training_partition",
+    "embedded_upstream_training_corpus": "none; selected release is source code without learned biological weights",
+    "future_sealed_target_exposure": "target_label_unexposed_only_if_the_split_local_construction_and_commit_protocol_passes",
+    "overall_exposure_state": "target_label_unexposed",
+    "paper_software_version": "v0.2.4",
+    "selected_source_release": "v0.2.6 released 2023-03-10",
+    "source_chronology_interpretation": "The selected code release predates GSE281160 and GSE281364 and carries no checkpoint. Exposure is controlled by project graph manifests, not source-code date alone.",
+    "upstream_checkpoint": "none"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "split_local_source_projection_transductive_coverage_and_endpoint_role",
+    "sha256": "e61ebe16bc1a2d5eb915337da717b8cb3f941eba81af8d7744f725df1baa8012"
+  },
+  "interpretation": "BIONIC is an open, locally trained, unsupervised network-integration comparator, not a pretrained checkpoint. It can test whether separate retained evidence networks contain recoverable structure, but the native model is homogeneous, undirected, closed-world, and transductive. Under the campaign's full held-block incident-edge removal, block-only nodes are untestable. No wholly sealed graph source is registered, so BIONIC cannot earn a champion claim in the current campaign.",
+  "known_incidents_and_biases": [
+    "The model's first linear projection and per-source encoders are indexed by the union training-node count. A whole-graph fit performed before a source or block split would directly contaminate every downstream fold.",
+    "BIONIC v0.2.6 converts each network to undirected form and shares a union node index. Edge direction and within-source relation type are not represented.",
+    "The preprocessor adds self-loops for the union nodes to every network while a separate mask denotes whether a node was originally present. A node absent from all retained evidence has no valid integrated support and cannot be rescued by the added loop or embedding bias.",
+    "Unsupervised reconstruction treats zero adjacency entries among network-supported nodes as negative signal. Consulting the held source to repair hidden positives would leak outcomes, so this closed-world mismatch must remain and be disclosed.",
+    "Supplying label_names activates a supervised classification path. All project fits must keep label_names=null so current Gene Catalog, COLOC, MPRA, and CROP-seq outcomes cannot enter the encoder.",
+    "The native pretrained_model_path calls torch.load without a restricted weights-only mode and applies strict=false. No external .pt file is admitted.",
+    "Source order changes source-specific encoders and learned scales; node-union ordering changes indexed parameters. Both are part of the artifact identity.",
+    "The primary paper reports BIONIC v0.2.4 while this census pins the later v0.2.6 source. Results must name the selected software version rather than imply exact paper-code reproduction.",
+    "The cross-modality projection places locus, variant, gene, peak, and other typed IDs into networks designed for genes/proteins. Namespacing prevents collision but does not restore typed biological semantics."
+  ],
+  "remaining_blockers": [
+    "Promote the corrected 50-study COLOC release, then freeze one immutable evidence ontology, graph snapshot, native-build block map, source-provenance family map, candidate universe, and unsupported-versus-untestable states.",
+    "Resolve rights and exact graph joins for every admitted source; a transductive embedding can encode source topology and is not automatically redistributable merely because BIONIC is MIT licensed.",
+    "Create and hash one training-only undirected edge list per retained evidence source after held-source and held-block removal; freeze binary weighting, duplicate policy, source order, typed node map, masks, and common-support denominator.",
+    "Build an isolated legacy runtime only through SLURM and pass CPU plus optional L40S import, forward/backward, seed, sampler, memory, save, same-process inference, restart-trust-boundary, and numeric-tolerance probes.",
+    "Implement bounded edge/config/TSV validation, prohibit wildcard paths and pretrained_model_path, and pass fixtures proving that held-source and held-block edges and derivatives never reach preprocessing or sampling.",
+    "Create five per-split project artifacts and freeze graph, environment, config, model, feature, node-roster, raw-score, calibration, resource, and terminal-disposition hashes.",
+    "Identify and prospectively register a wholly sealed evidence source before selection lock. Without one, report development source-recovery results only and make no champion claim."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_currently_no_sealed_source_and_ineligible_for_full_crossed_held_block_denominator; conditionally_eligible_after_all_data_runtime_and_artifact_locks_as_a_development_common_support_transductive_source_recovery_comparator",
+  "verified_date": "2026-08-22"
+}

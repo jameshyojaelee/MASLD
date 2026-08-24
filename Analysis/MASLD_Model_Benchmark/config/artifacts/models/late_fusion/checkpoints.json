@@ -1,0 +1,107 @@
+{
+  "algorithm_contract": {
+    "algorithm_id": "masld_equal_weight_calibrated_late_fusion_v1",
+    "component_eligibility": "A component must emit an immutable out-of-fold PredictionBundle for the same task, endpoint, row semantics, direction, and assay-native output contract. Every component and calibrator must already pass its own exposure, license, split, and task gates.",
+    "component_roster": "Freeze one selection-locked prediction artifact per admitted component family before fusion. No sealed outcome or fusion result may add, drop, or replace a component.",
+    "fitting": "No fusion weight is fitted. Equal component weights are fixed a priori; task-specific component calibration occurs upstream inside development training folds.",
+    "fusion_formula": "For row i with admissible observed component set A_i, output the arithmetic mean of aligned calibrated predictions: sum_{j in A_i} p_ij / |A_i|.",
+    "incomparable_outputs": "Do not combine different endpoints, lineages, classes, effect directions, assay units, or row definitions. Emit a per-endpoint prediction map rather than a synthetic universal score.",
+    "model_family": "deterministic_equal_weight_late_fusion",
+    "single_component": "Pass the one calibrated prediction through unchanged.",
+    "zero_component": "Emit structurally_missing and no numeric prediction; do not use zero, global prevalence, a neighboring task, or an imputed component.",
+    "binary_and_multiclass": "Average calibrated probabilities component-wise and verify the resulting probability vector is finite and sums to one within tolerance.",
+    "continuous_and_profile": "Average only predictions already expressed in the exact same frozen endpoint units and coordinate order. No generic z-score, rank transform, or unit conversion is part of v1."
+  },
+  "checkpoint_contract": {
+    "checkpoint_revision": "NOT_APPLICABLE_DETERMINISTIC_FUSION",
+    "checkpoint_sha256": "NOT_APPLICABLE_NO_FUSION_WEIGHTS",
+    "effective_artifact": "fusion manifest binding component PredictionBundle hashes, component calibration hashes, endpoint contracts, masks, and output hash",
+    "implementation_type": "classical_baseline",
+    "pretrained_checkpoint_available": false,
+    "status": "algorithm_frozen_implementation_and_component_rosters_not_admitted"
+  },
+  "held_source_and_induction_contract": {
+    "exposure_inheritance": "The fused prediction inherits the most restrictive exposure and use terms of every contributing component and input prediction.",
+    "graph_held_source": "Every component for a held-source row must have removed that source before graph, feature, model, calibration, and candidate construction. Fusion receives no source outcome, observability, eligibility, degree, or prevalence.",
+    "inductive_behavior": "Fusion is available for a new row only when at least one admissible component can score it without query fitting. Fusion cannot make a transductive or unsupported component inductive.",
+    "source_specific_component": "A component that consumes the evaluated source or a source-specific untrained relation is ineligible, not missing-at-random.",
+    "wholly_removed_source": "Conditionally supported as retrospective cross-source prioritization when all contributing component predictions were generated under the identical removal receipt."
+  },
+  "input_contract": {
+    "component_prediction": "row hash, unit hash, block hash where required, endpoint and stratum identity, calibrated prediction, uncertainty where available, eligibility mask, missingness state, source exposure, and artifact hashes",
+    "component_terms": "Record code, weight, output-use, derivative-model, and redistribution terms. Restricted outputs cannot be silently used to create an open fusion artifact.",
+    "missingness_states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "row_join": "Exact one-to-one join on task endpoint row identity. Outer joins preserve masks; duplicate or many-to-many component rows fail.",
+    "uncertainty": "Do not treat component seeds or models as independent biological replicates. Preserve component uncertainty and use task-registered biological cluster bootstrap."
+  },
+  "output_contract": {
+    "availability_pattern": "Emit ordered contributing component IDs, component count, and explicit missing states for every absent component.",
+    "causal_interpretation": "prohibited",
+    "graph_output": "calibrated source-agnostic candidate-gene probability for eligible rows when all inputs share that contract",
+    "native_output": "per-task and per-endpoint equal-weight fused prediction with explicit masks and provenance",
+    "unified_output": "a map of task-specific predictions and eligibility masks; never a synthetic complete patient matrix or one scalar that hides a failed endpoint"
+  },
+  "implementation": {
+    "algorithm_version": "1",
+    "repository": "repo_local_masld_bench",
+    "repository_revision": "UNRESOLVED_no_implementation_exists",
+    "source_code_present": false,
+    "source_code_run": false
+  },
+  "runtime_and_artifact_contract": {
+    "execution": "CPU deterministic sorted row join and arithmetic reduction",
+    "numeric_rule": "float64 reference accumulation in frozen component order; reject nonfinite values and out-of-contract probabilities",
+    "output_receipt": "Hash algorithm ID, ordered component roster, component predictions and calibrators, row joins, endpoint contracts, availability patterns, output values, and PredictionBundle.",
+    "seed": "not_applicable_for_equal_weight_fusion"
+  },
+  "safe_loading_contract": {
+    "model_loader": "none",
+    "no_runtime_network": true,
+    "serialized_inputs": "schema-validated immutable PredictionBundles and JSON manifests only",
+    "untrusted_object_deserialization": "prohibited"
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The project evidence-graph, unified-model, split, capability, missingness, and promotion contracts were inspected on 2026-08-22. No upstream fusion package, model, data, or weights are registered or were downloaded.",
+  "source_records": [
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/models/evidence_graph.toml",
+      "sha256": "926641e4df3746e5497b91f8518565b259ebc7fa41837f36f5e021d5ee83ae10",
+      "size_bytes": 7325
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/typed_evidence_graph.toml",
+      "sha256": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "size_bytes": 1955
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/unified_model.toml",
+      "sha256": "69e6a5e51281516bfd950838b2d973f17b7383a265f11663af4521dd4532407c",
+      "size_bytes": 2357
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/unified_nested.toml",
+      "sha256": "26bc8482381bb55358a5b6c20396036736bb9f1b2ca75da46e5bdda04e9d7028",
+      "size_bytes": 1050
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/resources.toml",
+      "sha256": "fabdee11b41930cfc29ff73da47e221902d9fc3fc717e8afc7832733eeb94e3a",
+      "size_bytes": 4303
+    }
+  ],
+  "task_fit": {
+    "causal_gene_inference": "not_supported",
+    "held_source_recovery": "conditionally_supported_if_every_component_is_source_removed_and_aligned",
+    "typed_evidence_graph": "development_only_baseline_no_current_seal",
+    "unified_model": "baseline_blocked_until_component_finalists_external_families_and_implementation_are_frozen"
+  },
+  "terms_audit": {
+    "algorithm": "mathematical_equal_weight_average_no_upstream_implementation",
+    "component_terms": "Binding. The fusion cannot broaden component output-use, derivative-model, commercial, or redistribution rights.",
+    "project_implementation_license": "UNRESOLVED_repository_root_license_not_located_and_code_not_written",
+    "redistribution": "Release only manifests and permitted predictions unless every component and dataset authorizes the derived artifact.",
+    "result": "no_upstream_fusion_license_dependency_component_and_project_terms_still_gate_release"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NOT_APPLICABLE_NO_FUSION_WEIGHTS"
+}

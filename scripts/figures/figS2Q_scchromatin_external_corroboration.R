@@ -25,26 +25,33 @@ suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
+source(file.path(BASE, "scripts/figures/fig2_promoted_coloc_context.R"))
 
 src <- fread(file.path(BASE,
   "RNA-seq/results/multi_evidence/external_scchromatin/figS2Q_source.tsv"))
 num <- function(v) suppressWarnings(as.numeric(v))
+src <- merge(src, load_fig2_promoted_context(BASE, src$gene), by = "gene", all.x = TRUE)
+deg <- load_fig2_current_deg_by_symbol(BASE, src$gene)
+src <- merge(src, deg[, .(gene = gene_symbol, current_deg_ensembl = gene,
+                          current_logFC = logFC, current_padj = padj,
+                          current_is_deg)],
+             by = "gene", all.x = TRUE)
 
 # ---- rows to feature (grouped; ONECUT1/CEBPA/XBP1 stay in the data table only) --
 ord <- c("RORA","PPP1R3B","KRT8","EFHD1","CUX2","RELB","CREB5","THRB","HNF4A",
          "TRPS1","FCGR2B","HLA-DQA1","FLACC1",
          "PNPLA3","TM6SF2","HSD17B13","MBOAT7")
-G1 <- "Corroboration\n(their regulatory\nlayer vs our maps)"
-G2 <- "Cell-of-action\ngap-fill\n(their caQTL)"
-G3 <- "Mutual boundary\n(lipid canon)"
+G1 <- "Source comparison\n(regulatory layer)"
+G2 <- "Cell-context\nannotation\n(their caQTL)"
+G3 <- "Not discussed\nin source atlas"
 grp <- c(rep(G1, 9), rep(G2, 4), rep(G3, 4))
 names(grp) <- ord
 d <- src[match(ord, gene)]
 d[, group := factor(grp[gene], levels = c(G1, G2, G3))]
 
 # ---- our genetic tiles: direct-MASLD vs enzyme-trait max PP.H4 ------------------
-d[, gdir := pmax(fcoalesce(num(our_susie_direct),0), fcoalesce(num(our_abf_direct),0))]
-d[, genz := pmax(fcoalesce(num(our_susie_enzyme),0), fcoalesce(num(our_abf_enzyme),0))]
+d[, gdir := direct_best]
+d[, genz := enzyme_best]
 
 # ---- Elison single-cell chromatin layer label ---------------------------------
 elison_lab <- c(RORA="MASL hep GRN ↑", HNF4A="MASL hep GRN ↑", CUX2="MASL hep GRN ↑",
@@ -57,31 +64,14 @@ elison_lab <- c(RORA="MASL hep GRN ↑", HNF4A="MASL hep GRN ↑", CUX2="MASL he
 d[, elab := elison_lab[gene]]
 
 # ---- our disease-state DEG text ------------------------------------------------
-d[, deg_txt := fifelse(our_is_deg == TRUE,
-    sprintf("DEG %s (%.0e)", fifelse(num(our_bulk_logFC) > 0, "↑", "↓"),
-            num(our_bulk_treat_fdr)),
-    fifelse(gene %in% c("CREB5"), "near-DEG (0.057)", "n.s."))]
+d[, deg_txt := fifelse(is.na(current_is_deg), "bulk map not evaluable",
+    fifelse(current_is_deg,
+      sprintf("DEG %s (%.0e)", fifelse(num(current_logFC) > 0, "↑", "↓"),
+              num(current_padj)), "no canonical DEG call"))]
 
-# ---- interpretation (short; honest) -------------------------------------------
-interp <- c(
-  RORA   = "genetic (direct 0.98) + DEG + their GRN — co-nomination (axes differ)",
-  PPP1R3B= "genetic (direct-MASLD ABF 0.97); their causal variant + >200 kb loop add cell type",
-  KRT8   = "we supply expression-COLOC they lacked; enzyme-trait anchored",
-  EFHD1  = "co-localized locus; direction differs (their eQTL ↑ vs our DE ↓)",
-  CUX2   = "disease-state DEG + suggestive coloc; their MASL GRN ↑ / our pooled DE ↓",
-  RELB   = "disease-state DEG ↑ matches their Fib+ GRN ↑ (same axis)",
-  CREB5  = "our Progressor-subtype marker + Cas13 target = their MASH GRN driver",
-  THRB   = "drug-axis: their GRN ↓ + our regulon ↓; GGT-anchored, direct null",
-  HNF4A  = "TF-activity agreement; our expression-genetic null (stable master TF)",
-  TRPS1  = "their myeloid caQTL assigns the cell of action for our genetic hit",
-  FCGR2B = "their endothelial caQTL assigns the cell of action for our genetic hit",
-  "HLA-DQA1"="their myeloid caQTL resolves the cell layer",
-  FLACC1 = "their HSC caQTL detects signal our expression-COLOC is null on",
-  PNPLA3 = "held by monogenic I148M — blind to caQTL AND expression-COLOC",
-  TM6SF2 = "held by coding E167K — direct-MASLD coloc null",
-  HSD17B13="held by splice rs72613567 — expression-COLOC null",
-  MBOAT7 = "rescued by TWAS (z = -3.69) — coloc null both maps")
-d[, itext := interp[gene]]
+# ---- release-derived interpretation retained in the source table --------------
+d[, itext := sprintf("external: %s; direct/liver-fat: %s; enzyme: %s; bulk: %s",
+                     elab, direct_support, enzyme_support, deg_txt)]
 
 # ---- layout: gene on y (reverse group order top->bottom) -----------------------
 d[, gene := factor(gene, levels = rev(ord))]
@@ -94,43 +84,53 @@ tiles <- rbindlist(list(
 TXT_EL <- 2.85; TXT_DEG <- 5.6
 p <- ggplot() +
   geom_tile(data = tiles, aes(xk, gene, fill = value), colour = "white", linewidth = 0.6) +
-  geom_text(data = tiles, aes(xk, gene, label = lab), size = 2.0, colour = "black") +
-  geom_text(data = d, aes(TXT_EL,  gene, label = elab),   hjust = 0, size = 2.0, colour = "black") +
-  geom_text(data = d, aes(TXT_DEG, gene, label = deg_txt),hjust = 0, size = 2.0, colour = "black") +
+  geom_text(data = tiles, aes(xk, gene, label = lab), size = GEOM_TEXT_6PT, colour = "black") +
+  geom_text(data = d, aes(TXT_EL, gene, label = elab), hjust = 0,
+            size = GEOM_TEXT_6PT, colour = "black") +
+  geom_text(data = d, aes(TXT_DEG, gene, label = deg_txt), hjust = 0,
+            size = GEOM_TEXT_6PT, colour = "black") +
   scale_fill_gradient(low = "#f3eef2", high = "#c0508d", limits = c(0, 1),
                       breaks = c(0, 0.5, 1), name = "our coloc PP.H4") +
   scale_x_continuous(breaks = c(1, 2),
-                     labels = c("direct\nMASLD", "enzyme\ntrait"),
+                     labels = c("direct /\nliver fat", "liver\nenzyme"),
                      limits = c(0.5, 7.0), expand = expansion(mult = 0),
                      sec.axis = sec_axis(~ ., breaks = c(1.5, TXT_EL + 0.35, TXT_DEG + 0.35),
                        labels = c("our coloc", "Elison sc-chromatin", "our DEG"))) +
   facet_grid(group ~ ., scales = "free_y", space = "free_y", switch = "y") +
-  labs(x = "our genetic map (colocalization)", y = NULL) +
+  labs(x = "promoted expression-QTL COLOC", y = NULL) +
   theme_masld(base_size = 6) +
   theme(axis.text.y = element_text(face = "italic"),
         axis.line = element_blank(), axis.ticks = element_blank(),
         panel.grid = element_blank(),
-        axis.title.x = element_text(size = 5.5, hjust = 0.08),
-        strip.text.y.left = element_text(angle = 0, hjust = 0.5, size = 5),
+        axis.title.x = element_text(size = 6, hjust = 0.08),
+        strip.text.y.left = element_text(angle = 0, hjust = 0.5, size = 6),
         strip.placement = "outside", panel.spacing = unit(2, "mm"),
         legend.key.size = unit(3, "mm"), legend.position = "bottom")
 
-out_dir <- file.path(BASE, "figures/main/fig2_genetics/panels")
+out_dir <- Sys.getenv("FIG2_SUPP_OUT_DIR",
+  unset = file.path(BASE, "figures/main/fig2_genetics/panels"))
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 out_pdf <- file.path(out_dir, "FigS2Q_scchromatin_external_corroboration.pdf")
 fwrite(d[, .(gene, group, elison_layer = elab, our_genetic_direct_pph4 = gdir,
              our_genetic_enzyme_pph4 = genz, our_disease_state = deg_txt,
-             relationship, interpretation = itext, caveat)],
+             current_bulk_ensembl = current_deg_ensembl,
+             current_bulk_logFC = current_logFC,
+             current_bulk_padj = current_padj,
+             current_bulk_is_deg = current_is_deg,
+             elison_finding_type, elison_celltype,
+             direct_multi_signal_pph4 = direct_susie,
+             direct_single_signal_pph4 = direct_abf,
+             direct_support_state = direct_support,
+             enzyme_multi_signal_pph4 = enzyme_susie,
+             enzyme_single_signal_pph4 = enzyme_abf,
+             enzyme_support_state = enzyme_support,
+             interpretation = itext)],
        file.path(out_dir, "FigS2Q_scchromatin_external_corroboration_source.csv"))
 save_fig(p, out_pdf, width = 6.3, height = 3.4)
 message("Wrote ", out_pdf)
-message("CAPTION: External single-cell-chromatin corroboration (Elison, Gaulton et al. 2025; ",
-        "liver 5-modality multiomics, 86 donors) of our genetic and disease-state maps. Tiles = our ",
-        "colocalization PP.H4 anchored on direct-MASLD vs enzyme traits (side by side to show trait ",
-        "anchoring); text = Elison's cell-type regulatory layer, our canonical DEG, and interpretation. ",
-        "RORA/PPP1R3B corroborate our genetic map; RORA/CUX2/RELB/EFHD1/KRT8 our disease-state map; ",
-        "per-cell-type caQTL resolves the cell-of-action for our genetic-only hits (TRPS1/FCGR2B/",
-        "HLA-DQA1/FLACC1); the lipid canon (PNPLA3/TM6SF2/HSD17B13/MBOAT7) is absent from their atlas ",
-        "AND null on our expression-COLOC, held by our TWAS/monogenic layers. Direction/axis and ",
-        "trait-anchor caveats per gene in the source CSV. Cited external annotation, not a ",
-        "convergence-score input; their genome-wide tables remain embargoed (Zenodo 15298484).")
+message("CAPTION: Source-reported single-cell chromatin annotations from Elison/Gaulton et al. ",
+        "are cross-referenced to the promoted expression-QTL COLOC portfolio and the current ",
+        "canonical bulk gate. Direct/liver-fat and liver-enzyme posteriors remain separate. ",
+        "The source table records method availability and support states; absent support is not ",
+        "treated as proof against a regulatory mechanism. External annotation; not a Resource ",
+        "evidence-class input.")

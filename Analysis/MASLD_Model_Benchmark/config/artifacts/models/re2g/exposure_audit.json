@@ -1,0 +1,45 @@
+{
+  "audit_scope": {
+    "checkpoint": "EngreitzLab/ENCODE_rE2G@d039062b7092de338ed10a77ea208b3d5b06e89c:models/atac_megamap/model.pkl",
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+  },
+  "checkpoint_finding": {
+    "corpus": "declared K562 CRISPR enhancer-gene labels and ABC-derived features; exact row inventory unresolved",
+    "current_git_blob_sha1": "a27f8f38524cd5d5f1a3dda38e816c4091396228",
+    "exposure_state": "clean_declared",
+    "historical_identity": "identical blob at v1.0.0 commit 1bfa1a4190d4462fd8aaa3970c09a0f398ed9c96 dated 2024-06-04",
+    "sha256_status": "unresolved_until_approved_acquisition",
+    "target_effect_label_exposure": "unexposed_by_declared_corpus_and_chronology"
+  },
+  "checkpoint_manifest_record": {
+    "path": "checkpoints.json",
+    "sha256": "6b897f64ba8ebe99c8b971800bf0af96ed91add2283afe7c905f9c4032dc0dd8"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "c70080c4d15ccade08f648a56a7624cc461a26613e64985582d44338b85f6e69"
+  },
+  "interpretation": "The selected ATAC-plus-MegaMap rE2G model has a clean content chronology: its exact Git blob predates all three project sources. Its scientific output is still only an unsigned enhancer-gene link probability. GSE296875 can supply development liver ATAC features, but GSE289173 supplies no ATAC, so sealed use is limited to a static precommitted link atlas. rE2G can compete on retrieval or enter a composite; it cannot win the primary signed-effect endpoint alone.",
+  "known_incidents_and_biases": [
+    "The official application calls pickle.load on model.pkl; benchmark runs must never execute that path.",
+    "The official application replaces every NaN and infinity with zero, which conflates structural missingness with observed zero under the project contract.",
+    "The selected classifier was trained on K562 CRISPR data, while liver cell states and donor ATAC are a domain transfer.",
+    "The 0.179 threshold is chosen for a K562 CRISPR recall operating point and is not calibrated to liver.",
+    "The selected feature set depends on upstream ABC candidate peaks, qnorm, gene/TSS definitions, MegaMap contact, and neighborhood features, so leakage can enter before the logistic model.",
+    "The registered application revision and ABC submodule postdate some project releases, although the exact fitted model blob is unchanged from 2024."
+  ],
+  "remaining_blockers": [
+    "Obtain campaign approval before acquiring model.pkl, then verify Git blob identity, compute SHA-256, statically audit pickle opcodes/globals, and perform a one-time no-network restricted conversion to non-executable numeric coefficients and metadata.",
+    "Prove converted-adapter predictions match scikit-learn 1.2.1 on a fixed finite complete-feature fixture before deleting pickle access from the runtime path.",
+    "Audit and hash the exact MegaMap contact artifact and its terms; no pretrained power-law rE2G model is available upstream.",
+    "Activate GSE296875 only after donor/barcode/well, fragments, peaks, reference, QC, missingness, and rights authorities pass.",
+    "Freeze the GENCODE v49 to upstream RefSeq/TSS/promoter-feature crosswalk and reject unresolved genes rather than filling them with zero.",
+    "Freeze all donor-by-cell-state features, candidate elements, merged LD blocks, continuous scores, and the final static link atlas before sealed variants are opened.",
+    "Keep any allele-specific activity and signed direction model separately named; do not call the composite rE2G alone."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_as_a_standalone_signed_variant_to_regulation_champion; conditionally_eligible_after_safe_conversion_reference_contact_data_and_atlas_locks_as_an_open_unsigned_link_retrieval_baseline_or_composite_component; no_typed_graph_champion_without_a_sealed_source",
+  "verified_date": "2026-08-22"
+}

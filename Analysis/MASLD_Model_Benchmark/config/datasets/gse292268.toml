@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse292268"
+title = "Human F2 MASLD CosMx"
+role = "blocked"
+status = "blocked"
+species = "human"
+accession = ["GSE292268"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 4
+native_genome_build = "GRCh38"
+native_annotation_release = "UNRESOLVED"
+modalities = ["cosmx_rna"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "join_unresolved"
+exposure_status = "target_label_unexposed"
+admission_blocking = true
+blockers = ["Authoritative slide/FOV/region-to-donor map must be frozen before donor-level inference.", "No morphology image asset is present in the registered files."]
+notes = "Four F2 participants are distributed two per slide. Slides and FOVs are technical units, not donors."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE292268"
+verified_date = "2026-08-21"
+local_exposure = "Not admitted to the core benchmark."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "blocked"
+label_visibility = "unavailable_join"

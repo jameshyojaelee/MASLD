@@ -1,0 +1,130 @@
+{
+  "admission_status": "BLOCKED_INCOMPLETE_RELEASED_INPUT_AND_NUMERIC_PARITY",
+  "architecture_contract": {
+    "base": "Regular Corgi convolutional-FiLM-transformer backbone",
+    "checkpoint_auxiliary_input": "26 channels, confirmed by aux_encoder.0.weight shape [128,26,1]",
+    "checkpoint_state_numel": 198664365,
+    "checkpoint_state_key_count": 190,
+    "declared_use": "cross-cell-type RNA-to-epigenomic imputation",
+    "input_length_bp": 524288,
+    "local_auxiliary_encoder": "CorgiPlus encodes per-bin auxiliary tracks and concatenates them with DNA features before the transformer stack",
+    "output_central_bins": 6144,
+    "output_resolution_bp": 64,
+    "published_final_auxiliary_input": "2 stranded local total-RNA tracks plus 22 training-context mean-baseline tracks plus 2 RNA delta-from-baseline tracks, for 26 channels",
+    "published_final_objective": "multi-assay coverage loss plus delta-from-mean-baseline MSE; RNA output channels are masked because RNA is an input",
+    "trans_context_features": 2891
+  },
+  "checkpoint": {
+    "filename": "corgiplus_model.pt",
+    "format": "PyTorch_pickle_backed_checkpoint",
+    "md5": "f7dbe2ca301fe64814bebcd4fc3377bd",
+    "sha256": "01855614bfeffa72d5bcaaa28729c022ccfbc8f5fdcc0add8e04ba4533e94ccd",
+    "size_bytes": 2384030158,
+    "weight_downloaded": true,
+    "weights_only_schema_inventory": true
+  },
+  "identity_reconciliation": {
+    "checkpoint_mode": "FINAL_26_CHANNEL_AUXILIARY_WIDTH_CONFIRMED_BY_STATE_SHAPE",
+    "checkpoint_producing_code_revision": "UNRESOLVED",
+    "current_code_revision": "d84c00082da3d04eb05169e290e53f1c7da2b9c5",
+    "finding": "The two Zenodo records contain byte-identical Corgi+ files. A restricted CPU tensor-schema inventory identified aux_encoder.0.weight with shape [128,26,1], excluding the incompatible 22- and 24-channel alternatives and binding the object to a 26-channel auxiliary input. State shape does not recover the missing input tensors, transforms, checkpoint-producing source or numeric reference.",
+    "paper_archive": {"created": "2026-06-14", "doi": "10.5281/zenodo.20686797", "record_license": "CC-BY-4.0"},
+    "readme_archive": {"created": "2026-02-13", "doi": "10.5281/zenodo.18630048", "record_license": "CC-BY-4.0"},
+    "reproduction_gap": "ekinda/corgi-reproduction pins an unavailable corgi gitlink and contains hard-coded /project paths. Its auto mode would not identify the official filename as corgiplusplus_rna, so it is not a portable checkpoint loader."
+  },
+  "input_contract": {
+    "global_context": "The same 2,891 trans-regulator vector and normalization uncertainty as Regular Corgi.",
+    "local_rna": "Strand-specific total-RNA coverage across the full 524288-bp window at 64-bp bins, transformed exactly like Corgi training RNA tracks.",
+    "mean_baseline": "Per-assay, per-genomic-bin mean over training contexts only. It is a learned-data artifact and must be recomputed strictly inside each development training fold or frozen from the original checkpoint's training set if that exact object is recovered.",
+    "rna_delta": "Local RNA minus the corresponding two mean-baseline RNA channels for the published final Corgi+ design.",
+    "warning": "A gene-by-cell UMI matrix is not local stranded RNA coverage. Treat local coverage as structurally missing unless alignment-derived coverage exists and passes the exact transform contract; never encode missing coverage as zero."
+  },
+  "license_audit": {
+    "code_status": "CONFLICT_UNRESOLVED",
+    "finding": "The shared repository root LICENSE is Apache-2.0 while pyproject.toml declares MIT. The Corgi+ weight records are CC-BY-4.0 at record level.",
+    "open_champion_eligibility": "INELIGIBLE_UNTIL_CODE_CONFLICT_AND_DERIVATIVE_WEIGHT_TERMS_ARE_CLEARED",
+    "weight_record_license": "CC-BY-4.0"
+  },
+  "loader_audit": {
+    "high_level_api": "corgiplus_pretrained exists only as a placeholder; predict, predict_regions and predict_regions_with_bigwig all raise NotImplementedError.",
+    "low_level_reproduction_code": "Research scripts manually construct CorgiPlus with mode-specific auxiliary widths and strict or non-strict torch.load paths, but depend on unreleased mean baselines, masks, tissue tables, transformed tracks and absolute /project paths.",
+    "status": "NO_COMPLETE_RELEASED_INFERENCE_PATH"
+  },
+  "output_contract": {
+    "activation": "Conv1d_then_Softplus for the Corgi+ checkpoint; derived from exact output_head.0.weight and output_head.0.bias state keys and confirmed by strict restoration",
+    "channels": "Same 22 channels as Regular Corgi",
+    "eligible_scoring_channels": "For RNA-conditioned imputation, score epigenomic/accessibility outputs only. Do not score RNA channels 16-20 as predicted outcomes when their local total-RNA signal is supplied as input.",
+    "primary_endpoint": "conditional profile/multinomial deviance skill over a training-only cell-type mean, macro-averaged across held donor by cell type by genomic block",
+    "transform_status": "UNRESOLVED; exact original mean baseline, local RNA transforms, output transforms and released checkpoint mode are not published as a portable bundle"
+  },
+  "pretraining_contract": {
+    "genomic_generalization": "Corgi+ used all 14395 Corgi sequence windows for cross-cell-type imputation training/evaluation. It is not a held-sequence foundation checkpoint for this task.",
+    "samples": {"test": 14, "train": 71, "validation": 17},
+    "selection": "102 samples with total RNA, DNase and at least one histone assay",
+    "warning": "All project donor and genomic splits must still be imposed on local adaptation. The frozen upstream checkpoint has broad genomic-position and mean-baseline exposure."
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "native_build": "hg38",
+    "native_fasta_identity": "UNRESOLVED_modified_Borzoi_hg38",
+    "rule": "Require the Regular Corgi sequence parity suite plus exact 64-bp alignment of local RNA, baseline and outputs under shifts and reverse complement."
+  },
+  "release": {
+    "code_repository": "https://github.com/ekinda/corgi",
+    "paper_doi": "10.1038/s41467-026-75527-2",
+    "publication_date": "2026-07-14",
+    "reproduction_repository": "https://github.com/ekinda/corgi-reproduction"
+  },
+  "runtime_contract": {
+    "compatibility_runtime": "NVIDIA PyTorch 24.01 container, Python 3.10.12, torch 2.2.0a0+81ea7a4, CUDA 12.3, FlashAttention 2.0.4 plus the exact upstream rotary_emb 0.1 extension compiled for sm_89",
+    "exact_checkpoint_training_runtime": "UNRESOLVED",
+    "full_window_probe": "Exact 26-channel construction, strict restore, synthetic-shape-only 524,288-bp plus 8,192-bin auxiliary forward to [1,22,6144], and shortened-window mixed-precision backward/SGD step passed on one NVIDIA L40S. Released biological auxiliary inputs and native numeric parity remain absent.",
+    "released_config_portability": "BLOCKED: config_corgiplus.py contains absolute /project paths and does not freeze the final auxiliary mode",
+    "status": "L40S_COMPATIBILITY_PASSED_RELEASED_INPUT_BUNDLE_NATIVE_NUMERIC_PARITY_AND_CHECKPOINT_RESUME_ABSENT"
+  },
+  "safe_loading_contract": {
+    "loading_rule": "The downloaded object passed size, MD5 and SHA-256 verification, CPU-only torch.load(weights_only=True,map_location=cpu,mmap=True) tensor-schema inventory, and isolated no-network exact architecture restoration with no missing or surplus tensors. Use this safe exact path; never use the released unrestricted or non-strict paths.",
+    "numeric_parity": "Admission additionally requires official reference predictions or an upstream portable loader for local RNA, mean baseline, RNA delta, context, crop, TTA and all output channels. State-shape compatibility alone is not numeric parity.",
+    "weight_downloaded": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Communications article, both official Zenodo records, ekinda/corgi at d84c00082da3d04eb05169e290e53f1c7da2b9c5 and ekinda/corgi-reproduction at 2367c42cf36630b7cf561eccc2e781abc22b36be were queried on 2026-08-22. On 2026-08-24 the official checkpoint was downloaded from Zenodo 18630048, byte-verified and safely inventoried without importing Corgi. No source_data.zip, training mean baseline, transformed local track or checkpoint-bound reference genome was acquired.",
+  "verified_artifacts": {
+    "acquisition_artifacts_sha256": "73aad9ab9ad3e080a2ccaa0cee1a1d727d126a454f0e69f74f343a900b168c0f",
+    "acquisition_path": "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463",
+    "schema_artifacts_sha256": "312bb3c90ae6da3eff20f43d920b03fbf6a5b05b2b480bbc98d24aaad71d868e",
+    "schema_path": "executions/corgi-official-checkpoint-schema-21064532",
+    "compatibility_runtime_artifacts_sha256": "01de778c17c67d92de9a2e242350e17443dbfe76b7c5a5f8bc447eae5408cd3c",
+    "compatibility_runtime_path": "executions/environments/corgi-nvidia-pytorch-24.01-py3-recovery-21064690",
+    "l40s_native_runtime_probe_artifacts_sha256": "09d8811b612cba4f75361feeba29bd0676efde83f0e4785a37990c2d2f52a0a2",
+    "l40s_native_runtime_probe_path": "executions/corgi-native-runtime-l40s-r8-21065022",
+    "rotary_l40s_probe_artifacts_sha256": "4ac0d03f52fa26583006c4067ccf35ac4946a491295c721f5b6a7f4cbc90a3f2",
+    "rotary_overlay_artifacts_sha256": "c60c4ebf0b32df7d158a3a1d781f5d45fdf4187ab0fba9f4bea35605a92e4c3a",
+    "strict_architecture_restore_performed": true,
+    "strict_restore_missing_keys": [],
+    "strict_restore_unexpected_keys": [],
+    "full_524288_bp_l40s_forward_performed": true,
+    "shortened_window_l40s_backward_performed": true,
+    "released_input_bundle_complete": false,
+    "native_numeric_parity_performed": false,
+    "checkpoint_resume_performed": false,
+    "tensor_values_exported": false
+  },
+  "source_records": [
+    {"identity": "ekinda/corgi@d84c000:corgi/config_corgiplus.py", "sha256": "9d996d85a8e1ab8b3b0a21277581a1ddb5efec65f9a28c841215986a1f9c13b8", "size_bytes": 2410},
+    {"identity": "ekinda/corgi@d84c000:corgi/model.py", "sha256": "767067e4659ca196f307d2133104365fb7e6ea9d2f151dd61d3c2a8a7e0737e6", "size_bytes": 12228},
+    {"identity": "ekinda/corgi@d84c000:corgi/predict.py", "sha256": "0d8da0bedbf60a493188bfd9109cc56624292ea139c14f3ec20df5cf8573567b", "size_bytes": 17976},
+    {"identity": "ekinda/corgi@d84c000:corgi/trainer_corgiplus.py", "sha256": "4ccb5db5d2be4933aa0cb270217fe251e9eb71e9635ed7cfcacb879c27926af5", "size_bytes": 25752},
+    {"identity": "ekinda/corgi-reproduction@2367c42:code/corgiplus_delta_bench_tta.py", "sha256": "a6ec48da151f6da912d4b6d019a3e0d021322867c91ec7a5f6a920ccb9212276", "size_bytes": 24502},
+    {"identity": "Zenodo:18630048:corgiplus_model.pt", "md5": "f7dbe2ca301fe64814bebcd4fc3377bd", "sha256": "01855614bfeffa72d5bcaaa28729c022ccfbc8f5fdcc0add8e04ba4533e94ccd", "size_bytes": 2384030158},
+    {"identity": "Zenodo:20686797:corgiplus_model.pt", "md5": "f7dbe2ca301fe64814bebcd4fc3377bd", "size_bytes": 2384030158}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "primary conceptual fit but currently blocked; requires alignment-derived stranded local RNA and a training-only mean baseline, not gene-count matrices",
+    "unified_model": "blocked until a complete portable loader, exact checkpoint mode and all terms/input artifacts are resolved",
+    "variant_to_regulation": "not a primary sealed comparator: local RNA and mean baseline can encode the assayed locus, and the released model has no validated variant-scoring contract",
+    "perturbation_transfer": "not_supported"
+  },
+  "weight_license": "CC-BY-4.0_AT_RECORD_LEVEL"
+}

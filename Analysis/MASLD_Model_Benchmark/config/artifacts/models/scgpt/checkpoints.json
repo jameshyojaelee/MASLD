@@ -1,0 +1,147 @@
+{
+  "architecture_contract": {
+    "d_hid": 512,
+    "dropout": 0.2,
+    "embedding_size": 512,
+    "fast_transformer": true,
+    "max_sequence_length": 1200,
+    "mvc": true,
+    "n_expression_bins": 51,
+    "n_heads": 8,
+    "n_layers": 12,
+    "n_layers_cls": 3,
+    "pad_token": "<pad>",
+    "pad_value": -2
+  },
+  "bundles": {
+    "scgpt_continual": {
+      "artifacts": [
+        {
+          "google_drive_file_id": "1x1SfmFdI-zcocmqWAd7ZTC9CTEAVfKZq",
+          "path": "best_model.pt",
+          "sha256": "UNRESOLVED",
+          "size_bytes": 207861754
+        },
+        {
+          "google_drive_file_id": "15TEZmd2cZCrHwgfE424fgQkGUZCXiYrR",
+          "path": "args.json",
+          "sha256": "77fec83c32306225f37cc023321b716a49ce9e778039f2c1c4b80e1e4e7008bd",
+          "size_bytes": 1503
+        },
+        {
+          "google_drive_file_id": "1jfT_T5n8WNbO9QZcLWObLdRG8lYFKH-Q",
+          "path": "vocab.json",
+          "sha256": "ee2b2c90158eedb97c2318e49abaaed0a02c6fdf7e3f7ca6a821906413c4d2a4",
+          "size_bytes": 1317639
+        }
+      ],
+      "google_drive_folder_id": "1_GROJTzXiAV8HB4imruOTk6PEGuNOcgB",
+      "observed_checkpoint_modified_utc": "2023-12-19T14:12:05Z",
+      "training_contract": {
+        "annotation_source": "Tabula Sapiens",
+        "annotation_valid_size_or_ratio": 0.1,
+        "base_checkpoint": "scgpt_whole_human",
+        "batch_size": 24,
+        "epochs": 10,
+        "generative_training": true,
+        "learning_rate": 0.0001,
+        "mask_ratios": [0.25, 0.5, 0.75],
+        "supervised_cell_type_objective": true,
+        "use_cls": true
+      }
+    },
+    "scgpt_whole_human": {
+      "artifacts": [
+        {
+          "czi_s3_etag": "349c8a6268e29fd5ef4fcd0cb713dcc5-25",
+          "google_drive_file_id": "14AebJfGOUF047Eg40hk57HCtrb0fyDTm",
+          "path": "best_model.pt",
+          "sha256": "UNRESOLVED",
+          "size_bytes": 205385258
+        },
+        {
+          "czi_s3_etag": "07d28cf62c2dac56007b927d31345d45",
+          "google_drive_file_id": "1hh2zGKyWAx3DyovD30GStZ3QlzmSqdk1",
+          "path": "args.json",
+          "sha256": "c18e075e018140cb8b2d9029387b9de26607a5ce6a8ccabd6ead70cd76b95d60",
+          "size_bytes": 1300
+        },
+        {
+          "czi_s3_etag": "8efa7f3ca6949e1facdaa47e539e9855",
+          "google_drive_file_id": "1H3E_MJ-Dl36AQV6jLbna2EdvgPaqvqcC",
+          "path": "vocab.json",
+          "sha256": "acca93d114ca62c3f0f50debbd23e8c87f0714f4737764454f6b2b13f2e8580f",
+          "size_bytes": 1317639
+        }
+      ],
+      "czi_s3_mirror": {
+        "bucket": "czi-scgenept-public",
+        "prefix": "models/pretrained/scgpt/",
+        "repository": "czi-ai/scGenePT",
+        "repository_revision": "5847c57e4cccd9949a7f0b5f3775d5dcae5a5eac"
+      },
+      "google_drive_folder_id": "1oWh_-ZRdhtoGQ2Fw24HP41FgLoomVo-y",
+      "observed_checkpoint_modified_utc": "2023-06-23T15:54:41Z",
+      "training_contract": {
+        "cellxgene_census_version": "2023-05-08",
+        "disease_filter": "normal",
+        "epochs": 6,
+        "generative_training": true,
+        "human_cells_reported": 33000000,
+        "learning_rate": 0.0001,
+        "mask_ratios": [0.25, 0.5, 0.75],
+        "supervised_cell_type_objective": false,
+        "use_cls": false
+      }
+    }
+  },
+  "code_license": "MIT",
+  "input_contract": {
+    "canonical_matrix": "raw_unselected_nonnegative_single_cell_or_single_nucleus_counts",
+    "embedding": "L2_normalized_first_token_hidden_state",
+    "gene_identifier": "feature_name_gene_symbol",
+    "in_vocabulary_gene_filter": true,
+    "nonzero_genes_only": true,
+    "sampling_contract": "preserve_cls_then_sample_without_replacement_to_1200_tokens",
+    "sampling_warning": "The official collator uses torch.randperm for cells exceeding 1199 expressed in-vocabulary genes. Common-lane adapters must derive per-cell sampling seeds from immutable row IDs so embeddings are cell-order invariant; native-lane official behavior is reported separately.",
+    "special_tokens": {
+      "cls": 60695,
+      "eoc": 60696,
+      "pad": 60694
+    },
+    "vocabulary_size": 60697,
+    "within_cell_expression_transform": "51-bin rank-like binning of nonzero values"
+  },
+  "repository": "bowang-lab/scGPT",
+  "repository_revision": "cebd6fae655b9c585a4807daa3ac31bb764f06b4",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Official pinned repository code and tutorials, official public Google Drive folder metadata, and the public CZI scGenePT S3 mirror were queried on 2026-08-22. Both Google Drive auxiliary files byte-match the mirror. Weight bodies were not downloaded; their SHA-256 values remain unresolved.",
+  "source_records": [
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:LICENSE",
+      "sha256": "1ceeacbed51e2890187425547bc2efd16c1b7ad45189b7dfb21e83a45a2e9d9e"
+    },
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:README.md",
+      "sha256": "b0503e8ca789f19f1fc2350c5aaf57b1b323bbae43b354655231b5f4a1586c83"
+    },
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:data/cellxgene/README.md",
+      "sha256": "b9760b4b9ffa67c52b739f9210451c7d3f0186227091061c41815492b3919c6d"
+    },
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:tutorials/zero-shot/README.md",
+      "sha256": "a15606b7449a64e87135e8717aab01a701ab94b195f63f6ed2026257f908d3d8"
+    },
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:tutorials/zero-shot/Tutorial_ZeroShot_Integration_Continual_Pretraining.ipynb",
+      "sha256": "7e9318d4f29d066c60d77a2457413a60fb66843350dccf4dd49004cfd41d13e2"
+    },
+    {
+      "identity": "czi-ai/scGenePT@5847c57e4cccd9949a7f0b5f3775d5dcae5a5eac:README.md",
+      "sha256": "99972a731f10f9ba56386a931d5491c5705c124200e534d49186eece592e9238"
+    }
+  ],
+  "weight_content_downloaded": false,
+  "weight_license": "UNDECLARED"
+}

@@ -1,0 +1,44 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["cell_state_mapping", "rna_conditioned_atac", "development_only_rna_atac_state_mapping"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development frozen RNA-query cell mapping and donor-by-cell-state RNA-to-ATAC diagnostics only. RNA and ATAC were measured from different aliquots and can be compared only after biologically justified aggregation.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No GSE244832 cells, ATAC, labels, feature statistics, covariate encoding, encoder adaptation, early stopping, or calibration may enter a model scored on GSE244832."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only inductive cell-state prediction after selection lock. It has no observed ATAC endpoint and cannot confirm RNA-conditioned ATAC.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA counts only through the frozen direct-query adapter; no labels, eQTL/ieQTL outcomes, query fitting, feature changes, head fitting, or calibration before prediction hashes are committed."
+    },
+    "gse296875": {
+      "allowed_use": "Same-nucleus RNA-ATAC outer-fold training and donor-held retrospective cell/profile evaluation after activation and exact-row-join gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors define genes, peaks, paired rows, architecture, covariates, parameters, early stopping, heads, or calibration. Held donors supply RNA only to the model; held ATAC remains evaluator-only."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_fitted_scpair_per_outer_fold_seed_gene_inventory_peak_inventory_and_no_covariate_contract",
+    "common_lane": "frozen RNA-to-ATAC encoder representation with cov=None plus identical common head",
+    "native_lane": "frozen direct Bernoulli RNA-to-ATAC peak probabilities; atlas augmentation may use outer-training unimodal cells only and must be named separately",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; never row-paired; donor-by-cell-state comparison only",
+    "gse289173": "RNA_only sealed query; ATAC is structurally missing",
+    "gse296875": "same_nucleus; exact identical ordered row IDs are mandatory for every paired training objective"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, nuclei, and peak predictions are not independent biological replicates.",
+    "feature_contract": "Genes and peaks, including order and any filtering, are fixed inside each outer-training partition.",
+    "no_false_pairing": "The project adapter must reject a paired object unless donor, sample, nucleus/barcode, row count, and ordered row IDs agree exactly. Upstream merge_paired_data is not sufficient validation.",
+    "profile_scale": "Score frozen output_px as Bernoulli peak probabilities or apply one prospectively frozen row normalization for a multinomial endpoint. Never derive scaling or calibration from held ATAC.",
+    "query_isolation": "Prediction receives held RNA tensors and frozen state only. The upstream high-level loader/predict and augment paths are prohibited on held or sealed rows."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

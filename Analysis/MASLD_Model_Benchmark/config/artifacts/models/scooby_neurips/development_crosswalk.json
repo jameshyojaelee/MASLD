@@ -1,0 +1,40 @@
+{
+  "crosswalk_scope": {
+    "project_sources": ["resource_atlas_current", "gse244832", "gse281160", "gse281364", "gse289173", "gse296875", "current_coloc_gwas"],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "upstream_cell_sources": ["GSE194122", "SRP356158", "NeurIPS_2021_AWS_multiome"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "The exact NeurIPS checkpoint was not the paper's main OneK1K/GTEx eQTL benchmark model, but reproduction code applies its family REF/ALT exon-sum method to fine-mapped variants. Treat the readout as downstream-demo evidence; MASLD GWAS and COLOC labels were not training targets.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {"evidence": "The October 2024 checkpoint predates GSE244832 public release and its liver stellate profiles are absent from the explicit NeurIPS corpus.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "gse281160": {"evidence": "The perturbation source became public after the checkpoint and was not a training target.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "gse281364": {"evidence": "The MPRA source became public after the checkpoint and was not in the training corpus.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "gse289173": {
+      "evidence": "The immutable NeurIPS weight predates GSE289173 public release by four months. Its MASLD cell labels, donor eQTLs and interaction-eQTL outcomes could not have entered the checkpoint. Generic reference sequence and inherited functional-genomics priors remain expected.",
+      "exposure_confidence": "high",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {"evidence": "GSE296875 became public nearly a year after the checkpoint. Its liver multiome, QTL and histopathology outcomes were unexposed.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "resource_atlas_current": {"evidence": "No Resource MASLD labels or frozen programs were targets. The learned single-cell decoder is hematopoietic, while generic liver priors can only be inherited from Borzoi.", "exposure_state": "target_label_unexposed"}
+  },
+  "interpretation": "NeurIPS scooby has the cleanest sealed chronology of the three checkpoints, but chronology does not solve topology. Its 14-D context was trained from observed RNA and ATAC, the encoder is absent and cross-tissue/donor induction was not established.",
+  "rules": {
+    "cell_embedding": "The exact Poisson-MultiVI reference model, retained feature universe, sample-batch handling and query posterior are part of the checkpoint input. A new 14-D latent is not interchangeable.",
+    "genome_overlap": "Any adaptation crosses donor folds with chromosome/LD blocks and a 524288-bp buffer.",
+    "rna_conditioned_atac": "No inference request may expose ATAC counts, ATAC-derived neighbors, peak features or a latent computed from them. Only a prespecified RNA-only query projection can reactivate the candidate.",
+    "sealed_rule": "GSE289173 has RNA only. Do not fit a bridge, encoder, calibration or threshold using its outcomes after unblinding."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "adaptation_modalities": ["stranded_scRNA_coverage", "scATAC_insertion_profile"],
+    "cell_context": "14-D custom Poisson-MultiVI joint RNA/ATAC latent",
+    "cell_source": "63,683 NeurIPS bone-marrow multiome cells/nuclei",
+    "inherited_base": "Borzoi replicate 0 human/mouse sequence-to-profile corpus",
+    "topology": "same-nucleus RNA-ATAC"
+  },
+  "verified_date": "2026-08-22"
+}

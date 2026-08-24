@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse244832"
+title = "Human MASLD donor-matched snRNA and snATAC"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["GSE244832"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 18
+native_genome_build = "hg38_Cell_Ranger_3.0.2_RNA+bwa_mem_0.7.17_ATAC"
+native_annotation_release = "UNRESOLVED_Cell_Ranger_3.0.2_hg38_gene_annotation+ATAC_reference_bundle"
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+pairing_levels = ["same_sample_different_aliquot"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Full model-input admission remains task-specific: freeze the exact RNA annotation and ATAC reference bundle plus explicit GENCODE v49/GRCh38.p14 crosswalks before using deposited source-native features as training inputs.", "The frozen fixed-window artifact activates evaluator-only development transport, not cell-paired RNA-ATAC learning, model fitting, calibration, or an external champion claim."]
+notes = "RNA and ATAC use separate nuclei from matched donors. Cell-to-cell pairing is prohibited. GEO sample records specify Cell Ranger 3.0.2/hg38 for snRNA and bwa mem 0.7.17 for snATAC. Source audit ARTIFACTS ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392 recovered 88,814 ATAC cells across all 18 donors and rejected the stale legacy pseudobulks. Membership ARTIFACTS 32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6 froze donor-cell membership. Outcome ARTIFACTS 6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3 rebuilt evaluator-only 20-bin profiles and counts on 32,000 project windows from all raw fragments using the audited custom-Bowtie2 Tn5 geometry. This activates donor-by-lineage development transport only."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE244832"
+verified_date = "2026-08-24"
+local_exposure = "Heavily used locally; development only."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "train"
+label_visibility = "development_visible"

@@ -1,0 +1,15 @@
+{
+  "admitted": true,
+  "authority": "rights",
+  "evidence": {
+    "access_tier": "public",
+    "internal_research_computation_allowed": true,
+    "license_status": "source_terms_apply",
+    "redistribution_allowed": false,
+    "redistribution_class": "source_reference_only",
+    "scope": "compatibility_smoke_only"
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

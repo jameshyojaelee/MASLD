@@ -1,0 +1,43 @@
+{
+  "audit_scope": {
+    "checkpoint": "official_Calico_Borzoi_four_member_human_ensemble",
+    "development_sources": "variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "borzoi_ensemble": {
+      "checkpoint_identity": "GCS generations 1691539358988138,1691539419241923,1691539441571542,1691539462862235 in replicate order",
+      "corpus": "UCSC hg38 and mm10 sequence paired with ENCODE, GTEx v8/recount3, FANTOM5, Roadmap and CATlas functional-genomics tracks",
+      "corpus_annotation_state": "supervised_coverage_tracks_with_generic_tissue_and_cell_context",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_variant_and_regulatory_sources",
+    "sha256": "65ace3b7b31138459e88db1c34c05f90cd75121ac2b88befe18552f1780e3716"
+  },
+  "interpretation": "The official weights predate sealed GSE289173 by approximately 18 months, the accession is absent from the exact released training-target manifest, and donor/cell-type eQTL and interaction-eQTL outcomes were not declared training targets. The checkpoint is target-label-unexposed for the sealed variant endpoint. This does not make genomic positions novel: the reference sequence was broadly used in pretraining, so held chromosome/LD blocks and receptive-field buffers remain mandatory.",
+  "license_disposition": {
+    "code": "Apache-2.0",
+    "open_champion_eligibility": "ineligible_until_weight_terms_are_explicit",
+    "weights": "UNDECLARED_on_the_official_GCS_objects"
+  },
+  "noncanonical_checkpoint_findings": {
+    "Genentech_gReLU_conversion": "A separately converted four-member checkpoint may provide safer framework integration, but it is not the canonical upstream release. It cannot replace the official ensemble until every member passes native Calico numeric parity, track order, inverse-transform, reverse-complement and license-derivation checks.",
+    "PyTorch_flashzoi_and_other_Hugging_Face_ports": "Ports are independently versioned derivatives. Do not use their hashes, configs or declared licenses as evidence for the official TensorFlow HDF5 objects."
+  },
+  "remaining_blockers": [
+    "Obtain explicit terms for the separately hosted official weights or an institutional legal determination that the repository Apache-2.0 grant covers them.",
+    "With campaign approval, download all four objects by immutable GCS generation, verify size/MD5/CRC32C, compute SHA-256, and inventory HDF5 paths/shapes/dtypes without following links.",
+    "Recover or reconstruct and freeze the exact Baskerville and Westminster revisions used to create the weights; the v1.0.0 release does not pin them.",
+    "Resolve the training hg38.ml.fa identity. The currently linked object postdates the weights; demonstrate primary-contig parity to the project GRCh38.p14 FASTA and freeze patch/haplotype behavior.",
+    "Resolve the paper's 16384-bin mathematical output, the 6144-bin central training loss and the 16352-bin released prediction config with fixed numeric fixtures.",
+    "Freeze target order, strand pairs, inverse transforms, zero-shift policy, REF/ALT orientation, reverse-complement restoration and the liver-track subset without sealed outcomes.",
+    "Run isolated TensorFlow 2.11 and release TensorFlow 2.15 compatibility probes on L40S before selecting the runtime; full training exceeded 40 GB per GPU in the publication.",
+    "Prove strict native parity for any converted gReLU, PyTorch or parameter-efficient adaptation path before it may represent Borzoi in the tournament."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "exposure_eligible_but_license_and_runtime_blocked",
+  "verified_date": "2026-08-22"
+}

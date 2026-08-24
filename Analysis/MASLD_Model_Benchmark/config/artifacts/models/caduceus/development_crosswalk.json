@@ -1,0 +1,48 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_content": "HG38_human_reference_genome",
+    "interval_source": "Basenji_Enformer_sequences_human.bed",
+    "training_segments": 34021,
+    "segment_extension_bp": 1048576,
+    "approximate_training_tokens": 35000000000,
+    "training_objective": "masked_language_modeling",
+    "reverse_complement_augmentation": false,
+    "reason_no_reverse_complement_augmentation": "Caduceus_PS_is_architecturally_reverse_complement_equivariant",
+    "locus_inventory_status": "DERIVABLE_NOT_PROCESSED"
+  },
+  "crosswalk_scope": {
+    "admitted_task": "variant_to_regulation",
+    "project_reference": "GRCh38.p14",
+    "registered_development_signed_effect_source": null,
+    "project_sealed_source": "GSE289173"
+  },
+  "findings": {
+    "GRCh38.p14_project_reference": {
+      "exposure_state": "encoder_seen",
+      "evidence": "The checkpoint used extended hg38 training intervals. Exact GRCh38.p14 patch and contig differences must be validated."
+    },
+    "GSE289173_reference_allele_windows": {
+      "exposure_state": "encoder_seen",
+      "evidence": "Human reference windows are the declared pretraining corpus; exact locus membership can be derived from the frozen BED and extension algorithm."
+    },
+    "GSE289173_observed_variant_alleles": {
+      "exposure_state": "clean_declared",
+      "evidence": "The corpus used the reference genome and did not declare population haplotypes."
+    },
+    "GSE289173_eQTL_ieQTL_effects": {
+      "exposure_state": "target_label_unexposed",
+      "evidence": "The checkpoint was released before GSE289173 became public and was trained without eQTL labels."
+    },
+    "long_range_eQTL_VEP_labels": {
+      "exposure_state": "downstream_demo",
+      "evidence": "The Caduceus study extracted frozen embeddings and fit an SVM on the published long-range eQTL variant classification task. The fitted SVM is not part of this checkpoint."
+    }
+  },
+  "task_data_gate": {
+    "common_frozen_embedding_lane": "blocked_for_supervised_signed_effect_fit_until_a_nonsealed_development_label_source_is_registered",
+    "native_zero_shot_lane": "admissible_as_a_sequence_only_comparator",
+    "sealed_rule": "GSE289173 cannot choose context length, pooling width, layer, RCPS aggregation, calibration, or head parameters."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

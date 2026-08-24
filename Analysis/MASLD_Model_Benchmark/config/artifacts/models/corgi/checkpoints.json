@@ -1,0 +1,169 @@
+{
+  "admission_status": "BLOCKED_PENDING_LICENSE_CHECKPOINT_SOURCE_REFERENCE_INPUT_MAPPER_AND_NATIVE_NUMERIC_PARITY",
+  "architecture_contract": {
+    "checkpoint_state_numel": 195870252,
+    "declared_parameter_count": 196000000,
+    "input_length_bp": 524288,
+    "input_resolution_bp": 1,
+    "model_family": "convolutional_tower_with_FiLM_plus_nine_grouped_query_self_attention_blocks",
+    "output_central_bins": 6144,
+    "output_length_bp": 393216,
+    "output_resolution_bp": 64,
+    "sequence_features": "float32 one-hot A,C,G,T DNA",
+    "trans_context_features": 2891,
+    "transformer_heads": 8,
+    "transformer_layers": 9,
+    "warning": "The article describes four grouped-query groups, while released config.py stores gqa=2 and modules.py derives num_heads_kv=heads//gqa. Freeze the behavior of the checkpoint-bound implementation after strict restoration rather than resolving this wording by assumption."
+  },
+  "checkpoint": {
+    "filename": "corgi_model.pt",
+    "format": "PyTorch_pickle_backed_checkpoint",
+    "md5": "b10ddca8bb32eae3b67116242cfe1871",
+    "sha256": "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4",
+    "size_bytes": 2350451066,
+    "state_key_count": 177,
+    "weight_downloaded": true,
+    "weights_only_schema_inventory": true
+  },
+  "identity_reconciliation": {
+    "checkpoint_producing_code_revision": "UNRESOLVED",
+    "current_code_revision": "d84c00082da3d04eb05169e290e53f1c7da2b9c5",
+    "current_revision_date": "2026-08-13",
+    "finding": "The two Zenodo records publish the same Corgi object by filename, size and MD5. The paper-linked reproduction repository pins its corgi gitlink to f5e8507e9d3bd65fc8d520b15655a7e283abf46b, but that object is not advertised or fetchable from ekinda/corgi and the reproduction repository has no .gitmodules URL. Current executable source is therefore identifiable but not cryptographically bound to the weight.",
+    "paper_archive": {
+      "created": "2026-06-14",
+      "doi": "10.5281/zenodo.20686797",
+      "record_license": "CC-BY-4.0"
+    },
+    "readme_archive": {
+      "created": "2026-02-13",
+      "doi": "10.5281/zenodo.18630048",
+      "record_license": "CC-BY-4.0"
+    },
+    "source_stability": "All model, config, prediction and packaged context-reference blobs are unchanged between repository commit 9fbbcf2ae8c3eb9c65040574440cb9506277eb0f on 2026-02-13 and current HEAD. Later changes are README or packaging cleanup only. This does not prove that either source revision produced the weight."
+  },
+  "input_contract": {
+    "context_gene_order": {
+      "ensembl_list_sha256": "544bbd49775a43cdda0b990a5f04774bda300938bb77166c59c31c87328ba2e4",
+      "hgnc_list_sha256": "1c5d718a25ed1c89898d727a293b36fb694589977a4b88bb7b333513f36fb770",
+      "length": 2891,
+      "unresolved_gene_contract": "Freeze identifier versions, duplicate handling, absent-gene policy and GENCODE-v49 crosswalk before any project mapping. Missing genes cannot be encoded as biological zero without a prespecified observed-expression rule."
+    },
+    "paper_training_context": "Coding-gene TPM-like values were log transformed, quantile normalized and pyComBat-corrected across total RNA, polyA RNA, pseudobulk single-cell RNA and CAGE, using total RNA as reference.",
+    "released_inference_context": "predict.py orders a 2,891-value vector and replaces its within-vector ranks by the sorted packaged tf_reference.npy values. This removes magnitude information and is not the paper's full log-plus-cross-sample-pyComBat training pipeline.",
+    "released_reference_sha256": "95041201bacaa6a77f0cf8c6db29a628b47249edcc0ee69579d04d49b6b2381d",
+    "sequence_window": "524288_bp with predictions from the central 393216_bp",
+    "unknown_base_policy": "Non-ACGT bases become all-zero one-hot rows in the released helper; freeze and test boundary N masks explicitly."
+  },
+  "license_audit": {
+    "code_status": "CONFLICT_UNRESOLVED",
+    "finding": "The repository root LICENSE is Apache-2.0 while pyproject.toml declares MIT. The project must obtain upstream clarification or an institutional legal determination before code reuse, adaptation or redistribution.",
+    "open_champion_eligibility": "INELIGIBLE_UNTIL_CODE_CONFLICT_AND_DERIVATIVE_WEIGHT_TERMS_ARE_CLEARED",
+    "root_license": "Apache-2.0",
+    "weight_record_license": "CC-BY-4.0",
+    "weight_terms_scope": "Record-level CC-BY-4.0 is explicit for both archives, but derivative-weight redistribution and interaction with the conflicting code grant require review.",
+    "pyproject_license": "MIT"
+  },
+  "native_scoring_contract": {
+    "common_lane": "Use identical project sequence and expression-derived features only after a fold-fitted context mapper is frozen. Preserve sequence-only, trans-only, mean-context, nearest-context, shuffled-context and task-native sequence baselines.",
+    "published_variant_path": "For each eQTL-eGene pair, center a 524288-bp REF or ALT window at the variant, hold trans context fixed, and difference predictions. Published readouts aggregate total-RNA strands across the gene body plus 256 bp and histone signal between variant and distal gene end plus 4096 bp, then combine normalized assay readouts.",
+    "variant_scope": "The paper evaluated fine-mapped GTEx eQTLs, including liver, after training. These readouts are a frozen native comparator but any change in readout, assay weights, gene span or context mapper is development fitting.",
+    "warning": "Corgi predicts functional genomic tracks, not signed donor-level cell-type eQTL or interaction-eQTL coefficients. Directional calibration must be learned only from development folds."
+  },
+  "output_contract": {
+    "activation": "direct_Conv1d_without_softplus_for_the_regular_checkpoint; derived from exact output_head.weight and output_head.bias state keys and confirmed by strict restoration",
+    "channels": [
+      "dnase", "atac", "h3k4me1", "h3k4me2", "h3k4me3", "h3k9ac", "h3k9me3", "h3k27ac", "h3k27me3", "h3k36me3", "h3k79me2", "ctcf", "cage_plus", "cage_minus", "rampage_plus", "rampage_minus", "rna_total_plus", "rna_total_minus", "rna_polya_plus", "rna_polya_minus", "rna_10x", "wgbs"
+    ],
+    "count": 22,
+    "training_transform": "Assay-specific scale and soft clipping followed by 64-bp aggregation: sum for CAGE/RAMPAGE, square-root of sum for RNA and mean for other assays.",
+    "transform_status": "UNRESOLVED_FOR_NUMERIC_INVERSION; the public prediction helper emits model-scale values and does not publish a complete assay-specific inverse-transform contract."
+  },
+  "pretraining_contract": {
+    "contexts": 580,
+    "context_split": {
+      "test": 37,
+      "train": 488,
+      "validation": 28,
+      "warning": "The three reported counts sum to 553 rather than 580 because easy-test or otherwise excluded contexts are not fully reconciled in the article text/config. Freeze the exact tissue/sample manifest before any split-sensitive claim."
+    },
+    "corpora": ["ENCODE", "FANTOM5", "Tabula_Sapiens", "CATlas", "10x_healthy_PBMC_multiome", "10x_healthy_brain_multiome"],
+    "genomic_split": "Borzoi fold3 test, fold4 validation and remaining folds train after subtracting trans-regulator gene bodies from folds3/4",
+    "genomic_windows": {"test": 1437, "train": 11496, "validation": 1462},
+    "held_out_liver_prior": "Liver and hepatocyte contexts were placed mainly in the published test set, but the corpus still supplies broad normal human regulatory and tissue priors. This is not MASLD supervision.",
+    "objective": "supervised multi-assay 64-bp coverage prediction conditioned on DNA and trans-regulator expression",
+    "training_compute": "approximately 200 A100 GPU-days, five epochs, batch size two, bfloat16"
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "benchmark_rule": "Use the project reference only after gzip/checksum, primary-contig sequence identity, coordinate, strand and REF-allele fixtures pass. Patch and haplotype scaffolds absent from the native split are out of domain.",
+    "native_build": "hg38",
+    "native_chrom_sizes_sha256": "e1d9152418038457a959e949d99c9caf7ae3e4f87cfbb4ffe7d8b9a54ba1202b",
+    "native_fold_bed_sha256": "8ac0a937114db7be4eb0d7e02766c7c89e889ed970d4ea75787b8ef9efce9697",
+    "native_fasta_identity": "UNRESOLVED: training used a Borzoi-derived hg38 modified toward common gnomAD alternate alleles, but no exact FASTA object or checksum is bound to the checkpoint.",
+    "sequence_buffer_bp": 524288
+  },
+  "release": {
+    "code_repository": "https://github.com/ekinda/corgi",
+    "paper_doi": "10.1038/s41467-026-75527-2",
+    "publication_date": "2026-07-14",
+    "reproduction_repository": "https://github.com/ekinda/corgi-reproduction"
+  },
+  "runtime_contract": {
+    "compatibility_runtime": "NVIDIA PyTorch 24.01 container, Python 3.10.12, torch 2.2.0a0+81ea7a4, CUDA 12.3, FlashAttention 2.0.4 plus the exact upstream rotary_emb 0.1 extension compiled for sm_89",
+    "exact_checkpoint_training_runtime": "UNRESOLVED",
+    "full_window_probe": "Strict restore, 524,288-bp forward to [1,22,6144], shortened-window mixed-precision backward/SGD step, repeated inference and reverse-complement shape/finite checks passed on one NVIDIA L40S. This is compatibility evidence, not native numeric parity.",
+    "hardware": "Ampere-or-newer NVIDIA GPU declared because FlashAttention v2 is required; L40S remains the project compatibility default.",
+    "package_floor_only": "Python>=3.9, torch>=2.1, flash-attn>=2.0.0, numpy>=1.24, pandas>=1.5, pyfaidx>=0.7, pybigwig>=0.3.22",
+    "status": "L40S_COMPATIBILITY_PASSED_NATIVE_NUMERIC_PARITY_AND_CHECKPOINT_RESUME_NOT_PERFORMED",
+    "warning": "Version floors do not reproduce the A100 training environment. B6K use remains prohibited until sm_120 import, kernel, restore, training-step, resume and numeric-tolerance probes pass."
+  },
+  "safe_loading_contract": {
+    "current_loader": "predict.py calls unrestricted torch.load and load_state_dict(strict=False). This can execute pickle payloads and can silently accept missing or unexpected parameters.",
+    "loading_rule": "The downloaded object passed size, MD5 and SHA-256 verification, CPU-only torch.load(weights_only=True,map_location=cpu,mmap=True) tensor-schema inventory, and isolated no-network strict architecture restoration with no missing or surplus tensors. Use this safe exact path; never use the released unrestricted loader or strict=False.",
+    "numeric_parity": "Reproduce fixed forward, reverse-complement, context-rank mapping, crop, channel order and REF/ALT fixtures against the official helper before admission.",
+    "weight_downloaded": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Communications article, both official Zenodo records, ekinda/corgi at d84c00082da3d04eb05169e290e53f1c7da2b9c5, ekinda/corgi-reproduction at 2367c42cf36630b7cf561eccc2e781abc22b36be and small GEO metadata were queried on 2026-08-22. On 2026-08-24 the official checkpoint was downloaded from Zenodo 18630048, byte-verified and safely inventoried without importing Corgi. No source_data.zip or checkpoint-bound reference genome was acquired.",
+  "verified_artifacts": {
+    "acquisition_artifacts_sha256": "73aad9ab9ad3e080a2ccaa0cee1a1d727d126a454f0e69f74f343a900b168c0f",
+    "acquisition_path": "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463",
+    "schema_artifacts_sha256": "312bb3c90ae6da3eff20f43d920b03fbf6a5b05b2b480bbc98d24aaad71d868e",
+    "schema_path": "executions/corgi-official-checkpoint-schema-21064532",
+    "compatibility_runtime_artifacts_sha256": "01de778c17c67d92de9a2e242350e17443dbfe76b7c5a5f8bc447eae5408cd3c",
+    "compatibility_runtime_path": "executions/environments/corgi-nvidia-pytorch-24.01-py3-recovery-21064690",
+    "l40s_native_runtime_probe_artifacts_sha256": "09d8811b612cba4f75361feeba29bd0676efde83f0e4785a37990c2d2f52a0a2",
+    "l40s_native_runtime_probe_path": "executions/corgi-native-runtime-l40s-r8-21065022",
+    "rotary_l40s_probe_artifacts_sha256": "4ac0d03f52fa26583006c4067ccf35ac4946a491295c721f5b6a7f4cbc90a3f2",
+    "rotary_overlay_artifacts_sha256": "c60c4ebf0b32df7d158a3a1d781f5d45fdf4187ab0fba9f4bea35605a92e4c3a",
+    "strict_architecture_restore_performed": true,
+    "strict_restore_missing_keys": [],
+    "strict_restore_unexpected_keys": [],
+    "full_524288_bp_l40s_forward_performed": true,
+    "shortened_window_l40s_backward_performed": true,
+    "native_numeric_parity_performed": false,
+    "checkpoint_resume_performed": false,
+    "tensor_values_exported": false
+  },
+  "source_records": [
+    {"identity": "ekinda/corgi@d84c000:LICENSE", "sha256": "feb79b816ab6d0cfef7c005b934f1383c0c1af9b6522382a2e156b82f87e388a", "size_bytes": 9707},
+    {"identity": "ekinda/corgi@d84c000:pyproject.toml", "sha256": "fd298c3d18d273d8b41fa6df57a4f1d52cba4f7b2f68e35a57537090f66ef515", "size_bytes": 725},
+    {"identity": "ekinda/corgi@d84c000:corgi/config.py", "sha256": "a6ae55409602e0de35a8d2cf757eb5ebac93b602e31e00f0aa36a4fbd63ac4b1", "size_bytes": 2256},
+    {"identity": "ekinda/corgi@d84c000:corgi/constants.py", "sha256": "4ee89ba8fef8c72f931dabd9b25545e95922b9c1a9d1da8235f951b99b39ad7c", "size_bytes": 674},
+    {"identity": "ekinda/corgi@d84c000:corgi/model.py", "sha256": "767067e4659ca196f307d2133104365fb7e6ea9d2f151dd61d3c2a8a7e0737e6", "size_bytes": 12228},
+    {"identity": "ekinda/corgi@d84c000:corgi/predict.py", "sha256": "0d8da0bedbf60a493188bfd9109cc56624292ea139c14f3ec20df5cf8573567b", "size_bytes": 17976},
+    {"identity": "ekinda/corgi@d84c000:data/tf_reference.npy", "sha256": "95041201bacaa6a77f0cf8c6db29a628b47249edcc0ee69579d04d49b6b2381d", "size_bytes": 23256},
+    {"identity": "Zenodo:18630048:corgi_model.pt", "md5": "b10ddca8bb32eae3b67116242cfe1871", "sha256": "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4", "size_bytes": 2350451066},
+    {"identity": "Zenodo:20686797:corgi_model.pt", "md5": "b10ddca8bb32eae3b67116242cfe1871", "size_bytes": 2350451066},
+    {"identity": "ekinda/corgi-reproduction@2367c42:corgi_gitlink", "git_object": "f5e8507e9d3bd65fc8d520b15655a7e283abf46b", "status": "UNFETCHABLE_FROM_DECLARED_UPSTREAM"}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported_as_a_cell_encoder; trans-context vectors may be an auxiliary pseudobulk representation only",
+    "perturbation_transfer": "not_supported_zero_shot: the paper reports failure to predict trans-regulator perturbation effects accurately; any perturbation head is development training",
+    "rna_conditioned_atac": "primary context-aware frozen comparator, but Regular Corgi consumes a global expression context rather than local RNA coverage; compare against sequence-only, context-only and specialist ATAC baselines",
+    "unified_model": "eligible only as a conditional sequence-plus-context component after all admission gates",
+    "variant_to_regulation": "primary supported comparator after a development-only signed-effect calibration; GTEx-derived readout design is downstream-demo evidence"
+  },
+  "weight_license": "CC-BY-4.0_AT_RECORD_LEVEL"
+}

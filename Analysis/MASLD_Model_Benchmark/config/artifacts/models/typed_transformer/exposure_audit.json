@@ -1,0 +1,64 @@
+{
+  "audit_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "implementation": "UNRESOLVED_typed_evidence_transformer",
+    "sealed_sources": [],
+    "task": "typed_evidence_graph"
+  },
+  "checkpoint_finding": {
+    "biological_pretraining": "not_applicable_no_model",
+    "checkpoint_identity": "UNRESOLVED_not_created",
+    "exposure_state": "unknown",
+    "implementation_source": "absent",
+    "license": "unresolved",
+    "overall_status": "blocked_not_runnable",
+    "reason": "There is no source revision, architecture, tokenizer, graph transform, decoder, runtime, or fitted artifact to audit."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "proposed_model_fail_closed_source_holdout_induction_and_missingness_contract",
+    "sha256": "4e779c45b4262d53006d66ffe2a62675c1187ba0ac9478013740e2075449d06e"
+  },
+  "held_source_feasibility": {
+    "answer": "not_currently_evaluable;_conditionally_possible_only_after_an_exact_source_agnostic_architecture_is_frozen",
+    "future_feasible_design": "Remove the evaluated source before node, token, mask, position, and graph construction; train a generic candidate-gene scorer on remaining sources; join evaluator-only source labels after prediction freeze.",
+    "relation_specific_failure": "A held-source token, type embedding, query, or decoder has no training signal after complete source removal and cannot define a valid unseen-source score.",
+    "seal_status": "No current evidence source is sealed, so even a future leakage-safe leave-source-out score remains development-only."
+  },
+  "known_leakage_routes": [
+    "Selecting a published graph-transformer implementation after observing project source-recovery results, then retaining the same model ID.",
+    "Tokenizing nodes, edges, types, candidates, or source coverage from the complete graph before removal.",
+    "Fitting graph-wide self-attention masks, positional encodings, Laplacian features, random-walk features, shortest paths, centrality, metapaths, normalization, or vocabulary on held-source topology.",
+    "Retaining held-source IDs, type embeddings, inverse edges, source nodes, aliases, observability, tested status, missingness, prevalence, degree, source count, or deterministic derivatives.",
+    "Using a held-source-specific head or a randomly initialized unseen source embedding.",
+    "Treating missing, untestable, not-applicable, unavailable, indeterminate, or absent evidence as a negative or zero token.",
+    "Using current Gene Catalog memberships, provisional COLOC outcomes, frozen 117 programs, or hero genes as design or selection targets.",
+    "Importing an external knowledge graph without a source-level outcome and alias audit.",
+    "Interpreting attention values as causal importance or counting tokens, heads, seeds, genes, variants, cells, or guides as independent replicates."
+  ],
+  "license_disposition": {
+    "code": "UNRESOLVED_NO_IMPLEMENTATION",
+    "open_champion_eligibility": "ineligible_no_model_and_no_wholly_sealed_graph_source",
+    "project_weights": "not_created; future redistribution requires implementation terms and all graph-source derivative rights"
+  },
+  "remaining_blockers": [
+    "Choose and freeze one exact implementation identity before writing or comparing code: repository, immutable revision, package, paper mapping, complete architecture, source license, and redistribution terms.",
+    "Complete and promote the corrected 50-study COLOC release, then freeze one graph snapshot, evidence ontology, canonical node universe, source aliases, LD and locus groups, and provenance.",
+    "Freeze tokenization, canonical order, type and inverse encoding, source-independent node features, continuous values, missingness masks, attention scope, positional features, generic decoder, negatives, calibration, optimizer, early stopping, and five seeds.",
+    "Choose and verify inductive behavior. A model with entity-ID or fixed graph-token embeddings is transductive and cannot claim unseen-node transfer.",
+    "Implement source removal before every vocabulary, token, mask, positional, graph, feature, negative, normalization, and sampling operation.",
+    "Create synthetic fixtures that reject source-only nodes, inverse and alias leakage, untestable negatives, held-source tokens, untrained relation outputs, metadata permutations, and query-time graph refitting.",
+    "Define tensor-only save and strict-load receipts, then freeze graph, training, environment, model, calibration, and prediction hashes for each split and seed.",
+    "Only after campaign approval, run implementation-specific import, forward/backward, local fit, save/resume, deterministic-seed, CPU/L40S tolerance, and metric-reproduction probes through SLURM.",
+    "Keep the track blocked and development-only until a wholly sealed evidence source is prospectively registered and powered."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_implementation_no_license_no_fitted_artifact_and_no_sealed_source",
+  "task_disposition": {
+    "causal_gene": "prohibited",
+    "held_source_recovery": "blocked",
+    "open_champion": "blocked_missing_model_and_sealed_source",
+    "typed_evidence_graph": "proposed_not_runnable"
+  },
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "pxd051911"
+title = "Matched liver and adipose proteomes in obesity"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["PXD051911"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "participant"
+expected_biological_units = 58
+native_genome_build = "not_applicable"
+native_annotation_release = "not_applicable_proteomics"
+modalities = ["liver_proteomics", "subcutaneous_adipose_proteomics", "omental_adipose_proteomics"]
+pairing_levels = ["same_donor_different_tissue"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence."]
+notes = "More than 7,000 proteins were measured across matched tissues. The accession does not create a matched RNA edge."
+
+[provenance]
+source_url = "https://www.ebi.ac.uk/pride/archive/projects/PXD051911"
+verified_date = "2026-08-21"
+local_exposure = "Already used locally; development only."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "train"
+label_visibility = "development_visible"

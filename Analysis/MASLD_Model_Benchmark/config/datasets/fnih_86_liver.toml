@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "fnih_86_liver"
+title = "Conditional FNIH 86-liver cohort"
+role = "deferred"
+status = "deferred"
+species = "human"
+accession = ["FNIH_86_LIVER_CONDITIONAL"]
+access_tier = "conditional"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "no_redistribution_without_permission"
+license_status = "open_download_and_reuse_not_established"
+biological_unit = "donor"
+expected_biological_units = 86
+native_genome_build = "UNRESOLVED"
+native_annotation_release = "UNRESOLVED"
+modalities = ["single_nucleus_rna", "single_nucleus_atac", "paired_tag", "hi_c", "spatial_rna", "clinical_phenotype"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "unavailable_permission"
+exposure_status = "unknown"
+admission_blocking = true
+blockers = ["Raw or analysis-complete donor-linked files are not yet verified as openly downloadable without a DUA.", "Participant joins, genome build, outcome definitions, and export rules remain unresolved.", "Activation requires an immutable 86-donor manifest and confirmation that all repeated specimens remain donor-grouped."]
+notes = "Conditional future seal for the published 86-liver multiome, Paired-Tag, Hi-C, and spatial cohort. Do not delay development or infer a longitudinal endpoint."
+
+[provenance]
+source_url = "https://pmc.ncbi.nlm.nih.gov/articles/PMC12083587/"
+verified_date = "2026-08-21"
+local_exposure = "No controlled participant data are admitted."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "deferred"
+label_visibility = "unavailable_permission"

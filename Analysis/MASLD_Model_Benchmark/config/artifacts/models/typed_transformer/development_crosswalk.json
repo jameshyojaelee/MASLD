@@ -1,0 +1,84 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "graph_status": "BLOCKED_corrected_50_study_COLOC_release_promoted_graph_snapshot_and_model_implementation_absent",
+    "sealed_sources": [],
+    "task": "typed_evidence_graph"
+  },
+  "endpoint_eligibility": {
+    "brier_score": "ineligible_no_model_or_calibrator",
+    "causal_gene": "ineligible_by_scientific_scope",
+    "held_source_auprc": "ineligible_until_an_exact_implementation_and_leakage-safe_source-holdout_fixture_exist",
+    "locus_macro_hits_at_10": "ineligible_no_model",
+    "locus_macro_mrr": "ineligible_no_model",
+    "open_champion": "ineligible because no implementation exists and datasets_sealed is empty"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "none while the model and promoted graph snapshot are absent",
+      "exposure_state": "downstream_demo",
+      "future_fit_state": "continual_seen for every node, edge, token, feature, path, and position used in a local training graph",
+      "warning": "The corrected 50-study rerun is not promoted. Current memberships cannot be frozen into a checkpoint."
+    },
+    "gse281160": {
+      "allowed_use": "none while the model is unresolved; future development-only source-recovery diagnostic after dataset activation",
+      "exposure_state": "downstream_demo",
+      "topology": "same_cell guide and RNA aggregated to experimental replicate, target locus, and guide family",
+      "warning": "The 20 MPRA-selected targets are not an unbiased source seal."
+    },
+    "gse281364": {
+      "allowed_use": "none while the model is unresolved; future development-only source-recovery diagnostic after dataset activation",
+      "exposure_state": "downstream_demo",
+      "topology": "same_sample_different_aliquot DNA and RNA counts grouped by experimental replicate, locus, and sequence identity",
+      "warning": "Reporter activity is not an endogenous enhancer-gene link without independent mapping evidence."
+    },
+    "gse289173": {
+      "allowed_use": "none for this task",
+      "exposure_state": "target_label_unexposed",
+      "reason": "It is not a registered graph seal and cannot be used to design, debug, pretrain, calibrate, or activate the proposed architecture."
+    },
+    "resource_gene_catalog_current": {
+      "allowed_use": "none while the model and graph snapshot are unresolved. A future development graph cannot redefine Resource evidence classes, thresholds, hero genes, or frozen programs.",
+      "exposure_state": "downstream_demo"
+    }
+  },
+  "future_held_source_protocol": {
+    "calibration": "Fit only on source-held predictions and labels from remaining development sources. No evaluated-source prevalence, threshold, class weight, or eligibility enters fitting.",
+    "decoder": "One source-agnostic gene-ranking head. A source-specific query token or head cannot score a source that was wholly removed.",
+    "evaluator_only_items": [
+      "held_source_positive_and_tested_negative_labels",
+      "held_source_assay_observability",
+      "held_source_candidate_eligibility",
+      "held_source_prevalence",
+      "held_source_thresholds"
+    ],
+    "graph_removal": "Remove held-source edges, inverse edges, nodes, source tokens, provenance, observability, attention-mask entries, positional or structural encodings, paths, aggregates, degrees, source counts, normalized features, and aliases before tokenizer fitting.",
+    "negative_sampling": "Sample only within each remaining source's explicitly tested eligible universe. Missing, untestable, not-applicable, join-unresolved, and absent evidence are not negatives.",
+    "node_universe": "Freeze source-independent variants, loci, and genes. Held-source-only nodes and coverage are evaluator-only.",
+    "split": "Group native-build LD blocks, loci, genes, aliases, exact sequences, and deterministic derivatives before graph or token construction.",
+    "success_interpretation": "Cross-source support recovery can prioritize a genetically anchored candidate. It cannot supply causal attribution."
+  },
+  "induction_contract": {
+    "feature_lane": "Future only. Requires source-independent feature transforms and no per-entity embedding or query-time graph refit.",
+    "new_edge_type": "unsupported unless a separately justified trained compositional relation rule exists",
+    "new_node_type": "unsupported unless type parameters and query transform were trained before holdout",
+    "status": "UNRESOLVED"
+  },
+  "missingness_and_semantics": {
+    "evidence_states": ["supported", "discordant", "tested_negative", "untestable", "not_applicable", "source_dependent", "indeterminate"],
+    "missingness_rule": "Explicit state and mask; never substitute zero for held, untested, unavailable, or inapplicable evidence.",
+    "scientific_language": "Use colocalized or genetically anchored candidate and prioritization. Never causal gene from COLOC or model attention."
+  },
+  "reproducibility_contract": {
+    "architecture_receipt": "Required before any model code is written: implementation revision, license, type ontology, tokenizer, order, attention mask, positional encodings, decoder, loss, negatives, calibration, optimizer, early stopping, and seeds.",
+    "graph_receipt": "Hash promoted input rows, canonical nodes, typed directed edges, inverse edges, evidence states, source provenance, removed source, masks, and every graph-derived feature before fitting.",
+    "statistical_unit": "independent locus; seeds, tokens, heads, edges, genes, variants, guides, and cells are not independent biological replicates",
+    "task_contract_hashes": {
+      "evidence_graph_outer_toml": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "promotion_gates_toml": "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a",
+      "typed_evidence_graph_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92"
+    }
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

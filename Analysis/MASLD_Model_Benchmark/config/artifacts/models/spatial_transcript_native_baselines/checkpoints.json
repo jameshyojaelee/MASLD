@@ -1,0 +1,115 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "The suite has exact top-level package artifacts but no registered spatial TaskSpec, powered rights-cleared donor-level source, external source, or complete transitive environment lock.",
+    "v1_execution": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited",
+    "future_priority": "mandatory_if_a_spatial_task_is_activated"
+  },
+  "suite_contract": {
+    "model_family": "transcript_native_nonpretrained_spatial_and_nonspatial_baselines",
+    "upstream_checkpoint": "none",
+    "project_trained_state": "not_created",
+    "registered_lanes": {
+      "expression_only": "Training-partition RNA normalization and HVGs followed by PCA and a frozen classifier where labels exist, or explicitly transductive K-means or Leiden where the endpoint is target-fitted domain discovery.",
+      "simple_spatial_neighbor": "A participant- and section-local Squidpy coordinate graph; row-normalized neighbor-mean RNA features combined with own-expression features under a predeclared lambda grid; PCA plus the same frozen or transductive head contract.",
+      "BayesSpace_spot_native": "BayesSpace spatial clustering on original spot-level expression and coordinates without H&E. Subspot enhancement is excluded from the primary benchmark."
+    },
+    "mandatory_comparison": "If a spatial task is activated, every eligible deep or graph model must beat the strongest assay- and topology-matched lane under the same donor folds and endpoint.",
+    "unsupported_claim": "A target-fitted partition is not an inductive predictor, and a spatially smoothed feature matrix is not an assay-native count model."
+  },
+  "package_artifacts": {
+    "scanpy": {
+      "version": "1.12.3",
+      "license": "BSD-3-Clause",
+      "python_requires": ">=3.12",
+      "wheel": {"filename": "scanpy-1.12.3-py3-none-any.whl", "sha256": "296bc35e243cb70f3aa948ca97237843fe0773f57aca3f66e6b37bf94b6e795d", "size_bytes": 2157252},
+      "sdist": {"filename": "scanpy-1.12.3.tar.gz", "sha256": "46de2ee85d39a06d24843447d09f046de57da51e3bf1af2e44d76707493bdf33", "size_bytes": 20037416}
+    },
+    "squidpy": {
+      "version": "1.8.3",
+      "license": "BSD-3-Clause",
+      "python_requires": ">=3.12",
+      "wheel": {"filename": "squidpy-1.8.3-py3-none-any.whl", "sha256": "05fd5da00db697e6d0dbb91ff543ff5b27d0046666ce5a7348548076b3310efc", "size_bytes": 280536},
+      "sdist": {"filename": "squidpy-1.8.3.tar.gz", "sha256": "66d90f47193707a872de0e700645f57ddd5c5bcb60c5b64b5a58648043231ede", "size_bytes": 6115213}
+    },
+    "scikit_learn": {
+      "version": "1.9.0",
+      "license": "BSD-3-Clause",
+      "python_requires": ">=3.11",
+      "cp312_manylinux_x86_64_wheel": {"sha256": "056c92bb67ad4c28463c2f2653d9701449201e7e7a9e94e321be0f71c4fef2b8", "size_bytes": 9132097},
+      "sdist": {"filename": "scikit_learn-1.9.0.tar.gz", "sha256": "8833266989d3a5110178a9fae30783675460724d0e1efb13b14901d2c660c557", "size_bytes": 7750767},
+      "wheel_warning": "The registered wheel is platform- and Python-minor-specific and may only be used when the future environment exactly matches its tags."
+    },
+    "leidenalg": {
+      "version": "0.12.0",
+      "license": "GPL-3.0-or-later",
+      "manylinux_x86_64_wheel": {"sha256": "fcbd89655243cc739d28ba23fe894587d8d7235124a9248ba375819585e70090", "size_bytes": 2739255},
+      "sdist": {"filename": "leidenalg-0.12.0.tar.gz", "sha256": "c81a45a2fb874fe71e903d43a869d0efeb7f907af70476c03f6945ef0e8f44c5", "size_bytes": 453641}
+    },
+    "python_igraph": {
+      "version": "1.0.0",
+      "license": "GPL",
+      "wheel": {"filename": "igraph-1.0.0-py3-none-any.whl", "sha256": "b0bb8d91cce2a1e0550fe45f9ec925bcd04152dfb5be3fa822b9f5f36eb3f380", "size_bytes": 9157},
+      "sdist": {"filename": "igraph-1.0.0.tar.gz", "sha256": "6da7ac4e9f6a9cf03734798bed6fb082bb9274f2ae288f6099121f0332803018", "size_bytes": 9726},
+      "warning": "The pure Python distribution is not a complete native igraph runtime identity. The exact transitive C core or binary artifact remains unresolved."
+    },
+    "BayesSpace": {
+      "bioconductor_release": "3.23",
+      "version": "1.22.0",
+      "R_requires": ">=4.0",
+      "license": "MIT_plus_file",
+      "source_md5_reported": "039fa3818761e0d4c71d7d0d887caa6d",
+      "sha256": "UNRESOLVED_archive_not_downloaded",
+      "compiled_code": true
+    },
+    "status": "metadata_registered_no_package_downloaded_or_installed"
+  },
+  "preprocessing_contract": {
+    "expression": "Record raw-count provenance, library-size normalization, log transform, HVG method and count, scaling, gene identifiers, duplicates, feature order, and panel intersection. Fit learned choices in training participants unless the task is explicitly target-transductive.",
+    "PCA": "Freeze components, centering, solver, seed, component signs or a sign-invariant comparison, and the training feature roster. A strict lane uses development-fitted loadings for held donors.",
+    "spatial_neighbor_features": "Freeze graph builder, coordinate source and units, section boundary, K or radius, weighting, row normalization, self-edge policy, m-order, lambda, sparse graph, and feature formula.",
+    "clustering": "Freeze K-means cluster count and n_init or Leiden graph, resolution, partition type, seed, and mapping. Held labels cannot select these values.",
+    "BayesSpace": "Freeze feature input, platform lattice, q, d, nrep, gamma, seed, initialization, chain and burn-in policy, and label relabeling. Run and score at original spot and participant units.",
+    "missingness": "Unmeasured genes, panel absence, filtered features, below-QC observations, permission blocks, and failed joins are not interchangeable zeros."
+  },
+  "graph_and_topology_contract": {
+    "cross_donor_edges": "forbidden",
+    "construction": "Construct graphs independently inside each authoritative participant and section or core, then combine block-diagonally.",
+    "multiple_sections": "All sections from one participant remain in one outer fold. A technical slide or array containing multiple participants is split by authoritative barcode or tissue-island joins before any graph.",
+    "held_query": "A coordinate graph inside a held donor can be constructed under a locked outcome-blind rule. Refitting PCA, batch correction, feature selection, cluster parameters, or a supervised head on the held cohort is not strict inference.",
+    "replication": "Participants are inferential units. Spots, cells, subspots, graph nodes, edges, clusters, sections, and arrays are not independent participants."
+  },
+  "BayesSpace_specific_contract": {
+    "native_resolution": "Spot-based spatial transcriptomics with an appropriate lattice and original spot-level expression is the registered lane.",
+    "single_cell_panels": "Do not port the spot-lattice null and neighborhood assumptions to CosMx cells merely because a matrix and coordinates are available.",
+    "enhanceSpatial": "Modeled subspots are derivations from original spots. They cannot be treated as observations, independent replicates, or higher-resolution ground truth.",
+    "H&E": "Excluded from this baseline suite so it remains transcript-native."
+  },
+  "held_donor_capability": {
+    "supervised_strict_lane": "Fit normalization statistics where transferable, HVGs, PCA, classifier, calibration, thresholds, and all tunable graph settings on development participants; transform one held participant at a time with no label access.",
+    "unsupervised_transductive_lane": "PCA, spatial features, and partitions fitted to the target cohort are allowed only for a prespecified transductive domain-discovery endpoint and must be labeled transductive.",
+    "BayesSpace_lane": "BayesSpace is target-fitted spatial clustering, not a native frozen held-donor predictor.",
+    "selection": "All model and cluster selection uses development participants. The held source only scores the locked output."
+  },
+  "safe_loading_contract": {
+    "checkpoint": "not_applicable_no_upstream_model_state",
+    "packages": "Acquire only registered artifacts after activation and campaign approval; verify declared sizes and hashes, resolve every transitive package and native-library identity, build without mutable network resolution, and retain lockfiles.",
+    "derived_state": "Persist arrays and tabular parameters in bounded non-executable formats. Do not accept untrusted pickle, joblib, RDS, or AnnData objects as model state."
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED_top_level_artifacts_are_pinned_but_Python_R_and_native_transitive_dependencies_are_not",
+    "new_dependency_status": "none_installed",
+    "required_probe": "After activation and campaign approval only: CPU SLURM Python and R imports, fixed normalization and HVG fixture, participant-blocked graph, PCA transform, K-means and Leiden seeds, BayesSpace compiled-code and chain reproducibility, spot and row-order invariance, no cross-participant edges, no-network rebuild, and output round trip."
+  },
+  "terms_and_release_contract": {
+    "Python_suite": "BSD-3-Clause components plus GPL Leiden and igraph components; distribution obligations require review for the assembled environment.",
+    "BayesSpace": "MIT plus its package license file, subject to verification of the exact source archive and dependencies.",
+    "upstream_weights": "none",
+    "data_and_outputs": "Release remains conditional on every input matrix, coordinate, annotation, and derived-output right.",
+    "open_champion": "ineligible_now_but_mandatory_baseline_candidate_after_task_data_runtime_and_rights_activation"
+  },
+  "source_evidence": "Official PyPI release metadata for Scanpy, Squidpy, scikit-learn, leidenalg, and python-igraph plus official Bioconductor metadata for BayesSpace were inspected online on 2026-08-22. No archive, package, code, checkpoint, or dataset was downloaded, installed, or executed.",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

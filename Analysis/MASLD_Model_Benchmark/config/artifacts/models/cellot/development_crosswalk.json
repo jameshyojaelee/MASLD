@@ -1,0 +1,53 @@
+{
+  "current_task_admission": {
+    "decision": "deferred",
+    "primary_reason": "CellOT needs the held perturbation's observed target distribution to fit its transport map and has no perturbation-identity encoder for a wholly unseen target.",
+    "prohibited_workaround": "fit_or_select_the_transport_map_on_any_held_target_cell",
+    "task_id": "perturbation_transfer"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "future_known_perturbation_held_animal_or_context_only",
+      "required_resolution": ["mouse_reference", "target_and_guide_identity", "cell_to_animal_join", "RNA_to_perturbation_pairing"],
+      "reason": "A map may be learned from training animals carrying a known perturbation and applied to controls in a held animal, but current same_study_unpaired joins fail and four animals permit descriptive stress evidence only."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_held_target_but_potential_known_target_held_context",
+      "reason": "Each noncoding target would require its own observed perturbed distribution to learn a map; using that distribution defeats the target_locus holdout."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_direct_model_input_or_query",
+      "reason": "The released CellOT pipeline is single-cell distribution-native; treating 33 bulk libraries as cells would violate the assay error model and the three-batch replication structure."
+    }
+  },
+  "held_target_leakage_contract": {
+    "autoencoder_and_reduction": "outer_training_cells_only",
+    "checkpoint_selection": "inner_training_validation_distributions_only",
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "target_distribution": "same_known_perturbation_and_outer_training_role_only",
+    "upstream_incident": "default_split_functions_split_cells_and_the_trainer_selects_model.pt_by_MMD_on_loader.test; both must_be_replaced_by_grouped_outer_and_inner_roles"
+  },
+  "pairing_contract": {
+    "allowed": "unpaired_control_and_perturbed_distributions_within_a_valid_training_context",
+    "forbidden_interpretation": "transported_cell_pairs_are_not_same_cell_observations_and_do_not_estimate_individual_cell_causal_effects",
+    "missingness": "unresolved_RNA_to_perturbation_or_animal_join_is_join_unresolved_not_an_unpaired_training_sample"
+  },
+  "replication_and_export_contract": {
+    "adapter_export": "decoded_absolute_gene_expression_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "no_pseudoreplication": "cells_guides_targets_transport_pairs_and_lanes_are_not_independent_replicates",
+    "prediction_aggregation": "pseudobulk_transported_cells_within_each_replicate_before_evaluator_metrics"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "valid_only_for_a_future_known_perturbation_held_context_task_after_gene_space_decode",
+    "centroid_accuracy": "independent_evaluator_compares_replicate_aggregated_transported_centroids_to_observed_eligible_test_centroids",
+    "perturbed_reference": "O_pert_is_computed_from_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Systema_operates_on_standardized_gene_profiles_after_transport_and_does_not_license_a_map_fit_on_the_test_target_distribution"
+  },
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,71 @@
+{
+  "architecture_contract": {
+    "attention_heads": 4,
+    "hidden_dimension": 256,
+    "intermediate_dimension": 512,
+    "maximum_tokens": 2048,
+    "pretraining_objectives": ["permuted_language_modeling", "cell_type_coherence", "cell_ontology_alignment"],
+    "transformer_layers": 6,
+    "vocabulary_size": 25427
+  },
+  "checkpoint": {
+    "hf_commit": "e59304e5f49d661b7bd142e9b926737e34ae222d",
+    "hf_repository": "katarinayuan/scCello-zeroshot",
+    "lfs_blob_id": "5c65bbfbf74b35e893f48c567319b0967664d160",
+    "name": "pytorch_model.bin",
+    "sha256": "b30ddf0aadfbcca32f1a92c3b77743091e433e4f4a38dcd77c87a89236c3e676",
+    "size_bytes": 44049097,
+    "upload_date": "2025-01-20T21:44:41Z",
+    "url": "https://huggingface.co/katarinayuan/scCello-zeroshot/resolve/e59304e5f49d661b7bd142e9b926737e34ae222d/pytorch_model.bin"
+  },
+  "code_license": "NO_LICENSE_DETECTED",
+  "embedding_contract": {
+    "common_lane_candidate": "raw_last_layer_cls_embedding_before_cell_cls_and_l2_normalization",
+    "native_lane_candidate": "released_cell_cls_projection_of_last_layer_cls_with_optional_l2_normalization",
+    "output_dimension": 256,
+    "selection_rule": "The raw last-layer CLS embedding is the common representation. The learned cell_cls transform is a separately named native representation; normalization is frozen before smoke and not selected by evaluation performance.",
+    "upstream_clustering_path": "Trainer prediction returns CLS tokens from every hidden layer; the released clustering script selects the final layer."
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unintegrated_nonnegative_single_cell_or_single_nucleus_UMI_counts_with_Ensembl_gene_ids",
+    "feature_alignment": "released_25427_token_dictionary_and_gene_median_dictionary",
+    "normalization": "scale_each_cell_to_10000_counts_then_rank_nonzero_genes_by_scaled_expression_divided_by_training_corpus_gene_median",
+    "sequence": "prepend_cls_then_descending_gene_rank_then_truncate_to_2048",
+    "supported_assays": ["scRNA_UMI", "snRNA_UMI"],
+    "warning": "The tokenizer and gene-median dictionary are loaded from the separate pretraining dataset assets and must be frozen with exact hashes before execution."
+  },
+  "repository": "DeepGraphLearning/scCello",
+  "repository_revision": "767585b6cc2ef5a3e03234164c665e751a432194",
+  "runtime_contract": {
+    "declared_python": "3.9",
+    "declared_torch": "2.0.1_cuda_11.7",
+    "declared_transformers_in_checkpoint": "4.32.1",
+    "environment_status": "UNRESOLVED"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format": "pytorch_model_bin",
+    "require_explicit_code_and_weight_terms_before_download": true,
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The official repository, immutable Hugging Face model commit/blob metadata, model config, and immutable pretraining dataset repository metadata were queried on 2026-08-22. The checkpoint was not downloaded or deserialized.",
+  "source_records": [
+    {"identity": "scCello:README.md", "sha256": "fa3ed9a4e98037b10ebaee9e0f22d012666c07a1e2d99a96f3745652dfee9b83", "size_bytes": 8550},
+    {"identity": "scCello:model_prototype_contrastive.py", "sha256": "d2c8e9c91614aa0aec4110c75d62391241fb8dab6ccc278dcc60fecfa68176b5", "size_bytes": 26045},
+    {"identity": "scCello:tokenizer.py", "sha256": "6e04f95236cb8a288c8faff7af201ba266bf34141cca84508b75eaa2e54f1b27", "size_bytes": 1677},
+    {"identity": "scCello:data_proc.py", "sha256": "984023c4517c8a5787a199b6e5714deadb97dad72bc17b6a05fb0045e6604228", "size_bytes": 10949},
+    {"identity": "scCello:helpers.py", "sha256": "aa6d2270025386eaa924e0ffe87f3a6fea618e15a34c0ecd77f29f2da6035cc6", "size_bytes": 4472},
+    {"identity": "scCello:run_cell_type_clustering.py", "sha256": "efbb981e6a51b3cb6ea3e061e04410fb891ea6ac47b35cb15e1a550b2ae2eff1", "size_bytes": 5588},
+    {"identity": "scCello:sccello_bert_model.json", "sha256": "8396aa0229e21d68b6192aeb831e2cc340aabd1238655b6e496aad1b7453adf7", "size_bytes": 526},
+    {"identity": "HF:scCello-zeroshot:config.json", "sha256": "4868466a291406898f6eafc69e0918fd5e72f8f9403bbc8b8b97277d9938aafc", "size_bytes": 1183}
+  ],
+  "terms_audit": {
+    "hf_model_card_license": "absent",
+    "repository_license_file": "absent",
+    "repository_package_license": "absent",
+    "result": "blocked_no_detected_code_or_weight_license"
+  },
+  "weight_license": "NO_LICENSE_DETECTED"
+}

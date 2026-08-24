@@ -199,7 +199,7 @@ fwrite(cohort_direction, file.path(analysis_dir, "fig3c_cohort_direction_summary
 fwrite(loo_summary, file.path(analysis_dir, "fig3c_loo_summary.tsv"), sep = "\t")
 fig3c_source <- merge(cohort_direction, loo_summary,
                       by.x = "dataset", by.y = "held_out_cohort", all = TRUE)
-fwrite(fig3c_source, file.path(source_dir, "fig3c_cohort_robustness.tsv"), sep = "\t")
+fwrite(fig3c_source, file.path(source_dir, "figs3c_cohort_robustness.tsv"), sep = "\t")
 
 model_audit <- data.table(
   model = "Advanced disease versus strict control sensitivity",

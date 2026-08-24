@@ -1,0 +1,40 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "exposure_audit",
+  "model_ids": ["cobolt"],
+  "exposure_status": "target_label_unexposed",
+  "checkpoint_exposure_class": "target_label_unexposed",
+  "pretraining": false,
+  "fold_local_fit": true,
+  "held_donor_atac_exposed_to_fit_or_predict": false,
+  "query_atac_tensor_created": false,
+  "query_fitted_latent_correction": false,
+  "dataset_adjustments_enabled": false,
+  "sealed_sources_exposed": false,
+  "source_acquisition": {
+    "job_id": "21060709",
+    "status": "passed",
+    "archive_sha256": "ee72da3d1869d31d800441c021543e8ad4af3fcc99ca0cf630197801aba632d0",
+    "artifacts_sha256": "73622ff1b36da1da51ab3fc85178f41b5052e1c53e3ae51a75f326bd478b948f"
+  },
+  "runtime_probe": {
+    "job_id": "21060919",
+    "status": "passed",
+    "artifacts_sha256": "2e7d811262ed75bddeab5a7112cd6289c10e61618c1c6700729378007d71e5a4"
+  },
+  "profile_fixture": {
+    "job_id": "21061264",
+    "status": "passed",
+    "held_atac_exposed": false,
+    "equation_parity_passed": true,
+    "query_composition_invariant_by_construction": true,
+    "source_sha256": "d4b4a0c60c1388edafbe1c3db91c2370598515083d6d84d1ad23a14df907e4f9",
+    "artifacts_sha256": "f30e37d08ed97b3056577bc0f215ec5f68575de72f588ad27d6dc2f67a71de62"
+  },
+  "champion_eligibility": "ineligible_from_current_smoke_view",
+  "champion_blockers": [
+    "The source-wide consensus peak inventory includes held-donor peak discovery.",
+    "No eligible external RNA-ATAC seal is active."
+  ],
+  "notes": "This authority admits retrospective smoke execution only. Held ATAC is joined by the independent evaluator."
+}

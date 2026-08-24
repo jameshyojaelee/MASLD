@@ -1,0 +1,110 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not download, run, fine-tune, screen, promote, or compare Novae in v1.",
+    "minimum_future_evidence": "An authoritative, rights-cleared donor-level spatial RNA dataset with reusable counts, coordinates, section and participant joins, outcome-independent tissue boundaries, adequate donor power, and permission for checkpoint use and any derivative-weight release.",
+    "task_gate": "Register a spatial endpoint, donor-level inferential unit, transcript-native mandatory baselines, strict frozen and native-transductive lanes, prospective power, and a genuinely external source before any superiority or champion claim."
+  },
+  "checkpoint_training_corpus": {
+    "checkpoint_blob_date": "2024-09-10",
+    "declared_cells": 28909516,
+    "declared_image_based_samples": 78,
+    "declared_platforms": [
+      "Xenium",
+      "MERSCOPE",
+      "CosMx"
+    ],
+    "declared_tissues": 18,
+    "human_liver_cells": 2373073,
+    "human_liver_samples": 6,
+    "liver_context_exposure": "encoder_seen_normal_and_cancer_liver",
+    "masld_target_labels_declared": false,
+    "checkpoint_specific_alias_receipt": "UNRESOLVED",
+    "overall_project_exposure_state": "unknown",
+    "reason": "Published Supplementary Data declare liver context and do not declare MASLD supervision, but the exact checkpoint lacks a bound accession, donor-alias, and source-version manifest."
+  },
+  "crosswalk_scope": {
+    "candidate_checkpoint": "prism-oncology/novae-human-0@b8c0a5d7612bac6bc719ab57ed3cd16ad814728c",
+    "candidate_sources": [
+      "gse192741",
+      "gse292268",
+      "hra007511",
+      "vu2025"
+    ],
+    "registered_benchmark_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors represented by 5 Visium sections; one donor contributes 2 sections",
+      "checkpoint_exposure_state": "unknown",
+      "chronology": "The source predates the 2024 checkpoint blobs, and a donor or accession alias crosswalk to the 78 declared samples is not frozen.",
+      "modality_transfer": "Visium is spatial RNA but is a lower-resolution spot assay than the image-based single-cell pretraining corpus.",
+      "project_role": "development_visible_technical_pilot",
+      "status": "blocked_for_training_and_ineligible_for_donor_held_superiority",
+      "why": "Four donors, exposed outcomes, unresolved hg19 annotation identity, and cross-resolution transfer permit only future technical diagnostics. HEST-1k copies are duplicates, not new donors."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per CosMx slide",
+      "checkpoint_exposure_state": "target_label_unexposed_by_blob_chronology_but_alias_audit_incomplete",
+      "modality_transfer": "CosMx matches a declared pretraining platform, but target slide and donor joins remain unresolved.",
+      "status": "blocked",
+      "why": "The slide, field-of-view, and region-to-donor map is unresolved; four donors cannot support superiority; morphology is unavailable."
+    },
+    "hra007511": {
+      "biological_units": "61-participant union; 35 spatial participants",
+      "checkpoint_exposure_state": "unknown",
+      "modality_transfer": "Visium RNA is cross-resolution. H&E and MALDI are not inputs to the registered transcriptomic checkpoint.",
+      "pairing": "adjacent_section_or_same_study_unpaired_pending_authoritative_joins",
+      "status": "deferred_controlled_access",
+      "why": "Spatial and image assets require permission, derivative-weight rights require written approval, participant joins are not admitted, and source findings are already project-exposed."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants; one participant has two synchronous cores",
+      "checkpoint_exposure_state": "target_label_unexposed_by_blob_chronology_but_alias_audit_incomplete",
+      "modality_transfer": "Visium RNA is cross-resolution. CODEX and H&E are not native features of the registered checkpoint.",
+      "topology": "Ten VLP technical arrays each contain four to five participants; barcode, tissue-island, core, and participant boundaries are unresolved.",
+      "status": "blocked_controlled_access_and_join_unresolved",
+      "why": "A data-sharing agreement is required, graphs would otherwise cross participants, and CODEX registration is incomplete."
+    }
+  },
+  "strict_frozen_lane": {
+    "encoder": "Use the exact frozen transcriptomic checkpoint only after weight terms and safe loading clear.",
+    "feature_policy": "Disable target-fit HVG discovery and freeze identifiers, vocabulary intersection, feature selection, and any transferable scaling from development donors.",
+    "query_normalization": "If per-slide normalization or z-scoring remains inseparable from the native representation, label the lane transductive at the preprocessing level and do not call it strict donor-inductive.",
+    "graph": "Construct an outcome-blind graph independently within each held participant, core, and section using a development-locked rule.",
+    "head_and_prototypes": "Fit the task head, prototypes, hierarchy, clustering resolution, domain mapping, calibration, and thresholds using development donors only. Never refit them on a held cohort.",
+    "inference": "Encode each held donor without access to other held donors' features and without reference='all'."
+  },
+  "native_transductive_lane": {
+    "zero_shot_behavior": "The official zero_shot=True path recomputes K-means prototypes from selected query or reference latent features and overwrites prototype assignments.",
+    "reference_all": "reference='all' pools features across the evaluation cohort and is cross-donor transduction.",
+    "target_feature_fit": "Automatic HVGs and slide gene statistics may use all target nodes.",
+    "reporting": "Report this lane separately as native transductive inference. Do not use its results as evidence that the checkpoint generalizes inductively to unseen donors.",
+    "fine_tuning": "Any query fine-tuning is a still stronger query-adaptive lane and receives a new artifact identity."
+  },
+  "donor_and_graph_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "multiple_samples": "All sections, cores, aliquots, fields of view, slides, arrays, and graphs from one participant remain in one outer fold.",
+    "technical_units": "Cells, spots, nodes, fields, sections, arrays, edges, leaves, and prototypes are not biological replicates.",
+    "graph_scope": "Never construct a graph across donor, participant, core, section, tissue-island, field, slide, or capture-array boundaries unless a prespecified same-participant registered-volume design explicitly authorizes a boundary.",
+    "physical_distance": "Freeze coordinate source, units, scale-to-microns, and radius. Delaunay without a radius must not bridge disconnected tissue islands.",
+    "uncertainty": "Resample donors or participants for inferential uncertainty."
+  },
+  "modality_and_missingness": {
+    "H&E": "The registered checkpoint is transcriptomic. A future same-section H&E composite requires exact image weights, development-fit PCA, registration, terms, and a new checkpoint manifest.",
+    "CODEX": "Protein observations cannot be entered as expression genes or paired node features without a separately specified assay-native extension.",
+    "MALDI": "Adjacent-section metabolite intensities are not same-cell expression and are not native Novae inputs.",
+    "RNA_ATAC": "Novae does not natively implement the benchmark's same-nucleus RNA-conditioned ATAC prediction endpoint.",
+    "missingness": "Use observed, structurally_missing, not_applicable, below_qc, unavailable_permission, join_unresolved, withheld_sealed, and derivable_not_processed. Never encode an unavailable modality, gene panel, registration, or donor join as zero."
+  },
+  "claim_boundary": {
+    "possible_future_role": "Frozen spatial-RNA representation or domain comparator on a powered donor-resolved spatial endpoint, alongside spot-native and graph-native baselines.",
+    "current_role": "metadata-audited_deferred_candidate_only",
+    "prohibited": "v1 training, screening, leaderboard rank, MASLD spatial champion, superiority, multimodal H&E or CODEX claim, or a claim of strict zero-shot donor transfer from the native prototype-refit path",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "interpretation": "Novae is the only one of these three deferred methods with a canonical public pretrained spatial-transcriptomic checkpoint, but that does not make it ready for the campaign. Its weights lack declared terms; the corpus has definite liver encoder exposure but no checkpoint-bound accession receipt; native zero-shot refits query prototypes; and current MASLD spatial sources are small, controlled, exposed, join-unresolved, or cross-resolution. It remains deferred with no v1 task or champion eligibility.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

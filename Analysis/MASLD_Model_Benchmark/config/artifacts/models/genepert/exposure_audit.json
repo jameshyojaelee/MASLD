@@ -1,0 +1,50 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_external_gene_embeddings_plus_future_project_fit",
+    "development_sources": ["gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_id": "perturbation_transfer"
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_checkpoint": false,
+    "code_identity": "zou-group/GenePert@31c0034211010696ba76dc62cb875af51bfe6f4a",
+    "declared_algorithm_exposure_state": "target_label_unexposed",
+    "future_project_fit_rule": "A fit on GSE281160 is continual_seen for that dataset and cannot be described as zero-shot or external; record exact targets, guides, replicate rows, expression scale, embedding artifact, alpha, split, seed, and output hashes."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "335c930c9fe5defa4801f809fd5a62ca05bd79cc60d2e3edcf8035c265c7d565"
+  },
+  "external_embedding_exposure": {
+    "candidate_record": "Zenodo_10833191",
+    "candidate_state": "reference_only_if_exact_artifact_identity_terms_and_source_snapshot_clear",
+    "current_state": "unknown_due_to_unbound_repository_pickle_names_and_missing_archive_SHA256",
+    "outcome_rule": "gene_and_protein_text_must_not_include_project_perturbation_outcomes_or_outcome_informed_target_links"
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {"benchmark_action": "replace", "finding": "The pinned code averages cells into one condition mean without retaining biological replicate identity."},
+    {"benchmark_action": "replace", "finding": "The pinned code computes a control mean from the complete loaded dataset rather than the outer-training role."},
+    {"benchmark_action": "replace", "finding": "Model and alpha selection utilities use outer test-fold aggregates instead of nested training-only validation."},
+    {"benchmark_action": "reject_current_task", "finding": "A noncoding held target has no exact gene embedding, and the upstream missing-embedding fallback generates a random vector."}
+  ],
+  "prediction_first_rule": {
+    "gse313774": "No GenePert output is a valid direct prediction for these bulk condition/insulin arms. Do not derive a stress score after opening outcomes; CXCL1 and IL8 remain excluded from confirmation."
+  },
+  "remaining_blockers": [
+    "Do not schedule GenePert for GSE281160 unless a new gene-perturbation task is registered.",
+    "Obtain explicit repository-code permission or a license.",
+    "Bind the exact approved embedding archive member to a SHA256, source-text release, gene mapping, embedding model, dimensions, and redistribution terms.",
+    "Resolve GSE281160 biological replicates, custom reference, guide-to-locus table, matrix layer, and output gene universe.",
+    "Implement grouped nested fitting, training-only controls and normalization, deterministic seeds, strict embedding coverage, and safe non-pickle loading.",
+    "Freeze trained weights and pass isolated runtime and leakage fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_current_target_identity_unsupported_and_terms_blocked",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "not_currently_evaluable",
+    "rule": "The independent evaluator computes O_pert only from training perturbation-specific replicate centroids; residualization cannot supply a missing target embedding."
+  },
+  "terms_result": "code_NO_LICENSE_DETECTED_embedding_identity_and_terms_UNRESOLVED",
+  "verified_date": "2026-08-22"
+}

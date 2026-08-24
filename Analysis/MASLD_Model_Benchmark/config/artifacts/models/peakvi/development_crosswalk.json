@@ -1,0 +1,37 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["development_only_atac_representation", "development_only_rna_atac_integration"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Donor-compatible external-development ATAC embedding/integration evaluation only after a separate TaskSpec; RNA and ATAC are same-sample different aliquots and never cell-paired.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No GSE244832 cells, peaks, labels, batch prototypes, query adaptation, or calibration may enter a model scored on GSE244832."
+    },
+    "gse289173": {
+      "allowed_use": "None under the current PeakVI routes because the sealed row universe is RNA-only and no ATAC region matrix is exposed.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No labels or eQTL/ieQTL outcomes are available; modality incompatibility is terminal for the current sealed tasks."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-fold local PeakVI training and donor-held retrospective ATAC representation evaluation after donor/well/reference activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors define peaks, region filtering/order, model dimensions, normalization, covariates, early stopping, heads, or calibration. Held-donor query adaptation is prohibited unless separately frozen before fitting."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_trained_per_outer_fold_seed_and_peak_inventory",
+    "genomic_policy": "Peak inventory and coordinates are training-only. Any genomic-block endpoint also holds out merged blocks and the largest applicable model boundary buffer.",
+    "missingness": "An absent assay, region, donor-state, or failed-QC row is explicit missingness and is never encoded as a biological zero.",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, nuclei, peaks, and wells are not independent biological replicates.",
+    "local_training": "Project-trained artifacts are target-label-unexposed only if all fitting and selection precede sealed inference and prediction hashes are committed before outcomes are joined.",
+    "query_mapping": "scArches query updating is model fitting. It cannot occur on held or sealed rows unless an outcome-blind adaptation lane was prospectively registered."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

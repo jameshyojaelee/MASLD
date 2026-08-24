@@ -1,0 +1,43 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["cell_state_mapping", "development_only_rna_atac_integration", "experimental_rna_to_atac_decode"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development unpaired integration evaluation only. Use SCGLUE, not paired obs-name matching, because RNA and ATAC are same-sample different aliquots.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No GSE244832 matrices, labels, graph construction, balancing weights, preprocessing, model fitting, decode defaults, or calibration may enter a model scored on it."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only inductive embedding and frozen cell-state head after selection lock; no ATAC profile confirmation is possible.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA features only; no labels, outcomes, graph changes, query fitting, cell-type supervision, or calibration before prediction hashes are committed."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-fold unpaired SCGLUE and native PairedSCGLUE development lanes after donor/barcode/well/reference activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors define HVGs, LSI/PCA, gene-peak graph, balancing weights, batches, cell-type supervision, network parameters, early stopping, heads, or calibration. Held-donor RNA may be encoded without fitting."
+    }
+  },
+  "local_model_roster": {
+    "common_lane": "SCGLUE posterior-mean RNA embedding with no cell-type supervision and an identical common head",
+    "native_lane": "PairedSCGLUE only for validated same-nucleus GSE296875 training rows; report separately",
+    "experimental_lane": "RNA-to-ATAC decode_data is unscored until its defaults and fixture are added to the shared TaskSpec",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; use unpaired SCGLUE and distinct row identifiers",
+    "gse296875": "same_nucleus; PairedSCGLUE use_obs_names allowed only after join validation",
+    "gse289173": "RNA_only; inductive encoding only"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, nuclei, and graph edges are not independent biological replicates.",
+    "guidance_graph": "Construct and hash the graph within each outer-training partition. Never call a prior edge a causal regulatory relationship.",
+    "serialization": "No external dill loading. Local checkpoints require a state-dict adapter and exact graph/feature/config manifest.",
+    "supervision": "Evaluation labels cannot enter encoders. Training-donor cell-type supervision, if evaluated, belongs only to a separately declared native lane."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

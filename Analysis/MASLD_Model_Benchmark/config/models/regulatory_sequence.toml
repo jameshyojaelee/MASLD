@@ -1,0 +1,186 @@
+schema_version = "masld-bench-model-v1"
+family_id = "regulatory_sequence"
+modality = ["dna_sequence", "chromatin_profile", "rna_profile"]
+status = "candidate"
+
+[[models]]
+model_id = "corgi_regular"
+display_name = "Corgi regular"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ekinda/corgi@d84c00082da3d04eb05169e290e53f1c7da2b9c5+Zenodo:18630048:corgi_model.pt"
+checkpoint_sha256 = "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4"
+license_status = "code_license_conflict_Apache-2.0_vs_MIT_weight_CC-BY-4.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The current source, byte-identical Zenodo records, exact 2,350,451,066-byte checkpoint SHA-256, safe 177-tensor/195,870,252-value schema, sequence-plus-2,891-gene context architecture, 22 outputs, partial corpus crosswalk, and medium-confidence GSE289173 target-label-unexposed status are frozen. Safe weights-only loading, zero-mismatch strict restoration, the checkpoint-derived direct output head, full 524,288-bp L40S forward, and shortened mixed-precision backward now pass. This is compatibility, not admission. Resolve the Apache-2.0 root versus MIT pyproject conflict and derivative-weight terms; recover or certify the checkpoint-producing source and modified hg38 FASTA; reconcile grouped-query behavior and native numeric parity; freeze all assay transforms, strand/crop/TTA behavior, checkpoint resume, and a development-fold count-to-context mapper with GENCODE-v49 crosswalk and explicit absent-gene handling. Native GTEx readouts are downstream-demo evidence, not a signed cell-type eQTL head."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "borzoi_ensemble"
+display_name = "Borzoi ensemble"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "calico/borzoi@9736924e6c861f0d71978cc3012ff8d76d6fa91f+GCS:generation:1691539358988138,1691539419241923,1691539441571542,1691539462862235"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_Apache-2.0_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The canonical ensemble is four TensorFlow HDF5 random-initialization/order replicates on the same fold3-test/fold4-validation split, not four genomic CV folds. The immutable GCS generations, sizes, MD5 values, architecture, target manifest, output-window discrepancy, source crosswalk, and GSE289173 target-label-unexposed status are frozen under config/artifacts/models/borzoi. Official weight terms are undeclared. Before execution, obtain explicit terms or an institutional determination; download by generation and verify size, MD5, CRC32C, and SHA-256; reject HDF5 links or schema drift; recover the checkpoint-bound Baskerville/Westminster revisions; resolve hg38.ml.fa identity; and pass native TensorFlow parity for track order, inverse transforms, reverse-complement restoration, zero-shift inference, all four members, and the 16,384/16,352/6,144-bin contracts. Converted gReLU or PyTorch artifacts are separate ports and cannot substitute without native parity."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "scooby_onek1k"
+display_name = "scooby OneK1K"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "lauradmartens/onek1k-scooby@dd7a2b7be54c906b43de4bc0159b169caaf057c5+code@dbfe6cd150d018d46a6d24ffa0406d7f2e89b471"
+checkpoint_sha256 = "2ae335c651182040462d965bb879118be40a6cb174550a3686fb10b04a74f7cb"
+license_status = "code_MIT_weight_MIT_declared_inherited_Borzoi_terms_UNRESOLVED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The 765,092,032-byte safetensors, source-era architecture, OneK1K PBMC RNA profile objective, and medium-confidence target-label-unexposed chronology are frozen. The checkpoint consumes an exact 10-D scPoli space, but its encoder, feature map, preprocessing, donor conditions, and raw-RNA query transform are not bundled; a newly trained 10-D latent is incompatible. Resolve inherited canonical Borzoi authority, bind historical code/runtime/reference artifacts, verify the registered SHA-256 and strict tensor schema after campaign approval, and reproduce profile/REF-ALT fixtures. Retain only as a blood-domain variant comparator; it has no ATAC output and cannot support a MASLD champion claim as released."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "scooby_epicardioids"
+display_name = "scooby Epicardioids"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "lauradmartens/epicardioids-scooby@cefc3a626f5080baaf83878754ea924df6bd7e8d+code@dbfe6cd150d018d46a6d24ffa0406d7f2e89b471"
+checkpoint_sha256 = "f945e1937a46ddd5cb31249ef71e721e7a7b1381aa207fb2de449f23ac75a9e8"
+license_status = "code_MIT_weight_MIT_declared_inherited_Borzoi_terms_UNRESOLVED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The 772,988,628-byte safetensors, source-era architecture, unpaired epicardioid RNA/ATAC profile objective, and medium-confidence target-label-unexposed chronology are frozen. Its 50-D scGLUE context was built from observed ATAC and RNA pseudo-matches, and the exact encoder, features, graph, preprocessing, and query transform are not bundled. Resolve inherited Borzoi authority, bind historical runtime/reference artifacts, verify strict restoration and numeric fixtures after campaign approval, and preserve same-study-unpaired topology. Retain only as a cardiac variant comparator; it cannot enter RNA-conditioned ATAC or sealed MASLD champion evaluation as released."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "scooby_neurips"
+display_name = "scooby NeurIPS checkpoint"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "johahi/neurips-scooby@1591d15696c65f14053e4495e52c74812a86fd8d+code@dbfe6cd150d018d46a6d24ffa0406d7f2e89b471"
+checkpoint_sha256 = "8f2e2de3e86016378116c90accf94572e75963d5445beb6cabd585c8372170dd"
+license_status = "code_MIT_weight_license_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The October 2024 checkpoint predates GSE289173 and is target-label-unexposed with high confidence, but its weight terms are undeclared and inherited Borzoi authority is unresolved. Its missing 14-D Poisson-MultiVI encoder used observed same-nucleus RNA and ATAC, so it has no eligible RNA-only held-donor context path. Obtain terms, bind historical code/runtime/reference artifacts, recover the exact encoder, and pass strict restoration and numeric fixtures after campaign approval. Retain only as a hematopoietic variant comparator; it cannot enter RNA-conditioned ATAC or sealed MASLD champion evaluation as released."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "epibert"
+display_name = "EpiBERT"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "naumanjaved/EpiBERT@dae61b434f885991c29e2fde3fbf7f70d0ff9b80+tag:v1.0.0+Zenodo:14504049:epibert_models.tar.gz"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weight_CC-BY-4.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The v1.0.0 code, 3,738,627,947-byte CC-BY-4.0 archive, source MD5, 524,288-bp sequence, required observed 4-bp ATAC and 693-dimensional motif-context inputs, output heads, partial corpus crosswalk, and target-label-unexposed chronology are frozen. With approved acquisition, compute SHA-256 and safely inventory the exact two pretrained ATAC members plus one RAMPAGE member; freeze native hg38 identity, masking, tensor schema, TensorFlow 2.13 runtime, reverse-complement/member scoring, and numeric parity. EpiBERT is not RNA-conditioned ATAC: observed target-context ATAC is required and scored bins must be masked. It can only be a topology-matched development variant/caQTL diagnostic unless an external sealed source supplies prespecified ATAC context."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "epcotv2"
+display_name = "EPCOTv2 human"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "hf-space:luosanj/EPCOTv2@f93a2a944a49797a111f0294709416d38bedbcbe:models/human_model.pt+publication-code:liu-bioinfo-lab/general_AI_model@f20362ab5139ac53448745cdca3480f952db5cf1"
+checkpoint_sha256 = "b824a80ed238e64e15c5a6eeae91329d24f04825c62d2a9dd328658822aba45d"
+license_status = "publication_code_MIT_exact_space_code_UNDECLARED_weights_UNDECLARED_reference_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The canonical paper-linked luosanj Space checkpoint, exact 468,200,299-byte LFS SHA-256, later byte-identical mirror, publication-code source, 600-kb sequence plus required observed-ATAC input, 500-kb outputs, and medium-confidence target-label-unexposed audit are frozen. The exact Space code, weights, and reference arrays have no declared terms; obtain written terms or a legal determination before execution or redistribution. Then verify strict state schema, pin reference arrays, reconcile divergent training/inference runtimes, reconstruct the checkpoint split and alias manifest, and pass all-head numeric fixtures. EPCOTv2 does not output ATAC and the released model lacks the paper's trained eQTL classifier; it is only a topology-matched development observed-ATAC comparator, not an RNA-to-ATAC or standalone signed-eQTL model."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "enformer"
+display_name = "Enformer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "google-deepmind/deepmind-research@f5de0ede8430809180254ee957abf36ed62579ef+aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:Enformer_human"
+checkpoint_sha256 = "628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc"
+license_status = "original_code_Apache-2.0_conversion_path_academic_noncommercial_nontransferable"
+exposure_status = "target_label_unexposed"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The official Sonnet code revision, three immutable GCS object generations/sizes/MD5 values, 196,608-bp input, 5,313-track manifest, target-label-unexposed chronology, and sequence-component endpoint role are frozen under config/artifacts/models/enformer. Native weight terms and SHA-256 values remain unresolved. The registered 915,174,055-byte CREsted conversion has SHA-256 628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc but uses academic noncommercial, nontransferable terms and lacks a reproducible conversion/parity receipt, so it remains a restricted comparator. After approved acquisition, verify native objects; freeze strict restoration, target order/inverse transforms, crop, strand restoration, SAD/SAR/ALT-minus-REF sign, no-network runtime, L40S parity, and any cross-fitted track/link/direction head. Native tracks are fixed reference contexts, not donor-specific MASLD states or standalone signed eQTL/ieQTL effects."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "sei"
+display_name = "Sei"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "FunctionLab/sei-framework@1e16bff9b1618af7065a23f82c4a3bb82aaeb689+Zenodo:4906997:sei_model.tar.gz"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_academic_research_only_weight_CC-BY-4.0"
+exposure_status = "target_label_unexposed"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The exact 3,281,639,255-byte Zenodo archive, source MD5 4297aafb711aec4ecccb645b8928ea26, academic/research-only code, CC-BY-4.0 archive, 4,096-bp input, 21,907 target and 40 sequence-class manifests, and target-label-unexposed chronology are frozen under config/artifacts/models/sei. After campaign approval, verify SHA-256 and safely inventory the archive; isolate and convert the pickle checkpoint without unrestricted loading; hash projection arrays; freeze hg38/Selene channels, center anchoring, REF match, reverse-complement averaging, ALT-minus-REF sign, output formulas, legacy runtime, strict restore, L40S parity, and any cross-fitted combiner/link/direction head. Sei outputs center-bin regulatory probabilities/classes, not a spatial ATAC profile or signed gene effect, and its research-only code makes it ineligible for the open champion."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "chromdragonn"
+display_name = "ChromDragoNN"
+implementation_type = "train_locally"
+checkpoint_revision = "kundajelab/ChromDragoNN@d4a4504a06ac0beba68da031d3ae1265ed14069f"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact MIT source, no-upstream-checkpoint local-training contract, 1,000-bp sequence plus 1,630-TF RNA context, binary 200-bp-region accessibility output, continual-seen local-fit exposure rule, and secondary/component endpoint role are frozen under config/artifacts/models/chromdragonn. Native output is a binary open probability, not ATAC counts, nucleotide profiles, or a multinomial profile, so ChromDragoNN is removed from the primary RNA-conditioned ATAC task. Before a variant component run, resolve coordinate subtraction, log(TPM)-versus-arcsinh context normalization, one-logit-versus-two-class output, open-class index, backgrounds, mean-accessibility training-only computation, and crossed donor/genomic splits; implement tensor-only restoration in an isolated legacy runtime and pass sequence/REF/strand, L40S forward/backward/resume, seed, memory, calibration, and cross-device fixtures. Any enhancer-gene link or expression-direction layer is a separately named model."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "crested"
+display_name = "CREsted DeepLiver Accessibility (mouse diagnostic)"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:DeepLiver_accessibility"
+checkpoint_sha256 = "8a3ddcfa29effa9e979eae769fbfc6a362de90197434a630015dccca9fecb34c"
+license_status = "code_academic_noncommercial_nontransferable_no_derivatives_weight_terms_UNRESOLVED"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact 45,469,771-byte CREsted port hash, 500-bp mm10 input, 219,823 mouse-hepatocyte training regions, 82 mouse regulatory-topic outputs, approximate-only TensorFlow-1-to-Keras-3 conversion parity, and restricted or unresolved terms are frozen under config/artifacts/models/crested. This is neither a human liver model, donor-context model, genomic profile model, nor gene-expression-effect model. Liftover changes coordinates but cannot create human sequence grammar or signed cell-type eQTL/ieQTL semantics, so DeepLiver remains inactive in v1 with no supported task. A future prespecified cross-species diagnostic would still require permission, exact output-topic names, a conversion receipt, safe archive inspection, native-versus-port parity, and an outcome-independent ortholog mapping."]
+supported_tasks = []
+
+[[models]]
+model_id = "context_borzoi"
+display_name = "Conditional MASLD context model (legacy context_borzoi ID)"
+implementation_type = "train_locally"
+checkpoint_revision = "UNRESOLVED_UNSELECTED_UNIMPLEMENTED_COMPONENTS"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "component_code_weight_output_and_derivative_terms_UNRESOLVED"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["This legacy model_id is the single generic conditional context-model slot. It is not an implementation, released checkpoint, trained state, or commitment to Borzoi. It inherits no checkpoint, license, exposure, runtime, output, result, or scientific identity from Borzoi or any other candidate. It cannot be built unless the prespecified complementarity trigger passes; the highest-ranked eligible open long-range backbone within one standard error is then selected under the frozen conditional-model rule. Clear the selected sequence backbone and cell encoder's exact code, weight, output, and derivative terms and all native-parity blockers, then freeze a new component identity, RNA-context mapper, missingness mask, FiLM/LoRA and head attachment points, sequence window, assay outputs, donor and chromosome/LD splits, seeds, runtime, local-training receipt, and trained-artifact hashes. Exposure remains unknown until those component and local-training audits are bound. It cannot enter the common zero-shot lane."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "epibrain"
+display_name = "EpiBRAIN"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "zhongguojie1998/EpiBRAIN@ada90b066832cf313ef2df0e4ef4ddebeb1f8ba5+GDrive:10NjxkEaKsDdOX8WhOU8KdYIEx8XganNw:chk_epoch_20.pt+GDrive:1MgT3n1ufZP4Wxci3h_4Kr0JPVa18nTmF:chk_epoch_17.pt"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "blocked_no_license"
+exposure_status = "unknown"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The exact source revision, two live 2.06-GB Google Drive checkpoint identities, fixed 37- or 70-cell brain heads, six assay modalities, 524,288-bp sequence input, unresolved inherited Borzoi receipt, unknown GSE289173 exposure, paper-versus-checkpoint 8D/6D cell-head discrepancy, and no-license status are frozen under config/artifacts/models/epibrain. Do not download, import, run, compare, adapt, or redistribute without written permission covering source, inherited and final weights, derivatives, and redistribution plus an immutable checkpoint receipt. Even after clearance, EpiBRAIN remains a fixed-brain, sequence-only secondary diagnostic: its published L2 variant score is unsigned, direct ALT-minus-REF profiles require a new sign/orientation contract, and brain heads cannot be relabeled as MASLD liver context or observed-RNA-conditioned ATAC. Safe tensor export, exact track rosters, reference/crop/strand fixtures, and isolated L40S probes are also required."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "corgi_plus"
+display_name = "Corgi+"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ekinda/corgi@d84c00082da3d04eb05169e290e53f1c7da2b9c5+Zenodo:18630048:corgiplus_model.pt"
+checkpoint_sha256 = "01855614bfeffa72d5bcaaa28729c022ccfbc8f5fdcc0add8e04ba4533e94ccd"
+license_status = "code_license_conflict_Apache-2.0_vs_MIT_weight_CC-BY-4.0"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The byte-identical Zenodo records, exact 2,384,030,158-byte checkpoint SHA-256, safe 190-tensor/198,664,365-value schema, checkpoint-bound 26-channel auxiliary width, partial corpus crosswalk, and medium-confidence target-label-unexposed chronology are frozen. Safe exact restoration, checkpoint-derived Conv1d-plus-Softplus output head, synthetic-shape-only full 524,288-bp plus 26-channel auxiliary L40S forward, and shortened mixed-precision backward now pass. Corgi+ remains inactive: runtime compatibility does not supply its inputs or numeric reference; its public high-level API is placeholder-only, the checkpoint-producing source is unavailable, research scripts use absolute paths, and the required training mean baseline, local stranded 64-bp RNA, RNA delta, transforms, masks, and portable input bundle are unreleased. Resolve code/derivative terms and source; require a portable exact loader; prove coordinate/TTA/native numeric parity and checkpoint resume. Gene counts are not stranded local RNA coverage, and missing coverage is never zero. It has no validated variant-scoring contract and is registered only as a blocked conditional RNA-to-epigenomic profile candidate."]
+supported_tasks = ["rna_conditioned_atac"]

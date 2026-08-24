@@ -1,0 +1,237 @@
+{
+  "activation_disposition": {
+    "admission_status": "blocked",
+    "reason": "The nine registry roles are frozen as project-local specifications, but none has an executable implementation receipt, immutable source artifact, complete runtime lock, or fixed-fixture result.",
+    "execution": "prohibited_until_each_selected_role_has_its_own_implementation_and_runtime_receipt",
+    "selection": "The generic registry IDs may identify benchmark roles. They may not stand in for an unregistered backbone, checkpoint, or champion.",
+    "downloads_installs_jobs_or_tests_performed": false
+  },
+  "roster_contract": {
+    "count": 9,
+    "registry_ids": [
+      "mean_track",
+      "context_only",
+      "sequence_only",
+      "trans_only",
+      "nearest_regulatory_feature",
+      "nearest_context",
+      "shuffled_context",
+      "sequence_cnn_control",
+      "sequence_transformer_control"
+    ],
+    "scope": "exactly_the_nine_registered_regulatory_native_controls",
+    "no_implicit_members": true,
+    "generic_identity_rule": "Each ID below freezes a project specification, not executable code or weights. A run must additionally bind an immutable implementation ID and artifact hash. Parent-bound ablations must name the concrete parent implementation and must not claim an independent backbone or checkpoint identity."
+  },
+  "classification_contract": {
+    "true_task_native_baselines": [
+      "mean_track",
+      "nearest_regulatory_feature",
+      "nearest_context",
+      "sequence_cnn_control",
+      "sequence_transformer_control"
+    ],
+    "parent_or_pathway_ablations": [
+      "context_only",
+      "sequence_only",
+      "trans_only"
+    ],
+    "negative_controls": [
+      "shuffled_context"
+    ],
+    "registry_role_warning": "The registry capability role 'baseline' means mandatory comparison. It does not convert an ablation or negative control into an independent model family.",
+    "champion_identity_rule": "A true baseline may win under its own exact implementation and eligible sealed evaluation. A generic ablation or negative-control ID cannot inherit or become the champion identity of the parent model whose pathway it tests."
+  },
+  "models": {
+    "mean_track": {
+      "specification_id": "masld_mean_track_v1",
+      "scientific_class": "true_task_native_baseline",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "none",
+      "project_trained_state": "not_created",
+      "inputs": "Requested assay, cell-state stratum when defined, and frozen output feature IDs only. Query RNA, query DNA, query ATAC, REF/ALT, and outcomes are ignored.",
+      "fit": "Within each outer-training partition, first create assay-native donor-level profiles, then take an equal-donor arithmetic mean within the prespecified assay and cell-state stratum. Exclude explicitly missing donors from the denominator and record n; never insert zeros.",
+      "outputs": {
+        "rna_conditioned_atac": "A finite nonnegative vector on the evaluator's frozen peak/profile axis, repeated for every eligible held donor in the same stratum.",
+        "variant_to_regulation": "Reference mean activity may be emitted diagnostically; allele delta is exactly zero because the input is allele invariant."
+      },
+      "sign_semantics": "No signed allelic evidence. REF and ALT receive the same value, so ALT-minus-REF equals zero by construction.",
+      "champion_scope": "May be a task winner only under its own implementation and an eligible sealed gate; zero delta is never evidence of correct allelic direction."
+    },
+    "context_only": {
+      "specification_id": "masld_context_only_v1",
+      "scientific_class": "pathway_ablation",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "none_unless_a_concrete_parent_bound_instance_is_registered",
+      "project_trained_state": "not_created",
+      "inputs": "Observed query RNA/context and its explicit mask; no cis DNA sequence, coordinates that encode target identity, REF/ALT, or observed query ATAC.",
+      "fit": "Fit a separately named context-to-output implementation inside the outer-training partition. Any feature roster, mapper, prototypes, normalization, output head, and calibration are training-only.",
+      "outputs": {
+        "rna_conditioned_atac": "A full finite peak/profile prediction on the frozen assay axis; an embedding alone is ineligible.",
+        "variant_to_regulation": "Allele-invariant accessibility prediction with exact zero ALT-minus-REF delta."
+      },
+      "sign_semantics": "No allelic sign is supported because neither allele is observed.",
+      "identity_firewall": "This role cannot borrow a sequence backbone, checkpoint name, receptive field, or champion identity. If implemented as a parent-model ablation, the artifact ID must encode that parent and remains an ablation result."
+    },
+    "sequence_only": {
+      "specification_id": "masld_sequence_only_v1",
+      "scientific_class": "parent_bound_pathway_ablation",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "UNRESOLVED_until_concrete_parent_instance_is_named",
+      "project_trained_state": "not_created",
+      "inputs": "Reference and alternate sequence windows for variant scoring, or reference sequence windows for profile prediction. Query context is replaced only by a training-partition reference context and mask defined in the concrete implementation receipt.",
+      "fit": "Bind an exact sequence encoder, receptive field, output head, reference-context construction, trainable parameter set, and artifact hashes. The generic ID alone is unschedulable.",
+      "outputs": {
+        "rna_conditioned_atac": "Full finite assay-native profile/count predictions on the frozen axis.",
+        "variant_to_regulation": "Accessibility or expression effect from separate ALT and REF forward passes, plus any endpoint-specific gene or lineage crosswalk required by the evaluator."
+      },
+      "sign_semantics": "Canonical effect is score(ALT)-score(REF) after forward-strand restoration. Swapping REF and ALT must negate the score. Reverse-complement ensembling must preserve the sign.",
+      "identity_firewall": "The ablation may reuse only the weights explicitly recorded for its concrete parent-bound run. It does not become an independent checkpoint, architecture family, or parent champion. A standalone scratch sequence baseline must use sequence_cnn_control or sequence_transformer_control instead."
+    },
+    "trans_only": {
+      "specification_id": "masld_trans_only_v1",
+      "scientific_class": "parent_bound_pathway_ablation",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "UNRESOLVED_until_concrete_parent_instance_is_named",
+      "project_trained_state": "not_created",
+      "inputs": "Only the exact trans-regulator vector, order, transform, mask, and context mapper used by a named context-aware parent. Cis sequence and REF/ALT are absent or neutralized under a frozen parent-specific rule.",
+      "fit": "All trans-vector mapping and head fitting occurs inside the outer-training partition. A fold-external normalization or context prototype is prohibited.",
+      "outputs": {
+        "rna_conditioned_atac": "A full finite profile prediction on the frozen peak axis when the concrete trans-only head supports it.",
+        "variant_to_regulation": "Allele-invariant prediction with exact zero ALT-minus-REF delta."
+      },
+      "sign_semantics": "No allelic sign is supported because the trans input is identical for REF and ALT.",
+      "identity_firewall": "Trans-only is narrower than context-only: it tests the parent's prespecified trans-regulator pathway. It inherits the strictest data and terms restrictions of reused artifacts, but not the parent's backbone or champion identity."
+    },
+    "nearest_regulatory_feature": {
+      "specification_id": "masld_nearest_regulatory_feature_v1",
+      "scientific_class": "true_task_native_distance_baseline",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "none",
+      "project_trained_state": "not_created",
+      "inputs": "A normalized variant-gene candidate row and an outer-training-frozen regulatory-feature interval table with stable feature-to-gene links and provenance.",
+      "fit": "No outcome-fitted parameters. For each candidate gene, choose the linked eligible feature on the same contig with minimum base-pair distance to the normalized variant anchor; overlaps have distance zero and stable feature ID breaks ties.",
+      "outputs": {
+        "variant_to_regulation": "enhancer_gene_link_score = -distance_bp for the selected feature and its stable ID. A candidate with no eligible linked feature is explicitly untestable, not zero."
+      },
+      "sign_semantics": "Unsigned proximity only. It cannot emit accessibility delta, expression delta, allelic direction, or a signed eQTL effect.",
+      "champion_scope": "Eligible only for the enhancer-gene-link or retrieval comparisons its output supports; it cannot stand in for a signed variant-effect champion."
+    },
+    "nearest_context": {
+      "specification_id": "masld_nearest_context_v1",
+      "scientific_class": "true_task_native_retrieval_baseline",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "none",
+      "project_trained_state": "not_created",
+      "inputs": "Observed query RNA/context and mask plus a training-only bank of donor-level context prototypes and their assay-native target profiles or already-frozen model outputs. Query ATAC and held outcomes are forbidden.",
+      "fit": "Fit normalization, feature roster, distance metric, context prototypes, and any target summaries using outer-training donors only. Retrieve one nearest eligible prototype; stable prototype ID breaks exact ties.",
+      "outputs": {
+        "rna_conditioned_atac": "The retrieved training prototype's full finite profile on the frozen output axis.",
+        "variant_to_regulation": "Only endpoints supported by the registered retrieved artifact: accessibility delta, allelic direction, and eQTL retrieval. It is not primary signed cell-type eQTL output."
+      },
+      "sign_semantics": "When a retrieved artifact contains allele scores, report its canonical ALT-minus-REF value. Absence of an eligible prototype is missing, never zero or mean fallback.",
+      "champion_scope": "May win only under its own immutable retrieval implementation and endpoint-eligible sealed gate."
+    },
+    "shuffled_context": {
+      "specification_id": "masld_shuffled_context_v1",
+      "scientific_class": "negative_control",
+      "implementation_status": "not_implemented",
+      "upstream_checkpoint": "UNRESOLVED_until_concrete_parent_instance_is_named",
+      "project_trained_state": "not_created",
+      "inputs": "The exact sequence and context interface of a concrete parent-bound run, with context assignment replaced by a precommitted, seed-keyed permutation inside legal donor, assay, lineage, and locus strata.",
+      "fit": "Construct permutation universes and assignments without outcomes, using only the registered partition. Freeze assignments by stable row IDs and seed before scoring. The permutation may not move records across donors, outer folds, loci, assays, lineages, or missingness states unless a task contract explicitly authorizes that axis.",
+      "outputs": {
+        "rna_conditioned_atac": "The parent's full profile output under the shuffled context assignment.",
+        "variant_to_regulation": "The parent's canonical gene-expression or registered allelic output under the shuffled context assignment."
+      },
+      "sign_semantics": "Any allele effect remains score(ALT)-score(REF); only context assignment changes. A null or reversed result is a dependence diagnostic, not a variant-effect model claim.",
+      "identity_firewall": "This generic role is not automatically interchangeable with a parent's 'permuted_context' ablation. Each parent-specific realization needs its own receipt. It is never an independent champion identity."
+    },
+    "sequence_cnn_control": {
+      "specification_id": "masld_sequence_cnn_control_v1",
+      "scientific_class": "true_task_native_train_from_scratch_baseline",
+      "implementation_status": "not_implemented_architecture_unresolved",
+      "upstream_checkpoint": "none_random_initialization",
+      "project_trained_state": "not_created",
+      "inputs": "One-hot or explicitly frozen DNA encoding on an immutable reference build, with paired REF and ALT windows for variant scoring. It receives no pretrained features or query ATAC.",
+      "fit": "Train from scratch within the outer-training partition using the same admissible labels, output axes, label budget, selection rule, and fixed seeds as its comparison. Architecture, receptive field, padding, strand handling, head, loss, optimizer, and parameter count must be frozen in a later implementation receipt.",
+      "outputs": {
+        "rna_conditioned_atac": "Full finite assay-native profile/count predictions on the frozen axis.",
+        "variant_to_regulation": "Accessibility or activity delta from separate ALT and REF passes; signed eQTL output is unsupported unless an eligible gene/lineage head is separately registered."
+      },
+      "sign_semantics": "score(ALT)-score(REF) after forward-strand restoration; REF/ALT swap negates and reverse-complement restoration preserves sign.",
+      "champion_scope": "May be the released baseline champion only under its own exact scratch-trained implementation and eligible sealed result."
+    },
+    "sequence_transformer_control": {
+      "specification_id": "masld_sequence_transformer_control_v1",
+      "scientific_class": "true_task_native_train_from_scratch_baseline",
+      "implementation_status": "not_implemented_architecture_unresolved",
+      "upstream_checkpoint": "none_random_initialization",
+      "project_trained_state": "not_created",
+      "inputs": "One-hot or explicitly frozen DNA encoding on an immutable reference build, with paired REF and ALT windows for variant scoring. It receives no pretrained embeddings, language-model weights, or query ATAC.",
+      "fit": "Train from scratch within the outer-training partition using the same admissible labels, output axes, label budget, selection rule, and fixed seeds as its comparison. Tokenization, positional encoding, architecture, receptive field, head, loss, optimizer, and parameter count must be frozen in a later implementation receipt.",
+      "outputs": {
+        "rna_conditioned_atac": "Full finite assay-native profile/count predictions on the frozen axis.",
+        "variant_to_regulation": "Accessibility or activity delta from separate ALT and REF passes; signed eQTL output is unsupported unless an eligible gene/lineage head is separately registered."
+      },
+      "sign_semantics": "score(ALT)-score(REF) after forward-strand restoration; REF/ALT swap negates and reverse-complement restoration preserves sign.",
+      "champion_scope": "May be the released baseline champion only under its own exact scratch-trained implementation and eligible sealed result."
+    }
+  },
+  "shared_input_and_output_contract": {
+    "reference": "GRCh38.p14 and GENCODE v49 under the package reference contract.",
+    "variant_normalization": "Validate gzip and reference hashes, use VCF forward-reference REF/ALT semantics, left-normalize variants, require REF match, and record coordinate conversion before extracting any window.",
+    "sequence_windows": "REF and ALT windows are identical except for the normalized allele. An implementation must freeze anchor and padding behavior; unsupported indels are untestable, never assigned zero effect.",
+    "reverse_complement": "Reverse-complement both allele windows, restore position, strand, and output channel to the forward-genome convention, then ensemble. Reverse complement cannot reverse ALT-minus-REF sign.",
+    "rna_conditioned_atac": "Profile-capable controls emit finite vectors with stable row and feature IDs on the evaluator's full frozen axis. Latent embeddings, observed-query-ATAC reconstructions, and partial unregistered tracks are ineligible.",
+    "variant_effect": "Every signed allele output is ALT minus REF. An unsigned link or retrieval score is not coerced into an allele effect.",
+    "missingness": "Use observed, structurally_missing, not_applicable, below_qc, unavailable_permission, join_unresolved, withheld_sealed, or derivable_not_processed. Missing evidence is not zero."
+  },
+  "training_only_statistics_contract": {
+    "donor_balance": "Construct context and track statistics from donor-level assay-native units so donors, not cells or fragments, determine the mean.",
+    "track_mean": "Fit within outer-training donors and the prespecified assay and cell-state stratum. Persist feature order, denominators, masks, transform, and fold hash.",
+    "context_mean": "Fit after the training-only context mapper on outer-training donors only. Persist gene or regulator order, normalization, donor weights, masks, and fold hash.",
+    "retrieval_bank": "Build only from the outer-training partition. Held RNA may query a frozen bank when the TaskSpec permits it; held ATAC, labels, eQTL effects, and other outcomes never enter the bank.",
+    "sealed_inference": "No mean, prototype, distance metric, permutation stratum, calibration, or output mapping may be recomputed after held or sealed features are opened."
+  },
+  "split_and_buffer_contract": {
+    "biological_unit": "All modalities from one person remain in one outer fold. Cells and nuclei are not independent replicates.",
+    "crossed_split": "Sequence-dependent controls use held donors crossed with held chromosome, locus, or ancestry-matched native-build LD blocks as required by the TaskSpec.",
+    "identity_groups": "Keep exact sequence, near-identical sequence, reverse-complement identity, declared loci, and variants within 1 Mb or r2 >= 0.8 in any represented ancestry in one merged block.",
+    "boundary_buffer": "Exclude a boundary buffer equal to the largest receptive field of every admitted comparison model, not the smaller field of an individual control. A control with no sequence field does not reduce the shared buffer.",
+    "parent_bound_ablations": "Use the identical donor and genomic rows as the concrete parent. Only the declared pathway intervention may differ.",
+    "permutation": "Permutation is confined to a registered partition and legal strata, deterministic from stable IDs plus fixed seed, and outcome blind."
+  },
+  "runtime_and_safe_loading_contract": {
+    "environment_status": "UNRESOLVED_for_all_nine_controls",
+    "source_status": "No executable project implementation or immutable source hash is registered for any role.",
+    "checkpoint_loading": "No third-party checkpoint applies to the five standalone baselines. Parent-bound ablations may load only the exact parent artifact recorded in a separate safe-loading receipt.",
+    "derived_state": "Persist means, prototypes, distances, permutations, weights, and predictions in bounded non-executable formats where possible. Do not accept untrusted pickle-like artifacts.",
+    "compute": "Mean and distance baselines should be CPU-capable. Parent-bound and scratch neural controls require a runtime-specific CPU or GPU receipt. No hardware claim exists until the fixed fixture passes through SLURM.",
+    "required_future_probe": "Import, deterministic construction, one train step where applicable, resume, full profile output, allele-swap sign, reverse-complement restoration, row-order invariance, no-observed-ATAC fixture, held-fold firewall, serialization round trip, and numeric tolerance."
+  },
+  "terms_and_release_contract": {
+    "project_code_license": "UNRESOLVED_no_implementation_artifact",
+    "upstream_weights": "none for standalone controls; parent-bound ablations inherit the strictest code, weight, derivative, data, and redistribution restrictions of the specifically reused parent artifacts",
+    "data_and_annotations": "Input datasets, genome, annotation, regulatory-feature tables, and derived outputs retain their own rights and attribution conditions.",
+    "release": "Do not release code, weights, fit artifacts, or claim an open champion until the exact implementation, dependencies, input rights, output rights, and derivative obligations are audited.",
+    "identity": "No control may be labeled with a backbone, checkpoint, or champion identity that its immutable implementation receipt does not establish."
+  },
+  "authority": {
+    "primary": [
+      "config/models/mandatory_baselines.toml",
+      "config/tasks/rna_conditioned_atac.toml",
+      "config/tasks/variant_to_regulation.toml",
+      "config/evaluation/rna_conditioned_atac_capabilities.toml",
+      "config/evaluation/variant_to_regulation_capabilities.toml",
+      "config/splits/locus_outer.toml"
+    ],
+    "parent_ablation_context": [
+      "config/adaptation/corgi.toml",
+      "src/masld_bench/conditional_model.py"
+    ],
+    "source_evidence": "Project-local registry, task, evaluator, split, adaptation, and conditional-model contracts inspected on 2026-08-22. No web source was needed because these are project-defined controls."
+  },
+  "schema_version": "masld-bench-local-model-suite-preflight-v1",
+  "verified_date": "2026-08-22"
+}

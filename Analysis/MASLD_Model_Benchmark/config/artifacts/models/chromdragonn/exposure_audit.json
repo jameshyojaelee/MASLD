@@ -1,0 +1,61 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_future_project_trained_fold_weights",
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["rna_conditioned_atac", "variant_to_regulation"]
+  },
+  "checkpoint_findings": {
+    "chromdragonn_algorithm": {
+      "checkpoint_identity": "kundajelab/ChromDragoNN@d4a4504a06ac0beba68da031d3ae1265ed14069f; no upstream fitted checkpoint",
+      "corpus": "Architecture and training-recipe prior from 123 ENCODE and Roadmap DNase contexts with matched RNA; no parameters are transferred",
+      "exposure_confidence": "high",
+      "exposure_state": "target_label_unexposed",
+      "rule": "Original algorithm exposure is not checkpoint exposure because no original fitted parameters are loaded."
+    },
+    "chromdragonn_local_fold_models": {
+      "checkpoint_identity": "future stage-1 and stage-2 artifacts keyed by outer donor fold, genomic block, seed, TF mapper, and mean-accessibility regime",
+      "development_exposure": "continual_seen_for_each_outer_training_donor_context_and_accessibility_label",
+      "held_donor_exposure": "target_label_unexposed_within_each_correctly_isolated_outer_fold",
+      "sealed_gse289173_exposure": "target_label_unexposed",
+      "status": "PROJECT_ARTIFACT_UNRESOLVED"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "local_binary_accessibility_and_variant_component_sources",
+    "sha256": "9798a3a77d5f4e34ea3ad571a6a67725971fb5657d453c87b909a430ded70cdf"
+  },
+  "input_eligibility": {
+    "gse281364": "Retrospective MPRA direction and rank diagnostic only after the local model, context mapper, windows, allele orientation, and thresholds are frozen without MPRA outcomes.",
+    "gse289173": "One-time donor-RNA-conditioned allele inference may be possible after selection lock. Its eQTL and ieQTL labels remain evaluator-only, and it provides no sealed ATAC profile endpoint. An open-probability delta is not a signed gene effect without a separate link and direction model.",
+    "gse296875": "Development-only donor-by-cell-state same-nucleus RNA and ATAC pseudobulk can fit local fold models. The public GEO record does not declare MASLD diagnosis, fibrosis stage, NAS, or histology, so this is liver multiome adaptation rather than verified MASLD phenotype fine-tuning.",
+    "observed_context_requirement": "Stage 2 requires an observed donor-by-cell-state RNA pseudobulk mapped to the frozen 1630-TF order. Missing, below-QC, or join-unresolved context makes prediction ineligible and is never encoded as zero.",
+    "observed_target_atac_requirement": "No held-donor or sealed ATAC is permitted at inference. If enabled, the locus mean is computed from outer-training contexts only and exposed identically to the mean-only baseline."
+  },
+  "interpretation": "ChromDragoNN has no upstream checkpoint. Exposure attaches to each future project-fitted fold artifact, not to the algorithm name: GSE296875 training observations are continual-seen while held donors and sealed GSE289173 labels remain unexposed. Native ChromDragoNN predicts binary region accessibility, not ATAC counts, nucleotide profiles, multinomial profiles, enhancer-gene links, or signed gene effects.",
+  "license_disposition": {
+    "code": "MIT",
+    "local_derivative_weights": "redistributable_under_MIT_subject_to_notices_and_project_input_data_terms",
+    "open_champion_eligibility": "eligible_only_for_a_prespecified_secondary_binary_accessibility_task_or_as_a_variant_component_after_all_local_artifact_gates"
+  },
+  "remaining_blockers": [
+    "Implement a project split adapter that crosses biological-donor folds with merged chromosome or LD blocks and a 1000-bp boundary buffer; the released either-context-or-chromosome split is insufficient.",
+    "Resolve the released subtract-one coordinate behavior against explicit 0-based half-open project BED fixtures and prove GRCh38.p14 REF, center-window, reverse-complement, and allele-orientation parity.",
+    "Resolve paper log(TPM) versus README arcsinh(TPM) context normalization, freeze a training-only 1630-TF GENCODE v49 mapper, and reject ambiguous or missing genes instead of reordering silently.",
+    "Use a validated isolated legacy runtime or a separately reviewed source port; prohibit untrusted joblib and PyTorch pickle loading and bind every local tensor name, shape, dtype, and SHA-256.",
+    "Resolve the paper one-logit versus released two-class log-softmax output and freeze the open-class index, binary label construction, background sampling, loss, calibration, and prediction scale.",
+    "Prespecify a donor-balanced binary accessibility AUPRC and calibration endpoint if ChromDragoNN is retained; do not score its native output as conditional profile deviance.",
+    "Treat conditional ALT-minus-REF open probability only as a variant feature. Any enhancer-gene link or expression-direction layer is a separately named and frozen model.",
+    "Pass L40S preprocess, import, forward, backward, checkpoint resume, deterministic-seed, reverse-complement, and cross-device tolerance probes through SLURM only after campaign approval."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_for_current_primary_profile_and_signed_effect_endpoints;_secondary_binary_or_component_only",
+  "task_disposition": {
+    "allele_effect": "conditional_ALT_minus_REF_change_in_binary_open_probability_after_local_training",
+    "rna_conditioned_atac": "secondary_binary_region_accessibility_only_not_primary_profile_deviance",
+    "signed_eqtl_ieqtl": "not_standalone_requires_separate_link_and_direction_model",
+    "variant_to_regulation": "context_conditioned_accessibility_component_only"
+  },
+  "verified_date": "2026-08-22"
+}

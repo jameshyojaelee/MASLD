@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "steatosite"
+title = "SteatoSITE histology, clinical, and bulk RNA resource"
+role = "deferred"
+status = "deferred"
+species = "human"
+accession = ["PRJEB58625", "STEATOSITE_CONTROLLED"]
+access_tier = "controlled"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "secure_environment_only"
+license_status = "controlled_access_review_required"
+biological_unit = "participant"
+expected_biological_units = "UNRESOLVED"
+native_genome_build = "GRCh38"
+native_annotation_release = "UNRESOLVED"
+modalities = ["histology_he", "histology_psr", "pathology_scores", "clinical_ehr", "bulk_rna"]
+pairing_levels = ["adjacent_section", "same_sample_different_aliquot"]
+modality_status_default = "unavailable_permission"
+exposure_status = "unknown"
+admission_blocking = true
+blockers = ["Controlled application portal is temporarily closed.", "Exact participant overlap across WSI, scores, EHR, and RNA is unresolved until secure join.", "Export and trained-weight rules require approval."]
+notes = "Highest-value pathology acquisition target. Public RNA counts do not establish the controlled WSI/EHR join or derivative model rights."
+
+[provenance]
+source_url = "https://regeneration-repair.ed.ac.uk/research/research-resources/steatosite/our-data"
+verified_date = "2026-08-21"
+local_exposure = "Not admitted; controlled joins unavailable."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "deferred"
+label_visibility = "unavailable_permission"

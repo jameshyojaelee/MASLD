@@ -1,0 +1,67 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49; preserve source-native build until a loss-audited crosswalk exists",
+    "sealed_source": "NONE_REGISTERED",
+    "task": "typed_evidence_graph",
+    "unit_of_inference": "independent_locus"
+  },
+  "compatibility_finding": {
+    "held_evidence_source": "Compatible after complete source and derivative removal because shared GraphSAGE weights can encode candidate nodes from retained topology and outcome-independent features.",
+    "held_ld_or_gene_block": "Compatible with a root-feature-only score when all held-block incident edges are removed, provided a source-independent candidate roster and valid node-type features were frozen without outcomes. Such nodes may be indistinguishable within type; report this information limit.",
+    "inductive_behavior": "Conditional, not automatic. It comes from SAGEConv aggregation over supplied features and root_weight=true. A node-ID lookup, full-graph feature, or target-derived node roster would destroy inductive eligibility.",
+    "sealed_source_recovery": "Technically compatible with a future wholly sealed source if graph, features, negatives, decoder, calibration, coverage, and candidate roster are frozen before outcomes. No present sealed source exists, so no champion claim is available."
+  },
+  "endpoint_eligibility": {
+    "brier_score": "Eligible after a logistic calibrator is fit solely on inner pseudo-held development sources and frozen. Raw inner products are not probabilities.",
+    "held_source_auprc": "Development-eligible over the full prespecified candidate roster when both endpoint node types resolve; report retained-neighbor versus root-only strata.",
+    "locus_macro_hits_at_10": "Development-eligible with one rank list per independent locus and explicit root-only/untestable status.",
+    "locus_macro_mrr": "Development-eligible with one rank list per independent locus and explicit root-only/untestable status.",
+    "typed_or_directed_claim": "Ineligible. Node types enter features and candidate filtering, but relation types and directions are discarded from message passing and decoding."
+  },
+  "feature_and_graph_crosswalk": {
+    "candidate_roster": "Freeze independently of held outcomes. For future sealed inference, the evaluator may supply anonymized candidate nodes with source-independent node type; the development environment must not receive source-edge labels or held observability.",
+    "feature_fit": "Construct type one-hot, source availability, retained-source observation, and log1p degree channels only after outer source/block removal. Fit all scaling inside the outer training partition and hash feature names, source order, row order, masks, and values.",
+    "held_blocks": "Remove every incident edge for native-build ancestry-aware LD blocks, loci within 1 Mb, and gene blocks before node features, graph normalization, negative controls, sampling, or message passing. Held nodes may re-enter only as feature-bearing isolated inference queries from the independent roster.",
+    "held_source": "Remove the entire source and direct or deterministic thresholded, aggregated, mirrored, ontology-projected, duplicated-release, degree, source-count, observability, and missingness derivatives before every graph operation.",
+    "negative_controls": "Generate one retained-graph negative per retained training positive, matching ordered node-type pair and retained-source observability class. Do not inspect held positives to exclude false negatives. Evaluator negatives for AUPRC remain degree- and observability-matched and evaluator-only.",
+    "projection": "Canonical undirected typed-ID pairs, duplicate collapse, binary topology, and no relation-specific parameters. Independently measured duplicate pairs from a retained source may remain; deterministic target derivatives may not."
+  },
+  "source_findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Exposed training/development graph evidence only after the corrected 50-study release is promoted. Preserve study, trait, native build, locus, COLOC provenance, observability, and unsupported/untestable states. Never label a predicted gene causal from COLOC alone.",
+      "biological_unit": "study",
+      "exposure_state": "downstream_demo",
+      "status": "blocked_until_promoted_graph_snapshot"
+    },
+    "gse281160": {
+      "allowed_use": "Mechanistic development source or pseudo-held source after experimental-replicate aggregation and guide-target/reference joins. Cells and guides are not biological replicates. When held, remove direct and all target/program/gene-derived edges before features or sampling.",
+      "biological_unit": "experimental_replicate",
+      "exposure_state": "downstream_demo",
+      "pairing": "same_cell",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "allowed_use": "Mechanistic development source or pseudo-held source after oligo, allele, barcode, count, context, replicate, and build joins. Replicate libraries are the unit. When held, remove direct MPRA and all derived evidence edges before features or sampling.",
+      "biological_unit": "experimental_replicate",
+      "exposure_state": "downstream_demo",
+      "pairing": "same_sample_different_aliquot",
+      "public_date": "2026-03-16"
+    }
+  },
+  "split_and_leakage_rules": {
+    "artifact_scope": "Fit GraphSAGE anew for every outer held-source by held-block split and seed. Reusing a state, feature scaler, negative pool, neighbor cache, or whole-graph embedding across outer splits is prohibited.",
+    "inner_validation": "Every inner-validation edge and deterministic derivative is absent from message-passing edge_index and negative construction. Fixed 50-epoch screening does not select on outer outcomes.",
+    "loader_fixture": "Enumerate sampled global edge IDs and prove no held-source, held-block, or validation ID enters any batch. LinkNeighborLoader does not mask prediction edges automatically.",
+    "selection": "Choose architecture, feature schema, negative rule, sampler, decoder, calibrator, and coverage rule on development pseudo-held sources only. Five seeds measure stability and are not inferential replicates.",
+    "sealed_protocol": "For a future seal, commit graph, feature schema/matrix, node roster, five states, raw predictions, root-only/testable flags, decoder, and calibration before the evaluator joins source outcomes."
+  },
+  "coverage_and_missingness": {
+    "full_inductive": "Node has permitted retained neighbors and a valid feature vector.",
+    "root_only": "Node has a valid independent feature vector but no retained edges after the held-block/source removal. Score and report separately because all nodes with identical features receive identical representations.",
+    "untestable": "Node type or required source-independent features cannot be resolved without opening held outcomes. Do not zero-fill or infer the nearest type.",
+    "reporting": "Report candidate and locus coverage plus full-inductive, root-only, and untestable strata by node type, evidence source, observability, degree, and block."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

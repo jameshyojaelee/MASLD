@@ -1,0 +1,19 @@
+{
+  "admitted": true,
+  "authority": "qc",
+  "evidence": {
+    "data_sha256": "d59c85b4fb0a1352a427de3b2a587c30aac12891a8d753e10d4442fc719c985f",
+    "ensembl_id_present": true,
+    "n_counts_present": true,
+    "nnz": 1567574,
+    "raw_unselected_integer_counts": true,
+    "shape": [
+      1000,
+      37533
+    ],
+    "unique_cell_ids": true
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

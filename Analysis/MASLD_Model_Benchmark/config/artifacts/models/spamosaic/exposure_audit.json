@@ -1,0 +1,60 @@
+{
+  "audit_scope": {
+    "candidate": "SpaMosaic_1.0.3_at_cc133675_train_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "code": "JinmiaoChenLab/SpaMosaic@cc1336755de8d1ddd1337b3cd67c9d41a61c2cb4",
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "admitted_upstream_checkpoint": "none",
+    "checkpoint_exposure_state": "not_applicable_no_upstream_model_state",
+    "project_trained_state": "not_created",
+    "project_state_exposure": "unknown_until_a_future_participant_fold_graph_and_training_receipt_exists",
+    "rule": "A future local state is target-label-unexposed only when preprocessing, within-batch graphs, bridge topology, MNN edges, imputation, model selection, and downstream mappings are constructed without held outcomes and inside the registered participant split."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "mosaic_pairing_bridge_connectivity_graph_transduction_donor_boundaries_and_activation_gate",
+    "sha256": "13fecc343edd18610a9282ff201a0d62280eeeaa0b8742c3dbc9db9ecef8d4b4"
+  },
+  "input_eligibility": {
+    "gse192741": "Only spatial RNA plus H&E is registered, not a native multi-omic molecular bridge. Four donors permit future single-modality plumbing diagnostics only.",
+    "gse292268": "Only CosMx RNA is registered and participant joins remain unresolved. It cannot exercise mosaic molecular integration.",
+    "hra007511": "Spatial RNA plus adjacent-section MALDI is not a row-aligned bridge. Access, participant joins, registration, assay-native adapter, and derivative-output rights are unresolved.",
+    "vu2025": "Visium RNA and CODEX can only enter after the DSA, barcode-to-participant map, and authoritative same-section or registered-section topology clear. A VLP array is never a donor or bridge batch."
+  },
+  "exposure_and_leakage_findings": {
+    "bridge_pairing": "A modality bridge requires authoritative row-aligned observations or an explicitly registered derivation. Same-study, same-participant, or adjacent-section data do not become same-cell or same-spot pairs.",
+    "MNN": "The native cross-batch graph can connect bridge, non-bridge, development, and query batches. Building those MNNs with held features is cross-batch transduction even when labels are hidden.",
+    "preprocessing": "HVGs, PCA or LSI, Harmony, scaling, MNN construction, and missing-modality imputation can expose held distributions if performed before the participant split.",
+    "graph": "Spatial graphs must be participant- and section-blocked. MNN edges that cross participants require a separately named transductive integration task and can never create biological pairing.",
+    "identifiers": "Observation names must be globally unique; duplicate platform barcodes can overwrite internal dictionary entries and silently corrupt modality alignment."
+  },
+  "known_incidents_and_biases": [
+    "The selected release has no pretrained biological state and no native frozen held-donor fit/predict contract.",
+    "The native workflow jointly fits supplied batches and constructs cross-batch MNN edges, so its usual evaluation is transductive.",
+    "A connected mosaic design depends on bridge batches. An absent or false bridge is not repaired by shared disease stage or participant metadata.",
+    "Generic matrix inputs do not make MALDI intensity, CODEX protein, chromatin accessibility, and RNA share one measurement model.",
+    "The declared environment omits runtime-critical packages used by the source, including PyTorch, PyTorch Geometric, and harmony-pytorch.",
+    "KNN imputation is a model-derived value, not an observed assay and not a new biological replicate."
+  ],
+  "license_disposition": {
+    "selected_code": "MIT",
+    "upstream_checkpoint": "none",
+    "training_data_and_outputs": "unresolved_until_a_future_native_dataset_and_every_derived-output_right_clear",
+    "open_champion": "ineligible"
+  },
+  "remaining_blockers": [
+    "Obtain a rights-cleared participant-linked mosaic molecular dataset with authoritative observation pairing, bridge topology, section boundaries, assay metadata, sufficient participant power, and an external source.",
+    "Register a modality-native task that separates strict participant-held inference from native cross-batch transductive integration and defines independent baselines and uncertainty.",
+    "Freeze all training-only preprocessing, globally unique observation IDs, feature and missingness maps, within-section graphs, MNN edges, bridge connectivity, and imputation outputs by participant fold.",
+    "Implement an explicit no-query-MNN strict lane and a separately labeled query-reference-MNN transductive lane; fixture-test that no forbidden held edge or statistic enters strict inference.",
+    "Resolve the incomplete runtime declaration and pass SLURM import, graph, pairing, missing-modality, sparse-memory, forward, backward, resume, deterministic seed, node-order, no-network, and numeric-tolerance probes after campaign approval.",
+    "Hash every local training state, environment, graph, feature roster, output, and terminal disposition before any selection."
+  ],
+  "interpretation": "SpaMosaic is relevant only when the observed assay topology supplies a legitimate connected mosaic design. None of the registered MASLD spatial sources currently provides an admitted, powered, rights-cleared bridge and external endpoint. The absence of an upstream checkpoint avoids pretraining contamination but does not avoid split, graph, bridge, imputation, or transductive leakage.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_registered_task_no_sealed_spatial_source_no_admitted_native_bridge_and_no_verified_runtime",
+  "verified_date": "2026-08-22"
+}

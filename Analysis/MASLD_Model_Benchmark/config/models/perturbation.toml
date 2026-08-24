@@ -1,0 +1,95 @@
+schema_version = "masld-bench-model-v1"
+family_id = "perturbation"
+modality = ["single_cell_rna", "perturbation_identity"]
+status = "deferred"
+
+[[models]]
+model_id = "gears"
+display_name = "GEARS"
+implementation_type = "train_locally"
+checkpoint_revision = "snap-stanford/GEARS@f374e43e197b295016d80395d7a54ddb81cc6769"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["GEARS is not schedulable on the current held noncoding-target task: it requires each perturbation to be a gene symbol present in both the expression vocabulary and GO graph, while GSE281160 perturbs noncoding variant loci with CRISPRi guides. Nearest-gene substitution would change the task and inject a new prior. Retain GEARS only for a separately registered gene-perturbation task. Then freeze fold-local genes, controls, coexpression and safe GO graphs before preprocessing; prohibit upstream pickle splits/downloads and cross-role control sampling; use replicate-level scoring; and freeze runtime, seeds, and artifact hashes."]
+supported_tasks = ["gene_perturbation_response"]
+
+[[models]]
+model_id = "scgen"
+display_name = "scGen"
+implementation_type = "train_locally"
+checkpoint_revision = "theislab/scgen@d79e1f04233c30f9a4eb5b8d57718127909807d7"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "repository_GPL-3.0_package_metadata_MIT_conflict"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["scGen estimates a latent shift from observed control and perturbed cells; it cannot identify the effect vector for a wholly unseen perturbation target. Keep it registered for a future known-perturbation held-context/donor task. If activated, resolve the GPL-3.0 repository versus MIT package-metadata conflict; split target, guide family, and biological replicate before normalization/HVGs/training/delta estimation; prohibit held-target stimulated cells and test-delta leakage; replace random balancing with recorded fold-local row-ID sampling; and freeze runtime and artifacts."]
+supported_tasks = ["gene_perturbation_response"]
+
+[[models]]
+model_id = "cpa"
+display_name = "CPA"
+implementation_type = "train_locally"
+checkpoint_revision = "theislab/cpa@fbd7c0250edc23eff003a10c99655579c53afd63"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "repository_BSD-3-Clause_package_metadata_MIT_conflict"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The categorical CPA path learns embeddings only for perturbation atoms represented during training; it has no validated sequence or molecular representation for a wholly unseen noncoding locus/guide. Keep it for a future held-combination, dose, or context task with seen atoms. If activated, resolve the BSD-3-Clause repository versus MIT package-metadata conflict; build target vocabulary and all grouped splits before setup_anndata; reject unknown categories instead of retaining random untrained embeddings; prohibit full-data DEG/HVG/category leakage; score biological replicates; and freeze the legacy runtime and artifacts."]
+supported_tasks = ["gene_perturbation_response"]
+
+[[models]]
+model_id = "cellot"
+display_name = "CellOT"
+implementation_type = "train_locally"
+checkpoint_revision = "bunnech/cellot@522d2b953da8ad244fcf36f64521487fdf763788"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["CellOT learns one transport map from observed control and perturbed distributions for a specified perturbation; perturbation identity is not an input and it cannot infer a wholly unseen target without that target's outcomes. Keep it for a future known-perturbation held-donor/context distributional task. If activated, split biological replicates before any PCA/autoencoder or fit; prohibit held-target perturbed cells from transport, reduction, and checkpoint selection; replace cell-level train/test and test-MMD selection with inner grouped validation; preserve distribution-level unpaired semantics; and freeze the legacy runtime and safe state artifacts."]
+supported_tasks = ["gene_perturbation_response"]
+
+[[models]]
+model_id = "genepert"
+display_name = "GenePert"
+implementation_type = "train_locally"
+checkpoint_revision = "zou-group/GenePert@31c0034211010696ba76dc62cb875af51bfe6f4a"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "code_NO_LICENSE_DETECTED_embedding_terms_UNRESOLVED"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["GenePert requires one exact gene embedding per perturbed gene, while GSE281160 holds out noncoding loci and guide families. Nearest-gene, linked-gene, and random-vector substitution change the task and are prohibited. The official repository has no detected license, and the exact GenePT embedding artifact, source snapshot, gene mapping, and redistribution terms are unresolved. Retain only for a separately registered gene-perturbation task; then fit replicate-preserving ridge models and all preprocessing inside held-target folds."]
+supported_tasks = ["gene_perturbation_response"]
+
+[[models]]
+model_id = "scgpt_perturbation_head"
+display_name = "scGPT perturbation head"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:gdrive-folder:1oWh_-ZRdhtoGQ2Fw24HP41FgLoomVo-y+official_perturbation_tutorial"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The official perturbation generator flags a measured in-vocabulary gene token. GSE281160 noncoding loci and guide pseudo-genes have no valid whole-human token; pad, nearest-gene, linked-gene, or dropped-target substitution is prohibited. Retain only for a separately registered in-vocabulary gene-perturbation task. Before activation, resolve and hash the whole-human base weights and terms, pin the full legacy runtime, split targets and replicates before all preprocessing, force valid targets into every sequence, and use verified state-dict loading."]
+supported_tasks = ["gene_perturbation_response"]
+
+[[models]]
+model_id = "perturblib_lpm"
+display_name = "perturblib Large Perturbation Model"
+implementation_type = "train_locally"
+checkpoint_revision = "perturblib/perturblib@9e79ae328ab532aa9de76a3586be93554d72fb4f"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["LPM means Latent Perturbation Model. Its released symbolic P/R/C vocabulary supports unseen combinations only when every symbol was observed in training. A held GSE281160 noncoding locus or guide is an unknown perturbation symbol, and the upstream fallback silently maps it to control; that behavior is prohibited. Retain only for a separately registered in-vocabulary combination task. Then freeze split-first preprocessing, replicate-preserving records, strict unknown rejection, admitted corpora and rights, vocabularies, architecture, seeds, and project state-dict hashes."]
+supported_tasks = ["gene_perturbation_response"]

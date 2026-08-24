@@ -1,0 +1,95 @@
+{
+  "architecture_contract": {
+    "architecture": "decoder_only_autoregressive_StripedHyena_2_multi_hybrid",
+    "declared_parameter_scale": "7B",
+    "hidden_dimension": 4096,
+    "inner_mlp_dimension": 11264,
+    "layers": 32,
+    "attention_heads": 32,
+    "operator_layout": {
+      "short_hyena_layers": [0, 4, 7, 11, 14, 18, 21, 25, 28],
+      "medium_hyena_layers": [1, 5, 8, 12, 15, 19, 22, 26, 29],
+      "long_hyena_layers": [2, 6, 9, 13, 16, 20, 23, 27, 30],
+      "attention_layers": [3, 10, 17, 24, 31]
+    },
+    "pretraining_objective": "autoregressive_next_nucleotide_prediction",
+    "declared_training_tokens": 2400000000000,
+    "initial_context_tokens": 8192,
+    "maximum_context_tokens": 1048576,
+    "nucleotide_resolution": true
+  },
+  "checkpoint": {
+    "repository": "arcinstitute/evo2_7b",
+    "revision": "bda0089f92582d5baabf0f22d9fc85f3588f6b58",
+    "filename": "evo2_7b.pt",
+    "sha256": "c66645929dc1b9c631f5be656da8726f38946315dc9167000a615dd626fcecf4",
+    "size_bytes": 13766621200,
+    "status": "exact_7B_1M_context_checkpoint_registered"
+  },
+  "code": {
+    "repository": "ArcInstitute/evo2",
+    "revision": "53f195997257c56c00e5ef8d33a54f5baad143a6",
+    "license": "Apache-2.0_with_NOTICE",
+    "inference_engine": "vtx_greater_than_or_equal_to_1.1.0",
+    "exact_inference_engine_revision": "UNRESOLVED",
+    "training_engine": "Savanna_or_NVIDIA_BioNeMo_not_part_of_this_inference_pin"
+  },
+  "input_contract": {
+    "canonical_project_reference": "GRCh38.p14",
+    "pretraining_reference": "OpenGenome2_multispecies_corpus_including_Homo_sapiens",
+    "tokenization": "single_nucleotide_character_tokenizer_with_512_slot_vocabulary",
+    "variant_window": "fixed_6000_bp_SNP_centered_window_for_common_lane; longer_native_context_requires_a_separate_resource-approved_campaign",
+    "strand_contract": "use the pinned score_sequences_rc policy or an equivalent fixture: score forward and reverse complement and average after reversing positional outputs",
+    "supported_primary_variant_type": "biallelic_SNP",
+    "indel_status": "native_zero_shot_only_after_matched_length_normalization_and_alignment_fixtures"
+  },
+  "representation_and_task_contract": {
+    "admitted_task": "variant_to_regulation",
+    "common_lane": "Hook and freeze the final block representation, mean-pool a fixed 1536-bp variant-centered region for REF and ALT, repeat on reverse complements, align and average orientations, and fit identical linear and two-layer heads to REF, ALT, ALT-minus-REF, and absolute-difference features.",
+    "native_embedding_lane": "Use the documented intermediate representation at blocks.28.mlp.l3 with the same fixed pooling and head contract; report separately because layer selection is model-native.",
+    "native_zero_shot_lane": "Compute the normalized ALT-minus-REF autoregressive log-likelihood over matched affected bases and average forward and reverse-complement scores using the pinned scoring implementation.",
+    "signed_effect_limit": "Evo 2 likelihood and embeddings do not directly provide cell-type eQTL direction. A task head requires a nonsealed signed-effect training source.",
+    "not_supported": ["cell_state_mapping", "RNA_conditioned_ATAC", "bulk_state_transfer", "perturbation_transfer"]
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.11,<3.13",
+    "declared_cuda": ">=12.1",
+    "declared_cudnn": ">=9.3",
+    "recommended_torch": "2.6.x_or_2.7.x",
+    "declared_vtx": ">=1.1.0",
+    "configuration_use_fp8_input_projections": true,
+    "documented_7B_fallback": "disable_FP8_input_projections_and_run_bfloat16_without_Transformer_Engine",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "isolated_L40S_and_conditional_B6K_import_checkpoint_safe_load_forward_embedding_hook_RC_score_backward_or_adapter_resume_determinism_kernel_toggle_and_numeric_tolerance",
+    "warning": "Neither a version range nor an FP8 fallback is an immutable runtime. Freeze the exact Vortex and dependency revisions and validate the chosen projection path. One-million-base inference is not presumed feasible on a single L40S."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format": "PyTorch_pt_pickle_container",
+    "deserialized": false,
+    "require_restricted_no_network_inspection": true,
+    "require_state_dict_only_conversion_to_safetensors": true,
+    "require_state_dict_key_shape_dtype_freeze": true,
+    "warning": "The official loader calls a checkpoint loader on a .pt object. Do not execute it before safe inspection and conversion."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The 2026 Nature paper, pinned Evo 2 source, and exact Hugging Face revision were queried on 2026-08-22. Only public text, configuration, source, and file metadata were read; checkpoint bytes were not downloaded or deserialized.",
+  "source_records": [
+    {"identity": "evo2:LICENSE", "sha256": "5bb5812fc2bfb2d777fe5621767172f8ef30be62ad719c87e0f10832336a99e0", "size_bytes": 25780},
+    {"identity": "evo2:NOTICE", "sha256": "70672511c8a6ac6eadc2f626446a47c8a72c577326262f99244571be72f51036", "size_bytes": 1927},
+    {"identity": "evo2:README.md", "sha256": "58787c8ef5cb4fba4c04322a4ceb9f174e2233ec22d4193622fb6bc67d651d89", "size_bytes": 12895},
+    {"identity": "evo2:pyproject.toml", "sha256": "7cc6a516e1da69df2f87f6487f80bdc69a50b581c4a674a3313b4c9c23b5cddf", "size_bytes": 743},
+    {"identity": "evo2:evo2/configs/evo2-7b-1m.yml", "sha256": "9637f84ffd796f42cce3f926832b3999ff34a82686beba04505327162b288b1a", "size_bytes": 1764},
+    {"identity": "evo2:evo2/scoring.py", "sha256": "17e6985cef3a62c2a488133ab5a65050dcf0abeec2f55d1c0b068dfe37c44de6", "size_bytes": 7456},
+    {"identity": "evo2:evo2/models.py", "sha256": "0b757fcc42b37a52b0c3f508e876a52356331392ae8aa16a923576265043b78c", "size_bytes": 12471},
+    {"identity": "HF:README.md", "sha256": "802cb1e030bc560414a9fabcddd8fe243c296ad7d0b523dde0a3a0e1a7eaf794", "size_bytes": 1253},
+    {"identity": "HF:config.json", "sha256": "7f2e195e156de678b6d7db090dca19b37e88671f72ea7c9e1866e103946b69b2", "size_bytes": 87}
+  ],
+  "terms_audit": {
+    "repository_code_license": "Apache-2.0_with_NOTICE_and_third_party_attributions",
+    "checkpoint_license": "Apache-2.0",
+    "derivative_weight_redistribution": "permitted_subject_to_Apache-2.0_NOTICE_and_dependency_audit",
+    "result": "terms_pass_preflight"
+  },
+  "weight_license": "Apache-2.0"
+}

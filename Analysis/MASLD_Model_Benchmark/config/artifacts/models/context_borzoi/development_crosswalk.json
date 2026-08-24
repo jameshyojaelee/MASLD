@@ -1,0 +1,60 @@
+{
+  "crosswalk_scope": {
+    "model_id": "context_borzoi",
+    "project_sources": ["resource_atlas_current", "current_coloc_gwas", "gse244832", "gse281160", "gse281364", "gse289173", "gse296875", "fnih_86_liver"],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "current_model_exposure_findings": {
+    "current_coloc_gwas": {"evidence": "No model or selected component bundle exists, so neither inclusion nor exclusion can be attached to an immutable state.", "exposure_state": "unknown"},
+    "fnih_86_liver": {"evidence": "No model exists and the conditional source is not admitted or openly downloadable; a future seal classification requires a built-state receipt and component-level alias audit.", "exposure_state": "unknown"},
+    "gse244832": {"evidence": "No model or selected component bundle exists. Its task-specific development/training role is prospective only.", "exposure_state": "unknown"},
+    "gse281160": {"evidence": "No model exists. This exposed CROP-seq source can be used only as a retrospective direction diagnostic after prediction freezing.", "exposure_state": "unknown"},
+    "gse281364": {"evidence": "No model exists. Any future MPRA-fitted prediction must be out of fold by merged locus, sequence identity, and reverse-complement identity.", "exposure_state": "unknown"},
+    "gse289173": {"evidence": "No model, selected base, context encoder, training receipt, or selection lock exists. The sealed source therefore cannot inherit Borzoi's target-label-unexposed classification.", "exposure_state": "unknown"},
+    "gse296875": {"evidence": "No model exists. This is the intended local same-nucleus training source, so a final development fit would expose the trained state to its RNA and ATAC targets.", "exposure_state": "unknown"},
+    "resource_atlas_current": {"evidence": "No model exists and use of the current Atlas to fit the context mapper or encoder has not been frozen.", "exposure_state": "unknown"}
+  },
+  "missingness_and_pairing_contract": {
+    "allowed_missingness_states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "gse244832": "same_sample_different_aliquot; preserve distinct RNA and ATAC row identities and evaluate only at donor-compatible resolution; never manufacture cell or nucleus pairs",
+    "gse281160": "same_cell guide and RNA observations, but experimental replicates rather than cells or guides are inferential units",
+    "gse281364": "same_sample_different_aliquot reporter DNA and RNA counts; experimental replicates are inferential units",
+    "gse289173": "same_study_unpaired RNA and QTL summaries; no sealed ATAC is available and outcomes remain evaluator-only",
+    "gse296875": "same_nucleus; exact barcode-to-donor and ordered RNA-ATAC joins must pass before training; donors remain inferential units",
+    "missing_as_zero": "forbidden",
+    "model_mask_requirement": "Every missing or unavailable modality is represented by an explicit state and mask."
+  },
+  "noninheritance_contract": {
+    "base_component_crosswalk": "A selected sequence backbone and cell encoder each require their own frozen corpus crosswalk. Their findings remain component-level and are not sufficient for the locally fitted composite.",
+    "borzoi_finding_inherited": false,
+    "rule": "The official Borzoi ensemble predates some project sources, but context_borzoi does not exist and may be trained on later project data. It therefore remains unknown for every source until the exact selected components and local training receipt are frozen."
+  },
+  "prospective_task_roles": {
+    "rna_conditioned_atac": {
+      "fnih_86_liver": {"planned_role": "conditional_future_seal", "post_fit_state_if_kept_out_and_component_cleanliness_passes": "target_label_unexposed", "restriction": "No activation unless open download, rights, donor joins, modalities, reference, and outcomes pass before selection lock."},
+      "gse244832": {"planned_role": "external_development", "post_use_state": "downstream_demo", "restriction": "No fitting, tuning, feature selection, calibration, or cell-level pairing on the held development partition."},
+      "gse296875": {"planned_role": "donor_grouped_same_nucleus_training", "post_fit_state": "continual_seen", "restriction": "Within-fold held donors and their ATAC remain excluded from every fitted transform and model input."}
+    },
+    "variant_to_regulation": {
+      "current_coloc_gwas": {"planned_role": "training", "post_fit_state": "continual_seen", "restriction": "Corrected graph snapshot and task labels must be frozen before use."},
+      "gse244832": {"planned_role": "training", "post_fit_state": "continual_seen", "restriction": "Use assay-native donor-compatible supervision only; never infer false paired cells."},
+      "gse281160": {"planned_role": "development_only_direction_diagnostic", "post_use_state": "downstream_demo", "restriction": "The 20 MPRA-selected targets are not an unbiased validation set."},
+      "gse281364": {"planned_role": "locus_cross_fitted_mpra_training", "post_fit_state": "continual_seen", "restriction": "Only held-locus predictions are eligible; MPRA cannot supervise signed cell-type eQTL or ieQTL effects."},
+      "gse289173": {"planned_role": "project_sealed_final", "post_lock_state_if_every_component_and_local_receipt_pass": "target_label_unexposed", "restriction": "Features are anonymized for inference, ATAC and outcomes are unavailable, prediction hashes are committed before one evaluator-only label join."},
+      "gse296875": {"planned_role": "training", "post_fit_state": "continual_seen", "restriction": "Cross donors with held chromosome or LD blocks and a full selected-backbone boundary buffer."}
+    }
+  },
+  "prospective_training_receipt": {
+    "required_fields": ["selected_sequence_checkpoint_and_license_decision", "selected_cell_encoder_checkpoint_and_license_decision", "architecture_spec_sha256", "context_mapper_and_masks", "training_dataset_artifact_hashes", "donor_folds", "chromosome_and_ld_blocks", "boundary_buffer", "feature_and_reference_crosswalks", "five_seeds", "runtime_lock", "code_snapshot_and_dirty_patch_hash", "trained_checkpoint_sha256", "calibration_and_thresholds", "selection_lock_sha256"],
+    "status": "ABSENT"
+  },
+  "rules": {
+    "component_exposure": "The composite exposure is at least as restrictive as any selected pretrained component plus every local fit, adapter, head, mapper, calibration, and downstream demonstration.",
+    "final_development_fit": "A source used in the final local fit is continual_seen for the resulting artifact even if donor/genomic cross-fitting supplied development estimates.",
+    "sealed": "GSE289173 may become target_label_unexposed only after all components, local data, preprocessing, code, runtime, trained state, outputs, and thresholds are locked without its labels or QTL outcomes. Current state is unknown.",
+    "sequence_overlap": "Reference-sequence familiarity is handled by merged chromosome/LD blocks and a boundary buffer equal to the selected model's largest receptive field; it does not substitute for target-exposure auditing."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "status": "prospective_fail_closed_no_model",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,61 @@
+{
+  "audit_scope": {
+    "artifact_type": "official_native_Sonnet_checkpoint_plus_registered_CREsted_conversion",
+    "development_sources": ["gse281364", "gse296875", "current_coloc_gwas"],
+    "sealed_source": "gse289173",
+    "task_id": "variant_to_regulation"
+  },
+  "checkpoint_findings": {
+    "official_native_sonnet_human": {
+      "checkpoint_identity": "google-deepmind/deepmind-research@f5de0ede8430809180254ee957abf36ed62579ef plus immutable GCS generations 1653413781220972, 1653414053766013, and 1653414056026643",
+      "corpus": "Broad hg38 ENCODE, FANTOM5, and Basenji2-processed functional-genomics tracks; no donor-expression input",
+      "exposure_confidence": "high_for_named_post_2022_target_labels_medium_for_upstream_locus_and_profile_aliases",
+      "exposure_state": "target_label_unexposed",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    },
+    "registered_crested_enformer_human": {
+      "checkpoint_identity": "aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:Enformer_human archive sha256 628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc declared by the pinned registry",
+      "conversion_parity": "UNRESOLVED",
+      "exposure_confidence": "inherits_native_target_label_status_only_if_numeric_parity_is_proven",
+      "exposure_state": "target_label_unexposed_with_conversion_uncertainty",
+      "rule": "A conversion cannot improve the native checkpoint's exposure classification and is a separate artifact identity."
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_variant_and_regulatory_sources",
+    "sha256": "64fe8bedf4d7e6a9caeb286c2a67ac60c0bfbfc2c5fd597ae5582bee04575bf1"
+  },
+  "input_eligibility": {
+    "gse281364": "Sequence-only retrospective MPRA direction and rank diagnostic. No MPRA outcome may select tracks, bins, windows, aggregation, or a downstream head.",
+    "gse289173": "Eligible only for one-time sequence inference after selection lock. Enformer has no donor or expression input, so predictions at the same allele and window are identical across donors. Signed eQTL or ieQTL prediction requires a separately frozen development-only link and direction model.",
+    "gse296875": "Eligible as a static sequence-track baseline or as input to a separately named development-fitted head. It cannot use same-nucleus RNA as context and is not an RNA-conditioned ATAC model.",
+    "observed_context_requirement": "none_supported; a fixed liver, HepG2, CAGE, DNase, or ATAC training track is not observed donor context"
+  },
+  "interpretation": "The three named project sources postdate the immutable native checkpoint, so their target labels are unexposed. Reference sequence and generic functional-genomics biology remain exposed. The registered CREsted archive is restricted and lacks a reproducible conversion and parity report; it must not be treated as the official native checkpoint.",
+  "license_disposition": {
+    "converted_code_and_loader": "CREsted pinned internal academic, noncommercial, nontransferable terms that prohibit unapproved modification or derivatives",
+    "converted_weights": "no separate archive terms located",
+    "native_code": "Apache-2.0",
+    "native_weights": "UNDECLARED_in_official_GCS_metadata",
+    "open_champion_eligibility": "ineligible_until_native_weight_authority_or_institutional_determination_and_an_exact_admission_lock"
+  },
+  "remaining_blockers": [
+    "Obtain an approved acquisition of every official native GCS object by immutable generation, verify GCS size and MD5 or CRC32C, compute SHA-256, and freeze tensor names, shapes, and dtypes.",
+    "Resolve native checkpoint terms and derivative-weight redistribution authority before any open-champion designation.",
+    "Keep the CREsted conversion restricted unless separate archive authority is established; require the checkpoint-producing conversion source and numeric parity against native Sonnet on fixed fixtures.",
+    "Freeze the 5313-track manifest and prove native versus converted output order, internal crop, reverse-complement restoration, boundary behavior, SAD and SAR, and project ALT-minus-REF sign parity.",
+    "Lock a no-network native runtime and pass strict restore, import, forward, backward, resume, deterministic-seed, and L40S numeric-tolerance probes through SLURM after campaign approval.",
+    "Cross any fitted track combiner, calibration, enhancer-gene link, or direction head over held donors and merged chromosome or LD blocks with a 196608-bp boundary buffer.",
+    "Prespecify that Enformer is sequence-only and cannot enter the RNA-conditioned ATAC profile champion comparison except as the static sequence baseline."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "registered_conversion_ineligible;_native_sequence_component_reconsiderable_only_after_terms_hash_runtime_and_task_head_gates",
+  "task_disposition": {
+    "allele_effect": "eligible_as_sequence_only_ALT_minus_REF_track_effect_after_admission",
+    "rna_conditioned_atac": "static_sequence_baseline_only",
+    "signed_eqtl_ieqtl": "not_native_requires_separately_frozen_link_and_direction_model",
+    "variant_to_regulation": "eligible_as_a_sequence_component_not_a_complete_context_conditioned_gene_effect_model"
+  },
+  "verified_date": "2026-08-22"
+}

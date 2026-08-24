@@ -1,0 +1,102 @@
+schema_version = "masld-bench-model-audit-bindings-v1"
+verified_date = "2026-08-22"
+default_rule = "registry_model_id_equals_artifact_bundle_id"
+expected_registry_model_count = 136
+expected_artifact_bundle_count = 104
+required_bundle_files = ["checkpoints.json", "development_crosswalk.json", "exposure_audit.json"]
+
+[[group_bindings]]
+bundle_id = "geneformer"
+model_ids = ["geneformer_v1_10m", "geneformer_v2_104m", "geneformer_v2_316m"]
+
+[[group_bindings]]
+bundle_id = "scgpt"
+model_ids = ["scgpt_whole_human", "scgpt_continual"]
+
+[[group_bindings]]
+bundle_id = "uce"
+model_ids = ["uce_4l", "uce_33l"]
+
+[[group_bindings]]
+bundle_id = "cellplm"
+model_ids = ["cellplm_85m", "cellplm_85m_vae_20231027"]
+
+[[group_bindings]]
+bundle_id = "scimilarity"
+model_ids = ["scimilarity_v1_1"]
+
+[[group_bindings]]
+bundle_id = "transcriptformer"
+model_ids = ["transcriptformer_tf_sapiens"]
+
+[[group_bindings]]
+bundle_id = "scprint"
+model_ids = ["scprint_v1_5_medium"]
+
+[[group_bindings]]
+bundle_id = "scprint2"
+model_ids = ["scprint2_small_v2", "scprint2_medium"]
+
+[[group_bindings]]
+bundle_id = "corgi"
+model_ids = ["corgi_regular"]
+
+[[group_bindings]]
+bundle_id = "borzoi"
+model_ids = ["borzoi_ensemble"]
+
+[[group_bindings]]
+bundle_id = "scfoundation"
+model_ids = ["scfoundation_heads"]
+
+[[group_bindings]]
+bundle_id = "cell_bulk_classical_baselines"
+model_ids = [
+  "hvg_pca_nearest_centroid",
+  "hvg_pca_knn",
+  "hvg_pca_logistic",
+  "hvg_pca_elastic_net",
+  "hvg_pca_linear_svm",
+  "harmony_logistic",
+  "scvi_baseline",
+  "scanvi_baseline",
+  "celltypist_baseline",
+  "pca_procrustes",
+  "cca",
+  "mean_expression_bulk",
+  "assay_native_pseudobulk",
+]
+
+[[group_bindings]]
+bundle_id = "regulatory_native_controls"
+model_ids = [
+  "mean_track",
+  "context_only",
+  "sequence_only",
+  "nearest_regulatory_feature",
+  "nearest_context",
+  "sequence_cnn_control",
+  "sequence_transformer_control",
+]
+
+[[group_bindings]]
+bundle_id = "rna_atac_regularized"
+model_ids = ["shrunken_pseudobulk", "shuffled_context", "trans_only"]
+
+[[group_bindings]]
+bundle_id = "perturbation_native_baselines"
+model_ids = [
+  "control_mean",
+  "perturbed_mean",
+  "ridge_perturbation",
+  "bilinear_perturbation",
+  "systema",
+]
+
+[[group_bindings]]
+bundle_id = "evidence_graph_native_baselines"
+model_ids = ["graph_degree", "graph_source_count", "regularized_linear_evidence"]
+
+[[group_bindings]]
+bundle_id = "negative_controls"
+model_ids = ["shuffled_outcome"]

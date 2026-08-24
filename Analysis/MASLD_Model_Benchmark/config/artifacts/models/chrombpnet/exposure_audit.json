@@ -1,0 +1,31 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "tasks": ["rna_conditioned_atac", "variant_to_regulation"]
+  },
+  "checkpoint_findings": {
+    "chrombpnet": {
+      "checkpoint_identity": "project_trained_per_outer_fold_cell_state_seed_and_genomic_split",
+      "corpus": "No upstream assay checkpoint; only declared outer-training donor-state ATAC fragments and permitted genomic blocks",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "task_specific_local_training_and_sealed_access",
+    "sha256": "b0a546eacb895533314773f671e3115b1951b5d400af6fd0c6574aa242f6f6ed"
+  },
+  "interpretation": "ChromBPNet has no foundation-model corpus contamination because it is trained locally inside the benchmark splits. Leakage risk instead comes from donor pooling, peak and negative definition, bias-model fitting, genomic windows, early stopping, and calibration. Every one of those operations must remain inside the crossed donor and genomic training partitions. GSE289173 target labels and eQTL/ieQTL outcomes remain unexposed.",
+  "remaining_blockers": [
+    "Verify the exact PyPI wheel in an isolated runtime and pass TensorFlow 2.8 import, forward/backward, checkpoint-resume, reverse-complement, and cross-device tolerance probes on L40S.",
+    "Activate GSE296875 only after its barcode-to-donor, well, reference, feature/peak, QC, and missingness authorities pass.",
+    "Freeze fold-specific donor-state fragments, peaks, matched nonpeaks, bias models, genomic buffers, model hyperparameters, and five trained-artifact SHA-256 values per cell state.",
+    "Pass the fixed profile fixture proving that no held-donor ATAC is available at inference and label this model sequence-only rather than RNA-conditioned.",
+    "Freeze ALT-minus-REF orientation and keep any enhancer-gene linking/direction composite separate from the ChromBPNet-only score."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "conditional_after_runtime_data_and_local_artifact_locks_as_a_sequence_accessibility_component_not_a_standalone_signed_gene_effect_model",
+  "verified_date": "2026-08-22"
+}

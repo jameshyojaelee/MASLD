@@ -1,0 +1,229 @@
+{
+  "architecture_contract": {
+    "backbone": "Borzoi_initialized_sequence_encoder",
+    "head": "ConvHead_with_exponential_output_activation",
+    "input_channels": 5,
+    "input_span_bp": 524288,
+    "model_family": "gene_centered_sequence_to_fixed_single_cell_expression_tasks",
+    "output_task_count": 8856,
+    "output_task_semantics": "fixed cell-context expression tasks from the released metadata; not query-provided contexts",
+    "warning": "A released output task may be used only under its frozen metadata identity. It cannot be relabeled as a MASLD lineage, donor, or state."
+  },
+  "input_contract": {
+    "allele_checks": "Require normalized biallelic variants, hg38 or GRCh38.p14 REF matching, explicit VCF 1-based and BED 0-based-half-open conventions, strand restoration, and gene-centered anchoring before sequence extraction.",
+    "canonical_tensor": "A,C,G,T one-hot DNA plus a binary gene-body mask",
+    "donor_or_cell_context": "none",
+    "gene_contract": "A prespecified target gene, transcriptional strand, and gene-body mask are required for every prediction.",
+    "observed_atac_required": false,
+    "observed_rna_required": false,
+    "sealed_input_interpretation": "GSE289173 DNA and an eligible target-gene annotation can be scored. Its single-nucleus RNA cannot define a new Decima context or task."
+  },
+  "native_checkpoints": {
+    "code_repository": "Genentech/decima",
+    "code_revision": "5e2439a63effe12b33e9b624dabf8b577a409d75",
+    "code_version": "v0.7.2",
+    "code_version_rule": "Earlier released ensemble VEP paths are inadmissible because v0.7.2 fixes allele and variant dimension scrambling.",
+    "format": "PyTorch_Lightning_ckpt_pickle_backed",
+    "registered_identity": "Zenodo:15092691:rep0.ckpt,rep1.ckpt,rep2.ckpt,rep3.ckpt",
+    "registered_objects": [
+      {
+        "md5": "1dbc5675702c791f439f163ee9efae00",
+        "name": "rep0.ckpt",
+        "sha256": "UNRESOLVED_not_downloaded",
+        "size_bytes": 2260600894
+      },
+      {
+        "md5": "e002eac765483082ab83b215d892b743",
+        "name": "rep1.ckpt",
+        "sha256": "UNRESOLVED_not_downloaded",
+        "size_bytes": 2260600894
+      },
+      {
+        "md5": "0d5401d5cc2683bca738e548336de588",
+        "name": "rep2.ckpt",
+        "sha256": "UNRESOLVED_not_downloaded",
+        "size_bytes": 2260600894
+      },
+      {
+        "md5": "99f51c59eb54e59e3794a20ab2d12c54",
+        "name": "rep3.ckpt",
+        "sha256": "UNRESOLVED_not_downloaded",
+        "size_bytes": 2260600894
+      }
+    ],
+    "status": "exact_Zenodo_objects_registered_but_bytes_not_acquired",
+    "zenodo_creation_date": "2025-03-27",
+    "zenodo_new_record_equivalence": "Zenodo 18142522 contains the same four filenames, sizes, and MD5 values. Treat it as a second record for the same bytes, not a new checkpoint."
+  },
+  "official_huggingface_alternative": {
+    "checkpoint_equivalence_to_registered_zenodo_objects": "UNRESOLVED_without_tensor_or_numeric_parity",
+    "checkpoint_repository": "Genentech/decima-model",
+    "checkpoint_revision": "bd12cada26a69c54f223791e1072ab76a3ffe7b4",
+    "ckpt_objects": [
+      {
+        "lfs_sha256": "9b4efc2967d09d05c34ced1877744ad1d499d3899863463d5107d072046bfb31",
+        "name": "rep0.ckpt"
+      },
+      {
+        "lfs_sha256": "7f2322061c92f238af320b1fdcd949c345859b51e31788e18d28521a51fca408",
+        "name": "rep1.ckpt"
+      },
+      {
+        "lfs_sha256": "da95328d7a7690edaba49943b26722064a0f4159141c792d1221dc8c9100a9b4",
+        "name": "rep2.ckpt"
+      },
+      {
+        "lfs_sha256": "31127cc544b048db99bf84b3c859ef764b60be6f844d28195da26ace24cb69c5",
+        "name": "rep3.ckpt"
+      }
+    ],
+    "safetensor_objects": [
+      {
+        "lfs_sha256": "7b4a4ddd20f4c4ee8792459ee2f006576e255adc633c9347b6d3d8378f9173e0",
+        "name": "rep0.safetensors",
+        "size_bytes": 755007760
+      },
+      {
+        "lfs_sha256": "245bf6f4b4357f39ee15d8e38e32f79e6976ef64936a276d37bd03dbc266a7e3",
+        "name": "rep1.safetensors",
+        "size_bytes": 755007760
+      },
+      {
+        "lfs_sha256": "9200c7640fe6774b3a3c033c50009a4b002f439f6be10515c66bd727ad4328a0",
+        "name": "rep2.safetensors",
+        "size_bytes": 755007760
+      },
+      {
+        "lfs_sha256": "9a390d8be850879d8a533e6826dafa0329f6a4d26c612f280244ce7c19ee1992",
+        "name": "rep3.safetensors",
+        "size_bytes": 755007760
+      }
+    ],
+    "status": "separately_identified_safer_format_not_a_permitted_substitute_until_parity_and_terms_are_resolved"
+  },
+  "output_contract": {
+    "ensemble": "Run all four replicate checkpoints independently, restore the intended allele and variant axes, then take the arithmetic mean. Replicates quantify model stability and are not biological replicates.",
+    "native_scale": "positive predicted expression for each of 8856 fixed output tasks",
+    "output_activation": "exp",
+    "sealed_lineage_roster": "UNRESOLVED_the_official_3.27_GB_metadata_artifact_was_not_downloaded",
+    "variant_score": "ALT-minus-REF predicted expression for a prespecified target gene and each fixed output task",
+    "vep_defaults": {
+      "dtype": "float32",
+      "reverse_complement": false,
+      "shift": 0
+    }
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_genome": "hg38",
+    "reference_gate": "Freeze the exact Decima gene metadata, transcript/gene selection, task metadata, hg38-to-GRCh38.p14 primary-contig equivalence, contig naming, coordinates, REF alleles, strand restoration, gene masks, and boundary behavior."
+  },
+  "release": {
+    "code_release_date": "2026-06-04",
+    "publication_date": "2026",
+    "publication_doi": "10.1038/s41592-026-03102-0",
+    "registered_checkpoint_revision": "Genentech/decima@5e2439a63effe12b33e9b624dabf8b577a409d75:v0.7.2+Zenodo:15092691:rep0.ckpt,rep1.ckpt,rep2.ckpt,rep3.ckpt"
+  },
+  "runtime_contract": {
+    "data_repository": "Genentech/decima-data",
+    "data_revision": "71e6ef93e9ac581b5788d9bf135c4358a765fbb4",
+    "environment_status": "UNRESOLVED",
+    "metadata_object": {
+      "lfs_sha256": "b6d1d7430a2e60955fcc457dcdd8efc1f522a9b9fef1dd2df6a76f146bcf233a",
+      "name": "metadata.h5ad",
+      "size_bytes": 3273994413,
+      "status": "not_downloaded"
+    },
+    "required_probe": "isolated_L40S_import_strict_tensor_load_four_model_forward_VEP_axis_fixture_reverse_complement_gene_strand_resume_deterministic_seed_and_numeric_tolerance"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "lightning_risk": "The .ckpt path uses Lightning load_from_checkpoint and is pickle-backed executable content.",
+    "preferred_path": "After acquisition approval, verify exact artifacts, inspect .ckpt only in an isolated no-network environment, convert recognized tensors to safetensors, and prove tensor and numeric parity against the official v0.7.2 inference path.",
+    "substitution_rule": "The Hugging Face safetensors cannot replace the registered Zenodo ensemble until checkpoint equivalence, output-task order, tensor names and shapes, and fixed-fixture numeric parity are frozen.",
+    "runtime_network_policy": "No runtime network fetches."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods paper, pinned official Decima code release, official Zenodo records, and pinned Hugging Face model and data repository metadata were checked on 2026-08-22. No model or metadata artifact was downloaded or deserialized.",
+  "source_records": [
+    {
+      "identity": "Genentech/decima@5e2439a6:README.md",
+      "sha256": "51c09f065a0e57ad5302518325055a3f8838378ebb7a7b8bb09651d1cbea8231",
+      "size_bytes": 1459
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:LICENSE",
+      "sha256": "923d56d0df9d6f372713622028d4b175310af3288008cc0ac2ec796683493953",
+      "size_bytes": 10550
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:pyproject.toml",
+      "sha256": "df5e77ac6f1920bb13b3299a7107459851c31c8df01a0b0542c8c376d1f5b0a7",
+      "size_bytes": 626
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:setup.cfg",
+      "sha256": "4dc20bb243058b78000b949ca8bf7d7c88acc2a3acbc7657609195c5a7beceeb",
+      "size_bytes": 4266
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:src/decima/constants.py",
+      "sha256": "c31b43e1b49d5e9bab3f8574203a04041efda65805a52626c7f651271d923965",
+      "size_bytes": 2040
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:src/decima/core/decima_model.py",
+      "sha256": "3f81bb140200d8885610d6924404b0ebf7ed05566d2ab9111efd64c59e05be86",
+      "size_bytes": 3656
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:src/decima/core/lightning.py",
+      "sha256": "999e3e0bef445fb0e70c135b7ca776475c19383a5f5755fc5ccf66ec96155653",
+      "size_bytes": 23249
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:src/decima/hub/download.py",
+      "sha256": "bac2d8a6917a120ffdb6067b8e4ab536e6184b83662f96460c8001bced95127f",
+      "size_bytes": 3222
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:src/decima/interpret/vep.py",
+      "sha256": "cf764d407ec65465a46a24c83730f940abc3f11da1b37469713b4ed2edbd8a42",
+      "size_bytes": 11792
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:src/decima/data/dataset.py",
+      "sha256": "f82dbe23530744c978b58b3a33386e5706584cd641ebd521f0c732724eafbf0b",
+      "size_bytes": 33578
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:notebooks/variant_effect_prediction.ipynb",
+      "sha256": "70b3b7ba8bb14783c0fd30f06c7a0f441721365b9159e9dbbae20a914e505ae4",
+      "size_bytes": 266114
+    },
+    {
+      "identity": "Genentech/decima@5e2439a6:notebooks/gene_expression_prediction.ipynb",
+      "sha256": "71fd8e051aff2a6a567ed24b2d61f9cb8a73e4e8487407e70a52c286f015cbdc",
+      "size_bytes": 117349
+    }
+  ],
+  "task_fit": {
+    "allele_effect": "supported_as_signed_ALT_minus_REF_gene_expression_for_fixed_output_tasks",
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported_as_conditioned_model;_static_sequence_gene_expression_comparator_only",
+    "signed_eqtl_ieqtl": "conditionally_supported_if_all_prespecified_lineages_have_exact_frozen_output_tasks",
+    "variant_to_regulation": "conditional_on_output_task_roster_terms_metadata_reference_and_runtime_gates"
+  },
+  "terms_audit": {
+    "code_license": "Genentech_Non-Commercial_Software_License_1.0",
+    "huggingface_model_card_declaration": "MIT",
+    "open_champion_disposition": "ineligible_until_the_authoritative_code_and_weight_terms_conflict_is_resolved",
+    "terms_conflict": "The Hugging Face model card's MIT declaration conflicts with the frozen GitHub code license and Zenodo CC-BY-NC-4.0 weight record. It does not clear open adaptation or redistribution.",
+    "zenodo_weight_license": "CC-BY-NC-4.0"
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "CC-BY-NC-4.0_REGISTERED_ZENODO_ARTIFACT"
+}

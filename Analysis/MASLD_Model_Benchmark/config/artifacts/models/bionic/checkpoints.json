@@ -1,0 +1,103 @@
+{
+  "architecture_contract": {
+    "decoder": "Use the native symmetric embedding dot product as the raw recovery score. A separate evaluator may fit one logistic calibration only on inner pseudo-held evidence sources; no held-source outcome may fit or select the decoder or calibrator.",
+    "direction_and_type_warning": "BIONIC v0.2.6 accepts multiple homogeneous undirected networks over a common node universe. The project projection therefore discards edge direction and relation identity within each source. Typed node namespaces prevent identifier collision, but they do not make BIONIC a typed or directed graph model.",
+    "input_networks": "Create one training-only edge-list network per retained evidence source after the outer held-source and held LD/locus/gene blocks are removed. Every retained edge has binary weight 1.0; source-native weights are not pooled across incomparable evidence units in this baseline.",
+    "native_assay": "The method was designed to integrate gene/protein interaction or functional-association networks. Applying it to a projected multi-node-type evidence graph is a registered cross-modality comparator with lost relation semantics, not a native typed-evidence model.",
+    "node_identity": "UTF-8 typed IDs with a required namespace prefix such as locus:, variant:, gene:, peak:, or program:. Sort by bytewise ID before native preprocessing and freeze the index-to-ID table by SHA-256.",
+    "projection": "Within each evidence source, canonicalize every non-self edge as min(typed_id_a,typed_id_b), max(typed_id_a,typed_id_b), collapse duplicates, and write one undirected record. Self-evidence and non-finite or negative weights are rejected before BIONIC adds its own self-loops.",
+    "supervision": "Unsupervised reconstruction only: label_names=null and lambda resolves to 1.0. Current Gene Catalog membership, COLOC outcomes, GSE281160 outcomes, GSE281364 outcomes, and a held evidence source cannot enter a classification head."
+  },
+  "implementation": {
+    "checkpoint_policy": "No upstream biological checkpoint is admitted. A fresh model and integrated embedding are trained inside every outer held-source by held-block partition and seed, then identified by immutable graph, node-map, config, environment, model, and feature hashes.",
+    "implementation_type": "train_locally_from_exact_source",
+    "primary_paper": "https://doi.org/10.1038/s41592-022-01616-x",
+    "paper_software_version": "v0.2.4",
+    "repository": "bowang-lab/BIONIC",
+    "repository_revision": "b74e117602a9573a72edd1f53400243d567ca373",
+    "release_tag": "v0.2.6",
+    "release_date": "2023-03-10",
+    "revision_status": "exact_immutable_commit_and_tag_registered",
+    "source_code_run": false,
+    "upstream_checkpoint": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+  },
+  "local_training_identity": {
+    "batch_size": 2048,
+    "embedding_size": 512,
+    "epochs": 3000,
+    "gat_shapes": {
+      "dimension": 64,
+      "n_heads": 10,
+      "n_layers": 2
+    },
+    "initialization": "kaiming",
+    "learning_rate": 0.0005,
+    "model_parallel": false,
+    "neighbor_sample_size": 2,
+    "optimizer": "Adam as constructed by BIONIC v0.2.6",
+    "sample_size": 0,
+    "save_model": true,
+    "save_network_scales": true,
+    "seeds": [11, 29, 47, 71, 101],
+    "shared_encoder": false,
+    "status": "project_frozen_screening_recipe_equal_to_upstream_defaults",
+    "tensorboard": {
+      "embedding": false,
+      "training": false
+    }
+  },
+  "missingness_and_coverage": {
+    "absent_from_one_network": "Retain BIONIC's per-network mask. Absence is not a zero-weight observed edge and must remain distinct from a measured nonedge.",
+    "absent_from_all_retained_networks": "Untestable. BIONIC builds its union from retained edge lists and its first projection is indexed by the fixed union size. Do not add held-source edges merely to create the node and do not convert a common bias-only vector into a prediction.",
+    "coverage_denominator": "Freeze and report all evaluator candidates, the subset whose two endpoints have nonheld network support, and every reason for exclusion before held outcomes are joined.",
+    "inductive_status": "transductive_fixed_training_union",
+    "unseen_node_behavior": "No valid transform. Retraining on an expanded outcome-independent graph creates a new model identity; a held-source-only node remains untestable for that split."
+  },
+  "runtime_contract": {
+    "declared_upstream_runtime": [
+      "Python 3.8",
+      "PyTorch 1.9.0",
+      "torch-geometric 1.7.2",
+      "torch-scatter 2.0.8",
+      "torch-sparse 0.6.11",
+      "torch-cluster 1.5.9"
+    ],
+    "environment_status": "UNRESOLVED_LEGACY_CPU_AND_L40S_IMPORT_KERNEL_TRAIN_RESUME_NUMERIC_PROBES_REQUIRED",
+    "execution_target": "CPU SLURM compatibility default until an isolated legacy CUDA runtime passes the project L40S probe; do not assume CUDA 11.1-era wheels work on the campaign stack.",
+    "no_install_or_execution_during_audit": true,
+    "release_wheel_policy": "No release wheel is admitted by this audit. Build or install only after a separate environment lock records exact artifact hashes and dependency resolution.",
+    "seed_wrapper": "Before model construction, set Python, NumPy, torch CPU, and every CUDA seed; record deterministic-algorithm settings, sampler order, worker count, device, and five independent fitted artifacts. BIONIC has no seed field in its JSON config.",
+    "resource_warning": "The encoder contains a node-universe-sized linear parameter matrix for every nonshared source encoder, and inference reconstructs dot products. Measure memory on a fixed synthetic graph before any full graph submission."
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only",
+    "external_pt_files": "prohibited",
+    "feature_export": "The primary reusable artifact is the native *_features.tsv plus a separately hashed typed node roster. Parse as bounded UTF-8 tabular text, require exactly 512 finite numeric columns, unique exact node IDs, exact row count/order, and no missing values.",
+    "legacy_pickle_constraint": "BIONIC v0.2.6 calls torch.load(pretrained_model_path) without map_location or a restricted weights-only mode and loads with strict=false. Keep pretrained_model_path=null. The pinned PyTorch 1.9 runtime cannot be treated as a safe loader for untrusted pickle.",
+    "model_export": "A native *_model.pt may be retained only as a hashed project-generated restart artifact inside the campaign trust boundary. It is never accepted from upstream or a third party. Prefer same-process train-plus-forward; any later loader must reconstruct the exact architecture, inspect a tensor-only state dictionary in an isolated no-network process, and require strict key, shape, dtype, and finiteness checks.",
+    "require_no_network_execution": true,
+    "wildcard_and_path_rule": "Reject '*' network paths, symlinks outside the immutable campaign input root, duplicate paths, non-regular files, and mutable output targets before invoking BIONIC."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The primary paper, immutable v0.2.6 tag and source, MIT text, default configuration, preprocessing, model, loss, sampler, training, save, and unsafe pretrained-load paths were inspected on 2026-08-22. No software, source archive, wheel, graph, or biological weights were downloaded to disk; no model was installed or executed.",
+  "source_records": [
+    {"identity": "BIONIC:LICENSE", "sha256": "eb24104637141bab4751106416b18aebb897d0b5955d3b3f25b46a269aba163d", "size_bytes": 1070},
+    {"identity": "BIONIC:README.md", "sha256": "2936d16921867add2280be7ab73d9f0645bc69ed33413f701f144876e67eb577", "size_bytes": 15748},
+    {"identity": "BIONIC:pyproject.toml", "sha256": "f59553c9d8b2e06a18e6cf27ae7b26d3d56e28db8d8b31a9dae47197138c331d", "size_bytes": 1504},
+    {"identity": "BIONIC:bionic/train.py", "sha256": "4655d217b3eb3cbecee3642ddc53ea782ecd8a44945c1f666f9be3b7c82a1264", "size_bytes": 18059},
+    {"identity": "BIONIC:bionic/model/model.py", "sha256": "c8dfb19dffb5e29993fda68739bee3fff5f881fef927118697478a6d3aeb4172", "size_bytes": 10841},
+    {"identity": "BIONIC:bionic/model/layers.py", "sha256": "90f9294991073fbac8578cac6127973aab6275b4a3493d3110c93b6f6d198a2c", "size_bytes": 6157},
+    {"identity": "BIONIC:bionic/model/loss.py", "sha256": "307051101789d943f0ce73b830eaa56ae66ea8907a55512738f8f098d2211bd8", "size_bytes": 961},
+    {"identity": "BIONIC:bionic/utils/preprocessor.py", "sha256": "ddeb8375ac366de19482d8ccca661fc3a0fdc25f8b449720b000da7f5851f5c6", "size_bytes": 6998},
+    {"identity": "BIONIC:bionic/utils/config_parser.py", "sha256": "8b52f8b0fd04bb5a7169fee2a1b4b8e1c0f36248f74445f9ac98d23de566a872", "size_bytes": 8008},
+    {"identity": "BIONIC:bionic/utils/sampler.py", "sha256": "65f435a53ba23890cc699df69c76d283e42854efa61a7014d73c2c1181348970", "size_bytes": 2893}
+  ],
+  "terms_audit": {
+    "code_license": "MIT",
+    "derivative_weight_redistribution": "The software license does not impose a separate learned-weight restriction. Release of project-trained states or embeddings remains conditional on every input evidence source's reuse and redistribution terms; otherwise release code, manifests, and predictions without restricted artifacts.",
+    "license_file_inspected": true,
+    "notice_obligation": "Retain the BIONIC copyright and MIT permission notice in redistributed source or substantial portions.",
+    "result": "open_source_code_preflight_pass_no_upstream_weights_local_artifacts_not_yet_created"
+  },
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+}

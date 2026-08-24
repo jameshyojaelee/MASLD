@@ -1,0 +1,30 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_by_archive_timing_with_pre_archive_unknown_retained",
+    "sealed_dataset_id": "gse289173",
+    "sealed_endpoint_labels": ["frozen_cell_state_mapping_labels", "cell_type_eqtl_effects", "interaction_eqtl_effects"]
+  },
+  "checkpoint_findings": {
+    "transcriptformer_tf_sapiens": {
+      "corpus": "57 million human CELLxGENE cells across 644 datasets",
+      "corpus_annotation_state": "self_supervised_gene_and_count_generation_with_assay_token",
+      "exposure_state": "unknown",
+      "immutable_archive_date": "2025-04-10"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "39b47fff3415cf1b9030145d2f25cc8e73e8641d548b8babe07c8c27de641ef0"
+  },
+  "interpretation": "TF-Sapiens cannot yet support the project-sealed GSE289173 champion claim. The sealed GEO source became public before the immutable archive was created, and the official complete 644-dataset UUID table could not be retrieved from bioRxiv during this audit. Its absence from the mutable 2026 CELLxGENE catalog is corroborating but not historical evidence. Exposure remains unknown until the exact table is hash-verified and crosswalked.",
+  "remaining_blockers": [
+    "Retrieve and hash the official complete Extended Data Table 1, then crosswalk accession, publication, collection, and dataset UUID aliases.",
+    "Obtain the versioned archive only with approval, verify its SHA-256 and internal roster, and do not use the upstream unsafe CLI extractor.",
+    "Freeze an executable runtime and separate native and common-lane gene-order contracts before smoke admission.",
+    "Do not transfer this audit to TF-Exemplar, TF-Metazoa, later releases, or independently tuned checkpoints."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_while_exposure_unknown",
+  "verified_date": "2026-08-22"
+}

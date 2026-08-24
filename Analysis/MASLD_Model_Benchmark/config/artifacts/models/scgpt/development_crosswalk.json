@@ -1,0 +1,115 @@
+{
+  "corpus": {
+    "cutoff": "2023-05-08",
+    "declared_filter": "human cells with disease == normal and suspension_type != na",
+    "inventory_granularity": "versioned CELLxGENE Census; the exact weekly build is no longer publicly listed and the adjacent LTS 2023-05-15 release is not substituted",
+    "reported_cells": 33000000,
+    "source": "scGPT whole-human",
+    "supervised_continual_addition": "Tabula Sapiens cell-type labels"
+  },
+  "crosswalk_scope": {
+    "additional_cell_state_task_datasets": [
+      "GSE256398",
+      "GSE281367",
+      "GSE289173",
+      "GSE296875"
+    ],
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "smoke_view_source_datasets": [
+      "GSE136103",
+      "GSE174748",
+      "GSE185477",
+      "GSE189600",
+      "GSE202379",
+      "GSE244832",
+      "Liver_Atlas"
+    ],
+    "scope_limit": "This classifies every registered cell-state source by timing and explicit continual-supervision identity. Exact archived Census membership remains unresolved for sources public on or before 2023-05-08. It does not cover bulk or other tasks."
+  },
+  "findings": {
+    "GSE136103": {
+      "aliases": ["GSE136103", "PRJNA561303", "DOI:10.1038/s41586-019-1631-3"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "Public before the corpus cutoff; exact membership and normal-donor subset overlap in the retired weekly Census build are unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2019-09-12"
+    },
+    "GSE174748": {
+      "aliases": ["GSE174748", "PRJNA731458", "DOI:10.1038/s41586-022-05289-6"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "Public before the corpus cutoff; exact membership in the retired weekly Census build is unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2022-05-01"
+    },
+    "GSE185477": {
+      "aliases": ["GSE185477", "DOI:10.1002/hep4.1854"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "Public before the corpus cutoff; exact membership and normal-cell subset overlap in the retired weekly Census build are unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2021-10-13"
+    },
+    "GSE189600": {
+      "aliases": ["GSE189600", "PRJNA783863", "DOI:10.1126/scitranslmed.adc9653"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "Public before the corpus cutoff; exact membership in the retired weekly Census build is unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2023-02-08"
+    },
+    "GSE202379": {
+      "aliases": ["GSE202379", "PRJNA835824", "DOI:10.1038/s41586-024-07465-2"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "GEO first became public after the frozen 2023-05-08 corpus cutoff.",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-04-04"
+    },
+    "GSE244832": {
+      "aliases": ["GSE244832", "PRJNA1024976", "DOI:10.1016/j.jhep.2024.10.044"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "GEO first became public after the frozen 2023-05-08 corpus cutoff and after the continual artifact was released.",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-11-13"
+    },
+    "GSE256398": {
+      "aliases": ["GSE256398", "PRJNA1079341", "DOI:10.1038/s41586-025-08677-w"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "GEO first became public after both frozen checkpoints were released.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-03-03"
+    },
+    "GSE281367": {
+      "aliases": ["GSE281367", "PRJNA1183734", "DOI:10.1038/s41588-026-02617-8"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "GEO first became public after both frozen checkpoints were released.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16"
+    },
+    "GSE289173": {
+      "aliases": ["GSE289173", "PRJNA1221860", "DOI:10.1038/s41588-025-02237-8"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "GEO was submitted and made public after both frozen checkpoints were released; its frozen cell-state and eQTL/ieQTL outcomes were not checkpoint-training labels.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "GSE296875": {
+      "aliases": ["GSE296875", "PRJNA1261871", "DOI:10.1016/j.ajhg.2025.11.009"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "GEO first became public after both frozen checkpoints were released.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "Liver_Atlas": {
+      "aliases": ["Liver_Atlas", "GSE115469", "DOI:10.1038/s41467-018-06318-7"],
+      "continual_relation": "not_Tabula_Sapiens",
+      "evidence": "Public before the corpus cutoff and currently represented in CELLxGENE, but exact membership in the retired 2023-05-08 weekly Census build is not substituted from a later release.",
+      "exposure_state": "unknown",
+      "public_date": "2018-10-22"
+    }
+  },
+  "rules": {
+    "continual_supervision": "Any Tabula Sapiens evaluation source is continual_seen for scgpt_continual even when it is merely encoder_seen for scgpt_whole_human.",
+    "post_cutoff": "A source first public after 2023-05-08 is clean_declared for whole-human unless another training declaration names it.",
+    "pre_cutoff": "A source public on or before 2023-05-08 remains unknown until exact archived Census membership is rederived; a later Census release is not accepted as a substitute."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,156 @@
+{
+  "architecture_contract": {
+    "attention_heads": 12,
+    "embedding_dimension": 768,
+    "feature_count": 283,
+    "model_family": "observed_accessible_region_transformer",
+    "published_region_count": 200,
+    "released_yaml_region_count": 900,
+    "transformer_layers": 12,
+    "warning": "The Nature paper describes 200 accessible regions, while the pinned released YAML requests 900. The exact checkpoint-bound configuration is unresolved and must be read from an admitted checkpoint rather than inferred from either value."
+  },
+  "input_contract": {
+    "accessibility_feature": "one observed accessibility value per selected region",
+    "binary_atac_mode": "Setting accessibility values to one still requires an observed cell-context accessible-region universe; it is not a sequence-only mode.",
+    "canonical_tensor": "region_by_283_features: 282 motif-cluster features plus observed accessibility",
+    "donor_or_cell_context": "supplied through the observed accessible-region set and accessibility feature",
+    "motif_features": "sequence-derived motif-cluster values for each observed accessible region",
+    "observed_atac_required": true,
+    "observed_rna_required": false,
+    "region_span": "published examples select 200 accessible regions spanning approximately 2_to_4_Mb",
+    "sealed_input_interpretation": "GSE289173 provides DNA and single-nucleus RNA but no ATAC. It cannot produce a native GET input without an external RNA-to-ATAC proxy, which would be a different model."
+  },
+  "native_checkpoint": {
+    "artifact_prefix": "s3://2023-get-xf2217/get_demo/",
+    "candidate_objects_from_official_tutorial": [
+      "s3://2023-get-xf2217/get_demo/checkpoints/regulatory_inference_checkpoint_fetal_adult/finetune_fetal_adult_leaveout_astrocyte/checkpoint-best.pth",
+      "s3://2023-get-xf2217/get_demo/checkpoints/regulatory_inference_checkpoint_fetal_adult/pretrain_fetal_adult/checkpoint-799.pth"
+    ],
+    "code_repository": "GET-Foundation/get_model",
+    "code_revision": "fb05735325350d83c104b5020e50b8ae8ebf13cb",
+    "exact_object_etag": "UNRESOLVED",
+    "exact_object_size": "UNRESOLVED",
+    "exact_object_version_id": "UNRESOLVED",
+    "format": "PyTorch_pth_pickle_backed",
+    "selected_object": "UNRESOLVED_pretrained_and_expression_finetuned_objects_have_different_task_semantics",
+    "sha256": "UNRESOLVED",
+    "status": "blocked_no_immutable_checkpoint_identity",
+    "storage_access_observation": "On 2026-08-22 the official bucket rejected anonymous listing and object requests because it is Requester Pays. No weight bytes were acquired.",
+    "warning": "The registered S3 prefix is mutable and is not a checkpoint identity. No GET run is admissible until one exact object, version or equivalent immutable identity, size, hash, configuration, and task head are frozen."
+  },
+  "output_contract": {
+    "expression_head": "two nonnegative expression outputs representing positive and negative strand targets",
+    "fine_tuning_objective": "Poisson negative log likelihood for expression",
+    "native_pretraining_output": "masked or held-region regulatory representation objectives rather than a sealed signed eQTL effect",
+    "signed_variant_effect": "Not a native raw-DNA output. A candidate ALT-minus-REF effect can only be constructed by changing motif features inside a prespecified observed accessible peak while holding the development-derived context fixed.",
+    "task_semantics_warning": "The pretraining checkpoint requires a task head; the fetal/adult fine-tuned checkpoint is an expression model. They cannot be substituted without separate manifests and parity checks."
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_annotation": "GENCODE_v40",
+    "native_genome": "hg38",
+    "reference_gate": "Freeze the v40-to-v49 gene and TSS crosswalk, motif database and clustering artifact, peak coordinate convention, contig mapping, REF checks, and any sequence window extraction before use."
+  },
+  "release": {
+    "code_revision_date": "2026-04-07",
+    "publication_date": "2024",
+    "publication_doi": "10.1038/s41586-024-08391-z",
+    "registered_checkpoint_revision": "GET-Foundation/get_model@fb05735325350d83c104b5020e50b8ae8ebf13cb+s3://2023-get-xf2217/get_demo/"
+  },
+  "runtime_contract": {
+    "checkpoint_producing_revision": "UNRESOLVED",
+    "environment_status": "UNRESOLVED_unpinned_checkpoint_runtime",
+    "official_demo_revision": "get-foundation/getdemo@d0785b45f6fcbd81e11c94414ee2ff3b67ec4e85",
+    "required_probe": "isolated_L40S_import_safe_tensor_conversion_strict_load_forward_backward_resume_deterministic_seed_and_numeric_tolerance",
+    "storage_runtime_warning": "The official demo uses anonymous s3fs, but the bucket now requires authenticated Requester Pays access. Runtime network retrieval is forbidden."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "official_loader_risk": "get_model.utils.load_checkpoint invokes torch.load with weights_only=False. A .pth object is executable pickle-backed content and must not be opened in the campaign environment.",
+    "required_path": "After explicit acquisition approval, download the exact immutable object into an isolated no-network environment, verify external object metadata and hash, inspect and convert only recognized tensors, freeze every tensor name, shape, and dtype, then strict-load a tensor-only artifact.",
+    "runtime_network_policy": "No runtime network or S3 access."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature paper, pinned official GET repository, pinned official demo, and official S3 responses were checked on 2026-08-22. No checkpoint bytes were downloaded or deserialized.",
+  "source_records": [
+    {
+      "identity": "GET-Foundation/get_model@fb057353:README.md",
+      "sha256": "6b7380435db41484f965254cb7206169e30b3580918f5c896ffca2d140832a84",
+      "size_bytes": 9486
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:pyproject.toml",
+      "sha256": "17f1b19c0e7bb60236badfc2c503b58f6b3c30dde2a15219672d1b53abdcd27a",
+      "size_bytes": 4745
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/config/model/GETRegionPretrain.yaml",
+      "sha256": "368d26f2451e8b5dc8f2e0d0eaf767d1f681ccd1990fd110128c2c0ca20df332",
+      "size_bytes": 1047
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/config/model/GETRegionFinetune.yaml",
+      "sha256": "44e3d9e41f1c78fe7d6fc14a9f92b9ac8c30ff725384db3ecfe1221d4382a338",
+      "size_bytes": 1119
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/config/pretrain.yaml",
+      "sha256": "df7bd610f4e739ae328d6535e537eedaeeb2dc4b21550636542525f5a07d228f",
+      "size_bytes": 763
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:docs/Finetune.md",
+      "sha256": "0fcdfc0719abf1d707e8f26d9ae03effffbf07d14214c084702f9f6b096736eb",
+      "size_bytes": 4463
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:docs/Configuration.md",
+      "sha256": "03d31902e22946c7b0b89aa4c36a45627d4f6f19f092d46a92db2e73df0ddb77",
+      "size_bytes": 14575
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/config.py",
+      "sha256": "bba56c168f599f30c1898e4b6237effb843de05d081ef5a6f2d2bbf14f49c1ed",
+      "size_bytes": 13761
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/dataset/zarr_dataset.py",
+      "sha256": "6be4ae2dd3b20e806190c44f9cea95f680c1174462de62a1f15329fdbc41157a",
+      "size_bytes": 52735
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/utils.py",
+      "sha256": "fbb5c03c6f4f1a323ee0128852db15c60bc686a19eba4bce09205cdbe791bb75",
+      "size_bytes": 12546
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/model.py",
+      "sha256": "489c6162cef6d2b31dc48fb06259fb2d8be884105f024679406c204cb32f285e",
+      "size_bytes": 70107
+    },
+    {
+      "identity": "GET-Foundation/get_model@fb057353:get_model/modules.py",
+      "sha256": "87d19a7712dbf31045c492e6f3e38260ca5f1e12c8ee94d7d846ce683a4d1d23",
+      "size_bytes": 38783
+    }
+  ],
+  "task_fit": {
+    "allele_effect": "conditional_non_native_motif_perturbation_inside_an_observed_accessible_peak_only",
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported;_GET_consumes_observed_ATAC_and_predicts_expression_or_regulatory_features",
+    "signed_eqtl_ieqtl": "not_supported_from_sealed_DNA_plus_RNA_without_missing_ATAC",
+    "variant_to_regulation": "observed_context_only_and_ineligible_for_GSE289173_primary_endpoint"
+  },
+  "terms_audit": {
+    "code_license_file_at_frozen_revision": "ABSENT",
+    "open_champion_disposition": "ineligible_under_current_noncommercial_and_incomplete_weight_terms",
+    "repository_declarations": "README and pyproject declare CC-BY-NC-4.0",
+    "weight_terms": "UNRESOLVED_no_immutable_weight_object_or_checkpoint_bound_terms_record",
+    "warning": "A package metadata declaration is not a substitute for a complete license grant tied to code and weights."
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "UNRESOLVED_NONCOMMERCIAL_DECLARATION"
+}

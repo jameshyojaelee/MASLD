@@ -1,0 +1,53 @@
+{
+  "admitted": true,
+  "authority": "reference",
+  "evidence": {
+    "analysis_contigs": [
+      "chr1",
+      "chr2",
+      "chr3",
+      "chr4",
+      "chr5",
+      "chr6",
+      "chr7",
+      "chr8",
+      "chr9",
+      "chr10",
+      "chr11",
+      "chr12",
+      "chr13",
+      "chr14",
+      "chr15",
+      "chr16",
+      "chr17",
+      "chr18",
+      "chr19",
+      "chr20",
+      "chr21",
+      "chr22",
+      "chrX",
+      "chrY"
+    ],
+    "analysis_peak_coordinates": "BED_0_based_half_open",
+    "native_gene_annotation": "GENCODE_v32_filtered",
+    "native_reference": "10x_GRCh38_2020-A",
+    "project_genome": "GRCh38.p14",
+    "project_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "project_gtf": "GENCODE_v49",
+    "project_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "sequence_extraction_ready": false,
+    "source_peak_coordinates": "GRanges_1_based_closed",
+    "sources": {
+      "R_sessionInfo_sha256": "acb7b0b91fb9c88f7994c3110b98637d8a60db03616de3096ffb5a92b165e98a",
+      "author_labels_sha256": "45c077e9beb8607402bd2ed7bce0586596430d401f290ca86978f91e230ea67d",
+      "mapping_metadata_sha256": "5d3d946607f55b140ffa4a44369cf35f6e9e91f0f17276afc0e3e9f008554781",
+      "parent_registry_sha256": "9465b012bbf46611641555a5acae4d1f033d053c900bf944dcec02979c735b6f",
+      "processed_rds_sha256": "6af74b7dbdd3839841f90cb7f3e47a3184b4dd3dd02242f6f3bdbd14533cfcab",
+      "raw_matrix_roster_sha256": "07c32e23f1e6a21aa6f0d31950f3a6d732ba2d2f07965615804f67cdb339842b",
+      "source_lock_sha256": "6be686b4187309f038097cf73d3f2a8dd34e72d666bc92733a53e99a1ccbb620"
+    }
+  },
+  "parent_dataset_id": "gse296875",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse296875_rna_atac_smoke_1000_v1"
+}

@@ -1,0 +1,108 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "No rights-cleared donor-level MASLD spatial multi-omics source currently supplies the authoritative observation joins, bridge topology, assay-native inputs, external task, and derivative-weight permission required by SpaMosaic.",
+    "v1_training": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "mosaic_spatial_multiomics_integration_with_modality_specific_graph_encoders_and_contrastive_alignment",
+    "native_modalities": [
+      "spatial_RNA",
+      "spatial_protein_abundance",
+      "spatial_ATAC_or_gene_activity",
+      "spatial_histone_or_other_epigenomic_feature_matrices"
+    ],
+    "native_topology": "Multiple spatial batches may contain partially overlapping modality sets, but the modality graph must be connected through at least one authoritative bridge batch. Modalities observed in one bridge batch must describe the same ordered observations after explicit joins.",
+    "intra_batch_graph": "A spatial radius or KNN graph is constructed separately for each observed modality and batch.",
+    "inter_batch_graph": "Within each modality, mutual nearest neighbors computed from supplied molecular representations create weighted cross-batch edges between bridge batches and non-bridge query batches.",
+    "latent_alignment": "Modality-specific graph encoders use within-batch and cross-batch edges plus contrastive losses to construct a modality-agnostic latent representation.",
+    "missing_modality_output": "KNN transfer from measured-modality embeddings to an aligned donor pool imputes a missing feature matrix. An imputation is derived, not observed evidence.",
+    "warning": "A generic feature matrix interface does not supply an assay-native likelihood. MALDI intensity and image pixels are not admitted merely because they can be placed in AnnData."
+  },
+  "implementation": {
+    "package": "spamosaic",
+    "repository": "JinmiaoChenLab/SpaMosaic",
+    "repository_revision": "cc1336755de8d1ddd1337b3cd67c9d41a61c2cb4",
+    "release_tag": "v1.0.3",
+    "release_published": "2026-01-28",
+    "source_license": "MIT",
+    "publication_doi": "10.1038/s41588-026-02573-3",
+    "publication_title": "Mosaic integration of spatial multi-omics with SpaMosaic",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "package_artifacts": {
+    "pypi_release": "1.0.3",
+    "pypi_upload_date": "2025-08-07",
+    "python_requires": ">=3.8",
+    "sdist": {
+      "filename": "spamosaic-1.0.3.tar.gz",
+      "sha256": "a747191db2622ab1f304e84f67aaf5ce4e8c9e9e16b032a201077ecdbe5bb486",
+      "size_bytes": 30264
+    },
+    "wheel": {
+      "filename": "spamosaic-1.0.3-py3-none-any.whl",
+      "sha256": "3fbff3eca9d2fd65d668fe1a7aca7b79f7f4b1c2393206656af449ea22fbb903",
+      "size_bytes": 34977
+    },
+    "status": "metadata_registered_packages_not_downloaded_or_installed"
+  },
+  "checkpoint_contract": {
+    "admitted_upstream_biological_checkpoint": "none",
+    "implementation_type": "train_locally",
+    "project_trained_artifact": "not_created",
+    "required_future_identity": "Every fold and seed must bind source, environment, training participants, ordered modality and feature rosters, preprocessing transformers, bridge topology, spatial and MNN graphs, hyperparameters, state-dict manifest, and SHA-256."
+  },
+  "input_and_pairing_contract": {
+    "bridge_batch": "For modalities treated as coprofiled in one batch, require identical participant, section or registered volume, observation key, row order, and observation count. A row-position coincidence is not a join.",
+    "mosaic_batch": "A missing modality is represented as structurally missing for that batch. Do not manufacture a paired bridge from same-study, same-donor different-aliquot, adjacent-section, or unregistered assays.",
+    "features": "Fit and freeze assay-specific feature selection, transformations, identifier mapping, and dimension reduction inside training participants. RNA, protein, chromatin, histone, and metabolite scales remain distinct.",
+    "barcodes": "Observation IDs must be globally unique across modality and batch. The pinned code creates dictionary maps whose duplicate keys can silently overwrite identities.",
+    "coordinates": "Freeze coordinate units, physical scaling, section boundary, and registration provenance for every modality."
+  },
+  "graph_and_leakage_contract": {
+    "intra_batch": "Build spatial graphs independently inside an authoritative participant and section or core boundary, then use block-diagonal batching.",
+    "cross_donor_spatial_edges": "forbidden",
+    "cross_batch_mnn_edges": "allowed_only_in_a_predeclared_transductive_reference_mapping_lane; never present in strict held_donor_inductive_evaluation",
+    "MNN_fit": "The approximate MNN search, normalization, K values, metric, bridge set, outlier filter, and random seed use molecular features from every connected batch and must be hashed.",
+    "outlier_filter": "IsolationForest on paired spatial coordinates is a fitted component, not a neutral QC step.",
+    "query_cohort": "Do not connect held donors to one another. A query mapping lane may connect one held donor to a frozen development reference without outcomes and must be scored and labeled as transductive."
+  },
+  "held_donor_capability": {
+    "native_lane": "Transductive joint fit. The official framework constructs query-to-bridge MNN edges and trains graph encoders using all supplied bridge and non-bridge batches.",
+    "strict_frozen_lane": "Not provided as an official fit-predict interface. A future adapter would need frozen preprocessing and weights, section-local query graphs, no query MNN refit, a fixed missing-modality policy, and fixture-proven transform behavior.",
+    "query_mapping_lane": "Potentially useful but explicitly transductive: construct MNNs from one held donor to development bridge batches and encode or adapt with unlabeled query features under a selection-locked recipe.",
+    "cluster_and_imputation": "Clustering, latent alignment, KNN imputation, and any missing-modality calibration use target features and cannot be called donor-inductive."
+  },
+  "safe_loading_contract": {
+    "native_state": "The inspected framework keeps modality models in memory and does not define an immutable benchmark-ready export and strict loader contract.",
+    "required_path": "If activated, export tensor-only state dictionaries or safetensors plus schema-validated JSON. Require exact modality, feature, row, graph, preprocessing, parameter, key, shape, dtype, and finite-value checks with no network access.",
+    "serialized_objects": "Do not release or load pickled AnnData, sklearn, Harmony, PyTorch, or approximate-neighbor objects as trusted checkpoints. Reconstruct audited non-tensor objects from JSON and canonical arrays."
+  },
+  "runtime_contract": {
+    "declared_environment": "Python 3.8.13 with partially pinned scientific dependencies",
+    "incompleteness": "PyTorch, PyTorch Geometric, and harmony-pytorch are used or required by the documented workflow but are absent from the package dependency lock; the README requires manual installation.",
+    "environment_status": "UNRESOLVED_no_complete_exact_lock",
+    "required_probe": "After data activation and campaign approval only: L40S import, assay-specific preprocessing, bridge-row equality, per-section graph, MNN determinism, forward, backward, state export, resume, held-query isolation, imputation missingness, no-network, and cross-device tolerance through SLURM."
+  },
+  "terms_and_release_contract": {
+    "code": "MIT_at_the_pinned_source_revision",
+    "upstream_checkpoint": "none",
+    "training_data": "Every modality, registration, donor join, and derived representation retains source-specific terms.",
+    "local_weights": "Release requires permission from every training source for model training and derivative-weight redistribution.",
+    "open_champion": "ineligible_until_an_external_spatial_task_rights_cleared_data_and_a_fold_specific_artifact_exist"
+  },
+  "source_evidence": "The Nature Genetics article, official GitHub v1.0.3 source, and official PyPI metadata were inspected online on 2026-08-22. No source archive, package, model, checkpoint, or dataset was downloaded, installed, or executed.",
+  "source_records": [
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:LICENSE", "sha256": "3d200cf5a630c4035781ccd736d842d1b5fa218218dac832cd110136c7db65ff", "size_bytes": 1071},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:README.md", "sha256": "46fe6359c22394a3d05a597c587af254c9cabcad9108cc0cc1f0a6ee3e15bcab", "size_bytes": 2632},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:pyproject.toml", "sha256": "9fad3e730f52ffdb94ebd190340dc503f03d29bcdaccba436bbabc7fe768b006", "size_bytes": 747},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:environment.yml", "sha256": "73e9353f118e9c855ad80349d6e5c9d759d93a83037dcde9a47b2f827942fc7f", "size_bytes": 370},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:spamosaic/framework.py", "sha256": "a5b90dc08f41188156006d026d4ede02604c64ee192c9c9a5dc714a52c6a3d6d", "size_bytes": 21938},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:spamosaic/build_graph.py", "sha256": "c7fe6132bf173dc4c1f1f981cffa05d8dde40e3b1659f6c69d975371cda787de", "size_bytes": 10404},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:spamosaic/preprocessing.py", "sha256": "2925a4f58ea7f46450cabc7508fd291a2a5ba9bd34210bfb71b28c3bdcfa12f4", "size_bytes": 13572},
+    {"identity": "JinmiaoChenLab/SpaMosaic@cc133675:spamosaic/MNN.py", "sha256": "003f83bd123c03dccc1bc766a01bc030a6b3671786b5093c48f8071e58df1eab", "size_bytes": 5576}
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

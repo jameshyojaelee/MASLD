@@ -1,0 +1,67 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49; retain source-native build until a loss-audited crosswalk is frozen",
+    "sealed_source": "NONE_REGISTERED",
+    "task": "typed_evidence_graph",
+    "unit_of_inference": "independent_locus"
+  },
+  "compatibility_finding": {
+    "held_evidence_source": "Conditionally compatible only for candidate pairs whose endpoints remain in the graph through nonheld sources. Refit walks and embeddings after the entire source and derivatives are removed.",
+    "held_ld_or_gene_block": "Incompatible with scoring a fully isolated held block under the registered split. Removing all held-block incident edges removes the topology needed to learn its node embeddings; such rows are untestable, not negative.",
+    "inductive_behavior": "None. A predeclared but isolated node receives no topology-trained representation even if num_nodes reserves an index.",
+    "sealed_source_recovery": "No current seal exists. For a future seal, node2vec can be only a common-support transductive comparator, not a full-denominator champion, unless the prespecified endpoint explicitly permits nonheld support and the coverage rule is locked before unblinding."
+  },
+  "endpoint_eligibility": {
+    "brier_score": "Eligible on the frozen common-support subset only after inner-source logistic calibration; raw dot products are not probabilities.",
+    "held_source_auprc": "Development-eligible on retained-node common support. Ineligible for source-only nodes or fully isolated held blocks.",
+    "locus_macro_hits_at_10": "Development-eligible only for loci with a frozen nonheld-supported candidate denominator; disclose excluded loci.",
+    "locus_macro_mrr": "Development-eligible only for loci with a frozen nonheld-supported candidate denominator; disclose excluded loci.",
+    "typed_or_directed_claim": "Ineligible because the projection discards edge type, evidence source, direction, and weight."
+  },
+  "graph_construction_contract": {
+    "candidate_universe": "Evaluator-owned typed candidate pairs, frozen independently of held outcomes. The model adapter receives pair IDs only after its embedding and node coverage map are committed.",
+    "held_blocks": "Remove all incident edges for native-build ancestry-aware LD blocks, loci within 1 Mb, and gene blocks before node mapping, walks, random negatives, or any normalization. Do not preserve a held node by adding a target-derived self-loop.",
+    "held_source": "Remove its edges and every deterministic thresholded, aggregated, mirrored, ontology-projected, or source-release duplicate before graph collapse. An independently measured edge from another retained source may remain with explicit provenance.",
+    "negative_sampling": "Use the exact native random-context sampler over the retained node universe. Do not inspect held positives to exclude false negatives; report the closed-world bias.",
+    "projection": "After source and block removal, union the retained edges, canonicalize typed pairs, collapse duplicates, discard weights/source counts, and emit a stable undirected edge_index.",
+    "row_identity": "Hash the ordered typed node map. Different held sources, held blocks, or seeds have distinct embedding artifact IDs even when dimensions match."
+  },
+  "source_findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Exposed training/development topology only after the corrected 50-study release is promoted. Keep study, trait, build, locus, COLOC provenance, and observability outside any causal-gene claim. Provisional current memberships cannot define a frozen graph.",
+      "biological_unit": "study",
+      "exposure_state": "downstream_demo",
+      "status": "blocked_until_promoted_graph_snapshot"
+    },
+    "gse281160": {
+      "allowed_use": "Mechanistic development or pseudo-held source only after experimental-replicate aggregation and guide-target joins. When held, remove direct and program/target/gene derivative edges before graph collapse. Cells and guides are not replicates.",
+      "biological_unit": "experimental_replicate",
+      "exposure_state": "downstream_demo",
+      "pairing": "same_cell",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "allowed_use": "Mechanistic development or pseudo-held source only after oligo, allele, barcode, count, context, replicate, and build joins. When held, remove direct MPRA and every derived evidence edge before graph collapse.",
+      "biological_unit": "experimental_replicate",
+      "exposure_state": "downstream_demo",
+      "pairing": "same_sample_different_aliquot",
+      "public_date": "2026-03-16"
+    }
+  },
+  "split_and_leakage_rules": {
+    "artifact_scope": "Train one new node2vec model per outer held-source by held-block split and seed. Precomputing one full-graph embedding and slicing it by fold is target leakage.",
+    "derivatives": "The retained node universe, degree, connected components, edge multiplicity collapse, walk corpus, random-negative distribution, source-overlap status, calibration, and coverage are graph-derived and must be recomputed after every holdout.",
+    "selection": "Select recipe, epoch count, decoder, calibrator, and coverage rule using development pseudo-held sources only. Seeds quantify stability and are not inferential replicates.",
+    "sealed_protocol": "For any future seal, commit graph, node roster, five embeddings, supported candidate denominator, raw scores, calibration, and untestable states before the evaluator joins source outcomes."
+  },
+  "coverage_and_missingness": {
+    "both_endpoints_supported": "Score only if both nodes have at least one retained non-self edge and finite embeddings in every admitted seed.",
+    "held_source_only_node": "untestable",
+    "held_block_isolated_node": "untestable",
+    "reporting": "Report full candidate count, scored count, pair and locus coverage, and coverage by node type, source, degree, observability, and held block. Never encode an absent embedding as zeros.",
+    "semantic_distinction": "A low score for a supported pair is unsupported model evidence. Missing retained topology is untestable."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

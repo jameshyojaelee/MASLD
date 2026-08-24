@@ -1,0 +1,59 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_profile_sources": {"Cistrome_processed": 19905, "ENCODE_and_Roadmap_processed": 2002},
+    "declared_profiles": {"chromatin_accessibility": 2372, "histone_mark": 10064, "TF_binding": 9471},
+    "reference": "hg38",
+    "split": {"test": ["chr8", "chr9"], "validation": ["chr10"]},
+    "target_alias_manifest_status": "INCOMPLETE",
+    "training_label": "binary_peak_at_center_of_4096_bp_window"
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "2021-06-07",
+    "project_sources": ["gse281364", "gse289173", "gse296875", "current_coloc_gwas"],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "The Sei framework was developed for human genetics, evaluated sequence classes against tissue expression and eQTL evidence, and applied them to GWAS interpretation. Project GWAS or eQTL-derived model-selection outcomes therefore belong to a downstream-demo task family, even though project-specific COLOC memberships were not checkpoint targets.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse281364": {
+      "evidence": "GSE281364 became public on 2026-03-16, nearly five years after the immutable Sei archive. Its HepG2/LX-2 MPRA allele activities and MASLD labels were not checkpoint targets. Reference windows and generic liver, intestine, HepG2, TF, histone, or accessibility profiles may overlap Sei's broad training domain.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16",
+      "reference_locus_exposure": "encoder_seen_for_nonheld_chromosomes_or_unresolved"
+    },
+    "gse289173": {
+      "evidence": "GSE289173 became public on 2025-02-12, after the 2021 model archive. Its 48 donor cell states and signed cell-type eQTL/ieQTL outcomes were not checkpoint targets. Reference loci outside chr8/chr9 were eligible for sequence sampling, and the accession-level target alias manifest is incomplete.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "reference_locus_exposure": "encoder_seen_for_nonheld_chromosomes_or_unresolved"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public on 2025-10-01, after the 2021 archive. Its 39-donor same-nucleus RNA/ATAC and QTL outcomes were not targets. The public GEO record describes cardiometabolic liver multiome data but does not provide a MASLD diagnosis or histology phenotype for supervision.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-10-01",
+      "reference_locus_exposure": "encoder_seen_for_nonheld_chromosomes_or_unresolved"
+    }
+  },
+  "held_out_behavior": {
+    "donor": "Sei has no donor or expression input. At a fixed allele and locus, native predictions are identical across donors. Any fitted target-profile combiner, calibration, enhancer-gene link, or signed-effect head uses donor-grouped development folds.",
+    "locus": "The official training config held chr8 and chr9 for test and chr10 for validation, but all other project loci may have supplied reference-sequence training examples. Project evaluation therefore crosses donor folds with merged chromosome/LD blocks and a 4096-bp boundary buffer; it does not call the encoder locus-clean.",
+    "sealed": "GSE289173 cannot select target profiles, sequence classes, center windows, aggregation, projection normalization, gene links, effect direction, calibration, or thresholds."
+  },
+  "interpretation": "Sei is target-label-unexposed for GSE281364, GSE289173, and GSE296875 by immutable chronology, replacing the registry's conservative unknown exposure pending this audit. It remains broadly exposed to hg38 sequence and generic liver-related regulatory profiles, and its original official code terms keep it a restricted comparator.",
+  "rules": {
+    "checkpoint_chronology": "A project outcome public after the immutable 2021 Zenodo archive is target-label-unexposed unless an upstream target contains the same outcome under an alias.",
+    "genome_overlap": "Reference-window exposure is distinct from outcome-label exposure and is handled with genomic/LD blocks plus the full input-window boundary buffer.",
+    "profile_aliases": "The 21907 profile names do not form a complete accession, run, donor, or release manifest. Chronology resolves the three post-2021 project sources, but older source absence cannot be inferred from a missing literal accession.",
+    "trans_context": "Sei accepts sequence only. Liver/intestine sequence classes and liver-related target profiles are fixed training outputs, not observed donor context.",
+    "variant_direction": "ALT-minus-REF chromatin or class effects are not signed gene-expression effects without a separately trained and frozen gene/link/direction model."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "task_data_gate": {
+    "gse281364": "Retrospective MPRA direction/rank diagnostic only. Locus and class selection must be cross-fitted without held MPRA outcomes.",
+    "gse289173": "Eligible for one-time sequence inference only after archive, runtime, and selection locks. The official code path cannot be an open champion.",
+    "gse296875": "Eligible for development-only center-bin accessibility classification and fitted feature heads; it cannot make Sei an RNA-conditioned or profile-output model."
+  },
+  "verified_date": "2026-08-22"
+}

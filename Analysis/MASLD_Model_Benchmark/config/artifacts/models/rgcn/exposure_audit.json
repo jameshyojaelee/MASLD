@@ -1,0 +1,64 @@
+{
+  "audit_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "implementation": "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:RGCNConv",
+    "sealed_sources": [],
+    "task": "typed_evidence_graph"
+  },
+  "checkpoint_finding": {
+    "biological_pretraining": "none",
+    "checkpoint_identity": "project_trained_per_outer_graph_split_held_source_and_seed;_not_yet_created",
+    "code_only_exposure_state": "target_label_unexposed",
+    "current_coloc_fit_state": "continual_seen_if_used_in_the_local_training_graph",
+    "development_source_fit_state": "held_source_outcomes_evaluator_only_in_its_fold_and_continual_seen_when_used_as_a_remaining_training_source",
+    "historical_or_example_weights": "none_admitted",
+    "overall_status": "blocked_until_promoted_graph_snapshot_and_complete_model_contract_exist",
+    "source_revision_date": "2025-10-14",
+    "source_revision_warning": "The source code postdates all current graph datasets but contains no biological weights. Exposure is determined by each immutable local graph and training receipt, not code chronology."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "local_graph_training_source_holdout_induction_output_and_missingness_contract",
+    "sha256": "f810a9dbdec1f8253aeaeae411da65c1203620718a6df0a5534661292cc61d3b"
+  },
+  "held_source_feasibility": {
+    "answer": "conditionally_yes_for_retrospective_source_agnostic_recovery;_no_for_direct_completion_of_an_unseen_relation_type",
+    "feasible_design": "Remove one evidence source before graph construction and fit a generic candidate-gene scorer from remaining relations. The isolated evaluator later measures whether that ranking recovers support in the removed source.",
+    "relation_specific_failure": "RGCN relation transforms and a DistMult-style decoder relation embedding for a wholly absent type are untrained. Querying them would produce initialization-dependent scores, not evidence transfer.",
+    "seal_status": "No current evidence source is project-sealed. Leave-one-source-out evaluation remains retrospective development evidence regardless of split cleanliness."
+  },
+  "known_leakage_routes": [
+    "Constructing nodes or the candidate universe from genes, variants, loci, or assays present only in the held source.",
+    "Retaining held-source inverse edges, source nodes, aliases, observability, tested status, coverage, missingness, prevalence, degrees, source counts, paths, metapaths, normalization statistics, or edge-derived node features.",
+    "Computing graph embeddings, centrality, positional features, negative pools, feature scaling, or early-stopping signals before source and locus removal.",
+    "Using a held relation ID in the decoder or interpreting randomly initialized held-relation parameters as predictions.",
+    "Using untestable, not-applicable, unavailable, indeterminate, or merely absent edges as negatives.",
+    "Letting current Gene Catalog memberships, provisional corrected-COLOC outcomes, frozen 117 programs, or hero genes define targets, hyperparameters, or calibration.",
+    "Adding an external knowledge graph without tracing whether it already contains project COLOC, MPRA, CROP-seq, Gene Catalog, or deterministic derivative edges.",
+    "Reporting seeds, edges, genes, variants, cells, or guides as independent replicates instead of resampling LD and gene blocks."
+  ],
+  "license_disposition": {
+    "code": "MIT",
+    "open_champion_eligibility": "ineligible_no_wholly_sealed_graph_source",
+    "project_weights": "No upstream restriction, but redistribution remains conditional on every graph source's terms and project derivative-use review."
+  },
+  "remaining_blockers": [
+    "Complete and explicitly promote the corrected 50-study COLOC release, then freeze one graph snapshot, evidence ontology, canonical node universe, source aliases, native-build LD and locus groups, and source provenance.",
+    "Freeze feature-based versus entity-ID mode. Any inductive claim requires feature-based input and a query fixture for unseen nodes; node-index mode is transductive.",
+    "Freeze relation and inverse-relation order, RGCN depth, dimensions, basis or block decomposition, aggregation, dropout, sampler, generic decoder, negatives, optimizer, early stopping, calibration, and five seeds.",
+    "Implement a source-removal constructor that deletes every held-source outcome, coverage signal, deterministic derivative, and held-locus message-passing path before any fitted transform.",
+    "Prove on synthetic fixtures that source-only nodes disappear, untestable edges never become negatives, inverse and alias leakage fail closed, relation permutation preserves semantics, and an unseen relation-specific decoder is rejected.",
+    "Freeze tensor-only model artifacts, graph and training receipts, environment, predictions, calibration, and hashes for every split and seed.",
+    "Run import, forward/backward, local fit, save/resume, seed determinism, sampler, relation-order, CPU/L40S tolerance, and reproduction probes only through an approved SLURM campaign.",
+    "Keep all graph results development-only until a wholly sealed evidence source is registered and powered before outcomes are read."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source;_development_only_source_agnostic_prioritization_comparator_after_graph_architecture_runtime_and_leakage_gates",
+  "task_disposition": {
+    "causal_gene": "prohibited",
+    "held_source_recovery": "conditional_retrospective_development_only",
+    "open_champion": "blocked_missing_sealed_source",
+    "typed_evidence_graph": "candidate_after_admission_not_currently_runnable"
+  },
+  "verified_date": "2026-08-22"
+}

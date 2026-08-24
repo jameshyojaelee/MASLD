@@ -1,0 +1,121 @@
+schema_version = "masld-bench-model-v1"
+family_id = "restricted_unclear"
+modality = ["single_cell_rna", "dna_sequence", "chromatin_profile", "perturbation_identity"]
+status = "restricted_comparator"
+
+[[models]]
+model_id = "alphagenome"
+display_name = "AlphaGenome all-folds"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "google-deepmind/alphagenome_research@1e55dcffb98ba26b31e74edc5e9f038f54c0e89d+google/alphagenome-all-folds@a8f293a76ee73d5b57f3bf2ae146510589fcf187"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_Apache-2.0_weights_GATED_MODEL_TERMS_noncommercial_restricted"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The exact code and gated Hugging Face revisions are registered, but the gated metadata and complete OCDBT artifact have not been acquired or hashed. The pinned RNA ontology supplies hepatocyte and generic endothelial tracks but no cholangiocyte or hepatic-stellate RNA track, so AlphaGenome is a static supported-track secondary comparator and cannot enter the prespecified four-lineage signed-effect endpoint. Before use, obtain authorized access, freeze every object and calibration dependency, resolve GRCh38.p13-to-p14 and GENCODE v46-to-v49 mappings, prove ALT-minus-REF behavior, audit the checkpoint corpus, and pass an isolated runtime probe. Noncommercial model terms make it ineligible for the open champion or conditional-model training unless authoritative permission changes."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "get"
+display_name = "GET General Expression Transformer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "GET-Foundation/get_model@fb05735325350d83c104b5020e50b8ae8ebf13cb+s3://2023-get-xf2217/get_demo/"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "repository_declares_CC-BY-NC-4.0_no_LICENSE_weight_terms_UNRESOLVED"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The official Requester-Pays S3 prefix is mutable and no exact checkpoint object, version, size, ETag, SHA-256, configuration, or task head is frozen. Native GET input requires an observed accessible-region universe and accessibility values; binary-ATAC mode does not remove that requirement. GSE289173 has RNA but no ATAC, so GET is structurally ineligible for its sealed variant endpoint and missing ATAC cannot be zero-filled or inferred from sealed RNA. Resolve exact artifacts, pickle-safe conversion, the 200-versus-900-region contract, complete code and weight terms, exposure, reference, and isolated runtime before development-only use on observed-ATAC cohorts."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "decima"
+display_name = "Decima four-replicate ensemble"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "Genentech/decima@5e2439a63effe12b33e9b624dabf8b577a409d75:v0.7.2+Zenodo:15092691:rep0.ckpt,rep1.ckpt,rep2.ckpt,rep3.ckpt"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "Genentech-Non-Commercial-Software-License-1.0_weights_CC-BY-NC-4.0"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The exact four-member Zenodo ensemble and v0.7.2 code are registered, but the checkpoints have not been acquired, safely converted, or SHA-256 verified. The required 3.27-GB metadata artifact has not been acquired, so no ontology-only mapping of all 8,856 fixed tasks to cholangiocyte, endothelial, hepatocyte, and stellate lineages is frozen. Decima remains a conditional static sequence secondary comparator, not a primary signed-effect model, until that full roster, GRCh38.p14/GENCODE v49 gene-mask contract, fixed-axis ALT-minus-REF ensemble behavior, checkpoint exposure, and isolated runtime pass. Conflicting noncommercial code, CC-BY-NC weights, and Hugging Face MIT declarations also block an open champion."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "scfoundation_heads"
+display_name = "scFoundation 100M task heads"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "biomap-research/scFoundation@397631c495eddf9ad6644fc00c6ea8139e651245+sharepoint-folder:IgBlEJ72TBE5Q76AmgXbgjXiAR69fzcrgzqgUYdSThPLrqk"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_Apache-2.0_weights_noncommercial_nontransferable_nonsublicensable_revocable"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The registered SharePoint folder is mutable and does not identify one immutable 100M base object or separate task heads. Inventory and hash every selected object, bind each head to its base, folds, seeds and training data, and resolve the checkpoint-bound accession/donor/cell corpus crosswalk; all Atlas sources, including GSE289173, remain exposure-unknown. Freeze the 19,264-gene order, count-depth tokens, layer/pooling choice, safe tensor-only load and L40S runtime. The custom model terms are noncommercial, nontransferable, nonsublicensable and revocable: any approved adaptation stays an internal restricted comparator, never the conditional model or released open champion. Bulk transfer and the separate GEARS route are not admitted by this cell-state entry."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "cellfm"
+display_name = "CellFM base checkpoint"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "biomed-AI/CellFM@bfed59c0e34103231165d69b97927ecc888d623c+ShangguanNingyuan/CellFM@69361b50d1814ade0e3749c9d8eb829590c2ce3c:base_weight.ckpt"
+checkpoint_sha256 = "a3ab63e580ebf779edd5d13b4b9c7cfc5795c24495f61c45e2e9f0f1eb7bfc60"
+license_status = "CC-BY-NC-ND-4.0"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The exact 9,659,358,467-byte base_weight.ckpt and SHA-256 are pinned, but no checkpoint-bound accession, donor or retained-cell inventory exists; GEO public-release chronology cannot exclude earlier private biological data or labels, so every Atlas source, including GSE289173, remains exposure-unknown. CC-BY-NC-ND-4.0 blocks benchmark adaptation and sharing of adapted material: evaluate only the unmodified frozen representation with a separable project-owned probe after counsel confirms it is permitted, and never fine-tune, LoRA, distill, train the conditional model from CellFM outputs or release CellFM as the open champion. Freeze the 24,078-gene order, count normalization, deterministic 2,048-token sampling, layer/CLS pooling, isolated MindSpore load and an L40S-compatible runtime. Bulk and separately fitted GEARS/CellOT systems are not admitted by this entry."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "genecompass"
+display_name = "GeneCompass Base"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "xCompass-AI/GeneCompass@66ab82f90fa94f88613df7d89a2fb38165e2a82f+ScienceDB:anonymous/SUZOdk1y:Base"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "NO_LICENSE_DETECTED"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The official repository is pinned, but the anonymous ScienceDB label Base is a mutable portal entry rather than an immutable checkpoint object; no code, weight or prior-payload license was detected. Do not use GeneCompass until written terms are obtained and the Base weight, Git LFS/external prior objects, tokenizer and gene medians are inventoried and hashed. Reconcile the scCompass-126M claim with the paper's component sum of 101,768,420 cells, then bind an accession/donor/retained-cell corpus crosswalk; every Atlas source, including GSE289173, remains exposure-unknown. Freeze the species flag, Ensembl vocabularies, median-adjusted top-2,048 rank/value encoding, pooling, pickle-safe conversion and L40S runtime. The separate GEARS route and bulk transfer are not admitted, and GeneCompass cannot train the conditional model or become an open champion."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "gb_cell"
+display_name = "GB.Cell-100M"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "genbio-ai/ModelGenerator@bda6f2da297ba886e3662b49eea9928feacbfd98+genbio-ai/GB.Cell-100M@a983b388e1025860f2c413ecef60e76078253c24:model.safetensors"
+checkpoint_sha256 = "4602f09951c5a2f8cb814363f68cd63d8d7bd145e02560b852f6652df78bec77"
+license_status = "GenBio-AI-Community-License_noncommercial_nontransferable_nonsublicensable_revocable_output_training_restricted"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The exact 399,481,732-byte GB.Cell-100M safetensors artifact is pinned. The GenBio AI Community License restricts use to noncommercial purposes and prohibits using outputs, including embeddings and gradients, to train or improve similar models except GB.Cell itself or downstream derivatives; therefore GB.Cell cannot supply frozen context features to the independently implemented conditional MASLD model and cannot be the open champion. Before execution, obtain institutional confirmation that the intended benchmark use and publication satisfy the license, freeze the full-transcriptome gene order, auto-discretization, read-depth preprocessing, pooling/head, runtime and the accession-level crosswalk for the 50-million-cell corpus. Unknown corpus exposure blocks sealed use; the single-cell encoder is not admitted to bulk transfer."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "sclong"
+display_name = "scLong 1B mixed pretraining checkpoint"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "BaiDing1234/scLong@41b72021540918e4386c4f2264351d7a6cbeed99+Zenodo:17510567:v1.0+sharepoint-folder:EpvKzQW4hI5Bnb88-iM7vE0B_e2_U5r_ZGXb_FILCLTw3Q:gocont_4096_48m_pretrain_1b_mix_2024-02-05_16-23-37.pth"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_Zenodo_CC-BY-4.0_GitHub_root_unlicensed_weights_outputs_derivatives_UNRESOLVED"
+exposure_status = "unknown"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["The exact v1.0 source commit and Zenodo software archive are pinned under CC-BY-4.0 metadata, but the GitHub root has no license and the separately hosted checkpoint, four required auxiliary payloads, outputs, embeddings and derivatives have no resolved terms. The SharePoint folder returned HTTP 403 and supplies only a mutable filename with no verified bytes, size, SHA-256, timestamp or training cutoff. Obtain written terms and immutable objects; bind the 48-million-cell accession/donor/retained-cell corpus; resolve preprocessing, missingness, pooling, conflicting runtimes and the author-local import path; then pass isolated loading and L40S fixtures. The bundled GEARS route is separate and bulk transfer is not admitted."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "arc_state"
+display_name = "Arc State ST-SE Replogle HepG2 few-shot"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ArcInstitute/state@9bbfe78a434a55205e4de834e1ea99f85f7a3add+arcinstitute/SE-600M@5a9a80f44f7ce32ce57059933ef0d735d7c10ce5:model.safetensors+arcinstitute/ST-SE-Replogle@e324967ff4cea5ec199e29bcbb5c1f00e5b9d69c:fewshot/hepg2/checkpoints/final.ckpt"
+checkpoint_sha256 = "9e39d5c8e8176eb80bdcab958dec9dd0bbe24aef6156fc2a5319d44d14104654"
+license_status = "code_CC-BY-NC-SA-4.0_weights_outputs_Arc-State-Model-Non-Commercial-License_AUP"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact 510,112,715-byte HepG2 transition checkpoint is pinned; its required SE-600M model.safetensors dependency is 2,860,276,816 bytes with SHA-256 3ebec58bd9e9c07f0a76de25b900dad13d015768fbff1e68e5dcbdfb3b2245de. State code is CC-BY-NC-SA-4.0 and weights/outputs use Arc's noncommercial model license and acceptable-use policy, so it cannot be the open champion. Before execution, confirm institutional noncommercial eligibility and freeze the SE protein embeddings/config, gene universe, control-state construction, perturbation one-hot map, target overlap, cell-context mapping and runtime. The released categorical perturbation map cannot represent a wholly unseen target, so this registered checkpoint is limited to a separately labeled seen-target or held-context diagnostic and is never eligible for the current held-target primary endpoint. Any composite that adds an external target representation is a different model and must receive its own registry identity, audit bundle, split contract and unseen-target fixture; it does not cure this checkpoint. Replogle/HepG2 training exposure also requires an accession and target-level overlap audit against GSE281160."]
+supported_tasks = []

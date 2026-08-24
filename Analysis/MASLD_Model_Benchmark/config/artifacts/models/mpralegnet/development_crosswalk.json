@@ -1,0 +1,60 @@
+{
+  "checkpoint_training_corpus": {
+    "author_declared_content": "human lentiMPRA sequence-to-expression measurements from K562, HepG2, and WTC11",
+    "author_release_created": "2024-02-20",
+    "cross_validation": "ten-fold training and testing in the author study",
+    "exact_checkpoint_fold": "test1_val2 inferred from filename; training receipt unavailable",
+    "exact_hugging_face_revision_date": "2025-10-11",
+    "masld_cohort_data_declared": false,
+    "warning": "The exact Hugging Face bytes have not been shown to equal one checkpoint inside the author Zenodo release."
+  },
+  "crosswalk_scope": {
+    "admitted_task": "variant_to_regulation",
+    "development_sources": ["gse281364", "gse296875"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49",
+    "sealed_source": "gse289173"
+  },
+  "endpoint_eligibility": {
+    "allelic_direction_accuracy": "eligible as a HepG2 MPRA diagnostic after allele and sequence-construction fixtures pass",
+    "enhancer_gene_link_retrieval": "ineligible without a separately frozen link model",
+    "eqtl_retrieval_auprc": "component_only after a separately frozen variant-to-gene mapping",
+    "mean_fisher_z_celltype_spearman": "ineligible standalone because the score has neither a target gene nor cell-type eQTL/ieQTL calibration",
+    "typed_evidence_graph": "reporter-activity edge only; never an endogenous enhancer-gene edge"
+  },
+  "findings": {
+    "gse281364": {
+      "allowed_use": "Frozen zero-shot HepG2 reporter-activity and direction diagnostic. Any learned head must be out-of-fold by merged locus, sequence identity, and reverse-complement identity. Control and PAOA receive the same sequence score; LX-2 is out of native domain.",
+      "checkpoint_exposure_state": "clean_declared",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16",
+      "reason": "The exact Hugging Face revision predates the GEO release and its declared corpus is the earlier K562/HepG2/WTC11 lentiMPRA study."
+    },
+    "gse289173": {
+      "allowed_use": "One-time sequence-only inference after selection lock. Only evaluator-approved variant coordinates and alleles may enter the sequence builder; no eQTL/ieQTL effect, retrieval label, lineage result, threshold, or calibration value may be exposed.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "exact_sequence_overlap": "unknown",
+      "public_date": "2025-02-12",
+      "reason": "The exact artifact was uploaded after the GEO release, but the artifact declares only HepG2 lentiMPRA training and no MASLD cohort labels. This is not a clean chronology claim."
+    },
+    "gse296875": {
+      "allowed_use": "Training-fold-only nomination of peaks or loci for development diagnostics. Held-donor ATAC, pathology, RNA, peak calls, or normalization cannot select windows, heads, thresholds, or calibration.",
+      "checkpoint_exposure_state": "target_label_unexposed",
+      "model_input_status": "not_a_native_input",
+      "public_date": "2025-10-01",
+      "reason": "The exact artifact was uploaded ten days after the GEO release but declares an unrelated lentiMPRA corpus. Exact developer exposure is not established, so only target-label unexposed is claimed."
+    }
+  },
+  "missingness_and_topology": {
+    "gse281364": "RNA and DNA barcode counts are same-sample different aliquots. Four assay replicates per context are not independent donors. Missing oligo joins, alleles, or contexts are explicit missing states, never zero activity.",
+    "gse289173": "RNA and QTL summaries are same-study unpaired. The checkpoint consumes sequence only and produces no donor-conditioned output.",
+    "gse296875": "Same-nucleus RNA-ATAC pairing is not used by MPRALegNet. Donor identity still governs every development split."
+  },
+  "split_and_leakage_rules": {
+    "donor_rule": "All GSE296875 nuclei from one donor remain in one outer fold; cells and nuclei are not biological replicates.",
+    "genomic_rule": "Merge variants by native-build LD, locus, exact sequence, and reverse-complement identity before splitting. Apply a 230-bp boundary buffer.",
+    "head_rule": "GSE281364 can fit only an assay-native MPRA activity or direction head and every scored locus must be out-of-fold. It cannot fit a signed eQTL/ieQTL head.",
+    "sealed_rule": "No layer, orientation rule, checkpoint choice, sequence construction, target-gene mapper, threshold, or calibration can change after sealed outcomes are opened."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

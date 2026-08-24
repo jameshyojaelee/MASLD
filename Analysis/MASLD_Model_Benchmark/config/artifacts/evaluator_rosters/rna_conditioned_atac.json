@@ -1,0 +1,1 @@
+{"primary_evaluator_id":"rna_atac_two_way_deviance_reduction_v1","roster":["cholangiocyte","fibroblast","hepatocyte","macrophage","t_cell"],"roster_field":"strata","schema_version":"masld-bench-evaluator-roster-v1","task_id":"rna_conditioned_atac"}

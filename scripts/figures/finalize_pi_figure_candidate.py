@@ -57,14 +57,16 @@ for name in [
     "fig5c_mrna_protein_composite.pdf",
     "fig5d_snatac_accessibility.pdf",
     "fig5e_multimodal_program_summary.pdf",
-    "fig5f_spatial_program_maps.pdf",
+    "fig5f_spatial_program_calibration.pdf",
 ]:
     copy_new(ROOT / "figures/main/fig5_molecular_context/panels" / name, figure5 / name)
-for old, new in [
-    ("fig5_passport_evidence_state.pdf", "fig6b_coverage_observability.pdf"),
-    ("fig5_passport_next_experiment.pdf", "fig6d_next_experiment.pdf"),
+# Canonical panels were renamed fig5*->fig6* on 2026-08-23, so the historical
+# old->new translation is now an identity copy; names are already fig6-correct.
+for name in [
+    "fig6b_coverage_observability.pdf",
+    "fig6d_next_experiment.pdf",
 ]:
-    copy_new(ROOT / "figures/main/fig6_gene_catalog/panels" / old, figure6 / new)
+    copy_new(ROOT / "figures/main/fig6_gene_catalog/panels" / name, figure6 / name)
 
 source_dir = CANDIDATE / "source_tables"
 for source in sorted((ROOT / "figures/main/fig5_molecular_context/data").glob("composite_*.csv")):
@@ -72,7 +74,7 @@ for source in sorted((ROOT / "figures/main/fig5_molecular_context/data").glob("c
 for source in [
     ROOT / "figures/main/fig5_molecular_context/data/fig5d_snatac_accessibility_source.tsv",
     ROOT / "figures/main/fig5_molecular_context/panels/data/fig5e_multimodal_program_summary_selection.tsv",
-    ROOT / "figures/main/fig5_molecular_context/panels/data/fig5f_spatial_program_maps_selection.tsv",
+    ROOT / "figures/main/fig5_molecular_context/panels/data/fig5f_spatial_program_calibration.tsv",
 ]:
     copy_new(source, source_dir / source.name)
 for source in sorted((CANDIDATE / "figure5/panels/data").glob("fig5*.tsv")):
@@ -225,7 +227,7 @@ callouts: list[dict[str, object]] = []
 for figure, names in {
     "3": [
         "fig3a_cohort_metadata_matrix.pdf", "fig3b_nas_fib_grid.pdf",
-        "fig3c_cohort_robustness.pdf", "fig3d_pca_fibrosis_gradient.pdf",
+        "fig3c_cohort_alluvial.pdf", "fig3d_pca_fibrosis_gradient.pdf",
         "fig3e_stage_remodeling.pdf", "fig3f_stage_deg_genetics_matrix.pdf",
     ],
     "4": [
@@ -236,7 +238,7 @@ for figure, names in {
     "5": [
         "fig5a_input_firewall.pdf", "fig5b_protein_triage.pdf",
         "fig5c_mrna_protein_composite.pdf", "fig5d_snatac_accessibility.pdf",
-        "fig5e_multimodal_program_summary.pdf", "fig5f_spatial_program_maps.pdf",
+        "fig5e_multimodal_program_summary.pdf", "fig5f_spatial_program_calibration.pdf",
     ],
     "6": [
         "fig6a_catalog_structure.pdf", "fig6b_coverage_observability.pdf",
@@ -301,7 +303,7 @@ stage_groups: dict[tuple[str, str], int] = {}
 for row in stage_rows:
     key = (row["axis"], row["contrast"])
     stage_groups[key] = stage_groups.get(key, 0) + 1
-if len(stage_groups) != 11 or set(stage_groups.values()) != {23370}:
+if len(stage_groups) != 14 or set(stage_groups.values()) != {23370}:
     raise RuntimeError(f"Stage family cardinality drift: {stage_groups}")
 
 program_rows = read_tsv(source_dir / "fig4c_all_117_programs.tsv")
@@ -407,7 +409,7 @@ def panel(figure: int, filename: str) -> Path:
 
 composite("figure3_composite_proof", [(x[0], panel(3, x[1])) for x in [
     ("A", "fig3a_cohort_metadata_matrix.pdf"), ("B", "fig3b_nas_fib_grid.pdf"),
-    ("C", "fig3c_cohort_robustness.pdf"), ("D", "fig3d_pca_fibrosis_gradient.pdf"),
+    ("C", "fig3c_cohort_alluvial.pdf"), ("D", "fig3d_pca_fibrosis_gradient.pdf"),
     ("E", "fig3e_stage_remodeling.pdf"), ("F", "fig3f_stage_deg_genetics_matrix.pdf")]],
     [(0, 0, 474, 720), (474, 0, 473, 720), (947, 0, 473, 720),
      (0, 720, 420, 1080), (420, 720, 650, 1080), (1070, 720, 350, 1080)])
@@ -453,7 +455,7 @@ inputs = [
     singlecell_supplement_source,
 ]
 inputs.extend(sorted((ROOT / "figures/main/fig5_molecular_context/panels").glob("fig5[cd-f]_*.pdf")))
-inputs.extend(sorted((ROOT / "figures/main/fig6_gene_catalog/panels").glob("fig5_passport_*.pdf")))
+inputs.extend(sorted((ROOT / "figures/main/fig6_gene_catalog/panels").glob("fig6[bd]_*.pdf")))
 input_rows = [{"path": str(p), "size_bytes": p.stat().st_size, "sha256": sha256(p)} for p in inputs]
 write_tsv(CANDIDATE / "input_manifest.tsv", input_rows, ["path", "size_bytes", "sha256"])
 

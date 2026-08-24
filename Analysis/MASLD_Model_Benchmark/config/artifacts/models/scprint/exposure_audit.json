@@ -1,0 +1,37 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_for_all_registered_cell_state_sources_with_pre_cutoff_unknown_retained",
+    "sealed_dataset_id": "gse289173",
+    "sealed_endpoint_labels": ["frozen_cell_state_mapping_labels", "cell_type_eqtl_effects", "interaction_eqtl_effects"]
+  },
+  "checkpoint_findings": {
+    "scprint_v1_5_medium": {
+      "checkpoint_identity": "jkobject/scPRINT@f60c87152e83fedb932a84f8ba850fbf489a5a86:v2-medium.ckpt",
+      "corpus": "CELLxGENE Census LTS 2023-12-15; 54,084,961 post-QC cells and 548 datasets",
+      "corpus_annotation_state": "raw_counts_plus_supervised_cell_type_disease_assay_ethnicity_sex_organism_objectives",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "479ba64fe4e45b1fb154724d151e836d85b5ad05163ba8362163b8d8fd4de624"
+  },
+  "interpretation": "The original March 2025 v1.5 object is tied to the published LTS 2023-12-15 corpus, which predates GSE289173 and supports target_label_unexposed for the sealed endpoint. Several development sources were public before the cutoff and remain source-specific unknown because the exact post-QC train/holdout inventory was not released.",
+  "rejected_checkpoint": {
+    "checkpoint_identity": "jkobject/scPRINT@8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed:medium-v1.5.ckpt",
+    "exposure_state": "unknown",
+    "reason": "Silent same-path replacement on 2026-05-05 with a new object hash and undeclared corpus, after the sealed source was public.",
+    "sealed_champion_eligibility": "ineligible"
+  },
+  "remaining_blockers": [
+    "Obtain the exact 221,775,592-byte original checkpoint only with approval and verify its published LFS SHA-256.",
+    "Inspect checkpoint pickle globals and schema in a restricted staging path before any Lightning load.",
+    "Freeze checkpoint hyperparameters, gene vocabulary, ontology decoders, exact common/native embedding variants, and an executable Torch 2.2 runtime.",
+    "Recover the exact 548-dataset post-QC train/validation/test inventory or retain pre-cutoff development sources as unknown.",
+    "Pass immutable-row-ID, deterministic sampling, cell-order invariance, forward, backward, resume, and device-tolerance fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "eligible_on_exposure_and_terms_other_admission_gates_still_apply",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,22 @@
+{
+  "adapter_sha256": "63231c2ba6455bf2cd63f23821eb25837981a446594df05abe210af6c7da4201",
+  "algorithm": {
+    "classifier": "multinomial logistic regression; L2; C=1; lbfgs; max_iter=2000",
+    "feature_selection": "training-only rank-binned normalized dispersion; 20 mean bins; top 2000; Ensembl-ID tie break",
+    "normalization": "per-cell library-size scaling to 10000 followed by log1p",
+    "pca": "training-only centered full SVD; at most 50 components",
+    "prediction": "held-donor fold only; softmax probabilities; no observed label",
+    "split": "SHA256(split_seed NUL donor_id), first 8 bytes big-endian modulo 5",
+    "training_weights": "equal class mass, then equal donor mass within class, rescaled to training cell count"
+  },
+  "input_contract": {
+    "feature_id": "versionless Ensembl gene ID",
+    "label": "frozen broad_liver_five_v1 cell class",
+    "matrix": "nonnegative integer raw counts",
+    "row_id": "globally unique Atlas obs_names",
+    "unit": "dataset-view donor_id admitted as cohort_family_id+person_key"
+  },
+  "model_id": "hvg_pca_logistic",
+  "schema_version": "masld-bench-preprocessing-authority-v1",
+  "scope": "cell_state_mapping only"
+}

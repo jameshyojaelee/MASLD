@@ -1,0 +1,236 @@
+{
+  "architecture_contract": {
+    "family": "read_depth_aware_dense_bidirectional_transformer_for_single_cell_expression",
+    "registered_scale": "GB.Cell-100M",
+    "parameter_count_reported_by_huggingface": 99900000,
+    "layers": 18,
+    "hidden_size": 640,
+    "attention_heads": 20,
+    "intermediate_size": 1664,
+    "maximum_gene_positions": 19264,
+    "continuous_value_encoding": "auto_discretization_with_100_bins_and_read_depth_aware_pretraining",
+    "normalization": "LayerNorm",
+    "activation": "SwiGLU",
+    "attention_dropout": 0.0,
+    "hidden_dropout": 0.0,
+    "warning": "The model card table says hidden size 650, but the exact config.json and the paper specify 640. The immutable config value 640 controls this checkpoint."
+  },
+  "checkpoint_contract": {
+    "registered_identity": "genbio-ai/GB.Cell-100M@a983b388e1025860f2c413ecef60e76078253c24:model.safetensors",
+    "repository_revision": "a983b388e1025860f2c413ecef60e76078253c24",
+    "filename": "model.safetensors",
+    "format": "safetensors",
+    "sha256": "4602f09951c5a2f8cb814363f68cd63d8d7bd145e02560b852f6652df78bec77",
+    "size_bytes": 399481732,
+    "git_lfs_blob_id": "c40aa271d733c2e3166d48eedde9f486ecf3e285",
+    "revision_date_utc": "2026-07-25T17:42:48Z",
+    "safetensors_ancestor_revision": "0f6ffc252f2af4553caadc66e82116c5b781d469",
+    "safetensors_conversion_date_utc": "2025-05-09T16:24:45Z",
+    "status": "exact_remote_object_pinned_not_downloaded",
+    "weight_content_downloaded": false,
+    "excluded_alias": {
+      "filename": "pytorch_model.bin",
+      "reason": "Pickle-backed PyTorch object is unnecessary and must not be loaded when an exact safetensors artifact exists.",
+      "sha256": "1abca73f447e20976f25ca702f6b0c985f35433cba90201ecbda0eee6e36e133",
+      "size_bytes": 399527266
+    }
+  },
+  "code_contract": {
+    "repository": "genbio-ai/ModelGenerator",
+    "revision": "bda6f2da297ba886e3662b49eea9928feacbfd98",
+    "revision_date_utc": "2026-08-19T19:16:41Z",
+    "git_tree": "27bbde0139c4878b51a821fc0e5a1ea3042f13a7",
+    "revision_verification": "GitHub reports a valid verified commit",
+    "implementation_root": "huggingface/gb.cell",
+    "repository_state": "The upstream README marks ModelGenerator deprecated for the previous GB generation, but retains the experiments and base-model implementation.",
+    "status": "exact_source_revision_pinned_not_cloned"
+  },
+  "input_contract": {
+    "canonical_assays": [
+      "scRNA_UMI_counts",
+      "snRNA_UMI_counts_after_task_specific_distribution_audit"
+    ],
+    "required_matrix": "nonnegative finite raw gene counts with positive total count for every admitted cell or nucleus",
+    "gene_axis": {
+      "identity": "OS_scRNA_gene_index.19264.tsv at the pinned code revision",
+      "count": 19264,
+      "identifier_field": "gene_name",
+      "order_sha256": "bb337ea195d94e7b033543abc02a42e7060d6562eba97deb077f7dcecec62661"
+    },
+    "alignment": "Intersect input genes with the exact 19,264-name list, append absent model genes, and reorder to the released axis. Duplicate or ambiguous identifiers must be resolved before alignment.",
+    "preprocessing": [
+      "Compute total raw counts per cell.",
+      "Normalize expression as log1p(count / total_count * 10000).",
+      "Append two depth values, each max(log10(total_count), 5).",
+      "Clip all input values at 20.",
+      "Use float32 on CPU and bfloat16 on CUDA under the official helper."
+    ],
+    "attention_mask": "The released alignment helper masks genes absent from the input panel and marks both depth positions observed. Preserve a separate project missingness state because the native tensor cannot distinguish every structural absence from an observed zero.",
+    "unsupported_inputs": [
+      "bulk_RNA",
+      "negative_or_integrated_expression",
+      "TPM_or_log_expression_without_raw_counts",
+      "native_RNA_ATAC_or_other_multimodal_input"
+    ]
+  },
+  "embedding_contract": {
+    "official_standalone_recipe": "CellFoundationModel last_hidden_state followed by attention-mask-weighted mean across admitted gene positions and both depth positions.",
+    "embedding_dimension": 640,
+    "common_lane": "Freeze exact layer, inclusion of depth tokens, mask semantics, pooling, numeric precision, row order, and identical project head before screening.",
+    "native_lane": "A project classifier, adapter, LoRA, or full fine-tune is not admitted until institutional terms review. Any allowed derivative remains subject to the GenBio license and is not an open champion.",
+    "warning": "The HF example script defaults to GB.Cell-3M. A GB.Cell-100M benchmark run must override the model handle and record it in the run receipt."
+  },
+  "registry_binding": {
+    "artifact_bundle_id": "gb_cell",
+    "registry_model_id": "gb_cell",
+    "mapping": "exact_GB.Cell-100M_only"
+  },
+  "release": {
+    "model_repository": "https://huggingface.co/genbio-ai/GB.Cell-100M",
+    "paper": "Scaling Dense Representations for Single Cell with Transcriptome-Scale Context",
+    "paper_doi": "10.1101/2024.11.28.625303",
+    "paper_url": "https://www.biorxiv.org/content/10.1101/2024.11.28.625303v1",
+    "paper_version_date": "2024-12-03"
+  },
+  "pretraining_contract": {
+    "declared_cells": 50000000,
+    "declared_validation_cells": 100000,
+    "declared_gene_tokens": 963000000000,
+    "declared_tissues": "more_than_100",
+    "declared_species": "human",
+    "declared_sources": [
+      "GEO",
+      "DISCO",
+      "hECA",
+      "Single_Cell_Portal",
+      "other_sources_from_the_scFoundation_supplementary_list"
+    ],
+    "objective": "Read-Depth-Aware masked high-read-depth expression prediction from downsampled lower-read-depth expression.",
+    "training_compute": "The paper reports 256 H100 GPUs for three days for the 100M model using bfloat16.",
+    "checkpoint_bound_accession_inventory": "UNRESOLVED",
+    "warning": "Saying that the scFoundation supplementary list was followed does not identify the exact retained accessions, release aliases, donors, cells, labels, preprocessing versions, or cutoff bound to this weight object."
+  },
+  "runtime_contract": {
+    "standalone_package_python": ">=3.10",
+    "standalone_dependencies": [
+      "torch>=2.0.0",
+      "transformers>=4.30.0,<5",
+      "numpy>=1.20.0",
+      "anndata>=0.8.0",
+      "scanpy>=1.10.0",
+      "pandas>=1.3.0",
+      "tqdm>=4.60.0"
+    ],
+    "config_transformers_version": "4.38.0.dev0",
+    "optional_flash_attention": ">=2.1.0",
+    "environment_status": "UNRESOLVED_loose_ranges_are_not_an_immutable_runtime",
+    "target_hardware_status": "L40S_and_B6K_not_probed",
+    "required_probe": "After acquisition and campaign approval only: no-network exact imports, safetensors load, CPU fallback, L40S FlashAttention path, fixed-count preprocessing, forward, deterministic masked mean pooling, backward only if licensed, resume, memory profile, row-order invariance, and cross-device numeric tolerance.",
+    "scheduling_status": "blocked_by_terms_exposure_runtime_and_capability"
+  },
+  "safe_loading_contract": {
+    "checkpoint_downloaded": false,
+    "required_artifacts": [
+      "model.safetensors",
+      "config.json",
+      "exact pinned implementation source",
+      "OS_scRNA_gene_index.19264.tsv"
+    ],
+    "required_path": [
+      "Acquire only after institutional license confirmation and campaign approval.",
+      "Verify filename, 399,481,732-byte size, and SHA-256 before parsing.",
+      "Use the safetensors object only; reject pytorch_model.bin.",
+      "Load from an offline local path with remote code and mutable network resolution disabled.",
+      "Freeze tensor names, shapes, dtypes, configuration, gene order, preprocessing, pooling, and a fixed-fixture digest."
+    ],
+    "project_state": "Persist probes and predictions in bounded non-executable formats with hashes; their use and distribution remain subject to the upstream terms."
+  },
+  "terms_audit": {
+    "weight_terms": "GenBio_AI_Community_License_Agreement_at_the_exact_HF_revision",
+    "repository_root_terms": "GenBio_AI_Community_License_Agreement_at_the_exact_code_revision",
+    "nested_package_metadata": "huggingface/gb.cell/pyproject.toml says Apache-2.0, but no nested license displaces the stricter root license; treat the code as GenBio-licensed until GenBio clarifies in writing.",
+    "grant": "nonexclusive_worldwide_nontransferable_nonsublicensable_revocable_royalty_free_limited_noncommercial",
+    "output_scope": "The license defines outputs to include activations, attention maps, gradients, and embeddings.",
+    "output_training_restriction": "Outputs and output derivatives may not train or improve similar models except GenBio Materials themselves or downstream Derivative Works of them.",
+    "distribution_conditions": [
+      "Noncommercial use only",
+      "Distribute the license and required notice",
+      "Display Powered by GenBio AI in the prescribed documentation or interface",
+      "Describe modifications in the notice for derivative works"
+    ],
+    "derivative_weights": "Permitted only as noncommercial GenBio Derivative Works under the license conditions; not suitable for the benchmark's unrestricted open champion.",
+    "conditional_model": "GB.Cell embeddings or gradients cannot train the independently implemented conditional MASLD model under the current output-training restriction.",
+    "institutional_review": "required_before_any_execution_or_project_probe",
+    "open_champion_eligible": false,
+    "result": "restricted_comparator_only"
+  },
+  "task_fit": {
+    "cell_state_mapping": "restricted_frozen_representation_comparator_only_after_terms_input_runtime_capability_and_exposure_gates",
+    "conditional_masld_model": "prohibited_as_context_teacher_or_feature_training_source_under_current_terms",
+    "perturbation_response": "not_admitted_by_the_base_checkpoint; source-owned perturbation evaluations do not constitute a frozen perturbation head",
+    "rna_atac_integration": "not_native",
+    "bulk_state_transfer": "not_admitted_single_cell_input_contract"
+  },
+  "source_records": [
+    {
+      "identity": "genbio-ai/GB.Cell-100M@a983b388:model.safetensors",
+      "sha256": "4602f09951c5a2f8cb814363f68cd63d8d7bd145e02560b852f6652df78bec77",
+      "size_bytes": 399481732,
+      "url": "https://huggingface.co/genbio-ai/GB.Cell-100M/blob/a983b388e1025860f2c413ecef60e76078253c24/model.safetensors"
+    },
+    {
+      "identity": "genbio-ai/GB.Cell-100M@a983b388:config.json",
+      "sha256": "d1f5fe34a2f76ecf61b6954b4c60360229501ce51473fd03248675c3066f096a",
+      "url": "https://huggingface.co/genbio-ai/GB.Cell-100M/blob/a983b388e1025860f2c413ecef60e76078253c24/config.json"
+    },
+    {
+      "identity": "genbio-ai/GB.Cell-100M@a983b388:LICENSE",
+      "sha256": "1093f6e45737ac90258c839421be3bcdb2c89ef286c6ca1161edbd758b56d88b",
+      "url": "https://huggingface.co/genbio-ai/GB.Cell-100M/blob/a983b388e1025860f2c413ecef60e76078253c24/LICENSE"
+    },
+    {
+      "identity": "genbio-ai/GB.Cell-100M@a983b388:README.md",
+      "sha256": "0a01193baad116d95b5ddbe3cec7971960eb0f9452669717cdeb505dbed7f8e7",
+      "url": "https://huggingface.co/genbio-ai/GB.Cell-100M/blob/a983b388e1025860f2c413ecef60e76078253c24/README.md"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:LICENSE",
+      "sha256": "d94523de4cd4ce315aec6bcc2efc2ad034cc987a1a36f95dcc57e4986450c2ba",
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/LICENSE"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:huggingface/gb.cell/pyproject.toml",
+      "sha256": "59058470808fda70c1de1af8accccb8cf0cbdb0144321e1d798853c5f2f967b9",
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/huggingface/gb.cell/pyproject.toml"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:modeling_cellfoundation.py",
+      "sha256": "4a8bf5b4b2184b4724d6557d8579502cc68f8c25e0739f34a480edf9cf98e768",
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/huggingface/gb.cell/gb_cell/models/modeling_cellfoundation.py"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:preprocessing.py",
+      "sha256": "0be1940442f08055a59006440b06e05950c8731adbcfc199aaa8bff4645d30d5",
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/huggingface/gb.cell/gb_cell/utils/preprocessing.py"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:gene_alignment.py",
+      "sha256": "56bcd597c46f436266b5385ba112b0bcc6c090981e69b5950159059fe8f4a2be",
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/huggingface/gb.cell/gb_cell/utils/gene_alignment.py"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:OS_scRNA_gene_index.19264.tsv",
+      "sha256": "bb337ea195d94e7b033543abc02a42e7060d6562eba97deb077f7dcecec62661",
+      "size_bytes": 228232,
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/huggingface/gb.cell/gb_cell/models/gene_lists/OS_scRNA_gene_index.19264.tsv"
+    },
+    {
+      "identity": "ModelGenerator@bda6f2da:embed.py",
+      "sha256": "8dcc47556b9e3b0bc9b49988f3ed6eaf0bb7606170f48a4d7a4e4b4a176b4252",
+      "url": "https://github.com/genbio-ai/ModelGenerator/blob/bda6f2da297ba886e3662b49eea9928feacbfd98/huggingface/gb.cell/embed.py"
+    }
+  ],
+  "source_evidence": "The exact Hugging Face revision and blob metadata, exact verified GitHub commit and source objects, GenBio license texts, model card, and primary paper were inspected on 2026-08-22. No repository was cloned and no checkpoint, package, dataset, or model artifact was downloaded, installed, or deserialized.",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

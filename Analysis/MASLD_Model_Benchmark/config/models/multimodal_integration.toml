@@ -1,0 +1,302 @@
+schema_version = "masld-bench-model-v1"
+family_id = "multimodal_integration"
+modality = ["single_cell_rna", "single_nucleus_rna", "single_nucleus_atac"]
+status = "candidate"
+
+[[models]]
+model_id = "multivi"
+display_name = "MultiVI"
+implementation_type = "train_locally"
+checkpoint_revision = "scverse/scvi-tools@56520c713eb1d2b245c72a0f60bc393b74198c91+PyPI:scvi-tools==1.5.0.post1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact scvi-tools 1.5.0.post1 source and wheel SHA-256 d868c86332f819b8d79846ea0e36ec6eef26c3fafeb03ce7a239f1ddefb1c976 are frozen. Upstream MultiVI infers modality presence from row sums and conflates a structurally missing assay with an observed all-zero row, so it cannot run unchanged. Implement an explicit-state mask adapter or obtain a prospectively justified contract exception; freeze training-only genes/peaks, explicit latent dimensions, equal common-lane modality weights, covariates without donor batch levels, RNA-only inductive query path, folds, seeds, and artifact hashes; prohibit query fitting; then pass the missingness and no-held-ATAC profile fixtures."]
+supported_tasks = ["cell_state_mapping", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "midas"
+display_name = "MIDAS"
+implementation_type = "train_locally"
+checkpoint_revision = "labomics/midas@95651c03c7600e632fba9e8a9d91505e376d9d99+tag:v0.3.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact v0.3.0 source, MIT terms, PyPI hashes, mosaic architecture, explicit batch-level modality omission, and RNA-to-ATAC output are frozen. Implement a project tensor-only loader because MIDAS.load uses weights_only=false, omits ordered feature IDs from setup.json, and rebuilds batch dimensions from the query. Freeze training-only genes, peaks, chromosome chunks, hyperparameters, known technical categories, donor folds, seeds, and artifacts; require identical ordered obs IDs for paired batches and keep GSE244832 modalities as separate batches; then pass no-query-fit, same-nucleus join, feature-order, missing-state, safe-loading, and no-held-ATAC profile fixtures."]
+supported_tasks = ["cell_state_mapping", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "scbutterfly"
+display_name = "scButterfly"
+implementation_type = "train_locally"
+checkpoint_revision = "BioX-NKU/scButterfly@eb31e04bb8c4abdf85c4cbecd044fcd359105caa"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact source, MIT terms, scButterfly-B common variant, PyPI hashes, same-cell/same-nucleus training topology, and continuous RNA-to-ATAC decoder output are frozen. Implement a direct frozen RNA-encoder/translator/ATAC-decoder adapter in eval/no-grad mode: never call the high-level combined train-plus-query preprocessing/test path, provide query ATAC, fit features on queries, or use inverse TF-IDF, which requires unavailable held-ATAC statistics. Freeze training-only genes/peaks and normalization, exact paired rows, ATAC metadata independent of the upstream RNA-var defect, folds, seeds, runtime, state schema, and hashes; then pass no-query-influence, no-held-ATAC, output-scale, and profile fixtures."]
+supported_tasks = ["cell_state_mapping", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "scpair"
+display_name = "scPair"
+implementation_type = "train_locally"
+checkpoint_revision = "quon-titative-biology/scPair@52d1ca1e26c8127b2023f3d80cfd1c140a0ea80a+tag:v0.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["cell_state_mapping", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "https://github.com/quon-titative-biology/scPair"
+upstream_commit = "52d1ca1e26c8127b2023f3d80cfd1c140a0ea80a"
+preprocessing_sha256 = "b2ea8e3e63c60e05eb83781fb013085d625a4b42fd8465610eedf4e67ba87693"
+vocabulary_or_build = "outer_training_2000_hvg_plus_source_fixed_2000_peak_smoke_axis"
+genome_build = "GRCh38.p14"
+code_license = "MIT"
+weights_license = "project_owned"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_no_pretraining_fold_local_fit"
+declared_corpora_sha256 = "0d4e5bfceb0a5ea08df15d12bca4d04c891b8e4d38167eecabebe2c10fb73e69"
+cellxgene_uuids_sha256 = "14330c8bf4d2718f1ebf63487b0f528738270d6880a4bbadc1df4678af5df3f1"
+exposure_audit_sha256 = "294dbdca7bc57c538d8d4b93f762b3477d5c540f553e5181ac98522682c4b19c"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/scpair/preprocessing.json", sha256 = "b2ea8e3e63c60e05eb83781fb013085d625a4b42fd8465610eedf4e67ba87693", size_bytes = 2301, media_type = "application/json", role = "model_authority:scpair:preprocessing" },
+  { path = "artifacts/model-authorities/scpair/code_license.json", sha256 = "3e3f76793d99508daa45a7883dc402317827df713aab7c441e3b4afb9af2baad", size_bytes = 245, media_type = "application/json", role = "model_authority:scpair:code_license" },
+  { path = "artifacts/model-authorities/scpair/weights_license.json", sha256 = "26000cec381e3bac9fce5e0e968d9aa036c76cd4c73b1f4c4cf02231dadc3d6e", size_bytes = 258, media_type = "application/json", role = "model_authority:scpair:weights_license" },
+  { path = "artifacts/model-authorities/scpair/derivative_weights_license.json", sha256 = "95a2cb12b5ccbd1a73a43c3869940f6012fd9a7b6f05efebfb83edea13a7a3f4", size_bytes = 269, media_type = "application/json", role = "model_authority:scpair:derivative_weights_license" },
+  { path = "artifacts/model-authorities/scpair/declared_corpora.json", sha256 = "0d4e5bfceb0a5ea08df15d12bca4d04c891b8e4d38167eecabebe2c10fb73e69", size_bytes = 437, media_type = "application/json", role = "model_authority:scpair:declared_corpora" },
+  { path = "artifacts/model-authorities/scpair/cellxgene_uuids.json", sha256 = "14330c8bf4d2718f1ebf63487b0f528738270d6880a4bbadc1df4678af5df3f1", size_bytes = 275, media_type = "application/json", role = "model_authority:scpair:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/scpair/exposure_audit.json", sha256 = "294dbdca7bc57c538d8d4b93f762b3477d5c540f553e5181ac98522682c4b19c", size_bytes = 1013, media_type = "application/json", role = "model_authority:scpair:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "gpu_rna_atac_torch_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_scpair.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/gpu_rna_atac_torch_smoke--c2308fc3b7524081/environment.lock.json", sha256 = "c2308fc3b7524081c7a49ff1d840213306bcc20dff003010da2b898e2bdaa461", size_bytes = 1253, media_type = "application/json", role = "environment:gpu_rna_atac_torch_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "jamie"
+display_name = "JAMIE"
+implementation_type = "train_locally"
+checkpoint_revision = "daifengwanglab/JAMIE@8069d1ce8ebaea21b9a93dd2e78d89bf7b46ffc6+tag:v4.3.2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0-only"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact v4.3.2 source is GPL-3.0-only; PyPI JAMIE is an unrelated package and must not be installed. The audited frozen RNA transform can support cell-state representation after raw-query preprocessing, explicit-pairing, state-dict, runtime, leakage, BatchNorm/dropout eval-state, and query-composition fixtures. Its opposite-modality inverse-PCA ATAC output is unbounded and may be negative, so JAMIE is removed from the primary RNA-conditioned ATAC profile task. Retain cross-modal rank/correlation only after a separate nonpromotable development TaskSpec is approved; never clip, shift, softplus, or normalize the held output post hoc. GSE296875 pairs require exact nucleus IDs and GSE244832 aliquots are never paired."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "monae"
+display_name = "Monae"
+implementation_type = "train_locally"
+checkpoint_revision = "shapsider/monae@f040dea1e0959dfd30d34e6b7d83463a21df23b5+tag:v1.0.0"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact BSD-3-Clause v1.0.0 release trains a bundled CoVEL/GLUE path and does not expose the paper-described teacher/student contrastive architecture; paper-code identity is unresolved. Do not schedule or label it Monae. Activate only after author clarification or approval of a distinctly named release-code comparator with exact terms, an outer-training raw-RNA-to-X_pre transform, frozen graph and target library size, no donor batch, tensor-only restoration, explicit unpaired topology, L40S/runtime fixtures, and no query fitting. The released experimental NB decoder can technically emit a normalized RNA-to-ATAC profile, but it cannot substitute for architecture fidelity. Monae-E is transductive and cannot receive held or sealed cells."]
+supported_tasks = []
+
+[[models]]
+model_id = "multidgd"
+display_name = "multiDGD"
+implementation_type = "train_locally"
+checkpoint_revision = "Center-for-Health-Data-Science/multiDGD@acc9edb212c554d693739890b23a6d209e15ecfa+tag:v0.0.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact MIT v0.0.1 source has no inductive encoder: every unseen cell receives a newly optimized RepresentationLayer parameter, mutates test state, may fit a new correction component, and the released predict_new entry point calls a nonexistent _init_test_set method. Remove multiDGD from frozen common, sealed, champion, cell-state, and direct RNA-to-ATAC scheduling. Its ATAC decoder can emit a normalized profile only after RNA-only query optimization, which is not a frozen forward pass. Any future use requires a separately approved nonpromotable outcome-blind query-optimization TaskSpec, an ephemeral no-save patch, no target ATAC/depth/correction fitting, explicit donor/pairing rules, project-controlled state, and L40S/memory/determinism fixtures. Published non-MASLD weights remain reference-only and must not be loaded."]
+supported_tasks = []
+
+[[models]]
+model_id = "scdiffusionx"
+display_name = "scDiffusion-X"
+implementation_type = "train_locally"
+checkpoint_revision = "EperLuo/scDiffusion-X@d60d928b635ab7a52ace030a641efd02137c193f"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "root_MIT_nested_package_BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact source commit, mixed root-MIT/nested-BSD-3-Clause notices, local-training contract, frozen lower-level RNA-encoder/conditional-DDPM/ATAC-decoder path, Bernoulli peak output, and target-label-unexposed project-fit rule are frozen under config/artifacts/models/scdiffusionx. MiniAtlas weights have unknown exposure and remain excluded. Never use the released high-level translation script on held data: it reads both assays, fits query labels, mutates inputs, hard-codes class state, and its DPM-Solver branches ignore source conditioning. Implement an unconditional, tensor-only RNA query adapter with outer-training genes/peaks/rna_std/atac_std, fresh source-conditioned DDPM state, row-keyed sampling seeds, sigmoid output, no target placeholders or query fitting, exact GSE296875 nucleus pairs, and GSE244832 aliquot rejection. Freeze sampler/draw aggregation/profile normalization and project state hashes; pass query-composition invariance, no-target profile, safe-loading, L40S forward/backward/resume, memory, determinism, and cross-device fixtures."]
+supported_tasks = ["cell_state_mapping", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "babel"
+display_name = "BABEL"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "wukevin/babel@55742e4c704eb0e1e81569c7caeceb0a516bd90b+gdrive:1uJDbiDrBb5M0d9I5hjj2Ext-N08CXESS:babel_human_v1.1.tar.gz:md5:5e2f68466a1460a36e39a45229b21b1b"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_NO_LICENSE_DETECTED_weights_NO_TERMS_DETECTED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["BABEL is registered as a historically target-label-unexposed RNA-to-ATAC prior-art comparator, not as a locally trainable model. The repository has no license and the separately hosted checkpoint has no detected terms; obtain written permission before download, execution, adaptation, or redistribution. If authorized, verify the author MD5 plus SHA-256 and size, inventory the archive safely, freeze its exact 34,861-gene/223,897-peak registries and build, replace normalization/clustering-before-split with donor-safe inference-only preprocessing, validate the Python 3.7/Torch 1.3 path, and pass safe-loading, domain-shift, and no-held-ATAC profile fixtures. GSE244832 is never treated as paired training data."]
+supported_tasks = ["rna_conditioned_atac"]
+
+[[models]]
+model_id = "scmvp"
+display_name = "scMVP"
+implementation_type = "train_locally"
+checkpoint_revision = "bm2-lab/scMVP@9db000194d6f4adff3f94cc9f4640473f09e1298"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Only the frozen RNA-encoder posterior mean can enter cell-state mapping. Every released ATAC reconstruction path consumes observed ATAC, including its library size, and is ineligible for RNA-conditioned ATAC scoring. Implement an eval/no-grad RNA-only adapter with training-only genes, GMM state, common head, donor folds, seeds, and local state-dict hashes; never fabricate zero ATAC or load hosted trainer pickles; then pass pairing, query-isolation, BatchNorm, safe-loading, legacy-runtime, and L40S fixtures."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scglue"
+display_name = "scGLUE"
+implementation_type = "train_locally"
+checkpoint_revision = "gao-lab/GLUE@091bdbbdb3dd6d652ed4677200b034ee3c85dae1+tag:v0.4.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the v0.4.1 source rather than silently substituting PyPI 0.4.0, training-only guidance graph, feature universe, assay-native decoders, preprocessing, query mapping, classifier head, donor split, seeds, environment, and artifact hashes. Use a project-controlled state_dict manifest because upstream save/load uses unsafe dill. Joint-latent cell mapping may proceed after fixtures, but RNA-to-ATAC decode_data is explicitly experimental and remains latent-only under the current profile registry until a separate frozen decoder fixture and TaskSpec revision admit it."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scmomat"
+display_name = "scMoMaT"
+implementation_type = "train_locally"
+checkpoint_revision = "PeterZZQ/scMoMaT@dbd954de4b1be415cdea543baf2856df0fda6992+PyPI:scmomat==0.2.2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The exact source and PyPI 0.2.2 artifacts, MIT terms, modality-absence sentinel, and transductive factorization are frozen. Every supplied cell receives a free learned C_cells row and no frozen unseen-cell transform exists; neither sealed-row inclusion nor held-row coordinate optimization is allowed. Retain only for a future nonpromotable development-only integration TaskSpec, enforce exact paired row joins and training-only preprocessing, and export plain factor arrays or trusted tensors instead of loading whole-model pickle objects."]
+supported_tasks = []
+
+[[models]]
+model_id = "stabmap"
+display_name = "StabMap"
+implementation_type = "train_locally"
+checkpoint_revision = "Bioconductor:StabMap==1.6.0@git:2c983548d049d33966b014d142a74b45bc058aab"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact Bioconductor 1.6.0 source, GPL-2.0 terms, topology traversal, and cell-state-only task fit are frozen. Implement a leakage-safe wrapper with training-only references and connected bridge topology, unique modality-namespaced cells, every held donor as a terminal query leaf, native centering/scaling disabled, frozen upstream transforms, and final coordinates anchored to the training-reference mean rather than the combined reference-plus-query mean. Prove queries cannot move reference coordinates, features, topology, prototypes, neighbours, or calibration; freeze classifier, donor folds, seeds, R environment, plain-matrix artifacts, and hashes. Native nearest-neighbour imputation remains latent-only and cannot enter the ATAC-profile leaderboard."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "seurat_wnn"
+display_name = "Seurat WNN"
+implementation_type = "classical_baseline"
+checkpoint_revision = "satijalab/seurat@4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a+CRAN:Seurat==5.5.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["Native WNN requires truly observed same-cell or same-nucleus paired modalities and learns modality weights and neighborhoods from the supplied query geometry. It exposes no frozen RNA-only transform and no RNA-to-ATAC decoder, so it cannot score the sealed cell-state or RNA-conditioned ATAC endpoints. Retain it only as a transductive same-cell or same-nucleus development diagnostic; GSE244832 same-donor modalities cannot be falsely paired. Register a distinct frozen Seurat reference-mapping model only if its training-only reference, bridge, query-update policy and endpoint are independently audited."]
+supported_tasks = []
+
+[[models]]
+model_id = "cobolt"
+display_name = "Cobolt"
+implementation_type = "train_locally"
+checkpoint_revision = "epurdom/cobolt@cf5a448c6539025346a6393c215ba329cb3a0183+tag:v1.0.1+Zenodo:7039226"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0-only"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["cell_state_mapping", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "https://github.com/epurdom/cobolt"
+upstream_commit = "cf5a448c6539025346a6393c215ba329cb3a0183"
+preprocessing_sha256 = "c541e53fb6a6eaa406285225f02158133f6abb54e4d865e729efe8064bf0f331"
+vocabulary_or_build = "outer_training_2000_hvg_plus_source_fixed_2000_peak_smoke_axis"
+genome_build = "GRCh38.p14"
+code_license = "GPL-3.0-only"
+weights_license = "project_owned"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_no_pretraining_fold_local_fit"
+declared_corpora_sha256 = "9456101f9264a57f4582810e18267c480e3bf62ecdbc2e1c1c82844dc17d115f"
+cellxgene_uuids_sha256 = "a016381ea17fb0ad5f85d47c28b31a7f67115d12830374dcc96efeaabbd94fc0"
+exposure_audit_sha256 = "c2818f2ac5056d089a198f32659826c0463778c73853d7c8ef7030fd20fba958"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/cobolt/preprocessing.json", sha256 = "c541e53fb6a6eaa406285225f02158133f6abb54e4d865e729efe8064bf0f331", size_bytes = 2585, media_type = "application/json", role = "model_authority:cobolt:preprocessing" },
+  { path = "artifacts/model-authorities/cobolt/code_license.json", sha256 = "b2b690deffce2fbaddb55c59a134e9d09a594921acefbc4e62dd326a275f3280", size_bytes = 254, media_type = "application/json", role = "model_authority:cobolt:code_license" },
+  { path = "artifacts/model-authorities/cobolt/weights_license.json", sha256 = "ef99da4b8ab86c43243cdcc5ede8a923bbcb3c0814dfea698b8688f3e6198355", size_bytes = 258, media_type = "application/json", role = "model_authority:cobolt:weights_license" },
+  { path = "artifacts/model-authorities/cobolt/derivative_weights_license.json", sha256 = "9b13b4a14cd5102db0bf5ca835b46aad01ba8630a706f65308f5d2b220f4431c", size_bytes = 269, media_type = "application/json", role = "model_authority:cobolt:derivative_weights_license" },
+  { path = "artifacts/model-authorities/cobolt/declared_corpora.json", sha256 = "9456101f9264a57f4582810e18267c480e3bf62ecdbc2e1c1c82844dc17d115f", size_bytes = 444, media_type = "application/json", role = "model_authority:cobolt:declared_corpora" },
+  { path = "artifacts/model-authorities/cobolt/cellxgene_uuids.json", sha256 = "a016381ea17fb0ad5f85d47c28b31a7f67115d12830374dcc96efeaabbd94fc0", size_bytes = 270, media_type = "application/json", role = "model_authority:cobolt:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/cobolt/exposure_audit.json", sha256 = "c2818f2ac5056d089a198f32659826c0463778c73853d7c8ef7030fd20fba958", size_bytes = 1645, media_type = "application/json", role = "model_authority:cobolt:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "gpu_rna_atac_torch_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_cobolt.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/gpu_rna_atac_torch_smoke--c2308fc3b7524081/environment.lock.json", sha256 = "c2308fc3b7524081c7a49ff1d840213306bcc20dff003010da2b898e2bdaa461", size_bytes = 1253, media_type = "application/json", role = "environment:gpu_rna_atac_torch_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "mofaplus"
+display_name = "MOFA+"
+implementation_type = "classical_baseline"
+checkpoint_revision = "bioFAM/mofapy2@68c5bee640a643dc4fbfe37c7a0c8001cb318358+PyPI:mofapy2==0.7.4"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "LGPL-3.0"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The released predict and imputation paths reconstruct samples whose latent Z values were fitted. MOFA+ exposes no official frozen RNA-to-factor transform for an unseen donor, and MEFISTO covariate prediction is not an assay transform. Retain only for a future nonpromotable development TaskSpec; never insert, optimize, or refit sealed donor rows, even with ATAC represented as NaN."]
+supported_tasks = []
+
+[[models]]
+model_id = "mira"
+display_name = "MIRA"
+implementation_type = "train_locally"
+checkpoint_revision = "AllenWLynch/MIRA@6a2a22edf7724883ab0b481d7dd125e466e23b0f+PyPI:mira-multiome==2.1.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD3_declared_complete_license_text_not_detected"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The exact 2.1.1 repository and PyPI metadata declare BSD3, but no complete license text or license file was detected. Obtain written rights confirmation before execution, adaptation, or redistribution. If terms resolve, freeze the RNA topic encoder, features, covariates, common head, donor folds, seeds, runtime, and local state-dict hashes. Joint features require observed exactly paired RNA and ATAC, and no released RNA-to-ATAC map exists, so paired topics and within-modality imputation remain latent-only."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scjoint"
+display_name = "scJoint"
+implementation_type = "train_locally"
+checkpoint_revision = "SydneyBioX/scJoint@cbbfa5d7e7faa35f3d725bd5257507a01a22810f"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "blocked_no_detected_license"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["No code or demonstration-checkpoint terms were detected; obtain written permission before execution, local adaptation, or checkpoint use. scJoint has no peak decoder and remains latent/cell-label only, never an RNA-conditioned ATAC profile. If terms resolve, discard the official transductive target-cell co-training and pseudo-label path for held evaluation; implement an outer-training-only frozen 64-dimensional RNA encoder/head with eval/no-grad terminal queries, training-only gene-activity construction and preprocessing, no held cells in KNN or calibration, safe state loading, fixed folds/runtime/seeds, and artifact hashes."]
+supported_tasks = ["cell_state_mapping"]

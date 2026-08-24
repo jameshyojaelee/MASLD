@@ -1,0 +1,38 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["rna_conditioned_atac", "variant_to_regulation"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Donor-compatible external-development accessibility evaluation only; RNA and ATAC are same-sample different aliquots and never cell-paired.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No use in fitting or calibration for a GSE244832 development score."
+    },
+    "gse289173": {
+      "allowed_use": "One-time sealed variant-to-regulation inference after selection lock; the sequence-only model receives only evaluator-approved anonymized variants and reference sequence.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No cell-state labels, eQTL/ieQTL outcomes, calibration values, or ATAC profiles are available to training."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-fold training of cell-state-specific accessibility models and donor-held retrospective evaluation; pathology fields are used only in the prespecified donor-level error audit.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors and permitted genomic blocks contribute fragments, peaks, nonpeaks, bias models, normalization, or early stopping."
+    }
+  },
+  "local_model_roster": {
+    "cell_states": ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"],
+    "donor_pooling": "Within each outer fold, pseudobulk fragments by donor and cell state, retain donor-level QC, then pool only outer-training donors for model fitting.",
+    "genomic_split": "Cross donor folds with chromosome/merged-LD blocks; peaks, nonpeaks, bias models, and early stopping obey both exclusions.",
+    "seeds": [11, 29, 47, 71, 101],
+    "unseen_state_policy": "No nearest-state substitution. An untrained or QC-failed state is structurally missing and cannot be scored."
+  },
+  "rules": {
+    "donor_inference": "Cells, nuclei, fragments, peaks, and genomic windows are not biological replicates.",
+    "missingness": "Missing cell states or low-depth donor-state profiles use explicit missingness states, never zero profiles.",
+    "sealed_chronology": "Project-trained artifacts are eligible only if their campaign inputs and timestamps predate one-time sealed inference and their prediction hashes are committed before outcome joining."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,51 @@
+{
+  "audit_scope": {
+    "checkpoint": "Zenodo_14504049_EpiBERT_v1_archive",
+    "development_sources": "registered_variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "fine_tuned_rampage_member": {
+      "checkpoint_identity": "Zenodo archive md5 8c6b54ac40a5239af6a5226c4c44cbb4; exact member identity unresolved",
+      "corpus": "EpiBERT pretraining corpus plus 50 ATAC-RAMPAGE training contexts",
+      "corpus_annotation_state": "mixed same-donor and same-tissue ATAC-RAMPAGE topology",
+      "exposure_state": "target_label_unexposed"
+    },
+    "pretrained_atac_pair": {
+      "checkpoint_identity": "Zenodo archive md5 8c6b54ac40a5239af6a5226c4c44cbb4; two paper-declared members with exact paths unresolved",
+      "corpus": "hg38 sequence and approximately 738 training ATAC contexts from ENCODE, CATlas and GEO with global motif enrichment context",
+      "corpus_annotation_state": "partial cell-context map; no complete accession/run/donor alias manifest",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_variant_and_regulatory_sources",
+    "sha256": "f35ed7e16d31ff86d85d3ce9e0ece06e0f73e0895d2683e440c0c886aac99a24"
+  },
+  "input_eligibility": {
+    "gse289173": "The sealed source provides snRNA-derived states and QTL outcomes, not a topology-matched observed ATAC profile under the current manifest. Native EpiBERT therefore has no sealed inference fixture unless an independently frozen, outcome-blind ATAC context is added before selection lock.",
+    "gse296875": "Same-nucleus ATAC is available for development, but its use makes EpiBERT an observed-ATAC comparator. It cannot be called RNA-conditioned and every scored ATAC region must be masked from the input.",
+    "motif_context": "A motif vector computed from the same held-donor ATAC peaks is another observed held-donor input. Its construction must occur inside folds and be made available to matched baselines."
+  },
+  "interpretation": "The released archive predates GSE289173 public availability by nearly two months, so its donor, cell-state, eQTL and ieQTL labels are unexposed. This exposure finding does not make EpiBERT eligible for the sealed task: native inference requires observed context-specific ATAC and a motif vector, which are not part of the current GSE289173 sealed feature contract. Genomic overlap also remains and requires held LD/chromosome blocks with a full-window buffer.",
+  "license_disposition": {
+    "code": "MIT",
+    "open_champion_eligibility": "provisionally eligible after archive notice, exact-member, input-fixture and runtime gates",
+    "weights": "CC-BY-4.0_on_Zenodo_record_14504049"
+  },
+  "remaining_blockers": [
+    "With campaign approval, download the archive once, verify the published MD5 plus computed SHA-256, and perform traversal-safe, size-limited inventory without executing or deserializing archive content.",
+    "Freeze the exact paths, hashes, checkpoint state schemas, member order and seeds for both pretraining members and the fine-tuned RAMPAGE member.",
+    "Inspect included license and attribution notices and confirm terms for redistributed MASLD derivative weights.",
+    "Recover a complete accession/BioProject/SRA/donor alias manifest for all pretraining and RAMPAGE contexts; GSE244832 remains unknown because it was public before checkpoint release.",
+    "Resolve the exact hg38 FASTA and prove primary-contig parity to the project GRCh38.p14 reference, including REF alleles, contigs, strand and boundaries.",
+    "Freeze the ATAC FPM, peak calling, SEA motif enrichment and released motif normalization pipeline. Do not fit any part using sealed outcomes.",
+    "Define a topology-valid ATAC input for each endpoint. Without sealed GSE289173 ATAC, EpiBERT cannot earn that task's champion claim.",
+    "Reproduce the two-member, two-orientation caQTL statistic and RAMPAGE outputs on fixed fixtures with strict TensorFlow checkpoint consumption.",
+    "Run TensorFlow 2.13 import, forward/backward, restore, resume, deterministic-seed and L40S numeric probes through SLURM before admission."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "exposure_eligible_but_input_and_checkpoint_inventory_blocked",
+  "verified_date": "2026-08-22"
+}

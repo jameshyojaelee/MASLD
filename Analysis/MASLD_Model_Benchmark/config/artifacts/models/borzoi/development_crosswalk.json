@@ -1,0 +1,63 @@
+{
+  "crosswalk_scope": {
+    "project_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse289173",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "upstream_manifest": "calico/borzoi@9736924:data/targets_human.txt.gz"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "The checkpoint was trained on functional genomic coverage, including 89 GTEx v8/recount3 tracks, but not on project COLOC memberships or MASLD GWAS labels. The Borzoi paper used GTEx QTL results for post-training evaluation and score design, so GTEx-derived development outcomes are downstream-demo evidence rather than a pristine model-selection source.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "evidence": "GEO became public after the immutable 2023 weight objects. Its accession is absent from the released 7,611-track manifest.",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "evidence": "This project perturbation source is absent from the released target manifest and postdates the immutable 2023 weights. Its outcomes remain development-only by project policy.",
+      "exposure_state": "clean_declared"
+    },
+    "gse281364": {
+      "evidence": "This project MPRA source is absent from the released target manifest and postdates the immutable 2023 weights. Its outcomes remain locus-cross-fitted development evidence by project policy.",
+      "exposure_state": "clean_declared"
+    },
+    "gse289173": {
+      "evidence": "The official four checkpoint objects were created on 2023-08-09. GSE289173 became public on 2025-02-12 and is absent from the released target manifest. Reference genome sequence at its loci was generally available to the model, but its donor, cell-type eQTL and interaction-eQTL outcomes were not training targets.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "evidence": "GEO became public after the immutable 2023 weight objects and its accession is absent from the released target manifest. Reference genome sequence and generic liver tracks were seen, but its donor-specific RNA, ATAC, pathology and QTL outcomes were not.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "resource_atlas_current": {
+      "evidence": "No registered Resource Atlas GEO accession string occurs in the released 7,611-track manifest. Borzoi was nevertheless supervised on generic ENCODE, GTEx, FANTOM5 and CATlas liver/hepatocyte tracks, so it has strong liver-domain prior exposure but no declared Resource donor labels or MASLD phenotype supervision.",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "interpretation": "Borzoi is not a MASLD-pretrained model. Its relevant prior is broad sequence-to-functional-genomics supervision that includes normal liver and hepatocyte tracks. Project MASLD donor and experimental outcomes are unexposed or development-only, while reference genome sequence overlap is expected and must be controlled with held genomic/LD blocks rather than misclassified as donor-label contamination.",
+  "rules": {
+    "checkpoint_chronology": "A project outcome first public after the immutable GCS weight generation is target-label-unexposed unless another declared training source contains it.",
+    "genome_overlap": "Borzoi saw reference sequence across most training genome partitions. Sequence overlap is handled by chromosome/LD blocks and a 524288-bp boundary buffer; it does not make a later donor-level molecular outcome label-exposed.",
+    "track_manifest": "Exact accession absence is evidence only for the released target manifest. It does not imply absence of the same biosample under an unresolved ENCODE, GTEx, FANTOM5 or CATlas alias.",
+    "trans_context": "Generic liver output tracks are not MASLD or donor context and cannot be relabeled as such."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "exact_target_manifest_status": "FROZEN",
+    "human_track_count": 7611,
+    "sources": ["ENCODE", "GTEx_v8_via_recount3", "FANTOM5", "Roadmap_Epigenomics", "CATlas"],
+    "training_genome_split": "Eight orthology-linked human/mouse partitions; fold3 test, fold4 validation, remaining approximately 75 percent training for all four released replicates."
+  },
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,43 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["cell_state_mapping", "rna_conditioned_atac", "development_only_rna_atac_integration"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development donor-level robustness only. RNA and ATAC aliquots must be separate unpaired rows; never fabricate cell or nucleus pairs.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No GSE244832 cells, peaks, labels, preprocessing statistics, query fitting, calibration, or early stopping may enter a model scored on GSE244832."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only inductive cell-state prediction after selection lock. It has no ATAC truth and cannot confirm RNA-conditioned ATAC.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA features only; no labels, eQTL/ieQTL outcomes, query updating, calibration, or feature re-selection before prediction hashes are committed."
+    },
+    "gse296875": {
+      "allowed_use": "Same-nucleus RNA-ATAC outer-fold training and donor-held retrospective profile/integration evaluation after activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors define genes, peaks, covariates, dimensions, normalization, model weights, heads, early stopping, or calibration. Held donors provide RNA only to an RNA-to-ATAC prediction call when that endpoint is scored."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_trained_per_outer_fold_seed_gene_inventory_and_peak_inventory",
+    "common_lane": "equal modality weights, explicit frozen dimensions, RNA-only posterior mean, identical common head",
+    "native_lane": "universal modality weights or native accessibility output only when separately frozen",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; represent separate unpaired modality rows",
+    "gse296875": "same_nucleus; paired objectives allowed after donor/barcode/well validation",
+    "gse289173": "RNA_only; ATAC is structurally missing and must be carried by an explicit mask"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells and nuclei are not independent biological replicates.",
+    "held_donor_behavior": "No model update or donor-specific batch category. RNA-only inference must emit the frozen peak profile without observed ATAC.",
+    "missingness": "All project missing states stay explicit. An all-zero modality block is not an admissible proxy for structural missingness.",
+    "peak_and_gene_definition": "Every feature inventory and transformation is fit inside the outer-training partition."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

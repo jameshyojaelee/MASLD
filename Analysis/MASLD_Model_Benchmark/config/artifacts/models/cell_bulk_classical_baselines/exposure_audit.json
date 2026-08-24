@@ -1,0 +1,331 @@
+{
+  "audit_binding": {
+    "checkpoint_manifest": {
+      "path": "checkpoints.json",
+      "sha256": "a45d4b82e124a8fb975bf710be950ff139b7bda12b28cd45d8edb9d29685c5c7"
+    },
+    "development_crosswalk": {
+      "path": "development_crosswalk.json",
+      "sha256": "9bcedba0fd40d4ef979a37b2b3827547155663cd542cd2a5b5776ad02f83c939"
+    },
+    "registry": {
+      "path": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e"
+    }
+  },
+  "checkpoint_manifest_record": {
+    "path": "checkpoints.json",
+    "sha256": "a45d4b82e124a8fb975bf710be950ff139b7bda12b28cd45d8edb9d29685c5c7"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "9bcedba0fd40d4ef979a37b2b3827547155663cd542cd2a5b5776ad02f83c939"
+  },
+  "audit_scope": {
+    "registry_model_ids": [
+      "hvg_pca_nearest_centroid",
+      "hvg_pca_knn",
+      "hvg_pca_logistic",
+      "hvg_pca_elastic_net",
+      "hvg_pca_linear_svm",
+      "harmony_logistic",
+      "scvi_baseline",
+      "scanvi_baseline",
+      "celltypist_baseline",
+      "pca_procrustes",
+      "cca",
+      "mean_expression_bulk",
+      "assay_native_pseudobulk"
+    ],
+    "tasks": [
+      "cell_state_mapping",
+      "bulk_state_transfer",
+      "rna_conditioned_atac"
+    ]
+  },
+  "overall_finding": {
+    "biological_pretraining": "none_for_all_thirteen_rows",
+    "checkpoint_contamination": "No upstream biological weight is admitted, so checkpoint-corpus overlap is not the active risk. Leakage risk is created by local fitting, feature construction, query adaptation, transductive alignment, and outcome access.",
+    "package_artifacts": "harmonypy, scvi-tools, and CellTypist are code packages, not pretrained biological states in this bundle.",
+    "sealed_fit_policy": "No sealed feature or label may enter training, representation fitting, batch correction, alignment, prototype construction, calibration, model selection, or early stopping.",
+    "weights_downloaded": false
+  },
+  "model_exposure": {
+    "assay_native_pseudobulk": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "not_applicable_no_implementation",
+      "registry_exposure": "unknown",
+      "sealed_exposure": "none",
+      "reason": "The algorithm, implementation, and fitted artifact are unresolved. A future project-local implementation can become target_label_unexposed only after its fold and input receipts prove that held outcomes and held ATAC were absent."
+    },
+    "cca": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "not_applicable_no_implementation",
+      "registry_exposure": "unknown",
+      "sealed_exposure": "none",
+      "reason": "No implementation or projection policy is frozen. A joint train-query CCA would expose held geometry and is not an eligible inductive state."
+    },
+    "celltypist_baseline": {
+      "biological_checkpoint": "none; built-in CellTypist model files are prohibited",
+      "fitted_state_exposure": "future_outer_training_donors_and_labels_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The package code is pinned, but every classifier must be newly fit within one donor outer fold. Query clustering or majority voting would expose held-query structure and is a separate transductive diagnostic."
+    },
+    "harmony_logistic": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "none_currently;_future_joint_alignment_would_see_every_cell_in_that_diagnostic",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "Package code has no biological pretraining, but its registered use lacks a frozen-reference query transform. Joint alignment is transductive even without labels."
+    },
+    "hvg_pca_elastic_net": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "outer_training_donors_and_labels_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The current project authority fits normalization, HVGs, PCA, classifier, and calibration state inside the donor outer training partition."
+    },
+    "hvg_pca_knn": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "outer_training_donors_and_labels_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The current project authority fits normalization, HVGs, PCA, neighbor reference, and donor/class weights inside the donor outer training partition."
+    },
+    "hvg_pca_linear_svm": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "outer_training_donors_and_labels_only;_calibration_uses_donor-grouped_inner_training_folds",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The current project authority fits normalization, HVGs, PCA, SVM, and probability calibration inside the donor outer training partition."
+    },
+    "hvg_pca_logistic": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "outer_training_donors_and_labels_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The current project authority fits normalization, HVGs, PCA, and logistic state inside the donor outer training partition."
+    },
+    "hvg_pca_nearest_centroid": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "outer_training_donors_and_labels_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The current project authority fits normalization, HVGs, PCA, centroids, and softmax temperature inside the donor outer training partition."
+    },
+    "mean_expression_bulk": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "not_applicable_no_implementation",
+      "registry_exposure": "unknown",
+      "sealed_exposure": "none",
+      "reason": "The feature, cohort transform, reference mean, output, and code are unresolved."
+    },
+    "pca_procrustes": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "not_applicable_no_implementation",
+      "registry_exposure": "unknown",
+      "sealed_exposure": "none",
+      "reason": "No implementation or alignment policy is frozen. Held-query anchors or geometry would make the fit transductive."
+    },
+    "scanvi_baseline": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "future_outer_training_donors_counts_and_labels_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The registered package is code only. A local SCVI plus SCANVI state must be fit in the outer training fold; official query-model training is not admitted in the current inductive contract."
+    },
+    "scvi_baseline": {
+      "biological_checkpoint": "none",
+      "fitted_state_exposure": "future_outer_training_donors_counts_and_labels_for_the_downstream_head_only",
+      "registry_exposure": "target_label_unexposed",
+      "sealed_exposure": "none",
+      "reason": "The registered package is code only. Both the generative representation and downstream classifier must remain outer-fold local; query-model training is not admitted in the current inductive contract."
+    }
+  },
+  "sealed_source_firewall": {
+    "fnih_86_liver": {
+      "role": "conditional future seal for rna_conditioned_atac",
+      "rule": "No access or use unless openly downloadable donor-linked files pass rights, topology, endpoint, power, and contamination gates before selection lock.",
+      "status": "inactive"
+    },
+    "gse267031": {
+      "role": "conditional bulk seal",
+      "rule": "Do not open stage outcomes until donor deduplication, endpoint completeness, frozen paired development variance, and prospective 80% power for the prespecified effect all pass. If they fail, no confirmatory bulk unblinding occurs.",
+      "status": "withheld_sealed"
+    },
+    "gse289173": {
+      "role": "project-sealed cell-state evaluation",
+      "rule": "Keep labels evaluator-only; expose the identical anonymized snRNA row universe to every locked candidate; commit prediction and artifact hashes before the single label join; never recalibrate, repair, or reselect on this holdout.",
+      "status": "withheld_sealed"
+    }
+  },
+  "known_leakage_routes": [
+    "Splitting cells, nuclei, libraries, tissues, timepoints, or modalities from one person across outer roles.",
+    "Failing to merge accession, BioProject, run, DOI, donor alias, release alias, expression fingerprint, or permitted genotype fingerprint into cohort_family_id and person_key before splitting.",
+    "Selecting genes, fitting normalization or scale parameters, choosing PCA dimension, learning latent variables, estimating centroids, selecting neighbors, or calibrating probabilities with development or withheld donors.",
+    "Treating cells or nuclei as biological replicates in inference, uncertainty, or significance tests.",
+    "Using GSE296875 histopathology fields to create MASLD, MASH, NAS, or fibrosis-stage labels that the frozen source authority does not establish.",
+    "Choosing the broad-label ontology, class merges, low-confidence rejection, class weights, thresholds, or evaluable class roster after seeing GSE289173 labels or predictions.",
+    "Training or updating scVI or scANVI on held-query counts through load_query_data or any equivalent query-adaptation path under the inductive champion lane.",
+    "Running Harmony, CCA, Procrustes, PCA, neighbors, clustering, or batch correction jointly on training and held cells and then describing the result as inductive.",
+    "Using CellTypist built-in pretrained model files or selecting among them after development outcomes; this bundle admits only fold-trained custom state.",
+    "Using CellTypist query-dependent majority voting in the inductive lane without a separate transductive label and locked policy.",
+    "Substituting the scvi-tools 0.14.6 package found in the Python 3.10 runtime for the registered scvi-tools 1.4.2 identity.",
+    "Installing a newer harmonypy, scvi-tools, CellTypist, scikit-learn, or dependency version while retaining the old model or environment identity.",
+    "Using GSE256398 or another external-development cohort as a pristine external seal after tuning on it.",
+    "Using PXD051911 as if its participants were paired to RNA cohorts, or porting RNA normalization and error assumptions to protein measurements.",
+    "Reading held-donor ATAC, using held ATAC to define the peak universe or normalization reference, or treating held ATAC absence as zero in rna_conditioned_atac.",
+    "Creating false cell-to-cell RNA-ATAC pairs in GSE244832 rather than donor-compatible summaries.",
+    "Using outcome availability, phenotype prevalence, assay coverage, or below-QC status to define a numeric zero or negative class.",
+    "Resolving the baseline-winner comparator ambiguity, power assumptions, hyperparameters, calibration, or release choice after sealed outcomes are known.",
+    "Carrying a fold-fitted state, feature map, latent model, centroid, query mapping, or calibrator into another outer fold.",
+    "Treating seeds as independent biological replicates or allowing cell count to inflate the paired bootstrap effective sample size."
+  ],
+  "transductive_controls": {
+    "allowed_diagnostic": "A transductive result may be registered before execution, run on development data only, labeled transductive in every table, and kept outside the sealed champion comparison.",
+    "held_feature_rule": "Unlabeled held features are still held data. They may be passed through a frozen predictor for inference, but may not update any weight, batch parameter, anchor, cluster, neighbor graph, transform, normalization reference, or stopping rule.",
+    "prohibited_relabeling": "A label-free update is not automatically inductive and is not made eligible by calling it domain adaptation, integration, or reference mapping."
+  },
+  "runtime_and_identity_audit": {
+    "celltypist_baseline": {
+      "current_runtime": "celltypist not present in the frozen cpu_baseline_smoke distribution inventory",
+      "identity": "celltypist==1.7.1 at fe357564a6625d3b1732a022fd39f18e55696e80; wheel SHA-256 3953f96a4476ed1dd2807446d97d3945e8905bbdac6bfef0d20b84a9a00d1101",
+      "status": "blocked"
+    },
+    "harmony_logistic": {
+      "current_runtime": "harmonypy==0.0.10 is present in the frozen cpu_baseline_smoke distribution inventory",
+      "identity": "harmonypy==0.0.10 at a770f2dd3b724a7b5dae811357bd157cedacc195; wheel SHA-256 dab528052f909204e521c9c2bd980221c64003538b0c0fe25be2e43c1199282b",
+      "status": "package_available_but_scientifically_deferred"
+    },
+    "hvg_pca_family": {
+      "current_runtime": "cpu_baseline_smoke, CPython 3.10.18, scikit-learn 1.7.2",
+      "identity": "project adapter SHA-256 13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "status": "ready_for_cell_state_mapping_only"
+    },
+    "scvi_and_scanvi": {
+      "current_runtime": "The frozen classical runtime is CPython 3.10.18 and contains scvi-tools 0.14.6. The registered scvi-tools 1.4.2 requires Python >=3.11 and is not installed in that lock.",
+      "identity": "scvi-tools==1.4.2 at release dc95497; wheel SHA-256 c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5",
+      "status": "blocked_new_separate_environment_required"
+    },
+    "unresolved_project_algorithms": {
+      "models": [
+        "pca_procrustes",
+        "cca",
+        "mean_expression_bulk",
+        "assay_native_pseudobulk"
+      ],
+      "status": "blocked_no_code_revision_license_environment_or_fitted_state"
+    }
+  },
+  "license_and_release_disposition": {
+    "celltypist_baseline": {
+      "code": "MIT",
+      "open_champion": "conditional_after_implementation_runtime_data_and_sealed_gates",
+      "weights": "No upstream weights admitted. Project-generated fitted classifier release remains subject to training-data terms and project model-card review."
+    },
+    "harmony_logistic": {
+      "code": "GPL-3.0-or-later",
+      "open_champion": "ineligible_under_current_transductive_deferred_status",
+      "weights": "none"
+    },
+    "hvg_pca_family": {
+      "code": "project_owned authorities permit use and redistribution",
+      "open_champion": "conditionally_eligible_for_cell_state_mapping_only",
+      "weights": "No upstream weights. Fold-generated parameters may be released under the project authority after input-data review."
+    },
+    "scvi_and_scanvi": {
+      "code": "BSD-3-Clause",
+      "open_champion": "conditional_after_environment_query_policy_data_and_sealed_gates",
+      "weights": "No upstream weights admitted. Project-generated model state requires notices, dependency audit, training-data review, and a safe-loading release path."
+    },
+    "unresolved_project_algorithms": {
+      "code": "UNRESOLVED",
+      "models": [
+        "pca_procrustes",
+        "cca",
+        "mean_expression_bulk",
+        "assay_native_pseudobulk"
+      ],
+      "open_champion": "blocked",
+      "weights": "none_currently"
+    },
+    "warning": "An upstream package license does not settle licenses of dependencies, project adapters, input matrices, donor-derived fitted weights, or redistributed predictions."
+  },
+  "open_champion_eligibility": {
+    "assay_native_pseudobulk": {
+      "bulk_state_transfer": "blocked_unimplemented_and_conditional_seal_not_activated",
+      "rna_conditioned_atac": "blocked_unimplemented_and_no_active_external_seal"
+    },
+    "cca": {
+      "cell_state_mapping": "blocked_unimplemented_license_unknown_and_not_in_current_TaskSpec_roster"
+    },
+    "celltypist_baseline": {
+      "cell_state_mapping": "conditional_after_fold-local_implementation_and_sealed_gate"
+    },
+    "harmony_logistic": {
+      "cell_state_mapping": "ineligible_deferred_transductive_diagnostic"
+    },
+    "hvg_pca_elastic_net": {
+      "bulk_state_transfer": "blocked_no_bulk_execution_contract",
+      "cell_state_mapping": "conditionally_eligible"
+    },
+    "hvg_pca_knn": {
+      "cell_state_mapping": "conditionally_eligible"
+    },
+    "hvg_pca_linear_svm": {
+      "bulk_state_transfer": "blocked_no_bulk_execution_contract",
+      "cell_state_mapping": "conditionally_eligible"
+    },
+    "hvg_pca_logistic": {
+      "cell_state_mapping": "conditionally_eligible"
+    },
+    "hvg_pca_nearest_centroid": {
+      "bulk_state_transfer": "blocked_no_bulk_execution_contract",
+      "cell_state_mapping": "conditionally_eligible"
+    },
+    "mean_expression_bulk": {
+      "bulk_state_transfer": "blocked_unimplemented_and_conditional_seal_not_activated"
+    },
+    "pca_procrustes": {
+      "cell_state_mapping": "blocked_unimplemented_license_unknown_and_not_in_current_TaskSpec_roster"
+    },
+    "scanvi_baseline": {
+      "cell_state_mapping": "conditional_after_python_3.11_runtime_fold-local_query_policy_and_sealed_gate"
+    },
+    "scvi_baseline": {
+      "cell_state_mapping": "conditional_after_python_3.11_runtime_fold-local_head_query_policy_and_sealed_gate"
+    }
+  },
+  "baseline_comparator_policy": {
+    "policy": "Select the candidate with the strongest prospectively frozen development endpoint. Compare it with the strongest eligible prespecified baseline after excluding the selected model. A baseline may be the winner. If no distinct eligible comparator remains, make no superiority claim. Negative controls are never champions or champion baselines.",
+    "policy_constants": {
+      "baseline": "BASELINE_COMPARATOR_POLICY",
+      "selection": "MODEL_SELECTION_POLICY"
+    },
+    "resolved_before_any_sealed_outcome": true,
+    "source_module": "Analysis/MASLD_Model_Benchmark/src/masld_bench/selection.py",
+    "status": "resolved_no_sealed_outcome_used"
+  },
+  "remaining_blockers": [
+    "Keep the five existing HVG/PCA models limited to cell_state_mapping until a separate donor-level bulk adapter, input fixture, preprocessing authority, fitted-state contract, and runtime receipt exist.",
+    "For scVI and scANVI, create a separate Python 3.11+ environment pinned to the verified 1.4.2 wheel hash; do not substitute the installed 0.14.6 package.",
+    "Freeze scVI and scANVI gene universe, raw-count layer, covariates, architecture, head or label ontology, seeds, early stopping, calibration, and a no-held-query-training inference path; hash every fold state.",
+    "For CellTypist, freeze a locally installed 1.7.1 environment, fold-local custom training recipe, features, solver and regularization, balancing, seed, calibration, majority-vote disposition, safe loading, and fitted-state hashes; use no pretrained classifier.",
+    "Keep Harmony outside the sealed tournament unless a validated frozen-reference transform is independently registered; otherwise it remains a labeled development-only transductive diagnostic under GPL terms.",
+    "Implement PCA-Procrustes and CCA only after exact training-only alignment mathematics, anchors, feature and pairing rules, code revision, license, runtime, seeds, and prediction interface are frozen; add them to the TaskSpec roster before scheduling.",
+    "Implement mean_expression_bulk with an assay-native participant-level input, training-only cohort transform and mean, covariates, feature masks, output definition, license, environment, and hashes.",
+    "Define assay_native_pseudobulk separately for bulk transfer and RNA-conditioned ATAC. For ATAC, freeze the predictive rule and prove that no observed held ATAC, target-derived peak filter, or held normalization reference enters inference.",
+    "Activate GSE267031 only after the outcome-blind prospective 80% power gate; otherwise do not claim a bulk champion.",
+    "Treat RNA-conditioned ATAC as retrospective until an eligible public FNIH or equivalent external seal activates; no development result can become a MASLD champion.",
+    "For GSE289173, freeze identical row eligibility, label ontology, preprocessing, seeds, calibration, comparator, and predictions before the one-time evaluator join.",
+    "Retain explicit missing states and donor-level inference throughout; never encode absent assay, untestability, permission limits, unresolved joins, or withheld evidence as zero."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "terminal_disposition": {
+    "bulk_state_transfer": "no_runnable_baseline_in_this_bundle_and_no_active_champion_seal",
+    "cell_state_mapping": "five_project_HVG_PCA_baselines_runnable;_three_TaskSpec_baselines_blocked;_two_registry_candidates_unscheduled;_one_transductive_diagnostic_deferred",
+    "rna_conditioned_atac": "assay_native_pseudobulk_unimplemented_and_external_seal_inactive"
+  },
+  "verified_date": "2026-08-22"
+}

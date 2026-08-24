@@ -30,6 +30,8 @@ Run: GATE=gws        ~/micromamba/envs/rnaseq/bin/python scripts/figures/fig2_an
 """
 import os
 import csv
+import subprocess
+import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -47,9 +49,16 @@ TITLE_FS, BODY_FS, TXT = 6, 6, "black"
 GATE = os.environ.get("GATE", "gws")
 THRESH = {"gws": 5e-8, "suggestive": 1e-6}[GATE]
 GLAB = {"gws": "GWS-gated (p < 5×10⁻⁸)", "suggestive": "suggestive-gated (p < 10⁻⁶)"}[GATE]
-ULAB = {"gws": "non-EUR\nGWS-unique", "suggestive": "non-EUR\nsuggestive-unique"}[GATE]
+ULAB = {"gws": "non-EUR GWS-unique", "suggestive": "non-EUR suggestive-unique"}[GATE]
 OUT  = {"gws": "Fig2E_ancestry_unique_coloc_GWS.pdf",
         "suggestive": "Fig2E_ancestry_unique_coloc_suggestive.pdf"}[GATE]
+# Sidecar stem must track the gate too: a suggestive run previously overwrote the
+# GWS source/membership TSVs while its PDF went to a different filename.
+STEM = {"gws": "Fig2E_ancestry_unique_coloc_GWS",
+        "suggestive": "Fig2E_ancestry_unique_coloc_suggestive"}[GATE]
+# Threshold text is derived from THRESH so the recorded provenance can never
+# claim 5e-8 for a run gated at 1e-6.
+TLAB = {"gws": "5e-8", "suggestive": "1e-6"}[GATE]
 
 BASE = os.environ.get("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
@@ -153,41 +162,128 @@ for i, (r, c, (name, sub)) in enumerate(zip(rects, cols, labels)):
                 ha="center", va="center", color=TXT, fontsize=BODY_FS, linespacing=1.25)
 
 # Leader the two small tiles into separate whitespace regions below the mosaic.
+# Each label is deliberately two lines; a separate one-line method/composition
+# footnote sits below them with a measured gap.
 rf = rects[2]
-ax.annotate(f"non-EUR sub-threshold\n{n_fail} ({pct(n_fail):.0f}%)",
+subthreshold_label = ax.annotate(f"non-EUR sub-threshold\n{n_fail} ({pct(n_fail):.0f}%)",
             xy=(rf["x"] + rf["dx"] / 2, rf["y"] + rf["dy"] / 2),
-            xytext=(27, H + 4.0), ha="center", va="top",
-            fontsize=BODY_FS, color=TXT,
+            xytext=(27, H + 3.5), ha="center", va="top",
+            fontsize=BODY_FS, linespacing=1.1, color=TXT,
             arrowprops=dict(arrowstyle="-", lw=0.45, color="black",
                             shrinkA=0, shrinkB=0))
 rp = rects[3]
-ax.annotate(f"{ULAB}\n{n_pass} ({pct(n_pass):.0f}%)", xy=(rp["x"] + rp["dx"] / 2, rp["y"] + rp["dy"] / 2),
-            xytext=(75, H + 4.0), ha="center", va="top",
-            fontsize=BODY_FS, color=TXT,
+gws_label = ax.annotate(f"{ULAB}\n{n_pass} ({pct(n_pass):.0f}%)",
+            xy=(rp["x"] + rp["dx"] / 2, rp["y"] + rp["dy"] / 2),
+            xytext=(75, H + 3.5), ha="center", va="top",
+            fontsize=BODY_FS, linespacing=1.1, color=TXT,
             arrowprops=dict(arrowstyle="-", lw=0.45, color="black",
                             shrinkA=0, shrinkB=0))
-ax.text(W / 2, H + 13.0, f"multi-signal COLOC\nnon-EUR GWS: {comp_str}",
-        ha="center", va="top", fontsize=BODY_FS, linespacing=1.1, color=TXT)
+footnote = ax.text(W / 2, H + 14.0,
+        f"multi-signal COLOC · GWS ancestry: {comp_str}",
+        ha="center", va="top", fontsize=BODY_FS, color=TXT)
 
 ax.set_xlim(0, W)
-ax.set_ylim(0, H + 19)
+ax.set_ylim(0, H + 19.0)
 ax.invert_yaxis()
 ax.axis("off")
 
 os.makedirs(PANEL_DIR, exist_ok=True)
 out = os.path.join(PANEL_DIR, OUT)
 fig.subplots_adjust(left=0.04, right=0.96, top=0.97, bottom=0.03)
+fig.canvas.draw()
+renderer = fig.canvas.get_renderer()
+gws_box = gws_label.get_window_extent(renderer=renderer)
+sub_box = subthreshold_label.get_window_extent(renderer=renderer)
+foot_box = footnote.get_window_extent(renderer=renderer)
+if gws_box.overlaps(foot_box) or sub_box.overlaps(foot_box):
+    raise RuntimeError("Fig2E lower labels overlap the method/composition footnote")
+def vertical_gap_px(first, second):
+    if first.y1 < second.y0:
+        return second.y0 - first.y1
+    if second.y1 < first.y0:
+        return first.y0 - second.y1
+    return 0.0
+
+vertical_gap_in = min(
+    vertical_gap_px(foot_box, gws_box),
+    vertical_gap_px(foot_box, sub_box),
+) / fig.dpi
+if vertical_gap_in < 0.03:
+    raise RuntimeError(
+        f"Fig2E footnote clearance is {vertical_gap_in:.4f} in; expected >=0.03 in"
+    )
+with open(os.path.join(PANEL_DIR, "Fig2E_layout_measurements.tsv"), "w", newline="") as handle:
+    writer = csv.writer(handle, delimiter="\t")
+    writer.writerow(["measurement", "value", "required_minimum"])
+    writer.writerow(["footnote_to_small_label_vertical_gap_in",
+                     f"{vertical_gap_in:.6f}", "0.03"])
 fig.savefig(out)   # NO bbox_inches="tight": exact figsize for place-at-100%
 plt.close(fig)
-source_out = os.path.join(PANEL_DIR, "Fig2E_ancestry_unique_coloc_GWS_source.tsv")
+subprocess.run(
+    [sys.executable, os.path.join(BASE, "scripts/figures/normalize_pdf_page_box.py"),
+     out, "2.00", "2.10"],
+    check=True,
+)
+source_out = os.path.join(PANEL_DIR, f"{STEM}_source.tsv")
 with open(source_out, "w", newline="") as handle:
     writer = csv.writer(handle, delimiter="\t")
-    writer.writerow(["category", "n_genes", "percent_of_multi_signal_coloc", "threshold"])
-    for category, count in zip(
-        ["EUR_only", "shared", "non_EUR_sub_threshold", "non_EUR_GWS_unique"], sizes
+    writer.writerow([
+        "category", "n_genes", "percent_of_multi_signal_coloc",
+        "denominator_n", "coloc_threshold", "non_eur_gws_gate",
+    ])
+    gate_labels = [
+        "not applicable",
+        "not applicable",
+        f"non-EUR-unique; minimum lead-variant p >= {TLAB} or unavailable",
+        f"non-EUR-unique; minimum lead-variant p < {TLAB}",
+    ]
+    for category, count, gate_label in zip(
+        ["EUR_only", "shared", "non_EUR_sub_threshold", "non_EUR_GWS_unique"],
+        sizes,
+        gate_labels,
     ):
-        writer.writerow([category, count, f"{pct(count):.6f}",
-                         "SuSiE PP.H4 > 0.5; non-EUR GWS p < 5e-8"])
+        writer.writerow([
+            category, count, f"{pct(count):.6f}", n_total,
+            "SuSiE PP.H4 > 0.5", gate_label,
+        ])
+
+# Full membership makes the four displayed counts independently auditable. The
+# GWS gate is meaningful only for the non-EUR-unique branch; it is deliberately
+# recorded as not applicable for EUR-only and shared genes.
+gene_summary = (
+    sig.groupby("gene", as_index=False)
+       .agg(max_multi_pp4=("pp4_best", "max"),
+            supported_ancestries=("ancestry", lambda x: "+".join(sorted(set(x)))))
+)
+gene_summary["ancestry_partition"] = gene_summary["gene"].map(gb.to_dict())
+gene_summary["display_category"] = gene_summary["ancestry_partition"].map({
+    "EUR only": "EUR_only",
+    "shared": "shared",
+    "non-EUR-unique": "non_EUR_sub_threshold",
+})
+gene_summary.loc[gene_summary["gene"].isin(pass_genes), "display_category"] = (
+    "non_EUR_GWS_unique"
+)
+audit_columns = [
+    c for c in ("min_p", "best_gwas", "best_snp", "bin", "tier")
+    if c in aud.columns
+]
+membership = gene_summary.merge(
+    aud[audit_columns], how="left", left_on="gene", right_index=True,
+    validate="one_to_one",
+)
+membership["non_eur_gws_gate_applicable"] = (
+    membership["ancestry_partition"] == "non-EUR-unique"
+)
+membership["non_eur_gws_gate_pass"] = membership["gene"].isin(pass_genes)
+membership = membership.sort_values(
+    ["display_category", "max_multi_pp4", "gene"],
+    ascending=[True, False, True],
+)
+membership.to_csv(
+    os.path.join(PANEL_DIR, f"{STEM}_membership.tsv"),
+    sep="\t", index=False,
+)
 print(f"[fig2E/{GATE}] wrote {OUT} | multi-signal COLOC (SuSiE PP.H4>0.5): EUR-only {n_eur}, "
       f"shared {n_shared}, non-EUR sub-threshold {n_fail}, non-EUR-unique(gated) {n_pass} [{comp_str}]")
 print(f"CAPTION: Non-EUR-unique multi-signal COLOC genes (SuSiE PP.H4 > 0.5) gated on {GLAB} of the "

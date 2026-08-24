@@ -1,0 +1,59 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse281367", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["future_development_only_atac_representation", "future_development_only_rna_atac_integration"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Observed-ATAC held-query representation and donor-compatible RNA-ATAC integration after dataset activation and a separate TaskSpec. RNA and ATAC are separate nuclei from matched donors.",
+      "dataset_registry_exposure": "downstream_demo",
+      "model_exposure_by_outer_role": {
+        "held_role": "target_label_unexposed",
+        "training_role": "continual_seen"
+      },
+      "model_access": "When held, no GSE244832 cell, peak call, IDF contribution, SVD fit, label, prototype, classifier fit, or calibration may enter the model. Never infer cell pairing."
+    },
+    "gse281367": {
+      "allowed_use": "Observed-ATAC representation within donor-grouped development folds after native-reference, peak, fragment, donor, and TaskSpec gates pass.",
+      "dataset_registry_exposure": "downstream_demo",
+      "model_exposure_by_outer_role": {
+        "held_role": "target_label_unexposed",
+        "training_role": "continual_seen"
+      },
+      "model_access": "When held, its 12 donors contribute neither peaks nor any fitted statistic. Cells are not biological replicates."
+    },
+    "gse289173": {
+      "allowed_use": "None under current LSI routes because the sealed row universe contains snRNA and evaluator-only eQTL/ieQTL summaries but no ATAC peak matrix.",
+      "dataset_registry_exposure": "target_label_unexposed",
+      "model_exposure_by_outer_role": {
+        "sealed_role": "target_label_unexposed"
+      },
+      "model_access": "No sealed feature or outcome access. LSI cannot transform RNA-only rows and cannot produce signed variant effects."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-fold same-nucleus ATAC representation and donor-compatible RNA-ATAC diagnostics after donor/well/reference/peak/QC/missingness gates pass.",
+      "dataset_registry_exposure": "downstream_demo",
+      "model_exposure_by_outer_role": {
+        "held_role": "target_label_unexposed",
+        "training_role": "continual_seen"
+      },
+      "model_access": "Only outer-training donors may define peaks, feature filtering, IDF, SVD, component policy, heads, or calibration. Held nuclei receive transform-only observed-ATAC inference."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_trained_per_outer_fold_seed_and_training_only_peak_inventory",
+    "formula_authority": "Signac RunTFIDF method 1 at stuart-lab/signac@12d1ff82774890b08e55b3101f36fab83e674b88",
+    "missingness": "Unavailable assays, unresolved feature crosswalks, failed-QC rows, and unassayed regions are explicit missingness. Only measured zero counts on frozen peaks are numeric zeros.",
+    "runtime_identity": "scikit-learn 1.9.0 at 77def0ed6e3beab57244885d2a584470e96c103d using the registered wheel hash",
+    "upstream_checkpoint": "none"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, nuclei, peaks, wells, and LSI coordinates are not independent replicates.",
+    "local_training": "Every IDF/SVD/head artifact is continual_seen only for its declared outer-training donors and target-label-unexposed for a held source only when all fitted state excludes that source.",
+    "pairing": "GSE296875 is same-nucleus. GSE244832 is same-sample different aliquot and permits donor-level alignment only.",
+    "query_mapping": "A held query uses the exact training peak order, IDF, normalization formula, and SVD transform. Query IDF recomputation or SVD refitting is prohibited."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

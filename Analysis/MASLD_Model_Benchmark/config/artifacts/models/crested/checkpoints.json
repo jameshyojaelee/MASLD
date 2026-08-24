@@ -1,0 +1,100 @@
+{
+  "architecture_contract": {
+    "input_length_bp": 500,
+    "model_family": "hybrid_CNN_RNN_topic_classifier_with_reverse_complement_layer",
+    "native_reference": "mm10",
+    "output_dim": 82,
+    "output_type": "mouse_liver_regulatory_topic_membership_scores",
+    "parameters": 12200000,
+    "training_regions": 219823,
+    "warning": "DeepLiver Accessibility is a mouse regulatory-topic classifier. It is not a human liver model, a donor-context model, a genomic profile model, or a gene-expression effect model."
+  },
+  "conversion_contract": {
+    "conversion_source": "UNRESOLVED_no_checkpoint_producing_script_or_tensor_mapping_receipt_at_the_pinned_CREsted_revision",
+    "crested_statement": "The model card states that architecture and weights are the same but TensorFlow 1 versus current Keras backend changes yield correlation above 0.99 rather than exact outputs.",
+    "native_vs_converted_parity": "APPROXIMATE_ONLY",
+    "rule": "The Keras 3 port is a separate artifact. Do not substitute it for the original TensorFlow 1 model in exact replication or signed-delta fixtures."
+  },
+  "input_contract": {
+    "canonical_tensor": "500_bp_one_hot_mm10_DNA_in_A_C_G_T_order",
+    "donor_or_cell_context": "none",
+    "observed_atac_required": false,
+    "observed_rna_required": false,
+    "variant_scope": "native_mouse_sequence_perturbation_only_after_exact_coordinate_and_orientation_fixtures"
+  },
+  "original_checkpoint": {
+    "architecture_file": {
+      "filename": "DeepLiver_Accessibility.json",
+      "md5": "d83414502531ac59401a3fdc478e6e20",
+      "size_bytes": 7003
+    },
+    "format": "TensorFlow_1_Keras_JSON_plus_HDF5",
+    "record": "Zenodo_8139953",
+    "record_license": "other-noncommercial",
+    "weights_file": {
+      "filename": "DeepLiver_Accessibility.hdf5",
+      "md5": "b26d8290f5205ad25ecf9a5f54fc4073",
+      "sha256": "UNRESOLVED",
+      "size_bytes": 147011592
+    }
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_genome": "mm10",
+    "reference_gate": "No GRCh38 input is admitted. Liftover changes coordinates, not species-specific sequence grammar or the biological meaning of 82 mouse topics."
+  },
+  "registered_converted_checkpoint": {
+    "archive_url": "https://resources.aertslab.org/CREsted/models/deepliver_accessibility.tar.gz",
+    "content_length_observed_2026_08_22": 45469771,
+    "crested_repository": "aertslab/CREsted",
+    "crested_revision": "934eea18c97992cd098d547cc09edb20b79c28fd",
+    "declared_sha256_from_pinned_pooch_registry": "8a3ddcfa29effa9e979eae769fbfc6a362de90197434a630015dccca9fecb34c",
+    "expected_members": "model.keras_plus_output_class_names_TSV",
+    "format": "tar_gzip_containing_Keras_v3_model_and_output_class_table",
+    "last_modified_header": "2025-01-09T16:01:25Z",
+    "member_inventory": "UNRESOLVED_archive_not_downloaded",
+    "registered_model_name": "DeepLiver_accessibility",
+    "status": "exact_archive_addressable_but_deferred_and_restricted"
+  },
+  "release": {
+    "original_model_repository": "kipoi/models@770dcaf2ac592391fefd7def166ee5c7eaee92b8:DeepLiver/DeepLiver_Accessibility",
+    "publication_doi": "10.1038/s41556-023-01316-4",
+    "publication_title": "Single-cell spatial multi-omics and deep learning dissect enhancer-driven gene regulatory networks in liver zonation"
+  },
+  "runtime_contract": {
+    "converted_environment_status": "UNRESOLVED_Keras3_backend_and_exact_custom_layer_versions_not_locked",
+    "native_environment": "Python_3.7_TensorFlow_1.15_numpy_1.19.5_h5py_2.10.0",
+    "required_probe": "future_cross_species_diagnostic_only_isolated_import_strict_restore_forward_reverse_complement_and_native_converted_numeric_tolerance"
+  },
+  "safe_loading_contract": {
+    "archive_downloaded": false,
+    "converted_archive": "After any future approved diagnostic campaign, verify exact SHA-256 and size before opening; reject traversal, absolute paths, links, duplicate paths, excess members, and excess expanded size; inspect Keras configuration and custom objects before deserialization.",
+    "native_checkpoint": "The original HDF5 and architecture JSON are not needed for v1. If exact publication replication is later approved, verify Zenodo MD5 and compute SHA-256 before isolated legacy loading.",
+    "network_policy": "No runtime network fetches."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Cell Biology paper, pinned CREsted and Kipoi repositories, official CREsted model card and registry, Zenodo 8139953 metadata, and official archive headers were queried on 2026-08-22. No archive, checkpoint, package, or data bytes were downloaded or executed.",
+  "source_records": [
+    {"identity": "aertslab/CREsted@934eea18:LICENSE", "sha256": "c29d9c8a8b9e76a4a2b0a42f508b71a964f8d1244e74b29d8bb6f552c9ffa496", "size_bytes": 8741},
+    {"identity": "aertslab/CREsted@934eea18:docs/models/Liver/deepliver accessibility.rst", "sha256": "4200c4ab61438e2d8b7a73844ccce8e9043e587063097dcae55de073a3e1a743", "size_bytes": 2276},
+    {"identity": "aertslab/CREsted@934eea18:src/crested/_datasets.py", "sha256": "e645fb812478838c8963217dcaa75ee6f705fe2e03b7d14f33da909e76adb63e", "size_bytes": 19119},
+    {"identity": "kipoi/models@770dcaf2:DeepLiver/DeepLiver_Accessibility/model.yaml", "sha256": "1da0b5e1a0792588d4f6a35ae61a032a8fa8a9725b067b7b844135829abb50ef", "size_bytes": 1340},
+    {"identity": "kipoi/models@770dcaf2:DeepLiver/LICENSE.txt", "sha256": "59b3704e58b3f5df7708cf9e8e5e0ae07c0b4e1f712d4b5f2a288045bd7ddf8f", "size_bytes": 8754}
+  ],
+  "task_fit": {
+    "allele_effect": "native_mouse_topic_score_delta_only_not_human_gene_effect",
+    "rna_conditioned_atac": "not_supported_sequence_only_topic_classifier_no_observed_RNA_or_profile_output",
+    "signed_eqtl_ieqtl": "not_supported_wrong_species_reference_and_output_semantics",
+    "variant_to_regulation": "deferred_cross_species_mechanistic_diagnostic_only"
+  },
+  "terms_audit": {
+    "converted_archive_terms": "No separate archive terms were located at the official resource endpoint.",
+    "crested_code": "internal_academic_noncommercial_nontransferable_no_unapproved_modification_or_derivatives",
+    "original_deepliver": "other_noncommercial_record_plus_internal_academic_nontransferable_no_derivatives_LICENSE",
+    "result": "restricted_and_ineligible_for_open_champion"
+  },
+  "weight_license": "RESTRICTED_OR_UNRESOLVED_FOR_CONVERTED_ARCHIVE"
+}

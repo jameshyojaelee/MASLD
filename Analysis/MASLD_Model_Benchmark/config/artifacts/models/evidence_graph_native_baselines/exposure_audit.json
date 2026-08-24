@@ -1,0 +1,111 @@
+{
+  "audit_scope": {
+    "models": ["graph_degree", "graph_source_count", "regularized_linear_evidence"],
+    "task": "typed_evidence_graph",
+    "train_sources": ["current_coloc_gwas"],
+    "development_sources": ["gse281364", "gse281160"],
+    "sealed_sources": []
+  },
+  "checkpoint_findings": {
+    "graph_degree": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "graph_exposure": "continual_seen_for_every_remaining_source_edge_counted_in_a_run"
+    },
+    "graph_source_count": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "graph_exposure": "continual_seen_for_every_remaining_source_support_map_counted_in_a_run"
+    },
+    "regularized_linear_evidence": {
+      "upstream_checkpoint": "none",
+      "biological_pretraining": "none",
+      "project_state": "not_created",
+      "current_registry_exposure": "unknown",
+      "graph_exposure": "continual_seen_for_remaining_source_features_and_training_pseudo_source_labels_only",
+      "admissible_future_exposure": "target_label_unexposed_to_the_evaluated_source_only_after_complete_source_removal_and_nested_cross_source_LD_gene_block_fit_receipts"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "three_graph_baselines_source_removal_observability_assay_units_LD_gene_blocks_and_claim_boundary",
+    "sha256": "3fcbede8c5fde2b09fa6c8ed9f2989ee2ff7ee33db59198044cc5b9f89d51f25"
+  },
+  "held_source_feasibility": {
+    "graph_degree": {
+      "answer": "yes_retrospectively_after_complete_pre_degree_source_and_block_removal",
+      "reason": "The native score fits no source-specific parameter, but it can still leak evaluated-source observability or derivative edges unless removal is exhaustive."
+    },
+    "graph_source_count": {
+      "answer": "yes_retrospectively_after_complete_pre_count_source_and_block_removal",
+      "reason": "The native score fits no parameters and uses only remaining source families, but aliases and derived releases must collapse before counting."
+    },
+    "regularized_linear_evidence": {
+      "answer": "conditional",
+      "reason": "It requires enough development source families with explicit supported and tested-negative candidates to create pseudo-held-source training examples and nested source plus LD/gene-block folds. That feasibility is currently unresolved."
+    },
+    "seal_status": "No current source is sealed. Even a leakage-safe source-removal result is exposed retrospective development evidence and cannot earn a champion."
+  },
+  "known_leakage_routes": [
+    "Building the candidate universe, gene or locus roster, label denominator, edge ontology, source taxonomy, feature lexicon, or status thresholds from the evaluated source.",
+    "Retaining evaluated-source aliases, inverse edges, source nodes, provenance, observability, coverage, tested status, missingness, deterministic derivatives, aggregates, paths, degrees, source counts, or normalization.",
+    "Removing a source after degree, counts, features, embeddings, negatives, normalization, or candidate rows have already been computed.",
+    "Retaining any edge incident to an outer-held locus before graph construction, feature aggregation, training-example creation, or calibration.",
+    "Splitting variants within ancestry-aware native-build LD blocks, one locus, one gene block, source aliases, technical releases, or graph derivatives across roles.",
+    "Treating an absent edge, untested candidate, unobservable assay, not-applicable source, unavailable permission, failed join, discordant result, or indeterminate result as a tested negative.",
+    "Counting accessions, publications, technical replicates, alleles, barcodes, cells, guides, or derivative tables from one experiment as independent sources.",
+    "Pooling continuous colocalization, MPRA, perturbation, distance, and other assay values before retaining source, metric, unit, direction, and missing state.",
+    "Using evaluated-source prevalence, observability, eligibility, score distribution, or labels to calibrate degree, counts, or linear probabilities.",
+    "Using entity IDs or transductive graph embeddings in regularized_linear_evidence so held candidates inherit outcome-coded identity.",
+    "Using the provisional Gene Catalog or frozen 117 programs as model-selection targets or pseudo-sealed labels."
+  ],
+  "observability_and_bias_disposition": {
+    "graph_degree": "A direct graph-popularity and study-intensity guard. Report in/out composition, edge-type concentration, remaining-source observability strata, and correlation with all graph model scores.",
+    "graph_source_count": "A source-breadth guard. Report alias collapse, per-source contributions, source concentration, and remaining-source applicability strata.",
+    "regularized_linear_evidence": "Can learn observability and source-size bias. Report raw-unit feature definitions, state coefficients, source-held calibration, coefficient stability, and performance after removal of explicit observability features.",
+    "held_observability": "Evaluator-only for all three. It may stratify terminal scoring under a frozen evaluator but cannot be a feature, calibration input, or model-selection aid.",
+    "zero": "Numeric zero requires an observed applicable remaining graph. No applicable or observable evidence is structurally_missing."
+  },
+  "replication_and_uncertainty_disposition": {
+    "unit": "independent native-build LD locus; gene-block dependence is additionally retained",
+    "not_replicates": ["variants", "genes", "edges", "paths", "source rows", "assay replicates", "cells", "guides", "technical releases", "model seeds"],
+    "bootstrap": "10000 paired two-way LD-block and gene-block replicates with nested graph rows preserved",
+    "multiplicity": "BH q<0.05 within the secondary typed-evidence-graph source and endpoint family"
+  },
+  "calibration_disposition": {
+    "graph_degree": "No native probability. Brier is ineligible until a source-blind cross-fitted one-dimensional calibrator has its own immutable fit receipt.",
+    "graph_source_count": "No native probability. Brier is ineligible until a source-blind cross-fitted one-dimensional calibrator has its own immutable fit receipt.",
+    "regularized_linear_evidence": "Native sigmoid probability reflects the frozen equal-source and equal-block development mixture. Report Brier without held-source recalibration and state that its prevalence target is the development mixture.",
+    "prohibition": "No evaluated-source prevalence, eligibility, observability, threshold, or outcome enters calibration."
+  },
+  "license_and_release_disposition": {
+    "upstream_software": "none",
+    "upstream_weights": "none",
+    "project_code": "UNRESOLVED_no_repository_root_license_and_no_implementation",
+    "graph_and_data": "Every graph input, source ID, evidence row, aggregate, coefficient, and prediction remains subject to its source terms and the aggregate-only Resource policy.",
+    "open_champion": "ineligible_no_wholly_sealed_graph_source",
+    "release": "No implementation or fitted artifact may be described as reproducible or releasable until immutable source, runtime, graph, and output receipts exist."
+  },
+  "remaining_blockers": [
+    "Promote the corrected 50-study COLOC release and freeze one immutable graph snapshot, evidence ontology, edge direction and type roster, source-family aliases, evidence-unit identity, statuses, observability, native-build LD blocks, loci, gene blocks, and source-independent candidate universe.",
+    "Resolve whether enough independent development source families have explicit tested-negative denominators to fit and select regularized_linear_evidence without row-level pseudoreplication.",
+    "Implement exhaustive held-source and held-block removal before any graph or feature derivative and prove the removal receipt has no residual source path.",
+    "Implement exact canonical degree, supporting-source count, and cross-source ridge-logistic formulas with deterministic ties, the frozen regularization grid, and bounded coefficient artifacts.",
+    "Register source-blind cross-fitted calibrators for degree and source count if Brier is retained; do not calibrate to the evaluated source.",
+    "Pass approved CPU-SLURM synthetic fixtures for aliases, inverse edges, technical replicates, edge direction, held-source-only candidates, missing versus zero, explicit negatives, source removal, LD/gene grouping, row-order invariance, coefficient reproduction, and output hashes.",
+    "Keep all findings development-only and use candidate-prioritization language until a wholly sealed graph source is prospectively registered and powered."
+  ],
+  "task_disposition": {
+    "typed_evidence_graph": "mandatory_baselines_not_currently_runnable",
+    "held_source_recovery": "conditional_retrospective_development_only",
+    "open_champion": "blocked_missing_sealed_source",
+    "causal_gene": "prohibited"
+  },
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_graph_source_and_no_admitted_graph_or_implementation",
+  "verified_date": "2026-08-22"
+}

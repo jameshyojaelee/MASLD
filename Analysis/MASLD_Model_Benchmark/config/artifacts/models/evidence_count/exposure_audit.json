@@ -1,0 +1,70 @@
+{
+  "audit_scope": {
+    "algorithm": "masld_evidence_count_v1",
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "sealed_sources": [],
+    "task": "typed_evidence_graph"
+  },
+  "checkpoint_finding": {
+    "biological_pretraining": "none",
+    "checkpoint_identity": "not_applicable_deterministic_count",
+    "code_exposure_state": "target_label_unexposed",
+    "graph_exposure": "continual_seen_for_every_remaining-source_record_counted_in_a_run",
+    "implementation_identity": "UNRESOLVED_no_code_exists",
+    "overall_status": "blocked_until_promoted_graph_schema_implementation_and_optional_calibration_exist",
+    "weights": "none"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "deterministic_count_definition_source_holdout_confounding_and_missingness_contract",
+    "sha256": "34ace615d255294092898abfce7065a9cfe6f087c3345976e45280ae1a518837"
+  },
+  "held_source_feasibility": {
+    "answer": "yes_for_retrospective_source_agnostic_recovery_after_complete_pre_count_removal",
+    "reason": "The native baseline fits no source-specific parameter and can count support from remaining sources only.",
+    "seal_status": "No current source is sealed. A leakage-safe result is still exposed development evidence and cannot earn a champion."
+  },
+  "known_biases_and_leakage_routes": [
+    "Counting technical rows, accessions, aliases, derivative edges, repeated publications, or correlated replicates as independent evidence units.",
+    "Building genes, variants, loci, or the candidate denominator from held-source assay coverage.",
+    "Retaining held-source inverse edges, source nodes, provenance, observability, tested status, missingness, aliases, degree, source count, paths, normalization, or any deterministic derivative.",
+    "Thresholding continuous assay values into supported status after inspecting held or development outcomes.",
+    "Treating an absent, untestable, not-applicable, unavailable, source-dependent, indeterminate, or discordant record as a tested negative.",
+    "Allowing large or deeply assayed studies to contribute many units without reporting source-level concentration.",
+    "Using held-source prevalence or eligibility to fit the count-to-probability calibrator required for Brier scoring.",
+    "Splitting LD-linked variants, one locus, one gene block, or deterministic graph derivatives across roles.",
+    "Interpreting a high evidence count as causal support rather than study density and cross-source prioritization."
+  ],
+  "confounding_disposition": {
+    "degree": "Report correlation with graph degree and degree-matched performance. Evidence count is expected to share this confound.",
+    "observability": "Report remaining-source observability strata. The held source's assay coverage is evaluator-only and cannot be a feature.",
+    "source_count": "Report distinct supporting source families alongside raw evidence units so one large source is visible.",
+    "study_intensity": "Report contribution by source family and deduplication attrition; do not outcome-weight sources."
+  },
+  "license_disposition": {
+    "algorithm": "no upstream software",
+    "open_champion_eligibility": "ineligible_no_wholly_sealed_graph_source",
+    "project_code": "UNRESOLVED_no_repository_root_license_and_no_implementation",
+    "weights": "not_applicable",
+    "output_redistribution": "subject to source-specific graph data terms and aggregate-only project policy"
+  },
+  "remaining_blockers": [
+    "Promote the corrected 50-study COLOC release and freeze one immutable graph snapshot, evidence ontology, source-family aliases, evidence-unit identity, statuses, provenance, native-build LD blocks, loci, genes, and candidate universe.",
+    "Implement the exact count and deduplication contract under a frozen project revision and terms determination.",
+    "Prove with synthetic fixtures that duplicate aliases collapse, technical replicates follow the frozen evidence-unit rule, opposite directions remain distinct, source-only candidates disappear, and non-supported states never increment.",
+    "Implement complete held-source removal before counting and reject any residual inverse, observability, tested-status, degree, source-count, path, normalization, or alias signal.",
+    "Freeze evaluator tie handling and a source-blind monotone one-dimensional calibrator if Brier score is reported; the native count remains the ranking score.",
+    "Hash graph inputs, canonicalization, deduplication groups, removed-source receipt, masks, counts, calibration, and predictions for every role.",
+    "Run only lightweight approved CPU-SLURM fixtures after campaign approval; no model job is currently authorized.",
+    "Keep results development-only and use prioritization language until a wholly sealed evidence source is registered and powered before outcomes are read."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_graph_source;_mandatory_development_baseline_after_graph_implementation_calibration_and_leakage_gates",
+  "task_disposition": {
+    "causal_gene": "prohibited",
+    "held_source_recovery": "conditional_retrospective_development_only",
+    "open_champion": "blocked_missing_sealed_source",
+    "typed_evidence_graph": "mandatory_baseline_not_currently_runnable"
+  },
+  "verified_date": "2026-08-22"
+}

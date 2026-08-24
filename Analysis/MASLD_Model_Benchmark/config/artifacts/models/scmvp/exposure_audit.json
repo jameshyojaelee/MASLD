@@ -1,0 +1,39 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping only; RNA-conditioned ATAC is ineligible"
+  },
+  "checkpoint_findings": {
+    "scmvp_local": {
+      "checkpoint_identity": "project_fitted_scmvp_per_outer_fold_seed_gene_peak_inventory_and_gmm_state",
+      "corpus": "No admitted upstream checkpoint; exact outer-training paired RNA-ATAC cells or nuclei only",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    },
+    "hosted_demo_trainers": {
+      "checkpoint_identity": "Baidu/Google Drive pre_trainer.pkl, pre_atac_trainer.pkl, and multi_vae_trainer.pkl referenced by README",
+      "exposure_state": "unknown",
+      "status": "not_admitted_not_acquired_terms_hashes_corpora_and_serialization_unresolved"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "paired_training_frozen_rna_query_and_observed_atac_profile_exclusion",
+    "sha256": "8258f00226e0ba6515848db7cfe2b7457c807849192f88454e711edbc36c404c"
+  },
+  "interpretation": "A locally trained scMVP model has no checkpoint-corpus contamination, but only its RNA encoder is usable for an RNA-only held donor. The released multimodal inference and imputation paths require observed ATAC, infer an ATAC latent, form a joint latent, and compute observed ATAC library size before decoding. These outputs are reconstructions, not RNA-conditioned accessibility. GSE244832 aliquots cannot train the paired model. GSE289173 can in principle seal cell-state mapping through a frozen RNA encoder but cannot seal ATAC profiling.",
+  "remaining_blockers": [
+    "Implement a frozen RNA-only adapter that aligns training genes, forces eval/no-grad, returns the RNA posterior mean, and never constructs or passes an ATAC tensor.",
+    "Prove adding, removing, batching, or permuting query cells cannot alter BatchNorm state, GMM parameters, another query embedding, head parameters, prototypes, or calibration.",
+    "Freeze GENCODE v49 genes, GRCh38.p14 peaks, assay transforms, architecture, GMM initialization/state, training schedule, early stopping, donor folds, common head, five seeds, and local artifact hashes.",
+    "Validate exact same-nucleus joins for GSE296875. Reject GSE244832 different-aliquot rows as multimodal pairs.",
+    "Keep p_atac_scale, p_atac_mean, joint latent, and MultiPosterior.imputation out of the RNA-conditioned ATAC task because each consumes observed ATAC.",
+    "Do not download or load hosted trainer pickle files. Use project-fitted state dicts with exact key/shape/dtype manifests and controlled local loading.",
+    "Validate Python 3.7-era dependencies, Torch/CUDA compatibility, L40S import/forward/backward, deterministic seeds, BatchNorm behavior, resume, and memory on an approved smoke job.",
+    "Prove GSE289173 receives anonymized RNA only after selection lock and cannot influence feature selection, adaptation, GMM state, head fitting, or calibration before prediction hashes are committed."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_pending_frozen_rna_only_adapter_pairing_runtime_safe_loading_and_leakage_fixtures; eligible in principle for sealed cell-state mapping only",
+  "verified_date": "2026-08-22"
+}

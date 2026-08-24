@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse281364"
+title = "MASLD variant MPRA in hepatocyte and stellate-cell contexts"
+role = "mechanistic_diagnostic"
+status = "available"
+species = "human_cell_line"
+accession = ["GSE281364"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "experimental_replicate"
+expected_biological_units = 16
+native_genome_build = "GRCh38"
+native_annotation_release = "not_applicable_count_assay"
+modalities = ["mpra_dna_counts", "mpra_rna_counts"]
+pairing_levels = ["same_sample_different_aliquot"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence."]
+notes = "Measures 5,369 MASLD variants in HepG2 control/PAOA and LX-2 control/TGF-beta contexts with four replicates per context. Diagnostic only because outcomes are exposed."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE281364"
+verified_date = "2026-08-21"
+local_exposure = "Deeply analyzed locally."
+
+[split]
+group_key = "locus_id+sequence_identity_group"
+outer_role = "development"
+label_visibility = "development_visible"

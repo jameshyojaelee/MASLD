@@ -1,0 +1,40 @@
+schema_version = "masld-bench-sealed-protocol-v1"
+protocol_id = "project_sealed_once"
+selection_lock_required = true
+anonymized_features_only = true
+labels_in_evaluator_only = true
+prediction_hash_before_label_join = true
+outcome_join_count = 1
+post_unblind_reselection = false
+post_unblind_recalibration = false
+post_unblind_threshold_change = false
+post_unblind_repair = false
+terminal_failures_remain_failures = true
+
+[custody]
+minimum_independent_custodians = 2
+development_environment_may_read_labels = false
+evaluator_environment_may_fit_or_recalibrate = false
+external_timestamp_receipt_required = true
+external_timestamp_receipt_sha256 = "UNRESOLVED"
+activation_receipt_required = true
+admission_blocking = true
+blockers = ["Name two custodians and freeze a third-party timestamp receipt before any sealed feature inference."]
+
+[gse289173]
+tasks = ["cell_state_mapping", "variant_to_regulation"]
+sealed_outcome_bundle_id = "gse289173_joint_cell_and_regulatory_bundle"
+co_unblinded = true
+checkpoint_exclusion = "Any checkpoint trained on the 2026 scBaseCount snapshot containing GSE289173, a later snapshot, or an undeclared corpus is ineligible."
+primary_task_outcomes_opened_in_development = false
+disease_control_secondary_sealed_eligible = false
+incident_record = "config/artifacts/incidents/gse289173_geo_metadata_20260821.json"
+required_mitigation = "Evaluator pseudonymizes feature row IDs, excludes disease/control AUROC from sealed claims, and never exposes the row-key map, cell-state labels, eQTL effects, ieQTL effects, or summary tables to development."
+
+[gse267031]
+tasks = ["bulk_state_transfer"]
+activation = ["donor_deduplication_pass", "stage_metadata_complete", "endpoint_complete", "prospective_power_at_least_0.80"]
+
+[fnih_86_liver]
+tasks = ["rna_conditioned_atac", "unified_model"]
+activation = ["open_download_without_DUA", "donor_linked_files_complete", "activated_before_selection_lock"]

@@ -1,0 +1,97 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "STAGATE is a locally fitted graph autoencoder with no pretrained checkpoint or native held-donor interface, and no rights-cleared powered spatial endpoint is registered.",
+    "v1_training": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "adaptive_graph_attention_autoencoder_for_spatial_expression",
+    "selected_implementation": "PyTorch_Geometric",
+    "native_input": "one spatial RNA feature matrix plus a radius or KNN spot or cell graph",
+    "encoder": "two graph-attention layers with a default 512-dimensional hidden layer and 30-dimensional latent space",
+    "decoder": "weight-tied graph-attention reconstruction trained with mean-squared error",
+    "native_outputs": ["target_fitted_latent_embedding", "optional_reconstructed_expression"],
+    "downstream": "Target embeddings are commonly clustered with mclust or another target-fitted clusterer.",
+    "unsupported_selected_path": "The selected PyG repository states that the published cell-type-aware module is not supported.",
+    "warning": "Mean-squared reconstruction of normalized expression is not a count likelihood. Reconstructed values are not observed counts and are not valid donor replicates."
+  },
+  "implementation": {
+    "repository": "QIFEIDKN/STAGATE_pyG",
+    "repository_revision": "ae1158ca8cf1eb6bb8ee198298552d44c9ac21db",
+    "source_version": "1.0.0",
+    "revision_date": "2023-11-10",
+    "revision_note": "The pinned revision includes the upstream GPU-memory growth bug fix.",
+    "source_license": "MIT",
+    "publication_doi": "10.1038/s41467-022-29439-6",
+    "publication_title": "Deciphering spatial domains from spatially resolved transcriptomics with an adaptive graph attention auto-encoder",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "publication_archive": {
+    "doi": "10.5281/zenodo.6330702",
+    "archive": "QIFEIDKN/STAGATE-STAGATE.zip",
+    "md5_reported": "ce960e582d10daf32c0b189e3d783fe0",
+    "size_bytes": 1681603,
+    "relationship": "TensorFlow_reference_archive_not_the_selected_PyG_implementation",
+    "sha256": "UNRESOLVED_archive_not_downloaded"
+  },
+  "checkpoint_contract": {
+    "admitted_upstream_checkpoint": "none",
+    "project_trained_state": "not_created",
+    "native_export": "train_STAGATE stores embeddings and optional reconstruction in AnnData but does not return or persist a complete strict-load model identity.",
+    "required_future_identity": "Every fold and seed must bind feature order, graph, preprocessing, source, environment, model state, clusterer, seed, and SHA-256."
+  },
+  "preprocessing_contract": {
+    "feature_roster": "The training function uses genes marked highly_variable when present and otherwise uses all genes. Normalization, log transform, HVGs, scale, and gene order must therefore be specified outside and frozen within training participants.",
+    "expression_scale": "Record the exact assay-native count provenance and the normalized continuous matrix presented to the MSE objective.",
+    "cross_assay": "Visium spots and image-based cells or panels are separate strata; an expression matrix alone does not prove cross-resolution comparability.",
+    "missing_features": "Panel absence, below detection, and filtered genes are not interchangeable zeros."
+  },
+  "graph_and_topology_contract": {
+    "two_dimensional_graph": "The selected source supports radius or KNN construction from adata.obsm['spatial'].",
+    "cross_donor_edges": "forbidden",
+    "construction": "Build one graph inside each authoritative participant and section or core boundary, then combine block-diagonally.",
+    "three_dimensional_path": "Cal_Spatial_Net_3D explicitly adds edges between adjacent sections using section order and raw coordinate distance. It is prohibited unless sections belong to the same participant, are authoritatively ordered and registered in a common physical coordinate system, and the design prespecifies cross-section edges.",
+    "vu2025": "Never graph an entire VLP array because it contains biopsies from four to five participants.",
+    "required_lock": "Freeze coordinate units, registration, radius or K, section boundary, section order, Z-axis cutoff, direction, self-loop policy, edge list, and SHA-256."
+  },
+  "held_donor_capability": {
+    "official_lane": "Transductive local training on all target nodes and edges, followed by target-fitted clustering.",
+    "strict_frozen_lane": "Not exposed by the official workflow. A future adapter must persist a development-frozen encoder, feature mapper, cluster or prediction head, and graph recipe, then apply it without gradient or cluster refit to one held donor at a time.",
+    "query_adaptation": "Any target training, reconstruction fit, mclust fit, cluster-number selection, or query graph hyperparameter choice is transductive or query-adaptive.",
+    "multi_section": "Pooling sections for training may be a valid transductive analysis but is not independent held-donor inference."
+  },
+  "determinism_and_memory_contract": {
+    "native_flags": "The selected code sets cudnn.deterministic=True and cudnn.benchmark=True simultaneously; deterministic behavior is not established by these conflicting settings.",
+    "dense_conversion": "The PyG conversion calls todense on sparse expression, which can exceed memory for large high-resolution sections.",
+    "required_fix": "A future memory-safe sparse or chunked path must reproduce fixed-fixture embeddings within a locked numeric tolerance before activation."
+  },
+  "safe_loading_contract": {
+    "native_state": "No admitted upstream object and no strict native export.",
+    "required_path": "Serialize only a tensor state dictionary or safetensors plus validated JSON and canonical feature and graph arrays. Require exact keys, shapes, dtypes, finite values, graph blocks, gene order, and no network access.",
+    "AnnData": "Do not treat a pickled or externally supplied AnnData object as a trusted model checkpoint."
+  },
+  "runtime_contract": {
+    "declared_stack": ["scanpy", "pytorch", "torch_geometric", "optional_R_and_mclust"],
+    "environment_status": "UNRESOLVED_no_exact_dependency_lock_or_selected_PyG_archive",
+    "required_probe": "After data activation and campaign approval only: L40S import, sparse-memory fixture, graph boundaries, forward, backward, tensor export, resume, deterministic seed, node-order, section-order, no-network, and cross-device tolerance through SLURM."
+  },
+  "terms_and_release_contract": {
+    "selected_source": "MIT",
+    "upstream_checkpoint": "none",
+    "project_weights": "Release remains conditional on every training dataset and annotation right.",
+    "open_champion": "ineligible_until_a_registered_external_task_and_rights_cleared_source_exist"
+  },
+  "source_evidence": "The Nature Communications article, official GitHub PyG source, official TensorFlow Zenodo archive metadata, and pinned raw files were inspected online on 2026-08-22. No archive, package, model, or dataset was downloaded or executed.",
+  "source_records": [
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:LICENSE", "sha256": "0a0fbef1b92f11f291f43e6b14ab4cc8aea26537a9c96972a9567f0b22f916ad", "size_bytes": 1070},
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:README.md", "sha256": "9e85824e1b97cdbd40aacbbca4cccd16199e57c7a04eb8b06803e56a9cc2df03", "size_bytes": 2369},
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:setup.py", "sha256": "f0580eeccacbc8c0802c43e31971aa822e46ab2f56d453c70ce9c6101229ada9", "size_bytes": 1007},
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:STAGATE_pyG/STAGATE.py", "sha256": "2224eb23af303b1b8e175740f62d1d8fdee991b9ba32e74d4f805daf3f40fb92", "size_bytes": 1624},
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:STAGATE_pyG/gat_conv.py", "sha256": "598666cb5ac9e23b292f826c87664311340b9c204e8eee468ecda502e791175a", "size_bytes": 9702},
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:STAGATE_pyG/Train_STAGATE.py", "sha256": "997fcaea97ec690e809f6513d48cf3ef8892784c15305b4eab75bd400995efa5", "size_bytes": 3096},
+    {"identity": "QIFEIDKN/STAGATE_pyG@ae1158ca:STAGATE_pyG/utils.py", "sha256": "df8295dbe9b11b9492f1baa2d15e6183282289f6b3993d4bf088c27b24b09ecd", "size_bytes": 9875}
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

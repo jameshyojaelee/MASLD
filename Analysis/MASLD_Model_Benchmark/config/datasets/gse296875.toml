@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse296875"
+title = "Human cardiometabolic liver same-nucleus multiome with donor-linked histopathology"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["GSE296875", "PRJNA1261871"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 39
+native_genome_build = "GRCh38_10x_2020-A"
+native_annotation_release = "GENCODE_v32_filtered_gene_quantification+EnsDb.Hsapiens_v86_TSS_QC"
+modalities = ["single_nucleus_rna", "single_nucleus_atac", "pathology_scores", "clinical_covariates"]
+pairing_levels = ["same_nucleus"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Freeze and hash the authoritative well-namespaced barcode-to-donor assignment before any split, fit, or evaluation.", "Treat well as a technical batch and freeze a leave-one-well-out sensitivity analysis in addition to donor-grouped inference.", "The publication resolves Cell Ranger ARC v2 against GRCh38-2020-A with filtered GENCODE v32 for gene quantification and EnsDb.Hsapiens.v86 for TSS QC; freeze the deposited feature/peak identities and auditable v32-to-v49 and peak-coordinate crosswalks. An unmapped feature is missing, not a biological zero.", "Freeze endpoint-specific missingness masks and denominators: steatosis is observed for 38 of 39 analyzed donors and fibrosis for 37 of 39; do not encode missing pathology as absence.", "Freeze an adult-only histopathology sensitivity before fitting: the analyzed cohort spans ages 13 to 75 and includes five donors under 18; never silently exclude them or generalize an all-age estimate to adults.", "Freeze the donor-level covariate model and limit use to cross-sectional histology-associated modeling. Data S1 has BMI and donor-linked fibrosis and steatosis fields but no explicit MASLD or MASH adjudication, NAS, ballooning, lobular inflammation, or visible alcohol and etiology exclusions; do not make a MASLD diagnosis or MASLD-specific stage claim."]
+notes = "Thirty-nine analyzed donors and 68,398 same-nucleus RNA-ATAC profiles are pooled across eight deposited wells. Data S1 Table S1 includes fibrosis_categorical, fibrosis_status, steatosis_categorical, steatosis_numeric, steatosis_status, and BMI; steatosis is observed for 38 donors and fibrosis for 37. Donors remain inferential units and wells remain technical batches. These support cross-sectional histology-associated development analyses after join, missingness, and covariate gates pass, not MASLD/MASH diagnosis or longitudinal progression. Primary supplement Data S1: https://ars.els-cdn.com/content/image/1-s2.0-S0002929725004343-mmc2.xlsx ; DOI: https://doi.org/10.1016/j.ajhg.2025.11.009 ."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE296875"
+verified_date = "2026-08-21"
+local_exposure = "Deeply used locally; development only."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "train"
+label_visibility = "development_visible"

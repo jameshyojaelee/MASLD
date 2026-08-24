@@ -1,0 +1,51 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_content": "OpenGenome2_curated_nonredundant_sequences_from_bacteria_archaea_eukarya_and_bacteriophage",
+    "full_corpus_nucleotides": 8800000000000,
+    "checkpoint_training_tokens": 2400000000000,
+    "Homo_sapiens_included": true,
+    "human_genetic_variation_included": false,
+    "functional_genomics_labels_included": false,
+    "exact_7B_training_shard_inventory": "UNRESOLVED",
+    "training_phases": "8192_token_pretraining_followed_by_multistage_midtraining_to_1048576_tokens"
+  },
+  "crosswalk_scope": {
+    "admitted_task": "variant_to_regulation",
+    "project_reference": "GRCh38.p14",
+    "registered_development_signed_effect_source": null,
+    "project_sealed_source": "GSE289173"
+  },
+  "findings": {
+    "GRCh38.p14_project_reference": {
+      "exposure_state": "encoder_seen",
+      "evidence": "OpenGenome2 includes Homo sapiens sequence. The exact human assembly, retained records, and 7B sampled shards are not bound in the checkpoint repository."
+    },
+    "GSE289173_reference_allele_windows": {
+      "exposure_state": "encoder_seen",
+      "evidence": "Human reference-like sequence exposure is expected and is not considered a clean feature holdout."
+    },
+    "GSE289173_observed_variant_alleles": {
+      "exposure_state": "clean_declared",
+      "evidence": "The paper explicitly states that Evo 2 was not trained on human genetic variation."
+    },
+    "GSE289173_eQTL_ieQTL_effects": {
+      "exposure_state": "target_label_unexposed",
+      "evidence": "The paper explicitly states that Evo 2 was not trained on functional genomics data. The checkpoint repository was created on 2025-02-13, one day after GSE289173 became public, so chronology alone is insufficient; corpus type is the controlling evidence."
+    },
+    "ClinVar_BRCA1_BRCA2_and_SpliceVarDB": {
+      "exposure_state": "downstream_demo",
+      "evidence": "The paper evaluated zero-shot scores and trained separate embedding classifiers on clinical and experimental variant datasets; these heads are not part of the base checkpoint."
+    },
+    "DART_eval_caQTL_dsQTL": {
+      "exposure_state": "downstream_demo",
+      "evidence": "The paper evaluated regulatory-QTL tasks using likelihoods and embeddings. This exposes the task family but not GSE289173 labels to checkpoint training."
+    }
+  },
+  "task_data_gate": {
+    "common_frozen_embedding_lane": "blocked_for_supervised_signed_effect_fit_until_a_nonsealed_development_label_source_is_registered",
+    "native_zero_shot_lane": "admissible_as_a_sequence_only_comparator",
+    "sealed_rule": "No GSE289173 outcome can select context length, embedding layer, pooling width, likelihood span, projection mode, calibration, threshold, or head parameters."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,46 @@
+{
+  "audit_scope": {
+    "checkpoint": "Zenodo_corgi_model_pt",
+    "development_sources": "registered_variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "regular_corgi": {
+      "checkpoint_identity": "Zenodo 18630048 and 20686797 corgi_model.pt, size 2350451066, md5 b10ddca8bb32eae3b67116242cfe1871, sha256 cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4",
+      "corpus": "hg38 sequence plus ENCODE, FANTOM5, Tabula Sapiens, CATlas and two named healthy 10x multiome sources",
+      "corpus_annotation_state": "paper source tables exist but no exact checkpoint-bound donor/run manifest is in the code release",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_variant_and_regulatory_sources",
+    "sha256": "5469fe769d2620ddd652113eb9ac3f21ff762dadc78d61a5f7d7fd28405a80f3"
+  },
+  "input_eligibility": {
+    "gse289173": "Regular Corgi can consume a 2,891-gene donor-by-cell-type pseudobulk context if those genes are observable, but the released rank mapper is not equivalent to the paper training transform. The mapper, aggregation, missing-gene handling and calibration must be selected on development data and frozen before anonymized sealed features are opened.",
+    "gse296875": "Same-nucleus RNA/ATAC supports development-only context-to-accessibility evaluation. RNA and ATAC stay paired only at the same-nucleus topology; donor grouping, cell-type aggregation, genomic blocks and all normalization remain inside folds.",
+    "variant_scoring": "Use identical selected context for REF and ALT. Do not use sealed QTL signs, effect sizes or retrieval labels to choose assays, gene spans, context mapper, strand aggregation or calibration."
+  },
+  "interpretation": "No declared corpus evidence indicates training on GSE289173 MASLD labels, donor eQTLs or interaction-eQTLs, so Regular Corgi is provisionally target-label-unexposed with medium confidence. A project-safe weights-only loader, exact strict restore, full 524,288-bp L40S forward and shortened mixed-precision backward now pass. It remains inadmissible because code terms conflict, the checkpoint-producing source and native FASTA are unresolved, native numeric parity is absent and project expression requires an unvalidated mapper.",
+  "license_disposition": {
+    "code": "CONFLICT_APACHE_2_0_ROOT_VERSUS_MIT_PYPROJECT",
+    "open_champion_eligibility": "ineligible_until_code_and_derivative_weight_terms_are_cleared",
+    "weights": "CC-BY-4.0_at_Zenodo_record_level"
+  },
+  "remaining_blockers": [
+    "Obtain upstream clarification or institutional determination for the Apache-2.0 versus MIT code conflict and derivative-weight redistribution under the record-level CC-BY-4.0 grant.",
+    "Recover or certify the checkpoint-producing source revision; the paper reproduction gitlink f5e8507e9d3bd65fc8d520b15655a7e283abf46b is not fetchable from the declared upstream.",
+    "The checkpoint passed size, MD5, SHA-256, restricted weights-only tensor-schema inventory, isolated no-network exact restoration, full-window L40S forward and shortened mixed-precision backward. Native numeric parity and checkpoint-resume evidence remain absent. Never use unrestricted torch.load or strict=False.",
+    "Resolve the exact modified hg38 training FASTA and prove primary-contig parity with project GRCh38.p14; freeze REF/ALT, coordinate, strand, reverse-complement and boundary fixtures.",
+    "Reconcile article grouped-query wording with released config behavior through strict checkpoint shape inspection and numeric parity.",
+    "Freeze the 2,891-gene GENCODE-v49 crosswalk, absent-gene policy and project count-to-context mapper using development folds only.",
+    "Recover complete assay transforms and prove channel-scale, crop, rank-normalization, TTA and REF/ALT parity against fixed official-helper fixtures.",
+    "Resolve ENCODE/FANTOM accession, run and donor aliases for GSE244832 and GSE289173 before final contamination classification.",
+    "Run checkpoint-resume and official-helper native numeric-tolerance fixtures through SLURM before admission; the import, exact restore, full forward, shortened backward and repeated-inference compatibility probes already pass on L40S."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "exposure_provisionally_eligible_but_license_checkpoint_source_reference_native_parity_and_input_mapper_blocked",
+  "verified_date": "2026-08-22"
+}

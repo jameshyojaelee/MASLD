@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse256398"
+title = "Human liver snRNA across healthy, MASLD, MASH fibrosis, and cirrhosis"
+role = "external_development"
+status = "available"
+species = "human"
+accession = ["GSE256398"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 26
+native_genome_build = "modified_GRCh38_Cell_Ranger_3.1.0_intronic+exonic"
+native_annotation_release = "UNRESOLVED_modified_Cell_Ranger_3.1.0_gene_annotation"
+modalities = ["single_nucleus_rna"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "target_label_unexposed"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence.", "The primary methods specify Cell Ranger 3.1.0 and a modified GRCh38 reference retaining intronic and exonic reads, but not the exact base annotation or modification recipe. Freeze the deposited feature identity and project-reference crosswalk before admission."]
+notes = "The MASLD development endpoint uses 17 donors: 6 healthy, 3 MASLD F0, 4 MASH fibrosis, and 4 MASH cirrhosis. The 9 alcohol-associated human donors are retained only as an etiology/OOD challenge and are never MASLD-negative controls. Mouse samples are outside the human endpoint. Human snRNA was processed with Cell Ranger 3.1.0 against a modified GRCh38 reference retaining intronic and exonic reads."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE256398"
+verified_date = "2026-08-21"
+local_exposure = "No local analysis found at registry creation; reserve for external model selection, not final reporting."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "development"
+label_visibility = "development_visible"

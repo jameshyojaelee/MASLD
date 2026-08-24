@@ -1,0 +1,136 @@
+{
+  "architecture_contract": {
+    "attention_heads": 48,
+    "backbone": "modified_ERetNet",
+    "base_hidden_dimension": 1536,
+    "base_layer_count": 40,
+    "published_parameter_scale": "approximately_800_million_parameters",
+    "published_pretraining_cells": 102304686,
+    "published_pretraining_samples": 19914,
+    "warning": "The registered base_weight.ckpt is the published base-scale object. The separately hosted CellFM_80M_weight.ckpt is not an interchangeable alias and is outside this census entry."
+  },
+  "checkpoint_contract": {
+    "code_identity": "biomed-AI/CellFM@bfed59c0e34103231165d69b97927ecc888d623c",
+    "format": "MindSpore_checkpoint",
+    "huggingface_file_last_modified_utc": "2024-12-17T14:07:00Z",
+    "registered_identity": "ShangguanNingyuan/CellFM@69361b50d1814ade0e3749c9d8eb829590c2ce3c:base_weight.ckpt",
+    "sha256": "a3ab63e580ebf779edd5d13b4b9c7cfc5795c24495f61c45e2e9f0f1eb7bfc60",
+    "size_bytes": 9659358467,
+    "status": "exact_remote_object_pinned_not_downloaded",
+    "weight_content_downloaded": false
+  },
+  "embedding_contract": {
+    "cell_embedding": "1536d_cell_CLS_state",
+    "gene_embeddings": "per_token_hidden_states_in_the_selected_nonzero_gene_sequence",
+    "common_lane_rule": "Freeze the base network, exact layer, CLS pooling, gene order, sequence sampling seed, and maximum sequence length before screening.",
+    "warning": "The official preprocessing samples nonzero genes when a cell exceeds the sequence limit. Unseeded resampling would change the representation and is prohibited."
+  },
+  "input_contract": {
+    "canonical_assays": ["scRNA_UMI_counts", "snRNA_UMI_counts"],
+    "fixed_gene_count": 24078,
+    "feature_alignment": "gene_symbol_or_name_intersection_to_csv/gene_info.csv_in_exact_released_order",
+    "initial_count_processing": "round_counts_after_library_scaling_with_an_upper_target_of_100000_as_implemented_by_the_official_reader",
+    "maximum_nonzero_gene_tokens": 2048,
+    "overlength_selection": "weighted_without_replacement_by_log1p_count",
+    "token_value_normalization": "log1p(selected_count_divided_by_selected_read_total_times_10000)",
+    "structural_missingness_rule": "Keep assay observability in the adapter manifest. Do not treat a structurally unassayed gene as an observed zero, and do not admit matrices whose raw-count and gene-coverage contract fails.",
+    "unsupported_inputs": ["bulk_RNA", "negative_or_integrated_expression", "native_joint_RNA_ATAC"]
+  },
+  "registry_binding": {
+    "artifact_bundle_id": "cellfm",
+    "registry_model_id": "cellfm",
+    "mapping": "exact"
+  },
+  "repository": "biomed-AI/CellFM",
+  "repository_revision": "bfed59c0e34103231165d69b97927ecc888d623c",
+  "release": {
+    "paper": "CellFM: a large-scale foundation model pre-trained on transcriptomics of 100 million human cells",
+    "paper_doi": "10.1038/s41467-025-59926-5",
+    "paper_publication_date": "2025-05-20",
+    "zenodo_data_record": "Zenodo:15138665",
+    "zenodo_data_doi": "10.5281/zenodo.15138665",
+    "zenodo_rule": "The separate Zenodo dataset record and its CC-BY-4.0 metadata do not override the repository and model-repository CC-BY-NC-ND-4.0 terms."
+  },
+  "runtime_contract": {
+    "declared_hardware": "four_Huawei_Atlas800_servers_each_with_eight_Ascend910_NPUs",
+    "declared_mindspore": "2.2.10",
+    "declared_python": "3.9",
+    "declared_scanpy": "1.10",
+    "declared_scib": "1.1.5",
+    "environment_status": "UNRESOLVED_FOR_L40S_CUDA",
+    "required_probe": "isolated_supported_runtime_import_hash_verified_checkpoint_load_fixed_input_forward_deterministic_gene_sampling_memory_profile_and_numeric_tolerance",
+    "scheduling_status": "blocked_until_terms_and_runtime_path_are_accepted"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "official_loader": "mindspore.load_checkpoint_then_load_param_into_net",
+    "required_path": [
+      "Verify the registered LFS SHA-256 and byte size before load.",
+      "Load only in an isolated no-network MindSpore environment.",
+      "Freeze parameter names, shapes, dtypes, and a deterministic fixed-fixture output digest.",
+      "Do not convert, adapt, or redistribute the checkpoint unless the no-derivatives terms are separately cleared."
+    ]
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Communications paper, pinned official GitHub repository, pinned official Hugging Face model repository and LFS metadata, and Zenodo metadata were checked on 2026-08-22. No checkpoint or dataset artifact was downloaded or deserialized.",
+  "source_records": [
+    {
+      "identity": "CellFM@bfed59c0:README.md",
+      "sha256": "2be89d0b7e38ed1570acc08e08a0da5880ee5317d17bf5a67cacd65bbe484a1b",
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/README.md"
+    },
+    {
+      "identity": "CellFM@bfed59c0:LICENSE-cc-by-nc-nd-4.0",
+      "sha256": "89f5b34cc32156bba14add9cac7459bf6139a11b4a1a7764f219e7ba3eba2a2f",
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/LICENSE-cc-by-nc-nd-4.0"
+    },
+    {
+      "identity": "CellFM@bfed59c0:config.py",
+      "sha256": "b13ac4e4fd6a158d48b8a637689cf2976f81c2ac9cf8ce530fa457776947a63d",
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/config.py"
+    },
+    {
+      "identity": "CellFM@bfed59c0:data_process.py",
+      "sha256": "327e3b22ea578f69660fe6d8b77a65b17190791073ee5da1ea52a9494153c150",
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/data_process.py"
+    },
+    {
+      "identity": "CellFM@bfed59c0:model.py",
+      "sha256": "69b3ef4347e9f28ebf5e1ad5e89e317800af872ccd5afed7e516d7b2b8083bd1",
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/model.py"
+    },
+    {
+      "identity": "CellFM@bfed59c0:train.py",
+      "sha256": "a30ac325800d7799a53886b162255f8879090dcc640167f2fb6f8b38d7eb00e2",
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/train.py"
+    },
+    {
+      "identity": "CellFM@bfed59c0:csv/gene_info.csv",
+      "sha256": "406c5df678f3ff17bbfc3cf9f95326ba311e4536e5c71c2f31dce51e39f7b446",
+      "size_bytes": 1970280,
+      "url": "https://github.com/biomed-AI/CellFM/blob/bfed59c0e34103231165d69b97927ecc888d623c/csv/gene_info.csv"
+    },
+    {
+      "identity": "ShangguanNingyuan/CellFM@69361b50:base_weight.ckpt",
+      "sha256": "a3ab63e580ebf779edd5d13b4b9c7cfc5795c24495f61c45e2e9f0f1eb7bfc60",
+      "size_bytes": 9659358467,
+      "url": "https://huggingface.co/ShangguanNingyuan/CellFM/blob/69361b50d1814ade0e3749c9d8eb829590c2ce3c/base_weight.ckpt"
+    }
+  ],
+  "task_fit": {
+    "cell_state_mapping": "restricted_frozen_representation_comparator_only_after_counsel_runtime_input_and_exposure_gates",
+    "masld_adaptation": "Fine-tuning, LoRA, adapter training inside the checkpoint, distillation, and using CellFM outputs to train the conditional model are prohibited by the benchmark under current no-derivatives terms.",
+    "perturbation_response": "not_admitted_by_the_base_checkpoint; published GEARS_and_CellOT_experiments_use_separate_fitted_components_and_require_independent_manifests",
+    "rna_atac_integration": "not_native",
+    "bulk_state_transfer": "not_admitted"
+  },
+  "terms_audit": {
+    "repository_code_terms": "CC-BY-NC-ND-4.0",
+    "separate_permissive_software_license_detected": false,
+    "weight_terms": "CC-BY-NC-ND-4.0",
+    "restrictions": ["noncommercial", "no_distribution_of_adapted_material"],
+    "open_champion_eligible": false,
+    "project_probe_rule": "A separable project-owned probe over frozen outputs may be evaluated only after counsel confirms that it is not prohibited adapted material.",
+    "result": "restricted_comparator_only"
+  }
+}

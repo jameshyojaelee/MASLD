@@ -1,0 +1,27 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-adaptation"
+description = "Licensed head, PEFT, MASLD self-supervision, and full-tuning ladders"
+wave = "adaptation"
+status = "blocked_prerequisites"
+prerequisites = ["v1-specialist-screen complete", "frozen adaptation allowlist"]
+adaptation_allowlist_sha256 = "UNRESOLVED"
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["cell_state_mapping", "variant_to_regulation", "rna_conditioned_atac", "bulk_state_transfer", "typed_evidence_graph", "perturbation_transfer"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_single"
+runtime_id = "gpu_finetune"
+seeds = [1103, 2909, 4721, 6673, 8111]
+data_budget = "full_development"
+adaptation_regimes = ["official_preprocessing_and_head", "frozen_probe", "head_only", "parameter_efficient", "domain_adaptive_self_supervision", "licensed_full_finetune"]
+corgi_ladder = ["zero_shot", "assay_head", "film_head", "upper_blocks_film_head", "lora_head", "full_finetune"]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0

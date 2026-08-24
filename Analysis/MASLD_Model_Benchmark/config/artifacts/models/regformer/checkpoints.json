@@ -1,0 +1,103 @@
+{
+  "architecture_contract": {
+    "cell_embedding_style": "avg-pool",
+    "declared_parameter_count": 49354241,
+    "expression_bins": 51,
+    "graph_order": "CisTarget_top20_DAG_topological_sort",
+    "hidden_dimension": 512,
+    "maximum_genes_per_cell": 1200,
+    "pretraining_objectives": ["MLM_value_prediction", "MVC_cell_embedding", "TOPO_generative_gene_prediction"],
+    "state_space_layers": 10
+  },
+  "canonical_checkpoint": {
+    "figshare_article_doi": "10.6084/m9.figshare.28645493.v2",
+    "figshare_file_id": 57423100,
+    "md5": "6f0dea8ae1508077d1851cdcda6fce42",
+    "name": "best_model.pt",
+    "publication_date": "2025-08-26T05:48:19Z",
+    "sha256": "UNRESOLVED",
+    "size_bytes": 197677201,
+    "url": "https://ndownloader.figshare.com/files/57423100"
+  },
+  "canonical_selection_evidence": {
+    "companion_log_file_id": 57423094,
+    "companion_script_file_id": 57423091,
+    "interpretation": "This bundle is the only v2 bundle whose companion log records a completed epoch-1 validation, a best_model.pt save, and the pt_graph_sort_avg_pool run path. The publication archive's pretrain configuration loads pt_graph_sort_avg_pool_e1 and declares the final 1.2k architecture. The weight still requires safe state-dict inspection before admission.",
+    "logged_training_cells": 24627572,
+    "logged_validation_cells": 599926,
+    "logged_validation_loss_epoch_1": 119.9956,
+    "published_model_label": "RegFormer-1.2k"
+  },
+  "code_license": "MIT",
+  "embedding_contract": {
+    "common_lane_candidate": "unrefined_avg_pooled_512d_encoder_embedding_with_identical_training_only_head",
+    "forbidden_postprocessing": "The released cell-embedding script calls refine_embedding with true cell-type labels for every evaluated cell, aligns batch-by-cell-type means, and amplifies class separation. This is target leakage and is prohibited in every benchmark lane.",
+    "native_lane_rule": "Native evaluation starts from the unrefined encoder embedding. Any supervised correction must be learned from outer-training donors only and applied without evaluation labels as a separately named adaptation run.",
+    "output_dimension": 512,
+    "row_identity_rule": "Carry immutable input row IDs through batching and join outputs by row ID, never generated observation names or output order."
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unintegrated_nonnegative_single_cell_or_single_nucleus_UMI_counts",
+    "feature_alignment": "exact_released_vocab_plus_published_CisTarget_DAG",
+    "model_values": "normalize_total_10000_then_log1p_then_per_cell_quantile_binning_to_51_values",
+    "pretraining_filter": "cells_with_at_least_200_detected_genes_then_remove_genes_outside_vocabulary",
+    "sampling_warning": "The released dataset code randomly subsamples expressed genes when a cell exceeds max_seq_len. The common lane derives the sampling seed from the immutable row ID and must pass cell-order invariance.",
+    "supported_assays": ["scRNA_UMI", "snRNA_UMI"]
+  },
+  "noncanonical_artifacts": [
+    {
+      "eligibility": "not_admitted_ambiguous_provenance",
+      "figshare_file_id": 57423085,
+      "md5": "792291ab303bf3580b3c00c415cf421b",
+      "name": "best_model.pt",
+      "reason": "Its companion all-length log concatenates failed, resumed, and incomplete runs, ends partway through epoch 1, and does not identify which produced object was uploaded. The publication tutorial points to an all-length path, but no released args.json binds this file to a reproducible architecture or terminal checkpoint.",
+      "size_bytes": 197669009
+    },
+    {
+      "architecture": "12_layers_512d_3000_gene_context",
+      "eligibility": "legacy_preprint_variant_not_primary_census_checkpoint",
+      "figshare_file_id": 53164916,
+      "md5": "b2d60a77672dfb1fdc381874d6b12b19",
+      "name": "best_model.pt",
+      "reason": "The v1 object has an args.json but represents the earlier 22-million-cell/preprint configuration rather than the final RegFormer-1.2k publication model.",
+      "size_bytes": 211058091
+    }
+  ],
+  "publication_archive": {
+    "figshare_article_doi": "10.6084/m9.figshare.28645493.v3",
+    "publication_date": "2026-02-25T03:24:30Z",
+    "repository_mirror_revision": "9618f1f4bb7b61c9b236d3ea8a6339c236f2da1b",
+    "repository_mirror_rule": "The pinned GitHub revision is the last revision before the v3 archive date and its audited publication files are byte-identical by MD5 to the v3 Figshare copies."
+  },
+  "repository": "BGIResearch/RegFormer",
+  "runtime_contract": {
+    "declared_cuda_components": ["torch==2.0.0+cuda11.6", "dgl==1.1.2+cu118", "mamba_ssm==1.1.1", "flash_attn==1.0.4"],
+    "declared_python": "3.9",
+    "environment_status": "UNRESOLVED",
+    "warning": "The declared Torch CUDA 11.6 and DGL CUDA 11.8 builds are internally mismatched and old compiled Mamba/FlashAttention extensions require isolated L40S compatibility probes before any checkpoint load."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "released_loader": "torch.load_without_weights_only",
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Communications article, bioRxiv v1, Figshare versions 1-3 and their file APIs, the publication archive, and the pinned byte-identical GitHub mirror were queried on 2026-08-22. Checkpoint tails were range-inspected only; no complete checkpoint was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "RegFormer:LICENSE", "sha256": "847f9048bf110be3e0df25ae50769b707be769b90eb18c8f201e67511da48111", "size_bytes": 1069},
+    {"identity": "RegFormer:README.md", "sha256": "e2aa5a3e2a9bd7b6d51cd500aef24ca185f759cbe3cd5e3761b453c394dfe868", "size_bytes": 4850},
+    {"identity": "RegFormer:requirements.txt", "sha256": "3b4061611d51b15b5f4f0f54e3b1066d0355104290ef474d45ec57de9dd39aa3", "size_bytes": 532},
+    {"identity": "Figshare_v3:pretrain.toml:62134521", "sha256": "f599274fed2ff2d80a96d2e318e40941ad4c67adb08946b72a990e37b25c57ea", "size_bytes": 3623},
+    {"identity": "Figshare_v3:regformer_emb.py:62134473", "sha256": "1fe56a1349cfd63593ca368408701ebb877deb75076037b2408234ed5390e0f8", "size_bytes": 12755},
+    {"identity": "Figshare_v3:utils.py:62134347", "sha256": "844e449ca8d2429b555f5d70f9772360e53fd9d067a770d4ffa17b34988f0406", "size_bytes": 13510},
+    {"identity": "Figshare_v2:canonical_regformer_pretrain.py:57423091", "sha256": "409ca6d4ec09c1de12ff74fda08408add86624d6f7a39cc763ab8a0a042f6ff8", "size_bytes": 24665},
+    {"identity": "Figshare_v2:canonical_run.log:57423094", "sha256": "0521af22ae24a5f0554dc32683bc87a6cddcc4c0a2f57eff84daea806345bf2b", "size_bytes": 99435},
+    {"identity": "Figshare_v2:vocab.json:57423097", "sha256": "acca93d114ca62c3f0f50debbd23e8c87f0714f4737764454f6b2b13f2e8580f", "size_bytes": 1317639},
+    {"identity": "Figshare_v3:output_graph_no_cycles.dgl:62134482", "sha256": "f0a530d760c82ef9e264eec3f3f5a230f295fd3c3e3a6b347e2f84a784807397", "size_bytes": 2185000},
+    {"identity": "Figshare_v2:ambiguous_all_length_script.py:57423076", "sha256": "e14e841478b94b1ce7b72c1cf766f504a35ef3a6fcc9ad357580bde66e805bb0", "size_bytes": 27596},
+    {"identity": "Figshare_v2:ambiguous_all_length_run.log:57423079", "sha256": "92ed08110f666d476ade57fefbfce5cb51653ccf787164773d35af73a537c0d1", "size_bytes": 1000830},
+    {"identity": "Figshare_v1:args.json:53164910", "sha256": "08006c4c6778a5b70821945a6ed28e4addb6a043bcfb7a2b84c3d893f9655d0f", "size_bytes": 1628}
+  ],
+  "weight_license": "CC-BY-4.0"
+}

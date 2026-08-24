@@ -1,0 +1,34 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "future nonpromotable development-only integration"
+  },
+  "checkpoint_findings": {
+    "mofaplus_local": {
+      "artifact_identity": "project_fitted_mofapy2_0_7_4_hdf5_per_development_campaign_feature_order_likelihood_and_seed",
+      "corpus": "No upstream checkpoint; every sample in a local fit receives fitted latent factors",
+      "exposure_state": "continual_seen",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "fitted_sample_factors_nan_missingness_noninductive_imputation_and_sealed_exclusion",
+    "sha256": "cdc768c1e2d0b959c158eea90c8e951e706401263d39ed0540d47d6e62523163"
+  },
+  "interpretation": "MOFA+ natively masks missing entries with NaN and can reconstruct an absent view for samples whose latent Z values were fitted. It has no amortized or official frozen transform from a new sample's RNA measurements to Z. Ordinary imputation therefore cannot be used for held or sealed donors without inserting and fitting those donors. MEFISTO predict_factor extrapolates factors from covariate coordinates, not from a new RNA assay. MOFA+ remains deferred until a separate nonpromotable development TaskSpec exists and is excluded from GSE289173.",
+  "remaining_blockers": [
+    "Do not schedule MOFA+ until a separate nonpromotable development-only integration TaskSpec defines the sample unit, likelihoods, metrics, and transductive interpretation.",
+    "Never insert GSE289173 rows with ATAC set to NaN, optimize query Z, refit W/Z, or use MEFISTO covariate prediction as an RNA assay transform.",
+    "Freeze donor or donor-by-cell-state sample IDs, GENCODE v49 genes, GRCh38.p14 peaks, likelihood per view, missingness masks, centering/scaling, factor count, sparsity/ARD options, convergence, donor grouping, seeds, and artifact hashes.",
+    "For GSE244832, permit alignment only at an explicitly declared donor-by-cell-state pseudobulk sample unit; never align different-aliquot cells. Validate exact same-nucleus joins for cell-level GSE296875 development diagnostics.",
+    "Prove NaN masks exclude absent observations and preserve project missingness reasons externally; missing evidence is never encoded as biological zero.",
+    "Keep fitted-sample WZ imputation, Z factors, and MEFISTO covariate predictions latent-only and outside every sealed cell-state or RNA-conditioned ATAC leaderboard.",
+    "Export immutable HDF5 plus plain W/Z/mask/feature/sample manifests. Test metric reproduction without overwriting the source HDF5.",
+    "Validate mofapy2 0.7.4 numerical determinism, float32/float64 tolerance, HDF5 round trip, memory, optional GPU behavior, and five-seed factor stability on an approved compute job before any development run."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_frozen_unseen_sample_transform; deferred_to_future_nonpromotable_development_only_task",
+  "verified_date": "2026-08-22"
+}

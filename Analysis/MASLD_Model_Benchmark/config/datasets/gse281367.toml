@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse281367"
+title = "Human normal and MASH snATAC"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["GSE281367"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 12
+native_genome_build = "GRCh38_cellranger-atac_2.1.0"
+native_annotation_release = "UNRESOLVED_Cell_Ranger_ATAC_GRCh38_reference_bundle"
+modalities = ["single_nucleus_atac"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["Full model-input admission remains task-specific: freeze the exact Cell Ranger ATAC reference bundle and explicit GRCh38.p14 crosswalk before using deposited source-native peaks as training inputs.", "The frozen fixed-window artifact activates evaluator-only development transport, not model fitting, calibration, invented RNA context, or an external champion claim."]
+notes = "Six normal and six MASH donors; already analyzed locally. GEO records Cell Ranger ATAC 2.1.0 alignment to GRCh38. Source audit ARTIFACTS ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392 recovered 226,224 ATAC cells across all 12 donors and rejected duplicate-feature legacy matrices. Membership ARTIFACTS 32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6 froze donor-cell membership. Outcome ARTIFACTS 6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3 rebuilt evaluator-only 20-bin profiles and counts on 32,000 project windows from all raw fragments using Cell Ranger ATAC's already Tn5-adjusted coordinates. This activates donor-by-lineage development transport only."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE281367"
+verified_date = "2026-08-24"
+local_exposure = "Exposed development data."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "train"
+label_visibility = "development_visible"

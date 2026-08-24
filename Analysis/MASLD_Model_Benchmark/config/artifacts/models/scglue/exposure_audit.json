@@ -1,0 +1,33 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping and development-only RNA-ATAC integration"
+  },
+  "checkpoint_findings": {
+    "scglue_local": {
+      "checkpoint_identity": "project_trained_per_outer_fold_seed_training_only_feature_inventory_and_guidance_graph",
+      "corpus": "No upstream checkpoint or pretraining corpus; only declared outer-training donor modality matrices and training-only guidance graph",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "task_specific_local_training_pairing_graph_and_serialization",
+    "sha256": "7ce9fcbec039c7b5da209c782864f556312579c661e68acbd22cab9945b723d3"
+  },
+  "interpretation": "Locally trained scGLUE avoids checkpoint-corpus contamination when every feature, representation, graph, balancing weight, parameter, and head is fitted only on outer-training donors. Its largest hazards are false obs-name pairing, full-data HVG/LSI or guidance-graph construction, label-supervised encoders, donor batch categories, untrusted dill deserialization, and treating the experimental cross-decoder as a validated profile model. The current task registry correctly retains scGLUE as latent-only.",
+  "remaining_blockers": [
+    "Activate GSE296875 only after donor/barcode/well/reference/peak/QC and same-nucleus joins pass; validate PairedSCGLUE obs-name masks on fixed fixtures.",
+    "Prove GSE244832 uses distinct unpaired RNA and ATAC row identifiers and cannot enter PairedSCGLUE cross-prediction losses.",
+    "Freeze outer-training-only HVGs, RNA/ATAC representations, exact gene-peak graph vertices/edges/weights/signs, batches, balancing weights, dimensions, early stopping, heads, and five seeds.",
+    "Build a state-dict-only local serialization adapter with exact architecture, feature, graph, and preprocessing manifests; never load external dill.",
+    "Keep decode_data nonpromotable until a separate TaskSpec freezes target library size, target batch, output distribution, no-held-ATAC fixture, and assay-native baselines.",
+    "Validate GLUE v0.4.1 source on a frozen modern environment with L40S import, sparse data path, forward/backward, resume, determinism, numeric tolerance, and memory probes.",
+    "For sealed RNA cell-state mapping, prohibit feature refitting, cell-type supervision, query optimization, or calibration on GSE289173."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "cell-state eligible in principle after local data_runtime_serialization_and_leakage fixtures; RNA-conditioned ATAC is currently latent-only and cannot champion",
+  "verified_date": "2026-08-22"
+}

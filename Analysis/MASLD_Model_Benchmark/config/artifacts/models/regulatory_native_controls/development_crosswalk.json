@@ -1,0 +1,206 @@
+{
+  "crosswalk_scope": {
+    "candidate": "regulatory_native_controls_exact_nine_role_suite",
+    "registry_ids": [
+      "mean_track",
+      "context_only",
+      "sequence_only",
+      "trans_only",
+      "nearest_regulatory_feature",
+      "nearest_context",
+      "shuffled_context",
+      "sequence_cnn_control",
+      "sequence_transformer_control"
+    ],
+    "registered_tasks": [
+      "rna_conditioned_atac",
+      "variant_to_regulation"
+    ],
+    "status": "blocked_pending_implementation_runtime_and_fixed_fixtures"
+  },
+  "task_role_matrix": {
+    "mean_track": {
+      "rna_conditioned_atac": "mandatory true baseline: training-only donor-balanced mean profile",
+      "variant_to_regulation": "mandatory allele-invariant baseline: exact zero delta, not directional evidence",
+      "primary_signed_variant_eligible": false
+    },
+    "context_only": {
+      "rna_conditioned_atac": "mandatory context-path ablation with full profile output",
+      "variant_to_regulation": "mandatory allele-invariant ablation: exact zero delta",
+      "primary_signed_variant_eligible": false
+    },
+    "sequence_only": {
+      "rna_conditioned_atac": "mandatory parent-bound ablation with query context clamped to a training-only reference",
+      "variant_to_regulation": "mandatory parent-bound sequence ablation; primary-output-compatible only after a gene/lineage crosswalk and exact implementation are registered",
+      "primary_signed_variant_eligible": "conditional_output_capability_not_current_admission"
+    },
+    "trans_only": {
+      "rna_conditioned_atac": "mandatory parent-specific trans-regulator-path ablation with full profile output",
+      "variant_to_regulation": "mandatory allele-invariant ablation: exact zero delta",
+      "primary_signed_variant_eligible": false
+    },
+    "nearest_regulatory_feature": {
+      "rna_conditioned_atac": "not_applicable",
+      "variant_to_regulation": "mandatory unsigned enhancer-gene-link and retrieval baseline",
+      "primary_signed_variant_eligible": false
+    },
+    "nearest_context": {
+      "rna_conditioned_atac": "mandatory training-bank retrieval baseline with full profile output",
+      "variant_to_regulation": "mandatory retrieval baseline for accessibility delta, allelic direction, and eQTL retrieval only",
+      "primary_signed_variant_eligible": false
+    },
+    "shuffled_context": {
+      "rna_conditioned_atac": "mandatory parent-bound negative control for context dependence",
+      "variant_to_regulation": "mandatory parent-bound negative control; its output type can be scored on a primary endpoint but cannot establish an independent model",
+      "primary_signed_variant_eligible": "conditional_output_capability_not_champion_identity"
+    },
+    "sequence_cnn_control": {
+      "rna_conditioned_atac": "mandatory standalone sequence baseline trained from scratch",
+      "variant_to_regulation": "mandatory standalone accessibility/activity-delta baseline; no primary signed eQTL head is currently admitted",
+      "primary_signed_variant_eligible": false
+    },
+    "sequence_transformer_control": {
+      "rna_conditioned_atac": "mandatory standalone sequence baseline trained from scratch",
+      "variant_to_regulation": "mandatory standalone accessibility/activity-delta baseline; no primary signed eQTL head is currently admitted",
+      "primary_signed_variant_eligible": false
+    }
+  },
+  "dataset_role_crosswalk": {
+    "gse296875": {
+      "role": "project_exposed_training",
+      "topology": "same_nucleus_RNA_ATAC",
+      "eligible_use": "Fit donor-level context and track statistics, RNA-conditioned ATAC heads, retrieval banks, and development controls inside outer folds. Same-nucleus links may support paired objectives after donor grouping.",
+      "prohibited_use": "Final external claim, global fit before donor splitting, or treating nuclei as biological replicates."
+    },
+    "gse244832": {
+      "role": "project_exposed_external_development",
+      "topology": "same_donor_different_aliquot_or_assay_native_pseudobulk_not_cell_pairing",
+      "eligible_use": "Donor-compatible development comparison and error analysis under assay-native pseudobulk.",
+      "prohibited_use": "False RNA-to-ATAC cell pairing, prototype construction for the strict held lane, or pristine external claim."
+    },
+    "gse281364": {
+      "role": "project_exposed_variant_development",
+      "topology": "locus_level_MPRA_or_registered_assay_native_variant_rows",
+      "eligible_use": "Outer-training or locus-cross-fitted accessibility/activity heads and retrospective direction diagnostics when allowed by TaskSpec.",
+      "prohibited_use": "Donor replication claims or final sealed confirmation."
+    },
+    "gse281160": {
+      "role": "project_exposed_variant_external_development",
+      "topology": "registered_variant_diagnostic_source",
+      "eligible_use": "Frozen development diagnostics and model selection only under the registered locus split.",
+      "prohibited_use": "Pristine external or champion claim."
+    },
+    "current_coloc_gwas": {
+      "role": "project_exposed_variant_development",
+      "topology": "summary_evidence_not_cell_or_donor_pairing",
+      "eligible_use": "Training-only or cross-fitted retrieval/link endpoints under held locus and LD blocks.",
+      "prohibited_use": "Causal-gene labels, signed cell-state regulatory truth, or biological-replicate inflation."
+    },
+    "gse289173": {
+      "role": "project_sealed_variant_final",
+      "topology": "48_donors_with_separately_withheld_labels_and_eqtl_ieqtl_summaries",
+      "eligible_use": "One-time locked inference for endpoints whose complete eligible summaries exist, after prediction hashes are committed.",
+      "prohibited_use": "Any fit, mean, prototype, distance metric, context permutation, head, calibration, threshold, exclusion, or repair."
+    },
+    "fnih_86_liver": {
+      "role": "conditional_future_rna_atac_seal",
+      "topology": "donor_linked_multiome_and_other_assays_only_if_open_analysis_complete_files_become_admissible",
+      "eligible_use": "One-time RNA-conditioned ATAC confirmation only if the predefined openness, rights, topology, endpoint, contamination, and power gate passes before selection lock.",
+      "prohibited_use": "Delaying development, retrospective relabeling as sealed after inspection, or assuming same-cell topology across assay types."
+    }
+  },
+  "task_specific_crosswalk": {
+    "rna_conditioned_atac": {
+      "target": "Predict donor by cell-state ATAC profiles from DNA and allowed observed RNA/context without observed query ATAC.",
+      "profile_requirement": "Every applicable control must emit a full finite prediction on stable feature IDs and the evaluator's frozen profile axis. Embeddings or partial latent tracks are not predictions.",
+      "fit_unit": "Donor-level assay-native pseudobulk or explicitly same-nucleus training objective; donors remain the inferential units.",
+      "held_query": "Observed held RNA/context can be input only to models whose contract requires it. Held ATAC is evaluator-only. Process held donors without refitting normalization, features, means, prototypes, heads, or calibration.",
+      "comparison": "Conditional multinomial/profile-deviance skill over the outer-training cell-state mean, macro-averaged across held donor, cell type, and genomic block.",
+      "current_claim_state": "retrospective_development_only_unless_the_conditional_FNIH_seal_activates"
+    },
+    "variant_to_regulation": {
+      "target": "Predict assay-native variant effects and, where explicitly supported, signed cell-type eQTL or ieQTL effects under held loci and LD blocks.",
+      "primary_head_firewall": "No eQTL-specific fit or calibration is allowed until a nonsealed signed-effect training source with eligible gene, lineage, allele, and reference crosswalk exists.",
+      "zero_delta_controls": "mean_track, context_only, and trans_only are required null ablations. Their zero ALT-minus-REF score is not evidence for direction, retrieval, or a biological null.",
+      "unsigned_control": "nearest_regulatory_feature is proximity only and cannot be evaluated as a signed allele predictor.",
+      "allele_orientation": "Normalize against GRCh38.p14, require forward-reference REF match, and score ALT minus REF. Restore reverse-complement outputs to forward coordinates and strand before any ensemble.",
+      "current_claim_state": "sealed_champion_possible_only_for_an_endpoint_with_complete_GSE289173_summaries_and_a_clean_eligible_exact_implementation"
+    }
+  },
+  "fit_and_selection_firewall": {
+    "outer_fit": "All normalization, gene or regulator selection, length or library transforms, donor pseudobulk, context mapper, mean, prototype, metric, retrieval bank, regulatory-feature universe, output head, permutation, calibration, and threshold are fitted or frozen inside the outer-training partition.",
+    "inner_selection": "Use donor-grouped inner cross-validation crossed with the registered genomic or LD grouping where the endpoint is sequence dependent.",
+    "held_features": "A held donor's RNA may be transformed or queried only under a locked inductive interface. It cannot update shared statistics or populate a training prototype bank.",
+    "held_outcomes": "Held ATAC, cell-state labels used as outcomes, eQTL or ieQTL effects, MPRA outcomes, phenotype, and evaluation summaries remain evaluator-only.",
+    "parent_bound_rows": "context_only, sequence_only, trans_only, and shuffled_context use the same eligible rows, output axis, split, seed set, and evaluator as their concrete parent. Only the declared pathway intervention differs.",
+    "one_standard_error_and_seed_rules": "Controls remain through selection under the same fixed seeds, label budget, early stopping, and one-standard-error rule as the compared model; seeds measure stability, not biological replication."
+  },
+  "donor_genomic_and_identity_firewall": {
+    "donor": "Group by cohort_family_id plus resolved person key. Keep every modality and aliquot from one person in one outer fold.",
+    "genomic": "For sequence-dependent tasks, cross held donors with held chromosome, locus, or ancestry-matched native-build LD blocks. Merge variants within 1 Mb or r2 >= 0.8 in any represented ancestry.",
+    "sequence_identity": "Exact sequences, near-identical windows, and reverse-complement-equivalent windows remain in one split group.",
+    "boundary": "Remove a buffer equal to the largest receptive field among all admitted comparison models at every outer boundary. A smaller native control cannot use a smaller buffer.",
+    "GSE244832": "Same donor does not imply same cell. Only donor-level pseudobulk or another topology-valid comparison is allowed.",
+    "GSE296875": "Same-nucleus RNA and ATAC may be paired, but all nuclei from one donor remain together and nuclei do not supply independent inferential n.",
+    "permutation": "Freeze a deterministic, outcome-blind permutation from stable IDs and a fixed seed inside legal split and topology strata. Record singleton strata and do not silently widen them."
+  },
+  "mean_context_and_retrieval_crosswalk": {
+    "mean_track": "Compute equal-donor assay-native means after donor pseudobulk, separately for each frozen task stratum. Denominators and missing-state exclusions are recorded per feature.",
+    "reference_context": "Compute the context mean after the exact training-only mapper. It is a fixed reference input for sequence-only ablations, not a statistic recomputed on held RNA.",
+    "nearest_context": "Use a training-only prototype bank and locked metric. Query RNA can choose a prototype without changing the bank; held ATAC and outcomes never participate in neighbor selection.",
+    "shuffled_context": "Do not build a permutation pool from sealed outcomes or from records across outer partitions. Held query contexts may only be permuted under an explicitly registered outcome-blind held-query rule; otherwise use a training-only context bank.",
+    "fallback": "No model may silently fall back from unavailable context to mean context. The state is missing unless the exact model specification declares the mean reference as its intended input."
+  },
+  "reference_sign_and_strand_crosswalk": {
+    "reference": "GRCh38.p14 FASTA and GENCODE v49 under their admitted hashes and coordinate contract; BED intervals are 0-based half-open.",
+    "variant": "Left-normalize in the native build, require a unique admitted mapping and reference allele match, and preserve forward-reference REF/ALT labels.",
+    "delta": "Signed allele output is always score(ALT)-score(REF). REF/ALT swap must negate the score within tolerance.",
+    "strand": "For reverse-complement inference, transform both alleles, restore positions and strand-specific output channels, and then combine. Reverse complement never changes the allele contrast definition.",
+    "indels": "Freeze anchor, window resizing, and output realignment. If an implementation supports only SNVs, indels are not_applicable or untestable, never zero.",
+    "distance_baseline": "nearest_regulatory_feature uses forward-genome interval distance and is unsigned; gene strand does not change distance sign."
+  },
+  "missingness_crosswalk": {
+    "states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
+    "rule": "Missing evidence is not biological zero and cannot be encoded as zero-valued input or outcome without a separate observed mask.",
+    "means": "Exclude nonobserved donor-feature values from mean denominators and persist counts. Do not mean-impute structurally absent assays.",
+    "retrieval": "A missing query context or empty eligible training bank produces an explicit missing prediction. It does not trigger cross-lineage, cross-assay, or mean fallback.",
+    "profiles": "Filtered peaks, unmappable loci, unsupported alleles, missing masks, and output-axis mismatches are reported separately rather than dropped after outcome inspection."
+  },
+  "exposure_crosswalk": {
+    "upstream_pretraining": "None for standalone project baselines. Parent-bound ablations use only the exact parent's registered artifacts and inherit their strictest checkpoint exposure class.",
+    "project_fit": "Every fitted outer-training state is continual_seen for its own development donors and loci. It can be target_label_unexposed for a held source only with complete fold and feature receipts.",
+    "external_annotation": "A regulatory-feature table used without target labels is reference_only only when its source, release, build, derivation, and source-overlap risks are registered.",
+    "sealed": "Opening anonymized GSE289173 features for locked inference does not authorize any adaptation. Opening labels or effect summaries ends sealed status for all subsequent choices."
+  },
+  "claim_boundary": {
+    "true_baselines": "mean_track, nearest_regulatory_feature, nearest_context, sequence_cnn_control, and sequence_transformer_control may be winning models only under exact self-owned implementations and endpoint-eligible sealed gates.",
+    "ablations": "context_only, sequence_only, and trans_only quantify pathway dependence. A parent-specific instance must be reported as an ablation of that parent and cannot inherit an independent family or champion identity.",
+    "negative_control": "shuffled_context tests whether the parent uses correctly matched context. It is not a biological model or champion even if its output can be scored on a primary endpoint.",
+    "variant_language": "Unsigned proximity or retrieval is candidate prioritization, not causal regulation. Zero delta is a null control, not proof of no effect.",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "activation_gate": {
+    "current_state": "blocked",
+    "minimum_per_selected_control": [
+      "Immutable implementation ID, source hash, and dirty-patch receipt",
+      "Exact architecture or deterministic algorithm, preprocessing, output axis, and model-state format",
+      "Complete runtime and license or redistribution audit",
+      "Task capability receipt including sign, strand, missingness, and full-profile behavior",
+      "Donor-by-genomic split and largest-receptive-field buffer receipt",
+      "Fixed-fixture pass without query ATAC or held-outcome access"
+    ],
+    "selection_rule": "Do not register one generic implementation for multiple scientifically different controls. Every executable role owns its implementation receipt; every parent-bound ablation additionally names the parent artifact it tests."
+  },
+  "interpretation": "These controls answer different questions. Mean and nearest-neighbor methods test whether learned models beat simple task-native structure. Scratch CNN and transformer models test pretraining rather than architecture alone. Context-only, sequence-only, and trans-only isolate pathways inside a concrete model. Shuffled context is a negative control for matched biological context. Keeping these roles separate prevents an ablation from borrowing a parent model's evidence, receptive field, license, or champion identity.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

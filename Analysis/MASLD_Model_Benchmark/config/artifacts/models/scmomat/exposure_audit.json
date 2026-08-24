@@ -1,0 +1,34 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "future nonpromotable transductive RNA-ATAC integration"
+  },
+  "checkpoint_findings": {
+    "scmomat_local": {
+      "checkpoint_identity": "project_transductive_factorization_tied_to_exact_supplied_cell_and_feature_rows",
+      "corpus": "No upstream checkpoint or pretraining corpus; supplied development matrices only",
+      "exposure_state": "target_label_unexposed_only_when_sealed_rows_are_excluded",
+      "upstream_pretraining": "none"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "transductive_only_topology_and_no_sealed_query_transform",
+    "sha256": "c1f2e5f8044b0b325bb83f14f54436aa5fe403e9735ec97367eec7147d7aeada"
+  },
+  "interpretation": "scMoMaT has no pretrained-checkpoint contamination, but this does not make it eligible for held-donor evaluation. Its cell representation consists of free C_cells parameters allocated for the cells supplied to the factorization. A held or sealed cell has no coordinate unless its data enter transductive training or new coordinates are optimized. Both violate the frozen sealed-query contract. The method remains scientifically useful only for a future explicitly descriptive, nonpromotable development integration task.",
+  "remaining_blockers": [
+    "Create a separate nonpromotable development-only latent-integration TaskSpec before any run; current sealed and RNA-conditioned ATAC tasks cannot schedule scMoMaT.",
+    "Exclude GSE289173 entirely. Do not include sealed features in a joint factorization or optimize sealed-cell coordinates.",
+    "Freeze exact repository source rather than assuming the post-release main commit is byte-equivalent to PyPI 0.2.2; record environment and source receipt.",
+    "Validate exact ordered same-nucleus IDs before treating GSE296875 modalities as parallel rows; represent GSE244832 aliquots as separate batches with None placeholders.",
+    "Freeze feature inventories, peak remapping, preprocessing, K, regularization, minibatch fraction, iterations, seeds, post-processing graph, and any descriptive clustering within the declared development population.",
+    "Do not use second-stage labels or marker retraining as representation evidence in the common lane; cells remain non-independent and donors remain the inferential unit.",
+    "Never load external whole-model torch objects. Export plain local factor arrays and hashes if the deferred task is activated.",
+    "Validate dense-memory requirements and modern Python/PyTorch L40S numerical behavior before scheduling even a development-only run."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_frozen_unseen_cell_transform; deferred_to_future_nonpromotable_development_only_integration",
+  "verified_date": "2026-08-22"
+}

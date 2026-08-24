@@ -1,0 +1,155 @@
+{
+  "architecture_contract": {
+    "accessibility_encoder": "A convolutional stem with 2-fold max pooling followed by two convolutional blocks with 4-fold pooling reduces the 131072-position, 4-bp ATAC input to 4096 positions at 128-bp resolution.",
+    "attention": "Eight linear-scaling SNNK/Performer-style attention blocks with rotary positional embeddings",
+    "input_length_bp": 524288,
+    "model_family": "multimodal_sequence_plus_observed_ATAC_plus_global_motif_context_transformer",
+    "parameter_count": "UNRESOLVED_until_archive_inventory_and_strict_restore",
+    "pretraining_attention_heads": 4,
+    "pretraining_output_bins": 4092,
+    "pretraining_output_resolution_bp": 128,
+    "rampage_attention_heads": 8,
+    "rampage_output_bins": 896,
+    "rampage_output_span_bp": 114688,
+    "sequence_encoder": "A convolutional stem plus six convolution/softmax-pooling blocks reduce the 524288-bp one-hot sequence to 4096 positions.",
+    "sequence_encoder_filters": [512, 640, 640, 768, 896, 1024],
+    "trans_context": "693-dimensional per-cell-context global motif-enrichment vector derived with SEA from Vierstra et al. 2020 consensus motifs"
+  },
+  "checkpoint_release": {
+    "archive": {
+      "archive_format": "tar.gz",
+      "archive_member_inventory": "UNRESOLVED_NOT_DOWNLOADED",
+      "doi": "10.5281/zenodo.14504049",
+      "md5": "8c6b54ac40a5239af6a5226c4c44cbb4",
+      "name": "epibert_models.tar.gz",
+      "record_created": "2024-12-17T02:43:54.082056+00:00",
+      "sha256": "UNRESOLVED_REQUIRES_APPROVED_DOWNLOAD",
+      "size_bytes": 3738627947,
+      "url": "https://zenodo.org/api/records/14504049/files/epibert_models.tar.gz/content"
+    },
+    "declared_members": {
+      "fine_tuned_rampage": {
+        "count": 1,
+        "exact_archive_path": "UNRESOLVED",
+        "purpose": "sequence_plus_observed_ATAC_plus_motif_context_to_RAMPAGE_and_masked_ATAC"
+      },
+      "pretrained_atac": {
+        "count": 2,
+        "exact_archive_paths": "UNRESOLVED",
+        "member_relationship": "Two independently trained models used together for the paper's caQTL analysis; their seeds, run names, tensor manifests and ordering require archive inventory.",
+        "purpose": "masked_ATAC_reconstruction_and_caQTL_scoring"
+      }
+    },
+    "identity_status": "ARCHIVE_FROZEN_MEMBER_IDENTITIES_BLOCKED",
+    "weight_format": "Expected TensorFlow checkpoint bundles from the released restoration code, but exact files and schemas are unresolved until safe archive inventory."
+  },
+  "code_license": "MIT",
+  "input_contract": {
+    "accessibility": {
+      "native_measurement": "observed cell-context ATAC-seq fragment-per-million profile",
+      "native_resolution_bp": 4,
+      "required": true,
+      "soft_clip": "min(150,max(0,x))+sqrt(relu(x-150))",
+      "target_leakage_rule": "For any masked-accessibility endpoint, all scored positions and their prespecified mask span must be removed from the ATAC input before inference. Unmasked target ATAC cannot be passed through as context."
+    },
+    "global_motif_context": {
+      "dimension": 693,
+      "normalization": "Per-cell-type SEA motif enrichments followed by the native relative scaling and released training means/standard deviations. Exact parity must be established from a frozen peak-set pipeline.",
+      "required_for_canonical_model": true
+    },
+    "sequence": {
+      "canonical_tensor": "one_hot_hg38_DNA",
+      "required": true,
+      "window_bp": 524288
+    },
+    "topology_rule": "ATAC and any RNA target must be labeled with their actual topology. EpiBERT fine-tuning mixed exact donor pairs with same-tissue datasets; same tissue cannot be upgraded to same donor or same aliquot."
+  },
+  "license_audit": {
+    "code_finding": "The v1.0.0 GitHub/Zenodo code release is MIT licensed.",
+    "derivative_weight_rule": "CC-BY-4.0 permits adaptation and redistribution with attribution, but the archive must be checked for included notices and third-party components before release.",
+    "open_champion_terms_status": "PROVISIONALLY_ELIGIBLE_PENDING_ARCHIVE_NOTICE_AUDIT",
+    "weight_finding": "Zenodo record 14504049 explicitly labels the model archive CC-BY-4.0."
+  },
+  "native_scoring_contract": {
+    "caQTL": "Center a 1536-bp ATAC mask on the variant, predict REF and ALT in forward and reverse-complement orientations with each of the two pretraining checkpoints, restore orientation, take ALT-minus-REF over the central four 128-bp bins, then average strands and members. Exact released indices and member ordering must be reproduced from fixed fixtures before use.",
+    "common_lane": "The model cannot enter a sequence-only or RNA-context common lane under its native identity. Any ATAC-free or motif-free ablation is a separately named adaptation with the identical downstream head and input budget.",
+    "member_uncertainty": "The two checkpoints and two orientations are correlated technical predictions, not biological replicates. Preserve member outputs for stability diagnostics only.",
+    "rampage": "Use the fine-tuned checkpoint's central 896 bins. RNA/RAMPAGE outputs are an expression proxy and are not automatically comparable to signed donor-level eQTL or ieQTL effects."
+  },
+  "output_contract": {
+    "fine_tuned_rampage": {
+      "accessibility_head": "softplus ATAC prediction at 128-bp resolution",
+      "rna_head": "softplus RAMPAGE coverage at 128-bp resolution over the central 114688 bp",
+      "target_scale": "Native normalized RAMPAGE and ATAC scales; exact inverse transform and strand/TSS aggregation require fixture validation."
+    },
+    "pretrained_accessibility": {
+      "activation": "softplus",
+      "loss": "Poisson over masked bins",
+      "output_bins": 4092,
+      "resolution_bp": 128,
+      "target_soft_clip": "min(2000,max(0,x))+sqrt(relu(x-2000))"
+    }
+  },
+  "pretraining_contract": {
+    "cell_context_split": "738 training, 17 validation and 17 test ATAC contexts in the final paper; 34 cell types were held out across validation and test.",
+    "corpus": ["ENCODE", "CATlas", "GEO"],
+    "examples": "Approximately 25 million locus-by-cell-context examples",
+    "genomic_split": "34021 training, 2160 validation and 1840 reported test 524-kb windows, constructed to avoid overlap and reduce sequence similarity using Enformer-aligned approximately 1-Mb components.",
+    "masking": "Approximately 15 percent of ATAC in random 1536-bp spans",
+    "pretraining_assay": "ATAC-seq",
+    "rampage_finetuning": "50 training and 8 held-out ATAC-RAMPAGE contexts; some measurements were exact donor pairs and some only same-tissue matches.",
+    "training_data_manifest_status": "PARTIAL: cell-context labels and genomic split files are released, but an exact accession/run/donor alias table bound to each checkpoint is not."
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "benchmark_rule": "Regenerate all inputs from the project reference only after primary-contig parity, contig naming, coordinate, strand, REF-allele and window-boundary fixtures pass. Patch and haplotype scaffolds absent from training are out of domain.",
+    "native_build": "hg38",
+    "native_fasta_identity": "UNRESOLVED",
+    "sequence_buffer_bp": 524288
+  },
+  "release": {
+    "code_archive_doi": "10.5281/zenodo.14498039",
+    "code_archive_md5": "c3f90ece96e75b43d8df78d2425476ed",
+    "code_archive_name": "naumanjaved/EpiBERT-v1.0.0.zip",
+    "code_archive_size_bytes": 3865896,
+    "publication_date": "2025-01-29",
+    "publication_doi": "10.1016/j.xgen.2025.100762",
+    "repository": "naumanjaved/EpiBERT",
+    "revision": "dae61b434f885991c29e2fde3fbf7f70d0ff9b80",
+    "tag": "v1.0.0"
+  },
+  "runtime_contract": {
+    "paper_compute": "TPU v3-64; pretraining reported approximately 4.5 days",
+    "python": "3.9",
+    "requirements_lock_status": "requirements.txt is a pip freeze-style environment capture, not a tested project lock for current CUDA GPUs",
+    "status": "UNTESTED_ON_PROJECT_GPU",
+    "tensorflow": "2.13.0"
+  },
+  "safe_loading_contract": {
+    "archive_downloaded": false,
+    "archive_inventory": "After campaign approval, verify the Zenodo MD5 and computed SHA-256; reject absolute paths, parent traversal, symlinks, hardlinks, device nodes, duplicate normalized names and decompression-limit violations before extraction.",
+    "checkpoint_restore": "Inventory TensorFlow variable names, shapes and dtypes without executing arbitrary archive content. Restore into the exact v1.0.0 architecture and require consumed/existing-object assertions; reject partial restores.",
+    "numeric_parity": "Reproduce fixed pretraining ATAC, RAMPAGE and two-member caQTL predictions in both orientations before admission."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Cell Genomics article, official EpiBERT v1.0.0 repository, Zenodo code/model records and released small text/split/config files were queried on 2026-08-22. No checkpoint archive was downloaded or opened.",
+  "source_records": [
+    {"identity": "naumanjaved/EpiBERT@dae61b4:LICENSE", "sha256": "3ee2000fdcfea66b39c931b9ee747c9c08cc183c8f3afec11b24d35987a31eda", "size_bytes": 1069},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:README.md", "sha256": "dfa38dba7207a990f1e339532a19dc31dd03720dc3b39176d23bdc4312a19fda", "size_bytes": 3582},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:requirements.txt", "sha256": "98f30f6c722a30659633b5e62ba4e55248bc906def576eaf6b0f9273b42f8821", "size_bytes": 17641},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:execute_pretraining.sh", "sha256": "8e2bd3d3a268e7ffb6135ffb7158b71b6d90ef29e2a47f718e80d5cab428b9af", "size_bytes": 2043},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:execute_finetuning.sh", "sha256": "c272415d86e874e4a807e7af00ea6d0eb6b8683ba5dca18152c3e7853882a341", "size_bytes": 2237},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:src/models/epibert_atac_pretrain.py", "sha256": "af89aca11ddcad3364cf23a180bf3208327e56ca3cd6a6124cb9e4aa36e6e0df", "size_bytes": 14823},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:src/models/epibert_rampage_finetune.py", "sha256": "9ae93fb8eb959fad03a152f25eaee34e061847697c4141164d9890b9f6d402b7", "size_bytes": 21035},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:data_processing/write_TF_records/sequence_splits/all_cell_types_map.tsv", "sha256": "cee26aa3cc1f1ca322e922c2b9b814b77533e0cb085f252186f5e35c7e7b738a", "size_bytes": 22497},
+    {"identity": "naumanjaved/EpiBERT@dae61b4:data_processing/write_TF_records/sequence_splits/hg38_train_524k.bed", "sha256": "5ef306ef1d4395d5a4da92a601e2ed2c649b5205367f875bf51b84302ab2f3c6", "size_bytes": 1016528},
+    {"identity": "Zenodo:14504049:epibert_models.tar.gz", "md5": "8c6b54ac40a5239af6a5226c4c44cbb4", "sha256": "UNRESOLVED", "size_bytes": 3738627947}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported: EpiBERT consumes observed ATAC to reconstruct masked ATAC. It cannot infer ATAC from RNA alone and must not receive held-out target ATAC outside a prespecified mask.",
+    "unified_model": "eligible only as an observed-ATAC regulatory component after member inventory, parity and topology gates; it is not the requested RNA-context encoder",
+    "variant_to_regulation": "conditional diagnostic: native scoring targets accessibility/caQTL effects and requires observed context-specific ATAC. The RAMPAGE model may yield expression-proxy deltas, but neither output is inherently a signed donor-level eQTL/ieQTL effect."
+  },
+  "weight_license": "CC-BY-4.0"
+}

@@ -1,0 +1,48 @@
+{
+  "audit_scope": {
+    "checkpoint": "Zenodo_corgiplus_model_pt",
+    "development_sources": "registered_variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "corgi_plus": {
+      "checkpoint_identity": "Zenodo 18630048 and 20686797 corgiplus_model.pt, size 2384030158, md5 f7dbe2ca301fe64814bebcd4fc3377bd, sha256 01855614bfeffa72d5bcaaa28729c022ccfbc8f5fdcc0add8e04ba4533e94ccd",
+      "checkpoint_mode": "26_channel_auxiliary_width_confirmed_by_aux_encoder_state_shape",
+      "corpus": "102-sample imputation subset of the Corgi functional-genomics corpus",
+      "corpus_annotation_state": "not checkpoint-bound at accession/donor/run level",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "registered_rna_conditioned_atac_sources",
+    "sha256": "af1e5f6c53fa3cfc729faa14be549f259f8e2f08e0e0378d587865a48c28ae8c"
+  },
+  "input_eligibility": {
+    "gse289173": "Ineligible under the current sealed feature contract. A gene-count expression matrix does not provide 64-bp stranded local total-RNA coverage, and the checkpoint's original 22-track training mean baseline is not released as a portable, validated input artifact.",
+    "gse296875": "Conditionally usable for development only if raw/aligned RNA permits stranded 64-bp coverage and the same-nucleus donor/barcode joins pass. The mean baseline, transforms, feature masks and all selection must remain inside donor-by-genomic training folds.",
+    "resource_atlas_current": "Global 2,891-gene context may be derivable, but local RNA coverage is a separate required modality. Missing local coverage cannot be replaced with zeros or a held-out-derived proxy."
+  },
+  "interpretation": "Corgi+ is provisionally target-label-unexposed for GSE289173, but no sealed champion evaluation is currently possible. Safe exact restoration, a synthetic-shape-only full 524,288-bp plus 26-channel auxiliary L40S forward and shortened mixed-precision backward now pass. This does not supply or validate biological inputs: the high-level prediction API is a placeholder, required baseline and transformed local-RNA artifacts are absent, native numeric parity is absent, code terms conflict and the reproduction path is not portable.",
+  "license_disposition": {
+    "code": "CONFLICT_APACHE_2_0_ROOT_VERSUS_MIT_PYPROJECT",
+    "open_champion_eligibility": "ineligible_until_code_and_derivative_weight_terms_are_cleared",
+    "weights": "CC-BY-4.0_at_Zenodo_record_level"
+  },
+  "remaining_blockers": [
+    "Obtain upstream clarification or institutional determination for shared code terms and derivative-weight redistribution.",
+    "The checkpoint's aux_encoder.0.weight shape [128,26,1] binds it to a 26-channel auxiliary input. Obtain an upstream checkpoint card or numeric reference that binds the ordered 26 inputs and their transforms; do not infer order or values from width alone.",
+    "Recover or certify the checkpoint-producing source revision; the reproduction repository's corgi gitlink is unavailable.",
+    "Require a complete portable loader. Current corgiplus_pretrained methods raise NotImplementedError and research scripts rely on absolute /project paths and unreleased inputs.",
+    "Recover the exact original training mean-baseline tensor, assay masks, local RNA transforms and channel transforms, with hashes and terms, or classify the frozen checkpoint as non-reproducible.",
+    "The checkpoint passed size, MD5, SHA-256, restricted weights-only tensor-schema inventory, isolated no-network exact restoration, synthetic-shape-only full-window L40S forward and shortened mixed-precision backward. This is runtime compatibility, not biological-input or numeric-parity validation.",
+    "Prove 64-bp coordinate, crop, shift and reverse-complement parity simultaneously for DNA, stranded RNA, mean baseline, RNA delta and outputs.",
+    "Verify that GSE296875 has alignment-derived stranded RNA coverage and authoritative same-nucleus donor/barcode joins. If only gene counts are available, keep Corgi+ inactive.",
+    "Do not activate a GSE289173 sealed evaluation unless the full required input bundle exists before selection lock; otherwise mark the task not applicable.",
+    "After the loader and biological input bundle are complete, run checkpoint-resume and native numeric-tolerance fixtures through SLURM; exact restore, full forward, shortened backward and repeated-inference compatibility already pass on L40S."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_in_current_v1_sealed_contract",
+  "verified_date": "2026-08-22"
+}

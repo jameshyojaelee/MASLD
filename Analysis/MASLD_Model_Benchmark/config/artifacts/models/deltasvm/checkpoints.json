@@ -1,0 +1,99 @@
+{
+  "algorithm_contract": {
+    "cell_state_roster": ["cholangiocyte", "endothelial_cell", "hepatocyte", "stellate_cell"],
+    "classifier": "One C-SVC is trained per crossed outer donor/genomic split, cell state, and seed, using all permitted training blocks in that split. It distinguishes training-fold ATAC peak sequences from matched nonpeak sequences.",
+    "delta_method": "Clean-room project implementation of the published deltaSVM weight-sum equation over project-trained LS-GKM weights. The historical website script and historical cell-line weights are not admitted.",
+    "kernel": {
+      "C": 1.0,
+      "cache_mb": 4096,
+      "epsilon": 0.001,
+      "gamma": 1.0,
+      "kernel_type": 2,
+      "kernel_type_name": "estimated_lmer_truncated_filter_gkm",
+      "max_mismatches_d": 3,
+      "positive_class_weight": 1.0,
+      "reverse_complement_same_feature": true,
+      "shrinking": false,
+      "threads": 1,
+      "word_length_L": 11,
+      "informative_columns_k": 7
+    },
+    "model_family_relationship": "deltaSVM reuses the exact fold/state/seed LS-GKM model registered for gkmsvm. It is a deterministic variant-score transform, not an independently trained model family and not independent evidence.",
+    "seeds": [11, 29, 47, 71, 101],
+    "training_window": "Exactly 300 bp centered on the training-fold peak summit, represented as [summit-150, summit+150) in 0-based half-open coordinates.",
+    "training_window_status": "project_frozen_baseline_choice_not_an_upstream_default"
+  },
+  "implementation": {
+    "checkpoint_policy": "No upstream biological checkpoint is admitted. Every LS-GKM model, 11-mer score table, and delta wrapper output is generated inside the crossed outer donor/genomic training partition and receives a project SHA-256.",
+    "implementation_type": "train_locally_plus_project_owned_ref_minus_alt_transform",
+    "primary_paper": "https://doi.org/10.1038/ng.3331",
+    "repository": "Dongwon-Lee/lsgkm",
+    "repository_revision": "d7ef90f7cb326b190619c51a13843da48c99e239",
+    "revision_date": "2026-05-23",
+    "revision_status": "exact_immutable_commit_registered",
+    "source_code_run": false
+  },
+  "input_contract": {
+    "alphabet": "Uppercase A/C/G/T only. Reject N, lowercase, ambiguity codes, empty records, mixed lengths, and any sequence longer than 2047 bp before native code is called.",
+    "canonical_reference": "GRCh38.p14 with the project checksum and REF-allele validation contract",
+    "indels": "not_admitted; the v1 transform is SNP-only until a length-changing alignment and affected-k-mer fixture are frozen",
+    "snp_context": "Use exactly 21 bp [variant_pos0-10, variant_pos0+11), with the validated allele at zero-based index 10. This 2L-1 window contains every 11-mer affected by one SNP exactly once.",
+    "strand": "Do not pass -R. LS-GKM therefore treats reverse complements as the same feature. Canonicalize each 11-mer with its reverse complement and require an explicit reverse-complement invariance fixture.",
+    "boundary_policy": "Reject variants whose complete 21-bp context is outside the contig or contains unresolved bases; never pad or silently truncate.",
+    "coordinate_contract": "BED is 0-based half-open; VCF POS is converted once to zero-based variant_pos0; REF is matched to the project FASTA before ALT construction."
+  },
+  "negative_sampling_contract": {
+    "candidate_exclusions": ["outer-fold_training_peaks", "ENCODE_blacklist", "assembly_gaps", "non_ACGT_windows", "held_genomic_blocks_and_boundary_buffer"],
+    "matching": "Within the same permitted chromosome/block, select one nonpeak 300-bp window per positive without replacement, matching exact length, GC fraction within 0.02, mappability within 0.05 with minimum 0.80, the same outer-training log1p-ATAC decile, the same TSS-distance bin, and repeat fraction within 0.05.",
+    "no_match_policy": "Drop the unmatched positive with a recorded reason. Do not relax matching after any development or sealed outcome is observed.",
+    "ordering": "Deterministic nearest-distance match with salted row-ID tie breaking under the registered seed; exact and reverse-complement duplicate sequences stay in one genomic group.",
+    "peak_construction": "Call and rank peaks only from outer-training donor-by-cell-state ATAC. Held donors, held genomic blocks, and held outcomes cannot affect the peak universe, summit, accessibility decile, matching pool, or early stopping."
+  },
+  "score_contract": {
+    "canonical_alt_minus_ref": "canonical_ALT_minus_REF_activity_delta = -1 * native_REF_minus_ALT_delta; both columns are emitted and the sign conversion occurs exactly once in the adapter",
+    "kmer_table": "Generate all nonredundant 11-mers with the pinned nrkmers.py, score them with the exact project-trained gkmpredict model, and freeze the resulting canonical-k-mer score table by SHA-256.",
+    "native_delta": "sum(score of the 11 REF 11-mers overlapping the SNP) minus sum(score of the 11 ALT 11-mers overlapping the SNP)",
+    "native_positive_interpretation": "The reference allele is predicted to support more of the locally learned accessibility/activity vocabulary than the alternate allele.",
+    "not_supported": ["target_gene_identity", "signed_gene_expression_effect", "cell_type_eqtl_or_ieqtl_effect", "donor_conditioning", "causal_gene_inference"],
+    "task_role": "secondary assay-native accessibility/activity direction baseline and optional component of a separately frozen link-plus-direction composite",
+    "weight_proxy_warning": "The published method uses gkm-SVM scores of all k-mers as proxies for linear weights. Do not describe the proxy table as a directly fitted independent linear model."
+  },
+  "runtime_contract": {
+    "build": "Pinned source Makefile with a campaign-frozen CXX, -Wall -Wconversion -O3 -fPIC, and -lm -lpthread -lz",
+    "environment_status": "UNRESOLVED_CPU_SLURM_BUILD_NUMERIC_AND_RESUME_PROBES_REQUIRED",
+    "execution_target": "cpu_partition",
+    "gpu_required": false,
+    "model_command_contract": "gkmtrain -t 2 -l 11 -k 7 -d 3 -c 1 -e 0.001 -w 1 -m 4096 -T 1 -z POS.fa NEG.fa OUT",
+    "internal_cross_validation": "disabled; do not pass -x or -r. Project seed controls matching and deterministic record order, because LS-GKM's -r applies only to its internal CV shuffle.",
+    "prediction_command_contract": "gkmpredict -T 1 KMERS.fa OUT.model.txt.gz KMERS.tsv"
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only",
+    "external_historical_models": "prohibited",
+    "format": "plain_or_gzip_LS-GKM_text_model",
+    "require_before_native_load": ["training receipt", "SHA-256 and size", "bounded file size", "gzip integrity when applicable", "exact header grammar and parameter match", "finite rho and coefficients", "nr_class and support-vector count consistency", "A/C/G/T support-vector sequences of one frozen length"],
+    "require_no_network_execution": true,
+    "silent_truncation_guard": "The pinned FASTA readers warn and retain only the first 2047 bases. The adapter must reject an overlength input before LS-GKM so truncation can never occur.",
+    "untrusted_native_parser_warning": "The C/zlib loader parses variable-length text and allocates from file-declared counts. Only prevalidated project-generated model bytes may reach it."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The immutable LS-GKM source, GPL-3.0 text, exact defaults, FASTA and model loaders, Makefile, and nonredundant-k-mer script were inspected on 2026-08-22. The delta definition was checked against the primary 2015 paper and its public full text. No software was built, no biological weights or data were downloaded, and no model was executed.",
+  "source_records": [
+    {"identity": "lsgkm:LICENSE", "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903", "size_bytes": 35147},
+    {"identity": "lsgkm:README.md", "sha256": "412cb2159d6b19be35ff3b08b9c7bf48c437f1db63f8b46f1edb48ffd3788383", "size_bytes": 9866},
+    {"identity": "lsgkm:src/Makefile", "sha256": "4b9b88ef6792b9a66dee404849af6bd03cfb6c186caf58bc8ac8c433e434d063", "size_bytes": 1001},
+    {"identity": "lsgkm:src/gkmtrain.c", "sha256": "45794701587d4f759ca976f98e8b2f3c639420f79f7b4706fbb030b69df7f50e", "size_bytes": 15637},
+    {"identity": "lsgkm:src/gkmpredict.c", "sha256": "a98627bbd12cb2a2c161082903a6a0607583a8df5d4f5f68e04ca1ef46a9792e", "size_bytes": 7145},
+    {"identity": "lsgkm:src/libsvm.cpp", "sha256": "21327ab4d9c4a737084b9e16e9a0146ffb4228b6b8668930c44fab3239e6b5cd", "size_bytes": 77029},
+    {"identity": "lsgkm:src/libsvm_gkm.c", "sha256": "088eb2f1963e8055291ed3952f760a0648023aeceef4bcb6a2238e2c58a7d535", "size_bytes": 64720},
+    {"identity": "lsgkm:src/libsvm_gkm.h", "sha256": "9f9b530b235e6ac62e9d054f4d8108b78c32cf0153a4e78e31db789b0665a1f8", "size_bytes": 3067},
+    {"identity": "lsgkm:scripts/nrkmers.py", "sha256": "f1b4207d1c87924294d61046042e51abf0ce92c492898d72c9982720efdf8b9c", "size_bytes": 1603}
+  ],
+  "terms_audit": {
+    "code_license": "GPL-3.0",
+    "derivative_weight_redistribution": "No upstream weights are admitted. Project-trained model release remains conditional on source-data rights and institutional review; the GPL source and any distributed project wrapper must retain applicable notices and source obligations.",
+    "historical_weight_terms": "not_audited_and_not_admitted",
+    "result": "open_source_code_preflight_pass_local_weights_and_wrapper_not_yet_created"
+  },
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+}

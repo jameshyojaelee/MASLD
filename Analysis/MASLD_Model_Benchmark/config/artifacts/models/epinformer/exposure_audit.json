@@ -1,0 +1,49 @@
+{
+  "audit_scope": {
+    "checkpoint": "JiecongLin/EPInformer@667a74e6a1358bee35fd1951570839bdeb5dec24:HepG2/RNA/f3 twelve expression checkpoints plus twelve matching enhancer encoders",
+    "code": "pinellolab/EPInformer@ddba0b657516950c0dacbb26759f2cfa7ea3c15b",
+    "development_sources": ["gse244832", "gse281160", "gse281364", "gse296875", "current_coloc_gwas"],
+    "sealed_dataset_id": "gse289173",
+    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+  },
+  "checkpoint_finding": {
+    "checkpoint_code_alignment": "unresolved; the selected code commit is two days newer than the exact weight revision and parity has not been executed",
+    "checkpoint_identity": "24 exact Git LFS SHA-256 objects and sizes registered; bytes not acquired",
+    "declared_corpus": "ENCODE/Roadmap/Xpresso-derived sequence, DNase, H3K27ac, Hi-C, RNA/CAGE and ABC candidates for six cell lines; selected weights are HepG2 RNA f3",
+    "gse289173_target_exposure": "target_label_unexposed",
+    "masld_donor_or_qtl_supervision": "not_declared",
+    "overall_exposure_state": "target_label_unexposed",
+    "reference_sequence_exposure": "expected_generic_human_reference_overlap",
+    "release_chronology": "The July 2026 code and weights postdate every named project GEO release; absence of MASLD labels is supported by the declared corpus, not clean chronology.",
+    "upstream_downstream_demo_exposure": "The paper evaluated attention against K562 CRISPR enhancer links and GM12878 fine-mapped eQTL retrieval, so similar generic link outcomes are downstream-demo evidence."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "checkpoint_corpus_native_inputs_fold_routing_and_link_only_role",
+    "sha256": "b08112b3038a257ebb2eb920f2ab14d7f25b1a5a73f514edab2ccb96e7f073ab"
+  },
+  "interpretation": "EPInformer is potentially useful as a compact enhancer-to-gene prior, but the selected HepG2 f3 release is neither MASLD-contextual nor a signed variant-effect model. Its admissible score is relative attention within a fixed native candidate set. GSE289173 target labels appear unexposed, yet the comparator is currently unschedulable because exact-code licensing, safe loading, fold routing, and native HepG2 input artifacts remain unresolved.",
+  "known_incidents_and_biases": [
+    "The Nature Communications code-availability statement says v0.1.1 is MIT, but no LICENSE/COPYING/NOTICE file exists in that tag or the selected later code commit. The current Zenodo concept record is v0.3.0 with CC-BY-4.0 metadata, not the selected commit. Exact-code terms remain unresolved.",
+    "The Hugging Face model card declares MIT for weights, but weight terms do not independently authorize reuse of unlicensed source code.",
+    "The model card usage text names JiecongLin/EPInformer-pipeline, while the exact inspected repository is JiecongLin/EPInformer.",
+    "The official loader calls torch.load with weights_only=False on pickle-based .pt files.",
+    "The expression checkpoint requires its matching fold-specific enhancer encoder and a separate native HDF5/feature/split authority; checkpoint bytes alone are insufficient.",
+    "Attention is normalized within each promoter's candidate set. Changing the TSS, candidate enhancers, order, activity, contact, or missingness changes the score denominator.",
+    "HepG2 is a transformed cell line and its activity/contact context is not a substitute for MASLD donor or cell-state context.",
+    "Averaging all twelve chromosome-fold models would include models trained on the queried chromosome; the out-of-fold lane must route by the exact frozen split instead.",
+    "Attention is unsigned and cannot distinguish activating from repressive links or infer an allele-specific gene-expression direction."
+  ],
+  "remaining_blockers": [
+    "Obtain an explicit upstream license covering the exact selected code commit or written permission. Until then, do not download weights, execute, adapt, or redistribute the code.",
+    "If terms clear and campaign approval is granted, acquire all 24 checkpoint objects, verify every LFS SHA-256 and size plus the ordered manifest, and convert them in an isolated no-network process to strictly validated tensor-only state dictionaries.",
+    "Resolve the Hugging Face repository-name mismatch and prove exact checkpoint-to-code compatibility, matching fold encoders, architecture flags, BatchNorm/eval state, and numeric output on fixed fixtures.",
+    "Acquire and hash the exact 18,377-gene chromosome split, HepG2 HDF5/candidate roster, promoter/enhancer sequences, activity, promoter signal, Hi-C/contact, Xpresso features, TSS authority, and reference build. No missing feature may be silently zero-filled beyond native padding.",
+    "Pass L40S import/load/forward, no-network, deterministic attention, chromosome routing, padding mask, candidate-order, reverse-complement/strand, and cross-device tolerance probes.",
+    "Freeze the static HepG2 link atlas and interval-overlap evaluator before sealed inference. Keep any sequence substitution, activity delta, cell-state transfer, or link-plus-direction composite outside this link-only checkpoint record.",
+    "Retain typed-graph results as nonchampion evidence until that task has a genuinely sealed removed source."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_terms_and_ineligible_for_the_signed_variant_effect_champion; conditionally_eligible_only_after_terms_input_runtime_and_safe_loading_locks_as_an_unsigned_HepG2_link_and_retrieval_comparator; no_typed_graph_champion_without_a_sealed_source",
+  "verified_date": "2026-08-22"
+}

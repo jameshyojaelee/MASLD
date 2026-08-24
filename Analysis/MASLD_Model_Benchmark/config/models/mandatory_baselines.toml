@@ -1,0 +1,806 @@
+schema_version = "masld-bench-model-v1"
+family_id = "mandatory_baselines"
+modality = ["single_cell_rna", "single_nucleus_atac", "bulk_rna", "dna_sequence", "typed_evidence_graph", "perturbation_identity"]
+status = "candidate"
+
+[[models]]
+model_id = "hvg_pca_nearest_centroid"
+display_name = "HVG/PCA nearest-centroid"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["bulk_state_transfer", "cell_state_mapping"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+preprocessing_sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c"
+vocabulary_or_build = "versionless_ensembl_gene_id_axis_sha256_8598c8316dd65eceb48b10048e1b38dfde920d87dbd8f23c7cd68a9a4a4323f3"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59"
+cellxgene_uuids_sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2"
+exposure_audit_sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/hvg_pca_classical/preprocessing.json", sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c", size_bytes = 1872, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:preprocessing" },
+  { path = "artifacts/model-authorities/hvg_pca_nearest_centroid/code_license.json", sha256 = "956903c98a80049675ae900d99eea637dfb789f7868332ad019c23c4dd60aab7", size_bytes = 273, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:code_license" },
+  { path = "artifacts/model-authorities/hvg_pca_nearest_centroid/weights_license.json", sha256 = "d9366a43d67e221c2f3c8dc1c63a23a00c20b8d540ac67806b09390236831302", size_bytes = 287, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_nearest_centroid/derivative_weights_license.json", sha256 = "1df975e1d56b663f2848a3fb3f1464cb87789910b4a011827bce2783554ac226", size_bytes = 287, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:derivative_weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/declared_corpora.json", sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59", size_bytes = 397, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:declared_corpora" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/cellxgene_uuids.json", sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2", size_bytes = 309, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/exposure_audit.json", sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3", size_bytes = 594, media_type = "application/json", role = "model_authority:hvg_pca_nearest_centroid:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["cell_state_mapping"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "hvg_pca_knn"
+display_name = "HVG/PCA k-nearest neighbors"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["cell_state_mapping"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+preprocessing_sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c"
+vocabulary_or_build = "versionless_ensembl_gene_id_axis_sha256_8598c8316dd65eceb48b10048e1b38dfde920d87dbd8f23c7cd68a9a4a4323f3"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59"
+cellxgene_uuids_sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2"
+exposure_audit_sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/hvg_pca_classical/preprocessing.json", sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c", size_bytes = 1872, media_type = "application/json", role = "model_authority:hvg_pca_knn:preprocessing" },
+  { path = "artifacts/model-authorities/hvg_pca_knn/code_license.json", sha256 = "2e357d0769eb6e6ad64450190d059c42d9f8e24fd51d7d6a7ece9b4d5bede23e", size_bytes = 260, media_type = "application/json", role = "model_authority:hvg_pca_knn:code_license" },
+  { path = "artifacts/model-authorities/hvg_pca_knn/weights_license.json", sha256 = "e22137b81423f0e86c9c39fa91ec372ec0449b6bc2f2008597ab5925bc33687f", size_bytes = 274, media_type = "application/json", role = "model_authority:hvg_pca_knn:weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_knn/derivative_weights_license.json", sha256 = "dbed38cae5b8b6d19bb593bedb24e753612d8615275d236a97535ee357ac9c26", size_bytes = 274, media_type = "application/json", role = "model_authority:hvg_pca_knn:derivative_weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/declared_corpora.json", sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59", size_bytes = 397, media_type = "application/json", role = "model_authority:hvg_pca_knn:declared_corpora" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/cellxgene_uuids.json", sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2", size_bytes = 309, media_type = "application/json", role = "model_authority:hvg_pca_knn:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/exposure_audit.json", sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3", size_bytes = 594, media_type = "application/json", role = "model_authority:hvg_pca_knn:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["cell_state_mapping"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "hvg_pca_logistic"
+display_name = "HVG/PCA logistic regression"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["cell_state_mapping"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+preprocessing_sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c"
+vocabulary_or_build = "versionless_ensembl_gene_id_axis_sha256_8598c8316dd65eceb48b10048e1b38dfde920d87dbd8f23c7cd68a9a4a4323f3"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59"
+cellxgene_uuids_sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2"
+exposure_audit_sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/hvg_pca_classical/preprocessing.json", sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c", size_bytes = 1872, media_type = "application/json", role = "model_authority:hvg_pca_logistic:preprocessing" },
+  { path = "artifacts/model-authorities/hvg_pca_logistic/code_license.json", sha256 = "bb60d3d14746a1ceced248d88339605edd0d0448a784bb478cd6ed42d9f5e6e9", size_bytes = 265, media_type = "application/json", role = "model_authority:hvg_pca_logistic:code_license" },
+  { path = "artifacts/model-authorities/hvg_pca_logistic/weights_license.json", sha256 = "68506878e1700934fabe2a7bb06102a4215312700d95fda9e87fc48ee6f2afaa", size_bytes = 279, media_type = "application/json", role = "model_authority:hvg_pca_logistic:weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_logistic/derivative_weights_license.json", sha256 = "aad8bfe2bb33f855efb4882bc6e7a2df215e5a9873aa7d9e632f54c5ce7b2dfd", size_bytes = 279, media_type = "application/json", role = "model_authority:hvg_pca_logistic:derivative_weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/declared_corpora.json", sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59", size_bytes = 397, media_type = "application/json", role = "model_authority:hvg_pca_logistic:declared_corpora" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/cellxgene_uuids.json", sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2", size_bytes = 309, media_type = "application/json", role = "model_authority:hvg_pca_logistic:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/exposure_audit.json", sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3", size_bytes = 594, media_type = "application/json", role = "model_authority:hvg_pca_logistic:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["cell_state_mapping"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "hvg_pca_elastic_net"
+display_name = "HVG/PCA elastic net"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["bulk_state_transfer", "cell_state_mapping"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+preprocessing_sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c"
+vocabulary_or_build = "versionless_ensembl_gene_id_axis_sha256_8598c8316dd65eceb48b10048e1b38dfde920d87dbd8f23c7cd68a9a4a4323f3"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59"
+cellxgene_uuids_sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2"
+exposure_audit_sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/hvg_pca_classical/preprocessing.json", sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c", size_bytes = 1872, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:preprocessing" },
+  { path = "artifacts/model-authorities/hvg_pca_elastic_net/code_license.json", sha256 = "7323f9aa856fbdfce5d3f2011e37912c1c20877d04cbfad2c1bf7b566fa526d2", size_bytes = 268, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:code_license" },
+  { path = "artifacts/model-authorities/hvg_pca_elastic_net/weights_license.json", sha256 = "45d1e32b0709c6293585114d130465dd329b928e63d7676adb8369c93cc50f20", size_bytes = 282, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_elastic_net/derivative_weights_license.json", sha256 = "c0517bf87a13ef881ab63f008d6a6e0ad5bbc00ee2f18040b3b301cd181fa0d2", size_bytes = 282, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:derivative_weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/declared_corpora.json", sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59", size_bytes = 397, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:declared_corpora" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/cellxgene_uuids.json", sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2", size_bytes = 309, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/exposure_audit.json", sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3", size_bytes = 594, media_type = "application/json", role = "model_authority:hvg_pca_elastic_net:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["cell_state_mapping"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "hvg_pca_linear_svm"
+display_name = "HVG/PCA linear SVM"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:hvg_pca_logistic.py@13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["bulk_state_transfer", "cell_state_mapping"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09"
+preprocessing_sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c"
+vocabulary_or_build = "versionless_ensembl_gene_id_axis_sha256_8598c8316dd65eceb48b10048e1b38dfde920d87dbd8f23c7cd68a9a4a4323f3"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59"
+cellxgene_uuids_sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2"
+exposure_audit_sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/hvg_pca_classical/preprocessing.json", sha256 = "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c", size_bytes = 1872, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:preprocessing" },
+  { path = "artifacts/model-authorities/hvg_pca_linear_svm/code_license.json", sha256 = "c6672cd4066871b4ef0822ddc4da0a30a8c6cf82657ba90b09beeb3034837fab", size_bytes = 267, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:code_license" },
+  { path = "artifacts/model-authorities/hvg_pca_linear_svm/weights_license.json", sha256 = "1ed5666f007f708259dbbac0f1c92007779fd195620ec698e759d5a604c5c3c7", size_bytes = 281, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_linear_svm/derivative_weights_license.json", sha256 = "3a12968686ae264a53a9cd40c4a392dce4877297b99da4c6981e3c6085897891", size_bytes = 281, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:derivative_weights_license" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/declared_corpora.json", sha256 = "dd9166a09000e99112516706192f94e883230aeca3f19c971571ce1a869b7a59", size_bytes = 397, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:declared_corpora" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/cellxgene_uuids.json", sha256 = "3ad122391be50f7bc15a8440f20a9458968f94f9f9c92a72441c7370ccaec3e2", size_bytes = 309, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/hvg_pca_classical/exposure_audit.json", sha256 = "9ed6618f06c1bb2b3fe833486769c47d05f68d85bd1e1a08600472edb68501f3", size_bytes = 594, media_type = "application/json", role = "model_authority:hvg_pca_linear_svm:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["cell_state_mapping"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "harmony_logistic"
+display_name = "Harmony plus logistic regression"
+implementation_type = "classical_baseline"
+checkpoint_revision = "slowkow/harmonypy@a770f2dd3b724a7b5dae811357bd157cedacc195:v0.0.10"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GPL-3.0-or-later"
+exposure_status = "target_label_unexposed"
+status = "deferred"
+admission_blocking = true
+blockers = ["The released harmonypy API fits cell-specific corrections jointly and has no frozen-reference transform for a held query. Keep it registered for transductive diagnostics, but do not schedule it while the benchmark contract requires all batch correction to be fit inside training partitions."]
+supported_tasks = []
+
+[[models]]
+model_id = "scvi_baseline"
+display_name = "scVI baseline"
+implementation_type = "train_locally"
+checkpoint_revision = "scverse/scvi-tools@dc95497+PyPI:scvi-tools==1.4.2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Verify PyPI wheel SHA-256 c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5; freeze gene universe, count layer, covariates, donor folds, query mapping, seeds, and fitted-artifact SHA-256."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scanvi_baseline"
+display_name = "scANVI baseline"
+implementation_type = "train_locally"
+checkpoint_revision = "scverse/scvi-tools@dc95497+PyPI:scvi-tools==1.4.2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "BSD-3-Clause"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Verify PyPI wheel SHA-256 c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5; freeze label ontology, gene universe, count layer, covariates, donor folds, query mapping, seeds, and fitted-artifact SHA-256."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "celltypist_baseline"
+display_name = "CellTypist fold-trained baseline"
+implementation_type = "train_locally"
+checkpoint_revision = "Teichlab/celltypist@fe357564a6625d3b1732a022fd39f18e55696e80:celltypist==1.7.1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "MIT"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Train a new CellTypist classifier inside each donor-grouped fold; do not select or ensemble pretrained CellTypist models after inspecting outcomes. Freeze log1p-per-10,000 normalization, feature selection, solver, regularization, class balancing, seed, majority-vote policy, calibration, and fitted-model SHA-256."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "mean_track"
+display_name = "Mean-track baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:rna_atac_classical.py@5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+preprocessing_sha256 = "727ad4ce1d1c61cdbfb2d156259b562ddca961d2092305040ed69e47d227a8aa"
+vocabulary_or_build = "gse296875_rna_atac_smoke_1000_v1:GRCh38:deterministic_2000_peak_smoke_axis"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "f75d93f40c12e21825cd0ed8480004e72a33732330f12e80fe4feb019fa87edb"
+cellxgene_uuids_sha256 = "3d9ce34ead9ba7f945d3a1acbbb179f5b3d6c72c572d9cc989c5a5207c39ee20"
+exposure_audit_sha256 = "36807767dca3292c0b3a4516eb17a84c07fdd835fc92a7c8d21a4fb85a916e7f"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/rna_atac_classical/preprocessing.json", sha256 = "727ad4ce1d1c61cdbfb2d156259b562ddca961d2092305040ed69e47d227a8aa", size_bytes = 1732, media_type = "application/json", role = "model_authority:mean_track:preprocessing" },
+  { path = "artifacts/model-authorities/mean_track/code_license.json", sha256 = "6b95c73778436f179866b69fb323e5e7d35b9df0d63f205c8cfb4c4bedf8b1ad", size_bytes = 259, media_type = "application/json", role = "model_authority:mean_track:code_license" },
+  { path = "artifacts/model-authorities/mean_track/weights_license.json", sha256 = "56352457fdf4a191ec6c3dd246acda644b462dc11a28e9cbe1d8ff822b6bf554", size_bytes = 273, media_type = "application/json", role = "model_authority:mean_track:weights_license" },
+  { path = "artifacts/model-authorities/mean_track/derivative_weights_license.json", sha256 = "91ebf4171db59f7dbd404fc0a6c524b9438a4f6fcaa2690b8fd3497b403678ab", size_bytes = 273, media_type = "application/json", role = "model_authority:mean_track:derivative_weights_license" },
+  { path = "artifacts/model-authorities/rna_atac_classical/declared_corpora.json", sha256 = "f75d93f40c12e21825cd0ed8480004e72a33732330f12e80fe4feb019fa87edb", size_bytes = 425, media_type = "application/json", role = "model_authority:mean_track:declared_corpora" },
+  { path = "artifacts/model-authorities/rna_atac_classical/cellxgene_uuids.json", sha256 = "3d9ce34ead9ba7f945d3a1acbbb179f5b3d6c72c572d9cc989c5a5207c39ee20", size_bytes = 340, media_type = "application/json", role = "model_authority:mean_track:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/rna_atac_classical/exposure_audit.json", sha256 = "36807767dca3292c0b3a4516eb17a84c07fdd835fc92a7c8d21a4fb85a916e7f", size_bytes = 754, media_type = "application/json", role = "model_authority:mean_track:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_classical.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "context_only"
+display_name = "Context-only ablation"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Context-only ablation."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "sequence_only"
+display_name = "Sequence-only ablation"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Sequence-only ablation."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "trans_only"
+display_name = "Nested-CV transcription-only ridge baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:rna_atac_regularized.py@690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+preprocessing_sha256 = "d79e8f79c960c54e547407de7ed0acb632a3a2911dc2d9b7ea2c0dc61fe603ff"
+vocabulary_or_build = "gse296875_rna_atac_smoke_1000_v1:GRCh38:deterministic_2000_peak_smoke_axis"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_fold_local"
+declared_corpora_sha256 = "11004846f0f3284ce9e10dc49fe349ad0b06e95a51f1fbb936f9cdf8205bf1c2"
+cellxgene_uuids_sha256 = "4b99e1d5a0b4b0011ed824b96427bf6c79f7f5ec9ffa4a635de6ae796983b3d4"
+exposure_audit_sha256 = "8cd23e2a023eee3eef20514dea057886d4b99a7251bd2690ad809cd29ac7acab"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/rna_atac_regularized/preprocessing.json", sha256 = "d79e8f79c960c54e547407de7ed0acb632a3a2911dc2d9b7ea2c0dc61fe603ff", size_bytes = 2311, media_type = "application/json", role = "model_authority:trans_only:preprocessing" },
+  { path = "artifacts/model-authorities/trans_only/code_license.json", sha256 = "e8957fb1cb58642bb5dc4dae86bf89bbcc78a74d1dca2cc9b3039a50f7ce45aa", size_bytes = 259, media_type = "application/json", role = "model_authority:trans_only:code_license" },
+  { path = "artifacts/model-authorities/trans_only/weights_license.json", sha256 = "3a50576515dd0c3971fbb8dc1fc5246630b9d6a195fb1b2a3b324a62715201d1", size_bytes = 273, media_type = "application/json", role = "model_authority:trans_only:weights_license" },
+  { path = "artifacts/model-authorities/trans_only/derivative_weights_license.json", sha256 = "c34de4ae51a45a940a1c5f045c41eccc8a2bda374989e9e2f132c1fe71cd590d", size_bytes = 273, media_type = "application/json", role = "model_authority:trans_only:derivative_weights_license" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/declared_corpora.json", sha256 = "11004846f0f3284ce9e10dc49fe349ad0b06e95a51f1fbb936f9cdf8205bf1c2", size_bytes = 416, media_type = "application/json", role = "model_authority:trans_only:declared_corpora" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/cellxgene_uuids.json", sha256 = "4b99e1d5a0b4b0011ed824b96427bf6c79f7f5ec9ffa4a635de6ae796983b3d4", size_bytes = 336, media_type = "application/json", role = "model_authority:trans_only:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/exposure_audit.json", sha256 = "8cd23e2a023eee3eef20514dea057886d4b99a7251bd2690ad809cd29ac7acab", size_bytes = 673, media_type = "application/json", role = "model_authority:trans_only:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_regularized.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "nearest_regulatory_feature"
+display_name = "Nearest-regulatory-feature baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Nearest-regulatory-feature baseline."]
+supported_tasks = ["variant_to_regulation"]
+
+[[models]]
+model_id = "shuffled_outcome"
+display_name = "Split-preserving shuffled-outcome control"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Split-preserving shuffled-outcome control."]
+supported_tasks = ["variant_to_regulation", "typed_evidence_graph", "perturbation_transfer"]
+
+[[models]]
+model_id = "control_mean"
+display_name = "Control-mean perturbation baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Control-mean perturbation baseline."]
+supported_tasks = ["perturbation_transfer", "gene_perturbation_response"]
+
+[[models]]
+model_id = "perturbed_mean"
+display_name = "Perturbed-mean baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Perturbed-mean baseline."]
+supported_tasks = ["perturbation_transfer", "gene_perturbation_response"]
+
+[[models]]
+model_id = "ridge_perturbation"
+display_name = "Ridge perturbation baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Ridge perturbation baseline."]
+supported_tasks = ["perturbation_transfer", "gene_perturbation_response"]
+
+[[models]]
+model_id = "bilinear_perturbation"
+display_name = "Bilinear perturbation baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Bilinear perturbation baseline."]
+supported_tasks = ["perturbation_transfer", "gene_perturbation_response"]
+
+[[models]]
+model_id = "systema"
+display_name = "Systema matching-mean baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "scientific_spec:mlbio-epfl/systema@aaf5b5353993b48b78543f2f93b3e18ca65df515:matching_mean+independent_project_implementation"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "project_owned_independent_implementation_no_upstream_code_reuse"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The upstream Systema repository has no detected license, so independently implement the published matching-mean equation without copying code; freeze perturbation matching, train-only centroids, unseen-component fallback, split and output hash. For single-gene perturbations this equals perturbed mean and must not be counted as an independent baseline win."]
+supported_tasks = ["perturbation_transfer", "gene_perturbation_response"]
+
+[[models]]
+model_id = "pca_procrustes"
+display_name = "PCA plus Procrustes alignment"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for PCA plus Procrustes alignment."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "cca"
+display_name = "Canonical correlation analysis"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Canonical correlation analysis."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "mean_expression_bulk"
+display_name = "Mean-expression bulk baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze the repo-local implementation or adapter, features, split, seed, license, and fitted-artifact SHA-256 for Mean-expression bulk baseline."]
+supported_tasks = ["bulk_state_transfer"]
+
+[[models]]
+model_id = "evidence_count"
+display_name = "Evidence-count baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_evidence_count_v1"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_implementation_and_input_output_terms_UNRESOLVED"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Promote and freeze the corrected COLOC graph snapshot, evidence ontology, source-family aliases, evidence-unit deduplication key, statuses, source-independent candidates, native-build blocks, and explicit observability masks.",
+  "Implement masld_evidence_count_v1 and held-source removal before counting, then freeze tie handling, any source-blind monotone calibrator, project terms, fixtures, and immutable count outputs. Only deduplicated supported evidence increments; absence is not a negative or zero.",
+  "No wholly sealed graph source is registered, so this mandatory transparent baseline remains development-only and cannot earn a graph champion claim.",
+]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "nearest_gene"
+display_name = "Nearest-gene baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_nearest_gene_tss_v1:GENCODE_v49:GRCh38.p14"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "GENCODE_open_access_project_implementation_terms_UNRESOLVED"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = [
+  "Build and hash the admitted GENCODE v49 transcript-TSS artifact, then freeze the source-independent variant-gene and locus-gene candidate roster, native-build grouping, unique liftover and REF-match rules, ties, and explicit untestable states.",
+  "Implement masld_nearest_gene_tss_v1 and pass strand, indel-anchor, contig, gene-version, liftover, candidate-order, and REF-equals-ALT fixtures before freezing predictions and project terms.",
+  "Nearest-gene is unsigned retrieval/link evidence only: it is prohibited from the signed eQTL/ieQTL primary endpoint, and its graph use remains development-only because no sealed graph source exists.",
+]
+supported_tasks = ["typed_evidence_graph", "variant_to_regulation"]
+
+[[models]]
+model_id = "nearest_context"
+display_name = "Nearest-context regulatory baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:rna_atac_classical.py@5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+preprocessing_sha256 = "727ad4ce1d1c61cdbfb2d156259b562ddca961d2092305040ed69e47d227a8aa"
+vocabulary_or_build = "gse296875_rna_atac_smoke_1000_v1:GRCh38:deterministic_2000_peak_smoke_axis"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "f75d93f40c12e21825cd0ed8480004e72a33732330f12e80fe4feb019fa87edb"
+cellxgene_uuids_sha256 = "3d9ce34ead9ba7f945d3a1acbbb179f5b3d6c72c572d9cc989c5a5207c39ee20"
+exposure_audit_sha256 = "36807767dca3292c0b3a4516eb17a84c07fdd835fc92a7c8d21a4fb85a916e7f"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/rna_atac_classical/preprocessing.json", sha256 = "727ad4ce1d1c61cdbfb2d156259b562ddca961d2092305040ed69e47d227a8aa", size_bytes = 1732, media_type = "application/json", role = "model_authority:nearest_context:preprocessing" },
+  { path = "artifacts/model-authorities/nearest_context/code_license.json", sha256 = "0a24bbeeafd3f5e60fad5035e19a127c46ac1a4069dbbd3a025d5d822dd36776", size_bytes = 264, media_type = "application/json", role = "model_authority:nearest_context:code_license" },
+  { path = "artifacts/model-authorities/nearest_context/weights_license.json", sha256 = "556cd667691c09b08520a79a1ff02a64ff760c85294e6ab9756aff4cc005bdb3", size_bytes = 278, media_type = "application/json", role = "model_authority:nearest_context:weights_license" },
+  { path = "artifacts/model-authorities/nearest_context/derivative_weights_license.json", sha256 = "d58bdcf0dcb328eb524ef0473059cfa314031b78a6af1696512cdcfb8beffcc6", size_bytes = 278, media_type = "application/json", role = "model_authority:nearest_context:derivative_weights_license" },
+  { path = "artifacts/model-authorities/rna_atac_classical/declared_corpora.json", sha256 = "f75d93f40c12e21825cd0ed8480004e72a33732330f12e80fe4feb019fa87edb", size_bytes = 425, media_type = "application/json", role = "model_authority:nearest_context:declared_corpora" },
+  { path = "artifacts/model-authorities/rna_atac_classical/cellxgene_uuids.json", sha256 = "3d9ce34ead9ba7f945d3a1acbbb179f5b3d6c72c572d9cc989c5a5207c39ee20", size_bytes = 340, media_type = "application/json", role = "model_authority:nearest_context:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/rna_atac_classical/exposure_audit.json", sha256 = "36807767dca3292c0b3a4516eb17a84c07fdd835fc92a7c8d21a4fb85a916e7f", size_bytes = 754, media_type = "application/json", role = "model_authority:nearest_context:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_classical.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "shuffled_context"
+display_name = "Split-preserving shuffled-context control"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:rna_atac_regularized.py@690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+preprocessing_sha256 = "d79e8f79c960c54e547407de7ed0acb632a3a2911dc2d9b7ea2c0dc61fe603ff"
+vocabulary_or_build = "gse296875_rna_atac_smoke_1000_v1:GRCh38:deterministic_2000_peak_smoke_axis"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_fold_local"
+declared_corpora_sha256 = "11004846f0f3284ce9e10dc49fe349ad0b06e95a51f1fbb936f9cdf8205bf1c2"
+cellxgene_uuids_sha256 = "4b99e1d5a0b4b0011ed824b96427bf6c79f7f5ec9ffa4a635de6ae796983b3d4"
+exposure_audit_sha256 = "8cd23e2a023eee3eef20514dea057886d4b99a7251bd2690ad809cd29ac7acab"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/rna_atac_regularized/preprocessing.json", sha256 = "d79e8f79c960c54e547407de7ed0acb632a3a2911dc2d9b7ea2c0dc61fe603ff", size_bytes = 2311, media_type = "application/json", role = "model_authority:shuffled_context:preprocessing" },
+  { path = "artifacts/model-authorities/shuffled_context/code_license.json", sha256 = "e40f3c4c7b95eb49393d9f1358be851c7fdccc7bd53d54397fb13f8ec104859b", size_bytes = 265, media_type = "application/json", role = "model_authority:shuffled_context:code_license" },
+  { path = "artifacts/model-authorities/shuffled_context/weights_license.json", sha256 = "563e4e4fd191da60bad016cc6abd9e6eab209b18051c265285eb59285e066780", size_bytes = 279, media_type = "application/json", role = "model_authority:shuffled_context:weights_license" },
+  { path = "artifacts/model-authorities/shuffled_context/derivative_weights_license.json", sha256 = "4e8de7268884a83cd33dd70ee73ea458fbf3a0b4170d6c614f73ca88f25a0468", size_bytes = 279, media_type = "application/json", role = "model_authority:shuffled_context:derivative_weights_license" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/declared_corpora.json", sha256 = "11004846f0f3284ce9e10dc49fe349ad0b06e95a51f1fbb936f9cdf8205bf1c2", size_bytes = 416, media_type = "application/json", role = "model_authority:shuffled_context:declared_corpora" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/cellxgene_uuids.json", sha256 = "4b99e1d5a0b4b0011ed824b96427bf6c79f7f5ec9ffa4a635de6ae796983b3d4", size_bytes = 336, media_type = "application/json", role = "model_authority:shuffled_context:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/exposure_audit.json", sha256 = "8cd23e2a023eee3eef20514dea057886d4b99a7251bd2690ad809cd29ac7acab", size_bytes = 673, media_type = "application/json", role = "model_authority:shuffled_context:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_regularized.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "shrunken_pseudobulk"
+display_name = "Nested-CV shrunken lineage pseudobulk"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:rna_atac_regularized.py@690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "690d8efd8aa6cc6e4d78f288c7bcd29217edf2f8f4a7fd72009b12bf84354a34"
+preprocessing_sha256 = "d79e8f79c960c54e547407de7ed0acb632a3a2911dc2d9b7ea2c0dc61fe603ff"
+vocabulary_or_build = "gse296875_rna_atac_smoke_1000_v1:GRCh38:deterministic_2000_peak_smoke_axis"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_fold_local"
+declared_corpora_sha256 = "11004846f0f3284ce9e10dc49fe349ad0b06e95a51f1fbb936f9cdf8205bf1c2"
+cellxgene_uuids_sha256 = "4b99e1d5a0b4b0011ed824b96427bf6c79f7f5ec9ffa4a635de6ae796983b3d4"
+exposure_audit_sha256 = "8cd23e2a023eee3eef20514dea057886d4b99a7251bd2690ad809cd29ac7acab"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/rna_atac_regularized/preprocessing.json", sha256 = "d79e8f79c960c54e547407de7ed0acb632a3a2911dc2d9b7ea2c0dc61fe603ff", size_bytes = 2311, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:preprocessing" },
+  { path = "artifacts/model-authorities/shrunken_pseudobulk/code_license.json", sha256 = "00292f773a978e2213d5f6f3c1c28dceb80728717f3309e15f694af2aa6b0946", size_bytes = 268, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:code_license" },
+  { path = "artifacts/model-authorities/shrunken_pseudobulk/weights_license.json", sha256 = "25ebad85da739a62024a62c542c8fd72ca0edfcc00f4325a6cbd535be4ee8ec2", size_bytes = 282, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:weights_license" },
+  { path = "artifacts/model-authorities/shrunken_pseudobulk/derivative_weights_license.json", sha256 = "95c0bd53e572e2451b5945f00ac7c9a73e704a1e93d3bcdd6dd28ecb1d02c668", size_bytes = 282, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:derivative_weights_license" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/declared_corpora.json", sha256 = "11004846f0f3284ce9e10dc49fe349ad0b06e95a51f1fbb936f9cdf8205bf1c2", size_bytes = 416, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:declared_corpora" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/cellxgene_uuids.json", sha256 = "4b99e1d5a0b4b0011ed824b96427bf6c79f7f5ec9ffa4a635de6ae796983b3d4", size_bytes = 336, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/rna_atac_regularized/exposure_audit.json", sha256 = "8cd23e2a023eee3eef20514dea057886d4b99a7251bd2690ad809cd29ac7acab", size_bytes = 673, media_type = "application/json", role = "model_authority:shrunken_pseudobulk:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_regularized.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "sequence_cnn_control"
+display_name = "Sequence CNN trained from scratch"
+implementation_type = "train_locally"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze architecture, receptive field, chromosome/LD split, implementation, seeds, license, and trained-artifact SHA-256."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "sequence_transformer_control"
+display_name = "Sequence transformer trained from scratch"
+implementation_type = "train_locally"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze architecture, receptive field, chromosome/LD split, implementation, seeds, license, and trained-artifact SHA-256."]
+supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[[models]]
+model_id = "assay_native_pseudobulk"
+display_name = "Assay-native donor pseudobulk"
+implementation_type = "classical_baseline"
+checkpoint_revision = "masld_bench:rna_atac_classical.py@5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+checkpoint_sha256 = "NOT_APPLICABLE"
+license_status = "project_owned"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = false
+blockers = []
+supported_tasks = ["rna_conditioned_atac", "bulk_state_transfer"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "project://Analysis/MASLD_Model_Benchmark"
+upstream_commit = "5fa5b63a9b86d1dea9ef704569d47c3a7da3ef016aeab76d967184d1788b95f2"
+preprocessing_sha256 = "727ad4ce1d1c61cdbfb2d156259b562ddca961d2092305040ed69e47d227a8aa"
+vocabulary_or_build = "gse296875_rna_atac_smoke_1000_v1:GRCh38:deterministic_2000_peak_smoke_axis"
+genome_build = "GRCh38"
+code_license = "project_owned"
+weights_license = "not_applicable_classical"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_classical"
+declared_corpora_sha256 = "f75d93f40c12e21825cd0ed8480004e72a33732330f12e80fe4feb019fa87edb"
+cellxgene_uuids_sha256 = "3d9ce34ead9ba7f945d3a1acbbb179f5b3d6c72c572d9cc989c5a5207c39ee20"
+exposure_audit_sha256 = "36807767dca3292c0b3a4516eb17a84c07fdd835fc92a7c8d21a4fb85a916e7f"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/rna_atac_classical/preprocessing.json", sha256 = "727ad4ce1d1c61cdbfb2d156259b562ddca961d2092305040ed69e47d227a8aa", size_bytes = 1732, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:preprocessing" },
+  { path = "artifacts/model-authorities/assay_native_pseudobulk/code_license.json", sha256 = "670bf5de8d1355c87817657458863b1cc45ea3d5975058863009a31de53d5cce", size_bytes = 272, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:code_license" },
+  { path = "artifacts/model-authorities/assay_native_pseudobulk/weights_license.json", sha256 = "b7ae051479acf3b95f377bcfd8a726ebeb2cc3a646ec8dd602177f4f9295b8c7", size_bytes = 286, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:weights_license" },
+  { path = "artifacts/model-authorities/assay_native_pseudobulk/derivative_weights_license.json", sha256 = "6cda083e23d4c7d626a31a66a0eff1d279e4719ebb66d6f843a217d7566bcef8", size_bytes = 286, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:derivative_weights_license" },
+  { path = "artifacts/model-authorities/rna_atac_classical/declared_corpora.json", sha256 = "f75d93f40c12e21825cd0ed8480004e72a33732330f12e80fe4feb019fa87edb", size_bytes = 425, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:declared_corpora" },
+  { path = "artifacts/model-authorities/rna_atac_classical/cellxgene_uuids.json", sha256 = "3d9ce34ead9ba7f945d3a1acbbb179f5b3d6c72c572d9cc989c5a5207c39ee20", size_bytes = 340, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/rna_atac_classical/exposure_audit.json", sha256 = "36807767dca3292c0b3a4516eb17a84c07fdd835fc92a7c8d21a4fb85a916e7f", size_bytes = 754, media_type = "application/json", role = "model_authority:assay_native_pseudobulk:exposure_audit" },
+]
+supported_actions = ["prepare", "fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "cpu_baseline_smoke"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_classical.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json", sha256 = "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298", size_bytes = 1205, media_type = "application/json", role = "environment:cpu_baseline_smoke" }
+capture_r_session = false
+ready = true
+
+[[models]]
+model_id = "graph_degree"
+display_name = "Graph degree baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze split-safe graph snapshot, edge direction, degree definition, tie-breaking, and output SHA-256."]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "graph_source_count"
+display_name = "Evidence-source count baseline"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze evidence-source taxonomy, observability handling, split-safe graph snapshot, tie-breaking, and output SHA-256."]
+supported_tasks = ["typed_evidence_graph"]
+
+[[models]]
+model_id = "regularized_linear_evidence"
+display_name = "Regularized linear evidence model"
+implementation_type = "classical_baseline"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["Freeze evidence encoding, missing-state masks, grouped folds, regularization grid, seeds, and fitted-artifact SHA-256."]
+supported_tasks = ["typed_evidence_graph"]

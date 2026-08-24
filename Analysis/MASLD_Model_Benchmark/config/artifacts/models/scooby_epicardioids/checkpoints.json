@@ -1,0 +1,111 @@
+{
+  "admission_status": "BLOCKED_PENDING_CONTEXT_ENCODER_TOPOLOGY_RUNTIME_AND_INHERITED_TERMS",
+  "architecture_contract": {
+    "base_model": "Borzoi replicate 0 converted to PyTorch, original species heads removed",
+    "cell_decoder": "A 50-dimensional scGLUE cell-state vector is mapped by an MLP to cell-specific 1x1 convolution weights and biases over 1,920-dimensional sequence embeddings.",
+    "decoder_tracks": 3,
+    "input_length_bp": 524288,
+    "lora": "Rank-8 LoRA was trained through convolutional and transformer projections and merged into the full released checkpoint.",
+    "output_central_bins": 6144,
+    "output_length_bp": 196608,
+    "output_resolution_bp": 32,
+    "parameter_count_from_hugging_face_safetensors_metadata": 193241443,
+    "sequence_embedding_dim": 1920,
+    "transform_borzoi_embedding": true
+  },
+  "checkpoint": {
+    "created": "2025-05-26T14:52:58Z",
+    "filename": "model.safetensors",
+    "format": "safetensors_F32",
+    "hugging_face_repository": "lauradmartens/epicardioids-scooby",
+    "revision": "cefc3a626f5080baaf83878754ea924df6bd7e8d",
+    "sha256": "f945e1937a46ddd5cb31249ef71e721e7a7b1381aa207fb2de449f23ac75a9e8",
+    "size_bytes": 772988628,
+    "weight_downloaded": false
+  },
+  "code_identity": {
+    "checkpoint_bound_revision": "UNRESOLVED",
+    "frozen_adapter_revision": "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471",
+    "finding": "The nearest pre-upload source revision is 81e5f89fc378c79c2403632d0392e46e2300927f. Its scooby model file is byte-identical to the frozen adapter revision, while data-loader code changed after upload, including a sequence-window correction. The weight commit has no source revision field.",
+    "release_era_model_sha256": "6b003b4cad458a2a270e4870b8bd159cd051bb368c7703170af5231fa86533d8"
+  },
+  "held_donor_contract": {
+    "published_evidence": "The paper analyzes developmental cardiac states and cell-fate interpolation within the epicardioid system, but does not report held-donor or held-study transfer. Its only explicit unseen-state test is a related hematopoietic normoblast experiment in another checkpoint.",
+    "status": "NO_PUBLISHED_HELD_DONOR_OR_CROSS_TISSUE_INDUCTIVE_VALIDATION",
+    "benchmark_rule": "Treat Epicardioids as a cardiac-domain control. Any liver context encoder, latent bridge or decoder adaptation is trained within project donor folds and reported as adaptation, not zero-shot transfer."
+  },
+  "input_contract": {
+    "cell_context": "50-dimensional scGLUE embedding from the original epicardioid study, built jointly from separately assayed scRNA-seq and scATAC-seq and used to construct pseudo-multiome metacell matches.",
+    "cell_context_encoder_status": "NOT_BUNDLED_IN_THE_HUGGING_FACE_CHECKPOINT",
+    "sequence": "One-hot hg38 DNA, 524288 bp.",
+    "topology": "The underlying RNA and ATAC cells are same-study unpaired. A scGLUE-derived pseudo-match is not same-cell or same-nucleus evidence.",
+    "warning": "The ATAC output is conditioned on a latent that used observed ATAC. This violates the project's RNA-conditioned ATAC inference contract. A new 50-D latent is not coordinate-compatible merely because its shape matches."
+  },
+  "license_audit": {
+    "code": "MIT",
+    "inherited_base": "The merged checkpoint contains a johahi Borzoi replicate-0 conversion declared CC-BY-4.0, derived from canonical Calico weights whose explicit terms remain unresolved.",
+    "open_champion_eligibility": "INELIGIBLE_UNTIL_INHERITED_BORZOI_WEIGHT_AUTHORITY_AND_DERIVATIVE_REDISTRIBUTION_ARE_CLEARED",
+    "weight_card": "The Hugging Face front matter declares MIT but contains no model description, provenance or inherited-term explanation.",
+    "weight_status": "DECLARED_MIT_WITH_UNRESOLVED_INHERITED_BORZOI_TERMS"
+  },
+  "output_contract": {
+    "activation": "softplus",
+    "atac_inverse_transform": "Multiply accessibility predictions by 20 to reverse the 0.05 training scale.",
+    "profiles": ["rna_plus", "rna_minus", "atac_insertion"],
+    "rna_inverse_transform": "Undo the Borzoi-like single-cell squashed scale with clip_soft=5.",
+    "warning": "RNA and ATAC profiles were trained against pseudo-matched unpaired modalities. They cannot be described as same-cell paired outputs."
+  },
+  "pretraining_and_adaptation": {
+    "base_corpora": "Inherited Borzoi human/mouse sequence and functional-genomics corpus.",
+    "cell_dataset": "Human heart organoid epicardioid scRNA-seq SRP359249 and scATAC-seq SRP359250.",
+    "cell_state_information": "scGLUE joint latent plus original CellRank transition probabilities and metacell mappings; transition outcomes were used downstream for motif analysis, not declared profile-training labels.",
+    "genomic_split": "Borzoi fold3 test and fold4 validation; validation/test genes and peaks excluded from embedding construction.",
+    "objective": "single-cell/pseudo-matched stranded RNA coverage and unstranded ATAC insertion profile prediction",
+    "training_topology": "same-study unpaired assays joined computationally through scGLUE pseudo-multiome mappings",
+    "training_unit": "Pseudo-matched cells/metacells are target rows, not biological donor replicates."
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "native_annotation": "GENCODE v32",
+    "native_build": "Cell Ranger ATAC refdata-cellranger-arc-GRCh38-2020-A-2.0.0 and RNA refdata-gex-GRCh38-2020-A",
+    "rule": "Require primary-contig sequence, coordinate, RNA strand, Tn5 insertion, exon and v32-to-v49 parity. Preserve a 524288-bp block buffer and test the post-release sequence-window correction."
+  },
+  "release": {
+    "article_doi": "10.1038/s41592-025-02854-5",
+    "article_publication_date": "2025-10-22",
+    "code_repository": "https://github.com/gagneurlab/scooby",
+    "reproducibility_repository": "https://github.com/gagneurlab/scooby_reproducibility",
+    "training_data_doi": "10.5281/zenodo.15517072"
+  },
+  "runtime_contract": {
+    "checkpoint_config_transformers": "4.46.1",
+    "current_setup": "Python tested at 3.9; broad package floors and an unpinned adapted-peft Git dependency.",
+    "paper_runtime": "PyTorch 2.1.0, adapted peft 0.10.1, Borzoi-PyTorch described as 0.0.2, scGLUE-derived input, mixed precision on A40 GPUs.",
+    "status": "UNRESOLVED_AND_VERSION_DIVERGENT",
+    "warning": "The exact scGLUE model/runtime is part of the input contract, not optional preprocessing. Freeze it together with scooby, borzoi-pytorch, peft, transformers, torch and CUDA."
+  },
+  "safe_loading_contract": {
+    "format_risk": "Safetensors avoids pickle execution but still requires bounded-header and exact tensor-schema validation.",
+    "loading_rule": "After campaign approval, download by immutable revision, verify SHA-256 and require exact tensor keys, shapes and dtypes under cell_emb_dim=50, n_tracks=3 and use_transform_borzoi_emb=true.",
+    "numeric_parity": "Reproduce DNA crop, cell-specific decoder, RNA/ATAC transforms, reverse-complement restoration and reference motif-effect fixtures.",
+    "weight_downloaded": false
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods article, immutable Hugging Face metadata/config, gagneurlab/scooby at dbfe6cd150d018d46a6d24ffa0406d7f2e89b471, release-era history, gagneurlab/scooby_reproducibility at 8f4eefbecf15e2e2a3cef433893086bc18505c40 and Zenodo metadata were queried on 2026-08-22. No model, latent encoder, archive, package or reference was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "gagneurlab/scooby@dbfe6cd:LICENSE", "sha256": "0a09080986ba1b09bc670290c172fc831a1f73dff1f0c6ab23039b79f80d8ed3", "size_bytes": 1068},
+    {"identity": "gagneurlab/scooby@dbfe6cd:scooby/modeling/scooby.py", "sha256": "6b003b4cad458a2a270e4870b8bd159cd051bb368c7703170af5231fa86533d8", "size_bytes": 9374},
+    {"identity": "gagneurlab/scooby_reproducibility@8f4eefb:scripts/training_epicardioids/config_multiome.yaml", "sha256": "0a95d5aeec4557d16f01c62a2506e0570bf7229f3762a3f2bc57012d3c3439da", "size_bytes": 1212},
+    {"identity": "gagneurlab/scooby_reproducibility@8f4eefb:scripts/training_epicardioids/train_multiome.py", "sha256": "a582ba9e648c9432820136671a6daa574f09cde43a2dfeaa1a069ca35bc245e5", "size_bytes": 7697},
+    {"identity": "lauradmartens/epicardioids-scooby@cefc3a6:config.json", "sha256": "f74372c396e1dd3d7d139eae6fed6fbfc6742130061e7e0cdaa11d93a00e700e", "size_bytes": 405},
+    {"identity": "lauradmartens/epicardioids-scooby@cefc3a6:README.md", "sha256": "d8d7a46d41a1a37fe4f0a5f637bf55c649310185329127d8a2204632e480be17", "size_bytes": 24},
+    {"identity": "lauradmartens/epicardioids-scooby@cefc3a6:model.safetensors", "sha256": "f945e1937a46ddd5cb31249ef71e721e7a7b1381aa207fb2de449f23ac75a9e8", "size_bytes": 772988628}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported; the checkpoint consumes a precomputed cardiac scGLUE latent",
+    "rna_conditioned_atac": "ineligible because observed ATAC contributed to the 50-D inference context; no RNA-only frozen query path is bundled",
+    "unified_model": "cardiac OOD control only after terms/runtime resolution",
+    "variant_to_regulation": "exploratory cardiac motif/variant control. No published eQTL calibration or liver-context input exists, so no sealed MASLD champion eligibility."
+  },
+  "weight_license": "MIT_DECLARED_WITH_UNRESOLVED_INHERITED_BORZOI_AUTHORITY"
+}

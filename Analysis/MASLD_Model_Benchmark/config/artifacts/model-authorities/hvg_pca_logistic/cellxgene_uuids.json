@@ -1,0 +1,6 @@
+{
+  "cellxgene_snapshot_uuids": [],
+  "model_id": "hvg_pca_logistic",
+  "reason": "No pretrained encoder or external corpus is used.",
+  "schema_version": "masld-bench-cellxgene-authority-v1"
+}

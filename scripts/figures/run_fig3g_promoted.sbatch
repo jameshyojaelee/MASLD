@@ -26,10 +26,15 @@ export MKL_NUM_THREADS=1
 "${rnaseq_env}/bin/Rscript" --vanilla \
   "${project_root}/scripts/figures/fig3g_genetic_state_complementarity.R"
 pdf="${FIGURE_CANDIDATE_ROOT}/figure3/panels/fig3g_genetic_state_complementarity.pdf"
+supp_pdf="${FIGURE_CANDIDATE_ROOT}/figureS3/panels/figs3g_expression_matched_pairs.pdf"
 test "$(pdfinfo "${pdf}" | awk '/^Pages:/ {print $2}')" = "1"
+test "$(pdfinfo "${supp_pdf}" | awk '/^Pages:/ {print $2}')" = "1"
 if strings "${pdf}" | grep -q '/Subtype /Type3'; then exit 1; fi
+if strings "${supp_pdf}" | grep -q '/Subtype /Type3'; then exit 1; fi
 strings "${pdf}" | grep -q '/FontFamily (Helvetica)'
+strings "${supp_pdf}" | grep -q '/FontFamily (Helvetica)'
 gs -q -dNOPAUSE -dBATCH -sDEVICE=nullpage "${pdf}"
+gs -q -dNOPAUSE -dBATCH -sDEVICE=nullpage "${supp_pdf}"
 awk -F '\t' 'NR == 2 {if ($2 != 14112 || $3 != 3617 || $7 != 428 ||
   $8 != 30 || $9 != 428 || $10 != 30 || $11 != 21 || $12 != 377 ||
   $13 != 0 || $16 != 0.25) exit 1}' \
@@ -37,6 +42,8 @@ awk -F '\t' 'NR == 2 {if ($2 != 14112 || $3 != 3617 || $7 != 428 ||
 mkdir -p "${FIGURE_CANDIDATE_ROOT}/proofs"
 gs -q -dNOPAUSE -dBATCH -sDEVICE=pngalpha -r240 \
   -sOutputFile="${FIGURE_CANDIDATE_ROOT}/proofs/fig3g_genetic_state_complementarity.png" "${pdf}"
+gs -q -dNOPAUSE -dBATCH -sDEVICE=pngalpha -r240 \
+  -sOutputFile="${FIGURE_CANDIDATE_ROOT}/proofs/figs3g_expression_matched_pairs.png" "${supp_pdf}"
 find "${FIGURE_CANDIDATE_ROOT}" -type f ! -name input_output_manifest.tsv -print0 | \
   sort -z | xargs -0 sha256sum > "${FIGURE_CANDIDATE_ROOT}/input_output_manifest.tsv"
 "${rnaseq_env}/bin/python3" \

@@ -1,0 +1,85 @@
+{
+  "crosswalk_scope": {
+    "project_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse289173",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "upstream_manifests": [
+      "liu-bioinfo-lab/general_AI_model@f20362a:data/accession_number.xlsx",
+      "liu-bioinfo-lab/general_AI_model@f20362a:src/train.py"
+    ]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "The paper trained downstream eQTL classifiers on GTEx/eQTL Catalogue outcomes and used Borzoi scores as added features, although those classifier weights are not in human_model.pt. Any overlapping GTEx or eQTL Catalogue project outcome is downstream-demo evidence and must not be used as pristine selection evidence.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "evidence": "GSE244832 was public before the March 2025 checkpoint upload. The publication accession workbook does not contain the literal accession, but it is not cryptographically bound to the checkpoint and donor/assay aliases have not been exhaustively resolved.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "evidence": "This project perturbation source postdates the March 2025 checkpoint and is absent from the publication accession workbook.",
+      "exposure_state": "clean_declared"
+    },
+    "gse281364": {
+      "evidence": "This project MPRA source postdates the March 2025 checkpoint and is absent from the publication accession workbook. The paper's lentiMPRA studies are separate downstream datasets and do not make this source exposed.",
+      "exposure_state": "clean_declared"
+    },
+    "gse289173": {
+      "evidence": "The checkpoint was uploaded on 2025-03-03, 19 days after GSE289173 became public. The publication's assay-accession workbook contains no GSE289173 entry and the declared supervised targets do not include its snRNA cell-state, eQTL or interaction-eQTL outcomes. Because chronology alone cannot exclude a late undeclared ingestion and the workbook is not checkpoint-bound, exposure confidence is medium rather than clean-declared.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public after the March 2025 checkpoint. Its same-nucleus donor RNA/ATAC and MASLD outcomes are absent from the publication accession workbook. Supplying its ATAC at inference remains observed held-donor evidence and is development-only.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "resource_atlas_current": {
+      "evidence": "No Resource donor labels or MASLD phenotypes are declared training targets. The checkpoint was supervised on a normal right-lobe liver context from a 53-year-old female and broader GTEx/ENCODE tissue data, so it has liver-domain but not MASLD-state supervision.",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "interpretation": "EPCOTv2 is a general observed-accessibility-to-multi-assay model, not a MASLD model. Its training includes normal liver context and its paper used eQTLs downstream. GSE289173 target-label exposure is not indicated by the released corpus workbook, but the checkpoint was published after that accession and the corpus manifest is not checkpoint-bound, so the conclusion has only medium confidence. Input availability, not contamination alone, prevents a sealed champion claim.",
+  "rules": {
+    "checkpoint_chronology": "Post-checkpoint sources can be clean-declared when absent from the exact publication manifest. Pre-checkpoint sources need accession/run/donor alias resolution. GSE289173 receives target-label-unexposed rather than clean-declared because it predates upload.",
+    "genome_overlap": "EPCOTv2 was trained across fixed hg38 windows. Apply donor groups crossed with chromosome/LD blocks and at least a 600000-bp boundary buffer to all learned adaptations; reference-sequence exposure is distinct from target-label exposure.",
+    "input_availability": "Native inference requires observed ATAC/DNase. No outcome-selected surrogate or development-trained RNA-to-ATAC translator may be introduced after selection lock to make a sealed source runnable.",
+    "variant_input": "REF and ALT predictions receive identical outcome-blind ATAC. Mask the variant bin in a prespecified sensitivity analysis to separate sequence effects from accessibility already encoded in the observed input.",
+    "upstream_aliases": "Literal accession absence is not donor-level deduplication. Resolve ENCODE file IDs, GEO/SRA aliases, GTEx donor/tissue IDs and publication study aliases before final exposure classification."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "accession_manifest_status": "PUBLICATION_WORKBOOK_FROZEN_NOT_CHECKPOINT_BOUND",
+    "declared_human_contexts": {
+      "cell_lines_or_primary_cells": 11,
+      "tissues": 8
+    },
+    "liver_domain_prior": "right_lobe_of_liver_f53 with ATAC and RNA supervision",
+    "modalities": [
+      "ATAC_or_DNase_input",
+      "ChIP_seq",
+      "CAGE_seq",
+      "total_RNA_seq",
+      "polyA_RNA_seq",
+      "Bru_family",
+      "GRO_family",
+      "TT_seq",
+      "PRO_seq",
+      "NET_CAGE",
+      "STARR_seq",
+      "Hi_C",
+      "Intact_Hi_C",
+      "Micro_C"
+    ]
+  },
+  "verified_date": "2026-08-22"
+}

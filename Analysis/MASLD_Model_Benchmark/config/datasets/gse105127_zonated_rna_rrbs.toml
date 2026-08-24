@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse105127_zonated_rna_rrbs"
+title = "Zonated human liver RNA and RRBS methylation"
+role = "blocked"
+status = "blocked"
+species = "human"
+accession = ["GSE105127", "PRJNA414905"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "participant"
+expected_biological_units = 19
+native_genome_build = "hg19"
+native_annotation_release = "GENCODE_v19_RNA+UNRESOLVED_RRBS_CpG_coordinate_contract"
+modalities = ["laser_microdissected_bulk_rna", "rrbs_methylation", "liver_zone", "histopathology"]
+pairing_levels = ["adjacent_section"]
+modality_status_default = "observed"
+exposure_status = "reference_only"
+admission_blocking = true
+blockers = ["Download and assay-native QC all 57 coverage-bearing RRBS BED files, then freeze exact methylation and coverage column semantics.", "Freeze the exact 1000 Genomes GRCh37 source reference and a failure-aware CpG hg19-to-GRCh38.p14 crosswalk before sequence extraction.", "Freeze an RNA count or read-level processing contract; RNA coverage bigWigs alone are not an expression matrix.", "Use a coverage-aware methylation likelihood and assay-native null; do not apply an RNA count model to RRBS methylation fractions.", "Freeze a task-specific activation contract and complete model-specific derivative-weight review before training or open release."]
+notes = "Nineteen participants comprise four normal controls, five healthy-obese, five bland-steatosis, and five early-NASH participants. Metadata audit ARTIFACTS bac433336705b74dcb2a6ef6b6594af10fef362769d564adfea9788fe546e88e reproduced the full 114-record cross-product. Authoritative join/rights ARTIFACTS 574eeee1119054a2d7b55066804accf29fb45f23b591dd26f9d61d907b27a75f triangulates the official GEO overall design, every sample title and characteristic, and the source article (PMCID PMC6175862; DOI 10.1038/s41467-018-06611-5). It freezes five phenotype-balanced participant folds and corrects the topology to adjacent-section RNA and RRBS. These are not same-section, same-cell, or same-molecule measurements. Public internal nonclinical research use needs no new DUA; redistribution is prohibited and derivative weights require model-specific review. Participant is the inferential unit; zone, section, assay, and library are repeated measurements. Model training remains blocked."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE105127"
+verified_date = "2026-08-24"
+local_exposure = "Official GEO SOFT metadata, source-article evidence, and the authoritative adjacent-section participant-zone-assay join are frozen; no assay matrix or model result is active."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "blocked"
+label_visibility = "development_visible"

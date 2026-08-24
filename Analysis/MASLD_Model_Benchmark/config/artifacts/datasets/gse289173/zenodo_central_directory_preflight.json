@@ -1,0 +1,32 @@
+{
+  "archive": {
+    "filename": "Zenodo_250212.zip",
+    "md5": "1fd1a014829a8d6a0f2e97fcb07e69fb",
+    "size_bytes": 6647735352,
+    "zenodo_doi": "10.5281/zenodo.14586466"
+  },
+  "central_directory": {
+    "entries": 526,
+    "non_macos_regular_files": 233,
+    "offset_bytes": 6647661140,
+    "sha256": "60691c678ae499509506ed37b0bd92a205baf54fa99689a77941db710abc9b35",
+    "size_bytes": 74114
+  },
+  "content_opened": false,
+  "inventory": {
+    "donor_matrix_directories": 48,
+    "full_eqtl_summary_lineages_named": [
+      "cholangiocyte",
+      "endothelial_cell",
+      "hepatocyte",
+      "stellate_cell"
+    ],
+    "interaction_eqtl_files_named": 23,
+    "processed_seurat_object_named": true,
+    "significant_only_eqtl_files_named": true
+  },
+  "license": "CC-BY-4.0",
+  "limitations": "Central-directory names establish only archive inventory. Outcome-table schema, completeness, harmonization, denominators, and metric eligibility remain unverified and evaluator-only.",
+  "schema_version": "masld-bench-sealed-archive-preflight-v1",
+  "verified_date": "2026-08-21"
+}

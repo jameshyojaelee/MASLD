@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse238219"
+title = "Differentiated HepaRG CRISPRi Perturb-seq of MASLD-prioritized genes"
+role = "external_development"
+status = "available"
+species = "human_cell_line"
+accession = ["GSE238219", "PRJNA998383"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "independent_culture_replicate"
+expected_biological_units = "UNRESOLVED"
+native_genome_build = "hg38_Cell_Ranger_6"
+native_annotation_release = "UNRESOLVED_Cell_Ranger_6_feature_reference"
+modalities = ["single_cell_rna", "crispri_guide_assignment", "gene_target"]
+pairing_levels = ["same_cell"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["The guide-to-target/control crosswalk and exact raw Cell Ranger feature axis were frozen in job array 21067095, but the Cell Ranger reference annotation authority remains unresolved.", "GEO deposits five objects labelled replicates, while the paper states that differential expression used two Perturb-seq replicates. Resolve culture, transduction, capture, and sequencing ancestry before declaring the number of independent biological cultures.", "Split target gene, guide family, and culture replicate before normalization, feature selection, model fitting, or delta/transport estimation; source-derived perturbation-effect tables are prohibited inputs.", "The 11 genes were selected using human genetic evidence and are conditional follow-up, not an unbiased discovery or independent genetic validation set.", "Freeze a rights authority before model-input use or aggregate redistribution."]
+notes = "The registered targets are C6orf106, GPAM, LYPLAL1, NCKIPSD, PNPLA3, PPP1R3B, RBM6, TNKS, TRIB1, VKORC1, and WDR6. This source can test unseen-gene prediction only after the replicate crosswalk is frozen; scGen and CellOT are restricted to known-target held-replicate prediction. Cells and guide assignments are never inferential replicates."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE238219"
+verified_date = "2026-08-24"
+local_exposure = "Primary GEO metadata, the open source article, raw Cell Ranger counts, and raw guide calls were inspected. Job array 21067095 materialized deposited-sample raw-count pseudobulk without reading source perturbation-effect tables. No fitted model or benchmark prediction was exposed."
+
+[split]
+group_key = "cohort_family_id+target_gene+guide_family+culture_replicate"
+outer_role = "development"
+label_visibility = "development_visible"

@@ -1,0 +1,68 @@
+{
+  "architecture_contract": {
+    "default_dropout": 0.2,
+    "default_hidden_depth": 2,
+    "default_hidden_dimension": 256,
+    "default_latent_dimension": 50,
+    "model": "modality-specific variational encoders and decoders plus a graph VAE and adversarial modality discriminator",
+    "supported_probabilistic_decoders": ["Normal", "ZIN", "ZILN", "NB", "ZINB", "Beta"],
+    "warning": "The guidance graph is a training prior, not evidence of a learned causal regulatory edge. Graph vertices, weights, signs, genomic windows, and preprocessing must be frozen inside each training partition."
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No general upstream checkpoint is admitted. Train SCGLUE or PairedSCGLUE inside each outer donor fold and hash every local artifact.",
+    "implementation_type": "train_locally_from_exact_source_tag",
+    "pypi_warning": "PyPI exposes scglue 0.4.0, not source tag 0.4.1. The 0.4.0 wheel must not be silently substituted for this frozen source identity.",
+    "repository": "gao-lab/GLUE",
+    "repository_revision": "091bdbbdb3dd6d652ed4677200b034ee3c85dae1",
+    "repository_tag": "v0.4.1",
+    "source_version": "0.4.1"
+  },
+  "inductive_inference_contract": {
+    "allowed": "encode_data may compute an RNA embedding for held rows without model fitting when features and configured transforms are frozen.",
+    "experimental_cross_decode": "decode_data can map RNA embeddings through an ATAC decoder without held ATAC, but upstream labels it EXPERIMENTAL and defaults target library size to 1.0 and target batch to 0.",
+    "frozen_decoding_inputs": "Any future RNA-to-ATAC lane must freeze target library size, target batch handling, graph, feature order, and output interpretation before evaluation.",
+    "held_row_training": "No fit_SCGLUE, adopt_pretrained_model, feature selection, query fitting, cell-type supervision, or calibration on held or sealed rows."
+  },
+  "input_contract": {
+    "atac_input": "assay-native ATAC peak matrix with a training-only feature inventory and an explicitly frozen probabilistic decoder/preprocessing recipe",
+    "guidance_graph": "training-only bipartite gene-peak prior aligned to GRCh38.p14 and GENCODE v49, with exact vertices, edges, weights, signs, window, and hash",
+    "rna_input": "assay-native RNA matrix with training-only HVG/representation and explicitly frozen NB/ZINB or other decoder recipe",
+    "supported_pairing_topologies": ["same_study_unpaired", "same_cell", "same_nucleus", "same_sample_different_aliquot_as_separate_unpaired_rows"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_with_use_obs_names", "same_donor_different_tissue_with_use_obs_names"],
+    "pairing_mechanism": "PairedSCGLUE marks paired cells through matching obs_names when use_obs_names is enabled; those identifiers require a validated same-cell or same-nucleus join."
+  },
+  "output_contract": {
+    "common_embedding": "encode_data posterior mean, 50 dimensions unless the common lane freezes another identical dimension",
+    "current_profile_status": "latent-only under the current RNA-conditioned ATAC capability registry",
+    "experimental_profile": "decode_data mean over the frozen ATAC feature inventory; it is not scoreable until a separate fixture and TaskSpec revision admit it."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.6",
+    "declared_scglue_source": "0.4.1",
+    "declared_torch": ">=1.8",
+    "environment_status": "UNRESOLVED_MODERN_PYTHON_L40S_IMPORT_FORWARD_BACKWARD_RESUME_DETERMINISM_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "upstream_risk": "Model.save and load_model use dill, which can execute code during deserialization.",
+    "required_adapter": "Export a project-controlled state_dict plus architecture, feature, graph, and preprocessing manifests; never load external or untrusted dill artifacts."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact GLUE v0.4.1 tag, source, license, project metadata, and PyPI release mismatch were inspected on 2026-08-22. No package, checkpoint, or serialized object was downloaded, installed, loaded, or trained.",
+  "source_records": [
+    {"identity": "GLUE:LICENSE", "sha256": "f66904d80415738a11a60a542ebe29688993481f415cbc82f39a1cb7ed6c82fe", "size_bytes": 1064},
+    {"identity": "GLUE:pyproject.toml", "sha256": "e51acb7bc8975176e8f7cba39d6b193118c5dc1f6674abfced9c05b4c9ed2604", "size_bytes": 2048},
+    {"identity": "GLUE:scglue/models/scglue.py", "sha256": "00343c0aa394f23858eb1ba6d526bd3c61ec6d5a33c2c0e2e99d645c442ace84", "size_bytes": 48463},
+    {"identity": "GLUE:scglue/models/base.py", "sha256": "5b507022f5bd48148ef59647038bf1d8169a0eb7cdb908670a505afe14570b2b", "size_bytes": 11827},
+    {"identity": "GLUE:scglue/genomics.py", "sha256": "285b4e4bdb32223575241aec3568faf83c1b216498b354439b7dea4ee7eec3d4", "size_bytes": 39165}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Eligible in principle as a locally trained RNA inductive embedding plus common head after runtime and feature fixtures pass.",
+    "rna_conditioned_atac": "Latent-only in the current registry. Experimental decode_data is not an active direct-profile candidate until separately admitted.",
+    "variant_to_regulation": "Ineligible standalone because scGLUE has no allele-specific sequence mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

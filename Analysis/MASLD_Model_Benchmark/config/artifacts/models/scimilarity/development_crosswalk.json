@@ -1,0 +1,51 @@
+{
+  "corpus": {
+    "annotated_test_cells": 1415962,
+    "annotated_test_studies": 15,
+    "annotated_test_table_rows": 15,
+    "annotated_training_cells": 7886247,
+    "annotated_training_studies": 56,
+    "annotated_training_table_rows": 52,
+    "full_reference_cells": 23381150,
+    "full_reference_studies": 412,
+    "inventory_granularity": "training_or_test_dataset_UUID_and_publication_plus_reference_GEO_sample_accession; the paper reports 56 training studies while the final table contains 52 nonempty train rows, so both counts are retained rather than silently reconciled",
+    "source_record_identity": "Heimberg_et_al_2024_Supplementary_Table_1",
+    "source_record_sha256": "3363c906dd5368dcc1f740fb7ec872d34b0875425e1c68db3cb6406a2c847792",
+    "source_record_url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-024-08411-y/MediaObjects/41586_2024_8411_MOESM3_ESM.xlsx"
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"],
+    "scope_limit": "Cell-state task only. Training/test rows and reference-only GEO sample rows were searched separately by accession and exact publication title."
+  },
+  "findings": {
+    "GSE136103": {
+      "evidence": "Twenty-six GEO sample rows occur in the full search reference, but the source is absent from the annotated training/test table. The common embedding lane never uses the released reference index.",
+      "exposure_state": "reference_only",
+      "matched_reference_samples": 26,
+      "public_date": "2019-09-12"
+    },
+    "GSE174748": {"evidence": "No accession or exact publication-title match in the complete declared training/test/reference table.", "exposure_state": "clean_declared", "public_date": "2022-05-01"},
+    "GSE185477": {
+      "evidence": "Declared annotated training dataset 44531dd9-1388-4416-a117-af0a99de2294, Andrews et al., liver, scRNA and snRNA, 6 samples and 43,863 cells.",
+      "exposure_state": "encoder_seen",
+      "matched_records": [{"cells": 43863, "dataset_id": "44531dd9-1388-4416-a117-af0a99de2294", "samples": 6, "split": "train"}],
+      "public_date": "2021-10-13"
+    },
+    "GSE189600": {"evidence": "No accession or exact publication-title match in the complete declared training/test/reference table.", "exposure_state": "clean_declared", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO was submitted and made public after the v1.1 Zenodo record was finalized; its frozen cell-state and eQTL/ieQTL outcomes were not training labels.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "No GSE115469 accession, MacParland author, or exact publication-title match in the complete declared training/test/reference table.", "exposure_state": "clean_declared", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "encoder_training": "A declared train row is encoder_seen because model training used author-provided Cell Ontology labels and expression.",
+    "reference_only": "A source found only in the full search reference is reference_only. Reference-free common embedding runs remain valid; native kNN/index runs must declare the reference corpus separately.",
+    "sealed_timing": "A source first public after the finalized v1.1 record is target_label_unexposed for the sealed source and clean_declared for development sources unless another declaration names it."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

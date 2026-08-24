@@ -1,0 +1,21 @@
+{
+  "admitted": true,
+  "authority": "labels",
+  "evidence": {
+    "class_count": 5,
+    "classes": [
+      "cholangiocyte",
+      "endothelial",
+      "hepatocyte",
+      "immune",
+      "mesenchymal_stromal"
+    ],
+    "labels_per_class": 200,
+    "ontology_sha256": "42351e02ea9e2fc29aff972a0dc95b7398ba1162561ebb75c08d2acbe60996d7",
+    "sealed_outcomes_used": false,
+    "selection_outcomes_used": false
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

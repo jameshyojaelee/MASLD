@@ -1,0 +1,75 @@
+{
+  "architecture_contract": {
+    "base_initialization": "load_only_encoder_value_encoder_and_transformer_encoder_parameters_from_the_scGPT_whole_human_checkpoint",
+    "canonical_tutorial_model": "TransformerGenerator_with_new_3_state_perturbation_embedding_and_new_affine_expression_decoder",
+    "input": "single_cell_gene_expression_tokens_plus_per_gene_perturbation_flags",
+    "native_output": "absolute_post_perturbation_single_cell_expression_on_the_fitted_gene_scale",
+    "published_task": "gene_perturbation_response_generation",
+    "tutorial_configuration": {"embedding_dimension": 512, "transformer_layers": 12, "attention_heads": 8, "hidden_dimension": 512, "classification_layers": 3, "dropout": 0.0, "max_sequence_length": 1536}
+  },
+  "base_checkpoint_contract": {
+    "args_file": {"google_drive_id": "1hh2zGKyWAx3DyovD30GStZ3QlzmSqdk1", "sha256": "c18e075e018140cb8b2d9029387b9de26607a5ce6a8ccabd6ead70cd76b95d60", "size_bytes": 1300},
+    "base_artifact": "scGPT_whole_human",
+    "base_checkpoint_modified": "2023-06-23",
+    "base_checkpoint_sha256": "UNRESOLVED_NOT_DOWNLOADED",
+    "base_checkpoint_size_bytes": 205385258,
+    "base_weights_google_drive_id": "14AebJfGOUF047Eg40hk57HCtrb0fyDTm",
+    "folder_google_drive_id": "1oWh_-ZRdhtoGQ2Fw24HP41FgLoomVo-y",
+    "vocab_file": {"google_drive_id": "1H3E_MJ-Dl36AQV6jLbna2EdvgPaqvqcC", "sha256": "acca93d114ca62c3f0f50debbd23e8c87f0714f4737764454f6b2b13f2e8580f", "size_bytes": 1317639}
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_perturbation_checkpoint": false,
+    "implementation_type": "partially_initialize_then_train_locally",
+    "registered_identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4+official_Tutorial_Perturbation",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "fit_contract": {
+    "tutorial_defaults": {"batch_size": 64, "early_stopping_patience": 10, "epochs": 15, "learning_rate": 0.0001, "seed": 42, "split_seed": 1},
+    "fine_tuning_scope": "all_TransformerGenerator_parameters_are_optimized; this_is_not_head_only_tuning",
+    "fold_rule": "split_target_locus_guide_family_and_biological_replicate_before_gene_filtering_controls_DE_metadata_or_fit",
+    "gene_retention_rule": "force_each_valid_perturbed_gene_feature_into_every_training_and_inference_sequence",
+    "tutorial_incident": "training_randomly_subsamples_at_most_1536_genes_without_forcing_the_perturbed_feature_but_inference_with_include_zero_gene_all_uses_all_genes",
+    "unknown_token_rule": "reject_OOV_perturbation_targets; never_map_a_target_to_pad"
+  },
+  "pretraining_corpus": {
+    "declared_source": "CELLxGENE_Census_snapshot_2023-05-08",
+    "declared_scope": "approximately_33_million_normal_human_cells_six_epochs",
+    "target_label_exposure": "GSE281160_postdates_the_base_checkpoint_and_is_chronologically_unexposed_to_the_declared_base_corpus",
+    "weight_terms": "UNDECLARED"
+  },
+  "query_contract": {
+    "current_task_result": "blocked_target_representation_mismatch",
+    "reason": "The tutorial perturbation flag is attached to a measured gene token. GSE281160 perturbs noncoding loci represented by guide pseudo-genes that are absent from the frozen whole-human gene vocabulary and have no pretrained target identity.",
+    "prohibited_behaviors": ["map_locus_or_guide_to_pad", "nearest_gene_substitution", "drop_the_perturbed_feature", "use_global_controls"],
+    "valid_future_use": "a_separately_registered_gene_perturbation_task_where_the_target_is_measured_in_the_matrix_and_present_in_the_frozen_base_vocabulary"
+  },
+  "repository": "bowang-lab/scGPT",
+  "repository_revision": "cebd6fae655b9c585a4807daa3ac31bb764f06b4",
+  "runtime_contract": {
+    "declared_package_version": "0.2.5",
+    "declared_python": ">=3.7.12,<4",
+    "key_requirements": ["torch>=1.13", "scanpy>=1.9.1,<2", "scvi-tools>=0.16,<1", "datasets>=2.20,<3", "cell-gears<0.0.3"],
+    "runtime_status": "UNRESOLVED_tutorial_not_locked_and_uses_deprecated_numpy_float",
+    "required_probe": "isolated_L40S_import_dataset_build_forward_backward_resume_forced_target_retention_and_fixed_seed_numeric_probe"
+  },
+  "safe_loading_contract": {
+    "unrestricted_torch_load_prohibited": true,
+    "project_action": "after_terms_clear_verify_downloaded_bytes_then_load_validated_state_dict_only_in_an_isolated_environment"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository and already frozen scGPT base metadata were inspected on 2026-08-22; no package or checkpoint was downloaded or loaded.",
+  "source_records": [
+    {"identity": "scGPT:tutorials/Tutorial_Perturbation.ipynb", "sha256": "a997191d88e4c05969103e777f1323ebf4263238e64520877ae3a0f6aed4bdbb", "size_bytes": 144523},
+    {"identity": "scGPT:scgpt/model/generation_model.py", "sha256": "a6dff3fff64f49f061847b91ec67041586d59720426ec360e78c15a24fb59d2f", "size_bytes": 19594},
+    {"identity": "scGPT:scgpt/model/model.py", "sha256": "4ae77618cc6f12a7d1f6d946fee3f7bd5c56f3e9e103073394a590ceba5a35ed", "size_bytes": 39040},
+    {"identity": "scGPT:scgpt/tokenizer/gene_tokenizer.py", "sha256": "5044666baf469c46b77a124ae01c2ccbea02c185c6a93333d09b9571c088b8b5", "size_bytes": 17362},
+    {"identity": "scGPT:pyproject.toml", "sha256": "e6b8a140d7a34f559eb5868e28e9a5b7f3dbd75bcb846c642e0eb71174c14110", "size_bytes": 1291}
+  ],
+  "terms_audit": {
+    "base_weight_terms": "UNDECLARED",
+    "code_license": "MIT",
+    "project_trained_weight_terms": "project_owned_subject_to_base_weight_and_training_data_terms",
+    "result": "blocked_base_weight_terms_and_missing_checkpoint_hash"
+  }
+}

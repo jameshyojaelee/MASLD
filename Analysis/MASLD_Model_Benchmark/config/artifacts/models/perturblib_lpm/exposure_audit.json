@@ -1,0 +1,50 @@
+{
+  "audit_scope": {
+    "artifact_type": "algorithm_revision_plus_future_project_trained_weights",
+    "development_sources": ["gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_id": "perturbation_transfer"
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_checkpoint": false,
+    "code_identity": "perturblib/perturblib@9e79ae328ab532aa9de76a3586be93554d72fb4f",
+    "declared_algorithm_exposure_state": "target_label_unexposed",
+    "future_project_fit_rule": "A fit on any development source is continual_seen for that source. Record exact P/R/C records, biological replicate rows, preprocessing, training-only vocabularies, architecture, loss, optimizer, validation partition, seeds, and artifact hashes."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "58deeefe31b85256770e50f3ea8ac727e40227c867c4a7eae5783da2948d9e78"
+  },
+  "external_corpus_exposure": {
+    "canonical_paper_sources": ["LINCS_L1000", "Replogle_2022_K562", "Replogle_2022_RPE1"],
+    "current_state": "not_admitted_exact_files_rights_donor_or_replicate_units_and_checksums_unresolved",
+    "rule": "Any admitted external records become training exposure for their P/R/C symbols and cannot be used as independent test outcomes."
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {"benchmark_action": "replace", "finding": "Default transcriptomics preprocessing can normalize, log-transform, and select HVGs on all observations before a later split."},
+    {"benchmark_action": "replace", "finding": "Default aggregation can collapse all biological replicates sharing perturbation, context, and split into one mean."},
+    {"benchmark_action": "replace", "finding": "The fallback split is by perturbation symbol and does not implement project locus, guide-family, context, and replicate grouping."},
+    {"benchmark_action": "reject_unknown", "finding": "The released encoding path silently maps an unknown perturbation symbol to the control code."},
+    {"benchmark_action": "reject_current_task", "finding": "Core LPM has no released external embedding path for a wholly unseen noncoding perturbation symbol."}
+  ],
+  "prediction_first_rule": {
+    "gse313774": "An unseen liver-chip context C and mismatched intervention P cannot be added to the vocabulary after outcomes are opened. No current LPM prediction is eligible for this stress test; CXCL1 and IL8 remain excluded."
+  },
+  "remaining_blockers": [
+    "Do not schedule LPM for the current GSE281160 held-symbol task; register a separate in-vocabulary combination task if scientifically useful.",
+    "Resolve GSE281160 biological replicates, custom reference, guide-to-locus table, matrix layer, P/R/C schema, and output scale.",
+    "Implement split-before-preprocessing, replicate-preserving conversion, strict unknown P/R/C rejection, deterministic checkpoint naming, and safe state-dict loading.",
+    "If paper corpora are used, separately freeze exact files, versions, rights, biological units, identifiers, and checksums.",
+    "Freeze project architecture, optimizer, validation rule, seeds, vocabularies, weights, and prediction hashes.",
+    "Pass isolated runtime, resume, numeric, and leakage fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_and_current_held_target_symbol_is_unsupported",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "not_currently_evaluable",
+    "rule": "For a supported task, the independent evaluator reconstructs full absolute-expression vectors and computes O_pert only from training perturbation-specific replicate centroids; residualization cannot supply unknown P or C symbols."
+  },
+  "terms_result": "code_Apache-2.0_external_training_corpus_terms_UNRESOLVED",
+  "verified_date": "2026-08-22"
+}

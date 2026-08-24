@@ -1,0 +1,101 @@
+{
+  "algorithm_contract": {
+    "candidate_regions": "up to 150000 strongest accessibility peaks, extended 250 bp from summit under the registered defaults",
+    "contact_term": "cell-type Hi-C when supplied, otherwise a distance power law",
+    "formula": "for each gene and TSS, Activity times Contact divided by the sum of Activity times Contact over candidate elements within the window",
+    "input_activity": "quantile-normalized ATAC for the primary liver lane; geometric mean with H3K27ac is unavailable and not imputed",
+    "model_kind": "deterministic_classical_baseline_without_learned_weights",
+    "output": "unsigned relative enhancer-gene link score within each gene-TSS neighborhood",
+    "self_promoter_behavior": "self-promoter scores are forced to one by upstream code",
+    "window_bp": 5000000
+  },
+  "implementation": {
+    "checkpoint_policy": "No checkpoint exists or is admitted.",
+    "implementation_type": "pinned_source_classical_baseline",
+    "repository": "broadinstitute/ABC-Enhancer-Gene-Prediction",
+    "repository_revision": "d5976ee642edf94de54b1d694c29477983f88df2",
+    "revision_date": "2026-08-14",
+    "revision_status": "exact_immutable_commit_registered",
+    "source_code_run": false
+  },
+  "registry_binding": {
+    "exposure_status": "reference_only",
+    "model_id": "abc",
+    "path": "config/models/regulatory_local.toml",
+    "sha256": "c0d1094657688864a5e13e0c6a3818ef6e165ed62e93f2ce0bc8402d9715ab6d"
+  },
+  "input_contract": {
+    "canonical_reference": "GRCh38.p14 and a project-derived GENCODE v49 TSS/gene authority; the bundled hg38 gene files are not admitted silently",
+    "gse296875_activity": "ATAC insertions pseudobulked by donor and cell state, with candidate peaks, normalization, QC, and pooling fit only from outer-training donors",
+    "h3k27ac_state": "structurally_missing; select the no-H3K27ac lane rather than zero-imputing a track",
+    "primary_lane": {
+      "contact": "registered distance-power-law defaults",
+      "contact_gamma": 1.024238616787792,
+      "contact_scale": 5.9594510043736655,
+      "hic_pseudocount_distance_bp": 5000,
+      "name": "atac_no_h3k27ac_powerlaw",
+      "upstream_binary_threshold_diagnostic_only": 0.013
+    },
+    "quantile_normalization": "Use the pinned upstream K562 reference only as a declared fixed transform. A no-qnorm sensitivity is separately named and cannot replace the primary lane after outcomes are seen.",
+    "reference_contact_sensitivity": "A MegaMap/contact sensitivity may run only if the exact contact artifact, rights, build, normalization, resolution, and checksum are frozen before submission. It is never selected using holdout outcomes.",
+    "reference_mismatch": "The registered upstream config uses its own hg38 collapsed gene bounds. GENCODE v49 changes the TSS roster and score denominator, so this is a declared project adaptation and upstream binary calibration is not assumed to transfer.",
+    "variant_mapping": "Intersect evaluator-provided variant positions with the full frozen candidate-element intervals using explicit 0-based half-open coordinates. Keep continuous ABC scores."
+  },
+  "output_and_task_contract": {
+    "admitted_tasks": ["variant_to_regulation", "typed_evidence_graph"],
+    "not_supported": [
+      "allele_specific_activity",
+      "signed_expression_effect",
+      "donor_conditioning_at_sealed_inference",
+      "causal_gene_inference"
+    ],
+    "sealed_behavior": "Use a cell-state link atlas built entirely from development ATAC before selection lock. GSE289173 has no ATAC, so ABC cannot create donor-specific sealed links.",
+    "typed_graph_output": "unsigned typed enhancer_to_gene edge with source, cell state, observability, and continuous score",
+    "variant_endpoint_status": "eligible as an unsigned link/retrieval baseline or component, not as a standalone signed eQTL/ieQTL predictor",
+    "variant_overlap_helper": "prohibited; upstream getVariantOverlap.py hard-codes score and distance filters, shrinks regions, and invokes shell commands instead of honoring the benchmark contract"
+  },
+  "runtime_contract": {
+    "declared_environment": {
+      "macs2": "2.2.9.1",
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "python": "3.10.14",
+      "snakemake": "7.32.4"
+    },
+    "environment_status": "UNRESOLVED_CPU_SLURM_COMPATIBILITY_AND_FIXED_FIXTURE_PROBE_REQUIRED",
+    "execution_target": "cpu_partition",
+    "gpu_required": false
+  },
+  "safe_loading_contract": {
+    "checkpoint_or_pickle": false,
+    "external_contact_downloaded": false,
+    "prohibit_getVariantOverlap_py": true,
+    "require_no_network_execution": true,
+    "require_pinned_source_and_environment": true,
+    "require_project_owned_coordinate_overlap": true,
+    "require_structural_missingness_rejection_before_scoring": true
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact official repository commit, its MIT license, v1.1.2 release ancestry, configuration, thresholds, environment, and scoring source were queried on 2026-08-22. Source text was inspected without installing dependencies, downloading reference/contact data, or executing the pipeline.",
+  "source_records": [
+    {"identity": "ABC:LICENSE", "sha256": "c99eddc47a4e3cda7fee080d1f66a2f16c288a52e753dc9b290485d8f02c25ae", "size_bytes": 1078},
+    {"identity": "ABC:README.md", "sha256": "d437f4d3abb4b6d6b94ca61620479edf76f20cae5c97546ae78c3fd196581686", "size_bytes": 1980},
+    {"identity": "ABC:config/config.yaml", "sha256": "6f0aabfc78c93e7fbd39d8dbea3bbd95541a4ae22fa3056e5fbb986ddfc9edb6", "size_bytes": 2032},
+    {"identity": "ABC:reference/abc_thresholds.tsv", "sha256": "f814dc0dc5b1211581b695783681dfc83460b6338c1ef0803c088c97b53b131e", "size_bytes": 333},
+    {"identity": "ABC:workflow/Snakefile", "sha256": "8c4da7e5f59a6e889febe0d41829240ea13b7272000224a3a3cbee0a7f608d70", "size_bytes": 1325},
+    {"identity": "ABC:workflow/envs/abcenv.yml", "sha256": "75ce2f5b692f83392c1fbd53dd085b8525614405ab0acd14a7126778bdaf13f4", "size_bytes": 12653},
+    {"identity": "ABC:workflow/rules/candidate_regions.smk", "sha256": "8f22e313d44b37d47170bd19d2d3ac51a1853c70b39662cbc2d5e1419f79ade0", "size_bytes": 1393},
+    {"identity": "ABC:workflow/scripts/neighborhoods.py", "sha256": "8d456cafc50860e1371e2d85b42f4a0a90f4d8be6d823a489fe0b5b9f5d59814", "size_bytes": 28736},
+    {"identity": "ABC:workflow/scripts/predict.py", "sha256": "e83ee516e8750a18f1f5dace5a9bc369513812831ee6de4395444dc52546c82d", "size_bytes": 10543},
+    {"identity": "ABC:workflow/scripts/predictor.py", "sha256": "a09ff2036927f3b33cd9db011eb7891f25d50a6e69004f8057675b0728cea691", "size_bytes": 18701},
+    {"identity": "ABC:workflow/scripts/getVariantOverlap.py", "sha256": "d13bbaec5dd18e77d00802e69a84ed30f5070d4ebd6299834e6c9d2cff7e1034", "size_bytes": 1910},
+    {"identity": "config/models/regulatory_local.toml", "sha256": "c0d1094657688864a5e13e0c6a3818ef6e165ed62e93f2ce0bc8402d9715ab6d", "role": "registry_binding"}
+  ],
+  "terms_audit": {
+    "code_license": "MIT",
+    "derivative_weight_redistribution": "not_applicable_no_weights",
+    "external_reference_and_contact_terms": "must_be_audited_per_artifact_before_activation",
+    "result": "code_terms_pass_preflight_external_inputs_unresolved"
+  },
+  "weight_license": "NOT_APPLICABLE_NO_WEIGHTS"
+}

@@ -1,0 +1,96 @@
+schema_version = "masld-bench-promotion-gates-v1"
+confirmatory_method = "Holm"
+confirmatory_fwer = 0.05
+
+[tasks.cell_state_mapping]
+promotion_gate_id = "cell_state_mapping_promotion_v1"
+allowed_promotion_modes = ["sealed_confirmatory"]
+sealed_holdout_dataset_ids = ["gse289173"]
+primary_metric = "donor_class_balanced_macro_f1"
+primary_min = 0.70
+delta_metric = "delta_donor_class_balanced_macro_f1"
+delta_min = 0.02
+delta_ci_low_metric = "delta_donor_class_balanced_macro_f1_ci_low"
+delta_ci_low_strict_min = 0.0
+stratum_metric = "per_class_f1"
+stratum_min = 0.50
+brier_delta_metric = "delta_multiclass_brier_score"
+brier_delta_max = 0.01
+power_metric = "delta_donor_class_balanced_macro_f1"
+power_method_id = "empirical_paired_endpoint_bootstrap_v1"
+power_minimum_effect = 0.02
+
+[tasks.variant_to_regulation]
+promotion_gate_id = "variant_to_regulation_promotion_v1"
+allowed_promotion_modes = ["sealed_confirmatory"]
+sealed_holdout_dataset_ids = ["gse289173"]
+summary_statistics_flag = "complete_summary_statistics_available"
+delta_metric = "delta_mean_fisher_z_celltype_spearman"
+delta_min = 0.03
+delta_ci_low_metric = "delta_mean_fisher_z_celltype_spearman_ci_low"
+delta_ci_low_strict_min = 0.0
+stratum_metric = "major_lineage_signed_effect_spearman_deltas"
+stratum_min = -0.03
+auprc_delta_ci_low_metric = "delta_vs_best_retrieval_comparator_auprc_ci_low"
+power_metric = "delta_mean_fisher_z_celltype_spearman"
+power_method_id = "empirical_paired_endpoint_bootstrap_v1"
+power_minimum_effect = 0.03
+
+[tasks.rna_conditioned_atac]
+promotion_gate_id = "rna_conditioned_atac_promotion_v1"
+allowed_promotion_modes = ["conditional_sealed", "development_only"]
+sealed_holdout_dataset_ids = ["fnih_86_liver"]
+delta_metric = "relative_deviance_reduction"
+delta_min = 0.05
+delta_ci_low_metric = "relative_deviance_reduction_ci_low"
+delta_ci_low_strict_min = 0.0
+stratum_metric = "major_lineage_deviance_reductions"
+stratum_min = -0.02
+min_improved_strata = 4
+required_stratum_count = 5
+power_metric = "relative_deviance_reduction"
+power_method_id = "empirical_paired_endpoint_bootstrap_v1"
+power_minimum_effect = 0.05
+
+[tasks.bulk_state_transfer]
+promotion_gate_id = "bulk_state_transfer_promotion_v1"
+allowed_promotion_modes = ["conditional_sealed", "development_only"]
+sealed_holdout_dataset_ids = ["gse267031"]
+delta_metric = "paired_rank_correlation_gain"
+delta_min = 0.05
+delta_ci_low_metric = "paired_rank_correlation_gain_ci_low"
+delta_ci_low_strict_min = 0.0
+direction_reversal_metric = "direction_reversal_by_endpoint"
+power_metric = "paired_rank_correlation_gain"
+power_method_id = "empirical_paired_endpoint_bootstrap_v1"
+power_minimum_effect = 0.05
+
+[tasks.typed_evidence_graph]
+promotion_gate_id = "typed_evidence_graph_promotion_v1"
+allowed_promotion_modes = ["blocked_missing_sealed_source", "conditional_sealed"]
+sealed_holdout_dataset_ids = []
+delta_metric = "held_source_auprc_gain"
+delta_min = 0.03
+delta_ci_low_metric = "held_source_auprc_gain_ci_low"
+delta_ci_low_strict_min = 0.0
+brier_delta_metric = "delta_brier_score"
+brier_delta_max = 0.01
+power_metric = "held_source_auprc_gain"
+power_method_id = "empirical_paired_endpoint_bootstrap_v1"
+power_minimum_effect = 0.03
+
+[tasks.perturbation_transfer]
+promotion_gate_id = "perturbation_transfer_promotion_v1"
+allowed_promotion_modes = ["exploratory_only"]
+sealed_holdout_dataset_ids = []
+
+[tasks.unified_model]
+promotion_gate_id = "unified_model_promotion_v1"
+allowed_promotion_modes = ["blocked_missing_external_family", "conditional_sealed"]
+sealed_holdout_dataset_ids = ["fnih_86_liver", "gse267031", "gse289173"]
+min_superior_source_families = 2
+min_external_superior_source_families = 1
+min_eligible_external_source_families = 2
+power_metric = "two_source_family_superiority_holm"
+power_method_id = "empirical_paired_endpoint_bootstrap_v1"
+power_minimum_effect = 0.05

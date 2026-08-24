@@ -1,0 +1,25 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "exposure_audit",
+  "model_ids": ["scpair"],
+  "exposure_status": "target_label_unexposed",
+  "checkpoint_exposure_class": "target_label_unexposed",
+  "pretraining": false,
+  "fold_local_fit": true,
+  "held_donor_atac_exposed_to_fit_or_predict": false,
+  "query_atac_tensor_created": false,
+  "sealed_sources_exposed": false,
+  "profile_fixture": {
+    "job_id": "21057440",
+    "status": "passed",
+    "held_atac_exposed": false,
+    "query_composition_invariant_by_construction": true,
+    "source_sha256": "750e4b2a7eef827f399fac560f714d0d9d6a7a1dc96ebe045870409d3e2a52e7"
+  },
+  "champion_eligibility": "ineligible_from_current_smoke_view",
+  "champion_blockers": [
+    "The source-wide consensus peak inventory includes held-donor peak discovery.",
+    "No eligible external RNA-ATAC seal is active."
+  ],
+  "notes": "This authority admits smoke execution, not a champion claim. Held ATAC is joined only by the independent evaluator."
+}

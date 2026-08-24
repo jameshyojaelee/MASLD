@@ -1,0 +1,87 @@
+{
+  "architecture_contract": {
+    "paper_method": "Monae is described as modality-specific asymmetric teacher/student autoencoders with adaptive-clustering contrastive learning, a regulatory feature graph VAE, and feature-by-cell latent decoding; Monae-E adds cells as graph nodes.",
+    "released_api_behavior": "The exact tag exposes CoVELModel derived from the bundled GLUE/GLUETrainer implementation, modality-specific probabilistic encoders/decoders, a graph encoder/decoder, adversarial modality alignment, encode_data, encode_graph, and experimental decode_data.",
+    "released_default_dimensions": {"dropout": 0.2, "hidden_depth": 2, "hidden_dimension": 256, "latent_dimension": 50},
+    "released_native_decoders": ["Normal", "ZIN", "ZILN", "NB", "ZINB"],
+    "release_fidelity_status": "BLOCKED_PAPER_CODE_MISMATCH",
+    "release_fidelity_finding": "The inspected Python training surface contains no teacher/student modules, positive-sample branch, or contrastive-learning path matching the paper description. train.py instantiates CoVELModel. An optional DDC/classification loss exists only when configured cell-type labels create a classifier, while the official training scripts do not configure cell types. The exact release cannot be called a verified implementation of the paper-defined Monae until the authors clarify or provide a faithful immutable revision."
+  },
+  "code_license": "BSD-3-Clause_with_bundled_MIT_GLUE_components",
+  "implementation": {
+    "checkpoint_policy": "No upstream checkpoint is admitted. If the fidelity gate is resolved, fit one local tensor-state bundle per outer donor fold and seed. Until then, no benchmark run may be labeled paper-defined Monae.",
+    "implementation_type": "deferred_exact_source_release_pending_paper_code_fidelity",
+    "primary_paper": "https://doi.org/10.1038/s41467-024-53355-6",
+    "repository": "shapsider/monae",
+    "repository_revision": "f040dea1e0959dfd30d34e6b7d83463a21df23b5",
+    "repository_revision_date": "2024-07-23T05:43:43Z",
+    "repository_tag": "v1.0.0",
+    "zenodo_record": "https://doi.org/10.5281/zenodo.13636952",
+    "zenodo_warning": "Zenodo v1.0.0 metadata labels the 157,679,969-byte archive CC-BY-4.0, while the GitHub root code is BSD-3-Clause and bundled src code carries a Gao Lab MIT notice. The archive, bundled data, and weights are not admitted; retain both source-code notices for any allowed derivative."
+  },
+  "inductive_inference_contract": {
+    "released_cell_transform": "CoVELModel.encode_data can encode a held RNA AnnData in eval/no-grad mode and returns the posterior mean without target ATAC or query optimization, provided the exact training feature and representation contract is supplied.",
+    "released_cross_decode": "CoVELModel.decode_data can call the frozen RNA encoder, frozen graph encoder, and target ATAC decoder without observed held ATAC or query fitting. The upstream method is explicitly marked experimental.",
+    "monae_e_exclusion": "Monae-E X_init is learned by adding training cells to a graph and fitting PyTorch-BigGraph. No frozen raw-RNA transform for a new held cell is released. Monae-E is transductive and ineligible for donor-held or sealed queries.",
+    "raw_rna_requirement": "The original notebook supplies X_pre copied from a preprocessed matrix. A future project adapter must start from raw held RNA counts and apply only training-frozen genes, per-cell total normalization/log1p, and training-fitted scaling to construct X_pre. No held-row fit is allowed.",
+    "status": "Source APIs are technically inductive for the original X_pre lane, but no task is admitted until paper-code fidelity is resolved or the released implementation is explicitly renamed as a distinct comparator."
+  },
+  "input_contract": {
+    "atac_input": "observed training ATAC counts over a GRCh38.p14 training-only peak inventory with a declared probabilistic decoder",
+    "feature_graph": "training-only gene-peak guidance graph aligned to GENCODE v49 and GRCh38.p14; the bundled GENCODE v42 annotation is not admissible",
+    "original_monae_rna": "raw UMI counts plus a project-created X_pre representation using outer-training-frozen preprocessing",
+    "monae_e_rna": "X_init graph entity embedding tied to the exact cells used in graph training; unavailable for frozen held-query use",
+    "released_pairing_behavior": "The CoVELModel training loaders treat modality cells independently and support unpaired modalities. Same-nucleus identity is not a released paired objective and must not be inferred from row order.",
+    "supported_pairing_topologies_if_fidelity_resolved": ["same_study_unpaired", "same_sample_different_aliquot_as_separate_unpaired_rows", "same_cell_treated_as_unpaired", "same_nucleus_treated_as_unpaired"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_as_cell_pairs", "row_order_as_pairing_evidence", "held_cells_added_to_monae_e_graph"]
+  },
+  "missingness_contract": {
+    "released_training": "Different modality cell sets are represented independently; no target zero padding is required.",
+    "released_inference": "RNA-only encode_data/decode_data accepts the source modality alone. Structural target absence remains explicit in the project manifest.",
+    "project_mapping": "Retain all eight project missingness states outside the release. Missing ATAC is never encoded as observed zeros."
+  },
+  "output_contract": {
+    "cell_embedding": "released CoVELModel RNA posterior mean from encode_data; not yet admissible as a Monae paper representation",
+    "released_atac_profile": "With the official NB ATAC configuration and frozen target_libsize=1.0, decode_data returns a nonnegative decoder mean whose features sum to one, using target batch zero unless a training-known batch is explicitly supplied.",
+    "profile_validity": "The exact source release can technically emit a normalized held-RNA-to-ATAC peak profile without observed held ATAC or query fitting. It remains blocked from the benchmark because architecture identity is unresolved, the API is experimental, and the raw-X_pre and frozen-graph fixtures do not yet exist.",
+    "target_batch_rule": "Do not encode donor identity. Prefer no ATAC batch covariate; otherwise freeze one training reference category before evaluation.",
+    "uncertainty": "Use deterministic posterior and graph means for common prediction. Five separately trained seeds measure stability."
+  },
+  "runtime_contract": {
+    "declared_python": "3.8",
+    "declared_torch": "1.11.0+cu113",
+    "dependency_status": "README lists muon, simba_pbg, simba, scanpy, scglue, pytorch-ignite, typing_extensions, and tensorboardX without a complete immutable environment lock; two dependencies are installed from unpinned GitHub URLs.",
+    "determinism_warning": "The release states GPU scatter_add operations are not exactly repeatable even in repeatability mode; exact repeatability is claimed only on CPU.",
+    "environment_status": "UNRESOLVED_SOURCE_FIDELITY_UNPINNED_DEPENDENCIES_LEGACY_PYTHON_TORCH_CUDA_L40S_IMPORT_FORWARD_BACKWARD_RESUME_DETERMINISM_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "bundled_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "hosted_checkpoint_downloaded": false,
+    "local_artifacts_only_if_activated": true,
+    "upstream_risk": "Model.save and official notebooks use dill serialization/deserialization, which can execute arbitrary code. The repository also contains a 6,466,844-byte PBMC monae.dill object and links additional Baidu models.",
+    "required_adapter": "Never deserialize bundled or hosted dill. If a renamed release comparator is approved, reconstruct the audited architecture and restore project-controlled tensor state only, with graph, feature, transform, key/shape/dtype, fold, seed, and SHA-256 manifests."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact Monae v1.0.0 tag, immutable GitHub source, both code-license notices, official notebooks, Zenodo metadata, and primary paper were inspected on 2026-08-22. The official training surface and every direct src/*.py and top-level Python file were searched as text for the paper-described teacher/student and contrastive paths. No package, dependency, archive, checkpoint, weight, dataset, or serialized object was downloaded, installed, loaded, trained, or executed.",
+  "source_records": [
+    {"identity": "monae:LICENSE", "sha256": "03ae14ffdef3fe1d822bb80562e6578667a8c28cccc24c3fa2a633a94820242c", "size_bytes": 1496},
+    {"identity": "monae:README.md", "sha256": "625d5a50797c3e67db156f119c67650bf1c889a0ee391e2feb78f2d1bd3f9040", "size_bytes": 2483},
+    {"identity": "monae:src/LICENSE", "sha256": "7a945f09e699473aee3c3f50b5b651b6c228571197de077aefefeb0cd91a2d93", "size_bytes": 1064},
+    {"identity": "monae:src/models.py", "sha256": "f2cdac2dab89d85b8f409b9dd27b58bbe8f15c8810eb6822b0b234a907427ff6", "size_bytes": 30012},
+    {"identity": "monae:src/sc.py", "sha256": "8c54d048983139272bf471fb6d93427b00ae4e2bc0965cc1a35023e6344f6652", "size_bytes": 15381},
+    {"identity": "monae:src/config.py", "sha256": "599eda1b5552ca044c738ddd55ce126c35d40289651d8a613d44f15f3f9611d4", "size_bytes": 12018},
+    {"identity": "monae:src/base.py", "sha256": "37b1a302d6e7d771e928618f7cd4a3b57c5368b19ff6b3bece15cf7e22facd97", "size_bytes": 12101},
+    {"identity": "monae:src/train.py", "sha256": "0046847ff34ed6fa07ccc1281724498c5cb9fcef32981946704561920523848d", "size_bytes": 1411},
+    {"identity": "monae:preprocess_1.py", "sha256": "671f67df6016324e6863e653ae23275cf5888a7af5601f54b782855874eea4da", "size_bytes": 2314},
+    {"identity": "monae:preprocess_2.py", "sha256": "d2b40fd2ad1cb5417891555cd5186d50ecef3c154c0673b5cc25271c7968c09e", "size_bytes": 2940},
+    {"identity": "monae:notebook_monae/imputation_rna2atac.ipynb", "sha256": "ce1ed0bcb7d704bf370c1f936d4af46347e3daeb90ec74257825d4e81c96cdaa", "size_bytes": 236082}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Deferred. The released CoVELModel has an inductive RNA posterior mean, but it cannot be benchmarked as paper-defined Monae until architecture fidelity is resolved or it is explicitly renamed as a release-code comparator.",
+    "development_only_integration": "Deferred for the same fidelity reason. Any future released-code comparator must report that it is unpaired CoVELModel behavior, not verified paper Monae.",
+    "rna_conditioned_atac": "Deferred. The released NB decoder can emit a valid nonnegative normalized profile without held ATAC, but paper-code identity, raw-X_pre transfer, graph freezing, safe loading, and runtime gates fail.",
+    "variant_to_regulation": "Ineligible because the release has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHT_ADMITTED"
+}

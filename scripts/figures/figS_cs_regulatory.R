@@ -11,9 +11,30 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+candidate_dir <- Sys.getenv("FIG2_SUPP_OUT_DIR", unset = "")
+PANEL_DIR <- if (nzchar(candidate_dir)) candidate_dir else file.path(FIG3_DIR, "panels")
 
 la <- fread(file.path(BASE, "RNA-seq/results/coloc_variant_classes/lead_causal_annotation.csv"))
+# Fail closed: this historical table has no populated gene, Ensembl, or COLOC
+# posterior fields, so its 31,036 fine-mapping rows cannot be called
+# "colocalizing credible-set lead variants" or filtered to the promoted release.
+required_link <- c("gene_symbol", "ensembl", "pp4_susie", "pp4_abf")
+if (!all(required_link %in% names(la)) ||
+    all(vapply(la[, ..required_link], function(x) all(is.na(x) | x == ""), logical(1)))) {
+  if (nzchar(candidate_dir)) {
+    dir.create(candidate_dir, recursive = TRUE, showWarnings = FALSE)
+    fwrite(data.table(
+      panel = "FigS2K_cs_regulatory_composition",
+      status = "blocked_retired",
+      invalid_input_rows = nrow(la),
+      reason = paste(
+        "lead_causal_annotation.csv has no populated COLOC gene/posterior linkage;",
+        "31,036 fine-mapping annotations cannot be called colocalizing variants"
+      )
+    ), file.path(candidate_dir, "FigS2K_cs_regulatory_composition_BLOCKED.tsv"), sep = "\t")
+  }
+  stop("FigS2K retired: lead_causal_annotation.csv has no COLOC gene/posterior linkage; use the validated noncoding-DNA credible-set source instead.")
+}
 la <- la[!is.na(fine_class) & fine_class != ""]
 N <- nrow(la)
 lev <- c("coding", "fiveUTR", "threeUTR", "promoter", "intron", "intergenic")

@@ -1,0 +1,13 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "exposure_audit",
+  "model_ids": ["shrunken_pseudobulk", "shuffled_context", "trans_only"],
+  "exposure_status": "target_label_unexposed",
+  "checkpoint_exposure_class": "target_label_unexposed",
+  "pretraining": false,
+  "fold_local_fit": true,
+  "held_donor_atac_exposed_to_fit_or_predict": false,
+  "sealed_sources_exposed": false,
+  "champion_eligibility": "development_only_until_an_eligible_external_seal_exists",
+  "notes": "Only outer-training RNA and ATAC are used for fitting and inner selection. Query RNA is observed at inference; query ATAC is joined only by the independent evaluator."
+}

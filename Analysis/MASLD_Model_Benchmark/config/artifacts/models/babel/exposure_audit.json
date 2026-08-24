@@ -1,0 +1,40 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "retrospective RNA-conditioned ATAC"
+  },
+  "checkpoint_findings": {
+    "babel_human_v1_1": {
+      "checkpoint_identity": "babel_human_v1.1.tar.gz with author-declared MD5 5e2f68466a1460a36e39a45229b21b1b; SHA-256, size, and contents not acquired",
+      "corpus": "Author-declared paired 10x Multiome PBMC, COLO-320DM, and COLO-320HSR data",
+      "exposure_state": "target_label_unexposed_by_chronology_pending_object_identity_verification",
+      "release_evidence": "Checkpoint auto-download was committed in October 2021, before the three project accessions used in this crosswalk."
+    },
+    "babel_local": {
+      "checkpoint_identity": "not_admitted",
+      "corpus": "Would be outer-training GSE296875 same-nucleus data only",
+      "exposure_state": "blocked_no_code_license",
+      "release_evidence": "No local use or adaptation is authorized without written permission."
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "historical_checkpoint_chronology_pairing_permissions_and_local_leakage",
+    "sha256": "2fa0d5f143af708b99eeda74170dca065e1c7dab43f0feb7e377fcdf034f4232"
+  },
+  "interpretation": "The historical v1.1 checkpoint likely predates GSE244832, GSE296875, and GSE289173, so chronology supports target-label-unexposed status if its declared MD5 verifies. That does not make it admissible. The repository has no code license, no separate checkpoint terms were detected, the archive lacks a frozen SHA-256/size/inventory, loading is unsafe until inspected, the runtime is a legacy 2020 stack, and the checkpoint was trained on blood and colorectal cells rather than liver. The upstream local-training path also normalizes and clusters before splitting, which is leakage-incompatible.",
+  "remaining_blockers": [
+    "Obtain written permission covering code execution, modification, trained derivatives, and any redistribution; obtain separate checkpoint use and derivative-weight terms.",
+    "Only after permission, acquire the archive under a controlled receipt and verify the declared MD5 plus SHA-256, byte size, immutable source identity, and a path-traversal-safe file inventory before extraction.",
+    "Review every serialized file offline and convert only trusted tensor state into a safe project format; disable automatic gdown download and extraction.",
+    "Resolve the checkpoint genome build and validate all 34,861 gene and 223,897 peak identifiers against GENCODE v49 and GRCh38.p14 with exact feature coverage/order.",
+    "Replace full-data normalization, clustering, and internal splitting with donor-grouped outer-fold preprocessing fitted only on training donors before any local BABEL training.",
+    "Validate the Python 3.7/PyTorch 1.3 legacy model on an isolated L40S-compatible environment or document a numerically equivalent permitted port with fixed fixtures.",
+    "Prove RNA-only held-donor inference emits ATAC probabilities without target ATAC, updating, feature refitting, or calibration; compare calibration and liver domain shift explicitly.",
+    "Do not use GSE244832 as paired training data and do not claim a sealed profile champion from RNA-only GSE289173."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "blocked_by_code_and_weight_terms_identity_safe_loading_runtime_reference_and_no_ATAC_seal; registered as prior art only",
+  "verified_date": "2026-08-22"
+}

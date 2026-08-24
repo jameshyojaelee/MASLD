@@ -1,0 +1,117 @@
+{
+  "crosswalk_scope": {
+    "model_id": "arc_state",
+    "registered_identity": "ArcInstitute/state@9bbfe78a434a55205e4de834e1ea99f85f7a3add+arcinstitute/SE-600M@5a9a80f44f7ce32ce57059933ef0d735d7c10ce5:model.safetensors+arcinstitute/ST-SE-Replogle@e324967ff4cea5ec199e29bcbb5c1f00e5b9d69c:fewshot/hepg2/checkpoints/final.ckpt",
+    "primary_task": "perturbation_transfer",
+    "current_status": "restricted_deferred",
+    "rule": "Base SE-600M embeddings and HepG2 few-shot State Transition predictions are separate artifact layers and must never inherit each other's task claims."
+  },
+  "current_task_admission": {
+    "decision": "deferred_unschedulable",
+    "primary_reason": "The current perturbation_transfer split holds out a wholly unseen noncoding target locus and guide family. The released HepG2 transition state consumes a finite saved one-hot perturbation map and has no sequence, locus, guide, or categorical-unknown encoder.",
+    "allowed_future_scope": "A separately registered, nonpromotable seen-target or held-context diagnostic may be considered only if the exact target is present in a safely inventoried map and institutional, exposure, runtime, and data-topology gates all pass.",
+    "prohibited_workarounds": [
+      "map_an_unknown_locus_to_the_non_targeting_control_vector",
+      "map_an_unknown_locus_to_a_nearest_or_linked_gene",
+      "allocate_a_random_or_untrained_category_embedding",
+      "extend_the_target_vocabulary_with_evaluation_targets",
+      "use_held_outcomes_to_choose_a_proxy_target"
+    ]
+  },
+  "checkpoint_layer_boundaries": {
+    "se_600m": {
+      "native_action": "expression_to_X_state_embedding",
+      "not_a_transition_prediction": true,
+      "project_status": "not_registered_as_a_separate_cell_state_candidate",
+      "exposure": "unknown_for_every_project_dataset_because_the_immutable_training_roster_is_absent"
+    },
+    "st_se_replogle_hepg2_fewshot": {
+      "native_action": "X_state_plus_known_categorical_perturbation_to_gene_space_response",
+      "cell_context": "HepG2",
+      "known_target_requirement": "exact_member_of_safely_inventoried_pert_onehot_map",
+      "project_status": "deferred_for_current_wholly_unseen_noncoding_target_task"
+    }
+  },
+  "registered_project_dataset_exposure": {
+    "rule": "Fail closed. The SE-600M config names scBasecamp, CELLxGENE, and Tahoe but supplies no immutable accession, collection UUID, donor, row, release, or cutoff roster. The transition release also lacks a crosswalkable row and target corpus manifest. Unknown is not clean_declared or target_label_unexposed.",
+    "dataset_states": {
+      "bulk_five_cohort": "unknown",
+      "current_coloc_gwas": "unknown",
+      "fnih_86_liver": "unknown",
+      "gse192741": "unknown",
+      "gse244832": "unknown",
+      "gse249997": "unknown",
+      "gse256398": "unknown",
+      "gse267031": "unknown",
+      "gse275483": "unknown",
+      "gse281160": "unknown",
+      "gse281364": "unknown",
+      "gse281367": "unknown",
+      "gse289173": "unknown",
+      "gse292268": "unknown",
+      "gse296875": "unknown",
+      "gse312698": "unknown",
+      "gse313774": "unknown",
+      "hra007511": "unknown",
+      "pxd051911": "unknown",
+      "resource_atlas_current": "unknown",
+      "steatosite": "unknown",
+      "vu2025": "unknown"
+    },
+    "sealed_consequence": "No Arc State or SE-600M artifact may be evaluated on GSE289173. That accession appears in at least one 2026 scBaseCount snapshot, and the released base corpus cannot prove that the relevant snapshot, accession aliases, donors, cells, labels, or derived embeddings were absent."
+  },
+  "task_dataset_findings": {
+    "perturbation_transfer": {
+      "gse281160": {
+        "role": "training_development_source",
+        "topology": "same_cell_guide_and_RNA_with_experimental_replicate_as_inferential_unit",
+        "finding": "The 20 MPRA-selected noncoding loci are not representable under a target-locus holdout unless a held locus already exists in the upstream categorical map. The map is not safely inventoried, upstream HepG2/Replogle overlap is unresolved, and expected experimental replicate count remains unresolved.",
+        "allowed_use": "none_in_current_task"
+      },
+      "gse275483": {
+        "role": "development_stress_source",
+        "topology": "mouse_single_cell_with_animal_as_inferential_unit_n4",
+        "finding": "The released checkpoint is human HepG2 and categorical-target-specific. Species, gene order, target map, cell context, and experimental joins do not support a valid direct query.",
+        "allowed_use": "none"
+      },
+      "gse313774": {
+        "role": "prediction_first_intervention_stress_source",
+        "topology": "human_liver_chip_bulk_RNA_with_independent_batch_as_inferential_unit_n3_and_33_nested_libraries",
+        "finding": "Bulk condition and insulin arms are not single-cell HepG2 categorical perturbations. Libraries cannot be treated as cells, and no post-outcome remapping to a State target is allowed.",
+        "allowed_use": "none"
+      }
+    },
+    "cell_state_mapping": {
+      "resource_atlas_current": "Unknown base-corpus exposure and an unregistered base-encoder identity prohibit common-lane or sealed claims for this Arc State composite.",
+      "gse296875": "Same-nucleus RNA-ATAC is development-exposed, but Arc State consumes expression and a known perturbation category, not ATAC. Its 39 donors and 68,398 nuclei cannot be treated as MASLD-diagnosed: the registered manifest has histology fields but no explicit MASLD or MASH adjudication.",
+      "gse244832": "Same-donor RNA and ATAC come from different nuclei or aliquots. Arc State has no valid paired use, and cell-to-cell pairing is prohibited.",
+      "gse256398": "External-development use is blocked by unknown SE-600M corpus exposure and the absence of a separately registered frozen SE embedding candidate.",
+      "gse281367": "Development use is blocked by unknown SE-600M corpus exposure and the absence of a separately registered frozen SE embedding candidate.",
+      "gse289173": "Sealed use is ineligible because base-corpus exposure is unknown and GSE289173 occurs in at least one 2026 scBaseCount snapshot."
+    },
+    "rna_conditioned_atac": {
+      "gse296875": "Ineligible. Arc State has no ATAC profile or count decoder, and observed held-donor ATAC cannot be supplied as model context.",
+      "gse244832": "Ineligible. The model has no RNA-to-ATAC output, and separate-aliquot RNA and ATAC cannot be fabricated as paired cells.",
+      "fnih_86_liver": "Ineligible even if activated because the registered composite has no ATAC profile decoder and unknown upstream exposure."
+    }
+  },
+  "inductive_and_transductive_boundary": {
+    "base_embedding": "A frozen SE-600M forward pass can be inductive only after exact gene mapping, preprocessing, dataset-correction behavior, and corpus exposure pass. Those gates are unresolved.",
+    "transition_query": "A frozen State Transition forward pass is defined only for known perturbation, batch, cell-context, and gene vocabularies. It does not inductively represent a new perturbation category.",
+    "adaptation": "Any tuning, fitting, calibration, vocabulary change, or mapper fit makes the relevant training partition continual_seen. No held donor, target, guide family, development outcome, or sealed feature may participate in those operations.",
+    "query_rejection": "Unknown perturbation, batch, cell context, gene, dimension, or map key must terminate inference rather than invoke upstream fallback behavior."
+  },
+  "replication_and_export_contract": {
+    "inferential_unit": "experimental_replicate_or_animal_for_a_future_compatible_perturbation_TaskSpec",
+    "not_independent": ["cells", "cell_sets", "guides", "targets", "genes", "technical_lanes", "libraries", "random_seeds"],
+    "aggregation": "Aggregate predictions and observations to the declared biological replicate before evaluator metrics or bootstrap.",
+    "prediction_bundle": "Export immutable row_id, source_id, biological_replicate_id, target_id, target_map_key, cell_context, batch_context, control_row_ids, gene_id, predicted_value, output_scale, seed, and artifact hashes.",
+    "uncertainty": "Model seeds measure implementation stability; biological uncertainty resamples experimental replicates or animals."
+  },
+  "claims_contract": {
+    "allowed": "At most a restricted, internally authorized comparator on a separately registered compatible research task after every gate passes.",
+    "prohibited": "No MASLD champion, open checkpoint, unseen-target, variant-effect, RNA-to-ATAC, diagnosis, prognosis, treatment-response, clinical-decision, or deployment claim."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

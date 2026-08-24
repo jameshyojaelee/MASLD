@@ -2,12 +2,12 @@
 # KEY MESSAGE: Cross-ancestry portability is partial and depends on which signal
 # model is evaluable; absent multi-signal output is not a negative COLOC result.
 # fig2_tri_ancestry_coloc.R  (2026-06-17; redesigned 2026-07-01; MVP 5-ancestry 2026-07-05)  — Fig 2 (defends para 6)
-# Cross-ancestry colocalization of selected, partially portable candidate genes.
+# Cross-ancestry colocalization of partially portable candidate genes.
 # Scoped 2026-07-06 to the Tier-1/2 (liver-specific) MAIN strata only.
-# Eligibility: PP.H4 > 0.5 in >=3 of the 5 tested ancestry panels (EUR/AFR/AMR/EAS/SAS,
-# 35 Tier-1/2 GWAS incl. MVP NAFLD/ALT/AST). Rows are ranked using genetics alone:
-# number of ancestry panels with multi-signal support, total supported panels, mean
-# multi-signal PP.H4, then gene symbol. The artwork encodes the four evidence/evaluability
+# Eligibility: PP.H4 > 0.5 in >=4 of the 5 tested ancestry panels (EUR/AFR/AMR/EAS/SAS,
+# 35 Tier-1/2 GWAS incl. MVP NAFLD/ALT/AST). Every eligible gene is shown; rows are
+# ordered using genetics alone by number of ancestry panels with multi-signal support,
+# mean multi-signal PP.H4, then gene symbol. The artwork encodes the four evidence/evaluability
 # states; exact methods, traits, lead variants, LD, and ancestry provenance stay in the
 # source table and legend.
 # All values computed from disk so they always match the manuscript text.
@@ -18,7 +18,9 @@
 # provenance remain in the source table rather than competing in the artwork.
 #
 # Out: figures/main/fig2_genetics/panels/Fig2F_crossancestry_coloc.pdf (+ source CSV)
-suppressPackageStartupMessages({ library(data.table); library(ggplot2) })
+suppressPackageStartupMessages({
+  library(data.table); library(ggplot2); library(grid); library(gridExtra)
+})
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
@@ -33,14 +35,18 @@ FROZEN_SOURCE <- Sys.getenv("FIG2_CROSSANCESTRY_SOURCE")
 OUT_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 ANC <- GWAS_ANCESTRY_LEVELS   # c("EUR","AFR","AMR","EAS","SAS")
-N_GENES <- 9
+MIN_SUPPORTED_ANCESTRIES <- 4L
 
 if (nzchar(FROZEN_SOURCE)) {
   m <- fread(FROZEN_SOURCE)
   required <- c("gene", "ancestry", "evidence_state", "multi_pp4", "single_pp4")
   stopifnot(all(required %in% names(m)))
   GENE_ORDER <- unique(m$gene)
-  stopifnot(length(GENE_ORDER) == N_GENES, nrow(m) == N_GENES * length(ANC))
+  stopifnot(nrow(m) == length(GENE_ORDER) * length(ANC))
+  frozen_support <- m[, .(n_supported = sum(evidence_state %in%
+    c("multi_signal", "single_signal_only"))), by = gene]
+  stopifnot(nrow(frozen_support) == length(GENE_ORDER),
+            all(frozen_support$n_supported >= MIN_SUPPORTED_ANCESTRIES))
 } else {
 sc <- fread(COLOC_INPUT)
 # MAIN (Tier-1/2, liver-specific) restriction (2026-07-06): placement=="main" strata only
@@ -79,18 +85,18 @@ cells[, evidence_state := fcase(
   is.finite(multi_pp4) | is.finite(single_pp4), "evaluated_no_support",
   default = "not_evaluable")]
 
-# Genetics-only row selection. Require support in at least three ancestry panels,
-# then rank by multi-signal breadth, total support, mean multi-signal posterior,
-# and gene symbol. No disease-state or convergence output enters this decision.
+# Genetics-only row selection. Show every gene supported in at least four ancestry
+# panels, ordered by multi-signal breadth, mean multi-signal posterior, and gene
+# symbol. No disease-state or convergence output enters this decision.
 rank <- cells[, .(
   n_multi = sum(evidence_state == "multi_signal"),
   n_supported = sum(evidence_state %in% c("multi_signal", "single_signal_only")),
   mean_multi_pp4 = if (any(evidence_state == "multi_signal"))
     mean(multi_pp4[evidence_state == "multi_signal"]) else NA_real_), by = gene]
-rank <- rank[n_supported >= 3]
+rank <- rank[n_supported >= MIN_SUPPORTED_ANCESTRIES]
 setorder(rank, -n_multi, -n_supported, -mean_multi_pp4, gene, na.last = TRUE)
-GENES <- head(rank$gene, N_GENES)
-if (!length(GENES)) stop("No genes meet the prespecified >=3-ancestry support rule")
+GENES <- rank$gene
+if (!length(GENES)) stop("No genes meet the prespecified >=4-ancestry support rule")
 
 grid <- CJ(gene = GENES, ancestry = ANC)
 m <- merge(grid, cells[gene %in% GENES], by = c("gene", "ancestry"), all.x = TRUE)
@@ -118,7 +124,7 @@ state_cols <- c(
 state_labs <- c(
   multi_signal = "multi-signal",
   single_signal_only = "single-signal only",
-  evaluated_no_support = "evaluated, PP.H4 ≤ 0.5",
+  evaluated_no_support = "evaluated ≤ 0.5",
   not_evaluable = "□ Not evaluable")
 
 # Circle area reports the posterior used for the displayed evidence state.
@@ -172,29 +178,57 @@ p <- ggplot(m, aes(x = ancestry, y = gene)) +
         axis.ticks = element_blank(),
         axis.line = element_blank(),
         plot.title = element_blank(),
-        legend.position = "bottom",
-        legend.box = "vertical",
-        legend.direction = "horizontal",
-        legend.box.spacing = unit(0, "pt"),
-        legend.spacing.x = unit(0.5, "pt"),
-        legend.text = element_text(size = 6, face = "plain"),
-        legend.title = element_text(size = 6, face = "plain"),
-        legend.key.width = unit(0.14, "cm"),
-        legend.key.height = unit(0.10, "cm"),
-        legend.spacing.y = unit(0, "pt"),
-        legend.margin = margin(t = 0, b = 0),
+        legend.position = "none",
         plot.margin = margin(2, 2, 0, 2))
 
-source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))   # save_panel(): exact contract size + cairo_pdf
-out_pdf <- file.path(OUT_DIR, "Fig2F_crossancestry_coloc.pdf")
-ggsave(out_pdf, p, width = 2.58, height = 2.10, units = "in",
-       device = cairo_pdf, family = "Helvetica")
+# Two explicit 6-pt legend rows use exactly 0.20 in. ggplot guide boxes added
+# ~0.30 in at this size and pushed the matrix below its 1.60-in acceptance
+# height. Absolute units keep the legend and maximum 9-pt dot reproducible.
+leg_gp <- gpar(fontsize = 6, fontfamily = "Helvetica", col = "black")
+legend_grob <- grobTree(
+  pointsGrob(x = unit(c(0.25, 0.83, 1.65), "in"),
+             y = unit(rep(0.155, 3), "in"), pch = 21,
+             size = unit(rep(0.08, 3), "in"),
+             gp = gpar(fill = state_cols[c("multi_signal", "single_signal_only",
+                                           "evaluated_no_support")],
+                       col = "#4D4D4D", lwd = 0.4)),
+  textGrob("multi-signal", x = unit(0.31, "in"), y = unit(0.155, "in"),
+           just = "left", gp = leg_gp),
+  textGrob("single-signal only", x = unit(0.89, "in"), y = unit(0.155, "in"),
+           just = "left", gp = leg_gp),
+  textGrob("evaluated ≤ 0.5", x = unit(1.71, "in"), y = unit(0.155, "in"),
+           just = "left", gp = leg_gp),
+  textGrob("PP.H4", x = unit(0.30, "in"), y = unit(0.065, "in"),
+           just = "left", gp = leg_gp),
+  pointsGrob(x = unit(c(0.72, 1.08, 1.46, 1.88), "in"),
+             y = unit(rep(0.065, 4), "in"), pch = 21,
+             size = unit(c(0.0625, 0.0884, 0.1083, 0.125), "in"),
+             gp = gpar(fill = "white", col = "#4D4D4D", lwd = 0.5)),
+  textGrob(c("0.25", "0.50", "0.75", "1.00"),
+           x = unit(c(0.78, 1.14, 1.53, 1.96), "in"),
+           y = unit(rep(0.065, 4), "in"), just = "left", gp = leg_gp)
+)
+assembled <- arrangeGrob(p, legend_grob, ncol = 1,
+                         heights = unit(c(1.90, 0.20), "in"),
+                         padding = unit(0, "pt"))
+
+source(file.path(BASE, "figures/layout_specs/regenerate_panels.R"))
+sizes <- read_sizes(file.path(BASE, "figures/layout_specs/figure2_panel_sizes.tsv"))
+pdf_rel <- "main/fig2_genetics/panels/Fig2F_crossancestry_coloc.pdf"
+contract <- sizes[sizes$pdf == pdf_rel, , drop = FALSE]
+stopifnot(nrow(contract) == 1L, contract$width_in == 2.58, contract$height_in == 2.10)
+if (nzchar(Sys.getenv("FIG2_CANDIDATE_DIR"))) {
+  contract$pdf <- basename(pdf_rel)
+  save_panel(assembled, basename(pdf_rel), contract, OUT_DIR)
+} else {
+  save_panel(assembled, pdf_rel, sizes, file.path(BASE, "figures"))
+}
 
 # Caption (house style: no in-plot title/subtitle) -> stdout
 n_supported_by_gene <- m[, .(n = sum(evidence_state %in%
   c("multi_signal", "single_signal_only"))), by = gene]
 message(sprintf(paste0(
-  "CAPTION (Fig2F): Signal-model-aware portability of EUR liver-eQTL colocalization across five GWAS ancestry panels. Rows are the %d genes selected using genetics alone: number of ancestry panels with multi-signal support, total supported panels, mean multi-signal PP.H4, and gene symbol. Circle area denotes the displayed PP.H4. Dark blue uses multi-signal SuSiE PP.H4; light blue uses single-signal ABF PP.H4 when it alone exceeds 0.5; gray uses the larger available posterior when neither model exceeds 0.5. Portability is partial: %d-%d of %d panels support each displayed gene. Exact PP.H4, trait, method availability, lead variant, LD source, GWAS ancestry, and eQTL ancestry are retained in the source table. The eQTL resource is European in every column, so non-European GWAS columns test portability of a European-defined regulatory relationship rather than ancestry-matched molecular regulation. COLOC nominates shared-signal candidates; it does not establish mediation or biological differences between ancestry groups."),
+  "CAPTION (Fig2F): Signal-model-aware portability of EUR liver-eQTL colocalization across five GWAS ancestry panels. Rows are all %d genes with PP.H4 > 0.5 in at least four ancestry panels, ordered by multi-signal breadth, mean multi-signal PP.H4, and gene symbol. Circle area denotes the displayed PP.H4. Dark blue uses multi-signal SuSiE PP.H4; light blue uses single-signal ABF PP.H4 when it alone exceeds 0.5; gray uses the larger available posterior when neither model exceeds 0.5. Portability is partial: %d-%d of %d panels support each displayed gene. Exact PP.H4, trait, method availability, lead variant, LD source, GWAS ancestry, and eQTL ancestry are retained in the source table. The eQTL resource is European in every column, so non-European GWAS columns test portability of a European-defined regulatory relationship rather than ancestry-matched molecular regulation. COLOC nominates shared-signal candidates; it does not establish mediation or biological differences between ancestry groups."),
   length(GENES), min(n_supported_by_gene$n), max(n_supported_by_gene$n), length(ANC)))
 
 source_out <- copy(m)

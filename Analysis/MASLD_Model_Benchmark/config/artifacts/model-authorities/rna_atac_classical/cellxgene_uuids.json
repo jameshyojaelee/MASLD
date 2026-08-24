@@ -1,0 +1,12 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "cellxgene_uuids",
+  "model_ids": [
+    "assay_native_pseudobulk",
+    "mean_track",
+    "nearest_context"
+  ],
+  "cellxgene_uuids": [],
+  "cellxgene_snapshot_used": false,
+  "reason": "locally fit task-native baselines use the registered GSE296875 development view"
+}

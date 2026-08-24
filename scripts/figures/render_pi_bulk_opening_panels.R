@@ -14,7 +14,11 @@ base <- Sys.getenv("MASLD_PROJECT_ROOT",
 candidate_root <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
 if (!nzchar(candidate_root) || !dir.exists(candidate_root)) stop("Active candidate root required", call. = FALSE)
 source(file.path(base, "scripts/figures/publication_theme.R"))
-analysis_root <- file.path(candidate_root, "analysis", "stage_extensions")
+stage_extension_root <- Sys.getenv(
+  "STAGE_EXTENSION_ROOT",
+  file.path(candidate_root, "analysis", "stage_extensions")
+)
+analysis_root <- normalizePath(stage_extension_root, mustWork = TRUE)
 out_dir <- file.path(candidate_root, "figure3", "panels")
 src_dir <- file.path(candidate_root, "source_tables")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
@@ -75,7 +79,7 @@ p_grid <- ggplot(grid, aes(factor(fibrosis_stage), factor(nas_score), fill = N))
 ggsave(file.path(out_dir, "fig3b_nas_fib_grid.pdf"), p_grid,
        width = 2.2, height = 2.15, device = cairo_pdf)
 
-# 3C: per-cohort DEG replication. The five complete BH families are kept
+# 3C: per-cohort DEG membership. The five complete BH families are kept
 # separate; a gene enters a cohort stream at FDR<0.05 and |log2FC|>0.5.
 cohort_de <- fread(file.path(analysis_root, "cohort_disease_all_gene_results.tsv"))
 if (any(cohort_de[, uniqueN(gene_id_versioned), by = dataset]$V1 != unique(cohort_de$bh_family_size))) {
@@ -84,27 +88,61 @@ if (any(cohort_de[, uniqueN(gene_id_versioned), by = dataset]$V1 != unique(cohor
 hits <- cohort_de[FDR < 0.05 & abs(logFC) > 0.5, .(dataset, gene_id_versioned)]
 hit_counts <- hits[, .(n_cohorts = uniqueN(dataset)), by = gene_id_versioned]
 alluvial <- merge(hits, hit_counts, by = "gene_id_versioned")[, .N, by = .(dataset, n_cohorts)]
-alluvial[, display_cohorts := pmin(n_cohorts, 4L)]
-alluvial[, tier := factor(fifelse(display_cohorts == 4L, "≥4 cohorts",
-                          paste0(display_cohorts, " cohort",
-                                 fifelse(display_cohorts == 1L, "", "s"))),
-                          levels = c("1 cohort", "2 cohorts", "3 cohorts", "≥4 cohorts"))]
-alluvial[, dataset := factor(dataset, levels = cohorts)]
+alluvial[, tier := factor(
+  fifelse(n_cohorts == 1L, "Unique to study", paste0(n_cohorts, " cohorts")),
+  levels = c("Unique to study", "2 cohorts", "3 cohorts", "4 cohorts", "5 cohorts")
+)]
+cohort_order_top_down <- alluvial[, .(N = sum(N)), by = dataset][order(-N), dataset]
+tier_order_top_down <- c("Unique to study", "2 cohorts", "3 cohorts", "4 cohorts", "5 cohorts")
+alluvial[, dataset := factor(dataset, levels = cohort_order_top_down)]
+alluvial[, tier := factor(tier, levels = tier_order_top_down)]
+
+# Restore the original Fig. 3C alluvial visual language at its original
+# 364 x 285 pt footprint. Labels remain outside the streams and only the
+# unique tier carries a count.
+cohort_pal_pastel <- c(
+  GSE126848 = "#a8c7e5", GSE130970 = "#c9b8e8", GSE135251 = "#e8bde9",
+  GSE162694 = "#f3bec1", GSE213621 = "#fbdebd"
+)
+tier_pal_pastel <- c(
+  `Unique to study` = "#D5D5D5", `2 cohorts` = "#e3bee8",
+  `3 cohorts` = "#beace0", `4 cohorts` = "#a3acd3", `5 cohorts` = "#7f87b6"
+)
+left_dt <- alluvial[, .(N = sum(N)), by = dataset][order(dataset)]
+total_y <- sum(left_dt$N)
+left_dt[, y_top := total_y - cumsum(c(0, head(N, -1L)))]
+left_dt[, y_bot := y_top - N]
+left_dt[, y_mid := (y_top + y_bot) / 2]
+right_dt <- alluvial[, .(N = sum(N)), by = tier][order(tier)]
+right_dt[, y_top := total_y - cumsum(c(0, head(N, -1L)))]
+right_dt[, y_bot := y_top - N]
+right_dt[, y_mid := (y_top + y_bot) / 2]
+unique_n <- right_dt[as.character(tier) == "Unique to study", N]
+
 p_alluvial <- ggplot(alluvial, aes(y = N, axis1 = dataset, axis2 = tier)) +
-  geom_alluvium(aes(fill = dataset), width = 0.12, alpha = 0.6, linewidth = 0) +
-  geom_stratum(width = 0.12, fill = "grey90", color = "white", linewidth = 0.3) +
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 6 / .pt) +
-  scale_x_discrete(limits = c("Cohort", "Detected in"), expand = c(0.2, 0.2)) +
-  scale_fill_manual(values = setNames(cat_palette[seq_along(cohorts)], cohorts), guide = "none") +
-  labs(x = NULL, y = "DEG memberships") + theme_masld_compact() +
-  theme(axis.text.x = element_text(size = 6, face = "plain"), axis.text.y = element_blank(),
-        axis.ticks.y = element_blank(), panel.grid = element_blank())
-supp_dir <- file.path(candidate_root, "supplementary", "figureS3", "panels")
-dir.create(supp_dir, recursive = TRUE, showWarnings = FALSE)
-ggsave(file.path(supp_dir, "figs3c_cohort_deg_membership_alluvial.pdf"), p_alluvial,
-       width = 2.65, height = 2.15, device = cairo_pdf)
+  geom_alluvium(aes(fill = dataset), width = 1 / 10, alpha = 0.55,
+                knot.pos = 0.42, curve_type = "sigmoid", linewidth = 0) +
+  geom_stratum(aes(fill = after_stat(stratum)), width = 1 / 10,
+               color = "white", linewidth = 0.45) +
+  annotate("text", x = 1 - 0.085, y = left_dt$y_mid,
+           label = as.character(left_dt$dataset), hjust = 1,
+           size = 6 / .pt, fontface = "plain", color = "black") +
+  annotate("text", x = 2 + 0.085, y = right_dt$y_mid,
+           label = ifelse(as.character(right_dt$tier) == "Unique to study",
+                          sprintf("Unique to study\n(%s)", format(unique_n, big.mark = ",")),
+                          as.character(right_dt$tier)),
+           hjust = 0, size = 6 / .pt, fontface = "plain", color = "black") +
+  scale_x_discrete(limits = c("Study", "Overlap"), expand = c(0.30, 0.30), position = "top") +
+  scale_y_continuous(expand = c(0.005, 0.005)) +
+  scale_fill_manual(values = c(cohort_pal_pastel, tier_pal_pastel), guide = "none") +
+  labs(x = NULL, y = NULL) + theme_void() +
+  theme(axis.text.x.top = element_text(size = 6, face = "plain", color = "black",
+                                       margin = margin(b = 4)),
+        plot.margin = margin(8, 14, 6, 14))
+ggsave(file.path(out_dir, "fig3c_cohort_alluvial.pdf"), p_alluvial,
+       width = 364 / 72, height = 285 / 72, device = cairo_pdf)
 
 fwrite(summary, file.path(src_dir, "fig3a_five_cohort_summary.tsv"), sep = "\t")
 fwrite(grid, file.path(src_dir, "fig3b_fibrosis_nas_grid.tsv"), sep = "\t")
-fwrite(alluvial, file.path(src_dir, "figs3c_cohort_deg_membership.tsv"), sep = "\t")
-cat("[saved] Figure 3A-B and supplementary cohort-membership alluvial\n")
+fwrite(alluvial, file.path(src_dir, "fig3c_cohort_deg_replication.tsv"), sep = "\t")
+cat("[saved] Figure 3A-B and main cohort-membership alluvial\n")

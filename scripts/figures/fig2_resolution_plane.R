@@ -234,7 +234,8 @@ lab_dt[, nudge_x := tx - x_plot]
 lab_dt[, nudge_y := ty - y_plot]
 
 p <- ggplot(plot_dt, aes(x = x_plot, y = y_plot)) +
-  geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.3, color = "grey45") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", linewidth = 0.3,
+             color = "grey45") +
   # background layer: unlabeled genes use the same class colors as the legend
   rasterize_layer(geom_point(data = bg_dt, aes(color = class), size = 0.45,
                              alpha = 0.8, shape = 16)) +
@@ -251,24 +252,32 @@ p <- ggplot(plot_dt, aes(x = x_plot, y = y_plot)) +
     segment.alpha = 0.9, seed = 1, bg.color = "white", bg.r = 0.12) +
   scale_color_manual(values = class_cols, name = NULL,
                      breaks = c("Non-coding", "Coding", "Both")) +
-  scale_x_continuous(limits = c(0, 1.03), breaks = c(0, 0.5, 1.0),
+  # Both axes keep the full 0-1 probability range (plus the same small
+  # point/label clearance at each edge), but the plane is NOT forced square:
+  # the panel fills the 1.80 x 2.35-in slot, so it renders portrait (~1:1.32).
+  # Nothing here is read off a 45-degree diagonal - the content is the point
+  # mass at x=0, x=1 and y=1 plus the PP.H4=0.5 threshold - so the vertical stretch costs no interpretation
+  # and recovers ~0.5 in of otherwise stranded height below the x-axis title.
+  scale_x_continuous(limits = c(-0.02, 1.03), breaks = c(0, 0.5, 1.0),
                      expand = expansion(mult = c(0.01, 0.02))) +
   scale_y_continuous(limits = c(-0.02, 1.03), breaks = c(0, 0.5, 1.0),
                      expand = expansion(mult = c(0.01, 0.02))) +
   labs(x = "Fine-mapping PIP",
        y = "Multi-signal COLOC PP.H4") +
-  coord_fixed(ratio = 1, clip = "off") +
+  coord_cartesian(clip = "off") +
   theme_masld(base_size = 6) +
   theme(legend.position = c(0.48, 0.64),
         legend.justification = "center",
         legend.direction = "horizontal",
         plot.title = element_blank(),
-        plot.margin = margin(10, 1, 3, 3, "pt"),
+        plot.margin = margin(8, 1, 1, 3, "pt"),
         axis.ticks.length = unit(2, "pt"),
         axis.title = element_text(size = 6, face = "plain"),
         axis.title.y = element_text(margin = margin(r = 0.5, unit = "pt")),
+        axis.title.x = element_text(margin = margin(t = 1, unit = "pt")),
         axis.text = element_text(size = 6, face = "plain", color = "black"),
         axis.text.y = element_text(margin = margin(r = 0.5, unit = "pt")),
+        axis.text.x = element_text(margin = margin(t = 1, unit = "pt")),
         legend.key.size = unit(5, "pt"),
         legend.spacing.x = unit(1, "pt"),
         legend.margin = margin(0, 0, 0, 0),

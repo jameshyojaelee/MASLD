@@ -1,0 +1,54 @@
+{
+  "current_task_admission": {
+    "decision": "blocked",
+    "primary_reason": "GenePert requires an exact perturbed-gene embedding; GSE281160 holds out noncoding loci and guide families rather than genes.",
+    "prohibited_workaround": "nearest_gene_colocalized_gene_MPRA_linked_gene_or_random_embedding_substitution",
+    "task_id": "perturbation_transfer"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "blocked_current_topology",
+      "reason": "A gene-target audit would require a resolved cell-to-animal and target join plus an orthology policy; current same-study-unpaired evidence cannot support replicate-level prediction."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_current_task",
+      "reason": "Twenty MPRA-selected noncoding variant loci and their guide pseudo-genes have no canonical GenePT gene embedding; six sequencing lanes are technical units, not biological replicates."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_direct_model_input_or_query",
+      "reason": "The 33 bulk RNA libraries encode condition and insulin arms rather than held gene perturbations. GenePert has neither a condition encoder nor a matching perturbation identity."
+    }
+  },
+  "held_target_leakage_contract": {
+    "control_centroid": "outer_training_controls_only",
+    "embedding_mapping": "frozen_before_fit_without_held_expression_or_annotation_outcomes",
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "normalization": "outer_training_rows_only",
+    "selection": "ridge_alpha_selected_in_inner_grouped_training_CV_only",
+    "upstream_incidents": [
+      "populate_dicts_averages_all_cells_per_condition_without_preserving_biological_replicates",
+      "mean_expression_is_computed_from_all_controls_when_the_dataset_is_loaded",
+      "utility_model_selection_aggregates_test_fold_metrics",
+      "a_missing_embedding_is_silently_replaced_with_a_random_L2_normalized_vector"
+    ]
+  },
+  "representation_and_export_contract": {
+    "adapter_export": "absolute_post_perturbation_expression_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "native_scale_finding": "the_pinned_ridge_target_is_absolute_condition_mean_expression_not_control_subtracted_delta",
+    "no_pseudoreplication": "cells_guides_targets_lanes_and_expression_genes_are_not_independent_replicates",
+    "prediction_aggregation": "pseudobulk_each_biological_replicate_before_independent_evaluator_metrics"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "conditional_on_a_valid_gene_perturbation_task_and_absolute_expression_export",
+    "centroid_accuracy": "the_evaluator_compares_each_replicate_aggregated_prediction_to_the_correct_observed_perturbation_centroid_and_all_other_eligible_test_centroids",
+    "perturbed_reference": "O_pert_is_the_unweighted_average_of_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Systema_is_evaluator_only_and_does_not_create_a_noncoding_target_embedding"
+  },
+  "verified_date": "2026-08-22"
+}

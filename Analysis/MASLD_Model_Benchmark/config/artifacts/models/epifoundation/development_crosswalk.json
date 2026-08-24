@@ -1,0 +1,49 @@
+{
+  "checkpoint_chronology": {
+    "checkpoint_file_introduced": "2025-02-04",
+    "checkpoint_file_introduced_revision": "7d1e29105c2121c192052e30e449c5ae45c064cb",
+    "current_selected_revision": "a459bb7829ef80a37499aae01a21f00a0b50a782",
+    "manifest_state": "The checkpoint is content-addressed, but no checkpoint-bound accession, BioProject, sample, donor, or release-alias manifest was found for the declared paired MiniAtlas pretraining corpus.",
+    "pretraining_summary": "More than 100,000 paired RNA-ATAC cells across 19 tissues and 56 cell types; the MiniAtlas dataset card exposes full-atlas and Kidney/PBMC/BMMC files without accession-level provenance."
+  },
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse281367", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["future_development_only_observed_atac_representation", "future_directional_paired_modality_diagnostic"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "No benchmark use until code terms, safe loading, vocabulary/reference mapping, and corpus exposure resolve. If admitted later, use only donor-compatible observed-ATAC diagnostics; never claim cell pairing between its RNA and ATAC aliquots.",
+      "evidence": "GSE244832 became public on 2024-11-13, before the checkpoint was uploaded. The checkpoint-bound pretraining accession manifest is absent.",
+      "exposure_state": "unknown",
+      "model_access": "A GSE244832 external-development score may use deterministic inference only after admission; no source cells, labels, prototypes, fine-tuning, calibration, or vocabulary fitting may enter that scored model."
+    },
+    "gse281367": {
+      "allowed_use": "No benchmark use until all model and dataset gates resolve. If admitted later, observed-ATAC representation only under donor-grouped development folds.",
+      "evidence": "The BioProject was registered before the checkpoint and locally exposed source artifacts exist, but no checkpoint-corpus accession manifest was found. Publication chronology alone cannot exclude private or aliased inclusion.",
+      "exposure_state": "unknown",
+      "model_access": "No claim that the upstream encoder is unexposed. Any downstream head or adaptation remains outer-training-only and the source has only 12 donors."
+    },
+    "gse289173": {
+      "allowed_use": "None under the current sealed tasks because EpiFoundation requires observed ATAC and has no sequence-based signed variant-effect output, whereas the evaluator exposes RNA-only nuclei and eQTL/ieQTL summaries.",
+      "evidence": "The checkpoint was uploaded on 2025-02-04, before GSE289173 submission on 2025-02-10 and public release on 2025-02-12. This favorable public chronology does not replace the absent checkpoint-bound corpus manifest or establish exclusion of private/aliased data.",
+      "exposure_state": "unknown",
+      "model_access": "No sealed feature or outcome access. Modality incompatibility is terminal even if corpus exclusion were later established."
+    },
+    "gse296875": {
+      "allowed_use": "Potential same-nucleus observed-ATAC development diagnostics only after terms, safe loading, exact vocabulary/reference mapping, deterministic tokenization, and dataset activation gates pass.",
+      "evidence": "GSE296875 became public on 2025-10-01, after the immutable checkpoint upload and selected revision. Public-release chronology alone does not show when the underlying biological material or processed data existed, and the checkpoint-bound corpus lacks an accession/sample/donor collection manifest.",
+      "exposure_state": "unknown",
+      "model_access": "Any fine-tuning, head, prototype, feature crosswalk learned from data, normalization, or calibration uses outer-training donors only. Held nuclei receive deterministic inference only."
+    }
+  },
+  "rules": {
+    "checkpoint_identity": "Only pretrain.pth at the registered Hugging Face revision, exact SHA-256, and complete companion vocabulary hashes is in scope. No newer, mutable, or locally converted artifact substitutes without its own immutable lineage.",
+    "exposure": "Overall and source-specific exposure remains unknown for GSE244832, GSE281367, GSE289173, and GSE296875 because none can be excluded from the unmanifested upstream corpus using public-release dates alone.",
+    "modality": "The ATAC-derived CLS embedding cannot enter an RNA-only sealed cell task. Consuming observed held ATAC cannot count as RNA-conditioned ATAC prediction.",
+    "pairing": "GSE296875 is same-nucleus. GSE244832 is same-sample different aliquot; no cell-to-cell pairing is permitted.",
+    "reference": "Freeze exact EpiFoundation ATAC peak and RNA gene vocabularies, their native genome/annotation identities, and auditable mappings to GRCh38.p14/GENCODE v49. An unmapped token is missing, not zero."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

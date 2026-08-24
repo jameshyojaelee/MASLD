@@ -1,0 +1,123 @@
+{
+  "architecture_contract": {
+    "approximate_parameters": 1400000000,
+    "attention_heads": 8,
+    "embedding_dimension": 512,
+    "maximum_rank_embeddings": 8192,
+    "pretraining_objectives": ["replaced_language_modeling", "cell_ccre_alignment", "signal_reconstruction"],
+    "transformer_layers": 18,
+    "vocabulary": {
+      "ccre_tokens": 1355445,
+      "special_tokens": 4,
+      "total": 1355449
+    },
+    "warning": "The cCRE embedding and signal decoder each contain roughly 695 million parameters. The 512-dimensional CLS representation is the compact cell output; the full model remains approximately 1.4 billion parameters."
+  },
+  "checkpoint": {
+    "content_digest": "UNRESOLVED_NOT_DOWNLOADED",
+    "drive_file_id": "1Swr4FZFcOmJQnR8ljjbzw4JBteMf_hUn",
+    "drive_folder_id": "1WlNykSCNtZGsUp2oG0dw3cDdVKYDR-iX",
+    "drive_listed_mime_type": "application/x-zip",
+    "drive_modification_time": "2025-08-09T15:33:55.105Z",
+    "name": "pretrained_EpiAgent.pth",
+    "size_bytes": 5801822387,
+    "url": "https://drive.google.com/file/d/1Swr4FZFcOmJQnR8ljjbzw4JBteMf_hUn/view",
+    "warning": "The public Google Drive listing supplies a current file ID, size, and modification time but no immutable content digest or public version history. This object postdates GSE289173 and cannot be treated as the December 2024 historical checkpoint without further evidence."
+  },
+  "code_license": "MIT",
+  "embedding_contract": {
+    "common_lane_candidate": "deterministic_final_transformer_cls_embedding_before_any_task_head",
+    "native_lane_candidates": [
+      "official_zero_shot_final_transformer_cls_embedding",
+      "training_fold_only_unsupervised_feature_extraction_fine_tune",
+      "training_fold_only_supervised_annotation_head"
+    ],
+    "output_dimension": 512,
+    "selection_rule": "The common lane uses is_random=false so cells longer than 8,190 cCREs retain the leading global-TF-IDF-ranked cCREs deterministically. Any official random subsampling or fine-tuned head is separately named, seeded, and confined to outer-training donors.",
+    "warning": "The released CellDataset defaults to random subsampling for long cells despite contradictory docstrings. Unseeded native defaults are not benchmark-admissible."
+  },
+  "input_contract": {
+    "canonical_matrix": "single_cell_or_single_nucleus_ATAC_fragment_overlap_counts_against_the_exact_1355445_ccre_inventory",
+    "ccre_bed": {
+      "coordinate_system": "BED_0_based_half_open",
+      "genome_build": "hg38_GRCh38",
+      "name": "cCRE.bed",
+      "rows": 1355445,
+      "sha256": "bacbe420a7ceba9e9a529d72788ac6fa0a195e8bc86804d8fed51963369ee782",
+      "size_bytes": 32413020
+    },
+    "document_frequency": {
+      "name": "cCRE_document_frequency.npy",
+      "sha256": "f443e5ca77471797d501237bc65387724a277fe843ed6bb807c9962f8a1aea60",
+      "size_bytes": 10843688,
+      "warning": "The repository states that a May 2026 replacement corrected a scale issue affecting imputation. This exact corrected object is mandatory and cannot be mixed with the original checkpoint-era array."
+    },
+    "normalization": "global_TFIDF: per-cell count fraction divided by the released corpus cCRE document-frequency vector, then log1p(10000*x)",
+    "sequence": "sort accessible cCRE tokens by descending global-TFIDF, offset cCRE indices by four, prepend CLS=1, append SEP=2, pad=0, maximum 8192 tokens",
+    "supported_assays": ["scATAC_fragments", "snATAC_fragments"],
+    "unsupported_inputs": ["RNA_only", "pseudobulk_ATAC_without_cell_rows", "arbitrary_peak_matrix_without_exact_ccre_projection"],
+    "warning": "Overlap counting, contig normalization, barcode joins, Tn5 convention, cCRE order, and the exact corrected document-frequency vector must be frozen before tokenization. Missing cCREs are structural absence of observations, not zero evidence."
+  },
+  "repository": "xy-chen16/EpiAgent",
+  "repository_revision": "9c4b7902537b14871bdb13d2fad43bff9974310a",
+  "release_records": {
+    "code_tag_commit": "12482b8decdb9a3f01491b5e790d9409a7b3f006",
+    "code_tag": "v1.0.0",
+    "pypi_0_0_3": {
+      "filename": "epiagent-0.0.3-py3-none-any.whl",
+      "sha256": "fb51454184865c5f0dd7027eead41e0f07b14be2e125176b5271f504cdeec39e",
+      "size_bytes": 32820,
+      "upload_time": "2025-03-03T14:07:35.471590Z"
+    },
+    "zenodo_v1_0_0": {
+      "archive": "xy-chen16/EpiAgent-v1.0.0.zip",
+      "doi": "10.5281/zenodo.16562787",
+      "md5": "9c2557d3cf77ca46cb57a3a81cd346b4",
+      "published": "2025-07-29",
+      "size_bytes": 32294765
+    }
+  },
+  "runtime_contract": {
+    "declared_cuda": "11.7",
+    "declared_flash_attention": "2.5.8",
+    "declared_python": "3.11_recommended_and_package_requires_3.8_or_newer",
+    "declared_torch": "2.0.1",
+    "environment_status": "UNRESOLVED_L40S_COMPATIBILITY_AND_MEMORY_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "checkpoint_downloaded": false,
+    "format": "pytorch_pth_reported_by_source_and_zip_mime_reported_by_drive",
+    "require_archive_member_inventory_before_deserialization": true,
+    "require_content_sha256_before_load": true,
+    "require_networkless_restricted_inspection": true,
+    "require_state_dict_key_shape_dtype_freeze": true,
+    "require_torch_weights_only_load": true,
+    "warning": "Official notebooks call unrestricted torch.load. The benchmark must not reproduce that loading path on an unverified external object."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The pinned repository, official Nature Methods article, Human-scATAC-Corpus site, Zenodo record, PyPI metadata, and public Google Drive folder metadata were queried on 2026-08-22. Repository source and bundled cCRE assets were hashed from the pinned commit. The 5.8-GB checkpoint was not downloaded or deserialized.",
+  "source_records": [
+    {"identity": "EpiAgent:LICENSE", "sha256": "9d367b20833cab2de757f6e41f4a816e2ed0fbaf6d006e71458d98c9efb88531", "size_bytes": 1065},
+    {"identity": "EpiAgent:README.md", "sha256": "0ebae8c80e9bf9c48d9841e4e770374b2499f5af869892c38e83157582703883", "size_bytes": 12060},
+    {"identity": "EpiAgent:setup.py", "sha256": "12294046a13a4f8a1fb0bc9f5a700ec3e0127f57f698a2130ea71047cbd39265", "size_bytes": 1089},
+    {"identity": "EpiAgent:epiagent/model.py", "sha256": "cd2bd931cc238afdbb97444b4e425b06a0d21d1d3ec6437b6ef616938181e591", "size_bytes": 42215},
+    {"identity": "EpiAgent:epiagent/tokenization.py", "sha256": "efdadca9640a2397fa81943536630d95a3482261f3c7fd2c6da7595ebe2f793d", "size_bytes": 3287},
+    {"identity": "EpiAgent:epiagent/preprocessing.py", "sha256": "261df35d4c429e97ee0b780b6d9e6822c17fbaaeb302cc37f00a99bac5b09159", "size_bytes": 3600},
+    {"identity": "EpiAgent:epiagent/dataset.py", "sha256": "93b9c2f5875c61d2eed82ea065f8406b880b2fd6aa19cc10df822965c1d6c51f", "size_bytes": 66385},
+    {"identity": "EpiAgent:epiagent/inference.py", "sha256": "8f93a54014d08a9411cb715a8d958147329f8991228b9e9366fcd518fb46ad4f", "size_bytes": 10288}
+  ],
+  "task_fit": {
+    "active_tasks": [],
+    "development_only_candidate": "ATAC cell-representation benchmark after a separate TaskSpec freezes identical ATAC rows, donor-safe splits, labels, baselines, and nonpromotable endpoints",
+    "rna_conditioned_atac": "ineligible because native inference consumes observed ATAC cCRE tokens rather than RNA/context-only input",
+    "sealed_cell_state_mapping": "ineligible because GSE289173 exposes an RNA-only row universe",
+    "variant_to_regulation": "ineligible as a standalone signed eQTL/ieQTL effect model; it does not accept the sealed RNA-only input or produce enhancer-gene direction"
+  },
+  "terms_audit": {
+    "google_drive_weight_terms": "not_explicitly_declared",
+    "repository_code_terms": "MIT",
+    "result": "blocked_pending_checkpoint_terms_and_digest",
+    "zenodo_record_terms": "MIT metadata applies to the archived 32.3-MB release file, but the archive cannot contain the separately hosted 5.8-GB Drive checkpoint; the record description alone is not treated as unambiguous terms for the current Drive object"
+  },
+  "weight_license": "UNRESOLVED"
+}

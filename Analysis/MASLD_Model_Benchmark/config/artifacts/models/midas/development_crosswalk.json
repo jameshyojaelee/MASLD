@@ -1,0 +1,43 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["cell_state_mapping", "rna_conditioned_atac", "development_only_rna_atac_integration"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "External-development unpaired mosaic robustness only. RNA and ATAC aliquots must be distinct modality batches, never one positionally paired MultiModalDataset.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No GSE244832 matrices, targets, preprocessing statistics, feature selection, query fitting, technical-category fitting, or calibration may enter a model scored on it."
+    },
+    "gse289173": {
+      "allowed_use": "One-time RNA-only frozen cell-state inference after selection lock. It has no ATAC truth and cannot confirm MIDAS profile performance.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "Anonymized RNA features only; no labels, eQTL/ieQTL outcomes, optimization, feature changes, technical-category learning, or calibration before prediction hashes are committed."
+    },
+    "gse296875": {
+      "allowed_use": "Same-nucleus RNA-ATAC outer-fold training and donor-held retrospective RNA-to-ATAC evaluation after activation gates pass.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors define genes, peaks, chromosome chunks, masks, technical categories, configuration, parameters, early stopping, heads, or calibration. Held donors provide RNA only when the profile endpoint is scored."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_trained_per_outer_fold_seed_feature_inventory_chromosome_chunk_and_batch_mapping",
+    "common_lane": "frozen z_c RNA-only embedding with identical common head",
+    "native_lane": "frozen deterministic RNA-to-ATAC imputation and native biological latent, reported separately",
+    "seeds": [11, 29, 47, 71, 101]
+  },
+  "pairing_rules": {
+    "gse244832": "same_sample_different_aliquot; place RNA and ATAC in distinct batches with distinct row identifiers",
+    "gse296875": "same_nucleus; one paired batch only after exact ordered obs-ID validation",
+    "gse289173": "RNA_only; omit ATAC rows structurally and preserve the explicit project state"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units; cells, nuclei, batches, and peaks are not independent biological replicates.",
+    "feature_contract": "Genes, peaks, chromosome chunks, transformations, masks, and output order are frozen inside the outer-training partition.",
+    "held_query": "Use a tensor-only project adapter with a prespecified training-known technical category and no optimization; the official loader alone is insufficient.",
+    "no_false_pairing": "Equal row counts are not proof of pairing. Same-batch modalities require identical ordered validated same-cell or same-nucleus IDs."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

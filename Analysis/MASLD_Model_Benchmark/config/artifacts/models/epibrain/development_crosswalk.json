@@ -1,0 +1,59 @@
+{
+  "checkpoint_training_corpus": {
+    "backbone": "Borzoi_pretrained_bulk_functional_genomics_weights",
+    "brain_sources": "human_basal_ganglia_and_cortex_Droplet_Paired_Tag_profiles",
+    "modalities": ["ATAC", "H3K27ac", "H3K27me3", "H3K9me3", "RNA_plus", "RNA_minus"],
+    "published_cell_type_rule": "37_brain_subclasses_with_at_least_1000_cells",
+    "reference": "hg38",
+    "replication_limit": "Cell-type pseudobulk tracks were fitted; individual cells and genomic windows are not biological replicates."
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "UNRESOLVED_Google_Drive_artifact_not_immutable",
+    "project_sources": ["gse281364", "gse289173", "gse296875"],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "gse281364": {
+      "declared_corpus_result": "no_declared_use",
+      "evidence": "The paper and committed run receipts describe brain profile training and do not name GSE281364. The model repository and live artifact links postdate the accession's 2026-03-16 public release, and no immutable checkpoint creation receipt or corpus manifest rules out later exposure.",
+      "exposure_state": "unknown",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "declared_corpus_result": "no_declared_use",
+      "evidence": "The declared training corpus is brain Droplet Paired-Tag rather than liver QTL data, and the paper's eQTL evaluation used GTEx basal ganglia plus independent brain studies. However, GSE289173 was public on 2025-02-12 before the 2026 paper, repository, and unversioned Google Drive links. Without checkpoint hashes, creation dates, and a checkpoint-bound corpus manifest, sealed target-label exposure remains unknown.",
+      "exposure_state": "unknown",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "declared_corpus_result": "no_declared_use",
+      "evidence": "The declared corpus is brain-only and does not name GSE296875, but the liver multiome source was public on 2025-10-01 before the released EpiBRAIN artifacts. The checkpoint is not immutable or corpus-bound, so absence cannot be proven.",
+      "exposure_state": "unknown",
+      "public_date": "2025-10-01"
+    },
+    "gtx_brain_eqtl": {
+      "evidence": "EpiBRAIN evaluated an L2 variant score on GTEx basal ganglia fine-mapped eQTLs and compared predictions with independent brain eQTL betas. These outcome families are downstream demonstrations, not declared profile-training targets.",
+      "exposure_state": "downstream_demo"
+    }
+  },
+  "held_out_behavior": {
+    "cell_context": "The 37-cell-type checkpoint and 70-cell-type extension have fixed learned brain output heads. No new donor, liver cell state, or expression context can be encoded inductively without training a new model.",
+    "donor": "Published evaluation aggregates cells into cell-type tracks and does not establish held-biological-donor transfer. The same DNA sequence produces the same fixed brain outputs for every donor.",
+    "locus": "The paper states that genomic splits follow Borzoi, while the committed checkpoint receipt records 10 percent validation and 10 percent test partition settings rather than an immutable chromosome roster. Project evaluation would require merged genomic or LD blocks plus a 524288-bp boundary buffer.",
+    "sealed": "GSE289173 cannot select a brain proxy head, modality, bin aggregation, L2 summary, link model, direction rule, calibration, or threshold."
+  },
+  "interpretation": "EpiBRAIN is a sequence-to-fixed-brain-profile model, not a general observed-context encoder. Its declared biology does not include MASLD sources, but the unversioned, post-GSE289173 checkpoint links prevent a clean exposure classification. It is blocked by terms and cannot enter either primary MASLD endpoint.",
+  "rules": {
+    "checkpoint_identity": "A live Google Drive ID and filename are not an immutable checkpoint. Exposure cannot be upgraded until bytes, SHA-256, creation receipt, training track roster, and producing source are bound together.",
+    "domain": "A fixed microglial, neuronal, or other brain head cannot be relabeled as hepatocyte, stellate, endothelial, cholangiocyte, or liver immune context.",
+    "profile_vs_context": "A model may emit ATAC and RNA profiles while still being sequence-only. Conditional context requires observed target RNA at inference; EpiBRAIN has no such input.",
+    "variant_direction": "The published L2 score is a magnitude summary. It is not a signed cell-type eQTL or ieQTL effect."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "task_data_gate": {
+    "gse281364": "No use while terms and checkpoint identity are blocked; at most a future brain-domain sequence diagnostic.",
+    "gse289173": "Ineligible for the sealed champion because exposure is unknown, liver context is absent, and the native variant summary is not a signed liver gene effect.",
+    "gse296875": "Cannot be supplied as test-time RNA context. Any liver fine-tuning would create a new checkpoint and is prohibited without written license authority."
+  },
+  "verified_date": "2026-08-22"
+}

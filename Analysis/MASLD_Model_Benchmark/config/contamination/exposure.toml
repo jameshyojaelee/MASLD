@@ -1,0 +1,11 @@
+schema_version = "masld-bench-contamination-v1"
+audit_id = "cohort_checkpoint_exposure"
+cohort_identity_keys = ["accession", "bioproject", "sra_run", "doi", "donor_alias", "cohort_release_alias"]
+donor_checks = ["salted_metadata_signature", "salted_sex_signature", "salted_expression_signature", "salted_genotype_ibs_signature_where_allowed"]
+artifact_checks = ["exact_matrix_sha256", "near_duplicate_matrix_signature", "image_sha256", "near_duplicate_image_signature"]
+raw_private_fingerprints_retained = false
+
+checkpoint_fields = ["checkpoint_sha256", "release_date", "training_cutoff", "declared_corpora", "cellxgene_uuid", "accession_alias", "exposure_confidence"]
+exposure_states = ["clean_declared", "target_label_unexposed", "encoder_seen", "continual_seen", "reference_only", "downstream_demo", "unknown"]
+champion_eligible_states = ["clean_declared", "target_label_unexposed"]
+unknown_is_champion_eligible = false

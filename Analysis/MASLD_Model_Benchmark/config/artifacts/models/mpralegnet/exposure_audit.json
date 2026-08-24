@@ -1,0 +1,41 @@
+{
+  "audit_scope": {
+    "checkpoint": "Ni-os/MPRALegNet@bba3b416a1450f1186b2ec3112b728650568a686:weights/hepg2_best_model_test1_val2.safetensors",
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task": "variant_to_regulation"
+  },
+  "checkpoint_finding": {
+    "author_checkpoint_equivalence": "unresolved",
+    "declared_corpus": "K562, HepG2, and WTC11 human lentiMPRA",
+    "gse281364_target_exposure": "clean_declared",
+    "gse289173_target_exposure": "target_label_unexposed",
+    "gse296875_target_exposure": "target_label_unexposed",
+    "overall_exposure_state": "target_label_unexposed",
+    "reference_or_variant_sequence_exposure": "unknown",
+    "weight_identity": "Git LFS SHA-256 and size are exact, but bytes were not acquired"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "26f84732a802f33d08f0718dc360285702a5f9fe7b1dc2f1b09b91953565cfb5"
+  },
+  "interpretation": "MPRALegNet is a useful HepG2 reporter-activity comparator, not an endogenous regulatory-effect model. Its ALT-minus-REF score can test whether a learned MPRA prior transports to MASLD variants, but the base model has no donor context, treatment context, enhancer-gene link, or signed eQTL/ieQTL target. The exact HF artifact predates GSE281364 but postdates the other two GEO releases; target-label unexposed, not globally clean, is the defensible overall classification.",
+  "known_incidents_and_biases": [
+    "The checkpoint is a third-party Hugging Face repackaging and has not been matched to the author Zenodo model archive.",
+    "The filename identifies one test1_val2 model, whereas the author study used ten-fold cross-validation.",
+    "HepG2 is a transformed hepatoblastoma line and does not supply LX-2, donor, or MASLD tissue context.",
+    "A 230-bp genomic window is a domain-transfer input, not the original lentiMPRA construct distribution.",
+    "Reverse-complement averaging can stabilize orientation but does not create treatment or cell-state conditioning."
+  ],
+  "remaining_blockers": [
+    "Obtain campaign approval before acquiring the exact safetensors file, then verify its LFS SHA-256, size, tensor keys, shapes, and dtypes without network access during load.",
+    "Either prove equality to an author Zenodo checkpoint or explicitly freeze acceptance of the third-party artifact and its lower provenance confidence.",
+    "Pass the Python 3.11, PyTorch 2.0, CUDA, BatchNorm eval-mode, forward, reverse-complement, determinism, and cross-device tolerance probes on L40S.",
+    "Freeze and fixture-test 230-bp oligo and genomic-window construction, allele index, REF match, N handling, strand restoration, and SNP-only admission.",
+    "Activate GSE281364 only after its variant-barcode-oligo joins, counts, condition labels, replicate structure, QC, and rights pass; never treat replicate libraries as donors.",
+    "Keep any enhancer-gene link and signed-effect direction rule as a separately registered composite frozen before sealed inference."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_as_a_standalone_signed_variant_to_regulation_champion; conditionally_eligible_as_an_open_frozen_HepG2_reporter_activity_component_after_provenance_runtime_and_input_locks",
+  "verified_date": "2026-08-22"
+}

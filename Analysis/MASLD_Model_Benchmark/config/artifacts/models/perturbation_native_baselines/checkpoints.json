@@ -1,0 +1,237 @@
+{
+  "activation_disposition": {
+    "admission_status": "blocked",
+    "downloads_installs_jobs_or_tests_performed": true,
+    "reason": "An independent project implementation and six-test synthetic fixture are frozen, but no fitted outer-fold state or admissible dataset activation receipt exists.",
+    "selection": "All five remain mandatory perturbation comparators when their assay and target interface is applicable. Inapplicability must be reported; no deep model receives credit for beating a silently malformed baseline."
+  },
+  "roster_contract": {
+    "count": 5,
+    "registry_ids": [
+      "control_mean",
+      "perturbed_mean",
+      "ridge_perturbation",
+      "bilinear_perturbation",
+      "systema"
+    ],
+    "no_implicit_members": true,
+    "scope": "exactly_the_five_registered_perturbation_native_baselines"
+  },
+  "registry_snapshot": {
+    "source": "config/models/mandatory_baselines.toml",
+    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+    "models": {
+      "control_mean": {
+        "checkpoint_revision": "UNRESOLVED",
+        "checkpoint_sha256": "UNRESOLVED",
+        "exposure_status": "unknown",
+        "implementation_type": "classical_baseline",
+        "license_status": "UNRESOLVED",
+        "status": "candidate",
+        "supported_tasks": ["perturbation_transfer", "gene_perturbation_response"]
+      },
+      "perturbed_mean": {
+        "checkpoint_revision": "UNRESOLVED",
+        "checkpoint_sha256": "UNRESOLVED",
+        "exposure_status": "unknown",
+        "implementation_type": "classical_baseline",
+        "license_status": "UNRESOLVED",
+        "status": "candidate",
+        "supported_tasks": ["perturbation_transfer", "gene_perturbation_response"]
+      },
+      "ridge_perturbation": {
+        "checkpoint_revision": "UNRESOLVED",
+        "checkpoint_sha256": "UNRESOLVED",
+        "exposure_status": "unknown",
+        "implementation_type": "classical_baseline",
+        "license_status": "UNRESOLVED",
+        "status": "candidate",
+        "supported_tasks": ["perturbation_transfer", "gene_perturbation_response"]
+      },
+      "bilinear_perturbation": {
+        "checkpoint_revision": "UNRESOLVED",
+        "checkpoint_sha256": "UNRESOLVED",
+        "exposure_status": "unknown",
+        "implementation_type": "classical_baseline",
+        "license_status": "UNRESOLVED",
+        "status": "candidate",
+        "supported_tasks": ["perturbation_transfer", "gene_perturbation_response"]
+      },
+      "systema": {
+        "checkpoint_revision": "scientific_spec:mlbio-epfl/systema@aaf5b5353993b48b78543f2f93b3e18ca65df515:matching_mean+independent_project_implementation",
+        "checkpoint_sha256": "UNRESOLVED",
+        "exposure_status": "target_label_unexposed",
+        "implementation_type": "classical_baseline",
+        "license_status": "project_owned_independent_implementation_no_upstream_code_reuse",
+        "status": "candidate",
+        "supported_tasks": ["perturbation_transfer", "gene_perturbation_response"]
+      }
+    }
+  },
+  "shared_assay_native_contract": {
+    "biological_unit": "experimental replicate, independent liver-chip batch, or animal as declared by the DatasetManifest",
+    "pseudobulk_order": "Aggregate raw counts within target locus, declared context, and biological unit before any normalization, feature selection, centering, fit, or metric. Collapse technical lanes and guides under a frozen target-family rule.",
+    "fit_weighting": "Each biological unit has total weight one; target rows inside a biological unit share that weight. Cells, guides, targets, libraries, and genes never add biological replication.",
+    "response": "Y[r,t,c,g] is the biological-unit pseudobulk expression profile on one DatasetActivationContract-frozen assay-native scale. Raw counts, normalized expression, fold change, differential-expression statistics, and cross-species ortholog summaries are distinct outputs and are never pooled as if commensurate.",
+    "delta": "D[r,t,c,g] = Y[r,t,c,g] - M_control[r,c,g], where M_control is a matched within-biological-unit control profile. If that match is absent, D is structurally_missing unless a hierarchy was frozen before outcomes were read.",
+    "gene_axis": "Freeze gene IDs, order, duplicate handling, ortholog rule where relevant, masks, and transform before fit. A missing gene or failed crosswalk is not zero expression.",
+    "strata": "Any source, species, assay, cell state, time, dose, intervention class, and control hierarchy used for matching is predeclared and fit inside the outer-training partition. Outcome-selected nearest matching is prohibited.",
+    "current_scale_status": "UNRESOLVED_until_each_dataset_activation_contract_freezes_raw_count_provenance_and_endpoint_scale"
+  },
+  "models": {
+    "control_mean": {
+      "algorithm_id": "masld_control_mean_perturbation_v1",
+      "scientific_class": "task_native_no_response_baseline",
+      "formula": "mu_control[c,g] = sum_r w_r Y_control[r,c,g] / sum_r w_r over eligible outer-training biological units; predict absolute profile mu_control and perturbation delta exactly zero.",
+      "fitting": "Fit the control centroid independently inside every outer-training partition and declared stratum. Biological-unit weights are equal after within-unit target aggregation.",
+      "inputs_used": ["training_control_pseudobulk", "declared_context", "gene_and_missingness_manifest"],
+      "inputs_ignored": ["held_outcome", "target_identity", "guide_identity", "held_target_expression"],
+      "fitted_state": ["gene_order", "assay_scale", "stratum_definition", "eligible_training_unit_ids", "unit_weights", "control_centroid", "feature_masks"],
+      "native_outputs": ["absolute_control_mean_profile", "zero_delta_profile"],
+      "missing_match": "structurally_missing_no_global_fallback",
+      "task_role": "mandatory baseline; may win an applicable exploratory endpoint, but no current perturbation task can produce a sealed champion"
+    },
+    "perturbed_mean": {
+      "algorithm_id": "masld_perturbed_mean_v1",
+      "scientific_class": "task_native_population_mean_baseline",
+      "formula": "mu_pert[c,g] = sum_(r,t) w_(r,t) Y_pert[r,t,c,g] / sum_(r,t) w_(r,t) over eligible outer-training units and targets; predict absolute profile mu_pert and delta mu_pert - mu_control.",
+      "fitting": "Exclude every held target locus, guide family, biological unit, and outer-development source. Give each biological unit total weight one and divide that weight across its eligible targets.",
+      "fitted_state": ["all_control_mean_state", "eligible_training_unit_and_target_ids", "unit_target_weights", "perturbed_centroid", "feature_masks"],
+      "unseen_target_behavior": "Use the same training perturbed centroid without inspecting target outcomes. This is a population prior, not target-specific prediction.",
+      "native_outputs": ["absolute_perturbed_mean_profile", "population_mean_delta_profile"],
+      "task_role": "mandatory baseline and the Systema matching-mean equivalent for the currently registered single-component held-target task"
+    },
+    "ridge_perturbation": {
+      "algorithm_id": "masld_multioutput_ridge_perturbation_v1",
+      "scientific_class": "regularized_additive_linear_baseline",
+      "feature_vector": "x[r,t] = [1, c[r], z[t]], where c is a pre-outcome context vector and z is an outcome-independent held-target-capable feature vector. Target IDs, nearest-gene substitutions, outcome-derived embeddings, and tokens unavailable for held noncoding loci are forbidden.",
+      "formula": "B_hat(lambda) = argmin_B sum_(r,t) w_(r,t) ||D[r,t] - x[r,t] B||_2^2 + lambda ||P B||_F^2; P leaves the intercept unpenalized.",
+      "regularization_grid": [1e-06, 1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0],
+      "selection": "Select lambda by inner target-locus, guide-family, and biological-unit grouped cross-validation on gene-macro squared error; choose the largest lambda within one standard error of the minimum. All centering and scaling is inner-training-only.",
+      "fitted_state": ["response_gene_axis", "context_feature_manifest", "target_feature_manifest", "missingness_masks", "training_feature_center_and_scale", "lambda_grid", "selected_lambda", "coefficient_matrix", "intercept", "outer_and_inner_group_receipts"],
+      "fail_closed": "If a target feature manifest that is computable for every held target is absent, or an inner grouped split is infeasible, this baseline is not runnable. It does not silently become target-ID regression, nearest-gene regression, or context mean.",
+      "native_outputs": ["predicted_delta_profile", "predicted_absolute_profile_as_mu_control_plus_delta"],
+      "task_role": "mandatory additive generalization baseline"
+    },
+    "bilinear_perturbation": {
+      "algorithm_id": "masld_kronecker_bilinear_perturbation_v1",
+      "scientific_class": "regularized_linear_in_parameters_context_by_target_interaction_baseline",
+      "feature_vector": "phi[r,t] = [1, c[r], z[t], vec(c[r] outer_product z[t])]. This is bilinear in context and target inputs and linear in fitted parameters.",
+      "formula": "Theta_hat(lambda) = argmin_Theta sum_(r,t) w_(r,t) ||D[r,t] - phi[r,t] Theta||_2^2 + lambda ||P Theta||_F^2; P leaves the intercept unpenalized.",
+      "regularization_grid": [1e-06, 1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0],
+      "selection": "Use the same grouped inner folds, endpoint, one-standard-error rule, biological-unit weights, and training-only transforms as ridge_perturbation.",
+      "fitted_state": ["all_ridge_input_state", "ordered_Kronecker_feature_manifest", "selected_lambda", "interaction_coefficient_matrix", "main_effect_coefficients", "intercept"],
+      "resource_rule": "The full feature dimensions and memory estimate must be frozen before a campaign. Outcome-driven rank reduction is prohibited; if the exact Kronecker design exceeds the approved resource ceiling, report unschedulable rather than changing the model after seeing results.",
+      "fail_closed": "The context and target vectors must both be computable for held targets and contexts without outcome access. Otherwise this baseline is not runnable.",
+      "native_outputs": ["predicted_delta_profile", "predicted_absolute_profile_as_mu_control_plus_delta"],
+      "task_role": "mandatory interaction baseline"
+    },
+    "systema": {
+      "algorithm_id": "masld_systema_matching_mean_v1",
+      "scientific_class": "independently_implemented_published_matching_mean_baseline_plus_linear_evaluation_reference",
+      "published_matching_mean": "For a two-component perturbation X+Y, predict 0.5 * (m[X] + m[Y]). A component observed as a singleton in outer training uses its equal-biological-unit mean; an unseen component uses mu_pert. For the registered single-component held-target task, matching mean is defined to equal perturbed_mean.",
+      "project_unit_adaptation": "The publication defines cell-level means. This benchmark first creates biological-unit pseudobulk and then takes equal-biological-unit means so cells do not become replicates; this adaptation must be labeled in reports.",
+      "strict_systema_reference": "Let v_train be the outer-training perturbed centroid. The evaluator may report R_v(y) = y - v_train for both observed and predicted profiles. This is a fixed linear translation, not a fitted perturbation model and not confounding, batch, guide, or leakage correction.",
+      "evaluation_outcome_reference": "Any diagnostic that instead derives v from evaluation outcomes is transductive and evaluator-only. It cannot enter fitting, calibration, model selection, prediction repair, or a champion claim.",
+      "fitted_state": ["all_perturbed_mean_state", "component_identity_and_matching_manifest", "singleton_component_training_centroids", "unseen_component_mask", "strict_training_reference"],
+      "duplicate_win_rule": "On the current single-component task, systema and perturbed_mean form one baseline family and cannot count as two independent wins, two hypotheses, or complementarity evidence.",
+      "native_outputs": ["matching_mean_absolute_profile", "matching_mean_delta_profile", "strict_training_referenced_profile"],
+      "task_role": "mandatory published comparison after independent implementation; no upstream source code reuse"
+    }
+  },
+  "split_and_leakage_contract": {
+    "outer_groups": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "target_holdout": "All guides, sequence windows, cells, and derived outcomes for one target locus remain in one role.",
+    "fit_scope": "Centroids, feature rosters, transformations, covariate encoding, scaling, regularization, component matching, calibration, and any ortholog mapping are fit or frozen inside outer training.",
+    "pseudoreplication_prohibitions": [
+      "Cells do not define folds, confidence intervals, or n.",
+      "Guides and targets do not define biological replication.",
+      "The 33 GSE313774 libraries do not replace its three independent batches.",
+      "Approximately 103000 GSE275483 cells do not replace its four animals.",
+      "Seeds are stability repeats, not biological replicates."
+    ],
+    "held_outcome_firewall": "No held expression, differential-expression statistic, target centroid, guide effect, pathway score, or highlighted gene can construct a baseline, scale, feature, match, or reference."
+  },
+  "missingness_contract": {
+    "states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "rule": "Carry assay, gene, control-match, target-feature, ortholog, and join masks through every fit and PredictionBundle. Missing entries never become measured zero or zero response.",
+    "model_behavior": "A baseline that cannot produce the full registered output axis emits a typed missing state for the affected rows and is excluded only under the evaluator's precommitted completeness rule."
+  },
+  "calibration_uncertainty_and_selection": {
+    "calibration": "These five methods natively emit continuous expression profiles, not probabilities. No post hoc probability calibration or Brier claim is defined. Any future binary endpoint needs a separately registered cross-fitted calibrator.",
+    "uncertainty": "Use 10000 paired experimental-replicate, independent-batch, or animal cluster-bootstrap replicates as specified by the TaskSpec. Resample target rows only inside their sampled biological unit; never resample cells or guides as independent units.",
+    "seeds": "Ridge and bilinear fitting is deterministic for a frozen design and solver. Any solver or tie randomness must use the RunSpec seed and be recorded; seed variation is not inferential uncertainty.",
+    "champion": "The current task is exploratory and has no sealed source. A simple baseline may be the endpoint winner, but no MASLD perturbation champion can be declared."
+  },
+  "runtime_safe_loading_terms_and_release": {
+    "implementation": "An independent project implementation exists at src/masld_bench/perturbation_baselines.py. No fitted state exists. It uses bounded validated arrays and does not deserialize untrusted objects.",
+    "runtime": "The six-test deterministic CPU fixture passed on SLURM job 21066694. This establishes formula, weighting, missing-match, held-target, and strict-reference behavior on synthetic inputs only; it is not a dataset activation or performance result.",
+    "new_dependency": "none_added",
+    "project_license": "UNRESOLVED_repository_root_license_not_located",
+    "upstream_weights": "none",
+    "systema_terms": "The exact official repository revision has no detected license in the current registry audit. Do not copy, import, vendor, or redistribute its code. Independently implement only the published equation.",
+    "release": "Source code release requires a project-license decision. Fitted summaries and predictions remain subject to every dataset's source terms and source-reference-only or aggregate-only policy.",
+    "open_champion": "ineligible_no_sealed_perturbation_source"
+  },
+  "safe_loading_contract": {
+    "checkpoint_loader": "none_no_upstream_weights",
+    "no_runtime_network": true,
+    "project_fitted_state": "Store centroids, masks, ordered feature manifests, scalers, coefficients, regularization choice, and split receipts in bounded non-executable formats.",
+    "untrusted_pickle_joblib_or_R_object": "prohibited"
+  },
+  "source_evidence": "The official Systema paper and exact official repository revision were inspected without copying upstream code. An independent five-baseline implementation and six synthetic unit tests passed on CPU SLURM job 21066694 on 2026-08-24. No fitted fold state or admissible dataset activation exists.",
+  "source_records": [
+    {
+      "identity": "Systema paper",
+      "url": "https://www.nature.com/articles/s41587-025-02777-8",
+      "doi": "10.1038/s41587-025-02777-8",
+      "role": "published_Systema_reference_and_matching_mean_definition"
+    },
+    {
+      "identity": "mlbio-epfl/systema",
+      "url": "https://github.com/mlbio-epfl/systema/tree/aaf5b5353993b48b78543f2f93b3e18ca65df515",
+      "revision": "aaf5b5353993b48b78543f2f93b3e18ca65df515",
+      "role": "exact_repository_identity_only_no_code_reuse"
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/perturbation_transfer.toml",
+      "sha256": "c44ab6f4b19c54dad8df6a498aa5a2f34bc40811eda6afd7e8bd6745e5574a05",
+      "size_bytes": 3018
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/perturbation_outer.toml",
+      "sha256": "99a15115a9eb43672577c422a42eeb306e33ba9497b949e466ce51c7e886b275",
+      "size_bytes": 839
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/gene_perturbation_response.toml",
+      "sha256": "a8a0345ae2409df68cf7b30946fae3c45b7e4bd4bd73bfad4b3008e68cac0912",
+      "size_bytes": 3010
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/gene_perturbation_outer.toml",
+      "sha256": "279c5be229a61e028914fea741eb74bbd8fd8bf70213728ee82519668e7d8db7",
+      "size_bytes": 1870
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/src/masld_bench/perturbation_baselines.py",
+      "sha256": "a5298dc5af50b89f2c7ed7f6896c4f702cdbcc897e06844a59ba4b4777136809",
+      "size_bytes": 8605,
+      "role": "independent_project_implementation_no_Systema_source_reuse"
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/tests/unit/test_perturbation_native_baselines.py",
+      "sha256": "02bf1b9effeac06f4ec38dd6756e00b1ec1632e15777c9d2c26936516001b7ad",
+      "size_bytes": 3310,
+      "role": "six_synthetic_contract_tests"
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/executions/perturbation-baseline-fixture-21066694/ARTIFACTS.json",
+      "sha256": "2fa59928d38522fd4623cb3c60e9862591893edb8f849a92b94b84fa62db494b",
+      "size_bytes": 478,
+      "role": "frozen_CPU_SLURM_fixture_receipt_6_of_6_passed"
+    }
+  ],
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "verified_date": "2026-08-24"
+}

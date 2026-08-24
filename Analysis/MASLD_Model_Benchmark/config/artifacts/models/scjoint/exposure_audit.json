@@ -1,0 +1,33 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping only; RNA-conditioned ATAC is ineligible"
+  },
+  "checkpoint_findings": {
+    "scjoint_repository_and_demo_checkpoint": {
+      "checkpoint_identity": "repository revision cbbfa5d7e7faa35f3d725bd5257507a01a22810f; bundled demonstration checkpoint not admitted",
+      "corpus": "No general pretraining corpus is declared; official use trains jointly on user-supplied labeled RNA and unlabeled ATAC gene-activity cells",
+      "exposure_state": "unknown",
+      "terms_state": "blocked_no_detected_code_or_weight_license"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "terms_transductive_training_frozen_query_and_latent_only_contract",
+    "sha256": "b060563fd450af6eea437866696620fd2395dff803822d16ab7b711a54d0d58d"
+  },
+  "interpretation": "No license was detected for the exact scJoint repository or its bundled checkpoint, so execution, adaptation, and redistribution remain blocked. Independent of terms, the official algorithm is transductive: it co-trains on target ATAC cells in stage 1, uses KNN pseudo-labels, and retrains in stage 3. Held donors cannot enter that workflow. scJoint outputs embeddings and label probabilities from expression or ATAC gene-activity matrices; it has no peak decoder and is ineligible for RNA-conditioned ATAC profile scoring.",
+  "remaining_blockers": [
+    "Obtain written permission covering source execution, modification, local adaptation, checkpoint use, publication, and derivative redistribution before any package, code, or weight is executed.",
+    "Do not acquire or deserialize the bundled demonstration checkpoint. If permission is obtained, first freeze its source, terms, hash, configuration, corpus or demo dataset, and safe state-dict inspection record.",
+    "Implement and validate a frozen encoder/head query wrapper that excludes held rows from stage 1, KNN pseudo-labeling, stage 3, gene intersection, normalization, model selection, and calibration.",
+    "Freeze a GENCODE v49 gene order and a training-only, assay-valid ATAC gene-activity construction. Keep peak accessibility and gene activity distinct.",
+    "Prove GSE244832 aliquots remain separate populations, GSE296875 held donors never enter co-training, and GSE289173 is RNA-only inference after selection lock.",
+    "Validate the legacy PyTorch 1.0/1.4 implementation under a frozen compatible runtime on L40S, including numerical parity, eval mode, deterministic seeds, checkpoint resume, and memory, only after terms resolve.",
+    "Keep scJoint latent-only in the RNA-conditioned ATAC registry; no embedding, gene-activity matrix, class score, or KNN probability can satisfy the peak-profile contract."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_while_code_and_weight_terms_are_unresolved; if resolved, blocked_pending_frozen_query_runtime_and_leakage_fixtures_for_cell_state_mapping_only",
+  "verified_date": "2026-08-22"
+}

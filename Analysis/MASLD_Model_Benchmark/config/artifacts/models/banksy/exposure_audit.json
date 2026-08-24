@@ -1,0 +1,62 @@
+{
+  "audit_scope": {
+    "candidate": "Banksy_py_1.3.5_at_9278996c_transform_and_cluster_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "code": "prabhakarlab/Banksy_py@9278996c39e376277d57ef95278000447ba6c57c",
+    "registered_spatial_task": "none",
+    "sealed_spatial_source": "none"
+  },
+  "checkpoint_finding": {
+    "admitted_upstream_checkpoint": "none",
+    "checkpoint_exposure_state": "not_applicable_no_upstream_model_state",
+    "project_trained_state": "not_created",
+    "project_state_exposure": "unknown_until_a_future_participant_fold_transform_and_partition_receipt_exists",
+    "rule": "A future state is target-label-unexposed only when normalization, graphs, neighborhood features, coordinate convention, variance balancing, lambda, PCA, clustering, Harmony, and mappings are selected without held outcomes under the registered participant split."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "Python_implementation_identity_coordinate_sensitive_neighborhoods_transductive_clustering_donor_boundaries_and_activation_gate",
+    "sha256": "4a1f7f6c4f3b7f09c970e01d7945751bcac84c19159d897c03dcf5dfe6d62033"
+  },
+  "input_eligibility": {
+    "gse192741": "Visium RNA and coordinates are structurally compatible, but four donors and unresolved hg19 annotation permit only technical fixtures.",
+    "gse292268": "CosMx RNA and coordinates are structurally compatible as a separate panel and resolution stratum, but donor joins are unresolved and four donors are underpowered.",
+    "hra007511": "Visium RNA could be used only after permission, participant and section joins, output rights, and runtime admission. H&E and adjacent-section MALDI are excluded from this lane.",
+    "vu2025": "Visium RNA could be used only after the DSA and participant map clear. No graph may span the four to five participants sharing one VLP array."
+  },
+  "exposure_and_leakage_findings": {
+    "native_fit": "BANKSY computes neighbor features, standardization, PCA, and a partition using the supplied target observations. Its normal workflow is transductive.",
+    "coordinates": "First-order azimuthal features depend on coordinate orientation. Axis swap, reflection, rotation, unit scaling, and section concatenation are part of the model identity.",
+    "graph": "KNN and weighted neighbor graphs must be participant- and section-blocked. Overlapping coordinate ranges from concatenated sections can create impossible edges.",
+    "selection": "Lambda, K, variance balancing, PCA, Harmony, cluster algorithm, resolution or cluster count, and any ARI-guided selection must be fit on development participants.",
+    "strict_lane": "The upstream workflow does not expose a complete native frozen donor predictor. Any development-frozen transform and head is a separately specified benchmark adapter."
+  },
+  "known_incidents_and_biases": [
+    "The selected exact Python source is GPL-3.0, while the separate R implementation has custom academic-only terms. They are not interchangeable implementation or license identities.",
+    "The PyPI 1.3.5 upload preceded same-version source fixes affecting parameter alignment, plotting, and integer-lambda handling, so those artifacts are not admitted as the selected code.",
+    "Native feature computation and clustering are target-fitted and cannot be described as zero-shot held-donor prediction.",
+    "Coordinate orientation can change azimuthal components even when pairwise distances remain similar.",
+    "Joint Harmony correction across target samples is cohort-transductive.",
+    "BANKSY standardized features and partitions do not provide a count likelihood or new biological replicates."
+  ],
+  "license_disposition": {
+    "selected_Python_source": "GPL-3.0",
+    "selected_PyPI_artifacts": "not_admitted_source_mismatch",
+    "nonselected_R_package": "custom_academic_use_only_with_commercial_restriction",
+    "upstream_checkpoint": "none",
+    "training_data_and_outputs": "unresolved_until_future_source_and_annotation_rights_clear",
+    "open_champion": "ineligible_now"
+  },
+  "remaining_blockers": [
+    "Obtain a rights-cleared powered participant-linked spatial expression dataset, registered endpoint, transcript-native baselines, and external source.",
+    "Build the future environment from the exact selected Git commit rather than the stale same-version PyPI artifacts and freeze all transitive packages.",
+    "Register separate native-transductive and benchmark-defined strict lanes; freeze normalization, coordinate convention, graph, lambda, K, variance balancing, PCA, Harmony, clusterer, resolution, cluster number, and mappings on development participants.",
+    "Pass fixtures for participant-blocked graphs, coordinate rotation and reflection, integer and floating lambda behavior, held-label exclusion, deterministic seeds, node and section order, sparse memory, no-network rebuild, and output round trip through CPU SLURM after activation and campaign approval.",
+    "Resolve dataset and derived-output rights before releasing any feature matrices or partitions.",
+    "Hash every graph, coordinate transform, feature roster, fitted transform, partition, environment, and terminal disposition before selection."
+  ],
+  "interpretation": "BANKSY is a strong future simple spatial comparator, but it is a target-fitted feature and clustering method rather than a pretrained or naturally inductive model. The exact Python commit is open under GPL-3.0, yet its same-version package artifacts are stale relative to selected fixes. With no active spatial task, powered source, or external seal, it remains deferred.",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_registered_task_no_sealed_source_no_verified_exact_source_runtime_or_frozen_inference_contract",
+  "verified_date": "2026-08-22"
+}

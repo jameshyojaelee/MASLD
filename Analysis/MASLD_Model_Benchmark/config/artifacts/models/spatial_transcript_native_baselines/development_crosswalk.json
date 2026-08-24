@@ -1,0 +1,77 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not install, fit, cluster, screen, promote, or compare the spatial transcript-native baseline suite in v1.",
+    "minimum_future_evidence": "A rights-cleared powered participant-level spatial RNA source with authoritative counts, coordinates, participant and section joins, a registered endpoint, and a genuinely external source.",
+    "task_gate": "If any spatial model activates, this suite activates as a mandatory comparator under the same assay, resolution, donor folds, transductive or frozen lane, and endpoint."
+  },
+  "crosswalk_scope": {
+    "candidate": "frozen_nonspatial_spatial_neighbor_and_BayesSpace_baseline_suite",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "lane_definitions": {
+    "expression_only": "RNA-only normalization, development-frozen HVGs and PCA, then an endpoint-matched linear classifier or explicitly target-transductive K-means or Leiden.",
+    "simple_spatial_neighbor": "The same RNA features augmented with row-normalized neighbor means from a participant- and section-local locked coordinate graph, with lambda selected on development participants.",
+    "BayesSpace": "Original-spot spatial clustering without H&E for spot-based platforms only. Subspot enhancement is diagnostic at most and excluded from the primary endpoint.",
+    "purpose": "Measure whether a complex spatial model adds transferable signal beyond expression alone, a simple local-neighborhood transform, and a spot-native spatial model."
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors represented by 5 Visium sections; one donor contributes 2 sections",
+      "eligible_lanes_in_principle": ["expression_only", "simple_spatial_neighbor", "BayesSpace"],
+      "status": "technical_pilot_only",
+      "why": "Four donors, exposed outcomes, and unresolved hg19 annotation identity preclude model superiority. The dataset may only support future plumbing fixtures."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per CosMx slide",
+      "eligible_lanes_in_principle": ["expression_only", "simple_spatial_neighbor"],
+      "BayesSpace": "not_applicable_without_a_new_single_cell_native_task_and_rederived_spatial_model",
+      "status": "blocked_join_unresolved_and_underpowered",
+      "why": "The slide, field-of-view, and region-to-donor mapping is unresolved and four donors cannot support donor-level evaluation."
+    },
+    "hra007511": {
+      "biological_units": "61-participant union with 35 spatial participants",
+      "eligible_lanes_in_principle": ["expression_only", "simple_spatial_neighbor", "BayesSpace"],
+      "status": "deferred_permission_and_output_rights_unresolved",
+      "why": "Spatial matrices, coordinates, joins, and reuse rights are not admitted. H&E and adjacent-section MALDI are excluded from these transcript-native lanes."
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants distributed across 10 VLP technical arrays",
+      "eligible_lanes_in_principle": ["expression_only", "simple_spatial_neighbor", "BayesSpace"],
+      "status": "blocked_DSA_and_participant_boundaries_unresolved",
+      "why": "A data-sharing agreement and barcode-to-biopsy participant map are required. No graph or BayesSpace lattice may span the four to five participants sharing one array."
+    }
+  },
+  "donor_and_topology_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "graphs": "Build graph and lattice objects within authoritative participant and section or core boundaries. Combine block-diagonally; keep all sections from one participant in one fold.",
+    "vu2025": "A technical array is not a donor. Split barcodes and tissue islands by biopsy and participant before any neighbor relation.",
+    "replication": "Participants are replicates. Cells, spots, modeled subspots, nodes, edges, arrays, sections, clusters, and posterior samples are not.",
+    "pairing": "Same-study or adjacent-section assays cannot be converted into same-cell, same-spot, or same-section observations."
+  },
+  "fit_and_selection_firewall": {
+    "strict_lane": "Fit feature selection, transferable scaling, PCA, supervised head, calibration, thresholds, lambda, graph hyperparameters, and all tuning on development participants. Process each held participant independently under the locked recipe.",
+    "transductive_lane": "Target-fitted PCA, clustering, BayesSpace inference, or cross-sample correction is allowed only for a prespecified cohort-partition task and must be reported as transductive.",
+    "held_labels": "Never use held annotations or outcomes to select HVGs, PCA, K or radius, lambda, graph, cluster algorithm, resolution, q, BayesSpace parameters, initialization, exclusions, or label mapping.",
+    "BayesSpace": "Score at original-spot and participant levels. Modeled subspots remain derivable_not_observed and cannot increase n.",
+    "missingness": "Preserve explicit assay and join states; do not convert absent panel genes, filtered observations, permission blocks, or failed joins to biological zeros."
+  },
+  "training_and_exposure_crosswalk": {
+    "upstream_biological_checkpoint": "none",
+    "upstream_training_corpus": "none",
+    "project_trained_state": "not_created",
+    "eligible_development_source": "none_currently",
+    "eligible_external_source": "none_currently",
+    "future_exposure_rule": "A fitted state is outcome-unexposed only when every learned transform, spatial graph choice, hyperparameter, head, cluster mapping, and calibration is selected without held outcomes and within the registered lane."
+  },
+  "claim_boundary": {
+    "allowed_if_future_gate_passes": "An endpoint-matched transcript-native baseline may be the winning released model when it passes its own external gate.",
+    "prohibited_now": "Any v1 spatial result, superiority statement, MASLD spatial champion, or claim that smoothed or modeled subspot expression is independent measured biology.",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "interpretation": "These are the required reality-check baselines for any future spatial track. They test expression alone, a simple local-neighborhood augmentation, and a spot-native Bayesian spatial method without pretrained representations or histology. Their simplicity does not exempt them from donor leakage, transductive labeling, assay-native assumptions, or rights and power gates. No eligible spatial task or source exists now, so the suite remains deferred.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

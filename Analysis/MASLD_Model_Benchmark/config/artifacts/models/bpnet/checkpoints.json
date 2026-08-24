@@ -1,0 +1,67 @@
+{
+  "architecture_contract": {
+    "counts_head": {"activation": "linear", "units": [1]},
+    "input_length_bp": 2114,
+    "losses": {"counts": "mean_squared_error_on_log_total_counts", "profile": "multinomial_negative_log_likelihood"},
+    "motif_module": {"filters": [64], "kernel_sizes": [21], "padding": "valid"},
+    "output_length_bp": 1000,
+    "profile_head": {"filters": 1, "kernel_size": 75, "padding": "valid"},
+    "syntax_module": {"dilation_rates": [2, 4, 8, 16, 32, 64, 128, 256], "filters": 64, "kernel_size": 3, "layers": 8, "padding": "valid", "pre_activation_residual_unit": true}
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No upstream assay checkpoint is admitted. Train one model inside each outer donor, genomic, cell-state, and seed partition and hash every HDF5 artifact.",
+    "implementation_type": "train_locally",
+    "pypi_release": {
+      "filename": "bpnet-2.0.0-py3-none-any.whl",
+      "sha256": "dccff1bfe7c1d726967e95e270b712a9eacd580756d80f6c19ae55ea1be43633",
+      "size_bytes": 92880,
+      "upload_time": "2025-09-23T21:41:36.807493Z",
+      "version": "2.0.0"
+    },
+    "repository": "kundajelab/bpnet",
+    "repository_revision": "f4593eedca51741f25b8c5cc0c0d647faf8c8a3c"
+  },
+  "inference_contract": {
+    "atac_available_at_inference": false,
+    "bias_inputs": "none_for_the_prespecified_sequence_only_baseline",
+    "common_lane": "outer_fold_cell_state_specific_single_task_unstranded_BPNet",
+    "donor_context": "none; predictions are cell-state and sequence specific but not donor conditioned",
+    "reverse_complement": "average forward and reverse-complement predictions after restoring profile orientation",
+    "variant_primary_score": "ALT_minus_REF log_total_count averaged across orientations and five fixed seeds",
+    "variant_to_gene_limit": "BPNet predicts sequence-driven accessibility profiles and counts, not enhancer-gene links or signed expression effects. Any link/direction composite is a distinct frozen model."
+  },
+  "input_contract": {
+    "canonical_sequence": "GRCh38.p14 one-hot ACGT sequence with coordinate and REF-allele validation",
+    "control_policy": "No control or bias bigWig is supplied; this keeps BPNet a from-scratch sequence-only architecture control distinct from bias-factorized ChromBPNet.",
+    "peak_and_profile_policy": "Use the same training-fold-only donor-state pseudobulk insertion profiles, peaks, matched nonpeaks, reference, held genomic blocks, and row identifiers as ChromBPNet.",
+    "training_augmentation": "128-bp maximum jitter and reverse-complement augmentation, frozen before execution",
+    "warning": "The CLI training default input length is 3,088 bp while the model default is 2,114 bp. The benchmark explicitly fixes 2,114 bp and rejects an implicit CLI default."
+  },
+  "runtime_contract": {
+    "declared_python": "UNDECLARED_legacy_runtime",
+    "declared_tensorflow": "2.4.1",
+    "declared_tensorflow_probability": "0.12.2",
+    "environment_status": "UNRESOLVED_L40S_COMPATIBILITY_PROBE_REQUIRED",
+    "wheel_downloaded": false
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "local_hdf5_only": true,
+    "require_hdf5_structure_and_tensor_manifest": true,
+    "require_training_receipt_and_sha256": true
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The pinned repository commit and PyPI 2.0.0 metadata were queried on 2026-08-22. Source code was inspected without installing the package, running TensorFlow, or downloading a checkpoint.",
+  "source_records": [
+    {"identity": "BPNet:LICENSE", "sha256": "07cc7fd1890c0f369dfc2d35bfd5fc5bc8bde189401c35ae0f4e4ef63f088a96", "size_bytes": 1068},
+    {"identity": "BPNet:README.md", "sha256": "f1a54bf17f0dac0e17ae6986d35a0130bf7e9fd04d4f946f73c3314ce30b0e7d", "size_bytes": 16499},
+    {"identity": "BPNet:setup.py", "sha256": "c9f5c42f741e688805e8dcc487214cb28aef40bd92bb34b2816f22f344aad8ab", "size_bytes": 2011},
+    {"identity": "BPNet:bpnet/model/arch.py", "sha256": "cbc05bd2e84c5e68b30785ab47ccce207ea4218e414ecce5bf995f523cd16b86", "size_bytes": 28883},
+    {"identity": "BPNet:bpnet/model/bpnetdefaults.py", "sha256": "3cff612b084420b4c45ab70073b429638acd4958a3b2672a561a5194c15b7a88", "size_bytes": 2071},
+    {"identity": "BPNet:bpnet/model/losses.py", "sha256": "fe5f0481ebb6cf33833f7cc029e31719806fad0345ac19309faedbf7cab2a023", "size_bytes": 1378},
+    {"identity": "BPNet:bpnet/train/training.py", "sha256": "bd7aa3eb4975cc91cd1a9a4c59e97c5962c131a2c24afb29090669eec1962092", "size_bytes": 29668},
+    {"identity": "BPNet:bpnet/generators/generators.py", "sha256": "34ceebd89052cba57c836001cebcfda251fa6ffdc7345d839142023c3b96c3b2", "size_bytes": 49861}
+  ],
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

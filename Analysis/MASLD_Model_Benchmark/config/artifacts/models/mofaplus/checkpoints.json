@@ -1,0 +1,74 @@
+{
+  "architecture_contract": {
+    "method": "Bayesian multi-view factor analysis with per-sample latent factors Z, per-view feature weights W, view-specific likelihoods, optional sparsity/ARD, and optional MEFISTO Gaussian-process factors",
+    "likelihoods": ["gaussian", "bernoulli", "poisson"],
+    "missing_data": "NaN entries are masked in the likelihood and replaced internally by zero only after a separate mask is recorded.",
+    "inductive_limitation": "Ordinary MOFA factors are free variational parameters for the samples included during model fitting; there is no amortized encoder or official frozen factor transform for a new assay vector."
+  },
+  "code_license": "LGPL-3.0",
+  "implementation": {
+    "checkpoint_policy": "No upstream checkpoint exists. A local fitted HDF5 object would be development-only and cannot be used for sealed-query refitting.",
+    "pypi_release": {
+      "python_requires": ">=3.8,<4.0",
+      "sdist": {"filename": "mofapy2-0.7.4.tar.gz", "sha256": "3a8801cff9b88b547ca9331d93ceb413822f10fd2f47d8f9a7d877cb7b500aca", "size_bytes": 945936},
+      "version": "0.7.4",
+      "wheel": {"filename": "mofapy2-0.7.4-py3-none-any.whl", "sha256": "9224d77f93167f5edb0cce1e682c7dd22065e62140c79b8fb397769f5fa2a466", "size_bytes": 1003520}
+    },
+    "repository": "bioFAM/mofapy2",
+    "repository_release_revision": "68c5bee640a643dc4fbfe37c7a0c8001cb318358",
+    "repository_release_revision_date": "2026-04-23T16:56:01+02:00",
+    "release_tags": "no_0.7.4_tag_detected"
+  },
+  "inductive_inference_contract": {
+    "ordinary_mofa": "No champion-eligible unseen-sample transform exists. Adding held RNA rows with ATAC set to NaN and refitting or optimizing their Z values is transductive and prohibited.",
+    "mefisto_limit": "predict_factor predicts Z at new covariate coordinates from a fitted Gaussian-process prior. It does not infer factors from a new donor's RNA assay and is not an RNA query transform.",
+    "imputation_limit": "entry_point.impute reconstructs missing entries for samples already represented by fitted Z. It cannot produce an inductive ATAC profile for a new RNA-only donor without fitting that donor's latent variables.",
+    "allowed_use": "Development-only factor interpretation on outer-training samples under a separate nonpromotable TaskSpec."
+  },
+  "input_contract": {
+    "assays": "nested sample-by-feature matrices or a long dataframe; each view has a declared gaussian, bernoulli, or poisson likelihood",
+    "pairing": "Views share a common sample axis. Entire missing views can be represented by NaN, but unrelated cells or aliquots must not be asserted as the same biological observation.",
+    "preprocessing": "Centering by group is default; view/group scaling is optional. All centering, scaling, likelihood choice, feature selection, and factor count selection must be outer-training-only.",
+    "reference": "GENCODE v49 gene names and GRCh38.p14 peak identifiers with modality namespaces and frozen feature order",
+    "supported_topologies": ["same_cell", "same_nucleus", "same_sample_different_aliquot_at_explicit_pseudobulk_sample_unit"],
+    "unsupported_topologies": ["same_sample_different_aliquot_as_same_cell", "study_unpaired_rows_as_same_sample"]
+  },
+  "missingness_contract": {
+    "native": "Entrywise NaN is recorded in a mask and excluded from updates and likelihood calculations. This supports structurally absent views for fitted samples.",
+    "project_mapping": "MOFA stores only observed versus masked. Preserve the eight project missingness reasons outside the model and use NaN plus mask, never semantic zero.",
+    "sealed_rule": "Native missing-view support does not make the model inductive; a sealed donor cannot be inserted as a masked training sample."
+  },
+  "output_contract": {
+    "development_embedding": "fitted-sample factor expectation Z with factor sign/order and training sample IDs frozen",
+    "imputation": "WZ reconstruction for missing entries of fitted samples only",
+    "profile_status": "latent_only",
+    "not_admitted": "training-sample imputation, MEFISTO covariate prediction, or refitted query factors cannot enter RNA-conditioned ATAC or sealed cell-state leaderboards"
+  },
+  "runtime_contract": {
+    "declared": {"python": ">=3.8,<4.0", "h5py": ">=3,<4", "scikit-learn": ">=1,<2", "scipy": ">=1,<2", "anndata_optional": ">0.8"},
+    "environment_status": "UNRESOLVED_NUMERICAL_DETERMINISM_HDF5_IMMUTABILITY_FLOAT32_FLOAT64_MEMORY_AND_OPTIONAL_GPU_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "required_artifacts": "Immutable project-fitted HDF5 plus plain manifests for W, Z, intercepts, masks, feature/sample orders, likelihoods, transforms, factor ordering, seed, environment, and hashes."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact 0.7.4 release commit, LGPL-3.0 license, public PyPI JSON metadata, and relevant source files were inspected as text on 2026-08-22. Distributions, packages, fitted models, and data were not downloaded, installed, deserialized, or executed.",
+  "source_records": [
+    {"identity": "mofapy2:LICENSE", "sha256": "e3a994d82e644b03a792a930f574002658412f62407f5fee083f2555c5f23118", "size_bytes": 7652},
+    {"identity": "mofapy2:README.md", "sha256": "d3ba6d6216e892cc6315ad57559cd3e802a7d6c91ca248e53069353de493bee8", "size_bytes": 890},
+    {"identity": "mofapy2:pyproject.toml", "sha256": "d35f8d5440950e8596f13344130ecc36ad47b5ad6c924ac9cc9b514ade1d3f46", "size_bytes": 634},
+    {"identity": "mofapy2:mofapy2/run/entry_point.py", "sha256": "b997b1f6824cf019b639eada7dcd7a83f19e82b647f758895ed8f6af7d2f8aed", "size_bytes": 77421},
+    {"identity": "mofapy2:mofapy2/build_model/save_model.py", "sha256": "0d8037890145ab86a0a932e030a7334a33fe71da487ac296911c2882589dcd49", "size_bytes": 29314},
+    {"identity": "mofapy2:mofapy2/core/nodes/Y_nodes.py", "sha256": "33bb4efd5f15e0afab0cac44dc2f4e94a92a10e0333f5db1ed547a404a404724", "size_bytes": 3736},
+    {"identity": "mofapy2:mofapy2/core/nodes/Z_nodes.py", "sha256": "5d72d0fb2265f8d6956d4701459d41ab12331ffc0e78103493ad91f67c509ec9", "size_bytes": 16687}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Deferred and ineligible for sealed mapping because no frozen unseen-sample transform exists.",
+    "rna_conditioned_atac": "Ineligible and latent-only; imputation reconstructs missing views only for samples whose Z was fitted.",
+    "variant_to_regulation": "Ineligible because MOFA+ has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_FITTED_HDF5"
+}

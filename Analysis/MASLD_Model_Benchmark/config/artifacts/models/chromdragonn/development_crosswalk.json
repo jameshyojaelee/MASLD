@@ -1,0 +1,65 @@
+{
+  "algorithm_prior": {
+    "original_accessibility_corpus": "123 ENCODE and Roadmap DNase-seq cellular contexts",
+    "original_expression_corpus": "Matched ENCODE and Roadmap RNA-seq quantified with STAR/RSEM and GENCODE 19",
+    "original_reference": "GRCh37",
+    "parameter_transfer_to_project": false,
+    "role": "architecture_and_training_recipe_only",
+    "warning": "Historical algorithm development on ENCODE/Roadmap is scientific prior exposure, not checkpoint exposure, because no original fitted parameters are loaded."
+  },
+  "crosswalk_scope": {
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["rna_conditioned_atac", "variant_to_regulation"]
+  },
+  "findings": {
+    "gse281364": {
+      "algorithm_exposure": "target_label_unexposed",
+      "allowed_use": "Retrospective MPRA direction and rank diagnostic only. Do not choose TF mapping, context proxy, windows, allelic orientation, model family, or thresholds on held MPRA outcomes.",
+      "evidence": "GSE281364 became public on 2026-03-16, years after the 2019 paper and 2021 code revision. No project-fitted artifact sees its MPRA labels unless a later development run explicitly uses them; such a run is continual-seen and cannot support a sealed claim.",
+      "project_fitted_exposure": "target_label_unexposed_before_any_explicit_MPRA_fit",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "algorithm_exposure": "target_label_unexposed",
+      "allowed_use": "One-time donor-RNA-conditioned allele inference after selection lock. eQTL and ieQTL labels remain evaluator-only. There is no sealed ATAC profile endpoint in this source.",
+      "evidence": "GSE289173 became public on 2025-02-12. The architecture and any GSE296875-fitted models predeclare no use of its donors, cell-state labels, eQTLs, or ieQTLs. Reference windows may overlap local training loci and must be controlled with merged genomic/LD blocks.",
+      "project_fitted_exposure": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "algorithm_exposure": "target_label_unexposed",
+      "allowed_use": "Outer-fold local training and donor-held development evaluation of binary accessibility only.",
+      "evidence": "GSE296875 supplies same-nucleus RNA and ATAC for 39 donors and therefore can train donor-by-cell-state context models after activation. A local fold model is continual-seen for its outer-training donors while remaining blind to its held donors. The public GEO record does not declare MASLD diagnosis, fibrosis stage, NAS, or histology labels, so it cannot provide MASLD phenotype supervision.",
+      "project_fitted_exposure": "continual_seen_with_fold_specific_held_donors",
+      "public_date": "2025-10-01"
+    }
+  },
+  "local_model_roster": {
+    "artifact_identity": "stage1_and_stage2_per_outer_donor_fold_genomic_block_seed_and_mean_accessibility_regime",
+    "genomic_split": "Cross donor folds with chromosome or merged-LD blocks and a 1000-bp boundary buffer.",
+    "mean_regimes": ["without_training_context_mean", "with_training_context_mean"],
+    "seeds": [11, 29, 47, 71, 101],
+    "stage1_rule": "The stage1 sequence model is refit using only the stage2 outer-training donors and genomic blocks; it is never a global all-donor precursor."
+  },
+  "missingness_and_pairing": {
+    "inference_context": "donor_by_cell_state_RNA_pseudobulk",
+    "missing_expression": "explicit_missing_and_prediction_ineligible_not_zero",
+    "training_topology": "same_nucleus_measurements_summarized_to_biological_donor_by_cell_state",
+    "warning": "Nuclei, wells, peaks, and genomic bins are not biological replicates."
+  },
+  "output_gate": {
+    "primary_rna_conditioned_atac_endpoint": "ineligible_native_output_is_binary_not_profile_or_count",
+    "secondary_endpoint": "donor-balanced binary accessibility AUPRC, calibration, and per-lineage error analysis may be reported if prespecified",
+    "variant_endpoint": "conditional open-probability delta is an input feature; no standalone signed eQTL/ieQTL champion claim"
+  },
+  "rules": {
+    "algorithm_vs_artifact": "Do not assign the original ENCODE/Roadmap corpus to a nonexistent upstream checkpoint. Exposure for a project-trained model is computed from its exact fold receipt and differs across outer folds.",
+    "held_donor": "The original paper held cellular contexts, not donors. Project donors remain the replication and split unit.",
+    "held_locus": "Original reference and project reference windows are expected to overlap. Only project-fitted labels and features are leakage-controlled; use merged genomic/LD blocks and the full input-window buffer.",
+    "mean_accessibility": "Compute the optional locus mean from outer-training donor-contexts only and expose the identical feature to the mean-only baseline.",
+    "phenotype": "Do not call a GSE296875-trained model MASLD-fine-tuned based on the public GEO record. It is liver multiome adaptation unless a separate authoritative phenotype manifest passes activation."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

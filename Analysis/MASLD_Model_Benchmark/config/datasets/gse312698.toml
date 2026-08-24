@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse312698"
+title = "Human MASLD CosMx Leuven technical exports"
+role = "blocked"
+status = "blocked"
+species = "human"
+accession = ["GSE312698"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = "UNRESOLVED"
+native_genome_build = "GRCh38"
+native_annotation_release = "UNRESOLVED"
+modalities = ["cosmx_rna"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "join_unresolved"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["FOV-to-tissue-to-donor map is absent.", "The title reports ten samples while the public composition enumerates eleven tissues.", "No morphology image asset is registered."]
+notes = "Four Leuven exports contain multiple tissues. Technical exports cannot be treated as biological replicates or donors."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE312698"
+verified_date = "2026-08-21"
+local_exposure = "Local scripts expose the technical exports, but donor inference remains invalid."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "blocked"
+label_visibility = "unavailable_join"

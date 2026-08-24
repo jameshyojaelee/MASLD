@@ -1,0 +1,263 @@
+schema_version = "masld-bench-cross-cohort-expansion-v1"
+registry_id = "cross_cohort_multimodal_development"
+status = "plan_only_until_dataset_manifest_activation"
+objective = "Generalize MASLD models across independent cohorts, datasets, assay platforms, disease contexts, and modalities without false pairing or pseudoreplication."
+gse296875_is_sole_training_source = false
+gse296875_is_sole_selection_source = false
+gse296875_is_masld_phenotype_source = false
+candidate_record_is_active_dataset = false
+cohort_family_dedup_precedes_split = true
+participant_dedup_precedes_split = true
+same_person_all_modalities_same_outer_fold = true
+missing_modality_encoded_as_zero = false
+frozen_hotspot_programs_are_training_targets = false
+
+[generalization_contract]
+outer_unit = "cohort_family_then_participant_or_independent_locus"
+three_or_more_compatible_families = "leave_one_study_out_outer_evaluation"
+two_compatible_families = "tune_in_one_and_report_explicit_transport_to_the_other"
+one_compatible_family = "internal_development_only_no_external_or_universal_claim"
+sampling = "cohort_balanced_then_donor_balanced_then_cell_or_locus_balanced"
+primary_reporting = "macro_average_across_cohort_families_with_donor_or_block_cluster_uncertainty"
+preprocessing = "fit_inside_outer_training_partition_for_every_assay"
+reference = "assay_native_source_reference_plus_frozen_GRCh38p14_GENCODEv49_crosswalk"
+label_mapping = "source_native_labels_with_explicit_mapped_and_unmappable_states"
+forbidden = ["random_cell_outer_split", "array_or_library_as_donor", "cross_cohort_test_normalization", "false_cell_pairing", "missing_as_zero", "same_superseries_subseries_in_different_outer_folds"]
+
+[modality_contract]
+modalities = ["single_cell_rna", "single_nucleus_rna", "single_nucleus_atac", "bulk_rna", "h3k27ac_cutrun", "rrbs_methylation", "liver_proteomics", "adipose_proteomics", "spatial_rna", "pathology", "eqtl", "ieqtl", "perturbation_rna"]
+assay_native_heads_required = true
+assay_native_error_models_required = true
+pairing_topology_is_model_input = true
+structural_missingness_mask_required = true
+cross_modal_association_is_not_same_molecule_measurement = true
+
+[activation_order]
+priority_1 = ["resource_atlas_current", "gse244832", "gse281367", "gse296875", "bulk_five_cohort", "gse256398", "pxd051911"]
+priority_2 = ["gse267145_znf469_human_liver", "gse105127_zonated_rna_rrbs"]
+priority_3 = ["gse268273_imid_masld", "gse260666_bulk_rna", "gse274114_mash_hbv", "gse83452_longitudinal_array", "gse49541_fibrosis_array"]
+conditional = ["fnih_86_liver"]
+sealed = ["gse289173"]
+
+[[cohort_family]]
+family_id = "resource_atlas_current"
+status = "registered_development_activation_blocked"
+accessions = ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "LIVER_ATLAS"]
+reported_biological_units = 102
+modalities = ["single_cell_rna", "single_nucleus_rna"]
+tasks = ["cell_state_mapping", "rna_context_encoder", "bulk_state_transport"]
+rules = ["The seven sources are separate outer cohort families where compatible.", "GSE202379 and GSE244832 are already included and cannot be counted again as independent RNA cohorts.", "Cells and 273 analyzed libraries do not increase n beyond donors."]
+
+[[cohort_family]]
+family_id = "gse296875"
+status = "registered_development_available"
+accessions = ["GSE296875", "PRJNA1261871"]
+reported_biological_units = 39
+modalities = ["single_nucleus_rna", "single_nucleus_atac", "pathology_scores", "clinical_covariates"]
+topology = "same_nucleus"
+tasks = ["rna_conditioned_atac", "observed_multiome", "sequence_native_regulatory"]
+rules = ["Topology anchor, not sole development population.", "No explicit MASLD or MASH adjudication is available.", "Histopathology missingness remains explicit."]
+
+[[cohort_family]]
+family_id = "gse244832"
+status = "development_transport_active_model_input_blocked"
+accessions = ["GSE244832"]
+reported_biological_units = 18
+source_audit_artifacts_sha256 = "ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392"
+membership_artifacts_sha256 = "32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6"
+transport_outcomes_artifacts_sha256 = "6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3"
+audited_atac_cells = 88814
+legacy_pseudobulk_usable = false
+development_transport_active = true
+model_training_active = false
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+topology = "same_sample_different_aliquot"
+tasks = ["rna_conditioned_atac", "observed_multiome", "cell_state_mapping", "sequence_native_regulatory"]
+rules = ["The evaluator-only donor-by-lineage fixed-window outcome is active for development transport.", "Model inputs may not read this outcome and source-native input admission remains task-specific.", "Cell-to-cell pairing is forbidden.", "The deduplicated legacy peak matrices have stale library-size metadata and are not benchmark outcomes.", "Raw custom-Bowtie2 fragments use start+4 and end-5 Tn5 cut sites."]
+
+[[cohort_family]]
+family_id = "gse281367"
+status = "development_transport_active_model_input_blocked"
+accessions = ["GSE281367"]
+reported_biological_units = 12
+source_audit_artifacts_sha256 = "ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392"
+membership_artifacts_sha256 = "32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6"
+transport_outcomes_artifacts_sha256 = "6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3"
+audited_atac_cells = 226224
+legacy_pseudobulk_usable = false
+development_transport_active = true
+model_training_active = false
+modalities = ["single_nucleus_atac"]
+topology = "same_study_unpaired"
+tasks = ["sequence_native_regulatory", "atac_cross_cohort_transfer"]
+rules = ["Six normal and six MASH donors.", "The evaluator-only donor-by-lineage fixed-window outcome is active for development transport.", "Model inputs may not read this outcome and source-native input admission remains task-specific.", "No donor RNA context may be invented.", "Legacy lineage matrices retain 18,729 to 50,622 duplicate feature instances and are not benchmark outcomes.", "Cell Ranger ATAC fragment coordinates are already Tn5-adjusted; use start and end-1 cut sites."]
+
+[[cohort_family]]
+family_id = "gse256398"
+status = "registered_external_development_activation_blocked"
+accessions = ["GSE256398"]
+reported_biological_units = 26
+modalities = ["single_nucleus_rna"]
+topology = "same_study_unpaired"
+tasks = ["cell_state_mapping", "rna_state_transfer", "etiology_ood"]
+rules = ["Seventeen donors form the MASLD-relevant development set.", "Nine alcohol-associated donors are OOD only and never MASLD-negative controls."]
+
+[[cohort_family]]
+family_id = "gse289173"
+status = "registered_project_sealed"
+accessions = ["GSE289173", "PRJNA1221860"]
+reported_biological_units = 48
+modalities = ["single_nucleus_rna", "cell_type_eqtl_summary", "interaction_eqtl_summary"]
+tasks = ["cell_state_mapping", "variant_to_regulation"]
+rules = ["Keep labels and QTL outcomes evaluator-only.", "This is one seal even if files are distributed across GEO and Zenodo."]
+
+[[cohort_family]]
+family_id = "bulk_existing_source_pool"
+status = "existing_local_sources_require_benchmark_specific_activation"
+accessions = ["GSE126848", "GSE130970", "GSE135251", "GSE162694", "GSE167523", "GSE174478", "GSE193066", "GSE213621", "GSE240729"]
+modalities = ["bulk_rna"]
+topology = "same_study_unpaired"
+tasks = ["bulk_state_transfer", "rna_state_transfer", "cross_assay_program_transport"]
+rules = ["Resolve overlap with the current five-cohort meta-manifest before counting studies or participants.", "Use source-native disease and histology endpoints rather than one imputed stage.", "Repeated specimens in GSE193066 remain participant-grouped."]
+
+[[cohort_family]]
+family_id = "gse267145_znf469_human_liver"
+status = "topology_activation_passed_qc_rights_passed_model_training_blocked"
+accessions = ["GSE267145", "GSE269412", "GSE267119"]
+reported_participants_in_source_paper = 108
+reported_rna_sample_records = 262
+reported_h3k27ac_sample_records = 99
+metadata_audit_artifacts_sha256 = "bac433336705b74dcb2a6ef6b6594af10fef362769d564adfea9788fe546e88e"
+candidate_title_join_exact_one_to_one = 99
+candidate_title_join_h3k27ac_only = 0
+candidate_title_join_authoritative = true
+authoritative_join_artifacts_sha256 = "e6c539c5fb29cd357dc126073779948c73c27fd219ff7a4d80b3d20a6cddb580"
+rna_measurement_artifacts_sha256 = "38531e463837cafd2c8e321411048c7b8b493876c3c964c0f50790cac8806f2f"
+reference_crosswalk_artifacts_sha256 = "da491302ea738a92017978518239bc3884a7635d580e01e3bd28cd4f55b630c2"
+qc_rights_artifacts_sha256 = "ac7c92fd01b2b4240b380e4f6a58d98f1a6f853f8d0ad98d7167d7af34baaa73"
+authoritatively_joined_participants = 99
+assay_native_qc_passed_participants = 99
+assay_native_qc_hard_failures = 0
+new_dua_or_controlled_access_required = false
+internal_nonclinical_research_use_allowed = true
+open_derivative_weight_review_required = true
+model_training_active = false
+continuous_rna_input_allowed = true
+raw_integer_rna_count_likelihood_allowed = false
+rna_genes_exact_v98_v49 = 42163
+rna_genes_masked_retired_or_absent_v49 = 1122
+h3_regions_on_grch38p14_primary_contigs = 96460
+h3_coordinate_base_resolved = false
+h3_sequence_extraction_allowed = false
+matrix_audit_artifacts_sha256 = "4e0d17f392530f4e6f0b54346d5d9333e450b7606d9698fbf7253a4f2a0e0417"
+matrix_paired_candidate_ids = 99
+rna_matrix_feature_rows = 43285
+h3k27ac_matrix_feature_rows = 96460
+rna_matrix_nonnegative_integer = false
+h3k27ac_matrix_nonnegative_integer = true
+modalities = ["bulk_rna", "h3k27ac_cutrun", "pathology_scores", "clinical_covariates"]
+topology = "same_sample_different_aliquot"
+tasks = ["histone_regulatory", "sequence_native_regulatory", "rna_histone_transport", "bulk_state_transfer"]
+rules = ["Treat the entire GSE267145 SuperSeries as one cohort family.", "Do not equate assay record counts with independent donors.", "The 99-participant paired subset and stage-balanced folds are authoritative from official GEO, article, title, histology, and matrix-axis triangulation.", "RNA is continuous estimated expression and every transform is fit inside the outer training fold; do not round or use an integer count likelihood.", "Retain only the 42,163 stable gene IDs present in both frozen annotations and explicitly mask the 1,122 retired genes.", "All 99 paired participants pass the hard finite, nonnegative, positive-library QC rule; distributional diagnostics are reported and are not automatic exclusions.", "Sequence extraction is prohibited while H3K27ac coordinate base remains ambiguous.", "Internal nonclinical research use is permitted without a new DUA; data redistribution is prohibited and open derivative weights require model-specific terms and legal review.", "Model training remains blocked until a task-specific activation contract separates coordinate-dependent sequence tasks from coordinate-independent paired-assay tasks."]
+
+[[cohort_family]]
+family_id = "gse105127_zonated_rna_rrbs"
+status = "authoritative_topology_and_rights_passed_rrbs_qc_blocked"
+accessions = ["GSE105127", "PRJNA414905"]
+reported_biological_units = 19
+reported_assay_records = 114
+metadata_audit_artifacts_sha256 = "bac433336705b74dcb2a6ef6b6594af10fef362769d564adfea9788fe546e88e"
+candidate_complete_donor_zone_assay_crossproducts = 19
+authoritative_join_rights_artifacts_sha256 = "574eeee1119054a2d7b55066804accf29fb45f23b591dd26f9d61d907b27a75f"
+authoritatively_joined_participants = 19
+authoritatively_joined_assay_records = 114
+participant_safe_outer_folds = 5
+candidate_title_join_authoritative = true
+new_dua_or_controlled_access_required = false
+internal_nonclinical_research_use_allowed = true
+open_derivative_weight_review_required = true
+rrbs_bed_qc_complete = false
+hg19_to_grch38p14_crosswalk_complete = false
+model_training_active = false
+modalities = ["laser_microdissected_bulk_rna", "rrbs_methylation", "liver_zone"]
+topology = "adjacent_section"
+tasks = ["methylation_regulatory", "rna_methylation_transport", "zonation_transfer"]
+rules = ["The official GEO design, sample records, and source article authorize a 19-participant by three-zone by two-assay join.", "RNA and RRBS come from adjacent cryosections, never the same section, cell, or molecule.", "Three liver zones and two assays per participant do not create 114 biological replicates.", "RRBS uses coverage-aware methylation modeling, not an RNA count likelihood.", "Native 1000 Genomes GRCh37/hg19 coordinates require an auditable GRCh38.p14 remap and failure state.", "Internal nonclinical research needs no new DUA, but data redistribution is prohibited and derivative weights require model-specific review.", "Training remains blocked until assay-native RRBS QC, reference crosswalks, RNA processing, and a task-specific activation contract pass."]
+
+[[cohort_family]]
+family_id = "gse268273_imid_masld"
+status = "candidate_activation_audit"
+accessions = ["GSE268273"]
+reported_rna_sample_records = 109
+modalities = ["bulk_rna", "clinical_covariates"]
+topology = "same_study_unpaired"
+tasks = ["bulk_state_transfer", "comorbidity_ood"]
+rules = ["Verify participant count and repeated specimens before activation.", "IMID-associated MASLD is an OOD/comorbidity stratum, not a negative control."]
+
+[[cohort_family]]
+family_id = "gse260666_bulk_rna"
+status = "candidate_activation_audit"
+accessions = ["GSE260666", "PRJNA1082656"]
+reported_biological_units = 16
+modalities = ["bulk_rna"]
+topology = "same_study_unpaired"
+tasks = ["bulk_state_transfer"]
+rules = ["Six controls, six NAFL, and four NASH participants.", "Small-cohort uncertainty is donor-level."]
+
+[[cohort_family]]
+family_id = "gse274114_mash_hbv"
+status = "candidate_activation_audit"
+accessions = ["GSE274114", "PRJNA1144975"]
+reported_biological_units = 39
+modalities = ["bulk_rna", "clinical_covariates"]
+topology = "same_study_unpaired"
+tasks = ["bulk_state_transfer", "etiology_ood", "comorbidity_ood"]
+rules = ["MASH-only, HBV-only, combined MASH-HBV, and healthy groups remain distinct.", "HBV-only participants are not MASLD controls."]
+
+[[cohort_family]]
+family_id = "gse83452_longitudinal_array"
+status = "candidate_activation_audit"
+accessions = ["GSE83452"]
+reported_baseline_records = 152
+reported_followup_records = 79
+modalities = ["bulk_rna_microarray", "histopathology", "intervention"]
+topology = "repeated_participant"
+tasks = ["bulk_state_transfer", "intervention_stress"]
+rules = ["Resolve the baseline-follow-up participant key before splitting.", "Repeated biopsies stay in one fold.", "Array probe processing remains assay-native and separate from RNA-seq counts."]
+
+[[cohort_family]]
+family_id = "gse49541_fibrosis_array"
+status = "candidate_activation_audit"
+accessions = ["GSE49541"]
+reported_biological_units = 72
+modalities = ["bulk_rna_microarray", "histopathology"]
+topology = "same_study_unpaired"
+tasks = ["bulk_state_transfer"]
+rules = ["Forty mild F0-F1 and 32 advanced F3-F4 participants.", "Microarray probe mapping and normalization remain inside training folds."]
+
+[[cohort_family]]
+family_id = "pxd051911"
+status = "registered_development_activation_blocked"
+accessions = ["PXD051911"]
+reported_biological_units = 58
+modalities = ["liver_proteomics", "subcutaneous_adipose_proteomics", "omental_adipose_proteomics"]
+topology = "same_donor_different_tissue"
+tasks = ["protein_transport"]
+rules = ["No matched RNA edge is inferred.", "Protein identifiers and missingness remain assay-native."]
+
+[[cohort_family]]
+family_id = "fnih_86_liver"
+status = "conditional_future_source"
+accessions = ["FNIH_86_LIVER_CONDITIONAL"]
+reported_biological_units = 86
+modalities = ["single_nucleus_rna", "single_nucleus_atac", "paired_tag", "hi_c", "spatial_rna", "clinical_phenotype"]
+tasks = ["rna_conditioned_atac", "observed_multiome", "histone_regulatory", "spatial_transport"]
+rules = ["Do not delay development.", "Activate only after open download, rights, donor joins, and reference contracts pass."]
+
+[promotion_contract]
+task_champion_requires_external_source = true
+universal_claim_requires_more_than_one_external_source_family = true
+single_source_histone_or_methylation_result_is_mechanistic_development_only = true
+ood_source_may_serve_as_masld_negative_control = false
+restricted_model_may_be_open_champion = false
+baseline_may_be_champion = true

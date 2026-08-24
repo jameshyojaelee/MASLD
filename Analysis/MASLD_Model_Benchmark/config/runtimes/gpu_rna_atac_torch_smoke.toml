@@ -1,0 +1,17 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "gpu_rna_atac_torch_smoke"
+status = "candidate"
+purpose = "Deterministic L40S training and RNA-only inference for admitted RNA-to-ATAC smoke adapters"
+scheduler = "slurm"
+resource_profile = "gpu_rna_atac_smoke"
+environment_lock = "sha256:c2308fc3b7524081c7a49ff1d840213306bcc20dff003010da2b898e2bdaa461"
+container_digest = "NOT_APPLICABLE"
+modules = []
+command_prefix = [
+  "/usr/bin/env",
+  "PYTHONNOUSERSITE=1",
+  "CUBLAS_WORKSPACE_CONFIG=:4096:8",
+  "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/.agent/scanpy_env/bin/python",
+]
+admission_blocking = false
+blockers = []

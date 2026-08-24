@@ -1,0 +1,95 @@
+{
+  "checkpoint_training_corpus": {
+    "cell_count_reported": 1300000,
+    "cell_context_count_reported": 213,
+    "declared_context": "normal fetal and adult human cell types",
+    "disease_state_training": "paper states no disease states in pretraining",
+    "exact_checkpoint_bound_accession_manifest_status": "UNRESOLVED",
+    "expression_fine_tuning_sources": ["Cao_fetal_atlas", "Tabula_Sapiens_adult", "paired_multiome"],
+    "pretraining_input": "observed single-cell ATAC accessible regions plus sequence motif-cluster features"
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "UNRESOLVED_exact_S3_object_identity_unavailable",
+    "project_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse289173",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "Project GWAS and COLOC memberships are not declared GET training targets. They also do not provide the observed cell-context accessible-region input required for a native GET variant score.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed"
+    },
+    "gse244832": {
+      "evidence": "The source supplies RNA and ATAC from distinct aliquots. Its accession is not a named GET corpus, but the checkpoint-bound donor and run alias manifest is unavailable.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13",
+      "topology": "same_sample_different_aliquot; distinct RNA and ATAC row identities"
+    },
+    "gse281160": {
+      "evidence": "The perturbation source is not a declared GET pretraining or expression fine-tuning source. It supplies guide-linked expression rather than the required observed accessibility context.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16",
+      "topology": "same_cell guide and RNA; inference aggregates to experimental replicate and target family"
+    },
+    "gse281364": {
+      "evidence": "The MPRA source is not a declared GET corpus and became public after the original publication. It does not supply the native observed cell-context ATAC peak universe needed to interpret sequence motif changes.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "evidence": "The 48-donor cell states and signed cell-type eQTL and interaction-eQTL outcomes are not declared targets. Exact checkpoint chronology and the checkpoint-bound accession manifest are unresolved, so confidence is medium. Independently, the cohort has no ATAC and cannot satisfy the native input contract.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "topology": "single-nucleus RNA plus evaluator-only cell-type eQTL and interaction-eQTL summaries; no ATAC"
+    },
+    "gse296875": {
+      "evidence": "The 39-donor same-nucleus RNA and ATAC source is not a declared training source. It is the strongest project development substrate for constructing native observed GET contexts, but every peak selection, motif feature, expression target, and context aggregation must remain inside donor-grouped training folds.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-10-01",
+      "topology": "same_nucleus RNA and ATAC"
+    },
+    "resource_atlas_current": {
+      "evidence": "Resource donor labels, MASLD phenotypes, and frozen programs are not declared GET training targets. The Atlas supplies RNA but not the observed per-context ATAC input required by the released model.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "topology": "single-cell RNA; donor-grouped"
+    }
+  },
+  "held_out_behavior": {
+    "context": "Observed accessibility defines the query context. All peak calling, region selection, motif features, accessibility aggregation, expression targets, and any RNA-to-ATAC proxy are fitted or fixed inside the development training partition.",
+    "donor": "GSE244832 may be evaluated only at donor-by-cell-state pseudobulk because its RNA and ATAC cells are not paired. GSE296875 may use same-nucleus objectives while retaining donors as outer split units.",
+    "locus": "Any variant perturbation of motif features is crossed with merged chromosome or LD blocks and keeps the observed accessible-region set frozen independently of the held allele and outcome.",
+    "sealed": "GSE289173 RNA, eQTL and interaction-eQTL outcomes cannot infer, select, or calibrate a missing ATAC context."
+  },
+  "interpretation": "GET is a chromatin-context model, but its context is observed accessibility, not RNA. It is development-eligible where project ATAC exists and seal-ineligible where it does not. Calling binary-ATAC mode sequence-only would be a modality error because the accessible-region universe still comes from observed ATAC.",
+  "rules": {
+    "checkpoint_identity": "No exposure class can become clean_declared until an exact weight object, date, corpus manifest, and hash are frozen.",
+    "false_pairing": "GSE244832 RNA and ATAC may share donor/sample identity but never a cell row. Do not train a paired translation objective on those rows.",
+    "missing_modality": "Missing ATAC is structurally_missing, not zero. A predicted ATAC proxy is a separate model and cannot be described as native GET input evidence.",
+    "observed_peak_universe": "Binary accessibility does not remove ATAC dependence. The peak universe, region ordering, and context membership must be derived without held-out outcomes.",
+    "variant_sign": "A motif-feature ALT-minus-REF diagnostic requires a frozen motif scorer and a signed fixture. It is not a released raw-DNA VEP."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "task_data_gate": {
+    "current_coloc_gwas": "No native use without a separately frozen development-derived ATAC context; not a sealed source.",
+    "gse244832": "Development-only unpaired ATAC context and donor-level RNA comparison. Never row-paired.",
+    "gse281160": "Not native because no observed ATAC context is supplied; perturbation expression remains exploratory.",
+    "gse281364": "No sequence-only GET MPRA score. A context-specific diagnostic is possible only after a development-only observed ATAC context and motif-feature rule are locked.",
+    "gse289173": "Ineligible for primary or secondary native GET scoring because observed ATAC is structurally absent. Do not impute it from sealed RNA.",
+    "gse296875": "Eligible for donor-grouped development and native RNA-output evaluation using same-nucleus ATAC context. It is not external confirmation.",
+    "resource_atlas_current": "RNA-only Atlas data cannot instantiate a native GET query context."
+  },
+  "verified_date": "2026-08-22"
+}

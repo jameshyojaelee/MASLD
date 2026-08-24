@@ -1,0 +1,29 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-admission"
+description = "License, checkpoint, exposure, reference, and fixed-fixture admission only"
+wave = "admission"
+review_only = true
+allow_arrays = false
+allow_sealed_features = false
+allow_sealed_labels = false
+submit_enabled = false
+
+task_ids = [
+  "cell_state_mapping",
+  "variant_to_regulation",
+  "rna_conditioned_atac",
+  "bulk_state_transfer",
+  "typed_evidence_graph",
+  "perturbation_transfer",
+  "unified_model",
+]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate", "restricted_comparator", "blocked_terms", "deferred"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "cpu_contract"
+runtime_id = "contract_validation"
+seeds = [20260821]

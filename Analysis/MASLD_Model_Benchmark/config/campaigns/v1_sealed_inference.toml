@@ -1,0 +1,25 @@
+schema_version = "masld-bench-campaign-v1"
+campaign_id = "v1-sealed-inference"
+description = "One-time anonymized sealed-feature inference after SelectionLock"
+wave = "sealed_inference"
+status = "blocked_selection_lock"
+prerequisites = ["SelectionLock frozen", "prospective endpoint power decisions frozen", "prediction commit evaluator ready", "For any FNIH task, the separately reviewed FNIH activation manifest is frozen before SelectionLock"]
+selection_lock_id = "UNRESOLVED"
+fnih_activation_manifest_sha256 = "UNRESOLVED"
+allow_arrays = false
+allow_sealed_features = true
+allow_sealed_labels = false
+submit_enabled = false
+task_ids = ["cell_state_mapping", "variant_to_regulation", "rna_conditioned_atac", "bulk_state_transfer", "unified_model"]
+
+[selection]
+census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
+model_statuses = ["candidate", "restricted_comparator"]
+include_mandatory_baselines = true
+
+[execution]
+default_resource_profile = "gpu_single"
+runtime_id = "gpu_inference"
+seeds = [1103, 2909, 4721, 6673, 8111]
+retries_on_resource_failure = 1
+retries_on_software_failure = 0

@@ -1,0 +1,68 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not download, embed, fine-tune, screen, promote, or compare Nicheformer in the v1 spatial roster.",
+    "minimum_future_evidence": "A fixed and parity-validated expression mapper, checkpoint-bound corpus audit, rights-cleared powered donor-level spatial RNA source, registered spatial endpoint, and genuinely external evaluation.",
+    "task_gate": "Separate frozen per-observation representation tasks from downstream coordinate-derived niche heads. Register donor-level splits, spot- or cell-native baselines, power, uncertainty, and champion rules."
+  },
+  "checkpoint_corpus_crosswalk": {
+    "checkpoint": "theislab/Nicheformer@0ba4ba162f9ad3d6c8b713761954c31be2fa69ed",
+    "corpus": "SpatialCorpus-110M",
+    "generic_liver_exposure": "encoder_seen_and_downstream_demo",
+    "project_accession_exposure": "unknown",
+    "reason": "The checkpoint lacks a bound accession, donor-alias, UUID, and source-version manifest. The paper explicitly demonstrates a human CosMx liver neighborhood task."
+  },
+  "crosswalk_scope": {
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors and 5 Visium sections",
+      "native_fit": "Expression can be tokenized only as cross-resolution spot input; coordinates and H&E are ignored by the base checkpoint.",
+      "checkpoint_exposure": "unknown_source_predates_checkpoint_and_corpus_aliases_are_unresolved",
+      "status": "technical_pilot_only",
+      "why": "Four donors, exposed outcomes, unresolved hg19 annotation, and no spatial base input preclude superiority."
+    },
+    "gse292268": {
+      "biological_units": "4 F2 MASLD donors distributed two per CosMx slide",
+      "native_fit": "CosMx cell expression matches a declared assay family, but a spatial head would still require coordinates, donor joins, and development labels.",
+      "checkpoint_exposure": "unknown_until_checkpoint_corpus_aliases_are_resolved",
+      "status": "blocked_join_unresolved_and_underpowered"
+    },
+    "hra007511": {
+      "biological_units": "35 spatial participants; only 3 overlap the dissociated and spatial subsets",
+      "native_fit": "Visium spots are cross-resolution. H&E and MALDI are not base inputs. Dissociated and spatial records cannot be falsely paired.",
+      "checkpoint_exposure": "unknown",
+      "status": "deferred_controlled_access_and_rights_blocked"
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants",
+      "native_fit": "Visium spots are cross-resolution. CODEX and H&E are not base inputs.",
+      "checkpoint_exposure": "unknown",
+      "status": "blocked_DSA_barcode_join_and_registration_unresolved"
+    }
+  },
+  "held_donor_and_topology_firewall": {
+    "base_embedding": "Once the tokenizer is frozen, encode each observation independently. No coordinate graph exists to connect held donors.",
+    "spatial_head": "Fit neighborhood, density, region, domain, or label heads only on development donors. Freeze the head checkpoint, cell-type vocabulary, radius, target transform, calibration, and missing-class policy.",
+    "neighborhood_truth": "Evaluator-only coordinate targets are built inside authoritative participant and section boundaries. Spots, cells, and neighbor pairs are not donor replicates.",
+    "cross_resolution": "Visium spot embeddings and image-based single-cell embeddings are distinct evaluation strata.",
+    "fine_tuning": "Any held-feature gradient update is query adaptation and receives a separate artifact."
+  },
+  "missingness_and_mapper": {
+    "required_metadata": "Species, assay, modality, gene identifier order, corpus medians, and technology means are explicit inputs and masks.",
+    "unknown_assay": "Fail closed; do not turn an unknown assay token into PAD.",
+    "unmeasured_gene": "Gene-panel absence and below-detection are not equivalent to a measured zero.",
+    "non_RNA_modalities": "H&E, CODEX, MALDI, and ATAC remain not_applicable to the registered base checkpoint."
+  },
+  "claim_boundary": {
+    "possible_future_role": "Frozen cell- or spot-expression representation and separately fitted niche-head comparator after contamination and mapper gates.",
+    "prohibited_now": "Any v1 spatial embedding result, zero-shot niche claim, MASLD spatial champion, or statement that the base checkpoint consumes spatial coordinates.",
+    "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
+  },
+  "interpretation": "Nicheformer is a pretrained expression model with a spatial modality token, not a graph or coordinate encoder. That makes its frozen base potentially donor-inductive but incapable of a native spatial-domain prediction. Its spatial utility depends on separately trained heads. The mapper and conversion are not yet reproducible, corpus exposure is unresolved, and no eligible spatial endpoint exists, so it remains deferred.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

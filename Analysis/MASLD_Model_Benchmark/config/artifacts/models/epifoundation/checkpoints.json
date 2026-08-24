@@ -1,0 +1,163 @@
+{
+  "architecture_contract": {
+    "checkpoint_bound_status": "UNRESOLVED",
+    "common_declared_fields": {
+      "attention_heads": 8,
+      "embedding_dimension": 512,
+      "head_dimension": 1024,
+      "transformer_layers": 6,
+      "uses_cls_cell_token": true,
+      "uses_chromosome_labels": true
+    },
+    "configuration_conflict": {
+      "evaluation_ATAC_max_tokens": 12000,
+      "evaluation_RNA_max_tokens": 8000,
+      "evaluation_dropout": 0.15,
+      "pretraining_ATAC_max_tokens": 8000,
+      "pretraining_RNA_max_tokens": 8000,
+      "pretraining_dropout": 0.2
+    },
+    "warning": "The repository exposes differing pretraining and evaluation configurations and no signed checkpoint-to-config manifest. Architecture, maximum lengths, masking, vocabulary order, and state-dict keys must be bound to the exact checkpoint before any load."
+  },
+  "checkpoint": {
+    "content_digest": "2da08ff4572738d90fd70d38d792850821bb21c2cf52838286537542b991ab59",
+    "filename": "pretrain.pth",
+    "format": "PyTorch_pickle_container",
+    "huggingface_repository": "UCSC-VLAA/EpiFoundation",
+    "introduced_at_revision": "7d1e29105c2121c192052e30e449c5ae45c064cb",
+    "introduced_date": "2025-02-04",
+    "pickle_global_inventory": [
+      "torch.FloatStorage",
+      "torch.LongStorage",
+      "torch._utils._rebuild_tensor_v2",
+      "collections.OrderedDict"
+    ],
+    "selected_revision": "a459bb7829ef80a37499aae01a21f00a0b50a782",
+    "size_bytes": 3606582266,
+    "xet_hash": "377ce4b0a4b65f1e13c0ea46cccb4889d3cf7f06f2e0de1d14cf3ad365ae5daa",
+    "warning": "The checkpoint is an executable pickle-format artifact. Its known hash does not authorize unrestricted torch.load. No acquisition or deserialization occurred in this audit."
+  },
+  "code_license": "UNDECLARED",
+  "companion_artifacts": [
+    {
+      "filename": "vocab/atac_vocab.json",
+      "sha256": "54218ddf3df9ade25bb2edde3aed1eb235db0df08d86593a8caccbf464740f3b",
+      "size_bytes": 19237573
+    },
+    {
+      "filename": "vocab/rna_vocab.json",
+      "sha256": "0e010c4379db6ceede6e23d72c5b351502a3470728df9740f833003f3aeaea00",
+      "size_bytes": 736136
+    },
+    {
+      "filename": "vocab/chr_vocab.json",
+      "sha256": "f684e54533b6655884018150fe1d37bfe719cde96997daf09fbd5278e8f9bf2b",
+      "size_bytes": 716
+    },
+    {
+      "filename": "vocab/gene2chr.json",
+      "sha256": "12d275fc8f1f446092ad90f3e6041ee771beb10c79d371c0468faec8666d23ab",
+      "size_bytes": 728529
+    },
+    {
+      "filename": "vocab/cell_full.json",
+      "sha256": "c80936d3a9c2857cdb8bfec91a32a0feed738bcc2dad1f7184f270236cd64728",
+      "size_bytes": 1436
+    },
+    {
+      "filename": "vocab/batch_full.json",
+      "sha256": "9f5eecb6a3e0f7c48b5aa54beac614832336b9bdc777fb6a82d33d45c27b1a77",
+      "size_bytes": 511
+    }
+  ],
+  "input_and_query_contract": {
+    "ATAC_tokens": "indices_of_nonzero_peaks_in_the_checkpoint_vocabulary_plus_CLS_and_chromosome_annotations",
+    "RNA_tokens": "gene_tokens_from_observed_RNA_under_the_official_paired_dataset_and_decoder_path",
+    "cell_embedding": "CLS_output_from_the_ATAC_transformer_path",
+    "native_assay_topology": "paired_same_cell_or_same_nucleus_scRNA_plus_scATAC",
+    "official_dataloader": "PairedSCDataset over paired RNA and ATAC h5ad inputs",
+    "official_query_inputs": ["observed_ATAC_peak_tokens", "observed_RNA_gene_tokens"],
+    "randomness": "Rows above maximum length are randomly subsampled in the released data path; RNA nonzero/zero sampling and permutations also require explicit worker-level seeds.",
+    "unsupported_queries": ["RNA_only", "sequence_or_REF_ALT_only", "ATAC_profile_prediction_without_observed_target_ATAC"],
+    "warning": "A deterministic tokenization and truncation policy, exact vocabulary/references, out-of-vocabulary semantics, and same-row pairing checks must be frozen. The ATAC-derived CLS vector must not be described as an RNA-conditioned prediction."
+  },
+  "pretraining_contract": {
+    "declared_cell_types": 56,
+    "declared_scale": "more_than_100000_paired_single_cell_RNA_ATAC_profiles",
+    "declared_tissues": 19,
+    "mini_atlas_dataset_card_scale": "approximately_120000_full_atlas_rows_plus_Kidney_PBMC_and_BMMC_evaluation_subsets",
+    "provenance_status": "UNRESOLVED_NO_CHECKPOINT_BOUND_ACCESSION_SAMPLE_MANIFEST",
+    "warning": "Tissue and cell-count summaries do not establish exclusion of a target accession, donor, or release alias. The official MiniAtlas dataset card lists data files but no accession-level provenance crosswalk."
+  },
+  "repository": "UCSC-VLAA/EpiFoundation",
+  "repository_revision": "0c2c50479ae62dc3bbc0abf17fd47bc558a8f9b7",
+  "runtime_contract": {
+    "declared_anndata": "0.9.2",
+    "declared_cuda": "12.1",
+    "declared_cudnn": "8.9.2",
+    "declared_flash_attention": "2.6.3",
+    "declared_numpy": "1.24.3",
+    "declared_python": "3.8.19",
+    "declared_torch": "2.1.1",
+    "environment_status": "UNRESOLVED_L40S_IMPORT_KERNEL_MEMORY_DETERMINISM_AND_NUMERIC_PROBES_REQUIRED",
+    "warning": "The official evaluation path assumes CUDA distributed execution with NCCL. No package environment was created and no compatibility claim is made."
+  },
+  "safe_loading_contract": {
+    "acquisition_authorized": false,
+    "checkpoint_downloaded": false,
+    "conversion_target": "tensor_only_safetensors_plus_JSON_architecture_and_vocabulary_manifest",
+    "forbid_optimizer_scheduler_scaler_restore": true,
+    "forbid_unrestricted_fallback": true,
+    "inspection_sequence": [
+      "resolve_code_and_weight_terms_before_acquisition",
+      "verify_selected_revision_filename_size_SHA256_Xet_pointer_and_all_companion_hashes",
+      "inventory_archive_members_pickle_opcodes_globals_and_storage_bounds_in_a_networkless_restricted_runtime",
+      "attempt_torch_load_weights_only_true_only",
+      "validate_state_dict_keys_shapes_dtypes_finiteness_and_checkpoint_config_binding",
+      "export_tensor_only_state_and_allow_ordinary_runtime_to_read_only_the_converted_artifact"
+    ],
+    "warning": "The official scripts call unrestricted torch.load. That path is not benchmark-admissible for the upstream pickle."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The exact GitHub and Hugging Face revisions, checkpoint and companion artifact metadata, official code/config/data paths, MiniAtlas dataset card, environment declaration, and primary preprint were checked on 2026-08-22. No artifact was downloaded, installed, executed, or deserialized.",
+  "source_records": [
+    {
+      "identity": "EpiFoundation source repository",
+      "revision": "0c2c50479ae62dc3bbc0abf17fd47bc558a8f9b7",
+      "url": "https://github.com/UCSC-VLAA/EpiFoundation/tree/0c2c50479ae62dc3bbc0abf17fd47bc558a8f9b7"
+    },
+    {
+      "identity": "EpiFoundation Hugging Face model revision",
+      "revision": "a459bb7829ef80a37499aae01a21f00a0b50a782",
+      "url": "https://huggingface.co/UCSC-VLAA/EpiFoundation/tree/a459bb7829ef80a37499aae01a21f00a0b50a782"
+    },
+    {
+      "identity": "EpiFoundation checkpoint introduction commit",
+      "revision": "7d1e29105c2121c192052e30e449c5ae45c064cb",
+      "url": "https://huggingface.co/UCSC-VLAA/EpiFoundation/commit/7d1e29105c2121c192052e30e449c5ae45c064cb"
+    },
+    {
+      "identity": "UCSC-VLAA MiniAtlas dataset card",
+      "url": "https://huggingface.co/datasets/UCSC-VLAA/MiniAtlas"
+    },
+    {
+      "doi": "10.1101/2025.02.05.636688",
+      "identity": "EpiFoundation primary preprint",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11839112/"
+    }
+  ],
+  "task_fit": {
+    "active_tasks": [],
+    "development_only_candidate": "Observed-ATAC cell representation and an explicitly directional paired-modality diagnostic after a separate nonpromotable TaskSpec, exact vocabulary/reference crosswalk, corpus audit, terms resolution, and safe conversion.",
+    "rna_conditioned_atac": "ineligible because native inference consumes observed target ATAC tokens and the released direction is not RNA/context-only ATAC profile prediction",
+    "sealed_cell_state_mapping": "ineligible because GSE289173 exposes RNA-only nuclei while the CLS cell representation is ATAC-derived",
+    "variant_to_regulation": "ineligible because the model has no genomic sequence or REF/ALT allele-effect mechanism and does not emit signed eQTL/ieQTL effects"
+  },
+  "terms_audit": {
+    "code_repository": "No LICENSE file was detected at the pinned GitHub revision.",
+    "result": "blocked_pending_written_code_permission_and_institutional_review_of_weight_and_derivative_terms",
+    "weight_repository": "Apache-2.0 is declared in the Hugging Face model card.",
+    "warning": "Weight terms do not grant permission to copy or execute unlicensed repository code. Do not run, adapt, or redistribute that code without written authorization."
+  },
+  "weight_license": "Apache-2.0"
+}

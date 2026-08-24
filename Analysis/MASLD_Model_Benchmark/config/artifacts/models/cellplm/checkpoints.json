@@ -1,0 +1,121 @@
+{
+  "architecture_contract": {
+    "declared_parameter_count": 82402543,
+    "decoder_hidden_dimension": 1024,
+    "decoder_layers": 2,
+    "encoder_attention_heads": 8,
+    "encoder_hidden_dimension": 1024,
+    "encoder_layers": 4,
+    "encoder_type": "Flowformer_linear_attention_over_cells_within_one_sample_context",
+    "gene_embedding": "expression_weighted_sum_of_learned_gene_embeddings",
+    "latent_dimension": 512,
+    "model_gene_universe": 19374,
+    "pretraining_objective": "cell_level_masked_expression_reconstruction_with_variational_regularization",
+    "published_latent_prior": "16_component_Gaussian_mixture",
+    "warning": "The 85M label is a parameter-scale name, not a claim that 85 million cells were used for pretraining. The paper reports 82,402,543 parameters and 11.4 million training cells."
+  },
+  "checkpoint_release_conflict": {
+    "benchmark_action": "Do not silently substitute the undocumented 20231027 VAE checkpoint for the documented 20230926 Gaussian-mixture checkpoint. Resolve the census entry before acquisition, or register both as separately named comparators after terms and hashes are available.",
+    "finding": "The repository README calls 20230926_85M the latest version and the checked-in configuration uses the published Gaussian-mixture latent. The mutable Dropbox folder also contains an undocumented 20231027_85M pair whose configuration changes latent_mod from gmvae to vae. The released zero-shot embedding tutorial uses 20231027, while the cell-type annotation tutorial uses 20230926.",
+    "registered_census_object": "20231027_85M.best.ckpt",
+    "registered_object_status": "noncanonical_until_upstream_provenance_is_resolved"
+  },
+  "documented_checkpoint": {
+    "configuration": {
+      "gene_list_length": 19374,
+      "latent_mod": "gmvae",
+      "name_inside_config": "20230926_75M_50M",
+      "sha256": "949ae2ba0e099fcb37859f3dbb82d7c2a7ac00b9bce41a2de4004797a60c02c3",
+      "size_bytes": 368869
+    },
+    "dropbox_content_revision": "016213c1be94746000000029e76cf71",
+    "dropbox_file_id": "id:CJJBAR0ywPoAAAAAAAOVEA",
+    "dropbox_server_modified_utc": "2023-10-02T20:51:27Z",
+    "name": "20230926_85M.best.ckpt",
+    "sha256": "UNRESOLVED",
+    "size_bytes": 907020069,
+    "status": "documented_release_candidate"
+  },
+  "registered_checkpoint": {
+    "configuration": {
+      "gene_list_length": 19374,
+      "latent_mod": "vae",
+      "name_inside_config": "20230926_75M_50M_VAE",
+      "sha256": "c9827f8cc2a8eda8e3e0726e1f21e2cbfd3a9582ee211d45f3855bfa81a2a686",
+      "size_bytes": 368871
+    },
+    "dropbox_content_revision": "016213c1be94747000000029e76cf71",
+    "dropbox_file_id": "id:CJJBAR0ywPoAAAAAAAOWPg",
+    "dropbox_server_modified_utc": "2023-10-25T16:21:56Z",
+    "name": "20231027_85M.best.ckpt",
+    "sha256": "UNRESOLVED",
+    "size_bytes": 906500243,
+    "status": "undocumented_release_variant"
+  },
+  "embedding_contract": {
+    "common_lane_candidate": "1024d_layer_normalized_encoder_output_immediately_before_the_variational_latent",
+    "common_lane_context": "Each cell embedding is context-dependent. Construct deterministic row-ID-sorted context blocks within one biological donor and sample only; never pool cells across donors, outer folds, studies, or sealed and development sources.",
+    "common_lane_dimension": 1024,
+    "native_annotation_lane": "The official annotation pipeline replaces the pretrained variational latent with a newly initialized 1024_to_512 linear latent and an annotation head, selects 3000 HVGs, and fine-tunes the embedder, encoder, latent, and head. Benchmark preprocessing, label encoding, and selection are reimplemented inside outer-training donors.",
+    "released_20230926_zero_shot_embedding": "512d_GMVAE_posterior_mean_conditioned_on_a_sampled_hard_Gumbel_category; stochastic even in eval mode and therefore not the common representation",
+    "released_20231027_zero_shot_embedding": "512d_plain_VAE_posterior_mean_in_eval_mode; this is a separately named native representation from the undocumented variant",
+    "upstream_paths_rejected_for_scoring": [
+      "CellEmbeddingPipeline.score chooses the best Leiden resolution using the evaluation labels.",
+      "The tutorial combines train and test cells before HVG selection and model fitting.",
+      "CellTypeAnnotationPipeline.common_preprocess selects HVGs before applying the split field."
+    ]
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unintegrated_nonnegative_single_cell_or_single_nucleus_counts",
+    "context_topology": "same_donor_and_same_sample_or_aliquot_only",
+    "feature_alignment": "Ensembl_gene_ids_against_the_exact_19374_gene_order_in_the_selected_configuration",
+    "normalization": "per_cell_library_size_normalization_to_10000_then_exactly_one_natural_log1p_inside_the_expression_embedder",
+    "normalization_warning": "The paper declares library-size normalization plus log1p, but the released pipeline only applies log1p internally. Feeding raw counts directly does not reproduce the paper, while feeding already log-transformed values applies log1p twice.",
+    "supported_assays": ["scRNA_UMI", "snRNA_UMI", "single_cell_resolution_SRT_counts"],
+    "training_only_feature_selection": "The common frozen-embedding lane uses all intersecting genes. The native annotation lane may use 3000 HVGs only when fitted on outer-training donors and then frozen.",
+    "unmeasured_gene_rule": "Use the released input_gene_list alignment for assayed genes and preserve an explicit assay-observability mask. Do not reinterpret an unmeasured gene as an observed biological zero."
+  },
+  "repository": "OmicsML/CellPLM",
+  "repository_revision": "b59ee7688b1bd2a745856a610248b46f15019a22",
+  "runtime_contract": {
+    "declared_cuda": ">=11.7",
+    "declared_python": ">=3.9_with_README_recommendation_3.9",
+    "declared_rapids_components": "23.4.1",
+    "declared_torch": "1.13.0+cu117",
+    "environment_status": "UNRESOLVED",
+    "warning": "The old Torch/CUDA/RAPIDS stack and Flowformer implementation require an isolated L40S import, forward/backward, checkpoint-load, resume, deterministic-context, and numeric-tolerance probe."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "released_loader": "torch.load_without_weights_only",
+    "require_canonical_checkpoint_resolution_before_download": true,
+    "require_explicit_weight_terms_before_download": true,
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The ICLR 2024 proceedings paper, pinned official repository, checked-in configuration, tutorial code, and live Dropbox folder metadata were queried on 2026-08-22. Only the two small JSON configurations were retrieved; neither checkpoint weight was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "CellPLM:LICENSE", "sha256": "906f6647e26bf07bf788daa50dfec287416110a9f8692084d4d2a646db30b71b", "size_bytes": 1316},
+    {"identity": "CellPLM:README.md", "sha256": "16f93cf45ba1c22f531c46651cde161b45b1926aa2d1d30f7c1ed43427014f57", "size_bytes": 3592},
+    {"identity": "CellPLM:requirements.txt", "sha256": "1fa0ad8df6fe5cd83178d56d5a8c863098422ccbe203f4e7290fbe2df3e389af", "size_bytes": 239},
+    {"identity": "CellPLM:ckpt/20230926_85M.config.json", "sha256": "949ae2ba0e099fcb37859f3dbb82d7c2a7ac00b9bce41a2de4004797a60c02c3", "size_bytes": 368869},
+    {"identity": "Dropbox:ckpt/20231027_85M.config.json", "sha256": "c9827f8cc2a8eda8e3e0726e1f21e2cbfd3a9582ee211d45f3855bfa81a2a686", "size_bytes": 368871},
+    {"identity": "CellPLM:CellPLM/model/cellformer.py", "sha256": "8bbdf4ae7584691e2c50dc6bab2ce037ccd65a74ac145018f8dd366319c7ab80", "size_bytes": 6410},
+    {"identity": "CellPLM:CellPLM/embedder/omics.py", "sha256": "cc1664757fa94f24c155508e4dabe34838dd8231f47cb78ad07e872c23ca0509", "size_bytes": 3980},
+    {"identity": "CellPLM:CellPLM/latent/autoencoders.py", "sha256": "add551c8878ddba4b672a026ba6cef8cae5bf066c7e0e5340478e0d312c32f02", "size_bytes": 12211},
+    {"identity": "CellPLM:CellPLM/pipeline/__init__.py", "sha256": "5ffe64334aee8ecc56eefecb190af651ae425ce39a2b035e10e88d6a78f64620", "size_bytes": 5052},
+    {"identity": "CellPLM:CellPLM/pipeline/cell_embedding.py", "sha256": "427ee8a3b3a406190ccdebce94298016aecd1c4dd2a4dc35be92459d62a77433", "size_bytes": 7181},
+    {"identity": "CellPLM:CellPLM/pipeline/cell_type_annotation.py", "sha256": "d3d262d76c8e7d9b11a6f467599034f6a2fe51a1e61534eaf70cd9f7fa2cfc8a", "size_bytes": 12651},
+    {"identity": "CellPLM:CellPLM/utils/data.py", "sha256": "251ca129c1d43883d384f1efbe703e9a0e6e3c494d6e541ddb64884aae929de8", "size_bytes": 17013},
+    {"identity": "CellPLM:tutorials/cell_embedding.ipynb", "sha256": "be5597fdb390d582b742c18addf4b90d50aa10d1dd19ddad2df3eeebd48bef48", "size_bytes": 151465},
+    {"identity": "CellPLM:tutorials/cell_type_annotation.ipynb", "sha256": "df8367d94433afdb26f837666bb5b4dab60b401c10983b82b764f472b5fe264e", "size_bytes": 395881}
+  ],
+  "terms_audit": {
+    "paper_license": "ICLR_proceedings_paper_not_assumed_to_license_checkpoint_weights",
+    "repository_code_license": "BSD-2-Clause",
+    "result": "blocked_checkpoint_terms_undeclared",
+    "weight_terms_in_dropbox_or_repository": "absent"
+  },
+  "weight_license": "UNDECLARED"
+}

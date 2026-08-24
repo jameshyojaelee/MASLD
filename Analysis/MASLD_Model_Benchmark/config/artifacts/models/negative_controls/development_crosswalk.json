@@ -1,0 +1,119 @@
+{
+  "crosswalk_scope": {
+    "candidate": "split_preserving_shuffled_outcome_parent_bound_negative_control",
+    "registered_supported_tasks": ["variant_to_regulation", "typed_evidence_graph", "perturbation_transfer"],
+    "mandatory_baseline_for_any_task": false,
+    "primary_or_champion_eligible": false,
+    "status": "blocked_parent_binding_permutation_count_implementation_and_task_roster_absent"
+  },
+  "task_dispositions": {
+    "variant_to_regulation": {
+      "current_registry_role": "negative_control",
+      "current_task_baseline_roster": "not_listed",
+      "allowed_endpoints": ["allelic_direction", "eqtl_retrieval", "mpra_activity"],
+      "primary_signed_cell_type_eqtl_effect": "ineligible",
+      "eligible_development_use": "A parent-bound supervised MPRA, allelic-direction, or retrieval head may be refit on locus-bundle-shuffled outer-training outcomes and scored out of fold.",
+      "current_limitation": "No nonsealed signed eQTL or ieQTL training source is registered. A shuffled primary signed-effect head cannot be invented, and GSE289173 outcomes remain sealed and unavailable for fitting.",
+      "split": "Merged native-build LD blocks, declared loci, exact and reverse-complement sequence identity, and largest-receptive-field boundary buffer remain unchanged."
+    },
+    "typed_evidence_graph": {
+      "current_registry_role": "supported_task_negative_control_only",
+      "current_task_baseline_roster": "not_listed",
+      "eligible_development_use": "Refit an exact parent supervised graph or evidence estimator on whole LD-locus plus gene-block label bundles shuffled among shape-compatible training blocks after complete pseudo-held-source removal.",
+      "current_limitation": "The promoted graph, explicit tested-negative denominators, parent estimator, and enough exchangeable source and block groups do not exist.",
+      "split": "Pseudo-held source family, native-build LD locus, gene block, source aliases, and graph derivatives remain intact."
+    },
+    "perturbation_transfer": {
+      "current_registry_role": "supported_task_negative_control_only",
+      "current_task_baseline_roster": "not_listed",
+      "eligible_development_use": "Refit an exact held-target-capable parent on target-level response bundles deterministically deranged among shape-compatible outer-training targets.",
+      "current_limitation": "Most registered deep perturbation models are incompatible with the wholly unseen noncoding target task, and no exact parent-bound negative-control RunSpec exists.",
+      "split": "Target locus, guide family, and all nested biological-replicate response rows move as one bundle; cells and guides never move independently."
+    }
+  },
+  "dataset_crosswalk": {
+    "gse281364": {
+      "task": "variant_to_regulation",
+      "role": "exposed_development_MPRA_outcomes",
+      "allowed_control_use": "Locus-cross-fitted MPRA activity or allelic-direction parent heads only, with all four-replicate context outcome rows for a locus kept in one bundle.",
+      "prohibitions": ["No row-level barcode or allele shuffle.", "No mixing HepG2, LX-2, control, PAOA, or TGF-beta assay contexts.", "No claim that a shuffled outcome is a tested biological negative."]
+    },
+    "gse281160": {
+      "tasks": ["variant_to_regulation", "typed_evidence_graph", "perturbation_transfer"],
+      "role": "exposed_MPRA_selected_conditional_followup",
+      "allowed_control_use": "Only after experimental replicates, custom reference, guide families, target loci, response axes, and evidence ontology are frozen. Target-level bundles preserve all nested replicate and guide structure.",
+      "prohibitions": ["Cells, guides, sequencing lanes, targets, and genes are not exchangeability or inferential units by themselves.", "The 20 selected loci cannot be described as an unbiased source.", "Nearest-gene reassignment cannot make a parent model held-target capable."]
+    },
+    "current_coloc_gwas": {
+      "task": "typed_evidence_graph",
+      "role": "provisional_exposed_training_evidence",
+      "allowed_control_use": "Only after corrected promotion and complete pseudo-source and held-block removal. Whole source-specific locus-gene label bundles may be shuffled in training; source and LD topology stays intact.",
+      "prohibition": "Current provisional memberships, the Gene Catalog, and frozen 117 programs cannot define permutation strata, outcomes, or null expectations."
+    },
+    "gse244832_and_gse296875": {
+      "task": "variant_to_regulation",
+      "role": "development features and assay-native training sources",
+      "allowed_control_use": "Outcome-independent training-fold RNA, ATAC, sequence, and masks may remain features for an eligible parent. Only the parent's supervised outcome bundle is shuffled.",
+      "prohibition": "Donors, nuclei, modalities, and same-nucleus or same-sample topology are never shuffled or split."
+    },
+    "gse275483": {
+      "task": "perturbation_transfer",
+      "role": "n=4 animal development stress",
+      "allowed_control_use": "True animal-held outcomes may score a frozen parent-bound negative control after mouse references and joins activate. They cannot fit the permutation, parent, target mapping, or ortholog output.",
+      "prohibition": "Cells are not exchangeable biological replicates, and the one fasting animal cannot define its own permutation stratum."
+    },
+    "gse313774": {
+      "task": "perturbation_transfer",
+      "role": "prediction_first n=3 independent-batch stress",
+      "allowed_control_use": "Only score a fully frozen control prediction after the prediction commit and outcome opening. Its 33 expression profiles never enter shuffled training.",
+      "prohibitions": ["No fit, model selection, calibration, or permutation construction from chip outcomes.", "Libraries are not cells or n=33 biological replicates.", "CXCL1 and IL8 remain excluded; no resmetirom RNA arm exists."]
+    },
+    "gse289173": {
+      "task": "variant_to_regulation",
+      "role": "jointly sealed cell and QTL evaluator",
+      "allowed_control_use": "none under the current shuffled_outcome capability because signed cell-type eQTL effects are not an allowed endpoint",
+      "prohibition": "Do not open, permute, fit, calibrate, or tune against sealed eQTL or ieQTL outcomes."
+    }
+  },
+  "exchangeability_and_missingness_firewall": {
+    "training_only": "Construct strata, deterministic mappings, outcome bundles, parent fits, supervised feature selection, hyperparameters, early stopping, and calibration entirely inside each outer-training role.",
+    "split_preservation": "No outcome bundle crosses cohort family, outer role, donor or biological unit, assay, species, native build, LD block topology, gene block topology, target component arity, or frozen response schema.",
+    "held_labels": "Development and sealed labels remain true and evaluator-only. Shuffling them would change the evaluation question and is prohibited.",
+    "missingness": "Feature masks remain with features. Outcome eligibility and exact outcome-state masks move with the whole outcome bundle. Missing values never become zero and strata with fewer than two compatible groups are not_applicable.",
+    "no_adaptive_relaxation": "Do not merge strata, change outcome bundles, drop difficult rows, or choose a permutation index after seeing control or real-model scores."
+  },
+  "calibration_uncertainty_and_null_use": {
+    "calibration": "Refit any parent calibrator on cross-fitted shuffled training labels only. A shuffled control never calibrates the real model, estimates held prevalence, or chooses a threshold.",
+    "biological_uncertainty": "Use the parent task's donor, biological-replicate or animal, LD-block, or two-way LD plus gene-block bootstrap inside each realized permutation.",
+    "permutation_variation": "Permutation indices measure null-control variation only. They are not donors, replicates, model seeds, or independent hypotheses.",
+    "null_diagnostic": "A control performing unexpectedly well triggers a halted leakage and exchangeability audit. It is not evidence for outcome-free predictability and is not repaired on the same evaluated source.",
+    "permutation_test": "No permutation p-value is currently registered. A future test must predeclare count, tail, statistic, exchangeability, inapplicable handling, and plus-one correction."
+  },
+  "selection_and_claim_firewall": {
+    "baseline_status": "never_a_scientific_baseline_and_not_in_any_current_TaskSpec_baseline_model_ids",
+    "leaderboard": "May appear only in a clearly separated negative-control diagnostic table or band.",
+    "strongest_baseline": "excluded",
+    "promotion_gate": "excluded",
+    "family_win": "excluded",
+    "Pareto_selection": "excluded",
+    "stacking_or_conditional_model_trigger": "excluded",
+    "multiplicity": "Does not add a champion hypothesis. Any prespecified permutation-null test has its own separate family.",
+    "champion": "permanently_ineligible",
+    "biological_claim": "none"
+  },
+  "reproducibility_contract": {
+    "control_receipt": "Hash parent checkpoint and fitted-state identities, all parent inputs, split groups, exchangeability strata, stable group IDs, permutation seed material, ordering, offsets, source-to-destination mapping, no-fixed-point proof, inapplicable groups, shuffled labels and masks, every refitted outcome-dependent artifact, predictions, and evaluator inputs.",
+    "required_RunSpec_fields": ["parent_model_id", "parent_artifact_hash", "task_id", "outer_fold_id", "permutation_indices", "campaign_hash", "exchangeability_contract_id", "parent_fit_regime", "output_axis_hash"],
+    "current_contract_hashes": {
+      "variant_capability_toml": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63",
+      "variant_task_toml": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233",
+      "locus_outer_toml": "649db9e4f265e96b5bc134494027ebfcd21038f9db819f81740470e4cbfedd2e",
+      "typed_graph_task_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92",
+      "evidence_graph_outer_toml": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "perturbation_task_toml": "c44ab6f4b19c54dad8df6a498aa5a2f34bc40811eda6afd7e8bd6745e5574a05",
+      "perturbation_outer_toml": "99a15115a9eb43672577c422a42eeb306e33ba9497b949e466ce51c7e886b275"
+    }
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

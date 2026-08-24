@@ -43,7 +43,7 @@ for extra in ccc_v3_panels.R fig2_chromatin_cascade.R hotspot_module_geneset_cor
 done
 
 echo "########## FIG 5 PANELS (assemble/causal_arch/translation/legacy EXCLUDED) ##########"
-run fig5_convergence.R                              # -> panels/fig5a_therapeutic_axes.pdf (canonical)
+run fig5_convergence.R                              # -> panels/fig6_therapeutic_axes.pdf (canonical)
 run fig5_convergence_v3.R                           # -> panels/fig5b.pdf
 # panel 5e (TF convergence scatter + 4-way survival lollipop) CUT 2026-06-19:
 #   banned lollipop + oversold refuted 4-way claim + null SCENIC+ axis.

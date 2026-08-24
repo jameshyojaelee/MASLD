@@ -1,0 +1,42 @@
+{
+  "audit_scope": {
+    "checkpoint": "lauradmartens_onek1k_scooby_model_safetensors",
+    "development_sources": "registered_variant_and_regulatory_project_sources",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "onek1k": {
+      "checkpoint_identity": "lauradmartens/onek1k-scooby@dd7a2b7be54c906b43de4bc0159b169caaf057c5:model.safetensors sha256 2ae335c651182040462d965bb879118be40a6cb174550a3686fb10b04a74f7cb",
+      "corpus": "OneK1K PBMC RNA profiles plus inherited Borzoi replicate-0 sequence and functional-genomics weights",
+      "corpus_annotation_state": "cell adaptation source is explicit; exact base-conversion and source revision are not checkpoint-bound",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {"path": "development_crosswalk.json", "scope": "registered_variant_and_regulatory_sources", "sha256": "3745b447153ae76beb19c4ddcffceb2e33ae9175487c2d79b8a1db182589db26"},
+  "input_eligibility": {
+    "gse289173": "The sealed snRNA features cannot be fed directly. The checkpoint requires coordinates in the exact 10-D OneK1K scPoli space, whose trained encoder/query artifact and frozen feature map are not bundled. Even if recovered, liver states are drastically outside the PBMC domain for which the paper supports interpolation.",
+    "gse296875": "Can support development of a new liver context encoder and scooby adaptation inside donor-by-genomic folds, but that is an adapted model, not zero-shot OneK1K inference. This checkpoint has no ATAC output.",
+    "variant_scoring": "The frozen OneK1K score is a blood-domain downstream comparator. No nearest blood embedding may be relabeled as hepatocyte, stellate, endothelial or immune-liver context."
+  },
+  "interpretation": "GSE289173 target labels are provisionally unexposed, but the frozen OneK1K checkpoint cannot earn a MASLD sealed champion claim. Its raw-input encoder is missing, its cell state is PBMC-specific, no donor/study transfer was validated, it lacks an ATAC head and inherited Borzoi weight authority remains unresolved.",
+  "license_disposition": {
+    "code": "MIT",
+    "open_champion_eligibility": "ineligible_until_inherited_Borzoi_weight_authority_and_derivative_terms_are_cleared",
+    "weights": "MIT_declared_on_the_scooby_HF_card_with_unresolved_inherited_Borzoi_terms"
+  },
+  "remaining_blockers": [
+    "Resolve authority for the canonical Calico Borzoi weights inherited through johahi/borzoi-replicate-0 and the permitted terms for the merged scooby derivative.",
+    "Bind the weight to an exact scooby, borzoi-pytorch, adapted-peft, transformers and torch source/runtime lock; current setup includes unpinned Git and broad version floors.",
+    "Recover and hash the exact OneK1K scPoli model, retained feature set, preprocessing, donor-condition and query-mapping contract. An embedding parquet alone does not create an inductive raw-RNA path.",
+    "After campaign approval, verify safetensors SHA-256 and exact tensor keys, shapes and dtypes under cell_emb_dim=10, n_tracks=2 and use_transform_borzoi_emb=true.",
+    "Resolve the training FASTA and Borzoi split BED; prove coordinate parity across the post-checkpoint sequence-window fix and project GRCh38.p14.",
+    "Reproduce reverse-complement restoration, squashed-scale inversion, exon aggregation and published REF/ALT effects on fixed OneK1K fixtures.",
+    "Do not schedule this object for RNA-conditioned ATAC because it has only stranded RNA outputs.",
+    "If retained as a blood-domain negative control, prespecify that it cannot support liver cell-context or MASLD champion claims.",
+    "Run L40S import, forward/backward, strict safetensors restoration, deterministic-seed and numeric-tolerance probes through SLURM only after the runtime and embedding artifacts are frozen."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_missing_inductive_liver_context_and_task_output",
+  "verified_date": "2026-08-22"
+}

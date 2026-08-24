@@ -1,0 +1,60 @@
+{
+  "audit_scope": {
+    "checkpoint": "EpiBRAIN_Google_Drive_final_checkpoints",
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_source": "gse289173",
+    "task_id": "variant_to_regulation"
+  },
+  "checkpoint_findings": {
+    "published_37_brain_cell_type_checkpoint": {
+      "checkpoint_identity": "Google Drive 10NjxkEaKsDdOX8WhOU8KdYIEx8XganNw chk_epoch_20.pt size 2060708233; SHA-256 unresolved",
+      "corpus": "Borzoi-initialized model fine-tuned on fixed human basal-ganglia and cortex Droplet Paired-Tag cell-type profiles",
+      "declared_corpus_result": "no_GSE289173_use_declared",
+      "exposure_confidence": "low_without_immutable_checkpoint_or_corpus_receipt",
+      "exposure_state": "unknown"
+    },
+    "repository_70_brain_cell_type_extension": {
+      "checkpoint_identity": "Google Drive 1MgT3n1ufZP4Wxci3h_4Kr0JPVa18nTmF chk_epoch_17.pt size 2068500169; SHA-256 unresolved",
+      "declared_corpus_result": "no_GSE289173_use_declared",
+      "exposure_confidence": "low_without_immutable_checkpoint_or_corpus_receipt",
+      "exposure_state": "unknown"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "fixed_brain_profile_and_variant_diagnostic_sources",
+    "sha256": "d40ac21719785860275d15751d5e9e2cbf9c9756d51f4969bd3ca2d02c5d4471"
+  },
+  "input_eligibility": {
+    "gse281364": "No use while terms and checkpoint identity are blocked. Even after resolution, only a fixed-brain-head sequence diagnostic would be native; HepG2 and LX-2 outcomes cannot choose proxy heads or score summaries.",
+    "gse289173": "Ineligible for sealed champion evaluation. EpiBRAIN accepts sequence only, has fixed brain output heads, lacks observed liver context, and publishes an unsigned L2 variant magnitude rather than a signed liver eQTL or ieQTL effect.",
+    "gse296875": "The RNA matrix cannot be supplied as context to the released model. Liver adaptation would create a new checkpoint and is prohibited without written code, base-weight, final-weight, and derivative authority.",
+    "observed_context_requirement": "not_supported; fixed_brain_cell_type_heads_are_not_observed_target_context"
+  },
+  "interpretation": "The paper declares brain-only profile training and no GSE289173 use, but both live Google Drive checkpoints lack hashes, creation receipts, and checkpoint-bound corpus manifests and were released after GSE289173 became public. Exposure therefore remains unknown. Independent of contamination, the model's fixed brain heads do not match either MASLD primary endpoint.",
+  "license_disposition": {
+    "code": "NO_LICENSE_FILE_OR_PACKAGE_LICENSE",
+    "inherited_borzoi_weights": "UNRESOLVED",
+    "weights": "NO_TERMS_ATTACHED_TO_GOOGLE_DRIVE_ARTIFACTS",
+    "open_champion_eligibility": "blocked_no_license"
+  },
+  "remaining_blockers": [
+    "Obtain written permission covering source use, execution, modification, inherited Borzoi weights, final EpiBRAIN weights, derivative training, and redistribution. Until then, do not download, run, compare, or adapt EpiBRAIN.",
+    "Move each official final checkpoint to an immutable host or obtain an upstream cryptographic receipt binding SHA-256, size, creation date, producing commit, track roster, preprocessing, and training corpus.",
+    "Resolve the absent Borzoi-pretrain fetch receipt and inherited base-weight authority.",
+    "After terms clearance and campaign approval, inspect the PyTorch artifact in an isolated no-network runtime, export a tensor-only inference bundle, and require exact key, shape, dtype, and finite-value restoration.",
+    "Freeze all 37-cell-type 199-track or 70-cell-type 386-track names, old-to-new subclass aliases, modality transforms, output crop, strand order, and missing-track masks.",
+    "Resolve the paper's 8-dimensional cell embedding versus the linked checkpoint receipt's value 6 and prove the restored tensor shapes rather than relying on the experiment-directory name.",
+    "Prove 524288-bp center, 16320-bin crop, 32-bp resolution, REF matching, reverse-complement restoration, and ALT-minus-REF direct-track parity separately from the paper's unsigned L2 score.",
+    "Do not relabel any brain head as a liver state or count sequence-only brain outputs as observed-RNA-conditioned ATAC.",
+    "Run L40S import, strict restore, forward, backward, resume, deterministic-seed, reverse-complement, and numeric-tolerance probes through SLURM only after all prior gates pass."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_unknown_exposure_no_license_fixed_brain_domain_and_non_native_primary_endpoints",
+  "task_disposition": {
+    "rna_conditioned_atac_primary": "ineligible_sequence_only_fixed_brain_heads",
+    "signed_variant_primary": "ineligible_unsigned_brain_domain_score_no_liver_context",
+    "variant_to_regulation_secondary": "blocked_brain_domain_diagnostic_only"
+  },
+  "verified_date": "2026-08-22"
+}

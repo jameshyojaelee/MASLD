@@ -1,0 +1,96 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "GraphST is a target-fitted spatial representation method with no upstream checkpoint, conflicting source-license declarations, no strict held-donor interface, and no eligible MASLD spatial task or external source.",
+    "v1_training": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "graph_self_supervised_contrastive_autoencoder_for_spatial_RNA",
+    "native_modalities": ["10x_Visium_RNA", "Stereo-seq_RNA", "Slide-seq_RNA"],
+    "native_input": "target_spot_expression_plus_two_dimensional_coordinates_and_a_spot_neighbor_graph",
+    "graph_default": "three nearest spatial neighbors; dense all-pairs Euclidean distance for the 10X path and sklearn KNN for Stereo or Slide paths",
+    "representation_objective": "Graph convolutional reconstruction plus contrastive discrimination between observed and feature-permuted views.",
+    "downstream_clustering": "PCA of the target embedding followed by mclust, Leiden, or Louvain, with optional spatial majority refinement.",
+    "deconvolution_extension": "A separate scRNA autoencoder and a target-specific cell-to-spot mapping matrix are jointly optimized against the entire spatial target.",
+    "warning": "GraphST does not provide a frozen biological foundation checkpoint. Its published workflow learns the representation and clusters from the target sections."
+  },
+  "implementation": {
+    "package": "GraphST",
+    "repository": "JinmiaoChenLab/GraphST",
+    "repository_revision": "d62b0b7b6cd38ee285f3ac8cd67b7341a10bcc74",
+    "source_version": "1.1.1",
+    "publication_doi": "10.1038/s41467-023-36796-3",
+    "publication_title": "Spatially informed clustering, integration, and deconvolution of spatial transcriptomics with GraphST",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "package_artifacts": {
+    "pypi_release": "1.1.1",
+    "pypi_upload_date": "2022-12-27",
+    "sdist": {"filename": "GraphST-1.1.1.tar.gz", "sha256": "8d1ab580a004ba108fd718470f069cf49446f231cdb1e53c44325175d95c75d4", "size_bytes": 22755},
+    "wheel": {"filename": "GraphST-1.1.1-py3-none-any.whl", "sha256": "3d384ac093a20cb928c6e804751b7bf3bc99c545453744098acfa392a36231f3", "size_bytes": 23287},
+    "source_alignment": "UNRESOLVED_no_receipt_binding_the_2022_package_bytes_to_the_selected_2024_repository_commit",
+    "status": "metadata_registered_packages_not_downloaded_or_installed"
+  },
+  "checkpoint_contract": {
+    "admitted_upstream_checkpoint": "none",
+    "project_trained_state": "not_created",
+    "native_export": "No immutable benchmark-ready save and strict-load contract is exposed by the selected workflow.",
+    "required_future_identity": "Every donor-fold and seed state must bind source, exact feature and graph order, preprocessing, target donors, scRNA reference if any, architecture, state dictionary, clusterer, refinement, and SHA-256."
+  },
+  "source_terms_contract": {
+    "repository_LICENSE_md": "AGPL-3.0_text_at_the_selected_commit",
+    "setup_py": "declares_MIT",
+    "pypi_metadata": "declares_MIT",
+    "conflict": "The explicit repository license and package metadata disagree. Do not infer a permissive grant from setup metadata or a PyPI field.",
+    "disposition": "UNRESOLVED_do_not_execute_adapt_or_redistribute_until_the_rightsholder_clarifies_terms_for_the_exact_selected_source"
+  },
+  "preprocessing_contract": {
+    "native_automatic_path": "If highly_variable is absent, the code normalizes total counts, log-transforms, selects highly variable genes, and scales on the supplied target AnnData.",
+    "feature_dimension": "The learned input dimension is target-derived, commonly 3,000 HVGs. A frozen model cannot accept a new gene roster without an exact mapper.",
+    "training_only_rule": "For any donor-transfer task, HVGs, normalization references, scale, feature order, and any scRNA overlap roster must be fitted inside training donors.",
+    "assay_limit": "The registered implementation names 10X, Stereo, and Slide data. CosMx and other image-based panels require a separately validated assay path rather than reuse of the 10X flag."
+  },
+  "graph_and_section_contract": {
+    "cross_donor_edges": "forbidden",
+    "construction": "Build neighbor graphs independently inside authoritative participant, core, and section boundaries and combine them block-diagonally.",
+    "native_risk": "Calling the native constructor on concatenated overlapping coordinates can create cross-section or cross-donor nearest neighbors.",
+    "memory_risk": "The 10X constructor materializes a dense all-pairs distance matrix and dense adjacency, which is not admissible for large sections without a memory-safe equivalent and numeric parity.",
+    "required_lock": "Freeze coordinate units, section boundaries, neighbor number, directed-to-symmetric conversion, self-loop and normalization policy, adjacency and graph_neigh arrays, and SHA-256.",
+    "refinement": "Optional majority refinement is a target-spatial postprocessor and must be predeclared; its neighborhood size cannot be chosen from held labels."
+  },
+  "held_donor_capability": {
+    "official_lane": "Transductive local fit on all supplied target spots. Embedding PCA, clusterer, resolution or cluster count, and optional refinement also use the target.",
+    "strict_frozen_lane": "Unsupported by the official workflow. A future adapter would require a development-frozen feature roster, graph encoder state, cluster or prediction head, and section-local query graph with no target refit.",
+    "multi_sample_integration": "Joint fitting or non-spatial alignment across target samples is transductive. Held donors cannot be pooled with each other or with training donors and called independent inference.",
+    "deconvolution": "The mapping matrix is sized to and optimized on the full target spot and reference-cell set, so it is target-specific and not inductive."
+  },
+  "selection_and_replication_contract": {
+    "cluster_count": "The official clustering API accepts a target number of clusters or searches resolution until that count is reached. The count and search rule must be frozen on development data, never read from held annotations.",
+    "labels": "Target labels cannot select epochs, graph K, PCA components, resolution, mclust model, refinement radius, deconvolution retain fraction, or seeds.",
+    "replicates": "Spots, nodes, graph edges, permuted views, clusters, and mapped cells are not biological replicates."
+  },
+  "safe_loading_contract": {
+    "native_state": "No admitted pretrained object and no complete strict export path.",
+    "required_path": "If activated, serialize tensor-only state dictionaries or safetensors plus validated JSON and canonical arrays for feature order, graph policy, PCA, clusterer, and any mapping head. Reject pickle and unrestricted torch.load.",
+    "strictness": "Require exact keys, shapes, dtypes, finite values, feature order, section block structure, and deterministic fixed-fixture output."
+  },
+  "runtime_contract": {
+    "declared_stack": "Python 3.8, PyTorch, Scanpy, AnnData, POT, scikit-learn, rpy2, and R mclust",
+    "packaging_gap": "setup.py lists only requests despite the substantially larger runtime, and no exact environment lock is registered.",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "After terms, data activation, and campaign approval only: L40S import, sparse graph parity, memory ceiling, forward, backward, state export, resume, deterministic permutation, donor block, node-order invariance, no-network, and cross-device tolerance through SLURM."
+  },
+  "source_evidence": "The Nature Communications article, official pinned GitHub source, official PyPI metadata, and Zenodo record were inspected online on 2026-08-22. The Zenodo 10.5281/zenodo.6921985 archive is DeepST V1.0.0 and is not the selected GraphST implementation. No package, archive, model, or dataset was downloaded or run.",
+  "source_records": [
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:LICENSE.md", "sha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef", "size_bytes": 34523},
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:README.md", "sha256": "e6fb465686a49d1f439a0a0ddbe71ede328a3a4c021326bc4c29a5b900265002", "size_bytes": 2235},
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:setup.py", "sha256": "20a0c3234b2960c33fb14c8496379f6f89ced838a8697f7b6bda1e498c3b55a6", "size_bytes": 2397},
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:GraphST/GraphST.py", "sha256": "2d1e033e2d759b81109c4a10993b835783880ef8823d2acb9e563f8047597f18", "size_bytes": 13280},
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:GraphST/preprocess.py", "sha256": "5959887f0045fd545011b15c4ba3ddccab7b95fbd0a62ccc2d63ffb06ce4b321", "size_bytes": 5844},
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:GraphST/model.py", "sha256": "014788892c21eccd7fdc939985079175898d7ba1e9fc90531598643b8ae88c95", "size_bytes": 7390},
+    {"identity": "JinmiaoChenLab/GraphST@d62b0b7b:GraphST/utils.py", "sha256": "3d2833cec32429c4c4cf9726130fb1d77c8a830793b5f3c7f7ed896ef70ff388", "size_bytes": 8254}
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,53 @@
+{
+  "current_task_admission": {
+    "decision": "blocked",
+    "primary_reason": "The scGPT perturbation generator flags a perturbed measured gene token, but GSE281160 holds out noncoding loci and guide pseudo-genes absent from the frozen whole-human vocabulary.",
+    "prohibited_workaround": "pad_token_nearest_gene_or_linked_gene_substitution",
+    "task_id": "perturbation_transfer"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "blocked_current_topology",
+      "reason": "A future gene-perturbation assessment requires a resolved cell-to-animal and target join, compatible species vocabulary, and no crossing of animals; the current same-study-unpaired topology fails admission."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_current_task",
+      "reason": "Noncoding variant loci and guide pseudo-genes cannot receive a valid pretrained gene-token identity. Mapping OOV identifiers to pad or substituting a linked gene invalidates held-target evaluation."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_direct_model_input_or_query",
+      "reason": "These are bulk condition and insulin intervention libraries, not single-cell gene perturbations with a matching gene-token flag."
+    }
+  },
+  "held_target_leakage_contract": {
+    "control_construction": "training_role_context_and_replicate_matched_controls_only",
+    "DE_and_preprocessing_metadata": "training_partition_only",
+    "gene_vocabulary": "freeze_before_fit_and_reject_OOV_targets",
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "perturbed_gene_retention": "force_the_valid_target_gene_into_every_train_and_inference_sequence",
+    "upstream_incidents": [
+      "the_official_tutorial_uses_GEARS_simulation_splits_not_project_grouped_replicate_and_locus_splits",
+      "global_controls_and_GEARS_DE_metadata_can_be_constructed_before_the_project_split",
+      "training_randomly_subsamples_gene_features_without_forcing_the_perturbed_gene",
+      "inference_uses_all_genes_while_tutorial_training_is_capped_at_1536_features"
+    ]
+  },
+  "representation_and_export_contract": {
+    "adapter_export": "absolute_post_perturbation_expression_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "no_pseudoreplication": "cells_guides_targets_lanes_and_expression_genes_are_not_independent_replicates",
+    "prediction_aggregation": "pseudobulk_predicted_and_observed_cells_within_biological_replicate_before_evaluator_metrics"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "conditional_on_a_valid_in_vocabulary_gene_perturbation_task_and_absolute_expression_export",
+    "centroid_accuracy": "the_evaluator_compares_each_replicate_aggregated_prediction_to_the_correct_observed_perturbation_centroid_and_all_other_eligible_test_centroids",
+    "perturbed_reference": "O_pert_is_the_unweighted_average_of_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Systema_is_evaluator_only_and_cannot_repair_an_OOV_noncoding_target"
+  },
+  "verified_date": "2026-08-22"
+}

@@ -17,7 +17,7 @@
 # benchmarks, but has the highest mean and highest worst-case AUROC across the
 # five modalities -- it generalizes where no single channel does. Per-panel
 # AUROCs are annotated in-facet; head-to-head DeLong tests (convergence vs each
-# channel) are written to fig5d_delong_pairwise.csv.
+# channel) are written to fig6_calibration_delong_pairwise.csv.
 ##############################################################################
 
 suppressPackageStartupMessages({
@@ -287,11 +287,11 @@ metrics <- rbindlist(metric_rows, use.names = TRUE)
 metrics[, auroc_label := fifelse(star == "ns",
   sprintf("%.2f ns", auroc),
   sprintf("%.2f", auroc))]
-fwrite(metrics, file.path(PANDIR, "fig5d_calibration_source.csv"))
+fwrite(metrics, file.path(PANDIR, "fig6_calibration_source.csv"))
 
 # Full channel-name lookup (used by the DeLong table); the plotted panel shows
 # only the three head-to-head scorers -- the No bulk-DE ablation is retained in
-# fig5d_delong_pairwise.csv as a circularity control, not on the main figure.
+# fig6_calibration_delong_pairwise.csv as a circularity control, not on the main figure.
 channel_names <- c(
   score_convergence_full = "Convergence",
   score_convergence_lomo_s1 = "No bulk-DE",
@@ -342,7 +342,7 @@ roc_dt[, panel_facet := factor(panel_facet, levels = facet_levels)]
 roc_dt[, channel := factor(channel, levels = unname(display_scores))]
 roc_dt[, line_label := factor(line_label,
   levels = plot_dt[order(channel), unique(line_label)])]
-fwrite(roc_dt, file.path(PANDIR, "fig5d_calibration_baselines.csv"))
+fwrite(roc_dt, file.path(PANDIR, "fig6_calibration_baselines.csv"))
 
 ## Pairwise DeLong test (correlated ROC, same observations + label vector per
 ## panel): does full-stack convergence differ from each alternative channel?
@@ -369,7 +369,7 @@ for (pn in names(panels)) {
 }
 delong <- rbindlist(delong_rows)
 delong[, delong_fdr := p.adjust(delong_p, "BH")]
-fwrite(delong, file.path(PANDIR, "fig5d_delong_pairwise.csv"))
+fwrite(delong, file.path(PANDIR, "fig6_calibration_delong_pairwise.csv"))
 
 ## Per-facet AUROC block (channels black text; legend maps colour/linetype).
 auc_annot <- plot_dt[order(panel, channel),
@@ -433,10 +433,10 @@ p5e <- ggplot(roc_dt, aes(x = fpr, y = tpr, color = channel,
         panel.spacing.x = unit(0.12, "cm"),
         plot.margin = margin(2, 3, 1, 1))
 
-ggsave(file.path(PANDIR, "fig5d_calibration.pdf"), p5e,
+ggsave(file.path(PANDIR, "fig6_calibration.pdf"), p5e,
        width = 6.63, height = 1.88, device = cairo_pdf)
 
-cat("Saved panels/fig5d_calibration.pdf + source/baseline CSVs\n\n")
+cat("Saved panels/fig6_calibration.pdf + source/baseline CSVs\n\n")
 cat("Panel coverage after alias canonicalization:\n")
 print(unique(metrics[, .(panel, n_panel_canonical, n_pos, n_missing, missing_genes)]))
 cat("\nPlotted ROC summaries:\n")

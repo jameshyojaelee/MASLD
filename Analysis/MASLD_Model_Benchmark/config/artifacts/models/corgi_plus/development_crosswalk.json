@@ -1,0 +1,63 @@
+{
+  "crosswalk_scope": {
+    "project_sources": ["resource_atlas_current", "gse244832", "gse281160", "gse281364", "gse289173", "gse296875", "current_coloc_gwas"],
+    "task_scope": ["rna_conditioned_atac"],
+    "upstream_sources": ["Corgi_102_sample_imputation_subset"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "Corgi+ was trained for RNA-to-epigenomic imputation, not on MASLD GWAS or COLOC outcomes. The family paper's GTEx eQTL demo concerns Regular Corgi, so Corgi+ has no released signed-variant scoring path.",
+      "exposure_state": "reference_only"
+    },
+    "gse244832": {
+      "evidence": "GSE244832 predates the checkpoint and exact ENCODE/FANTOM donor aliases for the 102-sample imputation subset are not checkpoint-bound. Its same-sample-different-aliquot RNA/ATAC relationship also does not satisfy a same-cell or same-nucleus local-RNA pairing claim.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "evidence": "GSE281160 became public after the byte-identical February weight. Perturb-seq was not used in Corgi-family training and Corgi+ has no perturbation objective.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "evidence": "GSE281364 became public after the byte-identical February weight and is absent from the declared Corgi-family corpus. It is not a topology-valid Corgi+ training source.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "evidence": "Corgi+ training targets contain no MASLD labels, donor eQTLs or interaction-eQTL effects. Exact upstream sample aliases remain incomplete, so label exposure is provisionally excluded with medium confidence. The sealed source does not currently expose the full stranded local-RNA plus baseline input bundle required by the released design.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 is not one of the two named healthy 10x multiome sources and is absent from the declared 102-sample imputation subset. Its same-nucleus RNA/ATAC can support development only if alignment-derived stranded local RNA is available; a UMI gene-count matrix is insufficient.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "resource_atlas_current": {
+      "evidence": "No Atlas MASLD labels or frozen programs were Corgi+ targets. Atlas UMI pseudobulk can supply global trans-regulator context, but it does not supply the local stranded total-RNA coverage required by final Corgi+ unless aligned reads are available and processed.",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "interpretation": "Corgi+ has the strongest conceptual fit to RNA-conditioned accessibility but the released object is not currently executable or input-complete for project data. Contamination is not the main blocker: checkpoint mode, loader, mean baseline, local RNA coverage and exact transforms are unresolved.",
+  "missingness_rules": {
+    "gene_counts": "Do not reinterpret gene-level UMI counts as 64-bp stranded total-RNA coverage.",
+    "local_rna": "Use observed only when alignment-derived coverage is available; otherwise use derivable_not_processed, structurally_missing or unavailable_permission as appropriate.",
+    "mean_baseline": "Compute inside each training fold and mask unavailable assay-context combinations. Never compute from held donors or the sealed source.",
+    "pairing": "GSE296875 is same-nucleus RNA-ATAC. GSE244832 is same-sample-different-aliquot and supports donor-compatible comparison only."
+  },
+  "rules": {
+    "checkpoint_chronology": "Use the February 2026 object date because the June paper archive repeats identical size and MD5.",
+    "genome_overlap": "The upstream imputation model used all 14395 Corgi windows. Local project adaptation must cross donors with held chromosome/LD blocks and a 524288-bp boundary buffer.",
+    "sealed_rule": "Do not synthesize, tune or recalibrate a Corgi+ input path after GSE289173 labels or QTL outcomes are opened.",
+    "target_mask": "RNA supplied as input cannot be scored as an independently predicted output. Restrict the primary track to ATAC/accessibility and other non-input epigenomic channels."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "manifest_status": "NOT_CHECKPOINT_BOUND",
+    "samples": {"test": 14, "train": 71, "validation": 17},
+    "source_scope": "subset of Corgi contexts with total RNA, DNase and at least one histone assay"
+  },
+  "verified_date": "2026-08-22"
+}

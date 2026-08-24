@@ -1,0 +1,169 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "The only registered MASLD source matching SpatialMETA's spatial-transcriptomics plus spatial-metabolomics design is controlled, adjacent-section HRA007511, and implementation, patent, vendored-code, asset, join, and derivative-weight rights are unresolved.",
+    "v1_training": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "cross_sample_cross_modal_conditional_variational_autoencoder_for_spatial_transcriptomics_and_metabolomics",
+    "native_modalities": {
+      "spatial_metabolomics": "MALDI_or_DESI_metabolite_intensity_matrix_with_coordinates",
+      "spatial_transcriptomics": "Visium_like_gene_count_matrix_with_coordinates_and_optional_histology"
+    },
+    "registration": "Rotation, translation, scale, optional nonlinear distortion, and optional diffeomorphic refinement align the modalities before K-nearest-neighbor reassignment to a common resolution.",
+    "cross_modal_assignment": "The published workflow maps nearby spatial-metabolomics observations to spatial-transcriptomic spots and aggregates intensities; this is a derived registered estimate, not a same-section measurement.",
+    "latent_model": "Batch-invariant encoders and batch-conditioned decoders learn shared and modality-specific latent factors.",
+    "likelihoods": {
+      "spatial_metabolite_intensities": "Gaussian_or_zero_inflated_Gaussian",
+      "spatial_RNA_counts": "zero_inflated_negative_binomial"
+    },
+    "modality_warning": "RNA count and metabolite intensity likelihoods are assay-specific. Never port the count likelihood or its effect scale to MALDI intensities merely because the software accepts a matrix."
+  },
+  "implementation": {
+    "package": "spatialMETA",
+    "repository_aliases": [
+      "WanluLiuLab/SpatialMETA",
+      "RuonanTian/SpatialMETA"
+    ],
+    "repository_revision": "909844e03c2ddffa331e8c45212830f8ffc85553",
+    "release_version": "0.0.3.0",
+    "publication_archive_doi": "10.5281/zenodo.16750012",
+    "publication_archive_version": "SpatialMETA-0.0.3.zip",
+    "publication_doi": "10.1038/s41467-025-63915-z",
+    "publication_title": "Integrating cross-sample and cross-modal data for spatial transcriptomics and metabolomics with SpatialMETA",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "package_artifacts": {
+    "pypi_release": "0.0.3.0",
+    "wheel": {
+      "filename": "spatialMETA-0.0.3.0-py3-none-any.whl",
+      "sha256": "a2327e9ff845a7a88acc7d9929f6a41a3cdb49c0a84b89f63705b5c099ef001c",
+      "size_bytes": 12651393
+    },
+    "zenodo_archive": {
+      "filename": "SpatialMETA-0.0.3.zip",
+      "md5_reported_by_zenodo": "e6e19b60958fb428c504c84639937717",
+      "sha256": "UNRESOLVED_archive_not_downloaded",
+      "size": "57.2_MB_reported",
+      "software_heritage_directory": "swh:1:dir:04358f84fb30c4ac93e7c049bfeef140062b5983"
+    },
+    "status": "metadata_registered_packages_not_downloaded_or_installed"
+  },
+  "checkpoint_contract": {
+    "admitted_upstream_biological_checkpoint": "none",
+    "implementation_type": "train_locally",
+    "trained_artifact_sha256": "UNRESOLVED_no_project_model_has_been_trained",
+    "rule": "Every future donor-fold and seed produces a new state-dict identity bound to exact registration, reassignment, feature, scaler, batch-category, and training-donor receipts."
+  },
+  "registration_and_reassignment_contract": {
+    "adjacent_section_semantics": "A registered value from an adjacent MALDI section remains a derived adjacent-section estimate with registration uncertainty. It is never relabeled as observed on the transcriptomic section.",
+    "default_reassignment_observed_in_source": "K_nearest_neighbors_5_with_distance_threshold_1.5_times_minimum_distance",
+    "freeze_before_use": "Lock the registration inputs, coordinate units, landmarks or outlines, affine and nonlinear stages, objective, initialization, iteration schedule, interpolation, K, distance threshold, aggregation, unmapped policy, and transform SHA-256.",
+    "circularity_guard": "If cross-modal recovery is evaluated, do not optimize registration on the same gene or metabolite signals used as evaluation truth. Use outcome-independent outline or histology registration, or a predeclared disjoint alignment-feature and evaluation-feature split.",
+    "manual_registration": "Manual landmarks or parameter choices informed by disease stage, model residuals, or held outcomes are prohibited.",
+    "spatial_feature_selection": "Spatially variable gene and metabolite selection, including any spatial-neighbor or Moran-statistic calculation, is fitted inside training donors only."
+  },
+  "held_donor_capability": {
+    "frozen_encoder_lane": "Potentially supported after implementation: apply fixed feature orders, scaling, encoder weights, and registration rules to a new donor. The frozen latent encoder must not require a new learned donor category.",
+    "batch_conditioned_decoder_limit": "The native decoder conditions on training-defined batch categories and is not automatically inductive for an unseen donor category. A fixed neutral or reference policy must be predeclared or decoder evaluation is ineligible.",
+    "query_registration": "Computing a transform and KNN reassignment from a held donor's unlabeled images or coordinates is query-specific transductive preprocessing, even when model weights remain frozen.",
+    "query_adaptation": "Any held-feature fine-tuning, re-estimation of scaling or spatial features, or addition of a donor batch embedding is a separately reported query-adaptive lane, not zero-shot.",
+    "split_rule": "All sections, modalities, registrations, cores, and aliquots from one participant stay in one outer fold."
+  },
+  "input_and_missingness_contract": {
+    "feature_rosters": "Freeze training-derived gene and metabolite identifiers, order, normalization, and mapping. Unmeasured features remain missing or out of domain, not zero.",
+    "pairing": "Record same_section, adjacent_section, same_sample_different_aliquot, or same_study_unpaired exactly. Registration does not upgrade topology.",
+    "RNA": "Preserve raw-count provenance and library-size semantics required by the RNA likelihood.",
+    "metabolites": "Preserve intensity scale, preprocessing, peak annotation confidence, ion mode, and below-detection status required by the metabolite likelihood.",
+    "unpaired_data": "Use only modes the pinned implementation natively supports and label any imputation or cross-modal prediction as derived_not_observed."
+  },
+  "safe_loading_contract": {
+    "core_model": "The inspected core exposes an in-memory trained_state_dict but does not provide a complete immutable project-ready checkpoint and loader contract.",
+    "optional_vendored_paths": "Vendored optional modules include unrestricted torch.load calls. They and all external pretrained objects are prohibited unless separately pinned, terms-cleared, isolated, and converted to a tensor-only format.",
+    "required_project_path": "Serialize only a validated tensor state dictionary or safetensors plus schema-validated JSON. Require exact keys, shapes, dtypes, finite values, feature order, batch categories, likelihood configuration, transform hashes, and strict restoration with no network access."
+  },
+  "runtime_contract": {
+    "declared_python": "3.9",
+    "selected_declared_packages": {
+      "anndata": "0.8.0",
+      "numpy": "1.21.6",
+      "scanpy": "1.8.1",
+      "scipy": "1.10.0",
+      "torch": "2.2.2",
+      "torchvision": "0.17.2"
+    },
+    "inconsistency": "scikit-learn is 0.24.1 in setup.py but 1.5.0 in the repository requirements and environment declarations.",
+    "environment_status": "UNRESOLVED_conflicting_and_incomplete_lock",
+    "required_probe": "After rights clearance, activation, and campaign approval only: isolated L40S import, registration fixture, assay-native likelihood fixture, forward, backward, state-dict round-trip, resume, deterministic seed, donor block, no-network, and cross-device tolerance probes through SLURM."
+  },
+  "terms_and_release_contract": {
+    "top_level_code": "BSD-3-Clause is present at the pinned repository revision and is reported by the paper.",
+    "patent": "The paper reports Chinese patent application 2025110969999 covering the SpatialMETA algorithm. The BSD-3-Clause text has no explicit patent grant; institutional review is required before adaptation or open release.",
+    "vendored_stalign": "SpatialMETA identifies its alignment model as modified from STalign. Upstream JEFworks-Lab/STalign is GPL-3.0, while the inspected SpatialMETA tree presents a top-level BSD license and no clear per-file GPL notice for the vendored modified copy. Exact reuse and redistribution obligations are unresolved.",
+    "vendored_taming_transformers": "Vendored code derived from taming-transformers requires provenance and license-notice verification even though upstream is described as MIT.",
+    "hmdb_table": "The repository includes a large HMDB-derived table. HMDB data terms and redistribution are independent of the source-code license; the table is prohibited unless separately audited and is not required for the core integration comparison.",
+    "training_data_and_weights": "A locally trained model can be redistributed only if every spatial RNA, image, metabolite, annotation, registration, and derived-weight term permits it.",
+    "open_champion": "ineligible while patent, vendored-code, asset, dataset, and derivative-weight terms remain unresolved"
+  },
+  "source_evidence": "The Nature Communications article and supplement, official Zenodo record, official PyPI metadata, pinned GitHub source, upstream STalign repository, and referenced license files were inspected online on 2026-08-22. No archive, package, checkpoint, data asset, or code was downloaded, installed, or executed.",
+  "source_records": [
+    {
+      "identity": "SpatialMETA@909844e0:LICENSE",
+      "sha256": "a9dec521d24977f054128f72bb322f1ff108aa8273befa943db66011888d43cc",
+      "size_bytes": 1525
+    },
+    {
+      "identity": "SpatialMETA@909844e0:README.md",
+      "sha256": "97b8fec38c51e1306ff37aab889eaa0b78361df216a9db3417ed7551e84b18e3",
+      "size_bytes": 998
+    },
+    {
+      "identity": "SpatialMETA@909844e0:setup.py",
+      "sha256": "120c29d37612d0055022dee90182006e417188c70b737c2c238bc94f9c4a292f",
+      "size_bytes": 1898
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/_version.py",
+      "sha256": "2f28d607d7bfa63df456a0066ebb95d37b876d8d273c2dda3b6c3170c131ec5d",
+      "size_bytes": 19
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/environment.yml",
+      "sha256": "19f638f8aa7ebc37c506e63f3adb694f80a468c0bf60e4a78949ba262e3077c0",
+      "size_bytes": 1327
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/requirements.txt",
+      "sha256": "34a09e7f9fdc877354eff67403d4fb46fc91075d03fc1ac363bc11744df1119c",
+      "size_bytes": 831
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/model/_model.py",
+      "sha256": "a657fd4da828882e56f422d26d93c72677b7b5a5d637b4196be788a167ec00ed",
+      "size_bytes": 35726
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/model/_alignment_model.py",
+      "sha256": "8f27af7cf09d436ea12b54c585380a1d1ce8c50fb4fd04051f8b15142b04dde4",
+      "size_bytes": 72441
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/model/_alignment_module.py",
+      "sha256": "83997da89855a22677c8d3e0b02cd403f7ca3762d35776ce371f06fd08f78852",
+      "size_bytes": 64391
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/preprocess/_preprocess.py",
+      "sha256": "30516f55fb5bdcd1e888a1ec590ab2a31d8f9981d2f71d8a0dfc85034bf88ce5",
+      "size_bytes": 60164
+    },
+    {
+      "identity": "SpatialMETA@909844e0:spatialmeta/external/stalign/STalign.py",
+      "sha256": "7d62bb9ef6bf9b40104d9dc4361dc881eb9715eb2d5546d4b68b98f5e19aa6ae",
+      "size_bytes": 72688
+    }
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

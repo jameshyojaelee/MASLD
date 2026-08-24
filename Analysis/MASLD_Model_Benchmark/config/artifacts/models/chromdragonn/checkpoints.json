@@ -1,0 +1,124 @@
+{
+  "architecture_contract": {
+    "stage1": {
+      "context": "sequence_only",
+      "input_length_bp": 1000,
+      "model": "residual_convolutional_network",
+      "output": "one_binary_accessibility_logit_per_training_context",
+      "role": "learn_cis_sequence_features_across_outer_training_contexts"
+    },
+    "stage2": {
+      "context": "sequence_representation_plus_1630_TF_expression_values_plus_optional_training_context_mean_accessibility",
+      "hidden_layers": [1000, 1000],
+      "model": "two_stage_cis_trans_classifier",
+      "released_code_output": "two_class_log_softmax",
+      "role": "predict_open_or_closed_state_for_one_locus_and_one_held_context"
+    },
+    "warning": "The paper describes a one-output logistic probability, while the pinned stage-2 source returns two-class log-softmax values. The code output and open-class index require a fixed parity fixture."
+  },
+  "implementation": {
+    "checkpoint_policy": "No upstream assay checkpoint is admitted or supplied by the official repository or Zenodo data record. Train stage 1 and stage 2 independently inside every outer donor, genomic-block, and seed partition, then hash each project artifact.",
+    "implementation_type": "train_locally",
+    "publication_doi": "10.1093/bioinformatics/btz352",
+    "repository": "kundajelab/ChromDragoNN",
+    "repository_revision": "d4a4504a06ac0beba68da031d3ae1265ed14069f",
+    "upstream_checkpoint": "NOT_APPLICABLE"
+  },
+  "input_contract": {
+    "accessibility_label": "Binary open or closed label for a 200-bp genomic bin sampled every 50 bp; the original paper labels a bin open when it overlaps a reproducible DNase peak by more than 50 percent.",
+    "canonical_sequence": "1000-bp GRCh38.p14 one-hot sequence centered on the scored bin or variant, with explicit coordinates and REF matching",
+    "context_expression": "Donor-by-cell-state pseudobulk expression mapped to an ordered 1630-TF vector inside each training fold",
+    "context_normalization_discrepancy": "The paper reports log(TPM); the repository README and preprocessing docstring report arcsinh(TPM); the preprocessing script itself accepts already normalized values without transforming them. Exact upstream parity is unresolved. Project mappers compare prespecified training-only transformations and freeze one without held outcomes.",
+    "mean_accessibility_option": "Optional scalar locus mean computed only across outer-training donor-contexts. It is not observed held-donor ATAC and may not include validation, test, or sealed data.",
+    "missingness": "RNA context is required for stage 2. Missing, below-QC, or join-unresolved expression is masked and makes that prediction ineligible; it is never encoded as a zero vector.",
+    "pairing": "GSE296875 training uses donor-by-cell-state same-nucleus RNA/ATAC pseudobulk summaries. Individual nuclei are not biological replicates.",
+    "preprocessing_warning": "The released accessibility script subtracts one from both input coordinates before FASTA slicing although the documented table does not define its coordinate system. Do not reuse this path until a fixed offset fixture resolves it; project BED remains 0-based half-open."
+  },
+  "local_artifact_contract": {
+    "required_artifacts_per_fold_and_seed": [
+      "training_donor_and_context_roster",
+      "training_genomic_and_LD_block_roster",
+      "ordered_1630_TF_crosswalk_and_normalization_mapper",
+      "binary_label_and_negative_sampling_manifest",
+      "training_only_locus_mean_if_enabled",
+      "stage1_tensor_manifest_and_SHA256",
+      "stage2_tensor_manifest_and_SHA256",
+      "optimizer_resume_receipt",
+      "prediction_bundle_and_SHA256"
+    ],
+    "seeds": [11, 29, 47, 71, 101],
+    "stage1_checkpoint_sha256": "PROJECT_ARTIFACT_UNRESOLVED",
+    "stage2_checkpoint_sha256": "PROJECT_ARTIFACT_UNRESOLVED"
+  },
+  "output_contract": {
+    "assay_native_unit": "probability_that_a_prespecified_genomic_bin_is_accessible_in_one_expression_context",
+    "continuous_ATAC_count": false,
+    "multinomial_profile": false,
+    "nucleotide_resolution_profile": false,
+    "open_class_index": "UNRESOLVED_until_source_fixture",
+    "primary_task_limit": "Binary region probabilities cannot be scored as conditional multinomial/profile deviance without changing the head and loss. A profile/count derivative is a separately named model, not native ChromDragoNN."
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "original_annotation": "GENCODE_release_19_GRCh37.p13",
+    "original_genome": "GRCh37",
+    "original_TF_source": "FANTOM5_hg19_curated_1630_putative_TFs",
+    "reference_rule": "This is a local retraining, not use of original weights. Train on project GRCh38.p14 sequence and freeze a one-to-one GENCODE v49 crosswalk for the ordered 1630-TF context; reject ambiguous, missing, or duplicated genes rather than silently reordering them."
+  },
+  "runtime_contract": {
+    "declared_environment": "UNDECLARED",
+    "environment_status": "UNRESOLVED_LEGACY_RUNTIME_OR_VALIDATED_PORT_REQUIRED",
+    "framework": "PyTorch_version_unpinned",
+    "required_probe": "isolated_L40S_import_preprocess_forward_backward_checkpoint_resume_deterministic_seed_reverse_complement_and_cross_device_tolerance",
+    "source_compatibility_warning": "Pinned source uses legacy Variable patterns, unrestricted torch.load/joblib.load, and the removed cuda(async=True) syntax. Current Python cannot import those files unchanged."
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "original_data_downloaded": false,
+    "project_artifact_rule": "Never deserialize an upstream or user-supplied joblib or PyTorch pickle. For project-owned training artifacts, bind source run, path, size, SHA-256, state keys, shapes, and dtypes before restore; keep optimizer/resume state separate from the inference tensor bundle where the approved runtime permits.",
+    "source_risks": "The released pipeline uses joblib.load and unrestricted torch.load on files that can construct Python objects. The official Zenodo record contains data, not an admitted checkpoint, and is not needed for project training.",
+    "strict_restore": "Instantiate the exact frozen architecture from trusted local source, consume every expected tensor exactly once, and reject missing, surplus, nonfinite, or shape-mismatched values."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The Bioinformatics article, pinned official repository, and immutable Zenodo 2635744 metadata were queried on 2026-08-22. Source was inspected without executing model code, downloading data or weights, installing packages, or submitting jobs.",
+  "source_records": [
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:README.md", "sha256": "1229ec95faa85383ec657a25c22c4cee797bf3075570819e4cfcd2548b4967c9", "size_bytes": 4696},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:LICENSE", "sha256": "eee7b4d55be619630ce91024410485d25226c387e72315b83712a8dbf89188ef", "size_bytes": 1068},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:model_zoo/stage1/resnet.py", "sha256": "6251837e61cd378bcaec8ab031fabe3603f29aa9c662d607827064bc51ed15b9", "size_bytes": 7564},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:model_zoo/stage2/simple.py", "sha256": "a00bd8a279fe314909e1399672cc13f1c7fb67b9d9ba868bfa3f4515273eff63", "size_bytes": 2581},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:utils/fetch_global_args.py", "sha256": "7a579f8d28f5badd9a8e534b4d25cb2c5ffab2936bffaa34722768f8de93a128", "size_bytes": 5551},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:utils/data_iterator.py", "sha256": "a972f61ccbecb1e9d963038bb8c87c2b64318ca590b1165f18f0a8f79312d024", "size_bytes": 26897},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:preprocess/make_accessibility_joblib.py", "sha256": "3873aff6701442144380bf4aa411877d34e7dd68a45a8cd991ca5ab0c9615f7f", "size_bytes": 2978},
+    {"identity": "kundajelab/ChromDragoNN@d4a4504a:preprocess/make_rna_joblib.py", "sha256": "d8a3fb9d42f7915815318446efc0c799db14091292b905e8cd277864147384b5", "size_bytes": 1573}
+  ],
+  "task_fit": {
+    "allele_effect": "conditional_ALT_minus_REF_change_in_binary_open_probability_after_a_project_model_is_trained",
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "supported_only_as_secondary_binary_region_accessibility_classification; not_supported_for_the_primary_profile_deviance_endpoint",
+    "signed_eqtl_ieqtl": "not_standalone; requires a separately frozen enhancer_gene_link_and_expression_direction_model",
+    "variant_to_regulation": "eligible_only_as_a_context_conditioned_accessibility_component_not_a_complete_signed_gene_effect_model"
+  },
+  "terms_audit": {
+    "code_license": "MIT",
+    "derivative_weight_redistribution": "permitted_subject_to_MIT_notice_and_the_terms_of_project_training_inputs",
+    "original_Zenodo_data_license": "MIT_but_original_data_are_not_required_or_admitted",
+    "result": "terms_pass_for_local_code_adaptation"
+  },
+  "training_and_split_contract": {
+    "held_donor": "All preprocessing, TF mapping, normalization, mean accessibility, peak/background construction, early stopping, calibration, and stage1/stage2 fitting use outer-training donors only.",
+    "held_locus": "Cross donor folds with merged chromosome/LD blocks and a 1000-bp boundary buffer. Any local stage1 pretraining uses only the same permitted training blocks.",
+    "native_split_limit": "Released code supports holding out either cell types or chromosomes, not their cross-product, and the paper's reported five-fold evaluation held cellular contexts rather than biological donors. A project split adapter is mandatory.",
+    "replication_unit": "biological_donor",
+    "reverse_complement": "Average forward and reverse-complement open probabilities after restoring allele and sequence orientation; require an equivariance fixture."
+  },
+  "variant_scoring_contract": {
+    "context": "Observed donor-by-cell-state RNA pseudobulk is permitted at inference; target-donor ATAC is not.",
+    "primary_score": "ALT_minus_REF_open_probability_for_the_same_1000_bp_window_context_and_training_fold",
+    "profile_claim": "forbidden",
+    "variant_to_gene_limit": "ChromDragoNN does not predict enhancer-gene links or gene-expression direction. Any composite score is a separate frozen model."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

@@ -1,0 +1,58 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse281367", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["future_development_only_atac_topic_diagnostics"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Training-partition ATAC topic diagnostics only after dataset activation and a separate TaskSpec. RNA and ATAC are same-sample different aliquots and may be compared only at donor-compatible resolution.",
+      "dataset_registry_exposure": "downstream_demo",
+      "model_exposure_by_outer_role": {
+        "held_role": "target_label_unexposed",
+        "training_role": "continual_seen"
+      },
+      "model_access": "Never create cell-to-cell RNA-ATAC pairs. A checkpoint fitted on GSE244832 cells cannot be scored as an external GSE244832 model."
+    },
+    "gse281367": {
+      "allowed_use": "Training-partition ATAC topic diagnostics after the donor, native-reference, peak-coordinate, fragment-convention, and TaskSpec gates pass.",
+      "dataset_registry_exposure": "downstream_demo",
+      "model_exposure_by_outer_role": {
+        "held_role": "target_label_unexposed",
+        "training_role": "continual_seen"
+      },
+      "model_access": "The source is ATAC-only and has 12 donors. Cells are not replicates; labels, peak filtering, and topic selection remain donor-grouped and training-only."
+    },
+    "gse289173": {
+      "allowed_use": "None under current cisTopic routes because the sealed feature universe is snRNA plus evaluator-only eQTL/ieQTL summaries, with no observed ATAC matrix.",
+      "dataset_registry_exposure": "target_label_unexposed",
+      "model_exposure_by_outer_role": {
+        "sealed_role": "target_label_unexposed"
+      },
+      "model_access": "No sealed features or outcomes. Modality incompatibility and lack of an inductive query transform are independently terminal."
+    },
+    "gse296875": {
+      "allowed_use": "Training-partition same-nucleus ATAC topic diagnostics after donor/well/reference/peak/QC/missingness authorities pass.",
+      "dataset_registry_exposure": "downstream_demo",
+      "model_exposure_by_outer_role": {
+        "held_role": "target_label_unexposed",
+        "training_role": "continual_seen"
+      },
+      "model_access": "Only outer-training donors may define regions, filtering, LDA topics, model selection, labels, or projections. The pinned cisTopic release cannot transform held nuclei, so held-donor scoring is unavailable."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_trained_per_outer_fold_seed_topic_count_and_training_only_region_inventory",
+    "missingness": "Unassayed, failed-QC, permission-blocked, or unmapped regions remain explicit missingness. A binary zero is allowed only for an assayed frozen region with measured count below the accessibility threshold.",
+    "pretraining_corpus": "none",
+    "upstream_checkpoint": "none"
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units. Cells, nuclei, regions, wells, and model topics are not biological replicates.",
+    "local_training": "Each fit is continual_seen only for its declared outer-training rows. It is target-label-unexposed for a held source only when no row, label, peak definition, or tuning signal from that source entered the fit.",
+    "pairing": "GSE296875 is same-nucleus. GSE244832 is same-sample different aliquot and never cell-paired.",
+    "query_mapping": "The pinned release has no inductive transform. Joint fitting or refitting on held or sealed cells is model fitting and is prohibited."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

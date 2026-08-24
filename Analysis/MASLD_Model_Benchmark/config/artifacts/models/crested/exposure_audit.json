@@ -1,0 +1,58 @@
+{
+  "audit_scope": {
+    "checkpoint": "CREsted_DeepLiver_accessibility_Keras3_port",
+    "development_sources": ["gse281364", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "checkpoint_findings": {
+    "registered_crested_port": {
+      "checkpoint_identity": "aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:deepliver_accessibility.tar.gz sha256 8a3ddcfa29effa9e979eae769fbfc6a362de90197434a630015dccca9fecb34c size 45469771",
+      "corpus": "219823 mm10 mouse liver accessible regions labeled by 82 pycisTopic regulatory topics",
+      "conversion_parity": "approximate_correlation_above_0.99_not_exact",
+      "exposure_confidence": "high",
+      "exposure_state": "target_label_unexposed"
+    },
+    "original_tensorflow1_checkpoint": {
+      "checkpoint_identity": "Zenodo 8139953 DeepLiver_Accessibility.hdf5 size 147011592 md5 b26d8290f5205ad25ecf9a5f54fc4073 plus architecture JSON md5 d83414502531ac59401a3fdc478e6e20",
+      "corpus": "same_mouse_liver_topic_training_source",
+      "exposure_state": "target_label_unexposed",
+      "status": "not_required_for_v1"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "mouse_liver_cross_species_diagnostic_sources",
+    "sha256": "144a9121bef48d964c551de9186db3c91b8f2cbf31354e12e9b94a77d38148f3"
+  },
+  "input_eligibility": {
+    "gse281364": "Ineligible for active inference. Human HepG2 and LX-2 REF or ALT sequences are outside the mm10 training and 82-topic output contract; liftover cannot repair species or endpoint mismatch.",
+    "gse289173": "Ineligible for sealed inference. The checkpoint has no GRCh38 path, donor context, enhancer-gene link, expression direction, or signed human QTL output.",
+    "gse296875": "Ineligible for RNA-conditioned ATAC. DeepLiver consumes only 500-bp mouse sequence and predicts topic membership rather than an ATAC profile or count.",
+    "observed_context_requirement": "none_supported"
+  },
+  "interpretation": "DeepLiver's registered port predates GSE289173 and is target-label-unexposed, but it is scientifically inapplicable to the primary tasks. It is a restricted mm10 mouse-liver topic classifier with approximate, not exact, native-to-Keras parity. The model remains deferred as a possible cross-species mechanistic diagnostic only.",
+  "license_disposition": {
+    "converted_archive": "no_separate_terms_located",
+    "crested_code": "internal_academic_noncommercial_nontransferable_no_unapproved_modification_or_derivatives",
+    "original_deepliver": "other_noncommercial_Zenodo_record_and_restrictive_internal_academic_LICENSE",
+    "open_champion_eligibility": "ineligible_restricted_terms_and_wrong_task_domain"
+  },
+  "remaining_blockers": [
+    "Keep DeepLiver inactive in v1; no current human signed-variant or RNA-conditioned ATAC endpoint accepts its native species and output.",
+    "If a future cross-species diagnostic is scientifically prespecified, obtain permission covering CREsted use and the converted weight archive before acquisition or execution.",
+    "Resolve separate converted-archive terms and freeze the exact 82 output names and their biological topic definitions.",
+    "Recover a checkpoint-producing conversion receipt and fixed native TensorFlow 1 versus Keras 3 numeric comparison; correlation above 0.99 is insufficient for exact signed differences.",
+    "After approval, verify archive SHA-256 and size, inventory tar members safely, inspect Keras configuration and custom objects, and require strict restoration without runtime network access.",
+    "Prespecify homolog and ortholog mapping independently of outcomes and state explicitly that liftover does not create a human model.",
+    "Do not interpret mouse topic-score deltas as human cell-type eQTL or ieQTL effects, enhancer-gene links, or donor-conditioned accessibility."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_wrong_species_reference_context_and_output_plus_restricted_terms",
+  "task_disposition": {
+    "rna_conditioned_atac_primary": "ineligible",
+    "signed_variant_primary": "ineligible",
+    "variant_to_regulation_secondary": "deferred_cross_species_mouse_topic_diagnostic_only"
+  },
+  "verified_date": "2026-08-22"
+}

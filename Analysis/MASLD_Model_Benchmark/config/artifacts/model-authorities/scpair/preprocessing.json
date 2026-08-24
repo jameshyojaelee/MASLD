@@ -1,0 +1,59 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "preprocessing",
+  "model_ids": ["scpair"],
+  "task_id": "rna_conditioned_atac",
+  "dataset_view_id": "gse296875_rna_atac_smoke_1000_v1",
+  "scope": "retrospective_smoke_only",
+  "unit_of_inference": "donor",
+  "pairing_level": "same_nucleus",
+  "split": {
+    "entity": "donor",
+    "outer_folds": 5,
+    "seed": 20260821,
+    "all_modalities_one_fold": true
+  },
+  "inner_validation": {
+    "entity": "donor",
+    "fraction": 0.2,
+    "seed": 20260823,
+    "metric": "binary_cross_entropy",
+    "query_donors_excluded": true
+  },
+  "architecture": {
+    "upstream_revision": "52d1ca1e26c8127b2023f3d80cfd1c140a0ea80a",
+    "hidden_layers": [900, 40],
+    "dropout_rate": 0.1,
+    "normalization": "layer_norm",
+    "activation": "leaky_relu",
+    "atac_likelihood": "bernoulli",
+    "training_loss": "binary_cross_entropy_on_output_result",
+    "primary_prediction": "output_px_before_source_RNA_library_scaling"
+  },
+  "rna": {
+    "input": "raw_nonnegative_UMI_counts",
+    "selection": "2000_outer_training_HVGs",
+    "query_transform": "training_frozen_gene_order_and_log1p_counts_per_10000"
+  },
+  "atac": {
+    "training_target": "binary_accessibility",
+    "smoke_peak_universe": "2000 peaks selected by SHA-256 ranking of stable source identifiers",
+    "query_status": "withheld_sealed",
+    "query_tensor_created": false,
+    "output_profile": "donor_lineage_mean_output_px_row_normalized_with_1e-8_pseudocount"
+  },
+  "held_atac_firewall": "prepare exports paired outer-training RNA and binary ATAC plus query RNA only; fit and predict cannot access the source HDF5 or query ATAC",
+  "safe_loading": "project-controlled tensor-only state_dict restored with weights_only=true and exact key-shape-dtype manifest",
+  "query_composition_policy": "fixed inference batch size one; no query-fitted state",
+  "missingness": {
+    "query_rna": "observed",
+    "query_atac": "withheld_sealed",
+    "missing_encoded_as_zero": false
+  },
+  "champion_claim_allowed": false,
+  "champion_blockers": [
+    "The smoke peak inventory was discovered in the source study using all donors.",
+    "No eligible external RNA-ATAC seal is active."
+  ],
+  "adapter_sha256": "750e4b2a7eef827f399fac560f714d0d9d6a7a1dc96ebe045870409d3e2a52e7"
+}

@@ -1,0 +1,168 @@
+{
+  "architecture_contract": {
+    "convolutional_blocks_including_stem": 7,
+    "human_output_tracks": 5313,
+    "input_length_bp": 196608,
+    "model_family": "convolutional_tower_plus_relative_position_transformer",
+    "mouse_output_tracks": 1643,
+    "output_activation": "softplus",
+    "output_bins": 896,
+    "output_resolution_bp": 128,
+    "predicted_central_span_bp": 114688,
+    "transformer_blocks": 11,
+    "transformer_heads": 8,
+    "warning": "The retired TFHub wrapper accepted 393216 bp and internally cropped to the central 196608 bp. The released Sonnet architecture and CREsted port accept 196608 bp directly. These input contracts must not be interchanged."
+  },
+  "input_contract": {
+    "allele_checks": "Require normalized biallelic variants, GRCh38.p14 REF matching, explicit VCF 1-based and BED 0-based-half-open conventions, and fixed window anchoring before sequence extraction.",
+    "canonical_tensor": "float32 one-hot DNA in A,C,G,T order; N is four zeros",
+    "donor_or_cell_context": "none",
+    "observed_atac_required": false,
+    "reverse_complement": "Restore genomic orientation and the released strand-paired target order before averaging.",
+    "sequence_window": "196608_bp_centered_on_the_prespecified_variant_or_target_anchor",
+    "window_boundary_rule": "Use an explicit N-padding mask near contig boundaries and a held-block boundary buffer of at least 196608 bp."
+  },
+  "native_checkpoint": {
+    "checkpoint_objects": [
+      {
+        "crc32c_base64": "swSMdg==",
+        "gcs_generation": "1653413781220972",
+        "md5": "f17ec4d6b36c8043f26e9a132700ebc5",
+        "name": "models/enformer/sonnet_weights/checkpoint",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 111
+      },
+      {
+        "crc32c_base64": "wauYkA==",
+        "gcs_generation": "1653414053766013",
+        "md5": "7c2d13d5391195387bb7cea11763e312",
+        "name": "models/enformer/sonnet_weights/enformer-fine-tuned-human-1.data-00000-of-00001",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 1005199965
+      },
+      {
+        "crc32c_base64": "SeMxoQ==",
+        "gcs_generation": "1653414056026643",
+        "md5": "6c6337fde7a3232130253f1bc2e1cade",
+        "name": "models/enformer/sonnet_weights/enformer-fine-tuned-human-1.index",
+        "sha256": "UNRESOLVED",
+        "size_bytes": 5800
+      }
+    ],
+    "code_repository": "google-deepmind/deepmind-research",
+    "code_revision": "f5de0ede8430809180254ee957abf36ed62579ef",
+    "format": "TensorFlow_v2_checkpoint",
+    "immutable_identity": "GCS object generations plus size and MD5; SHA-256 remains unresolved until an approved acquisition",
+    "object_creation_date": "2022-05-24",
+    "restore_prefix": "enformer-fine-tuned-human-1",
+    "status": "official_native_checkpoint_available_but_not_yet_admitted",
+    "tfhub_endpoint_status": "https://tfhub.dev/deepmind/enformer/1 returned HTTP 404 on 2026-08-22"
+  },
+  "native_vs_converted_parity": {
+    "admission_rule": "The CREsted archive is a separately identified conversion, not a byte-equivalent Enformer checkpoint. It cannot stand in for native Sonnet until fixed fixtures reproduce all 5313 human tracks, internal crop alignment, strand handling, and ALT-minus-REF scores within frozen absolute and relative tolerances.",
+    "conversion_provenance": "CREsted documentation states that architecture and weights were ported, but the pinned repository does not contain the checkpoint-producing conversion script or a native-versus-converted numeric report.",
+    "fixture_roster": [
+      "all-A and mixed-N boundary sequences",
+      "forward and reverse-complement primary-contig windows",
+      "known REF and ALT SNVs in central and edge output bins",
+      "human output order against the pinned 5313-row target manifest",
+      "native Sonnet SAD and SAR plus project ALT-minus-REF summaries"
+    ],
+    "parity_status": "UNRESOLVED",
+    "preferred_scientific_path": "Use the official native Sonnet checkpoint after weight terms, SHA-256, strict restore, and runtime gates pass. Keep the converted archive only as a restricted comparator or parity oracle."
+  },
+  "output_contract": {
+    "human_track_counts": {
+      "CAGE": 638,
+      "DNase_or_ATAC": 684,
+      "histone_ChIP_seq": 1860,
+      "TF_ChIP_seq": 2131
+    },
+    "native_scale": "nonnegative softplus genomic-track predictions at 128-bp resolution",
+    "target_manifest": {
+      "identity": "calico/basenji@0.5:manuscripts/cross2020/targets_human.txt",
+      "rows_including_header": 5314,
+      "sha256": "d90233175a9fec389e5ac04cc4aac8cfc08c4aa86217e2e5c10221de78023580",
+      "size_bytes": 800919
+    },
+    "track_context_limit": "Training-track identities are fixed bulk tissue or cell-line contexts. They are not donor-specific MASLD contexts and cannot be relabeled as such."
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_annotation_for_gene_evaluation": "GENCODE_v32",
+    "native_genome": "hg38 extended from the Basenji2 sequence split",
+    "reference_gate": "Before inference, prove primary-contig sequence identity, contig naming, REF alleles, coordinate conventions, and any GENCODE v32-to-v49 gene/TSS crosswalk. Patch and alternate contigs absent from native training are out of domain."
+  },
+  "registered_converted_checkpoint": {
+    "archive_url": "https://resources.aertslab.org/CREsted/models/enformer_human.tar.gz",
+    "content_length_observed_2026_08_22": 915174055,
+    "crested_repository": "aertslab/CREsted",
+    "crested_revision": "934eea18c97992cd098d547cc09edb20b79c28fd",
+    "crested_version_at_revision": "1.10.0",
+    "declared_sha256_from_pinned_pooch_registry": "628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc",
+    "format": "tar_gzip_containing_Keras_v3_model_and_output_class_table",
+    "last_modified_header": "2025-01-20T10:34:11Z",
+    "member_inventory": "UNRESOLVED_archive_not_downloaded",
+    "registered_model_name": "enformer_human",
+    "status": "current_census_identity_restricted_and_admission_blocked"
+  },
+  "release": {
+    "publication_date": "2021-10-04",
+    "publication_doi": "10.1038/s41592-021-01252-x",
+    "registered_checkpoint_revision": "google-deepmind/deepmind-research@f5de0ede8430809180254ee957abf36ed62579ef+aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:enformer_human"
+  },
+  "runtime_contract": {
+    "converted_loader": "CREsted 1.10.0 declares Python >=3.11,<3.14, Keras >=3.4, and either TensorFlow or PyTorch, but does not freeze a backend version for this archive.",
+    "environment_status": "UNRESOLVED",
+    "native_code_requirements": {
+      "dm_sonnet": "2.0.0",
+      "kipoiseq": "0.5.2",
+      "numpy": "1.19.5",
+      "pandas": "1.2.3",
+      "python": "3.8_from_official_README_example",
+      "tensorflow": "2.4.1_in_requirements;_paper_reports_2.4.0",
+      "tensorflow_hub": "0.11.0_not_required_for_direct_checkpoint_restore"
+    },
+    "required_probe": "isolated_L40S_import_strict_restore_forward_backward_resume_deterministic_seed_reverse_complement_and_native_converted_numeric_tolerance"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "converted_archive": "After campaign approval, verify exact SHA-256 and size before opening; list members with traversal, absolute-path, link, duplicate-path, file-count, and expanded-size limits; reject unexpected members; prefer constructing the pinned known architecture and loading a strict tensor manifest over unconstrained Keras object deserialization.",
+    "native_checkpoint": "Acquire by immutable GCS generation, verify size and GCS MD5/CRC32C, compute SHA-256, freeze every tensor name/shape/dtype, and require full TensorFlow restore consumption with no missing or surplus tensors.",
+    "network_policy": "No runtime network fetches. Stage verified artifacts into an immutable campaign input before execution."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods article, pinned DeepMind and CREsted repositories, official GCS object metadata, official CREsted resource headers, and the pinned Basenji target manifest were queried on 2026-08-22. No model archive or checkpoint bytes were downloaded or deserialized.",
+  "source_records": [
+    {"identity": "google-deepmind/deepmind-research@f5de0ede:enformer/README.md", "sha256": "08e67f46f3b69d5d4b602a6859f46911a9e7ddea6dc7829b3c3fdda00dd586fd", "size_bytes": 5968},
+    {"identity": "google-deepmind/deepmind-research@f5de0ede:enformer/enformer.py", "sha256": "330d6dc505252ade7aec2bcdc7e4a7a6cbb7e1350692a4b8e8d78f929f9ffa93", "size_bytes": 11916},
+    {"identity": "google-deepmind/deepmind-research@f5de0ede:enformer/requirements.txt", "sha256": "5825849602f7152be4926a6da26186956aa32a3129be59393057d8c218902ef0", "size_bytes": 102},
+    {"identity": "aertslab/CREsted@934eea18:LICENSE", "sha256": "c29d9c8a8b9e76a4a2b0a42f508b71a964f8d1244e74b29d8bb6f552c9ffa496", "size_bytes": 8741},
+    {"identity": "aertslab/CREsted@934eea18:src/crested/_datasets.py", "sha256": "e645fb812478838c8963217dcaa75ee6f705fe2e03b7d14f33da909e76adb63e", "size_bytes": 19119},
+    {"identity": "aertslab/CREsted@934eea18:src/crested/tl/zoo/_enformer.py", "sha256": "c7a2e74a91ca3f418b986df6b7fb301fb321ed3953248d08ee695bc2e224d474", "size_bytes": 8926}
+  ],
+  "task_fit": {
+    "allele_effect": "supported_as_sequence_only_ALT_minus_REF_changes_in_prespecified_tracks_or_development_fitted_features",
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported_as_a_conditioned_model; eligible_only_as_the_static_sequence_track_baseline",
+    "signed_eqtl_ieqtl": "not_native; any gene-linked signed effect requires a frozen development-only track/link/direction model and cannot use sealed labels",
+    "variant_to_regulation": "supported_as_a_sequence_component_after_checkpoint_terms_runtime_parity_and_track-selection_gates"
+  },
+  "terms_audit": {
+    "converted_archive_terms": "No separate archive terms were located. The registered loader and conversion implementation are CREsted, whose pinned license is internal academic, noncommercial, nontransferable, and prohibits modification or derivative works without permission.",
+    "native_checkpoint_terms": "UNDECLARED: official GCS object metadata contains no license field. The Apache-2.0 repository grant clearly covers code; the README applies CC-BY-4.0 to precomputed predictions, not expressly to checkpoint weights.",
+    "open_champion_disposition": "The registered converted identity is ineligible. A native Sonnet identity could be reconsidered only after explicit weight terms or institutional legal determination and a separate admission lock.",
+    "original_code_license": "Apache-2.0",
+    "precomputed_prediction_license": "CC-BY-4.0"
+  },
+  "variant_scoring_contract": {
+    "common_lane": "Compute REF and ALT predictions under identical deterministic windows and orientations, emit ALT-minus-REF track features, and fit only identical development heads inside held donor and LD/genomic folds.",
+    "native_lane": "Report official SAD and SAR-style summaries separately. Any test-time shifts are a fixed, named ensemble; no random inference augmentation is permitted.",
+    "orientation_warning": "The official README defines SAD as ALT minus REF, while paper prose also describes a reference-minus-alternative vector. The benchmark convention is ALT minus REF and requires a signed fixture before admission.",
+    "published_downstream_exposure": "The paper used Enformer features with GTEx eQTL classifiers and CAGI5 MPRA lasso models. Those task families are downstream demonstrations, not checkpoint training labels."
+  },
+  "weight_license": "UNDECLARED_NATIVE;_CONVERTED_PATH_RESTRICTED"
+}

@@ -1,0 +1,13 @@
+{
+  "declared_pretraining_corpora": [],
+  "fit_data_policy": "Only RunSpec datasets in the fit partition; only training donors inside the frozen outer fold.",
+  "model_ids": [
+    "hvg_pca_elastic_net",
+    "hvg_pca_knn",
+    "hvg_pca_linear_svm",
+    "hvg_pca_logistic",
+    "hvg_pca_nearest_centroid"
+  ],
+  "pretrained": false,
+  "schema_version": "masld-bench-declared-corpora-authority-v1"
+}

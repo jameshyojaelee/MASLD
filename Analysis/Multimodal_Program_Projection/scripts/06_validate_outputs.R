@@ -487,41 +487,133 @@ assert(
   "Panel 5B sidecar does not rederive from the adjusted protein and bulk inputs"
 )
 
-map_selection <- fread(file.path(FIG5, "panels/data/fig5f_spatial_program_maps_selection.tsv"))
+spatial_calibration <- fread(file.path(
+  FIG5, "panels/data/fig5f_spatial_program_calibration.tsv"
+))
+spatial_expected <- data.table(
+  legacy_program_id = c(
+    "hepatocytes::8", "hepatocytes::8",
+    "hepatocytes::20", "hepatocytes::20"
+  ),
+  source_dataset_id = rep(c("GSE192741", "Vu_et_al_2025"), 2L),
+  moran_excess = c(
+    0.0404971194464155, 0.0503364297323570,
+    0.0153216166560845, 0.0026544910432589
+  ),
+  bh_q = c(0.001, 0.0006, 0.0793, 0.3158)
+)
+spatial_check <- merge(
+  spatial_calibration,
+  spatial_expected,
+  by = c("legacy_program_id", "source_dataset_id"),
+  suffixes = c("", "_expected"),
+  all = TRUE
+)
 assert(
-  nrow(map_selection) == 4L &&
-    setequal(map_selection$program_id, c("hepatocytes::8", "hepatocytes::20")) &&
-    setequal(map_selection$dataset, c("GSE192741", "Vu_et_al_2025")) &&
-    identical(
-      map_selection[, unique(sample_id), by = dataset][order(dataset)]$V1,
-      c("JBO019", "VLP115_A")
-    ) &&
-    all(map_selection[, uniqueN(sample_id), by = dataset]$V1 == 1L) &&
-    all(map_selection$program_outcomes_used_for_selection == FALSE) &&
-    all(map_selection$selection_rule == paste0(
-      "closest_to_dataset_median_source_spot_count_then_lexical_",
-      "reporting_unit_id"
-    )) &&
+  nrow(spatial_check) == 4L &&
+    setequal(spatial_calibration$display_name, c("Stromal ECM", "Ductular injury")) &&
     setequal(
-      map_selection$display_name,
-      c("Stromal ECM program", "Ductular injury program")
+      spatial_calibration$display_source,
+      c("Guilliams et al.", "Vu et al.")
     ) &&
-    all(!grepl("IGFBP7|BICC1", map_selection$display_name)) &&
-    setequal(map_selection$program_n_genes, c(49L, 22L)) &&
+    all(!grepl("GSE|IGFBP7|BICC1", spatial_calibration$display_source)) &&
+    all(spatial_calibration$n_null == 9999L) &&
+    all(grepl("all_16_cell2location", spatial_calibration$residualization)) &&
     same_numeric(
-      unique(map_selection[program_id == "hepatocytes::8"]$named_gene_l1_weight),
-      0.0247414433914627,
+      spatial_check$moran_excess,
+      spatial_check$moran_excess_expected,
       tolerance = 1e-12
     ) &&
+    same_numeric(spatial_check$bh_q, spatial_check$bh_q_expected, tolerance = 1e-12) &&
+    all(spatial_calibration[
+      legacy_program_id == "hepatocytes::8", supported_within_source
+    ]) &&
+    !any(spatial_calibration[
+      legacy_program_id == "hepatocytes::20", supported_within_source
+    ]),
+  "Panel 5F must reproduce the all-cell-adjusted matched-gene calibration"
+)
+
+spatial_overlay <- fread(file.path(
+  FIG5, "panels/data/fig5f_spatial_histology_overlay.tsv.gz"
+))
+spatial_overlay_meta <- fread(file.path(
+  FIG5, "panels/data/fig5f_spatial_histology_overlay_metadata.tsv"
+))
+assert(
+  nrow(spatial_overlay_meta) == 1L &&
+    nrow(spatial_overlay) == spatial_overlay_meta$n_graph_eligible_spots &&
+    nrow(spatial_overlay) == 1164L &&
+    uniqueN(spatial_overlay$spot_id) == nrow(spatial_overlay) &&
+    all(spatial_overlay$legacy_program_id == "hepatocytes::8") &&
+    all(spatial_overlay$display_name == "Stromal ECM") &&
+    all(spatial_overlay$source_dataset_id == "GSE192741") &&
+    all(spatial_overlay$display_source == "Guilliams et al.") &&
+    all(spatial_overlay$reporting_unit_id == "JBO019") &&
+    all(spatial_overlay$source_individual_label == "H37") &&
+    all(spatial_overlay$condition == "Steatotic") &&
+    all(is.finite(spatial_overlay$all_cell_adjusted_program_score_z)),
+  "Panel 5F registered H&E overlay does not contain the sealed representative section"
+)
+assert(
+  spatial_overlay_meta$n_genes_measured == 26L &&
+    same_numeric(spatial_overlay_meta$retained_l1_weight, 0.5475147789509411) &&
+    spatial_overlay_meta$selection_rule == paste0(
+      "closest_to_dataset_median_source_spot_count_then_lexical_reporting_unit_id"
+    ) &&
+    spatial_overlay_meta$program_outcomes_used_for_selection == FALSE &&
+    grepl("all_16_cell2location", spatial_overlay_meta$residualization) &&
+    spatial_overlay_meta$map_role ==
+      "illustrative_registered_histology_overlay_not_inference" &&
+    spatial_overlay_meta$histology_annotation_status ==
+      "no_pathologist_region_masks_available" &&
     same_numeric(
-      unique(map_selection[program_id == "hepatocytes::20"]$named_gene_l1_weight),
-      0.0543594280513238,
+      spatial_overlay_meta$rederived_residual_moran_i,
+      spatial_overlay_meta$sealed_residual_moran_i,
+      tolerance = 1e-10
+    ) &&
+    same_numeric(
+      spatial_overlay_meta$sealed_residual_moran_i,
+      0.05827348904968467,
       tolerance = 1e-12
     ),
-  paste(
-    "Panel 5F must show two prespecified program-level maps on one",
-    "outcome-blind median-size section per source"
-  )
+  "Panel 5F H&E overlay is not aligned to the sealed all-cell-adjusted score"
+)
+assert(
+  same_numeric(
+    spatial_overlay$hires_x,
+    spatial_overlay$fullres_x * spatial_overlay_meta$tissue_hires_scalef,
+    tolerance = 1e-8
+  ) &&
+    same_numeric(
+      spatial_overlay$hires_y,
+      spatial_overlay$fullres_y * spatial_overlay_meta$tissue_hires_scalef,
+      tolerance = 1e-8
+    ) &&
+    min(spatial_overlay$hires_x) >= 0 &&
+    max(spatial_overlay$hires_x) < spatial_overlay_meta$histology_image_width &&
+    min(spatial_overlay$hires_y) >= 0 &&
+    max(spatial_overlay$hires_y) < spatial_overlay_meta$histology_image_height,
+  "Panel 5F spot coordinates do not register within the H&E image"
+)
+overlay_image <- file.path(BASE, spatial_overlay_meta$histology_image_relative_path)
+overlay_scalefactors <- file.path(BASE, spatial_overlay_meta$scalefactors_relative_path)
+assert(
+  file.exists(overlay_image) && file.exists(overlay_scalefactors) &&
+    digest(
+      overlay_image, algo = "sha256", file = TRUE, serialize = FALSE
+    ) == spatial_overlay_meta$histology_image_sha256 &&
+    digest(
+      overlay_scalefactors, algo = "sha256", file = TRUE, serialize = FALSE
+    ) == spatial_overlay_meta$scalefactors_sha256,
+  "Panel 5F registered H&E image or Space Ranger scale factors drifted"
+)
+assert(
+  !file.exists(file.path(FIG5, "panels/fig5f_spatial_program_maps.pdf")) &&
+    !file.exists(file.path(
+      FIG5, "panels/data/fig5f_spatial_program_maps_selection.tsv"
+    )),
+  "Retired Figure 5F map outputs must not remain in the active panel tree"
 )
 
 summary_selection <- fread(file.path(FIG5, "panels/data/fig5e_multimodal_program_summary_selection.tsv"))
@@ -564,7 +656,7 @@ pdfs <- file.path(FIG5, c(
   "panels/fig5c_mrna_protein_composite.pdf",
   "panels/fig5d_snatac_accessibility.pdf",
   "panels/fig5e_multimodal_program_summary.pdf",
-  "panels/fig5f_spatial_program_maps.pdf"
+  "panels/fig5f_spatial_program_calibration.pdf"
 ))
 assert(all(file.exists(pdfs)), "One or more final Figure 5 PDFs are missing")
 assert(all(file.info(pdfs)$size > 1000), "One or more final Figure 5 PDFs are empty")
@@ -577,6 +669,19 @@ for (pdf in pdfs) {
   pages <- grep("^Pages:", info, value = TRUE)
   assert(length(pages) == 1L && grepl("Pages:[[:space:]]+1$", pages), paste("Expected one-page PDF:", basename(pdf)))
 }
+spatial_text <- system2(
+  "pdftotext",
+  c(file.path(FIG5, "panels/fig5f_spatial_program_calibration.pdf"), "-"),
+  stdout = TRUE,
+  stderr = TRUE
+)
+assert(
+  any(grepl("Guilliams et al[.]", spatial_text)) &&
+    any(grepl("Vu et al[.]", spatial_text)) &&
+    any(grepl("Stromal ECM", spatial_text, fixed = TRUE)) &&
+    !any(grepl("GSE192741|IGFBP7|BICC1|JBO019|H37|donor key", spatial_text)),
+  "Panel 5F artwork must use clean author labels and program-level inference"
+)
 
 release <- fread(file.path(FIG5, "CANONICAL_MAIN_PANELS.tsv"))
 assert(

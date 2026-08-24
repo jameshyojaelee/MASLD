@@ -1,0 +1,36 @@
+{
+  "audit_scope": {
+    "checkpoint": "InstaDeepAI/nucleotide-transformer-500m-human-ref@f87b5d7233295242e79c951873d290f4cf992045",
+    "sealed_dataset_id": "GSE289173",
+    "task": "variant_to_regulation"
+  },
+  "checkpoint_finding": {
+    "exposure_state": "target_label_unexposed",
+    "reference_sequence_exposure": "encoder_seen",
+    "alternate_allele_exposure": "clean_declared_for_reference_only_checkpoint",
+    "target_effect_label_exposure": "unexposed",
+    "downstream_task_family_exposure": "downstream_demo",
+    "interpretation": "The base encoder is eligible for target-label evaluation but cannot be the released open champion because the checkpoint is noncommercial and share-alike. Reference sequence exposure must remain explicit."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "dd34db7145b0308b203734fa3c82025bd8e407d793f456d36c97ab540a0af26b"
+  },
+  "known_incidents_and_biases": [
+    "Nonoverlapping six-mer tokenization makes scores depend on the left boundary phase.",
+    "The pinned vocabulary has 4105 entries while the paper describes 4104.",
+    "The model is not reverse-complement equivariant.",
+    "The checkpoint config names an unrecovered Transformers 4.29.0 development build.",
+    "Published downstream eQTL work used presence or absence labels and does not validate signed, cell-type-specific effect prediction."
+  ],
+  "remaining_blockers": [
+    "Keep the model restricted-comparator-only unless checkpoint terms change.",
+    "Register a nonsealed signed-effect development source before fitting common heads.",
+    "Recover the exact Transformers source revision or numerically validate a frozen compatible runtime.",
+    "Acquire only after campaign approval, verify SHA-256, and convert the PyTorch state dict to safetensors in a restricted no-network process.",
+    "Fixture-test six tokenization phases, reverse complements, vocabulary count, REF matching, and GRCh38-to-GRCh38.p14 contig behavior."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_open_champion_restricted_terms_but_admissible_comparator_after_runtime_and_task_data_gates",
+  "verified_date": "2026-08-22"
+}

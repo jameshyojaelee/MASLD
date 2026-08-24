@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "bulk_five_cohort"
+title = "Current five-cohort human liver bulk RNA analysis"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["MULTI_SOURCE_FIVE_COHORT_BULK"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 844
+native_genome_build = "mixed_source_normalized_to_GRCh38"
+native_annotation_release = "mixed_source_UNRESOLVED"
+modalities = ["bulk_rna"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence."]
+notes = "The selected disease/control analysis contains 844 donor-level profiles from 1,257 QC-passing profiles. Use cross-sectional stage-associated remodeling language."
+
+[provenance]
+source_url = "../../../docs/RESULTS.md"
+verified_date = "2026-08-21"
+local_exposure = "Outcome labels and current analyses are exposed."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "train"
+label_visibility = "development_visible"

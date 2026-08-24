@@ -1,0 +1,33 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "ATAC-only development representation; current sealed cell-state and variant tasks are modality-incompatible"
+  },
+  "checkpoint_findings": {
+    "epiagent": {
+      "checkpoint_identity": "Google Drive file 1Swr4FZFcOmJQnR8ljjbzw4JBteMf_hUn, current size 5,801,822,387 bytes, modified 2025-08-09T15:33:55.105Z, digest unresolved",
+      "corpus": "Approximately five million human scATAC cells and 35 billion cCRE tokens from a declared 28 dataset collections and 31 tissues; immutable checkpoint-bound accession/sample manifest unresolved",
+      "corpus_annotation_state": "self-supervised chromatin accessibility and signal reconstruction; downstream supervised models are separate",
+      "exposure_state": "unknown",
+      "historical_object_problem": "A pretrained model was announced in December 2024, but the current mutable Drive object postdates GSE289173 and has no public digest or version history binding it to that historical object."
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "task_specific_atac_sources_and_sealed_modality",
+    "sha256": "6e445ccb68017963aad584ecba0f3851e770d6f42630eb5c61e2d796f50c9e0e"
+  },
+  "interpretation": "EpiAgent is a genuine ATAC foundation model, but the executable checkpoint fails closed. The current 5.8-GB Drive object has no digest, explicit weight terms, or immutable version history and was modified after GSE289173 became public. GSE296875 is clean by post-object chronology, while GSE244832 and GSE289173 remain exposure-unknown. Independently, EpiAgent cannot enter the current sealed RNA-only cell-state task or RNA-conditioned ATAC profile task because native inference consumes observed ATAC cCRE tokens.",
+  "remaining_blockers": [
+    "Obtain explicit terms for the current Google Drive checkpoint and evidence that its intended license covers use, adaptation, and any derivative release.",
+    "With approval, download once, freeze SHA-256, inventory the reported zip/PyTorch container without deserializing, then inspect a state dict with a restricted weights-only loader and freeze keys, shapes, and dtypes.",
+    "Recover an immutable checkpoint-bound Human-scATAC-Corpus accession/sample manifest or retain unknown exposure for every source public before the current object.",
+    "Validate the 1.4-billion-parameter Torch 2.0.1/FlashAttention 2.5.8 runtime, checkpoint load, forward/backward, resume, deterministic long-cell truncation, and numeric tolerances on L40S.",
+    "Freeze the exact corrected cCRE document-frequency vector, GRCh38 coordinate checks, fragment/barcode joins, Tn5 convention, and 1,355,445-row cCRE order.",
+    "Create a separate development-only ATAC representation TaskSpec before scoring; no current task may substitute ATAC latent distance for an RNA-only label or RNA-conditioned profile endpoint."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_current_tasks_due_to_modality_and_ineligible_any_sealed_use_while_checkpoint_identity_terms_and_exposure_are_unresolved",
+  "verified_date": "2026-08-22"
+}

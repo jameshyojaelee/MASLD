@@ -1,0 +1,29 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_for_all_registered_cell_state_sources_with_unknown_retained",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "sccello": {
+      "checkpoint_identity": "katarinayuan/scCello-zeroshot@e59304e5f49d661b7bd142e9b926737e34ae222d:pytorch_model.bin",
+      "corpus": "22,316,072 cells in immutable katarinayuan/scCello_pretrain_unsplitted commit e04dea678784a0e59639bd15e3c024c190904aed",
+      "corpus_annotation_state": "cell-type and ontology supervision plus self-supervised expression modeling",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "8d60bee3019d1c808229b9737aa239cc1a1c1fbc072e76cc578ab302c8395544"
+  },
+  "interpretation": "The immutable scCello checkpoint was uploaded before GSE289173 became public, so the sealed source and its target labels were unexposed. This does not make the model admissible: neither the official code repository nor Hugging Face model declares reuse terms.",
+  "remaining_blockers": [
+    "Obtain written code and checkpoint terms before download, execution, adaptation, or redistribution.",
+    "Freeze the exact token and gene-median dictionaries from the immutable pretraining assets and complete accession-to-cell_dataset_id crosswalks for development cohorts.",
+    "Inspect the PyTorch checkpoint without unrestricted pickle loading and freeze state-dict keys, shapes, and dtypes.",
+    "Validate the Python 3.9/Torch 2.0.1/Transformers 4.32.1 runtime and raw/native CLS representations on L40S."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_while_code_and_weight_terms_are_unresolved",
+  "verified_date": "2026-08-22"
+}

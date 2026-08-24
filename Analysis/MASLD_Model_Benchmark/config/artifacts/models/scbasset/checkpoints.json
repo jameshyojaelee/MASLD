@@ -1,0 +1,110 @@
+{
+  "architecture_contract": {
+    "bottleneck_dimension": 32,
+    "convolution": {
+      "first_block_filters": 288,
+      "first_kernel": 17,
+      "first_pool": 3,
+      "tower_filter_multiplier": 1.122,
+      "tower_kernel": 5,
+      "tower_pool": 2,
+      "tower_repeats": 6
+    },
+    "input_length_bp": 1344,
+    "loss": "binary_cross_entropy_over_sequence_by_cell_accessibility",
+    "output_tasks": "one_sigmoid_output_per_training_cell",
+    "selection_warning": "The released trainer early-stops and selects on training AUROC rather than validation AUROC. Benchmark use must prespecify a donor-safe validation criterion and cannot copy this choice uncritically."
+  },
+  "code_license": "Apache-2.0",
+  "embedding_contract": {
+    "cell_embedding": "transpose_of_the_final_dense_output_kernel_yielding_one_32d_vector_per_training_cell",
+    "common_lane_candidate": "sequence_to_outer_training_cell_predictions_aggregated_by_training_only_cell_state_for_the_profile_task; none_for_held_cell_embeddings",
+    "native_lane_candidate": "training-dataset_transductive_32d_cell_embeddings_and_sequence_to_training_cell_accessibility_predictions",
+    "warning": "scBasset cannot produce an embedding for a new held cell without changing the output layer and retraining. Training-cell embeddings must never be presented as inductive held-donor predictions."
+  },
+  "implementation": {
+    "checkpoint_policy": "Train from scratch only for an explicitly registered, development-only, transductive ATAC task. Public tutorial weights are provenance records and are not transferable MASLD initializations.",
+    "implementation_type": "task_native_train_locally",
+    "repository": "calico/scBasset",
+    "repository_revision": "aed3a6f713091fd988196b297e9c06e092ff1d22"
+  },
+  "inference_contract": {
+    "atac_available_at_inference": false,
+    "common_profile_lane": "predict accessibility of each sequence in each outer-training cell, average those predictions within the frozen training-only cell-state labels, and repeat the resulting cell-state profile across held donors",
+    "donor_context": "none; every held donor receives the same training-cell-state mean prediction and the output is labeled sequence_only",
+    "held_cell_embedding": "structurally_unavailable",
+    "native_transductive_lane": "32d embeddings and denoised accessibility for cells represented as output columns during local fitting only",
+    "profile_fixture": "The adapter must emit the frozen donor-by-cell-state peak matrix from sequence alone and reject any held-donor ATAC matrix or target columns."
+  },
+  "input_contract": {
+    "accessibility_target": "binary_peak_accessibility; the generator uses sparse nonzero indices and discards count magnitude",
+    "canonical_sequence": "1344-bp GRCh38.p14 one-hot sequence centered on each training-defined peak",
+    "matrix": "CSR_AnnData_cells_by_peaks_with_chr_start_end_in_exact_matrix_column_order",
+    "peak_filtering": "upstream README recommends retaining peaks accessible in at least five percent of cells; every threshold and peak call must be fit on outer-training donors only",
+    "reference": "GRCh38.p14 project FASTA and GENCODE v49 contract",
+    "split": "held genomic blocks with a 1344-bp boundary buffer; the released random peak split is not benchmark-admissible",
+    "warning": "Released preprocessing maps every N base to an unseeded random nucleotide. Benchmark admission requires rejecting ambiguous sequence windows or replacing this with a prespecified deterministic encoding validated against the original model. Peak rows from ArchR getPeakSet may not match matrix order; the source explicitly warns to use matrix rowRanges."
+  },
+  "runtime_contract": {
+    "declared_python": "3.7",
+    "declared_tensorflow": "2.8.0",
+    "environment_status": "UNRESOLVED_LEGACY_TENSORFLOW_L40S_COMPATIBILITY_PROBE_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "local_hdf5_only_for_admitted_runs": true,
+    "require_hdf5_member_tensor_manifest": true,
+    "require_no_untrusted_lambda_or_custom_object_deserialization": true,
+    "require_project_sha256_and_training_receipt": true,
+    "tutorial_weights_downloaded": false
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The full pinned repository commit, Apache-2.0 license, official Nature Methods paper/README, and immutable Google Cloud Storage response metadata were queried on 2026-08-22. No package was installed, no checkpoint body was downloaded, and no model was run.",
+  "source_records": [
+    {"identity": "scBasset:LICENSE", "sha256": "4534e268bc50d35b1272461ba82979cac2cf90c0ac3cc8bf97b91fcba1b40747", "size_bytes": 10725},
+    {"identity": "scBasset:README.md", "sha256": "a5a53c6501c3bfa50927621aa0237d8575be0dc829846ed0a7ef1c461f521b87", "size_bytes": 8927},
+    {"identity": "scBasset:setup.py", "sha256": "b7b54078e11ad8bc594512cc33ee38db80c190b06bfde66e3420cb2248ab19d1", "size_bytes": 644},
+    {"identity": "scBasset:requirements-with-version.txt", "sha256": "48b2e8adebb2320311111a114a25239783884ef746266b09498fe2d5908c1aeb", "size_bytes": 263},
+    {"identity": "scBasset:scbasset/utils.py", "sha256": "7b653646fc83867cf38c51ae14fdcdf523f0dc99685d1b9446ea5940de71543c", "size_bytes": 16810},
+    {"identity": "scBasset:scbasset/basenji_utils.py", "sha256": "165fdc3c2dd85afd300bf71e27199ae907b005e325c33fa0cc1e9b96be9a92b2", "size_bytes": 14440},
+    {"identity": "scBasset:bin/scbasset_preprocess.py", "sha256": "9d3c47a62182395b1344497140651569691c63f22b6cc7acaf6ed6a7efd347f7", "size_bytes": 2556},
+    {"identity": "scBasset:bin/scbasset_train.py", "sha256": "5773d15e9fdc2a9f679ede6c7a14d6354f067ea92691fd3b7f99a37ca389a155", "size_bytes": 6164}
+  ],
+  "task_fit": {
+    "active_tasks": ["rna_conditioned_atac_as_sequence_only_profile_baseline_after_fixture"],
+    "development_only_candidate": "transductive ATAC representation, denoising, and sequence attribution after a separate TaskSpec and donor-safe interpretation are frozen",
+    "rna_conditioned_atac": "conditionally eligible as the registered sequence-only baseline by training-cell-state aggregation; it cannot model donor-specific RNA context and remains constant across held donors",
+    "sealed_cell_state_mapping": "ineligible because the sealed GSE289173 row universe is RNA-only and scBasset is ATAC-specific",
+    "variant_to_regulation": "limited to sequence-to-training-cell accessibility diagnostics; not a standalone signed eQTL/ieQTL or enhancer-gene model"
+  },
+  "terms_audit": {
+    "repository_code_terms": "Apache-2.0",
+    "tutorial_weight_terms": "not_explicitly_declared",
+    "result": "local_training_allowed_but_public_tutorial_weights_not_admitted"
+  },
+  "tutorial_checkpoints": [
+    {
+      "etag_md5_hex": "1d3cfccac295f79e51b5b3ae94761a60",
+      "gcs_generation": "1653432436021143",
+      "gcs_metageneration": "1",
+      "last_modified": "2022-05-24T22:47:16Z",
+      "md5_base64": "HTz8ysKV955RtbOulHYaYA==",
+      "name": "buen_model_sc.h5",
+      "size_bytes": 18436272,
+      "status": "not_admitted_nontransferable_tutorial_object_with_undeclared_weight_terms",
+      "url": "https://storage.googleapis.com/scbasset_tutorial_data/buen_model_sc.h5"
+    },
+    {
+      "etag_md5_hex": "db34a4c5bb715204ff8b6a7ebb5e1121",
+      "gcs_generation": "1648069886243042",
+      "gcs_metageneration": "1",
+      "last_modified": "2022-03-23T21:11:26Z",
+      "md5_base64": "2zSkxbtxUgT/i2p+u14RIQ==",
+      "name": "pbmc_model.h5",
+      "size_bytes": 18526184,
+      "status": "not_admitted_nontransferable_tutorial_object_with_undeclared_weight_terms",
+      "url": "https://storage.googleapis.com/scbasset_tutorial_data/pbmc_model.h5"
+    }
+  ],
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED; PUBLIC_TUTORIAL_WEIGHTS_UNRESOLVED"
+}

@@ -1,0 +1,52 @@
+{
+  "audit_scope": {
+    "artifact_type": "base_checkpoint_plus_new_perturbation_generator_and_future_project_fit",
+    "development_sources": ["gse281160", "gse275483", "gse313774"],
+    "sealed_sources": [],
+    "task_id": "perturbation_transfer"
+  },
+  "checkpoint_finding": {
+    "canonical_pretrained_perturbation_checkpoint": false,
+    "code_identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4",
+    "declared_base_exposure_state": "target_label_unexposed",
+    "declared_base_reason": "The whole-human checkpoint was released in 2023 from the declared CELLxGENE Census 2023-05-08 normal-human corpus, before GSE281160 became public.",
+    "future_project_fit_rule": "A generator trained on GSE281160 is continual_seen for that dataset and cannot be described as zero-shot or external; record exact rows, controls, target genes, vocabulary, preprocessing, split, initialized parameters, seeds, and artifact hashes."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "eeabefa4c0894462d0bfb1fe8acba34c8e1297c65d2417736f797572ce26cf17"
+  },
+  "pretraining_exposure": {
+    "base_corpus": "CELLxGENE_Census_2023-05-08_normal_human",
+    "base_checkpoint_SHA256": "UNRESOLVED",
+    "base_weight_terms": "UNDECLARED",
+    "classification": "target_label_unexposed_chronologically_but_checkpoint_not_admissible_until_hash_terms_and_declared_corpus_are_verified"
+  },
+  "preprocessing_and_evaluation_incidents": [
+    {"benchmark_action": "replace", "finding": "The official tutorial uses an upstream GEARS simulation split rather than project grouping by target locus, guide family, and biological replicate."},
+    {"benchmark_action": "replace", "finding": "GEARS-derived global controls and DE metadata can cross outer roles unless the project split precedes every preprocessing object."},
+    {"benchmark_action": "replace", "finding": "Training randomly caps features at 1536 and can omit the perturbed gene; the project requires forced target retention."},
+    {"benchmark_action": "freeze_separately", "finding": "Only base encoder components are initialized, while the perturbation embedding and decoder are new and the tutorial optimizes the entire generator."},
+    {"benchmark_action": "reject_current_task", "finding": "Noncoding loci and guide pseudo-genes are not valid measured whole-human vocabulary tokens; OOV-to-pad is not a target representation."}
+  ],
+  "prediction_first_rule": {
+    "gse313774": "The single-cell gene-perturbation generator cannot directly query bulk condition/insulin arms. No post-outcome remapping into a stress prediction is allowed; CXCL1 and IL8 remain excluded."
+  },
+  "remaining_blockers": [
+    "Do not schedule the scGPT perturbation head for GSE281160 unless a new in-vocabulary gene-perturbation task is registered.",
+    "Resolve and hash the exact whole-human weight bytes and base-weight terms.",
+    "Freeze the exact cell-gears and full runtime lock and patch deprecated NumPy API use in a new immutable adapter revision.",
+    "Resolve GSE281160 biological replicates, custom reference, guide-to-locus table, matrix layer, gene vocabulary, and output scale.",
+    "Implement split-first preprocessing, fold-local controls, strict OOV rejection, forced target retention, deterministic feature selection, and safe state-dict loading.",
+    "Freeze trained perturbation artifacts and pass isolated GPU, resume, numeric, and leakage fixtures."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_sealed_source_current_target_identity_unsupported_and_base_weight_terms_unresolved",
+  "systema_audit": {
+    "reference_source": "https://www.nature.com/articles/s41587-025-02777-8",
+    "result": "not_currently_evaluable",
+    "rule": "The independent evaluator computes O_pert only from training perturbation-specific replicate centroids; residualization cannot turn an OOV noncoding target into a valid gene token."
+  },
+  "terms_result": "code_MIT_base_weight_terms_UNDECLARED",
+  "verified_date": "2026-08-22"
+}

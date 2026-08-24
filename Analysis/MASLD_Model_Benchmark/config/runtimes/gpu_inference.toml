@@ -1,0 +1,12 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "gpu_inference"
+status = "candidate"
+purpose = "Single-GPU deterministic inference for an admitted immutable checkpoint"
+scheduler = "slurm"
+resource_profile = "gpu_single"
+environment_lock = "UNRESOLVED"
+container_digest = "UNRESOLVED"
+modules = ["UNRESOLVED"]
+command_prefix = ["UNRESOLVED"]
+admission_blocking = true
+blockers = ["The L40S resource default is frozen, but the model-specific environment, container digest, checkpoint, command, and total resource ask are unresolved. B6K is ineligible until the separate sm_120 compatibility probe passes."]

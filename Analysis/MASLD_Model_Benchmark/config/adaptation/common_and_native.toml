@@ -1,0 +1,47 @@
+schema_version = "masld-bench-adaptation-v1"
+adaptation_id = "common_and_native"
+
+[common_lane]
+regimes = ["zero_shot", "frozen_embedding_linear_head", "frozen_embedding_two_layer_head"]
+fit_inside_inner_training_fold = ["normalization", "feature_selection", "batch_correction", "head", "calibration", "early_stopping"]
+equalized = ["outer_folds", "input_features", "label_budget", "head_hyperparameter_count", "early_stopping_rule"]
+seeds_by_wave = { smoke = 1, frozen_screen = 3, finalist = 5 }
+
+[common_lane.cell_state_head_contract]
+contract_id = "cell_state_common_heads_v1"
+head_ids = ["linear", "two_layer_mlp"]
+input = "frozen_per_cell_embedding"
+embedding_transform = "inner_fit_mean_and_population_sd_with_zero_variance_dimensions_fixed_to_unit_scale"
+class_roster = "frozen_task_evaluator_class_roster"
+biological_group = "donor"
+inner_folds = 5
+inner_fold_assignment = "deterministic_donor_hash_from_outer_training_donors_only"
+inner_ensemble = "one_model_per_inner_fold_with_external_probabilities_arithmetic_meaned"
+training_weight_policy = "equal_class_mass_equal_donor_mass_within_class_equal_cell_mass_within_donor_class"
+loss = "weighted_multiclass_cross_entropy"
+optimizer = "adamw"
+learning_rate = 0.001
+weight_decay = 0.01
+batch_size = 128
+maximum_epochs = 200
+early_stopping_monitor = "inner_validation_weighted_cross_entropy"
+early_stopping_patience = 15
+early_stopping_minimum_delta = 0.0001
+probability_calibration = "one_positive_temperature_fit_to_concatenated_inner_oof_logits_then_applied_before_inner_ensemble"
+linear_architecture = "embedding_to_class_logits_with_bias"
+two_layer_mlp_architecture = "embedding_to_min_256_or_embedding_width_gelu_dropout_to_class_logits"
+two_layer_mlp_dropout = 0.1
+hyperparameter_selection = "none_in_smoke_prespecified_recipe_only"
+prediction_uncertainty = "seed_ensemble_is_primary_inner_head_dispersion_is_diagnostic_only"
+failure_policy = "fail_if_any_outer_training_class_is_absent_from_an_inner_fit_partition"
+
+[native_lane]
+regimes = ["official_preprocessing_and_head", "frozen_probe", "head_only", "parameter_efficient", "domain_adaptive_self_supervision", "licensed_full_finetune"]
+report_separately_from_common_lane = true
+official_recipe_does_not_measure_representation_alone = true
+
+[finalists]
+selection = ["top_two_per_architecture_family", "all_pareto_nondominated", "within_one_standard_error_of_family_leader"]
+fixed_seeds = [1103, 2909, 4721, 6673, 8111]
+seed_direction_requirement = 4
+seeds_are_biological_replicates = false

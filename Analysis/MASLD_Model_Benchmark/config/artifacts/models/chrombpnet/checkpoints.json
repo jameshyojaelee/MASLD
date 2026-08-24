@@ -1,0 +1,87 @@
+{
+  "architecture_contract": {
+    "assay_model": {
+      "dilated_convolution_layers": 8,
+      "filters": 512,
+      "first_convolution_kernel": 21,
+      "input_length_bp": 2114,
+      "output_length_bp": 1000,
+      "profile_kernel": 75,
+      "residual_dilation_rates": [2, 4, 8, 16, 32, 64, 128, 256]
+    },
+    "bias_model": {
+      "dilated_convolution_layers": 4,
+      "filters": 128,
+      "input_length_bp": 2114,
+      "output_length_bp": 1000
+    },
+    "losses": {
+      "counts": "mean_squared_error_on_log_total_counts",
+      "profile": "multinomial_negative_log_likelihood_on_base_resolution_profile"
+    },
+    "outputs": ["profile_logits_1000bp", "log_total_count"]
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No upstream assay checkpoint is admitted. Every model and bias model is trained inside the outer donor and genomic folds, and every produced HDF5 artifact receives a project SHA-256.",
+    "implementation_type": "train_locally",
+    "pypi_release": {
+      "filename": "chrombpnet-1.0.1-py3-none-any.whl",
+      "sha256": "fc2986a04d9cb0c0e4737c823b056ddd97edc77fac9b495fe0db9963531aad59",
+      "size_bytes": 440753,
+      "upload_time": "2025-07-11T04:00:26.247850Z",
+      "version": "1.0.1"
+    },
+    "repository": "kundajelab/ChromBPNet",
+    "repository_revision": "eaa0fe58b6a43da62ea23b75cfc2bef4ecd3550c"
+  },
+  "inference_contract": {
+    "atac_available_at_inference": false,
+    "common_lane": "outer_fold_cell_state_specific_sequence_only_chrombpnet_nobias_model",
+    "donor_context": "none; one training-donor-pooled prediction per cell state and locus is repeated across held donors and labeled sequence_only",
+    "native_lane": "same architecture and outputs; native preprocessing is the fixed ChromBPNet peak/profile pipeline",
+    "profile_prediction": "Use the bias-free TF model for biological accessibility predictions; retain full bias-factorized output only as an assay-QC diagnostic.",
+    "reverse_complement": "mean predictions from forward and reverse-complement sequences after reversing the RC profile to reference orientation",
+    "variant_primary_score": "ALT_minus_REF bias-free log_total_count, averaged across reverse complements and the five fixed seeds",
+    "variant_profile_diagnostic": "ALT-minus-REF bias-free 1000-bp profile after orientation restoration",
+    "variant_to_gene_limit": "ChromBPNet predicts sequence-driven accessibility, not enhancer-gene links or signed expression effects. Signed gene-effect scoring requires a separately frozen linking and direction rule and is reported as a composite, never as ChromBPNet alone."
+  },
+  "input_contract": {
+    "atac_shift": "Unstranded insertion bigWig normalized to +4/-4 for ATAC; auto-detection is diagnostic and its inferred source shift is frozen per input artifact.",
+    "canonical_sequence": "GRCh38.p14 one-hot ACGT sequence from the project reference with REF-allele validation",
+    "peak_definition": "Training-fold-only 10-column narrowPeak records centered at start plus summit; held donors and held genomic blocks cannot affect the peak universe.",
+    "profile_supervision": "Raw Tn5 insertion counts pseudobulked within outer-training donor by cell state before pooling; cells and fragments are not inferential replicates.",
+    "negative_definition": "Training-fold-only GC-, mappability-, accessibility-, and distance-matched nonpeak regions; negative_sampling_ratio is frozen at 0.1 unless changed before the campaign lock.",
+    "reference": "GRCh38.p14 plus the frozen GENCODE v49 project contract",
+    "training_augmentation": "Maximum 500-bp jitter and 0.5 reverse-complement fraction, with deterministic row IDs and seed.",
+    "warning": "The upstream pipeline accepts BAM, fragment, tagAlign, or bigWig inputs. The benchmark canonicalizes to hashed fragments plus a derived insertion bigWig; input format cannot vary by fold or model."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.8_with_upstream_recommendation_3.8",
+    "declared_tensorflow": "2.8.0",
+    "declared_tensorflow_probability": "0.15.0",
+    "environment_status": "UNRESOLVED_L40S_COMPATIBILITY_PROBE_REQUIRED",
+    "wheel_downloaded": false
+  },
+  "safe_loading_contract": {
+    "external_assay_checkpoint_downloaded": false,
+    "local_hdf5_only": true,
+    "require_hdf5_structure_and_tensor_manifest": true,
+    "require_no_lambda_deserialization_from_untrusted_artifacts": true,
+    "require_training_receipt_and_sha256": true
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The full pinned repository commit and PyPI 1.0.1 metadata were queried on 2026-08-22. Source code was inspected without installing the package or running TensorFlow. No pretrained model was downloaded.",
+  "source_records": [
+    {"identity": "ChromBPNet:LICENSE", "sha256": "eee7b4d55be619630ce91024410485d25226c387e72315b83712a8dbf89188ef", "size_bytes": 1068},
+    {"identity": "ChromBPNet:README.md", "sha256": "16702b378ea6a158614be001b21fe8a420a5603141fec063edbf9c14d9ca6add", "size_bytes": 14590},
+    {"identity": "ChromBPNet:requirements.txt", "sha256": "a2299b7298690f1bdbccf59172d512ee50edf94a042ba8088553864d05cde358", "size_bytes": 411},
+    {"identity": "ChromBPNet:setup.py", "sha256": "7dde221fd752bcc421da88d6d151c16c77c4254c92a19d7b6324f13fc93f5e9c", "size_bytes": 1077},
+    {"identity": "ChromBPNet:bpnet_model.py", "sha256": "8ddbab40fa13d4ee7b5e326560e184a2502ddbd009444c5143420bca12d7ee28", "size_bytes": 4048},
+    {"identity": "ChromBPNet:chrombpnet_with_bias_model.py", "sha256": "bedc63a36ee27bb25ab39a00f1d9e3d4d64809754bf46aebe10d17b3a331dd33", "size_bytes": 6167},
+    {"identity": "ChromBPNet:train.py", "sha256": "3a569e319fae561de89d99eab95a15bd369a5ff00922c33bb60342bd6bb9a77f", "size_bytes": 4817},
+    {"identity": "ChromBPNet:augment.py", "sha256": "8b560dd4d9563f2620c2b6c1043f8a8220385c3c22d9e84fc289e1e80cfbdea7", "size_bytes": 3120},
+    {"identity": "ChromBPNet:losses.py", "sha256": "c32e816398274bf7995cf83aab9bebb3b40ddaac7d162cebfa0672c31d259a6d", "size_bytes": 687}
+  ],
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

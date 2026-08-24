@@ -1,0 +1,81 @@
+{
+  "architecture_contract": {
+    "method": "multimodal variational autoencoder with modality-specific encoders, product-of-experts posterior, logistic-normal topic proportions, and modality-specific multinomial feature decoders",
+    "decoder": "For modality m, softmax(topic_proportions times beta_m, optionally modified by learned dataset-specific slope/intercept terms) gives a compositional feature-probability vector.",
+    "missing_modality_support": "A union of barcodes is stored and absent modalities are represented as None, not zero tensors.",
+    "latent_correction_warning": "calc_all_latent fits XGBoost regressors from single-modality to joint latent coordinates. That correction is a separate native, training-only operation and is not permitted to fit on held query rows."
+  },
+  "code_license": "GPL-3.0-only",
+  "implementation": {
+    "checkpoint_policy": "No task-independent pretrained checkpoint exists. Fit one local model per outer fold and seed.",
+    "repository": "epurdom/cobolt",
+    "repository_revision": "cf5a448c6539025346a6393c215ba329cb3a0183",
+    "repository_revision_date": "2022-08-26T12:23:57-07:00",
+    "release_tag": "v1.0.1",
+    "zenodo_release": {
+      "doi": "10.5281/zenodo.7039226",
+      "filename": "epurdom/cobolt-v1.0.1.zip",
+      "md5_declared_by_zenodo": "7341b3a8d1f8a05a082029499c6c0af0",
+      "sha256_expected_from_campaign_registry": "ee72da3d1869d31d800441c021543e8ad4af3fcc99ca0cf630197801aba632d0",
+      "sha256_status": "VERIFIED_JOB_21060709_ARTIFACTS_SHA256_73622ff1b36da1da51ab3fc85178f41b5052e1c53e3ae51a75f326bd478b948f",
+      "size_bytes": 944890
+    },
+    "warning": "The PyPI project named cobolt version 0.1.0 is unrelated and must never be installed. Its wheel SHA-256 is b79ede329f43b25edc7b086b5eb6adf61b7851e15a19719920c8977804986bb0."
+  },
+  "inductive_inference_contract": {
+    "allowed_wrapper": "Use a frozen model in eval/no-grad mode, align query RNA to the outer-training gene inventory, encode RNA with all other modalities absent, take deterministic posterior mean topic proportions, and decode through the frozen ATAC beta matrix.",
+    "new_dataset_rule": "For unseen donors or batches, the champion-eligible lane disables dataset-specific slope and intercept adjustments at model construction. A held query cannot create or fit a new dataset factor.",
+    "forbidden": "Do not append held query rows to the training object, update BatchNorm state, train XGBoost latent correction on held rows, filter features using query cells, or condition the profile on observed query ATAC.",
+    "upstream_api_gap": "The released wrapper exposes latent/topic proportions but no cross-modal profile method and does not call model.eval before latent extraction. A project adapter must implement the frozen decoder equation and enforce eval mode.",
+    "profile_validity": "The admitted output is an ATAC feature-composition probability vector over the frozen peak inventory. It is not a fragment count, independent Bernoulli accessibility probability, or profile depth. Compare shapes with a prespecified depth-free multinomial/profile metric."
+  },
+  "input_contract": {
+    "assays": "nonnegative count matrices with cells by features; the model internally applies log(count+1) before each encoder",
+    "feature_alignment": "SingleData objects for one modality are intersected by feature name. Freeze GENCODE v49 genes and GRCh38.p14 peaks from outer-training data and preserve order.",
+    "pairing": "Cells are paired only when their dataset-prefixed barcodes are exactly identical across modalities. Distinct aliquot barcodes remain unpaired and structurally missing.",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus", "same_sample_different_aliquot_as_unpaired", "same_study_unpaired"],
+    "warning": "Dataset names are prefixed to barcodes. Exact join and uniqueness fixtures are required so unrelated cells cannot become paired through barcode collision."
+  },
+  "missingness_contract": {
+    "native": "Absent cell modalities are None and omitted from the product of experts and ELBO. This is valid structural missingness, not missing-as-zero.",
+    "project_mapping": "The model distinguishes observed tensor versus absent tensor only. Preserve the eight project missingness reasons in external masks/manifests."
+  },
+  "output_contract": {
+    "cell_embedding": "posterior mean or topic-proportion vector with raw versus XGBoost-corrected status explicit",
+    "rna_to_atac": "deterministic RNA-posterior ATAC multinomial feature composition over frozen peaks with dataset adjustments disabled",
+    "not_admitted": ["query-fitted_XGBoost_correction", "dataset-factor_for_unseen_query", "predicted_fragment_depth", "Bernoulli_peak_probability"]
+  },
+  "runtime_contract": {
+    "declared_python": "README says >=3.8; setup.py says >=3.7",
+    "declared_dependencies": ["numpy", "scipy", "torch", "umap-learn", "python-igraph", "scikit-learn", "xgboost", "pandas", "seaborn", "leidenalg"],
+    "environment_status": "VALIDATED_JOB_21060919_L40S_TORCH_2_3_1_CUDA_12_1_FORWARD_BACKWARD_EQUATION_QUERY_INVARIANCE_AND_TENSOR_STATE_RESTORE"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "required_artifacts": "Project-fitted plain state dict plus exact key/shape/dtype manifest, feature orders, model hyperparameters, dataset-adjustment flags, seed, and hash."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The official Zenodo v1.0.1 archive was acquired and verified by SHA-256 and MD5 in job 21060709, with 44 safe entries and all registered source hashes matching. Exact-source L40S equation/runtime parity passed in job 21060919. The project direct decoder passed the real donor-held RNA-only profile fixture in job 21061264. No unrelated PyPI package, upstream checkpoint, query ATAC, query-fitted correction, dataset adjustment, or whole-module pickle was used.",
+  "source_records": [
+    {"identity": "cobolt:LICENSE", "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986", "size_bytes": 35149},
+    {"identity": "cobolt:README.md", "sha256": "64d15e5afb832c9d00ebe91be104807c9be010403a361458a82e25aef950c340", "size_bytes": 1468},
+    {"identity": "cobolt:setup.py", "sha256": "71ae102c492515c2e047323781243b12837d32b4dd5811ade6669d7c37cf0204", "size_bytes": 1077},
+    {"identity": "cobolt:cobolt/model/cobolt.py", "sha256": "6481b6a89d3edde3c9b51d1d3ffb36a58e8762818cc30d585601a457b2514001", "size_bytes": 19155},
+    {"identity": "cobolt:cobolt/model/coboltmodel.py", "sha256": "a4f5c3a45ca4069e12ffa05d3efbfcd8a0a636da7515d7d4e9174a914f3f2311", "size_bytes": 10775},
+    {"identity": "cobolt:cobolt/utils/data.py", "sha256": "f2d7937753fd3c92aecd34ebf56913b957f862caf167f990eac3a71c413e7aa4", "size_bytes": 7974},
+    {"identity": "cobolt:cobolt/utils/dataset.py", "sha256": "8fa2b8021f0cc5980ccc3a4625a9ea43e444a105a4797c5f3cc5a94c97a6ad88", "size_bytes": 3523}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Candidate after frozen-query, no-query-influence, missing-modality, eval-mode, feature-alignment, and runtime fixtures pass.",
+    "rna_conditioned_atac": "Direct compositional-profile candidate after the project decoder adapter passes an equation-parity fixture and held-donor RNA-only inference test.",
+    "variant_to_regulation": "Ineligible because the model has no DNA sequence or allele-effect mechanism."
+  },
+  "terms_audit": {
+    "repository_license": "GPL-3.0 root LICENSE",
+    "setup_classifier_conflict": "setup.py declares an MIT classifier despite the root GPL-3.0 license; treat GPL-3.0 as binding and preserve compatible release obligations",
+    "result": "open_with_packaging_metadata_warning"
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_FITTED_STATE_DICT"
+}

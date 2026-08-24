@@ -1,0 +1,52 @@
+{
+  "activation_gate": {
+    "current_state": "deferred",
+    "decision": "Do not install, train, reconstruct, cluster, promote, or compare STAGATE in v1.",
+    "minimum_future_evidence": "A rights-cleared powered donor-level spatial RNA source, memory-safe section-blocked adapter, registered transductive or frozen endpoint, strong baselines, and external evaluation.",
+    "task_gate": "Keep target-fitted spatial domain discovery distinct from frozen held-donor prediction."
+  },
+  "crosswalk_scope": {
+    "candidate": "STAGATE_pyG_1.0.0_at_ae1158ca_train_locally",
+    "candidate_sources": ["gse192741", "gse292268", "hra007511", "vu2025"],
+    "registered_tasks": [],
+    "status": "deferred_no_active_spatial_task"
+  },
+  "dataset_findings": {
+    "gse192741": {
+      "biological_units": "4 donors and 5 Visium sections",
+      "native_fit": "Visium RNA and coordinates are native in principle.",
+      "status": "technical_pilot_only",
+      "why": "Four donors, exposed outcomes, and unresolved hg19 annotation preclude a model claim."
+    },
+    "gse292268": {
+      "biological_units": "4 donors and CosMx cell-level expression",
+      "native_fit": "Spatial expression and coordinates are structurally compatible, but panel depth and cell-level resolution require a separate stratum.",
+      "status": "blocked_join_unresolved_and_underpowered"
+    },
+    "hra007511": {
+      "biological_units": "35 spatial participants",
+      "native_fit": "Visium RNA is native; H&E and adjacent-section MALDI are not inputs.",
+      "status": "deferred_permission_and_weight_rights_unresolved"
+    },
+    "vu2025": {
+      "biological_units": "33 biopsies from 32 participants",
+      "native_fit": "Visium RNA is native; CODEX and H&E are not model inputs.",
+      "status": "blocked_DSA_and_participant_boundaries_unresolved"
+    }
+  },
+  "graph_and_donor_firewall": {
+    "outer_group": "cohort_family_id_plus_person_key",
+    "two_dimensional": "Construct one graph per participant and section or core, then combine block-diagonally. All sections from one participant stay in one fold.",
+    "three_dimensional": "Disabled by default. It requires same-participant adjacent RNA sections, authoritative order and registration, physical Z spacing, and a precommitted cross-section objective.",
+    "query": "Official STAGATE retrains on the target and is transductive. A frozen lane cannot refit encoder, graph hyperparameters, PCA, mclust, cluster count, or calibration.",
+    "replication": "Participants are replicates; spots, nodes, edges, sections, and reconstructed values are not."
+  },
+  "preprocessing_and_output_firewall": {
+    "training_only": "Normalization, log transform, HVGs, feature order, graph radius or K, architecture, epochs, clusterer, number of clusters, and any reconstruction threshold.",
+    "reconstruction": "Label reconstructed expression derivable_not_observed. Never substitute it for native counts or use spots as replicates for differential testing.",
+    "missingness": "Unmeasured genes, permission blocks, absent assays, and failed joins remain explicit missing states rather than zeros."
+  },
+  "interpretation": "STAGATE is a strong future target-fitted spatial RNA baseline, not an inductive pretrained model. Its selected PyG implementation is MIT-licensed but lacks a complete runtime and checkpoint export, densifies expression, and includes an unsafe cross-section option unless topology is rigorously controlled. With no eligible task or seal, it remains deferred.",
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

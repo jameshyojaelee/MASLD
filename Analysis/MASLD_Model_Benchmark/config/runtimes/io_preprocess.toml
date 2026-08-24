@@ -1,0 +1,13 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "io_preprocess"
+status = "candidate"
+purpose = "I/O-heavy preprocessing only"
+scheduler = "slurm"
+resource_profile = "io_preprocess"
+environment_lock = "UNRESOLVED"
+container_digest = "UNRESOLVED"
+modules = []
+command_prefix = ["UNRESOLVED"]
+admission_blocking = true
+blockers = ["Restricted I/O partition use must be justified; freeze environment, command, and total resource ask. The 72-hour limit is hard."
+]

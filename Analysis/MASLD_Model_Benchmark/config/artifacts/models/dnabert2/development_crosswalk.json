@@ -1,0 +1,46 @@
+{
+  "checkpoint_training_corpus": {
+    "declared_content": "32.49_billion_nucleotide_bases_from_135_species_across_six_categories_after_removing_sequences_with_N",
+    "human_sequence_included": true,
+    "exact_human_assembly_accession": "UNRESOLVED",
+    "training_labels_used": false,
+    "pretraining_steps": 500000,
+    "pretraining_batch_size": 4096,
+    "warning": "The released checkpoint is declared as the base multispecies MLM. The paper also reports a separate GUE-continued model, but the pinned Hugging Face object is not declared as that continued checkpoint."
+  },
+  "crosswalk_scope": {
+    "admitted_task": "variant_to_regulation",
+    "project_reference": "GRCh38.p14",
+    "registered_development_signed_effect_source": null,
+    "project_sealed_source": "GSE289173"
+  },
+  "findings": {
+    "GRCh38.p14_project_reference": {
+      "exposure_state": "encoder_seen",
+      "evidence": "Human reference sequence is included in the declared multispecies corpus, but the exact assembly accession and per-locus retained sequence inventory are not bound to the checkpoint."
+    },
+    "GSE289173_reference_allele_windows": {
+      "exposure_state": "encoder_seen",
+      "evidence": "Human reference-like sequence was part of pretraining. Exact locus membership cannot be excluded and is not treated as clean merely because cohort labels were later released."
+    },
+    "GSE289173_observed_variant_alleles": {
+      "exposure_state": "unknown",
+      "evidence": "The corpus inventory does not establish whether any alternate human haplotypes were present among the multispecies genome records."
+    },
+    "GSE289173_eQTL_ieQTL_effects": {
+      "exposure_state": "target_label_unexposed",
+      "evidence": "The checkpoint was released in 2023 and used unlabeled reference genomes; GSE289173 became public on 2025-02-12."
+    },
+    "GUE_regulatory_tasks": {
+      "exposure_state": "downstream_demo",
+      "evidence": "The paper evaluated and separately continued DNABERT-2 on GUE training sets; the registered base checkpoint is not declared as the continued object."
+    }
+  },
+  "task_data_gate": {
+    "common_frozen_embedding_lane": "blocked_for_supervised_signed_effect_fit_until_a_nonsealed_development_label_source_is_registered",
+    "native_zero_shot_lane": "admissible_as_a_sequence_only_comparator",
+    "sealed_rule": "No GSE289173 label, summary statistic, calibration target, layer choice, threshold, or hyperparameter may enter preprocessing, head fitting, or selection."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

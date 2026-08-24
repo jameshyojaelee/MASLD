@@ -1,0 +1,88 @@
+{
+  "architecture_contract": {
+    "architecture": "bidirectional_reverse_complement_parameter_sharing_Mamba_MLM",
+    "variant": "Caduceus-PS",
+    "hidden_dimension": 256,
+    "layers": 16,
+    "mamba_state_dimension": 16,
+    "mamba_expansion": 2,
+    "bidirectional_strategy": "add",
+    "bidirectional_weight_tie": true,
+    "reverse_complement_parameter_sharing": true,
+    "pretraining_objective": "BERT_style_masked_language_modeling_at_15_percent",
+    "pretraining_sequence_length_bp": 131072,
+    "pretraining_steps": 50000
+  },
+  "checkpoint": {
+    "repository": "kuleshov-group/caduceus-ps_seqlen-131k_d_model-256_n_layer-16",
+    "revision": "d89eeb853136ea64da7feb3d0c8e909771b17ae6",
+    "filename": "model.safetensors",
+    "sha256": "a3e6976fe90460ff5d90d371b457d0263dc65e156ea5651b4a452e98228daef2",
+    "size_bytes": 30937760,
+    "status": "exact_Caduceus_PS_checkpoint_registered"
+  },
+  "code": {
+    "repository": "kuleshov-group/caduceus",
+    "revision": "0060a6d8079b6a040fc55d505e15972a327b70a6",
+    "license": "Apache-2.0",
+    "custom_huggingface_code": true
+  },
+  "input_contract": {
+    "canonical_project_reference": "GRCh38.p14",
+    "pretraining_reference": "hg38.ml.fa_from_basenji_barnyard2",
+    "tokenization": "single_nucleotide_character_tokens",
+    "released_vocabulary_size": 16,
+    "variant_window": "fixed_6000_bp_SNP_centered_window_for_common_lane; 131072_bp_native_context_only_after_resource_probe",
+    "strand_contract": "Use the official RCPS channel transformation: split paired channels, reverse length and channel order for the RC half, align base coordinates, then average invariant summaries.",
+    "supported_primary_variant_type": "biallelic_SNP",
+    "indel_status": "deferred_until_length_and_center_alignment_fixtures_pass"
+  },
+  "representation_and_task_contract": {
+    "admitted_task": "variant_to_regulation",
+    "common_lane": "Follow the pinned VEP extraction logic: obtain REF and ALT backbone states, transform RCPS channel halves into aligned orientations, mean-pool each over the fixed 1536-bp variant-centered region, average orientations, and fit identical linear and two-layer heads to REF, ALT, ALT-minus-REF, and absolute-difference features.",
+    "native_zero_shot_lane": "Mask the variant base and compute the signed ALT-versus-REF log-probability difference from the MLM head, using the RCPS-consistent paired orientation score.",
+    "published_native_comparator": "Frozen 131072-bp embeddings pooled over 1536 bp around each allele and classified with an SVM in the long-range eQTL VEP benchmark.",
+    "signed_effect_limit": "Published VEP classification is not signed cell-type eQTL or ieQTL prediction. A supervised signed-effect head requires a nonsealed development source.",
+    "not_supported": ["cell_state_mapping", "RNA_conditioned_ATAC", "bulk_state_transfer", "perturbation_transfer"]
+  },
+  "runtime_contract": {
+    "declared_python": "3.8",
+    "declared_torch": "2.2.0",
+    "declared_pytorch_cuda": "12.1",
+    "declared_transformers": "4.38.1",
+    "declared_mamba_ssm": "1.2.0.post1",
+    "declared_causal_conv1d": "1.2.0.post2",
+    "declared_flash_attn": "2.5.6",
+    "environment_status": "UNRESOLVED",
+    "required_probe": "isolated_L40S_compiled_extension_import_tokenize_safetensors_load_forward_backward_resume_RC_equivariance_determinism_and_cross_device_tolerance",
+    "warning": "The checked-in environment mixes cuda-nvcc 11.7.99 with pytorch-cuda 12.1 and duplicates torchaudio. Treat it as evidence, not an executable lock; build and freeze a corrected isolated runtime only after dependency approval."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "format": "safetensors",
+    "deserialized": false,
+    "require_offline_vendored_custom_code": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Caduceus paper, pinned official code, exact Hugging Face revision, and public Basenji interval metadata were queried on 2026-08-22. No checkpoint bytes were downloaded or loaded.",
+  "source_records": [
+    {"identity": "caduceus:LICENSE", "sha256": "53c3bce42b068bd4c9a7831e18d4d7e7eab1b9cd00b8a3faac0aa96793c99bc5", "size_bytes": 11357},
+    {"identity": "caduceus:README.md", "sha256": "e508e5199d0cfb9c36dbd503cdccf50d734f419fa8cf1f890dec0db7e741ad42", "size_bytes": 13061},
+    {"identity": "caduceus:caduceus_env.yml", "sha256": "08469eeab6fa6bc4e61ded17bbc72b3248abe1d137e18370a219d467408a586a", "size_bytes": 1109},
+    {"identity": "caduceus:configs/dataset/hg38.yaml", "sha256": "bd489a341856e21d916e1bb0fb49cf9fbacb62b527dea59c4c98f1f66dde0895", "size_bytes": 299},
+    {"identity": "caduceus:src/dataloaders/datasets/hg38_dataset.py", "sha256": "9245ad360f4d2f9b95d22a32d175b3cef190085256ea2480ca3cde51688d4229", "size_bytes": 7514},
+    {"identity": "caduceus:vep_embeddings.py", "sha256": "e1a8fce33c28d8237a1e064941a67b08111ea5feb4e0ad897fc1f97eebeaab5a", "size_bytes": 20804},
+    {"identity": "basenji_barnyard2:sequences_human.bed", "sha256": "42a81b3240ad9e7868053101f166b71f1da8db6c757abb8bb407b9d7cb2024c2", "size_bytes": 1139472},
+    {"identity": "HF:config.json", "sha256": "d0f8eaf9d62370ffae2d41c92d00b9424fae31c823baf21111602dabc35eef45", "size_bytes": 1375},
+    {"identity": "HF:modeling_caduceus.py", "sha256": "9c79343c590721395af3d4323eb3992a2d01684e683f9f24db4acb9d9e56f655", "size_bytes": 28938},
+    {"identity": "HF:tokenization_caduceus.py", "sha256": "a85b0ee68a4764a3e27c11910972dc5ffa737204aa298b1e9cc798c18228da7e", "size_bytes": 4966}
+  ],
+  "terms_audit": {
+    "repository_code_license": "Apache-2.0",
+    "checkpoint_license": "Apache-2.0",
+    "derivative_weight_redistribution": "permitted_subject_to_Apache-2.0_notice_and_dependency_audit",
+    "result": "terms_pass_preflight"
+  },
+  "weight_license": "Apache-2.0"
+}

@@ -25,7 +25,7 @@
 # FAIRNESS block below). NO lollipop (memory/feedback-no-lollipop); all text BLACK,
 # gene names italic, no titles/subtitles/in-plot annotations (memory/feedback-no-colored-fonts).
 #
-# Output: figures/main/fig5_convergence/panels/fig5c_drug_target_calibration.pdf
+# Output: figures/main/fig6_gene_catalog/panels/fig6_drug_target_calibration.pdf
 # Env:    rnaseq
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -259,7 +259,7 @@ p <- ggplot(plot_dt, aes(xj, yj)) +
         legend.text = element_text(size = 6, face = "plain"),
         plot.margin = margin(3, 4, 3, 3))
 
-out <- file.path(FIG5_DIR, "panels", "fig5c_drug_target_calibration.pdf")
+out <- file.path(FIG5_DIR, "panels", "fig6_drug_target_calibration.pdf")
 save_fig(p, out, width = 3.31, height = 2.22)
 message("Saved: ", out)
 message("CAPTION: x = genetic colocalization (COLOC PP.H4); y = canonical raw logFC ",

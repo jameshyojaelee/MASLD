@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse275483"
+title = "Mouse in vivo pooled mosaic liver perturbation study"
+role = "cross_species_stress"
+status = "available"
+species = "mouse"
+accession = ["GSE275483"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "animal"
+expected_biological_units = 4
+native_genome_build = "UNRESOLVED"
+native_annotation_release = "UNRESOLVED"
+modalities = ["single_cell_rna", "pooled_perturbation", "imaging"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "target_label_unexposed"
+admission_blocking = true
+blockers = ["Mouse reference build and exact modality joins must be resolved before admission.", "Only animal-held inference is permitted; cells are not biological replicates."]
+notes = "Approximately 103,000 confident hepatocytes do not replace the four-animal replication unit: three ad-libitum and one fasting animal. Cross-species stress test only."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE275483"
+verified_date = "2026-08-21"
+local_exposure = "No direct local accession use was found at registry creation."
+
+[split]
+group_key = "cohort_family_id+animal_id"
+outer_role = "development"
+label_visibility = "development_visible"

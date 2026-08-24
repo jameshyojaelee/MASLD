@@ -1,0 +1,151 @@
+{
+  "architecture_contract": {
+    "declared_scale": "approximately_100_million_parameters",
+    "encoder_attention_heads": 12,
+    "encoder_hidden_dimension": 768,
+    "encoder_layers": 12,
+    "family": "xTrimoGene_asymmetric_encoder_decoder_expression_foundation_model",
+    "fixed_gene_count": 19264,
+    "pretraining_corpus_claim": "more_than_50_million_human_single_cell_transcriptomes",
+    "pretraining_objective": "masked_gene_expression_reconstruction",
+    "warning": "The repository's 100M label describes model scale. It is not an immutable checkpoint identity, and the SharePoint folder may contain base models and separately trained downstream heads."
+  },
+  "checkpoint_contract": {
+    "registered_identity": "biomap-research/scFoundation@397631c495eddf9ad6644fc00c6ea8139e651245+sharepoint-folder:IgBlEJ72TBE5Q76AmgXbgjXiAR69fzcrgzqgUYdSThPLrqk",
+    "registered_sha256": "UNRESOLVED",
+    "sharepoint_folder_token": "IgBlEJ72TBE5Q76AmgXbgjXiAR69fzcrgzqgUYdSThPLrqk",
+    "status": "blocked_mutable_folder_is_not_an_exact_checkpoint",
+    "required_resolution": [
+      "Inventory every object in the official SharePoint folder with immutable file identity, byte size, modification time, and SHA-256.",
+      "Select and name exactly one 100M base object independently of every downstream task head.",
+      "Bind every admitted task head to its base checkpoint, training data, fold, seed, configuration, and separate SHA-256.",
+      "Do not substitute a filename inferred from README examples for a verified checkpoint object."
+    ],
+    "weight_content_downloaded": false
+  },
+  "embedding_contract": {
+    "candidate_cell_representation": "768d_pooled_encoder_state",
+    "official_pooling_options": ["all", "max"],
+    "common_lane_rule": "Freeze one layer and pooling definition before screening; use the same definition for every donor and fold.",
+    "read_depth_tokens": [
+      "target_or_high_resolution_token_T",
+      "log10_total_count_token"
+    ],
+    "warning": "The official embedding script exposes multiple pooling and resolution choices. These are model-selection choices and cannot be chosen using validation or sealed labels."
+  },
+  "input_contract": {
+    "canonical_assays": ["scRNA_UMI_counts", "snRNA_UMI_counts"],
+    "feature_alignment": "gene_symbols_aligned_to_OS_scRNA_gene_index.19264.tsv_in_exact_index_order",
+    "fixed_gene_count": 19264,
+    "normalization_modes": {
+      "raw_single_cell": "log1p(raw_count_per_cell_total_times_10000)",
+      "pre_normalized_A": "official_GEARS_mode_with_total_count_appended",
+      "pre_normalized_F_or_T": "upstream_declared_modes_that_require_a_frozen_adapter_contract_before_use"
+    },
+    "structural_missingness_rule": "Do not silently interpret an unassayed gene as an observed biological zero. Preserve assay observability outside the native tensor, and admit only matrices whose gene coverage and count semantics pass the frozen adapter fixture.",
+    "unsupported_inputs": ["bulk_RNA", "normalized_values_of_unknown_provenance", "paired_RNA_ATAC_as_a_native_joint_input"]
+  },
+  "registry_binding": {
+    "artifact_bundle_id": "scfoundation",
+    "registry_model_id": "scfoundation_heads",
+    "mapping": "intentional",
+    "rule": "The directory name is a filesystem-safe family label. It does not rename or broaden the registered scfoundation_heads census entry."
+  },
+  "repository": "biomap-research/scFoundation",
+  "repository_revision": "397631c495eddf9ad6644fc00c6ea8139e651245",
+  "release": {
+    "paper": "Hao et al. Large-scale foundation model on single-cell transcriptomics",
+    "paper_doi": "10.1038/s41592-024-02305-7",
+    "paper_online_date": "2024-06-06",
+    "processed_downstream_artifact_record": "Figshare:24049200:v3",
+    "processed_downstream_artifact_doi": "10.6084/m9.figshare.24049200.v3",
+    "processed_downstream_artifact_rule": "The Figshare downstream-data record is not evidence for the identity or license of the registered SharePoint base checkpoint or task heads."
+  },
+  "runtime_contract": {
+    "environment_status": "UNRESOLVED",
+    "framework": "PyTorch_and_CUDA",
+    "official_loader_behavior": "model/load.py uses torch.load and moves the model to CUDA",
+    "required_probe": "isolated_L40S_import_exact_checkpoint_load_fixed_gene_alignment_forward_backward_if_adaptation_is_licensed_resume_deterministic_seed_pooling_and_numeric_tolerance",
+    "scheduling_status": "blocked_until_exact_checkpoint_identity_terms_and_safe_conversion_pass"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "official_loader_permitted_directly_on_untrusted_bytes": false,
+    "risk": "The official path invokes unrestricted torch.load on a remotely hosted checkpoint.",
+    "required_path": [
+      "Resolve and approve one exact remote object before acquisition.",
+      "Verify byte size and SHA-256 before deserialization.",
+      "Inspect in a disposable no-network environment, using weights_only when compatible.",
+      "Convert recognized tensor state to a non-executable format and freeze tensor names, shapes, and dtypes.",
+      "Prove fixed-fixture numeric parity with the pinned official code before benchmark use."
+    ]
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods paper, pinned official repository, repository code and licenses, Figshare metadata, and live official SharePoint endpoint were checked on 2026-08-22. No checkpoint or dataset artifact was downloaded or deserialized.",
+  "source_records": [
+    {
+      "identity": "scFoundation@397631c4:README.md",
+      "sha256": "02a7ae44cf2cc9948b5c1520b18a261b45abf9f17e3149e37d9f48072184f376",
+      "size_bytes": 8960,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/README.md"
+    },
+    {
+      "identity": "scFoundation@397631c4:LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "size_bytes": 11357,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/LICENSE"
+    },
+    {
+      "identity": "scFoundation@397631c4:MODEL_LICENSE",
+      "sha256": "bdcd01b3213efb813f4461ef60c2a30d56cf07b63446d234283d8c0547ee3cbb",
+      "size_bytes": 2310,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/MODEL_LICENSE"
+    },
+    {
+      "identity": "scFoundation@397631c4:OS_scRNA_gene_index.19264.tsv",
+      "sha256": "bb337ea195d94e7b033543abc02a42e7060d6562eba97deb077f7dcecec62661",
+      "size_bytes": 228232,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/OS_scRNA_gene_index.19264.tsv"
+    },
+    {
+      "identity": "scFoundation@397631c4:model/README.md",
+      "sha256": "f62879233ecf5fac407cd516aca2ddb3df20370523cb111c9d057676b4721d5d",
+      "size_bytes": 6523,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/model/README.md"
+    },
+    {
+      "identity": "scFoundation@397631c4:model/get_embedding.py",
+      "sha256": "7e1d7ce2905d5b5b60288e9ac0919eece4becadba909a0eccc7afadb9697e351",
+      "size_bytes": 14077,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/model/get_embedding.py"
+    },
+    {
+      "identity": "scFoundation@397631c4:model/load.py",
+      "sha256": "6cd804545f80ad737c215339bd420f3e3e6d4d4ca47197a72dcd25b027d013f5",
+      "size_bytes": 7183,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/model/load.py"
+    },
+    {
+      "identity": "scFoundation@397631c4:model/finetune_model.py",
+      "sha256": "0ca996846210f5b27b614c3045554db54829049d504697d11bb9ab77acc7af12",
+      "size_bytes": 2638,
+      "url": "https://github.com/biomap-research/scFoundation/blob/397631c495eddf9ad6644fc00c6ea8139e651245/model/finetune_model.py"
+    }
+  ],
+  "task_fit": {
+    "cell_state_mapping": "conditional_restricted_comparator_after_exact_base_identity_runtime_input_and_exposure_gates",
+    "masld_adaptation": "Project-internal noncommercial research adaptation may be considered only after exact checkpoint inventory and written terms acceptance. Adapted weights or heads remain ineligible for redistribution or an open champion.",
+    "perturbation_response": "not_admitted_by_this_registry_entry; the official GEARS integration is a separately trained task pipeline and requires its own checkpoint, splits, seeds, terms, and exposure audit",
+    "rna_atac_integration": "not_native",
+    "bulk_state_transfer": "not_admitted"
+  },
+  "terms_audit": {
+    "code_license": "Apache-2.0",
+    "code_license_scope": "repository_software_only",
+    "model_license": "custom_noncommercial_research_license",
+    "model_license_characteristics": ["noncommercial", "nontransferable", "nonsublicensable", "revocable"],
+    "open_champion_eligible": false,
+    "redistribution_rule": "Do not redistribute the base weights or derived task heads; a noncommercial internal adaptation, if approved, remains a restricted comparator.",
+    "result": "restricted_comparator_only_after_exact_object_and_terms_acceptance"
+  }
+}

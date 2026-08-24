@@ -1,0 +1,130 @@
+schema_version = "masld-bench-resources-v1"
+
+[reference]
+bundle_id = "grch38p14_gencode_v49"
+assembly = "GRCh38"
+assembly_patch = "p14"
+annotation_release = "GENCODE_v49"
+sequence_extraction_ready = false
+sequence_extraction_blockers = ["The admitted FASTA is plain gzip and has no frozen .fai/.gzi indexes. Build and checksum a derived indexed copy on a compute node before any sequence-window campaign."]
+
+[reference.genome]
+path = "/gpfs/commons/home/jameslee/reference_genome/refdata-gex-GRCh38-2024-A/genome/GRCh38.p14.genome.fa.gz"
+sha256 = "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215"
+compression = "gzip"
+integrity = "gzip_and_sha256_verified_2026-08-21"
+
+[reference.annotation]
+path = "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
+sha256 = "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9"
+format = "gtf_gzip"
+integrity = "gzip_and_sha256_verified_2026-08-21"
+
+[coordinate_contract]
+bed_system = "zero_based_half_open"
+contig_policy = "canonical_GRCh38_names_with_explicit_primary_alt_patch_policy"
+analysis_contigs = ["chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY", "chrM"]
+excluded_contig_policy = "reject"
+variant_normalization = "reference_allele_check_then_left_normalize"
+liftover_policy = "retain_native_coordinates_and_accept_unique_one_to_one_mappings_only"
+native_ld_policy = "compute_ancestry_matched_LD_on_native_build_before_liftover"
+
+[semantics]
+pairing_levels = ["same_molecule", "same_cell", "same_nucleus", "same_section", "adjacent_section", "same_sample_different_aliquot", "same_donor_different_tissue", "same_study_unpaired"]
+modality_statuses = ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"]
+exposure_statuses = ["clean_declared", "target_label_unexposed", "encoder_seen", "continual_seen", "reference_only", "downstream_demo", "unknown"]
+evidence_statuses = ["supported", "discordant", "tested_negative", "untestable", "not_applicable", "source_dependent", "indeterminate"]
+missingness_policy = "A missing modality is never a biological zero; measured assay-native zeros remain values. Cross-modal loss is evaluated only on authoritative pair edges and reports its eligible denominator."
+
+[prohibited_references]
+paths = ["/gpfs/commons/home/jameslee/reference_genome/gencode_v49/GRCh38.p14.genome.fa.gz", "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.transcripts.fa.gz"]
+reason = "Both files were truncated and failed gzip integrity testing on 2026-08-21."
+
+[redistribution]
+default_data_policy = "release_manifests_hashes_source_fetchers_splits_code_and_aggregate_metrics_only"
+human_raw_data_policy = "do_not_rehost"
+controlled_data_policy = "no_training_or_weight_release_without_written_permission"
+model_weight_policy = "dataset_level_derivative_use_review_required"
+
+[cluster]
+default_qos = "nslab"
+aggregate_memory_cap_gb = 7000
+array_submission_default = false
+production_submit_default = false
+
+[profiles.cpu_contract]
+partition = "cpu"
+cpus = 1
+memory_gb = 4
+wall_time = "00:15:00"
+gpus = 0
+accelerator = "none"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.cpu_preprocess]
+partition = "cpu"
+cpus = 16
+memory_gb = 200
+wall_time = "90:00:00"
+gpus = 0
+accelerator = "none"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.cpu_baseline_smoke]
+partition = "cpu"
+cpus = 1
+memory_gb = 16
+wall_time = "01:00:00"
+gpus = 0
+accelerator = "none"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.bigmem_preprocess]
+partition = "bigmem"
+cpus = 16
+memory_gb = 512
+wall_time = "90:00:00"
+gpus = 0
+accelerator = "none"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.io_preprocess]
+partition = "io"
+cpus = 16
+memory_gb = 200
+wall_time = "72:00:00"
+gpus = 0
+accelerator = "none"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.gpu_single]
+partition = "gpu"
+cpus = 16
+memory_gb = 200
+wall_time = "90:00:00"
+gpus = 1
+accelerator = "l40s"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.gpu_rna_atac_smoke]
+partition = "gpu"
+cpus = 4
+memory_gb = 64
+wall_time = "04:00:00"
+gpus = 1
+accelerator = "l40s"
+qos = "nslab"
+admission_blocking = false
+blockers = []

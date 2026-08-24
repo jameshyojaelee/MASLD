@@ -1,0 +1,156 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "No rights-cleared donor-level MASLD spatial dataset currently satisfies the donor-join, graph, prior-asset, split, and artifact-lock contracts.",
+    "v1_training": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "prior_informed_variational_graph_autoencoder_for_spatial_niches",
+    "native_observation": "one spatially located cell or spot",
+    "native_modalities": [
+      "raw_spatial_RNA_counts",
+      "optional_same_observation_paired_ATAC"
+    ],
+    "non_native_modalities": [
+      "histology_pixels",
+      "CODEX_protein_images",
+      "MALDI_metabolite_images"
+    ],
+    "required_graph": "A symmetric binary spatial adjacency supplied in AnnData obsp under the selected adjacency key.",
+    "prior_mechanism": "Masked gene-program encoder and decoder links derived from ligand-receptor, transcription-factor-target, and optional metabolite-related prior programs.",
+    "warning": "Successful ingestion of H&E, CODEX, or MALDI-derived features through a generic container would not make those assays native NicheCompass observations. Any such extension is a separately specified model."
+  },
+  "implementation": {
+    "package": "nichecompass",
+    "repository": "Lotfollahi-lab/nichecompass",
+    "repository_revision": "5bf7d2a09e70bd490c59e978e37f4df30f812994",
+    "release_tag": "0.3.3",
+    "release_date": "2026-05-15",
+    "source_license": "BSD-3-Clause",
+    "publication_doi": "10.1038/s41588-025-02120-6",
+    "publication_title": "Quantitative characterization of cell niches in spatially resolved omics data",
+    "status": "exact_source_revision_registered_not_downloaded_or_executed"
+  },
+  "package_artifacts": {
+    "pypi_release": "0.3.3",
+    "python_requires": ">=3.10",
+    "sdist": {
+      "filename": "nichecompass-0.3.3.tar.gz",
+      "sha256": "8550b414dcaaca06cb231a643ee3cbd961bb466e60a24acec45bd43893e0ab32",
+      "size_bytes": 39630309
+    },
+    "wheel": {
+      "filename": "nichecompass-0.3.3-py3-none-any.whl",
+      "sha256": "a5463a62debd2dbf6e85cabc622d24e5957283356160cfdbce54ab203b582657",
+      "size_bytes": 126695
+    },
+    "status": "metadata_registered_packages_not_downloaded_or_installed"
+  },
+  "checkpoint_contract": {
+    "admitted_upstream_biological_checkpoint": "none",
+    "implementation_type": "train_locally",
+    "trained_artifact_sha256": "UNRESOLVED_no_project_model_has_been_trained",
+    "rule": "A future fold-specific model is a new checkpoint identity. Record training donors, graph and prior hashes, exact source and environment, state-dict manifest, seed, and artifact SHA-256 separately for every fold and seed."
+  },
+  "input_contract": {
+    "adjacency_default": "spatial_connectivities",
+    "counts_default": "counts",
+    "gene_order": "Freeze a training-derived ordered feature roster. A held donor is aligned to that roster; absent genes are masked or handled by a predeclared native rule, never silently interpreted as measured zeros.",
+    "raw_counts": "Retain assay-native count semantics. Normalization, highly variable feature selection, program filtering, and scaling are fitted inside training donors only.",
+    "paired_RNA_ATAC": "Allowed only when RNA and ATAC are observed on the same cell or nucleus. Same-donor, same-section, adjacent-section, or different-aliquot measurements are not substituted as paired observations.",
+    "sample_covariates": "Any categorical sample or batch embedding and the policy for an unseen held donor must be frozen before evaluation.",
+    "spatial_coordinates": "Coordinates must carry explicit section, participant, units, scale, and registration provenance. Pixel and micron coordinates are not mixed without a frozen transform."
+  },
+  "spatial_graph_contract": {
+    "cross_donor_edges": "forbidden",
+    "cross_section_edges": "forbidden_unless_one_authoritatively_registered_same_participant_tissue_volume_and_the_rule_is_predeclared",
+    "construction": "Build each graph independently within an authoritative participant and section boundary, then combine as a block-diagonal graph. Never construct neighbors after pooling raw coordinates from multiple donors, slides, arrays, or fields of view.",
+    "graph_builder_status": "UNRESOLVED_external_to_the_core_model",
+    "required_lock": "Freeze implementation revision, coordinate system, metric, neighbor or radius rule, physical scale, boundary masks, symmetrization, self-loop policy, isolated-node policy, and graph edge-list SHA-256.",
+    "vu2025_rule": "Do not construct a graph on a VLP capture array until every barcode or tissue island has an authoritative biopsy and participant assignment. Four to five participants share each technical array.",
+    "held_donor_rule": "A held donor may use its own unlabeled coordinates to form a within-donor query graph under the frozen rule. Its labels, outcomes, clusters, or manually outcome-guided boundaries may not affect graph construction."
+  },
+  "held_donor_capability": {
+    "frozen_inductive_lane": "Potentially supported: apply frozen model weights, training-derived gene and program rosters, and a fixed covariate policy to a new donor's within-donor graph. This capability is not yet verified on a fixed fixture.",
+    "query_adaptive_lane": "Native reference mapping or fine-tuning that adds or learns query sample covariates uses held-donor features and is transductive or query-adaptive. It must be reported separately and cannot be called zero-shot.",
+    "selection_firewall": "Clustering, prototype count, resolution, early stopping, graph hyperparameters, program pruning, and label mapping are selected using development donors only.",
+    "unseen_sample_covariate": "UNRESOLVED; a neutral or reference-coded policy must be prespecified for the frozen lane rather than creating a learned embedding from evaluator labels."
+  },
+  "prior_asset_contract": {
+    "dynamic_retrieval": "The pinned implementation can retrieve resources such as NicheNet, OmniPath, and CollecTRI. Network access and mutable latest resources are forbidden in benchmark runs.",
+    "required_lock": "Vendor only rights-cleared versions into a project-controlled offline bundle; record source URL, version or release date, organism, identifier authority, license, row-level provenance, canonical serialization, and SHA-256.",
+    "bundled_or_referenced_assets": "Mouse GENCODE vM25, human-mouse ortholog, and metabolite enzyme or sensor tables require independent applicability and terms review before use in a human MASLD model.",
+    "hotspot_firewall": "The frozen 117 Atlas Hotspot programs are read-only post hoc projections. They cannot be NicheCompass training programs, optimized features, selection endpoints, or hyperparameter targets."
+  },
+  "safe_loading_contract": {
+    "native_behavior": "The pinned save path writes model_params.pt, attr.pkl, and var_names.csv; the load path uses torch.load and pickle.load and warns rather than fails on a variable-name mismatch.",
+    "risk": "Pickle and unrestricted torch deserialization are unsafe for untrusted artifacts, and warning-only gene-order handling is inadequate for a frozen benchmark.",
+    "required_project_path": "Accept only project-produced trusted fold artifacts. Prefer a tensor-only state dictionary or safetensors plus schema-validated JSON metadata; require exact keys, shapes, dtypes, finite values, gene order, program order, and adjacency contract. No upstream pickled model object is admitted.",
+    "network": "No model, prior, or data retrieval is allowed during load or inference."
+  },
+  "runtime_contract": {
+    "declared_dependencies": [
+      "mlflow",
+      "pyreadr",
+      "scanpy",
+      "torch-geometric",
+      "omnipath",
+      "decoupler",
+      "numpy"
+    ],
+    "environment_status": "UNRESOLVED_unpinned_dependency_ranges_and_optional_stack",
+    "required_probe": "After activation and campaign approval only: isolated L40S import, graph construction fixture, forward, backward, checkpoint resume, deterministic seed, cell-order permutation, block-diagonal graph, held-donor encode, no-network, and cross-device numeric-tolerance probes through SLURM."
+  },
+  "terms_and_release_contract": {
+    "code": "BSD-3-Clause at the pinned source revision.",
+    "local_weights": "A locally trained state dictionary may be released only if every training dataset and prior asset permits model training and derivative-weight redistribution; BSD source terms alone do not resolve those upstream rights.",
+    "upstream_checkpoints": "none_admitted",
+    "open_champion": "ineligible while no eligible donor-level spatial source, split, prior bundle, trained checkpoint, and weight-redistribution receipt exist"
+  },
+  "source_evidence": "The Nature Genetics article, official GitHub release and raw source at the pinned revision, and official PyPI metadata were inspected online on 2026-08-22. No package, checkpoint, prior bundle, or dataset was downloaded, installed, or executed.",
+  "source_records": [
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:LICENSE",
+      "sha256": "916041bbfed704086a5cf3aecb7ea030e4c20615e38a60f394c301050aa271ae",
+      "size_bytes": 1567
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:README.md",
+      "sha256": "b8e3f7b1e3a866fdbd29b3c5e4a29cb8f726bfb7ae829db44a33b8b43b717e60",
+      "size_bytes": 2366
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:pyproject.toml",
+      "sha256": "e2d73fd161bf1a7ab846807d79b250a718078df23ac80a34cda11e462b3bb79a",
+      "size_bytes": 4176
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:environment.yaml",
+      "sha256": "af18404541e810ac7b7e9c8caf3c8725b068f03d5619724e126b2b64bae75dd6",
+      "size_bytes": 223
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:src/nichecompass/models/nichecompass.py",
+      "sha256": "e83f4b96d8b24ab4cecdaa3badd7bf66da8f6c6e7223fd6221622cd354dcfb0a",
+      "size_bytes": 95234
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:src/nichecompass/models/basemodelmixin.py",
+      "sha256": "d197efb66e9712333a0d1a4b4f1e3925a5ad68ba84ce25a8878b270ff0d43c75",
+      "size_bytes": 12887
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:src/nichecompass/utils/gene_programs.py",
+      "sha256": "664091ca977e08e964ab231a879b78005f7539cd75bf0356545c6f006b5a3aaf",
+      "size_bytes": 62997
+    },
+    {
+      "identity": "Lotfollahi-lab/nichecompass@5bf7d2a0:src/nichecompass/modules/vgpgae.py",
+      "sha256": "2adc7aa210686a8b7a2a40fdcd9e02512845185116dadfdc7f72a38a017b2771",
+      "size_bytes": 81193
+    }
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

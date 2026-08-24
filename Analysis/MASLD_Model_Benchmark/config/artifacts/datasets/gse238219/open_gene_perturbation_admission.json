@@ -1,0 +1,157 @@
+{
+  "admission_status": "blocked_biological_ancestry_and_rights_authority_unresolved",
+  "dataset_id": "gse238219",
+  "dataset_version": {
+    "accessions": [
+      "GSE238219",
+      "PRJNA998383"
+    ],
+    "geo_raw_tar_sha256": "7aa4ad594fa30694c863e03c5c50d15dc7303bca0dca146b14bd690345807bf5",
+    "geo_raw_tar_size_bytes": 643778560
+  },
+  "frozen_receipts": {
+    "cross_sample_gate": {
+      "artifact_manifest_sha256": "7f2805b3577ac26bf3e75114a0833501afa524c2cb893aec56c742c016ed1ee1",
+      "cross_sample_gate_sha256": "1ed375c2abfcf2059ebe8622296566c8035d4779169dda8d443f5ace54117b3a",
+      "path": "executions/gse238219-cross-sample-21067096"
+    },
+    "extended_methods": {
+      "artifact_manifest_sha256": "f46af7f3200dd97bfd69e5fbff1f5d8df65cbee64c9c7fb588f44422046c52b1",
+      "path": "executions/gse238219-extended-methods-21067316",
+      "source_docx_sha256": "e8eb7294c490e92697f60cf9e4e747587ccb9147d66c88c3f728656207f2a73c"
+    },
+    "materializations": [
+      {
+        "artifact_manifest_sha256": "a0647833b352cad106b20c86a635765b340c1d5f70d09697eed8988ab23aa976",
+        "path": "executions/gse238219-pseudobulk-GSM7660623-21067095_0",
+        "sample": "GSM7660623"
+      },
+      {
+        "artifact_manifest_sha256": "173c84f8de01326213cd7d78ba84b3daea3f758d467ad66dc12a235cdfcae7f8",
+        "path": "executions/gse238219-pseudobulk-GSM7660624-21067095_1",
+        "sample": "GSM7660624"
+      },
+      {
+        "artifact_manifest_sha256": "dd6f9ac761b233256355e52d4300b89a09ffb2f38978fcb2cdf163901ac65dc4",
+        "path": "executions/gse238219-pseudobulk-GSM7660625-21067095_2",
+        "sample": "GSM7660625"
+      },
+      {
+        "artifact_manifest_sha256": "5b486e865f3117157a32bcb69137c60fcf0577dbeb6757bab55271812c80b3ac",
+        "path": "executions/gse238219-pseudobulk-GSM7660626-21067095_3",
+        "sample": "GSM7660626"
+      },
+      {
+        "artifact_manifest_sha256": "69521a60bd3c56ebf5f312335eb4e5cce68a2752557c337cbd2422d0d237f1b4",
+        "path": "executions/gse238219-pseudobulk-GSM7660627-21067095_4",
+        "sample": "GSM7660627"
+      }
+    ],
+    "source_acquisition": {
+      "artifact_manifest_sha256": "0c5d7e5b731e42f9119d149606216a66ae17965de7ef7e360f5536c42582b85a",
+      "path": "executions/gene-perturbation-source-gse238219-21066693_0"
+    },
+    "sra_ancestry": [
+      {
+        "artifact_manifest_sha256": "bd24b6cedf05882e4b59c048c09856f6c4d2843aac2193ce814ccd7a2223d4ca",
+        "path": "executions/gse238219-sra-SRX21157431-21067335_0",
+        "sra_experiment": "SRX21157431"
+      },
+      {
+        "artifact_manifest_sha256": "5724bde66478a39d4c342407727dea3d8f5aa095de47d298325a0d504faae9ae",
+        "path": "executions/gse238219-sra-SRX21157432-21067335_1",
+        "sra_experiment": "SRX21157432"
+      },
+      {
+        "artifact_manifest_sha256": "e94ee2de0e7da3bc409c50f0f1f9df1803fa727d1d051a75590289ffb476a272",
+        "path": "executions/gse238219-sra-SRX21157433-21067415_2",
+        "sra_experiment": "SRX21157433"
+      },
+      {
+        "artifact_manifest_sha256": "6dc0e3db1d96f9828596dd18d66dc150e2bde5fbc30bf40ddac0a91680353aa9",
+        "path": "executions/gse238219-sra-SRX21157434-21067415_3",
+        "sra_experiment": "SRX21157434"
+      },
+      {
+        "artifact_manifest_sha256": "b03add0ff43a0761ed79de0814b529769c33232df147cf311d37951e509d3b9d",
+        "path": "executions/gse238219-sra-SRX21157435-21067415_4",
+        "sra_experiment": "SRX21157435"
+      }
+    ],
+    "submission_template": {
+      "artifact_manifest_sha256": "05379b74e13ae4072bbb9b2fd1a5ddf4daaed7197193f8da7519b3793bff6bc0",
+      "path": "executions/gse238219-submission-template-21067425"
+    },
+    "unseen_target_split_manifest": {
+      "artifact_manifest_sha256": "6d6bb5ad785b5aa65573db5e1e1eb15f430bd98cfd163c0571b1fb895a6b31c9",
+      "execution_ready": false,
+      "path": "executions/gse238219-target-splits-21067592"
+    }
+  },
+  "materialized_topology": {
+    "cell_assignment_totals": {
+      "control": 1902,
+      "mixed_control_target": 990,
+      "multi_gene": 2666,
+      "single_gene": 14506,
+      "unassigned": 4002
+    },
+    "deposited_sample_count": 5,
+    "deposited_series_labels": [
+      "DIFF_HRG_P_Seq2",
+      "P_Seq2",
+      "PSG_1",
+      "PSG_2",
+      "PSG_3"
+    ],
+    "gene_axis_identical_across_samples": true,
+    "guide_reference_identical_across_samples": true,
+    "independent_biological_unit_count": "UNRESOLVED",
+    "primary_pseudobulk_rule": "Pure non-targeting controls and cells with one unique non-control target gene and no non-targeting guide are aggregated separately within each deposited sample. Multiple guides to the same gene are retained with the exact guide family recorded. Mixed control-target and multi-gene calls are excluded from the single-gene endpoint.",
+    "reason_independent_n_unresolved": "GEO exposes five deposited objects, while the source paper reports differential-expression analysis over two Perturb-seq replicates. Culture, transduction, capture, and sequencing ancestry have not been resolved."
+  },
+  "replicate_ancestry_evidence": {
+    "author_submission_template": "The template defines biological replicates as separate sample rows, technical sequencing replicates as multiple files in one row, and places five samples in rows titled Perturb-Seq replicates 1 through 5.",
+    "extended_methods": "The source methods describe one day-42 FACS and 10X capture workflow but do not state whether the five submitted samples arose from independent cultures or independent transductions.",
+    "main_paper": "Differential expression for VKORC1 was analyzed over two Perturb-seq replicates.",
+    "sra": "Each GEO sample maps to a distinct BioSample and SRA experiment. Replicates 1 and 2 each contain two runs; replicates 3 through 5 each contain four runs. The runs and lanes remain technical units nested within their sample.",
+    "conclusion": "Five author-designated replicate samples and their nested technical runs are verified. Independent culture/transduction ancestry for all five is not documented, so five biological units are not yet admitted."
+  },
+  "model_applicability": {
+    "cellot_scgen": "known-target held-independent-biological-replicate or held-context only; currently blocked because independent biological replicate ancestry is unresolved",
+    "cpa_perturblib": "seen perturbation atoms and contexts only; no valid held-combination claim is registered",
+    "gears_genepert_scgpt_perturbation_head": "exact gene-target folds only, with exact model-vocabulary identity; runtime, checkpoint, terms, and safe-loading gates remain model-specific blockers",
+    "perturbation_native_baselines": "independent code and synthetic contract fixture are ready; fitted outer-fold state remains blocked on dataset activation and held-target-capable feature authorities"
+  },
+  "release_and_exposure": {
+    "allowed_use": "development-visible raw-count topology and preprocessing only until activation gates resolve",
+    "automatic_redistribution": false,
+    "exposure_status": "downstream_demo",
+    "license_status": "source_terms_apply_no_explicit_GEO_data_license_identified",
+    "source_perturbation_effect_tables_used": false
+  },
+  "runtime_receipt": {
+    "array_job_id": "21067095",
+    "elapsed_range_seconds": [
+      10,
+      38
+    ],
+    "max_rss_accounting": "SLURM reported 35,652 KiB and 36,108 KiB for two tasks; MaxRSS was unavailable or zero for three tasks",
+    "requested_per_task": "1 CPU, 8 GiB, 2 hours, io partition",
+    "tasks_completed": 5,
+    "tasks_failed": 0
+  },
+  "task_firewalls": {
+    "gse281160": "not a gene-target dataset; remains only in perturbation_transfer and is never mapped to a nearest gene",
+    "gse313774_accessed": false,
+    "source_outcome_derived_tables": "excluded from split construction, preprocessing, features, and pseudobulk materialization"
+  },
+  "terminal_blockers": [
+    "Obtain a primary record or author clarification that states whether the five author-designated replicate samples arose from independent cultures and independent transductions, and reconcile all five with the paper's two-replicate differential-expression analysis.",
+    "Freeze a rights authority for model-input use and any aggregate redistribution.",
+    "Freeze the exact Cell Ranger reference annotation authority and activation QC without using source-derived perturbation-effect outcomes.",
+    "For unseen-target ridge or bilinear comparisons, freeze held-target-capable, outcome-independent target features before reading fold outcomes."
+  ],
+  "schema_version": "masld-bench-open-gene-perturbation-admission-v1",
+  "verified_date": "2026-08-24"
+}

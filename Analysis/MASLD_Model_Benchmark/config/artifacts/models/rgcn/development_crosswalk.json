@@ -1,0 +1,86 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "graph_status": "BLOCKED_corrected_50_study_COLOC_release_and_promoted_graph_snapshot_absent",
+    "sealed_sources": [],
+    "task": "typed_evidence_graph"
+  },
+  "endpoint_eligibility": {
+    "brier_score": "development-only after a source-blind calibrator is fit without the evaluated source",
+    "causal_gene": "ineligible; output supports prioritization only",
+    "held_source_auprc": "eligible as nested development cross-source recovery only after all leakage gates pass",
+    "locus_macro_hits_at_10": "eligible development-only",
+    "locus_macro_mrr": "eligible development-only",
+    "open_champion": "ineligible because datasets_sealed is empty and the executable promotion gate permits only blocked_missing_sealed_source"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Outer-training graph evidence only after the corrected 50-study COLOC release is promoted. Native-build LD and locus grouping precede graph construction.",
+      "exposure_state": "downstream_demo",
+      "model_fit_state": "continual_seen_for_rows_and_edges_used_in_each_training_graph",
+      "warning": "Current memberships are exposed and provisional; no local checkpoint may be created from them before promotion."
+    },
+    "gse281160": {
+      "allowed_use": "Development-only source-recovery diagnostic. Aggregate same-cell guide and RNA evidence to experimental replicate, target locus, and guide family before graph edges are constructed.",
+      "exposure_state": "downstream_demo",
+      "model_fit_state": "held_source_labels_evaluator_only_in_its_fold;_continual_seen_if_used_as_an_input_source_in_other_development_folds",
+      "topology": "same_cell guide and RNA; cells and guides are not biological replicates",
+      "warning": "The 20 targets were MPRA-selected and are not an unbiased source seal."
+    },
+    "gse281364": {
+      "allowed_use": "Development-only source-recovery diagnostic grouped by locus and sequence identity. MPRA reporter activity is not an endogenous enhancer-gene link unless an independently registered mapping supports that edge type.",
+      "exposure_state": "downstream_demo",
+      "model_fit_state": "held_source_labels_evaluator_only_in_its_fold;_continual_seen_if_used_as_an_input_source_in_other_development_folds",
+      "topology": "same_sample_different_aliquot DNA and RNA counts; 16 experimental replicates"
+    },
+    "gse289173": {
+      "allowed_use": "none for the typed-evidence graph task under the current TaskSpec",
+      "exposure_state": "target_label_unexposed",
+      "reason": "It is not a registered graph seal and its cell-state or QTL outcomes cannot be imported to create one."
+    },
+    "resource_gene_catalog_current": {
+      "allowed_use": "Exposed development graph content only after a promoted immutable snapshot. Frozen Resource evidence classes, thresholds, hero genes, and 117 programs cannot become graph training targets or be redefined by model output.",
+      "exposure_state": "downstream_demo"
+    }
+  },
+  "held_source_protocol": {
+    "calibration": "Fit any probability calibrator using predictions and labels from remaining source-held development folds only. The evaluated source contributes no calibration row, prevalence, threshold, or class weight.",
+    "decoder": "Train one source-agnostic candidate-gene head. Do not instantiate or query a held-source-specific relation embedding or decoder parameter.",
+    "evaluator_only_items": [
+      "held_source_positive_and_tested_negative_labels",
+      "held_source_assay_observability",
+      "held_source_candidate_eligibility",
+      "held_source_prevalence",
+      "held_source_thresholds"
+    ],
+    "graph_removal": "Before graph construction, delete every held-source edge, inverse edge, source node, provenance field, assay-observability mask, derived path, aggregate, degree, source count, feature, normalization statistic, and duplicate alias.",
+    "negative_sampling": "Generate training negatives separately within each remaining source's eligible tested universe. Untestable, not-applicable, structurally missing, join-unresolved, or simply absent edges are not negatives.",
+    "node_universe": "Construct variants, loci, and genes from source-independent registries frozen before source removal. A node or candidate introduced only because the held source assayed it is evaluator-only.",
+    "split": "Group native-build LD blocks, loci, source aliases, genes, and every deterministic derivative before graph construction. Remove held-locus incident edges and a frozen message-passing neighborhood where required by the outer split.",
+    "success_interpretation": "A score can show that remaining evidence prioritizes genes later supported by the removed source. It cannot establish causality or predict the semantics of an unseen relation."
+  },
+  "induction_contract": {
+    "feature_lane": "Conditionally inductive to unseen nodes of existing schema only when all node features are computed by a frozen source-independent transform and no entity-ID embedding is used.",
+    "new_relation": "unsupported; a wholly unseen relation has untrained RGCN parameters",
+    "transductive_lane": "Permitted only as an explicitly labeled fixed-node-universe development comparator. Node existence must not derive from the held source.",
+    "unseen_node_with_id_embedding": "unsupported"
+  },
+  "missingness_and_semantics": {
+    "evidence_states": ["supported", "discordant", "tested_negative", "untestable", "not_applicable", "source_dependent", "indeterminate"],
+    "missingness_rule": "No missing, untested, unavailable, or held evidence state is encoded as a zero-valued negative edge.",
+    "native_operator_gap": "RGCNConv has no continuous edge-feature argument. Any discretization or feature projection must retain assay-native meaning, explicit masks, and provenance and must be frozen before fitting.",
+    "scientific_language": "Use colocalized or genetically anchored candidate and prioritization. Never causal gene from COLOC or graph rank alone."
+  },
+  "reproducibility_contract": {
+    "graph_receipt": "Hash the promoted input rows, canonical node IDs, directed typed edges, inverse edges, source provenance, explicit missing states, removed-source list, and every derivative feature before fitting.",
+    "local_artifact": "Freeze architecture, relation order, graph receipt, outer role, decoder, negative samples, calibration folds, seed, environment, tensors, and predictions for every fitted model.",
+    "statistical_unit": "independent locus; seeds, edges, variants, genes, guides, and cells are not independent biological replicates",
+    "task_contract_hashes": {
+      "evidence_graph_outer_toml": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "promotion_gates_toml": "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a",
+      "typed_evidence_graph_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92"
+    }
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

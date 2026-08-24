@@ -1,0 +1,50 @@
+{
+  "corpus": {
+    "batch_count_in_released_config": 12596,
+    "cells": 11400000,
+    "dataset_count_in_released_config": 484,
+    "declared_scRNA_cells": 8700000,
+    "declared_spatial_cells": 2700000,
+    "declared_sources": {
+      "GEO": ["GSE139324", "GSE136246", "GSE179994", "GSE131907", "GSE171145", "GSE139555", "GSE156728_CD4", "GSE148071", "PMID_34663877", "Qian_et_al_2020_LC", "GSE176021", "GSE156728_CD8"],
+      "HCA": ["cxg_PBMCs", "EGAS00001004571_PBMCs", "eQTLAutoimmune", "covid19autoimmunityPBMCs", "VanDerWijst-Human-10x5pv1", "cxg_Airways", "COMBAT2022", "TabulaSapiens", "PAN.A01.v01.raw_count.20210429.PFI.embedding", "GTEx_8_tissues_snRNAseq_atlas_071421.public_obs"],
+      "HTCA": ["HTAN_HTAPP", "HTAN_Stanford", "HTAN_Vanderbilt", "HTAN_BU"],
+      "other_atlas_deduplicated": ["MalteEtAl_LungAtlas", "TICAtlas"],
+      "spatial": ["Nanostring_CosMx_NSCLC_FFPE"]
+    },
+    "exact_source_and_cell_inventory_status": "UNRESOLVED",
+    "paper_common_scRNA_gene_set": 13500,
+    "released_configuration_gene_universe": 19374,
+    "source_evidence": "ICLR 2024 Appendix Table 6 and Section E.2 plus the released configurations",
+    "training_labels_used": false,
+    "warning": "The paper promised a more detailed source list, but the repository does not bind an immutable donor/cell inventory or the 484 dataset IDs to public accessions. The 13,500-gene paper training matrix also differs from the 19,374-gene released configuration universe."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "declared_non_task_overlap": {
+    "GSE131907": {"evidence": "Explicitly listed as a CellPLM pretraining source in Appendix Table 6.", "exposure_state": "encoder_seen"},
+    "GSE151530": {"evidence": "Used as a downstream liver-cancer reference in the published spatial-imputation evaluation, not declared as pretraining data.", "exposure_state": "downstream_demo"}
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before both checkpoint revisions; membership cannot be excluded because the 484-source accession/alias inventory is incomplete.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before both checkpoint revisions; membership cannot be excluded because the 484-source accession/alias inventory is incomplete.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before both checkpoint revisions; membership cannot be excluded because the 484-source accession/alias inventory is incomplete.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before both checkpoint revisions; membership cannot be excluded because the 484-source accession/alias inventory is incomplete.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "GEO first became public after both current Dropbox checkpoint revisions were last modified.", "exposure_state": "clean_declared", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO first became public after both current Dropbox checkpoint revisions were last modified.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO first became public after both current Dropbox checkpoint revisions were last modified.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after both current Dropbox checkpoint revisions were last modified.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO first became public on 2025-02-12, more than fifteen months after the 20231027 checkpoint object's current Dropbox revision was last modified; neither its features nor labels could have entered that revision.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after both current Dropbox checkpoint revisions were last modified.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Public before both checkpoint revisions; membership cannot be excluded because the 484-source accession/alias inventory is incomplete.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "post_checkpoint": "A source first public after the current Dropbox object's recorded 2023 revision is clean_declared; the sealed source is target_label_unexposed.",
+    "pre_checkpoint": "A source public before the checkpoint remains unknown unless the exact 484-dataset inventory and retained cell roster resolve its accession and release aliases.",
+    "release_conflict": "The 20230926 and 20231027 objects share a corpus configuration footprint but differ in latent prior. Exposure chronology does not resolve which object belongs in the frozen census."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

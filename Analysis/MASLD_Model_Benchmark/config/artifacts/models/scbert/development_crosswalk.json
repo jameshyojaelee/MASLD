@@ -1,0 +1,35 @@
+{
+  "corpus": {
+    "cells": 1126580,
+    "datasets": 209,
+    "exact_dataset_inventory_status": "UNRESOLVED",
+    "source": "PanglaoDB_human_single_cell_snapshot_used_before_2021-12-05_preprint",
+    "tissues": 74,
+    "training_labels_used": false,
+    "warning": "The paper reports corpus totals but does not bind the 209 source accessions or an immutable PanglaoDB snapshot to the released checkpoint."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Public before the preprint; exact PanglaoDB source membership is unresolved.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public shortly before the preprint; exact PanglaoDB source membership and snapshot are unresolved.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO first became public more than three years after the preprint fixed the existence of the pretrained model.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "The MacParland liver dataset was an explicit downstream benchmark in the paper, and exact overlap with the PanglaoDB pretraining snapshot remains unresolved.", "exposure_state": "downstream_demo", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "checkpoint_chronology": "The December 2021 preprint proves that a historical pretrained model existed by that date.",
+    "current_share_caveat": "Chronology establishes exposure for the historical paper checkpoint, not byte identity for the current mutable Weixin object.",
+    "pre_preprint": "Sources public before the preprint remain unknown unless the exact PanglaoDB source snapshot or explicit downstream-only use resolves them."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

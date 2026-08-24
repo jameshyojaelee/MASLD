@@ -1,0 +1,78 @@
+{
+  "architecture_contract": {
+    "default_cell_factor_dimension": 30,
+    "default_first_stage_iterations": 4000,
+    "default_learning_rate": 0.01,
+    "default_minibatch_fraction": 0.1,
+    "default_regularization_lambda": 0.001,
+    "model": "mosaic matrix tri-factorization with one learned cell-factor row per supplied cell, modality feature factors, shared and batch-modality association matrices, scales, and biases",
+    "second_stage": "optional cluster-label retraining for feature factors and marker scores; never part of the common unsupervised representation lane",
+    "warning": "Cell factors are free parameters indexed by the cells present during training. The release provides no frozen encoder or query transform for unseen cells."
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No upstream checkpoint is admitted. Any model is a locally fitted factorization tied to its exact cell and feature rows.",
+    "implementation_type": "train_locally_transductive",
+    "pypi_release": {
+      "sdist": {"filename": "scmomat-0.2.2.tar.gz", "sha256": "2c7802a4fa0b213f5740f56516433824c5152f5f1cce9c4ca095f1bed3f8dc65", "size_bytes": 118350, "upload_time": "2023-08-05T01:49:39.559531Z"},
+      "version": "0.2.2",
+      "wheel": {"filename": "scmomat-0.2.2-py3-none-any.whl", "sha256": "5c75b6ba1484c1d56935ebaf7ec076a0f9dd3dcb349f69155627bb13bc783a33", "size_bytes": 48998, "upload_time": "2023-08-05T01:49:37.736113Z"}
+    },
+    "repository": "PeterZZQ/scMoMaT",
+    "repository_revision": "dbd954de4b1be415cdea543baf2856df0fda6992",
+    "repository_tag": null,
+    "source_identity_warning": "The repository retained version 0.2.2 after the PyPI upload and received later utils changes. The exact repository commit is the selected source identity; PyPI artifacts are recorded but must not be treated as byte-equivalent without a parity audit."
+  },
+  "inductive_inference_contract": {
+    "frozen_query_transform": false,
+    "reason": "C_cells is allocated with one optimizable row for every cell in every supplied batch. New held rows have no coordinates unless new parameters are optimized or the held data are included in the original factorization.",
+    "sealed_rule": "Neither transductive fitting on sealed rows nor held-row coordinate optimization is allowed. scMoMaT therefore cannot enter sealed cell-state or profile leaderboards.",
+    "umap_warning": "The bundled UMAP transform is downstream visualization code and is not an assay-to-scMoMaT-factor encoder."
+  },
+  "input_contract": {
+    "feature_alignment": "Every batch within a modality must share an identical frozen ordered feature inventory; training-only GENCODE v49 genes and GRCh38.p14 peaks",
+    "missing_modality": "A modality list uses None for batches where that modality is structurally absent",
+    "preprocessing": "Native utils.preprocess binarizes ATAC and quantile-normalizes log1p RNA/other assays followed by global maximum scaling; all data-dependent operations must stay inside the development analysis population and cannot be fitted on held/sealed rows",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus", "same_study_unpaired", "same_sample_different_aliquot_as_separate_batches"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_as_parallel_rows", "same_donor_different_tissue_as_parallel_rows"],
+    "warning": "The sanity check verifies equal cell counts for multiple modalities in a batch, not ordered cell identity. Exact same-cell or same-nucleus row joins require an external fixture."
+  },
+  "missingness_contract": {
+    "batch_level": "None is an explicit structural modality-absence sentinel and is preferable to zero padding.",
+    "project_mapping": "Retain the project's eight missing states outside the model and map only structurally_missing to None. Other missing states remain excluded or separately flagged.",
+    "limitation": "There is no feature-level eight-state mask in the released factorization."
+  },
+  "output_contract": {
+    "cell_embedding": "softmax of learned C_cells for cells included in the factorization",
+    "feature_scores": "feature factors and shared association-derived marker scores after optional label-based retraining",
+    "profile_status": "latent-only under the frozen RNA-conditioned ATAC registry; reconstructed matrices are not an admitted RNA-only held-donor profile."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.8.10",
+    "declared_torch": ">=1.11.0",
+    "environment_status": "UNRESOLVED_MODERN_PYTHON_L40S_DENSE_MEMORY_DETERMINISM_AND_NUMERIC_TOLERANCE_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "upstream_risk": "Reproduction scripts save and load whole model objects with torch.save/torch.load.",
+    "required_rule": "Do not deserialize external model objects. If a future development-only task runs, export plain factor arrays and manifests or a trusted tensor-only state dict with exact rows and features."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact public repository commit, MIT license, setup metadata, README, model, preprocessing, and PyPI artifact metadata were inspected as text on 2026-08-22. No package, checkpoint, or model object was installed, downloaded, deserialized, or executed.",
+  "source_records": [
+    {"identity": "scMoMaT:LICENSE", "sha256": "126d8dbee7aa7f6cb97931bcaf5169666b2ce353486f92fbbcd63df1e126f6cd", "size_bytes": 1066},
+    {"identity": "scMoMaT:setup.py", "sha256": "54ceb9f43faa942897866325e7576fbcf6dc8f094de440e8f6dfb85056d0adad", "size_bytes": 4117},
+    {"identity": "scMoMaT:README.md", "sha256": "4394cd14ceb3f1a4f8f9c7c009d26ec645f00120377adf6c9a2835f3c851d034", "size_bytes": 7080},
+    {"identity": "scMoMaT:scmomat/model.py", "sha256": "e9bd399eb08a1ced17719539a3c0a090f0048661dbd5194abe07a3ace3b8ab4b", "size_bytes": 33204},
+    {"identity": "scMoMaT:scmomat/utils.py", "sha256": "2129089b7593762d3cf3764373fe34f99d9d897b384ca7994f765f369ae708b1", "size_bytes": 37686}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Ineligible for sealed or donor-held evaluation because no frozen unseen-cell transform exists.",
+    "development_only_integration": "Eligible only for a future explicitly nonpromotable transductive latent-integration TaskSpec.",
+    "rna_conditioned_atac": "Latent-only and unschedulable under the current profile registry.",
+    "variant_to_regulation": "Ineligible because scMoMaT has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

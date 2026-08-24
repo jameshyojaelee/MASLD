@@ -1,0 +1,25 @@
+schema_version = "masld-bench-task-v1"
+task_id = "cell_state_mapping"
+status = "candidate"
+unit_of_inference = "donor"
+input_modalities = ["single_cell_rna", "single_nucleus_rna"]
+endpoint = "Map RNA-profiled cells or nuclei to a frozen biological cell identity and continuous MASLD state representation; aggregate every inferential metric to donor level."
+metrics = ["donor_class_balanced_macro_f1", "per_class_f1", "multiclass_brier_score", "donor_balanced_accuracy", "donor_macro_auprc", "development_macrovesicular_steatosis_spearman", "development_any_fibrosis_auprc"]
+datasets_train = ["resource_atlas_current", "gse296875", "gse244832"]
+datasets_development = ["gse256398", "gse281367"]
+datasets_sealed = ["gse289173"]
+split_id = "donor_outer"
+required_pairing_levels = []
+missingness_policy = "explicit_state_and_mask"
+admission_gates = ["Freeze label ontology without using GSE289173 outcomes.", "Resolve every checkpoint revision, SHA-256, license, and exposure state.", "Keep every library, tissue, timepoint, and modality from one person in one outer split.", "Apply config/evaluation/cell_state_mapping_capabilities.toml: sealed candidate and baseline predictions must use the identical GSE289173 snRNA row universe; ATAC-only encoders require a separate development-only TaskSpec and cannot compete for this champion.", "Do not admit GSE296875 until its well-namespaced barcode-to-donor map is frozen and a leave-one-well-out sensitivity analysis is prespecified.", "For GSE296875, evaluate numeric macrovesicular steatosis and prespecified any-versus-no-significant-fibrosis mappings only as donor-level cross-fitted secondary development endpoints; freeze missingness, an age/sex/BMI sensitivity model, descriptive race balance, and leave-one-well-out transport before fitting, and never relabel them as MASLD or MASH diagnosis, NAS, or fibrosis stage.", "Commit predictions before the one-time sealed unblinding."]
+baseline_model_ids = ["hvg_pca_nearest_centroid", "hvg_pca_knn", "hvg_pca_logistic", "hvg_pca_elastic_net", "hvg_pca_linear_svm", "scvi_baseline", "scanvi_baseline", "celltypist_baseline"]
+uncertainty_method = "paired_donor_cluster_bootstrap"
+resampling_units = ["donor"]
+bootstrap_replicates = 10000
+multiplicity_family = "confirmatory_external_champion_family_1"
+multiplicity_method = "holm_fwer_0.05_primary_and_bh_q0.05_secondary"
+promotion_gate_id = "cell_state_mapping_promotion_v1"
+promotion_gate_config_sha256 = "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a"
+primary_evaluator_id = "cell_donor_balanced_macro_f1_v1"
+evaluator_parameters = { class_roster = ["cholangiocyte", "endothelial", "hepatocyte", "immune", "mesenchymal_stromal"], roster_authority = { path = "artifacts/evaluator_rosters/cell_state_mapping.json", sha256 = "907f094c4a62d7903f32016a10f67375821c9b37af5977547fed3b7379ca1aeb", size_bytes = 256, media_type = "application/json", role = "task_evaluator_roster:cell_state_mapping" } }
+claim_gate = "On project-sealed GSE289173 require macro-F1 >=0.70, gain >=0.02 over the strongest baseline, paired 95% lower bound above zero, every evaluable class F1 >=0.50, and Brier no worse by >0.01; confirmatory hypotheses use Holm FWER 0.05."

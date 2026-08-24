@@ -1,0 +1,190 @@
+{
+  "artifacts": [
+    {
+      "path": "Geneformer-V1-10M/model.safetensors",
+      "sha256": "a5e33a757431643b3697de7ef6127950cdc49e06e58d4266b3a3ab191b683f14",
+      "size_bytes": 41183536,
+      "training_cutoff": "2021-06"
+    },
+    {
+      "path": "Geneformer-V2-104M/model.safetensors",
+      "sha256": "fff5cba29ddd8792991fa77b4872246fbe548a178cebda3775cdc72b67780e7f",
+      "size_bytes": 417571156,
+      "training_cutoff": "2024-12"
+    },
+    {
+      "path": "Geneformer-V2-316M/model.safetensors",
+      "sha256": "965ceccea81953d362081ef3843560a0e4fef88d396c28017881f1e94b1246f3",
+      "size_bytes": 1265455076,
+      "training_cutoff": "2024-12"
+    }
+  ],
+  "auxiliary_artifacts": {
+    "V1": [
+      {
+        "path": "Geneformer-V1-10M/config.json",
+        "sha256": "9cf69ca3bdb0215c4188b54c451b6f02adfe68b8f66011a57d0f32845133fd4b",
+        "size_bytes": 565
+      },
+      {
+        "path": "geneformer/gene_dictionaries_30m/ensembl_mapping_dict_gc30M.pkl",
+        "sha256": "eac0fb0b3007267871b6305ac0003ceba19d4f28d85686cb9067ecf142787869",
+        "size_bytes": 584125
+      },
+      {
+        "path": "geneformer/gene_dictionaries_30m/gene_median_dictionary_gc30M.pkl",
+        "sha256": "b3b589bb5ec75040d05fc44dd6bf0184cf87f3c362cf158d196a6ed3b7fe5f39",
+        "size_bytes": 940965
+      },
+      {
+        "path": "geneformer/gene_dictionaries_30m/gene_name_id_dict_gc30M.pkl",
+        "sha256": "55e67962e79c0039a6c32d43c5c99f38e51964bbcfa32f736150ee1e285c438c",
+        "size_bytes": 1117117
+      },
+      {
+        "path": "geneformer/gene_dictionaries_30m/token_dictionary_gc30M.pkl",
+        "sha256": "ab9dc40973fa5224d77b793e2fd114cacf3d08423ed9c4c49caf0ba9c7f218f1",
+        "size_bytes": 788424
+      }
+    ],
+    "V2_shared": [
+      {
+        "path": "geneformer/ensembl_mapping_dict_gc104M.pkl",
+        "sha256": "0819bcbd869cfa14279449b037eb9ed1d09a91310e77bd1a19d927465030e95c",
+        "size_bytes": 3957652
+      },
+      {
+        "path": "geneformer/gene_median_dictionary_gc104M.pkl",
+        "sha256": "a51c53f6a771d64508dfaf61529df70e394c53bd20856926117ae5d641a24bf5",
+        "size_bytes": 1512661
+      },
+      {
+        "path": "geneformer/gene_name_id_dict_gc104M.pkl",
+        "sha256": "fabfa0c2f49c598c59ae432a32c3499a5908c033756c663b5e0cddf58deea8e1",
+        "size_bytes": 1660882
+      },
+      {
+        "path": "geneformer/token_dictionary_gc104M.pkl",
+        "sha256": "67c445f4385127adfc48dcc072320cd65d6822829bf27dd38070e6e787bc597f",
+        "size_bytes": 425590
+      }
+    ],
+    "V2_104M": [
+      {
+        "path": "Geneformer-V2-104M/config.json",
+        "sha256": "467d4492f0dd53b4d60afffe20812db484ca1cf9fdbeb6a6e060e93564f70859",
+        "size_bytes": 590
+      },
+      {
+        "path": "Geneformer-V2-104M/generation_config.json",
+        "sha256": "bf1ba320993168b0d6ee5ff170df2108454d239b28eaac5948d30ee6993cccc1",
+        "size_bytes": 90
+      }
+    ],
+    "V2_316M": [
+      {
+        "path": "Geneformer-V2-316M/config.json",
+        "sha256": "2cc4af3442644e84af71814a607b61c958d7b4e5ebde6791ab77b5f534ac6f6e",
+        "size_bytes": 591
+      },
+      {
+        "path": "Geneformer-V2-316M/generation_config.json",
+        "sha256": "bf1ba320993168b0d6ee5ff170df2108454d239b28eaac5948d30ee6993cccc1",
+        "size_bytes": 90
+      }
+    ]
+  },
+  "code_source_artifacts": [
+    {
+      "path": "setup.py",
+      "sha256": "eaee21265f8a2f08759b498e8197b6b782596f094020cd9bf7451d96b3026868",
+      "size_bytes": 1087
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "ce24555bcc90a2af82c2516a2d8e16074247508bd78103b3025a9e4f7914c3b6",
+      "size_bytes": 382
+    },
+    {
+      "path": "geneformer/__init__.py",
+      "sha256": "bf0af7a1e703013e691be53c3cd39a886fd24c7e35986a38f69bd9990d1f4a21",
+      "size_bytes": 1646
+    },
+    {
+      "path": "geneformer/tokenizer.py",
+      "sha256": "689b71a916b75fa618fbb460a7fc460c3ab32d41e4f98064efb0ebb3ee921002",
+      "size_bytes": 34686
+    },
+    {
+      "path": "geneformer/emb_extractor.py",
+      "sha256": "50d4eee1677b376f4d2c50887558450fdd39150c4ed902833e9929f25f17adb0",
+      "size_bytes": 35355
+    }
+  ],
+  "architecture_contract": {
+    "geneformer_v1_10m": {
+      "architectures": [
+        "BertForMaskedLM"
+      ],
+      "hidden_size": 256,
+      "intermediate_size": 512,
+      "max_position_embeddings": 2048,
+      "model_type": "bert",
+      "num_attention_heads": 4,
+      "num_hidden_layers": 6,
+      "pad_token_id": 0,
+      "vocab_size": 25426
+    },
+    "geneformer_v2_104m": {
+      "architectures": [
+        "BertForMaskedLM"
+      ],
+      "hidden_size": 768,
+      "intermediate_size": 3072,
+      "max_position_embeddings": 4096,
+      "model_type": "bert",
+      "num_attention_heads": 12,
+      "num_hidden_layers": 12,
+      "pad_token_id": 0,
+      "vocab_size": 20275
+    },
+    "geneformer_v2_316m": {
+      "architectures": [
+        "BertForMaskedLM"
+      ],
+      "hidden_size": 1152,
+      "intermediate_size": 4608,
+      "max_position_embeddings": 4096,
+      "model_type": "bert",
+      "num_attention_heads": 18,
+      "num_hidden_layers": 18,
+      "pad_token_id": 0,
+      "vocab_size": 20275
+    }
+  },
+  "input_contract": {
+    "V1": {
+      "model_input_size": 2048,
+      "special_token": false
+    },
+    "V2": {
+      "model_input_size": 4096,
+      "special_token": true
+    },
+    "required_h5ad_fields": {
+      "obs": [
+        "n_counts"
+      ],
+      "var": [
+        "ensembl_id"
+      ]
+    },
+    "required_matrix": "raw_unselected_counts"
+  },
+  "license": "Apache-2.0",
+  "repository": "ctheodoris/Geneformer",
+  "repository_revision": "04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Hugging Face model and tree APIs plus immutable resolve responses queried at the pinned revision on 2026-08-21 and rechecked on 2026-08-22; every listed small source/config artifact was streamed through SHA-256, LFS object IDs were cross-checked for weights and dictionaries, and the architecture contract was transcribed from the hash-bound model configs.",
+  "weight_content_downloaded": false
+}

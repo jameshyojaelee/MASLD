@@ -1,0 +1,68 @@
+{
+  "architecture_contract": {
+    "canonical_model": "ridge_regression_from_L2_normalized_target_gene_embedding_to_absolute_condition_mean_expression",
+    "input": "one_fixed_embedding_for_a_perturbed_gene_symbol",
+    "native_output": "one_full_absolute_mean_expression_vector_per_perturbation_condition",
+    "published_task": "held_gene_perturbation_response_prediction",
+    "replicate_handling": "the_pinned_code_averages_all_cells_per_condition_and_does_not_preserve_biological_replicates"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "implementation_type": "train_locally_from_external_gene_embeddings",
+    "registered_identity": "zou-group/GenePert@31c0034211010696ba76dc62cb875af51bfe6f4a",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "external_embedding_contract": {
+    "candidate_record": "Zenodo_10833191_DOI_10.5281/zenodo.10833191",
+    "candidate_file": "GenePT_emebdding_v2.zip",
+    "candidate_file_md5": "3f6ce4317e3a0091978ae5cb8fbf05a3",
+    "candidate_file_sha256": "UNRESOLVED_NOT_DOWNLOADED",
+    "candidate_file_size_bytes": 574395233,
+    "candidate_record_license": "CC-BY-4.0",
+    "binding_status": "UNRESOLVED; the pinned GenePert repository does not bind its local pickle names to this Zenodo record or a member checksum",
+    "declared_candidate_provenance": "GenePT_v2_gene_and_protein_text_embeddings_reportedly_derived_from_NCBI_gene_summaries_and_UniProt_protein_summaries_with_OpenAI_text-embedding-3-large_3072_dimensions",
+    "required_freeze": "exact_archive_member_uncompressed_SHA256_gene_identifier_release_source_text_snapshot_embedding_API_model_and_terms",
+    "unsafe_loader": "the_pinned_utilities_use_unrestricted_pickle.load"
+  },
+  "fit_contract": {
+    "allowed_estimator": "ridge_only_for_the_registered_common_comparator",
+    "default_candidate_alphas": [0.1, 1.0, 10.0],
+    "fold_rule": "group_target_locus_guide_family_and_biological_replicate_before_any_centroid_normalization_embedding_mapping_or_selection",
+    "normalization_rule": "fit_expression_scale_and_control_centroid_from_outer_training_rows_only",
+    "selection_rule": "select_alpha_in_training_only_inner_grouped_CV; never select from aggregate outer-test metrics",
+    "target_representation_rule": "require_an_exact_predeclared_gene_symbol_embedding; reject_missing_embeddings"
+  },
+  "query_contract": {
+    "current_task_result": "blocked_target_representation_mismatch",
+    "reason": "GSE281160 perturbs noncoding variant loci with CRISPRi guides, while GenePert accepts gene embeddings. A nearest or linked gene is a different target and the upstream random-vector fallback is invalid.",
+    "prohibited_behaviors": ["nearest_gene_substitution", "linked_gene_substitution", "random_missing_embedding", "held_outcome_informed_gene_mapping"],
+    "valid_future_use": "a_separately_registered_held_gene_perturbation_task_with_exact_frozen_gene_embeddings"
+  },
+  "repository": "zou-group/GenePert",
+  "repository_revision": "31c0034211010696ba76dc62cb875af51bfe6f4a",
+  "runtime_contract": {
+    "declared_environment": "NONE",
+    "runtime_status": "UNRESOLVED",
+    "required_probe": "isolated_CPU_smoke_fit_predict_serialization_and_fixed_seed_reproduction_after_terms_clear"
+  },
+  "safe_loading_contract": {
+    "pickle_deserialization_prohibited": true,
+    "project_action": "inspect_and_convert_an_approved_embedding_archive_in_a_restricted_job_then_load_only_validated_non_executable_arrays_and_JSON_metadata"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository plus GenePert and GenePT preprints and Zenodo text metadata were inspected on 2026-08-22; no package, weight, embedding archive, or pickle was downloaded or loaded.",
+  "source_records": [
+    {"identity": "GenePert:README.md", "sha256": "7737a97dcb5332a1fad5f00bafcaa3659e57b6617d3515de7844d9b13fb59823", "size_bytes": 3097},
+    {"identity": "GenePert:GenePertExperiment.py", "sha256": "f0029569af72c1e7503041347b54130f250473b22f0a26b796f5dab886274120", "size_bytes": 27856},
+    {"identity": "GenePert:utils.py", "sha256": "6f4abd41dea47d3ed018ec7214dbf71d1800b76e29c6f9c56a50978f6e55830b", "size_bytes": 18665},
+    {"identity": "GenePert:GenePertExperiment.ipynb", "sha256": "f4fc10292af5bf0bd78f88ec99a4988874f16179a1860a9b480a1d0357be46e2", "size_bytes": 2892980},
+    {"identity": "GenePert:.gitignore", "sha256": "8fbaea5da0325a637147a568afa5934e3a42fd6817c99ba9b3ff2288819e7900"}
+  ],
+  "terms_audit": {
+    "code_license": "NO_LICENSE_DETECTED",
+    "embedding_record_license": "CC-BY-4.0_but_exact_used_artifact_binding_unresolved",
+    "paper_license": "CC-BY-NC-ND-4.0_does_not_license_repository_code",
+    "result": "blocked_code_and_embedding_identity_terms"
+  }
+}

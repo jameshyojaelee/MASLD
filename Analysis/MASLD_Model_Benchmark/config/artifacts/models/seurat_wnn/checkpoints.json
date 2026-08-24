@@ -1,0 +1,125 @@
+{
+  "admission_disposition": {
+    "status": "deferred_latent_only_no_registered_task",
+    "downloads_installs_jobs_or_tests_performed": false,
+    "reason": "Native WNN is a dataset-fitted multimodal neighbor graph, not a pretrained frozen encoder and not an RNA-to-ATAC decoder. Its valid input is observed paired modalities on the same cells or nuclei.",
+    "open_champion": "ineligible_under_current_task_contracts"
+  },
+  "registered_identity": {
+    "model_id": "seurat_wnn",
+    "display_name": "Seurat WNN",
+    "implementation_type": "classical_baseline",
+    "registry_revision": "satijalab/seurat@4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a+CRAN:Seurat==5.5.1",
+    "registry_checkpoint_sha256": "NOT_APPLICABLE",
+    "registry_status": "deferred",
+    "registry_exposure_status": "target_label_unexposed",
+    "registry_supported_tasks": []
+  },
+  "implementation_identity": {
+    "repository": "satijalab/seurat",
+    "repository_revision": "4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a",
+    "repository_tree": "bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921",
+    "commit_verified_signature": true,
+    "commit_date": "2026-06-25T00:00:00Z",
+    "commit_message_scope": "submit_5.5.1_to_CRAN",
+    "cran_package": "Seurat",
+    "cran_version": "5.5.1",
+    "cran_publication_date": "2026-06-26",
+    "cran_source_md5": "b07be078da2106bfa6cd0572744fdbb6",
+    "cran_source_sha256": "UNRESOLVED_source_archive_not_downloaded",
+    "needs_compilation": true,
+    "r_version_floor": ">=4.0"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "pretraining_corpus": "not_applicable",
+    "weight_artifact": "not_applicable",
+    "fit_artifact": "A project WNN object contains data-derived modality weights, nearest-neighbor indices, and graph geometry and must receive its own immutable training-row, parameter, runtime, and output hashes.",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "important_distinction": "A code revision does not define a biological representation. Every fitted WNN graph is specific to the cells, modalities, reductions, features, and parameters supplied."
+  },
+  "native_architecture_contract": {
+    "input": "two_or_more_observed_modality_specific_low_dimensional_reductions_for_the_same_ordered_cells_or_nuclei",
+    "native_operation": "estimate_cell_specific_modality_weights_then_construct_weighted_nearest_neighbor_and_shared_nearest_neighbor_graphs",
+    "native_outputs": ["modality_weights", "weighted_nearest_neighbors", "WNN_graph", "WSNN_graph", "joint_neighbor_geometry"],
+    "not_native_outputs": ["RNA_to_ATAC_peak_probability", "ATAC_profile_or_count", "DNA_variant_effect", "frozen_query_embedding_from_RNA_only", "perturbation_response"],
+    "supported_native_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_native_topologies": ["same_sample_different_aliquot", "same_donor_unpaired", "same_study_unpaired", "RNA_only_query"],
+    "replication_rule": "Cells or nuclei define graph rows but are not biological replicates; donor remains the inferential unit."
+  },
+  "frozen_function_contract": {
+    "function": "FindMultiModalNeighbors",
+    "required_identity_inputs": ["ordered_cell_or_nucleus_IDs", "reduction.list", "dims.list", "modality_feature_and_reduction_hashes"],
+    "registered_defaults": {
+      "k.nn": 20,
+      "l2.norm": true,
+      "knn.range": 200,
+      "prune.SNN": "1/15",
+      "sd.scale": 1,
+      "cross.contant.list": "1e-4_per_modality_by_default",
+      "smooth": false
+    },
+    "fit_behavior": "FindMultiModalNeighbors invokes modality-weight estimation and multimodal neighbor construction on the supplied object. Modality weights and neighborhoods depend on the supplied rows and modality reductions.",
+    "transductive_consequence": "Running native WNN jointly on training and held-query rows, or rerunning it after adding query rows, changes the learned graph using held-query geometry. That is target-fitted transduction, not a frozen inductive transform."
+  },
+  "method_identity_boundaries": {
+    "native_WNN": "Observed paired modalities enter modality-weight and neighbor estimation for each supplied row.",
+    "multimodal_reference_mapping": "A separate Seurat workflow can use a WNN reference and supervised PCA plus FindTransferAnchors and MapQuery. It is not native WNN and must be separately registered; query geometry still enters anchor and mapping operations.",
+    "bridge_integration": "FindBridgeIntegrationAnchors is a separate bridge workflow requiring a modality-spanning bridge reference. A multiome bridge must contain true same-cell or same-nucleus modalities. It cannot create pairs for separate aliquots.",
+    "RNA_to_ATAC_translation": "Not implemented by WNN, reference mapping, or bridge anchors. A separate decoder and TaskSpec would be required."
+  },
+  "task_capability": {
+    "cell_state_mapping": "Native WNN is not admitted because project-sealed GSE289173 supplies RNA only and the task requires the same RNA-only query universe for every candidate. A separately registered reference-mapping method may be audited later but cannot inherit the seurat_wnn identity or be called frozen without a query-composition test.",
+    "rna_conditioned_atac": "Ineligible and explicitly latent-only. Native WNN requires observed query ATAC and emits graph geometry rather than a peak profile or count. Supplying held-donor ATAC would violate the TaskSpec.",
+    "variant_to_regulation": "ineligible_no_DNA_sequence_allele_or_signed_regulatory_effect_interface",
+    "perturbation_transfer": "ineligible_no_perturbation_response_generator",
+    "bulk_state_transfer": "ineligible_no_assay_native_participant_level_bulk_prediction_interface",
+    "clinical": "No diagnosis, prognosis, treatment-response, clinical-decision, or deployment claim."
+  },
+  "missingness_contract": {
+    "rule": "A missing modality remains structurally_missing, unavailable_permission, join_unresolved, withheld_sealed, or another registered explicit state. It is never an all-zero assay.",
+    "RNA_only_query": "Native WNN is not callable because the query lacks the required observed ATAC reduction.",
+    "separate_aliquots": "RNA and ATAC rows retain distinct IDs and cannot be concatenated into fictitious paired cells or nuclei."
+  },
+  "safe_loading_contract": {
+    "upstream_checkpoint": "not_applicable",
+    "external_R_serialization": "Do not load untrusted RDS, RData, Seurat, graph, or Annoy-index objects into the benchmark runtime.",
+    "project_fit": "Construct from admitted matrices and reductions inside the fold, then export bounded plain artifacts such as Matrix Market or Parquet/TSV row-edge tables, modality-weight tables, reduction matrices, JSON metadata, and hashes.",
+    "Annoy_index": "If used, bind index bytes, row order, feature/reduction identity, RcppAnnoy version, metric, tree/search parameters, and seed; never accept an unmanifested serialized index.",
+    "runtime_network": "prohibited"
+  },
+  "runtime_contract": {
+    "status": "UNRESOLVED_exact_R_and_compiled_dependency_lock_not_created",
+    "required_lock": ["R", "Seurat==5.5.1", "SeuratObject", "Matrix", "Rcpp", "RcppEigen", "RcppAnnoy", "RcppHNSW", "igraph", "future", "sctransform", "BLAS_and_threads", "Signac_and_GenomeInfoDb_if_ATAC_preprocessing_is_used"],
+    "required_probe": "After campaign approval only: CPU-SLURM install or restore from a frozen lock, same-row and row-permutation fixtures, paired-topology rejection, missing-modality rejection, donor-fold isolation, query-composition sensitivity, deterministic-neighbor tolerance, export/reload, memory, and sessionInfo capture.",
+    "GPU_required": false
+  },
+  "terms_audit": {
+    "code": "The pinned repository and CRAN metadata declare MIT plus the package LICENSE file.",
+    "weights": "not_applicable_no_pretrained_weight",
+    "fitted_objects": "Data-derived modality weights, reductions, neighbors, graphs, and indexes are governed by project input-data terms and cannot be assumed redistributable merely because the code is MIT.",
+    "derivative_code": "MIT conditions apply to modified code; every dependency and any copied vignette or data asset requires a separate terms audit.",
+    "outputs": "Release only bounded derived outputs whose source-data permissions and privacy review permit redistribution.",
+    "open_champion": "Code terms alone do not block an open implementation, but the registered method is ineligible because it has no current supported or sealed endpoint.",
+    "legal_status": "research_audit_not_legal_advice"
+  },
+  "source_evidence": "Official immutable GitHub source, official CRAN metadata, official Seurat WNN and bridge documentation, and the primary Cell paper were inspected as text on 2026-08-22. No source archive, package, R object, dataset, index, or fitted output was downloaded, installed, loaded, executed, or tested.",
+  "source_records": [
+    {"identity": "Seurat:DESCRIPTION", "sha256": "UNRESOLVED_source_not_downloaded", "size_bytes": 6069, "immutable_parent": "repository_tree_bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921"},
+    {"identity": "Seurat:LICENSE", "sha256": "UNRESOLVED_source_not_downloaded", "size_bytes": 44, "immutable_parent": "repository_tree_bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921"},
+    {"identity": "Seurat:R/clustering.R", "sha256": "UNRESOLVED_source_not_downloaded", "size_bytes": 62257, "immutable_parent": "repository_tree_bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921"},
+    {"identity": "Seurat:R/integration.R", "sha256": "UNRESOLVED_source_not_downloaded", "size_bytes": 292309, "immutable_parent": "repository_tree_bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921"},
+    {"identity": "Seurat:vignettes/weighted_nearest_neighbor_analysis.Rmd", "sha256": "UNRESOLVED_source_not_downloaded", "size_bytes": 23729, "immutable_parent": "repository_tree_bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921"},
+    {"identity": "Seurat:vignettes/multimodal_reference_mapping.Rmd", "sha256": "UNRESOLVED_source_not_downloaded", "size_bytes": 14393, "immutable_parent": "repository_tree_bf99ab6bd2677e1e27b2fe9d10aa4b0cb5c98921"}
+  ],
+  "primary_sources": [
+    "https://github.com/satijalab/seurat/tree/4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a",
+    "https://cran.r-project.org/package=Seurat",
+    "https://satijalab.org/seurat/articles/weighted_nearest_neighbor_analysis",
+    "https://satijalab.org/seurat/reference/findmultimodalneighbors",
+    "https://satijalab.org/seurat/reference/findbridgeintegrationanchors",
+    "https://doi.org/10.1016/j.cell.2021.04.048"
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

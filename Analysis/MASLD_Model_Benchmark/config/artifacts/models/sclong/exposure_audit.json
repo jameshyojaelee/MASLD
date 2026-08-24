@@ -1,0 +1,107 @@
+{
+  "audit_scope": {
+    "artifact_bundle_id": "sclong",
+    "registry_model_id": "sclong",
+    "checkpoint": "SharePoint:gocont_4096_48m_pretrain_1b_mix_2024-02-05_16-23-37.pth",
+    "development_encoder_overlap": "all_registered_cell_state_sources_retained_as_unknown",
+    "sealed_dataset_id": "gse289173"
+  },
+  "checkpoint_findings": {
+    "sclong_1b_mixed_pretraining": {
+      "checkpoint_identity": "BaiDing1234/scLong@41b72021540918e4386c4f2264351d7a6cbeed99+sharepoint-folder:EpvKzQW4hI5Bnb88-iM7vE0B_e2_U5r_ZGXb_FILCLTw3Q:gocont_4096_48m_pretrain_1b_mix_2024-02-05_16-23-37.pth",
+      "checkpoint_object_status": "unresolved_mutable_and_currently_inaccessible_folder_filename_not_an_immutable_object",
+      "sha256": "UNRESOLVED",
+      "size_bytes": "UNRESOLVED",
+      "availability": "official folder redirected then returned HTTP 403 on 2026-08-22",
+      "corpus": "48,024,242 deduplicated human cells and 27,874 genes collected from CELLxGENE, Cell BLAST, and Human Cell Atlas; Methods reports 848 retained datasets while Figure 1 says 1,618 datasets",
+      "corpus_inventory_status": "no_checkpoint_bound_accession_release_alias_donor_retained_cell_label_deduplication_or_cutoff_roster",
+      "required_payload_status": "gene_list_Gene2Vec_GO_graph_and_pickle_hyperparameters_all_unhashed_and_unlicensed",
+      "exposure_state": "unknown"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "1e2cedb165238269c68c5bac6a85d0193f88bc4bc0de41447eaf9836827a53c1"
+  },
+  "interpretation": "The exact v1.0 source commit is archived, but the selected checkpoint is only a filename inside a mutable SharePoint folder and has no verified bytes, size, hash, upload date, training cutoff, or license. Its four required auxiliary payloads are also unresolved. All Atlas sources, including project-sealed GSE289173, remain exposure-unknown. scLong is blocked from execution, adaptation, conditional-model use, and open-champion status.",
+  "preprocessing_and_evaluation_findings": [
+    {
+      "benchmark_action": "resolve_checkpoint_compatible_preprocessing",
+      "finding": "The paper describes raw-count transformation followed by clipping or rescaling each cell to maximum 10, while the released embed script simply requires an already log1p-normalized H5AD. No target outcome may choose between these paths."
+    },
+    {
+      "benchmark_action": "freeze_gene_and_prior_payloads",
+      "finding": "Execution depends on an exact 27,874-Ensembl-ID list, Gene2Vec array, GO graph, and pickle hyperparameter object. None has a size, SHA-256, release, or terms receipt."
+    },
+    {
+      "benchmark_action": "define_a_cell_representation",
+      "finding": "embed.py emits per-gene 200-dimensional merged_decodings. The paper's described cell representation is a per-gene vector formed by summing embedding and reconstruction features. Neither is an unambiguous scalar cell embedding; pooling must be frozen on development data before cell-state screening."
+    },
+    {
+      "benchmark_action": "preserve_missingness",
+      "finding": "The source helper zero-fills model genes absent from the assay and mean-fills representations for input genes absent from the model. Structural absence and derivation must remain explicit and cannot silently enter pooling."
+    },
+    {
+      "benchmark_action": "runtime_probe_before_scheduling",
+      "finding": "The repository environment and README disagree, CUDA 11.8 packages coexist with cuda-version 12.5, embed.py contains an author-local path, and the one-billion-parameter full-length output has no L40S memory receipt."
+    }
+  ],
+  "contamination_findings": {
+    "declared_corpus": "Source portals and aggregate counts are declared, but no accession, release-alias, donor, retained-cell, label-use, or duplicate-signature manifest is bound to the selected weight object.",
+    "dataset_count": "The paper's 1,618-dataset figure and 848-retained-dataset Methods statement may represent different stages, but the exact training roster is not recoverable from the current declaration.",
+    "public_chronology": "The filename contains a 2024-02-05 timestamp, but the SharePoint object has no immutable hash or upload history. Public GEO dates before or after that string cannot establish inclusion, exclusion, or target-label nonexposure.",
+    "sealed_source": "GSE289173 remains unknown rather than target_label_unexposed and cannot support a champion for scLong.",
+    "future_project_heads": "Any project pooling, probe, or adapter is continual_seen for its development donors and labels and does not repair base-encoder exposure."
+  },
+  "terms_findings": {
+    "source_code": "The exact Zenodo v1.0 software record declares CC-BY-4.0, while the corresponding GitHub root contains no license file.",
+    "transitive_code": "Bundled or adapted third-party components require their own provenance review; the MIT file inside GRN_inference does not license the base model implementation.",
+    "checkpoint": "No weight license was detected in the repository, SharePoint locator, Zenodo source record, or paper.",
+    "auxiliary_payloads": "No terms were detected for selected_gene2vec_27k.npy, selected_genes_27k.txt, human_ens_gene2go_graph.csv, or gocont_4096_48m_pretrain_1b_mix.pkl.",
+    "outputs_and_embeddings": "UNRESOLVED",
+    "derivative_weights": "UNRESOLVED",
+    "institutional_permission": "written_terms_required_before_acquisition_or_use"
+  },
+  "safe_loading_findings": {
+    "checkpoint_risk": "The official code invokes torch.load on a pickle-backed .pth object.",
+    "hyperparameter_risk": "The official code invokes pickle5.load on a model-construction object that includes the GO graph.",
+    "isolation": "If written terms and immutable hashes are later obtained, inspect objects only in a disposable no-network environment without credentials or mounted project data.",
+    "conversion": "Only if derivative terms permit, extract recognized state_dict tensors and plain parameters into bounded non-executable formats and verify numeric parity against the quarantined source load.",
+    "fixture": "Freeze tensor schema, 27,874-gene order, Gene2Vec and GO provenance, preprocessing, merged_decodings schema, pooling, row-order and batch-size behavior, memory, and numeric digest."
+  },
+  "runtime_findings": {
+    "repository_environment": "sclong.yml pins Python 3.9.19, PyTorch 2.3.1, PyTorch CUDA 11.8, NumPy 1.26.4, SciPy 1.11.4, Scanpy 1.10.1, and related packages, but does not provide explicit immutable package artifacts.",
+    "README_environment": "README instead lists Python 3.7.16, NumPy 1.21.5, SciPy 1.7.3, Scanpy 1.9.3, pickle5 0.0.12, and PyTorch Geometric 2.3.0.",
+    "CUDA_conflict": "sclong.yml includes CUDA runtime 11.8 and cuda-version 12.5 declarations.",
+    "code_path": "embed.py prepends /home/ding.bai/ding-scfmv1-downstream before importing model code, so the released source path is not self-contained without correction and parity testing.",
+    "hardware": "L40S and B6K import, load, memory, forward, determinism, and tolerance are untested."
+  },
+  "published_downstream_components": {
+    "GEARS": "The bundled GEARS route trains a separate Norman-dataset perturbation system and does not make the base checkpoint a perturbation predictor.",
+    "chemical_perturbation": "The published gene-profile system adds drug encoders and task-specific fitting; it is not part of the base checkpoint.",
+    "drug_response_and_combination": "These use separate drug and expression heads and cannot be inferred from base-checkpoint admission.",
+    "GRN": "The GRN_inference directory is a separate downstream system with its own MIT license file and task fitting.",
+    "batch_integration": "The zero-shot batch route is source-owned prior work, not a sealed MASLD cell-state evaluation or a native benchmark head."
+  },
+  "remaining_blockers": [
+    "Obtain immutable checkpoint and auxiliary filenames, sizes, SHA-256 values, upload timestamps, and a cryptographically bound training cutoff from the authors or an archival repository.",
+    "Obtain written code, checkpoint, auxiliary-payload, output, embedding, derivative-weight, and redistribution terms; audit all transitive adapted code separately.",
+    "Bind the selected checkpoint to an accession, release-alias, donor, retained-cell, label-use, duplicate-signature, and cutoff roster; reconcile the 848 and 1,618 dataset descriptions.",
+    "Freeze the exact 27,874-gene Ensembl order, Gene2Vec source, GO release and graph, preprocessing scale, zero and mean-fill missingness, output field, and cell pooling.",
+    "Quarantine and inspect pickle-backed objects, then convert only if terms permit and numeric parity is established.",
+    "Build an immutable runtime from explicit artifacts, remove the author-local path without changing numerics, resolve CUDA 11.8 versus 12.5, and pass L40S memory and deterministic forward fixtures after campaign approval.",
+    "Pass the identical sealed row-universe cell-state capability fixture; do not infer perturbation capability from the separate GEARS route.",
+    "Do not use scLong outputs to train the conditional MASLD model until output and derivative terms and clean exposure are established."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_due_unresolved_checkpoint_auxiliary_payloads_weight_output_derivative_terms_runtime_pooling_and_unknown_exposure",
+  "task_disposition": {
+    "cell_state_mapping": "admission_blocked_restricted_comparator",
+    "conditional_masld_model": "prohibited_as_backbone_context_teacher_or_feature_training_source_without_written_terms_and_clean_exposure",
+    "perturbation_response": "not_admitted_without_a_separate_exact_GEARS_system_manifest",
+    "bulk_state_transfer": "not_admitted",
+    "released_open_champion": "ineligible"
+  },
+  "verified_date": "2026-08-22"
+}

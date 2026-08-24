@@ -1,0 +1,136 @@
+{
+  "architecture_contract": {
+    "input_length_bp": 4096,
+    "model_family": "dual_path_residual_convolution_plus_dilated_convolution_plus_spatial_B_spline_projection",
+    "native_output_dim": 21907,
+    "native_output_type": "binary_peak_probability_at_the_center_position_for_each_training_profile",
+    "sequence_class_dim": 40,
+    "strand_aggregation": "mean",
+    "warning": "Sei emits one 21907-element vector for the center of a 4096-bp sequence. It does not emit a nucleotide- or bin-resolved accessibility profile."
+  },
+  "conversion_contract": {
+    "converted_checkpoint_registered": false,
+    "future_conversion_rule": "Any safetensors or modern-runtime conversion is a separately named artifact. It must reproduce all 21907 raw probabilities, target order, 40 raw projections, histone-normalized ALT-minus-REF projections, and strand means on fixed hg38 fixtures before replacing the native path.",
+    "native_vs_converted_parity": "NOT_APPLICABLE_UNTIL_A_CONVERSION_IS_FROZEN"
+  },
+  "input_contract": {
+    "allele_checks": "Normalize variants, require GRCh38.p14 REF matching, make VCF and BED coordinate conventions explicit, and reject unresolved multiallelic or indel alignment cases.",
+    "canonical_tensor": "4096_bp_one_hot_DNA_in_the_exact_Selene_channel_order",
+    "donor_or_cell_context": "none",
+    "observed_atac_required": false,
+    "sequence_window": "4096_bp_centered_on_the_variant_or_prespecified_locus",
+    "variant_scope": "biallelic_SNV_primary;_indels_deferred_until_center_and_length_fixtures_pass",
+    "window_boundary_rule": "Use explicit N padding and a held-block boundary buffer of at least 4096 bp."
+  },
+  "native_checkpoint": {
+    "archive": {
+      "concept_doi": "10.5281/zenodo.4906996",
+      "doi": "10.5281/zenodo.4906997",
+      "filename": "sei_model.tar.gz",
+      "md5": "4297aafb711aec4ecccb645b8928ea26",
+      "publication_date": "2021-06-07",
+      "record_id": 4906997,
+      "sha256": "UNRESOLVED",
+      "size_bytes": 3281639255,
+      "version": "0.0.0"
+    },
+    "expected_weight_member": "model/sei.pth",
+    "expected_weight_member_identity": "UNRESOLVED_until_traversal_safe_inventory",
+    "format": "tar_gzip_with_PyTorch_pickle_checkpoint_and_numeric_auxiliary_arrays",
+    "repository": "FunctionLab/sei-framework",
+    "repository_revision": "1e16bff9b1618af7065a23f82c4a3bb82aaeb689",
+    "status": "exact_archive_registered_but_SHA256_and_member_manifest_unresolved"
+  },
+  "output_contract": {
+    "chromatin_profile_target_manifest": {
+      "identity": "FunctionLab/sei-framework@1e16bff9:model/target.names",
+      "rows": 21907,
+      "sha256": "3a2cece0a7877dadb2c23e8fcaf57b25ef57523258437201785fde9e537376a9",
+      "size_bytes": 905833
+    },
+    "native_target_breakdown": {
+      "chromatin_accessibility": 2372,
+      "histone_mark": 10064,
+      "TF_binding": 9471
+    },
+    "profile_limit": "Outputs are center-bin peak probabilities, not continuous DNase/ATAC counts, insertion profiles, or multinomial profiles.",
+    "sequence_class_manifest": {
+      "identity": "FunctionLab/sei-framework@1e16bff9:model/seqclass.names",
+      "rows": 40,
+      "sha256": "5276a0a39f4d0364e22c5bb93d02e75c7c171f6e4b61fc47baa301fce9cc15b3",
+      "size_bytes": 692
+    },
+    "sequence_class_projection_members": {
+      "histone_indices": "model/histone_inds.npy_member_hash_UNRESOLVED",
+      "projection_vectors": "model/projvec_targets.npy_member_hash_UNRESOLVED"
+    }
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_genome": "resources/hg38_UCSC.fa_from_Zenodo_4906962",
+    "native_reference_archive": {"md5": "fe01b54294ba1c7201ddf34d7e666ee6", "sha256": "UNRESOLVED", "size_bytes": 1932399766},
+    "reference_gate": "Do not use the released FASTA blindly. Freeze its member hash after approved acquisition and prove primary-contig sequence identity, contig naming, coordinate conventions, and REF alleles against GRCh38.p14."
+  },
+  "release": {
+    "publication_date": "2022-07-11",
+    "publication_doi": "10.1038/s41588-022-01102-2",
+    "registered_checkpoint_revision": "FunctionLab/sei-framework@1e16bff9b1618af7065a23f82c4a3bb82aaeb689+Zenodo:4906997:sei_model.tar.gz"
+  },
+  "runtime_contract": {
+    "declared_requirements": "Python 3.6+, PyTorch >=1.0, Selene >=0.5.0, and docopt",
+    "environment_status": "UNRESOLVED_LEGACY_RUNTIME",
+    "exact_versions": "UNDECLARED",
+    "hardware_reported_for_training": "four_Tesla_V100_GPUs_with_NVLink",
+    "required_probe": "isolated_L40S_import_tensor_only_restore_forward_backward_resume_deterministic_seed_reverse_complement_and_projection_numeric_tolerance",
+    "warning": "The broad lower bounds are not an executable environment lock. Freeze an exact compatible runtime without changing native math before admission."
+  },
+  "safe_loading_contract": {
+    "archive_downloaded": false,
+    "archive_gate": "After campaign approval, verify 3281639255 bytes, published MD5, and computed SHA-256 before opening. Inventory with traversal, absolute-path, link, duplicate-path, member-count, per-member-size, and expanded-size limits.",
+    "auxiliary_arrays": "Load only expected numeric NPY arrays with object/pickle loading disabled; freeze path, SHA-256, shape, dtype, finite-value checks, and target-order dimensions.",
+    "checkpoint_risk": "The expected .pth file is a Python pickle container. Never call unrestricted torch.load on an untrusted archive. Inspect in an isolated no-network runtime, require a tensor-only state dictionary, freeze key/shape/dtype inventory, and convert only through a separately audited parity path.",
+    "network_policy": "No runtime network fetches or archive extraction in a model process."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Genetics article, pinned official repository, and immutable Zenodo model, training-data, and reference-resource records were queried on 2026-08-22. No archive, checkpoint, package, training data, or FASTA was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "FunctionLab/sei-framework@1e16bff9:README.md", "sha256": "3a967b1a5c691ace4c2fa330e11358ccea5960d03d84bfc9ab2c52ef7e76ca2b", "size_bytes": 15454},
+    {"identity": "FunctionLab/sei-framework@1e16bff9:LICENSE.txt", "sha256": "16d8adee0328c4a6e9c67c6bc700b4d984ae3cd2731231d932ced631b8cdaea8", "size_bytes": 1814},
+    {"identity": "FunctionLab/sei-framework@1e16bff9:model/sei.py", "sha256": "3871abd56110b601e30d2d50c26aec2e7475ace3e9764a4740abbb0431a5d012", "size_bytes": 8689},
+    {"identity": "FunctionLab/sei-framework@1e16bff9:train/train.yml", "sha256": "c82d2388e613fdffbeda6de3e5ae9c0aa486df5b91db7e9148112e976a18a3df", "size_bytes": 2380},
+    {"identity": "FunctionLab/sei-framework@1e16bff9:model/sei_varianteffect_prediction.yml", "sha256": "c8faeddbc918812161cc34ec6c5953c4fcd236c9f58ac4172b7e49143bdcda8d", "size_bytes": 539}
+  ],
+  "task_fit": {
+    "allele_effect": "supported_as_ALT_minus_REF_changes_in_21907_peak_probabilities_and_40_sequence_class_scores",
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported; eligible_only_as_a_sequence_only_center_bin_classification_baseline",
+    "signed_eqtl_ieqtl": "not_native; a signed gene-effect model requires a nonsealed development head plus a separately frozen enhancer-gene and direction contract",
+    "variant_to_regulation": "supported_as_a_restricted_sequence_feature_comparator_after_runtime_and_checkpoint_gates"
+  },
+  "terms_audit": {
+    "code": "Academic and research use only; commercial use requires contact with Princeton licensing.",
+    "derivative_release": "The official code path is not eligible for the open champion. A clean-room implementation using the CC-BY-4.0 weight artifact would be a new identity requiring legal review, tensor parity, attribution, and redistribution audit.",
+    "model_archive": "Zenodo 4906997 declares CC-BY-4.0",
+    "result": "restricted_comparator",
+    "training_data": "Zenodo 4907038 declares CC-BY-4.0, while the official README additionally requires agreement to Cistrome Project terms before downloading processed Cistrome training data."
+  },
+  "training_contract": {
+    "label_type": "binary presence or absence of each regulatory-profile peak at the two-base center",
+    "random_seed": 1447,
+    "reference": "hg38_UCSC.fa",
+    "test_holdout": ["chr8", "chr9"],
+    "training_corpus": "19905 Cistrome-processed profiles plus 2002 profiles processed by ENCODE and Roadmap; more than 1300 cell lines and tissues",
+    "validation_holdout": ["chr10"],
+    "warning": "The released training configuration declares this split, but exact checkpoint-to-config parity and the full accession/run alias manifest remain unresolved."
+  },
+  "variant_scoring_contract": {
+    "common_lane": "Emit prespecified raw REF, ALT, and ALT-minus-REF 21907-track features under identical windows and strand means; fit identical heads only in development donor and LD/genomic folds.",
+    "native_lane": "Compute the official histone-nucleosome-adjusted 40-class score as ALT minus REF using the exact projection vectors and histone-index array.",
+    "signed_effect_limit": "A positive Sei track or sequence-class delta is a predicted chromatin change, not a signed target-gene eQTL or ieQTL effect.",
+    "track_and_class_selection": "Liver/intestine E9 or any profile subset is frozen without sealed outcomes and reported alongside the full prespecified feature path."
+  },
+  "weight_license": "CC-BY-4.0"
+}

@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse281160"
+title = "MASLD variant CRISPRi CROP-seq in HepG2"
+role = "mechanistic_diagnostic"
+status = "available"
+species = "human_cell_line"
+accession = ["GSE281160"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "experimental_replicate"
+expected_biological_units = "UNRESOLVED"
+native_genome_build = "custom_GRCh38_with_sgRNA_pseudogenes"
+native_annotation_release = "UNRESOLVED_base_gene_annotation+sgRNA_pseudogenes"
+modalities = ["single_cell_rna", "crispri_guide_assignment"]
+pairing_levels = ["same_cell"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence.", "GEO specifies a custom GRCh38 Cell Ranger reference with each sgRNA added as a pseudo-gene, but does not identify the base gene annotation, Cell Ranger version, or complete custom-reference recipe. Freeze those identities and the feature/guide crosswalk before admission."]
+notes = "Tests 20 MPRA-selected variants using the top two guides. It is conditional follow-up, not an unbiased independent validation set. Six sequencing lanes were mapped separately to a custom GRCh38 plus sgRNA-pseudogene reference and aggregated."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE281160"
+verified_date = "2026-08-21"
+local_exposure = "Deeply analyzed locally and source-gated."
+
+[split]
+group_key = "target_locus+guide_family+experimental_replicate"
+outer_role = "development"
+label_visibility = "development_visible"

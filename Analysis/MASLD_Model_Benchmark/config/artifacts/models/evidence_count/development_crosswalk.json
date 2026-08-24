@@ -1,0 +1,79 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "graph_status": "BLOCKED_corrected_50_study_COLOC_release_and_promoted_graph_snapshot_absent",
+    "sealed_sources": [],
+    "task": "typed_evidence_graph"
+  },
+  "endpoint_eligibility": {
+    "brier_score": "blocked_until_a_source-blind_monotone_count_calibrator_is_registered_and_cross-fitted",
+    "causal_gene": "ineligible",
+    "held_source_auprc": "eligible as retrospective development-only source recovery after leakage-safe construction",
+    "locus_macro_hits_at_10": "eligible development-only",
+    "locus_macro_mrr": "eligible development-only",
+    "open_champion": "ineligible because no wholly sealed graph source exists"
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Count only after the corrected 50-study release is promoted and canonical evidence units, cohort families, LD blocks, loci, and deterministic derivatives are frozen.",
+      "exposure_state": "downstream_demo",
+      "warning": "Current memberships are provisional and already project-exposed."
+    },
+    "gse281160": {
+      "allowed_use": "Development-only removed-source recovery. Count a qualifying aggregate at most once per experimental replicate, target locus, guide family, gene, and evidence type after aliases and technical lanes are collapsed.",
+      "exposure_state": "downstream_demo",
+      "topology": "same_cell guide and RNA; experimental replicate is the biological unit",
+      "warning": "The 20 targets were selected from MPRA and do not form an unbiased source seal."
+    },
+    "gse281364": {
+      "allowed_use": "Development-only removed-source recovery. Reporter replicates are evidence units only after assay-native aggregation; MPRA activity alone is not an enhancer-gene link.",
+      "exposure_state": "downstream_demo",
+      "topology": "same_sample_different_aliquot DNA and RNA counts; 16 experimental replicates"
+    },
+    "gse289173": {
+      "allowed_use": "none for the typed-evidence graph task",
+      "exposure_state": "target_label_unexposed",
+      "reason": "It is not a registered graph seal and its QTL outcomes cannot define graph edges, counts, thresholds, or calibration."
+    },
+    "resource_gene_catalog_current": {
+      "allowed_use": "Exposed development content only after an immutable graph promotion. Existing evidence classes and the frozen 117 programs remain read-only authorities, not count thresholds or model-selection targets.",
+      "exposure_state": "downstream_demo"
+    }
+  },
+  "confounding_audit": {
+    "degree": "The count is expected to correlate with graph degree. Report that correlation and performance within degree-matched strata; do not present the baseline as evidence beyond study density.",
+    "duplication": "Multiple accessions, rows, technical replicates, derivative edges, or publications from one underlying experiment do not become independent support units.",
+    "observability": "Well-studied genes and assays can accumulate more support. Report performance across remaining-source observability strata, but keep held-source observability evaluator-only.",
+    "source_size": "Large studies can dominate evidence count. Compare against graph_source_count and report per-source contributions without learning outcome-based weights.",
+    "zero": "A numeric zero is emitted only when at least one remaining source is applicable or observable; otherwise the score is structurally_missing."
+  },
+  "held_source_protocol": {
+    "calibration": "A future count-to-probability calibrator uses only out-of-fold predictions and labels from remaining development sources. No evaluated-source prevalence, eligibility, threshold, or count distribution enters fitting.",
+    "candidate_universe": "Freeze source-independent variants, loci, and genes before source removal. Held-source-only candidates remain evaluator-only.",
+    "evaluator_only_items": [
+      "held_source_support_and_tested_negative_labels",
+      "held_source_assay_observability",
+      "held_source_candidate_eligibility",
+      "held_source_prevalence"
+    ],
+    "removal": "Delete held-source nodes, edges, inverse edges, provenance, observability, tested status, missingness, aliases, aggregates, degrees, source counts, and deterministic derivatives before evidence-unit deduplication.",
+    "split": "Group ancestry-aware native-build LD blocks, loci, genes, source aliases, and all derivative edges before counting. One locus is the inferential unit.",
+    "success_interpretation": "Remaining evidence density recovers support in an exposed removed source; this is prioritization, not causality."
+  },
+  "missingness_and_negative_contract": {
+    "evidence_states": ["supported", "discordant", "tested_negative", "untestable", "not_applicable", "source_dependent", "indeterminate"],
+    "negative_rule": "Only evaluator-designated tested negatives inside the removed source's eligible denominator are negative outcomes. Absence, untestability, and non-applicability are not negatives.",
+    "score_rule": "Only supported remaining-source evidence increments the native score; every other state remains explicit."
+  },
+  "reproducibility_contract": {
+    "graph_receipt": "Hash source rows, canonical IDs, evidence-unit deduplication keys, status masks, held-source removal, and count outputs.",
+    "implementation_receipt": "Freeze repo revision, algorithm ID, schema, deterministic sort, tie policy, optional calibrator, environment, and output hashes before any score is reported.",
+    "task_contract_hashes": {
+      "evidence_graph_outer_toml": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e",
+      "typed_evidence_graph_toml": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92"
+    },
+    "unit_of_inference": "independent locus; evidence units, source rows, genes, variants, cells, guides, and replicates are not automatically inferential replicates"
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

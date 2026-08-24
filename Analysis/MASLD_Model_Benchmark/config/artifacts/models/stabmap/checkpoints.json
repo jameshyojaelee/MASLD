@@ -1,0 +1,72 @@
+{
+  "architecture_contract": {
+    "default_max_features": 1000,
+    "default_reference_components": 50,
+    "default_subset_components": 50,
+    "method": "non-neural mosaic topology traversal using reference PCA or LDA scores, shared-feature linear projections, and optional intermediate PCA hops",
+    "native_query_classifier": "adaptive or fixed k-nearest-neighbor label transfer in the joint embedding",
+    "native_imputation": "mean by default over reference-cell nearest neighbours in the StabMap embedding",
+    "warning": "The upstream defaults center and scale every supplied dataset and finally recenter the combined reference-plus-query embedding. Those steps make coordinates depend on the held query population unless replaced by training-reference transforms."
+  },
+  "code_license": "GPL-2",
+  "implementation": {
+    "bioconductor_release": {
+      "git_revision": "2c983548d049d33966b014d142a74b45bc058aab",
+      "release_branch": "RELEASE_3_23",
+      "source_archive": {"filename": "StabMap_1.6.0.tar.gz", "md5_declared_by_bioconductor": "bf6e6db94749669866f0aca6f6e8085d", "sha256": "NOT_ACQUIRED", "size_bytes_from_http_metadata": 2003538},
+      "version": "1.6.0"
+    },
+    "checkpoint_policy": "No pretrained checkpoint exists. Fit reference scores and projection operators only from outer-training references and bridges.",
+    "implementation_type": "classical_reference_mapping"
+  },
+  "inductive_inference_contract": {
+    "allowed_wrapper": "Use training-only reference datasets and bridge matrices, provide or derive training-only reference scores, make every held dataset a terminal query leaf, set scale.center=false and scale.scale=false, and apply frozen upstream assay transforms.",
+    "combined_centering_fix": "Replace upstream final reference-plus-query colMean centering with a training-reference-only origin and prove a query cannot move any reference coordinate, classifier coefficient, prototype, or neighbour index.",
+    "forbidden": "Held queries cannot be references or intermediate bridges, cannot select reference features, cannot alter topology among training nodes, and cannot contribute labels, scaling, PCA/LDA, k selection, or calibration.",
+    "native_lane": "classifyEmbedding may transfer training-reference labels after the leakage-safe embedding is frozen; common lane uses an identical benchmark head instead."
+  },
+  "input_contract": {
+    "assay_input": "named list of feature-by-cell matrices or SummarizedExperiment assays with unique dataset names, unique cell identifiers across list elements, and explicit feature row names",
+    "bridge_requirement": "The feature-overlap topology must be connected through training-only bridge datasets. For RNA and peak spaces, a validated same-nucleus stacked bridge or training-only ATAC gene-activity bridge is required.",
+    "reference": "GENCODE v49 genes and GRCh38.p14 peak coordinates with modality namespaces and frozen assay-native transformations",
+    "supported_pairing_topologies": ["same_study_unpaired", "same_sample_different_aliquot_as_distinct_datasets", "same_cell_via_one_stacked_bridge_matrix", "same_nucleus_via_one_stacked_bridge_matrix"],
+    "unsupported_pairing_topologies": ["duplicate_same_cell_column_names_across_list_elements", "same_sample_different_aliquot_as_one_stacked_cell_matrix"],
+    "warning": "StabMap requires every cell column name across assay_list elements to be unique. A paired RNA/ATAC bridge must be represented as one validated stacked feature matrix, not duplicate cell columns in two list elements."
+  },
+  "missingness_contract": {
+    "dataset_level": "Missing assays are structural because datasets expose only their measured feature rows; no missing assay is represented as a zero block.",
+    "project_mapping": "Retain all eight project states outside StabMap. Only observed features enter matrices; unresolved, below-QC, permission, withheld, and structural states remain distinguishable in manifests.",
+    "limitation": "StabMap does not natively carry per-entry project missing-state masks."
+  },
+  "output_contract": {
+    "common_embedding": "training-reference-anchored joint PC embedding for terminal RNA query cells",
+    "imputation": "nearest-reference feature imputation is a native diagnostic, not an admitted RNA-conditioned ATAC profile",
+    "profile_status": "latent-only under the frozen RNA-conditioned ATAC capability registry"
+  },
+  "runtime_contract": {
+    "bioconductor": "3.23",
+    "declared_r": ">=4.4.0; Bioconductor 3.23 release tooling may impose a newer campaign R that must be frozen",
+    "environment_status": "UNRESOLVED_SESSIONINFO_SPARSE_DENSE_EQUIVALENCE_DETERMINISM_PARALLELISM_AND_MEMORY_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "required_artifacts": "Plain matrices and manifests for reference scores, projection coefficients, feature lists, bridge topology, centering origin, labels/head, and hashes; do not accept external serialized R objects."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact Bioconductor StabMap 1.6.0 release branch commit, DESCRIPTION, core R sources, public package metadata, and official documentation were inspected as text on 2026-08-22. The source archive, packages, fitted objects, and model data were not downloaded, installed, deserialized, or executed.",
+  "source_records": [
+    {"identity": "StabMap:DESCRIPTION", "sha256": "5ca0d4a2349465b8366674507eda62391b631ce626105db73ad9b32ac5fa91af", "size_bytes": 1720},
+    {"identity": "StabMap:R/stabMap.R", "sha256": "f522b3ef458da0b00b346a3043a1959bcbee7ea6c239740f79447bdd148fc79e", "size_bytes": 20122},
+    {"identity": "StabMap:R/imputeEmbedding.R", "sha256": "77374c94f46097a081e8e9088c190796c74661d0689f925a9369048e5736c4aa", "size_bytes": 3028},
+    {"identity": "StabMap:R/classifyEmbedding.R", "sha256": "cd8ca74310aa59c7fc3dc7bdce456db07162ee419e804812640142b6e7ed61df", "size_bytes": 7301},
+    {"identity": "StabMap:R/mosaicDataTopology.R", "sha256": "a19a98e227010904801cc61140661c92713aff44f0cb3730707dd1351ced11e4", "size_bytes": 1625}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Eligible as a classical reference-mapping candidate only after the terminal-query, frozen-transform, training-reference centering, bridge, and no-query-influence fixtures pass.",
+    "rna_conditioned_atac": "Latent-only in the current registry. Native nearest-neighbour imputation cannot be scored as a profile champion.",
+    "variant_to_regulation": "Ineligible because StabMap has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_CLASSICAL_FITTED_ARTIFACT"
+}

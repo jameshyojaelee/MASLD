@@ -10,11 +10,19 @@ set -euo pipefail
 BASE="${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design}"
 FIG_DIR="$BASE/figures"
 OUT="$FIG_DIR/figures_manifest.tsv"
+TMP=$(mktemp "$FIG_DIR/.figures_manifest.tsv.tmp.XXXXXX")
+trap 'rm -f "$TMP"' EXIT
 
 {
   printf 'rel_path\tbytes\tmtime_epoch\tmtime_human\n'
   find "$FIG_DIR" -name '*.pdf' -type f \
     -printf '%P\t%s\t%T@\t%TY-%Tm-%Td %TH:%TM\n' | sort
-} > "$OUT"
+} > "$TMP"
+
+# Publish only after the full tree scan and sort succeed. Directly truncating
+# OUT before the GPFS traversal finishes can leave a header-only manifest when
+# the process is interrupted.
+mv "$TMP" "$OUT"
+trap - EXIT
 
 echo "Wrote $OUT ($(( $(wc -l < "$OUT") - 1 )) PDFs)"

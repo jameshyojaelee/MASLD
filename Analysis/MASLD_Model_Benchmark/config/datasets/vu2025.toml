@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "vu2025"
+title = "Vu 2025 MASLD Visium and CODEX biopsy cohort"
+role = "blocked"
+status = "blocked"
+species = "human"
+accession = ["VU_SPATIAL_TRANSCRIPTOMIC_SIGNATURE_2025"]
+access_tier = "controlled"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "no_redistribution_without_dsa"
+license_status = "data_sharing_agreement_required"
+biological_unit = "participant"
+expected_biological_units = 32
+native_genome_build = "GRCh38"
+native_annotation_release = "UNRESOLVED"
+modalities = ["visium_rna", "histology_he", "codex_proteomics"]
+pairing_levels = ["same_section", "same_study_unpaired"]
+modality_status_default = "join_unresolved"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["A University of Queensland Data Sharing Agreement is required before reuse.", "Per-barcode participant maps for the ten VLP capture-area exports are absent.", "Public CODEX-to-Visium transforms are absent.", "Only two of the three public CODEX specimens were reported as registered to Visium."]
+notes = "Thirty-three biopsies came from 32 participants; one participant has two synchronous cores and must remain in one split. Each 6.5 mm array contains biopsies from four to five participants. VLP identifiers are technical arrays, not donors."
+
+[provenance]
+source_url = "https://researchdata.edu.au/spatial-transcriptomic-signature-metabolic-reprogramming/3753269"
+verified_date = "2026-08-21"
+local_exposure = "Local ZIPs exist, but their presence does not grant training or redistribution rights."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "blocked"
+label_visibility = "unavailable_join"

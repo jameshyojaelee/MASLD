@@ -1,0 +1,43 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_source": "gse289173",
+    "tasks": ["rna_conditioned_atac_sequence_only_baseline", "development_only_atac_representation"]
+  },
+  "findings": {
+    "gse244832": {
+      "allowed_use": "Donor-compatible external-development accessibility-profile or transductive ATAC diagnostics only. RNA and ATAC are different aliquots and never cell-paired.",
+      "exposure_state": "downstream_demo",
+      "model_access": "No GSE244832 peaks, cells, ATAC values, labels, normalization, or calibration may enter a model scored on GSE244832."
+    },
+    "gse289173": {
+      "allowed_use": "No cell-state mapping use because the sealed row universe is RNA-only. Any variant diagnostic would be sequence-only and cannot independently predict signed gene effects.",
+      "exposure_state": "target_label_unexposed",
+      "model_access": "No cell-state labels or eQTL/ieQTL outcomes are available to fitting."
+    },
+    "gse296875": {
+      "allowed_use": "Outer-fold local sequence-to-accessibility training. For the registered profile baseline, average predictions across outer-training cells within each frozen cell state and repeat that sequence-only cell-state profile across held donors.",
+      "exposure_state": "continual_seen",
+      "model_access": "Only outer-training donors define peaks, binary cell targets, cell-state aggregation, early stopping, or calibration. Held-donor ATAC cannot enter inference."
+    }
+  },
+  "local_model_roster": {
+    "checkpoint_identity": "project_trained_per_outer_fold_seed_peak_inventory_and_genomic_split",
+    "profile_output": "outer_training_cell_state_mean_sequence_profile_repeated_across_held_donors_and_labeled_sequence_only",
+    "seeds": [11, 29, 47, 71, 101],
+    "transductive_limit": "The native 32-dimensional embedding exists only for cells represented by output columns during fitting; held-cell embedding scores are structurally unavailable."
+  },
+  "public_tutorial_objects": {
+    "corpora": ["Buenrostro2018_hematopoiesis", "10x_PBMC_multiome"],
+    "exposure_state": "reference_only",
+    "policy": "Do not initialize MASLD runs from these cell-specific output heads. They are not general pretrained checkpoints and their weight terms are undeclared."
+  },
+  "rules": {
+    "biological_unit": "Donors are inferential units. Cells are model output tasks, not biological replicates.",
+    "genomic_split": "Sequence rows use held merged genomic blocks with a 1344-bp boundary buffer; random peak splits from the tutorial are prohibited.",
+    "profile_fixture": "Before scheduling, prove that the adapter emits finite donor-by-cell-state peak profiles using sequence and training-frozen state aggregation only, with no held-donor ATAC input.",
+    "sealed_chronology": "Every local artifact and prediction hash must predate outcome joining."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

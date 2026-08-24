@@ -1,0 +1,27 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_from_complete_declared_training_table",
+    "sealed_dataset_id": "gse289173",
+    "sealed_endpoint_labels": ["frozen_cell_state_mapping_labels", "cell_type_eqtl_effects", "interaction_eqtl_effects"]
+  },
+  "checkpoint_findings": {
+    "uce_33l": {"corpus": "UCE declared 36,238,416-cell corpus", "corpus_annotation_state": "self_supervised_expression", "exposure_state": "target_label_unexposed"},
+    "uce_4l": {"corpus": "UCE declared 36,238,416-cell corpus", "corpus_annotation_state": "self_supervised_expression", "exposure_state": "target_label_unexposed"}
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "54b2091b8d92ec8c2b00fd78201ba6a2f7b7d63b2babd8388b58c1736b612971"
+  },
+  "interpretation": "The complete declared UCE training table contains GSE185477 and the MacParland Liver Atlas source, which are encoder_seen and require source-stratified diagnostics. It contains no exact title or accession match for the other registered pre-release development sources. GSE289173 postdates both public weight records and its frozen cell-state and eQTL/ieQTL outcomes were not training labels, supporting target_label_unexposed for sealed evaluation.",
+  "remaining_blockers": [
+    "Obtain approved weight and auxiliary artifacts, verify source MD5 plus local SHA-256, and never treat source MD5 as the benchmark digest.",
+    "Inspect model weights, all_tokens.torch, species_offsets.pkl, and the protein archive without unrestricted pickle execution or unsafe extraction.",
+    "Freeze an executable runtime and deterministic per-cell sampling for the common lane.",
+    "Treat GSE185477 and Liver_Atlas as encoder_seen in source-stratified development reporting.",
+    "Do not transfer this audit to later or independently tuned UCE checkpoints."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "eligible_on_exposure_and_terms_other_admission_gates_still_apply",
+  "verified_date": "2026-08-22"
+}

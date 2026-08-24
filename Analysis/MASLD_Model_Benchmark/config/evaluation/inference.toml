@@ -1,0 +1,30 @@
+schema_version = "masld-bench-inference-v1"
+inference_id = "donor_locus_confirmatory"
+bootstrap_replicates = 10000
+confidence_level = 0.95
+final_prediction = "five_seed_ensemble"
+seed_direction_requirement = 4
+
+[resampling]
+donor_outcomes = "paired_donor_cluster_bootstrap"
+donor_genomic_outcomes = "two_way_donor_block_bootstrap"
+variant_only_outcomes = "ld_block_bootstrap"
+cells_spots_arrays_sections_runs_guides_as_clusters = false
+
+[multiplicity]
+confirmatory_method = "Holm"
+confirmatory_fwer = 0.05
+confirmatory_family = "one champion versus strongest baseline for each externally eligible track"
+secondary_method = "Benjamini-Hochberg"
+secondary_q = 0.05
+secondary_family = "task_by_source_by_endpoint"
+
+[power]
+prospective_target = 0.80
+variance_source = "development_paired_difference"
+effect_estimator = "cross_fitted_or_shrunk_development_gain"
+effect_size_rule = "use_each_task_prespecified_promotion_effect; bulk_state_transfer_is_exactly_0.05_rank_correlation_gain"
+bulk_state_transfer_minimum_effect = 0.05
+decision_timing = "before_any_sealed_outcome_is_opened"
+underpowered_action = "downgrade_without_unblinding"
+reachability_assumption = "none"

@@ -1,0 +1,48 @@
+{
+  "audit_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "implementation": "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:SAGEConv",
+    "sealed_dataset_id": "NONE_REGISTERED",
+    "task": "typed_evidence_graph"
+  },
+  "checkpoint_finding": {
+    "checkpoint_identity": "project_trained_per_held_source_held_block_and_seed; not_yet_created",
+    "declared_training_corpus": "Only split-local retained evidence topology, outcome-independent features, and project-generated retained-graph negatives",
+    "development_source_exposure": "continual_seen_only_within_each_permitted_outer_training_partition",
+    "embedded_upstream_training_corpus": "none; selected PyG components and example contain no learned biological checkpoint",
+    "future_sealed_target_exposure": "target_label_unexposed_only_if_candidate_roster_features_graph_sampler_negatives_calibration_and_model_are_frozen_before_outcomes",
+    "overall_exposure_state": "target_label_unexposed",
+    "source_release": "torch-geometric 2.7.0 released 2025-10-15",
+    "source_chronology_interpretation": "GraphSAGE's library release carries no biological knowledge. Clean eligibility depends on every project feature and message-passing edge being constructed inside the split.",
+    "upstream_checkpoint": "none"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "split_local_inductive_features_graph_sampling_coverage_and_endpoint_role",
+    "sha256": "242a03a5518c7313b562d65d6ef8c15765300ccd2edd4b867685d1b6a6be13a5"
+  },
+  "interpretation": "GraphSAGE is the only model in this audit wave that can produce a principled score for a node absent from training topology, and only because the frozen recipe prohibits node-ID embeddings and supplies outcome-independent node features with root_weight=true. This conditional inductive property makes future sealed source recovery technically feasible. It does not make the relation-agnostic projection typed, and there is no current sealed source, so no champion claim is available.",
+  "known_incidents_and_biases": [
+    "GraphSAGE is not inherently leakage-proof or inductive. A trainable node-ID table, full-graph degree feature, target-derived roster, or target-derived attribute would make the project model transductive or contaminated.",
+    "LinkNeighborLoader documents that supervision edges are not masked from message passing by default. Every held-source, held-block, and validation edge must be physically removed before loader construction and verified by sampled global edge IDs.",
+    "LinkNeighborLoader's native approximate negative sampling can produce false negatives. The project recipe disables it and supplies type-compatible negatives constructed without held outcomes; hidden positives may still occur and cannot be repaired by peeking.",
+    "Root-only isolated nodes with the same allowed features receive identical embeddings. A finite score is not evidence of locus-specific information; root-only results require a separate stratum.",
+    "The registered homogeneous projection discards relation types, edge direction, source-native weights, and multiplicity. Node-type features and candidate filtering do not turn it into R-GCN, HGT, or a typed transformer.",
+    "Retained-source degree and observation channels are graph derivatives. Computing or scaling them on the full graph before source/block removal is direct leakage.",
+    "Training positives may also be present in retained message-passing topology, following the upstream graph-autoencoding example. This cannot be used as a validation score and never permits a validation or held edge in message passing.",
+    "Raw dot products require development-only calibration for Brier score. Source-specific recalibration after a sealed source is opened is prohibited.",
+    "MIT source terms do not establish redistribution rights for a state trained on restricted graph features."
+  ],
+  "remaining_blockers": [
+    "Promote the corrected 50-study COLOC release, then freeze a graph snapshot, ontology, provenance families, native-build block map, source-independent candidate roster, full feature schema/order, and explicit missingness states.",
+    "Resolve rights for every topology and feature source and decide whether graph-derived trained states may be redistributed; otherwise restrict release to code, manifests, hashes, and predictions.",
+    "Implement split-local feature construction and scaling, typed negative controls, homogeneous edge projection, LinkNeighborLoader wrapper, global-edge leakage receipts, and root-only/untestable coverage exports.",
+    "Freeze an exact Python, PyTorch, torch-geometric, sampler-extension, CPU/CUDA, driver, wheel, deterministic, and seed environment; pass CPU and optional L40S import, forward/backward, sampler, state-load, resume, cross-device, and tolerance probes on SLURM.",
+    "Pass synthetic fixtures proving that held-source, deterministic derivative, held-block, and inner-validation edges never enter features, negatives, normalization, caches, message passing, early stopping, or calibration.",
+    "Create five immutable states per split and hash graph, roster, x, masks, scaler, negatives, sampler order, environment, state, raw predictions, calibrator, coverage, resources, and terminal disposition.",
+    "Prospectively register a wholly sealed evidence source and freeze its source-independent feature handoff before outcomes. Until then all GraphSAGE findings are development-only."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_currently_because_no_sealed_source; conditionally_eligible_after_data_runtime_feature_sampler_artifact_and_future_seal_locks_for_full_denominator_source_recovery_with_root_only_results_reported_separately",
+  "verified_date": "2026-08-22"
+}

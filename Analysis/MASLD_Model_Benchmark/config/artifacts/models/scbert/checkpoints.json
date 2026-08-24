@@ -1,0 +1,78 @@
+{
+  "architecture_contract": {
+    "attention_heads": 10,
+    "expression_token_count": 7,
+    "gene_context_length": 16906,
+    "hidden_dimension": 200,
+    "performer_layers": 6,
+    "position_embedding": "gene2vec_16906",
+    "sequence_length_with_terminal_token": 16907
+  },
+  "checkpoint": {
+    "download_status": "authentication_required_no_download_url_returned",
+    "file_id": "s.1970325010981265.642406688Tub_f.642406714080m",
+    "name": "panglao_pretrain.pth",
+    "sha256": "UNRESOLVED",
+    "share_id": "AJEAIQdfAAoUxhXE7r",
+    "share_url": "https://drive.weixin.qq.com/s?k=AJEAIQdfAAoUxhXE7r",
+    "size_bytes": 87631538,
+    "terms": "UNDECLARED",
+    "timestamp": "UNRESOLVED"
+  },
+  "code_license": "GPL-3.0-or-later",
+  "embedding_contract": {
+    "common_lane_candidate": "mean_pool_layer_normalized_encoder_tokens_over_16906_genes_excluding_synthetic_terminal_token",
+    "common_lane_dimension": 200,
+    "native_lane": "official_conv_over_200d_tokens_then_16907_to_512_to_128_classification_head_with_outer_training donors_only",
+    "selection_rule": "The common representation and native head are frozen before smoke. The synthetic terminal zero token is not treated as a pretrained CLS token.",
+    "warning": "The released model has no native standalone cell embedding. return_encodings yields a 16,907 by 200 token tensor per cell; mean pooling is a benchmark-defined common representation and the official supervised convolutional head remains a separate native lane."
+  },
+  "input_contract": {
+    "canonical_matrix": "raw_unintegrated_nonnegative_single_cell_or_single_nucleus_UMI_counts",
+    "feature_alignment": "exact_16906_gene_order_from_released_Panglao_reference_and_NCBI_Gene_mapping_updated_2020-01-10",
+    "filter": "at_least_200_detected_aligned_genes",
+    "normalization": "scanpy_normalize_total_target_10000_then_log1p_base_2",
+    "quantization": "clip_integerized_expression_to_five_non_special_bins_as_released_code",
+    "supported_assays": ["scRNA_UMI", "snRNA_UMI"],
+    "warning": "The exact 16,906-gene order and gene2vec array are supplied inside the separate mutable data share, not the source repository, and remain unresolved."
+  },
+  "paper_code_archive": {
+    "doi": "10.5281/zenodo.6572672",
+    "license_metadata": "other-open",
+    "md5": "0863a1de036c59a1ce623fa7f7fd5a95",
+    "name": "TencentAILabHealthcare/scBERT-v1.0.0.zip",
+    "sha256": "56f16981af773764956617a22bb1af0241abbef336b21680cd917ad0e0f9a672",
+    "size_bytes": 26447
+  },
+  "repository": "TencentAILabHealthcare/scBERT",
+  "repository_revision": "262fd4b91f3f1c21a6e595d03d4ef423e16ffc99",
+  "release": "v1.0.0_at_be43114be73e8cf639ba3b0fef26db97166292f7_plus_GPL_and_maintenance_commit",
+  "runtime_contract": {
+    "declared_numpy": "1.20",
+    "declared_python": "UNRESOLVED",
+    "declared_scanpy": "1.7.2",
+    "declared_torch": "1.8.1",
+    "environment_status": "UNRESOLVED",
+    "warning": "The legacy Torch 1.8.1/Scanpy 1.7.2 stack and bundled Performer fork require an isolated compatibility environment and L40S import/forward/backward probes."
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "released_loader": "torch.load_without_weights_only",
+    "require_explicit_weight_terms_before_download": true,
+    "require_restricted_checkpoint_inspection_before_load": true,
+    "require_state_dict_key_shape_dtype_freeze": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Machine Intelligence article, official GitHub tag/current history, Zenodo code archive, and live Weixin share metadata were queried on 2026-08-22. The checkpoint was not downloaded or deserialized.",
+  "source_records": [
+    {"identity": "scBERT:LICENSE", "sha256": "2a1cd1c518b360c3589b697ad3e7b091075d86c1386f205f9d48fd2c99fe78a1", "size_bytes": 35106},
+    {"identity": "scBERT:README.md", "sha256": "c6ceec232c81ee7f02eae17513f77e69b9e3029a77d30b56c36f64bf9db39969", "size_bytes": 5284},
+    {"identity": "scBERT:requirements.txt", "sha256": "1c15021a9ed68e17da00d22840e04ce18e27406ce706855b58718477caa44eed", "size_bytes": 155},
+    {"identity": "scBERT:preprocess.py", "sha256": "5a0919d814c24af09f17a4aa12a3bc36252a176ad2b4a50e70213fa698f549a5", "size_bytes": 748},
+    {"identity": "scBERT:pretrain.py", "sha256": "2be0800a04eb92794aab62a0a0e6c544ff942dfc5ea2ad428c331d5cc0eb41ec", "size_bytes": 11958},
+    {"identity": "scBERT:finetune.py", "sha256": "0cc3949c82660db6d415bbfd5147acbca37c59a270fa151ace3a642f06c55e7b", "size_bytes": 10498},
+    {"identity": "scBERT:predict.py", "sha256": "ada38aa52090a4fa775205b1e905805e4dd62d0a12a5ed7991eafb010998fe08", "size_bytes": 4517},
+    {"identity": "scBERT:utils.py", "sha256": "996f13c4d18a8d240b4ca2148b7ebe0f096f0082a844f725710ce9c560a41d90", "size_bytes": 14579}
+  ],
+  "weight_license": "UNDECLARED"
+}

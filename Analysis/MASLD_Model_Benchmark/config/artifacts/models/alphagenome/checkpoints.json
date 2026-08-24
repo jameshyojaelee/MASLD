@@ -1,0 +1,218 @@
+{
+  "architecture_contract": {
+    "human_output_tracks_reported_in_paper": 5930,
+    "input_span_bp": 1048576,
+    "model_family": "long_range_sequence_to_multimodal_genomic_tracks",
+    "output_types": [
+      "ATAC",
+      "CAGE",
+      "DNASE",
+      "RNA_SEQ",
+      "HISTONE_CHIP",
+      "TF_CHIP",
+      "SPLICE_SITES",
+      "SPLICE_SITE_USAGE",
+      "SPLICE_JUNCTIONS",
+      "CONTACT_MAPS",
+      "PROCAP"
+    ],
+    "track_accounting": "The encoded human head has 6126 slots. The pinned metadata contains 5563 non-padding entries, and 367 splice-junction targets carry an implicit second strand, yielding the paper's 5930 active human tracks.",
+    "warning": "ontology_terms selects among fixed training tracks; it does not inject a new donor, cell, disease, RNA, or trans-regulator context."
+  },
+  "input_contract": {
+    "allele_checks": "Require normalized biallelic variants, GRCh38.p14 REF matching, explicit VCF 1-based and BED 0-based-half-open conventions, and fixed sequence anchoring before extraction.",
+    "canonical_tensor": "DNA one-hot sequence plus an organism index",
+    "donor_or_cell_context": "none",
+    "observed_atac_required": false,
+    "observed_rna_required": false,
+    "sealed_input_interpretation": "GSE289173 DNA sequence can be scored. Its single-nucleus RNA cannot be supplied as a native AlphaGenome context.",
+    "sequence_window": "up_to_1048576_bp"
+  },
+  "native_checkpoint": {
+    "code_repository": "google-deepmind/alphagenome_research",
+    "code_revision": "1e55dcffb98ba26b31e74edc5e9f038f54c0e89d",
+    "format": "Orbax_OCDBT",
+    "huggingface_repository": "google/alphagenome-all-folds",
+    "huggingface_revision": "a8f293a76ee73d5b57f3bf2ae146510589fcf187",
+    "inventory_size_bytes": 734799353,
+    "objects": [
+      {
+        "git_blob_sha1": "b73491323e2a2414b5f28363fe1f8286db6a9d25",
+        "name": ".gitattributes",
+        "size_bytes": 1780
+      },
+      {
+        "git_blob_sha1": "b7aa388be0a821de28823536ce8d59dc2a347a30",
+        "name": "README.md",
+        "size_bytes": 16867
+      },
+      {
+        "git_blob_sha1": "d50662268ec0adc247e3a8b7035d4dfc7f5115ba",
+        "name": "_CHECKPOINT_METADATA",
+        "size_bytes": 262
+      },
+      {
+        "git_blob_sha1": "2ddd5e54b5b018590d32d3aeca50dc70c2b75014",
+        "name": "_METADATA",
+        "size_bytes": 222864
+      },
+      {
+        "git_blob_sha1": "c8957e5a1fc4f8f079bab5574d61e96e6b5cf5ed",
+        "name": "d/549b1a1ce6bea654c08ac287872a5d99",
+        "size_bytes": 77325
+      },
+      {
+        "git_blob_sha1": "56963e8b532df628f9b354dac15cd8f5e8a34513",
+        "name": "manifest.ocdbt",
+        "size_bytes": 120
+      },
+      {
+        "git_blob_sha1": "46a80deafe40e1a6d16ca90b2fc3370bd4e03c3d",
+        "name": "notebook.ipynb",
+        "size_bytes": 969961
+      },
+      {
+        "git_blob_sha1": "46fbc165d853a1ebe2100b553b830062f6e49dd5",
+        "name": "ocdbt.process_0/d/41569d1134215cd16b582168403f7509",
+        "size_bytes": 2313
+      },
+      {
+        "lfs_sha256": "10427eeb88365daf0a9e9e2fe31b4738063c54cc23eead51903a13c8fdf1b9fe",
+        "name": "ocdbt.process_0/d/48900811ab32b5ad3873d40e96d63846",
+        "size_bytes": 165916672
+      },
+      {
+        "lfs_sha256": "128c1ff1ec757d1c5e8e4ca7bd0156c2b33ac57c7a5733e8ed0e3b9806b9d0da",
+        "name": "ocdbt.process_0/d/6b08a83c9d6a2ade925dbcdd91299ce2",
+        "size_bytes": 152793088
+      },
+      {
+        "lfs_sha256": "8724bef26aa0ef7fbdf4bbf6fce3d502bf06c69aaba8aec97d6c55a80b6ff880",
+        "name": "ocdbt.process_0/d/bda173d4f00d3afcef0a043614df05a6",
+        "size_bytes": 414797824
+      },
+      {
+        "git_blob_sha1": "59f60e1e12c0d41e86020098598cd39ee18078a8",
+        "name": "ocdbt.process_0/manifest.ocdbt",
+        "size_bytes": 277
+      }
+    ],
+    "repository_gate": "auto",
+    "status": "exact_repository_revision_registered_but_gated_bytes_not_acquired",
+    "whole_artifact_sha256": "UNRESOLVED_gated_small_objects_not_acquired",
+    "warning": "The released create_from_huggingface helper does not pass a revision to snapshot_download. Campaign code must acquire the frozen revision explicitly and load a local immutable path."
+  },
+  "output_contract": {
+    "fixed_track_rule": "Every output is one of the released assay and ontology tracks. A built-in generic cell type or tissue track cannot be relabeled as a sealed MASLD lineage or donor state.",
+    "gene_expression_variant_score": "For a selected RNA_SEQ track and gene mask, the released scorer computes log(mean(ALT)+0.001)-log(mean(REF)+0.001).",
+    "native_scale": "assay-specific genomic track predictions",
+    "sealed_lineage_coverage": {
+      "cholangiocyte": "no_matching_RNA_SEQ_track_in_pinned_metadata",
+      "endothelial_cell": "generic_CL:0000115_RNA_SEQ_only_not_liver_specific",
+      "hepatocyte": "CL:0000182_RNA_SEQ_available",
+      "stellate_cell": "no_hepatic_stellate_RNA_SEQ_track;_CL:0000632_exists_only_for_DNASE"
+    },
+    "sealed_roster_consequence": "AlphaGenome cannot natively emit a signed gene-expression effect for all four prespecified GSE289173 evaluator lineages."
+  },
+  "reference_contract": {
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "benchmark_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "native_annotation": "GENCODE_v46",
+    "native_genome": "GRCh38.p13",
+    "native_support_files": ["PAS annotations", "splice-site annotations", "calibration scores"],
+    "reference_gate": "Freeze and validate the p13-to-p14 primary-contig sequence and v46-to-v49 gene crosswalk. Patch, alternate, and scaffold coordinates outside proven native equivalence are out of domain.",
+    "runtime_fetch_warning": "The default calibration path is a Google-internal gs:///alphagenome path and must not be fetched at runtime. Any needed calibration artifact requires a separately frozen accessible identity."
+  },
+  "release": {
+    "code_revision_date": "2026-07-30",
+    "publication_date": "2026-01-28",
+    "publication_doi": "10.1038/s41586-025-10014-0",
+    "registered_checkpoint_revision": "google-deepmind/alphagenome_research@1e55dcffb98ba26b31e74edc5e9f038f54c0e89d+google/alphagenome-all-folds@a8f293a76ee73d5b57f3bf2ae146510589fcf187"
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.11",
+    "environment_status": "UNRESOLVED",
+    "hardware_guidance": "The official repository recommends an NVIDIA H100-class GPU.",
+    "required_probe": "isolated_L40S_and_then_B6K_import_strict_restore_forward_variant_score_reverse_complement_deterministic_seed_and_numeric_tolerance",
+    "weight_producing_revision": "UNRESOLVED_the_registered_code_revision_postdates_the_weight_release"
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "loader": "Acquire every object from the exact Hugging Face revision, verify the frozen inventory and LFS SHA-256 values, compute hashes for all small objects, disable runtime networking, then call the local-path loader.",
+    "metadata_gate": "The gated _CHECKPOINT_METADATA and _METADATA bytes must be inspected before any claim about fold identity, tensor structure, or checkpoint-producing revision.",
+    "network_policy": "No runtime network fetches. Stage verified artifacts into an immutable campaign input only after user-approved acquisition."
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature paper, official pinned AlphaGenome repository, pinned human output metadata, and Hugging Face repository metadata were checked on 2026-08-22. No gated model object was downloaded or deserialized.",
+  "source_records": [
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:README.md",
+      "sha256": "c715b22c31bd4f69e9b76236de0ab6a26c96fa0f384ad56a2f9d2cb65e262681",
+      "size_bytes": 15234
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "size_bytes": 11358
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:pyproject.toml",
+      "sha256": "9c809953f4703929ac9e92f9a44f7ce3c59c8ed57247d2b568f6c6e124909498",
+      "size_bytes": 2581
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/models/dna_model.py",
+      "sha256": "7ef0a8be133a0bb8dc32ec4e722278a061e97a142193775d9917a008f890d528",
+      "size_bytes": 65405
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/models/heads.py",
+      "sha256": "11f2f72a5a23bcf8b9eb6a1ffe586d17b254047d9ea988e86f25807e943a52e4",
+      "size_bytes": 43188
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/models/metadata.py",
+      "sha256": "b3edc4092e95ccc4fa766d3ce8c3b115a2499d50d26e035a0dcd537b8ff09d5f",
+      "size_bytes": 5625
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/models/variant_scoring.py",
+      "sha256": "3b59a3a47441b88198a5db2753e16b41fdc1e3d108937138b2056a59872e3659",
+      "size_bytes": 12879
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/models/gene_mask.py",
+      "sha256": "b668443c242eab0b102b20b62b04221c41ab742ab20ad0218d4aa7bba8a7efff",
+      "size_bytes": 7532
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/data/metadata/human_all_folds_output_metadata.textproto",
+      "sha256": "413b4063096bbf7a75a7fdf5560030f8e3866c6af2455fb313e58686ae3d49e8",
+      "size_bytes": 2637391
+    },
+    {
+      "identity": "google-deepmind/alphagenome_research@1e55dcff:src/alphagenome/models/schemas.py",
+      "sha256": "0ed930ebffbf2b1e14f6290ec761a052beaa008876cc84b873cad216612a3f1a",
+      "size_bytes": 3836
+    }
+  ],
+  "task_fit": {
+    "allele_effect": "supported_as_signed_ALT_minus_REF_for_selected_fixed_tracks",
+    "cell_state_mapping": "not_supported",
+    "rna_conditioned_atac": "not_supported_as_conditioned_model;_static_sequence_comparator_only",
+    "signed_eqtl_ieqtl": "partial_fixed_track_support_only;_no_complete_four_lineage_roster_and_no_RNA_conditioning",
+    "variant_to_regulation": "secondary_supported_track_comparator_only_until_a_prespecified_full_roster_crosswalk_exists"
+  },
+  "terms_audit": {
+    "code_license": "Apache-2.0",
+    "documentation_and_examples": "CC-BY",
+    "model_access": "gated",
+    "model_parameter_terms": "noncommercial; derivatives and models trained from AlphaGenome outputs remain subject to the model terms",
+    "open_champion_disposition": "ineligible_under_current_model_terms",
+    "redistribution": "Do not redistribute weights or derived weights without an explicit authoritative terms determination."
+  },
+  "verified_date": "2026-08-22",
+  "weight_license": "NONCOMMERCIAL_GATED"
+}

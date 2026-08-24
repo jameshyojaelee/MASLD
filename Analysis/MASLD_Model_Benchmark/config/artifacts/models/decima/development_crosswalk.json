@@ -1,0 +1,109 @@
+{
+  "checkpoint_training_corpus": {
+    "cell_count_reported": "more_than_22000000",
+    "declared_sources": [
+      "SCimilarity_datasets",
+      "Brain_Cell_Atlas",
+      "human_skin_atlas_SCP2738",
+      "human_retina_CELLxGENE_collection"
+    ],
+    "exact_checkpoint_bound_accession_and_cell_task_manifest_status": "UNRESOLVED_official_metadata_not_acquired",
+    "initialization": "Borzoi sequence backbone",
+    "label_scope": "expression across 8856 fixed cell contexts"
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "2025-03-27_first_immutable_weight_record",
+    "project_sources": [
+      "resource_atlas_current",
+      "gse244832",
+      "gse281160",
+      "gse281364",
+      "gse289173",
+      "gse296875",
+      "current_coloc_gwas"
+    ],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "Decima was evaluated post-training on eQTL Catalogue study QTS000038. That study resolves to the OneK1K PBMC cohort, GSE196830, rather than GSE289173. Project COLOC memberships were not training labels, but eQTL scoring is a downstream-demo task family.",
+      "exposure_state": "downstream_demo",
+      "resolved_alias": "QTS000038=OneK1K=GSE196830",
+      "sealed_overlap": false
+    },
+    "gse244832": {
+      "evidence": "GSE244832 was public after the original preprint but before the first immutable weight record. It is not a declared named corpus, but the 8856-task metadata and checkpoint-bound sample alias manifest have not been acquired.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13",
+      "topology": "same_sample_different_aliquot; no false cell-level RNA-ATAC pairing"
+    },
+    "gse281160": {
+      "evidence": "GSE281160 became public after the first immutable weight record. Its guide-linked expression perturbation outcomes were not checkpoint targets.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16",
+      "topology": "same_cell guide and RNA; biological inference aggregates to experimental replicate and target family"
+    },
+    "gse281364": {
+      "evidence": "GSE281364 became public after the first immutable weight record. Its HepG2 and LX-2 MPRA allele activities were not checkpoint targets, although Borzoi initialization supplies generic sequence and functional-genomics priors.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16",
+      "reference_locus_exposure": "encoder_seen_or_possible"
+    },
+    "gse289173": {
+      "evidence": "The original Decima preprint predates GSE289173 public release, and the declared training sources do not include it. The first immutable weight record follows the GEO release and no checkpoint-bound sample manifest is available, so the 48-donor cell states and signed cell-type eQTL and interaction-eQTL outcomes are target-label-unexposed with medium confidence, not clean-declared. QTS000038 is OneK1K GSE196830 and is not an alias for this seal.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "reference_locus_exposure": "encoder_seen_or_possible",
+      "topology": "single-nucleus RNA plus evaluator-only cell-type eQTL and interaction-eQTL summaries; no ATAC"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public after the first immutable weight record and is not a declared training source. Its 39-donor same-nucleus RNA and ATAC outcomes remain development-only.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01",
+      "topology": "same_nucleus RNA and ATAC"
+    },
+    "resource_atlas_current": {
+      "evidence": "Resource donor labels, MASLD phenotypes, and the frozen 117 programs are not declared checkpoint targets. Exact overlap of source cells with Decima's large SCimilarity-derived training collection remains unresolved, so donor-label exposure is provisionally target-label-unexposed with medium confidence.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "topology": "single-cell RNA; donor-grouped"
+    }
+  },
+  "held_out_behavior": {
+    "context": "Decima has no donor or RNA input. At the same allele, target gene, sequence window, gene mask, and fixed output task, every donor receives the same prediction.",
+    "locus": "Borzoi initialization and Decima training expose broad reference sequence and functional-genomics biology. Variant evaluation crosses donor folds with merged chromosome or LD blocks and a 524288-bp boundary buffer.",
+    "sealed": "GSE289173 labels may not choose output tasks, task aggregations, target genes, transcripts, windows, masks, calibration, thresholds, or direction rules."
+  },
+  "interpretation": "Decima can natively emit signed ALT-minus-REF gene-expression effects, but only for a fixed catalog of output contexts. It does not accept sealed RNA as a new context. Primary GSE289173 eligibility remains blocked until the exact 8856-task metadata is frozen and independently maps all four prespecified lineages without sealed-label tuning.",
+  "rules": {
+    "checkpoint_chronology": "The original preprint supports training-design chronology, but the 2025-03-27 immutable weight record controls artifact chronology. A clean declaration requires a checkpoint-bound accession and sample manifest.",
+    "fixed_task_ontology": "A cell task is eligible only under its released metadata identity. Similar names, disease states, bulk tissues, or broad parent cell types cannot be relabeled to fill a missing evaluator lineage.",
+    "gene_and_task_selection": "Freeze the target-gene, transcript, gene-mask, output-task, and any task-aggregation rule entirely from upstream ontology and development evidence before sealed inference.",
+    "genome_overlap": "Reference sequence overlap is encoder exposure and is controlled through held genomic or LD blocks and a 524288-bp boundary buffer.",
+    "sealed_rna": "The model cannot consume sealed RNA. Sealed expression may not select or weight output tasks unless a separately named development-trained model and selection lock already define the operation.",
+    "variant_sign": "Use benchmark ALT-minus-REF and v0.7.2 or later fixed-axis fixtures. Never use the pre-v0.7.2 ensemble VEP result."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "sealed_output_roster": {
+    "metadata_identity": "Genentech/decima-data@71e6ef93e9ac581b5788d9bf135c4358a765fbb4:metadata.h5ad",
+    "metadata_status": "not_acquired",
+    "required_lineages": [
+      "cholangiocyte",
+      "endothelial_cell",
+      "hepatocyte",
+      "stellate_cell"
+    ],
+    "roster_status": "UNRESOLVED_BLOCKING",
+    "selection_rule": "An ontology-only one-to-one or prespecified aggregation crosswalk must be frozen without GSE289173 outcomes. If any lineage lacks a defensible matching output task, Decima is ineligible for the primary full-roster endpoint and remains a supported-task secondary comparator."
+  },
+  "task_data_gate": {
+    "current_coloc_gwas": "Downstream-demo genetic task family; project COLOC memberships remain development-only and cannot confirm the model.",
+    "gse281160": "Exploratory perturbation direction diagnostic only; Decima has no guide or donor RNA input.",
+    "gse281364": "Retrospective gene-linked MPRA direction and rank diagnostic after a development-only gene and fixed-task crosswalk.",
+    "gse289173": "Conditional primary eligibility only after exact metadata acquisition, a complete four-lineage ontology crosswalk, terms resolution, artifact admission, and selection lock. Otherwise secondary supported-task static sequence analysis only.",
+    "gse296875": "Static gene-centered sequence comparator or development-fitted head only. Same-nucleus RNA and ATAC cannot turn Decima into an RNA-conditioned model.",
+    "resource_atlas_current": "May support development-only output-task crosswalk diagnostics without using frozen programs as training or selection targets."
+  },
+  "verified_date": "2026-08-22"
+}

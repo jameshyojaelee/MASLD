@@ -1,0 +1,24 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "cpu_baseline_smoke"
+status = "candidate"
+purpose = "Donor-held-out classical cell-state baseline compatibility smoke"
+scheduler = "slurm"
+resource_profile = "cpu_baseline_smoke"
+environment_lock = "sha256:8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298"
+container_digest = "NOT_APPLICABLE"
+modules = ["python/3.11.5-GCCcore-13.2.0"]
+command_prefix = [
+  "/gpfs/commons/home/jameslee/.local/bin/micromamba",
+  "run",
+  "--prefix",
+  "/gpfs/commons/home/jameslee/micromamba/envs/immune-atlas",
+  "env",
+  "PYTHONNOUSERSITE=1",
+  "OMP_NUM_THREADS=1",
+  "OPENBLAS_NUM_THREADS=1",
+  "MKL_NUM_THREADS=1",
+  "NUMEXPR_NUM_THREADS=1",
+  "python",
+]
+admission_blocking = false
+blockers = []

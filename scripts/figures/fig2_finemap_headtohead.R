@@ -21,7 +21,8 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+PANEL_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 FM        <- file.path(BASE, "GWAS/finemapping/results")
 TOL       <- 500000L   # physical-region match window
 
@@ -103,6 +104,9 @@ p <- ggplot(dB, aes(N, tool, fill = band)) +
 
 save_fig(p, file.path(PANEL_DIR, "FigS2C_finemap_method_headtohead.pdf"),
          width = fig_col_width * 1.15, height = 2.6)
+fwrite(dB[, .(method = as.character(tool), pip_band = as.character(band),
+              n_loci = as.integer(N), common_set_n = NTOT)],
+       file.path(PANEL_DIR, "FigS2C_finemap_method_headtohead_source.tsv"), sep = "\t")
 
 # ---- caption + numbers to stdout (NOT on the plot) -------------------------
 cat(sprintf("[finemap_headtohead] wrote panel — common set N = %d physical loci\n", NTOT))

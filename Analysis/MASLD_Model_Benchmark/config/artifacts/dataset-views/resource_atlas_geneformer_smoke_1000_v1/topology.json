@@ -1,0 +1,18 @@
+{
+  "admitted": true,
+  "authority": "topology",
+  "evidence": {
+    "biological_unit": "donor",
+    "false_cell_pairing_prohibited": true,
+    "modalities": [
+      "single_cell_rna"
+    ],
+    "pairing_levels": [
+      "same_study_unpaired"
+    ],
+    "scope": "one frozen single-cell RNA view"
+  },
+  "parent_dataset_id": "resource_atlas_current",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "resource_atlas_geneformer_smoke_1000_v1"
+}

@@ -1,0 +1,62 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49; preserve every source's native build until a loss-audited project crosswalk exists",
+    "sealed_source": "NONE_REGISTERED",
+    "task": "typed_evidence_graph",
+    "unit_of_inference": "independent_locus"
+  },
+  "endpoint_eligibility": {
+    "brier_score": "Eligible only after a logistic calibrator is trained on inner pseudo-held sources and frozen before the outer held source. Raw BIONIC dot products are not probabilities.",
+    "held_source_auprc": "Development-eligible for a wholly removed source among predeclared candidate pairs whose endpoints both have retained-network support.",
+    "locus_macro_hits_at_10": "Development-eligible with candidate sets and untestable coverage frozen per independent locus.",
+    "locus_macro_mrr": "Development-eligible with candidate sets and untestable coverage frozen per independent locus.",
+    "sealed_champion": "Ineligible because no wholly sealed evidence source is registered. A future seal would still require a frozen supported-node denominator and cannot test unseen nodes.",
+    "typed_or_directed_relation_prediction": "Ineligible. The project input is an undirected source-separated projection, and BIONIC does not carry relation types or directions through message passing."
+  },
+  "graph_projection_contract": {
+    "block_crossing": "Cross the held evidence source with native-build ancestry-aware LD blocks, loci within 1 Mb, and gene blocks. Remove every held-block node's incident edge from every retained source before union construction, masks, self-loops, normalization, reconstruction targets, or sampling.",
+    "candidate_universe": "Evaluator-owned locus-gene or other prespecified typed pairs. Candidate membership and observability may be opened only to the evaluator; the adapter receives anonymized pair IDs after the prediction model is frozen.",
+    "held_source": "Remove the entire source edge list and every deterministic derivative before computing the retained node union. Never pass an empty placeholder source, held-source degree, held-source observability, held-source network scale, or outcome-derived node roster.",
+    "negative_controls": "Evaluator creates degree- and observability-matched controls within eligible typed pair families. Training uses only BIONIC's native reconstruction of retained source adjacencies and never consults held-source positives to clean zeros.",
+    "ontology": "Freeze node types, source IDs, build, provenance, and unsupported-versus-untestable states before graph construction. Namespace IDs prevent collisions but relation semantics remain outside this baseline.",
+    "source_order": "Sort retained source IDs and network paths deterministically; hash every edge file and the ordered list. BIONIC learns source-specific encoders and source scales, so source order is part of the model identity."
+  },
+  "source_findings": {
+    "current_coloc_gwas": {
+      "allowed_use": "Exposed training/development evidence only after the corrected 50-study release is promoted. Preserve study, trait, native build, locus, COLOC provenance, and assay observability. Do not freeze current provisional memberships as labels or describe a recovered candidate as causal.",
+      "biological_unit": "study",
+      "exposure_state": "downstream_demo",
+      "status": "blocked_until_promoted_graph_snapshot"
+    },
+    "gse281160": {
+      "allowed_use": "Mechanistic development source or pseudo-held source only after experimental-replicate aggregation, guide-target joins, provenance, and observability are frozen. Cells and guides are not independent replicates. When held, every derived target/program/gene edge is removed from all model inputs.",
+      "biological_unit": "experimental_replicate",
+      "exposure_state": "downstream_demo",
+      "pairing": "same_cell",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "allowed_use": "Mechanistic development source or pseudo-held source only after oligo, allele, barcode, count, context, replicate, and build joins pass. Replicate libraries are the unit. When held, direct MPRA edges and every thresholded or aggregated derivative are removed.",
+      "biological_unit": "experimental_replicate",
+      "exposure_state": "downstream_demo",
+      "pairing": "same_sample_different_aliquot",
+      "public_date": "2026-03-16"
+    }
+  },
+  "split_and_leakage_rules": {
+    "artifact_scope": "Train BIONIC anew for every outer held-source by held-block split and seed. A whole-graph embedding trained once before splitting is prohibited.",
+    "feature_derivatives": "Degrees, source counts, network scales, node support, source-normalized weights, node union, missingness masks, and calibration inputs are features and must be recomputed from retained training evidence only.",
+    "hidden_positive_as_zero": "BIONIC reconstructs zeros in each retained adjacency. Do not inspect a held source to change those zeros. A held-source edge may therefore be treated as absent in another retained source; record this native closed-world mismatch rather than leaking the held label to repair it.",
+    "sealed_inference": "For a future eligible seal, hash the trained model, retained graph, node roster, supported candidate denominator, decoder, calibrator, and seeds before anonymized source-edge outcomes are opened. Commit pair-level predictions and untestable states before the evaluator joins labels.",
+    "selection": "Architecture, source projection, epochs, early-stopping policy, seed ensemble, decoder, calibration, and coverage rule are selected using development pseudo-held sources only."
+  },
+  "transductive_coverage_contract": {
+    "eligible_pair": "Both typed endpoints occur in at least one retained training network after held blocks are removed and receive finite five-seed BIONIC embeddings.",
+    "held_source_only_node": "untestable_not_zero_not_negative",
+    "reporting": "Report pair coverage and locus coverage overall and by source, node type, observability class, and degree bin. Score superiority only on the frozen common-support denominator and also disclose full-universe coverage.",
+    "unsupported_evidence": "An observed candidate pair with two supported endpoints but low score is unsupported by this model. A pair with an endpoint absent from retained support is untestable."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,120 @@
+{
+  "architecture_contract": {
+    "decoder": "Symmetric inner product of two 64-dimensional node embeddings. A separate evaluator may fit one logistic calibrator on inner pseudo-held evidence sources only; raw logits are not probabilities.",
+    "layers": [
+      {
+        "activation_after": "relu",
+        "aggr": "mean",
+        "bias": true,
+        "in_channels": "frozen_feature_width",
+        "normalize": false,
+        "out_channels": 64,
+        "project": false,
+        "root_weight": true,
+        "type": "SAGEConv"
+      },
+      {
+        "activation_after": "none",
+        "aggr": "mean",
+        "bias": true,
+        "in_channels": 64,
+        "normalize": false,
+        "out_channels": 64,
+        "project": false,
+        "root_weight": true,
+        "type": "SAGEConv"
+      }
+    ],
+    "model_wrapper": "torch_geometric.nn.models.GraphSAGE with hidden_channels=64, num_layers=2, out_channels=64, dropout=0, act=relu, norm=null, jk=null",
+    "native_method": "GraphSAGE is inductive only through a learned neighborhood aggregation function applied to available node attributes. No trainable node-ID embedding lookup is admitted.",
+    "typed_graph_status": "The registered project baseline deliberately uses one homogeneous undirected relation-agnostic projection. Typed namespaces and type-restricted candidates remain, but message passing does not model edge types or direction."
+  },
+  "feature_contract": {
+    "allowed_features": [
+      "one-hot node type from the selection-locked ontology",
+      "for every registered development evidence source in sorted source-ID order: retained_source_available mask",
+      "for every registered development evidence source in sorted source-ID order: observed_in_retained_source mask",
+      "for every registered development evidence source in sorted source-ID order: training-fold standardized log1p degree"
+    ],
+    "held_source_channels": "Set source_available=0, observed=0, and degree=0 before normalization. The held source cannot contribute observability, degree, source count, missingness, or any derivative.",
+    "inductive_query": "A query node absent from retained topology may be included only through a source-independent, outcome-independent candidate roster and receives its one-hot node type with all retained-source observation/degree channels set from permitted evidence. With root_weight=true, the model emits a finite root-feature embedding; if even node type cannot be resolved, mark untestable.",
+    "normalization": "Fit degree means and standard deviations on outer-training retained nodes only. Store explicit observation and availability masks, use zero as the neutral standardized fill only after masking, and never encode missing evidence as an observed zero.",
+    "prohibited_features": [
+      "trainable node-ID embeddings",
+      "held-source edges, outcomes, observability, degree, source count, or node support",
+      "current Gene Catalog membership as a feature or label",
+      "COLOC, MPRA, CROP-seq, or other outcome-derived features when that evidence family or block is held",
+      "features precomputed on the full graph"
+    ]
+  },
+  "implementation": {
+    "checkpoint_policy": "No upstream biological checkpoint is admitted. Train a new GraphSAGE state inside every held-source by held-block split and seed and hash the retained graph, candidate roster, feature matrix, scaling, negatives, recipe, runtime, state, and predictions.",
+    "implementation_type": "train_locally_from_exact_library_components_plus_project_split_safe_features_and_negatives",
+    "primary_paper": "https://proceedings.neurips.cc/paper_files/paper/2017/hash/5dd9db5e033da9c6fb5ba83c7a7ebea9-Abstract.html",
+    "primary_preprint": "https://arxiv.org/abs/1706.02216v4",
+    "repository": "pyg-team/pytorch_geometric",
+    "repository_revision": "76ff9c2ce18c8cebf52122b57e2aeadce9793d10",
+    "release_tag": "2.7.0",
+    "release_date": "2025-10-15",
+    "selected_components": ["torch_geometric.nn.conv.SAGEConv", "torch_geometric.nn.models.GraphSAGE", "torch_geometric.loader.LinkNeighborLoader"],
+    "source_code_run": false,
+    "upstream_checkpoint": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+  },
+  "local_training_identity": {
+    "batch_size": 256,
+    "epochs": 50,
+    "loader_num_workers": 0,
+    "message_passing_edge_rule": "Only retained outer-training edges enter data.edge_index. Held-source, held-block, inner-validation, and deterministic derivative edges are absent before loader construction. Training-positive retained edges may also be sampled for message passing, matching the upstream unsupervised example; this never permits held or validation edges.",
+    "negative_ratio": 1.0,
+    "negative_sampling": "Project-generated one-to-one negatives with the same ordered node-type pair and retained-source observability class, drawn from retained-graph nonedges without consulting held-source outcomes; pass explicit edge_label_index and edge_label with LinkNeighborLoader native negative sampling disabled.",
+    "num_neighbors": [10, 10],
+    "optimizer": "torch.optim.Adam",
+    "optimizer_learning_rate": 0.01,
+    "seeds": [11, 29, 47, 71, 101],
+    "shuffle": true,
+    "status": "project_frozen_screening_recipe_based_on_exact_upstream_unsupervised_example_with_split_safe_features_and_typed_negatives"
+  },
+  "runtime_contract": {
+    "core_package": "torch-geometric==2.7.0 from PyPI wheel sha256 6e0cd3ad824d484651ef5d308fc66c687bfcf5ba040d56d1e0fe0f81f365e292",
+    "environment_status": "UNRESOLVED_CPU_L40S_SAMPLER_IMPORT_FORWARD_BACKWARD_RESUME_DETERMINISM_AND_NUMERIC_PROBES_REQUIRED",
+    "execution_target": "CPU SLURM compatibility default; L40S only after the exact PyTorch, CUDA, and sampler-extension environment passes project probes.",
+    "neighbor_sampler_dependency": "LinkNeighborLoader performance and capabilities depend on a compatible pyg-lib or torch-sparse/torch-cluster stack. Freeze exact wheels and hashes; torch-geometric does not declare PyTorch itself.",
+    "python_requirement": ">=3.10",
+    "seed_wrapper": "Set Python, NumPy, torch CPU, and all CUDA seeds before edge/negative shuffling and construction; freeze loader order, worker count zero, deterministic settings, device, and one artifact per seed.",
+    "work_status": "No package, extension, graph, feature matrix, or model was installed or executed during this audit."
+  },
+  "safe_loading_contract": {
+    "admitted_model_origin": "project_generated_only",
+    "external_pytorch_objects": "prohibited",
+    "feature_and_graph_inputs": "Do not load pickled Data objects. Rebuild x, edge_index, candidate rows, and masks from bounded hashed JSON/TSV/NumPy artifacts; require finite features, unique typed IDs, exact shapes, in-range indices, frozen undirected symmetry, and held-edge absence.",
+    "model_state": "Save state_dict only plus a JSON architecture/feature receipt. Reload with torch.load(weights_only=true,map_location='cpu'), reconstruct the exact class, and require strict keys, dimensions, dtype, finiteness, feature schema, and source-order hashes before device transfer.",
+    "prediction_export": "Bounded UTF-8 row IDs plus float32 raw logits and explicit testable status. No adapter-calculated benchmark metric and no pickled prediction bundle.",
+    "require_no_network_execution": true
+  },
+  "sampler_leakage_warning": {
+    "upstream_behavior": "LinkNeighborLoader documents that supervision edges are not masked from message-passing samples by default and that its approximate native negative sampling may create false negatives.",
+    "project_rule": "Every held-source, held-block, and inner-validation edge must be physically absent from data.edge_index. Provide project-frozen typed negatives rather than the native approximate sampler. A fixture must show that no prohibited edge ID appears in any sampled message-passing batch.",
+    "training_edge_overlap": "Retained training positives may overlap retained message-passing topology as in the upstream graph-autoencoding example. This is disclosed as a training-objective property; it cannot justify selecting on training reconstruction and does not relax held-edge removal."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The NeurIPS paper record and arXiv v4 abstract, immutable PyG 2.7.0 tag, MIT text, package metadata, exact SAGEConv and GraphSAGE sources, exact LinkNeighborLoader warnings, sampler implementation, and exact unsupervised example were inspected on 2026-08-22. No code archive, wheel, extension, graph, or weights were downloaded to disk; no model was installed or executed.",
+  "source_records": [
+    {"identity": "pytorch_geometric:LICENSE", "sha256": "89cfb6edc309735916a0c1189dccf761add4af6062ddb34b5a26f60d3efadfea", "size_bytes": 1067},
+    {"identity": "pytorch_geometric:pyproject.toml", "sha256": "a3f39e5d750a86aa0bb9e89ad4da16d79ca86c4aefd011ba4c2cf40ee4cfe398", "size_bytes": 5839},
+    {"identity": "pytorch_geometric:torch_geometric/nn/conv/sage_conv.py", "sha256": "db5a4998387eb0ae2ee1cb3d957699938e6c0fd1b0a1c8b6135c691dfe5af7c7", "size_bytes": 5812},
+    {"identity": "pytorch_geometric:torch_geometric/nn/models/basic_gnn.py", "sha256": "b69eea6c72a7fee3b5081684896efdcda043003f9f47cf04f1f7c9a5d0d8afdc", "size_bytes": 31261},
+    {"identity": "pytorch_geometric:torch_geometric/loader/link_neighbor_loader.py", "sha256": "d0a8ef58d61e1b2acb3aba6a2136ade9617ddb9cf0e813b4f13e82024261c39f", "size_bytes": 14464},
+    {"identity": "pytorch_geometric:torch_geometric/sampler/neighbor_sampler.py", "sha256": "847f2649b765ab927d8a316b3bfaa5918fb58687615336b1c859f1fc1b049064", "size_bytes": 45450},
+    {"identity": "pytorch_geometric:examples/graph_sage_unsup.py", "sha256": "bba6ff20c89e0b95e867ac5b5a5f663eac91d71e52affb258bd50d107a375b96", "size_bytes": 2259},
+    {"identity": "PyPI:torch_geometric-2.7.0-py3-none-any.whl", "sha256": "6e0cd3ad824d484651ef5d308fc66c687bfcf5ba040d56d1e0fe0f81f365e292", "size_bytes": 1275346},
+    {"identity": "PyPI:torch_geometric-2.7.0.tar.gz", "sha256": "f9099e4aece1a9f618c84dbaac33a77f43139736698c7e8bddf3301ef1f2e8d4", "size_bytes": 876725}
+  ],
+  "terms_audit": {
+    "code_license": "MIT",
+    "derivative_weight_redistribution": "The software license does not impose a separate learned-weight restriction. Release of project states remains conditional on every input feature and evidence source's terms; where restricted, release code, hashes, model cards, and frozen predictions without restricted graph-derived weights.",
+    "license_file_inspected": true,
+    "notice_obligation": "Retain the PyTorch Geometric copyright and MIT permission notice in redistributed source or substantial portions.",
+    "result": "open_source_code_preflight_pass_no_upstream_weights_local_states_not_yet_created"
+  },
+  "weight_license": "NOT_APPLICABLE_NO_UPSTREAM_WEIGHTS"
+}

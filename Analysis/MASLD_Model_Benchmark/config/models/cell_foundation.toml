@@ -1,0 +1,238 @@
+schema_version = "masld-bench-model-v1"
+family_id = "cell_foundation"
+modality = ["single_cell_rna", "single_nucleus_rna"]
+status = "candidate"
+
+[[models]]
+model_id = "geneformer_v1_10m"
+display_name = "Geneformer v1 10M"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ctheodoris/Geneformer@04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5:Geneformer-V1-10M/model.safetensors"
+checkpoint_sha256 = "a5e33a757431643b3697de7ef6127950cdc49e06e58d4266b3a3ab191b683f14"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Checkpoint, weight SHA-256, repository license, June 2021 training cutoff, config, and every V1 tokenizer/mapping dictionary hash are frozen. The cell-state crosswalk identifies GSE136103 and Liver_Atlas as encoder_seen and classifies every other registered cell-state source by public date. Before smoke admission, obtain the artifacts with approval, materialize the hash-verified restricted-pickle bundle, and freeze an executable runtime. Extend the corpus crosswalk before any bulk-transfer use."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "geneformer_v2_104m"
+display_name = "Geneformer v2 104M"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ctheodoris/Geneformer@04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5:Geneformer-V2-104M/model.safetensors"
+checkpoint_sha256 = "fff5cba29ddd8792991fa77b4872246fbe548a178cebda3775cdc72b67780e7f"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Checkpoint, weight SHA-256, repository license, December 2024 training cutoff, config, and every shared V2 tokenizer/mapping dictionary hash are frozen. The cell-state crosswalk identifies GSE136103, GSE185477, and Liver_Atlas as encoder_seen and classifies every other registered cell-state source by public date. Before smoke admission, obtain the artifacts with approval, materialize the hash-verified restricted-pickle bundle, and freeze an executable runtime. Extend the corpus crosswalk before any bulk-transfer use."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "geneformer_v2_316m"
+display_name = "Geneformer v2 316M"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "ctheodoris/Geneformer@04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5:Geneformer-V2-316M/model.safetensors"
+checkpoint_sha256 = "965ceccea81953d362081ef3843560a0e4fef88d396c28017881f1e94b1246f3"
+license_status = "Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["Checkpoint, weight SHA-256, repository license, December 2024 training cutoff, config, and every shared V2 tokenizer/mapping dictionary hash are frozen. The cell-state crosswalk identifies GSE136103, GSE185477, and Liver_Atlas as encoder_seen and classifies every other registered cell-state source by public date. Before smoke admission, obtain the artifacts with approval, materialize the hash-verified restricted-pickle bundle, and freeze an executable runtime. Extend the corpus crosswalk before any bulk-transfer use."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scgpt_whole_human"
+display_name = "scGPT whole-human"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:gdrive-folder:1oWh_-ZRdhtoGQ2Fw24HP41FgLoomVo-y"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact official file IDs, byte sizes, auxiliary SHA-256 values, architecture, 2023-05-08 CELLxGENE normal-cell corpus cutoff, and sealed-source timing are frozen. Obtain and SHA-256 the 205385258-byte best_model.pt only with approval, inspect it without unrestricted pickle execution, resolve explicit weight terms, freeze the runtime, and finish the pre-cutoff development-source crosswalk before admission."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scgpt_continual"
+display_name = "scGPT continual-pretraining checkpoint"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:gdrive-folder:1_GROJTzXiAV8HB4imruOTk6PEGuNOcgB"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact official file IDs, byte sizes, auxiliary SHA-256 values, architecture, inherited corpus, Tabula Sapiens supervised cell-type objective, and sealed-source timing are frozen. Obtain and SHA-256 the 207861754-byte best_model.pt only with approval, inspect it without unrestricted pickle execution, resolve explicit weight terms, freeze the runtime, and finish the pre-cutoff development-source crosswalk before admission. Any Tabula Sapiens evaluation is continual_seen and ineligible for a clean claim."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "uce_4l"
+display_name = "UCE 4-layer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "snap-stanford/UCE@9c416007be15ad6753dc84af4468c1dc10421ab9+Figshare:24320806v4:file:42706576"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_CC-BY-4.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact Figshare record, 3,403,514,339-byte weight, source MD5, auxiliary roster, architecture, CC-BY-4.0 weight terms, complete training table, and sealed exposure are frozen. Obtain and SHA-256 all artifacts with approval; safely inspect PyTorch/pickle/archive content; freeze the runtime and deterministic row-ID sampling before admission."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "uce_33l"
+display_name = "UCE 33-layer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "snap-stanford/UCE@9c416007be15ad6753dc84af4468c1dc10421ab9+Figshare:24320806v5:file:43423236"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_CC-BY-4.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact Figshare v5 record, 5,686,283,829-byte weight, source MD5, auxiliary roster, architecture, CC-BY-4.0 weight terms, complete training table, and sealed exposure are frozen. Obtain and SHA-256 all artifacts with approval; safely inspect PyTorch/pickle/archive content; freeze the runtime and deterministic row-ID sampling before admission."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scimilarity_v1_1"
+display_name = "SCimilarity v1.1"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "Genentech/scimilarity@3ce3ec81e122a115eb3e667706725120f7ee252d+Zenodo:10685499:model_v1.1.tar.gz"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_Apache-2.0_weights_CC-BY-SA-4.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact 30,310,810,843-byte Zenodo v1.1 archive, source MD5, Apache-2.0 code and CC-BY-SA-4.0 weight terms, architecture, preprocessing, complete corpus table, and sealed timing are frozen. GSE185477 is encoder_seen and GSE136103 is reference_only. With approval, obtain and SHA-256 the archive without extraction; then safely inspect/stage the encoder, freeze gene_order.tsv and layer_sizes.json, and validate an executable runtime without unrestricted pickle loading."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "cellplm_85m"
+display_name = "CellPLM 85M documented GMVAE"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "OmicsML/CellPLM@b59ee7688b1bd2a745856a610248b46f15019a22:dropbox-rev:016213c1be94746000000029e76cf71:20230926_85M.best.ckpt"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_BSD-2-Clause_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["This is the repository-documented 20230926 checkpoint and published 16-component GMVAE architecture: 82,402,543 parameters trained on 11.4 million cells, not 85 million cells. Its immutable Dropbox revision, 907,020,069-byte size, matching 19,374-gene configuration hash, 1,024-dimensional donor-local common representation, 512-dimensional native GMVAE path, chronology, and preprocessing/evaluation hazards are frozen under config/artifacts/models/cellplm. Weight terms and SHA-256 are unresolved. Before execution, obtain explicit terms, safely inspect the checkpoint, freeze the exact runtime and state schema, resolve the 13,500-versus-19,374 gene-universe discrepancy and 484-source roster, enforce donor-local deterministic contexts and one normalization path, and prohibit oracle Leiden resolution plus test-aware HVG selection."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "cellplm_85m_vae_20231027"
+display_name = "CellPLM 85M undocumented VAE variant"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "OmicsML/CellPLM@b59ee7688b1bd2a745856a610248b46f15019a22:dropbox-rev:016213c1be94747000000029e76cf71:20231027_85M.best.ckpt"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_BSD-2-Clause_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "restricted_comparator"
+admission_blocking = true
+blockers = ["This October 2023 plain-VAE object is used by the released zero-shot embedding tutorial but is not documented as the latest checkpoint or explained in the paper/README. It is never substituted for the documented GMVAE. Its immutable Dropbox revision, 906,500,243-byte size, matching 19,374-gene configuration hash, and separate 512-dimensional VAE native path are frozen. It remains restricted until upstream provenance, explicit weight terms, SHA-256, safe state schema, runtime, donor-local context, normalization, corpus roster, and nonleaking evaluation paths are resolved."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "transcriptformer_tf_sapiens"
+display_name = "TranscriptFormer TF-Sapiens"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "czi-ai/transcriptformer@c943a89a4de9511a8ab1010715bf1cfa8827cc99+v0.6.0+s3-version:P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "MIT"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact versioned 1,819,975,447-byte archive, multipart ETag, MIT terms, architecture, source hashes, and raw-count input contract are frozen. GSE289173 predates the archive and the complete 644-dataset UUID table could not be retrieved, so exposure remains unknown and sealed use is ineligible. With approval, obtain and SHA-256 the archive without extraction; then safely inspect/stage it, retrieve the declared corpus table, and freeze distinct native/common gene-order policies and an executable runtime."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scprint_v1_5_medium"
+display_name = "scPRINT v1.5 medium"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "cantinilab/scPRINT@6bbe1a7cfebb557dc745e23d1ddf5be6e38daf3f+1.6.4+jkobject/scPRINT@f60c87152e83fedb932a84f8ba850fbf489a5a86:v2-medium.ckpt"
+checkpoint_sha256 = "a4cf0753270d4ff451a5dbddadd4c59a53e10e4c3e96a8af0db407ad893c36c5"
+license_status = "code_MIT_weights_Apache-2.0"
+exposure_status = "target_label_unexposed"
+status = "candidate"
+admission_blocking = true
+blockers = ["The exact original 221,775,592-byte March 2025 v1.5 object, SHA-256, paper code tag, MIT code and Apache-2.0 weight terms, architecture, LTS 2023-12-15 corpus, source-specific crosswalk, and raw-count input contract are frozen. The byte-identical December rename is recorded; the silently replaced May 2026 same-path object is ineligible. With approval, obtain the original object, inspect it without unrestricted pickle loading, freeze its vocabulary/hyperparameters/ontology decoders and common/native embedding variants, recover the post-QC train/holdout inventory or retain pre-cutoff development sources as unknown, and validate the Torch 2.2 runtime plus deterministic row-ID sampling."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scprint2_small_v2"
+display_name = "scPRINT-2 small-v2"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "cantinilab/scPRINT-2@7ee2de5aaa3492f326f540f703d44ddeaf1f2fd4:1.0.3+jkobject/scPRINT@d02d4aa684a8422d8bfdc1dbb521a85c773a2772:18hebyht-final-small.ckpt"
+checkpoint_sha256 = "2b586c144cf9a1f638b4b3e803554ebf6ce389f81c5f34179288a970addfd822"
+license_status = "code_GPL-3.0_weight_Apache-2.0"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["The original 889,706,878-byte small-v2 object, SHA-256, byte-identical rename, code release 1.0.3, governing GPL-3.0 repository license, Apache-2.0 weight terms, source architecture/input contract, and crosswalk are frozen. The exact CELLxGENE, Tahoe, and continually expanding scBaseCount snapshots are not version-bound; GSE289173 exposure is unknown and sealed use is ineligible. With approval, obtain and safely inspect the original object, freeze checkpoint vocabulary/hyperparameters/ontologies and the Torch 2.8/Lamin runtime, preserve row IDs, and prevent KNN/metacell inputs from crossing donor, study, or outer-fold boundaries."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scprint2_medium"
+display_name = "scPRINT-2 medium"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "UNRESOLVED"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "UNRESOLVED"
+exposure_status = "unknown"
+status = "deferred"
+admission_blocking = true
+blockers = ["The frozen census requires a scPRINT-2 medium arm, but no exact medium checkpoint revision, LFS SHA-256, license bundle, executable code commit, or training-corpus exposure audit is frozen. Do not substitute the v1/v1.5 medium checkpoint or invent a medium-v2 artifact."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "regformer"
+display_name = "RegFormer"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "BGIResearch/RegFormer@9618f1f4bb7b61c9b236d3ea8a6339c236f2da1b+Figshare:28645493v2:file:57423100"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_CC-BY-4.0"
+exposure_status = "unknown"
+status = "candidate"
+admission_blocking = true
+blockers = ["The final RegFormer-1.2k checkpoint is pinned to Figshare file 57423100 because its companion log records the completed epoch-1 best-model save and the publication config loads that run. The ambiguous all-length file 57423085 and legacy v1 file are not silently substituted. With approval, obtain the canonical object, freeze its SHA-256/state schema/vocabulary/GRN, validate the mismatched Torch/DGL CUDA runtime, and use raw pre-refinement embeddings because the released refine_embedding path consumes evaluation cell-type labels. Exact CELLxGENE corpus membership and GSE289173 exposure remain unknown, so sealed champion use is ineligible."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "scbert"
+display_name = "scBERT"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "TencentAILabHealthcare/scBERT@262fd4b91f3f1c21a6e595d03d4ef423e16ffc99+tag:v1.0.0@be43114be73e8cf639ba3b0fef26db97166292f7+weixin-share:AJEAIQdfAAoUxhXE7r:file_id:s.1970325010981265.642406688Tub_f.642406714080m:87631538"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_GPL-3.0_weights_UNDECLARED"
+exposure_status = "unknown"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The GPL-bearing maintenance commit, historical v1.0.0 tag, current Weixin file ID/name/87,631,538-byte size, 1,126,580-cell PanglaoDB corpus, architecture, preprocessing, and source chronology are frozen. The separately hosted weight has no declared terms, immutable digest, timestamp, or unauthenticated download URL; the current object's exposure therefore remains unknown even though the historical paper checkpoint predates GSE289173. Do not download it until terms are resolved. If resolved, freeze SHA-256/state schema plus the separate 16,906-gene order/gene2vec array and validate the legacy runtime. Common-lane embeddings are prespecified as mean-pooled encoder tokens; the official convolutional classifier is native-lane only."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "sccello"
+display_name = "scCello"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "DeepGraphLearning/scCello@767585b6cc2ef5a3e03234164c665e751a432194+katarinayuan/scCello-zeroshot@e59304e5f49d661b7bd142e9b926737e34ae222d:pytorch_model.bin"
+checkpoint_sha256 = "b30ddf0aadfbcca32f1a92c3b77743091e433e4f4a38dcd77c87a89236c3e676"
+license_status = "blocked_no_detected_code_or_weight_license"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The immutable 44,049,097-byte checkpoint, SHA-256, six-layer/256-dimensional architecture, 22,316,072-cell immutable corpus, rank-tokenization path, final-layer CLS embedding, and source chronology are frozen. GSE289173 postdates the checkpoint and is target-label-unexposed. Neither the official repository nor the Hugging Face model declares code or weight terms, so download, execution, adaptation, and redistribution remain blocked pending written permission. If resolved, freeze token/gene-median dictionaries, complete development source UUID crosswalks, safely inspect the state dict, and validate the runtime."]
+supported_tasks = ["cell_state_mapping"]
+
+[[models]]
+model_id = "langcell"
+display_name = "LangCell"
+implementation_type = "pretrained_adapter"
+checkpoint_revision = "PharMolix/LangCell@69e41ef2fae485b67703294b50f3150bb1d5bb9b+gdrive-folder:1cuhVG9v0YoAnjW-t_WMpQQguajumCBTp:cell_bert:119ic1oiZr6Lxa5Bguv240L-OL5lPGEAq:cell_proj:1euTzbl3jHirjwDyTLhprdmjD25w7YwzC:text_bert:1HXP5blzlJ5sVNGBjBOUvdoLAU985zrfW:text_proj:1_4gLPOPGZBxvddEwYpIlrAhVl10Lf9Er:ctm_head:1t2x9dN8ifwVyMAvixYpxMxrGzbsR9I5P"
+checkpoint_sha256 = "UNRESOLVED"
+license_status = "code_MIT_weights_UNDECLARED"
+exposure_status = "target_label_unexposed"
+status = "blocked_terms"
+admission_blocking = true
+blockers = ["The eight-file Google Drive bundle is resolved to exact IDs, byte sizes, May 2024 modification timestamps, configuration hashes, architecture, rank-tokenization assets, common/native representation paths, and sealed chronology. The repository is MIT, but the separately hosted weights have no declared terms; do not download them until permission is resolved. If resolved, freeze every module SHA-256 and state schema, validate the legacy runtime, prove memory-safe tokenizer parity, and recover the checkpoint-bound scLibrary CELLxGENE UUID inventory. GSE136103 and Liver_Atlas are encoder_seen through Geneformer initialization; other pre-checkpoint sources remain unknown. The common lane is raw 512-dimensional cell CLS only; 256-dimensional projection, LangCell-CE, and label-description/CTM inference are separate native lanes."]
+supported_tasks = ["cell_state_mapping"]

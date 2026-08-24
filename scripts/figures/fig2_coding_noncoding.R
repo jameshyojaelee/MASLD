@@ -130,35 +130,81 @@ ann  <- merge(tot, codg, by = "method")
 ann[, pct := round(100 * coding / n, 1)]
 
 ntot <- ann$n; ncod <- ann$coding; nnon <- ntot - ncod
-legend_counts <- setNames(f1$n_genes, as.character(f1$fine_class))
-legend_labs <- paste0(unname(labs[present_lev]), "\n", legend_counts[present_lev])
 if (ntot > 1050) stop("Figure 2C y-axis contract requires review: union exceeds 1,050 genes")
 
-p <- ggplot(f1, aes(x = method, y = n_genes, fill = fine_class)) +
-  geom_col(width = 0.55, color = "white", linewidth = 0.18) +
-  # total above the vertical bar (black)
-  geom_text(data = tot, aes(x = method, y = n, label = n),
-            inherit.aes = FALSE, vjust = -0.55, hjust = 0.5,
-            size = GEOM_TEXT_6PT, fontface = "plain") +
-  scale_fill_manual(values = fig2_consequence_cols, labels = legend_labs,
-                    name = NULL, breaks = present_lev) +
-  scale_y_continuous(limits = c(0, 1100), breaks = c(0, 500, 1000),
-                     expand = expansion(mult = c(0, 0))) +
-  scale_x_discrete(expand = expansion(add = c(0.18, 0.18))) +
-  labs(x = NULL, y = "Colocalizing genes") +
+# One explicit stack with direct labels. The order is bottom-to-top and matches
+# the source-table consequence vocabulary used elsewhere in Figure 2.
+stack_order <- c("intergenic", "intron", "promoter", "UTR", "coding")
+bar_dt <- f1[, .(fine_class = as.character(fine_class), n_genes)]
+bar_dt[, stack_rank := match(fine_class, stack_order)]
+# An off-vocabulary fine_class (possible via FIG2_VARIANT_CLASS_DIR) yields
+# stack_rank NA, which setorder places FIRST, silently making it the bottom
+# segment with an invisible NA fill and shifting every hardcoded label_y.
+stopifnot(!anyNA(bar_dt$stack_rank))
+setorder(bar_dt, stack_rank)
+bar_dt[, cumulative_n := cumsum(n_genes)]
+bar_dt[, `:=`(
+  ymin = c(0, head(cumulative_n, -1)),
+  ymax = cumulative_n
+)]
+bar_dt[, ymid := (ymin + ymax) / 2]
+bar_dt[, fill_col := unname(fig2_consequence_cols[fine_class])]
+
+direct_names <- c(
+  intergenic = "intergenic", intron = "intron", promoter = "promoter",
+  UTR = "UTR", coding = "coding"
+)
+label_dt <- copy(bar_dt)
+label_dt[, label := paste0(direct_names[fine_class], " (", n_genes, ")")]
+# The three short top segments need separated baselines; leaders preserve the
+# exact segment-to-label mapping without putting values inside the bar.
+label_y <- c(intergenic = 171, intron = 570, promoter = 846, UTR = 925, coding = 1000)
+label_dt[, label_y := unname(label_y[fine_class])]
+
+BAR_LEFT <- 0.08
+BAR_RIGHT <- 0.31
+LABEL_X <- 0.43
+HEADER_Y <- 1090
+HEADER_LABEL <- paste0(
+  format(ntot, big.mark = ",", scientific = FALSE), " colocalizing genes"
+)
+
+p <- ggplot() +
+  geom_rect(
+    data = bar_dt,
+    aes(xmin = BAR_LEFT, xmax = BAR_RIGHT, ymin = ymin, ymax = ymax,
+        fill = fill_col),
+    color = "white", linewidth = 0.18
+  ) +
+  # linewidth 0.08 ggplot units renders below 0.25 pt; the candidate audit
+  # measures the emitted PDF paths rather than trusting the nominal setting.
+  geom_segment(
+    data = label_dt,
+    aes(x = BAR_RIGHT, xend = LABEL_X - 0.025, y = ymid, yend = label_y),
+    inherit.aes = FALSE, color = "#666666", linewidth = 0.08,
+    lineend = "butt"
+  ) +
+  geom_text(
+    data = label_dt,
+    aes(x = LABEL_X, y = label_y, label = label),
+    inherit.aes = FALSE, hjust = 0, vjust = 0.5,
+    size = GEOM_TEXT_6PT, fontface = "plain", family = "Helvetica"
+  ) +
+  annotate(
+    "text", x = BAR_LEFT, y = HEADER_Y,
+    label = HEADER_LABEL, hjust = 0, vjust = 0.5,
+    size = GEOM_TEXT_6PT, fontface = "plain", family = "Helvetica"
+  ) +
+  scale_fill_identity() +
+  scale_x_continuous(limits = c(0, 1), expand = expansion(mult = 0)) +
+  scale_y_continuous(limits = c(0, 1120), expand = expansion(mult = 0)) +
   coord_cartesian(clip = "off") +
-  theme_masld() + theme_pub() +
-  theme(plot.margin = margin(10, 3, 3, 8, "pt"),
-        legend.position = "right",
-        legend.justification = "center",
-        legend.key.width = unit(5, "pt"),
-        legend.key.height = unit(5, "pt"),
-        legend.text = element_text(size = 6, lineheight = 0.85),
-        legend.margin = margin(0, 0, 0, 0),
-        legend.box.spacing = unit(1, "pt"),
-        legend.spacing.y = unit(1, "pt"),
-        axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
-  guides(fill = guide_legend(ncol = 1, byrow = TRUE))
+  theme_void(base_size = 6) +
+  theme(
+    text = element_text(family = "Helvetica", size = 6, color = "black"),
+    legend.position = "none",
+    plot.margin = margin(3, 2, 3, 2, "pt")
+  )
 
 message(sprintf("[caption] Fig2C variant class: non-coding %d (%.0f%%) vs coding %d (%.0f%%); best PP.H4 > 0.5.",
                 nnon, 100 - ann$pct, ncod, ann$pct))

@@ -1,0 +1,63 @@
+{
+  "checkpoint_training_corpus": {
+    "cistromes": 6391,
+    "data_types": ["ChIP-seq", "DNase-seq", "ATAC-seq"],
+    "genome_bins": 2137894,
+    "histone_modifications": 76,
+    "reference": "hg38",
+    "region_resolution_bp": 1000,
+    "source": "Cistrome_Data_Browser_Cistrome_Human_6K",
+    "tissue_scope": "more_than_100_tissues_and_cell_contexts_pooled_cell_type_agnostically",
+    "transcription_regulators": 991
+  },
+  "crosswalk_scope": {
+    "checkpoint_date": "2024-07-09",
+    "project_sources": ["gse281364", "gse289173", "gse296875"],
+    "tasks": ["variant_to_regulation", "rna_conditioned_atac"]
+  },
+  "findings": {
+    "gse281364": {
+      "evidence": "GSE281364 became public on 2026-03-16, after the registered 2024 base checkpoint. Its HepG2 and LX-2 MPRA allele activities and study labels were not base pretraining targets. Generic Cistrome binding states and the corresponding hg38 1-kb bin may have been encoded.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2026-03-16",
+      "reference_and_generic_profile_exposure": "encoder_seen_or_possible"
+    },
+    "gse289173": {
+      "evidence": "GSE289173 became public on 2025-02-12, seven months after the immutable registered checkpoint. Its 48 donor cell states and signed liver cell-type eQTL and ieQTL outcomes were not base pretraining targets. The model may encode the same hg38 1-kb bins and generic liver-related Cistrome profiles.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12",
+      "reference_and_generic_profile_exposure": "encoder_seen_or_possible"
+    },
+    "gse296875": {
+      "evidence": "GSE296875 became public on 2025-10-01, after the registered checkpoint. Its 39-donor same-nucleus RNA and ATAC outcomes were not base pretraining targets. The public GEO record does not provide MASLD diagnosis or histology supervision.",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-10-01",
+      "reference_and_generic_profile_exposure": "encoder_seen_or_possible"
+    },
+    "paper_eqtl_catalog_task": {
+      "evidence": "The paper fine-tuned ChromBERT with DNABERT-2 prompts to classify eQTL Catalog causal versus non-causal variants across 49 tissues. That is a downstream demonstration; the registered artifact is the base pretraining checkpoint, not an eQTL-fine-tuned checkpoint.",
+      "exposure_state": "downstream_demo"
+    }
+  },
+  "held_out_behavior": {
+    "donor": "The base checkpoint has no donor input. At one 1-kb region it returns the same representation for every donor. Donor grouping applies to every project prompt, decoder, calibration, link, and direction head.",
+    "locus": "Pretraining used 2,137,894 hg38 bins and did not establish project-clean chromosome or LD blocks. Region identity and generic binding states are encoder exposure. Project labels and any fitted head must still cross donor folds with merged genomic or LD blocks.",
+    "sealed": "GSE289173 cannot select bins, regulator subsets, prompts, pooling, heads, links, direction rules, calibration, or thresholds.",
+    "variant": "Native ChromBERT cannot distinguish REF from ALT within a bin. Any DNABERT-2 or other allele prompt is a separately frozen composite model, not zero-shot ChromBERT."
+  },
+  "interpretation": "The registered 2024 base checkpoint is target-label-unexposed for all three named post-checkpoint project sources, but it is not allele-aware and is broadly exposed to hg38 bins and pooled regulatory profiles. It can enter only as a frozen region or regulator representation component after terms are resolved, not as a native signed-variant or RNA-conditioned ATAC model.",
+  "rules": {
+    "alternate_checkpoint": "The April 2026 safetensors model is post-seal and lacks a conversion and corpus receipt. It is a separate unknown-exposure identity and cannot inherit the registered checkpoint's chronology without parity evidence.",
+    "checkpoint_chronology": "The immutable July 2024 base weight predates the three named project releases; this supports target-label-unexposed status only for the registered bytes.",
+    "genome_overlap": "An hg38 bin used in pretraining is encoder exposure, not outcome-label exposure. Do not call the locus pristine.",
+    "prompt_separation": "RNA, accessibility, scGPT, DNABERT-2, or other prompts plus their decoders are fitted models with their own checkpoints, data exposure, terms, and split receipts.",
+    "trans_context": "The registered base checkpoint has no observed donor-expression input and cannot satisfy the conditional context endpoint."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "task_data_gate": {
+    "gse281364": "Retrospective representation diagnostic only; native ChromBERT has no allelic score.",
+    "gse289173": "No primary sealed variant inference from the native checkpoint. A new allele-aware composite would require a separate prespecified model and terms-clear checkpoint before selection lock.",
+    "gse296875": "Development-only representation probing is possible after terms clearance. It does not convert the base encoder into observed-RNA-conditioned ATAC prediction."
+  },
+  "verified_date": "2026-08-22"
+}

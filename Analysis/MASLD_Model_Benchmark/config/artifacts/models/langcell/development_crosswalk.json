@@ -1,0 +1,39 @@
+{
+  "corpus": {
+    "cells_approximate": 27500000,
+    "construction": "Human 10X CELLxGENE raw-count cells after duplicate, fewer-than-200-expressed-gene, metadata-missingness, and downstream-dataset exclusions",
+    "hf_complete_repository_commit": "c25508c9bc744024c0c2ecf2f29d60dc68512a5d",
+    "hf_dataset_repository": "Toycat/scLibrary",
+    "hf_repository_license_metadata": "MIT",
+    "hf_upload_relationship_to_checkpoint": "The complete 247-shard repository state was uploaded after checkpoint training and is not an immutable source manifest bound to the May 2024 weights.",
+    "identity_text_fields": ["assay", "cell_type", "development_stage", "disease", "ethnicity", "sex", "tissue", "organ"],
+    "initialization_corpus": "Geneformer Genecorpus-30M",
+    "source": "CELLxGENE",
+    "source_inventory_status": "UNRESOLVED",
+    "warning": "The paper reports selection rules and an approximate cell count but no checkpoint-bound CELLxGENE census version, dataset UUID inventory, or download cutoff. Current scLibrary dataset_id values cannot be assumed to be the exact training roster."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "findings": {
+    "GSE136103": {"evidence": "This cohort is a declared Genecorpus-30M source inherited through Geneformer initialization; later LangCell objectives do not erase encoder exposure.", "exposure_state": "encoder_seen", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Public before the May 2024 checkpoint; exact scLibrary CELLxGENE membership is unresolved.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Public before the May 2024 checkpoint; exact scLibrary CELLxGENE membership is unresolved.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Public before the May 2024 checkpoint; exact scLibrary CELLxGENE membership is unresolved.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "GEO became public shortly before the May 2024 checkpoint; no checkpoint-bound CELLxGENE source inventory proves inclusion or exclusion.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp; neither its features nor frozen cell-state labels could have entered those objects.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "MacParland is both a declared Genecorpus-30M source inherited through Geneformer initialization and an explicit LangCell downstream liver benchmark.", "exposure_state": "encoder_seen", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "inherited_encoder": "Declared Geneformer initialization sources remain encoder_seen even if excluded from later scLibrary construction or reused only as a downstream demonstration.",
+    "post_checkpoint": "Sources first public after all released module modification timestamps are clean_declared; the sealed source is target_label_unexposed.",
+    "pre_checkpoint": "Sources public before checkpoint creation remain unknown until the exact scLibrary CELLxGENE snapshot and dataset UUID roster are bound."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

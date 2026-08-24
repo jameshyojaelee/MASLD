@@ -1,0 +1,46 @@
+{
+  "corpus": {
+    "declared_name": "scCompass-126M",
+    "declared_human_cells": 53568337,
+    "declared_mouse_cells": 48200083,
+    "declared_sum_from_component_counts": 101768420,
+    "declared_textual_scale": "more_than_120_million_cells",
+    "declared_public_fraction_percent": 94.41,
+    "declared_sources": ["GEO", "ArrayExpress", "CNCB", "CELLxGENE_and_other_sources"],
+    "exact_accession_donor_and_cell_inventory_status": "UNRESOLVED",
+    "source_evidence": "Cell Research paper; accession-level Supplementary Table S1 was not acquired in this metadata-only audit",
+    "warning": "The paper's component cell counts sum to 101,768,420, not 126 million. The corpus scale, retained-cell roster, release aliases, and binding to the mutable Base portal object must be reconciled before exposure classification."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"]
+  },
+  "declared_non_training_overlap": {
+    "published_human_liver_annotation_demo": {
+      "evidence": "The paper reports a Sharma et al. human liver cell-annotation downstream evaluation. A downstream demo is not proof of pretraining exposure, but it is not a clean independent test of the published recipe.",
+      "exposure_state": "downstream_demo",
+      "source_identity_status": "requires_accession_alias_resolution"
+    }
+  },
+  "findings": {
+    "GSE136103": {"evidence": "Exact accession membership cannot be excluded, and the mutable ScienceDB Base label lacks an immutable object timestamp and corpus binding.", "exposure_state": "unknown", "public_date": "2019-09-12"},
+    "GSE174748": {"evidence": "Exact accession membership cannot be excluded, and the mutable ScienceDB Base label lacks an immutable object timestamp and corpus binding.", "exposure_state": "unknown", "public_date": "2022-05-01"},
+    "GSE185477": {"evidence": "Exact accession membership cannot be excluded, and the mutable ScienceDB Base label lacks an immutable object timestamp and corpus binding.", "exposure_state": "unknown", "public_date": "2021-10-13"},
+    "GSE189600": {"evidence": "Exact accession membership cannot be excluded, and the mutable ScienceDB Base label lacks an immutable object timestamp and corpus binding.", "exposure_state": "unknown", "public_date": "2023-02-08"},
+    "GSE202379": {"evidence": "Exact accession membership and chronology cannot be resolved because the selected Base bytes and training cutoff are not frozen.", "exposure_state": "unknown", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "Paper chronology is insufficient because the selected Base bytes and training cutoff are not frozen.", "exposure_state": "unknown", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "This source postdates the paper, but the mutable portal object has no immutable timestamp or hash, so clean_declared status cannot be assigned.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "This source postdates the paper, but the mutable portal object has no immutable timestamp or hash, so clean_declared status cannot be assigned.", "exposure_state": "unknown", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO became public after the paper, but no immutable Base checkpoint object, file timestamp, or training cutoff proves that its features and labels were unexposed.", "exposure_state": "unknown", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "This source postdates the paper, but the mutable portal object has no immutable timestamp or hash, so clean_declared status cannot be assigned.", "exposure_state": "unknown", "public_date": "2025-10-01"},
+    "Liver_Atlas": {"evidence": "Exact accession membership cannot be excluded, and the mutable ScienceDB Base label lacks an immutable object timestamp and corpus binding.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+  },
+  "rules": {
+    "exact_object_first": "A paper date, anonymous portal token, or UI label cannot substitute for the selected checkpoint object's immutable identity and training cutoff.",
+    "pre_checkpoint": "Resolve accession, release alias, donor, and retained-cell membership from the full corpus inventory before assigning clean status.",
+    "post_paper": "Retain unknown until the selected Base object is proven to predate the source.",
+    "sealed_source": "GSE289173 remains unknown rather than target_label_unexposed until immutable checkpoint chronology is available."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

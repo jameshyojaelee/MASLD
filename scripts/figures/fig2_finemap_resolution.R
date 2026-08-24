@@ -36,7 +36,8 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
-PANEL_DIR <- file.path(FIG3_DIR, "panels")
+PANEL_DIR <- Sys.getenv("FIG2_CANDIDATE_DIR", file.path(FIG3_DIR, "panels"))
+dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 FM        <- file.path(BASE, "GWAS/finemapping/results")
 
 # Single shared y-axis: row order top -> bottom (one blank spacer separates blocks)
@@ -125,6 +126,11 @@ p <- ggplot() +
 message("[caption] GWAS fine-mapping: consolidation and resolution")
 save_fig(p, file.path(PANEL_DIR, "FigS2B_finemap_cascade.pdf"),
          width = fig_col_width * 1.15, height = 3.9)
+fwrite(rbindlist(list(
+  dA[, .(block = "locus_consolidation", item = cat, band = NA_character_, n)],
+  dB[, .(block = "fine_mapper", item = as.character(tool),
+          band = as.character(pip), n = as.integer(n))]
+), fill = TRUE), file.path(PANEL_DIR, "FigS2B_finemap_cascade_source.tsv"), sep = "\t")
 cat(sprintf("[finemap_resolution] loci %d/%d/%d (tot/shared/uniq) | per-tool loci by best PIP (hi/mod/lo):\n",
             n_total, n_shared, n_unique))
 print(tools[, .(tool, hi, mod, lo, total = hi + mod + lo)])

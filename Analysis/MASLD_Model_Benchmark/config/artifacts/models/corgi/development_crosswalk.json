@@ -1,0 +1,59 @@
+{
+  "crosswalk_scope": {
+    "project_sources": ["resource_atlas_current", "gse244832", "gse281160", "gse281364", "gse289173", "gse296875", "current_coloc_gwas"],
+    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "upstream_sources": ["ENCODE", "FANTOM5", "Tabula_Sapiens", "CATlas", "10x_healthy_PBMC_multiome", "10x_healthy_brain_multiome"]
+  },
+  "findings": {
+    "current_coloc_gwas": {
+      "evidence": "Corgi was not trained on MASLD GWAS or project COLOC memberships. The paper nevertheless designed and evaluated its variant readouts on fine-mapped GTEx eQTLs, including liver, so overlapping GTEx outcomes and any score choices derived from them are downstream-demo evidence.",
+      "exposure_state": "downstream_demo"
+    },
+    "gse244832": {
+      "evidence": "GSE244832 was public before the February 2026 checkpoint. It is not one of the declared Tabula/CATlas/10x sources, but the ENCODE and FANTOM sample-level aliases have not been fully crosswalked to its donors and hepatic stellate-cell assays.",
+      "exposure_state": "unknown",
+      "public_date": "2024-11-13"
+    },
+    "gse281160": {
+      "evidence": "GSE281160 became public after the byte-identical February checkpoint object. The paper explicitly states that Perturb-seq data were not used in Corgi training.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16"
+    },
+    "gse281364": {
+      "evidence": "GSE281364 became public after the byte-identical February checkpoint object and is not among the declared functional-genomics training sources. It remains retrospective development evidence by project policy.",
+      "exposure_state": "clean_declared",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "evidence": "GSE289173 was public about one year before the checkpoint, but the declared Corgi corpus is ENCODE, FANTOM5, Tabula Sapiens, CATlas and two named healthy 10x multiome datasets. The model objective contains functional-genomic coverage, not MASLD cell labels, donor eQTLs or interaction-eQTL effects. Exact ENCODE/FANTOM donor-alias resolution is incomplete, so confidence is medium rather than clean-declared.",
+      "exposure_confidence": "medium",
+      "exposure_state": "target_label_unexposed",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "evidence": "The paper names the only 10x multiome additions as healthy PBMC and healthy brain datasets; GSE296875 is a later 39-donor liver multiome cohort and is not a declared source. Its donor RNA, ATAC, pathology and QTL outcomes remain development-only.",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01"
+    },
+    "resource_atlas_current": {
+      "evidence": "No Resource donor labels, MASLD phenotypes or frozen 117 programs are declared training targets. Corgi was trained on broad normal human regulatory data, with liver and hepatocyte contexts used mainly as published held-out contexts; this supplies a liver-domain prior but not MASLD-state supervision.",
+      "exposure_state": "target_label_unexposed"
+    }
+  },
+  "interpretation": "Regular Corgi is a general context-aware functional-genomics model, not a MASLD-pretrained model. GSE289173 target labels are provisionally unexposed, while its reference sequence and generic liver regulatory priors are expected. Pre-checkpoint development sources need donor/run alias resolution before a clean claim.",
+  "rules": {
+    "checkpoint_chronology": "The February and June Zenodo files are byte-identical by filename, size and MD5, so the February creation date governs chronology.",
+    "context_mapper": "Fit UMI-to-Corgi context transforms only within development training folds. Compare the released within-vector rank mapper with fold-fitted CPM, length-adjusted TPM and learned count-to-context mappings; sealed outcomes choose none of them.",
+    "genome_overlap": "Corgi saw large portions of hg38 reference sequence. Cross donors with chromosome/LD blocks and a 524288-bp buffer; reference-sequence exposure is distinct from donor-label contamination.",
+    "sealed_rule": "GSE289173 labels, QTL summaries, thresholds and calibration targets remain evaluator-only. Context may be generated only from anonymized sealed expression features using the selection-locked mapper.",
+    "upstream_aliases": "Literal accession absence is insufficient for ENCODE/FANTOM. Resolve accession, BioProject, SRA, donor and sample aliases before final classification."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "upstream_corpus": {
+    "accession_manifest_status": "PARTIAL: the paper reports 580 samples and links supplementary source tables, but an exact checkpoint-bound, cryptographically frozen donor/run manifest is not present in the code release",
+    "context_count": 580,
+    "modalities": ["DNase_seq", "ATAC_seq", "histone_ChIP_seq", "CTCF_ChIP_seq", "CAGE_seq", "RAMPAGE_seq", "total_RNA_seq", "polyA_RNA_seq", "10x_scRNA_seq", "WGBS"],
+    "training_label_scope": "multi-assay genomic coverage; no disease phenotype, donor eQTL or interaction-eQTL targets"
+  },
+  "verified_date": "2026-08-22"
+}

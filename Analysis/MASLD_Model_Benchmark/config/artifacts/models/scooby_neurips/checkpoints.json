@@ -1,0 +1,116 @@
+{
+  "admission_status": "BLOCKED_UNDECLARED_WEIGHT_TERMS_MISSING_CONTEXT_ENCODER_AND_RUNTIME_PROVENANCE",
+  "architecture_contract": {
+    "base_model": "Borzoi replicate 0 converted to PyTorch, original species heads removed",
+    "cell_decoder": "A 14-dimensional Poisson-MultiVI cell-state vector is mapped by an MLP to cell-specific 1x1 convolution weights and biases over 1,920-dimensional sequence embeddings.",
+    "decoder_tracks": 3,
+    "input_length_bp": 524288,
+    "lora": "Rank-8 LoRA fine-tuning was merged into the full checkpoint.",
+    "output_central_bins": 6144,
+    "output_length_bp": 196608,
+    "output_resolution_bp": 32,
+    "parameter_count_from_hugging_face_safetensors_metadata": 193236835,
+    "sequence_embedding_dim": 1920,
+    "transform_borzoi_embedding": true
+  },
+  "checkpoint": {
+    "created": "2024-10-10T12:53:46Z",
+    "filename": "model.safetensors",
+    "format": "safetensors_F32",
+    "hugging_face_repository": "johahi/neurips-scooby",
+    "revision": "1591d15696c65f14053e4495e52c74812a86fd8d",
+    "sha256": "8f2e2de3e86016378116c90accf94572e75963d5445beb6cabd585c8372170dd",
+    "size_bytes": 772970196,
+    "weight_downloaded": false
+  },
+  "code_identity": {
+    "checkpoint_bound_revision": "UNRESOLVED",
+    "frozen_adapter_revision": "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471",
+    "finding": "The closest source commit before upload is 10069bf09ba68707c9161f5db7c0e696b5983b0a from 2024-10-09. Its Scooby class predates later initialization, dtype/cache and documentation changes; the architecture appears compatible but is not byte-identical to current source. The checkpoint config contains no scooby code revision or required cell_emb_dim/n_tracks fields.",
+    "release_era_model_sha256": "8d2e4c018311315adebc93168061028bff8354b4945ec48f4f883ab1ed2f3d33"
+  },
+  "held_donor_contract": {
+    "published_evidence": "Evaluation holds genomic sequences, not donors or studies. A separate ablation projects a closely related withheld normoblast state into a learned hematopoietic embedding; the paper explicitly warns against transfer to drastically different cell types.",
+    "status": "NO_PUBLISHED_HELD_DONOR_OR_CROSS_TISSUE_INDUCTIVE_VALIDATION",
+    "benchmark_rule": "A liver application must use a frozen, training-donor-only reference/query embedding path and project held donors without ATAC or outcomes. Retraining Poisson-MultiVI on all project donors before splitting is leakage."
+  },
+  "input_contract": {
+    "cell_context": "14-dimensional custom Poisson-MultiVI latent generated jointly from RNA and ATAC in the 10x NeurIPS bone-marrow multiome; sample was a batch covariate. Validation/test genes and peaks were removed before embedding.",
+    "cell_context_encoder_status": "NOT_BUNDLED_IN_THE_HUGGING_FACE_CHECKPOINT; only the Scooby safetensors and a generic architecture config are present.",
+    "sequence": "One-hot hg38 DNA, 524288 bp.",
+    "topology": "same-nucleus RNA-ATAC in the upstream 10x multiome.",
+    "warning": "The published cell context used observed ATAC. It cannot enter the RNA-conditioned ATAC task as released. A future exact Poisson-MultiVI RNA-only query posterior must be separately frozen and prove that no observed ATAC, peak counts, ATAC-derived neighbors or held-donor fitting enter inference."
+  },
+  "license_audit": {
+    "code": "MIT",
+    "inherited_base": "The full checkpoint embeds a converted Borzoi replicate whose Hugging Face conversion declares CC-BY-4.0, while the canonical Calico weight terms remain undeclared.",
+    "open_champion_eligibility": "INELIGIBLE",
+    "weight_card": "The immutable NeurIPS Hugging Face revision has no README, license tag or cardData license.",
+    "weight_status": "UNDECLARED_BLOCKED"
+  },
+  "native_scoring_contract": {
+    "motif_effect": "The paper's primary NeurIPS use mutates matched TF motifs and contrasts predicted RNA or ATAC profiles across hematopoietic cells.",
+    "variant_effect": "Reproduction code supports REF/ALT sequence contrasts with fixed cell embeddings, reverse-complement averaging and exon-summed RNA readouts, but the paper's confirmatory eQTL benchmark used the OneK1K checkpoint. Treat NeurIPS variant scoring as exploratory family-level transfer.",
+    "warning": "Neither path supplies a liver cell embedding. ATAC-conditioned context can leak the regulatory phenotype being predicted."
+  },
+  "output_contract": {
+    "activation": "softplus",
+    "atac_inverse_transform": "Multiply by 20 to reverse the 0.05 training scale.",
+    "profiles": ["rna_plus", "rna_minus", "atac_insertion"],
+    "rna_inverse_transform": "Undo the Borzoi-like single-cell squashed scale with clip_soft=5.",
+    "reverse_complement": "Reverse bins, swap RNA strands and preserve the unstranded ATAC channel before averaging forward and reverse-complement predictions."
+  },
+  "pretraining_and_adaptation": {
+    "base_corpora": "Inherited Borzoi human/mouse reference sequence and functional-genomics corpus.",
+    "cell_dataset": "NeurIPS 2021 10x bone-marrow multiome: GSE194122/SRP356158 plus challenge AWS ATAC fragments.",
+    "cell_scale": "63,683 bone-marrow mononuclear cells/nuclei.",
+    "genomic_split": "Borzoi fold3 test and fold4 validation; overlapping genes/peaks excluded from the cell embedding.",
+    "objective": "same-nucleus stranded RNA coverage and unstranded ATAC insertion profile prediction",
+    "training_topology": "same-nucleus paired multiome",
+    "training_unit": "Cells are profile targets, not donor replicates; no donor-held outer evaluation was reported."
+  },
+  "reference_contract": {
+    "benchmark_reference": "GRCh38.p14 plus GENCODE v49",
+    "native_annotation": "GENCODE v32",
+    "native_build": "Cell Ranger ARC refdata-cellranger-arc-GRCh38-2020-A-2.0.0 and GEX refdata-gex-GRCh38-2020-A",
+    "rule": "Require primary-contig sequence, coordinate, RNA strand, Tn5 insertion, exon and v32-to-v49 parity. Preserve a 524288-bp buffer and reconcile the weight-era loader with the July 2025 sequence-window fix."
+  },
+  "release": {
+    "article_doi": "10.1038/s41592-025-02854-5",
+    "article_publication_date": "2025-10-22",
+    "code_repository": "https://github.com/gagneurlab/scooby",
+    "reproducibility_repository": "https://github.com/gagneurlab/scooby_reproducibility",
+    "zenodo_historical_archive": "10.5281/zenodo.13891693"
+  },
+  "runtime_contract": {
+    "checkpoint_config_transformers": "4.45.2",
+    "current_setup": "Python tested at 3.9; broad package floors and an unpinned adapted-peft Git dependency.",
+    "paper_runtime": "PyTorch 2.1.0, custom Poisson-MultiVI in scvi-tools 1.1.2, adapted peft 0.10.1, Borzoi-PyTorch 0.0.2 and mixed precision on eight A40 GPUs.",
+    "status": "UNRESOLVED_AND_VERSION_DIVERGENT",
+    "warning": "Freeze the historical Scooby implementation plus exact borzoi-pytorch, peft fork, custom scvi-tools commit, transformers, torch and CUDA. The current source and package floors postdate the weight."
+  },
+  "safe_loading_contract": {
+    "format_risk": "Safetensors is non-pickle but still requires bounded-header and tensor-schema validation.",
+    "loading_rule": "After terms and campaign approval, download by immutable revision, verify SHA-256 and require exact tensors under cell_emb_dim=14, n_tracks=3 and use_transform_borzoi_emb=true. Compare historical and current source behavior before selecting an adapter.",
+    "numeric_parity": "Reproduce cell-decoder outputs, central crop, RNA/ATAC transforms, reverse complement, gene/exon aggregation and published profile fixtures.",
+    "weight_downloaded": false
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The Nature Methods article, immutable Hugging Face metadata/config, gagneurlab/scooby current and release-era source history, gagneurlab/scooby_reproducibility at 8f4eefbecf15e2e2a3cef433893086bc18505c40 and Zenodo metadata were queried on 2026-08-22. No weight, embedding encoder, archive, package or reference was downloaded or deserialized.",
+  "source_records": [
+    {"identity": "gagneurlab/scooby@10069bf:scooby/modeling/scooby.py", "sha256": "8d2e4c018311315adebc93168061028bff8354b4945ec48f4f883ab1ed2f3d33", "size_bytes": 5658},
+    {"identity": "gagneurlab/scooby@dbfe6cd:LICENSE", "sha256": "0a09080986ba1b09bc670290c172fc831a1f73dff1f0c6ab23039b79f80d8ed3", "size_bytes": 1068},
+    {"identity": "gagneurlab/scooby@dbfe6cd:scooby/modeling/scooby.py", "sha256": "6b003b4cad458a2a270e4870b8bd159cd051bb368c7703170af5231fa86533d8", "size_bytes": 9374},
+    {"identity": "gagneurlab/scooby@dbfe6cd:scripts/config_multiome.yaml", "sha256": "ca197df999e963821719a845e44cde4166242beca311e1c183dd054877374daa", "size_bytes": 1096},
+    {"identity": "gagneurlab/scooby_reproducibility@8f4eefb:scripts/inference_eqtls/parallel_inference-susie_fixed.py", "sha256": "f6bd156bbd406255718e111aca5116e0a7ea19a50617bb451a4740c5775edaa1", "size_bytes": 6044},
+    {"identity": "johahi/neurips-scooby@1591d15:config.json", "sha256": "26862280d15319c004a062e1823699d9e1150e753c1afcc6c40ffe9676e68eba", "size_bytes": 401},
+    {"identity": "johahi/neurips-scooby@1591d15:model.safetensors", "sha256": "8f2e2de3e86016378116c90accf94572e75963d5445beb6cabd585c8372170dd", "size_bytes": 772970196}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "not_supported; the model consumes a Poisson-MultiVI context rather than assigning cell labels",
+    "rna_conditioned_atac": "blocked as released because the published context used observed ATAC and the exact encoder is absent. Conditional reconsideration requires a frozen RNA-only query path that passes the no-ATAC fixture.",
+    "unified_model": "hematopoietic component only after terms and a topology-valid context path",
+    "variant_to_regulation": "hematopoietic exploratory comparator; no MASLD/liver latent or donor-held evidence supports a sealed champion claim"
+  },
+  "weight_license": "UNDECLARED"
+}

@@ -1,0 +1,50 @@
+{
+  "crosswalk_scope": {
+    "development_sources": ["gse281364", "gse296875"],
+    "project_reference": "GRCh38.p14 plus GENCODE v49",
+    "sealed_source": "gse289173",
+    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+  },
+  "endpoint_eligibility": {
+    "allelic_direction_accuracy": "ineligible because ABC has no REF-versus-ALT sequence term",
+    "eqtl_retrieval_auprc": "eligible as a continuous unsigned link baseline after variant-to-element overlap is frozen",
+    "mean_fisher_z_celltype_spearman": "ineligible standalone; any signed result is a separately registered composite",
+    "typed_evidence_graph": "eligible as a typed unsigned link source, but the current task has no sealed source and therefore no champion"
+  },
+  "findings": {
+    "gse281364": {
+      "allowed_use": "Development-only overlap and orthogonal reporter-activity diagnostic. MPRA measures an isolated reporter construct and is not endogenous enhancer-gene link truth. No ABC lane, threshold, candidate-region definition, or contact choice may be selected on these outcomes.",
+      "algorithm_exposure_state": "reference_only",
+      "project_source_state": "downstream_demo",
+      "public_date": "2026-03-16"
+    },
+    "gse289173": {
+      "allowed_use": "One-time mapping of sealed variant positions onto a precommitted development-built cell-state link atlas. No sealed ATAC exists, and no eQTL/ieQTL outcome may alter peaks, normalization, gene roster, link scores, thresholds, or calibration.",
+      "algorithm_exposure_state": "target_label_unexposed",
+      "held_query_behavior": "static_link_prior_only",
+      "public_date": "2025-02-12"
+    },
+    "gse296875": {
+      "allowed_use": "Build and evaluate donor-held cell-state ATAC link maps. Every candidate peak, signal track, quantile transform, gene filter, QC threshold, and pooled profile must be generated from outer-training donors for development scores.",
+      "algorithm_exposure_state": "continual_seen",
+      "model_input_status": "observed_same_nucleus_ATAC_pseudobulked_to_donor_by_cell_state",
+      "public_date": "2025-10-01"
+    }
+  },
+  "reference_and_topology_contract": {
+    "annotation": "Generate a versioned GENCODE v49 TSS and gene table. Never silently use the upstream collapsed hg38 gene authority or map unmatched genes to zero.",
+    "gse281364": "Same-sample different-aliquot DNA and RNA counts do not establish endogenous enhancer-gene pairing.",
+    "gse289173": "RNA and QTL summaries are same-study unpaired. ABC consumes neither at native inference and produces no donor-specific score.",
+    "gse296875": "Same-nucleus identity is preserved in provenance but ABC uses donor-by-cell-state ATAC pseudobulk. Nuclei and fragments are not biological replicates.",
+    "missingness": "No ATAC, contact, gene mapping, or QC failure is encoded as zero. A structurally missing lane or row is not scored."
+  },
+  "split_and_leakage_rules": {
+    "candidate_regions": "Call and rank peaks inside each outer-training donor partition. Held donors cannot affect the peak universe, qnorm, candidate cap, promoter definition, or gene-expression filter.",
+    "donors": "All nuclei and wells from one GSE296875 donor remain in one outer fold; retain well as a technical batch and donor as the inferential unit.",
+    "genomics": "Cross donor folds with native-build merged LD/locus blocks. Variants in one merged block remain together, and region or gene neighborhoods cannot cross into a held block through score denominators.",
+    "sealed_atlas": "After model selection, rebuild the named static link atlas from all admitted development donors, hash it, and lock it before anonymized sealed variant features are opened.",
+    "variant_overlap": "Use a project evaluator with exact coordinates and continuous scores. The upstream hard-coded variant-overlap helper is forbidden."
+  },
+  "schema_version": "masld-bench-local-model-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,362 @@
+{
+  "corpora": {
+    "Genecorpus-104M": {
+      "declared_source_count": 2903,
+      "inventory_granularity": "doi_or_source_url",
+      "source_record_identity": "Chen_and_Venkatesh_et_al_2026_Supplementary_Table_1",
+      "source_record_sha256": "6547a7e47585d65a6c98c17335f4d59c9c48c61950c5ce29a61bc63857902d59",
+      "source_record_url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs43588-026-00972-4/MediaObjects/43588_2026_972_MOESM3_ESM.xlsx"
+    },
+    "Genecorpus-30M": {
+      "declared_source_count": 561,
+      "inventory_granularity": "cellxgene_dataset_id_and_publication_citation",
+      "source_record_identity": "Theodoris_et_al_2023_Supplementary_Table_1",
+      "source_record_sha256": "bbfcddfa95a1565977fce9c60862032d061958ac5a4571942bd079a1a0a33e3f",
+      "source_record_url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-023-06139-9/MediaObjects/41586_2023_6139_MOESM4_ESM.xlsx"
+    }
+  },
+  "crosswalk_scope": {
+    "additional_cell_state_task_datasets": [
+      "GSE256398",
+      "GSE281367",
+      "GSE289173",
+      "GSE296875"
+    ],
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "smoke_view_source_datasets": [
+      "GSE136103",
+      "GSE174748",
+      "GSE185477",
+      "GSE189600",
+      "GSE202379",
+      "GSE244832",
+      "Liver_Atlas"
+    ],
+    "scope_limit": "This resolves the seven-source frozen 1000-cell smoke view plus every additional registered cell-state task cohort. It does not resolve the five-cohort bulk source composition, other task cohorts, CELLxGENE UUID aliases absent from the declared tables, or any later checkpoint."
+  },
+  "findings": {
+    "GSE136103": {
+      "aliases": [
+        "GSE136103",
+        "PRJNA561303",
+        "SRP218975",
+        "PMID:31597160",
+        "DOI:10.1038/s41586-019-1631-3"
+      ],
+      "public_date": "2019-09-12",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": true,
+          "evidence": "DOI 10.1038/s41586-019-1631-3; 279280 cells passed filtering",
+          "exposure_state": "encoder_seen",
+          "matched_records": [
+            {
+              "cells_passed_filtering": 279280,
+              "source_key": "DOI:10.1038/s41586-019-1631-3"
+            }
+          ]
+        },
+        "Genecorpus-30M": {
+          "declared_match": true,
+          "evidence": "CELLxGENE dataset ID 414901; Ramachandran et al. Nature 575, 512-518 (2019); 273857 cells passed filtering",
+          "exposure_state": "encoder_seen",
+          "matched_records": [
+            {
+              "cells_passed_filtering": 273857,
+              "source_key": "CELLXGENE_DATASET_ID:414901"
+            }
+          ]
+        }
+      }
+    },
+    "GSE174748": {
+      "aliases": [
+        "GSE174748",
+        "PRJNA731458",
+        "SRP320662",
+        "PMID:36198802",
+        "DOI:10.1038/s41586-022-05289-6"
+      ],
+      "public_date": "2022-05-01",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "No DOI or accession alias match in the declared table",
+          "exposure_state": "unknown"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2022-05-01, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE185477": {
+      "aliases": [
+        "GSE185477",
+        "PMID:34792289",
+        "DOI:10.1002/hep4.1854"
+      ],
+      "public_date": "2021-10-13",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": true,
+          "evidence": "DOI 10.1002/hep4.1854; 73295 cells passed filtering",
+          "exposure_state": "encoder_seen",
+          "matched_records": [
+            {
+              "cells_passed_filtering": 73295,
+              "source_key": "DOI:10.1002/hep4.1854"
+            }
+          ]
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2021-10-13, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE189600": {
+      "aliases": [
+        "GSE189600",
+        "PRJNA783863",
+        "SRP348024",
+        "PMID:36753562",
+        "DOI:10.1126/scitranslmed.adc9653"
+      ],
+      "public_date": "2023-02-08",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "No DOI or accession alias match in the declared table",
+          "exposure_state": "unknown"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2023-02-08, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE202379": {
+      "aliases": [
+        "GSE202379",
+        "PRJNA835824",
+        "PMID:38778114",
+        "DOI:10.1038/s41586-024-07465-2"
+      ],
+      "public_date": "2024-04-04",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "No DOI or accession alias match in the declared table",
+          "exposure_state": "unknown"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2024-04-04, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE244832": {
+      "aliases": [
+        "GSE244832",
+        "PRJNA1024976",
+        "PMID:39522884",
+        "DOI:10.1016/j.jhep.2024.10.044"
+      ],
+      "public_date": "2024-11-13",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "No DOI or accession alias match in the declared table",
+          "exposure_state": "unknown"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2024-11-13, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE256398": {
+      "aliases": [
+        "GSE256398",
+        "PRJNA1079341",
+        "PMID:40074890",
+        "DOI:10.1038/s41586-025-08677-w"
+      ],
+      "public_date": "2025-03-03",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2025-03-03, after the December 2024 V2 cutoff",
+          "exposure_state": "clean_declared"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2025-03-03, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE281367": {
+      "aliases": [
+        "GSE281367",
+        "PRJNA1183734",
+        "PMID:42230773",
+        "DOI:10.1038/s41588-026-02617-8"
+      ],
+      "public_date": "2026-03-16",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2026-03-16, after the December 2024 V2 cutoff",
+          "exposure_state": "clean_declared"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2026-03-16, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "GSE289173": {
+      "aliases": [
+        "GSE289173",
+        "PRJNA1221860",
+        "PMID:40562914",
+        "DOI:10.1038/s41588-025-02237-8"
+      ],
+      "public_date": "2025-02-12",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2025-02-12, after the December 2024 V2 cutoff; frozen cell-state and eQTL/ieQTL outcomes were not training labels",
+          "exposure_state": "target_label_unexposed"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2025-02-12, after the June 2021 V1 cutoff; frozen cell-state and eQTL/ieQTL outcomes were not training labels",
+          "exposure_state": "target_label_unexposed"
+        }
+      }
+    },
+    "GSE296875": {
+      "aliases": [
+        "GSE296875",
+        "PRJNA1261871",
+        "PMID:41338218",
+        "DOI:10.1016/j.ajhg.2025.11.009"
+      ],
+      "public_date": "2025-10-01",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2025-10-01, after the December 2024 V2 cutoff",
+          "exposure_state": "clean_declared"
+        },
+        "Genecorpus-30M": {
+          "declared_match": false,
+          "evidence": "GEO first became public on 2025-10-01, after the June 2021 V1 cutoff",
+          "exposure_state": "clean_declared"
+        }
+      }
+    },
+    "Liver_Atlas": {
+      "aliases": [
+        "Liver_Atlas",
+        "GSE115469",
+        "PMID:30348985",
+        "DOI:10.1038/s41467-018-06318-7"
+      ],
+      "public_date": "2018-10-22",
+      "corpus_findings": {
+        "Genecorpus-104M": {
+          "declared_match": true,
+          "evidence": "DOI 10.1038/s41467-018-06318-7 appears in seven declared rows totaling 782916 cells passed filtering",
+          "exposure_state": "encoder_seen",
+          "matched_records": [
+            {
+              "cells_passed_filtering": 332497,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row1"
+            },
+            {
+              "cells_passed_filtering": 86379,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row2"
+            },
+            {
+              "cells_passed_filtering": 82751,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row3"
+            },
+            {
+              "cells_passed_filtering": 77238,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row4"
+            },
+            {
+              "cells_passed_filtering": 76362,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row5"
+            },
+            {
+              "cells_passed_filtering": 64878,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row6"
+            },
+            {
+              "cells_passed_filtering": 62811,
+              "source_key": "DOI:10.1038/s41467-018-06318-7:row7"
+            }
+          ]
+        },
+        "Genecorpus-30M": {
+          "declared_match": true,
+          "evidence": "MacParland et al. Nat Commun 9, 4383 (2018) appears in CELLxGENE dataset IDs 337313, 766226, 253136, 776602, 364042, 379024, and 399004, totaling 768462 cells passed filtering",
+          "exposure_state": "encoder_seen",
+          "matched_records": [
+            {
+              "cells_passed_filtering": 326954,
+              "source_key": "CELLXGENE_DATASET_ID:337313"
+            },
+            {
+              "cells_passed_filtering": 84485,
+              "source_key": "CELLXGENE_DATASET_ID:766226"
+            },
+            {
+              "cells_passed_filtering": 81452,
+              "source_key": "CELLXGENE_DATASET_ID:253136"
+            },
+            {
+              "cells_passed_filtering": 75483,
+              "source_key": "CELLXGENE_DATASET_ID:776602"
+            },
+            {
+              "cells_passed_filtering": 74586,
+              "source_key": "CELLXGENE_DATASET_ID:364042"
+            },
+            {
+              "cells_passed_filtering": 63723,
+              "source_key": "CELLXGENE_DATASET_ID:379024"
+            },
+            {
+              "cells_passed_filtering": 61779,
+              "source_key": "CELLXGENE_DATASET_ID:399004"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "interpretation": {
+    "geneformer_v1_10m": "GSE136103 and Liver_Atlas are encoder_seen. The other smoke-view and registered cell-state cohorts first became public after the V1 cutoff and are clean_declared, except sealed GSE289173, whose task labels are target_label_unexposed.",
+    "geneformer_v2_104m": "GSE136103, GSE185477, and Liver_Atlas are encoder_seen. GSE174748, GSE189600, GSE202379, and GSE244832 were public before the V2 cutoff but have no declared source-table match and remain unknown. GSE256398, GSE281367, and GSE296875 are clean_declared by post-cutoff public dates; sealed GSE289173 is target_label_unexposed.",
+    "geneformer_v2_316m": "GSE136103, GSE185477, and Liver_Atlas are encoder_seen. GSE174748, GSE189600, GSE202379, and GSE244832 were public before the V2 cutoff but have no declared source-table match and remain unknown. GSE256398, GSE281367, and GSE296875 are clean_declared by post-cutoff public dates; sealed GSE289173 is target_label_unexposed."
+  },
+  "policy": {
+    "development_use": "Run cell-state development benchmarks with source-stratified diagnostics by declared encoder exposure.",
+    "negative_match_rule": "Absence from a declared table remains unknown when a source was public before the checkpoint cutoff. A documented first-public date after the cutoff supports clean_declared.",
+    "sealed_use": "This development crosswalk does not alter the separate target-label-unexposed finding for GSE289173."
+  },
+  "schema_version": "masld-bench-development-exposure-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

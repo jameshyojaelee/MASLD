@@ -1,0 +1,118 @@
+{
+  "architecture_contract": {
+    "declared_model": "scikit-learn logistic regression trained on K562 CRISPR enhancer-gene labels",
+    "feature_transform": "log(abs(feature) + 0.01)",
+    "polynomial_features": false,
+    "selected_model_lane": "atac_megamap",
+    "selected_features_in_order": [
+      "numTSSEnhGene",
+      "distanceToTSS",
+      "normalizedATAC_prom",
+      "sumNearbyEnhancers",
+      "ubiquitousExpressedGene",
+      "numCandidateEnhGene",
+      "contactFrequency",
+      "ABC.Score"
+    ],
+    "output": "probability-like unsigned enhancer-gene link score",
+    "warning": "Coefficients, intercept, classes, solver metadata, and exact fitted training receipt remain unverified because model.pkl was not acquired or deserialized."
+  },
+  "checkpoint": {
+    "feature_table_filename": "models/atac_megamap/feature_table.tsv",
+    "feature_table_sha256": "fc4d831be3692162bc45dc20558cd3cc0e3546d1acddadbc6003f31efbfb7d5c",
+    "feature_table_size_bytes": 602,
+    "filename": "models/atac_megamap/model.pkl",
+    "git_blob_sha1": "a27f8f38524cd5d5f1a3dda38e816c4091396228",
+    "historical_identity": "The same Git blob is present at v1.0.0 commit 1bfa1a4190d4462fd8aaa3970c09a0f398ed9c96 dated 2024-06-04.",
+    "repository": "EngreitzLab/ENCODE_rE2G",
+    "revision": "d039062b7092de338ed10a77ea208b3d5b06e89c",
+    "sha256": null,
+    "size_bytes": 1013,
+    "status": "exact_git_blob_registered_sha256_unresolved_not_acquired",
+    "threshold": 0.179,
+    "threshold_source": "empty repository file named models/atac_megamap/threshold_.179"
+  },
+  "code": {
+    "abc_submodule": "broadinstitute/ABC-Enhancer-Gene-Prediction@ba9a7902a722274b626bde0fa02f25be9f49eb3c",
+    "license": "MIT",
+    "repository": "EngreitzLab/ENCODE_rE2G",
+    "revision": "d039062b7092de338ed10a77ea208b3d5b06e89c",
+    "revision_date": "2026-07-14"
+  },
+  "registry_binding": {
+    "exposure_status": "clean_declared",
+    "model_id": "re2g",
+    "path": "config/models/regulatory_local.toml",
+    "sha256": "c0d1094657688864a5e13e0c6a3818ef6e165ed62e93f2ce0bc8402d9715ab6d"
+  },
+  "input_contract": {
+    "accessibility": "GSE296875 donor-by-cell-state ATAC pseudobulk; no held-donor fragments, peaks, normalization, or gene filtering in development evaluation",
+    "contact": "exact reference MegaMap Hi-C artifact required because the official repository has no pretrained power-law rE2G model",
+    "h3k27ac": "structurally_missing; therefore use atac_megamap, never an H3K27ac model with zero imputation",
+    "missingness": "A structural, permission, join, or QC missing value rejects the row or lane before the model adapter. The upstream blanket fillna(0) behavior is not admitted.",
+    "reference": "GRCh38 coordinates plus project GENCODE v49 gene/TSS authority",
+    "reference_mismatch": "The upstream application config uses a 2017 RefSeq-curated TSS and promoter-class authority. A frozen gene crosswalk is required, and an unmatched covariate is missing rather than zero.",
+    "variant_mapping": "Map variants to frozen candidate elements, then carry the continuous rE2G link score to each candidate target gene. rE2G does not consume REF or ALT sequence."
+  },
+  "representation_and_task_contract": {
+    "admitted_tasks": ["variant_to_regulation", "typed_evidence_graph"],
+    "native_output": "unsigned enhancer-gene interaction probability",
+    "not_supported": [
+      "allele_specific_activity",
+      "signed_eqtl_or_ieqtl_effect",
+      "donor_specific_sealed_link_prediction",
+      "causal_gene_inference"
+    ],
+    "sealed_behavior": "Apply the converted fixed logistic coefficients to a development-built cell-state ATAC plus MegaMap feature atlas, hash the atlas before sealed features are opened, and overlap evaluator-provided variants without sealed ATAC.",
+    "threshold_policy": "Use continuous ENCODE-rE2G.Score for benchmark metrics. The upstream 0.179 threshold is a K562 CRISPR recall operating point and is diagnostic only in liver.",
+    "variant_endpoint_status": "eligible as an unsigned link/retrieval baseline or component, not as a standalone signed-effect model"
+  },
+  "runtime_contract": {
+    "declared_environment": {
+      "python": ">=3.6",
+      "scikit_learn": "1.2.1",
+      "snakemake": ">=7,<8"
+    },
+    "environment_status": "UNRESOLVED_CPU_SLURM_SAFE_CONVERSION_AND_NUMERIC_FIXTURE_REQUIRED",
+    "execution_target": "cpu_partition",
+    "gpu_required": false,
+    "source_code_run": false
+  },
+  "safe_loading_contract": {
+    "checkpoint_content_downloaded": false,
+    "deserialized": false,
+    "format": "Python_pickle",
+    "prohibit_upstream_pickle_load_in_benchmark_runs": true,
+    "require_exact_git_blob_then_sha256": true,
+    "require_no_network_quarantine": true,
+    "require_pickle_opcode_and_global_allowlist": true,
+    "require_restricted_one_time_extraction": "Extract only LogisticRegression coefficients, intercept, classes, n_features_in, feature_names_in when present, and required scalar metadata; reject every unexpected class or callable.",
+    "require_safe_project_artifact": "Re-serialize reviewed numeric arrays and metadata to non-executable project-owned artifacts, freeze SHA-256, and use a direct formula adapter thereafter.",
+    "require_sklearn_1_2_1_equivalence_fixture": true
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "The exact official repository commit, v1.0.0 tag, model-tree metadata, feature table, threshold filename, MIT license, current ABC submodule revision, environment, application code, and training code were queried on 2026-08-22. No pickle, package, reference/contact file, or data was downloaded, no object was deserialized, and no model code was executed.",
+  "source_records": [
+    {"identity": "ENCODE_rE2G:LICENSE", "sha256": "53c7b8c82cf172c113dd413fca3da981bd36be09b1a66e09816c4ed1bed0f33f", "size_bytes": 1069},
+    {"identity": "ENCODE_rE2G:README.md", "sha256": "003978efdc35e3104b4dec6dc3eac02018166c8c01184597e7be8de8f5c11a4f", "size_bytes": 7841},
+    {"identity": "ENCODE_rE2G:.gitmodules", "sha256": "af411766f2cab78e59f876845d3a4fe9a830e7e904433d2adb66779b9efbd71b", "size_bytes": 104},
+    {"identity": "ENCODE_rE2G:config/config.yaml", "sha256": "2dff14579fe8914d6a05ac56dbdfd2e659f1875e8a83a1c7010bcf65d48f498c", "size_bytes": 1421},
+    {"identity": "ENCODE_rE2G:models/atac_megamap/feature_table.tsv", "sha256": "fc4d831be3692162bc45dc20558cd3cc0e3546d1acddadbc6003f31efbfb7d5c", "size_bytes": 602},
+    {"identity": "ENCODE_rE2G:workflow/Snakefile", "sha256": "68f81894dfc86cabf9e134b6519709043035f9abfc14677b4942f23c285484c3", "size_bytes": 3102},
+    {"identity": "ENCODE_rE2G:workflow/envs/encode_re2g.yml", "sha256": "8853b12658143bcd055740adedc73436b9e2df5e3af676b24e23a843e05b83d8", "size_bytes": 603},
+    {"identity": "ENCODE_rE2G:workflow/rules/utils.smk", "sha256": "cce55e030f8073eaf90b0bfa0bd868916cf61c50d56e09f5131579824ce1c980", "size_bytes": 4567},
+    {"identity": "ENCODE_rE2G:workflow/scripts/model_application/run_e2g.py", "sha256": "f961cd6d2b58848017fc615f85bad6d6033b8b15662c72765a298202a025f7f5", "size_bytes": 1300},
+    {"identity": "ENCODE_rE2G:workflow/scripts/model_application/process_model_output.py", "sha256": "d8843f8c1223b42c57eb7f46fa6806fd16e42f512664ad315ada44b0d45591c0", "size_bytes": 1175},
+    {"identity": "ENCODE_rE2G:workflow/scripts/model_application/threshold_e2g_predictions.py", "sha256": "e928eaf72787f90b6fa09c19a11c0e5c0bbe0327eafc0ee53e6a920f4db91e57", "size_bytes": 1284},
+    {"identity": "ENCODE_rE2G:workflow/scripts/model_training/train_model.py", "sha256": "48f0b059f47cc9ab3a57f54efb251e8a225fd3cb5357ff1df40e0f71d41c25ef", "size_bytes": 8843},
+    {"identity": "ENCODE_rE2G:workflow/scripts/model_training/training_functions.py", "sha256": "7abe401de215a85fa7fb35891527dd49a7693397929b196320e99e9b7a856082", "size_bytes": 6865},
+    {"identity": "config/models/regulatory_local.toml", "sha256": "c0d1094657688864a5e13e0c6a3818ef6e165ed62e93f2ce0bc8402d9715ab6d", "role": "registry_binding"}
+  ],
+  "terms_audit": {
+    "abc_submodule_license": "MIT",
+    "code_license": "MIT",
+    "model_artifact_license": "MIT_at_the_registered_repository_revision",
+    "result": "terms_pass_preflight_external_MegaMap_and_reference_artifact_terms_still_require_audit"
+  },
+  "weight_license": "MIT_at_registered_repository_revision"
+}

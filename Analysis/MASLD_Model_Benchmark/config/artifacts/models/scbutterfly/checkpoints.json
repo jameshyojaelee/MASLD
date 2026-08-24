@@ -1,0 +1,81 @@
+{
+  "architecture_contract": {
+    "method": "dual variational autoencoder with modality-specific RNA and chromosome-split ATAC encoders/decoders, stochastic cross-modal translators, and adversarial alignment",
+    "released_variant_for_common_screen": "scButterfly-B with no cell-type, cluster, or MultiVI augmentation",
+    "default_dimensions": {
+      "atac_encoder": [32, 128],
+      "atac_decoder": [128, 32],
+      "rna_encoder": [256, 128],
+      "rna_decoder": [128, 256],
+      "translator_latent": 128
+    },
+    "native_variants": "scButterfly-C, -T, and -TC may be separate native-lane runs only when augmentation is fit inside the outer-training partition. They are not representation-comparable to scButterfly-B."
+  },
+  "code_license": "MIT",
+  "implementation": {
+    "checkpoint_policy": "No task-independent pretrained checkpoint is admitted. Fit one local state-dict bundle per outer fold and seed from permitted outer-training same-cell or same-nucleus pairs.",
+    "pypi_release": {
+      "python_requires": ">=3.9",
+      "sdist": {"filename": "scbutterfly-0.0.9.tar.gz", "sha256": "5c55070b225a6cddf604eb660fe02d38986fd7b958ddfb156dee2a56fcff6162", "size_bytes": 48378},
+      "version": "0.0.9",
+      "wheel": {"filename": "scButterfly-0.0.9-py3-none-any.whl", "sha256": "98aab0c1d8445f69a08126821d6a3d250d17c3d2065a35b339e711754f1293e7", "size_bytes": 50797}
+    },
+    "repository": "BioX-NKU/scButterfly",
+    "repository_revision": "eb31e04bb8c4abdf85c4cbecd044fcd359105caa",
+    "repository_revision_date": "2024-07-01T08:36:01+08:00",
+    "release_tags": "none_detected"
+  },
+  "inductive_inference_contract": {
+    "allowed_wrapper": "A project adapter may call the frozen RNA encoder, RNA translator, and ATAC decoder directly in eval and no-grad mode using RNA query rows alone. It must attach the frozen training peak inventory itself.",
+    "forbidden": "Do not call Butterfly.load_data/data_preprocessing/test_model on a combined train-plus-query object. Do not supply query ATAC, select features on query cells, update batch-normalization state, tune on query targets, or use test cells in augmentation.",
+    "upstream_api_audit": "The released high-level API requires both RNA and ATAC matrices and preprocesses the entire supplied matrices before applying train/test IDs. Its bidirectional test routine also constructs both RNA and ATAC test loaders. It is therefore not an admissible inductive query path.",
+    "profile_validity": "The direct RNA-to-ATAC decoder emits a sigmoid-valued vector in the training ATAC target space. Score it as a continuous accessibility score on the frozen peak inventory. Do not call it a count, probability, or calibrated binary accessibility profile without an outer-training-only calibration fixture.",
+    "inverse_tfidf_warning": "The released inverse TF-IDF requires cell-specific library-size tiles and feature-frequency tiles from the ATAC matrix being inverted. Those quantities are unavailable for an RNA-only query and must never be derived from held ATAC. Inverse TF-IDF output is not admitted."
+  },
+  "input_contract": {
+    "atac": "training-pair binary peak counts on a GRCh38.p14 peak inventory selected only from outer-training donors; any TF-IDF feature frequencies and global scale are fit only there",
+    "pairing_requirement": "Core training indexes RNA and ATAC rows as paired observations. Only exact same-cell or same-nucleus joins are allowed; different aliquots and study-unpaired cells are never presented as pairs.",
+    "reference": "GENCODE v49 stable gene identifiers and GRCh38.p14 0-based half-open peaks, with chromosome order and per-chromosome peak counts frozen",
+    "rna": "nonnegative UMI counts aligned to the training gene inventory; per-cell total normalization and log1p may be applied to query rows, but HVG selection is outer-training-only",
+    "supported_pairing_topologies": ["same_cell", "same_nucleus"],
+    "unsupported_pairing_topologies": ["same_sample_different_aliquot_as_cell_pair", "same_study_unpaired_as_cell_pair"]
+  },
+  "missingness_contract": {
+    "training": "The released core model expects both modalities for every paired training row and does not consume project missing-state masks.",
+    "inference": "RNA-only inference is a source-to-target decoder operation, not missing-as-zero. The ATAC tensor is absent and must not be fabricated.",
+    "project_mapping": "Retain all eight project missingness states in manifests outside the model. Only observed modalities enter model tensors."
+  },
+  "output_contract": {
+    "cell_embedding": "frozen RNA-encoder or RNA-translator embedding with the exact layer named in the RunSpec",
+    "rna_to_atac": "cell-by-frozen-peak continuous decoder scores, optionally donor-by-cell-state aggregated after inference",
+    "known_upstream_defect": "train_model.Model assigns ATAC_data_var from RNA_data.var. The adapter must ignore this metadata and attach the independently frozen ATAC peak table.",
+    "not_admitted": ["inverse_TFIDF_counts_for_RNA_only_query", "query-fitted_peak_inventory", "profile_from_observed_query_ATAC"]
+  },
+  "runtime_contract": {
+    "declared_core": {"episcanpy": "0.3.2", "pot": "0.9.0", "python": ">=3.9", "scipy": "1.9.3", "scvi-tools": "0.19.0", "torch": ">=1.12.1"},
+    "environment_status": "UNRESOLVED_LEGACY_DEPENDENCY_CUDA_L40S_BATCHNORM_DETERMINISM_AND_MEMORY_PROBES_REQUIRED"
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "required_fix": "Replace unrestricted torch.load calls with a project-controlled local state-dict loader using weights-only semantics where supported, CPU-first inspection, exact key/shape/dtype manifests, and hash verification."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact repository revision, MIT license, source files, and public PyPI JSON metadata were inspected as text on 2026-08-22. PyPI distributions, dependencies, checkpoints, packages, and weights were not downloaded, installed, deserialized, or executed.",
+  "source_records": [
+    {"identity": "scButterfly:LICENSE", "sha256": "cfc70d362e20124c400f82cec22b71270a5bc6e493ea842c1f2e562b4906246c", "size_bytes": 1065},
+    {"identity": "scButterfly:README.md", "sha256": "7fc5424d30041dc9b902d4332654ac53843ef06168d88abbcf35fb0a0585f861", "size_bytes": 9396},
+    {"identity": "scButterfly:setup.py", "sha256": "e1dcd9521c9552d07a4600feffdbc04e31f5308a1e444c20e41c8248e90d3378", "size_bytes": 2592},
+    {"identity": "scButterfly:scButterfly/butterfly.py", "sha256": "c64fd4d66517df06be0791328126b44aed0e7ef3afafb9cee890675a857b611f", "size_bytes": 26847},
+    {"identity": "scButterfly:scButterfly/data_processing.py", "sha256": "49bd1401dee38a403c7cbe454c3402ecb7e43e772a4fec1c6be166f0751c6002", "size_bytes": 10529},
+    {"identity": "scButterfly:scButterfly/train_model.py", "sha256": "48a4dfeb48dc5fcc32c17b9fc1d795f786c8a9b769fc159f0ac646146d7798fc", "size_bytes": 46275},
+    {"identity": "scButterfly:scButterfly/model_component.py", "sha256": "b765dfa75f78274e7ec340ed7def6a752d09e79d0fa64c4c80e72b9487b40416", "size_bytes": 27716}
+  ],
+  "task_fit": {
+    "cell_state_mapping": "Candidate after frozen RNA-query, no-query-influence, preprocessing, and runtime fixtures pass.",
+    "rna_conditioned_atac": "Direct-profile candidate only as continuous frozen-peak decoder scores. Requires same-nucleus outer-training pairs and a no-query-ATAC adapter; inverse-TFIDF counts are ineligible.",
+    "variant_to_regulation": "Ineligible because the model has no DNA sequence or allele-effect mechanism."
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_FITTED_STATE_DICT"
+}

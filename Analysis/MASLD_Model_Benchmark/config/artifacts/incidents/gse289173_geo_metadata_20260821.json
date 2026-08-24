@@ -1,0 +1,23 @@
+{
+  "affected_primary_task_outcomes": [],
+  "affected_secondary_endpoint": "disease_control_research_utility",
+  "containment": {
+    "disease_control_secondary_sealed_eligible": false,
+    "development_artifact_written_from_exposed_values": false,
+    "development_use_forbidden": true,
+    "isolated_evaluator_required": true,
+    "pseudonymized_feature_rows_required": true
+  },
+  "date": "2026-08-21",
+  "exposed_fields": [
+    "disease_group",
+    "sample_title",
+    "sex"
+  ],
+  "exposed_sample_count": 2,
+  "primary_cell_state_labels_opened": false,
+  "primary_eqtl_or_ieqtl_outcomes_opened": false,
+  "schema_version": "masld-bench-seal-incident-v1",
+  "source": "NCBI GEO family SOFT metadata",
+  "values_persisted_in_benchmark_files": false
+}

@@ -1,0 +1,91 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_for_all_registered_cell_state_task_datasets_with_unknown_retained",
+    "sealed_dataset_id": "gse289173",
+    "sealed_endpoint_labels": [
+      "frozen_cell_state_mapping_labels",
+      "cell_type_eqtl_effects",
+      "interaction_eqtl_effects"
+    ]
+  },
+  "checkpoint_findings": {
+    "geneformer_v1_10m": {
+      "corpus": "Genecorpus-30M",
+      "corpus_annotation_state": "unlabeled_rank_value_encodings",
+      "exposure_state": "target_label_unexposed",
+      "training_cutoff": "2021-06"
+    },
+    "geneformer_v2_104m": {
+      "corpus": "Genecorpus-104M",
+      "corpus_annotation_state": "unlabeled_rank_value_encodings",
+      "exposure_state": "target_label_unexposed",
+      "training_cutoff": "2024-12"
+    },
+    "geneformer_v2_316m": {
+      "corpus": "Genecorpus-104M",
+      "corpus_annotation_state": "unlabeled_rank_value_encodings",
+      "exposure_state": "target_label_unexposed",
+      "training_cutoff": "2024-12"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "348ddd48c1ce4ce603f2219d05b22dc3708c09c9c5b90d9844afdf51a7ed7dcb"
+  },
+  "interpretation": "The frozen Geneformer checkpoints were pretrained with a self-supervised masked-gene objective on rank-encoded corpora that the official corpus cards describe as unlabeled. GSE289173 was submitted to GEO on 2025-02-10 and made public on 2025-02-12, after both frozen training cutoffs. Its linked article was received on 2024-09-20, accepted on 2025-05-16, and published online on 2025-06-25. The official Genecorpus-104M source table is DOI-level rather than accession-complete and contains no GSE289173, PRJNA1221860, or eventual article DOI 10.1038/s41588-025-02237-8. These facts support target_label_unexposed for the sealed cell-state and eQTL/ieQTL outcomes. The cell-state crosswalk detects declared encoder exposure for GSE136103 and Liver_Atlas in V1 and V2, and GSE185477 in V2. An unmatched source is clean_declared only when its first-public date is after the checkpoint cutoff; unmatched sources already public before a cutoff remain unknown.",
+  "remaining_blockers": [
+    "Extend the completed cell-state crosswalk to the five-cohort bulk source families and any other task that proposes Geneformer-derived transfer.",
+    "Treat development sources found in a pretraining corpus as encoder_seen for source-stratified diagnostics.",
+    "Do not transfer this audit to continual, cancer-tuned, later, or undeclared Geneformer checkpoints.",
+    "Recheck this classification if an upstream source inventory or checkpoint training declaration changes."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "eligible_on_exposure_only_other_admission_gates_still_apply",
+  "source_records": [
+    {
+      "identity": "ctheodoris/Geneformer@04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5:README.md",
+      "sha256": "56d6e570b349cbedae9a54634421c94e7af8ea467ce0fdd79193372ae3cbdbd8",
+      "url": "https://huggingface.co/ctheodoris/Geneformer/blob/04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5/README.md"
+    },
+    {
+      "identity": "ctheodoris/Genecorpus-30M@71fae97a141652584e0cf09e8ace306e9b9e6d8c:README.md",
+      "sha256": "823e6f1119a5bcd396c8270254342ca533d891a7b8b98970a4312d1404923b5b",
+      "url": "https://huggingface.co/datasets/ctheodoris/Genecorpus-30M/blob/71fae97a141652584e0cf09e8ace306e9b9e6d8c/README.md"
+    },
+    {
+      "identity": "Theodoris_et_al_2023_Supplementary_Table_1",
+      "sha256": "bbfcddfa95a1565977fce9c60862032d061958ac5a4571942bd079a1a0a33e3f",
+      "url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-023-06139-9/MediaObjects/41586_2023_6139_MOESM4_ESM.xlsx"
+    },
+    {
+      "identity": "theodoris-lab/Genecorpus-104M@28eda69789cb9ff8865d526b3e176e7c686e0d99:README.md",
+      "sha256": "e47a8a4c776f87ffc051ad4c8f80311ab1d2c42690cb8c90002bdf5c35daebd4",
+      "url": "https://huggingface.co/datasets/theodoris-lab/Genecorpus-104M/blob/28eda69789cb9ff8865d526b3e176e7c686e0d99/README.md"
+    },
+    {
+      "identity": "Chen_and_Venkatesh_et_al_2026_Supplementary_Table_1",
+      "sha256": "6547a7e47585d65a6c98c17335f4d59c9c48c61950c5ce29a61bc63857902d59",
+      "url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs43588-026-00972-4/MediaObjects/43588_2026_972_MOESM3_ESM.xlsx"
+    },
+    {
+      "identity": "GSE289173_series_record",
+      "observed_dates": {
+        "public": "2025-02-12",
+        "submitted": "2025-02-10"
+      },
+      "url": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE289173"
+    },
+    {
+      "identity": "PubMed_40562914",
+      "article_doi": "10.1038/s41588-025-02237-8",
+      "observed_dates": {
+        "accepted": "2025-05-16",
+        "published_online": "2025-06-25",
+        "received": "2024-09-20"
+      },
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40562914/"
+    }
+  ],
+  "verified_date": "2026-08-22"
+}

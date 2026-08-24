@@ -1,0 +1,33 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "resource_atlas_current"
+title = "Current seven-dataset human MASLD single-cell atlas"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["MULTI_SOURCE_RESOURCE_ATLAS"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "donor"
+expected_biological_units = 102
+native_genome_build = "mixed_source_normalized_to_GRCh38"
+native_annotation_release = "mixed_source_UNRESOLVED"
+modalities = ["single_cell_rna"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence."]
+notes = "Includes 1,232,285 analyzed cells and 273 libraries. Cells and libraries are not biological replicates. The 117 Hotspot programs remain frozen and are inputs, not outcomes to rediscover."
+
+[provenance]
+source_url = "../../../docs/technical/DATASETS_AND_PIPELINES.md"
+verified_date = "2026-08-21"
+local_exposure = "Deeply used by the current Resource; never eligible as a sealed endpoint."
+
+[split]
+group_key = "cohort_family_id+person_key"
+outer_role = "train"
+label_visibility = "development_visible"

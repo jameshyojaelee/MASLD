@@ -1,0 +1,129 @@
+{
+  "algorithm_contract": {
+    "feature_orientation": "fit_sklearn_TruncatedSVD_on_cells_by_frozen_peaks",
+    "idf_formula": "number_of_outer_training_cells_divided_by_outer_training_row_sum_for_each_peak",
+    "idf_warning": "The pinned Signac method computes IDF from peak row sums, not an independently substituted document-frequency formula. With nonbinary peak counts these quantities differ.",
+    "matrix_formula": "log1p(10000_times_TF_times_IDF)",
+    "method": "Signac_RunTFIDF_method_1_followed_by_uncentered_TruncatedSVD",
+    "scale_factor": 10000,
+    "sklearn_defaults_to_freeze_or_override": {
+      "algorithm": "randomized",
+      "n_iter": 5,
+      "n_oversamples": 10,
+      "power_iteration_normalizer": "auto",
+      "random_state": "MUST_BE_EXPLICIT_INTEGER_NOT_DEFAULT_NONE",
+      "tol": 0.0
+    },
+    "term_frequency_formula": "peak_count_divided_by_total_peak_counts_for_the_same_cell",
+    "unresolved_activation_parameters": [
+      "training_only_peak_frequency_filter",
+      "number_of_svd_components",
+      "exact_seed_roster_and_randomized_solver_fixture",
+      "downstream_common_and_native_heads",
+      "calibration_and_early_stopping_rules"
+    ],
+    "warning": "The registry prespecifies exclusion of the first depth-associated component. That exclusion, the component indexing, the retained dimension, and the SVD sign-orientation fixture must be frozen before activation and cannot be changed after inspecting held outcomes."
+  },
+  "code_license": "BSD-3-Clause",
+  "embedding_contract": {
+    "common_lane_candidate": "outer_fold_fitted_query_TruncatedSVD_coordinates_after_prespecified_first_component_exclusion",
+    "held_query_transform": "Apply the training-frozen peak order, training IDF vector, method-1 normalization, and the exact fitted TruncatedSVD.transform without refitting.",
+    "native_lane_candidates": ["LSI_coordinates", "training_only_regularized_classifier_on_LSI"],
+    "sign_indeterminacy": "Retain and hash the exact fitted SVD object or canonicalize component signs using a training-only deterministic rule. Never refit to recover signs on held rows.",
+    "warning": "A query transform requires observed ATAC counts on the frozen peak universe. LSI is not an RNA-to-ATAC predictor."
+  },
+  "implementation": {
+    "formula_authority": {
+      "repository": "stuart-lab/signac",
+      "repository_revision": "12d1ff82774890b08e55b3101f36fab83e674b88",
+      "source": "R/preprocessing.R:RunTFIDF.default"
+    },
+    "implementation_type": "train_locally",
+    "runtime_package": {
+      "filename": "scikit_learn-1.9.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "repository": "scikit-learn/scikit-learn",
+      "repository_revision": "77def0ed6e3beab57244885d2a584470e96c103d",
+      "sha256": "f7e254636164090da847715a27f8e5478feb98c40a9e0ee90cbd277de9e5ceb8",
+      "size_bytes": "UNRESOLVED_NOT_DOWNLOADED",
+      "upload_date": "2026-06-02",
+      "version": "1.9.0"
+    },
+    "warning": "Signac is the formula authority, not an additional runtime dependency. A project implementation must reproduce a fixed sparse-matrix fixture against the pinned Signac source before admission."
+  },
+  "input_contract": {
+    "canonical_matrix": "nonnegative_single_cell_or_single_nucleus_ATAC_peak_counts",
+    "feature_alignment": "exact ordered outer-training peak inventory represented as GRCh38.p14 coordinate tuples plus stable project row IDs",
+    "peak_policy": "Call, merge, filter, and order peaks using outer-training donors only. Held rows are projected to the frozen inventory without allowing their counts to change feature selection or IDF.",
+    "query_zero_semantics": "Zero means an assayed frozen peak with no observed count. A structurally unavailable assay, failed reference crosswalk, absent donor-state, or permission block remains explicit missingness and is not inserted as a zero row.",
+    "supported_assays": ["scATAC_peak_counts", "snATAC_peak_counts"],
+    "unsupported_inputs": ["RNA_only", "RNA_conditioned_ATAC_without_observed_query_ATAC", "variant_sequence"]
+  },
+  "leakage_contract": {
+    "fit_scope": "outer_training_donors_only",
+    "fitted_state": [
+      "peak_inventory_and_filter",
+      "IDF_vector",
+      "SVD_components_and_explained_variance",
+      "component_sign_orientation",
+      "excluded_component_policy",
+      "downstream_head_and_calibration"
+    ],
+    "held_query_policy": "Only deterministic matrix projection and TruncatedSVD.transform are permitted. No held-row IDF recomputation, SVD refit, component selection, peak filtering, head tuning, or calibration.",
+    "study_policy": "Use study-level outer folds where feasible and donor-grouped folds otherwise. Every modality from one person remains in one outer fold."
+  },
+  "runtime_contract": {
+    "declared_python": ">=3.11",
+    "execution_class": "CPU",
+    "environment_status": "UNRESOLVED_PACKAGE_ADMISSION_AND_SPARSE_NUMERIC_FIXTURES",
+    "resource_note": "Memory is driven by cells times retained peaks and sparse intermediate copies; record peak count, nonzeros, peak memory, BLAS/thread settings, wall time, and artifact sizes."
+  },
+  "safe_loading_contract": {
+    "external_checkpoint_downloaded": false,
+    "external_checkpoint_permitted": false,
+    "local_artifacts_only": true,
+    "package_acquisition": "If later approved, verify the exact CPython 3.11 x86_64 manylinux wheel SHA-256 before installation in an isolated environment.",
+    "preferred_artifact_format": "non_executable_arrays_plus_JSON_manifest",
+    "required_artifacts": [
+      "ordered_peak_inventory_and_hash",
+      "IDF_vector_and_hash",
+      "TruncatedSVD_parameters_components_and_hash",
+      "component_orientation_and_exclusion_receipt",
+      "downstream_head_and_training_receipt"
+    ],
+    "warning": "Do not accept external pickle or joblib artifacts. If a project-owned object format is used, restore only from an immutable campaign path and validate dimensions, finite values, feature IDs, and hashes."
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "source_evidence": "The exact Signac RunTFIDF implementation, official Signac documentation, scikit-learn 1.9.0 source revision and TruncatedSVD documentation, and PyPI release attestation were checked on 2026-08-22. No package was installed and no model was fit.",
+  "source_records": [
+    {
+      "identity": "Signac RunTFIDF source",
+      "revision": "12d1ff82774890b08e55b3101f36fab83e674b88",
+      "url": "https://raw.githubusercontent.com/stuart-lab/signac/12d1ff82774890b08e55b3101f36fab83e674b88/R/preprocessing.R"
+    },
+    {
+      "identity": "Signac RunTFIDF documentation",
+      "url": "https://stuartlab.org/signac/reference/runtfidf"
+    },
+    {
+      "identity": "scikit-learn source",
+      "revision": "77def0ed6e3beab57244885d2a584470e96c103d",
+      "url": "https://github.com/scikit-learn/scikit-learn/tree/77def0ed6e3beab57244885d2a584470e96c103d"
+    },
+    {
+      "identity": "scikit-learn 1.9.0 PyPI release",
+      "url": "https://pypi.org/project/scikit-learn/1.9.0/"
+    },
+    {
+      "identity": "sklearn.decomposition.TruncatedSVD 1.9 documentation",
+      "url": "https://scikit-learn.org/1.9/modules/generated/sklearn.decomposition.TruncatedSVD.html"
+    }
+  ],
+  "task_fit": {
+    "active_tasks": [],
+    "development_only_candidate": "Inductive observed-ATAC cell representation and donor-compatible integration after a separate nonpromotable TaskSpec freezes rows, peaks, components, labels, baselines, metrics, and no-champion scope.",
+    "rna_conditioned_atac": "ineligible because the held transform consumes the observed target ATAC matrix rather than producing a profile from RNA/context",
+    "sealed_cell_state_mapping": "ineligible because GSE289173 exposes RNA-only nuclei",
+    "variant_to_regulation": "ineligible because LSI has no nucleotide sequence, REF/ALT, or signed regulatory-effect mechanism"
+  },
+  "weight_license": "NOT_APPLICABLE_PROJECT_TRAINED"
+}

@@ -1,0 +1,62 @@
+{
+  "audit_scope": {
+    "development_encoder_overlap": "classified_by_cutoff_with_pre_cutoff_unknown_retained",
+    "sealed_dataset_id": "gse289173",
+    "sealed_endpoint_labels": [
+      "frozen_cell_state_mapping_labels",
+      "cell_type_eqtl_effects",
+      "interaction_eqtl_effects"
+    ]
+  },
+  "checkpoint_findings": {
+    "scgpt_continual": {
+      "corpus": "scGPT whole-human plus supervised Tabula Sapiens cell-type training",
+      "corpus_annotation_state": "self_supervised_expression_plus_external_cell_type_labels",
+      "exposure_state": "target_label_unexposed",
+      "release_date": "2023-12-19"
+    },
+    "scgpt_whole_human": {
+      "corpus": "CELLxGENE Census 2023-05-08 normal human cells",
+      "corpus_annotation_state": "self_supervised_binned_expression",
+      "exposure_state": "target_label_unexposed",
+      "release_date": "2023-06-23"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
+    "sha256": "d6a9e3f182423778027afad116aa20806a001c2a480f74238e8ccbb3c408699a"
+  },
+  "interpretation": "GSE289173 was submitted and made public in February 2025, after the June 2023 whole-human and December 2023 continual artifacts. The continual model's Tabula Sapiens supervision is a generic external cell-type objective, not exposure to GSE289173 or its frozen endpoint labels; it is therefore target_label_unexposed for the sealed source. This does not make the two checkpoints scientifically equivalent: their self-supervised and externally supervised results must be reported separately, and scgpt_continual is continual_seen on any Tabula Sapiens evaluation. Sources public before the whole-human cutoff remain unknown until the exact retired Census build can be queried.",
+  "remaining_blockers": [
+    "Obtain approved weight artifacts and record their SHA-256 without executing checkpoint content.",
+    "Resolve whether the downloadable weights have terms separate from the MIT code repository; undeclared weight terms block an open champion.",
+    "Inspect the PyTorch archives and stage state dictionaries without unrestricted pickle execution.",
+    "Reconstruct exact membership of the retired 2023-05-08 CELLxGENE weekly build for pre-cutoff development sources.",
+    "Freeze and probe an executable runtime, including deterministic per-cell token sampling for common-lane embeddings.",
+    "Do not transfer this audit to organ-specific, pan-cancer, perturbation, later, or undeclared scGPT checkpoints."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "eligible_on_exposure_only_weight_terms_and_other_admission_gates_still_apply",
+  "source_records": [
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:data/cellxgene/README.md",
+      "sha256": "b9760b4b9ffa67c52b739f9210451c7d3f0186227091061c41815492b3919c6d",
+      "url": "https://github.com/bowang-lab/scGPT/blob/cebd6fae655b9c585a4807daa3ac31bb764f06b4/data/cellxgene/README.md"
+    },
+    {
+      "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:tutorials/zero-shot/README.md",
+      "sha256": "a15606b7449a64e87135e8717aab01a701ab94b195f63f6ed2026257f908d3d8",
+      "url": "https://github.com/bowang-lab/scGPT/blob/cebd6fae655b9c585a4807daa3ac31bb764f06b4/tutorials/zero-shot/README.md"
+    },
+    {
+      "identity": "GSE289173_series_record",
+      "observed_dates": {
+        "public": "2025-02-12",
+        "submitted": "2025-02-10"
+      },
+      "url": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE289173"
+    }
+  ],
+  "verified_date": "2026-08-22"
+}

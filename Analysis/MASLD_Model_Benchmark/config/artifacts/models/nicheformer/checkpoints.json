@@ -1,0 +1,133 @@
+{
+  "activation_disposition": {
+    "admission_status": "deferred",
+    "reason": "A public safetensors checkpoint exists, but the exact preprocessing assets and conversion parity are incomplete, project-cohort exposure is unknown, and no rights-cleared powered spatial task or sealed source is registered.",
+    "v1_inference_or_fine_tuning": "prohibited",
+    "v1_superiority_or_champion_claim": "prohibited"
+  },
+  "architecture_contract": {
+    "model_family": "rank_tokenized_single_cell_transformer_pretrained_on_dissociated_and_spatial_transcriptomes",
+    "base_input": "one_cell_or_spot_gene_expression_vector_plus_species_assay_and_modality_tokens",
+    "base_spatial_input": "a_spatial_modality_token_only; coordinates_neighbor_graphs_images_and_neighbor_cell_expression_are_not_inputs_to_the_base_checkpoint",
+    "base_output": "mean_pooled_per_observation_expression_embedding_and_masked_gene_token_logits",
+    "context_length": 1500,
+    "hidden_dimension": 512,
+    "attention_heads": 16,
+    "feedforward_dimension": 1024,
+    "transformer_layers": 12,
+    "masking_probability": 0.15,
+    "configured_tokens": 20340,
+    "vocabulary_entries": 20329,
+    "spatial_task_contract": "Published neighborhood composition, density, or region predictions use separately fitted downstream heads and coordinate-derived targets. The base checkpoint alone does not infer a niche, graph, domain, or cell-cell interaction."
+  },
+  "implementation": {
+    "official_source_repository": "theislab/nicheformer",
+    "official_source_revision": "485cadbc5caa15119adfd54228f8a8af835fcabc",
+    "source_version": "0.0.1",
+    "source_license": "BSD-3-Clause",
+    "publication_doi": "10.1038/s41592-025-02814-z",
+    "publication_title": "Nicheformer: a foundation model for single-cell and spatial omics",
+    "status": "source_and_model_metadata_registered_not_downloaded_or_executed"
+  },
+  "registered_checkpoint": {
+    "format": "safetensors",
+    "huggingface_repository": "theislab/Nicheformer",
+    "huggingface_revision": "0ba4ba162f9ad3d6c8b713761954c31be2fa69ed",
+    "last_modified": "2025-03-26",
+    "license_declared": "MIT",
+    "model_file": {
+      "filename": "model.safetensors",
+      "sha256": "65fff02ac9bdd978cbb06b158a60d94ec59a96f30e706aed2c56d213d582e603",
+      "size_bytes": 195851648
+    },
+    "reference_file": {
+      "filename": "model.h5ad",
+      "sha256": "a2658657dd9131c905dffe71e5d67c98accfde00f1b4bdf9d26fe3701b516322",
+      "size_bytes": 1066912,
+      "role": "gene_alignment_reference_used_by_the_Hugging_Face_tokenizer"
+    },
+    "configuration": {
+      "filename": "config.json",
+      "sha256": "f0e124908222eb2e7082be1ee141e5fea8c68c02fcb98c75c3118ee4b048c7b0",
+      "size_bytes": 808
+    },
+    "vocabulary": {
+      "filename": "vocab.json",
+      "sha256": "1ea4c02144cf02b669c5eb0419762f8acba9ac9da601e78ada90a390b3021a3e",
+      "size_bytes": 599311
+    },
+    "status": "exact_bytes_addressable_not_downloaded_and_admission_blocked"
+  },
+  "checkpoint_code_alignment": {
+    "finding": "The Hugging Face repository contains a separate custom Transformers conversion. No signed conversion receipt or fixed-fixture parity result binds it to the original Mendeley Lightning checkpoint and official GitHub preprocessing.",
+    "card_repository_mismatch": "The selected theislab model card instructs users to load aletlvl/Nicheformer and declares that alias as its base model.",
+    "architecture_metadata_mismatch": "The card states vocabulary size 25,000, whereas config n_tokens is 20,340 and the vocabulary JSON has 20,329 named entries with token IDs through 20,339.",
+    "status": "UNRESOLVED"
+  },
+  "tokenization_contract": {
+    "expression": "Size-factor normalize each observation to 10,000, optionally divide by frozen median counts per gene and assay technology means, log-transform, rank nonzero genes, then encode the top tokens.",
+    "gene_authority": "The vocabulary uses human and mouse Ensembl gene identifiers plus auxiliary tokens. Freeze organism, Ensembl release and alias map; do not substitute GENCODE v49 symbols by nearest or case-insensitive guess.",
+    "required_assets": "Exact ordered gene reference, median counts per gene, technology mean, species, modality and assay token maps, and out-of-vocabulary behavior.",
+    "missing_asset": "The model card requires technology_mean.npy, but that file is not present in the pinned model repository. The exact training-compatible technology means are unresolved.",
+    "dynamic_reference": "The custom tokenizer calls hf_hub_download for model.h5ad using name_or_path. Network retrieval and mutable aliases are prohibited.",
+    "metadata": "Require valid species, assay, and modality for every row. Unknown strings must fail admission rather than silently map to PAD.",
+    "cross_resolution": "A Visium spot contains multiple cells and is not distributionally identical to a single-cell token sequence. Report Visium use as cross-resolution transfer."
+  },
+  "held_donor_and_spatial_contract": {
+    "frozen_base_embedding": "Potentially donor-inductive after the mapper is resolved because each observation is encoded independently and coordinates are absent. Normalization uses the observation plus frozen corpus statistics, not other held donors.",
+    "spatial_head": "Any niche, neighbor-composition, density, region, or domain head is a separately fitted model. Its labels, radius, cell-type vocabulary, class set, and checkpoint must be fit on development donors.",
+    "neighborhood_target": "Construct coordinate-derived targets independently within an authoritative participant and section. Never include cross-section, cross-core, array, or donor neighbors.",
+    "fine_tuning": "Fine-tuning on held features is query adaptation and receives a new identity. It cannot be called zero-shot.",
+    "base_limit": "A spatial-modality token does not prove spatial structure transfer and cannot support a spatial champion without a registered spatial endpoint."
+  },
+  "training_corpus_contract": {
+    "name": "SpatialCorpus-110M",
+    "reported_total_cells": "more_than_110_million",
+    "reported_image_based_spatial_cells": 53830000,
+    "reported_organs_and_tissues": 73,
+    "species": ["human", "mouse"],
+    "modalities": ["dissociated_RNA", "spatial_RNA"],
+    "declared_technology_examples": ["MERFISH", "CosMx", "Xenium", "10x_Genomics", "CITE-seq", "Smart-seq_v4"],
+    "liver_context": "The paper evaluates neighborhood-composition heads on a human CosMx liver dataset; generic liver and task-family downstream exposure are definite.",
+    "project_alias_manifest": "UNRESOLVED_no_checkpoint_bound_accession_CELLxGENE_UUID_donor_alias_and_release_receipt",
+    "overall_project_exposure_state": "unknown"
+  },
+  "safe_loading_contract": {
+    "weights": "Safetensors is the required tensor container, but exact size and hash verification is still mandatory.",
+    "remote_code": "The model requires custom Transformers code. Never use unpinned trust_remote_code; vendor and hash configuration, model, masking, and tokenizer source and import it offline.",
+    "reference_h5ad": "Treat model.h5ad as untrusted structured data. Inspect its HDF5 schema in isolation, enforce bounded dimensions and primitive dtypes, and extract only the admitted gene and statistic arrays.",
+    "conversion_checks": "Require exact tensor keys, shapes, dtypes, finite values, vocabulary IDs, special tokens, padding and masking behavior, and numeric parity with an author-provided original fixture."
+  },
+  "known_conversion_risks": [
+    "The custom model sets embedding padding_idx to token 1 although vocab.json assigns PAD to 0 and MASK to 1.",
+    "get_embeddings removes the first three positions whenever with_context is false, so complete and correctly ordered species, assay, and modality tokens are required to avoid dropping gene tokens.",
+    "The tokenizer uses the first row's special-token presence mask for the whole batch, making heterogeneous missing metadata unsafe.",
+    "Unknown metadata can map to PAD rather than fail.",
+    "The reference model and technology-mean paths are not self-contained in the usage example."
+  ],
+  "runtime_contract": {
+    "official_python": ">=3.9",
+    "selected_declared_dependencies": ["torch>=2.5.1", "pytorch-lightning>=2.0.0", "numpy==1.26.4", "pandas==1.5.3", "squidpy", "merlin-core", "dask-cuda"],
+    "environment_status": "UNRESOLVED_dependency_ranges_and_no_checkpoint_producing_lock",
+    "required_probe": "After terms, mapper, data activation, and campaign approval only: L40S offline import, strict safetensors load, original-versus-HF parity, gene order, special-token, missing-metadata, cell-order, raw-count, Visium cross-resolution, frozen embedding, fine-tune backward, resume, deterministic seed, and cross-device tolerance through SLURM."
+  },
+  "terms_and_release_contract": {
+    "official_source": "BSD-3-Clause",
+    "Hugging_Face_code_and_weights": "MIT_declared_in_the_pinned_model_repository",
+    "training_data": "Source-specific corpus rights remain separate from model terms.",
+    "fine_tuned_weights": "Redistribution remains conditional on the project training data and labels.",
+    "open_champion": "ineligible_while_exposure_mapper_parity_task_and_external_data_gates_are_unresolved"
+  },
+  "source_evidence": "The Nature Methods article, official GitHub source, official Hugging Face model card, immutable repository metadata, and raw custom code were inspected online on 2026-08-22. No checkpoint, H5AD, package, corpus, or source archive was downloaded or executed.",
+  "source_records": [
+    {"identity": "theislab/nicheformer@485cadbc:LICENSE", "sha256": "11d465ea4dbfe82ed5a767760a1df9c91a86705e179a21d0bfb67d92577d4d71", "size_bytes": 1516},
+    {"identity": "theislab/nicheformer@485cadbc:pyproject.toml", "sha256": "127363f2b6e813e86a0f7f68e0e949bd71d98e7d46c45446b635e8a353182f1f", "size_bytes": 3994},
+    {"identity": "theislab/nicheformer@485cadbc:src/nicheformer/models/_nicheformer.py", "sha256": "aaec65aae78fdf88eae467f068e2c177ef5fefde81f0f914b0c379e04b9c7311", "size_bytes": 13577},
+    {"identity": "theislab/nicheformer@485cadbc:src/nicheformer/_embeddings.py", "sha256": "695c5ac053bed67002cb8093a8f711e79c3d56ea8e84e2852fa2a7f4222527db", "size_bytes": 7448},
+    {"identity": "theislab/Nicheformer@0ba4ba16:configuration_nicheformer.py", "sha256": "3520832e05c6e0aead0cdbff45ec20985a8a5e20d2f2b1bea6ee99700a63f835", "size_bytes": 2006},
+    {"identity": "theislab/Nicheformer@0ba4ba16:modeling_nicheformer.py", "sha256": "f80ff3ed8e012d95ca3e113c56c88ead8af237d574cb4411adb7f59d2f50a93b", "size_bytes": 10397},
+    {"identity": "theislab/Nicheformer@0ba4ba16:tokenization_nicheformer.py", "sha256": "22f0a49b877ca1dc319f54cb840c859da7b4a608f7671051d56c3fedebc6815c", "size_bytes": 16222}
+  ],
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "verified_date": "2026-08-22"
+}

@@ -1,0 +1,36 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "cell-state mapping only; paired topic integration is development-only and RNA-conditioned ATAC is ineligible"
+  },
+  "checkpoint_findings": {
+    "mira_local": {
+      "checkpoint_identity": "project_fitted_mira_2_1_1_rna_and_atac_topic_models_per_outer_fold_seed_and_feature_state",
+      "corpus": "No admitted upstream checkpoint; declared outer-training count matrices only",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none",
+      "terms_state": "blocked_pending_complete_BSD_license_text_or_written_confirmation"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "separate_topic_models_paired_joint_representation_frozen_rna_query_terms_and_latent_only_contract",
+    "sha256": "20806a47a80a3d9d35618786ad05bbedb3c7c960c7686a9b262493335954f901"
+  },
+  "interpretation": "MIRA 2.1.1 has no upstream pretraining contamination when fit locally and its expression topic model exposes an amortized frozen RNA query path. Its joint representation is only a horizontal concatenation of independently inferred RNA and ATAC topic embeddings for exactly shared cells. Different aliquots cannot be joined, and an RNA-only query cannot obtain the ATAC topics. Within-modality decoder imputation is not cross-modal prediction. Execution and champion eligibility are additionally blocked because the release repository and PyPI metadata declare BSD3 but provide no complete license text or license file.",
+  "remaining_blockers": [
+    "Obtain and freeze the complete BSD-3-Clause license text from the rights holder or written confirmation covering execution, modification, publication, and redistribution; packaging metadata alone is not the license grant text.",
+    "Implement a frozen expression-topic adapter with training-only gene/HVG inventory, count layer, covariate categories/scalers, model parameters, topic transform, common head, and calibration.",
+    "Prove query prediction calls eval/no-grad and that query order, batch composition, or removal cannot change model state, fitted covariate transforms, another query embedding, head, prototypes, or calibration.",
+    "Freeze topic-number selection, learning-rate tuning, feature/HVG selection, ATAC encoder type, training-only TF-IDF/LSI state, batch covariates, donor folds, five seeds, and local artifact hashes.",
+    "Validate exact same-nucleus IDs before GSE296875 joint diagnostics. Never represent GSE244832 aliquots as shared cells.",
+    "Keep joint concatenated topics, cross-topic correlations, and within-ATAC imputation latent-only; no released RNA-to-ATAC topic mapping exists.",
+    "Replace unrestricted torch.load and pickle cache loading with project-controlled local state dicts and plain metadata. Do not accept external serialized models or on-disk dataset caches.",
+    "Validate the Python<3.12, Torch<=2.0, Pyro, NetworkX<=2.5, SciPy<=1.10.2 runtime on L40S, including Monte Carlo seed stability, BatchNorm, sparse inputs, resume, and memory, only after terms resolve.",
+    "Prove GSE289173 receives anonymized RNA only after selection lock and cannot influence fitting, tuning, features, topic alignment, head fitting, or calibration."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_until_complete_license_terms_are_resolved; then_blocked_pending_frozen_rna_query_runtime_safe_loading_and_leakage_fixtures_for_cell_state_mapping_only",
+  "verified_date": "2026-08-22"
+}

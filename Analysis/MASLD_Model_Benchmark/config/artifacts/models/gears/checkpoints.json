@@ -1,0 +1,76 @@
+{
+  "architecture_contract": {
+    "context_scope": "one_cell_line_or_cell_context_per_fit; the official README says the method was not designed for multi-cell-type or bulk prediction",
+    "external_prior": "gene_gene_graph_from_Gene_Ontology_annotation_overlap",
+    "input": "single_cell_expression_with_obs.condition_obs.cell_type_and_var.gene_name",
+    "native_output": "absolute_post_perturbation_expression_for_sampled_control_cells_on_the_fitted_gene_scale",
+    "perturbation_identity": "one_or_two_perturbed_gene_symbols_that_are_both_expression_features_and_nodes_in_the_perturbation_graph",
+    "prediction_mechanism": "gene_specific_and_global_graph_message_passing_conditioned_on_a_sampled_control_cell",
+    "published_task": "unseen_single_gene_and_combinatorial_gene_perturbation_response_prediction"
+  },
+  "checkpoint_contract": {
+    "canonical_pretrained_checkpoint": false,
+    "implementation_type": "train_locally",
+    "registered_identity": "snap-stanford/GEARS@f374e43e197b295016d80395d7a54ddb81cc6769",
+    "trained_artifact_identity": "NOT_YET_CREATED",
+    "upstream_example_weight": "README_links_a_Norman_example_but_does_not_define_it_as_a_universal_release_checkpoint",
+    "weight_sha256": "NOT_APPLICABLE_UNTIL_A_PROJECT_FIT_EXISTS"
+  },
+  "input_and_fit_contract": {
+    "control_rule": "replace_upstream_global_random_control_sampling_with_deterministic_fold_local_controls_matched_by_biological_replicate_and_valid_context; never sample controls across outer roles",
+    "external_graph_rule": "do_not_run_the_automatic_pickle_download_or_loader; separately inventory, license, hash, and safely convert the GO prior before admission",
+    "feature_rule": "freeze_gene_symbols_and_duplicates; every queried perturbation must resolve to exactly one measured_expression_feature_and_graph_node",
+    "normalization_status": "UNRESOLVED; freeze the exact GSE281160 matrix layer and reproduce an upstream-compatible training scale inside each outer-training fold",
+    "preprocessing_rule": "create the target_locus_guide_family_and_replicate split before DE genes, dropout genes, control construction, graph construction, or cache creation",
+    "split_rule": "do_not_use_upstream_pickle_splits; provide an immutable project split and make every processed cache key include its SHA256",
+    "training_graph_rule": "coexpression edges may use outer-training expression only; the pinned implementation requests set2conditions.train but its cache identity is insufficient without the project split hash"
+  },
+  "query_contract": {
+    "current_task_result": "blocked_modality_and_identity_mismatch",
+    "reason": "GSE281160 perturbs noncoding variant loci with CRISPRi guides. GEARS queries perturbed gene symbols, not variant loci or guide sequences. Mapping a locus to a gene would inject a new prior and would no longer be the registered held-target task.",
+    "rejection_rule": "reject_non_gene_loci_unknown_symbols_unmeasured_genes_and_genes_absent_from_the_GO_graph; never substitute_nearest_gene_or_silently_impute",
+    "valid_future_use": "gene_perturbation_response with exact target genes in the expression and graph vocabularies after every dataset, prior, adapter, and biological-unit gate passes",
+    "task_results": {
+      "gene_perturbation_response": "conditionally_applicable_unseen_gene_target_endpoint_but_currently_blocked_on_dataset_activation_external_prior_adapter_and_full_runtime",
+      "perturbation_transfer": "blocked_modality_and_identity_mismatch_no_locus_to_gene_substitution"
+    }
+  },
+  "repository": "snap-stanford/GEARS",
+  "repository_revision": "f374e43e197b295016d80395d7a54ddb81cc6769",
+  "runtime_contract": {
+    "declared_package_version": "0.1.2",
+    "declared_python": ">=3.7",
+    "key_requirements": ["numpy==1.26.4", "pandas==2.2.2", "scikit-learn==1.5.1", "scanpy==1.10.2", "scipy==1.14.1", "torch_unpinned", "torch_geometric_unpinned"],
+    "runtime_status": "CPU_core_tensor_forward_backward_passed_full_scientific_runtime_unresolved",
+    "completed_probe": "SLURM job 21067574 passed a fixed-seed 8-gene synthetic GEARS_Model CPU forward/backward with exact repeat, finite gradients, runtime network blocked, no external GO graph, no pickle/checkpoint, and no biological data",
+    "required_probe": "project_dataset_adapter_fold_local_control_numeric_parity_safe_prior_conversion_checkpoint_resume_and_L40S_training"
+  },
+  "safe_loading_contract": {
+    "automatic_pickle_downloads_prohibited": true,
+    "finding": "PertData.__init__ downloads and pickle.loads a GO mapping; the default perturbation-gene path also downloads and pickle.loads an essential-gene list. Model save/load also uses pickle and unrestricted torch.load.",
+    "project_action": "no upstream pickle or Torch artifact may be deserialized; convert approved immutable artifacts in a restricted inspection job and load only validated state dictionaries and JSON metadata"
+  },
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
+  "source_evidence": "Pinned official repository and Nature Biotechnology paper were inspected on 2026-08-22. The existing cell-gears 0.1.2 environment passed a network-blocked synthetic core forward/backward fixture on CPU SLURM job 21067574 on 2026-08-24. No upstream weight, biological data, external GO artifact, pickle, or checkpoint was loaded.",
+  "source_records": [
+    {"identity": "GEARS:LICENSE", "sha256": "5c608f2c9421da729963328261ebffd23127dc55184fa8acc96acc52d8fd8b90", "size_bytes": 1098},
+    {"identity": "GEARS:README.md", "sha256": "fe78b7b1ede50c673b8f0d91fb2637707685c78b269ee157edb6cbc4d510d61b", "size_bytes": 3850},
+    {"identity": "GEARS:requirements.txt", "sha256": "dffa9f17177d33bc5d7e7cdcea7e734446d1775ea945b8151b081d8956f96c6c", "size_bytes": 131},
+    {"identity": "GEARS:setup.py", "sha256": "f683681c539d3ac411dff3556d0286110a44a36676643177b5103b93c036ed68", "size_bytes": 1149},
+    {"identity": "GEARS:gears/pertdata.py", "sha256": "7b7f849808947bd148e5e96db22d56cfb083913ed547be0817cbf798930d410b", "size_bytes": 23008},
+    {"identity": "GEARS:gears/gears.py", "sha256": "b87b464b9bce74ff909626ef642781c5b8df6907902c5e18ec11d6c57ca7f562", "size_bytes": 26531},
+    {"identity": "GEARS:gears/model.py", "sha256": "07fee864bc5020807c90ed5443ff17530116f47f257332466243c233ef2bc857", "size_bytes": 9156},
+    {"identity": "GEARS:gears/data_utils.py", "sha256": "8091713aa91a8d3a6e07d7cb82535ace0b0e7d98ca1626c7e769d00ef77b8a88", "size_bytes": 18868},
+    {"identity": "GEARS:gears/inference.py", "sha256": "744668b54fa05c0493baefad3da6fdccfa658426db5d0519b27a2d3f4f036dd7", "size_bytes": 33564},
+    {"identity": "Analysis/MASLD_Model_Benchmark/scripts/test_gears_core_forward.py", "sha256": "4b6becfbb44385c755d20fb7d392a0172b3f3f6c58e3f20c567fc36bb44d539c", "size_bytes": 4962, "role": "network_blocked_synthetic_core_fixture"},
+    {"identity": "Analysis/MASLD_Model_Benchmark/slurm/test_gears_core_forward.sbatch", "sha256": "a6d18d7a2b4a823259ab56b822b51a9d2929aa244147b5c2073c12bcd0d3753a", "size_bytes": 1889, "role": "CPU_SLURM_fixture_launcher"},
+    {"identity": "Analysis/MASLD_Model_Benchmark/executions/gears-core-forward-21067574/ARTIFACTS.json", "sha256": "d8ea9af228c89576cfa77361fc1cdc5643d16ec8ab4bd6294da06d26df947c7a", "size_bytes": 563, "role": "frozen_core_forward_receipt"}
+  ],
+  "terms_audit": {
+    "code_license": "MIT",
+    "external_GO_pickle_terms": "UNRESOLVED",
+    "project_trained_weight_terms": "project_owned_subject_to_input_and_prior_terms",
+    "result": "code_admissible_external_prior_blocked"
+  },
+  "verified_date": "2026-08-24"
+}

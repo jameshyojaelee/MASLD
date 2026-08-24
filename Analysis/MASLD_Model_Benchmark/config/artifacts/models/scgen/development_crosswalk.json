@@ -1,0 +1,48 @@
+{
+  "current_task_admission": {
+    "decision": "deferred",
+    "primary_reason": "A held perturbation's stimulated outcomes are required to estimate scGen's latent shift, so the method cannot predict a wholly unseen target.",
+    "prohibited_workaround": "estimate_the_delta_from_held_target_cells_or_from_any_cell_in_the_outer_evaluation_role",
+    "task_id": "perturbation_transfer"
+  },
+  "dataset_findings": {
+    "gse275483": {
+      "biological_unit": "animal_n4",
+      "fit": "future_known_perturbation_held_animal_or_context_only",
+      "required_resolution": ["mouse_reference", "target_and_guide_identity", "cell_to_animal_join", "RNA_to_perturbation_pairing"],
+      "reason": "A delta may be learned only from animals carrying the same known perturbation in training; four animals make any result descriptive and cells cannot supply replication."
+    },
+    "gse281160": {
+      "biological_unit": "experimental_replicate_count_UNRESOLVED",
+      "exposure": "downstream_demo_and_MPRA_selected_conditional_followup",
+      "fit": "incompatible_held_target_but_potential_known_target_held_context",
+      "reason": "The latent delta for each noncoding target can only be computed after observing that target's perturbed cells, which violates the current target_locus holdout."
+    },
+    "gse313774": {
+      "biological_unit": "independent_liver_chip_batch_n3",
+      "fit": "incompatible_direct_model_input_or_query",
+      "reason": "The released implementation expects single-cell AnnData and an observed stimulated versus control condition; bulk chip libraries are not valid single-cell inputs and have no cross-study matching perturbation identity."
+    }
+  },
+  "held_target_leakage_contract": {
+    "delta_cells": "outer_training_role_only_and_same_known_perturbation",
+    "group_keys": ["cohort_family_id", "target_locus", "guide_family", "biological_replicate"],
+    "query_controls": "held_context_controls_may_be_queries_but_never_delta_estimators",
+    "random_balancing": "fixed_seed_and_row_ID_manifested",
+    "upstream_incident": "predict_reads_ctrl_and_stim_cells_from_self.adata_and_randomly_subsamples_them; an AnnData containing evaluation outcomes would leak them_into_the_delta"
+  },
+  "replication_and_export_contract": {
+    "adapter_export": "decoded_absolute_expression_with_row_ID_target_ID_context_ID_replicate_ID_gene_ID_and_seed",
+    "inferential_unit": "experimental_replicate_or_animal",
+    "no_pseudoreplication": "cells_guides_targets_and_lanes_are_not_independent_replicates",
+    "prediction_aggregation": "pseudobulk_each_replicate_before_evaluator_metrics"
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "systema_contract": {
+    "compatibility": "valid_only_for_a_future_known_perturbation_held_context_task",
+    "centroid_accuracy": "independent_evaluator_compares_predicted_replicate_aggregated_centroids_to_observed_eligible_test_centroids",
+    "perturbed_reference": "O_pert_is_computed_from_training_perturbation_specific_replicate_aggregated_centroids_only",
+    "rule": "Never_use_Systema_or_any_reference_shift_to_hide_that_the_target_delta_was_estimated_from_held_outcomes"
+  },
+  "verified_date": "2026-08-22"
+}

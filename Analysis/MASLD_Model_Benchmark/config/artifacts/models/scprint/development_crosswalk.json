@@ -1,0 +1,72 @@
+{
+  "corpus": {
+    "declared_release": "CELLxGENE Census LTS 2023-12-15",
+    "post_qc_cells": 54084961,
+    "post_qc_datasets": 548,
+    "pre_qc_datasets": 1200,
+    "pretraining_labels": [
+      "cell_type",
+      "disease",
+      "sequencer_assay",
+      "ethnicity",
+      "sex",
+      "organism"
+    ],
+    "source_record_identity": "Nature_Communications_2025_scPRINT_Data_Availability_plus_CELLxGENE_release_manifest",
+    "source_record_sha256": "409739c0a0d385b16b3b9dd1b6abdc68a59232dc23d6b1d0b4ec57401fa3f191",
+    "training_filter": "primary human or mouse, non-spatial, at least 200 expressed genes per cell, at least 100 retained cells, at least 10,000 genes, and no more than 95 percent cells removed",
+    "unpublished_inventory_warning": "The paper declares aggregate post-QC counts but does not provide the exact 548-dataset retained-versus-held-out inventory. Presence in the LTS archive therefore establishes possible exposure, not encoder_seen, until that inventory is recovered."
+  },
+  "crosswalk_scope": {
+    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"],
+    "scope_limit": "Cell-state task only. Exact accession, DOI, title, and known CELLxGENE dataset aliases were checked against available historical and current records."
+  },
+  "findings": {
+    "GSE136103": {
+      "aliases": ["GSE136103", "DOI:10.1038/s41586-019-1631-3"],
+      "evidence": "Public before the LTS cutoff. Exact membership in the unpublished 548-dataset retained/training inventory is unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2019-09-12"
+    },
+    "GSE174748": {
+      "aliases": ["GSE174748", "DOI:10.1038/s41586-022-05289-6"],
+      "evidence": "Public before the LTS cutoff. Exact membership in the unpublished 548-dataset retained/training inventory is unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2022-05-01"
+    },
+    "GSE185477": {
+      "aliases": ["GSE185477", "DOI:10.1002/hep4.1854"],
+      "evidence": "CELLxGENE dataset ddb22b3d-a75c-4dd1-9730-dff7fc8ca530 exists in the exact LTS archive, but the released paper does not identify whether it survived QC and entered train rather than dataset-level holdout.",
+      "exposure_state": "unknown",
+      "historical_archive_records": [{"dataset_id": "ddb22b3d-a75c-4dd1-9730-dff7fc8ca530", "etag": "5a12c510dadb5e658ece9e8e82ae6e93-83", "last_modified": "2023-12-14T05:22:46Z", "size_bytes": 693198262}],
+      "public_date": "2021-10-13"
+    },
+    "GSE189600": {
+      "aliases": ["GSE189600", "DOI:10.1126/scitranslmed.adc9653"],
+      "evidence": "Public before the LTS cutoff. Exact membership in the unpublished 548-dataset retained/training inventory is unresolved.",
+      "exposure_state": "unknown",
+      "public_date": "2023-02-08"
+    },
+    "GSE202379": {"evidence": "GEO first became public after the declared LTS pretraining release.", "exposure_state": "clean_declared", "public_date": "2024-04-04"},
+    "GSE244832": {"evidence": "GEO first became public after the declared LTS pretraining release.", "exposure_state": "clean_declared", "public_date": "2024-11-13"},
+    "GSE256398": {"evidence": "GEO first became public after the declared LTS pretraining release.", "exposure_state": "clean_declared", "public_date": "2025-03-03"},
+    "GSE281367": {"evidence": "GEO first became public after the declared LTS pretraining release.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
+    "GSE289173": {"evidence": "GEO first became public after the declared LTS pretraining release. The original published v1.5 checkpoint is used; the undeclared May 2026 replacement is ineligible.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
+    "GSE296875": {"evidence": "GEO first became public after the declared LTS pretraining release.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
+    "Liver_Atlas": {
+      "aliases": ["Liver_Atlas", "GSE115469", "DOI:10.1038/s41467-018-06318-7"],
+      "evidence": "CELLxGENE dataset a43aa46b-bd16-47fe-bc3e-19a052624e79 exists in the exact LTS archive, but the released paper does not identify whether it survived QC and entered train rather than dataset-level holdout.",
+      "exposure_state": "unknown",
+      "historical_archive_records": [{"dataset_id": "a43aa46b-bd16-47fe-bc3e-19a052624e79", "etag": "8685314b190f9c93fd6e568453c93565-8", "last_modified": "2023-12-14T04:56:34Z", "size_bytes": 66271286}],
+      "public_date": "2018-10-22"
+    }
+  },
+  "rules": {
+    "archive_presence": "Archive presence without the post-QC train/validation/test inventory is possible exposure and remains unknown.",
+    "post_release": "A source first public after the declared LTS release is clean_declared for development and target_label_unexposed for the sealed source, unless another declared corpus names it.",
+    "replacement": "The May 2026 object at medium-v1.5.ckpt has unknown exposure and cannot inherit this crosswalk."
+  },
+  "schema_version": "masld-bench-development-crosswalk-v1",
+  "verified_date": "2026-08-22"
+}

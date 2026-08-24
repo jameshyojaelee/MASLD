@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Validate the indexed working-main Figure 2 A-J panel sequence."""
+"""Validate the indexed working-main Figure 2 sequence or an A-I candidate."""
 
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import re
@@ -26,6 +27,23 @@ def pdf_info(path: Path) -> tuple[int, float, float]:
     return pages, float(size.group(1)) / 72, float(size.group(2)) / 72
 
 
+def pdf_text(path: Path, errors: list[str]) -> str | None:
+    """Extract PDF text, recording a FAIL instead of aborting the whole run.
+
+    A partial candidate render (source sidecar present, PDF absent) otherwise
+    kills validation with a CalledProcessError traceback before the collected
+    failures are printed.
+    """
+    if not path.exists():
+        errors.append(f"missing panel PDF for text check: {path.name}")
+        return None
+    try:
+        return subprocess.check_output(["pdftotext", str(path), "-"], text=True)
+    except subprocess.CalledProcessError as exc:
+        errors.append(f"pdftotext failed on {path.name}: {exc}")
+        return None
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -34,20 +52,41 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--panel-dir", type=Path, default=PANELS)
+    parser.add_argument(
+        "--layout-only",
+        action="store_true",
+        help="validate the A-I assembled layout candidate; omit the auxiliary J panel and promotion manifest",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
+    panel_dir = args.panel_dir.resolve()
     errors: list[str] = []
     with SIZE_SPEC.open(newline="") as handle:
         rows = list(csv.DictReader(handle, delimiter="\t"))
-    expected = {
+    expected_all = {
         Path(row["pdf"]).name: (float(row["width_in"]), float(row["height_in"]))
         for row in rows
     }
+    # Select the A-I sequence by identity, not by position: slicing [:9] silently
+    # validates a different nine panels if the size index is reordered.
+    expected = (
+        {name: size for name, size in expected_all.items() if not name.startswith("Fig2J_")}
+        if args.layout_only
+        else expected_all
+    )
     indexed = list(expected)
-    if len(indexed) != 10:
-        errors.append(f"size index has {len(indexed)} panels, expected 10")
+    expected_n = 9 if args.layout_only else 10
+    if len(indexed) != expected_n:
+        errors.append(f"size index selected {len(indexed)} panels, expected {expected_n}")
 
     for name, (want_w, want_h) in expected.items():
-        path = PANELS / name
+        path = panel_dir / name
         if not path.exists():
             errors.append(f"missing indexed panel {name}")
             continue
@@ -64,13 +103,15 @@ def main() -> int:
                 errors.append(f"{name}: prohibited artwork label {term!r}")
         if b"/FontFile" not in path.read_bytes():
             errors.append(f"{name}: no embedded font object detected")
+        if b"Helvetica" not in path.read_bytes():
+            errors.append(f"{name}: embedded Helvetica name not detected")
         if subprocess.run(
             ["gs", "-q", "-dNOPAUSE", "-dBATCH", "-sDEVICE=nullpage", str(path)],
             check=False,
         ).returncode:
             errors.append(f"{name}: Ghostscript parse failed")
 
-    required_sources = (
+    required_sources = [
         "fig2A_gwas_cascade_source.tsv",
         "Fig2B_PIP_vs_SuSiE-coloc_source.csv",
         "Fig2C_coding_noncoding_source.csv",
@@ -79,13 +120,14 @@ def main() -> int:
         "Fig2F_crossancestry_coloc_source.tsv",
         "Fig2G_RORA_NAFLD_source.csv",
         "Fig2H_FABP1_ALT_source.csv",
-        "Fig2J_phenotype_provenance_source.csv",
-    )
+    ]
+    if not args.layout_only:
+        required_sources.append("Fig2J_phenotype_provenance_source.csv")
     for name in required_sources:
-        if not (PANELS / name).exists():
+        if not (panel_dir / name).exists():
             errors.append(f"missing source sidecar {name}")
 
-    fig2a_source = PANELS / "fig2A_gwas_cascade_source.tsv"
+    fig2a_source = panel_dir / "fig2A_gwas_cascade_source.tsv"
     if fig2a_source.exists():
         with fig2a_source.open(newline="") as handle:
             fig2a_rows = list(csv.DictReader(handle, delimiter="\t"))
@@ -122,8 +164,46 @@ def main() -> int:
             errors.append(
                 f"Fig2A routed PP.H4 bands {routed_totals} disagree with endpoints {band_totals}"
             )
+        fig2a_text = pdf_text(panel_dir / "fig2A_gwas_cascade.pdf", errors)
+        if fig2a_text is not None and "1,013" not in fig2a_text:
+            errors.append("Fig2A artwork does not display the promoted 1,013-gene union")
 
-    fig2j_source = PANELS / "Fig2J_phenotype_provenance_source.csv"
+    fig2c_source = panel_dir / "Fig2C_coding_noncoding_source.csv"
+    if fig2c_source.exists():
+        with fig2c_source.open(newline="") as handle:
+            fig2c_rows = list(csv.DictReader(handle))
+        class_counts = {row["consequence"]: int(row["n_genes"]) for row in fig2c_rows}
+        expected_classes = {
+            "coding": 36,
+            "UTR": 73,
+            "promoter": 107,
+            "intron": 455,
+            "intergenic": 342,
+        }
+        if class_counts != expected_classes:
+            errors.append(f"Fig2C promoted-union classes disagree: {class_counts}")
+        fig2c_text = pdf_text(panel_dir / "Fig2C_coding_noncoding_split.pdf", errors)
+        if fig2c_text is not None:
+            if "1013" not in fig2c_text.replace(",", ""):
+                errors.append("Fig2C artwork does not display the promoted 1,013-gene union")
+            if "1030" in fig2c_text.replace(",", ""):
+                errors.append("Fig2C artwork still displays the superseded 1,030-gene union")
+
+    fig2e_source = panel_dir / "Fig2E_ancestry_unique_coloc_GWS_source.tsv"
+    if fig2e_source.exists():
+        with fig2e_source.open(newline="") as handle:
+            fig2e_rows = list(csv.DictReader(handle, delimiter="\t"))
+        ancestry_counts = {row["category"]: int(row["n_genes"]) for row in fig2e_rows}
+        expected_ancestry = {
+            "EUR_only": 352,
+            "shared": 70,
+            "non_EUR_sub_threshold": 26,
+            "non_EUR_GWS_unique": 14,
+        }
+        if ancestry_counts != expected_ancestry:
+            errors.append(f"Fig2E promoted ancestry partition disagrees: {ancestry_counts}")
+
+    fig2j_source = panel_dir / "Fig2J_phenotype_provenance_source.csv"
     if fig2j_source.exists():
         with fig2j_source.open(newline="") as handle:
             fig2j_rows = list(csv.DictReader(handle))
@@ -139,27 +219,54 @@ def main() -> int:
         if phenotype_totals != expected_phenotypes:
             errors.append(f"Fig2J phenotype totals disagree: {phenotype_totals}")
 
-    fig2f_source = PANELS / "Fig2F_crossancestry_coloc_source.tsv"
-    fig2f_pdf = PANELS / "Fig2F_crossancestry_coloc.pdf"
+    fig2f_source = panel_dir / "Fig2F_crossancestry_coloc_source.tsv"
+    fig2f_pdf = panel_dir / "Fig2F_crossancestry_coloc.pdf"
     if fig2f_source.exists() and fig2f_pdf.exists():
         with fig2f_source.open(newline="") as handle:
             fig2f_rows = list(csv.DictReader(handle, delimiter="\t"))
+        expected_genes = {
+            "GGT1", "PANX1", "EPHA2", "C2orf16", "ACTG1", "SHROOM3",
+            "MLIP", "MSL2", "EFHD1", "GOT2", "GLDC", "HSCB", "CHEK2",
+        }
+        observed_genes = {row["gene"] for row in fig2f_rows}
+        if observed_genes != expected_genes or len(fig2f_rows) != 65:
+            errors.append(
+                "Fig2F does not contain the complete promoted >=4-ancestry roster: "
+                f"{sorted(observed_genes)} ({len(fig2f_rows)} cells)"
+            )
+        support_by_gene = {
+            gene: sum(
+                row["evidence_state"] in {"multi_signal", "single_signal_only"}
+                for row in fig2f_rows if row["gene"] == gene
+            )
+            for gene in observed_genes
+        }
+        if set(support_by_gene.values()) != {4}:
+            errors.append(f"Fig2F ancestry-support counts disagree: {support_by_gene}")
         observed_states = {row["evidence_state"] for row in fig2f_rows}
-        fig2f_text = subprocess.check_output(["pdftotext", str(fig2f_pdf), "-"], text=True)
+        fig2f_text = pdf_text(fig2f_pdf, errors)
         state_labels = {
-            "multi_signal": "Multi-signal COLOC",
-            "single_signal_only": "Single-signal COLOC only",
-            "evaluated_no_support": "Evaluated, PP.H4 ≤ 0.5",
+            "multi_signal": "multi-signal",
+            "single_signal_only": "single-signal only",
+            "evaluated_no_support": "evaluated ≤ 0.5",
             "not_evaluable": "Not evaluable",
         }
-        for state, label in state_labels.items():
-            if state not in observed_states and label.lower() in fig2f_text.lower():
-                errors.append(f"Fig2F legend includes unused evidence state {state}")
+        if fig2f_text is not None:
+            for state, label in state_labels.items():
+                present = label.lower() in fig2f_text.lower()
+                if state not in observed_states and present:
+                    errors.append(f"Fig2F legend includes unused evidence state {state}")
+                # The reverse case matters just as much: a state the panel draws
+                # but the legend omits leaves the reader an unexplained mark.
+                if state in observed_states and not present:
+                    errors.append(f"Fig2F draws evidence state {state} with no legend entry")
 
-    if not REINDEX_MANIFEST.exists():
+    check_promotion = not args.layout_only and panel_dir == PANELS.resolve()
+    reindex_manifest = panel_dir / REINDEX_MANIFEST.name
+    if check_promotion and not reindex_manifest.exists():
         errors.append("missing Figure2_reindex_manifest.tsv")
-    else:
-        with REINDEX_MANIFEST.open(newline="") as handle:
+    elif check_promotion:
+        with reindex_manifest.open(newline="") as handle:
             manifest_rows = list(csv.DictReader(handle, delimiter="\t"))
         if [row["panel"] for row in manifest_rows] != list("ABCDEFGHIJ"):
             errors.append("reindex manifest does not contain ordered panels A-J")
@@ -169,7 +276,7 @@ def main() -> int:
                 f"manifest filenames disagree with size index: {manifest_names} versus {indexed}"
             )
         for row in manifest_rows:
-            path = PANELS / row["canonical_pdf"]
+            path = panel_dir / row["canonical_pdf"]
             if not path.exists():
                 errors.append(f"manifest target is missing: {row['canonical_pdf']}")
             elif sha256(path) != row["sha256"]:
@@ -191,7 +298,7 @@ def main() -> int:
         "fig2A_gwas_alluvial.pdf",
     )
     for name in stale:
-        if (PANELS / name).exists():
+        if check_promotion and (panel_dir / name).exists():
             errors.append(f"stale pre-reindex canonical file remains: {name}")
 
     legend_text = LEGEND.read_text()
@@ -209,6 +316,7 @@ def main() -> int:
     print("embedded_fonts\tTRUE")
     print("prohibited_labels_absent\tTRUE")
     print("source_sidecars_present\tTRUE")
+    print(f"panel_dir\t{panel_dir}")
     return 0
 
 

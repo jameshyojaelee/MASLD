@@ -1,0 +1,54 @@
+schema_version = "masld-bench-gse296875-histopathology-v1"
+dataset_id = "gse296875"
+role = "secondary_development_only"
+unit_of_inference = "donor"
+analyzed_donors = 39
+technical_batches = 8
+donors_under_18 = 5
+minimum_age_years = 13
+maximum_age_years = 75
+source_doi = "10.1016/j.ajhg.2025.11.009"
+source_supplement = "https://ars.els-cdn.com/content/image/1-s2.0-S0002929725004343-mmc2.xlsx"
+source_supplement_sha256 = "8356c2002059073faca89831181c8dc60d87857ebd408fe1021a7fabc15f73eb"
+source_supplement_size_bytes = 5884547
+verified_date = "2026-08-21"
+source_sheet = "S1 donorInfo"
+source_fields = ["fibrosis_categorical", "fibrosis_status", "steatosis_categorical", "steatosis_numeric", "steatosis_status", "BMI"]
+external_or_sealed = false
+champion_eligible = false
+admission_blocking = true
+blockers = ["Freeze and hash the well-namespaced barcode-to-donor join.", "Freeze endpoint rows and explicit missingness masks from the authoritative supplement.", "Freeze donor-grouped folds and the leave-one-well-out sensitivity before fitting."]
+
+[steatosis]
+endpoint = "source_deposited_numeric_macrovesicular_steatosis_percent"
+observed_donors = 38
+missing_donors = 1
+metric = "cross_fitted_spearman"
+recoding = "none"
+
+[fibrosis]
+endpoint = "source_described_any_fibrosis"
+observed_donors = 37
+missing_donors = 2
+metric = "cross_fitted_auprc"
+negative_source_values = ["None"]
+positive_source_values = ["mild", "yes"]
+ordinal_stage_inference = false
+
+[covariates]
+primary = []
+sensitivity = ["age_in_yr", "reported_sex", "BMI"]
+race_policy = "report descriptively; do not fit a stable race coefficient with only five Black donors"
+well_policy = "leave_one_well_out_transport_sensitivity_not_an_independent_biological_replicate"
+age_scope_policy = "report all-donor assay analyses and a prespecified adult-only histopathology sensitivity; never silently discard the five donors under 18"
+
+[inference]
+selection_use = "nested_cross_fitted_development_only"
+uncertainty = "paired_donor_cluster_bootstrap"
+bootstrap_replicates = 10000
+multiple_testing = "BH_q_0.05_within_GSE296875_histopathology_secondary_family"
+missingness = "explicit_endpoint_mask_never_absence"
+
+[claims]
+allowed = "cross-sectional histology-associated representation or prediction in this donor cohort"
+forbidden = ["MASLD diagnosis", "MASH diagnosis", "NAS", "standard fibrosis stage", "longitudinal progression", "external validation", "champion confirmation"]

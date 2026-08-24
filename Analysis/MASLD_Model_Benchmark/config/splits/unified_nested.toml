@@ -1,0 +1,10 @@
+schema_version = "masld-bench-split-v1"
+split_id = "unified_nested"
+entity = "federated_person_or_locus"
+group_keys = ["cohort_family_id", "person_key_or_locus_id", "outer_role"]
+roles = ["train", "development", "withheld_sealed"]
+seed = 20260821
+locus_grouping = "Use donor_outer for biospecimen endpoints and locus_outer for genomic endpoints; never collapse the two inferential units."
+label_policy = "Fusion sees only fixed out-of-fold component predictions and explicit eligibility masks. Sealed labels are unavailable until all component and fusion configurations are committed."
+exposure_policy = "A single global outer role dominates: any duplicate or paired entity inherits the most restrictive role, with withheld_sealed taking precedence."
+admission_gates = ["Freeze component splits and verify disjoint identifiers.", "Freeze one finalist per model family before fusion.", "Train fusion only on development-visible out-of-fold predictions.", "Report task-specific metrics and denominators; no aggregate score may conceal a failed task."]

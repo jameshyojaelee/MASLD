@@ -10,6 +10,18 @@ suppressPackageStartupMessages({ library(plotgardener); library(grid) })
 
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
+normalize_page <- function(path, w, h) {
+  python <- Sys.getenv(
+    "MASLD_FIGURE_PYTHON",
+    "/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/python"
+  )
+  status <- system2(
+    python,
+    c(shQuote(file.path(BASE, "scripts/figures/normalize_pdf_page_box.py")),
+      shQuote(path), format(w, trim = TRUE), format(h, trim = TRUE))
+  )
+  if (!identical(status, 0L)) stop("Could not normalize PDF page box: ", path)
+}
 args <- commandArgs(trailingOnly = TRUE)
 OUT  <- if (length(args) >= 1) args[1] else
   file.path(BASE, "figures/main/fig2_genetics/panels/Fig2I_locus_legend.pdf")
@@ -92,4 +104,5 @@ cur <- cur + 0.12
 cur <- put_txt("n.s.", cur)
 
 invisible(dev.off())
+normalize_page(OUT, PAGE_W, PAGE_H)
 cat(sprintf("[saved] %s  (%.2f x %.2f in; content ends at %.2f in)\n", OUT, PAGE_W, PAGE_H, cur))

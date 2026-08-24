@@ -1,0 +1,48 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "noninductive query-optimization audit; frozen cell-state mapping and direct RNA-conditioned ATAC excluded"
+  },
+  "checkpoint_findings": {
+    "multidgd_local_strict": {
+      "checkpoint_identity": "none",
+      "corpus": "No project checkpoint can satisfy the strict frozen raw-RNA query contract because the architecture has no encoder.",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    },
+    "multidgd_future_diagnostic": {
+      "checkpoint_identity": "project_fitted_multidgd_per_outer_fold_seed_plus_ephemeral_outcome_blind_query_representations",
+      "corpus": "Only outer-training same-cell or same-nucleus RNA-ATAC rows for reusable parameters; each held RNA profile would fit its own ephemeral latent vector under a separate TaskSpec.",
+      "exposure_state": "target_label_unexposed_while_not_scheduled",
+      "status": "nonpromotable_and_not_approved"
+    },
+    "published_figshare_models": {
+      "checkpoint_identity": "Figshare 23796198 v1: dgd_human_bonemarrow.pt md5 59d417c6681421c13c1bc8cc5a223379; dgd_human_brain.pt md5 d5c49a818c98ec5ce59744cbcd527957; dgd_mouse_gastrulation.pt md5 b228ff9e23927af7a584e45c1464ad07",
+      "corpus": "Declared paper corpora GSE194122, GSE162170, and GSE205117; record published 2023-07-28 before the project seal",
+      "exposure_state": "clean_declared",
+      "status": "reference_only_not_admitted_not_downloaded_not_loaded_feature_and_species_specific_CC-BY-4.0_weights"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "no_inductive_encoder_query_parameter_fitting_profile_scale_and_false_pairing_exclusion",
+    "sha256": "f1e34dd5d28278f14df75f481bd45f15beb36f41d39aa3f9f329a335c5a57070"
+  },
+  "interpretation": "Checkpoint contamination is not the limiting issue. Published weights have declared non-MASLD corpora and no upstream weight is admitted locally. The disqualifying fact is architectural: multiDGD learns one parameter vector per cell and infers every unseen cell by optimizing a new vector against its observed RNA partial likelihood. Its ATAC branch then returns a normalized negative-binomial mean profile without target ATAC, but that is not a frozen raw-RNA transform. The exact release also mutates and saves test state, can fit a new correction component, and contains a static new-data entrypoint naming defect. GSE289173 therefore remains completely unexposed and cannot evaluate this model under the sealed contract.",
+  "remaining_blockers": [
+    "Remove multiDGD from active common-lane, sealed, champion, and direct RNA-to-ATAC scheduling. Do not count a decoder-only query optimization as a frozen embedding or forward pass.",
+    "If scientific interest justifies it, approve a separate nonpromotable TaskSpec before any run. Label the method outcome-blind per-query optimization and prohibit comparison as a frozen representation model.",
+    "Document a minimal project patch for predict_new calling the absent _init_test_set method, suppress automatic save of query state, and make every query representation ephemeral. Static inspection found these defects; no execution test was performed.",
+    "Use only outer-training GSE296875 same-nucleus pairs after exact ordered ID validation. Reject GSE244832 different aliquots as training pairs regardless of matched donor or cell-state labels.",
+    "Freeze genes, peaks, raw-count representation, decoder, mixture, query initialization, epochs, optimizer, convergence rule, correction exclusion, profile definition, folds, and seeds before a diagnostic evaluation.",
+    "Prove held ATAC, labels, target depth, early stopping, calibration, and other query rows cannot affect a query latent vector. Keep structural missingness explicit and never create an observed zero ATAC vector.",
+    "Never load the published .pt files. If a local diagnostic is approved, reconstruct the audited architecture and restore project-controlled tensor state while excluding all query-specific representations from reusable checkpoints.",
+    "Resolve the legacy Python, Torch, dense-memory, state-dict, deterministic initialization, and numeric-tolerance behavior on L40S before any approved smoke job.",
+    "Keep GSE289173 features, labels, and outcomes outside every multiDGD adapter, patch, diagnostic, head, and calibration experiment."
+  ],
+  "scheduling_disposition": "remove_active; optional_nonpromotable_development_query_optimization_diagnostic_requires_new_TaskSpec",
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_no_frozen_raw_rna_to_latent_or_atac_transform; query_optimization_is_not_admitted_and_gse289173_has_no_atac_endpoint",
+  "verified_date": "2026-08-22"
+}

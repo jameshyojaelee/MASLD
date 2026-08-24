@@ -1,0 +1,47 @@
+{
+  "audit_scope": {
+    "development_sources": ["current_coloc_gwas", "gse281160", "gse281364"],
+    "implementation": "pyg-team/pytorch_geometric@76ff9c2ce18c8cebf52122b57e2aeadce9793d10:torch_geometric==2.7.0:Node2Vec",
+    "sealed_dataset_id": "NONE_REGISTERED",
+    "task": "typed_evidence_graph"
+  },
+  "checkpoint_finding": {
+    "checkpoint_identity": "project_trained_per_held_source_held_block_and_seed; not_yet_created",
+    "declared_training_corpus": "Only the undirected relation-agnostic projection of retained training evidence outside held blocks",
+    "development_source_exposure": "continual_seen_only_within_each_permitted_outer_training_partition",
+    "embedded_upstream_training_corpus": "none; selected PyG class and example contain no learned biological checkpoint",
+    "future_sealed_target_exposure": "target_label_unexposed_only_if_graph_walk_negative_and_node_map_construction_is_repeated_inside_the_split",
+    "overall_exposure_state": "target_label_unexposed",
+    "source_release": "torch-geometric 2.7.0 released 2025-10-15",
+    "source_chronology_interpretation": "Library chronology does not confer clean evaluation by itself. The learned object is a project-specific transductive table whose exposure is exactly the graph used before its random walks.",
+    "upstream_checkpoint": "none"
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "split_local_graph_projection_transductive_coverage_and_endpoint_role",
+    "sha256": "f3279dd175a4e56bc21f33228b0c42bcf78e53c131b1641f6f69b00f0ce07aee"
+  },
+  "interpretation": "The selected node2vec is an open, locally trained topology baseline with no upstream corpus. Its main contamination surface is any graph, node map, walk, or random-negative artifact computed before source and block removal. It cannot represent a node absent from retained topology and therefore cannot evaluate fully isolated held LD/gene blocks. With no wholly sealed evidence source registered, it is development-only and cannot earn a champion claim.",
+  "known_incidents_and_biases": [
+    "PyG Node2Vec owns an Embedding row for each training index rather than a feature-to-embedding function. Reserving an index for an isolated node yields an untrained or negative-sampling-affected vector, not an inductive prediction.",
+    "A full-graph node2vec fit followed by fold slicing is direct target leakage even when held edges are hidden only at metric time.",
+    "The registered projection discards evidence source, relation, direction, multiplicity, and weight. It is a homogeneous topology baseline and cannot support a typed-evidence modeling claim.",
+    "The native negative sampler draws random context nodes from the complete retained node universe without node-type constraints and may create false negatives. Held outcomes cannot be inspected to clean them.",
+    "The selected p=q=1 recipe is an unbiased-walk setting. It should not be described as evidence that BFS- or DFS-biased node2vec hyperparameters were exhaustively tested.",
+    "At p=q=1 the exact implementation still requires pyg-lib or torch-cluster. Extension, PyTorch, CUDA, and device versions can change walk behavior and must be frozen.",
+    "Edges independently present in a retained source may correctly reveal support for a held-source edge. Deterministic duplicate releases or transformations of the held source must instead be removed by provenance family.",
+    "Raw embedding dot products are not calibrated probabilities; using held-source labels for calibration would contaminate Brier score.",
+    "A transductive embedding can encode restricted graph topology. MIT code terms do not establish the right to redistribute project embeddings."
+  ],
+  "remaining_blockers": [
+    "Promote the corrected 50-study COLOC release, then freeze the evidence ontology, graph snapshot, source families, native-build LD/locus/gene blocks, candidate universe, and missingness states.",
+    "Freeze and hash the exact typed-ID-to-index table, undirected duplicate collapse, held-source and held-block removal, retained graph, common-support denominator, and all untestable rows for every outer split.",
+    "Freeze exact Python, PyTorch, torch-geometric, pyg-lib or torch-cluster, CPU/CUDA, driver, wheel hashes, deterministic settings, and sparse optimizer runtime, then pass all probes on SLURM.",
+    "Implement bounded non-pickle graph inputs and weights-only state loading; pass fixtures for graph symmetry, index range, source-family removal, held-block isolation, fixed walks, resume, and exported-embedding row identity.",
+    "Create five project artifacts per split and record graph, node-map, walk recipe, seed, runtime, state, embedding, raw prediction, calibrator, and coverage hashes.",
+    "Prospectively register a wholly sealed evidence source. Even then, predeclare node2vec as a common-support comparator because source-only or isolated-block nodes remain untestable."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_currently_no_sealed_source_and_ineligible_for_full_crossed_held_block_denominator; conditionally_eligible_after_all_locks_as_a_development_common_support_transductive_topology_baseline",
+  "verified_date": "2026-08-22"
+}

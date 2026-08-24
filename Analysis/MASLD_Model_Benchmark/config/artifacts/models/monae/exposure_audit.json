@@ -1,0 +1,46 @@
+{
+  "audit_scope": {
+    "development_sources": ["gse244832", "gse296875"],
+    "sealed_dataset_id": "gse289173",
+    "task_scope": "release-fidelity audit only; cell-state mapping and RNA-conditioned ATAC deferred"
+  },
+  "checkpoint_findings": {
+    "monae_local": {
+      "checkpoint_identity": "none_while_release_fidelity_is_unresolved",
+      "corpus": "No project model may be fit under the paper-defined Monae identity at the current gate",
+      "exposure_state": "target_label_unexposed",
+      "upstream_pretraining": "none"
+    },
+    "repository_pbmc_dill": {
+      "checkpoint_identity": "dataset/pbmc/result/ckpt/monae.dill at exact v1.0.0 tag, 6466844 bytes",
+      "corpus": "README identifies the bundled extension example as PBMC; exact training receipt and safe tensor manifest are absent",
+      "exposure_state": "reference_only",
+      "status": "not_admitted_not_downloaded_not_deserialized_unsafe_dill_and_feature_specific"
+    },
+    "baidu_models": {
+      "checkpoint_identity": "README-linked trained Monae model bundle",
+      "exposure_state": "unknown",
+      "status": "not_admitted_not_downloaded_hashes_exact_corpora_weight_terms_and_safe_serialization_unresolved"
+    }
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "scope": "paper_code_fidelity_unpaired_topology_raw_rna_transfer_and_monae_e_exclusion",
+    "sha256": "90f3fe77a1bdf5d46bb2528ffbbd31061d2b655672d30823b69dbdd65da471f9"
+  },
+  "interpretation": "Checkpoint contamination is not the limiting issue because no upstream weight is admitted. The exact v1.0.0 release fails the more basic reproducibility gate: its published training surface instantiates CoVELModel derived from GLUE, and the inspected Python files do not expose the paper-described teacher/student asymmetric contrastive architecture. The source release does provide frozen encode_data and experimental RNA-to-ATAC decode_data; with NB and target_libsize=1 it can emit a normalized profile without held ATAC. Those capabilities cannot be credited to paper-defined Monae until identity is resolved. Monae-E is independently ineligible for held queries because X_init embeds the supplied cells transductively. GSE289173 remains completely unexposed.",
+  "remaining_blockers": [
+    "Obtain author clarification or a paper-faithful immutable implementation with exact license and source receipt. Otherwise rename the current tag as a distinct Monae-release-CoVEL comparator and approve a separate TaskSpec before any run.",
+    "Remove/defer Monae from active cell_state_mapping and rna_conditioned_atac scheduling under its current identity; do not let a runnable experimental decoder substitute for architecture fidelity.",
+    "If a renamed release comparator is approved, implement a raw-RNA-to-X_pre adapter using outer-training genes, per-cell normalization/log1p, training-fitted scaling, frozen graph, target_libsize=1.0, no donor batch, and zero query fitting.",
+    "Keep Monae-E out of donor-held and sealed lanes because X_init requires held cells to become graph nodes or otherwise receive newly fitted entity embeddings.",
+    "Treat GSE244832 modalities as separate unpaired aliquots. Treat GSE296875 modalities as unpaired inputs to this release even though same-nucleus identity is retained for evaluator checks.",
+    "Never load repository or Baidu dill objects. If activated, reconstruct the audited code and restore project-controlled tensor state with exact graph, feature, transform, key/shape/dtype, fold, seed, and SHA-256 manifests.",
+    "Resolve BSD-3-Clause, bundled MIT, and Zenodo CC-BY-4.0 metadata boundaries for any redistributed source or derived artifact; do not redistribute bundled datasets or weights.",
+    "Freeze an immutable dependency environment because the README uses legacy Torch 1.11.0+cu113 and unpinned GitHub installs; then validate L40S import/forward/backward, resume, GPU nondeterminism, CPU reference tolerance, and memory on an approved smoke job.",
+    "Keep GSE289173 features, labels, and outcomes outside every fidelity investigation, graph construction, preprocessing experiment, adapter test, head fit, and calibration until a new selection lock is approved."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "ineligible_current_release_identity_not_verified_against_paper_and_monae_e_has_no_frozen_unseen_cell_transform; tasks deferred until author clarification or explicit renamed-comparator approval followed by raw_query_graph_loading_runtime_and_leakage_fixtures",
+  "verified_date": "2026-08-22"
+}

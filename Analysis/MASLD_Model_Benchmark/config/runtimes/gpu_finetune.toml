@@ -1,0 +1,12 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "gpu_finetune"
+status = "candidate"
+purpose = "Single-GPU adapter training or fine-tuning after model admission"
+scheduler = "slurm"
+resource_profile = "gpu_single"
+environment_lock = "UNRESOLVED"
+container_digest = "UNRESOLVED"
+modules = ["UNRESOLVED"]
+command_prefix = ["UNRESOLVED"]
+admission_blocking = true
+blockers = ["The L40S resource default is frozen, but the model-specific environment, container digest, checkpoint, command, and total resource ask are unresolved. B6K is ineligible until import, sm_120 kernel, checkpoint-load, training-step, resume, and numeric-tolerance probes pass."]

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-"""Locus-independent re-estimation of fine-mapped PIP architecture by phenotype directness.
+"""Region-balanced re-estimation of fine-mapped PIP architecture by phenotype directness.
 
 The published candidate reports credible-set-instance-weighted means. Instances are
-study-by-locus units, so a locus discovered by many studies is counted many times.
+study-by-region units, so a region discovered by many studies is counted many times.
 This script reproduces the published instance-weighted values as an assertion, then
 re-estimates every quantity with operational 1-Mb clusters as the unit and a cluster
 bootstrap over them for uncertainty.
@@ -166,9 +166,9 @@ def context_locus_estimates(per_set: pd.DataFrame, cols: list[str],
                             rng: np.random.Generator) -> pd.DataFrame:
     """Locus-weighted context fractions with a cluster bootstrap over loci.
 
-    Each independent locus contributes the mean of its credible-set instances, so a
-    locus recovered by many studies counts once. Fractions are ratios of summed
-    locus-level masses, matching the published sum/sum estimator within each unit.
+    Each operational 1-Mb region contributes the mean of its credible-set instances,
+    so a region recovered by many studies counts once. Fractions are ratios of summed
+    region-level masses, matching the published sum/sum estimator within each unit.
     """
     per_locus = per_set.groupby("locus_id")[cols + ["noncoding_pip_mass"]].mean()
     num = per_locus[cols].to_numpy()
@@ -191,7 +191,7 @@ def context_locus_estimates(per_set: pd.DataFrame, cols: list[str],
             "locus_boot_hi": float(hi),
             "absolute_pip_mass_units": float(per_set[col].sum()),
             "n_credible_set_instances": int(len(per_set)),
-            "n_independent_loci_1mb": int(n),
+            "n_operational_regions_1mb": int(n),
             "n_loci_with_any_mass": int((per_locus[col] > 0).sum()),
         })
     return pd.DataFrame(out)
@@ -229,7 +229,7 @@ def instance_weighted(frame: pd.DataFrame, cols: list[str]) -> dict[str, float]:
 
 
 def locus_weighted_point(frame: pd.DataFrame, cols: list[str]) -> dict[str, float]:
-    """Each independent locus contributes once, after averaging its instances."""
+    """Each operational 1-Mb region contributes once, after averaging its instances."""
     per_locus = frame.groupby("locus_id")[cols].mean()
     total = per_locus.to_numpy().sum()
     return {c: float(per_locus[c].sum() / total) for c in cols}
@@ -345,7 +345,7 @@ def main() -> int:
             "trait_scope": scope,
             "trait_scope_label": SCOPE_LABEL[scope],
             "n_credible_set_instances": len(a),
-            "n_independent_loci_1mb": a["locus_id"].nunique(),
+            "n_operational_regions_1mb": a["locus_id"].nunique(),
             "n_studies": a["study"].nunique(),
             "n_traits": a["trait"].nunique(),
             "instances_per_locus": len(a) / a["locus_id"].nunique(),
@@ -370,7 +370,7 @@ def main() -> int:
                 "locus_boot_hi": ci[col][1],
                 "absolute_pip_mass_units": float(a[col].sum()),
                 "n_credible_set_instances": len(a),
-                "n_independent_loci_1mb": a["locus_id"].nunique(),
+                "n_operational_regions_1mb": a["locus_id"].nunique(),
                 "n_loci_with_any_mass": int(
                     (a.groupby("locus_id")[col].sum() > 0).sum()),
             })

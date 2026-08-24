@@ -1,0 +1,36 @@
+{
+  "audit_scope": {
+    "checkpoint": "kuleshov-group/caduceus-ps_seqlen-131k_d_model-256_n_layer-16@d89eeb853136ea64da7feb3d0c8e909771b17ae6",
+    "sealed_dataset_id": "GSE289173",
+    "task": "variant_to_regulation"
+  },
+  "checkpoint_finding": {
+    "exposure_state": "target_label_unexposed",
+    "reference_sequence_exposure": "encoder_seen",
+    "alternate_allele_exposure": "clean_declared_for_reference_only_corpus",
+    "target_effect_label_exposure": "unexposed",
+    "downstream_task_family_exposure": "downstream_demo",
+    "interpretation": "Conditionally eligible for an open champion claim. The exact sealed effects were not used, but the reference loci and an independent eQTL classification task were exposed during pretraining and downstream demonstration, respectively."
+  },
+  "development_crosswalk_record": {
+    "path": "development_crosswalk.json",
+    "sha256": "0230ceeeb8c6521d17b2bbf94e4fb101f221a622d00e0d62592fee179c2d59a4"
+  },
+  "known_incidents_and_biases": [
+    "Raw RCPS channels are equivariant, not directly invariant; incorrect channel splitting or flipping silently breaks strand symmetry.",
+    "The official VEP representation concatenates REF and ALT pooled embeddings and fits an SVM; this does not predict signed cell-type effects.",
+    "The environment file has internally inconsistent CUDA declarations and a duplicated torchaudio entry.",
+    "Mamba and causal-conv1d compiled kernels require device-specific numerical and determinism checks.",
+    "The model has seen hg38 reference sequence and must not be described as locus-clean."
+  ],
+  "remaining_blockers": [
+    "Register nonsealed signed-effect development labels before fitting common heads.",
+    "Freeze the hg38 FASTA checksum and derive exact train-locus coverage from the 34,021 intervals and 1,048,576-bp extension code.",
+    "Acquire only after campaign approval and verify safetensors SHA-256, keys, shapes, dtypes, and RCPS channel dimensions.",
+    "Build a corrected isolated runtime and pass L40S import, compiled-kernel, forward/backward, resume, deterministic-seed, and RC-equivalence tests.",
+    "Admit the 131-kb native context only after memory and throughput estimates enter an approved campaign."
+  ],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
+  "sealed_champion_eligibility": "conditionally_eligible_target_labels_unexposed_but_blocked_on_runtime_and_supervised_development_labels",
+  "verified_date": "2026-08-22"
+}
