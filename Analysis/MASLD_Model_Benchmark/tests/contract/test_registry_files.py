@@ -254,6 +254,79 @@ MODEL_IDS = {
 }
 
 
+def audit_root_species(authority: dict) -> tuple[set[str], dict]:
+    """Split the audit root into census bundles and declared record dirs.
+
+    config/artifacts/models/ holds two species.  Most directories are census
+    bundles: one per registry bundle_id, each carrying the three required
+    member files.  A few are cross-cutting, task-scoped campaign disposition
+    records whose subject models each already own a census bundle of their
+    own.  Those cannot be registered as group bindings -- binding their
+    subjects would re-resolve them away from their own directories and orphan
+    those instead -- so they are declared explicitly and held to a separate,
+    stricter contract.
+    """
+
+    declared = set(authority.get("non_census_record_directories", []))
+    return declared, authority.get("non_census_record_rules", {})
+
+
+def assert_non_census_record_dir(
+    case: unittest.TestCase,
+    bundle: Path,
+    *,
+    required: set[str],
+    rules: dict,
+    resolved: dict[str, str],
+    bundle_ids: set[str],
+    audit_root: Path,
+) -> None:
+    """Hold a declared non-census directory to its own stricter contract.
+
+    These four conditions exist so the declaration cannot be used to launder a
+    real bundle out of the census.  A directory that quietly grew member files,
+    lost its disposition record, or started describing models that have no
+    bundle of their own fails here rather than disappearing from coverage.
+    """
+
+    name = bundle.name
+    members = {path.name for path in bundle.iterdir() if path.is_file()}
+
+    # 1. A declaration may never shadow a real census bundle id.
+    case.assertTrue(rules["must_not_shadow_a_census_bundle_id"], name)
+    case.assertNotIn(name, bundle_ids, name)
+
+    # 2. It must carry none of the census member files.  If it has one, it is
+    #    a bundle pretending to be a record and belongs in the census.
+    case.assertTrue(rules["must_not_contain_any_required_bundle_file"], name)
+    case.assertEqual(members & required, set(), name)
+
+    # 3. It must actually be a disposition record.
+    case.assertTrue(rules["must_contain_at_least_one_disposition_record"], name)
+    case.assertTrue(
+        sorted(bundle.glob(rules["disposition_record_glob"])), name
+    )
+
+    # 4. Every registry model_id it names must own its own census bundle.
+    #    This is what makes it a cross-cutting record rather than a family:
+    #    a real family's members have no directory of their own.
+    case.assertTrue(rules["named_registry_model_ids_must_own_their_own_bundle"], name)
+    text = "".join(
+        path.read_text(encoding="utf-8") for path in sorted(bundle.glob("*.json"))
+    )
+    named = [
+        model_id
+        for model_id in resolved
+        if re.search(
+            r"(?<![A-Za-z0-9_])" + re.escape(model_id) + r"(?![A-Za-z0-9_])", text
+        )
+    ]
+    case.assertTrue(named, name)
+    for model_id in named:
+        case.assertEqual(resolved[model_id], model_id, f"{name}:{model_id}")
+        case.assertTrue((audit_root / model_id).is_dir(), f"{name}:{model_id}")
+
+
 def load_toml(path: Path) -> dict:
     with path.open("rb") as handle:
         return tomllib.load(handle)
@@ -264,6 +337,48 @@ def tables(directory: str) -> dict[str, dict]:
         path.stem: load_toml(path)
         for path in sorted((CONFIG / directory).glob("*.toml"))
     }
+
+
+# A campaign that selects models out of the frozen registry declares this whole
+# surface, and it is the presence of the surface -- not the presence of
+# [selection] -- that makes census binding mandatory.  Dataset-lane revision,
+# reprocessing and within-cohort baseline records declare none of it: their
+# `models` entries are inline `model_kind` specifications rather than registry
+# `model_id` references, so there is no census for them to bind.
+CAMPAIGN_MODEL_DISPATCH_KEYS = frozenset(
+    {
+        "allow_arrays",
+        "allow_sealed_features",
+        "allow_sealed_labels",
+        "execution",
+        "selection",
+        "submit_enabled",
+        "task_ids",
+        "wave",
+    }
+)
+
+
+def campaign_dispatch_keys(campaign: dict) -> set[str]:
+    """Which model-dispatch keys a campaign declares."""
+
+    return {key for key in CAMPAIGN_MODEL_DISPATCH_KEYS if key in campaign}
+
+
+def references_registry_model_id(node: object) -> bool:
+    """True if any key anywhere names a registry model id.
+
+    This is what keeps the dataset-lane branch honest: an inert record is
+    allowed to skip census binding only if it names no registry model at all.
+    """
+
+    if isinstance(node, dict):
+        if any("model_id" in key for key in node):
+            return True
+        return any(references_registry_model_id(value) for value in node.values())
+    if isinstance(node, list):
+        return any(references_registry_model_id(value) for value in node)
+    return False
 
 
 class RegistryFileContractTest(unittest.TestCase):
@@ -316,6 +431,22 @@ class RegistryFileContractTest(unittest.TestCase):
                 if model_id in cls.models:
                     raise AssertionError(f"duplicate model_id: {model_id}")
                 cls.models[model_id] = model
+
+    def resolved_bundle_ids(self) -> dict[str, str]:
+        """Map every registry model_id to the audit bundle that must hold it.
+
+        A model_id listed in a group binding resolves to that binding's
+        bundle_id; every other model_id resolves to itself.  Both the census
+        mapping test and the bundle completeness test derive from this one
+        implementation so they cannot drift apart.
+        """
+
+        grouped = {
+            model_id: binding["bundle_id"]
+            for binding in self.model_audit_bindings["group_bindings"]
+            for model_id in binding["model_ids"]
+        }
+        return {model_id: grouped.get(model_id, model_id) for model_id in self.models}
 
     def test_all_registry_files_parse_and_have_expected_schema(self) -> None:
         self.assertGreater(len(self.datasets), 0)
@@ -388,9 +519,13 @@ class RegistryFileContractTest(unittest.TestCase):
             self.datasets["gse192741"]["native_genome_build"],
             "hg19_Space_Ranger_1.0",
         )
-        self.assertIn(
-            "Cell_Ranger_3.1.0",
+        self.assertEqual(
             self.datasets["gse256398"]["native_genome_build"],
+            "GRCh38",
+        )
+        self.assertIn(
+            "UNRESOLVED_exact_Cell_Ranger_reference",
+            self.datasets["gse256398"]["native_annotation_release"],
         )
         self.assertIn(
             "STAR_2.5.2b",
@@ -542,6 +677,7 @@ class RegistryFileContractTest(unittest.TestCase):
         )
         self.assertEqual(scprint2["exposure_status"], "unknown")
         self.assertIs(scprint2["admission_blocking"], True)
+        self.assertIn("0.9222576", scprint2["blockers"][0])
         scprint2_medium = self.models["scprint2_medium"]
         self.assertEqual(scprint2_medium["checkpoint_revision"], "UNRESOLVED")
         self.assertEqual(scprint2_medium["checkpoint_sha256"], "UNRESOLVED")
@@ -564,21 +700,34 @@ class RegistryFileContractTest(unittest.TestCase):
         exact_public_sources = {
             "scimilarity_v1_1": (
                 "Zenodo:10685499:model_v1.1.tar.gz",
-                "target_label_unexposed",
+                "encoder_seen",
+                "a08f023788bdbded191e2d9344e5d4240ffc7d7505eca4e0b7a37526b858d19f",
+                True,
             ),
             "transcriptformer_tf_sapiens": (
                 "s3-version:P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU",
                 "unknown",
+                "eff027e7393f92a32cadcbb2e13a917e24b62b71341571bf40f38ff6ec6d3021",
+                True,
             ),
         }
-        for model_id, (source_id, exposure_status) in exact_public_sources.items():
+        for model_id, (
+            source_id,
+            exposure_status,
+            checkpoint_sha256,
+            admission_blocking,
+        ) in exact_public_sources.items():
             model = self.models[model_id]
             self.assertIn(source_id, model["checkpoint_revision"], model_id)
-            self.assertEqual(model["checkpoint_sha256"], "UNRESOLVED", model_id)
+            self.assertEqual(
+                model["checkpoint_sha256"], checkpoint_sha256, model_id
+            )
             self.assertEqual(
                 model["exposure_status"], exposure_status, model_id
             )
-            self.assertIs(model["admission_blocking"], True, model_id)
+            self.assertIs(
+                model["admission_blocking"], admission_blocking, model_id
+            )
 
         scgpt_sources = {
             "scgpt_whole_human": "gdrive-folder:1oWh_-ZRdhtoGQ2Fw24HP41FgLoomVo-y",
@@ -893,24 +1042,56 @@ class RegistryFileContractTest(unittest.TestCase):
             "development_crosswalk.json",
             "exposure_audit.json",
         }
+        # A -v2 is admitted only where the bundle genuinely needs more structure
+        # than v1 can carry.  scimilarity is the only such bundle today: it is
+        # the census's only supervised-corpus model with a training/test/
+        # reference split and its only encoder_seen model, so it is the only one
+        # that has an annotated-training-versus-test corpus breakdown, explicit
+        # reference-only matching, and sealed_champion_eligible as a first-class
+        # boolean to record.  Widening an accepted set is a laundering route
+        # unless something stops a bump being used to SHED a field, so
+        # test_versioned_audit_schemas_only_ever_add_fields holds every v2 to
+        # being a strict superset of the universal v1 shape.
         checkpoint_schemas = {
             "masld-bench-external-checkpoint-preflight-v1",
             "masld-bench-grouped-model-preflight-v1",
             "masld-bench-local-model-preflight-v1",
             "masld-bench-local-model-suite-preflight-v1",
             "masld-bench-upstream-checkpoint-preflight-v1",
+            "masld-bench-upstream-checkpoint-preflight-v2",
         }
         crosswalk_schemas = {
             "masld-bench-development-crosswalk-v1",
+            "masld-bench-development-crosswalk-v2",
             "masld-bench-development-exposure-crosswalk-v1",
             "masld-bench-external-model-crosswalk-v1",
             "masld-bench-grouped-model-crosswalk-v1",
             "masld-bench-local-model-crosswalk-v1",
         }
+        exposure_schemas = {
+            "masld-bench-checkpoint-exposure-audit-v1",
+            "masld-bench-checkpoint-exposure-audit-v2",
+        }
+        authority = self.model_audit_bindings
+        declared, rules = audit_root_species(authority)
+        resolved = self.resolved_bundle_ids()
+        bundle_ids = set(resolved.values())
         bundle_dirs = sorted(path for path in audit_root.iterdir() if path.is_dir())
         self.assertTrue(bundle_dirs)
+        self.assertTrue(declared <= {path.name for path in bundle_dirs})
         for bundle in bundle_dirs:
             self.assertFalse(bundle.is_symlink(), bundle)
+            if bundle.name in declared:
+                assert_non_census_record_dir(
+                    self,
+                    bundle,
+                    required=required,
+                    rules=rules,
+                    resolved=resolved,
+                    bundle_ids=bundle_ids,
+                    audit_root=audit_root,
+                )
+                continue
             members = {path.name for path in bundle.iterdir() if path.is_file()}
             self.assertTrue(required.issubset(members), bundle.name)
             checkpoint = json.loads(
@@ -923,11 +1104,7 @@ class RegistryFileContractTest(unittest.TestCase):
             )
             self.assertIn(checkpoint["schema_version"], checkpoint_schemas, bundle.name)
             self.assertIn(crosswalk["schema_version"], crosswalk_schemas, bundle.name)
-            self.assertEqual(
-                exposure["schema_version"],
-                "masld-bench-checkpoint-exposure-audit-v1",
-                bundle.name,
-            )
+            self.assertIn(exposure["schema_version"], exposure_schemas, bundle.name)
             self.assertRegex(crosswalk["verified_date"], r"^20\d{2}-\d{2}-\d{2}$")
             self.assertRegex(exposure["verified_date"], r"^20\d{2}-\d{2}-\d{2}$")
             self.assertIn("development_crosswalk_record", exposure, bundle.name)
@@ -938,6 +1115,61 @@ class RegistryFileContractTest(unittest.TestCase):
                 hashlib.sha256(crosswalk_path.read_bytes()).hexdigest(),
                 bundle.name,
             )
+
+    def test_versioned_audit_schemas_only_ever_add_fields(self) -> None:
+        """A schema bump may add structure; it may never shed a requirement.
+
+        The accepted schema sets above are the only definition of these schemas
+        in the repository -- there is no schema file for v1 either -- so
+        widening a set to admit a v2 would otherwise let a bundle drop a field
+        the v1 peers all carry and still validate.  This holds every versioned
+        bundle file to being a strict superset of the shape shared by every one
+        of its v1 peers.
+        """
+
+        audit_root = CONFIG / "artifacts" / "models"
+
+        def shape(node: object, prefix: str = "") -> set[str]:
+            paths: set[str] = set()
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    paths.add(prefix + key)
+                    paths |= shape(value, f"{prefix}{key}.")
+            elif isinstance(node, list) and node and isinstance(node[0], dict):
+                paths |= shape(node[0], f"{prefix}[].")
+            return paths
+
+        families = {
+            "checkpoints.json": "masld-bench-upstream-checkpoint-preflight-v",
+            "development_crosswalk.json": "masld-bench-development-crosswalk-v",
+            "exposure_audit.json": "masld-bench-checkpoint-exposure-audit-v",
+        }
+        checked = 0
+        for filename, stem in families.items():
+            v1_shapes: list[set[str]] = []
+            successors: list[tuple[str, set[str]]] = []
+            for bundle in sorted(path for path in audit_root.iterdir() if path.is_dir()):
+                member = bundle / filename
+                if not member.is_file():
+                    continue
+                body = json.loads(member.read_text(encoding="utf-8"))
+                version = body.get("schema_version", "")
+                if not version.startswith(stem):
+                    continue
+                if version == f"{stem}1":
+                    v1_shapes.append(shape(body))
+                else:
+                    successors.append((bundle.name, shape(body)))
+            self.assertTrue(v1_shapes, filename)
+            universal = set.intersection(*v1_shapes)
+            for name, later in successors:
+                checked += 1
+                self.assertEqual(
+                    sorted(universal - later),
+                    [],
+                    f"{name}/{filename} dropped a field every v1 peer carries",
+                )
+        self.assertGreater(checked, 0, "no versioned successor bundle found")
 
     def test_code_policy_constants_agree_across_modules(self) -> None:
         """Policy strings are duplicated across modules; prove they agree.
@@ -1099,10 +1331,11 @@ class RegistryFileContractTest(unittest.TestCase):
                 self.assertNotIn(model_id, grouped_by_model, model_id)
                 grouped_by_model[model_id] = bundle_id
 
-        resolved = {
+        resolved = self.resolved_bundle_ids()
+        self.assertEqual(resolved, {
             model_id: grouped_by_model.get(model_id, model_id)
             for model_id in self.models
-        }
+        })
         bundle_ids = set(resolved.values())
         self.assertEqual(
             len(bundle_ids), authority["expected_artifact_bundle_count"]
@@ -1111,7 +1344,23 @@ class RegistryFileContractTest(unittest.TestCase):
         observed_bundle_ids = {
             path.name for path in audit_root.iterdir() if path.is_dir()
         }
-        self.assertEqual(observed_bundle_ids, bundle_ids)
+        declared, rules = audit_root_species(authority)
+        # A declaration may not shadow a census bundle, and a directory that is
+        # neither derived from the census nor declared still fails, exactly as
+        # before this check was scoped.
+        self.assertTrue(rules["undeclared_directory_in_the_audit_root_is_a_failure"])
+        self.assertEqual(declared & bundle_ids, set())
+        self.assertEqual(observed_bundle_ids, bundle_ids | declared)
+        for name in sorted(declared):
+            assert_non_census_record_dir(
+                self,
+                audit_root / name,
+                required=set(authority["required_bundle_files"]),
+                rules=rules,
+                resolved=resolved,
+                bundle_ids=bundle_ids,
+                audit_root=audit_root,
+            )
         required = set(authority["required_bundle_files"])
         self.assertEqual(
             required,
@@ -2188,7 +2437,7 @@ class RegistryFileContractTest(unittest.TestCase):
             "cebd6fae655b9c585a4807daa3ac31bb764f06b4",
         )
         self.assertEqual(checkpoints["weight_license"], "UNDECLARED")
-        self.assertIs(checkpoints["weight_content_downloaded"], False)
+        self.assertIs(checkpoints["weight_content_downloaded"], True)
         self.assertEqual(
             checkpoints["architecture_contract"],
             {
@@ -2209,11 +2458,13 @@ class RegistryFileContractTest(unittest.TestCase):
         expected = {
             "scgpt_whole_human": {
                 "weight_bytes": 205385258,
+                "weight_sha256": "6cb5d451ab5c4b33eb673adbe4fddc61d2389df1b89b7651a9fe2e557572b922",
                 "args_sha256": "c18e075e018140cb8b2d9029387b9de26607a5ce6a8ccabd6ead70cd76b95d60",
                 "vocab_sha256": "acca93d114ca62c3f0f50debbd23e8c87f0714f4737764454f6b2b13f2e8580f",
             },
             "scgpt_continual": {
                 "weight_bytes": 207861754,
+                "weight_sha256": "ad0252a1971e0cd619b7116dbab3177432236c4537225d54280a2aa7e5fe402a",
                 "args_sha256": "77fec83c32306225f37cc023321b716a49ce9e778039f2c1c4b80e1e4e7008bd",
                 "vocab_sha256": "ee2b2c90158eedb97c2318e49abaaed0a02c6fdf7e3f7ca6a821906413c4d2a4",
             },
@@ -2226,7 +2477,13 @@ class RegistryFileContractTest(unittest.TestCase):
             self.assertEqual(
                 artifacts["best_model.pt"]["size_bytes"], values["weight_bytes"]
             )
-            self.assertEqual(artifacts["best_model.pt"]["sha256"], "UNRESOLVED")
+            # Corrected 2026-08-25: the bodies were acquired 2026-08-23 (job
+            # 21015743) and their digests re-derived from the files. The bundle
+            # placeholder is gone, so asserting UNRESOLVED would re-assert the
+            # falsehood the correction removed.
+            self.assertEqual(
+                artifacts["best_model.pt"]["sha256"], values["weight_sha256"]
+            )
             self.assertEqual(
                 artifacts["args.json"]["sha256"], values["args_sha256"]
             )
@@ -2325,7 +2582,10 @@ class RegistryFileContractTest(unittest.TestCase):
             "9c416007be15ad6753dc84af4468c1dc10421ab9",
         )
         self.assertEqual(checkpoints["weight_license"], "CC-BY-4.0")
-        self.assertIs(checkpoints["weight_content_downloaded"], False)
+        # Corrected 2026-08-25: the weight bodies were acquired on 2026-08-23
+        # (executions/uce-acquisition-21015745) and re-derive byte-exact against
+        # the recorded digests. The bundle is right; this assertion was stale.
+        self.assertIs(checkpoints["weight_content_downloaded"], True)
         expected = {
             "uce_4l": {
                 "layers": 4,
@@ -2408,20 +2668,51 @@ class RegistryFileContractTest(unittest.TestCase):
         )
         self.assertEqual(checkpoints["code_license"], "Apache-2.0")
         self.assertEqual(checkpoints["weight_license"], "CC-BY-SA-4.0")
-        self.assertIs(checkpoints["weight_content_downloaded"], False)
+        self.assertIs(checkpoints["weight_content_downloaded"], True)
         archive = checkpoints["archive"]
         self.assertEqual(archive["size_bytes"], 30310810843)
         self.assertEqual(
             archive["source_md5"], "546251b7c435f3b1dbe38e2e420ad57f"
         )
-        self.assertEqual(archive["sha256"], "UNRESOLVED")
+        self.assertEqual(
+            archive["sha256"],
+            "3904fb66969bca0dd9b162955d9092f497b0769b6975caff70a17257901e68a1",
+        )
         self.assertIn("Zenodo:10685499", model["checkpoint_revision"])
-        self.assertEqual(model["checkpoint_sha256"], "UNRESOLVED")
+        self.assertEqual(
+            model["checkpoint_sha256"],
+            "a08f023788bdbded191e2d9344e5d4240ffc7d7505eca4e0b7a37526b858d19f",
+        )
         self.assertEqual(
             model["license_status"],
             "code_Apache-2.0_weights_CC-BY-SA-4.0",
         )
-        self.assertEqual(model["exposure_status"], "target_label_unexposed")
+        self.assertEqual(model["exposure_status"], "encoder_seen")
+
+        # Corrected 2026-08-25.  These two assertions previously required
+        # admission_blocking False and blockers [], which the registry has never
+        # held.  Two lanes edited scimilarity the same day in opposite
+        # directions: the assertions were added here requiring an admitted
+        # model, while config/models/cell_foundation.toml was rewritten to keep
+        # it blocked, saying verbatim "Keep this model admission-blocked until
+        # those exact authorities are materialized and registry validation
+        # passes."  The registry was taken as authoritative because
+        # admission_blocking == bool(blockers) holds for 136 of 136 models with
+        # zero violations, and registry.py uses the flag to mean "has unresolved
+        # blockers that block its own admission".  An admitted scimilarity would
+        # be the census's only violation of that invariant.  See
+        # config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json
+        # for the coordination item; if the admission work has since landed,
+        # clear the blocker in the registry first and this follows.
+        #
+        # The blocker is the MISSING ModelExecutionContract, not encoder_seen.
+        # encoder_seen makes scimilarity sealed-champion-ineligible, which is a
+        # different gate; clearing one would not clear the other.
+        self.assertIs(model["admission_blocking"], True)
+        self.assertEqual(model["admission_blocking"], bool(model["blockers"]))
+        self.assertEqual(len(model["blockers"]), 1)
+        self.assertIn("Keep this model admission-blocked", model["blockers"][0])
+        self.assertIn("ModelExecutionContract", model["blockers"][0])
         self.assertEqual(model["supported_tasks"], ["cell_state_mapping"])
         self.assertEqual(
             checkpoints["architecture_contract"],
@@ -2436,7 +2727,7 @@ class RegistryFileContractTest(unittest.TestCase):
         )
         self.assertEqual(
             checkpoints["input_contract"]["normalization"],
-            "per_cell_total_10000_then_natural_log1p",
+            "per_cell_total_10000_over_retained_model_genes_then_natural_log1p",
         )
         self.assertEqual(
             checkpoints["input_contract"]["minimum_gene_overlap"], 5000
@@ -2465,12 +2756,25 @@ class RegistryFileContractTest(unittest.TestCase):
             exposure["checkpoint_findings"]["scimilarity_v1_1"][
                 "exposure_state"
             ],
+            "encoder_seen",
+        )
+        self.assertEqual(
+            exposure["checkpoint_findings"]["scimilarity_v1_1"][
+                "sealed_target_exposure_state"
+            ],
             "target_label_unexposed",
         )
         self.assertEqual(
             exposure["sealed_champion_eligibility"],
-            "eligible_on_exposure_and_terms_other_admission_gates_still_apply",
+            "ineligible_aggregate_development_encoder_seen",
         )
+        self.assertIs(exposure["sealed_champion_eligible"], False)
+        fixture = exposure["frozen_fixture_contract"]
+        self.assertEqual(fixture["study_gene_observability_shape"], [7, 28231])
+        self.assertEqual(len(fixture["study_gene_observability_order"]), 7)
+        self.assertIs(fixture["study_gene_observability_is_global"], True)
+        self.assertIs(fixture["evaluation_labels_read"], False)
+        self.assertIs(fixture["sealed_outcomes_read"], False)
         self.assertEqual(crosswalk["corpus"]["annotated_training_studies"], 56)
         self.assertEqual(
             crosswalk["corpus"]["annotated_training_table_rows"], 52
@@ -2665,6 +2969,17 @@ class RegistryFileContractTest(unittest.TestCase):
             checkpoints["historical_alias"]["sha256"], original["sha256"]
         )
         self.assertEqual(model["exposure_status"], "unknown")
+        execution = checkpoints["development_execution"]
+        self.assertEqual(
+            execution["evaluation_artifacts_sha256"],
+            "109077b2d8c90870946c406933ab2018a08db79e1965bcfad06198deb8b8245e",
+        )
+        self.assertEqual(
+            execution["promotion_disposition"],
+            "did_not_promote_from_development_smoke",
+        )
+        self.assertFalse(execution["sealed_outcomes_read"])
+        self.assertIn("not_native_knn", execution["scope"])
         self.assertIn(
             "outer fold",
             checkpoints["embedding_contract"][
@@ -3476,6 +3791,22 @@ class RegistryFileContractTest(unittest.TestCase):
         self.assertEqual(epibert["weight_license"], "CC-BY-4.0")
         self.assertIs(epibert["input_contract"]["accessibility"]["required"], True)
         self.assertIn("not_supported", epibert["task_fit"]["rna_conditioned_atac"])
+        readiness = epibert["native_input_readiness"]
+        self.assertIs(readiness["motif_order_exact"], True)
+        self.assertEqual(readiness["motif_count"], 693)
+        self.assertIs(readiness["native_preprocessing_fixture_built"], False)
+        self.assertEqual(
+            readiness["native_preprocessing_terminal_disposition"],
+            "checkpoint_runtime_ready_native_preprocessing_terminally_blocked_no_fixture",
+        )
+        self.assertEqual(
+            epibert["execution_evidence"]["native_preprocessing_audit_artifacts_sha256"],
+            "844775b7710584d478e6ae1ff9592a0ab665fdb3da3e3c2728794d1a0a2e6727",
+        )
+        self.assertIn(
+            "min-max",
+            epibert["input_contract"]["global_motif_context"]["normalization"],
+        )
         self.assertIn("dae61b434", self.models["epibert"]["checkpoint_revision"])
         self.assertEqual(self.models["epibert"]["exposure_status"], "target_label_unexposed")
 
@@ -3499,6 +3830,20 @@ class RegistryFileContractTest(unittest.TestCase):
         )
         self.assertIn("luosanj/EPCOTv2", self.models["epcotv2"]["checkpoint_revision"])
         self.assertEqual(self.models["epcotv2"]["status"], "blocked_terms")
+        self.assertIn("basis channels", epcot["input_contract"]["sequence"]["channels"])
+        self.assertIn(
+            "mask the prespecified raw genomic ATAC locus",
+            epcot["native_scoring_contract"]["variant_ablation_rule"],
+        )
+        epcot_native_audit = json.loads(
+            (
+                ROOT / "executions/model-audit-112-21099014/audit/audit.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            epcot_native_audit["native_output"]["same_nucleus_rna_atac_task"],
+            "observed_ATAC_plus_sequence_to_RNA_profile",
+        )
 
         for model_id in ("epibert", "epcotv2"):
             crosswalk_path = CONFIG / f"artifacts/models/{model_id}/development_crosswalk.json"
@@ -3512,6 +3857,28 @@ class RegistryFileContractTest(unittest.TestCase):
                 hashlib.sha256(crosswalk_path.read_bytes()).hexdigest(),
             )
             self.assertIn("input", exposure["sealed_champion_eligibility"])
+        epcot_exposure = json.loads(
+            (CONFIG / "artifacts/models/epcotv2/exposure_audit.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            epcot_exposure["native_contract_audit_record"]["artifacts_sha256"],
+            "b51a9c95bf0706352961a74040cbee5fb45a4aca8f14a369093b4b80af4e21ec",
+        )
+        epibert_exposure = json.loads(
+            (CONFIG / "artifacts/models/epibert/exposure_audit.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            epibert_exposure["native_preprocessing_audit_record"]["status"],
+            "pass_terminal_blocker_frozen",
+        )
+        self.assertIs(
+            epibert_exposure["native_preprocessing_audit_record"]["fixture_built"],
+            False,
+        )
 
     def test_genomic_language_encoders_freeze_sequence_and_label_exposure(self) -> None:
         expected = {
@@ -3925,9 +4292,12 @@ class RegistryFileContractTest(unittest.TestCase):
             checkpoints["repository_revision"],
             "c943a89a4de9511a8ab1010715bf1cfa8827cc99",
         )
-        self.assertEqual(checkpoints["release"], "v0.6.0")
+        self.assertEqual(
+            checkpoints["release"], "unversioned_tf_sapiens_archive"
+        )
+        self.assertEqual(checkpoints["source_version"], "0.6.1")
         self.assertEqual(checkpoints["weight_license"], "MIT")
-        self.assertIs(checkpoints["weight_content_downloaded"], False)
+        self.assertIs(checkpoints["weight_content_downloaded"], True)
         archive = checkpoints["archive"]
         self.assertEqual(archive["size_bytes"], 1819975447)
         self.assertEqual(
@@ -3937,9 +4307,16 @@ class RegistryFileContractTest(unittest.TestCase):
             archive["s3_version_id"],
             "P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU",
         )
-        self.assertEqual(archive["sha256"], "UNRESOLVED")
+        self.assertEqual(
+            archive["sha256"],
+            "d108a7a9ee7fdf38e0dcd4e58593e94304cba927df6ec63e82ea74e2b177e529",
+        )
         self.assertIn(archive["s3_version_id"], model["checkpoint_revision"])
-        self.assertEqual(model["checkpoint_sha256"], "UNRESOLVED")
+        self.assertEqual(
+            model["checkpoint_sha256"],
+            "eff027e7393f92a32cadcbb2e13a917e24b62b71341571bf40f38ff6ec6d3021",
+        )
+        self.assertIs(model["admission_blocking"], True)
         self.assertEqual(model["license_status"], "MIT")
         self.assertEqual(model["exposure_status"], "unknown")
         self.assertEqual(model["supported_tasks"], ["cell_state_mapping"])
@@ -3953,8 +4330,15 @@ class RegistryFileContractTest(unittest.TestCase):
                 "transformer_layers": 12,
                 "trainable_parameters": 368000000,
                 "frozen_embedding_parameters": 61000000,
-                "vocabulary_size": 23829,
+                "gene_tokens": 23823,
+                "special_tokens": 7,
+                "strict_loaded_parameters": 429870637,
+                "vocabulary_rows": 23830,
             },
+        )
+        self.assertEqual(
+            checkpoints["artifact_chain"]["activation_artifacts_sha256"],
+            "375f38c25140746a77d13dffc7a90fed47e6597dc0537578bb311d9807043007",
         )
         self.assertEqual(checkpoints["input_contract"]["count_clip"], 30)
         self.assertEqual(
@@ -4033,6 +4417,59 @@ class RegistryFileContractTest(unittest.TestCase):
                 "gse289173_accession_or_title_matches"
             ],
             0,
+        )
+
+        adaptation = tomllib.loads(
+            (CONFIG / "adaptation/transcriptformer.toml").read_text(
+                encoding="utf-8"
+            )
+        )
+        self.assertEqual(
+            adaptation["status"],
+            "development_common_lane_smoke_complete",
+        )
+        self.assertIs(adaptation["sealed_champion_eligible"], False)
+        self.assertEqual(
+            set(adaptation["input_firewall"]["allowed_source_observation_fields"]),
+            {"_index", "donor_id", "dataset"},
+        )
+        activation_path = ROOT / checkpoints["artifact_chain"][
+            "activation_artifacts_json"
+        ]
+        self.assertEqual(
+            hashlib.sha256(activation_path.read_bytes()).hexdigest(),
+            checkpoints["artifact_chain"]["activation_artifacts_sha256"],
+        )
+        activation = json.loads(activation_path.read_text(encoding="utf-8"))
+        metadata = activation["metadata"]
+        self.assertEqual(metadata["status"], "passed")
+        self.assertEqual(metadata["development_rows"], 1000)
+        self.assertIs(metadata["evaluation_labels_read"], False)
+        self.assertIs(metadata["sealed_outcomes_read"], False)
+        self.assertIs(metadata["sealed_champion_eligible"], False)
+
+        disposition = json.loads(
+            (
+                CONFIG
+                / "artifacts/models/transcriptformer/development_disposition.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(
+            disposition["development_evaluation_artifact"]["sha256"],
+            checkpoints["artifact_chain"][
+                "development_common_lane_evaluation_artifacts_sha256"
+            ],
+        )
+        self.assertEqual(
+            disposition["next_activation"]["dataset_id"], "gse256398"
+        )
+        self.assertEqual(
+            disposition["next_activation"]["alcohol_associated_role"],
+            "etiology_ood_challenge_not_masld_negative_controls",
+        )
+        self.assertIs(disposition["eligibility"]["champion_eligible"], False)
+        self.assertIs(
+            disposition["eligibility"]["sealed_evaluation_eligible"], False
         )
 
         acquisition = (
@@ -4258,13 +4695,37 @@ class RegistryFileContractTest(unittest.TestCase):
                 ensure_ascii=False,
             ).encode("utf-8")
         ).hexdigest()
+        bound = 0
+        inert = 0
         for path in sorted((CONFIG / "campaigns").glob("*.toml")):
             campaign = load_toml(path)
+            declared = campaign_dispatch_keys(campaign)
+            if not declared:
+                # Dataset-lane record. Allowed to skip census binding only
+                # because it names no registry model.
+                self.assertFalse(
+                    references_registry_model_id(campaign),
+                    f"{path.name} names a registry model but declares no "
+                    "model-dispatch surface, so nothing binds it to the census",
+                )
+                inert += 1
+                continue
+            # A partial declaration is the dangerous case: a model campaign
+            # that lost [selection] would otherwise pass as dataset-lane.
+            self.assertEqual(
+                declared,
+                set(CAMPAIGN_MODEL_DISPATCH_KEYS),
+                f"{path.name} declares only part of the model-dispatch "
+                f"surface; missing {sorted(CAMPAIGN_MODEL_DISPATCH_KEYS - declared)}",
+            )
             self.assertEqual(
                 campaign["selection"]["census_model_ids_sha256"],
                 expected,
                 path.name,
             )
+            bound += 1
+        self.assertGreater(bound, 0, "no campaign bound the frozen model census")
+        self.assertGreater(inert, 0, "dataset-lane campaign records disappeared")
 
     def test_sealed_dataset_is_never_planning_visible(self) -> None:
         sealed = self.datasets["gse289173"]
@@ -4440,6 +4901,7 @@ class RegistryFileContractTest(unittest.TestCase):
             capability["profile_fixture_passed_models"],
             [
                 "assay_native_pseudobulk",
+                "bpnet",
                 "cobolt",
                 "mean_track",
                 "nearest_context",
@@ -4977,6 +5439,11 @@ class RegistryFileContractTest(unittest.TestCase):
         )
         self.assertNotIn("same_cell", self.datasets["gse244832"]["pairing_levels"])
         self.assertEqual(self.datasets["gse192741"]["pairing_levels"], ["same_section"])
+        self.assertEqual(
+            self.datasets["gse256398"]["pairing_levels"],
+            ["same_study_unpaired"],
+        )
+        self.assertEqual(self.datasets["gse256398"]["modalities"], ["single_nucleus_rna"])
         self.assertEqual(
             self.datasets["pxd051911"]["pairing_levels"],
             ["same_donor_different_tissue"],

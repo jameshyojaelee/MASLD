@@ -5,8 +5,8 @@
   "status_document": "docs/STATUS.md",
   "results_document": "docs/RESULTS.md",
   "roadmap_document": "docs/ROADMAP.md",
-  "paper_title": "A multimodal human MASLD Resource maps inherited genetic variation and multicellular disease remodeling",
-  "ultimate_goal": "The goal is to publish a standalone human MASLD Resource that maps two linked dimensions of human disease biology: inherited genetic variation relevant to MASLD and liver traits, and multicellular remodeling in established disease. The Resource connects those maps to donor-aware cell programs and protein, chromatin, and spatial tissue context, then organizes the results in a transparent MASLD Gene Catalog with appropriate follow-up experiments. It distinguishes protein-altering variation, supported regulatory relationships, unresolved noncoding signals, lncRNA transcription, and the mature RNA molecule rather than assuming that all inherited variation is regulatory. The paper must be scientifically useful without Cas13 results; the future Cas13 screen prospectively tests Resource nominations but cannot redefine its classes, figures, or claims.",
+  "paper_title": "A multimodal human MASLD Resource resolves the architecture of inherited risk and the coordination of multicellular remodeling",
+  "ultimate_goal": "The goal is to publish a standalone human MASLD Resource that maps five linked dimensions of human disease biology: inherited genetic variation relevant to MASLD and liver traits; multicellular remodeling in established disease; how genes and gene sets relate to the three disease aspects of metabolism, inflammation, and fibrosis across cross-sectional disease stages; and how inherited variants, combinations of variants, and chromatin state relate to those aspects. The Resource connects those maps to donor-aware cell programs and protein, chromatin, and spatial tissue context, then organizes the results in a transparent MASLD Gene Catalog with appropriate follow-up experiments. It distinguishes protein-altering variation, supported regulatory relationships, unresolved noncoding signals, lncRNA transcription, and the mature RNA molecule rather than assuming that all inherited variation is regulatory. It records where an aspect-specific or variant-combination question is supported, indeterminate, or untestable with the available assays rather than leaving that distinction implicit. Finally, it measures what current predictive models, including pretrained sequence and single-cell models, can and cannot learn from those maps, reporting every score beside an audit of what each model already saw during training so that apparent skill is separated from prior exposure. The paper must be scientifically useful without Cas13 results; the future Cas13 screen prospectively tests Resource nominations but cannot redefine its classes, figures, or claims.",
   "paper_identity": "standalone_human_masld_resource_and_analytical_framework",
   "central_scientific_contribution": "inherited_genetic_variation_and_multicellular_disease_remodeling",
   "figure_decision_contract": [
@@ -34,7 +34,8 @@
     "multicohort_disease_remodeling",
     "donor_aware_multicellular_programs",
     "molecular_physical_tissue_context",
-    "masld_gene_catalog"
+    "masld_gene_catalog",
+    "model_framework_and_transfer_limits"
   ],
   "resource_terminal_supplementary_plans": [
     "40",

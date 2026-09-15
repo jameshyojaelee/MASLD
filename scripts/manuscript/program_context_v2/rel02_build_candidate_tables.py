@@ -580,7 +580,7 @@ def build_candidate_tables(
             )
     # Complete every source/claim invariant check before the first REL-02
     # candidate product is materialized. A bad frozen contract must not leave a
-    # partially extended immutable candidate.
+    # partially extended read-only candidate.
     numbers, claims, dependencies = build_ledgers(rows)
 
     panel_table_paths: dict[tuple[str, str], Path] = {}

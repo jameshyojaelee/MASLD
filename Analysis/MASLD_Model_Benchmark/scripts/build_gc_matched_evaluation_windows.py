@@ -39,7 +39,7 @@ CCRE_WINDOW_FIELDS = (
 
 
 class BackgroundWindowError(ValueError):
-    """Raised when outcome-independent background matching violates its contract."""
+    """Raised when outcome-independent background matching does not meet its requirements."""
 
 
 def stable_integer(*values: object, seed: int = SEED) -> int:

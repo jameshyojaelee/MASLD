@@ -26,7 +26,7 @@ ATTRIBUTE = re.compile(r'(?P<key>[A-Za-z_]+) "(?P<value>[^"]*)";')
 
 
 class CorgiContextError(RuntimeError):
-    """Raised when a source, mapping, or raw-count contract differs."""
+    """Raised when a source, mapping, or raw-count requirement differs."""
 
 
 def digest(path: Path) -> str:

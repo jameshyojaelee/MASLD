@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy a closed Plan 60 input set into the exact immutable candidate root."""
+"""Copy a closed Plan 60 input set into the exact read-only candidate root."""
 
 from __future__ import annotations
 
@@ -539,7 +539,7 @@ def validate_prepared_adapter_provenance(
     """Bind prepared adapter outputs to inputs and the exact frozen producers.
 
     This runs before candidate-root creation.  A producer edit after adapter
-    preparation therefore fails closed without leaving a partial immutable
+    preparation therefore fails closed without leaving a partial read-only
     candidate behind.
     """
 

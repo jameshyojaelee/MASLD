@@ -1,10 +1,11 @@
-"""Execute reviewed campaign jobs without weakening plan immutability."""
+"""Execute reviewed campaign jobs without letting the plan change."""
 
 from __future__ import annotations
 
 from dataclasses import replace
 import json
 from pathlib import Path
+from pathlib import PurePosixPath
 import re
 import subprocess
 import sys
@@ -42,7 +43,7 @@ from .runtime import capture_runtime_lock
 
 
 class CampaignError(RuntimeError):
-    """Raised when a frozen campaign or run fails its execution contract."""
+    """Raised when a frozen campaign or run fails its execution requirements."""
 
 
 def _resolve_existing_directory(path: str | Path, label: str) -> Path:
@@ -152,10 +153,17 @@ def _assert_config_snapshot(plan: Mapping[str, Any]) -> None:
         Path(str(plan.get("config_root", ""))), "frozen configuration root"
     )
     snapshot = plan.get("registry_snapshot")
-    if not isinstance(snapshot, Mapping) or snapshot.get("schema_version") != (
-        "masld-bench-registry-file-snapshot-v1"
-    ):
+    if not isinstance(snapshot, Mapping):
         raise CampaignError("frozen registry snapshot is invalid")
+    schema_version = snapshot.get("schema_version")
+    if schema_version not in {
+        "masld-bench-registry-file-snapshot-v1",
+        "masld-bench-registry-file-snapshot-v2",
+    }:
+        raise CampaignError("frozen registry snapshot is invalid")
+    scoped = schema_version == "masld-bench-registry-file-snapshot-v2"
+    if scoped and snapshot.get("scope_mode") != "explicit_files":
+        raise CampaignError("scoped registry snapshot mode is invalid")
     raw_expected = snapshot.get("files")
     if not isinstance(raw_expected, list):
         raise CampaignError("frozen registry snapshot has no file inventory")
@@ -164,26 +172,45 @@ def _assert_config_snapshot(plan: Mapping[str, Any]) -> None:
         if not isinstance(value, Mapping):
             raise CampaignError("frozen registry file inventory contains a non-object")
         relative = str(value.get("path", ""))
+        canonical = PurePosixPath(relative)
+        if (
+            not relative
+            or relative != canonical.as_posix()
+            or canonical.is_absolute()
+            or ".." in canonical.parts
+            or "\\" in relative
+        ):
+            raise CampaignError(f"invalid frozen registry path: {relative!r}")
         if relative in expected:
             raise CampaignError(f"duplicate frozen registry path: {relative}")
         expected[relative] = value
-    observed_paths: set[str] = set()
-    for path in sorted(config_root.rglob("*")):
-        if path.is_symlink():
-            raise CampaignError(f"configuration tree contains a symlink: {path}")
-        if path.is_dir():
-            continue
-        if not path.is_file():
+    if scoped:
+        included_paths = snapshot.get("included_paths")
+        if (
+            not isinstance(included_paths, list)
+            or included_paths != sorted(expected)
+            or any(not isinstance(path, str) for path in included_paths)
+        ):
+            raise CampaignError("scoped registry file inventory is inconsistent")
+    else:
+        observed_paths: set[str] = set()
+        for path in sorted(config_root.rglob("*")):
+            if path.is_symlink():
+                raise CampaignError(f"configuration tree contains a symlink: {path}")
+            if path.is_dir():
+                continue
+            if not path.is_file():
+                raise CampaignError(
+                    f"configuration tree contains a non-regular member: {path}"
+                )
+            relative = path.relative_to(config_root).as_posix()
+            observed_paths.add(relative)
+        if set(expected) != observed_paths:
+            changed = sorted(set(expected) ^ observed_paths)
             raise CampaignError(
-                f"configuration tree contains a non-regular member: {path}"
+                "configuration TOML membership changed after review: "
+                + ", ".join(changed)
             )
-        relative = path.relative_to(config_root).as_posix()
-        observed_paths.add(relative)
-    if set(expected) != observed_paths:
-        changed = sorted(set(expected) ^ observed_paths)
-        raise CampaignError(
-            "configuration TOML membership changed after review: " + ", ".join(changed)
-        )
     for relative, record in expected.items():
         path = _resolve_existing_file(
             config_root / relative, f"registry file {relative}"
@@ -198,6 +225,30 @@ def _assert_config_snapshot(plan: Mapping[str, Any]) -> None:
         _assert_hash(path, str(record.get("sha256", "")), f"registry file {relative}")
     if canonical_hash(snapshot) != plan.get("registry_snapshot_sha256"):
         raise CampaignError("frozen registry snapshot hash is invalid")
+
+
+def _observed_source_lock(
+    plan: Mapping[str, Any], package_root: Path
+) -> dict[str, Any]:
+    expected = plan.get("source_lock")
+    if not isinstance(expected, Mapping):
+        raise CampaignError("plan has no valid frozen source lock")
+    schema_version = expected.get("schema_version")
+    if schema_version == "masld-bench-source-lock-v2":
+        included_paths = None
+    elif (
+        schema_version == "masld-bench-source-lock-v3"
+        and expected.get("scope_mode") == "explicit_paths"
+    ):
+        included_paths = expected.get("included_paths")
+        if not isinstance(included_paths, list) or not included_paths:
+            raise CampaignError("scoped source lock has no included paths")
+    else:
+        raise CampaignError("frozen source lock schema is invalid")
+    try:
+        return source_lock(package_root, included_paths=included_paths)
+    except PlanningError as error:
+        raise CampaignError(f"cannot revalidate source lock: {error}") from error
 
 
 def _validate_external_artifact(artifact: ArtifactRef, label: str) -> Path:
@@ -327,10 +378,7 @@ def _assert_run_bindings(
         Path(str(plan.get("package_root", Path(__file__).resolve().parents[2]))),
         "frozen package root",
     )
-    try:
-        observed_source = source_lock(package_root)
-    except PlanningError as error:
-        raise CampaignError(f"cannot revalidate source lock: {error}") from error
+    observed_source = _observed_source_lock(plan, package_root)
     if observed_source != plan.get("source_lock"):
         raise CampaignError("source tree differs from the reviewed campaign plan")
     control_plane = plan.get("control_plane_lock")
@@ -626,7 +674,7 @@ def _publish_minimal_failure_attempt(
     """Quarantine untrusted output and publish a separately built terminal receipt.
 
     The untrusted tree is moved atomically without inventorying or copying it.  A
-    new minimal tree is then constructed from in-memory contract objects only.
+    new minimal tree is then constructed from in-memory requirement objects only.
     """
 
     quarantine = attempt.parent / f"quarantine-{attempt.name}-untrusted"
@@ -896,7 +944,9 @@ def execute_run(
             prior_outputs.append(dict(action_record))
 
         _assert_config_snapshot(plan)
-        if source_lock(Path(str(plan["package_root"]))) != plan["source_lock"]:
+        if _observed_source_lock(
+            plan, Path(str(plan["package_root"]))
+        ) != plan["source_lock"]:
             raise CampaignError("source tree changed during adapter execution")
         for index, artifact in enumerate(run_spec.inputs):
             _validate_external_artifact(artifact, f"run input {index} after execution")
@@ -985,7 +1035,7 @@ def execute_run(
 def execute_admission_run(
     *, candidate: str | Path, run_id: str, output_root: str | Path
 ) -> Path:
-    """Compatibility wrapper that refuses to execute a non-admission run."""
+    """Compatibility wrapper that refuses to execute a non-inclusion run."""
 
     candidate_path = _resolve_existing_directory(candidate, "candidate")
     _, _, run_spec, _ = _candidate_run(candidate_path, run_id)
@@ -1150,6 +1200,19 @@ def _repository_root(path: Path) -> Path:
     return Path(process.stdout.strip())
 
 
+_GPU_SBATCH_DIRECTIVE = re.compile(
+    r"^#SBATCH[ \t]+(?:"
+    r"(?:--partition|-p)(?:=|[ \t]+)gpu(?:[ \t]|$)"
+    r"|--gres(?:=|[ \t]+)gpu(?::[^ \t]+)?(?:[ \t]|$)"
+    r")",
+    re.MULTILINE,
+)
+
+
+def _is_gpu_sbatch(path: Path) -> bool:
+    return _GPU_SBATCH_DIRECTIVE.search(path.read_text(encoding="utf-8")) is not None
+
+
 def submission_commands(
     *,
     candidate: str | Path,
@@ -1188,6 +1251,13 @@ def submission_commands(
             "frozen job script set does not exactly match planned run identifiers"
         )
     scripts = [candidate_path / relative for relative in sorted(expected_relative)]
+    gpu_scripts = [path for path in scripts if _is_gpu_sbatch(path)]
+    if gpu_scripts:
+        raise CampaignError(
+            "GPU campaign submission is dispatcher-only: "
+            f"{len(gpu_scripts)} GPU job script(s) must be queued through the central "
+            "five-job nslab dispatcher; direct sbatch commands are not emitted"
+        )
     commands = [f"sbatch --parsable {path.as_posix()}" for path in scripts]
     if execute:
         if submission_ledger_root is None:

@@ -410,11 +410,11 @@ fwrite(input_manifest, file.path(tmp, "input_manifest.tsv"), sep = "\t")
 readme <- c(
   "# Resolved program systems figure candidate",
   "",
-  "Status: candidate only; not promoted.",
-  "Source: sealed BULK-PROGRAM-MAP-v9 outputs.",
+  "Status: candidate only; not adopted.",
+  "Source: recorded BULK-PROGRAM-MAP-v9 outputs.",
   "The 117 cell-type-specific gene programs were defined before cross-cohort testing.",
   "Panels: T3 vocabulary, T4 coordination, T5 composition coupling, T6 modifiers.",
-  "Open release blocker: axis map 113/27 versus T3 114/26 remains unreconciled.",
+  "Open release dependency: axis map 113/27 versus T3 114/26 remains unreconciled.",
   "No holdout data were read and no system was refit by this figure generator."
 )
 writeLines(readme, file.path(tmp, "README.md"))

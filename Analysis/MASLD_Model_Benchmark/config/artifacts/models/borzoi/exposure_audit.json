@@ -17,7 +17,7 @@
     "scope": "registered_variant_and_regulatory_sources",
     "sha256": "65ace3b7b31138459e88db1c34c05f90cd75121ac2b88befe18552f1780e3716"
   },
-  "interpretation": "The official weights predate sealed GSE289173 by approximately 18 months, the accession is absent from the exact released training-target manifest, and donor/cell-type eQTL and interaction-eQTL outcomes were not declared training targets. The checkpoint is target-label-unexposed for the sealed variant endpoint. This does not make genomic positions novel: the reference sequence was broadly used in pretraining, so held chromosome/LD blocks and receptive-field buffers remain mandatory.",
+  "interpretation": "The official weights predate held-back GSE289173 by approximately 18 months, the accession is absent from the exact released training-target manifest, and donor/cell-type eQTL and interaction-eQTL outcomes were not declared training targets. The checkpoint is target-label-unexposed for the held-back variant endpoint. This does not make genomic positions novel: the reference sequence was broadly used in pretraining, so held chromosome/LD blocks and receptive-field buffers remain mandatory.",
   "license_disposition": {
     "code": "Apache-2.0",
     "open_champion_eligibility": "ineligible_until_weight_terms_are_explicit",

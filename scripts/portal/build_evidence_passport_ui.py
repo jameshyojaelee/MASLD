@@ -5,7 +5,7 @@ This is a presentation adapter over the frozen candidate tables. Legacy
 ``passport_*`` field and file names are read unchanged because they belong to
 an already sealed candidate; they are not the public name of the product. It
 does not calculate, merge, or reinterpret a scientific call.  The resulting
-HTML is self-contained so the review copy can be opened from an immutable
+HTML is self-contained so the review copy can be opened from an read-only
 release without a server or network connection.
 """
 

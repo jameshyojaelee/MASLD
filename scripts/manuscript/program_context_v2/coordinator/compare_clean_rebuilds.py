@@ -218,7 +218,7 @@ def execution_identity(
     label: str,
     fixture_mode: bool = False,
 ) -> dict[str, str]:
-    """Derive an execution identity from the immutable REL01 context."""
+    """Derive an execution identity from the read-only REL01 context."""
 
     path = candidate / "manifests/execution_context.json"
     payload = load_json_file(path, f"{label} execution context")

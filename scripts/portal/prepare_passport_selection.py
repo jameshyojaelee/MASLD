@@ -2,7 +2,7 @@
 """Write the exact, unsigned production PASS input-selection table.
 
 The row roster and parent/terminal links are frozen here so the coordinator
-does not have to hand-edit 28-column TSV rows.  This helper computes immutable
+does not have to hand-edit 28-column TSV rows.  This helper computes read-only
 artifact/producer hashes but deliberately does not create the sibling
 attestation; the coordinating agent must inspect the table and run
 ``prepare_passport_attestations.py selection`` separately.

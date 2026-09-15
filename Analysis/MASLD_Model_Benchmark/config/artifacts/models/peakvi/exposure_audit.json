@@ -17,7 +17,7 @@
     "scope": "task_specific_local_training_and_sealed_modality",
     "sha256": "ff6f58b28ec2ce3c1a61c5cf33ca6988e181c8ea8a39696835e3c8058b969fb4"
   },
-  "interpretation": "PeakVI has no foundation-checkpoint contamination because every admitted model is trained locally within outer folds. Its leakage risks are training-plus-held peak unions, region filtering, data-dependent model dimensions, covariates, early stopping, query adaptation, and downstream heads. It is an ATAC latent/accessibility model, not an RNA-conditioned profile or allele-effect model, so it cannot enter the current sealed endpoints.",
+  "interpretation": "PeakVI has no foundation-checkpoint contamination because every included model is trained locally within outer folds. Its leakage risks are training-plus-held peak unions, region filtering, data-dependent model dimensions, covariates, early stopping, query adaptation, and downstream heads. It is an ATAC latent/accessibility model, not an RNA-conditioned profile or allele-effect model, so it cannot enter the current held-back endpoints.",
   "remaining_blockers": [
     "Activate GSE296875 only after its donor/barcode/well/reference/peak/QC/missingness authorities pass and freeze same-nucleus rows without using held donors.",
     "Freeze explicit hidden and latent dimensions after the training-only peak contract; do not allow implicit square-root defaults to alter capacity by fold.",

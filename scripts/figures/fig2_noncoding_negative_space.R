@@ -49,7 +49,7 @@ context[, trait_scope := factor(trait_scope, levels = scope_order)]
 setorder(context, metric, trait_scope)
 stopifnot(nrow(context) == 6L)
 
-# Re-derive the exact values printed in the panel from the immutable source.
+# Re-derive the exact values printed in the panel from the read-only source.
 expected <- c(
   tier1_direct_masld_pdff.promoter_mass = 0.0787249975787247,
   tier2_liver_enzyme.promoter_mass = 0.0445912158230019,

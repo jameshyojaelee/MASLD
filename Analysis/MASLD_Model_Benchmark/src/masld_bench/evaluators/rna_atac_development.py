@@ -13,7 +13,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class RNAATACEvaluationError(RuntimeError):
-    """Raised when an OOF prediction/outcome join violates its contract."""
+    """Raised when an OOF prediction/outcome join does not meet its requirements."""
 
 
 TASK_ID = "rna_conditioned_atac"

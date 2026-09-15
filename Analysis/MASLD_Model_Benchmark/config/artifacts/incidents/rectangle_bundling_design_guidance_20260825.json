@@ -1,0 +1,122 @@
+{
+  "schema_version": "masld-bench-design-guidance-record-v1",
+  "record_id": "rectangle_bundling_design_guidance_20260825",
+  "audit_date": "2026-08-25",
+  "record_only": true,
+  "consumed_by_runtime": false,
+  "applies_to": "the design of FUTURE fit rectangles and their GPU bundling",
+  "explicitly_not_a_change_to": "executions/sequence-five-seed-rectangle-admission-21098556",
+  "decided_by": "team-lead, 2026-08-25",
+  "headline": "Two shape findings from the sequence five-seed rectangle that should inform the NEXT rectangle's design. Neither is a defect in the current one, and neither authorises any change to it. The current rectangle keeps five seeds, keeps its controls, keeps its walltime, and nothing is cancelled.",
+
+  "ruling_on_the_current_rectangle": {
+    "decision": "keep five seeds, accept the timeline, no re-scope of controls, nothing cancelled",
+    "primary_reason": "Choosing seed count from the rectangle's own observed between-seed variance would be post hoc design selection on the same data. It would make the seed count a function of the results the seeds exist to produce. This is the same circularity family that terminated a predictive continuum arm on 2026-08-25.",
+    "secondary_reason": "The completion range is dominated by GPU contention the campaign does not control, not by seed count. Removing 45.3% of the remaining work buys far less certainty than the 2.75-to-22.5 day spread implies.",
+    "firewall_note": "The engineer who produced this arithmetic did not read scored outcomes, predictions, or metrics. That boundary is what kept the seed count independent of the results, and it should be preserved for any future version of this question."
+  },
+
+  "note_1_cost_shape": {
+    "finding": "58.8% of the rectangle's GPU-hours are baselines, not models under test.",
+    "measured_on": "the 438 missing fits of the five-seed rectangle, median priors",
+    "table": [
+      {"model_id": "sequence_transformer_control", "role": "control", "fits": 114, "gpu_hours_per_fit_median": 0.934, "median_gpu_hours": 106.5, "share_of_median_cost": "40.4%", "observed_runtime_tasks": 8},
+      {"model_id": "chrombpnet", "role": "under_test", "fits": 106, "gpu_hours_per_fit_median": 0.860, "median_gpu_hours": 91.2, "share_of_median_cost": "34.6%", "observed_runtime_tasks": 16},
+      {"model_id": "sequence_cnn_control", "role": "control", "fits": 113, "gpu_hours_per_fit_median": 0.431, "median_gpu_hours": 48.7, "share_of_median_cost": "18.5%", "observed_runtime_tasks": 8},
+      {"model_id": "bpnet", "role": "under_test", "fits": 105, "gpu_hours_per_fit_median": 0.165, "median_gpu_hours": 17.3, "share_of_median_cost": "6.6%", "observed_runtime_tasks": 16}
+    ],
+    "totals": {"fits": 438, "median_gpu_hours": 263.7, "p90_gpu_hours": 539.4},
+    "controls_subtotal": {"fits": 227, "median_gpu_hours": 155.2, "share_of_median_cost": "58.8%"},
+    "the_asymmetry": "sequence_transformer_control costs 5.7x per fit what bpnet costs (0.934 vs 0.165 GPU-h), so the single most expensive line item is a baseline while bpnet, a model under test, is 6.6% of the bill.",
+    "what_this_is_NOT": "This is not an argument that controls are waste. A claim that a model beats a simple CNN baseline is unsupportable without fitting the CNN, and the controls are load-bearing for exactly that claim. Dropping or thinning them would trade compute for an unfalsifiable result.",
+    "guidance_for_future_rectangles": "Price the control arm explicitly at design time rather than discovering its share afterwards. If a control is several times more expensive per fit than the models it anchors, decide deliberately whether it needs the same seed and fold depth as the models under test, or whether a smaller control grid supports the same comparison. Make that a design decision, taken before any fit runs, never a reaction to observed results."
+  },
+
+  "note_2_uneven_bundle_packing": {
+    "finding": "Bundle cost varies 5.5x while every bundle requests the same walltime.",
+    "measured": {
+      "bundles": 30,
+      "fits_per_bundle_range": [14, 16],
+      "median_cost_cheapest_bundle_gpu_hours": 2.48,
+      "median_cost_most_expensive_bundle_gpu_hours": 13.76,
+      "spread": "5.5x",
+      "uniform_walltime_request_hours": 48.0
+    },
+    "consequence": "Bundles are packed by fit COUNT, not by expected cost, because model families differ by 5.7x per fit. A bundle of 15 transformer-control fits and a bundle of 15 bpnet fits are treated as equivalent units and are not. The cheap two-thirds reserve far more walltime than they need, which makes them poor Slurm backfill candidates and slows the whole set.",
+    "guidance_for_future_rectangles": "Allocate bundles by estimated GPU-hours rather than by fit count, and size each bundle's walltime to its own composition. Equal-cost bundles schedule better than equal-count bundles and give a truthful resource ask.",
+    "why_it_is_not_applied_here": "The 30 bundles are already submitted and hold their lane positions. Re-bundling would require cancelling running and chained work, which is prohibited and would lose progress for a scheduling gain."
+  },
+
+  "lever_checked_and_rejected": {
+    "candidate": "reduce the 48h per-bundle walltime to improve backfill",
+    "verdict": "REJECT. Do not cut it.",
+    "evidence": "Worst-case single bundle at per-model MAXIMUM priors is 34.06 GPU-h; at p90 it is 29.43 GPU-h. A 48h limit is 1.41x headroom over the absolute worst case. That is appropriate sizing, not padding.",
+    "what_breaks_if_changed": "The expensive bundles would be killed late in their runs for no scientific gain, discarding up to 34 hours of completed GPU work each.",
+    "note": "Recorded because a future reader looking for throughput levers will independently notice the uniform 48h request and reach for it. The uneven packing in note 2 is the real inefficiency; the walltime ceiling itself is correct."
+  },
+
+  "p90_caveat_carry_this_prominently": {
+    "statement": "Every GPU-hour figure in this record has wide uncertainty concentrated in the least-measured models. Quoting the median without the p90 beside it is misleading.",
+    "basis": "Runtime priors rest on 16 / 16 / 8 / 8 observed tasks for bpnet / chrombpnet / sequence_cnn_control / sequence_transformer_control respectively.",
+    "the_problem": "The two controls are 58.8% of the total estimate and rest on only 8 observed tasks each, with p90/median ratios of 2.0 and 2.1.",
+    "range": {"median_gpu_hours": 263.7, "p90_gpu_hours": 539.4, "ratio": 2.05},
+    "completion_range_by_effective_concurrency": [
+      {"concurrent_gpu_jobs": 4, "note": "the campaign's own design cap", "median_days": 2.75, "p90_days": 5.62},
+      {"concurrent_gpu_jobs": 3, "median_days": 3.66, "p90_days": 7.49},
+      {"concurrent_gpu_jobs": 2, "median_days": 5.49, "p90_days": 11.24},
+      {"concurrent_gpu_jobs": 1, "note": "observed state on 2026-08-25", "median_days": 10.99, "p90_days": 22.47}
+    ],
+    "the_number_people_will_be_surprised_by": "22.5 days"
+  },
+
+  "throughput_context_for_future_design": {
+    "finding": "The queue depth is a self-imposed concurrency cap, not a GPU shortage.",
+    "evidence": {
+      "pending_on_Dependency": 29,
+      "pending_on_Priority": 3,
+      "running": 1,
+      "shape": "four afterany lane heads with 29 bundles chained behind them",
+      "declared_policy": "plan/resource_estimate.json concurrency_policy = at_most_four_running_plus_one_pending_GPU_jobs_user_wide",
+      "initial_queue_wait": "7h38m from submit 2026-08-25T06:59:11 to first start 2026-08-25T14:37:43",
+      "cluster_share_at_audit": "1 of 18 L40S GPUs held by this campaign; other pending users were daknowles (2) and arovsing (1)"
+    },
+    "interpretation": "L40S scarcity explains why 3 of the 4 lane heads were idle. It does not explain why 29 bundles were queued; the four-lane cap does. Future rectangles should choose the lane count deliberately against expected cluster share, since it sets the ceiling on wall-clock completion independently of how much hardware is free.",
+    "hardware_note": "This rectangle cannot use B6K under any routing policy. All four of its task wrappers run TensorFlow 2.8.2 inside a Singularity image, which has no sm_120. See b6k_manual_gpu_sbatch_policy_scope_20260825.json for the portability test and the full arithmetic."
+  },
+
+  "corrections_folded_into_this_record": [
+    {
+      "superseded_claim": "The five-seed design is ragged, evidenced by the seed distribution 44 / 94 / 100 / 100 / 100.",
+      "status": "incorrect",
+      "correction": "The design is perfectly regular: 4 families x 5 lineages x 5 outer folds x 5 seeds = 500 fits. Existing fits are 56 at seed 20260824 and 6 at seed 20260825, so missing per seed is exactly 100 minus existing. Nothing is uneven."
+    },
+    {
+      "superseded_claim": "It is only a top-up, which weakens the case for spending 438 GPU-tasks on it.",
+      "status": "unsupported by the numbers",
+      "correction": "62 of 500 fits exist, so the rectangle is 12.4% complete and 87.6% of it is genuinely new work. It is effectively a fresh fit with a small head start and should be argued on the merits of its design."
+    }
+  ],
+
+  "source_data": {
+    "plan_root": "executions/sequence-five-seed-rectangle-admission-21098556",
+    "files_read": [
+      "plan/summary.json",
+      "plan/resource_estimate.json",
+      "plan/runtime_storage_priors.tsv",
+      "plan/canonical_existing_fits.tsv",
+      "plan/missing_fit_tasks.tsv",
+      "plan/bundle_tasks.tsv"
+    ],
+    "access": "read_only; nothing in the plan tree was modified"
+  },
+
+  "firewall": {
+    "outcomes_read": false,
+    "predictions_read": false,
+    "metrics_calculated": false,
+    "scorer_invoked": false,
+    "design_parameters_modified": false,
+    "jobs_cancelled_or_requeued": false,
+    "gpu_jobs_submitted": false
+  }
+}

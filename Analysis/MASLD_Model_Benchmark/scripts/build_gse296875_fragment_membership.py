@@ -53,7 +53,7 @@ OUTER_FOLDS = 5
 
 
 class MembershipError(ValueError):
-    """Raised when the frozen source join violates its contract."""
+    """Raised when the frozen source join does not meet its requirements."""
 
 
 def fold_index(donor_id: str, *, seed: int = SPLIT_SEED) -> int:

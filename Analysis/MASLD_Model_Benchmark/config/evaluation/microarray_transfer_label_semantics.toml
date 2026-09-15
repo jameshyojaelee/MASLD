@@ -1,0 +1,47 @@
+schema_version = "masld-bench-microarray-label-semantics-v1"
+contract_id = "gse83452_source_native_nash_semantics_v1"
+status = "frozen_before_any_model_transfer"
+cohort_family_id = "antwerp_inserm_shared"
+accession_aliases = ["GSE106737", "GSE83452"]
+project_exposure = "project_exposed_external_development"
+independent_evaluation_between_accession_aliases = false
+labels_visible_to_overlap_audit = false
+labels_visible_to_preprocessing = false
+generic_disease_binary_is_compatible_training_label = false
+
+[target]
+series = "GSE83452"
+biological_unit = "participant"
+timepoint = "baseline"
+source_field = "liver status"
+positive_source_value = "NASH"
+negative_source_value = "no NASH"
+missing_source_value = "undefined"
+positive_semantics = "Source-defined NASH requiring the combined presence of steatosis, ballooning, and lobular inflammation under the deposited NASH-CRN-based assessment."
+negative_semantics = "Source-defined no NASH within the deposited overweight/obese liver-biopsy cohort; this is not a healthy-control label and does not imply absence of steatosis or fibrosis."
+missing_semantics = "Undefined remains missing and is never mapped to no NASH."
+endpoint_evaluable = 148
+positive_n = 104
+negative_n = 44
+missing_n = 4
+
+[source_training]
+admission_unit = "participant_baseline_liver_biopsy"
+positive_required = "An explicit participant-level histology-derived steatohepatitis/NASH/MASH label requiring steatosis plus hepatocyte ballooning plus lobular inflammation, or an authoritatively documented equivalent definition."
+negative_required = "An explicit participant-level biopsy-derived no-steatohepatitis label sampled from the same source population and adjudication procedure as positives."
+missing_required = "Ambiguous, borderline, undefined, indeterminate, or unavailable histology is excluded from this endpoint and retained in the audit."
+required_metadata = ["source_accession", "participant_id", "specimen_timepoint", "source_label", "source_definition", "histology_adjudication_basis"]
+prohibited_positive_substitutions = ["generic_MASLD", "generic_NAFLD", "fibrosis_stage_only", "NAS_threshold_without_source_NASH_adjudication", "clinical_code_only", "transcriptome_inferred_state"]
+prohibited_negative_substitutions = ["healthy_control", "normal_liver", "simple_steatosis_without_explicit_no_NASH_adjudication", "generic_non_MASLD", "undefined", "missing"]
+current_bulk_existing_source_pool_status = "not_admitted_as_a_pool_until_each_source_native_label_and_population_passes_this_contract"
+eligible_source_roster = []
+transfer_training_allowed_now = false
+
+[family_firewall]
+excluded_from_training_when_GSE83452_is_held = ["GSE106737", "GSE83452"]
+reason = "The accessions share 78 fingerprint-confirmed arrays and 41 participant aliases and are one cohort family."
+series_matrix_use = "overlap_audit_only_never_model_input"
+
+[claims]
+allowed = "mechanistic external-development transport of a source-native baseline histology label"
+forbidden = ["diagnosis", "screening", "prognosis", "progression", "treatment_response", "universal_model", "independent_replication_between_GSE106737_and_GSE83452"]

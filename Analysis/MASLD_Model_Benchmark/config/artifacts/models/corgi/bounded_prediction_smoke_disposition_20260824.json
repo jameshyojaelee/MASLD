@@ -1,0 +1,199 @@
+{
+  "schema_version": "masld-bench-corgi-regular-bounded-prediction-smoke-v1",
+  "audit_date": "2026-08-24",
+  "status": "BOUNDED_OUTCOME_FREE_PREDICTION_SMOKE_COMPLETE",
+  "admission_class": "restricted_development_comparator",
+  "scope": "Regular Corgi checkpoint, runtime, input mapper, development tile, CPU preflight, and completed outcome-free prediction-smoke metadata. Prediction arrays, evaluator outputs, held ATAC, outcome labels, test-role data, and sealed features or labels were not opened for this audit.",
+  "model_identity": {
+    "model_id": "corgi_regular",
+    "display_name": "Regular Corgi",
+    "checkpoint_sha256": "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4",
+    "checkpoint_size_bytes": 2350451066,
+    "checkpoint_state_key_count": 177,
+    "checkpoint_state_numel": 195870252,
+    "code_commit": "d84c00082da3d04eb05169e290e53f1c7da2b9c5",
+    "task": "rna_conditioned_atac",
+    "role": "development-only native-family comparator using DNA plus fold-fitted 2,891-gene global context and the regular 22-track output head",
+    "corgi_plus_identity_claimed": false,
+    "relabeling_as_corgi_plus_prohibited": true
+  },
+  "exact_contract": {
+    "sequence_input_bp": 524288,
+    "trans_context_features": 2891,
+    "output_channels": 22,
+    "output_bins": 6144,
+    "output_resolution_bp": 64,
+    "output_central_bp": 393216,
+    "atac_channel_index": 1,
+    "output_activation": "direct_Conv1d_without_softplus_for_the_regular_checkpoint; derived from exact output_head.weight and output_head.bias state keys and confirmed by strict restoration",
+    "hgnc_gene_order_sha256": "1c5d718a25ed1c89898d727a293b36fb694589977a4b88bb7b333513f36fb770",
+    "ensembl_gene_order_sha256": "544bbd49775a43cdda0b990a5f04774bda300938bb77166c59c31c87328ba2e4",
+    "released_reference_sha256": "95041201bacaa6a77f0cf8c6db29a628b47249edcc0ee69579d04d49b6b2381d",
+    "missing_gene_policy": "Explicit mask followed by reference-median neutral imputation; structurally missing genes are never interpreted as biological zero.",
+    "runtime": "NVIDIA PyTorch 24.01 container, Python 3.10.12, torch 2.2.0a0, CUDA 12.3, FlashAttention 2.0.4 plus the frozen rotary_emb overlay",
+    "runtime_evidence": "Strict restoration, full 524,288-bp finite forward, shortened-window backward step, repeated inference, and reverse-complement shape checks passed on L40S. This is compatibility evidence, not native numeric parity."
+  },
+  "development_task": {
+    "dataset_id": "gse296875",
+    "lineage_id": "hepatocyte",
+    "biological_unit": "donor_by_lineage_pseudobulk",
+    "donors": 39,
+    "outcome_role": "valid",
+    "outer_folds": 5,
+    "crossed_split_ids": [
+      "donor0_genomic0",
+      "donor1_genomic1",
+      "donor2_genomic2",
+      "donor3_genomic3",
+      "donor4_genomic4"
+    ],
+    "tiles_per_fold": 128,
+    "total_tiles": 640,
+    "total_scoreable_windows": 7863,
+    "context_arms": [
+      "actual_released_rank_masked",
+      "actual_length_adjusted_tpm_rank_masked",
+      "training_lineage_mean_released_rank",
+      "nearest_training_released_rank",
+      "shuffled_valid_released_rank"
+    ],
+    "regional_score_names": [
+      "forward_raw_regional_mean",
+      "reverse_complement_raw_regional_mean",
+      "strand_tta_raw_regional_mean",
+      "strand_tta_orientation_mean_softplus_regional_sum"
+    ],
+    "count_like_tta_order": "orientation_wise_softplus_then_average",
+    "model_fitted_or_adapted": false,
+    "held_rna_used_for_context": true,
+    "held_atac_or_other_outcomes_used": false,
+    "test_or_sealed_features_or_labels_read": false,
+    "outcomes_read": false,
+    "evaluator_outputs_opened_for_this_audit": false
+  },
+  "completed_execution": {
+    "bundle_path": "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656",
+    "bundle_artifacts_sha256": "bf53c7a23a1d023442a3de64150fd98799a5be3991e95e6a2f4057f6998d4eda",
+    "status": "pass_outcome_free_prediction",
+    "gpu": "NVIDIA L40S",
+    "logical_tasks": 5,
+    "requested_resources": {
+      "partition": "gpu",
+      "account": "nslab",
+      "qos": "nslab",
+      "gpus": "l40s:1",
+      "cpus": 8,
+      "memory_gb": 32,
+      "wall_time": "08:00:00"
+    },
+    "observed_peak_memory_bytes": 14399623168,
+    "repeat_max_abs": 0.0,
+    "repeat_tolerance": 0.001,
+    "existing_artifacts_immutable": true,
+    "resubmission_authorized": false,
+    "resubmission_needed": false,
+    "evaluation_authorized_by_this_disposition": false
+  },
+  "fold_receipts": [
+    {
+      "fold": 0,
+      "path": "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656/fold0/receipt.json",
+      "sha256": "d3591a6f33b668e269fcd13ed49a529e1eb697d6fad627d89523696750bf9080",
+      "valid_fold": 1,
+      "valid_donors": 9,
+      "scoreable_windows": 1463,
+      "mapper_artifacts_sha256": "0c2f6577c9981039a39409d5fb3593973e089fd9d2d3d665f72947c55d1f7c7a"
+    },
+    {
+      "fold": 1,
+      "path": "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656/fold1/receipt.json",
+      "sha256": "ce8e0de376caca5953d1b8c537fcafed82ad632014355944940696c2b91ad54e",
+      "valid_fold": 2,
+      "valid_donors": 7,
+      "scoreable_windows": 1593,
+      "mapper_artifacts_sha256": "f964222d36d11755e44e77c07a1769f0ffebd3771dbd877909c3c2316911cc5a"
+    },
+    {
+      "fold": 2,
+      "path": "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656/fold2/receipt.json",
+      "sha256": "4dc959cbcbe1ad41b244a34b621ae7eef3422d020d5b9528d4fbd902ff52a443",
+      "valid_fold": 3,
+      "valid_donors": 4,
+      "scoreable_windows": 1628,
+      "mapper_artifacts_sha256": "ceae9d4a53ed6a8bcfaf08aeffe6a396aad12ee1839ebe2da818a75332709507"
+    },
+    {
+      "fold": 3,
+      "path": "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656/fold3/receipt.json",
+      "sha256": "b2dd2545b5669f16303d65f4c40a7084bdb3ed9c5039b50b2fc5efaf1a5fd5a5",
+      "valid_fold": 4,
+      "valid_donors": 8,
+      "scoreable_windows": 1531,
+      "mapper_artifacts_sha256": "18ddf520a41db2b968a766ced416c85c02bef355becef1c12f5c9b808052b367"
+    },
+    {
+      "fold": 4,
+      "path": "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656/fold4/receipt.json",
+      "sha256": "54fa8ed8aee4782773477c7e28da252b5c6d8ada4be643735ba4db5108fe5638",
+      "valid_fold": 0,
+      "valid_donors": 11,
+      "scoreable_windows": 1648,
+      "mapper_artifacts_sha256": "a2ef2ae490c3cfe429c0c29755d33285085adbe8bf36418e938345c31c3e6053"
+    }
+  ],
+  "remaining_blockers": [
+    "Resolve the Apache-2.0 repository license versus MIT package-metadata conflict and derivative-weight terms before open-champion use.",
+    "Recover or certify the checkpoint-producing source revision.",
+    "Recover the exact modified hg38 FASTA bound to training and prove reference parity.",
+    "Establish full-window native numeric parity against an official biological input/output fixture, including rank mapping, crop, channel order, reverse complement, and test-time augmentation.",
+    "Establish released-training-transform equivalence or retain the project mapper as an explicitly approximate development comparator."
+  ],
+  "tournament_disposition": {
+    "bounded_development_prediction_complete": true,
+    "native_lane_admitted": false,
+    "open_champion_eligible": false,
+    "comparative_claim_eligible": false,
+    "production_resubmission_authorized": false,
+    "sealed_evaluation_authorized": false,
+    "development_evaluation_authorized": false,
+    "next_action": "No model resubmission. A separate, explicitly authorized evaluator step may consume immutable valid-role predictions and development ATAC; it is outside this disposition."
+  },
+  "corgi_plus_separation": {
+    "disposition_path": "config/artifacts/models/corgi_plus/release_disposition_20260824.json",
+    "disposition_sha256": "43210eabff99797a7c026e52f5ec19ead336424ba0ff13a237e71203232a173f",
+    "status": "TERMINAL_BLOCKED_CURRENT_UPSTREAM_RELEASE",
+    "regular_corgi_is_not_a_corgi_plus_substitute": true,
+    "relabeling_prohibited": true
+  },
+  "authority_hashes": {
+    "config/adaptation/corgi.toml": "6c6486be8157910a2e6afdf07f463309d7602b42e2c6a8a5ce9ac1720df3c38a",
+    "config/artifacts/models/corgi/checkpoints.json": "1df7633507cd716f85ab03ab7ab6a171e3e56c0e3e1f29f81b04f565134a089e",
+    "config/artifacts/models/corgi/development_crosswalk.json": "5469fe769d2620ddd652113eb9ac3f21ff762dadc78d61a5f7d7fd28405a80f3",
+    "config/artifacts/models/corgi/exposure_audit.json": "cafda72a70c6f6b36c66db10f5753c3d4b268da1b64378853c39a19a4016bb0a",
+    "config/artifacts/models/corgi/release.json": "604c1d368770a4ab02472bd718c75b05c16e32b7f273c0f5839342561bdd35be",
+    "config/artifacts/models/corgi_plus/release_disposition_20260824.json": "43210eabff99797a7c026e52f5ec19ead336424ba0ff13a237e71203232a173f"
+  },
+  "implementation_hashes": {
+    "scripts/corgi_predict_outcome_aligned_tiles.py": "2a68bc359f246f4fecc6e835fc6fd798861b4c631fd9d665fccd85d200b6e31c",
+    "slurm/run_corgi_hepatocyte_tile_smoke_bundle.sbatch": "3ee487623986aaffd999b85edad848a141c4a6f0151a5f2e2408bb0b9724da8f",
+    "slurm/test_corgi_hepatocyte_tile_bundle_preflight_cpu.sbatch": "394962078656dfb5490b0afc078ec3abaa0089f1ffb7b27a1070a936a5b557e8"
+  },
+  "artifact_manifest_hashes": {
+    "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/ARTIFACTS.json": "73aad9ab9ad3e080a2ccaa0cee1a1d727d126a454f0e69f74f343a900b168c0f",
+    "executions/corgi-official-checkpoint-schema-21064532/ARTIFACTS.json": "312bb3c90ae6da3eff20f43d920b03fbf6a5b05b2b480bbc98d24aaad71d868e",
+    "executions/environments/corgi-nvidia-pytorch-24.01-py3-recovery-21064690/ARTIFACTS.json": "01de778c17c67d92de9a2e242350e17443dbfe76b7c5a5f8bc447eae5408cd3c",
+    "executions/environments/corgi-rotary-emb-0.1-flashattn2.0.4-build-r1-21064845/ARTIFACTS.json": "c60c4ebf0b32df7d158a3a1d781f5d45fdf4187ab0fba9f4bea35605a92e4c3a",
+    "executions/corgi-native-runtime-l40s-r8-21065022/ARTIFACTS.json": "09d8811b612cba4f75361feeba29bd0676efde83f0e4785a37990c2d2f52a0a2",
+    "executions/corgi-gse296875-context-counts-21066278/ARTIFACTS.json": "6946c329e74cd1a6cd72fe37faaf805183ff24c729ef9e549da11c49ca02fef8",
+    "executions/corgi-gse296875-mapper-fold0-21066334/ARTIFACTS.json": "0c2f6577c9981039a39409d5fb3593973e089fd9d2d3d665f72947c55d1f7c7a",
+    "executions/corgi-gse296875-mapper-fold1-21066335/ARTIFACTS.json": "f964222d36d11755e44e77c07a1769f0ffebd3771dbd877909c3c2316911cc5a",
+    "executions/corgi-gse296875-mapper-fold2-21066337/ARTIFACTS.json": "ceae9d4a53ed6a8bcfaf08aeffe6a396aad12ee1839ebe2da818a75332709507",
+    "executions/corgi-gse296875-mapper-fold3-21066336/ARTIFACTS.json": "18ddf520a41db2b968a766ced416c85c02bef355becef1c12f5c9b808052b367",
+    "executions/corgi-gse296875-mapper-fold4-21066338/ARTIFACTS.json": "a2ef2ae490c3cfe429c0c29755d33285085adbe8bf36418e938345c31c3e6053",
+    "executions/corgi-outcome-aligned-tiles-21068311/ARTIFACTS.json": "1cdf94aa4c37ead139125ffc3d8fee358605a2394a206b1f3e79190ecd25645c",
+    "executions/corgi-tile-smoke-subset-21068454/ARTIFACTS.json": "2617f3a85a9ced8b0f7cb9efe3819b1e57177629221a2013e39fc7c96e187f5b",
+    "executions/corgi-outcome-aligned-predictor-test-21068997/ARTIFACTS.json": "2639ccd153b854f69a06abb36f1456f1a1145677ddf18aaed5729509a4cc2f41",
+    "executions/corgi-hepatocyte-tile-bundle-v3-preflight-21069014/ARTIFACTS.json": "0af81bdac692416907b5110de0e055da64ff0fcc76f571a6223554d1204ffdde",
+    "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656/ARTIFACTS.json": "bf53c7a23a1d023442a3de64150fd98799a5be3991e95e6a2f4057f6998d4eda"
+  }
+}

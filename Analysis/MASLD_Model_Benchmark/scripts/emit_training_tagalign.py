@@ -41,7 +41,7 @@ PSEUDOBULK_FIELDS = (
 
 
 class TagAlignError(ValueError):
-    """Raised when a train-only tagAlign violates its contract."""
+    """Raised when a train-only tagAlign does not meet its requirements."""
 
 
 def read_tsv(path: Path, fields: Sequence[str]) -> list[dict[str, str]]:

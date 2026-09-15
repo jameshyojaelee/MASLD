@@ -99,12 +99,12 @@ model_id = "scimilarity_v1_1"
 display_name = "SCimilarity v1.1"
 implementation_type = "pretrained_adapter"
 checkpoint_revision = "Genentech/scimilarity@3ce3ec81e122a115eb3e667706725120f7ee252d+Zenodo:10685499:model_v1.1.tar.gz"
-checkpoint_sha256 = "UNRESOLVED"
+checkpoint_sha256 = "a08f023788bdbded191e2d9344e5d4240ffc7d7505eca4e0b7a37526b858d19f"
 license_status = "code_Apache-2.0_weights_CC-BY-SA-4.0"
-exposure_status = "target_label_unexposed"
+exposure_status = "encoder_seen"
 status = "candidate"
 admission_blocking = true
-blockers = ["The exact 30,310,810,843-byte Zenodo v1.1 archive, source MD5, Apache-2.0 code and CC-BY-SA-4.0 weight terms, architecture, preprocessing, complete corpus table, and sealed timing are frozen. GSE185477 is encoder_seen and GSE136103 is reference_only. With approval, obtain and SHA-256 the archive without extraction; then safely inspect/stage the encoder, freeze gene_order.tsv and layer_sizes.json, and validate an executable runtime without unrestricted pickle loading."]
+blockers = ["The checkpoint, isolated compatibility runtime, outcome-blind 50,000-cell fixture, and development exposure crosswalk are frozen, but the central registry still lacks a complete ModelExecutionContract binding the adapter, runtime, checkpoint, preprocessing, licenses, corpus authorities, and executable task. Keep this model admission-blocked until those exact authorities are materialized and registry validation passes. The aggregate development lane remains encoder_seen and sealed champion-ineligible."]
 supported_tasks = ["cell_state_mapping"]
 
 [[models]]
@@ -137,13 +137,13 @@ supported_tasks = ["cell_state_mapping"]
 model_id = "transcriptformer_tf_sapiens"
 display_name = "TranscriptFormer TF-Sapiens"
 implementation_type = "pretrained_adapter"
-checkpoint_revision = "czi-ai/transcriptformer@c943a89a4de9511a8ab1010715bf1cfa8827cc99+v0.6.0+s3-version:P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU"
-checkpoint_sha256 = "UNRESOLVED"
+checkpoint_revision = "czi-ai/transcriptformer@c943a89a4de9511a8ab1010715bf1cfa8827cc99+source-0.6.1+s3-version:P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU"
+checkpoint_sha256 = "eff027e7393f92a32cadcbb2e13a917e24b62b71341571bf40f38ff6ec6d3021"
 license_status = "MIT"
 exposure_status = "unknown"
 status = "candidate"
 admission_blocking = true
-blockers = ["The exact versioned 1,819,975,447-byte archive, multipart ETag, MIT terms, architecture, source hashes, and raw-count input contract are frozen. GSE289173 predates the archive and the complete 644-dataset UUID table could not be retrieved, so exposure remains unknown and sealed use is ineligible. With approval, obtain and SHA-256 the archive without extraction; then safely inspect/stage it, retrieve the declared corpus table, and freeze distinct native/common gene-order policies and an executable runtime."]
+blockers = ["The versioned archive, checkpoint, vocabularies, isolated runtime, strict load, and separate outcome-blind native/common embedding paths are frozen, but global model admission remains blocked while checkpoint exposure is unknown. Preregistered development-comparator scripts may execute without sealed or champion eligibility. The source reports 0.6.1 while the v0.6.0 tag points to a different commit. GSE289173 predates the archive and the complete 644-dataset UUID table remains unavailable."]
 supported_tasks = ["cell_state_mapping"]
 
 [[models]]
@@ -154,9 +154,9 @@ checkpoint_revision = "cantinilab/scPRINT@6bbe1a7cfebb557dc745e23d1ddf5be6e38daf
 checkpoint_sha256 = "a4cf0753270d4ff451a5dbddadd4c59a53e10e4c3e96a8af0db407ad893c36c5"
 license_status = "code_MIT_weights_Apache-2.0"
 exposure_status = "target_label_unexposed"
-status = "candidate"
+status = "deferred"
 admission_blocking = true
-blockers = ["The exact original 221,775,592-byte March 2025 v1.5 object, SHA-256, paper code tag, MIT code and Apache-2.0 weight terms, architecture, LTS 2023-12-15 corpus, source-specific crosswalk, and raw-count input contract are frozen. The byte-identical December rename is recorded; the silently replaced May 2026 same-path object is ineligible. With approval, obtain the original object, inspect it without unrestricted pickle loading, freeze its vocabulary/hyperparameters/ontology decoders and common/native embedding variants, recover the post-QC train/holdout inventory or retain pre-cutoff development sources as unknown, and validate the Torch 2.2 runtime plus deterministic row-ID sampling."]
+blockers = ["The exact original 221,775,592-byte March 2025 v1.5 object, SHA-256, paper code tag, MIT code and Apache-2.0 weight terms, architecture, LTS 2023-12-15 corpus, source-specific crosswalk, and raw-count input contract are frozen. Restricted loading passes, but the checkpoint cannot be restored by the exact released 1.6.4 source: it serializes classes as a list while the constructor requires a mapping, carries obsolete ontology-hierarchy offsets that crash construction, and passes compress_class_dim although the frozen FlashTransformerEncoder does not accept it. An outcome-blind tensor-shape reconstruction still fails before strict state restoration; artifact f0ed73826f18a07ebc42dc1e80ff4ff41475b5546d5b3da8dad8bcfb015eec23 records the terminal development-lane failure. Do not drop compress_class_dim or substitute later scPRINT code because that changes the released embedding computation without native parity. The May 2026 same-path replacement remains ineligible."]
 supported_tasks = ["cell_state_mapping"]
 
 [[models]]
@@ -169,7 +169,7 @@ license_status = "code_GPL-3.0_weight_Apache-2.0"
 exposure_status = "unknown"
 status = "candidate"
 admission_blocking = true
-blockers = ["The original 889,706,878-byte small-v2 object, SHA-256, byte-identical rename, code release 1.0.3, governing GPL-3.0 repository license, Apache-2.0 weight terms, source architecture/input contract, and crosswalk are frozen. The exact CELLxGENE, Tahoe, and continually expanding scBaseCount snapshots are not version-bound; GSE289173 exposure is unknown and sealed use is ineligible. With approval, obtain and safely inspect the original object, freeze checkpoint vocabulary/hyperparameters/ontologies and the Torch 2.8/Lamin runtime, preserve row IDs, and prevent KNN/metacell inputs from crossing donor, study, or outer-fold boundaries."]
+blockers = ["The original 889,706,878-byte small-v2 object, SHA-256, byte-identical rename, code release 1.0.3, governing GPL-3.0 repository license, Apache-2.0 weight terms, all 503 restored tensors, checkpoint vocabulary/hyperparameters/ontologies, and exact Torch 2.8 runtime are frozen. The outcome-blind no-neighbor development screen is complete: its best common MLP reached donor-class-balanced macro-F1 0.9222576 versus 0.9229205 for HVG/PCA/logistic (delta -0.0006629; paired donor-bootstrap 95% CI -0.0175897 to 0.0158384) and did not promote. This is not the released native KNN/metacell path. The exact CELLxGENE, Tahoe, and continually expanding scBaseCount snapshots remain unbound; GSE289173 exposure is unknown and sealed use is ineligible. Any future native KNN/metacell evaluation must keep neighbors within sample, donor, study, and outer-fold boundaries; derivative-weight release terms also remain unresolved."]
 supported_tasks = ["cell_state_mapping"]
 
 [[models]]

@@ -1,4 +1,4 @@
-"""Deterministic hashing primitives for benchmark contracts.
+"""Deterministic hashing primitives for benchmark requirements.
 
 Only JSON-compatible values are hashable.  The conversion is intentionally
 strict: an unordered set, a non-finite float, or an opaque Python object must

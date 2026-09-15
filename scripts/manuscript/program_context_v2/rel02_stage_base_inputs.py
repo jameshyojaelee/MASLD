@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage coordinator-selected base hero inputs as an immutable snapshot extension."""
+"""Stage coordinator-selected base hero inputs as an read-only snapshot extension."""
 
 from __future__ import annotations
 

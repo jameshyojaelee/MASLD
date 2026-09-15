@@ -19,7 +19,7 @@
     "scope": "local_ATAC_fit_query_transform_pairing_and_sealed_modality",
     "sha256": "0b33820bfffdd9d4e82e9df465739af26a335fea070f3c418cdcc242e71471d3"
   },
-  "interpretation": "TF-IDF plus LSI has no checkpoint-corpus contamination and, unlike the pinned cisTopic release, supports an inductive transform for observed held ATAC rows. Leakage can still enter through the peak universe, Signac IDF, component count and exclusion, SVD fit/signs, labels, classifier, or calibration. The exact Signac method-1 formula is training-frozen and must not be replaced by a document-frequency variant. LSI remains ineligible for current sealed tasks because GSE289173 is RNA-only and LSI has neither RNA-conditioned ATAC generation nor a sequence/allele mechanism.",
+  "interpretation": "TF-IDF plus LSI has no checkpoint-corpus contamination and, unlike the pinned cisTopic release, supports an inductive transform for observed held ATAC rows. Leakage can still enter through the peak universe, Signac IDF, component count and exclusion, SVD fit/signs, labels, classifier, or calibration. The exact Signac method-1 formula is training-frozen and must not be replaced by a document-frequency variant. LSI remains ineligible for current held-back tasks because GSE289173 is RNA-only and LSI has neither RNA-conditioned ATAC generation nor a sequence/allele mechanism.",
   "remaining_blockers": [
     "Create a separate nonpromotable observed-ATAC representation/integration TaskSpec with donor-level inference and assay-native baselines before activation.",
     "Freeze the outer-training-only peak calling, merge, frequency filter, coordinate/order, cell-depth handling, exact Signac method-1 sparse fixture, and missingness semantics.",

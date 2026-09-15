@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify every immutable source copied into the Resource-paper candidate."""
+"""Verify every read-only source copied into the Resource-paper candidate."""
 
 from __future__ import annotations
 

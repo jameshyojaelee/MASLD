@@ -13,19 +13,19 @@ license_status = "source_terms_apply"
 biological_unit = "transduced_cell_pool"
 expected_biological_units = 2
 native_genome_build = "GRCh38_Cell_Ranger_UNRESOLVED"
-native_annotation_release = "UNRESOLVED"
+native_annotation_release = "frozen_deposited_9624_feature_axis_reference_provenance_unresolved"
 modalities = ["single_cell_rna", "crispri_guide_assignment", "gene_target"]
 pairing_levels = ["same_cell"]
 modality_status_default = "observed"
 exposure_status = "reference_only"
 admission_blocking = true
-blockers = ["The HepG2 and Jurkat screens each derive from one transduced pool; 56 HepG2 GEM groups are technical capture groups and cannot be treated as biological replicates.", "Freeze the original raw H5AD schema, controls, guide-to-target mapping, Cell Ranger reference, and GEM-group ancestry. Processed third-party copies that remove GEM-group metadata are not admissible.", "Use only for training or descriptive target/context generalization; do not attach biological-replicate uncertainty, donor transfer, or confirmatory claims.", "Audit checkpoint-specific exposure because this 2025 public genome-scale dataset may appear in later perturbation-model corpora."]
-notes = "The source contains large matched HepG2 and Jurkat common-essential-gene screens. It is valuable for gene-token model development and descriptive HepG2/Jurkat context transfer, but it supplies no independent culture or donor replication."
+blockers = ["The HepG2 and Jurkat screens each derive from one transduced pool; 56 HepG2 GEM groups are technical capture groups and cannot be treated as biological replicates.", "The exact HepG2 H5AD, schema, 9,624-feature axis, guide/target categories, controls, and GEM groups are frozen. Its integer nonnegative X row sums are 9 to 2,080 counts below obs/UMI_count in every cell, so authoritative source preprocessing and feature-selection semantics remain unresolved; the Jurkat object is not acquired or audited.", "Use only for training or descriptive target/context generalization; do not attach biological-replicate uncertainty, donor transfer, or confirmatory claims.", "Audit checkpoint-specific exposure because this 2025 public genome-scale dataset may appear in later perturbation-model corpora."]
+notes = "The source contains large matched HepG2 and Jurkat common-essential-gene screens. The exact 5.61 GB HepG2 H5AD was audited: 145,473 cells, 2,394 target labels, 56 technical GEM groups, and a 9,624-feature integer matrix. It is useful for gene-token training and descriptive context transfer, but supplies no independent culture or donor replication."
 
 [provenance]
 source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE264667"
 verified_date = "2026-08-24"
-local_exposure = "Primary GEO, SRA, and source-article metadata were inspected; the 5.2 GB HepG2 outcome object was not opened."
+local_exposure = "Primary metadata and the exact 5,614,460,941-byte HepG2 H5AD were frozen. Schema, metadata topology, and all 1,400,032,152 X values were audited without normalization or model fitting; the Jurkat object was not acquired."
 
 [split]
 group_key = "cohort_family_id+cell_line+screen_pool+target_gene+guide_family"

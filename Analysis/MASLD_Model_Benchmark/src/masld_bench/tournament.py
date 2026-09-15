@@ -1,9 +1,9 @@
-"""Deterministic finalist selection and fail-closed champion promotion.
+"""Deterministic finalist selection and fail-closed best-model adoption.
 
 The aggregate SelectionLock freezes five seeded selected and baseline runs per
 task.  A separate hashed terminal authorization binds those exact runs to one
-sealed outcome bundle after predictions and prospective power are frozen.
-Every opened bundle is terminal whether its gate passes or fails.
+held-back outcome bundle after predictions and prospective power are frozen.
+Every opened bundle is terminal whether its check passes or fails.
 """
 
 from __future__ import annotations
@@ -165,7 +165,7 @@ SCREENING_CAMPAIGN_UNIVERSE_SCHEMA_VERSION = (
 )
 # A ledger's authority decides what it may support.  A screening ledger may
 # produce a shortlist and nothing else; only a finalist ledger bound to a
-# pre-scoring campaign universe may back a SelectionLock or a champion.
+# pre-scoring campaign universe may back a SelectionLock or a best model.
 LEDGER_AUTHORITY_SCREENING = "frozen_screen_shortlist_only_no_lock_v1"
 LEDGER_AUTHORITY_FINALIST = (
     "finalist_campaign_universe_bound_champion_eligible_v1"
@@ -194,8 +194,8 @@ _LEDGER_AUTHORITY_POLICIES: Mapping[str, tuple[str, int]] = {
     LEDGER_AUTHORITY_SCREENING: (UNIVERSE_KIND_SCREENING, _SCREENING_SEED_COUNT),
     LEDGER_AUTHORITY_FINALIST: (UNIVERSE_KIND_FINALIST, _FINALIST_SEED_COUNT),
 }
-# Development ranking and sealed inference must estimate the SAME quantity.
-# Sealed inference averages the five locked seeds' predictions and evaluates the
+# Development ranking and held-back inference must estimate the SAME quantity.
+# Held-back inference averages the five fixed seeds' predictions and evaluates the
 # task-native endpoint once (evaluators/sealed_metrics.py).  Macro-F1, Fisher-z
 # Spearman, average precision, and relative profile deviance are all nonlinear
 # in the prediction, so mean(metric(seed)) != metric(mean(seed)).  Development
@@ -217,7 +217,7 @@ _ENSEMBLE_SEED_COUNT = 5
 _ENSEMBLE_PROBABILITY_TOLERANCE = 1e-6
 # Averaging RAW predicted scores is not scale invariant: a seed that emits
 # scores on a wider scale dominates the ensemble for every rank-based endpoint
-# (Spearman, Fisher-z Spearman, average precision).  Sealed inference averages
+# (Spearman, Fisher-z Spearman, average precision).  Held-back inference averages
 # raw scores, so rank-averaging here would break parity; instead require the
 # five seeds to be on a comparable scale and fail closed when they are not.
 # The ratio is prospectively frozen and is not tuned on any outcome.
@@ -373,7 +373,7 @@ _JOINED_ENDPOINT_FIELDS: Mapping[str, tuple[str, ...]] = {
 }
 # Numeric prediction columns averaged across seeds to form the development
 # ensemble.  The cell task is empty because its ensemble is built from class
-# probabilities and then argmaxed, exactly as sealed inference does.
+# probabilities and then argmaxed, exactly as held-back inference does.
 _ENSEMBLE_AVERAGED_FIELDS: Mapping[str, tuple[str, ...]] = {
     CELL_TASK: (),
     VARIANT_TASK: ("candidate", "baseline"),
@@ -414,7 +414,7 @@ _SEALED_METRIC_RESULT_CACHE: dict[str, Any] = {}
 
 
 def _sealed_evaluator_source_bundle() -> dict[str, Any]:
-    """Hash the local source closure that constructs sealed endpoint metrics."""
+    """Hash the local source closure that constructs held-back endpoint metrics."""
 
     package_root = Path(__file__).resolve().parent
     source_paths = (
@@ -1212,8 +1212,8 @@ def _prediction_source(
     }
     if bundle.task_id == CELL_TASK:
         # Cell-state ensembling averages class probabilities and then argmaxes,
-        # exactly as sealed inference does.  A development bundle that ships
-        # only hard labels cannot be ensemble-ranked, so require the artifact
+        # exactly as held-back inference does.  A development bundle that ships
+        # only hard labels cannot be ensemble-ranked, so require the output file
         # here rather than discovering the gap at selection time.
         if class_roster is None:
             raise TournamentError(
@@ -1550,7 +1550,7 @@ def _development_ensemble_rows(
     """Build the exact five-seed development ensemble joined table.
 
     Returns the ensemble rows and an alignment/stability record.  The ensemble
-    is the deployed artifact, so this is the quantity development must rank.
+    is the deployed output file, so this is the quantity development must rank.
     """
 
     fields = _JOINED_ENDPOINT_FIELDS.get(task_id)
@@ -2394,7 +2394,7 @@ def freeze_variant_secondary_run_receipt(
 
 
 def verify_variant_secondary_run_receipt(path: str | Path) -> dict[str, Any]:
-    """Recursively verify one immutable non-scoring variant comparator receipt."""
+    """Recursively verify one read-only non-scoring variant comparator receipt."""
 
     root = _safe_resolve(path, "variant secondary run receipt")
     try:
@@ -2664,7 +2664,7 @@ def _selection_artifact_hashes(
         actions["fit"].get("output_manifest_sha256"),
         "fit output manifest SHA-256",
     )
-    # One fit action, one immutable output manifest.  The three fit-state roles
+    # One fit action, one read-only output manifest.  The three fit-state roles
     # bind that same bundle by policy; this makes the claim explicit rather
     # than leaving three identical-looking fields to be read as independent.
     return {
@@ -2800,8 +2800,8 @@ def _model_candidates_from_scientific_runs(
                 dict(sorted(per_run.items()))
             )
         # Per-seed values are retained only as a stability diagnostic; ranking
-        # uses the endpoint of the five-seed ensemble, which is the artifact
-        # sealed inference actually deploys.
+        # uses the endpoint of the five-seed ensemble, which is the output file
+        # held-back inference actually deploys.
         per_seed_metrics: dict[str, float] = {}
         per_seed_standard_errors: dict[str, float] = {}
         for metric in sorted(metric_names):
@@ -3074,8 +3074,8 @@ def _derive_campaign_universe(
 ) -> dict[str, Any]:
     """Derive one pre-scoring campaign universe of the requested kind.
 
-    The screening kind admits only the prospectively frozen three-seed
-    ``frozen_screen`` wave; the finalist kind admits only the full specialist,
+    The screening kind allows only the prospectively frozen three-seed
+    ``frozen_screen`` wave; the finalist kind allows only the full specialist,
     adaptation, and authorized conditional waves at exactly five seeds.
     """
 
@@ -3915,7 +3915,7 @@ def _derive_selection_ledger(
     ]
 
     # The anti-cherry-pick control: the complete scheduled run set and the exact
-    # per-task seed sets were fixed in an independently reviewed artifact before
+    # per-task seed sets were fixed in an independently reviewed output file before
     # any development score existed.  A caller can therefore neither omit a
     # stronger campaign nor choose a convenient seed set after the fact.
     observed_projection = [
@@ -4008,7 +4008,7 @@ def _derive_selection_ledger(
             for item in scheduled
             if item["terminal_status"] != "succeeded"
         ]
-        # Champion grade is inexpressible on a screening-authority ledger.
+        # Best-model standing is inexpressible on a screening-authority ledger.
         candidate["five_seed_universe_complete"] = bool(
             five_seed_complete and ledger_authority == LEDGER_AUTHORITY_FINALIST
         )
@@ -4096,10 +4096,10 @@ def freeze_finalist_candidate_ledger(
     terminal_execution_attempt_dirs: Iterable[str | Path] = (),
     output_root: str | Path,
 ) -> Path:
-    """Freeze the only ledger class that may support a champion SelectionLock.
+    """Freeze the only ledger class that may support a best-model SelectionLock.
 
     ``reviewed_universe_id`` is the human review handshake.  Transcribe it from
-    the independently reviewed universe artifact; it is deliberately not
+    the independently reviewed universe output file; it is deliberately not
     defaulted from the directory being passed.
     """
 
@@ -4123,7 +4123,7 @@ def freeze_screening_candidate_ledger(
     terminal_execution_attempt_dirs: Iterable[str | Path] = (),
     output_root: str | Path,
 ) -> Path:
-    """Freeze a frozen-screen ledger that may shortlist but never lock."""
+    """Freeze a frozen-screen ledger that may shortlist but never settle the selection."""
 
     return _freeze_selection_candidate_ledger(
         ledger_authority=LEDGER_AUTHORITY_SCREENING,
@@ -4150,8 +4150,8 @@ def verify_selection_candidate_ledger(path: str | Path) -> dict[str, Any]:
     """Recursively rederive a multi-campaign scientific candidate ledger.
 
     Rederivation now recomputes one endpoint bootstrap per candidate, and the
-    downstream chain verifies the same immutable ledger many times over (lock
-    construction, lock validation, lock verification, and each finalist metric
+    downstream chain verifies the same read-only ledger many times over (record
+    construction, record validation, record verification, and each finalist metric
     bundle).  A frozen tree cannot change, so the result is memoized on the
     resolved path plus its ARTIFACTS.json digest: a different or tampered tree
     yields a different key and is fully rederived.  Nothing about WHAT is
@@ -4214,7 +4214,7 @@ def _verify_selection_candidate_ledger_uncached(
             "selection candidate ledger lacks its explicit campaign universe"
         )
     # The campaign set is no longer read from the ledger's own list; it is
-    # recovered from the recursively verified pre-scoring universe artifact.
+    # recovered from the recursively verified pre-scoring universe output file.
     universe_binding = payload.get("campaign_universe_binding")
     if not isinstance(universe_binding, Mapping):
         raise TournamentError(
@@ -5262,11 +5262,11 @@ def one_standard_error_candidates(
 
 
 def _locked_string_array(value: Any) -> list[str] | None:
-    """Read a locked string array that may be a list or a contract tuple.
+    """Read a fixed string array that may be a list or a requirements tuple.
 
     ``contracts._as_metadata`` freezes every nested array inside a
     ``SelectionLock`` task decision into a tuple, so ``isinstance(x, list)``
-    and ``x != [...]`` are both False for perfectly valid locked records.
+    and ``x != [...]`` are both False for perfectly valid fixed records.
     Returning a list lets the callers keep comparing values exactly while
     ignoring container type.
     """
@@ -5935,7 +5935,7 @@ def freeze_development_shortlist(
     higher_is_better: bool = True,
     max_per_family: int = 2,
 ) -> Path:
-    """Freeze a pre-lock development leaderboard and its model-level union.
+    """Freeze a pre-selection development leaderboard and its model-level union.
 
     ``source_wave`` must name a wave that is allowed to shortlist and must be
     exactly the wave the bound ledger was built from, at exactly that wave's
@@ -6001,7 +6001,7 @@ def freeze_development_shortlist(
     selected_ids = sorted(
         identifier for family_ids in selected.values() for identifier in family_ids
     )
-    # Reject BEFORE anything immutable is written.  Publishing an invalid target
+    # Reject BEFORE anything read-only is written.  Publishing an invalid target
     # first would strand that identity permanently, because a frozen directory
     # can never be replaced or deleted.
     if not selected_ids:
@@ -7757,7 +7757,7 @@ def _sealed_metric_sources(
 
 
 def _canonical_locked_binding(value: Any, label: str) -> dict[str, Any]:
-    """Deep-convert a locked binding to the plain JSON types a frozen doc holds."""
+    """Deep-convert a fixed binding to the plain JSON types a frozen doc holds."""
 
     try:
         converted = canonicalize(value)
@@ -7813,7 +7813,7 @@ def freeze_sealed_metric_bundle(
     outcome_consumption_path: str | Path,
     output_root: str | Path,
 ) -> Path:
-    """Freeze task-native metrics from the already consumed sealed outcome."""
+    """Freeze task-native metrics from the already consumed held-back outcome."""
 
     sources = _sealed_metric_sources(
         selection_lock_dir=selection_lock_dir,
@@ -7869,7 +7869,7 @@ def freeze_sealed_metric_bundle(
 def verify_sealed_metric_bundle(
     path: str | Path, *, reverify_sources: bool = True
 ) -> dict[str, Any]:
-    """Verify and optionally rederive one task-native sealed metric bundle."""
+    """Verify and optionally rederive one task-native held-back metric bundle."""
 
     root = _safe_resolve(path, "sealed metric bundle")
     try:
@@ -8047,7 +8047,7 @@ def freeze_confirmatory_multiplicity_bundle(
     sealed_metric_bundle_dirs: Iterable[str | Path],
     output_root: str | Path,
 ) -> Path:
-    """Freeze the exact Holm family across all promotable locked tracks."""
+    """Freeze the exact Holm family across all adoptable fixed tracks."""
 
     sources = _confirmatory_multiplicity_sources(
         selection_lock_dir=selection_lock_dir,
@@ -8196,8 +8196,8 @@ def _champion_gate_sources(
             raise TournamentError("PowerDecision does not bind the locked task/method/gate")
         # firewall._complete_prediction_set REQUIRES the variant task's power
         # decision to bind every secondary comparator run as well, so the two
-        # modules must agree on which coverage sets are admissible here.  The
-        # gate needs the selected and baseline commits to be complete; the
+        # modules must agree on which coverage sets are eligible here.  The
+        # check needs the selected and baseline commits to be complete; the
         # auxiliary comparators are additionally present for the variant task
         # and are non-scoring, so their presence must not be rejected.
         if coverage not in {"selected_and_baseline", "selected_baseline_secondary"}:
@@ -8485,7 +8485,7 @@ def freeze_champion_gate_decision(
     sealed_metric_bundle_dir: str | Path | None = None,
     confirmatory_multiplicity_bundle_dir: str | Path | None = None,
 ) -> Path:
-    """Freeze one task gate from recursively verified concrete source artifacts."""
+    """Freeze one task check from recursively verified concrete source output files."""
 
     sources = _champion_gate_sources(
         selection_lock_dir=selection_lock_dir,
@@ -8526,7 +8526,7 @@ def freeze_champion_gate_decision(
 def verify_champion_gate_decision(
     path: str | Path, *, reverify_sources: bool = True
 ) -> dict[str, Any]:
-    """Verify and optionally recursively rederive one frozen champion gate."""
+    """Verify and optionally recursively rederive one frozen best-model check."""
 
     root = _safe_resolve(path, "champion gate decision")
     try:
@@ -9062,7 +9062,7 @@ def freeze_development_residual_bundle(
     residual_table_path: str | Path,
     output_root: str | Path,
 ) -> Path:
-    """Freeze row-level held residuals under the shortlist's scientific contract."""
+    """Freeze row-level held residuals under the shortlist's scientific requirements."""
 
     shortlist_root = _safe_resolve(
         development_shortlist_dir, "development shortlist"
@@ -9280,7 +9280,7 @@ def conditional_new_model_trigger(
     new_model_version: str | None = None,
     holdout_id: str | None = None,
 ) -> ComplementarityDecision:
-    """Evaluate the one-model trigger from frozen pre-lock development artifacts."""
+    """Evaluate the one-model trigger from frozen pre-selection development output files."""
 
     evidence_receipt_sha256 = _sha256_identifier(
         evidence_receipt_sha256, "evidence_receipt_sha256"
@@ -9516,7 +9516,7 @@ def freeze_conditional_model_decision(
     output_root: str | Path,
     comparison_task_ids: Sequence[str] = (VARIANT_TASK, RNA_ATAC_TASK),
 ) -> Path:
-    """Freeze the pre-lock conditional trigger and all shortlist bindings."""
+    """Freeze the pre-selection conditional trigger and all shortlist bindings."""
 
     paths = tuple(
         _safe_resolve(path, "development shortlist")
@@ -9587,7 +9587,7 @@ def freeze_conditional_model_decision(
 
 
 def verify_conditional_model_decision(path: str | Path) -> dict[str, Any]:
-    """Recursively rederive a frozen pre-lock conditional trigger."""
+    """Recursively rederive a frozen pre-selection conditional trigger."""
 
     root = _safe_resolve(path, "conditional decision")
     try:

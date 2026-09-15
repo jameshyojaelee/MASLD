@@ -71,7 +71,7 @@ PUBLISHED_CONTEXT = {
     ("tier2_liver_enzyme", "unresolved_context_mass"): 0.604308028252816,
 }
 
-# Published instance-weighted values in the immutable candidate; asserted, not assumed.
+# Published instance-weighted values in the read-only candidate; asserted, not assumed.
 PUBLISHED = {
     ("tier1_direct_masld_pdff", "protein_altering_pip_mass"): 0.157736519057125,
     ("tier2_liver_enzyme", "protein_altering_pip_mass"): 0.0325683421565398,
@@ -388,7 +388,7 @@ def main() -> int:
     design = pd.DataFrame(design_rows)
 
     # Assertion: the instance-weighted consequence values must reproduce the
-    # immutable published candidate exactly.
+    # read-only published candidate exactly.
     for (scope, col), expected in PUBLISHED.items():
         got = estimates.loc[
             (estimates.trait_scope == scope) & (estimates.category == col),

@@ -17,7 +17,7 @@
     "scope": "barcode_pairing_missingness_frozen_query_decoder_and_profile_scale_contract",
     "sha256": "b77ed82249ff372a93418d55871590c09ea3579a077e2bcfefa85840225be6f7"
   },
-  "interpretation": "Cobolt has no upstream corpus contamination when fit locally. The project adapter now supplies structural ATAC absence without a zero tensor, forces eval/no-grad, uses the deterministic RNA posterior, disables dataset slope/intercept adjustments, omits query-fitted XGBoost correction, and decodes a depth-free multinomial ATAC composition on the frozen peak order. Exact source, runtime, equation-parity, tensor-state, query-invariance, and real donor-held profile fixtures passed. GSE289173 can seal cell-state mapping but not RNA-conditioned ATAC because it has no ATAC truth.",
+  "interpretation": "Cobolt has no upstream corpus contamination when fit locally. The project adapter now supplies structural ATAC absence without a zero tensor, forces eval/no-grad, uses the deterministic RNA posterior, disables dataset slope/intercept adjustments, omits query-fitted XGBoost correction, and decodes a depth-free multinomial ATAC composition on the frozen peak order. Exact source, runtime, equation-parity, tensor-state, query-invariance, and real donor-held profile fixtures passed. GSE289173 can hold back cell-state mapping but not RNA-conditioned ATAC because it has no ATAC truth.",
   "remaining_blockers": [
     "The current smoke peak inventory was discovered from all source donors, so this view cannot support a champion claim.",
     "An eligible external RNA-ATAC seal is not active.",

@@ -2,18 +2,155 @@
   "activation_disposition": {
     "admission_status": "blocked",
     "downloads_installs_jobs_or_tests_performed": false,
-    "reason": "The three registry roles now have frozen algorithm and leakage contracts, but the corrected COLOC release, promoted graph snapshot, evidence ontology, implementation, calibration decision, and runtime receipts do not exist.",
+    "reason": "The three registry roles now have frozen algorithm and leakage requirements, but the corrected COLOC release, adopted graph snapshot, evidence ontology, implementation, calibration decision, and runtime receipts do not exist.",
     "selection": "Retain all three through graph model selection when runnable. They measure study intensity and linear evidence aggregation, not causality."
   },
-  "roster_contract": {
-    "count": 3,
-    "registry_ids": ["graph_degree", "graph_source_count", "regularized_linear_evidence"],
-    "no_implicit_members": true,
-    "scope": "exactly_the_three_registered_typed_evidence_graph_native_baselines"
+  "distinctions": {
+    "evidence_count": "The separately registered baseline counts distinct supported evidence units and can count several within one source family.",
+    "graph_degree": "Counts canonical incident evidence-bearing graph edges for the candidate gene regardless of support status semantics encoded by separate typed edges; it measures graph popularity.",
+    "graph_source_count": "Counts distinct source families with explicit candidate support; multiple evidence units from one source count once.",
+    "regularized_linear_evidence": "Learns cross-source weights for typed counts, assay-native columns, observability, and missing states without entity embeddings.",
+    "warning": "All four can exploit study density and observability. They are required guards against mistaking graph complexity for biological generalization."
+  },
+  "missingness_and_observability_contract": {
+    "dataset_states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
+    "evidence_states": [
+      "supported",
+      "discordant",
+      "tested_negative",
+      "untestable",
+      "not_applicable",
+      "source_dependent",
+      "indeterminate"
+    ],
+    "held_source": "Held-source observability, tested status, missingness, coverage, and prevalence are evaluator-only and are removed from all inputs.",
+    "rule": "Preserve source applicability, assay observability, eligibility, status, and permission or join failure separately. An absent edge is never automatically a tested negative, and a missing metric is never a numeric zero."
+  },
+  "models": {
+    "graph_degree": {
+      "algorithm_id": "masld_graph_gene_total_degree_v1",
+      "definition": "For candidate (locus l, gene g), score the canonical total degree of gene node g in the remaining split-safe graph after held-source and held-block removal.",
+      "derived_state": [
+        "promoted_graph_hash",
+        "removed_source_receipt",
+        "held_block_receipt",
+        "edge_type_roster",
+        "canonical_edge_map",
+        "in_degree",
+        "out_degree",
+        "observability_masks"
+      ],
+      "direction_rule": "Persist d_in and d_out separately. The ranking score is their sum. A source-target edge and a generated inverse representation count once under the canonical biological-edge ID; genuinely distinct directed evidence units remain distinct.",
+      "fitted_state": [
+        "none"
+      ],
+      "fitting": "none_for_native_degree",
+      "formula": "score_degree(l,g) = d_in(g) + d_out(g), with each canonical evidence-bearing edge counted once; self-loops contribute zero.",
+      "native_outputs": [
+        "gene_in_degree",
+        "gene_out_degree",
+        "gene_total_degree",
+        "observability_and_state_masks"
+      ],
+      "parallel_edge_rule": "Parallel rows count separately only when their frozen source_family_id, evidence_type, evidence_unit_id, and biological direction identify distinct evidence units after alias and technical-replicate deduplication.",
+      "scientific_class": "deterministic_graph_popularity_baseline",
+      "task_role": "mandatory study-intensity baseline; no causal interpretation",
+      "zero_rule": "Emit numeric zero only when the gene is in the source-independent candidate universe and at least one remaining graph evidence family is applicable and observed. Otherwise emit structurally_missing."
+    },
+    "graph_source_count": {
+      "algorithm_id": "masld_graph_supporting_source_family_count_v1",
+      "definition": "For candidate (locus l, gene g), count distinct remaining source families with at least one deduplicated supported evidence unit explicitly linking that candidate under the frozen ontology.",
+      "derived_state": [
+        "promoted_graph_hash",
+        "removed_source_receipt",
+        "source_family_taxonomy",
+        "candidate_to_source_support_map",
+        "observability_masks"
+      ],
+      "fitted_state": [
+        "none"
+      ],
+      "fitting": "none_for_native_source_count",
+      "formula": "score_source(l,g) = sum_s I[there exists a canonical evidence unit e for (l,g,s) with evidence_status=supported].",
+      "native_outputs": [
+        "supporting_source_family_count",
+        "supporting_source_family_ids_for_internal_receipt",
+        "observability_and_state_masks"
+      ],
+      "scientific_class": "deterministic_source_breadth_baseline",
+      "source_identity": "Collapse accessions, releases, aliases, derivative tables, publications, and technical replicates from one underlying evidence source into one frozen source_family_id before counting.",
+      "status_rule": "Only supported increments. Discordant, tested_negative, untestable, not_applicable, source_dependent, indeterminate, and unavailable records remain typed masks and do not increment.",
+      "task_role": "mandatory source-breadth baseline; no causal interpretation",
+      "zero_rule": "Emit numeric zero only when at least one remaining source family is explicitly applicable and observable for the candidate. Otherwise emit structurally_missing."
+    },
+    "regularized_linear_evidence": {
+      "algorithm_id": "masld_cross_source_ridge_logistic_evidence_v1",
+      "calibration": "The sigmoid is the native probability under the frozen equal-source and equal-block development mixture. Do not recalibrate to held-source prevalence. Any extra calibrator requires a separate source-blind cross-fitted artifact and cannot use evaluated-source labels.",
+      "feature_dictionary": {
+        "assay_native_values": "For every lexicographically ordered (source_family_id, evidence_type, metric_id, assay_unit, direction) column, retain the raw value in the input receipt and use a separately training-standardized numeric channel only when observed, accompanied by its exact state indicators. Values from different assays or units never share a numeric column.",
+        "global_counts": [
+          "log1p_gene_total_degree",
+          "log1p_supported_evidence_unit_count",
+          "log1p_supporting_source_family_count"
+        ],
+        "source_independent": "No held-source identity, prevalence, threshold, tested denominator, observability, or candidate-universe contribution is a feature. Nearest-gene distance is not silently added; it remains its separately registered baseline.",
+        "typed_counts": "For every lexicographically ordered evidence_type in the frozen ontology, include log1p counts of supported, discordant, and tested_negative remaining-source evidence units plus explicit applicability, observability, and each missing-state indicator."
+      },
+      "fitted_state": [
+        "graph_and_source_removal_receipts",
+        "candidate_and_label_rosters",
+        "feature_lexicon",
+        "raw_assay_unit_manifest",
+        "state_masks",
+        "training_means_and_scales",
+        "block_weights",
+        "inner_fold_assignments",
+        "lambda_grid",
+        "selected_lambda",
+        "intercept",
+        "coefficient_vector",
+        "solver_and_tolerance"
+      ],
+      "formula": "p_i = sigmoid(beta_0 + phi_i^T beta); minimize sum_i w_i[-y_i log(p_i) - (1-y_i) log(1-p_i)] + lambda ||beta||_2^2 / 2. The intercept is unpenalized.",
+      "inductive_behavior": "Scores a new source-independent candidate only when the entire frozen feature dictionary and typed missingness state can be constructed without the evaluated source. Entity-ID coefficients and transductive embeddings are prohibited.",
+      "missing_vectorization": "A nonobserved numeric channel is algebraically masked and accompanied by a one-hot exact state, so it cannot be confused with measured zero. Missing-state coefficients are learned only from outer training.",
+      "native_outputs": [
+        "development_mixture_support_probability",
+        "linear_predictor",
+        "feature_state_masks"
+      ],
+      "regularization_grid": [
+        1e-06,
+        1e-05,
+        0.0001,
+        0.001,
+        0.01,
+        0.1,
+        1.0,
+        10.0,
+        100.0,
+        1000.0,
+        10000.0,
+        100000.0,
+        1000000.0
+      ],
+      "scientific_class": "regularized_linear_probability_baseline",
+      "selection": "Nested source-family and native-build LD/gene-block grouped cross-validation. Minimize source-macro held-out log loss and choose the largest lambda within one standard error of the minimum. Every feature lexicon, continuous transform, scale, and state encoding is fit inside the inner-training partition.",
+      "task_role": "mandatory learned linear evidence baseline; prioritization only",
+      "training_examples": "For each eligible development source s used as a pseudo-held source, completely remove s, build remaining-source features for each source-independent locus-gene candidate, and label y=1 only for explicit support in s and y=0 only for explicit tested-negative eligibility in s.",
+      "weights": "Give each pseudo-held source family equal total weight, then each independent native-build LD or gene block equal total weight within source. Candidate rows share their block's weight; genes, variants, and graph edges do not add replication."
+    }
   },
   "registry_snapshot": {
-    "source": "config/models/mandatory_baselines.toml",
-    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
     "models": {
       "graph_degree": {
         "checkpoint_revision": "UNRESOLVED",
@@ -22,7 +159,9 @@
         "implementation_type": "classical_baseline",
         "license_status": "UNRESOLVED",
         "status": "candidate",
-        "supported_tasks": ["typed_evidence_graph"]
+        "supported_tasks": [
+          "typed_evidence_graph"
+        ]
       },
       "graph_source_count": {
         "checkpoint_revision": "UNRESOLVED",
@@ -31,7 +170,9 @@
         "implementation_type": "classical_baseline",
         "license_status": "UNRESOLVED",
         "status": "candidate",
-        "supported_tasks": ["typed_evidence_graph"]
+        "supported_tasks": [
+          "typed_evidence_graph"
+        ]
       },
       "regularized_linear_evidence": {
         "checkpoint_revision": "UNRESOLVED",
@@ -40,107 +181,66 @@
         "implementation_type": "classical_baseline",
         "license_status": "UNRESOLVED",
         "status": "candidate",
-        "supported_tasks": ["typed_evidence_graph"]
+        "supported_tasks": [
+          "typed_evidence_graph"
+        ]
       }
-    }
-  },
-  "shared_graph_contract": {
-    "candidate_key": ["graph_snapshot_id", "native_build", "ld_block_id", "locus_id", "gene_id"],
-    "candidate_universe": "Freeze source-independent native-build variants, ancestry-aware LD blocks, loci, and gene entities before source removal. Held-source-only candidates remain evaluator-only and cannot be used to expand model inputs.",
-    "canonical_edge_key": ["source_family_id", "evidence_type", "evidence_unit_id", "source_node_id", "target_node_id", "direction", "native_build", "locus_id"],
-    "edge_admission": "Use only ontology-registered evidence-bearing biological edges. Alias, provenance, administrative, batch, observability, tested-status, and deterministic inverse edges do not contribute numerical degree or support counts.",
-    "held_source_removal": "Before graph construction or features, delete the evaluated source, source aliases, nodes, edges, inverse edges, provenance, coverage, observability, tested status, missingness, derivatives, aggregates, degrees, source counts, paths, candidate-universe contributions, and normalization state.",
-    "held_block_removal": "Before fit or scoring, remove held-locus incident edges and every derivative neighborhood. Group native-build LD blocks, loci, gene blocks, source aliases, and deterministic graph derivatives across folds.",
-    "negative_labels": "Only explicit tested-negative rows inside the removed source's frozen eligible denominator are negatives. Absence, discordance, untestability, non-applicability, unavailable permission, failed joins, and indeterminate status are not negatives.",
-    "current_graph_status": "UNAVAILABLE_corrected_50_study_COLOC_release_and_promoted_immutable_graph_absent"
-  },
-  "models": {
-    "graph_degree": {
-      "algorithm_id": "masld_graph_gene_total_degree_v1",
-      "scientific_class": "deterministic_graph_popularity_baseline",
-      "definition": "For candidate (locus l, gene g), score the canonical total degree of gene node g in the remaining split-safe graph after held-source and held-block removal.",
-      "formula": "score_degree(l,g) = d_in(g) + d_out(g), with each canonical evidence-bearing edge counted once; self-loops contribute zero.",
-      "direction_rule": "Persist d_in and d_out separately. The ranking score is their sum. A source-target edge and a generated inverse representation count once under the canonical biological-edge ID; genuinely distinct directed evidence units remain distinct.",
-      "parallel_edge_rule": "Parallel rows count separately only when their frozen source_family_id, evidence_type, evidence_unit_id, and biological direction identify distinct evidence units after alias and technical-replicate deduplication.",
-      "fitting": "none_for_native_degree",
-      "fitted_state": ["none"],
-      "derived_state": ["promoted_graph_hash", "removed_source_receipt", "held_block_receipt", "edge_type_roster", "canonical_edge_map", "in_degree", "out_degree", "observability_masks"],
-      "zero_rule": "Emit numeric zero only when the gene is in the source-independent candidate universe and at least one remaining graph evidence family is applicable and observed. Otherwise emit structurally_missing.",
-      "native_outputs": ["gene_in_degree", "gene_out_degree", "gene_total_degree", "observability_and_state_masks"],
-      "task_role": "mandatory study-intensity baseline; no causal interpretation"
     },
-    "graph_source_count": {
-      "algorithm_id": "masld_graph_supporting_source_family_count_v1",
-      "scientific_class": "deterministic_source_breadth_baseline",
-      "definition": "For candidate (locus l, gene g), count distinct remaining source families with at least one deduplicated supported evidence unit explicitly linking that candidate under the frozen ontology.",
-      "formula": "score_source(l,g) = sum_s I[there exists a canonical evidence unit e for (l,g,s) with evidence_status=supported].",
-      "source_identity": "Collapse accessions, releases, aliases, derivative tables, publications, and technical replicates from one underlying evidence source into one frozen source_family_id before counting.",
-      "status_rule": "Only supported increments. Discordant, tested_negative, untestable, not_applicable, source_dependent, indeterminate, and unavailable records remain typed masks and do not increment.",
-      "fitting": "none_for_native_source_count",
-      "fitted_state": ["none"],
-      "derived_state": ["promoted_graph_hash", "removed_source_receipt", "source_family_taxonomy", "candidate_to_source_support_map", "observability_masks"],
-      "zero_rule": "Emit numeric zero only when at least one remaining source family is explicitly applicable and observable for the candidate. Otherwise emit structurally_missing.",
-      "native_outputs": ["supporting_source_family_count", "supporting_source_family_ids_for_internal_receipt", "observability_and_state_masks"],
-      "task_role": "mandatory source-breadth baseline; no causal interpretation"
-    },
-    "regularized_linear_evidence": {
-      "algorithm_id": "masld_cross_source_ridge_logistic_evidence_v1",
-      "scientific_class": "regularized_linear_probability_baseline",
-      "training_examples": "For each eligible development source s used as a pseudo-held source, completely remove s, build remaining-source features for each source-independent locus-gene candidate, and label y=1 only for explicit support in s and y=0 only for explicit tested-negative eligibility in s.",
-      "feature_dictionary": {
-        "global_counts": ["log1p_gene_total_degree", "log1p_supported_evidence_unit_count", "log1p_supporting_source_family_count"],
-        "typed_counts": "For every lexicographically ordered evidence_type in the frozen ontology, include log1p counts of supported, discordant, and tested_negative remaining-source evidence units plus explicit applicability, observability, and each missing-state indicator.",
-        "assay_native_values": "For every lexicographically ordered (source_family_id, evidence_type, metric_id, assay_unit, direction) column, retain the raw value in the input receipt and use a separately training-standardized numeric channel only when observed, accompanied by its exact state indicators. Values from different assays or units never share a numeric column.",
-        "source_independent": "No held-source identity, prevalence, threshold, tested denominator, observability, or candidate-universe contribution is a feature. Nearest-gene distance is not silently added; it remains its separately registered baseline."
-      },
-      "missing_vectorization": "A nonobserved numeric channel is algebraically masked and accompanied by a one-hot exact state, so it cannot be confused with measured zero. Missing-state coefficients are learned only from outer training.",
-      "formula": "p_i = sigmoid(beta_0 + phi_i^T beta); minimize sum_i w_i[-y_i log(p_i) - (1-y_i) log(1-p_i)] + lambda ||beta||_2^2 / 2. The intercept is unpenalized.",
-      "weights": "Give each pseudo-held source family equal total weight, then each independent native-build LD or gene block equal total weight within source. Candidate rows share their block's weight; genes, variants, and graph edges do not add replication.",
-      "regularization_grid": [1e-06, 1e-05, 0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0],
-      "selection": "Nested source-family and native-build LD/gene-block grouped cross-validation. Minimize source-macro held-out log loss and choose the largest lambda within one standard error of the minimum. Every feature lexicon, continuous transform, scale, and state encoding is fit inside the inner-training partition.",
-      "fitted_state": ["graph_and_source_removal_receipts", "candidate_and_label_rosters", "feature_lexicon", "raw_assay_unit_manifest", "state_masks", "training_means_and_scales", "block_weights", "inner_fold_assignments", "lambda_grid", "selected_lambda", "intercept", "coefficient_vector", "solver_and_tolerance"],
-      "native_outputs": ["development_mixture_support_probability", "linear_predictor", "feature_state_masks"],
-      "calibration": "The sigmoid is the native probability under the frozen equal-source and equal-block development mixture. Do not recalibrate to held-source prevalence. Any extra calibrator requires a separate source-blind cross-fitted artifact and cannot use evaluated-source labels.",
-      "inductive_behavior": "Scores a new source-independent candidate only when the entire frozen feature dictionary and typed missingness state can be constructed without the evaluated source. Entity-ID coefficients and transductive embeddings are prohibited.",
-      "task_role": "mandatory learned linear evidence baseline; prioritization only"
-    }
+    "source": "config/models/mandatory_baselines.toml",
+    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e"
   },
-  "distinctions": {
-    "graph_degree": "Counts canonical incident evidence-bearing graph edges for the candidate gene regardless of support status semantics encoded by separate typed edges; it measures graph popularity.",
-    "graph_source_count": "Counts distinct source families with explicit candidate support; multiple evidence units from one source count once.",
-    "evidence_count": "The separately registered baseline counts distinct supported evidence units and can count several within one source family.",
-    "regularized_linear_evidence": "Learns cross-source weights for typed counts, assay-native columns, observability, and missing states without entity embeddings.",
-    "warning": "All four can exploit study density and observability. They are required guards against mistaking graph complexity for biological generalization."
-  },
-  "missingness_and_observability_contract": {
-    "evidence_states": ["supported", "discordant", "tested_negative", "untestable", "not_applicable", "source_dependent", "indeterminate"],
-    "dataset_states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
-    "rule": "Preserve source applicability, assay observability, eligibility, status, and permission or join failure separately. An absent edge is never automatically a tested negative, and a missing metric is never a numeric zero.",
-    "held_source": "Held-source observability, tested status, missingness, coverage, and prevalence are evaluator-only and are removed from all inputs."
-  },
-  "uncertainty_calibration_and_claims": {
-    "uncertainty": "Use 10000 paired two-way LD-block and gene-block bootstrap replicates. Preserve candidates, variants, edges, and source rows nested within sampled blocks.",
-    "ties": "PredictionBundle preserves exact ties and stable row order. A stable gene ID may order serialization but cannot create fractional score differences. The evaluator's frozen tie rule owns ranking metrics.",
-    "calibration": "Degree and source count are not probabilities; Brier requires separately registered source-blind cross-fitted calibration. Regularized linear evidence emits its frozen development-mixture sigmoid probability and receives no held-source recalibration.",
-    "multiplicity": "BH q<0.05 within the secondary typed-evidence-graph endpoint family; no champion exists without a wholly sealed evidence source.",
-    "claim": "Any positive result supports candidate prioritization only. Use colocalized or genetically anchored candidate language, never causal gene from COLOC alone."
+  "roster_contract": {
+    "count": 3,
+    "no_implicit_members": true,
+    "registry_ids": [
+      "graph_degree",
+      "graph_source_count",
+      "regularized_linear_evidence"
+    ],
+    "scope": "exactly_the_three_registered_typed_evidence_graph_native_baselines"
   },
   "runtime_safe_loading_terms_and_release": {
     "implementation": "No repo-local implementation or fitted state exists.",
-    "runtime": "CPU deterministic sorted graph aggregation and convex linear optimization are expected, but no hardware or numeric claim exists until approved CPU-SLURM fixtures pass.",
     "new_dependency": "none_added",
-    "safe_loading": "Accept only bounded schema-validated graph tables, arrays, masks, and project-created coefficient artifacts. Untrusted pickle, joblib, R objects, and runtime network access are prohibited.",
+    "open_champion": "ineligible_no_wholly_sealed_graph_source",
     "project_license": "UNRESOLVED_repository_root_license_not_located_and_code_not_written",
-    "upstream_weights": "none",
     "release": "Code release waits for a project-license decision. Graph-derived rows, source IDs, fitted coefficients, and predictions remain subject to all input-source terms and aggregate-only restrictions.",
-    "open_champion": "ineligible_no_wholly_sealed_graph_source"
+    "runtime": "CPU deterministic sorted graph aggregation and convex linear optimization are expected, but no hardware or numeric claim exists until approved CPU-SLURM fixtures pass.",
+    "safe_loading": "Accept only bounded schema-validated graph tables, arrays, masks, and project-created coefficient artifacts. Untrusted pickle, joblib, R objects, and runtime network access are prohibited.",
+    "upstream_weights": "none"
+  },
+  "schema_version": "masld-bench-local-model-preflight-v1",
+  "shared_graph_contract": {
+    "candidate_key": [
+      "graph_snapshot_id",
+      "native_build",
+      "ld_block_id",
+      "locus_id",
+      "gene_id"
+    ],
+    "candidate_universe": "Freeze source-independent native-build variants, ancestry-aware LD blocks, loci, and gene entities before source removal. Held-source-only candidates remain evaluator-only and cannot be used to expand model inputs.",
+    "canonical_edge_key": [
+      "source_family_id",
+      "evidence_type",
+      "evidence_unit_id",
+      "source_node_id",
+      "target_node_id",
+      "direction",
+      "native_build",
+      "locus_id"
+    ],
+    "current_graph_status": "UNAVAILABLE_corrected_50_study_COLOC_release_and_promoted_immutable_graph_absent",
+    "edge_admission": "Use only ontology-registered evidence-bearing biological edges. Alias, provenance, administrative, batch, observability, tested-status, and deterministic inverse edges do not contribute numerical degree or support counts.",
+    "held_block_removal": "Before fit or scoring, remove held-locus incident edges and every derivative neighborhood. Group native-build LD blocks, loci, gene blocks, source aliases, and deterministic graph derivatives across folds.",
+    "held_source_removal": "Before graph construction or features, delete the evaluated source, source aliases, nodes, edges, inverse edges, provenance, coverage, observability, tested status, missingness, derivatives, aggregates, degrees, source counts, paths, candidate-universe contributions, and normalization state.",
+    "negative_labels": "Only explicit tested-negative rows inside the removed source's frozen eligible denominator are negatives. Absence, discordance, untestability, non-applicability, unavailable permission, failed joins, and indeterminate status are not negatives."
   },
   "source_evidence": "The local model registry, typed-evidence TaskSpec, split, DatasetManifests, and existing evidence-count contract were inspected on 2026-08-22. These are project-owned mathematical specifications; no package, code, graph, data, weights, job, or test was downloaded or run.",
   "source_records": [
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-      "size_bytes": 59115
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+      "size_bytes": 59705
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/typed_evidence_graph.toml",
@@ -153,6 +253,12 @@
       "size_bytes": 961
     }
   ],
-  "schema_version": "masld-bench-local-model-preflight-v1",
+  "uncertainty_calibration_and_claims": {
+    "calibration": "Degree and source count are not probabilities; Brier requires separately registered source-blind cross-fitted calibration. Regularized linear evidence emits its frozen development-mixture sigmoid probability and receives no held-source recalibration.",
+    "claim": "Any positive result supports candidate prioritization only. Use colocalized or genetically anchored candidate language, never causal gene from COLOC alone.",
+    "multiplicity": "BH q<0.05 within the secondary typed-evidence-graph endpoint family; no champion exists without a wholly sealed evidence source.",
+    "ties": "PredictionBundle preserves exact ties and stable row order. A stable gene ID may order serialization but cannot create fractional score differences. The evaluator's frozen tie rule owns ranking metrics.",
+    "uncertainty": "Use 10000 paired two-way LD-block and gene-block bootstrap replicates. Preserve candidates, variants, edges, and source rows nested within sampled blocks."
+  },
   "verified_date": "2026-08-22"
 }

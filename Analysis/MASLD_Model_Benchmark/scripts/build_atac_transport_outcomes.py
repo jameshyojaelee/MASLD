@@ -36,7 +36,7 @@ CELLRANGER_FRAGMENT_FORMAT_URL = (
 
 
 class ATACOutcomeError(RuntimeError):
-    """Raised when a raw-fragment outcome violates the frozen contract."""
+    """Raised when a raw-fragment outcome does not meet the frozen requirements."""
 
 
 @dataclass(frozen=True)

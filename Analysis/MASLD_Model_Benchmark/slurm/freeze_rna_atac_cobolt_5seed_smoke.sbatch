@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=masld-cobolt-5seed-freeze
+#SBATCH --job-name=model-cpu-freeze-208
 #SBATCH --partition=cpu
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8G

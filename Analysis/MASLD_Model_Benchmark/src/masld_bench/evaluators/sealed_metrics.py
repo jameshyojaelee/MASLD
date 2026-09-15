@@ -1,4 +1,4 @@
-"""Task-native sealed metrics rederived from five-seed frozen predictions.
+"""Task-native held-back metrics rederived from five-seed frozen predictions.
 
 Seeds define one ensemble and one stability diagnostic.  Inferential intervals
 resample donors or LD blocks, never seeds or rows as biological replicates.
@@ -43,16 +43,16 @@ _MANDATORY_RETRIEVAL_MODELS = ("abc", "nearest_gene", "re2g")
 
 
 class SealedMetricError(ValueError):
-    """Raised when sealed sources cannot support an exact registered metric."""
+    """Raised when held-back sources cannot support an exact registered metric."""
 
 
 def _locked_string_array(value: Any) -> list[str] | None:
-    """Read a locked string array that may be a list or a contract tuple.
+    """Read a fixed string array that may be a list or a requirements tuple.
 
     These capability records come out of a ``SelectionLock`` task decision,
     and ``contracts._as_metadata`` freezes every nested array there into a
     tuple.  Testing ``isinstance(value, list)`` or comparing against a list
-    literal would therefore reject a perfectly valid locked record.
+    literal would therefore reject a perfectly valid fixed record.
     """
 
     if isinstance(value, (str, bytes)) or not isinstance(value, Sequence):

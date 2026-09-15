@@ -18,7 +18,7 @@
     "scope": "task_specific_atac_sources_and_sealed_modality",
     "sha256": "6e445ccb68017963aad584ecba0f3851e770d6f42630eb5c61e2d796f50c9e0e"
   },
-  "interpretation": "EpiAgent is a genuine ATAC foundation model, but the executable checkpoint fails closed. The current 5.8-GB Drive object has no digest, explicit weight terms, or immutable version history and was modified after GSE289173 became public. GSE296875 is clean by post-object chronology, while GSE244832 and GSE289173 remain exposure-unknown. Independently, EpiAgent cannot enter the current sealed RNA-only cell-state task or RNA-conditioned ATAC profile task because native inference consumes observed ATAC cCRE tokens.",
+  "interpretation": "EpiAgent is a genuine ATAC foundation model, but the executable checkpoint fails closed. The current 5.8-GB Drive object has no digest, explicit weight terms, or read-only version history and was modified after GSE289173 became public. GSE296875 is clean by post-object chronology, while GSE244832 and GSE289173 remain exposure-unknown. Independently, EpiAgent cannot enter the current held-back RNA-only cell-state task or RNA-conditioned ATAC profile task because native inference consumes observed ATAC cCRE tokens.",
   "remaining_blockers": [
     "Obtain explicit terms for the current Google Drive checkpoint and evidence that its intended license covers use, adaptation, and any derivative release.",
     "With approval, download once, freeze SHA-256, inventory the reported zip/PyTorch container without deserializing, then inspect a state dict with a restricted weights-only loader and freeze keys, shapes, and dtypes.",

@@ -12,6 +12,8 @@ from unittest.mock import patch
 from masld_bench.artifacts import canonical_hash, verify_frozen_tree
 from masld_bench.campaign import (
     CampaignError,
+    _assert_config_snapshot,
+    _observed_source_lock,
     execute_admission_run,
     execute_run,
     submission_commands,
@@ -928,6 +930,44 @@ class CampaignIntegrationTests(unittest.TestCase):
                     submission_ledger_root=ledger_parent_link / "ledgers",
                 )
 
+    def test_gpu_campaign_submission_requires_central_dispatcher(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            campaign = _fixture_config(root)
+            runtime = root / "config" / "runtimes" / "fixture.toml"
+            runtime.write_text(
+                runtime.read_text(encoding="utf-8").replace(
+                    'resource_profile = "cpu_contract"',
+                    'resource_profile = "gpu_single"',
+                ),
+                encoding="utf-8",
+            )
+            campaign.write_text(
+                campaign.read_text(encoding="utf-8")
+                .replace("submit_enabled = false", "submit_enabled = true")
+                .replace(
+                    'default_resource_profile = "cpu_contract"',
+                    'default_resource_profile = "gpu_single"',
+                ),
+                encoding="utf-8",
+            )
+            candidate = freeze_campaign(
+                campaign,
+                config_root=root / "config",
+                package_root=PACKAGE_ROOT,
+                output_root=root / "candidates",
+            )
+            approved = sha256_file(candidate / "ARTIFACTS.json")
+            with patch("masld_bench.campaign.subprocess.run") as submit:
+                with self.assertRaisesRegex(CampaignError, "dispatcher-only"):
+                    submission_commands(
+                        candidate=candidate,
+                        approved_campaign_sha256=approved,
+                        execute=True,
+                        submission_ledger_root=root / "submission-ledgers",
+                    )
+            submit.assert_not_called()
+
     def test_scientific_run_requires_and_executes_frozen_actions(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -1726,6 +1766,71 @@ class CampaignIntegrationTests(unittest.TestCase):
             self.assertEqual(frozen["source_lock"], after_output["source_lock"])
             self.assertEqual(frozen["runs"][0]["run_id"], after_output["runs"][0]["run_id"])
             self.assertEqual(frozen["plan_sha256"], after_output["plan_sha256"])
+
+    def test_scoped_cobolt_lock_ignores_queue_but_detects_bound_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory(
+            prefix=".planner-source-", dir=_test_source_parent()
+        ) as source_temporary:
+            root = Path(temporary)
+            source_root = Path(source_temporary)
+            bound_source = source_root / "src" / "cobolt_bound.py"
+            _write(bound_source, "VALUE = 1")
+            campaign = _fixture_config(root)
+            config = root / "config"
+            registry_paths = sorted(
+                path.relative_to(config).as_posix()
+                for path in config.rglob("*")
+                if path.is_file()
+            )
+            document = campaign.read_text(encoding="utf-8").replace(
+                'task_ids = ["fixture_task"]',
+                '\n'.join(
+                    (
+                        'task_ids = ["fixture_task"]',
+                        'source_lock_paths = ["src/cobolt_bound.py"]',
+                        "registry_snapshot_paths = "
+                        + json.dumps(registry_paths, separators=(",", ":")),
+                    )
+                ),
+                1,
+            )
+            campaign.write_text(document, encoding="utf-8")
+
+            plan = build_plan(
+                campaign,
+                config_root=config,
+                package_root=source_root,
+            )
+            self.assertEqual(
+                plan["source_lock"]["schema_version"],
+                "masld-bench-source-lock-v3",
+            )
+            self.assertEqual(
+                plan["registry_snapshot"]["schema_version"],
+                "masld-bench-registry-file-snapshot-v2",
+            )
+
+            _write(
+                config / "campaigns" / "gpu_bundle_queue" / "unrelated.json",
+                '{"model_id":"unrelated"}',
+            )
+            _write(
+                source_root
+                / "config"
+                / "campaigns"
+                / "gpu_bundle_queue"
+                / "unrelated.json",
+                '{"model_id":"unrelated"}',
+            )
+            _assert_config_snapshot(plan)
+            self.assertEqual(
+                _observed_source_lock(plan, source_root), plan["source_lock"]
+            )
+
+            _write(bound_source, "VALUE = 2")
+            self.assertNotEqual(
+                _observed_source_lock(plan, source_root), plan["source_lock"]
+            )
 
     def test_configuration_snapshot_rejects_symlinks(self) -> None:
         with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory(

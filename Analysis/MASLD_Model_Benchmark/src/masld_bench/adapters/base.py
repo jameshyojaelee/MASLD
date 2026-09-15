@@ -259,7 +259,7 @@ def withheld_input_roles_for_action(
 ) -> frozenset[str]:
     """Return prospectively frozen roles hidden from one adapter action.
 
-    This supports outcome-firewalled workflows in which ``prepare`` may read a
+    This supports outcome-separated workflows in which ``prepare`` may read a
     paired development object and materialize training targets plus query
     inputs, while later ``fit`` and ``predict`` requests must not receive the
     original outcome-bearing object.  The omission is part of the reviewed

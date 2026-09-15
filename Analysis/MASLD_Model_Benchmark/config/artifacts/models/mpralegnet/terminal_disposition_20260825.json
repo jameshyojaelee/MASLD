@@ -1,0 +1,50 @@
+{
+  "schema_version": "masld-bench-mpralegnet-terminal-disposition-v1",
+  "audit_date": "2026-08-25",
+  "status": "TERMINAL_BLOCKED_FROM_SCORING_PROVENANCE_EQUIVALENCE_FAILED",
+  "record_only": true,
+  "consumed_by_runtime": false,
+  "correction_scope": "Binds an existing terminal receipt into the model census. Changes recorded state only. No model, checkpoint, endpoint, threshold, seed, task binding, or evaluation behaviour is altered, and no executable source is introduced.",
+  "defect_corrected": {
+    "description": "OVERALL_PLAN.md recorded MPRALegNet as terminally blocked from scoring with a frozen receipt, but neither that receipt path nor its digest appeared anywhere under config/. The census independently read as conditionally open. An operator driving off the census could therefore have scored a model the plan forbids scoring.",
+    "registry_said": "terms_audit.result = conditional_open_artifact_pending_provenance_equivalence_or_explicit_acceptance_of_third_party_weights; representation_and_task_contract.admitted_task = variant_to_regulation; roster status = candidate",
+    "receipt_says": "status = terminal_blocked; provenance_equivalence_pass = false; standalone_champion_eligible = false",
+    "precise_discrepancy": "The registry describes provenance equivalence as PENDING. The frozen receipt records that it terminally FAILED. Pending and terminally-failed are not the same state and imply opposite permissions."
+  },
+  "terminal_receipt": {
+    "path": "executions/model-check-230-21092108",
+    "artifacts_sha256": "cdf356b81aa19127f2eff45a8d213a4a9d360b9fed5f81edb4c7972d0cb9874d",
+    "artifact_class": "mpralegnet_terminal_checkpoint_provenance_audit",
+    "model_id": "mpralegnet_hepg2_test1_val2",
+    "status": "terminal_blocked",
+    "terminal_reason": "blocked_official_weights_only_scanner_unsupported_POP_opcode",
+    "provenance_equivalence_pass": false,
+    "standalone_champion_eligible": false,
+    "metrics_calculated": false,
+    "model_fit": false,
+    "predictions_generated": false,
+    "outcomes_read": false,
+    "torch_load_invoked": false,
+    "unrestricted_deserializer_used": false,
+    "custom_deserializer_used": false
+  },
+  "why_blocked": {
+    "official_checkpoint": "The author Zenodo record 10558183 final_dump.zip (3,504,620,192 bytes, md5 05118d0edf404a43aeca5e5ca87ec7b3) cannot be certified by PyTorch's restricted weights-only scanner: it rejects undeclared builtins.getattr on an unsupported POP opcode.",
+    "no_bypass_permitted": "Unrestricted deserialization is prohibited by the campaign's safe-loading contract, so the official checkpoint cannot be opened to establish equivalence.",
+    "registered_artifact_is_third_party": "The registered artifact is a third-party single-fold test1/validation2 safetensors repackaging (sha256 470dc7bfd3f0912c91f307a5f4019598072b8786294c46fc501b826c030cbe39, 5,335,404 bytes) whose equality to the author checkpoint is unresolved and, given the above, cannot currently be resolved."
+  },
+  "binding_consequences": {
+    "scoring_authorized": false,
+    "may_produce_benchmark_metrics": false,
+    "may_enter_a_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "standalone_champion_eligible": false,
+    "permitted_role": "re-keyed descriptive secondary comparator only, and only where a separately frozen contract authorises it",
+    "ridge_seed_caveat": "The MPRALegNet-adjacent ridge fits are deterministic, so their five repeated schema seeds are one fitted prediction, not five stability replicates. They must never be reported as five seeds."
+  },
+  "supersedes_nothing": true,
+  "base_registry_unchanged": true,
+  "outcomes_read": false,
+  "metrics_calculated": false,
+  "sealed_data_read": false
+}

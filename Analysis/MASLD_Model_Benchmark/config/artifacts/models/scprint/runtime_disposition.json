@@ -1,0 +1,23 @@
+{
+  "artifact": {
+    "artifacts_sha256": "f0ed73826f18a07ebc42dc1e80ff4ff41475b5546d5b3da8dad8bcfb015eec23",
+    "path": "executions/scprint-v1-runtime-preflight-21072885",
+    "runtime_preflight_sha256": "ba264c18cda94353734cce59fa854353a53451064b3df26f641d49396be6beee"
+  },
+  "checkpoint_sha256": "a4cf0753270d4ff451a5dbddadd4c59a53e10e4c3e96a8af0db407ad893c36c5",
+  "disposition": "terminal_runtime_incompatibility",
+  "model_id": "scprint_v1_5_medium",
+  "outcomes_or_labels_read": false,
+  "reasons": [
+    "checkpoint_classes_list_but_exact_1_6_4_constructor_requires_mapping",
+    "checkpoint_ontology_hierarchy_offsets_crash_exact_constructor",
+    "checkpoint_compress_class_dim_not_supported_by_exact_released_encoder"
+  ],
+  "schema_version": "masld-bench-model-runtime-disposition-v1",
+  "strict_state_restoration_passed": false,
+  "substitution_forbidden": [
+    "post_release_scprint_source_without_native_numeric_parity",
+    "May_2026_same_path_checkpoint_replacement",
+    "dropping_compress_class_dim"
+  ]
+}

@@ -64,7 +64,7 @@
     "Create an exact environment lock, then pass L40S import, graph, forward, backward, resume, deterministic-seed, order-invariance, donor-block, no-network, and cross-device probes through an approved SLURM campaign.",
     "Hash every fold- and seed-specific trained artifact and contamination receipt before any selection or evaluation."
   ],
-  "interpretation": "NicheCompass has a reproducible BSD-licensed source revision but no upstream biological checkpoint and no eligible MASLD training substrate. Its decisive contamination risks are locally constructed: cross-participant graph edges, target-fitted programs or preprocessing, mutable priors, and query-adaptive reference mapping. Because no spatial task or project-sealed spatial source exists, it remains a deferred method rather than a v1 benchmark participant.",
+  "interpretation": "NicheCompass has a reproducible BSD-licensed source revision but no upstream biological checkpoint and no eligible MASLD training substrate. Its decisive contamination risks are locally constructed: cross-participant graph edges, target-fitted programs or preprocessing, mutable priors, and query-adaptive reference mapping. Because no spatial task or project-reserved spatial source exists, it remains a deferred method rather than a v1 benchmark participant.",
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_no_registered_spatial_task_no_project_seal_no_powered_rights_cleared_dataset_and_no_trained_artifact",
   "verified_date": "2026-08-22"

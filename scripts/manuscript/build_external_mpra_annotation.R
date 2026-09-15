@@ -7,7 +7,7 @@
 # quantify, per gene, how the experimental variant-function layer relates to our
 # genetic + disease-state classes. ADDITIVE / external annotation only -- does NOT
 # mutate the frozen release and is NOT an input to the convergence/heuristic score.
-# See data/external/zhu2026_masld_mpra/README.md and the number-verification firewall.
+# See data/external/zhu2026_masld_mpra/README.md and the number-verification separation.
 #
 # Analog of build_external_scchromatin_annotation.R (Elison sc-chromatin) and
 # build_external_pqtl_annotation.R (Gobeil pQTL), one modality over (experimental MPRA).
@@ -36,7 +36,7 @@ stopifnot(file.exists(sub_f), file.exists(frozen_f), file.exists(gencode_f))
 num <- function(v) suppressWarnings(as.numeric(v))
 DOI <- "Zhu 2026 NatGenet, DOI 10.1038/s41588-026-02617-8"
 
-# --- (1) derive the DAV calls from the script-92 parse (firewall: no hand-typed values) ---
+# --- (1) derive the DAV calls from the script-92 parse (separation: no hand-typed values) ---
 s <- fread(sub_f)
 dav <- s[num(dav) == 1]
 # gene = our finemapping/coloc locus assignment for the tested variant (made explicit in source_note)

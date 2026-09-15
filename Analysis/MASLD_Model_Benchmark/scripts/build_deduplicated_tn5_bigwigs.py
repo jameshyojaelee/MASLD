@@ -38,7 +38,7 @@ FRAGMENT_MANIFEST_FIELDS = (
 
 
 class Tn5BigWigError(ValueError):
-    """Raised when inputs or output signal violate the Tn5 contract."""
+    """Raised when inputs or output signal does not meet the Tn5 requirements."""
 
 
 class HashingReader:

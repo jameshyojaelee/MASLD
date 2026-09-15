@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit local GSE244832 and GSE281367 ATAC transport source assets.
 
-This audit does not activate either dataset. It inventories immutable source
+This audit does not activate either dataset. It inventories read-only source
 objects, checks donor and cell-type axes in the processed H5ADs, and rejects
 legacy donor-pseudobulk matrices with duplicate or malformed peak columns.
 Benchmark outcomes must subsequently be rebuilt from the raw fragment files on
@@ -28,7 +28,7 @@ PEAK_RE = re.compile(r"^(chr(?:[1-9]|1[0-9]|2[0-2]|X|Y)):(\d+)-(\d+)$")
 
 
 class ATACSourceAuditError(RuntimeError):
-    """Raised when a local ATAC source violates the audit contract."""
+    """Raised when a local ATAC source does not meet the audit requirements."""
 
 
 def sha256_file(path: Path) -> str:

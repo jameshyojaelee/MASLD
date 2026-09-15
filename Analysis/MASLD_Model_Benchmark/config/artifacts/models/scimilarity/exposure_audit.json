@@ -8,24 +8,40 @@
     "scimilarity_v1_1": {
       "corpus": "7,886,247 annotated training cells from 56 studies",
       "corpus_annotation_state": "supervised_Cell_Ontology_triplet_loss_plus_expression_reconstruction",
-      "exposure_state": "target_label_unexposed",
+      "exposure_state": "encoder_seen",
+      "sealed_target_exposure_state": "target_label_unexposed",
       "zenodo_record_finalized": "2024-03-29"
     }
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "c0e83d7298c25025cefd313eb05e68979d6e8a77d03e3bad04d29118cdab9abf"
+    "sha256": "1688aa2b8a535bde4f3b3c2de11fc9fb0403117657e79913d61a99c719a24709"
   },
-  "interpretation": "The complete declared SCimilarity table identifies GSE185477 as an annotated training source and GSE136103 as reference_only. Reference-free common embedding runs must report GSE185477 as encoder_seen and never use the released native reference index. GSE289173 became public after the finalized v1.1 record, supporting target_label_unexposed for sealed evaluation.",
-  "remaining_blockers": [
-    "Obtain the 30,310,810,843-byte archive only with approval and verify source MD5 plus local SHA-256.",
-    "Safely inspect and stage the archive without unrestricted tar extraction or torch.load(weights_only=False).",
-    "Freeze the exact gene_order.tsv, layer_sizes.json, encoder state, runtime, and gene-symbol mapping before smoke admission.",
-    "Keep native reference-index annotation separate from reference-free common linear and two-layer heads.",
-    "Treat GSE185477 as encoder_seen and GSE136103 as reference_only in source-stratified development reporting."
-  ],
-  "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
-  "sealed_champion_eligibility": "eligible_on_exposure_and_terms_other_admission_gates_still_apply",
-  "verified_date": "2026-08-22"
+  "frozen_fixture_contract": {
+    "artifacts_manifest_sha256": "b6d50557107b5e6a878480741ec6a4c781663218876943ae205578b1a4ecd1e5",
+    "evaluation_labels_read": false,
+    "observed_gene_mask_sha256": "24c5897dc9ed881b3c3ff2bbcde3864b88f635ef998ca92f677b281fe92967a1",
+    "path": "executions/scimilarity-v1-1-frozen-screen-fixture-21079292",
+    "sealed_outcomes_read": false,
+    "studies": 7,
+    "study_gene_observability_is_global": true,
+    "study_gene_observability_order": [
+      "GSE136103",
+      "GSE174748",
+      "GSE185477",
+      "GSE189600",
+      "GSE202379",
+      "GSE244832",
+      "Liver_Atlas"
+    ],
+    "study_gene_observability_sha256": "373c7e1c1a9e346b723d7eee8890394249583b104624ad8a129775cd6109d966",
+    "study_gene_observability_shape": [7, 28231]
+  },
+  "interpretation": "The complete declared SCimilarity table identifies GSE185477 as an annotated training source and GSE136103 as reference_only, so the aggregate seven-study development exposure is encoder_seen. The released native reference index is prohibited. GSE289173 became public after the finalized v1.1 record, but aggregate encoder exposure makes this frozen lane benchmark-only and not a held-back best model candidate.",
+  "remaining_blockers": [],
+  "schema_version": "masld-bench-checkpoint-exposure-audit-v2",
+  "sealed_champion_eligibility": "ineligible_aggregate_development_encoder_seen",
+  "sealed_champion_eligible": false,
+  "verified_date": "2026-08-24"
 }

@@ -300,6 +300,55 @@ load_dream_results <- function() {
   dt
 }
 
+# --- Explicit adopted-bulk release reader ---
+#
+# This reader is intentionally separate from load_dream_results().  Legacy
+# consumers retain their historical integration path, while a manuscript panel
+# can opt into one immutable bulk-only release by supplying BULK_RELEASE_ROOT
+# (or an explicit release_root).  A requested release never falls back to the
+# integration default: a missing or malformed release is an error.
+.bulk_release_dream_cache <- list()
+resolve_bulk_release_root <- function(release_root = Sys.getenv("BULK_RELEASE_ROOT", "")) {
+  if (!nzchar(release_root)) {
+    stop("BULK_RELEASE_ROOT or an explicit release_root is required", call. = FALSE)
+  }
+  root <- normalizePath(release_root, mustWork = TRUE)
+  manifest_path <- file.path(root, "release_manifest.tsv")
+  if (!file.exists(manifest_path)) {
+    stop("Bulk release manifest is missing: ", manifest_path, call. = FALSE)
+  }
+  manifest <- fread(manifest_path)
+  if (nrow(manifest) != 1L || !all(c("release_id", "release_state", "scope") %in% names(manifest)) ||
+      manifest$release_state[[1L]] != "adopted_bulk_only" ||
+      manifest$scope[[1L]] != "five_cohort_bulk_dependents") {
+    stop("Bulk release manifest is not an adopted five-cohort bulk-only release", call. = FALSE)
+  }
+  root
+}
+
+load_bulk_release_dream_results <- function(release_root = Sys.getenv("BULK_RELEASE_ROOT", "")) {
+  root <- resolve_bulk_release_root(release_root)
+  key <- normalizePath(root, mustWork = TRUE)
+  if (!is.null(.bulk_release_dream_cache[[key]])) return(.bulk_release_dream_cache[[key]])
+  f <- file.path(root, "artifacts", "pooled", "deg_results.csv")
+  if (!file.exists(f)) {
+    stop("Bulk release DEG table is missing: ", f, call. = FALSE)
+  }
+  dt <- fread(f)
+  if (!all(c("gene", "logFC", "padj", "treat_fdr") %in% names(dt)) || nrow(dt) != 23370L ||
+      anyDuplicated(dt$gene)) {
+    stop("Bulk release DEG table fails the expected five-cohort schema", call. = FALSE)
+  }
+  if (!"bulk_padj" %in% names(dt)) setnames(dt, "padj", "bulk_padj")
+  if (!"bulk_logFC" %in% names(dt)) setnames(dt, "logFC", "bulk_logFC")
+  if ("shrunk_logFC" %in% names(dt) && !"bulk_shrunk_logFC" %in% names(dt))
+    setnames(dt, "shrunk_logFC", "bulk_shrunk_logFC")
+  if ("lfsr" %in% names(dt) && !"bulk_lfsr" %in% names(dt))
+    setnames(dt, "lfsr", "bulk_lfsr")
+  .bulk_release_dream_cache[[key]] <<- dt
+  dt
+}
+
 # --- DEG classification helper ---
 # THE single definition of the canonical bulk DEG call. Every figure, table, and
 # release number must route through this function; do not re-derive a gate inline.

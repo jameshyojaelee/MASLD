@@ -1,6 +1,6 @@
 """Model-environment adapter protocol.
 
-Adapters create assay-native predictions and artifacts.  Benchmark metrics are
+Adapters create assay-native predictions and output files.  Benchmark metrics are
 computed only by :mod:`masld_bench.evaluators`.
 """
 

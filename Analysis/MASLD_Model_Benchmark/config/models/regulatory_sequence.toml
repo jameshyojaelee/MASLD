@@ -73,12 +73,12 @@ model_id = "epibert"
 display_name = "EpiBERT"
 implementation_type = "pretrained_adapter"
 checkpoint_revision = "naumanjaved/EpiBERT@dae61b434f885991c29e2fde3fbf7f70d0ff9b80+tag:v1.0.0+Zenodo:14504049:epibert_models.tar.gz"
-checkpoint_sha256 = "UNRESOLVED"
+checkpoint_sha256 = "67684dc1f1562955a726f56fc7c53b758afe666f1138d833615fa1def46cf651"
 license_status = "code_MIT_weight_CC-BY-4.0"
 exposure_status = "target_label_unexposed"
 status = "candidate"
 admission_blocking = true
-blockers = ["The v1.0.0 code, 3,738,627,947-byte CC-BY-4.0 archive, source MD5, 524,288-bp sequence, required observed 4-bp ATAC and 693-dimensional motif-context inputs, output heads, partial corpus crosswalk, and target-label-unexposed chronology are frozen. With approved acquisition, compute SHA-256 and safely inventory the exact two pretrained ATAC members plus one RAMPAGE member; freeze native hg38 identity, masking, tensor schema, TensorFlow 2.13 runtime, reverse-complement/member scoring, and numeric parity. EpiBERT is not RNA-conditioned ATAC: observed target-context ATAC is required and scored bins must be masked. It can only be a topology-matched development variant/caQTL diagnostic unless an external sealed source supplies prespecified ATAC context."]
+blockers = ["The exact CC-BY-4.0 archive SHA-256 and three checkpoint prefixes are frozen. All existing model objects match under TensorFlow 2.13 on L40S, with extra checkpoint training state permitted rather than a consumed-checkpoint assertion; repeat synthetic inference is bit-identical. Native GSE296875 execution remains blocked because the released WDL does not bind scale_factor units for its 20/scale_factor ATAC transform and does not release the top_peaks, half_peak_width, background_peaks, or SEA threshold used for the required 693-dimensional motif context. Backward/resume and project-reference parity also remain untested. EpiBERT is observed-ATAC, not RNA-conditioned ATAC; it has no current topology-matched sealed source and cannot earn a sealed champion claim."]
 supported_tasks = ["variant_to_regulation"]
 
 [[models]]
@@ -104,7 +104,7 @@ license_status = "original_code_Apache-2.0_conversion_path_academic_noncommercia
 exposure_status = "target_label_unexposed"
 status = "restricted_comparator"
 admission_blocking = true
-blockers = ["The official Sonnet code revision, three immutable GCS object generations/sizes/MD5 values, 196,608-bp input, 5,313-track manifest, target-label-unexposed chronology, and sequence-component endpoint role are frozen under config/artifacts/models/enformer. Native weight terms and SHA-256 values remain unresolved. The registered 915,174,055-byte CREsted conversion has SHA-256 628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc but uses academic noncommercial, nontransferable terms and lacks a reproducible conversion/parity receipt, so it remains a restricted comparator. After approved acquisition, verify native objects; freeze strict restoration, target order/inverse transforms, crop, strand restoration, SAD/SAR/ALT-minus-REF sign, no-network runtime, L40S parity, and any cross-fitted track/link/direction head. Native tracks are fixed reference contexts, not donor-specific MASLD states or standalone signed eQTL/ieQTL effects."]
+blockers = ["The official Sonnet code revision, three immutable GCS object generations/sizes/MD5 values, 196,608-bp input, 5,313-track manifest, target-label-unexposed chronology, and sequence-component endpoint role are frozen under config/artifacts/models/enformer. Native weight terms, native object SHA-256 values, and a no-network native runtime remain unresolved. The separately identified CREsted conversion is admitted at archive SHA-256 628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc and Keras-member SHA-256 29dc3835c1d13a6c6bd93315b554075107cc409a9179b11ee0e00180f67cef56; safe inventory, strict fixed-fixture restoration, 5,313-track positional crosswalk, deterministic L40S inference, reverse-complement SAD/SAR, ALT-minus-REF scoring, and outcome-blind GSE281364 inference passed. It remains restricted under academic noncommercial nontransferable terms and lacks the checkpoint-producing conversion plus numeric parity against official Sonnet. Native tracks are fixed reference contexts, not donor-specific MASLD states or standalone signed eQTL/ieQTL effects."]
 supported_tasks = ["variant_to_regulation"]
 
 [[models]]
@@ -112,12 +112,12 @@ model_id = "sei"
 display_name = "Sei"
 implementation_type = "pretrained_adapter"
 checkpoint_revision = "FunctionLab/sei-framework@1e16bff9b1618af7065a23f82c4a3bb82aaeb689+Zenodo:4906997:sei_model.tar.gz"
-checkpoint_sha256 = "UNRESOLVED"
+checkpoint_sha256 = "3e1c41468d4b01d312aa44ebe0d2a708a705344908efb60daf8ff76548255b46"
 license_status = "code_academic_research_only_weight_CC-BY-4.0"
 exposure_status = "target_label_unexposed"
 status = "restricted_comparator"
 admission_blocking = true
-blockers = ["The exact 3,281,639,255-byte Zenodo archive, source MD5 4297aafb711aec4ecccb645b8928ea26, academic/research-only code, CC-BY-4.0 archive, 4,096-bp input, 21,907 target and 40 sequence-class manifests, and target-label-unexposed chronology are frozen under config/artifacts/models/sei. After campaign approval, verify SHA-256 and safely inventory the archive; isolate and convert the pickle checkpoint without unrestricted loading; hash projection arrays; freeze hg38/Selene channels, center anchoring, REF match, reverse-complement averaging, ALT-minus-REF sign, output formulas, legacy runtime, strict restore, L40S parity, and any cross-fitted combiner/link/direction head. Sei outputs center-bin regulatory probabilities/classes, not a spatial ATAC profile or signed gene effect, and its research-only code makes it ineligible for the open champion."]
+blockers = ["The exact 3,281,639,255-byte Zenodo archive is admitted at SHA-256 3e1c41468d4b01d312aa44ebe0d2a708a705344908efb60daf8ff76548255b46. Safe inventory, allowlisted member hashes, weights-only conversion, strict L40S restoration, 21,907 center-bin outputs, 40 projected sequence classes, reverse-complement averaging, ALT-minus-REF scoring, deterministic repeat, and outcome-blind GSE281364 inference passed. Sei remains admission-blocking for champion use because its official code is academic/research-only, the native reference archive is not reconciled against GRCh38.p14, no trainable optimizer/resume contract exists, and any fitted combiner/link/direction head still requires donor- and LD-block-safe development locking. It is a restricted static sequence center-bin comparator, not an RNA-conditioned or spatial ATAC-profile model and not a signed gene-effect predictor."]
 supported_tasks = ["variant_to_regulation"]
 
 [[models]]

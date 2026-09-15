@@ -15,7 +15,7 @@ MODEL_IDS = ("sequence_cnn_control", "sequence_transformer_control")
 
 
 class SequenceControlTrainingError(ValueError):
-    """Raised when a sequence-control training request violates its contract."""
+    """Raised when a sequence-control training request does not meet its requirements."""
 
 
 def _load_config(path: Path, model_id: str) -> Mapping[str, Any]:

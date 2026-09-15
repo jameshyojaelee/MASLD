@@ -147,7 +147,7 @@ def audit_resource_atlas(
     contract_lock_path: str | Path,
     output_dir: str | Path,
 ) -> Path:
-    """Verify the upstream atlas contract and inventory Geneformer inputs."""
+    """Verify the upstream atlas requirements and inventory Geneformer inputs."""
 
     try:
         import h5py

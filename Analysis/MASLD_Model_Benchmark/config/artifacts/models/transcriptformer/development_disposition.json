@@ -1,0 +1,46 @@
+{
+  "activation_artifact": {
+    "path": "executions/model-training-21071475/ARTIFACTS.json",
+    "sha256": "375f38c25140746a77d13dffc7a90fed47e6597dc0537578bb311d9807043007"
+  },
+  "development_evaluation_artifact": {
+    "path": "executions/model-evaluation-21073148/ARTIFACTS.json",
+    "sha256": "8c5f8afbff9d2e256ec9ad1c0685ff262680ce2385fb048435fc19d232e7e32a"
+  },
+  "development_result": {
+    "best_existing_candidate": "geneformer_v2_316m::two_layer_mlp",
+    "best_existing_candidate_macro_f1": 0.9504623179251468,
+    "best_transcriptformer_head": "two_layer_mlp",
+    "best_transcriptformer_macro_f1": 0.9444998047809087,
+    "delta_brier_vs_hvg_pca_logistic": -0.03026621977237677,
+    "delta_macro_f1_ci95_vs_hvg_pca_logistic": [
+      0.0071431230403207705,
+      0.03676667614735565
+    ],
+    "delta_macro_f1_vs_best_existing_candidate": -0.0059625131442381,
+    "delta_macro_f1_vs_hvg_pca_logistic": 0.021579322151933922,
+    "hvg_pca_logistic_macro_f1": 0.9229204826289747,
+    "minimum_transcriptformer_class_f1": 0.9058693291035456,
+    "transcriptformer_brier": 0.09507424177944278
+  },
+  "disposition": "promote_two_layer_mlp_to_cross_cohort_development_robustness_only",
+  "eligibility": {
+    "champion_eligible": false,
+    "development_baseline_gate_passed": true,
+    "external_claim_eligible": false,
+    "exposure_status": "unknown",
+    "sealed_evaluation_eligible": false
+  },
+  "next_activation": {
+    "dataset_id": "gse256398",
+    "evaluation_role": "external_development",
+    "masld_donors": 17,
+    "alcohol_associated_donors": 9,
+    "alcohol_associated_role": "etiology_ood_challenge_not_masld_negative_controls",
+    "protocol": "extract native and common embeddings without outcome fields; preserve donor IDs and study identity; freeze prediction hashes before joining development labels; fit or adapt only on project-exposed training cohorts; report donor-balanced MASLD robustness and the alcohol-associated cohort separately",
+    "sealed_dataset_prohibited": "gse289173"
+  },
+  "schema_version": "masld-bench-development-disposition-v1",
+  "scope": "retrospective_1000_cell_smoke_only",
+  "status": "closed_pass_development_not_sealed"
+}

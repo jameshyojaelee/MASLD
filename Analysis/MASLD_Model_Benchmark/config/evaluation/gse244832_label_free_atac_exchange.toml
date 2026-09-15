@@ -1,0 +1,186 @@
+schema_version = "masld-bench-gse244832-label-free-atac-exchange-v1"
+exchange_id = "gse296875_to_gse244832_fixed_window_atac_transport_20260825"
+source_dataset_id = "gse296875"
+target_dataset_id = "gse244832"
+task_id = "observed_multiome"
+role = "project_exposed_condition_blind_cross_cohort_transport"
+biological_unit = "donor"
+automatic_model_execution = false
+condition_labels_available_to_model_jobs = false
+condition_labels_used_for_axis_selection = false
+condition_labels_used_for_model_selection = false
+phenotype_values_available_to_model_jobs = false
+development_outcomes_available_to_model_jobs = false
+sealed_data_available = false
+external_or_sealed_evaluation = false
+champion_claim_allowed = false
+universal_claim_allowed = false
+rna_assay_available_to_atac_model_jobs = false
+cross_assay_participant_join_inferred = false
+
+[activation_authority]
+path = "executions/gse244832-activation-readiness-21099523"
+artifacts_sha256 = "878606eec5a9bdb3a480943fd1a2be73cb5f1f9111eb4f684ea288de521b9ce6"
+artifact_class = "gse244832_activation_readiness_audit"
+cross_assay_participant_join = "unresolved"
+pairing_topology = "same_sample_different_aliquot"
+
+[source_authority]
+path = "executions/atac-transport-source-audit-21064435"
+artifacts_sha256 = "ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392"
+artifact_class = "atac_transport_source_admission_audit"
+inventory_path = "source_inventory.tsv"
+inventory_sha256 = "991b4df86c570ee73ff86c3568ee1958a489e22aba082ba46803215563e2b7e7"
+merged_h5ad_suffix = "Analysis/ATAC/Human_Multiome/results/label_transfer/snapatac2_relabeled.h5ad"
+per_donor_inventory_authority = "executions/atac-transport-membership-21064488"
+per_donor_inventory_artifacts_sha256 = "32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6"
+per_donor_inventory_path = "per_donor_h5ad_inventory.tsv"
+per_donor_inventory_sha256 = "98436dfd28a6b27222063d8aea9ba57c85b761144289972db6d6f8678e4ddb5b"
+source_qc_authority = "project_frozen_88814_cell_membership"
+source_native_publication_membership_claim_allowed = false
+
+[window_authority]
+path = "executions/atac-transport-outcomes-21064552"
+artifacts_sha256 = "6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3"
+artifact_class = "atac_transport_evaluator_outcomes"
+coordinate_only_path = "evaluator_outcomes/windows.tsv"
+coordinate_only_sha256 = "7266ab1a5c751423c6aaf422a19911fcf3ee48e4c615793e1cf1266f59bb16c0"
+biological_array_files_read_by_exchange_builder = false
+condition_bearing_axis_read_by_exchange_builder = false
+
+[census_authority]
+path = "executions/model-check-288-21098630"
+artifacts_sha256 = "f7705f963286fd6d2dda3d0677cd72515b34e7be0a4aab6f8bbdfc87003e5472"
+artifact_class = "observed_multiome_additive_census_revision"
+revision_id = "observed_multiome_additive_census_20260825"
+execution_authorized_by_census_alone = false
+
+[family_eligibility_authority]
+path = "config/evaluation/gse281367_label_free_atac_exchange.toml"
+sha256 = "5329086965d81bfab7a616e1fa423754da614a11fbc95c452520aba3a0f42237"
+section = "family_eligibility"
+row_count = 25
+reuse_scope = "family_native_input_and_output_eligibility_only"
+target_specific_pairing_and_missingness_override = "GSE244832_ATAC_only_exchange_does_not_expose_RNA_or_infer_cross_assay_donor_join"
+
+[label_free_axis]
+donor_count = 18
+donor_id_source = "obs_donor_id_only"
+cell_label_source = "project_frozen_transferred_annotation_used_only_as_stratification"
+source_labels_are_independent_accuracy_outcomes = false
+outer_fold_count = 5
+outer_fold_seed = 20260821
+outer_fold_inputs = ["dataset_id", "donor_id"]
+outer_fold_uses_condition = false
+primary_lineages = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage"]
+canonical_lineages = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"]
+minimum_cells = 50
+t_cell_state = "not_applicable_evaluator_not_materialized"
+rna_state = "structurally_missing_for_atac_exchange"
+same_cell_pairing_claimed = false
+same_nucleus_pairing_claimed = false
+same_donor_cross_assay_pairing_claimed = false
+missing_as_zero = false
+
+[window_exchange]
+coordinate_system = "GRCh38.p14_0_based_half_open"
+window_count = 32000
+window_width_bp = 1000
+profile_bins = 20
+profile_bin_width_bp = 50
+valid_window_count = 16000
+test_window_count = 16000
+roles_are_whole_chromosome_disjoint = true
+largest_admitted_receptive_field_bp = 524288
+target_role_contigs_removed_from_query_atac = true
+target_role_contigs_removed_before_query_transform = true
+local_boundary_buffer_needed_after_whole_contig_removal = false
+target_selection_uses_condition_or_outcome = false
+native_peak_to_window_interpolation_primary_allowed = false
+unsupported_window_encoded_as_zero = false
+query_fragment_cut_sites = "start_plus_4_and_end_minus_5"
+cellranger_tn5_adjusted_coordinates = false
+raw_fragment_multiplicity_used_for_query_values = false
+
+[[rotation]]
+rotation_id = "valid_context_test_target"
+observed_atac_context_role = "valid"
+scored_target_role = "test"
+
+[[rotation]]
+rotation_id = "test_context_valid_target"
+observed_atac_context_role = "test"
+scored_target_role = "valid"
+
+[overlap_contract]
+profile_track_mapping = "exact_base_pair_integral_into_twenty_50bp_target_bins"
+count_track_mapping = "sum_of_mapped_target_profile_bins"
+fixed_window_head_mapping = "exact_window_id_only"
+native_peak_scalar_primary_mapping = "prohibited_require_refit_or_decoder_on_fixed_project_windows"
+shared_support_sensitivity_required = true
+per_model_coverage_report_required = true
+coverage_threshold_for_primary_profile_or_count = 0.95
+coverage_threshold_selected_from_outcomes = false
+
+[missingness_contract]
+states = ["observed", "structurally_missing", "not_applicable", "below_qc", "withheld_scored_mask", "window_unsupported", "reference_incompatible", "model_output_missing"]
+observed_code = 0
+structurally_missing_code = 1
+not_applicable_code = 2
+below_qc_code = 3
+withheld_scored_mask_code = 4
+window_unsupported_code = 5
+reference_incompatible_code = 6
+model_output_missing_code = 7
+missing_prediction_value = "nan"
+missing_prediction_value_may_be_zero = false
+
+[prediction_commit]
+schema_version = "masld-bench-atac-transport-prediction-bundle-v1"
+target_specific_commit_implementation_registered = false
+row_axis_hash_required = true
+window_axis_hash_required = true
+model_manifest_hash_required = true
+prediction_tree_frozen_before_scoring = true
+prediction_hash_commit_before_outcome_open = true
+condition_or_phenotype_fields_forbidden = true
+threshold_or_calibration_change_after_commit = false
+
+[scorer]
+target_specific_condition_blind_scorer_registered = false
+join_fields = ["donor_id", "lineage_id", "window_id", "profile_bin"]
+condition_join_allowed = false
+phenotype_join_allowed = false
+native_output_families_ranked_separately = true
+selection_unit = "donor_by_lineage_by_chromosome_block"
+condition_stratified_selection_allowed = false
+
+[claim_boundary]
+gse244832_is_non_champion = true
+project_exposed_development_only = true
+cross_assay_join_unresolved = true
+rna_and_atac_are_different_aliquots = true
+cell_or_nucleus_pairing_prohibited = true
+partial_fibrosis_metadata_not_opened = true
+source_annotations_are_transferred_not_independent_truth = true
+transport_robustness_claim_allowed_after_blind_scoring = true
+external_confirmation_claim_allowed = false
+masld_specific_superiority_claim_allowed = false
+diagnostic_prognostic_or_clinical_claim_allowed = false
+
+[implementation]
+builder_path = "scripts/build_gse244832_label_free_atac_exchange.py"
+builder_sha256 = "748fc627208e6cdc9d2a3ba79b3330ada1407e4b67a074fbe8fe4bbce24f3fe4"
+builder_test_path = "tests/unit/test_gse244832_label_free_atac_exchange.py"
+builder_test_sha256 = "0a9cef0db265043f4d0fad2282693eb4144214e8266f87ed78819a9143b47359"
+
+[decision]
+label_free_axis_build_authorized = true
+query_atac_materialization_authorized = false
+target_specific_prediction_commit_registered = false
+target_specific_condition_blind_scorer_registered = false
+individual_model_execution_requires_native_fixture = true
+biological_scoring_authorized_before_prediction_commit = false
+cross_assay_fusion_authorized = false
+outcome_selected_model_repair_allowed = false
+status = "CONTRACT_READY_AXIS_BUILD_PENDING"

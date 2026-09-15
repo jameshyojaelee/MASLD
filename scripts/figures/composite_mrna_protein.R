@@ -32,7 +32,17 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 source(file.path(BASE, "scripts/figures/load_figure_data.R"))
 source(file.path(BASE, "scripts/figures/composite_helpers.R"))
-DATA_DIR <- file.path(FIG5_CONTEXT_DIR, "data")
+CANDIDATE_ROOT <- Sys.getenv("FIGURE_CANDIDATE_ROOT", "")
+OUTPUT_DIR <- if (nzchar(CANDIDATE_ROOT)) {
+  file.path(CANDIDATE_ROOT, "figure5", "panels")
+} else {
+  file.path(FIG5_CONTEXT_DIR, "panels")
+}
+DATA_DIR <- if (nzchar(CANDIDATE_ROOT)) {
+  file.path(CANDIDATE_ROOT, "figure5", "data")
+} else {
+  file.path(FIG5_CONTEXT_DIR, "data")
+}
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
 PROTEIN_CONTEXT <- file.path(PROGRAM_CONTEXT_DIR, "proteomics")
 
@@ -297,7 +307,7 @@ lp <- dot_panel(cand, "gene", ord, est1 = "bulk_logFC", est2 = "protein_logFC",
 # NOT collected: each colorbar stays under its OWN panel (z-score under heatmap, histology-r under pie),
 # so the two similar blue-red scales are spatially tied to their data and separated (mRNA key is inline).
 comp <- hp + pp + lp + plot_layout(widths = c(3.30, 0.62, 1.02))
-out <- file.path(FIG5_CONTEXT_DIR, "panels", "fig5c_mrna_protein_composite.pdf")
+out <- file.path(OUTPUT_DIR, "fig5c_mrna_protein_composite.pdf")
 dir.create(dirname(out), showWarnings = FALSE, recursive = TRUE)
 ggsave(out, comp, width = 6.63, height = 2.83, device = grDevices::cairo_pdf)
 cat("[fig5c] saved:", out, "\n[fig5c]", n, "proteins x", np, "patients;", length(gl), "gene-row programs (NES on program brackets)\n")

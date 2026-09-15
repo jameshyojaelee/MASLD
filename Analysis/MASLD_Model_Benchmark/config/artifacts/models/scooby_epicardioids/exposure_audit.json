@@ -19,7 +19,7 @@
     "gse296875": "Same-nucleus RNA/ATAC can support a new liver adaptation inside donor-by-genomic folds, but training a new scGLUE space does not preserve the checkpoint decoder coordinate system. An explicit bridge or decoder adaptation is required and must be reported as a new fitted model.",
     "rna_conditioned_atac": "Fails the no-observed-ATAC inference gate because ATAC contributed to the cell context. Masking ATAC after computing the embedding does not remove that leakage."
   },
-  "interpretation": "GSE289173 target labels are provisionally unexposed, but Epicardioids cannot run on the sealed feature topology or compete for RNA-conditioned ATAC. Its inputs are cardiac, ATAC-conditioned and dependent on an unbundled scGLUE encoder; upstream Borzoi terms and exact runtime also remain unresolved.",
+  "interpretation": "GSE289173 target labels are provisionally unexposed, but Epicardioids cannot run on the held-back feature topology or compete for RNA-conditioned ATAC. Its inputs are cardiac, ATAC-conditioned and dependent on an unbundled scGLUE encoder; upstream Borzoi terms and exact runtime also remain unresolved.",
   "license_disposition": {
     "code": "MIT",
     "open_champion_eligibility": "ineligible_until_inherited_Borzoi_weight_authority_and_derivative_terms_are_cleared",

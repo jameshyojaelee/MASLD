@@ -38,7 +38,7 @@ MEMBERSHIP_FIELDS = (
 
 
 class FragmentSplitError(ValueError):
-    """Raised when a fragment source or split output violates its contract."""
+    """Raised when a fragment source or split output does not meet its requirements."""
 
 
 class HashingReader:

@@ -1,0 +1,25 @@
+schema_version = "masld-bench-task-v1"
+task_id = "observed_multiome"
+status = "candidate"
+unit_of_inference = "donor"
+input_modalities = ["dna_sequence", "single_nucleus_rna", "single_nucleus_atac"]
+endpoint = "Evaluate family-native observed-multiome outputs without collapsing masked accessibility profiles, functional tracks, and joint representations into one scalar leaderboard. The primary profile endpoint predicts prespecified held-out ATAC bins after removing those bins and their buffer from every query-derived transform."
+metrics = ["relative_masked_profile_deviance_reduction", "donor_block_profile_spearman", "donor_peak_auprc", "same_nucleus_cross_modal_retrieval", "held_donor_joint_representation_stability"]
+datasets_train = ["gse296875"]
+datasets_development = ["gse244832", "gse281367"]
+datasets_sealed = []
+split_id = "donor_outer"
+required_pairing_levels = ["same_nucleus", "same_sample_different_aliquot", "same_study_unpaired"]
+missingness_policy = "explicit_state_and_mask_never_zero"
+admission_gates = ["This standalone TaskSpec does not change the frozen global model census or historical exposure audits; execution remains blocked until a prospective global census revision binds every admitted model and new baseline.", "Remove every scored ATAC position and its prespecified receptive-field buffer before query normalization, feature selection, motif construction, embedding, neighbor search, fitting, or inference.", "Give every compared baseline the identical observed query modalities and mask geometry.", "Use GSE296875 only through its frozen same-nucleus join and keep all modalities from one donor in one outer fold.", "Treat GSE244832 as same-sample different-aliquot and evaluate only at donor-compatible pseudobulk resolution; false cell or nucleus pairing is forbidden.", "Treat GSE281367 RNA as structurally missing; do not encode it as zero, impute it, or relabel the task as RNA-conditioned ATAC.", "Fit peak universes, IDF, normalization, motif context, neighbor graphs, feature selection, calibration, and all learned query transforms inside the outer-training partition.", "Cross held donors with held genomic blocks and a boundary buffer at least as large as the largest admitted receptive field.", "Donors and genomic blocks are resampling units; cells and nuclei are not biological replicates.", "Rank native output families separately. No champion, sealed, RNA-conditioned, diagnostic, prognostic, clinical, or universal claim is allowed from this development task."]
+baseline_model_ids = ["assay_native_pseudobulk", "context_only", "lsi", "mean_track", "peakvi", "sequence_only", "seurat_wnn", "shuffled_context", "trans_only"]
+uncertainty_method = "paired_two_way_donor_genomic_block_bootstrap"
+resampling_units = ["donor", "genomic_block"]
+bootstrap_replicates = 10000
+multiplicity_family = "observed_multiome_development_endpoints"
+multiplicity_method = "bh_q0.05_within_native_output_family_no_confirmatory_family"
+promotion_gate_id = "observed_multiome_development_v1"
+promotion_gate_config_sha256 = "78cff35fa0cec02b06091c8bb13ac2da4f6e289ce845abffa9ba4f1eed06cff3"
+primary_evaluator_id = "observed_multiome_masked_accessibility_deviance_v1"
+evaluator_parameters = { output_families = ["functional_track", "joint_representation", "masked_accessibility_profile"], major_lineages = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"], native_output_families_ranked_separately = true, external_champion_claim_allowed = false }
+claim_gate = "Development diagnostics only. A topology-matched external seal, prospective global census revision, complete native fixture admission, and new selection lock are required before any model promotion or champion claim."

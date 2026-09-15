@@ -19,7 +19,7 @@ response_headers="${stage}/response.headers"
 version_id="P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU"
 expected_etag='"a841d3efcfc21eb14c41c6151bc39b73-217"'
 expected_bytes="1819975447"
-source_url="https://czi-transcriptformer.s3.amazonaws.com/weights/tf_sapiens.tar.gz"
+source_url="https://czi-transcriptformer.s3.amazonaws.com/weights/tf_sapiens.tar.gz?versionId=${version_id}"
 
 if [[ -e "${target}" || -e "${stage}" ]]; then
   printf 'Refusing to overwrite TranscriptFormer acquisition: %s\n' "${target}" >&2

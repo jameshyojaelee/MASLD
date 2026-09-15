@@ -1,0 +1,39 @@
+schema_version = "masld-bench-dataset-v1"
+dataset_id = "gse274114_mash_hbv"
+title = "FFPE liver RNA-seq from healthy, MASH-only, HBeAg-negative chronic HBV-only, and combined MASH-HBV participants"
+role = "train_development"
+status = "available"
+species = "human"
+accession = ["GSE274114", "PRJNA1144975", "SRP524555"]
+access_tier = "public"
+automatic_download = false
+outcome_url = "NOT_REGISTERED"
+redistribution_class = "source_reference_only"
+license_status = "source_terms_apply"
+biological_unit = "participant"
+expected_biological_units = 39
+native_genome_build = "GRCh38"
+native_annotation_release = "GENCODE_v40"
+modalities = ["bulk_rna", "source_native_etiology_labels"]
+pairing_levels = ["same_study_unpaired"]
+modality_status_default = "observed"
+exposure_status = "downstream_demo"
+admission_blocking = true
+blockers = [
+  "Global four-class, MASH-versus-non-MASH, MASH-versus-healthy, and naive OOD performance uses are prohibited because sequencing instrument is perfectly confounded with MASH superclass.",
+  "Only the separately registered CTRL-versus-ENEG HiSeq and NASH-versus-ENEG_NASH NovaSeq TaskSpec may activate model fitting after its no-fit fixture and evaluator pass.",
+  "Participant-level age, sex, ethnicity, fibrosis, steatosis, ballooning, lobular inflammation, BMI, metabolic, alcohol, and laboratory metadata are not publicly deposited; article group summaries remain descriptive only.",
+  "Participant identity across unrelated cohorts remains join-unresolved after exact accession and local-alias screening unless a permissioned salted expression or genotype fingerprint is later available.",
+  "Materially trained derivative weights require model-specific source terms and legal review before release."
+]
+notes = "The article and GEO describe 39 participants and one FFPE core liver biopsy per participant: 9 healthy liver-donor controls, 11 HBeAg-negative chronic HBV-only (ENEG), 10 biopsy-proven MASH-only, and 9 combined MASH/ENEG. The public deposit has 39 unique GSMs, BioSamples, and SRA experiments but 71 technical SRA runs. Salmon gene quantification used GRCh38/GENCODE v40. The frozen no-fit activation corrects an earlier crosswalk by handling 44 X/PAR_Y two-row target genes explicitly and masking 1,230 source rows absent from GENCODE v49. No model has been fit or scored in this activation lane."
+
+[provenance]
+source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE274114"
+verified_date = "2026-08-24"
+local_exposure = "Official GEO/SRA records, processed Salmon files, and a prior project activation audit are already project-exposed; this source is never sealed."
+
+[split]
+group_key = "cohort_family_id+participant_id"
+outer_role = "train"
+label_visibility = "development_visible_evaluator_separated"

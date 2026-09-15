@@ -34,14 +34,14 @@
       "checkpoint_exposure_state": "target_label_unexposed",
       "exact_sequence_overlap": "unknown",
       "public_date": "2025-02-12",
-      "reason": "The exact artifact was uploaded after the GEO release, but the artifact declares only HepG2 lentiMPRA training and no MASLD cohort labels. This is not a clean chronology claim."
+      "reason": "The exact output file was uploaded after the GEO release, but the output file declares only HepG2 lentiMPRA training and no MASLD cohort labels. This is not a clean chronology claim."
     },
     "gse296875": {
       "allowed_use": "Training-fold-only nomination of peaks or loci for development diagnostics. Held-donor ATAC, pathology, RNA, peak calls, or normalization cannot select windows, heads, thresholds, or calibration.",
       "checkpoint_exposure_state": "target_label_unexposed",
       "model_input_status": "not_a_native_input",
       "public_date": "2025-10-01",
-      "reason": "The exact artifact was uploaded ten days after the GEO release but declares an unrelated lentiMPRA corpus. Exact developer exposure is not established, so only target-label unexposed is claimed."
+      "reason": "The exact output file was uploaded ten days after the GEO release but declares an unrelated lentiMPRA corpus. Exact developer exposure is not established, so only target-label unexposed is claimed."
     }
   },
   "missingness_and_topology": {

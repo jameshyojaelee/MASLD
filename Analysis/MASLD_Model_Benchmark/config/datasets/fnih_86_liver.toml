@@ -20,7 +20,7 @@ modality_status_default = "unavailable_permission"
 exposure_status = "unknown"
 admission_blocking = true
 blockers = ["Raw or analysis-complete donor-linked files are not yet verified as openly downloadable without a DUA.", "Participant joins, genome build, outcome definitions, and export rules remain unresolved.", "Activation requires an immutable 86-donor manifest and confirmation that all repeated specimens remain donor-grouped."]
-notes = "Conditional future seal for the published 86-liver multiome, Paired-Tag, Hi-C, and spatial cohort. Do not delay development or infer a longitudinal endpoint."
+notes = "Conditional future hold-back for the published 86-liver multiome, Paired-Tag, Hi-C, and spatial cohort. Do not delay development or infer a longitudinal endpoint."
 
 [provenance]
 source_url = "https://pmc.ncbi.nlm.nih.gov/articles/PMC12083587/"

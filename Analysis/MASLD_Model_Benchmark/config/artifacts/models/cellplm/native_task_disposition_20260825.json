@@ -1,0 +1,110 @@
+{
+  "audit_date": "2026-08-25",
+  "base_registry_files": [
+    {
+      "registry_file": "config/models/cell_foundation.toml",
+      "registry_file_sha256": "6c0d8d6aff2db6fa99000ff5cc593940f097b6dde9745d08b8cd93aed9b4d14d"
+    }
+  ],
+  "base_registry_unchanged": true,
+  "binding_consequences": {
+    "development_execution_recorded": false,
+    "may_enter_a_sealed_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "permitted_role": "outcome-blind development record only, and only where a separately frozen contract authorises it",
+    "sealed_champion_eligible": false,
+    "sealed_scoring_authorized": false
+  },
+  "biological_data_read": false,
+  "bound_evidence": [
+    {
+      "path": "config/artifacts/models/cellplm/checkpoints.json",
+      "sha256": "eecb7f6a82541edc9524bfa3fa5c1c06731acb88cdfe6025a08204e4defb4fca"
+    },
+    {
+      "path": "executions/model-validate-205-21088010/ARTIFACTS.json",
+      "sha256": "f4ecab8ba1163e2b973b36ab5dbe4f76cc60adf2aa1eb88836b84ed6f9e377c9"
+    }
+  ],
+  "checkpoint_opened": false,
+  "closes": "OVERALL_PLAN.md completion criterion 1: every required model family must carry an exact-checkpoint, license, exposure, runtime and native-task disposition. This record supplies the missing native-task axis only.",
+  "consumed_by_runtime": false,
+  "disposition": "blocked",
+  "disposition_reason": "weight_terms_undeclared_and_zero_execution",
+  "disposition_scope": "Native-task disposition only. This record adds no capability, opens no checkpoint, deserializes nothing, and bypasses no license gate. The base registry under config/models/ is unchanged.",
+  "exposure_rule": {
+    "champion_permitting_subset": [
+      "clean_declared",
+      "target_label_unexposed"
+    ],
+    "champion_permitting_subset_frozen_at": [
+      "config/gse281364_five_seed_row_universe.toml:allowed_checkpoint_exposure_states",
+      "config/gse281364_sequence_context_refit_dag.toml:allowed_checkpoint_exposure"
+    ],
+    "frozen_vocabulary": "config/resources.toml [semantics].exposure_statuses enumerates the seven permitted checkpoint exposure states: clean_declared, target_label_unexposed, encoder_seen, continual_seen, reference_only, downstream_demo, unknown.",
+    "scope_caveat": "Both frozen enumerations of the two-state subset are prespecified for the GSE281364 sequence lane. config/tasks/cell_state_mapping.toml declares no allowed_checkpoint_exposure list of its own. For the cell_state_mapping lane the binding authority is therefore each family's own exposure audit under config/artifacts/models/<family>/exposure_audit.json, which records sealed_champion_eligibility directly."
+  },
+  "family_id": "cellplm",
+  "family_specific_blockers": {
+    "checkpoint_release_conflict_unresolved": true,
+    "detail": "config/artifacts/models/cellplm/checkpoints.json carries an unresolved checkpoint_release_conflict: the registered census object is 20231027_85M.best.ckpt (latent_mod = vae, status undocumented_release_variant) while the repository-documented object is 20230926_85M.best.ckpt (latent_mod = gmvae). Its benchmark_action forbids silent substitution and requires the census entry to be resolved before acquisition. Neither weight was downloaded or deserialized.",
+    "documented_checkpoint_status": "documented_release_candidate",
+    "registered_checkpoint_status": "undocumented_release_variant"
+  },
+  "license_gate_bypassed": false,
+  "metrics_calculated": false,
+  "model_dispositions": [
+    {
+      "disposition": "blocked",
+      "model_id": "cellplm_85m",
+      "reason": "config/artifacts/models/cellplm/checkpoints.json terms_audit.result is blocked_checkpoint_terms_undeclared and weight_license is UNDECLARED; the registry checkpoint_sha256 is UNRESOLVED. No execution of any kind is recorded."
+    },
+    {
+      "disposition": "blocked",
+      "model_id": "cellplm_85m_vae_20231027",
+      "reason": "Same undeclared weight terms and UNRESOLVED digest. The registry additionally holds this id at status = restricted_comparator, and the bundle records registered_checkpoint.status = undocumented_release_variant."
+    }
+  ],
+  "model_ids": [
+    "cellplm_85m",
+    "cellplm_85m_vae_20231027"
+  ],
+  "outcomes_read": false,
+  "overlay_id": "model_census_native_task_disposition_20260825",
+  "record_only": true,
+  "registry_facts_at_audit": {
+    "cellplm_85m": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "code_BSD-2-Clause_weights_UNDECLARED",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "blocked_terms",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    },
+    "cellplm_85m_vae_20231027": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "code_BSD-2-Clause_weights_UNDECLARED",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "restricted_comparator",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    }
+  },
+  "root_cause": {
+    "cell_state_capability_rows": 0,
+    "consequence": "No per-model cell_state_mapping capability row exists to carry a native-task disposition, so the disposition is recorded here instead. Adding rows to the capability registry is a separate, non-additive change and is deliberately not attempted.",
+    "finding": "config/evaluation/cell_state_mapping_capabilities.toml carries no [[models]] roster. It is 12 lines of task-level scope with four family names, a baseline list and an ATAC-only exclusion, and it names no per-model row. config/evaluation/variant_to_regulation_capabilities.toml carries 40 per-model rows over 411 lines. That structural asymmetry, not a missing judgement, is why the cell_state_mapping native-task column is empty for every family in this record.",
+    "variant_capability_rows": 40
+  },
+  "schema_version": "masld-bench-native-task-disposition-v1",
+  "sealed_data_read": false,
+  "supersedes_nothing": true,
+  "task_id": "cell_state_mapping",
+  "unrestricted_deserializer_used": false
+}

@@ -19,7 +19,7 @@
     "gse296875": "Development-only same-nucleus RNA/ATAC can support reconstruction diagnostics or a new liver adaptation. For the RNA-conditioned ATAC endpoint, held-donor ATAC cannot enter context construction, neighbors, query fitting or calibration.",
     "rna_only_query_condition": "Reconsider only if the exact historical Poisson-MultiVI artifact is recovered and an RNA-only query posterior can project held liver donors without ATAC or held-donor fitting. This path must pass the project's fixed no-ATAC profile fixture before selection lock."
   },
-  "interpretation": "The NeurIPS weight predates GSE289173 and is target-label-unexposed with high confidence. It still cannot compete in the current sealed or RNA-conditioned ATAC tracks: weight terms are undeclared, the checkpoint-specific context encoder is absent, published context uses observed ATAC, and held-donor/cross-tissue induction is unvalidated.",
+  "interpretation": "The NeurIPS weight predates GSE289173 and is target-label-unexposed with high confidence. It still cannot compete in the current held-back or RNA-conditioned ATAC tracks: weight terms are undeclared, the checkpoint-specific context encoder is absent, published context uses observed ATAC, and held-donor/cross-tissue induction is unvalidated.",
   "license_disposition": {
     "code": "MIT",
     "open_champion_eligibility": "ineligible",

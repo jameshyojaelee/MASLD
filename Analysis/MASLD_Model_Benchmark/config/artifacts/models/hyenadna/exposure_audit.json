@@ -9,7 +9,7 @@
     "reference_sequence_exposure": "encoder_seen_with_declared_chr14_and_chrX_pretraining_holdout",
     "alternate_allele_exposure": "clean_declared_for_single_reference_corpus",
     "target_effect_label_exposure": "unexposed",
-    "interpretation": "Conditionally eligible for an open champion claim after task-data and runtime gates. Any chr14/X advantage must be labeled a pretraining-reference holdout analysis, not an independent cohort result."
+    "interpretation": "Conditionally eligible for a best openly licensed model claim after task-data and runtime checks. Any chr14/X advantage must be labeled a pretraining-reference holdout analysis, not an independent cohort result."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",

@@ -1,0 +1,326 @@
+{
+  "schema_version": "masld-bench-dna-lm-family-reconciliation-v1",
+  "status": "pass_reconciled_development_smoke_no_model_promoted",
+  "verified_date": "2026-08-24",
+  "family_id": "dna_language",
+  "model_order": [
+    "dnabert2",
+    "nucleotide_transformer",
+    "hyenadna",
+    "caduceus"
+  ],
+  "frozen_file_authorities": {
+    "registry": {
+      "path": "config/models/dna_language.toml",
+      "sha256": "bb6e11d6b38b2a424f719a867d92e88c5d9e275223cf06385e82c89f6621e386"
+    },
+    "common_task_contract": {
+      "path": "config/gse281364_dna_lm_native_contract.json",
+      "sha256": "4d47fd8fabb4e968574479c3a0982ccabe5568d0f23a2bdb33290c7166b34239"
+    },
+    "caduceus_task_contract": {
+      "path": "config/gse281364_caduceus_131k_contract.json",
+      "sha256": "0c3e50fb5dc5a41c3686caf638416106b523a1e059a28c50fd5a75c2e37a0dbf"
+    },
+    "common_fixture_contract": {
+      "path": "config/gse281364_dna_lm_common_fixture.json",
+      "sha256": "adcc739341f5651b9f291d45964e6df03b032edd5f2c05a2bcc4b9f9af4315bf"
+    },
+    "common_evaluator": {
+      "path": "scripts/evaluate_gse281364_dna_lm_common_lane.py",
+      "sha256": "39730c63b7370ea05153482f881da5165287e0a8ff1ad757a1d9399db2f7ab82"
+    },
+    "caduceus_evaluator": {
+      "path": "scripts/evaluate_gse281364_caduceus_common_lane.py",
+      "sha256": "bb837a6abbf6d01a504d9539345c970d1fec14d37f19b6a7b75431251dd3e034"
+    },
+    "dnabert2_checkpoints": {
+      "path": "config/artifacts/models/dnabert2/checkpoints.json",
+      "sha256": "7e6d488da6400476f45ae156c55b2af0fc73311723476d774ae0b95af7f83052"
+    },
+    "dnabert2_exposure": {
+      "path": "config/artifacts/models/dnabert2/exposure_audit.json",
+      "sha256": "2c2b3bad87b0ffecbb0579d7fd4d8ca5aa49510135b4484f60a6fd6397dc2fa3"
+    },
+    "dnabert2_crosswalk": {
+      "path": "config/artifacts/models/dnabert2/development_crosswalk.json",
+      "sha256": "c0b01d5d1e5ebbbe5a51815d03bb8a13cc56eb79a8cf1addd43d2a1ddab5c7dc"
+    },
+    "nucleotide_transformer_checkpoints": {
+      "path": "config/artifacts/models/nucleotide_transformer/checkpoints.json",
+      "sha256": "c0fd9bca2a8c49e420979584f0723c2eaaf666c3c440131638c72dae32433fe2"
+    },
+    "nucleotide_transformer_exposure": {
+      "path": "config/artifacts/models/nucleotide_transformer/exposure_audit.json",
+      "sha256": "25fa279686c1c77bf61152455e8db841d31dfd79ecaf6bec170a24cafbfd05a5"
+    },
+    "nucleotide_transformer_crosswalk": {
+      "path": "config/artifacts/models/nucleotide_transformer/development_crosswalk.json",
+      "sha256": "dd34db7145b0308b203734fa3c82025bd8e407d793f456d36c97ab540a0af26b"
+    },
+    "hyenadna_checkpoints": {
+      "path": "config/artifacts/models/hyenadna/checkpoints.json",
+      "sha256": "808c02488a697759855edd1fcd7c02723af5410b7935d665a74542cc4ea56c14"
+    },
+    "hyenadna_exposure": {
+      "path": "config/artifacts/models/hyenadna/exposure_audit.json",
+      "sha256": "e73cc713a2bd0177ed5b4fed9966b50d30340a133154de10d15ee434ca9cfb9d"
+    },
+    "hyenadna_crosswalk": {
+      "path": "config/artifacts/models/hyenadna/development_crosswalk.json",
+      "sha256": "93d4b069f2af56bee9cf154c7f3f211311bfe22a69c552c339ed37f9e08c5aa6"
+    },
+    "caduceus_checkpoints": {
+      "path": "config/artifacts/models/caduceus/checkpoints.json",
+      "sha256": "ec7626c97d759987784506ccd9524169d41b425ffe70e4e069c205e1f5227ea1"
+    },
+    "caduceus_exposure": {
+      "path": "config/artifacts/models/caduceus/exposure_audit.json",
+      "sha256": "f93bb9d2720e53125aedcbf4c49aa290b4eb06e211fb6d0e973f881acd8b04e8"
+    },
+    "caduceus_crosswalk": {
+      "path": "config/artifacts/models/caduceus/development_crosswalk.json",
+      "sha256": "0230ceeeb8c6521d17b2bbf94e4fb101f221a622d00e0d62592fee179c2d59a4"
+    }
+  },
+  "frozen_tree_authorities": {
+    "source_admission": {
+      "path": "executions/dna-lm-admission-sources-21064540",
+      "artifacts_sha256": "4e1703b03ff28924904053e842b89079d510a80d2a9ad082de5369adaeea75c8"
+    },
+    "project_reference": {
+      "path": "executions/sequence-fasta-21063808",
+      "artifacts_sha256": "7c202e392c3e415ee7f6bc196b931199c514b2fefc04a19fc82645d81fd8ba39"
+    },
+    "common_fixture": {
+      "path": "executions/gse281364-dna-lm-common-fixture-21069076",
+      "artifacts_sha256": "74a3a5c36bd1416daf3fe4b63fe317cfa7e2d008b96e2503d4ca43770b4357de"
+    },
+    "caduceus_fixture": {
+      "path": "executions/gse281364-caduceus-131k-fixture-21071004",
+      "artifacts_sha256": "82b47ba2059193cae23e35db5401013659879024052c47558e602c03b4ee2c70"
+    },
+    "token_coordinate_contract": {
+      "path": "executions/gse281364-dna-lm-native-contract-21069406",
+      "artifacts_sha256": "92c11e5ae4e71475fff3367d3e5e8ddb801d1d5ea235cfec7a15c1e2251ec623"
+    },
+    "dnabert2_runtime_probe": {
+      "path": "executions/dnabert2-common-runtime-probe-21065134",
+      "artifacts_sha256": "a0324f4b774c0af4d8bfbdc9bb4ce4514d62e704e4f0ae34bf8cd8d2c67f9545"
+    },
+    "nucleotide_transformer_runtime_probe": {
+      "path": "executions/nucleotide-transformer-common-runtime-probe-21065102",
+      "artifacts_sha256": "f0c65ebdb5880b9392dfd131e43b3f320df88cd8eccb7accf1f7cc9dd358e325"
+    },
+    "hyenadna_runtime_probe": {
+      "path": "executions/hyenadna-common-runtime-probe-21064769",
+      "artifacts_sha256": "9deb82d5faae1636cb6129ce6d30b70b8264c6cc30313caa8fb7506293aa12b6"
+    },
+    "caduceus_common_runtime_probe": {
+      "path": "executions/caduceus-native-probe-21065951",
+      "artifacts_sha256": "6bc5288848ca6cd696cc90c36ceea4e789e97b7f11ceb70670526bd0ee696ceb"
+    },
+    "caduceus_131k_runtime_probe": {
+      "path": "executions/caduceus-131k-probe-21066018",
+      "artifacts_sha256": "a9c531b8a044c8e7990e24cbafcb7b035d51d5861efccb7c2c326c66f41b5456"
+    },
+    "common_embeddings": {
+      "path": "executions/model-work-001-21070132",
+      "artifacts_sha256": "e0efbb81731c1bdb2a1f5546ae3e0678eda28cd5960cbea48afce92f286e62da"
+    },
+    "caduceus_embeddings": {
+      "path": "executions/model-work-301-21072684",
+      "artifacts_sha256": "641ef6be0436e323a473dfacbd7f66f673cafc498a795bdcddf9b048e44d1b20"
+    },
+    "development_outcomes": {
+      "path": "executions/gse281364-replicate-outcomes-21066307",
+      "artifacts_sha256": "cb42bd4037127a4e4d6a406d6f7b00c706bc93b631cdf93083ce994809e791db"
+    },
+    "common_evaluation": {
+      "path": "executions/gse281364-dna-lm-common-lane-evaluation-21070646",
+      "artifacts_sha256": "9f516cfc83163b73f0fb3c79d897bba59105ca129a347eeb23bd8c6a94049db9"
+    },
+    "caduceus_evaluation": {
+      "path": "executions/gse281364-caduceus-common-lane-evaluation-21076001",
+      "artifacts_sha256": "94710782708a08e4504e8b13b9d3fc6bda8594246a3e4bf31c770d66ccfe51f7"
+    }
+  },
+  "models": {
+    "dnabert2": {
+      "checkpoint_repository": "zhihan1996/DNABERT-2-117M",
+      "checkpoint_revision": "7bce263b15377fc15361f52cfab88f8b586abda0",
+      "source_checkpoint_sha256": "7ff39ec77a484dd01070a41bfd6e95cdd7247bec80fe357ab43a4be33687aeba",
+      "executable_checkpoint_sha256": "2b9f9fa945557c2446697ca72d4c7919aaf24b871794ba3dc436b422d6fa8d32",
+      "source_checkpoint_format": "PyTorch_pickle_container",
+      "execution_checkpoint_format": "safetensors_restricted_conversion",
+      "code_license": "Apache-2.0",
+      "weight_license": "Apache-2.0_checkpoint_repository_LICENSE",
+      "restricted_comparator": false,
+      "open_champion_eligible_after_task_and_external_gates": true,
+      "exposure_state": "target_label_unexposed",
+      "reference_sequence_exposure": "encoder_seen",
+      "downstream_task_family_exposure": "downstream_demo_separate_GUE_continued_model_not_registered_checkpoint",
+      "pretraining_context": "approximately_700bp_encoded_as_128_BPE_tokens",
+      "task_input_bp": 4096,
+      "tokenization": "revision_pinned_BPE_vocab4096_with_per_allele_base_offsets",
+      "raw_feature_width": 768,
+      "runtime_probe_authority": "dnabert2_runtime_probe",
+      "runtime_receipt": "predictions/runtime_probe_receipt.json",
+      "learned_parameters": 117074176
+    },
+    "nucleotide_transformer": {
+      "checkpoint_repository": "InstaDeepAI/nucleotide-transformer-500m-human-ref",
+      "checkpoint_revision": "f87b5d7233295242e79c951873d290f4cf992045",
+      "source_checkpoint_sha256": "971cb721bd8cc8134d3665b5d94b195fffb18a1480ad5925d6dcc9290bf1c17f",
+      "executable_checkpoint_sha256": "05f00d75d230a4e31bb0fc51565180355efd46c9f749aa9ae470c04290028136",
+      "source_checkpoint_format": "PyTorch_pickle_container",
+      "execution_checkpoint_format": "safetensors_restricted_conversion",
+      "code_license": "Apache-2.0_Transformers_implementation",
+      "weight_license": "CC-BY-NC-SA-4.0",
+      "restricted_comparator": true,
+      "open_champion_eligible_after_task_and_external_gates": false,
+      "exposure_state": "target_label_unexposed",
+      "reference_sequence_exposure": "encoder_seen",
+      "downstream_task_family_exposure": "downstream_demo_dataset_declared_on_model_card",
+      "pretraining_context": "up_to_6000bp_as_1000_nonoverlapping_6mers",
+      "task_input_bp": 4096,
+      "tokenization": "six_fixed_phases_each_4086bp_681_6mers_plus_CLS",
+      "raw_feature_width": 1280,
+      "runtime_probe_authority": "nucleotide_transformer_runtime_probe",
+      "runtime_receipt": "predictions/runtime_probe_receipt.json",
+      "learned_parameters": 485699306
+    },
+    "hyenadna": {
+      "checkpoint_repository": "LongSafari/hyenadna-large-1m-seqlen-hf",
+      "checkpoint_revision": "0a629abf9c7f85b4ec9aa6a1aefa3adcf1907446",
+      "source_checkpoint_sha256": "deafb53209bfafb314d14bd81108546a34d473c07ed7ab7a355674376b56ad12",
+      "executable_checkpoint_sha256": "deafb53209bfafb314d14bd81108546a34d473c07ed7ab7a355674376b56ad12",
+      "source_checkpoint_format": "safetensors",
+      "execution_checkpoint_format": "safetensors",
+      "code_license": "Apache-2.0",
+      "weight_license": "BSD-3-Clause",
+      "restricted_comparator": false,
+      "open_champion_eligible_after_task_and_external_gates": true,
+      "exposure_state": "target_label_unexposed",
+      "reference_sequence_exposure": "encoder_seen_with_declared_chr14_and_chrX_pretraining_holdout",
+      "downstream_task_family_exposure": "reference_only_pretraining_no_functional_labels",
+      "pretraining_context": "1000000_single_nucleotide_tokens",
+      "task_input_bp": 4096,
+      "tokenization": "one_base_one_token_plus_terminal_SEP",
+      "raw_feature_width": 256,
+      "runtime_probe_authority": "hyenadna_runtime_probe",
+      "runtime_receipt": "predictions/runtime_probe_receipt.json",
+      "learned_parameters": 6554624
+    },
+    "caduceus": {
+      "checkpoint_repository": "kuleshov-group/caduceus-ps_seqlen-131k_d_model-256_n_layer-16",
+      "checkpoint_revision": "d89eeb853136ea64da7feb3d0c8e909771b17ae6",
+      "source_checkpoint_sha256": "a3e6976fe90460ff5d90d371b457d0263dc65e156ea5651b4a452e98228daef2",
+      "executable_checkpoint_sha256": "a3e6976fe90460ff5d90d371b457d0263dc65e156ea5651b4a452e98228daef2",
+      "source_checkpoint_format": "safetensors",
+      "execution_checkpoint_format": "safetensors",
+      "code_license": "Apache-2.0",
+      "weight_license": "Apache-2.0",
+      "restricted_comparator": false,
+      "open_champion_eligible_after_task_and_external_gates": true,
+      "exposure_state": "target_label_unexposed",
+      "reference_sequence_exposure": "encoder_seen",
+      "downstream_task_family_exposure": "downstream_demo_long_range_eQTL_classification",
+      "pretraining_context": "131072_single_nucleotide_tokens",
+      "task_input_bp": 131072,
+      "tokenization": "one_base_one_token_RCPS_channels_realigned_to_width256",
+      "raw_feature_width": 512,
+      "aligned_feature_width": 256,
+      "runtime_probe_authority": "caduceus_common_runtime_probe",
+      "runtime_receipt": "predictions/runtime_probe_receipt.json",
+      "learned_parameters": 7725312
+    }
+  },
+  "task_contract": {
+    "task_id": "gse281364_mpra_development_sequence_transfer",
+    "dataset_id": "gse281364",
+    "assay": "massively_parallel_reporter_assay",
+    "contexts": ["HepG2_control", "HepG2_PAOA"],
+    "endpoint": "mean_signed_log2_ALT_minus_REF_RNA_over_DNA_activity",
+    "elements": 1033,
+    "outer_locus_sequence_groups": 1033,
+    "outer_folds": 5,
+    "biological_donors": 0,
+    "experimental_replicates_per_context": 4,
+    "replicates_used_as_independent_donors": false,
+    "outcome_role": "exposed_development_MPRA_only",
+    "reference_build": "GRCh38.p14",
+    "reference_fasta": "GRCh38.p14.sequence_model.fa",
+    "reference_fasta_sha256": "ed20dceeb315cffa2bc3de050d846eceefc552451fef741f0dd95b0149d10fce",
+    "supported_variant_type": "biallelic_SNV",
+    "alleles": ["REF", "ALT", "REF_RC", "ALT_RC"],
+    "allele_effect_sign": "ALT_minus_REF",
+    "pool_interval_bp": 1536,
+    "context_policy": "family_native_inputs_with_identical_downstream_heads",
+    "context_comparability_warning": "DNABERT2_NT_and_HyenaDNA_use_4096bp;_Caduceus_uses_131072bp_native_context;_head_comparison_is_identical_but_representation_context_is_not_matched",
+    "head_contract": {
+      "projection_fit_unit": "outer_training_locus_sequence_groups_only",
+      "normalization": "training_mean_and_population_standard_deviation_floor_1e-6",
+      "projection": "training_only_PCA256_deterministic_largest_absolute_loading_positive",
+      "whitening": "training_eigenvalue_floor_max_1e-8_or_1e-6_times_largest",
+      "strand_aggregation": "arithmetic_mean_REF_with_REF_RC_and_ALT_with_ALT_RC_after_alignment",
+      "feature_blocks": ["REF", "ALT", "ALT_minus_REF", "absolute_ALT_minus_REF"],
+      "input_width": 1024,
+      "heads": ["linear_ridge", "two_layer_gelu"],
+      "head_fit_scope": "outer_training_locus_sequence_groups_only",
+      "hyperparameter_selection": "one_prespecified_inner_outer_fold_within_outer_training_only",
+      "seed": 20260824,
+      "bootstrap_replicates": 1000,
+      "bootstrap_unit": "outer_locus_sequence_group"
+    },
+    "task_native_baselines": ["zero", "training_mean", "allele_identity_ridge"],
+    "promotion_gate": "mean_spearman>=0.10;gain_over_allele_baseline>=0.02;positive_both_contexts;rmse_better_than_training_mean_both_contexts",
+    "external_evaluation": false,
+    "champion_eligible": false,
+    "clinical_claim_supported": false
+  },
+  "expected_development_disposition": {
+    "allele_identity_ridge_mean_two_context_spearman": "0.17707525618729647",
+    "models": {
+      "dnabert2": {
+        "selected_head": "two_layer_gelu",
+        "mean_two_context_spearman": "0.0038347189500998998",
+        "spearman_gain": "-0.17324053723719657",
+        "three_seed_screening_recommended": "false"
+      },
+      "nucleotide_transformer": {
+        "selected_head": "linear_ridge",
+        "mean_two_context_spearman": "0.15482952844468645",
+        "spearman_gain": "-0.022245727742610022",
+        "three_seed_screening_recommended": "false"
+      },
+      "hyenadna": {
+        "selected_head": "linear_ridge",
+        "mean_two_context_spearman": "0.13508299265352627",
+        "spearman_gain": "-0.041992263533770197",
+        "three_seed_screening_recommended": "false"
+      },
+      "caduceus": {
+        "selected_head": "linear_ridge",
+        "mean_two_context_spearman": "0.094218415704686198",
+        "spearman_gain": "-0.082856840482610272",
+        "three_seed_screening_recommended": "false"
+      }
+    },
+    "best_model_by_mean_spearman": "nucleotide_transformer",
+    "best_model_is_restricted": true,
+    "all_model_gains_over_allele_identity_ridge_are_negative": true,
+    "family_promotion": "none",
+    "next_action": "retain_negative_result_and_do_not_escalate_seeds_or_tuning_on_this_task"
+  },
+  "claim_boundaries": {
+    "sequence_embeds_are_biologically_interpretable_without_head": false,
+    "native_likelihood_is_cell_type_effect_direction": false,
+    "supervised_eQTL_or_ieQTL_head_fit": false,
+    "cell_state_context_supported": false,
+    "external_transfer_claim_supported": false,
+    "universal_model_claim_supported": false,
+    "clinical_claim_supported": false,
+    "sealed_assets_read_by_reconciliation": false
+  }
+}

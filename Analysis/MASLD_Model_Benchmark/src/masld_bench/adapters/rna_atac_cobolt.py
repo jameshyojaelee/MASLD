@@ -8,7 +8,7 @@ paired development HDF5; ``fit`` sees outer-training RNA/ATAC pairs and
 ``predict`` sees held RNA only.
 
 The 1,000-nucleus view uses a source-wide consensus peak inventory and is a
-smoke fixture. It cannot support a champion or external-transfer claim.
+smoke fixture. It cannot support a best-model or external-transfer claim.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class RNAATACCoboltError(RuntimeError):
-    """Raised when a Cobolt smoke contract is violated."""
+    """Raised when a Cobolt smoke requirement is not met."""
 
 
 def _load_classical() -> Any:
@@ -51,7 +51,7 @@ DATASET_ID = base.DATASET_ID
 VIEW_ID = base.VIEW_ID
 DATA_ROLE = base.DATA_ROLE
 LINEAGES = base.LINEAGES
-RUNTIME_ID = "gpu_rna_atac_torch_smoke"
+RUNTIME_ID = "gpu_rna_atac_torch_b6k"
 RECEIPT_SCHEMA = base.RECEIPT_SCHEMA
 PREDICTION_SCHEMA = base.PREDICTION_SCHEMA
 UPSTREAM_REVISION = "cf5a448c6539025346a6393c215ba329cb3a0183"
@@ -62,9 +62,25 @@ UPSTREAM_MODEL_SOURCE_SHA256 = (
 UPSTREAM_ACQUISITION_SHA256 = (
     "73622ff1b36da1da51ab3fc85178f41b5052e1c53e3ae51a75f326bd478b948f"
 )
-RUNTIME_PROBE_SHA256 = (
-    "2e7d811262ed75bddeab5a7112cd6289c10e61618c1c6700729378007d71e5a4"
-)
+ADMITTED_TORCH_RUNTIMES: Mapping[str, Mapping[str, Any]] = {
+    "gpu_rna_atac_torch_smoke": {
+        "torch_version": "2.3.1+cu121",
+        "device_substring": "L40S",
+        "device_capability": (8, 9),
+        "validation_artifacts_sha256": (
+            "2e7d811262ed75bddeab5a7112cd6289c10e61618c1c6700729378007d71e5a4"
+        ),
+    },
+    "gpu_rna_atac_torch_b6k": {
+        "torch_version": "2.8.0+cu128",
+        "device_substring": "RTX PRO 6000 Blackwell",
+        "device_capability": (12, 0),
+        "validation_artifacts_sha256": (
+            "9ab79607dc34c059485ed04e4c2fef005713eddd8003cf4d234a5ecdf16afa7b"
+        ),
+    },
+}
+RUNTIME_PROBE_SHA256 = ADMITTED_TORCH_RUNTIMES[RUNTIME_ID]["validation_artifacts_sha256"]
 base.RUNTIME_ID = RUNTIME_ID
 
 _PARAMETER_FIELDS = frozenset(
@@ -265,24 +281,52 @@ def _validate_request(
     return _validate_parameters(run_spec.get("hyperparameters"))
 
 
+def match_admitted_torch_runtime(
+    torch_version: str, device_name: str, capability: Sequence[int]
+) -> str | None:
+    """Return the included runtime id matching an observed torch/device triple.
+
+    Fails closed: an unlisted combination returns None and the caller must raise.
+    A silent runtime or hardware swap therefore cannot produce quietly different
+    numbers under a validated runtime's name.
+    """
+
+    observed = tuple(int(value) for value in capability)
+    for runtime_id, entry in ADMITTED_TORCH_RUNTIMES.items():
+        if (
+            torch_version == entry["torch_version"]
+            and str(entry["device_substring"]) in device_name
+            and observed == tuple(entry["device_capability"])
+        ):
+            return runtime_id
+    return None
+
+
 def _validate_torch_runtime() -> Mapping[str, Any]:
     import torch
 
     if os.environ.get("CUBLAS_WORKSPACE_CONFIG") != ":4096:8":
         raise RNAATACCoboltError("CUBLAS_WORKSPACE_CONFIG=:4096:8 is required")
-    if torch.__version__ != "2.3.1+cu121":
-        raise RNAATACCoboltError("torch version differs from the frozen runtime")
     if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
         raise RNAATACCoboltError("exactly one visible CUDA device is required")
     device_name = torch.cuda.get_device_name(0)
     capability = tuple(int(value) for value in torch.cuda.get_device_capability(0))
-    if "L40S" not in device_name or capability != (8, 9):
-        raise RNAATACCoboltError("runtime is not the admitted L40S device")
+    admitted = match_admitted_torch_runtime(torch.__version__, device_name, capability)
+    if admitted is None:
+        raise RNAATACCoboltError(
+            "torch/device combination is not an admitted runtime: "
+            f"{torch.__version__} on {device_name} sm_{capability[0]}{capability[1]}"
+        )
+    if admitted != RUNTIME_ID:
+        raise RNAATACCoboltError(
+            f"observed runtime {admitted} differs from the campaign runtime {RUNTIME_ID}"
+        )
     torch.use_deterministic_algorithms(True)
     torch.backends.cudnn.enabled = False
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
     return {
+        "admitted_runtime": admitted,
         "torch_version": torch.__version__,
         "cuda_runtime": torch.version.cuda,
         "device_name": device_name,

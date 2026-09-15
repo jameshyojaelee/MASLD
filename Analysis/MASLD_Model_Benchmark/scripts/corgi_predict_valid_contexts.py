@@ -26,7 +26,7 @@ LINEAGES = ("cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell")
 
 
 class CorgiPredictionError(RuntimeError):
-    """Raised when a checkpoint, context, or prediction contract differs."""
+    """Raised when a checkpoint, context, or prediction requirement differs."""
 
 
 def digest(path: Path) -> str:

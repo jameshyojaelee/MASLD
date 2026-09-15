@@ -15,7 +15,7 @@ MODEL_IDS = ("sequence_cnn_control", "sequence_transformer_control")
 
 
 class SequenceControlArchitectureError(ValueError):
-    """Raised when a sequence-control architecture violates its frozen contract."""
+    """Raised when a sequence-control architecture does not meet its frozen requirements."""
 
 
 def _integer(

@@ -143,32 +143,74 @@ if (nzchar(CANDIDATE_ROOT)) {
 
   # Composition remains supplementary. Each biopsy is one participant-level
   # unit under the validated crosswalk; no library or cell is treated as n.
-  comp <- fread(file.path(
+  comp_path <- Sys.getenv("COMPOSITION_RELEASE_PATH", file.path(
     BASE,
     "RNA-seq/results/manuscript_release/candidates/resource-f-five-coloc-v6-candidate-2026-08-10/",
     "workstreams/BULK-PROGRAM-MAP-v9/precontract/composition_acceptance/accepted_composition.tsv.gz"
   ))
-  stage_samples <- unique(fread(file.path(EXT_ROOT, "stage_sample_manifest.tsv"))[, .(
-    sample_id, analysis_unit_id, fibrosis_stage
-  )], by = "analysis_unit_id")
+  if (!file.exists(comp_path)) {
+    stop("Accepted composition table is missing: ", comp_path, call. = FALSE)
+  }
+  comp <- fread(comp_path)
+  if (!all(c("sample_id", "dataset", "Hepatocytes") %in% names(comp)) ||
+      anyDuplicated(comp$sample_id)) {
+    stop("Composition input must contain one unique sample_id with a Hepatocytes column", call. = FALSE)
+  }
+  cell_cols <- setdiff(names(comp), c("sample_id", "dataset"))
+  if (!length(cell_cols) || anyNA(comp[, ..cell_cols]) ||
+      any(!is.finite(as.matrix(comp[, ..cell_cols]))) ||
+      any(as.matrix(comp[, ..cell_cols]) < 0 | as.matrix(comp[, ..cell_cols]) > 1) ||
+      any(abs(rowSums(as.matrix(comp[, ..cell_cols])) - 1) > 1e-6)) {
+    stop("Composition input has missing, invalid, or non-compositional fractions", call. = FALSE)
+  }
+  stage_samples <- fread(file.path(EXT_ROOT, "stage_sample_manifest.tsv"))[, .(
+    sample_id, analysis_unit_id, dataset, fibrosis_stage
+  )]
   stage_samples[, group := paste0("F", fibrosis_stage)]
   nas_samples <- fread(file.path(EXT_ROOT, "stage_extension_sample_manifest.tsv"))[axis == "NAS"]
   nas_samples[, group := fifelse(grepl("NAS0", contrast) & group == "NAS0", "NAS0", group)]
+
+  collapse_samples <- function(samples, label) {
+    required <- c("sample_id", "analysis_unit_id", "dataset", "group")
+    if (!all(required %in% names(samples)) || anyNA(samples[, ..required])) {
+      stop(label, " sample manifest has missing unit identifiers", call. = FALSE)
+    }
+    conflict <- samples[, .(n_group = uniqueN(group), n_dataset = uniqueN(dataset)),
+                        by = .(analysis_unit_id, sample_id)]
+    if (any(conflict$n_group != 1L | conflict$n_dataset != 1L)) {
+      stop(label, " sample manifest assigns a unit to conflicting groups or cohorts", call. = FALSE)
+    }
+    unique(samples[, ..required], by = "analysis_unit_id")
+  }
+  stage_samples <- collapse_samples(stage_samples, "Fibrosis")
+  nas_samples <- collapse_samples(nas_samples, "NAS")
+
   composition_summary <- function(samples, axis_id, groups) {
-    d <- merge(comp, unique(samples[, .(sample_id, analysis_unit_id, group)], by = "analysis_unit_id"), by = "sample_id")
-    cell_cols <- setdiff(names(comp), c("sample_id", "dataset"))
+    expected <- nrow(samples)
+    d <- merge(comp, samples[, .(sample_id, analysis_unit_id, dataset, group)],
+               by = c("sample_id", "dataset"), all = FALSE)
+    if (nrow(d) != expected || anyDuplicated(d$analysis_unit_id)) {
+      stop("Composition join is incomplete or duplicates an analysis unit for ", axis_id,
+           call. = FALSE)
+    }
     d[, hepatocyte := Hepatocytes]
-    d[, non_parenchymal := rowSums(.SD, na.rm = TRUE), .SDcols = setdiff(cell_cols, "Hepatocytes")]
-    z <- melt(d, id.vars = c("analysis_unit_id", "group"), measure.vars = c("hepatocyte", "non_parenchymal"),
+    d[, non_parenchymal := rowSums(.SD), .SDcols = setdiff(cell_cols, "Hepatocytes")]
+    z <- melt(d, id.vars = c("analysis_unit_id", "dataset", "group"), measure.vars = c("hepatocyte", "non_parenchymal"),
               variable.name = "compartment", value.name = "fraction")
     z[, axis := axis_id]
-    z[, .(mean = mean(fraction), SE = sd(fraction) / sqrt(.N), n_participants = .N),
-      by = .(axis, group = factor(group, levels = groups), compartment)]
+    list(
+      pooled = z[, .(mean = mean(fraction), SE = sd(fraction) / sqrt(.N), n_participants = .N,
+                    estimand = "unadjusted participant mean plus SE"),
+                  by = .(axis, group = factor(group, levels = groups), compartment)],
+      by_cohort = z[, .(mean = mean(fraction), SE = sd(fraction) / sqrt(.N), n_participants = .N,
+                       estimand = "unadjusted participant mean plus SE"),
+                     by = .(axis, dataset, group = factor(group, levels = groups), compartment)]
+    )
   }
-  comp_sum <- rbind(
-    composition_summary(stage_samples, "fibrosis", paste0("F", 0:4)),
-    composition_summary(nas_samples, "NAS", c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8"))
-  )
+  fib_comp <- composition_summary(stage_samples, "fibrosis", paste0("F", 0:4))
+  nas_comp <- composition_summary(nas_samples, "NAS", c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8"))
+  comp_sum <- rbind(fib_comp$pooled, nas_comp$pooled)
+  comp_sum_by_cohort <- rbind(fib_comp$by_cohort, nas_comp$by_cohort)
   comp_plot <- function(axis_id, xlab) ggplot(comp_sum[axis == axis_id],
       aes(group, mean, color = compartment, group = compartment)) +
     geom_line(linewidth = 0.65) + geom_point(size = 1.1) +
@@ -186,6 +228,7 @@ if (nzchar(CANDIDATE_ROOT)) {
   fwrite(counts, file.path(SRC_DIR, "fig3e_deg_counts.tsv"), sep = "\t")
   fwrite(activity, file.path(SRC_DIR, "fig3e_prespecified_nmf_activity.tsv"), sep = "\t")
   fwrite(comp_sum, file.path(SRC_DIR, "figs3_composition_summary.tsv"), sep = "\t")
+  fwrite(comp_sum_by_cohort, file.path(SRC_DIR, "figs3_composition_summary_by_cohort.tsv"), sep = "\t")
   quit(save = "no", status = 0)
 }
 

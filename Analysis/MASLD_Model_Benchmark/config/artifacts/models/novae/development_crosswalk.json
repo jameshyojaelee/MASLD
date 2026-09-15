@@ -104,7 +104,7 @@
     "prohibited": "v1 training, screening, leaderboard rank, MASLD spatial champion, superiority, multimodal H&E or CODEX claim, or a claim of strict zero-shot donor transfer from the native prototype-refit path",
     "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
   },
-  "interpretation": "Novae is the only one of these three deferred methods with a canonical public pretrained spatial-transcriptomic checkpoint, but that does not make it ready for the campaign. Its weights lack declared terms; the corpus has definite liver encoder exposure but no checkpoint-bound accession receipt; native zero-shot refits query prototypes; and current MASLD spatial sources are small, controlled, exposed, join-unresolved, or cross-resolution. It remains deferred with no v1 task or champion eligibility.",
+  "interpretation": "Novae is the only one of these three deferred methods with a canonical public pretrained spatial-transcriptomic checkpoint, but that does not make it ready for the campaign. Its weights lack declared terms; the corpus has definite liver encoder exposure but no checkpoint-bound accession receipt; native zero-shot refits query prototypes; and current MASLD spatial sources are small, controlled, exposed, join-unresolved, or cross-resolution. It remains deferred with no v1 task or best-model eligibility.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

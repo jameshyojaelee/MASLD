@@ -18,7 +18,7 @@
     "scope": "local_ATAC_training_sources_pairing_and_sealed_modality",
     "sha256": "f643ae9753ab4f1cdba9144de1b59f229dcbe955e210dc99a3f9690b4ff5753f"
   },
-  "interpretation": "cisTopic 0.3.0 has no upstream biological-corpus contamination because it is trained locally. Its dominant leakage risks are donor-spanning peak definition, region filtering, topic-count selection, joint fitting, label/prototype fitting, and model selection. More importantly, the pinned R release is transductive and exposes no inductive held-cell transform. It therefore cannot produce a valid held-donor score and cannot enter the current RNA-only sealed tasks.",
+  "interpretation": "cisTopic 0.3.0 has no upstream biological-corpus contamination because it is trained locally. Its dominant leakage risks are donor-spanning peak definition, region filtering, topic-count selection, joint fitting, label/prototype fitting, and model selection. More importantly, the pinned R release is transductive and exposes no inductive held-cell transform. It therefore cannot produce a valid held-donor score and cannot enter the current RNA-only held-back tasks.",
   "remaining_blockers": [
     "Create a separate nonpromotable development-only ATAC TaskSpec before any fit; freeze rows, donor grouping, region inventory, metrics, model-selection rule, baselines, and the explicit absence of a champion claim.",
     "Resolve whether a scientifically faithful independently audited inductive implementation exists. Do not silently substitute pycisTopic or append/refit held cells under the cisTopic 0.3.0 registry identity.",

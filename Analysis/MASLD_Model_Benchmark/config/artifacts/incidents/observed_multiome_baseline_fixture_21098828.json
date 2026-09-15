@@ -1,0 +1,26 @@
+{
+  "schema_version": "masld-bench-software-attempt-incident-v1",
+  "job_id": "21098828",
+  "job_name": "model-check-290",
+  "terminal_state": "FAILED",
+  "exit_code": "1:0",
+  "failure_stage": "failed_attempt_archival_before_unit_tests",
+  "cause": "The selected Python 3.10 environment contained NumPy but could not import the benchmark package because the package requires the Python 3.11 standard-library tomllib module.",
+  "prior_wrapper": {
+    "path": "slurm/probe_observed_multiome_baselines_cpu.sbatch",
+    "sha256": "20523fa35e576650c9e1113216ebe1f1ec8336ee59e297cf62def4dc68908343"
+  },
+  "stdout": {
+    "path": "executions/model-check-290-21098828.out",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": "executions/model-check-290-21098828.err",
+    "sha256": "cb3d0c00af6589183e9fa47e483d9c7e62ced76b2a42c32927531514ba35b16d"
+  },
+  "biological_data_read": false,
+  "development_outcomes_read": false,
+  "sealed_outcomes_read": false,
+  "model_fit_started": false,
+  "predictions_produced": false
+}

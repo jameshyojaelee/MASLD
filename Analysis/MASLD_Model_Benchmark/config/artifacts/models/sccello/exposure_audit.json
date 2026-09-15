@@ -16,7 +16,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "8d60bee3019d1c808229b9737aa239cc1a1c1fbc072e76cc578ab302c8395544"
   },
-  "interpretation": "The immutable scCello checkpoint was uploaded before GSE289173 became public, so the sealed source and its target labels were unexposed. This does not make the model admissible: neither the official code repository nor Hugging Face model declares reuse terms.",
+  "interpretation": "The read-only scCello checkpoint was uploaded before GSE289173 became public, so the held-back source and its target labels were unexposed. This does not make the model eligible: neither the official code repository nor Hugging Face model declares reuse terms.",
   "remaining_blockers": [
     "Obtain written code and checkpoint terms before download, execution, adaptation, or redistribution.",
     "Freeze the exact token and gene-median dictionaries from the immutable pretraining assets and complete accession-to-cell_dataset_id crosswalks for development cohorts.",

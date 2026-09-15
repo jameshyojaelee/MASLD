@@ -38,7 +38,7 @@ LABEL_MAP = {
 
 
 class GSE296875SmokeError(ValueError):
-    """Raised when source data violate the frozen smoke-view contract."""
+    """Raised when source data does not meet the frozen smoke-view requirements."""
 
 
 def sha256_file(path: Path) -> str:
@@ -112,7 +112,7 @@ def _freeze_smoke_tree(root: Path, metadata: Mapping[str, Any]) -> str:
 
     The scientific builder runs in the existing Python 3.10 Scanpy environment,
     whereas ``masld_bench`` intentionally requires Python 3.11 or newer.  This
-    writer follows the registered artifact schema; the SLURM job subsequently
+    writer follows the registered output file schema; the SLURM job subsequently
     re-verifies the result with the Python 3.11 control-plane verifier.
     """
 

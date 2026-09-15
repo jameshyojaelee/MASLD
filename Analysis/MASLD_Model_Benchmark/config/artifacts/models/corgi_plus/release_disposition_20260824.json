@@ -1,0 +1,223 @@
+{
+  "schema_version": "masld-bench-corgi-plus-release-disposition-v1",
+  "audit_date": "2026-08-24",
+  "audit_scope": "Public Corgi+ code, checkpoint, inference, training, input, reference, license, and nearest-comparator surface. No benchmark outcomes or sealed features were opened.",
+  "status": "TERMINAL_BLOCKED_CURRENT_UPSTREAM_RELEASE",
+  "model_identity": {
+    "model_id": "corgi_plus",
+    "checkpoint_name": "corgiplus_model.pt",
+    "checkpoint_sha256": "01855614bfeffa72d5bcaaa28729c022ccfbc8f5fdcc0add8e04ba4533e94ccd",
+    "checkpoint_size_bytes": 2384030158,
+    "checkpoint_state_key_count": 190,
+    "checkpoint_state_numel": 198664365,
+    "required_task": "rna_conditioned_atac",
+    "scientific_identity": "Corgi+ RNA-to-epigenomic imputation with DNA, global trans-regulator context, local stranded total-RNA coverage, a 22-track genomic-position mean baseline, and local RNA delta from that baseline.",
+    "relabeling_prohibited": true
+  },
+  "primary_source_snapshot": {
+    "code_repository": {
+      "url": "https://github.com/ekinda/corgi",
+      "head_commit": "d84c00082da3d04eb05169e290e53f1c7da2b9c5",
+      "head_verified_date": "2026-08-24",
+      "files": {
+        "LICENSE": "feb79b816ab6d0cfef7c005b934f1383c0c1af9b6522382a2e156b82f87e388a",
+        "pyproject.toml": "fd298c3d18d273d8b41fa6df57a4f1d52cba4f7b2f68e35a57537090f66ef515",
+        "corgi/config_corgiplus.py": "9d996d85a8e1ab8b3b0a21277581a1ddb5efec65f9a28c841215986a1f9c13b8",
+        "corgi/model.py": "767067e4659ca196f307d2133104365fb7e6ea9d2f151dd61d3c2a8a7e0737e6",
+        "corgi/predict.py": "0d8da0bedbf60a493188bfd9109cc56624292ea139c14f3ec20df5cf8573567b",
+        "corgi/trainer_corgiplus.py": "4ccb5db5d2be4933aa0cb270217fe251e9eb71e9635ed7cfcacb879c27926af5"
+      }
+    },
+    "reproduction_repository": {
+      "url": "https://github.com/ekinda/corgi-reproduction",
+      "head_commit": "2367c42cf36630b7cf561eccc2e781abc22b36be",
+      "head_verified_date": "2026-08-24",
+      "declared_corgi_gitlink": "f5e8507e9d3bd65fc8d520b15655a7e283abf46b",
+      "declared_corgi_gitlink_status": "UNFETCHABLE_FROM_DECLARED_UPSTREAM",
+      "corgiplus_delta_bench_tta_sha256": "a6ec48da151f6da912d4b6d019a3e0d021322867c91ec7a5f6a920ccb9212276"
+    },
+    "article": {
+      "doi": "10.1038/s41467-026-75527-2",
+      "publication_date": "2026-07-14",
+      "article_license": "CC-BY-4.0",
+      "method_surface": "The final published Corgi+ auxiliary input is local total-RNA plus/minus, the 22 assay-specific training-context mean tracks, then local total-RNA plus/minus delta from the corresponding mean tracks."
+    },
+    "zenodo_records": [
+      {
+        "record_id": 18630048,
+        "created": "2026-02-13T10:57:44.081530+00:00",
+        "updated": "2026-02-13T10:57:44.393411+00:00",
+        "record_license": "CC-BY-4.0",
+        "corgiplus_model_md5": "f7dbe2ca301fe64814bebcd4fc3377bd",
+        "corgiplus_model_size_bytes": 2384030158
+      },
+      {
+        "record_id": 20686797,
+        "created": "2026-06-14T07:37:20.706747+00:00",
+        "updated": "2026-06-14T07:37:21.142681+00:00",
+        "record_license": "CC-BY-4.0",
+        "corgiplus_model_md5": "f7dbe2ca301fe64814bebcd4fc3377bd",
+        "corgiplus_model_size_bytes": 2384030158,
+        "source_data_zip_md5": "82eb5e70886e4c3d863f6230a96a2210",
+        "source_data_zip_size_bytes": 800112106
+      }
+    ]
+  },
+  "released_surface": {
+    "checkpoint": {
+      "available": true,
+      "byte_verified": true,
+      "safe_tensor_schema_inventoried": true,
+      "strict_architecture_restore_passed": true,
+      "full_window_synthetic_forward_passed": true,
+      "short_window_backward_step_passed": true,
+      "safely_inventoried_tensor_mapping_path": [
+        "model_state_dict"
+      ],
+      "optimizer_scheduler_or_training_state_inventory_performed": false,
+      "checkpoint_resume_performed": false,
+      "biological_input_or_numeric_parity_established": false
+    },
+    "inference": {
+      "public_high_level_class": "corgiplus_pretrained",
+      "predict": "NotImplementedError",
+      "predict_regions": "NotImplementedError",
+      "predict_regions_with_bigwig": "NotImplementedError",
+      "portable_complete_loader_available": false,
+      "safe_strict_loader_available_upstream": false,
+      "disposition": "Architecture-level execution is not scientific task execution. Do not construct project predictions from synthetic or guessed auxiliary inputs."
+    },
+    "training": {
+      "model_and_trainer_source_available": true,
+      "source_defined_mode": "corgiplusplus_rna",
+      "source_defined_auxiliary_width": 26,
+      "source_defined_candidate_auxiliary_order": [
+        "rna_total_plus",
+        "rna_total_minus",
+        "mean_baseline_channels_0_through_21_in_native_output_order",
+        "rna_total_plus_minus_mean_baseline_rna_total_plus",
+        "rna_total_minus_minus_mean_baseline_rna_total_minus"
+      ],
+      "candidate_order_checkpoint_bound": false,
+      "reason_candidate_order_is_not_checkpoint_bound": "The 26-channel state shape and current trainer agree, but the checkpoint-producing source revision is unresolved and the paper reproduction gitlink is unavailable.",
+      "portable_training_config_available": false,
+      "training_config_absolute_path_prefixes": [
+        "/project/deeprna",
+        "/project/deeprna_data"
+      ],
+      "required_training_arrays_released": false,
+      "released_checkpoint_resume_completeness": "UNVERIFIED; only the model-state tensor mapping was safely inventoried, and no optimizer/scheduler restore was attempted"
+    },
+    "source_data_zip_bounded_inventory": {
+      "url": "https://zenodo.org/api/records/20686797/files/source_data.zip/content",
+      "archive_size_bytes": 800112106,
+      "declared_md5": "82eb5e70886e4c3d863f6230a96a2210",
+      "zip64": false,
+      "central_directory_offset": 800105106,
+      "central_directory_size_bytes": 6978,
+      "entry_count": 53,
+      "nondirectory_member_count": 46,
+      "nondirectory_member_suffixes": [
+        ".csv"
+      ],
+      "inventory_http_range_requests": 2,
+      "inventory_http_bytes_downloaded": 72619,
+      "archive_payload_downloaded": false,
+      "archive_extracted": false,
+      "csv_contents_opened": false,
+      "finding": "The central directory contains figure source-table CSVs, including Figure 4 mean-baseline and Corgi+ result tables. It contains no tensor, checkpoint, reference-genome, preprocessing, mask, local-RNA, or portable inference-input member. Result-table contents were not opened."
+    },
+    "licenses": {
+      "repository_root": "Apache-2.0",
+      "pyproject_metadata": "MIT",
+      "code_license_disposition": "CONFLICT_UNRESOLVED",
+      "weight_record": "CC-BY-4.0",
+      "derivative_weight_redistribution_disposition": "REQUIRES_UPSTREAM_CLARIFICATION_OR_INSTITUTIONAL_DETERMINATION",
+      "open_champion_eligible": false
+    },
+    "current_login_environment": {
+      "python": "3.10.12",
+      "import_specs_present": {
+        "torch": true,
+        "numpy": false,
+        "pandas": false,
+        "pyfaidx": false,
+        "pyBigWig": false,
+        "flash_attn": false,
+        "rotary_emb": false
+      },
+      "model_execution_attempted": false,
+      "finding": "The login environment is dependency-incomplete and is not a model execution environment. No dependency installation is authorized. The frozen isolated L40S compatibility runtime remains architecture evidence only."
+    }
+  },
+  "blocking_gates": [
+    {
+      "gate_id": "checkpoint_producing_source",
+      "state": "blocked",
+      "requirement": "Recover or obtain upstream certification of the exact checkpoint-producing source revision and final mode."
+    },
+    {
+      "gate_id": "portable_safe_inference",
+      "state": "blocked",
+      "requirement": "Release or independently validate a safe strict loader that consumes every biological input with fixed order, transforms, crop, shift, reverse-complement, and output semantics."
+    },
+    {
+      "gate_id": "complete_auxiliary_inputs",
+      "state": "blocked",
+      "requirement": "Provide the native 22-track genomic-position mean-baseline tensor and transforms, or a prospectively authorized task-native construction with all 22 channels. Provide aligned stranded local total-RNA coverage; a gene-count matrix and zero-filled missing tracks are invalid substitutes."
+    },
+    {
+      "gate_id": "checkpoint_bound_reference",
+      "state": "blocked",
+      "requirement": "Recover the modified hg38 FASTA and all coordinate/channel reference objects bound to the checkpoint."
+    },
+    {
+      "gate_id": "native_numeric_parity",
+      "state": "blocked",
+      "requirement": "Match an official fixed biological input/output fixture across full-window prediction and test-time augmentation. Synthetic shape and finite-value checks do not satisfy this gate."
+    },
+    {
+      "gate_id": "training_or_adaptation_resume",
+      "state": "blocked",
+      "requirement": "After the biological-input and loader gates pass, safely inventory any optimizer and scheduler state, then prove deterministic local checkpoint save/resume and five-seed donor-by-genomic-fold adaptation without held-query ATAC. Only the model-state tensor mapping has been safely inventoried so far."
+    },
+    {
+      "gate_id": "license_and_redistribution",
+      "state": "blocked",
+      "requirement": "Resolve Apache-2.0 versus MIT code metadata and obtain an institutional or upstream determination for code adaptation and derivative-weight redistribution before open-champion use."
+    }
+  ],
+  "tournament_disposition": {
+    "admission_attempt_complete": true,
+    "rna_conditioned_atac_execution_authorized": false,
+    "variant_to_regulation_task_registered": false,
+    "model_training_authorized": false,
+    "model_adaptation_authorized": false,
+    "production_sbatch_authorized": false,
+    "comparative_claim_eligible": false,
+    "conditional_component_eligible": false,
+    "reevaluation_trigger": "A new immutable upstream release or direct upstream clarification that closes the checkpoint-source, full-input, portable-loader, reference, and numeric-parity gates. License clearance is additionally required for an open champion or redistributed derivative."
+  },
+  "nearest_legitimate_comparator": {
+    "model_id": "corgi_regular",
+    "display_name": "Regular Corgi",
+    "checkpoint_sha256": "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4",
+    "checkpoint_size_bytes": 2350451066,
+    "code_commit": "d84c00082da3d04eb05169e290e53f1c7da2b9c5",
+    "task": "rna_conditioned_atac",
+    "role": "development-only native-family comparator using DNA plus the fold-fitted 2,891-gene global context and the regular 22-track output head",
+    "why_nearest": "It is the released base-family checkpoint and preserves the same long-range DNA, FiLM global-context, transformer, resolution, crop, and output-channel family while omitting Corgi+'s unavailable local-RNA, mean-baseline, and RNA-delta inputs.",
+    "not_a_corgi_plus_substitute": true,
+    "relabeling_as_corgi_plus_prohibited": true,
+    "remaining_boundary": "Regular Corgi is executable as a development comparator but remains ineligible for an open champion until its code terms, checkpoint-producing source, checkpoint-bound FASTA, and native numeric parity are resolved."
+  },
+  "authority_hashes": {
+    "config/artifacts/models/corgi_plus/checkpoints.json": "936718cd13ffd621a4d77e2a340e9ede5f328208da4f72055a41f8c1b87af50f",
+    "config/artifacts/models/corgi_plus/development_crosswalk.json": "af1e5f6c53fa3cfc729faa14be549f259f8e2f08e0e0378d587865a48c28ae8c",
+    "config/artifacts/models/corgi_plus/exposure_audit.json": "60c176303db6beb14d1b20519ada8d7aace8e2cdba94703a85c5e4428a864148",
+    "config/artifacts/models/corgi/checkpoints.json": "1df7633507cd716f85ab03ab7ab6a171e3e56c0e3e1f29f81b04f565134a089e",
+    "config/artifacts/models/corgi/development_crosswalk.json": "5469fe769d2620ddd652113eb9ac3f21ff762dadc78d61a5f7d7fd28405a80f3",
+    "config/artifacts/models/corgi/exposure_audit.json": "cafda72a70c6f6b36c66db10f5753c3d4b268da1b64378853c39a19a4016bb0a",
+    "config/artifacts/models/corgi/release.json": "604c1d368770a4ab02472bd718c75b05c16e32b7f273c0f5839342561bdd35be"
+  }
+}

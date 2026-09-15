@@ -12,7 +12,7 @@
     "MASLD_target_label_exposure": "not_declared",
     "checkpoint_specific_accession_and_donor_manifest": "unavailable",
     "overall_exposure_state": "unknown",
-    "reason": "The published corpus and downstream tasks establish liver and spatial task-family exposure, but the exact checkpoint is not bound to an accession, sample, donor-alias, and corpus-version receipt sufficient to exclude the project cohorts. Unknown checkpoints cannot earn a champion claim."
+    "reason": "The published corpus and downstream tasks establish liver and spatial task-family exposure, but the exact checkpoint is not bound to an accession, sample, donor-alias, and corpus-version receipt sufficient to exclude the project cohorts. Unknown checkpoints cannot earn a best-model claim."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
@@ -56,7 +56,7 @@
     "Obtain a powered rights-cleared donor-linked spatial source and genuinely external evaluation. Resolve cross-resolution behavior before using Visium.",
     "Pass SLURM strict-load, tokenizer, unknown-metadata, heterogeneous-batch, cell-order, frozen-head, no-network, deterministic-seed, and L40S numeric-tolerance fixtures."
   ],
-  "interpretation": "Nicheformer is an admissible research candidate only after its exact conversion and exposure are resolved. Its frozen base checkpoint is an expression transformer with spatial assay metadata, not a graph or coordinate encoder. Generic liver and downstream spatial-task exposure are definite, exact project-cohort exposure is unknown, and there is no active spatial task or seal, so it remains outside v1 and cannot earn a champion claim.",
+  "interpretation": "Nicheformer is an eligible research candidate only after its exact conversion and exposure are resolved. Its frozen base checkpoint is an expression transformer with spatial assay metadata, not a graph or coordinate encoder. Generic liver and downstream spatial-task exposure are definite, exact project-cohort exposure is unknown, and there is no active spatial task or hold back, so it remains outside v1 and cannot earn a best-model claim.",
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_unknown_checkpoint_exposure_no_registered_spatial_task_no_seal_and_unresolved_conversion_runtime",
   "verified_date": "2026-08-22"

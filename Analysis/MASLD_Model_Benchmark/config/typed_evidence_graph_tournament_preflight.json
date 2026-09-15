@@ -1,0 +1,466 @@
+{
+  "activation_gates": [
+    {
+      "gate_id": "promoted_corrected_coloc_release",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "immutable_graph_snapshot",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "frozen_evidence_ontology_and_direction",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "source_family_alias_and_derivative_map",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "source_independent_candidate_universe",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "wholly_removed_source_identity",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "explicit_supported_and_tested_negative_denominator",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "held_source_removal_receipt",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "evidence_provenance_applicability_observability_and_missing_states",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "ancestry_aware_native_build_ld_blocks",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "gene_blocks_and_held_locus_incident_edge_removal",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "degree_source_count_and_observability_matched_controls",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "split_safe_negative_sampling",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "source_blind_calibration_contract",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "implementation_runtime_and_tensor_only_artifact_receipts",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "model_audit_source_record_reconciliation",
+      "required": true,
+      "status": "unresolved"
+    },
+    {
+      "gate_id": "wholly_sealed_external_graph_source",
+      "required": false,
+      "status": "absent"
+    }
+  ],
+  "authority_lineage_audit": {
+    "current_registry_matches_recorded_registry": false,
+    "graph_baseline_audits_recorded_registry_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+    "graph_model_rows_revalidated_from_current_registry": true,
+    "mandatory_baseline_registry_current_sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+    "required_action": "Reissue those audit bundles against the current mandatory-baseline registry before activation; semantic row revalidation does not rewrite historical provenance.",
+    "status": "stale_whole_registry_hash_in_evidence_count_nearest_gene_and_native_baseline_audits"
+  },
+  "bundled_cpu_validation_ask": {
+    "array": false,
+    "cpus_per_task": 1,
+    "job_count": 1,
+    "job_name": "model-check-217",
+    "memory_gb": 8,
+    "nodes": 1,
+    "partition": "cpu",
+    "purpose": "unit_tests_plus_outcome_blind_registry_and_gate_preflight_only",
+    "qos": "nslab",
+    "submitted": false,
+    "total_cpu_hours": 2,
+    "total_gpu_hours": 0,
+    "walltime": "02:00:00"
+  },
+  "candidate_source_audit": {
+    "current_coloc_gwas": {
+      "blocking_findings": [
+        "corrected_50_study_release_not_promoted",
+        "immutable_graph_snapshot_absent",
+        "source_family_alias_map_absent",
+        "explicit_tested_negative_denominator_absent",
+        "native_build_ld_locus_and_gene_blocks_absent"
+      ],
+      "currently_executable": false,
+      "expected_biological_units": 50,
+      "role": "first_activation_candidate",
+      "unit": "study"
+    },
+    "gse281160": {
+      "blocking_findings": [
+        "dataset_activation_contract_unresolved",
+        "base_annotation_and_custom_reference_recipe_unresolved",
+        "20_targets_were_selected_from_MPRA",
+        "functional_edge_ontology_and_tested_negative_denominator_absent",
+        "cells_guides_lanes_and_response_genes_are_not_independent_replicates"
+      ],
+      "currently_executable": false,
+      "expected_biological_units": "UNRESOLVED",
+      "role": "conditional_development_diagnostic_only",
+      "unit": "experimental_replicate"
+    },
+    "gse281364": {
+      "blocking_findings": [
+        "dataset_activation_contract_unresolved",
+        "MPRA_activity_is_not_an_endogenous_enhancer_gene_link",
+        "variant_to_gene_mapping_would_require_a_prospectively_frozen_non_outcome_rule",
+        "explicit_graph_candidate_tested_negative_denominator_absent",
+        "replicates_contexts_barcodes_and_constructs_are_not_source_families"
+      ],
+      "currently_executable": false,
+      "expected_biological_units": 16,
+      "role": "assay_native_variant_diagnostic_not_primary_graph_source",
+      "unit": "experimental_replicate"
+    }
+  },
+  "evaluation_contract": {
+    "causal_claim": false,
+    "clinical_claim": false,
+    "degree_and_observability_controls": [
+      "remaining_source_gene_total_degree",
+      "remaining_source_supporting_source_family_count",
+      "remaining_source_observability_stratum",
+      "candidate_availability_pattern"
+    ],
+    "grouping": "merge_variants_within_1Mb_or_r2_at_least_0.8_in_any_represented_ancestry_then_preserve_gene_blocks",
+    "mandatory_baselines": [
+      "evidence_count",
+      "nearest_gene",
+      "graph_degree",
+      "graph_source_count",
+      "regularized_linear_evidence"
+    ],
+    "multiplicity": "BH_q_less_than_0.05_within_secondary_typed_evidence_graph_source_by_endpoint_family",
+    "primary_comparison": "one_selected_graph_model_vs_strongest_applicable_mandatory_baseline",
+    "primary_metric": "held_source_auprc",
+    "promotion": "none_without_a_wholly_sealed_evidence_source",
+    "uncertainty": "10000_paired_two_way_native_build_ld_block_and_gene_block_bootstrap_replicates"
+  },
+  "first_activation_candidate": {
+    "activation_boundary": "Activate only after a promoted immutable release proves at least three independent eligible source families, each with source-independent candidate eligibility and explicit supported versus tested-negative outcomes. Absence from a study is never a negative.",
+    "biological_unit": "independent_native_build_ld_locus",
+    "candidate_id": "current_coloc_gwas_leave_one_study_family_out",
+    "claim_boundary": "Retrospective development-only cross-source prioritization; no causal-gene or champion claim.",
+    "held_source_unit": "one_frozen_independent_study_source_family",
+    "rank": 1,
+    "reason": "The expected 50-study substrate is the only registered source with enough potential independent source families for pseudo-held-source training and evaluation, but the corrected release is not adopted and no explicit tested-negative denominator is frozen.",
+    "status": "blocked"
+  },
+  "frozen_file_authorities": {
+    "bionic_checkpoints": {
+      "path": "config/artifacts/models/bionic/checkpoints.json",
+      "sha256": "63afe0ee76d6f14094f8627e716cc3a957cbf4b9e5d65e486b2851e110b259d5"
+    },
+    "bionic_crosswalk": {
+      "path": "config/artifacts/models/bionic/development_crosswalk.json",
+      "sha256": "e61ebe16bc1a2d5eb915337da717b8cb3f941eba81af8d7744f725df1baa8012"
+    },
+    "bionic_exposure": {
+      "path": "config/artifacts/models/bionic/exposure_audit.json",
+      "sha256": "e6d31c40e7b04ddb8226b404d6b06a9e548f83db4a4277d4221dd445481f97b5"
+    },
+    "current_coloc_gwas_dataset": {
+      "path": "config/datasets/current_coloc_gwas.toml",
+      "sha256": "abfe6af83871208f0f8b5b28f3c930fd8f1bad4e6032668a0201fced532033e7"
+    },
+    "evidence_count_checkpoints": {
+      "path": "config/artifacts/models/evidence_count/checkpoints.json",
+      "sha256": "e669d8ce345d1b0ff855d330799d63fb53f85eac10de1c61a30d4750b854fa91"
+    },
+    "evidence_count_crosswalk": {
+      "path": "config/artifacts/models/evidence_count/development_crosswalk.json",
+      "sha256": "34ace615d255294092898abfce7065a9cfe6f087c3345976e45280ae1a518837"
+    },
+    "evidence_count_exposure": {
+      "path": "config/artifacts/models/evidence_count/exposure_audit.json",
+      "sha256": "de75b58a006eabcb379c73c4276fb777034bc4d9b6b10c4cd2ef01835db89f0c"
+    },
+    "evidence_graph_registry": {
+      "path": "config/models/evidence_graph.toml",
+      "sha256": "926641e4df3746e5497b91f8518565b259ebc7fa41837f36f5e021d5ee83ae10"
+    },
+    "graphsage_checkpoints": {
+      "path": "config/artifacts/models/graphsage/checkpoints.json",
+      "sha256": "4e5dce7f5bee616b5ea6381c08a3aa69951e34a325e5b42373510bb457b51454"
+    },
+    "graphsage_crosswalk": {
+      "path": "config/artifacts/models/graphsage/development_crosswalk.json",
+      "sha256": "242a03a5518c7313b562d65d6ef8c15765300ccd2edd4b867685d1b6a6be13a5"
+    },
+    "graphsage_exposure": {
+      "path": "config/artifacts/models/graphsage/exposure_audit.json",
+      "sha256": "e66493dc1a8e762c3802e7db394014b2936f7b0b41e999f1a89080eee092d74f"
+    },
+    "gse281160_dataset": {
+      "path": "config/datasets/gse281160.toml",
+      "sha256": "34f6f960a4a734da463a4099359cbc308268d13d7ef49ac89084d3522874d614"
+    },
+    "gse281364_dataset": {
+      "path": "config/datasets/gse281364.toml",
+      "sha256": "0fbb843b62654dc5b49cb1ff1fa1679b4584b4c1d4046159d316163ff2f95e31"
+    },
+    "hgt_checkpoints": {
+      "path": "config/artifacts/models/hgt/checkpoints.json",
+      "sha256": "8e4a6eb853c697f1d48c4ca8f8cad1f3433d13ef9e1243382bfdc04e2f0363cf"
+    },
+    "hgt_crosswalk": {
+      "path": "config/artifacts/models/hgt/development_crosswalk.json",
+      "sha256": "21372c4cecdf46eab0d490a958007549f7c4838e70a20d9a13abaf4245103796"
+    },
+    "hgt_exposure": {
+      "path": "config/artifacts/models/hgt/exposure_audit.json",
+      "sha256": "fb7dcfc507b74201e21e51678dcde0d1db438176f8ec2f887043d95efa103af4"
+    },
+    "late_fusion_checkpoints": {
+      "path": "config/artifacts/models/late_fusion/checkpoints.json",
+      "sha256": "c5017c7c48963e065efe117a5f5a7ce6bb78fb4b20e5990fd1a5f6a74dccf4de"
+    },
+    "late_fusion_crosswalk": {
+      "path": "config/artifacts/models/late_fusion/development_crosswalk.json",
+      "sha256": "9ce27dbc1d79ec05ab377dc6e15059cb8dbd799c74f55d927ffddcb8de3ccdf6"
+    },
+    "late_fusion_exposure": {
+      "path": "config/artifacts/models/late_fusion/exposure_audit.json",
+      "sha256": "e0916dcda4333d870270c46c45cbdae49738b81fab7de6d64eb763d2856f6bfa"
+    },
+    "mandatory_baseline_registry": {
+      "path": "config/models/mandatory_baselines.toml",
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d"
+    },
+    "native_baselines_checkpoints": {
+      "path": "config/artifacts/models/evidence_graph_native_baselines/checkpoints.json",
+      "sha256": "69c139c9bca9ac6fdda83f85db4fdc545799003abed615df775c02359774bb27"
+    },
+    "native_baselines_crosswalk": {
+      "path": "config/artifacts/models/evidence_graph_native_baselines/development_crosswalk.json",
+      "sha256": "3fcbede8c5fde2b09fa6c8ed9f2989ee2ff7ee33db59198044cc5b9f89d51f25"
+    },
+    "native_baselines_exposure": {
+      "path": "config/artifacts/models/evidence_graph_native_baselines/exposure_audit.json",
+      "sha256": "c113e3f2cfda115e29374f73ac8a91b6ef2a00434f3092e87df0d59c6ace7172"
+    },
+    "nearest_gene_checkpoints": {
+      "path": "config/artifacts/models/nearest_gene/checkpoints.json",
+      "sha256": "fab43cb070db0287b789ec0bcae14b19a221cb8626f6c94b55df42300a70bcba"
+    },
+    "nearest_gene_crosswalk": {
+      "path": "config/artifacts/models/nearest_gene/development_crosswalk.json",
+      "sha256": "ee70f1b4b33e6aef97c9aa51ff6cd02f15a043bf9119f45225cb381d20a909f3"
+    },
+    "nearest_gene_exposure": {
+      "path": "config/artifacts/models/nearest_gene/exposure_audit.json",
+      "sha256": "166e0a97adc8358520cccf03ad3b650ab8ae721bc71efa0f77dc928e384cd847"
+    },
+    "node2vec_checkpoints": {
+      "path": "config/artifacts/models/node2vec/checkpoints.json",
+      "sha256": "fe54fcc5941814a4d930f83d2ca1fe60f49ec3065f7be0252d7705b2f10caf09"
+    },
+    "node2vec_crosswalk": {
+      "path": "config/artifacts/models/node2vec/development_crosswalk.json",
+      "sha256": "f3279dd175a4e56bc21f33228b0c42bcf78e53c131b1641f6f69b00f0ce07aee"
+    },
+    "node2vec_exposure": {
+      "path": "config/artifacts/models/node2vec/exposure_audit.json",
+      "sha256": "cc7a88485e9d2e5ee6cbeaca03fcb1e277d372939e0edb15b0b9b1fc58b184cf"
+    },
+    "promotion_gates": {
+      "path": "config/evaluation/promotion_gates.toml",
+      "sha256": "396729908f39ad5e6d32ff419ecaf73d110c568814cbe1c254bfc53518f5a25a"
+    },
+    "rgcn_checkpoints": {
+      "path": "config/artifacts/models/rgcn/checkpoints.json",
+      "sha256": "2a436650c0681f059c7f6f105e28abba01d075d88cba751de57034f11402c255"
+    },
+    "rgcn_crosswalk": {
+      "path": "config/artifacts/models/rgcn/development_crosswalk.json",
+      "sha256": "f810a9dbdec1f8253aeaeae411da65c1203620718a6df0a5534661292cc61d3b"
+    },
+    "rgcn_exposure": {
+      "path": "config/artifacts/models/rgcn/exposure_audit.json",
+      "sha256": "a24fc606fc35ef5d238220f69149f5272811eb62a4c4055c863988cd7e12e894"
+    },
+    "split": {
+      "path": "config/splits/evidence_graph_outer.toml",
+      "sha256": "5c35b58366180c3139f13da99027ecd3d4c12767c3b80bce49c0bb0213426a0e"
+    },
+    "task": {
+      "path": "config/tasks/typed_evidence_graph.toml",
+      "sha256": "c1237c32941a2b51c13a8e20741bb6697e541115de6c2c607964724c948bbb92"
+    },
+    "typed_transformer_checkpoints": {
+      "path": "config/artifacts/models/typed_transformer/checkpoints.json",
+      "sha256": "f14aa6d371b3b4eede817f308c308edf3f8ee7e6ac6924f4d413ae8955666683"
+    },
+    "typed_transformer_crosswalk": {
+      "path": "config/artifacts/models/typed_transformer/development_crosswalk.json",
+      "sha256": "4e779c45b4262d53006d66ffe2a62675c1187ba0ac9478013740e2075449d06e"
+    },
+    "typed_transformer_exposure": {
+      "path": "config/artifacts/models/typed_transformer/exposure_audit.json",
+      "sha256": "26309ab8ebc6c265fc2b7eb4a8ecb4ab068d7d18cd5f56abc8b535df6826dd02"
+    }
+  },
+  "models": {
+    "bionic": {
+      "current_status": "blocked_no_graph_network_roster_runtime_or_split_local_state",
+      "evaluation_support": "common_support_only_unsupported_nodes_untestable",
+      "mandatory": false,
+      "model_class": "transductive_homogeneous_multinetwork_integration",
+      "registry": "evidence_graph"
+    },
+    "evidence_count": {
+      "current_status": "blocked_no_graph_or_implementation",
+      "evaluation_support": "full_source_independent_candidate_denominator_after_complete_source_removal",
+      "mandatory": true,
+      "model_class": "deterministic_supported_evidence_unit_count",
+      "registry": "mandatory_baselines"
+    },
+    "graph_degree": {
+      "current_status": "blocked_no_graph_or_implementation",
+      "evaluation_support": "full_source_independent_candidate_denominator_after_complete_source_and_block_removal",
+      "mandatory": true,
+      "model_class": "deterministic_graph_popularity_control",
+      "registry": "mandatory_baselines"
+    },
+    "graph_source_count": {
+      "current_status": "blocked_no_graph_or_implementation",
+      "evaluation_support": "full_source_independent_candidate_denominator_after_alias_collapse",
+      "mandatory": true,
+      "model_class": "deterministic_source_breadth_control",
+      "registry": "mandatory_baselines"
+    },
+    "graphsage": {
+      "current_status": "blocked_no_graph_feature_schema_runtime_or_state",
+      "evaluation_support": "full_denominator_only_with_frozen_source_independent_root_features_and_root_only_queries_reported_separately",
+      "mandatory": false,
+      "model_class": "conditionally_inductive_relation_agnostic_gnn",
+      "registry": "evidence_graph"
+    },
+    "hgt": {
+      "current_status": "blocked_no_graph_metadata_decoder_runtime_or_state",
+      "evaluation_support": "cannot_score_untrained_unseen_node_or_edge_types",
+      "mandatory": false,
+      "model_class": "heterogeneous_graph_transformer_with_generic_source_agnostic_decoder",
+      "registry": "evidence_graph"
+    },
+    "late_fusion": {
+      "current_status": "blocked_no_component_roster_implementation_terms_or_predictions",
+      "evaluation_support": "only_components_with_identical_source_removal_and_row_contracts",
+      "mandatory": false,
+      "model_class": "deterministic_equal_weight_endpoint_matched_fusion",
+      "registry": "evidence_graph"
+    },
+    "nearest_gene": {
+      "current_status": "blocked_no_derived_tss_artifact_candidate_contract_or_implementation",
+      "evaluation_support": "full_source_independent_candidate_denominator",
+      "mandatory": true,
+      "model_class": "deterministic_nearest_gencode_v49_tss",
+      "registry": "mandatory_baselines"
+    },
+    "node2vec": {
+      "current_status": "blocked_no_graph_runtime_or_split_local_state",
+      "evaluation_support": "common_support_only_source_only_and_isolated_nodes_untestable",
+      "mandatory": false,
+      "model_class": "transductive_homogeneous_topology_embedding",
+      "registry": "evidence_graph"
+    },
+    "regularized_linear_evidence": {
+      "current_status": "blocked_no_graph_explicit_negatives_or_implementation",
+      "evaluation_support": "conditionally_inductive_source_independent_features",
+      "mandatory": true,
+      "model_class": "cross_source_ridge_logistic_evidence",
+      "registry": "mandatory_baselines"
+    },
+    "rgcn": {
+      "current_status": "blocked_no_graph_architecture_decoder_runtime_or_state",
+      "evaluation_support": "cannot_directly_complete_an_unseen_relation_type",
+      "mandatory": false,
+      "model_class": "relational_gnn_with_generic_source_agnostic_decoder",
+      "registry": "evidence_graph"
+    },
+    "typed_transformer": {
+      "current_status": "blocked_no_implementation_identity_license_architecture_runtime_or_state",
+      "evaluation_support": "none_until_exact_source_agnostic_architecture_is_frozen",
+      "mandatory": false,
+      "model_class": "unresolved_project_proposed_typed_evidence_transformer",
+      "registry": "evidence_graph"
+    }
+  },
+  "outcome_firewall": {
+    "gene_catalog_or_frozen_117_programs_used_as_targets": false,
+    "model_import_fit_predict_or_score": false,
+    "network_download_or_install": false,
+    "raw_or_summary_labels_read_by_preflight": false,
+    "sealed_assets_read_by_preflight": false
+  },
+  "required_artifact_bindings": {
+    "candidate_universe": null,
+    "evidence_ontology": null,
+    "explicit_outcome_denominator": null,
+    "gene_block_manifest": null,
+    "graph_snapshot": null,
+    "held_source_manifest": null,
+    "ld_block_manifest": null,
+    "matched_control_manifest": null,
+    "negative_sampling_fixture": null,
+    "observability_manifest": null,
+    "source_family_map": null,
+    "source_removal_fixture": null
+  },
+  "schema_version": "masld-bench-typed-evidence-graph-tournament-preflight-v1",
+  "status": "blocked_no_executable_wholly_removed_source_task",
+  "strongest_currently_executable_task": null,
+  "task_id": "typed_evidence_graph",
+  "tournament_model_order": [
+    "evidence_count",
+    "nearest_gene",
+    "graph_degree",
+    "graph_source_count",
+    "regularized_linear_evidence",
+    "node2vec",
+    "bionic",
+    "graphsage",
+    "rgcn",
+    "hgt",
+    "typed_transformer",
+    "late_fusion"
+  ],
+  "verified_date": "2026-08-24"
+}

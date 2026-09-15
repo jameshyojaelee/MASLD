@@ -1,0 +1,165 @@
+{
+  "schema_version": "masld-bench-gse281364-borzoi-native-screen-v1",
+  "status": "prepared_fixture_only_checkpoint_execution_blocked",
+  "dataset_id": "gse281364",
+  "model_id": "borzoi_ensemble",
+  "authorities": {
+    "outcome_blind_split": {
+      "root": "executions/gse281364-outcome-blind-splits-21068885",
+      "artifacts_sha256": "26a20a18c7697c4e16eb645640428d3fd6290957efcef4df18219f9e16320de8"
+    },
+    "common_locus_selection": {
+      "root": "executions/gse281364-sei-fixture-21068925",
+      "artifacts_sha256": "620464c0ef7cf378eb2b44a1608cb6b9c273bd70b8770a43b2a95d21e725af4d"
+    },
+    "reference": {
+      "root": "executions/sequence-fasta-21063808",
+      "artifacts_sha256": "7c202e392c3e415ee7f6bc196b931199c514b2fefc04a19fc82645d81fd8ba39",
+      "build": "GRCh38.p14",
+      "fasta": "GRCh38.p14.sequence_model.fa",
+      "fasta_sha256": "ed20dceeb315cffa2bc3de050d846eceefc552451fef741f0dd95b0149d10fce"
+    },
+    "admission_sources": {
+      "root": "executions/borzoi-enformer-admission-sources-21064438",
+      "artifacts_sha256": "c6af0a8723e5a4d8186af52c277d935c5ec4a2f4c46037b3f6954f9f77c39487",
+      "target_manifest": "sources/borzoi_targets_human.txt.gz",
+      "target_manifest_sha256": "8f67ef43b914e42d7a7dafb8d621190cafe84a167bc4c9eb1aa781ee694d6d32"
+    },
+    "checkpoint_contract": {
+      "path": "config/artifacts/models/borzoi/checkpoints.json",
+      "sha256": "1c5d7213dab05be8bb819d61ff4d03b2bcd7ca307954ab328de739c476c9e257"
+    },
+    "exposure_audit": {
+      "path": "config/artifacts/models/borzoi/exposure_audit.json",
+      "sha256": "e8318f78fbe61e7dca6dc5ea60720395c48c0526a616eac006d8c75f5d54b43b"
+    },
+    "development_crosswalk": {
+      "path": "config/artifacts/models/borzoi/development_crosswalk.json",
+      "sha256": "65ace3b7b31138459e88db1c34c05f90cd75121ac2b88befe18552f1780e3716"
+    }
+  },
+  "sequence_contract": {
+    "input_length_bp": 524288,
+    "variant_index0": 262144,
+    "coordinate_convention": "input_0_based_half_open_variant_pos0_and_VCF_pos1",
+    "variant_scope": "biallelic_SNV_only",
+    "allele_effect_sign": "ALT_minus_REF",
+    "allowed_contigs": [
+      "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8",
+      "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15",
+      "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22",
+      "chrX", "chrY"
+    ],
+    "unknown_base_policy": "preserve_N_and_encode_as_all_zero_only_after_native_loader_parity",
+    "reference_requirements": [
+      "gzip_and_ARTIFACTS_integrity_pass",
+      "GRCh38.p14_primary_contig_only",
+      "REF_matches_reference_at_variant_pos0",
+      "variant_pos1_equals_variant_pos0_plus_1",
+      "ALT_differs_from_REF_at_exactly_one_base",
+      "reverse_complement_hashes_are_frozen"
+    ]
+  },
+  "leakage_firewall": {
+    "source_grouping_distance_bp": 6000,
+    "borzoi_receptive_field_buffer_bp": 524288,
+    "action": "merge_source_locus_groups_on_each_contig_until_adjacent_component_intervals_are_at_least_524288bp_apart_then_assign_whole_components_to_outer_folds",
+    "outer_folds": 5,
+    "fold_seed": "gse281364-borzoi-long-range-v1",
+    "common_locus_selection": "one_outcome_blind_element_per_original_1033_locus_groups",
+    "expected_source_locus_groups": 1033,
+    "expected_long_range_components": 239,
+    "donor_rule": "not_applicable_no_biological_donors_MPRA_experimental_replicates_are_scored_as_replicates_not_donors",
+    "outcomes_forbidden": [
+      "reporter_counts",
+      "replicate_outcomes",
+      "MASLD_labels",
+      "sealed_labels"
+    ],
+    "selection_or_fold_fit_on_outcomes": false
+  },
+  "native_output_contract": {
+    "human_tracks": 7611,
+    "output_resolution_bp": 32,
+    "released_prediction_bins": 16352,
+    "central_training_loss_bins": 6144,
+    "manifest_fields": [
+      "index", "identifier", "file", "clip", "clip_soft", "scale",
+      "sum_stat", "strand_pair", "description"
+    ],
+    "assay_track_counts": {
+      "ATAC": 232,
+      "CAGE": 1276,
+      "CHIP": 3886,
+      "DNASE": 674,
+      "RNA": 1543
+    },
+    "primary_track_indices": [22, 23, 878, 879, 1302, 1724, 2035, 7563, 7564, 7565],
+    "primary_track_roles": {
+      "22": "expression_CAGE_adult_liver_plus",
+      "23": "expression_CAGE_adult_liver_minus",
+      "878": "expression_CAGE_hepatocyte_plus",
+      "879": "expression_CAGE_hepatocyte_minus",
+      "1302": "accessibility_DNASE_hepatocyte",
+      "1724": "accessibility_DNASE_adult_liver",
+      "2035": "accessibility_ATAC_hepatocyte",
+      "7563": "expression_GTEx_liver_1",
+      "7564": "expression_GTEx_liver_2",
+      "7565": "expression_GTEx_liver_3"
+    },
+    "primary_track_identifiers": {
+      "22": "CNhs10624+",
+      "23": "CNhs10624-",
+      "878": "CNhs12349+",
+      "879": "CNhs12349-",
+      "1302": "ENCFF818FXA",
+      "1724": "ENCFF462ZLK",
+      "2035": "kai167",
+      "7563": "GTEX-11EQ9-0526-SM-5A5JZ.1",
+      "7564": "GTEX-1QP66-0226-SM-DPRXS.1",
+      "7565": "GTEX-ZYT6-0626-SM-5E45V.1"
+    },
+    "transform_rule": "retain_clip_clip_soft_scale_sum_stat_and_strand_pair_verbatim; apply_the_released_old_inverse_transform_before_member_or_orientation_averaging",
+    "claim_boundary": "static_reference_liver_or_hepatocyte_tracks_not_MASLD_state_or_donor_conditioned_outputs"
+  },
+  "ensemble_contract": {
+    "member_order": ["replicate_0", "replicate_1", "replicate_2", "replicate_3"],
+    "member_relationship": "random_initialization_and_sequence_order_replicates_on_same_fold3_test_fold4_validation_split_not_genomic_CV_folds",
+    "orientations": ["forward", "reverse_complement"],
+    "shift_bp": [0],
+    "restore_before_average": [
+      "reverse_genomic_bins_for_reverse_complement_predictions",
+      "apply_manifest_strand_pair_permutation",
+      "apply_exact_released_track_inverse_transform"
+    ],
+    "aggregation": "arithmetic_mean_of_8_restored_member_by_orientation_predictions_per_allele",
+    "variant_statistics": ["logSUM", "gene_specific_logSED", "log_L2"],
+    "member_uncertainty": "retain_member_predictions_for_stability_only_not_inferential_replication",
+    "generic_port_rule": "converted_or_reimplemented_weights_are_separately_named_ports_until_native_TensorFlow_numeric_parity_passes"
+  },
+  "mandatory_baselines": [
+    "zero_allele_delta",
+    "deltasvm",
+    "gkmsvm",
+    "mpralegnet",
+    "sequence_cnn_control",
+    "sequence_transformer_control"
+  ],
+  "execution_gate": {
+    "checkpoint_download_allowed": false,
+    "checkpoint_deserialization_allowed": false,
+    "model_forward_allowed": false,
+    "model_metrics_allowed_in_fixture_or_adapter": false,
+    "weight_terms": "UNDECLARED_BLOCKED",
+    "runtime": "BLOCKED_checkpoint_bound_Baskerville_Westminster_and_no_network_native_runtime_unresolved",
+    "reference_parity": "BLOCKED_native_hg38_ml_fa_identity_unresolved",
+    "open_champion_eligible": false,
+    "allowed_next_action": "CPU_only_outcome_blind_long_range_fixture_and_native_track_map"
+  },
+  "claim_boundary": {
+    "screen_role": "exposed_development_MPRA_sequence_native_diagnostic_only",
+    "signed_eqtl_claim_allowed": false,
+    "sealed_external_claim_allowed": false,
+    "clinical_claim_allowed": false
+  }
+}

@@ -87,7 +87,7 @@ PAIRED_BLOCK_FIELDS = (
 
 
 class RNAATACScPairEvaluationError(RuntimeError):
-    """Raised when the seven-model evaluation contract is violated."""
+    """Raised when the seven-model evaluation requirements are not met."""
 
 
 def relative_deviance_reduction(reference: float, candidate: float) -> float:

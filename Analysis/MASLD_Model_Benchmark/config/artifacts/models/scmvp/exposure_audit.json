@@ -22,7 +22,7 @@
     "scope": "paired_training_frozen_rna_query_and_observed_atac_profile_exclusion",
     "sha256": "8258f00226e0ba6515848db7cfe2b7457c807849192f88454e711edbc36c404c"
   },
-  "interpretation": "A locally trained scMVP model has no checkpoint-corpus contamination, but only its RNA encoder is usable for an RNA-only held donor. The released multimodal inference and imputation paths require observed ATAC, infer an ATAC latent, form a joint latent, and compute observed ATAC library size before decoding. These outputs are reconstructions, not RNA-conditioned accessibility. GSE244832 aliquots cannot train the paired model. GSE289173 can in principle seal cell-state mapping through a frozen RNA encoder but cannot seal ATAC profiling.",
+  "interpretation": "A locally trained scMVP model has no checkpoint-corpus contamination, but only its RNA encoder is usable for an RNA-only held donor. The released multimodal inference and imputation paths require observed ATAC, infer an ATAC latent, form a joint latent, and compute observed ATAC library size before decoding. These outputs are reconstructions, not RNA-conditioned accessibility. GSE244832 aliquots cannot train the paired model. GSE289173 can in principle hold-back cell-state mapping through a frozen RNA encoder but cannot hold back ATAC profiling.",
   "remaining_blockers": [
     "Implement a frozen RNA-only adapter that aligns training genes, forces eval/no-grad, returns the RNA posterior mean, and never constructs or passes an ATAC tensor.",
     "Prove adding, removing, batching, or permuting query cells cannot alter BatchNorm state, GMM parameters, another query embedding, head parameters, prototypes, or calibration.",

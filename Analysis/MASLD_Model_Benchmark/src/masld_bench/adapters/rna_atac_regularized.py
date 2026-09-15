@@ -21,7 +21,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class RNAATACRegularizedError(RuntimeError):
-    """Raised when a regularized RNA-to-ATAC contract is violated."""
+    """Raised when a regularized RNA-to-ATAC requirement is not met."""
 
 
 def _load_classical() -> Any:

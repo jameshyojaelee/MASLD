@@ -1,0 +1,109 @@
+{
+  "schema_version": "masld-bench-geneformer-weight-state-correction-record-v1",
+  "record_id": "geneformer_weight_state_correction_20260825",
+  "audit_date": "2026-08-25",
+  "model_id": "geneformer",
+  "decision": "correct_the_stale_flag_and_normalise_the_licence_keys",
+  "decided_by": "user via team-lead, 2026-08-25, after the rights premise was withdrawn",
+
+  "headline": "There is NO rights gap for geneformer. Its weights are licensed Apache-2.0. The only defect was a stale download flag, plus a schema key that made the licence invisible to a search.",
+
+  "rights_position": {
+    "weight_license": "Apache-2.0",
+    "code_license": "Apache-2.0",
+    "declared": true,
+    "permissive": true,
+    "corroborated_by": [
+      "config/artifacts/models/geneformer/checkpoints.json, previously under the singular key 'license'",
+      "config/models/cell_foundation.toml license_status = Apache-2.0 on geneformer_v1_10m, v2_104m and v2_316m",
+      "upstream ctheodoris/Geneformer ships weights and code in the same Apache-2.0 repository"
+    ],
+    "redistribution_prohibited": false,
+    "derivative_weights_prohibited": false,
+    "champion_rights_blocked": false,
+    "exposure_class": "target_label_unexposed",
+    "eligibility_note": "The exposure class is target_label_unexposed and the weight terms are declared and permissive, so geneformer is NOT rights-blocked for a champion claim. An earlier draft of this finding asserted the opposite; that assertion was withdrawn before it was ever frozen. Champion eligibility remains subject to every other standing gate."
+  },
+
+  "what_was_corrected": {
+    "weight_content_downloaded": {"from": false, "to": true, "kind": "stale_fact"},
+    "license_key": {
+      "from": "license: Apache-2.0",
+      "to": "weight_license: Apache-2.0 and code_license: Apache-2.0",
+      "kind": "schema_normalisation",
+      "value_changed": false,
+      "why_code_license_too": "The singular key covered the code_source_artifacts as well. Splitting it without carrying the code half across would have lost information the old key held."
+    },
+    "digests_corrected": 0,
+    "digests_note": "Unlike scGPT, all three weight digests were already resolved in the bundle. Nothing to fix.",
+    "weights_deleted": 0
+  },
+
+  "verification": {
+    "method": "All three model.safetensors bodies re-derived from the bytes on a compute node, plus all 16 EXPECTED_SHA256SUMS entries.",
+    "weight_bodies": 3,
+    "weight_bytes_unique": 1724209768,
+    "expected_sha256sums_entries": 16,
+    "mismatches": 0,
+    "missing": 0,
+    "read_only_evidence": "executions/geneformer-weight-state-verification-21111156"
+  },
+
+  "known_deferred_item_now_closed": {
+    "recorded_by": "config/artifacts/models/geneformer/native_task_disposition_20260825.json",
+    "recorded_on": "2026-08-25, earlier the same day",
+    "original_action": "recorded_only_not_corrected_by_this_overlay",
+    "original_observation": "All three model.safetensors bodies are present on disk under executions/geneformer-acquisition-21014827/source/ at the exact frozen sizes. The recorded false is stale.",
+    "credit": "The staleness was found and deliberately deferred by that overlay, not missed. This record closes a known deferred item; it is not a new discovery.",
+    "status": "closed_2026_08_25"
+  },
+
+  "root_cause_of_the_false_alarm": {
+    "what_happened": "An audit searched for the key name weight_license, found it absent, and reported the absence as a rights gap. The bundle carried the value under the singular key license, and it was Apache-2.0 the whole time.",
+    "the_lesson": "An audit that reasons from the shape it expects rather than the shape that exists will find phantom gaps as reliably as it misses real ones. This is the same class as 'the filesystem is the authority, the bundle is a claim about it': a key-name search tests your model of the schema, not the schema.",
+    "why_the_schema_made_it_likely": "Geneformer was the only one of 104 bundles using the singular license key. Normalising it removes the trap rather than only this instance of it.",
+    "corroborating_check_that_would_have_caught_it": "Reading the licence VALUE from the model registry (config/models/cell_foundation.toml license_status) rather than inferring absence from one bundle key. Two independent sources disagreeing is the signal.",
+    "how_close_it_came": "The false gap was one instruction away from being frozen as a redistribution prohibition and a champion block on the model holding the campaign's strongest cell-state result. It was caught by re-examining the premise before editing, not by any test."
+  },
+
+  "durability_cuts_both_ways": {
+    "statement": "The danger is not only a record that reads as a clean bill of health. It is equally a record that reads as routine when it is not, and a record that reads as alarming when the situation is routine. In every case the durability of the record then works against you.",
+    "worked_example_understating": "scGPT recorded weight_content_downloaded=false while the bodies sat on disk under an undeclared licence. The false read as compliance, so nothing flagged it for two days.",
+    "worked_example_overstating": "This geneformer entry asserted an absent weight licence on a release-eligible model. Had it been frozen, it would have suppressed a legitimate release candidate on a gap that did not exist.",
+    "consequence": "A register that can only overstate is no more trustworthy than one that can only understate. Both failure directions must be checkable, which is why the corrections below are shown rather than silently replaced."
+  },
+
+  "corrections_to_the_earlier_finding": [
+    {
+      "claim": "48 weight files",
+      "corrected_to": "3 unique weight bodies plus 13 auxiliary artifacts; 21 recorded entries",
+      "why_wrong": "The count included .pkl dictionaries and config files as weights."
+    },
+    {
+      "claim": "6,947,079,999 bytes",
+      "corrected_to": "1,724,209,768 bytes of unique weight content",
+      "why_wrong": "The figure triple-counted the same three bodies across one complete acquisition and two abandoned .staging attempts holding byte-identical copies."
+    },
+    {
+      "claim": "about 17x the scGPT exposure",
+      "corrected_to": "about 4.2x, against scGPT's 413,247,012 bytes",
+      "why_wrong": "It followed from the triple-counted total."
+    },
+    {
+      "claim": "weight_license key ABSENT entirely, not merely UNDECLARED; no licence field at all",
+      "corrected_to": "The licence is declared Apache-2.0 under the singular license key",
+      "why_wrong": "A search for the wrong key name. This is the claim that produced the false rights alarm."
+    },
+    {
+      "claim": "an absent licence key is itself evidence of a rights gap",
+      "corrected_to": "30 of 104 bundles carry no licence key at all, so an absent key is unexceptional and proves nothing on its own",
+      "why_wrong": "The inference treated a schema variation as a rights finding."
+    }
+  ],
+
+  "sealed_outcomes_read": false,
+  "models_fit": [],
+  "models_scored": [],
+  "checkpoint_opened": false,
+  "weights_deserialized": false
+}

@@ -54,7 +54,7 @@ SPLIT_FIELDS = (
 
 
 class DevelopmentOutcomeError(ValueError):
-    """Raised when evaluator-only ATAC outcome extraction violates its contract."""
+    """Raised when evaluator-only ATAC outcome extraction does not meet its requirements."""
 
 
 def sha256_file(path: Path) -> str:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the admitted MPRALegNet checkpoint on an outcome-free allele fixture."""
+"""Run the included MPRALegNet checkpoint on an outcome-free allele fixture."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ COMPLEMENT = str.maketrans("ACGTN", "TGCAN")
 
 
 class MPRALegNetProbeError(ValueError):
-    """Raised when checkpoint execution differs from its frozen contract."""
+    """Raised when checkpoint execution differs from its frozen requirements."""
 
 
 def _sha256_file(path: Path) -> str:

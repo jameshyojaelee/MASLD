@@ -1,0 +1,65 @@
+{
+  "schema_version": "masld-bench-remaining-multimodal-validation-v1",
+  "job_id": 21088037,
+  "job_name": "remaining-multimodal-audit",
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed": "00:00:05",
+  "partition": "cpu",
+  "account": "nslab",
+  "qos": "nslab",
+  "allocated_cpus": 1,
+  "requested_memory": "4G",
+  "requested_time": "00:10:00",
+  "unit_tests_run": 1,
+  "unit_tests_passed": 1,
+  "audit_status": "pass_metadata_audit_all_new_execution_gates_closed",
+  "verified_metadata_files": 72,
+  "model_identity_count": 13,
+  "admitted_model_count": 0,
+  "training_authorized": false,
+  "prediction_authorized": false,
+  "scoring_authorized": false,
+  "sealed_outcomes_opened": false,
+  "development_outcomes_opened": false,
+  "model_payloads_opened": false,
+  "data_matrices_opened": false,
+  "files": [
+    {
+      "path": "executions/remaining-multimodal-audit-21088037.out",
+      "sha256": "935eb9e1de600e8ec481e07b7d6bb1b906076a1677612b9f90aab2c79334b03c",
+      "size_bytes": 1075,
+      "role": "slurm_stdout"
+    },
+    {
+      "path": "executions/remaining-multimodal-audit-21088037.err",
+      "sha256": "82a7592b99574c7742bdafec0962cfb20500770a9801b0309b2e19c18c2e2b42",
+      "size_bytes": 98,
+      "role": "slurm_stderr"
+    },
+    {
+      "path": "config/artifacts/models/remaining_multimodal_families/disposition_20260824.json",
+      "sha256": "de07b243f55b38a616fee8c333540a50baa2ec284f2d08944b6f5a259171e591",
+      "size_bytes": 24007,
+      "role": "disposition_authority"
+    },
+    {
+      "path": "scripts/audit_remaining_multimodal_families_disposition.py",
+      "sha256": "2bb53407ad32b4247f9e7a39d9a05028f282a903b1e8d57960b0478aec00bcaf",
+      "size_bytes": 35327,
+      "role": "validator"
+    },
+    {
+      "path": "tests/unit/test_audit_remaining_multimodal_families_disposition.py",
+      "sha256": "a51a62e4c69157e542a08d3fec813aed772299cfed17c365a725a056942d5678",
+      "size_bytes": 1673,
+      "role": "unit_test"
+    },
+    {
+      "path": "slurm/validate_remaining_multimodal_families_disposition_cpu.sbatch",
+      "sha256": "6ab00be39fde06d411e2ac8836ef298555927c0da4746331d99e313da713f471",
+      "size_bytes": 1502,
+      "role": "slurm_wrapper"
+    }
+  ]
+}

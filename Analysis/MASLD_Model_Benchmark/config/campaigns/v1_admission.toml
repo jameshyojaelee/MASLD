@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-admission"
-description = "License, checkpoint, exposure, reference, and fixed-fixture admission only"
+description = "License, checkpoint, exposure, reference, and fixed-fixture inclusion only"
 wave = "admission"
 review_only = true
 allow_arrays = false

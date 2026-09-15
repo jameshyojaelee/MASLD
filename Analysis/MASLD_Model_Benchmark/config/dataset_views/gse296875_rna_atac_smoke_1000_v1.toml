@@ -1,7 +1,7 @@
 schema_version = "masld-bench-dataset-view-v1"
 view_id = "gse296875_rna_atac_smoke_1000_v1"
 parent_dataset_id = "gse296875"
-parent_registry_sha256 = "9465b012bbf46611641555a5acae4d1f033d053c900bf944dcec02979c735b6f"
+parent_registry_sha256 = "d0f278c045755ef3174362a1bed110c5d4fe57d3fa5e9c33ab069f7e211c6caa"
 purpose = "compatibility_smoke"
 allowed_waves = ["smoke"]
 row_count = 1000

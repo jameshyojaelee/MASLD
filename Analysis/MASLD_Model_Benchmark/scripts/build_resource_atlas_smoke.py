@@ -41,7 +41,7 @@ PER_DONOR_CLASS_BUFFER = 16
 
 
 class SmokeSubsetError(ValueError):
-    """Raised when the source atlas cannot satisfy the frozen smoke contract."""
+    """Raised when the source atlas cannot satisfy the frozen smoke requirements."""
 
 
 def sha256_file(path: Path) -> str:

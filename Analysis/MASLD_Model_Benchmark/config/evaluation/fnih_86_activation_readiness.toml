@@ -1,0 +1,192 @@
+schema_version = "masld-bench-fnih-activation-readiness-v1"
+audit_id = "fnih_86_activation_readiness_20260825"
+dataset_id = "fnih_86_liver"
+status = "outcome_blind_fail_closed"
+automatic_activation = false
+sealed_outcomes_read = false
+biological_matrices_downloaded = false
+controlled_data_accessed = false
+expected_final_donor_n = 86
+source_collected_donor_n = 87
+source_excluded_qc_donor_n = 1
+cohort_family_id = "fnih_86_liver_conditional"
+external_role = "conditional_future_seal"
+reference_contract = "GRCh38.p14_GENCODE_v49_project_target"
+native_reference_high_level = "hg38"
+native_reference_exact_bundle = "UNRESOLVED"
+native_annotation_release = "UNRESOLVED"
+activation_rule = "Every required criterion must be pass in one immutable audit, followed by a reviewed DatasetManifest and TaskSpec revision; this audit never activates the source automatically."
+
+[publication]
+title = "Single cell multiomics reveals drivers of MASLD disease states"
+pmcid = "PMC12083587"
+pmid = "40385416"
+doi = "10.1101/2025.05.09.25327043"
+current_publication_class = "preprint"
+
+[[public_source]]
+source_id = "portal_html"
+url = "https://epigenome.wustl.edu/MASLD/"
+content_class = "public_metadata_html"
+required_tokens = ["Multimodal analysis of MASLD", "/MASLD/assets/"]
+
+[[public_source]]
+source_id = "zenodo_record"
+url = "https://zenodo.org/api/records/15298484"
+content_class = "public_metadata_json"
+required_tokens = ["15298484"]
+
+[[public_source]]
+source_id = "pubmed_record"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=40385416&retmode=xml"
+content_class = "public_metadata_xml"
+required_tokens = ["Single cell multiomics reveals drivers", "Preprint"]
+
+[[public_source]]
+source_id = "pmc_bioc"
+url = "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC12083587/unicode"
+content_class = "public_publication_json"
+required_tokens = ["10x Multiome", "demuxlet", "Cell Ranger ARC", "Visium HD"]
+
+[[public_source]]
+source_id = "github_repository"
+url = "https://api.github.com/repos/Gaulton-Lab/FNIH.Liver"
+content_class = "public_code_metadata_json"
+required_tokens = ["Gaulton-Lab/FNIH.Liver"]
+allow_unavailable = true
+unavailable_disposition = "Code license and exact source tree remain unresolved; participant-data activation stays blocked."
+
+[[public_source]]
+source_id = "gds_by_pmid"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=40385416%5BPMID%5D&retmode=json"
+content_class = "public_repository_search_json"
+required_tokens = ["esearchresult"]
+
+[[public_source]]
+source_id = "gds_by_exact_title"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=%22Single%20cell%20multiomics%20reveals%20drivers%20of%20MASLD%20disease%20states%22%5BTitle%5D&retmode=json"
+content_class = "public_repository_search_json"
+required_tokens = ["esearchresult"]
+
+[[assay_topology]]
+assay_id = "tenx_multiome_rna_atac"
+donor_n = 86
+profile_n = 408178
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+within_assay_pairing = "same_nucleus"
+cross_assay_pairing = "not_applicable"
+pooling = "15_to_30_donors_per_library"
+donor_assignment = "genotype_demultiplexing_with_demuxlet"
+public_donor_barcode_join = false
+source_processing = "Cell_Ranger_ARC_2.0.2"
+
+[[assay_topology]]
+assay_id = "paired_tag_rna_h3k27ac"
+donor_n = -1
+profile_n = -1
+modalities = ["single_nucleus_rna", "single_nucleus_h3k27ac"]
+within_assay_pairing = "same_nucleus"
+cross_assay_pairing = "separate_nuclei_from_multiome_and_other_paired_tag_mark"
+pooling = "pooled_donor_samples"
+donor_assignment = "genotype_demultiplexing"
+public_donor_barcode_join = false
+source_processing = "cellranger_6.1.2_rna+cellranger_atac_2.0.0_histone"
+
+[[assay_topology]]
+assay_id = "paired_tag_rna_h3k27me3"
+donor_n = -1
+profile_n = -1
+modalities = ["single_nucleus_rna", "single_nucleus_h3k27me3"]
+within_assay_pairing = "same_nucleus"
+cross_assay_pairing = "separate_nuclei_from_multiome_and_other_paired_tag_mark"
+pooling = "pooled_donor_samples"
+donor_assignment = "genotype_demultiplexing"
+public_donor_barcode_join = false
+source_processing = "cellranger_6.1.2_rna+cellranger_atac_2.0.0_histone"
+
+[[assay_topology]]
+assay_id = "droplet_hic"
+donor_n = 85
+profile_n = -1
+modalities = ["single_nucleus_hic"]
+within_assay_pairing = "same_nucleus_within_hic_only"
+cross_assay_pairing = "separate_nuclei_from_multiome_and_paired_tag"
+pooling = "UNRESOLVED_PUBLIC_MANIFEST"
+donor_assignment = "UNRESOLVED_PUBLIC_JOIN"
+public_donor_barcode_join = false
+source_processing = "UNRESOLVED_EXACT_PIPELINE"
+
+[[assay_topology]]
+assay_id = "visium_hd"
+donor_n = 7
+profile_n = -1
+modalities = ["spatial_rna"]
+within_assay_pairing = "same_section_within_spatial_rna_only"
+cross_assay_pairing = "donor_and_tissue_join_unresolved"
+pooling = "not_applicable"
+donor_assignment = "UNRESOLVED_PUBLIC_JOIN"
+public_donor_barcode_join = false
+source_processing = "Visium_HD"
+
+[[activation_criterion]]
+criterion_id = "publication_topology_evidence"
+required = true
+current_state = "pass"
+evidence = "The public source describes assay-level topology and donor counts."
+
+[[activation_criterion]]
+criterion_id = "open_raw_or_analysis_complete_file_manifest"
+required = true
+current_state = "fail"
+evidence = "No immutable public donor-linked raw or analysis-complete file manifest has been established."
+
+[[activation_criterion]]
+criterion_id = "dataset_reuse_and_derivative_terms"
+required = true
+current_state = "fail"
+evidence = "Code, article, portal, and record licenses do not by themselves establish participant-data reuse or derivative-weight redistribution rights."
+
+[[activation_criterion]]
+criterion_id = "immutable_donor_and_barcode_join"
+required = true
+current_state = "fail"
+evidence = "A public participant-to-pool-to-barcode manifest with hashes is unavailable."
+
+[[activation_criterion]]
+criterion_id = "exact_native_reference_bundle"
+required = true
+current_state = "fail"
+evidence = "High-level hg38 and tool versions are described, but FASTA, annotation, contig set, and reference-bundle hashes are unresolved."
+
+[[activation_criterion]]
+criterion_id = "cohort_family_and_donor_deduplication"
+required = true
+current_state = "not_evaluable"
+evidence = "Participant-level public manifests or permitted salted fingerprints are unavailable."
+
+[[activation_criterion]]
+criterion_id = "checkpoint_contamination_eligibility"
+required = true
+current_state = "not_evaluable"
+evidence = "Activation must precede checkpoint-specific exposure audit; source discovery is not checkpoint clearance."
+
+[[activation_criterion]]
+criterion_id = "task_endpoint_and_prospective_power_binding"
+required = true
+current_state = "not_evaluable"
+evidence = "No task may spend this future seal before an outcome-blind TaskSpec, endpoint inventory, and prospective power decision are frozen."
+
+[rights_interpretation]
+portal_reachability_is_data_release = false
+article_license_is_dataset_license = false
+code_license_is_dataset_license = false
+zenodo_metadata_license_applies_to_unavailable_files = false
+restricted_or_zero_file_record_is_open_dataset = false
+unknown_terms_are_permission = false
+
+[decision]
+current_activation_state = "blocked"
+eligible_as_external_seal_now = false
+eligible_for_training_now = false
+next_required_action = "Obtain and freeze an openly downloadable donor-linked file manifest, data-specific reuse terms, participant joins, exact native reference identity, deduplication evidence, and a task-specific contamination/power contract."
+claim_boundary = "The public topology can motivate development. It cannot support training, external validation, a universal claim, or a MASLD champion claim."

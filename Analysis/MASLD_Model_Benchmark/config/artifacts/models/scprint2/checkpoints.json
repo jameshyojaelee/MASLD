@@ -1,6 +1,6 @@
 {
   "architecture_source_contract": {
-    "checkpoint_confirmation": "UNRESOLVED_UNTIL_RESTRICTED_INSPECTION",
+    "checkpoint_confirmation": "STRICT_RESTORE_PASSED_ALL_503_TENSORS_WITH_NO_MISSING_OR_UNEXPECTED_KEYS",
     "class_embedding_dimensions": {"age": 8, "assay": 12, "cell_culture": 2, "cell_type": 64, "disease": 32, "ethnicity": 8, "organism": 8, "sex": 2, "tissue": 32},
     "expression_attention_heads": 4,
     "expression_hidden_dimension": 256,
@@ -35,6 +35,23 @@
     "official_default_use_knn": true,
     "row_identity_rule": "Carry immutable row IDs through batching and join emitted shards by those IDs, never by generated observation names or shard order.",
     "transductive_warning": "The official metacell/KNN path can couple cells. It cannot cross donor, study, or outer-fold boundaries and is reported separately from independent-cell common probes."
+  },
+  "development_execution": {
+    "evaluation_artifact": "executions/model-evaluation-302-21076583",
+    "evaluation_artifacts_sha256": "109077b2d8c90870946c406933ab2018a08db79e1965bcfad06198deb8b8245e",
+    "embedding_artifact": "executions/model-work-302-21075963",
+    "embedding_artifacts_sha256": "3c57bcf5f9c821e395966809033b4319971432102714c0051f2c8d449e654183",
+    "fixture_artifact": "executions/scprint2-no-neighbor-fixture-21075645",
+    "fixture_artifacts_sha256": "edf71c212340ebfdcc266ef7c0ecb73449193b36a17147e53d3801804082c9f7",
+    "best_development_arm": "common_two_layer_mlp",
+    "best_donor_class_balanced_macro_f1": 0.9222575759734882,
+    "strongest_registered_baseline": "hvg_pca_logistic",
+    "strongest_baseline_macro_f1": 0.9229204826289747,
+    "delta_macro_f1": -0.0006629066554865171,
+    "paired_donor_bootstrap_ci95": [-0.017589701508270012, 0.015838394355578052],
+    "promotion_disposition": "did_not_promote_from_development_smoke",
+    "scope": "no_neighbor_common_lane_only_not_native_knn_metacell",
+    "sealed_outcomes_read": false
   },
   "historical_alias": {
     "hf_commit": "fc86c66feee198e7ebc902cb800195b3e1235098",
@@ -80,7 +97,7 @@
     "legacy_objects_rejected": [
       {
         "identity": "scprint_v1_5_medium_original",
-        "reason": "Separate scPRINT v1/v1.5 model already registered; wrong generation and architecture contract.",
+        "reason": "Separate scPRINT v1/v1.5 model already registered; wrong generation and architecture requirements.",
         "revision": "jkobject/scPRINT@f60c87152e83fedb932a84f8ba850fbf489a5a86:v2-medium.ckpt",
         "sha256": "a4cf0753270d4ff451a5dbddadd4c59a53e10e4c3e96a8af0db407ad893c36c5",
         "size_bytes": 221775592
@@ -107,10 +124,16 @@
     "declared_python": ">=3.10,<3.13",
     "declared_scDataLoader": ">=2.1.1",
     "declared_torch": "2.8.0",
-    "environment_status": "UNRESOLVED"
+    "environment_status": "EXACT_RELEASE_1.0.3_TORCH_2.8_RUNTIME_AND_STRICT_CHECKPOINT_RESTORE_PASSED",
+    "runtime_artifact": "executions/environments/scprint2-native-torch2.8.0-v2-21073597",
+    "runtime_artifacts_sha256": "4474a0d069d09a9a805e7d6e33936af95eeab9fb72d6e3c131e7e7733350842d",
+    "strict_restore_artifact": "executions/scprint2-native-runtime-preflight-v2-21074027",
+    "strict_restore_artifacts_sha256": "9ed6d6db96bca280b2b2a99f8c3256be329978ad145e234aaac4815ef33295fa"
   },
   "safe_loading_contract": {
-    "checkpoint_content_downloaded": false,
+    "checkpoint_content_downloaded": true,
+    "restricted_checkpoint_inspection_passed": true,
+    "strict_restore_passed": true,
     "released_loader": "lightning_scPRINT2_load_from_checkpoint",
     "require_restricted_checkpoint_inspection_before_load": true,
     "require_state_dict_hyperparameter_vocabulary_and_ontology_schema_freeze": true
@@ -168,7 +191,7 @@
     }
   ],
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The exact Hugging Face history, scPRINT-2 release 1.0.3, preprint-linked repository, and scBaseCount release record were queried on 2026-08-22. No checkpoint body was downloaded or deserialized.",
+  "source_evidence": "The exact Hugging Face history, scPRINT-2 release 1.0.3, preprint-linked repository, and scBaseCount release record were queried on 2026-08-22. The exact checkpoint was subsequently hash-verified, restricted-inspected, strictly restored under the release runtime, and evaluated outcome-blind in three explicitly no-neighbor development arms on 2026-08-24. Exposure remains unknown because the training snapshots are not version-bound.",
   "source_records": [
     {"identity": "scPRINT-2:LICENSE", "sha256": "ae49d34bb24814b78a8c3390342986b3df683fe719864f9d6c4569ad27f0ec9a", "size_bytes": 34736},
     {"identity": "scPRINT-2:README.md", "sha256": "42cf19d5b74199bef4328838910f168f2b00aa0c3cc1fd285d517860a710cfb1", "size_bytes": 25809},

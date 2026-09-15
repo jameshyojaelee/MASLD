@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract only the five admitted Sei native members from its frozen archive."""
+"""Extract only the five included Sei native members from its frozen archive."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ import numpy as np
 
 
 class SeiNativeMemberError(ValueError):
-    """Raised when the frozen Sei archive differs from its admitted census."""
+    """Raised when the frozen Sei archive differs from its included census."""
 
 
 def _sha256_file(path: Path) -> str:

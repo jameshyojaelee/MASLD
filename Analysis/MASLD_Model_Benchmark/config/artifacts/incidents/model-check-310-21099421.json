@@ -1,0 +1,27 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "job_id": "21099421",
+  "job_name": "model-check-310",
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "stage_reached": "five_thousand_identifier_only_training_targets_and_candidate_census_written_before_receipt",
+  "unit_tests": {
+    "passed": 5,
+    "failed": 0
+  },
+  "failure_class": "noncanonical_integer_json_object_keys",
+  "failure_message": "training_targets_per_held_genomic_fold used integer keys, which the canonical JSON writer rejects",
+  "candidate_census": {
+    "minimum_eligible_candidates_per_held_by_source_fold": 14831,
+    "selected_targets_per_held_by_source_fold": 250,
+    "minimum_realized_finite_distance_bp": 524289
+  },
+  "rna_count_values_read": false,
+  "atac_count_values_read": false,
+  "raw_donor_ids_read": false,
+  "development_metric_calculated": false,
+  "model_fit": false,
+  "sealed_outcomes_read": false,
+  "output_tree_frozen": false,
+  "disposition": "preserved_nonpromotable_and_replayed_with_string_fold_keys"
+}

@@ -1,6 +1,6 @@
 schema_version = "masld-bench-dataset-v1"
 dataset_id = "pxd051911"
-title = "Matched liver and adipose proteomes in obesity"
+title = "Matched liver, subcutaneous and omental adipose proteomes in obesity"
 role = "train_development"
 status = "available"
 species = "human"
@@ -8,8 +8,8 @@ accession = ["PXD051911"]
 access_tier = "public"
 automatic_download = false
 outcome_url = "NOT_REGISTERED"
-redistribution_class = "source_reference_only"
-license_status = "source_terms_apply"
+redistribution_class = "cc0_redistribution_permitted"
+license_status = "CC0_public_domain_verified_against_pride_project_record"
 biological_unit = "participant"
 expected_biological_units = 58
 native_genome_build = "not_applicable"
@@ -19,13 +19,13 @@ pairing_levels = ["same_donor_different_tissue"]
 modality_status_default = "observed"
 exposure_status = "downstream_demo"
 admission_blocking = true
-blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence."]
-notes = "More than 7,000 proteins were measured across matched tissues. The accession does not create a matched RNA edge."
+blockers = ["Global admission remains gated. Only the development-only protein_transport lane over the liver, scWAT and oWAT arms is active under activation ARTIFACTS 8488568d468f4fe15dff152cd1529f069b69b9ef6f27708a518fdfc757b681a7.", "The plasma arm is excluded and must stay excluded unless collapsed to person_key. Its 184 rows cover 143 participants with 41 repeat-visit rows, so treating plasma runs as independent donors would pseudoreplicate. The activated liver arm is 58 rows over 58 participants at 1:1 and is unaffected.", "No protein champion claim is permitted. protein_transport requires an external protein cohort and zero are eligible; the only other proteomic source, vu2025, is CODEX imaging proteomics rather than LC-MS shotgun proteomics and is itself blocked behind a data-sharing agreement. This is a structural impossibility, not a pending acquisition.", "No paired RNA-protein relationship may be inferred from this accession under any lane."]
+notes = "Activated development-only. Activation ARTIFACTS 8488568d468f4fe15dff152cd1529f069b69b9ef6f27708a518fdfc757b681a7 authenticates all four deposited matrices plus meta_data.txt by SHA-1 against the deposit's own checksum.txt, so the local copy is provably the published output file. The authoritative participant join in meta_data.txt resolves exactly with zero orphans in either direction: liver 58/58, scWAT 58/58, oWAT 27/27. Matched cross-tissue coverage is 56 liver-and-scWAT, 25 liver-and-oWAT and 25 across all three. Proteins quantified are 7,096 liver, 6,988 scWAT and 6,988 oWAT. Source-native histology is complete on all 58 liver participants: Kleiner F0 13, F1 31, F2 11, F3 3; steatosis 0-3; ballooning 0-2; lobular inflammation 0-3; NAS 0-8; SAF No_MASLD 12, MASL 29, MASH 17. Sex 38 female and 20 male, age and BMI complete. fat_pct is observed for 44 of 58 and carries a typed mask, never a zero. The accession does not create a matched RNA edge."
 
 [provenance]
 source_url = "https://www.ebi.ac.uk/pride/archive/projects/PXD051911"
-verified_date = "2026-08-21"
-local_exposure = "Already used locally; development only."
+verified_date = "2026-08-25"
+local_exposure = "Already used locally; development only. Liver and plasma matrices were held locally before this activation; the scWAT and oWAT matrices were acquired from the PRIDE FTP archive during it."
 
 [split]
 group_key = "cohort_family_id+person_key"

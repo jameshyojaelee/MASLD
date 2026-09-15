@@ -1,0 +1,36 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "gse244832_observed_atac_execution_guard_20260825",
+  "detected_at": "2026-08-25",
+  "dataset_id": "gse244832",
+  "affected_authorities": [
+    {
+      "path": "executions/gse244832-reference-guarded-atac-exchange-axis-20260825",
+      "artifacts_sha256": "ff1a506d5cca81382911355978097ecd49fcb1b2b48826e8e760a5f2ad1ad35e",
+      "finding": "The coarse observed_atac input label left EpiBERT, EPCOTv2, GET, and unresolved embedding/decoder families potentially query-eligible even though they require sequence, motif, reference, checkpoint, or fixed-window decoder fixtures that have not passed for GSE244832."
+    },
+    {
+      "path": "executions/gse244832-label-free-atac-query-valid-context-20260825",
+      "artifacts_sha256": "801411d062f9d9f199c0468b6c8c6256263af85ea2805d75e3d166299d190742",
+      "finding": "The ATAC value tree is label-free and reusable, but its direct model-input roster lacks the explicit 18-donor by 4-lineage missingness mask needed to distinguish 48 eligible units from four structurally missing and 20 below-QC units."
+    },
+    {
+      "path": "executions/gse244832-label-free-atac-query-test-context-20260825",
+      "artifacts_sha256": "970992d3dc84f2d2c6c2c5357149579fa09b16051ddafb7eed0c1f2949a9ee8a",
+      "finding": "The ATAC value tree is label-free and reusable, but its direct model-input roster lacks the explicit 18-donor by 4-lineage missingness mask needed to distinguish 48 eligible units from four structurally missing and 20 below-QC units."
+    }
+  ],
+  "scientific_impact": "No model prediction, prediction commit, metric, selection, biological outcome open, or sealed-data access occurred. Donor identities, lineages, fixed windows, query ATAC values, +4/-5 Tn5 geometry, and whole-contig masking remain reusable through a stricter execution authority.",
+  "condition_values_read": false,
+  "phenotype_values_read": false,
+  "rna_assay_opened": false,
+  "cross_assay_join_inferred": false,
+  "biological_outcome_arrays_read": false,
+  "prediction_files_read": false,
+  "prediction_files_produced": false,
+  "metric_files_produced": false,
+  "champion_claim_allowed": false,
+  "disposition": "direct_model_execution_quarantined_before_predictions",
+  "replacement_contract_path": "config/evaluation/gse244832_observed_atac_execution_registration_20260825.json",
+  "replacement_rule": "Only PeakVI, LSI, observed_atac_glm, and observed_atac_only may execute, only through a frozen registration carrying the explicit donor-lineage missingness mask. EpiBERT, EPCOTv2, GET, EpiAgent, scBasset embeddings, all sequence families, and RNA-paired families remain blocked. The prediction commit must bind the registration before any evaluator outcome is opened."
+}

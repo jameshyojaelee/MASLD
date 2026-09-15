@@ -22,7 +22,7 @@ def run_fixture(
     request: Mapping[str, Any],
     output_dir: str | Path,
 ) -> Path:
-    """Create protocol-valid artifacts; never calculate evaluation metrics."""
+    """Create protocol-valid output files; never calculate evaluation metrics."""
 
     output = Path(output_dir)
     if output.exists():

@@ -19,7 +19,7 @@
     "path": "development_crosswalk.json",
     "sha256": "26f84732a802f33d08f0718dc360285702a5f9fe7b1dc2f1b09b91953565cfb5"
   },
-  "interpretation": "MPRALegNet is a useful HepG2 reporter-activity comparator, not an endogenous regulatory-effect model. Its ALT-minus-REF score can test whether a learned MPRA prior transports to MASLD variants, but the base model has no donor context, treatment context, enhancer-gene link, or signed eQTL/ieQTL target. The exact HF artifact predates GSE281364 but postdates the other two GEO releases; target-label unexposed, not globally clean, is the defensible overall classification.",
+  "interpretation": "MPRALegNet is a useful HepG2 reporter-activity comparator, not an endogenous regulatory-effect model. Its ALT-minus-REF score can test whether a learned MPRA prior transports to MASLD variants, but the base model has no donor context, treatment context, enhancer-gene link, or signed eQTL/ieQTL target. The exact HF output file predates GSE281364 but postdates the other two GEO releases; target-label unexposed, not globally clean, is the defensible overall classification.",
   "known_incidents_and_biases": [
     "The checkpoint is a third-party Hugging Face repackaging and has not been matched to the author Zenodo model archive.",
     "The filename identifies one test1_val2 model, whereas the author study used ten-fold cross-validation.",

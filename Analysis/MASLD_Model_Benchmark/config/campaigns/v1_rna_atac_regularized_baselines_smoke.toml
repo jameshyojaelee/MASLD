@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-rna-atac-regularized-baselines-smoke"
-description = "Five-fold donor-held-out six-model RNA-to-ATAC screen on the frozen 1,000-nucleus GSE296875 view, adding nested-CV shrinkage, transcription-only ridge, and shuffled-context control to the completed classical baselines; smoke metrics are descriptive and cannot support a champion"
+description = "Five-fold donor-held-out six-model RNA-to-ATAC screen on the frozen 1,000-nucleus GSE296875 view, adding nested-CV shrinkage, transcription-only ridge, and shuffled-context control to the completed classical baselines; smoke metrics are descriptive and cannot support a best model"
 wave = "smoke"
 status = "ready"
 prerequisites = []

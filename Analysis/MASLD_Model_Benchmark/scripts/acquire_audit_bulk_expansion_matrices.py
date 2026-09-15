@@ -33,7 +33,7 @@ MAX_FILE_BYTES = 1024 * 1024 * 1024
 
 
 class BulkMatrixAuditError(RuntimeError):
-    """Raised when a processed bulk source violates the acquisition contract."""
+    """Raised when a processed bulk source does not meet the acquisition requirements."""
 
 
 def sha256_file(path: Path) -> str:

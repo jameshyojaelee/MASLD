@@ -1,0 +1,37 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse83452_paired_intervention_stress"
+status = "blocked"
+unit_of_inference = "participant"
+input_modalities = ["baseline_bulk_rna_microarray", "baseline_clinical_covariates", "intervention"]
+endpoint = "From each outer-training participant's baseline molecular profile, baseline age and recorded sex, and deposited intervention, learn to predict follow-up-minus-baseline expression change for a wholly held participant over the one-year interval. Follow-up expression is the outcome only. Report Diet and bariatric-surgery strata separately; NASH transition is secondary and descriptive."
+metrics = ["participant_macro_spearman_observed_vs_predicted_expression_change", "participant_de_direction_rank", "participant_pathway_recovery", "intervention_stratified_expression_change_correlation", "secondary_defined_nash_transition_direction"]
+datasets_train = ["antwerp_inserm_shared"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse83452_participant_grouped_paired_outer_v1"
+required_pairing_levels = []
+missingness_policy = "All 60 expression-complete deposited pairs are eligible for molecular response stress. Only the 54 pairs with defined NASH status at both visits are eligible for the separately labeled NASH-transition summary; undefined is never no NASH."
+admission_gates = [
+  "Keep each baseline-follow-up pair in one participant group for outer and inner splits. Sixty pairs, 120 arrays, cells, genes, and visits do not create more than 60 biological replicates.",
+  "The empty required_pairing_levels field denotes a single-assay task and must not be read as unpaired visits. The longitudinal topology is an authoritative same-participant repeated baseline/follow-up pair.",
+  "Only baseline molecular profile, baseline age, recorded sex, intervention, and the deposited interval may enter a held-participant prediction. Held follow-up expression and NASH transition are outcomes and cannot enter preprocessing, feature selection, representation fitting, nearest-neighbor construction, calibration, or model inputs.",
+  "GSE106737 and GSE83452 are one project-exposed cohort family. GSE106737 may not be treated as an external replication or a separate training cohort for this task.",
+  "Use all 60 deposited pairs for the primary expression-change stress test: 32 Diet and 28 bariatric-surgery participants. Use only the 54 status-defined pairs for secondary NASH-transition direction and retain six pairs with undefined status as explicit missing outcomes.",
+  "Ordinary full-cohort RMA, quantile normalization, Partek global scaling, and the GEO series matrix are prohibited for scored evaluation. Every learned target distribution, sketch, probe summarizer, feature map, gene collapse, scaler, model, and calibration object is fit using outer-training participants only and applied independently to held participants.",
+  "Baseline and follow-up arrays from a held participant are processed with the same frozen training object. Cross-platform pooling is prohibited before exact gene mapping and no fold may learn from the held pair's intensity distribution.",
+  "The primary endpoint is genome-wide or prespecified-program expression change. Highlighted source-publication genes, outcome-selected pathways, and observed NASH transitions cannot select features, models, thresholds, or preprocessing.",
+  "Baseline age, recorded sex, intervention, and observed time interval are declared covariates. Report molecular-only, metadata-only, and masked-fusion lanes separately; intervention-specific results are required and pooled effects alone are insufficient.",
+  "Required baselines are no change, outer-training mean response by intervention, ridge, bilinear, and nearest-participant response. Deep models must beat the strongest applicable baseline with participant-level uncertainty.",
+  "This small single-cohort task is exploratory. It cannot support treatment-response, efficacy, prognosis, progression, diagnosis, champion, causal, or universal-model claims."
+]
+baseline_model_ids = ["no_change", "training_mean_response_by_intervention", "paired_ridge", "paired_bilinear", "nearest_participant_response"]
+uncertainty_method = "paired_participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse83452_paired_intervention_stress_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "gse83452_paired_intervention_stress_v1"
+promotion_gate_config_sha256 = "7e4fb2b4edbc393d2208b7a4742b355c72677fa7d20cb4ae4f95a6fc4f9cbe32"
+primary_evaluator_id = "gse83452_paired_intervention_stress_v1"
+evaluator_parameters = { paired_participants_expression = 60, paired_participants_defined_nash_transition = 54, diet_pairs = 32, bariatric_surgery_pairs = 28, participant_grouped_outer_folds = 5, baseline_age_required = true, recorded_sex_required = true, intervention_stratified_reporting_required = true, cohort_family_id = "antwerp_inserm_shared", longitudinal_topology = "same_participant_repeated_baseline_followup", predictor_timepoint = "baseline_only", molecular_outcome = "followup_minus_baseline_expression", followup_expression_allowed_as_input = false }
+claim_gate = "Exploratory paired stress only. No treatment-response, intervention-efficacy, diagnostic, prognostic, longitudinal progression, champion, causal, or universal-model claim is eligible from GSE83452."

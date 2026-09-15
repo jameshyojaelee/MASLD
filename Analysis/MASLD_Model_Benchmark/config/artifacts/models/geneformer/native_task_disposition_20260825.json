@@ -1,0 +1,162 @@
+{
+  "audit_date": "2026-08-25",
+  "base_registry_files": [
+    {
+      "registry_file": "config/models/cell_foundation.toml",
+      "registry_file_sha256": "6c0d8d6aff2db6fa99000ff5cc593940f097b6dde9745d08b8cd93aed9b4d14d"
+    }
+  ],
+  "base_registry_unchanged": true,
+  "binding_consequences": {
+    "development_execution_recorded": true,
+    "may_enter_a_sealed_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "permitted_role": "outcome-blind development record only, and only where a separately frozen contract authorises it",
+    "sealed_champion_eligible": false,
+    "sealed_scoring_authorized": false
+  },
+  "biological_data_read": false,
+  "bound_evidence": [
+    {
+      "path": "config/artifacts/models/geneformer/checkpoints.json",
+      "sha256": "77026b62d78c78fd29835c1909fd53febcbd0708b1ef5f4074fd05d699a296dd"
+    },
+    {
+      "path": "config/artifacts/models/geneformer/exposure_audit.json",
+      "sha256": "6aef01d60a68689af920a5c571b0979bdd7364d39d35e59cc1a2ba3e242032d3"
+    },
+    {
+      "path": "executions/geneformer-v2-316m-frozen-screen-extraction-21082667/ARTIFACTS.json",
+      "sha256": "06cf29415a5e6696e235c2f9a5ffc4edd8127043327f6c36e237e8d930390411"
+    },
+    {
+      "path": "executions/geneformer-acquisition-21014827/bundles/geneformer_v1_10m--11f311a5078fc4c8/ARTIFACTS.json",
+      "sha256": "0c64b674743b28f28839c6169730a42489c9f6ee4601e6e9437f30c4bb07d76d"
+    },
+    {
+      "path": "executions/geneformer-acquisition-21014827/bundles/geneformer_v2_104m--11f311a5078fc4c8/ARTIFACTS.json",
+      "sha256": "cc44db5d912944c790eeda998561140daa5b5fe64a8aa7811a0411b4c8b699d1"
+    },
+    {
+      "path": "executions/geneformer-acquisition-21014827/bundles/geneformer_v2_316m--11f311a5078fc4c8/ARTIFACTS.json",
+      "sha256": "b269cef53fa92cc7e7ab9c21a2b85de69904cdfaaf5881e9676c57dc2ae02ae0"
+    }
+  ],
+  "champion_eligibility_axis": "config/artifacts/models/geneformer/exposure_audit.json records sealed_champion_eligibility = eligible_on_exposure_only_other_admission_gates_still_apply. Geneformer is therefore NOT champion-ineligible on exposure. It is blocked on the separate admission axis: admission_blocking is true for all three ids and the bundle has no runtime_contract block.",
+  "checkpoint_opened": false,
+  "closes": "OVERALL_PLAN.md completion criterion 1: every required model family must carry an exact-checkpoint, license, exposure, runtime and native-task disposition. This record supplies the missing native-task axis only.",
+  "consumed_by_runtime": false,
+  "disposition": "split_by_model_id_executed_development_and_acquired_not_executed",
+  "disposition_reason": "one_of_three_checkpoints_executed_all_three_admission_blocked",
+  "disposition_scope": "Native-task disposition only. This record adds no capability, opens no checkpoint, deserializes nothing, and bypasses no license gate. The base registry under config/models/ is unchanged.",
+  "exposure_rule": {
+    "champion_permitting_subset": [
+      "clean_declared",
+      "target_label_unexposed"
+    ],
+    "champion_permitting_subset_frozen_at": [
+      "config/gse281364_five_seed_row_universe.toml:allowed_checkpoint_exposure_states",
+      "config/gse281364_sequence_context_refit_dag.toml:allowed_checkpoint_exposure"
+    ],
+    "frozen_vocabulary": "config/resources.toml [semantics].exposure_statuses enumerates the seven permitted checkpoint exposure states: clean_declared, target_label_unexposed, encoder_seen, continual_seen, reference_only, downstream_demo, unknown.",
+    "scope_caveat": "Both frozen enumerations of the two-state subset are prespecified for the GSE281364 sequence lane. config/tasks/cell_state_mapping.toml declares no allowed_checkpoint_exposure list of its own. For the cell_state_mapping lane the binding authority is therefore each family's own exposure audit under config/artifacts/models/<family>/exposure_audit.json, which records sealed_champion_eligibility directly."
+  },
+  "exposure_scope_resolution": {
+    "question": "config/models/cell_foundation.toml sets exposure_status = target_label_unexposed for all three ids while the same rows' blockers text states that the cell-state crosswalk identifies GSE136103 and Liver_Atlas as encoder_seen.",
+    "resolved": true,
+    "resolved_from": "config/artifacts/models/geneformer/exposure_audit.json",
+    "sealed_target_the_claim_is_scoped_to": {
+      "sealed_dataset_id": "gse289173",
+      "sealed_endpoint_labels": [
+        "frozen_cell_state_mapping_labels",
+        "cell_type_eqtl_effects",
+        "interaction_eqtl_effects"
+      ]
+    },
+    "statement": "exposure_status = target_label_unexposed is scoped to the sealed GSE289173 outcome labels listed above, and rests on the frozen training cutoffs (2021-06 for V1, 2024-12 for V2) preceding the 2025-02-12 GSE289173 public date. The encoder_seen finding is a separate axis, audit_scope.development_encoder_overlap, scoped to DEVELOPMENT sources: GSE136103 and Liver_Atlas for V1 and V2, plus GSE185477 for V2. It governs source-stratified development reporting, not the sealed-target claim. The two files describe different axes of one audit and do not contradict each other.",
+    "unresolved_remainder": "An unmatched development source already public before a cutoff remains unknown rather than clean_declared, so the development axis is not fully classified and the crosswalk has not been extended to the five-cohort bulk source families."
+  },
+  "family_id": "geneformer",
+  "license_gate_bypassed": false,
+  "metrics_calculated": false,
+  "model_dispositions": [
+    {
+      "disposition": "acquired_not_executed",
+      "model_id": "geneformer_v1_10m",
+      "reason": "The checkpoint bundle is materialized and hash-frozen, but no execution referencing this model_id exists under executions/. It is not an executed-development model."
+    },
+    {
+      "disposition": "acquired_not_executed",
+      "model_id": "geneformer_v2_104m",
+      "reason": "The checkpoint bundle is materialized and hash-frozen, but no execution referencing this model_id exists under executions/. It is not an executed-development model."
+    },
+    {
+      "disposition": "executed_development_admission_blocked",
+      "model_id": "geneformer_v2_316m",
+      "reason": "Outcome-blind raw embedding extraction over the 50,000-row resource_atlas_frozen_screen_50000_v1 view completed on an L40S with evaluation_labels_read, sealed_outcomes_read and downstream_head_fit all false. The registry still holds admission_blocking = true, so this is development execution without held-back inclusion."
+    }
+  ],
+  "model_ids": [
+    "geneformer_v1_10m",
+    "geneformer_v2_104m",
+    "geneformer_v2_316m"
+  ],
+  "outcomes_read": false,
+  "overlay_id": "model_census_native_task_disposition_20260825",
+  "record_only": true,
+  "recorded_inconsistencies": [
+    {
+      "action": "corrected_2026_08_25",
+      "correction": "weight_content_downloaded set to true after re-deriving all three bodies from the bytes. This overlay recorded the staleness and deferred the fix; the deferred item is now closed.",
+      "field": "config/artifacts/models/geneformer/checkpoints.json:weight_content_downloaded",
+      "observed": "All three model.safetensors bodies are present on disk under executions/geneformer-acquisition-21014827/source/ at the exact frozen sizes (41,183,536; 417,571,156; 1,265,455,076 bytes), and the geneformer_v2_316m extraction restored weights on an L40S. The recorded false is stale.",
+      "recorded_value": false
+    }
+  ],
+  "registry_facts_at_audit": {
+    "geneformer_v1_10m": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "a5e33a757431643b3697de7ef6127950cdc49e06e58d4266b3a3ab191b683f14",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "Apache-2.0",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    },
+    "geneformer_v2_104m": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "fff5cba29ddd8792991fa77b4872246fbe548a178cebda3775cdc72b67780e7f",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "Apache-2.0",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    },
+    "geneformer_v2_316m": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "965ceccea81953d362081ef3843560a0e4fef88d396c28017881f1e94b1246f3",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "Apache-2.0",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    }
+  },
+  "root_cause": {
+    "cell_state_capability_rows": 0,
+    "consequence": "No per-model cell_state_mapping capability row exists to carry a native-task disposition, so the disposition is recorded here instead. Adding rows to the capability registry is a separate, non-additive change and is deliberately not attempted.",
+    "finding": "config/evaluation/cell_state_mapping_capabilities.toml carries no [[models]] roster. It is 12 lines of task-level scope with four family names, a baseline list and an ATAC-only exclusion, and it names no per-model row. config/evaluation/variant_to_regulation_capabilities.toml carries 40 per-model rows over 411 lines. That structural asymmetry, not a missing judgement, is why the cell_state_mapping native-task column is empty for every family in this record.",
+    "variant_capability_rows": 40
+  },
+  "schema_version": "masld-bench-native-task-disposition-v1",
+  "sealed_data_read": false,
+  "supersedes_nothing": true,
+  "task_id": "cell_state_mapping",
+  "unrestricted_deserializer_used": false
+}

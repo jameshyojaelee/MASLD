@@ -23,7 +23,7 @@
     "scope": "task_specific_local_training_profile_aggregation_and_sealed_modality",
     "sha256": "0ce0b9fce36a7ca4ba82ccfc560205665149ae5ce4b7791993462aa652aca2dc"
   },
-  "interpretation": "The admitted scBasset route is a local sequence-only profile baseline, not transfer from the public PBMC or hematopoietic heads. Within each outer fold it predicts accessibility for outer-training cells, averages predictions by frozen training-only cell state, and repeats that state profile across held donors. This passes the scientific modality boundary only if a fixed fixture proves that held-donor ATAC is absent. The native 32-dimensional cell embedding remains transductive and cannot score held cells.",
+  "interpretation": "The included scBasset route is a local sequence-only profile baseline, not transfer from the public PBMC or hematopoietic heads. Within each outer fold it predicts accessibility for outer-training cells, averages predictions by frozen training-only cell state, and repeats that state profile across held donors. This passes the scientific modality boundary only if a fixed fixture proves that held-donor ATAC is absent. The native 32-dimensional cell embedding remains transductive and cannot score held cells.",
   "remaining_blockers": [
     "Implement and fixture-test the sequence-only training-cell-state aggregation adapter; reject any inference bundle containing held-donor ATAC or held-cell output columns.",
     "Activate GSE296875 only after donor/barcode/well/reference/peak/QC/missingness authorities pass; keep GSE244832 different-aliquot comparisons donor-compatible.",

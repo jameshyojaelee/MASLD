@@ -19,7 +19,7 @@ from scripts.build_chrombpnet_development_outcomes import (
 
 
 class DevelopmentProfileError(ValueError):
-    """Raised when evaluator-only base-profile extraction violates its contract."""
+    """Raised when evaluator-only base-profile extraction does not meet its requirements."""
 
 
 def sha256_file(path: Path) -> str:

@@ -34,7 +34,7 @@ DTYPE_BYTES = {
 
 
 class SafetensorsInventoryError(ValueError):
-    """Raised when a safetensors file violates its no-load contract."""
+    """Raised when a safetensors file does not meet its no-load requirements."""
 
 
 def _hash(path: Path) -> tuple[str, int]:

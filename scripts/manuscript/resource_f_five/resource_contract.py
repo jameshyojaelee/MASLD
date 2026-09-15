@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared immutable contract for the F_five Resource-paper candidate."""
+"""Shared read-only contract for the F_five Resource-paper candidate."""
 
 from __future__ import annotations
 
@@ -142,7 +142,7 @@ REVIEWED_CODE_FILES = (
 
 
 class ContractError(RuntimeError):
-    """Raised when an immutable candidate contract is violated."""
+    """Raised when an read-only candidate contract is violated."""
 
 
 def require(condition: bool, message: str) -> None:

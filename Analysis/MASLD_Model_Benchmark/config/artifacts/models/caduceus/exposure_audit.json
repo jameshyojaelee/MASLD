@@ -10,7 +10,7 @@
     "alternate_allele_exposure": "clean_declared_for_reference_only_corpus",
     "target_effect_label_exposure": "unexposed",
     "downstream_task_family_exposure": "downstream_demo",
-    "interpretation": "Conditionally eligible for an open champion claim. The exact sealed effects were not used, but the reference loci and an independent eQTL classification task were exposed during pretraining and downstream demonstration, respectively."
+    "interpretation": "Conditionally eligible for a best openly licensed model claim. The exact held-back effects were not used, but the reference loci and an independent eQTL classification task were exposed during pretraining and downstream demonstration, respectively."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",

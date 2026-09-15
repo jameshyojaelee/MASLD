@@ -1,0 +1,141 @@
+{
+  "audit_date": "2026-08-25",
+  "base_registry_files": [
+    {
+      "registry_file": "config/models/cell_foundation.toml",
+      "registry_file_sha256": "6c0d8d6aff2db6fa99000ff5cc593940f097b6dde9745d08b8cd93aed9b4d14d"
+    }
+  ],
+  "base_registry_unchanged": true,
+  "binding_consequences": {
+    "development_execution_recorded": false,
+    "may_enter_a_sealed_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "permitted_role": "outcome-blind development record only, and only where a separately frozen contract authorises it",
+    "sealed_champion_eligible": false,
+    "sealed_scoring_authorized": false
+  },
+  "biological_data_read": false,
+  "bound_evidence": [
+    {
+      "path": "config/artifacts/models/uce/checkpoints.json",
+      "sha256": "6d5e9073abe48df713b6d1d07950329b0219b9398b6e52cdf0eba79698e4d7f3"
+    },
+    {
+      "path": "config/artifacts/models/uce/frozen_screen_50000.json",
+      "sha256": "f771b97b17a8b0be7f8657f1dd3943f0e605844d026ff1101c459edcaa0b4087"
+    },
+    {
+      "path": "config/artifacts/models/uce/exposure_audit.json",
+      "sha256": "429e0975ce89e813535ec0f3fc23f0c28d87d054589f279384ffe4fe064ea897"
+    },
+    {
+      "path": "executions/uce-acquisition-21015745/SHA256SUMS",
+      "sha256": "ee5c39ef6ddcd7335d68bc2926362498513d18d4bf9f0a25334b06013c83d029"
+    }
+  ],
+  "champion_eligibility_axis": "config/artifacts/models/uce/exposure_audit.json records sealed_champion_eligibility = eligible_on_exposure_and_terms_other_admission_gates_still_apply. UCE is therefore NOT champion-ineligible on exposure. It is blocked on the separate admission axis.",
+  "checkpoint_opened": false,
+  "closes": "OVERALL_PLAN.md completion criterion 1: every required model family must carry an exact-checkpoint, license, exposure, runtime and native-task disposition. This record supplies the missing native-task axis only.",
+  "consumed_by_runtime": false,
+  "disposition": "staged_not_executed",
+  "disposition_reason": "runtime_inputs_and_split_bound_but_no_execution_recorded",
+  "disposition_scope": "Native-task disposition only. This record adds no capability, opens no checkpoint, deserializes nothing, and bypasses no license gate. The base registry under config/models/ is unchanged.",
+  "exposure_rule": {
+    "champion_permitting_subset": [
+      "clean_declared",
+      "target_label_unexposed"
+    ],
+    "champion_permitting_subset_frozen_at": [
+      "config/gse281364_five_seed_row_universe.toml:allowed_checkpoint_exposure_states",
+      "config/gse281364_sequence_context_refit_dag.toml:allowed_checkpoint_exposure"
+    ],
+    "frozen_vocabulary": "config/resources.toml [semantics].exposure_statuses enumerates the seven permitted checkpoint exposure states: clean_declared, target_label_unexposed, encoder_seen, continual_seen, reference_only, downstream_demo, unknown.",
+    "scope_caveat": "Both frozen enumerations of the two-state subset are prespecified for the GSE281364 sequence lane. config/tasks/cell_state_mapping.toml declares no allowed_checkpoint_exposure list of its own. For the cell_state_mapping lane the binding authority is therefore each family's own exposure audit under config/artifacts/models/<family>/exposure_audit.json, which records sealed_champion_eligibility directly."
+  },
+  "family_id": "uce",
+  "license_gate_bypassed": false,
+  "metrics_calculated": false,
+  "model_dispositions": [
+    {
+      "disposition": "staged_not_executed",
+      "model_id": "uce_4l",
+      "reason": "Weights are acquired and hash-frozen and the runtime, inputs and split are bound by frozen_screen_50000.json, but no execution referencing this model_id exists under executions/. The registry holds admission_blocking = true."
+    },
+    {
+      "disposition": "staged_not_executed",
+      "model_id": "uce_33l",
+      "reason": "Weights are acquired and hash-frozen and the runtime, inputs and split are bound by frozen_screen_50000.json, but no execution referencing this model_id exists under executions/. The registry holds admission_blocking = true."
+    }
+  ],
+  "model_ids": [
+    "uce_4l",
+    "uce_33l"
+  ],
+  "outcomes_read": false,
+  "overlay_id": "model_census_native_task_disposition_20260825",
+  "record_only": true,
+  "recorded_inconsistencies": [
+    {
+      "action": "recorded_only. Correcting the base registry is a non-additive edit and is deliberately not attempted here.",
+      "field": "config/models/cell_foundation.toml:uce_4l.checkpoint_sha256 and uce_33l.checkpoint_sha256",
+      "observed": "config/artifacts/models/uce/checkpoints.json records weight_content_downloaded = true with exact digests acb28f3f0a1d803e4a4ffe891b9bab38bf93c84762dc06b2452f0d515da91560 (uce_4l) and 3f458726196308e171611ed28394b55865708749f82af68cfd7771d5dfee661e (uce_33l), repeated in frozen_screen_50000.json. The checkpoint-identity axis therefore disagrees between the base registry and the artifact bundle.",
+      "recorded_value": "UNRESOLVED"
+    },
+    {
+      "action": "recorded_only_not_corrected_by_this_overlay",
+      "field": "config/artifacts/models/uce/frozen_screen_50000.json:checkpoints.*.sealed_champion_eligible",
+      "observed": "The frozen screen activation record asserts sealed champion eligibility for both UCE checkpoints while the base registry holds both at admission_blocking = true with an UNRESOLVED checkpoint_sha256. Eligibility on exposure and terms is not admission; this record does not authorize any sealed use.",
+      "recorded_value": true
+    }
+  ],
+  "registry_facts_at_audit": {
+    "uce_33l": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "code_MIT_weights_CC-BY-4.0",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    },
+    "uce_4l": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "code_MIT_weights_CC-BY-4.0",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    }
+  },
+  "root_cause": {
+    "cell_state_capability_rows": 0,
+    "consequence": "No per-model cell_state_mapping capability row exists to carry a native-task disposition, so the disposition is recorded here instead. Adding rows to the capability registry is a separate, non-additive change and is deliberately not attempted.",
+    "finding": "config/evaluation/cell_state_mapping_capabilities.toml carries no [[models]] roster. It is 12 lines of task-level scope with four family names, a baseline list and an ATAC-only exclusion, and it names no per-model row. config/evaluation/variant_to_regulation_capabilities.toml carries 40 per-model rows over 411 lines. That structural asymmetry, not a missing judgement, is why the cell_state_mapping native-task column is empty for every family in this record.",
+    "variant_capability_rows": 40
+  },
+  "runtime_axis_bound_from_existing_artifact": {
+    "authority": "config/artifacts/models/uce/frozen_screen_50000.json",
+    "cuda_build": "12.4",
+    "dataset_view_id": "resource_atlas_frozen_screen_50000_v1",
+    "donors": 102,
+    "python": "3.11.16",
+    "rows": 50000,
+    "runtime_artifacts_sha256": "f22ddd872d681edea9f1c12d5d971c55f66d44d0624d816e317f987ec12c8abb",
+    "runtime_root": "executions/environments/transcriptformer-torch2.5.1-21070738",
+    "split_id": "resource_atlas_study_outer_5fold_v1",
+    "statement": "The runtime axis of completion criterion 1 is recoverable for this family from an artifact that already exists and is bound here. It is a declared, hash-pinned environment root plus input and split bindings; it is not an executed forward pass for either UCE checkpoint.",
+    "studies": 7,
+    "torch": "2.5.1"
+  },
+  "schema_version": "masld-bench-native-task-disposition-v1",
+  "sealed_data_read": false,
+  "supersedes_nothing": true,
+  "task_id": "cell_state_mapping",
+  "unrestricted_deserializer_used": false
+}

@@ -1,0 +1,333 @@
+schema_version = "masld-bench-task-v1"
+task_id = "bulk_lineage_composition_fibrosis_transfer"
+status = "registered_active"
+review_note = "Reviewed and approved by the team lead on 2026-08-26 with three required changes, all implemented in revision 3. Frozen into config/evaluation/ from drafts/w2_lineage_composition/."
+draft_revision = 4
+draft_revision_note_v3 = "Revision 3 implements the three required review changes: a detection-floor eligibility rule that is the rank-analogue of the CLR problem, a mandatory co-primary on the two preservation-undisclosed cohorts, and an explicit scoping clause on the label rules. The floor rule shrinks the confirmatory family from 16 lineages to 3, which is the single largest consequence in this revision."
+draft_revision_note = "Revision 2 changed four things from revision 1, each on verification rather than preference: the cross-cohort combination is now the macro-average the frozen generalization contract prescribes rather than the precision-weighted meta-analysis revision 1 invented; GSE240729 is retained in the primary rather than demoted, because the floor hazard was tested and provably cannot reach a rank statistic; preservation method is recorded as disclosed by exactly one cohort; and the fibrosis-label criteria are written to be liftable into a future contract."
+
+unit_of_inference = "bulk_rna_sample"
+unit_of_inference_note = "Sample, never donor. Every cohort here is SRR-keyed and none deposits a donor key, so a donor count cannot be established and is never claimed. Analysis/Deconvolution/rectangle_comparison/pseudobulk/donor_folds.tsv mislabels SRR accessions as donor; it is not an input and its naming is not authoritative."
+input_modalities = ["deconvolution_derived_lineage_proportion"]
+
+endpoint = "Does the frozen reference-plus-BayesPrism lineage projection carry a fibrosis-stage rank association that transfers to a held-out cohort? The reference and the deconvolution operator together ARE the model under test; this task evaluates transfer of that fixed operator's output, not the biology of the lineages it names."
+
+metrics = [
+  "lineage_spearman_rho_fibrosis_stage",
+  "lineage_spearman_rho_held_out_cohort",
+  "lineage_held_out_sign_agreement",
+  "lineage_held_out_magnitude_retention",
+]
+primary_metric = "lineage_spearman_rho_fibrosis_stage"
+
+datasets_development = ["bulk_existing_source_pool_composition_arm"]
+datasets_sealed = []
+split_id = "leave_one_cohort_out_graded_fibrosis_v1"
+required_pairing_levels = []
+
+# ---------------------------------------------------------------------------
+# Fibrosis-label admissibility criteria.
+#
+# ESTABLISHED HERE FOR THE FIRST TIME. There is no fibrosis-label contract in
+# this repository: config/evaluation/microarray_transfer_label_semantics.toml is
+# the only label-semantics authority and it is NASH-scoped
+# (contract_id = gse83452_source_native_nash_semantics_v1). Its
+# prohibited_positive_substitutions entry "fibrosis_stage_only" is a rule about
+# what may stand in for a NASH positive and establishes nothing about whether a
+# fibrosis stage is admissible for a fibrosis endpoint.
+#
+# These criteria are written to be lifted verbatim into a future
+# fibrosis_label_semantics contract. They are inherited from nothing.
+# ---------------------------------------------------------------------------
+
+[fibrosis_label_criteria]
+established_here_for_the_first_time = true
+inherited_from = "nothing"
+intended_to_be_liftable_into = "a future fibrosis_label_semantics contract"
+
+positive_required = "An explicit, participant-level, biopsy-derived fibrosis stage on a named ordinal staging system, deposited per sample. The staging system must be identified, not inferred from the value alphabet."
+graded_scale_required = "All five NASH-CRN levels 0 to 4 present and mutually distinguishable in the deposit."
+prohibited_substitutions = [
+  "transcriptome_inferred_stage",
+  "clinical_code_only",
+  "imaging_or_elastography_surrogate_without_a_deposited_biopsy_stage",
+  "a_disease_label_from_which_a_stage_is_guessed",
+  "healthy_control_mapped_to_stage_0",
+]
+
+[fibrosis_label_criteria.control_arm]
+rule = "A healthy-control arm is EXCLUDED from a graded-fibrosis endpoint. It is never mapped to stage 0."
+reason = "A healthy control is a different source population, not the low end of a fibrosis gradient within a diseased cohort. Mapping one to stage 0 imports a between-population contrast into what is declared a within-population gradient, and it manufactures association at the low end. This is the fibrosis-endpoint form of the healthy-control substitution the NASH contract bars, and it is barred here for the same reason rather than by borrowing that contract's authority."
+audit_state = "excluded controls are counted and reported, never silently dropped"
+
+[fibrosis_label_criteria.pooled_scale]
+rule = "A staging scale that pools adjacent stages, or omits a level, is a DIFFERENT measurement instrument. It is admissible only as a separately reported arm on its own scale, and may never be meta-analysed or pooled with a graded 0-to-4 cohort."
+reason = "Combining a 3-level pooled scale with a 5-level graded scale silently averages two instruments with different resolution and different level spacing. The combined estimate then belongs to neither instrument."
+downgrade_is_not_permitted = "Collapsing the graded cohorts down to the pooled cohort's resolution to force comparability is also prohibited, because it discards recorded information to match the weaker instrument and changes the estimand without saying so."
+
+[fibrosis_label_criteria.same_source_population]
+meaning_for_a_fibrosis_endpoint = "All samples contributing to one graded estimate must come from one recruitment population whose staging was adjudicated by one procedure. For a fibrosis gradient this is weaker than the NASH contract's requirement, because a gradient is estimated WITHIN a population rather than between two arms, so what must be constant is the staging instrument and the population, not a positive-versus-negative adjudication."
+operationalised_as = "one cohort is one population; cross-cohort combination is handled by the leave-one-cohort-out design and never by pooling samples across cohorts into a single correlation"
+cross_cohort_pooling_of_raw_samples = "prohibited"
+
+[fibrosis_label_criteria.scope]
+these_are_task_scoped_admissibility_rules = true
+these_are_NOT_a_general_fibrosis_label_standard = true
+no_general_fibrosis_label_authority_exists_in_this_repository = true
+statement = "These clauses settle exactly what THIS task needs: control-arm handling and pooled-scale handling, plus the two supporting definitions those require. They do not settle what counts as an admissible participant-level fibrosis stage in general, and they do not settle what same source population means for every fibrosis endpoint. They are deliberately narrower than a standard."
+a_later_contract_may = "lift these clauses verbatim into a general fibrosis_label_semantics contract"
+a_later_contract_may_not = "treat the ABSENCE of a clause here as permission. Silence in a task-scoped rule set is not a general allowance; it means the question was out of scope for this task and remains unsettled."
+failure_mode_this_prevents = "A reader inferring a general rule from a scoped one. This is the same failure mode the NASH adjudication caveat prevents in the opposite direction, where prohibited_positive_substitutions naming fibrosis_stage_only could be misread as a general statement about fibrosis labels when it is a rule about NASH positives."
+
+[fibrosis_label_criteria.adjudication]
+GSE135251 = { field = "Fibrosis_stage", scale = "NASH-CRN 0-4, all five present", graded_samples = 172, distribution = [29, 40, 47, 44, 12], controls_excluded = 8, verdict = "ADMISSIBLE for the graded primary" }
+GSE162694 = { field = "condition", scale = "stage embedded as NASH_F0..NASH_F4, all five present", graded_samples = 112, distribution = [35, 30, 27, 8, 12], controls_excluded = 31, verdict = "ADMISSIBLE for the graded primary" }
+GSE240729 = { field = "fibrosisscore", scale = "F0-F4, all five present", graded_samples = 66, distribution = [9, 16, 25, 10, 6], controls_excluded = 0, verdict = "ADMISSIBLE for the graded primary, with a declared preservation stratum" }
+GSE213621 = { field = "fibrotic_stage", scale = "Control / F0F1 / F2 / F3F4 -- two pooled levels, no level 4", graded_samples = 0, reduced_resolution_samples = 299, controls_excluded = 68, verdict = "NOT ADMISSIBLE for the graded primary; admissible only as a separate reduced-resolution arm" }
+
+# ---------------------------------------------------------------------------
+# Detection-floor eligibility. This is the rank-analogue of the log-ratio
+# problem and it is NOT solved by having moved to ranks.
+#
+# Rank makes a collapsed part finite. It does not make it informative. A lineage
+# sitting at 1e-15 to 1e-22 across most of a cohort still receives a full rank
+# ordering, but that ordering is set by numerical variation in the deconvolution
+# posterior rather than by biology. A Spearman computed over mostly-sub-floor
+# ranks is computable and uninterpretable, and BH would hand it a q-value like
+# any other test.
+# ---------------------------------------------------------------------------
+
+[detection_floor]
+floor = 1e-4
+floor_units = "proportion of the sample composition"
+floor_justification = "One part in ten thousand of the tissue. In a typical 20 to 50 million read bulk library a lineage at this share contributes on the order of a few thousand reads spread across its entire marker set, which is at the edge of what deconvolution against a reference can resolve; below it the posterior mean is not carrying assay information. It is also the SAME floor the robust-subcomposition analysis uses, so the spec carries one floor rather than two and cannot be accused of floor-shopping between them."
+floor_is_the_stricter_choice = "At 1e-6 ten lineages would qualify and at 1e-4 only three do. The stricter floor was chosen deliberately: it shrinks the confirmatory family and makes a positive result harder, which is the correct direction for a floor that could otherwise be tuned to admit more opportunities."
+
+minimum_fraction_above_floor = 0.50
+minimum_fraction_justification = "This is not a round number chosen for convenience. It is exactly the point at which the MEDIAN sample clears the floor. Below 0.50 the majority of a cohort's rank ordering is determined by sub-floor values, so the Spearman is predominantly ranking posterior noise. Anchoring the criterion to the median makes it a statement about when the statistic stops being interpretable rather than a tunable knob."
+evaluated_per_cohort_not_globally = true
+per_cohort_justification = "Collapse is cohort-dependent, so it must be measured per cohort. Endothelial cells clear the 1e-4 floor in 36.1 percent of GSE135251 samples and in 100 percent of GSE240729 samples: the same lineage is in a different numerical regime in different cohorts. A lineage is eligible only if the median sample clears the floor in EVERY cohort contributing to that estimate."
+
+mandatory_reporting = "The fraction of samples above the floor is reported per lineage per cohort alongside every rho, without exception, including for lineages that fail the criterion."
+failing_lineages = "reported with their rho and their fraction, and explicitly NOT counted toward the gate, the same treatment given to effects between the detectability line and the 0.15 floor"
+
+[detection_floor.collapse_confounding_test]
+required_at_review = true
+statistic = "spearman(collapsed_indicator, fibrosis_stage), per lineage per cohort"
+collapse_definition = "proportion < 1e-4, the same detection floor"
+null = "measured by permutation against the realised binary indicator, 2000 replicates"
+alpha = 0.05
+rule = "a lineage flagged in ANY contributing cohort is reported with its rho, its collapsed fraction and its collapse-versus-stage p, and is never counted"
+not_testable_when = "collapse status is constant in a cohort; recorded not_applicable, not a flag"
+what_distinctness_settled = "Every proportion value is distinct within every cohort, maximum tie-group size 1. That disposes of the mechanism by which a cohort-level floor shift could mechanically degrade a within-cohort Spearman."
+what_distinctness_did_not_settle = "Whether the ordering AMONG collapsed values carries signal or noise. Values can be distinct and still be numerical variation in a posterior mean."
+the_confounding_this_catches = "If RNA quality varies with fibrosis stage within a cohort -- cirrhotic tissue yielding more degraded RNA is not a stretch -- and degraded input produces more collapsed posterior mass, then collapse status correlates with stage and a lineage's rank association is partly a measurement artifact wearing a biological label. BH will not catch it, because the association is real; it is simply not biological."
+why_the_null_is_measured = "The indicator is binary and heavily tied, so its null is narrower than a continuous scorer's. Assuming 1/sqrt(n-1) would set the bar too high and let confounding through."
+two_guards_not_one = "The floor-and-fraction rule catches a lineage that is mostly unmeasured, so its ranks are noise. This test catches a lineage whose collapse tracks the outcome, so its association is an artifact. A lineage can pass either and fail the other, so both are applied; this ADDS an instrument rather than replacing the floor rule."
+gives_the_preservation_stratum_a_real_test = "If GSE240729's collapse pattern tracks stage differently from the other two cohorts, that is now measured per cohort rather than declared."
+
+[detection_floor.eligible_lineages_three_cohort_primary]
+count_before_collapse_confounding_filter = 3
+count_note = "The floor-and-fraction rule admits 3. The collapse-confounding filter is applied on top and can only reduce this; the realised eligible set is emitted by the evaluator, not asserted here."
+count = 3
+lineages = ["Hepatocytes", "Macrophages", "pDCs"]
+fraction_above_floor = { Hepatocytes = [1.000, 1.000, 1.000], Macrophages = [1.000, 1.000, 1.000], pDCs = [0.991, 1.000, 0.894] }
+fraction_order = ["GSE135251", "GSE162694", "GSE240729"]
+
+[detection_floor.eligible_lineages_two_cohort_co_primary]
+count = 7
+lineages = ["Hepatocytes", "Plasma cells", "T cells", "Macrophages", "Mono+mono derived cells", "cDC2s", "pDCs"]
+note = "The two-cohort co-primary has a LARGER eligible family than the three-cohort primary, because GSE240729 is the cohort that collapses the most lineages. Including it strengthens the transport design and narrows the answerable question at the same time. That tension is real, is not resolved by preferring one number, and is why both estimates are reported as co-primaries with their own eligible families."
+
+[detection_floor.prespecified_sensitivity_sweep]
+note = "Recorded BEFORE any outcome is seen so the floor cannot be accused of post-hoc selection. Qualifying lineage counts across the three primary cohorts at the median criterion."
+floor_1e_3 = { count = 3, lineages = ["Hepatocytes", "Macrophages", "pDCs"] }
+floor_1e_4 = { count = 3, lineages = ["Hepatocytes", "Macrophages", "pDCs"] }
+floor_1e_5 = { count = 5, lineages = ["Endothelial cells", "Hepatocytes", "Macrophages", "Basophils", "pDCs"] }
+floor_1e_6 = { count = 10, lineages = ["Endothelial cells", "Hepatocytes", "T cells", "Macrophages", "Mono+mono derived cells", "Basophils", "B cells", "cDC1s", "cDC2s", "pDCs"] }
+binding_floor = 1e-4
+stability_note = "The eligible set is identical at 1e-3 and 1e-4, so the binding choice sits on a plateau rather than on a cliff edge. It expands only below 1e-5, where the admitted lineages are ones at least one cohort cannot measure."
+
+# ---------------------------------------------------------------------------
+# Substrate.
+# ---------------------------------------------------------------------------
+
+[substrate]
+lineages = 16
+lineages_note = "SIXTEEN, not fifteen. The proportions files carry the same R write.table(row.names = TRUE) offset as the metadata: the header line holds 16 lineage names and no key-column name, and every data row holds 17 fields, an unnamed SRR rowname plus 16 values. A parser reading the header as 15 lineages plus a key is off by one."
+lineage_axis = ["Endothelial cells", "Hepatocytes", "Plasma cells", "T cells", "Cholangiocytes", "Fibroblasts", "Macrophages", "Circulating NK/NKT", "Resident NK", "Mono+mono derived cells", "Basophils", "B cells", "cDC1s", "cDC2s", "pDCs", "Neutrophils"]
+proportion_row_sums = "exactly_1.000000000_in_every_sample"
+deconvolution_method = "BayesPrism"
+music_excluded = "MuSiC output in the same tree is recorded as degenerate on real bulk and is never an input"
+
+[substrate.primary_cohorts]
+GSE135251 = { samples = 172, join_key = "Run" }
+GSE162694 = { samples = 112, join_key = "sample_id" }
+GSE240729 = { samples = 66, join_key = "sample_id" }
+total_samples = 350
+total_samples_note = "350, not 389. The 389 figure counts 39 healthy-control-arm samples (8 in GSE135251, 31 in GSE162694) plus GSE135251's 36 proportion rows carrying no metadata. A two-cohort GSE135251-plus-GSE162694 primary would be 284 samples, not 323; 323 is the same control-inclusive arithmetic."
+gse135251_reconciliation = "216 proportion rows against 180 metadata rows; the 36 without metadata carry no fibrosis stage, are recorded, and never enter the endpoint"
+gse162694_covariate_lane_impossible = "GSE162694's metadata has exactly two columns, sample_id and condition. There is no age, no sex, no NAS and no covariate of any kind, so no covariate-adjusted or covariate-only lane can be built from this cohort, and therefore not from the pooled arm either."
+
+[substrate.reduced_resolution_arm]
+GSE213621 = { samples = 299, scale = ["F0F1", "F2", "F3F4"], controls_excluded = 68, join_key = "BioSample" }
+never_pooled_with_primary = true
+
+[substrate.tissue_preservation]
+disclosed_by = ["GSE240729"]
+GSE240729 = "liver (FFPE = Formalin Fixed Paraffin Embedded), stated in both the tissue and !Sample_source_name_ch1 fields"
+GSE135251 = "not deposited"
+GSE162694 = "not deposited -- the metadata has only two columns"
+GSE213621 = "not deposited"
+finding = "Exactly ONE of the four cohorts discloses its preservation method, and it is the FFPE one. No cohort is verified fresh-frozen; three are simply undisclosed. Any design that demotes GSE240729 for being FFPE while treating the others as fresh-frozen is comparing a disclosed fact against an assumption, and penalises the only cohort that documented its method."
+consequence = "GSE240729 carries a declared preservation stratum. It is not demoted out of the primary on that basis, and no cohort is asserted to be fresh-frozen."
+
+# ---------------------------------------------------------------------------
+# What is under test.
+# ---------------------------------------------------------------------------
+
+[estimand]
+under_test = "the frozen reference plus BayesPrism deconvolution operator, as a fixed transferable model"
+quantity = "per-lineage Spearman rank correlation between a lineage's share of the sample and the sample's fibrosis stage"
+lineage_abundance_is_an_inference = true
+lineage_abundance_note = "Deconvolution-derived lineage abundance is an INFERENCE, not an observation. It is estimated from bulk RNA against a reference, and the reference's own composition constrains what can be recovered. Every reported claim carries this."
+shares_not_absolute_abundances = true
+shares_note = "These are shares of a closed composition summing to exactly 1. A share can rise because its lineage grew or because another shrank."
+
+[shared_estimator_dependency]
+cohorts_are_independent_in_bulk_rna = true
+lineage_estimates_are_independent = false
+evidence = [
+  "the 16-lineage header line is byte-identical across all four cohorts by md5",
+  "Analysis/Deconvolution/scripts/13_bayesprism.sbatch drives every human run from a single REF_HUMAN reference_human_sce.rds",
+  "proportion row sums are exactly 1.000000000 in every sample of every cohort",
+]
+consequence = "Cross-cohort agreement is evidence that ONE fixed operator transfers. It is not evidence that three independent measurements agree, because the lineage estimates share a reference and a deconvolution model."
+forbidden_claims = [
+  "the cohorts independently confirm the lineage biology",
+  "cross-cohort replication validates the lineage attribution",
+  "a lineage's estimated share is its measured abundance",
+  "a rise in one lineage's share caused or was caused by a fall in another's",
+]
+required_phrasing = "Any statement of cross-cohort agreement must name the shared-reference dependency in the same sentence."
+
+# ---------------------------------------------------------------------------
+# Method.
+# ---------------------------------------------------------------------------
+
+[method.primary]
+statistic = "Spearman rank correlation, per lineage, within cohort"
+combination = "macro_average_across_cohort_families"
+combination_authority = "config/evaluation/cross_cohort_expansion.toml [generalization_contract] primary_reporting = macro_average_across_cohort_families_with_donor_or_block_cluster_uncertainty"
+combination_note = "Revision 1 specified a precision-weighted fixed-effect meta-analysis. That was invented rather than inherited and it lets GSE135251 dominate by size. The frozen generalization contract already prescribes a macro-average across cohort families, so the primary binds to that. The precision-weighted estimate is reported alongside as a secondary, and any disagreement between them is a finding about cohort heterogeneity, not a choice to be made after seeing it."
+transform = "none"
+zero_floor_prescribed = false
+
+[method.primary.why_rank_not_log_ratio]
+reason = "A centred log-ratio takes the log of every part. Across the four cohorts 819 proportion values sit in (0, 1e-8), with minima 7.70e-22 in GSE135251, 3.50e-24 in GSE162694 and 1.11e-24 in GSE213621. log(7.70e-22) is about -48.6 against about -0.69 for a hepatocyte share near 0.5, so a handful of collapsed posterior means would set the geometric mean and every CLR coordinate for that sample."
+no_exact_zeros_is_not_the_licence = "Exact zeros were verified absent in all four cohorts. That is true and is NOT the justification for a log-ratio: it buys a finite logarithm, not a stable one."
+closure_scope = "Closure invalidates inferring reciprocal relationships BETWEEN lineages. It does not invalidate a per-lineage association with an EXTERNAL variable: whether a lineage's share tracks fibrosis is a well-posed question about a share. The primary is sound on raw proportions; reading reciprocal between-lineage shifts out of it is forbidden."
+
+[method.primary.rank_is_immune_to_the_floor_hazard]
+tested = true
+finding = "Every proportion value is DISTINCT within every cohort: all 16 lineages in all 4 cohorts show distinct/n equal to 216/216, 143/143, 66/66 and 367/367 with a maximum tie-group size of 1. There is not one tied value anywhere."
+consequence = "Within-cohort ranks are a strict total ordering, so a cohort-level floor difference cannot move a within-cohort Spearman. GSE240729's floor at 7.19e-08 against 1e-22 elsewhere is real, and it is inert for this statistic. It would have wrecked a CLR, which is why the primary is rank-based; it does not justify removing the cohort."
+what_the_floor_difference_may_still_mean = "It may indicate that GSE240729's deconvolution operates in a different regime, whose association with fibrosis could differ. That is a hypothesis the leave-one-cohort-out design TESTS by holding the cohort out. It is not a reason to remove the cohort before testing it."
+
+[method.transport]
+design = "leave_one_cohort_out"
+folds = 3
+design_authority = "config/evaluation/cross_cohort_expansion.toml [generalization_contract] three_or_more_compatible_families = leave_one_study_out_outer_evaluation"
+fold_definition = "estimate on two cohorts, report the held-out cohort's own per-lineage rho"
+held_out_unit = "the entire cohort"
+why_three_cohorts_and_not_two = "The frozen generalization contract prescribes leave-one-study-out at three or more compatible families and drops to tune-in-one-and-report-transport at two. Retaining three keeps the stronger registry rule. Dropping GSE240729 would also remove the most dissimilar cohort, which is the hardest and most informative transport test, and would make transfer look better by construction. The macro-average null SE is 0.0580 at three cohorts against 0.0609 at two, so the three-cohort design is also marginally more precise despite the smaller third cohort."
+why_loco_makes_the_missing_donor_key_non_load_bearing = "The held-out boundary is a whole cohort, so no participant can straddle it whether or not a donor key exists. Within-cohort intervals remain optimistic if a participant contributed more than one sample, and that caveat is carried on every within-cohort interval."
+this_is_replication_not_a_fitted_model_transfer = "A Spearman correlation is not a fitted object. What transfers is the sign and magnitude, so fold-level evidence is the held-out cohort's own rho and its agreement with the estimate from the other two."
+
+[method.uncertainty]
+within_cohort = "sample-level bootstrap, 10000 replicates, per lineage per cohort"
+within_cohort_caveat = "optimistic if any participant contributed more than one sample; no donor key exists to check"
+cross_cohort = "macro-average across cohort families; its standard error is the root-mean-square of the per-cohort standard errors divided by the number of cohorts"
+between_cohort_heterogeneity = "declared unestimable at k = 3 and never reported as an estimate"
+cohort_level_bootstrap_rejected = true
+cohort_level_bootstrap_rejection_reason = "A bootstrap over three cohorts draws from only 10 distinct resample multisets and cannot produce a usable interval. It is not performed and no interval is presented as if it had been. Transport evidence comes from the leave-one-cohort-out folds instead."
+
+[method.null]
+reference = "permutation null measured at the realised n and the realised tie structure, per lineage per cohort"
+analytic_cross_check = "1/sqrt(n-1)"
+analytic_cross_check_note = "Outcome ties do not move a rank-correlation null, so the measured null and 1/sqrt(n-1) are expected to agree. Both are reported and disagreement is a finding to investigate, not to smooth over."
+per_cohort_null_se = { GSE135251 = 0.076472, GSE162694 = 0.094916, GSE240729 = 0.124035 }
+macro_average_null_se_three_cohorts = 0.057967
+macro_average_null_se_two_cohorts = 0.060945
+detectable_effect = "two macro-average null SE correspond to |rho| = 0.116 at three cohorts and 0.122 at two"
+
+[method.multiplicity]
+confirmatory_family = "bulk_lineage_composition_fibrosis_primary"
+confirmatory_family_size = 3
+confirmatory_family_size_note = "THREE, not sixteen. Only 3 of the 16 lineages clear the detection-floor eligibility rule in all three primary cohorts. The other 13 are reported with their rho and their above-floor fraction and are not tested, so they are not in the family. The co-primary carries its own family of 7."
+confirmatory_family_definition = "the per-lineage macro-average estimates for the detection-floor-eligible lineages only; 3 for the three-cohort primary, 7 for the two-cohort co-primary, each corrected within its own family"
+method = "benjamini_hochberg_q_0.05"
+fold_level_results_are_descriptive = true
+fold_level_note = "The three folds produce fold-level correlations for every lineage. These are transport evidence, are NOT separately corrected, and must never be presented as 48 corrected tests."
+
+[method.secondary_log_ratio]
+status = "not_supported_by_this_substrate"
+finding = "At a 1e-4 floor only 2 of 16 lineages clear it in every cohort: Hepatocytes and Macrophages. A two-part subcomposition admits exactly one log-ratio, which is a single ratio and not between-lineage structure."
+resolution = "The log-ratio secondary is dropped. log(Hepatocytes / Macrophages) may be reported as one named descriptive ratio, non-gated, carrying no between-lineage claim."
+robust_subcomposition = ["Hepatocytes", "Macrophages"]
+
+[co_primary]
+mandatory = true
+equal_prominence = true
+three_cohort_estimate = { cohorts = ["GSE135251", "GSE162694", "GSE240729"], samples = 350, eligible_lineages = 3, design = "leave_one_cohort_out, 3 folds", gate_binding = true }
+two_cohort_estimate = { cohorts = ["GSE135251", "GSE162694"], samples = 284, eligible_lineages = 7, design = "reciprocal transport, 2 folds", gate_binding = false }
+naming_correction = "This co-primary is NOT a 'fresh-frozen' estimate and must never be labelled one. Only GSE240729 discloses its preservation method. GSE135251 and GSE162694 deposit no preservation field at all, so they are preservation-UNDISCLOSED, not verified fresh-frozen. The co-primary is defined by excluding the one cohort with a disclosed difference, not by including two cohorts with a verified shared property."
+what_the_comparison_establishes = "Whether the one cohort with a disclosed preservation difference and a 14-to-16-order-of-magnitude floor difference changes the answer. Agreement dismisses that concern empirically; divergence IS the finding and is reported as such."
+what_the_comparison_does_NOT_establish = "Anything about FFPE versus fresh-frozen in general, because the comparator cohorts' preservation is unknown rather than known to differ."
+gse240729_retained_in_transport = "GSE240729 stays in the three-cohort estimate and in all three leave-one-cohort-out folds. Dropping it from transport would waste the third fold, and excluding a cohort on suspicion is its own bias."
+homogeneity_note = "Revision 1's fixed-effect inverse-variance combination did assume one common true effect, which cannot be checked at k=3. Revision 2 replaced it with the registry-prescribed macro-average, which averages cohort-specific effects and does not assume homogeneity. The co-primary is retained regardless, because the direct evidence of a different deconvolution regime in GSE240729 deserves a side-by-side estimate rather than a footnote."
+
+[strata.preservation]
+cohort = "GSE240729"
+declared_prospectively = true
+facts_bound = [
+  "its tissue and !Sample_source_name_ch1 fields both read 'liver (FFPE = Formalin Fixed Paraffin Embedded)'",
+  "no other cohort deposits any preservation field, so none is verified fresh-frozen",
+  "its proportion floor is 7.19e-08 against 7.70e-22, 3.50e-24 and 1.11e-24 elsewhere",
+  "its Endothelial-cell minimum is 1.12e-02 against 2.58e-15 in GSE135251",
+  "it is the smallest cohort at 66 samples, so its held-out fold is the noisiest at null SE 0.124",
+]
+mechanism_status = "INFERENCE, not established. Degraded FFPE RNA deconvolved against a fresh single-cell reference is a coherent single mechanism for both the floor difference and the non-collapsing structural lineages, but it is not demonstrated here and is labelled as an inference wherever it appears."
+treatment = "retained in the primary with a prespecified sensitivity arm that drops it; every fold report states the disclosure asymmetry"
+demotion_steer_withdrawn = "A review steer to demote GSE240729 out of the primary was withdrawn. The floor hazard cannot reach a rank statistic; no cohort is verified fresh-frozen so demoting it would penalise the only cohort that disclosed its preservation method; the frozen generalization contract prescribes leave-one-study-out at three or more families; and excluding the most dissimilar cohort before testing transport cleans the test set. The collapse-confounding test now gives the stratum a measured test rather than a declaration."
+
+[strata.reduced_resolution]
+cohort = "GSE213621"
+treatment = "separate consistency arm on its own three-level scale, never pooled with the primary, never gate-eligible"
+
+admission_gates = [
+  "Sixteen lineages, not fifteen. Any component reading the proportions header as 15 lineages plus a key column has the R rowname offset wrong and is inadmissible.",
+  "The N+1 rowname offset must be asserted and fail closed on every metadata and proportions file read from the deconvolution tree.",
+  "Control arms are excluded from the graded primary and counted in the audit. A healthy control is never mapped to stage 0.",
+  "Samples are the unit. No donor count may be claimed and no sample count may stand in for a donor count in any power statement.",
+  "GSE213621 is never pooled with the graded 0-to-4 cohorts, and the graded cohorts are never collapsed to its resolution.",
+  "Raw samples are never pooled across cohorts into a single correlation; cross-cohort combination is the macro-average only.",
+  "BayesPrism proportions only.",
+  "The shared-reference dependency is named in the same sentence as any cross-cohort agreement claim.",
+  "Reciprocal between-lineage shifts may not be read out of the primary.",
+  "No cohort may be described as fresh-frozen; only GSE240729's preservation is disclosed.",
+  "This is external-development association evidence, not a model comparison. The signature-basis benchmark is not built from it.",
+  "A lineage is testable only if the median sample clears the 1e-4 detection floor in every cohort contributing to that estimate. Ineligible lineages are reported with their rho and their above-floor fraction and are never counted.",
+  "The above-floor fraction is reported per lineage per cohort alongside every rho, without exception.",
+  "The two-cohort co-primary may never be described as a fresh-frozen estimate; three of the four cohorts disclose no preservation method.",
+]
+
+uncertainty_method = "sample_level_bootstrap_within_cohort_plus_leave_one_cohort_out_transport"
+resampling_units = ["bulk_rna_sample"]
+bootstrap_replicates = 10000
+multiplicity_family = "bulk_lineage_composition_fibrosis_primary"
+multiplicity_method = "bh_q0.05_within_each_estimate_s_own_detection_floor_eligible_family"
+promotion_gate_id = "bulk_lineage_composition_fibrosis_development_v1"
+primary_evaluator_id = "bulk_lineage_composition_fibrosis_transfer_v1"
+
+claim_gate = "External-development association evidence for the transfer of one fixed deconvolution operator. No champion, sealed confirmation, diagnostic, prognostic, causal, lineage-attribution, or independent-replication claim is eligible from this endpoint."

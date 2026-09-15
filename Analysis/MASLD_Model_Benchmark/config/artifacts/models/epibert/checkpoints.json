@@ -4,8 +4,10 @@
     "attention": "Eight linear-scaling SNNK/Performer-style attention blocks with rotary positional embeddings",
     "input_length_bp": 524288,
     "model_family": "multimodal_sequence_plus_observed_ATAC_plus_global_motif_context_transformer",
-    "parameter_count": "UNRESOLVED_until_archive_inventory_and_strict_restore",
-    "pretraining_attention_heads": 4,
+    "parameter_count": "84314237 model-variable elements per pretrained member; 84492754 for fine_tuned_rampage",
+    "pretraining_attention_heads": 8,
+    "published_pretraining_command_attention_heads": 4,
+    "pretraining_head_discrepancy": "Released checkpoint tensor shapes require 8 heads; the published execution script requests 4. The model-object-matched constructor is bound to the checkpoint shapes.",
     "pretraining_output_bins": 4092,
     "pretraining_output_resolution_bp": 128,
     "rampage_attention_heads": 8,
@@ -15,33 +17,75 @@
     "sequence_encoder_filters": [512, 640, 640, 768, 896, 1024],
     "trans_context": "693-dimensional per-cell-context global motif-enrichment vector derived with SEA from Vierstra et al. 2020 consensus motifs"
   },
+  "execution_evidence": {
+    "admission_sources_artifacts_sha256": "26e12915b05c2727c45eca091f85ec89f96c205e817c6ec9b64f181a563e7577",
+    "checkpoint_shape_audit_artifacts_sha256": "937e455dcf7bd96081e8bb148925c0fe9b3b286a6a97529c6d48fa31287a6c12",
+    "executable_runtime_artifacts_sha256": "83e42afe350081391204703e9178ac30b52b7dfc15b863ba1af2e10611342aa4",
+    "released_forward_probe_artifacts_sha256": "cff3537ef5cf023db472acff523c791b758575db428bae5d8e9ec6d973eb7a5a",
+    "lane_audit_artifacts_sha256": "bee0470e7f0aa44f89367a6e9517899533769884fa39369ce5eba3c95809b228",
+    "primary_source_history_artifacts_sha256": "4047b17e387eaf1be1401a7e80bb9470670ef9af11b13e2f4209a25133e1e6e0",
+    "native_preprocessing_audit_artifacts_sha256": "844775b7710584d478e6ae1ff9592a0ab665fdb3da3e3c2728794d1a0a2e6727",
+    "existing_model_objects_matched": true,
+    "extra_checkpoint_training_state_permitted": true,
+    "restore_consumed_assertion_passed": false,
+    "repeat_inference_bit_identical": true,
+    "backward_executed": false,
+    "checkpoint_resume_executed": false,
+    "project_data_read": false,
+    "outcomes_read": false
+  },
+  "native_input_readiness": {
+    "gse296875_topology_supported": true,
+    "gse296875_signal_transform_exact": false,
+    "signal_transform_blocker": "The scale-factor input unit is total accepted fragments divided by 1e6, but the paper describes 1/f FPM while pinned WDL and a post-release author example use 20/f after insertion expansion. No checkpoint-bound invocation resolves the numeric transform.",
+    "motif_file_sha256": "aaa5f79457e991d470c69efd0066b9db25e395d4c4e8bd07bc4bffa3c2d6768c",
+    "motif_count": 693,
+    "motif_order_exact": true,
+    "motif_order": "SEA field 3 lexicographic order, exactly AC0001 through AC0693",
+    "motif_context_exact": false,
+    "motif_context_blocker": "The 693-motif roster and order are exact, but the paper, pinned WDL, and post-release examples disagree or remain unbound for foreground selection, peak-window mapping, the exact background, SEA threshold, and validation normalization.",
+    "field_disposition": {
+      "atac_tn5_shifts": "authoritative: +4 bp forward and -5 bp reverse",
+      "atac_scale_transform": "unresolved: paper 1/f versus pinned WDL and post-release example 20/f",
+      "motif_top_peaks": "unresolved: paper random 50000 versus post-release top 50000",
+      "motif_peak_window": "unresolved: post-release 128-bp summit window versus unbound WDL half_peak_width",
+      "motif_background_peaks": "unresolved: paper sampled 50000 versus unbound post-release 56059-row file",
+      "motif_sea_threshold": "unresolved: post-release author examples changed from 1.0 to 50000.0",
+      "motif_roster_and_order": "authoritative: 693 motifs, AC0001 through AC0693",
+      "motif_normalization": "training and released analysis use min-max; released validation uses means/standard deviations"
+    },
+    "native_preprocessing_audit_path": "executions/model-check-ep904-21098732",
+    "native_preprocessing_terminal_disposition": "checkpoint_runtime_ready_native_preprocessing_terminally_blocked_no_fixture",
+    "native_preprocessing_fixture_built": false,
+    "gpu_execution_ready": false
+  },
   "checkpoint_release": {
     "archive": {
       "archive_format": "tar.gz",
-      "archive_member_inventory": "UNRESOLVED_NOT_DOWNLOADED",
+      "archive_member_inventory": "SAFE_INVENTORY_PASSED",
       "doi": "10.5281/zenodo.14504049",
       "md5": "8c6b54ac40a5239af6a5226c4c44cbb4",
       "name": "epibert_models.tar.gz",
       "record_created": "2024-12-17T02:43:54.082056+00:00",
-      "sha256": "UNRESOLVED_REQUIRES_APPROVED_DOWNLOAD",
+      "sha256": "67684dc1f1562955a726f56fc7c53b758afe666f1138d833615fa1def46cf651",
       "size_bytes": 3738627947,
       "url": "https://zenodo.org/api/records/14504049/files/epibert_models.tar.gz/content"
     },
     "declared_members": {
       "fine_tuned_rampage": {
         "count": 1,
-        "exact_archive_path": "UNRESOLVED",
+        "exact_archive_path": "epibert_models/fine_tuned/ckpt-16",
         "purpose": "sequence_plus_observed_ATAC_plus_motif_context_to_RAMPAGE_and_masked_ATAC"
       },
       "pretrained_atac": {
         "count": 2,
-        "exact_archive_paths": "UNRESOLVED",
+        "exact_archive_paths": ["epibert_models/pretrained/model1/ckpt-45", "epibert_models/pretrained/model2/ckpt-45"],
         "member_relationship": "Two independently trained models used together for the paper's caQTL analysis; their seeds, run names, tensor manifests and ordering require archive inventory.",
         "purpose": "masked_ATAC_reconstruction_and_caQTL_scoring"
       }
     },
-    "identity_status": "ARCHIVE_FROZEN_MEMBER_IDENTITIES_BLOCKED",
-    "weight_format": "Expected TensorFlow checkpoint bundles from the released restoration code, but exact files and schemas are unresolved until safe archive inventory."
+    "identity_status": "EXACT_MEMBERS_FROZEN_AND_EXISTING_MODEL_OBJECTS_MATCHED",
+    "weight_format": "TensorFlow checkpoint bundles; exact index/data members, hashes, shapes and explicit restore prefixes are frozen in the executable-runtime artifact."
   },
   "code_license": "MIT",
   "input_contract": {
@@ -54,7 +98,7 @@
     },
     "global_motif_context": {
       "dimension": 693,
-      "normalization": "Per-cell-type SEA motif enrichments followed by the native relative scaling and released training means/standard deviations. Exact parity must be established from a frozen peak-set pipeline.",
+      "normalization": "Training and released inference utilities min-max scale the lexicographically ordered SEA vector. The released validation deserializer instead uses frozen means/standard deviations; exact validation parity must not be assumed.",
       "required_for_canonical_model": true
     },
     "sequence": {
@@ -67,7 +111,7 @@
   "license_audit": {
     "code_finding": "The v1.0.0 GitHub/Zenodo code release is MIT licensed.",
     "derivative_weight_rule": "CC-BY-4.0 permits adaptation and redistribution with attribution, but the archive must be checked for included notices and third-party components before release.",
-    "open_champion_terms_status": "PROVISIONALLY_ELIGIBLE_PENDING_ARCHIVE_NOTICE_AUDIT",
+    "open_champion_terms_status": "ELIGIBLE_BY_DECLARED_MIT_CODE_AND_CC-BY-4.0_WEIGHT_TERMS_WITH_ATTRIBUTION",
     "weight_finding": "Zenodo record 14504049 explicitly labels the model archive CC-BY-4.0."
   },
   "native_scoring_contract": {
@@ -122,17 +166,17 @@
     "paper_compute": "TPU v3-64; pretraining reported approximately 4.5 days",
     "python": "3.9",
     "requirements_lock_status": "requirements.txt is a pip freeze-style environment capture, not a tested project lock for current CUDA GPUs",
-    "status": "UNTESTED_ON_PROJECT_GPU",
+    "status": "FORWARD_AND_EXISTING_MODEL_OBJECT_MATCH_PASSED_ON_L40S; EXTRA_TRAINING_STATE_PERMITTED; BACKWARD_AND_RESUME_NOT_TESTED",
     "tensorflow": "2.13.0"
   },
   "safe_loading_contract": {
-    "archive_downloaded": false,
-    "archive_inventory": "After campaign approval, verify the Zenodo MD5 and computed SHA-256; reject absolute paths, parent traversal, symlinks, hardlinks, device nodes, duplicate normalized names and decompression-limit violations before extraction.",
-    "checkpoint_restore": "Inventory TensorFlow variable names, shapes and dtypes without executing arbitrary archive content. Restore into the exact v1.0.0 architecture and require consumed/existing-object assertions; reject partial restores.",
-    "numeric_parity": "Reproduce fixed pretraining ATAC, RAMPAGE and two-member caQTL predictions in both orientations before admission."
+    "archive_downloaded": true,
+    "archive_inventory": "Published MD5, computed SHA-256, size and traversal-safe member inventory passed; the source archive remains frozen and unexecuted.",
+    "checkpoint_restore": "All two pretraining members and the fine-tuned RAMPAGE member restored into the v1.0.0 architecture with existing-object matches under the checkpoint-shape-bound 8-head constructor.",
+    "numeric_parity": "Repeated synthetic forward inference was bit-identical for all three released members on L40S. Biological-input, reverse-complement caQTL and training-resume parity remain pending."
   },
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The Cell Genomics article, official EpiBERT v1.0.0 repository, Zenodo code/model records and released small text/split/config files were queried on 2026-08-22. No checkpoint archive was downloaded or opened.",
+    "source_evidence": "The Cell Genomics article, NCBI EFetch JATS and supplement metadata, complete 65-commit official repository history, EpiBERT v1.0.0 source, Zenodo code/model records, safe archive inventory, exact selected checkpoint extraction, checkpoint-shape audit and existing-model-object-matched L40S forward probes were frozen through 2026-08-25. The native preprocessing audit terminated without a biological fixture because checkpoint-bound transforms remain contradictory or absent. Extra checkpoint training state was permitted; no consumed-checkpoint assertion passed. No project outcomes or labels were read.",
   "source_records": [
     {"identity": "naumanjaved/EpiBERT@dae61b4:LICENSE", "sha256": "3ee2000fdcfea66b39c931b9ee747c9c08cc183c8f3afec11b24d35987a31eda", "size_bytes": 1069},
     {"identity": "naumanjaved/EpiBERT@dae61b4:README.md", "sha256": "dfa38dba7207a990f1e339532a19dc31dd03720dc3b39176d23bdc4312a19fda", "size_bytes": 3582},
@@ -143,7 +187,9 @@
     {"identity": "naumanjaved/EpiBERT@dae61b4:src/models/epibert_rampage_finetune.py", "sha256": "9ae93fb8eb959fad03a152f25eaee34e061847697c4141164d9890b9f6d402b7", "size_bytes": 21035},
     {"identity": "naumanjaved/EpiBERT@dae61b4:data_processing/write_TF_records/sequence_splits/all_cell_types_map.tsv", "sha256": "cee26aa3cc1f1ca322e922c2b9b814b77533e0cb085f252186f5e35c7e7b738a", "size_bytes": 22497},
     {"identity": "naumanjaved/EpiBERT@dae61b4:data_processing/write_TF_records/sequence_splits/hg38_train_524k.bed", "sha256": "5ef306ef1d4395d5a4da92a601e2ed2c649b5205367f875bf51b84302ab2f3c6", "size_bytes": 1016528},
-    {"identity": "Zenodo:14504049:epibert_models.tar.gz", "md5": "8c6b54ac40a5239af6a5226c4c44cbb4", "sha256": "UNRESOLVED", "size_bytes": 3738627947}
+    {"identity": "Zenodo:14504049:epibert_models.tar.gz", "md5": "8c6b54ac40a5239af6a5226c4c44cbb4", "sha256": "67684dc1f1562955a726f56fc7c53b758afe666f1138d833615fa1def46cf651", "size_bytes": 3738627947},
+    {"identity": "frozen:EpiBERT-primary-source-history-and-paper-evidence", "artifacts_sha256": "4047b17e387eaf1be1401a7e80bb9470670ef9af11b13e2f4209a25133e1e6e0", "path": "executions/model-data-ep903-21098560"},
+    {"identity": "frozen:EpiBERT-native-preprocessing-terminal-audit", "artifacts_sha256": "844775b7710584d478e6ae1ff9592a0ab665fdb3da3e3c2728794d1a0a2e6727", "path": "executions/model-check-ep904-21098732"}
   ],
   "task_fit": {
     "cell_state_mapping": "not_supported",

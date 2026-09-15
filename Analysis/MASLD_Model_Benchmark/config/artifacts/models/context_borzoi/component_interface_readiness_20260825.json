@@ -1,0 +1,243 @@
+{
+  "component_reconciliation": {
+    "borzoi": {
+      "disabled_full_window_gpu_queue_artifact": "executions/model-check-279-21097067",
+      "disabled_full_window_gpu_queue_artifacts_sha256": "55b2101299516a2f708e42368636dc40f671d2e9e7223f525632b98fdb8c0e02",
+      "not_proven": [
+        "canonical checkpoint-bound source recovery",
+        "native TensorFlow numeric parity",
+        "official weight terms",
+        "full-window GPU forward completion",
+        "open champion eligibility"
+      ],
+      "official_authority_path": "config/artifacts/models/borzoi/checkpoints.json",
+      "official_authority_sha256": "1c5d7213dab05be8bb819d61ff4d03b2bcd7ca307954ab328de739c476c9e257",
+      "proven": [
+        "four converted archives passed bounded static ZIP and pickle-opcode audit",
+        "all four converted members passed semantic-key strict weights-only restoration",
+        "the 1920-channel latent and 6144-bin central output geometry are represented in the reconciled port",
+        "known historical/local semantic differences are explicitly diagnosed"
+      ],
+      "role": "provisional long-range sequence-latent provider",
+      "selected_as_parent": false,
+      "semantic_diagnostic_artifact": "executions/model-check-264-21096934",
+      "semantic_diagnostic_artifacts_sha256": "a80aed3c527577cc5203b6e578f27d9eda9ec4906044d73b9401245a886d8669",
+      "semantic_mapping_artifact": "executions/model-check-261-21096790",
+      "semantic_mapping_artifacts_sha256": "fa38f9b6bf4843e2c51e148e32be44680a44dbc97cfade25852f37f58c096d36",
+      "static_converted_port_audit_artifact": "executions/model-data-259-21096699",
+      "static_converted_port_audit_artifacts_sha256": "1054a52a3e8f87cc041d52107bb3ba6e74bf9e2dbe764b9c6d2c34e547d40f9b",
+      "weights_reused_by_this_contract": false
+    },
+    "corgi": {
+      "adapter_unit_artifact": "executions/model-check-262-21096805",
+      "adapter_unit_artifacts_sha256": "ee695f9e421c140d77caf807de8fc05739bff4bbeac8a045b4cbdc80fa21ae7c",
+      "corgi_checkpoint_selected_or_reused": false,
+      "corgi_film_weights_reused": false,
+      "film_contract_artifact": "executions/model-check-260-21096725",
+      "film_contract_artifacts_sha256": "378a21b2ccb7b6e9cae865cd11aef61309f8a3f6e5f49bedbe640b5aca4a82a7",
+      "implementation_pattern_may_inform_independent_code": true,
+      "not_proven": [
+        "Borzoi attachment compatibility",
+        "Corgi native numeric parity",
+        "Corgi code and derivative-weight redistribution eligibility",
+        "context-Borzoi performance"
+      ],
+      "outcome_blind_fixture_artifact": "executions/data-prep-264-21096833",
+      "outcome_blind_fixture_artifacts_sha256": "63700ed1ad974175c65322047bde7ac39f067971ca25f90d33427ea0b5a1d20a",
+      "proven": [
+        "restricted FiLM-plus-head parameter surface is frozen and unit-tested",
+        "five donor-by-chromosome cross-fit folds are prospectively specified",
+        "outcome-blind context records and schedule exist without model or ATAC outcome access"
+      ],
+      "role": "FiLM and restricted-adaptation interface precedent only"
+    },
+    "scooby": {
+      "checkpoint_authority_path": "config/artifacts/models/scooby_neurips/checkpoints.json",
+      "checkpoint_authority_sha256": "d76f024290f2b4d7c7ef8da2d2e915a3f87f8e337d3413949d230347f585d412",
+      "checkpoint_or_code_reused": false,
+      "not_proven": [
+        "topology-valid liver RNA-only query encoder",
+        "checkpoint-bound context encoder and runtime parity",
+        "inherited Borzoi weight authority",
+        "released checkpoint eligibility for context-Borzoi"
+      ],
+      "proven": [
+        "released architecture declares 1920-dimensional sequence embeddings and 6144 central bins",
+        "cell context can generate cell-specific decoder weights and biases",
+        "released multiome contexts using observed ATAC are explicitly separated from RNA-conditioned inference"
+      ],
+      "registered_rna_conditioned_atac_models": [],
+      "released_lane_audit_artifact": "executions/model-audit-201-21085741",
+      "released_lane_audit_artifacts_sha256": "01d5dabca02430ac18fd5cf26cc9ed64c1ea1fc37baeb49506512ff2fa4d6198",
+      "role": "published/released 1920-channel context-decoder and LoRA architecture precedent only"
+    }
+  },
+  "conditional_slot": {
+    "architecture_built": false,
+    "architecture_count_cap": 1,
+    "complementarity_trigger_state": "NOT_EVALUATED",
+    "component_selection_lock": "ABSENT",
+    "existing_preflight_path": "config/artifacts/models/context_borzoi/outcome_blind_architecture_preflight_20260824.json",
+    "existing_preflight_sha256": "88b353a3c1bd1074b3042333d74d4dcd977396c452eea054d9bc87edd204f512",
+    "model_id": "context_borzoi",
+    "selected_cell_encoder": null,
+    "selected_sequence_backbone": null,
+    "training_started": false
+  },
+  "conditioning_interface": {
+    "film": {
+      "attachment_axis": "selected_sequence_latent_channel",
+      "gate": "explicit_context_observed_mask",
+      "missing_context_behavior": "latent_unchanged",
+      "neutral_initialization": "gamma_delta_zero_beta_zero_gate_zero",
+      "role": "context_to_per_channel_gamma_beta"
+    },
+    "lora": {
+      "exact_module_names": "UNRESOLVED_UNTIL_PARENT_SELECTION",
+      "missing_context_behavior": "delta_exactly_zero",
+      "neutral_initialization": "zero_delta",
+      "rank_alpha_dropout": "UNRESOLVED_UNTIL_PARENT_SELECTION",
+      "role": "context_gated_low_rank_delta_on_selected_upper_backbone_modules"
+    },
+    "same_parent_ablation_rule": "Sequence-only, trans-only, permuted-context, reverse-complement, and matched-shuffle arms must use the same parent, rows, output axes, splits, seeds, evaluator, and calibration."
+  },
+  "context_interface": {
+    "allowed_query_sources": [
+      "observed_query_rna",
+      "training_fold_frozen_rna_context",
+      "explicit_missing_modality_mask"
+    ],
+    "forbidden_query_sources": [
+      "observed_query_atac",
+      "held_atac_target",
+      "atac_derived_neighbor_graph",
+      "held_donor_fitted_normalization_reference",
+      "histology_or_disease_label",
+      "sealed_label_or_outcome"
+    ],
+    "held_donor_query_rule": "Project held RNA through a mapper fit without held ATAC, held outcomes, or held-donor refitting.",
+    "mapper_fit_scope": "outer_training_partition_only",
+    "missing_as_numeric_zero_allowed": false,
+    "missing_context_effect": "exact_neutral_identity",
+    "missing_context_mask": false,
+    "missing_context_value": null,
+    "missingness_states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
+    "status": "SCHEMA_READY_ENCODER_UNSELECTED"
+  },
+  "execution_disposition": {
+    "architecture_build_authorized": false,
+    "checkpoint_download_or_open_authorized": false,
+    "component_selection_authorized": false,
+    "cpu_metadata_and_unit_validation_authorized": true,
+    "development_scoring_authorized": false,
+    "gpu_bundle_registration_authorized": false,
+    "gpu_job_submission_authorized": false,
+    "mapper_fit_authorized": false,
+    "prediction_authorized": false,
+    "sealed_scoring_authorized": false,
+    "training_authorized": false
+  },
+  "family_native_task_boundaries": {
+    "observed_multiome": {
+      "eligible_interface": false,
+      "reason": "Observed-ATAC models have a separate family-native task and must not be relabeled as RNA-conditioned models.",
+      "results_may_support_universal_claim": false
+    },
+    "rna_conditioned_atac": {
+      "biological_unit": "donor",
+      "eligible_interface": true,
+      "genomic_unit": "held_chromosome_or_merged_ld_block",
+      "primary_output": "atac_profile",
+      "query_atac_allowed": false,
+      "status": "interface_only_no_model_or_scoring_authorized"
+    },
+    "variant_to_regulation": {
+      "eligible_interface": true,
+      "native_outputs": [
+        "accessibility_delta",
+        "gene_expression_delta"
+      ],
+      "signed_cell_type_eqtl_effect_requires_fitted_calibrated_head": true,
+      "status": "interface_only_no_model_or_scoring_authorized"
+    }
+  },
+  "head_interface": {
+    "allowed_heads": [
+      "atac_profile",
+      "atac_count",
+      "rna_coverage"
+    ],
+    "atac_count_axis": "donor_by_cell_state_by_frozen_region",
+    "atac_profile_axis": "donor_by_cell_state_by_frozen_peak_or_genomic_bin",
+    "forbidden_heads": [
+      "masld_histone"
+    ],
+    "head_selection_and_fit_scope": "outer_training_partition_only",
+    "prediction_uncertainty": "five_fixed_seed_ensemble_not_biological_replication",
+    "profile_and_count_factorized": true,
+    "rna_coverage_axis": "donor_by_cell_state_by_frozen_gene_or_exon"
+  },
+  "next_action": "Wait for the complementarity and component-selection gates. If they pass, instantiate this abstract interface in one new parent-bound spec; otherwise stop without building context-Borzoi.",
+  "outcome_firewall": {
+    "biological_data_read_by_contract": false,
+    "current_resource_authorities_modified": false,
+    "development_outcomes_read_by_contract": false,
+    "frozen_117_hotspot_programs_read": false,
+    "gse289173_features_read": false,
+    "gse289173_labels_or_qtl_outcomes_read": false,
+    "observed_multiome_materialization_read_or_modified": false
+  },
+  "provisional_sequence_latent_interface": {
+    "boundary_buffer_rule": "At least the full selected receptive field, frozen before any fit.",
+    "central_bin_resolution_bp": 32,
+    "geometry_change_requires_new_parent_bound_spec": true,
+    "input_axis_order": [
+      "batch",
+      "nucleotide",
+      "base"
+    ],
+    "input_dtype": "float32_one_hot_A_C_G_T",
+    "input_shape": [
+      null,
+      4,
+      524288
+    ],
+    "latent_axis_order": [
+      "batch",
+      "channel",
+      "central_bin"
+    ],
+    "latent_shape": [
+      null,
+      1920,
+      6144
+    ],
+    "provisional_only_reason": "The 524288 by 1920 by 6144 surface is shared by the current Borzoi/Scooby evidence, but no backbone has been selected and native Borzoi authority remains blocked.",
+    "selected_backbone_may_change_geometry": true,
+    "sequence_only_identity_required": true,
+    "status": "SCHEMA_READY_COMPONENT_UNSELECTED",
+    "variant_orientation_rule": "REF and ALT use the same window, reverse-complement restoration, output crop, strand map, and ALT-minus-REF sign convention."
+  },
+  "remaining_activation_gates": [
+    "Pass and freeze the prespecified complementarity trigger on development evidence only.",
+    "Select the open long-range backbone and clean cell encoder from their five-seed full-specialist shortlists.",
+    "Resolve selected-component code, checkpoint, inherited and derivative-weight terms.",
+    "Pass strict restoration, native numeric parity, reference, crop, strand and reverse-complement gates for the selected sequence parent.",
+    "Freeze exact selected-parent latent attachments, LoRA module names and rank/alpha/dropout in a new parent-bound architecture spec.",
+    "Freeze the RNA-only context mapper, feature order, normalization, missing masks, donor folds, chromosome/LD blocks and receptive-field buffer.",
+    "Implement and CPU-test neutral missing-context behavior, parameter masks, strict delta loading and all same-parent ablations.",
+    "Only then run one centralized-dispatcher L40S import, forward/backward, resume, determinism and numeric-tolerance probe before any training bundle."
+  ],
+  "schema_version": "masld-bench-context-borzoi-component-interface-readiness-v1",
+  "scope": "Outcome-blind reconciliation of existing Borzoi sequence-latent, Regular Corgi FiLM, and released Scooby context-decoder infrastructure for the one conditional context-model slot. This freezes an abstract component interface only. It does not select a backbone or cell encoder, implement a composite, fit a mapper or model, open a new checkpoint, read biological outcomes, authorize GPU work, or change the conditional trigger.",
+  "status": "INTERFACE_CONTRACT_READY_BUILD_BLOCKED"
+}

@@ -1,7 +1,7 @@
 {
   "activation_disposition": {
     "admission_status": "deferred",
-    "reason": "The suite has exact top-level package artifacts but no registered spatial TaskSpec, powered rights-cleared donor-level source, external source, or complete transitive environment lock.",
+    "reason": "The suite has exact top-level package output files but no registered spatial TaskSpec, powered rights-cleared donor-level source, external source, or complete transitive environment pin.",
     "v1_execution": "prohibited",
     "v1_superiority_or_champion_claim": "prohibited",
     "future_priority": "mandatory_if_a_spatial_task_is_activated"

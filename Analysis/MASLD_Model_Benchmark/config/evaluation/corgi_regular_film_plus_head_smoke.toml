@@ -1,0 +1,232 @@
+schema_version = "masld-bench-corgi-film-plus-head-contract-v1"
+contract_id = "corgi_regular_gse296875_film_plus_head_smoke_v1"
+status = "frozen_prospective_preflight_execution_not_yet_authorized"
+model_id = "corgi_regular"
+task_id = "rna_conditioned_atac"
+dataset_id = "gse296875"
+lineage_id = "hepatocyte"
+adaptation_rung = "film_plus_head"
+scope = "existing_128_tile_per_fold_development_smoke_only"
+biological_unit = "donor"
+genomic_block_unit = "chromosome"
+same_nucleus_topology_required = true
+observed_atac_task = true
+gse296875_masld_diagnosis_claimed = false
+histology_or_disease_endpoint_used = false
+test_or_sealed_features_used = false
+test_or_sealed_outcomes_used = false
+champion_or_external_transfer_claim_allowed = false
+global_census_revision = false
+global_promotion_gate_revision = false
+historical_audit_hashes_modified = false
+training_execution_authorized = false
+prediction_execution_authorized = false
+evaluation_execution_authorized = false
+
+[source_artifacts]
+adaptation_contract_path = "config/adaptation/corgi.toml"
+adaptation_contract_sha256 = "6c6486be8157910a2e6afdf07f463309d7602b42e2c6a8a5ce9ac1720df3c38a"
+new_head_contract_path = "config/evaluation/corgi_regular_crossfit_profile_head_smoke.toml"
+new_head_contract_sha256 = "880ccde3fd6c429ed90915e670dc9d4016d7fe8583b6160be899d3c49b397f7e"
+negative_disposition_path = "config/artifacts/models/corgi/new_assay_head_development_disposition_20260825.json"
+negative_disposition_sha256 = "bff0cb47b7df5311859b38c0f0375db611c54b8d1a7bc7fe4f5896b21c54d9d1"
+negative_disposition_audit_path = "executions/model-check-259-21096667/ARTIFACTS.json"
+negative_disposition_audit_sha256 = "c181d1601a876907c68ec9496422f05334a156587e13e665a2dde7fd4e8f4523"
+bounded_smoke_disposition_path = "config/artifacts/models/corgi/bounded_prediction_smoke_disposition_20260824.json"
+bounded_smoke_disposition_sha256 = "92543e0ee28e0cdbdd9e2bb13a32b0b4f2960a9320dc417aa881d4d1f8f63635"
+dataset_manifest_path = "config/datasets/gse296875.toml"
+dataset_manifest_sha256 = "9465b012bbf46611641555a5acae4d1f033d053c900bf944dcec02979c735b6f"
+checkpoint_schema_path = "executions/corgi-official-checkpoint-schema-21064532/schemas/corgi_regular.json"
+checkpoint_schema_sha256 = "1c25a9dc8ae66e4ea95d3296befafcf5705086a1eb644736c9db6121e20851aa"
+checkpoint_schema_artifacts_path = "executions/corgi-official-checkpoint-schema-21064532/ARTIFACTS.json"
+checkpoint_schema_artifacts_sha256 = "312bb3c90ae6da3eff20f43d920b03fbf6a5b05b2b480bbc98d24aaad71d868e"
+acquisition_artifacts_path = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/ARTIFACTS.json"
+acquisition_artifacts_sha256 = "73aad9ab9ad3e080a2ccaa0cee1a1d727d126a454f0e69f74f343a900b168c0f"
+checkpoint_path = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/downloads/corgi_model.pt"
+checkpoint_sha256 = "cd51539f01de1e66a3a4f9b89e772bdeae07df2f0178d5b692f2368db2f4d2a4"
+runtime_artifacts_path = "executions/corgi-native-runtime-l40s-r8-21065022/ARTIFACTS.json"
+runtime_artifacts_sha256 = "09d8811b612cba4f75361feeba29bd0676efde83f0e4785a37990c2d2f52a0a2"
+tile_contract_artifacts_path = "executions/corgi-outcome-aligned-tiles-21068311/ARTIFACTS.json"
+tile_contract_artifacts_sha256 = "1cdf94aa4c37ead139125ffc3d8fee358605a2394a206b1f3e79190ecd25645c"
+tile_subset_artifacts_path = "executions/corgi-tile-smoke-subset-21068454/ARTIFACTS.json"
+tile_subset_artifacts_sha256 = "2617f3a85a9ced8b0f7cb9efe3819b1e57177629221a2013e39fc7c96e187f5b"
+tile_subset_summary_path = "executions/corgi-tile-smoke-subset-21068454/subset/summary.json"
+tile_subset_summary_sha256 = "64d37d182d8c45e723762d923a548abb696708adc71aa63b02a13effd0a2aa23"
+donor_atac_artifacts_path = "executions/gse296875-deduplicated-tn5-bigwigs-21063992/ARTIFACTS.json"
+donor_atac_artifacts_sha256 = "01aacc2bb59898d6f7c133081b00c535047e271a2fed5f15761c2631b7545f1f"
+training_mean_atac_artifacts_path = "executions/gse296875-training-fold-pseudobulk-21063993/ARTIFACTS.json"
+training_mean_atac_artifacts_sha256 = "3190aa76cd5872f50d7b0c71bcb92520f1f2428110ce2fb4c26856994bc17e5b"
+
+[released_source]
+code_commit = "d84c00082da3d04eb05169e290e53f1c7da2b9c5"
+source_root = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/source/corgi-d84c00082da3d04eb05169e290e53f1c7da2b9c5/corgi"
+model_path = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/source/corgi-d84c00082da3d04eb05169e290e53f1c7da2b9c5/corgi/model.py"
+model_sha256 = "767067e4659ca196f307d2133104365fb7e6ea9d2f151dd61d3c2a8a7e0737e6"
+modules_path = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/source/corgi-d84c00082da3d04eb05169e290e53f1c7da2b9c5/corgi/modules.py"
+modules_sha256 = "53f4891df15f2dfe204a6fbe133ae21e7dec983441ab5400c96360ff6965c665"
+config_path = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/source/corgi-d84c00082da3d04eb05169e290e53f1c7da2b9c5/corgi/config.py"
+config_sha256 = "a6ae55409602e0de35a8d2cf757eb5ebac93b602e31e00f0aa36a4fbd63ac4b1"
+finetune_path = "executions/upstream-acquisitions/corgi-d84c000-zenodo18630048-21064463/source/corgi-d84c00082da3d04eb05169e290e53f1c7da2b9c5/corgi/finetune.py"
+finetune_sha256 = "6f9cc9fb660b06f3e42c29d55d75eb3199cd84f6aa5b5847662a3c3f2cc4000d"
+upstream_finetune_helper_reused = false
+reason_not_reused = "The released helper labels itself untested, loads all native tracks, does not implement this crossed donor-by-genomic-fold schedule, and does not freeze non-FiLM module state."
+
+[architecture]
+sequence_input_bp = 524288
+context_width = 2891
+output_bins = 6144
+output_resolution_bp = 64
+pretrained_atac_channel_index = 1
+pretrained_output_channels = 22
+replacement_head_name = "masld_atac_head"
+replacement_head_type = "Conv1d_1920_to_1_kernel_1"
+replacement_head_initialization = "copy_pretrained_output_head_channel_1_weight_and_bias"
+replacement_head_output_transform = "softplus"
+replacement_head_output_transform_reason = "The released regular checkpoint head is raw-valued; the Poisson-multinomial ATAC objective requires nonnegative predictions."
+final_conv_trainable = false
+transformer_blocks_trainable = false
+convolution_backbone_trainable = false
+film_layers_have_trainable_parameters = false
+trainable_parameter_prefixes = ["film_mlp_conv.", "film_mlp_transformer.", "masld_atac_head."]
+checkpoint_film_mlp_conv_state_entries = 11
+checkpoint_film_mlp_transformer_state_entries = 11
+checkpoint_output_head_state_entries = 2
+checkpoint_film_mlp_conv_state_numel_including_buffers = 2676269
+checkpoint_film_mlp_transformer_state_numel_including_buffers = 3202605
+expected_trainable_parameter_numel = 5869229
+expected_replacement_head_parameter_numel = 1921
+checkpoint_loading_order = "strict_restore_released_22_track_checkpoint_then_copy_atac_row_then_replace_head"
+
+[module_state]
+whole_model_mode_during_optimization = "eval"
+film_dropout_active = false
+all_batchnorm_running_statistics_frozen = true
+film_batchnorm_affine_parameters_trainable = true
+frozen_parameter_requires_grad = false
+optimizer_receipt_must_list_every_trainable_parameter = true
+optimizer_receipt_must_reject_any_other_parameter = true
+checkpoint_resume_required_before_campaign = true
+
+[objective]
+training_context_arm = "actual_released_rank_masked"
+context_arm_specific_training_forbidden = true
+predicted_assay = "donor_hepatocyte_pseudobulk_tn5_insertions"
+loss = "poisson_multinomial"
+profile_component = "multinomial_nll_per_central_bin"
+total_count_component = "poisson_nll_divided_by_6144"
+total_count_weight = 0.25
+epsilon = 0.00001
+training_only_atac_outcomes_allowed = true
+held_fold_atac_outcomes_during_fit_forbidden = true
+histology_or_disease_labels_forbidden = true
+sealed_or_test_data_forbidden = true
+
+[optimization]
+seed = 20260825
+optimizer = "AdamW"
+film_learning_rate = 0.00001
+head_learning_rate = 0.00003
+film_weight_decay = 0.001
+head_weight_decay = 0.0001
+gradient_clip_norm = 1.0
+max_selection_epochs = 3
+minimum_selection_epochs = 1
+epoch_selection_rule = "one_standard_error_from_minimum_inner_valid_donor_by_chromosome_profile_loss_then_earliest_epoch"
+refit_from_original_checkpoint = true
+refit_folds = "all_four_nonheld_crossed_folds"
+refit_epochs = "selected_inner_epoch"
+mixed_precision = "bfloat16"
+batch_size = 1
+gradient_accumulation_steps = 4
+deterministic_algorithms = true
+
+[sampling]
+tile_universe = "frozen_outcome_free_128_tiles_per_genomic_fold"
+training_tiles_per_donor_per_crossed_fold_per_epoch = 4
+inner_validation_tiles_per_donor = 16
+sampling_key = "sha256(corgi-film-head-20260825-v1|phase|outer_fold|epoch|donor_hash|tile_id)"
+sampling_uses_atac_signal = false
+every_training_donor_seen_each_epoch = true
+held_evaluation_uses_all_128_tiles = true
+boundary_buffer_bp = 524288
+
+[context_ablations]
+fit_context_arm = "actual_released_rank_masked"
+held_prediction_arms = ["actual_released_rank_masked", "actual_length_adjusted_tpm_rank_masked", "training_lineage_mean_released_rank", "nearest_training_released_rank", "shuffled_valid_released_rank"]
+same_fitted_weights_applied_to_every_arm = true
+arm_specific_early_stopping_forbidden = true
+arm_specific_calibration_forbidden = true
+strand_tta = "orientation_wise_softplus_then_average"
+
+[evaluation]
+evaluator_implementation = "scripts/evaluate_corgi_regular_film_plus_head_smoke.py"
+fit_predict_implementation = "scripts/train_predict_corgi_regular_film_plus_head_smoke.py"
+independent_evaluator_required = true
+fit_predict_stage_computes_benchmark_metrics = false
+primary_endpoint = "conditional_multinomial_profile_deviance_skill_over_training_only_mean"
+secondary_endpoint = "regional_count_spearman"
+macro_averaging_unit = "donor_by_chromosome"
+same_unit_and_formula_as_new_assay_head_rung = true
+numeric_tolerance_cannot_be_interpreted_as_gain = true
+promotion_gate_evaluated = false
+development_diagnostic_only = true
+full_family_ranking_allowed = false
+
+[[crossfit_folds]]
+evaluation_fold = 0
+evaluation_base_outer_fold = 4
+fit_valid_folds = [1, 2, 3, 4]
+fit_base_outer_folds = [0, 1, 2, 3]
+inner_validation_fold = 1
+inner_training_folds = [2, 3, 4]
+
+[[crossfit_folds]]
+evaluation_fold = 1
+evaluation_base_outer_fold = 0
+fit_valid_folds = [0, 2, 3, 4]
+fit_base_outer_folds = [4, 1, 2, 3]
+inner_validation_fold = 2
+inner_training_folds = [0, 3, 4]
+
+[[crossfit_folds]]
+evaluation_fold = 2
+evaluation_base_outer_fold = 1
+fit_valid_folds = [0, 1, 3, 4]
+fit_base_outer_folds = [4, 0, 2, 3]
+inner_validation_fold = 3
+inner_training_folds = [0, 1, 4]
+
+[[crossfit_folds]]
+evaluation_fold = 3
+evaluation_base_outer_fold = 2
+fit_valid_folds = [0, 1, 2, 4]
+fit_base_outer_folds = [4, 0, 1, 3]
+inner_validation_fold = 4
+inner_training_folds = [0, 1, 2]
+
+[[crossfit_folds]]
+evaluation_fold = 4
+evaluation_base_outer_fold = 3
+fit_valid_folds = [0, 1, 2, 3]
+fit_base_outer_folds = [4, 0, 1, 2]
+inner_validation_fold = 0
+inner_training_folds = [1, 2, 3]
+
+[required_pre_execution_gates]
+adapter_implementation_present = false
+parameter_mask_unit_test_passed = false
+single_step_l40s_test_passed = false
+checkpoint_resume_test_passed = false
+training_fixture_leakage_test_passed = false
+held_prediction_export_test_passed = false
+separate_evaluator_test_passed = false
+gpu_dispatch_bundle_registered = false
+all_gates_required_before_training = true
+
+[terminal_boundaries]
+native_numeric_parity_established = false
+open_champion_eligible = false
+external_validation_present = false
+full_donor_lineage_screen_complete = false
+negative_new_head_result_overridden = false
+next_action = "Validate this outcome-blind contract, then independently implement and CPU-test the parameter mask and donor-by-genomic-fold materializer before any centralized nslab GPU bundle is registered."

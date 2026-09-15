@@ -19,9 +19,11 @@
 #   5. sample x sample Spearman rho (rank -> scale -> crossprod, BLAS)
 #   6. hclust(ward.D2) on (1 - rho) -> annotated, rasterized heatmap -> PDF
 #
-# Output: figures/supplementary/figS_sample_clustering/
-#           sample_spearman_heatmap.pdf      (the figure)
-#           sample_spearman_matrix.rds       (rho + clustering + labels)
+# Producer output: figures/supplementary/figS_sample_clustering/
+#                   sample_spearman_heatmap.pdf
+#                   sample_spearman_matrix.rds
+# Figure authority: figures/supplementary/figS03_bulk_transcriptomics/
+#                   panels/figs3h_sample_spearman_heatmap.pdf
 # ===========================================================================
 suppressPackageStartupMessages({
   library(edgeR); library(limma); library(matrixStats)
@@ -177,14 +179,21 @@ draw(ht, merge_legend = TRUE, heatmap_legend_side = "right", annotation_legend_s
 dev.off()
 cat("[write]", pdf_path, "\n")
 
-# Replicate the canonical (default, n=200) heatmap into the main Fig 3 panels dir
-# (promoted to main Fig 3C 2026-06-15). The sweep variants (OUT_SUFFIX != "")
-# stay supplementary-only; the supplementary copy above is the canonical source.
+# Route the canonical default render to Figure S3. Sweep variants remain only in
+# the producer output. A differing authority file is never overwritten.
 if (OUT_SUFFIX == "") {
-  fig3_panels <- file.path(BASE, "figures/main/fig3_RNAseq/panels")
-  dir.create(fig3_panels, recursive = TRUE, showWarnings = FALSE)
-  file.copy(pdf_path, file.path(fig3_panels, "sample_spearman_heatmap.pdf"), overwrite = TRUE)
-  cat("[replicate] sample_spearman_heatmap.pdf -> main Fig 3 panels (3C)\n")
+  figs3_panels <- file.path(
+    BASE, "figures/supplementary/figS03_bulk_transcriptomics/panels"
+  )
+  destination <- file.path(figs3_panels, "figs3h_sample_spearman_heatmap.pdf")
+  dir.create(figs3_panels, recursive = TRUE, showWarnings = FALSE)
+  if (file.exists(destination)) {
+    stopifnot(unname(tools::md5sum(pdf_path)) == unname(tools::md5sum(destination)))
+    cat("[authority] existing Figure S3H copy is byte-equivalent\n")
+  } else {
+    stopifnot(file.copy(pdf_path, destination, overwrite = FALSE))
+    cat("[authority] sample_spearman_heatmap.pdf -> Figure S3H\n")
+  }
 }
 
 saveRDS(list(rho = S, hclust = hc, order = hc$order, disease_status = disease_status,

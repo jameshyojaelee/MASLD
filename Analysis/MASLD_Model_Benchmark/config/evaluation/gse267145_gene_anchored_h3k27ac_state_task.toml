@@ -1,0 +1,37 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gene_anchored_h3k27ac_histology_state"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["h3k27ac_cutrun"]
+endpoint = "Predict source-aligned three-state liver histology (NOR, NAFL, NASH) in the same five fixed participant-held folds as paired_bulk_histology_state, from H3K27ac aggregated to GENCODE v49 gene-anchored windows rather than from opaque region keys, so that the representation is reproducible by another laboratory from its own peak calls. The region-level lane and the library-complexity-only lane are re-run as reproduction guards."
+metrics = ["participant_macro_f1_stage3", "participant_multiclass_brier_stage3", "participant_spearman_nash_crn_component_sum", "gene_minus_region_macro_f1_paired_delta", "gene_minus_technical_macro_f1_paired_delta"]
+datasets_train = ["gse267145_znf469_human_liver"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse267145_participant_outer_v1"
+required_pairing_levels = ["same_sample_different_aliquot"]
+missingness_policy = "A gene window with no overlapping region keeps its column with window_observed = false; its zero means no peak in this peak set, never no acetylation. Missing is never encoded as normal."
+admission_gates = [
+  "Coordinate convention is the one frozen by structural inference in executions/gse267145-coordinate-convention-21473307 (1-based inclusive); regions are converted once at ingest to 0-based half-open and one convention is used throughout. coordinate_semantics_resolved remains false and this TaskSpec does not require it.",
+  "Gene axis is a deterministic function of GENCODE v49 primary (protein_coding + lncRNA) and the declared window sizes: promoter TSS +/- 1,000 bp, distal TSS +/- 50,000 bp minus promoter. The ordered column names are hashed (axis.sha256) and must rebuild byte-identically.",
+  "A region overlapping several windows is assigned to every one of them; no nearest-gene tie-break is used. Library size is the participant's original region sum over all 96,460 regions, never the window sum.",
+  "Use the frozen 99-participant authoritative join and the five fixed stage-balanced outer folds of paired_bulk_histology_state. Participants are the only biological replicates.",
+  "The classifier recipe is fixed in advance and never tuned: 4,096 top-variance features selected inside outer-training participants, 20 principal components, elastic net C=1.0 l1_ratio=0.5, kNN k=5; no inner selection.",
+  "Report gene-level macro-F1 beside the region-level and library-complexity-only lanes on the same folds; the region-level and technical lanes must reproduce their standing values (0.6690 and 0.4975) to 1e-4 before any gene-level number is interpreted.",
+  "Noninferiority of the gene-level lane to the region-level lane uses a prespecified margin of -0.05 macro-F1 on the paired participant-bootstrap lower bound; a lower bound below the margin with a point estimate above it is reported as inconclusive at n=99, never as pass or fail.",
+  "Never use the publication's NOR-versus-NASH differential regions, differential genes, or any full-cohort outcome-selected feature set.",
+  "Report every classification metric against both a continuous random-scorer reference and a permutation of the model's own predictions. Class prevalence is prohibited as a baseline.",
+  "This is single-cohort development evaluation. It cannot support a task champion, an external-transfer, diagnostic, prognostic, progression, treatment-response or clinical claim. No second H3K27ac cohort with three-state histology exists.",
+  "Internal nonclinical research use only. Raw or processed source data are not redistributed, and materially trained derivative weights require model-specific terms and legal review before any release. The gene-window aggregation code and the ordered axis are what transfer."
+]
+baseline_model_ids = ["training_stage_distribution", "region_variance_pca_elastic_net", "technical_only_elastic_net", "gene_promoter_only_elastic_net", "gene_body_elastic_net", "gene_two_window_fractional_elastic_net", "gene_two_window_nearest_centroid"]
+uncertainty_method = "paired_participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse267145_gene_anchored_development_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "gene_anchored_h3k27ac_histology_state_development_only_v1"
+promotion_gate_config_sha256 = "184aff8942e362af1c0cc504f207c5cc2e65424aee53d24fee17ece48c1adb25"
+primary_evaluator_id = "gene_anchored_h3k27ac_macro_f1_v1"
+evaluator_parameters = { participants = 99, outer_folds = 5, gene_axis = "gencode_v49_primary_pc_lncrna_two_window", declared_columns = 109954, coordinate_convention = "one_based_inclusive_frozen_by_structural_inference", source_outcomes_available_to_model = false, source_outcomes_available_to_selector = false, prevalence_as_baseline_prohibited = true }
+claim_gate = "Development diagnostics only. No model can be called a champion and no external-transfer, disease-classification, diagnostic, prognostic, causal or clinical claim is eligible. A well-characterised negative, including a portable representation that loses the region-level signal, is an acceptable and reportable outcome."

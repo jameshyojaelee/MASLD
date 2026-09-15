@@ -25,7 +25,8 @@ sys.modules[SPEC.name] = adapter
 SPEC.loader.exec_module(adapter)
 
 DATA_ROLE = "dataset_view_data:gse296875_rna_atac_smoke_1000_v1"
-RUNTIME_ID = "gpu_rna_atac_torch_smoke"
+# Track the adapter rather than restating its runtime, so the two cannot drift.
+RUNTIME_ID = adapter.RUNTIME_ID
 
 
 def _sha256_file(path: Path) -> str:

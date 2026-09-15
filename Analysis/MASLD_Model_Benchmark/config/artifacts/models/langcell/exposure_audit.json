@@ -17,7 +17,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "0ebe526a3c441570403e5dd5734cab0e3e536563a3d623bead79dc8fffdc750b"
   },
-  "interpretation": "All released checkpoint modules carry May 2024 modification timestamps, before GSE289173 became public, so the sealed source and target labels are unexposed. The initialized Geneformer encoder nevertheless makes GSE136103 and Liver_Atlas encoder_seen, and the missing checkpoint-bound scLibrary UUID inventory leaves other pre-checkpoint cohorts unknown. Sealed use remains blocked because the separately hosted weights have no declared terms.",
+  "interpretation": "All released checkpoint modules carry May 2024 modification timestamps, before GSE289173 became public, so the held-back source and target labels are unexposed. The initialized Geneformer encoder nevertheless makes GSE136103 and Liver_Atlas encoder_seen, and the missing checkpoint-bound scLibrary UUID inventory leaves other pre-checkpoint cohorts unknown. Held-back use remains blocked because the separately hosted weights have no declared terms.",
   "remaining_blockers": [
     "Obtain explicit checkpoint terms before downloading, executing, adapting, or redistributing any Drive module.",
     "After approval and terms resolution, acquire every required module, freeze SHA-256 values and state-dict key/shape/dtype manifests, and prove that their configuration files match.",

@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-cell-classical-baselines-smoke"
-description = "Donor-held-out five-method classical baseline screen on the frozen 1,000-cell Resource Atlas compatibility view; smoke metrics are descriptive and cannot support a champion"
+description = "Donor-held-out five-method classical baseline screen on the frozen 1,000-cell Resource Atlas compatibility view; smoke metrics are descriptive and cannot support a best model"
 wave = "smoke"
 status = "ready"
 prerequisites = []

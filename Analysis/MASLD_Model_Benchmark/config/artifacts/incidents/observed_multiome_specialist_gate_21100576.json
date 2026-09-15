@@ -1,0 +1,20 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "observed_multiome_specialist_gate_21100576",
+  "job_id": 21100576,
+  "artifact_path": "executions/model-check-330-21100576",
+  "artifact_sha256": "ce5705da25207caf03fa1406840f1e1fa8569e0a9eb7bc0d894821dcfb5272b3",
+  "stage_reached": "synthetic_tests_and_outcome_blind_baseline_axis_validation_complete",
+  "failure_class": "native_output_family_registry_mismatch",
+  "cause": "The first specialist gate locally labeled MultiVI and PeakVI as peak_accessibility_rate outputs and used a generic scooby identity. The frozen observed-multiome census defines MultiVI and PeakVI as joint_representation outputs and separately registers scooby_epicardioids and scooby_neurips as functional_track outputs.",
+  "detection": "Post-validation reconciliation against config/campaigns/observed_multiome_additive_census_revision_20260825.json.",
+  "scientific_impact": "The first gate cannot authorize any specialist comparison because it does not preserve the authoritative native output-family identities.",
+  "outcome_access": {
+    "new_development_outcomes_read": false,
+    "sealed_outcomes_read": false,
+    "candidate_predictions_read": false,
+    "candidate_metrics_calculated": false
+  },
+  "terminal_disposition": "failed_not_admissible",
+  "retry_policy": "Issue an immutable revision bound to the frozen candidate census, retain native functional-track and joint-representation lanes, and permit comparison with observed_atac_glm only through a separately identified prediction-level common-profile projection frozen before scoring."
+}

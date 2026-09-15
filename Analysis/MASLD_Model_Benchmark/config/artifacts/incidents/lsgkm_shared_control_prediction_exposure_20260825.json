@@ -1,0 +1,77 @@
+{
+  "schema_version": "masld-bench-protocol-exposure-incident-v1",
+  "incident_id": "lsgkm_shared_control_prediction_exposure_20260825",
+  "timestamp": "2026-08-25T06:27:58-04:00",
+  "task": "/root/enformer_sei_advance",
+  "campaign_id": "lsgkm_hepatocyte_atac_peak_exact_dinucleotide_null_v1",
+  "exposure_class": "single_shared_control_prediction_row_opened_during_schema_inspection",
+  "source_authority": {
+    "artifacts_path": "executions/model-cpu-train-604-21097189/fit/ARTIFACTS.json",
+    "artifacts_sha256": "9306d6352163a4ccabf06406709d3545b0a73cca1b47e07ab817bcae874a829e",
+    "prediction_member": "oof_predictions.tsv.gz",
+    "prediction_member_project_path": "executions/model-cpu-train-604-21097189/fit/oof_predictions.tsv.gz",
+    "prediction_member_sha256": "7b96aced402064e6a5d06a86e77d59cbce7be5377c3a47e30aadb6a96ad36c06"
+  },
+  "exposure_scope": {
+    "operation": "gzip TSV header inspection followed by one csv.DictReader row read",
+    "header_opened": true,
+    "data_rows_opened": 1,
+    "prediction_values_opened": 1,
+    "prediction_value_redacted_from_incident": true,
+    "exposed_model_id": "available_simple_controls",
+    "exposed_head_id": "zero",
+    "exposed_seed": 1103,
+    "exposed_assay_context_id": "HepG2_control",
+    "additional_prediction_rows_opened": false,
+    "control_file_reopened_after_incident_recognition": false
+  },
+  "explicit_exclusions": {
+    "reporter_outcomes_opened": false,
+    "reporter_counts_opened": false,
+    "development_labels_opened": false,
+    "sealed_features_opened": false,
+    "sealed_labels_or_outcomes_opened": false,
+    "benchmark_metrics_opened_or_calculated": false,
+    "control_selection_summary_opened": false,
+    "additional_control_prediction_values_opened": false,
+    "prediction_value_used_for_model_training": false,
+    "prediction_value_used_for_model_selection": false,
+    "prediction_value_used_for_threshold_or_calibration_choice": false
+  },
+  "affected_work": {
+    "lsgkm_scale_probe_started_before_exposure": true,
+    "lsgkm_scale_probe_completed_before_exposure": true,
+    "lsgkm_full_campaign_authorization_frozen_before_exposure": true,
+    "lsgkm_remaining_24_fits_started_before_exposure": true,
+    "lsgkm_training_inputs_affected": false,
+    "lsgkm_fit_commands_affected": false,
+    "lsgkm_predictions_affected": false,
+    "candidate_or_baseline_selection_affected": false
+  },
+  "impact_assessment": {
+    "label_leakage": false,
+    "metric_leakage": false,
+    "sealed_test_compromise": false,
+    "control_value_blinding_breach": true,
+    "scientific_interpretation": "The exposure was one prediction from the prespecified zero control and supplied no reporter label, outcome, metric, ranking, calibration, or model-selection information. It does not alter the LS-GKM fits, but the shared-control file is no longer wholly unseen by this task.",
+    "lsgkm_campaign_disposition": "continue_outcome_blind_training_and_prediction_generation",
+    "shared_control_disposition": "retain_as_prespecified_comparator_with_project_exposure_annotation"
+  },
+  "required_downstream_handling": {
+    "do_not_reopen_control_prediction_member_before_isolated_evaluation": true,
+    "bind_control_identity_and_member_hash_only_during_candidate_aggregation": true,
+    "freeze_lsgkm_candidate_prediction_hashes_before_control_or_outcome_evaluation": true,
+    "do_not_use_exposed_value_for_training_selection_calibration_or_thresholding": true,
+    "run_comparison_in_an_independent_evaluator_after_selection_lock": true,
+    "record_control_as_project_exposed_not_globally_unseen": true,
+    "carry_incident_id_into_evaluation_and_publication_provenance": true,
+    "no_repair_or_reselection_on_the_same_evaluation": true
+  },
+  "containment": {
+    "incident_reported_immediately_to_parent_agent": true,
+    "prediction_file_inspection_stopped": true,
+    "no_additional_prediction_or_outcome_value_inspection_authorized": true,
+    "incident_artifact_contains_no_prediction_value": true
+  },
+  "status": "contained_narrow_control_value_exposure_no_label_or_metric_leakage"
+}

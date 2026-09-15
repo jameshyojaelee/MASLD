@@ -11,7 +11,7 @@ needed: the checkpoint's ``fast_transformer_backend="flash"`` attention is
 mathematically ordinary scaled-dot-product self-attention over a fused QKV
 projection (``self_attn.Wqkv`` / ``self_attn.out_proj``); FlashAttention is a
 kernel-level optimization of the identical computation, not a different
-architecture.  The tokenization/embedding contract below (rank-like 51-bin
+architecture.  The tokenization/embedding requirements below (rank-like 51-bin
 digitization of nonzero, in-vocabulary genes; CLS-prepend; sample-without-
 replacement truncation to 1200 tokens; L2-normalized CLS hidden state) is
 taken from ``config/artifacts/models/scgpt/checkpoints.json``'s
@@ -28,7 +28,7 @@ manifest (the analogue of ``checkpoint_preflight.py``'s hash-then-load
 discipline; there is no scGPT bundle-staging module, so this adapter performs
 that verification itself), and only then loaded with
 ``torch.load(..., weights_only=True)`` -- PyTorch's own restricted unpickler,
-which admits only tensor/storage reconstruction and builtin containers, no
+which allows only tensor/storage reconstruction and builtin containers, no
 arbitrary global or class construction.  The Geneformer common-lane adapter
 already relies on this same mechanism for its own ``head_state.pt``.  Loading
 this checkpoint under ``weights_only=True`` was verified to succeed with the
@@ -38,7 +38,7 @@ allowlist untouched: the file is a plain ``collections.OrderedDict`` of
 Two upstream steps use an *unseeded* global RNG (the per-cell bin-tie-break
 randomization in ``_digitize``, and ``torch.randperm`` truncation sampling for
 cells with more than 1199 expressed in-vocabulary genes).  Per the frozen
-``sampling_warning`` in the registry contract, this adapter replaces both
+``sampling_warning`` in the registry requirements, this adapter replaces both
 draws with a per-row generator seeded from the row's own ``row_hash``, so
 tokenization is deterministic and invariant to cell processing order; native
 (non-common-lane) scGPT runs are expected to differ and are reported
@@ -74,7 +74,7 @@ MODEL_IDS = ("scgpt_continual",)
 HEAD_IDS = ("linear", "two_layer_mlp")
 EMBEDDING_POLICY = "cls_token_hidden_state_l2_normalized"
 
-# Frozen architecture contract -- from the acquisition-time exchange with the
+# Frozen architecture requirements -- from the acquisition-time exchange with the
 # team lead and confirmed against config/artifacts/models/scgpt/checkpoints.json.
 EMBEDDING_SIZE = 512
 D_HID = 512
@@ -898,7 +898,7 @@ def predict(request_path: Path, request: Mapping[str, Any], output: Path) -> Non
     probability_rows = []
     for position, row in enumerate(held):
         values = [float(v) for v in probabilities[position]]
-        # Deterministic tie-break identical to the sealed evaluator.
+        # Deterministic tie-break identical to the held-back evaluator.
         winner = min(range(len(roster)), key=lambda i: (-values[i], roster[i]))
         prediction_rows.append(
             {

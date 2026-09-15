@@ -22,7 +22,7 @@
   "canonical_selection_evidence": {
     "companion_log_file_id": 57423094,
     "companion_script_file_id": 57423091,
-    "interpretation": "This bundle is the only v2 bundle whose companion log records a completed epoch-1 validation, a best_model.pt save, and the pt_graph_sort_avg_pool run path. The publication archive's pretrain configuration loads pt_graph_sort_avg_pool_e1 and declares the final 1.2k architecture. The weight still requires safe state-dict inspection before admission.",
+    "interpretation": "This bundle is the only v2 bundle whose companion log records a completed epoch-1 validation, a best_model.pt save, and the pt_graph_sort_avg_pool run path. The publication archive's pretrain configuration loads pt_graph_sort_avg_pool_e1 and declares the final 1.2k architecture. The weight still requires safe state-dict inspection before inclusion.",
     "logged_training_cells": 24627572,
     "logged_validation_cells": 599926,
     "logged_validation_loss_epoch_1": 119.9956,

@@ -53,7 +53,7 @@
     "Resolve the incomplete runtime declaration and pass SLURM import, graph, pairing, missing-modality, sparse-memory, forward, backward, resume, deterministic seed, node-order, no-network, and numeric-tolerance probes after campaign approval.",
     "Hash every local training state, environment, graph, feature roster, output, and terminal disposition before any selection."
   ],
-  "interpretation": "SpaMosaic is relevant only when the observed assay topology supplies a legitimate connected mosaic design. None of the registered MASLD spatial sources currently provides an admitted, powered, rights-cleared bridge and external endpoint. The absence of an upstream checkpoint avoids pretraining contamination but does not avoid split, graph, bridge, imputation, or transductive leakage.",
+  "interpretation": "SpaMosaic is relevant only when the observed assay topology supplies a legitimate connected mosaic design. None of the registered MASLD spatial sources currently provides an included, powered, rights-cleared bridge and external endpoint. The absence of an upstream checkpoint avoids pretraining contamination but does not avoid split, graph, bridge, imputation, or transductive leakage.",
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_no_registered_task_no_sealed_spatial_source_no_admitted_native_bridge_and_no_verified_runtime",
   "verified_date": "2026-08-22"

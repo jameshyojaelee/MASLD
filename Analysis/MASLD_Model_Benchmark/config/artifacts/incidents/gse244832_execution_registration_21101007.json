@@ -1,0 +1,14 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "gse244832_execution_registration_21101007",
+  "detected_at": "2026-08-25",
+  "dataset_id": "gse244832",
+  "affected_job_ids": [21101007],
+  "finding": "The first CPU registration validation exited 127 after checksum validation because the batch runtime invoked an unavailable bare python command.",
+  "scientific_impact": "No unit test, query array read, registration artifact, prediction, biological outcome access, or metric occurred.",
+  "condition_values_read": false,
+  "biological_outcome_arrays_read": false,
+  "prediction_files_read": false,
+  "metric_files_produced": false,
+  "disposition": "environment_only_failure_superseded_by_explicit_frozen_python_runtime"
+}

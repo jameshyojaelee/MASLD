@@ -10,7 +10,7 @@
   "archive": {
     "name": "model_v1.1.tar.gz",
     "record_doi": "10.5281/zenodo.10685499",
-    "sha256": "UNRESOLVED",
+    "sha256": "3904fb66969bca0dd9b162955d9092f497b0769b6975caff70a17257901e68a1",
     "size_bytes": 30310810843,
     "source_md5": "546251b7c435f3b1dbe38e2e420ad57f",
     "url": "https://zenodo.org/api/records/10685499/files/model_v1.1.tar.gz/content"
@@ -22,7 +22,7 @@
     "duplicate_gene_symbols": "sum_before_alignment",
     "feature_identifier": "gene_symbol",
     "minimum_gene_overlap": 5000,
-    "normalization": "per_cell_total_10000_then_natural_log1p",
+    "normalization": "per_cell_total_10000_over_retained_model_genes_then_natural_log1p",
     "training_assay": "10x_Chromium_scRNA_or_snRNA",
     "zero_fill_warning": "Genes absent from the assay are structural missingness before alignment, not observed biological zeros. The adapter records overlap and the aligned-zero mask even though the released network requires a dense 28,231-gene vector."
   },
@@ -35,8 +35,8 @@
     "require_restricted_checkpoint_inspection_before_load": true,
     "require_traversal_safe_archive_staging": true
   },
-  "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The pinned official repository, Nature Methods/architecture text, complete Supplementary Table 1, and Zenodo record 10685499 were queried on 2026-08-22. The 30.3-GB archive body was not downloaded, extracted, or deserialized, so SHA-256, internal paths, layer-size files, and exact gene order remain unresolved.",
+  "schema_version": "masld-bench-upstream-checkpoint-preflight-v2",
+  "source_evidence": "The exact Zenodo v1.1 archive passed source-MD5, local SHA-256, size, traversal-safe staging, and weights-only inspection. The staged encoder, 28,231-gene order, pinned architecture source, isolated compatibility runtime, and frozen 50,000-cell label-free input are checksum-bound below.",
   "source_records": [
     {"identity": "scimilarity:LICENSE", "sha256": "938fb579905acc3f45d10f20cd18da74f2e754300220f9669d0e5c5698f85cac", "size_bytes": 556},
     {"identity": "scimilarity:README.rst", "sha256": "8f546d0cd763fcefb966d7694902af859897549f3cc5c37a8c9aea02699ea9f1", "size_bytes": 1853},
@@ -47,6 +47,17 @@
     {"identity": "Zenodo_10685499_API_response_queried_2026-08-22", "sha256": "1b0553fcaa905a0b29047b83d438f389ec6694b05b48fb9b6c8b5c5c4904049a", "size_bytes": 5335},
     {"identity": "Heimberg_et_al_2024_Supplementary_Table_1", "sha256": "3363c906dd5368dcc1f740fb7ec872d34b0875425e1c68db3cb6406a2c847792", "size_bytes": 329148, "url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-024-08411-y/MediaObjects/41586_2024_8411_MOESM3_ESM.xlsx"}
   ],
-  "weight_content_downloaded": false,
+  "staged_model_contract": {
+    "encoder_sha256": "a08f023788bdbded191e2d9344e5d4240ffc7d7505eca4e0b7a37526b858d19f",
+    "gene_order_rows": 28231,
+    "gene_order_sha256": "0a9aeacf7fc19399426273d8cfab8683253ec56b51be556d42edd115f125b8ca",
+    "strict_weights_only_restore": true
+  },
+  "runtime_contract": {
+    "artifacts_manifest_sha256": "8f66e2e478742665072a23ed4b115346830fcee516094c59f20164c94b3a5a4a",
+    "path": "executions/scimilarity-v1-1-compat-runtime-21079070",
+    "runtime_archive_sha256": "e2d0a97c8631d3cdacb4234fa7bc167ddd8fc391c3dd2a2b7dd23ebaebe88548"
+  },
+  "weight_content_downloaded": true,
   "weight_license": "CC-BY-SA-4.0"
 }

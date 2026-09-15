@@ -15,7 +15,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class SlurmError(ValueError):
-    """Raised when a request violates the project Slurm contract."""
+    """Raised when a request does not meet the project Slurm requirements."""
 
 
 _PARTITION_LIMIT_SECONDS = {

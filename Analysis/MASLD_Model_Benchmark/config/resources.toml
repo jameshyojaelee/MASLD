@@ -43,8 +43,17 @@ reason = "Both files were truncated and failed gzip integrity testing on 2026-08
 [redistribution]
 default_data_policy = "release_manifests_hashes_source_fetchers_splits_code_and_aggregate_metrics_only"
 human_raw_data_policy = "do_not_rehost"
-controlled_data_policy = "no_training_or_weight_release_without_written_permission"
-model_weight_policy = "dataset_level_derivative_use_review_required"
+# 2026-09-07 OWNER OVERRIDE. The two values below previously read
+#   controlled_data_policy = "no_training_or_weight_release_without_written_permission"
+#   model_weight_policy    = "dataset_level_derivative_use_review_required"
+# The owner states those were written by an agent, not by them, and no such restriction was ever
+# imposed. They are lifted. Every source they were applied to is an open GEO deposit with no
+# licence detected and no DUA (gse267145 rights_contract.json: explicit_data_license_detected =
+# false, new_dua_or_controlled_access_required = false). The genuine obligation that REMAINS is
+# human_raw_data_policy above: do not rehost raw or processed human DATA. Model weights are a
+# derived aggregate and are releasable. See docs/decisions/2026-09-07-derivative-weight-release.md
+controlled_data_policy = "no_raw_or_processed_data_rehosting; derivative_model_weights_releasable"
+model_weight_policy = "releasable_owner_decision_2026_09_07"
 
 [cluster]
 default_qos = "nslab"
@@ -125,6 +134,35 @@ memory_gb = 64
 wall_time = "04:00:00"
 gpus = 1
 accelerator = "l40s"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.gpu_b6k_training]
+partition = "gpu"
+cpus = 16
+memory_gb = 170
+# Training wall time, not the four-hour smoke budget.  With the three scientific
+# wave actions (prepare, fit, predict) the planner allows
+# (324000 - 900) // 3 = 107700 seconds, or 29.92 hours, per action.
+# Memory is 170 GB rather than the 200 GB of gpu_single so that two
+# single-GPU jobs fit one 350 GB B6K node, which carries two GPUs.
+wall_time = "90:00:00"
+gpus = 1
+accelerator = "b6k"
+qos = "nslab"
+admission_blocking = false
+blockers = []
+
+[profiles.gpu_rna_atac_b6k]
+partition = "gpu"
+cpus = 4
+memory_gb = 64
+# Identical to gpu_rna_atac_smoke so metadata.adapter_timeout_seconds stays 4500.
+# The accelerator is the only field that differs.
+wall_time = "04:00:00"
+gpus = 1
+accelerator = "b6k"
 qos = "nslab"
 admission_blocking = false
 blockers = []

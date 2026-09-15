@@ -1,0 +1,120 @@
+{
+  "audit_date": "2026-08-25",
+  "base_registry_files": [
+    {
+      "registry_file": "config/models/regulatory_sequence.toml",
+      "registry_file_sha256": "bccce82a8a949eb81b73246848dcf7e80b164e464992fdb9b9fcb10c72181c1b"
+    }
+  ],
+  "base_registry_unchanged": true,
+  "binding_consequences": {
+    "development_execution_recorded": false,
+    "execution_authorized": false,
+    "may_enter_a_sealed_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "permitted_role": "registered observed_multiome candidate; no execution, no metric and no ranking until the fixture, the five missing modality-ablation baselines and an external seal are bound",
+    "rna_conditioned_atac_claim_allowed": false,
+    "sealed_champion_eligible": false,
+    "sealed_scoring_authorized": false
+  },
+  "biological_data_read": false,
+  "bound_evidence": [
+    {
+      "path": "config/evaluation/observed_multiome_task_capabilities.toml",
+      "sha256": "6c2e92a78af315a0412a949de208daea5ec28d30fdd2e421a7762d3ffe6252b8"
+    },
+    {
+      "path": "config/evaluation/family_native_tournament.toml",
+      "sha256": "acd9f333bd4d639d6df6b3017c1bf9a040ee921195b59b01fee934f1726a0495"
+    },
+    {
+      "path": "executions/model-check-288-21098630/ARTIFACTS.json",
+      "sha256": "f7705f963286fd6d2dda3d0677cd72515b34e7be0a4aab6f8bbdfc87003e5472"
+    },
+    {
+      "path": "executions/model-check-288-21098630/candidate_models.tsv",
+      "sha256": "4257cdbefea40253846ab9158500363d061a57b8245101ee602f4320e0d3e2d8"
+    },
+    {
+      "path": "config/artifacts/models/epibert/checkpoints.json",
+      "sha256": "d4eb045c2b7d93396db5065683423ea5a9a29bdf7a9b854f3ebc4e2248527c80"
+    }
+  ],
+  "checkpoint_opened": false,
+  "closes": "OVERALL_PLAN.md completion criterion 1: every required model family must carry an exact-checkpoint, license, exposure, runtime and native-task disposition. This record supplies the missing native-task axis only.",
+  "consumed_by_runtime": false,
+  "disposition": "registered_candidate_execution_not_authorized",
+  "disposition_reason": "candidate_in_capability_registry_and_additive_census_but_no_fixture_pass_and_no_external_seal",
+  "disposition_scope": "Native-task disposition only. This record adds no capability, opens no checkpoint, deserializes nothing, and bypasses no license gate. The base registry under config/models/ is unchanged.",
+  "family_id": "epibert",
+  "license_gate_bypassed": false,
+  "metrics_calculated": false,
+  "model_dispositions": [
+    {
+      "capability_track": "observed_atac_conditioned_track_candidates",
+      "census_output_family": "functional_track",
+      "census_query_modalities": [
+        "dna_sequence",
+        "explicitly_observed_single_nucleus_atac"
+      ],
+      "census_role": "observed_atac_conditioned_functional_track",
+      "disposition": "registered_candidate_execution_not_authorized",
+      "model_id": "epibert",
+      "reason": "Registered as a candidate under observed_atac_conditioned_track_candidates in config/evaluation/observed_multiome_task_capabilities.toml and as a observed_atac_conditioned_functional_track row in the additive census executions/model-check-288-21098630/candidate_models.tsv. Both authorities record execution_authorized = false. No candidate has passed the exact masked-profile fixture with topology-matched baseline evidence, five modality-ablation baselines are still unregistered, and no topology-matched external held-back cohort is bound. This is a registered, unexecuted candidate, not a blocked family.",
+      "tournament_disposition_rule": "execute_only_with_observed_atac_on_observed_multiome_or_native_observed_context_variant_diagnostic"
+    }
+  ],
+  "model_ids": [
+    "epibert"
+  ],
+  "outcomes_read": false,
+  "overlay_id": "model_census_native_task_disposition_20260825",
+  "record_only": true,
+  "registry_facts_at_audit": {
+    "epibert": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "67684dc1f1562955a726f56fc7c53b758afe666f1138d833615fa1def46cf651",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "code_MIT_weight_CC-BY-4.0",
+      "registry_file": "config/models/regulatory_sequence.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "variant_to_regulation"
+      ]
+    }
+  },
+  "required_future_baseline_ids": [
+    "masked_modality",
+    "observed_atac_glm",
+    "observed_atac_only",
+    "rna_only",
+    "shuffled_modality"
+  ],
+  "root_cause": {
+    "additive_census": "executions/model-check-288-21098630",
+    "bundles_with_observed_multiome_task_fit": [
+      "epcotv2"
+    ],
+    "capability_registry": "config/evaluation/observed_multiome_task_capabilities.toml",
+    "census_facts": {
+      "candidate_fixture_requirement_satisfied": false,
+      "candidate_model_count": 10,
+      "census_requirement_satisfied": true,
+      "execution_authorized": false,
+      "external_champion_claim_allowed": false,
+      "external_seal_bound": false,
+      "global_registry_integration_allowed": false,
+      "primary_eligible_models": [],
+      "profile_fixture_passed_models": [],
+      "rna_conditioned_atac_claim_allowed": false
+    },
+    "statement": "epibert, scooby_epicardioids and scooby_neurips carry no observed_multiome key in task_fit. Across all 106 bundles under config/artifacts/models/ only epcotv2 has one. The task is held deliberately outside config/tasks so it cannot mutate the frozen global census, so no TaskSpec-side roster carries the disposition either. All three models are nonetheless registered candidates in the capability registry and in the additive census.",
+    "task_spec_outside_config_tasks": true,
+    "task_status": "planned_registration"
+  },
+  "schema_version": "masld-bench-native-task-disposition-v1",
+  "sealed_data_read": false,
+  "supersedes_nothing": true,
+  "task_id": "observed_multiome",
+  "unrestricted_deserializer_used": false
+}

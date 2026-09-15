@@ -62,7 +62,7 @@ SCOPE_LABEL = {
 CODING_COLS = ["protein_altering_pip_mass", "canonical_splice_pip_mass"]
 ARCH_COLS = CODING_COLS + ["synonymous_or_utr_pip_mass", "other_noncoding_pip_mass"]
 
-# Published instance-weighted values from the immutable candidate. Asserted, not
+# Published instance-weighted values from the read-only candidate. Asserted, not
 # assumed, so this script cannot silently drift off the claim it is testing.
 PUBLISHED = {
     ("tier1_direct_masld_pdff", "protein_altering_pip_mass"): 0.157736519057125,

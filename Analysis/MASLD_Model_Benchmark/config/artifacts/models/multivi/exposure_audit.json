@@ -17,7 +17,7 @@
     "scope": "task_specific_local_training_pairing_and_held_donor_behavior",
     "sha256": "b893ff9e8f5ba82574f3982a8731b045de84d9b8e1816373150b1f422bbd66f8"
   },
-  "interpretation": "Locally trained MultiVI avoids foundation-checkpoint contamination if every fitted object stays inside its outer donor fold. The dominant leakage risks are held-donor peak unions, gene/region filtering, data-dependent dimensions, categorical batches, query updating, early stopping, calibration, and confusing structural missingness with zero. Unmodified scvi-tools infers modality presence from nonzero row sums, which violates the explicit-mask project contract.",
+  "interpretation": "Locally trained MultiVI avoids foundation-checkpoint contamination if every fitted object stays inside its outer donor fold. The dominant leakage risks are held-donor peak unions, gene/region filtering, data-dependent dimensions, categorical batches, query updating, early stopping, calibration, and confusing structural missingness with zero. Unmodified scvi-tools infers modality presence from nonzero row sums, which does not meet the explicit-mask project requirements.",
   "remaining_blockers": [
     "Implement and review an explicit missing-modality-mask adapter or obtain a documented project contract exception; prove observed all-zero and structurally missing rows remain distinguishable.",
     "Activate GSE296875 only after donor/barcode/well/reference/peak/QC and same-nucleus joins pass.",

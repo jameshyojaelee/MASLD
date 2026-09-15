@@ -5,6 +5,17 @@ expected_registry_model_count = 136
 expected_artifact_bundle_count = 104
 required_bundle_files = ["checkpoints.json", "development_crosswalk.json", "exposure_audit.json"]
 
+# Directories under config/artifacts/models/ that are NOT census bundles.
+# They hold cross-cutting, task-scoped campaign disposition records whose
+# subject models each already own a census bundle of their own, so they can
+# never be group bindings: binding those subjects here would re-resolve them
+# away from their own directories and orphan those instead. Registering both
+# takes the audit root from 104 bundles / 2 orphans to 89 / 17.
+# Every entry is held to [non_census_record_rules], which are stricter than
+# the census-bundle requirements, not looser. A directory that is neither derived
+# from the census nor declared here still fails exactly as before.
+non_census_record_directories = ["observed_multiome_integration", "remaining_multimodal_families"]
+
 [[group_bindings]]
 bundle_id = "geneformer"
 model_ids = ["geneformer_v1_10m", "geneformer_v2_104m", "geneformer_v2_316m"]
@@ -100,3 +111,13 @@ model_ids = ["graph_degree", "graph_source_count", "regularized_linear_evidence"
 [[group_bindings]]
 bundle_id = "negative_controls"
 model_ids = ["shuffled_outcome"]
+
+[non_census_record_rules]
+# Enforced by tests/contract/test_registry_files.py and guarded against
+# regression by tests/unit/test_non_census_record_directories.py.
+must_not_shadow_a_census_bundle_id = true
+must_not_contain_any_required_bundle_file = true
+must_contain_at_least_one_disposition_record = true
+disposition_record_glob = "disposition_*.json"
+named_registry_model_ids_must_own_their_own_bundle = true
+undeclared_directory_in_the_audit_root_is_a_failure = true

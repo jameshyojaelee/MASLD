@@ -1,0 +1,68 @@
+{
+  "schema_version": "masld-bench-freeze-completion-signal-v1",
+  "record_id": "freeze_completion_signal_definition_20260825",
+  "audit_date": "2026-08-25",
+  "purpose": "Define what it means for a campaign freeze to have LANDED, so a reader does not infer completion from an output file that appears early.",
+  "the_signal": {
+    "landed_requires_BOTH": [
+      "a COMPLETE marker on the execution's frozen tree",
+      "a terminal job state in sacct"
+    ],
+    "NOT_sufficient": "the presence of a candidate directory under candidates/",
+    "why": "freeze_campaign writes the candidate BEFORE the job's remaining checks run. A candidate on disk means the freeze got far enough to write one. It says nothing about whether the scope check, control validation, or resource-stability check that follows it passed."
+  },
+  "evidence": {
+    "verified_directly": [
+      {
+        "version": "v10",
+        "candidate_present": "candidates/v1-rna-atac-cobolt-5seed-smoke-v10--6cbef395fdccc389",
+        "subsequent_job_outcomes": [
+          "executions/cobolt-v10-prefreeze-resource-stability-21104557.failed  (no COMPLETE)"
+        ],
+        "also_passed": "executions/cobolt-v10-revision-scope-validation-21106245 (COMPLETE)",
+        "job_detail": "21104557, masked name model-cpu-freeze-351, FAILED at 00:26:27, exit 1:0",
+        "failure_reason": "revision scope violated: a seed, fold, model, hyperparameter, dataset binding, split, runtime, resource profile, evaluator, or endpoint differs from the superseded revision. Root cause diagnosed by the team lead as registry_snapshot_sha256, which moved because the campaign TOML is itself one of the 14 registry files, so the edit a revision REQUIRES tripped the guard.",
+        "resolution": "A standalone validator was written against the existing candidate rather than re-freezing; 21106245 passed 13/13.",
+        "conclusion": "Candidate existed while the prefreeze job failed 26 minutes in. Candidate presence did not mean landed.",
+        "verified_by": "independent re-derivation on 2026-08-25 after the team lead supplied the masked job id"
+      },
+      {
+        "version": "v11",
+        "candidate_present": "candidates/v1-rna-atac-cobolt-5seed-smoke-v11--e17be3dab9ba48cb",
+        "subsequent_job_outcomes": [
+          "executions/cobolt-v11-prefreeze-resource-stability-21108035.failed  (no COMPLETE)",
+          "executions/cobolt-v11-cpu-control-validation-21109496.failed  (no COMPLETE)"
+        ],
+        "also_passed": "executions/cobolt-v11-revision-scope-validation-21109214 (COMPLETE)",
+        "conclusion": "Candidate existed while two subsequent validation jobs failed. Candidate presence did not mean landed."
+      },
+      {
+        "version": "v12",
+        "candidate_present": "candidates/v1-rna-atac-cobolt-5seed-smoke-v12--3972f43112b8ecc4, created 14:09",
+        "job_state": "21110827 still RUNNING",
+        "tree_state": "executions/cobolt-v12-prefreeze-resource-stability-21110827.staging, no COMPLETE marker",
+        "conclusion": "Live instance of the same pattern at the time of writing."
+      }
+    ],
+    "asserted_but_not_verified_here": {
+      "entries": [],
+      "retained_deliberately": true,
+      "why_retained": "Kept as an empty slot on purpose. Every claim in this record is now independently verified, but the slot and the freeze-job assertion that guards it remain so that any future addition must declare its verification status rather than inheriting the credibility of the verified entries around it.",
+      "history": "v10 was originally recorded here because a search for its execution tree found nothing. The trees carry masked job names (model-cpu-freeze-351 for v10, model-cpu-freeze-352 for v11), so a name-based search missed them. Supplying the job id made it verifiable in seconds. The entry was upgraded to verified rather than left understated."
+    },
+    "verified_case_count": 3
+  },
+  "how_this_nearly_misled_a_reader": {
+    "what_happened": "An agent holding a cascade on 'has v12 landed' used two signals: an unfrozen .staging tree and a zero count of v12 candidate directories. The candidate directory appeared while the job was still running, flipping one signal without the underlying state changing.",
+    "correct_handling": "Report that one signal flipped and the other did not, and read it as further along rather than landed. Do not infer completion from a directory appearing.",
+    "the_general_form": "A progress artifact written partway through a process is not a completion signal. Prefer the marker the process writes LAST, and prefer a terminal job state over any on-disk artifact.",
+    "related": "This is the same family as 'the filesystem is the authority, the bundle is a claim about it' and 'checking for the field name you expect rather than the field that exists'. In each case the check tested something adjacent to the question rather than the question.",
+    "masked_name_corollary": "Execution trees carry masked job names, so searching for a tree by version string can return nothing while the tree exists. Resolve via sacct or scontrol on the job id, as with the 21108035 reconciliation. A search that fails to find something is not evidence it is absent."
+  },
+  "incidental_reconciliation": "Job 21108035, observed earlier on 2026-08-25 as a FAILED job named model-cpu-freeze-352 and reported at the time as 'the config freeze never landed', is the same event as cobolt-v11-prefreeze-resource-stability-21108035.failed. The masked job name and the execution directory name refer to one job.",
+  "sealed_outcomes_read": false,
+  "models_fit": [],
+  "models_scored": [],
+  "files_modified": 0,
+  "revision": "revision_2_20260825_v10_upgraded_to_verified"
+}

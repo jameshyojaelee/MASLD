@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synthetic L40S admission probe for exact PeakVI and MultiVI modules."""
+"""Synthetic L40S inclusion probe for exact PeakVI and MultiVI modules."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Any, Sequence
 
 
 class MultiomeProbeError(ValueError):
-    """Raised when the synthetic observed-multiome contract differs."""
+    """Raised when the synthetic observed-multiome requirement differs."""
 
 
 def validate_state_row_sums(

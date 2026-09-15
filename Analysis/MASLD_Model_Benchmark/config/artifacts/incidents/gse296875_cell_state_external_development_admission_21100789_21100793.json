@@ -1,0 +1,39 @@
+{
+  "schema_version": "masld-bench-nonscientific-admission-incident-v1",
+  "incident_id": "gse296875_cell_state_external_development_admission_21100789_21100793",
+  "jobs": [
+    {
+      "job_id": "21100789",
+      "state": "FAILED",
+      "elapsed_seconds": 5,
+      "exit_code": "1:0",
+      "failure_stage": "canonical_wrapper_source_binding",
+      "failure": "SLURM spool basename slurm_script was not the canonical wrapper basename",
+      "stderr_path": "executions/model-data-330-21100789.err",
+      "stderr_sha256": "ab0b0be743cba2bddbc3a39354cc3a6d1aef22b188be1ceff559d8dd912a8cc7"
+    },
+    {
+      "job_id": "21100793",
+      "state": "FAILED",
+      "elapsed_seconds": 4,
+      "exit_code": "1:0",
+      "failure_stage": "runtime_lock_probe_import",
+      "failure": "PYTHONPATH was exported after the control-plane runtime probe",
+      "stderr_path": "executions/model-data-330-21100793.err",
+      "stderr_sha256": "0435f07b1e9cc3b45e84ffd9d4109c6dfa40e31775a10f60219767f319488c39"
+    }
+  ],
+  "scientific_script_launched": false,
+  "biological_content_parsed": false,
+  "biological_matrix_values_read": false,
+  "development_labels_parsed": false,
+  "development_metric_calculated": false,
+  "model_fit": false,
+  "prediction_emitted": false,
+  "gse296875_atac_read": false,
+  "gse289173_feature_or_outcome_read": false,
+  "sealed_sources_accessed": [],
+  "scientific_result_created": false,
+  "terminal_disposition": "superseded_nonscientific_admission_failure",
+  "corrective_attempt": "21100798"
+}

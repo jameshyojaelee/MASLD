@@ -21,7 +21,7 @@
     "scope": "split_local_inductive_features_graph_sampling_coverage_and_endpoint_role",
     "sha256": "242a03a5518c7313b562d65d6ef8c15765300ccd2edd4b867685d1b6a6be13a5"
   },
-  "interpretation": "GraphSAGE is the only model in this audit wave that can produce a principled score for a node absent from training topology, and only because the frozen recipe prohibits node-ID embeddings and supplies outcome-independent node features with root_weight=true. This conditional inductive property makes future sealed source recovery technically feasible. It does not make the relation-agnostic projection typed, and there is no current sealed source, so no champion claim is available.",
+  "interpretation": "GraphSAGE is the only model in this audit wave that can produce a principled score for a node absent from training topology, and only because the frozen recipe prohibits node-ID embeddings and supplies outcome-independent node features with root_weight=true. This conditional inductive property makes future held-back source recovery technically feasible. It does not make the relation-agnostic projection typed, and there is no current held-back source, so no best-model claim is available.",
   "known_incidents_and_biases": [
     "GraphSAGE is not inherently leakage-proof or inductive. A trainable node-ID table, full-graph degree feature, target-derived roster, or target-derived attribute would make the project model transductive or contaminated.",
     "LinkNeighborLoader documents that supervision edges are not masked from message passing by default. Every held-source, held-block, and validation edge must be physically removed before loader construction and verified by sampled global edge IDs.",

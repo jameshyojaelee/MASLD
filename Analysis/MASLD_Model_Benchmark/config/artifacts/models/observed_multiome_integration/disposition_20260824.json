@@ -1,0 +1,260 @@
+{
+  "schema_version": "masld-bench-observed-multiome-integration-disposition-v2",
+  "audit_date": "2026-08-24",
+  "status": "FAIL_CLOSED_TASKSPEC_EXECUTION_BLOCKED_AND_NO_ADMITTED_MODEL_LANE",
+  "scope": "Outcome-blind reconciliation of checkpoint, code, license, runtime, reference, pairing, and existing execution-manifest evidence for MultiVI, scGLUE, MOFA+, and Seurat WNN. Only JSON/TOML authorities, ARTIFACTS manifests, source hash inventories, and current implementation hashes were inspected. No model artifact, matrix, prediction, evaluator output, development outcome, or sealed outcome was opened.",
+  "task_gate": {
+    "task_id": "observed_multiome",
+    "registry_status_observed": "planned_registration",
+    "canonical_task_spec_exists": false,
+    "standalone_task_spec_exists": true,
+    "task_spec_paths": {
+      "config/tasks/observed_multiome.toml": false,
+      "config/evaluation/observed_multiome_task.toml": true
+    },
+    "standalone_task_spec": {
+      "path": "config/evaluation/observed_multiome_task.toml",
+      "sha256": "abc634ea96718031d7212c4a1229fe3fd84c626d8ad46d75fd68fda91ccdb729",
+      "schema_version": "masld-bench-task-v1",
+      "document_status": "candidate",
+      "registered_in_config_tasks": false,
+      "kept_outside_config_tasks_so_it_cannot_mutate_the_frozen_census": true,
+      "datasets_sealed": [],
+      "execution_blocked_by_its_own_admission_gate": "This standalone TaskSpec does not change the frozen global model census or historical exposure audits; execution remains blocked until a prospective global census revision binds every admitted model and new baseline."
+    },
+    "standalone_development_gate": {
+      "path": "config/evaluation/observed_multiome_development_gate.toml",
+      "sha256": "78cff35fa0cec02b06091c8bb13ac2da4f6e289ce845abffa9ba4f1eed06cff3",
+      "global_census_revision_required_before_execution": true,
+      "model_promotion_allowed": false,
+      "champion_claim_allowed": false,
+      "selection_lock_allowed": false,
+      "external_seal_bound": false
+    },
+    "external_seal_bound": false,
+    "model_admission_complete": false,
+    "execution_authorized": false,
+    "reason": "The shared tournament registry is modified and not frozen; no TaskSpec exists at the canonical registration path config/tasks/observed_multiome.toml, and the standalone TaskSpec parked outside config/tasks holds execution closed on its own terms pending a prospective global census revision; and none of the four named method identities has a complete current inclusion chain for this task."
+  },
+  "reference_and_pairing_contract": {
+    "development_fixture": "gse296875_rna_atac_smoke_1000_v1",
+    "nuclei": 1000,
+    "donors": 39,
+    "outer_unit": "donor",
+    "pairing": "same_nucleus",
+    "join_key": "well_id+raw_10x_barcode",
+    "project_genome": "GRCh38.p14",
+    "project_genome_sha256": "9489780d014865df158afc650e1f0ccc204b3a9878e147c1aae2ac982df26215",
+    "project_gtf": "GENCODE_v49",
+    "project_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "peak_coordinates": "BED_0_based_half_open",
+    "missing_as_zero": false,
+    "held_atac_available_to_rna_only_inference": false,
+    "gse244832_rule": "same_sample_different_aliquot; never same-cell or same-nucleus rows",
+    "cells_or_nuclei_are_biological_replicates": false,
+    "model_specific_pairing": {
+      "multivi": "same-nucleus rows and explicitly separate unpaired rows are native; false aliquot pairing is forbidden",
+      "scglue": "unpaired SCGLUE may use distinct modality rows; PairedSCGLUE obs-name pairing requires exact same-nucleus identities",
+      "mofaplus": "views may align only at a true same-nucleus row or an explicitly declared donor-by-cell-state pseudobulk unit",
+      "seurat_wnn": "native WNN requires observed modalities on the same ordered cell or nucleus; RNA-only and different-aliquot rows are unsupported"
+    }
+  },
+  "model_dispositions": {
+    "multivi": {
+      "code_identity": "scverse/scvi-tools@56520c713eb1d2b245c72a0f60bc393b74198c91+PyPI:scvi-tools==1.5.0.post1",
+      "code_license": "BSD-3-Clause",
+      "wheel_sha256": "d868c86332f819b8d79846ea0e36ec6eef26c3fafeb03ce7a239f1ddefb1c976",
+      "upstream_checkpoint": "none",
+      "project_checkpoint_state": "five smoke-only outer-fold state dictionaries exist but are not admitted checkpoints",
+      "runtime_state": "portable scvi-tools runtime and torch 2.6.0+cu124 overlay passed metadata/import probes; GPU probe remains pending",
+      "execution_state": "explicit-state bridge, donor-held preparation, RNA-only-query fit/predict, and development evaluation manifests passed; evaluator source later drifted",
+      "observed_multiome_role": "candidate_in_planned_registry_only",
+      "admitted": false,
+      "gate": "BLOCKED_TASKSPEC_EXECUTION_BLOCKED_UNPROMOTED_MASK_AND_PROFILE_FIXTURES_GPU_PROBE_PENDING_AND_EVALUATOR_SOURCE_DRIFT",
+      "gate_superseded_20260825": "BLOCKED_NO_TASKSPEC_UNPROMOTED_MASK_AND_PROFILE_FIXTURES_GPU_PROBE_PENDING_AND_EVALUATOR_SOURCE_DRIFT",
+      "observed_multiome_authority_presence": {
+        "observed_multiome_task_spec": "absent",
+        "capabilities": "joint_representation_candidates",
+        "family_native_tournament": "additional_native_models, translator_models",
+        "additive_census_model_check_288": "observed_multiome_joint_representation",
+        "summary": "the only one of the four registered as a task candidate"
+      }
+    },
+    "scglue": {
+      "code_identity": "gao-lab/GLUE@091bdbbdb3dd6d652ed4677200b034ee3c85dae1+tag:v0.4.1",
+      "code_license": "MIT",
+      "upstream_checkpoint": "none",
+      "project_checkpoint_state": "smoke-only SCGLUE and PairedSCGLUE state dictionaries exist but are not admitted checkpoints",
+      "runtime_state": "portable exact v0.4.1 source runtime passed; GPU probe remains pending and external dill loading remains prohibited",
+      "execution_state": "donor-held same-nucleus latent retrieval manifests passed without model access to the hidden pair map; no RNA-to-ATAC profile was executed",
+      "observed_multiome_role": "latent_development_integration_only_not_registered_for_task",
+      "admitted": false,
+      "gate": "BLOCKED_TASKSPEC_EXECUTION_BLOCKED_LATENT_ONLY_NO_PROFILE_OR_SEALED_ENDPOINT_GPU_PROBE_PENDING",
+      "gate_superseded_20260825": "BLOCKED_NO_TASKSPEC_LATENT_ONLY_NO_PROFILE_OR_SEALED_ENDPOINT_GPU_PROBE_PENDING",
+      "observed_multiome_authority_presence": {
+        "observed_multiome_task_spec": "absent",
+        "capabilities": "absent",
+        "family_native_tournament": "absent",
+        "additive_census_model_check_288": "absent",
+        "summary": "appears in no observed-multiome authority at all. The standalone TaskSpec's existence is irrelevant to this subject."
+      }
+    },
+    "mofaplus": {
+      "code_identity": "bioFAM/mofapy2@68c5bee640a643dc4fbfe37c7a0c8001cb318358+PyPI:mofapy2==0.7.4",
+      "code_license": "LGPL-3.0",
+      "sdist_sha256": "3a8801cff9b88b547ca9331d93ceb413822f10fd2f47d8f9a7d877cb7b500aca",
+      "wheel_sha256": "9224d77f93167f5edb0cce1e682c7dd22065e62140c79b8fb397769f5fa2a466",
+      "upstream_checkpoint": "none",
+      "project_checkpoint_state": "no fitted HDF5 or execution manifest exists",
+      "runtime_state": "no frozen runtime or numerical/HDF5 probe exists",
+      "execution_state": "no execution evidence",
+      "observed_multiome_role": "future_nonpromotable_development_factor_analysis_only",
+      "admitted": false,
+      "gate": "BLOCKED_TASKSPEC_EXECUTION_BLOCKED_NO_RUNTIME_NO_EXECUTION_AND_NO_FROZEN_UNSEEN_SAMPLE_TRANSFORM",
+      "gate_superseded_20260825": "BLOCKED_NO_TASKSPEC_NO_RUNTIME_NO_EXECUTION_AND_NO_FROZEN_UNSEEN_SAMPLE_TRANSFORM",
+      "observed_multiome_authority_presence": {
+        "observed_multiome_task_spec": "absent",
+        "capabilities": "absent",
+        "family_native_tournament": "absent",
+        "additive_census_model_check_288": "absent",
+        "summary": "appears in no observed-multiome authority at all. The standalone TaskSpec's existence is irrelevant to this subject."
+      }
+    },
+    "seurat_wnn": {
+      "code_identity": "satijalab/seurat@4c0f2dc16fad4e8f0d7b5c98321d8bcb18caa13a+CRAN:Seurat==5.5.1",
+      "code_license": "MIT",
+      "source_sha256": "9614ef02d3e1010c40be5916a309103a76c4221a667cbc4b312e5126459a5821",
+      "upstream_checkpoint": "not_applicable",
+      "project_checkpoint_state": "no native WNN checkpoint or frozen inductive transform exists",
+      "runtime_state": "Seurat 5.5.1 portable runtime passed and resolved the source archive SHA-256; dependency redistribution remains separately governed",
+      "execution_state": "a separate seurat_wnn_bridge identity passed bounded same-nucleus retrieval manifests and created local RDS objects; this is not native WNN admission",
+      "observed_multiome_role": "mandatory_transductive_development_baseline_named_in_the_standalone_taskspec_baseline_model_ids",
+      "admitted": false,
+      "gate": "BLOCKED_TASKSPEC_EXECUTION_BLOCKED_NO_NATIVE_WNN_EXECUTION_NO_FROZEN_QUERY_TRANSFORM_AND_BRIDGE_IDENTITY_NONINHERITANCE",
+      "gate_superseded_20260825": "BLOCKED_NO_TASKSPEC_NO_NATIVE_WNN_EXECUTION_NO_FROZEN_QUERY_TRANSFORM_AND_BRIDGE_IDENTITY_NONINHERITANCE",
+      "observed_multiome_authority_presence": {
+        "observed_multiome_task_spec": "baseline_model_ids",
+        "capabilities": "joint_representation_candidates, registered_baseline_models",
+        "family_native_tournament": "mandatory_baselines",
+        "additive_census_model_check_288": "same_nucleus_transductive_joint_representation",
+        "summary": "registration upgraded by the standalone TaskSpec, which names it in baseline_model_ids alongside lsi and peakvi. The prior qualifier 'in planned registry only' is now understated. Registration changed; admission did not."
+      },
+      "observed_multiome_role_superseded_20260825": "mandatory_transductive_development_baseline_in_planned_registry_only"
+    }
+  },
+  "authority_to_execution_reconciliation": [
+    {
+      "model_id": "multivi",
+      "authority_state": "source inspected; environment unresolved; no install or training at authority freeze",
+      "later_evidence": "portable runtime plus bounded smoke manifests exist",
+      "promotion_state": "not promoted into model admission; registry remains admission-blocking"
+    },
+    {
+      "model_id": "scglue",
+      "authority_state": "source inspected; environment unresolved; no install or training at authority freeze",
+      "later_evidence": "portable exact-source runtime plus bounded latent retrieval manifests exist",
+      "promotion_state": "not promoted into observed-multiome admission; registry supports only cell-state mapping"
+    },
+    {
+      "model_id": "mofaplus",
+      "authority_state": "source inspected; runtime and execution unresolved",
+      "later_evidence": "none",
+      "promotion_state": "deferred and nonpromotable"
+    },
+    {
+      "model_id": "seurat_wnn",
+      "authority_state": "source archive SHA unresolved and no download, runtime, fit, or test at authority freeze",
+      "later_evidence": "portable Seurat runtime resolved the archive SHA; separate bridge retrieval manifests exist",
+      "promotion_state": "bridge evidence cannot inherit native WNN identity and no current task is admitted"
+    }
+  ],
+  "known_source_and_registry_drift": [
+    {
+      "path": "scripts/evaluate_multivi_smoke.py",
+      "embedded_execution_sha256": "57c0195f55254ad725eea04aaee074c2ac164d5ca038027b7f7fd7cb40939b90",
+      "observed_sha256": "085f973e25a3e6dd83474afe7c8b3bd4d136ae70bee92ea687313c6883cac09f",
+      "disposition": "Historical MultiVI evaluation evidence remains hash-bound, but current-source reproduction is blocked until a new outcome-blind source freeze is approved."
+    },
+    {
+      "path": "config/evaluation/family_native_tournament.toml",
+      "embedded_repository_sha256": "f6ac2994983496c3b758888785ee5f3d9128f9a6ff89ba33cd43cee50d8ef4a4",
+      "observed_sha256": "acd9f333bd4d639d6df6b3017c1bf9a040ee921195b59b01fee934f1726a0495",
+      "disposition": "Pre-existing shared modification; observed-multiome registration cannot freeze against it until reconciled."
+    },
+    {
+      "path": "config/evaluation/rna_conditioned_atac_capabilities.toml",
+      "embedded_repository_sha256": "c233a982a48c1bf827ce9f64d894ce3c6d6af3e11a20e39cf03df3920fae6330",
+      "observed_sha256": "c779f06dedf69a15ec44280323a7701e0938b75bfa2660d11dd2a6f5de37868d",
+      "disposition": "Pre-existing shared modification; it still does not promote MultiVI's profile fixture and keeps scGLUE, MOFA+, and WNN latent-only."
+    }
+  ],
+  "execution_disposition": {
+    "metadata_audit_authorized": true,
+    "dependency_install_authorized": false,
+    "runtime_build_authorized": false,
+    "checkpoint_or_rds_open_authorized": false,
+    "data_matrix_open_authorized": false,
+    "training_authorized": false,
+    "prediction_authorized": false,
+    "development_scoring_authorized": false,
+    "sealed_scoring_authorized": false,
+    "gpu_sbatch_authorized": false,
+    "observed_multiome_cpu_or_gpu_campaign_authorized": false,
+    "next_action": "First reconcile and freeze the shared tournament registry, create a nonpromotable donor-safe observed-multiome TaskSpec and endpoint-specific capability registry, then separately admit only method identities native to that TaskSpec."
+  },
+  "model_authority_hashes": {
+    "config/artifacts/models/multivi/checkpoints.json": "6b545794efcfd1779dbc8c6c20db30d855206165ab9caf45ac68177cf6e7c05d",
+    "config/artifacts/models/multivi/development_crosswalk.json": "b893ff9e8f5ba82574f3982a8731b045de84d9b8e1816373150b1f422bbd66f8",
+    "config/artifacts/models/multivi/exposure_audit.json": "205e00ebe6e4925608ada5a2bae220bb622fae373fe4ca181deea23e5b513b28",
+    "config/artifacts/models/scglue/checkpoints.json": "ab02a8cd19fb56c57d1e9375974dcb884255d651b51dfb315098d418c80633bb",
+    "config/artifacts/models/scglue/development_crosswalk.json": "7ce9fcbec039c7b5da209c782864f556312579c661e68acbd22cab9945b723d3",
+    "config/artifacts/models/scglue/exposure_audit.json": "64a6e661dda8b3836e481917dc47a72c26472a01a765a8d467fc8f2bd0e584cb",
+    "config/artifacts/models/mofaplus/checkpoints.json": "8b7727ebe9d6d3d612b85927b91664fe39939f8107aee05ea7e1a569bd32884e",
+    "config/artifacts/models/mofaplus/development_crosswalk.json": "cdc768c1e2d0b959c158eea90c8e951e706401263d39ed0540d47d6e62523163",
+    "config/artifacts/models/mofaplus/exposure_audit.json": "79aef2fe01c5ccaba339afd4b007ec74dad6be4d828535a4abc732808632172b",
+    "config/artifacts/models/seurat_wnn/checkpoints.json": "02f653d0f8685e289beec8f28b467f2472b4534fb16176e89c1fbbc003f1c268",
+    "config/artifacts/models/seurat_wnn/development_crosswalk.json": "a2193e6b55b56d8d48a83523897bf0cf0bd5ca2c69eccd9d84757e9d04f4f4ce",
+    "config/artifacts/models/seurat_wnn/exposure_audit.json": "b636eab049fc315ce850979723099c82359b707acef4f649764111848fc2e2cc",
+    "config/models/multimodal_integration.toml": "9569f89cf5d452e0335f899c3a3e43a483661fa2259d471d2208a5b1c5c107cb"
+  },
+  "dataset_view_hashes": {
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/donor_join.json": "213cef66253b1783b7a35687ec1765fab2495a94416b301cc9d2c5c603dee99f",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/exposure_audit.json": "b04f7581e28685d33502f0680464757683b449b85ea5924450cf3ecc0d9e14b3",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/qc.json": "4cfec866791181add53b8745f8f47d2aea917fdb5610455f6b6598d915dcee3a",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/reference.json": "e69d2dcb4cd02b31c595f87ee628d4c9d852ed66ef623258bc7a28ebcb6a2845",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/rights.json": "ada3e522fcc6f396d5a14bc9a63ef07e19da2bdafb2b7a0735044c16f56f0394",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/topology.json": "45e1d944ad33ed1036e04f9bbd045a5c4492846a3453f0152f631f7ab5bfa150"
+  },
+  "runtime_manifest_hashes": {
+    "executions/environments/pytorch-2.6.0-cu124-portable-21064747/ARTIFACTS.json": "d4112dbc9574e619edbaec0f2c1503c57e0271fe17517b2e121d711ea21f71a3",
+    "executions/environments/scglue-v0.4.1-portable-21064673/ARTIFACTS.json": "371632648d40f8838f97605442623c9302886d32f84e0282f1167445ac513081",
+    "executions/environments/scvi-tools-1.5.0.post1-portable-21064579/ARTIFACTS.json": "30814d4944e933d999e8c02c5b521432786b1985cc8794f9436f2a44af5ad1af",
+    "executions/environments/seurat-5.5.1-portable-21064881/ARTIFACTS.json": "67f5689231eac5f66cb82b830c32217943071b59b74180fdc1031978b3478eff"
+  },
+  "execution_manifest_hashes": {
+    "executions/multivi-peakvi-no-outcome-probe-21064846/ARTIFACTS.json": "d46cf09bea93ebf189b7b707f26ac2debabfb730a21608cad4326bb948158c1c",
+    "executions/multivi-smoke-evaluation-21065278/ARTIFACTS.json": "be622e9c21820c68b2082dff827884ee32318787afc3b475f6726b1e2fc13128",
+    "executions/multivi-smoke-fit-predict-21065203/ARTIFACTS.json": "f3ad2ad9a6be31ba4d828f0e7fe3253e7045d98336b8e45fdae1eb01c362a1fd",
+    "executions/multivi-smoke-prepared-21065093/ARTIFACTS.json": "6c10206033545fe7ed1ecbd9f7d64e107e2b3742de06db55a838bbdb46a1cdaa",
+    "executions/scglue-no-outcome-probe-21064835/ARTIFACTS.json": "087d0a517fcf967078a8ebe7b952af165d8913fa3bb5facbff3a2ce3a69fa35a",
+    "executions/scglue-retrieval-evaluation-21065607/ARTIFACTS.json": "515cf5905cd28f69448db5e7d55452147b2481f27e76d36c9eeee4f4bb4d9965",
+    "executions/scglue-retrieval-fit-predict-21065540/ARTIFACTS.json": "6a37d1c78d1bf6d798e68d8cb6d4e683befbedc4d1a21eea6ec08fb9c82656ad",
+    "executions/scglue-retrieval-prepared-21065511/ARTIFACTS.json": "c79930c961cbbd44d9d198579f8b9443b6758e28cc2f4458be48d884d62a3354",
+    "executions/seurat-wnn-bridge-evaluation-21065970/ARTIFACTS.json": "f61e9c88f1eb26c28c3b21ac80c221ccda25b4f0d4ce77660a48f3bcc1d01454",
+    "executions/seurat-wnn-bridge-fit-predict-21065917/ARTIFACTS.json": "f8fbfe21e08100ac86d70bb45566057b8325fe8a223df5c9f4ef41b6fbe06af3",
+    "executions/seurat-wnn-bridge-prepared-21065772/ARTIFACTS.json": "099bea7c9a3728da1eb0eaf2938f1a8f26fa9de6f6c087532aaadc4df9ee3500"
+  },
+  "correction_20260825": {
+    "supersedes_schema": "masld-bench-observed-multiome-integration-disposition-v1",
+    "supersedes_status": "FAIL_CLOSED_NO_TASKSPEC_OR_ADMITTED_MODEL_LANE",
+    "why": "The 2026-08-24 record asserted that no observed-multiome TaskSpec existed. A standalone TaskSpec was written to config/evaluation/observed_multiome_task.toml at 2026-08-25 01:58:03, after this record. The NO_TASKSPEC clause was therefore false and had to be re-derived rather than left standing.",
+    "found_how": "Surfaced on 2026-08-25 by refreshing this record's stale config/models/multimodal_integration.toml pin. The stale pin was masking the deeper staleness: the validator aborted on the pin before it reached the TaskSpec check.",
+    "what_did_not_change": "No model disposition moved. All four subjects remain admitted=false, each on two or three independent blockers besides the TaskSpec clause. Five of the six other task_gate facts are unchanged and are now corroborated by the TaskSpec rather than resting on its absence. No authority pin, runtime, execution manifest or per-model contract assertion was altered.",
+    "the_token_was_regrounded_not_lifted": "NO_TASKSPEC became TASKSPEC_EXECUTION_BLOCKED in the record status and in all four per-model gates. The conjunct count of every gate is unchanged. The blocker now closes from the standalone TaskSpec's own admission_gates[0] and from observed_multiome_development_gate.toml, which is a stronger authority than absence was.",
+    "why_a_boolean_flip_would_have_been_wrong": "task_spec_exists could not simply be set to true. The record checks two paths and the answer differs between them: the canonical registration path config/tasks/observed_multiome.toml is still absent, while the standalone path is present. That asymmetry is deliberate -- observed_multiome_task_capabilities.toml states the task is kept outside config/tasks so it cannot mutate the frozen global census or historical audit hashes. A single boolean flip would have asserted the task was registered when its location exists precisely to ensure it is not, and would have contradicted the tournament's still-correct planned_registration.",
+    "status_fields_do_not_conflict": "observed_multiome_task.toml status='candidate' and family_native_tournament.toml [task.observed_multiome] status='planned_registration' describe different axes and are simultaneously correct. TaskSpec document status takes only {candidate, blocked} across all nine specs; tournament task status takes only {active, planned_registration, planned_activation_audit, compound} across all seven entries. The value sets are disjoint, and rna_conditioned_atac and variant_to_regulation each carry both at once (TaskSpec candidate, tournament active), which proves 'candidate' makes no claim about registration. registry_status_observed is unchanged.",
+    "ordering_evidence_that_the_dispositions_do_not_move": "observed_multiome_development_gate.toml written 2026-08-25 01:57:21, observed_multiome_task.toml 01:58:03, observed_multiome_task_capabilities.toml 01:58:03. The additive observed-multiome census executions/model-check-288-21098630 ran at 04:10:39, two hours and twelve minutes later, in a world where the TaskSpec already existed, and still recorded execution_authorized=false, candidate_fixture_requirement_satisfied=false and external_seal_bound=false. A later independent authority looked at the same world with the TaskSpec present and reached this record's conclusion.",
+    "corrected_date": "2026-08-25"
+  },
+  "why_this_is_a_correction_not_a_reassessment": "Only multivi is a registered observed-multiome candidate and only seurat_wnn is a registered baseline. scGLUE and MOFA+ appear in no observed-multiome authority at all -- not the standalone TaskSpec, the capabilities file, the development gate, family_native_tournament, or the additive census candidate list. For half the subjects the TaskSpec's existence changes nothing, and for the other half it changes registration rather than admission. No model was reassessed."
+}

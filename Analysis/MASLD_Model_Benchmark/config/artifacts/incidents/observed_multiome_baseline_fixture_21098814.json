@@ -1,0 +1,26 @@
+{
+  "schema_version": "masld-bench-software-attempt-incident-v1",
+  "job_id": "21098814",
+  "job_name": "model-check-289",
+  "terminal_state": "FAILED",
+  "exit_code": "1:0",
+  "failure_stage": "unit_test_import_before_fit",
+  "cause": "The generic Python/3.11.5 module did not contain NumPy; no fixture model was fit and no prediction was produced.",
+  "prior_wrapper": {
+    "path": "slurm/probe_observed_multiome_baselines_cpu.sbatch",
+    "sha256": "b0da01f4eb44aa49904a88b08c2ae5513c41b06abcdab04e641abb4353ea1653"
+  },
+  "stdout": {
+    "path": "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/executions/model-check-289-21098814.out",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/executions/model-check-289-21098814.err",
+    "sha256": "b8d559c5f3403ba2a6461bce165e8e4b56dcdc7182ac8715d815faa99cce5da3"
+  },
+  "biological_data_read": false,
+  "development_outcomes_read": false,
+  "sealed_outcomes_read": false,
+  "model_fit_started": false,
+  "predictions_produced": false
+}

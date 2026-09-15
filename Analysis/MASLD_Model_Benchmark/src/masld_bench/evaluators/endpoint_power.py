@@ -1,6 +1,6 @@
 """Registered endpoint-recomputed bootstrap evaluators for prospective power.
 
-The power firewall never accepts caller-supplied donor summaries.  It binds one
+The power separation never accepts caller-supplied donor summaries.  It binds one
 strict joined development table, dispatches by a frozen evaluator identifier,
 and recomputes candidate, baseline, and paired-difference endpoints on the same
 biological-unit draws. Unknown evaluators fail closed.

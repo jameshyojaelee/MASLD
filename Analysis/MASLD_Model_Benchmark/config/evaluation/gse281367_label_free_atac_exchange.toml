@@ -1,0 +1,361 @@
+schema_version = "masld-bench-gse281367-label-free-atac-exchange-v1"
+exchange_id = "gse296875_to_gse281367_fixed_window_atac_transport_20260825"
+source_dataset_id = "gse296875"
+target_dataset_id = "gse281367"
+task_id = "observed_multiome"
+role = "project_exposed_condition_blind_cross_cohort_transport"
+biological_unit = "donor"
+automatic_model_execution = false
+condition_labels_available_to_model_jobs = false
+condition_labels_used_for_axis_selection = false
+condition_labels_used_for_model_selection = false
+phenotype_values_available_to_model_jobs = false
+development_outcomes_available_to_model_jobs = false
+sealed_data_available = false
+external_or_sealed_evaluation = false
+champion_claim_allowed = false
+universal_claim_allowed = false
+
+[parent_readiness]
+path = "executions/gse281367-atac-transport-production-readiness-21099780"
+artifacts_sha256 = "e7769dc43d99ed286bb7e8c8b848da8a28020d56cbb1b73ebfa775a78a074801"
+artifact_class = "gse281367_atac_transport_production_readiness_audit"
+blocked_exchange_layer_is_not_modified = true
+
+[activation_authority]
+path = "executions/gse281367-activation-readiness-21099679"
+artifacts_sha256 = "e36b86815bdb9f66c372c933c2ce3052ba5c2b475138f45f2bfa2a26805f9f01"
+artifact_class = "gse281367_activation_readiness_audit"
+
+[source_authority]
+path = "executions/atac-transport-source-audit-21064435"
+artifacts_sha256 = "ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392"
+artifact_class = "atac_transport_source_admission_audit"
+inventory_path = "source_inventory.tsv"
+inventory_sha256 = "991b4df86c570ee73ff86c3568ee1958a489e22aba082ba46803215563e2b7e7"
+merged_h5ad_suffix = "Analysis/ATAC/Human_External/snapatac2_fast/snapatac2_processed.h5ad"
+per_donor_inventory_authority = "executions/atac-transport-membership-21064488"
+per_donor_inventory_artifacts_sha256 = "32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6"
+per_donor_inventory_path = "per_donor_h5ad_inventory.tsv"
+per_donor_inventory_sha256 = "98436dfd28a6b27222063d8aea9ba57c85b761144289972db6d6f8678e4ddb5b"
+source_qc_authority = "project_frozen_226224_cell_membership_not_publication_69595_nucleus_census"
+source_native_publication_membership_claim_allowed = false
+
+[window_authority]
+path = "executions/atac-transport-outcomes-21064552"
+artifacts_sha256 = "6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3"
+artifact_class = "atac_transport_evaluator_outcomes"
+coordinate_only_path = "evaluator_outcomes/windows.tsv"
+coordinate_only_sha256 = "7266ab1a5c751423c6aaf422a19911fcf3ee48e4c615793e1cf1266f59bb16c0"
+biological_array_files_read_by_exchange_builder = false
+condition_bearing_axis_read_by_exchange_builder = false
+
+[census_authority]
+path = "executions/model-check-288-21098630"
+artifacts_sha256 = "f7705f963286fd6d2dda3d0677cd72515b34e7be0a4aab6f8bbdfc87003e5472"
+artifact_class = "observed_multiome_additive_census_revision"
+revision_id = "observed_multiome_additive_census_20260825"
+census_requirement_satisfied = true
+execution_authorized_by_census_alone = false
+
+[label_free_axis]
+donor_count = 12
+donor_id_source = "obs_donor_id_only"
+cell_label_source = "project_frozen_transferred_annotation_used_only_as_stratification"
+source_labels_are_independent_accuracy_outcomes = false
+outer_fold_count = 5
+outer_fold_seed = 20260821
+outer_fold_inputs = ["dataset_id", "donor_id"]
+outer_fold_uses_condition = false
+primary_lineages = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage"]
+canonical_lineages = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"]
+minimum_cells = 50
+t_cell_state = "not_applicable_evaluator_not_materialized"
+rna_state = "structurally_missing"
+same_cell_pairing_claimed = false
+same_nucleus_pairing_claimed = false
+missing_as_zero = false
+
+[window_exchange]
+coordinate_system = "GRCh38.p14_0_based_half_open"
+window_count = 32000
+window_width_bp = 1000
+profile_bins = 20
+profile_bin_width_bp = 50
+valid_window_count = 16000
+test_window_count = 16000
+roles_are_whole_chromosome_disjoint = true
+largest_admitted_receptive_field_bp = 524288
+target_role_contigs_removed_from_query_atac = true
+target_role_contigs_removed_before_query_transform = true
+local_boundary_buffer_needed_after_whole_contig_removal = false
+target_selection_uses_condition_or_outcome = false
+native_peak_to_window_interpolation_primary_allowed = false
+unsupported_window_encoded_as_zero = false
+
+[[rotation]]
+rotation_id = "valid_context_test_target"
+observed_atac_context_role = "valid"
+scored_target_role = "test"
+
+[[rotation]]
+rotation_id = "test_context_valid_target"
+observed_atac_context_role = "test"
+scored_target_role = "valid"
+
+[overlap_contract]
+profile_track_mapping = "exact_base_pair_integral_into_twenty_50bp_target_bins"
+count_track_mapping = "sum_of_mapped_target_profile_bins"
+fixed_window_head_mapping = "exact_window_id_only"
+native_peak_scalar_primary_mapping = "prohibited_require_refit_or_decoder_on_fixed_project_windows"
+shared_support_sensitivity_required = true
+per_model_coverage_report_required = true
+coverage_threshold_for_primary_profile_or_count = 0.95
+coverage_threshold_selected_from_outcomes = false
+
+[missingness_contract]
+states = ["observed", "structurally_missing", "not_applicable", "below_qc", "withheld_scored_mask", "window_unsupported", "reference_incompatible", "model_output_missing"]
+observed_code = 0
+structurally_missing_code = 1
+not_applicable_code = 2
+below_qc_code = 3
+withheld_scored_mask_code = 4
+window_unsupported_code = 5
+reference_incompatible_code = 6
+model_output_missing_code = 7
+missing_prediction_value = "nan"
+missing_prediction_value_may_be_zero = false
+
+[prediction_commit]
+schema_version = "masld-bench-atac-transport-prediction-bundle-v1"
+row_axis_hash_required = true
+window_axis_hash_required = true
+model_manifest_hash_required = true
+prediction_tree_frozen_before_scoring = true
+prediction_hash_commit_before_outcome_open = true
+condition_or_phenotype_fields_forbidden = true
+threshold_or_calibration_change_after_commit = false
+
+[scorer]
+schema_version = "masld-bench-atac-transport-condition-blind-scorer-v1"
+join_fields = ["donor_id", "lineage_id", "window_id", "profile_bin"]
+condition_join_allowed = false
+phenotype_join_allowed = false
+native_output_families_ranked_separately = true
+primary_profile_endpoint = "multinomial_profile_deviance_per_insertion"
+primary_count_endpoint = "window_count_deviance_or_rank_association_by_native_family"
+secondary_endpoints = ["peak_auprc", "profile_spearman", "coverage_fraction"]
+baseline_predictions_require_separate_blind_commit = true
+selection_unit = "donor_by_lineage_by_chromosome_block"
+condition_stratified_selection_allowed = false
+
+[[family_eligibility]]
+model_id = "chrombpnet"
+input_regime = "sequence_only"
+output_family = "profile_and_count"
+eligibility = "eligible_after_gse296875_source_fit_and_fixed_window_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "bpnet"
+input_regime = "sequence_only"
+output_family = "profile_and_count"
+eligibility = "eligible_after_gse296875_source_fit_and_fixed_window_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "scbasset"
+input_regime = "sequence_only"
+output_family = "count_profile"
+eligibility = "eligible_training_lineage_mean_sequence_view_only"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "sequence_cnn_control"
+input_regime = "sequence_only"
+output_family = "count_or_profile"
+eligibility = "eligible_after_source_only_head_fit"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "sequence_transformer_control"
+input_regime = "sequence_only"
+output_family = "count_or_profile"
+eligibility = "eligible_after_source_only_head_fit"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "alphagenome"
+input_regime = "sequence_only"
+output_family = "native_accessibility_track"
+eligibility = "restricted_comparator_after_track_reference_and_terms_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "borzoi_ensemble"
+input_regime = "sequence_only"
+output_family = "native_or_source_fitted_accessibility_track"
+eligibility = "conditional_on_channel_mapping_or_source_only_head_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "enformer"
+input_regime = "sequence_only"
+output_family = "native_or_source_fitted_accessibility_track"
+eligibility = "conditional_on_channel_mapping_or_source_only_head_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "sei"
+input_regime = "sequence_only"
+output_family = "regulatory_class_or_source_fitted_count"
+eligibility = "conditional_on_safe_runtime_and_fixed_head_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "dna_language_models"
+input_regime = "sequence_only"
+output_family = "identical_source_fitted_head"
+eligibility = "eligible_per_checkpoint_after_safe_runtime_and_fixed_head_fixture"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "epibert"
+input_regime = "observed_atac"
+output_family = "functional_track"
+eligibility = "conditional_on_mask_before_query_transform_and_reference_fixture"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "epcotv2"
+input_regime = "observed_atac"
+output_family = "functional_track"
+eligibility = "conditional_on_mask_before_query_transform_and_reference_fixture"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "get"
+input_regime = "observed_atac"
+output_family = "functional_track"
+eligibility = "restricted_comparator_after_terms_checkpoint_and_masked_query_fixture"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "peakvi"
+input_regime = "observed_atac"
+output_family = "masked_fixed_window_count"
+eligibility = "eligible_after_gse296875_source_fit_and_target_context_transform_fixture"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "lsi"
+input_regime = "observed_atac"
+output_family = "masked_fixed_window_count_or_representation"
+eligibility = "eligible_with_source_fitted_idf_and_rotation_specific_query_projection"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "observed_atac_glm"
+input_regime = "observed_atac"
+output_family = "masked_fixed_window_count"
+eligibility = "eligible_mandatory_baseline"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "observed_atac_only"
+input_regime = "observed_atac"
+output_family = "masked_fixed_window_count"
+eligibility = "eligible_mandatory_baseline"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "epiagent"
+input_regime = "observed_atac"
+output_family = "joint_representation"
+eligibility = "conditional_separate_representation_family_or_source_fitted_decoder"
+query_atac_allowed = true
+
+[[family_eligibility]]
+model_id = "scbasset_observed_cell_embedding"
+input_regime = "observed_atac"
+output_family = "joint_representation"
+eligibility = "ineligible_until_mask_aware_query_encoder_exists"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "multivi"
+input_regime = "paired_rna_atac"
+output_family = "joint_representation"
+eligibility = "ineligible_target_rna_structurally_missing_and_same_nucleus_required"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "seurat_wnn"
+input_regime = "paired_rna_atac"
+output_family = "joint_representation"
+eligibility = "ineligible_target_rna_structurally_missing_and_same_nucleus_required"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "scooby_released"
+input_regime = "sequence_plus_rna"
+output_family = "functional_track"
+eligibility = "ineligible_target_rna_structurally_missing"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "corgi_regular"
+input_regime = "sequence_plus_trans_expression"
+output_family = "functional_track"
+eligibility = "ineligible_target_trans_expression_structurally_missing"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "corgi_plus"
+input_regime = "sequence_plus_local_rna"
+output_family = "functional_track"
+eligibility = "ineligible_release_path_blocked_and_target_rna_structurally_missing"
+query_atac_allowed = false
+
+[[family_eligibility]]
+model_id = "context_borzoi"
+input_regime = "sequence_plus_rna"
+output_family = "functional_track"
+eligibility = "ineligible_as_context_model_sequence_backbone_may_enter_borzoi_lane"
+query_atac_allowed = false
+
+[claim_boundary]
+gse281367_is_non_champion = true
+gse281367_missing_phenotype_authority = true
+gse281367_source_condition_semantics_conflict = true
+cross_cohort_donor_independence_unresolved = true
+source_annotations_are_transferred_not_independent_truth = true
+transport_robustness_claim_allowed_after_blind_scoring = true
+external_confirmation_claim_allowed = false
+masld_specific_superiority_claim_allowed = false
+diagnostic_prognostic_or_clinical_claim_allowed = false
+
+[implementation]
+builder_path = "scripts/build_gse281367_label_free_atac_exchange.py"
+builder_sha256 = "7c9e5dcc4de2d43e6785ef84599284be67ce7f52f30e94d492e264ed20c13b5f"
+builder_test_path = "tests/unit/test_gse281367_label_free_atac_exchange.py"
+builder_test_sha256 = "3705dfbf632b7585649c1b78c3d26cc8682d07156bcdd1534300ac55cf0f2dd1"
+commit_path = "scripts/commit_gse281367_atac_transport_predictions.py"
+commit_sha256 = "30fec3c271235b1348026a9c3ceaabe8dd97792dbf774b5abb4a8d5a5cd3f789"
+commit_test_path = "tests/unit/test_commit_gse281367_atac_transport_predictions.py"
+commit_test_sha256 = "f442ef9a25993e7ccfaff98025056946900def866fad969856c1a71f9c9890c3"
+scorer_path = "scripts/score_gse281367_atac_transport.py"
+scorer_sha256 = "079a75b9ff59a62246ea0c1caf8eb60686d15e1262a272885a12789a53c3ba9e"
+scorer_test_path = "tests/unit/test_score_gse281367_atac_transport.py"
+scorer_test_sha256 = "e34c0a35a14a4a49f10a606925bb95f000da3e87c067f631ceb4b40f4dfb6805"
+
+[decision]
+label_free_exchange_contract_frozen = true
+condition_blind_scorer_registered = true
+prediction_hash_commit_registered = true
+family_native_eligibility_frozen = true
+observed_atac_query_materialization_authorized_after_axis_admission = true
+individual_model_execution_requires_native_fixture = true
+biological_scoring_authorized_before_prediction_commit = false
+outcome_selected_model_repair_allowed = false
+status = "CONTRACT_READY_AXIS_BUILD_PENDING"

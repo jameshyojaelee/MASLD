@@ -580,7 +580,7 @@ def build_release(
     annotation_release: str = ANNOTATION_RELEASE,
     fixture_mode: bool = False,
 ) -> dict[str, int | str]:
-    """Build an immutable candidate directory and return its census."""
+    """Build an read-only candidate directory and return its census."""
 
     require(not output_dir.exists(), f"output directory already exists: {output_dir}")
     if fixture_mode:

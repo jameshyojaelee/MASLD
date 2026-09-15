@@ -66,7 +66,7 @@
     "After activation and campaign approval, pass assay-native likelihood, registration non-circularity, donor block, load, forward, backward, resume, deterministic seed, no-network, and cross-device probes through SLURM.",
     "Hash every participant-fold registration, feature roster, environment, and trained state before selection."
   ],
-  "interpretation": "SpatialMETA is not a generic multimodal spatial model. It is specifically designed for spatial RNA counts and spatial metabolite intensities, usually after registration and reassignment across sections. Only HRA007511 plausibly matches that design, and it is controlled, adjacent-section, project-exposed, and rights-blocked. The lack of a task and seal, plus unresolved vendored-code and patent terms, keeps SpatialMETA outside v1.",
+  "interpretation": "SpatialMETA is not a generic multimodal spatial model. It is specifically designed for spatial RNA counts and spatial metabolite intensities, usually after registration and reassignment across sections. Only HRA007511 plausibly matches that design, and it is controlled, adjacent-section, project-exposed, and rights-blocked. The lack of a task and hold back, plus unresolved vendored-code and patent terms, keeps SpatialMETA outside v1.",
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_no_registered_task_no_sealed_spatial_metabolomics_source_no_rights_cleared_native_dataset_and_unresolved_code_patent_asset_terms",
   "verified_date": "2026-08-22"

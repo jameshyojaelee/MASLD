@@ -1,0 +1,37 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse260666_external_histology_transfer"
+status = "candidate_fixture_and_evaluator_pending"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna"]
+endpoint = "Transfer a GSE267145-selected RNA-only three-state model to the 16 unique-source GSE260666 liver RNA-seq participants without query fitting, calibration, or label access."
+metrics = ["participant_macro_f1_stage3", "participant_per_class_f1_stage3", "participant_multiclass_brier_stage3", "participant_log_loss_stage3", "participant_confidence_calibration_gap", "participant_ece4_descriptive"]
+datasets_train = ["gse267145_znf469_human_liver"]
+datasets_development = ["gse260666_bulk_rna"]
+datasets_sealed = []
+split_id = "gse267145_full_development_refit_to_gse260666_external_v1"
+required_pairing_levels = ["same_study_unpaired"]
+missingness_policy = "Every participant and gene observation carries an explicit state or mask; missing is never normal, healthy, or numeric zero."
+source_stage3_roster = ["healthy_control", "non-alcoholic_fatty_liver_disease_(nafld)", "non-alcoholic_steatohepatitis_(nash)"]
+evaluation_stage3_roster = ["NOR", "NAFL", "NASH"]
+source_to_evaluation_mapping = { healthy_control = "NOR", "non-alcoholic_fatty_liver_disease_(nafld)" = "NAFL", "non-alcoholic_steatohepatitis_(nash)" = "NASH" }
+label_definition_mismatch = "GSE267145 classes are source histology states, while GSE260666 supplies source disease-state diagnoses only. Healthy control to NOR is a fixed semantic transport mapping, not proof that the external controls satisfy the GSE267145 histologic NOR definition."
+baseline_model_ids = ["training_stage_distribution", "rna_hvg_pca_nearest_centroid", "rna_hvg_pca_elastic_net", "rna_hvg_pca_linear_svm"]
+uncertainty_method = "source_class_stratified_participant_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "development_external_transfer_descriptive_no_confirmatory_p_values"
+multiplicity_method = "not_applicable_effects_and_intervals_only"
+primary_evaluator_id = "gse260666_external_stage3_v1"
+evaluator_parameters = { participants = 16, source_class_counts = { healthy_control = 6, "non-alcoholic_fatty_liver_disease_(nafld)" = 6, "non-alcoholic_steatohepatitis_(nash)" = 4 }, class_balanced_primary = true, calibration_reliability_bins = 4, bootstrap_seed = 20260824 }
+admission_gates = [
+  "Freeze the GSE267145 RNA-only recipe from participant-held internal development before any full-99 refit. GSE260666 features or labels cannot choose the recipe, hyperparameters, feature count, calibration, threshold, or model family.",
+  "Refit the locked preprocessing and head on all 99 GSE267145 participants only after the source selection lock exists. Export its ordered stable-gene axis, learned preprocessing, classifier state, training participant hash, source receipt, and convergence state.",
+  "Predict the 16 GSE260666 participants once without fitting, query normalization across participants, domain adaptation, recalibration, nearest-query construction, label access, or exclusion after outcome inspection.",
+  "Retain source-native labels and the one-to-one semantic mapping. Never pool NAFL and NASH, infer fibrosis or NAS, or relabel generic NAFLD as a histologic stage.",
+  "GSE267145 fractional expression estimates and GSE260666 raw StringTie counts are different measurement pipelines. Per-participant log1p CPM and a source-trained transform do not remove that shift; report this as a cross-pipeline transport stress.",
+  "Use participants as replicates. The four external NASH participants imply wide donor-bootstrap uncertainty and do not justify cell-, gene-, or read-level pseudoreplication.",
+  "Complete accession, cohort-family, participant-alias, matrix, and expression-fingerprint deduplication before model access. Retain only salted expression fingerprints.",
+  "Internal nonclinical research use needs no new DUA. Source matrices and materially trained weights are not redistributed without their separate rights review."
+]
+prediction_contract = "Exactly one frozen ensemble row per external participant and model, with row_id, fixed NOR/NAFL/NASH probabilities, and the corresponding fixed-order argmax."
+claim_gate = "External-development robustness only. GSE260666 is not project-sealed and cannot support a MASLD champion, universal, diagnostic, prognostic, progression, treatment-response, or clinical claim. No selection or repair is allowed from its outcomes."

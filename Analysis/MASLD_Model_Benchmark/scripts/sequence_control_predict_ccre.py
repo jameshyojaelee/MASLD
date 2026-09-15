@@ -58,7 +58,7 @@ STANDARDIZED_FIELDS = (
 
 
 class SequenceControlPredictionError(ValueError):
-    """Raised when fixed-window control inference violates its contract."""
+    """Raised when fixed-window control inference does not meet its requirements."""
 
 
 def one_hot_dna(sequences: Sequence[str]) -> np.ndarray:

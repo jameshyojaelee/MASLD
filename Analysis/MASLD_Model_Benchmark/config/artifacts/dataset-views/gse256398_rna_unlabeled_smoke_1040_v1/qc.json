@@ -1,0 +1,25 @@
+{
+  "admitted": true,
+  "authority": "qc",
+  "evidence": {
+    "full_activation_allowed": false,
+    "pathological_automatic_call": {
+      "automatic_doublets": 8762,
+      "donor": "S35",
+      "nuclei_input": 11080,
+      "threshold": 0.03888609971186587
+    },
+    "qc_artifacts_sha256": "3499eed58c6da15e644f5114da33b2874e3252a86fad6d6937960424e781ecbc",
+    "qc_order": "per_donor_Scrublet_defaults_then_strict_public_R_thresholds",
+    "qc_sensitivity_artifacts_sha256": "77b7b62b30c49fdf306039a3c31930040a5a140d23a64dd24875370cc11e91ad",
+    "scrublet_runtime_warnings": "divide_by_zero_warnings_scores_finite",
+    "selection_membership": "intersection_of_source_exact_and_expected_rate_capped",
+    "selection_policy": "40_per_donor_then_sha256_seed_and_namespaced_row_id",
+    "selection_seed": 20260824,
+    "source_exact_is_author_final_membership": false,
+    "source_exact_project_reconstructed_retained": 165372
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

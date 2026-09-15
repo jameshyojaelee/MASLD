@@ -1,0 +1,360 @@
+schema_version = "masld-bench-complementarity-readiness-audit-v1"
+status = "blocked_no_trigger_compatible_prediction_pair"
+verified_date = "2026-08-24"
+audit_id = "current_development_prediction_complementarity_readiness"
+build_authorized = false
+stack_fit_or_residual_correlation_authorized = false
+sealed_assets_read = false
+raw_or_summary_outcomes_read = false
+prediction_values_read = false
+row_identifiers_may_be_read = true
+
+[trigger_contract]
+required_task_ids = ["variant_to_regulation", "rna_conditioned_atac"]
+variant_endpoint_id = "mpra_allelic_direction"
+variant_evaluator_id = "locus_heldout_allelic_spearman_v1"
+variant_study_ids = ["gse281364"]
+variant_minimum_gain = 0.02
+rna_atac_endpoint_id = "rna_atac_regulatory_profile"
+rna_atac_evaluator_id = "rna_atac_two_way_deviance_reduction_v1"
+rna_atac_study_ids = ["gse244832", "gse296875"]
+rna_atac_strata = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"]
+rna_atac_minimum_gain = 0.05
+fixed_seeds = [1103, 2909, 4721, 6673, 8111]
+minimum_qualifying_seed_count = 4
+residual_correlation_strictly_below = 0.8
+minimum_study_count = 2
+cross_fitted = true
+nonnegative_stack = true
+best_open_models_compared = true
+distinct_sequence_and_context_source_families = true
+required_source_counts = { development_shortlist = 2, development_residual_bundle = 2, development_stack_gain_bundle = 2 }
+
+[required_stacking_sources]
+variant_development_shortlist = "UNBOUND"
+rna_atac_development_shortlist = "UNBOUND"
+sequence_development_residual_bundle = "UNBOUND"
+context_development_residual_bundle = "UNBOUND"
+variant_development_stack_gain_bundle = "UNBOUND"
+rna_atac_development_stack_gain_bundle = "UNBOUND"
+
+[[prediction_lanes]]
+lane_id = "gse296875_local_sequence_profile"
+task_id = "rna_conditioned_atac"
+dataset_ids = ["gse296875"]
+model_ids = ["bpnet", "chrombpnet", "sequence_cnn_control", "sequence_transformer_control"]
+source_family_role = "sequence"
+authority_ids = ["local_variant_reconciliation", "local_profile_incomplete_matrix"]
+prediction_schema = "1000bp_profile_plus_regional_count_on_fixed_cCRE_windows_expanded_across_held_donors_by_evaluator"
+biological_unit = "donor"
+genomic_unit = "held_contig_block"
+outer_folds_observed = 5
+seed_ids_observed = [20260824, 20260825]
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = false
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["current_valid_matrix_has_only_7_evaluation_groups_and_is_not_rankable", "candidate_fold_lineage_coverage_is_incomplete", "fixed_trigger_seeds_are_absent", "gse244832_predictions_are_unbound", "no_best_open_development_shortlist_exists"]
+
+[[prediction_lanes]]
+lane_id = "gse296875_corgi_context_regional"
+task_id = "rna_conditioned_atac"
+dataset_ids = ["gse296875"]
+model_ids = ["corgi_regular"]
+source_family_role = "context"
+authority_ids = ["corgi_hepatocyte_tile_predictions"]
+prediction_schema = "outcome_aligned_long_range_regional_ATAC_scores_on_128_tiles_per_fold"
+biological_unit = "donor"
+genomic_unit = "chromosome"
+outer_folds_observed = 5
+seed_ids_observed = []
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = false
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["hepatocyte_only_smoke", "different_window_and_score_schema_from_local_sequence_profiles", "checkpoint_is_restricted_development_comparator", "native_numeric_parity_not_established", "fixed_trigger_seeds_are_absent", "gse244832_predictions_are_unbound"]
+
+[[prediction_lanes]]
+lane_id = "gse296875_midas_inductive_context"
+task_id = "rna_conditioned_atac"
+dataset_ids = ["gse296875"]
+model_ids = ["midas_inductive"]
+source_family_role = "context"
+authority_ids = ["midas_inductive_predictions"]
+prediction_schema = "standardized_donor_lineage_peak_probability_PredictionBundle"
+biological_unit = "donor"
+genomic_unit = "peak"
+outer_folds_observed = 5
+seed_ids_observed = [2711]
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = true
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["smoke_only_single_seed", "10000_peak_denominator_differs_from_scbasset_16000_peak_denominator", "no_open_shortlist_or_five_seed_fitted_state", "gse244832_predictions_are_unbound"]
+
+[[prediction_lanes]]
+lane_id = "gse296875_scbasset_sequence"
+task_id = "rna_conditioned_atac"
+dataset_ids = ["gse296875"]
+model_ids = ["scbasset"]
+source_family_role = "sequence"
+authority_ids = ["scbasset_fold0_predictions", "scbasset_fold1to4_prediction_lock"]
+prediction_schema = "standardized_donor_lineage_peak_probability_PredictionBundle"
+biological_unit = "donor"
+genomic_unit = "peak"
+outer_folds_observed = 5
+seed_ids_observed = [11, 20260824]
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = true
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["mixed_seed_crossfold_aggregate", "16000_peak_denominator_differs_from_midas_10000_peak_denominator", "fixed_trigger_seeds_are_absent", "gse244832_predictions_are_unbound"]
+
+[[prediction_lanes]]
+lane_id = "gse281364_dna_lm_common_mpra"
+task_id = "variant_to_regulation"
+dataset_ids = ["gse281364"]
+model_ids = ["dnabert2", "nucleotide_transformer", "hyenadna", "caduceus"]
+source_family_role = "sequence"
+authority_ids = ["dna_lm_family_reconciliation"]
+prediction_schema = "outer_locus_cross_fitted_identical_linear_or_two_layer_MPRA_heads"
+biological_unit = "none_zero_donors"
+genomic_unit = "outer_locus_sequence_group"
+outer_folds_observed = 5
+seed_ids_observed = [20260824]
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = true
+open_component_ready = false
+row_identity_ready = true
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["one_seed_development_smoke", "no_context_candidate_on_identical_rows", "no_model_promoted_over_strong_allele_identity_baseline", "nucleotide_transformer_is_restricted"]
+
+[[prediction_lanes]]
+lane_id = "gse281364_native_sequence_transfer"
+task_id = "variant_to_regulation"
+dataset_ids = ["gse281364"]
+model_ids = ["sei", "mpralegnet", "enformer_crested_restricted_port"]
+source_family_role = "sequence"
+authority_ids = ["native_mpra_evaluation", "enformer_mpra_evaluation"]
+prediction_schema = "family_native_assay_transfer_scores_without_one_common_output_contract"
+biological_unit = "none_zero_donors"
+genomic_unit = "outer_locus_sequence_group"
+outer_folds_observed = 5
+seed_ids_observed = [20260824]
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = false
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["models_not_forced_to_common_endpoint_or_ranked", "mpralegnet_has_4359_element_rows_while_sequence_models_have_1033_locus_rows", "one_seed_only", "no_context_candidate", "enformer_port_is_restricted_and_lacks_native_parity"]
+
+[[prediction_lanes]]
+lane_id = "gse281364_borzoi_native"
+task_id = "variant_to_regulation"
+dataset_ids = ["gse281364"]
+model_ids = ["borzoi_ensemble"]
+source_family_role = "sequence"
+authority_ids = ["borzoi_native_execution_preflight"]
+prediction_schema = "none_fixture_only"
+biological_unit = "none_zero_donors"
+genomic_unit = "outer_locus_sequence_group"
+outer_folds_observed = 5
+seed_ids_observed = []
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = false
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["official_weight_terms_weights_runtime_reference_parity_and_native_parity_unbound", "model_forward_not_executed", "no_predictions"]
+
+[[prediction_lanes]]
+lane_id = "gse244832_rna_atac_development"
+task_id = "rna_conditioned_atac"
+dataset_ids = ["gse244832"]
+model_ids = []
+source_family_role = "required_development_study"
+authority_ids = []
+prediction_schema = "UNBOUND"
+biological_unit = "donor_compatible_pseudobulk"
+genomic_unit = "UNBOUND"
+outer_folds_observed = 0
+seed_ids_observed = []
+same_candidate_seed_set = false
+complete_candidate_by_fold_by_lineage_matrix = false
+open_component_ready = false
+row_identity_ready = false
+residual_ready = false
+stack_gain_ready = false
+blocking_findings = ["no_frozen_prediction_authority_bound", "cell_to_cell_pairing_is_prohibited", "required_second_RNA_ATAC_study_is_absent_from_current_component_tables"]
+
+[[pair_audits]]
+pair_id = "local_sequence_family_internal"
+left_lane = "gse296875_local_sequence_profile"
+right_lane = "gse296875_local_sequence_profile"
+same_task = true
+same_prediction_schema = true
+distinct_sequence_context_families = false
+trigger_ready = false
+disposition = "useful_for_sequence_family_selection_only_after_complete_matrix_not_complementarity_trigger"
+
+[[pair_audits]]
+pair_id = "local_sequence_vs_corgi"
+left_lane = "gse296875_local_sequence_profile"
+right_lane = "gse296875_corgi_context_regional"
+same_task = true
+same_prediction_schema = false
+distinct_sequence_context_families = true
+trigger_ready = false
+disposition = "requires_one_common_outcome_aligned_row_universe_all_five_lineages_five_fixed_seeds_open_context_candidate_and_gse244832"
+
+[[pair_audits]]
+pair_id = "scbasset_vs_midas"
+left_lane = "gse296875_scbasset_sequence"
+right_lane = "gse296875_midas_inductive_context"
+same_task = true
+same_prediction_schema = true
+distinct_sequence_context_families = true
+trigger_ready = false
+disposition = "row_overlap_is_auditable_but_peak_denominator_fold_role_seed_roster_and_second_study_are_not_aligned"
+
+[[pair_audits]]
+pair_id = "dna_lm_common_internal"
+left_lane = "gse281364_dna_lm_common_mpra"
+right_lane = "gse281364_dna_lm_common_mpra"
+same_task = true
+same_prediction_schema = true
+distinct_sequence_context_families = false
+trigger_ready = false
+disposition = "common_lane_representation_comparison_only_no_context_candidate_and_one_seed"
+
+[[pair_audits]]
+pair_id = "native_mpra_cross_family"
+left_lane = "gse281364_dna_lm_common_mpra"
+right_lane = "gse281364_native_sequence_transfer"
+same_task = true
+same_prediction_schema = false
+distinct_sequence_context_families = false
+trigger_ready = false
+disposition = "native_outputs_and_row_cardinalities_differ_and_all_models_are_sequence_only"
+
+[[pair_audits]]
+pair_id = "any_current_variant_vs_borzoi"
+left_lane = "gse281364_dna_lm_common_mpra"
+right_lane = "gse281364_borzoi_native"
+same_task = true
+same_prediction_schema = false
+distinct_sequence_context_families = false
+trigger_ready = false
+disposition = "borzoi_has_no_executable_prediction_bundle"
+
+[exclusions]
+cell_state_mapping_predictions = "not_one_of_the_two_frozen_stacking_task_contracts"
+histology_scores = "error_stratification_covariates_not_mechanistic_prediction_rows_or_stack_targets"
+sealed_predictions_or_outcomes = "prohibited"
+active_unfrozen_job_outputs = "prohibited_until_terminal_frozen_and_separately_bound"
+same_model_context_ablation_pair = "not_distinct_source_families"
+
+[activation_order]
+steps = ["freeze_complete_GSE296875_valid_matrix_and_task_specific_open_shortlists", "produce_identical_five_seed_variant_component_rows_for_one_open_sequence_and_one_open_context_candidate", "produce_identical_five_seed_RNA_ATAC_component_rows_on_GSE296875_and_GSE244832_for_task_specific_best_open_candidates", "freeze_two_development_shortlists", "freeze_two_cross_fitted_stack_gain_bundles", "freeze_two_same_task_distinct_family_residual_bundles", "freeze_and_recursively_verify_the_six_source_stacking_evidence_tree"]
+
+[frozen_file_authorities.stacking_source]
+path = "src/masld_bench/stacking.py"
+sha256 = "933c52c62982e01e957399bc5c995a39c67c03c07b8a71d52ec7e682b1acd6af"
+
+[frozen_file_authorities.context_preflight]
+path = "config/artifacts/models/context_borzoi/outcome_blind_architecture_preflight_20260824.json"
+sha256 = "88b353a3c1bd1074b3042333d74d4dcd977396c452eea054d9bc87edd204f512"
+
+[frozen_file_authorities.context_checkpoints]
+path = "config/artifacts/models/context_borzoi/checkpoints.json"
+sha256 = "7f2fde87b0dd7a1c7de3e4d77dd2b70d93e2ddb12054f58855d7f033897aa4b6"
+
+[frozen_file_authorities.rna_atac_task]
+path = "config/tasks/rna_conditioned_atac.toml"
+sha256 = "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0"
+
+[frozen_file_authorities.variant_task]
+path = "config/tasks/variant_to_regulation.toml"
+sha256 = "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"
+
+[frozen_file_authorities.error_audit_campaign]
+path = "config/campaigns/v1_error_audit.toml"
+sha256 = "da7144e3ff72f7d2158d76a9a32f427874bc9997810fa7920933c540a1591ad4"
+
+[frozen_file_authorities.conditional_campaign]
+path = "config/campaigns/v1_conditional_model.toml"
+sha256 = "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c"
+
+[frozen_file_authorities.family_native_tournament]
+path = "config/evaluation/family_native_tournament.toml"
+sha256 = "acd9f333bd4d639d6df6b3017c1bf9a040ee921195b59b01fee934f1726a0495"
+
+[frozen_file_authorities.local_variant_config]
+path = "config/local_variant_family_reconciliation.json"
+sha256 = "4dfe912f4d669f31fa05706231e57312293c9308e5688febe460bfb1e72e6df8"
+
+[frozen_tree_authorities.local_variant_reconciliation]
+path = "executions/model-check-218-21088040"
+artifacts_sha256 = "10f8b925ebdf9a7e0582fda49790433b0d2dbad3e83bc64db2b17842cb10e009"
+
+[frozen_tree_authorities.local_profile_incomplete_matrix]
+path = "executions/sequence-accessibility-valid-matrix-21070421"
+artifacts_sha256 = "7960cb07a58f7d43d66615da87bc6347d94d6e488d763414678049480fa38fe3"
+
+[frozen_tree_authorities.corgi_hepatocyte_tile_predictions]
+path = "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656"
+artifacts_sha256 = "bf53c7a23a1d023442a3de64150fd98799a5be3991e95e6a2f4057f6998d4eda"
+
+[frozen_tree_authorities.midas_inductive_predictions]
+path = "executions/midas-inductive-seed2711-aggregated-21070221"
+artifacts_sha256 = "675f8e7cee927fb5d852edf0b9de3a9df22ce60f1adc4740aa2bd430fbf00b4b"
+
+[frozen_tree_authorities.scbasset_fold0_predictions]
+path = "executions/scbasset-donor0-genomic0-seed11-valid-21064859"
+artifacts_sha256 = "c27f080243968ec5815e158fc22280c1718ef9b0cb0ea08012442755d35a9db0"
+
+[frozen_tree_authorities.scbasset_fold1to4_prediction_lock]
+path = "executions/scbasset-fold1to4-prediction-lock-21070492"
+artifacts_sha256 = "9686a37c7bbeeac898cc2c4e1162c7033fcf2e0d09088abc9bb6c6c97bef3f07"
+
+[frozen_tree_authorities.dna_lm_family_reconciliation]
+path = "executions/model-check-216-21087653"
+artifacts_sha256 = "df8c64a3c56a2eb939f8d4a2785be3b5dbc009f6722476f1b281b4b162346f39"
+
+[frozen_tree_authorities.native_mpra_evaluation]
+path = "executions/gse281364-sei-mpralegnet-evaluation-21070138"
+artifacts_sha256 = "505146198a2e2fbdcc221733ba41042d58fa4ef88b24a687714cfdf5f912860c"
+
+[frozen_tree_authorities.enformer_mpra_evaluation]
+path = "executions/gse281364-enformer-evaluation-21071015"
+artifacts_sha256 = "41f173e6e9fbec992d5a857be60a269ad5d0723135330f9d57e913dc4ed05876"
+
+[frozen_tree_authorities.borzoi_native_execution_preflight]
+path = "executions/borzoi-native-execution-preflight-21086270"
+artifacts_sha256 = "44256f047b26326eea9caaacd79f85c5639fa432a9d4dd2ff4de7ac926945f57"
+
+[bundled_cpu_validation_ask]
+job_name = "model-check-219"
+partition = "cpu"
+qos = "nslab"
+nodes = 1
+cpus_per_task = 2
+memory_gb = 24
+walltime = "04:00:00"
+array = false
+job_count = 1
+total_cpu_hours = 8
+total_gpu_hours = 0
+purpose = "unit_tests_hash_validation_prediction_bundle_metadata_and_row_identifier_overlap_only"
+submitted = false

@@ -1,0 +1,332 @@
+schema_version = "masld-bench-task-v1"
+task_id = "model_output_structural_corroboration"
+status = "draft_substrate_cannot_support_this_lane_as_scoped"
+draft_revision = 3
+draft_revision_note = "Revision 2 removes an eligibility matrix that revision 1 encoded and that is now known to be wrong on two rows, corrects an error of the producer's own about the Zhu negatives, and binds the three ranking authorities by path and digest. It does not settle scope: the cell-model question below is unresolved and gates the lane."
+draft_note = "DRAFT under drafts/. Not an authority until reviewed, moved into config/tasks/ and hash-pinned."
+
+unit_of_inference = "independent_locus"
+unit_inherited_from = "config/tasks/typed_evidence_graph.toml"
+unit_note = "Inherited, not invented. Individual variants and neighbouring regions are correlated, so a per-variant or per-region bootstrap understates uncertainty."
+
+endpoint = "Do the campaign's own completed model outputs rank targets in a way that COLOC-independent structural evidence supports? This scores existing rankings against external annotation; it fits nothing new."
+
+# ---------------------------------------------------------------------------
+# Relationship to the registered prioritization endpoint.
+# ---------------------------------------------------------------------------
+
+[relationship_to_typed_evidence_graph]
+registered_endpoint = "config/tasks/typed_evidence_graph.toml"
+this_lane_supersedes_it = false
+this_lane_amends_it = false
+that_file_must_remain_byte_identical = true
+verified_before_and_after = true
+different_question = "typed_evidence_graph ranks genes FROM a typed evidence graph and trains on the Resource COLOC. This lane takes rankings that already exist, produced by models trained on other substrates, and asks whether independent structural annotation corroborates them. Neither is a substitute for the other."
+why_the_coloc_admission_block_does_not_bite = "config/datasets/current_coloc_gwas.toml carries admission_blocking = true pending promotion of the corrected 50-study COLOC rerun. This lane does not train on, read, or score against current_coloc_gwas, so that blocker is out of scope here. It remains binding on typed_evidence_graph, which does train on it."
+coloc_is_not_an_input_to_this_lane = true
+
+# ---------------------------------------------------------------------------
+# Substrate. Every resource verified as real content, not a stub, before binding.
+# ---------------------------------------------------------------------------
+
+[substrate.verification]
+method = "file count and total bytes under each directory"
+motivation = "config/datasets/genebass was registered and is an EMPTY directory. A registry entry is not evidence that content exists."
+genebass_excluded = "0 files, 4096 bytes - directory entry only. Excluded and recorded so nobody binds it."
+
+[substrate.structural_primary]
+independence_basis = "none of these derive from the liver GWAS that the Resource COLOC consumed, so they are genuinely independent of the Resource's genetic layer"
+abc_liver = { files = 2, bytes = 342646808, content = "HepG2 ABC enhancer predictions and the AvgHiC ABC prediction table" }
+encode_liver = { files = 2, bytes = 556372384, content = "H3K27ac and H3K27me3 bigWig" }
+roadmap_liver_E066 = { files = 5, bytes = 10893438, content = "chromHMM 15-state hg38 and H3K27ac broadPeak" }
+screen_ccre_hepg2 = { files = 1, bytes = 129087151, content = "GRCh38 cCREs" }
+gnomad_constraint = { files = 1, bytes = 95550137, content = "gnomAD v4.1 constraint metrics" }
+
+[substrate.variant_level_external]
+zhu2026_masld_mpra = { files = 2, bytes = 19414, doi = "10.1038/s41588-026-02617-8" }
+usable_layer = "variant"
+excluded_layer = "gene"
+exclusion_reason = "The resource's own README states that the DAV status and mpra_log2fc are Zhu's, but 'The gene label attached to a DAV is our finemapping/coloc locus assignment for that variant.' The gene attribution is the Resource's own. Scoring a GENE ranking against gene labels the Resource assigned would be circular at exactly the level being scored. The variant readout is independent; the gene layer is not."
+readout = "signed allelic reporter effect, zhu_mpra_log2fc, with an rsID in zhu_lead_variant"
+n_dav = 23
+n_featured_target = 4
+n_total_rows = 27
+positives_only = true
+positives_only_consequence = "This file contains only SIGNIFICANT DAVs. It carries no non-DAV comparison set, so a discrimination test is impossible from it alone. Importing negatives from another variant source with different ascertainment would be the asymmetric-denominator trap. This lane therefore runs a CONCORDANCE test among the 23, never a 2x2."
+
+[substrate.prohibited]
+gtex_v8_liver_eqtl = "DO NOT USE. data/gtex_v8_liver_eqtl/ contains ONE file, chrX only, with header 'Entrez Variant CHR POS NEA EA EAF Beta SE PVAL N Studies GeneSymbol ENSG Gene_Biotype'. A Studies column indicates a meta-analysis, which is not GTEx v8's native eQTL schema, and the filename matches the data/broadaway_eqtl pattern. The directory name asserts a provenance its contents do not support."
+gtex_v8_liver_sqtl = "NOT an eQTL substitute. Splicing QTL is a different molecular phenotype and may not stand in for expression QTL."
+current_coloc_gwas = "not an input to this lane at all"
+resource_owned = "Gene Catalog, portal, figures, evidence classes, thresholds and the 117 Hotspot programs are read-only and are not scored here"
+
+# ---------------------------------------------------------------------------
+# Eligibility. A variant-effect score and a region-level accessibility skill
+# are NOT interchangeable rankings, and the matrix says so explicitly.
+# ---------------------------------------------------------------------------
+
+[eligibility]
+rule = "A model output may only be scored against evidence at its own unit. Cross-unit scoring is prohibited, not discouraged."
+
+[eligibility.matrix]
+correction_note = "Revision 1 placed sei_native_40_class and observed_atac_glm_region_skill in the REGION lane. Both rows were wrong and both are corrected here, each against artifact evidence rather than assertion."
+
+hyenadna_mpra_delta = { unit = "variant", authority = "executions/model-cpu-train-605-21099008", artifacts_sha256 = "c2685589276933ae91bb73fc9a804a81eda0a16c10e28cc360f93f7afb3d2396", metric = "delta_ridge", value = 0.21622332457761556, per_element_predictions = "fit/oof_predictions.tsv.gz", elements = 1033, eligible_evidence = ["zhu2026 mpra variant layer"], ineligible = ["cCRE", "ABC", "chromHMM", "H3K27ac", "gnomAD constraint"] }
+
+sei_native_40_class = { unit = "variant", authority = "executions/model-cpu-train-604-21097189", artifacts_sha256 = "f77dac4d7c6b924c201a266e96f855bab8d56c8682ffcda5236e30957f71510a", metric = "native_40class_ridge", value = 0.19386484092133013, per_element_predictions = "fit/oof_predictions.tsv.gz", elements = 1033, eligible_evidence = ["zhu2026 mpra variant layer"], ineligible = ["cCRE", "ABC", "chromHMM", "H3K27ac", "gnomAD constraint"] }
+sei_correction_evidence = "Sei's own out-of-fold table carries exactly the same 1,033 element_ids as HyenaDNA, and sits beside available_simple_controls/allele_identity_ridge and /zero - the allelic-effect controls. Sei is a VARIANT model in the same MPRA universe, not a region model. Verified from executions/model-cpu-train-604-21097189/fit/oof_predictions.tsv.gz, not accepted on assertion."
+
+observed_atac_glm_region_skill = { unit = "not_rankable", authority = "executions/model-cpu-score-328-21100332", artifacts_sha256 = "6b8cbf9e38da67f6d0b63ccc0978b678ea45c2bbc125dbab9e1ed8d878a73d21", metric = "five_seed_ensemble_profile_deviance_skill", value = 0.162666866678673, ci = [0.15199894584277426, 0.17325905925000024], eligible_evidence = [], ineligible = ["everything"] }
+atac_glm_exclusion_evidence = "Its receipt records genomic_blocks = 5, n_cells = 195, n_observations = 975 and prediction_matrices = 625. The output is a per-lineage profile deviance skill over FIVE genomic blocks, not a per-element score across thousands of regions. There is nothing in it to rank against a cCRE or an ABC enhancer. It is a complete authorised result - partial_ranking_authorized false, partial_rectangle_used false - it simply is not a ranking."
+
+gene_level_stage_associations = { unit = "gene", eligible_evidence = ["gnomad_constraint"], ineligible = ["zhu variant layer", "cCRE", "ABC", "chromHMM"] }
+
+[eligibility.open_item_before_freeze]
+status = "CLOSED - all three authorities resolved by path and digest and bound in the matrix above"
+per_element_predictions_exist = true
+per_element_predictions_location = "fit/oof_predictions.tsv.gz in each run, a FILE inside fit/ rather than a predictions/ directory, which is why a directory search missed it"
+reuse_constraint_holds = "The frozen out-of-fold tables carry per-element predictions with element_id, model_id, head_id, prediction, seed, outer_fold and long_range_block_id. Nothing needs re-deriving from frozen heads, so 'reuse completed outputs, fit nothing new' is satisfied and no additional authorisation is required."
+heads_are_weights_only = "fit/heads/**.npz contain coefficient (128 for HyenaDNA, 40 for Sei), intercept, selected_alpha and the feature mean/scale/indices. They are fitted head weights and carry no per-element output - confirmed by opening them."
+superseded_issue = "The specific frozen artifacts carrying the three named model outputs were NOT resolved at revision 1."
+what_is_registered = "config/evaluation/family_native_tournament.toml registers model_id 'hyenadna' and the endpoint families 'mpra_activity' and 'accessibility_delta', so the identities exist. The headline values quoted in the lane briefing (0.2162 MPRA delta, +0.082 gain over the allele ridge, 0.1627 ATAC-GLM deviance skill) were NOT located in config/ during the substrate check."
+requirement = "Every ranking input must be pinned by execution path and ARTIFACTS.json digest before this spec is frozen. No number is bound to this lane on the strength of a value quoted in conversation."
+
+# ---------------------------------------------------------------------------
+# Lanes.
+# ---------------------------------------------------------------------------
+
+[lanes.region]
+lane_id = "region_structural_corroboration"
+status = "NO_ELIGIBLE_MODEL_OUTPUT"
+headline_eligible = false
+runnable = false
+rankings = []
+evidence_available_but_unscoreable = ["screen_ccre_hepg2", "abc_liver", "roadmap_liver_E066", "encode_liver"]
+finding = "Roughly 1 GB of verified, genuinely COLOC-independent structural annotation is present and has NOTHING to be scored against. The only two candidate region-level rankings both fail: Sei is a variant model in the 1,033-element MPRA universe, and the observed-ATAC GLM emits a five-block profile deviance skill rather than per-element scores."
+this_is_a_result_not_an_omission = "The substrate is real and the gap is on the model side. Recording it tells a future lane exactly what would unlock this annotation: any model output that scores thousands of individual genomic regions."
+do_not_freeze_this_lane = true
+
+[lanes.variant]
+lane_id = "variant_mpra_corroboration"
+headline_eligible = true
+rankings = ["hyenadna_mpra_delta", "sei_native_40_class"]
+evidence = "zhu2026 mpra variant layer, via the upstream parse"
+evidence_path = "GWAS/finemapping/results/seqfunc/mpra_benchmark/mpra_substrate_truth.tsv"
+evidence_rows = 1128
+
+[lanes.variant.producer_error_corrected]
+revision_1_claimed = "the Zhu resource holds only positives, so a discrimination test is impossible and a 2x2 is prohibited"
+that_was_wrong = true
+why = "Revision 1 read the 27-row CURATED csv, data/external/zhu2026_masld_mpra/zhu2026_masld_mpra_calls.csv, which contains only DAVs. The upstream parse the README itself names carries 1,128 rows with a dav column: 87 positive and 1,041 negative."
+consequence = "A discrimination test IS possible, and its negatives are the right kind: variants tested in the SAME MPRA and found non-significant. That is an ascertainment-matched negative set from the same assay, which is precisely the non-asymmetric denominator revision 1 said did not exist."
+
+[lanes.variant.realised_overlap]
+frozen_universe_elements = 1033
+substrate_rows = 1128
+substrate_dav_positive = 87
+substrate_dav_negative = 1041
+rows_inside_the_frozen_universe = 232
+dav_inside = 17
+non_dav_inside = 215
+signed_effect_available_for = "the 87 DAVs only; rsid, mpra_log2fc, mpra_p and mpra_fdr are populated for DAVs and empty for non-DAVs"
+
+[lanes.variant.ascertainment_check]
+question = "does membership of the frozen element universe depend on DAV status?"
+dav_in_universe = 0.1954
+non_dav_in_universe = 0.2065
+verdict = "PASS - near-identical rates, so the intersection introduces no asymmetric denominator"
+
+[lanes.variant.arms]
+discrimination = { statistic = "AUPRC and threshold-free rank correlation of model score against dav status", n = 232, positives = 17, null_se = 0.0658, two_null_se = 0.1316, powered = true }
+concordance = { statistic = "signed Spearman of predicted allelic delta against zhu_mpra_log2fc", n = 17, null_se = 0.2500, two_null_se = 0.5000, powered = false, disposition = "records not_applicable, underpowered by construction, NEVER met=false" }
+concordance_is_worse_than_revision_1_assumed = "revision 1 assumed n=23; the realised intersection is 17"
+
+[lanes.variant.block_bootstrap_resolution]
+distinct_block_1mb_in_overlap = 23
+blocks_containing_any_dav = 8
+dav_per_block = "chr17:67 has 5, chr19:19 has 4, chr1:155 has 3, and five blocks hold one each"
+concentration = "12 of the 17 DAVs sit in 3 blocks"
+consequence = "A block bootstrap resolves at about 23 units with the positive signal concentrated in 8 of them. Intervals will be honest and wide. This is the same class of limitation as the k=3 cohort bootstrap on W2 and is recorded rather than worked around."
+
+[lanes.variant.column_allowlist]
+policy = "ALLOWLIST with default deny. Not a blocklist."
+why_not_a_blocklist = "The upstream table mixes Zhu's experimental readout with the Resource's own annotation in one file. A blocklist requires enumerating every Resource-owned column correctly and fails silently the moment a new one appears or one is missed. An allowlist fails closed: a column nobody positively attributed to Zhu is simply not scoreable."
+allowed_zhu_owned_columns = ["rsid", "mpra_log2fc", "mpra_p", "mpra_fdr", "dav", "cell_model", "stimulus"]
+default_for_every_other_column = "DENIED - may not be scored against, joined on as an outcome, or used to define a positive set"
+known_resource_derived_examples = ["max_pip", "coloc_pp4_best", "colocalizes", "coloc_match", "is_DEG", "primary_gene", "is_final_nomination_lead", "magnitude_percentile"]
+known_resource_derived_note = "Listed as examples of what the default correctly excludes, NOT as the definition of what is excluded. The definition is: anything not on the allowlist."
+provenance_basis = "the resource README states that the DAV status and mpra_log2fc are Zhu's while the gene attribution is the Resource's finemapping/coloc assignment"
+
+[lanes.variant.OPEN_QUESTION_GATING_SCOPE]
+question = "may an LX2 measurement be scored against a HepG2 prediction?"
+why_it_matters = "The substrate is 564 HepG2 plus 564 LX2, each variant measured twice. The frozen predictions carry assay_context_id of HepG2_control and HepG2_PAOA - both HepG2. If LX2 rows cannot be scored against HepG2 predictions, the usable overlap roughly halves to about 116 rows and 8 or 9 DAVs."
+consequence_if_hepg2_only = "discrimination becomes marginal and concordance is dead; W3 would reduce to a single underpowered arm and 'the substrate cannot support this lane as scoped' becomes the honest finding"
+status = "UNRESOLVED - this is a scientific call, not bookkeeping, and it is not the producer's to make"
+scope_is_not_settled_until_this_is_answered = true
+
+[lanes.gene]
+lane_id = "gene_constraint_corroboration"
+headline_eligible = false
+rankings = ["gene_level_stage_associations"]
+evidence = ["gnomad_constraint"]
+question = "are genes the stage-association models rank highly more constrained than expression-matched genes?"
+weakness_stated = "gnomAD constraint is neither liver-specific nor fibrosis-specific. It measures depletion of loss-of-function variation across all human tissues and phenotypes."
+what_a_positive_can_support = "that the ranked genes are enriched for genes under selective constraint, which is a statement about general biological importance"
+what_a_positive_CANNOT_support = "that the ranked genes are MASLD-relevant, liver-relevant, or fibrosis-relevant. Constraint would rank a haploinsufficient neurodevelopmental gene above a liver-specific enzyme."
+consequence = "this lane is reported as descriptive context and is not headline-eligible; it cannot advance the gate on its own"
+
+# ---------------------------------------------------------------------------
+# Controls. The asymmetric-denominator trap is the live risk here.
+# ---------------------------------------------------------------------------
+
+[controls.matched_background]
+mandatory = true
+the_trap = "Regions with more coverage and higher accessibility are both EASIER for a model to score well AND MORE LIKELY to have been annotated as a cCRE or an ABC enhancer. That correlation alone manufactures enrichment with no model skill involved."
+matching_is_modality_specific = "Matching on the wrong covariate is the same error in a new costume."
+region_lane_match_on = ["accessibility", "sequencing coverage", "GC content", "region length", "mappability"]
+variant_lane_match_on = "not applicable - concordance among a fixed positive set, no background is drawn"
+gene_lane_match_on = ["expression"]
+gene_lane_matching_rationale = "An earlier orthogonality-ladder enrichment in this project was an expression artifact: the expression-matched ladder was FLAT at 1 across all 11 floors. A gene lane matched on anything other than expression repeats that failure."
+region_lane_matching_rationale = "Expression matching is meaningless for a genomic region. Accessibility and coverage are the covariates that drive both the model score and the annotation probability here."
+
+[controls.universe]
+must_be_stated_explicitly = true
+must_be_justified = true
+prior_failure = "An earlier Fisher test in this project used a universe of 27,638 where 14,931 was correct. Both 'significant' enrichments evaporated when the universe was fixed."
+region_universe = "the regions the ranking model actually scored, not all annotated regions and not the whole genome"
+gene_universe = "the genes the association model actually tested, not all protein-coding genes"
+rule = "The universe is the set the model could have ranked. A gene or region the model never scored was never available to be ranked and may not sit in the denominator."
+
+[controls.nulls]
+auprc_null = "measured permutation null computed from each model's OWN realised score-vector tie structure"
+prevalence_is_never_the_null = "Prevalence has sat BELOW the measured null mean in all three cohorts tested this week. Scoring average precision against prevalence manufactures significance."
+rank_correlation_null = "measured by permutation, reported beside the 1/sqrt(n-1) analytic reference"
+both_references_reported = true
+
+[controls.comparison]
+model_vs_model = "paired bootstrap on the same resampled blocks"
+overlapping_marginal_intervals_are_not_evidence_of_absence = true
+
+[controls.reporting]
+p_value_resolution_floor = "A p-value from R permutations may not be reported below 1/(R+1). At 10000 replicates, 3 exceedances is reported as p <= 1e-4, never as 3.0e-4."
+threshold_free_beside_every_2x2 = true
+
+# ---------------------------------------------------------------------------
+# Uncertainty.
+# ---------------------------------------------------------------------------
+
+[uncertainty]
+method = "paired_ld_and_gene_block_bootstrap"
+resampling_units = ["ld_block", "gene_block"]
+inherited_from = "config/tasks/typed_evidence_graph.toml"
+bootstrap_replicates = 10000
+block_definition_open_item = "The LD-block source must be pinned before freeze. Approximately-independent LD blocks are preferred; if no block file is present on disk, fixed-width genomic blocks are the fallback and the width must be justified, not defaulted."
+why_blocks_and_not_units = "Neighbouring accessible regions share chromatin-domain structure and neighbouring variants share LD. Resampling regions or variants independently would treat correlated observations as independent and understate the interval."
+
+multiplicity_family = "model_output_structural_corroboration_primary"
+multiplicity_method = "bh_q0.05_within_each_lane_s_own_family"
+promotion_gate_id = "model_output_structural_corroboration_development_v1"
+
+claim_gate = "External-development corroboration only. This lane scores existing model outputs against independent structural annotation. No champion, sealed confirmation, causal, diagnostic, prognostic, or clinical claim is eligible, and no result here amends the Resource's evidence classes, Gene Catalog, thresholds or the 117 Hotspot programs."
+external_development_only = true
+champion_eligible = false
+
+# ---------------------------------------------------------------------------
+# VERDICT AFTER THE HepG2-ONLY RULING. The lane cannot run as scoped.
+# ---------------------------------------------------------------------------
+
+[verdict]
+finding = "The substrate cannot support this lane as scoped."
+both_arms_underpowered = true
+this_is_a_result_not_a_failure = "Recorded as a finding about what the available substrate can answer, not as a failed analysis."
+
+[verdict.substrate_shape]
+distinct_variants_in_substrate = 282
+rows = 1128
+structure = "282 variants x 2 cell models x 2 stimuli"
+stimulus_by_cell_model = "HepG2/control 282, HepG2/PAOA 282, LX2/control 282, LX2/TGFb 282"
+the_1128_was_never_1128_variants = "The row count is a 4x expansion of 282 variants. Neither 1,128 nor 564 is a variant count."
+
+[verdict.hepg2_only_realised]
+rows_inside_frozen_universe = 116
+distinct_elements = 57
+dav_rows = 7
+dav_distinct_rsid = 5
+dav_distinct_element = 5
+non_dav_rows = 109
+non_dav_distinct_element = 55
+blocks = 23
+blocks_containing_a_dav = 5
+answer_to_the_distinct_variant_question = "The 17 DAV rows were NOT 17 distinct variants. Under the HepG2 restriction they collapse to 5 distinct rsIDs on 5 distinct elements; the extra rows are the same variants measured under control and PAOA."
+
+[verdict.power]
+discrimination_n_elements = 57
+discrimination_positives = 5
+rank_null_se = 0.1336
+rank_two_null_se = 0.2673
+discrimination_disposition = "not_applicable - underpowered. Detectable only at |rho| >= 0.267 on 57 elements carrying 5 positives, with the positives spread over 5 of 23 blocks."
+concordance_n_variants = 5
+concordance_disposition = "not_applicable - underpowered. A signed rank correlation on 5 points is not interpretable."
+rule_applied = "By the lane's own rule an underpowered arm records not_applicable, never met=false. A null here is uninformative about the model and scoring it as failure would be the mirror image of a vacuous pass."
+
+[verdict.the_ruling_was_empirically_correct]
+question = "was excluding LX2 the right call, or merely conservative?"
+evidence = "DAV status is substantially cell-type specific. Across the whole substrate: 25 rsIDs are DAV in HepG2, 44 are DAV in LX2, and only 13 are DAV in BOTH - 12 HepG2-only, 31 LX2-only."
+reading = "Fewer than a quarter of the 56 unique DAVs are shared between the two cell lines. Pooling HepG2 and LX2 would have conflated two largely different variant sets and roughly doubled n with rows whose positive labels disagree. The cell-type ruling is vindicated by the data, not just by the biology."
+
+[verdict.stimulus_decision]
+question = "may HepG2_control and HepG2_PAOA be pooled?"
+decision = "NOT pooled for the primary. Each of the 57 elements carries a prediction under each context and a measurement under each stimulus; pooling would enter every element twice and treat two conditions as independent observations."
+consequence = "Per-stimulus the arm is roughly 58 rows on 57 elements, so pooling would not rescue power - it would only double-count. The pooling question is therefore moot for this substrate and is recorded as decided rather than left open."
+
+[verdict.what_would_unlock_this]
+region_lane = "any campaign model output that scores thousands of individual genomic regions; roughly 1 GB of verified COLOC-independent ABC/ENCODE/Roadmap/SCREEN annotation is already on disk waiting for one"
+variant_lane = "either an MPRA whose tested variants overlap the frozen 1,033-element universe far more than 5.1 percent, or predictions generated over the Zhu variant set rather than over the existing MPRA element panel"
+note = "Both gaps are on the model-output side. The external evidence is real, licensed and independent; nothing in the campaign currently produces a ranking at the unit the evidence is measured on."
+
+
+# ---------------------------------------------------------------------------
+# Required at freeze. Lessons that outlive this lane.
+# ---------------------------------------------------------------------------
+
+[lessons.row_count_is_not_a_unit_count]
+first_class_finding = true
+statement = "A row count is not a unit count, and a design expanded across conditions inflates it by exactly the expansion factor."
+this_substrate = "282 distinct variants x 2 cell models x 2 stimuli = 1128 rows"
+what_both_parties_did = "The team lead and the producer both reasoned from 1128 and 564 as if they were variant counts. Both are row counts of a 4x expansion. The 17 DAV rows were never 17 variants; under HepG2 they collapse to 5 rsIDs on 5 elements."
+consequence = "EVERY power number quoted by either party before the distinct-variant check was wrong for this reason, including the producer's own 0.4264 threshold, which assumed n=23."
+same_shape_as = ["the SRR-run-versus-donor trap in W2", "the sample-versus-donor collapse earlier in this project"]
+rule = "Before any power arithmetic, report distinct units alongside row counts and state which one the arithmetic uses."
+
+[lessons.convenience_is_a_tell]
+verbatim = "The convenience of doubling n was exactly the tell."
+context = "Pooling HepG2 and LX2 would have doubled n. That convenience was the signal to check whether the pooling was legitimate, not a reason to do it."
+generalised = "When a methodological shortcut happens to increase power, treat the convenience itself as a prompt to verify the shortcut, because motivated reasoning runs in the direction of more n."
+
+[lessons.unit_alignment_is_a_design_constraint]
+statement = "Unit alignment with external evidence must be a design constraint at the point a task is REGISTERED, not something discovered at scoring time."
+why = "This benchmark's endpoints were chosen to be internally rigorous, and they do not align with the units independent external evidence is recorded on. That misalignment is invisible until an external corroboration lane is attempted, and by then the model outputs are already frozen at the wrong unit."
+evidence_from_this_lane = "The region annotation needs a model scoring thousands of individual genomic regions and none exists; the variant evidence needs predictions over the Zhu variant set, and the frozen 1,033-element MPRA panel overlaps it at 5.1 percent."
+
+[campaign_level_finding]
+statement = "Both gaps are on the model-output side. The external evidence is fine."
+elaboration = "The external evidence is real, licensed, verified and genuinely COLOC-independent. What is missing is any campaign output measured at the unit that evidence is recorded on."
+this_is_structural_not_incidental = "It is a statement about what this benchmark has optimised for: internal rigour at units of its own choosing."
+not_a_criticism_of_the_substrate = true
+
+[no_gate_registered]
+decision = "This lane has NO promotion gate, by team lead ruling of 2026-08-26."
+reason = "A gate for a lane that cannot run would assert more than we know."
+a_draft_gate_exists_unfrozen = "drafts/w3_prioritization/model_output_structural_corroboration_promotion_gate.json is marked MUST_NOT_BE_REGISTERED and is retained only as a working record of what would have been tested."
+the_zero_applicable_finding_is_preserved_here = "Applying not_applicable honestly leaves zero applicable conditions, and an evaluator computing all() over an empty list returns True - so a naive implementation would emit PASS having tested nothing. The correct third state is NO_APPLICABLE_CONDITIONS: not PASS because nothing was demonstrated, not FAIL because nothing was tested. Any gate can reach this state once not_applicable is applied honestly, so every evaluator must handle 0/0 explicitly."
+
+[cell_type_specificity_evidence]
+bound_as_evidence = true
+purpose = "turns a principled ruling into a demonstrated one, so a future reader tempted to pool is stopped by data rather than by an argument"
+hepg2_dav_rsids = 25
+lx2_dav_rsids = 44
+dav_in_both = 13
+hepg2_only = 12
+lx2_only = 31
+unique_davs = 56
+reading = "Fewer than a quarter of the 56 unique DAVs are shared between the two cell lines. Pooling would have merged two largely disjoint positive sets, with the same variant positive in one line and negative in the other."

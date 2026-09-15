@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-smoke"
-description = "One-seed fixed-fixture smoke tests after checkpoint and runtime admission"
+description = "One-seed fixed-fixture smoke tests after checkpoint and runtime inclusion"
 wave = "smoke"
 status = "blocked_prerequisites"
 prerequisites = ["v1-admission complete", "exact runtime lock", "reference validation"]

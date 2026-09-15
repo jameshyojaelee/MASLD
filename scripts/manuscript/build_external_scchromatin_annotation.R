@@ -7,7 +7,7 @@
 # layer relates to our genetic + disease-state classes. ADDITIVE / external
 # annotation only -- does NOT mutate the frozen release and is NOT an input to the
 # convergence/heuristic score. See data/external/elison2025_sc_chromatin/README.md
-# and the number-verification firewall.
+# and the number-verification separation.
 #
 # Analog of scripts/manuscript/build_external_pqtl_annotation.R (Gobeil pQTL), one
 # regulatory layer over. Our per-gene values are pulled LIVE from the frozen table

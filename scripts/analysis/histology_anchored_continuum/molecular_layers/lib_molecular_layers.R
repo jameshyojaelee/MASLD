@@ -174,6 +174,114 @@ ml_load_axes <- function(contract = ml_read_contract()) {
   axes
 }
 
+ml_node_collection_order <- function() {
+  c("hallmark", "kegg", "reactome", "go_bp", "go_mf", "go_cc", "hotspot")
+}
+
+# Builds the node-level donor score table for the frozen molecular-system atlas.
+# Lifted from 70_infer_molecular_systems.R so that downstream stress tests score
+# the identical substrate; 73 asserts equality against the frozen 70 candidate.
+ml_load_node_donor_scores <- function(analysis_candidate, nodes, hotspot) {
+  collection_order <- ml_node_collection_order()
+  pathway_paths <- file.path(
+    analysis_candidate, "pathway_tf", "pathways", collection_order[1:6],
+    "donor_scores.tsv.gz"
+  )
+  ml_assert(all(file.exists(pathway_paths)),
+            "A pathway donor-score file is missing")
+  score_rows <- vector("list", length(collection_order))
+  for (index in seq_len(6L)) {
+    collection_name <- collection_order[[index]]
+    values <- fread(pathway_paths[[index]], na.strings = c("", "NA"))
+    ml_assert(
+      all(c("set_id", "sample_id", "pathway_score", "dataset") %in% names(values)),
+      paste0("Pathway donor-score schema drift: ", collection_name)
+    )
+    score_rows[[index]] <- values[
+      set_id %in% nodes[collection == collection_name, feature_id],
+      .(
+        feature_id = set_id, collection = collection_name,
+        sample_id, dataset, feature_score = as.numeric(pathway_score)
+      )
+    ]
+  }
+  score_rows[[7L]] <- hotspot[
+    program_uid %in% nodes[collection == "hotspot", feature_id],
+    .(
+      feature_id = program_uid, collection = "hotspot",
+      sample_id, dataset, feature_score = as.numeric(outcome_z)
+    )
+  ]
+  feature_scores <- rbindlist(score_rows, use.names = TRUE)
+  feature_scores <- merge(
+    feature_scores, nodes,
+    by = c("feature_id", "collection"), all = FALSE, sort = FALSE
+  )
+  ml_assert(!anyDuplicated(feature_scores[, .(feature_id, sample_id, dataset)]),
+            "Feature donor scores are duplicated")
+  ml_assert(all(is.finite(feature_scores$feature_score)),
+            "Feature donor scores contain non-finite values")
+  feature_scores
+}
+
+# Collection-balanced system score: median within collection, then unweighted
+# mean across the collections present. Matches 70_infer_molecular_systems.R.
+ml_collection_balanced_scores <- function(feature_scores,
+                                          group_columns = c("community_id")) {
+  by_collection <- c("sample_id", "dataset", group_columns, "collection")
+  components <- feature_scores[, .(
+    collection_median = median(feature_score)
+  ), by = by_collection]
+  components[, .(
+    system_score_raw = mean(collection_median),
+    n_collections = .N
+  ), by = c("sample_id", "dataset", group_columns)]
+}
+
+# Li and Ji (2005) effective number of independent tests in a correlated family.
+ml_effective_tests <- function(correlation) {
+  eigenvalues <- abs(eigen(correlation, symmetric = TRUE, only.values = TRUE)$values)
+  sum(as.integer(eigenvalues >= 1) + (eigenvalues - floor(eigenvalues)))
+}
+
+# Uniform-on-boundary snowball sample of a connected node set. Preserves set
+# size and graph connectivity, so it is the conservative competitive reference
+# for a graph community. adjacency is a list of integer neighbour vectors.
+# Returns NULL when the boundary empties before the target size is reached.
+ml_draw_connected_subgraph <- function(adjacency, target_size) {
+  n_nodes <- length(adjacency)
+  ml_assert(target_size >= 1L && target_size <= n_nodes,
+            "Connected-subgraph target size is out of range")
+  in_set <- logical(n_nodes)
+  on_boundary <- logical(n_nodes)
+  chosen <- integer(target_size)
+  seed_node <- sample.int(n_nodes, 1L)
+  in_set[seed_node] <- TRUE
+  chosen[1L] <- seed_node
+  boundary <- adjacency[[seed_node]]
+  boundary <- boundary[!in_set[boundary]]
+  on_boundary[boundary] <- TRUE
+  filled <- 1L
+  while (filled < target_size) {
+    if (length(boundary) == 0L) return(NULL)
+    pick <- sample.int(length(boundary), 1L)
+    node <- boundary[[pick]]
+    boundary[[pick]] <- boundary[[length(boundary)]]
+    length(boundary) <- length(boundary) - 1L
+    on_boundary[node] <- FALSE
+    in_set[node] <- TRUE
+    filled <- filled + 1L
+    chosen[filled] <- node
+    neighbours <- adjacency[[node]]
+    neighbours <- neighbours[!in_set[neighbours] & !on_boundary[neighbours]]
+    if (length(neighbours)) {
+      on_boundary[neighbours] <- TRUE
+      boundary <- c(boundary, neighbours)
+    }
+  }
+  chosen
+}
+
 ml_fit_outcome <- function(data, outcome = "outcome_z", stage = "fibrosis_stage") {
   d <- copy(data)
   required <- c(outcome, "axis_raw", stage, "inferred_sex")

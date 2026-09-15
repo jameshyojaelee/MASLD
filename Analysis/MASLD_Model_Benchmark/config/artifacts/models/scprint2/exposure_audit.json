@@ -25,7 +25,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "2ac7927f82804a0140c39368c382f0b47d2c7cc6361a73d43414c7ee32e7853b"
   },
-  "interpretation": "The original small-v2 object and code release are identifiable, but GSE289173 predates the checkpoint and the continuously updated scBaseCount/CELLxGENE/Tahoe inputs are not version-bound. Sealed exposure is therefore unknown, not target_label_unexposed. scprint2_medium is a separate deferred census identity: official scPRINT-2 materials identify only small-v2 and route larger models to the previous scPRINT-1 generation, so no medium checkpoint, architecture, corpus, runtime, license bundle, or exposure result exists to audit. Legacy medium-v1/v1.5 objects are not substitutes.",
+  "interpretation": "The original small-v2 object and code release are identifiable, but GSE289173 predates the checkpoint and the continuously updated scBaseCount/CELLxGENE/Tahoe inputs are not version-bound. Held-back exposure is therefore unknown, not target_label_unexposed. scprint2_medium is a separate deferred census identity: official scPRINT-2 materials identify only small-v2 and route larger models to the previous scPRINT-1 generation, so no medium checkpoint, architecture, corpus, runtime, license bundle, or exposure result exists to audit. Legacy medium-v1/v1.5 objects are not substitutes.",
   "license_disposition_by_identity": {
     "scprint2_medium": {
       "code": "UNRESOLVED_NO_EXECUTABLE_MEDIUM_RELEASE_BOUND",
@@ -42,9 +42,8 @@
   },
   "remaining_blockers": [
     "Freeze the exact CELLxGENE, Tahoe, and scBaseCount manifests and retained train/validation/test membership used by the checkpoint.",
-    "Obtain and hash-verify the original checkpoint only with approval, then inspect it without unrestricted pickle loading.",
-    "Freeze checkpoint architecture, vocabulary, ontology decoders, neighbor construction, row identity, and executable Torch 2.8 runtime.",
     "Prevent KNN/metacell inputs from crossing donor, study, or outer-fold boundaries and retain a no-neighbor common lane.",
+    "Resolve derivative-weight redistribution terms before releasing any adapted checkpoint.",
     "For scprint2_medium, obtain a primary-source release that explicitly identifies a scPRINT-2 medium checkpoint; do not substitute small-v2, medium-v1, medium-v1.5, v2-medium.ckpt, or a mutable same-path replacement.",
     "For scprint2_medium, bind the exact repository commit, configuration, checkpoint revision, byte size, immutable digest, architecture, vocabulary, ontology, and declared training-corpus membership.",
     "For scprint2_medium, audit code, weight, and derivative-weight terms separately and establish an executable safe-loading/runtime contract.",
@@ -52,7 +51,7 @@
   ],
   "safe_loading_by_identity": {
     "scprint2_medium": "No checkpoint exists, so loading is not authorized. A future artifact requires isolated restricted inspection, tensor/schema inventory, strict restore, and executable parity before use.",
-    "scprint2_small_v2": "The checkpoint was not downloaded. Obtain only with approval and inspect without unrestricted pickle loading before freezing state_dict, hyperparameters, vocabulary, ontologies, and loader/runtime."
+    "scprint2_small_v2": "The exact checkpoint is hash-verified and restricted-inspected; all 503 tensors strictly restore under the frozen release-1.0.3 Torch-2.8 runtime. Three no-neighbor outcome-blind embedding arms were evaluated without sealed outcomes. This does not authorize a cross-donor native KNN/metacell path."
   },
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_while_exposure_unknown",
@@ -62,7 +61,7 @@
   },
   "task_disposition": {
     "scprint2_medium": "deferred distinct cell_state_mapping identity; not runnable and not substitutable",
-    "scprint2_small_v2": "candidate cell_state_mapping comparator after safe-loading, runtime, leakage, and corpus gates; sealed champion use remains ineligible while exposure is unknown"
+    "scprint2_small_v2": "completed no-neighbor development comparator that did not beat the strongest registered baseline; native KNN/metacell evaluation remains separate and sealed champion use remains ineligible while exposure is unknown"
   },
   "verified_date": "2026-08-22"
 }

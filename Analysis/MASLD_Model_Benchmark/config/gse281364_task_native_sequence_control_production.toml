@@ -1,0 +1,96 @@
+schema_version = "masld-bench-gse281364-task-native-sequence-production-v1"
+status = "authorized_prediction_only_development_campaign"
+dataset_id = "gse281364"
+task_id = "signed_hepg2_reporter_activity_transfer"
+outcome_role = "exposed_development_MPRA_only"
+model_training_authorized = true
+prediction_generation_authorized = true
+adapter_metric_calculation_authorized = false
+adapter_scoring_authorized = false
+model_ranking_authorized = false
+shortlist_authorized = false
+promotion_authorized = false
+external_claim_authorized = false
+
+[frozen_task]
+path = "executions/model-check-227-21092007"
+artifacts_sha256 = "622ca08fa8df12f91349431c40e82bde693c56423c755dea6f72dd76c5478a5f"
+task_spec_member = "frozen/contract/task_spec.json"
+task_spec_sha256 = "fd5cec59db07718d54e174ed10443b26e574403d82453f747bda97c6ff6431c1"
+fixture_manifest_member = "frozen/fixture/manifest.tsv"
+fixture_manifest_sha256 = "e8564b2a20e6799ab77ec666da78cd5990e09103826ca83d6a03d20527025931"
+sequence_fasta_member = "frozen/fixture/sequence_controls.alleles.fa.gz"
+sequence_fasta_sha256 = "cd6f0c1663764b1340874ce4553076c8a7b148913c7031e078b132bf80ed46bd"
+split_plan_member = "frozen/fixture/split_plan.tsv"
+split_plan_sha256 = "b947cd6f4f0319eb297dff671bb9f3e95b48809d65df655349661008e62fd28c"
+
+[outcome_authority]
+path = "executions/gse281364-replicate-outcomes-21066307"
+artifacts_sha256 = "cb42bd4037127a4e4d6a406d6f7b00c706bc93b631cdf93083ce994809e791db"
+member = "outcomes/replicate_outcomes.tsv.gz"
+member_sha256 = "783caf7e7b659d95d34f5227e3aa149f636faf92ea5d685c4a25b41cb1f0b8f1"
+sealed_outcomes = false
+donors = 0
+experimental_replicates = 16
+
+[execution]
+models = ["sequence_cnn_control", "sequence_transformer_control"]
+outer_folds = ["fold-0", "fold-1", "fold-2", "fold-3", "fold-4"]
+seeds = [1103, 2909, 4721, 6673, 8111]
+fit_count = 50
+inner_selection_fit_count = 50
+final_refit_count = 50
+prediction_rows_per_model = 10330
+prediction_rows_total = 20660
+bundle_jobs = 1
+gpu_jobs = 1
+held_test_outcomes_visible_to_training_adapter = false
+target_materialization_process_separate_from_training_adapter = true
+private_target_views_retained_in_frozen_output = false
+
+[selection]
+inner_validation = "next_outer_fold_modulo_five"
+inner_training = "three_remaining_folds"
+selection_unit = "long_range_block"
+selection_loss = "mean_per_block_prespecified_smooth_l1_composite"
+standard_error = "sample_sd_across_validation_long_range_blocks_divided_by_sqrt_blocks"
+one_standard_error_rule = "earliest_epoch_at_or_after_minimum_epoch_with_loss_at_most_minimum_loss_plus_its_block_SE"
+early_stopping = "20_epochs_without_lower_block_mean_after_minimum_epoch"
+final_refit = "same_initialization_seed_all_four_non_test_folds_selected_epoch_count"
+
+[determinism]
+torch_deterministic_algorithms = true
+cublas_workspace_config = ":4096:8"
+cudnn_benchmark = false
+cudnn_deterministic = true
+tf32 = false
+reverse_complement_training_augmentation = "joint_REF_ALT_Bernoulli_half"
+reverse_complement_inference = "per_allele_forward_RC_mean_before_ALT_minus_REF"
+
+[output_contract]
+checkpoint_format = "safetensors_tensor_only"
+checkpoint_count = 50
+training_receipt_count = 50
+prediction_rows = 20660
+prediction_units = "unstandardized_mean_replicate_log2_RNA_over_DNA_activity"
+checkpoint_hashes_distinct_within_model_outer_fold = true
+benchmark_metrics = "forbidden"
+evaluator_outputs = "none"
+raw_training_targets_retained = false
+outcomes_copied_to_output = false
+champion_eligible = false
+external_claim_eligible = false
+
+[campaign]
+job_name = "model-training-231"
+partition = "gpu"
+account = "nslab"
+qos = "nslab"
+gpu_type = "l40s"
+gpus = 1
+cpus = 4
+memory_gb = 32
+hours = 24
+array = false
+bundled = true
+no_overwrite = true

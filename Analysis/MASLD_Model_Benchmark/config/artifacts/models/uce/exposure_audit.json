@@ -13,7 +13,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "54b2091b8d92ec8c2b00fd78201ba6a2f7b7d63b2babd8388b58c1736b612971"
   },
-  "interpretation": "The complete declared UCE training table contains GSE185477 and the MacParland Liver Atlas source, which are encoder_seen and require source-stratified diagnostics. It contains no exact title or accession match for the other registered pre-release development sources. GSE289173 postdates both public weight records and its frozen cell-state and eQTL/ieQTL outcomes were not training labels, supporting target_label_unexposed for sealed evaluation.",
+  "interpretation": "The complete declared UCE training table contains GSE185477 and the MacParland Liver Atlas source, which are encoder_seen and require source-stratified diagnostics. It contains no exact title or accession match for the other registered pre-release development sources. GSE289173 postdates both public weight records and its frozen cell-state and eQTL/ieQTL outcomes were not training labels, supporting target_label_unexposed for held-back evaluation.",
   "remaining_blockers": [
     "Obtain approved weight and auxiliary artifacts, verify source MD5 plus local SHA-256, and never treat source MD5 as the benchmark digest.",
     "Inspect model weights, all_tokens.torch, species_offsets.pkl, and the protein archive without unrestricted pickle execution or unsafe extraction.",

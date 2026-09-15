@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build immutable source contracts for the aging-inspired Figure 4–6 rebuild."""
+"""Build read-only source contracts for the aging-inspired Figure 4–6 rebuild."""
 
 from __future__ import annotations
 
@@ -667,7 +667,7 @@ def main() -> None:
         encoding="utf-8",
     )
     caption6.write_text(
-        "Figure 6C. Assay-native evidence ribbons for GNMT–MAT1A–CYP2C19, ECM/IGFBP7, and ductular-injury/BICC1. Every node retains its native effect unit, provenance, evidence state, unresolved alternative, and discriminating experiment. No combined score, vote count, or rank is calculated. The GNMT inherited shared-signal node remains blocked until the corrected 50-study COLOC release is audited and promoted.\n",
+        "Figure 6C. Assay-native evidence ribbons for GNMT–MAT1A–CYP2C19, ECM/IGFBP7, and ductular-injury/BICC1. Every node retains its native effect unit, provenance, evidence state, unresolved alternative, and discriminating experiment. No combined score, vote count, or rank is calculated. The GNMT inherited shared-signal node is withheld until the corrected 50-study COLOC release is audited and adopted.\n",
         encoding="utf-8",
     )
 

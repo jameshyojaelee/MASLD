@@ -1,0 +1,29 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "gse244832_task_native_baseline_cli_21101353",
+  "job_id": 21101353,
+  "dependent_job_cancelled": 21101354,
+  "stage": "source_materializer_cli_dispatch_before_any_source_value_read",
+  "terminal_state": "FAILED",
+  "exit_code": "1:0",
+  "elapsed": "00:00:03",
+  "tests": {
+    "passed": 19,
+    "failed": 0,
+    "python310_pybigwig_compatibility_probe": "passed"
+  },
+  "failure": "argparse forwarded --config under the key config, while the materialize function requires config_path.",
+  "scientific_state": {
+    "source_bigwig_values_read": false,
+    "gse244832_query_values_read": false,
+    "target_role_atac_consumed": false,
+    "predictions_written": false,
+    "prediction_commits_written": false,
+    "evaluator_outcomes_opened": false,
+    "metrics_calculated": false
+  },
+  "partial_artifacts": [],
+  "retry_rule": "Bind --config to dest=config_path in materializer, fit-predict-commit, and verifier CLIs; add a parser dispatch fixture; preserve all scientific settings and use new immutable paths.",
+  "model_or_threshold_change": false,
+  "status": "terminal_nonpromotable"
+}

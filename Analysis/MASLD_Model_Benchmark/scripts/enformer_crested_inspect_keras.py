@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Safely inspect the admitted CREsted Enformer Keras archive without loading it."""
+"""Safely inspect the included CREsted Enformer Keras archive without loading it."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ CLASSES_SIZE = 230_186
 
 
 class KerasInspectionError(ValueError):
-    """Raised when the restricted converted checkpoint violates its safe contract."""
+    """Raised when the restricted converted checkpoint does not meet its safe requirements."""
 
 
 def _safe_name(value: str) -> str:

@@ -15,7 +15,7 @@ import tomllib
 
 
 class AdmissionSourceError(ValueError):
-    """Raised when an admission source differs from its immutable contract."""
+    """Raised when an inclusion source differs from its read-only requirement."""
 
 
 def _hash(path: Path, algorithm: str = "sha256") -> str:

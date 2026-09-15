@@ -1,7 +1,7 @@
-"""Deterministic cohort, donor, artifact, and checkpoint contamination audits.
+"""Deterministic cohort, donor, output file, and checkpoint contamination audits.
 
 This module is deliberately metadata-only.  It accepts salted SHA-256 donor
-fingerprints and supplied artifact signatures, never raw donor vectors,
+fingerprints and supplied output-file signatures, never raw donor vectors,
 genotypes, metadata, matrices, or images.  Invalid or incomplete evidence is a
 hard error; ambiguous checkpoint exposure is an ineligible decision.
 """
@@ -850,7 +850,7 @@ def assess_checkpoint_champion_eligibility(
     scbasecount_snapshots: Sequence[ScBaseCountSnapshot],
     target_accession: str = "GSE289173",
 ) -> CheckpointEligibility:
-    """Apply the fail-closed sealed-evaluation checkpoint exposure policy."""
+    """Apply the fail-closed held-back evaluation checkpoint exposure policy."""
 
     if not isinstance(record, CheckpointAuditRecord):
         raise ContaminationAuditError("record must be a CheckpointAuditRecord")

@@ -34,7 +34,7 @@
     "gse296875": "Eligible as a static sequence comparator only. Same-nucleus RNA and ATAC cannot be supplied as new AlphaGenome contexts.",
     "observed_context_requirement": "none_supported; fixed training tracks are output identities, not observed sealed contexts"
   },
-  "interpretation": "The exact checkpoint is provisionally target-label-unexposed for GSE289173, but it is not a complete primary endpoint model. Its fixed RNA ontology lacks cholangiocyte and hepatic stellate RNA tracks and does not accept sealed RNA. Current model terms also bar an open champion.",
+  "interpretation": "The exact checkpoint is provisionally target-label-unexposed for GSE289173, but it is not a complete primary endpoint model. Its fixed RNA ontology lacks cholangiocyte and hepatic stellate RNA tracks and does not accept held-back RNA. Current model terms also bar a best openly licensed model.",
   "license_disposition": {
     "code": "Apache-2.0",
     "derivative_and_output_trained_models": "subject_to_the_noncommercial_model_terms",

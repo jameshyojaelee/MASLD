@@ -1,6 +1,6 @@
-"""Immutable artifact helpers used by every benchmark component.
+"""Read-only output-file helpers used by every benchmark component.
 
-The control plane never overwrites a named artifact.  Callers create a new
+The control plane never overwrites a named output file.  Callers create a new
 campaign or attempt identifier when content changes.
 """
 
@@ -20,7 +20,7 @@ from .hashing import canonical_json, canonical_sha256, sha256_bytes, sha256_file
 
 
 class ArtifactError(RuntimeError):
-    """Raised when an immutable artifact cannot be created or verified."""
+    """Raised when a read-only output file cannot be created or verified."""
 
 
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -101,7 +101,7 @@ def _reserved_directory_publication(source: Path, target: Path) -> None:
     ``mkdir`` reserves the final name exclusively. Frozen trees become usable
     only when ``COMPLETE`` is linked as the final directory entry, so an
     interrupted publication is visible only as an invalid, fail-closed tree.
-    This is the GPFS-compatible fallback for the artifact protocol.
+    This is the GPFS-compatible fallback for the output-file protocol.
     """
 
     source_stat = source.stat(follow_symlinks=False)
@@ -330,7 +330,7 @@ def inventory_tree(
 
 
 def freeze_tree(root: str | Path, metadata: Mapping[str, Any] | None = None) -> str:
-    """Inventory a directory and add immutable manifest and completion marker."""
+    """Inventory a directory and add read-only manifest and completion marker."""
 
     configured = reject_symlink_components(
         Path(root), label="immutable-tree root"

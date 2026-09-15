@@ -181,8 +181,8 @@ def require_order(text: str, tokens: list[str], label: str, errors: list[str]) -
 def main() -> int:
     errors: list[str] = []
     contract = json.loads(CONTRACT_PATH.read_text())
-    if len(contract.get("main_figure_roles", [])) != 6:
-        errors.append("main_figure_role_count_drift:expected_6")
+    if len(contract.get("main_figure_roles", [])) != 7:
+        errors.append("main_figure_role_count_drift:expected_7")
     if contract.get("central_scientific_contribution") != (
         "inherited_genetic_variation_and_multicellular_disease_remodeling"
     ):
@@ -245,6 +245,8 @@ def main() -> int:
         "figures/main/fig5_molecular_context/CANDIDATE_PANEL_INDEX.tsv",
         "figures/main/fig6_gene_catalog/README.md",
         "figures/main/fig6_gene_catalog/CANDIDATE_PANEL_INDEX.tsv",
+        "figures/main/fig7_model_framework/README.md",
+        "figures/main/fig7_model_framework/CANDIDATE_PANEL_INDEX.tsv",
         "masld-atlas-v2/README.md",
         "docs/manuscript/release/README.md",
     ]
@@ -287,7 +289,7 @@ def main() -> int:
     for marker in (
         "## Ultimate goal",
         "## The central scientific contribution",
-        "## Six-figure story",
+        "## Seven-figure story",
         "## Claims we can make",
         "## Claims we cannot make",
         "## Two-paper firewall",
@@ -309,6 +311,7 @@ def main() -> int:
             "4. Multicellular programs",
             "5. Molecular and physical tissue context",
             "6. MASLD Gene Catalog",
+            "7. Model framework and transfer limits",
         ],
         "paper_figure_spine",
         errors,
@@ -322,7 +325,7 @@ def main() -> int:
         "docs/manuscript/draft/fig5.md": "next discriminating experiment",
         "docs/manuscript/draft/fig5_discussion.md": "deterministic next-experiment rule",
         "docs/manuscript/05_figure_legends.md": "machine-readable evidence state",
-        "figures/main/INDEX.md": "Shared Figure 1–6 decision contract",
+        "figures/main/INDEX.md": "Shared Figure 1–7 decision rules",
     }
     for relative, marker in figure_contract_markers.items():
         require(

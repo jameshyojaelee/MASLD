@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from pathlib import PurePosixPath
 import re
 import shutil
 import subprocess
@@ -161,6 +162,7 @@ def _tree_file_records(
     suffix: str | None = None,
     excluded_parts: frozenset[str] = frozenset(),
     excluded_roots: frozenset[str] = frozenset(),
+    relative_to: Path | None = None,
 ) -> list[dict[str, Any]]:
     """Return a deterministic regular-file manifest without following links."""
 
@@ -187,8 +189,103 @@ def _tree_file_records(
             if not path.is_file():
                 raise PlanningError(f"provenance tree contains a non-regular member: {path}")
             if suffix is None or path.suffix == suffix:
-                records.append(_stable_file_record(path, relative_to=root))
+                records.append(
+                    _stable_file_record(path, relative_to=relative_to or root)
+                )
     return sorted(records, key=lambda record: str(record["path"]))
+
+
+def _explicit_relative_paths(values: Any, label: str) -> tuple[str, ...]:
+    if not isinstance(values, (list, tuple)) or not values:
+        raise PlanningError(f"{label} must be a non-empty array of relative paths")
+    normalized: list[str] = []
+    for value in values:
+        if not isinstance(value, str) or not value:
+            raise PlanningError(f"{label} contains an invalid path")
+        path = PurePosixPath(value)
+        if (
+            value != path.as_posix()
+            or path.is_absolute()
+            or path.as_posix() == "."
+            or ".." in path.parts
+            or "\\" in value
+        ):
+            raise PlanningError(f"{label} contains a non-canonical relative path: {value!r}")
+        normalized.append(path.as_posix())
+    if len(set(normalized)) != len(normalized):
+        raise PlanningError(f"{label} contains duplicate paths")
+    return tuple(sorted(normalized))
+
+
+def _project_registry_snapshot(
+    full_snapshot: Mapping[str, Any], included_files: Any
+) -> dict[str, Any]:
+    """Project a validated full registry snapshot onto explicit files only."""
+
+    included = _explicit_relative_paths(
+        included_files, "campaign registry_snapshot_paths"
+    )
+    records = {
+        str(record["path"]): dict(record)
+        for record in full_snapshot.get("files", [])
+        if isinstance(record, Mapping)
+    }
+    missing = sorted(set(included).difference(records))
+    if missing:
+        raise PlanningError(
+            "campaign registry_snapshot_paths are absent from the validated registry: "
+            + ", ".join(missing)
+        )
+    return {
+        "schema_version": "masld-bench-registry-file-snapshot-v2",
+        "scope_mode": "explicit_files",
+        "included_paths": list(included),
+        "files": [records[path] for path in included],
+    }
+
+
+def _scoped_config_registry_snapshot(
+    config_root: str | Path, included_files: Any
+) -> dict[str, Any]:
+    """Hash only explicitly bound configuration files for a scoped campaign."""
+
+    source = _reject_configured_symlinks(config_root, "configuration root")
+    try:
+        root = source.resolve(strict=True)
+    except OSError as error:
+        raise PlanningError(f"configuration root cannot be resolved: {source}") from error
+    if not root.is_dir():
+        raise PlanningError(f"configuration root is not a directory: {root}")
+    included = _explicit_relative_paths(
+        included_files, "campaign registry_snapshot_paths"
+    )
+    records: list[dict[str, Any]] = []
+    for relative in included:
+        configured = _reject_configured_symlinks(
+            root.joinpath(*PurePosixPath(relative).parts),
+            f"scoped registry file {relative}",
+        )
+        try:
+            path = configured.resolve(strict=True)
+        except OSError as error:
+            raise PlanningError(f"scoped registry file is unavailable: {relative}") from error
+        try:
+            path.relative_to(root)
+        except ValueError as error:
+            raise PlanningError(
+                f"scoped registry file escapes the configuration root: {relative}"
+            ) from error
+        if not path.is_file():
+            raise PlanningError(
+                f"registry_snapshot_paths must name regular files: {relative}"
+            )
+        records.append(_stable_file_record(path, relative_to=root))
+    return {
+        "schema_version": "masld-bench-registry-file-snapshot-v2",
+        "scope_mode": "explicit_files",
+        "included_paths": list(included),
+        "files": records,
+    }
 
 
 def _config_registry_snapshot(config_root: str | Path) -> dict[str, Any]:
@@ -314,7 +411,7 @@ def _resource_document(config_root: Path) -> Mapping[str, Any]:
 
 
 def validate_registry_tree(config_root: str | Path) -> dict[str, Any]:
-    """Validate cross-document admission invariants without opening any dataset."""
+    """Validate cross-document inclusion invariants without opening any dataset."""
 
     registry_snapshot = _config_registry_snapshot(config_root)
     registry_snapshot_sha256 = canonical_hash(registry_snapshot)
@@ -424,7 +521,9 @@ def _git_output(args: list[str], cwd: Path) -> bytes | None:
     return process.stdout if process.returncode == 0 else None
 
 
-def source_lock(package_root: str | Path) -> dict[str, Any]:
+def source_lock(
+    package_root: str | Path, *, included_paths: Any | None = None
+) -> dict[str, Any]:
     """Record commit, dirty patch, and package tree as one source identity."""
 
     source = _reject_configured_symlinks(package_root, "package root")
@@ -451,11 +550,31 @@ def source_lock(package_root: str | Path) -> dict[str, Any]:
 
     from hashlib import sha256
 
+    scope: tuple[str, ...] | None = None
+    if included_paths is not None:
+        scope = _explicit_relative_paths(included_paths, "source_lock included_paths")
+        for scoped_path in scope:
+            first = PurePosixPath(scoped_path).parts[0]
+            if first in _SOURCE_OUTPUT_ROOTS or any(
+                part in _SOURCE_IGNORED_PARTS
+                for part in PurePosixPath(scoped_path).parts
+            ):
+                raise PlanningError(
+                    f"source_lock included_paths contains a provenance-excluded path: {scoped_path}"
+                )
+
     dirty_components: list[dict[str, Any]] = []
     dirty_payload = b""
+    if scope is None:
+        git_pathspecs = [relative]
+    else:
+        git_pathspecs = [
+            (Path(relative) / Path(*PurePosixPath(path).parts)).as_posix()
+            for path in scope
+        ]
     for label, command in (
-        ("unstaged", ["git", "diff", "--binary", "--", relative]),
-        ("staged", ["git", "diff", "--cached", "--binary", "--", relative]),
+        ("unstaged", ["git", "diff", "--binary", "--", *git_pathspecs]),
+        ("staged", ["git", "diff", "--cached", "--binary", "--", *git_pathspecs]),
     ):
         payload = _git_output(command, repository)
         if payload is None:
@@ -469,13 +588,55 @@ def source_lock(package_root: str | Path) -> dict[str, Any]:
         )
         dirty_payload += label.encode("utf-8") + b"\0" + payload + b"\0"
 
-    records = _tree_file_records(
-        root,
-        excluded_parts=_SOURCE_IGNORED_PARTS,
-        excluded_roots=_SOURCE_OUTPUT_ROOTS,
-    )
+    if scope is None:
+        records = _tree_file_records(
+            root,
+            excluded_parts=_SOURCE_IGNORED_PARTS,
+            excluded_roots=_SOURCE_OUTPUT_ROOTS,
+        )
+    else:
+        records_by_path: dict[str, dict[str, Any]] = {}
+        for scoped_path in scope:
+            configured = _reject_configured_symlinks(
+                root.joinpath(*PurePosixPath(scoped_path).parts),
+                f"scoped source path {scoped_path}",
+            )
+            try:
+                path = configured.resolve(strict=True)
+            except OSError as error:
+                raise PlanningError(
+                    f"scoped source path is unavailable: {scoped_path}"
+                ) from error
+            try:
+                path.relative_to(root)
+            except ValueError as error:
+                raise PlanningError(
+                    f"scoped source path escapes the package root: {scoped_path}"
+                ) from error
+            if path.is_file():
+                scoped_records = [_stable_file_record(path, relative_to=root)]
+            elif path.is_dir():
+                scoped_records = _tree_file_records(
+                    path,
+                    excluded_parts=_SOURCE_IGNORED_PARTS,
+                    excluded_roots=_SOURCE_OUTPUT_ROOTS,
+                    relative_to=root,
+                )
+            else:
+                raise PlanningError(
+                    f"scoped source path is not a regular file or directory: {scoped_path}"
+                )
+            for record in scoped_records:
+                records_by_path[str(record["path"])] = record
+        records = [records_by_path[path] for path in sorted(records_by_path)]
+        if not records:
+            raise PlanningError("scoped source lock contains no regular files")
     payload = {
-        "schema_version": "masld-bench-source-lock-v2",
+        "schema_version": (
+            "masld-bench-source-lock-v2"
+            if scope is None
+            else "masld-bench-source-lock-v3"
+        ),
         "git_commit": head,
         "dirty_patch_sha256": sha256(dirty_payload).hexdigest(),
         "dirty_patch_components": dirty_components,
@@ -483,6 +644,9 @@ def source_lock(package_root: str | Path) -> dict[str, Any]:
         "tree_files": len(records),
         "tree_manifest": records,
     }
+    if scope is not None:
+        payload["scope_mode"] = "explicit_paths"
+        payload["included_paths"] = list(scope)
     result = dict(payload)
     result["source_lock_sha256"] = canonical_hash(payload)
     return result
@@ -1149,7 +1313,8 @@ def build_plan(
     config = _reject_configured_symlinks(
         config_root, "configuration root"
     ).resolve(strict=True)
-    registry_snapshot = validation["registry_snapshot"]
+    full_registry_snapshot = validation["registry_snapshot"]
+    registry_snapshot = full_registry_snapshot
     registry_snapshot_sha256 = str(validation["registry_snapshot_sha256"])
     core_registry_contract_sha256 = str(
         validation["core_registry_contract_sha256"]
@@ -1160,7 +1325,7 @@ def build_plan(
         raise PlanningError("campaign file must be inside the configuration root") from error
     campaign_file_sha256 = sha256_file(campaign_file)
     campaign_records = {
-        str(record["path"]): record for record in registry_snapshot["files"]
+        str(record["path"]): record for record in full_registry_snapshot["files"]
     }
     campaign_record = campaign_records.get(campaign_relative)
     if campaign_record is None:
@@ -1168,6 +1333,27 @@ def build_plan(
     if campaign_record["sha256"] != campaign_file_sha256:
         raise PlanningError("campaign file changed after the configuration snapshot")
     campaign = dict(_load_toml(campaign_file))
+    raw_registry_snapshot_paths = campaign.get("registry_snapshot_paths")
+    if raw_registry_snapshot_paths is not None:
+        registry_snapshot = _project_registry_snapshot(
+            full_registry_snapshot, raw_registry_snapshot_paths
+        )
+        scoped_registry_paths = set(registry_snapshot["included_paths"])
+        required_registry_paths = {campaign_relative, "resources.toml"}
+        missing_required_paths = sorted(
+            required_registry_paths.difference(scoped_registry_paths)
+        )
+        if missing_required_paths:
+            raise PlanningError(
+                "scoped registry snapshot omits required campaign inputs: "
+                + ", ".join(missing_required_paths)
+            )
+        registry_snapshot_sha256 = canonical_hash(registry_snapshot)
+    source_lock_paths = campaign.get("source_lock_paths")
+    if source_lock_paths is not None:
+        source_lock_paths = list(
+            _explicit_relative_paths(source_lock_paths, "campaign source_lock_paths")
+        )
     campaign_id = _require_identifier(campaign.get("campaign_id"), "campaign_id")
     wave = _require_identifier(campaign.get("wave"), "campaign.wave")
     scientific = wave != "admission"
@@ -1301,7 +1487,9 @@ def build_plan(
     )
 
     package_source = _reject_configured_symlinks(package_root, "package root")
-    locked_source = source_lock(package_source)
+    locked_source = source_lock(
+        package_source, included_paths=source_lock_paths
+    )
     package = package_source.resolve(strict=True)
     source_lock_sha256 = str(locked_source["source_lock_sha256"])
 
@@ -2278,12 +2466,20 @@ def build_plan(
             f"together: {totals['memory_gb_if_all_concurrent']} GB > "
             f"{aggregate_memory_cap} GB"
         )
-    if _config_registry_snapshot(config) != registry_snapshot:
-        raise PlanningError("configuration tree changed while the plan was being built")
+    if raw_registry_snapshot_paths is None:
+        observed_registry_snapshot = _config_registry_snapshot(config)
+    else:
+        observed_registry_snapshot = _scoped_config_registry_snapshot(
+            config, registry_snapshot["included_paths"]
+        )
+    if observed_registry_snapshot != registry_snapshot:
+        raise PlanningError(
+            "bound configuration files changed while the plan was being built"
+        )
     if sha256_file(campaign_file) != campaign_file_sha256:
         raise PlanningError("campaign file changed while the plan was being built")
-    if source_lock(package) != locked_source:
-        raise PlanningError("source tree changed while the plan was being built")
+    if source_lock(package, included_paths=source_lock_paths) != locked_source:
+        raise PlanningError("bound source files changed while the plan was being built")
     control_plane_python = Path(sys.executable).resolve(strict=True)
     control_plane_lock = {
         "python_executable": control_plane_python.as_posix(),

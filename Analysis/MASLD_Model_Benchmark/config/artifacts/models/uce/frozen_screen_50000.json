@@ -1,0 +1,109 @@
+{
+  "schema_version": "masld-bench-uce-frozen-screen-activation-v1",
+  "dataset_view_id": "resource_atlas_frozen_screen_50000_v1",
+  "split_id": "resource_atlas_study_outer_5fold_v1",
+  "rows": 50000,
+  "donors": 102,
+  "studies": 7,
+  "repository": "snap-stanford/UCE",
+  "repository_revision": "9c416007be15ad6753dc84af4468c1dc10421ab9",
+  "licenses": {
+    "code": "MIT",
+    "code_evidence": "https://raw.githubusercontent.com/snap-stanford/UCE/9c416007be15ad6753dc84af4468c1dc10421ab9/LICENSE",
+    "weights": "CC-BY-4.0",
+    "weights_evidence": "https://api.figshare.com/v2/articles/24320806"
+  },
+  "runtime": {
+    "root": "executions/environments/transcriptformer-torch2.5.1-21070738",
+    "artifacts_sha256": "f22ddd872d681edea9f1c12d5d971c55f66d44d0624d816e317f987ec12c8abb",
+    "python": "3.11.16",
+    "torch": "2.5.1",
+    "cuda_build": "12.4"
+  },
+  "inputs": {
+    "outcome_blind_counts": {
+      "path": "executions/model-data-051-21077382/fixture/unlabeled_counts.h5ad",
+      "sha256": "b45f505fdbe737e7ad1332f47fd4394917c7b00002c95ad5b7172650caff59b5",
+      "parent_artifacts": "executions/model-data-051-21077382/ARTIFACTS.json",
+      "parent_artifacts_sha256": "ba40ce9555bb6d7bc278be2a80015b993f9f3650fa06f59505ad279c88cc117a"
+    },
+    "symbol_axis_source": {
+      "path": "executions/model-data-050-20260824T211318Z-21077049/fixture/resource_atlas_frozen_screen_50000.h5ad",
+      "sha256": "6a704d4f0503d9bd113c9d70a6f92f65abd6af734a4f74cb2523c75c56d6a862",
+      "parent_artifacts": "executions/model-data-050-20260824T211318Z-21077049/fixture/ARTIFACTS.json",
+      "parent_artifacts_sha256": "672b1f75a1c3ca264066dd2a0bf24e479397d8ec5e2f67f13ccdd4be14879509",
+      "allowed_read": ["var._index", "var.ensembl_id", "var.source_feature_id"]
+    },
+    "study_split": {
+      "path": "executions/model-data-052-21077595/split/row_outer_folds.tsv",
+      "sha256": "f668e512ad116d945d58cd456e77e4e97472241a40c03f2e2c49b79e4477a819",
+      "parent_artifacts": "executions/model-data-052-21077595/split/ARTIFACTS.json",
+      "parent_artifacts_sha256": "10927e162581375d866adbcf2b3bb7bd0dc4fda9fd6dfe033198df7d95be2680"
+    }
+  },
+  "model_files": {
+    "all_tokens": {
+      "path": "executions/uce-acquisition-21015745/all_tokens.torch",
+      "sha256": "07397ab3828502fb7d0bab658125c47f145f989f384db8f55fe106f6826b2a54",
+      "size_bytes": 2979205876
+    },
+    "species_offsets": {
+      "path": "executions/uce-acquisition-21015745/species_offsets.pkl",
+      "sha256": "abda5b2bc4018187e408623b292686a061912f449daceb4c9c9603caf0d62538",
+      "size_bytes": 139
+    },
+    "species_chrom": {
+      "path": "executions/uce-acquisition-21015745/species_chrom.csv",
+      "sha256": "a9e801829ffaf05b5d7e6c6ef12404326cf6796ad561ad62ce701884f07969f5",
+      "size_bytes": 4097781
+    },
+    "human_protein_embeddings": {
+      "path": "executions/uce-protein-embeddings-20260823/protein_embeddings/Homo_sapiens.GRCh38.gene_symbol_to_embedding_ESM2.pt",
+      "sha256": "a210e1cc7901513999b2bca3836ba9e2f203cd008be4e9a9d6412a2267de9748",
+      "size_bytes": 410886729
+    }
+  },
+  "checkpoints": {
+    "uce_4l": {
+      "path": "executions/uce-acquisition-21015745/4layer_model.torch",
+      "sha256": "acb28f3f0a1d803e4a4ffe891b9bab38bf93c84762dc06b2452f0d515da91560",
+      "size_bytes": 3403514339,
+      "layers": 4,
+      "exposure_status": "target_label_unexposed",
+      "sealed_champion_eligible": true
+    },
+    "uce_33l": {
+      "path": "executions/uce-acquisition-21015745/33l_8ep_1024t_1280.torch",
+      "sha256": "3f458726196308e171611ed28394b55865708749f82af68cfd7771d5dfee661e",
+      "size_bytes": 5686283829,
+      "layers": 33,
+      "exposure_status": "target_label_unexposed",
+      "sealed_champion_eligible": true
+    }
+  },
+  "exposure": {
+    "known_encoder_seen_development_studies": ["GSE185477", "Liver_Atlas"],
+    "required_diagnostic": "source_stratified_development_reporting",
+    "sealed_labels_seen": false,
+    "audit_path": "config/artifacts/models/uce/exposure_audit.json",
+    "audit_sha256": "429e0975ce89e813535ec0f3fc23f0c28d87d054589f279384ffe4fe064ea897"
+  },
+  "tokenization": {
+    "gene_identifier": "uppercase_gene_symbol",
+    "official_additional_filter": true,
+    "gene_min_cells": 10,
+    "cell_min_genes_before_protein_mapping": 25,
+    "sample_size": 1024,
+    "sampling_with_replacement": true,
+    "sampling_weight": "log1p_raw_count",
+    "pad_length": 1536,
+    "cls_token_index": 3,
+    "pad_token_index": 0,
+    "chromosome_right_token_index": 2,
+    "chromosome_token_offset": 143574,
+    "common_lane_rng": "numpy.default_rng_seeded_by_sha256(row_id,seed,policy)",
+    "common_lane_seed": 20260824,
+    "truncation_policy": "fail_if_sentence_exceeds_1536;never_truncate",
+    "output_policy": "l2_normalized_cls_decoder_output"
+  }
+}

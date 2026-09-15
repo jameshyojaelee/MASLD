@@ -18,7 +18,7 @@ from transformers import EsmConfig, EsmForMaskedLM, EsmTokenizer
 
 
 class NucleotideTransformerProbeError(ValueError):
-    """Raised when the NT fixture or exact runtime contract differs."""
+    """Raised when the NT fixture or exact runtime requirement differs."""
 
 
 PHASE_CONTEXT_BP = 5994

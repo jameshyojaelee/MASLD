@@ -1,0 +1,29 @@
+{
+  "schema_version": "masld-bench-gpu-dependency-dispatcher-incident-v1",
+  "failed_job_id": 21100489,
+  "failed_job_name": "model-dispatcher",
+  "terminal_state": "FAILED",
+  "exit_code": "1:0",
+  "elapsed": "00:05:04",
+  "cause": "After the cancelled legacy controller aged out of squeue, Slurm returned exit status 1 with 'Invalid job id specified'. The dependency dispatcher incorrectly treated this terminal-job response as a scheduler failure.",
+  "failure_mode": "fail_closed_before_submission",
+  "gpu_jobs_submitted_by_failed_attempt": 0,
+  "gpu_jobs_cancelled_or_mutated": 0,
+  "queue_snapshot_at_failure": {
+    "visible_campaign_gpu_jobs": 41,
+    "runnable_or_running_campaign_gpu_jobs": 4,
+    "dependency_pending_campaign_gpu_jobs": 37
+  },
+  "correction": {
+    "dispatcher_path": "scripts/gpu_dependency_dispatcher.py",
+    "dispatcher_sha256": "6eac5303ac5f8265a48f7ef1434d55caf2f87b40de73c658eac24013d70e8c7c",
+    "test_path": "tests/unit/test_gpu_dependency_dispatcher.py",
+    "test_sha256": "e150cfc7ff9d3397c0ba171fc6d2fd59f8b99c88c8d65016ebf25164d2e04ad2",
+    "policy_path": "config/campaigns/gpu_dependency_dispatcher_policy_20260825.json",
+    "validation_job_id": 21100572,
+    "validation_tests_passed": 17,
+    "replacement_controller_job_id": 21100574
+  },
+  "sealed_outcomes_read": false,
+  "biological_outcomes_read": false
+}

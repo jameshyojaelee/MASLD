@@ -1,10 +1,10 @@
 schema_version = "masld-bench-dataset-v1"
 dataset_id = "gse256398"
-title = "Human liver snRNA across healthy, MASLD, MASH fibrosis, and cirrhosis"
+title = "Human liver single-nucleus RNA across healthy, MASLD/MASH, and alcohol-associated disease"
 role = "external_development"
 status = "available"
 species = "human"
-accession = ["GSE256398"]
+accession = ["GSE256398", "PRJNA1079341"]
 access_tier = "public"
 automatic_download = false
 outcome_url = "NOT_REGISTERED"
@@ -12,22 +12,22 @@ redistribution_class = "source_reference_only"
 license_status = "source_terms_apply"
 biological_unit = "donor"
 expected_biological_units = 26
-native_genome_build = "modified_GRCh38_Cell_Ranger_3.1.0_intronic+exonic"
-native_annotation_release = "UNRESOLVED_modified_Cell_Ranger_3.1.0_gene_annotation"
+native_genome_build = "GRCh38"
+native_annotation_release = "UNRESOLVED_exact_Cell_Ranger_reference_deposited_36601_feature_axis_crosswalked_to_GENCODE_v49"
 modalities = ["single_nucleus_rna"]
 pairing_levels = ["same_study_unpaired"]
 modality_status_default = "observed"
-exposure_status = "target_label_unexposed"
+exposure_status = "downstream_demo"
 admission_blocking = true
-blockers = ["DatasetActivationContract is unresolved: freeze rights, topology, donor join, labels, QC, reference, exposure, and artifact-manifest evidence.", "The primary methods specify Cell Ranger 3.1.0 and a modified GRCh38 reference retaining intronic and exonic reads, but not the exact base annotation or modification recipe. Freeze the deposited feature identity and project-reference crosswalk before admission."]
-notes = "The MASLD development endpoint uses 17 donors: 6 healthy, 3 MASLD F0, 4 MASH fibrosis, and 4 MASH cirrhosis. The 9 alcohol-associated human donors are retained only as an etiology/OOD challenge and are never MASLD-negative controls. Mouse samples are outside the human endpoint. Human snRNA was processed with Cell Ranger 3.1.0 against a modified GRCh38 reference retaining intronic and exonic reads."
+blockers = ["Full activation is blocked by an anomalous automatic Scrublet call in donor S35: threshold 0.038886 classified 8,762 of 11,080 deposited barcodes as doublets and left 1,571 nuclei. The source-exact and prospectively capped QC memberships must be compared, with a leave-S35-out sensitivity, before any biological evaluation or model selection.", "The exact Cell Ranger reference remains unresolved because the GEO processing text is internally inconsistent. Use the deposited H5 feature genome and identifiers as the source authority; retain only the 35,455 stable-ID-exact GENCODE v49 genes and mask the other 1,146 features.", "No deposited barcode-level author cell annotation exists. The public author code documents manual analysis using unreleased intermediate objects and cannot be treated as exact supervised labels; transferred or reconstructed labels cannot become accuracy truth.", "Keep the nine alcohol-associated cirrhosis/hepatitis donors as an etiology OOD challenge. They are not MASLD-negative controls and cannot select a MASLD classifier.", "No biological transfer TaskSpec is executable for this cohort yet. Any registered DatasetView is compatibility-smoke-only and cannot authorize model selection, biological performance, or an external claim."]
+notes = "Frozen source output file f54ac799b22cb02912b82432929255e6400d871cc0fd99dbf9b4756f8f977a20 contains 197,942 deposited CellBender-filtered, pre-project-QC barcodes from 26 independent human liver donors: 6 healthy controls, 3 MASLD F0, 4 MASH fibrosis, 4 MASH cirrhosis, 4 alcohol-associated cirrhosis, and 5 alcohol-associated hepatitis. Project-reconstructed strict public-code QC retained 165,372 before unreleased author manual cluster removal; this is not an author-final analyzed-nucleus census. QC sensitivity output file 77b7b62b30c49fdf306039a3c31930040a5a140d23a64dd24875370cc11e91ad retains 172,997 under an outcome-blind 10-percent cap for the single pathological automatic call and requires leave-S35-out analysis. The 17 healthy/MASLD/MASH donors are external development only; the nine alcohol-associated donors are an etiology OOD stratum. Age is observed for all 26 donors (20-80 years) and recorded sex for all 26 (11 female, 15 male), but these donor fields are metadata rather than another aliquot. Crosswalk output file 54ca7af31f6ae223defdee4a7c1d7931f7cba4362f621fe9646fd08530c4c6da maps 35,455 of 36,601 features by version-stripped stable ID and masks 1,146; only 23,173 also preserve the gene name. Full model training remains inactive."
 
 [provenance]
 source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE256398"
-verified_date = "2026-08-21"
-local_exposure = "No local analysis found at registry creation; reserve for external model selection, not final reporting."
+verified_date = "2026-08-24"
+local_exposure = "Project-unexposed before the 2026-08-24 source audit; now project-visible external development. It is ineligible as a pristine external seal."
 
 [split]
 group_key = "cohort_family_id+person_key"
-outer_role = "development"
+outer_role = "external_development"
 label_visibility = "development_visible"

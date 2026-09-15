@@ -885,9 +885,12 @@ def _validate_dataset_view(
         raise RegistryError(
             f"dataset view {view.view_id} changes parent label visibility"
         )
-    if parent.role.value != "train_development" or parent.status.value != "available":
+    if (
+        parent.role.value not in {"train_development", "external_development"}
+        or parent.status.value != "available"
+    ):
         raise RegistryError(
-            f"dataset view {view.view_id} parent must be an available training dataset"
+            f"dataset view {view.view_id} parent must be an available development dataset"
         )
 
     direct = {
@@ -968,12 +971,20 @@ def _validate_dataset_view(
         )
     }
     observed_records = artifact_manifest.get("artifacts")
-    artifact_class = artifact_manifest.get("metadata", {}).get("artifact_class")
+    artifact_metadata = artifact_manifest.get("metadata", {})
+    artifact_class = artifact_metadata.get("artifact_class")
+    artifact_view_id = artifact_metadata.get(
+        "subset_id", artifact_metadata.get("view_id")
+    )
     if (
         artifact_manifest.get("schema_version") != "masld-bench-artifacts-v1"
         or artifact_class
-        not in {"geneformer_smoke_subset", "multimodal_smoke_subset"}
-        or artifact_manifest.get("metadata", {}).get("subset_id") != view.view_id
+        not in {
+            "geneformer_smoke_subset",
+            "multimodal_smoke_subset",
+            "unlabeled_snrna_smoke_subset",
+        }
+        or artifact_view_id != view.view_id
         or not isinstance(observed_records, list)
         or sorted(observed_records, key=lambda item: str(item.get("path")))
         != sorted(expected_records.values(), key=lambda item: str(item["path"]))
@@ -1020,6 +1031,11 @@ def _validate_dataset_view(
         ]
         data_sha256 = artifacts.get("multimodal_h5", {}).get("sha256")
         expected_artifact_class = "multimodal_smoke_subset"
+    elif derivation_schema == "masld-bench-unlabeled-snrna-smoke-subset-v1":
+        input_ready = derivation.get("unlabeled_input_contract", {}).get("ready")
+        row_shapes = [matrix.get("shape", [None])[0]]
+        data_sha256 = artifacts.get("h5ad", {}).get("sha256")
+        expected_artifact_class = "unlabeled_snrna_smoke_subset"
     else:
         raise RegistryError(
             f"dataset view {view.view_id} has an unsupported derivation schema"
@@ -1308,7 +1324,7 @@ def _validate_resources(document: Mapping[str, Any], path: Path) -> ReferenceBun
 
 
 class Registry:
-    """An immutable, cross-referenced snapshot of datasets, models, and tasks."""
+    """A read-only, cross-referenced snapshot of datasets, models, and tasks."""
 
     __slots__ = (
         "root",

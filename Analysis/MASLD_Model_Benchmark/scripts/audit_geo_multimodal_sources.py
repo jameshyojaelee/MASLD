@@ -25,7 +25,7 @@ ZONE_TITLE = re.compile(r"^(?P<donor>[0-9]+)_(?P<zone>CV|IZ|PP)_(?P<assay>RNA|RR
 
 
 class SourceAuditError(RuntimeError):
-    """Raised when source metadata violates its frozen structural contract."""
+    """Raised when source metadata does not meet its frozen structural requirements."""
 
 
 def sha256_bytes(payload: bytes) -> str:

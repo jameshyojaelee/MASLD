@@ -1,0 +1,74 @@
+schema_version = "masld-bench-microarray-transfer-preprocessing-v1"
+status = "platform_audit_ready_GPL16686_authoritative_mapping_and_biological_single_array_runtime_blocked"
+source_audit_artifacts_sha256 = "4c1460c573285fa53fe6464f23498e9c27c610c4be14cf3df3cc2944282ae96d"
+participant_audit_v2_artifacts_sha256 = "1ba06484d9d064198c6c85d480c6ae2c0dadea712d0b53f9f15d81c6aa35fddb"
+raw_CEL_artifacts_sha256 = "8b30a2265c421f2917ed886d99cfaa08ee8d874abd40e68c8c72d48c726781d1"
+platform_audit_v1_artifacts_sha256 = "0ce6af4196d2fb0905d6ca3d07fbbeb3bf1ce5b37776a63a726cc1d21794f4bf"
+raw_CEL_records = 303
+ordinary_all_sample_RMA_allowed_for_scored_transfer = false
+GEO_series_matrix_allowed_for_scored_transfer = false
+cross_platform_pooling_before_gene_mapping = false
+outcome_aware_QC_or_sample_exclusion = false
+model_training_activated = false
+
+[reference]
+genome_build = "GRCh38.p14"
+annotation = "GENCODE_v49"
+gtf = "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz"
+gtf_sha256 = "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9"
+feature_identity = "platform_feature_to_exact_Entrez_then_one_to_one_Ensembl_stable_ID_present_in_GENCODE_v49"
+ambiguous_mapping_state = "join_unresolved"
+retired_or_absent_GENCODE_state = "below_qc"
+
+[inductive_firewall]
+outer_training_fit_only = ["quantile_or_sketch_target", "probe_effect_or_summarization_parameters", "platform_feature_annotation_revision", "ambiguous_feature_mask", "Entrez_to_Ensembl_crosswalk", "GENCODE_v49_intersection", "multi_feature_gene_collapse", "scaling", "feature_selection", "dimensionality_reduction", "batch_or_platform_adjustment", "model", "calibration", "decision_threshold"]
+held_array_application = "one_array_at_a_time_with_frozen_training_object"
+held_cohort_intensity_distribution_visible_to_training = false
+held_labels_visible_to_preprocessing = false
+paired_records_same_outer_group = true
+allowed_primary_paths = ["exact_frozen_single_array_method_after_platform_fixture", "training_only_quantile_sketch_and_probe_summary_applied_inductively"]
+required_baseline_path = "single_array_summarization_then_within_array_gene_rank"
+blocked_paths = ["all_sample_RMA", "all_sample_quantile_normalization", "GEO_series_matrix", "Partek_full_cohort_global_scaling", "Combat_fit_with_held_arrays", "cross_platform_probe_pooling", "outcome_selected_probe_mapping_or_QC"]
+
+[platform.GPL570]
+series = "GSE49541"
+cohort_family_id = "gse31803_gse49541_fibrosis_array"
+array = "Affymetrix_Human_Genome_U133_Plus_2.0"
+platform_rows = 54675
+CEL_records = 72
+CEL_format = "calvin_v1"
+candidate_single_array_methods = ["frma_with_exact_hgu133plus2frmavecs", "SCAN_with_hgu133plus2cdf", "single_array_summary_then_rank"]
+blocked_default = "affy_RMA_across_all_72_arrays"
+required_runtime_packages = ["affy", "affyio", "affxparser", "frma", "hgu133plus2cdf", "hgu133plus2.db", "hgu133plus2frmavecs", "SCAN.UPC", "AnnotationDbi", "org.Hs.eg.db"]
+mapping_authority = "hgu133plus2.db_exact_version_then_org.Hs.eg.db_exact_version_then_GENCODE_v49"
+gene_collapse = "training_frozen_median_of_log_scale_features_after_one_to_one_mapping"
+
+[platform.GPL16686]
+series = "GSE83452"
+cohort_family_id = "antwerp_inserm_shared"
+accession_aliases = ["GSE106737", "GSE83452"]
+array = "Affymetrix_Human_Gene_2.0_ST_transcript_gene"
+platform_rows = 53981
+CEL_records = 231
+CEL_format = "calvin_v1"
+candidate_single_array_methods = ["SCAN_with_pd.hugene.2.0.st", "single_array_summary_then_rank"]
+frma_vector_status = "no_official_hugene_2.0_ST_vector_package_identified_at_contract_freeze"
+blocked_default = "oligo_RMA_across_all_231_arrays"
+required_runtime_packages = ["oligo", "affyio", "affxparser", "pd.hugene.2.0.st", "hugene20sttranscriptcluster.db", "SCAN.UPC", "AnnotationDbi", "org.Hs.eg.db"]
+mapping_authority = "hugene20sttranscriptcluster.db_exact_version_then_org.Hs.eg.db_exact_version_then_GENCODE_v49"
+authoritative_vendor_release = "Thermo_Fisher_HuGene-2_0-st-v1_transcript_cluster_Release_36_hg19"
+authoritative_vendor_asset_status = "unavailable_permission_until_exact_asset_is_openly_downloadable_or_credentials_are_provided"
+GEO_platform_gene_mapping_status = "not_provided"
+coordinate_or_GB_ACC_mapping_inference_allowed = false
+gene_collapse = "training_frozen_median_of_log_scale_features_after_one_to_one_mapping"
+
+[qc]
+hard_failures = ["CEL_parse_failure", "array_type_mismatch", "sample_axis_mismatch", "nonfinite_summary", "duplicate_feature_or_sample_ID", "no_positive_intensity"]
+descriptive_flags = ["raw_intensity_distribution", "RLE_median_and_IQR", "PCA_robust_distance", "GPL570_RNA_degradation_when_supported", "platform_specific_control_probe_summary"]
+automatic_exclusion_from_descriptive_flag = false
+label_blind = true
+
+[output]
+retain = ["platform_feature_matrix", "one_to_one_gene_matrix", "mapping_states", "QC_metrics", "participant_masks", "preprocessing_object_hash", "R_sessionInfo", "package_versions", "prediction_eligible_flag"]
+raw_CEL_redistribution = "prohibited"
+derived_matrix_redistribution = "source_and_model_specific_review_required"

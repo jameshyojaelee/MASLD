@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 class LSIProbeError(ValueError):
-    """Raised when the observed-ATAC LSI contract differs."""
+    """Raised when the observed-ATAC LSI requirement differs."""
 
 
 def _sha(value) -> str:

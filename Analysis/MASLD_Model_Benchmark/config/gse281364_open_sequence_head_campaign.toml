@@ -1,0 +1,220 @@
+schema_version = "masld-bench-gse281364-open-sequence-head-campaign-v1"
+status = "prespecified_exposed_development_head_campaign"
+verified_date = "2026-08-25"
+dataset_id = "gse281364"
+task_id = "variant_to_regulation"
+endpoint_id = "mpra_allelic_direction"
+evaluator_id = "gse281364_long_range_open_sequence_development_v1"
+outcome_access_authorized = true
+prediction_generation_authorized = true
+model_head_fit_authorized = true
+base_checkpoint_tuning_authorized = false
+stack_fit_authorized = false
+residual_correlation_authorized = false
+conditional_model_build_authorized = false
+sealed_asset_access_authorized = false
+
+[completion_firewall]
+campaign_scope = "partial_common_head_campaign"
+mandatory_baselines_complete = false
+mandatory_baselines_missing = ["deltaSVM", "gkm-SVM", "sequence_CNN", "sequence_transformer", "MPRALegNet_signed_MPRA_rekeyed_to_1033_elements_239_blocks"]
+strongest_available_control_only = true
+allele_identity_ridge_role = "16_substitution_class_control_not_strongest_task_native_baseline"
+shortlist_blocked = true
+finalist_claim_blocked = true
+complementarity_blocked = true
+conditional_trigger_blocked = true
+mpralegnet_reconciliation = "separate_outcome_safe_rekey_to_frozen_1033_element_239_block_universe_required"
+
+[task_spec]
+claim_role = "exposed_development_MPRA_proxy_only"
+external_evaluation = false
+champion_claim_authorized = false
+clinical_claim_authorized = false
+biological_donors = 0
+measurement_replicates_per_context = 4
+measurement_replicates_are_biological_replicates = false
+outcome_unit = "mean_signed_log2_ALT_minus_REF_RNA_over_DNA_activity"
+replicate_transform = "log2((RNA_ALT+0.5)/(DNA_ALT+0.5))-log2((RNA_REF+0.5)/(DNA_REF+0.5))"
+replicate_aggregation = "arithmetic_mean_of_four_complete_experimental_replicate_deltas_within_element_and_context"
+allele_sign = "ALT_minus_REF"
+contexts = ["HepG2_control", "HepG2_PAOA"]
+selected_elements = 1033
+rows_per_seed = 2066
+fixed_seeds = [1103, 2909, 4721, 6673, 8111]
+seeded_rows_per_candidate = 10330
+outer_folds = 5
+long_range_blocks = 239
+largest_receptive_field_buffer_bp = 524288
+outer_group = "long_range_block_id"
+inner_validation_rule = "fold_(outer_plus_1)_mod_5_within_outer_training"
+inner_group = "long_range_block_id"
+primary_metric = "tanh_mean_Fisher_z_Spearman_across_two_assay_contexts"
+secondary_metrics = ["context_Spearman", "Pearson", "RMSE", "MAE", "R2", "calibration_intercept", "calibration_slope"]
+seed_ensemble = "arithmetic_mean_prediction_across_five_fixed_seeds"
+seeds_are_independent_biological_replicates = false
+minimum_positive_gain_seeds_for_partial_one_se_screen = 4
+selection = "effect_interval_and_one_standard_error_partial_screen_only_no_shortlist_or_finalist"
+
+[uncertainty]
+method = "paired_long_range_block_bootstrap"
+resamples = 10000
+seed = 20260825
+resampling_unit = "long_range_block_id"
+contexts_resampled_together = true
+source_locus_groups_within_sampled_block_kept_together = true
+confidence_level = 0.95
+baseline_comparison = "strongest_available_simple_control_within_partial_campaign_by_ensemble_primary_metric"
+
+[multiplicity]
+confirmatory_family = "none_exposed_development_screen"
+confirmatory_p_values_reported = false
+familywise_claim_authorized = false
+development_pairwise_tests = false
+ranking_rule = "primary_effect_then_interval_then_model_and_head_id"
+one_standard_error_rule = "candidate_primary_score_at_least_leader_score_minus_leader_bootstrap_standard_error"
+future_confirmatory_rule = "one_frozen_champion_vs_strongest_baseline_hypothesis_per_externally_eligible_track_with_Holm_FWER_0.05"
+
+[projection_contract]
+outer_projection_source = "executions/model-check-221-21089160/open_sequence_projection"
+outer_projection_fit = "training_long_range_blocks_only"
+inner_projection = "recomputed_from_raw_embeddings_on_inner_training_blocks_only_for_head_or_epoch_selection"
+projection_width = 256
+outer_head_feature_width = 1024
+feature_blocks = ["REF", "ALT", "ALT_minus_REF", "absolute_ALT_minus_REF"]
+delta_feature_slice_start0 = 512
+delta_feature_slice_end0 = 768
+all_standardization_fit = "head_fit_partition_only"
+held_fold_outcomes_read_during_fit = false
+held_fold_features_used_for_fit_or_tuning = false
+
+[ridge_recipe]
+solver = "sklearn_Ridge_lsqr"
+fit_intercept = true
+tolerance = 1.0e-7
+alpha_grid = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]
+constant_training_mean_candidate = true
+selection_metric = "inner_grouped_RMSE"
+tie_break = "smaller_alpha"
+final_fit = "selected_alpha_refit_on_all_outer_training_blocks"
+
+[two_layer_recipe]
+included = true
+input_width = 1024
+hidden_width = 32
+activation = "GELU"
+output_width = 1
+dropout = 0.0
+batch_normalization = false
+optimizer = "AdamW"
+learning_rate = 0.0005
+weight_decay = 0.01
+gradient_clip_norm = 1.0
+batching = "full_batch"
+maximum_epochs = 100
+patience = 12
+minimum_delta = 0.000001
+selection_metric = "inner_grouped_standardized_MSE"
+outcome_standardization = "inner_training_or_outer_training_only"
+feature_standardization = "inner_training_or_outer_training_only"
+epoch_selection = "one_prespecified_inner_grouped_fold"
+epoch_selection_seed = 1103
+selected_epoch_reused_across_final_seeds = true
+final_fit = "reinitialize_same_seed_and_train_selected_epoch_count_on_all_outer_training_blocks"
+deterministic_algorithms = true
+cpu_only = true
+
+[prediction_schema]
+format = "gzip_TSV_mtime_zero"
+fields = ["seed", "row_hash", "unit_hash", "block_hash", "stratum", "outer_fold", "study_id", "assay_context_id", "element_id", "source_locus_group_id", "long_range_block_id", "model_id", "head_id", "observed", "prediction", "experimental_replicates", "biological_donors", "outcome_role"]
+missing_allowed = false
+missing_as_zero_allowed = false
+prediction_unit = "out_of_fold_predicted_mean_signed_log2_ALT_minus_REF_RNA_over_DNA_activity"
+same_rows_all_candidates = true
+same_rows_all_seeds = true
+same_outer_fold_all_candidates = true
+
+[[candidate]]
+model_id = "available_simple_controls"
+head_ids = ["zero", "training_mean", "allele_identity_ridge"]
+source_family = "partial_control"
+open_release_eligible = true
+seed_behavior = "deterministic_repeated_for_schema_only"
+
+[[candidate]]
+model_id = "caduceus"
+head_ids = ["delta_ridge", "full_ridge", "two_layer_gelu"]
+source_family = "dna_language"
+open_release_eligible = true
+seed_behavior = "ridge_deterministic_two_layer_seed_specific"
+
+[[candidate]]
+model_id = "dnabert2"
+head_ids = ["delta_ridge", "full_ridge", "two_layer_gelu"]
+source_family = "dna_language"
+open_release_eligible = true
+seed_behavior = "ridge_deterministic_two_layer_seed_specific"
+
+[[candidate]]
+model_id = "hyenadna"
+head_ids = ["delta_ridge", "full_ridge", "two_layer_gelu"]
+source_family = "dna_language"
+open_release_eligible = true
+seed_behavior = "ridge_deterministic_two_layer_seed_specific"
+
+[row_authority]
+tree_path = "executions/model-check-220-21088696"
+artifacts_sha256 = "61f3ce0d8a92df554ba4bfdbaa674d4838a4c0e3762025f3f06cb5c1fcf5d00e"
+row_member = "contract/row_universe.tsv"
+row_sha256 = "9a336c75f74d1ec55503429e0ef43c5b16ff42337eaaf8a52a3887df030be393"
+base_row_set_sha256 = "1ada849b1a2261055d64737c068ae3cafdcf66eb6b45d52628071ae4d0fde335"
+
+[outcome_authority]
+tree_path = "executions/gse281364-replicate-outcomes-21066307"
+artifacts_sha256 = "cb42bd4037127a4e4d6a406d6f7b00c706bc93b631cdf93083ce994809e791db"
+outcome_member = "outcomes/replicate_outcomes.tsv.gz"
+outcome_sha256 = "783caf7e7b659d95d34f5227e3aa149f636faf92ea5d685c4a25b41cb1f0b8f1"
+role = "exposed_development_MPRA_only"
+donor_count = 0
+
+[projection_authority]
+tree_path = "executions/model-check-221-21089160"
+artifacts_sha256 = "4be0df90a80f8431ee196cd0b6e63f14dc953b2d0a24758a509c22378282f038"
+projection_member = "open_sequence_projection/receipt.json"
+projection_receipt_sha256 = "0e19813c471f5ca2a09e0f2c0d86b39adf658f8533f9d217d0b75e85dd0846d3"
+models = ["caduceus", "dnabert2", "hyenadna"]
+
+[[raw_authority]]
+model_ids = ["dnabert2", "hyenadna"]
+tree_path = "executions/model-work-001-21070132"
+artifacts_sha256 = "e0efbb81731c1bdb2a1f5546ae3e0678eda28cd5960cbea48afce92f286e62da"
+fixture_tree_path = "executions/gse281364-dna-lm-common-fixture-21069076"
+fixture_artifacts_sha256 = "74a3a5c36bd1416daf3fe4b63fe317cfa7e2d008b96e2503d4ca43770b4357de"
+fixture_manifest_member = "fixture/sequence_manifest.tsv"
+
+[[raw_authority]]
+model_ids = ["caduceus"]
+tree_path = "executions/model-work-301-21072684"
+artifacts_sha256 = "641ef6be0436e323a473dfacbd7f66f673cafc498a795bdcddf9b048e44d1b20"
+fixture_tree_path = "executions/gse281364-caduceus-131k-fixture-21071004"
+fixture_artifacts_sha256 = "82b47ba2059193cae23e35db5401013659879024052c47558e602c03b4ee2c70"
+fixture_manifest_member = "fixture/sequence_manifest.tsv"
+
+[file_authorities.variant_task]
+path = "config/tasks/variant_to_regulation.toml"
+sha256 = "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"
+
+[file_authorities.dna_language_registry]
+path = "config/models/dna_language.toml"
+sha256 = "bb6e11d6b38b2a424f719a867d92e88c5d9e275223cf06385e82c89f6621e386"
+
+[campaign]
+partition = "cpu"
+account = "nslab"
+qos = "nslab"
+cpus = 16
+memory_gb = 128
+hours = 36
+array = false
+bundled = true
+no_overwrite = true

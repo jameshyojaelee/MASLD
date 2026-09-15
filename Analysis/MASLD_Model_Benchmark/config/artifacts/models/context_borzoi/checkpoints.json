@@ -4,17 +4,41 @@
     "authority_path": "src/masld_bench/conditional_model.py",
     "authority_sha256": "169ec2acbf895974b126435a849e482506f4e38bc1a606e5fabd1ad210dd72f8",
     "competing_context_path": "training_fold_hvg_pseudobulk_encoder",
-    "conditioning": ["gated_film", "lora_adapters"],
-    "forbidden_heads": ["masld_histone"],
-    "heads": ["atac_profile", "atac_count", "rna_coverage"],
+    "conditioning": [
+      "gated_film",
+      "lora_adapters"
+    ],
+    "forbidden_heads": [
+      "masld_histone"
+    ],
+    "heads": [
+      "atac_profile",
+      "atac_count",
+      "rna_coverage"
+    ],
     "missing_modality_masks": true,
-    "outputs": ["gene_score", "peak_score", "variant_score", "five_seed_uncertainty"],
-    "required_ablations": ["sequence_only", "trans_only", "permuted_context", "reverse_complement", "matched_shuffle"],
-    "retrospective_diagnostics": ["mpra", "crop_seq"],
+    "outputs": [
+      "gene_score",
+      "peak_score",
+      "variant_score",
+      "five_seed_uncertainty"
+    ],
+    "required_ablations": [
+      "sequence_only",
+      "trans_only",
+      "permuted_context",
+      "reverse_complement",
+      "matched_shuffle"
+    ],
+    "retrospective_diagnostics": [
+      "mpra",
+      "crop_seq"
+    ],
     "status": "specified_but_not_implemented",
     "uses_frozen_hotspot_117": "read_only_post_hoc_projection_only"
   },
   "authorization_contract": {
+    "build_authorized": false,
     "campaign_id": "v1-conditional-context-model",
     "campaign_path": "config/campaigns/v1_conditional_model.toml",
     "campaign_sha256": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c",
@@ -31,8 +55,7 @@
       "residual_correlation_strictly_below": 0.8
     },
     "selection_rule": "Choose the highest-scoring open long-range sequence backbone within one standard error, using lower compute only after score ordering, plus the highest-ranked admitted clean open cell-state encoder.",
-    "trigger_result": "NOT_EVALUATED",
-    "build_authorized": false
+    "trigger_result": "NOT_EVALUATED"
   },
   "checkpoint": {
     "artifact_exists": false,
@@ -62,11 +85,15 @@
     "warning": "The legacy model_id identifies only the single generic conditional slot. It does not identify or bind Borzoi, another sequence backbone, a cell encoder, an implementation, or a trained artifact."
   },
   "input_contract": {
-    "allowed_inference_inputs": ["dna_sequence", "single_nucleus_rna_or_training_fold_context", "explicit_missing_modality_masks"],
+    "allowed_inference_inputs": [
+      "dna_sequence",
+      "single_nucleus_rna_or_training_fold_context",
+      "explicit_missing_modality_masks"
+    ],
     "atac_inference_input": "forbidden",
     "context_mapper": "UNIMPLEMENTED_AND_UNFIT",
-    "genome_build": "GRCh38.p14_after_reference_admission_checks",
     "gene_annotation": "GENCODE_v49_after_crosswalk_admission_checks",
+    "genome_build": "GRCh38.p14_after_reference_admission_checks",
     "pairing_topologies": {
       "gse244832": "same_sample_different_aliquot_at_donor_compatible_resolution_only",
       "gse296875": "same_nucleus_training_only_after_exact_join_validation"
@@ -90,12 +117,12 @@
       "redistribution_status": "INELIGIBLE",
       "status": "BLOCKED_UNTIL_BASE_TERMS_AND_BUILT_ARTIFACT_LICENSE_DECISION"
     },
+    "open_champion_eligibility": false,
     "project_context_code": {
       "license": "UNRESOLVED_NO_IMPLEMENTATION_EXISTS",
       "redistribution_status": "INELIGIBLE",
       "status": "NOT_IMPLEMENTED"
-    },
-    "open_champion_eligibility": false
+    }
   },
   "noninheritance_contract": {
     "borzoi_checkpoint_bytes_inherited": false,
@@ -113,7 +140,12 @@
       "status": "blocked_no_implementation_and_no_profile_fixture"
     },
     "variant_to_regulation": {
-      "allowed_endpoints": ["accessibility_delta", "allelic_direction", "eqtl_retrieval", "signed_cell_type_eqtl_effect"],
+      "allowed_endpoints": [
+        "accessibility_delta",
+        "allelic_direction",
+        "eqtl_retrieval",
+        "signed_cell_type_eqtl_effect"
+      ],
       "capability_registry_path": "config/evaluation/variant_to_regulation_capabilities.toml",
       "capability_registry_sha256": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63",
       "requires_fitted_head": true,
@@ -123,7 +155,13 @@
   },
   "runtime_contract": {
     "declared_campaign_runtime_id": "gpu_finetune",
-    "deterministic_seed_set": [1103, 2909, 4721, 6673, 8111],
+    "deterministic_seed_set": [
+      1103,
+      2909,
+      4721,
+      6673,
+      8111
+    ],
     "environment_lock": "UNRESOLVED",
     "gpu_compatibility": "UNTESTED",
     "implementation_import": "NOT_AVAILABLE",
@@ -140,16 +178,49 @@
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
   "source_evidence": "Project authorities were checked on 2026-08-23. The complementarity, stacking-evidence, frozen context-spec, and planner authorization control plane now exists, but no selected component configuration, trained architecture weight, or selection lock exists, and no candidate checkpoint identity is bound by this bundle.",
   "source_records": [
-    {"identity": "src/masld_bench/conditional_model.py", "sha256": "169ec2acbf895974b126435a849e482506f4e38bc1a606e5fabd1ad210dd72f8"},
-    {"identity": "src/masld_bench/stacking.py", "sha256": "933c52c62982e01e957399bc5c995a39c67c03c07b8a71d52ec7e682b1acd6af"},
-    {"identity": "src/masld_bench/context_spec.py", "sha256": "098f1f2b6ef8c7101301d7e6ef1b83d9ec5dba4191b61a3c368d02a265248a9f"},
-    {"identity": "src/masld_bench/planner.py", "sha256": "c0bfa239d6db1af4d34c34a5bfd58c60cfd0494fa6527679e8407c74c19acc10"},
-    {"identity": "src/masld_bench/evaluators/endpoint_power.py", "sha256": "01371765f3a5978abb9d4bed87d2d3c574711f126e15d25395e8e479409aa45a"},
-    {"identity": "config/campaigns/v1_conditional_model.toml", "sha256": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c"},
-    {"identity": "config/models/regulatory_sequence.toml", "sha256": "866a53b7fd5e0222482d291e4af8419d31d7f6baa2d0773b7ff9c40d518dff50"},
-    {"identity": "config/evaluation/variant_to_regulation_capabilities.toml", "sha256": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63"},
-    {"identity": "config/evaluation/rna_conditioned_atac_capabilities.toml", "sha256": "c233a982a48c1bf827ce9f64d894ce3c6d6af3e11a20e39cf03df3920fae6330"},
-    {"identity": "config/tasks/variant_to_regulation.toml", "sha256": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"},
-    {"identity": "config/tasks/rna_conditioned_atac.toml", "sha256": "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0"}
+    {
+      "identity": "src/masld_bench/conditional_model.py",
+      "sha256": "169ec2acbf895974b126435a849e482506f4e38bc1a606e5fabd1ad210dd72f8"
+    },
+    {
+      "identity": "src/masld_bench/stacking.py",
+      "sha256": "933c52c62982e01e957399bc5c995a39c67c03c07b8a71d52ec7e682b1acd6af"
+    },
+    {
+      "identity": "src/masld_bench/context_spec.py",
+      "sha256": "098f1f2b6ef8c7101301d7e6ef1b83d9ec5dba4191b61a3c368d02a265248a9f"
+    },
+    {
+      "identity": "src/masld_bench/planner.py",
+      "sha256": "5942f1d9098c1bb0959e274b632d3f07bf3a2e01de72205ce86aad3a7e5b173f"
+    },
+    {
+      "identity": "src/masld_bench/evaluators/endpoint_power.py",
+      "sha256": "01371765f3a5978abb9d4bed87d2d3c574711f126e15d25395e8e479409aa45a"
+    },
+    {
+      "identity": "config/campaigns/v1_conditional_model.toml",
+      "sha256": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c"
+    },
+    {
+      "identity": "config/models/regulatory_sequence.toml",
+      "sha256": "bccce82a8a949eb81b73246848dcf7e80b164e464992fdb9b9fcb10c72181c1b"
+    },
+    {
+      "identity": "config/evaluation/variant_to_regulation_capabilities.toml",
+      "sha256": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63"
+    },
+    {
+      "identity": "config/evaluation/rna_conditioned_atac_capabilities.toml",
+      "sha256": "c779f06dedf69a15ec44280323a7701e0938b75bfa2660d11dd2a6f5de37868d"
+    },
+    {
+      "identity": "config/tasks/variant_to_regulation.toml",
+      "sha256": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"
+    },
+    {
+      "identity": "config/tasks/rna_conditioned_atac.toml",
+      "sha256": "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0"
+    }
   ]
 }

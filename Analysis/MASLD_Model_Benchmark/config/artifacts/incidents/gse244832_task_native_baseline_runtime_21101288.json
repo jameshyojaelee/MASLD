@@ -1,0 +1,28 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "gse244832_task_native_baseline_runtime_21101288",
+  "job_id": 21101288,
+  "dependent_job_cancelled": 21101289,
+  "stage": "source_materializer_import_before_any_source_value_read",
+  "terminal_state": "FAILED",
+  "exit_code": "1:0",
+  "elapsed": "00:00:04",
+  "tests": {
+    "passed": 19,
+    "failed": 0
+  },
+  "failure": "The system pyBigWig module selected Python 3.10.4, while importing masld_bench executes contracts.py, which requires the Python 3.11 standard-library tomllib module.",
+  "scientific_state": {
+    "source_bigwig_values_read": false,
+    "gse244832_query_values_read": false,
+    "target_role_atac_consumed": false,
+    "predictions_written": false,
+    "prediction_commits_written": false,
+    "evaluator_outcomes_opened": false,
+    "metrics_calculated": false
+  },
+  "partial_artifacts": [],
+  "retry_rule": "Use an explicit runtime bridge that keeps pyBigWig extraction in its compatible Python runtime and all benchmark validation/freezing in the pinned Python 3.11 runtime. Any retry must use new immutable execution paths and a new dependent verifier.",
+  "model_or_threshold_change": false,
+  "status": "terminal_nonpromotable"
+}

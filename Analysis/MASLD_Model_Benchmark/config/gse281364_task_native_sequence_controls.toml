@@ -1,0 +1,157 @@
+schema_version = "masld-bench-gse281364-task-native-sequence-controls-v1"
+status = "prespecified_outcome_blind_task_and_fixture_freeze"
+dataset_id = "gse281364"
+task_id = "signed_hepg2_reporter_activity_transfer"
+outcome_access_authorized = false
+reporter_count_access_authorized = false
+metric_calculation_authorized = false
+model_training_authorized = false
+prediction_generation_authorized = false
+selection_authorized = false
+promotion_authorized = false
+
+[row_contract]
+elements = 1033
+source_locus_groups = 1033
+long_range_blocks = 239
+outer_folds = 5
+fold_element_counts = [208, 208, 207, 208, 202]
+fold_block_counts = [52, 46, 50, 46, 45]
+contexts = ["HepG2_control", "HepG2_PAOA"]
+fixed_seeds = [1103, 2909, 4721, 6673, 8111]
+seeds_are_genuinely_distinct_fits = true
+schema_seed_repeats_permitted = false
+biological_donors = 0
+
+[sequence_contract]
+input_length_bp = 230
+channel_order = ["A", "G", "C", "T"]
+ambiguous_base_encoding = "0.25_each_channel"
+forward_variant_index0 = 115
+reverse_complement_variant_index0 = 114
+allele_sign = "ALT_minus_REF"
+shared_ref_alt_encoder = true
+joint_reverse_complement_training_augmentation = true
+reverse_complement_inference = "mean_forward_and_reverse_complement_activity_per_allele_before_ALT_minus_REF"
+input_lane = "GRCh38p14_230bp_genomic_window_transfer"
+source_assay_insert_length_bp = 107
+native_assay_input_claim = false
+observed_query_atac_allowed = false
+local_atac_weight_reuse_allowed = false
+
+[target_contract]
+future_outcome_tree = "executions/gse281364-replicate-outcomes-21066307"
+future_outcome_artifacts_sha256 = "cb42bd4037127a4e4d6a406d6f7b00c706bc93b631cdf93083ce994809e791db"
+outcome_role = "exposed_development_MPRA_only"
+read_during_this_freeze = false
+per_allele_activity = "mean_across_four_replicates_log2((RNA+0.5)/(DNA+0.5))"
+signed_delta = "ALT_activity_minus_REF_activity"
+missingness = "require_complete_REF_ALT_pairs_per_context_never_encode_missing_as_zero"
+training_only_standardization = "per_context_activity_mean_and_sd_fit_on_outer_training_rows_only"
+loss = "0.25_smooth_l1_REF_activity_plus_0.25_smooth_l1_ALT_activity_plus_1.0_smooth_l1_ALT_minus_REF_delta"
+smooth_l1_beta = 1.0
+
+[split_contract]
+outer_test = "frozen_long_range_block_fold"
+inner_validation = "next_outer_fold_modulo_five"
+inner_train = "three_folds_excluding_outer_test_and_inner_validation"
+epoch_selection = "lowest_inner_validation_loss_with_fixed_patience_then_one_standard_error_earliest_epoch"
+final_refit = "reinitialize_same_seed_namespace_and_fit_all_four_non_test_folds_for_selected_epoch_count"
+architecture_hyperparameter_selection = "none_all_architecture_and_optimizer_values_prespecified"
+held_test_outcomes_visible_to_adapter = false
+largest_receptive_field_buffer = "already_enforced_by_frozen_524kb_long_range_blocks"
+exact_and_reverse_complement_identity_cross_fold = false
+
+[optimization]
+optimizer = "AdamW"
+learning_rate = 0.0003
+weight_decay = 0.0001
+batch_size = 64
+maximum_epochs = 200
+minimum_epochs = 10
+early_stopping_patience = 20
+gradient_clip_norm = 1.0
+dropout = 0.1
+deterministic_algorithms = true
+
+[architectures.sequence_cnn_control]
+implementation_id = "sequence_cnn_control::gse281364_mpra_230bp_v1"
+stem_channels = 64
+stem_kernel = 15
+residual_blocks = 4
+residual_kernel = 7
+dilations = [1, 2, 4, 8]
+normalization = "GroupNorm_8_groups"
+pooling = "global_mean_plus_global_max"
+head_hidden = 64
+output_contexts = 2
+
+[architectures.sequence_transformer_control]
+implementation_id = "sequence_transformer_control::gse281364_mpra_230bp_v1"
+width = 64
+layers = 6
+attention_heads = 4
+ffn_width = 192
+position_encoding = "learned_CLS_plus_230_positions"
+normalization = "pre_norm_LayerNorm"
+pooling = "CLS"
+output_contexts = 2
+
+[artifact_contract]
+adapter_outputs = ["tensor_only_checkpoint", "prediction_rows", "training_receipt", "resource_receipt"]
+adapter_metrics_forbidden = true
+adapter_scoring_forbidden = true
+prediction_rows = 10330
+prediction_row_formula = "1033_elements_x_2_contexts_x_5_genuine_seeds"
+outer_test_prediction_once_per_element_seed = true
+five_distinct_checkpoint_hashes_required_per_model_outer_fold = true
+independent_evaluator_required = true
+
+[license_disposition]
+implementation_origin = "new_project_owned_task_native_code"
+upstream_model_weights = "none_random_initialization"
+local_atac_code_reused = false
+local_atac_weights_reused = false
+runtime_dependency = "PyTorch_BSD-style"
+project_repository_license = "UNRESOLVED_no_repository_level_license_detected"
+internal_research_execution = "permitted_project_owned_code"
+source_redistribution = "blocked_pending_repository_license"
+derivative_weight_redistribution = "blocked_pending_project_code_and_GSE281364_output_terms_review"
+open_champion_eligibility = "blocked_until_license_and_external_task_gate_pass"
+
+[claim_contract]
+development_comparator = true
+foundation_model = false
+pretrained_model = false
+task_native_scratch_baseline = true
+models_ranked_during_adapter_execution = false
+shortlist_eligible_during_adapter_execution = false
+complementarity_eligible_during_adapter_execution = false
+standalone_signed_eqtl_or_ieqtl_eligible = false
+champion_eligible_without_external_evaluation = false
+
+[immutable_trees.row_universe]
+path = "executions/model-check-220-21088696"
+artifacts_sha256 = "61f3ce0d8a92df554ba4bfdbaa674d4838a4c0e3762025f3f06cb5c1fcf5d00e"
+
+[immutable_trees.sequence_source]
+path = "executions/gse281364-mpralegnet-fixture-21069059"
+artifacts_sha256 = "33c3ea9fe134157b9f8f29396cd9d0d565243a9f6e44db3f458cd970c486d32c"
+
+[immutable_trees.reconciliation]
+path = "executions/model-check-225-21091492"
+artifacts_sha256 = "fdc1db620152757f74c07904487a62381fcd182a532669b93b0aa1ca5cdfc2ac"
+selected_member = "reconciliation/mpralegnet_selected_elements.tsv"
+selected_member_sha256 = "59c96fc41d1ef14ef6f4a5bb7ad0f2e24336c6f23776b97fef82de4bf4f5d6cd"
+
+[campaign]
+job_name = "model-check-227"
+partition = "cpu"
+account = "nslab"
+qos = "nslab"
+cpus = 2
+memory_gb = 16
+hours = 4
+array = false
+bundled = true
+no_overwrite = true

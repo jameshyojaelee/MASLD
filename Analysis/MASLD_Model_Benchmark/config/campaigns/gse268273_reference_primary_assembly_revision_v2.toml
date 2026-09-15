@@ -1,0 +1,51 @@
+schema_version = "masld-bench-campaign-revision-v1"
+revision_id = "gse268273_reference_primary_assembly_revision_v2"
+status = "prepared_not_submitted"
+base_campaign_id = "gse268273_raw_reprocessing_v1"
+base_plan_root = "executions/model-data-075-21082574/plan"
+base_plan_artifacts_sha256 = "29566d52311a4204adbfd7ec4501bf07b452ca770ff81f47a3da47fc89b2d717"
+base_campaign_hash = "fb28496669135258d3a6e9895299cb2757453056038aa2b4fd6fba05516f8d3a"
+failed_reference_job = 21082744
+failed_artifact = "executions/model-data-077-21082744.failed"
+failure = "The chromosome-only GENCODE v36 GTF omitted seven frozen source features on primary-assembly scaffolds."
+correction = "Use the official GENCODE v36 primary-assembly GTF and preserve the GRCh38.p14 genome and GENCODE v49 target contracts."
+source_gtf_url = "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.primary_assembly.annotation.gtf.gz"
+source_gtf_bytes = 44517553
+source_gtf_md5 = "5038acd7158686c69a1f88a5e26a5934"
+source_gtf_gene_ids = 60719
+source_gtf_contigs = 47
+source_crosswalk_features = 14149
+target_stable_genes = 14078
+target_duplicate_sum_groups = 11
+source_features_masked_absent_v49 = 60
+primary_scaffold_source_features = [
+  "ENSG00000271254.6",
+  "ENSG00000274847.1",
+  "ENSG00000276256.1",
+  "ENSG00000277196.4",
+  "ENSG00000277400.1",
+  "ENSG00000278384.1",
+  "ENSG00000278817.1",
+]
+running_download_job_reusable = 21082743
+failed_reference_artifact_preserved = true
+labels_accessed = false
+fit_or_score_performed = false
+
+[verification]
+wrapper = "slurm/verify_gse268273_reference_census_cpu.sbatch"
+job_name = "model-data-080"
+partition = "cpu"
+account = "nslab"
+qos = "nslab"
+cpus_per_task = 4
+memory_gb = 32
+wall_hours = 2
+
+[replacement]
+reference_wrapper = "slurm/build_gse268273_rsem_reference_cpu.sbatch"
+quantification_wrapper = "slurm/quantify_gse268273_rsem_bundles_cpu.sbatch"
+consolidation_wrapper = "slurm/consolidate_gse268273_rsem_counts_cpu.sbatch"
+reference_depends_on = ["verification"]
+quantification_depends_on = ["running_download_job_reusable", "replacement_reference"]
+consolidation_depends_on = ["replacement_quantification"]

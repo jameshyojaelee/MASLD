@@ -1,0 +1,18 @@
+{
+  "admitted": true,
+  "authority": "exposure_audit",
+  "evidence": {
+    "development_or_selection_use_allowed": false,
+    "exposure_status": "downstream_demo",
+    "first_project_exposure_date": "2026-08-24",
+    "globally_untouched": false,
+    "model_checkpoint_exposure_audit_still_required": true,
+    "project_role": "external_development_compatibility_smoke_only",
+    "sealed_or_champion_claim_allowed": false,
+    "sealed_outcomes_used": false,
+    "selection_outcomes_used": false
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

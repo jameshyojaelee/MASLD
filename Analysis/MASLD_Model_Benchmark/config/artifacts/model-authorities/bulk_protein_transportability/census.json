@@ -1,0 +1,401 @@
+{
+  "schema_version": "masld-bench-bulk-protein-transportability-census-v1",
+  "verified_date": "2026-08-24",
+  "scope": {
+    "task_families": [
+      "bulk_state_transfer",
+      "paired_bulk_histology_state",
+      "gse268273_fibrosis_etiology_ood_transport",
+      "gse274114_within_instrument_etiology",
+      "protein_transport"
+    ],
+    "unit_of_inference": "participant_or_donor",
+    "sealed_sources_accessed": [],
+    "models_fit": [],
+    "models_scored": [],
+    "new_jobs_submitted": []
+  },
+  "global_contract": {
+    "all_assays_from_one_person_share_outer_role": true,
+    "technical_runs_are_biological_replicates": false,
+    "rna_protein_pair_assumed": false,
+    "missing_encoded_as_zero": false,
+    "allowed_missingness_states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
+    "training_only_operations": [
+      "feature_filtering",
+      "normalization",
+      "scaling",
+      "dimensionality_reduction",
+      "covariate_adjustment",
+      "hyperparameter_selection",
+      "calibration",
+      "threshold_selection",
+      "program_projection_mapping"
+    ],
+    "claim_language": "cross-sectional stage-associated remodeling",
+    "prohibited_claims": [
+      "diagnosis",
+      "prognosis",
+      "longitudinal_progression",
+      "treatment_response",
+      "causality",
+      "prevalence",
+      "universal_model_without_external_task_specific_evaluation"
+    ]
+  },
+  "cohorts": [
+    {
+      "cohort_family_id": "bulk_five_cohort",
+      "role": "train_development_project_exposed",
+      "biological_unit": "donor",
+      "biological_units": 844,
+      "assay_records_after_qc": 1257,
+      "modalities": ["bulk_rna"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "development_visible",
+      "activation_state": "blocked_dataset_activation_contract_and_source_family_overlap",
+      "metadata": {
+        "disease_or_control": {"state": "observed", "use": "development_only"},
+        "fibrosis": {"state": "join_unresolved"},
+        "nas": {"state": "join_unresolved"},
+        "steatosis": {"state": "join_unresolved"},
+        "ballooning": {"state": "join_unresolved"},
+        "lobular_inflammation": {"state": "join_unresolved"},
+        "sex": {"state": "join_unresolved"},
+        "age": {"state": "join_unresolved"}
+      },
+      "constraints": [
+        "Resolve overlap with the nine-source registered bulk pool before counting independent studies or people.",
+        "Use source-native endpoints; do not impute a common stage across cohorts."
+      ]
+    },
+    {
+      "cohort_family_id": "gse267145_znf469_human_liver",
+      "role": "train_development_project_exposed",
+      "biological_unit": "participant",
+      "biological_units": 99,
+      "modalities": ["bulk_rna", "h3k27ac_cutrun"],
+      "pairing": "same_sample_different_aliquot",
+      "seal_state": "development_visible_evaluator_separated",
+      "activation_state": "participant_join_and_histology_preflight_passed_production_fit_not_authorized",
+      "metadata": {
+        "stage": {"state": "observed", "complete_participants": 99},
+        "fibrosis": {"state": "observed", "complete_participants": 99, "scale": [0, 1, 2, 3]},
+        "nas": {"state": "derivable_not_processed", "rule": "steatosis_plus_ballooning_plus_lobular_inflammation"},
+        "steatosis": {"state": "observed", "complete_participants": 99},
+        "ballooning": {"state": "observed", "complete_participants": 99},
+        "lobular_inflammation": {"state": "observed", "complete_participants": 99},
+        "lobular_necrosis": {"state": "observed", "complete_participants": 99},
+        "sex": {"state": "observed", "complete_participants": 99, "female": 85, "male": 14},
+        "age": {"state": "structurally_missing"},
+        "bmi": {"state": "structurally_missing"}
+      },
+      "constraints": [
+        "RNA-only, H3K27ac-only, and observed-pair multimodal lanes remain separate.",
+        "Observed query H3K27ac cannot support an RNA-only transport claim.",
+        "The single cohort supports development diagnostics only."
+      ]
+    },
+    {
+      "cohort_family_id": "gse268273_imid_masld",
+      "role": "external_development_project_exposed",
+      "biological_unit": "participant",
+      "biological_units": 109,
+      "technical_runs": 824,
+      "modalities": ["bulk_rna", "clinical_covariates"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "external_development_not_sealed",
+      "activation_state": "raw_outcome_blind_reprocessing_chain_active_model_fit_and_scoring_blocked",
+      "metadata": {
+        "masld": {"state": "observed", "complete_participants": 109},
+        "etiology_or_comorbidity_stratum": {"state": "observed", "complete_participants": 109, "evaluator_only": true},
+        "fibrosis": {"state": "observed", "complete_participants": 109, "scale": [0, 1, 2, 3, 4], "evaluator_only": true},
+        "nas": {"state": "structurally_missing"},
+        "steatosis": {"state": "structurally_missing"},
+        "ballooning": {"state": "structurally_missing"},
+        "lobular_inflammation": {"state": "structurally_missing"},
+        "sex": {"state": "observed", "complete_participants": 109, "female": 52, "male": 57, "evaluator_only": true},
+        "age": {"state": "structurally_missing"},
+        "bmi": {"state": "structurally_missing"},
+        "metabolic_covariates_and_labs": {"state": "observed", "participant_level_missingness": "source_native", "evaluator_only": true}
+      },
+      "constraints": [
+        "All participants have biopsy-proven MASLD; IMID-associated MASLD is an OOD stratum, not a negative control.",
+        "Collapse technical runs by participant before normalization.",
+        "The deposited globally normalized voom matrix is audit evidence only and is prohibited as scored input.",
+        "Model selection, preprocessing, calibration, and thresholds must be locked without GSE268273 expression or outcomes."
+      ]
+    },
+    {
+      "cohort_family_id": "gse260666_bulk_rna",
+      "role": "external_development_project_exposed",
+      "biological_unit": "participant",
+      "biological_units": 16,
+      "modalities": ["bulk_rna"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "external_development_not_sealed",
+      "activation_state": "label_free_fixture_passed_fit_blocked_on_training_selection_lock",
+      "metadata": {
+        "group": {"state": "observed", "control": 6, "nafl": 6, "nash": 4, "evaluator_only": true},
+        "fibrosis": {"state": "structurally_missing"},
+        "nas": {"state": "structurally_missing"},
+        "sex": {"state": "join_unresolved"},
+        "age": {"state": "join_unresolved"}
+      },
+      "constraints": ["Small-cohort uncertainty is participant-level."]
+    },
+    {
+      "cohort_family_id": "gse274114_mash_hbv",
+      "role": "train_development_project_exposed",
+      "biological_unit": "participant",
+      "biological_units": 39,
+      "technical_runs": 71,
+      "modalities": ["bulk_rna"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "development_visible_evaluator_separated",
+      "activation_state": "label_free_fixture_passed_two_within_instrument_contrasts_only",
+      "metadata": {
+        "group": {"state": "observed", "healthy": 9, "hbv_only": 11, "mash_only": 10, "mash_hbv": 9, "evaluator_only": true},
+        "fibrosis": {"state": "structurally_missing", "group_design_only": "F0_to_F2"},
+        "nas": {"state": "structurally_missing"},
+        "steatosis": {"state": "structurally_missing"},
+        "ballooning": {"state": "structurally_missing"},
+        "lobular_inflammation": {"state": "structurally_missing"},
+        "sex": {"state": "structurally_missing"},
+        "age": {"state": "structurally_missing"},
+        "bmi": {"state": "structurally_missing"}
+      },
+      "constraints": [
+        "Sequencing instrument is perfectly confounded with the global MASH superclass.",
+        "Only healthy-versus-HBV-only within HiSeq and MASH-only-versus-MASH-HBV within NovaSeq are eligible.",
+        "Group summaries cannot be assigned to participants."
+      ]
+    },
+    {
+      "cohort_family_id": "gse249997",
+      "role": "external_development",
+      "biological_unit": "participant",
+      "reported_participants": 70,
+      "assay_records": 77,
+      "modalities": ["bulk_rna"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "external_development_not_sealed",
+      "activation_state": "participant_join_unresolved",
+      "metadata": {
+        "early_masld": {"state": "observed"},
+        "fibrosis": {"state": "join_unresolved"},
+        "nas": {"state": "join_unresolved"},
+        "sex": {"state": "join_unresolved"},
+        "age": {"state": "join_unresolved"}
+      },
+      "constraints": [
+        "Resolve 77 samples versus 70 participants before splitting.",
+        "No control or broad stage endpoint is available; use only for early-MASLD domain transport."
+      ]
+    },
+    {
+      "cohort_family_id": "antwerp_inserm_shared",
+      "role": "development_project_exposed",
+      "biological_unit": "participant",
+      "biological_unit_range": [171, 200],
+      "modalities": ["bulk_rna_microarray", "histopathology", "intervention"],
+      "pairing": "repeated_participant",
+      "seal_state": "development_visible",
+      "activation_state": "cross_accession_overlap_passed_platform_preprocessing_blocked",
+      "metadata": {
+        "nash_status": {"state": "observed", "baseline_evaluable": 148, "paired_transition_evaluable": 54},
+        "histopathology": {"state": "observed"},
+        "fibrosis": {"state": "join_unresolved"},
+        "nas": {"state": "join_unresolved"},
+        "sex": {"state": "observed"},
+        "age": {"state": "observed"}
+      },
+      "constraints": [
+        "GSE106737 and GSE83452 form one overlapping cohort family.",
+        "Repeated visits stay in one participant fold.",
+        "Assay-native inductive microarray preprocessing remains blocked."
+      ]
+    },
+    {
+      "cohort_family_id": "gse31803_gse49541_fibrosis_array",
+      "role": "development_project_exposed",
+      "biological_unit": "participant",
+      "biological_units": 72,
+      "modalities": ["bulk_rna_microarray", "histopathology"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "development_visible",
+      "activation_state": "participant_and_raw_cel_audits_passed_platform_preprocessing_pending",
+      "metadata": {
+        "fibrosis_group": {"state": "observed", "mild_f0_f1": 40, "advanced_f3_f4": 32},
+        "exact_fibrosis": {"state": "structurally_missing"},
+        "nas": {"state": "structurally_missing"},
+        "sex": {"state": "structurally_missing"},
+        "age": {"state": "structurally_missing"}
+      },
+      "constraints": ["GSE49541 is a SubSeries of GSE31803 and cannot be counted independently."]
+    },
+    {
+      "cohort_family_id": "pxd051911",
+      "role": "train_development_project_exposed",
+      "biological_unit": "participant",
+      "biological_units": 58,
+      "modalities": ["liver_proteomics", "subcutaneous_adipose_proteomics", "omental_adipose_proteomics"],
+      "pairing": "same_donor_different_tissue",
+      "cross_cohort_rna_pairing": "same_study_unpaired",
+      "seal_state": "development_visible",
+      "activation_state": "blocked_dataset_activation_and_protein_identifier_missingness_contract",
+      "metadata": {
+        "obesity_context": {"state": "observed"},
+        "fibrosis": {"state": "join_unresolved"},
+        "nas": {"state": "join_unresolved"},
+        "steatosis": {"state": "join_unresolved"},
+        "sex": {"state": "join_unresolved"},
+        "age": {"state": "join_unresolved"}
+      },
+      "constraints": [
+        "No RNA edge is inferred.",
+        "Protein identifiers, below-QC values, and tissue-specific missingness remain assay-native.",
+        "One protein cohort cannot support a protein champion claim."
+      ]
+    },
+    {
+      "cohort_family_id": "gse267031",
+      "role": "conditional_project_sealed",
+      "biological_unit": "donor",
+      "biological_units": 18,
+      "modalities": ["bulk_rna"],
+      "pairing": "same_study_unpaired",
+      "seal_state": "withheld_sealed",
+      "activation_state": "not_activated_no_outcome_access",
+      "metadata": {
+        "fibrosis_or_stage": {"state": "withheld_sealed"},
+        "nas": {"state": "withheld_sealed"},
+        "sex": {"state": "withheld_sealed"},
+        "age": {"state": "withheld_sealed"},
+        "endpoint_completeness": {"state": "withheld_sealed"}
+      },
+      "constraints": [
+        "Do not register or read an outcome URL in the development environment.",
+        "Donor deduplication, stage completeness, endpoint completeness, and prospective power must pass before unblinding."
+      ]
+    }
+  ],
+  "task_native_model_lanes": [
+    {
+      "lane_id": "bulk_rna_stage_and_fibrosis",
+      "native_inputs": ["participant_by_gene_bulk_rna"],
+      "mandatory_or_strong_baselines": [
+        "training_outcome_distribution",
+        "mean_expression_bulk",
+        "hvg_pca_nearest_centroid",
+        "hvg_pca_knn",
+        "hvg_pca_ridge",
+        "hvg_pca_elastic_net",
+        "hvg_pca_linear_svm",
+        "ordinal_logistic"
+      ],
+      "candidate_models": [
+        "assay_native_program_projection",
+        "partial_least_squares",
+        "reduced_rank_regression",
+        "regularized_bulk_autoencoder_screening_only",
+        "calibrated_late_fusion_only_for_endpoint_matched_out_of_fold_predictions"
+      ],
+      "single_cell_foundation_model_default": "ineligible_without_a_registered_bulk_observation_and_query_transform",
+      "current_state": "gse267145_preflight_passed_unscored_but_general_bulk_execution_and_selection_lock_incomplete",
+      "runnable_new_campaign": false
+    },
+    {
+      "lane_id": "observed_bulk_rna_h3k27ac",
+      "native_inputs": ["participant_by_gene_bulk_rna", "participant_by_opaque_h3k27ac_feature"],
+      "mandatory_or_strong_baselines": [
+        "training_mean_h3_profile",
+        "pca_ridge",
+        "reduced_rank_regression",
+        "pls2",
+        "sparse_cca",
+        "block_pca_elastic_net",
+        "calibrated_late_fusion"
+      ],
+      "candidate_models": [
+        "generalized_low_rank_multiview",
+        "regularized_paired_bulk_autoencoder_screening_only"
+      ],
+      "mofaplus_state": "deferred_no_frozen_unseen_participant_transform_and_never_sealed_query_refit",
+      "current_state": "coordinate_independent_single_cohort_development_lane_only",
+      "runnable_new_campaign": false
+    },
+    {
+      "lane_id": "protein_transport",
+      "native_inputs": ["participant_by_protein_liver", "participant_by_protein_adipose_where_observed"],
+      "mandatory_or_strong_baselines": [
+        "protein_mean",
+        "protein_pca",
+        "protein_elastic_net",
+        "assay_native_program_projection"
+      ],
+      "candidate_models": ["assay_native_protein_encoder", "calibrated_late_fusion"],
+      "current_state": "planned_only_no_activated_dataset_view_adapter_or_external_protein_cohort",
+      "runnable_new_campaign": false
+    }
+  ],
+  "power_and_promotion_gates": {
+    "bulk_state_transfer": {
+      "sealed_source": "gse267031",
+      "minimum_effect": 0.05,
+      "effect_metric": "paired_rank_correlation_gain",
+      "prospective_power_required": 0.8,
+      "pre_unblind_requirements": [
+        "donor_deduplication_pass",
+        "stage_metadata_complete",
+        "endpoint_complete",
+        "paired_development_variance_frozen",
+        "prospective_power_at_least_0.80"
+      ],
+      "current_state": "blocked_without_unblinding",
+      "champion_eligible_now": false
+    },
+    "protein_transport": {
+      "external_protein_cohort_required": true,
+      "eligible_external_protein_cohorts": 0,
+      "current_state": "blocked_missing_external_protein_source",
+      "champion_eligible_now": false
+    },
+    "development_sources": {
+      "gse267145": "development_only_no_champion",
+      "gse268273": "external_development_ood_only_no_champion",
+      "gse274114": "within_instrument_development_only_no_champion",
+      "gse260666": "small_external_development_only_no_champion"
+    }
+  },
+  "next_outcome_blind_campaign": {
+    "campaign_id": "gse268273_raw_reprocessing_v1",
+    "action": "continue_existing_download_then_participant_level_rsem_quantification_then_consolidation_chain",
+    "justification": "It creates the required assay-native outcome-free external-development input while the deposited global voom matrix is prohibited.",
+    "model_or_outcome_selection_allowed": false,
+    "labels_or_evaluator_metadata_available_to_workers": false,
+    "new_submission_authorized_by_this_reconciliation": false,
+    "additional_parallel_campaign_justified": false,
+    "block_after_consolidation": "Freeze the GSE267145 training-only preprocessing and model selection lock before prediction; do not score GSE268273 or open GSE267031."
+  },
+  "terminal_disposition": {
+    "cohorts_reconciled": 10,
+    "new_model_campaigns_authorized": 0,
+    "new_jobs_submitted": 0,
+    "sealed_sources_accessed": [],
+    "models_fit": [],
+    "models_scored": [],
+    "bulk_champion_created": false,
+    "protein_champion_created": false,
+    "resource_authorities_modified": false
+  }
+}

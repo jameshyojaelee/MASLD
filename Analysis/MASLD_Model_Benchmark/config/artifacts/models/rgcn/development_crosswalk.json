@@ -36,7 +36,7 @@
     "gse289173": {
       "allowed_use": "none for the typed-evidence graph task under the current TaskSpec",
       "exposure_state": "target_label_unexposed",
-      "reason": "It is not a registered graph seal and its cell-state or QTL outcomes cannot be imported to create one."
+      "reason": "It is not a registered graph hold-back and its cell-state or QTL outcomes cannot be imported to create one."
     },
     "resource_gene_catalog_current": {
       "allowed_use": "Exposed development graph content only after a promoted immutable snapshot. Frozen Resource evidence classes, thresholds, hero genes, and 117 programs cannot become graph training targets or be redefined by model output.",

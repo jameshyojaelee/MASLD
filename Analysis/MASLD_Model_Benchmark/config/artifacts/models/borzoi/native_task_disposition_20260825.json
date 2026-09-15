@@ -1,0 +1,135 @@
+{
+  "audit_date": "2026-08-25",
+  "base_registry_files": [
+    {
+      "registry_file": "config/models/regulatory_sequence.toml",
+      "registry_file_sha256": "bccce82a8a949eb81b73246848dcf7e80b164e464992fdb9b9fcb10c72181c1b"
+    }
+  ],
+  "base_registry_unchanged": true,
+  "binding_consequences": {
+    "development_execution_recorded": false,
+    "may_enter_a_sealed_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "permitted_role": "none on this task until a sequence_native_regulatory TaskSpec is registered; the model's separate variant_to_regulation standing is untouched by this record",
+    "sealed_champion_eligible": false,
+    "sealed_scoring_authorized": false,
+    "task_registered": false
+  },
+  "biological_data_read": false,
+  "bound_evidence": [
+    {
+      "path": "config/evaluation/family_native_tournament.toml",
+      "sha256": "acd9f333bd4d639d6df6b3017c1bf9a040ee921195b59b01fee934f1726a0495"
+    },
+    {
+      "path": "config/artifacts/models/borzoi/checkpoints.json",
+      "sha256": "1c5d7213dab05be8bb819d61ff4d03b2bcd7ca307954ab328de739c476c9e257"
+    }
+  ],
+  "checkpoint_opened": false,
+  "closes": "OVERALL_PLAN.md completion criterion 1: every required model family must carry an exact-checkpoint, license, exposure, runtime and native-task disposition. This record supplies the missing native-task axis only.",
+  "consumed_by_runtime": false,
+  "disposition": "blocked_task_not_registered",
+  "disposition_reason": "task_at_planned_registration_with_no_taskspec_and_sequence_artifacts_bound_to_rna_conditioned_atac",
+  "disposition_scope": "Native-task disposition only. This record adds no capability, opens no checkpoint, deserializes nothing, and bypasses no license gate. The base registry under config/models/ is unchanged.",
+  "family_id": "borzoi",
+  "license_gate_bypassed": false,
+  "metrics_calculated": false,
+  "model_dispositions": [
+    {
+      "disposition": "blocked_task_not_registered",
+      "model_id": "borzoi_ensemble",
+      "reason": "config/evaluation/family_native_tournament.toml lists borzoi_ensemble under required_family_disposition with required_tasks including sequence_native_regulatory, but that task has no TaskSpec, no capability roster and no task_fit key anywhere. No native-task disposition can be earned or refused until the task is registered.",
+      "tournament_disposition_rule": "execute_native_or_record_terms_runtime_or_reference_failure"
+    }
+  ],
+  "model_ids": [
+    "borzoi_ensemble"
+  ],
+  "outcomes_read": false,
+  "overlay_id": "model_census_native_task_disposition_20260825",
+  "record_only": true,
+  "registry_facts_at_audit": {
+    "borzoi_ensemble": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "UNRESOLVED",
+      "exposure_status": "target_label_unexposed",
+      "license_status": "code_Apache-2.0_weights_UNDECLARED",
+      "registry_file": "config/models/regulatory_sequence.toml",
+      "status": "blocked_terms",
+      "supported_tasks": [
+        "variant_to_regulation"
+      ]
+    }
+  },
+  "root_cause": {
+    "reason_1_task_not_registered": {
+      "registered_task_ids": [
+        "bulk_state_transfer",
+        "cell_state_mapping",
+        "gene_perturbation_response",
+        "perturbation_transfer",
+        "rna_conditioned_atac",
+        "typed_evidence_graph",
+        "unified_model",
+        "variant_to_regulation"
+      ],
+      "statement": "config/evaluation/family_native_tournament.toml holds [task.sequence_native_regulatory] at status = planned_registration and lists it under task_ids_to_register, not under active_task_ids. config/tasks/ contains eight TaskSpecs (bulk_state_transfer, cell_state_mapping, gene_perturbation_response, perturbation_transfer, rna_conditioned_atac, typed_evidence_graph, unified_model, variant_to_regulation) and none of them is sequence_native_regulatory. The string does not appear as a task_fit key in any bundle under config/artifacts/models/.",
+      "task_spec_exists": false,
+      "task_status": "planned_registration"
+    },
+    "reason_2_sequence_artifacts_are_bound_to_a_different_task": {
+      "artifacts": [
+        {
+          "declared_task_id": "rna_conditioned_atac",
+          "path": "config/evaluation/sequence_terminal_admission.json"
+        },
+        {
+          "declared_task_id": "rna_conditioned_atac",
+          "path": "config/evaluation/sequence_task_native_five_seed_rectangular_evaluator_20260825.json"
+        },
+        {
+          "declared_task_id": null,
+          "note": "No task_id key. Binds evaluator_contract = config/evaluation/sequence_task_native_five_seed_rectangular_evaluator_20260825.json, whose task_id is rna_conditioned_atac.",
+          "path": "config/evaluation/sequence_regulatory_full_rectangle_completion_20260825.json"
+        }
+      ],
+      "statement": "The three artifacts that look like the sequence lane are bound to rna_conditioned_atac, not to sequence_native_regulatory. sequence_terminal_admission.json and sequence_task_native_five_seed_rectangular_evaluator_20260825.json each carry task_id = \"rna_conditioned_atac\" literally. sequence_regulatory_full_rectangle_completion_20260825.json carries no task_id field of its own and reaches the same lane through its evaluator_contract, which is the rna_conditioned_atac-bound evaluator. Their model rosters are bpnet, chrombpnet, scbasset and the sequence CNN/transformer controls; none of the ten model_ids in this record appears in them. Mislabelling these artifacts as the sequence-native lane has already cost this campaign time on 2026-08-25 and is recorded here so it is not repeated."
+    },
+    "reason_3_registry_cannot_name_the_task": "Every one of the ten model_ids declares supported_tasks = [\"variant_to_regulation\"] in the base registry. It cannot declare sequence_native_regulatory because that id is not a registered task, so the tournament's required_family_disposition and the registry's supported_tasks disagree by construction until the TaskSpec is registered."
+  },
+  "schema_version": "masld-bench-native-task-disposition-v1",
+  "sealed_data_read": false,
+  "sequence_lane_runtime_constraint": {
+    "b6k_admissible_only_for_rectangles_fit_entirely_on_b6k": true,
+    "bpnet_compatibility_runtime": "tensorflow_2.8.2_gpu",
+    "bpnet_declared_tensorflow": "2.4.1",
+    "bpnet_device_class": "NVIDIA_L40S_sm89",
+    "bpnet_environment_status": "PASSED_COMPATIBILITY_NOT_NATIVE_VERSION_PARITY",
+    "bpnet_native_version_parity_claimed": false,
+    "chrombpnet_declared_tensorflow": "2.8.0",
+    "chrombpnet_environment_status": "UNRESOLVED_L40S_COMPATIBILITY_PROBE_REQUIRED",
+    "cluster_fact": "L40S nodes ne1dg6-* run driver 550.107.02 with CUDA 12.4; B6K nodes ne1dg7-* run driver 590.48.01 with CUDA 13.1. Job 21106572 verified that torch 2.13.0+cu130 cannot initialise on L40S (no_cuda_device_visible) and job 21106573 verified that torch 2.6.0+cu124 cannot run on B6K (no_matching_sass). torch 2.8.0+cu128 is the only runtime in the tree that executes on both pools, and even there the L40S-versus-B6K architecture effect was adjudicated materially_different.",
+    "constraint": "the_task_native_sequence_rectangle_is_L40S_bound",
+    "established_on": "2026-08-25",
+    "evidence": [
+      {
+        "path": "config/artifacts/models/bpnet/checkpoints.json"
+      },
+      {
+        "path": "config/artifacts/models/chrombpnet/checkpoints.json"
+      },
+      {
+        "path": "executions/b6k-admission-comparison-21106761/ARTIFACTS.json"
+      },
+      {
+        "path": "executions/b6k-admission-comparison-21106761/comparison_summary.json"
+      }
+    ],
+    "statement": "The task-native sequence rectangle cannot move to the newly admitted B6K GPUs. BPNet declares TensorFlow 2.4.1 upstream and runs under a tensorflow_2.8.2_gpu compatibility runtime with device_class NVIDIA_L40S_sm89 and environment_status PASSED_COMPATIBILITY_NOT_NATIVE_VERSION_PARITY. ChromBPNet declares TensorFlow 2.8.0 with environment_status UNRESOLVED_L40S_COMPATIBILITY_PROBE_REQUIRED. TensorFlow 2.8.x cannot target sm_120, so neither model can execute on the B6K pool."
+  },
+  "supersedes_nothing": true,
+  "task_id": "sequence_native_regulatory",
+  "unrestricted_deserializer_used": false
+}

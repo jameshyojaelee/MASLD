@@ -21,7 +21,7 @@ PRIMARY_CONTIGS = tuple([f"chr{index}" for index in range(1, 23)] + ["chrX", "ch
 
 
 class TrainingPeakError(ValueError):
-    """Raised when peak filtering violates the training-only contract."""
+    """Raised when peak filtering does not meet the training-only requirements."""
 
 
 def genomic_fold_map(split_contract: Path) -> dict[str, int]:

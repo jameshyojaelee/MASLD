@@ -9,9 +9,14 @@
     "warning": "Sei emits one 21907-element vector for the center of a 4096-bp sequence. It does not emit a nucleotide- or bin-resolved accessibility profile."
   },
   "conversion_contract": {
-    "converted_checkpoint_registered": false,
-    "future_conversion_rule": "Any safetensors or modern-runtime conversion is a separately named artifact. It must reproduce all 21907 raw probabilities, target order, 40 raw projections, histone-normalized ALT-minus-REF projections, and strand means on fixed hg38 fixtures before replacing the native path.",
-    "native_vs_converted_parity": "NOT_APPLICABLE_UNTIL_A_CONVERSION_IS_FROZEN"
+    "converted_checkpoint_registered": true,
+    "converted_safetensors_sha256": "d0168411589bc47265e286b1224ab0564d4439c6d220a929f144924d1840a31e",
+    "converted_safetensors_size_bytes": 3559923972,
+    "converted_tensor_elements": 889979983,
+    "converted_tensor_keys": 38,
+    "conversion_artifact_manifest_sha256": "2b19a580f496db0a30a6174cc4f7fe65b0cf399e5dde94c8087665d374ba892b",
+    "conversion_loader": "torch.load(weights_only=True, mmap=False) in an isolated no-network runtime; no custom model code imported during conversion",
+    "native_vs_converted_parity": "all 38 source state-dict tensors are bound by key, shape, dtype, element count, and source hash; strict restore plus deterministic native-source forward passed, but no independent legacy-runtime prediction parity was run"
   },
   "input_contract": {
     "allele_checks": "Normalize variants, require GRCh38.p14 REF matching, make VCF and BED coordinate conventions explicit, and reject unresolved multiallelic or indel alignment cases.",
@@ -30,16 +35,16 @@
       "md5": "4297aafb711aec4ecccb645b8928ea26",
       "publication_date": "2021-06-07",
       "record_id": 4906997,
-      "sha256": "UNRESOLVED",
+      "sha256": "3e1c41468d4b01d312aa44ebe0d2a708a705344908efb60daf8ff76548255b46",
       "size_bytes": 3281639255,
       "version": "0.0.0"
     },
     "expected_weight_member": "model/sei.pth",
-    "expected_weight_member_identity": "UNRESOLVED_until_traversal_safe_inventory",
+    "expected_weight_member_identity": "sha256 9d4771d5363e4955eec2a36567fedac986191f64c7874c85bfb9e203c7f60783; 3559928168 bytes",
     "format": "tar_gzip_with_PyTorch_pickle_checkpoint_and_numeric_auxiliary_arrays",
     "repository": "FunctionLab/sei-framework",
     "repository_revision": "1e16bff9b1618af7065a23f82c4a3bb82aaeb689",
-    "status": "exact_archive_registered_but_SHA256_and_member_manifest_unresolved"
+    "status": "exact_archive_and_allowlisted_native_members_admitted; weights-only conversion and strict forward passed"
   },
   "output_contract": {
     "chromatin_profile_target_manifest": {
@@ -61,8 +66,8 @@
       "size_bytes": 692
     },
     "sequence_class_projection_members": {
-      "histone_indices": "model/histone_inds.npy_member_hash_UNRESOLVED",
-      "projection_vectors": "model/projvec_targets.npy_member_hash_UNRESOLVED"
+      "histone_indices": "model/histone_inds.npy sha256 7a7af2c642ae6833ce2cee799a702a907544c0926c56b5c8b1236cd6470f5443; int64[10064]",
+      "projection_vectors": "model/projvec_targets.npy sha256 7080fd22e98b3bb47436801f94682d8b097a29f4d8c9cb154210e64e0e4190c8; float64[61,21907]"
     }
   },
   "reference_contract": {
@@ -81,21 +86,43 @@
   },
   "runtime_contract": {
     "declared_requirements": "Python 3.6+, PyTorch >=1.0, Selene >=0.5.0, and docopt",
-    "environment_status": "UNRESOLVED_LEGACY_RUNTIME",
-    "exact_versions": "UNDECLARED",
+    "environment_status": "modern_compatibility_runtime_admitted_for_restricted_inference_and_input-gradient_probe; original_legacy_environment_remains_undeclared",
+    "exact_versions": "PyTorch 2.6.0+cu124 on NVIDIA L40S; source architecture pinned at FunctionLab/sei-framework@1e16bff9b1618af7065a23f82c4a3bb82aaeb689",
     "hardware_reported_for_training": "four_Tesla_V100_GPUs_with_NVLink",
-    "required_probe": "isolated_L40S_import_tensor_only_restore_forward_backward_resume_deterministic_seed_reverse_complement_and_projection_numeric_tolerance",
-    "warning": "The broad lower bounds are not an executable environment lock. Freeze an exact compatible runtime without changing native math before admission."
+    "probe_status": "strict restore, 21907-profile forward, finite input-gradient backward, 40-class projected ALT-minus-REF score, reverse-complement mean, and bit-identical repeat passed; training resume was not exercised",
+    "warning": "The compatibility runtime supports the frozen restricted inference lane. Full fine-tuning still requires a separately frozen optimizer, resume, and numeric-tolerance contract."
   },
   "safe_loading_contract": {
-    "archive_downloaded": false,
-    "archive_gate": "After campaign approval, verify 3281639255 bytes, published MD5, and computed SHA-256 before opening. Inventory with traversal, absolute-path, link, duplicate-path, member-count, per-member-size, and expanded-size limits.",
+    "archive_downloaded": true,
+    "archive_gate": "Passed size, published MD5, computed SHA-256, gzip, traversal/link/duplicate/member/expanded-size inventory, and exact allowlisted stream-copy gates in frozen artifact beff13e916cf12eb6db2e29cb301b3151cc519048293a2ada2a66f6fa3691d2d.",
     "auxiliary_arrays": "Load only expected numeric NPY arrays with object/pickle loading disabled; freeze path, SHA-256, shape, dtype, finite-value checks, and target-order dimensions.",
-    "checkpoint_risk": "The expected .pth file is a Python pickle container. Never call unrestricted torch.load on an untrusted archive. Inspect in an isolated no-network runtime, require a tensor-only state dictionary, freeze key/shape/dtype inventory, and convert only through a separately audited parity path.",
+    "checkpoint_risk": "The legacy pickle stream was inspected without execution, contained only OrderedDict, FloatStorage, and tensor-rebuild globals, and was converted with weights_only=True in an isolated no-network runtime. Unrestricted torch.load remains prohibited.",
     "network_policy": "No runtime network fetches or archive extraction in a model process."
   },
+  "development_smoke_contract": {
+    "artifact_manifest_sha256": "dd22116a2927712d1c7cafc1a3ca654783efce2173c44f010cd9fc22034c1803",
+    "dataset_id": "gse281364",
+    "elements": 1033,
+    "input_length_bp": 4096,
+    "minimum_topology_valid_scope": "the complete prespecified one-element-per-locus-group outcome-blind fixture; do not select a smaller subset using reporter outcomes",
+    "model_fitted_or_adapted": false,
+    "native_outputs": "21907 center-position regulatory-profile probabilities and 40 histone-normalized sequence-class ALT-minus-REF scores",
+    "outcomes_read": false,
+    "outer_folds": 5,
+    "outer_locus_sequence_groups": 1033,
+    "restriction": "retrospective MPRA direction/rank diagnostic and static sequence center-bin component only; not RNA-conditioned, not a spatial ATAC profile, and not open-champion eligible",
+    "status": "passed_outcome_blind_restricted_development_smoke"
+  },
+  "execution_evidence": {
+    "archive_admission_artifact_sha256": "beff13e916cf12eb6db2e29cb301b3151cc519048293a2ada2a66f6fa3691d2d",
+    "development_fixture_artifact_sha256": "620464c0ef7cf378eb2b44a1608cb6b9c273bd70b8770a43b2a95d21e725af4d",
+    "development_prediction_artifact_sha256": "dd22116a2927712d1c7cafc1a3ca654783efce2173c44f010cd9fc22034c1803",
+    "native_probe_artifact_sha256": "c0607cba297ad2e3c2889ebd4825b287655e6f0064f0d9137aaa60be34026894",
+    "scoring_source_artifact_sha256": "529a2034a4a8168d8e436c7044364c65735bb274a43b9652d65000110562c5f7",
+    "weights_only_conversion_artifact_sha256": "2b19a580f496db0a30a6174cc4f7fe65b0cf399e5dde94c8087665d374ba892b"
+  },
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The Nature Genetics article, pinned official repository, and immutable Zenodo model, training-data, and reference-resource records were queried on 2026-08-22. No archive, checkpoint, package, training data, or FASTA was downloaded or deserialized.",
+  "source_evidence": "Official source, terms, Zenodo metadata, and native manifests were frozen on 2026-08-22. The exact archive was subsequently acquired and safely inventoried; allowlisted members were hashed; the state dict was converted with weights_only=True; and strict L40S native-source forward/backward, deterministic repeat, and outcome-blind GSE281364 development inference passed. The separate native reference archive remains unacquired.",
   "source_records": [
     {"identity": "FunctionLab/sei-framework@1e16bff9:README.md", "sha256": "3a967b1a5c691ace4c2fa330e11358ccea5960d03d84bfc9ab2c52ef7e76ca2b", "size_bytes": 15454},
     {"identity": "FunctionLab/sei-framework@1e16bff9:LICENSE.txt", "sha256": "16d8adee0328c4a6e9c67c6bc700b4d984ae3cd2731231d932ced631b8cdaea8", "size_bytes": 1814},
@@ -108,7 +135,7 @@
     "cell_state_mapping": "not_supported",
     "rna_conditioned_atac": "not_supported; eligible_only_as_a_sequence_only_center_bin_classification_baseline",
     "signed_eqtl_ieqtl": "not_native; a signed gene-effect model requires a nonsealed development head plus a separately frozen enhancer-gene and direction contract",
-    "variant_to_regulation": "supported_as_a_restricted_sequence_feature_comparator_after_runtime_and_checkpoint_gates"
+    "variant_to_regulation": "executable as a restricted sequence feature comparator; champion use and any fitted gene/link/direction head remain admission-blocked"
   },
   "terms_audit": {
     "code": "Academic and research use only; commercial use requires contact with Princeton licensing.",

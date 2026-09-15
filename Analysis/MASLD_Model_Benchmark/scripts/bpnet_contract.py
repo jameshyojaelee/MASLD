@@ -18,7 +18,7 @@ FORBIDDEN_OUTCOME_TOKEN = "chrombpnet-hepatocyte-donor0-genomic0-outcomes"
 
 
 class BPNetContractError(ValueError):
-    """Raised when the BPNet matched-control contract is violated."""
+    """Raised when the BPNet matched-control requirements are not met."""
 
 
 def architecture_parameters(counts_loss_weight: float) -> dict[str, object]:

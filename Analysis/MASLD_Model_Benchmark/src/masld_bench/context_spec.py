@@ -293,7 +293,7 @@ def freeze_context_model_spec(
     cell_shortlist_dir: str | Path,
     output_root: str | Path,
 ) -> Path:
-    """Freeze the only artifact that may authorize a novel-model campaign."""
+    """Freeze the only output file that may authorize a novel-model campaign."""
 
     state = _source_state(
         conditional_decision_dir=conditional_decision_dir,

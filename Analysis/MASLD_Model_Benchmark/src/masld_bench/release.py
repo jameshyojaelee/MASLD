@@ -35,7 +35,7 @@ from .tournament import (
 
 
 class ReleaseError(RuntimeError):
-    """Raised when publication artifacts violate the open-release contract."""
+    """Raised when publication output files violate the open-release rules."""
 
 
 SPEC_SCHEMA_VERSION = "masld-bench-open-release-spec-v1"
@@ -428,7 +428,7 @@ def _verify_authorization(
     selection_manifest_sha256: str,
     selection_lock_sha256: str,
 ) -> tuple[dict[str, Any], dict[str, str], tuple[Path, ...]]:
-    """Recursively verify the terminal gates and every authority they bind."""
+    """Recursively verify the terminal checks and every authority they bind."""
 
     binding = _strict_mapping(
         value,
@@ -589,7 +589,7 @@ def _validate_decisions(
         ):
             raise ReleaseError(f"unopened terminal decision binds sealed outcomes for {task_id}")
         # Secondary comparator runs are bound by the variant power decision and
-        # carry their own model_id, so map each to the model the lock names for
+        # carry their own model_id, so map each to the model the selection record names for
         # it rather than to the selected or baseline model.
         secondary_models: dict[str, str] = {}
         if isinstance(secondary, Mapping):
@@ -1089,7 +1089,7 @@ def _readonly_tree(root: Path) -> None:
 
 
 def stage_release(*, spec_path: str | Path, output_root: str | Path) -> Path:
-    """Validate every upstream authority, then atomically stage an immutable release."""
+    """Validate every upstream authority, then atomically stage a read-only release."""
 
     try:
         configured_spec = reject_symlink_components(

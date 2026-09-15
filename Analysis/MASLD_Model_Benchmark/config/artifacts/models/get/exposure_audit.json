@@ -34,7 +34,7 @@
     "gse296875": "Eligible for donor-grouped development because same-nucleus RNA and ATAC are observed. It cannot supply external confirmation because it is project-exposed.",
     "observed_context_requirement": "observed_cell_context_ATAC_accessible_regions_and_accessibility_values"
   },
-  "interpretation": "GET's exposure status is provisional because no immutable checkpoint object can be audited. More decisively, the released model is structurally ineligible for the GSE289173 signed-effect endpoint: its context is observed ATAC, while the seal contains RNA but no ATAC. An RNA-to-ATAC proxy would be a separate model and could not make this native GET inference.",
+  "interpretation": "GET's exposure status is provisional because no read-only checkpoint object can be audited. More decisively, the released model is structurally ineligible for the GSE289173 signed-effect endpoint: its context is observed ATAC, while the hold-back contains RNA but no ATAC. An RNA-to-ATAC proxy would be a separate model and could not make this native GET inference.",
   "license_disposition": {
     "code_license_file": "absent_at_frozen_revision",
     "open_champion_eligibility": "ineligible_under_current_noncommercial_declarations_and_incomplete_weight_terms",

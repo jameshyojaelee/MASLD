@@ -38,7 +38,7 @@
       "size_bytes": 79197
     },
     "admission_status": "not_selected",
-    "reason": "The package upload preceded three same-version source fixes at the selected revision, including parameter alignment, plotting, and integer-lambda handling fixes. The package artifacts are therefore not byte-equivalent to the selected source identity."
+    "reason": "The package upload preceded three same-version source fixes at the selected revision, including parameter alignment, plotting, and integer-lambda handling fixes. The package output files are therefore not byte-equivalent to the selected source identity."
   },
   "nonselected_R_implementation": {
     "package": "Banksy",

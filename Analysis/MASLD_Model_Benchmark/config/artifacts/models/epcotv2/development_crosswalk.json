@@ -9,7 +9,7 @@
       "gse296875",
       "current_coloc_gwas"
     ],
-    "task_scope": ["variant_to_regulation", "rna_conditioned_atac"],
+    "task_scope": ["observed_multiome", "variant_to_regulation"],
     "upstream_manifests": [
       "liu-bioinfo-lab/general_AI_model@f20362a:data/accession_number.xlsx",
       "liu-bioinfo-lab/general_AI_model@f20362a:src/train.py"
@@ -39,7 +39,7 @@
       "public_date": "2025-02-12"
     },
     "gse296875": {
-      "evidence": "GSE296875 became public after the March 2025 checkpoint. Its same-nucleus donor RNA/ATAC and MASLD outcomes are absent from the publication accession workbook. Supplying its ATAC at inference remains observed held-donor evidence and is development-only.",
+      "evidence": "GSE296875 became public after the March 2025 checkpoint. Its same-nucleus donor RNA/ATAC and MASLD outcomes are absent from the publication accession workbook. It can support a development-only sequence-plus-observed-ATAC to RNA-profile task at donor-by-lineage pseudobulk resolution. Supplying held-donor ATAC at inference remains observed evidence and matched baselines receive the same ATAC.",
       "exposure_state": "clean_declared",
       "public_date": "2025-10-01"
     },
@@ -48,12 +48,12 @@
       "exposure_state": "target_label_unexposed"
     }
   },
-  "interpretation": "EPCOTv2 is a general observed-accessibility-to-multi-assay model, not a MASLD model. Its training includes normal liver context and its paper used eQTLs downstream. GSE289173 target-label exposure is not indicated by the released corpus workbook, but the checkpoint was published after that accession and the corpus manifest is not checkpoint-bound, so the conclusion has only medium confidence. Input availability, not contamination alone, prevents a sealed champion claim.",
+  "interpretation": "EPCOTv2 is a general observed-accessibility-to-multi-assay model, not a MASLD model. Its training includes normal liver context and its paper used eQTLs downstream. GSE289173 target-label exposure is not indicated by the released corpus workbook, but the checkpoint was published after that accession and the corpus manifest is not checkpoint-bound, so the conclusion has only medium confidence. Input availability, not contamination alone, prevents a held-back best-model claim.",
   "rules": {
     "checkpoint_chronology": "Post-checkpoint sources can be clean-declared when absent from the exact publication manifest. Pre-checkpoint sources need accession/run/donor alias resolution. GSE289173 receives target-label-unexposed rather than clean-declared because it predates upload.",
     "genome_overlap": "EPCOTv2 was trained across fixed hg38 windows. Apply donor groups crossed with chromosome/LD blocks and at least a 600000-bp boundary buffer to all learned adaptations; reference-sequence exposure is distinct from target-label exposure.",
     "input_availability": "Native inference requires observed ATAC/DNase. No outcome-selected surrogate or development-trained RNA-to-ATAC translator may be introduced after selection lock to make a sealed source runnable.",
-    "variant_input": "REF and ALT predictions receive identical outcome-blind ATAC. Mask the variant bin in a prespecified sensitivity analysis to separate sequence effects from accessibility already encoded in the observed input.",
+    "variant_input": "REF and ALT predictions receive identical outcome-blind ATAC. In the prespecified sensitivity analysis, mask the raw genomic ATAC locus before EPCOTv2's 300-bp neighbor padding. Masking only one assembled tensor bin leaks the raw locus into adjacent padded bins.",
     "upstream_aliases": "Literal accession absence is not donor-level deduplication. Resolve ENCODE file IDs, GEO/SRA aliases, GTEx donor/tissue IDs and publication study aliases before final exposure classification."
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
@@ -81,5 +81,5 @@
       "Micro_C"
     ]
   },
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-08-25"
 }

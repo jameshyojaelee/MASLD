@@ -2,7 +2,7 @@
   "admission_disposition": {
     "status": "restricted_deferred",
     "downloads_installs_jobs_or_tests_performed": false,
-    "reason": "The exact code, base SE state, HepG2 few-shot transition state, and major companion artifacts are pinned, but corpus membership, target vocabulary, safe conversion, complete runtime, institutional noncommercial eligibility, and current-task compatibility are unresolved.",
+    "reason": "The exact code, base SE state, HepG2 few-shot transition state, and major companion output files are pinned, but corpus membership, target vocabulary, safe conversion, complete runtime, institutional noncommercial eligibility, and current-task compatibility are unresolved.",
     "current_task": "Do not schedule for perturbation_transfer. The registered task holds out wholly unseen noncoding target loci, while this released transition state uses a saved categorical one-hot perturbation map.",
     "open_champion": "ineligible_restricted_noncommercial_model_and_output_terms_and_no_current_supported_task"
   },

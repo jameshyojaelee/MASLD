@@ -1,0 +1,389 @@
+{
+  "schema_version": "masld-bench-verification-method-register-v1",
+  "record_id": "verification_method_register_20260825",
+  "compiled": "2026-08-25",
+  "purpose": "A reusable register of verification failure modes observed in this campaign. Each entry is a rule, a worked example, and the cheap check that catches it. Written for a reader with no context on the sessions that produced them: apply the rules, ignore the history.",
+  "how_to_use": "Before trusting a check, find its failure mode here and run the named cheap check. Most entries cost seconds. All of them were discovered the expensive way at least once.",
+  "attribution": "None. These are properties of the checks, not of whoever wrote them. Several were found by the person who had just made the mistake.",
+  "rules": [
+    {
+      "id": "vacuous_check",
+      "rule": "A check that cannot detect what it checks for is worse than no check, because it licenses the action it was supposed to gate.",
+      "why_worse_than_nothing": "An absent check leaves you uncertain and cautious. A vacuous check returns green and makes you confident.",
+      "worked_examples": [
+        {
+          "instance": "A guard asserted a GPU capability (sm_120) on a node with no GPU. The capability query returned an empty list, the assertion over an empty list passed, and the guard reported success without ever testing the hardware.",
+          "artifact": "config/artifacts/models/corgi/checkpoints.json, config/artifacts/models/scooby_onek1k/native_task_disposition_20260825.json"
+        },
+        {
+          "instance": "A freshness guard used find -newermt with a RELATIVE expression and returned 0 matches while an 8-minute-old write existed, so a stale-artifact check passed on a tree it had not examined. The defect is letting find parse the relative expression at all.",
+          "artifact": "executions/resource-firewall-gitignored-drift-record-20260825-v2",
+          "specific_fix": "Render the cutoff first with date -d and pass find the absolute timestamp string. That form is safe and was canary-verified."
+        },
+        {
+          "instance": "A test 'verified' a PYTHONPATH fix by string-searching the source for sys.path.insert and asserting ROOT in sys.path. The assertion is trivially true in the parent test process regardless of the fix, so the test could not have caught the bug it guarded.",
+          "artifact": "executions/model-check-1042-21104187",
+          "specific_fix": "The replacement captures the environment the runner actually builds and adds a negative control proving the unshimmed fitter still fails in that same environment."
+        },
+        {
+          "instance": "A guard intended to mean 'am I changing the live dispatcher' was written as 'is any dispatcher process running'. Those differ: the second blocks unrelated work whenever the dispatcher is busy, and permits a live edit whenever it happens to be idle. The predicate has to test the property the guard is about.",
+          "artifact": "slurm/freeze_dispatcher_recovery_and_freeze_guards.sbatch"
+        }
+      ],
+      "cheap_check": "Positive-control every guard: feed it an input it MUST reject and confirm it does. Perturb a value by 1e-12 and require the comparison to fail; drop in a canary file and require the sweep to find it; assert a known-present item alongside the absent one; assert that an absent capability (sm_89) is reported absent.",
+      "reference_instance_of_the_control": "config/campaigns/gse296875_observed_multiome_complete_rectangle_verification_20260825.json"
+    },
+    {
+      "id": "null_search_result",
+      "rule": "A search that returns nothing is not evidence that the thing is absent. It is evidence that the search did not find it.",
+      "relation": "Same family as vacuous_check: a search that cannot find the thing and a check that cannot detect the thing fail identically, and both license the wrong action.",
+      "worked_examples": [
+        {
+          "instance": "A licence audit searched bundles for the key name weight_license, found it absent in one bundle, and reported a rights gap. That bundle carried the value under a singular license key and the licence was permissive and declared. The false gap was one instruction away from being frozen as a redistribution prohibition on a release-eligible model.",
+          "artifact": "config/artifacts/incidents/geneformer_weight_state_correction_20260825.json"
+        },
+        {
+          "instance": "A search for an execution tree by version string returned nothing, and the absence was recorded as an unverifiable claim. The trees carry masked job names, so the version string never appears in them. Supplying the job id made it verifiable in seconds.",
+          "artifact": "config/artifacts/incidents/freeze_completion_signal_definition_20260825.json"
+        },
+        {
+          "instance": "A reconstruction was verified with grep -c and an unescaped $ mid-pattern. GNU grep read the $ as an end-of-line anchor, making the pattern unmatchable, and it reported 0 matches on a line that was plainly present. That 0 was nearly reported as evidence the reconstruction had failed. A diff settled it. A broken check produced a confident false negative ABOUT a check.",
+          "artifact": "config/artifacts/incidents/verification_method_register_20260825.json"
+        }
+      ],
+      "cheap_check": "Before concluding absence, run the same search for something you KNOW is present. If that also returns nothing, the search is broken, not the world. Then corroborate from a second, differently-shaped source.",
+      "pattern_check_corollary": "An empty result from a pattern-based check is not evidence until the pattern has been shown to find something. Shell and regex metacharacters silently make a pattern unmatchable \u2014 $ inside a double-quoted or unescaped pattern, braces, brackets, dots \u2014 so a zero count can mean the pattern is broken rather than the world is empty. Prefer a structural comparison such as diff over a pattern match when what you need is 'are these two things different', and use grep -F when the pattern is a literal."
+    },
+    {
+      "id": "filesystem_is_the_authority",
+      "rule": "The filesystem is the authority for what exists. A record is a claim about the filesystem, and a claim can be stale. An audit reasoning only from records inherits their staleness.",
+      "worked_examples": [
+        {
+          "instance": "A checkpoint bundle recorded weight_content_downloaded=false with placeholder digests. The reasoning 'you cannot hash bytes you never fetched' was sound and the conclusion was wrong: the bundle predated the acquisition by one day. The bodies were on disk, byte-exact.",
+          "artifact": "config/artifacts/incidents/scgpt_weight_rights_disposition_20260825.json"
+        }
+      ],
+      "cheap_check": "Check the bytes. Compare recorded sizes to stat, recorded digests to a re-derivation. Compare the record's own mtime to the event it describes."
+    },
+    {
+      "id": "shape_you_expect",
+      "rule": "Checking for the field name, path, or format you expect rather than the one that exists invents phantom gaps as reliably as it misses real ones. The same error at one remove: observing that a reference exists and inferring its direction.",
+      "worked_examples": [
+        {
+          "instance": "One bundle of 104 used a singular license key instead of the weight_license / code_license pair. A key-name search reported no licence. 30 of the 104 carry no licence key at all, so an absent key was never evidence of anything.",
+          "artifact": "config/artifacts/incidents/geneformer_weight_state_correction_20260825.json"
+        },
+        {
+          "instance": "A cascade plan asserted that four scripts were PRODUCERS of the config files they name, so re-running them would re-derive their own digests. None of the four writes its config: each reads it as input and writes only into executions/. The mechanism could not have worked anywhere in the cascade, and re-running one against a stale config would have read the stale pins rather than fixing them \u2014 while appearing to succeed.",
+          "artifact": "config/campaigns/authorized_pin_refresh_branch_A_20260825.json"
+        },
+        {
+          "instance": "A sweep for unprotected freeze paths flagged a script because a mv to the authoritative name was followed by checks that could fail. The script was in fact the exemplar of the correct pattern: a promotion-pending flag set after the mv and an EXIT trap that renames the tree to .failed, cleared only once every post-move check passes. The sweep saw the dangerous sequence and inferred the absence of a guard rather than looking for one. Two other scripts were the real instances, and their severity was the inverse of what was filed: the flagged script runs a post-move check that can genuinely fail and is protected, while the real instances only run a check a same-filesystem rename cannot realistically break.",
+          "artifact": "config/artifacts/incidents/verification_method_register_20260825.json"
+        },
+        {
+          "instance": "A recovery defect was fixed in scripts/gpu_bundle_dispatcher.py. That module is LEGACY \u2014 its own docstring says so \u2014 and the running dispatcher is scripts/gpu_dependency_dispatcher.py, which imports the legacy module for exactly three helpers (load_item, atomic_json, append_ledger) and never calls its dispatch_once. The fix was correct and inert. The live defect is untouched at gpu_dependency_dispatcher.py:524, which tests (claims / f'{bundle_id}.json').exists() and writes status claimed_before_submission at line 637.",
+          "artifact": "config/artifacts/incidents/verification_method_register_20260825.json"
+        }
+      ],
+      "cheap_check": "Read the value from a second authority that uses a different schema (a model registry, an upstream record). Treat two sources disagreeing as the signal to investigate, and a schema outlier as a schema question before it is a substance question.",
+      "direction_of_reference_check": "A script that mentions a file may read it, write it, or merely hash it, and the fix depends on which. Establish the direction before building a plan on the relationship. Grep finds the mention; only reading the code tells you which way the data flows.",
+      "control_flow_corollary": "The same error applies to control flow, not just to file references. The presence of a dangerous pattern is not evidence that nothing guards it, exactly as a script mentioning a file is not evidence of which way it reads it. Look for the guard before concluding it is absent.",
+      "live_path_rule": "A module that shares a name, a helper set, or a docstring with the live path is not the live path. Trace the invocation; do not match the filename. Partial delegation is the trap, not naming: a real import relationship made the wrong file look like the right one. The mechanical remedy is cheap \u2014 squeue gives the job, the job gives the wrapper, the wrapper gives the entry point."
+    },
+    {
+      "id": "durability_cuts_both_ways",
+      "rule": "A durable record can be wrong in two directions: it can read as routine when the situation is not, and it can read as alarming when the situation is routine. In both cases the durability of the record works against you.",
+      "worked_examples": [
+        {
+          "instance": "UNDERSTATING. A stale false in a download flag read as deliberate licence compliance, so nothing flagged an undeclared-licence acquisition for two days.",
+          "artifact": "config/artifacts/incidents/scgpt_weight_rights_disposition_20260825.json"
+        },
+        {
+          "instance": "OVERSTATING. A finding asserted an absent weight licence on a release-eligible model. Had it been frozen it would have suppressed a legitimate release candidate on a gap that did not exist.",
+          "artifact": "config/artifacts/incidents/geneformer_weight_state_correction_20260825.json"
+        }
+      ],
+      "cheap_check": "State the consequence of the record being wrong in each direction before freezing it. Show corrections beside the original claim rather than replacing them, and assert in the freeze job that the withdrawn text stays present, so an error cannot be quietly tidied away.",
+      "corollary": "A register that can only overstate is no more trustworthy than one that can only understate."
+    },
+    {
+      "id": "duplicated_subject",
+      "rule": "A check that keeps its own copy of the thing it checks will desynchronise the moment anyone else is right.",
+      "worked_examples": [
+        {
+          "instance": "A test held a hardcoded second copy of an expected-failure register. When another lane correctly resolved one entry and shrank the register, the copy and the constant disagreed, and the gate reported the campaign's own tests as new failures.",
+          "artifact": "config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json"
+        },
+        {
+          "instance": "A queue item existed in both a staging directory and the live queue. A validator read the staging copy while the dispatcher read the live one, and the two had diverged on enabled: true in staging, false in live. The validator's PASS certified a file that would never run. The disable was deliberate and correct, so nothing was harmed, but validation and execution were reading different files and only one of them decides anything.",
+          "artifact": "config/campaigns/gpu_bundle_queue/056-cobolt-5seed-25run-v9.json"
+        }
+      ],
+      "cheap_check": "Derive the fixture from the thing under test rather than restating it. Re-adding the missing value is the wrong fix: it papers over the drift and breaks again on the next legitimate change.",
+      "generalises_to": "Duplicated digests, duplicated counts, duplicated expected-failure lists, any test asserting a value the code also defines. The duplicate is correct exactly until someone else does the right thing. It also covers two copies of a live input: validation pins one copy while execution reads another, so a PASS certifies something other than what will run. One file, or an explicit assertion that the two are identical."
+    },
+    {
+      "id": "enumeration_contamination",
+      "rule": "Enumeration used to find a defect must be invocation-aware and comment-stripped, or thorough documentation manufactures false positives in the very sweep meant to find the problem.",
+      "worked_examples": [
+        {
+          "instance": "A sweep for references to a version string matched prose in an authorization record that merely discussed the version, inflating the count of real references.",
+          "artifact": "config/artifacts/incidents/freeze_completion_signal_definition_20260825.json"
+        }
+      ],
+      "cheap_check": "Strip comments and docstrings before counting, resolve what is actually invoked rather than what is mentioned, and exclude the record you are currently writing from its own sweep."
+    },
+    {
+      "id": "shallow_blocker_masks_deep",
+      "rule": "Fixing a shallow blocker exposes a deeper one that was invisible while the shallow one aborted first. Budget for the second failure; do not treat the first green run as completion.",
+      "worked_examples": [
+        {
+          "instance": "A contract failure aborted a lane early and masked a layout defect underneath it.",
+          "artifact": "config/artifacts/incidents/observed_multiome_specialist_gate_21100576.json"
+        },
+        {
+          "instance": "A stale hash pin failed before a TaskSpec staleness could be reached, so the TaskSpec problem was invisible until the pin was refreshed.",
+          "artifact": "config/campaigns/stale_pin_refresh_plan_20260825.json"
+        }
+      ],
+      "cheap_check": "After clearing a blocker, re-run the whole path rather than the failing step, and expect a new failure rather than success."
+    },
+    {
+      "id": "queue_membership_is_not_executability",
+      "rule": "A job being queued is not evidence that it can run. Pending, held, dependency-blocked and never-satisfiable jobs all appear in the queue.",
+      "worked_examples": [
+        {
+          "instance": "A job sat queued on hardware where its runtime could neither initialise CUDA nor claim any GPU validation. Queued and blocked-forever are indistinguishable from the queue listing alone.",
+          "artifact": "executions/scvi-scanvi-1-4-2-b6k-first-gpu-validation-21108408"
+        },
+        {
+          "instance": "The stronger case: a queue item that could never have executed on any hardware, on two independent grounds, yet appeared in the queue exactly like work waiting for capacity.",
+          "artifact": "executions/scooby-full-backbone-probe-never-executed-finding-20260825-v2"
+        }
+      ],
+      "cheap_check": "Resolve each job's state and reason, not just its presence. scontrol show job <id> reports Command= even when the job name is masked, which is also how a masked job is mapped back to its wrapper."
+    },
+    {
+      "id": "late_logic_untested",
+      "rule": "Logic that runs only after an expensive step must be exercised against existing artifacts before the expensive step is paid for.",
+      "worked_examples": [
+        {
+          "instance": "A freeze wrapper failed after a 34-minute walk on a TypeError from a variable-name bug in post-step logic. The fix was to run a standalone validator against the artifact already on disk rather than repeat the walk.",
+          "artifact": "config/artifacts/incidents/freeze_completion_signal_definition_20260825.json"
+        }
+      ],
+      "cheap_check": "Run the post-step logic against a previously produced artifact first. If it cannot be run that way, that is itself the defect."
+    },
+    {
+      "id": "partial_artifact_is_not_completion",
+      "rule": "An artifact written partway through a process is not a completion signal. Prefer the marker the process writes LAST, plus a terminal job state.",
+      "worked_examples": [
+        {
+          "instance": "A campaign freeze writes its candidate directory before its remaining checks run. Across three revisions a candidate existed while the job then failed its post-freeze checks, so candidate presence never meant landed.",
+          "artifact": "config/artifacts/incidents/freeze_completion_signal_definition_20260825.json"
+        }
+      ],
+      "cheap_check": "Require the terminal marker AND a terminal job state. Never infer completion from a directory appearing."
+    },
+    {
+      "id": "lexical_timestamp_sort",
+      "rule": "Never sort timestamps lexically without the date component. Times alone reorder across midnight and across differing widths.",
+      "worked_examples": [
+        {
+          "instance": "Ordering by a time-only string produced a sequence disagreeing with the true event order. Recorded as one of four non-working detection methods in the same drift investigation.",
+          "artifact": "executions/resource-firewall-gitignored-drift-record-20260825-v2"
+        }
+      ],
+      "cheap_check": "Sort on a full ISO-8601 timestamp or an epoch integer. If a display format is all that is available, parse it before comparing."
+    },
+    {
+      "id": "concurrent_lane_changes",
+      "rule": "In a shared tree, a file changing under you is normal. Establish who changed it and whether the change is correct before deciding what to fix, and never revert another lane's work to make your own check pass.",
+      "worked_examples": [
+        {
+          "instance": "A constant shrank mid-campaign and a gate began reporting the campaign's own tests as failures. The change was another lane legitimately resolving an entry; the correct action was to fix the local duplicate, not restore the constant.",
+          "artifact": "config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json"
+        }
+      ],
+      "cheap_check": "Compare mtimes against your own last edit and against the digests recorded by your most recent freeze. Then test whether their change is right before assuming it is a regression."
+    },
+    {
+      "id": "unverified_must_declare_itself",
+      "rule": "An unverified claim sitting beside verified ones inherits their credibility unless it is labelled. Keep the label mechanism even when nothing is currently unverified.",
+      "worked_examples": [
+        {
+          "instance": "A record carried two independently verified cases and one asserted case. Labelling the third as asserted-not-verified kept a later reader from counting three. When it was subsequently verified it was upgraded, and the empty slot was retained so future additions must still declare their kind.",
+          "artifact": "config/artifacts/incidents/freeze_completion_signal_definition_20260825.json"
+        }
+      ],
+      "cheap_check": "Assert in the freeze job that the unverified container exists, that its contents are labelled, and that any verified count equals the number of verified entries."
+    },
+    {
+      "id": "unmeasured_progress",
+      "rule": "Report progress that no metric captures as progress, and say plainly when a fix moves no number. A report that only surfaces work when a count drops will eventually tempt someone to chase the count.",
+      "worked_examples": [
+        {
+          "instance": "Correcting a stale flag on a model, and refreshing three hash pins, each closed zero tests. Both were worth doing and neither moved the register.",
+          "artifact": "config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json"
+        }
+      ],
+      "cheap_check": "State the metric delta and the work separately. If they disagree, say so in the same sentence."
+    },
+    {
+      "id": "prefer_the_noisy_failure_direction",
+      "rule": "When a guard must be imperfect, make it over-broad rather than vacuous. Over-broad guards fail noisily and get fixed; vacuous guards pass quietly and do not. Of the two ways to get a check wrong, prefer the one that interrupts you.",
+      "why_this_is_the_through_line": "Most entries in this register are the quiet failure: a guard, a search, a record, a count or a queue listing returning a clean answer while measuring nothing. None of them announced itself. Every one was found by someone deciding to test the check rather than trust it.",
+      "worked_examples": [
+        {
+          "instance": "An attribution guard on a documentation record matched a bare ' you ' and rejected seven legitimate instructional uses. It was over-broad, it failed immediately, and it was narrowed within minutes with the reason recorded inline.",
+          "artifact": "config/artifacts/incidents/verification_method_register_20260825.json"
+        },
+        {
+          "instance": "A live-job safety guard flagged the very job that was running it, because that job's own wrapper named the model it was protecting. Self-exclusion was the fix; relaxing the guard was not.",
+          "artifact": "config/artifacts/incidents/scgpt_weight_rights_disposition_20260825.json"
+        },
+        {
+          "instance": "A search pattern matching 'tests.contract' reported a live job as using a contract suite it did not use. Over-broad, caught on inspection, narrowed.",
+          "artifact": "config/campaigns/live_job_bundle_bound_set_20260825.json"
+        }
+      ],
+      "cheap_check": "Ask what a false pass would cost versus a false alarm. If a false pass licenses an irreversible action, tune the guard toward false alarms and accept the noise.",
+      "counterweight": "This is not licence for guards so broad they are ignored. A guard everyone routinely overrides has become vacuous by a slower route."
+    },
+    {
+      "id": "wrong_meaning_not_wrong_value",
+      "rule": "When a boolean is wrong, check whether the field's MEANING is what is wrong before flipping its value. A two-valued reality recorded as one boolean will be wrong in one direction or the other whatever it is set to.",
+      "worked_examples": [
+        {
+          "instance": "A record carried task_spec_exists: false. It could not be flipped to true, because one of the audit's three checks was on the filesystem and config/tasks/observed_multiome.toml is genuinely absent. It could not stay false either, because config/evaluation/observed_multiome_task.toml has existed since 01:58:03. The single field compressed two paths whose answers had diverged, and the asymmetry was deliberate: the spec is parked outside config/tasks precisely so it cannot mutate the frozen global census. It was attempted twice on the same record before the shape was questioned \u2014 the first attempt would have failed the filesystem check, the second would have asserted a registration that had not occurred.",
+          "artifact": "executions/observed-multiome-taskspec-regrounding-21111904"
+        }
+      ],
+      "cheap_check": "When a boolean assertion fails, enumerate what the field actually reads before deciding what it should say. If it resolves more than one thing, the fix is to split it, not to set it.",
+      "resolution_shape": "Replaced by canonical_task_spec_exists: false plus standalone_task_spec_exists: true plus a per-path result map, with a schema bump because the shape genuinely changed.",
+      "tell": "Two failed attempts in opposite directions on the same field is the signature. If neither value is right, the field is the defect."
+    },
+    {
+      "id": "guard_in_the_wrapper_is_not_a_guard",
+      "rule": "A guard placed in the CLI wrapper rather than in the function it protects is not exercised by tests and is bypassed by every other caller.",
+      "worked_examples": [
+        {
+          "instance": "A branch-closure safety rule was written into main(). New unit tests calling plan_refresh directly failed, because the guard was not on that path. The tests were right and the placement was wrong: any caller other than the CLI \u2014 another script, a future batch mode, a test \u2014 would have written pins with no closure check at all.",
+          "artifact": "config/campaigns/authorized_pin_refresh_branch_A_20260825.json"
+        }
+      ],
+      "cheap_check": "Call the protected function directly in a test and confirm the guard still fires. If it does not, the guard is decoration on one entry point.",
+      "tell": "A test failing because it calls the inner function directly is the guard telling you where it lives. Moving the guard is the fix; adjusting the test to go through the wrapper hides it.",
+      "relation": "prefer_the_noisy_failure_direction: this failed loudly at the moment of writing, which is why it cost minutes."
+    },
+    {
+      "id": "a_pin_is_rarely_one_field",
+      "rule": "A pin usually has companions. Beside a digest a record often carries a size, a count or a date describing the same file. Refreshing the digest alone leaves the sibling asserting something the file no longer is, and the pin test does not look at companions, so the inconsistency is invisible where you are watching and surfaces somewhere else.",
+      "worked_examples": [
+        {
+          "instance": "A 16-pin cascade refreshed every sha256 and left nine stale size_bytes companions across seven records. The pin contract test went green while a second contract test failed on 59115 != 59705 for the same file.",
+          "artifact": "config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json"
+        }
+      ],
+      "cheap_check": "After refreshing a digest, re-derive every other field in the same record that describes the same file. If a field can be computed from the target, compute it."
+    },
+    {
+      "id": "every_writer_needs_the_same_guard",
+      "rule": "A second tool that writes the same files needs the same protections as the first. Rewriting a record changes its own digest, so any writer \u2014 not just the one built for pins \u2014 can strand whatever pins it.",
+      "worked_examples": [
+        {
+          "instance": "A companion-metadata fixer was written without the closure guard its sibling pin refresher already had. Correcting nine size fields rewrote seven bundles, changed their digests, and stranded six pins that two branches had just set. The gate caught it as a new contract failure within the same run, before anything was frozen.",
+          "artifact": "config/campaigns/authorized_pin_refresh_companion_repin_20260825.json"
+        }
+      ],
+      "cheap_check": "Before writing a second tool that edits the same class of file, list the guards the first one has and justify each omission. 'It only changes a small field' is not a justification: the digest does not care which field moved.",
+      "relation": "a_pin_is_rarely_one_field produced the need for the second writer; this rule is about what that writer forgot."
+    },
+    {
+      "id": "a_failure_path_that_leaves_partial_writes",
+      "rule": "A failure path that leaves partial writes turns a guard into a liability. The guard fires, the operator reads the failure as 'nothing happened', and the tree has moved.",
+      "why_it_is_worse_than_a_missing_guard": "A missing guard leaves you uncertain. A guard that fires while its run has already written leaves you confidently wrong, and it hands that wrongness to everyone who reads the job status instead of the file mtimes.",
+      "worked_examples": [
+        {
+          "instance": "A config writer applied nine corrections, then failed its baseline check. The staging directory was renamed .failed and the nine writes stayed on disk. For four and a half minutes the tree was inconsistent; an unrelated job started inside that window and failed on the same test, 46 seconds before the repair landed. The check had done its job \u2014 it caught the error inside the same run and nothing was frozen \u2014 and the damage still escaped through the failure path.",
+          "artifact": "config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json"
+        }
+      ],
+      "cheap_check": "Either write only after the gate passes, or snapshot before the first write and restore on any non-zero exit. Then prove the restore actually fires: run a job that deliberately writes and then exits non-zero, and confirm the file is byte-identical to its pre-write digest afterwards. A rollback that has never rolled back is a vacuous guard.",
+      "resolution_shape": "scripts/config_write_transaction.py snapshots targets with pre-write digests and restores them under a trap, verifying each restored file re-derives and writing a receipt that says positively what was undone. Proven by a deliberate-failure control, not by its unit tests alone.",
+      "relation": "vacuous_check and prefer_the_noisy_failure_direction both concern the check firing; this one concerns what happens after it fires."
+    },
+    {
+      "id": "a_guard_after_the_action_is_documentation",
+      "rule": "A guard placed after the action it protects is documentation, not a guard. Sequencing defeats a correct guard as thoroughly as omitting it.",
+      "worked_examples": [
+        {
+          "instance": "A job carried a guard refusing to change dispatcher recovery logic while a dispatcher was live. The guard was correct and it fired. But it ran at freeze time, after the edit had already been made, so it reported a violation that had already happened rather than preventing it.",
+          "artifact": "config/artifacts/incidents/verification_method_register_20260825.json"
+        },
+        {
+          "instance": "A guard for a config-writing run existed but the writes happened before it, so a failure left them applied while the run reported failure.",
+          "artifact": "config/artifacts/incidents/contract_suite_preexisting_debt_20260825.json"
+        }
+      ],
+      "cheap_check": "Ask what the guard would have prevented if it had run one step earlier. If the answer is 'the thing that went wrong', it is in the wrong place. Guards belong before the mutation, not before the report.",
+      "relation": "a_failure_path_that_leaves_partial_writes is the same shape one level over: there the guard fired correctly and the damage escaped through what happened after it; here the guard fired correctly and the damage had already happened before it. Correct guard, wrong moment, both times.",
+      "authors_failure_mode": "Recorded as a recurring habit rather than three incidents: the pattern gets found in the file that happened to be open rather than in the file that executes. Establish the call path from the thing that actually runs before editing anything."
+    },
+    {
+      "id": "ownership_claimed_twice",
+      "rule": "When a guard fires on state the job itself produced, look for ownership of that resource being claimed in two places. Neither the guard's placement nor its predicate need be wrong.",
+      "worked_examples": [
+        {
+          "instance": "A script created its output directory with output.mkdir(mode=0o750), no exist_ok, and refused at the top of run() if it already existed. Its wrapper pre-created the same directory with install -d. The guard correctly detected the second claim, and the job could never succeed on any run, on any node. The fix was one line in the wrapper; the guard needed no change at all.",
+          "artifact": "executions/model-data-082-21114387"
+        }
+      ],
+      "cheap_check": "Ask who owns the resource. If the script creates it, the wrapper must not. Grep the wrapper for creation of any path it later passes as an argument.",
+      "create_then_remove_corollary": "A wrapper that creates a path and REMOVES it again before handing it over has not claimed ownership \u2014 that pair is a deliberate handoff idiom, not a defect. Check for the removal before flagging the creation. Reading the creation without the removal is the same partial-read error as reading a reference without its direction; acting on it broke a working script and cost a six-second job failure.",
+      "discriminator": "The presence or absence of a matching removal is the one-line check that separates a real defect from a correct idiom. The broken wrapper had zero rmdir; each working one had exactly one."
+    },
+    {
+      "id": "a_detectors_first_version_is_a_hypothesis",
+      "rule": "A detector's first version is a hypothesis, not a finding. Do not freeze it, and do not act on its output against anyone else's work, until it has been confirmed against a known positive and a known negative.",
+      "worked_examples": [
+        {
+          "instance": "A detector for wrappers pre-creating their script's output path flagged nine files. After one refinement \u2014 does the script actually own the directory \u2014 two remained. After a second \u2014 was the path removed again before use \u2014 zero remained. Between those refinements it was acted on and broke a working script. Freezing it after the first pass would have made nine false accusations permanent.",
+          "artifact": "tests/unit/test_wrapper_output_ownership.py"
+        }
+      ],
+      "cheap_check": "Run the detector against the exact state that produced the defect and against the fixed state. Red on the first and green on the second, or it is not yet a detector. Confirming after the fix is weaker than confirming before it, because a test written after can pass for the wrong reason.",
+      "other_lanes_rule": "A detector that names another lane's file as an offender must not be frozen until that finding is confirmed. A wrong entry in a shared test is a claim about someone else's work that they then have to disprove."
+    }
+  ],
+  "cross_cutting_note": "Six of the entries above reduce to one habit: test the check before trusting its output. A guard, a search, a record, a count and a queue listing can each return a clean answer while measuring nothing. The cheap checks named here are all cheaper than the incident that produced them.",
+  "reference_completeness": {
+    "instances_with_a_located_artifact": 39,
+    "instances_recorded_without_one": 0,
+    "why": "All instances now carry a located, frozen artifact. The four originally recorded as gaps were closed when the owning lanes supplied their job ids. The gap mechanism is retained: any future instance without an artifact must be marked rather than given a plausible-looking path.",
+    "action": "Anyone who knows the owning artifact should attach it.",
+    "rules": 24,
+    "worked_examples": 39,
+    "self_count_note": "These counts are re-derived from the rules array by the freeze job rather than maintained by hand. The first draft of this record hardcoded them and was already wrong by two, which is the duplicated_subject failure documented above occurring inside the register that documents it."
+  },
+  "sealed_outcomes_read": false,
+  "models_fit": [],
+  "models_scored": [],
+  "files_modified": 0,
+  "revision": "revision_10_20260825_pattern_check_false_negative",
+  "corrections_to_the_brief": [
+    {
+      "stated": "Re-run the four producer scripts and let them re-derive their own digests.",
+      "actually": "None of the four writes its config file. Each READS its config as input and writes only into executions/. Nothing in the repository regenerates any of the 21 closure files; they are all hand-maintained, so the whole cascade goes through the allowlist refresher. The consumers remain useful as a post-refresh validation that the refreshed config still works.",
+      "how_it_was_missed": "The producer claim came from scripts REFERENCING the files, without checking the direction of the reference. Same shape as shape_you_expect: an association was observed and a relationship inferred.",
+      "recorded_as": "a correction to the brief, not a discovery credited to whoever ran it"
+    },
+    {
+      "stated": "Refresh in level-waves, reporting and waiting between each level.",
+      "actually": "The pause is what breaks it. A report-and-wait gap between levels leaves pins pointing at digests that no longer exist, temporarily makes the pin contract test worse, and exposes another lane to binding a stale digest inside the window. Branch decomposition \u2014 a seed set plus its full pinner closure to a root, completed in one transaction \u2014 is safe to pause between.",
+      "how_it_was_surfaced": "A guard refused the work, and the refusal was treated as evidence the plan was wrong rather than as an obstacle to bypass. See prefer_the_noisy_failure_direction.",
+      "recorded_as": "a correction to the brief"
+    }
+  ]
+}

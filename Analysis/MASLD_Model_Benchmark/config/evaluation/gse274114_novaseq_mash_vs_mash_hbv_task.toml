@@ -1,0 +1,34 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse274114_novaseq_mash_vs_mash_hbv"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna"]
+endpoint = "Within Illumina NovaSeq 6000 only, distinguish source-native biopsy-proven MASH-only participants (NASH) from combined MASH plus HBeAg-negative chronic HBV participants (ENEG_NASH)."
+metrics = ["participant_macro_f1", "participant_auprc", "participant_auroc", "participant_brier", "participant_log_loss"]
+datasets_train = ["gse274114_mash_hbv"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse274114_novaseq_nash_eneg_nash_stratified_participant_outer_v1"
+required_pairing_levels = ["same_study_unpaired"]
+missingness_policy = "Participant age, recorded sex, ethnicity, fibrosis, steatosis, ballooning, lobular inflammation, BMI, metabolic, alcohol, laboratory, and HBV measurements are unavailable in the public participant fixture. Group summaries are descriptive only and are never assigned, imputed, or encoded as participant inputs."
+admission_gates = [
+  "Use exactly the 19 source-native NovaSeq participants in the frozen evaluator: 10 NASH and 9 ENEG_NASH. Participants are biological replicates; biopsies, Salmon files, genes, SRA experiments, and 1-to-3 SRA technical runs are not replicates.",
+  "Collapse all technical runs within their source experiment before modeling. Keep every participant in one outer fold and use five source-label-stratified participant folds held only by the evaluator.",
+  "Use only the opaque, label-separated GENCODE v49 model fixture. The source-label map, participant folds, source-paper differential genes, pathways, figures, and highlighted results remain evaluator-only and cannot enter preprocessing or feature selection.",
+  "Fit count filtering, EffectiveLength offsets, normalization, scaling, feature selection, dimensionality reduction, hyperparameters, calibration, and thresholds inside outer-training participants only. Salmon NumReads remain continuous estimates and are never rounded.",
+  "This task asks whether HBV comorbidity is distinguishable among participants who all have MASH. It is not MASH-versus-non-MASH, healthy-versus-MASH, treatment-response, prognosis, or longitudinal progression.",
+  "Do not pool this task with HiSeq participants. Global four-class, MASH-versus-non-MASH, MASH-versus-healthy, cross-platform OOD-accuracy, universal-model, and task-champion claims are prohibited.",
+  "This source is project-exposed development data with no sealed holdout. Report participant-level intervals and development utility only; no diagnostic, prognostic, progression, treatment-response, causal, external-transfer, or champion claim is eligible.",
+  "Internal nonclinical research use requires no new DUA. Do not redistribute deposited matrices or materially trained derivative weights without source- and model-specific review."
+]
+baseline_model_ids = ["novaseq_training_class_prior", "novaseq_gene_rank_nearest_centroid", "novaseq_hvg_pca_elastic_net", "novaseq_hvg_pca_linear_svm"]
+uncertainty_method = "source_label_stratified_participant_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse274114_within_platform_development_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_task_secondary_endpoint_family"
+promotion_gate_id = "gse274114_within_instrument_etiology_development_v1"
+promotion_gate_config_sha256 = "2e45f65809ce927c5ef63e892b9434f41dd77bd2c28913815783c3d5a4577ab1"
+primary_evaluator_id = "gse274114_novaseq_nash_eneg_nash_participant_v1"
+evaluator_parameters = { participants = 19, source_group_counts = { NASH = 10, ENEG_NASH = 9 }, instrument = "Illumina NovaSeq 6000", outer_folds = 5, technical_runs_are_replicates = false, evaluator_labels_available_to_model = false, four_class_performance_allowed = false, global_ood_accuracy_allowed = false, mash_vs_non_mash_performance_allowed = false, model_fit_or_scoring_run = false }
+claim_gate = "Development-only, within-NovaSeq MASH-versus-MASH-plus-HBV comorbidity utility. No MASH-versus-non-MASH, four-class, pooled, cross-platform OOD, external-transfer, universal-model, diagnostic, prognostic, progression, treatment-response, causal, sealed, or champion claim is eligible."

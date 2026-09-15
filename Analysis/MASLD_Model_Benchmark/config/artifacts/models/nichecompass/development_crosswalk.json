@@ -77,7 +77,7 @@
     "masld_hotspot_programs": "prohibited_as_training_or_selection_inputs; read-only post hoc projections only",
     "target_exposure_interpretation": "A correctly donor-folded local model could be target_label_unexposed for its held donors, but no such model or eligible dataset exists."
   },
-  "interpretation": "NicheCompass is scientifically relevant for a future donor-resolved spatial RNA niche track, not for the active v1 tournament. Its spatial graph is an input with its own leakage surface, its optional RNA-ATAC path requires true same-observation pairing, and its priors are versioned external evidence rather than free model metadata. The current MASLD spatial sources are too small, controlled, join-unresolved, exposed, or non-native for a sealed superiority claim.",
+  "interpretation": "NicheCompass is scientifically relevant for a future donor-resolved spatial RNA niche track, not for the active v1 tournament. Its spatial graph is an input with its own leakage surface, its optional RNA-ATAC path requires true same-observation pairing, and its priors are versioned external evidence rather than free model metadata. The current MASLD spatial sources are too small, controlled, join-unresolved, exposed, or non-native for a held-back superiority claim.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

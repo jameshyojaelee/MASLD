@@ -42,8 +42,36 @@
     "declared_python": "UNDECLARED_legacy_runtime",
     "declared_tensorflow": "2.4.1",
     "declared_tensorflow_probability": "0.12.2",
-    "environment_status": "UNRESOLVED_L40S_COMPATIBILITY_PROBE_REQUIRED",
-    "wheel_downloaded": false
+    "compatibility_runtime": "tensorflow_2.8.2_gpu",
+    "device_class": "NVIDIA_L40S_sm89",
+    "environment_status": "PASSED_COMPATIBILITY_NOT_NATIVE_VERSION_PARITY",
+    "wheel_downloaded": true,
+    "source_acquisition": {
+      "path": "executions/upstream-acquisitions/bpnet-v2.0.0-21064186",
+      "artifacts_sha256": "8062574bfaa9067b0aca82ffa3eeae87188140ee5f5842399171ad4535cf88f6"
+    },
+    "runtime_probe": {
+      "path": "executions/bpnet-native-runtime-probe-21064198",
+      "artifacts_sha256": "cd25afab907693c048eb71b0764db81984c5c664d0b267999682dc10cb3b05e4",
+      "forward_backward_passed": true,
+      "checkpoint_resume_passed": true
+    },
+    "native_tensorflow_2_4_1_parity_claimed": false
+  },
+  "production_screen_contract": {
+    "path": "executions/sequence_gpu_bundle_004_bpnet-ready_71d22f6453-21077605",
+    "artifacts_sha256": "14af86ac22e67bc29f8a7b85ee3a049b63f875ba5423210cc8e539d29b9fe9e8",
+    "logical_tasks": 8,
+    "passed_tasks": 8,
+    "held_donor_atac_used_for_inference": false,
+    "evaluator_outcomes_exposed": false,
+    "benchmark_metrics_calculated": false,
+    "admitted_scope": "retrospective_development_profile_prediction",
+    "complete_five_fold_five_seed_finalist": false,
+    "variant_output_admitted": false,
+    "external_evaluation_complete": false,
+    "sealed_evaluation_complete": false,
+    "champion_eligible": false
   },
   "safe_loading_contract": {
     "external_checkpoint_downloaded": false,
@@ -52,7 +80,7 @@
     "require_training_receipt_and_sha256": true
   },
   "schema_version": "masld-bench-local-model-preflight-v1",
-  "source_evidence": "The pinned repository commit and PyPI 2.0.0 metadata were queried on 2026-08-22. Source code was inspected without installing the package, running TensorFlow, or downloading a checkpoint.",
+  "source_evidence": "The pinned repository commit and PyPI 2.0.0 wheel were acquired and hash-verified. TensorFlow 2.8.2 L40S compatibility, forward/backward, checkpoint resume, full training, and prediction passed. Native TensorFlow 2.4.1 numeric parity is not claimed.",
   "source_records": [
     {"identity": "BPNet:LICENSE", "sha256": "07cc7fd1890c0f369dfc2d35bfd5fc5bc8bde189401c35ae0f4e4ef63f088a96", "size_bytes": 1068},
     {"identity": "BPNet:README.md", "sha256": "f1a54bf17f0dac0e17ae6986d35a0130bf7e9fd04d4f946f73c3314ce30b0e7d", "size_bytes": 16499},

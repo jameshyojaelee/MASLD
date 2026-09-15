@@ -40,7 +40,7 @@ MANIFEST_FIELDS = (
 
 
 class AdmissionFixtureError(ValueError):
-    """Raised when the shared sequence fixture violates its frozen contract."""
+    """Raised when the shared sequence fixture does not meet its frozen requirements."""
 
 
 class IndexedFasta:

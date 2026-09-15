@@ -1,0 +1,240 @@
+{
+  "schema_version": "masld-bench-perturbation-specialist-census-v1",
+  "verified_date": "2026-08-24",
+  "scope": {
+    "task_ids": [
+      "gene_perturbation_response",
+      "perturbation_transfer"
+    ],
+    "models": [
+      "gears",
+      "scgen",
+      "cpa",
+      "cellot",
+      "genepert",
+      "scgpt_perturbation_head",
+      "scfoundation_heads"
+    ],
+    "sealed_sources": [],
+    "champion_eligible": false,
+    "universal_perturbation_objective": false,
+    "reason": "The registered models implement different native prediction problems, and the current sources do not provide a held-back, adequately replicated common endpoint."
+  },
+  "global_contract": {
+    "inferential_unit": "independent_culture_replicate_or_animal",
+    "not_independent_replicates": [
+      "cells",
+      "guides",
+      "target_genes",
+      "target_loci",
+      "sequencing_lanes",
+      "GEM_groups",
+      "capture_libraries",
+      "bulk_libraries_from_the_same_liver_chip_batch"
+    ],
+    "split_first": true,
+    "fold_local_objects": [
+      "normalization",
+      "feature_selection",
+      "control_sampling",
+      "perturbation_vocabulary",
+      "context_features",
+      "centroids",
+      "Systema_references",
+      "hyperparameters"
+    ],
+    "required_baselines": [
+      "control_mean",
+      "perturbed_mean",
+      "ridge_perturbation",
+      "bilinear_perturbation"
+    ],
+    "missing_as_zero_prohibited": true,
+    "noncoding_target_to_gene_mapping_prohibited": true,
+    "sealed_outcomes_accessed": false,
+    "production_jobs_authorized_by_this_census": false
+  },
+  "models": [
+    {
+      "model_id": "gears",
+      "registry_model_id": "gears",
+      "authority_bundle": "config/artifacts/models/gears",
+      "repository_revision": "snap-stanford/GEARS@f374e43e197b295016d80395d7a54ddb81cc6769",
+      "checkpoint_mode": "train_locally_no_canonical_pretrained_checkpoint",
+      "license": "code_MIT_external_GO_prior_terms_UNRESOLVED",
+      "native_input": "single-cell expression plus one or two measured gene targets present in the fitted expression and GO-graph vocabularies",
+      "native_output": "absolute post-perturbation expression for sampled control cells on the fitted gene scale",
+      "valid_subendpoint": "held_exact_gene_target_response_after_dataset_prior_adapter_and_runtime_gates",
+      "invalid_subendpoint": "noncoding_locus_or_guide_response",
+      "runtime_evidence": "synthetic_8_gene_CPU_core_forward_backward_only",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    },
+    {
+      "model_id": "scgen",
+      "registry_model_id": "scgen",
+      "authority_bundle": "config/artifacts/models/scgen",
+      "repository_revision": "theislab/scgen@d79e1f04233c30f9a4eb5b8d57718127909807d7",
+      "checkpoint_mode": "train_locally_no_canonical_pretrained_checkpoint",
+      "license": "repository_GPL-3.0_package_metadata_MIT_conflict",
+      "native_input": "normalized log1p single-cell expression with observed control and stimulated cells for the same known perturbation",
+      "native_output": "decoded expression after transferring a training-estimated latent perturbation shift",
+      "valid_subendpoint": "known_perturbation_held_replicate_or_context",
+      "invalid_subendpoint": "wholly_unseen_target_response",
+      "runtime_evidence": "mutable_environment_primary_import_failed",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    },
+    {
+      "model_id": "cpa",
+      "registry_model_id": "cpa",
+      "authority_bundle": "config/artifacts/models/cpa",
+      "repository_revision": "theislab/cpa@fbd7c0250edc23eff003a10c99655579c53afd63",
+      "checkpoint_mode": "train_locally_no_canonical_pretrained_checkpoint",
+      "license": "repository_BSD-3-Clause_package_metadata_MIT_conflict",
+      "native_input": "single-cell expression plus categorical perturbation atoms, dose, and optional categorical covariates",
+      "native_output": "predicted absolute expression distribution parameters on the fitted likelihood scale",
+      "valid_subendpoint": "held_dose_context_or_combination_where_every_atomic_perturbation_was_seen_in_training",
+      "invalid_subendpoint": "wholly_unseen_target_atom",
+      "runtime_evidence": "mutable_environment_primary_import_failed",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    },
+    {
+      "model_id": "cellot",
+      "registry_model_id": "cellot",
+      "authority_bundle": "config/artifacts/models/cellot",
+      "repository_revision": "bunnech/cellot@522d2b953da8ad244fcf36f64521487fdf763788",
+      "checkpoint_mode": "train_one_transport_map_per_observed_perturbation",
+      "license": "code_BSD-3-Clause",
+      "native_input": "unpaired control and observed perturbed single-cell distributions or training-only latent distributions",
+      "native_output": "transported control cells in fitted expression or latent space",
+      "valid_subendpoint": "known_perturbation_held_replicate_or_context_distribution",
+      "invalid_subendpoint": "wholly_unseen_target_response",
+      "runtime_evidence": "mutable_environment_primary_module_absent",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    },
+    {
+      "model_id": "genepert",
+      "registry_model_id": "genepert",
+      "authority_bundle": "config/artifacts/models/genepert",
+      "repository_revision": "zou-group/GenePert@31c0034211010696ba76dc62cb875af51bfe6f4a",
+      "checkpoint_mode": "train_locally_from_one_exact_frozen_embedding_per_target_gene",
+      "license": "code_NO_LICENSE_DETECTED_exact_embedding_identity_and_terms_UNRESOLVED",
+      "native_input": "one fixed embedding for an exact perturbed gene symbol",
+      "native_output": "one absolute mean expression vector per perturbation condition",
+      "valid_subendpoint": "held_exact_gene_target_response_after_embedding_and_terms_gates",
+      "invalid_subendpoint": "noncoding_locus_or_guide_response",
+      "runtime_evidence": "mutable_environment_primary_module_absent",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    },
+    {
+      "model_id": "scgpt_perturbation_head",
+      "registry_model_id": "scgpt_perturbation_head",
+      "authority_bundle": "config/artifacts/models/scgpt_perturbation_head",
+      "repository_revision": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4+official_Tutorial_Perturbation",
+      "checkpoint_mode": "partially_initialize_base_encoder_then_train_new_perturbation_embedding_and_decoder",
+      "license": "code_MIT_base_weight_terms_UNDECLARED",
+      "native_input": "single-cell expression tokens plus a perturbation flag on an exact measured in-vocabulary gene token",
+      "native_output": "absolute post-perturbation single-cell expression on the fitted gene scale",
+      "valid_subendpoint": "held_exact_in_vocabulary_gene_target_after_base_weight_runtime_and_adapter_gates",
+      "invalid_subendpoint": "noncoding_locus_guide_pseudogene_or_OOV_target",
+      "runtime_evidence": "mutable_environment_primary_import_failed_torchtext_ABI",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    },
+    {
+      "model_id": "scfoundation_heads",
+      "registry_model_id": "scfoundation_heads",
+      "authority_bundle": "config/artifacts/models/scfoundation",
+      "repository_revision": "biomap-research/scFoundation@397631c495eddf9ad6644fc00c6ea8139e651245+mutable_SharePoint_folder",
+      "checkpoint_mode": "no_exact_base_or_perturbation_head_object_admitted",
+      "license": "code_Apache-2.0_weights_custom_noncommercial_nontransferable_nonsublicensable_revocable",
+      "native_input": "not_applicable_no_registered_perturbation_head",
+      "native_output": "not_applicable_no_registered_perturbation_head",
+      "valid_subendpoint": "none_until_a_separate_exact_GEARS_integration_head_manifest_exists",
+      "invalid_subendpoint": "all_current_perturbation_tasks",
+      "runtime_evidence": "no_perturbation_head_runtime",
+      "runtime_admitted": false,
+      "schedulable": false,
+      "open_champion_eligible": false
+    }
+  ],
+  "datasets": [
+    {
+      "dataset_id": "gse281160",
+      "species_and_system": "human_cell_line_CRISPRi_non-coding_loci",
+      "biological_replication": "UNRESOLVED",
+      "technical_units": "six_sequencing_lanes",
+      "allowed_use": "conditional_development_followup_only_after_reference_join_and_replication_resolution",
+      "model_fit": "none_of_the_registered_gene_target_specialists_can_represent_the_held_noncoding_target",
+      "champion_eligible": false
+    },
+    {
+      "dataset_id": "gse238219",
+      "species_and_system": "human_differentiated_HepaRG_CRISPRi_gene_targets",
+      "biological_replication": "five_deposited_sample_rows_but_paper_analysis_n2_and_independent_culture_ancestry_UNRESOLVED",
+      "target_count": 11,
+      "allowed_use": "human_MASLD_relevant_development_candidate_after_ancestry_and_activation_gates",
+      "model_fit": "unseen_target_GEARS_GenePert_scGPT_only; known_target_scGen_CellOT_only; CPA_requires_seen_atoms",
+      "champion_eligible": false
+    },
+    {
+      "dataset_id": "gse264667",
+      "species_and_system": "human_HepG2_essential_gene_CRISPRi",
+      "biological_replication": "one_transduced_pool",
+      "technical_units": "56_GEM_groups",
+      "allowed_use": "training_or_descriptive_only",
+      "matrix_scale": "integer_nonnegative_but_raw_UMI_semantics_not_supported_by_deposited_row_sums",
+      "champion_eligible": false
+    },
+    {
+      "dataset_id": "gse242934",
+      "species_and_system": "mouse_primary_embryonic_hepatocyte_CRISPRa",
+      "biological_replication": "one_primary_hepatocyte_pool",
+      "technical_units": "one_RNA_library_and_one_guide_library",
+      "allowed_use": "training_or_descriptive_cross_species_only_with_CRISPRa_direction_kept_separate",
+      "champion_eligible": false
+    },
+    {
+      "dataset_id": "cra009621_oscar",
+      "species_and_system": "mouse_liver_organoid_gene_KO",
+      "biological_replication": "at_most_one_shared_infection_and_screen_pool_pending_ancestry_resolution",
+      "technical_units": "nine_production_capture_lanes",
+      "allowed_use": "descriptive_cross_species_only",
+      "matrix_scale": "integer_nonnegative_but_raw_count_semantics_not_authoritative",
+      "champion_eligible": false
+    },
+    {
+      "dataset_id": "gse275483",
+      "species_and_system": "mouse_in_vivo_pooled_liver_perturbation",
+      "biological_replication": "four_animals_three_ad_libitum_one_fasting",
+      "allowed_use": "descriptive_cross_species_stress_only_after_join_and_reference_resolution",
+      "champion_eligible": false
+    },
+    {
+      "dataset_id": "gse313774",
+      "species_and_system": "human_liver_chip_bulk_RNA",
+      "biological_replication": "three_independent_liver_chip_batches",
+      "technical_units": "33_bulk_libraries",
+      "allowed_use": "frozen_prediction_intervention_stress_test_only",
+      "model_fit": "not_native_single_cell_input_for_the_registered_specialists",
+      "special_rule": "no_deposited_resmetirom_RNA_arm_and_CXCL1_IL8_are_excluded_from_confirmation",
+      "champion_eligible": false
+    }
+  ],
+  "terminal_disposition": {
+    "status": "fail_closed_no_specialist_currently_schedulable",
+    "next_scientific_gate": "resolve_GSE238219_biological_ancestry_then_activate_only_the_model_native_subendpoints",
+    "next_runtime_gate": "build_isolated_version_locked_runtimes_without_installing_into_existing_mutable_environments",
+    "no_claim_if_gate_fails": true
+  }
+}

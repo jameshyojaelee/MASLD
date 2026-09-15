@@ -1,0 +1,71 @@
+{
+  "schema_version": "masld-bench-corgi-new-assay-head-development-disposition-v1",
+  "audit_date": "2026-08-25",
+  "status": "NEGATIVE_DEVELOPMENT_SMOKE_NO_INCREMENTAL_CORGI_PROFILE_CONTRIBUTION",
+  "scope": "Regular Corgi new-assay-head rung on the existing 128-tile-per-fold hepatocyte GSE296875 development smoke only.",
+  "model_id": "corgi_regular",
+  "task_id": "rna_conditioned_atac",
+  "dataset_id": "gse296875",
+  "lineage_id": "hepatocyte",
+  "adaptation_rung": "new_assay_head",
+  "biological_unit": "donor",
+  "genomic_block_unit": "chromosome",
+  "frozen_authority_hashes": {
+    "config/adaptation/corgi.toml": "6c6486be8157910a2e6afdf07f463309d7602b42e2c6a8a5ce9ac1720df3c38a",
+    "config/artifacts/models/corgi/bounded_prediction_smoke_disposition_20260824.json": "92543e0ee28e0cdbdd9e2bb13a32b0b4f2960a9320dc417aa881d4d1f8f63635",
+    "config/datasets/gse296875.toml": "9465b012bbf46611641555a5acae4d1f033d053c900bf944dcec02979c735b6f",
+    "config/evaluation/corgi_regular_crossfit_profile_head_smoke.toml": "880ccde3fd6c429ed90915e670dc9d4016d7fe8583b6160be899d3c49b397f7e",
+    "executions/data-eval-258-21096614/ARTIFACTS.json": "9f18e53ef49ca1e6724eb56a1503bd89cb667fce02e072d8663f0ae9da63bdb0",
+    "executions/data-eval-258-21096614/evaluation/evaluation.json": "96c2da49a1bcdd856790179fc7365c0b8badfc8a7cbf226e6bd59ade007d1b87",
+    "executions/data-eval-258-21096614/evaluation/unit_metrics.tsv": "e4a25abfe294a6f2cee3794bef5099b46100d20b9be4dc808b5e0490e4851bd9",
+    "executions/model-check-256-21096536/ARTIFACTS.json": "e2cfdb4356b7247ef82ebf11ee4d3822ae78f72ec16e6303a552ce85737183fc",
+    "executions/model-fit-257-21096578/ARTIFACTS.json": "4c46cf098c035251d0c2607e9fdb63ed703d76fb9b3b79d7982fbd32878aa353",
+    "executions/model-fit-257-21096578/fit/fit_loss_grid.tsv": "a6e8652f464d778760de5d94d3421c9534d1ae41c37bf04e61e25abb6b980836",
+    "executions/model-fit-257-21096578/fit/fit_receipt.json": "daf084813866dd4df21b888ff8772f940159de33b967c0a426e40706a6b58d28"
+  },
+  "training_only_selection": {
+    "crossfit_folds": 5,
+    "selected_alpha_by_evaluation_fold": [0.0, 0.0, 0.0, 0.0, 0.0],
+    "alpha_zero_was_minimum_mean_fit_loss_in_every_fold": true,
+    "selected_head_identity": "exact_training_only_atac_mean_baseline",
+    "held_fold_atac_signal_used_during_fit": false,
+    "same_selected_alpha_applied_to_all_context_arms": true
+  },
+  "independent_evaluation": {
+    "status": "pass_independent_development_smoke_evaluation",
+    "donors": 39,
+    "donor_by_chromosome_units_per_context_arm": 191,
+    "context_arms": [
+      "actual_length_adjusted_tpm_rank_masked",
+      "actual_released_rank_masked",
+      "nearest_training_released_rank",
+      "shuffled_valid_released_rank",
+      "training_lineage_mean_released_rank"
+    ],
+    "reported_primary_macro_relative_deviance_skill": 2.5296919282203256e-07,
+    "numeric_zero_tolerance": 1e-06,
+    "reported_numeric_residual_interpretation": "floating_point_implementation_residual_only_not_biological_gain",
+    "all_context_arms_identical_after_alpha_zero": true,
+    "development_disposition": "selected_head_is_exact_training_mean_baseline_no_incremental_corgi_profile_contribution"
+  },
+  "claim_boundaries": {
+    "gse296875_masld_diagnosis_claimed": false,
+    "histology_or_disease_endpoint_used": false,
+    "test_or_sealed_features_or_outcomes_used": false,
+    "promotion_gate_evaluated": false,
+    "full_family_ranking_performed": false,
+    "champion_or_external_transfer_claim_allowed": false,
+    "global_model_census_modified": false,
+    "global_promotion_gate_modified": false,
+    "negative_result_may_be_recast_as_gain": false
+  },
+  "next_rung": {
+    "name": "film_plus_head",
+    "prospective_contract_preparation_allowed": true,
+    "training_or_prediction_authorized_by_this_disposition": false,
+    "required_split_identity": "same_five_donor_by_chromosome_crossfit_folds",
+    "required_selection": "training_only",
+    "required_context_ablations": "identical_to_new_assay_head_rung",
+    "independent_evaluator_required": true
+  }
+}

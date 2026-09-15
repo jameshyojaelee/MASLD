@@ -17,7 +17,7 @@
     "scope": "fitted_sample_factors_nan_missingness_noninductive_imputation_and_sealed_exclusion",
     "sha256": "cdc768c1e2d0b959c158eea90c8e951e706401263d39ed0540d47d6e62523163"
   },
-  "interpretation": "MOFA+ natively masks missing entries with NaN and can reconstruct an absent view for samples whose latent Z values were fitted. It has no amortized or official frozen transform from a new sample's RNA measurements to Z. Ordinary imputation therefore cannot be used for held or sealed donors without inserting and fitting those donors. MEFISTO predict_factor extrapolates factors from covariate coordinates, not from a new RNA assay. MOFA+ remains deferred until a separate nonpromotable development TaskSpec exists and is excluded from GSE289173.",
+  "interpretation": "MOFA+ natively masks missing entries with NaN and can reconstruct an absent view for samples whose latent Z values were fitted. It has no amortized or official frozen transform from a new sample's RNA measurements to Z. Ordinary imputation therefore cannot be used for held or held-back donors without inserting and fitting those donors. MEFISTO predict_factor extrapolates factors from covariate coordinates, not from a new RNA assay. MOFA+ remains deferred until a separate nonpromotable development TaskSpec exists and is excluded from GSE289173.",
   "remaining_blockers": [
     "Do not schedule MOFA+ until a separate nonpromotable development-only integration TaskSpec defines the sample unit, likelihoods, metrics, and transductive interpretation.",
     "Never insert GSE289173 rows with ATAC set to NaN, optimize query Z, refit W/Z, or use MEFISTO covariate prediction as an RNA assay transform.",

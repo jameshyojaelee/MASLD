@@ -9,7 +9,7 @@
     "gse275483": {
       "biological_unit": "animal_n4",
       "fit": "blocked_current_topology",
-      "reason": "A future gene-perturbation assessment requires a resolved cell-to-animal and target join, compatible species vocabulary, and no crossing of animals; the current same-study-unpaired topology fails admission."
+      "reason": "A future gene-perturbation assessment requires a resolved cell-to-animal and target join, compatible species vocabulary, and no crossing of animals; the current same-study-unpaired topology fails inclusion."
     },
     "gse281160": {
       "biological_unit": "experimental_replicate_count_UNRESOLVED",

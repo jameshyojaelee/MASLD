@@ -19,7 +19,7 @@
         {
           "google_drive_file_id": "1x1SfmFdI-zcocmqWAd7ZTC9CTEAVfKZq",
           "path": "best_model.pt",
-          "sha256": "UNRESOLVED",
+          "sha256": "ad0252a1971e0cd619b7116dbab3177432236c4537225d54280a2aa7e5fe402a",
           "size_bytes": 207861754
         },
         {
@@ -45,7 +45,11 @@
         "epochs": 10,
         "generative_training": true,
         "learning_rate": 0.0001,
-        "mask_ratios": [0.25, 0.5, 0.75],
+        "mask_ratios": [
+          0.25,
+          0.5,
+          0.75
+        ],
         "supervised_cell_type_objective": true,
         "use_cls": true
       }
@@ -56,7 +60,7 @@
           "czi_s3_etag": "349c8a6268e29fd5ef4fcd0cb713dcc5-25",
           "google_drive_file_id": "14AebJfGOUF047Eg40hk57HCtrb0fyDTm",
           "path": "best_model.pt",
-          "sha256": "UNRESOLVED",
+          "sha256": "6cb5d451ab5c4b33eb673adbe4fddc61d2389df1b89b7651a9fe2e557572b922",
           "size_bytes": 205385258
         },
         {
@@ -89,7 +93,11 @@
         "generative_training": true,
         "human_cells_reported": 33000000,
         "learning_rate": 0.0001,
-        "mask_ratios": [0.25, 0.5, 0.75],
+        "mask_ratios": [
+          0.25,
+          0.5,
+          0.75
+        ],
         "supervised_cell_type_objective": false,
         "use_cls": false
       }
@@ -115,7 +123,7 @@
   "repository": "bowang-lab/scGPT",
   "repository_revision": "cebd6fae655b9c585a4807daa3ac31bb764f06b4",
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "Official pinned repository code and tutorials, official public Google Drive folder metadata, and the public CZI scGenePT S3 mirror were queried on 2026-08-22. Both Google Drive auxiliary files byte-match the mirror. Weight bodies were not downloaded; their SHA-256 values remain unresolved.",
+  "source_evidence": "Official pinned repository code and tutorials, official public Google Drive folder metadata, and the public CZI scGenePT S3 mirror were queried on 2026-08-22. Both Google Drive auxiliary files byte-match the mirror. Weight bodies were acquired on 2026-08-23 by job 21015743 and are held at executions/scgpt-acquisition-21015743; their SHA-256 values were re-derived from the bodies on 2026-08-25 and are recorded above. The weight licence remains UNDECLARED: acquisition does not grant terms, and derivative-weight redistribution stays prohibited pending a declared licence.",
   "source_records": [
     {
       "identity": "bowang-lab/scGPT@cebd6fae655b9c585a4807daa3ac31bb764f06b4:LICENSE",
@@ -142,6 +150,6 @@
       "sha256": "99972a731f10f9ba56386a931d5491c5705c124200e534d49186eece592e9238"
     }
   ],
-  "weight_content_downloaded": false,
+  "weight_content_downloaded": true,
   "weight_license": "UNDECLARED"
 }

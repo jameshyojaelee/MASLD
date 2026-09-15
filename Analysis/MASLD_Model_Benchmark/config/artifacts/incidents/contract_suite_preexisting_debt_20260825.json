@@ -1,0 +1,276 @@
+{
+  "schema_version": "masld-bench-contract-suite-debt-v1",
+  "record_id": "contract_suite_preexisting_debt_20260825",
+  "audit_date": "2026-08-25",
+  "suite": "tests/contract/test_registry_files.py",
+  "observed_by": "executions/native-census-scoping-validation (this campaign); re-derived three times on the live tree",
+  "tests_run": 130,
+  "failing_tests": 0,
+  "summary": "The register is EMPTY. It opened at eight contract failures on 2026-08-25 and all eight are resolved. Every item is retained below rather than deleted, because a debt register that removes its paid items loses the record of what was wrong. An empty register means the gate now requires a fully green suite: any failure is a new failure.",
+  "not_caused_by": {
+    "campaign": "pxd051911_activation_and_gse256398_terminal_disposition_20260825",
+    "evidence": "All eight were already failing on the unmodified tree in job 21109326, before any config write by this campaign. The 16 stale repo-path pins were re-enumerated after the config edits and none targets config/datasets/pxd051911.toml, config/datasets/gse256398.toml, or config/evaluation/family_native_tournament.toml.",
+    "campaign_json_files_are_not_globbed": "test_every_campaign_binds_the_frozen_model_census globs config/campaigns/*.toml only; the two records added by this campaign are .json."
+  },
+  "classification_key": {
+    "stale_pin_bookkeeping": "A recorded digest no longer matches its live source. Mechanical to refresh; owner just needs to re-derive and re-freeze.",
+    "real_disagreement": "Two authorities assert different facts, or an authority is incomplete. Needs a decision from the owning lane, not a refresh.",
+    "test_scope_defect": "The assertion is applied to files it was never meant to cover. Fix is in the test or in the file convention, not in the data."
+  },
+  "items": [
+    {
+      "test": "test_every_campaign_binds_the_frozen_model_census",
+      "outcome": "ERROR",
+      "line": 4436,
+      "cause": "KeyError: 'selection'. The test globs every config/campaigns/*.toml and unconditionally indexes campaign['selection']['census_model_ids_sha256']. Five of the 23 TOML campaigns have no [selection] table at all: gse105127_gzip_preflight_revision_v2.toml, gse268273_raw_reprocessing_v1.toml, gse268273_reference_primary_assembly_revision_v2.toml, gse274114_within_platform_baselines_v1.toml, gse274114_within_platform_baselines_v2.toml. All five are dataset-lane revision records with no model census to bind. The other 18 all agree on census digest 933e50b3a0147b29.",
+      "classification": "test_scope_defect",
+      "owning_lane": "model census / campaign schema",
+      "suggested_fix": "Either scope the glob to model-selection campaigns, or require [selection] only where a campaign selects models. Do not add a fake census digest to the five dataset-lane records.",
+      "status": "RESOLVED_20260825",
+      "resolution": "Scoped the check by the model-dispatch surface instead of indexing campaign['selection'] unconditionally. A campaign declaring any of the 8 dispatch keys must declare all 8 and bind the census; one declaring none is a dataset-lane record and must reference no registry model_id. Verified: 18 bind, 5 inert, 0 partial, and none of the 5 names a model_id anywhere. No campaign data was edited.",
+      "resolution_guard": "tests/unit/test_campaign_census_scoping.py asserts that a model campaign with [selection] removed is flagged as a partial declaration rather than skipped, and that stripping every dispatch key does not launder it because the model_id rule still catches it."
+    },
+    {
+      "test": "test_every_repo_path_anchored_audit_hash_rederives",
+      "outcome": "FAIL",
+      "line": 1090,
+      "cause": "16 of 196 checked repo-path pins no longer rederive. Stale targets: config/models/mandatory_baselines.toml (7), config/models/regulatory_local.toml (4), config/resources.toml (2), src/masld_bench/planner.py (1), config/models/regulatory_sequence.toml (1), config/evaluation/rna_conditioned_atac_capabilities.toml (1). Holding bundles: context_borzoi/checkpoints.json (3), abc/checkpoints.json (2), evidence_count/checkpoints.json (2), re2g/checkpoints.json (2), and one each in cell_bulk_classical_baselines/{checkpoints,development_crosswalk,exposure_audit}.json, evidence_graph_native_baselines/checkpoints.json, late_fusion/checkpoints.json, nearest_gene/checkpoints.json, negative_controls/checkpoints.json.",
+      "classification": "stale_pin_bookkeeping",
+      "owning_lane": "model audit bundles",
+      "suggested_fix": "Re-derive and re-freeze the 16 pins across 11 bundles. Six distinct source files moved; refreshing those six unblocks all 16.",
+      "note": "Counts were re-derived using the test's exact resolve() and digest-key precedence. A first pass using a looser rule gave 14 and a different target breakdown; the figures above match the test.",
+      "status": "RESOLVED_20260825",
+      "progress_20260825": "16 -> 7 dead pins. 3 refreshed under the isolated authorization, 5 plus 4 root pins in branch A, 1 plus 2 root pins in branch C. The remaining 7 are branch B (abc, re2g) and branch D (context_borzoi), both held together because they share the root config/complementarity_readiness_audit.toml.",
+      "dead_pins_now": 7,
+      "resolution": "Closed by paying the 16-pin cascade in four authorised transactions \u2014 three isolated pins, branch A, branch C, branch B+D \u2014 plus nine stale size_bytes companions that had gone stale beside the digests. Dead pins across the tree: 16 -> 0 of 236 checked."
+    },
+    {
+      "test": "test_graph_and_transparent_baseline_audits_freeze_exact_boundaries",
+      "outcome": "FAIL",
+      "line": 1379,
+      "cause": "The evidence_count bundle's frozen boundary digest is 8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e but the test expects cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d.",
+      "classification": "stale_pin_bookkeeping",
+      "owning_lane": "graph and transparent baselines",
+      "suggested_fix": "Likely the same drift as the item above; evidence_count/checkpoints.json also holds 2 stale pins. Refresh that bundle first and re-check.",
+      "probable_shared_root_cause_with": "test_every_repo_path_anchored_audit_hash_rederives",
+      "status": "RESOLVED_20260825",
+      "resolution": "Closed by paying the 16-pin cascade in four authorised transactions \u2014 three isolated pins, branch A, branch C, branch B+D \u2014 plus nine stale size_bytes companions that had gone stale beside the digests. Dead pins across the tree: 16 -> 0 of 236 checked."
+    },
+    {
+      "test": "test_every_model_audit_bundle_is_complete_and_hash_bound",
+      "outcome": "FAIL",
+      "line": 933,
+      "cause": "scimilarity is the only bundle on -v2 schemas and none of its three schema strings is in the test's accepted sets: masld-bench-upstream-checkpoint-preflight-v2 (62 bundles are v1), masld-bench-development-crosswalk-v2 (61 v1), masld-bench-checkpoint-exposure-audit-v2 (103 v1).",
+      "classification": "real_disagreement",
+      "owning_lane": "scimilarity preflight",
+      "suggested_fix": "Establish whether -v2 is sanctioned schema evolution or drift. If sanctioned, extend the test's three accepted schema sets; if drift, the bundle goes back to v1. Do not pick whichever makes the suite green.",
+      "status": "RESOLVED_20260825",
+      "original_cause": "The observed_multiome_integration bundle does not contain the full set of required member files.",
+      "original_cause_status": "RESOLVED_20260825",
+      "original_cause_resolution": "Re-derived with the test's own logic, abort removed. observed_multiome_integration lacked ALL THREE required members, not a subset, and remaining_multimodal_families lacked all three too -- the register named only the first because assertTrue(required.issubset(members)) aborts on the alphabetically first offender. Both are now scoped out as declared non-census record directories. Fabricating checkpoints/crosswalk/exposure files for records that own no checkpoint was rejected as the scGPT trap.",
+      "previously_masked": "This was invisible until 2026-08-25 because the test aborted on observed_multiome_integration first. It is a third scimilarity item, distinct from the open admission_blocking one.",
+      "resolution": "Sanctioned schema evolution, not drift. Reclassified real_disagreement -> test_stale. Versioning past v1 is established practice here: 12 of 239 distinct schema_version strings under config/ are non-v1, including a v3 and a v4. All three scimilarity v2 files are STRICT SUPERSETS of the shape shared by every v1 peer, nested included, checked against all 62 / 103 / 61 peers rather than spot-checked: universal-in-v1 paths missing from v2 is NONE in every case. checkpoints.json v2 adds staged_model_contract; exposure_audit.json v2 adds frozen_fixture_contract and sealed_champion_eligible; development_crosswalk.json v2 adds 13 nested paths splitting the annotated training and test corpora, matching reference-only samples, and stating rules.{encoder_training,reference_only,sealed_timing}. Those are exactly what scimilarity uniquely needs as the census's only supervised-corpus model with a training/test/reference split and its only encoder_seen model. Fix was to widen the test's three accepted sets, not to migrate the bundle back, which would have deleted real recorded structure to satisfy a frozen list.",
+      "reclassified_to": "test_stale",
+      "counter_argument_checked_and_discarded": "No schema DEFINITION file exists for the v2 strings anywhere. But none exists for the v1 strings either -- the contract test's accepted sets are the only definition of these schemas in the repository. So the absence of a v2 definition is not evidence of drift; it is how every schema here works.",
+      "resolution_guard": "test_versioned_audit_schemas_only_ever_add_fields in the contract suite, plus tests/unit/test_scimilarity_admission_and_schema_correction.py. Widening an accepted set is a laundering route unless something stops a bump being used to SHED a field, so every versioned successor is held to being a strict superset of the universal v1 shape, scimilarity is pinned as the only such bundle so a new one must be justified, and the specific structures that justified the bump are asserted present."
+    },
+    {
+      "test": "test_model_census_maps_exactly_to_audit_bundles",
+      "outcome": "FAIL",
+      "line": 1132,
+      "cause": "Two bundle directories exist on disk but are absent from the census in config/evaluation/model_audit_bindings.toml: observed_multiome_integration and remaining_multimodal_families.",
+      "classification": "real_disagreement",
+      "owning_lane": "model census",
+      "suggested_fix": "Decide whether these two are census members. Either register them in model_audit_bindings.toml or move them out of the audit root.",
+      "probable_shared_root_cause_with": "test_every_model_audit_bundle_is_complete_and_hash_bound",
+      "status": "RESOLVED_20260825",
+      "resolution": "Neither directory is a census member. Both are cross-cutting, task-scoped campaign disposition records whose subject models each already own a census bundle: observed_multiome_integration covers multivi, scglue, mofaplus and seurat_wnn; remaining_multimodal_families covers 13 more. Registering them as group bindings is provably self-defeating -- it re-resolves those 17 subjects away from their own directories and takes the audit root from 104 bundles / 2 orphans to 89 / 17, forcing expected_artifact_bundle_count down by 15. The aggregate rule has zero exceptions: all 17 group bindings have no member owning its own directory, which is exactly what these two invert. Reclassified from real_disagreement to test_scope_defect and fixed by scoping the audit root on species, declared in config/evaluation/model_audit_bindings.toml as non_census_record_directories with a [non_census_record_rules] contract. No bundle, record or base registry file was edited to achieve this.",
+      "reclassified_to": "test_scope_defect",
+      "resolution_guard": "tests/unit/test_non_census_record_directories.py exercises the contract suite's real assert_non_census_record_dir against synthetic directories and proves each abuse is flagged rather than skipped: a record dir that grows a member file, one with no disposition record, one naming a grouped model_id (the laundering route -- hiding a real family as a record), one naming no registry model at all, one shadowing a census bundle id, and one whose named subject has no directory. It also pins that the aggregate rule has zero exceptions and that removing the declaration makes both directories fail again, so the scoping narrows nothing."
+    },
+    {
+      "test": "test_scgpt_upstream_preflight_and_exposure_are_frozen",
+      "outcome": "FAIL",
+      "line": 2209,
+      "cause": "checkpoints['weight_content_downloaded'] is False; the test asserts True.",
+      "classification": "real_disagreement",
+      "owning_lane": "scgpt upstream preflight",
+      "suggested_fix": "Establish which is authoritative, the bundle state or the test assertion, before changing either.",
+      "status": "RESOLVED_20260825",
+      "revised_diagnosis": "Investigated 2026-08-25. This is NOT the mirror image of the uce item and NOT a transposition. Here the BUNDLE is stale and the test is correct: the scgpt weight bodies were acquired 2026-08-23 and are on disk (207,861,754 -> ad0252a1..., 205,385,258 -> 6cb5d451...), while checkpoints.json still records weight_content_downloaded=false and sha256 UNRESOLVED for both bodies.",
+      "blocked_on": "A rights decision. scgpt weight_license is UNDECLARED, so correcting the bundle to true surfaces an undeclared-licence weight acquisition. Referred to the user by the team lead on 2026-08-25.",
+      "do_not": "Never close this by editing the test down to False to match the stale bundle. That would make the suite green by recording a falsehood about what is physically on disk and would keep an undeclared-licence acquisition concealed. The current false reads as compliance, which makes it the more dangerous state.",
+      "see_also": "config/artifacts/incidents/scgpt_weight_rights_disposition_20260825.json",
+      "resolution": "The user decided to correct the record rather than remove the weights. The bundle was edited in place to weight_content_downloaded=true with both UNRESOLVED digests replaced by values re-derived from the bodies, and its single pinner native_task_disposition_20260825.json was updated in the same run so no binding was stranded. weight_license remains UNDECLARED: acquisition grants no terms. The test's matching UNRESOLVED expectation was corrected too, otherwise the fix would have traded one failure for another. No weight body was deleted.",
+      "rights_status": "OPEN: derivative-weight redistribution prohibited pending a declared licence"
+    },
+    {
+      "test": "test_uce_upstream_preflight_and_exposure_are_frozen",
+      "outcome": "FAIL",
+      "line": 2346,
+      "cause": "checkpoints['weight_content_downloaded'] is True; the test asserts False.",
+      "classification": "test_stale",
+      "owning_lane": "uce upstream preflight",
+      "suggested_fix": "Note the direction: scgpt expects True and observes False while uce expects False and observes True. That exact inversion is consistent with the two models' download states having been transposed in one edit. Check that hypothesis before treating them as two independent defects.",
+      "probable_shared_root_cause_with": "test_scgpt_upstream_preflight_and_exposure_are_frozen",
+      "status": "RESOLVED_20260825",
+      "resolution": "The assertion was stale, not the bundle. The uce weight bodies were acquired 2026-08-23 and re-derive byte-exact from disk against the recorded digests (33l 5,686,283,829 bytes -> 3f458726..., 4layer 3,403,514,339 bytes -> acb28f3f...). The test assertion was corrected False -> True. No bundle was edited."
+    },
+    {
+      "test": "test_scimilarity_preflight_and_exposure_are_frozen",
+      "outcome": "FAIL",
+      "line": 2449,
+      "cause": "model['admission_blocking'] is True; the test asserts False.",
+      "classification": "real_disagreement",
+      "owning_lane": "scimilarity preflight",
+      "suggested_fix": "Establish whether scimilarity is admission-blocking. This is a gate-semantics decision, not a refresh.",
+      "status": "RESOLVED_20260825",
+      "resolution": "The registry is correct and the test was wrong. Corrected the test to assert admission_blocking True, the invariant admission_blocking == bool(blockers), exactly one blocker, and that the blocker text contains both 'Keep this model admission-blocked' and 'ModelExecutionContract' -- pinning the reason rather than the bare state. No registry value was changed.",
+      "decided_on": "admission_blocking == bool(blockers) holds for 136 of 136 models with ZERO violations. 122 are True; the 14 False are 11 trivial baselines plus scpair, cobolt and bpnet, all with zero blockers. src/masld_bench/registry.py uses the flag as a gate meaning 'has unresolved blockers that block its own admission'. An admitted scimilarity carrying one blocker would be the census's only violation of that invariant.",
+      "coordination_item": {
+        "severity": "needs the other lane to see this",
+        "what_happened": "Two lanes edited scimilarity on 2026-08-25 in opposite directions. One added assertIs(model['admission_blocking'], False) and assertEqual(model['blockers'], []) to tests/contract/test_registry_files.py, requiring an admitted model. The other rewrote config/models/cell_foundation.toml to keep it blocked, with the blocker saying verbatim: 'Keep this model admission-blocked until those exact authorities are materialized and registry validation passes.'",
+        "evidence_they_were_new_not_stale": "At git HEAD the test asserted only weight_content_downloaded=False and exposure_status='target_label_unexposed'. It had NO admission_blocking assertion and NO blockers assertion. Both were added the same day.",
+        "resolved_how": "The registry was taken as authoritative on the 136/136 invariant.",
+        "what_the_other_lane_needs_to_know": "If the scimilarity admission work is mid-flight, the registry currently refuses it. Admitting the model means materialising the ModelExecutionContract and clearing the blocker in config/models/cell_foundation.toml FIRST; the contract test then follows and the invariant guard passes. The assertions were not quietly reverted -- they were corrected with this note in the test body."
+      },
+      "correction_to_the_working_hypothesis": "admission_blocking is NOT true because of encoder_seen. The admission blocker is the missing ModelExecutionContract binding adapter, runtime, checkpoint, preprocessing, licences, corpus authorities and executable task. encoder_seen appears only in the blocker's final sentence, as a champion-eligibility statement. Two different gates: scimilarity is champion-ineligible because of encoder_seen and admission-blocked because of the missing contract, and clearing one would not clear the other. A reader conflating them would think admitting scimilarity requires resolving its exposure class, which is a different and much harder problem.",
+      "resolution_guard": "tests/unit/test_scimilarity_admission_and_schema_correction.py asserts the invariant universally, so nobody can clear admission_blocking on ANY model while leaving its blockers in place, and asserts the two gates are distinct."
+    },
+    {
+      "test": "(not a test) config/artifacts/models/observed_multiome_integration/disposition_20260824.json",
+      "outcome": "RECORD_SUBSTANTIVELY_STALE",
+      "cause": "The record asserts task_gate.task_spec_exists = false and its status is FAIL_CLOSED_NO_TASKSPEC_OR_ADMITTED_MODEL_LANE, but config/evaluation/observed_multiome_task.toml was created 2026-08-25 01:58, after the record was written on 2026-08-24. Its own validator now fails closed with 'an observed-multiome TaskSpec now exists and requires a new audit', which is the script behaving correctly.",
+      "found_how": "Surfaced by refreshing the record's stale config/models/multimodal_integration.toml pin. The stale pin was masking this: the validator aborted on the pin before reaching the TaskSpec check. The pin refresh improved the diagnosis rather than fixing the record.",
+      "classification": "real_disagreement",
+      "owning_lane": "observed multiome integration",
+      "suggested_fix": "The owning lane must run a new audit. Do NOT close this by editing task_spec_exists to true: the audit's conclusion, not just its input, has to be re-derived.",
+      "does_not_block": "The census scoping fix is independent. None of the four non_census_record_rules asserts that a declared record is current.",
+      "status": "RESOLVED_20260825",
+      "resolution": "Re-audited, not hand-edited. The record moved to schema v2 with status FAIL_CLOSED_TASKSPEC_EXECUTION_BLOCKED_AND_NO_ADMITTED_MODEL_LANE, and the validator's task-gate logic was changed at four sites so its model of the world matches: a standalone TaskSpec may exist, but the canonical registration path must still be absent AND the standalone spec's own gates must still be shut. The audit now passes because it was re-derived over all 34 authority pins, not because an assertion was edited to match.",
+      "what_did_not_move": "Zero of the four dispositions. multivi, scglue, mofaplus and seurat_wnn all remain admitted=false, each on the two or three independent blockers that sat beside the TaskSpec clause. Five of the six other task_gate facts unchanged; registry_status_observed untouched.",
+      "the_boolean_flip_would_have_been_wrong_twice": "First because task_spec_exists=true would not satisfy the validator, whose check is on the filesystem rather than the record. Second because it is not true in the sense the field means: the record checks two paths and they now differ. config/tasks/observed_multiome.toml is still absent while config/evaluation/observed_multiome_task.toml is present, and that asymmetry is deliberate -- the capabilities file states the task is kept outside config/tasks so it cannot mutate the frozen global census. A flip would have asserted the task was registered when its location exists to ensure it is not. Recorded as two-valued instead.",
+      "no_status_conflict_existed": "observed_multiome_task.toml status='candidate' and family_native_tournament.toml [task.observed_multiome] status='planned_registration' describe different axes. TaskSpec document status takes only {candidate, blocked}; tournament task status takes only {active, planned_registration, planned_activation_audit, compound}. Disjoint sets, and rna_conditioned_atac and variant_to_regulation each carry both at once. Nothing was made to yield.",
+      "token_regrounded_not_lifted": "NO_TASKSPEC became TASKSPEC_EXECUTION_BLOCKED in the status and all four per-model gates, with the surviving conjuncts byte-identical and asserted so by test. The blocker now closes from the standalone TaskSpec's own admission_gates[0] and from the development gate's five prohibitions -- a stronger authority than absence.",
+      "resolution_guard": "tests/unit/test_observed_multiome_taskspec_regrounding.py, 19 tests. It drives the real audit_disposition against the real tree with mutated copies of the authority record and proves each way the correction could become an exemption still raises: claiming the canonical path exists, denying the standalone spec, inverting the path map back to the old both-absent world, re-pinning either digest, claiming the spec is registered or sealed, misreporting its document status, admitting any of the four models, reverting to the v1 schema or status, and reopening an execution authorization. It also asserts the live gates are shut directly, so opening one fails before the audit is consulted.",
+      "side_effect": "The correction bound config/evaluation/observed_multiome_task.toml and observed_multiome_development_gate.toml as proper {path, sha256} pairs rather than flat-map entries, so the contract walk now checks them: 196 -> 198 pins, both passing. Two fewer invisible pins in the blind spot enumerated below."
+    },
+    {
+      "test": "(not a test) flat-map authority pins are invisible to the contract walk",
+      "outcome": "BLIND_SPOT_ENUMERATED",
+      "cause": "test_every_repo_path_anchored_audit_hash_rederives only fires on a dict carrying BOTH a sha256/authority_sha256 key AND a sibling identity/authority_path/path key. A flat {relative_path: digest} mapping has no such sibling, so every pin in that shape is invisible to it.",
+      "size": "175 flat-map pins across 7 holder files under config/, all invisible to the walk, against 594 pins the walk does check -- roughly 23 percent of config pin coverage is unwatched. Holders: remaining_multimodal_families/disposition_20260824.json (72), observed_multiome_integration/disposition_20260824.json (34), corgi/bounded_prediction_smoke_disposition_20260824.json (25), context_borzoi/outcome_blind_architecture_preflight_20260824.json (22), corgi/new_assay_head_development_disposition_20260825.json (11), corgi_plus/release_disposition_20260824.json (8), gse281364_mpralegnet_provenance_audit.toml (3).",
+      "currently_stale": "1 of 175: corgi_plus/release_disposition_20260824.json pins pyproject.toml at fd298c3d18d273d8b41fa6df57a4f1d52cba4f7b2f68e35a57537090f66ef515, live is b8d0d84e21c3a6be6cf48b6fa51d06f0bc6ed24e274bf579d2da4bbb90dc4405. Owned by the corgi_plus lane; not touched by this campaign.",
+      "classification": "test_scope_defect",
+      "owning_lane": "model census / contract suite",
+      "suggested_fix": "Report only, per the team lead. Whether the walk should be widened to recognise the flat-map shape is a separate conversation with the user.",
+      "status": "STANDING_RECOMMENDATION_NOT_SCHEDULED",
+      "decision_20260825": "Team lead reviewed and declined to widen the walk now. 1 stale in 175, concentrated in 7 disposition-style records, does not justify changing a contract test that touches every lane mid-campaign. Recorded as a standing recommendation so the argument survives for whoever picks it up.",
+      "argument_for_widening_when_it_is_scheduled": [
+        "It would immediately surface the one live stale pin it cannot currently see: corgi_plus/release_disposition_20260824.json pinning pyproject.toml at fd298c3d..., live b8d0d84e....",
+        "It would have caught both observed_multiome_integration and remaining_multimodal_families drifting on config/models/multimodal_integration.toml days earlier. Both went stale silently because the walk cannot see a flat {path: digest} map, and the drift only surfaced when their own validators were run by hand on 2026-08-25.",
+        "The 23 percent gap is not spread thinly across the tree. It is concentrated in exactly the kind of file that pins many authorities at once, which is where a single upstream edit does the most silent damage.",
+        "The shape change is small: recognise a dict whose every value is a 64-hex digest and whose key resolves to a repo file, in addition to the existing path/sha256 sibling pair."
+      ],
+      "cost_of_widening": "It would add 175 live pins to a test that already fails on 13 stale ones, so it should be sequenced after the stale-pin cascade in config/campaigns/stale_pin_refresh_plan_20260825.json is paid, not before.",
+      "worked_example_of_the_migration": "The observed_multiome_integration re-grounding on 2026-08-25 did this migration for two pins as a by-product of doing the work correctly. Binding config/evaluation/observed_multiome_task.toml and config/evaluation/observed_multiome_development_gate.toml as proper {path, sha256} pairs inside task_gate, rather than as flat-map entries, put them into the contract walk: 196 -> 198 checked pins, both passing on the first run. That is the shape the widening should produce. The migration is per-record and mechanical -- rewrite {relative_path: digest} as a list or object of {path, sha256} -- it needs no change to the contract test, and it pays for itself immediately because the walk starts checking the pin the moment the shape is right. A record can be migrated on its own schedule by whoever next touches it, so the 175 do not have to move together.",
+      "two_routes": "Either widen the walk to recognise the flat-map shape in one change (sequenced after the 13-pin cascade), or migrate records to the {path, sha256} shape incrementally as they are edited. The second needs no contract-test change and is already underway at 2 of 175."
+    },
+    {
+      "test": "(not a test) the suite's failure reporting understates how much is wrong",
+      "outcome": "MEASUREMENT_CAVEAT",
+      "cause": "unittest reports the first failing assertion in a method and stops, so a method with several wrong assertions is counted once. Three instances surfaced on 2026-08-25 alone: blockers == [] sitting behind admission_blocking in the scimilarity test; remaining_multimodal_families sitting behind observed_multiome_integration in the audit-bundle completeness test, which aborts on the alphabetically first offender; and scimilarity's three -v2 schema strings sitting behind both of those.",
+      "consequence": "The failing-test count in this register is a FLOOR, not a measure. Each entry can hide further defects that only appear once the first is fixed, and in every case today the hidden one was substantive rather than cosmetic. Do not read a count of N as N problems.",
+      "classification": "measurement_caveat",
+      "owning_lane": "contract suite",
+      "suggested_fix": "Report only. If it ever matters, the audit-bundle and scimilarity tests could collect offenders and assert once at the end instead of aborting, which is how the census re-derivations were done by hand today.",
+      "status": "OPEN_REPORT_ONLY"
+    },
+    {
+      "test": "test_primary_endpoint_is_defined_in_every_fold",
+      "outcome": "ARRIVED_AND_SELF_RESOLVED_20260825",
+      "cause": "A new untracked module tests/contract/test_protein_transport_task_contract.py appeared at 14:46 on 2026-08-25 with one failing test: endpoints[primary].empty_level_fold_cells was 15, asserted 0. Unrelated to the census or scimilarity work.",
+      "note": "Recorded because it briefly took the observed failure count to 3 while this campaign was running, which would otherwise look like a regression introduced here. The protein-transport lane fixed it within the hour and the module now passes 19/19. Not added to the baseline frozenset.",
+      "classification": "other_lane_in_flight",
+      "owning_lane": "protein transport",
+      "status": "RESOLVED_BY_OWNING_LANE_20260825"
+    }
+  ],
+  "verification_provenance": {
+    "note": "Not every item here was independently re-derived. This block says which were, so a later reader does not mistake a quoted assertion for a verified one.",
+    "independently_rederived": [
+      "test_every_repo_path_anchored_audit_hash_rederives: 16 stale pins of 196 checked, reproduced with the contract test's exact resolve() and (sha256, authority_sha256) key precedence, with the per-target and per-bundle breakdown.",
+      "test_every_campaign_binds_the_frozen_model_census: the five TOML campaigns with no [selection] table, enumerated directly.",
+      "The absence of any campaign-touched file from the stale-pin set."
+    ],
+    "quoted_from_test_output_not_rederived": [
+      "test_model_census_maps_exactly_to_audit_bundles: the two orphaned bundle ids are taken verbatim from the test's assertion message. An attempt to re-derive them by set difference against config/evaluation/model_audit_bindings.toml was wrong twice: group_bindings uses the key bundle_id, not bundle_ids, and its 17 entries are group ids rather than per-model bundle ids, so a plain set difference over the 106 bundle directories does not reproduce the test's construction. The test's own output is the authority for this item.",
+      "test_every_model_audit_bundle_is_complete_and_hash_bound: which required members observed_multiome_integration lacks.",
+      "The scgpt, uce and scimilarity items: the observed and asserted values are quoted from the assertion messages."
+    ],
+    "consequence": "Anyone fixing the census item should read the test's own derivation at tests/contract/test_registry_files.py:1132 rather than trusting a set difference."
+  },
+  "totals_by_classification": {
+    "stale_pin_bookkeeping": 2,
+    "real_disagreement": 0,
+    "test_scope_defect": 0,
+    "resolved": 6
+  },
+  "distinct_probable_root_causes": 1,
+  "root_cause_note": "All eight resolved. No open contract failures remain.",
+  "gate_binding": {
+    "enforced_by": "scripts/check_contract_suite_baseline.py",
+    "rule": "A campaign passes only if it introduces no failure outside this list and its own tests ran and passed. A failure fixed elsewhere simply disappears from the observed set and still passes.",
+    "consequence": "The register is now empty, so the gate requires a fully green suite. Adding an entry to make a run pass would silently reintroduce the debt this record exists to track.",
+    "baseline_size": 0,
+    "shrunk_from": 8
+  },
+  "sealed_outcomes_read": false,
+  "models_fit": [],
+  "models_scored": [],
+  "biological_data_read": false,
+  "revision": "revision_7_20260825_register_empty",
+  "line_numbers_note": "Line numbers in the items below were recorded against the pre-fix tests/contract/test_registry_files.py and have since shifted. Cite the test name, not the line.",
+  "resolved_since_first_record": 8,
+  "open_rights_items": [
+    {
+      "model_id": "scgpt",
+      "status": "record corrected, licence still UNDECLARED, redistribution prohibited",
+      "record": "config/artifacts/incidents/scgpt_weight_rights_disposition_20260825.json"
+    },
+    {
+      "model_id": "geneformer",
+      "status": "WITHDRAWN_2026_08_25_finding_was_incorrect",
+      "finding": "48 weight files / 6,947,079,999 bytes acquired, bundle records weight_content_downloaded=false, weight_license key ABSENT entirely",
+      "action": "Stale weight_content_downloaded flag corrected and the singular license key normalised to weight_license/code_license, value Apache-2.0 preserved. No rights disposition, no prohibition, no champion block.",
+      "superseded_by": "config/artifacts/incidents/geneformer_weight_state_correction_20260825.json",
+      "what_was_claimed": "48 weight files / 6,947,079,999 bytes acquired, bundle records weight_content_downloaded=false, weight_license key ABSENT entirely",
+      "what_is_true": "3 unique weight bodies / 1,724,209,768 bytes. weight_content_downloaded=false was genuinely stale and is now corrected. There is NO rights gap: the weights are licensed Apache-2.0, which was present under the singular 'license' key all along.",
+      "why_the_claim_was_wrong": "A search for the key name weight_license found it absent and reported the absence as a rights gap; the byte total triple-counted one complete acquisition plus two abandoned .staging copies.",
+      "retained_visibly_not_deleted": "The withdrawn claim is left in place so the correction is auditable. A register that silently replaces its errors cannot be checked in either direction.",
+      "rights_gap": false
+    }
+  ],
+  "pin_refreshes_20260825": {
+    "authorization": "team lead, 2026-08-25, after pin-depth enumeration",
+    "refreshed": "config/models/multimodal_integration.toml 51ad8e06... -> 9569f89c... in two records",
+    "drift_source": "Another lane rebound cobolt's runtime gpu_rna_atac_torch_smoke -> gpu_rna_atac_torch_b6k. Cobolt is not a subject of either record, so the recorded facts about their 17 subjects were never invalidated; the pins are file-level, so any edit anywhere in the file trips them. A concrete instance of cross-lane config churn invalidating a frozen gate.",
+    "pinner_cascade_closed_in_the_same_run": [
+      "observed_multiome_integration: disposition + slurm/validate_observed_multiome_integration_disposition_cpu.sbatch",
+      "remaining_multimodal_families: disposition + its sbatch + validation_21088037.json (which pins both)",
+      "slurm/validate_native_task_disposition_overlay_cpu.sbatch: registry gate line plus a scgpt record pin"
+    ],
+    "no_frozen_execution_receipt_pinned_either_record": true,
+    "outcome": "remaining_multimodal_families validator now passes. observed_multiome_integration validator now fails on the deeper TaskSpec-exists condition the stale pin was hiding; see the RECORD_SUBSTANTIVELY_STALE item."
+  },
+  "register_hygiene_lessons": [
+    {
+      "lesson": "A test that keeps its own copy of the thing it tests will desynchronise the moment anyone else is right.",
+      "worked_example": "tests/unit/test_check_contract_suite_baseline.py held a hardcoded second copy of PREEXISTING_FAILURES. When another lane resolved test_model_census_maps_exactly_to_audit_bundles on 2026-08-25 and correctly shrank the register, the copy and the constant disagreed and the gate reported the campaign's own unit tests as new failures.",
+      "wrong_fix": "Re-adding the missing string. It papers over the drift and breaks again on the next resolution.",
+      "right_fix": "Derive the test fixture from the constant so the two cannot diverge.",
+      "generalises_to": "Any check that restates its subject rather than reading it: duplicated digests, duplicated counts, duplicated expected-failure lists, a test asserting a value the code also defines. The duplicate is correct exactly until someone else does the right thing.",
+      "recorded": "2026-08-25"
+    }
+  ]
+}

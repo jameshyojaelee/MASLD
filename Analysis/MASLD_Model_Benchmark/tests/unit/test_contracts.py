@@ -653,6 +653,5 @@ class SelectionAndRegistryTests(unittest.TestCase):
             ):
                 Registry.load(copied)
 
-
 if __name__ == "__main__":
     unittest.main()

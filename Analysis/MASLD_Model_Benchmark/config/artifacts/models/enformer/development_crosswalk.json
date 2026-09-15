@@ -41,7 +41,7 @@
     "locus": "The pretrained model saw broad hg38 reference sequence, except the native syntenic validation/test components. This is encoder exposure, not outcome-label exposure. Project evaluation still crosses donor folds with merged chromosome/LD blocks and a 196608-bp boundary buffer.",
     "sealed": "GSE289173 may not choose tracks, bins, TSS anchors, aggregation, link models, direction rules, calibration, or thresholds."
   },
-  "interpretation": "Enformer is a sequence-only functional-genomics prior, not a MASLD or donor-context model. All three named project sources postdate the immutable native checkpoint, so their target labels are unexposed. Reference loci and generic liver/HepG2 biology remain exposed and must be handled by genomic blocks and honest domain-language rather than called pristine.",
+  "interpretation": "Enformer is a sequence-only functional-genomics prior, not a MASLD or donor-context model. All three named project sources postdate the read-only native checkpoint, so their target labels are unexposed. Reference loci and generic liver/HepG2 biology remain exposed and must be handled by genomic blocks and honest domain-language rather than called pristine.",
   "rules": {
     "checkpoint_chronology": "A donor or experimental outcome public after the immutable 2022 GCS objects is target-label-unexposed unless an upstream source contains the same outcome under another identifier.",
     "conversion_inheritance": "A faithful conversion inherits native corpus exposure. Until parity is proven, it also carries conversion uncertainty and cannot improve its exposure classification.",

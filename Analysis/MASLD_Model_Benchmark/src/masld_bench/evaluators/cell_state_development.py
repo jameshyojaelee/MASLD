@@ -16,7 +16,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class CellEvaluationError(RuntimeError):
-    """Raised when a prediction or outcome join violates the frozen contract."""
+    """Raised when a prediction or outcome join does not meet the frozen requirements."""
 
 
 TASK_ID = "cell_state_mapping"

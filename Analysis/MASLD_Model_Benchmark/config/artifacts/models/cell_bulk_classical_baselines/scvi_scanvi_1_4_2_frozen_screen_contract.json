@@ -1,0 +1,112 @@
+{
+  "schema_version": "masld-bench-scvi-scanvi-frozen-screen-contract-v1",
+  "status": "build_preflight_passed_gpu_campaign_pending",
+  "models": {
+    "scvi_baseline": {
+      "representation": "SCVI latent space trained inside each outer-training partition",
+      "label_transfer": "fixed donor-class-balanced weighted 15-nearest-neighbor vote",
+      "learned_common_head": false
+    },
+    "scanvi_baseline": {
+      "initialization": "SCANVI.from_scvi_model using the fold-trained SCVI state",
+      "label_transfer": "native SCANVI classifier",
+      "learned_common_head": false
+    }
+  },
+  "registered_identity": {
+    "package": "scvi-tools==1.4.2",
+    "code_repository": "https://github.com/scverse/scvi-tools",
+    "code_commit": "dc95497",
+    "pypi_wheel_sha256": "c453b75b0fa0d222bf0eb3a531607d17f5ea0dbe5b848ab12fd8cc24599884e5",
+    "code_license": "BSD-3-Clause",
+    "code_license_file_sha256": "66399db0284d2539790efb348886ab0c1f745bbe5fea6ac38a00465a14adc8f5",
+    "dependency_license_census": "executions/model-preflight-146-21079904/preflight/dependency_license_census.json",
+    "dependency_terms_release_review_required": true
+  },
+  "runtime": {
+    "path": "executions/environments/scvi-tools-1.4.2-inductive-portable-21079606",
+    "artifacts_sha256": "d885ada24fdad9f6e3d57a92ff870ca8ff05f07701ac6b0762f55a8cb19db61a",
+    "direct_query_probe_artifacts_sha256": "2ed6231a91894b05dd53001319d1ccb26d334b9e0b4421955ff0d136a97850f8",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "gpu_probe_pending": true
+  },
+  "data": {
+    "dataset_view_id": "resource_atlas_frozen_screen_50000_v1",
+    "source_path": "executions/model-data-050-20260824T211318Z-21077049/fixture",
+    "source_artifacts_sha256": "672b1f75a1c3ca264066dd2a0bf24e479397d8ec5e2f67f13ccdd4be14879509",
+    "rows": 50000,
+    "donors": 102,
+    "studies": 7,
+    "input": "raw_nonnegative_integer_UMI_counts",
+    "split_id": "resource_atlas_study_outer_5fold_v1",
+    "split_path": "executions/model-data-052-21077595/split",
+    "split_artifacts_sha256": "10927e162581375d866adbcf2b3bb7bd0dc4fda9fd6dfe033198df7d95be2680",
+    "outer_split_unit": "study",
+    "inner_split_unit": "donor",
+    "biological_unit": "donor"
+  },
+  "preprocessing_and_fit": {
+    "training_only_hvg_selection": true,
+    "n_top_hvg": 4000,
+    "hvg_selection": "library_size_10000_log1p_dispersion_for_selection_only",
+    "model_input_after_selection": "raw_UMI_counts",
+    "batch_key": null,
+    "categorical_covariates": [],
+    "continuous_covariates": [],
+    "observed_library_size_only": true,
+    "n_hidden": 128,
+    "n_latent": 30,
+    "n_layers": 2,
+    "dropout_rate": 0.1,
+    "dispersion": "gene",
+    "gene_likelihood": "nb",
+    "latent_distribution": "normal",
+    "scvi_epochs": 200,
+    "scanvi_epochs": 100,
+    "batch_size": 512,
+    "train_size": 1.0,
+    "early_stopping": false,
+    "held_labels_used_for_stopping": false,
+    "inner_folds_used_for_model_selection": false,
+    "seeds": [20260824, 20260825, 20260826]
+  },
+  "inductive_query_firewall": {
+    "held_truth_replaced_by": "__unlabeled__",
+    "direct_SCVI_get_latent_representation_only": true,
+    "direct_SCANVI_predict_soft_only": true,
+    "load_query_data_allowed": false,
+    "prepare_query_anndata_allowed": false,
+    "scarches_allowed": false,
+    "query_train_allowed": false,
+    "query_adaptation_allowed": false,
+    "learned_state_hashed_before_and_after_query": true,
+    "state_change_disposition": "fail_campaign"
+  },
+  "campaign": {
+    "preflight_path": "executions/model-preflight-146-21079904",
+    "preflight_artifacts_sha256": "cb4eae65816d03b2877afb0fbd8f802f29c252feacc5f98916c79ef64ce32267",
+    "preflight_inner_artifacts_sha256": "27a71f1900248d361af3d93edf5aabea5d41948c9795a8dac92d34c1341347f4",
+    "gpu_wrapper_path": "slurm/run_scvi_scanvi_study_50000_seed_bundle.sbatch",
+    "gpu_wrapper_sha256": "c4661c4d4313419bad9e96f1b06bdbeae3779e7600c0b18c8422f2b4620f5dbe",
+    "gpu_allocations": 1,
+    "logical_fold_seed_fits": 15,
+    "aggregate_predictions": "unweighted_mean_probability_across_three_seeds",
+    "gpu_queue_published": false,
+    "metrics_calculated": false,
+    "sealed_outcomes_read": false
+  },
+  "exposure": {
+    "biological_checkpoint": "none_train_locally",
+    "registry_exposure": "target_label_unexposed",
+    "fitted_state_exposure": "outer_training_counts_and_training_labels_only",
+    "sealed_exposure": "none"
+  },
+  "claim_limits": {
+    "development_only_until_sealed_evaluation": true,
+    "clinical_claim_allowed": false,
+    "diagnostic_claim_allowed": false,
+    "prognostic_claim_allowed": false,
+    "cells_are_independent_replicates": false
+  }
+}

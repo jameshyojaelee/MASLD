@@ -32,6 +32,10 @@ def main() -> None:
     observed_min = math.inf
     observed_max = -math.inf
     maximum_row_sum_difference = 0.0
+    minimum_signed_row_sum_difference = math.inf
+    maximum_signed_row_sum_difference = -math.inf
+    row_sum_equal_count = 0
+    row_sum_less_than_or_equal_count = 0
     with h5py.File(args.source, mode="r", locking=True) as handle:
         matrix = handle["X"]
         umi_counts = handle["obs/UMI_count"]
@@ -49,12 +53,23 @@ def main() -> None:
             observed_min = min(observed_min, float(np.min(block)))
             observed_max = max(observed_max, float(np.max(block)))
             row_sums = np.sum(block, axis=1, dtype=np.float64)
+            signed_differences = row_sums - declared
             maximum_row_sum_difference = max(
                 maximum_row_sum_difference,
-                float(np.max(np.abs(row_sums - declared))),
+                float(np.max(np.abs(signed_differences))),
             )
+            minimum_signed_row_sum_difference = min(
+                minimum_signed_row_sum_difference,
+                float(np.min(signed_differences)),
+            )
+            maximum_signed_row_sum_difference = max(
+                maximum_signed_row_sum_difference,
+                float(np.max(signed_differences)),
+            )
+            row_sum_equal_count += int(np.count_nonzero(signed_differences == 0))
+            row_sum_less_than_or_equal_count += int(np.count_nonzero(signed_differences <= 0))
     result = {
-        "schema_version": "masld-bench-gse264667-hepg2-matrix-scale-v1",
+        "schema_version": "masld-bench-gse264667-hepg2-matrix-scale-v2",
         "dataset_id": "gse264667",
         "cell_line": "HepG2",
         "matrix_shape": [145473, 9624],
@@ -69,6 +84,13 @@ def main() -> None:
         "minimum": observed_min,
         "maximum": observed_max,
         "maximum_absolute_X_row_sum_minus_obs_UMI_count": maximum_row_sum_difference,
+        "minimum_signed_X_row_sum_minus_obs_UMI_count": minimum_signed_row_sum_difference,
+        "maximum_signed_X_row_sum_minus_obs_UMI_count": maximum_signed_row_sum_difference,
+        "X_row_sum_equals_obs_UMI_count_count": row_sum_equal_count,
+        "X_row_sum_less_than_or_equal_obs_UMI_count_count": row_sum_less_than_or_equal_count,
+        "integer_nonnegative_finite_matrix_supported": bool(
+            noninteger_values == 0 and nonfinite_values == 0 and negative_values == 0
+        ),
         "raw_count_scale_supported": bool(
             noninteger_values == 0
             and nonfinite_values == 0

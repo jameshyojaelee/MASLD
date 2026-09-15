@@ -21,7 +21,7 @@ rather than "fixed": (1) the transformer's padding mask is passed to
 upstream's own ``evaluate.py`` does, not converted to a boolean mask; (2) the
 sampled-gene sort order uses NumPy's default unstable-quicksort tie-breaking
 semantics, made ``stable`` here only for adapter-to-adapter reproducibility,
-which does not change upstream's own tie-breaking contract since ties are
+which does not change upstream's own tie-breaking requirements since ties are
 broken on (chromosome id, genomic start) which are the same sort keys either
 way.
 
@@ -108,7 +108,7 @@ MODEL_IDS = ("uce_4l", "uce_33l")
 HEAD_IDS = ("linear", "two_layer_mlp")
 EMBEDDING_POLICY = "l2_normalized_cls_decoder_output"
 
-# Frozen architecture contract, matching
+# Frozen architecture requirements, matching
 # config/artifacts/models/uce/checkpoints.json:architecture_contract exactly.
 N_LAYERS = {"uce_4l": 4, "uce_33l": 33}
 CHECKPOINT_FILENAMES = {
@@ -243,7 +243,7 @@ def _build_model(nlayers: int):
         def forward(self, tokens, mask):
             """tokens: LongTensor[seq_len, batch]; mask: FloatTensor[batch, seq_len]
             with 1 for valid (non-padding) positions, 0 for padding — exactly
-            upstream evaluate.py's contract, including passing the float
+            upstream evaluate.py's requirements, including passing the float
             ``(1 - mask)`` directly as ``src_key_padding_mask`` (an additive
             attention bias upstream never converted to a boolean mask).
             """

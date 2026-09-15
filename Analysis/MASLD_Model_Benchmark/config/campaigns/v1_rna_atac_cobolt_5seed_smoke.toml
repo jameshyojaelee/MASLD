@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
-campaign_id = "v1-rna-atac-cobolt-5seed-smoke-v1"
-description = "Five-seed donor-held Cobolt RNA-to-ATAC stability screen preserving the original seed, model adapter, evaluator firewall, frozen 1,000-nucleus GSE296875 view, task-native baselines, and source-wide consensus-peak smoke limitation"
+campaign_id = "v1-rna-atac-cobolt-5seed-smoke-v12"
+description = "Firewall-baseline-only re-freeze of the v11 B6K execution-runtime revision. v11 (candidate e17be3dab9ba48cb) froze a Resource snapshot at 494c07135cebab28 and was invalidated before any run executed by a second adoption burst on 2026-08-25: figures/main/fig4_singlecell_programs/captions.md was rewritten at 12:53:11 (e8fc7ccacf200b6c, 7885 B -> dd3c69138df040ac, 7868 B). That file is gitignored, so the drift is invisible to git status. Exactly one of the 1,676 human-edited authority files changed; none added, none removed. This revision re-baselines the protected snapshot against a quiet tree and changes NOTHING else: the scoped fixed source record, the gpu_rna_atac_torch_b6k fixed runtime and its validated cu128 runtime tree, the gpu_rna_atac_b6k profile, the adapter allowlist guard, every seed, fold, split_seed, hyperparameter, dataset view, evaluator, missingness rule, the five-seed by five-fold GPU grid, and the 150-run CPU control matrix are all carried over byte-identical from v11 and asserted as such. The B6K runtime validation (job 21107495) and adapter suite (job 21107681) are unchanged and are not re-run. CONSTRAINT ON FUTURE COMPARISONS: Cobolt executes on a runtime no other observed_multiome member shares; its comparator is the 150-run CPU control matrix re-fit under this campaign, and all 25 GPU fits run serially on one B6K device, so within-bundle hardware homogeneity holds by construction. A cross-model observed_multiome ranking may not treat this campaign as runtime-comparable with L40S-fit members without first establishing numeric interchangeability under config/b6k_numeric_tolerance_prespecification_20260825.json. No L40S-versus-B6K numeric comparison exists for Cobolt (job 21060919 never recorded a loss), and the absence of a comparison must not be read as a comparison having passed. v10 and v11 both remain valid frozen provenance records and neither is re-executable."
 wave = "smoke"
 status = "ready"
 prerequisites = []
@@ -10,6 +10,67 @@ allow_sealed_labels = false
 submit_enabled = true
 task_ids = ["rna_conditioned_atac"]
 dataset_view_ids = ["gse296875_rna_atac_smoke_1000_v1"]
+source_lock_paths = [
+  "src/masld_bench/__init__.py",
+  "src/masld_bench/adapters/__init__.py",
+  "src/masld_bench/adapters/base.py",
+  "src/masld_bench/adapters/rna_atac_classical.py",
+  "src/masld_bench/adapters/rna_atac_cobolt.py",
+  "src/masld_bench/adapters/rna_atac_regularized.py",
+  "src/masld_bench/artifacts.py",
+  "src/masld_bench/campaign.py",
+  "src/masld_bench/cli.py",
+  "src/masld_bench/contracts.py",
+  "src/masld_bench/evaluators/__init__.py",
+  "src/masld_bench/evaluators/endpoint_power.py",
+  "src/masld_bench/evaluators/metrics.py",
+  "src/masld_bench/evaluators/rna_atac_cobolt_development.py",
+  "src/masld_bench/evaluators/rna_atac_development.py",
+  "src/masld_bench/evaluators/rna_atac_scpair_development.py",
+  "src/masld_bench/evaluators/stats.py",
+  "src/masld_bench/firewall.py",
+  "src/masld_bench/hashing.py",
+  "src/masld_bench/planner.py",
+  "src/masld_bench/reference.py",
+  "src/masld_bench/registry.py",
+  "src/masld_bench/runtime.py",
+  "src/masld_bench/slurm.py",
+  "tests/integration/test_campaign.py",
+  "tests/scientific/test_rna_atac_classical_e2e.py",
+  "tests/scientific/test_rna_atac_cobolt_e2e.py",
+  "tests/scientific/test_rna_atac_regularized_e2e.py",
+  "tests/unit/test_rna_atac_classical.py",
+  "tests/unit/test_rna_atac_cobolt.py",
+  "tests/unit/test_rna_atac_cobolt_evaluator.py",
+  "tests/unit/test_rna_atac_regularized.py",
+  "slurm/acquire_cobolt_v1_0_1.sbatch",
+  "slurm/evaluate_rna_atac_cobolt_smoke.sbatch",
+  "slurm/freeze_rna_atac_cobolt_5seed_smoke.sbatch",
+  "slurm/build_cobolt_b6k_runtime.sbatch",
+  "slurm/probe_cobolt_b6k_runtime.sbatch",
+  "slurm/probe_cobolt_runtime.sbatch",
+  "slurm/validate_cobolt_b6k_runtime_gpu.sbatch",
+  "slurm/test_cobolt_scoped_source_lock.sbatch",
+  "slurm/test_rna_atac_cobolt_b6k.sbatch",
+  "slurm/test_rna_atac_cobolt.sbatch",
+  "slurm/test_rna_atac_cobolt_evaluator.sbatch",
+]
+registry_snapshot_paths = [
+  "campaigns/v1_rna_atac_cobolt_5seed_smoke.toml",
+  "dataset_views/gse296875_rna_atac_smoke_1000_v1.toml",
+  "datasets/fnih_86_liver.toml",
+  "datasets/gse244832.toml",
+  "datasets/gse296875.toml",
+  "evaluation/promotion_gates.toml",
+  "evaluation/rna_conditioned_atac_capabilities.toml",
+  "models/mandatory_baselines.toml",
+  "models/multimodal_integration.toml",
+  "resources.toml",
+  "runtimes/cpu_baseline_smoke.toml",
+  "runtimes/gpu_rna_atac_torch_b6k.toml",
+  "splits/donor_outer.toml",
+  "tasks/rna_conditioned_atac.toml",
+]
 
 [selection]
 census_model_ids_sha256 = "933e50b3a0147b29ac1fdbe5f159b4e9d0eb3317f52d3907443bb3ce598c8443"
@@ -18,8 +79,8 @@ model_ids = ["cobolt"]
 include_mandatory_baselines = true
 
 [execution]
-default_resource_profile = "gpu_rna_atac_smoke"
-runtime_id = "gpu_rna_atac_torch_smoke"
+default_resource_profile = "gpu_rna_atac_b6k"
+runtime_id = "gpu_rna_atac_torch_b6k"
 seeds = [1103, 2107, 3109, 4111, 5113]
 folds = [0, 1, 2, 3, 4]
 cell_budget = 1000

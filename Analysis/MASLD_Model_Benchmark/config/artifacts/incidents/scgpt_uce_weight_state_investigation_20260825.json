@@ -1,0 +1,123 @@
+{
+  "schema_version": "masld-bench-weight-state-investigation-v1",
+  "record_id": "scgpt_uce_weight_state_investigation_20260825",
+  "audit_date": "2026-08-25",
+  "status": "investigation_complete_no_change_made",
+  "requested_scope": "Report only. No test and no bundle was modified by this investigation.",
+  "question": "test_scgpt_upstream_preflight_and_exposure_are_frozen asserts weight_content_downloaded is True where the bundle says false; test_uce_upstream_preflight_and_exposure_are_frozen asserts False where the bundle says true. Is the defect in the tests, in the bundles, or one transposed edit?",
+  "answer": {
+    "verdict": "NOT a transposition. Two independent staleness defects on opposite sides, which together resemble an inversion.",
+    "scgpt": "The BUNDLE is wrong. The weight bodies were downloaded and are on disk. The test's True is correct.",
+    "uce": "The TEST is wrong. The bundle's true is correct and matches the bodies on disk.",
+    "shape": "The 2026-08-23 acquisition propagated into the uce bundle and the scgpt test, but not into the scgpt bundle or the uce test. A diagonal, not a swap."
+  },
+  "ground_truth_on_disk": {
+    "method": "Located the weight bodies, compared byte sizes to the bundle records, and read the acquisition receipts. Byte sizes match exactly in all four cases.",
+    "scgpt": {
+      "acquisition_execution": "executions/scgpt-acquisition-21015743",
+      "acquired": "2026-08-23 11:16",
+      "bodies_present": true,
+      "artifacts": [
+        {
+          "path": "executions/scgpt-acquisition-21015743/scgpt_continual/best_model.pt",
+          "size_bytes": 207861754,
+          "size_matches_bundle": true,
+          "sha256_from_acquisition_receipt": "ad0252a1971e0cd619b7116dbab3177432236c4537225d54280a2aa7e5fe402a",
+          "bundle_records": "UNRESOLVED"
+        },
+        {
+          "path": "executions/scgpt-acquisition-21015743/scgpt_whole_human/best_model.pt",
+          "size_bytes": 205385258,
+          "size_matches_bundle": true,
+          "sha256_from_acquisition_receipt": "6cb5d451ab5c4b33eb673adbe4fddc61d2389df1b89b7651a9fe2e557572b922",
+          "bundle_records": "UNRESOLVED"
+        }
+      ],
+      "additional_copy_outside_the_benchmark": {
+        "path": "data/perturbation/checkpoints/scgpt/whole-human/best_model.pt",
+        "size_bytes": 205385258,
+        "note": "A third copy of the whole-human body sits in the main project data tree, outside Analysis/MASLD_Model_Benchmark/. Pre-existing and not created by this campaign, but it is part of the exposure surface and the owning lane should know it is there."
+      }
+    },
+    "uce": {
+      "acquisition_execution": "executions/uce-acquisition-21015745",
+      "acquired": "2026-08-23 11:18 to 11:24",
+      "bodies_present": true,
+      "artifacts": [
+        {
+          "path": "executions/uce-acquisition-21015745/33l_8ep_1024t_1280.torch",
+          "size_bytes": 5686283829,
+          "size_matches_bundle": true,
+          "sha256_agrees_with_bundle": "3f458726196308e171611ed28394b55865708749f82af68cfd7771d5dfee661e"
+        },
+        {
+          "path": "executions/uce-acquisition-21015745/4layer_model.torch",
+          "size_bytes": 3403514339,
+          "size_matches_bundle": true,
+          "sha256_agrees_with_bundle": "acb28f3f0a1d803e4a4ffe891b9bab38bf93c84762dc06b2452f0d515da91560"
+        }
+      ]
+    }
+  },
+  "timeline": [
+    "2026-08-22 13:25 - scgpt/checkpoints.json written. Its own source_evidence states: 'Weight bodies were not downloaded; their SHA-256 values remain unresolved.' True at the time.",
+    "2026-08-23 11:16 - scgpt weight bodies acquired by job 21015743, with a SHA256SUMS receipt.",
+    "2026-08-23 11:18 to 11:24 - uce weight and auxiliary bodies acquired by job 21015745, with a SHA256SUMS receipt.",
+    "2026-08-24 18:29 - uce/checkpoints.json updated to weight_content_downloaded=true with the real digests, which match the acquisition receipt exactly.",
+    "scgpt/checkpoints.json was never updated and still carries its pre-acquisition 2026-08-22 state.",
+    "The test assertions were separately updated: scgpt's to True, matching reality; uce's was left at False, no longer matching reality."
+  ],
+  "wrong_values": [
+    {
+      "location": "config/artifacts/models/scgpt/checkpoints.json",
+      "field": "weight_content_downloaded",
+      "current": false,
+      "correct": true,
+      "kind": "bundle_stale"
+    },
+    {
+      "location": "config/artifacts/models/scgpt/checkpoints.json",
+      "field": "bundles.scgpt_continual.artifacts[best_model.pt].sha256",
+      "current": "UNRESOLVED",
+      "correct": "ad0252a1971e0cd619b7116dbab3177432236c4537225d54280a2aa7e5fe402a",
+      "kind": "bundle_stale"
+    },
+    {
+      "location": "config/artifacts/models/scgpt/checkpoints.json",
+      "field": "bundles.scgpt_whole_human.artifacts[best_model.pt].sha256",
+      "current": "UNRESOLVED",
+      "correct": "6cb5d451ab5c4b33eb673adbe4fddc61d2389df1b89b7651a9fe2e557572b922",
+      "kind": "bundle_stale"
+    },
+    {
+      "location": "tests/contract/test_registry_files.py, test_uce_upstream_preflight_and_exposure_are_frozen",
+      "field": "assertIs(checkpoints['weight_content_downloaded'], False)",
+      "current": false,
+      "correct": true,
+      "kind": "test_stale"
+    }
+  ],
+  "rights_consequence": {
+    "severity": "needs_a_rights_decision_not_a_flag_flip",
+    "finding": "scgpt weight_license is UNDECLARED, and the weight bodies were nonetheless downloaded and are on disk in three locations. The bundle currently conceals this by recording weight_content_downloaded=false.",
+    "implication": "Correcting the scgpt bundle to true is the factually right change, but it surfaces an acquisition of weights whose licence terms are undeclared. That is a rights question for the owning lane, not a one-line correction. The scgpt fix is therefore NOT symmetric with the uce fix.",
+    "uce_by_contrast": "uce weight_license is CC-BY-4.0 and resolved, so correcting its test assertion carries no rights consequence.",
+    "do_not": "Do not resolve this by editing the scgpt TEST down to False to match the stale bundle. That would make the suite green by recording a falsehood about what is on disk."
+  },
+  "recommended_fix_order": [
+    "1. Fix the uce test assertion False -> True. Zero rights consequence, closes one failure immediately.",
+    "2. Refer the scgpt bundle correction to the lane that owns weight rights, together with the third copy under data/perturbation/. Correcting the bundle is right on the facts but requires the undeclared-licence acquisition to be dispositioned first.",
+    "3. Only after that, update the scgpt bundle to weight_content_downloaded=true and fill in the two resolved SHA-256 values."
+  ],
+  "correction_to_an_earlier_reading": "An intermediate inference in this investigation held that scgpt's sha256:UNRESOLVED proved the bodies were never fetched, since one cannot hash bytes one does not have. That reasoning treated the record as authoritative when the record was simply a day out of date. Checking the filesystem reversed the conclusion. Recorded here because the same inference would mislead the next reader of that bundle.",
+  "verification": {
+    "sha256_recomputed_from_the_bodies": true,
+    "note": "The two scgpt digests above were re-derived from the files themselves on a compute node, not merely read from the acquisition SHA256SUMS."
+  },
+  "changes_made": [],
+  "sealed_outcomes_read": false,
+  "models_fit": [],
+  "models_scored": [],
+  "checkpoint_opened": false,
+  "weights_deserialized": false
+}

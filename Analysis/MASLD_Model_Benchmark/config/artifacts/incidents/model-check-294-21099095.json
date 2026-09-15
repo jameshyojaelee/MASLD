@@ -1,0 +1,24 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "job_id": "21099095",
+  "job_name": "model-check-294",
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "stage_reached": "unit_tests_passed_then_identifier_plan_failed_before_output_creation",
+  "unit_tests": {
+    "passed": 4,
+    "failed": 0
+  },
+  "failure_class": "overstrict_zero_peak_canonical_contig_assumption",
+  "failure_message": "canonical chromosome peak census differs",
+  "biological_matrix_values_read": false,
+  "development_outcomes_read": false,
+  "sealed_outcomes_read": false,
+  "metrics_calculated": false,
+  "output_tree_created": false,
+  "logs": {
+    "stdout": "executions/model-check-294-21099095.out",
+    "stderr": "executions/model-check-294-21099095.err"
+  },
+  "disposition": "preserved_nonpromotable_corrected_by_model_check_295"
+}

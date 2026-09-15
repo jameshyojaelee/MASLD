@@ -1,0 +1,199 @@
+{
+  "schema_version": "masld-bench-design-guidance-record-v1",
+  "record_id": "composition_join_audit_20260825",
+  "audit_date": "2026-08-25",
+  "record_only": true,
+  "consumed_by_runtime": false,
+  "auditor": "gpu-throughput-engineer",
+  "commissioned_by": "team-lead",
+  "access": "read_only throughout; no file in the audited tree was modified, no job submitted",
+  "headline": "A read-only audit of every place the campaign consumes two or more independently frozen artifacts and requires a relationship between them. One new defect found across the entire scoring and release spine. The durable output is not the defect but the explanation of where checks exist and where they do not: density follows comparability, not importance.",
+
+  "thesis": {
+    "statement": "Verification density follows COMPARABILITY, not importance. Code that holds two things can compare them, so the check gets written. Code that holds only its own output has nothing to compare against, so no check gets written, and the absence is silent.",
+    "why_it_matters": "It replaces the search heuristic. 'This code is important' is a bad predictor of where composition defects hide; 'can this code compare two things' is a good one. The sealed and selection phases are the best-defended code in the repository not because anyone judged them high-stakes, but because they are consumers.",
+    "consumers_are_defended": "An evaluator holds outcomes and predictions. A release holds a lock and a decision document. An aggregator holds a roster and a directory. Comparison is free, and in every case examined it was taken.",
+    "producers_are_not": "A bundle executor writing 150 runs into a root holds only that root. The campaign's expectation lives in campaign.py:1302, which the executor never reads. It CANNOT self-check.",
+    "single_file_exhibit": {
+      "note": "The thesis is demonstrated inside one file, by the same author. This is the centerpiece of the audit and the reason the finding is a property of structure rather than of care, skill, or attention.",
+      "file": "src/masld_bench/evaluators/rna_atac_cobolt_5seed_development.py",
+      "best_join_in_the_repository": {
+        "lines": "350-391 (_load_seed_values)",
+        "what_it_does": "Exact bidirectional set equality implemented as a coverage bitmap, plus four-field cross-validation per matched row.",
+        "mechanism": [
+          "line 361-364: positions.get(row_hash) returning None raises 'prediction row is unexpected' — no extra predictions",
+          "line 362: seen[position] raises 'or duplicated' — no repeats",
+          "line 388: seen.all() raises 'prediction seed does not cover the exact OOF outcome universe' — no missing predictions",
+          "lines 365-372: a matched row must additionally agree on fold, donor_hash, block_hash and stratum before its value is accepted"
+        ],
+        "why_it_is_thorough": "_load_seed_values receives BOTH universes — outcomes and predictions — as arguments. Comparison was available, and the author took it exhaustively."
+      },
+      "defect_in_the_same_file": {
+        "line": "135",
+        "code": "attempt = execution_root / \"runs\" / run_id / \"attempt-001\"",
+        "consequence": "Silently voided two campaign generations (cobolt v9 and v12).",
+        "why_it_was_unchecked": "The function receives ONE root. The expectation it would need to check that root against lives in campaign.py:1302, which this function never sees. Comparison was not available, so no check was written."
+      }
+    }
+  },
+
+  "primary_defect_class": {
+    "name": "producer_cannot_self_check",
+    "discovered_via": "cobolt v9, then independently reproduced by cobolt v12 one generation later",
+    "detection_history": "NOT a case of known knowledge failing to propagate into a gate. v9's defect was discovered on 2026-08-25, hours AFTER v12 had already been built and launched from a wrapper derived from v9's. Nobody had detected it in either generation, because nothing ever attempted to compose the arms until 2026-08-25.",
+    "mechanism": {
+      "step_1": "campaign.py:1302 and planner.py:2658 DERIVE the canonical execution root as candidate_path.parent / 'executions' / candidate_path.name.",
+      "step_2": "The bundle executor accepts an arbitrary --execution-root and CREATES it: run_cobolt_v12_cpu_baseline_bundle.py:651, execution_root.mkdir(parents=True, exist_ok=True).",
+      "step_3": "The evaluator resolves all runs of the campaign from a single --execution-root.",
+      "step_4": "Nothing anywhere compares step 2 against step 1. A tree-wide search for any such reconciliation returned zero hits.",
+      "the_silencer": "mkdir(parents=True, exist_ok=True) is the mechanism. A misrouted root does not fail — it is created, populated, verified and frozen. Had the executor required its root to already exist, the mistake would have surfaced on the first run instead of a generation later."
+    },
+    "the_pattern_appears_twice_per_executor": {
+      "verified": true,
+      "execution_root": "run_cobolt_v12_cpu_baseline_bundle.py:651",
+      "receipt_root": "run_cobolt_v12_cpu_baseline_bundle.py:689",
+      "consequence": "A bundle can also write its RECEIPT where nothing will look for it and still report success. Both outputs are silently created."
+    },
+    "generalisation": "Any executor that mkdir's its own output location cannot detect being misrouted.",
+    "remedy": {
+      "statement": "Give the producer a declared expectation to check itself against.",
+      "concrete": "Require each output root either to already exist, or to equal the root derived from the frozen plan. Apply to execution_root AND receipt_root.",
+      "why_this_is_the_general_cure": "It hands the producer the one fact it was missing, converting an uncomparable producer into a comparable one. This is not a cobolt fix; every producer in the tree that creates its own output location has the same blind spot and the same cure."
+    },
+    "exposure": "All five evaluators (rna_atac_cobolt_5seed, rna_atac_cobolt, rna_atac, rna_atac_regularized, rna_atac_scpair) take a single --execution-root. No evaluator in the tree can compose runs across roots.",
+    "repair_status": {
+      "owner": "B6KProduction lane, routed by team-lead",
+      "landed": "verified on disk 2026-08-25",
+      "evidence": "run_cobolt_v12_cpu_baseline_bundle.py now carries the widened foreign-run guard at lines 399-404, permitted_ids = selected_ids | campaign_run_ids, with a comment stating the 175-run single-root requirement. The executor self-checks its own SHA-256 at line 677; the current file hashes bd710456aff1e307854b68f0edd214e02f181656c151d35851c1d291e1f8e1fa against a1f3b38cadc4503af758db24f4846569970c53d21f497eeaa015549fa2fc3e97 recorded in the broken run's receipt, confirming the guard landed after that run.",
+      "note": "The audit did not perform or direct this repair."
+    }
+  },
+
+  "correction_to_an_earlier_audit_claim": {
+    "claim_as_originally_reported": "The executor's locality check at lines 684-686 confirms execution_root and receipt_root are nested in each other, and is therefore satisfied by any self-consistent wrong answer, which is why it never fired.",
+    "status": "INCORRECT — the auditor misread the condition, and the error was relayed and accepted before being caught.",
+    "what_the_code_actually_does": "Lines 683-688 raise CpuBundleError('execution and receipt roots may not contain one another') if the two roots DO contain one another. It is a SEPARATION check requiring them to be disjoint, not a locality check requiring them to be nested.",
+    "why_the_correction_strengthens_the_thesis": "The executor carefully enforces a relationship between its OWN TWO arguments — the two things it can see — while enforcing nothing about whether either matches the campaign's expectation, which it cannot see. That is the comparability thesis stated more precisely, not less."
+  },
+
+  "clean_negatives_recorded_as_findings": {
+    "why_recorded": "A sweep that only ever reports problems cannot distinguish 'checked and sound' from 'not checked'. Without these entries a future auditor re-derives all of it.",
+    "zero_subset_joins_tree_wide": {
+      "finding": "There is no subset join in any scoring path in the repository.",
+      "detail": "Every row-keyed lookup in every evaluator uses direct bracket indexing (candidate[row['row_hash']]), which raises KeyError on a miss rather than silently skipping, and every one is preceded by a set-equality guard: rna_atac_cobolt_development:156,186; rna_atac_regularized_development:144; rna_atac_scpair_development:171; sealed_metrics:536,786.",
+      "the_single_exception_is_not_a_hazard": "rna_atac_cobolt_5seed_development:361 is the only .get() in a row-keyed lookup, and its None result is raised on immediately rather than skipped. See the single-file exhibit above.",
+      "negative_control": "The empty result was VALIDATED rather than trusted, because a broken search and a clean tree look identical. The same pattern returns 626 .get( / ' in ' occurrences across the evaluators, proving the search worked."
+    },
+    "variant_capability_schema_bump_is_safe": {
+      "question": "Would bumping masld-bench-variant-capability-v1 to v2 break silently?",
+      "answer": "No. It fails loud in two independent ways.",
+      "loud_path_1": "registry.py:444 raises RegistryError('unsupported variant capability schema') on any non-v1 value, and wraps the document in _strict_mapping(allowed=fields, required=fields) so unknown AND missing fields are both rejected.",
+      "loud_path_2": "The file is hash-pinned under authority_hashes in config/artifacts/models/context_borzoi/outcome_blind_architecture_preflight_20260824.json, and audit_context_borzoi_preflight.py:130-132 digests and compares it BEFORE parsing. Any byte change raises 'conditional authority drifted' with an accurate message.",
+      "both_pins_currently_match_disk": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63",
+      "carried_caveat": "audit_context_borzoi_preflight.py parses that TOML PERMISSIVELY (.get('models', []), no schema check of its own) while registry.py parses it STRICTLY. If the hash pin were ever relaxed the two consumers would disagree about whether the same file is valid — strict rejecting an added field, permissive accepting it. A latent parser divergence held shut only by a hash pin is a fragile reason for two parsers to agree."
+    },
+    "leakage_defaulting_read_is_closed": {
+      "site": "leakage.py:76, provenance.get('fit_partition_ids', [])",
+      "why_it_looked_dangerous": "A defaulting read in a leakage check could produce an empty set and therefore a vacuous pass.",
+      "why_it_is_safe": "Line 77-78 raises LeakageError('preprocessor provenance has no fit_partition_ids') on the empty set. The vacuous-pass path is explicitly blocked, and both directions are then checked: nothing fit on sealed ids, nothing fit outside the training partition."
+    },
+    "contamination_membership_sites_are_not_joins": "contamination.py:360 and :454 are duplicate detectors that raise (360 on a cohort-family HASH COLLISION, the same failure class as the peakvi target-cell-hash incident already in this register). :496 partitions fingerprints within a family and correctly skips singletons where a within-family conflict is undefined.",
+    "aggregators_are_sound": "All seven aggregate_* scripts plus observed_multiome_aggregate.py enumerate from a frozen roster and count-check. The two that glob validate what they discovered: aggregate_gse267145_histology_production_predictions.py:193-196 compares the globbed file roster against MODEL_IDS; aggregate_gse281364_task_native_sequence_control_predictions.py:103 hard-requires exactly five checkpoints and five receipts while iterating FOLDS and MODELS from frozen rosters."
+  },
+
+  "the_asymmetric_denominator_hazard_and_its_defence": {
+    "note": "Recorded together deliberately. This defence only gets copied if it is written down beside the thing it prevents.",
+    "hazard": "A SUBSET join — iterating one universe and looking up the other with `in` or .get(), skipping on a miss — silently drops rows for whichever model happens to be missing some. That shrinks that model's denominator relative to the model it is compared against and MANUFACTURES an apparent advantage.",
+    "precedent_in_this_project": "This mechanism has already produced a false enrichment here: a control was silently cleaned by a filter the test group escaped. See feedback-asymmetric-denominator-trap in the project register.",
+    "defence": "Exact set equality enforced in BOTH directions between the prediction universe and the outcome universe, so a mismatch raises instead of shrinking a denominator.",
+    "implemented_at": [
+      "src/masld_bench/evaluators/sealed_metrics.py:536",
+      "src/masld_bench/evaluators/sealed_metrics.py:786",
+      "src/masld_bench/release.py:537",
+      "src/masld_bench/evaluators/rna_atac_cobolt_development.py:155",
+      "src/masld_bench/evaluators/rna_atac_cobolt_development.py:186",
+      "src/masld_bench/evaluators/rna_atac_cobolt_5seed_development.py:350-391"
+    ],
+    "rule": "Subset joins manufacture effects; set equality in both directions is the fix. Any new join must be written this way, and any existing `in`-based join is worth a second look on this basis regardless of where it sits."
+  },
+
+  "patterns_worth_copying": [
+    {
+      "pattern": "Exact set equality in both directions",
+      "example": "sealed_metrics.py:786 — set(outcomes) != set(row_ids) or set(secondary) != set(row_ids); release.py:537 — 'terminal authorization must cover every AND ONLY locked task'.",
+      "prevents": "The asymmetric-denominator hazard above."
+    },
+    {
+      "pattern": "A positional join made safe by immediate content re-verification",
+      "example": "aggregate_gse281364_task_native_sequence_control_predictions.py:108 pairs two INDEPENDENTLY globbed sets with zip(strict=True), which guarantees equal length but NOT correct pairing. Line 117 then requires fit_receipt['checkpoint_sha256'] == file_sha256(checkpoint), so a misaligned pair cannot survive; lines 115-116 pin outer_test_fold and model_id, and line 126 requires the five hashes be distinct so a duplicate cannot fill a slot.",
+      "lesson": "You do not always need a keyed join. You need the pairing to be FALSIFIABLE."
+    },
+    {
+      "pattern": "Agreement on the identity of the comparison basis, checked before anything is scored",
+      "example": "firewall._complete_prediction_set (firewall.py:2257) requires all prediction commits to agree on TWELVE properties — task, sealed datasets, dataset bindings, split, row-id field, unit-id field, unit namespace, biological unit, table schema, source join key, prediction count, and both SelectionLock id and manifest hash — then closes the roster with exact dict equality at 2336 (observed_roles != expected_roles), forbids secondary/primary run overlap, and rejects duplicate prediction-commit hashes.",
+      "lesson": "This is why release.py:1063 DELEGATING this join rather than duplicating it is correct: the delegate is stronger than anything the release path could reasonably re-derive. Delegation to a stronger checker is not a gap."
+    }
+  ],
+
+  "verification_density_observed": {
+    "note": "Raise counts are a crude proxy but the ordering is the point, and it tracks comparability rather than stakes.",
+    "firewall.py": {"lines": 3430, "raises": 264},
+    "selection.py": {"lines": 2681, "raises": 241, "cross_record_joins": "~20"},
+    "release.py": {"lines": 1575, "raises": 146},
+    "sealed_metrics.py": {"lines": 1109, "raises": 73},
+    "contamination.py": {"lines": 996, "raises": 45},
+    "leakage.py": {"lines": 269, "raises": 29},
+    "campaign_execution_layer": "essentially no join checks; this is where both defects lived"
+  },
+
+  "audit_boundary": {
+    "swept": [
+      "all five evaluators in src/masld_bench/evaluators/",
+      "selection.py, sealed_metrics.py, release.py, firewall.py, leakage.py, contamination.py",
+      "observed_multiome_specialist_gate.py and observed_multiome_specialist_gate_v2.py",
+      "all seven scripts/aggregate_*.py plus src/masld_bench/observed_multiome_aggregate.py",
+      "campaign.py and planner.py execution-root derivation",
+      "the bundle executors",
+      "all 743 config/**/*.json artifact hash pins"
+    ],
+    "not_swept": [
+      "src/masld_bench/campaign.py and planner.py beyond root derivation",
+      "src/masld_bench/adapters/",
+      "src/masld_bench/contracts.py, reference.py, activation_audit.py",
+      "the tests/ tree"
+    ],
+    "hash_pin_scan_scale": {
+      "config_jsons_scanned": 743,
+      "distinct_pinned_artifact_paths": 525,
+      "paths_pinned_by_more_than_one_file": 104,
+      "paths_with_conflicting_pins": 17,
+      "judgment": "Most of the 17 are legitimately superseded revisions recording what was true when they were frozen. Separating history from defect is what made the number useful; reporting '17 conflicting pins' unqualified would have sent someone chasing fourteen non-problems."
+    }
+  },
+
+  "open_items_routed_not_resolved": [
+    {
+      "item": "Stale audit_bindings in three admission configs",
+      "detail": "config/alphagenome_sei_admission.json (3 of 8 bindings stale), config/borzoi_enformer_admission.json (3 of 8), config/dna_lm_admission.json (1 of 16). Drifted authorities: sei/enformer checkpoints.json and exposure_audit.json, config/models/regulatory_sequence.toml, config/models/dna_language.toml.",
+      "severity": "LOUD but LATENT. Live verifiers iterate these and raise — borzoi_enformer_validate_sources.py:153 raises AdmissionSourceError('audit binding differs'), and alphagenome_sei_validate_sources.py:179 and dna_lm_validate_sources.py:110 do the same. All three would fail if run today. No existing result is invalidated.",
+      "confirmed_drift_not_work_in_flight": "Authority files are modified in git, last written 2026-08-24 22:33 and 2026-08-25 01:52. The admission files are clean and were last touched 2026-08-24 07:58-08:23, i.e. BEFORE. No edit for roughly 18 hours at audit time.",
+      "class": "Same as the primary defect: an authority with N independent attestations, edited without enumerating them. Whoever edited enformer/checkpoints.json had no way to discover that borzoi_enformer_admission.json attests to its old hash.",
+      "suggested_gate": "A tree-wide check that every recorded (path, sha256) pin either matches disk or is explicitly marked historical.",
+      "status": "routed by team-lead; not resolved by this audit"
+    },
+    {
+      "item": "Strict-versus-permissive parser divergence on the variant capability TOML",
+      "detail": "See clean_negatives_recorded_as_findings.variant_capability_schema_bump_is_safe.carried_caveat.",
+      "status": "routed by team-lead; not resolved by this audit"
+    }
+  ],
+
+  "firewall": {
+    "outcomes_read": false,
+    "predictions_read": false,
+    "metrics_calculated": false,
+    "scorer_invoked": false,
+    "files_modified_in_audited_tree": false,
+    "jobs_submitted": false
+  }
+}

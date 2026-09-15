@@ -10,7 +10,7 @@
     "alternate_allele_exposure": "clean_declared_for_reference_only_checkpoint",
     "target_effect_label_exposure": "unexposed",
     "downstream_task_family_exposure": "downstream_demo",
-    "interpretation": "The base encoder is eligible for target-label evaluation but cannot be the released open champion because the checkpoint is noncommercial and share-alike. Reference sequence exposure must remain explicit."
+    "interpretation": "The base encoder is eligible for target-label evaluation but cannot be the released best openly licensed model because the checkpoint is noncommercial and share-alike. Reference sequence exposure must remain explicit."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",

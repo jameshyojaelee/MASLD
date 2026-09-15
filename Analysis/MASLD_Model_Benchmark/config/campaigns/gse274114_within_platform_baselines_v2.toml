@@ -1,0 +1,92 @@
+schema_version = "masld-bench-gse274114-baseline-campaign-v2"
+campaign_id = "gse274114_within_platform_baselines_v2"
+status = "training_only_convergence_diagnostic_passed_synthetic_validation_required"
+dataset_id = "gse274114_mash_hbv"
+dataset_fixture_artifacts_sha256 = "b334ff4fe77903be82bb228fc479a28d92d74f4cec0b06ea98c3d6a6100c9300"
+convergence_diagnostic_artifacts_sha256 = "a5d230f6a54e00f575e79919170f8bb313698363fb0cb8de7deb36065a690bd9"
+convergence_trace_artifacts_sha256 = "de468a54e3e7d8dbc15fa04ad00f98273783b84ef8200cfb6d407b3f209ba7f1"
+outer_folds = 5
+unit_of_inference = "participant"
+pairing_topology = "same_study_unpaired"
+technical_runs_are_biological_replicates = false
+global_four_class_task_allowed = false
+global_ood_accuracy_allowed = false
+mash_vs_non_mash_task_allowed = false
+sealed_or_champion_claim_eligible = false
+
+[[tasks]]
+task_id = "gse274114_hiseq_healthy_vs_hbv"
+task_spec_sha256 = "2a05bf09ac7fccd4b52cac787f089a956260bf4e150f29a53f0e4843c247d113"
+split_id = "gse274114_hiseq_ctrl_eneg_stratified_participant_outer_v1"
+participants = 20
+negative_source_group = "CTRL"
+positive_source_group = "ENEG"
+instrument = "Illumina HiSeq 4000"
+claim_scope = "development-only within-HiSeq healthy-versus-HBV etiology utility"
+
+[[tasks]]
+task_id = "gse274114_novaseq_mash_vs_mash_hbv"
+task_spec_sha256 = "6150de64a148d5b1fb8f07bdac783f70931924211a4486302cbfadc5ce471ce5"
+split_id = "gse274114_novaseq_nash_eneg_nash_stratified_participant_outer_v1"
+participants = 19
+negative_source_group = "NASH"
+positive_source_group = "ENEG_NASH"
+instrument = "Illumina NovaSeq 6000"
+claim_scope = "development-only within-NovaSeq MASH-versus-MASH-plus-HBV comorbidity utility"
+
+[[models]]
+model_kind = "training_class_prior"
+seed_policy = "deterministic_seed_0_only"
+preprocessing = "training-label prevalence only"
+
+[[models]]
+model_kind = "gene_rank_nearest_centroid"
+seed_policy = "deterministic_seed_0_only"
+preprocessing = "training-only log-CPM prevalence filter and variance selection, within-participant average gene ranks, training-class centroids"
+
+[[models]]
+model_kind = "hvg_pca_elastic_net"
+seed_policy = "five_fixed_seeds_1103_2207_3301_4409_5501"
+preprocessing = "training-only log-CPM, prevalence filter, variance selection, scaling, PCA, nested three-fold hyperparameter ranking, then first outer-training-convergent ranked candidate"
+
+[[models]]
+model_kind = "hvg_pca_linear_svm"
+seed_policy = "five_fixed_seeds_1103_2207_3301_4409_5501"
+preprocessing = "training-only log-CPM, prevalence filter, variance selection, scaling, PCA, nested three-fold hyperparameter ranking, first outer-training-convergent ranked candidate, and training-only probability calibration"
+
+[firewall]
+feature_staging_reads_labels = false
+feature_staging_reads_folds = false
+feature_staging_runs_normalization = false
+trainer_view_contains_training_labels = true
+trainer_view_contains_held_fold_labels = false
+trainer_view_contains_source_group_strings = false
+trainer_view_contains_participant_covariates = false
+trainer_accepts_evaluator_paths = false
+preprocessing_fit_on_outer_training_participants_only = true
+cohort_wide_normalization_allowed = false
+prediction_tables_contain_observed_labels = false
+prediction_bundles_frozen_before_evaluator_labels_open = true
+partial_prediction_set_scoring_allowed = false
+threshold = 0.5
+convergence_warning_policy = "invalidate_hyperparameter_candidate"
+no_valid_hyperparameter_candidate_policy = "fail_outer_fold"
+selected_outer_fit_convergence_warning_policy = "try_next_inner_ranked_candidate_then_fail_outer_fold"
+outer_candidate_fallback_uses_training_partition_only = true
+outer_candidate_fallback_uses_query_outcomes = false
+
+[covariates]
+participant_level_metadata_available = false
+age_input_allowed = false
+sex_input_allowed = false
+fibrosis_input_allowed = false
+nas_input_allowed = false
+group_aggregate_metadata_input_allowed = false
+activation_rule = "A future revision may add age, recorded sex, fibrosis, NAS, or other histology only from verified participant-level fields, with missing-state masks and fold-local preprocessing. Group summaries can never be assigned to participants."
+
+[evaluation]
+metrics = ["participant_macro_f1", "participant_auprc", "participant_auroc", "participant_brier", "participant_log_loss"]
+bootstrap_unit = "participant_stratified_by_binary_source_label"
+bootstrap_replicates = 10000
+multiplicity = "development primary effect and interval; BH q<0.05 only within the prespecified task secondary endpoint family"
+clinical_claims_allowed = false

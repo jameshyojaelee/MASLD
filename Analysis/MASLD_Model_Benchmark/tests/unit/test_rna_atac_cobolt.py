@@ -58,6 +58,43 @@ class RNAATACCoboltUnitTests(unittest.TestCase):
         with self.assertRaises(adapter.RNAATACCoboltError):
             adapter._validate_parameters(parameters)
 
+    def test_admitted_runtime_allowlist_matches_only_validated_combinations(self) -> None:
+        self.assertEqual(
+            adapter.match_admitted_torch_runtime("2.3.1+cu121", "NVIDIA L40S", (8, 9)),
+            "gpu_rna_atac_torch_smoke",
+        )
+        self.assertEqual(
+            adapter.match_admitted_torch_runtime(
+                "2.8.0+cu128", "NVIDIA RTX PRO 6000 Blackwell Server Edition", (12, 0)
+            ),
+            "gpu_rna_atac_torch_b6k",
+        )
+
+    def test_admitted_runtime_allowlist_fails_closed(self) -> None:
+        # A third, unlisted torch/device combination must be rejected outright.
+        self.assertIsNone(
+            adapter.match_admitted_torch_runtime("2.6.0+cu124", "NVIDIA A100", (8, 0))
+        )
+        # Every single-field deviation from a validated triple must also fail.
+        self.assertIsNone(
+            adapter.match_admitted_torch_runtime("2.8.0+cu130", "NVIDIA L40S", (8, 9))
+        )
+        self.assertIsNone(
+            adapter.match_admitted_torch_runtime("2.3.1+cu121", "NVIDIA A40", (8, 9))
+        )
+        self.assertIsNone(
+            adapter.match_admitted_torch_runtime("2.3.1+cu121", "NVIDIA L40S", (8, 6))
+        )
+        # Mixing two validated entries must not produce a match.
+        self.assertIsNone(
+            adapter.match_admitted_torch_runtime("2.3.1+cu121", "NVIDIA L40S", (12, 0))
+        )
+        self.assertIsNone(
+            adapter.match_admitted_torch_runtime(
+                "2.8.0+cu128", "NVIDIA L40S", (8, 9)
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

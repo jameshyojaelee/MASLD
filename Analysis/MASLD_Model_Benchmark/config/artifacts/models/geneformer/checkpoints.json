@@ -1,4 +1,45 @@
 {
+  "architecture_contract": {
+    "geneformer_v1_10m": {
+      "architectures": [
+        "BertForMaskedLM"
+      ],
+      "hidden_size": 256,
+      "intermediate_size": 512,
+      "max_position_embeddings": 2048,
+      "model_type": "bert",
+      "num_attention_heads": 4,
+      "num_hidden_layers": 6,
+      "pad_token_id": 0,
+      "vocab_size": 25426
+    },
+    "geneformer_v2_104m": {
+      "architectures": [
+        "BertForMaskedLM"
+      ],
+      "hidden_size": 768,
+      "intermediate_size": 3072,
+      "max_position_embeddings": 4096,
+      "model_type": "bert",
+      "num_attention_heads": 12,
+      "num_hidden_layers": 12,
+      "pad_token_id": 0,
+      "vocab_size": 20275
+    },
+    "geneformer_v2_316m": {
+      "architectures": [
+        "BertForMaskedLM"
+      ],
+      "hidden_size": 1152,
+      "intermediate_size": 4608,
+      "max_position_embeddings": 4096,
+      "model_type": "bert",
+      "num_attention_heads": 18,
+      "num_hidden_layers": 18,
+      "pad_token_id": 0,
+      "vocab_size": 20275
+    }
+  },
   "artifacts": [
     {
       "path": "Geneformer-V1-10M/model.safetensors",
@@ -47,28 +88,6 @@
         "size_bytes": 788424
       }
     ],
-    "V2_shared": [
-      {
-        "path": "geneformer/ensembl_mapping_dict_gc104M.pkl",
-        "sha256": "0819bcbd869cfa14279449b037eb9ed1d09a91310e77bd1a19d927465030e95c",
-        "size_bytes": 3957652
-      },
-      {
-        "path": "geneformer/gene_median_dictionary_gc104M.pkl",
-        "sha256": "a51c53f6a771d64508dfaf61529df70e394c53bd20856926117ae5d641a24bf5",
-        "size_bytes": 1512661
-      },
-      {
-        "path": "geneformer/gene_name_id_dict_gc104M.pkl",
-        "sha256": "fabfa0c2f49c598c59ae432a32c3499a5908c033756c663b5e0cddf58deea8e1",
-        "size_bytes": 1660882
-      },
-      {
-        "path": "geneformer/token_dictionary_gc104M.pkl",
-        "sha256": "67c445f4385127adfc48dcc072320cd65d6822829bf27dd38070e6e787bc597f",
-        "size_bytes": 425590
-      }
-    ],
     "V2_104M": [
       {
         "path": "Geneformer-V2-104M/config.json",
@@ -92,8 +111,31 @@
         "sha256": "bf1ba320993168b0d6ee5ff170df2108454d239b28eaac5948d30ee6993cccc1",
         "size_bytes": 90
       }
+    ],
+    "V2_shared": [
+      {
+        "path": "geneformer/ensembl_mapping_dict_gc104M.pkl",
+        "sha256": "0819bcbd869cfa14279449b037eb9ed1d09a91310e77bd1a19d927465030e95c",
+        "size_bytes": 3957652
+      },
+      {
+        "path": "geneformer/gene_median_dictionary_gc104M.pkl",
+        "sha256": "a51c53f6a771d64508dfaf61529df70e394c53bd20856926117ae5d641a24bf5",
+        "size_bytes": 1512661
+      },
+      {
+        "path": "geneformer/gene_name_id_dict_gc104M.pkl",
+        "sha256": "fabfa0c2f49c598c59ae432a32c3499a5908c033756c663b5e0cddf58deea8e1",
+        "size_bytes": 1660882
+      },
+      {
+        "path": "geneformer/token_dictionary_gc104M.pkl",
+        "sha256": "67c445f4385127adfc48dcc072320cd65d6822829bf27dd38070e6e787bc597f",
+        "size_bytes": 425590
+      }
     ]
   },
+  "code_license": "Apache-2.0",
   "code_source_artifacts": [
     {
       "path": "setup.py",
@@ -121,47 +163,6 @@
       "size_bytes": 35355
     }
   ],
-  "architecture_contract": {
-    "geneformer_v1_10m": {
-      "architectures": [
-        "BertForMaskedLM"
-      ],
-      "hidden_size": 256,
-      "intermediate_size": 512,
-      "max_position_embeddings": 2048,
-      "model_type": "bert",
-      "num_attention_heads": 4,
-      "num_hidden_layers": 6,
-      "pad_token_id": 0,
-      "vocab_size": 25426
-    },
-    "geneformer_v2_104m": {
-      "architectures": [
-        "BertForMaskedLM"
-      ],
-      "hidden_size": 768,
-      "intermediate_size": 3072,
-      "max_position_embeddings": 4096,
-      "model_type": "bert",
-      "num_attention_heads": 12,
-      "num_hidden_layers": 12,
-      "pad_token_id": 0,
-      "vocab_size": 20275
-    },
-    "geneformer_v2_316m": {
-      "architectures": [
-        "BertForMaskedLM"
-      ],
-      "hidden_size": 1152,
-      "intermediate_size": 4608,
-      "max_position_embeddings": 4096,
-      "model_type": "bert",
-      "num_attention_heads": 18,
-      "num_hidden_layers": 18,
-      "pad_token_id": 0,
-      "vocab_size": 20275
-    }
-  },
   "input_contract": {
     "V1": {
       "model_input_size": 2048,
@@ -181,10 +182,10 @@
     },
     "required_matrix": "raw_unselected_counts"
   },
-  "license": "Apache-2.0",
   "repository": "ctheodoris/Geneformer",
   "repository_revision": "04c2b2e84da7c0f385c3f9ad8f3ec24bab6650e5",
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
   "source_evidence": "Hugging Face model and tree APIs plus immutable resolve responses queried at the pinned revision on 2026-08-21 and rechecked on 2026-08-22; every listed small source/config artifact was streamed through SHA-256, LFS object IDs were cross-checked for weights and dictionaries, and the architecture contract was transcribed from the hash-bound model configs.",
-  "weight_content_downloaded": false
+  "weight_content_downloaded": true,
+  "weight_license": "Apache-2.0"
 }

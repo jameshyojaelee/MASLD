@@ -95,7 +95,7 @@ save_pdf <- function(plot, filename, width, height) {
 }
 
 # -------------------------------------------------------------------------
-# 4A: input firewall. Genetics and the 22 Hotspot programs are inherited from
+# 4A: input separation. Genetics and the 22 Hotspot programs are inherited from
 # Figures 2/3; protein process sets remain an assay-native parallel branch.
 # -------------------------------------------------------------------------
 boxes <- data.table(

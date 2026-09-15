@@ -1,0 +1,128 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "b6k_manual_gpu_sbatch_policy_scope_20260825",
+  "status": "open_discrepancy_not_adjudicated",
+  "recorded_by": "gpu-throughput-engineer",
+  "recorded_on": "2026-08-25",
+  "summary": "The cobolt v12 B6K bundle job reached the gpu partition without passing through the dependency dispatcher, while the script that builds that same bundle stamps gpu_submission_authorized=false and manual_gpu_sbatch_allowed=false into its artifact metadata. Separately, manual_gpu_sbatch_allowed is not a field of the frozen dispatcher policy and appears as a policy value in only two campaign files, both scBasset. Whether the cobolt pathway is a sanctioned exception the field does not describe, or a bypass of an intent the field expresses, is NOT resolved here and is left for the campaign owner.",
+  "firewall": {
+    "outcomes_read": false,
+    "project_data_read": false,
+    "metrics_calculated": false,
+    "scorer_invoked": false,
+    "policy_modified": false,
+    "dispatcher_bound_files_modified": false,
+    "gpu_jobs_submitted_by_recorder": false
+  },
+  "observed_facts": {
+    "cobolt_v12_execution": {
+      "slurm_job_id": "21111907",
+      "job_name": "model-work-303",
+      "job_name_matches_dispatcher_pattern": true,
+      "gres": "gpu:b6k:1",
+      "node": "ne1dg7-009",
+      "state": "COMPLETED",
+      "elapsed": "01:26:17",
+      "planned_runs": 25,
+      "succeeded_runs": 25,
+      "failed_runs": 0,
+      "receipt": "executions/cobolt-5seed-bundles/cobolt-5seed-25run-v12-b6k--21111907/bundle_receipt.json",
+      "receipt_schema": "masld-bench-sequential-run-bundle-receipt-v2",
+      "runtime": "executions/environments/cobolt-native-torch2.8.0-cu128-21107432",
+      "torch": "2.8.0+cu128"
+    },
+    "not_dispatcher_submitted": {
+      "present_in_submissions_ledger": false,
+      "ledger_path": "executions/gpu-bundle-dispatch-state/submissions.tsv",
+      "dispatcher_claim_file_exists": false,
+      "dispatcher_cannot_have_submitted_it": true,
+      "reason": "scripts/gpu_dependency_dispatcher.py _submit() hardcodes --gres=gpu:l40s:1 on the sbatch command line, so the dispatcher is physically incapable of producing a gpu:b6k:1 job",
+      "prior_cobolt_bundles_did_use_the_dispatcher": {
+        "cobolt-5seed-25run-v8-generic5": "21081067",
+        "cobolt-5seed-25run-v9-generic6": "21100294"
+      },
+      "note": "cobolt v8 and v9 carry dispatcher claims; v12 does not. The submission pathway for this family changed between v9 and v12."
+    },
+    "builder_metadata_contradiction": {
+      "script": "scripts/build_cobolt_v12_gpu_bundle.py",
+      "lines": "221-222",
+      "stamps": {
+        "gpu_submission_authorized": false,
+        "manual_gpu_sbatch_allowed": false
+      },
+      "observation": "The v12 bundle artifact asserts that manual GPU sbatch is not allowed and that GPU submission is not authorized. The v12 work nevertheless reached the gpu partition outside the dispatcher."
+    },
+    "policy_field_scope": {
+      "field": "manual_gpu_sbatch_allowed",
+      "present_in_frozen_dispatcher_policy": false,
+      "frozen_dispatcher_policy": "config/campaigns/gpu_dependency_dispatcher_policy_20260825.json",
+      "frozen_policy_keys": [
+        "bootstrap",
+        "campaign_id",
+        "dependency_type",
+        "lane_count",
+        "legacy_dispatcher_job_id",
+        "pending_job_limit",
+        "poll_seconds",
+        "routing",
+        "schema_version",
+        "source_bindings",
+        "submission_batch_limit"
+      ],
+      "campaign_files_asserting_it_false": [
+        "config/campaigns/scbasset_five_seed_rectangle_20260825.json",
+        "config/campaigns/scbasset_three_seed_rectangle_20260825.json"
+      ],
+      "consequence": "The field is per-campaign metadata read by audit scripts, not a gate the dispatcher enforces at submission time. Neither file scopes cobolt. A campaign-wide 'GPU submission is dispatcher-only' rule is therefore narrower in the tree than it has been stated in discussion."
+    }
+  },
+  "retracted_claim": {
+    "claim": "A second production GPU submission pathway exists and is in active use, evidenced by candidates/v1-rna-atac-cobolt-5seed-smoke-v12--3972f43112b8ecc4/jobs/*.sbatch carrying --gres=gpu:b6k:1 and job-name=mb-<hash>.",
+    "status": "withdrawn_as_incorrect",
+    "disproof": "sacct since 2026-08-25 contains zero jobs whose name begins with 'mb-'. The 175 scripts under candidates/.../jobs/ were never submitted to Slurm. They are inert per-run templates executed in-process by masld_bench.cli run execute inside the single outer bundle job 21111907, which is why that one job holds one B6K GPU for 01:26:17 while completing 25 sequential runs of roughly 400 seconds each.",
+    "correction": "There is one pathway, not two. The narrow and still-open fact is that this single outer bundle job was submitted to the gpu partition without a dispatcher claim or ledger row."
+  },
+  "authorization_chain": {
+    "note": "The submission was deliberate and authorized. Without this block a reader finds a manual B6K submission with no dispatcher claim and no ledger row, and has no way to learn it was intended.",
+    "attested_by": "team-lead",
+    "attested_to": "gpu-throughput-engineer",
+    "attestation_date": "2026-08-25",
+    "chain": [
+      {"step": 1, "actor": "user", "action": "authorized B6K use in full", "quoted_as_relayed": "fully authorize and allow B6k"},
+      {"step": 2, "actor": "team-lead", "action": "directed the cobolt v12 bundle to be built and launched on B6K"},
+      {"step": 3, "actor": "unrecorded", "action": "submitted job 21111907 with --gres=gpu:b6k:1 outside the dispatcher"}
+    ],
+    "evidence_status": "RELAYED, NOT INDEPENDENTLY VERIFIED. The recorder did not observe the user's authorization directly and cannot see who invoked sbatch for 21111907. Steps 1 and 2 rest on the team lead's attestation; only step 3's effects are visible in Slurm and on disk.",
+    "consequence_for_reading": "This removes 'unexplained bypass by an unknown actor' from the set of readings. It does not settle whether the frozen field was breached, because the authorization postdates the field being stamped into the bundle artifact by the builder."
+  },
+  "competing_readings_not_adjudicated": [
+    {
+      "reading": "sanctioned_exception",
+      "argument": "manual_gpu_sbatch_allowed is scoped to the two scBasset campaigns and is absent from the frozen dispatcher policy. Cobolt is governed by neither, so no frozen contract was breached; the dispatcher-only rule was generalized in discussion beyond where it is written."
+    },
+    {
+      "reading": "bypass_of_expressed_intent",
+      "argument": "The v12 builder itself stamps manual_gpu_sbatch_allowed=false and gpu_submission_authorized=false into the bundle, and cobolt v8 and v9 went through the dispatcher. The intent applied to this family and the v12 submission departed from it."
+    }
+  ],
+  "job_name_provenance": {
+    "note": "Recorded for traceability. These CPU preflight jobs used non-masked names that break the generic job-name convention. They completed and were deliberately not re-run.",
+    "non_compliant_names": [
+      {"job_id": "21104492", "job_name": "b6kpreflight", "artifact": "executions/b6k-preflight-runtime-resolution-21104492"},
+      {"job_id": "21104650", "job_name": "b6kckpt", "artifact": "executions/b6k-preflight-probe3-checkpoint-21104650"},
+      {"job_id": "21104725", "job_name": "b6kckpt", "artifact": "executions/b6k-preflight-probe3-checkpoint-21104725"}
+    ],
+    "convention_going_forward": "model-check-101 for CPU validation, model-probe-101 for GPU probes"
+  },
+  "superseded_diagnosis": {
+    "claim": "Job 21100293 could never run on L40S because its runtime arch list lacks sm_89.",
+    "status": "incorrect",
+    "evidence": "executions/model-work-151-21100293.err shows RuntimeError in torch._C._cuda_init(): 'The NVIDIA driver on your system is too old (found version 12040)'. The failure occurred at CUDA initialisation, before kernel selection and before the arch list was consulted. Node ne1dg6-008 is L40S with a CUDA 12.4 driver; torch 2.13.0+cu130 links libcudart.so.13 and requires a CUDA 13 driver.",
+    "correct_test": "Check DT_NEEDED libcudart.so.<major> against the pool driver major first, then use the arch list to decide B6K. Absence of sm_89 is not disqualifying, because sm_86 SASS executes on an sm_89 device under CUDA minor-version binary compatibility."
+  },
+  "b6k_routing_disposition": {
+    "decision": "no_b6k_lane",
+    "rationale": "Zero of 452 live GPU logical tasks can execute on B6K. 438 of them are the sequence five-seed rectangle running TensorFlow 2.8.2 inside Singularity, which has no sm_120. The remaining 14 are cu124 builds with arch sm_50-sm_90 and no compute_* PTX. All 34 unclaimed queue items are enabled=false, and 30 of those are a superseded generation of the same 438 tasks. The only B6K-eligible queue item, model-work-302-retry1, is disabled and worth 2 logical tasks.",
+    "consequence": "A B6K dispatcher lane would have no work to carry. The bottleneck is 438 TensorFlow tasks that can only ever run on 18 L40S GPUs, which no routing policy can change."
+  }
+}

@@ -1,0 +1,37 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse274114_within_instrument_etiology"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna"]
+endpoint = "Two separately scored, source-native, within-instrument binary contrasts: healthy liver-donor controls versus HBeAg-negative chronic HBV-only participants on HiSeq 4000, and biopsy-proven MASH-only versus combined MASH/HBeAg-negative chronic HBV participants on NovaSeq 6000."
+metrics = ["mean_of_two_participant_macro_f1", "participant_macro_f1_by_contrast", "participant_auprc_by_contrast", "participant_auroc_by_contrast", "participant_brier_by_contrast", "participant_log_loss_by_contrast"]
+datasets_train = ["gse274114_mash_hbv"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse274114_source_group_stratified_participant_outer_v1"
+required_pairing_levels = ["same_study_unpaired"]
+missingness_policy = "Participant-level age, recorded sex, ethnicity, fibrosis, steatosis, ballooning, lobular inflammation, BMI, diabetes, smoking, alcohol, ALT, AST, and HBV measures are unavailable in the public deposit. Article Table 1 summaries remain group-aggregate descriptive evidence and are never assigned, imputed, or encoded as participant inputs."
+admission_gates = [
+  "Use the frozen one-to-one 39-participant, biopsy, GSM, BioSample, and SRA-experiment join. Collapse all 71 SRA runs within their source experiment; runs are technical partitions, not biological replicates.",
+  "Keep CTRL, ENEG, NASH, and ENEG_NASH as the four source-native labels. ENEG means HBeAg-negative chronic HBV only and is never a MASLD-negative or healthy control.",
+  "Sequencing instrument is perfectly confounded with MASH superclass: CTRL and ENEG were sequenced on HiSeq 4000, while NASH and ENEG_NASH were sequenced on NovaSeq 6000. Four-class, MASH-versus-non-MASH, MASH-versus-healthy, and naive OOD accuracy claims are prohibited.",
+  "Score only two separate within-instrument contrasts: CTRL versus ENEG on HiSeq, and NASH versus ENEG_NASH on NovaSeq. Do not pool predictions, participants, or uncertainty across those biological questions except the prespecified equal-contrast mean of macro-F1.",
+  "Use only the label-separated opaque no-fit Salmon fixture. Source groups, folds, participant aliases, aggregate metadata, source-paper differential genes, pathways, figures, and highlighted findings are evaluator-only and cannot enter preprocessing or feature selection.",
+  "Treat Salmon NumReads as continuous estimated counts and retain EffectiveLength for offset reconstruction. Never round NumReads, treat TPM as integer counts, or run a count likelihood without the required length/offset contract.",
+  "Map GENCODE v40 to GENCODE v49 fail-closed. Sum NumReads and TPM for the 44 X/PAR_Y two-row targets before normalization and use the registered TPM-weighted EffectiveLength rule. Mask all 1,230 unmapped source rows.",
+  "Fit count filtering, offsets, normalization, scaling, feature selection, dimensionality reduction, hyperparameters, calibration, and thresholds within outer-training participants only. The no-fit fixture performs none of those operations.",
+  "Use source-group-stratified participant bootstrap uncertainty. Genes, biopsies, files, SRA runs, and repeated numerical fields are not independent replicates.",
+  "This source is project-exposed and cannot support a sealed, external, universal, diagnostic, prognostic, progression, treatment-response, or champion claim. OOD model accuracy is blocked by instrument confounding unless an independent compatible endpoint is separately registered.",
+  "Internal nonclinical research use requires no new DUA. Do not redistribute source matrices or materially trained weights without source- and model-specific review."
+]
+baseline_model_ids = ["within_instrument_training_class_prior", "within_instrument_gene_rank_nearest_centroid", "within_instrument_hvg_pca_elastic_net", "within_instrument_hvg_pca_linear_svm"]
+uncertainty_method = "source_group_stratified_participant_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse274114_within_instrument_development_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "gse274114_within_instrument_etiology_development_v1"
+promotion_gate_config_sha256 = "2e45f65809ce927c5ef63e892b9434f41dd77bd2c28913815783c3d5a4577ab1"
+primary_evaluator_id = "gse274114_two_within_instrument_contrasts_v1"
+evaluator_parameters = { participants = 39, source_group_counts = { CTRL = 9, ENEG = 11, NASH = 10, ENEG_NASH = 9 }, outer_folds = 5, sra_runs = 71, sra_experiments = 39, source_features = 61598, mapped_source_rows = 60368, v49_unique_target_genes = 60324, par_y_x_two_row_targets = 44, unmapped_source_rows = 1230, four_class_performance_allowed = false, mash_vs_non_mash_performance_allowed = false, participant_metadata_inputs_available = false, group_aggregate_metadata_descriptive_only = true, model_fit_or_scoring_run = false }
+claim_gate = "Development-only, within-instrument etiology contrasts. No four-class, MASH-versus-non-MASH, OOD-accuracy, MASLD champion, universal-model, diagnostic, prognostic, progression, treatment-response, causal, or external-transfer claim is eligible."

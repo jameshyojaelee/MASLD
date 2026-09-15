@@ -1,0 +1,17 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "job_id": 21100856,
+  "job_name": "model-data-333",
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "stage_reached": "three_unit_tests_passed_then_cli_argument_dispatch_before_build",
+  "cause": "argparse exposed --config as arguments.config while build requires config_path; main incorrectly forwarded vars(arguments) directly.",
+  "biological_fragment_values_read": false,
+  "condition_values_read": false,
+  "phenotype_values_read": false,
+  "evaluator_outcomes_read": false,
+  "metrics_calculated": false,
+  "prediction_values_written": false,
+  "correction": "Map each parsed CLI argument explicitly into build, without changing the cell selection, source, target, missingness, or claim contracts.",
+  "retry_required": true
+}

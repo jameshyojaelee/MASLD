@@ -1,0 +1,36 @@
+schema_version = "masld-bench-task-v1"
+task_id = "sequence_native_regulatory"
+status = "blocked_every_measured_candidate_loses_to_the_allele_identity_ridge"
+unit_of_inference = "independent_locus"
+input_modalities = ["dna_sequence"]
+endpoint = "Predict assay-native regulatory activity for held-out loci from reference DNA sequence alone. The only measured endpoint in this repository today is the mean signed log2 ALT-minus-REF RNA-over-DNA reporter activity of GSE281364, read in the HepG2 control and HepG2 PAOA contexts. Accessibility, coverage, and splice endpoints named in the tournament have no scored evidence here and are listed as intended, not available."
+metrics = ["mean_two_context_locus_spearman", "locus_spearman_gain_over_allele_identity_ridge", "positive_gain_seed_count"]
+datasets_train = ["gse281364"]
+datasets_development = []
+datasets_sealed = []
+split_id = "locus_outer"
+required_pairing_levels = []
+missingness_policy = "explicit_state_and_mask"
+admission_gates = [
+  "GSE281364 has zero biological donors. It is a reporter assay in two cell-line contexts with four experimental replicates per context, and the record already states that replicates are not independent donors. No donor-level, participant-level, or disease claim can rest on it.",
+  "Group loci by ancestry-matched native-build linkage-disequilibrium block, declared locus, exact forward sequence identity, and exact reverse-complement identity before splitting, and remove a boundary buffer at least as wide as the largest receptive field among the compared models. This is what locus_outer already specifies.",
+  "Fit every projection, normalisation constant, whitening step, head, and hyperparameter inside the outer training loci only. Never fit a head on all reporter outcomes and then score those same rows.",
+  "Representation models are compared through identical downstream heads. Their native context widths are not matched, so a difference between them confounds representation quality with context width. Record the width alongside every score.",
+  "Report the paired difference against the allele-identity ridge with its interval, and report the count of seeds whose gain is positive. Do not report a confirmatory p-value for a development result.",
+  "This source is exposed development evidence. It cannot support an external-transfer, universal-model, diagnostic, prognostic, progression, or treatment-response claim, and no external reporter cohort is registered."
+]
+baseline_model_ids = ["zero", "training_mean", "allele_identity_ridge", "mean_track", "gc_kmer_control", "deltasvm", "gkmsvm", "nearest_regulatory_feature", "sequence_cnn_control", "sequence_transformer_control"]
+uncertainty_method = "paired_locus_block_bootstrap"
+resampling_units = ["merged_locus"]
+bootstrap_replicates = 10000
+multiplicity_family = "sequence_native_regulatory_development_exploratory"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "none_development_only_no_external_source"
+primary_evaluator_id = "locus_heldout_allelic_spearman_v1"
+evaluator_parameters = { assay = "massively_parallel_reporter_assay", contexts = ["HepG2_control", "HepG2_PAOA"], elements = 1033, biological_donors = 0, experimental_replicates_per_context = 4, replicates_used_as_independent_donors = false, outer_folds = 5, reference_build = "GRCh38.p14", supported_variant_type = "biallelic_SNV", allele_effect_sign = "ALT_minus_REF", block_definition_dna_language_lane = "outer_locus_sequence_group", block_count_dna_language_lane = 1033, block_definition_lsgkm_lane = "long_range_block_id", block_count_lsgkm_lane = 239, sealed_outcomes_read = false, external_evaluation = false }
+claim_gate = "Development diagnostics only, and the measured result is negative. In config/dna_lm_family_reconciliation.json the allele-identity ridge reaches 0.17707525618729647 and every language model falls below it: nucleotide_transformer 0.15482952844468645 (gain -0.022245727742610022), hyenadna 0.13508299265352627 (gain -0.041992263533770197), caduceus 0.094218415704686198 (gain -0.082856840482610272), dnabert2 0.0038347189500998998 (gain -0.17324053723719657). That record sets family_promotion to none and directs that seeds and tuning are not escalated on this task. In the separate LS-GKM evaluation over 239 long-range blocks the same ridge reaches 0.13421551707194201 and both LS-GKM heads also fall below it, with intervals spanning zero and one of five seeds positive. No model may be described as winning this task on the present evidence, and a well-characterised negative is the correct reportable outcome."
+
+[evidence]
+dna_language_lane = "config/dna_lm_family_reconciliation.json"
+lsgkm_lane = "executions/model-check-627-21100620/audit/evaluation_audit.json"
+registration_note = "This description is parked outside config/tasks. Adding any file to config/tasks changes the sorted list of registered task identifiers, which tests/unit/test_native_task_disposition_overlay.py compares against a value frozen in ten model records under config/artifacts/models."

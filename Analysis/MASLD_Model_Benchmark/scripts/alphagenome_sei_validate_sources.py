@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze AlphaGenome and Sei source, license, exposure, and checkpoint gates."""
+"""Freeze AlphaGenome and Sei source, license, exposure, and checkpoint checks."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import tomllib
 
 
 class AdmissionSourceError(ValueError):
-    """Raised when an official source differs from the admission contract."""
+    """Raised when an official source differs from the inclusion requirement."""
 
 
 def _hash(path: Path) -> str:

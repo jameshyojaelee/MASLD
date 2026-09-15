@@ -9,7 +9,7 @@ outer-training same-nucleus RNA/ATAC pairs, and ``predict`` sees held RNA only.
 
 This 1,000-nucleus view uses a source-fixed consensus peak inventory that was
 created by the data authors across the cohort. The run is therefore a smoke
-fixture and cannot support a champion or external-transfer claim.
+fixture and cannot support a best-model or external-transfer claim.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class RNAATACScPairError(RuntimeError):
-    """Raised when a scPair smoke contract is violated."""
+    """Raised when a scPair smoke requirement is not met."""
 
 
 def _load_classical() -> Any:

@@ -16,7 +16,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "8f31c7ee5667f929f9c8908932ed89ab113a9acd9c87b9a5a0925b5874c011ca"
   },
-  "interpretation": "GSE289173 postdates the historical paper checkpoint by more than three years, so that historical object is target-label-unexposed. The current Weixin share has a name, file ID, and byte size but no immutable digest or timestamp, and the source does not declare checkpoint terms. The registered object therefore remains exposure-unknown and terms-blocked.",
+  "interpretation": "GSE289173 postdates the historical paper checkpoint by more than three years, so that historical object is target-label-unexposed. The current Weixin share has a name, file ID, and byte size but no read-only digest or timestamp, and the source does not declare checkpoint terms. The registered object therefore remains exposure-unknown and terms-blocked.",
   "remaining_blockers": [
     "Obtain explicit terms covering the pretrained checkpoint and derivative use; the repository GPL license is not assumed to license separately hosted weights.",
     "Resolve an authenticated immutable download, SHA-256, object timestamp/history, and safe state-dict schema without unrestricted torch.load.",

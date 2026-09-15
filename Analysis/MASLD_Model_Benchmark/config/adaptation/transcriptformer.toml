@@ -1,0 +1,95 @@
+schema_version = "masld-bench-adaptation-v1"
+adaptation_id = "transcriptformer_tf_sapiens"
+model_id = "transcriptformer_tf_sapiens"
+status = "development_common_lane_smoke_complete"
+development_only = true
+exposure_status = "unknown"
+sealed_champion_eligible = false
+release_claim = "comparator_only"
+checkpoint_sha256 = "eff027e7393f92a32cadcbb2e13a917e24b62b71341571bf40f38ff6ec6d3021"
+source_commit = "c943a89a4de9511a8ab1010715bf1cfa8827cc99"
+source_version = "0.6.1"
+source_release_note = "The pinned executable source reports 0.6.1. The v0.6.0 tag points to baf5378b1c6c76a9e48b84d7870b762ab46a6e42 and is not an alias for the pinned commit."
+
+[input_firewall]
+dataset_view_id = "resource_atlas_geneformer_smoke_1000_v1"
+allowed_source_observation_fields = ["_index", "donor_id", "dataset"]
+assay_token_policy = "unknown_token_only"
+evaluation_label_columns_read = []
+sealed_outcomes_read = false
+model_auxiliary_inputs = ["assay"]
+forbidden_model_auxiliary_inputs = ["donor_id", "dataset_id", "outer_fold", "cell_type", "broad_label", "fibrosis", "nas", "sex", "age"]
+row_id_policy = "preserve_exact_registered_H5AD_obs_index_and_position"
+fold_policy = "activation fixture uses five outcome-blind sha256 donor groups only as a leakage fixture; every row from one donor remains in one fold; development common heads must recompute the registered resource_atlas_current:cell_state_mapping:donor_outer:v1 folds because the frozen per-cell embeddings contain no fold-fitted state"
+
+[native_lane]
+report_separately_from_common_lane = true
+input_matrix = "raw_unselected_nonnegative_single_cell_or_single_nucleus_counts"
+gene_identifier = "stable_Ensembl_gene_id"
+gene_order = "official_inference_default_source_var_order_of_nonzero_vocabulary_genes"
+sort_genes = false
+randomize_genes = false
+filter_to_vocabulary = true
+sequence_length = 2047
+truncate_after_ordering = true
+normalize_to_scale = 0
+count_clip = 30
+cell_embedding = "official_zero_masked_mean_over_full_2047_gene_axis"
+
+[common_lane]
+report_separately_from_native_lane = true
+input_matrix = "same_raw_unselected_nonnegative_counts_and_row_universe_as_native_lane"
+gene_identifier = "stable_Ensembl_gene_id"
+gene_order = "per_cell_descending_raw_count_then_ascending_stable_Ensembl_gene_id"
+ordering_reason = "deterministic dataset-var-order-independent top-expression path; counts are clipped only after ordering"
+sequence_length = 2047
+truncate_after_ordering = true
+normalize_to_scale = 0
+count_clip = 30
+frozen_embedding_width = 2048
+common_head_contract_id = "cell_state_common_heads_v1"
+common_heads = ["linear", "two_layer_mlp"]
+head_status = "not_fit_in_outcome_blind_activation"
+head_fit_scope = "outer_training_donors_only_after_embedding_admission"
+
+[activation_gate]
+cpu_requires = ["pinned_source_commit", "isolated_runtime_import", "checkpoint_and_vocab_hashes", "native_and_common_token_fixture", "row_order_and_donor_fold_contract", "label_firewall_tests"]
+gpu_requires = ["one_L40S_sm89", "checkpoint_strict_load", "embedding_only_forward_equivalent_to_official_embedding_branch", "deterministic_repeat", "native_and_common_1000_row_outputs"]
+gpu_route = "gpu/nslab_only"
+gpu_job_name = "model-training"
+gpu_cap_governed_by_dispatcher = true
+downstream_evaluation_in_activation = false
+
+[activation_receipt]
+job_id = "21071475"
+artifacts_path = "executions/model-training-21071475/ARTIFACTS.json"
+artifacts_sha256 = "375f38c25140746a77d13dffc7a90fed47e6597dc0537578bb311d9807043007"
+rows = 1000
+embedding_width = 2048
+native_repeat_max_abs_diff = 0.0
+common_repeat_max_abs_diff = 0.0
+evaluation_labels_read = false
+sealed_outcomes_read = false
+downstream_head_fit = false
+
+[development_common_lane_evaluation]
+job_id = "21073148"
+artifacts_path = "executions/model-evaluation-21073148/ARTIFACTS.json"
+artifacts_sha256 = "8c5f8afbff9d2e256ec9ad1c0685ff262680ce2385fb048435fc19d232e7e32a"
+evaluation_sha256 = "e05f75375024fadccdf4c9b769d90c721e54716b61feac7acd310ac944b0f488"
+development_rows = 1000
+development_donors = 102
+registered_outer_fold_contract = "resource_atlas_current:cell_state_mapping:donor_outer:v1"
+activation_fold_annotations_used_for_head_fitting = false
+heads = ["linear", "two_layer_mlp"]
+linear_donor_balanced_macro_f1 = 0.9408999269324031
+two_layer_mlp_donor_balanced_macro_f1 = 0.9444998047809087
+strongest_registered_baseline = "hvg_pca_logistic"
+strongest_registered_baseline_donor_balanced_macro_f1 = 0.9229204826289747
+two_layer_mlp_delta_vs_strongest_baseline = 0.021579322151933922
+two_layer_mlp_delta_ci95 = [0.0071431230403207705, 0.03676667614735565]
+best_existing_candidate = "geneformer_v2_316m::two_layer_mlp"
+best_existing_candidate_donor_balanced_macro_f1 = 0.9504623179251468
+smoke_only = true
+sealed_outcomes_read = false
+sealed_champion_eligible = false

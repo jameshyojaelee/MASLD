@@ -1,0 +1,104 @@
+schema_version = "masld-bench-corgi-crossfit-profile-head-contract-v1"
+contract_id = "corgi_regular_gse296875_crossfit_profile_head_smoke_v1"
+status = "frozen_development_preflight_only"
+model_id = "corgi_regular"
+task_id = "rna_conditioned_atac"
+dataset_id = "gse296875"
+lineage_id = "hepatocyte"
+adaptation_rung = "new_assay_head"
+scope = "existing_128_tile_per_fold_development_smoke_only"
+biological_unit = "donor"
+genomic_block_unit = "chromosome"
+same_nucleus_topology_required = true
+gse296875_masld_diagnosis_claimed = false
+histology_or_disease_endpoint_used = false
+test_or_sealed_features_used = false
+test_or_sealed_outcomes_used = false
+champion_or_external_transfer_claim_allowed = false
+global_census_revision = false
+historical_audit_hashes_modified = false
+
+[source_artifacts]
+adaptation_contract_path = "config/adaptation/corgi.toml"
+adaptation_contract_sha256 = "6c6486be8157910a2e6afdf07f463309d7602b42e2c6a8a5ce9ac1720df3c38a"
+bounded_smoke_disposition_path = "config/artifacts/models/corgi/bounded_prediction_smoke_disposition_20260824.json"
+bounded_smoke_disposition_sha256 = "92543e0ee28e0cdbdd9e2bb13a32b0b4f2960a9320dc417aa881d4d1f8f63635"
+dataset_manifest_path = "config/datasets/gse296875.toml"
+dataset_manifest_sha256 = "9465b012bbf46611641555a5acae4d1f033d053c900bf944dcec02979c735b6f"
+base_predictions_path = "executions/corgi-hepatocyte-tile-smoke-bundle-v3-21069656"
+base_predictions_artifacts_sha256 = "bf53c7a23a1d023442a3de64150fd98799a5be3991e95e6a2f4057f6998d4eda"
+donor_atac_path = "executions/gse296875-deduplicated-tn5-bigwigs-21063992"
+donor_atac_artifacts_sha256 = "01aacc2bb59898d6f7c133081b00c535047e271a2fed5f15761c2631b7545f1f"
+training_mean_atac_path = "executions/gse296875-training-fold-pseudobulk-21063993"
+training_mean_atac_artifacts_sha256 = "3190aa76cd5872f50d7b0c71bcb92520f1f2428110ce2fb4c26856994bc17e5b"
+design_exposed_smoke_evaluation_path = "executions/corgi-regional-development-smoke-evaluation-21070702"
+design_exposed_smoke_evaluation_artifacts_sha256 = "f87e0f0fb34a3141c24dc01d6c27aa6aac78e6f71500356ec0affd10615934c3"
+
+[base_representation]
+score_name = "strand_tta_orientation_mean_softplus_regional_sum"
+primary_context_arm = "actual_released_rank_masked"
+context_controls = ["training_lineage_mean_released_rank", "nearest_training_released_rank", "shuffled_valid_released_rank"]
+context_mapper_selected_in_this_contract = false
+model_weights_updated = false
+base_predictions_are_out_of_fold = true
+
+[profile_head]
+identity = "one_parameter_geometric_profile_interpolation"
+formula = "normalize((p_corgi + epsilon_per_window)^alpha * (p_training_mean + epsilon_per_window)^(1-alpha))"
+alpha_grid = [0.0, 0.25, 0.5, 0.75, 1.0]
+baseline_alpha = 0.0
+raw_corgi_alpha = 1.0
+epsilon_total_mass = 0.000001
+fit_loss = "multinomial_deviance_per_insertion"
+fit_aggregation = "equal_weight_donor_by_chromosome_units"
+selection_rule = "one_standard_error_from_minimum_mean_fit_loss_then_smallest_alpha"
+randomness = "none"
+fit_context_arm = "actual_released_rank_masked_only"
+apply_same_selected_alpha_to_context_controls = true
+context_arm_specific_fitting_forbidden = true
+held_fold_outcome_during_fit_forbidden = true
+
+[evaluation]
+primary_endpoint = "conditional_multinomial_profile_deviance_skill_over_training_only_mean"
+secondary_endpoint = "regional_count_spearman"
+macro_averaging_unit = "donor_by_chromosome"
+promotion_gate_evaluated = false
+development_diagnostic_only = true
+full_family_ranking_allowed = false
+
+[[crossfit_folds]]
+evaluation_fold = 0
+evaluation_base_outer_fold = 4
+fit_valid_folds = [1, 2, 3, 4]
+fit_base_outer_folds = [0, 1, 2, 3]
+
+[[crossfit_folds]]
+evaluation_fold = 1
+evaluation_base_outer_fold = 0
+fit_valid_folds = [0, 2, 3, 4]
+fit_base_outer_folds = [4, 1, 2, 3]
+
+[[crossfit_folds]]
+evaluation_fold = 2
+evaluation_base_outer_fold = 1
+fit_valid_folds = [0, 1, 3, 4]
+fit_base_outer_folds = [4, 0, 2, 3]
+
+[[crossfit_folds]]
+evaluation_fold = 3
+evaluation_base_outer_fold = 2
+fit_valid_folds = [0, 1, 2, 4]
+fit_base_outer_folds = [4, 0, 1, 3]
+
+[[crossfit_folds]]
+evaluation_fold = 4
+evaluation_base_outer_fold = 3
+fit_valid_folds = [0, 1, 2, 3]
+fit_base_outer_folds = [4, 0, 1, 2]
+
+[terminal_boundaries]
+native_numeric_parity_established = false
+open_champion_eligible = false
+external_validation_present = false
+full_donor_lineage_screen_complete = false
+next_action = "Fit five training-only scalar heads from the four nonoverlapping development folds, export held-fold predictions without metrics, then score them in an independent evaluator."

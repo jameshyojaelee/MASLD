@@ -24,7 +24,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class ScientificAdapterError(RuntimeError):
-    """Raised when the baseline's scientific or provenance contract fails."""
+    """Raised when the baseline's scientific or provenance requirements are not met."""
 
 
 MODEL_IDS = (

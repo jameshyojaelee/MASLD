@@ -37,7 +37,7 @@ profile = _load_module(
 
 
 class ScBassetPredictionError(RuntimeError):
-    """Raised when scBasset prediction violates its frozen contract."""
+    """Raised when scBasset prediction does not meet its frozen requirements."""
 
 
 def read_tsv(path: Path, fields: tuple[str, ...]) -> list[dict[str, str]]:

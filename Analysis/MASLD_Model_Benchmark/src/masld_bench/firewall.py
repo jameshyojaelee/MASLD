@@ -1,4 +1,4 @@
-"""Resource-paper and project-sealed evaluation firewalls."""
+"""Resource-paper and project-reserved evaluation separations."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ from .hashing import HashingError, canonicalize, is_sha256
 
 
 class FirewallError(RuntimeError):
-    """Raised when an operation crosses a declared scientific firewall."""
+    """Raised when an operation crosses a declared scientific separation."""
 
 
 class CampaignPhase(StrEnum):
@@ -88,7 +88,7 @@ DEFAULT_RESOURCE_AUTHORITIES = (
     "masld-atlas-v2/next.config.ts",
     "masld-atlas-v2/tsconfig.json",
     "masld-atlas-v2/eslint.config.mjs",
-    # Exact Gene Catalog/portal contract producers. Runtime logs and Python
+    # Exact Gene Catalog/portal requirements producers. Runtime logs and Python
     # caches beneath scripts/portal are not protected authorities.
     "scripts/portal/gene_catalog_v2.py",
     "scripts/portal/gene_catalog_observability.py",
@@ -834,7 +834,7 @@ def commit_predictions(
     prediction_bundle_path: str | Path,
     evaluator_state_dir: str | Path,
 ) -> PredictionCommit:
-    """Commit a strict PredictionBundle and all referenced artifacts."""
+    """Commit a strict PredictionBundle and all referenced output files."""
 
     selection_dir = _configured_path(selection_lock_dir, "SelectionLock").resolve()
     lock = _verify_selection_dir(selection_dir)
@@ -2360,7 +2360,7 @@ def freeze_power_decision(
     prediction_commit_sha256s: Iterable[str],
     development_power_evidence_dir: str | Path,
 ) -> PowerDecision:
-    """Bind a complete sealed prediction set to verified development power."""
+    """Bind a complete held-back prediction set to verified development power."""
 
     state = _configured_path(evaluator_state_dir, "evaluator-state root").resolve()
     commit_ids = tuple(prediction_commit_sha256s)
@@ -2670,7 +2670,7 @@ _COMPLETE_FIELDS = frozenset(
 def _preflight_sealed_outcome_bundle(
     path: str | Path,
 ) -> tuple[Path, SealedOutcomeBundle, str]:
-    """Verify outcome metadata without hashing or opening outcome artifacts."""
+    """Verify outcome metadata without hashing or opening outcome files."""
 
     root = _configured_path(path, "sealed outcome bundle").resolve()
     if not root.is_dir():
@@ -2900,7 +2900,7 @@ def _parse_outcome_power_binding(value: object, label: str) -> dict[str, Any]:
 
 
 def verify_outcome_consumption(path: str | Path) -> OutcomeConsumption:
-    """Verify the immutable one-time marker without reopening sealed outcomes."""
+    """Verify the read-only one-time marker without reopening held-back outcomes."""
 
     configured = _configured_path(path, "outcome-consumption marker")
     try:
@@ -3258,7 +3258,7 @@ def authorize_one_time_outcome_join(
     sealed_outcome_bundle_dir: str | Path,
     consumption_ledger_dir: str | Path,
 ) -> OutcomeConsumption:
-    """Atomically consume a whole sealed bundle after every task is ready."""
+    """Atomically consume a whole held-back bundle after every task is ready."""
 
     state = _configured_path(evaluator_state_dir, "evaluator-state root").resolve()
     power_ids = tuple(power_decision_sha256s)
@@ -3367,7 +3367,7 @@ def authorize_one_time_outcome_join(
             f"sealed outcome bundle {outcome_bundle.bundle_id} was already consumed"
         ) from error
 
-    # The atomic marker is deliberately written before any outcome artifact is
+    # The atomic marker is deliberately written before any outcome file is
     # opened or hashed. A corrupt bundle therefore remains consumed and cannot
     # be repaired and replayed after partial exposure.
     for power in powers:

@@ -1,0 +1,9 @@
+{
+  "authority": "code_license",
+  "declared_license": "MIT",
+  "derivative_redistribution_allowed": true,
+  "model_id": "bpnet",
+  "redistribution_allowed": true,
+  "schema_version": "masld-bench-license-authority-v1",
+  "use_allowed": true
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert admitted PyTorch ZIP checkpoints using the weights-only unpickler."""
+"""Convert included PyTorch ZIP checkpoints using the weights-only unpickler."""
 
 from __future__ import annotations
 
@@ -226,7 +226,7 @@ def convert(
     if model_id == "evo":
         # Evo 2 wraps its tensor mapping in an in-memory byte stream. BytesIO
         # carries bytes and has no external side effects; no other class is
-        # admitted if the weights-only unpickler encounters it.
+        # included if the weights-only unpickler encounters it.
         torch.serialization.add_safe_globals([io.BytesIO])
         safe_globals.append("_io.BytesIO")
     loaded = torch.load(

@@ -9,7 +9,7 @@ access_tier = "public"
 automatic_download = false
 outcome_url = "NOT_REGISTERED"
 redistribution_class = "source_reference_only"
-license_status = "source_terms_apply"
+license_status = "author_processed_repository_MIT_article_CC_BY_4.0_GSA_raw_source_terms_apply"
 biological_unit = "mouse_of_origin_or_independent_organoid_culture"
 expected_biological_units = "UNRESOLVED"
 native_genome_build = "mm10_Cell_Ranger_3.1.0"
@@ -19,13 +19,13 @@ pairing_levels = ["same_cell"]
 modality_status_default = "observed"
 exposure_status = "downstream_demo"
 admission_blocking = true
-blockers = ["Resolve mouse-of-origin and independent organoid-culture ancestry. The three EM and six DM production accessions correspond to approximately 10,000-cell Chromium lanes and are not automatically biological replicates.", "Freeze the 236 targeting and 10 non-targeting sgRNA crosswalk, unique-guide filter, per-guide cell missingness, and the exact mm10 feature reference.", "Keep guide identities nested within target gene and culture; do not estimate uncertainty from cells, organoids, or sequencing lanes when independent cultures are absent.", "The 79 candidate genes were selected from liver-development knowledge and bulk contrasts, so the screen is conditional follow-up and cross-species stress evidence."]
-notes = "The production screen contains 79 targets, generally three sgRNAs per gene, in expansion and differentiation media. It is native for mouse gene-target model development and descriptive known-target context transfer, but inferential admission awaits source-unit resolution."
+blockers = ["Resolve mouse-of-origin and independent organoid-culture ancestry. The three EM and six DM production experiments are Chromium capture lanes downstream of one described 500,000-cluster infection workflow and are not biological replicates.", "Freeze the authoritative mm10 Cell Ranger 3.1.0 feature reference and raw-count/preprocessing semantics. The acquired author matrices are integer, finite, and nonnegative but do not by themselves establish raw-count semantics.", "Resolve the source target-count discrepancy: the article uses 79 candidates in its overview, reports 78 factors in Methods, and the pinned author metadata contains 77 observed target-gene labels.", "Keep guide identities nested within target gene and culture; do not estimate uncertainty from cells, organoids, BioSamples, experiments, capture lanes, or guides when independent cultures are unresolved.", "The targets were selected from liver-development knowledge and bulk contrasts, so the screen is conditional follow-up and cross-species stress evidence.", "Complete checkpoint-specific exposure audits before using this public 2023 dataset with pretrained perturbation models."]
+notes = "Pinned author commit 57dce224345b3ba25baf585c8a025d4b156d5342 provides 41,383 uniquely assigned cells across 30,217 differentiation-medium and 11,166 expansion-medium cells, 17,444 features, 77 observed target genes, 226 observed target guides across contexts, and 10 non-targeting guides. At most one shared screen pool is included for descriptive development use; independent mouse or culture ancestry remains unresolved. This mouse intrahepatic-cholangiocyte organoid transition is not a mature human-hepatocyte donor endpoint."
 
 [provenance]
 source_url = "https://ngdc.cncb.ac.cn/bioproject/browse/PRJCA014442"
 verified_date = "2026-08-24"
-local_exposure = "Primary NGDC project metadata and the CC-BY-4.0 source article were inspected; no model fitting was performed."
+local_exposure = "Primary GSA project metadata, the CC-BY-4.0 source article, and the MIT-licensed author processed repository at immutable commit 57dce224345b3ba25baf585c8a025d4b156d5342 were inspected; no source effect table or outcome model was used."
 
 [split]
 group_key = "cohort_family_id+mouse_or_culture_id+culture_context+target_gene+guide_family"

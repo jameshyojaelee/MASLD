@@ -1,0 +1,17 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "gpu_rna_atac_torch_b6k"
+status = "candidate"
+purpose = "Deterministic B6K (sm_120) training and RNA-only inference for included RNA-to-ATAC smoke adapters; torch is the only delta from gpu_rna_atac_torch_smoke"
+scheduler = "slurm"
+resource_profile = "gpu_rna_atac_b6k"
+environment_lock = "sha256:7b1948ff69fb8a46831371424df0f02c897767c7a061af832d513f2d892f50ca"
+container_digest = "NOT_APPLICABLE"
+modules = []
+command_prefix = [
+  "/usr/bin/env",
+  "PYTHONNOUSERSITE=1",
+  "CUBLAS_WORKSPACE_CONFIG=:4096:8",
+  "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environments/cobolt-native-torch2.8.0-cu128-21107432/env/bin/python",
+]
+admission_blocking = false
+blockers = []

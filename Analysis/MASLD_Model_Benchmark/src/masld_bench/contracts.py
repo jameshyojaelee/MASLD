@@ -1,6 +1,6 @@
-"""Strict, immutable contracts for the MASLD model benchmark.
+"""Strict, read-only requirements for the MASLD model benchmark.
 
-The registry is an executable scientific contract rather than a permissive
+The registry is an executable set of scientific rules rather than a permissive
 configuration bag.  Every loader rejects unknown keys, every enum is explicit,
 and file-bearing records verify size and SHA-256 before use.
 """
@@ -29,7 +29,7 @@ from .hashing import (
 
 
 class ContractError(ValueError):
-    """Raised when a benchmark contract is incomplete or ambiguous."""
+    """Raised when a benchmark requirement is incomplete or ambiguous."""
 
 
 class PairingState(str, Enum):
@@ -332,7 +332,7 @@ def _set_frozen(instance: object, field_name: str, value: object) -> None:
 
 
 class StrictContract:
-    """Serialization helpers shared by all strict dataclass contracts."""
+    """Serialization helpers shared by all strict dataclass requirements."""
 
     @classmethod
     def from_dict(cls: type[_ContractT], value: Mapping[str, Any]) -> _ContractT:
@@ -602,12 +602,12 @@ class DatasetSplit(StrictContract):
 
 @dataclass(frozen=True, slots=True)
 class DatasetActivationContract(StrictContract):
-    """Checksummed admission evidence for one immutable dataset version.
+    """Checksummed inclusion evidence for one read-only dataset version.
 
     Registry records may describe a dataset before it is executable.  A dataset
-    becomes runnable only after this contract binds the rights, topology, donor
-    join, labels, QC, reference, and concrete artifact inventory reviewed for
-    that exact version.  Project-sealed datasets keep this contract unresolved
+    becomes runnable only after these requirements bind the rights, topology, donor
+    join, labels, QC, reference, and concrete output-file inventory reviewed for
+    that exact version.  Project-reserved datasets keep these requirements unresolved
     until the isolated evaluator activates anonymized features.
     """
 
@@ -800,7 +800,7 @@ class DatasetActivationContract(StrictContract):
 
 @dataclass(frozen=True, slots=True)
 class DatasetViewContract(StrictContract):
-    """Immutable, purpose-limited view of one registered parent dataset.
+    """Read-only, purpose-limited view of one registered parent dataset.
 
     A view can make a small compatibility fixture executable without claiming
     that the complete parent dataset has passed activation.  The permission is

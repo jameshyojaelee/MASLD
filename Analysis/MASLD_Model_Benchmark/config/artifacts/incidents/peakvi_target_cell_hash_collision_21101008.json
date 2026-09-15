@@ -1,0 +1,51 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "peakvi_target_cell_hash_collision_21101008",
+  "status": "terminal_failed_closed",
+  "failed_job_id": "21101008",
+  "failed_stage": "executions/peakvi-cross-cohort-admission-21101008.staging",
+  "failure_point": "independent_cell_axis_admission_before_model_fit",
+  "failure_class": "target_cell_hash_not_globally_unique_across_donors",
+  "affected_artifacts": {
+    "source": {
+      "path": "executions/peakvi-gse296875-source-cells-21100883",
+      "artifacts_sha256": "28fb20ce0d33fe1acb7f8a94b1388735e6273ce50f72ebc773d3e464efcae42e",
+      "cell_hashes_unique": true
+    },
+    "target_valid": {
+      "path": "executions/peakvi-gse281367-valid-context-cells-21100883",
+      "artifacts_sha256": "448d4b54bea4d92cf4d99e91424ba42bf20377bfa758b1950867fa8b2e5deda6"
+    },
+    "target_test": {
+      "path": "executions/peakvi-gse281367-test-context-cells-21100883",
+      "artifacts_sha256": "1fdfc0bcc980472bd0890fe28187279511998b62674e365e64459d5acdce5335"
+    }
+  },
+  "observed_target_axis": {
+    "rows": 3072,
+    "unique_cell_hashes": 2959,
+    "duplicated_hash_values": 108,
+    "rows_with_duplicated_hash": 221,
+    "maximum_hash_multiplicity": 4,
+    "cause": "GSE281367 Cell Ranger barcodes recur across donor-specific libraries while the v1 hash namespace included dataset and barcode but omitted donor"
+  },
+  "data_integrity": {
+    "fragment_counts_corrupted": false,
+    "donor_assignments_corrupted": false,
+    "lineage_assignments_corrupted": false,
+    "native_representation_row_identity_ambiguous": true
+  },
+  "firewall": {
+    "model_fit_started": false,
+    "prediction_generated": false,
+    "outcomes_read": false,
+    "metrics_calculated": false,
+    "scorer_invoked": false
+  },
+  "correction": {
+    "new_cell_hash_namespace": "sha256(peakvi-cross-cohort-v2\\0dataset_id\\0donor_id\\0cell_id)",
+    "rematerialization_required": true,
+    "old_target_artifacts_eligible_for_modeling": false,
+    "retry_policy": "immutable revision with donor-qualified hashes and a regression fixture using recurrent cross-donor barcodes"
+  }
+}

@@ -15,11 +15,19 @@ from typing import Any, Iterable, Mapping, Sequence
 
 EPSILON_MIXTURE = 1.0e-6
 DEVELOPMENT_EVALUATION_ROLE = "valid"
-PREDICTION_MANIFEST_FIELDS = (
+LEGACY_PREDICTION_MANIFEST_FIELDS = (
     "model_id",
     "root",
     "artifacts_sha256",
     "prediction_subdir",
+)
+PREDICTION_MANIFEST_FIELDS = (
+    "candidate_id",
+    "root_model_id",
+    "root",
+    "artifacts_sha256",
+    "prediction_subdir",
+    "seed",
 )
 COUNT_REQUIRED_FIELDS = (
     "window_id",
@@ -38,7 +46,7 @@ class SequenceEvaluationError(RuntimeError):
 
 
 def validate_evaluation_role(value: str) -> str:
-    """Fail closed until a separate finalist lock authorizes test evaluation."""
+    """Fail closed until a separate finalist selection record authorizes test evaluation."""
     if value != DEVELOPMENT_EVALUATION_ROLE:
         raise SequenceEvaluationError(
             "only the validation role is authorized before finalist selection lock"
@@ -175,12 +183,74 @@ def _block_hash(namespace: str, contig: str) -> str:
     return sha256(f"{namespace}\0block\0{contig}".encode()).hexdigest()
 
 
+def validate_evaluator_input_metadata(
+    *,
+    root: Path,
+    expected_artifacts_sha256: str,
+    artifact_class: str,
+    dataset_id: str,
+    split_id: str,
+    lineage_id: str,
+) -> dict[str, Any]:
+    artifacts_path = root / "ARTIFACTS.json"
+    if sha256_file(artifacts_path) != expected_artifacts_sha256:
+        raise SequenceEvaluationError(f"evaluator input ARTIFACTS differs: {root}")
+    metadata = json.loads(artifacts_path.read_text(encoding="utf-8")).get(
+        "metadata", {}
+    )
+    if (
+        metadata.get("artifact_class") != artifact_class
+        or metadata.get("dataset_id") != dataset_id
+        or metadata.get("split_id") != split_id
+        or metadata.get("lineage_id") != lineage_id
+        or metadata.get("biological_unit") != "donor"
+        or metadata.get("status") != "passed"
+        or metadata.get("benchmark_metrics_calculated") is not False
+    ):
+        raise SequenceEvaluationError(f"evaluator input identity differs: {root}")
+    if artifact_class == "chrombpnet_development_base_profiles":
+        if (
+            metadata.get("observed_atac_outcomes") is not True
+            or metadata.get("model_inference_input_eligible") is not False
+        ):
+            raise SequenceEvaluationError("observed profile firewall differs")
+    elif (
+        metadata.get("model_id") != "training_pseudobulk_mean"
+        or metadata.get("held_donor_outcomes_exposed") is not False
+    ):
+        raise SequenceEvaluationError("training baseline firewall differs")
+    return metadata
+
+
 def load_prediction_manifest(path: Path) -> list[dict[str, str]]:
     fields, rows = read_tsv(path)
-    if fields != PREDICTION_MANIFEST_FIELDS or len(rows) < 1:
+    if fields == LEGACY_PREDICTION_MANIFEST_FIELDS:
+        rows = [
+            {
+                "candidate_id": row["model_id"],
+                "root_model_id": row["model_id"],
+                "root": row["root"],
+                "artifacts_sha256": row["artifacts_sha256"],
+                "prediction_subdir": row["prediction_subdir"],
+                "seed": "20260824",
+            }
+            for row in rows
+        ]
+    elif fields != PREDICTION_MANIFEST_FIELDS:
         raise SequenceEvaluationError("prediction manifest schema/count differs")
-    if len({row["model_id"] for row in rows}) != len(rows):
-        raise SequenceEvaluationError("prediction model IDs are duplicated")
+    if len(rows) < 1:
+        raise SequenceEvaluationError("prediction manifest has no candidates")
+    if len({row["candidate_id"] for row in rows}) != len(rows):
+        raise SequenceEvaluationError("prediction candidate IDs are duplicated")
+    for row in rows:
+        if not row["candidate_id"] or not row["root_model_id"]:
+            raise SequenceEvaluationError("prediction candidate identity is empty")
+        try:
+            seed = int(row["seed"])
+        except ValueError as error:
+            raise SequenceEvaluationError("prediction seed is invalid") from error
+        if seed < 0:
+            raise SequenceEvaluationError("prediction seed is invalid")
     return rows
 
 
@@ -194,68 +264,107 @@ def bind_prediction_model_id(
     return expected_model_id
 
 
-def _verify_prediction_root(row: Mapping[str, str]) -> tuple[Path, Path]:
+def _verify_prediction_root(
+    row: Mapping[str, str],
+    *,
+    dataset_id: str,
+    split_id: str,
+    lineage_id: str,
+) -> tuple[Path, Path]:
     root = Path(row["root"]).resolve(strict=True)
     if sha256_file(root / "ARTIFACTS.json") != row["artifacts_sha256"]:
-        raise SequenceEvaluationError(f"prediction ARTIFACTS differs: {row['model_id']}")
+        raise SequenceEvaluationError(
+            f"prediction ARTIFACTS differs: {row['candidate_id']}"
+        )
     manifest = json.loads((root / "ARTIFACTS.json").read_text(encoding="utf-8"))
     metadata = manifest.get("metadata", {})
     if (
-        metadata.get("model_id") != row["model_id"]
-        or metadata.get("dataset_id") != "gse296875"
-        or metadata.get("split_id") != "donor0_genomic0"
-        or metadata.get("lineage_id") != "hepatocyte"
+        metadata.get("model_id") != row["root_model_id"]
+        or metadata.get("dataset_id") != dataset_id
+        or metadata.get("split_id") != split_id
+        or metadata.get("lineage_id") != lineage_id
+        or metadata.get("seed") != int(row["seed"])
         or metadata.get("status") != "passed"
         or metadata.get("benchmark_metrics_calculated") is True
         or metadata.get("evaluator_outcomes_exposed") is True
         or metadata.get("held_donor_atac_exposed") is True
         or metadata.get("test_outcomes_used") is True
     ):
-        raise SequenceEvaluationError(f"prediction outcome firewall differs: {row['model_id']}")
+        raise SequenceEvaluationError(
+            f"prediction outcome firewall differs: {row['candidate_id']}"
+        )
     subdir = (root / row["prediction_subdir"]).resolve(strict=True)
     if root not in subdir.parents:
         raise SequenceEvaluationError("prediction subdirectory escapes root")
     return root, subdir
 
 
-def load_prediction(row: Mapping[str, str]) -> dict[str, Any]:
+def load_prediction(
+    row: Mapping[str, str],
+    *,
+    dataset_id: str,
+    split_id: str,
+    lineage_id: str,
+) -> dict[str, Any]:
     import h5py
     import numpy as np
 
-    _root, subdir = _verify_prediction_root(row)
+    _root, subdir = _verify_prediction_root(
+        row,
+        dataset_id=dataset_id,
+        split_id=split_id,
+        lineage_id=lineage_id,
+    )
     summary = json.loads((subdir / "summary.json").read_text(encoding="utf-8"))
-    model_id = bind_prediction_model_id(summary, row["model_id"])
+    bind_prediction_model_id(summary, row["root_model_id"])
+    role_counts = summary.get("role_counts")
+    if not isinstance(role_counts, dict) or set(role_counts) != {"test", "valid"}:
+        raise SequenceEvaluationError(
+            f"prediction role census differs: {row['candidate_id']}"
+        )
+    if any(not isinstance(value, int) or value <= 0 for value in role_counts.values()):
+        raise SequenceEvaluationError(
+            f"prediction role census differs: {row['candidate_id']}"
+        )
+    windows = sum(role_counts.values())
+    output_length = summary.get("output_length")
     if (
         summary.get("status") != "pass"
-        or summary.get("windows") != 32_000
-        or summary.get("role_counts") != {"test": 16_000, "valid": 16_000}
+        or summary.get("windows") != windows
+        or not isinstance(output_length, int)
+        or output_length <= 0
+        or summary.get("seed") != int(row["seed"])
         or summary.get("observed_atac_input_exposed") is not False
         or summary.get("benchmark_metrics_calculated") is not False
     ):
-        raise SequenceEvaluationError(f"prediction summary differs: {row['model_id']}")
+        raise SequenceEvaluationError(
+            f"prediction summary differs: {row['candidate_id']}"
+        )
     counts_path = subdir / str(summary["regional_counts_path"])
     profile_path = subdir / str(summary["profile_probabilities_path"])
     fields, count_rows = read_tsv(counts_path)
     if (
         tuple(fields[:8]) != COUNT_REQUIRED_FIELDS
         or "strand_averaged_mass" not in fields
-        or len(count_rows) != 32_000
+        or len(count_rows) != windows
     ):
-        raise SequenceEvaluationError(f"prediction count table differs: {row['model_id']}")
+        raise SequenceEvaluationError(
+            f"prediction count table differs: {row['candidate_id']}"
+        )
     counts: dict[tuple[str, str], dict[str, Any]] = {}
     for value in count_rows:
         key = (value["window_id"], value["selection_hash"])
         if key in counts:
             raise SequenceEvaluationError("prediction window is duplicated")
         mass = float(value["strand_averaged_mass"])
-        if not math.isfinite(mass) or mass <= 0:
+        if not math.isfinite(mass) or mass < 0:
             raise SequenceEvaluationError("predicted regional mass is invalid")
         counts[key] = {**value, "mass": mass}
     with h5py.File(profile_path, "r") as handle:
         ids = _decode(handle["window_id"][:])
         hashes = _decode(handle["selection_hash"][:])
         probabilities = np.asarray(handle["profile_probability"][:], dtype=np.float64)
-    if probabilities.shape != (32_000, 1_000) or len(set(zip(ids, hashes))) != 32_000:
+    if probabilities.shape != (windows, output_length) or len(set(zip(ids, hashes))) != windows:
         raise SequenceEvaluationError("prediction profile tensor differs")
     if (
         np.any(~np.isfinite(probabilities))
@@ -269,7 +378,17 @@ def load_prediction(row: Mapping[str, str]) -> dict[str, Any]:
     if set(profile_by_key) != set(counts):
         raise SequenceEvaluationError("prediction profile/count keys differ")
     return {
-        "model_id": model_id,
+        "model_id": row["candidate_id"],
+        "root_model_id": row["root_model_id"],
+        "seed": int(row["seed"]),
+        "role_counts": role_counts,
+        "zero_mass_windows": {
+            role: sum(
+                value["mass"] == 0 and value["role"] == role
+                for value in counts.values()
+            )
+            for role in ("valid", "test")
+        },
         "counts": counts,
         "profile_by_key": profile_by_key,
         "profiles": probabilities,
@@ -283,6 +402,9 @@ def evaluate(
     observed_artifacts_sha256: str,
     training_baseline: Path,
     baseline_artifacts_sha256: str,
+    dataset_id: str,
+    split_id: str,
+    lineage_id: str,
     evaluation_role: str,
     output: Path,
 ) -> dict[str, Any]:
@@ -292,14 +414,32 @@ def evaluate(
     if output.exists():
         raise SequenceEvaluationError(f"output exists: {output}")
     role = validate_evaluation_role(evaluation_role)
-    for root, expected in (
-        (observed_profiles, observed_artifacts_sha256),
-        (training_baseline, baseline_artifacts_sha256),
-    ):
-        if sha256_file(root / "ARTIFACTS.json") != expected:
-            raise SequenceEvaluationError(f"evaluator input ARTIFACTS differs: {root}")
+    validate_evaluator_input_metadata(
+        root=observed_profiles,
+        expected_artifacts_sha256=observed_artifacts_sha256,
+        artifact_class="chrombpnet_development_base_profiles",
+        dataset_id=dataset_id,
+        split_id=split_id,
+        lineage_id=lineage_id,
+    )
+    validate_evaluator_input_metadata(
+        root=training_baseline,
+        expected_artifacts_sha256=baseline_artifacts_sha256,
+        artifact_class="sequence_training_mean_baseline",
+        dataset_id=dataset_id,
+        split_id=split_id,
+        lineage_id=lineage_id,
+    )
     rows = load_prediction_manifest(prediction_manifest)
-    predictions = [load_prediction(row) for row in rows]
+    predictions = [
+        load_prediction(
+            row,
+            dataset_id=dataset_id,
+            split_id=split_id,
+            lineage_id=lineage_id,
+        )
+        for row in rows
+    ]
     model_ids = ["uniform_global", "training_pseudobulk_mean"] + [
         item["model_id"] for item in predictions
     ]
@@ -326,21 +466,31 @@ def evaluate(
         if (
             truth_ids != base_ids
             or truth_hashes != base_hashes
-            or truth_counts.shape != (len(donors), 16_000, 1_000)
+            or len(contigs) != len(truth_ids)
+            or len(set(donors)) != len(donors)
+            or truth_counts.shape[0] != len(donors)
+            or truth_counts.shape[1] != len(truth_ids)
+            or truth_counts.shape[2] != 1_000
         ):
             raise SequenceEvaluationError(f"{role} baseline/outcome axes differ")
+        if baseline[role]["pseudobulk_counts"].shape != truth_counts.shape[1:]:
+            raise SequenceEvaluationError(f"{role} baseline profile shape differs")
         keys = list(zip(truth_ids, truth_hashes, strict=True))
         baseline_profile = np.asarray(base_group["pseudobulk_counts"][:], dtype=np.float64)
         baseline_mass = baseline_profile.sum(axis=1)
         model_intensity: dict[str, np.ndarray] = {
-            "uniform_global": np.ones((16_000, 1_000), dtype=np.float64),
+            "uniform_global": np.ones(baseline_profile.shape, dtype=np.float64),
             "training_pseudobulk_mean": baseline_profile,
         }
         model_mass: dict[str, np.ndarray] = {
-            "uniform_global": np.ones(16_000, dtype=np.float64),
+            "uniform_global": np.ones(len(keys), dtype=np.float64),
             "training_pseudobulk_mean": baseline_mass,
         }
         for prediction in predictions:
+            if prediction["role_counts"][role] != len(keys):
+                raise SequenceEvaluationError("prediction/outcome role census differs")
+            if prediction["profiles"].shape[1] != truth_counts.shape[2]:
+                raise SequenceEvaluationError("prediction/outcome profile width differs")
             offsets = [prediction["profile_by_key"].get(key, -1) for key in keys]
             if any(offset < 0 for offset in offsets):
                 raise SequenceEvaluationError("prediction lacks an outcome window")
@@ -462,12 +612,12 @@ def evaluate(
         candidate = summaries[role][model_id]["mean_block_deviance_per_insertion"]
         relative[model_id][role] = (baseline_value - candidate) / baseline_value
     result = {
-        "schema_version": "masld-bench-sequence-accessibility-evaluation-v2",
+        "schema_version": "masld-bench-sequence-accessibility-evaluation-v3",
         "status": "pass",
         "task_scope": "sequence_native_regulatory_development_screen",
-        "dataset_id": "gse296875",
-        "split_id": "donor0_genomic0",
-        "lineage_id": "hepatocyte",
+        "dataset_id": dataset_id,
+        "split_id": split_id,
+        "lineage_id": lineage_id,
         "evaluation_role": role,
         "biological_unit": "donor",
         "genomic_unit": "held_contig_block",
@@ -483,7 +633,17 @@ def evaluate(
         "donor_balanced": True,
         "cells_used_as_independent_replicates": False,
         "observed_profiles_exposed_to_models": False,
-        "one_seed_one_split_screen": True,
+        "candidate_seeds": {
+            item["model_id"]: item["seed"] for item in predictions
+        },
+        "prediction_diagnostics": {
+            item["model_id"]: {
+                "zero_mass_windows": item["zero_mass_windows"],
+            }
+            for item in predictions
+        },
+        "seeds_used_as_biological_replicates": False,
+        "one_split_screen": True,
         "test_outcomes_read": False,
         "champion_claim_allowed": False,
         "promotion_gate_evaluated": False,
@@ -491,7 +651,7 @@ def evaluate(
         "observed_artifacts_sha256": observed_artifacts_sha256,
         "baseline_artifacts_sha256": baseline_artifacts_sha256,
         "prediction_artifacts": {
-            row["model_id"]: row["artifacts_sha256"] for row in rows
+            row["candidate_id"]: row["artifacts_sha256"] for row in rows
         },
         "donor_hash_namespace": namespace,
     }
@@ -508,6 +668,9 @@ def main() -> int:
     parser.add_argument("--observed-artifacts-sha256", required=True)
     parser.add_argument("--training-baseline", type=Path, required=True)
     parser.add_argument("--baseline-artifacts-sha256", required=True)
+    parser.add_argument("--dataset-id", default="gse296875")
+    parser.add_argument("--split-id", default="donor0_genomic0")
+    parser.add_argument("--lineage-id", default="hepatocyte")
     parser.add_argument("--evaluation-role", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -517,6 +680,9 @@ def main() -> int:
         observed_artifacts_sha256=args.observed_artifacts_sha256,
         training_baseline=args.training_baseline,
         baseline_artifacts_sha256=args.baseline_artifacts_sha256,
+        dataset_id=args.dataset_id,
+        split_id=args.split_id,
+        lineage_id=args.lineage_id,
         evaluation_role=args.evaluation_role,
         output=args.output,
     )

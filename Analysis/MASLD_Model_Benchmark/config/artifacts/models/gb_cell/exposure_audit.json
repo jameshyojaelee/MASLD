@@ -22,7 +22,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "15a57bb3e8d46408747501b521047015e68e2b68646b1328e3957a26754930ec"
   },
-  "interpretation": "The checkpoint bytes are pinned exactly and the safetensors format provides a safe acquisition target, but the training corpus is not accession-resolved or bound to those bytes. All Atlas sources, including project-sealed GSE289173, remain exposure-unknown. The GenBio AI Community License independently prevents open-champion status and prohibits using embeddings, gradients, or other outputs to train the independently implemented conditional MASLD model.",
+  "interpretation": "The checkpoint bytes are pinned exactly and the safetensors format provides a safe acquisition target, but the training corpus is not accession-resolved or bound to those bytes. All Atlas sources, including project-reserved GSE289173, remain exposure-unknown. The GenBio AI Community License independently prevents best openly licensed model status and prohibits using embeddings, gradients, or other outputs to train the independently implemented conditional MASLD model.",
   "preprocessing_and_evaluation_findings": [
     {
       "benchmark_action": "freeze_exact_gene_and_count_contract",

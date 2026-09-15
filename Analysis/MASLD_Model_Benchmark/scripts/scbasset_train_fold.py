@@ -38,7 +38,7 @@ sha256_file = native.sha256_file
 
 
 class ScBassetTrainingError(RuntimeError):
-    """Raised when local scBasset training violates its fold contract."""
+    """Raised when local scBasset training does not meet its fold requirements."""
 
 
 def _cell_count(path: Path, expected_folds: set[int]) -> int:

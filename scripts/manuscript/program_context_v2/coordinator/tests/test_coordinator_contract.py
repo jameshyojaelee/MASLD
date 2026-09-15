@@ -1594,7 +1594,7 @@ class CoordinatorContractTests(unittest.TestCase):
             "PLAN20": paths.plan20_root / "SEMANTIC_ADJUDICATION_READY",
             "PLAN30": paths.plan30_root / "GEN_TERMINAL_CLOSURE_READY",
             "PLAN40": paths.plan40_root / "PHASE_C_VALIDATED",
-            # Plan50 is being re-frozen independently.  Its immutable scientific
+            # Plan50 is being re-frozen independently.  Its read-only scientific
             # products are exercised here, while the terminal-count seal below
             # is synthesized in memory and never published as an owner handoff.
             "PLAN50": paths.plan50_root / "passport_build_status.tsv",

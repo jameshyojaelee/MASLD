@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sequence-only scBasset profile export with a fail-closed held-ATAC firewall.
+"""Sequence-only scBasset profile export with a fail-closed held-ATAC separation.
 
 scBasset's output tasks are the cells used to fit its final dense layer.  This
 module therefore never creates a held-cell embedding.  It averages sequence-to-
@@ -49,7 +49,7 @@ PREDICTION_FIELDS = (
 
 
 class ScBassetProfileError(ValueError):
-    """Raised when scBasset profile inference violates its frozen contract."""
+    """Raised when scBasset profile inference does not meet its frozen requirements."""
 
 
 def _canonical_json(value: Any) -> str:

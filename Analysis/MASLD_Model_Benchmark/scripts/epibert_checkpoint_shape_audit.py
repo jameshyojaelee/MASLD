@@ -10,7 +10,7 @@ from typing import Any, Sequence
 
 
 class EpiBERTShapeAuditError(ValueError):
-    """Raised when released checkpoint shape admission differs."""
+    """Raised when released checkpoint shape inclusion differs."""
 
 
 def audit_one(tf: Any, prefix: Path) -> dict[str, Any]:

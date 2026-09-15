@@ -1,0 +1,42 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "jobs": [
+    {
+      "job_id": "21099784",
+      "job_name": "model-cpu-train-317",
+      "state": "FAILED",
+      "exit_code": "1:0",
+      "stage_reached": "training_only_preprocessing_before_first_complete_model_state",
+      "preserved_path": "executions/model-cpu-train-317-21099784.failed"
+    },
+    {
+      "job_id": "21099797",
+      "job_name": "model-cpu-diag-318",
+      "state": "FAILED_DIAGNOSTIC",
+      "exit_code": "1:0",
+      "stage_reached": "masked_modality_fit_complete_before_observed_atac_glm_input_validation",
+      "preserved_path": "executions/model-cpu-diag-318-21099797.failed"
+    }
+  ],
+  "unit_tests_before_first_attempt": {
+    "passed": 12,
+    "failed": 0
+  },
+  "failure_class": "signed_reduction_incompatible_with_nonnegative_observed_atac_contract",
+  "failure_message": "Randomized truncated SVD produced signed observed-ATAC row coordinates, while the registered observed-ATAC baselines reject negative assay inputs.",
+  "diagnostic_exception": "FactorizedBaselineError: observed ATAC must be nonnegative",
+  "model_input_read": true,
+  "outer_training_label_read": true,
+  "training_target_feature_read": true,
+  "held_target_feature_read": false,
+  "evaluator_artifact_read": false,
+  "prediction_bundle_written": false,
+  "benchmark_metric_calculated": false,
+  "sealed_outcomes_read": false,
+  "resolution": "Replace only observed-ATAC SVD with training-only NMF and nonnegative least-squares query projection; retain RNA SVD and all frozen surface, seed, fit, and evaluator choices.",
+  "corrected_artifact": {
+    "path": "executions/model-cpu-train-319-21099812",
+    "artifacts_sha256": "7644324e8b51bea83132744d003aa3399df7c1e02cae367522e9aab0abeb9232"
+  },
+  "disposition": "preserved_nonpromotable_and_replayed_without_expanding_data_access"
+}

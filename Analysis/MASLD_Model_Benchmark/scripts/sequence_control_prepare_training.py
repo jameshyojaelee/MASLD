@@ -16,7 +16,7 @@ PRIMARY_CONTIGS = tuple([f"chr{index}" for index in range(1, 23)] + ["chrX", "ch
 
 
 class SequenceControlPreparationError(ValueError):
-    """Raised when sequence-control preparation violates the split contract."""
+    """Raised when sequence-control preparation does not meet the split requirements."""
 
 
 def read_fold(path: Path) -> dict[str, list[str]]:

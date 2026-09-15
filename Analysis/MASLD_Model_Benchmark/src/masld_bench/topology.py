@@ -1,4 +1,4 @@
-"""Explicit multimodal pairing, missingness, and biological-unit contracts."""
+"""Explicit multimodal pairing, missingness, and biological-unit requirements."""
 
 from __future__ import annotations
 

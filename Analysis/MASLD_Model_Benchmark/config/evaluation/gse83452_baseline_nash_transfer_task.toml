@@ -1,0 +1,39 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse83452_baseline_nash_transfer"
+status = "blocked"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna_microarray", "clinical_covariates"]
+endpoint = "Transfer a training-frozen donor-level molecular model to source-deposited baseline NASH versus no-NASH status in GSE83452, with molecular-only, age-sex-only, and prospectively declared masked-fusion lanes kept separate."
+metrics = ["participant_macro_f1_nash_status", "participant_auroc_nash_status", "participant_auprc_nash_status", "participant_brier_nash_status"]
+datasets_train = ["bulk_existing_source_pool"]
+datasets_development = ["antwerp_inserm_shared"]
+datasets_sealed = []
+split_id = "train_study_held_gse83452_baseline_external_v1"
+required_pairing_levels = []
+missingness_policy = "Retain undefined NASH status as undefined and exclude it only from the NASH endpoint. Age and recorded sex remain observed covariates; intervention is a transport stratum, not a negative-control label."
+admission_gates = [
+  "Use 148 baseline participants with defined source NASH status for the primary endpoint. Retain all 152 baseline records in the matrix and audit, including four undefined labels that are never mapped to no NASH.",
+  "The source-native label contract is config/evaluation/microarray_transfer_label_semantics.toml. Generic disease/control, healthy/NASH, fibrosis-only, inferred state, and unadjudicated steatosis labels are not compatible training outcomes.",
+  "No bulk_existing_source_pool cohort enters training until its participant-level liver-biopsy label, source population, and histology definition pass the frozen label contract. The current eligible training roster is empty, so transfer remains blocked.",
+  "GSE106737 and GSE83452 are one project-exposed cohort family. Exclude both accessions from training when GSE83452 is held; they cannot provide independent development or replication evidence.",
+  "All baseline and follow-up records from one of the 171 participants remain in one group. A participant may never contribute one visit to fitting and another to evaluation.",
+  "Start from the frozen raw CEL artifact and exact GPL16686 axis. Do not use the GEO full-cohort series matrix or Partek full-cohort global-scaling output for scored transfer.",
+  "Do not run ordinary RMA or quantile normalization jointly across outer-training and held arrays. The scored lane requires a training-only quantile or sketch target applied independently to held arrays, an exact frozen single-array method whose GPL16686 support passes admission, or the registered per-array rank baseline.",
+  "Probe-set summarization, transcript-cluster annotation, Entrez-to-Ensembl mapping, GENCODE v49 intersection, gene collapse, scaling, feature selection, calibration, and any learned transform remain training-frozen. Cross-platform pooling is prohibited before gene mapping.",
+  "The primary gene matrix retains only transcript clusters with one unambiguous Entrez ID and one unambiguous GENCODE v49 Ensembl gene after exact frozen Bioconductor annotation. Multiple features per gene use the training-frozen median collapse; unmapped, control, ambiguous, and retired features remain explicit audit states.",
+  "Age and recorded sex are mandatory adjustment and error-audit fields. Report molecular-only, age-sex-only, and masked molecular-plus-metadata results separately. Do not infer missing clinical fields or reuse NASH status as an input.",
+  "Intervention assignment at baseline is a prespecified transport stratum. It is not the primary endpoint, a healthy-control definition, or evidence of future response.",
+  "QC is label-blind. CEL parse, array type, finite values, RLE, intensity distribution, and PCA diagnostics may flag samples, but phenotype-aware removal is prohibited and distributional flags are not automatic exclusions.",
+  "This is external-development transfer, not sealed evaluation and not a clinical NASH classifier claim."
+]
+baseline_model_ids = ["training_prevalence", "age_sex_logistic", "per_array_rank_elastic_net", "gene_median_elastic_net", "gene_median_linear_svm", "gene_median_pca_elastic_net"]
+uncertainty_method = "paired_participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse83452_baseline_nash_external_development_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "gse83452_baseline_nash_external_development_v1"
+promotion_gate_config_sha256 = "f8f28bf4812fd124e198b0bf810cbafd2775ccb9e86bb1f301a717a76e17e1e7"
+primary_evaluator_id = "gse83452_baseline_nash_transfer_v1"
+evaluator_parameters = { participants_total_baseline = 152, participants_endpoint_evaluable = 148, nash = 104, no_nash = 44, undefined = 4, age_observed = 152, sex_observed = 152, model_and_preprocessing_frozen_before_external_features = true, external_outcomes_available_to_model = false, cohort_family_id = "antwerp_inserm_shared", cross_accession_matched_arrays = 78, cross_accession_matched_participants = 41, compatible_training_roster_frozen = false }
+claim_gate = "External-development evidence only. No champion, sealed confirmation, diagnostic, prognostic, treatment-response, causal, or universal-model claim is eligible from the GSE83452 baseline endpoint."

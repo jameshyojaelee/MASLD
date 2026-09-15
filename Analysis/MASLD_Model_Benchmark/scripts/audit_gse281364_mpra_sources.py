@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 
 
 class GSE281364SourceError(ValueError):
-    """Raised when an MPRA source or topology differs from its contract."""
+    """Raised when an MPRA source or topology differs from its requirements."""
 
 
 def _sha256_file(path: Path) -> str:

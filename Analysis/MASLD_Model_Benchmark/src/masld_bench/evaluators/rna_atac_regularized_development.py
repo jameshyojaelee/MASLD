@@ -60,7 +60,7 @@ ENDPOINT_FIELDS = (
 
 
 class RNAATACRegularizedEvaluationError(RuntimeError):
-    """Raised when the six-model evaluation contract is violated."""
+    """Raised when the six-model evaluation requirements are not met."""
 
 
 def relative_deviance_reduction(reference: float, candidate: float) -> float:

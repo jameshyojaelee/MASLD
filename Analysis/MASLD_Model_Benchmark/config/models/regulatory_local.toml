@@ -25,9 +25,41 @@ checkpoint_sha256 = "NOT_APPLICABLE"
 license_status = "MIT"
 exposure_status = "target_label_unexposed"
 status = "candidate"
-admission_blocking = true
-blockers = ["The exact source commit, PyPI 2.0.0 wheel metadata, MIT terms, TensorFlow 2.4.1 runtime, 2,114-bp sequence/1,000-bp profile architecture, local-training exposure, and ALT-minus-REF score are frozen. Verify wheel SHA-256 dccff1bfe7c1d726967e95e270b712a9eacd580756d80f6c19ae55ea1be43633 in an approved runtime; freeze the same donor-state profiles, peaks, matched backgrounds, crossed donor/genomic partitions, reverse-complement policy, and five seeds used for ChromBPNet, plus every trained-artifact hash. This prespecified BPNet arm has no control/bias input, is sequence-only at inference, and cannot independently predict enhancer-gene links or signed expression effects."]
+admission_blocking = false
+blockers = []
 supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
+
+[models.execution]
+schema_version = "masld-bench-model-execution-v1"
+upstream_repository = "https://github.com/kundajelab/bpnet"
+upstream_commit = "f4593eedca51741f25b8c5cc0c0d647faf8c8a3c"
+preprocessing_sha256 = "e911b8b2cbd5e1fb2b0dcf71f47ee339e55f114dba09341c44dab4b4ff05921d"
+vocabulary_or_build = "GRCh38.p14_2114bp_sequence_to_1000bp_unstranded_Tn5_profile"
+genome_build = "GRCh38.p14"
+code_license = "MIT"
+weights_license = "project_owned"
+derivative_weights_license = "project_owned"
+training_cutoff = "not_applicable_no_upstream_pretraining_fold_local_fit"
+declared_corpora_sha256 = "2a2d036e4fa04f4f2d376012a51f791e1004b680193b0058fc494fa380baddff"
+cellxgene_uuids_sha256 = "f5a65ee9c0a60cdaed67615574a6c01fcf3bcf4bc70b570c0a1ad4dd926893ba"
+exposure_audit_sha256 = "c084eab18d910fc30093a61ba6857077c9394d3136b7cc0a8ab404019619447a"
+evidence_artifacts = [
+  { path = "artifacts/model-authorities/bpnet/preprocessing.json", sha256 = "e911b8b2cbd5e1fb2b0dcf71f47ee339e55f114dba09341c44dab4b4ff05921d", size_bytes = 1414, media_type = "application/json", role = "model_authority:bpnet:preprocessing" },
+  { path = "artifacts/model-authorities/bpnet/code_license.json", sha256 = "4024e36e988b91aa6f87d06bbabe969aeb6224e49a35df48889b930317fa42f3", size_bytes = 244, media_type = "application/json", role = "model_authority:bpnet:code_license" },
+  { path = "artifacts/model-authorities/bpnet/weights_license.json", sha256 = "ad40306a64ac78bbce1d39f17395a6640bb2962d45b609279085b32f6e09990a", size_bytes = 257, media_type = "application/json", role = "model_authority:bpnet:weights_license" },
+  { path = "artifacts/model-authorities/bpnet/derivative_weights_license.json", sha256 = "e032fb6285f224824ec736d60b0d88542f3f942c3f90a12fc740cc67c9e50997", size_bytes = 268, media_type = "application/json", role = "model_authority:bpnet:derivative_weights_license" },
+  { path = "artifacts/model-authorities/bpnet/declared_corpora.json", sha256 = "2a2d036e4fa04f4f2d376012a51f791e1004b680193b0058fc494fa380baddff", size_bytes = 583, media_type = "application/json", role = "model_authority:bpnet:declared_corpora" },
+  { path = "artifacts/model-authorities/bpnet/cellxgene_uuids.json", sha256 = "f5a65ee9c0a60cdaed67615574a6c01fcf3bcf4bc70b570c0a1ad4dd926893ba", size_bytes = 280, media_type = "application/json", role = "model_authority:bpnet:cellxgene_uuids" },
+  { path = "artifacts/model-authorities/bpnet/exposure_audit.json", sha256 = "c084eab18d910fc30093a61ba6857077c9394d3136b7cc0a8ab404019619447a", size_bytes = 1296, media_type = "application/json", role = "model_authority:bpnet:exposure_audit" },
+]
+supported_actions = ["fit", "predict"]
+executable_tasks = ["rna_conditioned_atac"]
+supported_adaptation_regimes = ["native_lane"]
+runtime_id = "bpnet_tensorflow_2_8_2_l40s_compat"
+adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/scripts/bpnet_run_training.py"]
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/bpnet-native-runtime-probe-21064198/ARTIFACTS.json", sha256 = "cd25afab907693c048eb71b0764db81984c5c664d0b267999682dc10cb3b05e4", size_bytes = 1724, media_type = "application/json", role = "environment:bpnet_tensorflow_2_8_2_l40s_compat" }
+capture_r_session = false
+ready = true
 
 [[models]]
 model_id = "mpralegnet"

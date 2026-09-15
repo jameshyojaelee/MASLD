@@ -26,7 +26,7 @@ MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024
 
 
 class MatrixAuditError(RuntimeError):
-    """Raised when a public matrix violates a structural safety contract."""
+    """Raised when a public matrix does not meet its structural safety requirements."""
 
 
 def fetch(url: str) -> tuple[bytes, dict[str, str]]:

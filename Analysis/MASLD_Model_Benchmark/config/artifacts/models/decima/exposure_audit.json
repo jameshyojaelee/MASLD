@@ -18,7 +18,7 @@
       "corpus": "More than 22 million scRNA or snRNA cells from declared SCimilarity, brain, skin, and retina collections; Borzoi initialization; fixed 8856 output tasks",
       "exposure_confidence": "medium",
       "exposure_state": "target_label_unexposed",
-      "reason": "The original preprint predates GSE289173 and the declared sources do not name it, but the first immutable weight record follows the GEO release and a checkpoint-bound sample manifest is unavailable.",
+      "reason": "The original preprint predates GSE289173 and the declared sources do not name it, but the first read-only weight record follows the GEO release and a checkpoint-bound sample manifest is unavailable.",
       "reference_locus_exposure": "encoder_seen_or_possible"
     },
     "separate_huggingface_safetensors": {
@@ -46,7 +46,7 @@
     "gse296875": "Static gene-centered sequence comparator only. Same-nucleus RNA and ATAC do not define new Decima tasks.",
     "observed_context_requirement": "none_supported; query context is selected from the fixed 8856-task catalog"
   },
-  "interpretation": "Decima is provisionally target-label-unexposed for GSE289173 and has a native signed gene-expression VEP. It is not yet eligible for the primary sealed endpoint because the exact 8856-task metadata has not been acquired or crosswalked to all four required liver lineages. Its noncommercial code and Zenodo weight terms also make it ineligible as an open champion.",
+  "interpretation": "Decima is provisionally target-label-unexposed for GSE289173 and has a native signed gene-expression VEP. It is not yet eligible for the primary held-back endpoint because the exact 8856-task metadata has not been acquired or crosswalked to all four required liver lineages. Its noncommercial code and Zenodo weight terms also make it ineligible as a best openly licensed model.",
   "license_disposition": {
     "code": "Genentech_Non-Commercial_Software_License_1.0",
     "huggingface_model_card": "declares_MIT_but_does_not_override_conflicting_authoritative_records",

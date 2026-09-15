@@ -32,7 +32,7 @@
       "exposure_state": "target_label_unexposed"
     }
   },
-  "interpretation": "OneK1K scooby is a blood-domain RNA profile and eQTL comparator. Its project target labels are unexposed, but this does not make its 10-D PBMC scPoli context transferable to liver. Exposure eligibility and input/domain eligibility are separate gates.",
+  "interpretation": "OneK1K scooby is a blood-domain RNA profile and eQTL comparator. Its project target labels are unexposed, but this does not make its 10-D PBMC scPoli context transferable to liver. Exposure eligibility and input/domain eligibility are separate checks.",
   "rules": {
     "cell_embedding": "Do not substitute a newly trained latent with the same dimension. Recover the exact scPoli model, feature set and query transform or classify frozen inference as unavailable.",
     "genome_overlap": "Cross donor folds with chromosome/LD blocks and a 524288-bp buffer for any local adaptation.",

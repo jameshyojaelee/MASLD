@@ -25,7 +25,7 @@ KEYWORDS = (
 
 
 class ExtendedMethodsError(RuntimeError):
-    """Raised when the source document differs from the bounded DOCX contract."""
+    """Raised when the source document differs from the bounded DOCX requirements."""
 
 
 def digest(path: Path) -> str:

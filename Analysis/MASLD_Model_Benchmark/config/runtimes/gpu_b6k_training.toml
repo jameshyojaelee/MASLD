@@ -1,0 +1,17 @@
+schema_version = "masld-bench-runtime-v1"
+runtime_id = "gpu_b6k_training"
+status = "candidate"
+purpose = "Deterministic B6K (sm_120) training for model families that need a full training wall time rather than the four-hour smoke budget. The interpreter and every pinned package are the same environment used by gpu_rna_atac_torch_b6k; the resource profile is the only difference."
+scheduler = "slurm"
+resource_profile = "gpu_b6k_training"
+environment_lock = "sha256:112cffec71044c89191469f62dfcdf60e435f42814d143baf6085bb2225f2b74"
+container_digest = "NOT_APPLICABLE"
+modules = []
+command_prefix = [
+  "/usr/bin/env",
+  "PYTHONNOUSERSITE=1",
+  "CUBLAS_WORKSPACE_CONFIG=:4096:8",
+  "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environments/cobolt-native-torch2.8.0-cu128-21107432/env/bin/python",
+]
+admission_blocking = false
+blockers = []

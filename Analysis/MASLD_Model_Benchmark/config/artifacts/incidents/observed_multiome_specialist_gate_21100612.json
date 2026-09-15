@@ -1,0 +1,19 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "observed_multiome_specialist_gate_21100612",
+  "job_id": 21100612,
+  "artifact_path": "executions/model-check-331-21100612",
+  "artifact_sha256": "baf90a322f473eded02b7657c87c43c606da2ef8db316a4db0e683646cec24f8",
+  "stage_reached": "corrected_census_bound_gate_validation_complete",
+  "failure_class": "incomplete_transitive_source_binding",
+  "cause": "The corrected gate module imports the original unit-axis and metric helpers plus the shared two-way-bootstrap implementation, but revision 2 did not include those transitive files in its source-binding roster.",
+  "scientific_impact": "The tested gate logic and native-family correction remain valid, but revision 2 is not a source-complete reproducibility lock and therefore is not the terminal readiness authority.",
+  "outcome_access": {
+    "new_development_outcomes_read": false,
+    "sealed_outcomes_read": false,
+    "candidate_predictions_read": false,
+    "candidate_metrics_calculated": false
+  },
+  "terminal_disposition": "superseded_incomplete_source_lock",
+  "retry_policy": "Bind the complete transitive source set, rerun the same tests and revision-2 validator without changing gate logic, and freeze a new wrapper receipt."
+}

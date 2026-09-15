@@ -1,0 +1,29 @@
+{
+  "schema_version": "masld-bench-protocol-incident-v1",
+  "incident_id": "observed_multiome_complete_rectangle_aggregation_21100166",
+  "date": "2026-08-25",
+  "job_id": 21100166,
+  "job_name": "model-cpu-score",
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "failed_stage": "complete_rectangle_aggregation",
+  "error_class": "ObservedMultiomeAggregateError",
+  "error_message": "lineage roster differs",
+  "cause": "The synthetic fixture used generic lineage placeholders rather than the five frozen production identifier labels.",
+  "production_lineage_authority": [
+    "cholangiocyte",
+    "fibroblast",
+    "hepatocyte",
+    "macrophage",
+    "t_cell"
+  ],
+  "development_prediction_arrays_deserialized": true,
+  "development_evaluator_arrays_deserialized": true,
+  "development_metric_result_written": false,
+  "partial_ranking_written": false,
+  "promotion_performed": false,
+  "sealed_outcomes_read": false,
+  "bundle_artifacts_modified": false,
+  "retry_policy": "Bind the exact production lineage vocabulary, rerun the synthetic fixture and complete-tree admission as new immutable revisions, then retry aggregation under a new job and output path.",
+  "superseded": false
+}

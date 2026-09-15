@@ -1,0 +1,185 @@
+schema_version = "masld-bench-lsgkm-runtime-fixture-v1"
+status = "prespecified_outcome_blind_cpu_runtime_and_synthetic_fixture"
+family_id = "shared_lsgkm_gkmsvm_deltasvm"
+source_revision = "d7ef90f7cb326b190619c51a13843da48c99e239"
+source_tree_sha256 = "b581071b9b77e4332f28b25c60a3c9251f6c4409"
+source_revision_date = "2026-05-23"
+code_license = "GPL-3.0"
+historical_weights_allowed = false
+historical_implementation_allowed = false
+outcome_access_authorized = false
+biological_data_access_authorized = false
+metric_calculation_authorized = false
+production_training_authorized = false
+production_prediction_authorized = false
+selection_authorized = false
+promotion_authorized = false
+native_resume_support = "unsupported_retry_from_scratch_only"
+
+[runtime]
+partition = "cpu"
+account = "nslab"
+qos = "nslab"
+cpus = 4
+memory_gib = 16
+walltime = "04:00:00"
+gcc_module = "GCC/13.2.0"
+zlib_module = "zlib/1.2.13-GCCcore-13.2.0"
+python_module = "python/3.11.5-GCCcore-13.2.0"
+targets = ["gkmtrain", "gkmpredict"]
+gpu_required = false
+
+[algorithm]
+training_command = "gkmtrain -t 2 -l 11 -k 7 -d 3 -c 1 -e 0.001 -w 1 -m 4096 -T 1 -z POS.fa NEG.fa OUT"
+prediction_command = "gkmpredict -T 1 TEST.fa OUT.model.txt.gz PREDICTIONS.tsv"
+internal_cross_validation = false
+random_seed_flag_used = false
+reverse_complement_separate_feature = false
+support_vector_length_bp = 300
+direct_variant_score = "ALT_300bp_raw_decision_minus_REF_300bp_raw_decision"
+deltasvm_native_score = "sum_REF_overlapping_11mer_proxy_scores_minus_sum_ALT_overlapping_11mer_proxy_scores"
+deltasvm_canonical_score = "negative_one_times_native_REF_minus_ALT"
+shared_fit_readouts = ["direct_gkmsvm", "deltasvm"]
+independent_model_families = 1
+
+[fixture]
+seed = 20260825
+positive_records = 48
+negative_records = 48
+sequence_length_bp = 300
+positive_motif = "CACGTG"
+negative_motif = "CTGCAG"
+motif_positions = [30, 60, 90, 120, 150, 180, 210, 240]
+train_repeats = 2
+prediction_repeats = 2
+reverse_complement_absolute_tolerance = 0.00001
+nrkmers_probe_length = 3
+nrkmers_expected_records = 32
+
+[source]
+raw_base_url = "https://raw.githubusercontent.com/Dongwon-Lee/lsgkm/d7ef90f7cb326b190619c51a13843da48c99e239"
+admitted_paths = ["LICENSE", "README.md", "scripts/nrkmers.py", "src/Makefile", "src/clog.h", "src/gkmpredict.c", "src/gkmtrain.c", "src/libsvm.cpp", "src/libsvm.h", "src/libsvm_gkm.c", "src/libsvm_gkm.h"]
+prohibited_path_prefixes = ["tests/", "examples/", "models/", "weights/"]
+
+[[source.files]]
+path = "LICENSE"
+sha256 = "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+
+[[source.files]]
+path = "README.md"
+sha256 = "412cb2159d6b19be35ff3b08b9c7bf48c437f1db63f8b46f1edb48ffd3788383"
+
+[[source.files]]
+path = "scripts/nrkmers.py"
+sha256 = "f1b4207d1c87924294d61046042e51abf0ce92c492898d72c9982720efdf8b9c"
+
+[[source.files]]
+path = "src/Makefile"
+sha256 = "4b9b88ef6792b9a66dee404849af6bd03cfb6c186caf58bc8ac8c433e434d063"
+
+[[source.files]]
+path = "src/clog.h"
+sha256 = "ab6dcfa3857a24b26fae8a1eba59f9945fcfc4824d8f5f88062e89e133b20187"
+
+[[source.files]]
+path = "src/gkmpredict.c"
+sha256 = "a98627bbd12cb2a2c161082903a6a0607583a8df5d4f5f68e04ca1ef46a9792e"
+
+[[source.files]]
+path = "src/gkmtrain.c"
+sha256 = "45794701587d4f759ca976f98e8b2f3c639420f79f7b4706fbb030b69df7f50e"
+
+[[source.files]]
+path = "src/libsvm.cpp"
+sha256 = "21327ab4d9c4a737084b9e16e9a0146ffb4228b6b8668930c44fab3239e6b5cd"
+
+[[source.files]]
+path = "src/libsvm.h"
+sha256 = "281add7e55abdce96427629165bd81bb952c7a95c2ec2b8829270ecacbcb2ccc"
+
+[[source.files]]
+path = "src/libsvm_gkm.c"
+sha256 = "088eb2f1963e8055291ed3952f760a0648023aeceef4bcb6a2238e2c58a7d535"
+
+[[source.files]]
+path = "src/libsvm_gkm.h"
+sha256 = "9f9b530b235e6ac62e9d054f4d8108b78c32cf0153a4e78e31db789b0665a1f8"
+
+[activation]
+status = "blocked_pending_preoutcome_roster_and_input_authority_resolution"
+registered_state_roster = ["cholangiocyte", "endothelial_cell", "hepatocyte", "stellate_cell"]
+observed_frozen_gse296875_roster = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"]
+roster_match = false
+crossed_outer_splits = 25
+donor_folds = 5
+genomic_folds = 5
+fixed_seeds = [11, 29, 47, 71, 101]
+provisional_shared_fit_count_if_observed_roster_is_adopted = 625
+readouts_per_shared_fit = 2
+independent_evidence_count_per_shared_fit = 1
+variant_scoring_source = "gse281364_development_only_scoring_target_never_training_target"
+full_11mer_table_records_per_shared_fit = 2097152
+existing_chrombpnet_negatives_admissible = false
+existing_chrombpnet_negative_reason = "2114bp_specialist_inputs_do_not_prove_the_frozen_300bp_GC_mappability_accessibility_TSS_distance_repeat_matching_contract"
+missing_activation_authorities = ["outer_training_only_peak_and_summit_builder", "300bp_mappability_track_and_version", "repeat_fraction_track_and_version", "GENCODE_v49_TSS_distance_bins", "outer_training_log1p_ATAC_decile_builder", "deterministic_without_replacement_negative_matcher", "preoutcome_state_roster_adjudication"]
+
+[activation.fit_contract]
+unit = "one_crossed_outer_donor_genomic_split_by_resolved_state_by_seed"
+positive_definition = "outer_training donor-state ATAC peak summit 300bp window"
+negative_definition = "one_same_permitted_block_nonpeak_300bp_window_per_positive_without_replacement"
+negative_matching = "GC_abs_le_0.02;mappability_abs_le_0.05_and_min_0.80;same_outer_training_log1p_ATAC_decile;same_TSS_distance_bin;repeat_fraction_abs_le_0.05"
+held_data_excluded = "held_donors;held_genomic_blocks;whole_contig_boundary;blacklist;assembly_gaps;non_ACGT;outer_fold_training_peaks"
+retry_policy = "retry_from_scratch_as_new_immutable_attempt_only"
+
+[activation.claim_contract]
+task_role = "secondary_accessibility_or_activity_direction_baseline"
+target_gene_supported = false
+signed_expression_effect_supported = false
+eqtl_or_ieqtl_effect_supported = false
+causal_gene_supported = false
+two_readouts_counted_as_independent = false
+
+[authorities.gkmsvm_checkpoints]
+path = "config/artifacts/models/gkmsvm/checkpoints.json"
+sha256 = "a7e378273faea57bacf40db911865ab85e3d62089caa1ca4b7838194175f6b6c"
+
+[authorities.gkmsvm_crosswalk]
+path = "config/artifacts/models/gkmsvm/development_crosswalk.json"
+sha256 = "6a8b9e167b858fa000e429feb30806c2de1b6f1fa3deccb39736a7b3b2412d67"
+
+[authorities.gkmsvm_exposure]
+path = "config/artifacts/models/gkmsvm/exposure_audit.json"
+sha256 = "e9b28dcb827267cd29431f3f81ab86907c90a7cc52bfa6a55af598fa675c438a"
+
+[authorities.deltasvm_checkpoints]
+path = "config/artifacts/models/deltasvm/checkpoints.json"
+sha256 = "6d719f820ffcbc17d6726c60bb5168e092a87c363fdb7976aaf8d4e34790c38d"
+
+[authorities.deltasvm_crosswalk]
+path = "config/artifacts/models/deltasvm/development_crosswalk.json"
+sha256 = "99ec993603a65f9926d98b93f82d823d60ae8b058d95f3c5e2d3a6382814e686"
+
+[authorities.deltasvm_exposure]
+path = "config/artifacts/models/deltasvm/exposure_audit.json"
+sha256 = "1acedca9ea5a799dc5d77b0568657a1cca876b0e4992a446b312749a1a6e026f"
+
+[authorities.gse296875_training_pseudobulk]
+path = "executions/gse296875-training-fold-pseudobulk-21063993"
+artifacts_sha256 = "3190aa76cd5872f50d7b0c71bcb92520f1f2428110ce2fb4c26856994bc17e5b"
+
+[authorities.sequence_split]
+path = "executions/sequence-split-contract-v2-21063827"
+artifacts_sha256 = "00c073e4667c16a4c54dc013c57d2812dbc88b8ecacd5cb8a6088fca9072fe0f"
+
+[authorities.sequence_reference]
+path = "executions/sequence-reference-contract-21063670"
+artifacts_sha256 = "7e761c93a6e6aafcc54decb611a8462d2ea5a7c9466e41f153173acee6d8b29d"
+
+[authorities.sequence_fasta]
+path = "executions/sequence-fasta-21063808"
+artifacts_sha256 = "7c202e392c3e415ee7f6bc196b931199c514b2fefc04a19fc82645d81fd8ba39"
+fasta_sha256 = "ed20dceeb315cffa2bc3de050d846eceefc552451fef741f0dd95b0149d10fce"
+
+[authorities.encode_blacklist]
+path = "executions/encode-grch38-blacklist-21063857"
+artifacts_sha256 = "fdbc0d2fbfb23781349a6ba880e29cf4e921cb30857075d5a91395f164c5a540"

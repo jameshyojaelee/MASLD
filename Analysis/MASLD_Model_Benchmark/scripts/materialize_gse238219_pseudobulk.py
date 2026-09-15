@@ -25,7 +25,7 @@ SAMPLES = {
 
 
 class MaterializationError(RuntimeError):
-    """Raised when source topology differs from the frozen contract."""
+    """Raised when source topology differs from the frozen requirements."""
 
 
 def file_digest(path: Path) -> str:

@@ -1,0 +1,120 @@
+{
+  "campaign_authority": {
+    "conditional_model_spec_path": "UNRESOLVED",
+    "path": "config/campaigns/v1_conditional_model.toml",
+    "required_status": "blocked_trigger",
+    "sha256": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c",
+    "submit_enabled": false
+  },
+  "component_authority": {
+    "architecture_built": false,
+    "artifact_class": "context_borzoi_component_interface_readiness",
+    "artifact_path": "executions/model-check-981-21099281",
+    "artifacts_sha256": "6b5f78b82c6a26952cc0015e02389241eb05ac13222224971596f0590c2e024d",
+    "checkpoint_opened": false,
+    "complementarity_trigger_passed": false,
+    "component_selection_locked": false,
+    "interface_path": "config/artifacts/models/context_borzoi/component_interface_readiness_20260825.json",
+    "interface_sha256": "7e5e7be080ef3b3c982524cc855a87c8b38ec4393717672e15269471884326d6",
+    "receipt_path": "readiness/receipt.json",
+    "receipt_sha256": "3c3edb12ccd5b7d81c9728e1743b0b3fd60a24c46b1a2576d8c2125f3f283300",
+    "required_status": "pass_interface_contract_build_blocked"
+  },
+  "conditional_gate": {
+    "architecture_authorized": false,
+    "complementarity_trigger_passed": false,
+    "component_selection_complete": false,
+    "parent_bound_spec_frozen": false,
+    "rule": "A passing synthetic fixture cannot supply complementarity evidence, select a parent, open a campaign, or authorize architecture construction.",
+    "state": "NOT_EVALUATED"
+  },
+  "execution_disposition": {
+    "architecture_build_authorized": false,
+    "biological_data_read_authorized": false,
+    "checkpoint_open_authorized": false,
+    "conditional_model_authorized": false,
+    "cpu_unit_fixture_authorized": true,
+    "development_outcome_read_authorized": false,
+    "gpu_execution_authorized": false,
+    "mapper_fit_authorized": false,
+    "model_weight_creation_authorized": false,
+    "observed_atac_read_authorized": false,
+    "prediction_authorized": false,
+    "sealed_feature_or_outcome_read_authorized": false,
+    "training_authorized": false
+  },
+  "export_contract": {
+    "allowed_files": [
+      "fixture_contract.json",
+      "fixture_outputs.json",
+      "export_manifest.json",
+      "COMPLETE"
+    ],
+    "checkpoint_allowed": false,
+    "format": "canonical_json_utf8",
+    "model_weights_allowed": false,
+    "pickle_allowed": false,
+    "tensor_state_allowed": false
+  },
+  "family_native_boundary": {
+    "allowed_input_modalities": [
+      "synthetic_sequence_latent",
+      "synthetic_rna_context",
+      "explicit_missing_mask"
+    ],
+    "biological_unit_claimed": false,
+    "held_atac_target_read": false,
+    "histology_or_disease_label_allowed": false,
+    "observed_atac_input_allowed": false,
+    "observed_multiome_task_modified": false,
+    "sealed_input_allowed": false
+  },
+  "fixture_interface": {
+    "arms": [
+      "conditioned",
+      "sequence_only",
+      "trans_only",
+      "permuted_context"
+    ],
+    "feature_width": 4,
+    "lora_alpha": 2.0,
+    "lora_rank": 2,
+    "missing_as_numeric_zero_allowed": false,
+    "missing_context_effect": "exact_sequence_only_identity",
+    "missing_mask": false,
+    "missing_value": null,
+    "missingness_states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
+    "permutation_fixed_points_allowed": false,
+    "permutation_seed": 20260825,
+    "permutation_strata": [
+      "outer_partition",
+      "dataset_id",
+      "assay",
+      "lineage",
+      "topology",
+      "missingness_states",
+      "observed_mask"
+    ],
+    "remaining_parent_bound_ablations": [
+      "reverse_complement",
+      "matched_shuffle"
+    ],
+    "same_parent_axes_required": true,
+    "sequence_only_reads_rna_values": false,
+    "source_kind": "synthetic_fixture_only",
+    "task_id": "rna_conditioned_atac",
+    "trans_only_reads_sequence_values": false
+  },
+  "schema_version": "masld-bench-context-borzoi-rna-adapter-fixture-contract-v1",
+  "scope": "Biology-free CPU fixture for explicit RNA missing masks, neutral FiLM/LoRA attachment behavior, same-parent sequence-only and trans-only ablations, within-stratum permuted context, and canonical JSON export. It selects no parent, opens no checkpoint, stores no model weights, reads no biological or observed-ATAC input, performs no fit or prediction, and cannot authorize the conditional architecture.",
+  "status": "SYNTHETIC_FIXTURE_ALLOWED_ARCHITECTURE_BLOCKED"
+}

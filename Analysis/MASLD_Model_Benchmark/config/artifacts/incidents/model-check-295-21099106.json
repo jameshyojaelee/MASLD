@@ -1,0 +1,25 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "job_id": "21099106",
+  "job_name": "model-check-295",
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "stage_reached": "unit_tests_failed_before_identifier_plan_execution",
+  "unit_tests": {
+    "passed": 4,
+    "failed": 1
+  },
+  "failure_class": "zero_peak_contig_missing_from_exported_count_dictionary",
+  "failure_message": "KeyError: chrY",
+  "biological_h5_opened": false,
+  "biological_matrix_values_read": false,
+  "development_outcomes_read": false,
+  "sealed_outcomes_read": false,
+  "metrics_calculated": false,
+  "output_tree_created": false,
+  "logs": {
+    "stdout": "executions/model-check-295-21099106.out",
+    "stderr": "executions/model-check-295-21099106.err"
+  },
+  "disposition": "preserved_nonpromotable_corrected_by_model_check_296"
+}

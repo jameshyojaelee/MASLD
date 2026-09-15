@@ -48,7 +48,7 @@
       "exposure_state": "target_label_unexposed"
     }
   },
-  "interpretation": "EpiBERT is not MASLD-pretrained. The sealed GSE289173 labels are chronologically unexposed, while generic liver accessibility and reference sequence are expected priors. The remaining important contamination uncertainty concerns project development sources that were already public before December 2024 and the incomplete accession-level EpiBERT corpus manifest.",
+  "interpretation": "EpiBERT is not MASLD-pretrained. The held-back GSE289173 labels are chronologically unexposed, while generic liver accessibility and reference sequence are expected priors. The remaining important contamination uncertainty concerns project development sources that were already public before December 2024 and the incomplete accession-level EpiBERT corpus manifest.",
   "rules": {
     "checkpoint_chronology": "A source public after the immutable 2024-12-17 archive is target-label-unexposed unless another declared upstream source contains the same outcomes.",
     "genome_overlap": "The model saw hg38 windows broadly. Hold donor and chromosome/LD blocks jointly, with at least a 524288-bp boundary buffer; sequence overlap is distinct from donor-label exposure.",

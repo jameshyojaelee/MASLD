@@ -20,7 +20,7 @@ modality_status_default = "withheld_sealed"
 exposure_status = "target_label_unexposed"
 admission_blocking = true
 blockers = ["Activate only after a written pre-unblinding seal record confirms no local outcome use.", "Before outcome access, freeze paired development variance and demonstrate at least 80% prospective power for the prespecified 0.05 rank-correlation gain; otherwise downgrade without unblinding.", "Outcome labels remain outside campaign planning and model selection.", "Checkpoint corpus exposure and source reuse terms must pass admission.", "GEO specifies STAR 2.5.2b alignment to GRCh38 and RSEM 1.3.0 plus featureCounts 1.5.1 quantification, but not the exact gene annotation. The evaluator must freeze feature identity and a project-reference crosswalk without opening stage outcomes."]
-notes = "Conditional 18-donor bulk endpoint with no assumption that confirmatory power is reachable. No outcome-download URL may be registered. If the exposure audit fails, reclassify as development; if the prospective power gate fails, downgrade without unblinding. GEO records STAR 2.5.2b/GRCh38 with RSEM 1.3.0 and featureCounts 1.5.1."
+notes = "Conditional 18-donor bulk endpoint with no assumption that confirmatory power is reachable. No outcome-download URL may be registered. If the exposure audit fails, reclassify as development; if the prospective power check fails, downgrade without unblinding. GEO records STAR 2.5.2b/GRCh38 with RSEM 1.3.0 and featureCounts 1.5.1."
 
 [provenance]
 source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE267031"

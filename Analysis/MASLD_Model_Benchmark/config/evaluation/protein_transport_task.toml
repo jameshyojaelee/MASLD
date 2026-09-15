@@ -1,0 +1,38 @@
+schema_version = "masld-bench-task-v1"
+task_id = "protein_transport"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["liver_proteomics", "scwat_proteomics", "owat_proteomics"]
+endpoint = "Within five fixed participant outer folds over the 58-participant PXD051911 liver arm, rank held-out participants by cross-sectional histological activity from liver protein abundance alone, and separately transport the fitted liver protein program to same-donor subcutaneous and omental adipose proteomes. The primary endpoint is the source-native NAFLD activity score as a 0-8 ordinal, scored as one pooled out-of-fold rank correlation over all 58 participants rather than as an average of per-fold values. Protein accessions are opaque source feature keys. No paired RNA-protein relationship exists in this accession and none may be inferred, fitted, or reported."
+metrics = ["participant_oof_nas_spearman_gain_over_protein_pca", "participant_oof_nas_spearman_absolute", "participant_oof_fibrosis_f2plus_auroc_gain", "participant_oof_saf_macro_f1_gain", "cross_tissue_liver_to_scwat_program_spearman_gain", "cross_tissue_liver_to_owat_program_spearman_gain"]
+datasets_train = ["pxd051911"]
+datasets_development = []
+datasets_sealed = []
+split_id = "pxd051911_participant_outer_v1"
+required_pairing_levels = ["same_donor_different_tissue"]
+missingness_policy = "typed_three_state_protein_mask_observed_structurally_missing_below_qc; never_encode_missing_as_zero"
+admission_gates = [
+  "Participants are the only biological replicates. Use the frozen 58-participant liver join and the five fixed participant outer folds; all tissues contributed by one participant share one outer fold.",
+  "The plasma arm is excluded and stays excluded. It is longitudinal at 184 rows over 143 participants with 41 repeat-visit rows, so admitting it without collapsing to person_key would treat repeat visits from one participant as independent donors. Its exclusion is a donor-safety condition of this TaskSpec, not a convenience.",
+  "No paired RNA-protein relationship may be inferred, fitted, reported, or used for feature selection. This accession creates no matched RNA edge, and protein features may not be substituted for, aligned to, or interpreted against any RNA measurement from any other dataset.",
+  "Protein accessions are opaque source feature keys. Gene-symbol mapping, pathway annotation, sequence retrieval, and structure lookup are prohibited until a direct source identifier convention is frozen. Two accessions per matrix carry a blank gene symbol, so the accession, never the symbol, is the join key.",
+  "Encode protein missingness with the typed three-state mask. A protein absent from a tissue panel is structurally_missing; a protein present in the panel but not quantified in a participant is below_qc, which is left-censored and intensity-dependent. These two states are not interchangeable and neither may be imputed as zero, as a shared constant, or collapsed into one mask.",
+  "fat_pct is observed for 44 of 58 participants and carries a typed mask. It may never be zero-filled. Any analysis using it must report the 44-participant subset explicitly.",
+  "Fit every learned transform, feature filter, variance screen, normalisation constant, imputation rule, latent space, hyperparameter, and calibration step inside the outer training participants only.",
+  "Report every rank-based and average-precision metric against both a continuous random-score reference and a label permutation of the model's own score vector, per ranking_metric_floor_requirement_20260825. Class prevalence is prohibited as a baseline. Record n, positive count, negative count, the number of distinct score values the scorer emits, and the draw count and seed for each reference.",
+  "A scorer emitting fewer than two distinct values has an undefined rank metric. Record that as a defined degenerate outcome with its distinct-value count; never substitute zero, prevalence, or a fold mean for it.",
+  "Cross-tissue transport is same_donor_different_tissue and never same-sample. Report liver-to-scWAT and liver-to-owat as separate scopes with their own n, never pooled into one adipose number and never described as technical replication.",
+  "This is single-cohort development evaluation. It cannot support a task champion, an external-transfer claim, a MASLD or MASH diagnosis claim, a progression or longitudinal claim, or any clinical, prognostic, or treatment-response claim.",
+  "The endpoint is cross-sectional stage-associated histology recorded at one biopsy per participant. Language asserting progression, trajectory, or disease course over time is prohibited."
+]
+baseline_model_ids = ["protein_mean", "protein_pca", "elastic_net", "assay_native_program_projection"]
+uncertainty_method = "participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "protein_transport_development_secondary"
+multiplicity_method = "primary_endpoint_reported_with_interval_and_both_null_references; bh_q0.05_within_prespecified_secondary_family"
+promotion_gate_id = "protein_transport_development_only_v1"
+promotion_gate_config_sha256 = "6be5223a38f2fbe9dbcbaf91edd85f10d3159c8efa1a5a66a4ef3e196434b781"
+primary_evaluator_id = "pxd051911_protein_transport_rank_v1"
+evaluator_parameters = { protein_feature_identity = "opaque_source_accession", primary_endpoint = "nafld_activity_score_ordinal_0_8", primary_metric_form = "pooled_out_of_fold_spearman_gain_over_protein_pca", scoring_pooling = "pooled_out_of_fold_never_average_of_per_fold", outer_folds = 5, fold_seed = 20260821, fold_assignment = "sha256_hash_of_person_key_unstratified", participants = 58, scwat_matched_participants = 56, owat_matched_participants = 25, liver_proteins = 7096, adipose_proteins = 6988, union_feature_axis = 8361, source_outcomes_available_to_model = false, source_outcomes_available_to_selector = false, prevalence_as_baseline_prohibited = true, rna_protein_pair_assumed = false }
+claim_gate = "Development diagnostics only. No model can be called a champion on this task and none ever can under the current portfolio: protein_transport requires an eligible external LC-MS shotgun protein cohort and zero exist, which is recorded as structurally_impossible_not_pending. No external-transfer, disease-classification, diagnostic, prognostic, progression, causal, or treatment-response claim is eligible. A well-characterised negative is an acceptable and reportable outcome of this task."

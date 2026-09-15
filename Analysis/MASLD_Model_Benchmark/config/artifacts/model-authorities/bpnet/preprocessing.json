@@ -1,0 +1,32 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "preprocessing",
+  "model_ids": ["bpnet"],
+  "task_id": "rna_conditioned_atac",
+  "dataset_id": "gse296875",
+  "scope": "retrospective_development_profile_screen_only",
+  "unit_of_inference": "donor",
+  "input_length_bp": 2114,
+  "output_length_bp": 1000,
+  "training_target": "outer_training_donor_by_lineage_Tn5_pseudobulk",
+  "inference_inputs": ["GRCh38.p14_DNA_sequence"],
+  "inference_inputs_forbidden": [
+    "held_donor_ATAC",
+    "held_donor_outcomes",
+    "sealed_features",
+    "sealed_outcomes"
+  ],
+  "crossed_split": "donor_fold_by_genomic_fold",
+  "reverse_complement_inference": "arithmetic_mean_after_profile_axis_restoration",
+  "profile_output": "1000_bp_probability_profile",
+  "count_output": "expm1_of_log1p_regional_count",
+  "terminal_bundle": {
+    "path": "executions/sequence_gpu_bundle_004_bpnet-ready_71d22f6453-21077605",
+    "artifacts_sha256": "14af86ac22e67bc29f8a7b85ee3a049b63f875ba5423210cc8e539d29b9fe9e8",
+    "logical_tasks": 8,
+    "passed_tasks": 8
+  },
+  "adapter_sha256": "ca15d5ce83fc5d4f9e33c927e2ae9c1e63d6082db57aadcd91c1ea177b4765c8",
+  "champion_claim_allowed": false,
+  "notes": "This authority allows the exact frozen development predictions for independent evaluation. It is not a complete five-fold, five-seed finalist campaign and does not admit variant scoring or held-back inference."
+}

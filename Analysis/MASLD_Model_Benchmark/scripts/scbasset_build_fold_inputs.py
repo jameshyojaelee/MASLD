@@ -70,7 +70,7 @@ SEQUENCE_LENGTH = 1344
 
 
 class ScBassetInputError(ValueError):
-    """Raised when scBasset fold inputs violate the leakage contract."""
+    """Raised when scBasset fold inputs does not meet the leakage requirements."""
 
 
 def _canonical_region_id(*, name: str, role: str, contig: str, center: int) -> str:
@@ -382,7 +382,7 @@ def _write_sequences(
 
 
 def _remove_intermediate_lineage_matrices(output: Path) -> None:
-    """Remove full-axis worker matrices before the immutable artifact is frozen.
+    """Remove full-axis worker matrices before the read-only output file is frozen.
 
     Their genomic-test rows are structurally missing and therefore must not
     survive as all-zero rows that could be mistaken for observed negatives.

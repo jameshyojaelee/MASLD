@@ -27,14 +27,14 @@ Architecture and gene vocabulary
 ---------------------------------
 Restricted inspection (see the adapter's ``inspect_checkpoint`` helper, and
 the report that accompanied this file) established two facts that the
-registered contract in ``config/artifacts/models/scprint/checkpoints.json``
+registered requirements in ``config/artifacts/models/scprint/checkpoints.json``
 did not state correctly or completely:
 
 * The checkpoint's ``hyper_parameters`` dict carries ``nhead: 4``, not the
   ``attention_heads: 2`` recorded in the checkpoints.json
   ``architecture_contract``.  ``d_model`` (256) and ``nlayers`` (8) do match.
   This adapter trusts the checkpoint's own hyperparameters, not the
-  registered contract, and records the discrepancy in every receipt.
+  registered requirements, and records the discrepancy in every receipt.
 * The gene vocabulary is fully self-contained in the checkpoint:
   ``hyper_parameters["genes"]`` is an ordered list of 44,756 Ensembl gene
   IDs whose length equals ``state_dict["gene_encoder.embedding.weight"]``'s

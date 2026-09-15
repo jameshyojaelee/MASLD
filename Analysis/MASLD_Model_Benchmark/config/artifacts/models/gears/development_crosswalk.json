@@ -17,7 +17,7 @@
       "biological_unit": "animal_n4",
       "fit": "conditional_future_gene_perturbation_stress_only",
       "required_resolution": ["mouse_reference", "target_and_guide_identity", "cell_to_animal_join", "RNA_to_perturbation_pairing", "gene_symbol_orthology_policy"],
-      "reason": "GEARS could only be assessed for gene targets after every cell and target is assigned without crossing animals; the current same_study_unpaired topology and unresolved joins fail admission."
+      "reason": "GEARS could only be assessed for gene targets after every cell and target is assigned without crossing animals; the current same_study_unpaired topology and unresolved joins fail inclusion."
     },
     "gse281160": {
       "biological_unit": "experimental_replicate_count_UNRESOLVED",

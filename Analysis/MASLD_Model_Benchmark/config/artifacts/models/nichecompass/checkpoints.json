@@ -1,7 +1,7 @@
 {
   "activation_disposition": {
     "admission_status": "deferred",
-    "reason": "No rights-cleared donor-level MASLD spatial dataset currently satisfies the donor-join, graph, prior-asset, split, and artifact-lock contracts.",
+    "reason": "No rights-cleared donor-level MASLD spatial dataset currently satisfies the donor-join, graph, prior-asset, split, and output-file record requirements.",
     "v1_training": "prohibited",
     "v1_superiority_or_champion_claim": "prohibited"
   },

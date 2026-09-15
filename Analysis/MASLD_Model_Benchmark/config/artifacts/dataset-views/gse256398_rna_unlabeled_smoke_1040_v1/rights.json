@@ -1,0 +1,16 @@
+{
+  "admitted": true,
+  "authority": "rights",
+  "evidence": {
+    "access_tier": "public",
+    "author_repository_code_reused": false,
+    "dua_required": false,
+    "license_status": "source_terms_apply",
+    "model_input_redistribution": "source_terms_apply",
+    "source_accession": "GSE256398",
+    "source_url": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE256398"
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

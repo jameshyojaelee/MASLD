@@ -80,7 +80,7 @@ PAIRED_BLOCK_FIELDS = scpair_evaluator.PAIRED_BLOCK_FIELDS
 
 
 class RNAATACCoboltEvaluationError(RuntimeError):
-    """Raised when the cross-campaign Cobolt evaluation contract is violated."""
+    """Raised when the cross-campaign Cobolt evaluation requirements are not met."""
 
 
 def relative_deviance_reduction(reference: float, candidate: float) -> float:
@@ -177,7 +177,7 @@ def score_external_model(
     *,
     model_id: str,
 ) -> tuple[dict[str, Any], list[dict[str, str]]]:
-    """Re-derive base-evaluator metrics for an immutable external campaign."""
+    """Re-derive base-evaluator metrics for a read-only external campaign."""
 
     import numpy as np
     from scipy.stats import spearmanr

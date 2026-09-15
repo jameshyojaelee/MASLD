@@ -1,0 +1,171 @@
+schema_version = "masld-bench-mpralegnet-provenance-audit-v1"
+status = "prespecified_outcome_blind_provenance_equivalence_audit"
+dataset_id = "gse281364"
+model_id = "mpralegnet_hepg2_test1_val2"
+task_id = "signed_hepg2_reporter_activity_transfer"
+outcome_access_authorized = false
+reporter_count_access_authorized = false
+metric_calculation_authorized = false
+model_fit_authorized = false
+prediction_generation_authorized = false
+shortlist_authorized = false
+complementarity_authorized = false
+promotion_authorized = false
+terminal_disposition = "blocked_official_weights_only_scanner_unsupported_POP_opcode"
+
+[zenodo_record]
+record_id = 10558183
+record_url = "https://zenodo.org/api/records/10558183"
+record_license = "cc-by-4.0"
+
+[zenodo_record.final_dump]
+filename = "final_dump.zip"
+url = "https://zenodo.org/api/records/10558183/files/final_dump.zip/content"
+size_bytes = 3504620192
+md5 = "05118d0edf404a43aeca5e5ca87ec7b3"
+member_count = 319
+checkpoint_member = "final_dump/models/HepG2/md_shift_reverse_noavg_noch/best_model_test1_val2.ckpt"
+checkpoint_size_bytes = 16028387
+checkpoint_compressed_size_bytes = 14681728
+checkpoint_crc32 = "cb95e504"
+checkpoint_sha256 = "1e4b7e79e7527b26e90fb1691c4c4ac2d7f6d201daebda67b6b1ba47c5db949b"
+config_member = "final_dump/models/HepG2/md_shift_reverse_noavg_noch/config.json"
+config_size_bytes = 669
+config_compressed_size_bytes = 312
+config_crc32 = "69b9bf07"
+
+[zenodo_record.final_dump.restricted_serialization]
+inner_member_count = 369
+inner_tensor_storage_members = 367
+inner_inventory_sha256 = "3be9166375a6d3c1b357224ef390c99843f13efe95c6958da49a22e0a2f1740d"
+data_pickle_sha256 = "e64510a222974b908a43d4b44ff8d79a4d49f08aafb638e18aa0f555a77913e9"
+torch_archive_version = "3"
+pickle_protocol = 2
+opcode_fingerprint_sha256 = "79ab93f305838dcebaf81771b07c213b487cf18bc1dbdf857e5c2ebf564b243c"
+global_fingerprint_sha256 = "6f678ad5e3091fad7cdee40adfa4678f8cc1ef74f0dba308e000ab035abb4f5f"
+allowed_opcodes = ["APPEND", "APPENDS", "BINFLOAT", "BINGET", "BININT", "BININT1", "BININT2", "BINPERSID", "BINPUT", "BINUNICODE", "BUILD", "EMPTY_DICT", "EMPTY_LIST", "EMPTY_TUPLE", "GLOBAL", "LONG_BINGET", "LONG_BINPUT", "MARK", "NEWFALSE", "NEWOBJ", "NEWTRUE", "NONE", "POP", "PROTO", "REDUCE", "SETITEM", "SETITEMS", "STOP", "TUPLE", "TUPLE1", "TUPLE2", "TUPLE3"]
+declared_globals = ["__builtin__ dict", "__builtin__ getattr", "collections OrderedDict", "collections defaultdict", "torch FloatStorage", "torch LongStorage", "torch._utils _rebuild_parameter", "torch._utils _rebuild_tensor_v2", "torch.optim.adamw AdamW", "torch.optim.lr_scheduler OneCycleLR"]
+expected_torch_unsafe_globals = ["builtins.getattr", "collections.defaultdict", "torch.optim.adamw.AdamW", "torch.optim.lr_scheduler.OneCycleLR"]
+narrow_safe_global_objects = ["builtins.getattr", "collections.defaultdict", "torch.optim.adamw.AdamW", "torch.optim.lr_scheduler.OneCycleLR"]
+getattr_reason = "Lightning_serialized_OneCycleLR_anneal_func_bound_method"
+unsafe_deserialization_fallback_allowed = false
+
+[preserved_failure_reuse]
+authorized = true
+source_path = "executions/model-check-226-21091805.failed"
+source_job_id = 21091805
+source_state = "FAILED"
+source_exit_code = "1:0"
+failure_reason = "restricted_weights_only_loader_rejected_undeclared_builtins_getattr"
+audit_stderr_member = "validation/audit.stderr.txt"
+audit_stderr_sha256 = "d8d57637a283c09d48d36d458c3f7a147387d6386ad635962dfc1e75a7a34c2f"
+record_member = "downloads/zenodo_record.json"
+record_sha256 = "34e1c4454341575beeb1158fb7ce08e4258d0b6041f80209498b1fe40a579645"
+final_dump_member = "downloads/final_dump.zip"
+final_dump_size_bytes = 3504620192
+final_dump_md5 = "05118d0edf404a43aeca5e5ca87ec7b3"
+code_archive_member = "downloads/human_legnet-main.zip"
+code_archive_size_bytes = 134493027
+code_archive_md5 = "de01b24b9cc5960a763df07f0358a19b"
+reuse_requires_reverification = true
+reuse_is_not_a_frozen_result_authority = true
+
+[terminal_scanner_failure]
+source_path = "executions/model-check-229-21092032.failed"
+source_job_id = 21092032
+source_state = "FAILED"
+source_exit_code = "1:0"
+audit_stderr_member = "validation/audit.stderr.txt"
+audit_stderr_sha256 = "b2996006b72c41b4232d0c2b01d445c5ad040760a7e32b5e29ce1fe4d0cefb24"
+tests_stderr_member = "validation/tests.stderr.txt"
+tests_stderr_sha256 = "9acaa26ffeb3fa06c587426768a75215775625be1d5b869bc390f88a8b6955bf"
+official_scanner = "torch.serialization.get_unsafe_globals_in_checkpoint"
+exception_type = "_pickle.UnpicklingError"
+exception_message = "Unsupported operand 48"
+unsupported_opcode = "POP"
+unsupported_opcode_decimal = 48
+torch_load_reached = false
+custom_deserializer_allowed = false
+unrestricted_deserializer_allowed = false
+
+[zenodo_record.code_archive]
+filename = "human_legnet-main.zip"
+url = "https://zenodo.org/api/records/10558183/files/human_legnet-main.zip/content"
+size_bytes = 134493027
+md5 = "de01b24b9cc5960a763df07f0358a19b"
+member_count = 45
+
+[code_members]
+"human_legnet-main/LICENSE" = "a43c0517b34d46afbb75b48bee74c0e52ae3612f9b860a81d566320ea49c0f15"
+"human_legnet-main/model.py" = "8a5650b788662db07fda0e82566697b0aa1b81a1e6ff7a53448f138d00c40975"
+"human_legnet-main/dataset.py" = "52eafb4a5d2d3830b852ded6119380e13d22865fd3f07497a859cd0a5cf2abd7"
+"human_legnet-main/utils.py" = "88304f6235a39eb83dad805d30175e4d97ef8a695eabf032303d6536a1db0fae"
+"human_legnet-main/fasta.py" = "8c6a7f9c7aae049a9d0022976f9302172d1caadef00bb3ffaa663b619ef86a47"
+"human_legnet-main/fasta_predict.py" = "703402fc5f2425bdb184addc2908f9ce0226e65b9d1d16870f1a0a9c6ae54e00"
+"human_legnet-main/training_config.py" = "e45aa5830e97fa63f0e1bbcdf388e98ac7e72afe5e9395be50ae5a9d8a28078e"
+"human_legnet-main/envs/environment.yml" = "90e8df5ce9e0649a1596723067db14ae855d6ff69d379a3efd36614d8a766d0f"
+
+[immutable_trees.admission]
+path = "executions/mpralegnet-admission-21066221"
+artifacts_sha256 = "6f77ec23b4990efe416a3f69fcacb9ccce942b2fb062f17855fb9bd32e26ca7f"
+
+[immutable_trees.fixture]
+path = "executions/gse281364-mpralegnet-fixture-21069059"
+artifacts_sha256 = "33c3ea9fe134157b9f8f29396cd9d0d565243a9f6e44db3f458cd970c486d32c"
+
+[immutable_trees.predictions]
+path = "executions/model-work-102-21069877"
+artifacts_sha256 = "a59c82c5093a61025f39d5fb12c61820711f58e001ee9bc7858bd505140ec5f9"
+
+[immutable_trees.reconciliation]
+path = "executions/model-check-225-21091492"
+artifacts_sha256 = "fdc1db620152757f74c07904487a62381fcd182a532669b93b0aa1ca5cdfc2ac"
+
+[execution_sources]
+"scripts/mpralegnet_probe_native.py" = "11b963016adf3b3154d0f5fb90d9122a0eefbc0e3169597f51b074e928b1548f"
+"scripts/mpralegnet_predict_gse281364.py" = "d22fcb8d87fcda9227d907d3a5e9646eca9852f3d6da5e5d16eef29703ed972f"
+"scripts/build_gse281364_mpralegnet_fixture.py" = "d5770bb87053affa882634741ae62496f0198e0cd1c50613444f421d65f04f74"
+
+[rekeyed_prediction]
+member = "reconciliation/mpralegnet_selected_elements.tsv"
+member_sha256 = "59c96fc41d1ef14ef6f4a5bb7ad0f2e24336c6f23776b97fef82de4bf4f5d6cd"
+selected_elements = 1033
+source_locus_groups = 1033
+long_range_blocks = 239
+independent_fitted_predictions = 1
+schema_seed_repeats_are_independent = false
+
+[future_outcome_authority]
+path = "executions/gse281364-replicate-outcomes-21066307"
+artifacts_sha256 = "cb42bd4037127a4e4d6a406d6f7b00c706bc93b631cdf93083ce994809e791db"
+role = "exposed_development_MPRA_only"
+read_during_this_audit = false
+
+[pre_scoring_contract]
+eligible_contexts = ["HepG2_control", "HepG2_PAOA"]
+excluded_contexts = ["LX2_control", "LX2_TGFb"]
+prediction_endpoint = "mean_orientation_ALT_minus_REF_uncalibrated_HepG2_reporter_score"
+observed_endpoint = "mean_of_four_replicate_ALT_minus_REF_log2_RNA_over_DNA_activity_deltas"
+pseudocount = 0.5
+primary_descriptor = "spearman_rank_correlation"
+secondary_descriptor = "pearson_correlation"
+bootstrap_replicates = 10000
+bootstrap_seed = 20260825
+resampling_unit = "source_locus_group"
+biological_donors = 0
+experimental_replicates_per_context = 4
+replicates_are_independent_donors = false
+models_ranked = false
+champion_eligible = false
+
+[campaign]
+job_name = "model-check-226"
+partition = "io"
+account = "nslab"
+qos = "nslab"
+cpus = 2
+memory_gb = 16
+hours = 8
+array = false
+bundled = true
+no_overwrite = true

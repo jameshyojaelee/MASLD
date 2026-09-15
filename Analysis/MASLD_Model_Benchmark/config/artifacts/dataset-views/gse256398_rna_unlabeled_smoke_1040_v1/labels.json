@@ -1,0 +1,22 @@
+{
+  "admitted": true,
+  "authority": "labels",
+  "evidence": {
+    "age_in_model_input": false,
+    "barcode_cell_labels": "structurally_missing",
+    "class_counts": {
+      "unlabeled": 1040
+    },
+    "disease_group_in_model_input": false,
+    "donor_metadata_visibility": "development_visible_outside_smoke_model_input",
+    "fibrosis_in_model_input": false,
+    "histology_in_model_input": false,
+    "nas_state": "structurally_missing",
+    "recorded_sex_in_model_input": false,
+    "supervised_cell_state_accuracy_allowed": false,
+    "transferred_labels_are_accuracy_truth": false
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

@@ -13,7 +13,7 @@ from typing import Any
 
 
 class RestrictedInspectionError(ValueError):
-    """Raised when a checkpoint or loaded value violates the inspection contract."""
+    """Raised when a checkpoint or loaded value does not meet the inspection requirements."""
 
 
 def _sha256_file(path: Path) -> str:

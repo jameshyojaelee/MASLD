@@ -16,7 +16,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "4d046904751aed4c1ff89ba47ef585adb0bae824365ee00448e2429bfc047b3f"
   },
-  "interpretation": "The final checkpoint was uploaded after GSE289173 became public, and the expansion from the preprint's 22-million-cell corpus to the final approximately 25-million-cell corpus has no immutable CELLxGENE source manifest. Sealed exposure is unknown. The model may remain a development comparator but cannot earn the GSE289173 champion claim.",
+  "interpretation": "The final checkpoint was uploaded after GSE289173 became public, and the expansion from the preprint's 22-million-cell corpus to the final approximately 25-million-cell corpus has no read-only CELLxGENE source manifest. Held-back exposure is unknown. The model may remain a development comparator but cannot earn the GSE289173 best-model claim.",
   "label_leakage_incident": {
     "affected_upstream_path": "downstream_task/regformer_emb.py:run_embedding -> regformer.utils.utils.refine_embedding",
     "benchmark_action": "prohibited",

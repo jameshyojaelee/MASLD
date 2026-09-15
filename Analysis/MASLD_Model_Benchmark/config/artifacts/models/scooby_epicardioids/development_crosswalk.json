@@ -21,7 +21,7 @@
     "gse296875": {"evidence": "GSE296875 became public after the May 2025 checkpoint. Its same-nucleus liver profiles, QTLs and histopathology were not exposed.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
     "resource_atlas_current": {"evidence": "No Resource MASLD labels or frozen programs were targets. The cell decoder is cardiac-organoid-specific; only generic functional-genomics priors are inherited through Borzoi.", "exposure_state": "target_label_unexposed"}
   },
-  "interpretation": "Epicardioids is a cardiac-development OOD control, not a liver-general checkpoint. Its target-label exposure is provisionally acceptable, but its ATAC-conditioned scGLUE latent and unpaired pseudo-matching make it ineligible for RNA-conditioned ATAC and current sealed inference.",
+  "interpretation": "Epicardioids is a cardiac-development OOD control, not a liver-general checkpoint. Its target-label exposure is provisionally acceptable, but its ATAC-conditioned scGLUE latent and unpaired pseudo-matching make it ineligible for RNA-conditioned ATAC and current held-back inference.",
   "rules": {
     "cell_embedding": "Recover the exact scGLUE model, guidance graph, features and query transform. Never substitute an arbitrary 50-D project embedding.",
     "genome_overlap": "Any adaptation crosses donor groups with chromosome/LD blocks and a 524288-bp buffer.",

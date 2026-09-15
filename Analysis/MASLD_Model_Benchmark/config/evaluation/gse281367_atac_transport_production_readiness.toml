@@ -1,0 +1,115 @@
+schema_version = "masld-bench-gse281367-atac-transport-production-readiness-v1"
+audit_id = "gse281367_atac_transport_production_readiness"
+dataset_id = "gse281367"
+role = "project_exposed_atac_only_development"
+automatic_activation = false
+sealed_outcomes_read = false
+biological_outcome_arrays_read = false
+condition_values_read = false
+condition_values_used = false
+source_native_input_activated = false
+external_or_sealed_evaluation = false
+champion_claim_allowed = false
+
+[activation_authority]
+path = "executions/gse281367-activation-readiness-21099679"
+artifacts_sha256 = "e36b86815bdb9f66c372c933c2ce3052ba5c2b475138f45f2bfa2a26805f9f01"
+artifact_class = "gse281367_activation_readiness_audit"
+
+[outcome_authority]
+path = "executions/atac-transport-outcomes-21064552"
+artifacts_sha256 = "6f5092f1343b91ff592851d7d265ab45f8e154d210984c19f96bf05421025be3"
+artifact_class = "atac_transport_evaluator_outcomes"
+summary_path = "outcome_summary.json"
+summary_sha256 = "27b6a3a831496b2a4991b9fe8b83932bdc85e8b6cc7c3210c694f11b44b42f92"
+axis_path = "evaluator_outcomes/donor_lineage_axis.tsv"
+axis_sha256 = "89002b39cc4a0b978fd931670eec10cc3eb893b1ef8699743813283d1f0fdf40"
+windows_path = "evaluator_outcomes/windows.tsv"
+windows_sha256 = "7266ab1a5c751423c6aaf422a19911fcf3ee48e4c615793e1cf1266f59bb16c0"
+artifact_role = "evaluator_only_development_outcomes"
+model_inputs_may_read = false
+
+[membership_authority]
+path = "executions/atac-transport-membership-21064488"
+artifacts_sha256 = "32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6"
+artifact_class = "atac_transport_cell_membership"
+builder_path = "scripts/build_atac_transport_membership.py"
+builder_sha256 = "57139208543ee06863b2c24bfe51895c66d16db17b48afee406dfa3068c62eb2"
+outer_fold_seed = 20260821
+outer_fold_count = 5
+outer_fold_inputs = ["dataset_id", "donor_id"]
+outer_fold_uses_condition = false
+
+[window_authority]
+path = "executions/chrombpnet-hepatocyte-donor0-genomic0-inputs-21064244"
+artifacts_sha256 = "fc26ec558ea51f74212bea120dab59053e5f2856494407bb0a717e9eaecc0208"
+artifact_class = "chrombpnet_training_inputs"
+summary_path = "regions/chrombpnet.regions.summary.json"
+summary_sha256 = "28ebbf97f0ee583cedd96a7c34fe6219b9a9750440a96314a99d63dc0d3b0062"
+fold_roles_path = "regions/chrombpnet.fold.json"
+fold_roles_sha256 = "c23fb8dd996a6fbc3f15d5f5b61c01a7db2da5d63fbf9fc65a1bf0dd1340ebee"
+held_window_source = "fixed_ENCODE_v4_cCRE_contract"
+held_atac_used_for_region_selection = false
+
+[builder_authority]
+path = "scripts/build_atac_transport_outcomes.py"
+sha256 = "82c8ddf60a8720edfbeb0d4f72bacbe60134240a8c6e95a852b6309e35754acf"
+test_path = "tests/unit/test_build_atac_transport_outcomes.py"
+test_sha256 = "49ab0353aa035cf478651ab63ef99aa6650f8ed74bb2693ac651a8b5ed008f47"
+sbatch_path = "slurm/build_atac_transport_outcomes.sbatch"
+sbatch_sha256 = "10d4fe5a95ec7c15346b2da0eead2665dafda762ef5cfbd719d8452a3e11bae9"
+
+[task_authority]
+task_path = "config/evaluation/observed_multiome_task.toml"
+task_sha256 = "abc634ea96718031d7212c4a1229fe3fd84c626d8ad46d75fd68fda91ccdb729"
+gate_path = "config/evaluation/observed_multiome_development_gate.toml"
+gate_sha256 = "78cff35fa0cec02b06091c8bb13ac2da4f6e289ce845abffa9ba4f1eed06cff3"
+task_status = "candidate"
+global_census_revision_required_before_execution = true
+external_seal_bound = false
+
+[expected_axis]
+fields = ["dataset_id", "donor_index", "donor_id", "lineage_index", "lineage_id", "condition", "outer_fold", "cells", "eligible_min_50_cells"]
+condition_column_present = true
+label_free_model_axis_frozen = false
+biological_unit = "donor"
+dataset_donor_n = 12
+lineages = ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage"]
+t_cell_state = "not_applicable_in_frozen_transport_axis"
+same_cell_pairing_claimed = false
+rna_state = "structurally_missing"
+
+[expected_windows]
+window_n = 32000
+window_width_bp = 1000
+profile_bins = 20
+profile_bin_width_bp = 50
+valid_window_n = 16000
+test_window_n = 16000
+train_window_n = 0
+coordinate_system = "GRCh38.p14_0_based_half_open"
+role_source = "held_chromosome_sets"
+
+[production_firewall]
+standardized_prediction_bundle_schema_frozen = false
+label_free_evaluator_axis_frozen = false
+condition_blind_scorer_registered = false
+prediction_hash_commit_before_scoring = false
+model_specific_observed_atac_mask_frozen = false
+largest_receptive_field_bound = false
+query_transform_buffer_frozen = false
+query_transforms_proven_training_only = false
+not_applicable_lineage_handling_frozen = false
+family_native_evaluator_commands_registered = false
+
+[decision]
+frozen_outcome_authority_valid = true
+donor_grouping_contract_valid = true
+label_agnostic_production_ready = false
+observed_atac_production_ready = false
+family_native_tournament_ready = false
+source_native_model_input_ready = false
+existing_outcome_artifact_may_be_rebuilt = false
+existing_outcome_artifact_may_be_given_to_model_jobs = false
+status = "BLOCKED_FOR_PRODUCTION_EXCHANGE_FROZEN_EVALUATOR_OUTCOME_AUTHORITY_RETAINS_RETROSPECTIVE_VALIDITY"
+next_gate = "freeze_a_label_free_prediction_axis_condition_blind_scorer_model_specific_observed_atac_mask_and_buffer_not_applicable_lineage_rules_and_prospective_global_census_revision"

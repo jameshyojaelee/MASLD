@@ -75,7 +75,7 @@
     "locus": "Borzoi initialization and Decima training expose broad reference sequence and functional-genomics biology. Variant evaluation crosses donor folds with merged chromosome or LD blocks and a 524288-bp boundary buffer.",
     "sealed": "GSE289173 labels may not choose output tasks, task aggregations, target genes, transcripts, windows, masks, calibration, thresholds, or direction rules."
   },
-  "interpretation": "Decima can natively emit signed ALT-minus-REF gene-expression effects, but only for a fixed catalog of output contexts. It does not accept sealed RNA as a new context. Primary GSE289173 eligibility remains blocked until the exact 8856-task metadata is frozen and independently maps all four prespecified lineages without sealed-label tuning.",
+  "interpretation": "Decima can natively emit signed ALT-minus-REF gene-expression effects, but only for a fixed catalog of output contexts. It does not accept held-back RNA as a new context. Primary GSE289173 eligibility remains blocked until the exact 8856-task metadata is frozen and independently maps all four prespecified lineages without held-back-label tuning.",
   "rules": {
     "checkpoint_chronology": "The original preprint supports training-design chronology, but the 2025-03-27 immutable weight record controls artifact chronology. A clean declaration requires a checkpoint-bound accession and sample manifest.",
     "fixed_task_ontology": "A cell task is eligible only under its released metadata identity. Similar names, disease states, bulk tissues, or broad parent cell types cannot be relabeled to fill a missing evaluator lineage.",

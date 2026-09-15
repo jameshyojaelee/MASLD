@@ -1,0 +1,230 @@
+schema_version = "masld-bench-gse281574-pooling-topology-v1"
+audit_id = "gse281574_pooling_topology_20260825"
+dataset_id = "gse281574_alcohol_multiome"
+accessions = ["GSE281574", "PRJNA1184747", "PMID40931030", "PMC12423296"]
+status = "outcome_blind_public_metadata_only"
+automatic_activation = false
+sealed_outcomes_read = false
+biological_matrices_downloaded = false
+controlled_data_accessed = false
+pooled_libraries_are_donors = false
+cells_are_biological_replicates = false
+normal_stratum_is_masld_negative_control = false
+reported_person_n = 15
+condition_n = 3
+persons_per_condition = 5
+physical_multiome_library_n = 6
+libraries_per_condition = 2
+geo_assay_record_n = 12
+assay_records_per_physical_library = 2
+pool_size_multiset_per_condition = [2, 3]
+numbered_pool_size_assignment = "UNRESOLVED_PUBLIC_METADATA"
+individual_to_pool_join = "UNAVAILABLE_PUBLIC_METADATA"
+nucleus_to_individual_join = "UNAVAILABLE_PUBLIC_METADATA"
+minimum_independent_molecular_unit = "physical_multiome_library_pool"
+donor_safe_split_available = false
+library_grouped_technical_split_available = true
+external_masld_champion_eligible = false
+role = "alcohol_etiology_ood_and_descriptive_only"
+
+[[public_source]]
+source_id = "geo_soft"
+url = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE281nnn/GSE281574/soft/GSE281574_family.soft.gz"
+encoding = "gzip_text"
+required_tokens = ["^SERIES = GSE281574", "Normal_pool1_ATAC", "AC_pool2_RNA", "Assembly: hg38", "Combined Seurat object with counts and metadata for all samples"]
+
+[[public_source]]
+source_id = "pmc_bioc"
+url = "https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC12423296/unicode"
+encoding = "text"
+required_tokens = ["For each condition, we pooled the nuclei into a batch of 3 individuals and another batch of two individuals", "targeted 9000 and 6000 single nuclei per batch", "Cell Ranger ARC pipeline", "GSE281574"]
+
+[[public_source]]
+source_id = "pubmed_record"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=40931030&retmode=xml"
+encoding = "text"
+required_tokens = ["Dysregulated RNA splicing impairs regeneration", "10.1038/s41467-025-63251-2", "PMC12423296"]
+
+[[condition]]
+condition_id = "Normal"
+source_labels = ["Normal", "normal individuals"]
+person_n = 5
+physical_library_n = 2
+etiology_role = "alcohol_study_reference_stratum"
+masld_negative_control = false
+
+[[condition]]
+condition_id = "SAH"
+source_labels = ["SAH", "AH patients"]
+person_n = 5
+physical_library_n = 2
+etiology_role = "severe_alcohol_associated_hepatitis_ood"
+masld_negative_control = false
+
+[[condition]]
+condition_id = "AC"
+source_labels = ["AC"]
+person_n = 5
+physical_library_n = 2
+etiology_role = "alcohol_associated_cirrhosis_ood"
+masld_negative_control = false
+
+[[assay_record_pair]]
+library_id = "Normal_pool1"
+condition_id = "Normal"
+pool_number = 1
+person_n = -1
+person_n_state = "one_of_2_or_3_unresolved_numbered_assignment"
+atac_gsm = "GSM8623836"
+rna_gsm = "GSM8623842"
+
+[[assay_record_pair]]
+library_id = "Normal_pool2"
+condition_id = "Normal"
+pool_number = 2
+person_n = -1
+person_n_state = "one_of_2_or_3_unresolved_numbered_assignment"
+atac_gsm = "GSM8623837"
+rna_gsm = "GSM8623843"
+
+[[assay_record_pair]]
+library_id = "SAH_pool1"
+condition_id = "SAH"
+pool_number = 1
+person_n = -1
+person_n_state = "one_of_2_or_3_unresolved_numbered_assignment"
+atac_gsm = "GSM8623838"
+rna_gsm = "GSM8623844"
+
+[[assay_record_pair]]
+library_id = "SAH_pool2"
+condition_id = "SAH"
+pool_number = 2
+person_n = -1
+person_n_state = "one_of_2_or_3_unresolved_numbered_assignment"
+atac_gsm = "GSM8623839"
+rna_gsm = "GSM8623845"
+
+[[assay_record_pair]]
+library_id = "AC_pool1"
+condition_id = "AC"
+pool_number = 1
+person_n = -1
+person_n_state = "one_of_2_or_3_unresolved_numbered_assignment"
+atac_gsm = "GSM8623840"
+rna_gsm = "GSM8623846"
+
+[[assay_record_pair]]
+library_id = "AC_pool2"
+condition_id = "AC"
+pool_number = 2
+person_n = -1
+person_n_state = "one_of_2_or_3_unresolved_numbered_assignment"
+atac_gsm = "GSM8623841"
+rna_gsm = "GSM8623847"
+
+[[task_disposition]]
+task_id = "same_nucleus_rna_atac_pairing"
+allowed = true
+current_execution_state = "blocked_until_file_barcode_reference_and_rights_admission"
+independent_unit = "physical_multiome_library_pool"
+replication_n = 6
+split = "group_all_cells_by_physical_library_id"
+model_selection_allowed = false
+claim_scope = "technical_pairing_and_reconstruction_diagnostic_only"
+
+[[task_disposition]]
+task_id = "leave_one_library_out_fixed_reconstruction"
+allowed = true
+current_execution_state = "blocked_until_file_barcode_reference_and_rights_admission"
+independent_unit = "physical_multiome_library_pool"
+replication_n = 6
+split = "six_fixed_leave_one_physical_library_out_folds_no_nested_selection"
+model_selection_allowed = false
+claim_scope = "library_transfer_diagnostic_not_donor_generalization"
+
+[[task_disposition]]
+task_id = "alcohol_etiology_ood_mapping"
+allowed = true
+current_execution_state = "blocked_until_input_and_annotation_admission"
+independent_unit = "physical_multiome_library_pool"
+replication_n = 6
+split = "evaluator_only_pool_grouped"
+model_selection_allowed = false
+claim_scope = "descriptive_alcohol_etiology_ood_stress_test"
+
+[[task_disposition]]
+task_id = "library_level_condition_contrast"
+allowed = true
+current_execution_state = "descriptive_only_if_inputs_admitted"
+independent_unit = "physical_multiome_library_pool"
+replication_n = 6
+split = "two_physical_libraries_per_condition"
+model_selection_allowed = false
+claim_scope = "descriptive_no_superiority_or_confirmatory_inference"
+
+[[task_disposition]]
+task_id = "donor_level_training_or_evaluation"
+allowed = false
+current_execution_state = "invalid_without_authoritative_nucleus_to_person_join"
+independent_unit = "unavailable"
+replication_n = 0
+split = "none"
+model_selection_allowed = false
+claim_scope = "prohibited"
+
+[[task_disposition]]
+task_id = "masld_case_control_or_negative_control"
+allowed = false
+current_execution_state = "wrong_etiology_and_no_masld_adjudication"
+independent_unit = "unavailable"
+replication_n = 0
+split = "none"
+model_selection_allowed = false
+claim_scope = "prohibited"
+
+[[task_disposition]]
+task_id = "histology_or_metadata_conditioning"
+allowed = false
+current_execution_state = "participant_join_and_fields_unavailable"
+independent_unit = "unavailable"
+replication_n = 0
+split = "none"
+model_selection_allowed = false
+claim_scope = "prohibited"
+
+[[task_disposition]]
+task_id = "external_masld_champion_or_sealed_confirmation"
+allowed = false
+current_execution_state = "ineligible_alcohol_etiology_pooled_libraries_and_project_exposure"
+independent_unit = "unavailable"
+replication_n = 0
+split = "none"
+model_selection_allowed = false
+claim_scope = "prohibited"
+
+[reference]
+source_high_level_build = "hg38"
+exact_cell_ranger_arc_version = "UNRESOLVED_PUBLIC_METADATA"
+exact_fasta = "UNRESOLVED"
+exact_gtf = "UNRESOLVED"
+exact_contig_set = "UNRESOLVED"
+project_target = "GRCh38.p14_GENCODE_v49"
+sequence_or_coordinate_task_ready = false
+
+[rights]
+geo_download_is_public = true
+article_license_is_dataset_license = false
+processed_object_redistribution_terms = "UNRESOLVED"
+derivative_weight_redistribution_terms = "UNRESOLVED"
+automatic_download = false
+
+[decision]
+current_role = "alcohol_etiology_ood_and_descriptive_only"
+donor_safe_split_available = false
+library_grouped_technical_split_available = true
+model_selection_allowed = false
+external_champion_eligible = false
+normal_stratum_may_be_used_as_masld_negative_controls = false
+activation_state = "blocked_inputs"
+next_required_action = "Freeze the processed-object file identity, same-barcode RNA-ATAC join, exact native reference, data-specific rights, and a six-library evaluator-only TaskSpec without opening condition-selected outcomes."

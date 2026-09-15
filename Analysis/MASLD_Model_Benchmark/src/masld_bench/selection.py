@@ -1,4 +1,4 @@
-"""Freeze complete model-selection decisions before sealed inference."""
+"""Freeze complete model-selection decisions before held-back inference."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from .planner import PlanningError, load_frozen_plan
 
 
 class SelectionError(RuntimeError):
-    """Raised when a proposed selection lock is incomplete or mutable."""
+    """Raised when a proposed selection record is incomplete or mutable."""
 
 
 SELECTION_SCHEMA_VERSION = "masld-bench-selection-lock-v1"
@@ -36,9 +36,9 @@ BASELINE_COMPARATOR_POLICY = (
     "strongest_eligible_prespecified_baseline_excluding_selected_model_v1"
 )
 # Development ranks the frozen five-seed ENSEMBLE endpoint, the same estimand
-# sealed inference reports.  Per-seed metrics remain as a stability diagnostic
+# held-back inference reports.  Per-seed metrics remain as a stability diagnostic
 # and never enter an ordering, so between-seed variance no longer belongs in
-# the standard error: the ensemble prediction is deterministic given the locked
+# the standard error: the ensemble prediction is deterministic given the fixed
 # runs and has no residual seed sampling.
 MODEL_SELECTION_POLICY = (
     "highest_five_seed_development_ensemble_primary_metric_"
@@ -54,13 +54,13 @@ SEED_STABILITY_POLICY = (
 DEVELOPMENT_ENSEMBLE_POLICY_ID = (
     "mean_prediction_five_seed_development_ensemble_v1"
 )
-# A fit action emits ONE immutable output manifest.  The checkpoint, task head,
+# A fit action emits ONE read-only output manifest.  The checkpoint, task head,
 # and calibration are three roles of that single composite bundle, not three
-# independently produced artifacts, so the three fields deliberately bind the
+# independently produced output files, so the three fields deliberately bind the
 # same digest.  Preprocessing comes from the separate prepare manifest and must
 # therefore differ.  Naming the policy makes the composite claim explicit and
 # machine-checked instead of implied by three identical-looking fields; a
-# ledger or lock that asserts independence is rejected.
+# ledger or selection record that asserts independence is rejected.
 FIT_STATE_ARTIFACT_POLICY = (
     "composite_immutable_fit_state_bundle_one_fit_output_manifest_v1"
 )
@@ -266,7 +266,7 @@ def _validated_plan(candidate: Path) -> tuple[dict[str, Any], str, str]:
             raise SelectionError(f"invalid selection candidate ledger: {error}") from error
         ledger_id = _sha256(ledger.get("ledger_id"), "ledger.ledger_id")
         # Only a ledger bound to an independently reviewed, pre-scoring
-        # finalist campaign universe may back a lock or a champion.  A
+        # finalist campaign universe may back a selection record or a best model.  A
         # frozen-screen ledger may produce a shortlist and nothing else.
         if (
             ledger.get("ledger_authority")
@@ -1811,7 +1811,7 @@ def _validate_locked_variant_secondary_evaluation(
         )
     # SelectionLock normalizes every nested array in a task decision to a
     # tuple (contracts._as_metadata), so comparing against list(...) here could
-    # never succeed once the decision had been through the contract.  Compare
+    # never succeed once the decision had been through the requirements.  Compare
     # type-agnostically against the frozen roster.
     if tuple(binding["mandatory_model_ids"]) != _VARIANT_MANDATORY_SECONDARY_MODELS:
         raise SelectionError(
@@ -2046,10 +2046,10 @@ def _validate_lock_structure(lock: SelectionLock) -> None:
 
 
 def _canonical_metadata(value: object, label: str) -> object:
-    """Compare contract-normalized metadata against freshly built structures.
+    """Compare requirements-normalized metadata against freshly built structures.
 
     ``contracts._as_metadata`` freezes every nested array into a tuple, so a
-    plain ``==`` between lock metadata and a rebuilt list is always False no
+    plain ``==`` between selection record metadata and a rebuilt list is always False no
     matter what it holds.  ``canonicalize`` renders tuples and lists alike as
     JSON arrays, so this compares structure and values, not container type.
     """
@@ -2068,7 +2068,7 @@ def _validate_lock_against_candidate(
     candidate_manifest_sha256: str,
     artifact_class: str,
 ) -> None:
-    """Recursively bind locked model labels to the exact candidate run records."""
+    """Recursively bind fixed model labels to the exact candidate run records."""
 
     expected_binding = {
         "path": candidate_path.as_posix(),
@@ -2331,7 +2331,7 @@ def _validate_lock_against_candidate(
 def build_selection_lock(
     *, candidate: str | Path, decisions: Mapping[str, Any]
 ) -> SelectionLock:
-    """Build a strict aggregate lock from a frozen campaign and development metrics."""
+    """Build a strict aggregate record from a frozen campaign and development metrics."""
 
     decision_document = _strict_mapping(
         decisions,
@@ -2552,7 +2552,7 @@ def freeze_selection_lock(
     decisions_path: str | Path,
     output_root: str | Path,
 ) -> Path:
-    """Write a SelectionLock as an immutable, independently verifiable directory."""
+    """Write a SelectionLock as a read-only, independently verifiable directory."""
 
     try:
         decisions_source = reject_symlink_components(
@@ -2600,7 +2600,7 @@ def freeze_selection_lock(
 
 
 def verify_selection_lock(path: str | Path) -> SelectionLock:
-    """Verify the frozen tree, strict schema, and canonical lock identity."""
+    """Verify the frozen tree, strict schema, and canonical selection record identity."""
 
     try:
         root = reject_symlink_components(

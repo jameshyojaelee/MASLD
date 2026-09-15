@@ -1,0 +1,114 @@
+{
+  "schema_version": "masld-bench-weight-rights-disposition-v1",
+  "record_id": "scgpt_weight_rights_disposition_20260825",
+  "audit_date": "2026-08-25",
+  "model_id": "scgpt",
+  "decision": "correct_the_record_and_flag_the_rights_gap",
+  "decided_by": "user, relayed 2026-08-25",
+  "weights_deleted": false,
+  "deletion_note": "The truthful-record route was chosen explicitly over removal. No weight body was deleted, moved, or altered by this disposition.",
+  "acquisition_facts": {
+    "acquired": "2026-08-23",
+    "acquiring_jobs": [
+      21015743
+    ],
+    "sibling_acquisition_same_campaign": 21015745,
+    "bodies_physically_present": true,
+    "verified_by": "SHA-256 re-derived from the bodies on a compute node 2026-08-25, byte sizes checked against the bundle record",
+    "artifacts": [
+      {
+        "path": "executions/scgpt-acquisition-21015743/scgpt_continual/best_model.pt",
+        "size_bytes": 207861754,
+        "sha256": "ad0252a1971e0cd619b7116dbab3177432236c4537225d54280a2aa7e5fe402a"
+      },
+      {
+        "path": "executions/scgpt-acquisition-21015743/scgpt_whole_human/best_model.pt",
+        "size_bytes": 205385258,
+        "sha256": "6cb5d451ab5c4b33eb673adbe4fddc61d2389df1b89b7651a9fe2e557572b922"
+      }
+    ]
+  },
+  "licence": {
+    "weight_license": "UNDECLARED",
+    "code_license": "MIT",
+    "code_licence_does_not_extend_to_weights": true,
+    "note": "The MIT grant covers the bowang-lab/scGPT repository code at revision cebd6fae655b9c585a4807daa3ac31bb764f06b4. It says nothing about the checkpoint bodies, which are distributed separately through a Google Drive folder with no accompanying terms. Acquisition does not create a grant, so correcting the download record deliberately leaves weight_license as UNDECLARED.",
+    "unchanged_by_this_disposition": true
+  },
+  "standing_constraints": {
+    "comparator_only": true,
+    "champion_ineligible": true,
+    "basis": "This follows from the frozen exposure rule, not from the licence question. scGPT's exposure_status places it outside champion eligibility independently of any rights finding, so the constraint would hold even if the weight licence were declared tomorrow. It is stated here as a consequence, not as a judgment added by this record.",
+    "derivative_weight_redistribution": "PROHIBITED pending a declared weight licence",
+    "also_prohibited": [
+      "releasing weights or any derivative of them",
+      "publishing a checkpoint materially trained from these bodies",
+      "treating acquisition as evidence of permission"
+    ],
+    "permitted": [
+      "local comparator evaluation already covered by the frozen exposure rule"
+    ]
+  },
+  "exposure_surface": {
+    "copies_in_the_benchmark_tree": [
+      "executions/scgpt-acquisition-21015743/scgpt_continual/best_model.pt",
+      "executions/scgpt-acquisition-21015743/scgpt_whole_human/best_model.pt"
+    ],
+    "copy_outside_the_benchmark_tree": {
+      "path": "data/perturbation/checkpoints/scgpt/whole-human/best_model.pt",
+      "size_bytes": 205385258,
+      "in_scope_of_this_campaign": false,
+      "pre_existing": true,
+      "note": "Outside Analysis/MASLD_Model_Benchmark/ and not created by this campaign. Named here so a future reviewer sees the whole picture rather than concluding the exposure is confined to the benchmark tree. Its own provenance was not audited by this disposition."
+    },
+    "total_copies_known": 3
+  },
+  "record_versus_reality_gap": {
+    "bundle_written": "2026-08-22",
+    "claim_at_the_time": "Weight bodies were not downloaded; their SHA-256 values remain unresolved.",
+    "true_when_written": true,
+    "weights_acquired": "2026-08-23",
+    "bundle_updated_after_acquisition": false,
+    "days_stale": 2,
+    "how_it_surfaced": "A contract test asserted True where the bundle said false. The mismatch was initially read as a transposition against the uce model, which showed the opposite disagreement. It was neither: uce's bundle had been updated after acquisition and its test had not, while scGPT's test had been updated and its bundle had not.",
+    "the_reusable_lesson": "The danger was not the acquisition. The danger was that the record made the tree look compliant. A stale false in weight_content_downloaded reads exactly like a deliberate decision not to download unlicensed weights, which is why nothing flagged it for two days. A gap you can see is manageable; a gap that reads as a clean bill of health is not. Correcting to true is the safer state precisely because it surfaces a problem rather than concealing one.",
+    "corollary_for_auditors": "The filesystem is the authority for what exists. A bundle is a claim about the filesystem, and a claim can be stale. An audit that reasons only from records will inherit their staleness; check the bytes."
+  },
+  "corrections_applied": {
+    "bundle": "config/artifacts/models/scgpt/checkpoints.json",
+    "route": "edited_in_place_with_its_single_pinner_updated_in_the_same_run",
+    "route_rationale": "The bundle is hash-pinned, but by exactly one file: its own config/artifacts/models/scgpt/native_task_disposition_20260825.json, which nothing else pins. Cascade depth is 1 and no live job references scgpt. An additive record with modified:false was considered and rejected, because it would have left the bundle itself still asserting the falsehood, which is the precise state this decision exists to end.",
+    "fields": [
+      "weight_content_downloaded false -> true",
+      "bundles.scgpt_continual.artifacts[best_model.pt].sha256 UNRESOLVED -> ad0252a1...",
+      "bundles.scgpt_whole_human.artifacts[best_model.pt].sha256 UNRESOLVED -> 6cb5d451...",
+      "source_evidence prose corrected, and it now carries the prohibition rather than a denial of the download"
+    ],
+    "pinner_updated": "config/artifacts/models/scgpt/native_task_disposition_20260825.json",
+    "pinner_fields": [
+      "bound_evidence[checkpoints.json].sha256 refreshed to the corrected bundle",
+      "family_specific_blockers.detail prose corrected; it had also asserted weight_content_downloaded is false"
+    ],
+    "test_updated": "tests/contract/test_registry_files.py",
+    "test_rationale": "The test separately asserted artifacts['best_model.pt']['sha256'] == 'UNRESOLVED'. Correcting only the bundle would have traded one failure for another and re-asserted the removed falsehood from the test side, so the expectation now carries the re-derived digests."
+  },
+  "related_finding_not_in_scope": {
+    "model_id": "geneformer",
+    "severity": "WITHDRAWN_no_rights_gap_exists",
+    "finding": "geneformer has an acquisition execution (geneformer-acquisition-21014827) holding 48 weight files totalling 6,947,079,999 bytes, while config/artifacts/models/geneformer/checkpoints.json records weight_content_downloaded=false. Its weight_license key is ABSENT entirely, not merely UNDECLARED.",
+    "implication": "CORRECTED: the scGPT pattern IS a one-off on the rights axis. scGPT holds weights under an UNDECLARED licence; geneformer holds its weights under a declared Apache-2.0 grant. Only the stale download flag was common to both.",
+    "action_taken": "None. Reported only; geneformer was outside the authorized scope of this correction and no geneformer file was read into, modified, or deleted.",
+    "recommended_next_step": "None. Closed by the geneformer correction record.",
+    "status": "WITHDRAWN_2026_08_25_finding_was_incorrect",
+    "superseded_by": "config/artifacts/incidents/geneformer_weight_state_correction_20260825.json",
+    "what_was_claimed": "48 weight files / 6,947,079,999 bytes acquired, bundle records weight_content_downloaded=false, weight_license key ABSENT entirely",
+    "what_is_true": "3 unique weight bodies / 1,724,209,768 bytes. weight_content_downloaded=false was genuinely stale and is now corrected. There is NO rights gap: the weights are licensed Apache-2.0, which was present under the singular 'license' key all along.",
+    "why_the_claim_was_wrong": "A search for the key name weight_license found it absent and reported the absence as a rights gap; the byte total triple-counted one complete acquisition plus two abandoned .staging copies.",
+    "retained_visibly_not_deleted": "The withdrawn claim is left in place so the correction is auditable. A register that silently replaces its errors cannot be checked in either direction."
+  },
+  "sealed_outcomes_read": false,
+  "models_fit": [],
+  "models_scored": [],
+  "checkpoint_opened": false,
+  "weights_deserialized": false
+}

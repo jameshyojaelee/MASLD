@@ -4,6 +4,16 @@
     "development_sources": "registered_variant_and_regulatory_project_sources",
     "sealed_dataset_id": "gse289173"
   },
+  "lane_audit_record": {
+    "artifacts_sha256": "bee0470e7f0aa44f89367a6e9517899533769884fa39369ce5eba3c95809b228",
+    "path": "executions/model-audit-104-21069951",
+    "status": "passed"
+  },
+  "native_contract_audit_record": {
+    "artifacts_sha256": "b51a9c95bf0706352961a74040cbee5fb45a4aca8f14a369093b4b80af4e21ec",
+    "path": "executions/model-audit-112-21099014",
+    "status": "passed_preprocessing_fixture_checkpoint_execution_blocked_terms"
+  },
   "checkpoint_findings": {
     "human_model": {
       "checkpoint_identity": "luosanj/EPCOTv2@f93a2a944a49797a111f0294709416d38bedbcbe:models/human_model.pt sha256 b824a80ed238e64e15c5a6eeae91329d24f04825c62d2a9dd328658822aba45d",
@@ -16,14 +26,14 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "registered_variant_and_regulatory_sources",
-    "sha256": "857f464124465388bc2962584210107fb8e49f69653634722a315e2467dedb7c"
+    "sha256": "0946207c5369801341c349a008c24f8bf28458b133664a144c77955fa0f44c1c"
   },
   "input_eligibility": {
     "gse289173": "The sealed feature contract contains snRNA-derived context and QTL summaries but no topology-matched observed ATAC/DNase. Native EPCOTv2 cannot run and cannot earn the sealed champion claim. Adding a proxy after outcomes or selection are visible is prohibited.",
-    "gse296875": "Same-nucleus ATAC can support development-only observed-ATAC comparisons. It does not turn EPCOTv2 into RNA-conditioned ATAC, and held-donor ATAC must be offered to matched baselines.",
-    "variant_scoring": "The same observed ATAC tensor must be used for REF and ALT. A variant-bin mask is required as a prespecified sensitivity analysis because unmasked ATAC may encode the regulatory consequence being evaluated."
+    "gse296875": "Same-nucleus ATAC can support a development-only sequence-plus-observed-ATAC to RNA-profile comparison at donor-by-lineage pseudobulk resolution. It does not turn EPCOTv2 into RNA-conditioned ATAC, and held-donor ATAC must be offered to matched baselines.",
+    "variant_scoring": "The same observed ATAC tensor must be used for REF and ALT. A raw-locus mask before 300-bp neighbor padding is required as a prespecified sensitivity analysis because unmasked ATAC may encode the regulatory consequence being evaluated."
   },
-  "interpretation": "No released corpus evidence indicates that human_model.pt was trained on GSE289173 snRNA, eQTL or interaction-eQTL labels, but the checkpoint upload occurred 19 days after the accession became public. The target-label-unexposed classification is therefore medium confidence and must be revisited after donor/accession alias resolution. Regardless of exposure, the current sealed source lacks the observed ATAC input required for native EPCOTv2 inference.",
+  "interpretation": "No released corpus evidence indicates that human_model.pt was trained on GSE289173 snRNA, eQTL or interaction-eQTL labels, but the checkpoint upload occurred 19 days after the accession became public. The target-label-unexposed classification is therefore medium confidence and must be revisited after donor/accession alias resolution. Regardless of exposure, the current held-back source lacks the observed ATAC input required for native EPCOTv2 inference.",
   "license_disposition": {
     "exact_space_code": "UNDECLARED",
     "open_champion_eligibility": "ineligible_until_exact_code_weight_and_reference_terms_are_explicit",
@@ -43,12 +53,12 @@
     "Recover the exact training runtime, checkpoint-producing source revision, staged optimization schedule, random seeds and checkpoint-to-genomic-split binding.",
     "Resolve all accession/run/donor aliases in data/accession_number.xlsx and demonstrate that GSE289173 or a duplicate cohort was not ingested during the 19-day post-release window.",
     "Resolve the hg38 source FASTA underlying the per-chromosome sparse arrays and prove equality to project GRCh38.p14 primary-contig fixtures. Freeze the Hugging Face dataset revision instead of unpinned main.",
-    "Freeze ATAC preprocessing, blacklist, normalization, one-hot padding, region alignment, crop and every assay output transform with fixed fixtures.",
+    "The biological-free audit now freezes tensor shape, 300-bp sequence/ATAC neighbor padding, raw-locus mask propagation, RPGC/2913022398/Offset-1 input settings and the 500-bin crop. Still resolve the one-hot base-channel mapping, exact blacklist identity, assay output transforms and biological numeric parity.",
     "Define a topology-valid sealed ATAC source before selection lock. If none exists, mark EPCOTv2 sealed evaluation not applicable rather than synthesizing a post hoc context.",
     "Implement a non-pickle benchmark input format. Never unpickle uploaded or untrusted ATAC files, and do not use the public Space loader directly.",
     "Run isolated PyTorch 1.10.1 training-code and PyTorch 2.2.1 Space-code import, forward/backward, strict-load, deterministic-seed and L40S numeric probes through SLURM before admission."
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "exposure_provisionally_eligible_but_input_license_runtime_and_provenance_blocked",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-08-25"
 }

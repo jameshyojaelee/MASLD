@@ -1,10 +1,10 @@
 {
   "activation_disposition": {
     "admission_status": "blocked",
-    "reason": "The nine registry roles are frozen as project-local specifications, but none has an executable implementation receipt, immutable source artifact, complete runtime lock, or fixed-fixture result.",
-    "execution": "prohibited_until_each_selected_role_has_its_own_implementation_and_runtime_receipt",
+    "reason": "The nine-role suite remains blocked as a whole. The scratch CNN now has an exact implementation and terminal 8/8 development production bundle, but its code/license and complete checkpoint-exposure authorities remain unresolved; the other unresolved roles retain their prior missing pieces.",
+    "execution": "only_exact_role_bound_artifacts_may_be_evaluated_and_no_unresolved_role_may_borrow_the_CNN_receipt",
     "selection": "The generic registry IDs may identify benchmark roles. They may not stand in for an unregistered backbone, checkpoint, or champion.",
-    "downloads_installs_jobs_or_tests_performed": false
+    "downloads_installs_jobs_or_tests_performed": true
   },
   "roster_contract": {
     "count": 9,
@@ -150,9 +150,33 @@
     "sequence_cnn_control": {
       "specification_id": "masld_sequence_cnn_control_v1",
       "scientific_class": "true_task_native_train_from_scratch_baseline",
-      "implementation_status": "not_implemented_architecture_unresolved",
+      "implementation_status": "terminal_development_production_bundle_registry_blocked",
       "upstream_checkpoint": "none_random_initialization",
-      "project_trained_state": "not_created",
+      "project_trained_state": "created_for_eight_exact_development_tasks",
+      "implementation_sources": {
+        "architecture_python_sha256": "9a64d0640323777a987b7743f9cf777a0d9826b33a5f9514407b347da5456c17",
+        "architecture_config_sha256": "492962a688ea78920ead75edf5b9267a822a5af442842749e4404ab63cb4a2c3",
+        "training_driver_sha256": "76f82a7c5cb7b13fa8176fcd17febf73bce3ba9547795352908be59f52eaf859"
+      },
+      "terminal_bundle": {
+        "path": "executions/sequence_gpu_bundle_016_sequence_cnn_control-ready_36823fe74c-21076966",
+        "artifacts_sha256": "b379da6299a7fd9b42c77da7da0150403a6268683cc8ecd1a35dd3ad983a33a6",
+        "logical_tasks": 8,
+        "passed_tasks": 8,
+        "held_donor_atac_used_for_inference": false,
+        "evaluator_outcomes_exposed": false,
+        "benchmark_metrics_calculated": false,
+        "sealed_features_exposed": false,
+        "sealed_outcomes_exposed": false,
+        "external_evaluation_complete": false,
+        "sealed_evaluation_complete": false,
+        "champion_eligible": false,
+        "development_profile_prediction_admitted": true,
+        "comparison_only": true,
+        "release_eligible": false
+      },
+      "registry_license_status": "UNRESOLVED",
+      "registry_exposure_status": "unknown",
       "inputs": "One-hot or explicitly frozen DNA encoding on an immutable reference build, with paired REF and ALT windows for variant scoring. It receives no pretrained features or query ATAC.",
       "fit": "Train from scratch within the outer-training partition using the same admissible labels, output axes, label budget, selection rule, and fixed seeds as its comparison. Architecture, receptive field, padding, strand handling, head, loss, optimizer, and parameter count must be frozen in a later implementation receipt.",
       "outputs": {
@@ -160,7 +184,7 @@
         "variant_to_regulation": "Accessibility or activity delta from separate ALT and REF passes; signed eQTL output is unsupported unless an eligible gene/lineage head is separately registered."
       },
       "sign_semantics": "score(ALT)-score(REF) after forward-strand restoration; REF/ALT swap negates and reverse-complement restoration preserves sign.",
-      "champion_scope": "May be the released baseline champion only under its own exact scratch-trained implementation and eligible sealed result."
+      "champion_scope": "Current artifacts may be scored as a retrospective development comparator but are champion- and release-ineligible. A future released baseline champion would require resolved code/license and exposure authorities, a complete finalist campaign, and an eligible sealed result under its own identity."
     },
     "sequence_transformer_control": {
       "specification_id": "masld_sequence_transformer_control_v1",

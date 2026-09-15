@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-rna-atac-scpair-smoke-r2"
-description = "Corrected five-fold donor-held scPair RNA-to-ATAC direct-translation screen with exact model-specific hyperparameter schemas for every runnable mandatory baseline on the frozen 1,000-nucleus GSE296875 view; the source-wide consensus peak inventory makes this retrospective smoke-only and champion-ineligible"
+description = "Corrected five-fold donor-held scPair RNA-to-ATAC direct-translation screen with exact model-specific hyperparameter schemas for every runnable mandatory baseline on the frozen 1,000-nucleus GSE296875 view; the source-wide consensus peak inventory makes this retrospective smoke-only and not eligible to be the best model"
 wave = "smoke"
 status = "ready"
 prerequisites = []

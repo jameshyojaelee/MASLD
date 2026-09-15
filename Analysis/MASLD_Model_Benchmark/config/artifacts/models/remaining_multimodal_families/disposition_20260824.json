@@ -1,0 +1,298 @@
+{
+  "schema_version": "masld-bench-remaining-multimodal-families-disposition-v1",
+  "audit_date": "2026-08-24",
+  "status": "FAIL_CLOSED_TOPOLOGY_AND_OUTPUT_CLASS_RECONCILED_NO_NEW_EXECUTION",
+  "scope": "Outcome-blind metadata reconciliation of MIDAS, scMoMaT, StabMap, MIRA, scMVP, BABEL, scButterfly, scJoint, PeakVI, EpiAgent, and the three released scooby context variants. Only model and dataset authorities, registries, ARTIFACTS manifests, and source hash inventories were read. No model payload, matrix, prediction, evaluator output, development outcome, or sealed outcome was opened. No dependency installation, runtime construction, training, prediction, scoring, or submission was authorized.",
+  "task_gates": {
+    "rna_conditioned_atac": {
+      "profile_native_families": ["midas", "babel", "scbutterfly"],
+      "admitted_model_count": 0,
+      "execution_authorized": false,
+      "reason": "MIDAS and scButterfly have bounded development evidence only, without the frozen five-seed inclusion chain; BABEL is blocked before acquisition by code and checkpoint terms."
+    },
+    "cell_state_mapping": {
+      "latent_or_retrieval_families": ["scmomat", "stabmap", "mira", "scmvp", "scjoint"],
+      "admitted_model_count": 0,
+      "execution_authorized": false,
+      "reason": "StabMap has three-seed development retrieval evidence only. The other identities lack a complete terms, runtime, inductive-query, or execution chain. None may be relabeled as assay-native ATAC profile prediction."
+    },
+    "observed_atac_representation": {
+      "families": ["peakvi", "epiagent"],
+      "task_spec_exists": false,
+      "admitted_model_count": 0,
+      "execution_authorized": false,
+      "reason": "Both methods consume observed ATAC. They are not RNA-conditioned methods and require a separate nonpromotable TaskSpec."
+    },
+    "observed_multiome_sequence_context": {
+      "families": ["scooby_onek1k", "scooby_epicardioids", "scooby_neurips"],
+      "task_spec_exists": false,
+      "admitted_model_count": 0,
+      "checkpoint_forward_authorized": false,
+      "reason": "The released checkpoints require variant-specific observed cell-context spaces whose encoders are not bundled or included. They are sequence-to-profile comparators, not released RNA-only profile predictors."
+    }
+  },
+  "native_output_classes": {
+    "assay_native_rna_to_atac_profile": ["midas", "babel", "scbutterfly"],
+    "latent_embedding_or_retrieval_only": ["scmomat", "stabmap", "mira", "scmvp", "scjoint"],
+    "observed_atac_latent_only": ["peakvi", "epiagent"],
+    "sequence_to_profile_with_observed_context_not_rna_conditioned_as_released": ["scooby_onek1k", "scooby_epicardioids", "scooby_neurips"],
+    "prohibited_equivalences": [
+      "A common latent, nearest-neighbour imputation, gene-activity vector, topic proportion, class probability, or ATAC reconstruction that consumed observed query ATAC is not an RNA-conditioned ATAC peak profile.",
+      "A sequence-to-profile checkpoint conditioned on an unavailable pretrained context vector is not an RNA-only assay translation model.",
+      "A bounded development receipt is not model admission, sealed eligibility, or a champion claim."
+    ]
+  },
+  "topology_contract": {
+    "development_fixture": "gse296875_rna_atac_smoke_1000_v1",
+    "nuclei": 1000,
+    "donors": 39,
+    "outer_unit": "donor",
+    "pairing": "same_nucleus",
+    "join_key": "well_id+raw_10x_barcode",
+    "held_atac_available_to_rna_only_inference": false,
+    "cells_or_nuclei_are_biological_replicates": false,
+    "gse244832_rule": "same_sample_different_aliquot; never represent as same-cell or same-nucleus rows",
+    "family_rules": {
+      "midas": "True same-cell or same-nucleus batches may align by identical row identity; unpaired modality batches remain distinct and use explicit missing-modality state.",
+      "scmomat": "True paired rows or explicitly separate modality batches are native, but every supplied row receives a transductive free factor and no frozen held-row transform exists.",
+      "stabmap": "Training references and bridges define topology; every held donor is a terminal query leaf. Native imputation remains a retrieval diagnostic.",
+      "mira": "RNA-only topics may represent queries only after a frozen RNA topic encoder. Joint topics require validated same-cell or same-nucleus pairs.",
+      "scmvp": "Training requires true same-cell or same-nucleus pairs; the RNA encoder alone is the only potentially inductive query path.",
+      "babel": "The hosted checkpoint was trained on paired same-cell data; different-aliquot rows cannot be substituted.",
+      "scbutterfly": "Training requires exact same-cell or same-nucleus pairs; RNA-only inference must not receive query ATAC, inverse-TFIDF statistics, or query-fitted features.",
+      "scjoint": "Unpaired modality rows and true same-nucleus rows may support latent alignment; the method has no ATAC profile decoder.",
+      "peakvi": "Observed query ATAC is required; this is an ATAC representation topology, not an RNA-conditioned topology.",
+      "epiagent": "Observed query ATAC over the checkpoint cCRE vocabulary is required; this is an ATAC representation topology.",
+      "scooby_onek1k": "The checkpoint expects a 10-D OneK1K scPoli RNA context and has RNA tracks only; the released encoder path is absent.",
+      "scooby_epicardioids": "The checkpoint expects a 50-D scGLUE context derived from same-study unpaired RNA and ATAC pseudo-matches; it is not true paired multiome.",
+      "scooby_neurips": "The checkpoint expects a 14-D Poisson-MultiVI context learned from observed same-nucleus RNA plus ATAC; the released context encoder is absent."
+    }
+  },
+  "model_dispositions": {
+    "midas": {
+      "registry_state": "candidate",
+      "native_output": "direct RNA-to-ATAC peak profile plus common latent",
+      "evidence": "Portable runtime, two synthetic-only trainer probes, five donor folds, one-seed aggregate, and one development evaluation are hash-bound.",
+      "admitted": false,
+      "gate": "BLOCKED_ONE_SEED_ONLY_NO_FROZEN_FIVE_SEED_ADMISSION_OR_SEALED_CHAIN"
+    },
+    "scmomat": {
+      "registry_state": "deferred",
+      "native_output": "transductive cell and feature factors",
+      "evidence": "No runtime or execution manifest.",
+      "admitted": false,
+      "gate": "BLOCKED_TRANSDUCTIVE_FREE_QUERY_FACTORS_NO_FROZEN_QUERY_TRANSFORM"
+    },
+    "stabmap": {
+      "registry_state": "candidate",
+      "native_output": "terminal-query latent retrieval; nearest-reference imputation is diagnostic only",
+      "evidence": "Portable base runtime, sparse overlay, three development retrieval evaluations, and seed-stability receipt are hash-bound.",
+      "admitted": false,
+      "gate": "BLOCKED_DEVELOPMENT_LATENT_ONLY_NO_PROFILE_OR_SEALED_ADMISSION"
+    },
+    "mira": {
+      "registry_state": "blocked_terms",
+      "native_output": "RNA topic embedding; joint paired topics and within-modality imputation are latent-only",
+      "evidence": "No runtime or execution manifest.",
+      "admitted": false,
+      "gate": "BLOCKED_LICENSE_TEXT_LEGACY_RUNTIME_AND_NO_FROZEN_RNA_TOPIC_QUERY_ENCODER"
+    },
+    "scmvp": {
+      "registry_state": "candidate",
+      "native_output": "RNA-encoder latent only for RNA-only queries",
+      "evidence": "No runtime or execution manifest.",
+      "admitted": false,
+      "gate": "BLOCKED_LEGACY_RUNTIME_NO_EXECUTION_AND_ATAC_RECONSTRUCTION_CONSUMES_OBSERVED_ATAC"
+    },
+    "babel": {
+      "registry_state": "blocked_terms",
+      "native_output": "historical direct RNA-to-ATAC probability profile",
+      "evidence": "Checkpoint was not downloaded; no runtime or execution manifest exists.",
+      "admitted": false,
+      "gate": "BLOCKED_CODE_LICENSE_CHECKPOINT_TERMS_DIGEST_REFERENCE_RUNTIME_AND_SAFE_LOADING"
+    },
+    "scbutterfly": {
+      "registry_state": "candidate",
+      "native_output": "direct RNA-to-ATAC continuous decoder profile plus latent",
+      "evidence": "Portable runtime and one bounded safe development fit/evaluation are hash-bound; the fit receipt has two current-source hash mismatches.",
+      "admitted": false,
+      "gate": "BLOCKED_SINGLE_SMOKE_ONLY_NO_FIVE_SEED_ADMISSION_AND_HISTORICAL_SOURCE_DRIFT"
+    },
+    "scjoint": {
+      "registry_state": "blocked_terms",
+      "native_output": "latent embedding and cell labels; no peak decoder",
+      "evidence": "No runtime or execution manifest.",
+      "admitted": false,
+      "gate": "BLOCKED_CODE_AND_WEIGHT_TERMS_LEGACY_RUNTIME_NO_EXECUTION_AND_LATENT_ONLY"
+    },
+    "peakvi": {
+      "registry_state": "deferred",
+      "native_output": "observed-ATAC latent and accessibility model",
+      "evidence": "Portable scvi-tools runtime and a bounded training-context smoke/evaluation exist; both receipts explicitly deny RNA-conditioned eligibility.",
+      "admitted": false,
+      "gate": "BLOCKED_NO_OBSERVED_ATAC_TASKSPEC_GPU_PROBE_PENDING_AND_NOT_RNA_CONDITIONED"
+    },
+    "epiagent": {
+      "registry_state": "deferred",
+      "native_output": "observed-ATAC cCRE token representation",
+      "evidence": "The 5.8-GB Drive object was not downloaded; no runtime or execution manifest exists.",
+      "admitted": false,
+      "gate": "BLOCKED_NO_OBSERVED_ATAC_TASKSPEC_WEIGHT_TERMS_DIGEST_EXPOSURE_RUNTIME_AND_SAFE_LOADING"
+    },
+    "scooby_onek1k": {
+      "registry_state": "blocked_terms",
+      "native_output": "sequence-to-RNA profiles conditioned on a 10-D observed RNA context",
+      "evidence": "Metadata-only cross-review, remote archive inventory, and bounded headers; no checkpoint payload or forward.",
+      "admitted": false,
+      "gate": "BLOCKED_INHERITED_BORZOI_AUTHORITY_CONTEXT_ENCODER_RUNTIME_REFERENCE_AND_NO_ATAC_HEAD"
+    },
+    "scooby_epicardioids": {
+      "registry_state": "blocked_terms",
+      "native_output": "sequence-to-RNA/ATAC profiles conditioned on a 50-D pseudo-matched scGLUE context",
+      "evidence": "Metadata-only cross-review, remote archive inventory, and bounded headers; no checkpoint payload or forward.",
+      "admitted": false,
+      "gate": "BLOCKED_INHERITED_BORZOI_AUTHORITY_CONTEXT_ENCODER_RUNTIME_REFERENCE_AND_UNPAIRED_TOPOLOGY"
+    },
+    "scooby_neurips": {
+      "registry_state": "restricted_comparator",
+      "native_output": "sequence-to-RNA/ATAC profiles conditioned on a 14-D observed same-nucleus Poisson-MultiVI context",
+      "evidence": "Metadata-only cross-review, remote archive inventory, and bounded headers; no checkpoint payload or forward.",
+      "admitted": false,
+      "gate": "BLOCKED_WEIGHT_TERMS_INHERITED_BORZOI_AUTHORITY_CONTEXT_ENCODER_RUNTIME_AND_REFERENCE"
+    }
+  },
+  "known_source_and_registry_drift": [
+    {
+      "path": "executions/environments/stabmap-v1.6.0-sparse-portable-21066444/source.sha256",
+      "expected_member": "executions/environments/stabmap-v1.6.0-sparse-portable-21066444.staging/source/sparseMatrixStats_1.24.0.tar.gz",
+      "expected_member_sha256": "4ca8dc253f0630eb4d85a8ba850aa3f3cbb885f3493971a435241d464cfa2564",
+      "observed_state": "missing",
+      "disposition": "The overlay receipt remains hash-bound, but source-chain reproduction is blocked because the staged tarball was not retained."
+    },
+    {
+      "path": "scripts/scbutterfly_fit_predict_smoke.py",
+      "embedded_execution_sha256": "0fe6a5fd22c16e458489e7853d11b510887b5c7715807f8a349d1d3459229c7c",
+      "observed_sha256": "c61a59a00748d4b7e35d4d40f24a37f0bda654b4a33a7593f4b41241dad523df",
+      "disposition": "Historical fit evidence remains development-only; current-source reproduction requires a new outcome-blind receipt."
+    },
+    {
+      "path": "tests/unit/test_scbutterfly_fit_predict_smoke.py",
+      "embedded_execution_sha256": "6bf55dfb86abe775b3838c797ea872d79b5e48f669aed242084e3d7027dd4e7d",
+      "observed_sha256": "eb8715af7d26635bd9d04a147bf2a3c097a6f61a569c03ea8faa1e214f443c18",
+      "disposition": "Historical fit evidence remains development-only; current fixture reproduction requires a new outcome-blind receipt."
+    },
+    {
+      "path": "config/evaluation/family_native_tournament.toml",
+      "embedded_repository_sha256": "f6ac2994983496c3b758888785ee5f3d9128f9a6ff89ba33cd43cee50d8ef4a4",
+      "observed_sha256": "acd9f333bd4d639d6df6b3017c1bf9a040ee921195b59b01fee934f1726a0495",
+      "disposition": "Pre-existing shared modification; no family is promoted by this audit."
+    },
+    {
+      "path": "config/evaluation/rna_conditioned_atac_capabilities.toml",
+      "embedded_repository_sha256": "c233a982a48c1bf827ce9f64d894ce3c6d6af3e11a20e39cf03df3920fae6330",
+      "observed_sha256": "c779f06dedf69a15ec44280323a7701e0938b75bfa2660d11dd2a6f5de37868d",
+      "disposition": "Pre-existing shared modification; latent and observed-ATAC outputs remain outside assay-native RNA-to-ATAC scoring."
+    },
+    {
+      "path": "config/models/regulatory_sequence.toml",
+      "embedded_repository_sha256": "ae3bed391965898735121345f54eb04719129a2b3aa574f4a810719172d13ddf",
+      "observed_sha256": "bccce82a8a949eb81b73246848dcf7e80b164e464992fdb9b9fcb10c72181c1b",
+      "disposition": "Pre-existing shared modification; the three scooby identities remain admission-blocking and no forward is authorized."
+    }
+  ],
+  "execution_disposition": {
+    "metadata_audit_authorized": true,
+    "dependency_install_authorized": false,
+    "runtime_build_authorized": false,
+    "checkpoint_open_authorized": false,
+    "data_matrix_open_authorized": false,
+    "training_authorized": false,
+    "prediction_authorized": false,
+    "development_scoring_authorized": false,
+    "sealed_scoring_authorized": false,
+    "cpu_campaign_authorized": false,
+    "gpu_campaign_authorized": false,
+    "sbatch_submission_authorized": false,
+    "next_action": "Reconcile the shared registries first. Then create endpoint-specific nonpromotable TaskSpecs for observed-ATAC and observed-context sequence comparators, or complete the prospectively frozen admission chain for one native existing task, before any new execution."
+  },
+  "model_authority_hashes": {
+    "config/artifacts/models/midas/checkpoints.json": "03d461f98b5792f67a31e9231d95c27c5fa6064e46ca551dd08822297ffbcd8c",
+    "config/artifacts/models/midas/development_crosswalk.json": "7663391dba69638c43e041006fba410eb4508f674cb0558af6f3e6fc70e87b6e",
+    "config/artifacts/models/midas/exposure_audit.json": "0b97e637dda3b455cf99e3a89aa29fcf1e69e04ca90cc4802240d38b23b92179",
+    "config/artifacts/models/scmomat/checkpoints.json": "3db911a87643d12ba89ee8c10f338771e0b6bcf6b2a25dad4cae0786565bade3",
+    "config/artifacts/models/scmomat/development_crosswalk.json": "c1f2e5f8044b0b325bb83f14f54436aa5fe403e9735ec97367eec7147d7aeada",
+    "config/artifacts/models/scmomat/exposure_audit.json": "a600e4716d81dbdbe91b9ca5ab82579804063de8ccb74936809b193534e4a336",
+    "config/artifacts/models/stabmap/checkpoints.json": "35fb7ad54d17b525d71cc4aa0cc8a1c2b038693e169127596f5302ba2de210ca",
+    "config/artifacts/models/stabmap/development_crosswalk.json": "1a75ec3f1d6763670a6db567323729141bdd3cb9a8b1ee3641b68b1b0afe8aba",
+    "config/artifacts/models/stabmap/exposure_audit.json": "b4e18c7b66e76e684d2b4f962861de456c1e15581071b3eb40062477e7f927f6",
+    "config/artifacts/models/mira/checkpoints.json": "3d57f60d9cd0273ad0b290d747d68ff0a598df5b7801d0c9af69a8781aaa9f63",
+    "config/artifacts/models/mira/development_crosswalk.json": "20806a47a80a3d9d35618786ad05bbedb3c7c960c7686a9b262493335954f901",
+    "config/artifacts/models/mira/exposure_audit.json": "a8283ade124267f098a0e733d6dbc12b4e002b10aa4328476a590897f9832110",
+    "config/artifacts/models/scmvp/checkpoints.json": "6611f68d525df83f1ce48c806caccf23c9e7898809a8943106ac8c629ed571e2",
+    "config/artifacts/models/scmvp/development_crosswalk.json": "8258f00226e0ba6515848db7cfe2b7457c807849192f88454e711edbc36c404c",
+    "config/artifacts/models/scmvp/exposure_audit.json": "540f6cea8538cd80e018a4ff46150234b0c9716d879c9c66bfd6211fdd874faa",
+    "config/artifacts/models/babel/checkpoints.json": "be169aff82d6adcb1b10a12e2926eb3beba692fa0d96d916dd9d47ef1178f3e5",
+    "config/artifacts/models/babel/development_crosswalk.json": "2fa0d5f143af708b99eeda74170dca065e1c7dab43f0feb7e377fcdf034f4232",
+    "config/artifacts/models/babel/exposure_audit.json": "9541dd354bdcb03e4304123ab3e911190406365ea5127c722af42ed8d7415c44",
+    "config/artifacts/models/scbutterfly/checkpoints.json": "8de42351e0affdcc5c69192324469b0817d3769a40f54dc89502aaef03f79747",
+    "config/artifacts/models/scbutterfly/development_crosswalk.json": "b5d4ac72aa8368e0997c5e2e73c2f432c835051c20087d0560e314fdf0bf296c",
+    "config/artifacts/models/scbutterfly/exposure_audit.json": "777d92619517a7cc86403a9b8125553d1d309c793abf37c7d7ec3234482c8db3",
+    "config/artifacts/models/scjoint/checkpoints.json": "284a1d5dff1022b268088b8814799c1cbaa2b9b0cc0467390d4df21d68ad803c",
+    "config/artifacts/models/scjoint/development_crosswalk.json": "b060563fd450af6eea437866696620fd2395dff803822d16ab7b711a54d0d58d",
+    "config/artifacts/models/scjoint/exposure_audit.json": "542d119ac5bfb49d2cd5129d167f015dd8171e2360b29f4550eef82e7ab6d85c",
+    "config/artifacts/models/peakvi/checkpoints.json": "75a9fd2d4ad90d40d1e8a5536c5c6e208f7ddf7b10106809fdb9a973af53c154",
+    "config/artifacts/models/peakvi/development_crosswalk.json": "ff6f58b28ec2ce3c1a61c5cf33ca6988e181c8ea8a39696835e3c8058b969fb4",
+    "config/artifacts/models/peakvi/exposure_audit.json": "b24b78362cfb9879b3263cbb925b63205b580dc13fccbebb66905ca0848e348b",
+    "config/artifacts/models/epiagent/checkpoints.json": "045643ba13197c161c20bf87521ec825fb011d95595540ff9a59a55afb8ace5f",
+    "config/artifacts/models/epiagent/development_crosswalk.json": "6e445ccb68017963aad584ecba0f3851e770d6f42630eb5c61e2d796f50c9e0e",
+    "config/artifacts/models/epiagent/exposure_audit.json": "0d082171ff3e594074b9d05091182496285b5ddeb1d3436ee1c51a5c826ba438",
+    "config/artifacts/models/scooby_onek1k/checkpoints.json": "a223a282bf7030ce2bc8d754854d434ddd6d46f30052393fae4df0c7e290313e",
+    "config/artifacts/models/scooby_onek1k/development_crosswalk.json": "3745b447153ae76beb19c4ddcffceb2e33ae9175487c2d79b8a1db182589db26",
+    "config/artifacts/models/scooby_onek1k/exposure_audit.json": "2b6ca19ac32ba32375278cd844421754d96732fd1497a909110be8b1c89e919c",
+    "config/artifacts/models/scooby_epicardioids/checkpoints.json": "bc125a6f3e146dcc891f6f3327bd6c86be506c67b41e1327696225f589a19520",
+    "config/artifacts/models/scooby_epicardioids/development_crosswalk.json": "32a6e8c2eef0de1004719cfc1b41c93609ad9adc75e7d2911502e34456994c52",
+    "config/artifacts/models/scooby_epicardioids/exposure_audit.json": "8f3cad157e701cb8e11c34ae7e4d8cf46a23b7b9426b1fd0fb138d880b200881",
+    "config/artifacts/models/scooby_neurips/checkpoints.json": "d76f024290f2b4d7c7ef8da2d2e915a3f87f8e337d3413949d230347f585d412",
+    "config/artifacts/models/scooby_neurips/development_crosswalk.json": "40e38d4c6a21da89b1c3dc4bc12812ba5ed8df679baa45ca4e02c786018d9672",
+    "config/artifacts/models/scooby_neurips/exposure_audit.json": "d4acd61c9d8e4de71a8a8e17f72a1020af12ad3f07df696ebcbe2a8e4e9ca493",
+    "config/models/chromatin.toml": "5fabd7dafffa3c2233a752d8a5016c11670b115bae2a0e4e5f3fc6a8123984ab",
+    "config/models/multimodal_integration.toml": "9569f89cf5d452e0335f899c3a3e43a483661fa2259d471d2208a5b1c5c107cb"
+  },
+  "dataset_view_hashes": {
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/donor_join.json": "213cef66253b1783b7a35687ec1765fab2495a94416b301cc9d2c5c603dee99f",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/exposure_audit.json": "b04f7581e28685d33502f0680464757683b449b85ea5924450cf3ecc0d9e14b3",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/qc.json": "4cfec866791181add53b8745f8f47d2aea917fdb5610455f6b6598d915dcee3a",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/reference.json": "e69d2dcb4cd02b31c595f87ee628d4c9d852ed66ef623258bc7a28ebcb6a2845",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/rights.json": "ada3e522fcc6f396d5a14bc9a63ef07e19da2bdafb2b7a0735044c16f56f0394",
+    "config/artifacts/dataset-views/gse296875_rna_atac_smoke_1000_v1/topology.json": "45e1d944ad33ed1036e04f9bbd045a5c4492846a3453f0152f631f7ab5bfa150"
+  },
+  "runtime_manifest_hashes": {
+    "executions/environments/midas-v0.3.0-portable-21066061/ARTIFACTS.json": "c861185715ed6952f8a3a09b37b04e17e5a2e8e22a23a2e3c8ab0688508fddce",
+    "executions/environments/scbutterfly-v0.0.9-portable-21066062/ARTIFACTS.json": "b495d6a28bff02387d4c1c56993df29bbac1cdc28119e8ec9bc4cff621965014",
+    "executions/environments/scvi-tools-1.5.0.post1-portable-21064579/ARTIFACTS.json": "30814d4944e933d999e8c02c5b521432786b1985cc8794f9436f2a44af5ad1af",
+    "executions/environments/stabmap-v1.6.0-portable-21066039/ARTIFACTS.json": "acbff9a5df6b3d0f770d2ab82b0f7a72c57b1c6beb83a43191e3d8548524fb91",
+    "executions/environments/stabmap-v1.6.0-sparse-portable-21066444/ARTIFACTS.json": "ec6963d24e95378073e5e27c2305ce854ed11fc2faeba8efc8638bc8dca71cf5"
+  },
+  "execution_manifest_hashes": {
+    "executions/midas-official-trainer-probe-21066691/ARTIFACTS.json": "a47f0ea2c7dcd53298d81acd7ceb94919ef7feca4ace6535b8c2ff1decfaf218",
+    "executions/midas-synthetic-training-probe-21066448/ARTIFACTS.json": "768abfe564275637afc3e7dd3a29626a8e42625e9cb1fc010dbe88de0ef4cabc",
+    "executions/midas-inductive-seed2711-fold0-21068567/ARTIFACTS.json": "ca05738c575f8621b8bc87806c7ae1c7fb451ce90ba1498ae27f5530c6d5fef6",
+    "executions/midas-inductive-seed2711-fold1-21069966/ARTIFACTS.json": "4c231ad97051b7eed76363b07f5c73fd64748518198b05d7866b5624f3037e67",
+    "executions/midas-inductive-seed2711-fold2-21069966/ARTIFACTS.json": "ee8edc5739552d9d69147625426448e8ea341bbcdcd265c88a408a8a218747e2",
+    "executions/midas-inductive-seed2711-fold3-21069966/ARTIFACTS.json": "cb2fe6442ff160aa9a1b3c0bc1081cdc179e89e128dceef63ed6bed5b6eda2dd",
+    "executions/midas-inductive-seed2711-fold4-21069966/ARTIFACTS.json": "d06989fc9050cca37ccbe2bec575c4d1083c2a6caa3e29d0b0f1ebb1ae0efc95",
+    "executions/midas-inductive-seed2711-aggregated-21070221/ARTIFACTS.json": "675f8e7cee927fb5d852edf0b9de3a9df22ce60f1adc4740aa2bd430fbf00b4b",
+    "executions/midas-inductive-seed2711-evaluation-21070222/ARTIFACTS.json": "e1d396de85df3cc92e3314303893a4f4f25ffc56ec84f5c680b058c87e801999",
+    "executions/scbutterfly-b-safe-fit-predict-21066188/ARTIFACTS.json": "d87dfdfcda353cf70121320d4bb428951533e4f59bd54508a175ce9e283a4033",
+    "executions/scbutterfly-b-safe-evaluation-21066294/ARTIFACTS.json": "82e0b257c5ad940fdf2f641c0b84cf952800f4844b2afe6f2a607b7b96b64e10",
+    "executions/peakvi-training-context-smoke-21065383/ARTIFACTS.json": "c2adc4d5eba25983e7bf595eac38348d0cd55b9355d102a1cdf5e028c8e854ba",
+    "executions/peakvi-training-context-evaluation-21065488/ARTIFACTS.json": "a89dfe18d8fdcf84bee293e5a57ea46d1716e101fc2e68a73b8a6302b0593b71",
+    "executions/stabmap-retrieval-evaluation-21067154/ARTIFACTS.json": "34ff295ebf26f4f6c64d89d82ad7c8a7d2b889549edd635ce8f78592404951a1",
+    "executions/stabmap-retrieval-seed5839-evaluation-21067341/ARTIFACTS.json": "4ebf02bd8c904a748aa585d74ea1e2e3db4d784055c5612a7ee96457858cfa99",
+    "executions/stabmap-retrieval-seed6857-evaluation-21067568/ARTIFACTS.json": "9ed70f02c9475e9734cca17a2642e16f1afd6047686b3d699ca794261d725fbe",
+    "executions/stabmap-retrieval-seed-stability-21067940/ARTIFACTS.json": "891604f6b950d1338fb959ebda2388cc43844b62d5e359af6ac9478a5df87a89",
+    "executions/scooby-cross-review-21064420/ARTIFACTS.json": "27668bff0943a8baac6489f073e000c2ba181e729a6f3360ea1dc0a3cfd6aa7c",
+    "executions/scooby-released-archive-inventory-21064432/ARTIFACTS.json": "8cb983369ff43a93fbd2bc96bd6683613ce7d3cdf45efd6a4efe1c21715d2aa7",
+    "executions/scooby-bounded-headers-21064492/ARTIFACTS.json": "569736f2d15e3c00326c25313a4cc33c352d9aeb6da296d86aad86e582e3ed9c"
+  }
+}

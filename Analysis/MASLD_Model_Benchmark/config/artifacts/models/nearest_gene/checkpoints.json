@@ -20,16 +20,54 @@
     "pretrained_checkpoint_available": false,
     "status": "algorithm_and_reference_frozen_derived_annotation_and_implementation_not_admitted"
   },
+  "implementation": {
+    "algorithm_version": "1",
+    "repository": "repo_local_masld_bench",
+    "repository_revision": "UNRESOLVED_no_implementation_exists",
+    "source_code_present": false,
+    "source_code_run": false
+  },
+  "inductive_and_held_source_contract": {
+    "fitting": "none",
+    "held_source_behavior": "Compute distance from anonymized selection-locked coordinates and gene IDs without held outcomes. The method has no source-specific parameter.",
+    "inductive_behavior": "Scores any valid new variant-gene pair represented in the frozen annotation and coordinate contract.",
+    "source_removal": "A graph held source may not select locus anchors, variants, genes, candidate radius, transcripts, or ties. Source-specific observability and outcomes remain evaluator-only.",
+    "warning": "If the held source defines which gene pairs exist, scoring only those pairs leaks its assay coverage. Candidate rows must be source-independent or supplied as anonymized evaluator features under a precommitted roster."
+  },
   "input_contract": {
+    "analysis_contigs": [
+      "chr1",
+      "chr2",
+      "chr3",
+      "chr4",
+      "chr5",
+      "chr6",
+      "chr7",
+      "chr8",
+      "chr9",
+      "chr10",
+      "chr11",
+      "chr12",
+      "chr13",
+      "chr14",
+      "chr15",
+      "chr16",
+      "chr17",
+      "chr18",
+      "chr19",
+      "chr20",
+      "chr21",
+      "chr22",
+      "chrX",
+      "chrY",
+      "chrM"
+    ],
     "annotation": {
       "format": "GENCODE_v49_comprehensive_GTF_gzip",
       "path": "/gpfs/commons/home/jameslee/reference_genome/gencode_v49/gencode.v49.chr_patch_hapl_scaff.annotation.gtf.gz",
       "sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
       "size_bytes": 97570076
     },
-    "analysis_contigs": [
-      "chr1", "chr2", "chr3", "chr4", "chr5", "chr6", "chr7", "chr8", "chr9", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", "chr18", "chr19", "chr20", "chr21", "chr22", "chrX", "chrY", "chrM"
-    ],
     "candidate_rows": "Canonical variant_id, gene_id, native_build, GRCh38.p14 coordinate or frozen unique one-to-one liftover, LD block, locus, and row hash",
     "excluded_annotation": "patch, haplotype, alternate, scaffold, and non-analysis contig genes are not silently projected to primary contigs",
     "genome": "GRCh38.p14",
@@ -49,27 +87,16 @@
       "causal_gene"
     ],
     "ranking": "closer TSS ranks first within the exact frozen candidate denominator",
-    "task_roles": ["mandatory_eQTL_retrieval_baseline", "mandatory_typed_graph_prioritization_baseline"]
-  },
-  "inductive_and_held_source_contract": {
-    "fitting": "none",
-    "held_source_behavior": "Compute distance from anonymized selection-locked coordinates and gene IDs without held outcomes. The method has no source-specific parameter.",
-    "inductive_behavior": "Scores any valid new variant-gene pair represented in the frozen annotation and coordinate contract.",
-    "source_removal": "A graph held source may not select locus anchors, variants, genes, candidate radius, transcripts, or ties. Source-specific observability and outcomes remain evaluator-only.",
-    "warning": "If the held source defines which gene pairs exist, scoring only those pairs leaks its assay coverage. Candidate rows must be source-independent or supplied as anonymized evaluator features under a precommitted roster."
-  },
-  "implementation": {
-    "algorithm_version": "1",
-    "repository": "repo_local_masld_bench",
-    "repository_revision": "UNRESOLVED_no_implementation_exists",
-    "source_code_present": false,
-    "source_code_run": false
+    "task_roles": [
+      "mandatory_eQTL_retrieval_baseline",
+      "mandatory_typed_graph_prioritization_baseline"
+    ]
   },
   "runtime_and_artifact_contract": {
     "execution": "CPU deterministic coordinate join",
+    "output_receipt": "Hash algorithm ID, TSS artifact, candidate table, coordinate and liftover receipts, distances, ties, row order, and PredictionBundle.",
     "seed": "not_applicable",
-    "tss_artifact_receipt": "Record source GTF hash, accepted feature types and contigs, gene/transcript parsing counts, duplicate IDs, coordinate examples on both strands, version crosswalk, sorted rows, size, and SHA-256.",
-    "output_receipt": "Hash algorithm ID, TSS artifact, candidate table, coordinate and liftover receipts, distances, ties, row order, and PredictionBundle."
+    "tss_artifact_receipt": "Record source GTF hash, accepted feature types and contigs, gene/transcript parsing counts, duplicate IDs, coordinate examples on both strands, version crosswalk, sorted rows, size, and SHA-256."
   },
   "safe_loading_contract": {
     "model_loader": "none",
@@ -96,8 +123,8 @@
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-      "size_bytes": 59115
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+      "size_bytes": 59705
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/variant_to_regulation.toml",
@@ -119,8 +146,8 @@
     "variant_to_regulation": "secondary_retrieval_only"
   },
   "terms_audit": {
-    "annotation_access": "GENCODE states its project data are open access",
     "algorithm": "mathematical_distance_no_upstream_software",
+    "annotation_access": "GENCODE states its project data are open access",
     "project_implementation_license": "UNRESOLVED_repository_root_license_not_located_and_code_not_written",
     "redistribution": "Release the derived TSS and prediction artifacts only after preserving GENCODE attribution and reviewing project source and evaluator-row terms.",
     "result": "reference_open_access_no_weight_license_project_code_and_output_review_pending"

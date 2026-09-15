@@ -1,0 +1,116 @@
+{
+  "schema_version": "masld-bench-deliberate-non-changes-record-v1",
+  "record_id": "mpralegnet_deliberate_non_changes_20260825",
+  "audit_date": "2026-08-25",
+  "model_id": "mpralegnet",
+  "record_only": true,
+  "consumed_by_runtime": false,
+  "decision": "record_three_sites_as_deliberately_unchanged_with_reasons",
+  "decided_by": "team-lead, 2026-08-25, after the correction scope was re-derived and two of the three originally-agreed edits were withdrawn",
+  "headline": "Three sites assert mpralegnet is a 'candidate'. All three are CORRECT and must not be 'fixed'. Two of them are working drift guards. An audit that reads the terminal disposition and then harmonises these sites would replace a true label with a false one and disable both guards.",
+  "why_this_record_exists": {
+    "the_near_miss": "The correction that produced this record was originally scoped to rewrite the roster status and the admitted_task. Both were endorsed before the site inventory was re-derived. Neither is a defect. Had they been applied, the campaign would have traded a true label and two guards for a false one.",
+    "the_general_trap": "A terminal disposition creates pressure to harmonise every nearby field to match it. Fields that look inconsistent with a block are not automatically wrong: a model can be simultaneously a roster candidate, admission-blocked, and terminally blocked from scoring, because those three statements are made by three different layers about three different questions.",
+    "instruction_to_future_auditors": "Do not edit the three sites below to agree with terminal_disposition_20260825.json. If you believe one of them is wrong, read this record first and then raise it, rather than editing."
+  },
+  "non_changes": [
+    {
+      "site": "D",
+      "path": "config/models/regulatory_local.toml",
+      "field": "mpralegnet.status",
+      "current_value": "candidate",
+      "companion_field": "admission_blocking = true",
+      "why_it_stays": "The defect is PROVENANCE EQUIVALENCE, not terms. The only roster value that reads as blocked is 'blocked_terms', and it would be actively false: the licence is MIT code and MIT weights, and the terms are not what failed. No roster status value expresses 'terminally blocked on provenance'. 'candidate' plus admission_blocking = true is the closest honest encoding the schema permits, and the precise reason lives in the terminal disposition.",
+      "additional_reason": "This file is the frozen base registry. The campaign rule is that registry changes are additive versioned overlays leaving the frozen base byte-identical.",
+      "what_breaks_if_changed": "Both guards below, plus the byte-identical-base invariant."
+    },
+    {
+      "site": "E",
+      "path": "tests/contract/test_registry_files.py",
+      "locator": "local_regulatory[\"mpralegnet\"] tuple, near line 788",
+      "current_value": "(\"470dc7bfd3f0912c91f307a5f4019598072b8786294c46fc501b826c030cbe39\", \"pretrained_adapter\", \"candidate\", \"target_label_unexposed\")",
+      "role": "drift_guard",
+      "guards": "site D",
+      "why_it_stays": "This is not an assertion that mpralegnet is scorable. It is a guard that fails if the roster identity moves. It encodes no falsehood. Editing it to say something other than 'candidate' would silently disable detection of an unauthorised roster edit.",
+      "note": "This is the same shape as the scGPT lesson but with the opposite conclusion. There, a test asserted sha256 == UNRESOLVED and encoded a real falsehood, so the test had to change with the bundle. Here the guarded value is true, so the guard stays. The test to change is the one encoding a false fact, not every test that mentions the model."
+    },
+    {
+      "site": "F",
+      "path": "scripts/build_gse281364_five_seed_row_universe.py",
+      "locator": "expected[\"mpralegnet\"], line 408",
+      "current_value": "(\"candidate\", \"target_label_unexposed\")",
+      "role": "drift_guard",
+      "guards": "site D",
+      "why_it_stays": "Second independent runtime guard keyed to the same roster value. It raises if the roster status or exposure moves without authorisation.",
+      "discovery_note": "This site was named by neither the team-lead nor the first-pass audit. It was found only by grepping source and scripts for the model id rather than reasoning about which files 'ought' to assert status. A three-site inventory derived from expectation missed it; a six-site inventory derived from grep found it."
+    }
+  ],
+  "sites_that_are_defects_and_are_handled_elsewhere": [
+    {
+      "site": "A",
+      "path": "config/artifacts/models/mpralegnet/checkpoints.json",
+      "field": "terms_audit.result",
+      "status": "AUTHORISED_BUT_NOT_YET_APPLIED",
+      "blocker": "The file is hash-pinned by config/gse281364_comparator_reconciliation.toml [file_authorities.mpralegnet_checkpoints] and by config/local_variant_family_reconciliation.json file_authorities.mpralegnet_checkpoints. Editing it makes both stale, so both must be refreshed in the same transaction. The literal digest is deliberately NOT reproduced here -- see phantom_pin_note.",
+      "pin_count_at_audit": 2,
+      "companion_fields_checked": "Both pin records carry only path + sha256 for this file. No size_bytes, count or date companion describes it, so the 'a pin is rarely one field' trap does not apply to this particular refresh. Verified on the reconciled tree at 16:45, not assumed."
+    },
+    {
+      "site": "B",
+      "path": "config/evaluation/variant_to_regulation_capabilities.toml",
+      "field": "models[mpralegnet].allowed_endpoints",
+      "status": "RULED_C1_SCHEMA_EXTENSION_SEQUENCED_AFTER_REFRESH_BRANCHES_B_AND_D",
+      "blocker": "The capability record schema is closed at eight keys, allowed_endpoints rejects empty, and the validator requires the capability model set to equal the roster's variant_to_regulation models. No in-schema edit can express a scoring block. Escalated as C1/C2/C3.",
+      "ruling": "User ruling via team-lead, 2026-08-25: extend the schema (C1). Not the base-roster route (C3), and not accepting the split (C2). Sequenced after the pin-refresh lane's branches B and D land.",
+      "scope_requirement": "Must be the GENERAL fix, not an mpralegnet patch. Any model registered for variant_to_regulation and later terminally blocked hits the same three walls, so a field only mpralegnet can use would leave the next blocked model exactly here.",
+      "enforceability_requirement": "The new field must be consulted by the gate, not merely declared. The defect being corrected is precisely that scoring_authorized:false in a disposition file never reached the layer that gates scoring; a v2 field no evaluator reads would rebuild that defect one level up. The proving test must call the gate directly rather than assert on config."
+    }
+  ],
+  "verification": {
+    "guard_test": "tests/unit/test_mpralegnet_deliberate_non_changes.py",
+    "asserts": "All three non-changed sites still hold their recorded values, so an unauthorised harmonisation fails a test instead of landing silently."
+  },
+  "base_registry_unchanged": true,
+  "files_modified": 0,
+  "pins_touched": 0,
+  "outcomes_read": false,
+  "metrics_calculated": false,
+  "sealed_data_read": false,
+  "checkpoint_opened": false,
+  "weights_deserialized": false,
+  "known_unenforceable_block": {
+    "statement": "Between this record and C1 landing, mpralegnet is BLOCKED ON PAPER AND SCORABLE IN PRACTICE. This is a known unenforceable block, not a resolved item.",
+    "why": "terminal_disposition_20260825.json sets scoring_authorized=false, but config/evaluation/variant_to_regulation_capabilities.toml still grants models[mpralegnet].allowed_endpoints = [allelic_direction, mpra_activity], and that capability registry is what an evaluator consults. The disposition layer and the gating layer disagree, and the gating layer wins at runtime.",
+    "do_not_read_this_record_as_closure": "If you are reading this and concluding the gate holds, it does not. Check whether C1 has landed before relying on the block.",
+    "pending_work": "C1 schema extension, sequenced after refresh branches B and D.",
+    "interim_control": "Manual. Do not schedule mpralegnet on variant_to_regulation on either allowed endpoint until C1 lands.",
+    "v1_consumers_to_move_at_v2": {
+      "enumerated_on": "2026-08-25, before any edit, per team-lead instruction",
+      "schema_string_sites": [
+        "config/evaluation/variant_to_regulation_capabilities.toml:1",
+        "src/masld_bench/registry.py:444",
+        "tests/contract/test_registry_files.py:4947",
+        "tests/unit/_sealed_fixtures.py:863",
+        "tests/unit/_sealed_fixtures.py:900"
+      ],
+      "consumer_sites": [
+        "src/masld_bench/registry.py:1590",
+        "scripts/scooby_cross_review.py:275",
+        "scripts/audit_context_borzoi_preflight.py:397",
+        "tests/contract/test_registry_files.py:402",
+        "tests/unit/scooby_test_cross_review.py:58",
+        "tests/unit/test_contracts.py:639",
+        "tests/unit/_sealed_fixtures.py:897",
+        "tests/unit/test_native_task_disposition_overlay.py:187"
+      ],
+      "non_obvious_consumer": "tests/unit/_sealed_fixtures.py CONSTRUCTS a v1 capability document rather than only reading one, so a v2 bump must move the fixture builder as well as the validator. A grep for the consumer path alone would have missed that it is also a producer."
+    }
+  },
+  "phantom_pin_note": {
+    "defect": "An earlier draft of this record reproduced the mpralegnet checkpoints.json digest as a literal, to explain the blocker. That made this record appear -- to any digest grep, and plausibly to the pin contract test -- to be a THIRD pinner of a file it only describes.",
+    "why_it_matters": "It would have gone stale the moment sites A and C landed, manufacturing a dead pin out of a prose sentence, in a record whose entire subject is not manufacturing false assertions.",
+    "fix": "The blocker now names the two pinning records and their table keys without reproducing the digest.",
+    "generalisation": "A record that quotes a digest to talk ABOUT a pin is indistinguishable, to a grep, from a record that HOLDS a pin. Descriptive prose in an audit record should name the pinning file and key, not echo the hash.",
+    "self_caught": "Found by re-deriving my own pin inventory on the reconciled tree, per the team-lead instruction not to trust an inventory built before a concurrent write. The re-derivation returned pinned_by=3 where I expected 2."
+  }
+}

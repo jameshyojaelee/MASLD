@@ -333,7 +333,7 @@ def resolve_project_path(project_root: Path, path_text: str, context: str) -> Pa
     candidate = raw if raw.is_absolute() else project / raw
     # Normalize ``..`` without resolving symlinks first.  Calling ``resolve()``
     # immediately would erase whether the manifest named a symlink and would let
-    # a link masquerade as an immutable regular-file input.
+    # a link masquerade as an read-only regular-file input.
     lexical = Path(os.path.abspath(candidate))
     if not is_relative_to(lexical, project):
         raise ReleaseContractError(f"{context} escapes project root: {path_text}")

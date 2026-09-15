@@ -33,7 +33,7 @@ CANDIDATE_MULTIPLIER = 5
 
 
 class SequenceSplitError(ValueError):
-    """Raised when a sequence split or evaluation window violates its contract."""
+    """Raised when a sequence split or evaluation window does not meet its requirements."""
 
 
 def sha256_file(path: Path) -> str:

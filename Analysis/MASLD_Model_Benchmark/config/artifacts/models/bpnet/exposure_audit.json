@@ -9,14 +9,26 @@
     }
   },
   "development_crosswalk_record": {"path": "development_crosswalk.json", "scope": "task_specific_local_training_and_sealed_access", "sha256": "09c691ec867b5a614897b9a4414a00032d842464f086037628a52b0a59f0620a"},
-  "interpretation": "BPNet is a project-trained sequence-only architecture baseline with no upstream corpus contamination. Its leakage surface is entirely local: donor pooling, genomic splits, sequence windows, peak/background construction, validation, and calibration. These are frozen to the same data partitions as ChromBPNet so the architecture comparison is interpretable.",
+  "interpretation": "BPNet is a project-trained sequence-only architecture baseline with no upstream corpus contamination. Its runtime and eight-task development production bundle are frozen. Its leakage surface remains local: donor pooling, genomic splits, sequence windows, peak/background construction, validation, and calibration. Development fitting is continual_seen, and target-label-unexposed is not upgraded to clean_declared.",
+  "terminal_development_bundle": {
+    "path": "executions/sequence_gpu_bundle_004_bpnet-ready_71d22f6453-21077605",
+    "artifacts_sha256": "14af86ac22e67bc29f8a7b85ee3a049b63f875ba5423210cc8e539d29b9fe9e8",
+    "logical_tasks": 8,
+    "passed_tasks": 8,
+    "held_donor_atac_used_for_inference": false,
+    "evaluator_outcomes_exposed": false,
+    "benchmark_metrics_calculated": false,
+    "external_evaluation_complete": false,
+    "sealed_evaluation_complete": false,
+    "champion_eligible": false
+  },
   "remaining_blockers": [
-    "Verify the exact PyPI wheel and legacy TensorFlow 2.4.1 runtime on L40S, including import, forward/backward, resume, reverse-complement, and numeric tolerance probes.",
-    "Activate GSE296875 and GSE244832 only after their donor, topology, reference, feature/peak, QC, rights, and missingness authorities pass.",
-    "Freeze and hash every local model, training profile, peak/background set, split, hyperparameter file, seed, log, and prediction bundle.",
-    "Pass the no-ATAC-at-inference profile fixture and keep enhancer-gene linking or expression-direction composites separately named."
+    "Complete the prespecified five-fold, five-seed finalist campaign before any finalist or stability claim.",
+    "Keep enhancer-gene linking, expression-direction, and variant-effect composites separately named; the terminal artifacts admit profile prediction only.",
+    "Require an appropriate external and project-sealed evaluation before any external-transfer or champion claim.",
+    "Do not claim native TensorFlow 2.4.1 numeric parity from the verified TensorFlow 2.8.2 compatibility runtime."
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
-  "sealed_champion_eligibility": "conditional_after_runtime_data_and_local_artifact_locks_as_a_sequence_accessibility_component_not_a_standalone_signed_gene_effect_model",
-  "verified_date": "2026-08-22"
+  "sealed_champion_eligibility": "false_current_sparse_development_screen_requires_complete_finalist_external_and_sealed_gates",
+  "verified_date": "2026-08-24"
 }

@@ -22,7 +22,7 @@
     "scope": "checkpoint_corpus_native_inputs_fold_routing_and_link_only_role",
     "sha256": "b08112b3038a257ebb2eb920f2ab14d7f25b1a5a73f514edab2ccb96e7f073ab"
   },
-  "interpretation": "EPInformer is potentially useful as a compact enhancer-to-gene prior, but the selected HepG2 f3 release is neither MASLD-contextual nor a signed variant-effect model. Its admissible score is relative attention within a fixed native candidate set. GSE289173 target labels appear unexposed, yet the comparator is currently unschedulable because exact-code licensing, safe loading, fold routing, and native HepG2 input artifacts remain unresolved.",
+  "interpretation": "EPInformer is potentially useful as a compact enhancer-to-gene prior, but the selected HepG2 f3 release is neither MASLD-contextual nor a signed variant-effect model. Its eligible score is relative attention within a fixed native candidate set. GSE289173 target labels appear unexposed, yet the comparator is currently unschedulable because exact-code licensing, safe loading, fold routing, and native HepG2 input files remain unresolved.",
   "known_incidents_and_biases": [
     "The Nature Communications code-availability statement says v0.1.1 is MIT, but no LICENSE/COPYING/NOTICE file exists in that tag or the selected later code commit. The current Zenodo concept record is v0.3.0 with CC-BY-4.0 metadata, not the selected commit. Exact-code terms remain unresolved.",
     "The Hugging Face model card declares MIT for weights, but weight terms do not independently authorize reuse of unlicensed source code.",

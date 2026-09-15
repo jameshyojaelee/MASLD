@@ -7,7 +7,7 @@
   },
   "checkpoint_findings": {
     "sei_zenodo_4906997": {
-      "checkpoint_identity": "Zenodo 4906997 sei_model.tar.gz, size 3281639255, md5 4297aafb711aec4ecccb645b8928ea26; internal member and SHA-256 unresolved",
+      "checkpoint_identity": "Zenodo 4906997 sei_model.tar.gz, size 3281639255, md5 4297aafb711aec4ecccb645b8928ea26, sha256 3e1c41468d4b01d312aa44ebe0d2a708a705344908efb60daf8ff76548255b46; model/sei.pth sha256 9d4771d5363e4955eec2a36567fedac986191f64c7874c85bfb9e203c7f60783",
       "corpus": "21907 hg38 binary regulatory profiles from Cistrome, ENCODE, and Roadmap across more than 1300 cell lines and tissues; no donor-expression input",
       "exposure_confidence": "high_for_named_post_2021_target_labels_medium_for_upstream_profile_aliases",
       "exposure_state": "target_label_unexposed",
@@ -25,7 +25,7 @@
     "gse296875": "Eligible for development-only center-bin accessibility classification and fitted feature heads. It cannot consume same-nucleus RNA context and does not emit an ATAC profile or count.",
     "observed_context_requirement": "none_supported; fixed liver-related target profiles or sequence classes are not observed donor context"
   },
-  "interpretation": "Immutable chronology changes the registry's conservative unknown state to target_label_unexposed for GSE281364, GSE289173, and GSE296875. Sei remains broadly exposed to hg38 reference sequence and generic liver-related regulatory profiles. Its native output is a center-position probability vector, not a spatial ATAC profile or a signed gene effect.",
+  "interpretation": "Read-only chronology changes the registry's conservative unknown state to target_label_unexposed for GSE281364, GSE289173, and GSE296875. Sei remains broadly exposed to hg38 reference sequence and generic liver-related regulatory profiles. Its native output is a center-position probability vector, not a spatial ATAC profile or a signed gene effect.",
   "license_disposition": {
     "code": "academic_and_research_use_only; commercial_use_requires_permission",
     "model_archive": "CC-BY-4.0_at_Zenodo_record_level",
@@ -33,21 +33,19 @@
     "training_data": "Zenodo_record_CC-BY_with_additional_Cistrome_terms_required_by_official_README"
   },
   "remaining_blockers": [
-    "After campaign approval, acquire sei_model.tar.gz by immutable Zenodo record, verify size and MD5, compute SHA-256, and inventory members with traversal, link, duplicate-path, expanded-size, and file-count limits.",
-    "Load no native .pth until an isolated no-network inspection binds tensor names, shapes, dtypes, model source, and exact runtime; unrestricted PyTorch pickle loading is prohibited.",
-    "Hash and freeze the 21907-target order, 40 sequence-class projection arrays, histone normalization values, strand aggregation, and raw versus normalized projection formulas.",
-    "Lock the official hg38/Selene sequence contract and prove center anchoring, channel order, REF matching, reverse-complement averaging, ALT-minus-REF sign, and the 4096-bp boundary buffer.",
-    "Pass isolated L40S import, strict restore, forward, backward, resume, deterministic-seed, and numeric-tolerance probes through SLURM only after campaign approval.",
+    "The archive, allowlisted members, safe weights-only conversion, 21907-target order, 40 named classes, 61-row projection matrix, histone indices, strict restore, reverse-complement mean, ALT-minus-REF sign, deterministic L40S inference, and finite input-gradient backward are frozen and passed.",
+    "The released hg38 reference archive remains unacquired. Development inference instead uses the project GRCh38.p14 reference only after exact REF, center-anchor, channel-order, boundary, and primary-contig checks.",
+    "Any full fine-tuning requires a separate optimizer, resume, and cross-device numeric-tolerance contract; the current admitted path is frozen inference and input-gradient probing only.",
     "Cross any fitted profile combiner, calibration, enhancer-gene link, or direction head over held donors and merged chromosome or LD blocks.",
     "Keep Sei out of the RNA-conditioned ATAC profile champion comparison except as a static sequence center-bin comparator."
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "restricted_comparator_only_not_open_champion",
   "task_disposition": {
-    "allele_effect": "eligible_as_sequence_only_ALT_minus_REF_profile_or_sequence_class_effect_after_admission",
+    "allele_effect": "executable_restricted_sequence_only_ALT_minus_REF_profile_or_sequence_class_effect",
     "rna_conditioned_atac": "static_sequence_center_bin_comparator_only",
     "signed_eqtl_ieqtl": "not_native_requires_separately_frozen_link_and_direction_model",
     "variant_to_regulation": "eligible_as_a_sequence_component_not_a_complete_context_conditioned_gene_effect_model"
   },
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-08-24"
 }

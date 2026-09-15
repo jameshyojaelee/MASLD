@@ -55,7 +55,7 @@
     "Pass CPU SLURM fixtures for normalization, HVGs, PCA, neighbor features, K-means, Leiden, BayesSpace chains, deterministic seeds, spot and row order, modeled-subspot exclusion, no-network rebuild, and output round trip after activation and campaign approval.",
     "Retain these baselines through final selection if a spatial track activates; a simple baseline is allowed to be the released champion."
   ],
-  "interpretation": "This suite is the mandatory control for a future spatial benchmark, not an optional low-capacity screen. It has no upstream corpus contamination, but every fitted transform and partition still has donor, graph, target-distribution, and hyperparameter leakage risks. No eligible task, dataset, or seal exists now, so it remains deferred without execution.",
+  "interpretation": "This suite is the mandatory control for a future spatial benchmark, not an optional low-capacity screen. It has no upstream corpus contamination, but every fitted transform and partition still has donor, graph, target-distribution, and hyperparameter leakage risks. No eligible task, dataset, or hold back exists now, so it remains deferred without execution.",
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_currently_no_registered_spatial_task_no_sealed_source_and_no_complete_runtime_lock",
   "verified_date": "2026-08-22"

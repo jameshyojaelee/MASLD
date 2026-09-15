@@ -69,13 +69,13 @@
     "gse289173": {
       "topology": "RNA_only_with_same_study_unpaired_QTL_summaries",
       "native_WNN_use": "none",
-      "reason": "The jointly sealed cell-state input is RNA only. Native WNN has no frozen RNA-only query transform and no observed ATAC may be introduced.",
+      "reason": "The jointly held-back cell-state input is RNA only. Native WNN has no frozen RNA-only query transform and no observed ATAC may be introduced.",
       "sealed_result": "ineligible"
     },
     "fnih_86_liver": {
       "topology": "registered_as_same_study_unpaired_and_current_permission_state_unavailable",
       "native_WNN_use": "none_unless_a_future_activation_manifest_proves_same_cell_or_same_nucleus_pairing",
-      "reason": "Study-level coavailability is not row-level pairing, and current files and rights are not admitted."
+      "reason": "Study-level coavailability is not row-level pairing, and current files and rights are not included."
     }
   },
   "method_boundary_matrix": {
@@ -113,7 +113,7 @@
   "task_admission": {
     "cell_state_mapping": {
       "decision": "deferred",
-      "reason": "Native WNN cannot score the sealed RNA-only row universe. Reference mapping is a different query-adaptive method and has not been registered, frozen, or tested for query-composition invariance.",
+      "reason": "Native WNN cannot score the held-back RNA-only row universe. Reference mapping is a different query-adaptive method and has not been registered, frozen, or tested for query-composition invariance.",
       "prohibited_workaround": "run_WNN_on_development_or_sealed_query_rows_with_observed_ATAC_or_call_reference_mapping_native_WNN"
     },
     "rna_conditioned_atac": {

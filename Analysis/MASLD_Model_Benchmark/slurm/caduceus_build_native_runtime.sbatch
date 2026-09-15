@@ -291,7 +291,7 @@ sha256sum \
   "${SOURCE}/ARTIFACTS.json" \
   > "${STAGE}/source.sha256"
 
-# Conda environments contain required symlinks, while immutable artifact trees
+# Conda environments contain required symlinks, while read-only output-file trees
 # forbid live symlinks. Store the complete environment as one checksummed
 # payload and prove it still imports after extraction at a different prefix.
 install -d -m 0750 "${STAGE}/payload"

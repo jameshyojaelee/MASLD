@@ -6,73 +6,6 @@
     "policy": "Every fitted classifier, latent model, centroid, projection, calibration model, or assay summary is a fold-local state derived from admitted training donors. No state may be carried across outer folds or updated with withheld features.",
     "sealed_data_in_any_fitted_state": false
   },
-  "registry_binding": {
-    "coverage": "exactly_the_thirteen_registry_rows_listed_here",
-    "registry_model_ids": [
-      "hvg_pca_nearest_centroid",
-      "hvg_pca_knn",
-      "hvg_pca_logistic",
-      "hvg_pca_elastic_net",
-      "hvg_pca_linear_svm",
-      "harmony_logistic",
-      "scvi_baseline",
-      "scanvi_baseline",
-      "celltypist_baseline",
-      "pca_procrustes",
-      "cca",
-      "mean_expression_bulk",
-      "assay_native_pseudobulk"
-    ],
-    "source": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-    "source_size_bytes": 59115
-  },
-  "shared_hvg_pca_execution": {
-    "adapter": {
-      "path": "Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py",
-      "sha256": "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
-      "supported_actions": [
-        "prepare",
-        "fit",
-        "predict"
-      ]
-    },
-    "applies_to": [
-      "hvg_pca_nearest_centroid",
-      "hvg_pca_knn",
-      "hvg_pca_logistic",
-      "hvg_pca_elastic_net",
-      "hvg_pca_linear_svm"
-    ],
-    "executable_tasks": [
-      "cell_state_mapping"
-    ],
-    "input_contract": {
-      "feature_id": "versionless Ensembl gene ID",
-      "label": "frozen broad_liver_five_v1 class",
-      "matrix": "nonnegative integer raw counts",
-      "row_id": "globally unique source observation name",
-      "unit": "dataset-view donor_id admitted as cohort_family_id plus person_key"
-    },
-    "preprocessing": {
-      "authority_path": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",
-      "authority_sha256": "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c",
-      "feature_selection": "Training-only rank-binned normalized dispersion with 20 mean bins, top 2000 genes, and Ensembl-ID tie breaking.",
-      "normalization": "Per-cell library-size scaling to 10000 followed by log1p.",
-      "pca": "Training-only centered full SVD with at most 50 components.",
-      "split": "SHA256(split_seed NUL donor_id), first 8 bytes big-endian modulo 5.",
-      "training_weights": "Equal class mass, then equal donor mass within class, rescaled to the training-cell count."
-    },
-    "runtime": {
-      "environment_lock_path": "Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json",
-      "environment_lock_sha256": "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298",
-      "environment_lock_size_bytes": 1205,
-      "python": "CPython 3.10.18",
-      "runtime_id": "cpu_baseline_smoke",
-      "scikit_learn": "1.7.2"
-    },
-    "scope_limit": "The authority and adapter implement cell_state_mapping only. Registry declarations for bulk_state_transfer are not executable implementations."
-  },
   "models": {
     "assay_native_pseudobulk": {
       "admission_blocking": true,
@@ -135,8 +68,8 @@
       "inductive_status": "The fold-trained logistic classifier is inductive only when query-dependent majority voting or clustering is disabled. Any majority-vote diagnostic is transductive and must be reported separately.",
       "input_contract": "Fold-local custom model using the training donor RNA matrix and frozen broad labels. AnnData input is log1p normalized to 10000 counts per cell; feature axis, centering, solver, regularization, balancing, calibration, and seed remain to be frozen.",
       "license_status": "MIT",
-      "pretrained_weights": false,
       "pretrained_weight_policy": "Do not download, select, ensemble, or use built-in CellTypist classifiers. Only a new classifier fit inside the outer training fold is admissible.",
+      "pretrained_weights": false,
       "registry_status": "candidate",
       "release_condition": "The package is permissively licensed, but an open champion additionally requires a frozen runtime, project-generated fitted-state hash, safe loading policy, input-data release review, and the sealed task gate.",
       "runtime_status": "blocked_celltypist_1.7.1_absent_from_the_only_frozen_classical_runtime",
@@ -371,6 +304,27 @@
     "harmonypy": "GitHub release v0.0.10 resolves to a770f2d and PyPI 0.0.10 publishes exact wheel and sdist hashes under GPL-3.0-or-later. A later release exists, so latest is prohibited.",
     "scvi_tools": "GitHub release 1.4.2 identifies dc95497. PyPI publishes a wheel hash matching the registry and attests the release workflow at b35cb7d3868ea110f60e0fb260d94fe054ea0470. The tag, package version, and wheel hash are separate frozen identity fields; none is inferred from another."
   },
+  "registry_binding": {
+    "coverage": "exactly_the_thirteen_registry_rows_listed_here",
+    "registry_model_ids": [
+      "hvg_pca_nearest_centroid",
+      "hvg_pca_knn",
+      "hvg_pca_logistic",
+      "hvg_pca_elastic_net",
+      "hvg_pca_linear_svm",
+      "harmony_logistic",
+      "scvi_baseline",
+      "scanvi_baseline",
+      "celltypist_baseline",
+      "pca_procrustes",
+      "cca",
+      "mean_expression_bulk",
+      "assay_native_pseudobulk"
+    ],
+    "source": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
+    "source_size_bytes": 59115
+  },
   "safe_artifact_contract": {
     "network_at_runtime": "prohibited",
     "project_generated_state": "Load only a bounded, schema-validated fold artifact whose source model, code, environment, training rows, feature axis, parameters, and SHA-256 are registered.",
@@ -378,11 +332,57 @@
     "weights_downloaded_for_this_audit": false
   },
   "schema_version": "masld-bench-grouped-model-preflight-v1",
+  "shared_hvg_pca_execution": {
+    "adapter": {
+      "path": "Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/hvg_pca_logistic.py",
+      "sha256": "13375a7d1bc1deee5542b3bee8db868dddc035531274bc50b1f42e9b55e1ad09",
+      "supported_actions": [
+        "prepare",
+        "fit",
+        "predict"
+      ]
+    },
+    "applies_to": [
+      "hvg_pca_nearest_centroid",
+      "hvg_pca_knn",
+      "hvg_pca_logistic",
+      "hvg_pca_elastic_net",
+      "hvg_pca_linear_svm"
+    ],
+    "executable_tasks": [
+      "cell_state_mapping"
+    ],
+    "input_contract": {
+      "feature_id": "versionless Ensembl gene ID",
+      "label": "frozen broad_liver_five_v1 class",
+      "matrix": "nonnegative integer raw counts",
+      "row_id": "globally unique source observation name",
+      "unit": "dataset-view donor_id admitted as cohort_family_id plus person_key"
+    },
+    "preprocessing": {
+      "authority_path": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",
+      "authority_sha256": "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c",
+      "feature_selection": "Training-only rank-binned normalized dispersion with 20 mean bins, top 2000 genes, and Ensembl-ID tie breaking.",
+      "normalization": "Per-cell library-size scaling to 10000 followed by log1p.",
+      "pca": "Training-only centered full SVD with at most 50 components.",
+      "split": "SHA256(split_seed NUL donor_id), first 8 bytes big-endian modulo 5.",
+      "training_weights": "Equal class mass, then equal donor mass within class, rescaled to the training-cell count."
+    },
+    "runtime": {
+      "environment_lock_path": "Analysis/MASLD_Model_Benchmark/executions/environment-locks/cpu_baseline_smoke--8a7dfd2a15a635d5/environment.lock.json",
+      "environment_lock_sha256": "8a7dfd2a15a635d5ef5b25fa8ee68355e6c6cfd047ec464cdc1dea83b7201298",
+      "environment_lock_size_bytes": 1205,
+      "python": "CPython 3.10.18",
+      "runtime_id": "cpu_baseline_smoke",
+      "scikit_learn": "1.7.2"
+    },
+    "scope_limit": "The authority and adapter implement cell_state_mapping only. Registry declarations for bulk_state_transfer are not executable implementations."
+  },
   "source_records": [
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-      "size_bytes": 59115
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+      "size_bytes": 59705
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",

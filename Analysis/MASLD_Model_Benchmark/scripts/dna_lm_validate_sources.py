@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate five DNA language-model source, license, and exposure gates."""
+"""Validate five DNA language-model source, license, and exposure checks."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ MODEL_IDS = (
 
 
 class DnaLmAdmissionError(ValueError):
-    """Raised when a DNA language-model admission source differs."""
+    """Raised when a DNA language-model inclusion source differs."""
 
 
 def _hash(path: Path) -> str:

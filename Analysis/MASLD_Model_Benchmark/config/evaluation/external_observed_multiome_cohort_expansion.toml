@@ -1,0 +1,142 @@
+schema_version = "masld-bench-external-observed-multiome-expansion-v1"
+audit_id = "external_observed_multiome_expansion_20260825"
+status = "outcome_blind_metadata_audit"
+anchor_excluded_from_ranking = "gse296875"
+sealed_outcomes_read = false
+biological_matrices_downloaded = false
+candidate_activation_is_automatic = false
+ranking_basis = ["MASLD phenotype relevance", "donor count", "RNA-ATAC topology", "donor join resolvability", "public access and reuse", "external-transfer value"]
+universal_claim_allowed = false
+
+[[candidate]]
+rank = 1
+candidate_id = "fnih_86_liver"
+category = "masld_same_nucleus"
+accessions = ["PMC12083587", "PMID40385416", "ZENODO15298484", "FNIH_86_LIVER_CONDITIONAL"]
+exact_donor_n = 86
+donor_n_basis = "source paper"
+modalities = ["single_nucleus_rna", "single_nucleus_atac", "paired_tag_rna_h3k27ac", "paired_tag_rna_h3k27me3", "single_cell_hi_c", "genotype", "spatial_rna_subset"]
+topology = "same_nucleus"
+topology_detail = "All 86 donors were profiled by 10x Multiome in pooled libraries and assigned by genotype; Paired-Tag and Hi-C are separate nuclei and must retain their own topology."
+phenotype_fields = ["normal", "MASL", "MASH", "MetALD", "fibrosis_stage_0_to_4", "steatosis", "steatohepatitis", "inflammation", "age", "sex", "BMI", "laboratory_tests", "alcohol_history"]
+native_reference_build = "UNRESOLVED_EXACT_BUNDLE"
+permissions = "The processed browser is public. Zenodo record 15298484 currently reports access_right=restricted and exposes zero files; raw or analysis-complete donor-linked files and dataset-specific reuse/redistribution terms are not established."
+availability = "public_browser_restricted_zenodo_no_raw_release"
+contamination_role = "conditional_future_external_candidate_after_checkpoint_and_project_exposure_audit"
+activation_status = "blocked"
+activation_blockers = ["No verified open raw or analysis-complete donor-linked multiome release", "Zenodo access_right is restricted and the record exposes zero files", "No immutable participant-barcode join", "Exact genome and annotation bundle unresolved", "Dataset-specific reuse and derivative-weight terms unresolved"]
+eligible_for_masld_external_champion = false
+next_acquisition_job = "fnih_86_portal_inventory_rights_and_donor_join_v1"
+source_urls = ["https://pmc.ncbi.nlm.nih.gov/articles/PMC12083587/", "https://epigenome.wustl.edu/MASLD/", "https://zenodo.org/records/15298484"]
+
+[[candidate]]
+rank = 2
+candidate_id = "gse281574_alcohol_multiome"
+category = "alcohol_ood_same_nucleus"
+accessions = ["GSE281574", "PRJNA1184747"]
+exact_donor_n = 15
+donor_n_basis = "peer-reviewed source paper: five unaffected, five severe alcohol-associated hepatitis, five alcohol-associated cirrhosis"
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+topology = "same_nucleus_donor_join_unresolved"
+topology_detail = "10x Multiome measures RNA and ATAC in the same nuclei, but the 15 donors were pooled into six condition-specific libraries (three donors and two donors per condition). Deposited sample accessions are pools, not donors."
+phenotype_fields = ["unaffected", "severe_alcohol_associated_hepatitis", "alcohol_associated_cirrhosis"]
+native_reference_build = "hg38_Cell_Ranger_ARC"
+permissions = "GEO/SRA raw data and a processed Seurat object are public; no dataset-specific redistribution license is asserted. Source terms apply."
+availability = "public_donor_join_unresolved"
+contamination_role = "etiology_ood_development_stress_test_not_masld_negative_control"
+activation_status = "blocked"
+activation_blockers = ["Authoritative donor-to-nucleus demultiplex assignments are not established in public metadata", "Pool is the deposited sample unit", "Cannot use unaffected donors as a MASLD-sealed control cohort"]
+eligible_for_masld_external_champion = false
+next_acquisition_job = "gse281574_donor_barcode_join_metadata_audit_v1"
+source_urls = ["https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE281574", "https://www.nature.com/articles/s41467-025-63251-2"]
+
+[[candidate]]
+rank = 3
+candidate_id = "emtab13130_13131_cirrhosis"
+category = "masld_same_sample_unpaired"
+accessions = ["E-MTAB-13130", "E-MTAB-13131", "S-SCDT-10_1038-S44321-025-00230-6"]
+exact_donor_n = 1
+donor_n_basis = "peer-reviewed source paper: snRNA and snATAC were both generated from cirrhotic sample b"
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+topology = "same_sample_different_aliquot"
+topology_detail = "The two assays came from the same cirrhotic liver sample, but the 6,170 RNA nuclei and 4,461 ATAC nuclei are distinct and cannot be cell-paired."
+phenotype_fields = ["cirrhosis", "underlying_MASLD", "advanced_fibrosis_pathology"]
+native_reference_build = "UNRESOLVED_EXACT_BUNDLE"
+permissions = "ArrayExpress/BioStudies records are public; exact file-level reuse and redistribution terms remain to be frozen."
+availability = "public_single_donor"
+contamination_role = "descriptive_masld_cirrhosis_reference_only"
+activation_status = "blocked"
+activation_blockers = ["One biological donor cannot support transfer or superiority inference", "RNA and ATAC nuclei are unpaired", "Exact source reference and file-level terms unresolved"]
+eligible_for_masld_external_champion = false
+next_acquisition_job = "emtab13130_13131_file_join_reference_rights_audit_v1"
+source_urls = ["https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-13130", "https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-13131", "https://pmc.ncbi.nlm.nih.gov/articles/PMC12162837/"]
+
+[[candidate]]
+rank = 4
+candidate_id = "encode_gse286690_liver_multiome"
+category = "healthy_reference_same_nucleus"
+accessions = ["GSE286690", "ENCSR788DZO", "ENCSR367YUX", "ENCSR630YEA", "ENCDO912EIY"]
+exact_donor_n = 1
+donor_n_basis = "ENCODE donor and multiomics-series metadata"
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+topology = "same_nucleus"
+topology_detail = "ENCODE identifies the RNA and ATAC experiments as one 10x multiomics series from the same adult right-liver-lobe nuclear preparation."
+phenotype_fields = ["adult", "age_47", "female", "right_lobe_of_liver", "no_MASLD_histology_endpoint"]
+native_reference_build = "GRCh38"
+permissions = "Released ENCODE data may be downloaded, analyzed, and published without restriction with required citation."
+availability = "public_released"
+contamination_role = "healthy_reference_only_pretraining_exposure_likely"
+activation_status = "reference_fixture_ready_after_file_manifest"
+activation_blockers = ["One donor cannot support donor-level generalization", "No MASLD or histology phenotype", "Common ENCODE provenance makes clean-checkpoint exposure unlikely"]
+eligible_for_masld_external_champion = false
+next_acquisition_job = "encode_liver_multiome_released_file_manifest_v1"
+source_urls = ["https://www.encodeproject.org/experiments/ENCSR367YUX/", "https://www.encodeproject.org/experiments/ENCSR630YEA/", "https://www.encodeproject.org/about/data-use-policy/", "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE286690"]
+
+[[candidate]]
+rank = 5
+candidate_id = "gse244832"
+category = "masld_same_donor_unpaired"
+accessions = ["GSE244832", "PRJNA1024976"]
+exact_donor_n = 18
+donor_n_basis = "GEO series design and existing frozen dataset registry"
+modalities = ["single_nucleus_rna", "single_nucleus_atac"]
+topology = "same_sample_different_aliquot"
+topology_detail = "Eighteen donor-matched RNA and ATAC assays use separate nuclei. Cell-to-cell pairing is forbidden."
+phenotype_fields = ["normal", "MASL", "MASH"]
+native_reference_build = "hg38_Cell_Ranger_3.0.2_RNA+bwa_mem_0.7.17_ATAC"
+permissions = "Public GEO/SRA download. Source terms apply; redistribution and derivative-weight rights are not assumed."
+availability = "public_existing_development"
+contamination_role = "project_exposed_development_only"
+activation_status = "development_transport_active_model_input_task_blocked"
+activation_blockers = ["Not same-nucleus", "Already project-exposed", "Exact RNA annotation and ATAC bundle crosswalks remain task-specific"]
+eligible_for_masld_external_champion = false
+next_acquisition_job = "none_existing_frozen_transport_artifacts"
+source_urls = ["https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE244832"]
+
+[[candidate]]
+rank = 6
+candidate_id = "ega_hepatoblastoma_multiome"
+category = "controlled_pediatric_liver_ood_same_nucleus"
+accessions = ["EGAS00001006932", "EGAD00001010049", "PMC11001886"]
+exact_donor_n = 5
+donor_n_basis = "peer-reviewed source paper: six tumor samples and two non-tumor counterparts from five pediatric patients"
+modalities = ["single_nucleus_rna", "single_nucleus_atac", "whole_genome_sequencing"]
+topology = "same_nucleus"
+topology_detail = "RNA and ATAC were simultaneously measured in each multiome nucleus within each tumor or non-tumor sample."
+phenotype_fields = ["hepatoblastoma", "tumor", "non_tumor_counterpart", "pediatric"]
+native_reference_build = "GRCh38_Cell_Ranger_ARC_2.0.0"
+permissions = "EGA files require a data-access request and DAC authorization. The article license does not make participant-level EGA files public."
+availability = "controlled_access"
+contamination_role = "blocked_pediatric_liver_ood_reference"
+activation_status = "blocked_out_of_scope"
+activation_blockers = ["Controlled access requires new authorization", "Pediatric cancer is not a MASLD phenotype cohort", "No automatic acquisition is permitted"]
+eligible_for_masld_external_champion = false
+next_acquisition_job = "none_controlled_access_not_public"
+source_urls = ["https://ega-archive.org/datasets/EGAD00001010049", "https://ega-archive.org/studies/EGAS00001006932", "https://pmc.ncbi.nlm.nih.gov/articles/PMC11001886/"]
+
+[decision]
+recommended_activation_order = ["fnih_86_liver", "gse281574_alcohol_multiome", "emtab13130_13131_cirrhosis", "encode_gse286690_liver_multiome"]
+immediate_metadata_job = "fnih_86_portal_inventory_rights_and_donor_join_v1"
+paired_masld_external_seal_available_now = false
+observed_multiome_external_champion_available_now = false
+reason = "No public, donor-resolved, rights-cleared, project-unexposed MASLD same-nucleus cohort currently passes the activation and hold-back requirements."

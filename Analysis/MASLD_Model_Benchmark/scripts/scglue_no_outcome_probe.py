@@ -11,7 +11,7 @@ from typing import Any
 
 
 class SCGLUEProbeError(ValueError):
-    """Raised when the synthetic scGLUE contract differs."""
+    """Raised when the synthetic scGLUE requirement differs."""
 
 
 def _array_sha256(value: Any) -> str:

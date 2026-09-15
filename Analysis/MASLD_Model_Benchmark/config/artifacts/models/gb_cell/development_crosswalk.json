@@ -102,7 +102,7 @@
     },
     "conditional_masld_model": {
       "status": "prohibited_under_current_terms",
-      "reason": "The license treats embeddings and gradients as outputs and restricts their use to train similar models except GenBio Materials or their downstream Derivative Works. The independent conditional MASLD model is not admitted as such a derivative."
+      "reason": "The license treats embeddings and gradients as outputs and restricts their use to train similar models except GenBio Materials or their downstream Derivative Works. The independent conditional MASLD model is not included as such a derivative."
     },
     "perturbation_response": {
       "status": "not_admitted_by_base_checkpoint",
@@ -145,7 +145,7 @@
     "open_champion": "ineligible_under_current_GenBio_terms",
     "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
   },
-  "interpretation": "GB.Cell is technically relevant to cell-state mapping because it consumes transcriptome-scale single-cell counts and exposes a deterministic pooled embedding recipe. It is not admitted now. The 50-million-cell corpus lacks a checkpoint-bound source inventory, all Atlas overlaps remain unknown, the runtime is not locked, and the license restricts noncommercial use, distribution, and training similar models from embeddings or other outputs.",
+  "interpretation": "GB.Cell is technically relevant to cell-state mapping because it consumes transcriptome-scale single-cell counts and exposes a deterministic pooled embedding recipe. It is not included now. The 50-million-cell corpus lacks a checkpoint-bound source inventory, all Atlas overlaps remain unknown, the runtime is not fixed, and the license restricts noncommercial use, distribution, and training similar models from embeddings or other outputs.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

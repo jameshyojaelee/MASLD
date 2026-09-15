@@ -1,16 +1,16 @@
 {
   "algorithm_contract": {
     "algorithm_id": "masld_equal_weight_calibrated_late_fusion_v1",
+    "binary_and_multiclass": "Average calibrated probabilities component-wise and verify the resulting probability vector is finite and sums to one within tolerance.",
     "component_eligibility": "A component must emit an immutable out-of-fold PredictionBundle for the same task, endpoint, row semantics, direction, and assay-native output contract. Every component and calibrator must already pass its own exposure, license, split, and task gates.",
     "component_roster": "Freeze one selection-locked prediction artifact per admitted component family before fusion. No sealed outcome or fusion result may add, drop, or replace a component.",
+    "continuous_and_profile": "Average only predictions already expressed in the exact same frozen endpoint units and coordinate order. No generic z-score, rank transform, or unit conversion is part of v1.",
     "fitting": "No fusion weight is fitted. Equal component weights are fixed a priori; task-specific component calibration occurs upstream inside development training folds.",
     "fusion_formula": "For row i with admissible observed component set A_i, output the arithmetic mean of aligned calibrated predictions: sum_{j in A_i} p_ij / |A_i|.",
     "incomparable_outputs": "Do not combine different endpoints, lineages, classes, effect directions, assay units, or row definitions. Emit a per-endpoint prediction map rather than a synthetic universal score.",
     "model_family": "deterministic_equal_weight_late_fusion",
     "single_component": "Pass the one calibrated prediction through unchanged.",
-    "zero_component": "Emit structurally_missing and no numeric prediction; do not use zero, global prevalence, a neighboring task, or an imputed component.",
-    "binary_and_multiclass": "Average calibrated probabilities component-wise and verify the resulting probability vector is finite and sums to one within tolerance.",
-    "continuous_and_profile": "Average only predictions already expressed in the exact same frozen endpoint units and coordinate order. No generic z-score, rank transform, or unit conversion is part of v1."
+    "zero_component": "Emit structurally_missing and no numeric prediction; do not use zero, global prevalence, a neighboring task, or an imputed component."
   },
   "checkpoint_contract": {
     "checkpoint_revision": "NOT_APPLICABLE_DETERMINISTIC_FUSION",
@@ -27,10 +27,26 @@
     "source_specific_component": "A component that consumes the evaluated source or a source-specific untrained relation is ineligible, not missing-at-random.",
     "wholly_removed_source": "Conditionally supported as retrospective cross-source prioritization when all contributing component predictions were generated under the identical removal receipt."
   },
+  "implementation": {
+    "algorithm_version": "1",
+    "repository": "repo_local_masld_bench",
+    "repository_revision": "UNRESOLVED_no_implementation_exists",
+    "source_code_present": false,
+    "source_code_run": false
+  },
   "input_contract": {
     "component_prediction": "row hash, unit hash, block hash where required, endpoint and stratum identity, calibrated prediction, uncertainty where available, eligibility mask, missingness state, source exposure, and artifact hashes",
     "component_terms": "Record code, weight, output-use, derivative-model, and redistribution terms. Restricted outputs cannot be silently used to create an open fusion artifact.",
-    "missingness_states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
+    "missingness_states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
     "row_join": "Exact one-to-one join on task endpoint row identity. Outer joins preserve masks; duplicate or many-to-many component rows fail.",
     "uncertainty": "Do not treat component seeds or models as independent biological replicates. Preserve component uncertainty and use task-registered biological cluster bootstrap."
   },
@@ -40,13 +56,6 @@
     "graph_output": "calibrated source-agnostic candidate-gene probability for eligible rows when all inputs share that contract",
     "native_output": "per-task and per-endpoint equal-weight fused prediction with explicit masks and provenance",
     "unified_output": "a map of task-specific predictions and eligibility masks; never a synthetic complete patient matrix or one scalar that hides a failed endpoint"
-  },
-  "implementation": {
-    "algorithm_version": "1",
-    "repository": "repo_local_masld_bench",
-    "repository_revision": "UNRESOLVED_no_implementation_exists",
-    "source_code_present": false,
-    "source_code_run": false
   },
   "runtime_and_artifact_contract": {
     "execution": "CPU deterministic sorted row join and arithmetic reduction",
@@ -85,8 +94,8 @@
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/resources.toml",
-      "sha256": "fabdee11b41930cfc29ff73da47e221902d9fc3fc717e8afc7832733eeb94e3a",
-      "size_bytes": 4303
+      "sha256": "6a92759ade3e5f8446ab7688845cae90444e90cf1575121b217c4637fd81de6d",
+      "size_bytes": 4794
     }
   ],
   "task_fit": {

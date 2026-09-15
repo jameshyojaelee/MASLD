@@ -49,7 +49,7 @@ def validate_bed_interval(
     coordinate_contract: CoordinateContract,
     contig_lengths: Mapping[str, int] | None = None,
 ) -> BedInterval:
-    """Validate one 0-based, half-open interval against the admitted contig set."""
+    """Validate one 0-based, half-open interval against the included contig set."""
 
     normalized_contig = coordinate_contract.require_analysis_contig(contig)
     if isinstance(start, bool) or not isinstance(start, int):

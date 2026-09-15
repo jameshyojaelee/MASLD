@@ -19,7 +19,7 @@ from transformers import PreTrainedTokenizerFast
 
 
 class Dnabert2ProbeError(ValueError):
-    """Raised when the exact DNABERT-2 runtime contract differs."""
+    """Raised when the exact DNABERT-2 runtime requirement differs."""
 
 
 def _sha256_file(path: Path) -> str:
@@ -247,7 +247,7 @@ def run(
     from bundle.configuration_bert import BertConfig
 
     # The archived upstream Triton kernel targets the 2023 Triton API and
-    # fails closed under the admitted Triton 2.3 runtime. Use the unmodified
+    # fails closed under the included Triton 2.3 runtime. Use the unmodified
     # model's explicit PyTorch fallback instead of patching that kernel.
     bert_layers.flash_attn_qkvpacked_func = None
     BertForMaskedLM = bert_layers.BertForMaskedLM

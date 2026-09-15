@@ -24,8 +24,8 @@ trap preserve_failed_stage EXIT
 if [[ -e "${TARGET}" || -e "${STAGE}" || -e "${FAILED}" ]]; then exit 1; fi
 install -d -m 0750 "${STAGE}/validation"
 printf '%s  %s\n' ecd37495a2ccb0d0077cb5f073683c6765821254259baab06d61f9cfd45357b0 "${ATTEMPTS}" | sha256sum --check --strict
-printf '%s  %s\n' 933d43bae1d4021d9fc6fb70e37ff44d2e1c499c69825cfe3f02960e633eb330 "${BACKLOG}" | sha256sum --check --strict
-printf '%s  %s\n' 582fdb2b913170ecc67df22ce6534be8a7a7cf5273479b3ef58f099b98a673ac "${POLICY}" | sha256sum --check --strict
+printf '%s  %s\n' 8e858dafe8d0a5055a838fb5e0aadfac9ffe1b8e83e529acec958d29455a2dc6 "${BACKLOG}" | sha256sum --check --strict
+printf '%s  %s\n' 36e830550fb11a8ad0293eeab929383968d8dbb66cab67f3ef27a380a899a3de "${POLICY}" | sha256sum --check --strict
 module load python/3.11.5-GCCcore-13.2.0
 PYTHONPATH="${ROOT}/src" python - "${ATTEMPTS}" "${BACKLOG}" "${POLICY}" \
   > "${STAGE}/validation/manifest_validation.json" <<'PY'
@@ -86,6 +86,7 @@ if active != {"21066983", "21066987", "21066988", "21066995", "21067819"}:
     raise SystemExit("active dispatcher identity differs")
 if any(
     row["submission_authority"] != "dispatcher_only_no_manual_sbatch"
+    or row["routing_policy"] != "nslab_only"
     or row["gpu_squeue_ceiling"] != "5"
     or row["max_running_gpu"] != "4"
     or row["max_pending_gpu"] != "1"
@@ -107,6 +108,12 @@ if (
     or policy["max_pending_gpu_jobs"] != 1
     or policy["submission_batch_size"] != 1
     or not policy["manual_gpu_sbatch_prohibited"]
+    or policy["routing"] != {
+        "account": "nslab",
+        "qos": "nslab",
+        "gres": "gpu:l40s:1",
+        "policy": "nslab_only",
+    }
 ):
     raise SystemExit("dispatcher policy differs")
 print(json.dumps({

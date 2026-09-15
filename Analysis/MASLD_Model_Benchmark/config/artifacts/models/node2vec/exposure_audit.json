@@ -21,7 +21,7 @@
     "scope": "split_local_graph_projection_transductive_coverage_and_endpoint_role",
     "sha256": "f3279dd175a4e56bc21f33228b0c42bcf78e53c131b1641f6f69b00f0ce07aee"
   },
-  "interpretation": "The selected node2vec is an open, locally trained topology baseline with no upstream corpus. Its main contamination surface is any graph, node map, walk, or random-negative artifact computed before source and block removal. It cannot represent a node absent from retained topology and therefore cannot evaluate fully isolated held LD/gene blocks. With no wholly sealed evidence source registered, it is development-only and cannot earn a champion claim.",
+  "interpretation": "The selected node2vec is an open, locally trained topology baseline with no upstream corpus. Its main contamination surface is any graph, node map, walk, or random-negative output file computed before source and block removal. It cannot represent a node absent from retained topology and therefore cannot evaluate fully isolated held LD/gene blocks. With no wholly held-back evidence source registered, it is development-only and cannot earn a best-model claim.",
   "known_incidents_and_biases": [
     "PyG Node2Vec owns an Embedding row for each training index rather than a feature-to-embedding function. Reserving an index for an isolated node yields an untrained or negative-sampling-affected vector, not an inductive prediction.",
     "A full-graph node2vec fit followed by fold slicing is direct target leakage even when held edges are hidden only at metric time.",

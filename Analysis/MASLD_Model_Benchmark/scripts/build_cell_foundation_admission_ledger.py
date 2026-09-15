@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build an immutable, development-only cell-foundation admission ledger."""
+"""Build a read-only, development-only cell-foundation inclusion ledger."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Any
 
 
 class AdmissionLedgerError(ValueError):
-    """Raised when an admitted input or ledger request differs."""
+    """Raised when an included input or ledger request differs."""
 
 
 CHECKPOINTS = {

@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# Figure 5A: input firewall for the physical-context analyses.
+# Figure 5A: input separation for the physical-context analyses.
 # This is a provenance schematic, not a quantitative validation funnel.
 # KEY MESSAGE: Fixed upstream inputs feed distinct assay-native Figure 5 branches without a global validation score.
 

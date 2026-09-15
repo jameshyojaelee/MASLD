@@ -1,0 +1,243 @@
+schema_version = "masld-bench-gse244832-activation-readiness-v1"
+audit_id = "gse244832_activation_readiness_20260825"
+dataset_id = "gse244832"
+accessions = ["GSE244832", "PRJNA1024976", "PMID39522884", "PMCIDPMC12306656"]
+status = "outcome_blind_public_metadata_and_frozen_audit_only"
+role = "project_exposed_development"
+automatic_activation = false
+sealed_outcomes_read = false
+biological_matrices_downloaded = false
+controlled_data_accessed = false
+same_cell_pairing_allowed = false
+same_nucleus_pairing_allowed = false
+infer_cross_assay_join_by_record_order = false
+cells_are_biological_replicates = false
+external_or_sealed_evaluation = false
+external_masld_champion_eligible = false
+declared_participant_n = 18
+geo_assay_record_n = 36
+rna_assay_record_n = 18
+atac_assay_record_n = 18
+sra_run_n = 135
+sra_experiment_n = 36
+rna_sra_run_n = 117
+atac_sra_run_n = 18
+pairing_topology = "same_sample_different_aliquot"
+study_level_same_liver_relationship = "DECLARED"
+machine_readable_cross_assay_participant_join = "UNRESOLVED"
+assay_native_donor_grouped_split_available = true
+cross_assay_donor_grouped_split_available = false
+project_atac_participant_n = 18
+project_atac_cell_n = 88814
+project_atac_pairing = "same_sample_different_aliquot"
+
+[[public_source]]
+source_id = "geo_soft"
+url = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE244nnn/GSE244832/soft/GSE244832_family.soft.gz"
+encoding = "gzip_text"
+store_payload = true
+required_tokens = ["^SERIES = GSE244832", "18 single nucleus ATACseq samples, 18 single nucleus RNAseq samples", "GSE244832_hLIVER_processed_files.tar.gz", "Assembly: hg38"]
+
+[[public_source]]
+source_id = "sra_runinfo"
+url = "https://trace.ncbi.nlm.nih.gov/Traces/sra-db-be/runinfo?acc=PRJNA1024976"
+encoding = "text"
+store_payload = true
+required_tokens = ["Run,ReleaseDate,LoadDate", "PRJNA1024976", "SRX22021595", "GSM7830541"]
+
+[[public_source]]
+source_id = "primary_pubmed"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=39522884&retmode=xml"
+encoding = "text"
+store_payload = true
+required_tokens = ["Multi-modal analysis of human hepatic stellate cells", "10.1016/j.jhep.2024.10.044", "PMC12306656"]
+
+[[public_source]]
+source_id = "secondary_pubmed"
+url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=41196693&retmode=xml"
+encoding = "text"
+store_payload = true
+required_tokens = ["ETS1 suppresses hepatic stellate cell activation and liver fibrosis", "10.1172/jci.insight.195242"]
+
+[[public_source]]
+source_id = "primary_article_pdf"
+url = "https://europepmc.org/articles/PMC12306656?pdf=render"
+encoding = "pdf_text"
+store_payload = false
+required_tokens = ["NORMAL (n=5), MASL (n=4), and MASH (n=9) livers", "MASH (n=9, fibrosis stage 2–4)", "isolated nuclei from snap-frozen livers", "snRNA-seq and snATAC-seq", "stage 3 fibrosis (donors D14, D16)", "D11, D15, and D18, with stage 4 fibrosis", "D10, D13, and D17 with stage 2 or 3 fibrosis"]
+
+[[condition]]
+condition_id = "NORMAL"
+participant_n = 5
+masld_role = "reference_stratum_defined_by_source_crn_criteria"
+
+[[condition]]
+condition_id = "MASL"
+participant_n = 4
+masld_role = "steatosis_without_source_mash_classification"
+
+[[condition]]
+condition_id = "MASH"
+participant_n = 9
+masld_role = "mash_with_source_reported_fibrosis_stage_2_to_4"
+
+[[phenotype_field]]
+field_id = "disease_group"
+availability = "observed_all_18_in_geo_and_article"
+granularity = "participant_category"
+model_input_status = "eligible_assay_native_after_matrix_and_fold_admission"
+missingness_state = "observed"
+
+[[phenotype_field]]
+field_id = "fibrosis_stage"
+availability = "partial_in_primary_article"
+granularity = "participant_for_six_mash_donors_plus_three_ambiguous_2_or_3"
+model_input_status = "blocked_until_authoritative_assay_join_and_complete_prespecified_coverage"
+missingness_state = "join_unresolved"
+
+[[phenotype_field]]
+field_id = "crn_score_or_diagnostic_criteria"
+availability = "group_thresholds_only_in_primary_article"
+granularity = "category_definition_not_participant_score"
+model_input_status = "not_a_continuous_score"
+missingness_state = "structurally_missing"
+
+[[phenotype_field]]
+field_id = "nas_total"
+availability = "not_established_in_geo_or_primary_article_main_text"
+granularity = "unavailable"
+model_input_status = "prohibited_as_zero_or_group_proxy"
+missingness_state = "structurally_missing"
+
+[[phenotype_field]]
+field_id = "histology_components"
+availability = "not_established_in_geo_or_primary_article_main_text"
+granularity = "unavailable"
+model_input_status = "prohibited_as_zero_or_group_proxy"
+missingness_state = "structurally_missing"
+
+[[phenotype_field]]
+field_id = "sex"
+availability = "not_reported_in_geo_sra_runinfo_or_primary_article_main_text"
+granularity = "unavailable"
+model_input_status = "prohibited_as_inferred"
+missingness_state = "structurally_missing"
+
+[[phenotype_field]]
+field_id = "age"
+availability = "not_reported_in_geo_sra_runinfo_or_primary_article_main_text"
+granularity = "unavailable"
+model_input_status = "prohibited_as_inferred"
+missingness_state = "structurally_missing"
+
+[[phenotype_field]]
+field_id = "bmi_or_body_composition"
+availability = "not_reported_in_geo_sra_runinfo_or_primary_article_main_text"
+granularity = "unavailable"
+model_input_status = "prohibited_as_inferred"
+missingness_state = "structurally_missing"
+
+[[task_disposition]]
+task_id = "atac_fixed_window_donor_lineage_transport"
+eligibility = "active_development"
+biological_unit = "participant"
+replication_n = 18
+pairing_requirement = "atac_assay_native_only"
+model_selection_allowed = true
+claim_scope = "project_exposed_development_transport_only"
+
+[[task_disposition]]
+task_id = "assay_native_donor_pseudobulk"
+eligibility = "conditional"
+biological_unit = "participant_within_each_assay"
+replication_n = 18
+pairing_requirement = "no_cross_assay_row_pairing"
+model_selection_allowed = true
+claim_scope = "development_after_modality_specific_matrix_reference_and_fold_admission"
+
+[[task_disposition]]
+task_id = "rna_cell_state_or_group_mapping"
+eligibility = "conditional"
+biological_unit = "participant"
+replication_n = 18
+pairing_requirement = "rna_assay_native_only"
+model_selection_allowed = true
+claim_scope = "development_after_matrix_reference_and_fold_admission"
+
+[[task_disposition]]
+task_id = "cross_assay_donor_pseudobulk_late_fusion"
+eligibility = "conditional"
+biological_unit = "participant"
+replication_n = 18
+pairing_requirement = "authoritative_rna_atac_participant_crosswalk"
+model_selection_allowed = false
+claim_scope = "blocked_until_machine_readable_join_is_frozen"
+
+[[task_disposition]]
+task_id = "same_cell_or_same_nucleus_rna_atac_pairing"
+eligibility = "prohibited"
+biological_unit = "unavailable"
+replication_n = 0
+pairing_requirement = "impossible_separate_nuclei"
+model_selection_allowed = false
+claim_scope = "prohibited"
+
+[[task_disposition]]
+task_id = "histology_conditioned_multimodal_training"
+eligibility = "prohibited"
+biological_unit = "unavailable"
+replication_n = 0
+pairing_requirement = "complete_authoritative_participant_histology_and_assay_join_missing"
+model_selection_allowed = false
+claim_scope = "prohibited_until_a_new_frozen_contract_passes"
+
+[[task_disposition]]
+task_id = "external_or_sealed_masld_champion"
+eligibility = "prohibited"
+biological_unit = "unavailable"
+replication_n = 0
+pairing_requirement = "project_exposed"
+model_selection_allowed = false
+claim_scope = "prohibited"
+
+[partial_fibrosis_evidence]
+exact_stage_3_donor_ids = ["D14", "D16"]
+exact_stage_4_donor_ids = ["D11", "D12", "D15", "D18"]
+ambiguous_stage_2_or_3_donor_ids = ["D10", "D13", "D17"]
+source_scope = "primary_article_figure_4_caption"
+may_be_joined_to_geo_assay_rows = false
+
+[reference]
+source_high_level_build = "hg38"
+rna_pipeline = "Cell_Ranger_3.0.2"
+atac_alignment = "trim_galore_0.4.4_then_bwa_mem_0.7.17_MAPQ_ge_30"
+exact_rna_reference_bundle = "UNRESOLVED"
+exact_rna_annotation = "UNRESOLVED"
+exact_atac_fasta = "UNRESOLVED"
+exact_atac_contig_set = "UNRESOLVED"
+project_target = "GRCh38.p14_GENCODE_v49"
+sequence_or_coordinate_task_ready = false
+
+[rights]
+geo_and_sra_downloads_are_public = true
+article_license_is_dataset_license = false
+processed_data_redistribution_terms = "UNRESOLVED"
+derivative_weight_redistribution_terms = "UNRESOLVED"
+automatic_download = false
+
+[project_artifact]
+source_audit_path = "executions/atac-transport-source-audit-21064435"
+source_audit_artifacts_sha256 = "ef43d3c3908c5c81554d750a928adf42f4bec0c7a90f519cdaf062e145e89392"
+source_audit_json_sha256 = "b12beaa365804996ff2a02d83ecb3ad471c04e45b8b83e3d7ce77a042b4efecc"
+membership_path = "executions/atac-transport-membership-21064488"
+membership_artifacts_sha256 = "32e1d7b3ba147aea6493a0fcdabe862c1eb887a9a8ec84a1d972b5adbc5b9db6"
+membership_json_sha256 = "ff5ad10f1c07f1c5b8399bd55654a7f76ee631ddad32b95b6903f8c32a6c0990"
+
+[decision]
+current_role = "project_exposed_development"
+assay_native_donor_tasks_available = true
+cross_assay_donor_fusion_available = false
+same_cell_or_nucleus_pairing_available = false
+histology_conditioning_available = false
+external_or_sealed_champion_available = false
+next_gate = "freeze_authoritative_rna_atac_participant_crosswalk_and_exact_reference_crosswalks_before_cross_assay_activation"

@@ -30,7 +30,7 @@
     "weight_content_downloaded": false,
     "excluded_alias": {
       "filename": "pytorch_model.bin",
-      "reason": "Pickle-backed PyTorch object is unnecessary and must not be loaded when an exact safetensors artifact exists.",
+      "reason": "Pickle-backed PyTorch object is unnecessary and must not be loaded when an exact safetensors output file exists.",
       "sha256": "1abca73f447e20976f25ca702f6b0c985f35433cba90201ecbda0eee6e36e133",
       "size_bytes": 399527266
     }

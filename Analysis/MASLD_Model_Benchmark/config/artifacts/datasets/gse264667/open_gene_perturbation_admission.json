@@ -1,0 +1,116 @@
+{
+  "admission_status": "training_only_blocked_single_pool_preprocessing_and_exposure",
+  "dataset_id": "gse264667",
+  "dataset_version": {
+    "accessions": [
+      "GSE264667",
+      "PRJNA1100571"
+    ],
+    "hepg2_h5ad_sha256": "e1ad7c3c5a201c861a207a858aa7e59f5e6ac1955674c415f7de0d1dadadb52e",
+    "hepg2_h5ad_size_bytes": 5614460941,
+    "hepg2_var_gene_id_name_axis_sha256": "a46d7dd2e61ee6eac2b2c876be547c69d2237fb566f125646080f4c872566bf0"
+  },
+  "frozen_receipts": {
+    "hepg2_acquisition": {
+      "artifact_manifest_sha256": "793e5d8925c67d7bbd6831afecf83aa5f33515b4b72996ed3d90349363e60981",
+      "path": "executions/gene-perturbation-training-gse264667_hepg2-21067795_0"
+    },
+    "hepg2_h5ad_schema": {
+      "artifact_manifest_sha256": "8f6b841073cbd1b113f0257ad3936b8465c97fde349881e3c6e6500a23021fc1",
+      "path": "executions/gse264667-h5ad-schema-21067942"
+    },
+    "hepg2_matrix_scale": {
+      "artifact_manifest_sha256": "59708920ad56b388c06722761a4f06a3544b48404fddea47b2309a3026f59723",
+      "path": "executions/gse264667-matrix-scale-21068319",
+      "supersedes_path": "executions/gse264667-matrix-scale-21068137"
+    },
+    "hepg2_metadata_topology": {
+      "artifact_manifest_sha256": "2046e8881daa9b7716bd73fb2fdb5d631e273cef4342801c9b2ab872d18e4fd4",
+      "path": "executions/gse264667-metadata-topology-21068136"
+    },
+    "source_metadata": {
+      "artifact_manifest_sha256": "68bab112c9c94cecea47a9a838124071409196a989649660575844d356ff819f",
+      "path": "executions/gene-perturbation-source-gse264667-21066693_1"
+    }
+  },
+  "hepg2_materialized_topology": {
+    "biological_unit_count": 1,
+    "cell_barcode_count": 145473,
+    "cell_barcode_unique_count": 145473,
+    "expression_feature_count": 9624,
+    "gem_group_cell_count_range": [
+      220,
+      3513
+    ],
+    "gem_group_count": 56,
+    "gem_groups_as_biological_replicates": false,
+    "guide_or_target_category_counts": {
+      "gene": 2394,
+      "gene_id": 2392,
+      "gene_transcript": 2679,
+      "sgID_AB": 2679,
+      "transcript": 62
+    },
+    "non_targeting_cell_count": 4976,
+    "var_gene_id_unique_count": 9624,
+    "var_gene_name_unique_count": 9623
+  },
+  "hepg2_matrix_scale": {
+    "X_row_sum_equals_obs_UMI_count_count": 0,
+    "X_row_sum_less_than_or_equal_obs_UMI_count_count": 145473,
+    "integer_nonnegative_finite_matrix_supported": true,
+    "matrix_shape": [
+      145473,
+      9624
+    ],
+    "maximum": 6761.0,
+    "maximum_signed_X_row_sum_minus_obs_UMI_count": -9.0,
+    "minimum": 0.0,
+    "minimum_signed_X_row_sum_minus_obs_UMI_count": -2080.0,
+    "nonzero_value_count": 604621146,
+    "raw_count_scale_supported": false,
+    "total_values_scanned": 1400032152,
+    "zero_value_count": 795411006
+  },
+  "model_applicability": {
+    "cellot_scgen": "HepG2 may provide descriptive within-context training only. No independent held-culture or held-donor response distribution exists.",
+    "cpa_perturblib": "May use seen target atoms in the sole HepG2 pool for training only; GEM groups cannot form held contexts or biological replicates.",
+    "gears_genepert_scgpt_perturbation_head": "May use exact deposited HepG2 gene-target labels for development-visible training after preprocessing semantics and model-specific gates are frozen; no confirmatory evaluation is admitted.",
+    "perturbation_native_baselines": "Independent baselines may be fitted only as descriptive training checks; cells and GEM groups do not supply replicate-level uncertainty or a valid outer endpoint."
+  },
+  "replicate_ancestry_evidence": {
+    "hepg2": "One transduced HepG2 pool split across 56 technical GEM capture groups.",
+    "independent_biological_unit_count_in_acquired_data": 1,
+    "jurkat": "A separate single Jurkat pool is described by the source but was not acquired or audited in this lane.",
+    "valid_inference": "Training or descriptive single-pool summaries only. Cells, target categories, GEM groups, and files are not biological replicates."
+  },
+  "release_and_exposure": {
+    "allowed_use": "development-visible training or descriptive HepG2 topology only",
+    "automatic_redistribution": false,
+    "checkpoint_specific_contamination_audit_required": true,
+    "license_status": "source_terms_apply_no_explicit_GEO_data_license_identified",
+    "model_fit_performed": false,
+    "normalization_performed_by_audit": false
+  },
+  "runtime_receipts": {
+    "acquisition": "21067795_0 COMPLETED in 75 seconds; 1 CPU, 8 GiB requested; MaxRSS 27,284 KiB",
+    "matrix_scale_superseded": "21068137 COMPLETED in 7 seconds; 1 CPU, 16 GiB requested; batch MaxRSS 0, extern MaxRSS 52 KiB",
+    "matrix_scale_v2": "21068319 COMPLETED in 4 seconds; 1 CPU, 16 GiB requested; batch MaxRSS 0, extern MaxRSS 44 KiB",
+    "metadata_topology": "21068136 COMPLETED in 1 second; 1 CPU, 16 GiB requested; batch MaxRSS 0, extern MaxRSS 8 KiB",
+    "schema": "21067942 COMPLETED in 15 seconds; 1 CPU, 16 GiB requested; batch MaxRSS 0, extern MaxRSS 8 KiB"
+  },
+  "task_firewalls": {
+    "gse281160": "not a gene-target dataset and never mapped to a nearest gene",
+    "gse313774_accessed": false,
+    "jurkat_accessed": false
+  },
+  "terminal_blockers": [
+    "The acquired HepG2 screen contains one transduced pool. The 56 GEM groups are technical and cannot support outer evaluation, replicate uncertainty, or confirmatory claims.",
+    "Resolve authoritative source preprocessing and feature-selection semantics: X is integer, finite, and nonnegative, but every 9,624-feature X row sum is 9 to 2,080 counts below obs/UMI_count.",
+    "Freeze the Cell Ranger reference authority and a rights authority for model-input use or aggregate redistribution.",
+    "Complete checkpoint-specific exposure audits for each pretrained perturbation model before using this 2025 public dataset.",
+    "Acquire and audit the Jurkat object separately before making any cross-context training claim."
+  ],
+  "schema_version": "masld-bench-open-gene-perturbation-admission-v1",
+  "verified_date": "2026-08-24"
+}

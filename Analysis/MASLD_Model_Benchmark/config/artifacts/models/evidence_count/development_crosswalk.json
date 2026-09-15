@@ -33,7 +33,7 @@
     "gse289173": {
       "allowed_use": "none for the typed-evidence graph task",
       "exposure_state": "target_label_unexposed",
-      "reason": "It is not a registered graph seal and its QTL outcomes cannot define graph edges, counts, thresholds, or calibration."
+      "reason": "It is not a registered graph hold-back and its QTL outcomes cannot define graph edges, counts, thresholds, or calibration."
     },
     "resource_gene_catalog_current": {
       "allowed_use": "Exposed development content only after an immutable graph promotion. Existing evidence classes and the frozen 117 programs remain read-only authorities, not count thresholds or model-selection targets.",

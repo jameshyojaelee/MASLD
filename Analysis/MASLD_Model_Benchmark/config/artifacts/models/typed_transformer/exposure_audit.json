@@ -12,7 +12,7 @@
     "implementation_source": "absent",
     "license": "unresolved",
     "overall_status": "blocked_not_runnable",
-    "reason": "There is no source revision, architecture, tokenizer, graph transform, decoder, runtime, or fitted artifact to audit."
+    "reason": "There is no source revision, architecture, tokenizer, graph transform, decoder, runtime, or fitted output file to audit."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",

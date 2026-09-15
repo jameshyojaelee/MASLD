@@ -95,7 +95,7 @@
     "prohibited_now": "Any v1 training result, model superiority statement, MASLD spatial-metabolomic champion, biological discovery, or claim that adjacent sections provide same-location paired truth.",
     "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
   },
-  "interpretation": "SpatialMETA is a modality-matched future candidate only for participant-linked spatial RNA plus spatial metabolomics. Among registered MASLD sources, HRA007511 is the sole plausible substrate, but it is controlled, project-exposed, rights-blocked, and adjacent-section. The other spatial cohorts lack metabolomics and are not valid substitutes. SpatialMETA therefore remains deferred and cannot participate in the v1 tournament or earn a champion claim.",
+  "interpretation": "SpatialMETA is a modality-matched future candidate only for participant-linked spatial RNA plus spatial metabolomics. Among registered MASLD sources, HRA007511 is the sole plausible substrate, but it is controlled, project-exposed, rights-blocked, and adjacent-section. The other spatial cohorts lack metabolomics and are not valid substitutes. SpatialMETA therefore remains deferred and cannot participate in the v1 tournament or earn a best-model claim.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

@@ -1,0 +1,8 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "cellxgene_uuids",
+  "model_ids": ["bpnet"],
+  "cellxgene_uuids": [],
+  "cellxgene_snapshot": "not_applicable_no_pretrained_cell_corpus",
+  "notes": "No CELLxGENE corpus or pretrained cell encoder is used."
+}

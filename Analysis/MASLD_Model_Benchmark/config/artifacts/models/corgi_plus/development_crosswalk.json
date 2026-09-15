@@ -40,7 +40,7 @@
       "exposure_state": "target_label_unexposed"
     }
   },
-  "interpretation": "Corgi+ has the strongest conceptual fit to RNA-conditioned accessibility but the released object is not currently executable or input-complete for project data. Contamination is not the main blocker: checkpoint mode, loader, mean baseline, local RNA coverage and exact transforms are unresolved.",
+  "interpretation": "Corgi+ has the strongest conceptual fit to RNA-conditioned accessibility but the released object is not currently executable or input-complete for project data. Contamination is not the main missing piece: checkpoint mode, loader, mean baseline, local RNA coverage and exact transforms are unresolved.",
   "missingness_rules": {
     "gene_counts": "Do not reinterpret gene-level UMI counts as 64-bp stranded total-RNA coverage.",
     "local_rna": "Use observed only when alignment-derived coverage is available; otherwise use derivable_not_processed, structurally_missing or unavailable_permission as appropriate.",

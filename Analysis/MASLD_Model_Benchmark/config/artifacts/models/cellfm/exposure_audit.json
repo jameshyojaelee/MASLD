@@ -20,7 +20,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "bc8f1c7438937e1e2c824c9b9d59989851dd9dd660fba8c3e28cf091fa8b45db"
   },
-  "interpretation": "The base checkpoint is pinned exactly, but the checkpoint-bound training inventory is not. GEO public-release dates after the checkpoint upload do not prove the biological data or target labels were unavailable privately before training. Every Atlas source, including project-sealed GSE289173, therefore remains exposure-unknown. CC-BY-NC-ND-4.0 independently blocks derivative adaptation and open-champion release.",
+  "interpretation": "The base checkpoint is pinned exactly, but the checkpoint-bound training inventory is not. GEO public-release dates after the checkpoint upload do not prove the biological data or target labels were unavailable privately before training. Every Atlas source, including project-reserved GSE289173, therefore remains exposure-unknown. CC-BY-NC-ND-4.0 independently blocks derivative adaptation and best openly licensed model release.",
   "preprocessing_and_evaluation_findings": [
     {
       "benchmark_action": "freeze_deterministic_token_selection",

@@ -1,0 +1,180 @@
+{
+  "schema_version": "masld-bench-bpnet-production-readiness-v1",
+  "status": "AUTHORIZED_EXISTING_CENTRAL_QUEUE_WAITING_FOR_FULL_RECTANGLE_AND_EXTERNAL_EVALUATION",
+  "model_id": "bpnet",
+  "scope": "outcome_blind_architecture_rectangle_license_and_dispatch_reconciliation",
+  "scientific_identity": {
+    "architecture_role": "from_scratch_bias_free_sequence_profile_and_count_model",
+    "input_length_bp": 2114,
+    "output_length_bp": 1000,
+    "prediction_views_per_fit": ["bpnet"],
+    "bias_or_control_input": false,
+    "observed_atac_at_inference": false,
+    "donor_context_at_inference": false,
+    "project_trained_per_outer_donor_genomic_lineage_seed_partition": true,
+    "bpnet_is_chrombpnet_nobias_view": false,
+    "chrombpnet_nobias_is_a_bpnet_checkpoint": false,
+    "chrombpnet_full_and_nobias_share_one_chrombpnet_fit": true,
+    "standalone_signed_gene_effect_claim_allowed": false
+  },
+  "frozen_authorities": {
+    "checkpoint_authority": {
+      "path": "config/artifacts/models/bpnet/checkpoints.json",
+      "sha256": "d82c761e39e48c2488fbbd2fff45d27f0ac9782be2a80f2f7d0229f8d18428c2"
+    },
+    "development_crosswalk": {
+      "path": "config/artifacts/models/bpnet/development_crosswalk.json",
+      "sha256": "09c691ec867b5a614897b9a4414a00032d842464f086037628a52b0a59f0620a"
+    },
+    "exposure_audit": {
+      "path": "config/artifacts/models/bpnet/exposure_audit.json",
+      "sha256": "cc31df3f9172b261b9188edf3e88bd1326ec1e23a1202191a791fe0941ea3d51"
+    },
+    "code_license": {
+      "path": "config/artifacts/model-authorities/bpnet/code_license.json",
+      "sha256": "4024e36e988b91aa6f87d06bbabe969aeb6224e49a35df48889b930317fa42f3"
+    },
+    "weights_license": {
+      "path": "config/artifacts/model-authorities/bpnet/weights_license.json",
+      "sha256": "ad40306a64ac78bbce1d39f17395a6640bb2962d45b609279085b32f6e09990a"
+    },
+    "derivative_weights_license": {
+      "path": "config/artifacts/model-authorities/bpnet/derivative_weights_license.json",
+      "sha256": "e032fb6285f224824ec736d60b0d88542f3f942c3f90a12fc740cc67c9e50997"
+    },
+    "source_acquisition": {
+      "path": "executions/upstream-acquisitions/bpnet-v2.0.0-21064186",
+      "artifacts_sha256": "8062574bfaa9067b0aca82ffa3eeae87188140ee5f5842399171ad4535cf88f6"
+    },
+    "bpnet_production_wrapper": {
+      "path": "slurm/bpnet_train_predict_five_seed_v2.sbatch",
+      "sha256": "13332178db164147b0a15823a1ee958e152b5a0a701ba959ce9da00f8d03cd60"
+    },
+    "chrombpnet_production_wrapper": {
+      "path": "slurm/chrombpnet_train_predict_five_seed_v2.sbatch",
+      "sha256": "fe83c0025cd0c1a83ea318b450bd9fc3a2c5c1b8eac43d5beb68b63ee302caae"
+    },
+    "chrombpnet_head_readiness": {
+      "path": "config/artifacts/models/chrombpnet/full_head_production_readiness_20260825.json",
+      "sha256": "cb7c2173567b9ba1e1018615d932225a7c0362ac2310c7025daf5df2254d813d"
+    },
+    "bundle_wrapper": {
+      "path": "slurm/run_sequence_task_native_five_seed_bundle_v2.sbatch",
+      "sha256": "7cfd70d94ad9fb57c4ae6337ed3696e8c4a381bc5d5a96b6800e8ef744c13e3d"
+    },
+    "bundle_controller": {
+      "path": "scripts/run_sequence_task_native_five_seed_bundle_v2.py",
+      "sha256": "a57f8b222da3e2c6179d9300eb58a1186af91a4b87274281a239efbe7a4af6c7"
+    }
+  },
+  "authority_history": {
+    "legacy_crosswalk_seeds": [11, 29, 47, 71, 101],
+    "production_rectangle_seeds": [20260824, 20260825, 20260826, 20260827, 20260828],
+    "production_seed_authority": "later_frozen_five_seed_rectangle_contract",
+    "legacy_crosswalk_rewritten_by_this_reconciliation": false,
+    "seed_sets_may_be_mixed": false
+  },
+  "five_seed_rectangle": {
+    "contract_path": "config/campaigns/sequence_task_native_five_seed_rectangle_20260825.json",
+    "contract_sha256": "324de8ec6789c948380aaeb1fc7bb470083b21d4f77c3008c7b6870bd745390c",
+    "admission_artifact_root": "executions/sequence-five-seed-rectangle-admission-21098556",
+    "admission_artifacts_sha256": "78d785157d8b11b38d18f99362b98bdec2a894e6455f42ac54cf681958da0b28",
+    "evaluator_readiness_artifact_root": "executions/sequence-five-seed-evaluator-readiness-21099052",
+    "evaluator_readiness_artifacts_sha256": "3500132b33cae3cd1f9466bde2a50e594e9861a252e7bad572b82a766301df72",
+    "lineages": ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"],
+    "diagonal_outer_folds": [0, 1, 2, 3, 4],
+    "fixed_seeds": [20260824, 20260825, 20260826, 20260827, 20260828],
+    "expected_fits": 125,
+    "complete_fits_at_freeze": 20,
+    "missing_fits_at_freeze": 105,
+    "expected_prediction_views": 125,
+    "lineage_fit_counts": {
+      "cholangiocyte": {"complete": 5, "missing": 20},
+      "fibroblast": {"complete": 4, "missing": 21},
+      "hepatocyte": {"complete": 2, "missing": 23},
+      "macrophage": {"complete": 4, "missing": 21},
+      "t_cell": {"complete": 5, "missing": 20}
+    },
+    "complete_contexts": [
+      ["cholangiocyte", 0, 20260824],
+      ["cholangiocyte", 0, 20260825],
+      ["cholangiocyte", 2, 20260824],
+      ["cholangiocyte", 3, 20260824],
+      ["cholangiocyte", 4, 20260824],
+      ["fibroblast", 0, 20260824],
+      ["fibroblast", 0, 20260825],
+      ["fibroblast", 1, 20260824],
+      ["fibroblast", 3, 20260824],
+      ["hepatocyte", 0, 20260824],
+      ["hepatocyte", 0, 20260825],
+      ["macrophage", 1, 20260824],
+      ["macrophage", 2, 20260824],
+      ["macrophage", 3, 20260824],
+      ["macrophage", 4, 20260824],
+      ["t_cell", 0, 20260824],
+      ["t_cell", 1, 20260824],
+      ["t_cell", 2, 20260824],
+      ["t_cell", 3, 20260824],
+      ["t_cell", 4, 20260824]
+    ],
+    "full_compatible_rectangle": false,
+    "partial_evaluator_access_allowed": false,
+    "partial_results_may_be_ranked": false
+  },
+  "central_dispatch_authorization": {
+    "queue_admission_artifact_root": "executions/sequence-five-seed-queue-admission-v3-21098963",
+    "queue_admission_artifacts_sha256": "ceca0985719a13b7588dbc5156401f30b611906338aecc0bfaa07ce0eba5a646",
+    "execution_correction_artifact_root": "executions/sequence-five-seed-execution-correction-21098951",
+    "execution_correction_artifacts_sha256": "5f3c122972f86a16e615c52c98e1f20af15fc6dcbf2c83b4b0f53730b0a68176",
+    "live_readiness_artifact_root": "executions/sequence-five-seed-live-dispatch-readiness-21099103",
+    "live_readiness_artifacts_sha256": "cc37e309b4935c880176fd93975e120bf7a8d3de04b39d014daa3ad3bc8dd1a8",
+    "queue_live_root": "config/campaigns/gpu_bundle_queue",
+    "submission_authority": "central_dispatcher_only",
+    "partition": "gpu",
+    "account": "nslab",
+    "qos": "nslab",
+    "gres": "gpu:l40s:1",
+    "maximum_running_gpu_jobs": 4,
+    "maximum_pending_gpu_jobs": 1,
+    "gpu_squeue_ceiling": 5,
+    "new_queue_registration_needed": false,
+    "direct_gpu_submission_authorized": false,
+    "bundles": [
+      {"task_bundle_id": "model-training-701", "dispatcher_bundle_id": "model-training-801", "logical_fits": 15, "priority": 70, "queue_filename": "070-model-training-801-v2.json", "queue_sha256": "02b74e0022517f69fc19144cfa28f91095847ea19c24f2584742cf5ec85a4c36"},
+      {"task_bundle_id": "model-training-702", "dispatcher_bundle_id": "model-training-802", "logical_fits": 15, "priority": 71, "queue_filename": "071-model-training-802-v2.json", "queue_sha256": "ebe05c80541fe4505cb07ae58cd9f703057357c19d0c3322729fc349d59e6727"},
+      {"task_bundle_id": "model-training-703", "dispatcher_bundle_id": "model-training-803", "logical_fits": 15, "priority": 72, "queue_filename": "072-model-training-803-v2.json", "queue_sha256": "fe9d6e173ded4b4928ba26509713238e95ace9c6c5983c3d73b0b16ca45604db"},
+      {"task_bundle_id": "model-training-704", "dispatcher_bundle_id": "model-training-804", "logical_fits": 15, "priority": 73, "queue_filename": "073-model-training-804-v2.json", "queue_sha256": "87a4e213564db5f238aae0301028fa00d9565298dfc095c64b3cfd81b9025171"},
+      {"task_bundle_id": "model-training-705", "dispatcher_bundle_id": "model-training-805", "logical_fits": 15, "priority": 74, "queue_filename": "074-model-training-805-v2.json", "queue_sha256": "d2ac1b1d0deec236ed2e352f54163f07c74c0a5eaea4f55d9c8429898c9e85eb"},
+      {"task_bundle_id": "model-training-706", "dispatcher_bundle_id": "model-training-806", "logical_fits": 15, "priority": 75, "queue_filename": "075-model-training-806-v2.json", "queue_sha256": "4786a61f163269b3156f089c2eaa81a50b7a4519f880ee7b551d8c0d44d50436"},
+      {"task_bundle_id": "model-training-707", "dispatcher_bundle_id": "model-training-807", "logical_fits": 15, "priority": 76, "queue_filename": "076-model-training-807-v2.json", "queue_sha256": "d3dc13f476508f91921e1b34bde8f31f1c6707242c00e252b2538b3286073a11"}
+    ]
+  },
+  "license_and_release_gate": {
+    "code_license": "MIT",
+    "project_trained_weights": true,
+    "weight_redistribution_allowed": true,
+    "derivative_weight_redistribution_allowed": true,
+    "license_blocks_open_champion": false,
+    "open_champion_eligible_now": false,
+    "remaining_requirements": [
+      "complete_five_seed_rectangle",
+      "selection_lock",
+      "task_appropriate_external_evaluation",
+      "project_sealed_evaluation"
+    ]
+  },
+  "claim_firewall": {
+    "development_only": true,
+    "partial_results_ranked": false,
+    "prediction_values_read": false,
+    "metric_values_read": false,
+    "development_outcomes_read": false,
+    "sealed_features_read": false,
+    "sealed_labels_or_outcomes_read": false,
+    "thresholds_changed": false,
+    "gpu_job_submitted_by_this_authorization": false,
+    "champion_claim_allowed": false,
+    "external_transfer_claim_allowed": false,
+    "universal_claim_allowed": false
+  }
+}

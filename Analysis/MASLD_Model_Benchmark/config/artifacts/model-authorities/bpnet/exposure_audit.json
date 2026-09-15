@@ -1,0 +1,27 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "exposure_audit",
+  "model_ids": ["bpnet"],
+  "exposure_status": "target_label_unexposed",
+  "checkpoint_exposure_class": "target_label_unexposed",
+  "pretraining": false,
+  "fold_local_fit": true,
+  "development_fit_exposure": "continual_seen",
+  "held_donor_atac_exposed_to_inference": false,
+  "evaluator_outcomes_exposed": false,
+  "sealed_features_exposed": false,
+  "sealed_outcomes_exposed": false,
+  "terminal_bundle": {
+    "path": "executions/sequence_gpu_bundle_004_bpnet-ready_71d22f6453-21077605",
+    "artifacts_sha256": "14af86ac22e67bc29f8a7b85ee3a049b63f875ba5423210cc8e539d29b9fe9e8",
+    "logical_tasks": 8,
+    "passed_tasks": 8
+  },
+  "champion_eligibility": "false_current_development_screen_only",
+  "champion_blockers": [
+    "The terminal bundle is a sparse eight-task development screen, not the complete five-fold, five-seed finalist model.",
+    "No external RNA-conditioned ATAC seal is active.",
+    "No variant-effect output contract or sealed variant evaluation is bound to these artifacts."
+  ],
+  "notes": "Target-label-unexposed is preserved rather than upgraded to clean_declared. The local fit is continual_seen for every training donor, locus, profile, and derived input it consumed."
+}

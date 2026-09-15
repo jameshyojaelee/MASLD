@@ -20,13 +20,26 @@ export PYTHONNOUSERSITE=1
 : "${MODEL_JOB_ID:=21064694}"
 : "${MODEL_ARTIFACTS_SHA256:=06db5a37eed92ebb6fd95b47f10cb998121cc0a641cab42686c27d47660e9e00}"
 : "${RUN_ID:=AUTO}"
+: "${INPUT_ROOT_OVERRIDE:=}"
 case "${OUTER_FOLD}" in 0|1|2|3|4) ;; *) printf 'Invalid OUTER_FOLD\n' >&2; exit 2 ;; esac
 case "${SEED}" in 20260824|20260825|20260826) ;; *) printf 'Invalid screening SEED\n' >&2; exit 2 ;; esac
 export PYTHONHASHSEED="${SEED}"
 SPLIT_ID="donor${OUTER_FOLD}_genomic${OUTER_FOLD}"
 
 ROOT=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark
-INPUT_ROOT="${ROOT}/executions/scbasset-${SPLIT_ID}-inputs-${INPUT_JOB_ID}"
+if [[ -n "${INPUT_ROOT_OVERRIDE}" ]]; then
+  case "${INPUT_ROOT_OVERRIDE}" in
+    "${ROOT}/executions/scbasset-donor0-genomic0-inputs-21064455"|\
+    "${ROOT}/executions/scbasset-donor1_genomic1-inputs-21067171"|\
+    "${ROOT}/executions/scbasset-donor2_genomic2-inputs-21067172"|\
+    "${ROOT}/executions/scbasset-donor3_genomic3-inputs-21067173"|\
+    "${ROOT}/executions/scbasset-donor4_genomic4-inputs-21067174") ;;
+    *) printf 'Invalid INPUT_ROOT_OVERRIDE\n' >&2; exit 2 ;;
+  esac
+  INPUT_ROOT="${INPUT_ROOT_OVERRIDE}"
+else
+  INPUT_ROOT="${ROOT}/executions/scbasset-${SPLIT_ID}-inputs-${INPUT_JOB_ID}"
+fi
 INPUTS="${INPUT_ROOT}/inputs"
 MODEL_ROOT="${ROOT}/executions/scbasset-${SPLIT_ID}-seed${SEED}-${MODEL_JOB_ID}"
 if [[ "${INPUT_ARTIFACTS_SHA256}" == AUTO ]]; then

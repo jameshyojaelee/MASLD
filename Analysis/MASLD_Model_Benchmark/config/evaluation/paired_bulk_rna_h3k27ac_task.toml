@@ -1,0 +1,36 @@
+schema_version = "masld-bench-task-v1"
+task_id = "paired_bulk_rna_h3k27ac"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna", "h3k27ac_cutrun"]
+endpoint = "Within fixed participant outer folds, predict the held-participant H3K27ac count composition from paired bulk RNA and separately evaluate observed-pair cross-modal retrieval. H3K27ac region strings are opaque feature keys; no coordinate interpretation is permitted."
+metrics = ["participant_macro_h3_profile_multinomial_deviance_skill", "paired_participant_retrieval_mrr", "paired_participant_retrieval_top1"]
+datasets_train = ["gse267145_znf469_human_liver"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse267145_participant_outer_v1"
+required_pairing_levels = ["same_sample_different_aliquot"]
+missingness_policy = "observed_pair_only_with_explicit_assay_state; never_encode_missing_as_zero"
+admission_gates = [
+  "Use the frozen 99-participant RNA-H3K27ac join and five fixed outer folds; participants are the only biological replicates.",
+  "Treat all H3K27ac region strings as opaque source feature keys. Sequence extraction, coordinate conversion, interval overlap, genomic distance, motif analysis, and coordinate-derived annotation are prohibited until a direct source coordinate convention is frozen.",
+  "Retain only the 42,163 RNA stable IDs present in both Ensembl 98 and GENCODE v49; mask the 1,122 retired or absent genes rather than encoding them as zero.",
+  "RNA values are nonnegative fractional expression estimates. Do not round them, use an integer count likelihood, or reconstruct DESeq2 without tximport lengths and offsets.",
+  "Fit every learned transform, feature filter, variance screen, scaling parameter, latent space, hyperparameter, and calibration step inside the outer training participants.",
+  "In the RNA-conditioned lane, held-participant H3K27ac is evaluator-only. Observed H3K27ac may enter only the separately reported observed-pair retrieval lane, which cannot support an RNA-conditioned claim.",
+  "Disease stage, fibrosis, steatosis, ballooning, lobular inflammation, lobular necrosis, sex, and other source-owned fields cannot be model inputs, fitting targets, selection endpoints, or error-audit selectors under this TaskSpec. A separate declared TaskSpec is required for any such use.",
+  "Admit bulk multi-view methods and bulk task-native baselines only. Single-cell tools are ineligible unless a separately justified bulk observation model is implemented and registered.",
+  "This is single-cohort development evaluation. It cannot support a task champion, an external-transfer claim, a sequence-histone claim, or a clinical claim.",
+  "Internal nonclinical research use is allowed without a new DUA, but raw and processed data redistribution is prohibited and release of materially trained derivative weights requires model-specific terms and legal review."
+]
+baseline_model_ids = ["training_mean_h3_profile", "pca_ridge", "reduced_rank_regression", "pls2", "sparse_cca"]
+uncertainty_method = "paired_participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "paired_bulk_rna_h3k27ac_development_secondary"
+multiplicity_method = "effects_and_intervals_primary; bh_q0.05_within_prespecified_secondary_family"
+promotion_gate_id = "paired_bulk_rna_h3k27ac_development_only_v1"
+promotion_gate_config_sha256 = "f26a2048346cb60f810407971c41bbc22fe862444ee5438c90da954eb44b21a1"
+primary_evaluator_id = "paired_bulk_rna_h3_profile_deviance_v1"
+evaluator_parameters = { h3_feature_identity = "opaque_source_region_string", h3_profile_total = "held_participant_observed_library_sum_evaluator_only", outer_folds = 5, participants = 99, source_outcomes_available_to_model = false, source_outcomes_available_to_selector = false }
+claim_gate = "Development diagnostics only. No model can be called a champion and no external-transfer, disease-classification, sequence-regulatory, causal, diagnostic, prognostic, or treatment-response claim is eligible without a separately registered external cohort, frozen TaskSpec, selection lock, and applicable rights review."

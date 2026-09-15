@@ -45,7 +45,7 @@ FRAGMENT_MANIFEST_FIELDS = (
 
 
 class TrainingPseudobulkError(ValueError):
-    """Raised when donor-safe pooling violates its contract."""
+    """Raised when donor-safe pooling does not meet its requirements."""
 
 
 class HashingWriter:

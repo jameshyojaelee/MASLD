@@ -22,7 +22,7 @@
     "scope": "split_local_source_projection_transductive_coverage_and_endpoint_role",
     "sha256": "e61ebe16bc1a2d5eb915337da717b8cb3f941eba81af8d7744f725df1baa8012"
   },
-  "interpretation": "BIONIC is an open, locally trained, unsupervised network-integration comparator, not a pretrained checkpoint. It can test whether separate retained evidence networks contain recoverable structure, but the native model is homogeneous, undirected, closed-world, and transductive. Under the campaign's full held-block incident-edge removal, block-only nodes are untestable. No wholly sealed graph source is registered, so BIONIC cannot earn a champion claim in the current campaign.",
+  "interpretation": "BIONIC is an open, locally trained, unsupervised network-integration comparator, not a pretrained checkpoint. It can test whether separate retained evidence networks contain recoverable structure, but the native model is homogeneous, undirected, closed-world, and transductive. Under the campaign's full held-block incident-edge removal, block-only nodes are untestable. No wholly held-back graph source is registered, so BIONIC cannot earn a best-model claim in the current campaign.",
   "known_incidents_and_biases": [
     "The model's first linear projection and per-source encoders are indexed by the union training-node count. A whole-graph fit performed before a source or block split would directly contaminate every downstream fold.",
     "BIONIC v0.2.6 converts each network to undirected form and shares a union node index. Edge direction and within-source relation type are not represented.",

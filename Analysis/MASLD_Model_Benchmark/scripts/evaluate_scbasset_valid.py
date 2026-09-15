@@ -71,7 +71,7 @@ EPSILON = 1.0e-6
 
 
 class ScBassetEvaluationError(ValueError):
-    """Raised when the validation-only evaluator contract differs."""
+    """Raised when the validation-only evaluator requirement differs."""
 
 
 def sha256_file(path: Path) -> str:

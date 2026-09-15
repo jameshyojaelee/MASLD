@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Derive the ten fail-closed scientific reports required before real REL-05.
 
-This is a post-REL-04 validator. It reads only the immutable candidate snapshot,
+This is a post-REL-04 validator. It reads only the read-only candidate snapshot,
 candidate-only ledgers/panels/manuscript, and protected frozen inputs. A report
 row is written only after every predicate has passed in memory. Expected
 limitations are validated boundaries, not warnings; an unexpected condition

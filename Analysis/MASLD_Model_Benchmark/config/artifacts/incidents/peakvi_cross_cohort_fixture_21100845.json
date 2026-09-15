@@ -1,0 +1,17 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "job_id": 21100845,
+  "job_name": "model-check-334",
+  "state": "FAILED",
+  "exit_code": "127:0",
+  "stage_reached": "wrapper_start_before_unit_tests_or_authority_reads",
+  "cause": "The fixture wrapper addressed the frozen runtime as RUNTIME/bin/python, but this environment stores its executable at RUNTIME/env/bin/python.",
+  "biological_fragment_values_read": false,
+  "condition_values_read": false,
+  "phenotype_values_read": false,
+  "evaluator_outcomes_read": false,
+  "metrics_calculated": false,
+  "prediction_values_written": false,
+  "correction": "Use the immutable runtime's env/bin/python path in both fixture and production materialization wrappers; no scientific contract changed.",
+  "retry_required": true
+}

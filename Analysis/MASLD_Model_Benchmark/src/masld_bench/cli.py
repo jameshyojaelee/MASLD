@@ -17,18 +17,12 @@ from .campaign import (
     submission_commands,
     verify_run_execution_attempt,
 )
-from .checkpoint_preflight import (
-    CheckpointPreflightError,
-    stage_geneformer_bundle,
-)
 from .planner import (
     PlanningError,
     freeze_campaign,
     load_frozen_plan,
     validate_registry_tree,
 )
-from .release import ReleaseError, stage_release, verify_release
-from .selection import SelectionError, freeze_selection_lock, verify_selection_lock
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
@@ -66,6 +60,8 @@ def _reference_validate(arguments: argparse.Namespace) -> int:
 
 
 def _checkpoint_stage_geneformer(arguments: argparse.Namespace) -> int:
+    from .checkpoint_preflight import stage_geneformer_bundle
+
     target = stage_geneformer_bundle(
         model_id=arguments.model_id,
         source_root=arguments.source_root,
@@ -171,6 +167,8 @@ def _run_verify(arguments: argparse.Namespace) -> int:
 
 
 def _selection_freeze(arguments: argparse.Namespace) -> int:
+    from .selection import freeze_selection_lock, verify_selection_lock
+
     path = freeze_selection_lock(
         candidate=arguments.candidate,
         decisions_path=arguments.decisions,
@@ -182,12 +180,16 @@ def _selection_freeze(arguments: argparse.Namespace) -> int:
 
 
 def _selection_verify(arguments: argparse.Namespace) -> int:
+    from .selection import verify_selection_lock
+
     lock = verify_selection_lock(arguments.selection)
     _json({"lock_id": lock.lock_id, "valid": True})
     return 0
 
 
 def _release_stage(arguments: argparse.Namespace) -> int:
+    from .release import stage_release, verify_release
+
     path = stage_release(spec_path=arguments.spec, output_root=arguments.output_root)
     manifest = verify_release(path)
     _json({"release": path.as_posix(), "release_id": manifest["release_id"], "valid": True})
@@ -195,6 +197,8 @@ def _release_stage(arguments: argparse.Namespace) -> int:
 
 
 def _release_verify(arguments: argparse.Namespace) -> int:
+    from .release import verify_release
+
     manifest = verify_release(arguments.release)
     _json({"release_id": manifest["release_id"], "valid": True})
     return 0
@@ -320,17 +324,27 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     arguments = parser.parse_args(argv)
-    try:
-        return int(arguments.handler(arguments))
-    except (
+    expected_errors: list[type[Exception]] = [
         ArtifactError,
         CampaignError,
-        CheckpointPreflightError,
         PlanningError,
-        ReleaseError,
-        SelectionError,
         ValueError,
-    ) as error:
+    ]
+    if arguments.group == "checkpoint":
+        from .checkpoint_preflight import CheckpointPreflightError
+
+        expected_errors.append(CheckpointPreflightError)
+    elif arguments.group == "selection":
+        from .selection import SelectionError
+
+        expected_errors.append(SelectionError)
+    elif arguments.group == "release":
+        from .release import ReleaseError
+
+        expected_errors.append(ReleaseError)
+    try:
+        return int(arguments.handler(arguments))
+    except tuple(expected_errors) as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 2
 

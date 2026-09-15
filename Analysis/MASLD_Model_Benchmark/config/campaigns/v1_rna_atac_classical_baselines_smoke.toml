@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-rna-atac-classical-baselines-smoke"
-description = "Five-fold donor-held-out mean-track, assay-native donor-lineage pseudobulk, and nearest-RNA-context screen on the frozen 1,000-nucleus GSE296875 view; smoke metrics are descriptive and cannot support a champion"
+description = "Five-fold donor-held-out mean-track, assay-native donor-lineage pseudobulk, and nearest-RNA-context screen on the frozen 1,000-nucleus GSE296875 view; smoke metrics are descriptive and cannot support a best model"
 wave = "smoke"
 status = "ready"
 prerequisites = []

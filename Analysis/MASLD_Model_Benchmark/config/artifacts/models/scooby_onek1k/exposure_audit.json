@@ -19,7 +19,7 @@
     "gse296875": "Can support development of a new liver context encoder and scooby adaptation inside donor-by-genomic folds, but that is an adapted model, not zero-shot OneK1K inference. This checkpoint has no ATAC output.",
     "variant_scoring": "The frozen OneK1K score is a blood-domain downstream comparator. No nearest blood embedding may be relabeled as hepatocyte, stellate, endothelial or immune-liver context."
   },
-  "interpretation": "GSE289173 target labels are provisionally unexposed, but the frozen OneK1K checkpoint cannot earn a MASLD sealed champion claim. Its raw-input encoder is missing, its cell state is PBMC-specific, no donor/study transfer was validated, it lacks an ATAC head and inherited Borzoi weight authority remains unresolved.",
+  "interpretation": "GSE289173 target labels are provisionally unexposed, but the frozen OneK1K checkpoint cannot earn a MASLD held-back best-model claim. Its raw-input encoder is missing, its cell state is PBMC-specific, no donor/study transfer was validated, it lacks an ATAC head and inherited Borzoi weight authority remains unresolved.",
   "license_disposition": {
     "code": "MIT",
     "open_champion_eligibility": "ineligible_until_inherited_Borzoi_weight_authority_and_derivative_terms_are_cleared",

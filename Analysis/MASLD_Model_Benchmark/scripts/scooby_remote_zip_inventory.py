@@ -35,7 +35,7 @@ class RangeReader(Protocol):
 
 
 class HTTPRangeReader:
-    """Strict immutable-object reader backed by HTTP byte ranges."""
+    """Strict read-only object reader backed by HTTP byte ranges."""
 
     def __init__(self, url: str, expected_size: int) -> None:
         if not url.startswith("https://") or expected_size <= 0:

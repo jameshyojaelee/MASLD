@@ -1,0 +1,12 @@
+{
+  "schema_version": "masld-bench-model-authority-v1",
+  "authority": "declared_corpora",
+  "model_ids": ["bpnet"],
+  "pretrained_corpora": [],
+  "upstream_checkpoint_used": false,
+  "fold_local_training_source": "gse296875_outer_training_donor_by_lineage_Tn5_pseudobulk",
+  "pairing_level": "same_nucleus_source_then_donor_pseudobulk",
+  "sealed_sources": [],
+  "external_labels_used": false,
+  "notes": "Every included BPNet state is initialized and fit locally. This removes upstream checkpoint contamination but does not make development donors or genomic windows unexposed."
+}

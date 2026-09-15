@@ -1,0 +1,105 @@
+{
+  "audit_date": "2026-08-25",
+  "base_registry_files": [
+    {
+      "registry_file": "config/models/cell_foundation.toml",
+      "registry_file_sha256": "6c0d8d6aff2db6fa99000ff5cc593940f097b6dde9745d08b8cd93aed9b4d14d"
+    }
+  ],
+  "base_registry_unchanged": true,
+  "binding_consequences": {
+    "development_execution_recorded": true,
+    "may_enter_a_sealed_shortlist_or_ranking": false,
+    "open_champion_eligible": false,
+    "permitted_role": "outcome-blind development record only, and only where a separately frozen contract authorises it",
+    "sealed_champion_eligible": false,
+    "sealed_scoring_authorized": false
+  },
+  "biological_data_read": false,
+  "bound_evidence": [
+    {
+      "path": "config/artifacts/models/scimilarity/checkpoints.json",
+      "sha256": "73d6a2083d763e9afd1eee2276a1df08119ebf9e40ebaf4115e95d32b59f44e8"
+    },
+    {
+      "path": "config/artifacts/models/scimilarity/exposure_audit.json",
+      "sha256": "142dcf3e57361e81e43f1fd8fd715d776a915ba43b4bd0dd047b76aa6b247eca"
+    },
+    {
+      "path": "executions/scimilarity-v1-1-frozen-screen-extraction-v1/ARTIFACTS.json",
+      "sha256": "1ab725f418e0236c83c812999336365c5cfd3a97dbc20d70dfd00d2f1ca544ec"
+    },
+    {
+      "path": "executions/model-validate-205-21088010/ARTIFACTS.json",
+      "sha256": "f4ecab8ba1163e2b973b36ab5dbe4f76cc60adf2aa1eb88836b84ed6f9e377c9"
+    }
+  ],
+  "champion_ineligibility_is_a_consequence_of_the_frozen_exposure_rule": {
+    "champion_permitting_states": [
+      "clean_declared",
+      "target_label_unexposed"
+    ],
+    "derivation": "config/models/cell_foundation.toml records exposure_status = encoder_seen for scimilarity_v1_1, the only encoder_seen row in the entire model census. encoder_seen is one of the seven states enumerated in config/resources.toml [semantics].exposure_statuses and is outside the two-state champion-permitting subset. config/artifacts/models/scimilarity/exposure_audit.json therefore records sealed_champion_eligibility = ineligible_aggregate_development_encoder_seen and sealed_champion_eligible = false, and the frozen extraction receipt independently carries sealed_champion_eligible = false. This is the rule applied, not a judgement about the model.",
+    "model_exposure_state": "encoder_seen",
+    "not_a_quality_judgement": true,
+    "underlying_overlap": "The complete declared SCimilarity table identifies GSE185477 as an annotated training source and GSE136103 as reference_only, so the aggregate seven-study development exposure is encoder_seen. The sealed target itself is separately classified target_label_unexposed because GSE289173 became public after the finalized v1.1 Zenodo record."
+  },
+  "checkpoint_opened": false,
+  "closes": "OVERALL_PLAN.md completion criterion 1: every required model family must carry an exact-checkpoint, license, exposure, runtime and native-task disposition. This record supplies the missing native-task axis only.",
+  "consumed_by_runtime": false,
+  "disposition": "executed_development_champion_ineligible_by_frozen_exposure_rule",
+  "disposition_reason": "encoder_seen_is_outside_the_champion_permitting_exposure_subset",
+  "disposition_scope": "Native-task disposition only. This record adds no capability, opens no checkpoint, deserializes nothing, and bypasses no license gate. The base registry under config/models/ is unchanged.",
+  "exposure_rule": {
+    "champion_permitting_subset": [
+      "clean_declared",
+      "target_label_unexposed"
+    ],
+    "champion_permitting_subset_frozen_at": [
+      "config/gse281364_five_seed_row_universe.toml:allowed_checkpoint_exposure_states",
+      "config/gse281364_sequence_context_refit_dag.toml:allowed_checkpoint_exposure"
+    ],
+    "frozen_vocabulary": "config/resources.toml [semantics].exposure_statuses enumerates the seven permitted checkpoint exposure states: clean_declared, target_label_unexposed, encoder_seen, continual_seen, reference_only, downstream_demo, unknown.",
+    "scope_caveat": "Both frozen enumerations of the two-state subset are prespecified for the GSE281364 sequence lane. config/tasks/cell_state_mapping.toml declares no allowed_checkpoint_exposure list of its own. For the cell_state_mapping lane the binding authority is therefore each family's own exposure audit under config/artifacts/models/<family>/exposure_audit.json, which records sealed_champion_eligibility directly."
+  },
+  "family_id": "scimilarity",
+  "license_gate_bypassed": false,
+  "metrics_calculated": false,
+  "model_dispositions": [
+    {
+      "disposition": "executed_development_champion_ineligible_by_frozen_exposure_rule",
+      "model_id": "scimilarity_v1_1",
+      "reason": "Outcome-blind raw embedding extraction over the 50,000-row resource_atlas_frozen_screen_50000_v1 view completed with evaluation_labels_read, sealed_outcomes_read, downstream_head_fit, common_head_fit, metrics_run and released_reference_index_used all false. Best model ineligibility follows from the frozen exposure classification, not from any assessment of this model's quality."
+    }
+  ],
+  "model_ids": [
+    "scimilarity_v1_1"
+  ],
+  "outcomes_read": false,
+  "overlay_id": "model_census_native_task_disposition_20260825",
+  "record_only": true,
+  "registry_facts_at_audit": {
+    "scimilarity_v1_1": {
+      "admission_blocking": true,
+      "checkpoint_sha256": "a08f023788bdbded191e2d9344e5d4240ffc7d7505eca4e0b7a37526b858d19f",
+      "exposure_status": "encoder_seen",
+      "license_status": "code_Apache-2.0_weights_CC-BY-SA-4.0",
+      "registry_file": "config/models/cell_foundation.toml",
+      "status": "candidate",
+      "supported_tasks": [
+        "cell_state_mapping"
+      ]
+    }
+  },
+  "root_cause": {
+    "cell_state_capability_rows": 0,
+    "consequence": "No per-model cell_state_mapping capability row exists to carry a native-task disposition, so the disposition is recorded here instead. Adding rows to the capability registry is a separate, non-additive change and is deliberately not attempted.",
+    "finding": "config/evaluation/cell_state_mapping_capabilities.toml carries no [[models]] roster. It is 12 lines of task-level scope with four family names, a baseline list and an ATAC-only exclusion, and it names no per-model row. config/evaluation/variant_to_regulation_capabilities.toml carries 40 per-model rows over 411 lines. That structural asymmetry, not a missing judgement, is why the cell_state_mapping native-task column is empty for every family in this record.",
+    "variant_capability_rows": 40
+  },
+  "schema_version": "masld-bench-native-task-disposition-v1",
+  "sealed_data_read": false,
+  "supersedes_nothing": true,
+  "task_id": "cell_state_mapping",
+  "unrestricted_deserializer_used": false
+}

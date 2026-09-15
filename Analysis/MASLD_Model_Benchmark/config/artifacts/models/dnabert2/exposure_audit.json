@@ -9,7 +9,7 @@
     "reference_sequence_exposure": "encoder_seen",
     "alternate_allele_exposure": "unknown",
     "target_effect_label_exposure": "unexposed",
-    "interpretation": "Eligible for a sealed target-label evaluation after runtime and task-data gates pass. This does not support a claim that sealed loci or reference alleles were unseen."
+    "interpretation": "Eligible for a held-back target-label evaluation after runtime and task-data checks pass. This does not support a claim that held-back loci or reference alleles were unseen."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",

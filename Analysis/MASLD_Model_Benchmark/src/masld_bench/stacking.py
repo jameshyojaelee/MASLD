@@ -1,8 +1,8 @@
-"""Cross-fitted development stacking and conditional-model evidence artifacts.
+"""Cross-fitted development stacking and conditional-model evidence files.
 
 This module implements the only scientific path that may produce the frozen
 ``development_stack_gain_bundle`` records required by the conditional-model
-authorization contract.  It never consumes sealed outcomes.
+authorisation rules.  It never consumes held-back outcomes.
 """
 
 from __future__ import annotations

@@ -11,7 +11,7 @@ from typing import Any, Mapping, Sequence
 
 
 class MIDASAggregationError(ValueError):
-    """Raised when frozen MIDAS fold artifacts cannot be combined exactly."""
+    """Raised when frozen MIDAS fold output files cannot be combined exactly."""
 
 
 def parse_fold_roots(values: Sequence[str]) -> dict[int, Path]:

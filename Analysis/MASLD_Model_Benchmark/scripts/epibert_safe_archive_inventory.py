@@ -12,7 +12,7 @@ from typing import BinaryIO
 
 
 class ArchiveInventoryError(ValueError):
-    """Raised when an upstream archive violates the safe-inventory contract."""
+    """Raised when an upstream archive does not meet the safe-inventory requirements."""
 
 
 def _hash_stream(handle: BinaryIO) -> tuple[str, int]:

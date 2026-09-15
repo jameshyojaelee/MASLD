@@ -1,0 +1,62 @@
+{
+  "schema_version": "masld-bench-protocol-exposure-incident-v1",
+  "incident_id": "scbasset_broad_rg_prediction_line_exposure_20260825",
+  "timestamp_date": "2026-08-25",
+  "task": "/root/alphagenome_advance",
+  "incident_type": "overbroad_queue_identity_search_under_executions",
+  "search_scope": {
+    "tool": "rg",
+    "purpose": "check_whether_queue_identity_605_already_existed",
+    "search_roots": [
+      "config/campaigns/gpu_bundle_queue",
+      "executions"
+    ],
+    "search_patterns": [
+      "model-training-605",
+      "\"priority\": 64",
+      "064-"
+    ],
+    "file_classes_requested": [
+      "json",
+      "tsv"
+    ],
+    "exact_shell_command_text_retained": false,
+    "scope_reconstructed_from_incident_time_observation": true
+  },
+  "exposure_scope": {
+    "unrelated_prediction_tsv_lines_emitted": true,
+    "emitted_line_count_recounted": false,
+    "emitted_line_count": null,
+    "prediction_values_copied_into_incident": false,
+    "prediction_values_reinspected_after_incident_recognition": false
+  },
+  "explicit_exclusions": {
+    "scbasset_prediction_values_emitted": false,
+    "scbasset_metrics_emitted": false,
+    "raw_outcomes_emitted": false,
+    "sealed_data_emitted": false,
+    "sealed_labels_or_outcomes_emitted": false,
+    "incident_values_used_for_rectangle_design": false,
+    "incident_values_used_for_queue_design": false,
+    "incident_values_used_for_model_design": false,
+    "incident_values_used_for_training": false,
+    "incident_values_used_for_model_selection": false,
+    "incident_values_used_for_calibration_or_thresholding": false
+  },
+  "impact_assessment": {
+    "scbasset_admission_affected": false,
+    "scbasset_five_seed_rectangle_affected": false,
+    "scbasset_prediction_view_affected": false,
+    "sealed_test_compromise": false,
+    "scientific_input_from_incident": false,
+    "disposition": "acknowledged_non_scientific_input_not_used"
+  },
+  "containment": {
+    "broad_search_stopped": true,
+    "future_queue_searches_restricted_to_queue_manifests_and_exact_claim_paths": true,
+    "no_further_prediction_value_inspection_authorized": true,
+    "incident_disclosed_to_parent_agent": true,
+    "incident_artifact_contains_no_prediction_or_outcome_value": true
+  },
+  "status": "acknowledged_non_scientific_input_not_used"
+}

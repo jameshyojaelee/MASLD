@@ -8,7 +8,7 @@ any fitted state.  Embeddings follow the registered policy exactly:
 pooler is deliberately unused; upstream ships no trained pooler and transformers
 re-initialises one on load, which would otherwise be silent untrained state.
 
-Rank-value encoding reproduces Geneformer's own contract: counts are scaled to
+Rank-value encoding reproduces Geneformer's own requirements: counts are scaled to
 a fixed library size, divided by the frozen gene median, ranked descending, and
 truncated to the model's ``max_position_embeddings``.  Genes absent from either
 the median or token dictionary are dropped, and the dropped fraction is
@@ -532,7 +532,7 @@ def predict(request_path: Path, request: Mapping[str, Any], output: Path) -> Non
     probability_rows = []
     for position, row in enumerate(held):
         values = [float(v) for v in probabilities[position]]
-        # Deterministic tie-break identical to the sealed evaluator.
+        # Deterministic tie-break identical to the held-back evaluator.
         winner = min(range(len(roster)), key=lambda i: (-values[i], roster[i]))
         prediction_rows.append(
             {

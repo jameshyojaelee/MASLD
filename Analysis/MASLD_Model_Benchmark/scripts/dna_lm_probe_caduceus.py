@@ -22,7 +22,7 @@ MASK_TOKEN_ID = 3
 
 
 class CaduceusProbeError(ValueError):
-    """Raised when the exact runtime or fixture contract differs."""
+    """Raised when the exact runtime or fixture requirement differs."""
 
 
 def _sha256_file(path: Path) -> str:

@@ -1,7 +1,7 @@
 {
   "activation_disposition": {
     "admission_status": "deferred",
-    "reason": "A public safetensors checkpoint exists, but the exact preprocessing assets and conversion parity are incomplete, project-cohort exposure is unknown, and no rights-cleared powered spatial task or sealed source is registered.",
+    "reason": "A public safetensors checkpoint exists, but the exact preprocessing assets and conversion parity are incomplete, project-cohort exposure is unknown, and no rights-cleared powered spatial task or held-back source is registered.",
     "v1_inference_or_fine_tuning": "prohibited",
     "v1_superiority_or_champion_claim": "prohibited"
   },

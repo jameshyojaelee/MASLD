@@ -1,0 +1,267 @@
+schema_version = "masld-bench-gse281364-five-seed-row-universe-v1"
+status = "row_universe_defined_stacking_blocked"
+verified_date = "2026-08-24"
+dataset_id = "gse281364"
+task_id = "variant_to_regulation"
+endpoint_id = "mpra_allelic_direction"
+evaluator_id = "locus_heldout_allelic_spearman_v1"
+row_universe_build_authorized = true
+prediction_generation_authorized = false
+outcome_access_authorized = false
+stack_fit_authorized = false
+residual_correlation_authorized = false
+conditional_model_build_authorized = false
+sealed_asset_access_authorized = false
+
+[row_contract]
+study_id = "gse281364"
+stratum = "all"
+selected_elements_per_source_locus_group = 1
+source_locus_groups = 1033
+assay_context_ids = ["HepG2_control", "HepG2_PAOA"]
+base_rows_per_seed = 2066
+fixed_seeds = [1103, 2909, 4721, 6673, 8111]
+seeded_rows = 10330
+biological_donors = 0
+experimental_replicates_per_assay_context = 4
+replication_unit = "experimental_replicate_not_biological_donor"
+element_selection = "one_deterministic_outcome_blind_element_per_frozen_source_locus_sequence_group"
+row_hash_preimage = "gse281364\\0mpra_allelic_direction\\0element_id\\0source_locus_group_id\\0assay_context_id"
+unit_hash_preimage = "gse281364\\0outer_locus_sequence_group\\0source_locus_group_id"
+block_hash_preimage = "gse281364\\0long_range_524288bp_component\\0long_range_block_id"
+row_hash_context_rule = "assay_context_id_is_part_of_row_hash_but_not_unit_hash_or_block_hash"
+component_fields = ["seed", "row_hash", "unit_hash", "block_hash", "stratum", "outer_fold", "study_id", "observed", "sequence_prediction", "context_prediction"]
+row_universe_fields = ["seed", "row_hash", "unit_hash", "block_hash", "stratum", "outer_fold", "study_id", "assay_context_id", "element_id", "source_locus_group_id", "long_range_block_id"]
+
+[fold_contract]
+outer_folds = 5
+largest_receptive_field_buffer_bp = 524288
+source_locus_group_count = 1033
+long_range_block_count = 239
+expected_fold_source_locus_groups = { "fold-0" = 208, "fold-1" = 208, "fold-2" = 207, "fold-3" = 208, "fold-4" = 202 }
+expected_source_groups_reassigned_from_original_6kb_fold_map = 830
+rule = "merge_source_locus_groups_on_each_contig_until_adjacent_component_intervals_are_at_least_524288bp_apart_then_assign_whole_components_to_outer_folds"
+reuse_rule = "outcome_blind_static_features_may_be_reused_but_every_fitted_head_projection_calibrator_and_selection_must_be_refit_inside_the_524288bp_outer_training_folds"
+original_6kb_fold_predictions_directly_stackable = false
+
+[outcome_contract]
+outcome_field = "observed"
+assay_native_unit = "mean_signed_log2_ALT_minus_REF_RNA_over_DNA_activity"
+replicate_transform = "log2((RNA_ALT+0.5)/(DNA_ALT+0.5))-log2((RNA_REF+0.5)/(DNA_REF+0.5))"
+replicate_aggregation = "arithmetic_mean_of_four_experimental_replicate_deltas_within_selected_element_and_assay_context"
+allele_effect_sign = "ALT_minus_REF"
+construct_denominator = "the_single_frozen_outcome_blind_selected_element_per_source_locus_group"
+context_denominator = "two_rows_per_source_locus_group_one_per_prespecified_HepG2_assay_context"
+all_4359_constructs_are_rows = false
+within_locus_construct_aggregation_allowed = false
+experimental_replicates_are_independent_donors = false
+claim_role = "exposed_development_MPRA_proxy_only_not_signed_cell_type_eQTL_or_ieQTL_confirmation"
+
+[prediction_contract]
+sequence_field = "sequence_prediction"
+context_field = "context_prediction"
+required_unit = "out_of_fold_predicted_mean_signed_log2_ALT_minus_REF_RNA_over_DNA_activity"
+required_sign = "ALT_minus_REF"
+required_contexts = ["HepG2_control", "HepG2_PAOA"]
+context_semantics = "assay_context_is_HepG2_condition_not_a_MASLD_donor_or_cell_state"
+static_native_score_directly_stackable = false
+calibration_rule = "fit_each_model_head_or_calibrator_on_outer_training_long_range_blocks_only_with_context_specific_training_intercepts_and_emit_held_fold_predictions_in_assay_native_units"
+selection_rule = "select_sequence_and_context_components_only_from_frozen_development_shortlists_before_residual_or_stack_calculation"
+same_rows_all_models = true
+same_rows_all_seeds = true
+same_outer_fold_all_models = true
+missing_prediction_allowed = false
+prediction_as_zero_allowed = false
+prediction_values_read_by_this_builder = false
+
+[admission_gates]
+allowed_checkpoint_exposure_states = ["clean_declared", "target_label_unexposed"]
+development_head_exposure_state = "continual_seen_training_folds_only"
+checkpoint_alias_audit_required = true
+gse281364_reporter_outcome_exposure_in_base_checkpoint_allowed = false
+license_layers_required = ["code", "weights", "outputs", "derivative_weights"]
+output_use_must_allow_stack_training = true
+derivative_terms_must_allow_conditional_model_training_and_reproducible_release = true
+restricted_or_unknown_terms_may_enter_open_trigger = false
+exact_checkpoint_and_environment_hashes_required = true
+five_fixed_seeds_required = true
+minimum_qualifying_seed_count = 4
+open_sequence_and_open_context_source_families_must_be_distinct = true
+conditional_model_may_supply_context_component = false
+sealed_results_may_select_components = false
+
+[[source_status]]
+source_id = "dna_lm_common_heads"
+source_family_role = "sequence"
+model_ids = ["dnabert2", "hyenadna", "caduceus"]
+current_row_count_per_context = 1033
+current_seed_ids = [20260824]
+current_fold_map = "original_6kb_source_locus_group_map"
+current_scale = "cross_fitted_MPRA_head_output"
+current_open_trigger_eligible = false
+eligible_after_gates = true
+diagnostic_only = false
+blockers = ["only_one_nontrigger_seed", "heads_and_fold_safe_projections_use_the_superseded_6kb_fold_map", "five_seed_524288bp_cross_fitted_predictions_absent", "no_admitted_context_component_on_identical_rows"]
+
+[[source_status]]
+source_id = "nucleotide_transformer_common_head"
+source_family_role = "sequence"
+model_ids = ["nucleotide_transformer"]
+current_row_count_per_context = 1033
+current_seed_ids = [20260824]
+current_fold_map = "original_6kb_source_locus_group_map"
+current_scale = "cross_fitted_MPRA_head_output"
+current_open_trigger_eligible = false
+eligible_after_gates = false
+diagnostic_only = true
+blockers = ["CC-BY-NC-SA-4.0_restricted_comparator", "only_one_nontrigger_seed", "superseded_fold_map"]
+
+[[source_status]]
+source_id = "mpralegnet_native"
+source_family_role = "sequence"
+model_ids = ["mpralegnet"]
+current_row_count_per_context = 4359
+current_seed_ids = []
+current_fold_map = "original_6kb_source_locus_group_map"
+current_scale = "uncalibrated_lentiMPRA_reporter_expression_ALT_minus_REF"
+current_open_trigger_eligible = false
+eligible_after_gates = false
+diagnostic_only = true
+blockers = ["4359_construct_rows_not_the_1033_selected_element_denominator", "static_native_score_not_in_required_outcome_scale", "third_party_checkpoint_equivalence_unresolved", "not_condition_specific"]
+
+[[source_status]]
+source_id = "restricted_native_sequence"
+source_family_role = "sequence"
+model_ids = ["sei", "enformer_crested_restricted_port"]
+current_row_count_per_context = 1033
+current_seed_ids = []
+current_fold_map = "original_6kb_source_locus_group_map"
+current_scale = "family_native_static_assay_transfer_scores"
+current_open_trigger_eligible = false
+eligible_after_gates = false
+diagnostic_only = true
+blockers = ["restricted_terms", "static_native_scores_not_in_required_outcome_scale", "not_condition_specific", "no_five_seed_cross_fitted_predictions"]
+
+[[source_status]]
+source_id = "borzoi_native"
+source_family_role = "sequence"
+model_ids = ["borzoi_ensemble"]
+current_row_count_per_context = 0
+current_seed_ids = []
+current_fold_map = "long_range_524288bp_map"
+current_scale = "none_fixture_only"
+current_open_trigger_eligible = false
+eligible_after_gates = false
+diagnostic_only = true
+blockers = ["official_weight_terms_unresolved", "checkpoint_runtime_reference_and_native_parity_unbound", "no_predictions"]
+
+[[source_status]]
+source_id = "corgi_regular_context"
+source_family_role = "context"
+model_ids = ["corgi_regular"]
+current_row_count_per_context = 0
+current_seed_ids = []
+current_fold_map = "none"
+current_scale = "none"
+current_open_trigger_eligible = false
+eligible_after_gates = true
+diagnostic_only = false
+blockers = ["no_GSE281364_prediction_authority", "no_registered_condition_matched_HepG2_control_and_PAOA_RNA_context_vectors", "code_license_conflict_and_derivative_terms_unresolved", "native_numeric_parity_unresolved", "five_seed_524288bp_cross_fitted_predictions_absent"]
+
+[[source_status]]
+source_id = "blocked_context_candidates"
+source_family_role = "context"
+model_ids = ["corgi_plus", "scooby_onek1k", "scooby_epicardioids", "scooby_neurips", "context_borzoi"]
+current_row_count_per_context = 0
+current_seed_ids = []
+current_fold_map = "none"
+current_scale = "none"
+current_open_trigger_eligible = false
+eligible_after_gates = false
+diagnostic_only = true
+blockers = ["no_eligible_condition_matched_query_context_path", "terms_or_required_context_encoders_unresolved", "context_borzoi_is_the_conditional_architecture_and_cannot_supply_its_own_trigger"]
+
+[frozen_file_authorities.variant_task]
+path = "config/tasks/variant_to_regulation.toml"
+sha256 = "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"
+
+[frozen_file_authorities.dna_language_registry]
+path = "config/models/dna_language.toml"
+sha256 = "bb6e11d6b38b2a424f719a867d92e88c5d9e275223cf06385e82c89f6621e386"
+
+[frozen_file_authorities.regulatory_sequence_registry]
+path = "config/models/regulatory_sequence.toml"
+sha256 = "bccce82a8a949eb81b73246848dcf7e80b164e464992fdb9b9fcb10c72181c1b"
+
+[frozen_file_authorities.regulatory_local_registry]
+path = "config/models/regulatory_local.toml"
+sha256 = "8c6684a23ef40e6573c788fdfc9d697668f5f5fc978390118dc8f12f9c79ae1d"
+
+[frozen_file_authorities.stacking_implementation]
+path = "src/masld_bench/stacking.py"
+sha256 = "933c52c62982e01e957399bc5c995a39c67c03c07b8a71d52ec7e682b1acd6af"
+
+[frozen_file_authorities.conditional_preflight]
+path = "config/artifacts/models/context_borzoi/outcome_blind_architecture_preflight_20260824.json"
+sha256 = "88b353a3c1bd1074b3042333d74d4dcd977396c452eea054d9bc87edd204f512"
+
+[frozen_tree_authorities.outcome_blind_split]
+path = "executions/gse281364-outcome-blind-splits-21068885"
+artifacts_sha256 = "26a20a18c7697c4e16eb645640428d3fd6290957efcef4df18219f9e16320de8"
+
+[frozen_tree_authorities.common_element_selection]
+path = "executions/gse281364-sei-fixture-21068925"
+artifacts_sha256 = "620464c0ef7cf378eb2b44a1608cb6b9c273bd70b8770a43b2a95d21e725af4d"
+
+[frozen_tree_authorities.long_range_fold_map]
+path = "executions/gse281364-borzoi-native-fixture-21083008"
+artifacts_sha256 = "b5fd9cfcaa0da6a2161abc5b14c6bc0e8de8c63e6f9400608f2cdc21f4f59712"
+
+[frozen_tree_authorities.dna_lm_features]
+path = "executions/model-work-001-21070132"
+artifacts_sha256 = "e0efbb81731c1bdb2a1f5546ae3e0678eda28cd5960cbea48afce92f286e62da"
+
+[frozen_tree_authorities.caduceus_features]
+path = "executions/model-work-301-21072684"
+artifacts_sha256 = "641ef6be0436e323a473dfacbd7f66f673cafc498a795bdcddf9b048e44d1b20"
+
+[frozen_tree_authorities.mpralegnet_predictions]
+path = "executions/model-work-102-21069877"
+artifacts_sha256 = "a59c82c5093a61025f39d5fb12c61820711f58e001ee9bc7858bd505140ec5f9"
+
+[frozen_tree_authorities.sei_predictions]
+path = "executions/sei-gse281364-smoke-21069658"
+artifacts_sha256 = "dd22116a2927712d1c7cafc1a3ca654783efce2173c44f010cd9fc22034c1803"
+
+[frozen_tree_authorities.enformer_predictions]
+path = "executions/model-work-203-21070998"
+artifacts_sha256 = "5b4940a0afca2276900c71bc08d247bc699180271caf0e653da5789312e580d6"
+
+[frozen_tree_authorities.dna_lm_one_seed_evaluation]
+path = "executions/gse281364-dna-lm-common-lane-evaluation-21070646"
+artifacts_sha256 = "9f516cfc83163b73f0fb3c79d897bba59105ca129a347eeb23bd8c6a94049db9"
+
+[frozen_tree_authorities.caduceus_one_seed_evaluation]
+path = "executions/gse281364-caduceus-common-lane-evaluation-21076001"
+artifacts_sha256 = "94710782708a08e4504e8b13b9d3fc6bda8594246a3e4bf31c770d66ccfe51f7"
+
+[frozen_tree_authorities.borzoi_execution_preflight]
+path = "executions/borzoi-native-execution-preflight-21086270"
+artifacts_sha256 = "44256f047b26326eea9caaacd79f85c5639fa432a9d4dd2ff4de7ac926945f57"
+
+[frozen_tree_authorities.complementarity_readiness_audit]
+path = "executions/model-check-219-21088206"
+artifacts_sha256 = "6e1ecb9a23f37d8b6e1ef0b600e16bdb9707ecf445785c62c7f091580b164926"
+
+[bundled_cpu_validation_ask]
+job_name = "model-check-220"
+partition = "cpu"
+qos = "nslab"
+cpus_per_task = 2
+memory_gb = 16
+walltime = "02:00:00"
+array = false
+job_count = 1
+total_cpu_hours = 4
+total_gpu_hours = 0
+submitted = false

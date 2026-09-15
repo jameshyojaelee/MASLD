@@ -39,7 +39,7 @@ GENOMIC_FOLD_FIELDS = ("genomic_fold", "contigs", "total_bp")
 
 
 class FoldRegionError(ValueError):
-    """Raised when a fold-region assembly violates its leakage contract."""
+    """Raised when a fold-region assembly does not meet its leakage requirements."""
 
 
 def read_tsv(path: Path, fields: Sequence[str]) -> list[dict[str, str]]:

@@ -1,8 +1,8 @@
 """Outcome-blind preconditions for future sequence-plus-RNA conditioning.
 
 This module does not build or authorize the conditional model.  It provides a
-small executable contract for fold-fitted context mapping, missingness, and
-neutral FiLM/LoRA attachment behavior while the complementarity gate is shut.
+small executable requirements for fold-fitted context mapping, missingness, and
+neutral FiLM/LoRA attachment behavior while the complementarity check is shut.
 """
 
 from __future__ import annotations

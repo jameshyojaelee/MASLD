@@ -1,0 +1,184 @@
+{
+  "schema_version": "masld-bench-chrombpnet-full-head-production-readiness-v1",
+  "status": "RECONCILED_WAITING_FOR_FULL_RECTANGLE_LICENSE_AND_EXTERNAL_EVALUATION",
+  "model_id": "chrombpnet",
+  "scope": "outcome_blind_development_head_semantics_rectangle_and_dispatch_reconciliation",
+  "scientific_head_contract": {
+    "input_shape": [null, 2114, 4],
+    "profile_output_shape": [null, 1000],
+    "count_output_shape": [null, 1],
+    "one_fit_two_views": true,
+    "primary_biological_view": "chrombpnet_nobias",
+    "assay_qc_view": "chrombpnet_full",
+    "full_view_is_independent_architecture": false,
+    "full_profile_equation": "no_bias_profile_logits_plus_bias_profile_logits",
+    "full_count_equation": "reduce_logsumexp_of_no_bias_and_bias_logcount_components",
+    "full_positive_mass_interpretation": "sum_of_sequence_specific_and_bias_component_mass",
+    "full_count_inverse_transform": "expm1_then_nonnegative_clip",
+    "nobias_count_inverse_transform": "exp",
+    "profile_reverse_complement_rule": "softmax_each_orientation_then_mean_after_reversing_rc_profile_axis",
+    "count_reverse_complement_rule": "arithmetic_mean_in_positive_mass_space",
+    "full_view_allowed_role": "assay_qc_and_sensitivity_only",
+    "nobias_view_allowed_role": "sequence_specific_biological_accessibility_prediction",
+    "standalone_signed_gene_effect_claim_allowed": false
+  },
+  "frozen_authorities": {
+    "checkpoint_authority": {
+      "path": "config/artifacts/models/chrombpnet/checkpoints.json",
+      "sha256": "1bb147e6d31312d3b6b23393170f3ac21b2c2b2cf4a1306fdf08ae666bac319e"
+    },
+    "development_crosswalk": {
+      "path": "config/artifacts/models/chrombpnet/development_crosswalk.json",
+      "sha256": "b0a546eacb895533314773f671e3115b1951b5d400af6fd0c6574aa242f6f6ed"
+    },
+    "exposure_audit": {
+      "path": "config/artifacts/models/chrombpnet/exposure_audit.json",
+      "sha256": "af24405eed37b3dd813d8ff1d359cd9506f351399652ed568b54fa4c7689d4de"
+    },
+    "upstream_full_head_source": {
+      "path": "executions/upstream-acquisitions/chrombpnet-v1.0.1-21063022/source/chrombpnet-eaa0fe58b6a43da62ea23b75cfc2bef4ecd3550c/chrombpnet/training/models/chrombpnet_with_bias_model.py",
+      "sha256": "bedc63a36ee27bb25ab39a00f1d9e3d4d64809754bf46aebe10d17b3a331dd33"
+    },
+    "project_prediction_source": {
+      "path": "scripts/predict_chrombpnet_ccre_windows.py",
+      "sha256": "1c2e7ce7e0871cb53e91b4b534441fcac6f1380805c37c966b05319b41654f5e"
+    },
+    "production_wrapper": {
+      "path": "slurm/chrombpnet_train_predict_five_seed_v2.sbatch",
+      "sha256": "fe83c0025cd0c1a83ea318b450bd9fc3a2c5c1b8eac43d5beb68b63ee302caae"
+    }
+  },
+  "reference_fit": {
+    "artifact_root": "executions/chrombpnet-hepatocyte-donor0-genomic0-seed20260824-21064489",
+    "artifacts_sha256": "a0ed38216f0f0acc139cede8c43060af5884db473c888d6e15092f8b71b3e547",
+    "expected_artifact_class": "chrombpnet_full_depth_training_and_predictions",
+    "dataset_id": "gse296875",
+    "lineage_id": "hepatocyte",
+    "split_id": "donor0_genomic0",
+    "seed": 20260824,
+    "full_checkpoint_sha256": "20b816b54b42d48c602aae84de2462a53c4304d006dd78187e923f1d2a6611a7",
+    "nobias_checkpoint_sha256": "947b3c3810b5b2a0ba46167dc1c8f0a5e633247e0a8142cbccc3f5122c745861",
+    "required_artifact_paths": [
+      "model/chrombpnet.h5",
+      "model/chrombpnet_nobias.h5",
+      "predictions/full_model/profile_probabilities.h5",
+      "predictions/full_model/regional_counts.tsv",
+      "predictions/nobias_model/profile_probabilities.h5",
+      "predictions/nobias_model/regional_counts.tsv"
+    ]
+  },
+  "authority_history": {
+    "legacy_crosswalk_seeds": [11, 29, 47, 71, 101],
+    "production_rectangle_seeds": [20260824, 20260825, 20260826, 20260827, 20260828],
+    "production_seed_authority": "later_frozen_five_seed_rectangle_contract",
+    "legacy_crosswalk_rewritten_by_this_reconciliation": false,
+    "seed_sets_may_be_mixed": false
+  },
+  "five_seed_rectangle": {
+    "contract_path": "config/campaigns/sequence_task_native_five_seed_rectangle_20260825.json",
+    "contract_sha256": "324de8ec6789c948380aaeb1fc7bb470083b21d4f77c3008c7b6870bd745390c",
+    "admission_artifact_root": "executions/sequence-five-seed-rectangle-admission-21098556",
+    "admission_artifacts_sha256": "78d785157d8b11b38d18f99362b98bdec2a894e6455f42ac54cf681958da0b28",
+    "evaluator_readiness_artifact_root": "executions/sequence-five-seed-evaluator-readiness-21099052",
+    "evaluator_readiness_artifacts_sha256": "3500132b33cae3cd1f9466bde2a50e594e9861a252e7bad572b82a766301df72",
+    "lineages": ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"],
+    "diagonal_outer_folds": [0, 1, 2, 3, 4],
+    "fixed_seeds": [20260824, 20260825, 20260826, 20260827, 20260828],
+    "expected_fits": 125,
+    "complete_fits_at_freeze": 19,
+    "missing_fits_at_freeze": 106,
+    "expected_prediction_views": 250,
+    "complete_prediction_views_at_freeze": 38,
+    "missing_prediction_views_at_freeze": 212,
+    "lineage_fit_counts": {
+      "cholangiocyte": {"complete": 5, "missing": 20},
+      "fibroblast": {"complete": 4, "missing": 21},
+      "hepatocyte": {"complete": 1, "missing": 24},
+      "macrophage": {"complete": 4, "missing": 21},
+      "t_cell": {"complete": 5, "missing": 20}
+    },
+    "complete_contexts": [
+      ["cholangiocyte", 0, 20260824],
+      ["cholangiocyte", 0, 20260825],
+      ["cholangiocyte", 2, 20260824],
+      ["cholangiocyte", 3, 20260824],
+      ["cholangiocyte", 4, 20260824],
+      ["fibroblast", 0, 20260824],
+      ["fibroblast", 0, 20260825],
+      ["fibroblast", 1, 20260824],
+      ["fibroblast", 3, 20260824],
+      ["hepatocyte", 0, 20260824],
+      ["macrophage", 1, 20260824],
+      ["macrophage", 2, 20260824],
+      ["macrophage", 3, 20260824],
+      ["macrophage", 4, 20260824],
+      ["t_cell", 0, 20260824],
+      ["t_cell", 1, 20260824],
+      ["t_cell", 2, 20260824],
+      ["t_cell", 3, 20260824],
+      ["t_cell", 4, 20260824]
+    ],
+    "full_compatible_rectangle": false,
+    "partial_evaluator_access_allowed": false,
+    "cross_model_ranking_allowed": false
+  },
+  "license_and_release_gate": {
+    "code_license": "MIT",
+    "bias_artifact_root": "executions/chrombpnet-bias-models-zenodo7443683-21063957",
+    "bias_artifacts_sha256": "8ecc40f452328df965be823d14f9ce76e2777407dba62cc7826685be635bb6e5",
+    "frozen_project_weight_license_status": "unknown_not_redistributable",
+    "frozen_project_allowed_role": "restricted_smoke_comparator",
+    "archived_zenodo_license_field": "cc-by-4.0",
+    "authority_contradiction_present": true,
+    "formal_terms_and_derivative_attribution_reconciliation_required": true,
+    "automatic_authority_rewrite_allowed": false,
+    "full_view_weight_redistribution_allowed": false,
+    "nobias_view_weight_redistribution_allowed": false,
+    "open_champion_eligible_now": false
+  },
+  "exposure_and_claim_gate": {
+    "gse296875_exposure_state": "continual_seen",
+    "gse289173_exposure_state": "target_label_unexposed",
+    "target_label_unexposed_equals_champion_eligible": false,
+    "external_evaluation_complete": false,
+    "sealed_evaluation_complete": false,
+    "development_champion_claim_allowed": false,
+    "external_champion_claim_allowed": false,
+    "universal_claim_allowed": false
+  },
+  "dispatcher_gate": {
+    "execution_correction_artifact_root": "executions/sequence-five-seed-execution-correction-21098951",
+    "execution_correction_artifacts_sha256": "5f3c122972f86a16e615c52c98e1f20af15fc6dcbf2c83b4b0f53730b0a68176",
+    "corrected_queue_artifact_root": "executions/sequence-five-seed-queue-admission-v3-21098963",
+    "corrected_queue_artifacts_sha256": "ceca0985719a13b7588dbc5156401f30b611906338aecc0bfaa07ce0eba5a646",
+    "live_readiness_artifact_root": "executions/sequence-five-seed-live-dispatch-readiness-21099103",
+    "live_readiness_artifacts_sha256": "cc37e309b4935c880176fd93975e120bf7a8d3de04b39d014daa3ad3bc8dd1a8",
+    "next_corrected_queue_item_path": "config/campaigns/gpu_bundle_queue/070-model-training-801-v2.json",
+    "next_corrected_queue_item_sha256": "02b74e0022517f69fc19144cfa28f91095847ea19c24f2584742cf5ec85a4c36",
+    "disabled_v1_queue_item_path": "config/campaigns/gpu_bundle_queue/070-model-training-701.json",
+    "disabled_v1_queue_item_sha256": "0d16decdf86bd81b5454f2122f888dd51107aff194b92fdb61f5bfbfdb615f19",
+    "registered_corrected_dispatcher_bundle_id": "model-training-801",
+    "registered_task_bundle_id": "model-training-701",
+    "registered_logical_fits": 15,
+    "valid_next_gpu_unit_already_registered": true,
+    "new_gpu_unit_registration_needed": false,
+    "submission_authority": "central_dispatcher_only",
+    "direct_gpu_submission_authorized": false,
+    "qos": "nslab",
+    "innovation_used": false,
+    "frozen_snapshot_readiness": "v2_ready_waiting_for_gpu_cap",
+    "frozen_snapshot_gpu_pending": 1
+  },
+  "firewall": {
+    "artifact_manifests_may_be_read": true,
+    "rectangle_plan_rows_may_be_read": true,
+    "source_code_may_be_read": true,
+    "prediction_values_may_be_read": false,
+    "metric_values_may_be_read": false,
+    "development_outcomes_may_be_read": false,
+    "sealed_features_may_be_read": false,
+    "sealed_labels_or_outcomes_may_be_read": false,
+    "thresholds_may_be_changed": false,
+    "gpu_job_may_be_submitted_by_this_audit": false
+  }
+}

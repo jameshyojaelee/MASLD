@@ -1,7 +1,56 @@
 {
+  "assay_native_preprocessing": {
+    "bulk_proteomics": {
+      "allowed_input": "PXD051911 participant-level protein quantities in their frozen assay-native representation.",
+      "pairing": "same_study_unpaired relative to transcriptomic cohorts",
+      "prohibited": "No donor-matched RNA-protein training, imputation of absent proteins as zero, transcript-level normalization ported to protein values, or protein evidence treated as technical replicates."
+    },
+    "bulk_rna": {
+      "allowed_input": "Participant-level assay-native bulk RNA matrix with cohort provenance, observed library metadata, and explicit feature coverage.",
+      "blocked_choice": "Exact count or transformed unit, gene filtering, library normalization, cohort scaling, covariates, feature harmonization, and frozen program projection are not yet registered for these baselines.",
+      "fold_rule": "Any learned gene filter, scale, covariate coefficient, reference mean, program mapping, or calibration uses training participants only."
+    },
+    "celltypist_rna": {
+      "allowed_input": "RNA expression normalized by library size to 10000 and log1p for AnnData-based custom training and prediction, with the same frozen training-derived gene axis.",
+      "fit_rule": "Train a new classifier within each donor outer fold. Freeze centering, solver, C or SGD parameters, balancing, feature selection, seed, calibration, and majority-vote policy.",
+      "pretrained_policy": "Built-in or downloaded CellTypist classifiers are prohibited for this baseline."
+    },
+    "harmony_rna": {
+      "allowed_input": "A training-derived normalized expression or PCA matrix plus prespecified batch variables.",
+      "disposition": "The registered release has no admitted frozen-query mapping; a joint train-query run is a transductive diagnostic and cannot be a sealed champion."
+    },
+    "hvg_pca_rna": {
+      "algorithms": {
+        "hvg_pca_elastic_net": "Multinomial elastic-net logistic regression; C=1; l1_ratio=0.5; SAGA; max_iter=5000.",
+        "hvg_pca_knn": "15-neighbor Euclidean donor/class-weighted vote; canonical-row tie break.",
+        "hvg_pca_linear_svm": "Linear SVM with donor-grouped three-fold out-of-fold multinomial logistic calibration.",
+        "hvg_pca_logistic": "Multinomial L2 logistic regression; C=1; LBFGS; max_iter=5000.",
+        "hvg_pca_nearest_centroid": "Donor/class-weighted centroids, squared Euclidean distance, and training-derived softmax temperature."
+      },
+      "allowed_input": "Nonnegative integer cell or nucleus UMI counts with versionless Ensembl gene IDs.",
+      "training_only_transform": "Scale each cell to 10000 counts and log1p; select 2000 HVGs by rank-binned normalized dispersion with 20 mean bins; fit centered full SVD with at most 50 PCs; fit all downstream state only on outer-training donors.",
+      "weighting": "Equal class mass and equal donor mass within class."
+    },
+    "pca_procrustes_and_cca_rna": {
+      "allowed_input": "Single-cell or single-nucleus RNA only.",
+      "blocked_choice": "No implementation, feature axis, normalization, regularization, anchor topology, projection direction, head, or held-query policy has been frozen.",
+      "fold_rule": "A future champion path must learn every projection and alignment from training donors only; held-query geometry cannot determine the transform."
+    },
+    "rna_atac_pseudobulk": {
+      "allowed_training_input": "GSE296875 donor-by-cell-state RNA and ATAC summaries constructed from admitted same-nucleus records after donor mapping, Tn5 processing, peak-universe, and QC locks.",
+      "blocked_choice": "The predictive rule, assay-native ATAC normalization, count/profile output, low-depth behavior, and missing-state fallback are unresolved. Pseudobulk aggregation alone is not a prediction model.",
+      "development_topology": "GSE244832 permits same-donor comparison only and never artificial cell-to-cell RNA-ATAC pairs.",
+      "inference_input": "Observed held-donor RNA/context and sequence only. Observed held ATAC is evaluator-only."
+    },
+    "scvi_scanvi_rna": {
+      "allowed_input": "Raw UMI counts in a frozen layer with a training-derived Ensembl gene universe.",
+      "blocked_choice": "Freeze batch key, categorical and continuous covariates, gene selection, architecture, likelihood, label ontology for scANVI, downstream head for scVI, seeds, early stopping, query mapping, calibration, and fitted-state format.",
+      "query_rule": "The current benchmark permits no query training or domain adaptation on held features. Official query-adaptive scArches runs may be reported only under a separately frozen transductive diagnostic contract."
+    }
+  },
   "bundle_id": "cell_bulk_classical_baselines",
   "crosswalk_scope": {
-    "purpose": "Bind the thirteen classical or locally trained cell and bulk baselines to the currently registered task, data-topology, leakage, and promotion contracts without turning unresolved registry rows into runnable models.",
+    "purpose": "Bind the thirteen classical or locally trained cell and bulk baselines to the currently registered task, data-topology, leakage, and adoption requirements without turning unresolved registry rows into runnable models.",
     "registry_model_ids": [
       "hvg_pca_nearest_centroid",
       "hvg_pca_knn",
@@ -123,55 +172,62 @@
       "rna_conditioned_atac": "not_registered"
     }
   },
-  "assay_native_preprocessing": {
-    "bulk_rna": {
-      "allowed_input": "Participant-level assay-native bulk RNA matrix with cohort provenance, observed library metadata, and explicit feature coverage.",
-      "blocked_choice": "Exact count or transformed unit, gene filtering, library normalization, cohort scaling, covariates, feature harmonization, and frozen program projection are not yet registered for these baselines.",
-      "fold_rule": "Any learned gene filter, scale, covariate coefficient, reference mean, program mapping, or calibration uses training participants only."
-    },
-    "bulk_proteomics": {
-      "allowed_input": "PXD051911 participant-level protein quantities in their frozen assay-native representation.",
-      "pairing": "same_study_unpaired relative to transcriptomic cohorts",
-      "prohibited": "No donor-matched RNA-protein training, imputation of absent proteins as zero, transcript-level normalization ported to protein values, or protein evidence treated as technical replicates."
-    },
-    "celltypist_rna": {
-      "allowed_input": "RNA expression normalized by library size to 10000 and log1p for AnnData-based custom training and prediction, with the same frozen training-derived gene axis.",
-      "fit_rule": "Train a new classifier within each donor outer fold. Freeze centering, solver, C or SGD parameters, balancing, feature selection, seed, calibration, and majority-vote policy.",
-      "pretrained_policy": "Built-in or downloaded CellTypist classifiers are prohibited for this baseline."
-    },
-    "harmony_rna": {
-      "allowed_input": "A training-derived normalized expression or PCA matrix plus prespecified batch variables.",
-      "disposition": "The registered release has no admitted frozen-query mapping; a joint train-query run is a transductive diagnostic and cannot be a sealed champion."
-    },
-    "hvg_pca_rna": {
-      "allowed_input": "Nonnegative integer cell or nucleus UMI counts with versionless Ensembl gene IDs.",
-      "algorithms": {
-        "hvg_pca_elastic_net": "Multinomial elastic-net logistic regression; C=1; l1_ratio=0.5; SAGA; max_iter=5000.",
-        "hvg_pca_knn": "15-neighbor Euclidean donor/class-weighted vote; canonical-row tie break.",
-        "hvg_pca_linear_svm": "Linear SVM with donor-grouped three-fold out-of-fold multinomial logistic calibration.",
-        "hvg_pca_logistic": "Multinomial L2 logistic regression; C=1; LBFGS; max_iter=5000.",
-        "hvg_pca_nearest_centroid": "Donor/class-weighted centroids, squared Euclidean distance, and training-derived softmax temperature."
-      },
-      "training_only_transform": "Scale each cell to 10000 counts and log1p; select 2000 HVGs by rank-binned normalized dispersion with 20 mean bins; fit centered full SVD with at most 50 PCs; fit all downstream state only on outer-training donors.",
-      "weighting": "Equal class mass and equal donor mass within class."
-    },
-    "pca_procrustes_and_cca_rna": {
-      "allowed_input": "Single-cell or single-nucleus RNA only.",
-      "blocked_choice": "No implementation, feature axis, normalization, regularization, anchor topology, projection direction, head, or held-query policy has been frozen.",
-      "fold_rule": "A future champion path must learn every projection and alignment from training donors only; held-query geometry cannot determine the transform."
-    },
-    "rna_atac_pseudobulk": {
-      "allowed_training_input": "GSE296875 donor-by-cell-state RNA and ATAC summaries constructed from admitted same-nucleus records after donor mapping, Tn5 processing, peak-universe, and QC locks.",
-      "development_topology": "GSE244832 permits same-donor comparison only and never artificial cell-to-cell RNA-ATAC pairs.",
-      "inference_input": "Observed held-donor RNA/context and sequence only. Observed held ATAC is evaluator-only.",
-      "blocked_choice": "The predictive rule, assay-native ATAC normalization, count/profile output, low-depth behavior, and missing-state fallback are unresolved. Pseudobulk aggregation alone is not a prediction model."
-    },
-    "scvi_scanvi_rna": {
-      "allowed_input": "Raw UMI counts in a frozen layer with a training-derived Ensembl gene universe.",
-      "blocked_choice": "Freeze batch key, categorical and continuous covariates, gene selection, architecture, likelihood, label ontology for scANVI, downstream head for scVI, seeds, early stopping, query mapping, calibration, and fitted-state format.",
-      "query_rule": "The current benchmark permits no query training or domain adaptation on held features. Official query-adaptive scArches runs may be reported only under a separately frozen transductive diagnostic contract."
-    }
+  "open_champion_contract": {
+    "baseline_comparator_policy": "Select the candidate with the strongest prospectively frozen development endpoint. Compare it with the strongest eligible prespecified baseline after excluding the selected model. A baseline may be the winner. If no distinct eligible comparator remains, make no superiority claim. Negative controls are never champions or champion baselines.",
+    "baseline_comparator_policy_resolved_before_any_sealed_outcome": true,
+    "baseline_winner_allowed": true,
+    "bulk": "No baseline in this bundle can currently earn an open bulk champion. All five task baselines lack a bulk execution contract, and GSE267031 must first pass the outcome-blind 80% power gate.",
+    "cell": "The five project HVG/PCA baselines are technically eligible for cell-state selection. scVI, scANVI, and CellTypist remain blocked. PCA-Procrustes and CCA are not in the current TaskSpec baseline roster. A task champion still requires project-sealed GSE289173 success, a clean exposure disposition, selection lock, and releaseable code and fitted state.",
+    "license": "A package license is necessary but insufficient. Release also requires dependency notices, project implementation terms, input-data and trained-weight review, environment and artifact locks, model card, predictions, and checksums.",
+    "no_universal_claim": "A win applies only to the task and seal that satisfy their own gate; there is no aggregate classical-baseline champion.",
+    "rna_conditioned_atac": "No MASLD champion is possible from the current development-only evidence. The assay-native pseudobulk row is also unimplemented."
   },
+  "reproducibility_contract": {
+    "common_receipt": "Hash dataset view, admitted donor rows, feature axis, masks, split, every fold-fitted transform, algorithm parameters, package and code lock, seed, fitted state, predictions, calibration, and terminal disposition.",
+    "fitted_state_scope": "outer_fold plus seed plus task plus dataset-view hash",
+    "immutability": "No fitted state or results directory is overwritten. A correction creates a new campaign revision.",
+    "no_runtime_network": true,
+    "seed_policy": "One fixed seed for smoke, three fixed seeds for screening, five fixed seeds for finalists. Seeds measure numerical stability and are not biological replicates."
+  },
+  "schema_version": "masld-bench-grouped-model-crosswalk-v1",
+  "scientific_claim_limits": {
+    "bulk": "Use cross-sectional stage-associated remodeling, never longitudinal progression.",
+    "cell": "Disease/control utility is secondary donor-level research performance, never a diagnostic claim.",
+    "resource_firewall": "Model results cannot change the Resource evidence classes, thresholds, figures, Gene Catalog, or frozen 117 programs.",
+    "rna_atac": "A pseudobulk or context baseline predicts assay profiles; it does not establish causal regulation."
+  },
+  "source_records": [
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+      "size_bytes": 59705
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/cell_state_mapping.toml",
+      "sha256": "2a07a6e5558b43d9825b7f3d5581ab418432320e31acff4067a9aab6dd9f678a",
+      "size_bytes": 3610
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/bulk_state_transfer.toml",
+      "sha256": "9891644bbb830623d78cffede6ad59321f0eb76c097357281a509e193aa55944",
+      "size_bytes": 2771
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/rna_conditioned_atac.toml",
+      "sha256": "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0",
+      "size_bytes": 3380
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/donor_outer.toml",
+      "sha256": "d913dc2b5f10848f926d661c7cc4c9a1979617957b513ccf80b78483d3bf172c",
+      "size_bytes": 960
+    },
+    {
+      "identity": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",
+      "sha256": "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c",
+      "size_bytes": 1872
+    }
+  ],
   "task_contracts": {
     "bulk_state_transfer": {
       "baseline_ids_in_this_bundle": [
@@ -285,61 +341,5 @@
     "scanvi_baseline": "Blocked until a no-query-training path is frozen; official query-model training is transductive domain adaptation.",
     "scvi_baseline": "Blocked until a no-query-training frozen-encoder path is frozen; query-model training is transductive domain adaptation."
   },
-  "open_champion_contract": {
-    "baseline_comparator_policy": "Select the candidate with the strongest prospectively frozen development endpoint. Compare it with the strongest eligible prespecified baseline after excluding the selected model. A baseline may be the winner. If no distinct eligible comparator remains, make no superiority claim. Negative controls are never champions or champion baselines.",
-    "baseline_comparator_policy_resolved_before_any_sealed_outcome": true,
-    "baseline_winner_allowed": true,
-    "bulk": "No baseline in this bundle can currently earn an open bulk champion. All five task baselines lack a bulk execution contract, and GSE267031 must first pass the outcome-blind 80% power gate.",
-    "cell": "The five project HVG/PCA baselines are technically eligible for cell-state selection. scVI, scANVI, and CellTypist remain blocked. PCA-Procrustes and CCA are not in the current TaskSpec baseline roster. A task champion still requires project-sealed GSE289173 success, a clean exposure disposition, selection lock, and releaseable code and fitted state.",
-    "license": "A package license is necessary but insufficient. Release also requires dependency notices, project implementation terms, input-data and trained-weight review, environment and artifact locks, model card, predictions, and checksums.",
-    "no_universal_claim": "A win applies only to the task and seal that satisfy their own gate; there is no aggregate classical-baseline champion.",
-    "rna_conditioned_atac": "No MASLD champion is possible from the current development-only evidence. The assay-native pseudobulk row is also unimplemented."
-  },
-  "reproducibility_contract": {
-    "common_receipt": "Hash dataset view, admitted donor rows, feature axis, masks, split, every fold-fitted transform, algorithm parameters, package and code lock, seed, fitted state, predictions, calibration, and terminal disposition.",
-    "fitted_state_scope": "outer_fold plus seed plus task plus dataset-view hash",
-    "immutability": "No fitted state or results directory is overwritten. A correction creates a new campaign revision.",
-    "no_runtime_network": true,
-    "seed_policy": "One fixed seed for smoke, three fixed seeds for screening, five fixed seeds for finalists. Seeds measure numerical stability and are not biological replicates."
-  },
-  "scientific_claim_limits": {
-    "bulk": "Use cross-sectional stage-associated remodeling, never longitudinal progression.",
-    "cell": "Disease/control utility is secondary donor-level research performance, never a diagnostic claim.",
-    "rna_atac": "A pseudobulk or context baseline predicts assay profiles; it does not establish causal regulation.",
-    "resource_firewall": "Model results cannot change the Resource evidence classes, thresholds, figures, Gene Catalog, or frozen 117 programs."
-  },
-  "schema_version": "masld-bench-grouped-model-crosswalk-v1",
-  "source_records": [
-    {
-      "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-      "size_bytes": 59115
-    },
-    {
-      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/cell_state_mapping.toml",
-      "sha256": "910424d681a548fe1abfd5d7dfb42208b8b95ae18754244c323170a63ccc7ea8",
-      "size_bytes": 3212
-    },
-    {
-      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/bulk_state_transfer.toml",
-      "sha256": "9891644bbb830623d78cffede6ad59321f0eb76c097357281a509e193aa55944",
-      "size_bytes": 2771
-    },
-    {
-      "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/rna_conditioned_atac.toml",
-      "sha256": "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0",
-      "size_bytes": 3380
-    },
-    {
-      "identity": "Analysis/MASLD_Model_Benchmark/config/splits/donor_outer.toml",
-      "sha256": "d913dc2b5f10848f926d661c7cc4c9a1979617957b513ccf80b78483d3bf172c",
-      "size_bytes": 960
-    },
-    {
-      "identity": "Analysis/MASLD_Model_Benchmark/config/artifacts/model-authorities/hvg_pca_classical/preprocessing.json",
-      "sha256": "19e37819499ef4b4101e9a3af8814ae836449599750067d71716aad69df8e52c",
-      "size_bytes": 1872
-    }
-  ],
   "verified_date": "2026-08-22"
 }

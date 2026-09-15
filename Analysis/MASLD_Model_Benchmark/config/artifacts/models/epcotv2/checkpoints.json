@@ -39,7 +39,7 @@
     },
     "canonical_tensor": "float tensor shaped batch_by_600_bins_by_5_channels_by_1600_positions",
     "sequence": {
-      "channels": "A,C,G,T one-hot",
+      "channels": "Four one-hot sequence basis channels. The exact base-to-channel mapping is unresolved until the released reference arrays are admissible and inspected; do not assign A/C/G/T labels by assumption.",
       "required": true,
       "window_bp": 600000
     },
@@ -59,7 +59,7 @@
   "native_scoring_contract": {
     "common_lane": "EPCOTv2 cannot enter a sequence-only or RNA-context common lane as its native model because observed ATAC is a required fifth input channel. Any sequence-only, ATAC-masked or RNA-to-context modification is a separately trained adaptation.",
     "published_eqtl_path": "The paper's eQTL system combines REF-versus-ALT local-encoder differences, learned variant-to-TSS 2D features and prompt features including Borzoi scores in a trained classifier. The released human_model.pt is the upstream multitask model; no frozen paper eQTL classifier checkpoint was found in the admitted release.",
-    "variant_ablation_rule": "For REF/ALT comparisons, keep the observed ATAC input identical between alleles and prespecify whether the variant-containing ATAC bin is masked. Report masked and unmasked analyses separately because observed accessibility may already encode the variant's regulatory effect.",
+    "variant_ablation_rule": "For REF/ALT comparisons, keep observed ATAC identical between alleles. For the masked sensitivity analysis, mask the prespecified raw genomic ATAC locus before 300-bp neighbor padding; a 1-kb raw locus propagates into three model bins. Report masked and unmasked analyses separately because observed accessibility may already encode the variant's regulatory effect.",
     "variant_effect_semantics": "The released heads predict functional genomic profiles or representations, not signed donor-level eQTL/ieQTL betas. A benchmark head must be fit only on development folds and evaluated against sequence, nearest-gene and expression-only baselines."
   },
   "output_contract": {
@@ -100,7 +100,7 @@
       "status": "The Space code downloads unpinned main-branch per-chromosome NPZ objects; benchmark use must pin this revision."
     },
     "native_build": "hg38",
-    "native_fasta_identity": "UNRESOLVED: only derived sparse one-hot chromosome objects are published",
+    "native_fasta_identity": "UNRESOLVED: only derived sparse one-hot chromosome objects are published, and the base-to-channel mapping is not declared in the admitted MIT source",
     "sequence_buffer_bp": 600000
   },
   "release": {
@@ -125,11 +125,12 @@
     "checkpoint_downloaded": false,
     "format_risk": "The official loader calls torch.load on a pickle-backed .pt object; Hugging Face reports only OrderedDict and tensor storage rebuild imports, but that scan is not a trust boundary.",
     "input_risk": "The public Space also unpickles uploaded ATAC files. The benchmark adapter must reject pickle inputs and use a validated internal array format.",
-    "loading_rule": "After campaign approval, fetch by immutable revision and SHA-256, scan in an isolated no-network runtime, then load tensors with a weights-only restricted path where compatible and require exact state_dict keys, shapes and dtypes. Never execute the public Space loader on untrusted files.",
+    "loading_rule": "Only after explicit terms clearance, fetch by immutable revision and SHA-256, scan in an isolated no-network runtime, then load tensors with a weights-only restricted path where compatible and require exact state_dict keys, shapes and dtypes. Never execute the public Space loader on untrusted files.",
+    "native_contract_audit": "executions/model-audit-112-21099014; ARTIFACTS SHA-256 b51a9c95bf0706352961a74040cbee5fb45a4aca8f14a369093b4b80af4e21ec. The audit built a source-defined biological-free basis-channel fixture, loaded no checkpoint, and found current and pinned Space/reference terms still absent.",
     "numeric_parity": "Reproduce official output tensors for all 14 modality groups on fixed hg38 plus ATAC fixtures under both the paper-linked Space stack and the selected project runtime before admission."
   },
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The Nucleic Acids Research article, official V1.0.0 GitHub/Zenodo release, paper-linked Hugging Face Space, byte-identical later mirror, Hugging Face reference dataset and small public text/config/accession metadata were queried on 2026-08-22. No checkpoint or reference array was downloaded or deserialized.",
+  "source_evidence": "The Nucleic Acids Research article, official V1.0.0 GitHub/Zenodo release, paper-linked Hugging Face Space, byte-identical later mirror, Hugging Face reference dataset and small public text/config/accession metadata were queried through 2026-08-25. Current and pinned Space/reference metadata still declare no license metadata or license file, and all four current/pinned LICENSE endpoints return HTTP 404. No checkpoint or reference array was downloaded or deserialized.",
   "source_records": [
     {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:LICENSE", "sha256": "2aff8b165075fc1c015e2b0f9df0adb319e965ab51cf3806c9f99dadec797b7e", "size_bytes": 1072},
     {"identity": "liu-bioinfo-lab/general_AI_model@f20362a:README.md", "sha256": "738e2190e60e5217a6076c5b014114025c280685946c746127de7a19ba89fd05", "size_bytes": 3023},
@@ -145,6 +146,7 @@
   ],
   "task_fit": {
     "cell_state_mapping": "not_supported",
+    "observed_multiome": "development-only sequence-plus-observed-ATAC to RNA-profile lane using donor-by-lineage pseudobulk. Same-nucleus pairing is valid, but donors are the replication unit and matched baselines receive the same held-context ATAC.",
     "rna_conditioned_atac": "not_supported: observed ATAC is an input and ATAC is not an output head",
     "unified_model": "restricted observed-ATAC component only; open use is blocked by exact Space code, checkpoint and reference-data terms",
     "variant_to_regulation": "development-only observed-ATAC comparator. The released checkpoint can provide allele-delta and variant-to-TSS representations but not signed eQTL effects; the published downstream classifier is not part of the admitted checkpoint. Native sealed evaluation is impossible without a frozen topology-matched ATAC input."

@@ -20,7 +20,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "5be876f9cffb14588af89891370ed09cb985fa7a81ec9da05bc719feed2673aa"
   },
-  "interpretation": "Neither the 2024 paper date nor the mutable SharePoint folder proves which base or task-head bytes are selected or when their training data were frozen. All development sources and project-sealed GSE289173 therefore remain exposure-unknown. The custom model license independently prevents an open champion and redistribution of the base or derived heads.",
+  "interpretation": "Neither the 2024 paper date nor the mutable SharePoint folder proves which base or task-head bytes are selected or when their training data were frozen. All development sources and project-reserved GSE289173 therefore remain exposure-unknown. The custom model license independently prevents a best openly licensed model and redistribution of the base or derived heads.",
   "preprocessing_and_evaluation_findings": [
     {
       "benchmark_action": "freeze_before_screening",

@@ -1,7 +1,7 @@
 schema_version = "masld-bench-runtime-v1"
 runtime_id = "gpu_rna_atac_torch_smoke"
 status = "candidate"
-purpose = "Deterministic L40S training and RNA-only inference for admitted RNA-to-ATAC smoke adapters"
+purpose = "Deterministic L40S training and RNA-only inference for included RNA-to-ATAC smoke adapters"
 scheduler = "slurm"
 resource_profile = "gpu_rna_atac_smoke"
 environment_lock = "sha256:c2308fc3b7524081c7a49ff1d840213306bcc20dff003010da2b898e2bdaa461"

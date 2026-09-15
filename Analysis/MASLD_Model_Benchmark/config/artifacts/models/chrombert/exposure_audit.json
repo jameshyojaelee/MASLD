@@ -31,7 +31,7 @@
     "gse296875": "Development-only region or regulator probing may be possible after terms and companion-file gates. The model cannot consume same-nucleus RNA as context or emit an ATAC profile.",
     "observed_context_requirement": "none_supported_by_the_registered_base_checkpoint"
   },
-  "interpretation": "The exact registered base bytes predate GSE289173 and are target-label-unexposed, but that does not make ChromBERT a variant model. It is a pooled Cistrome representation encoder with broad locus and regulatory-profile exposure. The separately released 2026 safetensors identity is post-seal and remains unknown-exposure until a conversion and corpus receipt exists.",
+  "interpretation": "The exact registered base bytes predate GSE289173 and are target-label-unexposed, but that does not make ChromBERT a variant model. It is a pooled Cistrome representation encoder with broad locus and regulatory-profile exposure. The separately released 2026 safetensors identity is after the outcomes are held back and remains unknown-exposure until a conversion and corpus receipt exists.",
   "license_disposition": {
     "post_census_safetensors": "MIT_declared_on_its_separate_Hugging_Face_model_card",
     "registered_checkpoint": "HF_dataset_card_has_a_GPLv3_badge_but_no_license_metadata_or_text",

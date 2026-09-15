@@ -269,11 +269,11 @@ write_tsv(CANDIDATE / "callout_map.tsv", callouts, ["callout", "relative_path", 
 
 (CANDIDATE / "captions").mkdir(parents=True, exist_ok=True)
 (CANDIDATE / "captions" / "figure3.md").write_text(
-    "Figure 3. Bulk transcriptomic remodeling and genetic overlap. A-C, synchronized five-cohort overview, stage/NAS coverage, and per-cohort DEG replication. D, covariate-adjusted PCA; control is gray and disease uses the fibrosis blue scale. E, adjacent-stage DEG counts and continuous prespecified NMF activity. F, adjacent-stage effects with separate exact-pair COLOC PP.H4 and lead-variant PIP lanes; pending corrected-COLOC promotion.\n",
+    "Figure 3. Bulk transcriptomic remodeling and genetic overlap. A-C, synchronized five-cohort overview, stage/NAS coverage, and per-cohort DEG replication. D, covariate-adjusted PCA; control is gray and disease uses the fibrosis blue scale. E, adjacent-stage DEG counts and continuous prespecified NMF activity. F, adjacent-stage effects with separate exact-pair COLOC PP.H4 and lead-variant PIP lanes; pending adoption of the corrected COLOC release.\n",
     encoding="utf-8",
 )
 (CANDIDATE / "captions" / "figure4.md").write_text(
-    "Figure 4. Single-cell programs and regulatory activity. A, seven datasets comprising 102 analyzed biological donors and 1.23 million analyzed cells define an annotated atlas and 117 programs in five tested lineages. B, directly labeled atlas UMAP with disease-density scale. C, all 117 donor-level stage effects and four selected three-stage profiles; outlines mark the two HC3-supported programs. D, fixed 13-pair donor-collapsed communication roster; zero of 13 pass donor-level family FDR, and failed or untestable rows remain visible as muted cells. E, two HC3-supported signatures projected into fragment-native F-versus-F0 models; genetic anchors await corrected-COLOC promotion. F, DoRothEA A/B/C TF activity from decoupleR weighted-mean inference; filled points meet within-contrast BH q<0.05.\n",
+    "Figure 4. Single-cell programs and regulatory activity. A, seven datasets comprising 102 analyzed biological donors and 1.23 million analyzed cells define an annotated atlas and 117 programs in five tested lineages. B, directly labeled atlas UMAP with disease-density scale. C, all 117 donor-level stage effects and four selected three-stage profiles; outlines mark the two HC3-supported programs. D, fixed 13-pair donor-collapsed communication roster; zero of 13 pass donor-level family FDR, and failed or untestable rows remain visible as muted cells. E, two HC3-supported signatures projected into fragment-native F-versus-F0 models; genetic anchors await adoption of the corrected COLOC release. F, DoRothEA A/B/C TF activity from decoupleR weighted-mean inference; filled points meet within-contrast BH q<0.05.\n",
     encoding="utf-8",
 )
 (CANDIDATE / "captions" / "figure5.md").write_text(
@@ -285,7 +285,7 @@ write_tsv(CANDIDATE / "callout_map.tsv", callouts, ["callout", "relative_path", 
     encoding="utf-8",
 )
 (CANDIDATE / "RETIREMENT_NOTES.md").write_text(
-    "The prior five-figure callout maps remain in place. This candidate supersedes their numbering only after explicit promotion. Single-cell supplementary callouts move to S4; prior S4 and S5 callouts move to S5 and S6. No historical map was deleted.\n",
+    "The prior five-figure callout maps remain in place. This candidate supersedes their numbering only after it is explicitly adopted. Single-cell supplementary callouts move to S4; prior S4 and S5 callouts move to S5 and S6. No historical map was deleted.\n",
     encoding="utf-8",
 )
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze the authoritative GSE105127 donor/zone/assay join and reuse contract."""
+"""Freeze the authoritative GSE105127 donor/zone/assay join and reuse requirements."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ ADJACENT_SECTION_EVIDENCE = (
 
 
 class GSE105127AuditError(RuntimeError):
-    """Raised when frozen source evidence violates the admission contract."""
+    """Raised when frozen source evidence does not meet the inclusion requirements."""
 
 
 def sha256_file(path: Path) -> str:

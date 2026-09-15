@@ -6,7 +6,7 @@
 # how the protein-genetic layer relates to our expression-genetic + disease-state
 # classes. ADDITIVE / external annotation only -- this does NOT mutate the frozen
 # release and is NOT an input to the convergence/heuristic score. See
-# data/external/gobeil2026_liver_pqtl/README.md and the number-verification firewall.
+# data/external/gobeil2026_liver_pqtl/README.md and the number-verification separation.
 #
 # Out: RNA-seq/results/multi_evidence/external_pqtl/pqtl_external_annotation.tsv
 #      RNA-seq/results/multi_evidence/external_pqtl/pqtl_external_summary.txt

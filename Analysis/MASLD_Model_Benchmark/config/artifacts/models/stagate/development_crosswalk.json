@@ -46,7 +46,7 @@
     "reconstruction": "Label reconstructed expression derivable_not_observed. Never substitute it for native counts or use spots as replicates for differential testing.",
     "missingness": "Unmeasured genes, permission blocks, absent assays, and failed joins remain explicit missing states rather than zeros."
   },
-  "interpretation": "STAGATE is a strong future target-fitted spatial RNA baseline, not an inductive pretrained model. Its selected PyG implementation is MIT-licensed but lacks a complete runtime and checkpoint export, densifies expression, and includes an unsafe cross-section option unless topology is rigorously controlled. With no eligible task or seal, it remains deferred.",
+  "interpretation": "STAGATE is a strong future target-fitted spatial RNA baseline, not an inductive pretrained model. Its selected PyG implementation is MIT-licensed but lacks a complete runtime and checkpoint export, densifies expression, and includes an unsafe cross-section option unless topology is rigorously controlled. With no eligible task or hold back, it remains deferred.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

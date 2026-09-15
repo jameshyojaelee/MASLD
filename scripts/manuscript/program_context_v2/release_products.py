@@ -113,7 +113,7 @@ SOURCE_ROW_FIELDS = (
 )
 
 # Continuous NMF axes are retained only as a supplementary decomposition.  The
-# exact generated-row language below is the primary firewall; this predicate is
+# exact generated-row language below is the primary separation; this predicate is
 # a secondary defense for prose outside those generated rows.
 NMF_DISCRETE_CLASS_CLAIM_PATTERNS = tuple(
     re.compile(pattern, re.IGNORECASE)

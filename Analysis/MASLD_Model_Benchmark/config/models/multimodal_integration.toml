@@ -68,7 +68,7 @@ derivative_weights_license = "project_owned"
 training_cutoff = "not_applicable_no_pretraining_fold_local_fit"
 declared_corpora_sha256 = "0d4e5bfceb0a5ea08df15d12bca4d04c891b8e4d38167eecabebe2c10fb73e69"
 cellxgene_uuids_sha256 = "14330c8bf4d2718f1ebf63487b0f528738270d6880a4bbadc1df4678af5df3f1"
-exposure_audit_sha256 = "294dbdca7bc57c538d8d4b93f762b3477d5c540f553e5181ac98522682c4b19c"
+exposure_audit_sha256 = "902ec3bee6b6cfcf3717c185ae22b40ecbd95f7d03f0ac6b21b67473a197b428"
 evidence_artifacts = [
   { path = "artifacts/model-authorities/scpair/preprocessing.json", sha256 = "b2ea8e3e63c60e05eb83781fb013085d625a4b42fd8465610eedf4e67ba87693", size_bytes = 2301, media_type = "application/json", role = "model_authority:scpair:preprocessing" },
   { path = "artifacts/model-authorities/scpair/code_license.json", sha256 = "3e3f76793d99508daa45a7883dc402317827df713aab7c441e3b4afb9af2baad", size_bytes = 245, media_type = "application/json", role = "model_authority:scpair:code_license" },
@@ -76,7 +76,7 @@ evidence_artifacts = [
   { path = "artifacts/model-authorities/scpair/derivative_weights_license.json", sha256 = "95a2cb12b5ccbd1a73a43c3869940f6012fd9a7b6f05efebfb83edea13a7a3f4", size_bytes = 269, media_type = "application/json", role = "model_authority:scpair:derivative_weights_license" },
   { path = "artifacts/model-authorities/scpair/declared_corpora.json", sha256 = "0d4e5bfceb0a5ea08df15d12bca4d04c891b8e4d38167eecabebe2c10fb73e69", size_bytes = 437, media_type = "application/json", role = "model_authority:scpair:declared_corpora" },
   { path = "artifacts/model-authorities/scpair/cellxgene_uuids.json", sha256 = "14330c8bf4d2718f1ebf63487b0f528738270d6880a4bbadc1df4678af5df3f1", size_bytes = 275, media_type = "application/json", role = "model_authority:scpair:cellxgene_uuids" },
-  { path = "artifacts/model-authorities/scpair/exposure_audit.json", sha256 = "294dbdca7bc57c538d8d4b93f762b3477d5c540f553e5181ac98522682c4b19c", size_bytes = 1013, media_type = "application/json", role = "model_authority:scpair:exposure_audit" },
+  { path = "artifacts/model-authorities/scpair/exposure_audit.json", sha256 = "902ec3bee6b6cfcf3717c185ae22b40ecbd95f7d03f0ac6b21b67473a197b428", size_bytes = 1015, media_type = "application/json", role = "model_authority:scpair:exposure_audit" },
 ]
 supported_actions = ["prepare", "fit", "predict"]
 executable_tasks = ["rna_conditioned_atac"]
@@ -243,7 +243,7 @@ derivative_weights_license = "project_owned"
 training_cutoff = "not_applicable_no_pretraining_fold_local_fit"
 declared_corpora_sha256 = "9456101f9264a57f4582810e18267c480e3bf62ecdbc2e1c1c82844dc17d115f"
 cellxgene_uuids_sha256 = "a016381ea17fb0ad5f85d47c28b31a7f67115d12830374dcc96efeaabbd94fc0"
-exposure_audit_sha256 = "c2818f2ac5056d089a198f32659826c0463778c73853d7c8ef7030fd20fba958"
+exposure_audit_sha256 = "182ca78abc54343cfa110976924c062c8d1b19653d8dcd3ad050875baa9338cf"
 evidence_artifacts = [
   { path = "artifacts/model-authorities/cobolt/preprocessing.json", sha256 = "c541e53fb6a6eaa406285225f02158133f6abb54e4d865e729efe8064bf0f331", size_bytes = 2585, media_type = "application/json", role = "model_authority:cobolt:preprocessing" },
   { path = "artifacts/model-authorities/cobolt/code_license.json", sha256 = "b2b690deffce2fbaddb55c59a134e9d09a594921acefbc4e62dd326a275f3280", size_bytes = 254, media_type = "application/json", role = "model_authority:cobolt:code_license" },
@@ -251,14 +251,14 @@ evidence_artifacts = [
   { path = "artifacts/model-authorities/cobolt/derivative_weights_license.json", sha256 = "9b13b4a14cd5102db0bf5ca835b46aad01ba8630a706f65308f5d2b220f4431c", size_bytes = 269, media_type = "application/json", role = "model_authority:cobolt:derivative_weights_license" },
   { path = "artifacts/model-authorities/cobolt/declared_corpora.json", sha256 = "9456101f9264a57f4582810e18267c480e3bf62ecdbc2e1c1c82844dc17d115f", size_bytes = 444, media_type = "application/json", role = "model_authority:cobolt:declared_corpora" },
   { path = "artifacts/model-authorities/cobolt/cellxgene_uuids.json", sha256 = "a016381ea17fb0ad5f85d47c28b31a7f67115d12830374dcc96efeaabbd94fc0", size_bytes = 270, media_type = "application/json", role = "model_authority:cobolt:cellxgene_uuids" },
-  { path = "artifacts/model-authorities/cobolt/exposure_audit.json", sha256 = "c2818f2ac5056d089a198f32659826c0463778c73853d7c8ef7030fd20fba958", size_bytes = 1645, media_type = "application/json", role = "model_authority:cobolt:exposure_audit" },
+  { path = "artifacts/model-authorities/cobolt/exposure_audit.json", sha256 = "182ca78abc54343cfa110976924c062c8d1b19653d8dcd3ad050875baa9338cf", size_bytes = 1645, media_type = "application/json", role = "model_authority:cobolt:exposure_audit" },
 ]
 supported_actions = ["prepare", "fit", "predict"]
 executable_tasks = ["rna_conditioned_atac"]
 supported_adaptation_regimes = ["native_lane"]
-runtime_id = "gpu_rna_atac_torch_smoke"
+runtime_id = "gpu_rna_atac_torch_b6k"
 adapter_command = ["/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/src/masld_bench/adapters/rna_atac_cobolt.py"]
-environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/gpu_rna_atac_torch_smoke--c2308fc3b7524081/environment.lock.json", sha256 = "c2308fc3b7524081c7a49ff1d840213306bcc20dff003010da2b898e2bdaa461", size_bytes = 1253, media_type = "application/json", role = "environment:gpu_rna_atac_torch_smoke" }
+environment_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/environment-locks/gpu_rna_atac_torch_b6k--7b1948ff69fb8a46/environment.lock.json", sha256 = "7b1948ff69fb8a46831371424df0f02c897767c7a061af832d513f2d892f50ca", size_bytes = 1413, media_type = "application/json", role = "environment:gpu_rna_atac_torch_b6k" }
 capture_r_session = false
 ready = true
 

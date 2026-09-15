@@ -699,13 +699,13 @@ ready = true
 model_id = "sequence_cnn_control"
 display_name = "Sequence CNN trained from scratch"
 implementation_type = "train_locally"
-checkpoint_revision = "UNRESOLVED"
-checkpoint_sha256 = "UNRESOLVED"
+checkpoint_revision = "project://sequence_control_architectures.py@9a64d0640323777a987b7743f9cf777a0d9826b33a5f9514407b347da5456c17+sequence_control_architectures.json@492962a688ea78920ead75edf5b9267a822a5af442842749e4404ab63cb4a2c3+terminal_bundle@b379da6299a7fd9b42c77da7da0150403a6268683cc8ecd1a35dd3ad983a33a6"
+checkpoint_sha256 = "NOT_APPLICABLE"
 license_status = "UNRESOLVED"
 exposure_status = "unknown"
 status = "candidate"
 admission_blocking = true
-blockers = ["Freeze architecture, receptive field, chromosome/LD split, implementation, seeds, license, and trained-artifact SHA-256."]
+blockers = ["The exact scratch CNN architecture, implementation sources, 2,114-bp input/1,000-bp output contract, and terminal 8/8 development production bundle are now bound. Admission remains blocked because the project code/license and complete checkpoint-exposure authority are unresolved. The sparse development bundle is not a complete five-fold, five-seed finalist, external evaluation, sealed result, or signed variant-effect head."]
 supported_tasks = ["variant_to_regulation", "rna_conditioned_atac"]
 
 [[models]]

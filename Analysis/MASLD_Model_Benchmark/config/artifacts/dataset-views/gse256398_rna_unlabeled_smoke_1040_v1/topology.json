@@ -1,0 +1,21 @@
+{
+  "admitted": true,
+  "authority": "topology",
+  "evidence": {
+    "biological_unit": "donor",
+    "biological_unit_count": 26,
+    "donor_metadata_is_an_assay_aliquot": false,
+    "false_cell_pairing_allowed": false,
+    "modalities": [
+      "single_nucleus_rna"
+    ],
+    "pairing_levels": [
+      "same_study_unpaired"
+    ],
+    "row_count": 1040,
+    "rows_per_donor": 40
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

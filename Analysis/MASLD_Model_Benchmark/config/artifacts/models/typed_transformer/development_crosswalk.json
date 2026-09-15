@@ -35,7 +35,7 @@
     "gse289173": {
       "allowed_use": "none for this task",
       "exposure_state": "target_label_unexposed",
-      "reason": "It is not a registered graph seal and cannot be used to design, debug, pretrain, calibrate, or activate the proposed architecture."
+      "reason": "It is not a registered graph hold-back and cannot be used to design, debug, pretrain, calibrate, or activate the proposed architecture."
     },
     "resource_gene_catalog_current": {
       "allowed_use": "none while the model and graph snapshot are unresolved. A future development graph cannot redefine Resource evidence classes, thresholds, hero genes, or frozen programs.",

@@ -41,7 +41,7 @@
     "locus": "The official training config held chr8 and chr9 for test and chr10 for validation, but all other project loci may have supplied reference-sequence training examples. Project evaluation therefore crosses donor folds with merged chromosome/LD blocks and a 4096-bp boundary buffer; it does not call the encoder locus-clean.",
     "sealed": "GSE289173 cannot select target profiles, sequence classes, center windows, aggregation, projection normalization, gene links, effect direction, calibration, or thresholds."
   },
-  "interpretation": "Sei is target-label-unexposed for GSE281364, GSE289173, and GSE296875 by immutable chronology, replacing the registry's conservative unknown exposure pending this audit. It remains broadly exposed to hg38 sequence and generic liver-related regulatory profiles, and its original official code terms keep it a restricted comparator.",
+  "interpretation": "Sei is target-label-unexposed for GSE281364, GSE289173, and GSE296875 by read-only chronology, replacing the registry's conservative unknown exposure pending this audit. It remains broadly exposed to hg38 sequence and generic liver-related regulatory profiles, and its original official code terms keep it a restricted comparator.",
   "rules": {
     "checkpoint_chronology": "A project outcome public after the immutable 2021 Zenodo archive is target-label-unexposed unless an upstream target contains the same outcome under an alias.",
     "genome_overlap": "Reference-window exposure is distinct from outcome-label exposure and is handled with genomic/LD blocks plus the full input-window boundary buffer.",

@@ -79,7 +79,7 @@ rna_conditioned_atac_claim_allowed = false
 champion_claim_requires_external_seal = true
 
 [task.histone_regulatory]
-status = "planned_activation_audit"
+status = "coordinate_independent_bulk_multiview_active_sequence_lane_blocked"
 held_query_modalities = ["dna_sequence", "rna_context_only_where_native", "observed_atac_only_on_observed_multiome_subtask"]
 endpoint_families = ["h3k27ac_profile", "h3k27ac_count", "signed_disease_associated_h3k27ac_delta"]
 candidate_dataset_families = ["gse267145_znf469_human_liver"]
@@ -87,6 +87,16 @@ primary_models = ["alphagenome", "borzoi_ensemble", "corgi_plus", "corgi_regular
 mandatory_baselines = ["mean_track", "sequence_only_cnn", "gc_kmer_control", "assay_native_glm", "nearest_regulatory_feature"]
 activation_requires = "Frozen participant-level GSE269412-GSE267119 join, repeated-library structure, rights, GRCh38 coordinate contract, and outcome-firewalled donor-safe splits."
 single_cohort_external_claim_allowed = false
+coordinate_independent_task_id = "paired_bulk_rna_h3k27ac"
+coordinate_independent_task_spec_path = "config/evaluation/paired_bulk_rna_h3k27ac_task.toml"
+coordinate_independent_task_spec_sha256 = "8bf05fe693c787ffdd8fe11443e019e668ecd03318c708e390785edd837b1a28"
+activation_artifacts_sha256 = "e5042eb43dddd84cda81c5aeed5d6dbeb0378ab1c942a0183e2ef1b41cd18b20"
+coordinate_independent_bulk_lane_active = true
+coordinate_dependent_sequence_lane_active = false
+h3_feature_identity = "opaque_source_region_string"
+eligible_bulk_multiview_models = ["pca_ridge", "reduced_rank_regression", "pls2", "sparse_cca", "mofa_plus", "generalized_low_rank_multiview", "regularized_paired_bulk_autoencoder_screening_only"]
+single_cell_models_allowed_on_bulk_lane = false
+source_owned_outcomes_available_for_selection = false
 
 [task.methylation_regulatory]
 status = "planned_activation_audit"

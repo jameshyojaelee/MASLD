@@ -1,0 +1,22 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "gse244832_label_free_axis_reference_guard_21100781",
+  "detected_at": "2026-08-25",
+  "dataset_id": "gse244832",
+  "affected_job_ids": [21100780, 21100781],
+  "affected_artifact_path": "executions/gse244832-label-free-atac-exchange-axis-20260825",
+  "affected_artifacts_sha256": "3c16c7b911c0ff96c31fb88d0ab54d2809b07f7ec0a699c4db26802cf6831b0b",
+  "finding": "The label-free data and masking axes passed, but family_eligibility.tsv inherited sequence-family eligibility from GSE281367 even though GSE244832's exact source-native reference bundle and annotation remain unresolved.",
+  "scientific_impact": "No model fit, prediction, metric, selection, or outcome access occurred. The artifact is ineligible as a model-execution authority but remains an immutable record of the correctly label-free donor, lineage, and window axes.",
+  "condition_values_read": false,
+  "rna_assay_opened": false,
+  "cross_assay_join_inferred": false,
+  "biological_outcome_arrays_read": false,
+  "prediction_files_produced": false,
+  "metric_files_produced": false,
+  "champion_claim_allowed": false,
+  "disposition": "quarantined_before_model_execution",
+  "replacement_guard_path": "config/evaluation/gse244832_atac_reference_guard_20260825.json",
+  "replacement_guard_sha256": "da94da73720a1e799e49edcfc261f37ef53cf6bcbb6abd4c92773d3e84fef368",
+  "replacement_rule": "Only observed-ATAC input families may proceed to query materialization. Sequence, sequence-plus-RNA, paired-RNA-ATAC, and other reference-dependent target execution remain blocked until an exact GRCh38.p14 reference crosswalk or a separately validated coordinate contract passes."
+}

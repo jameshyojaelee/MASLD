@@ -14,7 +14,7 @@
     "source_record_url": "https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs41586-024-08411-y/MediaObjects/41586_2024_8411_MOESM3_ESM.xlsx"
   },
   "crosswalk_scope": {
-    "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
+    "dataset_view_id": "resource_atlas_frozen_screen_50000_v1",
     "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"],
     "scope_limit": "Cell-state task only. Training/test rows and reference-only GEO sample rows were searched separately by accession and exact publication title."
   },
@@ -46,6 +46,6 @@
     "reference_only": "A source found only in the full search reference is reference_only. Reference-free common embedding runs remain valid; native kNN/index runs must declare the reference corpus separately.",
     "sealed_timing": "A source first public after the finalized v1.1 record is target_label_unexposed for the sealed source and clean_declared for development sources unless another declaration names it."
   },
-  "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "schema_version": "masld-bench-development-crosswalk-v2",
+  "verified_date": "2026-08-24"
 }

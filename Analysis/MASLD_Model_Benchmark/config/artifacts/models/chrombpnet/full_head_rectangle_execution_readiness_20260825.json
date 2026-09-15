@@ -1,0 +1,130 @@
+{
+  "schema_version": "masld-bench-chrombpnet-full-head-rectangle-execution-readiness-v1",
+  "status": "AUTHORIZED_EXISTING_CENTRAL_QUEUE_WAITING_FOR_FULL_RECTANGLE_LICENSE_AND_EXTERNAL_EVALUATION",
+  "model_id": "chrombpnet",
+  "lane_id": "chrombpnet_full_head_two_view_five_seed_rectangle",
+  "scope": "outcome_blind_full_lane_rectangle_and_central_dispatch_coverage",
+  "head_contract": {
+    "one_fit_two_views": true,
+    "primary_biological_view": "chrombpnet_nobias",
+    "assay_qc_view": "chrombpnet_full",
+    "full_view_is_independent_architecture": false,
+    "full_and_nobias_are_distinct_from_bpnet": true,
+    "expected_views_per_fit": 2,
+    "standalone_signed_gene_effect_claim_allowed": false
+  },
+  "frozen_authorities": {
+    "head_semantics_contract": {
+      "path": "config/artifacts/models/chrombpnet/full_head_production_readiness_20260825.json",
+      "sha256": "cb7c2173567b9ba1e1018615d932225a7c0362ac2310c7025daf5df2254d813d"
+    },
+    "head_semantics_audit": {
+      "path": "scripts/audit_chrombpnet_full_head_readiness.py",
+      "sha256": "4df6fa403b500cc416d1f336995c711a65a0b8b5e673f21701feb213ae342a45"
+    },
+    "head_semantics_admission": {
+      "path": "executions/model-check-982-21099376",
+      "artifacts_sha256": "fde4c55e24bbd70bca10c64d2af65bdb9b5889c60e5c6699d7b6ffccc9957cf3"
+    },
+    "campaign_contract": {
+      "path": "config/campaigns/sequence_task_native_five_seed_rectangle_20260825.json",
+      "sha256": "324de8ec6789c948380aaeb1fc7bb470083b21d4f77c3008c7b6870bd745390c"
+    },
+    "rectangle_admission": {
+      "path": "executions/sequence-five-seed-rectangle-admission-21098556",
+      "artifacts_sha256": "78d785157d8b11b38d18f99362b98bdec2a894e6455f42ac54cf681958da0b28"
+    },
+    "evaluator_readiness": {
+      "path": "executions/sequence-five-seed-evaluator-readiness-21099052",
+      "artifacts_sha256": "3500132b33cae3cd1f9466bde2a50e594e9861a252e7bad572b82a766301df72"
+    },
+    "execution_correction": {
+      "path": "executions/sequence-five-seed-execution-correction-21098951",
+      "artifacts_sha256": "5f3c122972f86a16e615c52c98e1f20af15fc6dcbf2c83b4b0f53730b0a68176"
+    },
+    "queue_admission": {
+      "path": "executions/sequence-five-seed-queue-admission-v3-21098963",
+      "artifacts_sha256": "ceca0985719a13b7588dbc5156401f30b611906338aecc0bfaa07ce0eba5a646"
+    },
+    "live_dispatch_readiness": {
+      "path": "executions/sequence-five-seed-live-dispatch-readiness-21099103",
+      "artifacts_sha256": "cc37e309b4935c880176fd93975e120bf7a8d3de04b39d014daa3ad3bc8dd1a8"
+    },
+    "production_wrapper": {
+      "path": "slurm/chrombpnet_train_predict_five_seed_v2.sbatch",
+      "sha256": "fe83c0025cd0c1a83ea318b450bd9fc3a2c5c1b8eac43d5beb68b63ee302caae"
+    },
+    "bundle_wrapper": {
+      "path": "slurm/run_sequence_task_native_five_seed_bundle_v2.sbatch",
+      "sha256": "7cfd70d94ad9fb57c4ae6337ed3696e8c4a381bc5d5a96b6800e8ef744c13e3d"
+    },
+    "bundle_controller": {
+      "path": "scripts/run_sequence_task_native_five_seed_bundle_v2.py",
+      "sha256": "a57f8b222da3e2c6179d9300eb58a1186af91a4b87274281a239efbe7a4af6c7"
+    }
+  },
+  "rectangle": {
+    "lineages": ["cholangiocyte", "fibroblast", "hepatocyte", "macrophage", "t_cell"],
+    "diagonal_outer_folds": [0, 1, 2, 3, 4],
+    "fixed_seeds": [20260824, 20260825, 20260826, 20260827, 20260828],
+    "expected_fits": 125,
+    "complete_fits_at_freeze": 19,
+    "missing_fits_at_freeze": 106,
+    "expected_prediction_views": 250,
+    "complete_prediction_views_at_freeze": 38,
+    "missing_prediction_views_at_freeze": 212,
+    "lineage_fit_counts": {
+      "cholangiocyte": {"complete": 5, "missing": 20},
+      "fibroblast": {"complete": 4, "missing": 21},
+      "hepatocyte": {"complete": 1, "missing": 24},
+      "macrophage": {"complete": 4, "missing": 21},
+      "t_cell": {"complete": 5, "missing": 20}
+    },
+    "full_compatible_rectangle": false,
+    "partial_evaluator_access_allowed": false,
+    "partial_results_may_be_ranked": false
+  },
+  "central_dispatch_authorization": {
+    "queue_live_root": "config/campaigns/gpu_bundle_queue",
+    "submission_authority": "central_dispatcher_only",
+    "partition": "gpu",
+    "account": "nslab",
+    "qos": "nslab",
+    "gres": "gpu:l40s:1",
+    "maximum_running_gpu_jobs": 4,
+    "maximum_pending_gpu_jobs": 1,
+    "gpu_squeue_ceiling": 5,
+    "new_queue_registration_needed": false,
+    "direct_gpu_submission_authorized": false,
+    "bundles": [
+      {"task_bundle_id": "model-training-708", "dispatcher_bundle_id": "model-training-808", "logical_fits": 16, "priority": 77, "queue_filename": "077-model-training-808-v2.json", "queue_sha256": "bcf074144f499c7b48936f1eb5e875e85f6410d3411702db3754ced125176c1e"},
+      {"task_bundle_id": "model-training-709", "dispatcher_bundle_id": "model-training-809", "logical_fits": 15, "priority": 78, "queue_filename": "078-model-training-809-v2.json", "queue_sha256": "fdfc4c31c1e65848f2161a2c1333c1467d1ed9696c4c0ce777792f1009f6743d"},
+      {"task_bundle_id": "model-training-710", "dispatcher_bundle_id": "model-training-810", "logical_fits": 15, "priority": 79, "queue_filename": "079-model-training-810-v2.json", "queue_sha256": "b482043be6ad13ec29ed2f745db118a7f5ffceb210ac46953543a14d59b4ca26"},
+      {"task_bundle_id": "model-training-711", "dispatcher_bundle_id": "model-training-811", "logical_fits": 15, "priority": 80, "queue_filename": "080-model-training-811-v2.json", "queue_sha256": "4d247e8152f8c4172da2ace2b764f1c919afe35f0c136da8e2d79329bdfa741e"},
+      {"task_bundle_id": "model-training-712", "dispatcher_bundle_id": "model-training-812", "logical_fits": 15, "priority": 81, "queue_filename": "081-model-training-812-v2.json", "queue_sha256": "9a26ab669a4ba9ec48a24c89769f5707ddf34f1e11477becdea936f4795da99c"},
+      {"task_bundle_id": "model-training-713", "dispatcher_bundle_id": "model-training-813", "logical_fits": 15, "priority": 82, "queue_filename": "082-model-training-813-v2.json", "queue_sha256": "f1c5e675784c312968ee342609a4fc05a0b109b28468cea3e2eb370b0376bf36"},
+      {"task_bundle_id": "model-training-714", "dispatcher_bundle_id": "model-training-814", "logical_fits": 15, "priority": 83, "queue_filename": "083-model-training-814-v2.json", "queue_sha256": "6cb34b4522266350e2a58a6608cde062ffb018c158179af074b416df2067dda4"}
+    ]
+  },
+  "license_and_release_gate": {
+    "license_authority_contradiction_present": true,
+    "weight_redistribution_authorized": false,
+    "open_champion_eligible_now": false,
+    "restricted_development_comparator_execution_allowed": true,
+    "formal_terms_reconciliation_required_before_open_release": true
+  },
+  "claim_firewall": {
+    "development_only": true,
+    "partial_results_ranked": false,
+    "prediction_values_read": false,
+    "metric_values_read": false,
+    "development_outcomes_read": false,
+    "sealed_features_read": false,
+    "sealed_labels_or_outcomes_read": false,
+    "thresholds_changed": false,
+    "gpu_job_submitted_by_this_authorization": false,
+    "champion_claim_allowed": false,
+    "external_transfer_claim_allowed": false,
+    "universal_claim_allowed": false
+  }
+}

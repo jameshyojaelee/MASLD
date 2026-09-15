@@ -16,7 +16,7 @@ FORBIDDEN_KEY_PARTS = ("label", "outcome", "truth", "response", "observed_y")
 
 
 class EpiBERTCheckpointProbeError(ValueError):
-    """Raised when an executable EpiBERT checkpoint contract differs."""
+    """Raised when an executable EpiBERT checkpoint requirement differs."""
 
 
 def constructor_contract(model_kind: str) -> dict[str, Any]:

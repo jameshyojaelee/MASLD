@@ -71,7 +71,7 @@
       "role": "not_a_graph_source_or_graph_seal",
       "exposure": "target_label_unexposed_for_its_separate_joint_sealed_evaluator",
       "allowed_use": "none for this typed-evidence graph task",
-      "reason": "Its cell-state and QTL outcomes belong to the separately sealed cell and variant evaluator. They cannot define graph edges, labels, features, calibration, thresholds, or source observability."
+      "reason": "Its cell-state and QTL outcomes belong to the separately held-back cell and variant evaluator. They cannot define graph edges, labels, features, calibration, thresholds, or source observability."
     },
     "resource_gene_catalog_current": {
       "role": "read_only_exposed_authority",

@@ -1,0 +1,89 @@
+schema_version = "masld-bench-sequence-partial-diagnostic-v1"
+status = "prospective_development_only_matched_unit_diagnostic"
+dataset_id = "gse296875"
+model_id = "bpnet"
+evaluation_role = "valid"
+biological_unit = "donor"
+genomic_unit = "held_contig_block"
+candidate_count_per_unit = 1
+expected_unit_count = 8
+comparison_baselines = ["uniform_global_profile", "matching_outer_training_donor_state_mean_ATAC_profile"]
+observed_outcome = "matching_held_validation_donor_by_lineage_ATAC_profile"
+chrombpnet_included = false
+bpnet_included = true
+sequence_cnn_included = false
+sequence_transformer_included = false
+cross_model_ranking_authorized = false
+cross_fold_ranking_authorized = false
+family_ranking_authorized = false
+selection_authorized = false
+promotion_authorized = false
+champion_claim_authorized = false
+test_outcome_access_authorized = false
+sealed_data_access_authorized = false
+external_evaluation = false
+partial_coverage_may_imply_family_performance = false
+
+[expected_candidates]
+"cholangiocyte:donor0_genomic0" = "bpnet__s20260825"
+"fibroblast:donor0_genomic0" = "bpnet__s20260825"
+"hepatocyte:donor0_genomic0" = "bpnet__s20260825"
+"macrophage:donor3_genomic3" = "bpnet__s20260824"
+"macrophage:donor4_genomic4" = "bpnet__s20260824"
+"t_cell:donor1_genomic1" = "bpnet__s20260824"
+"t_cell:donor3_genomic3" = "bpnet__s20260824"
+"t_cell:donor4_genomic4" = "bpnet__s20260824"
+
+[runtime]
+partition = "cpu"
+account = "nslab"
+qos = "nslab"
+cpus = 4
+memory_gib = 96
+walltime = "12:00:00"
+gpu_required = false
+
+[prediction_bundle]
+path = "executions/sequence_gpu_bundle_004_bpnet-ready_71d22f6453-21077605"
+artifacts_sha256 = "14af86ac22e67bc29f8a7b85ee3a049b63f875ba5423210cc8e539d29b9fe9e8"
+logical_tasks = 8
+terminal_status = "passed"
+
+[[evaluator_inputs]]
+lineage_id = "cholangiocyte"
+path = "executions/sequence-evaluator-inputs-cholangiocyte-bundle-21070155"
+artifacts_sha256 = "00e460810ab3bebf18a5f346d83164e3d1e87cd5f159f70a4c56e0cba965c073"
+
+[[evaluator_inputs]]
+lineage_id = "fibroblast"
+path = "executions/sequence-evaluator-inputs-fibroblast-bundle-21070156"
+artifacts_sha256 = "221872f6ea23134dfa34f0130f4d7462c525152bca412a5f23ec213a8d8791f1"
+
+[[evaluator_inputs]]
+lineage_id = "hepatocyte"
+path = "executions/sequence-evaluator-inputs-hepatocyte-bundle-21070157"
+artifacts_sha256 = "d7eca320745eae77dd91a10dca855f8226d3b71bb706f3ddeb6b17be6988e267"
+
+[[evaluator_inputs]]
+lineage_id = "macrophage"
+path = "executions/sequence-evaluator-inputs-macrophage-bundle-21070158"
+artifacts_sha256 = "bc6e0367204ad9f5c741cefe951542b0b6448fc0063ac716ebdba55d244dc082"
+
+[[evaluator_inputs]]
+lineage_id = "t_cell"
+path = "executions/sequence-evaluator-inputs-t_cell-bundle-21070159"
+artifacts_sha256 = "0011968343a271e7f5066f061b40a1ea2d3c1144fab427df211046d321de9aca"
+
+[evaluator_code]
+prepare_path = "scripts/prepare_sequence_evaluation_matrix.py"
+prepare_sha256 = "5b835e722619e232db0aa0731cfededaa4494a4e117b0e609cf816f082a82258"
+evaluate_path = "scripts/evaluate_sequence_accessibility.py"
+evaluate_sha256 = "be1b0dac61123d4875aea210d304ae6c2b67605d74079d490fc21f4a07419824"
+prepare_test_path = "tests/unit/test_prepare_sequence_evaluation_matrix.py"
+prepare_test_sha256 = "e0b9b25857263a05d855c11a3cbd90dd457acb7876b9f695dde274a5a1252be4"
+evaluate_test_path = "tests/unit/test_evaluate_sequence_accessibility.py"
+evaluate_test_sha256 = "2a0c36437c57ebe34adfe3ed5185293f4682bf65a5d823f28f21f31cfa856b19"
+
+[reporting]
+allowed = ["per_unit_candidate_metrics", "per_unit_matching_baseline_metrics", "per_unit_candidate_minus_matching_baseline", "coverage_and_failure_census"]
+prohibited = ["pooled_cell_or_window_pseudoreplication", "fold_as_replicate_inference", "seed_as_replicate_inference", "cross_model_leaderboard", "chrombpnet_comparison", "sequence_cnn_comparison", "sequence_transformer_comparison", "family_superiority", "champion_gate", "external_transfer_claim"]

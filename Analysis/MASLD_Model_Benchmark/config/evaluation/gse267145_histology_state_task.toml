@@ -1,0 +1,37 @@
+schema_version = "masld-bench-task-v1"
+task_id = "paired_bulk_histology_state"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna", "h3k27ac_cutrun"]
+endpoint = "Predict source-aligned three-state liver histology (NOR, NAFL, or NASH) in fixed participant-held folds, with prespecified secondary rank prediction of the NASH-CRN component sum and fibrosis. RNA-only, H3K27ac-only, and observed-pair multimodal lanes remain distinct."
+metrics = ["participant_macro_f1_stage3", "participant_multiclass_brier_stage3", "participant_spearman_nash_crn_component_sum", "participant_spearman_fibrosis", "participant_macro_f1_stage5", "participant_ordinal_mae_fibrosis"]
+datasets_train = ["gse267145_znf469_human_liver"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse267145_participant_outer_v1"
+required_pairing_levels = ["same_sample_different_aliquot"]
+missingness_policy = "Every molecular, pathology, and metadata field carries its source-native state and mask; missing is never zero or normal."
+admission_gates = [
+  "Use the frozen 99-participant authoritative join and five fixed stage-balanced outer folds. Participants are the biological replicates; assays, aliquots, regions, and genes are not replicates.",
+  "The primary stage3 ontology maps NOR to NOR, NAFL to NAFL, and NASH_F0, NASH_F1, and NASH_F23 to NASH. The five source stage labels remain a secondary endpoint and are never treated as a uniformly spaced ordinal scale.",
+  "Derive the NASH-CRN activity score only as the prespecified sum of source-native steatosis, ballooning, and lobular-inflammation components. Keep fibrosis on its recorded 0 to 3 scale and lobular necrosis separate.",
+  "Fit normalization, feature filtering, scaling, dimensionality reduction, imputation, model hyperparameters, calibration, and any molecular or metadata fusion only within outer-training participants. Histology labels may enter supervised task heads and inner selection only.",
+  "Never use the publication's NOR-versus-NASH differential regions, differential genes, gene signatures, figures, highlighted loci, or any other full-cohort outcome-selected feature set. Start from the complete deposited assay axes and fit feature selection inside training folds.",
+  "RNA inputs are nonnegative fractional expression estimates. Do not round them, impose an integer count likelihood, or reconstruct DESeq2 without tximport lengths and offsets.",
+  "Treat H3K27ac region strings as opaque source feature keys. Sequence extraction, coordinate conversion, motif analysis, interval overlap, and coordinate-derived annotation remain prohibited while coordinate semantics are unresolved.",
+  "Held-participant H3K27ac is evaluator-only in the RNA-only lane. It is an observed query modality only in the separately reported observed-pair multimodal lane; the latter cannot support an RNA-only claim.",
+  "Recorded sex is an adjustment and error-audit field in v1, not a primary predictor. No participant-level age or BMI values are available in the frozen public join, and cohort summaries must not be assigned to individuals.",
+  "Report cross-sectional histology-associated remodeling only. This single-cohort development task cannot support a diagnostic, prognostic, progression, treatment-response, external-transfer, universal-model, or task-champion claim.",
+  "Internal nonclinical research use is allowed without a new DUA. Raw or processed source data are not redistributed, and materially trained derivative weights require model-specific terms and legal review before release."
+]
+baseline_model_ids = ["training_stage_distribution", "rna_hvg_pca_elastic_net", "rna_hvg_pca_linear_svm", "rna_hvg_pca_nearest_centroid", "rna_hvg_pca_knn", "h3_variance_pca_elastic_net", "h3_variance_pca_linear_svm", "h3_variance_pca_nearest_centroid", "h3_variance_pca_knn", "block_pca_elastic_net", "calibrated_late_fusion"]
+uncertainty_method = "paired_participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse267145_histology_development_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "gse267145_histology_state_development_only_v1"
+promotion_gate_config_sha256 = "c8fd739e7d9cbaca9bf64729a8748dd0add42a9c76a5f7d4088362caf5add494"
+primary_evaluator_id = "paired_bulk_histology_stage3_v1"
+evaluator_parameters = { primary_class_roster = ["NOR", "NAFL", "NASH"], source_stage_roster = ["NOR", "NAFL", "NASH_F0", "NASH_F1", "NASH_F23"], outer_folds = 5, participants = 99, nash_crn_component_sum = ["steatosis", "ballooning", "lobular_inflammation"], fibrosis_scale = [0, 1, 2, 3], observed_pair_query_h3 = true, rna_only_query_h3 = false }
+claim_gate = "Development diagnostics only. No model can be called a MASLD champion and no external-transfer, diagnostic, prognostic, progression, treatment-response, causal, or universal claim is eligible without a separately registered independent cohort, frozen TaskSpec, contamination audit, selection lock, and applicable rights review."

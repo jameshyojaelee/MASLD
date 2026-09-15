@@ -36,7 +36,7 @@ MANIFEST_FIELDS = (
 
 
 class TrainingMeanBaselineError(RuntimeError):
-    """Raised when the training-only mean baseline contract is violated."""
+    """Raised when the training-only mean baseline requirements are not met."""
 
 
 def sha256_file(path: Path) -> str:

@@ -1,9 +1,15 @@
 {
   "audit_scope": {
-    "development_sources": ["gse281364", "gse296875"],
+    "development_sources": [
+      "gse281364",
+      "gse296875"
+    ],
     "implementation": "broadinstitute/ABC-Enhancer-Gene-Prediction@d5976ee642edf94de54b1d694c29477983f88df2",
     "sealed_dataset_id": "gse289173",
-    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+    "tasks": [
+      "variant_to_regulation",
+      "typed_evidence_graph"
+    ]
   },
   "checkpoint_finding": {
     "checkpoint_identity": "not_applicable_deterministic_algorithm",
@@ -15,13 +21,13 @@
   },
   "checkpoint_manifest_record": {
     "path": "checkpoints.json",
-    "sha256": "b8f19452ad6538518ed2744cd897a445fabd617d167ea75eceade0e193b46f34"
+    "sha256": "d873171e0a0afdb1b8642e119568e1791aa5a3785a85591f02fbf21a3771fded"
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "sha256": "55392b489d8c39624b649579f997087191d914a66b02e25d2d06bf11f355afdd"
   },
-  "interpretation": "ABC is a strong task-native unsigned enhancer-gene baseline. Its contamination surface is not checkpoint pretraining; it is data-derived peak calling, activity normalization, contact choice, gene/TSS authority, neighborhood denominators, and threshold selection. With GSE289173 lacking ATAC, only a precommitted development-built static link atlas can be queried at the seal. That can support retrieval or a composite but cannot by itself predict signed cell-type eQTL/ieQTL effects.",
+  "interpretation": "ABC is a strong task-native unsigned enhancer-gene baseline. Its contamination surface is not checkpoint pretraining; it is data-derived peak calling, activity normalization, contact choice, gene/TSS authority, neighborhood denominators, and threshold selection. With GSE289173 lacking ATAC, only a precommitted development-built static link atlas can be queried at the hold-back. That can support retrieval or a composite but cannot by itself predict signed cell-type eQTL/ieQTL effects.",
   "known_incidents_and_biases": [
     "The upstream variant-overlap helper hard-codes 0.015 and 0.1 score filters, a 2-Mb distance filter, region shrinking, and shell execution; it is prohibited.",
     "The upstream self-promoter rule forces scores to one and can dominate promoter-overlapping variants.",

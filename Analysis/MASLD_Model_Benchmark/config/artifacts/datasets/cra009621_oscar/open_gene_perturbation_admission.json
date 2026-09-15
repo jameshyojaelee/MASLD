@@ -1,0 +1,137 @@
+{
+  "admission_status": "development_visible_descriptive_only_blocked_unresolved_biological_ancestry_scale_and_exposure",
+  "dataset_id": "cra009621_oscar",
+  "dataset_version": {
+    "accessions": [
+      "PRJCA014442",
+      "CRA009621"
+    ],
+    "author_repository": "Wangxiaoyue-lab/OSCAR",
+    "author_repository_commit": "57dce224345b3ba25baf585c8a025d4b156d5342",
+    "dm_merged_matrix_sha256": "103a27fc78d681684f577fd572561c67deca666d2254db6b855b27b4176b593d",
+    "em_merged_matrix_sha256": "0b6f6b32666b2847bb1a8ce0dc4470c4caa63fc55ad4585402d5affb71aaa47f",
+    "gsa_html_sha256": "6b02705eb830abe531d77b33b852a2a30938d81205a443edce68749bbb3ee3e2",
+    "metadata_sha256": "c40a4cb6573a1652d6b7de51de4aa2e0d58210da7355ab8b30b7519cd21d86a1",
+    "source_article_fulltext_sha256": "2f7979f5112fa6eec321949162a0d4eb0fc8f648eb9cb6858f6449031aefd8be"
+  },
+  "frozen_receipts": {
+    "author_processed_input_acquisition": {
+      "artifact_manifest_sha256_by_task": [
+        "15f29b5b192071027f3fbcbc7bfa723e149d0cc772b756b6557ed5d1a01bf255",
+        "c365a1765d8ec249cb72c5c64b1f04e2616ec8bd5074a26c80a9b96e9cc31725",
+        "ef686f4465fce7fdfdc8a85ee0918583425e18ca03805b7343d9d57541b34876",
+        "f41b25d2f916dbdfe92be620a1a7b49de8ec6ed82eaa1019cef0c057cefcc7ea",
+        "8983c1781adcbedb6b50921c1a55be2d28cb2758b7d62a6fecf9105647433f43",
+        "a9048e3f0b532f3081667fb7980096ccc0b81b3672e15595b25e77365b32914e",
+        "d56fe4cfe6d824c757734a21f27b8db10f403f0569cef567705b2cca53a002ef",
+        "ffedae9a5d1169fbbf924ebbccf21833b20965eb6fb2614f5016f68c13ba9e91",
+        "be9467c6f1e96e85e28be9a47afd5033a9d4cc9dac520ddbff5c15bed76f7ab6",
+        "84ea42f5a2ca6940ebecef9f67d4fd6d1dc7d2eb4aca6481f85c10d8ce99f281",
+        "04239c3e76cda615ab29df7522ce4ff3fdec246a605e3211424950ab43d41025"
+      ],
+      "path_prefix": "executions/oscar-processed-input-21068346_"
+    },
+    "dm_materialization": {
+      "artifact_manifest_sha256": "3311424d73d908c31840c3e22f7d0897ff1576a38c85d0038bf55e8d7794a0eb",
+      "path": "executions/oscar-DM-materialization-21068445_0",
+      "supersedes_path": "executions/oscar-DM-materialization-21068406_0"
+    },
+    "em_materialization": {
+      "artifact_manifest_sha256": "9871e7fef2ffe57b13299fd7135936874e071c91d2f247bafdcf3babda62a2cc",
+      "path": "executions/oscar-EM-materialization-21068445_1",
+      "supersedes_path": "executions/oscar-EM-materialization-21068406_1"
+    },
+    "source_metadata": {
+      "artifact_manifest_sha256": "6b7798ca89946353ef052766ac7d431185d99c4c61c298de41dc38e428fbc8cf",
+      "path": "executions/gene-perturbation-source-cra009621_oscar-21066693_3"
+    },
+    "source_topology": {
+      "artifact_manifest_sha256": "809c2cda878f4e53b214a0994d197dab43f981cf4e3a809267919c9839c714ee",
+      "path": "executions/oscar-source-topology-21068446"
+    }
+  },
+  "materialized_topology": {
+    "cell_count": 41383,
+    "contexts": {
+      "DM": {
+        "cell_count": 30217,
+        "observed_target_guide_count": 226,
+        "technical_capture_lane_count": 6
+      },
+      "EM": {
+        "cell_count": 11166,
+        "observed_target_guide_count": 212,
+        "technical_capture_lane_count": 3
+      }
+    },
+    "expression_feature_count": 17444,
+    "integer_nonnegative_finite_deposited_scale": true,
+    "observed_control_guide_count": 10,
+    "observed_target_gene_count": 77,
+    "observed_target_guide_count_across_contexts": 226,
+    "raw_count_semantics_authoritatively_supported": false,
+    "source_outcome_derived_effect_tables_used": false
+  },
+  "matrix_scan": {
+    "DM": {
+      "maximum": 5772.0,
+      "minimum": 0.0,
+      "total_values_scanned": 527105348,
+      "zero_value_count": 417661179
+    },
+    "EM": {
+      "maximum": 2270.0,
+      "minimum": 0.0,
+      "total_values_scanned": 194779704,
+      "zero_value_count": 146558267
+    }
+  },
+  "model_applicability": {
+    "cellot_scgen": "May use within-pool EM/DM distributions for descriptive development only. The two media contexts do not create independent biological replication or an outer transport endpoint.",
+    "cpa_perturblib_systema": "May use observed knockout target and media atoms for development-visible training only after exact guide nesting is preserved. No confirmatory held-context or held-replicate claim is admitted.",
+    "gears_genepert_scgpt_perturbation_head": "May use exact observed gene-target labels for cross-species development stress only after model-specific preprocessing and checkpoint-exposure gates are frozen. No independent test endpoint is admitted.",
+    "perturbation_native_baselines": "May aggregate cells descriptively within the one admitted shared screen pool. Cells, guides, target genes, BioSamples, experiments, and capture lanes cannot supply replicate-level uncertainty."
+  },
+  "replicate_ancestry_evidence": {
+    "gsa_records": "Nine production experiments and nine corresponding BioSamples resolve six DM and three EM Chromium capture lanes, plus two pilot capture lanes.",
+    "independent_biological_unit_count": "UNRESOLVED",
+    "maximum_independent_units_admitted_for_inference": 1,
+    "screen_pool_count": 1,
+    "source_method": "The article describes one 500,000-cluster infection workflow followed by FACS, expansion, passage, and media exposure; it does not report independent screen cultures or mouse-of-origin ancestry.",
+    "valid_inference": "Development-visible descriptive use only. Production experiments, BioSamples, lanes, cells, guides, target genes, organoids, and files are not treated as biological replicates."
+  },
+  "release_and_exposure": {
+    "allowed_use": "development-visible cross-species training or descriptive topology only",
+    "automatic_redistribution": false,
+    "author_processed_repository_license": "MIT",
+    "checkpoint_specific_contamination_audit_required": true,
+    "gsa_raw_license_status": "source_terms_apply",
+    "model_fit_performed": false,
+    "normalization_performed_by_materialization": false,
+    "source_article_license": "CC_BY_4.0"
+  },
+  "runtime_receipts": {
+    "author_processed_input_acquisition": "21068346 array 0-10 COMPLETED in 1 to 2 seconds per task; 1 CPU and 4 GiB requested per task; largest observed MaxRSS 9,016 KiB",
+    "dm_materialization": "21068445_0 COMPLETED in 38 seconds; 1 CPU and 16 GiB requested; batch MaxRSS 65,476 KiB",
+    "em_materialization": "21068445_1 COMPLETED in 16 seconds; 1 CPU and 16 GiB requested; batch MaxRSS 0 and extern MaxRSS 8 KiB",
+    "source_topology": "21068446 COMPLETED in 2 seconds; 1 CPU and 4 GiB requested; batch and extern MaxRSS 0"
+  },
+  "source_identity_boundary": {
+    "assay_context": "Mouse intrahepatic-cholangiocyte organoids exposed to expansion or differentiation medium during hepatocyte-like lineage conversion.",
+    "mature_human_hepatocyte_endpoint": false,
+    "target_count_discrepancy": "The article overview uses 79 candidates, Methods reports 78 factors, and the pinned author processed metadata contains 77 observed target-gene labels."
+  },
+  "task_firewalls": {
+    "gse281160": "not a gene-target dataset and never mapped to a nearest gene",
+    "gse313774_accessed": false
+  },
+  "terminal_blockers": [
+    "Independent mouse-of-origin and organoid-culture ancestry are unresolved. At most one shared screen pool is admitted; the nine production capture lanes cannot support outer evaluation, uncertainty estimation, or confirmatory claims.",
+    "Resolve the article-versus-author-metadata target-count discrepancy before freezing a target universe.",
+    "Freeze the authoritative mm10 Cell Ranger 3.1.0 feature reference and deposited preprocessing semantics; integer, finite, nonnegative matrices do not alone establish raw-count semantics.",
+    "Complete checkpoint-specific public-data exposure audits for every pretrained perturbation model.",
+    "Keep this mouse organoid lineage-conversion screen separate from mature human-hepatocyte donor endpoints and from human MASLD confirmatory evaluation."
+  ],
+  "schema_version": "masld-bench-open-gene-perturbation-admission-v1",
+  "verified_date": "2026-08-24"
+}

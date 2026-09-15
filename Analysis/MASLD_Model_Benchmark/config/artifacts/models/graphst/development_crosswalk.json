@@ -53,7 +53,7 @@
     "features": "Unmeasured panel genes, mapping failures, and unavailable permissions are not zeros.",
     "reconstruction": "A reconstructed expression matrix is a model output and never substituted for observed counts in differential testing."
   },
-  "interpretation": "GraphST is a legitimate future target-transductive Visium comparator, but not a pretrained spatial model. The native workflow refits representation, PCA, clusters, and optional refinement on the target. Current sources do not provide a sealed powered task, and the selected repository has conflicting AGPL and MIT declarations. It remains unschedulable and deferred.",
+  "interpretation": "GraphST is a legitimate future target-transductive Visium comparator, but not a pretrained spatial model. The native workflow refits representation, PCA, clusters, and optional refinement on the target. Current sources do not provide a held-back powered task, and the selected repository has conflicting AGPL and MIT declarations. It remains unschedulable and deferred.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

@@ -1,0 +1,34 @@
+schema_version = "masld-bench-dataset-view-v1"
+view_id = "gse256398_rna_unlabeled_smoke_1040_v1"
+parent_dataset_id = "gse256398"
+parent_registry_sha256 = "aa569efb521309d21aedd594e706ad17ecafcf9f162d48af6ee5a31fcdeb0d25"
+purpose = "compatibility_smoke"
+allowed_waves = ["smoke"]
+row_count = 1040
+biological_unit_count = 26
+modalities = ["single_nucleus_rna"]
+pairing_levels = ["same_study_unpaired"]
+label_visibility = "development_visible"
+selection_policy = "intersection_of_source_exact_and_expected_rate_capped_QC_then_40_per_donor_SHA256_row_priority"
+selection_seed = 20260824
+selection_outcomes_used = false
+sealed_outcomes_used = false
+class_counts = { unlabeled = 1040 }
+ready = true
+
+artifact_manifest = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/gse256398-unlabeled-smoke-21069823/ARTIFACTS.json", sha256 = "3e71004da77ca708cfaa7e938f5e9df66824f15eaa7ccf1bddbe5d69fc448ba6", size_bytes = 811, media_type = "application/json", role = "dataset_view_manifest:gse256398_rna_unlabeled_smoke_1040_v1" }
+complete_receipt = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/gse256398-unlabeled-smoke-21069823/COMPLETE", sha256 = "6d861af804d2f0fb06ef43ea8fe648afbcffd14e02edbc9e7a702a3fe36ed45b", size_bytes = 149, media_type = "application/json", role = "dataset_view_complete:gse256398_rna_unlabeled_smoke_1040_v1" }
+data_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/gse256398-unlabeled-smoke-21069823/gse256398_rna_unlabeled_smoke_1040.h5ad", sha256 = "3e2870f32eaa6de013cd1d5cf3a251e74775641cc69d3d3e189ba74e8d41af5a", size_bytes = 11073938, media_type = "application/x-hdf5", role = "dataset_view_data:gse256398_rna_unlabeled_smoke_1040_v1" }
+selection_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/gse256398-unlabeled-smoke-21069823/selection.tsv", sha256 = "e38687b589ae3c42c27d3b22a90f0ae05cae830ef0bbbd9480df6f9ba32dac87", size_bytes = 195204, media_type = "text/tab-separated-values", role = "dataset_view_selection:gse256398_rna_unlabeled_smoke_1040_v1" }
+ontology_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/gse256398-unlabeled-smoke-21069823/unlabeled_snRNA_v1.json", sha256 = "fe76033fe5781c07321e25a1b0327f914693024d9602842f2dbb0915c35cdecf", size_bytes = 340, media_type = "application/json", role = "dataset_view_ontology:gse256398_rna_unlabeled_smoke_1040_v1" }
+derivation_artifact = { path = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/Analysis/MASLD_Model_Benchmark/executions/gse256398-unlabeled-smoke-21069823/smoke_subset_manifest.json", sha256 = "4e7a6f630f73e4ddb21ea4303da532cf7e886b8d480ac435a8f177fea039e40b", size_bytes = 2728, media_type = "application/json", role = "dataset_view_derivation:gse256398_rna_unlabeled_smoke_1040_v1" }
+
+authority_artifacts = [
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/rights.json", sha256 = "ae704e46bf6a390e893167c89e928c39a187cc0a4b707e1ac81e7cdd5456432e", size_bytes = 538, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:rights" },
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/topology.json", sha256 = "b5c2d95ec90cb32420c59786ce4d9320c33ff956a205fc3cb6cde64808408728", size_bytes = 538, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:topology" },
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/donor_join.json", sha256 = "3edf624d2e5f6386457bccd15adf2caba8e76fbc0f80d9c4d0e52ee242b9af39", size_bytes = 541, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:donor_join" },
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/labels.json", sha256 = "8c3c2338e0f37b07a000d204129e77f0b6c7c5e2fc8739316220c51573dd22f3", size_bytes = 746, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:labels" },
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/qc.json", sha256 = "111bf86d8245addf3091bf9b9330ad8107e5bb119374c2ea07246afb068278de", size_bytes = 1085, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:qc" },
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/reference.json", sha256 = "1a35e2cdf994eac13c144c8a1b47aeba58ab038ad5afacf9829fdf6c74ded42b", size_bytes = 758, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:reference" },
+  { path = "artifacts/dataset-views/gse256398_rna_unlabeled_smoke_1040_v1/exposure_audit.json", sha256 = "e4a2d927d6daf132bac74e371fd414411f4db7c4fb92dae9da0a955f57d18264", size_bytes = 651, media_type = "application/json", role = "dataset_view_authority:gse256398_rna_unlabeled_smoke_1040_v1:exposure_audit" },
+]

@@ -24,7 +24,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "1e2cedb165238269c68c5bac6a85d0193f88bc4bc0de41447eaf9836827a53c1"
   },
-  "interpretation": "The exact v1.0 source commit is archived, but the selected checkpoint is only a filename inside a mutable SharePoint folder and has no verified bytes, size, hash, upload date, training cutoff, or license. Its four required auxiliary payloads are also unresolved. All Atlas sources, including project-sealed GSE289173, remain exposure-unknown. scLong is blocked from execution, adaptation, conditional-model use, and open-champion status.",
+  "interpretation": "The exact v1.0 source commit is archived, but the selected checkpoint is only a filename inside a mutable SharePoint folder and has no verified bytes, size, hash, upload date, training cutoff, or license. Its four required auxiliary payloads are also unresolved. All Atlas sources, including project-reserved GSE289173, remain exposure-unknown. scLong is blocked from execution, adaptation, conditional-model use, and best openly licensed model status.",
   "preprocessing_and_evaluation_findings": [
     {
       "benchmark_action": "resolve_checkpoint_compatible_preprocessing",

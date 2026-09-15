@@ -1,0 +1,236 @@
+{
+  "schema_version": "masld-bench-alphagenome-comparator-preflight-v1",
+  "status": "terminal_current_release_restricted_and_execution_blocked",
+  "model_id": "alphagenome",
+  "checkpoint_id": "alphagenome_all_folds",
+  "frozen_authorities": {
+    "checkpoint_contract": {
+      "kind": "file",
+      "path": "config/artifacts/models/alphagenome/checkpoints.json",
+      "sha256": "8caeaa38e513d55183ceaa7fe41048da9c4e8aca13055ad3a2b4eee0fe00f921"
+    },
+    "exposure_audit": {
+      "kind": "file",
+      "path": "config/artifacts/models/alphagenome/exposure_audit.json",
+      "sha256": "067c15ac530c550519dde694bd77b5c9fa6ec9db481d7c51e4bb86d748b53280"
+    },
+    "development_crosswalk": {
+      "kind": "file",
+      "path": "config/artifacts/models/alphagenome/development_crosswalk.json",
+      "sha256": "720c5451eef80715e21eafc826db6a6df43553d8e8e3498134000a24651a67aa"
+    },
+    "registry": {
+      "kind": "file",
+      "path": "config/models/restricted_unclear.toml",
+      "sha256": "1bbe758b19e13989c795ec1d1c444523ee4a50e89ea99823194d5458fad4c364"
+    },
+    "admission_contract": {
+      "kind": "file",
+      "path": "config/alphagenome_sei_admission.json",
+      "sha256": "cce2d8f9576fe2c0a6cdc3964b444c4548abcb4823ca15180f16ad70016297bf"
+    },
+    "admission_sources": {
+      "kind": "tree",
+      "path": "executions/alphagenome-sei-admission-sources-21064512",
+      "sha256": "84ae3470dca123c20904e315ef9926d5a139fb9fe6d99c51f6aaf694ef6e6785"
+    },
+    "sequence_fixture": {
+      "kind": "tree",
+      "path": "executions/alphagenome-sei-sequence-fixture-21064515",
+      "sha256": "e87468da0f64da1c022751834b624471221aec3ba03fcd17d6dbf756e3b8472e"
+    },
+    "project_reference": {
+      "kind": "tree",
+      "path": "executions/sequence-fasta-21063808",
+      "sha256": "7c202e392c3e415ee7f6bc196b931199c514b2fefc04a19fc82645d81fd8ba39"
+    }
+  },
+  "local_checkpoint_route": {
+    "code_repository": "google-deepmind/alphagenome_research",
+    "code_revision": "1e55dcffb98ba26b31e74edc5e9f038f54c0e89d",
+    "checkpoint_repository": "google/alphagenome-all-folds",
+    "checkpoint_revision": "a8f293a76ee73d5b57f3bf2ae146510589fcf187",
+    "checkpoint_format": "Orbax_OCDBT",
+    "checkpoint_objects": 12,
+    "checkpoint_inventory_size_bytes": 734799353,
+    "checkpoint_downloaded": false,
+    "checkpoint_deserialized": false,
+    "current_execution_allowed": false,
+    "registered_artifacts": {
+      "authorized_access": {
+        "path": "executions/authorities/alphagenome-noncommercial-access-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      },
+      "checkpoint_bundle": {
+        "path": "executions/checkpoints/alphagenome-all-folds-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      },
+      "native_runtime": {
+        "path": "executions/environments/alphagenome-research-native-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      },
+      "reference_crosswalk": {
+        "path": "executions/alphagenome-reference-crosswalk-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      },
+      "native_parity": {
+        "path": "executions/alphagenome-native-parity-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      }
+    }
+  },
+  "api_route": {
+    "sdk_repository": "google-deepmind/alphagenome",
+    "sdk_tag": "v0.8.0",
+    "sdk_revision": "71a6beb8c30832f121309a81c2530efa5af7986a",
+    "sdk_release_date": "2026-08-17",
+    "sdk_code_license": "Apache-2.0",
+    "sdk_python_requirement": ">=3.10",
+    "grpc_address": "dns:///gdmscience.googleapis.com:443",
+    "api_key_required": true,
+    "api_key_inspection_allowed": false,
+    "logical_model_version": "ALL_FOLDS",
+    "default_model_version_allowed": false,
+    "supported_logical_versions": ["ALL_FOLDS", "FOLD_0", "FOLD_1", "FOLD_2", "FOLD_3"],
+    "supported_sequence_lengths_bp": [16384, 131072, 524288, 1048576],
+    "api_prediction_called": false,
+    "api_metadata_called": false,
+    "current_execution_allowed": false,
+    "reproducibility_blockers": [
+      "response_does_not_echo_model_version_or_server_checkpoint_digest",
+      "metadata_request_has_no_model_version_field",
+      "logical_ALL_FOLDS_name_does_not_freeze_a_server_build",
+      "no_frozen_api_output_metadata_snapshot",
+      "no_frozen_repeatability_or_ALT_minus_REF_parity_fixture"
+    ],
+    "pinned_sdk_source_records": [
+      {"path": "README.md", "sha256": "c3b1cf2169c877711a248e30268fd2f70f214f5d4c837b5a6cc03ebcbe759159"},
+      {"path": "LICENSE", "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"},
+      {"path": "pyproject.toml", "sha256": "e4b06b106b2a4836d1b94d0fb97128ec23a2aeb0b7ebf043aed302a321075777"},
+      {"path": "src/alphagenome/models/dna_client.py", "sha256": "223cb0eb1a9535177bef78da062ec4e91e7c6e92a775d98350e9aa6fbd595a83"},
+      {"path": "src/alphagenome/models/dna_model.py", "sha256": "17e7f689b40938a061e675ddcefb85ec7151d3e5d0ac43812a891df7bb914678"},
+      {"path": "src/alphagenome/models/dna_output.py", "sha256": "c90c908238e5c3161160628c181164ae6604762616e2ed029cb6021d585eed1d"},
+      {"path": "src/alphagenome/models/variant_scorers.py", "sha256": "1191e86d4b5eb49ad939cf92ff7e02c91eb288dddd30c591ffd49587673c8899"},
+      {"path": "src/alphagenome/protos/dna_model.proto", "sha256": "d19a7208ec34953ca021efbff32516f1aa277f0477276f7699d9567fd616329a"},
+      {"path": "src/alphagenome/protos/dna_model_service.proto", "sha256": "bdcfea14fb629fb4b6e9304909023a872267a69e5f0e3a23bdb9a769f26dc317"}
+    ],
+    "registered_artifacts": {
+      "sdk_source_and_runtime": {
+        "path": "executions/environments/alphagenome-api-sdk-v0.8.0",
+        "artifacts_sha256": "UNRESOLVED"
+      },
+      "server_build_identity": {
+        "path": "executions/alphagenome-api-server-identity-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      },
+      "metadata_and_numeric_parity": {
+        "path": "executions/alphagenome-api-parity-v1",
+        "artifacts_sha256": "UNRESOLVED"
+      }
+    }
+  },
+  "terms_contract": {
+    "code": "Apache-2.0",
+    "documentation_examples": "CC-BY-4.0",
+    "local_model_parameters": "gated_noncommercial",
+    "api_use": "free_of_charge_for_noncommercial_use_subject_to_API_terms",
+    "derivatives": "noncommercial_model_terms_continue_to_apply",
+    "models_trained_from_outputs": "subject_to_AlphaGenome_model_parameter_terms",
+    "open_champion_eligible": false,
+    "conditional_open_model_training_allowed": false,
+    "weight_or_derived_weight_redistribution_allowed": false
+  },
+  "input_reference_contract": {
+    "vocabulary": ["A", "C", "G", "T", "N"],
+    "one_hot_channel_order": ["A", "C", "G", "T"],
+    "unknown_base_policy": "N_all_zero_channels_after_parity",
+    "coordinate_contract": "intervals_0_based_half_open_variants_1_based",
+    "native_genome": "GRCh38.p13",
+    "native_annotation": "GENCODE_v46",
+    "benchmark_genome": "GRCh38.p14",
+    "benchmark_annotation": "GENCODE_v49",
+    "benchmark_fasta_sha256": "ed20dceeb315cffa2bc3de050d846eceefc552451fef741f0dd95b0149d10fce",
+    "required_crosswalks": [
+      "GRCh38.p13_to_GRCh38.p14_primary_contig_sequence_and_REF_parity",
+      "GENCODE_v46_to_v49_gene_and_transcript_masks",
+      "patch_alternate_and_scaffold_out_of_domain_mask",
+      "PAS_splice_site_and_calibration_artifact_identity"
+    ]
+  },
+  "metadata_contract": {
+    "source": "admission_sources/sources/alphagenome_human_metadata",
+    "source_sha256": "413b4063096bbf7a75a7fdf5560030f8e3866c6af2455fb313e58686ae3d49e8",
+    "encoded_output_slots": 6126,
+    "padding_slots": 563,
+    "nonpadding_metadata_rows": 5563,
+    "active_tracks_with_second_splice_junction_strands": 5930,
+    "relevant_ontology_expected_counts": {
+      "CL:0000115": 7,
+      "CL:0000182": 20,
+      "CL:0000235": 2,
+      "CL:0000632": 1,
+      "UBERON:0001114": 17,
+      "UBERON:0001115": 7,
+      "UBERON:0002107": 39
+    },
+    "cell_ontology_expected_counts_by_output": {
+      "CL:0000115": {
+        "CHIP_TF": 1,
+        "DNASE": 1,
+        "RNA_SEQ": 2,
+        "SPLICE_JUNCTIONS": 1,
+        "SPLICE_SITE_USAGE": 2
+      },
+      "CL:0000182": {
+        "CAGE": 2,
+        "CHIP_HISTONE": 7,
+        "CHIP_TF": 1,
+        "DNASE": 1,
+        "RNA_SEQ": 3,
+        "SPLICE_JUNCTIONS": 2,
+        "SPLICE_SITE_USAGE": 4
+      },
+      "CL:0000235": {
+        "CAGE": 2
+      },
+      "CL:0000632": {
+        "DNASE": 1
+      }
+    },
+    "cholangiocyte_exact_name_tracks": 0,
+    "kupffer_exact_name_tracks": 0
+  },
+  "topology_and_task_fit": {
+    "native_input": "sequence_only_plus_organism_index",
+    "donor_or_cell_state_context": false,
+    "observed_RNA_input": false,
+    "observed_ATAC_input": false,
+    "identical_variant_predictions_across_donors": true,
+    "sequence_native_coverage": "restricted_secondary_comparator_after_admission",
+    "GSE281364_MPRA": "retrospective_supported_track_direction_and_rank_diagnostic_only",
+    "GSE289173_signed_variant": "secondary_prespecified_hepatocyte_and_generic_endothelial_tracks_only_after_selection_lock",
+    "four_lineage_signed_RNA_endpoint": "ineligible_missing_cholangiocyte_and_stellate_RNA_tracks",
+    "RNA_conditioned_ATAC": "unsupported_static_sequence_baseline_only",
+    "observed_multiome": "sequence_only_baseline_not_an_observed_ATAC_model",
+    "cell_state_mapping": "unsupported",
+    "clinical_or_histology_prediction": "unsupported"
+  },
+  "current_local_state": {
+    "source_review_present": true,
+    "outcome_blind_fixture_present": true,
+    "fixture_anchors": 3,
+    "fixture_reference": "GRCh38.p14",
+    "checkpoint_present": false,
+    "native_runtime_present": false,
+    "api_sdk_runtime_present": false,
+    "model_forward_executed": false,
+    "outcomes_read": false,
+    "sealed_assets_read": false
+  },
+  "terminal_disposition": {
+    "current_campaign_action": "retain_as_registered_restricted_static_sequence_comparator_without_execution",
+    "local_route_reopen_condition": "authorized exact checkpoint plus runtime reference and parity artifacts",
+    "api_route_reopen_condition": "stable server build identity plus frozen metadata and numeric parity artifacts",
+    "unconditional_boundary": "never_open_champion_or_open_conditional_model_under_current_terms"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "admitted": true,
+  "authority": "donor_join",
+  "evidence": {
+    "all_rows_join_exactly_one_donor": true,
+    "donor_count": 26,
+    "fold_group_key": "cohort_family_id+person_key",
+    "person_key": "gse256398:source_sample_id",
+    "row_id": "gse256398:source_sample_id:sample_local_barcode",
+    "row_ids_unique": true,
+    "same_person_all_modalities_same_outer_fold": true
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

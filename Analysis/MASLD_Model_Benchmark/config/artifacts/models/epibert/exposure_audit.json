@@ -4,15 +4,27 @@
     "development_sources": "registered_variant_and_regulatory_project_sources",
     "sealed_dataset_id": "gse289173"
   },
+  "lane_audit_record": {
+    "artifacts_sha256": "bee0470e7f0aa44f89367a6e9517899533769884fa39369ce5eba3c95809b228",
+    "path": "executions/model-audit-104-21069951",
+    "status": "passed"
+  },
+  "native_preprocessing_audit_record": {
+    "artifacts_sha256": "844775b7710584d478e6ae1ff9592a0ab665fdb3da3e3c2728794d1a0a2e6727",
+    "path": "executions/model-check-ep904-21098732",
+    "primary_evidence_artifacts_sha256": "4047b17e387eaf1be1401a7e80bb9470670ef9af11b13e2f4209a25133e1e6e0",
+    "status": "pass_terminal_blocker_frozen",
+    "fixture_built": false
+  },
   "checkpoint_findings": {
     "fine_tuned_rampage_member": {
-      "checkpoint_identity": "Zenodo archive md5 8c6b54ac40a5239af6a5226c4c44cbb4; exact member identity unresolved",
+      "checkpoint_identity": "Zenodo archive sha256 67684dc1f1562955a726f56fc7c53b758afe666f1138d833615fa1def46cf651; epibert_models/fine_tuned/ckpt-16",
       "corpus": "EpiBERT pretraining corpus plus 50 ATAC-RAMPAGE training contexts",
       "corpus_annotation_state": "mixed same-donor and same-tissue ATAC-RAMPAGE topology",
       "exposure_state": "target_label_unexposed"
     },
     "pretrained_atac_pair": {
-      "checkpoint_identity": "Zenodo archive md5 8c6b54ac40a5239af6a5226c4c44cbb4; two paper-declared members with exact paths unresolved",
+      "checkpoint_identity": "Zenodo archive sha256 67684dc1f1562955a726f56fc7c53b758afe666f1138d833615fa1def46cf651; epibert_models/pretrained/model1/ckpt-45 and model2/ckpt-45",
       "corpus": "hg38 sequence and approximately 738 training ATAC contexts from ENCODE, CATlas and GEO with global motif enrichment context",
       "corpus_annotation_state": "partial cell-context map; no complete accession/run/donor alias manifest",
       "exposure_state": "target_label_unexposed"
@@ -28,24 +40,21 @@
     "gse296875": "Same-nucleus ATAC is available for development, but its use makes EpiBERT an observed-ATAC comparator. It cannot be called RNA-conditioned and every scored ATAC region must be masked from the input.",
     "motif_context": "A motif vector computed from the same held-donor ATAC peaks is another observed held-donor input. Its construction must occur inside folds and be made available to matched baselines."
   },
-  "interpretation": "The released archive predates GSE289173 public availability by nearly two months, so its donor, cell-state, eQTL and ieQTL labels are unexposed. This exposure finding does not make EpiBERT eligible for the sealed task: native inference requires observed context-specific ATAC and a motif vector, which are not part of the current GSE289173 sealed feature contract. Genomic overlap also remains and requires held LD/chromosome blocks with a full-window buffer.",
+  "interpretation": "The released archive predates GSE289173 public availability by nearly two months, so its donor, cell-state, eQTL and ieQTL labels are unexposed. This exposure finding does not make EpiBERT eligible for the held-back task: native inference requires observed context-specific ATAC and a motif vector, which are not part of the current GSE289173 held-back feature requirements. Genomic overlap also remains and requires held LD/chromosome blocks with a full-window buffer.",
   "license_disposition": {
     "code": "MIT",
-    "open_champion_eligibility": "provisionally eligible after archive notice, exact-member, input-fixture and runtime gates",
+    "open_champion_eligibility": "terms-eligible with attribution, but task champion eligibility still requires a topology-matched sealed source and exact native preprocessing",
     "weights": "CC-BY-4.0_on_Zenodo_record_14504049"
   },
   "remaining_blockers": [
-    "With campaign approval, download the archive once, verify the published MD5 plus computed SHA-256, and perform traversal-safe, size-limited inventory without executing or deserializing archive content.",
-    "Freeze the exact paths, hashes, checkpoint state schemas, member order and seeds for both pretraining members and the fine-tuned RAMPAGE member.",
-    "Inspect included license and attribution notices and confirm terms for redistributed MASLD derivative weights.",
     "Recover a complete accession/BioProject/SRA/donor alias manifest for all pretraining and RAMPAGE contexts; GSE244832 remains unknown because it was public before checkpoint release.",
     "Resolve the exact hg38 FASTA and prove primary-contig parity to the project GRCh38.p14 reference, including REF alleles, contigs, strand and boundaries.",
-    "Freeze the ATAC FPM, peak calling, SEA motif enrichment and released motif normalization pipeline. Do not fit any part using sealed outcomes.",
+    "The frozen native-preprocessing audit established the scale-factor unit and exact 693-motif order but terminated because paper 1/f conflicts with WDL 20/f, paper random 50000 conflicts with later top 50000, the 128-bp summit window does not bind WDL half_peak_width, the exact background is absent, and post-release SEA threshold changed from 1.0 to 50000.0. Do not guess or fit any part using sealed outcomes.",
     "Define a topology-valid ATAC input for each endpoint. Without sealed GSE289173 ATAC, EpiBERT cannot earn that task's champion claim.",
-    "Reproduce the two-member, two-orientation caQTL statistic and RAMPAGE outputs on fixed fixtures with strict TensorFlow checkpoint consumption.",
-    "Run TensorFlow 2.13 import, forward/backward, restore, resume, deterministic-seed and L40S numeric probes through SLURM before admission."
+    "Reproduce the two-member, two-orientation caQTL statistic and RAMPAGE outputs on biological fixed fixtures; synthetic existing-model-object matching and repeated inference already pass, with extra checkpoint training state permitted.",
+    "Run backward, checkpoint-resume and cross-device numeric probes through SLURM before any adaptation."
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
-  "sealed_champion_eligibility": "exposure_eligible_but_input_and_checkpoint_inventory_blocked",
-  "verified_date": "2026-08-22"
+  "sealed_champion_eligibility": "exposure_and_terms_eligible_but_native_input_and_external_topology_blocked",
+  "verified_date": "2026-08-25"
 }

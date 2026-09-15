@@ -17,7 +17,7 @@
     "scope": "transductive_only_topology_and_no_sealed_query_transform",
     "sha256": "c1f2e5f8044b0b325bb83f14f54436aa5fe403e9735ec97367eec7147d7aeada"
   },
-  "interpretation": "scMoMaT has no pretrained-checkpoint contamination, but this does not make it eligible for held-donor evaluation. Its cell representation consists of free C_cells parameters allocated for the cells supplied to the factorization. A held or sealed cell has no coordinate unless its data enter transductive training or new coordinates are optimized. Both violate the frozen sealed-query contract. The method remains scientifically useful only for a future explicitly descriptive, nonpromotable development integration task.",
+  "interpretation": "scMoMaT has no pretrained-checkpoint contamination, but this does not make it eligible for held-donor evaluation. Its cell representation consists of free C_cells parameters allocated for the cells supplied to the factorization. A held or held-back cell has no coordinate unless its data enter transductive training or new coordinates are optimized. Both does not meet the frozen held-back-query requirements. The method remains scientifically useful only for a future explicitly descriptive, nonpromotable development integration task.",
   "remaining_blockers": [
     "Create a separate nonpromotable development-only latent-integration TaskSpec before any run; current sealed and RNA-conditioned ATAC tasks cannot schedule scMoMaT.",
     "Exclude GSE289173 entirely. Do not include sealed features in a joint factorization or optimize sealed-cell coordinates.",

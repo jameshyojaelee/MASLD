@@ -682,7 +682,7 @@ fwrite(assertions, file.path(PROV_DIR, "render_assertions.tsv"), sep = "\t")
 caption <- c(
   "# Figure 4C–D bridge candidate caption",
   "",
-  "**Candidate only; Figure 4C is retained byte-for-byte and no authority is promoted.**",
+  "**Candidate only; Figure 4C is retained byte-for-byte and no authority is adopted.**",
   "",
   "**(C)** Existing thirty-program Hotspot stage heatmap, unchanged. Asterisks retain their existing meaning: complete-family BH q<0.05. The two starred hepatocyte-labelled programs are Hep 8 ECM/*IGFBP7* and Hep 20 ductular-injury/*BICC1*.",
   sprintf(

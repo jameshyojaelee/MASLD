@@ -200,7 +200,7 @@
     ],
     "selection_rule": "Do not register one generic implementation for multiple scientifically different controls. Every executable role owns its implementation receipt; every parent-bound ablation additionally names the parent artifact it tests."
   },
-  "interpretation": "These controls answer different questions. Mean and nearest-neighbor methods test whether learned models beat simple task-native structure. Scratch CNN and transformer models test pretraining rather than architecture alone. Context-only, sequence-only, and trans-only isolate pathways inside a concrete model. Shuffled context is a negative control for matched biological context. Keeping these roles separate prevents an ablation from borrowing a parent model's evidence, receptive field, license, or champion identity.",
+  "interpretation": "These controls answer different questions. Mean and nearest-neighbor methods test whether learned models beat simple task-native structure. Scratch CNN and transformer models test pretraining rather than architecture alone. Context-only, sequence-only, and trans-only isolate pathways inside a concrete model. Shuffled context is a negative control for matched biological context. Keeping these roles separate prevents an ablation from borrowing a parent model's evidence, receptive field, license, or best model identity.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

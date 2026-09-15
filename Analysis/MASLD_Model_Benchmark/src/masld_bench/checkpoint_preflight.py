@@ -1,6 +1,6 @@
 """Hash-first, offline staging for Geneformer checkpoint bundles.
 
-This module never downloads artifacts.  It accepts a user-populated source
+This module never downloads output files.  It accepts a user-populated source
 tree, verifies every required object against the frozen upstream manifest, and
 publishes only verified files.  Auxiliary pickle dictionaries are decoded with
 all global/class construction disabled, validated as plain JSON-compatible
@@ -45,11 +45,11 @@ _GENEFORMER_VARIANTS = {
 
 # Upstream Geneformer stores its gene-median and token dictionaries as plain
 # str -> numeric mappings whose values were pickled as numpy scalars.  Decoding
-# them needs exactly two globals and nothing else.  They are admitted under a
+# them needs exactly two globals and nothing else.  They are included under a
 # closed allowlist with a hard rejection of object and void dtypes, which is
 # the dtype family that makes numpy scalar reconstruction dangerous: an object
 # dtype causes the buffer itself to be unpickled, reintroducing arbitrary
-# construction.  Every admitted value is immediately coerced to a plain Python
+# construction.  Every included value is immediately coerced to a plain Python
 # int or float, so no numpy object survives into a staged bundle.
 # numpy renamed `numpy.core` to `numpy._core`, so the same reconstructor
 # appears under two module paths depending on the numpy that wrote the pickle.
@@ -158,13 +158,13 @@ def _plain_json_value(value: Any, *, path: str = "root") -> Any:
     if isinstance(value, dict):
         result: dict[str, Any] = {}
         for key, child in value.items():
-            # Keys must be strings, but the EMPTY string is admitted verbatim.
+            # Keys must be strings, but the EMPTY string is included verbatim.
             # Upstream Geneformer's V1 gene_name_id_dict_gc30M contains exactly
             # one such entry, '' -> ENSG00000285325, a real Ensembl gene whose
             # symbol is blank.  It is inert for tokenization, since no real gene
             # symbol can look it up, and JSON represents "" as a key without
             # difficulty.  Dropping it would silently alter a hash-verified
-            # upstream artifact, which is worse than carrying it.
+            # upstream output file, which is worse than carrying it.
             if not isinstance(key, str):
                 raise CheckpointPreflightError(
                     f"pickle mapping keys must be strings at {path}"
@@ -417,7 +417,7 @@ def stage_geneformer_bundle(
     output_root: str | Path,
     manifest_path: str | Path,
 ) -> Path:
-    """Verify and publish one immutable, execution-safe Geneformer bundle."""
+    """Verify and publish one read-only, execution-safe Geneformer bundle."""
 
     manifest_file = reject_symlink_components(
         Path(manifest_path), label="checkpoint manifest"

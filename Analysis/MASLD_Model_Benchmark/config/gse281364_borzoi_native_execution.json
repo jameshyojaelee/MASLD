@@ -1,0 +1,177 @@
+{
+  "schema_version": "masld-bench-gse281364-borzoi-native-execution-gate-v1",
+  "status": "blocked_missing_terms_weights_runtime_reference_parity_native_parity",
+  "dataset_id": "gse281364",
+  "model_id": "borzoi_ensemble",
+  "purpose": "Fail-closed zero-shot native Borzoi execution check for the outcome-blind GSE281364 development fixture.",
+  "frozen_authorities": {
+    "screen_contract": {
+      "kind": "file",
+      "path": "config/gse281364_borzoi_native_screen.json",
+      "sha256": "d7e1df0e1b101473ebad15f236f47f9e2bfc0720cb5ed934e465f5aa543f4d66"
+    },
+    "checkpoint_contract": {
+      "kind": "file",
+      "path": "config/artifacts/models/borzoi/checkpoints.json",
+      "sha256": "1c5d7213dab05be8bb819d61ff4d03b2bcd7ca307954ab328de739c476c9e257"
+    },
+    "exposure_audit": {
+      "kind": "file",
+      "path": "config/artifacts/models/borzoi/exposure_audit.json",
+      "sha256": "e8318f78fbe61e7dca6dc5ea60720395c48c0526a616eac006d8c75f5d54b43b"
+    },
+    "development_crosswalk": {
+      "kind": "file",
+      "path": "config/artifacts/models/borzoi/development_crosswalk.json",
+      "sha256": "65ace3b7b31138459e88db1c34c05f90cd75121ac2b88befe18552f1780e3716"
+    },
+    "native_fixture": {
+      "kind": "tree",
+      "path": "executions/gse281364-borzoi-native-fixture-21083008",
+      "sha256": "b5fd9cfcaa0da6a2161abc5b14c6bc0e8de8c63e6f9400608f2cdc21f4f59712"
+    },
+    "admission_sources": {
+      "kind": "tree",
+      "path": "executions/borzoi-enformer-admission-sources-21064438",
+      "sha256": "c6af0a8723e5a4d8186af52c277d935c5ec4a2f4c46037b3f6954f9f77c39487"
+    },
+    "project_reference": {
+      "kind": "tree",
+      "path": "executions/sequence-fasta-21063808",
+      "sha256": "7c202e392c3e415ee7f6bc196b931199c514b2fefc04a19fc82645d81fd8ba39"
+    }
+  },
+  "official_release_contract": {
+    "borzoi_repository": "calico/borzoi",
+    "borzoi_revision": "9736924e6c861f0d71978cc3012ff8d76d6fa91f",
+    "borzoi_tag": "v1.0.0",
+    "borzoi_paper_repository": "calico/borzoi-paper",
+    "borzoi_paper_revision": "b107b4f13f7a7d82f768d3a002b84c93f80c0e3a",
+    "borzoi_paper_tag": "v1.0.0",
+    "code_license": "Apache-2.0",
+    "weight_terms": "UNDECLARED_BLOCKED",
+    "documented_release_python_series": "3.10",
+    "pyproject_python_requirement": ">=3.9",
+    "tensorflow_requirement": "~=2.15.0",
+    "h5py_requirement": "~=3.10.0",
+    "numpy_requirement": "~=1.24.3",
+    "baskerville_revision": "UNRESOLVED",
+    "westminster_required_for_zero_shot_inference": false,
+    "params_pred_sha256": "247b6eaadda8a2721c4baeda7716201ffaa2aa133a969576086164e1c61a094d",
+    "target_manifest_sha256": "8f67ef43b914e42d7a7dafb8d621190cafe84a167bc4c9eb1aa781ee694d6d32",
+    "input_length_bp": 524288,
+    "raw_output_bins": 16384,
+    "released_prediction_bins": 16352,
+    "central_training_loss_bins": 6144,
+    "human_tracks": 7611,
+    "orientations": ["forward", "reverse_complement"],
+    "shift_bp": [0]
+  },
+  "official_checkpoint_members": [
+    {
+      "replicate": 0,
+      "name": "borzoi/f0/model0_best.h5",
+      "generation": "1691539358988138",
+      "size_bytes": 744112468,
+      "md5": "ef83ad59b43765413f73767d87a717df",
+      "crc32c_base64": "S/RrhQ=="
+    },
+    {
+      "replicate": 1,
+      "name": "borzoi/f1/model0_best.h5",
+      "generation": "1691539419241923",
+      "size_bytes": 744112468,
+      "md5": "3bd16acb7283387be2fdb84edca847f5",
+      "crc32c_base64": "FseOnA=="
+    },
+    {
+      "replicate": 2,
+      "name": "borzoi/f2/model0_best.h5",
+      "generation": "1691539441571542",
+      "size_bytes": 744112468,
+      "md5": "129888a9826e02092536c153cb7ee921",
+      "crc32c_base64": "2LE3+w=="
+    },
+    {
+      "replicate": 3,
+      "name": "borzoi/f3/model0_best.h5",
+      "generation": "1691539462862235",
+      "size_bytes": 744112468,
+      "md5": "bb7cf57a9363d24bf99aeb6d92f454f2",
+      "crc32c_base64": "3+xKdQ=="
+    }
+  ],
+  "required_execution_artifacts": {
+    "weight_terms": {
+      "path": "executions/authorities/borzoi-official-weight-terms-v1",
+      "artifacts_sha256": "UNRESOLVED",
+      "receipt": "receipt.json",
+      "receipt_schema": "masld-bench-borzoi-weight-terms-determination-v1"
+    },
+    "official_checkpoints": {
+      "path": "executions/checkpoints/borzoi-calico-native-v1",
+      "artifacts_sha256": "UNRESOLVED",
+      "receipt": "receipt.json",
+      "receipt_schema": "masld-bench-borzoi-native-checkpoints-v1"
+    },
+    "native_runtime": {
+      "path": "executions/environments/borzoi-calico-tf215-native-v1",
+      "artifacts_sha256": "UNRESOLVED",
+      "receipt": "receipt.json",
+      "receipt_schema": "masld-bench-borzoi-native-runtime-v1"
+    },
+    "reference_parity": {
+      "path": "executions/borzoi-reference-parity-v1",
+      "artifacts_sha256": "UNRESOLVED",
+      "receipt": "receipt.json",
+      "receipt_schema": "masld-bench-borzoi-reference-parity-v1"
+    },
+    "native_parity": {
+      "path": "executions/borzoi-native-parity-v1",
+      "artifacts_sha256": "UNRESOLVED",
+      "receipt": "receipt.json",
+      "receipt_schema": "masld-bench-borzoi-native-numeric-parity-v1"
+    }
+  },
+  "policy_transition": {
+    "fixture_screen_gate": "The frozen screen records the fixture-build state and remains closed for that artifact.",
+    "conditional_successor": "This separate contract permits model forward only in a future revision where every required execution artifact is present and bound by an exact ARTIFACTS.json SHA-256.",
+    "checkpoint_acquisition_authorized_by_this_contract": false,
+    "dependency_install_authorized_by_this_contract": false,
+    "current_model_forward_authorized": false
+  },
+  "local_port_observation": {
+    "environment": "/gpfs/commons/home/jameslee/micromamba/envs/borzoi",
+    "conda_history": "conda-meta/history",
+    "conda_history_sha256": "1f09bffcec41e8682e8b0e33a48ed06e852d6a7bcac7946ee77cef08f890f6e6",
+    "port_metadata": "lib/python3.11/site-packages/borzoi_pytorch-0.5.1.dist-info/METADATA",
+    "port_metadata_sha256": "f862b0e89bf94977d67f516abe9daca48a94afb2fd6571de104ce98d2d5882c4",
+    "disposition": "separate_unadmitted_PyTorch_port_not_native_execution_runtime"
+  },
+  "reference_scope": {
+    "zero_shot_inference": "Require exact primary-contig sequence parity between project GRCh38.p14 and the release download_models.sh UCSC hg38.fa helper.",
+    "training_or_fine_tuning": "Additionally requires the exact checkpoint-era hg38.ml.fa training reference; its identity remains unresolved.",
+    "benchmark_fasta_sha256": "ed20dceeb315cffa2bc3de050d846eceefc552451fef741f0dd95b0149d10fce"
+  },
+  "prediction_contract": {
+    "prediction_entrypoint_source": "native_runtime_receipt_only",
+    "prediction_entrypoint_must_be_relative_and_sha256_bound": true,
+    "entrypoint_cli_version": "masld-bench-borzoi-native-predictor-cli-v1",
+    "network_access": false,
+    "member_execution": "one_official_member_at_a_time_with_resume_then_four_member_aggregation",
+    "required_outputs": [
+      "prediction_bundle/manifest.tsv",
+      "prediction_bundle/member_track_deltas.npz",
+      "prediction_bundle/receipt.json"
+    ],
+    "outcomes_read": false,
+    "metrics_calculated": false,
+    "sealed_assets_read": false
+  },
+  "claim_boundary": {
+    "role": "exposed_development_MPRA_sequence_native_diagnostic_only",
+    "open_champion_eligible": false,
+    "sealed_external_claim_allowed": false,
+    "clinical_claim_allowed": false
+  }
+}

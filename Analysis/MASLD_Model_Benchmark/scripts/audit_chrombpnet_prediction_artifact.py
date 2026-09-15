@@ -55,7 +55,7 @@ MODEL_CONTRACTS = {
 
 
 class AdmissionError(ValueError):
-    """Raised when a frozen prediction artifact violates admission."""
+    """Raised when a frozen prediction file violates inclusion."""
 
 
 def _sha256(path: Path) -> str:

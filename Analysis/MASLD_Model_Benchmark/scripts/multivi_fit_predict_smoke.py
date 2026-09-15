@@ -26,7 +26,7 @@ PREDICTION_FIELDS = (
 
 
 class MultiVIFitPredictError(ValueError):
-    """Raised when the donor-held MultiVI execution contract differs."""
+    """Raised when the donor-held MultiVI execution requirement differs."""
 
 
 def canonical_json(value: Any) -> str:

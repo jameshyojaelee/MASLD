@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-cell-baseline-smoke"
-description = "Completed first donor-held-out logistic baseline on the frozen 1,000-cell Resource Atlas compatibility view; retained as an immutable historical campaign authority"
+description = "Completed first donor-held-out logistic baseline on the frozen 1,000-cell Resource Atlas compatibility view; retained as a read-only historical campaign authority"
 wave = "smoke"
 status = "blocked_completed"
 prerequisites = ["Completed as SLURM job 20998457 under candidate manifest 71b87d9b6867ab182d4d5324489b477c0d527cd153e8bcdf6f398f05c58ab657; initial submission is single-use."]

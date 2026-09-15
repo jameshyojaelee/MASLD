@@ -1,9 +1,15 @@
 {
   "audit_scope": {
     "checkpoint": "EngreitzLab/ENCODE_rE2G@d039062b7092de338ed10a77ea208b3d5b06e89c:models/atac_megamap/model.pkl",
-    "development_sources": ["gse281364", "gse296875"],
+    "development_sources": [
+      "gse281364",
+      "gse296875"
+    ],
     "sealed_dataset_id": "gse289173",
-    "tasks": ["variant_to_regulation", "typed_evidence_graph"]
+    "tasks": [
+      "variant_to_regulation",
+      "typed_evidence_graph"
+    ]
   },
   "checkpoint_finding": {
     "corpus": "declared K562 CRISPR enhancer-gene labels and ABC-derived features; exact row inventory unresolved",
@@ -15,13 +21,13 @@
   },
   "checkpoint_manifest_record": {
     "path": "checkpoints.json",
-    "sha256": "6b897f64ba8ebe99c8b971800bf0af96ed91add2283afe7c905f9c4032dc0dd8"
+    "sha256": "1054c46bc5594ed80c06ab56d9f7ab8b49e2a7ff35579164098a343d7cd925a2"
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "sha256": "c70080c4d15ccade08f648a56a7624cc461a26613e64985582d44338b85f6e69"
   },
-  "interpretation": "The selected ATAC-plus-MegaMap rE2G model has a clean content chronology: its exact Git blob predates all three project sources. Its scientific output is still only an unsigned enhancer-gene link probability. GSE296875 can supply development liver ATAC features, but GSE289173 supplies no ATAC, so sealed use is limited to a static precommitted link atlas. rE2G can compete on retrieval or enter a composite; it cannot win the primary signed-effect endpoint alone.",
+  "interpretation": "The selected ATAC-plus-MegaMap rE2G model has a clean content chronology: its exact Git blob predates all three project sources. Its scientific output is still only an unsigned enhancer-gene link probability. GSE296875 can supply development liver ATAC features, but GSE289173 supplies no ATAC, so held-back use is limited to a static precommitted link atlas. rE2G can compete on retrieval or enter a composite; it cannot win the primary signed-effect endpoint alone.",
   "known_incidents_and_biases": [
     "The official application calls pickle.load on model.pkl; benchmark runs must never execute that path.",
     "The official application replaces every NaN and infinity with zero, which conflates structural missingness with observed zero under the project contract.",

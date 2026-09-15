@@ -5,7 +5,7 @@ The encoder is frozen.  Only the common head is trained, and it is trained on
 outer-training donors alone, so the held-out donors of the fold never influence
 any fitted state.
 
-Preprocessing follows the registered input contract exactly, and it is executed
+Preprocessing follows the registered input requirements exactly, and it is executed
 by SCimilarity's own utilities rather than reimplemented here:
 
 * ``consolidate_duplicate_symbols`` -- duplicate gene symbols are summed
@@ -244,7 +244,7 @@ def _embed_all(adata: Any, model_root: Path, device: str):
             f"SCimilarity gene order is {len(gene_order)}, expected {INPUT_DIMENSION}"
         )
 
-    # Duplicate symbols are summed BEFORE alignment, per the input contract.
+    # Duplicate symbols are summed BEFORE alignment, per the input requirements.
     working = consolidate_duplicate_symbols(working)
 
     observed = {str(name) for name in working.var_names}

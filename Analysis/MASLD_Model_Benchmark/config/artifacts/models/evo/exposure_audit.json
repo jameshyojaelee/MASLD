@@ -10,7 +10,7 @@
     "alternate_allele_exposure": "clean_declared_for_human_genetic_variation",
     "target_effect_label_exposure": "unexposed_by_declared_corpus_type",
     "downstream_task_family_exposure": "downstream_demo",
-    "interpretation": "Conditionally eligible for an open champion claim. The checkpoint date alone cannot prove cleanliness because it follows the sealed source's public date by one day; eligibility rests on the paper's explicit exclusion of human genetic variation and functional genomics from training."
+    "interpretation": "Conditionally eligible for a best openly licensed model claim. The checkpoint date alone cannot prove cleanliness because it follows the held-back source's public date by one day; eligibility rests on the paper's explicit exclusion of human genetic variation and functional genomics from training."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",

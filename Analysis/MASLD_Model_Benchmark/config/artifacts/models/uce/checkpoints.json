@@ -19,24 +19,28 @@
     {
       "figshare_file_id": 42706555,
       "name": "species_offsets.pkl",
+      "sha256": "abda5b2bc4018187e408623b292686a061912f449daceb4c9c9603caf0d62538",
       "size_bytes": 139,
       "source_md5": "ddf9143508857e62607f323b338ff383"
     },
     {
       "figshare_file_id": 42706558,
       "name": "species_chrom.csv",
+      "sha256": "a9e801829ffaf05b5d7e6c6ef12404326cf6796ad561ad62ce701884f07969f5",
       "size_bytes": 4097781,
       "source_md5": "42a9b5871b1ed955fd05414b3ab89081"
     },
     {
       "figshare_file_id": 42706585,
       "name": "all_tokens.torch",
+      "sha256": "07397ab3828502fb7d0bab658125c47f145f989f384db8f55fe106f6826b2a54",
       "size_bytes": 2979205876,
       "source_md5": "3523ea431c403f95701b6eeb0c30b997"
     },
     {
       "figshare_file_id": 42715213,
       "name": "protein_embeddings.tar.gz",
+      "sha256": "dc0138b50a3238979e32ccb65caab4e3f99d49146b8bc3b975f79683d9ce9ec9",
       "size_bytes": 2735410523,
       "source_md5": "6756d7fa8348e0f70b5e5b11e324f023"
     }
@@ -54,13 +58,15 @@
   "repository": "snap-stanford/UCE",
   "repository_revision": "9c416007be15ad6753dc84af4468c1dc10421ab9",
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The pinned official repository, Figshare version APIs, and the paper's complete Supplementary Table 16 were queried on 2026-08-22. Weight bodies and large auxiliary bodies were not downloaded; SHA-256 values remain unresolved.",
+  "source_evidence": "The pinned official repository, Figshare version APIs, and the paper's complete Supplementary Table 16 were queried on 2026-08-22. Weight and auxiliary bodies were acquired on 2026-08-23, source MD5 values were checked during acquisition, and local SHA-256 identities are frozen here.",
   "source_records": [
     {"identity": "UCE:README.md", "sha256": "4454680cbe611ede29c2d19da3a000d874ec145ca3f36be9659545c0e5015101"},
     {"identity": "UCE:LICENSE", "sha256": "bf068012efcf3a796af03889d4214df435bc1220ac97981c77a14f14c5070cde"},
     {"identity": "UCE:requirements.txt", "sha256": "90aea1e37aa9e02f996dfa6efd47c275984c7d6ed3a7893849da7ec21c3d15cc"},
     {"identity": "UCE:model.py", "sha256": "4c0e8509bcca1055dc16396676900c6d4a019cda71815f87be36e7846dc715d8"},
     {"identity": "UCE:eval_data.py", "sha256": "f0adfa2171a91302e56dc7609bde5bc4c41bfba3fea8fc30bfbaeb9a8e0af313"},
+    {"identity": "UCE:data_proc/data_utils.py", "sha256": "f70f3b340fed57f5cd7800294bba352e5f401ad111f344b3adc27511fc5d0fb6"},
+    {"identity": "UCE:data_proc/gene_embeddings.py", "sha256": "32522fd92910e9457aa5f54de0328bff1b8fca5b49d7a7069748ac9b1de205ce"},
     {"identity": "UCE:evaluate.py", "sha256": "d5325c4991ff2d337a70cb07508c1b1fb01d89e85db4b9f1df6fd170ec6b6054"},
     {"identity": "Rosen_et_al_2026_Supplementary_Table_16", "sha256": "9a5117a0ae2ca6c8dba9a7cc45a926ed836de0c4e9d94528aed4bda08296a811"}
   ],
@@ -69,7 +75,7 @@
       "figshare_file_id": 43423236,
       "figshare_record_doi": "10.6084/m9.figshare.24320806.v5",
       "name": "33l_8ep_1024t_1280.torch",
-      "sha256": "UNRESOLVED",
+      "sha256": "3f458726196308e171611ed28394b55865708749f82af68cfd7771d5dfee661e",
       "size_bytes": 5686283829,
       "source_md5": "eed62d4fe51873c87bcf9660faa07707"
     },
@@ -77,11 +83,11 @@
       "figshare_file_id": 42706576,
       "figshare_record_doi": "10.6084/m9.figshare.24320806.v4",
       "name": "4layer_model.torch",
-      "sha256": "UNRESOLVED",
+      "sha256": "acb28f3f0a1d803e4a4ffe891b9bab38bf93c84762dc06b2452f0d515da91560",
       "size_bytes": 3403514339,
       "source_md5": "3e2f59d6da6eaa5396aa297edfcec08f"
     }
   },
-  "weight_content_downloaded": false,
+  "weight_content_downloaded": true,
   "weight_license": "CC-BY-4.0"
 }

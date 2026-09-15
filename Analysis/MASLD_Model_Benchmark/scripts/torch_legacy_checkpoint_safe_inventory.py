@@ -12,7 +12,7 @@ import zipfile
 
 
 class TorchLegacyInventoryError(ValueError):
-    """Raised when a legacy checkpoint differs from its admitted structure."""
+    """Raised when a legacy checkpoint differs from its included structure."""
 
 
 def _sha256_file(path: Path) -> str:

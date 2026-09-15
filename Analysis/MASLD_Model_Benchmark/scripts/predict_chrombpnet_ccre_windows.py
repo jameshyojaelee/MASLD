@@ -45,7 +45,7 @@ PRIMARY_CONTIGS = tuple([f"chr{index}" for index in range(1, 23)] + ["chrX", "ch
 
 
 class ChromBPNetPredictionError(ValueError):
-    """Raised when fixed-window ChromBPNet inference violates its contract."""
+    """Raised when fixed-window ChromBPNet inference does not meet its requirements."""
 
 
 def one_hot_dna(sequences: Sequence[str]) -> np.ndarray:

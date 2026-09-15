@@ -1,0 +1,305 @@
+{
+  "ablation_roster": {
+    "independent_champion_identities": false,
+    "matched_shuffle": "Use deterministic outcome-blind dinucleotide-preserving within-bin shuffles while retaining ambiguous-base masks, bin alignment, and variant anchors.",
+    "names": [
+      "sequence_only",
+      "trans_only",
+      "permuted_context",
+      "reverse_complement",
+      "matched_shuffle"
+    ],
+    "parent_bound_realization_required_after_both_gates": true,
+    "permuted_context": "Derange context assignments within outer partition, dataset, assay, lineage, topology, and complete missingness-pattern stratum using a precommitted seed.",
+    "reverse_complement": "Reverse-complement the complete window and restore bins, strand-paired channels, genomic orientation, and ALT-minus-REF sign before comparison.",
+    "same_parent_required": true,
+    "same_rows_output_axis_splits_seeds_and_evaluator_required": true,
+    "sequence_only": "Disable every query-context FiLM gate and LoRA delta; do not read query RNA.",
+    "state": "PRECONDITION_ONLY_PARENT_UNRESOLVED",
+    "trans_only": "Remove cis sequence information with a parent-bound neutral latent; ALT-minus-REF is exactly zero by construction."
+  },
+  "artifact_manifest_hashes": {
+    "executions/conditional-ablation-preconditions-21064541/ARTIFACTS.json": "89c06c054e781690ccb1fa0a11b7e18f5d7a0dedfe792f66918781edb0c1e577",
+    "executions/context-conditioning-precondition-21064508/ARTIFACTS.json": "3577ad32ac4b34252b78a4a8cd489375dcfaba3d50f3093f870eaedceabaccb5"
+  },
+  "audit_date": "2026-08-24",
+  "authority_hashes": {
+    "config/artifacts/models/borzoi/checkpoints.json": "1c5d7213dab05be8bb819d61ff4d03b2bcd7ca307954ab328de739c476c9e257",
+    "config/artifacts/models/borzoi/exposure_audit.json": "e8318f78fbe61e7dca6dc5ea60720395c48c0526a616eac006d8c75f5d54b43b",
+    "config/artifacts/models/context_borzoi/checkpoints.json": "7f2fde87b0dd7a1c7de3e4d77dd2b70d93e2ddb12054f58855d7f033897aa4b6",
+    "config/artifacts/models/context_borzoi/development_crosswalk.json": "da4cc2b60bfd77f2181ae2e2dc1d2cd3ecf1028297302754b8f759bbfe05df12",
+    "config/artifacts/models/context_borzoi/exposure_audit.json": "5b6e628f0dc065d07bd25861a9b3f883513a3e21783a9882d9ef72192454b3ef",
+    "config/artifacts/models/corgi/checkpoints.json": "1df7633507cd716f85ab03ab7ab6a171e3e56c0e3e1f29f81b04f565134a089e",
+    "config/artifacts/models/corgi/exposure_audit.json": "cafda72a70c6f6b36c66db10f5753c3d4b268da1b64378853c39a19a4016bb0a",
+    "config/campaigns/v1_conditional_model.toml": "3f4db25525fc8dcba655d214cf3841747c877e96321d98998246811138be785c",
+    "config/evaluation/variant_to_regulation_capabilities.toml": "af5b3a79171f6f55a75db1267e823baa5032ef90706e0213191eb4d8ef026c63",
+    "config/tasks/rna_conditioned_atac.toml": "84fbfde399e6995d4f96ffa6ab34b5407bd2cb25099d1aba94572ff31caba2e0",
+    "config/tasks/variant_to_regulation.toml": "83b3dc896183c4d354aa39b5251384d14b2fdec277908f3e53f4d6d9cbb56233"
+  },
+  "complementarity_gate": {
+    "best_open_models_compared": true,
+    "build_authorized": false,
+    "created_before_outcome_unblind": true,
+    "cross_fitted": true,
+    "evaluated_seed_count": 5,
+    "failure_disposition": "not_justified_no_architecture_build_or_training",
+    "minimum_qualifying_mechanistic_endpoints": 2,
+    "minimum_qualifying_seed_count": 4,
+    "minimum_study_count": 2,
+    "nonnegative_stack": true,
+    "qualifying_absolute_correlation_or_f1_gain_at_least": 0.02,
+    "qualifying_endpoint_keys_must_include": [
+      "rna_conditioned_atac",
+      "variant_to_regulation"
+    ],
+    "qualifying_relative_deviance_gain_at_least": 0.05,
+    "required_evidence_source": "recursively_verified_frozen_stacking_evidence_tree",
+    "residual_candidates_must_be_distinct_source_families": true,
+    "residual_correlation_strictly_below": 0.8,
+    "sealed_results_used": false,
+    "source_binding_counts": {
+      "development_residual_bundle": 2,
+      "development_shortlist": 2,
+      "development_stack_gain_bundle": 2
+    },
+    "state": "NOT_EVALUATED"
+  },
+  "component_admission_gate": {
+    "cell_encoder": {
+      "required": [
+        "candidate_id_and_configuration_sha256",
+        "exact_code_config_vocabulary_and_checkpoint_identity",
+        "clean_declared_exposure",
+        "open_champion_license_decision_sha256",
+        "open_champion_eligible",
+        "admitted",
+        "runtime_and_native_parity_receipts",
+        "fitted_state_role_hashes"
+      ],
+      "selection_rule": "Highest-ranked admitted clean open cell-state encoder from the five-seed full-specialist shortlist."
+    },
+    "component_findings_inherited_by_composite": false,
+    "component_weights_may_be_opened_now": false,
+    "corgi_current_state": "NOT_ADMITTED AS A COMPONENT: regular Corgi has only restricted development-comparator execution; code terms, checkpoint-producing source, checkpoint-bound FASTA, released-transform equivalence, and native numeric parity remain blocked.",
+    "local_derivative_may_be_built_now": false,
+    "sequence_backbone": {
+      "borzoi_current_state": "NOT_ADMITTED: official weight SHA-256s are unresolved, checkpoint bytes are not downloaded, weight terms are undeclared, runtime/native parity/reference/output-crop gates remain blocked.",
+      "required": [
+        "candidate_id_and_configuration_sha256",
+        "exact_code_config_and_checkpoint_identity",
+        "open_champion_license_decision_sha256",
+        "open_champion_eligible",
+        "admitted",
+        "within_one_standard_error",
+        "native_reference_runtime_restore_and_numeric_parity_receipts",
+        "fitted_state_role_hashes"
+      ],
+      "selection_rule": "Highest development-scoring admitted open long-range sequence backbone within one standard error; lower compute may break only an exact score tie under one hash-bound measured compute basis."
+    },
+    "state": "BLOCKED_NO_SELECTED_COMPONENTS"
+  },
+  "execution_disposition": {
+    "architecture_import_authorized": false,
+    "checkpoint_download_or_open_authorized": false,
+    "cpu_metadata_preflight_authorized": true,
+    "development_scoring_authorized": false,
+    "gpu_sbatch_authorized": false,
+    "mapper_fit_authorized": false,
+    "model_build_authorized": false,
+    "next_action": "Run only the metadata-only CPU audit after submission is separately authorized. If and only if the complementarity decision triggers and every selected component passes admission, freeze a synchronized parent-bound architecture spec and then implement one architecture plus its five same-parent ablations.",
+    "prediction_authorized": false,
+    "sealed_scoring_authorized": false,
+    "training_authorized": false
+  },
+  "existing_outcome_blind_preconditions": {
+    "ablation_fixture": {
+      "artifacts_sha256": "89c06c054e781690ccb1fa0a11b7e18f5d7a0dedfe792f66918781edb0c1e577",
+      "document_sha256": "c31480b4cd8f6bcd8067f145f2c9f92515fcc79b2b538b5743fba1583b830f77",
+      "path": "executions/conditional-ablation-preconditions-21064541",
+      "spec_sha256": "75a5d3e59ccfa2b3b4cc50ccef3c8c526b040c5efc4d2f8e528670d95c32503e",
+      "status": "precondition_only_parent_unresolved"
+    },
+    "architecture_built": false,
+    "conditional_model_authorized": false,
+    "context_fixture": {
+      "artifacts_sha256": "3577ad32ac4b34252b78a4a8cd489375dcfaba3d50f3093f870eaedceabaccb5",
+      "fixture_sha256": "4a81726e1c8984dd9c1cbefc363a1ef45adaacd9811a39587ab580903a7eddad",
+      "path": "executions/context-conditioning-precondition-21064508",
+      "status": "pass_precondition_only"
+    },
+    "model_training_started": false,
+    "sealed_outcomes_exposed": false
+  },
+  "family_native_task_boundaries": {
+    "rna_conditioned_atac": {
+      "allowed_inputs": [
+        "dna_sequence",
+        "observed_rna_or_training_frozen_context",
+        "explicit_missingness_masks"
+      ],
+      "latent_or_retrieval_output_may_substitute_for_profile": false,
+      "observed_atac_at_inference": false,
+      "profile_fixture_passed": false,
+      "required_output": "donor_by_cell_state_peak_accessibility_profile_on_frozen_peak_universe",
+      "role": "conditional_profile_candidate_only_after_trigger_component_admission_and_profile_fixture",
+      "scoring_authorized": false
+    },
+    "variant_to_regulation": {
+      "allowed_assay_native_endpoints": [
+        "accessibility_delta",
+        "allelic_direction",
+        "eqtl_retrieval"
+      ],
+      "crop_seq": "retrospective direction diagnostic only; cells and guides are not biological replicates",
+      "mpra": "locus-cross-fitted retrospective assay-native diagnostic only; never signed eQTL supervision",
+      "native_candidate_outputs": [
+        "accessibility_delta",
+        "gene_expression_delta"
+      ],
+      "role": "conditional_only_after_trigger_component_admission_fitted_head_and_output_crosswalk",
+      "scoring_authorized": false,
+      "signed_cell_type_eqtl_effect": "BLOCKED: no registered nonsealed signed-effect training source, fitted head, calibration, gene-lineage crosswalk, or primary-profile fixture exists."
+    }
+  },
+  "future_parent_bound_architecture_contract": {
+    "conditioning": [
+      "gated_film",
+      "lora_adapters"
+    ],
+    "forbidden_heads": [
+      "masld_histone"
+    ],
+    "heads": [
+      "atac_profile",
+      "atac_count",
+      "rna_coverage"
+    ],
+    "hotspot_117_usage": "read_only_post_hoc_projection_only",
+    "implementation_may_start_now": false,
+    "outputs": [
+      "gene_score",
+      "peak_score",
+      "variant_score",
+      "five_seed_uncertainty"
+    ],
+    "required_before_any_import_or_build": [
+      "triggered_conditional_decision_binding",
+      "frozen_context_model_spec_binding",
+      "selected_sequence_candidate_and_license_binding",
+      "selected_cell_candidate_and_license_binding",
+      "synchronized_registry_task_and_capability_hashes",
+      "reference_and_annotation_crosswalk_hashes",
+      "component_runtime_and_native_parity_receipts"
+    ],
+    "required_parent_specific_fields": [
+      "sequence_window_bp_receptive_field_bp_input_resolution_and_crop",
+      "ordered_sequence_latent_attachment_names_widths_and_resolutions",
+      "context_gene_or_feature_order_mapper_normalization_and_encoder_hashes",
+      "per_feature_missingness_state_and_observed_mask_axes",
+      "film_projection_attachment_gamma_beta_gate_and_zero_initialization",
+      "lora_attachment_names_rank_alpha_dropout_and_zero_initialization",
+      "atac_profile_atac_count_and_rna_coverage_head_axes_transforms_and_losses",
+      "strand_pair_reverse_complement_and_ref_alt_orientation_crosswalks",
+      "donor_chromosome_ld_block_sequence_identity_and_reverse_complement_splits",
+      "boundary_buffer_equal_to_largest_selected_receptive_field",
+      "five_seed_runtime_backward_resume_determinism_and_memory_receipts",
+      "strict_tensor_only_local_state_schema_and_trained_artifact_hashes",
+      "parent_bound_ablation_realization_hashes"
+    ],
+    "state": "SCHEMA_ONLY_PARENT_UNRESOLVED",
+    "training_may_start_now": false
+  },
+  "identity": {
+    "architecture_count_cap": 1,
+    "borzoi_component_selected": false,
+    "corgi_component_selected": false,
+    "display_name": "Conditional MASLD context model (legacy context_borzoi ID)",
+    "generic_conditional_slot": true,
+    "model_id": "context_borzoi",
+    "selected_cell_encoder": null,
+    "selected_sequence_backbone": null,
+    "trained_checkpoint": null,
+    "warning": "The legacy ID binds no Borzoi, Corgi, or other checkpoint, code, exposure, runtime, output, license, or scientific identity.",
+    "zero_shot_lane_eligible": false
+  },
+  "implementation_hashes": {
+    "scripts/build_conditional_ablation_preconditions.py": "8b10196117aa0fc33aea23d7d32fdb90d673ad71eeb4c0da75f398057675cb08",
+    "slurm/build_conditional_ablation_preconditions.sbatch": "a0ef9be161a4688bcf8cd106e8c2e96c3ba9c26fc1f2b24f23dc070232a9da95",
+    "slurm/build_context_precondition_fixture.sbatch": "07d14556d06fb5f342bc90a6cd4b449da3fa37ef650b0f6bd452e29ef46e965f",
+    "src/masld_bench/conditional_model.py": "169ec2acbf895974b126435a849e482506f4e38bc1a606e5fabd1ad210dd72f8",
+    "src/masld_bench/context_preconditions.py": "55c14bcf03cbd7c0edb976f6ad73c9d892c3327f7fe91622f11ba76edc00da70",
+    "src/masld_bench/context_spec.py": "098f1f2b6ef8c7101301d7e6ef1b83d9ec5dba4191b61a3c368d02a265248a9f",
+    "src/masld_bench/stacking.py": "933c52c62982e01e957399bc5c995a39c67c03c07b8a71d52ec7e682b1acd6af",
+    "src/masld_bench/topology.py": "46b2712a1d438d6a7fbcecebbd291a8440d88858397735bba040d2450c1ece3e",
+    "tests/unit/test_context_preconditions.py": "bdec5b4b3c0fa5c0859662248dee6f461a7c74d2936df9ddc24c1a0822ca001e"
+  },
+  "input_and_missingness_contract": {
+    "allowed_inference_inputs": [
+      "dna_sequence",
+      "single_nucleus_rna_or_training_fold_context",
+      "explicit_missing_modality_masks"
+    ],
+    "forbidden_inference_inputs": [
+      "observed_query_atac",
+      "held_atac_targets",
+      "outcome_summaries",
+      "sealed_labels",
+      "query_derived_neighbors_or_normalization_references"
+    ],
+    "future_learned_mask_aware_encoder": "May be fit only after both gates pass and only inside outer training partitions.",
+    "gse244832_pairing": "same_sample_different_aliquot_at_donor_compatible_resolution_only",
+    "gse296875_pairing": "same_nucleus_after_exact_join_validation",
+    "incomplete_released_rank_context_route": "sequence_only_with_context_gate_zero; never zero-fill",
+    "mapper_fit_role": "outer_training_only",
+    "missing_context_film_lora_behavior": "context gate exactly zero and neutral residual identity",
+    "missing_feature": {
+      "mask": false,
+      "numeric_zero_allowed": false,
+      "value": null
+    },
+    "missingness_states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ],
+    "observed_feature": {
+      "mask": true,
+      "value": "finite_nonnegative_assay_native_value"
+    },
+    "query_crossing": "held donor and held genomic block with the full selected-receptive-field boundary buffer"
+  },
+  "known_authority_drift_blockers": [
+    {
+      "disposition": "Pre-existing shared modification; do not bind until the registry is reconciled and re-frozen.",
+      "embedded_sha256": "866a53b7fd5e0222482d291e4af8419d31d7f6baa2d0773b7ff9c40d518dff50",
+      "observed_sha256": "bccce82a8a949eb81b73246848dcf7e80b164e464992fdb9b9fcb10c72181c1b",
+      "path": "config/models/regulatory_sequence.toml"
+    },
+    {
+      "disposition": "Pre-existing shared modification; do not bind until the capability registry is reconciled and re-frozen.",
+      "embedded_sha256": "c233a982a48c1bf827ce9f64d894ce3c6d6af3e11a20e39cf03df3920fae6330",
+      "observed_sha256": "c779f06dedf69a15ec44280323a7701e0938b75bfa2660d11dd2a6f5de37868d",
+      "path": "config/evaluation/rna_conditioned_atac_capabilities.toml"
+    },
+    {
+      "disposition": "Pre-existing shared modification; a future ready campaign must bind the reconciled planner.",
+      "embedded_sha256": "c0bfa239d6db1af4d34c34a5bfd58c60cfd0494fa6527679e8407c74c19acc10",
+      "observed_sha256": "5942f1d9098c1bb0959e274b632d3f07bf3a2e01de72205ce86aad3a7e5b173f",
+      "path": "src/masld_bench/planner.py"
+    },
+    {
+      "disposition": "The exposure audit predates the current checkpoint authority and must be regenerated after shared authorities settle.",
+      "embedded_in_exposure_audit_sha256": "2dc646c677c3b8d08a5be62a119f6b20859f0e6386fd5c88491ddcce762e3906",
+      "observed_sha256": "7f2fde87b0dd7a1c7de3e4d77dd2b70d93e2ddb12054f58855d7f033897aa4b6",
+      "path": "config/artifacts/models/context_borzoi/checkpoints.json"
+    }
+  ],
+  "schema_version": "masld-bench-context-borzoi-outcome-blind-preflight-v1",
+  "scope": "Outcome-blind architecture, component-admission, task-boundary, missingness, FiLM/LoRA attachment, and ablation preconditions for the one generic conditional context-model slot. No architecture was built, no model or mapper was fit, no checkpoint was opened, and no development, sealed, or evaluator outcome was read.",
+  "status": "PREFLIGHT_ONLY_BLOCKED_TRIGGER_AND_COMPONENT_ADMISSION"
+}

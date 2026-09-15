@@ -55,7 +55,7 @@
     "hf_commit": "8e1ad1a1bc40c1fc2f4f1700fe27923eea9a2bed",
     "lfs_blob_id": "952a00797afa5f239e38fcd08d8fe5971d245ec6",
     "name": "medium-v1.5.ckpt",
-    "reason": "The same path was replaced with a different object after the sealed source was public. The replacement's training corpus and relationship to the published model are undeclared.",
+    "reason": "The same path was replaced with a different object after the held-back source was public. The replacement's training corpus and relationship to the published model are undeclared.",
     "replacement_date": "2026-05-05T13:08:34Z",
     "sha256": "96ff7c5d9e1ad5076e818bde3c38f498c95cd354cc42029d90691b5ba2964ff8",
     "size_bytes": 221742980

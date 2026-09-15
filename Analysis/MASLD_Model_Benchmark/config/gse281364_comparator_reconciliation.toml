@@ -1,0 +1,193 @@
+schema_version = "masld-bench-gse281364-comparator-reconciliation-v1"
+status = "prespecified_outcome_blind_join_coverage_disposition"
+verified_date = "2026-08-25"
+dataset_id = "gse281364"
+task_id = "variant_to_regulation"
+outcome_access_authorized = false
+model_fit_authorized = false
+prediction_generation_authorized = false
+prediction_rekey_authorized = true
+metric_calculation_authorized = false
+shortlist_authorized = false
+complementarity_authorized = false
+conditional_trigger_authorized = false
+sealed_asset_access_authorized = false
+
+[row_contract]
+selected_elements = 1033
+source_locus_groups = 1033
+long_range_blocks = 239
+outer_folds = 5
+contexts = ["HepG2_control", "HepG2_PAOA"]
+fixed_schema_seeds = [1103, 2909, 4721, 6673, 8111]
+row_keys = 10330
+largest_receptive_field_buffer_bp = 524288
+biological_donors = 0
+
+[mpralegnet_contract]
+model_id = "mpralegnet_hepg2_test1_val2"
+source_elements = 4359
+source_locus_groups = 1033
+selected_elements = 1033
+selected_elements_reassigned_from_original_fold = 830
+native_score = "mean_orientation_ALT_minus_REF_uncalibrated_lentiMPRA_reporter_expression"
+allele_sign = "ALT_minus_REF"
+cell_context = "HepG2"
+input_lane = "GRCh38p14_230bp_genomic_window_transfer"
+context_specific = false
+seed_specific = false
+calibrated_to_gse281364_outcome = false
+future_use = "fixed_secondary_native_reporter_activity_comparator_only"
+standalone_signed_eqtl_or_ieqtl_eligible = false
+checkpoint_exposure = "target_label_unexposed"
+gse281364_target_exposure = "clean_declared"
+code_license = "MIT"
+weight_license = "MIT_declared_by_checkpoint_model_card"
+checkpoint_provenance = "third_party_Hugging_Face_repackaging_author_equivalence_unresolved"
+open_release_eligibility = "conditional_pending_author_checkpoint_equivalence_or_explicit_third_party_acceptance"
+
+[completion_firewall]
+campaign_scope = "outcome_blind_comparator_reconciliation_only"
+mandatory_comparator_evaluation_complete = false
+candidate_summary_metric_values_read = false
+deterministic_schema_seed_repeats_are_independent_fits = false
+stochastic_stability_claim_blocked_for_deterministic_heads = true
+shortlist_blocked = true
+finalist_claim_blocked = true
+complementarity_blocked = true
+conditional_trigger_blocked = true
+champion_claim_blocked = true
+
+[[comparator]]
+model_id = "mpralegnet"
+expected_disposition = "rekeyed_complete_static_native_score_comparator"
+expected_joined_row_keys = 10330
+expected_unique_native_scores = 1033
+valid_for_future_native_descriptive_scoring = true
+valid_for_current_shortlist = false
+
+[[comparator]]
+model_id = "sequence_cnn_control"
+expected_disposition = "blocked_no_gse281364_predictions_license_and_exposure_unresolved"
+expected_joined_row_keys = 0
+expected_unique_native_scores = 0
+valid_for_future_native_descriptive_scoring = false
+valid_for_current_shortlist = false
+
+[[comparator]]
+model_id = "sequence_transformer_control"
+expected_disposition = "blocked_no_gse281364_predictions_architecture_and_license_unresolved"
+expected_joined_row_keys = 0
+expected_unique_native_scores = 0
+valid_for_future_native_descriptive_scoring = false
+valid_for_current_shortlist = false
+
+[[comparator]]
+model_id = "gkmsvm"
+expected_disposition = "blocked_no_project_trained_weights_runtime_or_gse281364_predictions"
+expected_joined_row_keys = 0
+expected_unique_native_scores = 0
+valid_for_future_native_descriptive_scoring = false
+valid_for_current_shortlist = false
+
+[[comparator]]
+model_id = "deltasvm"
+expected_disposition = "blocked_no_shared_gkmsvm_weights_clean_room_wrapper_or_gse281364_predictions"
+expected_joined_row_keys = 0
+expected_unique_native_scores = 0
+valid_for_future_native_descriptive_scoring = false
+valid_for_current_shortlist = false
+
+[row_authority]
+tree_path = "executions/model-check-220-21088696"
+artifacts_sha256 = "61f3ce0d8a92df554ba4bfdbaa674d4838a4c0e3762025f3f06cb5c1fcf5d00e"
+member = "contract/row_universe.tsv"
+member_sha256 = "9a336c75f74d1ec55503429e0ef43c5b16ff42337eaaf8a52a3887df030be393"
+
+[mpralegnet_prediction_authority]
+tree_path = "executions/model-work-102-21069877"
+artifacts_sha256 = "a59c82c5093a61025f39d5fb12c61820711f58e001ee9bc7858bd505140ec5f9"
+score_member = "predictions/allele_scores.tsv"
+score_member_sha256 = "619dc480f78e19ac88d5e524a4eb487f35829d2b9010803fc2ecabee0991637b"
+receipt_member = "predictions/receipt.json"
+receipt_member_sha256 = "1b5979a02a839c2d1a02528c2fe7c6072905ba8254b88922c64d66c7fe0c0334"
+
+[sequence_cnn_authority]
+tree_path = "executions/sequence_gpu_bundle_016_sequence_cnn_control-ready_36823fe74c-21076966"
+artifacts_sha256 = "b379da6299a7fd9b42c77da7da0150403a6268683cc8ecd1a35dd3ad983a33a6"
+receipt_member = "bundle_summary.json"
+receipt_member_sha256 = "a27a85e58c2b8c7ee64d9da8114bc3a3e0aefd101c9909f81e9e94d4d0f15e9b"
+
+[sequence_transformer_authority]
+tree_path = "executions/sequence-control-training-inference-probe-21064273"
+artifacts_sha256 = "c8b89cbce015d100380f659247a900dba5922bc7d419073e5fd83beb62c822e0"
+receipt_member = "validation/summary.json"
+receipt_member_sha256 = "4066f0458fb8361b78a284589cabdc49e3aa38fe2385fdd5e36bdd43180a9051"
+
+[partial_campaign_authority]
+tree_path = "executions/model-work-502-21091229"
+artifacts_sha256 = "044245a3bbc4cb9ebd03bfc889572169879db20ed9a4511f38a86fdcd5288441"
+task_spec_member = "task_spec/task_spec.json"
+task_spec_member_sha256 = "d8d59a0c3495f52d097cfe8e09de0ceed952d7779845564b256969edc2e90170"
+candidate_summary_member = "evaluation/candidate_summary.tsv"
+candidate_summary_member_sha256 = "929502b86c1abb46947cb5f19d420eab8fa73f3144f5d6a2efe884ddd558025c"
+
+[file_authorities.mpralegnet_checkpoints]
+path = "config/artifacts/models/mpralegnet/checkpoints.json"
+sha256 = "12f9418d229274b8f14feceed1b1bf4aa918a040326ce85193ad81bf0073880e"
+
+[file_authorities.mpralegnet_crosswalk]
+path = "config/artifacts/models/mpralegnet/development_crosswalk.json"
+sha256 = "26f84732a802f33d08f0718dc360285702a5f9fe7b1dc2f1b09b91953565cfb5"
+
+[file_authorities.mpralegnet_exposure]
+path = "config/artifacts/models/mpralegnet/exposure_audit.json"
+sha256 = "bafdb3a9fc66c7425ee43320f94d47f5ed253407bfa79cb3e670c75da74babfa"
+
+[file_authorities.sequence_controls_checkpoints]
+path = "config/artifacts/models/regulatory_native_controls/checkpoints.json"
+sha256 = "75c435017ee2e7a3a7504cbd748e85f29a6430bf7820434832e10590b7e896d4"
+
+[file_authorities.sequence_controls_crosswalk]
+path = "config/artifacts/models/regulatory_native_controls/development_crosswalk.json"
+sha256 = "9f58cfeda210fd439da630a86848dbd1d3cb9cee93345cd577aa81c283eb9e9f"
+
+[file_authorities.sequence_controls_exposure]
+path = "config/artifacts/models/regulatory_native_controls/exposure_audit.json"
+sha256 = "ae3e6866e8a4c209ed321ad1816fe035f419cd17d2e198e91663c176482cad4b"
+
+[file_authorities.deltasvm_checkpoints]
+path = "config/artifacts/models/deltasvm/checkpoints.json"
+sha256 = "6d719f820ffcbc17d6726c60bb5168e092a87c363fdb7976aaf8d4e34790c38d"
+
+[file_authorities.deltasvm_crosswalk]
+path = "config/artifacts/models/deltasvm/development_crosswalk.json"
+sha256 = "99ec993603a65f9926d98b93f82d823d60ae8b058d95f3c5e2d3a6382814e686"
+
+[file_authorities.deltasvm_exposure]
+path = "config/artifacts/models/deltasvm/exposure_audit.json"
+sha256 = "1acedca9ea5a799dc5d77b0568657a1cca876b0e4992a446b312749a1a6e026f"
+
+[file_authorities.gkmsvm_checkpoints]
+path = "config/artifacts/models/gkmsvm/checkpoints.json"
+sha256 = "a7e378273faea57bacf40db911865ab85e3d62089caa1ca4b7838194175f6b6c"
+
+[file_authorities.gkmsvm_crosswalk]
+path = "config/artifacts/models/gkmsvm/development_crosswalk.json"
+sha256 = "6a8b9e167b858fa000e429feb30806c2de1b6f1fa3deccb39736a7b3b2412d67"
+
+[file_authorities.gkmsvm_exposure]
+path = "config/artifacts/models/gkmsvm/exposure_audit.json"
+sha256 = "e9b28dcb827267cd29431f3f81ab86907c90a7cc52bfa6a55af598fa675c438a"
+
+[campaign]
+job_name = "model-check-225"
+partition = "cpu"
+account = "nslab"
+qos = "nslab"
+cpus = 2
+memory_gb = 24
+hours = 4
+array = false
+bundled = true
+no_overwrite = true

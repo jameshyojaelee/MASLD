@@ -2,124 +2,123 @@
   "activation_disposition": {
     "admission_status": "blocked",
     "downloads_installs_jobs_or_tests_performed": false,
-    "reason": "The generic shuffled_outcome role now has a frozen split-preserving permutation contract, but it is not an estimator by itself. No parent estimator binding, permutation count, project implementation, fitted state, or runtime receipt exists.",
+    "reason": "The generic shuffled_outcome role now has a frozen split-preserving permutation requirement, but it is not an estimator by itself. No parent estimator binding, permutation count, project implementation, fitted state, or runtime receipt exists.",
     "selection": "This is a negative control only. It is excluded from baseline rosters, strongest-baseline comparisons, model-family wins, stacks, promotion gates, and champion eligibility."
-  },
-  "roster_contract": {
-    "count": 1,
-    "registry_ids": ["shuffled_outcome"],
-    "no_implicit_members": true,
-    "scope": "the_single_registered_split_preserving_shuffled_outcome_control"
-  },
-  "registry_snapshot": {
-    "source": "config/models/mandatory_baselines.toml",
-    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-    "model": {
-      "model_id": "shuffled_outcome",
-      "display_name": "Split-preserving shuffled-outcome control",
-      "implementation_type": "classical_baseline",
-      "checkpoint_revision": "UNRESOLVED",
-      "checkpoint_sha256": "UNRESOLVED",
-      "license_status": "UNRESOLVED",
-      "exposure_status": "unknown",
-      "status": "candidate",
-      "admission_blocking": true,
-      "supported_tasks": ["variant_to_regulation", "typed_evidence_graph", "perturbation_transfer"]
-    }
-  },
-  "current_task_registry_crosswalk": {
-    "variant_to_regulation": {
-      "capability_role": "negative_control",
-      "native_outputs": ["shuffled_score"],
-      "allowed_endpoints": ["allelic_direction", "eqtl_retrieval", "mpra_activity"],
-      "primary_eligible": false,
-      "is_mandatory_baseline": false,
-      "task_baseline_list": "absent"
-    },
-    "typed_evidence_graph": {
-      "capability_role": "negative_control_only",
-      "task_baseline_list": "absent",
-      "primary_or_champion_eligible": false
-    },
-    "perturbation_transfer": {
-      "capability_role": "negative_control_only",
-      "task_baseline_list": "absent",
-      "primary_or_champion_eligible": false
-    },
-    "scheduling_consequence": "The registry's supported_tasks field permits a future parent-bound diagnostic. It does not add shuffled_outcome to any current mandatory baseline set or authorize a campaign."
   },
   "algorithm_contract": {
     "algorithm_id": "masld_split_preserving_shuffled_outcome_v1",
-    "scientific_class": "parent_bound_negative_control",
-    "realization_id": "shuffled_outcome::{task_id}::{parent_model_id}::{outer_fold_id}::{permutation_index}",
-    "parent_binding": "Bind one exact admitted supervised parent estimator, task, adaptation regime, input rows, outer and inner folds, feature pipeline, endpoint, gene or candidate axis, calibration rule, and RunSpec. The generic registry ID has no prediction function without this binding.",
-    "shuffle_scope": "Permute training outcome bundles only. Features, outer roles, held/development outcomes, evaluator labels, donor or biological-unit assignments, genomic blocks, graph removal, and missing evidence inputs are never shuffled.",
-    "outcome_bundle": "The smallest complete outcome object that preserves the task's biological and correlation structure, including all response dimensions, repeated measures, eligibility, and outcome missingness for one exchangeability group.",
     "deterministic_derangement": {
-      "seed_material": "UTF8('masld_shuffled_outcome_v1' || campaign_hash || task_id || parent_model_id || outer_fold_id || permutation_index || stratum_id)",
-      "ordering": "Within each precommitted exchangeability stratum, sort eligible group IDs by the lexicographic SHA-256 hex digest of seed_material || group_id.",
-      "offset": "For n >= 2 groups, k = 1 + (unsigned integer represented by the first 16 hexadecimal characters of SHA256(seed_material || 'offset')) modulo (n - 1).",
       "mapping": "Map the outcome bundle of sorted group i to feature group (i + k) modulo n. Because k is nonzero, the rotation has no fixed group.",
-      "small_stratum": "If n < 2 shape-compatible groups, emit not_applicable for that stratum. Do not relax strata after inspecting outcomes.",
-      "receipt": "Persist stable group IDs, stratum IDs, hashes, ordering, offset, source and destination mapping, and a proof that no bundle crossed a forbidden boundary or remained attached to its original group."
+      "offset": "For n >= 2 groups, k = 1 + (unsigned integer represented by the first 16 hexadecimal characters of SHA256(seed_material || 'offset')) modulo (n - 1).",
+      "ordering": "Within each precommitted exchangeability stratum, sort eligible group IDs by the lexicographic SHA-256 hex digest of seed_material || group_id.",
+      "receipt": "Persist stable group IDs, stratum IDs, hashes, ordering, offset, source and destination mapping, and a proof that no bundle crossed a forbidden boundary or remained attached to its original group.",
+      "seed_material": "UTF8('masld_shuffled_outcome_v1' || campaign_hash || task_id || parent_model_id || outer_fold_id || permutation_index || stratum_id)",
+      "small_stratum": "If n < 2 shape-compatible groups, emit not_applicable for that stratum. Do not relax strata after inspecting outcomes."
     },
-    "permutation_count": "No default. The exact count and permutation indices must be frozen in RunSpec before fitting or scoring. The current registry is blocked until that count is defined for each realized control.",
     "fit_rule": "Refit every outcome-dependent parent step, supervised head, feature selection step, regularization choice, early stopping rule, threshold, and calibrator using shuffled outer-training labels only. An outcome-independent transform may be reused only when its exact train-only artifact and independence proof are hashed.",
     "held_label_rule": "True development or sealed labels remain evaluator-only and unmodified. They are used only to score the frozen shuffled-control predictions under the ordinary evaluator.",
-    "output_rule": "Emit the parent's native output type with control_role=negative_control, parent_model_id, permutation_index, mapping receipt hash, and explicit exclusion flags."
+    "outcome_bundle": "The smallest complete outcome object that preserves the task's biological and correlation structure, including all response dimensions, repeated measures, eligibility, and outcome missingness for one exchangeability group.",
+    "output_rule": "Emit the parent's native output type with control_role=negative_control, parent_model_id, permutation_index, mapping receipt hash, and explicit exclusion flags.",
+    "parent_binding": "Bind one exact admitted supervised parent estimator, task, adaptation regime, input rows, outer and inner folds, feature pipeline, endpoint, gene or candidate axis, calibration rule, and RunSpec. The generic registry ID has no prediction function without this binding.",
+    "permutation_count": "No default. The exact count and permutation indices must be frozen in RunSpec before fitting or scoring. The current registry is blocked until that count is defined for each realized control.",
+    "realization_id": "shuffled_outcome::{task_id}::{parent_model_id}::{outer_fold_id}::{permutation_index}",
+    "scientific_class": "parent_bound_negative_control",
+    "shuffle_scope": "Permute training outcome bundles only. Features, outer roles, held/development outcomes, evaluator labels, donor or biological-unit assignments, genomic blocks, graph removal, and missing evidence inputs are never shuffled."
   },
-  "task_specific_exchangeability": {
-    "variant_to_regulation": {
-      "group": "merged native-build LD block and locus, including exact and reverse-complement sequence-identity groups",
-      "bundle": "All eligible training outcomes for the locus on one frozen endpoint, assay, context roster, direction convention, candidate schema, and outcome-mask topology.",
-      "strata": ["outer_training_role", "source_family", "assay", "endpoint", "context_roster", "native_build", "bundle_schema_and_shape"],
-      "prohibitions": ["No variant-row shuffle inside an LD block.", "No REF/ALT swap masquerading as an outcome shuffle.", "No shuffle of GSE289173 signed eQTL or ieQTL outcomes; the capability registry excludes the primary signed endpoint.", "No cross-assay pooling of MPRA activity, accessibility, enhancer-gene links, and QTL effects."],
-      "eligible_outputs": ["allelic_direction", "eqtl_retrieval", "mpra_activity"]
-    },
-    "typed_evidence_graph": {
-      "group": "independent native-build LD locus plus its gene-block candidate bundle inside one pseudo-held development source",
-      "bundle": "Supported or explicit tested-negative labels, eligibility, and outcome-state masks for the full candidate bundle.",
-      "strata": ["outer_training_role", "pseudo_held_source_family", "evidence_family", "native_build", "candidate_bundle_schema_and_shape", "remaining_source_observability_bin_frozen_without_outcomes"],
-      "prohibitions": ["Complete pseudo-held-source removal occurs before feature construction and permutation.", "Held-source observability, eligibility, prevalence, or degree cannot define strata.", "Candidate rows, genes, variants, and edges are not independently permuted.", "No LD or gene block is split; one complete compatible block bundle maps to another complete compatible block bundle."],
-      "eligible_outputs": ["negative_control_held_source_score"]
-    },
+  "calibration_uncertainty_and_interpretation": {
+    "biological_uncertainty": "Within a realized control, use the task's ordinary donor, biological-replicate or animal, LD-block, or LD plus gene-block cluster bootstrap. Do not resample cells, guides, targets, genes, edges, or seeds as independent units.",
+    "calibration": "If the parent has a calibrator, refit it only on cross-fitted shuffled training predictions and shuffled labels. Never use the real model's calibrator, held-label prevalence, or the negative control to recalibrate the real model.",
+    "interpretation": "Unexpected above-null performance triggers a leakage, confounding, topology, or evaluator audit. It is never model evidence, a baseline win, or a biological discovery.",
+    "p_values": "Do not call a permutation p-value unless the number of permutations, tail, statistic, exchangeability groups, handling of inapplicable strata, and plus-one correction were registered before any score was observed.",
+    "permutation_distribution": "Variation across permutation indices is a negative-control distribution, not biological uncertainty, model-seed uncertainty, or an inferential sample size."
+  },
+  "current_task_registry_crosswalk": {
     "perturbation_transfer": {
-      "group": "target locus and guide family with all nested biological-unit response rows",
-      "bundle": "The complete gene-response matrix and outcome masks for one target across the same biological-replicate roster and declared contexts.",
-      "strata": ["outer_training_role", "source_family", "species", "assay", "context_time_and_dose", "perturbation_component_arity", "response_gene_axis", "biological_unit_and_outcome_mask_topology"],
-      "prohibitions": ["All guides and cells for one target move as one target-level outcome bundle.", "No cell, guide, target row, library, gene, or seed is treated as an independent biological replicate.", "No outcome bundle crosses species, assay, context, time, dose, experimental replicate, batch, or animal topology.", "GSE313774 outcomes remain withheld and are never shuffled for training."],
-      "eligible_outputs": ["parent_native_expression_prediction_labeled_negative_control"]
+      "capability_role": "negative_control_only",
+      "primary_or_champion_eligible": false,
+      "task_baseline_list": "absent"
+    },
+    "scheduling_consequence": "The registry's supported_tasks field permits a future parent-bound diagnostic. It does not add shuffled_outcome to any current mandatory baseline set or authorize a campaign.",
+    "typed_evidence_graph": {
+      "capability_role": "negative_control_only",
+      "primary_or_champion_eligible": false,
+      "task_baseline_list": "absent"
+    },
+    "variant_to_regulation": {
+      "allowed_endpoints": [
+        "allelic_direction",
+        "eqtl_retrieval",
+        "mpra_activity"
+      ],
+      "capability_role": "negative_control",
+      "is_mandatory_baseline": false,
+      "native_outputs": [
+        "shuffled_score"
+      ],
+      "primary_eligible": false,
+      "task_baseline_list": "absent"
     }
+  },
+  "identity_exposure_runtime_terms_and_release": {
+    "champion": "permanently_ineligible",
+    "checkpoint": "none_for_the_generic_control; inherits_the_exact_parent_checkpoint_and_artifact_identity",
+    "exposure": "Inherit the most restrictive parent checkpoint, corpus, local-data, and fitted-state exposure. The shuffled fitted head is deliberately exposed to permuted development labels but must remain unexposed to held labels.",
+    "implementation": "No repo-local implementation or fitted state exists.",
+    "license": "Inherit every parent code and weight restriction plus the unresolved project implementation license. A control cannot make restricted parent weights releasable.",
+    "release": "If predictions are released, mark them unmistakably as negative controls and include parent, split, permutation, mapping, exposure, and terms receipts. Never advertise a shuffled artifact as a model checkpoint.",
+    "runtime": "Inherit the parent runtime and resource class. Deterministic SHA-256 mapping is project logic; no runtime claim exists until the parent-bound fixture passes on an approved SLURM campaign.",
+    "safe_loading": "Inherit all parent safe-loading restrictions and store permutation mappings in bounded schema-validated text or tabular form. Untrusted executable deserialization is prohibited."
   },
   "missingness_contract": {
     "input_missingness": "Feature and assay masks remain attached to their original feature rows and are never permuted.",
     "outcome_missingness": "Outcome eligibility and exact outcome missing-state masks travel with the complete outcome bundle. Strata require compatible schema and topology so permutation cannot manufacture observed values.",
-    "states": ["observed", "structurally_missing", "not_applicable", "below_qc", "unavailable_permission", "join_unresolved", "withheld_sealed", "derivable_not_processed"],
-    "rule": "Neither feature nor outcome missingness is encoded as numerical zero. A missing bundle or insufficient exchangeability stratum is not_applicable."
+    "rule": "Neither feature nor outcome missingness is encoded as numerical zero. A missing bundle or insufficient exchangeability stratum is not_applicable.",
+    "states": [
+      "observed",
+      "structurally_missing",
+      "not_applicable",
+      "below_qc",
+      "unavailable_permission",
+      "join_unresolved",
+      "withheld_sealed",
+      "derivable_not_processed"
+    ]
   },
-  "calibration_uncertainty_and_interpretation": {
-    "calibration": "If the parent has a calibrator, refit it only on cross-fitted shuffled training predictions and shuffled labels. Never use the real model's calibrator, held-label prevalence, or the negative control to recalibrate the real model.",
-    "permutation_distribution": "Variation across permutation indices is a negative-control distribution, not biological uncertainty, model-seed uncertainty, or an inferential sample size.",
-    "biological_uncertainty": "Within a realized control, use the task's ordinary donor, biological-replicate or animal, LD-block, or LD plus gene-block cluster bootstrap. Do not resample cells, guides, targets, genes, edges, or seeds as independent units.",
-    "p_values": "Do not call a permutation p-value unless the number of permutations, tail, statistic, exchangeability groups, handling of inapplicable strata, and plus-one correction were registered before any score was observed.",
-    "interpretation": "Unexpected above-null performance triggers a leakage, confounding, topology, or evaluator audit. It is never model evidence, a baseline win, or a biological discovery."
+  "registry_snapshot": {
+    "model": {
+      "admission_blocking": true,
+      "checkpoint_revision": "UNRESOLVED",
+      "checkpoint_sha256": "UNRESOLVED",
+      "display_name": "Split-preserving shuffled-outcome control",
+      "exposure_status": "unknown",
+      "implementation_type": "classical_baseline",
+      "license_status": "UNRESOLVED",
+      "model_id": "shuffled_outcome",
+      "status": "candidate",
+      "supported_tasks": [
+        "variant_to_regulation",
+        "typed_evidence_graph",
+        "perturbation_transfer"
+      ]
+    },
+    "source": "config/models/mandatory_baselines.toml",
+    "source_sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e"
   },
-  "identity_exposure_runtime_terms_and_release": {
-    "checkpoint": "none_for_the_generic_control; inherits_the_exact_parent_checkpoint_and_artifact_identity",
-    "exposure": "Inherit the most restrictive parent checkpoint, corpus, local-data, and fitted-state exposure. The shuffled fitted head is deliberately exposed to permuted development labels but must remain unexposed to held labels.",
-    "runtime": "Inherit the parent runtime and resource class. Deterministic SHA-256 mapping is project logic; no runtime claim exists until the parent-bound fixture passes on an approved SLURM campaign.",
-    "implementation": "No repo-local implementation or fitted state exists.",
-    "safe_loading": "Inherit all parent safe-loading restrictions and store permutation mappings in bounded schema-validated text or tabular form. Untrusted executable deserialization is prohibited.",
-    "license": "Inherit every parent code and weight restriction plus the unresolved project implementation license. A control cannot make restricted parent weights releasable.",
-    "release": "If predictions are released, mark them unmistakably as negative controls and include parent, split, permutation, mapping, exposure, and terms receipts. Never advertise a shuffled artifact as a model checkpoint.",
-    "champion": "permanently_ineligible"
+  "roster_contract": {
+    "count": 1,
+    "no_implicit_members": true,
+    "registry_ids": [
+      "shuffled_outcome"
+    ],
+    "scope": "the_single_registered_split_preserving_shuffled_outcome_control"
   },
+  "schema_version": "masld-bench-local-model-preflight-v1",
   "source_evidence": "The local mandatory-baseline registry, three TaskSpecs and splits, and the variant capability registry were inspected on 2026-08-22. This is a project-owned negative-control specification; no package, code, model, data, job, or test was downloaded or run.",
   "source_records": [
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-      "size_bytes": 59115
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+      "size_bytes": 59705
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/evaluation/variant_to_regulation_capabilities.toml",
@@ -157,6 +156,75 @@
       "size_bytes": 839
     }
   ],
-  "schema_version": "masld-bench-local-model-preflight-v1",
+  "task_specific_exchangeability": {
+    "perturbation_transfer": {
+      "bundle": "The complete gene-response matrix and outcome masks for one target across the same biological-replicate roster and declared contexts.",
+      "eligible_outputs": [
+        "parent_native_expression_prediction_labeled_negative_control"
+      ],
+      "group": "target locus and guide family with all nested biological-unit response rows",
+      "prohibitions": [
+        "All guides and cells for one target move as one target-level outcome bundle.",
+        "No cell, guide, target row, library, gene, or seed is treated as an independent biological replicate.",
+        "No outcome bundle crosses species, assay, context, time, dose, experimental replicate, batch, or animal topology.",
+        "GSE313774 outcomes remain withheld and are never shuffled for training."
+      ],
+      "strata": [
+        "outer_training_role",
+        "source_family",
+        "species",
+        "assay",
+        "context_time_and_dose",
+        "perturbation_component_arity",
+        "response_gene_axis",
+        "biological_unit_and_outcome_mask_topology"
+      ]
+    },
+    "typed_evidence_graph": {
+      "bundle": "Supported or explicit tested-negative labels, eligibility, and outcome-state masks for the full candidate bundle.",
+      "eligible_outputs": [
+        "negative_control_held_source_score"
+      ],
+      "group": "independent native-build LD locus plus its gene-block candidate bundle inside one pseudo-held development source",
+      "prohibitions": [
+        "Complete pseudo-held-source removal occurs before feature construction and permutation.",
+        "Held-source observability, eligibility, prevalence, or degree cannot define strata.",
+        "Candidate rows, genes, variants, and edges are not independently permuted.",
+        "No LD or gene block is split; one complete compatible block bundle maps to another complete compatible block bundle."
+      ],
+      "strata": [
+        "outer_training_role",
+        "pseudo_held_source_family",
+        "evidence_family",
+        "native_build",
+        "candidate_bundle_schema_and_shape",
+        "remaining_source_observability_bin_frozen_without_outcomes"
+      ]
+    },
+    "variant_to_regulation": {
+      "bundle": "All eligible training outcomes for the locus on one frozen endpoint, assay, context roster, direction convention, candidate schema, and outcome-mask topology.",
+      "eligible_outputs": [
+        "allelic_direction",
+        "eqtl_retrieval",
+        "mpra_activity"
+      ],
+      "group": "merged native-build LD block and locus, including exact and reverse-complement sequence-identity groups",
+      "prohibitions": [
+        "No variant-row shuffle inside an LD block.",
+        "No REF/ALT swap masquerading as an outcome shuffle.",
+        "No shuffle of GSE289173 signed eQTL or ieQTL outcomes; the capability registry excludes the primary signed endpoint.",
+        "No cross-assay pooling of MPRA activity, accessibility, enhancer-gene links, and QTL effects."
+      ],
+      "strata": [
+        "outer_training_role",
+        "source_family",
+        "assay",
+        "endpoint",
+        "context_roster",
+        "native_build",
+        "bundle_schema_and_shape"
+      ]
+    }
+  },
   "verified_date": "2026-08-22"
 }

@@ -19,11 +19,11 @@
   },
   "suite_finding": {
     "admitted_upstream_checkpoint": "none",
-    "implementation_state": "not_created_for_all_nine_roles",
+    "implementation_state": "scratch_CNN_terminal_for_eight_development_tasks_other_roles_incomplete",
     "checkpoint_exposure_state": "not_applicable_for_standalone_controls_and_unresolved_for_parent_bound_ablations",
-    "project_fit_exposure_state": "unknown_until_fold_specific_artifacts_exist",
+    "project_fit_exposure_state": "CNN_exact_training_partitions_are_continual_seen_other_unfitted_roles_remain_not_applicable_or_unknown",
     "admission": "blocked",
-    "reason": "Project-local specifications are now explicit, but exact code, architecture or deterministic algorithm artifacts, environments, fit receipts, fixtures, and release terms remain unresolved."
+    "reason": "The suite remains blocked because inclusion is per exact role. The CNN terminal bundle resolves implementation and runtime evidence for eight development tasks but does not resolve its registry license/exposure authorities or admit the other eight roles."
   },
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
@@ -82,10 +82,23 @@
     },
     "sequence_cnn_control": {
       "upstream_exposure": "none_random_initialization",
-      "fit_exposure": "continual_seen_for_outer_training_donors_loci_sequences_and_targets_once_trained",
-      "held_eligibility": "target_label_unexposed only with an immutable architecture, receptive field, train split, seed, head, and artifact receipt before held inference",
+      "fit_exposure": "continual_seen_for_the_exact_outer_training_donors_loci_sequences_and_targets_in_the_terminal_eight_task_bundle",
+      "held_eligibility": "registry exposure remains unknown pending a complete source and checkpoint-exposure authority; the terminal bundle alone does not upgrade it to target_label_unexposed or clean_declared",
       "principal_leakage_risk": "Architecture or parameter-budget tuning on held outcomes, near-identical sequence across blocks, REF/ALT errors, or boundary buffers smaller than the largest admitted model.",
-      "identity_disposition": "standalone_true_scratch_baseline_eligible_only_under_own_artifact"
+      "identity_disposition": "standalone_true_scratch_baseline_with_terminal_development_artifacts_but_registry_and_champion_blocked",
+      "terminal_bundle": {
+        "path": "executions/sequence_gpu_bundle_016_sequence_cnn_control-ready_36823fe74c-21076966",
+        "artifacts_sha256": "b379da6299a7fd9b42c77da7da0150403a6268683cc8ecd1a35dd3ad983a33a6",
+        "logical_tasks": 8,
+        "passed_tasks": 8,
+        "sealed_features_exposed": false,
+        "sealed_outcomes_exposed": false,
+        "benchmark_metrics_calculated": false,
+        "champion_eligible": false,
+        "development_profile_prediction_admitted": true,
+        "comparison_only": true,
+        "release_eligible": false
+      }
     },
     "sequence_transformer_control": {
       "upstream_exposure": "none_random_initialization",
@@ -112,7 +125,7 @@
     "profile": "Every applicable RNA-conditioned ATAC control must emit a complete finite profile without observed query ATAC. An embedding or target-assisted reconstruction fails capability."
   },
   "known_incidents_and_biases": [
-    "All nine registry entries currently have unresolved source, revision, license, runtime, and fixed-fixture evidence; the specification bundle does not admit them for execution.",
+    "The CNN has exact source, runtime, and terminal development artifacts for eight tasks, but its registry license/exposure authorities remain unresolved. The remaining roles keep their role-specific blockers and cannot borrow the CNN receipt.",
     "A simple mean, context prototype, or nearest-neighbor bank can leak held donors just as a trained model can.",
     "Cell-weighted means let large cell yields dominate donors. The frozen specification therefore uses donor-level assay-native profiles and equal donor weights.",
     "Same-donor RNA and ATAC from GSE244832 are not same-cell pairs. Any cell-to-cell pairing would be fabricated.",
@@ -122,14 +135,14 @@
     "Cells, nuclei, peaks, variants, loci, permutation rows, and seeds are not independent biological donors."
   ],
   "runtime_disposition": {
-    "current": "unresolved_no_environment_or_implementation_artifact_for_any_role",
-    "no_action": "No dependency was installed, no artifact downloaded, no job submitted, and no code or model test run for this audit.",
+    "current": "CNN_terminal_development_runtime_passed_other_roles_role_specific",
+    "no_action": "This reconciliation does not install dependencies, submit jobs, mutate frozen results, score predictions, or open evaluator outcomes.",
     "future_cpu": "Mean, distance, retrieval, and deterministic permutation construction should pass CPU SLURM fixtures unless their concrete parent requires GPU inference.",
     "future_gpu": "Scratch CNN or transformer and parent-bound neural ablations require runtime-specific import, forward/backward where trained, checkpoint resume, deterministic seed, and numeric-tolerance receipts.",
     "safe_state": "Prefer JSON, Parquet, safetensors, or another bounded non-executable format with hashes. Untrusted pickle, joblib, torch.load of unrestricted objects, RDS, or AnnData model-state loading is not admitted."
   },
   "license_and_release_disposition": {
-    "project_implementation_license": "UNRESOLVED_no_code_artifact",
+    "project_implementation_license": "UNRESOLVED_for_sequence_cnn_control_despite_exact_code_artifact",
     "standalone_upstream_weights": "none",
     "parent_bound_terms": "strictest parent code, weight, derivative, data, and redistribution conditions apply to reused artifacts",
     "input_and_output_rights": "unresolved_per_dataset_annotation_regulatory_feature_table_and_derived_output",
@@ -137,7 +150,8 @@
     "identity": "No control may be released or cited under a model backbone, checkpoint, or champion name that its own immutable receipt does not implement."
   },
   "remaining_blockers": [
-    "Implement each selected standalone control or parent-specific ablation under a unique immutable implementation ID and source hash; do not reuse the nine generic registry IDs as executable identities.",
+    "Implement each remaining selected standalone control or parent-specific ablation under a unique immutable implementation ID and source hash; do not reuse the CNN receipt for another role.",
+    "Resolve the CNN project code/license and complete checkpoint-exposure authority before registry admission or release.",
     "Freeze architecture, deterministic algorithm, preprocessing, output axes, model-state format, runtime, dependencies, seeds, and licenses for each implementation.",
     "For parent-bound ablations, bind the exact parent checkpoint, preprocessing, receptive field, input mapper, trainable parameters, data exposure, and redistribution terms.",
     "Register fold-specific donor-balanced means, reference contexts, prototype banks, feature tables, and permutation assignment hashes before held inference.",
@@ -146,8 +160,8 @@
     "Keep zero-delta, unsigned, ablation, negative-control, and true-baseline claims distinct in evaluation and publication.",
     "Use a project-sealed source only once after selection lock; do not promote an RNA-conditioned ATAC champion unless the conditional FNIH or an equivalent eligible seal activates."
   ],
-  "interpretation": "These controls have no standalone pretrained-checkpoint contamination, but they are not exposure-free. Fold-derived means, prototypes, feature universes, output heads, and permutations are learned or selected state. Parent-bound ablations also carry their parent's checkpoint exposure and terms. The audit therefore blocks all nine until each has an exact implementation and receipt, while preserving the scientific distinction between simple baselines, pathway ablations, and a shuffled-context negative control.",
+  "interpretation": "These controls have no standalone pretrained-checkpoint contamination, but they are not exposure-free. Fold-derived means, prototypes, feature universes, output heads, and permutations are learned or selected state. Parent-bound ablations also carry their parent's checkpoint exposure and terms. The suite remains blocked from inclusion by role. The exact CNN bundle may be scored only as a retrospective development comparator while its registry license/exposure authorities remain unresolved; no other role inherits that exception.",
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "blocked_pending_exact_implementation_runtime_rights_capability_and_endpoint_specific_seal",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-08-24"
 }

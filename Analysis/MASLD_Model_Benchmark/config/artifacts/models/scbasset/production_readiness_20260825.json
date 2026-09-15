@@ -1,0 +1,206 @@
+{
+  "schema_version": "masld-bench-scbasset-production-readiness-v1",
+  "status": "RECONCILED_DEVELOPMENT_ONLY_NO_GPU_UNIT",
+  "model_id": "scbasset",
+  "scope": "outcome_blind_semantics_coverage_leakage_license_exposure_and_dispatch_reconciliation",
+  "native_semantics": {
+    "input_length_bp": 1344,
+    "training_target": "binary_peak_accessibility_per_outer_training_cell",
+    "native_output": "one_sigmoid_accessibility_output_per_outer_training_cell",
+    "observed_atac_role": "outer_training_supervision_only",
+    "observed_query_atac_consumed": false,
+    "rna_context_consumed": false,
+    "held_cell_embedding_available": false,
+    "native_cell_embedding_scope": "transductive_outer_training_cells_only",
+    "donor_transfer_profile": "mean_sequence_predictions_within_training_only_lineage_then_repeat_across_held_donors",
+    "donor_context": "none_sequence_only",
+    "held_donor_profiles_identical_within_lineage": true,
+    "rna_conditioned_model": false,
+    "inductive_observed_multiome_model": false,
+    "allowed_rna_conditioned_atac_role": "sequence_only_profile_baseline",
+    "allowed_observed_multiome_role": "none_under_current_inductive_masked_query_task",
+    "standalone_signed_variant_effect_model": false
+  },
+  "source_authorities": {
+    "checkpoint_authority": {
+      "path": "config/artifacts/models/scbasset/checkpoints.json",
+      "sha256": "591619ba4b72ebfe6ab5fe6562b0d25d79be73cae99e4f25ef27a47bcfcf6b27"
+    },
+    "development_crosswalk": {
+      "path": "config/artifacts/models/scbasset/development_crosswalk.json",
+      "sha256": "0ce0b9fce36a7ca4ba82ccfc560205665149ae5ce4b7791993462aa652aca2dc"
+    },
+    "exposure_audit": {
+      "path": "config/artifacts/models/scbasset/exposure_audit.json",
+      "sha256": "3aa3aa35939cc9968834eedadb159febcd38b2d35fe3ec274dddc75eab80ddf8"
+    },
+    "model_registry": {
+      "path": "config/models/chromatin.toml",
+      "sha256": "5fabd7dafffa3c2233a752d8a5016c11670b115bae2a0e4e5f3fc6a8123984ab"
+    },
+    "rna_conditioned_capabilities": {
+      "path": "config/evaluation/rna_conditioned_atac_capabilities.toml",
+      "sha256": "c779f06dedf69a15ec44280323a7701e0938b75bfa2660d11dd2a6f5de37868d"
+    },
+    "observed_multiome_task": {
+      "path": "config/evaluation/observed_multiome_task.toml",
+      "sha256": "abc634ea96718031d7212c4a1229fe3fd84c626d8ad46d75fd68fda91ccdb729"
+    },
+    "observed_multiome_capabilities": {
+      "path": "config/evaluation/observed_multiome_task_capabilities.toml",
+      "sha256": "6c2e92a78af315a0412a949de208daea5ec28d30fdd2e421a7762d3ffe6252b8"
+    },
+    "native_adapter": {
+      "path": "src/masld_bench/adapters/scbasset_native.py",
+      "sha256": "06bf7f9a03aa68d2e9978cd4c44abd5716b84be94cc5fcb7b05b3b87dbec081f"
+    },
+    "sequence_profile_adapter": {
+      "path": "src/masld_bench/adapters/scbasset_sequence_profile.py",
+      "sha256": "9894ec41455575ac9982a63bf294e178ceeb2e71019c546db60903e7b03754fa"
+    },
+    "input_builder": {
+      "path": "scripts/scbasset_build_fold_inputs.py",
+      "sha256": "474bfa110296e7aaae5de34555fcbfc77f33e935a7037cbb3bcad69398beb7e8"
+    },
+    "training_source": {
+      "path": "scripts/scbasset_train_fold.py",
+      "sha256": "21e55cb779b007c70c536841f92c47e7a7dc74733e69ea6d3e2b2bd481d9cbd8"
+    },
+    "prediction_source": {
+      "path": "scripts/scbasset_predict_fold.py",
+      "sha256": "e81de041fbefb1129097b4dc3bb060ae0a26e663da5053d8baa6687245f5a84b"
+    }
+  },
+  "smoke_and_runtime": {
+    "runtime_artifact_root": "executions/scbasset-native-runtime-probe-21064213",
+    "runtime_artifacts_sha256": "a46198d7e60a8f88dabdb201aed0f3738cc823909d3c9ba2dd63ceaa75668844",
+    "training_probe_artifact_root": "executions/scbasset-training-script-probe-21064318",
+    "training_probe_artifacts_sha256": "6e8cc84027ea4ce97d3f3b6dce0a3efe947c4b22be83060a88ac7412b8fd06c4",
+    "prediction_probe_artifact_root": "executions/scbasset-prediction-script-probe-21064281",
+    "prediction_probe_artifacts_sha256": "994df2605e7c55a4afd5329316fc80d9f64c7c2031274b55b0076e47a929435c",
+    "l40s_forward_backward_passed": true,
+    "hdf5_weights_only_load_passed": true,
+    "checkpoint_resume_passed": true,
+    "profile_fixture_artifact_passed": true,
+    "reverse_complement_tta_passed": true,
+    "public_tutorial_weights_used": false
+  },
+  "five_fold_valid_coverage": {
+    "campaign_audit_artifact_root": "executions/model-cpu-audit-033-21084760",
+    "campaign_audit_artifacts_sha256": "77c8156a80ea511ef4e4698a39f1a47276530fd675dd25dad6e785f465e1c35b",
+    "dataset_id": "gse296875",
+    "outer_folds": [0, 1, 2, 3, 4],
+    "biological_unit": "donor",
+    "donors": 39,
+    "each_donor_test_once": true,
+    "each_donor_validation_once": true,
+    "prediction_roles_present": ["valid"],
+    "test_role_predictions_present": false,
+    "seed_by_outer_fold": {
+      "0": 11,
+      "1": 20260824,
+      "2": 20260824,
+      "3": 20260824,
+      "4": 20260824
+    },
+    "mixed_seed_meta_aggregate": true,
+    "uniform_prediction_lock_folds": [1, 2, 3, 4],
+    "legacy_unlocked_fold": 0,
+    "uniform_five_fold_prediction_lock_complete": false,
+    "all_five_means_all_outer_folds_not_all_seeds_or_test_blocks": true,
+    "development_gate_passed": false,
+    "gpu_production_authorized_by_later_audit": false,
+    "champion_claim_allowed": false
+  },
+  "fixed_seed_rectangle": {
+    "matrix_gate_artifact_root": "executions/scbasset-diagonal-matrix-gate-21067170",
+    "matrix_gate_artifacts_sha256": "1b566cabc831f775c569b573bf2c76191fa66c8ceaf83c69ade9078ff1a3ae13",
+    "historical_bundle_plan_artifact_root": "executions/sequence-gpu-bundle-plan-21068430",
+    "historical_bundle_plan_artifacts_sha256": "36dd9ad437bdd61e150e1c681a88bfdf946672c768bffe5f78fac8ab2c352e69",
+    "outer_folds": [0, 1, 2, 3, 4],
+    "screening_seeds": [20260824, 20260825, 20260826],
+    "expected_fits": 15,
+    "expected_valid_prediction_views": 15,
+    "complete_compatible_fits": 4,
+    "complete_compatible_valid_prediction_views": 4,
+    "complete_contexts": [
+      [1, 20260824],
+      [2, 20260824],
+      [3, 20260824],
+      [4, 20260824]
+    ],
+    "missing_fits": 11,
+    "missing_valid_prediction_views": 11,
+    "legacy_fold0_seed11_is_rectangle_member": false,
+    "legacy_crosswalk_seeds": [11, 29, 47, 71, 101],
+    "legacy_crosswalk_seeds_may_be_mixed_with_screening_rectangle": false,
+    "fixed_seed_rectangle_complete": false,
+    "partial_ranking_allowed": false
+  },
+  "leakage_controls": {
+    "donor_test_fold": "outer_fold",
+    "donor_validation_fold": "outer_fold_plus_one_modulo_five",
+    "training_donor_folds": "remaining_three_folds",
+    "same_donor_cross_partition_allowed": false,
+    "training_peak_and_cell_filters_fit_inside_outer_training_only": true,
+    "genomic_train_valid_test_disjoint": true,
+    "genomic_boundary_buffer_bp": 1344,
+    "genomic_test_atac_used_for_training": false,
+    "held_donor_atac_used_for_inference": false,
+    "held_cell_output_columns_allowed": false,
+    "ambiguous_sequence_policy": "deterministic_reject_or_prespecified_encoding_only",
+    "missing_evidence_encoded_as_zero": false,
+    "cells_are_biological_replicates": false
+  },
+  "license_exposure_and_promotion": {
+    "code_license": "Apache-2.0",
+    "project_weights": "locally_trained_from_scratch",
+    "project_weight_redistribution_decision": "not_yet_frozen",
+    "tutorial_weight_terms": "undeclared",
+    "tutorial_weights_admitted": false,
+    "gse296875_exposure_state": "continual_seen",
+    "gse289173_exposure_state": "target_label_unexposed",
+    "target_label_unexposed_equals_champion_eligible": false,
+    "rna_conditioned_profile_fixture_artifact_exists": true,
+    "rna_conditioned_global_capability_registry_lists_fixture_passed": false,
+    "observed_multiome_capability_registry_lists_scbasset": false,
+    "observed_multiome_execution_authorized": false,
+    "external_evaluation_complete": false,
+    "sealed_evaluation_complete": false,
+    "open_champion_eligible_now": false,
+    "universal_claim_allowed": false
+  },
+  "dispatcher_reconciliation": {
+    "historical_queue_item_path": "config/campaigns/gpu_bundle_queue/036-scbasset-fold1to4.json",
+    "historical_queue_item_sha256": "6ba5d9bfb04f5aafb85ed7583a216594c89cca343e02de5df788a054af8c2592",
+    "historical_claim_path": "executions/gpu-bundle-dispatch-state/claims/scbasset-fold1to4-chain-v2-generic1.json",
+    "historical_claim_sha256": "735627b1229b41d9d0b283cbf0e01bc3285eaa7d2cb7a6ce1263efcf84924428",
+    "historical_bundle_id": "scbasset-fold1to4-chain-v2-generic1",
+    "historical_job_id": 21069969,
+    "historical_item_already_claimed": true,
+    "historical_item_is_next_gpu_unit": false,
+    "historical_plan_candidate_bundle_id": "sequence_gpu_bundle_030_scbasset-ready_with_internal_dependencies_89013a7300",
+    "historical_plan_candidate_logical_tasks": 6,
+    "historical_plan_candidate_fits": 3,
+    "historical_plan_predates_later_terminal_development_audit": true,
+    "later_development_gate_supersedes_gpu_candidate": true,
+    "valid_next_centrally_dispatched_gpu_unit_exists": false,
+    "new_queue_registration_authorized": false,
+    "direct_gpu_submission_authorized": false,
+    "reason": "later_frozen_development_gate_failed_and_current_observed_multiome_task_does_not_admit_scbasset"
+  },
+  "firewall": {
+    "artifact_manifests_may_be_read": true,
+    "structural_receipts_may_be_read": true,
+    "source_code_may_be_read": true,
+    "prediction_values_may_be_read": false,
+    "metric_values_may_be_read": false,
+    "raw_outcomes_may_be_read": false,
+    "sealed_features_may_be_read": false,
+    "sealed_labels_or_outcomes_may_be_read": false,
+    "partial_results_may_be_ranked": false,
+    "thresholds_may_be_changed": false,
+    "gpu_queue_may_be_registered_by_this_audit": false,
+    "gpu_job_may_be_submitted_by_this_audit": false
+  }
+}

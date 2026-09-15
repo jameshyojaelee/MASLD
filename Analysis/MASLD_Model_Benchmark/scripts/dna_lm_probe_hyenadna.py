@@ -21,7 +21,7 @@ TOKEN_IDS = {"A": 7, "C": 8, "G": 9, "T": 10, "N": 11}
 
 
 class HyenaProbeError(ValueError):
-    """Raised when the runtime probe violates its frozen fixture contract."""
+    """Raised when the runtime probe does not meet its frozen fixture requirements."""
 
 
 def _sha256_text(value: str) -> str:
@@ -70,7 +70,7 @@ def _read_manifest(path: Path) -> list[dict[str, str]]:
 
 
 def _tokenize(sequence: str) -> torch.Tensor:
-    # This exactly reproduces the admitted character tokenizer: one token per
+    # This exactly reproduces the included character tokenizer: one token per
     # input base followed by [SEP]=1. No padding or truncation is permitted.
     return torch.tensor([TOKEN_IDS[base] for base in sequence] + [1], dtype=torch.long)
 

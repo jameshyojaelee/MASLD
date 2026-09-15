@@ -40,7 +40,7 @@ LANES = {
 
 
 class RuntimeAuditError(ValueError):
-    """Raised when the immutable audit request differs."""
+    """Raised when the read-only audit request differs."""
 
 
 def _sha256_file(path: Path) -> str:
@@ -56,7 +56,7 @@ def _distribution(name: str) -> dict[str, Any]:
         distribution = importlib.metadata.distribution(name)
     except importlib.metadata.PackageNotFoundError:
         return {"name": name, "installed": False}
-    metadata_path = Path(distribution._path)  # immutable dist-info identity
+    metadata_path = Path(distribution._path)  # read-only dist-info identity
     record = metadata_path / "RECORD"
     return {
         "name": name,

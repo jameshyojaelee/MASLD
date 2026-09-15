@@ -1049,7 +1049,7 @@ def validate_nmf_continuous_bundle(
     ):
         raise CoordinatorContractError("Plan20 continuous NMF validation is incomplete")
 
-    # This is immutable *historical* provenance for the code that created the
+    # This is read-only *historical* provenance for the code that created the
     # Plan20 freeze.  Its exact bytes are already sealed by READY above and by
     # the Plan20 owner handoff in normal release preparation.  The historical
     # hashes must remain well-formed and attached to the original IDs, but are

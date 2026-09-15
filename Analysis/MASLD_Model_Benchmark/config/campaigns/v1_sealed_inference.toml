@@ -1,6 +1,6 @@
 schema_version = "masld-bench-campaign-v1"
 campaign_id = "v1-sealed-inference"
-description = "One-time anonymized sealed-feature inference after SelectionLock"
+description = "One-time anonymized held-back feature inference after SelectionLock"
 wave = "sealed_inference"
 status = "blocked_selection_lock"
 prerequisites = ["SelectionLock frozen", "prospective endpoint power decisions frozen", "prediction commit evaluator ready", "For any FNIH task, the separately reviewed FNIH activation manifest is frozen before SelectionLock"]

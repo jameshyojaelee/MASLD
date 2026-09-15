@@ -46,6 +46,13 @@
     "removal_rule": "Remove the evaluated source, aliases, inverse edges, source nodes, observability, coverage, tested status, missingness, derivatives, aggregates, and candidate-universe contributions before deduplication and counting.",
     "wholly_removed_source": "Supported for retrospective source-agnostic recovery because the algorithm has no source-specific learned parameter. Held-source outcomes and eligibility remain evaluator-only."
   },
+  "implementation": {
+    "algorithm_version": "1",
+    "repository": "repo_local_masld_bench",
+    "repository_revision": "UNRESOLVED_no_implementation_exists",
+    "source_code_present": false,
+    "source_code_run": false
+  },
   "input_contract": {
     "canonical_rows": "One promoted immutable graph snapshot with typed directed evidence rows, canonical node IDs, source_family_id, evidence_type, evidence_unit_id, status, provenance, native build, locus, gene, and explicit observability.",
     "continuous_scores": "ignored_by_v1; no assay-native value is thresholded into support after outcome inspection",
@@ -59,13 +66,6 @@
     "native_output": "support_edge_count and explicit source-observability/status summary masks",
     "ranking": "higher_count_ranks_first; preserve ties in the PredictionBundle and let the frozen evaluator apply its registered tie rule",
     "task_role": "mandatory transparent typed-evidence-graph baseline"
-  },
-  "implementation": {
-    "algorithm_version": "1",
-    "repository": "repo_local_masld_bench",
-    "repository_revision": "UNRESOLVED_no_implementation_exists",
-    "source_code_present": false,
-    "source_code_run": false
   },
   "runtime_and_artifact_contract": {
     "execution": "CPU deterministic sorted aggregation",
@@ -84,8 +84,8 @@
   "source_records": [
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/models/mandatory_baselines.toml",
-      "sha256": "8e89cc25c298627617f29927604dc7aa5288a89eb3c1bd3b87b3d5bc0ef6915e",
-      "size_bytes": 59115
+      "sha256": "cd7e67aa068c2a041fbf842564fc20d82be008020bb5226d70bc36c937e4a74d",
+      "size_bytes": 59705
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/tasks/typed_evidence_graph.toml",
@@ -99,8 +99,8 @@
     },
     {
       "identity": "Analysis/MASLD_Model_Benchmark/config/resources.toml",
-      "sha256": "fabdee11b41930cfc29ff73da47e221902d9fc3fc717e8afc7832733eeb94e3a",
-      "size_bytes": 4303
+      "sha256": "6a92759ade3e5f8446ab7688845cae90444e90cf1575121b217c4637fd81de6d",
+      "size_bytes": 4794
     }
   ],
   "task_fit": {

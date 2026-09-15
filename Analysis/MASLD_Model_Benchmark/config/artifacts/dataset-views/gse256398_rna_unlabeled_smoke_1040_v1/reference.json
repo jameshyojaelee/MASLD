@@ -1,0 +1,19 @@
+{
+  "admitted": true,
+  "authority": "reference",
+  "evidence": {
+    "allowed_features": 35455,
+    "crosswalk_artifacts_sha256": "54ca7af31f6ae223defdee4a7c1d7931f7cba4362f621fe9646fd08530c4c6da",
+    "exact_cell_ranger_reference": "unresolved",
+    "gene_name_preserved_features": 23173,
+    "mapped_gene_axis": "GENCODE_v49_version_stripped_stable_ID_exact",
+    "masked_features": 1146,
+    "missing_features_encoded_as_zero": false,
+    "native_feature_genome": "GRCh38",
+    "project_gtf_sha256": "73bbbbd6eb2f114d1536f7cbf2339a653e1edc889b0cbe78992e92560b5aaba9",
+    "source_features": 36601
+  },
+  "parent_dataset_id": "gse256398",
+  "schema_version": "masld-bench-dataset-view-authority-v1",
+  "view_id": "gse256398_rna_unlabeled_smoke_1040_v1"
+}

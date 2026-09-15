@@ -1,4 +1,4 @@
-"""Capture exact software and accelerator provenance for an immutable run."""
+"""Capture exact software and accelerator provenance for a read-only run."""
 
 from __future__ import annotations
 

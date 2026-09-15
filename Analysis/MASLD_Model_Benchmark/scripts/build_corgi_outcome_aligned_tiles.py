@@ -58,7 +58,7 @@ EXCLUDED_FIELDS = CCRE_FIELDS + ("exclusion_reason",)
 
 
 class CorgiTileError(ValueError):
-    """Raised when a reference or fixed-window contract differs."""
+    """Raised when a reference or fixed-window requirement differs."""
 
 
 def digest(path: Path) -> str:

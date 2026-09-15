@@ -1,0 +1,84 @@
+{
+  "admission_status": "training_only_blocked_single_pool_source_identity_and_rights",
+  "dataset_id": "gse242934",
+  "dataset_version": {
+    "accessions": [
+      "GSE242934",
+      "PRJNA1015558"
+    ],
+    "guide_library_sha256": "aa8dfe0469a58e08b3dd818b4414f88ca684e15c176ec813859de5e2d9bf8c07",
+    "matrix_sha256": "caf8d3e2754d4b43c48c33ca71e090b4d6aa2b251ced23b8d50138ead38e965b"
+  },
+  "frozen_receipts": {
+    "materialization": {
+      "artifact_manifest_sha256": "018114c8922cf6b098a1d00ad374312f01cf9f13b5eaeea2ba56162f606d2737",
+      "path": "executions/gse242934-pseudobulk-21067929"
+    },
+    "source_acquisition": {
+      "artifact_manifest_sha256": "58c74c90b13d8778a2378e0b1cdd9ab4b814fde25ea1176d6860b01063759189",
+      "path": "executions/gene-perturbation-training-gse242934_perturbseq-21067795_1"
+    },
+    "source_metadata": {
+      "artifact_manifest_sha256": "eecf97f366b13e9831d37f793e953e2175f3346aa28aab5338fa23d767c0000d",
+      "path": "executions/gene-perturbation-source-gse242934-21066693_2"
+    }
+  },
+  "materialized_topology": {
+    "biological_unit_count": 1,
+    "cell_assignment_totals": {
+      "control": 289,
+      "mixed_control_target": 40,
+      "multi_gene": 2845,
+      "single_gene": 1179,
+      "unassigned": 2613
+    },
+    "called_cell_count": 4353,
+    "expression_cell_count": 6966,
+    "expression_feature_count": 32289,
+    "guide_library_rows": 124,
+    "matrix_nonzero_count": 36232041,
+    "primary_pseudobulk_rule": "Pure non-targeting controls and cells with one unique non-control target gene and no non-targeting guide are aggregated separately within the sole deposited pool. Exact guide families are retained; mixed control-target and multi-gene calls are excluded.",
+    "pseudobulk_column_count": 62,
+    "single_gene_target_count_with_cells": 61
+  },
+  "model_applicability": {
+    "cellot_scgen": "May be used only for descriptive training within this CRISPRa source; no independent held-replicate or held-context evaluation exists.",
+    "cpa_perturblib": "May consume seen CRISPRa perturbation atoms for training only; no held-combination or biological-replicate claim is registered.",
+    "gears_genepert_scgpt_perturbation_head": "May consume exact gene targets for training or development-visible unseen-target engineering only; the one-pool source cannot supply confirmatory evaluation or replicate uncertainty.",
+    "perturbation_native_baselines": "Independent baselines may be fitted only as descriptive training checks; target columns are not biological replicates and no outer evaluation endpoint is admitted."
+  },
+  "replicate_ancestry_evidence": {
+    "deposited_objects": "One Perturb-seq expression library and one guide-amplicon library are deposited.",
+    "independent_biological_unit_count": 1,
+    "source_identity_boundary": "GEO labels the source G4 mESC, whereas the paper describes purified embryonic hepatocytes; embryo and mouse pooling ancestry are not frozen.",
+    "valid_inference": "Training or descriptive single-pool summaries only. Cells, guides, target columns, and files are not biological replicates."
+  },
+  "release_and_exposure": {
+    "allowed_use": "development-visible training or descriptive raw-count topology only",
+    "automatic_redistribution": false,
+    "exposure_status": "downstream_demo",
+    "license_status": "source_terms_apply_no_explicit_GEO_data_license_identified",
+    "normalization_performed": false,
+    "outcome_model_fit": false
+  },
+  "runtime_receipt": {
+    "elapsed_seconds": 28,
+    "job_id": "21067929",
+    "max_rss_accounting": "SLURM batch MaxRSS was 0 and extern MaxRSS was 48 KiB; task-level MaxRSS was unavailable.",
+    "requested": "1 CPU, 8 GiB, 2 hours, io partition",
+    "state": "COMPLETED"
+  },
+  "task_firewalls": {
+    "gse281160": "not a gene-target dataset and never mapped to a nearest gene",
+    "gse313774_accessed": false,
+    "perturbation_direction": "CRISPRa_activation_kept_separate_from_CRISPRi_and_knockout"
+  },
+  "terminal_blockers": [
+    "No independent biological replicate or donor exists, so the source cannot support outer evaluation, uncertainty estimation, or confirmatory claims.",
+    "Resolve the G4 mESC versus purified embryonic-hepatocyte source-label discrepancy and freeze embryo or mouse pooling ancestry.",
+    "Freeze authoritative Cell Ranger mm39 feature-reference provenance and a rights authority for model-input use or aggregate redistribution.",
+    "Keep CRISPRa activation separate from CRISPRi and knockout model tasks and target identities."
+  ],
+  "schema_version": "masld-bench-open-gene-perturbation-admission-v1",
+  "verified_date": "2026-08-24"
+}

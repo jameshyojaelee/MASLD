@@ -73,7 +73,7 @@
     "locus": "Any variant perturbation of motif features is crossed with merged chromosome or LD blocks and keeps the observed accessible-region set frozen independently of the held allele and outcome.",
     "sealed": "GSE289173 RNA, eQTL and interaction-eQTL outcomes cannot infer, select, or calibrate a missing ATAC context."
   },
-  "interpretation": "GET is a chromatin-context model, but its context is observed accessibility, not RNA. It is development-eligible where project ATAC exists and seal-ineligible where it does not. Calling binary-ATAC mode sequence-only would be a modality error because the accessible-region universe still comes from observed ATAC.",
+  "interpretation": "GET is a chromatin-context model, but its context is observed accessibility, not RNA. It is development-eligible where project ATAC exists and not eligible to be held back where it does not. Calling binary-ATAC mode sequence-only would be a modality error because the accessible-region universe still comes from observed ATAC.",
   "rules": {
     "checkpoint_identity": "No exposure class can become clean_declared until an exact weight object, date, corpus manifest, and hash are frozen.",
     "false_pairing": "GSE244832 RNA and ATAC may share donor/sample identity but never a cell row. Do not train a paired translation objective on those rows.",

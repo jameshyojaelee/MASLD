@@ -1,4 +1,4 @@
-"""Fail-closed genome and annotation reference contracts."""
+"""Fail-closed genome and annotation reference requirements."""
 
 from __future__ import annotations
 

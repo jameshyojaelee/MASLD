@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate immutable snapshot infrastructure without promoting or assembling it."""
+"""Validate read-only snapshot infrastructure without promoting or assembling it."""
 
 from __future__ import annotations
 
@@ -2081,7 +2081,7 @@ def validate_complete_pre_rel05_candidate(
     """Read-only proof that REL01--04 are complete before REL05 artifacts exist.
 
     This intentionally excludes the scientific-validation registry, the
-    two-clean-rebuild report, and REL05 reports/seals.  All immutable snapshot,
+    two-clean-rebuild report, and REL05 reports/seals.  All read-only snapshot,
     adapter-provenance, staged-input, table, panel, manuscript, and exact
     REL02--04 product-tree checks are reused from the terminal validator.
     """

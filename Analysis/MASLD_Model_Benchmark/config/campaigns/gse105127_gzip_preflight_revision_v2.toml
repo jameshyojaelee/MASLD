@@ -1,0 +1,104 @@
+schema_version = "masld-bench-campaign-v1"
+campaign = "gse105127_gzip_preflight_revision_v2"
+status = "prepared_not_submitted"
+purpose = "Rerun the assay-native GSE105127 source DAG with strict same-job one-member gzip preflights."
+pairing_topology = "adjacent_section"
+participants = 19
+participant_zone_rows = 57
+bundles = 8
+labels_accessed_by_control_or_preflight = false
+outcomes_accessed_by_control_or_preflight = false
+fit_or_score_performed = false
+prior_campaign_disposition = "development_only_preserved"
+legacy_quantifier_disposition = "failed_shadowed_path_implementation_not_reused"
+rna_quantifier = "quantify_gse105127_rna_bundle_v2.py"
+runtime_admission = "legacy_checksum_manifest_nonfrozen_environment"
+
+[reuse]
+plan = "independently_audited_label_free_source_plan"
+rna_fastq = "independently_audited_then_job_local_strict_gzip_preflight"
+rrbs_bed = "source_plan_and_prior_collapse_receipt_audited_then_job_local_strict_gzip_preflight"
+legacy_reference = "exact_decompressed_FASTA_for_lift_mechanics_only"
+lift_chains = "independently_audited_then_job_local_strict_gzip_preflight"
+
+[rerun]
+rsem_reference = true
+rrbs_collapse = true
+rna_quantification = true
+cpg_crosswalk = true
+rna_consolidation = true
+activation = true
+
+[strict_gzip]
+member_count = 1
+trailing_bytes = 0
+requires_gzip_t_exit_zero = true
+requires_empty_gzip_t_stdout = true
+requires_empty_gzip_t_stderr = true
+requires_compressed_digest_match = true
+requires_full_inflate_crc_isize_validation = true
+preflight_runs_in_same_slurm_job_as_consumer = true
+
+[dag]
+prepare = "source_audit"
+rsem_reference = "prepare"
+rrbs_collapse = "prepare"
+rna_quantification = "prepare+rsem_reference"
+cpg_crosswalk = "prepare+rrbs_collapse"
+rna_consolidation = "rna_quantification"
+finalize = "cpg_crosswalk+rna_consolidation"
+
+[resources.prepare]
+partition = "cpu"
+tasks = 1
+cpus_per_task = 2
+memory_gb = 8
+hours = 2
+
+[resources.rsem_reference]
+partition = "cpu"
+tasks = 1
+cpus_per_task = 16
+memory_gb = 128
+hours = 24
+
+[resources.rrbs_collapse]
+partition = "io"
+tasks = 8
+cpus_per_task = 4
+memory_gb = 32
+hours = 20
+
+[resources.rna_quantification]
+partition = "cpu"
+tasks = 8
+cpus_per_task = 8
+memory_gb = 64
+hours = 48
+
+[resources.cpg_crosswalk]
+partition = "io"
+tasks = 1
+cpus_per_task = 16
+memory_gb = 160
+hours = 48
+
+[resources.rna_consolidation]
+partition = "cpu"
+tasks = 1
+cpus_per_task = 8
+memory_gb = 64
+hours = 6
+
+[resources.finalize]
+partition = "cpu"
+tasks = 1
+cpus_per_task = 4
+memory_gb = 32
+hours = 2
+
+[terminal]
+artifact_status = "assays_ready_no_fit_gzip_contract_repaired"
+champion_eligibility = false
+sealed_evaluation = false
+clinical_claim = false

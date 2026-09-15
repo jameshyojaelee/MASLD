@@ -33,7 +33,7 @@
     "observed_context_requirement": "Stage 2 requires an observed donor-by-cell-state RNA pseudobulk mapped to the frozen 1630-TF order. Missing, below-QC, or join-unresolved context makes prediction ineligible and is never encoded as zero.",
     "observed_target_atac_requirement": "No held-donor or sealed ATAC is permitted at inference. If enabled, the locus mean is computed from outer-training contexts only and exposed identically to the mean-only baseline."
   },
-  "interpretation": "ChromDragoNN has no upstream checkpoint. Exposure attaches to each future project-fitted fold artifact, not to the algorithm name: GSE296875 training observations are continual-seen while held donors and sealed GSE289173 labels remain unexposed. Native ChromDragoNN predicts binary region accessibility, not ATAC counts, nucleotide profiles, multinomial profiles, enhancer-gene links, or signed gene effects.",
+  "interpretation": "ChromDragoNN has no upstream checkpoint. Exposure attaches to each future project-fitted fold output file, not to the algorithm name: GSE296875 training observations are continual-seen while held donors and held-back GSE289173 labels remain unexposed. Native ChromDragoNN predicts binary region accessibility, not ATAC counts, nucleotide profiles, multinomial profiles, enhancer-gene links, or signed gene effects.",
   "license_disposition": {
     "code": "MIT",
     "local_derivative_weights": "redistributable_under_MIT_subject_to_notices_and_project_input_data_terms",

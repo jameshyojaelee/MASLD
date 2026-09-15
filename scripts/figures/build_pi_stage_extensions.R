@@ -107,6 +107,7 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
   table <- topTable(fit, coef = coef_index, number = Inf, sort.by = "none")
   se <- fit$stdev.unscaled[, coef_index] * sqrt(fit$s2.post)
   critical <- qt(0.975, df = fit$df.total)
+  names(critical) <- rownames(fit)
   genes <- rownames(dge)
   result <- cbind(
     stage_annotation,

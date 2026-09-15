@@ -42,7 +42,7 @@ MANIFEST_FIELDS = (
 
 
 class AdmissionFixtureError(ValueError):
-    """Raised when a sequence fixture violates its frozen contract."""
+    """Raised when a sequence fixture does not meet its frozen requirements."""
 
 
 class IndexedFasta:

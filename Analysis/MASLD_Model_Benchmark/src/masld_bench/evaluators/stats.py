@@ -81,6 +81,35 @@ class SeedDirectionStabilityResult:
 
 
 @dataclass(frozen=True, slots=True)
+class GainConcentrationResult:
+    """Where a candidate's gain over a baseline actually comes from.
+
+    A pooled gain carried by one stratum is the signature of a model that has
+    learned a nuisance factor rather than the biology.  This is a mandatory
+    reported diagnostic, never a pass/fail condition: there is no defensible
+    threshold for "too concentrated", and inventing one would substitute a
+    judgment call for the evidence it is meant to expose.
+    """
+
+    applicable: bool
+    reason: str
+    n_strata: int
+    min_strata: int
+    stratum_ids: tuple[str, ...]
+    per_stratum_gain: tuple[float, ...]
+    pooled_gain: float
+    leave_one_out_pooled_gain: tuple[float, ...]
+    most_influential_stratum: str | None
+    pooled_gain_without_it: float | None
+    largest_absolute_shift: float | None
+    sign_flips_when_dropped: bool | None
+    supports_pass_fail_verdict: bool
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
 class PowerGateResult:
     """Prospective power check expressed through a minimum detectable effect."""
 
@@ -322,7 +351,7 @@ def empirical_bootstrap_power_gate(
     for candidate and baseline on every resample.  The function centers that
     distribution at ``observed_effect`` to obtain empirical sampling errors,
     then evaluates the prespecified ``minimum_effect`` against the first-step
-    Holm threshold.  The production evidence contract separately requires
+    Holm threshold.  The production evidence requirements require
     10,000 resamples and binds the source predictions, outcomes, evaluator, and
     unit set; this pure function also permits smaller deterministic test
     fixtures.
@@ -749,6 +778,102 @@ def ld_block_paired_bootstrap(
 ld_block_bootstrap = ld_block_paired_bootstrap
 
 
+def gain_concentration(
+    candidate: Sequence[float],
+    baseline: Sequence[float],
+    strata: Sequence[Hashable],
+    *,
+    weights: Sequence[float] | None = None,
+    min_strata: int = 4,
+) -> GainConcentrationResult:
+    """Report where a candidate's gain over a baseline is concentrated.
+
+    Uses leave-one-stratum-out on the pooled gain rather than a heterogeneity
+    statistic: it is directly interpretable, assumes no distribution, and is
+    what actually caught the GSE189600 problem, where a study holding 0.3% of
+    the data carried 14.3% of the metric and its removal collapsed a 0.066
+    margin to 0.0004.
+
+    Below ``min_strata`` the concentration is not estimable and the result is
+    returned as ``applicable=False`` with a reason and **no numbers** -- the
+    same k problem that made between-cohort heterogeneity unestimable at k=3.
+    """
+
+    candidate_values = _coerce_finite_series(candidate, "candidate")
+    baseline_values = _coerce_finite_series(baseline, "baseline")
+    stratum_ids = [str(value) for value in strata]
+    if not (len(candidate_values) == len(baseline_values) == len(stratum_ids)):
+        raise ValueError("candidate, baseline and strata must align")
+    if len(stratum_ids) != len(set(stratum_ids)):
+        raise ValueError("each stratum must appear exactly once; aggregate first")
+    if min_strata < 2:
+        raise ValueError("min_strata must be at least 2")
+
+    if weights is None:
+        stratum_weights = [1.0] * len(stratum_ids)
+    else:
+        stratum_weights = _coerce_finite_series(weights, "weights")
+        if len(stratum_weights) != len(stratum_ids):
+            raise ValueError("weights must align with strata")
+        if any(value <= 0.0 for value in stratum_weights):
+            raise ValueError("weights must be positive")
+
+    gains = [c - b for c, b in zip(candidate_values, baseline_values)]
+    n_strata = len(stratum_ids)
+
+    def pooled(indices: Sequence[int]) -> float:
+        total = sum(stratum_weights[i] for i in indices)
+        if total <= 0.0:
+            raise ValueError("a pooled gain needs positive total weight")
+        return sum(gains[i] * stratum_weights[i] for i in indices) / total
+
+    pooled_gain = pooled(range(n_strata))
+
+    if n_strata < min_strata:
+        return GainConcentrationResult(
+            applicable=False,
+            reason=(
+                f"concentration is not estimable at {n_strata} strata; "
+                f"at least {min_strata} are required. Reported as "
+                "not_applicable rather than as a number."
+            ),
+            n_strata=n_strata,
+            min_strata=min_strata,
+            stratum_ids=tuple(stratum_ids),
+            per_stratum_gain=tuple(gains),
+            pooled_gain=pooled_gain,
+            leave_one_out_pooled_gain=(),
+            most_influential_stratum=None,
+            pooled_gain_without_it=None,
+            largest_absolute_shift=None,
+            sign_flips_when_dropped=None,
+            supports_pass_fail_verdict=False,
+        )
+
+    loo = [
+        pooled([i for i in range(n_strata) if i != dropped])
+        for dropped in range(n_strata)
+    ]
+    shifts = [abs(value - pooled_gain) for value in loo]
+    worst = max(range(n_strata), key=lambda i: shifts[i])
+    without = loo[worst]
+    return GainConcentrationResult(
+        applicable=True,
+        reason="leave-one-stratum-out concentration computed",
+        n_strata=n_strata,
+        min_strata=min_strata,
+        stratum_ids=tuple(stratum_ids),
+        per_stratum_gain=tuple(gains),
+        pooled_gain=pooled_gain,
+        leave_one_out_pooled_gain=tuple(loo),
+        most_influential_stratum=stratum_ids[worst],
+        pooled_gain_without_it=without,
+        largest_absolute_shift=shifts[worst],
+        sign_flips_when_dropped=(pooled_gain > 0.0) != (without > 0.0),
+        supports_pass_fail_verdict=False,
+    )
+
+
 def five_seed_direction_stability(
     candidate: Sequence[float],
     baseline: Sequence[float],
@@ -816,11 +941,11 @@ def prospective_power_gate(
     min_units: int = 10,
     two_sided: bool = True,
 ) -> PowerGateResult:
-    """Check whether a sealed endpoint can resolve its practical effect floor.
+    """Check whether a held-back endpoint can resolve its practical effect floor.
 
     ``effective_alpha`` is the first-step Holm/Bonferroni threshold
     ``alpha / n_primary_claims``.  This is deliberately conservative for
-    prospective admission: later Holm steps can only be less stringent.
+    prospective inclusion: later Holm steps can only be less stringent.
     """
 
     if not isinstance(n_units, int) or isinstance(n_units, bool) or n_units < 2:

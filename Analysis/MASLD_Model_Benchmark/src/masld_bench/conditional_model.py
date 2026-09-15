@@ -419,7 +419,7 @@ class ComplementarityEvidence:
 def _license_bound_candidate(
     candidate: Mapping[str, Any], *, require_clean_declared: bool
 ) -> bool:
-    """Require an admitted candidate to carry its immutable open-license decision."""
+    """Require an included candidate to carry its read-only open-license decision."""
 
     decision = candidate.get("open_champion_license_decision")
     decision_sha256 = candidate.get("open_champion_license_decision_sha256")

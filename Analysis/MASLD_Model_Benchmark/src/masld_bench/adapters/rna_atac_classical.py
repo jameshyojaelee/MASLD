@@ -4,7 +4,7 @@
 The adapter never calculates benchmark metrics. ``prepare`` is the sole action
 allowed to receive the paired development HDF5. It emits training RNA/ATAC and
 held-donor RNA, but never held-donor ATAC. ``fit`` and ``predict`` operate only
-on those frozen prior-action artifacts.
+on those frozen prior-action output files.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from typing import Any, Iterable, Mapping, Sequence
 
 
 class RNAATACAdapterError(RuntimeError):
-    """Raised when an RNA-to-ATAC baseline contract is violated."""
+    """Raised when an RNA-to-ATAC baseline requirement is not met."""
 
 
 MODEL_IDS = ("assay_native_pseudobulk", "mean_track", "nearest_context")

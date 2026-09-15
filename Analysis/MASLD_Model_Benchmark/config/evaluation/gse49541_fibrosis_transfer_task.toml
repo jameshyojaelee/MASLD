@@ -1,0 +1,34 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse49541_fibrosis_transfer"
+status = "candidate"
+unit_of_inference = "participant"
+input_modalities = ["bulk_rna_microarray"]
+endpoint = "Transfer a training-frozen donor-level molecular model to source-deposited mild F0-F1 versus advanced F3-F4 fibrosis groups in GSE49541. Exact stage, age, and sex are structurally missing and cannot be invented."
+metrics = ["participant_auprc_advanced_f3_f4", "participant_auroc_advanced_f3_f4", "participant_macro_f1_fibrosis_group", "participant_brier_fibrosis_group"]
+datasets_train = ["bulk_existing_source_pool"]
+datasets_development = ["gse31803_gse49541_fibrosis_array"]
+datasets_sealed = []
+split_id = "train_study_held_gse31803_gse49541_external_v1"
+required_pairing_levels = ["same_study_unpaired"]
+missingness_policy = "Keep exact fibrosis stage, age, and sex as structurally_missing; never impute them from the group label, publication summaries, array intensity, or another cohort."
+admission_gates = [
+  "Treat GSE49541 as a SubSeries of GSE31803. GSE31803, GSE49541, and any participant or sample aliases from that family must be absent from model fitting, feature selection, calibration, threshold selection, and contamination-eligible pretraining claims.",
+  "Use all 72 deposited participants as the external-development evaluation unit: 40 mild F0-F1 and 32 advanced F3-F4. Arrays and probe sets are not independent replicates.",
+  "Start from the frozen raw CEL artifact and exact GPL570 axis. Do not use the GEO full-cohort series matrix for scored transfer.",
+  "Do not run ordinary RMA or quantile normalization jointly across outer-training and held arrays. The scored lane requires an inductive preprocessing object fit only on outer-training arrays and applied independently to every held array, an exact frozen single-array method whose GPL570 vectors pass admission, or the registered per-array rank baseline.",
+  "Probe annotation, ambiguous-feature masking, Entrez-to-Ensembl mapping, GENCODE v49 intersection, gene collapse, scaling, feature selection, calibration, and any learned probe summarization remain training-frozen. Cross-platform pooling is prohibited before the gene-level mapping is complete.",
+  "The primary gene matrix retains only platform features with one unambiguous Entrez ID and one unambiguous GENCODE v49 Ensembl gene. Multiple platform features per gene are collapsed by the training-frozen median rule on the log scale; unmapped, control, ambiguous, and retired features remain explicit audit states.",
+  "QC is label-blind. CEL parse, array type, finite values, RLE, intensity distribution, and PCA diagnostics may flag samples, but phenotype-aware removal is prohibited and distributional flags are not automatic exclusions.",
+  "This source supports external-development transfer for a binary deposited fibrosis group, not exact-stage regression, diagnosis, prognosis, progression, or a MASLD champion claim."
+]
+baseline_model_ids = ["training_prevalence", "per_array_rank_elastic_net", "gene_median_elastic_net", "gene_median_linear_svm", "gene_median_pca_elastic_net"]
+uncertainty_method = "paired_participant_cluster_bootstrap"
+resampling_units = ["participant"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse49541_fibrosis_external_development_secondary"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "gse49541_fibrosis_external_development_v1"
+promotion_gate_config_sha256 = "791dfa3199c3bdbdeb74bfae429cc8820364862c7187f5d1dbe11b46c03dc384"
+primary_evaluator_id = "gse49541_fibrosis_transfer_v1"
+evaluator_parameters = { participants = 72, mild_f0_f1 = 40, advanced_f3_f4 = 32, exact_stage_available = false, age_available = false, sex_available = false, model_and_preprocessing_frozen_before_external_features = true, external_outcomes_available_to_model = false }
+claim_gate = "External-development evidence only. No champion, sealed confirmation, diagnostic, prognostic, longitudinal progression, treatment-response, causal, or universal-model claim is eligible from GSE49541."

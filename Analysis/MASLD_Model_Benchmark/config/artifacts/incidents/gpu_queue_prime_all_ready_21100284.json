@@ -1,0 +1,18 @@
+{
+  "schema_version": "masld-bench-protocol-incident-v1",
+  "incident_id": "gpu_queue_prime_all_ready_21100284",
+  "date": "2026-08-25",
+  "job_id": 21100284,
+  "job_name": "model-queue-prime",
+  "state": "FAILED",
+  "exit_code": "1:0",
+  "failed_stage": "synthetic_unit_tests_before_submission",
+  "cause": "The synthetic 12-item duration fixture did not accumulate enough work for the lane preloaded with the existing 120-hour UCE request to receive a child, so an assertion requiring all four lanes was invalid.",
+  "live_resource_census_test_passed": true,
+  "gpu_claims_created": 0,
+  "gpu_jobs_submitted": 0,
+  "prediction_values_read": false,
+  "outcomes_read": false,
+  "sealed_outcomes_read": false,
+  "correction": "Increase only the synthetic planning fixture to twenty equal 48-hour items; production bundle roster, resources, ordering, dependency policy, and submitter are unchanged."
+}

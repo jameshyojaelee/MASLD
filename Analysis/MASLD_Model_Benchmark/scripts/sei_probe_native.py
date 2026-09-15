@@ -19,7 +19,7 @@ import torch
 
 
 class SeiProbeError(ValueError):
-    """Raised when the native Sei fixture differs from its frozen contract."""
+    """Raised when the native Sei fixture differs from its frozen requirements."""
 
 
 def _load_module(name: str, path: Path):

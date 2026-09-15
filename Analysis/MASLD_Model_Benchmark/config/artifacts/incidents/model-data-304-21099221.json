@@ -1,0 +1,26 @@
+{
+  "schema_version": "masld-bench-execution-incident-v1",
+  "job_id": "21099221",
+  "job_name": "model-data-304",
+  "state": "COMPLETED_NONPROMOTABLE",
+  "exit_code": "0:0",
+  "stage_reached": "five_model_input_children_and_parent_frozen",
+  "unit_tests": {
+    "passed": 5,
+    "failed": 0
+  },
+  "artifact": {
+    "path": "executions/model-data-304-21099221",
+    "artifacts_sha256": "0c7d59c91e64207fbbda93fa32a09d2096886093e1f321b4c580d3ae22beb8fb"
+  },
+  "failure_class": "frozen_identifier_contract_mismatch",
+  "failure_message": "The pseudonymous donor grouping key was exported as donor_hash, but the frozen materialization contract permits the identifier name unit_hash.",
+  "target_atac_values_read": false,
+  "target_atac_values_written": false,
+  "development_outcomes_read": false,
+  "sealed_outcomes_read": false,
+  "model_fit": false,
+  "metrics_calculated": false,
+  "consumed_by_downstream_model": false,
+  "disposition": "preserved_nonpromotable_and_replayed_with_unit_hash"
+}

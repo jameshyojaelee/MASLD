@@ -14,7 +14,7 @@
       "reference_locus_exposure": "encoder_seen_or_possible"
     },
     "registered_crested_enformer_human": {
-      "checkpoint_identity": "aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:Enformer_human archive sha256 628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc declared by the pinned registry",
+      "checkpoint_identity": "aertslab/CREsted@934eea18c97992cd098d547cc09edb20b79c28fd:Enformer_human archive sha256 628f67f540304d4d0e143176dc824ed72b3413f78f2fa2efe5d4f0ab51ea1bcc; Keras member sha256 29dc3835c1d13a6c6bd93315b554075107cc409a9179b11ee0e00180f67cef56",
       "conversion_parity": "UNRESOLVED",
       "exposure_confidence": "inherits_native_target_label_status_only_if_numeric_parity_is_proven",
       "exposure_state": "target_label_unexposed_with_conversion_uncertainty",
@@ -32,7 +32,7 @@
     "gse296875": "Eligible as a static sequence-track baseline or as input to a separately named development-fitted head. It cannot use same-nucleus RNA as context and is not an RNA-conditioned ATAC model.",
     "observed_context_requirement": "none_supported; a fixed liver, HepG2, CAGE, DNase, or ATAC training track is not observed donor context"
   },
-  "interpretation": "The three named project sources postdate the immutable native checkpoint, so their target labels are unexposed. Reference sequence and generic functional-genomics biology remain exposed. The registered CREsted archive is restricted and lacks a reproducible conversion and parity report; it must not be treated as the official native checkpoint.",
+  "interpretation": "The three named project sources postdate the read-only native checkpoint, so their target labels are unexposed. Reference sequence and generic functional-genomics biology remain exposed. The registered CREsted archive passed safe inventory, strict fixed-fixture restoration, deterministic repeat, output-order crosswalk, and an outcome-blind GSE281364 run, but it remains restricted and lacks a reproducible conversion plus numeric parity against official native Sonnet. It must not be treated as the official native checkpoint.",
   "license_disposition": {
     "converted_code_and_loader": "CREsted pinned internal academic, noncommercial, nontransferable terms that prohibit unapproved modification or derivatives",
     "converted_weights": "no separate archive terms located",
@@ -44,18 +44,18 @@
     "Obtain an approved acquisition of every official native GCS object by immutable generation, verify GCS size and MD5 or CRC32C, compute SHA-256, and freeze tensor names, shapes, and dtypes.",
     "Resolve native checkpoint terms and derivative-weight redistribution authority before any open-champion designation.",
     "Keep the CREsted conversion restricted unless separate archive authority is established; require the checkpoint-producing conversion source and numeric parity against native Sonnet on fixed fixtures.",
-    "Freeze the 5313-track manifest and prove native versus converted output order, internal crop, reverse-complement restoration, boundary behavior, SAD and SAR, and project ALT-minus-REF sign parity.",
-    "Lock a no-network native runtime and pass strict restore, import, forward, backward, resume, deterministic-seed, and L40S numeric-tolerance probes through SLURM after campaign approval.",
+    "The 5313-track positional crosswalk, restricted-port reverse-complement path, SAD/SAR formulas, ALT-minus-REF sign, and deterministic L40S forward are frozen. Native-versus-converted crop, boundary, and numeric parity remain unresolved.",
+    "Lock a no-network official native Sonnet runtime and pass strict restore and fixed-fixture numeric parity. Backward and resume are additionally required only if trainable native use is proposed.",
     "Cross any fitted track combiner, calibration, enhancer-gene link, or direction head over held donors and merged chromosome or LD blocks with a 196608-bp boundary buffer.",
     "Prespecify that Enformer is sequence-only and cannot enter the RNA-conditioned ATAC profile champion comparison except as the static sequence baseline."
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "registered_conversion_ineligible;_native_sequence_component_reconsiderable_only_after_terms_hash_runtime_and_task_head_gates",
   "task_disposition": {
-    "allele_effect": "eligible_as_sequence_only_ALT_minus_REF_track_effect_after_admission",
+    "allele_effect": "restricted_CREsted_port_executable_as_sequence_only_ALT_minus_REF_track_effect; official_native_Sonnet_not_admitted",
     "rna_conditioned_atac": "static_sequence_baseline_only",
     "signed_eqtl_ieqtl": "not_native_requires_separately_frozen_link_and_direction_model",
     "variant_to_regulation": "eligible_as_a_sequence_component_not_a_complete_context_conditioned_gene_effect_model"
   },
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-08-24"
 }

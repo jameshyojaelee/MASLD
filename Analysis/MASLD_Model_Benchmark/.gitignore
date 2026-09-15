@@ -7,6 +7,8 @@ results/
 selections/
 releases/
 !README.md
+!MODEL_RESULTS_SUMMARY.md
+!AGENT_HANDOFF_2026-08-25.md
 !PLAN_REVIEW_2026-08-21.md
 
 # The parent repository defaults to ignoring every JSON file.  These are
@@ -16,3 +18,9 @@ releases/
 !config/artifacts/
 !config/artifacts/**/
 !config/artifacts/**/*.json
+!config/gse281364_borzoi_native_screen.json
+!config/gse281364_borzoi_native_execution.json
+!config/alphagenome_comparator_preflight.json
+!config/dna_lm_family_reconciliation.json
+!config/typed_evidence_graph_tournament_preflight.json
+!config/local_variant_family_reconciliation.json

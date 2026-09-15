@@ -1,0 +1,75 @@
+{
+  "checkpoint_payloads_downloaded": false,
+  "full_payload_sha256_verified_locally": false,
+  "registered_checkpoint": "johahi/neurips-scooby@1591d15696c65f14053e4495e52c74812a86fd8d",
+  "release_roster_rule": "These are separately released checkpoint variants. They may not replace the registered NeurIPS multiome checkpoint, inherit its selection status, or be described as zero-shot MASLD models.",
+  "schema_version": "masld-bench-scooby-released-variants-v1",
+  "source_contract": {
+    "code_license_sha256": "0a09080986ba1b09bc670290c172fc831a1f73dff1f0c6ab23039b79f80d8ed3",
+    "code_revision": "dbfe6cd150d018d46a6d24ffa0406d7f2e89b471",
+    "config_multiome_sha256": "ca197df999e963821719a845e44cde4166242beca311e1c183dd054877374daa",
+    "config_rna_only_sha256": "afd700dd9b21f3d4fe92ebdbd42c01cfcba4d66a1e6a9d3c763e3ebc5d92041e",
+    "modeling_scooby_sha256": "6b003b4cad458a2a270e4870b8bd159cd051bb368c7703170af5231fa86533d8",
+    "train_multiome_sha256": "a73dbbf377dafeb65e4411b87e043ffc6ef70feae9a160fd0d51bd5af9000fae",
+    "train_rna_only_sha256": "476706af5a335a1a3a82116ebc75c71009c77f528a217d664532d87f968bf8d3"
+  },
+  "variants": {
+    "scooby_neurips_flash": {
+      "base_model": "johahi/flashzoi-replicate-0",
+      "base_model_card_license": "MIT",
+      "card_license": "MIT",
+      "checkpoint_role": "released_architecture_variant_not_in_frozen_model_registry",
+      "config_sha256": "29def9f275794e137c107bd116d74885084d6e7b4e06e6548bb5c73b2a6cb553",
+      "context_dimension": 14,
+      "decoder_tracks": [
+        "rna_plus",
+        "rna_minus",
+        "atac_insertion"
+      ],
+      "declared_weight_sha256": "18cca385e950dbb9baa4dd6535e0ce632ee64aa2618ba2faf5f3fe7a4bbc5c11",
+      "file_size_bytes": 754774916,
+      "header_parameter_count": 188688926,
+      "header_size_bytes": 19160,
+      "header_tensor_count": 191,
+      "held_query_topology": "The 14-D NeurIPS context is the released Poisson-MultiVI coordinate system derived from observed same-nucleus RNA and ATAC. A shape-compatible liver vector is not a valid substitute.",
+      "hugging_face_reported_parameter_count": 188688915,
+      "readme_sha256": "a808b921dd7c2915f51eab2396d123e5f2cb9d02f609b875af6ed815be6708ec",
+      "repository": "johahi/neurips-scooby-flash",
+      "revision": "06bbc89694730faf040c2f070d244fef144e5174",
+      "rna_conditioned_atac_eligible": false,
+      "sealed_masld_champion_eligible": false,
+      "task_disposition": "Observed-multiome development comparator in principle, not RNA-conditioned ATAC. It is not registered and has no liver query encoder or external liver validation.",
+      "terminal_disposition": "blocked_unregistered_missing_checkpoint_bound_training_source_exact_context_encoder_runtime_reference_parity_and_base_weight_provenance",
+      "use_transform_borzoi_embedding": false
+    },
+    "scooby_neurips_rna": {
+      "base_model": "johahi/borzoi-replicate-0",
+      "base_model_card_license": "CC-BY-4.0",
+      "card_license": "MIT",
+      "checkpoint_role": "released_rna_only_variant_not_in_frozen_model_registry",
+      "config_sha256": "e4802fb5c2d5c74a4f3fc852436c3cb5a5f41ded5c80a4e2b1dcc43a0d3f47d9",
+      "context_dimension": 14,
+      "decoder_tracks": [
+        "rna_plus",
+        "rna_minus"
+      ],
+      "declared_weight_sha256": "7bfdb8beb63be285e563b962a46cf398669935e43401ac158010f5ada537273e",
+      "file_size_bytes": 765094080,
+      "header_parameter_count": 191267821,
+      "header_size_bytes": 22744,
+      "header_tensor_count": 225,
+      "held_query_topology": "RNA-only describes the output heads, not the query context. Released training configuration points to embedding_no_val_genes_new.pq, the NeurIPS 14-D context derived from observed same-nucleus RNA and ATAC.",
+      "hugging_face_reported_parameter_count": 191267810,
+      "readme_sha256": "d9e5ee42de83440280737b42590d938849accd32379ed2ec66f36364f73f291b",
+      "repository": "johahi/neurips-scooby-rna",
+      "revision": "e2a0f23c9231c84fe3d887a2ec81692d505c6882",
+      "rna_conditioned_atac_eligible": false,
+      "sealed_masld_champion_eligible": false,
+      "task_disposition": "Hematopoietic RNA-profile and variant comparator in principle. It has no ATAC output and cannot enter either the RNA-conditioned ATAC profile endpoint or observed-multiome ATAC reconstruction.",
+      "terminal_disposition": "blocked_unregistered_missing_exact_context_encoder_checkpoint_source_runtime_reference_parity_and_inherited_base_weight_authority",
+      "use_transform_borzoi_embedding": true,
+      "weight_era_source_mismatch": "The released README requires use_transform_borzoi_emb=true, whereas the frozen current RNA-only training script initializes that flag as false. Numeric parity needs the checkpoint-producing source."
+    }
+  },
+  "verified_date": "2026-08-24"
+}

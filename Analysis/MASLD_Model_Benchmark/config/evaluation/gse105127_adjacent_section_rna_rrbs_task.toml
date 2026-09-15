@@ -1,0 +1,38 @@
+schema_version = "masld-bench-task-v1"
+task_id = "gse105127_adjacent_section_rna_to_rrbs"
+status = "blocked_until_failure_aware_remap_and_raw_rna_quantification"
+unit_of_inference = "participant"
+input_modalities = ["laser_microdissected_bulk_rna"]
+target_modalities = ["rrbs_methylated_reads", "rrbs_coverage"]
+endpoint = "Predict held-participant, held-genomic-block CpG methylation probability in RRBS from RNA measured in an adjacent liver-zone section. Score methylated-read observations conditional on observed RRBS coverage; never score unobserved CpGs as zero methylation."
+metrics = ["participant_block_macro_beta_binomial_deviance_skill", "participant_block_macro_spearman_beta", "participant_block_calibration_error"]
+datasets_train = ["gse105127_zonated_rna_rrbs"]
+datasets_development = []
+datasets_sealed = []
+split_id = "gse105127_participant_x_roundtrip_cpg_block_v1"
+required_pairing_levels = ["adjacent_section"]
+missingness_policy = "RNA and RRBS carry independent observed/derivable/below-QC/remap states. Missing CpGs, failed remaps, and absent assays are masked and never encoded as zero."
+admission_gates = [
+  "Use the frozen 19-participant by three-zone topology. Keep all zones, adjacent sections, assay libraries, and runs from one participant in one outer fold; only participants are biological replicates.",
+  "The RNA and RRBS libraries are adjacent sections. Never describe them as same-section, same-cell, same-nucleus, same-molecule, or directly paired molecular measurements.",
+  "Use all 57 RRBS BEDs only after validating the BisSNP BED contract. Reconstruct integer methylated reads from column-4 percent and column-5 coverage, then sum once across observed plus/minus strand rows for the same canonical CpG. Columns 10 and 11 are ignored auxiliary fields and never contribute counts.",
+  "Retain one-strand-only CpGs with their observed coverage. An absent CpG is missing, not unmethylated; do not reproduce the source paper's zero-covered tiled aggregation as a model input.",
+  "Admit only canonical two-base CpGs that are CG in the exact 1000 Genomes GRCh37 source, map uniquely as length two to a primary GRCh38.p14 contig, remain CG in the target, and return exactly to the source interval under the reverse chain. Preserve every failure with an explicit state.",
+  "The public RNA bigWigs are coverage visualizations, not expression matrices. Reprocess the 57 raw single-end 76-base RNA FASTQs against GRCh38.p14 and GENCODE v49. Retain continuous RSEM expected counts, effective lengths, and TPM without rounding.",
+  "Fit RNA filtering, normalization, count-to-context mapping, RRBS coverage thresholds, beta-binomial dispersion, feature selection, genomic blocking, hyperparameters, and calibration inside outer-training participants only.",
+  "Cross participant folds with held CpG/genomic blocks. Apply a boundary buffer at least as wide as the largest evaluated receptive field, and merge correlated or overlapping target windows before block assignment.",
+  "Compare RNA-conditioned models with training-only zone mean, training-only participant-agnostic CpG mean, nearest RNA context, RNA-only linear/MLP, sequence-only, and observed-RRBS specialist baselines. The observed-RRBS lane is separate and cannot support an RNA-only claim.",
+  "Use participant by genomic-block bootstrap uncertainty. CpGs, strands, zones, sections, libraries, and reads are not independent biological replicates.",
+  "Phenotype groups and histology-derived endpoints are out of scope and absent from this assay-translation fixture. A future separate supervised task must register them evaluator-only before use. This project-exposed 19-participant source cannot support an external, universal, diagnostic, prognostic, progression, treatment-response, or MASLD champion claim.",
+  "No fit or score is permitted until the immutable activation fixture, source FASTA, chains, CpG crosswalk, RNA quantification, fold authority, evaluator, and model-specific derivative-weight review are frozen."
+]
+baseline_model_ids = ["training_zone_cpg_mean", "training_cpg_mean", "nearest_rna_context", "rna_regularized_linear", "sequence_only", "observed_rrbs_specialist"]
+uncertainty_method = "two_way_participant_and_genomic_block_bootstrap"
+resampling_units = ["participant", "genomic_block"]
+bootstrap_replicates = 10000
+multiplicity_family = "gse105127_adjacent_section_development_exploratory"
+multiplicity_method = "primary_effect_and_interval_without_confirmatory_p_value; bh_q0.05_within_prespecified_secondary_endpoint_family"
+promotion_gate_id = "none_development_only_no_external_champion"
+primary_evaluator_id = "gse105127_coverage_aware_adjacent_section_rrbs_v1"
+evaluator_parameters = { participants = 19, participant_zone_rows = 57, rna_libraries = 57, rrbs_libraries = 57, pairing = "adjacent_section", source_build = "1000_Genomes_GRCh37", target_build = "GRCh38.p14", coordinate_convention = "zero_based_half_open", missing_as_zero = false, model_fit_or_scoring_run = false }
+claim_gate = "Development-only adjacent-section RNA-to-RRBS assay translation. No same-section, external-transfer, universal-model, task-champion, diagnostic, prognostic, progression, treatment-response, or causal claim is eligible."

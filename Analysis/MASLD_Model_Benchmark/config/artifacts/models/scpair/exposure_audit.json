@@ -22,7 +22,7 @@
     "scope": "paired_training_direct_rna_query_profile_scale_and_false_pairing_rejection",
     "sha256": "dea744dee9b6e8878db79316538ca5506220a3db77e9ab7a98b377fb86869786"
   },
-  "interpretation": "Local scPair training avoids foundation-checkpoint contamination, but the released high-level workflow is not safe for held RNA-only evaluation. It expects both modality blocks in one object, computes covariate encodings across that object, densifies it, and exposes an augmentation routine that optimizes on unimodal query rows. A direct frozen RNA-encoder/ATAC-decoder adapter can instead produce Bernoulli peak probabilities without observed held ATAC or query fitting. GSE296875 is the only admitted same-nucleus training source; GSE244832 aliquots are never paired. GSE289173 can seal cell-state mapping but has no ATAC endpoint.",
+  "interpretation": "Local scPair training avoids foundation-checkpoint contamination, but the released high-level workflow is not safe for held RNA-only evaluation. It expects both modality blocks in one object, computes covariate encodings across that object, densifies it, and exposes an augmentation routine that optimizes on unimodal query rows. A direct frozen RNA-encoder/ATAC-decoder adapter can instead produce Bernoulli peak probabilities without observed held ATAC or query fitting. GSE296875 is the only included same-nucleus training source; GSE244832 aliquots are never paired. GSE289173 can hold back cell-state mapping but has no ATAC endpoint.",
   "remaining_blockers": [
     "The current smoke peak inventory was discovered from all source donors, so this view cannot support a champion claim.",
     "An eligible external RNA-ATAC seal is not active.",

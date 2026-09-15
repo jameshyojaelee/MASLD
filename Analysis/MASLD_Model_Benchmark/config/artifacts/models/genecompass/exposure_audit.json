@@ -20,7 +20,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "160094a240d7be1d491085468e0c7ba3186dbbd93226c3542e575559919bb6aa"
   },
-  "interpretation": "The pinned code revision is reproducible as source, but the ScienceDB label Base is not an immutable checkpoint identity and no checkpoint-bound corpus inventory exists. Paper chronology cannot establish clean or target-label-unexposed status for any Atlas source. No repository, checkpoint, or prior-payload license was detected, so use and adaptation remain blocked rather than merely nonredistributable.",
+  "interpretation": "The pinned code revision is reproducible as source, but the ScienceDB label Base is not a read-only checkpoint identity and no checkpoint-bound corpus inventory exists. Paper chronology cannot establish clean or target-label-unexposed status for any Atlas source. No repository, checkpoint, or prior-payload license was detected, so use and adaptation remain blocked rather than merely nonredistributable.",
   "preprocessing_and_evaluation_findings": [
     {
       "benchmark_action": "freeze_all_input_payloads",

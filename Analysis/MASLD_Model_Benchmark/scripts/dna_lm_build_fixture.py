@@ -42,7 +42,7 @@ MANIFEST_FIELDS = (
 
 
 class DnaLmFixtureError(ValueError):
-    """Raised when a DNA-LM fixture violates its frozen contract."""
+    """Raised when a DNA-LM fixture does not meet its frozen requirements."""
 
 
 def _digest_bytes(value: str) -> str:

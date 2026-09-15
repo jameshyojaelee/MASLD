@@ -7,16 +7,33 @@
     "transformer_layers": 12,
     "trainable_parameters": 368000000,
     "frozen_embedding_parameters": 61000000,
-    "vocabulary_size": 23829
+    "gene_tokens": 23823,
+    "special_tokens": 7,
+    "strict_loaded_parameters": 429870637,
+    "vocabulary_rows": 23830
   },
   "archive": {
     "etag": "a841d3efcfc21eb14c41c6151bc39b73-217",
     "last_modified_utc": "2025-04-10T16:17:31Z",
     "name": "tf_sapiens.tar.gz",
     "s3_version_id": "P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU",
-    "sha256": "UNRESOLVED",
+    "sha256": "d108a7a9ee7fdf38e0dcd4e58593e94304cba927df6ec63e82ea74e2b177e529",
     "size_bytes": 1819975447,
     "url": "https://czi-transcriptformer.s3.amazonaws.com/weights/tf_sapiens.tar.gz?versionId=P5N5hx41EeWC7I0l8oW7yDyiJHS5InPU"
+  },
+  "artifact_chain": {
+    "activation_artifacts_json": "executions/model-training-21071475/ARTIFACTS.json",
+    "activation_artifacts_sha256": "375f38c25140746a77d13dffc7a90fed47e6597dc0537578bb311d9807043007",
+    "activation_job_id": "21071475",
+    "activation_receipt_sha256": "3bf356557721256d267f0046c3b34230a408763a16361d72ec8a42e15ca384f3",
+    "checkpoint_sha256": "eff027e7393f92a32cadcbb2e13a917e24b62b71341571bf40f38ff6ec6d3021",
+    "cpu_preflight_artifacts_sha256": "2402298e4492a487c063962b4b79d95fe15e871670d972a356a8b24b0a6a588c",
+    "development_common_lane_evaluation_artifacts_sha256": "8c5f8afbff9d2e256ec9ad1c0685ff262680ce2385fb048435fc19d232e7e32a",
+    "development_common_lane_evaluation_job_id": "21073148",
+    "development_common_lane_evaluation_sha256": "e05f75375024fadccdf4c9b769d90c721e54716b61feac7acd310ac944b0f488",
+    "materialization_receipt_sha256": "c9b390a7e5e3d5df12f7647a46742a3527851fda5eef748cb4ec877a8b3c6ca8",
+    "runtime_artifacts_sha256": "f22ddd872d681edea9f1c12d5d971c55f66d44d0624d816e317f987ec12c8abb",
+    "source_artifacts_sha256": "d0ee2c7d5d9bef3441449e425bd920e206de9cd846af438c16e84d27e04b2d96"
   },
   "code_license": "MIT",
   "extraction_contract": {
@@ -43,9 +60,11 @@
   },
   "repository": "czi-ai/transcriptformer",
   "repository_revision": "c943a89a4de9511a8ab1010715bf1cfa8827cc99",
-  "release": "v0.6.0",
+  "release": "unversioned_tf_sapiens_archive",
+  "source_release_note": "The pinned executable source reports package version 0.6.1. The v0.6.0 tag resolves to baf5378b1c6c76a9e48b84d7870b762ab46a6e42, not the pinned commit, so the tag is not used as checkpoint provenance.",
+  "source_version": "0.6.1",
   "schema_version": "masld-bench-upstream-checkpoint-preflight-v1",
-  "source_evidence": "The pinned official repository, official Virtual Cells model card, and versioned public S3 object metadata were queried on 2026-08-22. The archive body was not downloaded or extracted, so its SHA-256 and internal file roster remain unresolved.",
+  "source_evidence": "The exact versioned public S3 object was downloaded and hash-verified, safely materialized without the upstream extractor, inventoried, and strict-loaded against pinned MIT source. An isolated runtime and outcome-blind native/common embedding activation passed. A development-only donor-safe nested common-head smoke evaluation also passed; it is not sealed evidence. The exact pretraining corpus table remains unavailable, so exposure remains unknown.",
   "source_records": [
     {"identity": "transcriptformer:LICENSE.md", "sha256": "aaf473b176a223eeccd843bad7d5453501d826f6f939d44f8957b8f6f2e5cc81", "size_bytes": 1083},
     {"identity": "transcriptformer:README.md", "sha256": "15d1a28e0af8565e2337ef8fda144444b9c0518f1fb4f8bb66e3da8aac7431f0", "size_bytes": 19729},
@@ -56,6 +75,6 @@
     {"identity": "Virtual_Cells_TranscriptFormer_model_card_queried_2026-08-22", "sha256": "4b140e987d42ea7390442c6c680062c04dcf25541417e6e3947028de1e238240", "size_bytes": 298159, "url": "https://virtualcellmodels.cziscience.com/model/transcriptformer"},
     {"identity": "czi-transcriptformer_S3_bucket_inventory_queried_2026-08-22", "sha256": "b0db2728c060e6bf7b5aecd90c4966146af7a90c1c905c3cbf162eeb8111085d", "size_bytes": 1532, "url": "https://czi-transcriptformer.s3.amazonaws.com/?list-type=2&max-keys=1000"}
   ],
-  "weight_content_downloaded": false,
+  "weight_content_downloaded": true,
   "weight_license": "MIT"
 }

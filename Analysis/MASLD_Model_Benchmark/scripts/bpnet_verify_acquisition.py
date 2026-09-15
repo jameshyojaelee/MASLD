@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the immutable legacy BPNet acquisition receipt without deserializing it."""
+"""Verify the read-only legacy BPNet acquisition receipt without deserializing it."""
 
 from __future__ import annotations
 

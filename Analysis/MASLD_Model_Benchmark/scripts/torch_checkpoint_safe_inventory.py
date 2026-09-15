@@ -13,7 +13,7 @@ import zipfile
 
 
 class TorchCheckpointInventoryError(ValueError):
-    """Raised when a PyTorch checkpoint violates its no-pickle contract."""
+    """Raised when a PyTorch checkpoint does not meet its no-pickle requirements."""
 
 
 def _hash_stream(handle: BinaryIO) -> tuple[str, int]:

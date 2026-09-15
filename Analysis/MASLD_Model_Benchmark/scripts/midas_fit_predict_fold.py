@@ -18,7 +18,7 @@ MODEL_ID = "midas_inductive"
 
 
 class MIDASFitError(ValueError):
-    """Raised when the donor-held MIDAS execution contract differs."""
+    """Raised when the donor-held MIDAS execution requirement differs."""
 
 
 def load_helper(path: Path) -> Any:

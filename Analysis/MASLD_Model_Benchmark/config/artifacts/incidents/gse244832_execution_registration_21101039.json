@@ -1,0 +1,16 @@
+{
+  "schema_version": "masld-bench-incident-v1",
+  "incident_id": "gse244832_execution_registration_21101039",
+  "detected_at": "2026-08-25",
+  "dataset_id": "gse244832",
+  "affected_job_ids": [21101039],
+  "affected_artifact_path": "executions/model-check-336-21101039",
+  "affected_artifacts_sha256": "d42031c4e34898ced983face3317310dde26b423c0865a9f618c200b91e5d4f0",
+  "finding": "The registration correctly restricted model IDs, references, missingness, and commit order but did not yet bind the four admitted observed-ATAC models to their count-only family-native output.",
+  "scientific_impact": "No predictions, biological outcomes, metrics, or selection were opened. The artifact passed its declared checks but is superseded before model execution.",
+  "condition_values_read": false,
+  "biological_outcome_arrays_read": false,
+  "prediction_files_read": false,
+  "metric_files_produced": false,
+  "disposition": "superseded_before_predictions_by_model_specific_output_family_binding"
+}

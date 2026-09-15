@@ -153,7 +153,7 @@
     "open_champion": "ineligible_while_weight_output_and_derivative_terms_and_exposure_are_unresolved",
     "clinical": "No diagnostic, prognostic, treatment-response, or deployment claim."
   },
-  "interpretation": "scLong is scientifically relevant because it models all 27,874 genes using high- and low-expression Performer paths and GO-informed gene embeddings. It is not executable for this campaign. The checkpoint and four required payloads lack immutable hashes and terms, the official folder is inaccessible, preprocessing and cell pooling are ambiguous, all Atlas exposure is unknown, and the released runtime conflicts internally.",
+  "interpretation": "scLong is scientifically relevant because it models all 27,874 genes using high- and low-expression Performer paths and GO-informed gene embeddings. It is not executable for this campaign. The checkpoint and four required payloads lack read-only hashes and terms, the official folder is inaccessible, preprocessing and cell pooling are ambiguous, all Atlas exposure is unknown, and the released runtime conflicts internally.",
   "schema_version": "masld-bench-development-crosswalk-v1",
   "verified_date": "2026-08-22"
 }

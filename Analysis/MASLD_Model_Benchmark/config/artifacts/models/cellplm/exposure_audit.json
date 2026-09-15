@@ -24,7 +24,7 @@
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
     "sha256": "b5156f78e91d18ff443f2aad27ab4d1877708d549529eaacae335ef6e67de865"
   },
-  "interpretation": "Both current Dropbox revision timestamps predate GSE289173 by more than fifteen months, so its features and target labels were unexposed. This chronology does not make either checkpoint admissible. Checkpoint terms are undeclared, SHA-256 values are unresolved, and the census currently names an undocumented plain-VAE variant instead of the repository-documented Gaussian-mixture release.",
+  "interpretation": "Both current Dropbox revision timestamps predate GSE289173 by more than fifteen months, so its features and target labels were unexposed. This chronology does not make either checkpoint eligible. Checkpoint terms are undeclared, SHA-256 values are unresolved, and the census currently names an undocumented plain-VAE variant instead of the repository-documented Gaussian-mixture release.",
   "preprocessing_and_evaluation_incidents": [
     {
       "benchmark_action": "replace_with_donor_safe_adapter",
