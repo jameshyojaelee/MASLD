@@ -21,7 +21,16 @@ BASE <- Sys.getenv(
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
 ROOT <- file.path(BASE, "Analysis/Multimodal_Program_Projection")
-OUT <- file.path(ROOT, "results/proteomics")
+OUT <- Sys.getenv("PROTEOMICS_OUT_DIR", file.path(ROOT, "results/proteomics"))
+# Never overwrite a previous Panel 4C build; a rerun writes to a new directory.
+existing_outputs <- file.path(OUT, c("panel4c_mrna_protein.tsv", "panel4c_histology_partial.tsv"))
+if (any(file.exists(existing_outputs))) {
+  stop(
+    "Refusing to overwrite existing output(s): ",
+    paste(existing_outputs[file.exists(existing_outputs)], collapse = ", "),
+    ". Set PROTEOMICS_OUT_DIR to a new directory."
+  )
+}
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 
 REGISTRY_FILE <- file.path(ROOT, "results/frozen_programs.tsv")
@@ -30,9 +39,15 @@ RAW_FILE <- file.path(BASE, "data/PXD051911/liver_protein_quant.txt")
 META_FILE <- file.path(BASE, "data/PXD051911/meta_data.txt")
 CONTRACT_FILE <- file.path(ROOT, "config/fig4_input_contract.tsv")
 FIXED_ROWS_FILE <- file.path(ROOT, "config/panel4c_fixed_rows.tsv")
-BULK_FILE <- file.path(
-  BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"
+# Stable Ensembl ID of the bulk row for each fixed display gene. HLA-DQA1 has
+# four bulk rows; the display row is ENSG00000206305.
+BULK_ID_FILE <- file.path(ROOT, "config/panel4c_bulk_gene_ids.tsv")
+BULK_FILE <- Sys.getenv(
+  "BULK_DEG_FILE",
+  file.path(
+    BASE,
+    "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"
+  )
 )
 MSIGDB_RDS <- Sys.getenv(
   "MSIGDB_RDS",
@@ -41,7 +56,7 @@ MSIGDB_RDS <- Sys.getenv(
 
 required <- c(
   REGISTRY_FILE, MEMBERSHIP_FILE, RAW_FILE, META_FILE, CONTRACT_FILE, FIXED_ROWS_FILE,
-  BULK_FILE, MSIGDB_RDS
+  BULK_ID_FILE, BULK_FILE, MSIGDB_RDS
 )
 if (any(!file.exists(required))) {
   stop("Missing proteomics input(s): ", paste(required[!file.exists(required)], collapse = ", "))
@@ -239,9 +254,64 @@ panel_meta <- meta[, .(
 )]
 fwrite(panel_meta, file.path(OUT, "panel4c_metadata.tsv"), sep = "\t", quote = FALSE)
 
-bulk <- fread(BULK_FILE, select = c("symbol", "logFC", "treat_fdr"))
-setorder(bulk, symbol, treat_fdr)
-bulk <- bulk[!is.na(symbol) & symbol != ""][!duplicated(symbol)]
+# The bulk source is either the live canonical table or a release
+# deg_results.csv. Resolve each column role explicitly and stop if any is
+# missing or ambiguous. The conventional BH p-value (padj) and the TREAT FDR
+# are carried as separate fields; TREAT is the sensitivity arm only.
+bulk_header <- names(fread(BULK_FILE, nrows = 0L))
+pick_bulk_col <- function(role, candidates) {
+  hit <- intersect(candidates, bulk_header)
+  if (length(hit) != 1L) {
+    stop(
+      "Bulk DEG file ", BULK_FILE, " needs exactly one ", role, " column from {",
+      paste(candidates, collapse = ", "), "}; found {", paste(hit, collapse = ", "), "}"
+    )
+  }
+  hit
+}
+bulk_cols <- c(
+  gene_id = pick_bulk_col("Ensembl gene ID", c("gene", "gene_id", "ensembl_id")),
+  symbol = pick_bulk_col("gene symbol", c("symbol", "gene_symbol")),
+  logFC = pick_bulk_col("log2 fold change", "logFC"),
+  padj = pick_bulk_col("conventional BH-adjusted p-value", c("padj", "adj.P.Val")),
+  treat_fdr = pick_bulk_col("TREAT FDR", "treat_fdr")
+)
+bulk <- fread(
+  BULK_FILE,
+  select = unname(bulk_cols),
+  colClasses = list(character = unname(bulk_cols[c("gene_id", "symbol")]))
+)
+setnames(bulk, unname(bulk_cols), names(bulk_cols))
+bulk[, gene_id_unversioned := sub("\\.[0-9]+$", "", gene_id)]
+
+# Select the bulk row for each fixed display gene by its stable Ensembl ID
+# (version-insensitive), never by the lowest FDR among rows sharing a symbol.
+bulk_ids <- fread(BULK_ID_FILE)
+if (nrow(bulk_ids) != 25L || anyDuplicated(bulk_ids$gene) ||
+    anyDuplicated(bulk_ids$bulk_gene_id) || !setequal(bulk_ids$gene, fixed$gene)) {
+  stop("Panel 4C bulk gene-ID table must map the 25 fixed proteins to 25 unique Ensembl IDs")
+}
+bulk_ids[, gene_id_unversioned := sub("\\.[0-9]+$", "", bulk_gene_id)]
+bulk_sel <- merge(
+  bulk_ids[, .(gene, gene_id_unversioned)],
+  bulk,
+  by = "gene_id_unversioned",
+  all.x = TRUE,
+  sort = FALSE
+)
+bulk_hits <- bulk_sel[, .(n_rows = sum(!is.na(gene_id))), by = gene]
+if (any(bulk_hits$n_rows != 1L)) {
+  stop(
+    "Each fixed gene must match exactly one bulk row by Ensembl ID; offending: ",
+    paste0(bulk_hits[n_rows != 1L, paste0(gene, "=", n_rows)], collapse = ", ")
+  )
+}
+if (any(is.na(bulk_sel$symbol) | bulk_sel$symbol != bulk_sel$gene)) {
+  stop(
+    "Bulk symbol disagrees with the fixed display gene for: ",
+    paste(bulk_sel[is.na(symbol) | symbol != gene, paste0(gene, "/", gene_id, "/", symbol)], collapse = ", ")
+  )
+}
 panel_pairs <- merge(
   fixed[, .(gene, program, prog_order, gene_order)],
   de[, .(
@@ -259,14 +329,22 @@ panel_pairs <- merge(
 )
 panel_pairs <- merge(
   panel_pairs,
-  bulk[, .(gene = symbol, bulk_logFC = logFC, bulk_padj = treat_fdr)],
+  bulk_sel[, .(
+    gene,
+    bulk_gene_id = gene_id,
+    bulk_logFC = logFC,
+    bulk_padj = padj,
+    bulk_treat_fdr = treat_fdr
+  )],
   by = "gene",
   all.x = TRUE,
   sort = FALSE
 )
 setorder(panel_pairs, prog_order, gene_order)
+# bulk_sig mirrors is_canonical_deg() in scripts/figures/load_figure_data.R:
+# conventional padj < 0.05 and |log2FC| > 0.5.
 panel_pairs[, `:=`(
-  bulk_sig = is.finite(bulk_padj) & bulk_padj < 0.05,
+  bulk_sig = is.finite(bulk_padj) & bulk_padj < 0.05 & abs(bulk_logFC) > 0.5,
   protein_sig = is.finite(protein_padj) & protein_padj < 0.05,
   direction_concordant = sign(bulk_logFC) == sign(protein_logFC),
   selection_conditioned = TRUE,
@@ -274,46 +352,67 @@ panel_pairs[, `:=`(
 )]
 fwrite(panel_pairs, file.path(OUT, "panel4c_mrna_protein.tsv"), sep = "\t", quote = FALSE)
 
-# Conventional partial Spearman associations for all 25 proteins x five
-# prespecified histology features. Protein and histology variables are ranked
-# first, then both ranks are residualized on the same nuisance design.
-nuisance_design <- model.matrix(
-  ~ acquisition_batch + age_z + bmi_z + sex,
-  data = meta
-)
-rank_residualize <- function(y) {
-  ok <- is.finite(y) & apply(nuisance_design, 1, function(z) all(is.finite(z)))
-  out <- rep(NA_real_, length(y))
-  if (sum(ok) > ncol(nuisance_design) + 2L) {
-    out[ok] <- residuals(lm.fit(
-      nuisance_design[ok, , drop = FALSE],
-      rank(y[ok], ties.method = "average")
-    ))
-  }
-  out
-}
+# Partial Spearman associations for all 25 proteins x five prespecified
+# histology features. Each pair uses one complete-case participant set in which
+# the protein, the histology feature, and every nuisance covariate are observed.
+# Protein and histology are ranked within that set, and both ranks are
+# residualized on the identical nuisance design for the same participants.
+# age_z and bmi_z keep their all-58 scaling: least-squares residuals from a
+# design with an intercept do not change under an affine rescaling of a
+# covariate, so re-z-scoring within the set would give the same residuals.
+# The t approximation uses df = n - rank(nuisance design) - 1, i.e. n - 2 minus
+# the non-intercept nuisance columns (n - 6 for batch, age, BMI, and sex).
+nuisance_vars <- c("acquisition_batch", "age_z", "bmi_z", "sex")
+covariates_ok <- complete.cases(meta[, ..nuisance_vars])
 features <- c("Steatosis", "Ballooning", "Inflammation", "Fibrosis", "NAS")
-hist_resid <- lapply(features, function(x) rank_residualize(meta[[x]]))
-names(hist_resid) <- features
+partial_spearman <- function(g, feature) {
+  protein <- gene_expr[g, samples]
+  score <- meta[[feature]]
+  protein_ok <- is.finite(protein)
+  feature_ok <- is.finite(score)
+  ok <- protein_ok & feature_ok & covariates_ok
+  excluded <- c(
+    protein_not_quantified = sum(!protein_ok),
+    histology_missing = sum(!feature_ok),
+    covariate_missing = sum(!covariates_ok)
+  )
+  missing_reason <- if (any(excluded > 0L)) {
+    paste0(names(excluded)[excluded > 0L], ":", excluded[excluded > 0L], collapse = ";")
+  } else {
+    "none"
+  }
+  d <- droplevels(meta[ok])
+  rhs <- c("age_z", "bmi_z")
+  if (nlevels(d$acquisition_batch) > 1L) rhs <- c("acquisition_batch", rhs)
+  if (nlevels(d$sex) > 1L) rhs <- c(rhs, "sex")
+  x <- model.matrix(reformulate(rhs), data = d)
+  design_rank <- qr(x)$rank
+  out <- data.table(
+    gene = g,
+    feature,
+    n = sum(ok),
+    rho = NA_real_,
+    pvalue = NA_real_,
+    n_nuisance_terms = design_rank - 1L,
+    df = sum(ok) - design_rank - 1L,
+    missing_reason,
+    test_status = "tested"
+  )
+  if (design_rank < ncol(x)) return(out[, test_status := "rank_deficient_nuisance_design"])
+  if (out$n < 8L || out$df < 3L) return(out[, test_status := "too_few_participants"])
+  protein_resid <- residuals(lm.fit(x, rank(protein[ok], ties.method = "average")))
+  feature_resid <- residuals(lm.fit(x, rank(score[ok], ties.method = "average")))
+  r <- suppressWarnings(cor(protein_resid, feature_resid))
+  if (!is.finite(r)) return(out[, test_status := "no_residual_variance"])
+  t_stat <- r * sqrt(out$df / (1 - r^2))
+  out[, `:=`(rho = r, pvalue = 2 * pt(-abs(t_stat), out$df))]
+}
 histology <- rbindlist(lapply(fixed$gene, function(g) {
-  pr <- rank_residualize(gene_expr[g, samples])
-  rbindlist(lapply(features, function(feature) {
-    hr <- hist_resid[[feature]]
-    ok <- is.finite(pr) & is.finite(hr)
-    if (sum(ok) < 8L) {
-      return(data.table(gene = g, feature, n = sum(ok), rho = NA_real_, pvalue = NA_real_))
-    }
-    tst <- suppressWarnings(cor.test(pr[ok], hr[ok], method = "pearson"))
-    data.table(
-      gene = g,
-      feature,
-      n = sum(ok),
-      rho = unname(tst$estimate),
-      pvalue = tst$p.value
-    )
-  }))
+  rbindlist(lapply(features, function(feature) partial_spearman(g, feature)))
 }))
 histology[, padj := p.adjust(pvalue, method = "BH")]
+histology[, correction_family := "25_fixed_proteins_x_5_histology_features"]
+setcolorder(histology, c("gene", "feature", "n", "rho", "pvalue", "padj"))
 fwrite(histology, file.path(OUT, "panel4c_histology_partial.tsv"), sep = "\t", quote = FALSE)
 
 # Full-family enrichment on the adjusted protein t statistic. The six process
@@ -663,6 +762,8 @@ cat("[protein] fixed Panel 4C direction retained:",
     sum(panel_pairs$direction_concordant, na.rm = TRUE), "/25\n")
 cat("[protein] fixed Panel 4C adjusted q<0.05:",
     sum(panel_pairs$protein_sig, na.rm = TRUE), "/25\n")
+cat("[protein] Panel 4C partial Spearman tested:", sum(histology$test_status == "tested"),
+    "/125; BH q<0.05:", sum(histology$padj < 0.05, na.rm = TRUE), "\n")
 cat("[protein] module testability:", sum(module_results$testable), "/22; robust:",
     sum(module_results$robust), "\n")
 if (exists("module_histology")) {

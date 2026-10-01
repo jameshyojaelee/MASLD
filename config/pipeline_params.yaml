@@ -112,7 +112,7 @@ library:
   lfc: 0.8
   tpm_protein_coding: 1.0
   tpm_lncrna: 0.5
-  direction: "up"                    # Only upregulated targets for Cas13 knockdown
+  direction: "up"                    # Only upregulated targets for the separate RNA-reduction study
 
 # ---------------------------------------------------------------------------
 # SLURM job defaults

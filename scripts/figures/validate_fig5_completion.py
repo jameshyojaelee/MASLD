@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import math
+import os
 import re
 import subprocess
 from collections import Counter
@@ -118,7 +119,32 @@ def main() -> None:
     )
 
     canonical_manifest = {row["callout"]: row for row in read_tsv(CANONICAL / "CANONICAL_MAIN_PANELS.tsv")}
-    for callout in ("5B", "5E", "5F"):
+    # FIG5B_BULK_DEG: 5B is rendered from that bulk fit instead of copied, so its
+    # printed numbers are rederived from the per-gene rows rather than hash-matched.
+    rendered_5b = bool(os.environ.get("FIG5B_BULK_DEG"))
+    if rendered_5b:
+        genes = read_tsv(panels / "data/fig5b_protein_triage_genes.tsv")
+        summary_5b = read_tsv(panels / "data/fig5b_protein_triage_summary.tsv")[0]
+        n_conf = sum(row["class"] == "confirmed" for row in genes)
+        n_disc = sum(row["class"] == "discordant" for row in genes)
+        n_sig = n_conf + n_disc
+        text_b = pdf_text(panels / expected["5B"])
+        check(
+            summary_5b["bulk_deg_path"] == str(Path(os.environ["FIG5B_BULK_DEG"]).resolve())
+            and int(summary_5b["n_prioritized_measured"]) == len(genes)
+            and int(summary_5b["n_protein_significant"]) == n_sig
+            and int(summary_5b["n_significant_concordant"]) == n_conf
+            and int(summary_5b["n_significant_discordant"]) == n_disc
+            and f"(n = {n_sig:,})" in text_b
+            and f"{n_conf} ({100 * n_conf / n_sig:.1f}%)" in text_b
+            and f"{n_disc} ({100 * n_disc / n_sig:.1f}%)" in text_b
+            and f"ρ = {float(summary_5b['rho_prioritized']):.2f}" in text_b,
+            "5B_rendered_corrected_bulk",
+            f"5B rendered from FIG5B_BULK_DEG: {n_sig} protein-significant, "
+            f"{n_conf} concordant, {n_disc} discordant rederived and printed",
+            report,
+        )
+    for callout in ("5E", "5F") if rendered_5b else ("5B", "5E", "5F"):
         observed = sha256(panels / expected[callout])
         check(
             observed == canonical_manifest[callout]["sha256"],
@@ -177,6 +203,28 @@ def main() -> None:
         report,
     )
 
+    # FIG5D_PRIMARY_PAIRS: the sealed context restricted to COLOC-eligible signal
+    # pairs by atac_context_v3/24_restrict_primary_pairs_to_eligible.py.
+    expected_rows, expected_pairs, expected_genes = 4080, 816, 462
+    restricted = os.environ.get("FIG5D_PRIMARY_PAIRS")
+    if restricted:
+        context_path = Path(restricted)
+        restriction = {row["role"]: row["sha256"]
+                       for row in read_tsv(context_path.parent / "restriction_manifest.tsv")}
+        check(
+            restriction.get("restricted_primary_pairs") == sha256(context_path)
+            and restriction.get("sealed_primary_pairs") == genetic_manifest.get(context_relative)
+            and restriction.get("sealed_all_pairs")
+            == genetic_manifest.get("genetics/context/genetic_lineage_context_all_pairs.tsv"),
+            "5D_restricted_input",
+            "5D primary pairs are the sealed ATAC context restricted to COLOC-eligible pairs",
+            report,
+        )
+        census = {row["metric"]: row["r2"]
+                  for row in read_tsv(context_path.parent / "restriction_summary.tsv")}
+        expected_rows = int(census["lineage_rows"])
+        expected_pairs = int(census["gene_study_pairs"])
+        expected_genes = int(census["genes"])
     primary = read_tsv(context_path)
     source_d = read_tsv(panels / "data/fig5d_variant_consistent_accessibility.tsv")
     observed = Counter(
@@ -189,11 +237,12 @@ def main() -> None:
     )
     expected_denominators = Counter(key[0] for key in denominators)
     check(
-        len(primary) == 4080
-        and len({(row["gwas_name"], row["ensembl"]) for row in primary}) == 816
-        and len({row["ensembl"] for row in primary}) == 462,
+        len(primary) == expected_rows
+        and len({(row["gwas_name"], row["ensembl"]) for row in primary}) == expected_pairs
+        and len({row["ensembl"] for row in primary}) == expected_genes,
         "5D_primary_cardinality",
-        "4,080 lineage rows represent 816 gene-study pairs and 462 genes",
+        f"{expected_rows:,} lineage rows represent {expected_pairs:,} gene-study pairs "
+        f"and {expected_genes:,} genes",
         report,
     )
     check(
@@ -263,7 +312,8 @@ def main() -> None:
     }
     statuses = {
         "5A": "validated_current_source_wording",
-        "5B": "accepted_canonical_identity",
+        "5B": "validated_rendered_from_corrected_bulk" if os.environ.get("FIG5B_BULK_DEG")
+              else "accepted_canonical_identity",
         "5C": "validated_fixed_selection_conditioned_cornerstone",
         "5D": "validated_variant_consistent_promoted_coloc_context",
         "5E": "accepted_canonical_identity",

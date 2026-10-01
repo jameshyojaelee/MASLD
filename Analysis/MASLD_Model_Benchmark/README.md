@@ -1126,7 +1126,7 @@ Every public portal data file, including per-gene JSON, is protected. Only
 dependency and build caches (`node_modules`, `.next`, and `out`) are outside
 the authority surface.
 
-The Cas13 side of the byte-identity separation follows the authorities named by
+The experimental-study side of the byte-identity separation follows the authorities named by
 `Cas13_Library_Design/README.md`: the June-v9 build manifest, rebuild script,
 and guide table, plus the 2026-07-31 gene-membership freeze. No final
 order-ready guide authority exists yet. Directory authority membership is

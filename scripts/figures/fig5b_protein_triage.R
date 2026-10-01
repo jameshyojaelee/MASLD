@@ -35,10 +35,25 @@ OUTPUT_DIR <- if (nzchar(CANDIDATE_ROOT)) {
 prot <- fread(file.path(
   BASE, "Analysis/Multimodal_Program_Projection/results/proteomics/protein_de_adjusted.tsv"
 ))[, .(gene, protein_logFC = logFC, protein_padj = padj)]
-bulk <- fread(
+atlas <- fread(
   file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
-  select = c("human_symbol", "bulk_logFC", "bulk_padj")
-)[, .(gene = human_symbol, bulk_logFC, bulk_padj)]
+  select = c("human_symbol", "ensembl_id", "bulk_logFC", "bulk_padj")
+)
+# FIG5B_BULK_DEG: take the mRNA effect from a bulk fit's deg_results.csv instead
+# of the atlas (whose bulk columns are the retired 846-sample fit). Joined by
+# unversioned Ensembl ID; the atlas supplies only the symbol -> Ensembl map
+# that the protein table (HGNC symbols) needs. Genes absent from the fit drop out.
+BULK_DEG <- Sys.getenv("FIG5B_BULK_DEG", "")
+if (nzchar(BULK_DEG)) {
+  deg <- fread(BULK_DEG, select = c("gene", "logFC", "padj"))
+  deg[, ensembl_id := sub("\\..*$", "", gene)]
+  stopifnot(!anyDuplicated(deg$ensembl_id), !anyDuplicated(atlas$ensembl_id))
+  bulk <- merge(atlas[, .(gene = human_symbol, ensembl_id)],
+                deg[, .(ensembl_id, bulk_logFC = logFC, bulk_padj = padj)],
+                by = "ensembl_id", all = FALSE)[, .(gene, ensembl_id, bulk_logFC, bulk_padj)]
+} else {
+  bulk <- atlas[, .(gene = human_symbol, bulk_logFC, bulk_padj)]
+}
 stopifnot(!anyDuplicated(prot$gene), !anyDuplicated(bulk$gene))
 con <- merge(prot, bulk, by = "gene", all = FALSE, sort = FALSE)
 con <- con[is.finite(bulk_logFC) & is.finite(protein_logFC)]
@@ -93,9 +108,26 @@ summary_out <- data.table(
   pct_concordant_within_significant = 100 * n_conf / (n_conf + n_disc),
   pct_discordant_within_significant = 100 * n_disc / (n_conf + n_disc)
 )
+if (nzchar(BULK_DEG)) {
+  summary_out[, `:=`(
+    bulk_source = "bulk_fit_deg_results_by_unversioned_ensembl_id",
+    bulk_deg_path = normalizePath(BULK_DEG),
+    n_prioritized_protein_measured_without_bulk_row =
+      length(setdiff(intersect(prot$gene, uni), con$gene)),
+    universe_provenance = paste(
+      "prioritized_universe_FINAL.txt locked 2026-07-10 from the July 2026 COLOC release",
+      "and the 846-sample bulk contrasts; kept unchanged, not reselected")
+  )]
+}
 summary_path <- file.path(OUTPUT_DIR, "data", "fig5b_protein_triage_summary.tsv")
 dir.create(dirname(summary_path), recursive = TRUE, showWarnings = FALSE)
 fwrite(summary_out, summary_path, sep = "\t", quote = FALSE)
+if (nzchar(BULK_DEG)) {
+  # Per-gene rows so every printed number can be rederived.
+  fwrite(con[in_uni == TRUE, .(gene, ensembl_id, bulk_logFC, bulk_padj, protein_logFC,
+                                protein_padj, class = cls)],
+         file.path(OUTPUT_DIR, "data", "fig5b_protein_triage_genes.tsv"), sep = "\t", quote = FALSE)
+}
 
 # colours / draw order / point styling per class. The muted blue–rose pair is
 # shared with Figure 5C's program palette; gray remains the unsupported/background

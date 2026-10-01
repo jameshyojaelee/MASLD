@@ -11,6 +11,7 @@ attestation; the coordinating agent must inspect the table and run
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,22 @@ MM_ROOT = (
     PROJECT_ROOT / "Analysis/Multimodal_Program_Projection/candidates" / MANUSCRIPT_RELEASE
 )
 GEN_ROOT = MM_ROOT / "genetics_context"
+# PASSPORT_GEN_RAW_ROOT points GEN_RAW at frozen classes rebuilt on new bulk and
+# COLOC inputs (01_freeze_and_rederive.py under GEN_CONTEXT_ROOT_REL). The GEN
+# terminal closure, READY, phenotype and provenance rows stay on GEN_ROOT: they
+# carry no bulk or COLOC value.
+GEN_RAW_ROOT = Path(os.environ.get("PASSPORT_GEN_RAW_ROOT", GEN_ROOT))
+GEN_RAW_RELEASE = os.environ.get("PASSPORT_GEN_RAW_RELEASE", f"{MANUSCRIPT_RELEASE}:GEN")
+STALE_WITH_NEW_GEN_RAW = {
+    "GEN_CLOSURE": (
+        "STALE: allowed_downstream_use 'all_joint_34_of_447_descriptive_interface' "
+        "counts the v1 frozen classes, not the rebuilt GEN_RAW."
+    ),
+    "MYOJIN_CLASS": (
+        "STALE: the evidence-class test used the v1 frozen classes "
+        "(228 genetic_only, 463 disease_state_only, 15 convergent); not rerun."
+    ),
+}
 HOTSPOT_ROOT = MM_ROOT / "hotspot"
 PLAN13_ROOT = MM_ROOT / "spatial_context_semantic_v2_2026-08-08"
 MYOJIN_ROOT = MM_ROOT / "myojin_hlf"
@@ -153,8 +170,8 @@ def production_rows() -> list[dict[str, Any]]:
         ),
         _row(
             "GEN_RAW", "PLAN30", "gen_frozen_classes_raw_identity_source",
-            "gen_raw_identity_source_v1", "provenance", GEN_ROOT / "frozen_evidence_classes.tsv",
-            gen_scripts / "01_freeze_and_rederive.py", f"{MANUSCRIPT_RELEASE}:GEN",
+            "gen_raw_identity_source_v1", "provenance", GEN_RAW_ROOT / "frozen_evidence_classes.tsv",
+            gen_scripts / "01_freeze_and_rederive.py", GEN_RAW_RELEASE,
             "include", "GEN_READY", "Frozen source calls retained verbatim for identity adjudication.",
             "Mixed or duplicate Ensembl fields require outcome-blind v49 adjudication.",
             "canonical_human_bulk;GWAS_finemapping;Broadaway_liver_eQTL", "source-specific",
@@ -323,6 +340,11 @@ def production_rows() -> list[dict[str, Any]]:
     ]
     if len({row["input_id"] for row in rows}) != len(rows):
         raise contract.PassportContractError("SELECTION_INPUT_ID", "duplicate frozen row ID")
+    if GEN_RAW_ROOT.resolve() != GEN_ROOT.resolve():
+        # Reused rows whose content was computed on the v1 frozen classes.
+        for row in rows:
+            if row["input_id"] in STALE_WITH_NEW_GEN_RAW:
+                row["limitation"] = f"{row['limitation']} {STALE_WITH_NEW_GEN_RAW[row['input_id']]}"
     return rows
 
 

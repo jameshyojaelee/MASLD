@@ -11,15 +11,20 @@ MIN_SNPS <- 100L  # Post-hoc filter: exclude gene-GWAS pairs with < 100 overlapp
 BASE_DIR <- Sys.getenv("MASLD_PROJECT_ROOT",
   unset = "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 FM_DIR <- file.path(BASE_DIR, "GWAS/finemapping")
-COLOC_DIR <- file.path(FM_DIR, "results/susie_coloc_rerun")  # P6: REDIRECTED
-if (!grepl("_rerun$", COLOC_DIR)) stop("REFUSING: this copy must never write into canonical results/susie_coloc/")
+COLOC_DIR <- Sys.getenv("COLOC_DIR",
+  unset = file.path(FM_DIR, "results/susie_coloc_rerun"))  # P6: REDIRECTED
+# COLOC_MASTER_IN (review item 2, r2 release): start from an already-assembled
+# master (MIN_SNPS-filtered, C4 columns present) instead of the per-chr files.
+# The master is read, not rewritten; only the gene-level table is written.
+MASTER_IN <- Sys.getenv("COLOC_MASTER_IN", unset = "")
+if (!grepl("_rerun$|^susie_coloc_r2_", basename(COLOC_DIR))) stop("REFUSING: this copy must never write into canonical results/susie_coloc/")
 if (basename(COLOC_DIR) == "susie_coloc") stop("REFUSING: COLOC_DIR resolved to canonical")
 
 cat("============================================================\n")
 cat("Combining ABF COLOC results\n")
 cat("============================================================\n")
 
-gwas_dirs <- list.dirs(COLOC_DIR, recursive = FALSE)
+gwas_dirs <- if (nzchar(MASTER_IN)) character(0) else list.dirs(COLOC_DIR, recursive = FALSE)
 all_results <- list()
 
 for (gdir in gwas_dirs) {
@@ -48,7 +53,12 @@ for (gdir in gwas_dirs) {
 }
 
 # Master table
-if (length(all_results) > 0) {
+if (length(all_results) > 0 || nzchar(MASTER_IN)) {
+  if (nzchar(MASTER_IN)) {
+    master <- fread(MASTER_IN)
+    cat("Master table read from", MASTER_IN, ":", nrow(master), "rows\n")
+    if (any(!is.na(master$n_snps) & master$n_snps < MIN_SNPS)) stop("COLOC_MASTER_IN is not MIN_SNPS-filtered")
+  } else {
   master <- rbindlist(all_results, fill = TRUE)
 
   # Apply minimum SNP filter (raised from 10 to 100; see threshold audit)
@@ -56,6 +66,7 @@ if (length(all_results) > 0) {
   master <- master[is.na(n_snps) | n_snps >= MIN_SNPS]
   n_filtered <- n_before - nrow(master)
   cat(sprintf("\n  Filtered %d gene-GWAS pairs with n_snps < %d\n", n_filtered, MIN_SNPS))
+  }
 
   # ── C4: lambda_s / LD-reliability propagation (cross-ancestry LD-matching) ────
   # Propagate the SuSiE-RSS LD-consistency diagnostic lambda_s (estimate_s_rss;
@@ -97,7 +108,11 @@ if (length(all_results) > 0) {
   master[, ancestry := .anc_of(gwas_name)]
   strat_f <- file.path(QA_DIR, "lambda_s_by_stratum.tsv")
   locus_f <- file.path(QA_DIR, "lambda_s_by_locus.tsv")
-  if (file.exists(strat_f)) {
+  if (nzchar(MASTER_IN)) {
+    # The input master already carries the propagated columns; merging the
+    # stratum table again would duplicate them as .x/.y.
+    cat("  C4 lambda_s columns carried from COLOC_MASTER_IN (not re-propagated)\n")
+  } else if (file.exists(strat_f)) {
     strat <- fread(strat_f)
     master <- merge(master,
       strat[, .(gwas_name = study, ld_panel, ld_panel_n,
@@ -161,8 +176,8 @@ if (length(all_results) > 0) {
   }
   # ─────────────────────────────────────────────────────────────────────────────
 
-  master_file <- file.path(COLOC_DIR, "susie_coloc_all_gwas.csv")
-  fwrite(master, master_file)
+  master_file <- if (nzchar(MASTER_IN)) MASTER_IN else file.path(COLOC_DIR, "susie_coloc_all_gwas.csv")
+  if (!nzchar(MASTER_IN)) fwrite(master, master_file)
 
   cat("\n============================================================\n")
   cat("Master table:", nrow(master), "gene-GWAS entries\n")
@@ -406,6 +421,23 @@ if (length(all_results) > 0) {
   # the EUR-only companion while the atlas itself stays inclusive. (MAJOR-2 fix by
   # labeling, not exclusion — see the ancestry-tag comment above.)
   gene_best <- as.data.table(gene_best)
+
+  # Review item 2: a study whose every signal pair failed coloc's shared-posterior
+  # check has PP.H4.susie = NA, so the SuSiE block above never sees it. Count it
+  # as its own class; such a gene is never a SuSiE negative.
+  # coloc_susie_state: positive (> 0.5) > untestable > tested_le_0.5 > no_susie_result.
+  UNTESTABLE <- "susie_untestable_insufficient_shared_posterior"
+  gene_untest <- master[method == UNTESTABLE,
+    .(coloc_n_gwas_susie_untestable = .N,
+      coloc_susie_untestable_gwas = paste(sort(gwas_name), collapse = ";")),
+    by = .(gene, ensembl)]
+  gene_best <- merge(gene_best, gene_untest, by = c("gene", "ensembl"), all.x = TRUE)
+  gene_best[is.na(coloc_n_gwas_susie_untestable), coloc_n_gwas_susie_untestable := 0L]
+  gene_best[, coloc_susie_state := fifelse(!is.na(coloc_n_gwas_susie_h4_05) & coloc_n_gwas_susie_h4_05 > 0, "positive",
+    fifelse(coloc_n_gwas_susie_untestable > 0, "untestable",
+      fifelse(!is.na(coloc_best_susie_pp4), "tested_le_0.5", "no_susie_result")))]
+  cat("  SuSiE state by gene:", paste(names(table(gene_best$coloc_susie_state)),
+      table(gene_best$coloc_susie_state), sep = "=", collapse = " "), "\n")
   gene_best[, coloc_best_ancestry       := anc_of(coloc_best_gwas)]
   gene_best[, coloc_best_susie_ancestry := anc_of(coloc_best_susie_gwas)]
   gene_best[, coloc_abf_conf_tier   := conf_tier(coloc_best_pp4)]

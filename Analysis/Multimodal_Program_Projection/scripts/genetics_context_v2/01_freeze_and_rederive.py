@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections import defaultdict
 from pathlib import Path
 
@@ -19,6 +20,7 @@ from genetics_common import (
     clean,
     ensembl_base,
     inspect_table,
+    iter_table,
     load_config_tsv,
     parse_float,
     read_table,
@@ -30,6 +32,16 @@ from genetics_common import (
 )
 
 
+# Method-specific ABF driver columns written by rebuild_tier12.py (review item 5).
+# They are carried only when the Tier-1/2 table has them.
+ABF_DRIVER_FIELDS = ("abf_driving_gwas", "abf_driving_trait")
+
+# Counts recorded by the v1 freeze (2026-08-07). They are a historical record and
+# the template of the metric names; they are not asserted, because the shared
+# bulk-row rule and the Ensembl join (2026-09-24) move them on the v1 inputs
+# (treat_symbols 1,909, primary_susie_bulk_testable 449, primary_overlap 33).
+# Every run passes --expected, computed from the inputs by
+# 11_write_corrected_input_contract.py.
 EXPECTED = {
     "treat_rows": 1918,
     "treat_symbols": 1915,
@@ -37,6 +49,41 @@ EXPECTED = {
     "primary_susie_bulk_testable": 447,
     "primary_overlap": 34,
 }
+
+# Established-state rules. "treat" (default) is the rule of the frozen 2026-08-07
+# contract. "canonical" is the paper's DEG rule since 2026-08-12 and adds
+# bulk_padj and established_state_rule columns.
+STATE_RULES = {
+    "treat": "treat_fdr0.05",
+    "canonical": "canonical_padj0.05_absLFC0.5",
+}
+# Corrected 06_susie_coloc.R: every SuSiE signal pair failed coloc's
+# shared-posterior check. The gene is untestable by SuSiE, never a negative.
+UNTESTABLE_METHOD = "susie_untestable_insufficient_shared_posterior"
+UNTESTABLE_CLASS = "genetic_untestable_shared_posterior"
+# Shared bulk-row rule, identical to collapse_bulk_rows() in
+# scripts/manuscript/build_evidence_class_release.R: when several bulk rows carry
+# one symbol, the row on the primary assembly (GENCODE v49 chr1-22, X, Y, M) is
+# kept; alternate-haplotype and patch rows (e.g. HLA-DRA on GL000252.2) are used
+# only when the symbol has no primary row. Ties within an assembly class go to
+# the lowest q-value of the state rule, then the larger |t|, then the gene ID.
+# The kept row alone gives the state call and the displayed values.
+PRIMARY_CHROMOSOMES = frozenset([f"chr{n}" for n in range(1, 23)] + ["chrX", "chrY", "chrM"])
+
+
+def state_positive(row: dict[str, str], rule: str) -> bool:
+    if rule == "treat":
+        treat_fdr = parse_float(row.get("treat_fdr"))
+        return treat_fdr is not None and treat_fdr < 0.05
+    padj = parse_float(row.get("padj"))
+    logfc = parse_float(row.get("logFC"))
+    return padj is not None and logfc is not None and padj < 0.05 and abs(logfc) > 0.5
+
+
+def metric_names(rule: str, untestable: bool) -> list[str]:
+    """Frozen-contract count names; the v1 names when rule=treat without untestable."""
+    names = [f"{rule}_rows", f"{rule}_symbols", *list(EXPECTED)[2:]]
+    return names + (["genetic_untestable_named"] if untestable else [])
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,6 +94,18 @@ def parse_args() -> argparse.Namespace:
         "--contract",
         type=Path,
         default=SCRIPT_DIR / "config" / "input_contract_v1.tsv",
+    )
+    parser.add_argument(
+        "--expected",
+        type=Path,
+        required=True,
+        help="JSON of the frozen-contract counts (11_write_corrected_input_contract.py)",
+    )
+    parser.add_argument("--state-rule", choices=sorted(STATE_RULES), default="treat")
+    parser.add_argument(
+        "--untestable-state",
+        action="store_true",
+        help=f"give genes whose only Tier-1/2 SuSiE result is {UNTESTABLE_METHOD} the class {UNTESTABLE_CLASS}",
     )
     return parser.parse_args()
 
@@ -137,51 +196,92 @@ def verify_and_snapshot(
     return sources, manifest
 
 
-def collapse_bulk(rows: list[dict[str, str]]) -> tuple[dict[str, dict[str, object]], int]:
+def collapse_bulk(
+    rows: list[dict[str, str]], rule: str = "treat", primary_ids: set[str] | None = None
+) -> tuple[dict[str, dict[str, object]], int]:
     by_symbol: dict[str, list[dict[str, str]]] = defaultdict(list)
-    treat_rows = 0
+    state_rows = 0
+    # The displayed row is the most significant one under the rule's own q-value.
+    q_field = "treat_fdr" if rule == "treat" else "padj"
     for row in rows:
         symbol = clean(row.get("symbol"))
-        treat_fdr = parse_float(row.get("treat_fdr"))
-        if treat_fdr is not None and treat_fdr < 0.05:
-            treat_rows += 1
+        if state_positive(row, rule):
+            state_rows += 1
         if symbol:
             by_symbol[symbol].append(row)
 
     collapsed: dict[str, dict[str, object]] = {}
     for symbol, candidates in by_symbol.items():
-        ranked = sorted(
-            candidates,
-            key=lambda row: (
-                parse_float(row.get("treat_fdr"))
-                if parse_float(row.get("treat_fdr")) is not None
-                else float("inf"),
-                -(abs(parse_float(row.get("t")) or 0.0)),
-                clean(row.get("gene")),
-            ),
-        )
-        selected = ranked[0]
+        selected = select_bulk_row(candidates, q_field, primary_ids)
+        # Identity candidates: the primary-assembly IDs when the symbol has any
+        # (outcome-blind; alternate-contig copies drop out), else every ID.
+        ids = {ensembl_base(row.get("gene")) for row in candidates if ensembl_base(row.get("gene"))}
+        if primary_ids is not None and ids & primary_ids:
+            ids &= primary_ids
         collapsed[symbol] = {
-            "ensembl_bulk": ";".join(
-                sorted({ensembl_base(row.get("gene")) for row in candidates if ensembl_base(row.get("gene"))})
-            ),
+            "ensembl_bulk": ";".join(sorted(ids)),
             "bulk_row_count": len(candidates),
             "bulk_logFC": clean(selected.get("logFC")),
             "bulk_t": clean(selected.get("t")),
             "bulk_AveExpr": clean(selected.get("AveExpr")),
             "bulk_treat_fdr": clean(selected.get("treat_fdr")),
-            "established_state_associated": any(
-                parse_float(row.get("treat_fdr")) is not None
-                and float(row["treat_fdr"]) < 0.05
-                for row in candidates
-            ),
+            "bulk_padj": clean(selected.get("padj")),
+            "bulk_selected_ensembl": ensembl_base(selected.get("gene")),
+            "established_state_associated": state_positive(selected, rule),
         }
-    return collapsed, treat_rows
+    return collapsed, state_rows
+
+
+def primary_assembly_ids(metadata_path: Path) -> set[str]:
+    """Unversioned Ensembl IDs on the primary assembly in GENCODE v49 metadata."""
+    return {
+        ensembl_base(row.get("gene_id"))
+        for row in iter_table(metadata_path, "tsv_gz")
+        if clean(row.get("chromosome")) in PRIMARY_CHROMOSOMES
+    }
+
+
+def select_bulk_row(
+    candidates: list[dict[str, str]], q_field: str, primary_ids: set[str] | None = None
+) -> dict[str, str]:
+    """Shared bulk-row rule; see PRIMARY_CHROMOSOMES."""
+    return min(
+        candidates,
+        key=lambda row: (
+            primary_ids is not None and ensembl_base(row.get("gene")) not in primary_ids,
+            parse_float(row.get(q_field)) if parse_float(row.get(q_field)) is not None else float("inf"),
+            -(abs(parse_float(row.get("t")) or 0.0)),
+            clean(row.get("gene")),
+        ),
+    )
+
+
+def untestable_ensembl(all_gwas_path: Path, tier_path: Path) -> set[str]:
+    """Ensembl IDs with at least one Tier-1/2 pair of the untestable SuSiE method."""
+    tier12 = {
+        row["study_name"] for row in read_table(tier_path, "tsv") if clean(row.get("tier")) in {"1", "2"}
+    }
+    found: set[str] = set()
+    for row in iter_table(all_gwas_path, "csv"):
+        if row.get("method") == UNTESTABLE_METHOD and clean(row.get("gwas_name")) in tier12:
+            ens = ensembl_base(row.get("ensembl"))
+            if ens:
+                found.add(ens)
+    return found
 
 
 def collapse_genetics(
-    tier_rows: list[dict[str, str]], full_rows: list[dict[str, str]]
+    tier_rows: list[dict[str, str]],
+    full_rows: list[dict[str, str]],
+    untestable: set[str] | None = None,
+    bulk_symbols: dict[str, str] | None = None,
 ) -> dict[str, dict[str, object]]:
+    """Collapse Tier-1/2 COLOC rows to symbols.
+
+    A COLOC gene joins the bulk table by unversioned Ensembl ID: when its ID
+    carries a bulk row, the bulk (GENCODE v49) symbol is used, so renamed genes
+    (C11orf80 -> TOP6BL) stay one gene. Other IDs keep the COLOC symbol.
+    """
     ensembl_to_symbols: dict[str, set[str]] = defaultdict(set)
     for row in full_rows:
         ens = ensembl_base(row.get("ensembl"))
@@ -194,7 +294,10 @@ def collapse_genetics(
         ens = ensembl_base(row.get("ensembl"))
         if not ens:
             continue
-        symbols = ensembl_to_symbols.get(ens, set())
+        if bulk_symbols is not None and ens in bulk_symbols:
+            symbols = {bulk_symbols[ens]}
+        else:
+            symbols = ensembl_to_symbols.get(ens, set())
         if len(symbols) > 1:
             raise ContractError(f"ambiguous full-gene symbol map for {ens}: {sorted(symbols)}")
         if not symbols:
@@ -236,17 +339,53 @@ def collapse_genetics(
             "driving_trait": clean(selected.get("driving_trait")),
             "primary_genetic": max_susie is not None and max_susie > 0.5,
         }
+        if untestable is not None:
+            collapsed[symbol]["genetic_untestable"] = not collapsed[symbol]["primary_genetic"] and any(
+                row["ensembl_base"] in untestable for row in candidates
+            )
+        if all(field in selected for field in ABF_DRIVER_FIELDS):
+            # The ABF driver comes from the row holding the maximum ABF PP4.
+            abf_selected = sorted(
+                candidates,
+                key=lambda row: (
+                    -(
+                        parse_float(row.get("coloc_best_abf_pp4"))
+                        if parse_float(row.get("coloc_best_abf_pp4")) is not None
+                        else -1.0
+                    ),
+                    row["ensembl_base"],
+                ),
+            )[0]
+            for field in ABF_DRIVER_FIELDS:
+                collapsed[symbol][field] = clean(abf_selected.get(field))
     return collapsed
 
 
 def build_frozen_classes(
-    sources: dict[str, Path], candidate: Path
+    sources: dict[str, Path],
+    candidate: Path,
+    expected_counts: dict[str, int] = EXPECTED,
+    rule: str = "treat",
+    with_untestable: bool = False,
 ) -> tuple[Path, Path]:
     bulk_rows = read_table(sources["canonical_treat"], "csv")
     tier_rows = read_table(sources["tier12_genelevel"], "csv")
     full_rows = read_table(sources["full_genelevel"], "csv")
-    bulk, treat_rows = collapse_bulk(bulk_rows)
-    genetics = collapse_genetics(tier_rows, full_rows)
+    bulk, state_rows = collapse_bulk(
+        bulk_rows, rule, primary_assembly_ids(sources["gencode_metadata"])
+    )
+    bulk_symbols = {
+        ensembl_base(row.get("gene")): clean(row.get("symbol"))
+        for row in bulk_rows
+        if ensembl_base(row.get("gene")) and clean(row.get("symbol"))
+    }
+    untestable = (
+        untestable_ensembl(sources["all_gwas_coloc"], sources["gwas_trait_tier"])
+        if with_untestable
+        else None
+    )
+    genetics = collapse_genetics(tier_rows, full_rows, untestable, bulk_symbols)
+    has_abf_driver = bool(tier_rows) and all(field in tier_rows[0] for field in ABF_DRIVER_FIELDS)
 
     all_symbols = sorted(set(bulk) | set(genetics))
     frozen_rows: list[dict[str, object]] = []
@@ -258,7 +397,9 @@ def build_frozen_classes(
         joint = bulk_tested and genetic_tested
         primary = bool(g.get("primary_genetic", False))
         state = bool(b.get("established_state_associated", False))
-        if not joint:
+        if g.get("genetic_untestable", False):
+            static_class = UNTESTABLE_CLASS
+        elif not joint:
             static_class = "indeterminate_not_jointly_testable"
         elif primary and state:
             static_class = "convergent"
@@ -292,10 +433,20 @@ def build_frozen_classes(
                 "context_annotation": "not_evaluated_preflight",
             }
         )
+        if has_abf_driver:
+            frozen_rows[-1].update({field: g.get(field, "") for field in ABF_DRIVER_FIELDS})
+        if rule != "treat":
+            frozen_rows[-1].update(
+                bulk_padj=b.get("bulk_padj", ""), established_state_rule=STATE_RULES[rule]
+            )
+        if with_untestable:
+            frozen_rows[-1]["genetic_untestable_shared_posterior"] = bool_text(
+                bool(g.get("genetic_untestable", False))
+            )
 
     observed = {
-        "treat_rows": treat_rows,
-        "treat_symbols": sum(
+        f"{rule}_rows": state_rows,
+        f"{rule}_symbols": sum(
             1 for value in bulk.values() if value["established_state_associated"]
         ),
         "primary_susie_named": sum(1 for value in genetics.values() if value["primary_genetic"]),
@@ -312,9 +463,18 @@ def build_frozen_classes(
             and bulk[symbol]["established_state_associated"]
         ),
     }
+    if with_untestable:
+        observed["genetic_untestable_named"] = sum(
+            1 for value in genetics.values() if value.get("genetic_untestable", False)
+        )
+    names = metric_names(rule, with_untestable)
+    if set(expected_counts) != set(names):
+        raise ContractError(f"expected counts must give exactly {names}")
+    state_label = "TREAT FDR < 0.05" if rule == "treat" else "padj < 0.05 and |logFC| > 0.5"
     audit_rows = []
     failures = []
-    for metric, expected in EXPECTED.items():
+    for metric in names:
+        expected = expected_counts[metric]
         actual = observed[metric]
         passed = actual == expected
         audit_rows.append(
@@ -326,9 +486,16 @@ def build_frozen_classes(
                 "definition": {
                     "treat_rows": "canonical rows with treat_fdr < 0.05",
                     "treat_symbols": "unique nonempty symbols with any treat_fdr < 0.05",
+                    "canonical_rows": "bulk rows with padj < 0.05 and |logFC| > 0.5",
+                    "canonical_symbols": "unique nonempty symbols with any padj < 0.05 and |logFC| > 0.5 row",
                     "primary_susie_named": "unique named genes with SuSiE PP.H4 > 0.5",
                     "primary_susie_bulk_testable": "primary genes with a nonempty canonical bulk symbol",
-                    "primary_overlap": "primary bulk-testable genes with TREAT FDR < 0.05",
+                    "primary_overlap": f"primary bulk-testable genes with {state_label}"
+                    if rule != "treat"
+                    else "primary bulk-testable genes with TREAT FDR < 0.05",
+                    "genetic_untestable_named": (
+                        f"named genes without SuSiE PP.H4 > 0.5 and with a Tier-1/2 {UNTESTABLE_METHOD} pair"
+                    ),
                 }[metric],
             }
         )
@@ -361,6 +528,12 @@ def build_frozen_classes(
         "driving_trait",
         "context_annotation",
     ]
+    if has_abf_driver:
+        fields.extend(ABF_DRIVER_FIELDS)
+    if rule != "treat":
+        fields.extend(["bulk_padj", "established_state_rule"])
+    if with_untestable:
+        fields.append("genetic_untestable_shared_posterior")
     atomic_write_tsv(classes_path, frozen_rows, fields)
     atomic_write_tsv(
         audit_path,
@@ -376,12 +549,15 @@ def main() -> None:
     candidate = assert_candidate_root(project, args.candidate_root)
     candidate.mkdir(parents=True, exist_ok=True)
     sources, manifest = verify_and_snapshot(project, candidate, args.contract.resolve())
-    classes, audit = build_frozen_classes(sources, candidate)
+    expected_counts = json.loads(args.expected.read_text(encoding="utf-8"))
+    classes, audit = build_frozen_classes(
+        sources, candidate, expected_counts, args.state_rule, args.untestable_state
+    )
     write_stage_seal(
         candidate,
         "01_freeze_and_rederive",
         [manifest, classes, audit],
-        [args.contract.resolve()],
+        [args.contract.resolve(), args.expected.resolve()],
     )
     print(f"PASS: frozen contract written beneath {candidate}")
 

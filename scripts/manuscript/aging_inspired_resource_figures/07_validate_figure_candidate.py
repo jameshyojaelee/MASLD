@@ -84,6 +84,37 @@ def close(left: pd.Series, right: pd.Series) -> bool:
     )
 
 
+def expected_gnmt_genetics(
+    tier12_path: Path, master_path: Path, tier_path: Path, ensembl_id: str
+) -> tuple[str, float, str]:
+    """Independent GNMT call: (state, PP.H4 shown, driver column of the calling method)."""
+    tier12 = pd.read_csv(tier12_path, dtype={"ensembl": str})
+    match = tier12[tier12["ensembl"].str.split(".").str[0] == ensembl_id]
+    susie = float(match["coloc_best_susie_pp4"].iloc[0]) if len(match) else np.nan
+    abf = float(match["coloc_best_abf_pp4"].iloc[0]) if len(match) else np.nan
+    tiers = pd.read_csv(tier_path, sep="\t")
+    main_studies = set(tiers.loc[tiers["tier"].isin([1, 2]), "study_name"].astype(str))
+    n_untestable = 0
+    for chunk in pd.read_csv(master_path, usecols=["gwas_name", "ensembl", "method"],
+                             dtype=str, chunksize=1_000_000):
+        n_untestable += int((
+            (chunk["ensembl"].str.split(".").str[0] == ensembl_id)
+            & chunk["gwas_name"].isin(main_studies)
+            & (chunk["method"] == "susie_untestable_insufficient_shared_posterior")
+        ).sum())
+    if susie > 0.5:
+        return "supported_susie_coloc", susie, "susie_driving_gwas"
+    if n_untestable:
+        return "genetic_untestable_shared_posterior", np.nan, ""
+    if abf > 0.5:
+        return "abf_only_sensitivity", abf, "abf_driving_gwas"
+    if np.isfinite(susie):
+        return "not_colocalized", susie, "susie_driving_gwas"
+    if np.isfinite(abf):
+        return "not_colocalized", abf, "abf_driving_gwas"
+    return "untestable_no_tier12_pp4", np.nan, ""
+
+
 def main() -> None:
     for path in (VALIDATION, MANIFEST, VALIDATED):
         refuse(path)
@@ -195,9 +226,12 @@ def main() -> None:
             )
     bulk_plot = read_tsv("fig4f_bulk_stage_transport.tsv")
     bulk_source = pd.read_csv(
-        ROOT
-        / "figures/candidates/fig4-stage-terminology-corrected-2026-08-13-v5"
-        / "source_tables/fig4e_bulk_projection.tsv",
+        os.environ.get(
+            "WORKED_LOCI_BULK_PROJECTION",
+            ROOT
+            / "figures/candidates/fig4-stage-terminology-corrected-2026-08-13-v5"
+            / "source_tables/fig4e_bulk_projection.tsv",
+        ),
         sep="\t",
     )
     add("fig4f_bulk_rows_8", len(bulk_plot) == 8, len(bulk_plot))
@@ -240,16 +274,32 @@ def main() -> None:
     add("fig6c_three_examples", fingerprints["example"].nunique() == 3, fingerprints["example"].nunique())
     add("fig6c_nodes_15", len(nodes) == 15, len(nodes))
     add("fig6c_five_nodes_per_example", set(nodes.groupby("example").size()) == {5}, nodes.groupby("example").size().to_dict())
-    add(
-        "fig6c_genetics_blocked",
-        set(
-            fingerprints.loc[
-                fingerprints["node"] == "Inherited shared signal", "state"
-            ]
+    genetics = fingerprints[fingerprints["node"] == "Inherited shared signal"]
+    add("fig6c_genetics_one_row", len(genetics) == 1, len(genetics))
+    genetics = genetics.iloc[0]
+    if not os.environ.get("WORKED_LOCI_COLOC_TIER12"):
+        add("fig6c_genetics_blocked", genetics["state"] == "blocked_pending_corrected_coloc", genetics["state"])
+    else:
+        # Re-derive the GNMT call from the hashed source table, independently of 05.
+        tier12_path = Path(os.environ["WORKED_LOCI_COLOC_TIER12"])
+        add("fig6c_genetics_source_is_configured_tier12",
+            Path(genetics["source_path"]) == tier12_path.resolve(), genetics["source_path"])
+        aux = dict(item.split("=", 1) for item in str(genetics["auxiliary"]).split("; ") if "=" in item)
+        tier12 = pd.read_csv(tier12_path, dtype={"ensembl": str})
+        match = tier12[tier12["ensembl"].str.split(".").str[0] == aux.get("ensembl")]
+        expected = expected_gnmt_genetics(
+            tier12_path,
+            Path(os.environ["WORKED_LOCI_COLOC_MASTER"]),
+            Path(os.environ.get("WORKED_LOCI_GWAS_TIER",
+                                ROOT / "GWAS/finemapping/config/gwas_trait_tier.tsv")),
+            str(aux.get("ensembl")),
         )
-        == {"blocked_pending_corrected_coloc"},
-        fingerprints.loc[fingerprints["node"] == "Inherited shared signal", "state"].tolist(),
-    )
+        add("fig6c_genetics_state_rederived", genetics["state"] == expected[0], (genetics["state"], expected[0]))
+        add("fig6c_genetics_pp4_exact", close(pd.Series([genetics["estimate"]]), pd.Series([expected[1]])),
+            (genetics["estimate"], expected[1]))
+        if expected[2] and expected[2] in tier12.columns:
+            add("fig6c_genetics_method_specific_driver",
+                aux.get("driver") == str(match[expected[2]].iloc[0]), (aux.get("driver"), expected[2]))
     add(
         "fig6c_no_combined_score_or_rank",
         not any(

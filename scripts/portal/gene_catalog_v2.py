@@ -4,7 +4,7 @@
 This module is an adapter beside the sealed v1 ``passport_*`` file contract.
 It can read a v1 gene-index record without changing its route, and it provides
 the explicit molecular-object routing required by Catalog v2.  It does not
-read, select, or score Cas13 screen results.
+read, select, or score experimental follow-up screen results.
 """
 
 from __future__ import annotations
@@ -138,7 +138,7 @@ EXPERIMENT_RULES_V2: OrderedDict[str, dict[str, str]] = OrderedDict(
             {
                 "biological_model": "human liver-lineage model expressing the lncRNA",
                 "context": "the disease state in which the transcript was observed",
-                "perturbation": "Cas13 or ASO RNA depletion with an independent rescue when feasible",
+                "perturbation": "RNA depletion using an RNA-targeting nuclease or antisense oligonucleotide, with an independent rescue when feasible",
                 "primary_readout": "lncRNA depletion, neighboring-gene expression, and the prespecified cellular phenotype",
                 "falsifying_outcome": "adequate RNA depletion changes neither the phenotype nor the proposed downstream readout",
             },
@@ -271,7 +271,7 @@ def canonical_assay_applicability(value: Any) -> str:
 
 
 def assert_resource_firewall(record: Mapping[str, Any]) -> None:
-    """Reject future Cas13 screen contents while allowing generic RNA routing."""
+    """Reject future experimental screen contents while allowing generic RNA routing."""
 
     def inspect(value: Any, path: str) -> None:
         if isinstance(value, Mapping):

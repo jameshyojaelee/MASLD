@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 
 # Build the frozen manuscript evidence classes and the audits that support them.
-# The primary classes use only canonical bulk TREAT DE and Tier-1/2 SuSiE-COLOC;
+# The primary classes use only the canonical bulk DEG call (padj < 0.05 and
+# |log2FC| > 0.5; TREAT columns are carried as a sensitivity) and Tier-1/2 SuSiE-COLOC;
 # spatial, single-cell, and proteomic columns are reserved for independent tests.
 
 suppressPackageStartupMessages({
@@ -15,17 +16,21 @@ BASE <- Sys.getenv(
 RELEASE_ID <- Sys.getenv("MANUSCRIPT_RELEASE_ID", "2026-07-15-r2")
 PP4_THRESHOLDS <- c(0.5, 0.7, 0.9)
 
+# Each input can be redirected (for example to the corrected F_five deg_results.csv
+# and a corrected COLOC release); the defaults are the 2026-07-15-r2 inputs.
 paths <- list(
-  deg = file.path(BASE,
-    "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv"),
-  coloc = file.path(BASE,
-    "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv"),
-  trait_tier = file.path(BASE,
-    "GWAS/finemapping/config/gwas_trait_tier.tsv"),
-  atlas = file.path(BASE,
-    "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
-  convergence = file.path(BASE,
-    "RNA-seq/results/multi_evidence/convergence_evidence.csv")
+  deg = Sys.getenv("EVIDENCE_CLASS_DEG", file.path(BASE,
+    "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")),
+  coloc = Sys.getenv("EVIDENCE_CLASS_COLOC", file.path(BASE,
+    "GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv")),
+  trait_tier = Sys.getenv("EVIDENCE_CLASS_TRAIT_TIER", file.path(BASE,
+    "GWAS/finemapping/config/gwas_trait_tier.tsv")),
+  atlas = Sys.getenv("EVIDENCE_CLASS_ATLAS", file.path(BASE,
+    "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")),
+  convergence = Sys.getenv("EVIDENCE_CLASS_CONVERGENCE", file.path(BASE,
+    "RNA-seq/results/multi_evidence/convergence_evidence.csv")),
+  gene_metadata = Sys.getenv("EVIDENCE_CLASS_GENE_METADATA", file.path(BASE,
+    "data/gencode_v49_gene_metadata.tsv.gz"))
 )
 
 missing_inputs <- names(paths)[!file.exists(unlist(paths))]
@@ -33,8 +38,17 @@ if (length(missing_inputs)) {
   stop("Missing release input(s): ", paste(missing_inputs, collapse = ", "))
 }
 
-RESULT_DIR <- file.path(BASE, "RNA-seq/results/manuscript_release", RELEASE_ID)
-DOC_DIR <- file.path(BASE, "docs/manuscript/release")
+# EVIDENCE_CLASS_OUT_DIR writes every output, including the manifest and claim
+# ledger, into one new directory and leaves docs/manuscript/release untouched.
+OUT_DIR <- Sys.getenv("EVIDENCE_CLASS_OUT_DIR", "")
+if (nzchar(OUT_DIR)) {
+  if (file.exists(OUT_DIR)) stop("EVIDENCE_CLASS_OUT_DIR must not exist: ", OUT_DIR)
+  RESULT_DIR <- OUT_DIR
+  DOC_DIR <- OUT_DIR
+} else {
+  RESULT_DIR <- file.path(BASE, "RNA-seq/results/manuscript_release", RELEASE_ID)
+  DOC_DIR <- file.path(BASE, "docs/manuscript/release")
+}
 dir.create(RESULT_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(DOC_DIR, recursive = TRUE, showWarnings = FALSE)
 
@@ -60,17 +74,28 @@ coloc_raw <- fread(paths$coloc)
 tiers <- fread(paths$trait_tier)
 atlas <- fread(paths$atlas)
 
-stopifnot(all(c("symbol", "treat_fdr", "treat_p", "t", "AveExpr") %in% names(deg_raw)))
-stopifnot(all(c("gwas_name", "gene", "ensembl", "PP.H4.susie", "PP.H4.abf") %in% names(coloc_raw)))
+# Both bulk schemas (live canonical_deg_results.csv and F_five deg_results.csv)
+# carry these columns; gene is a versioned ENSG and symbol falls back to it.
+stopifnot(all(c("gene", "symbol", "logFC", "padj", "treat_fdr", "treat_p", "t", "AveExpr") %in% names(deg_raw)))
+stopifnot(all(c("gwas_name", "gene", "ensembl", "PP.H4.susie", "PP.H4.abf", "method") %in% names(coloc_raw)))
 stopifnot(all(c("study_name", "tier", "tier_label", "placement") %in% names(tiers)))
 stopifnot(all(c("human_symbol", "gene_biotype") %in% names(atlas)))
 
-# Canonical bulk table, one row per non-empty symbol. The most significant TREAT
-# row wins if duplicated symbols occur through annotation aliases.
+# Canonical bulk table, one row per non-empty symbol. When a symbol has several
+# ENSG rows, the row on the primary assembly (GENCODE v49 chr1-22, X, Y, M) wins;
+# among rows of equal assembly status the smallest conventional padj wins (F_five
+# DEFB1 has two primary rows on either side of padj 0.05). The bulk universe also
+# carries alternate-contig and patch genes; picking by padj alone let an
+# alternate-haplotype row decide HLA-DRA and SORD2P. Same rule as
+# genetics_context_v2/01_freeze_and_rederive.py (PRIMARY_CHROMOSOMES).
+gene_meta <- fread(paths$gene_metadata, select = c("gene_id", "chromosome"))
+primary_ids <- unique(sub("\\..*$", "", gene_meta[chromosome %in%
+  c(paste0("chr", 1:22), "chrX", "chrY", "chrM"), gene_id]))
 deg <- copy(deg_raw)
 deg[, symbol := clean_symbol(symbol)]
 deg <- deg[!is.na(symbol)]
-setorder(deg, symbol, treat_fdr, treat_p)
+deg[, off_primary := !(sub("\\..*$", "", gene) %in% primary_ids)]
+setorder(deg, symbol, off_primary, padj, P.Value, treat_fdr)
 deg <- deg[!duplicated(symbol)]
 # Canonical 2026-08-12: padj<0.05 & |log2FC|>0.5. Column name kept for schema
 # stability; it now carries the conventional-gate call, not the TREAT call.
@@ -79,6 +104,7 @@ deg <- deg[, .(
   symbol,
   ensembl_bulk = sub("\\..*$", "", gene),
   bulk_logFC = logFC,
+  bulk_padj = padj,
   bulk_t = t,
   bulk_AveExpr = AveExpr,
   bulk_treat_p = treat_p,
@@ -95,22 +121,38 @@ coloc <- merge(
   all = FALSE
 )
 coloc[, gene := clean_symbol(gene)]
+# The COLOC table names genes by an older symbol for some Ensembl IDs (for example
+# C2orf16, TOP6BL). Take the symbol from the bulk or atlas table through the
+# unversioned Ensembl ID where one exists, so a renamed gene is not dropped from
+# the symbol-keyed join below; otherwise keep the COLOC symbol.
+ensembl_symbol <- unique(rbind(
+  data.table(ensembl = sub("\\..*$", "", deg_raw$gene), symbol = clean_symbol(deg_raw$symbol)),
+  data.table(ensembl = sub("\\..*$", "", atlas$ensembl_id), symbol = clean_symbol(atlas$human_symbol))
+))[!is.na(ensembl) & !is.na(symbol) & nzchar(ensembl)]
+ensembl_symbol <- ensembl_symbol[!duplicated(ensembl)]
+coloc[, ensembl_key := sub("\\..*$", "", ensembl)]
+coloc[ensembl_symbol, on = .(ensembl_key = ensembl), gene := fifelse(!is.na(i.symbol), i.symbol, gene)]
 coloc <- coloc[placement == "main" & tier %in% c(1L, 2L) & !is.na(gene)]
 if (uniqueN(coloc$gwas_name) != 35L) {
   stop("Expected 35 primary GWAS, observed ", uniqueN(coloc$gwas_name))
 }
 
+# n_gwas_susie_untestable counts studies where every SuSiE signal pair failed
+# coloc's shared-posterior check (corrected 06_susie_coloc.R); those studies have
+# no SuSiE PP4 and are untestable, not SuSiE-negative.
 aggregate_scope <- function(d, suffix) {
   out <- d[, .(
     susie = safe_max(`PP.H4.susie`),
     abf = safe_max(`PP.H4.abf`),
     n_gwas_tested = uniqueN(gwas_name),
-    n_ancestries_tested = uniqueN(ancestry)
+    n_ancestries_tested = uniqueN(ancestry),
+    n_gwas_susie_untestable = uniqueN(gwas_name[method == "susie_untestable_insufficient_shared_posterior"])
   ), by = .(symbol = gene)]
   setnames(
     out,
-    c("susie", "abf", "n_gwas_tested", "n_ancestries_tested"),
-    paste0(c("max_susie_pp4_", "max_abf_pp4_", "n_gwas_tested_", "n_ancestries_tested_"), suffix)
+    c("susie", "abf", "n_gwas_tested", "n_ancestries_tested", "n_gwas_susie_untestable"),
+    paste0(c("max_susie_pp4_", "max_abf_pp4_", "n_gwas_tested_", "n_ancestries_tested_",
+             "n_gwas_susie_untestable_"), suffix)
   )
   out
 }
@@ -139,17 +181,35 @@ release[, in_union_sensitivity := pmax(max_susie_pp4_all, max_abf_pp4_all, na.rm
 release[!is.finite(pmax(max_susie_pp4_all, max_abf_pp4_all, na.rm = TRUE)),
         in_union_sensitivity := FALSE]
 
+# SuSiE-untestable: no SuSiE PP4 > 0.5 in the scope and at least one Tier-1/2 pair
+# whose signal pairs all failed the shared-posterior check. It is reported as a
+# separate genetic state, never a negative. In the audit denominators it counts
+# as not genetically positive (see below). For the SuSiE/ABF union, a positive
+# ABF result still counts.
+UNTESTABLE_CLASS <- "genetic_untestable_shared_posterior"
+susie_untestable <- function(d, susie_col, n_col) {
+  (is.na(d[[susie_col]]) | d[[susie_col]] <= 0.5) & !is.na(d[[n_col]]) & d[[n_col]] > 0
+}
+union_untestable <- function(d, susie_col, abf_col, n_col) {
+  susie_untestable(d, susie_col, n_col) & !(!is.na(d[[abf_col]]) & d[[abf_col]] > 0.5)
+}
+release[, genetic_untestable_susie := susie_untestable(release, "max_susie_pp4_all", "n_gwas_susie_untestable_all")]
+release[, genetic_untestable_union := union_untestable(
+  release, "max_susie_pp4_all", "max_abf_pp4_all", "n_gwas_susie_untestable_all")]
+
 release[, primary_evidence_class := fifelse(
-  !joint_testable, "not_jointly_testable",
+  genetic_untestable_susie, UNTESTABLE_CLASS,
+  fifelse(!joint_testable, "not_jointly_testable",
   fifelse(in_susie_primary & in_treat_deg, "convergent",
   fifelse(in_susie_primary, "genetic_only",
-  fifelse(in_treat_deg, "disease_state_only", "neither")))
+  fifelse(in_treat_deg, "disease_state_only", "neither"))))
 )]
 release[, sensitivity_evidence_class := fifelse(
-  !joint_testable, "not_jointly_testable",
+  genetic_untestable_union, UNTESTABLE_CLASS,
+  fifelse(!joint_testable, "not_jointly_testable",
   fifelse(in_union_sensitivity & in_treat_deg, "convergent",
   fifelse(in_union_sensitivity, "genetic_only",
-  fifelse(in_treat_deg, "disease_state_only", "neither")))
+  fifelse(in_treat_deg, "disease_state_only", "neither"))))
 )]
 
 direct_hit <- !is.na(release$max_susie_pp4_direct) & release$max_susie_pp4_direct > 0.5
@@ -161,7 +221,8 @@ release[, genetic_trait_scope := fifelse(
 release[, genetic_confidence := fifelse(
   in_susie_primary,
   "susie",
-  fifelse(in_union_sensitivity, "abf_only", "none")
+  fifelse(in_union_sensitivity, "abf_only",
+  fifelse(genetic_untestable_susie, "untestable_shared_posterior", "none"))
 )]
 release[, analysis_release_id := RELEASE_ID]
 setcolorder(release, c(
@@ -173,13 +234,55 @@ setorder(release, symbol)
 fwrite(release, file.path(RESULT_DIR, "evidence_class_table.tsv"), sep = "\t", na = "")
 
 message("[release] Building orthogonality audit")
-joint <- release[joint_testable == TRUE]
 
 scope_columns <- list(
-  all = c("max_susie_pp4_all", "max_abf_pp4_all"),
-  direct_disease = c("max_susie_pp4_direct", "max_abf_pp4_direct"),
-  enzyme = c("max_susie_pp4_enzyme", "max_abf_pp4_enzyme")
+  all = c("max_susie_pp4_all", "max_abf_pp4_all", "n_gwas_susie_untestable_all"),
+  direct_disease = c("max_susie_pp4_direct", "max_abf_pp4_direct", "n_gwas_susie_untestable_direct"),
+  enzyme = c("max_susie_pp4_enzyme", "max_abf_pp4_enzyme", "n_gwas_susie_untestable_enzyme")
 )
+
+# Denominators. The eligibility rerun rechecked only SuSiE-positive rows, so
+# genes tested at PP4 <= 0.5 were never screened for ineligible signal pairs.
+# Primary: untestable genes stay in the joint set and count as not genetically
+# positive, like every unscreened negative. Sensitivity, side by side in the
+# *_untestable_excluded columns: they are removed ("untestable_excluded
+# (positives screened only)").
+UNTESTABLE_EXCLUDED_LABEL <- "untestable_excluded (positives screened only)"
+spearman_pair <- function(score, d) {
+  ok <- is.finite(score) & is.finite(d$bulk_t)
+  rho_abs_t <- if (sum(ok) >= 5L) {
+    suppressWarnings(cor.test(score[ok], abs(d$bulk_t[ok]), method = "spearman", exact = FALSE))
+  } else NULL
+  rho_sig <- if (sum(ok) >= 5L) {
+    suppressWarnings(cor.test(score[ok], safe_neglog10(d$bulk_treat_p[ok]), method = "spearman", exact = FALSE))
+  } else NULL
+  data.table(
+    n_joint = sum(ok),
+    rho_abs_bulk_t = if (is.null(rho_abs_t)) NA_real_ else unname(rho_abs_t$estimate),
+    p_abs_bulk_t = if (is.null(rho_abs_t)) NA_real_ else rho_abs_t$p.value,
+    rho_bulk_significance = if (is.null(rho_sig)) NA_real_ else unname(rho_sig$estimate),
+    p_bulk_significance = if (is.null(rho_sig)) NA_real_ else rho_sig$p.value
+  )
+}
+overlap_table <- function(genetic, disease) {
+  a <- sum(genetic & disease)
+  b <- sum(genetic & !disease)
+  c <- sum(!genetic & disease)
+  d <- sum(!genetic & !disease)
+  ft <- fisher.test(matrix(c(a, b, c, d), nrow = 2, byrow = TRUE))
+  data.table(
+    n_joint_testable = length(genetic),
+    n_genetic_joint = a + b,
+    n_treat_deg_joint = a + c,
+    n_overlap = a,
+    pct_genetic_not_deg = 100 * b / max(1L, a + b),
+    pct_deg_not_genetic = 100 * c / max(1L, a + c),
+    jaccard = a / max(1L, a + b + c),
+    fisher_or = unname(ft$estimate),
+    fisher_p = ft$p.value
+  )
+}
+suffix_excluded <- function(d) setnames(copy(d), paste0(names(d), "_untestable_excluded"))
 
 audit_rows <- list()
 continuous_rows <- list()
@@ -187,7 +290,14 @@ idx <- 0L
 for (scope in names(scope_columns)) {
   susie_col <- scope_columns[[scope]][1]
   abf_col <- scope_columns[[scope]][2]
+  n_col <- scope_columns[[scope]][3]
   for (definition in c("susie", "susie_or_abf")) {
+    untestable_in <- function(d) {
+      if (definition == "susie") susie_untestable(d, susie_col, n_col)
+      else union_untestable(d, susie_col, abf_col, n_col)
+    }
+    joint <- release[joint_testable == TRUE]
+    screened <- !untestable_in(joint)
     score <- if (definition == "susie") {
       joint[[susie_col]]
     } else {
@@ -195,25 +305,16 @@ for (scope in names(scope_columns)) {
     }
     score[!is.finite(score)] <- NA_real_
 
-    ok_cont <- is.finite(score) & is.finite(joint$bulk_t)
-    rho_abs_t <- if (sum(ok_cont) >= 5L) {
-      suppressWarnings(cor.test(score[ok_cont], abs(joint$bulk_t[ok_cont]), method = "spearman", exact = FALSE))
-    } else NULL
-    rho_sig <- if (sum(ok_cont) >= 5L) {
-      suppressWarnings(cor.test(score[ok_cont], safe_neglog10(joint$bulk_treat_p[ok_cont]), method = "spearman", exact = FALSE))
-    } else NULL
-    continuous_rows[[length(continuous_rows) + 1L]] <- data.table(
-      analysis_release_id = RELEASE_ID,
-      trait_scope = scope,
-      genetic_definition = definition,
-      n_joint = sum(ok_cont),
-      rho_abs_bulk_t = if (is.null(rho_abs_t)) NA_real_ else unname(rho_abs_t$estimate),
-      p_abs_bulk_t = if (is.null(rho_abs_t)) NA_real_ else rho_abs_t$p.value,
-      rho_bulk_significance = if (is.null(rho_sig)) NA_real_ else unname(rho_sig$estimate),
-      p_bulk_significance = if (is.null(rho_sig)) NA_real_ else rho_sig$p.value
+    continuous_rows[[length(continuous_rows) + 1L]] <- cbind(
+      data.table(analysis_release_id = RELEASE_ID, trait_scope = scope, genetic_definition = definition),
+      spearman_pair(score, joint),
+      data.table(denominator_sensitivity = UNTESTABLE_EXCLUDED_LABEL),
+      suffix_excluded(spearman_pair(score[screened], joint[screened]))
     )
 
     for (threshold in PP4_THRESHOLDS) {
+      # Untestable genes have no SuSiE PP4 > 0.5 (and, for the union, no ABF PP4
+      # > 0.5), so they are never genetic here.
       genetic <- !is.na(score) & score > threshold
       total_score <- if (definition == "susie") {
         release[[susie_col]]
@@ -222,28 +323,21 @@ for (scope in names(scope_columns)) {
       }
       total_score[!is.finite(total_score)] <- NA_real_
       disease <- joint$in_treat_deg %in% TRUE
-      a <- sum(genetic & disease)
-      b <- sum(genetic & !disease)
-      c <- sum(!genetic & disease)
-      d <- sum(!genetic & !disease)
-      ft <- fisher.test(matrix(c(a, b, c, d), nrow = 2, byrow = TRUE))
       idx <- idx + 1L
-      audit_rows[[idx]] <- data.table(
-        analysis_release_id = RELEASE_ID,
-        trait_scope = scope,
-        genetic_definition = definition,
-        pp4_threshold = threshold,
-        n_joint_testable = nrow(joint),
-        n_genetic_total = sum(!is.na(total_score) & total_score > threshold),
-        n_genetic_joint = a + b,
-        n_treat_deg_total = sum(release$in_treat_deg %in% TRUE),
-        n_treat_deg_joint = a + c,
-        n_overlap = a,
-        pct_genetic_not_deg = 100 * b / max(1L, a + b),
-        pct_deg_not_genetic = 100 * c / max(1L, a + c),
-        jaccard = a / max(1L, a + b + c),
-        fisher_or = unname(ft$estimate),
-        fisher_p = ft$p.value
+      audit_rows[[idx]] <- cbind(
+        data.table(
+          analysis_release_id = RELEASE_ID,
+          trait_scope = scope,
+          genetic_definition = definition,
+          pp4_threshold = threshold,
+          n_genetic_untestable_total = sum(untestable_in(release)),
+          n_genetic_untestable_joint = sum(!screened),
+          n_genetic_total = sum(!is.na(total_score) & total_score > threshold),
+          n_treat_deg_total = sum(release$in_treat_deg %in% TRUE)
+        ),
+        overlap_table(genetic, disease),
+        data.table(denominator_sensitivity = UNTESTABLE_EXCLUDED_LABEL),
+        suffix_excluded(overlap_table(genetic[screened], disease[screened]))
       )
     }
   }
@@ -287,20 +381,36 @@ summary_rows <- list()
 pair_rows <- list()
 model_rows <- list()
 
+# Same denominator rule as the orthogonality audit: the primary tests untestable
+# genes as not genetically positive; the sensitivity drops them.
+PRIMARY_DENOMINATOR <- "untestable_included"
+validation[, class_untestable_included := fifelse(
+  primary_evidence_class %in% UNTESTABLE_CLASS & joint_testable %in% TRUE,
+  fifelse(in_treat_deg %in% TRUE, "disease_state_only", "neither"),
+  primary_evidence_class
+)]
+validation[, class_untestable_excluded := primary_evidence_class]
+denominator_classes <- setNames(
+  c("class_untestable_included", "class_untestable_excluded"),
+  c(PRIMARY_DENOMINATOR, UNTESTABLE_EXCLUDED_LABEL)
+)
+
+for (denominator in names(denominator_classes)) {
 for (endpoint in names(endpoint_specs)) {
   spec <- endpoint_specs[[endpoint]]
   d <- validation[spec$tested & joint_testable == TRUE]
   d[, endpoint_positive := spec$positive[spec$tested & validation$joint_testable == TRUE]]
+  d[, primary_evidence_class := get(denominator_classes[[denominator]])]
   d <- d[primary_evidence_class %in% class_levels]
   d[, primary_evidence_class := factor(primary_evidence_class, levels = class_levels)]
   d[, protein_coding := gene_biotype == "protein_coding"]
-  d[, `:=`(analysis_release_id = RELEASE_ID, endpoint_name = endpoint)]
+  d[, `:=`(analysis_release_id = RELEASE_ID, endpoint_name = endpoint, denominator = denominator)]
 
   summary_rows[[length(summary_rows) + 1L]] <- d[, .(
     n_tested = .N,
     n_positive = sum(endpoint_positive, na.rm = TRUE),
     positive_rate = mean(endpoint_positive, na.rm = TRUE)
-  ), by = .(analysis_release_id, endpoint = endpoint_name, primary_evidence_class)]
+  ), by = .(analysis_release_id, denominator, endpoint = endpoint_name, primary_evidence_class)]
 
   for (comparison in c("genetic_only", "disease_state_only")) {
     pdat <- d[primary_evidence_class %in% c("convergent", comparison)]
@@ -310,6 +420,7 @@ for (endpoint in names(endpoint_specs)) {
       ft <- fisher.test(tab)
       pair_rows[[length(pair_rows) + 1L]] <- data.table(
         analysis_release_id = RELEASE_ID,
+        denominator,
         endpoint,
         comparison = paste0("convergent_vs_", comparison),
         n_convergent = sum(pdat$primary_evidence_class == "convergent"),
@@ -332,6 +443,7 @@ for (endpoint in names(endpoint_specs)) {
     if (length(keep)) {
       model_rows[[length(model_rows) + 1L]] <- data.table(
         analysis_release_id = RELEASE_ID,
+        denominator,
         endpoint,
         term = rownames(co)[keep],
         log_odds = co[keep, "Estimate"],
@@ -345,11 +457,12 @@ for (endpoint in names(endpoint_specs)) {
   }
 }
 
+}
 validation_summary <- rbindlist(summary_rows, fill = TRUE)
 validation_pairwise <- rbindlist(pair_rows, fill = TRUE)
 validation_models <- rbindlist(model_rows, fill = TRUE)
-if (nrow(validation_pairwise)) validation_pairwise[, q_value := p.adjust(p_value, method = "BH")]
-if (nrow(validation_models)) validation_models[, q_value := p.adjust(p_value, method = "BH")]
+if (nrow(validation_pairwise)) validation_pairwise[, q_value := p.adjust(p_value, method = "BH"), by = denominator]
+if (nrow(validation_models)) validation_models[, q_value := p.adjust(p_value, method = "BH"), by = denominator]
 fwrite(validation_summary, file.path(RESULT_DIR, "evidence_class_validation_summary.tsv"), sep = "\t", na = "")
 fwrite(validation_pairwise, file.path(RESULT_DIR, "evidence_class_validation_pairwise.tsv"), sep = "\t", na = "")
 fwrite(validation_models, file.path(RESULT_DIR, "evidence_class_validation_adjusted.tsv"), sep = "\t", na = "")
@@ -379,7 +492,7 @@ orthogonality_pass <- nrow(primary_rows) == 3L && all(primary_rows$pct_genetic_n
 
 class_gate_endpoints <- character()
 if (nrow(validation_pairwise)) {
-  passed <- validation_pairwise[odds_ratio > 1 & q_value < 0.05]
+  passed <- validation_pairwise[denominator == PRIMARY_DENOMINATOR & odds_ratio > 1 & q_value < 0.05]
   class_gate_endpoints <- passed[, .N, by = endpoint][N >= 2L, endpoint]
 }
 class_validation_pass <- length(class_gate_endpoints) >= 2L
@@ -419,12 +532,12 @@ claims <- data.table(
   status = c("supported", "supported", "supported", "supported", "supported",
              "retired_pending_rebuild", "retired_pending_rebuild", "supported", "supported"),
   allowed_wording = c(
-    sprintf("The SuSiE set contains %d genes overall; among %d jointly tested genes, %d overlap canonical TREAT DEGs and %.1f%% are not differentially expressed.",
+    sprintf("The SuSiE set contains %d genes overall; among %d jointly tested genes, %d overlap canonical DEGs and %.1f%% are not differentially expressed.",
             p_susie$n_genetic_total, p_susie$n_genetic_joint,
             p_susie$n_overlap, p_susie$pct_genetic_not_deg),
-    sprintf("The SuSiE/ABF union contains %d genes overall; among %d jointly tested genes, %d overlap TREAT DEGs and %.1f%% are not differentially expressed.",
+    sprintf("The SuSiE/ABF union contains %d genes overall; among %d jointly tested genes, %d overlap canonical DEGs and %.1f%% are not differentially expressed.",
             p_union$n_genetic_total, p_union$n_genetic_joint, p_union$n_overlap, p_union$pct_genetic_not_deg),
-    sprintf("The direct-disease/PDFF union contains %d genes overall; among %d jointly tested genes, %d overlap TREAT DEGs and %.1f%% are not differentially expressed.",
+    sprintf("The direct-disease/PDFF union contains %d genes overall; among %d jointly tested genes, %d overlap canonical DEGs and %.1f%% are not differentially expressed.",
             p_direct$n_genetic_total, p_direct$n_genetic_joint, p_direct$n_overlap, p_direct$pct_genetic_not_deg),
     "Genetic and disease-state evidence define susceptibility-linked, disease-state-associated, and convergent candidate classes.",
     "The convergence score is an evidence-weighted heuristic and not a posterior probability or gene-level significance measure.",
@@ -453,6 +566,7 @@ claims <- data.table(
 fwrite(claims, file.path(DOC_DIR, "claim_ledger.tsv"), sep = "\t", na = "")
 
 message("[release] Complete: ", RESULT_DIR)
+writeLines(capture.output(sessionInfo()), file.path(RESULT_DIR, "sessionInfo.txt"))
 print(gates)
 print(primary_rows[, .(
   trait_scope, genetic_definition, n_genetic_total, n_genetic_joint,

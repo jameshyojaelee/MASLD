@@ -124,6 +124,25 @@ def signal_clump(df: pd.DataFrame) -> pd.DataFrame:
     return df.loc[keep].copy()
 
 
+def scorer_is_signed() -> dict[str, bool]:
+    """Server-declared signedness per scorer, read from the Track 0 deposit.
+
+    Added 2026-09-15 after the sQTL arm was found to have run a sign concordance on SPLICE_JUNCTIONS, which
+    the server declares unsigned and whose every quantile is positive. Any statistic that reads a SIGN must
+    consult this; a magnitude statistic need not.
+    """
+    path = la.track0_root() / "tables" / "scorer_metadata.tsv"
+    return {r["scorer"]: str(r["is_signed"]) == "True" for r in la.read_tsv(path)}
+
+
+def sign_note(scorer: str, signed: dict[str, bool]) -> str:
+    """Empty for a signed scorer; otherwise the reason this row is not a direction test."""
+    if signed.get(scorer, False):
+        return ""
+    return (f"NOT A DIRECTION TEST: {scorer} is server-declared unsigned (is_signed=False), so the sign of "
+            "its value is not a reference-to-alternate direction. Read the magnitude rows instead.")
+
+
 def score_one(y, score, groups, ok, label) -> dict:
     a = auroc(y, score, ok)
     lo, hi = block_bootstrap(y, score, groups, ok)
@@ -165,6 +184,7 @@ def collect_point_scores(stage_dir, channels: dict) -> dict[str, dict[str, float
 
 # ---------------------------------------------------------------- benchmarks
 def run_caqtl() -> None:
+    signed = scorer_is_signed()
     df = pd.read_csv(CAQTL, sep="\t", dtype=str)
     df["chr"] = df["chr"].astype(str).str.replace("^chr", "", regex=True)
     df["pos_hg38"] = pd.to_numeric(df["pos_hg38"], errors="coerce").astype(int)
@@ -184,6 +204,9 @@ def run_caqtl() -> None:
             s = pd.to_numeric(d[label], errors="coerce").to_numpy()
             ok = ~np.isnan(s)
             r = score_one(y, s, groups, ok, label); r["level"] = level; r["n_pos"] = int(y[ok].sum())
+            # the label here is a SIGN, so an unsigned channel's auROC is not a direction test
+            r["sign_validity"] = ("" if label.startswith("ag_api_")     # the archived API deltas are signed
+                                  else sign_note(CAQTL_CHANNELS[label][0], signed))
             key = (level, {"ag_api_atac": "alphagenome_atac", "ag_api_dnase": "alphagenome_dnase"}.get(label, ""))
             if key in prior:
                 r["archived_api_auroc"] = float(prior[key]["auroc"]); r["archived_api_n"] = int(prior[key]["n"])
@@ -472,6 +495,7 @@ def magnitude_control_auc(stim_abs_effect: np.ndarray, const_abs_effect: np.ndar
 
 
 def score_mpra(d: pd.DataFrame, chans: dict) -> None:
+    signed = scorer_is_signed()
     d["chr"] = d["interval"].str.split(":").str[0]; d["block"] = d["chr"] + ":" + (d["centre_pos_hg38"] // 1_000_000).astype(str)
     out_rows = []
     for ctx in ("HepG2_ctrl", "HepG2_PAOA", "LX2_ctrl", "LX2_TGFB"):
@@ -501,7 +525,8 @@ def score_mpra(d: pd.DataFrame, chans: dict) -> None:
             s = pd.to_numeric(k[f"{label}_allele_signed"], errors="coerce"); l2 = pd.to_numeric(k[f"log2fc_{ctx}"], errors="coerce"); ok = s.notna() & l2.notna() & (s != 0)
             conc = float(((s[ok] > 0) == (l2[ok] > 0)).mean()) if ok.sum() else math.nan
             out_rows.append({"context": ctx, "model": f"{label}|allelic_sign", "n": int(ok.sum()), "sign_concordance": conc,
-                             "marginal_expected_concordance": la.marginal_expected_concordance(s[ok], l2[ok]) if ok.sum() else math.nan})
+                             "marginal_expected_concordance": la.marginal_expected_concordance(s[ok], l2[ok]) if ok.sum() else math.nan,
+                             "sign_validity": sign_note(chans[label][0], signed)})
     la.write_tsv_once(TABLES / "external_benchmark_mpra.tsv", out_rows, sorted({k for r in out_rows for k in r}))
     json.dump({"n_intervals_scored": int(len(d)), "rule": "allele-agnostic centre-position max |quantile|; 1-Mb block bootstrap; label permutation",
                "prediction_written": "HepG2 auROC 0.60-0.70 with AVI ~ best single channel; stimulus-specific vs constitutive auROC within [0.45, 0.58]"},

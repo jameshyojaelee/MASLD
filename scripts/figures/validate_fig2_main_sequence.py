@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -60,6 +61,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="validate the A-I assembled layout candidate; omit the auxiliary J panel and promotion manifest",
     )
+    parser.add_argument(
+        "--expected-json",
+        type=Path,
+        help="r2_summary.json from GWAS/finemapping/src/perf/11_assemble_coloc_r2.py; the "
+        "multi-signal, single-signal-only and union counts come from its fig2 block. "
+        "Without it the adopted 2026-08-17 release counts (462 / 551 / 1,013) are checked.",
+    )
     return parser.parse_args()
 
 
@@ -67,6 +75,17 @@ def main() -> int:
     args = parse_args()
     panel_dir = args.panel_dir.resolve()
     errors: list[str] = []
+    # Gene counts of the COLOC release the panels were rendered from. The class,
+    # ancestry and roster breakdowns below are literal only for the adopted release;
+    # for another release they must sum to these counts.
+    release_counts = args.expected_json is not None
+    multi, single, union = 462, 551, 1013
+    if release_counts:
+        fig2 = json.loads(args.expected_json.read_text())["fig2"]
+        multi, single = fig2["multi_signal"], fig2["single_signal_only"]
+        union = fig2["multi_or_single_signal_coloc_gene_union"]
+        if multi + single != union:
+            errors.append(f"expected-json counts do not add up: {multi} + {single} != {union}")
     with SIZE_SPEC.open(newline="") as handle:
         rows = list(csv.DictReader(handle, delimiter="\t"))
     expected_all = {
@@ -141,7 +160,7 @@ def main() -> int:
         expected_summaries = {
             "gwas_strata": 35,
             "globally_unique_fine_mapped_loci": 265,
-            "multi_or_single_signal_coloc_gene_union": 1013,
+            "multi_or_single_signal_coloc_gene_union": union,
         }
         if summaries != expected_summaries:
             errors.append(f"Fig2A global summaries disagree: {summaries}")
@@ -151,7 +170,7 @@ def main() -> int:
                 int(row["value"]) for row in fig2a_rows
                 if row["record_type"] == "posterior_band" and row["signal_model"] == model
             )
-        if band_totals != {"multi_signal": 462, "single_signal_only": 551}:
+        if band_totals != {"multi_signal": multi, "single_signal_only": single}:
             errors.append(f"Fig2A signal-model totals disagree: {band_totals}")
         routed_totals: dict[str, int] = {}
         for model in ("multi_signal", "single_signal_only"):
@@ -165,8 +184,8 @@ def main() -> int:
                 f"Fig2A routed PP.H4 bands {routed_totals} disagree with endpoints {band_totals}"
             )
         fig2a_text = pdf_text(panel_dir / "fig2A_gwas_cascade.pdf", errors)
-        if fig2a_text is not None and "1,013" not in fig2a_text:
-            errors.append("Fig2A artwork does not display the promoted 1,013-gene union")
+        if fig2a_text is not None and f"{union:,}" not in fig2a_text:
+            errors.append(f"Fig2A artwork does not display the {union:,}-gene union")
 
     fig2c_source = panel_dir / "Fig2C_coding_noncoding_source.csv"
     if fig2c_source.exists():
@@ -180,13 +199,16 @@ def main() -> int:
             "intron": 455,
             "intergenic": 342,
         }
-        if class_counts != expected_classes:
+        if release_counts:
+            if set(class_counts) != set(expected_classes) or sum(class_counts.values()) != union:
+                errors.append(f"Fig2C classes do not partition the {union:,}-gene union: {class_counts}")
+        elif class_counts != expected_classes:
             errors.append(f"Fig2C promoted-union classes disagree: {class_counts}")
         fig2c_text = pdf_text(panel_dir / "Fig2C_coding_noncoding_split.pdf", errors)
         if fig2c_text is not None:
-            if "1013" not in fig2c_text.replace(",", ""):
-                errors.append("Fig2C artwork does not display the promoted 1,013-gene union")
-            if "1030" in fig2c_text.replace(",", ""):
+            if str(union) not in fig2c_text.replace(",", ""):
+                errors.append(f"Fig2C artwork does not display the {union:,}-gene union")
+            if union != 1030 and "1030" in fig2c_text.replace(",", ""):
                 errors.append("Fig2C artwork still displays the superseded 1,030-gene union")
 
     fig2e_source = panel_dir / "Fig2E_ancestry_unique_coloc_GWS_source.tsv"
@@ -200,7 +222,10 @@ def main() -> int:
             "non_EUR_sub_threshold": 26,
             "non_EUR_GWS_unique": 14,
         }
-        if ancestry_counts != expected_ancestry:
+        if release_counts:
+            if set(ancestry_counts) != set(expected_ancestry) or sum(ancestry_counts.values()) != multi:
+                errors.append(f"Fig2E ancestry bins do not partition the {multi} multi-signal genes: {ancestry_counts}")
+        elif ancestry_counts != expected_ancestry:
             errors.append(f"Fig2E promoted ancestry partition disagrees: {ancestry_counts}")
 
     fig2j_source = panel_dir / "Fig2J_phenotype_provenance_source.csv"
@@ -229,7 +254,11 @@ def main() -> int:
             "MLIP", "MSL2", "EFHD1", "GOT2", "GLDC", "HSCB", "CHEK2",
         }
         observed_genes = {row["gene"] for row in fig2f_rows}
-        if observed_genes != expected_genes or len(fig2f_rows) != 65:
+        if release_counts:
+            # Another release may change the >=4-ancestry roster; keep one cell per
+            # gene and ancestry (five ancestries) and report the roster.
+            expected_genes = observed_genes if observed_genes else {"<empty roster>"}
+        if observed_genes != expected_genes or len(fig2f_rows) != 5 * len(expected_genes):
             errors.append(
                 "Fig2F does not contain the complete promoted >=4-ancestry roster: "
                 f"{sorted(observed_genes)} ({len(fig2f_rows)} cells)"

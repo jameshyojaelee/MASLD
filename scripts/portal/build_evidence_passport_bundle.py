@@ -58,7 +58,12 @@ GEN_CLASS_MAP = {
     "disease_state_only": "established_state_associated",
     "neither": "unresolved",
     "indeterminate_not_jointly_testable": "untested",
+    # 01_freeze_and_rederive.py --untestable-state: every Tier-1/2 SuSiE signal pair
+    # failed coloc's shared-posterior check. Untested, never a negative.
+    "genetic_untestable_shared_posterior": "untested",
 }
+# 01_freeze_and_rederive.py --state-rule canonical writes this rule with bulk_padj.
+CANONICAL_STATE_RULE = "canonical_padj0.05_absLFC0.5"
 
 GEN_REQUIRED_COLUMNS = {
     "gene_symbol", "ensembl_bulk", "ensembl_genetic", "bulk_tested",
@@ -67,6 +72,9 @@ GEN_REQUIRED_COLUMNS = {
     "bulk_AveExpr", "bulk_treat_fdr", "coloc_best_susie_pp4",
     "coloc_best_abf_pp4", "driving_gwas", "driving_trait",
 }
+# Method-specific COLOC drivers (rebuild_tier12.py, review item 5). The legacy
+# driving_gwas/driving_trait name the SuSiE driver whenever a SuSiE PP4 exists.
+GEN_ABF_DRIVER_COLUMNS = ("abf_driving_gwas", "abf_driving_trait")
 GEN_ADJUDICATED_REQUIRED_COLUMNS = {
     *GEN_REQUIRED_COLUMNS,
     "adjudicated_ensembl_id", "adjudicated_symbol",
@@ -164,6 +172,48 @@ def _optional_bool(value: Any, field_name: str) -> bool | None:
 
 def _split_values(value: str) -> list[str]:
     return sorted({part.strip() for part in str(value).split(";") if part.strip()})
+
+
+def _bulk_state_rule(source: Mapping[str, Any]) -> tuple[str, str]:
+    """Assay label and q-value column of the frozen established-state rule."""
+    if _clean(source.get("established_state_rule")) == CANONICAL_STATE_RULE:
+        return "limma_voom_qw_canonical", "bulk_padj"
+    return "limma_voom_qw_TREAT", "bulk_treat_fdr"
+
+
+def _genetic_call_state(untestable: bool, tested: bool, positive: bool) -> tuple[str, str]:
+    """Call and testability state of a GEN genetics record."""
+    if untestable:
+        return "untestable", "insufficient_shared_posterior"
+    if positive:
+        return "supported", "testable"
+    return ("indeterminate", "testable") if tested else ("untestable", "underpowered_source")
+
+
+def _genetic_display(
+    source: Mapping[str, Any], susie: float | None, abf: float | None
+) -> tuple[float | None, str, str]:
+    """PP4, study, and trait of the COLOC method a GEN genetics record reports.
+
+    SuSiE is reported when it has a PP4, unless SuSiE is not positive and ABF is
+    (ABF-only positive; GNMT: SuSiE 0.128 from UKBB_ALT, ABF 0.706 from
+    2021_34841290_NAFLD_EUR). The ABF value is then paired with the ABF driver.
+    Source tables without the ABF driver columns keep the legacy pairing: the
+    SuSiE PP4 with the legacy (SuSiE) driver, or the ABF PP4 when SuSiE is absent,
+    where the legacy driver is the ABF driver.
+    """
+    abf_only_positive = abf is not None and abf > 0.5 and (susie is None or susie <= 0.5)
+    has_abf_driver = all(column in source for column in GEN_ABF_DRIVER_COLUMNS)
+    if susie is not None and not (abf_only_positive and has_abf_driver):
+        return susie, _clean(source["driving_gwas"]), _clean(source["driving_trait"])
+    if not has_abf_driver:
+        return abf, _clean(source["driving_gwas"]), _clean(source["driving_trait"])
+    study = _clean(source["abf_driving_gwas"])
+    if abf is not None and not study:
+        raise contract.PassportContractError(
+            "GEN_ABF_DRIVER_MISSING", f"{_clean(source.get('gene_symbol'))}: ABF PP4 without abf_driving_gwas"
+        )
+    return abf, study, _clean(source["abf_driving_trait"])
 
 
 def _read_frame(path: Path) -> pd.DataFrame:
@@ -583,8 +633,11 @@ def adapt_gen_classes(
         if static_class not in GEN_CLASS_MAP:
             raise contract.PassportContractError("GEN_STATIC_CLASS", static_class)
         primary_class = GEN_CLASS_MAP[static_class]
+        genetic_untestable = static_class == "genetic_untestable_shared_posterior"
         gene = _ensure_gene(
             assembly, identity, ensembl, primary_class,
+            "Every Tier-1/2 SuSiE-COLOC signal pair failed the shared-posterior check; genetic evidence is untested, not negative."
+            if genetic_untestable else
             {
                 "concordant": "Frozen genetics/state interface class is concordant.",
                 "genetically_anchored": "Frozen static genetic evidence is present.",
@@ -597,9 +650,10 @@ def adapt_gen_classes(
         bulk_tested = _bool(source["bulk_tested"], "bulk_tested")
         bulk_positive = _bool(source["established_state_associated"], "established_state_associated")
         bulk_call = "supported" if bulk_positive else "indeterminate" if bulk_tested else "untestable"
+        bulk_assay, bulk_q_field = _bulk_state_rule(source)
         bulk_values = {
             "source_input_row_id": f"{row_id}:bulk",
-            "evidence_domain": "transcriptomics", "assay": "limma_voom_qw_TREAT",
+            "evidence_domain": "transcriptomics", "assay": bulk_assay,
             "dataset_id": item.row["source_datasets"] or "canonical_human_bulk",
             "phenotype": "MASLD established disease state", "context": "pooled human liver",
             "biological_unit": item.row["biological_unit"],
@@ -607,7 +661,7 @@ def adapt_gen_classes(
             "effect_unit": "log2 fold change",
             "estimate": _optional_float(source["bulk_logFC"], "bulk_logFC"),
             "standard_error": None, "ci_lower": None, "ci_upper": None,
-            "p_value": None, "q_value": _optional_float(source["bulk_treat_fdr"], "bulk_treat_fdr"),
+            "p_value": None, "q_value": _optional_float(source[bulk_q_field], bulk_q_field),
             "direction": (
                 "positive" if (_optional_float(source["bulk_logFC"], "bulk_logFC") or 0) > 0
                 else "negative" if (_optional_float(source["bulk_logFC"], "bulk_logFC") or 0) < 0
@@ -631,28 +685,41 @@ def adapt_gen_classes(
         _add_gene_evidence(assembly, item, source, gene, bulk_values)
         genetic_tested = _bool(source["primary_genetic_map_tested"], "primary_genetic_map_tested")
         genetic_positive = _bool(source["primary_genetic"], "primary_genetic")
-        genetic_call = "supported" if genetic_positive else "indeterminate" if genetic_tested else "untestable"
+        genetic_call, genetic_testability = _genetic_call_state(
+            genetic_untestable, genetic_tested, genetic_positive
+        )
         susie = _optional_float(source["coloc_best_susie_pp4"], "coloc_best_susie_pp4")
         abf = _optional_float(source["coloc_best_abf_pp4"], "coloc_best_abf_pp4")
+        genetic_pp4, driving_gwas, driving_trait = _genetic_display(source, susie, abf)
+        if genetic_call == "untestable":
+            # An untestable record carries no statistic (validator rule
+            # FABRICATED_UNTESTABLE_STATISTIC); the best PP4 of another study, or
+            # the ABF value, would read as this record's test result.
+            genetic_pp4, driving_gwas, driving_trait = None, "", ""
         genetic_values = {
             "source_input_row_id": f"{row_id}:genetics",
             "evidence_domain": "genetics", "assay": "SuSiE_COLOC_or_ABF_fallback",
-            "dataset_id": _clean(source["driving_gwas"]) or item.row["source_datasets"] or "GEN_frozen_interface",
-            "phenotype": _clean(source["driving_trait"]) or "source-defined genetic phenotype",
+            "dataset_id": driving_gwas or item.row["source_datasets"] or "GEN_frozen_interface",
+            "phenotype": driving_trait or "source-defined genetic phenotype",
             "context": "bulk liver cis-eQTL interface",
             "biological_unit": item.row["biological_unit"],
             "contrast_or_exposure": "trait-locus colocalization",
-            "effect_unit": "PP.H4", "estimate": susie if susie is not None else abf,
+            "effect_unit": "PP.H4", "estimate": genetic_pp4,
             "standard_error": None, "ci_lower": None, "ci_upper": None,
             "p_value": None, "q_value": None, "direction": "not_directional",
-            "testability_state": "testable" if genetic_tested else "underpowered_source",
-            "testability_reason": "testable" if genetic_tested else "underpowered_source",
+            "testability_state": genetic_testability,
+            "testability_reason": genetic_testability,
             "call_state": genetic_call,
             "negative_call_rule_id": None, "negative_decision_boundary": None,
             "negative_margin": None, "negative_call_passed": None,
             "gate_id": "GEN_FROZEN_STATIC_CLASS", "n_biological_units": None,
             "n_technical_units": None,
-            "allowed_wording": "Genetically anchored." if genetic_positive else "No frozen positive genetic call; not a powered genetic null.",
+            "allowed_wording": (
+                "Genetically anchored." if genetic_positive
+                else "SuSiE-COLOC untestable: no signal pair kept enough shared posterior; not a negative."
+                if genetic_untestable
+                else "No frozen positive genetic call; not a powered genetic null."
+            ),
             "limitation": "Phenotype provenance and ancestry/eQTL-panel limitations remain source-specific.",
         }
         _add_gene_evidence(assembly, item, source, gene, genetic_values)

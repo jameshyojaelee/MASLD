@@ -18,7 +18,14 @@ source_path <- file.path(candidate_root, "source_tables", "figs3c_cohort_robustn
 out_path <- file.path(candidate_root, "supplementary", "figureS3", "panels", "figs3c_cohort_robustness.pdf")
 dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
 fig3c_source <- fread(source_path)
-stopifnot(nrow(fig3c_source) == 5L, all(fig3c_source$canonical_genes == 1347L))
+# fig3d_endpoint_validation.R sources this file with `expected` read from the
+# release's expected_counts.json; a standalone render keeps the adopted count.
+expected_canonical <- if (exists("expected") && !is.null(expected$canonical$n)) {
+  as.integer(expected$canonical$n)
+} else {
+  1347L
+}
+stopifnot(nrow(fig3c_source) == 5L, all(fig3c_source$canonical_genes == expected_canonical))
 
 cohort_order <- fig3c_source[order(-(n_control + n_disease)), dataset]
 fig3c_source[, dataset_factor := factor(dataset, levels = rev(cohort_order))]

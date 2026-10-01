@@ -24,7 +24,8 @@ PROJECT_ROOT <- Sys.getenv(
   "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 )
 BASE <- file.path(PROJECT_ROOT, "RNA-seq/Human/Patient_Cohorts")
-OUT  <- file.path(BASE, "analysis/integration/metadata")
+# HARMONIZE_OUT_DIR lets a corrected rerun write beside, not over, the live table.
+OUT  <- Sys.getenv("HARMONIZE_OUT_DIR", file.path(BASE, "analysis/integration/metadata"))
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 
 # --- Load dataset config ---
@@ -150,21 +151,44 @@ harmonize <- function(dt, dataset) {
     },
 
     # ---- GSE130970 ----
+    # Controls are the six histologically normal biopsies of Hoang et al. 2019,
+    # reconstructed from their Supplementary Table 1 by
+    # 00a_gse130970_source_controls.py. Fibrosis stage 0 is NOT control status:
+    # 16 of the F0 biopsies are steatotic NAFLD (review item 1, 2026-09-23).
     "GSE130970" = {
+      src_path <- file.path(BASE, "metadata/source/GSE130970/GSE130970_source_diagnosis.tsv")
+      if (!file.exists(src_path)) stop("GSE130970 source diagnosis table missing: ", src_path)
+      src <- fread(src_path, colClasses = "character")
+      unresolved <- setdiff(dt$Run, src$run)
+      if (length(unresolved)) {
+        stop("GSE130970 runs without a source control status: ",
+             paste(unresolved, collapse = ", "))
+      }
+      dt <- merge(dt, src[, .(Run = run, source_control_status, strict_control_nas0)],
+                  by = "Run", all.x = TRUE, sort = FALSE)
+      if (dt[source_control_status == "Control" & steatosis_grade != 0, .N]) {
+        stop("A steatotic GSE130970 biopsy is labelled as a source control")
+      }
       dt[, .(
         sample_id     = Run,
         dataset       = "GSE130970",
         condition     = fcase(
-          fibrosis_stage == "0", "Control",
+          source_control_status == "Control", "Control",
+          fibrosis_stage == "0", "Fibrosis_F0",
           fibrosis_stage == "1", "Fibrosis_F1",
           fibrosis_stage %in% c("2", "3"), "Fibrosis_F2F3",
           fibrosis_stage == "4", "Fibrosis_F4"
         ),
-        group_binary  = fifelse(fibrosis_stage == "0", "Control", "Disease"),
+        group_binary  = fifelse(source_control_status == "Control", "Control", "Disease"),
         sex           = fifelse(sex == "female", "F", "M"),
         age           = as.numeric(age_at_biopsy),
         fibrosis_stage = as.integer(fibrosis_stage),
-        nas_score      = as.integer(nafld_activity_score)
+        nas_score      = as.integer(nafld_activity_score),
+        source_control_status = source_control_status,
+        strict_control_nas0   = strict_control_nas0,
+        steatosis_grade       = as.integer(steatosis_grade),
+        lobular_grade         = as.integer(lobular_inflammation_grade),
+        ballooning_grade      = as.integer(cytological_ballooning_grade)
       )]
     },
 
@@ -329,6 +353,10 @@ unified <- rbindlist(harmonized, use.names = TRUE, fill = TRUE)
 #   NAS = 0 + Control condition → Control
 # For datasets without NAS scores, use original condition labels where possible.
 unified[, diagnosis_harmonized := fcase(
+  # 0. A source-defined histologically normal control stays Control even when
+  #    its GEO NAS is 1 (two GSE130970 controls; see 00a_gse130970_source_controls.py).
+  !is.na(source_control_status) & source_control_status == "Control", "Control",
+
   # 1. Datasets with NAS scores: classify by NAS
   !is.na(nas_score) & nas_score == 0 & condition == "Control", "Control",
   !is.na(nas_score) & nas_score < 3,                          "NAFL",

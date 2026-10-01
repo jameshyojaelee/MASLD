@@ -131,7 +131,7 @@ for (diet_name in names(comparisons)) {
   # defaults (min.count=10, min.total.count=15) silently drop canonical liver
   # fibrosis markers (Acta2, Timp1, Mmp2, Mmp9, Saa3) in CDAHFD/FPC. Relaxing
   # to min.count=5, min.total.count=10 recovers ~500-1000 biologically real
-  # low-expression-in-control genes critical for Cas13 screen positive-control
+  # low-expression-in-control genes critical for follow-up screen positive-control
   # representation.
   dge <- DGEList(counts = sub_counts)
   keep <- filterByExpr(dge, group = sub_meta$group_binary,

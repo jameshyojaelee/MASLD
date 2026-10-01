@@ -41,6 +41,7 @@ MODEL_DESIGN_PATH <- file.path(
 
 parse_arguments <- function(values) {
   expected <- c("source-gate", "gene-identity", "lncrna-class", "output")
+  optional <- c("fit-arm", "primary-arm")
   parsed <- list()
   for (value in values) {
     pieces <- strsplit(value, "=", fixed = TRUE)[[1L]]
@@ -48,13 +49,16 @@ parse_arguments <- function(values) {
       fail("Arguments must use --name=value syntax: ", value)
     }
     name <- sub("^--", "", pieces[[1L]])
-    if (!name %in% expected || name %in% names(parsed)) {
+    if (!name %in% c(expected, optional) || name %in% names(parsed)) {
       fail("Unknown or duplicate argument: ", name)
     }
     parsed[[name]] <- pieces[[2L]]
   }
   missing <- setdiff(expected, names(parsed))
   if (length(missing)) fail("Missing arguments: ", paste(missing, collapse = ","))
+  if (xor("fit-arm" %in% names(parsed), "primary-arm" %in% names(parsed))) {
+    fail("--fit-arm and --primary-arm must be given together")
+  }
   parsed
 }
 
@@ -84,6 +88,33 @@ IDENTITY_PATH <- normalizePath(arguments[["gene-identity"]], mustWork = TRUE)
 CLASS_PATH <- normalizePath(arguments[["lncrna-class"]], mustWork = TRUE)
 OUTPUT <- normalizePath(dirname(arguments[["output"]]), mustWork = TRUE)
 OUTPUT <- file.path(OUTPUT, basename(arguments[["output"]]))
+
+# Frozen F_five v6 census, or (--fit-arm/--primary-arm) a refit such as the
+# corrected-control arm: merged_dge.rds and meta_matched.rds from the fit root,
+# the validated deg_results.csv, VALIDATED.json and model_design.tsv from the
+# reproduction root, and the counts that refit recorded in expected_counts.json.
+# The lncRNA-only census is then derived and reported, not asserted.
+N_GENES <- 23370L; N_SAMPLES <- 844L; N_TREAT <- 1616L; N_CANONICAL <- 1347L
+N_LNCRNA_TESTED <- 6249L; N_LNCRNA_TREAT <- 434L; N_LNCRNA_CANONICAL <- 402L
+REFIT_MODE <- "fit-arm" %in% names(arguments)
+if (REFIT_MODE) {
+  FIT_ARM <- normalizePath(arguments[["fit-arm"]], mustWork = TRUE)
+  PRIMARY_ARM <- normalizePath(arguments[["primary-arm"]], mustWork = TRUE)
+  DGE_PATH <- file.path(FIT_ARM, "merged_dge.rds")
+  META_PATH <- file.path(FIT_ARM, "meta_matched.rds")
+  PRIMARY_PATH <- file.path(PRIMARY_ARM, "deg_results.csv")
+  PRIMARY_VALIDATED <- file.path(PRIMARY_ARM, "VALIDATED.json")
+  MODEL_DESIGN_PATH <- file.path(PRIMARY_ARM, "model_design.tsv")
+  if (!identical(jsonlite::fromJSON(PRIMARY_VALIDATED)$status, "VALIDATED")) {
+    fail("Primary arm is not VALIDATED: ", PRIMARY_ARM)
+  }
+  expected_counts <- jsonlite::fromJSON(file.path(PRIMARY_ARM, "expected_counts.json"))
+  N_GENES <- as.integer(expected_counts$n_genes)
+  N_SAMPLES <- as.integer(expected_counts$n_samples)
+  N_TREAT <- as.integer(expected_counts$treat$n)
+  N_CANONICAL <- as.integer(expected_counts$canonical$n)
+  N_LNCRNA_TESTED <- NA_integer_; N_LNCRNA_TREAT <- NA_integer_; N_LNCRNA_CANONICAL <- NA_integer_
+}
 if (file.exists(OUTPUT) || is_symlink(OUTPUT)) {
   fail("Refusing to overwrite output: ", OUTPUT)
 }
@@ -111,7 +142,7 @@ expected_hashes <- c(
 names(expected_hashes) <- c(
   DGE_PATH, META_PATH, PRIMARY_PATH, PRIMARY_VALIDATED, MODEL_DESIGN_PATH
 )
-for (path in names(expected_hashes)) {
+for (path in if (REFIT_MODE) character(0) else names(expected_hashes)) {
   assert_true(
     identical(sha256_file(path), unname(expected_hashes[[path]])),
     paste0("Frozen input SHA256 drift: ", path)
@@ -148,7 +179,7 @@ meta <- as.data.table(readRDS(META_PATH))
 keep <- dge$samples$dataset %in% LNCRNA_COHORTS
 dge_five <- dge[, keep, keep.lib.sizes = TRUE]
 assert_true(
-  nrow(dge_five) == 23370L && ncol(dge_five) == 844L,
+  nrow(dge_five) == N_GENES && ncol(dge_five) == N_SAMPLES,
   "Frozen five-cohort DGE census drift"
 )
 assert_true(!anyDuplicated(rownames(dge_five)), "Duplicate DGE versioned IDs")
@@ -182,7 +213,7 @@ assert_true(
 
 primary_all <- fread(PRIMARY_PATH)
 assert_true(
-  nrow(primary_all) == 23370L && !anyDuplicated(primary_all$gene),
+  nrow(primary_all) == N_GENES && !anyDuplicated(primary_all$gene),
   "Validated primary result universe drift"
 )
 assert_true(
@@ -191,24 +222,24 @@ assert_true(
 )
 # TREAT check retained: it validates that the SEALED input table is unchanged.
 assert_true(
-  sum(primary_all$treat_fdr < LNCRNA_FDR) == 1616L &&
+  sum(primary_all$treat_fdr < LNCRNA_FDR) == N_TREAT &&
     all(primary_all$treat_lfc == LNCRNA_TREAT_LFC),
   "Validated primary TREAT family drift"
 )
 # CANONICAL 2026-08-12 family on the same table.
 assert_true(
-  sum(lncrna_canonical_positive(primary_all)) == 1347L,
+  sum(lncrna_canonical_positive(primary_all)) == N_CANONICAL,
   "Validated primary canonical family drift"
 )
 
 identity_tested <- identity[match(rownames(dge_five), gene_id_versioned)]
 assert_true(
-  nrow(identity_tested) == 23370L && !anyNA(identity_tested$gene_id_versioned) &&
+  nrow(identity_tested) == N_GENES && !anyNA(identity_tested$gene_id_versioned) &&
     identical(identity_tested$gene_id_versioned, rownames(dge_five)),
   "Versioned-ID identity join is incomplete"
 )
 lncrna_ids <- identity_tested[gene_type == "lncRNA", gene_id_versioned]
-assert_true(length(lncrna_ids) == 6249L, "Tested lncRNA census drift")
+assert_true(REFIT_MODE || length(lncrna_ids) == N_LNCRNA_TESTED, "Tested lncRNA census drift")
 class_tested <- classes[match(lncrna_ids, gene_id_versioned)]
 assert_true(
   nrow(class_tested) == length(lncrna_ids) &&
@@ -231,7 +262,7 @@ cohort_effects <- rbindlist(lapply(LNCRNA_COHORTS, function(cohort) {
     n_control = sum(sample_info[selected]$group_binary == "Control"),
     n_disease = sum(sample_info[selected]$group_binary == "Disease"),
     model = "voomWithQualityWeights:~inferred_sex+group_binary",
-    bh_family_n = 23370L
+    bh_family_n = N_GENES
   )]
   fit[gene_id_versioned %in% lncrna_ids]
 }), use.names = TRUE)
@@ -250,7 +281,7 @@ loco_effects <- rbindlist(lapply(LNCRNA_COHORTS, function(excluded) {
     n_control = sum(sample_info[selected]$group_binary == "Control"),
     n_disease = sum(sample_info[selected]$group_binary == "Disease"),
     model = "voomWithQualityWeights:~dataset+inferred_sex+group_binary",
-    bh_family_n = 23370L
+    bh_family_n = N_GENES
   )]
   fit[gene_id_versioned %in% lncrna_ids]
 }), use.names = TRUE)
@@ -283,9 +314,11 @@ primary <- merge(
   by = "gene_id_versioned",
   sort = FALSE
 )
-assert_true(nrow(primary) == 6249L, "Primary lncRNA join drift")
-assert_true(sum(primary$treat_fdr < LNCRNA_FDR) == 434L, "Primary lncRNA TREAT count drift")
-assert_true(sum(lncrna_canonical_positive(primary)) == 402L, "Primary lncRNA canonical count drift")
+assert_true(nrow(primary) == length(lncrna_ids), "Primary lncRNA join drift")
+assert_true(REFIT_MODE || sum(primary$treat_fdr < LNCRNA_FDR) == N_LNCRNA_TREAT,
+            "Primary lncRNA TREAT count drift")
+assert_true(REFIT_MODE || sum(lncrna_canonical_positive(primary)) == N_LNCRNA_CANONICAL,
+            "Primary lncRNA canonical count drift")
 
 bulk_results <- derive_high_confidence(
   primary,
@@ -319,13 +352,13 @@ verdict <- data.table(
     "complete_case_sensitivity", "stage_analysis"
   ),
   value = c(
-    "pass", "23370", "6249",
+    "pass", as.character(N_GENES), as.character(length(lncrna_ids)),
     as.character(sum(lncrna_canonical_positive(primary_all))),
     as.character(sum(bulk_results$primary_canonical_positive)),
     as.character(sum(bulk_results$high_confidence)),
     as.character(sum(primary_all$treat_fdr < LNCRNA_FDR)),
     as.character(sum(bulk_results$primary_treat_positive)),
-    "identical_to_primary_844_of_844_complete",
+    paste0("identical_to_primary_", N_SAMPLES, "_of_", N_SAMPLES, "_complete"),
     "blocked_no_fragment_native_stage_model"
   ),
   interpretation = c(
@@ -375,7 +408,7 @@ write_tsv_once(
     slurm_job_id = Sys.getenv("SLURM_JOB_ID", "not_slurm"),
     biological_unit = "human_sample",
     primary_model = "validated_voomWithQualityWeights:~dataset+inferred_sex+group_binary",
-    primary_multiple_testing = "TREAT_|logFC|>0.25_BH_across_23370_genes"
+    primary_multiple_testing = paste0("TREAT_|logFC|>0.25_BH_across_", N_GENES, "_genes")
   ),
   file.path(OUTPUT, "execution_manifest.tsv")
 )

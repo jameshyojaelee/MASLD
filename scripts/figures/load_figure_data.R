@@ -185,8 +185,8 @@ FIGS_HOTSPOT_DIR         <- file.path(FIG_SUPP, "figS_hotspot")
 FIGS_HOTSPOT_PANELS_DIR  <- file.path(FIGS_HOTSPOT_DIR, "panels")
 FIGS_HOTSPOT_DATA_DIR    <- file.path(FIGS_HOTSPOT_PANELS_DIR, "data")
 
-# Separate future Cas13-screen-paper figures. This constant is not part of the
-# standalone Resource manuscript or its release graph.
+# Separate follow-up study figures. This constant is outside the standalone
+# Resource manuscript and its release graph.
 FIGS_CAS13LIB_DIR <- file.path(BASE, "Cas13_Library_Design", "figures")
 
 # Quantification comparison (STAR vs Kallisto sensitivity)

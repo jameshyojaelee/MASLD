@@ -89,7 +89,14 @@
 /SteatoSite/
 /Liver_Atlas/
 /archive/
-/figures/
+/figures/*
+# Track final main-figure panel PDFs only (not candidates, legacy, archives)
+!/figures/main/
+/figures/main/**/_*/
+/figures/main/**/archive/
+/figures/main/**/*.*
+!/figures/main/**/*.pdf
+!/figures/main/INDEX.md
 /figures_STAR_s0/
 /figures_kallisto/
 /logs/
@@ -117,9 +124,8 @@
 /masld-atlas-v2/
 /streamlit_convergence/
 
-# 7c) Cas13 library design is a separate line of work (active owner: vpassanisi)
-#     and is not versioned by this repository. Its files remain on disk; they
-#     were untracked here via `git rm -r --cached Cas13_Library_Design`.
+# 7c) Cas13 library design is maintained in a sibling directory (active owner:
+#     vpassanisi). Ignore the legacy compatibility symlink inside this repository.
 /Cas13_Library_Design/
 
 # 7b) Hard-exclude language/package environments & caches ANYWHERE

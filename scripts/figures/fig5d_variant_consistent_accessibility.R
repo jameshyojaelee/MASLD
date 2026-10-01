@@ -25,10 +25,16 @@ ATAC_ROOT <- file.path(
   BASE,
   "Analysis/Multimodal_Program_Projection/candidates/atac-context-v3-candidate-2026-08-11-r1"
 )
-SOURCE <- file.path(
+# FIG5D_PRIMARY_PAIRS: a primary-pair table restricted to COLOC-eligible signal
+# pairs (atac_context_v3/24_restrict_primary_pairs_to_eligible.py), with its
+# FIG5D_EXPECTED_ROWS / _PAIRS / _GENES from that script's restriction_summary.tsv.
+SOURCE <- Sys.getenv("FIG5D_PRIMARY_PAIRS", file.path(
   ATAC_ROOT,
   "genetics/context/genetic_lineage_context_primary_pairs.tsv"
-)
+))
+EXPECTED_ROWS <- as.integer(Sys.getenv("FIG5D_EXPECTED_ROWS", "4080"))
+EXPECTED_PAIRS <- as.integer(Sys.getenv("FIG5D_EXPECTED_PAIRS", "816"))
+EXPECTED_GENES <- as.integer(Sys.getenv("FIG5D_EXPECTED_GENES", "462"))
 FULL_READY <- file.path(ATAC_ROOT, "FULL_READY")
 if (!file.exists(SOURCE) || !file.exists(FULL_READY)) {
   stop("Validated ATAC v3 genetic context is incomplete")
@@ -41,9 +47,9 @@ expected_states <- c(
   "replicated_accessible", "source_dependent", "partial", "indeterminate", "untestable"
 )
 stopifnot(
-  nrow(d) == 4080L,
-  uniqueN(d[, .(gwas_name, ensembl)]) == 816L,
-  uniqueN(d$ensembl) == 462L,
+  nrow(d) == EXPECTED_ROWS,
+  uniqueN(d[, .(gwas_name, ensembl)]) == EXPECTED_PAIRS,
+  uniqueN(d$ensembl) == EXPECTED_GENES,
   setequal(d$lineage, expected_lineages),
   setequal(d$trait_class, expected_traits),
   all(d$evidence_state %chin% expected_states),

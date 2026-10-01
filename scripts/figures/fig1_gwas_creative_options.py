@@ -47,6 +47,7 @@ plt.rcParams.update({
 # recomputed at runtime from the canonical GWAS files below, RESTRICTED to the MAIN
 # (Tier-1/2) strata via the placement=="main" allowlist in gwas_trait_tier.tsv.
 import csv as _csv
+import json as _json
 import math as _math
 
 
@@ -81,6 +82,10 @@ _GENE_COLOC    = os.environ.get(
 # by several correlated enzymes/ancestries is counted ONCE (the old cascade summed per-study
 # n_loci, ~2,824, which double-counts).
 _CREDIBLE_SETS = os.path.join(_ROOT, "GWAS/finemapping/results/credible_sets.csv")
+# r2_summary.json of the COLOC release (11_assemble_coloc_r2.py). Its count of
+# single-signal-only genes whose SuSiE test was untestable goes into the caption.
+_COLOC_SUMMARY = os.environ.get("FIG2_COLOC_SUMMARY", "")
+_UNTESTABLE    = "susie_untestable_insufficient_shared_posterior"
 _LOCI_PAD      = 250_000   # +/- window padding (bp) before merging overlapping loci
 _FIG2_SIZE_TSV = os.path.join(_ROOT, "figures/layout_specs/figure2_panel_sizes.tsv")
 _CASCADE_REL   = "main/fig2_genetics/panels/fig2A_gwas_cascade.pdf"
@@ -252,11 +257,14 @@ def _load_manifest():
     # single-signal-only genes are assigned to their strongest ABF result.
     g_bs, g_ba = defaultdict(float), defaultdict(float)
     g_arg_susie, g_arg_abf = {}, {}
+    g_untestable = set()   # a MAIN study where every signal pair failed the shared-posterior check
     for r in _csv.DictReader(open(_GENE_COLOC)):
         gw = r["gwas_name"]
         if gw not in MAIN:
             continue
         gene = r["gene"]
+        if r.get("method") == _UNTESTABLE:
+            g_untestable.add(gene)
         su, abf = _fnum(r["PP.H4.susie"]), _fnum(r["PP.H4.abf"])
         if su == su and su > g_bs[gene]:
             g_bs[gene] = su
@@ -278,6 +286,7 @@ def _load_manifest():
     at_genes_susie, at_genes_abf = defaultdict(int), defaultdict(int)
     at_genes_susie_band, at_genes_abf_band = defaultdict(int), defaultdict(int)
     union_total = susie_total = abf_only_total = 0
+    union_gene_state = {}   # gene -> (signal model drawn, SuSiE state)
     susie_b9 = susie_b89 = susie_b58 = 0   # SuSiE PP.H4 confidence bands: >0.9 / 0.8-0.9 / 0.5-0.8
     abf_b9 = abf_b89 = abf_b58 = 0         # ABF-only PP.H4 confidence bands (same cut-points)
     for gene in set(g_bs) | set(g_ba):
@@ -299,6 +308,12 @@ def _load_manifest():
         if not (su_ok or abf_ok):
             continue
         union_total += 1
+        # An untestable SuSiE test is not a multi-signal negative; the gene is still
+        # drawn as single-signal only when its ABF evidence stands.
+        union_gene_state[gene] = (
+            "multi_signal" if su_ok else "single_signal_only",
+            "positive" if su_ok else "untestable" if gene in g_untestable
+            else "tested_le_0.5" if gene in g_arg_susie else "no_susie_result")
         _, a, gw = (g_arg_susie[gene] if su_ok else g_arg_abf[gene])
         t = _trait_of(gw)
         at_genes[(a, t)] += 1
@@ -336,6 +351,7 @@ def _load_manifest():
                 at_genes_susie_band=at_genes_susie_band,
                 at_genes_abf_band=at_genes_abf_band,
                 union_total=union_total, susie_total=susie_total, abf_only_total=abf_only_total,
+                union_gene_state=union_gene_state,
                 susie_bands=(susie_b9, susie_b89, susie_b58),
                 abf_bands=(abf_b9, abf_b89, abf_b58))
 
@@ -441,6 +457,7 @@ def _write_cascade_source(path):
     fields = [
         "record_type", "study", "ancestry", "eqtl_ancestry_status", "phenotype_class",
         "trait", "signal_model", "pp_h4_band", "metric", "value", "source",
+        "gene", "susie_state",
     ]
     rows = []
     class_eqtl_counts = defaultdict(int)
@@ -531,9 +548,28 @@ def _write_cascade_source(path):
             "value": value, "source": source,
         })
 
+    # One row per union gene with its SuSiE state, so a single-signal-only gene
+    # whose multi-signal test was untestable is visible as such.
+    state_counts = defaultdict(int)
+    for gene, (model, state) in sorted(_M["union_gene_state"].items()):
+        state_counts[(model, state)] += 1
+        rows.append({
+            "record_type": "union_gene", "study": "", "ancestry": "",
+            "eqtl_ancestry_status": "", "phenotype_class": "", "trait": "",
+            "signal_model": model, "pp_h4_band": "", "metric": "coloc_gene",
+            "value": 1, "source": _GENE_COLOC, "gene": gene, "susie_state": state,
+        })
+    for (model, state), value in sorted(state_counts.items()):
+        rows.append({
+            "record_type": "susie_state_summary", "study": "", "ancestry": "",
+            "eqtl_ancestry_status": "", "phenotype_class": "", "trait": "",
+            "signal_model": model, "pp_h4_band": "", "metric": "coloc_genes",
+            "value": value, "source": _GENE_COLOC, "gene": "", "susie_state": state,
+        })
+
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", newline="") as handle:
-        writer = _csv.DictWriter(handle, fieldnames=fields, delimiter="\t")
+        writer = _csv.DictWriter(handle, fieldnames=fields, delimiter="\t", restval="")
         writer.writeheader()
         writer.writerows(rows)
     print(f"Saved: {path}")
@@ -1033,8 +1069,32 @@ def build_cascade(path, extra_paths=None):
           "(blue) versus single-signal-only (grey, faint) groups and terminate in their matching PP.H4 band. "
           "The molecular-QTL panel is European, so European GWAS are ancestry-matched and non-European GWAS "
           "are cross-ancestry eQTL-limited. The MVP-EUR strata (separate PolyFun-LD pipeline) carry coloc "
-          "genes but no credible-set loci here, shown as faint trait->gene ribbons.")
+          "genes but no credible-set loci here, shown as faint trait->gene ribbons."
+          + _untestable_caption())
     plt.close(fig)
+
+
+def _untestable_caption():
+    """Caption sentence for single-signal-only genes whose SuSiE test was untestable.
+
+    n is read from the release's r2_summary.json and must equal the count in the
+    rendered source table; no sentence when the release has no such gene."""
+    n_drawn = sum(1 for model, state in _M["union_gene_state"].values()
+                  if model == "single_signal_only" and state == "untestable")
+    if not _COLOC_SUMMARY:
+        if n_drawn:
+            raise ValueError(f"{n_drawn} single-signal-only genes are SuSiE-untestable; "
+                             "set FIG2_COLOC_SUMMARY to the release's r2_summary.json")
+        return ""
+    with open(_COLOC_SUMMARY) as handle:
+        n = _json.load(handle)["fig2_susie_untestable"]["drawn_as_single_signal_only"]
+    if n != n_drawn:
+        raise ValueError(f"r2_summary.json gives {n} untestable single-signal-only genes; "
+                         f"the cascade counts {n_drawn}")
+    if not n:
+        return ""
+    return (f" {n} genes shown as single-signal only could not be tested by multi-signal "
+            "colocalization (shared posterior below 0.5); they are not multi-signal negatives.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

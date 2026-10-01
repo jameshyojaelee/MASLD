@@ -946,7 +946,83 @@ def mutate_embedded_native_record(
     )
 
 
+def check_genetic_driver_selection() -> None:
+    """The GEN genetics record pairs each PP4 with its own method's driver."""
+    gnmt_legacy = {
+        "gene_symbol": "GNMT",
+        "coloc_best_susie_pp4": "0.128218929733211",
+        "coloc_best_abf_pp4": "0.705831502782787",
+        "driving_gwas": "UKBB_ALT",
+        "driving_trait": "ALT",
+    }
+    gnmt = {
+        **gnmt_legacy,
+        "abf_driving_gwas": "2021_34841290_NAFLD_EUR",
+        "abf_driving_trait": "NAFLD",
+    }
+    susie_positive = {
+        **gnmt,
+        "coloc_best_susie_pp4": "0.91",
+        "driving_gwas": "FIXTURE_SUSIE",
+        "driving_trait": "MASLD diagnosis",
+    }
+    cases = [
+        ("gnmt_abf_only_positive", gnmt, (0.705831502782787, "2021_34841290_NAFLD_EUR", "NAFLD")),
+        ("gnmt_legacy_schema", gnmt_legacy, (0.128218929733211, "UKBB_ALT", "ALT")),
+        ("susie_positive", susie_positive, (0.91, "FIXTURE_SUSIE", "MASLD diagnosis")),
+        (
+            "abf_fallback_no_susie",
+            {**gnmt, "coloc_best_susie_pp4": "", "coloc_best_abf_pp4": "0.3"},
+            (0.3, "2021_34841290_NAFLD_EUR", "NAFLD"),
+        ),
+    ]
+    for label, source, expected in cases:
+        susie = builder._optional_float(source["coloc_best_susie_pp4"], "susie")
+        abf = builder._optional_float(source["coloc_best_abf_pp4"], "abf")
+        observed = builder._genetic_display(source, susie, abf)
+        if observed != expected:
+            raise contract.PassportContractError(
+                "GEN_DRIVER_SELECTION", f"{label}: expected {expected}; observed {observed}"
+            )
+    try:
+        builder._genetic_display({**gnmt, "abf_driving_gwas": ""}, 0.128218929733211, 0.705831502782787)
+    except contract.PassportContractError as exc:
+        if "GEN_ABF_DRIVER_MISSING" not in str(exc):
+            raise
+    else:
+        raise contract.PassportContractError(
+            "GEN_DRIVER_SELECTION", "blank ABF driver for an ABF PP4 was accepted"
+        )
+
+
+def check_gen_state_rules() -> None:
+    """Canonical bulk rule labels and q-values; untestable SuSiE is never a negative."""
+    cases = [
+        ("legacy_treat", builder._bulk_state_rule({"bulk_treat_fdr": "0.01"}), ("limma_voom_qw_TREAT", "bulk_treat_fdr")),
+        (
+            "canonical",
+            builder._bulk_state_rule({"established_state_rule": builder.CANONICAL_STATE_RULE}),
+            ("limma_voom_qw_canonical", "bulk_padj"),
+        ),
+        ("untestable", builder._genetic_call_state(True, True, False), ("untestable", "insufficient_shared_posterior")),
+        ("tested_not_positive", builder._genetic_call_state(False, True, False), ("indeterminate", "testable")),
+        ("supported", builder._genetic_call_state(False, True, True), ("supported", "testable")),
+        ("not_tested", builder._genetic_call_state(False, False, False), ("untestable", "underpowered_source")),
+    ]
+    for label, observed, expected in cases:
+        if observed != expected:
+            raise contract.PassportContractError(
+                "GEN_STATE_RULE", f"{label}: expected {expected}; observed {observed}"
+            )
+    if builder.GEN_CLASS_MAP["genetic_untestable_shared_posterior"] != "untested":
+        raise contract.PassportContractError("GEN_STATE_RULE", "untestable class must map to untested")
+    if "insufficient_shared_posterior" not in contract.TESTABILITY_STATES:
+        raise contract.PassportContractError("GEN_STATE_RULE", "testability vocabulary lacks shared posterior")
+
+
 def run_suite() -> Path:
+    check_genetic_driver_selection()
+    check_gen_state_rules()
     FIXTURE_ROOT.mkdir(parents=True, exist_ok=True)
     gen_identity.run_self_test()
     selection, _ = fixture_payloads(INPUT_ROOT / "positive")
@@ -1788,7 +1864,16 @@ def run_suite() -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args()
+    parser.add_argument(
+        "--driver-only", action="store_true",
+        help="run only the GEN driver and state-rule checks; writes no fixtures",
+    )
+    args = parser.parse_args()
+    if args.driver_only:
+        check_genetic_driver_selection()
+        check_gen_state_rules()
+        print("PASS: GEN driver pairing, state-rule labels, and untestable genetic state")
+        return
     report = run_suite()
     print(f"PASS: PASS-02--PASS-06 fixtures validated; report={report}")
 

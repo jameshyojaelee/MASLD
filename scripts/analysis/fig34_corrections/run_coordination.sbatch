@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=fig34-coordination
+#SBATCH --partition=cpu
+#SBATCH --qos=nslab
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
+#SBATCH --time=90:00:00
+set -euo pipefail
+cd /gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript scripts/analysis/fig34_corrections/04_coordination.R "$1/coordination_v2"

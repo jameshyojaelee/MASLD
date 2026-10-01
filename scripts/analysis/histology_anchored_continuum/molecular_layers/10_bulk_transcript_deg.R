@@ -97,15 +97,27 @@ ml_assert(nrow(signature) == contract$signature_published_size &&
             sum(as.logical(signature$in_resource)) == contract$signature_observed_size,
           "Frozen 145/139 signature census drift")
 signature_ids <- signature[as.logical(in_resource), gene_id_base]
-ml_assert(setequal(signature_ids, intersect(signature$gene_id_base, gene_base)),
-          "Signature in_resource flags disagree with the F_five gene universe")
+# The frozen axes use the 139 signature genes flagged in_resource; all must be in
+# the bulk universe. A refit with a larger expression-filtered universe (the
+# corrected-control fit adds DPEP1) can observe a signature gene outside the frozen
+# axis; it stays out of the axis and, because the axis does not use it, is tested
+# as an ordinary gene like any other.
+ml_assert(all(signature_ids %in% gene_base),
+          "Frozen signature genes are missing from the F_five gene universe")
+signature_outside_axis <- setdiff(intersect(signature$gene_id_base, gene_base), signature_ids)
+if (length(signature_outside_axis)) {
+  message("Signature genes observed but outside the frozen axis: ",
+          paste(signature[gene_id_base %in% signature_outside_axis, gene_symbol], collapse = ", "))
+}
 signature[, `:=`(
   observed_in_F_five = gene_id_base %in% gene_base,
   ordinary_continuum_inference_eligible = !gene_id_base %in% signature_ids,
   evidence_role = fifelse(
     gene_id_base %in% signature_ids,
     "axis_component_leave_one_out_only",
-    "unavailable_in_F_five"
+    fifelse(gene_id_base %in% gene_base,
+            "signature_gene_outside_frozen_axis",
+            "unavailable_in_F_five")
   )
 )]
 ml_write_tsv_once(signature, file.path(temporary_out, "signature_gene_ledger.tsv"))

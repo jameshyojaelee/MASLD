@@ -94,7 +94,7 @@ class GeneCatalogV2Tests(unittest.TestCase):
         )
         card = catalog.experiment_for_record(record)
         self.assertEqual(card["experiment_rule_id"], "EXP_LNCRNA_RNA_PRODUCT_V2")
-        self.assertIn("Cas13 or ASO RNA depletion", card["perturbation"])
+        self.assertIn("RNA depletion", card["perturbation"])
 
     def test_colocalized_lncrna_routes_to_disambiguation(self):
         record = base_v2(

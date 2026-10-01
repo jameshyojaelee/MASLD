@@ -34,7 +34,18 @@ ml_out_root <- function(must_exist = TRUE) {
 ml_read_contract <- function() {
   path <- file.path(ml_script_dir(), "00_contract.json")
   ml_assert(file.exists(path), paste0("Missing molecular-layer contract: ", path))
-  jsonlite::fromJSON(path, simplifyVector = TRUE)
+  contract <- jsonlite::fromJSON(path, simplifyVector = TRUE)
+  # HAC_CONTRACT_OVERRIDE names a JSON whose keys replace contract inputs, e.g.
+  # the corrected-control F_five refit (dge_rds, canonical_deg_results,
+  # sample_manifest, stage results, gene_family_size, canonical_deg_size).
+  override_path <- Sys.getenv("HAC_CONTRACT_OVERRIDE", unset = "")
+  if (nzchar(override_path)) {
+    override <- jsonlite::fromJSON(ml_resolve(override_path), simplifyVector = TRUE)
+    unknown <- setdiff(names(override), names(contract))
+    ml_assert(length(unknown) == 0L, paste0("Unknown contract override keys: ", paste(unknown, collapse = ", ")))
+    contract[names(override)] <- override
+  }
+  contract
 }
 
 ml_resolve <- function(path, must_exist = TRUE) {

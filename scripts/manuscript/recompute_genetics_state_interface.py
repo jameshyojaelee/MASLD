@@ -72,8 +72,8 @@ def base_id(s: pd.Series) -> pd.Series:
     return s.astype(str).str.split(".").str[0]
 
 
-def load_coloc() -> pd.DataFrame:
-    d = pd.read_csv(COLOC)
+def load_coloc(path: Path = COLOC) -> pd.DataFrame:
+    d = pd.read_csv(path)
     d["g"] = base_id(d["ensembl"])
     # One duplicated ensembl exists; keep the strongest evidence per gene so the
     # gene set is a set, not a bag.
@@ -90,8 +90,14 @@ def build(bulk_path: Path, coloc: pd.DataFrame) -> dict:
     # Joint testability rebuilt from the promoted release: a gene is jointly
     # testable when it was assayed in the bulk contrast AND appears in the
     # colocalization universe. No July flag is reused.
-    jt = deg.merge(coloc[["g", "coloc_best_susie_pp4", "coloc_best_abf_pp4"]],
-                   on="g", how="inner")
+    # Genes with NA best SuSiE PP.H4 stay in this universe. A corrected release marks
+    # a tier-1/2 SuSiE test that failed coloc's shared-posterior check as
+    # susie_state_t12 == "untestable"; such a gene counts as not SuSiE-positive, the
+    # same as a tested gene at PP.H4 <= 0.5, because only former positives were
+    # rechecked.
+    keep = ["g", "coloc_best_susie_pp4", "coloc_best_abf_pp4"]
+    keep += [c for c in ("susie_state_t12",) if c in coloc.columns]
+    jt = deg.merge(coloc[keep], on="g", how="inner")
     jt["susie"] = pd.to_numeric(jt["coloc_best_susie_pp4"], errors="coerce")
     jt["abf"] = pd.to_numeric(jt["coloc_best_abf_pp4"], errors="coerce")
     jt["is_deg"] = (jt["padj"] < CANON_PADJ) & (jt["logFC"].abs() > CANON_LFC)
@@ -239,17 +245,24 @@ def matched_ladder(
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
+    ap.add_argument("--coloc", type=Path, default=COLOC,
+                    help="gene_level_coloc_tier12.csv of the COLOC release (default: adopted)")
+    ap.add_argument("--bulk-fragment", type=Path, default=BULK["fragment_23370"],
+                    help="deg_results.csv of the five-cohort fragment fit (default: F_five v6)")
     args = ap.parse_args()
+    # The official arm stays in so the fragment arm's matching uses the same
+    # draws of the seeded generator as the adopted run.
+    bulk_arms = dict(BULK, fragment_23370=args.bulk_fragment)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)
 
-    coloc = load_coloc()
-    manifest = [{"role": "coloc_tier12", "path": str(COLOC), "sha256": sha256(COLOC),
+    coloc = load_coloc(args.coloc)
+    manifest = [{"role": "coloc_tier12", "path": str(args.coloc), "sha256": sha256(args.coloc),
                  "n_genes": int(coloc["g"].nunique())}]
 
     ov_rows, tf_rows, ladders, treat_rows, pair_tables = [], [], [], [], []
-    for arm, path in BULK.items():
+    for arm, path in bulk_arms.items():
         if not path.exists():
             print(f"SKIP {arm}: {path} absent", file=sys.stderr)
             continue
@@ -266,6 +279,10 @@ def main() -> int:
             mask = mask.fillna(False)
             r = overlap_stats(jt, mask, label)
             r["bulk_arm"] = arm
+            r["n_genes_bulk"] = len(b["deg"])   # the arm label is an identifier, not a count
+            if "susie_state_t12" in jt:
+                # Reported as their own state; they are in n_joint_testable and not genetic.
+                r["n_susie_untestable_joint"] = int((jt["susie_state_t12"] == "untestable").sum())
             ov_rows.append(r)
             print(f"  {label}: genetic {r['n_genetic_joint']}, DEG {r['n_deg_joint']}, "
                   f"overlap {r['n_overlap_observed']} vs expected {r['n_overlap_expected']:.1f}, "
@@ -277,6 +294,7 @@ def main() -> int:
                 lad["genetic_definition"] = label
                 ladders.append(lad)
                 treat_summary["bulk_arm"] = arm
+                treat_summary["n_genes_bulk"] = len(b["deg"])
                 treat_summary["genetic_definition"] = label
                 treat_rows.append(treat_summary)
                 pair_table["bulk_arm"] = arm
@@ -286,6 +304,12 @@ def main() -> int:
         for col in ("susie", "abf"):
             t = threshold_free(jt, col)
             t["bulk_arm"] = arm
+            t["n_genes_bulk"] = len(b["deg"])
+            if col == "susie" and "susie_state_t12" in jt:
+                # No PP.H4 to rank, so these genes are outside the threshold-free
+                # correlation only; they remain in every overlap denominator.
+                t["n_untestable_without_pp4"] = int(
+                    ((jt["susie_state_t12"] == "untestable") & jt["susie"].isna()).sum())
             tf_rows.append(t)
             print(f"  threshold-free {col}: rho_signed {t['spearman_signed']:.4f} "
                   f"(p {t['p_signed']:.3g}), rho_abs {t['spearman_absolute']:.4f} "

@@ -307,14 +307,14 @@ save_vector(p5f, file.path(PANELS, "fig5f_spatial_maps_and_matched_null.pdf"), 4
 
 # 6C. Two compact five-node ribbons. Text is limited to assay and one native
 # value; qualifications and full units remain in the exact source table.
-d6 <- fread(file.path(SOURCE, "fig6c_evidence_nodes.tsv"))
+d6 <- fread(file.path(SOURCE, "fig6c_evidence_nodes.tsv"), encoding = "UTF-8")
 d6[, block := fifelse(grepl("^GNMT", example), "genetic_state", "program")]
 d6[, x := node_order]
 d6[, y := fifelse(grepl("^GNMT", example), 3,
            fifelse(example == "ECM/IGFBP7", 2, 1))]
 d6[, state_class := fifelse(
   state %in% c("supported_multicohort_remodeling", "supported_stage_association",
-               "supported_selection_conditioned"), "supported",
+               "supported_selection_conditioned", "supported_susie_coloc"), "supported",
   fifelse(grepl("attenuation", state), "sensitive",
   fifelse(grepl("descriptive|directional|mixed", state), "descriptive",
           "indeterminate")))]
@@ -323,16 +323,9 @@ d6[example == "ECM/IGFBP7" & node_order == 5, state_class := "supported"]
 d6[, assay_short := fifelse(block == "genetic_state",
   c("Genetics", "RNA", "Stage", "Protein", "Covariation")[node_order],
   c("Disease", "Ambient", "Lineage", "Bulk", "Spatial")[node_order])]
-d6[, value_short := ""]
-d6[example == "GNMT–MAT1A–CYP2C19", value_short := c(
-  "pending", "5/5 · 4/5 · 5/5 ↓", "4/4 ↓", "3 proteins ↓", "ρ < 0"
-)]
-d6[example == "ECM/IGFBP7", value_short := c(
-  "β 0.40", "β 0.13", "fib β 2.27", "F4 0.76", "supported"
-)]
-d6[example == "Ductular-injury/BICC1", value_short := c(
-  "β 0.40", "β 0.39", "chol β 1.57", "F4 1.10", "indeterminate"
-)]
+d6[, value_short := compact_display]
+d6[example == "ECM/IGFBP7" & node_order == 5, value_short := "supported"]
+d6[example == "Ductular-injury/BICC1" & node_order == 5, value_short := "indeterminate"]
 d6[, label_y := y + fifelse(y == 2, 0.24, 0.22)]
 line6 <- unique(d6[, .(y, block)])
 p6c <- ggplot(d6, aes(x, y)) +

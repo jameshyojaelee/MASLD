@@ -46,9 +46,16 @@ if (nzchar(CANDIDATE_ROOT)) {
   suppressPackageStartupMessages({ library(edgeR); library(limma); library(patchwork) })
   STAGE_ROOT <- normalizePath(Sys.getenv("STAGE_RELEASE_ROOT", ""), mustWork = TRUE)
   model_manifest <- fread(file.path(STAGE_ROOT, "model_input_manifest.tsv"))
+  # Corrected-control refits ship expected_counts.json; 157/687 is the adopted release.
+  expected_counts_path <- file.path(STAGE_ROOT, "expected_counts.json")
+  expected_groups <- if (file.exists(expected_counts_path)) {
+    unlist(jsonlite::fromJSON(expected_counts_path)[c("n_control", "n_disease")])
+  } else {
+    c(n_control = 157L, n_disease = 687L)
+  }
   if (nrow(model_manifest) != 1L || model_manifest$n_cohorts != 5L ||
-      model_manifest$n_samples != 844L || model_manifest$n_control != 157L ||
-      model_manifest$n_disease != 687L) {
+      model_manifest$n_samples != 844L || model_manifest$n_control != expected_groups[["n_control"]] ||
+      model_manifest$n_disease != expected_groups[["n_disease"]]) {
     stop("STAGE_RELEASE_ROOT is not the validated five-cohort release", call. = FALSE)
   }
   dge <- readRDS(model_manifest$dge_path)
@@ -58,7 +65,7 @@ if (nzchar(CANDIDATE_ROOT)) {
   if (anyNA(meta$sample_id) || !identical(meta$sample_id, colnames(dge)) ||
       uniqueN(meta$dataset) != 5L ||
       !identical(meta[, .N, by = group_binary][order(group_binary)]$N,
-                 c(157L, 687L))) {
+                 as.integer(unname(expected_groups)))) {
     stop("Five-cohort metadata alignment or group census failed", call. = FALSE)
   }
   meta[, plot_class := factor(group_binary, levels = c("Control", "Disease"))]

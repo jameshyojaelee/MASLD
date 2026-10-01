@@ -31,14 +31,20 @@ LOGICAL_PRODUCER_ID = "scripts/portal/generate_evidence_passports.py"
 PROJECT_ROOT = Path(
     os.environ.get("MASLD_PROJECT_ROOT", os.fspath(SCRIPT_PATH.parents[2]))
 ).resolve()
-CANDIDATE_REL = Path(
+# PASSPORT_CANDIDATE_ROOT and PASSPORT_ANALYSIS_RELEASE_ID move every production
+# step (adjudication, selection, build, validation) to a new candidate root and
+# release together; unset, they are the 2026-08-07 v1 candidate.
+CANDIDATE_REL = Path(os.environ.get(
+    "PASSPORT_CANDIDATE_ROOT",
     "RNA-seq/results/evidence_passports/candidates/"
-    "program-context-v2-candidate-2026-08-07"
-)
+    "program-context-v2-candidate-2026-08-07",
+))
 DEFAULT_CANDIDATE_ROOT = PROJECT_ROOT / CANDIDATE_REL
 DEFAULT_FIXTURE_ROOT = DEFAULT_CANDIDATE_ROOT / "fixtures"
 ANALYSIS_RELEASE_ID = "fixture-passport-pass01-v1"
-PRODUCTION_ANALYSIS_RELEASE_ID = "program-context-v2-candidate-2026-08-07-passports-v1"
+PRODUCTION_ANALYSIS_RELEASE_ID = os.environ.get(
+    "PASSPORT_ANALYSIS_RELEASE_ID", "program-context-v2-candidate-2026-08-07-passports-v1"
+)
 FIXTURE_SIGNED_AT = "2026-08-07T00:00:00Z"
 DISCLAIMER = (
     "This experiment is a discriminating research proposal, not a calibrated "
@@ -74,6 +80,7 @@ TESTABILITY_STATES = OrderedDict(
         ("not_detected", "The feature was below the assay's prespecified detectability gate."),
         ("underpowered_source", "The source lacked adequate power for a positive or negative interpretation."),
         ("mapping_ambiguous", "Stable identity or allele mapping remained ambiguous."),
+        ("insufficient_shared_posterior", "No SuSiE-COLOC signal pair kept enough posterior mass on shared SNPs to be tested."),
         ("biological_unit_unresolved", "Independent biological units could not be resolved."),
         ("assay_out_of_scope", "The assay is not designed to answer the stated question."),
         ("source_gate_failed", "A dataset-level source gate failed; no gene-level pseudo-result is authorized."),

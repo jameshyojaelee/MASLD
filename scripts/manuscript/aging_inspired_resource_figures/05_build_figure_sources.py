@@ -34,11 +34,12 @@ PROGRAM_RELEASE = (
     / "program-context-v2-stage-corrected-candidate-2026-08-13-v3"
 )
 REGISTRY = PROGRAM_RELEASE / "hotspot/program_registry_v2.tsv"
-BULK = (
+BULK = Path(os.environ.get(
+    "WORKED_LOCI_BULK_PROJECTION",
     ROOT
     / "figures/candidates/fig4-stage-terminology-corrected-2026-08-13-v5"
-    / "source_tables/fig4e_bulk_projection.tsv"
-)
+    / "source_tables/fig4e_bulk_projection.tsv",
+))
 SPATIAL_ROOT = (
     ROOT
     / "Analysis/Multimodal_Program_Projection/candidates"
@@ -47,12 +48,32 @@ SPATIAL_ROOT = (
 SPATIAL = SPATIAL_ROOT / "data/fig4f_matched_null_discrimination.tsv"
 SPATIAL_MAP = SPATIAL_ROOT / "panels/fig4e_spatial_program_maps.pdf"
 STAGE_ROOT = ROOT / "figures/candidates/pi-figure-redesign-2026-08-13-v8"
-STAGE = STAGE_ROOT / "analysis/stage_extensions/stage_all_gene_results.tsv"
-COHORT = STAGE_ROOT / "analysis/stage_extensions/cohort_disease_all_gene_results.tsv"
+# Bulk stage and cohort tables can come from a corrected bulk release; the
+# Figure 4 program assets below always come from STAGE_ROOT.
+STAGE_DIR = Path(os.environ.get(
+    "WORKED_LOCI_STAGE_DIR", STAGE_ROOT / "analysis/stage_extensions"
+))
+STAGE = STAGE_DIR / "stage_all_gene_results.tsv"
+COHORT = STAGE_DIR / "cohort_disease_all_gene_results.tsv"
 BLOCKERS = STAGE_ROOT / "BLOCKERS.tsv"
-PROTEIN_ROOT = ROOT / "figures/main/fig5_molecular_context/data"
+PROTEIN_ROOT = Path(os.environ.get(
+    "WORKED_LOCI_PROTEIN_DATA_DIR", ROOT / "figures/main/fig5_molecular_context/data"
+))
 PROTEIN = PROTEIN_ROOT / "composite_mrna_protein_corrected.csv"
 PROTEIN_HIST = PROTEIN_ROOT / "composite_protein_histology_partial_corrected.csv"
+# Gene-level Tier-1/2 COLOC table (rebuild_tier12.py schema) and the gene-level
+# table that maps symbols to Ensembl IDs. Unset keeps the GNMT genetics node
+# withheld; set, the node state is computed from the table.
+COLOC_TIER12 = os.environ.get("WORKED_LOCI_COLOC_TIER12", "")
+COLOC_GENE_LEVEL = os.environ.get("WORKED_LOCI_COLOC_GENE_LEVEL", "")
+# Long master table (susie_coloc_all_gwas.csv); only its per-pair SuSiE method is
+# read, to find Tier-1/2 pairs that fail coloc's shared-posterior check.
+COLOC_MASTER = os.environ.get("WORKED_LOCI_COLOC_MASTER", "")
+GWAS_TIER = Path(os.environ.get(
+    "WORKED_LOCI_GWAS_TIER", ROOT / "GWAS/finemapping/config/gwas_trait_tier.tsv"
+))
+PP4_THRESHOLD = 0.5
+UNTESTABLE_METHOD = "susie_untestable_insufficient_shared_posterior"
 
 SUPPLEMENT_ASSETS = {
     "supplementary/figureS4/panels/figs4a_program_landscape_detail.pdf":
@@ -168,7 +189,154 @@ def evidence_row(
     }
 
 
+def finite_or_nan(value: object) -> float:
+    number = pd.to_numeric(value, errors="coerce")
+    return float(number) if pd.notna(number) else math.nan
+
+
+def untestable_tier12_studies(ensembl_id: str) -> list[str]:
+    """Tier-1/2 studies whose SuSiE pair for this gene failed the shared-posterior check."""
+    tiers = pd.read_csv(GWAS_TIER, sep="\t", dtype={"study_name": str})
+    tier12_studies = set(tiers.loc[tiers["tier"].isin([1, 2]), "study_name"])
+    studies: set[str] = set()
+    for chunk in pd.read_csv(
+        COLOC_MASTER, usecols=["gwas_name", "ensembl", "method"], dtype=str, chunksize=1_000_000
+    ):
+        hit = chunk[
+            (chunk["ensembl"].str.replace(r"\.\d+$", "", regex=True) == ensembl_id)
+            & chunk["gwas_name"].isin(tier12_studies)
+            & (chunk["method"] == UNTESTABLE_METHOD)
+        ]
+        studies.update(hit["gwas_name"])
+    return sorted(studies)
+
+
+def gnmt_genetics() -> dict[str, object]:
+    """GNMT inherited-signal node, computed from the Tier-1/2 gene-level COLOC table.
+
+    Fixed rule, in order: SuSiE PP.H4 > 0.5 is the primary genetic call; else any
+    Tier-1/2 SuSiE pair that fails coloc's shared-posterior check makes the node
+    untestable (never negative); else ABF PP.H4 > 0.5 is the ABF-only sensitivity
+    call. Each call names the driver study of its own method, never the legacy
+    SuSiE-first ``driving_gwas`` for ABF.
+    """
+    if not COLOC_TIER12:
+        return {
+            "state": "blocked_pending_corrected_coloc",
+            "metric": "corrected COLOC posterior",
+            "estimate": None,
+            "unit": "PP.H4 for an exact eQTL–GWAS signal pair",
+            "reason": "The corrected 50-study COLOC release is active and not promoted.",
+            "source": BLOCKERS,
+            "alternative": "The prior candidate signal may change after corrected signal-pair adjudication.",
+            "next": "Allele-aware hepatocyte perturbation at the promoted GNMT shared signal",
+            "display": "Corrected COLOC pending",
+            "compact": "pending",
+            "auxiliary": "",
+        }
+    require(bool(COLOC_GENE_LEVEL), "WORKED_LOCI_COLOC_GENE_LEVEL is required with WORKED_LOCI_COLOC_TIER12")
+    require(bool(COLOC_MASTER), "WORKED_LOCI_COLOC_MASTER is required with WORKED_LOCI_COLOC_TIER12")
+    tier12_path = Path(COLOC_TIER12)
+    gene_level = pd.read_csv(COLOC_GENE_LEVEL, usecols=["gene", "ensembl"], dtype=str)
+    ensembl = set(gene_level.loc[gene_level["gene"] == "GNMT", "ensembl"].str.replace(r"\.\d+$", "", regex=True))
+    require(len(ensembl) == 1, f"GNMT must map to one Ensembl ID, found {sorted(ensembl)}")
+    ensembl_id = ensembl.pop()
+    tier12 = pd.read_csv(tier12_path, dtype={"ensembl": str})
+    rows = tier12[tier12["ensembl"].str.replace(r"\.\d+$", "", regex=True) == ensembl_id]
+    require(len(rows) <= 1, f"GNMT is duplicated in {tier12_path}")
+    alternative = (
+        "COLOC supports a shared eQTL–GWAS signal; it does not identify the causal variant or gene."
+    )
+    if rows.empty:
+        susie = abf = math.nan
+    else:
+        row = rows.iloc[0]
+        susie = finite_or_nan(row["coloc_best_susie_pp4"])
+        abf = finite_or_nan(row["coloc_best_abf_pp4"])
+
+    def driver(method: str) -> tuple[str, str]:
+        if method == "SuSiE":
+            # The legacy driver is the SuSiE study whenever a SuSiE PP.H4 is finite.
+            study = str(row.get("susie_driving_gwas", row["driving_gwas"]))
+            require(study == str(row["driving_gwas"]), "SuSiE driver disagrees with legacy driving_gwas")
+            return study, str(row["driving_trait"])
+        if "abf_driving_gwas" in row.index:
+            return str(row["abf_driving_gwas"]), str(row["abf_driving_trait"])
+        require(math.isnan(susie), "ABF driver columns are absent and driving_gwas is the SuSiE study")
+        return str(row["driving_gwas"]), str(row["driving_trait"])
+
+    untestable = untestable_tier12_studies(ensembl_id)
+    if np.isfinite(susie) and susie > PP4_THRESHOLD:
+        state, method, estimate = "supported_susie_coloc", "SuSiE", susie
+    elif untestable:
+        return {
+            "state": "genetic_untestable_shared_posterior",
+            "metric": "Tier-1/2 gene-level COLOC posterior",
+            "estimate": None,
+            "unit": "maximum PP.H4 over Tier-1/2 GWAS for the stated method",
+            "reason": (
+                f"{len(untestable)} Tier-1/2 SuSiE pair(s) fail coloc's shared-posterior check "
+                f"({', '.join(untestable)}); no eligible SuSiE PP.H4 exceeds {PP4_THRESHOLD} "
+                f"(best SuSiE={susie:.3g}, ABF={abf:.3g}). Untestable, not negative."
+            ),
+            "source": tier12_path,
+            "alternative": alternative,
+            "next": "Allele-aware hepatocyte perturbation at the GNMT locus",
+            "display": "GNMT SuSiE-COLOC untestable",
+            "compact": "untestable",
+            "auxiliary": f"ensembl={ensembl_id}; method=SuSiE_untestable; untestable_gwas={','.join(untestable)}",
+        }
+    elif np.isfinite(abf) and abf > PP4_THRESHOLD:
+        state, method, estimate = "abf_only_sensitivity", "ABF", abf
+    elif np.isfinite(susie) or np.isfinite(abf):
+        method = "SuSiE" if np.isfinite(susie) else "ABF"
+        state, estimate = "not_colocalized", susie if method == "SuSiE" else abf
+    else:
+        return {
+            "state": "untestable_no_tier12_pp4",
+            "metric": "Tier-1/2 gene-level COLOC posterior",
+            "estimate": None,
+            "unit": "maximum PP.H4 over Tier-1/2 GWAS for the stated method",
+            "reason": "No finite Tier-1/2 SuSiE or ABF PP.H4 for GNMT in the configured COLOC release.",
+            "source": tier12_path,
+            "alternative": alternative,
+            "next": "Allele-aware hepatocyte perturbation at the GNMT locus",
+            "display": "GNMT COLOC untestable",
+            "compact": "untestable",
+            "auxiliary": f"ensembl={ensembl_id}; method=none",
+        }
+    study, trait = driver(method)
+    reason = (
+        f"Best Tier-1/2 {method} PP.H4={estimate:.3g} from {study} ({trait}); "
+        f"SuSiE={susie:.3g}, ABF={abf:.3g}; call threshold PP.H4>{PP4_THRESHOLD}."
+    )
+    if state == "abf_only_sensitivity":
+        reason += " The primary SuSiE-COLOC rule is not met."
+    return {
+        "state": state,
+        "metric": "Tier-1/2 gene-level COLOC posterior",
+        "estimate": estimate,
+        "unit": "maximum PP.H4 over Tier-1/2 GWAS for the stated method",
+        "reason": reason,
+        "source": tier12_path,
+        "alternative": alternative,
+        "next": f"Allele-aware hepatocyte perturbation at the GNMT {method}-COLOC signal",
+        "display": f"GNMT {method} PP.H4 {estimate:.2f}",
+        "compact": f"{method} {estimate:.2f}",
+        "auxiliary": f"ensembl={ensembl_id}; method={method}; driver={study}; driver_trait={trait}",
+    }
+
+
 def main() -> None:
+    # The Figure 4F bulk transport table is a program projection of the stage
+    # fits (render_pi_singlecell_panels.R). A corrected bulk release changes the
+    # fitted gene universe, so it must come with a projection rerun on that release.
+    require(
+        "WORKED_LOCI_STAGE_DIR" not in os.environ or "WORKED_LOCI_BULK_PROJECTION" in os.environ,
+        "WORKED_LOCI_STAGE_DIR is set without WORKED_LOCI_BULK_PROJECTION: rerun "
+        "scripts/figures/render_pi_singlecell_panels.R with STAGE_RELEASE_ROOT=<that stage dir> "
+        "and pass its source_tables/fig4e_bulk_projection.tsv",
+    )
     require((AMBIENT / "VALIDATED").exists(), "ambient candidate is not validated")
     require((CROSS / "VALIDATED").exists(), "complete cross-lineage candidate is not validated")
     inputs = [
@@ -184,6 +352,9 @@ def main() -> None:
         AMBIENT / "results/validation_report.tsv",
         CROSS / "results/validation_report.tsv",
     ]
+    inputs += [Path(path) for path in (COLOC_TIER12, COLOC_GENE_LEVEL, COLOC_MASTER) if path]
+    if COLOC_TIER12:
+        inputs.append(GWAS_TIER)
     for path in inputs:
         require(path.exists(), f"missing input: {path}")
 
@@ -391,23 +562,25 @@ def main() -> None:
     # 6C. Detailed fingerprints, followed by one display node per assay-native claim.
     fingerprints: list[dict[str, object]] = []
     triad_example = "GNMT–MAT1A–CYP2C19"
-    triad_next = "Allele-aware hepatocyte perturbation at the promoted GNMT shared signal"
+    genetics = gnmt_genetics()
     fingerprints.append(
         evidence_row(
             triad_example, 1, "Inherited shared signal", "genetics", "GNMT",
-            "corrected COLOC posterior", None, "PP.H4 for an exact eQTL–GWAS signal pair",
-            "blocked_pending_corrected_coloc",
-            "The corrected 50-study COLOC release is active and not promoted.",
-            BLOCKERS,
-            "The prior candidate signal may change after corrected signal-pair adjudication.",
-            triad_next, "Corrected COLOC pending",
+            genetics["metric"], genetics["estimate"], genetics["unit"], genetics["state"],
+            genetics["reason"], genetics["source"], genetics["alternative"],
+            genetics["next"], genetics["display"], genetics["auxiliary"],
         )
     )
+    # Short per-node values for the compact Figure 6C ribbon, derived from the
+    # same rows as the fingerprints.
+    triad_compact = {"Inherited shared signal": genetics["compact"]}
     cohort = pd.read_csv(COHORT, sep="\t")
     cohort = cohort[cohort["gene_name"].isin(TRIAD)].copy()
     require(len(cohort) == 15, "triad five-cohort rows must be 3 x 5")
+    cohort_down = []
     for gene, group in cohort.groupby("gene_name", sort=False):
         n_down = int((group["logFC"] < 0).sum())
+        cohort_down.append(f"{n_down}/{len(group)}")
         n_q = int((group["FDR"] < 0.05).sum())
         for row in group.itertuples(index=False):
             fingerprints.append(
@@ -421,11 +594,14 @@ def main() -> None:
                     f"{gene}: {n_down}/5 down; {n_q}/5 q<0.05", f"dataset={row.dataset}; q={row.FDR:.3g}",
                 )
             )
+    triad_compact["Five-cohort RNA remodeling"] = " · ".join(cohort_down) + " ↓"
     stage = pd.read_csv(STAGE, sep="\t")
     stage = stage[stage["gene_name"].isin(TRIAD)].copy()
     require(len(stage) == 12, "triad adjacent-stage rows must be 3 x 4")
+    stage_down = []
     for gene, group in stage.groupby("gene_name", sort=False):
         n_down = int((group["logFC"] < 0).sum())
+        stage_down.append(f"{n_down}/{len(group)}")
         n_q = int((group["FDR"] < 0.05).sum())
         for row in group.itertuples(index=False):
             fingerprints.append(
@@ -439,9 +615,18 @@ def main() -> None:
                     f"{gene}: {n_down}/4 down; {n_q}/4 q<0.05", f"contrast={row.contrast}; q={row.FDR:.3g}",
                 )
             )
+    triad_compact["Cross-sectional histologic stage"] = (
+        stage_down[0] if len(set(stage_down)) == 1 else " · ".join(stage_down)
+    ) + " ↓"
     protein = pd.read_csv(PROTEIN)
     protein = protein[protein["gene"].isin(TRIAD)].copy()
     require(len(protein) == 3, "triad protein rows missing")
+    n_protein_down = int((protein["protein_logFC"] < 0).sum())
+    triad_compact["Liver protein decrease"] = (
+        f"{n_protein_down} proteins ↓"
+        if n_protein_down == len(protein)
+        else f"{n_protein_down}/{len(protein)} proteins ↓"
+    )
     for row in protein.itertuples(index=False):
         fingerprints.append(
             evidence_row(
@@ -459,6 +644,10 @@ def main() -> None:
     hist = pd.read_csv(PROTEIN_HIST)
     hist = hist[hist["gene"].isin(TRIAD)].copy()
     require(len(hist) == 3, "triad protein-histology rows missing")
+    rhos = hist[["Steatosis", "Ballooning", "Inflammation", "Fibrosis", "NAS"]].to_numpy(dtype=float)
+    triad_compact["Adjusted protein covariation"] = (
+        "ρ < 0" if (rhos < 0).all() else "ρ > 0" if (rhos > 0).all() else "ρ mixed sign"
+    )
     for row in hist.itertuples(index=False):
         for feature in ("Steatosis", "Ballooning", "Inflammation", "Fibrosis", "NAS"):
             rho = float(getattr(row, feature))
@@ -477,10 +666,15 @@ def main() -> None:
 
     bulk_by_uid = bulk.groupby("program_uid")
     spatial_by_uid = spatial.groupby("program_id")
+    # Nodes 1-4 of the program ribbons; node 5 (spatial) keeps its label in 08.
+    hero_compact: dict[tuple[str, str], str] = {}
+    lineage_short = {"Fibroblasts": "fib", "Cholangiocytes": "chol"}
     for uid, example in HEROES.items():
         hero_effect = effects[effects["program_uid"] == uid]
         require(len(hero_effect) == 1, f"hero effect missing: {uid}")
         row = hero_effect.iloc[0]
+        hero_compact[(example, "Donor-level disease association")] = f"β {row.raw_beta:.2f}"
+        hero_compact[(example, "Ambient recalibration")] = f"β {row.corrected_beta:.2f}"
         next_experiment = (
             "Fibroblast-restricted IGFBP7 perturbation with matrix and hepatocyte-state readouts"
             if "IGFBP7" in example
@@ -516,6 +710,9 @@ def main() -> None:
         ]
         require(len(contrast) == 1, f"target contrast missing: {uid}")
         contrast = contrast.iloc[0]
+        hero_compact[(example, "Same-atlas localization")] = (
+            f"{lineage_short.get(target, target)} β {contrast.beta:.2f}"
+        )
         lineage_state = (
             "descriptive_localization_supported"
             if str(promo.main_figure_family_eligible).strip().lower() == "true"
@@ -533,6 +730,9 @@ def main() -> None:
             )
         )
         hero_bulk = bulk_by_uid.get_group(uid)
+        f4 = hero_bulk[hero_bulk["stage"] == "F4"]
+        require(len(f4) == 1, f"F4 bulk transport row missing: {uid}")
+        hero_compact[(example, "Bulk tissue-state transport")] = f"F4 {float(f4['effect'].iloc[0]):.2f}"
         for bulk_row in hero_bulk.itertuples(index=False):
             fingerprints.append(
                 evidence_row(
@@ -585,6 +785,10 @@ def main() -> None:
                 "unresolved_alternative": group["unresolved_alternative"].iloc[0],
                 "next_experiment": group["next_experiment"].iloc[0],
                 "n_native_rows": len(group),
+                "compact_display": (
+                    triad_compact[node] if example == triad_example
+                    else hero_compact.get((example, node), "")
+                ),
             }
         )
     nodes6 = pd.DataFrame(node_rows)
@@ -615,7 +819,9 @@ def main() -> None:
             (
                 "Figure 6",
                 "Recurring examples connect assay-native evidence states to discriminating experiments without collapsing modalities into a score or rank.",
-                "candidate_pending_corrected_coloc_and_catalog_rebuild",
+                "candidate_pending_corrected_coloc_and_catalog_rebuild"
+                if genetics["state"] == "blocked_pending_corrected_coloc"
+                else "candidate_pending_catalog_rebuild",
             ),
         ],
         columns=["figure", "sentence_level_discovery", "release_state"],
@@ -667,7 +873,13 @@ def main() -> None:
         encoding="utf-8",
     )
     caption6.write_text(
-        "Figure 6C. Assay-native evidence ribbons for GNMT–MAT1A–CYP2C19, ECM/IGFBP7, and ductular-injury/BICC1. Every node retains its native effect unit, provenance, evidence state, unresolved alternative, and discriminating experiment. No combined score, vote count, or rank is calculated. The GNMT inherited shared-signal node is withheld until the corrected 50-study COLOC release is audited and adopted.\n",
+        "Figure 6C. Assay-native evidence ribbons for GNMT–MAT1A–CYP2C19, ECM/IGFBP7, and ductular-injury/BICC1. Every node retains its native effect unit, provenance, evidence state, unresolved alternative, and discriminating experiment. No combined score, vote count, or rank is calculated. "
+        + (
+            "The GNMT inherited shared-signal node is withheld until the corrected 50-study COLOC release is audited and adopted."
+            if genetics["state"] == "blocked_pending_corrected_coloc"
+            else "The GNMT genetic node reports the Tier-1/2 gene-level COLOC posterior; SuSiE PP.H4 > 0.5 is the primary call and ABF PP.H4 > 0.5 alone is a sensitivity call. COLOC does not identify a causal gene."
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -688,7 +900,10 @@ def main() -> None:
                 "cross_lineage_candidate": str(CROSS.resolve()),
                 "cross_lineage_validated_sha256": sha256(CROSS / "VALIDATED"),
                 "lineage_panel_destination": family_destination[0],
-                "genetics_state": "blocked_pending_corrected_coloc",
+                "genetics_state": genetics["state"],
+                "coloc_tier12": str(Path(COLOC_TIER12).resolve()) if COLOC_TIER12 else "",
+                "bulk_stage_dir": str(STAGE_DIR.resolve()),
+                "protein_data_dir": str(PROTEIN_ROOT.resolve()),
                 "combined_score_calculated": False,
                 "seed": 20260815,
             },

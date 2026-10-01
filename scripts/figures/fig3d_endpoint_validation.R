@@ -30,9 +30,18 @@ dir.create(analysis_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(source_dir, recursive = TRUE, showWarnings = FALSE)
 
 manifest <- fread(file.path(release_root, "model_input_manifest.tsv"))
-stopifnot(nrow(manifest) == 1L, manifest$n_genes == 23370L,
+# A corrected-control refit ships expected_counts.json; the adopted 2026-08-10
+# release has none, and these defaults are its values.
+expected_counts_path <- file.path(release_root, "expected_counts.json")
+expected <- if (file.exists(expected_counts_path)) {
+  jsonlite::fromJSON(expected_counts_path)
+} else {
+  list(n_genes = 23370L, n_control = 157L, n_disease = 687L,
+       fig3d_endpoint = list(n_total = 418L, n_cohorts = 4L, n_advanced = 303L, n_strict_control = 115L))
+}
+stopifnot(nrow(manifest) == 1L, manifest$n_genes == expected$n_genes,
           manifest$n_samples == 844L, manifest$n_cohorts == 5L,
-          manifest$n_control == 157L, manifest$n_disease == 687L)
+          manifest$n_control == expected$n_control, manifest$n_disease == expected$n_disease)
 dge_all <- readRDS(manifest$dge_path)
 meta_all <- as.data.table(readRDS(manifest$meta_path))
 meta <- meta_all[match(colnames(dge_all), sample_id)]
@@ -43,7 +52,14 @@ stopifnot(nrow(meta) == 844L, !anyNA(meta$sample_id),
 # the single source-label conflict. Cohorts must contribute >=5 to both arms.
 meta[, advanced := (!is.na(nas_score) & nas_score >= 5) |
                    (!is.na(fibrosis_stage) & fibrosis_stage >= 3)]
-meta[, strict_control := group_binary == "Control" &
+# Control status is the source label where a cohort has one (GSE130970 after
+# the 2026-09-23 correction); group_binary elsewhere.
+meta[, source_control := if ("source_control_status" %in% names(meta)) {
+  fifelse(!is.na(source_control_status), source_control_status == "Control", group_binary == "Control")
+} else {
+  group_binary == "Control"
+}]
+meta[, strict_control := source_control &
                          (is.na(nas_score) | nas_score <= 1) &
                          (is.na(fibrosis_stage) | fibrosis_stage <= 0)]
 meta[, endpoint_code := fifelse(advanced, "Advanced",
@@ -55,9 +71,11 @@ endpoint_meta <- copy(meta[dataset %in% eligible_cohorts & !is.na(endpoint_code)
 endpoint_meta[, endpoint := factor(endpoint_code,
   levels = c("StrictControl", "Advanced"), labels = c("Strict control", "Advanced disease"))]
 setorder(endpoint_meta, dataset, sample_id)
-stopifnot(nrow(endpoint_meta) == 418L, uniqueN(endpoint_meta$dataset) == 4L,
-          sum(endpoint_meta$endpoint_code == "Advanced") == 303L,
-          sum(endpoint_meta$endpoint_code == "StrictControl") == 115L,
+print(eligible_wide)
+stopifnot(nrow(endpoint_meta) == expected$fig3d_endpoint$n_total,
+          uniqueN(endpoint_meta$dataset) == expected$fig3d_endpoint$n_cohorts,
+          sum(endpoint_meta$endpoint_code == "Advanced") == expected$fig3d_endpoint$n_advanced,
+          sum(endpoint_meta$endpoint_code == "StrictControl") == expected$fig3d_endpoint$n_strict_control,
           !anyDuplicated(endpoint_meta$sample_id))
 
 endpoint_counts <- endpoint_meta[, .(
@@ -100,7 +118,7 @@ endpoint_de[, `:=`(
   treat_fdr = p.adjust(treat_tt[genes, "P.Value"], method = "BH")
 )]
 canonical <- fread(file.path(release_root, "deg_results.csv"))
-stopifnot(nrow(canonical) == 23370L, setequal(canonical$gene, endpoint_de$gene))
+stopifnot(nrow(canonical) == expected$n_genes, setequal(canonical$gene, endpoint_de$gene))
 endpoint_de[, symbol := canonical$symbol[match(gene, canonical$gene)]]
 fwrite(endpoint_de, file.path(analysis_dir, "endpoint_de_results.tsv.gz"), sep = "\t")
 
@@ -145,8 +163,8 @@ fwrite(metrics, file.path(analysis_dir, "endpoint_vs_canonical_metrics.tsv"), se
 # Per-cohort effects come from the synchronized stage-extension candidate; LOO
 # models are recomputed here from the exact 844-participant substrate.
 cohort_de <- fread(file.path(stage_extension_root, "cohort_disease_all_gene_results.tsv"))
-stopifnot(nrow(cohort_de) == 5L * 23370L,
-          all(cohort_de[, uniqueN(gene_id_versioned), by = dataset]$V1 == 23370L))
+stopifnot(nrow(cohort_de) == 5L * expected$n_genes,
+          all(cohort_de[, uniqueN(gene_id_versioned), by = dataset]$V1 == expected$n_genes))
 canonical_effects <- canonical[, .(gene, full_logFC = logFC, full_padj = padj,
                                    canonical_deg = padj < 0.05 & abs(logFC) > 0.5)]
 cohort_join <- merge(cohort_de, canonical_effects,

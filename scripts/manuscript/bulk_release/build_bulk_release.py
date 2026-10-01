@@ -22,6 +22,24 @@ from pathlib import Path
 
 RELEASE_ID = "2026-09-09-bulk-r1"
 N_GENES = 23_370
+# Pooled counts of the adopted 2026-09-09 release. A corrected-control refit
+# (scripts/manuscript/resource_f_five/refit_corrected_controls.R) ships
+# expected_counts.json in its pooled root, which replaces these.
+LEGACY_EXPECTED = {
+    "n_samples": 844,
+    "n_control": 157,
+    "n_disease": 687,
+    "n_genes": N_GENES,
+    "canonical": {"n": 1347, "up": 1003, "down": 344},
+    "treat": {"n": 1616, "up": 1144, "down": 472},
+}
+
+
+def load_expected(path: Path) -> dict:
+    """Expected counts from expected_counts.json, or the adopted-release values."""
+    if not path.is_file():
+        return LEGACY_EXPECTED
+    return json.loads(path.read_text())
 
 
 def sha256(path: Path) -> str:
@@ -37,8 +55,10 @@ def open_table(path: Path):
 
 
 def rows(path: Path):
+    # deg_results.csv is comma-separated; every other source table is TSV.
+    delimiter = "," if path.name.endswith(".csv") else "\t"
     with open_table(path) as handle:
-        yield from csv.DictReader(handle, delimiter="\t")
+        yield from csv.DictReader(handle, delimiter=delimiter)
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -67,16 +87,16 @@ def finite(value: str) -> float:
     return result
 
 
-def bh_max_error(data: list[dict[str, str]], p_col: str, q_col: str) -> float:
-    require(len(data) == N_GENES, f"BH family has {len(data)} rows, expected {N_GENES}")
+def bh_max_error(data: list[dict[str, str]], p_col: str, q_col: str, n_genes: int = N_GENES) -> float:
+    require(len(data) == n_genes, f"BH family has {len(data)} rows, expected {n_genes}")
     p_values = [finite(row[p_col]) for row in data]
     q_values = [finite(row[q_col]) for row in data]
-    order = sorted(range(N_GENES), key=p_values.__getitem__, reverse=True)
+    order = sorted(range(n_genes), key=p_values.__getitem__, reverse=True)
     running = 1.0
-    expected = [0.0] * N_GENES
+    expected = [0.0] * n_genes
     for rank_desc, index in enumerate(order, start=1):
-        rank_asc = N_GENES - rank_desc + 1
-        running = min(running, N_GENES * p_values[index] / rank_asc)
+        rank_asc = n_genes - rank_desc + 1
+        running = min(running, n_genes * p_values[index] / rank_asc)
         expected[index] = running
     return max(abs(observed - calculated) for observed, calculated in zip(q_values, expected))
 
@@ -107,28 +127,30 @@ def validate_manifested_directory(source_dir: Path, manifest_name: str = "output
         require(sha256(artifact) == row["sha256"], f"Manifest hash mismatch: {artifact}")
 
 
-def validate_pooled(path: Path) -> dict[str, object]:
+def validate_pooled(path: Path, expected: dict = LEGACY_EXPECTED) -> dict[str, object]:
     data = read_rows(path)
-    require(len(data) == N_GENES, f"Pooled table has {len(data)} rows, expected {N_GENES}")
+    n_genes = expected["n_genes"]
+    require(len(data) == n_genes, f"Pooled table has {len(data)} rows, expected {n_genes}")
     genes = [row["gene"] for row in data]
-    require(len(set(genes)) == N_GENES, "Pooled table duplicates a versioned gene")
+    require(len(set(genes)) == n_genes, "Pooled table duplicates a versioned gene")
     primary = [row for row in data if finite(row["padj"]) < 0.05 and abs(finite(row["logFC"])) > 0.50]
     treat = [row for row in data if finite(row["treat_fdr"]) < 0.05]
-    require(len(primary) == 1347, f"Primary pooled DEG count is {len(primary)}, expected 1347")
-    require(sum(finite(row["logFC"]) > 0 for row in primary) == 1003, "Pooled up-DEG count drift")
-    require(sum(finite(row["logFC"]) < 0 for row in primary) == 344, "Pooled down-DEG count drift")
-    require(len(treat) == 1616, f"TREAT pooled DEG count is {len(treat)}, expected 1616")
-    require(sum(finite(row["logFC"]) > 0 for row in treat) == 1144, "TREAT up-DEG count drift")
-    require(sum(finite(row["logFC"]) < 0 for row in treat) == 472, "TREAT down-DEG count drift")
+    canonical, treat_expected = expected["canonical"], expected["treat"]
+    require(len(primary) == canonical["n"], f"Primary pooled DEG count is {len(primary)}, expected {canonical['n']}")
+    require(sum(finite(row["logFC"]) > 0 for row in primary) == canonical["up"], "Pooled up-DEG count drift")
+    require(sum(finite(row["logFC"]) < 0 for row in primary) == canonical["down"], "Pooled down-DEG count drift")
+    require(len(treat) == treat_expected["n"], f"TREAT pooled DEG count is {len(treat)}, expected {treat_expected['n']}")
+    require(sum(finite(row["logFC"]) > 0 for row in treat) == treat_expected["up"], "TREAT up-DEG count drift")
+    require(sum(finite(row["logFC"]) < 0 for row in treat) == treat_expected["down"], "TREAT down-DEG count drift")
     return {
-        "pooled_point_null_max_abs_BH_error": bh_max_error(data, "P.Value", "padj"),
-        "pooled_treat_max_abs_BH_error": bh_max_error(data, "treat_p", "treat_fdr"),
+        "pooled_point_null_max_abs_BH_error": bh_max_error(data, "P.Value", "padj", n_genes),
+        "pooled_treat_max_abs_BH_error": bh_max_error(data, "treat_p", "treat_fdr", n_genes),
         "pooled_primary_degs": len(primary),
         "pooled_treat_degs": len(treat),
     }
 
 
-def validate_stage(path: Path) -> dict[str, object]:
+def validate_stage(path: Path, n_genes: int = N_GENES) -> dict[str, object]:
     grouped: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
     for row in rows(path):
         key = (row["axis"], row["contrast"])
@@ -139,10 +161,10 @@ def validate_stage(path: Path) -> dict[str, object]:
     audits = []
     for (axis, contrast), family in sorted(grouped.items()):
         genes = [row["gene_id_versioned"] for row in family]
-        require(len(set(genes)) == N_GENES, f"Duplicate or missing genes in {axis}/{contrast}")
+        require(len(set(genes)) == n_genes, f"Duplicate or missing genes in {axis}/{contrast}")
         require(all(finite(row["CI_low"]) <= finite(row["logFC"]) <= finite(row["CI_high"]) for row in family),
                 f"Invalid pointwise interval in {axis}/{contrast}")
-        error = bh_max_error(family, "P.Value", "FDR")
+        error = bh_max_error(family, "P.Value", "FDR", n_genes)
         require(error < 1e-10, f"BH mismatch in {axis}/{contrast}: {error}")
         template = family[0]
         audits.append({
@@ -160,32 +182,46 @@ def validate_stage(path: Path) -> dict[str, object]:
     return {"stage_families": len(grouped), "stage_audits": audits}
 
 
-def validate_f0(path: Path, summary_path: Path) -> dict[str, object]:
+def validate_f0(path: Path, summary_path: Path, expected: dict = LEGACY_EXPECTED) -> dict[str, object]:
+    n_genes = expected["n_genes"]
+    legacy = "f0_reference" not in expected
     grouped: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
     for row in rows(path):
         grouped[(row["arm"], row["contrast"])].append(row)
-    require(len(grouped) == 23, f"F0 sensitivity has {len(grouped)} estimable fits, expected 23")
+    if legacy:
+        require(len(grouped) == 23, f"F0 sensitivity has {len(grouped)} estimable fits, expected 23")
     audits = []
     for (arm, contrast), family in sorted(grouped.items()):
-        require(len({row["gene_id_versioned"] for row in family}) == N_GENES,
+        require(len({row["gene_id_versioned"] for row in family}) == n_genes,
                 f"F0 sensitivity family is incomplete: {arm}/{contrast}")
         require(all(finite(row["CI_low"]) <= finite(row["logFC"]) <= finite(row["CI_high"]) for row in family),
                 f"Invalid F0 sensitivity interval: {arm}/{contrast}")
-        error = bh_max_error(family, "P.Value", "FDR")
+        error = bh_max_error(family, "P.Value", "FDR", n_genes)
         require(error < 1e-10, f"F0 sensitivity BH mismatch: {arm}/{contrast}")
         audits.append({"analysis": "F0_sensitivity", "axis": "fibrosis", "contrast": contrast,
                        "arm": arm, "n_genes": len(family), "max_abs_BH_error": f"{error:.3g}"})
     summary = {(row["arm"], row["contrast"]): row for row in rows(summary_path)}
-    expected = {
-        ("A_all_F0", "F0_to_F1"): (1471, 31, 73),
-        ("B_disease_only_F0", "F0_to_F1"): (7, 0, 73),
-        ("C_all_F0_plus_term", "F0_to_F1"): (258, 31, 73),
-    }
-    for key, values in expected.items():
-        require(key in summary, f"Missing F0 summary row: {key}")
-        observed = summary[key]
-        require((int(observed["n_BH_sig"]), int(observed["n_ref_control"]), int(observed["n_ref_disease"])) == values,
-                f"F0 sensitivity summary drift for {key}")
+    if legacy:
+        reference = {
+            ("A_all_F0", "F0_to_F1"): (1471, 31, 73),
+            ("B_disease_only_F0", "F0_to_F1"): (7, 0, 73),
+            ("C_all_F0_plus_term", "F0_to_F1"): (258, 31, 73),
+        }
+        for key, values in reference.items():
+            require(key in summary, f"Missing F0 summary row: {key}")
+            observed = summary[key]
+            require((int(observed["n_BH_sig"]), int(observed["n_ref_control"]), int(observed["n_ref_disease"])) == values,
+                    f"F0 sensitivity summary drift for {key}")
+    else:
+        # A corrected refit fixes the F0 reference composition from its labels;
+        # the DEG counts are outcomes of this run, reported, not asserted.
+        for arm, counts in expected["f0_reference"].items():
+            key = (arm, "F0_to_F1")
+            require(key in summary, f"Missing F0 summary row: {key}")
+            observed = summary[key]
+            require((int(observed["n_ref_control"]), int(observed["n_ref_disease"])) ==
+                    (counts["n_ref_control"], counts["n_ref_disease"]),
+                    f"F0 reference composition drift for {key}")
     require(("C_all_F0_plus_term", "F3_to_F4") not in grouped,
             "Non-estimable F3-to-F4 control-status sensitivity must remain unavailable")
     return {"f0_families": len(grouped), "f0_audits": audits}
@@ -258,10 +294,15 @@ def main() -> None:
     parser.add_argument("--figure-candidate", type=Path, required=True)
     parser.add_argument("--fig3g", type=Path, required=True)
     parser.add_argument("--fig4-candidate", type=Path, required=True)
+    parser.add_argument("--release-id", default=RELEASE_ID)
     args = parser.parse_args()
+    release_id = args.release_id
+    expected_path = args.pooled / "expected_counts.json"
+    expected = load_expected(expected_path)
+    n_genes = expected["n_genes"]
 
     output = args.output.resolve()
-    require(output.name == RELEASE_ID, f"Bulk release ID must be {RELEASE_ID}")
+    require(output.name == release_id, f"Bulk release ID must be {release_id}")
     require(not output.exists(), f"Refusing to overwrite named release: {output}")
     for source in (args.pooled, args.stage, args.f0, args.composition, args.lncrna,
                    args.lncrna_biotype, args.figure_candidate, args.fig3g, args.fig4_candidate):
@@ -276,9 +317,9 @@ def main() -> None:
     validate_manifested_directory(args.stage)
     validate_manifested_directory(args.lncrna)
     validate_manifested_directory(args.lncrna_biotype)
-    pooled_checks = validate_pooled(pooled)
-    stage_checks = validate_stage(stage)
-    f0_checks = validate_f0(f0, f0_summary)
+    pooled_checks = validate_pooled(pooled, expected)
+    stage_checks = validate_stage(stage, n_genes)
+    f0_checks = validate_f0(f0, f0_summary, expected)
     comp_summary = composition_summaries(args.composition, stage_samples)
 
     figure_pdfs = [
@@ -303,7 +344,8 @@ def main() -> None:
         inventory.append(record)
 
     for name in ["deg_results.csv", "treat_table.tsv.gz", "model_design.tsv", "model_input_manifest.tsv",
-                 "VALIDATED.json", "validation/validation_report.json", "validation/validation_checks.tsv"]:
+                 "VALIDATED.json", "validation/validation_report.json", "validation/validation_checks.tsv"] + (
+                     ["expected_counts.json"] if expected_path.is_file() else []):
         add(args.pooled / name, f"artifacts/pooled/{Path(name).name}", "five-cohort pooled disease-versus-control", "one selected biopsy record", "adopted_bulk_only")
     for name in ["stage_extension_all_gene_results.tsv", "stage_all_gene_results.tsv", "stage_extension_design_audit.tsv",
                  "stage_extension_sample_manifest.tsv", "stage_sample_manifest.tsv", "five_cohort_sample_manifest.tsv",
@@ -363,7 +405,7 @@ def main() -> None:
                [dict(row, arm="") for row in stage_checks["stage_audits"]] +
                [dict(row, n_reference="", n_comparison="", n_cohorts="", bh_family_size="", intervals="") for row in f0_checks["f0_audits"]])
     checks = {
-        "release_id": RELEASE_ID,
+        "release_id": release_id,
         "status": "PASS",
         "pooled": pooled_checks,
         "stage_families": stage_checks["stage_families"],
@@ -375,13 +417,13 @@ def main() -> None:
     (output / "validation/validation_report.json").parent.mkdir(parents=True, exist_ok=True)
     (output / "validation/validation_report.json").write_text(json.dumps(checks, indent=2) + "\n")
     manifest = [{
-        "release_id": RELEASE_ID,
+        "release_id": release_id,
         "release_state": "adopted_bulk_only",
         "scope": "five_cohort_bulk_dependents",
-        "pooled_samples": "844",
-        "controls": "157",
-        "disease": "687",
-        "tested_genes": str(N_GENES),
+        "pooled_samples": str(expected["n_samples"]),
+        "controls": str(expected["n_control"]),
+        "disease": str(expected["n_disease"]),
+        "tested_genes": str(n_genes),
         "resource_synchronized_release": "pending",
     }]
     write_rows(output / "release_manifest.tsv", list(manifest[0]), manifest)

@@ -41,8 +41,16 @@ if (!file.exists(stage_validation) || !file.exists(model_manifest_path) ||
   fail("STAGE_RELEASE_ROOT must be the validated five-cohort fragment release")
 }
 model_manifest <- fread(model_manifest_path)
+# A corrected-control refit ships expected_counts.json beside its manifest; the
+# adopted 2026-08-10 release has none and keeps its 23,370-gene universe.
+expected_counts_path <- file.path(stage_root, "expected_counts.json")
+n_genes_expected <- if (file.exists(expected_counts_path)) {
+  jsonlite::fromJSON(expected_counts_path)$n_genes
+} else {
+  23370L
+}
 if (nrow(model_manifest) != 1L || model_manifest$n_cohorts != 5L ||
-    model_manifest$n_samples != 844L || model_manifest$n_genes != 23370L) {
+    model_manifest$n_samples != 844L || model_manifest$n_genes != n_genes_expected) {
   fail("Five-cohort model-input contract drift")
 }
 
@@ -61,7 +69,7 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 if (!dir.exists(out_root)) fail("Cannot create output root")
 
 dge_all <- readRDS(dge_path)
-if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(23370L, 844L))) {
+if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(as.integer(n_genes_expected), 844L))) {
   fail("Five-cohort corrected fragment DGE identity drift")
 }
 stage_annotation <- fread(annotation_path)[, .(

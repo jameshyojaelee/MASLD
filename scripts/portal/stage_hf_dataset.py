@@ -171,8 +171,8 @@ Backing data for the MASLD atlas web portal (Hugging Face Static Space). A
 **human-only** metabolic-dysfunction-associated steatotic liver disease (MASLD)
 transcriptomic and multi-omic MASLD Gene Catalog. Disease effects are framed in human
 tissue only; **cross-ancestry** genetics (EUR / AFR / EAS / AMR / SAS) is
-first-class. Mouse content is retained solely for the Cas13 perturbation-library
-design and is never used to make disease claims.
+first-class. Mouse content belongs to the separate experimental follow-up
+study and is never used to make Resource disease claims.
 
 Generated: {gen}. Column names in the parquet files are data (kept verbatim);
 UI labels never reproduce internal statistical shorthand.

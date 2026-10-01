@@ -28,10 +28,12 @@ sha256 <- function(path) {
   strsplit(value[[1]], "[[:space:]]+")[[1]][[1]]
 }
 
-source_path <- file.path(
+# FIG4E_TRANSPORT_SOURCE: an annotated transport table from another stage
+# release (run_fig4e_corrected_controls.sbatch); default is the adopted one.
+source_path <- Sys.getenv("FIG4E_TRANSPORT_SOURCE", file.path(
   BASE,
   "figures/main/fig4_singlecell_programs/source_tables/current_candidate/fig4e_bulk_tissue_state_transport.tsv"
-)
+))
 theme_path <- file.path(BASE, "scripts/figures/publication_theme.R")
 inputs <- data.table(
   role = c("bulk_transport_input", "theme"),

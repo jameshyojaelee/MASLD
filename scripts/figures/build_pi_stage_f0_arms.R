@@ -1,24 +1,26 @@
 #!/usr/bin/env Rscript
 # KEY MESSAGE: The F0 reference in the adjacent-fibrosis contrasts is a mixture of
-# source controls and F0 disease biopsies, and the mixture is nested in cohort, so
-# the cohort term cannot absorb it. This runs the same contrasts three ways.
+# source controls and F0 disease biopsies, and the mixture differs by cohort. This
+# runs the same contrasts three ways.
 #
-# The F0 group is 104 participants:
+# The F0 group is 104 participants. With the corrected GSE130970 labels
+# (review item 1, 2026-09-23; Hoang 2019 source controls):
 #
-#   GSE130970   23 controls,  0 disease     (fibrosis_stage == 0 IS the control label)
+#   GSE130970    6 controls, 17 disease     (the 2026-08 release had 23 controls, 0
+#                                            disease: fibrosis_stage == 0 was used
+#                                            as the control label)
 #   GSE135251    8 controls, 38 disease
 #   GSE162694    0 controls, 35 disease     (its controls carry fibrosis_stage = NA
 #                                            and are excluded upstream)
 #
-# So F0 -> F1 is a control-versus-disease contrast inside GSE130970 and a
-# disease-stage contrast inside GSE162694. Because control status is nested in
-# cohort, `dataset` cannot separate the two. The 1,471 F0-to-F1 genes and the
-# GNMT and MAT1A F0-to-F1 effects are therefore partly disease-versus-control.
+# Control status is the source label (`source_control_status`) where the cohort
+# has one, and group_binary elsewhere. Metadata without that column (the adopted
+# 2026-08-10 release) reproduces the earlier arms exactly.
 #
-# This is a perspective the existing analysis does not report, not a refutation of
-# it. Arm A reproduces the published contrasts unchanged. Arm B removes the source
-# controls. Arm C keeps them and adds a control-status term. All three are written
-# side by side so a reader can see what the reference is doing.
+# Arm A keeps every F0 biopsy. Arm B drops the source controls from F0 (source-
+# disease-only F0). Arm C keeps them and adds a control-status term where it is
+# estimable. All three are written side by side so a reader can see what the
+# reference is doing.
 #
 # It also fixes a real defect in the adopted producer: at
 # scripts/figures/build_pi_stage_extensions.R:112, `critical <- qt(0.975, df =
@@ -27,7 +29,9 @@
 # extension output is therefore NA -- 257,070 of them. Point estimates,
 # p-values and BH values were unaffected.
 #
-# Env: MASLD_PROJECT_ROOT, FIGURE_CANDIDATE_ROOT (must not exist), STAGE_RELEASE_ROOT.
+# Env: MASLD_PROJECT_ROOT, FIGURE_CANDIDATE_ROOT (must not exist), STAGE_RELEASE_ROOT
+# (a validated five-cohort root; a corrected-control refit also ships
+# expected_counts.json, which sets the gene-universe size).
 
 suppressPackageStartupMessages({library(data.table); library(edgeR); library(limma)})
 options(digits = 17, scipen = 999)
@@ -48,10 +52,16 @@ if (file.exists(candidate_root)) fail("FIGURE_CANDIDATE_ROOT must not exist: ", 
 
 # same contract as the adopted producer
 mm <- fread(file.path(stage_root, "model_input_manifest.tsv"))
-if (nrow(mm) != 1L || mm$n_cohorts != 5L || mm$n_samples != 844L || mm$n_genes != 23370L)
+expected_counts_path <- file.path(stage_root, "expected_counts.json")
+n_genes_expected <- if (file.exists(expected_counts_path)) {
+  as.integer(jsonlite::fromJSON(expected_counts_path)$n_genes)
+} else {
+  23370L
+}
+if (nrow(mm) != 1L || mm$n_cohorts != 5L || mm$n_samples != 844L || mm$n_genes != n_genes_expected)
   fail("Five-cohort model-input contract drift")
 dge_all <- readRDS(normalizePath(mm$dge_path, mustWork = TRUE))
-if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(23370L, 844L)))
+if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(n_genes_expected, 844L)))
   fail("Five-cohort DGE identity drift")
 ann <- fread(normalizePath(mm$gene_metadata_path, mustWork = TRUE))[, .(
   gene_id_versioned = gene_id, gene_id_base = ensembl_base, gene_name)]
@@ -67,13 +77,17 @@ out_root <- file.path(candidate_root, "analysis", "f0_arms")
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 
 # ---------------------------------------------------------------- the F0 audit
+if (!"source_control_status" %in% names(elig)) elig[, source_control_status := NA_character_]
+elig[, control_status := fifelse(!is.na(source_control_status),
+                                 fifelse(source_control_status == "Control", "Control", "Disease"),
+                                 group_binary)]
 stage <- elig[dataset %in% c("GSE130970", "GSE135251", "GSE162694") & fibrosis_stage %in% 0:4,
-              .(sample_id, dataset, fibrosis_stage, inferred_sex, group_binary, nas_score)]
+              .(sample_id, dataset, fibrosis_stage, inferred_sex, group_binary, control_status, nas_score)]
 stage[, fib_group := paste0("F", fibrosis_stage)]
-audit <- stage[, .N, by = .(fib_group, dataset, group_binary)][order(fib_group, dataset)]
+audit <- stage[, .N, by = .(fib_group, dataset, control_status, group_binary)][order(fib_group, dataset)]
 write_tsv_once(audit, file.path(out_root, "f0_composition_audit.tsv"))
 cat("\n=== composition of every fibrosis group by cohort and control status ===\n")
-print(dcast(audit, fib_group + dataset ~ group_binary, value.var = "N", fill = 0L))
+print(dcast(audit, fib_group + dataset ~ control_status, value.var = "N", fun.aggregate = sum, fill = 0L))
 
 # ---------------------------------------------------------------- fitting
 fit_contrast <- function(tab, ref, cmp, contrast_id, arm, add_group_binary = FALSE) {
@@ -90,7 +104,7 @@ fit_contrast <- function(tab, ref, cmp, contrast_id, arm, add_group_binary = FAL
                      group = sel$group, row.names = sel$sample_id)
   covs <- "dataset+inferred_sex"
   if (add_group_binary) {
-    gb <- droplevels(factor(sel$group_binary))
+    gb <- droplevels(factor(sel$control_status))
     if (nlevels(gb) < 2L) {
       cat(sprintf("  [skip] %s / %s: control status is constant\n", arm, contrast_id)); return(NULL)
     }
@@ -124,8 +138,8 @@ fit_contrast <- function(tab, ref, cmp, contrast_id, arm, add_group_binary = FAL
     AveExpr = tt[g, "AveExpr"],
     arm = arm, contrast = contrast_id, reference = ref, comparison = cmp,
     n_reference = sum(sel$group == ref), n_comparison = sum(sel$group == cmp),
-    n_ref_control = sum(sel$group == ref & sel$group_binary == "Control"),
-    n_ref_disease = sum(sel$group == ref & sel$group_binary == "Disease"),
+    n_ref_control = sum(sel$group == ref & sel$control_status == "Control"),
+    n_ref_disease = sum(sel$group == ref & sel$control_status == "Disease"),
     n_cohorts = uniqueN(sel$dataset), covariates = covs,
     bh_family_size = nrow(dge)))
   if (nrow(res) != nrow(dge_all) ||
@@ -139,7 +153,7 @@ vs0 <- paste0("F", 1:4)
 
 arms <- list(
   A_all_F0            = list(tab = copy(stage), gb = FALSE),
-  B_disease_only_F0   = list(tab = stage[!(fib_group == "F0" & group_binary == "Control")], gb = FALSE),
+  B_disease_only_F0   = list(tab = stage[!(fib_group == "F0" & control_status == "Control")], gb = FALSE),
   C_all_F0_plus_term  = list(tab = copy(stage), gb = TRUE))
 
 all_res <- list()
@@ -148,8 +162,8 @@ for (arm in names(arms)) {
   a <- arms[[arm]]
   cat(sprintf("  F0 n = %d (%d control, %d disease)\n",
       sum(a$tab$fib_group == "F0"),
-      sum(a$tab$fib_group == "F0" & a$tab$group_binary == "Control"),
-      sum(a$tab$fib_group == "F0" & a$tab$group_binary == "Disease")))
+      sum(a$tab$fib_group == "F0" & a$tab$control_status == "Control"),
+      sum(a$tab$fib_group == "F0" & a$tab$control_status == "Disease")))
   for (p in adjacent) {
     r <- fit_contrast(a$tab, p[1], p[2], paste0(p[1], "_to_", p[2]), arm, a$gb)
     if (!is.null(r)) all_res[[length(all_res) + 1L]] <- r

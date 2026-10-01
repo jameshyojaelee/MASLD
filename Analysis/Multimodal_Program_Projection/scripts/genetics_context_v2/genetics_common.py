@@ -18,10 +18,12 @@ from typing import Iterable, Iterator, Mapping, Sequence
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parents[3]
-OWNED_ROOT_REL = Path(
+# GEN_CONTEXT_ROOT_REL relocates the owned root for a rerun on new inputs.
+OWNED_ROOT_REL = Path(os.environ.get(
+    "GEN_CONTEXT_ROOT_REL",
     "Analysis/Multimodal_Program_Projection/candidates/"
-    "program-context-v2-candidate-2026-08-07/genetics_context"
-)
+    "program-context-v2-candidate-2026-08-07/genetics_context",
+))
 DEFAULT_CANDIDATE_ROOT = PROJECT_ROOT / OWNED_ROOT_REL
 
 FORBIDDEN_ROOTS_REL = (

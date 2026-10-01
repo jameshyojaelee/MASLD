@@ -2627,8 +2627,7 @@ def finalize_pass06(
                 "promotion_allowed": "false",
                 "build_command": (
                     "python scripts/portal/build_evidence_passport_bundle.py "
-                    "--selection RNA-seq/results/evidence_passports/candidates/"
-                    "program-context-v2-candidate-2026-08-07/passport_input_selection.tsv"
+                    f"--selection {contract.CANDIDATE_REL.as_posix()}/passport_input_selection.tsv"
                 ),
                 "environment": f"spatial:pandas-{pd.__version__}",
                 "scientific_call_recomputed": "false",

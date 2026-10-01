@@ -10,10 +10,16 @@
 #SBATCH --error=logs/f0_arms_%j.err
 set -euo pipefail
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
-source /etc/profile.d/modules.sh
-module load R
 export MASLD_PROJECT_ROOT=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
-export STAGE_RELEASE_ROOT="$MASLD_PROJECT_ROOT/RNA-seq/results/manuscript_release/candidates/resource-f-five-coloc-v6-candidate-2026-08-10/workstreams/BULK-POOLED-REPRO"
-export FIGURE_CANDIDATE_ROOT="$MASLD_PROJECT_ROOT/figures/candidates/f0-reference-arms-20260907T105813Z"
-Rscript scripts/figures/build_pi_stage_f0_arms.R
+# Defaults are the 2026-09-07 run. The corrected-control chain passes both roots
+# and the rnaseq Rscript (same R/limma as the refit it reads).
+export STAGE_RELEASE_ROOT="${STAGE_RELEASE_ROOT:-$MASLD_PROJECT_ROOT/RNA-seq/results/manuscript_release/candidates/resource-f-five-coloc-v6-candidate-2026-08-10/workstreams/BULK-POOLED-REPRO}"
+export FIGURE_CANDIDATE_ROOT="${FIGURE_CANDIDATE_ROOT:-$MASLD_PROJECT_ROOT/figures/candidates/f0-reference-arms-20260907T105813Z}"
+if [[ -n "${RSCRIPT:-}" ]]; then
+  "${RSCRIPT}" --vanilla scripts/figures/build_pi_stage_f0_arms.R
+else
+  source /etc/profile.d/modules.sh
+  module load R
+  Rscript scripts/figures/build_pi_stage_f0_arms.R
+fi
 echo "F0_ARMS_JOB_COMPLETE"

@@ -97,6 +97,10 @@ strand_verdict_vs_panel <- function(obs_af, panel_af) {
       fifelse((d_same - d_opp) >= AF_PAL_MARGIN, "opposite", NA_character_)))
 }
 
+# Shared-posterior eligibility of SuSiE signal pairs (coloc 5.2.3 overlap.min
+# check, replicated so dropped pairs are recorded too). See that file's header.
+source(file.path(FM_DIR, "src/coloc_signal_eligibility.R"))
+
 cat("Versions: coloc", as.character(packageVersion("coloc")),
     "| susieR", as.character(packageVersion("susieR")),
     "| data.table", as.character(packageVersion("data.table")), "\n")
@@ -138,9 +142,25 @@ study_row <- registry[registry$study_name == gwas_name, ]
 if (nrow(study_row) == 0) stop(paste("GWAS", gwas_name, "not found in registry"))
 
 # registry validated -> now safe to create the output dir + resolve the output path
+# COLOC_OUT_ROOT (optional) sends a rerun to its own root, e.g.
+# results/susie_coloc_eligibility_<ts>/, instead of results/susie_coloc<suffix>/.
+COLOC_OUT_ROOT <- Sys.getenv("COLOC_OUT_ROOT", unset = "")
+if (COLOC_OUT_ROOT != "") {
+  if (normalizePath(COLOC_OUT_ROOT, mustWork = FALSE) ==
+      normalizePath(file.path(FM_DIR, "results/susie_coloc"), mustWork = FALSE)) {
+    stop("COLOC_OUT_ROOT must not be the adopted results/susie_coloc/")
+  }
+  OUT_DIR <- file.path(COLOC_OUT_ROOT, gwas_name)
+} else {
 OUT_DIR <- file.path(FM_DIR, paste0("results/susie_coloc", OUT_SUFFIX), gwas_name)
+}
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 out_file <- file.path(OUT_DIR, paste0("susie_coloc_chr", chr_num, ".csv"))
+# One row per SuSiE signal pair (GWAS CS x eQTL CS), including pairs coloc drops.
+pairs_suffix <- if (as.integer(Sys.getenv("N_WORKERS", unset = "1")) > 1) {
+  paste0("_w", Sys.getenv("WORKER_ID", unset = "0"))
+} else ""
+pairs_file <- file.path(OUT_DIR, paste0("susie_coloc_pairs_chr", chr_num, pairs_suffix, ".tsv"))
 
 gwas_path <- study_row$sumstats_path
 # Prefer the allele-frequency-augmented copy when available. It is a LEFT-JOIN of
@@ -267,6 +287,24 @@ if (!file.exists(eqtl_file)) stop(paste("eQTL file not found:", eqtl_file))
 eqtl_all <- fread(eqtl_file)
 egenes <- unique(eqtl_all$ENSG)
 cat("  eQTL variants:", nrow(eqtl_all), " | eGenes:", length(egenes), "\n")
+# COLOC_GENE_FILTER (optional): TSV with gwas_name, chr, ensembl. Restricts this
+# task to the listed genes for this study and chromosome (targeted reruns).
+COLOC_GENE_FILTER <- Sys.getenv("COLOC_GENE_FILTER", unset = "")
+if (COLOC_GENE_FILTER != "") {
+  if (!file.exists(COLOC_GENE_FILTER)) stop("COLOC_GENE_FILTER not found: ", COLOC_GENE_FILTER)
+  gene_filter <- fread(COLOC_GENE_FILTER, colClasses = list(character = c("gwas_name", "ensembl")))
+  if (!all(c("gwas_name", "chr", "ensembl") %in% names(gene_filter))) {
+    stop("COLOC_GENE_FILTER requires columns gwas_name, chr, ensembl")
+  }
+  filter_ids <- unique(gene_filter$ensembl[gene_filter$gwas_name == gwas_name &
+                                           gene_filter$chr == chr_num])
+  missing_ids <- setdiff(filter_ids, egenes)
+  if (length(filter_ids) == 0L) stop("COLOC_GENE_FILTER lists no genes for this study and chromosome")
+  if (length(missing_ids)) stop("COLOC_GENE_FILTER genes absent from the eQTL table: ",
+                                paste(head(missing_ids), collapse = ","))
+  egenes <- intersect(egenes, filter_ids)
+  cat("  Gene filter:", length(egenes), "eGenes kept\n")
+}
 
 # Pre-compute GWAS merge keys once
 gwas[, merge_key := paste(chromosome, position, sep = ":")]
@@ -320,7 +358,17 @@ n_susie_ok      <- 0L
 n_abf_fallback  <- 0L
 n_ld_fail       <- 0L
 
+n_susie_untestable <- 0L   # every signal pair failed the shared-posterior check
+n_elig_mismatch    <- 0L   # genes where our eligibility call disagrees with coloc's
+
 results <- vector("list", length(egenes))
+pair_rows <- vector("list", length(egenes))
+# Pair rows of resumed genes were written with the checkpoint that recorded them.
+resumed_pairs <- NULL
+if (length(done_genes) > 0 && file.exists(pairs_file)) {
+  resumed_pairs <- tryCatch(fread(pairs_file), error = function(e) NULL)
+  if (!is.null(resumed_pairs)) resumed_pairs <- resumed_pairs[ensembl %in% done_genes]
+}
 n_tested <- 0L
 n_skipped <- 0L
 n_resumed <- 0L
@@ -594,6 +642,7 @@ for (i in seq_along(egenes)) {
   susie_pp3    <- NA_real_
   susie_method <- "abf_only"
   n_cs_pairs   <- NA_integer_
+  n_cs_pairs_eligible <- NA_integer_
   susie_lambda_s <- NA_real_   # C4: per-gene GWAS-side LD-consistency (estimate_s_rss)
 
   eqtl_rds <- file.path(EQTL_SUSIE_DIR, paste0("chr", chr_num),
@@ -692,32 +741,53 @@ for (i in seq_along(egenes)) {
           # susie_rss() solution yields unreliable PIPs that propagate into a
           # spurious coloc.susie() PP.H4. Require convergence before colocalizing.
           if (!is.null(s_gwas) && isTRUE(s_gwas$converged)) {
-            # Subset eQTL SuSiE to SNPs shared with GWAS LD set
-            common_snps <- intersect(snp_ids, colnames(s_eqtl$lbf_variable))
+            # coloc.susie() matches the two fits by lbf_variable column names,
+            # so both must carry the same "CHR:POS" ids.
+            if (!identical(colnames(s_gwas$lbf_variable), snp_ids)) {
+              stop("GWAS SuSiE lbf_variable columns are not the CHR:POS snp_ids")
+            }
+            if (!all(grepl("^[0-9]+:[0-9]+$", eqtl_snp_ids))) {
+              stop("eQTL SuSiE lbf_variable columns are not CHR:POS ids")
+            }
+            common_snps <- intersect(snp_ids, eqtl_snp_ids)
 
             if (length(common_snps) >= MIN_TRIPLE_SNPS) {
-              s_eqtl_sub <- s_eqtl
-              s_eqtl_sub$lbf_variable <- s_eqtl$lbf_variable[
-                , common_snps, drop = FALSE]
-
-              s_gwas_sub <- s_gwas
-              s_gwas_sub$lbf_variable <- s_gwas$lbf_variable[
-                , common_snps, drop = FALSE]
-
+              # FULL fits, so coloc's overlap.min check sees each signal's whole
+              # posterior (src/coloc_signal_eligibility.R). For pairs that pass,
+              # coloc.bf_bf() restricts both rows to the shared SNPs itself, so
+              # their PP.H4 is the value the former pre-subset call returned.
               set.seed(42)  # C7 reproducibility (2026-07-05): deterministic coloc.susie
               susie_res <- tryCatch(
-                coloc.susie(s_gwas_sub, s_eqtl_sub),
+                coloc.susie(s_gwas, s_eqtl),
                 error = function(e) NULL
               )
 
               if (!is.null(susie_res) && !is.null(susie_res$summary) &&
                   nrow(susie_res$summary) > 0 &&
                   "PP.H4.abf" %in% names(susie_res$summary)) {
-                best_row   <- susie_res$summary[which.max(susie_res$summary$PP.H4.abf), ]
-                susie_pp4  <- best_row$PP.H4.abf
-                susie_pp3  <- best_row$PP.H3.abf
-                n_cs_pairs <- nrow(susie_res$summary)
-                susie_method <- "susie"
+                # Every GWAS CS x eQTL CS pair, with the shares coloc tested.
+                pair_tab <- coloc_susie_pair_table(s_gwas, s_eqtl, susie_res)
+                if (!pair_tab$matches_coloc) {
+                  n_elig_mismatch <- n_elig_mismatch + 1L
+                  cat("  ELIGIBILITY MISMATCH with coloc for", gene_id, "\n")
+                }
+                kept <- pair_tab$kept
+                pair_rows[[i]] <- cbind(
+                  data.table(gene = gene_symbol, ensembl = gene_id, chr = chr_num,
+                             gwas = gwas_name),
+                  pair_tab$pairs)
+                n_cs_pairs          <- nrow(pair_tab$pairs)
+                n_cs_pairs_eligible <- sum(pair_tab$pairs$eligible %in% TRUE)
+
+                if (coloc_susie_method(kept) == "susie") {
+                  best_row   <- kept[which.max(kept$PP.H4.abf), ]
+                  susie_pp4  <- best_row$PP.H4.abf
+                  susie_pp3  <- best_row$PP.H3.abf
+                  susie_method <- "susie"
+                } else {
+                  # Not PP4-negative: no signal pair can be tested on these SNPs.
+                  susie_method <- coloc_susie_method(kept)
+                }
               }
             }
           }
@@ -732,14 +802,16 @@ for (i in seq_along(egenes)) {
     # Free LD/SuSiE objects from this iteration to keep memory bounded
     rm(list = intersect(ls(), c("ld_result", "ss_ld", "R_mat", "R_reg",
        "s_gwas", "s_eqtl", "s_eqtl_sub", "s_gwas_sub", "susie_res",
-       "ss_for_ld", "gwas_sub")))
+       "ss_for_ld", "gwas_sub", "pair_tab", "kept")))
     if (i %% 100 == 0) gc(verbose = FALSE)
 
     if (susie_method == "abf_only") {
       susie_method <- "abf_fallback"
       n_abf_fallback <- n_abf_fallback + 1L
-    } else {
+    } else if (susie_method == "susie") {
       n_susie_ok <- n_susie_ok + 1L
+    } else {
+      n_susie_untestable <- n_susie_untestable + 1L
     }
   }
   # susie_method stays "abf_only" when no eQTL .rds exists (no attempt made)
@@ -770,7 +842,8 @@ for (i in seq_along(egenes)) {
     method      = susie_method,
     lambda_s_locus = susie_lambda_s,  # C4: GWAS-side LD-consistency for this gene's cis-region
     top_snp     = top_snp,
-    top_snp_PP  = top_snp_pp
+    top_snp_PP  = top_snp_pp,
+    n_cs_pairs_eligible = n_cs_pairs_eligible  # pairs passing coloc's shared-posterior check
   )
 
   # Progress + checkpoint every 200 genes
@@ -798,6 +871,8 @@ for (i in seq_along(egenes)) {
         new_dt <- new_dt[!duplicated(ensembl)]
       }
       fwrite(new_dt, chk_out)
+      fwrite(rbindlist(c(list(resumed_pairs), pair_rows), fill = TRUE),
+             pairs_file, sep = "\t")
     }
     cat(sprintf("  Progress: %d/%d (tested: %d, resumed: %d, skipped: %d | susie_ok: %d, abf_fallback: %d, ld_fail: %d)\n",
                 i, length(egenes), n_tested, n_resumed, n_skipped,
@@ -852,8 +927,13 @@ if (length(results) > 0) {
       cat("    ... dropped (AF-flip) :", sum(final$n_palindromic_af_dropped, na.rm = TRUE), "\n")
     }
   }
+  all_pairs <- rbindlist(c(list(resumed_pairs), pair_rows), fill = TRUE)
+  fwrite(all_pairs, pairs_file, sep = "\t")
+  cat("Signal pairs:", nrow(all_pairs), "| eligible:", sum(all_pairs$eligible %in% TRUE),
+      "| written to", pairs_file, "\n")
   cat("Method breakdown:",
       "susie =", n_susie_ok, "|",
+      "susie_untestable_insufficient_shared_posterior =", n_susie_untestable, "|",
       "abf_fallback =", n_abf_fallback, "|",
       "ld_fail (within susie attempt) =", n_ld_fail, "|",
       "abf_only (no eQTL .rds) =",
@@ -874,3 +954,8 @@ if (length(results) > 0) {
 # Clean up checkpoint
 chk <- file.path(OUT_DIR, paste0("checkpoint_chr", chr_num, ".csv"))
 if (file.exists(chk)) file.remove(chk)
+
+if (n_elig_mismatch > 0) {
+  stop(n_elig_mismatch, " gene(s) where the shared-posterior eligibility call ",
+       "disagrees with coloc.bf_bf(); see ELIGIBILITY MISMATCH lines above")
+}

@@ -12,7 +12,8 @@ This matters because the coding claim's permutation p is 0.055
 (`ascertainment_control/20260817T152705Z/`), so it is already at the boundary
 before any correction.
 
-TWO NULLS, BOTH REPORTED. `fig2_trait_directness_stats.py` reports
+TWO NULLS, BOTH REPORTED (superseded 2026-09-23; see CORRECTION below).
+`fig2_trait_directness_stats.py` reports
 `p_two_sided_diff_gt0 = 2 * min((diff <= 0).mean(), (diff >= 0).mean())`, a
 BOOTSTRAP p asking whether the direct-minus-enzyme difference is distinguishable
 from zero given within-arm sampling variability. This script reproduces that and
@@ -29,6 +30,36 @@ independent signal, and long-range LD can link clusters. Every output here uses
 published script (sum of per-cluster mean masses over sum of per-cluster mean
 denominators).
 
+CORRECTION 2026-09-23 (review items 3 and 4,
+`docs/technical/SCIENTIFIC_REVIEW_CORRECTIONS_2026-09-23.md`).
+
+Credible-set gate. Only sets with `pip_sum_gate_passed` enter, keyed by
+`credible_set_uid` on both the architecture and member tables. The 52 failing
+sets (1 direct, 51 enzyme) carry missing mass that pandas summed as 0. A set with
+missing or non-finite mass is excluded and written to
+`excluded_credible_sets.tsv`, never counted as zero mass.
+
+Physical cluster. Clusters are formed once on the pooled positions of both trait
+classes, so a region reached by both classes is one physical cluster holding one
+direct row and one enzyme row. After the gate the coding test has 283 rows in
+264 physical clusters; 19 are shared, and they hold 19 of the 24 direct clusters.
+
+Bootstrap. Physical clusters are resampled with replacement; a drawn shared
+cluster brings both its rows. The percentile interval comes from this bootstrap.
+Figure 2 reports intervals only. `nominal_p_bootstrap_diff` and its six-test BH
+`nominal_q_bootstrap_BH` are percentile-inversion diagnostics floored at 2/(n+1),
+not tests, and no pass/fail column is written.
+
+No permutation p. The candidate null exchanges the class label only among
+class-exclusive clusters and keeps the shared pairs fixed. It would relabel 5 of
+24 direct clusters while the 19 fixed shared clusters hold 79% of the direct
+denominator and 76% of the direct coding mass, so it tests the five exclusive
+direct clusters, not the direct-versus-enzyme contrast. Its exchangeability
+assumption also fails by ascertainment: enzyme GWAS are larger and reach
+smaller-effect loci, so an enzyme-exclusive cluster is not a draw from the same
+population as a direct-exclusive one. `p_permutation` is therefore NA and no
+permutation q-value is reported.
+
 Read-only inputs.
 """
 from __future__ import annotations
@@ -38,6 +69,7 @@ import hashlib
 import json
 import subprocess
 import sys
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -63,12 +95,26 @@ TEST_LABEL = {
     "unresolved_context_mass": "Unresolved context (noncoding)",
 }
 
-PUBLISHED = {
-    ("tier1_direct_masld_pdff", "protein_altering_pip_mass"): 0.157736519057125,
-    ("tier2_liver_enzyme", "protein_altering_pip_mass"): 0.0325683421565398,
-    ("tier1_direct_masld_pdff", "canonical_splice_pip_mass"): 0.000361875951271015,
-    ("tier2_liver_enzyme", "canonical_splice_pip_mass"): 0.0,
+# Gate failures in run_19783321, by credible_set_uid (review item 3).
+EXPECTED_GATE_FAILURES = {"tier1_direct_masld_pdff": 1, "tier2_liver_enzyme": 51}
+
+# Coding-mass estimate on gated sets, reproduced 2026-09-23 by a standalone
+# grouping that does not import this module (ungated it gives 0.22542908161519876
+# / 0.034420056715428145 / 6.549352416207798, the superseded published values).
+CORRECTED_CODING = {
+    "fraction_direct": 0.22680460858995022,
+    "fraction_enzyme": 0.03389892569783767,
+    "ratio": 6.690613461075479,
 }
+
+# (direct rows, enzyme rows, physical clusters, shared clusters) after the gate.
+# Coding census reproduced independently; context census from build_context_masses.
+EXPECTED_CENSUS = {"coding_mass": (24, 259, 264, 19)}
+EXPECTED_CENSUS.update({c: (22, 256, 261, 17) for c in CTX_COLS})
+
+P_PERMUTATION_STATUS = ("not_computed: most direct clusters are shared with the enzyme "
+                        "class; no defensible label exchange (see "
+                        "fig2_multiplicity_correction.py docstring)")
 
 
 def sha256(path: Path) -> str:
@@ -88,6 +134,63 @@ def bh(p: np.ndarray) -> np.ndarray:
     out = np.empty(n)
     out[order] = np.minimum(ranked, 1.0)
     return out
+
+
+def fit_rng(fit_id: str) -> np.random.Generator:
+    """Generator seeded by SEED and a stable fit id, so a fit's draws do not
+    depend on which fits ran before it."""
+    return np.random.default_rng([SEED, zlib.crc32(fit_id.encode())])
+
+
+def gate_passed(flag: pd.Series) -> pd.Series:
+    """`pip_sum_gate_passed` as bool. pandas reads the TSV's `true`/`false` as
+    bool; text spellings such as 'True' or 'TRUE' are accepted too."""
+    if flag.dtype == bool:
+        return flag
+    return flag.astype(str).str.strip().str.lower() == "true"
+
+
+def apply_gate(arch: pd.DataFrame, members: pd.DataFrame
+               ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Keep credible sets that pass the PIP-sum gate and have finite mass.
+
+    The unit is `credible_set_uid`; a set dropped from one table is dropped from
+    the other. Returns the two filtered tables and one row per excluded set with
+    its reason: `pip_sum_gate_failed`, `nonfinite_architecture_mass`,
+    `nonpositive_architecture_mass`, or `nonfinite_member_pip`.
+    """
+    uid = "credible_set_uid"
+    member_flag = gate_passed(members["pip_sum_gate_passed"]).groupby(members[uid]).all()
+    arch_flag = gate_passed(arch["pip_sum_gate_passed"]).set_axis(arch[uid])
+    if not arch_flag.index.is_unique:
+        raise ValueError("credible_set_uid is not unique in the architecture table")
+    common = member_flag.index.intersection(arch_flag.index)
+    if (member_flag[common] != arch_flag[common]).any():
+        raise ValueError("pip_sum_gate_passed disagrees between the two tables")
+
+    failed = set(arch_flag.index[~arch_flag]) | set(member_flag.index[~member_flag])
+    passing = arch[~arch[uid].isin(failed)]
+    mass = passing[ARCH_COLS].to_numpy(dtype=float)
+    nonfinite_arch = set(passing.loc[~np.isfinite(mass).all(axis=1), uid])
+    nonpositive_arch = set(passing.loc[np.isfinite(mass).all(axis=1)
+                                       & (mass.sum(axis=1) <= 0), uid])
+    pip = pd.to_numeric(members["normalized_susie_pip"], errors="coerce")
+    bad_pip = ~np.isfinite(pip.to_numpy(dtype=float)) & ~members[uid].isin(failed).to_numpy()
+    nonfinite_members = set(members.loc[bad_pip, uid])
+
+    reasons = {}
+    for reason, ids in [("nonfinite_member_pip", nonfinite_members),
+                        ("nonpositive_architecture_mass", nonpositive_arch),
+                        ("nonfinite_architecture_mass", nonfinite_arch),
+                        ("pip_sum_gate_failed", failed)]:
+        reasons.update(dict.fromkeys(ids, reason))  # later entries win: gate first
+    meta = pd.concat([arch[[uid, "trait_scope", "study"]],
+                      members[[uid, "trait_scope", "study"]]]).drop_duplicates(uid)
+    excluded = meta[meta[uid].isin(reasons)].copy()
+    excluded["reason"] = excluded[uid].map(reasons)
+    excluded = excluded.sort_values(["reason", "trait_scope", uid]).reset_index(drop=True)
+    return (arch[~arch[uid].isin(reasons)].copy(),
+            members[~members[uid].isin(reasons)].copy(), excluded)
 
 
 def parse_locus(frame: pd.DataFrame) -> pd.DataFrame:
@@ -161,8 +264,43 @@ def cluster_table(frame: pd.DataFrame, num_col: str, den_col: str) -> pd.DataFra
     return g.rename(columns={num_col: "num", den_col: "den"})
 
 
-def analyse(tab: pd.DataFrame, rng: np.random.Generator) -> dict:
-    """Fractions, difference, ratio, cluster bootstrap, and a label-shuffle permutation."""
+def physical_wide(tab: pd.DataFrame) -> pd.DataFrame:
+    """One row per physical cluster with the direct and enzyme num/den side by
+    side. A class absent from a cluster contributes 0 to both sums, which leaves
+    that class's ratio of sums unchanged."""
+    wide = tab.pivot(index="cluster_id", columns="trait_scope", values=["num", "den"])
+    wide = wide.reindex(columns=pd.MultiIndex.from_product([["num", "den"], SCOPES]))
+    present = wide["den"].notna()
+    out = pd.DataFrame({
+        "num_a": wide[("num", SCOPES[0])], "den_a": wide[("den", SCOPES[0])],
+        "num_b": wide[("num", SCOPES[1])], "den_b": wide[("den", SCOPES[1])],
+    }).fillna(0.0)
+    out["has_a"] = present[SCOPES[0]].to_numpy()
+    out["has_b"] = present[SCOPES[1]].to_numpy()
+    return out
+
+
+def cluster_bootstrap(wide: pd.DataFrame, rng: np.random.Generator,
+                      n_boot: int = N_BOOT) -> tuple[np.ndarray, np.ndarray]:
+    """Direct and enzyme fractions over `n_boot` resamples of physical clusters.
+
+    One index draw selects whole physical clusters, so a shared cluster's direct
+    and enzyme rows always enter or leave a replicate together.
+    """
+    idx = rng.integers(0, len(wide), size=(n_boot, len(wide)))
+    with np.errstate(divide="ignore", invalid="ignore"):
+        da = wide["num_a"].to_numpy()[idx].sum(axis=1) / wide["den_a"].to_numpy()[idx].sum(axis=1)
+        db = wide["num_b"].to_numpy()[idx].sum(axis=1) / wide["den_b"].to_numpy()[idx].sum(axis=1)
+    return da, db
+
+
+def analyse(tab: pd.DataFrame, rng: np.random.Generator, n_boot: int = N_BOOT) -> dict:
+    """Fractions, difference, ratio, and a physical-cluster bootstrap.
+
+    `tab` rows are (trait_scope, cluster_id) with cluster ids formed on the
+    pooled positions of both classes, so a shared cluster id is one region. No
+    permutation p is computed; see the module docstring.
+    """
     a = tab[tab["trait_scope"] == SCOPES[0]]
     b = tab[tab["trait_scope"] == SCOPES[1]]
     na, nb = len(a), len(b)
@@ -175,31 +313,18 @@ def analyse(tab: pd.DataFrame, rng: np.random.Generator) -> dict:
 
     fa, fb = frac(a), frac(b)
 
-    an, ad = a["num"].to_numpy(), a["den"].to_numpy()
-    bn, bd = b["num"].to_numpy(), b["den"].to_numpy()
-    ia = rng.integers(0, na, size=(N_BOOT, na))
-    ib = rng.integers(0, nb, size=(N_BOOT, nb))
-    da = an[ia].sum(axis=1) / ad[ia].sum(axis=1)
-    db = bn[ib].sum(axis=1) / bd[ib].sum(axis=1)
-    diff = da - db
+    wide = physical_wide(tab)
+    da, db = cluster_bootstrap(wide, rng, n_boot)
+    ok = np.isfinite(da) & np.isfinite(db)
+    diff = (da - db)[ok]
     with np.errstate(divide="ignore", invalid="ignore"):
-        ratio = np.where(db > 0, da / db, np.nan)
-
-    # Permutation: shuffle the trait-class label across all scope-cluster rows.
-    pool_n = np.concatenate([an, bn])
-    pool_d = np.concatenate([ad, bd])
-    obs = abs(fa - fb)
-    hits = 0
-    for _ in range(N_PERM):
-        idx = rng.permutation(len(pool_n))
-        sa, sb = idx[:na], idx[na:]
-        dena, denb = pool_d[sa].sum(), pool_d[sb].sum()
-        if dena <= 0 or denb <= 0:
-            continue
-        hits += abs(pool_n[sa].sum() / dena - pool_n[sb].sum() / denb) >= obs
+        ratio = np.where(db[ok] > 0, da[ok] / db[ok], np.nan)
+    tail = min(int((diff <= 0).sum()), int((diff >= 0).sum()))
 
     return {
         "n_clusters_direct": na, "n_clusters_enzyme": nb,
+        "n_physical_clusters": len(wide),
+        "n_shared_clusters": int((wide["has_a"] & wide["has_b"]).sum()),
         "fraction_direct": fa, "fraction_enzyme": fb,
         "difference": fa - fb,
         "diff_boot_lo": float(np.percentile(diff, 2.5)),
@@ -207,9 +332,14 @@ def analyse(tab: pd.DataFrame, rng: np.random.Generator) -> dict:
         "ratio": fa / fb if fb > 0 else np.nan,
         "ratio_boot_lo": float(np.nanpercentile(ratio, 2.5)),
         "ratio_boot_hi": float(np.nanpercentile(ratio, 97.5)),
-        # published-style bootstrap p, reproduced for auditability
-        "p_bootstrap_diff": float(2 * min((diff <= 0).mean(), (diff >= 0).mean())),
-        "p_permutation": (1 + hits) / (1 + N_PERM),
+        "n_boot_finite": int(ok.sum()),
+        # Percentile-inversion diagnostic from the physical-cluster bootstrap, not
+        # a test: twice the smaller tail share of the difference at zero, floored
+        # at 2/(n+1) so a tail with no draws is not reported as 0. Figure 2
+        # reports intervals only and makes no significance call.
+        "nominal_p_bootstrap_diff": min(1.0, 2 * (1 + tail) / (1 + len(diff))),
+        "p_permutation": np.nan,
+        "p_permutation_status": P_PERMUTATION_STATUS,
     }
 
 
@@ -220,7 +350,6 @@ def main() -> int:
     args = ap.parse_args()
     root, out = Path(args.project_root), Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
-    rng = np.random.default_rng(SEED)
 
     base = root / ("GWAS/finemapping/results/candidates/"
                    "noncoding-dna-precoloc-2026-08-12/run_19783321")
@@ -232,11 +361,14 @@ def main() -> int:
     arch = arch[arch["trait_scope"].isin(SCOPES)].copy()
     members = members[members["trait_scope"].isin(SCOPES)].copy()
 
-    for (scope, col), expected in PUBLISHED.items():
-        got = arch.loc[arch["trait_scope"] == scope, col].mean()
-        if not np.isclose(got, expected, rtol=1e-6, atol=1e-9):
-            raise AssertionError(f"published {col} for {scope}: expected {expected}, got {got}")
-    print("[mult] published instance-weighted architecture reproduced exactly", flush=True)
+    arch, members, excluded = apply_gate(arch, members)
+    excluded.to_csv(out / "excluded_credible_sets.tsv", sep="\t", index=False)
+    gate_fail = (excluded[excluded["reason"] == "pip_sum_gate_failed"]
+                 .groupby("trait_scope").size().to_dict())
+    if gate_fail != EXPECTED_GATE_FAILURES:
+        raise AssertionError(f"gate failures {gate_fail}, expected {EXPECTED_GATE_FAILURES}")
+    print(f"[mult] excluded credible sets by reason: "
+          f"{excluded.groupby(['reason', 'trait_scope']).size().to_dict()}", flush=True)
 
     arch = assign_clusters(parse_locus(arch))
     arch["coding_mass"] = arch[CODING_COLS].sum(axis=1)
@@ -249,39 +381,58 @@ def main() -> int:
 
     rows = []
     for name, frame, num, den in specs:
-        res = analyse(cluster_table(frame, num, den), rng)
+        res = analyse(cluster_table(frame, num, den), fit_rng(name))
         res["test"] = name
         res["label"] = TEST_LABEL[name]
         rows.append(res)
+        census = (res["n_clusters_direct"], res["n_clusters_enzyme"],
+                  res["n_physical_clusters"], res["n_shared_clusters"])
+        if census != EXPECTED_CENSUS[name]:
+            raise AssertionError(f"{name} census (direct, enzyme, physical, shared) "
+                                 f"{census}, expected {EXPECTED_CENSUS[name]}")
         print(f"[mult] {name:<26} direct {res.get('fraction_direct', float('nan')):.4f} "
               f"enzyme {res.get('fraction_enzyme', float('nan')):.4f} "
               f"ratio {res.get('ratio', float('nan')):.3f} "
-              f"p_perm {res.get('p_permutation', float('nan')):.4f} "
-              f"p_boot {res.get('p_bootstrap_diff', float('nan')):.4g}", flush=True)
+              f"[{res['ratio_boot_lo']:.3f}, {res['ratio_boot_hi']:.3f}] "
+              f"physical {census[2]} shared {census[3]} "
+              f"nominal_p_boot {res.get('nominal_p_bootstrap_diff', float('nan')):.4g}", flush=True)
+
+    coding = rows[0]
+    for key, expected in CORRECTED_CODING.items():
+        tol = 1e-9 if key.startswith("fraction") else 1e-7 * expected
+        if abs(coding[key] - expected) > tol:
+            raise AssertionError(f"coding {key}: expected {expected}, got {coding[key]}")
+    print("[mult] gated coding estimate matches the independent reproduction", flush=True)
 
     res = pd.DataFrame(rows)
     res["family"] = "fig2_trait_directness_six_tests"
     res["family_size"] = len(res)
-    res["q_permutation_BH"] = bh(res["p_permutation"].to_numpy())
-    res["q_bootstrap_BH"] = bh(res["p_bootstrap_diff"].to_numpy())
-    res["survives_BH_0.05_permutation"] = res["q_permutation_BH"] < 0.05
-    res["survives_BH_0.05_bootstrap"] = res["q_bootstrap_BH"] < 0.05
+    res["inference_unit"] = "physical_1Mb_cluster_pooled_over_trait_classes"
+    res["q_permutation_BH"] = np.nan
+    # BH over the six tests applied to the nominal diagnostic; no pass/fail flag
+    res["nominal_q_bootstrap_BH"] = bh(res["nominal_p_bootstrap_diff"].to_numpy())
+    res["seed"] = SEED
+    res["n_boot"] = N_BOOT
 
     cols = ["test", "label", "n_clusters_direct", "n_clusters_enzyme",
-            "fraction_direct", "fraction_enzyme", "difference", "ratio",
-            "ratio_boot_lo", "ratio_boot_hi", "p_permutation", "q_permutation_BH",
-            "survives_BH_0.05_permutation", "p_bootstrap_diff", "q_bootstrap_BH",
-            "survives_BH_0.05_bootstrap", "family", "family_size"]
+            "n_physical_clusters", "n_shared_clusters",
+            "fraction_direct", "fraction_enzyme", "difference",
+            "diff_boot_lo", "diff_boot_hi", "ratio",
+            "ratio_boot_lo", "ratio_boot_hi", "n_boot_finite",
+            "nominal_p_bootstrap_diff", "nominal_q_bootstrap_BH",
+            "p_permutation", "q_permutation_BH", "p_permutation_status",
+            "inference_unit", "family", "family_size", "seed", "n_boot"]
     res = res[cols]
     res.to_csv(out / "fig2_family_multiplicity.tsv", sep="\t", index=False)
-    print("\n" + res.drop(columns=["family", "family_size", "label"]).to_string(index=False), flush=True)
+    print("\n" + res.drop(columns=["family", "family_size", "label", "p_permutation_status",
+                                   "inference_unit"]).to_string(index=False), flush=True)
 
     manifest = [{"role": r, "path": str(p), "sha256": sha256(p)}
                 for r, p in [("architecture", arch_path), ("members", members_path)]]
     (out / "input_manifest.json").write_text(json.dumps(manifest, indent=2))
     (out / "environment.txt").write_text(
         f"python {sys.version}\nnumpy {np.__version__}\npandas {pd.__version__}\n"
-        f"seed {SEED}\nn_boot {N_BOOT}\nn_perm {N_PERM}\n"
+        f"seed {SEED} (per test: fit_rng(test))\nn_boot {N_BOOT}\nn_perm not used\n"
         + subprocess.run([sys.executable, "-m", "pip", "freeze"],
                          capture_output=True, text=True).stdout)
     print(f"[mult] wrote {out}", flush=True)

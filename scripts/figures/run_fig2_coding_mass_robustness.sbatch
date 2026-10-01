@@ -6,12 +6,17 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=08:00:00
-#SBATCH --output=logs/fig2_robust_%j.out
-#SBATCH --error=logs/fig2_robust_%j.err
+#SBATCH --chdir=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
+#SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/logs/fig2_robust_%j.out
+#SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/logs/fig2_robust_%j.err
 set -euo pipefail
-cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
+ROOT=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
+# new timestamped directory per run; never reuse 20260907T105813Z
+OUT="${ROOT}/GWAS/finemapping/results/fig2_robustness/$(date -u +%Y%m%dT%H%M%SZ)"
+export PYTHONNOUSERSITE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+mkdir -p "${ROOT}/logs" "${OUT}"
+echo "[sbatch] out=${OUT} start=$(date -u)"
 P=/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/python
-"$P" scripts/figures/fig2_coding_mass_robustness.py \
-  --project-root /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design \
-  --output-dir GWAS/finemapping/results/fig2_robustness/20260907T105813Z
-echo "FIG2_CODING_MASS_ROBUSTNESS_COMPLETE"
+"$P" "${ROOT}/scripts/figures/fig2_coding_mass_robustness.py" \
+  --project-root "${ROOT}" --output-dir "${OUT}"
+echo "FIG2_CODING_MASS_ROBUSTNESS_COMPLETE -> ${OUT}"

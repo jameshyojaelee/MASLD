@@ -375,7 +375,7 @@ def main() -> int:
         "## Final release checklist",
         "Plans 40–44",
         "Plans 45–46C",
-        "No Cas13 result",
+        "No follow-up screen result",
         "user explicitly approves promotion",
         "every main figure must expose the claim",
     ):

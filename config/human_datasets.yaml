@@ -82,12 +82,12 @@ datasets:
     sex_annotated: true          # Sex metadata available from SRA annotation
     de:
       formula: "~ 0 + condition + age + sex"
-      contrast: "(conditionFibrosis_F1 + conditionFibrosis_F2F3 + conditionFibrosis_F4)/3 - conditionControl"
-      condition_levels: ["Control", "Fibrosis_F1", "Fibrosis_F2F3", "Fibrosis_F4"]
+      contrast: "(conditionFibrosis_F0 + conditionFibrosis_F1 + conditionFibrosis_F2F3 + conditionFibrosis_F4)/4 - conditionControl"
+      condition_levels: ["Control", "Fibrosis_F0", "Fibrosis_F1", "Fibrosis_F2F3", "Fibrosis_F4"]
       norm_method: "TMM"
       quality_weights: true
       include_in_mega: true
-    notes: "GSE130970 — richest metadata; fibrosis stage 0-4. F0 = Control (histologically normal). Conditions are fibrosis-stage-based, not NAFL/NASH labels."
+    notes: "GSE130970 — richest metadata; fibrosis stage 0-4. Controls are the 6 histologically normal biopsies of Hoang et al. 2019 (metadata/source/GSE130970/GSE130970_source_diagnosis.tsv); F0 is not control status (16 retained F0 biopsies are steatotic). NAFLD conditions are fibrosis-stage-based, not NAFL/NASH labels."
 
   # ---------------------------------------------------------------------------
   # GSE213621 — Fibrosis-stage-based cohort (no explicit NAFL/NASH diagnosis)

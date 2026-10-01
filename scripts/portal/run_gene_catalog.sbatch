@@ -27,6 +27,12 @@ CANDIDATE_ROOT="${PASSPORT_CANDIDATE_ROOT:-$PROJECT_ROOT/RNA-seq/results/evidenc
 PASSPORT_MODE="${GENE_CATALOG_MODE:-${PASSPORT_MODE:-production}}"
 PASSPORT_SELECTION="${PASSPORT_SELECTION:-$CANDIDATE_ROOT/passport_input_selection.tsv}"
 PASSPORT_FINALIZE="${PASSPORT_FINALIZE:-false}"
+# A relocated candidate root must carry its own release ID; the Python tools
+# read both from the environment (generate_evidence_passports.py).
+if [[ -n "${PASSPORT_CANDIDATE_ROOT:-}" && -z "${PASSPORT_ANALYSIS_RELEASE_ID:-}" ]]; then
+  echo "PASSPORT_ANALYSIS_RELEASE_ID is required with PASSPORT_CANDIDATE_ROOT" >&2
+  exit 2
+fi
 
 export MASLD_PROJECT_ROOT="$PROJECT_ROOT"
 export PYTHONDONTWRITEBYTECODE=1

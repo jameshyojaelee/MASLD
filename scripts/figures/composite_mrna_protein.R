@@ -44,7 +44,7 @@ DATA_DIR <- if (nzchar(CANDIDATE_ROOT)) {
   file.path(FIG5_CONTEXT_DIR, "data")
 }
 dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
-PROTEIN_CONTEXT <- file.path(PROGRAM_CONTEXT_DIR, "proteomics")
+PROTEIN_CONTEXT <- Sys.getenv("FIG5C_PROTEOMICS_DIR", file.path(PROGRAM_CONTEXT_DIR, "proteomics"))
 
 # ── corrected logFC pairs + nuisance-adjusted liver DIA-MS matrix ─────────────
 con <- fread(file.path(PROTEIN_CONTEXT, "panel4c_mrna_protein.tsv"))
@@ -63,10 +63,13 @@ ord <- sel$gene; genes <- ord; group_of <- setNames(sel$program, sel$gene)
 gl <- unique(sel$program)                                  # program display order (top -> bottom)
 stopifnot(all(ord %in% rownames(abmat)))                   # every selected protein has an abundance row
 cand <- con[gene %in% genes]
-# The frozen source table's bulk_sig column was written under the retired TREAT
-# gate. Recompute it from bulk_padj/bulk_logFC so this panel follows the
-# canonical 2026-08-12 definition rather than a stale stored flag.
-cand[, bulk_sig := is_canonical_deg(cand)]
+# bulk_padj is the conventional BH p-value; the TREAT FDR arrives separately as
+# bulk_treat_fdr. Older source tables stored the TREAT FDR under bulk_padj and
+# have no bulk_treat_fdr column, so refuse them rather than mislabel markers.
+if (!all(c("bulk_gene_id", "bulk_treat_fdr") %in% names(cand)))
+  stop("panel4c_mrna_protein.tsv predates the split bulk_padj/bulk_treat_fdr fields: ", PROTEIN_CONTEXT)
+cand[, bulk_sig := is_canonical_deg(cand)]        # conventional padj < 0.05 and |log2FC| > 0.5
+cand[, bulk_treat_sig := is_treat_deg(cand)]      # TREAT sensitivity arm, sidecar only
 cand[, both_sig := bulk_sig & protein_sig]
 n <- length(ord); ytop <- n + 4.2                          # genes 1..n; NAS/fibrosis strips n+2:n+3
 g <- unname(group_of[ord]); bnd <- which(g[-1] != g[-n])
@@ -83,6 +86,8 @@ setnames(mh, "sample_id", "raw")
 mh <- mh[raw %in% colnames(abmat)]
 feat_levels <- c("Steatosis", "Ballooning", "Inflammation", "Fibrosis", "NAS")
 hist <- fread(file.path(PROTEIN_CONTEXT, "panel4c_histology_partial.tsv"))
+if (!all(c("df", "missing_reason") %in% names(hist)))
+  stop("panel4c_histology_partial.tsv predates the complete-case partial Spearman: ", PROTEIN_CONTEXT)
 cmat <- as.matrix(dcast(hist[gene %in% ord], gene ~ feature, value.var = "rho")
                   [match(ord, gene), ..feat_levels])
 rownames(cmat) <- ord
@@ -269,7 +274,7 @@ dot_panel <- function(dt, item_col, ord, est1, est2, est1_lab, est2_lab, xlab,
 
 lxmin <- min(cand$bulk_logFC, cand$protein_logFC, na.rm = TRUE)   # left edge for the inline legend
 lxmax <- max(cand$bulk_logFC, cand$protein_logFC, na.rm = TRUE)
-sig_key_x <- lxmax - 1.65
+sig_key_x <- lxmax - 2.05                                   # widened key: mRNA fill also requires |log2FC| > 0.5
 lp <- dot_panel(cand, "gene", ord, est1 = "bulk_logFC", est2 = "protein_logFC",
                 est1_lab = "mRNA log2FC", est2_lab = "protein log2FC",
                 xlab = "log2 FC", group_of = group_of,   # 2026-07-09: plotmath expression() was the DejaVuSans leak source (plain string is font-safe)
@@ -283,13 +288,13 @@ lp <- dot_panel(cand, "gene", ord, est1 = "bulk_logFC", est2 = "protein_logFC",
            colour = c("#8EC7E2", "#E8853A"), fill = c("#8EC7E2", "#E8853A"), stroke = 0.35, size = 1.2) +
   annotate("text", x = lxmin + 0.22, y = n + 3.2, label = "mRNA log2FC", hjust = 0, size = 6/.pt, family = FAM, colour = house_ink) +
   annotate("text", x = lxmin + 0.22, y = n + 2.2, label = "protein log2FC", hjust = 0, size = 6/.pt, family = FAM, colour = house_ink) +
-  annotate("rect", xmin = sig_key_x - 0.16, xmax = sig_key_x + 1.82, ymin = 0.95, ymax = 2.95,
+  # Filled = the canonical call: padj < 0.05 for both markers, plus |log2FC| > 0.5 for mRNA.
+  annotate("rect", xmin = sig_key_x - 0.16, xmax = sig_key_x + 2.22, ymin = 0.80, ymax = 5.30,
            fill = "white", colour = "grey70", linewidth = 0.2) +
-  annotate("point", x = sig_key_x + 0.05, y = c(2.35, 1.55), shape = 21,
+  annotate("point", x = sig_key_x + 0.05, y = c(4.70, 1.40), shape = 21,
            colour = "grey40", fill = c("grey40", "white"), stroke = 0.35, size = 1.2) +
-  annotate("text", x = sig_key_x + 0.22, y = 2.35, label = "padj < 0.05",
-           hjust = 0, size = 6/.pt, family = FAM) +
-  annotate("text", x = sig_key_x + 0.22, y = 1.55, label = "padj >= 0.05",
+  annotate("text", x = sig_key_x + 0.22, y = c(4.70, 3.65, 2.60, 1.40),
+           label = c("padj < 0.05", "and, for mRNA,", "|log2FC| > 0.5", "otherwise"),
            hjust = 0, size = 6/.pt, family = FAM) +
   ggtitle("mRNA vs protein") +
   theme(text = element_text(family = FAM, face = "plain"),
@@ -319,13 +324,17 @@ message("CAPTION (Fig 5C full-row proteomics composite): the shared 25-protein a
         "patients ordered by fibrosis then NAS, with NAS/fibrosis strips and gray denoting missing abundance. Acquisition ",
         "batch is retained in the statistical model and diagnostic sidecars but is not displayed as a biological annotation. ",
         "MIDDLE = partial Spearman associations ",
-        "with histology after residualizing the same nuisance variables (BH across 25 x 5 tests). RIGHT = canonical ",
-        "bulk mRNA log2FC (TREAT significance) versus adjusted protein log2FC. Program brackets show fgsea NES after BH correction across ",
+        "with histology: protein and histology ranks are computed and residualized on acquisition batch, age, BMI, and sex ",
+        "within the same participants with that protein quantified (n = ", min(hist$n), "-", max(hist$n), "), ",
+        "t test on n - ", paste(sort(unique(hist$n - hist$df)), collapse = "/"), " df, BH across 25 x 5 tests. RIGHT = canonical ",
+        "bulk mRNA log2FC versus adjusted protein log2FC; filled mRNA markers meet the conventional canonical threshold ",
+        "(BH padj < 0.05 and |log2FC| > 0.5), filled protein markers BH padj < 0.05; the TREAT interval-null FDR is ",
+        "reported in the source table as a sensitivity arm only. Program brackets show fgsea NES after BH correction across ",
         "the full Hallmark, Reactome, and curated-set family. These process sets are not Hotspot modules, and their ",
         "selection-conditioned row statistics are descriptive rather than independent validation.")
 
-fwrite(cand[, .(gene, bulk_logFC = round(bulk_logFC, 3), bulk_padj = signif(bulk_padj, 4),
-                 bulk_sig, protein_logFC = round(protein_logFC, 3),
+fwrite(cand[, .(gene, bulk_gene_id, bulk_logFC = round(bulk_logFC, 3), bulk_padj = signif(bulk_padj, 4),
+                 bulk_sig, bulk_treat_fdr = signif(bulk_treat_fdr, 4), bulk_treat_sig, protein_logFC = round(protein_logFC, 3),
                  protein_padj = signif(protein_padj, 4), protein_sig, both_sig,
                  selection_conditioned, interpretation,
                  module = group_of[gene])], file.path(DATA_DIR, "composite_mrna_protein_corrected.csv"))
