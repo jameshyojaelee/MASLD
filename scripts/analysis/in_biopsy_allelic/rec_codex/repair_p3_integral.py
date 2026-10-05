@@ -176,8 +176,8 @@ def integrate_gene(model, p, variance, rows, conditional, with_hessian=False, se
         cache[z] = result
         return result
 
-    def locate(bound):
-        grid = np.linspace(-bound, bound, int(np.ceil(2*bound/settings.grid_spacing))+1)
+    def locate(bound, spacing):
+        grid = np.linspace(-bound, bound, int(np.ceil(2*bound/spacing))+1)
         values = [stats(z) for z in grid]
         candidates = [float(grid[int(np.argmax([a[0] for a in values]))])]
         stationary = []
@@ -205,8 +205,8 @@ def integrate_gene(model, p, variance, rows, conditional, with_hessian=False, se
                 points.update(root + factor*scale for factor in (-8., -4., -1., 0., 1., 4., 8.) if -bound < root+factor*scale < bound)
         return center, sorted(points), peaks
 
-    def run(bound, precision):
-        center, points, peaks = locate(bound)
+    def run(bound, precision, spacing):
+        center, points, peaks = locate(bound, spacing)
         shift, gs, hs, _, _ = stats(center)
         gradient_scale = np.maximum(1., np.abs(gs))
         second_scale = np.maximum(1., np.abs(hs+np.outer(gs, gs))) if with_hessian else None
@@ -237,6 +237,7 @@ def integrate_gene(model, p, variance, rows, conditional, with_hessian=False, se
         if with_hessian:
             he += tail['relative_hessian_tail_allowance']
         report = dict(z_bound=bound, u_bound=bound*sqrtv, integration_center_z=center, stationary_points=peaks,
+                      requested_grid_spacing=spacing,
                       stationary_points_exhaustive=False, all_grid_intervals_integrated=True,
                       quadrature_points=len(points), quadrature_status=int(info.status), quadrature_message=info.message,
                       quadrature_evaluations=int(info.neval), error_estimate=float(error),
@@ -249,7 +250,7 @@ def integrate_gene(model, p, variance, rows, conditional, with_hessian=False, se
     bound = settings.initial_z_bound
     accepted = None
     for attempt in range(5):
-        result = run(bound, 10.**-attempt)
+        result = run(bound, 10.**-attempt, settings.grid_spacing)
         report = result[3]
         if report['relative_mass_tail_allowance'] > settings.logmass_tolerance / 8 or np.max(report['relative_gradient_tail_allowance']) > settings.gradient_tolerance / 8 or (
                 with_hessian and np.max(report['relative_hessian_tail_allowance']) > settings.hessian_tolerance / 8):
@@ -266,7 +267,8 @@ def integrate_gene(model, p, variance, rows, conditional, with_hessian=False, se
             accepted = result
             break
     require(accepted is not None, 'Candidate numerical uncertainty remained above fixed precision allowance')
-    refined = run(bound+2, 0.01)
+    require(bound+2 <= settings.maximum_z_bound, 'Final integral-domain refinement exceeds cap')
+    refined = run(bound+2, 0.01, settings.grid_spacing/2)
     delta_ll = abs(refined[0]-accepted[0])
     delta_g = np.abs(refined[1]-accepted[1])
     delta_h = np.abs(refined[2]-accepted[2]) if with_hessian else None
@@ -277,6 +279,7 @@ def integrate_gene(model, p, variance, rows, conditional, with_hessian=False, se
     report = dict(method='normalized-prior composite Gauss-Kronrod, all located modes and every grid interval',
                   numerical_revision_of_prescribed_20_node_approximation=True, same_probability_estimand=True,
                   first=accepted[3], refined=refined[3], logmass_refinement_difference=delta_ll,
+                  grid_spacing_refinement_factor=.5,
                   gradient_refinement_difference=delta_g, hessian_refinement_difference=delta_h,
                   unique_likelihood_evaluations=evaluations, quad_error_estimates_not_certified_bounds=True,
                   floating_arithmetic_error_not_rigorously_bounded=True)

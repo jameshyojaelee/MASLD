@@ -1,7 +1,7 @@
 {
   "corpus": {
     "declared_cell_total": 36238416,
-    "declared_dataset_rows": 998,
+    "declared_dataset_rows": 313,
     "inventory_granularity": "CELLxGENE dataset UUID and dataset/collection title, or non-CELLxGENE source and URL",
     "source_record_identity": "Rosen_et_al_2026_Supplementary_Table_16",
     "source_record_sha256": "9a5117a0ae2ca6c8dba9a7cc45a926ed836de0c4e9d94528aed4bda08296a811",
@@ -64,13 +64,28 @@
     },
     "GSE296875": {"evidence": "GEO became public after both weight records were published.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
     "Liver_Atlas": {
-      "article_title": "Single cell RNA sequencing of human liver reveals distinct intrahepatic macrophage populations",
-      "evidence": "Declared CELLxGENE dataset a43aa46b-bd16-47fe-bc3e-19a052624e79, Liver, 5,312 cells.",
+      "article_title": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches",
+      "evidence": "e84f2780-51e8-4cfa-8aa0-13bbfef677c7 (own, 167,598 cells, All cells from human liver dataset)",
       "exposure_state": "encoder_seen",
-      "matched_records": [{"cells": 5312, "dataset_id": "a43aa46b-bd16-47fe-bc3e-19a052624e79"}],
-      "public_date": "2018-10-22"
+      "matched_records": [
+        {
+          "dataset_id": "e84f2780-51e8-4cfa-8aa0-13bbfef677c7",
+          "relation": "own",
+          "cells": 167598,
+          "title": "All cells from human liver dataset"
+        }
+      ],
+      "public_date": "2022-01-11",
+      "aliases": [
+        "Liver_Atlas",
+        "GSE192742",
+        "GSE192740",
+        "GSE192741",
+        "DOI:10.1016/j.cell.2021.12.018",
+        "CELLXGENE:e84f2780-51e8-4cfa-8aa0-13bbfef677c7"
+      ]
     }
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-05"
 }

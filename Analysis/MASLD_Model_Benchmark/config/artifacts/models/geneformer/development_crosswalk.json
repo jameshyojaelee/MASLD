@@ -268,87 +268,45 @@
     "Liver_Atlas": {
       "aliases": [
         "Liver_Atlas",
-        "GSE115469",
-        "PMID:30348985",
-        "DOI:10.1038/s41467-018-06318-7"
+        "GSE192742",
+        "GSE192740",
+        "GSE192741",
+        "DOI:10.1016/j.cell.2021.12.018",
+        "CELLXGENE:e84f2780-51e8-4cfa-8aa0-13bbfef677c7"
       ],
-      "public_date": "2018-10-22",
+      "public_date": "2022-01-11",
       "corpus_findings": {
         "Genecorpus-104M": {
           "declared_match": true,
-          "evidence": "DOI 10.1038/s41467-018-06318-7 appears in seven declared rows totaling 782916 cells passed filtering",
           "exposure_state": "encoder_seen",
+          "evidence": "row 1848: https://doi.org/10.1016/j.cell.2021.12.018 167,598 cells (GEO link GSE192740;GSE192741;GSE192742); row 1845: https://doi.org/10.1126/sciimmunol.add8945 328,783 cells (GEO link GSE228232); row 1883: https://doi.org/10.1126/sciimmunol.add8945 167,856 cells (GEO link GSE228232)",
           "matched_records": [
             {
-              "cells_passed_filtering": 332497,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row1"
+              "cells_passed_filtering": 167598,
+              "source_key": "https://doi.org/10.1016/j.cell.2021.12.018:row1848"
             },
             {
-              "cells_passed_filtering": 86379,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row2"
+              "cells_passed_filtering": 328783,
+              "source_key": "https://doi.org/10.1126/sciimmunol.add8945:row1845"
             },
             {
-              "cells_passed_filtering": 82751,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row3"
-            },
-            {
-              "cells_passed_filtering": 77238,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row4"
-            },
-            {
-              "cells_passed_filtering": 76362,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row5"
-            },
-            {
-              "cells_passed_filtering": 64878,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row6"
-            },
-            {
-              "cells_passed_filtering": 62811,
-              "source_key": "DOI:10.1038/s41467-018-06318-7:row7"
+              "cells_passed_filtering": 167856,
+              "source_key": "https://doi.org/10.1126/sciimmunol.add8945:row1883"
             }
           ]
         },
         "Genecorpus-30M": {
-          "declared_match": true,
-          "evidence": "MacParland et al. Nat Commun 9, 4383 (2018) appears in CELLxGENE dataset IDs 337313, 766226, 253136, 776602, 364042, 379024, and 399004, totaling 768462 cells passed filtering",
-          "exposure_state": "encoder_seen",
-          "matched_records": [
-            {
-              "cells_passed_filtering": 326954,
-              "source_key": "CELLXGENE_DATASET_ID:337313"
-            },
-            {
-              "cells_passed_filtering": 84485,
-              "source_key": "CELLXGENE_DATASET_ID:766226"
-            },
-            {
-              "cells_passed_filtering": 81452,
-              "source_key": "CELLXGENE_DATASET_ID:253136"
-            },
-            {
-              "cells_passed_filtering": 75483,
-              "source_key": "CELLXGENE_DATASET_ID:776602"
-            },
-            {
-              "cells_passed_filtering": 74586,
-              "source_key": "CELLXGENE_DATASET_ID:364042"
-            },
-            {
-              "cells_passed_filtering": 63723,
-              "source_key": "CELLXGENE_DATASET_ID:379024"
-            },
-            {
-              "cells_passed_filtering": 61779,
-              "source_key": "CELLXGENE_DATASET_ID:399004"
-            }
-          ]
+          "declared_match": false,
+          "exposure_state": "clean_declared",
+          "matched_records": [],
+          "evidence": "Guilliams GEO public date 2022-01-11 is after the documented June 2021 V1 training cutoff; MacParland corpus rows are a different study."
         }
-      }
+      },
+      "article_title": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches"
     }
   },
   "interpretation": {
-    "geneformer_v1_10m": "GSE136103 and Liver_Atlas are encoder_seen. The other smoke-view and registered cell-state cohorts first became public after the V1 cutoff and are clean_declared, except sealed GSE289173, whose task labels are target_label_unexposed.",
+    "geneformer_v1_10m": "GSE136103 is encoder_seen. Guilliams Liver_Atlas first became public after the June 2021 V1 cutoff and is clean_declared; MacParland rows do not identify this Resource study. Other checkpoint-specific findings and protected GSE289173 labels are unchanged.",
     "geneformer_v2_104m": "GSE136103, GSE185477, and Liver_Atlas are encoder_seen. GSE174748, GSE189600, GSE202379, and GSE244832 were public before the V2 cutoff but have no declared source-table match and remain unknown. GSE256398, GSE281367, and GSE296875 are clean_declared by post-cutoff public dates; sealed GSE289173 is target_label_unexposed.",
     "geneformer_v2_316m": "GSE136103, GSE185477, and Liver_Atlas are encoder_seen. GSE174748, GSE189600, GSE202379, and GSE244832 were public before the V2 cutoff but have no declared source-table match and remain unknown. GSE256398, GSE281367, and GSE296875 are clean_declared by post-cutoff public dates; sealed GSE289173 is target_label_unexposed."
   },
@@ -358,5 +316,5 @@
     "sealed_use": "This development crosswalk does not alter the separate target-label-unexposed finding for GSE289173."
   },
   "schema_version": "masld-bench-development-exposure-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-05"
 }

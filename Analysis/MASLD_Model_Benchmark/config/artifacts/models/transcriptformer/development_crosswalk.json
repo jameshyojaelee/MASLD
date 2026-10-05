@@ -1,11 +1,11 @@
 {
   "corpus": {
-    "declared_cell_total": 57000000,
+    "declared_cell_total": 57336190,
     "declared_dataset_count": 644,
     "inventory_granularity": "CELLxGENE dataset UUID",
     "source_record_identity": "Pearce_et_al_2025_Extended_Data_Table_1_media-3.xlsx",
-    "source_record_sha256": "UNRESOLVED",
-    "source_record_status": "official_link_resolved_but_body_returned_HTTP_403_or_429_on_2026-08-22",
+    "source_record_sha256": "12838f5487838d8a5975542f40dd84222c33f13af75f90e3c2cd13fbb45485b5",
+    "source_record_status": "declared_644_human_UUID_inventory_resolved_for_seven_Resource_studies_2026-09-22",
     "source_record_url": "https://www.biorxiv.org/content/biorxiv/early/2025/04/29/2025.04.25.650731/DC3/embed/media-3.xlsx?download=true"
   },
   "corroborating_live_catalog": {
@@ -18,26 +18,182 @@
   },
   "crosswalk_scope": {
     "dataset_view_id": "resource_atlas_geneformer_smoke_1000_v1",
-    "registered_cell_state_sources": ["GSE136103", "GSE174748", "GSE185477", "GSE189600", "GSE202379", "GSE244832", "GSE256398", "GSE281367", "GSE289173", "GSE296875", "Liver_Atlas"],
-    "scope_limit": "Cell-state task only. Sources public on or before the versioned archive date remain unknown until the complete declared UUID table is hash-verified and crosswalked."
+    "registered_cell_state_sources": [
+      "GSE136103",
+      "GSE174748",
+      "GSE185477",
+      "GSE189600",
+      "GSE202379",
+      "GSE244832",
+      "GSE256398",
+      "GSE281367",
+      "GSE289173",
+      "GSE296875",
+      "Liver_Atlas"
+    ],
+    "scope_limit": "Cell-state task only. The seven Resource studies and GSE296875 use the resolved declared UUID inventory. Other pre-archive sources, including protected GSE289173, retain their existing unresolved states."
   },
   "findings": {
-    "GSE136103": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2019-09-12"},
-    "GSE174748": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2022-05-01"},
-    "GSE185477": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2021-10-13"},
-    "GSE189600": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2023-02-08"},
-    "GSE202379": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2024-04-04"},
-    "GSE244832": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2024-11-13"},
-    "GSE256398": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2025-03-03"},
+    "GSE136103": {
+      "evidence": "None of the 644 declared human UUIDs belongs to the study or to a collection that re-hosts its donors; all 644 resolved to a collection",
+      "exposure_state": "clean_declared",
+      "public_date": "2019-09-12",
+      "matched_records": []
+    },
+    "GSE174748": {
+      "evidence": "None of the 644 declared human UUIDs belongs to the study or to a collection that re-hosts its donors; all 644 resolved to a collection",
+      "exposure_state": "clean_declared",
+      "public_date": "2022-05-01",
+      "matched_records": []
+    },
+    "GSE185477": {
+      "evidence": "02792605-4760-4023-82ad-40fc4458a5db (reuse, 89,637 QC cells, All cells types from scRNA-seq of human primary sclerosing cholangitis patients and healthy controls); 0c9a8cfb-6649-4d52-b418-6d8e56bd7afe (reuse, 1,011 QC cells, Cholangiocytes from human healthy donor liver samples); 1873a18a-66fd-4a4d-8277-a872c93f5b59 (reuse, 105,780 QC cells, All cells types from snRNA-seq of human primary sclerosing cholangitis patients and healthy controls); 234c23d0-d6cd-4612-a40d-e5811727564b (reuse, 53,015 QC cells, Hepatocyte-1 cells from human healthy donor liver samples); 43560d7c-acd6-4ede-830d-c9ffc6cd0862 (reuse, 16,665 QC cells, Natural killer T cells from human healthy donor liver samples); 4993d61c-1d04-4630-9c61-8d9431f39adc (reuse, 1,250 QC cells, B cells from human healthy donor liver samples); 4ce8d8ec-b94c-4b79-afcb-b094336d8a78 (reuse, 9,422 QC cells, Endothelial cells from human healthy donor liver samples); 76af615b-12fe-4ebb-b8c6-239ad29e26e3 (reuse, 13,635 QC cells, Hepatocyte-2 cells from human healthy donor liver samples); b550fd94-97e0-42e2-90f7-7434781ea2f8 (reuse, 11,127 QC cells, Macrophage cells from human healthy donor liver samples); ddb22b3d-a75c-4dd1-9730-dff7fc8ca530 (own, 73,295 QC cells, Healthy human liver: integrated); e347396c-a7ff-4691-9f7a-99a43555ca18 (reuse, 1,417 QC cells, Stellate cells from human healthy donor liver samples)",
+      "exposure_state": "encoder_seen",
+      "public_date": "2021-10-13",
+      "matched_records": [
+        {
+          "dataset_id": "02792605-4760-4023-82ad-40fc4458a5db",
+          "relation": "reuse",
+          "n_qc_cells": 89637,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "All cells types from scRNA-seq of human primary sclerosing cholangitis patients and healthy controls"
+        },
+        {
+          "dataset_id": "0c9a8cfb-6649-4d52-b418-6d8e56bd7afe",
+          "relation": "reuse",
+          "n_qc_cells": 1011,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Cholangiocytes from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "1873a18a-66fd-4a4d-8277-a872c93f5b59",
+          "relation": "reuse",
+          "n_qc_cells": 105780,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "All cells types from snRNA-seq of human primary sclerosing cholangitis patients and healthy controls"
+        },
+        {
+          "dataset_id": "234c23d0-d6cd-4612-a40d-e5811727564b",
+          "relation": "reuse",
+          "n_qc_cells": 53015,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Hepatocyte-1 cells from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "43560d7c-acd6-4ede-830d-c9ffc6cd0862",
+          "relation": "reuse",
+          "n_qc_cells": 16665,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Natural killer T cells from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "4993d61c-1d04-4630-9c61-8d9431f39adc",
+          "relation": "reuse",
+          "n_qc_cells": 1250,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "B cells from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "4ce8d8ec-b94c-4b79-afcb-b094336d8a78",
+          "relation": "reuse",
+          "n_qc_cells": 9422,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Endothelial cells from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "76af615b-12fe-4ebb-b8c6-239ad29e26e3",
+          "relation": "reuse",
+          "n_qc_cells": 13635,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Hepatocyte-2 cells from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "b550fd94-97e0-42e2-90f7-7434781ea2f8",
+          "relation": "reuse",
+          "n_qc_cells": 11127,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Macrophage cells from human healthy donor liver samples"
+        },
+        {
+          "dataset_id": "ddb22b3d-a75c-4dd1-9730-dff7fc8ca530",
+          "relation": "own",
+          "n_qc_cells": 73295,
+          "collection": "Single-Cell, Single-Nucleus, and Spatial RNA Sequencing of the Human Liver Identifies Cholangiocyte and Mesenchymal Heterogeneity",
+          "title": "Healthy human liver: integrated"
+        },
+        {
+          "dataset_id": "e347396c-a7ff-4691-9f7a-99a43555ca18",
+          "relation": "reuse",
+          "n_qc_cells": 1417,
+          "collection": "Single-cell and spatial transcriptomics characterisation of the immunological landscape in the healthy and PSC human liver",
+          "title": "Stellate cells from human healthy donor liver samples"
+        }
+      ]
+    },
+    "GSE189600": {
+      "evidence": "None of the 644 declared human UUIDs belongs to the study or to a collection that re-hosts its donors; all 644 resolved to a collection",
+      "exposure_state": "clean_declared",
+      "public_date": "2023-02-08",
+      "matched_records": []
+    },
+    "GSE202379": {
+      "evidence": "None of the 644 declared human UUIDs belongs to the study or to a collection that re-hosts its donors; all 644 resolved to a collection",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-04-04",
+      "matched_records": []
+    },
+    "GSE244832": {
+      "evidence": "None of the 644 declared human UUIDs belongs to the study or to a collection that re-hosts its donors; all 644 resolved to a collection",
+      "exposure_state": "clean_declared",
+      "public_date": "2024-11-13",
+      "matched_records": []
+    },
+    "GSE256398": {
+      "evidence": "Not adjudicated by the seven-Resource-study UUID reconstruction. Its prior unknown exposure state is retained; available corpus metadata alone is not an exposure decision for this source.",
+      "exposure_state": "unknown",
+      "public_date": "2025-03-03"
+    },
     "GSE281367": {"evidence": "GEO first became public after the immutable archive object was created.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
-    "GSE289173": {"article_title": "Single-cell eQTL analysis identifies genetic variation underlying metabolic dysfunction-associated steatohepatitis", "evidence": "GEO became public 57 days before the immutable archive object was created. The current CELLxGENE catalog has no accession or title match, but the complete frozen pretraining table could not be retrieved; sealed exposure therefore remains unknown.", "exposure_state": "unknown", "public_date": "2025-02-12"},
-    "GSE296875": {"evidence": "GEO first became public after the immutable archive object was created.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
-    "Liver_Atlas": {"evidence": "Public before the archive date; complete declared corpus table unavailable.", "exposure_state": "unknown", "public_date": "2018-10-22"}
+    "GSE289173": {
+      "article_title": "Single-cell eQTL analysis identifies genetic variation underlying metabolic dysfunction-associated steatohepatitis",
+      "evidence": "Not adjudicated by the seven-Resource-study UUID reconstruction. Its prior unknown exposure state is retained; available corpus metadata alone is not an exposure decision for this source.",
+      "exposure_state": "unknown",
+      "public_date": "2025-02-12"
+    },
+    "GSE296875": {
+      "evidence": "GEO public 2025-10-01, after the 2025-04-10 archive",
+      "exposure_state": "clean_declared",
+      "public_date": "2025-10-01",
+      "matched_records": []
+    },
+    "Liver_Atlas": {
+      "evidence": "e84f2780-51e8-4cfa-8aa0-13bbfef677c7 (own, 167,598 QC cells, All cells from human liver dataset)",
+      "exposure_state": "encoder_seen",
+      "public_date": "2022-01-11",
+      "aliases": [
+        "Liver_Atlas",
+        "GSE192742",
+        "GSE192740",
+        "GSE192741",
+        "DOI:10.1016/j.cell.2021.12.018",
+        "CELLXGENE:e84f2780-51e8-4cfa-8aa0-13bbfef677c7"
+      ],
+      "article_title": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches",
+      "matched_records": [
+        {
+          "dataset_id": "e84f2780-51e8-4cfa-8aa0-13bbfef677c7",
+          "relation": "own",
+          "n_qc_cells": 167598,
+          "collection": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches",
+          "title": "All cells from human liver dataset"
+        }
+      ]
+    }
   },
   "rules": {
     "post_archive": "A source first public after 2025-04-10 is clean_declared for this exact versioned archive unless another training declaration names it.",
     "pre_archive": "A source public on or before 2025-04-10 remains unknown until the exact declared UUID inventory is checked; a current catalog is not a historical substitute."
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-05"
 }

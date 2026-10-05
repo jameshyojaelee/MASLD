@@ -15,7 +15,7 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "479ba64fe4e45b1fb154724d151e836d85b5ad05163ba8362163b8d8fd4de624"
+    "sha256": "1a8d243d61cc79bf8005c813b2266bf54f17f84c4067e6332d8e2f4bb7a236ff"
   },
   "interpretation": "The original March 2025 v1.5 object is tied to the published LTS 2023-12-15 corpus, which predates GSE289173 and supports target_label_unexposed for the held-back endpoint. Several development sources were public before the cutoff and remain source-specific unknown because the exact post-QC train/holdout inventory was not released.",
   "rejected_checkpoint": {

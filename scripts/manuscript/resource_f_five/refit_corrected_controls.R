@@ -23,8 +23,11 @@
 #
 # Design, filter and tests are unchanged: filterByExpr(~ 0 + group_binary), RLE,
 # voomWithQualityWeights, ~ dataset + inferred_sex + group_binary, eBayes,
-# TREAT lfc 0.25, ashr normal mixture. Unit of inference: one biopsy per
-# participant (844 participants, 5 cohorts).
+# TREAT lfc 0.25, ashr normal mixture. The historical 844 records are libraries;
+# they are not a verified independent-donor roster. For a qualified candidate,
+# supply REFIT_CORRECTED_COUNTS, REFIT_UNIT_ROSTER and
+# REFIT_ANNOTATION_RESOLUTION (a completed annotation/count certificate).
+# The unchanged historical counts are still used by the reproduction guard.
 
 suppressPackageStartupMessages({
   library(ashr)
@@ -46,6 +49,16 @@ PROJECT_ROOT <- normalizePath(Sys.getenv(
 ), mustWork = TRUE)
 MODE <- Sys.getenv("REFIT_MODE", "fit")
 if (!MODE %in% c("fit", "reproduce")) fail("REFIT_MODE must be fit or reproduce")
+QUALIFIED_PATHS <- c(
+  qualified_counts = Sys.getenv("REFIT_CORRECTED_COUNTS", ""),
+  qualified_roster = Sys.getenv("REFIT_UNIT_ROSTER", ""),
+  qualified_certificate = Sys.getenv("REFIT_ANNOTATION_RESOLUTION", "")
+)
+QUALIFIED <- any(nzchar(QUALIFIED_PATHS))
+if (QUALIFIED && !all(nzchar(QUALIFIED_PATHS))) {
+  fail("All three qualified count/roster/certificate inputs are required")
+}
+source(file.path(PROJECT_ROOT, "scripts/manuscript/resource_f_five/qualified_bulk_inputs.R"))
 OUT_ROOT <- Sys.getenv("REFIT_OUTPUT_ROOT", "")
 if (!nzchar(OUT_ROOT)) fail("REFIT_OUTPUT_ROOT is required")
 root_pattern <- if (MODE == "fit") {
@@ -76,8 +89,10 @@ INPUTS <- c(
   source_diagnosis = file.path(
     PROJECT_ROOT,
     "RNA-seq/Human/Patient_Cohorts/metadata/source/GSE130970/GSE130970_source_diagnosis.tsv"
-  )
+  ),
+  qualified_input_helper = file.path(PROJECT_ROOT, "scripts/manuscript/resource_f_five/qualified_bulk_inputs.R")
 )
+if (QUALIFIED) INPUTS <- c(INPUTS, QUALIFIED_PATHS)
 # SHA-256 of the adopted F_five artifacts (arms/F_five/provenance/artifact_manifest.tsv).
 PINNED <- c(
   counts_raw = "16afc00bf1db706731d07df1dfeabdad0bc423b1caa1b822631685a55ec7f225",
@@ -177,6 +192,7 @@ integrate_counts <- function(counts_raw, meta, pass_ids) {
 # 05h_limma_voom_qw_canonical.R, remediation mode.
 fit_disease_model <- function(dge, meta) {
   dge_mega <- dge[, dge$samples$dataset %in% mega]
+  assert_bulk_unit_alignment(meta, colnames(dge_mega))
   sex <- meta$inferred_sex[match(colnames(dge_mega), meta$sample_id)]
   if (anyNA(sex)) fail("Missing inferred_sex for model samples")
   info <- data.frame(
@@ -287,6 +303,9 @@ downstream_label_counts <- function(meta) {
 write_fit_outputs <- function(fitted, arm_dir, dge_path, meta_path,
                               reference_path = file.path(arm_dir, "deg_results.csv")) {
   out <- fitted$out
+  unit_qualified <- isTRUE(assert_bulk_unit_alignment(
+    as.data.table(readRDS(meta_path)), colnames(fitted$dge)
+  ))
   write_table_once(out, file.path(arm_dir, "deg_results.csv"), sep = ",")
   write_table_once(out[, .(gene, symbol, logFC, SE, t, P.Value, padj, AveExpr)],
                    file.path(arm_dir, "coefficient_table.tsv.gz"))
@@ -311,6 +330,9 @@ write_fit_outputs <- function(fitted, arm_dir, dge_path, meta_path,
     n_cohorts = nlevels(fitted$info$dataset),
     n_control = sum(fitted$info$group_binary == "Control"),
     n_disease = sum(fitted$info$group_binary == "Disease"),
+    biological_unit = if (unit_qualified)
+      "source_linked_donor_or_conservative_identity_cluster" else "historical_library_record",
+    identity_qualified = unit_qualified,
     treat_lfc = TREAT_LFC
   ), file.path(arm_dir, "model_input_manifest.tsv"))
   data.table(arm = basename(arm_dir), n_columns = ncol(fitted$design), rank = fitted$design_rank,
@@ -331,6 +353,15 @@ if (MODE == "fit") {
   reference_deg <- fread(INPUTS[["reference_deg"]])
   model_ids <- colnames(reference_dge)
   if (length(model_ids) != 844L) fail("Reference F_five DGE is not 844 participants")
+  if (QUALIFIED) {
+    qualified <- read_qualified_bulk_inputs(
+      QUALIFIED_PATHS[["qualified_counts"]], QUALIFIED_PATHS[["qualified_roster"]],
+      QUALIFIED_PATHS[["qualified_certificate"]], model_ids
+    )
+    if (!all(sub("[.][0-9]+$", "", rownames(qualified$counts)) %in% gene_metadata$eb)) {
+      fail("Corrected count genes are absent from the pinned GENCODE annotation")
+    }
+  }
 
   # ---- corrected GSE130970 labels, joined by run accession
   src <- fread(INPUTS[["source_diagnosis"]], colClasses = "character")
@@ -493,6 +524,31 @@ if (MODE == "fit") {
   cat("reproduction guard PASS\n")
   rm(guard_fit, guard_dge); invisible(gc())
 
+  # Count and identity corrections are applied together, after the unchanged
+  # historical fit reproduces. No historical DEG or participant total is a
+  # target for the qualified analysis.
+  if (QUALIFIED) {
+    original_model_ids <- model_ids
+    counts_raw <- qualified$counts
+    model_ids <- original_model_ids[original_model_ids %in% qualified$roster$sample_id]
+    pass_ids <- model_ids
+    for (arm in ARMS) {
+      m <- metas[[arm]][sample_id %in% model_ids]
+      m <- merge(m, qualified$roster[, .(sample_id, analysis_unit_id, unit_evidence)],
+                 by = "sample_id", all.x = TRUE, sort = FALSE)
+      assert_bulk_unit_alignment(m, model_ids)
+      metas[[arm]] <- m
+      arm_meta <- m[!sample_id %in% ARM_EXCLUDED[[arm]]]
+      expected_totals[[arm]] <- c(control = sum(arm_meta$group_binary == "Control"),
+                                disease = sum(arm_meta$group_binary == "Disease"))
+    }
+    write_tsv_once(qualified$roster, file.path(OUT_ROOT, "primary_unit_roster.tsv"))
+    write_tsv_once(data.table(sample_id = setdiff(original_model_ids, model_ids)),
+                   file.path(OUT_ROOT, "excluded_historical_model_records.tsv"))
+    write_json_once(qualified$certificate, file.path(OUT_ROOT, "qualified_input_certificate.json"))
+    rm(qualified); invisible(gc())
+  }
+
   # ---- 2. corrected arms
   reference_calls <- reference_deg[, .(gene, old_symbol = symbol, old_logFC = logFC, old_SE = SE,
                                        old_padj = padj, old_treat_fdr = treat_fdr,
@@ -507,8 +563,9 @@ if (MODE == "fit") {
     dir.create(arm_dir, recursive = FALSE, showWarnings = FALSE)
     meta_arm <- metas[[arm]]
     arm_ids <- setdiff(model_ids, ARM_EXCLUDED[[arm]])
+    if (QUALIFIED) meta_arm <- meta_arm[sample_id %in% arm_ids]
     dge <- integrate_counts(counts_raw, meta_arm, setdiff(pass_ids, ARM_EXCLUDED[[arm]]))
-    if (!setequal(colnames(dge), arm_ids)) fail("Arm ", arm, " sample set is not the 844 minus its exclusions")
+    if (!setequal(colnames(dge), arm_ids)) fail("Arm ", arm, " sample set differs from its selected roster")
     group_table <- table(dge$samples$group_binary)
     if (!identical(as.integer(group_table[c("Control", "Disease")]), unname(expected_totals[[arm]]))) {
       fail("Arm ", arm, " control/disease totals disagree with the source table")
@@ -584,7 +641,8 @@ if (MODE == "fit") {
     expected <- c(
       list(arm = arm,
            control_rule = ARM_RULE[[arm]],
-           excluded_samples = ARM_EXCLUDED[[arm]],
+           excluded_samples = if (QUALIFIED) setdiff(original_model_ids, arm_ids) else ARM_EXCLUDED[[arm]],
+           biological_unit = if (QUALIFIED) "source_linked_donor_or_conservative_identity_cluster" else "historical_library_record",
            n_samples = ncol(fitted$dge), n_cohorts = nlevels(fitted$info$dataset), n_genes = nrow(out),
            n_control = sum(fitted$info$group_binary == "Control"),
            n_disease = sum(fitted$info$group_binary == "Disease"),
@@ -706,7 +764,9 @@ if (MODE == "fit") {
     "",
     "Model: filterByExpr(~ 0 + group_binary), RLE, voomWithQualityWeights,",
     "~ dataset + inferred_sex + group_binary, eBayes; canonical DEG = padj < 0.05 and |logFC| > 0.5;",
-    "TREAT lfc 0.25 (BH) as sensitivity; ashr normal mixture. Unit: one biopsy per participant, n = 844.",
+    "TREAT lfc 0.25 (BH) as sensitivity; ashr normal mixture.",
+    if (QUALIFIED) "Unit: one selected record per supported donor or conservative genetic identity cluster; see primary_unit_roster.tsv." else
+      "Historical analysis: 844 library records; donor independence is not established.",
     "",
     "Arms:",
     "- reproduction_guard: old labels; must reproduce the adopted F_five fit (guard_checks.tsv).",

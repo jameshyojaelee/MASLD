@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 # KEY MESSAGE: Prespecified cell-type-specific gene programs show distinct donor-level profiles across Healthy, Steatosis, and Steatohepatitis groups.
 # Three outputs derive from one matrix so the source and color scale do not drift:
-#   MAIN(3I) fig3g_singlecell_module_heatmap.pdf — COMPACT: top-3 up + top-3 down
-#         per cell type (17 modules) — the multi-cellular hand-off at a glance.
+#   MAIN(4C) fig4c_hotspot_stage_heatmap.pdf — COMPACT: top-3 up + top-3 down
+#         per non-T lineage (24 modules); all five lineages remain in the supplement.
 #   MAIN(3J) fig3h_ccc_lr_heatmap.pdf           — companion communication heatmap
 #         (13 headline L-R pairs, row z-scored) as its own panel.
 #   SUPP  figs3_singlecell_module_heatmap_full.pdf — the FULL 22-module breadth.
@@ -70,7 +70,7 @@ CT_FULL  <- c(hepatocytes = "Hepatocytes", fibroblasts = "Fibroblasts",
 CT_COL   <- setNames(unname(ct_palette[CT_FULL[CTS]]), CT_LABEL[CTS])
 G6 <- function(...) gpar(fontsize = 6, fontfamily = "Helvetica", ...)
 MAIN_MODULE_WIDTH_IN  <- 3.54
-MAIN_MODULE_HEIGHT_IN <- 3.05
+MAIN_MODULE_HEIGHT_IN <- 2.65
 MAIN_LIANA_WIDTH_IN   <- 3.54
 MAIN_LIANA_HEIGHT_IN  <- 1.95
 
@@ -296,11 +296,11 @@ draw_modules <- function(Wsub, out_pdf, block_titles = TRUE,
 }
 
 draw_modules(W,          OUT_SUPP, block_titles = TRUE)    # FULL 54 -> supp (block titles + (n sig) help navigate)
-draw_modules(W[rk <= 3], OUT_MAIN, block_titles = FALSE,
+draw_modules(W[rk <= 3 & cell_type != "tcells"], OUT_MAIN, block_titles = FALSE,
              page_width_in = MAIN_MODULE_WIDTH_IN,
              page_height_in = MAIN_MODULE_HEIGHT_IN,
              row_mm = 2.0,
-             overhead_in = 0.56)  # compact 24 -> main: clean left margin; fixed to Fig 3 size contract
+             overhead_in = 0.56)  # compact 24 -> main: four non-T lineage blocks
 
 # ---------------------------------------------------------------------------
 # (3) LIANA communication heatmap — standalone MAIN panel
@@ -342,11 +342,11 @@ dev.off()
 cat(sprintf("[saved] %s  (%d L-R pairs)\n", OUT_LIANA, ncol(lmat)))
 
 n_sig_total <- nrow(sig[q < 0.05]) # donor-level BH-selected modules across the 5 cell types
-n_compact   <- nrow(W[rk <= 3])   # compact main selection (top-3 up + top-3 down per cell type)
+n_compact   <- nrow(W[rk <= 3 & cell_type != "tcells"])   # compact main selection (four displayed lineages)
 message(sprintf(paste0(
-  "[Figure 4C/4D caption] Donor-level single-cell remodeling. Figure 4C (MAIN): per cell type the ",
+  "[Figure 4C/4D caption] Donor-level single-cell remodeling. Figure 4C (MAIN): for each of four non-T lineages, the ",
   "3 positive + 3 negative Hotspot program effects with the smallest complete-family BH q ",
-  "(", n_compact, " displayed; ", n_sig_total, " of 117 pass BH q<0.05; all 117 in the supplementary panel) split by cell type × ",
+  "(", n_compact, " displayed; ", n_sig_total, " of 117 pass BH q<0.05; all 117, including T cells, in the supplementary panel) split by lineage × ",
   "coarse stage Healthy to Steatohepatitis; color = ",
   "dataset-centered median module score over the 3 stages Healthy/Steatosis/Steatohepatitis ",
   "(Cirrhosis excluded; scale shared with the full supp panel). Right bars = disease slope ",

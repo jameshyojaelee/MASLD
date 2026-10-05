@@ -25,7 +25,7 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "d6a9e3f182423778027afad116aa20806a001c2a480f74238e8ccbb3c408699a"
+    "sha256": "65c7af103dd7912417ae62c437c3f65af06a39a13ebf0a56b1dbe2623f97d1d2"
   },
   "interpretation": "GSE289173 was submitted and made public in February 2025, after the June 2023 whole-human and December 2023 continual output files. The continual model's Tabula Sapiens supervision is a generic external cell-type objective, not exposure to GSE289173 or its frozen endpoint labels; it is therefore target_label_unexposed for the held-back source. This does not make the two checkpoints scientifically equivalent: their self-supervised and externally supervised results must be reported separately, and scgpt_continual is continual_seen on any Tabula Sapiens evaluation. Sources public before the whole-human cutoff remain unknown until the exact retired Census build can be queried.",
   "remaining_blockers": [

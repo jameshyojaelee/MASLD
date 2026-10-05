@@ -98,11 +98,19 @@
       "public_date": "2025-10-01"
     },
     "Liver_Atlas": {
-      "aliases": ["Liver_Atlas", "GSE115469", "DOI:10.1038/s41467-018-06318-7"],
+      "aliases": [
+        "Liver_Atlas",
+        "GSE192742",
+        "GSE192740",
+        "GSE192741",
+        "DOI:10.1016/j.cell.2021.12.018",
+        "CELLXGENE:e84f2780-51e8-4cfa-8aa0-13bbfef677c7"
+      ],
       "continual_relation": "not_Tabula_Sapiens",
-      "evidence": "Public before the corpus cutoff and currently represented in CELLxGENE, but exact membership in the retired 2023-05-08 weekly Census build is not substituted from a later release.",
+      "evidence": "Guilliams GSE192740/GSE192742 was public before the checkpoint cutoff. Membership in the retired 2023-05-08 weekly Census build remains unavailable; no later build substitutes for it.",
       "exposure_state": "unknown",
-      "public_date": "2018-10-22"
+      "public_date": "2022-01-11",
+      "article_title": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches"
     }
   },
   "rules": {
@@ -111,5 +119,5 @@
     "pre_cutoff": "A source public on or before 2023-05-08 remains unknown until exact archived Census membership is rederived; a later Census release is not accepted as a substitute."
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-05"
 }

@@ -16,7 +16,7 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "1688aa2b8a535bde4f3b3c2de11fc9fb0403117657e79913d61a99c719a24709"
+    "sha256": "2d474569003b9734a112ee06dc2eeb74c4dc667bb488c2add9d0fdcc80821920"
   },
   "frozen_fixture_contract": {
     "artifacts_manifest_sha256": "b6d50557107b5e6a878480741ec6a4c781663218876943ae205578b1a4ecd1e5",

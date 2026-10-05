@@ -31,9 +31,9 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "348ddd48c1ce4ce603f2219d05b22dc3708c09c9c5b90d9844afdf51a7ed7dcb"
+    "sha256": "8b41c0dcc2fb06eca66c4d46d9d458ab2cba1cd098d70aa17829cd8a959e68bf"
   },
-  "interpretation": "The frozen Geneformer checkpoints were pretrained with a self-supervised masked-gene objective on rank-encoded corpora that the official corpus cards describe as unlabeled. GSE289173 was submitted to GEO on 2025-02-10 and made public on 2025-02-12, after both frozen training cutoffs. Its linked article was received on 2024-09-20, accepted on 2025-05-16, and published online on 2025-06-25. The official Genecorpus-104M source table is DOI-level rather than accession-complete and contains no GSE289173, PRJNA1221860, or eventual article DOI 10.1038/s41588-025-02237-8. These facts support target_label_unexposed for the held-back cell-state and eQTL/ieQTL outcomes. The cell-state crosswalk detects declared encoder exposure for GSE136103 and Liver_Atlas in V1 and V2, and GSE185477 in V2. An unmatched source is clean_declared only when its first-public date is after the checkpoint cutoff; unmatched sources already public before a cutoff remain unknown.",
+  "interpretation": "The frozen Geneformer checkpoints were pretrained with a self-supervised masked-gene objective on rank-encoded corpora that the official corpus cards describe as unlabeled. GSE289173 was submitted to GEO on 2025-02-10 and made public on 2025-02-12, after both frozen training cutoffs. Its linked article was received on 2024-09-20, accepted on 2025-05-16, and published online on 2025-06-25. The official Genecorpus-104M source table is DOI-level rather than accession-complete and contains no GSE289173, PRJNA1221860, or eventual article DOI 10.1038/s41588-025-02237-8. These facts support target_label_unexposed for the held-back cell-state and eQTL/ieQTL outcomes. The corrected cell-state crosswalk detects GSE136103 exposure in V1 and V2, and Guilliams Liver_Atlas plus GSE185477 exposure in V2. Guilliams was first public after the V1 cutoff and is clean_declared there. An unmatched source is clean_declared only when its first-public date is after the checkpoint cutoff; unmatched sources already public before a cutoff remain unknown.",
   "remaining_blockers": [
     "Extend the completed cell-state crosswalk to the five-cohort bulk source families and any other task that proposes Geneformer-derived transfer.",
     "Treat development sources found in a pretraining corpus as encoder_seen for source-stratified diagnostics.",
@@ -87,5 +87,5 @@
       "url": "https://pubmed.ncbi.nlm.nih.gov/40562914/"
     }
   ],
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-05"
 }

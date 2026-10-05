@@ -2326,7 +2326,7 @@ class RegistryFileContractTest(unittest.TestCase):
             ]
             == "encoder_seen"
         }
-        self.assertEqual(v1_seen, {"GSE136103", "Liver_Atlas"})
+        self.assertEqual(v1_seen, {"GSE136103"})
         self.assertEqual(
             v2_seen, {"GSE136103", "GSE185477", "Liver_Atlas"}
         )
@@ -2336,15 +2336,20 @@ class RegistryFileContractTest(unittest.TestCase):
                 record["cells_passed_filtering"]
                 for record in liver_atlas["Genecorpus-30M"]["matched_records"]
             ),
-            768462,
+            0,
         )
         self.assertEqual(
             sum(
                 record["cells_passed_filtering"]
                 for record in liver_atlas["Genecorpus-104M"]["matched_records"]
             ),
-            782916,
+            664237,
         )
+        self.assertGreater(
+            crosswalk["findings"]["Liver_Atlas"]["public_date"],
+            exposure["checkpoint_findings"]["geneformer_v1_10m"]["training_cutoff"],
+        )
+        self.assertNotIn("GSE115469", crosswalk["findings"]["Liver_Atlas"]["aliases"])
         v1_clean = {
             dataset_id
             for dataset_id, finding in crosswalk["findings"].items()
@@ -2380,6 +2385,7 @@ class RegistryFileContractTest(unittest.TestCase):
                 "GSE256398",
                 "GSE281367",
                 "GSE296875",
+                "Liver_Atlas",
             },
         )
         self.assertEqual(v2_clean, {"GSE256398", "GSE281367", "GSE296875"})
@@ -4407,10 +4413,11 @@ class RegistryFileContractTest(unittest.TestCase):
                 for dataset_id, finding in crosswalk["findings"].items()
                 if finding["exposure_state"] == "clean_declared"
             },
-            {"GSE281367", "GSE296875"},
+            {"GSE136103", "GSE174748", "GSE189600", "GSE202379", "GSE244832", "GSE281367", "GSE296875"},
         )
         self.assertEqual(
-            crosswalk["corpus"]["source_record_sha256"], "UNRESOLVED"
+            crosswalk["corpus"]["source_record_sha256"],
+            "12838f5487838d8a5975542f40dd84222c33f13af75f90e3c2cd13fbb45485b5",
         )
         self.assertEqual(
             crosswalk["corroborating_live_catalog"][

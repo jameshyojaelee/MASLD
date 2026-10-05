@@ -55,11 +55,24 @@
     "GSE289173": {"evidence": "GEO first became public after the declared LTS pretraining release. The original published v1.5 checkpoint is used; the undeclared May 2026 replacement is ineligible.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
     "GSE296875": {"evidence": "GEO first became public after the declared LTS pretraining release.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
     "Liver_Atlas": {
-      "aliases": ["Liver_Atlas", "GSE115469", "DOI:10.1038/s41467-018-06318-7"],
-      "evidence": "CELLxGENE dataset a43aa46b-bd16-47fe-bc3e-19a052624e79 exists in the exact LTS archive, but the released paper does not identify whether it survived QC and entered train rather than dataset-level holdout.",
+      "aliases": [
+        "Liver_Atlas",
+        "GSE192742",
+        "GSE192740",
+        "GSE192741",
+        "DOI:10.1016/j.cell.2021.12.018",
+        "CELLXGENE:e84f2780-51e8-4cfa-8aa0-13bbfef677c7"
+      ],
+      "evidence": "Guilliams dataset e84f2780-51e8-4cfa-8aa0-13bbfef677c7 is present in the frozen Census 2023-12-15 inventory; the checkpoint's post-QC training/holdout membership is unpublished and remains unknown.",
       "exposure_state": "unknown",
-      "historical_archive_records": [{"dataset_id": "a43aa46b-bd16-47fe-bc3e-19a052624e79", "etag": "8685314b190f9c93fd6e568453c93565-8", "last_modified": "2023-12-14T04:56:34Z", "size_bytes": 66271286}],
-      "public_date": "2018-10-22"
+      "public_date": "2022-01-11",
+      "article_title": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches",
+      "historical_archive_records": [
+        {
+          "dataset_id": "e84f2780-51e8-4cfa-8aa0-13bbfef677c7",
+          "census_build": "2023-12-15"
+        }
+      ]
     }
   },
   "rules": {
@@ -68,5 +81,5 @@
     "replacement": "The May 2026 object at medium-v1.5.ckpt has unknown exposure and cannot inherit this crosswalk."
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-05"
 }

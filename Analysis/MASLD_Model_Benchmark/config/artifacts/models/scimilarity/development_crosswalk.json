@@ -39,7 +39,21 @@
     "GSE281367": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
     "GSE289173": {"evidence": "GEO was submitted and made public after the v1.1 Zenodo record was finalized; its frozen cell-state and eQTL/ieQTL outcomes were not training labels.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
     "GSE296875": {"evidence": "GEO first became public after the v1.1 Zenodo record was finalized.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
-    "Liver_Atlas": {"evidence": "No GSE115469 accession, MacParland author, or exact publication-title match in the complete declared training/test/reference table.", "exposure_state": "clean_declared", "public_date": "2018-10-22"}
+    "Liver_Atlas": {
+      "evidence": "No train/test collection, publication, GEO series or any of 147 GSMs in the declared table",
+      "exposure_state": "clean_declared",
+      "public_date": "2022-01-11",
+      "aliases": [
+        "Liver_Atlas",
+        "GSE192742",
+        "GSE192740",
+        "GSE192741",
+        "DOI:10.1016/j.cell.2021.12.018",
+        "CELLXGENE:e84f2780-51e8-4cfa-8aa0-13bbfef677c7"
+      ],
+      "article_title": "Spatial proteogenomics reveals distinct and evolutionarily conserved hepatic macrophage niches",
+      "matched_records": []
+    }
   },
   "rules": {
     "encoder_training": "A declared train row is encoder_seen because model training used author-provided Cell Ontology labels and expression.",
@@ -47,5 +61,5 @@
     "sealed_timing": "A source first public after the finalized v1.1 record is target_label_unexposed for the sealed source and clean_declared for development sources unless another declaration names it."
   },
   "schema_version": "masld-bench-development-crosswalk-v2",
-  "verified_date": "2026-08-24"
+  "verified_date": "2026-10-05"
 }
