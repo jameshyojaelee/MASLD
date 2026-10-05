@@ -49,8 +49,13 @@ n_genes_expected <- if (file.exists(expected_counts_path)) {
 } else {
   23370L
 }
+unit_qualified <- "identity_qualified" %in% names(model_manifest) &&
+  isTRUE(as.logical(model_manifest$identity_qualified[[1L]]))
+n_samples_expected <- if (unit_qualified) as.integer(model_manifest$n_samples[[1L]]) else 844L
 if (nrow(model_manifest) != 1L || model_manifest$n_cohorts != 5L ||
-    model_manifest$n_samples != 844L || model_manifest$n_genes != n_genes_expected) {
+    model_manifest$n_samples != n_samples_expected || model_manifest$n_genes != n_genes_expected ||
+    (unit_qualified && (!file.exists(expected_counts_path) ||
+      jsonlite::fromJSON(expected_counts_path)$n_samples != n_samples_expected))) {
   fail("Five-cohort model-input contract drift")
 }
 
@@ -62,6 +67,15 @@ dge_path <- normalizePath(model_manifest$dge_path, mustWork = TRUE)
 meta_path <- normalizePath(model_manifest$meta_path, mustWork = TRUE)
 annotation_path <- normalizePath(model_manifest$gene_metadata_path, mustWork = TRUE)
 nmf_path <- file.path(project_root, "RNA-seq/results/subtypes/nmf_assignments.csv")
+context_roster_path <- Sys.getenv("STAGE_CONTEXT_ROSTER", "")
+if (unit_qualified) {
+  nmf_path <- Sys.getenv("STAGE_FIXED_NMF_SCORES", "")
+  if (!nzchar(context_roster_path) || !nzchar(nmf_path)) {
+    fail("Qualified stage models require STAGE_CONTEXT_ROSTER and STAGE_FIXED_NMF_SCORES")
+  }
+  nmf_path <- normalizePath(nmf_path, mustWork = TRUE)
+  context_roster_path <- normalizePath(context_roster_path, mustWork = TRUE)
+}
 program_label_path <- file.path(project_root, "RNA-seq/results/subtypes/program_labels.csv")
 
 out_root <- file.path(candidate_root, "analysis", "stage_extensions")
@@ -69,7 +83,7 @@ dir.create(out_root, recursive = TRUE, showWarnings = FALSE)
 if (!dir.exists(out_root)) fail("Cannot create output root")
 
 dge_all <- readRDS(dge_path)
-if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(as.integer(n_genes_expected), 844L))) {
+if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(as.integer(n_genes_expected), n_samples_expected))) {
   fail("Five-cohort corrected fragment DGE identity drift")
 }
 stage_annotation <- fread(annotation_path)[, .(
@@ -85,17 +99,60 @@ if (anyNA(stage_annotation$gene_id_versioned) || anyDuplicated(stage_annotation$
 }
 
 eligibility <- as.data.table(readRDS(meta_path))[sample_id %in% colnames(dge_all)]
-eligibility[, analysis_unit_id := paste(dataset, sample_id, sep = "::")]
+if (unit_qualified) {
+  required_unit_columns <- c("sample_id", "dataset", "analysis_unit_id", "unit_evidence")
+  roster <- fread(context_roster_path)
+  if (!all(required_unit_columns %in% names(eligibility)) ||
+      !all(required_unit_columns %in% names(roster))) fail("Qualified unit evidence is missing")
+  selected_roster <- roster[sample_id %in% colnames(dge_all)]
+  if (nrow(selected_roster) != n_samples_expected || anyDuplicated(selected_roster$sample_id) ||
+      anyDuplicated(selected_roster$analysis_unit_id)) fail("Context roster is incomplete or repeated")
+  joined_units <- merge(eligibility[, ..required_unit_columns], selected_roster[, ..required_unit_columns],
+                        by = c("sample_id", "dataset"), suffixes = c("_model", "_context"))
+  if (nrow(joined_units) != n_samples_expected ||
+      anyNA(joined_units) ||
+      any(!nzchar(joined_units$unit_evidence_model)) ||
+      any(joined_units$analysis_unit_id_model != joined_units$analysis_unit_id_context) ||
+      any(joined_units$unit_evidence_model != joined_units$unit_evidence_context)) {
+    fail("Model metadata and source-qualified context roster disagree")
+  }
+} else {
+  eligibility[, `:=`(analysis_unit_id = paste(dataset, sample_id, sep = "::"),
+                    unit_evidence = "historical_library_record_not_identity_verified")]
+}
 eligibility <- eligibility[!is.na(inferred_sex) & !is.na(dataset)]
-if (nrow(eligibility) != 844L || anyDuplicated(eligibility$sample_id) ||
+if (nrow(eligibility) != n_samples_expected || anyDuplicated(eligibility$sample_id) ||
     anyDuplicated(eligibility$analysis_unit_id)) fail("Biological-unit identity drift")
+nmf <- fread(nmf_path)
+programs <- paste0("P", 1:6)
+if (!all(c("sample_id", programs) %in% names(nmf)) ||
+    any(!is.finite(as.matrix(nmf[, ..programs])))) fail("Fixed P1-P6 scores are absent or non-finite")
+if (unit_qualified && (anyDuplicated(nmf$sample_id) ||
+    !setequal(nmf$sample_id, eligibility$sample_id))) fail("Fixed NMF projection roster differs from corrected model")
+if (identical(Sys.getenv("STAGE_EXTENSION_PREFLIGHT_ONLY"), "1")) {
+  cat("STAGE_EXTENSION_PREFLIGHT_PASS:", nrow(eligibility), "analysis units; no models fitted\n")
+  quit(save = "no", status = 0L)
+}
 
 fit_contrast <- function(sample_table, group_column, reference, comparison, contrast_id, axis_name) {
   selected <- sample_table[get(group_column) %in% c(reference, comparison)]
   selected[, group := factor(get(group_column), levels = c(reference, comparison))]
+  unestimable <- function(reason) list(
+    result = data.table(),
+    audit = data.table(axis = axis_name, contrast = contrast_id, reference = reference,
+      comparison = comparison, n_reference = sum(selected$group == reference),
+      n_comparison = sum(selected$group == comparison), n_samples = nrow(selected),
+      n_cohorts = uniqueN(selected$dataset), covariates = "dataset+inferred_sex",
+      bh_method = "Benjamini-Hochberg", bh_family_size = 0L,
+      biological_unit = if (unit_qualified) "source_linked_donor_or_conservative_identity_cluster" else "historical_library_record",
+      estimable = FALSE, failure_reason = reason),
+    samples = selected[, .(sample_id, analysis_unit_id, unit_evidence, dataset, inferred_sex,
+                           axis = axis_name, contrast = contrast_id, group = as.character(group))]
+  )
   if (uniqueN(selected$group) != 2L || uniqueN(selected$dataset) < 2L) {
-    fail("Unestimable contrast: ", contrast_id)
+    return(unestimable("comparison_group_or_multiple_cohort_support_missing"))
   }
+  if (uniqueN(selected$inferred_sex) < 2L) return(unestimable("inferred_sex_covariate_not_estimable"))
   setorder(selected, sample_id)
   dge <- dge_all[, match(selected$sample_id, colnames(dge_all))]
   info <- data.frame(
@@ -107,7 +164,7 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
   design <- model.matrix(~ dataset + inferred_sex + group, info)
   coef_name <- paste0("group", comparison)
   if (!coef_name %in% colnames(design) || qr(design)$rank != ncol(design)) {
-    fail("Rank-deficient design: ", contrast_id)
+    return(unestimable("rank_deficient_design"))
   }
   transformed <- voomWithQualityWeights(dge, design, plot = FALSE)
   fit <- eBayes(lmFit(transformed, design))
@@ -151,10 +208,11 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
       n_comparison = sum(selected$group == comparison), n_samples = nrow(selected),
       n_cohorts = uniqueN(selected$dataset), covariates = "dataset+inferred_sex",
       bh_method = "Benjamini-Hochberg", bh_family_size = nrow(dge),
-      biological_unit = "one_cross-sectional_human_biopsy_per_participant"
+      biological_unit = if (unit_qualified) "source_linked_donor_or_conservative_identity_cluster" else "historical_library_record",
+      estimable = TRUE, failure_reason = NA_character_
     ),
     samples = selected[, .(
-      sample_id, analysis_unit_id, dataset, inferred_sex,
+      sample_id, analysis_unit_id, unit_evidence, dataset, inferred_sex,
       axis = axis_name, contrast = contrast_id, group = as.character(group)
     )]
   )
@@ -162,7 +220,7 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
 
 stage_samples <- eligibility[
   dataset %in% c("GSE130970", "GSE135251", "GSE162694") & fibrosis_stage %in% 0:4,
-  .(sample_id, analysis_unit_id, dataset, fibrosis_stage, inferred_sex)
+  .(sample_id, analysis_unit_id, unit_evidence, dataset, fibrosis_stage, inferred_sex)
 ]
 stage_samples[, fib_group := paste0("F", fibrosis_stage)]
 
@@ -184,7 +242,7 @@ bin_nas <- function(x) fcase(
 nas_samples <- eligibility[!is.na(nas_score)]
 nas_samples[, nas_group := bin_nas(as.integer(nas_score))]
 nas_samples <- nas_samples[!is.na(nas_group), .(
-  sample_id, analysis_unit_id, dataset, inferred_sex, nas_group
+  sample_id, analysis_unit_id, unit_evidence, dataset, inferred_sex, nas_group
 )]
 if (anyDuplicated(nas_samples$analysis_unit_id)) fail("NAS biological unit is not unique")
 nas_pairs <- list(c("NAS0", "NAS1-2"), c("NAS1-2", "NAS3-4"), c("NAS3-4", "NAS5-8"))
@@ -211,17 +269,31 @@ write_tsv_once(unique(stage_samples), file.path(out_root, "stage_sample_manifest
 
 # Per-cohort disease models support the Figure 3C replication alluvial. Each
 # cohort retains its own complete BH family; no pooled p value is substituted.
+cohort_design_audit <- list()
 fit_cohort <- function(cohort_id) {
   selected <- eligibility[dataset == cohort_id & group_binary %in% c("Control", "Disease")]
   selected[, group := factor(group_binary, levels = c("Control", "Disease"))]
+  record_cohort <- function(estimable, reason = NA_character_) {
+    cohort_design_audit[[cohort_id]] <<- data.table(
+      dataset = cohort_id, contrast = "Disease_vs_Control", estimable = estimable,
+      failure_reason = reason, n_control = sum(selected$group == "Control"),
+      n_disease = sum(selected$group == "Disease"), n_analysis_units = nrow(selected),
+      covariates = "inferred_sex", bh_family_size = if (estimable) nrow(dge_all) else 0L)
+  }
+  if (uniqueN(selected$group) != 2L || uniqueN(selected$inferred_sex) < 2L) {
+    record_cohort(FALSE, "group_or_sex_covariate_not_estimable")
+    return(data.table())
+  }
   setorder(selected, sample_id)
   dge <- dge_all[, match(selected$sample_id, colnames(dge_all))]
   info <- data.frame(inferred_sex = droplevels(factor(selected$inferred_sex)),
                      group = selected$group, row.names = selected$sample_id)
   design <- model.matrix(~ inferred_sex + group, info)
   if (!"groupDisease" %in% colnames(design) || qr(design)$rank != ncol(design)) {
-    fail("Per-cohort disease design is not estimable: ", cohort_id)
+    record_cohort(FALSE, "rank_deficient_design")
+    return(data.table())
   }
+  record_cohort(TRUE)
   transformed <- voomWithQualityWeights(dge, design, plot = FALSE)
   fit <- eBayes(lmFit(transformed, design))
   table <- topTable(fit, coef = "groupDisease", number = Inf, sort.by = "none")
@@ -237,7 +309,8 @@ fit_cohort <- function(cohort_id) {
 }
 cohort_results <- rbindlist(lapply(sort(unique(eligibility$dataset)), fit_cohort))
 write_tsv_once(cohort_results, file.path(out_root, "cohort_disease_all_gene_results.tsv"))
-write_tsv_once(eligibility[, .(sample_id, analysis_unit_id, dataset, group_binary, inferred_sex,
+write_tsv_once(rbindlist(cohort_design_audit), file.path(out_root, "cohort_disease_design_audit.tsv"))
+write_tsv_once(eligibility[, .(sample_id, analysis_unit_id, unit_evidence, dataset, group_binary, inferred_sex,
                                sex_source, fibrosis_stage, nas_score, diagnosis_harmonized)],
                file.path(out_root, "five_cohort_sample_manifest.tsv"))
 cohort_summary <- eligibility[, .(
@@ -250,9 +323,7 @@ write_tsv_once(cohort_summary, file.path(out_root, "five_cohort_summary.tsv"))
 
 # Continuous prespecified NMF axes. Scores are centered within program before
 # cohort- and inferred-sex-adjusted group models. No dominant classes are used.
-nmf <- fread(nmf_path)
 program_labels <- fread(program_label_path)
-programs <- paste0("P", 1:6)
 if (!all(programs %in% names(nmf))) fail("Expected fixed P1-P6 scores are absent")
 nmf_long <- melt(nmf[, c("sample_id", programs), with = FALSE], id.vars = "sample_id",
                  variable.name = "program", value.name = "score")
@@ -265,8 +336,28 @@ program_group_summary <- function(samples, group_column, groups, axis_name) {
   joined[, group := factor(get(group_column), levels = groups)]
   rbindlist(lapply(programs, function(program_id) {
     d <- joined[program == program_id]
+    if (any(!is.finite(d$centered_score))) {
+      return(data.table(axis = axis_name, program = program_id,
+        program_label = program_labels$biological_label[match(program_id, program_labels$program_code)],
+        group = groups, centered_activity = NA_real_, SE = NA_real_,
+        n_samples = vapply(groups, function(value) sum(d$group == value), integer(1)),
+        n_cohorts = vapply(groups, function(value) uniqueN(d[group == value, dataset]), integer(1)),
+        covariates = "dataset+inferred_sex", prespecified = TRUE,
+        estimable = FALSE, failure_reason = "program_score_has_no_finite_standardized_variation"))
+    }
     rbindlist(lapply(groups, function(group_id) {
       x <- d[group == group_id]
+      design_group <- tryCatch(model.matrix(~ dataset + inferred_sex + group, data = d),
+                               error = function(e) NULL)
+      if (!nrow(x) || !any(d$group == groups[[1L]]) || is.null(design_group) ||
+          qr(design_group)$rank != ncol(design_group)) {
+        return(data.table(axis = axis_name, program = program_id,
+          program_label = program_labels$biological_label[match(program_id, program_labels$program_code)],
+          group = group_id, centered_activity = NA_real_, SE = NA_real_,
+          n_samples = nrow(x), n_cohorts = uniqueN(x$dataset),
+          covariates = "dataset+inferred_sex", prespecified = TRUE,
+          estimable = FALSE, failure_reason = "group_or_adjusted_design_not_estimable"))
+      }
       fit <- lm(centered_score ~ dataset + inferred_sex + group, data = d)
       reference_row <- data.frame(
         dataset = factor(d$dataset[[1L]], levels = levels(factor(d$dataset))),
@@ -282,7 +373,8 @@ program_group_summary <- function(samples, group_column, groups, axis_name) {
         program_label = unique(d$program_label), group = group_id,
         centered_activity = estimate, SE = se,
         n_samples = nrow(x), n_cohorts = uniqueN(x$dataset),
-        covariates = "dataset+inferred_sex", prespecified = TRUE
+        covariates = "dataset+inferred_sex", prespecified = TRUE,
+        estimable = TRUE, failure_reason = NA_character_
       )
     }))
   }))
@@ -298,6 +390,9 @@ source_manifest <- data.table(
   path = c(stage_validation, model_manifest_path, dge_path, meta_path, annotation_path, nmf_path, program_label_path)
 )
 source_manifest[, `:=`(size_bytes = file.info(path)$size, sha256 = vapply(path, sha256_file, character(1)))]
+if (unit_qualified) source_manifest <- rbind(source_manifest, data.table(
+  source_id = "source_qualified_context_roster", path = context_roster_path,
+  size_bytes = file.info(context_roster_path)$size, sha256 = sha256_file(context_roster_path)))
 write_tsv_once(source_manifest, file.path(out_root, "input_manifest.tsv"))
 
 writeLines(capture.output(sessionInfo()), file.path(out_root, "sessionInfo.txt"))

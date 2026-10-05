@@ -8,6 +8,22 @@ suppressPackageStartupMessages({
 
 options(digits = 17, scipen = 999)
 
+system_context_units <- function(context) {
+  columns <- c("sample_id", "dataset", "analysis_unit_id", "unit_evidence")
+  ml_assert(all(columns %in% names(context)) && !anyNA(context[, ..columns]) &&
+              all(nzchar(context$unit_evidence)) && !anyDuplicated(context$sample_id) &&
+              !anyDuplicated(context$analysis_unit_id), "Source-qualified system roster is incomplete or repeated")
+  context[, ..columns]
+}
+
+system_score_lineage <- function(root, corrected_hash) {
+  manifest_path <- file.path(root, "provenance", "input_manifest.tsv")
+  ml_assert(file.exists(manifest_path), "Corrected score input manifest is absent")
+  manifest <- fread(manifest_path)
+  ml_assert("sha256" %in% names(manifest) && corrected_hash %in% manifest$sha256,
+            "Molecular scores or axes do not identify the corrected expression substrate")
+}
+
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) != 3L) {
   stop(
@@ -31,6 +47,30 @@ script_file <- sub("^--file=", "", script_args[grepl("^--file=", script_args)])
 script_dir <- dirname(normalizePath(script_file))
 source(file.path(script_dir, "lib_molecular_layers.R"))
 contract <- ml_read_contract()
+context_path <- Sys.getenv("HAC_SYSTEM_CONTEXT_ROSTER", "")
+qualified <- nzchar(context_path)
+context <- NULL
+if (qualified) {
+  ml_assert(nzchar(Sys.getenv("HAC_SOURCE_ROOT")) && nzchar(Sys.getenv("HAC_CORRECTED_STAGE_ROOT")),
+            "Corrected systems require explicit continuum and verified stage roots")
+  context_path <- normalizePath(context_path, mustWork = TRUE)
+  context <- fread(context_path)
+  unit_columns <- c("sample_id", "dataset", "analysis_unit_id", "unit_evidence")
+  system_context_units(context)
+  stage_root <- normalizePath(Sys.getenv("HAC_CORRECTED_STAGE_ROOT"), mustWork = TRUE)
+  model <- fread(file.path(stage_root, "model_input_manifest.tsv"))
+  ml_assert(nrow(model) == 1L && "identity_qualified" %in% names(model) &&
+              isTRUE(as.logical(model$identity_qualified[[1L]])) &&
+              file.exists(file.path(stage_root, "VALIDATED.json")) &&
+              grepl('"status"[[:space:]]*:[[:space:]]*"VALIDATED"',
+                    paste(readLines(file.path(stage_root, "VALIDATED.json")), collapse = "")),
+            "Corrected stage inputs are not identity-qualified and validated")
+  # Both scores and axes must explicitly name the corrected expression hash.
+  corrected_hash <- ml_sha256(model$dge_path[[1L]])
+  for (root in c(analysis_candidate, ml_source_root(contract))) {
+    system_score_lineage(root, corrected_hash)
+  }
+}
 
 table_dir <- file.path(output_candidate, "tables")
 provenance_dir <- file.path(output_candidate, "provenance")
@@ -66,6 +106,8 @@ required_inputs <- c(
   community_path, node_path, atlas_checksums_path, legacy_window_path, axis_paths,
   pathway_paths, hotspot_path
 )
+if (qualified) required_inputs <- c(required_inputs, context_path,
+                                   file.path(stage_root, "model_input_manifest.tsv"), model$dge_path[[1L]])
 ml_assert(all(file.exists(required_inputs)), "A molecular-system inference input is missing")
 
 atlas_checksums <- fread(atlas_checksums_path)
@@ -87,7 +129,8 @@ input_manifest <- data.table(
     "promoted_atlas_checksum_registry", "legacy_feature_first_windows",
     "signature_pc1_scores",
     "fixed_projection_scores", rep("pathway_donor_scores", 6L),
-    "hotspot_donor_scores_and_metadata"
+    "hotspot_donor_scores_and_metadata",
+    if (qualified) c("source_qualified_context_roster", "corrected_model_input_manifest", "corrected_expression_substrate")
   )
 )
 input_manifest[, sha256 := vapply(path, ml_sha256, character(1))]
@@ -117,9 +160,20 @@ ml_assert(all(required_hotspot %in% names(hotspot)),
 metadata <- unique(hotspot[, .(
   sample_id, analysis_unit_id, dataset, inferred_sex, fibrosis_stage, nas_score
 )], by = c("sample_id", "dataset"))
-ml_assert(nrow(metadata) == 844L && !anyDuplicated(metadata$analysis_unit_id),
-          "System inference requires the frozen 844-participant roster")
-ml_assert(metadata[dataset %in% evaluation, uniqueN(sample_id)] == 501L,
+if (qualified) {
+  ml_assert("unit_evidence" %in% names(hotspot), "Corrected Hotspot scores lack unit evidence")
+  units <- unique(hotspot[, ..unit_columns])
+  ml_assert(nrow(units) == nrow(context) &&
+              identical(units[order(sample_id)], context[order(sample_id), ..unit_columns]),
+            "Corrected Hotspot scores disagree with context units")
+  metadata <- merge(metadata, context[, .(sample_id, dataset, unit_evidence)],
+                    by = c("sample_id", "dataset"), all = FALSE)
+}
+n_units <- if (qualified) nrow(context) else 844L
+n_evaluation <- if (qualified) context[dataset %in% evaluation, uniqueN(sample_id)] else 501L
+ml_assert(nrow(metadata) == n_units && !anyDuplicated(metadata$analysis_unit_id),
+          "System inference roster differs from its expected analysis units")
+ml_assert(metadata[dataset %in% evaluation, uniqueN(sample_id)] == n_evaluation,
           "Evaluation-cohort participant census drift")
 
 score_rows <- vector("list", length(collection_order))
@@ -145,6 +199,8 @@ score_rows[[7L]] <- hotspot[
   )
 ]
 feature_scores <- rbindlist(score_rows, use.names = TRUE)
+if (qualified) ml_assert(setequal(unique(feature_scores$sample_id), context$sample_id),
+                        "Corrected pathway/program score roster differs")
 rm(score_rows)
 feature_scores <- merge(
   feature_scores, nodes,
@@ -154,6 +210,8 @@ ml_assert(uniqueN(feature_scores$feature_id) == 5439L,
           "At least one frozen system node lacks donor scores")
 ml_assert(!anyDuplicated(feature_scores[, .(feature_id, sample_id, dataset)]),
           "Feature donor scores are duplicated")
+if (qualified) ml_assert(nrow(feature_scores) == n_units * nrow(nodes),
+                        "Corrected scores do not cover every frozen node in every context unit")
 ml_assert(all(is.finite(feature_scores$feature_score)),
           "Feature donor scores contain non-finite values")
 
@@ -196,7 +254,7 @@ system_scores <- merge(
   by = c("sample_id", "dataset"), all.x = TRUE, sort = FALSE
 )
 setorder(system_scores, aggregation_method, community_id, dataset, sample_id)
-expected_score_rows <- 844L * system_family_size * length(aggregation_methods)
+expected_score_rows <- n_units * system_family_size * length(aggregation_methods)
 ml_assert(nrow(system_scores) == expected_score_rows &&
             !anyDuplicated(system_scores[, .(
               aggregation_method, community_id, sample_id, dataset
@@ -224,9 +282,12 @@ ml_write_tsv_once(
 # inferential label is never silently attached to a different plotted estimand.
 all_axes <- ml_load_axes(contract)
 fixed_projection <- all_axes[axis_id == "fixed_projection"]
-ml_assert(nrow(fixed_projection) == 844L &&
+ml_assert(nrow(fixed_projection) == n_units &&
             !anyDuplicated(fixed_projection[, .(sample_id, dataset)]),
           "Fixed-projection roster is incomplete for window reconciliation")
+if (qualified) for (axis in axes_primary) ml_assert(
+  setequal(all_axes[axis_id == axis, sample_id], context$sample_id),
+  "Corrected continuum axis roster differs")
 window_score_rows <- vector("list", length(contract$window_centers))
 for (window_index in seq_along(contract$window_centers)) {
   center <- as.numeric(contract$window_centers[[window_index]])
@@ -327,7 +388,7 @@ ml_write_tsv_once(
 axes <- all_axes[
   dataset %in% evaluation & axis_id %in% axes_primary
 ]
-ml_assert(nrow(axes) == 501L * length(axes_primary) &&
+ml_assert(nrow(axes) == n_evaluation * length(axes_primary) &&
             !anyDuplicated(axes[, .(sample_id, dataset, axis_id)]),
           "Evaluation-cohort co-primary axis family drift")
 
@@ -422,12 +483,12 @@ ml_assert(nrow(continuum_models) ==
             length(aggregation_methods) * length(axes_primary) *
             length(evaluation) * system_family_size,
           "Continuum system-model family size drift")
-ml_assert(all(continuum_models$estimable),
-          "At least one primary system continuum model is not estimable")
 ml_write_tsv_once(
   continuum_models,
   file.path(table_dir, "system_continuum_cohort_models.tsv")
 )
+ml_assert(all(continuum_models$estimable),
+          "At least one primary system continuum model is not estimable; explicit failed rows were saved")
 
 continuum_meta <- continuum_models[, {
   fixed <- ml_fixed_meta(beta, se)
@@ -509,13 +570,14 @@ stage_models[, `:=`(
   biological_unit = "participant"
 ), by = .(aggregation_method, dataset)]
 ml_assert(nrow(stage_models) ==
-            length(aggregation_methods) * length(evaluation) * system_family_size &&
-            all(stage_models$estimable),
+            length(aggregation_methods) * length(evaluation) * system_family_size,
           "Fibrosis-stage system-model family size or estimability drift")
 ml_write_tsv_once(
   stage_models,
   file.path(table_dir, "system_fibrosis_stage_cohort_models.tsv")
 )
+ml_assert(all(stage_models$estimable),
+          "A fibrosis-stage system model is not estimable; explicit failed rows were saved")
 
 stage_meta <- stage_models[, {
   fixed <- ml_fixed_meta(beta, se)
@@ -785,7 +847,7 @@ summary <- data.table(
     "pooled_window_donor_first_vs_feature_first_spearman"
   ),
   value = c(
-    "844", "501", as.character(system_family_size),
+    as.character(n_units), as.character(n_evaluation), as.character(system_family_size),
     paste(axes_primary, collapse = ";"), paste(evaluation, collapse = ";"),
     as.character(sum(membership$continuum_associated_system)),
     as.character(sum(membership$fibrosis_stage_associated_system)),
@@ -817,7 +879,7 @@ bh_recomputed <- continuum_meta[, .(
   ))
 ), by = .(aggregation_method, axis_id)]
 bh_pass <- all(bh_recomputed$maximum_absolute_difference < 1e-15)
-participant_count_pass <- system_scores[, uniqueN(sample_id)] == 844L
+participant_count_pass <- system_scores[, uniqueN(analysis_unit_id)] == n_units
 complete_family_pass <-
   nrow(continuum_meta) == length(aggregation_methods) *
     length(axes_primary) * system_family_size &&
@@ -841,7 +903,7 @@ audit <- data.table(
     all(input_manifest$hash_frozen_before_outcome_read),
     nrow(communities) == system_family_size && nrow(nodes) == 5439L,
     participant_count_pass && nrow(system_scores) == expected_score_rows,
-    metadata[dataset %in% evaluation, uniqueN(sample_id)] == 501L,
+    metadata[dataset %in% evaluation, uniqueN(sample_id)] == n_evaluation,
     complete_family_pass, bh_pass, permutation_pass,
     all(continuum_membership$both_axes_present),
     nrow(window_reconciliation) == 43L * 5L * 9L &&
@@ -853,7 +915,7 @@ audit <- data.table(
   detail = c(
     paste(basename(required_inputs), collapse = ";"),
     "43 systems; 5,439 main-component feature nodes",
-    "844 participants x 43 systems x 2 aggregation methods",
+    paste(n_units, "analysis units x 43 systems x 2 aggregation methods"),
     paste(evaluation, collapse = ";"),
     "43 systems x 2 axes x 2 cohorts x 2 aggregations; plus stage models",
     paste(bh_recomputed$aggregation_method, bh_recomputed$axis_id,

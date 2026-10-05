@@ -270,6 +270,7 @@ def framework_candidate(out, cells, gains):
         selected.loc[index, "note"] = "Equal-study mean over clean studies only; comparator uses the identical study subset. Conditional on saved fitted models."
         selected.loc[index, "source"] = str((out.parent / "clean_study_paired_gains.tsv").relative_to(ROOT))
     selected = selected[selected.gain.notna()].copy()
+    selected["exposure_state"] = "clean_study_subset"
     selected["crosses_zero"] = (selected.lo <= 0) & (selected.hi >= 0)
     selected["verdict"] = np.where(selected.crosses_zero, "interval crosses zero", "interval excludes zero")
     selected.to_csv(table, sep="\t", index=False)

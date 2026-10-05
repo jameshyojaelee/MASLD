@@ -190,10 +190,106 @@ def project(exons, blocks):
     return union(mapped), length(covered), orientations
 
 
+def verified_exon_segments(exons, blocks):
+    """ALT coordinates supported by alignment matches; insertion bases excluded."""
+    return union([(max(s, qs), min(e, qe)) for s, e in exons
+                  for qs, qe, _, _, _ in blocks if max(s, qs) < min(e, qe)])
+
+
 def write_tsv(path, rows, fields):
     with path.open("x") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, delimiter="\t", lineterminator="\n")
         writer.writeheader(); writer.writerows(rows)
+
+
+def read_allele_groups(root, genes, report):
+    """Exact-version Ensembl groups, independently checked against the GTF."""
+    def rows(name):
+        with gzip.open(root/name, "rt") as handle:
+            return [line.rstrip("\n").split("\t") for line in handle]
+    meta = {r[2]: r[3] for r in rows("ensembl115_meta.txt.gz")}
+    if meta.get("gencode.version") != "GENCODE 49" or meta.get("assembly.accession") != "GCA_000001405.29":
+        raise ValueError("Allele groups must use the exact GENCODE49/GRCh38.p14 assembly")
+    sequences = {r[0]: r[1] for r in rows("ensembl115_seq_region.txt.gz")}
+    alleles = rows("alt_allele.txt.gz")
+    allele_core_ids = {r[2] for r in alleles}
+    core = {}
+    for r in rows("gene.txt.gz"):
+        if r[0] not in allele_core_ids: continue
+        gid = f"{r[12]}.{r[13]}"
+        core[r[0]] = gid
+        if gid not in genes: continue
+        g = genes[gid]; name = sequences[r[3]]
+        seq = report.get(name) or report.get("chrM" if name == "MT" else "chr"+name)
+        if not seq or (seq["ucsc"], int(r[4])-1, int(r[5]), "+" if r[6] == "1" else "-") != (g.chrom, g.start, g.end, g.strand):
+            raise ValueError(f"Ensembl/GTF exact-version locus mismatch: {gid}")
+    attrs = defaultdict(set)
+    for aid, flag in rows("alt_allele_attrib.txt.gz"): attrs[aid].add(flag)
+    groups, memberships = defaultdict(list), defaultdict(list)
+    for aid, group, core_id in alleles:
+        gid = core.get(core_id)
+        if gid:
+            member = (gid, attrs[aid])
+            groups[group].append(member); memberships[gid].append(group)
+    return groups, memberships
+
+
+def allele_identity_candidates(gene, body_candidates, genes, groups, memberships):
+    """Membership alone never establishes equivalence or absence of a gene."""
+    candidates = set()
+    for group in memberships.get(gene.gene_id, []):
+        members = groups[group]
+        if any(gid not in genes for gid, _ in members):
+            continue
+        primary = [gid for gid, _ in members if genes[gid].chrom in PRIMARY]
+        same_scaffold = [gid for gid, _ in members if genes[gid].chrom == gene.chrom]
+        flags = set().union(*(flag for gid, flag in members if gid == gene.gene_id))
+        if len(primary) != 1 or len(same_scaffold) != 1:
+            continue
+        if flags & {"IN_ARTIFICIALLY_DUPLICATED_ASSEMBLY", "IN_BROKEN_ASSEMBLY_REGION", "IS_PAR"}:
+            continue
+        p = genes[primary[0]]
+        if p not in body_candidates or (gene.hgnc and p.hgnc and gene.hgnc != p.hgnc):
+            continue
+        candidates.add(p.gene_id)
+    return [genes[gid] for gid in sorted(candidates)]
+
+
+def local_source_records(root, names):
+    """Bind downloaded source bytes to their recorded official URL/hash."""
+    records = {}
+    for path in root.glob("*manifest.json"):
+        value = json.loads(path.read_text())
+        if isinstance(value, list):
+            for row in value:
+                if row.get("status", "downloaded") == "downloaded" and row.get("path") and row.get("sha256"):
+                    records[Path(row["path"]).name] = row
+    result = []
+    for name in names:
+        path = root/name; record = records.get(name)
+        if not record or digest(path) != record["sha256"]:
+            raise ValueError(f"Official source missing or altered: {path}")
+        result.append({"url": record["url"], "path": str(path.resolve()), "sha256": record["sha256"], "bytes": path.stat().st_size})
+    return result
+
+
+def added_patch_component(gene, seq, placement, source_root):
+    """Positive AGP evidence that a patch component replaces only primary N gaps."""
+    if seq["unit"] != "PATCHES" or not placement or placement["parent_acc"] == "na":
+        return False
+    patch_agp = source_root/"alt.scaf.agp.gz"
+    parent_agp = source_root/f"chr{placement['parent_name']}.agp.gz"
+    if not patch_agp.exists() or not parent_agp.exists(): return False
+    with gzip.open(patch_agp, "rt") as handle:
+        components = [line.rstrip().split("\t") for line in handle if not line.startswith("#")]
+    components = [r for r in components if len(r) == 9 and r[0] == seq["genbank"] and r[4] == "W"
+                  and int(r[1])-1 <= gene.start and int(r[2]) >= gene.end]
+    if len(components) != 1: return False
+    start, end = int(placement["parent_start"])-1, int(placement["parent_stop"])
+    with gzip.open(parent_agp, "rt") as handle:
+        gaps = [line.rstrip().split("\t") for line in handle if not line.startswith("#")]
+    return any(len(r) == 9 and r[4] == "N" and r[6] == "short_arm"
+               and int(r[1])-1 <= start and int(r[2]) >= end for r in gaps)
 
 
 def main():
@@ -202,6 +298,9 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--source-cache-manifest", type=Path)
     parser.add_argument("--prior-correspondence", type=Path)
+    parser.add_argument("--ensembl-source-root", type=Path)
+    parser.add_argument("--added-patch-source-root", type=Path)
+    parser.add_argument("--grc-exclusions", type=Path)
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     sources = args.output / "sources"; sources.mkdir()
@@ -217,6 +316,21 @@ def main():
     report, placements = read_report(report_path), read_placements(placement_path)
     print("Reading exact counting GTF", file=sys.stderr, flush=True)
     genes = read_genes(args.gtf)
+    allele_groups, allele_memberships = ({}, {})
+    if args.ensembl_source_root:
+        manifest.extend(local_source_records(args.ensembl_source_root,
+            ["ensembl115_meta.txt.gz", "ensembl115_seq_region.txt.gz", "gene.txt.gz", "alt_allele.txt.gz", "alt_allele_attrib.txt.gz", "homo_sapiens_core_115_38.sql.gz"]))
+        allele_groups, allele_memberships = read_allele_groups(args.ensembl_source_root, genes, report)
+    if args.added_patch_source_root:
+        manifest.extend(local_source_records(args.added_patch_source_root,
+            ["alt.scaf.agp.gz", "chr13.agp.gz", "chr14.agp.gz", "chr15.agp.gz", "chr22.agp.gz"]))
+    contamination = []
+    if args.grc_exclusions:
+        manifest.extend(local_source_records(args.grc_exclusions.parent, [args.grc_exclusions.name]))
+        for line in args.grc_exclusions.read_text().splitlines():
+            c = line.split("\t")
+            if len(c) >= 4 and c[3] == "contamination":
+                contamination.append((c[0], int(c[1]), int(c[2])))
     by_chrom = defaultdict(list)
     for g in genes.values():
         if g.chrom in PRIMARY: by_chrom[g.chrom].append(g)
@@ -228,11 +342,18 @@ def main():
         if not seq or seq["unit"] == "Primary Assembly": continue
         placement = placements.get(seq["genbank"])
         if not placement or placement["parent_acc"] == "na":
-            mapping_errors[chrom] = "assembly_has_no_coordinate_alignment"; continue
-        unit = placement["alt_asm_name"]
-        name = f'{seq["genbank"]}_{placement["parent_acc"]}.gff'
+            # An official alignment can exist despite a missing placement row.
+            matches = [url for url in cache if url.startswith(STRUCTURE)
+                       and url.rsplit("/", 1)[-1].startswith(seq["genbank"]+"_") and url.endswith(".gff")]
+            if len(matches) != 1:
+                mapping_errors[chrom] = "assembly_has_no_coordinate_alignment"; continue
+            alignment_url = matches[0]; name = alignment_url.rsplit("/", 1)[-1]
+        else:
+            unit = placement["alt_asm_name"]
+            name = f'{seq["genbank"]}_{placement["parent_acc"]}.gff'
+            alignment_url = STRUCTURE+f"{unit}/alt_scaffolds/alignments/{name}"
         try:
-            manifest.append(fetch(STRUCTURE+f"{unit}/alt_scaffolds/alignments/{name}", sources/name, cache))
+            manifest.append(fetch(alignment_url, sources/name, cache))
             parent, blocks = alignment_blocks(sources/name)
             parent_seq = report.get(parent)
             if not parent_seq or parent_seq["ucsc"] not in PRIMARY:
@@ -247,13 +368,20 @@ def main():
                "mapped_exonic_bases": "", "primary_gene_candidates": "", "counting_gene_id": gid,
                "unmapped_exonic_bases": "", "coordinate_alignment_state": "not_applicable",
                "alternate_biotype_differs": "false", "disposition": "unresolved", "reason": "", "evidence_source": ""}
+        row["ensembl_allele_group_ids"] = ";".join(allele_memberships.get(gid, []))
         seq = report.get(g.chrom)
-        if g.chrom in PRIMARY:
+        if any(g.chrom == chrom and g.start < end and g.end > start for chrom, start, end in contamination):
+            row.update(reason="GRC_contamination_reference_policy_pending", evidence_source="GRC_exclusions.bed")
+        elif g.chrom in PRIMARY:
             row.update(disposition="primary_gene", reason="primary_chromosome_annotation", evidence_source="exact_counting_gtf")
         elif seq and seq["unit"] == "Primary Assembly":
             row.update(disposition="distinct_locus", reason="nonredundant_primary_assembly_scaffold", evidence_source="assembly_report.txt")
         elif g.chrom not in mappings:
-            row["reason"] = mapping_errors.get(g.chrom, "sequence_not_in_assembly_report")
+            if seq and args.added_patch_source_root and added_patch_component(g, seq, placements.get(seq["genbank"]), args.added_patch_source_root):
+                row.update(disposition="alternative_only", reason="added_patch_component_wholly_replaces_primary_N_short_arm_gap",
+                           evidence_source="official_patch_and_primary_AGP")
+            else:
+                row["reason"] = mapping_errors.get(g.chrom, "sequence_not_in_assembly_report")
         elif not g.exons:
             row["reason"] = "annotation_has_no_exons"
         else:
@@ -262,7 +390,7 @@ def main():
             row["mapped_exonic_bases"] = covered
             row["unmapped_exonic_bases"] = length(g.exons)-covered
             row["coordinate_alignment_state"] = "complete" if covered == length(g.exons) and len(orientations) == 1 else "partial_or_mixed"
-            row["evidence_source"] = f'{seq["genbank"]}_{placements[seq["genbank"]]["parent_acc"]}.gff'
+            row["evidence_source"] = next(r["path"] for r in manifest if Path(r["path"]).name.startswith(seq["genbank"]+"_") and r["path"].endswith(".gff"))
             if not covered or len(orientations) != 1:
                 row["reason"] = "exonic_coordinate_correspondence_incomplete_or_mixed"
             else:
@@ -275,6 +403,8 @@ def main():
                 exact = [p for p in candidates if covered == length(g.exons) and mapped == p.exons and p.biotype == g.biotype]
                 identified = [p for p in body_candidates if (g.hgnc and g.hgnc == p.hgnc)
                               or (g.havana and p.havana and g.havana.split(".")[0] == p.havana.split(".")[0])]
+                allele_identified = allele_identity_candidates(g, body_candidates, genes, allele_groups, allele_memberships)
+                identified += allele_identified
                 selected = {p.gene_id: p for p in exact+identified}
                 if len(selected) == 1:
                     p = next(iter(selected.values()))
@@ -285,8 +415,10 @@ def main():
                     row.update(disposition="duplicated", reason="multiple_authoritative_primary_gene_correspondences")
                 elif covered != length(g.exons):
                     row["reason"] = "partial_exon_map_without_authoritative_gene_identity"
+                elif not body_candidates:
+                    row.update(disposition="alternative_only", reason="fully_mapped_exons_have_no_same_strand_primary_gene_body_annotation")
                 elif not candidates:
-                    row.update(disposition="alternative_only", reason="fully_mapped_exons_have_no_same_strand_primary_gene_annotation")
+                    row["reason"] = "mapped_exons_within_primary_gene_body_without_resolved_gene_identity"
                 elif g.hgnc and all(p.hgnc and p.hgnc != g.hgnc for p in candidates):
                     row.update(disposition="distinct_locus", reason="mapped_locus_with_distinct_HGNC_identity")
                 else:
@@ -320,10 +452,13 @@ def main():
                "n_annotations": len(rows), "dispositions": counts, "n_unresolved": len(unresolved),
                "annotation_resolution_complete": not unresolved, "n_unresolved_annotations": len(unresolved),
                "counts_complete": False, "counts_sha256": None,
-               "primary_refit_allowed": False, "symbol_only_merging_used": False}
+               "primary_refit_allowed": False, "symbol_only_merging_used": False,
+               "partial_equivalent_exon_policy": "coordinate_verified_segments_only"}
     (args.output/"resolution_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
     if not unresolved:
         group_ids = {r["gene_id"]: r["counting_gene_id"] for r in rows}
+        partial_equivalents = {r["gene_id"] for r in rows if r["disposition"] == "equivalent"
+                              and r["coordinate_alignment_state"] != "complete"}
         with gzip.open(args.gtf, "rt") as src, gzip.open(args.output/"grouped_counting_annotation.gtf.gz", "wt") as dest:
             for line in src:
                 if line.startswith("#"): dest.write(line); continue
@@ -331,7 +466,12 @@ def main():
                 if len(c) != 9 or c[2] != "exon": continue
                 gid = dict(ATTR.findall(c[8]))["gene_id"]
                 c[8] = re.sub(r'gene_id "[^"]+"', f'gene_id "{group_ids[gid]}"', c[8])
-                dest.write("\t".join(c)+"\n")
+                segments = [(int(c[3])-1, int(c[4]))]
+                if gid in partial_equivalents:
+                    segments = verified_exon_segments(segments, mappings[c[0]][1])
+                for start, end in segments:
+                    c[3], c[4] = str(start+1), str(end)
+                    dest.write("\t".join(c)+"\n")
     print(json.dumps(summary, sort_keys=True), flush=True)
 
 

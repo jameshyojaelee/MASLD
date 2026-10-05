@@ -56,6 +56,10 @@ def main():
                 groups[r.query_name].append({"NH":tags.get("NH"),"HI":tags.get("HI"),"XS":tags.get("XS"),
                     "XN":tags.get("XN"),"XT":tags.get("XT"),"unmapped":r.is_unmapped,
                     "supplementary":r.is_supplementary,"mate":1 if r.is_read1 else (2 if r.is_read2 else 0)})
+                groups[r.query_name][-1].update(chimeric=r.has_tag("SA") or r.has_tag("ch"),
+                    paired=r.is_paired,mate_unmapped=r.mate_is_unmapped,
+                    reference_id=r.reference_id,reference_start=r.reference_start,
+                    next_reference_id=r.next_reference_id,next_reference_start=r.next_reference_start)
         observed={name:molecule_assignment(records,paired) for name,records in groups.items()}
         if observed!=expected:raise AssertionError(f"{label}: expected={expected},observed={observed}")
         result["checks"].append({"layout":label,"command":cmd,"n_fixture_molecules":len(observed),

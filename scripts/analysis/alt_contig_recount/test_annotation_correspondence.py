@@ -3,7 +3,7 @@
 from pathlib import Path
 import tempfile
 import unittest
-from resolve_annotation_correspondence import alignment_blocks, project, union
+from resolve_annotation_correspondence import alignment_blocks, project, union, verified_exon_segments
 
 
 class CoordinateTests(unittest.TestCase):
@@ -23,6 +23,10 @@ class CoordinateTests(unittest.TestCase):
     def test_insertion_is_unresolved_for_exonic_bases_in_insert(self):
         blocks = self.alignment("+", "1 14 +", "M5 I2 M7")
         self.assertEqual(project([(0,14)],blocks)[1],12)
+
+    def test_partial_equivalent_rescue_excludes_unaligned_inserted_bases(self):
+        blocks = self.alignment("+", "1 14 +", "M5 I2 M7")
+        self.assertEqual(verified_exon_segments([(0,14)], blocks), [(0,5),(7,14)])
 
     def test_reverse_orientation_preserves_half_open_coordinates(self):
         blocks = self.alignment("-", "1 12 +", "M12")

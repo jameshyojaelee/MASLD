@@ -90,6 +90,8 @@ def bootstrap_summary(out):
 
 def panels(out):
     gains = pd.read_csv(out / "framework7/tables/panel_7f_gain.tsv", sep="\t")
+    if not gains.exposure_state.eq("clean_study_subset").all():
+        raise ValueError("Clean-study gain retains a global checkpoint exposure label")
     crosses = (gains.lo <= 0) & (gains.hi >= 0)
     if not gains.crosses_zero.eq(crosses).all():
         raise ValueError("Clean-study interval classification differs")

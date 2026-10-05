@@ -28,6 +28,7 @@ BOUNDARY_DECIMAL = HERE / 'repair_p3_boundary_decimal.py'
 BOUNDARY_DECIMAL_FAST = HERE / 'repair_p3_boundary_decimal_fast.py'
 PREDICTOR_CACHE = HERE / 'repair_p3_cached_predictors.py'
 COMPOSITE_GL = HERE / 'repair_p3_composite_gl.py'
+MIXTURE_GH = HERE / 'repair_p3_mixture_gh.py'
 BASELINE_REUSE = HERE / 'repair_p3_baseline_reuse.py'
 CAP = 32 * 1024**2
 CASES = {'failed0gene2': 0, 'positive18': 18, 'boundary19': 19}
@@ -94,6 +95,8 @@ def main():
     parser.add_argument('--boundary-decimal-fast-sha')
     parser.add_argument('--predictor-points-sha')
     parser.add_argument('--composite-gl-sha')
+    parser.add_argument('--mixture-gh-sha')
+    parser.add_argument('--mixture-prior-policy', choices=('equal','scale_sqrt','scale_precision'))
     parser.add_argument('--reuse-baseline-dir', type=Path)
     parser.add_argument('--reuse-helper-sha')
     parser.add_argument('--reuse-hashes-json', type=Path)
@@ -120,17 +123,26 @@ def main():
         require(sha(PREDICTOR_CACHE) == args.predictor_points_sha, 'Reviewed predictor-cache source differs')
         ast.parse(PREDICTOR_CACHE.read_text())
         guards[PREDICTOR_CACHE] = args.predictor_points_sha
+    require(not (args.composite_gl_sha and args.mixture_gh_sha), 'Choose one numerical integration revision')
+    require(args.mixture_prior_policy is None or args.mixture_gh_sha,
+            'Mixture prior policy requires the mixture GH implementation')
     if args.composite_gl_sha:
         require(args.case != 'boundary19' and not args.predictor_points_sha,
                 'Composite GL comparison requires a saved positive-variance point')
         require(sha(COMPOSITE_GL) == args.composite_gl_sha, 'Reviewed composite GL source differs')
         ast.parse(COMPOSITE_GL.read_text())
         guards[COMPOSITE_GL] = args.composite_gl_sha
+    if args.mixture_gh_sha:
+        require(args.case != 'boundary19' and not args.predictor_points_sha and not boundary_sha,
+                'Mixture GH comparison requires a saved positive-variance point')
+        require(sha(MIXTURE_GH) == args.mixture_gh_sha, 'Reviewed mixture GH source differs')
+        ast.parse(MIXTURE_GH.read_text())
+        guards[MIXTURE_GH] = args.mixture_gh_sha
     reuse_options = (args.reuse_baseline_dir, args.reuse_helper_sha, args.reuse_hashes_json, args.reuse_hashes_sha)
     require(not any(reuse_options) or all(reuse_options), 'All baseline reuse pins are required together')
     reuse_hashes = None
     if args.reuse_baseline_dir:
-        require(args.case != 'boundary19' and args.composite_gl_sha and args.fast_reference and
+        require(args.case != 'boundary19' and args.composite_gl_sha and not args.mixture_gh_sha and args.fast_reference and
                 not args.baseline_only and not args.predictor_points_sha and not boundary_sha,
                 'Baseline reuse is for positive composite GL derivative checks only')
         require(sha(BASELINE_REUSE) == args.reuse_helper_sha, 'Reviewed baseline reuse helper differs')
@@ -160,6 +172,8 @@ def main():
               high_precision_boundary=bool(boundary_sha),
               predictor_points_only=bool(args.predictor_points_sha),
               composite_gl=bool(args.composite_gl_sha),
+              mixture_gh=bool(args.mixture_gh_sha),
+              mixture_prior_policy=(args.mixture_prior_policy or 'equal') if args.mixture_gh_sha else None,
               baseline_reuse=bool(args.reuse_baseline_dir),
               kernel_sha256=sha(KERNEL), metadata_and_source_checks=True)))
         return
@@ -252,6 +266,13 @@ def main():
                 return composite_gl.integrate_gene(*call_args, **call_kwargs,
                                                   expected_kernel_sha=args.expected_kernel_sha,
                                                   kernel_path=archive / KERNEL.name)
+        elif args.mixture_gh_sha:
+            mixture_gh = load_module('repair_p3_private_mixture_gh', archive / MIXTURE_GH.name)
+            def integrate_gene(*call_args, **call_kwargs):
+                return mixture_gh.integrate_gene(*call_args, **call_kwargs,
+                                                expected_kernel_sha=args.expected_kernel_sha,
+                                                kernel_path=archive / KERNEL.name,
+                                                prior_policy=args.mixture_prior_policy or 'equal')
         else:
             integrate_gene = kernel.integrate_gene
         versions = dict(python=platform.python_version(), numpy=np.__version__, scipy=scipy.__version__)
@@ -310,6 +331,8 @@ def main():
              high_precision_boundary=bool(boundary_sha),
              predictor_points_only=bool(args.predictor_points_sha),
              composite_gl=bool(args.composite_gl_sha),
+             mixture_gh=bool(args.mixture_gh_sha),
+             mixture_prior_policy=(args.mixture_prior_policy or 'equal') if args.mixture_gh_sha else None,
              baseline_reuse=bool(args.reuse_baseline_dir),
              reused_parent_directory=str(receipt_dir) if reuse_hashes is not None else None,
              reused_parent_file_hashes=reuse_hashes,
@@ -432,6 +455,7 @@ def main():
                 except (ValueError,FloatingPointError,np.linalg.LinAlgError) as error:
                     save('candidate_refusal',dict(completed=False,exception_type=type(error).__name__,traceback=traceback.format_exc(),
                                                  integration_reports=getattr(error,'integration_reports',None),
+                                                 geometry_reports=getattr(error,'geometry_reports',None),
                                                  likelihood_evaluations=getattr(error,'likelihood_evaluations',None),
                                                  not_a_replacement_failed_draw=True))
                     event('candidate_integral_refused',reason=str(error))

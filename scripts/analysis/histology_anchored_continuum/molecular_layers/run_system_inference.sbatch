@@ -10,11 +10,17 @@ set -euo pipefail
 PROJECT_ROOT="/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 SCRIPT="${PROJECT_ROOT}/scripts/analysis/histology_anchored_continuum/molecular_layers/70_infer_molecular_systems.R"
 R_BIN="/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/Rscript"
-ANALYSIS_CANDIDATE="${PROJECT_ROOT}/RNA-seq/results/histology_anchored_continuum/molecular_layers/hac-molecular-layers-20260818T173348Z"
+ANALYSIS_CANDIDATE="${HAC_MOLECULAR_ANALYSIS_CANDIDATE:-${PROJECT_ROOT}/RNA-seq/results/histology_anchored_continuum/molecular_layers/hac-molecular-layers-20260818T173348Z}"
 ATLAS_SOURCE="${PROJECT_ROOT}/figures/main/fig4_singlecell_programs/source_tables/current_candidate/molecular_systems_atlas_20260824"
 : "${HAC_SYSTEM_INFERENCE_CANDIDATE:?HAC_SYSTEM_INFERENCE_CANDIDATE is unset}"
 export MASLD_PROJECT_ROOT="${PROJECT_ROOT}"
-export HAC_SOURCE_ROOT="${PROJECT_ROOT}/RNA-seq/results/histology_anchored_continuum/candidates/hac-continuum-20260818T024923Z"
+if [[ -n "${HAC_SYSTEM_CONTEXT_ROSTER:-}" ]]; then
+  : "${HAC_MOLECULAR_ANALYSIS_CANDIDATE:?Corrected inference requires recomputed molecular scores}"
+  : "${HAC_SOURCE_ROOT:?Corrected inference requires recomputed fixed-loading axes}"
+  : "${HAC_CORRECTED_STAGE_ROOT:?Corrected inference requires verified corrected model inputs}"
+else
+  export HAC_SOURCE_ROOT="${HAC_SOURCE_ROOT:-${PROJECT_ROOT}/RNA-seq/results/histology_anchored_continuum/candidates/hac-continuum-20260818T024923Z}"
+fi
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 
 mkdir -p "${PROJECT_ROOT}/RNA-seq/results/histology_anchored_continuum/molecular_systems_inference"
@@ -37,9 +43,12 @@ mkdir -p "${PROJECT_ROOT}/RNA-seq/results/histology_anchored_continuum/molecular
   } else {
     10000L
   }
+  summary <- fread(file.path(root, "tables", "system_inference_summary.tsv"))
+  expected_units <- as.integer(summary[metric == "participants_all_five_cohorts", value])
+  if (!nzchar(Sys.getenv("HAC_SYSTEM_CONTEXT_ROSTER"))) stopifnot(expected_units == 844L)
   stopifnot(
-    nrow(scores) == 844L * 43L * 2L,
-    uniqueN(scores$analysis_unit_id) == 844L,
+    nrow(scores) == expected_units * 43L * 2L,
+    uniqueN(scores$analysis_unit_id) == expected_units,
     uniqueN(scores$community_id) == 43L,
     nrow(cohort) == 2L * 2L * 2L * 43L,
     nrow(meta) == 2L * 2L * 43L,

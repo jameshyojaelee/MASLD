@@ -63,9 +63,9 @@ def main():
     fig.savefig(panels/"fig6c_worked_entries.pdf");plt.close(fig)
     # KEY MESSAGE: entry details, object routes and source/download records refer to the same local candidate.
     fig,ax=canvas(4.1,1.7)
-    box(ax,.01,.53,.31,.32,"Browse / search genes\nSeparate evidence calls",BLUE)
-    box(ax,.36,.53,.29,.32,"Inspect object / uncertainty\nGene and object routes",TEAL)
-    box(ax,.70,.53,.29,.32,"Read source fields\nAssay and biological unit",GRAY)
+    box(ax,.01,.53,.31,.32,"View worked gene entries\nSeparate evidence calls",BLUE)
+    box(ax,.36,.53,.29,.32,"Inspect object\nand uncertainty\nGene and object routes",TEAL)
+    box(ax,.70,.53,.29,.32,"Read source references\nAnnotation / assay states",GRAY)
     for a,b in [(.32,.36),(.65,.70)]:ax.annotate("",xy=(b,.69),xytext=(a,.69),arrowprops={"arrowstyle":"->","lw":.6,"color":GRAY})
     box(ax,.17,.12,.66,.22,"Download gene calls + molecular-object records\nSame selected inputs; no combined score or rank",GRAY)
     ax.text(.5,.94,"Local review interface; unpublished",ha="center",fontsize=6)

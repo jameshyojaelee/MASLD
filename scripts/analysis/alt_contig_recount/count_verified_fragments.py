@@ -21,6 +21,8 @@ def molecule_assignment(records, paired):
     if not records: return None, "empty_group"
     if any(r.get("supplementary", False) for r in records):
         return None, "supplementary_alignment"
+    if any(r.get("chimeric", False) for r in records):
+        return None, "chimeric_alignment"
     if any(r.get("unmapped", False) for r in records):
         return None, "unmapped_or_missing_mate"
     nh = {r.get("NH") for r in records}
@@ -34,10 +36,23 @@ def molecule_assignment(records, paired):
         hits[hi].append(r)
     if len(hits) != expected:
         return None, "incomplete_NH_alignment_set"
+    if set(hits) != set(range(1, expected+1)):
+        return None, "invalid_HI_alignment_set"
     for hit in hits.values():
         if paired:
             if len(hit) != 2 or {r.get("mate") for r in hit} != {1, 2}:
                 return None, "incomplete_or_duplicated_pair"
+            if any(not r.get("paired") or r.get("mate_unmapped") for r in hit):
+                return None, "unmapped_or_missing_mate"
+            a, b = hit
+            if a.get("reference_id") is None or b.get("reference_id") is None:
+                return None, "missing_pair_coordinates"
+            if a["reference_id"] != b["reference_id"]:
+                return None, "cross_contig_pair"
+            if any(r.get("next_reference_id") != mate["reference_id"] or
+                   r.get("next_reference_start") != mate.get("reference_start")
+                   for r, mate in ((a, b), (b, a))):
+                return None, "nonreciprocal_mate_coordinates"
         elif len(hit) != 1:
             return None, "duplicated_single_end_hit"
     targets = set()
@@ -87,6 +102,10 @@ def main():
                 groups[tags.get("RG","")].append({"NH":tags.get("NH"),"HI":tags.get("HI"),
                     "XS":tags.get("XS"),"XN":tags.get("XN"),"XT":tags.get("XT"),
                     "unmapped":r.is_unmapped,"supplementary":r.is_supplementary,
+                    "chimeric":r.has_tag("SA") or r.has_tag("ch"),
+                    "paired":r.is_paired,"mate_unmapped":r.mate_is_unmapped,
+                    "reference_id":r.reference_id,"reference_start":r.reference_start,
+                    "next_reference_id":r.next_reference_id,"next_reference_start":r.next_reference_start,
                     "mate":1 if r.is_read1 else (2 if r.is_read2 else 0)})
             for records in groups.values():
                 gene, status=molecule_assignment(records,args.layout=="PAIRED")
