@@ -1,9 +1,10 @@
 """Registered seventeen-donor native ChIP transport comparison; never refit.
 
-Requires successful H3 job21998882 and its RNA hashes bound before H3 reads.
+Requires successful fixed recovery and RNA hashes bound before H3 reads.
 Source-person disjointness remains unverified. Counts define qualified
 single-read ChIP labels, not reconstruction of the source CUT&RUN assay.
 """
+import argparse
 import csv
 import hashlib
 import json
@@ -16,7 +17,8 @@ import types
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 REC = ROOT / 'Analysis/MASLD_Model_Benchmark/executions/codex-rec-20260929T142434Z'
-H3 = REC / 'codex_receiving_h3_reads_21998882'
+H3 = None  # Exact recovery job supplied before metadata admission.
+RECOVERY_SOURCE_SHA = 'b71d1f1bdd080bc157d24b2d121d558048bea6d5b835c212f99c22e1cf8811c3'
 SOURCES = {
     'export_training_h3_target_transform':'3499fb927373a04c7fc7121bd89598709774deb38f652b26d5506275e09ee907',
     'profile_error_decomposition':'f75a8ebacd9383962d11d16849efb153b621e330f6947b9abc22876fe2601d29',
@@ -24,6 +26,8 @@ SOURCES = {
     'apply_fixed_h3_residual_target':'0f508019599333f02f0c7164da00dd4bd99610f3c84f03366ac2492d2f3f05f3',
     'assemble_fixed_h3_counts':'0fb8317a9ffa4ccebd3e621915d9efbe72bdf93a8753fd5c4e983631b114d81f',
     'codex_receiving_h3_reads':'f641ea6485515b7f986f3ce279f449c5e6b85e99f676c3a5ac959fc93bf8b509',
+    'codex_receiving_h3_reads_recovery':'733f2c793206fcb122250d3f39aa2c19a9705d926858ed32bd3aa5f36180f01d',
+    'codex_receiving_h3_reads_storage_recovery':RECOVERY_SOURCE_SHA,
 }
 CHECKS = {
     REC/'fixed_h3_assembly_checks_21998841/summary.json':'473234d4e51bfc2502e5618397096be1c74ec36ba962896a6215251168d7e65e',
@@ -80,6 +84,8 @@ def load_sources(output):
 def admitted_tables(modules):
     """Metadata/hash admission precedes count or prediction deserialization."""
     helper=modules['codex_receiving_h3_reads'];assembler=modules['assemble_fixed_h3_counts']
+    recovery=modules['codex_receiving_h3_reads_storage_recovery']
+    require(H3 is not None and not (H3/'failure.json').exists(), 'Successful recovery required')
     complete=read_json(H3/'summary.json');protocol=read_json(H3/'protocol.json')
     require(complete.get('all17_reads_processed') and tuple(complete['completed'])==helper.DONORS
             and complete.get('biological_n')==17 and not complete.get('predictive_accuracy_evaluated')
@@ -89,6 +95,40 @@ def admitted_tables(modules):
             and protocol['h3_only_files']==202 and protocol['compressed_bytes']==56783483922
             and protocol['RNA_predictions_frozen_before_H3'] and not protocol['model_fit']
             and not protocol['predictive_accuracy_evaluated'],'H3 protocol/measurement boundary differs')
+    require(complete.get('recovery_source_sha256')==RECOVERY_SOURCE_SHA
+            and complete.get('original_processing_source_sha256')==SOURCES['codex_receiving_h3_reads']
+            and complete.get('reused_donors')==list(recovery.REUSED)
+            and set(complete.get('donor_receipt_paths',{}))==set(helper.DONORS)
+            and complete.get('count_payloads_parsed_or_copied') is False
+            and complete.get('predictions_refitted') is False,
+            'Recovery completion/source/measurement contract differs')
+    require(protocol.get('recovery_source_sha256')==RECOVERY_SOURCE_SHA
+            and protocol.get('original_processing_directory')==str(recovery.ORIGINAL)
+            and protocol.get('reused_donors')==list(recovery.REUSED)
+            and protocol.get('reacquired_donors')==[d for d in helper.DONORS if d not in recovery.REUSED]
+            and protocol.get('count_payloads_reused_in_place') is True
+            and protocol.get('count_payloads_parsed_or_copied') is False,
+            'Recovery origin/measurement protocol differs')
+    retained=[str(recovery.ORIGINAL),str(recovery.FAILED_RECOVERY)]
+    amendment=protocol.get('operational_cap_amendment',{})
+    require(protocol.get('retained_processing_directories')==retained
+            and protocol.get('prior_failed_recovery_directory')==str(recovery.FAILED_RECOVERY)
+            and protocol.get('prior_recovery_source_sha256')==recovery.PRIOR_SOURCE_SHA
+            and complete.get('prior_recovery_source_sha256')==recovery.PRIOR_SOURCE_SHA
+            and complete.get('all_prior_files_preserved') is True
+            and set(complete.get('retained_saved_output_bytes_by_directory',{}))==set(retained)
+            and complete.get('operational_cap_amendment')==amendment,
+            'Retained original/failed processing origins differ')
+    require(amendment.get('donor')=='B36'
+            and amendment.get('previous_cap_bytes')==recovery.OLD_B36_CAP
+            and amendment.get('amended_cap_bytes')==recovery.B36_CAP
+            and amendment.get('all_other_donor_caps_unchanged') is True
+            and amendment.get('global_sampled_stop_bytes')==recovery.GLOBAL_STOP
+            and amendment.get('global_acquisition_cap_bytes')==recovery.GLOBAL_ACQUISITION_CAP
+            and protocol.get('donor_caps',{}).get('B36')==recovery.B36_CAP
+            and protocol.get('sampled_stop_bytes')==recovery.GLOBAL_STOP
+            and protocol.get('hard_cap_bytes')==recovery.GLOBAL_ACQUISITION_CAP,
+            'Reviewed B36 retention allowance or unchanged global caps differ')
     # Requalify the exact B1/four-batch native RNA receipts and paired hashes.
     prerequisite,_,_=helper.prerequisites()
     bound={Path(p):h for p,h in protocol['input_sha256'].items()}
@@ -96,15 +136,39 @@ def admitted_tables(modules):
             'RNA/index prerequisite was not hash-bound in H3 protocol before H3 processing')
     require(bound.get(HERE/'codex_receiving_h3_reads.py')==SOURCES['codex_receiving_h3_reads'],
             'H3 executed helper lineage differs')
+    require(bound.get(HERE/'codex_receiving_h3_reads_recovery.py')==recovery.PRIOR_SOURCE_SHA
+            and bound.get(HERE/'codex_receiving_h3_reads_storage_recovery.py')==RECOVERY_SOURCE_SHA
+            and all(bound.get(p)==h for p,h in recovery.FAILED_GUARDS.items()),
+            'Prior/new recovery sources or retained failed receipts were not frozen')
+    reused_bound={Path(p):h for p,h in protocol['reused_input_sha256'].items()}
+    expected_reused_paths=set(recovery.ORIGINAL_GUARDS)
+    for donor,expected in recovery.REUSED.items():
+        base=recovery.ORIGINAL/donor
+        require(reused_bound.get(base/'summary.json')==expected,
+                'Original donor receipt not pinned by recovery')
+        expected_reused_paths.update((base/'summary.json',base/'native_featurecounts.tsv',
+                                     base/'native_featurecounts.tsv.summary'))
+    require(set(reused_bound)==expected_reused_paths
+            and all(reused_bound.get(p)==h for p,h in recovery.ORIGINAL_GUARDS.items()),
+            'Reused artifact set or original processing pins differ')
+    guard(reused_bound)
     guard(bound)
-    frozen=dict(bound);frozen.update(CHECKS)
+    frozen=dict(bound);frozen.update(reused_bound);frozen.update(CHECKS)
     frozen[H3/'summary.json']=sha(H3/'summary.json');frozen[H3/'protocol.json']=complete['protocol_sha256']
     tables=[]
     for donor in helper.DONORS:
-        base=H3/donor;p=base/'summary.json';s=read_json(p)
+        base=(recovery.ORIGINAL if donor in recovery.REUSED else H3)/donor
+        p=Path(complete['donor_receipt_paths'][donor])
+        require(p==base/'summary.json','Donor receipt escaped the exact original/recovery origins')
+        s=read_json(p)
         require(sha(p)==complete['donor_summary_sha256'][donor] and s['donor']==donor and s['h3_reads_processed']
                 and not s['predictions_refitted'] and not s['count_axis_assembly_or_target_evaluation_run'],
                 'H3 donor completion/identity differs')
+        if donor in recovery.REUSED:
+            require(complete['donor_summary_sha256'][donor]==recovery.REUSED[donor]
+                    and reused_bound.get(base/'native_featurecounts.tsv')==s['count_sha256']
+                    and reused_bound.get(base/'native_featurecounts.tsv.summary')==s['count_summary_sha256'],
+                    'Reused donor receipt/count binding changed')
         count=Path(s['count_table'])
         require(count==base/'native_featurecounts.tsv','Count path escaped fixed H3 donor')
         frozen[p]=complete['donor_summary_sha256'][donor]
@@ -147,7 +211,9 @@ def evaluate_completed_transport(modules,output):
         baseline='unchanged fixed training residual mean; zero secondary; no receiver centering or calibration',
         qualification='approximate native RNA quantification and single-read ChIP transport of CUT&RUN-trained frozen models',
         source_person_disjointness='unverified',bootstrap_limits='conditional on frozen models, B99, reference/counting and measured labels; no refitting, technical error or assay-shift uncertainty',
-        H3_protocol_sha256=sha(H3/'protocol.json'),models_refitted=False,receiving_target_selected=False,
+        H3_protocol_sha256=sha(H3/'protocol.json'),H3_processing_directory=str(H3),
+        H3_recovery_source_sha256=RECOVERY_SOURCE_SHA,
+        models_refitted=False,receiving_target_selected=False,
         donors_filtered_by_diagnostics=False))
     assembled=assembler.assemble_fixed_h3_counts(tables)
     require(tuple(assembled['donor_ids'])==evaluator.DONORS,'Assembler changed fixed donor order')
@@ -196,6 +262,14 @@ def evaluate_completed_transport(modules,output):
 
 
 def main():
+    global H3
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--h3-recovery-job-id',type=int,required=True)
+    parser.add_argument('--expected-recovery-source-sha256',required=True)
+    args=parser.parse_args()
+    require(args.h3_recovery_job_id==22026732 and args.expected_recovery_source_sha256==RECOVERY_SOURCE_SHA,
+            'Require the reviewed exact recovery job and source')
+    H3=REC/('codex_receiving_h3_reads_storage_recovery_'+str(args.h3_recovery_job_id))
     require(os.environ.get('SLURM_JOB_ID','').isdigit(),'Receiving evaluation only under SLURM')
     guard(CHECKS);guard({HERE/(n+'.py'):h for n,h in SOURCES.items()})
     # Successful synthetic receipt21998526 covers the exact current full-axis helper;

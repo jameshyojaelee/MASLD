@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Two descriptive fixed-PCA comparisons against saved primary residual target."""
+import argparse
 import csv
 import hashlib
 import json
@@ -12,7 +13,12 @@ import numpy as np
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 REC = ROOT / 'Analysis/MASLD_Model_Benchmark/executions/codex-rec-20260929T142434Z'
-PRIMARY = REC / 'codex_receiving_profile_evaluation_21998897'
+PRIMARY = None  # Exact successful replacement primary job supplied prospectively.
+PRIMARY_JOB = None
+PRIMARY_SOURCE_SHA = '7ae9d401789880bd8ca40cbdbe75b54d7e73f43d1008048f6f390ee6308c9895'
+H3_PROCESSING = REC / 'codex_receiving_h3_reads_storage_recovery_22026732'
+H3_SOURCE_SHA = 'b71d1f1bdd080bc157d24b2d121d558048bea6d5b835c212f99c22e1cf8811c3'
+DECLARATION_SHA = 'bf305fdfb60c8383787b7041193b41ff950ba351332d0f7093c25efb7f458b46'
 PCA = REC / 'residual_pca_comparator_21999355'
 CAP = 10_000_000
 
@@ -41,11 +47,30 @@ def write_json(path, value):
 
 
 def run(out, declaration):
+    require(PRIMARY is not None and PRIMARY_JOB is not None and not (PRIMARY/'failure.json').exists(),
+            'Require successful exact replacement primary job')
+    original_source_path = 'scripts/analysis/in_biopsy_allelic/rec_codex/codex_receiving_profile_evaluation.py'
+    original_source_sha = 'e12c2e617faf1c35e3093ec715bb5f1af2c018eb8cba92869ce393c330efff33'
+    require(declaration['primary_job']==21998897
+            and declaration['primary_path']==str((REC/'codex_receiving_profile_evaluation_21998897').relative_to(ROOT))
+            and declaration['input_sha256'][original_source_path]==original_source_sha,
+            'Original descriptive declaration metadata differs')
     guards = {ROOT / p: h for p, h in declaration['input_sha256'].items()}
+    # Only the cancelled primary job/source binding changes; fixed declaration stays on disk.
+    guards[ROOT/original_source_path] = PRIMARY_SOURCE_SHA
+    write_json(out/'primary_input_binding.json', dict(original_primary_job=21998897,
+               replacement_primary_job=PRIMARY_JOB, replacement_primary_path=str(PRIMARY),
+               original_primary_source_sha256=original_source_sha,
+               replacement_primary_source_sha256=PRIMARY_SOURCE_SHA,
+               H3_processing_directory=str(H3_PROCESSING), H3_recovery_source_sha256=H3_SOURCE_SHA,
+               changed_metadata_fields=['primary_job','primary_path','primary source hash',
+                                        'H3 processing path','H3 processing source hash'],
+               endpoints_heads_donors_regions_seed_unchanged=True))
     for p, h in guards.items():
         require(sha(p) == h, 'frozen input differs: ' + str(p))
     # The future primary receipt is not assigned an invented presubmission hash.
     # Bind its complete outputs to the specified job, reviewed source and schema.
+    primary_summary_sha = sha(PRIMARY/'summary.json')
     summary = read_json(PRIMARY / 'summary.json')
     require(summary['status'] == 'complete_fixed_transport_evaluation'
             and summary['biological_n'] == 17 and summary['regions'] == 96460
@@ -71,13 +96,30 @@ def run(out, declaration):
             and primary_protocol['source_person_disjointness'] == 'unverified'
             and primary_protocol['target'] == 'log2 modeled-region CPM minus fixed [1, native concentration descriptors] @ B99'
             and primary_protocol['primary'] == 'mean donor MSE(global rrr) minus mean donor MSE(local rrr_offset_cis)', 'primary target/axis changed')
+    require(primary_protocol.get('H3_processing_directory')==str(H3_PROCESSING)
+            and primary_protocol.get('H3_recovery_source_sha256')==H3_SOURCE_SHA
+            and not (H3_PROCESSING/'failure.json').exists(),
+            'Primary receiving processing origin changed')
+    processor=HERE/'codex_receiving_h3_reads_storage_recovery.py'
+    processing_protocol=H3_PROCESSING/'protocol.json'
+    processing_protocol_sha=primary_protocol['H3_protocol_sha256']
+    require(primary_protocol['input_sha256'].get(str(processor))==H3_SOURCE_SHA
+            and primary_protocol['input_sha256'].get(str(processing_protocol))==processing_protocol_sha
+            and sha(processor)==H3_SOURCE_SHA and sha(processing_protocol)==processing_protocol_sha,
+            'New H3 processor bytes or protocol not bound by primary')
+    receiving_protocol=read_json(processing_protocol)
+    require(receiving_protocol.get('recovery_source_sha256')==H3_SOURCE_SHA
+            and receiving_protocol['input_sha256'].get(str(processor))==H3_SOURCE_SHA,
+            'New H3 processor not bound by processing protocol')
+    guards[processor]=H3_SOURCE_SHA
+    guards[processing_protocol]=processing_protocol_sha
     for item in declaration['heads']:
         p = ROOT / item['path']
         require(primary_protocol['input_sha256'].get(str(p)) == item['sha256'], 'head not frozen in primary input receipt')
     for path in declaration['primary_source_paths']:
         p = ROOT / path
         require(primary_protocol['input_sha256'].get(str(p)) == guards[p], 'primary reviewed source/target identity differs')
-    guards[PRIMARY / 'summary.json'] = sha(PRIMARY / 'summary.json')
+    guards[PRIMARY / 'summary.json'] = primary_summary_sha
     axis = read_json(PCA / 'receiving_prediction_axis.json')
     require(axis['donors'] == donors and axis['region_axis_sha256'] == declaration['region_axis_sha256']
             and not axis['accuracy_evaluated'] and not axis['receiving_H3_read'] and axis['no_receiver_fit'], 'PCA axis/prediction contract differs')
@@ -91,8 +133,10 @@ def run(out, declaration):
     require(len(regions) == len(set(regions)) == 96460
             and [int(r['h3k27ac_feature_index']) for r in rows] == list(range(96460)), 'region order differs')
     write_json(out / 'input_receipt.json', dict(frozen_input_sha256={str(p): h for p, h in guards.items()},
-               primary_job=21998897, primary_target_sha256=summary['output_sha256']['fixed_B99_residual_target.npy'],
+               primary_job=PRIMARY_JOB, primary_target_sha256=summary['output_sha256']['fixed_B99_residual_target.npy'],
                primary_protocol_sha256=summary['protocol_sha256'], accuracy_opened_after_receipt=True))
+    for p,h in guards.items():
+        require(sha(p)==h,'input changed before accuracy: '+str(p))
     target = np.load(PRIMARY / 'fixed_B99_residual_target.npy', allow_pickle=False)
     pca = np.load(PCA / 'frozen17_residual_pca_predictions.npy', allow_pickle=False)
     require(target.shape == pca.shape == (17, 96460) and target.dtype == pca.dtype == np.float64
@@ -149,10 +193,21 @@ def run(out, declaration):
 
 
 def main():
+    global PRIMARY, PRIMARY_JOB
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--primary-job-id',type=int,required=True)
+    parser.add_argument('--expected-primary-source-sha256',required=True)
+    args=parser.parse_args()
+    require(args.primary_job_id==22026740
+            and args.expected_primary_source_sha256==PRIMARY_SOURCE_SHA,
+            'Require replacement primary job and reviewed source')
+    PRIMARY_JOB=args.primary_job_id
+    PRIMARY=REC/('codex_receiving_profile_evaluation_'+str(PRIMARY_JOB))
     require(os.environ.get('SLURM_JOB_ID', '').isdigit(), 'compute-only SLURM required')
     out = REC / ('residual_pca_supplement_' + os.environ['SLURM_JOB_ID'])
     out.mkdir(exist_ok=False)
     paths = [Path(__file__), HERE / 'residual_pca_supplement_protocol.json', HERE / 'run_residual_pca_supplement.sbatch']
+    require(sha(paths[1])==DECLARATION_SHA, 'Original fixed descriptive declaration changed')
     initial = {p: sha(p) for p in paths}
     for p in paths:
         shutil.copyfile(p, out / p.name)

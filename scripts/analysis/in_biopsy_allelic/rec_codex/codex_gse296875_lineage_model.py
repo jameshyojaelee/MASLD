@@ -609,7 +609,21 @@ class LineageScorer:
     """
     def __init__(self, model_directory, lineage, arm='target_lineage_RNA'):
         self.directory = Path(model_directory)
+        require(not (self.directory / 'failure.json').exists(), 'failed development run cannot supply a scorer')
+        summary = load_json(self.directory / 'summary.json')
+        require(summary.get('development_execution_completed') is True and
+                summary.get('complete_primary_available') is True and summary.get('final_scorers') == 28 and
+                summary.get('source_inventory_before_after_identical') is True,
+                'scorer requires completed primary development and all 28 final models')
+        artifacts = load_json(self.directory / 'artifacts.json')
+        contract_record = artifacts.get('final_scoring_contract.json')
+        require(isinstance(contract_record, dict), 'completed artifacts lack final scoring contract')
+        pin(self.directory / 'final_scoring_contract.json', contract_record['sha256'], contract_record['bytes'])
         self.contract = load_json(self.directory / 'final_scoring_contract.json')
+        require(summary.get('recipe_sha256') == self.contract['recipe_sha256'] == RECIPE_SHA and
+                summary.get('producer_sha256') == self.contract['producer_sha256'] == sha(Path(__file__)),
+                'completed summary, scoring contract and producer identity differ')
+        require(len(self.contract['models']) == 28, 'final scoring contract lacks the complete model set')
         require(self.contract['recipe_sha256'] == RECIPE_SHA and lineage in self.contract['lineages'] and arm in ARMS,
                 'unknown model recipe, lineage or arm')
         self.lineage, self.arm = lineage, arm

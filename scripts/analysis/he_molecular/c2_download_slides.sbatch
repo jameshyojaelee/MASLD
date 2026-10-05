@@ -4,10 +4,10 @@
 #SBATCH --mem=8G
 #SBATCH --time=24:00:00
 # Download the 224 C1-matched GTEx liver slides (IDC DICOM) to data/external/gtex_liver_slides/series/<SeriesInstanceUID>/.
-# Usage: sbatch --job-name=<n> --output=<log>/%j.out c2_download_slides.sbatch <c1_exec_dir>
+# Usage: sbatch --job-name=<n> --output=<log>/%j.out c2_download_slides.sbatch <c1_exec_dir> [dest_series_dir]
 set -euo pipefail
 repo=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
-dest=$repo/data/external/gtex_liver_slides/series
+dest=${2:-$repo/data/external/gtex_liver_slides/series}
 mkdir -p "$dest"
 export PYTHONNOUSERSITE=1
 /gpfs/commons/home/jameslee/.local/bin/micromamba run -n he_molecular python - "$1/liver_slides_matched.tsv" "$dest" <<'PY'
