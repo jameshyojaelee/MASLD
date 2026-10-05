@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Count one molecule only when its complete STAR alignment set identifies a gene.
+"""Count one read/fragment only when its complete STAR alignment set identifies a gene.
 
 Input: featureCounts -M -R BAM assignments on the fully resolved grouped GTF,
 then samtools sort -N. Paired libraries retain --countReadPairs -B; strandedness
@@ -14,10 +14,11 @@ import hashlib
 from itertools import groupby
 import json
 from pathlib import Path
+import shutil
 
 
 def molecule_assignment(records, paired):
-    """Return (gene or None, mutually exclusive disposition) for one QNAME/RG."""
+    """Return one read/pair assignment for a QNAME/RG, without UMI deduplication."""
     if not records: return None, "empty_group"
     if any(r.get("supplementary", False) for r in records):
         return None, "supplementary_alignment"
@@ -74,18 +75,83 @@ def digest(path):
     return h.hexdigest()
 
 
+def file_stat(path):
+    path=Path(path).resolve(strict=True)
+    info=path.stat()
+    return {"path":str(path),"size_bytes":info.st_size,"mtime_ns":str(info.st_mtime_ns)}
+
+
+def validate_count_execution(summary_path, evidence_path, assignment_bam, sample, layout):
+    """Bind assignments to the annotation and actual command without hashing BAMs."""
+    summary=json.loads(Path(summary_path).read_text())
+    grouped=Path(summary["grouped_counting_annotation"]).resolve(strict=True)
+    correspondence=Path(summary_path).parent/"annotation_correspondence.tsv"
+    grouped_sha=digest(grouped); correspondence_sha=digest(correspondence)
+    if grouped_sha!=summary.get("grouped_counting_annotation_sha256") or correspondence_sha!=summary.get("annotation_correspondence_sha256"):
+        raise ValueError("Grouped annotation or correspondence hash differs")
+    evidence=json.loads(Path(evidence_path).read_text())
+    if evidence.get("status")!="complete" or evidence.get("sample_id")!=sample or evidence.get("layout")!=layout or evidence.get("featurecounts_returncode")!=0 or evidence.get("samtools_sort_returncode")!=0:
+        raise ValueError("Assignment execution is not complete for this library")
+    if evidence.get("annotation_summary_sha256")!=digest(summary_path) or evidence.get("grouped_counting_annotation_sha256")!=grouped_sha or evidence.get("annotation_correspondence_sha256")!=correspondence_sha:
+        raise ValueError("Executed annotation evidence differs")
+    argv=evidence.get("featurecounts_argv",[])
+    def option(name):
+        if argv.count(name)!=1 or argv.index(name)+1>=len(argv):
+            raise ValueError("Required featureCounts option absent or repeated: "+name)
+        return argv[argv.index(name)+1]
+    if not argv or Path(argv[0]).name!="featureCounts" or option("-a")!=str(grouped) or option("-s")!="2" or option("-R")!="BAM" or argv.count("-M")!=1:
+        raise ValueError("Executed featureCounts annotation/strand/multimapper flags differ")
+    paired_flags=("-p","--countReadPairs","-B")
+    if any(argv.count(flag)!=(1 if layout=="PAIRED" else 0) for flag in paired_flags) or any(flag in argv for flag in ("--fraction","-O","-C","--primary","--donotsort")):
+        raise ValueError("Executed fragment eligibility flags differ")
+    value_options={"-T","-s","-R","-a","-o","--Rpath"}
+    switches={"-M",*paired_flags}
+    position=1
+    while position<len(argv)-1:
+        token=argv[position]
+        if token in value_options:
+            option(token)
+            position+=2
+        elif token in switches:
+            position+=1
+        else:
+            raise ValueError("Unrecognized featureCounts eligibility option: "+token)
+    before=evidence.get("source_bam_before",{})
+    if not before.get("path") or before!=evidence.get("source_bam_after") or before!=file_stat(before["path"]) or argv[-1]!=before["path"]:
+        raise ValueError("Source BAM path/stat changed during assignment")
+    if Path(before["path"]).name.split(".",1)[0]!=sample:
+        raise ValueError("Source BAM run ID differs from the counted sample")
+    if evidence.get("assignment_bam")!=file_stat(assignment_bam):
+        raise ValueError("Assignment BAM does not match executed output")
+    sort=evidence.get("samtools_sort_argv",[])
+    if len(sort)<3 or Path(sort[0]).name!="samtools" or sort[1]!="sort" or "-N" not in sort or sort.count("-o")!=1 or sort[sort.index("-o")+1]!=str(Path(assignment_bam).resolve()):
+        raise ValueError("Assignment BAM lacks lexical name-sort execution")
+    assigned=Path(sort[-1])
+    if assigned.name!=Path(before["path"]).name+".featureCounts.bam" or assigned.parent.resolve()!=Path(option("--Rpath")).resolve():
+        raise ValueError("Name-sort input does not identify featureCounts assignment output")
+    versions=evidence.get("versions",{})
+    if not all(isinstance(versions.get(name),str) and versions[name] for name in ("python","featureCounts","samtools")):
+        raise ValueError("Assignment executable versions missing")
+    return {"grouped_counting_annotation":str(grouped),"grouped_counting_annotation_sha256":grouped_sha,
+            "annotation_correspondence_sha256":correspondence_sha,
+            "source_bam":before,"assignment_execution_sha256":digest(evidence_path)}
+
+
 def main():
     import pysam
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument("--annotation-summary",type=Path,required=True)
     p.add_argument("--assignment-bam",type=Path,required=True)
+    p.add_argument("--execution-evidence",type=Path,required=True)
     p.add_argument("--sample-id",required=True)
     p.add_argument("--layout",choices=["SINGLE","PAIRED"],required=True)
     p.add_argument("--output",type=Path,required=True)
     args=p.parse_args()
+    reader_source_sha256=digest(Path(__file__))
     summary=json.loads(args.annotation_summary.read_text())
     if summary.get("annotation_resolution_complete") is not True or summary.get("n_unresolved_annotations") != 0:
         raise ValueError("Primary counts require full annotation correspondence resolution")
+    execution=validate_count_execution(args.annotation_summary,args.execution_evidence,args.assignment_bam,args.sample_id,args.layout)
     with (args.annotation_summary.parent/"annotation_correspondence.tsv").open() as f:
         permitted={r["counting_gene_id"] for r in csv.DictReader(f,delimiter="\t")}
     args.output.mkdir(parents=True,exist_ok=False)
@@ -122,6 +188,13 @@ def main():
         "annotation_summary_sha256":digest(args.annotation_summary),"counts_tsv_sha256":digest(out),
         "n_molecules":sum(dispositions.values()),"n_assigned_molecules":sum(counts.values()),
         "dispositions":dict(dispositions),"maximum_contribution_per_molecule":1,"fractional_renormalization":False}
+    certificate["sequencing_unit"]="QNAME/RG read or read pair; not UMI-deduplicated biological molecules"
+    copied_evidence=args.output/"assignment_execution.json"
+    shutil.copyfile(args.execution_evidence,copied_evidence)
+    certificate.update(execution)
+    certificate["assignment_execution"]=str(copied_evidence.resolve())
+    certificate["reader_versions"]={"pysam":pysam.__version__}
+    certificate["count_reader_source_sha256"]=reader_source_sha256
     (args.output/"count_completion.json").write_text(json.dumps(certificate,indent=2)+"\n")
     print(json.dumps(certificate,sort_keys=True))
 

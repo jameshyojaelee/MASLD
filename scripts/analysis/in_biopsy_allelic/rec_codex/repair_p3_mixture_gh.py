@@ -20,7 +20,8 @@ def metadata():
                 initial_z_bound=8.,maximum_z_bound=96.,maximum_evaluations=100000,
                 logmass_tolerance=1e-9,gradient_tolerance=1e-8,hessian_tolerance=1e-5,
                 prior_policies=['equal','scale_sqrt','scale_precision'],default_prior_policy='equal',
-                proposal_weights='positive prior weight; remaining mass equal across located maxima',
+                optional_wide_components=True,default_wide_components=False,wide_width_multiplier=4.,
+                proposal_weights='positive prior weight; remaining mass equal across all nonprior proposals',
                 fixed_point_only=True,all_modes_guaranteed=False,certified_error_bound=False)
 
 
@@ -35,7 +36,7 @@ def load_kernel(path, expected_sha):
 
 
 def integrate_gene(model,p,variance,rows,conditional,with_hessian=False,*,
-                   expected_kernel_sha,kernel_path=None,settings=None,prior_policy='equal'):
+                   expected_kernel_sha,kernel_path=None,settings=None,prior_policy='equal',wide_components=False):
     """Compatible four-value fixed-point API: LL, gradient, Hessian, report.
 
     The Gaussian GH proposal is in z=u/sqrt(v); its importance ratio uses the
@@ -43,6 +44,9 @@ def integrate_gene(model,p,variance,rows,conditional,with_hessian=False,*,
     Proposal/node derivatives are not differentiated. Prior scores are fixed-u.
     Report error_allowance fields are empirical node differences plus envelopes,
     not certified integration errors. No original model methods are patched.
+    wide_components=True adds a second Gaussian at every located maximum with
+    exactly four times its local width. Originals and prior remain present.
+    Policy J counts all nonprior proposals, including these wider components.
     """
     if not os.environ.get('SLURM_JOB_ID','').isdigit() or os.environ.get('SLURM_ARRAY_TASK_ID'):
         raise ValueError('Individual compute allocation required before numerical imports')
@@ -54,6 +58,7 @@ def integrate_gene(model,p,variance,rows,conditional,with_hessian=False,*,
     from scipy.stats import norm
     settings=kernel.Settings() if settings is None else settings
     kernel.require(prior_policy in ('equal','scale_sqrt','scale_precision'),'Unknown prespecified prior proposal policy')
+    kernel.require(isinstance(wide_components,bool),'Wide-component option must be explicitly boolean')
     kernel.require(0<settings.logmass_tolerance<=1e-9 and 0<settings.gradient_tolerance<=1e-8 and
                    0<settings.hessian_tolerance<=1e-5 and 0<settings.maximum_evaluations<=100000 and
                    0<settings.maximum_z_bound<=96 and settings.initial_z_bound==8 and settings.grid_spacing==.25,
@@ -172,7 +177,17 @@ def integrate_gene(model,p,variance,rows,conditional,with_hessian=False,*,
                 logdensity=value,z_score=score,z_curvature=curvature,
                 location=location,
                 stationary_score_threshold=1e-7*(1+abs(curvature))))
+            if wide_components:
+                wide_sd=4.*sd
+                if not np.isfinite(wide_sd) or wide_sd<=0:
+                    refuse('Invalid fourfold local proposal width',location)
+                components.append(dict(kind='located_maximum_wide',mean_z=z,sd_z=float(wide_sd),
+                    base_sd_z=float(sd),width_multiplier=4.,logdensity=value,
+                    z_score=score,z_curvature=curvature,location=location,
+                    stationary_score_threshold=1e-7*(1+abs(curvature))))
         record=dict(z_bound=bound,grid_spacing=spacing,components=components,
+                    wide_components=wide_components,wide_width_multiplier=4. if wide_components else None,
+                    original_local_proposals_retained=True,
                     sampled_peak_analytic_score_refinements=sampled_refinements,
                     all_grid_points_searched=True,stationary_points_exhaustive=False,
                     nearby_peak_proposals_not_merged=True,
@@ -267,6 +282,8 @@ def integrate_gene(model,p,variance,rows,conditional,with_hessian=False,*,
                     posterior_weighted_centered_score_outer_contribution=moment[1+width+width*width:].reshape(width,width)/total[0])
             component_reports.append(component_report)
         report=dict(z_bound=geometry['z_bound'],grid_spacing=geometry['grid_spacing'],order=order,
+                    wide_components=wide_components,wide_width_multiplier=4. if wide_components else None,
+                    prior_policy_nonprior_proposal_count=peak_count,
                     proposal_geometry=geometry,prior_policy=prior_policy,
                     prior_policy_precision_epsilon=precision_epsilon,
                     proposal_weights=alpha,component_contributions=component_reports,
@@ -330,6 +347,7 @@ def integrate_gene(model,p,variance,rows,conditional,with_hessian=False,*,
         gradient_refinement_difference=np.abs(final[1]-accepted[1]),
         hessian_refinement_difference=np.abs(final[2]-accepted[2]) if with_hessian else None,
         empirical_refinement_plus_tail_allowances=errors,fixed_point_only=True,prior_policy=prior_policy,
+        wide_components=wide_components,wide_width_multiplier=4. if wide_components else None,
         same_probability_estimand=True,numerical_revision_of_prescribed_20_node_approximation=True,
         refinement_differences_not_certified_error_bounds=True,floating_arithmetic_error_not_rigorously_bounded=True,
         unconditional_all_mode_coverage_guaranteed=False,no_model_fits=True,no_calibration=True)

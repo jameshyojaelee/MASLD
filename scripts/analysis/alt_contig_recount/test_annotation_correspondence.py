@@ -3,7 +3,9 @@
 from pathlib import Path
 import tempfile
 import unittest
-from resolve_annotation_correspondence import alignment_blocks, project, union, verified_exon_segments
+from resolve_annotation_correspondence import (Gene, alignment_blocks, project, union,
+    verified_exon_segments, allele_identity_candidates, added_patch_component)
+import gzip
 
 
 class CoordinateTests(unittest.TestCase):
@@ -38,6 +40,56 @@ class CoordinateTests(unittest.TestCase):
     def test_malformed_gap_cannot_license_a_correspondence(self):
         with self.assertRaises(ValueError):
             self.alignment("+", "1 12 +", "M10")
+
+
+class IdentityTests(unittest.TestCase):
+    def setUp(self):
+        self.alt = Gene("ALT", "", "lncRNA", "ALT1", "+", 0, 10)
+        self.primary = Gene("P", "", "lncRNA", "chr1", "+", 100, 110)
+        self.genes = {g.gene_id: g for g in [self.alt, self.primary]}
+        self.groups = {"G": [("ALT", set()), ("P", set())]}
+
+    def candidates(self, bodies=None):
+        return allele_identity_candidates(self.alt, [self.primary] if bodies is None else bodies,
+                                           self.genes, self.groups, {"ALT": ["G"]})
+
+    def test_source_group_and_independent_locus_both_required(self):
+        self.assertEqual(self.candidates(), [self.primary])
+        self.assertEqual(self.candidates([]), [])
+
+    def test_conflicting_HGNC_cannot_be_overruled_by_allele_group(self):
+        self.alt.hgnc = "HGNC:1"; self.primary.hgnc = "HGNC:2"
+        self.assertEqual(self.candidates(), [])
+
+    def test_same_haplotype_copies_remain_distinct(self):
+        self.genes["ALT2"] = Gene("ALT2", "", "lncRNA", "ALT1", "+", 20, 30)
+        self.groups["G"].append(("ALT2", set()))
+        self.assertEqual(self.candidates(), [])
+
+    def test_missing_exact_GTF_member_cannot_look_like_singleton_group(self):
+        self.groups["G"].append(("P.other_version", set()))
+        self.assertEqual(self.candidates(), [])
+
+    def test_added_patch_requires_positive_gap_and_component_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with gzip.open(root/"alt.scaf.agp.gz", "wt") as out:
+                out.write("ALTACC\t1\t100\t1\tW\tNEWACC\t1\t100\t+\n")
+            with gzip.open(root/"chr13.agp.gz", "wt") as out:
+                out.write("PRIMARY\t1\t1000\t1\tN\t1000\tshort_arm\tno\tna\n")
+            seq = {"unit": "PATCHES", "genbank": "ALTACC"}
+            placement = {"parent_acc": "PRIMARY", "parent_name": "13", "parent_start": "200", "parent_stop": "299"}
+            self.assertTrue(added_patch_component(self.alt, seq, placement, root))
+            self.alt.end = 101
+            self.assertFalse(added_patch_component(self.alt, seq, placement, root))
+
+    def test_multiple_group_memberships_keep_conflicting_primary_targets(self):
+        second = Gene("P2", "", "lncRNA", "chr1", "+", 100, 110)
+        self.genes["P2"] = second
+        self.groups["G2"] = [("ALT", set()), ("P2", set())]
+        selected = allele_identity_candidates(self.alt, [self.primary, second], self.genes,
+                                             self.groups, {"ALT": ["G", "G2"]})
+        self.assertEqual({p.gene_id for p in selected}, {"P", "P2"})
 
 
 if __name__ == "__main__": unittest.main()

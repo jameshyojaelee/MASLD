@@ -7,6 +7,7 @@ QNAME/RG sample. Region restriction and alignment-level decimation are forbidden
 import argparse
 from collections import Counter, defaultdict
 import csv
+from functools import lru_cache
 import hashlib
 from itertools import groupby
 import json
@@ -20,6 +21,7 @@ BIN = Path('/gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin')
 SEED = 'native-library-diagnostic-20261005'
 
 
+@lru_cache(maxsize=250000)
 def selected(qname, read_group, seed=SEED):
     key = json.dumps([seed, qname, read_group], ensure_ascii=False, separators=(',', ':'))
     return int.from_bytes(hashlib.sha256(key.encode()).digest(), 'big') % 1000 == 0
@@ -45,7 +47,19 @@ def main():
     parser.add_argument('--native-gtf', type=Path, required=True)
     parser.add_argument('--expected-gtf-sha256', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--dispatch-worker', action='store_true',
+                        help='Execute a pilot explicitly rerouted from the serial queue')
+    parser.add_argument('--independent-worker', action='store_true',
+                        help='Execute a pilot rerouted from the external serial queue')
     args = parser.parse_args()
+    independent_registry = args.output.parent / 'independent_dispatch.json'
+    if independent_registry.exists() and args.sample_id in json.loads(independent_registry.read_text())['sample_ids'] and not args.independent_worker:
+        print('SKIP_QUEUE_INDEPENDENTLY_DISPATCHED', args.sample_id, flush=True)
+        return
+    registry = args.output.parent / 'external_dispatch.json'
+    if registry.exists() and args.sample_id in json.loads(registry.read_text())['sample_ids'] and not args.dispatch_worker:
+        print('SKIP_SERIAL_EXTERNALLY_DISPATCHED', args.sample_id, flush=True)
+        return
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('Requires existing allocated compute node')
     with args.manifest.open() as handle:
@@ -53,6 +67,7 @@ def main():
     if len(rows) != 1:
         raise ValueError('Manifest must uniquely identify sample')
     row = rows[0]
+    sampler_sha256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     helper_sha256 = hashlib.sha256(Path(__file__).with_name('count_verified_fragments.py').read_bytes()).hexdigest()
     source = Path(row['bam_path'])
     layout = row['layout'].upper()
@@ -150,6 +165,8 @@ def main():
               'source': before, 'manifest': stat(args.manifest), 'native_gtf': stat(args.native_gtf),
               'native_gtf_sha256': gtf_hash,
               'molecule_assignment_source_sha256_at_start': helper_sha256,
+              'sampler_source_sha256_at_start': sampler_sha256,
+              'sampler_selection_cache_maxsize': 250000,
               'layout': layout, 'strandedness': strand, 'versions': versions, 'pysam': pysam.__version__,
               'stats': dict(stats), 'comparisons': comparisons,
               'difference_interpretation': 'Native unresolved GTF and complete-alignment acceptance differ; dispositions describe rejection reasons, without resolving ALT equivalence or certifying counts.'}

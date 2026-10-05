@@ -221,7 +221,7 @@ def read_allele_groups(root, genes, report):
         if gid not in genes: continue
         g = genes[gid]; name = sequences[r[3]]
         seq = report.get(name) or report.get("chrM" if name == "MT" else "chr"+name)
-        if not seq or (seq["ucsc"], int(r[4])-1, int(r[5]), "+" if r[6] == "1" else "-") != (g.chrom, g.start, g.end, g.strand):
+        if not seq or seq != report.get(g.chrom) or (int(r[4])-1, int(r[5]), "+" if r[6] == "1" else "-") != (g.start, g.end, g.strand):
             raise ValueError(f"Ensembl/GTF exact-version locus mismatch: {gid}")
     attrs = defaultdict(set)
     for aid, flag in rows("alt_allele_attrib.txt.gz"): attrs[aid].add(flag)
@@ -282,7 +282,7 @@ def added_patch_component(gene, seq, placement, source_root):
     if not patch_agp.exists() or not parent_agp.exists(): return False
     with gzip.open(patch_agp, "rt") as handle:
         components = [line.rstrip().split("\t") for line in handle if not line.startswith("#")]
-    components = [r for r in components if len(r) == 9 and r[0] == seq["genbank"] and r[4] == "W"
+    components = [r for r in components if len(r) == 9 and r[0] == seq["genbank"] and r[4] in {"A", "D", "F", "G", "O", "P", "W"}
                   and int(r[1])-1 <= gene.start and int(r[2]) >= gene.end]
     if len(components) != 1: return False
     start, end = int(placement["parent_start"])-1, int(placement["parent_stop"])
@@ -370,7 +370,8 @@ def main():
                "alternate_biotype_differs": "false", "disposition": "unresolved", "reason": "", "evidence_source": ""}
         row["ensembl_allele_group_ids"] = ";".join(allele_memberships.get(gid, []))
         seq = report.get(g.chrom)
-        if any(g.chrom == chrom and g.start < end and g.end > start for chrom, start, end in contamination):
+        if any(report.get(g.chrom) == report.get(chrom) and report.get(chrom)
+               and g.start < end and g.end > start for chrom, start, end in contamination):
             row.update(reason="GRC_contamination_reference_policy_pending", evidence_source="GRC_exclusions.bed")
         elif g.chrom in PRIMARY:
             row.update(disposition="primary_gene", reason="primary_chromosome_annotation", evidence_source="exact_counting_gtf")
@@ -391,8 +392,23 @@ def main():
             row["unmapped_exonic_bases"] = length(g.exons)-covered
             row["coordinate_alignment_state"] = "complete" if covered == length(g.exons) and len(orientations) == 1 else "partial_or_mixed"
             row["evidence_source"] = next(r["path"] for r in manifest if Path(r["path"]).name.startswith(seq["genbank"]+"_") and r["path"].endswith(".gff"))
+            mapped_body, body_covered, body_orientations = project([(g.start, g.end)], blocks)
+            allele_body_candidates = []
+            if body_covered and len(body_orientations) == 1:
+                body_ori = next(iter(body_orientations))
+                body_strand = g.strand if body_ori == 1 else ("-" if g.strand == "+" else "+")
+                allele_body_candidates = [p for p in by_chrom[parent][:bisect.bisect_left(starts[parent], mapped_body[-1][1])]
+                    if p.end > mapped_body[0][0] and p.strand == body_strand
+                    and overlap(mapped_body, [(p.start, p.end)])]
             if not covered or len(orientations) != 1:
-                row["reason"] = "exonic_coordinate_correspondence_incomplete_or_mixed"
+                identified = allele_identity_candidates(g, allele_body_candidates, genes, allele_groups, allele_memberships)
+                if not covered and not orientations and len(identified) == 1:
+                    p = identified[0]
+                    row.update(disposition="equivalent", counting_gene_id=p.gene_id,
+                        alternate_biotype_differs=str(p.biotype != g.biotype).lower(),
+                        reason="mapped_gene_body_and_exact_Ensembl_allele_identity_no_rescuable_ALT_exons")
+                else:
+                    row["reason"] = "exonic_coordinate_correspondence_incomplete_or_mixed"
             else:
                 ori = next(iter(orientations)); strand = g.strand if ori == 1 else ("-" if g.strand == "+" else "+")
                 body_candidates = [p for p in by_chrom[parent][:bisect.bisect_left(starts[parent], mapped[-1][1])]
@@ -403,7 +419,8 @@ def main():
                 exact = [p for p in candidates if covered == length(g.exons) and mapped == p.exons and p.biotype == g.biotype]
                 identified = [p for p in body_candidates if (g.hgnc and g.hgnc == p.hgnc)
                               or (g.havana and p.havana and g.havana.split(".")[0] == p.havana.split(".")[0])]
-                allele_identified = allele_identity_candidates(g, body_candidates, genes, allele_groups, allele_memberships)
+                coordinate_selected = {p.gene_id for p in exact+identified}
+                allele_identified = allele_identity_candidates(g, allele_body_candidates, genes, allele_groups, allele_memberships)
                 identified += allele_identified
                 selected = {p.gene_id: p for p in exact+identified}
                 if len(selected) == 1:
@@ -412,7 +429,10 @@ def main():
                                alternate_biotype_differs=str(p.biotype != g.biotype).lower(),
                                reason="mapped_unique_locus_and_authoritative_gene_identity" if p in identified else "exact_reciprocal_exon_correspondence")
                 elif len(selected) > 1:
-                    row.update(disposition="duplicated", reason="multiple_authoritative_primary_gene_correspondences")
+                    if allele_identified and len(coordinate_selected) <= 1:
+                        row["reason"] = "conflicting_allele_group_and_coordinate_or_gene_identity"
+                    else:
+                        row.update(disposition="duplicated", reason="multiple_authoritative_primary_gene_correspondences")
                 elif covered != length(g.exons):
                     row["reason"] = "partial_exon_map_without_authoritative_gene_identity"
                 elif not body_candidates:
@@ -453,8 +473,9 @@ def main():
                "annotation_resolution_complete": not unresolved, "n_unresolved_annotations": len(unresolved),
                "counts_complete": False, "counts_sha256": None,
                "primary_refit_allowed": False, "symbol_only_merging_used": False,
-               "partial_equivalent_exon_policy": "coordinate_verified_segments_only"}
-    (args.output/"resolution_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
+               "partial_equivalent_exon_policy": "coordinate_verified_segments_only",
+               "annotation_correspondence_sha256": digest(args.output/"annotation_correspondence.tsv"),
+               "grouped_counting_annotation": None, "grouped_counting_annotation_sha256": None}
     if not unresolved:
         group_ids = {r["gene_id"]: r["counting_gene_id"] for r in rows}
         partial_equivalents = {r["gene_id"] for r in rows if r["disposition"] == "equivalent"
@@ -472,6 +493,10 @@ def main():
                 for start, end in segments:
                     c[3], c[4] = str(start+1), str(end)
                     dest.write("\t".join(c)+"\n")
+        grouped_path = args.output/"grouped_counting_annotation.gtf.gz"
+        summary.update(grouped_counting_annotation=str(grouped_path.resolve()),
+                       grouped_counting_annotation_sha256=digest(grouped_path))
+    (args.output/"resolution_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
     print(json.dumps(summary, sort_keys=True), flush=True)
 
 

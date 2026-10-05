@@ -34,13 +34,14 @@ directories, with the prior README files retained under `_legacy/`.
 
 ## Adoption rule
 
-The working Figure 4D shared-axis forest is fixed to
-`figures/candidates/fig4de-geometry-review-2026-08-17-v5/`; its adoption checks
-passed in job 20878079. The gradual bulk line plot with uniform points is fixed
-to `figures/candidates/fig4e-uniform-points-2026-08-17-v1/`; its source table is
-byte-identical to candidate panel F in
-`figures/candidates/fig4def-multicellular-story-2026-08-17-v2/`. Both have
-explicit user visual approval and await synchronized Resource release.
+The user-reviewed compact Figure 4B–H panels were installed from
+`figures/candidates/fig4-assembly-review-20261005-v1/` on 2026-10-05. D is the
+complete 117-program discovery/content lineage comparison; E is the complete
+113-program weighted linear fibrosis/NAS comparison, qualified by historical
+bulk identity. C retains 24 modules; H retains the 18 strict-maxT outlines.
+The earlier focal lineage and member-gene transport PDFs remain in the recorded
+previous-panel backup. This working artwork update does not adopt the
+synchronized Resource release.
 The additive continuum panel is fixed to the trajectory-only revision rendered
 from the hash-pinned five-cohort context source. It shows all five Resource
 cohorts across fixed windows; cohort roles and primary-inference boundaries

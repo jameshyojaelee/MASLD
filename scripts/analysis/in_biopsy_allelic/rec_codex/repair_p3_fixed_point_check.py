@@ -97,6 +97,7 @@ def main():
     parser.add_argument('--composite-gl-sha')
     parser.add_argument('--mixture-gh-sha')
     parser.add_argument('--mixture-prior-policy', choices=('equal','scale_sqrt','scale_precision'))
+    parser.add_argument('--mixture-wide-components', action='store_true')
     parser.add_argument('--reuse-baseline-dir', type=Path)
     parser.add_argument('--reuse-helper-sha')
     parser.add_argument('--reuse-hashes-json', type=Path)
@@ -126,6 +127,8 @@ def main():
     require(not (args.composite_gl_sha and args.mixture_gh_sha), 'Choose one numerical integration revision')
     require(args.mixture_prior_policy is None or args.mixture_gh_sha,
             'Mixture prior policy requires the mixture GH implementation')
+    require(not args.mixture_wide_components or args.mixture_gh_sha,
+            'Wider components require the mixture GH implementation')
     if args.composite_gl_sha:
         require(args.case != 'boundary19' and not args.predictor_points_sha,
                 'Composite GL comparison requires a saved positive-variance point')
@@ -174,6 +177,7 @@ def main():
               composite_gl=bool(args.composite_gl_sha),
               mixture_gh=bool(args.mixture_gh_sha),
               mixture_prior_policy=(args.mixture_prior_policy or 'equal') if args.mixture_gh_sha else None,
+              mixture_wide_components=args.mixture_wide_components,
               baseline_reuse=bool(args.reuse_baseline_dir),
               kernel_sha256=sha(KERNEL), metadata_and_source_checks=True)))
         return
@@ -272,7 +276,8 @@ def main():
                 return mixture_gh.integrate_gene(*call_args, **call_kwargs,
                                                 expected_kernel_sha=args.expected_kernel_sha,
                                                 kernel_path=archive / KERNEL.name,
-                                                prior_policy=args.mixture_prior_policy or 'equal')
+                                                prior_policy=args.mixture_prior_policy or 'equal',
+                                                wide_components=args.mixture_wide_components)
         else:
             integrate_gene = kernel.integrate_gene
         versions = dict(python=platform.python_version(), numpy=np.__version__, scipy=scipy.__version__)
@@ -333,6 +338,7 @@ def main():
              composite_gl=bool(args.composite_gl_sha),
              mixture_gh=bool(args.mixture_gh_sha),
              mixture_prior_policy=(args.mixture_prior_policy or 'equal') if args.mixture_gh_sha else None,
+             mixture_wide_components=args.mixture_wide_components,
              baseline_reuse=bool(args.reuse_baseline_dir),
              reused_parent_directory=str(receipt_dir) if reuse_hashes is not None else None,
              reused_parent_file_hashes=reuse_hashes,
