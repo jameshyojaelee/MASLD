@@ -117,8 +117,11 @@
 /.review/
 /.envs/
 
-# 7a) Docs are entirely private and ignored.
-/docs/
+# 7a) Docs: track Markdown only; archive stays private.
+/docs/**
+!/docs/**/
+!/docs/**/*.md
+/docs/archive/
 
 # 7d) Web portals and streamlit apps are ignored
 /masld-atlas-v2/
@@ -188,3 +191,4 @@ micromamba
 
 # Root README
 !/README.md
+!/Analysis/MASLD_Model_Benchmark/MODELS.md
