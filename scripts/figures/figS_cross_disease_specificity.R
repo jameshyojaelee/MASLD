@@ -112,7 +112,6 @@ hcv_curated <- c(
   "DDX58", "DDX60", "DDX60L",
   "STAT1", "STAT2", "IRF7", "IRF9", "IRF1",
   "CXCL10", "CXCL9", "CXCL11",
-  # Antiviral effectors
   "GBP1", "GBP2", "GBP4", "GBP5",
   "TRIM22", "TRIM25", "TRIM5",
   "PLSCR1", "EIF2AK2", "ADAR",

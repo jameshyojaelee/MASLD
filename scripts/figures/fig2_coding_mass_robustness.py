@@ -4,14 +4,14 @@ records as still owed, plus an LD-block clustering arm.
 
 The headline compares the share of fine-mapped posterior mass in protein-altering
 or canonical-splice variants between direct-disease and liver-enzyme credible
-sets. After the PIP-sum gate (2026-09-23 correction) it is 22.68% against 3.39%,
-ratio 6.69, over 207 direct and 6,208 enzyme credible-set instances in 24 and 259
-operational clusters. Those clusters are 264 physical 1-Mb regions; 19 hold both
+sets. After the PIP-sum gate and coordinate restoration it is 23.34% against 3.87%,
+ratio 6.03, over 207 direct and 6,208 enzyme credible-set instances in 19 and 228
+operational clusters. Those clusters are 233 physical 1-Mb regions; 14 hold both
 classes. Three things could produce it without the trait class being the cause:
 
   1  ONE STUDY. MVP_NAFLD_AMR contributes 95 of the direct instances. If the
      result is that study, it is a study result, not a trait-class result.
-  2  ONE CLUSTER. 24 clusters is few enough that a single coding-heavy locus
+  2  ONE CLUSTER. 19 clusters is few enough that a single coding-heavy locus
      could carry the fraction.
   3  THE WINDOW. 1 Mb is arbitrary; a different window changes how many clusters
      exist and therefore what is being averaged.
@@ -116,17 +116,19 @@ def main() -> int:
                    "noncoding-dna-precoloc-2026-08-12/run_19783321")
     arch_path = base / "credible_set_pip_architecture.tsv"
     members_path = base / "credible_set_members_annotated.tsv"
-    arch = pd.read_csv(arch_path, sep="\t")
-    members = pd.read_csv(members_path, sep="\t", low_memory=False)
+    arch = pd.read_csv(arch_path, sep="\t", dtype={"locus": str})
+    members = pd.read_csv(members_path, sep="\t", low_memory=False, dtype={"locus": str})
     arch = arch[arch["trait_scope"].isin(SCOPES)].copy()
     members = members[members["trait_scope"].isin(SCOPES)].copy()
     # same credible-set gate and exclusions as the producer
-    arch, _, excluded = apply_gate(arch, members)
+    arch, members, excluded = apply_gate(arch, members)
     excluded.to_csv(out / "excluded_credible_sets.tsv", sep="\t", index=False)
     gate_fail = (excluded[excluded["reason"] == "pip_sum_gate_failed"]
                  .groupby("trait_scope").size().to_dict())
     assert gate_fail == EXPECTED_GATE_FAILURES, gate_fail
-    arch = coding_frame(parse_locus(arch))
+    arch = parse_locus(arch, members)
+    arch.to_csv(out / "corrected_locus_coordinates.tsv", sep="\t", index=False)
+    arch = coding_frame(arch)
 
     def ci(r):
         return (f"ratio {r.get('ratio', float('nan')):.3f} "
@@ -143,7 +145,8 @@ def main() -> int:
     for key, expected in CORRECTED_CODING.items():
         tol = 1e-9 if key.startswith("fraction") else 1e-7 * expected
         assert abs(r0[key] - expected) <= tol, (key, r0[key], expected)
-    assert (r0["n_physical_clusters"], r0["n_shared_clusters"]) == (264, 19), r0
+    assert (r0["n_clusters_direct"], r0["n_clusters_enzyme"],
+            r0["n_physical_clusters"], r0["n_shared_clusters"]) == (19, 228, 233, 14), r0
     print("[ref] corrected gated estimate reproduced", flush=True)
 
     rows = [r0]
@@ -158,7 +161,7 @@ def main() -> int:
                                                      (arch.study == st)).sum())))
             print(f"[loso-{tag}] -{st:<32} {ci(rows[-1])}", flush=True)
 
-    # ---- 2. leave-one-cluster-out, direct clusters only (24 of them)
+    # ---- 2. leave-one-cluster-out, direct clusters only (19 of them)
     for cid in sorted(ref.loc[ref.trait_scope == SCOPES[0], "cluster_id"].unique()):
         sub = ref[~((ref.trait_scope == SCOPES[0]) & (ref.cluster_id == cid))].copy()
         rows.append(run(cluster_table(sub, "coding_mass", "arch_total"),
@@ -167,7 +170,8 @@ def main() -> int:
           f"clusters dropped one at a time", flush=True)
 
     # ---- 3. window size
-    for gap in (250_000, 500_000, 1_000_000, 2_000_000, 5_000_000):
+    window_gaps = (250_000, 500_000, 1_000_000, 2_000_000, 5_000_000)
+    for gap in window_gaps:
         sub = assign_clusters_gap(arch.copy(), gap)
         rows.append(run(cluster_table(sub, "coding_mass", "arch_total"),
                         arm="window_size", dropped=f"{gap/1e6:g}Mb"))
@@ -188,7 +192,17 @@ def main() -> int:
           f"shared {rows[-1].get('n_shared_clusters')} {ci(rows[-1])} "
           f"({nsing} sets fell in no block)", flush=True)
 
-    assert len(rows) == 62, len(rows)
+    expected_arm_counts = {
+        "reference_1Mb": 1,
+        "leave_one_study_out_direct": arch.loc[arch.trait_scope == SCOPES[0], "study"].nunique(),
+        "leave_one_study_out_enzyme": arch.loc[arch.trait_scope == SCOPES[1], "study"].nunique(),
+        "leave_one_cluster_out_direct": ref.loc[ref.trait_scope == SCOPES[0], "cluster_id"].nunique(),
+        "window_size": len(window_gaps),
+        "ld_block_clustering": 1,
+    }
+    observed_arm_counts = pd.Series([r["arm"] for r in rows]).value_counts().to_dict()
+    assert observed_arm_counts == expected_arm_counts, (observed_arm_counts, expected_arm_counts)
+    assert len(rows) == sum(expected_arm_counts.values()), len(rows)
     res = pd.DataFrame(rows)
     res["seed"] = SEED
     res["n_boot"] = N_BOOT

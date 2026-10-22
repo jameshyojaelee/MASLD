@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # Figure 3D endpoint PCA and synchronized endpoint-DE sensitivity.
-# The five-cohort, 844-participant disease-vs-control model remains canonical.
+# The five-cohort disease-vs-control model on the selected roster remains canonical.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -36,16 +36,16 @@ expected_counts_path <- file.path(release_root, "expected_counts.json")
 expected <- if (file.exists(expected_counts_path)) {
   jsonlite::fromJSON(expected_counts_path)
 } else {
-  list(n_genes = 23370L, n_control = 157L, n_disease = 687L,
+  list(n_genes = 23370L, n_samples = 844L, n_control = 157L, n_disease = 687L,
        fig3d_endpoint = list(n_total = 418L, n_cohorts = 4L, n_advanced = 303L, n_strict_control = 115L))
 }
 stopifnot(nrow(manifest) == 1L, manifest$n_genes == expected$n_genes,
-          manifest$n_samples == 844L, manifest$n_cohorts == 5L,
+          manifest$n_samples == expected$n_samples, manifest$n_cohorts == 5L,
           manifest$n_control == expected$n_control, manifest$n_disease == expected$n_disease)
 dge_all <- readRDS(manifest$dge_path)
 meta_all <- as.data.table(readRDS(manifest$meta_path))
 meta <- meta_all[match(colnames(dge_all), sample_id)]
-stopifnot(nrow(meta) == 844L, !anyNA(meta$sample_id),
+stopifnot(nrow(meta) == expected$n_samples, !anyNA(meta$sample_id),
           identical(meta$sample_id, colnames(dge_all)), uniqueN(meta$dataset) == 5L)
 
 # Prespecified endpoint definitions. Advanced histology takes precedence for
@@ -161,9 +161,19 @@ fwrite(metrics, file.path(analysis_dir, "endpoint_vs_canonical_metrics.tsv"), se
 
 # Figure 3C: direct five-cohort direction and leave-one-cohort-out stability.
 # Per-cohort effects come from the synchronized stage-extension candidate; LOO
-# models are recomputed here from the exact 844-participant substrate.
+# models are recomputed here from the exact selected-roster substrate.
 cohort_de <- fread(file.path(stage_extension_root, "cohort_disease_all_gene_results.tsv"))
-stopifnot(nrow(cohort_de) == 5L * expected$n_genes,
+# A cohort whose disease-vs-control contrast cannot be estimated (design audit
+# estimable == FALSE) has no per-cohort rows; the legacy adopted root has no audit.
+cohort_audit_path <- file.path(stage_extension_root, "cohort_disease_design_audit.tsv")
+estimable_cohorts <- if (file.exists(cohort_audit_path)) {
+  fread(cohort_audit_path)[estimable == TRUE, dataset]
+} else {
+  unique(meta$dataset)
+}
+n_estimable_cohorts <- length(estimable_cohorts)
+stopifnot(nrow(cohort_de) == n_estimable_cohorts * expected$n_genes,
+          setequal(cohort_de$dataset, estimable_cohorts),
           all(cohort_de[, uniqueN(gene_id_versioned), by = dataset]$V1 == expected$n_genes))
 canonical_effects <- canonical[, .(gene, full_logFC = logFC, full_padj = padj,
                                    canonical_deg = padj < 0.05 & abs(logFC) > 0.5)]
@@ -204,7 +214,7 @@ fit_loo <- function(held_out) {
 loo_results <- rbindlist(lapply(sort(unique(meta$dataset)), fit_loo))
 loo_join <- merge(loo_results, canonical_effects, by = "gene", all.x = TRUE)
 loo_summary <- loo_join[, .(
-  n_training_participants = 844L - sum(meta$dataset == unique(held_out_cohort)),
+  n_training_participants = nrow(meta) - sum(meta$dataset == unique(held_out_cohort)),
   all_gene_spearman = cor(loo_logFC, full_logFC, method = "spearman"),
   canonical_same_direction_fraction = mean(sign(loo_logFC[canonical_deg]) ==
                                              sign(full_logFC[canonical_deg])),

@@ -200,6 +200,17 @@ main <- function() {
   out_root <- required_env("HAC_OUT_ROOT")
   dge_path <- required_env("HAC_DGE_PATH")
   manifest_path <- required_env("HAC_MANIFEST_PATH")
+  # A corrected roster passes its own counts through HAC_EXPECTED_COUNTS_PATH
+  # (cohort_sizes, n_resource_signature); without it the 2026-08 values apply.
+  expected_sizes <- EXPECTED_COHORT_SIZES
+  expected_resource_signature <- SIGNATURE_RESOURCE_EXPECTED
+  expected_counts_path <- Sys.getenv("HAC_EXPECTED_COUNTS_PATH", "")
+  if (nzchar(expected_counts_path)) {
+    roster_counts <- jsonlite::fromJSON(expected_counts_path, simplifyVector = TRUE)
+    expected_sizes <- unlist(roster_counts$cohort_sizes)
+    expected_sizes <- setNames(as.integer(expected_sizes), names(expected_sizes))
+    expected_resource_signature <- as.integer(roster_counts$n_resource_signature)
+  }
   reproduction_dir <- file.path(out_root, "reproduction")
   model_path <- file.path(reproduction_dir, "discovery_signature_model.rds")
   signature_path <- file.path(reproduction_dir, "signature_genes.tsv")
@@ -228,9 +239,10 @@ main <- function() {
   assert_true(setequal(unique(meta$dataset), EXPECTED_COHORTS),
               "Manifest cohorts differ from the frozen five-cohort Resource set")
   observed_sizes <- table(meta$dataset)
-  assert_true(nrow(meta) == sum(EXPECTED_COHORT_SIZES) &&
-                all(observed_sizes[names(EXPECTED_COHORT_SIZES)] == EXPECTED_COHORT_SIZES),
-              "Manifest participant counts differ from the frozen 844-participant substrate")
+  assert_true(nrow(meta) == sum(expected_sizes) &&
+                all(observed_sizes[names(expected_sizes)] == expected_sizes),
+              "Manifest participant counts differ from the expected ",
+              sum(expected_sizes), "-participant substrate")
 
   dge <- readRDS(dge_path)
   counts <- if (inherits(dge, "DGEList")) dge$counts else if (is.matrix(dge)) dge else NULL
@@ -270,9 +282,9 @@ main <- function() {
   common_genes <- unique(strip_ensembl_version(model$common_gene_ids))
   assert_true(length(signature_all) == SIGNATURE_TOTAL_EXPECTED,
               "Frozen signature contains ", length(signature_all), " rather than 145 genes")
-  assert_true(length(common_genes) == SIGNATURE_RESOURCE_EXPECTED,
+  assert_true(length(common_genes) == expected_resource_signature,
               "Frozen Resource intersection contains ", length(common_genes),
-              " rather than 139 genes")
+              " rather than ", expected_resource_signature, " genes")
   assert_true(setequal(signature_all, signature$gene_id_base),
               "Signature table and discovery model contain different 145-gene sets")
   assert_true(all(common_genes %in% signature_all),
@@ -460,7 +472,7 @@ main <- function() {
     value = c(
       as.character(HAC_SEED), "rowSums(counts) > n_samples", "log2(counts + 1)",
       "within_cohort", "none", "none", as.character(SIGNATURE_TOTAL_EXPECTED),
-      as.character(SIGNATURE_RESOURCE_EXPECTED), as.character(MIN_SIGNATURE_COVERAGE),
+      as.character(expected_resource_signature), as.character(MIN_SIGNATURE_COVERAGE),
       "co_primary", "control"
     )
   ), file.path(output_dir, "parameters.tsv"))

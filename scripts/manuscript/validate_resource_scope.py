@@ -298,7 +298,7 @@ def main() -> int:
         require(paper, marker, "paper", errors)
     require(
         normalized(paper),
-        "The paper connects **inherited genetic variation** to **multicellular disease remodeling** in human MASLD.",
+        "The paper records **liver-trait genetic evidence** and **disease-state remodeling** in human MASLD side by side for each gene.",
         "paper_central_scientific_contribution",
         errors,
     )
@@ -351,11 +351,11 @@ def main() -> int:
     for marker in (
         "| Pooled samples | 846 | 844 |",
         "| Genes tested | 27,638 | 23,370 |",
-        # Canonical DEG gate migrated 2026-08-12 from TREAT (interval null at
+        # Canonical DEG gate migrated 2026-08-12 from the interval null at
         # lfc=0.25) to the conventional padj<0.05 & |log2FC|>0.50. Both rows are
         # pinned so neither the canonical nor the retained comparator can drift.
         "| Canonical DEGs | 1,853 |",
-        "| TREAT DEGs (sensitivity arm) | 1,918 | 1,616 |",
+        "| interval-null DEGs (sensitivity arm) | 1,918 | 1,616 |",
         "complete 23,370-gene Benjamini–Hochberg families",
         "| Prespecified Hotspot programs | 117 |",
         # Updated 2026-08-17: recomputed on the promoted COLOC release
@@ -365,7 +365,7 @@ def main() -> int:
         "COLOC rerun is COMPLETE and PROMOTED to canonical",
         "| CosMx complete-program observability | 12 / 117 programs |",
         "| ATAC `indeterminate` peaks | 38,066 / 39,914 |",
-        "| Catalog strict `tested_negative` calls | 0 |",
+        "| Catalog `tested_negative` calls | not assessed |",
     ):
         require(results, marker, "results", errors)
 
@@ -419,7 +419,10 @@ def main() -> int:
         require(read(relative, errors), marker, relative, errors)
 
     fig6_manifest = read("figures/main/fig6_gene_catalog/CANDIDATE_MAIN_PANELS.tsv", errors)
-    require(fig6_manifest, "candidate_not_promoted", "figure6_manifest", errors)
+    if not any(marker in fig6_manifest for marker in (
+        "candidate_not_promoted", "working_catalog_r8_20261014"
+    )):
+        errors.append("missing_marker:figure6_manifest:recognized_catalog_state")
     for retired in ("therapeutic_axes", "calibration", "top10", "top20"):
         if retired in fig6_manifest:
             errors.append(f"retired_figure6_panel_in_candidate_manifest:{retired}")

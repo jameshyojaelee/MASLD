@@ -1,5 +1,6 @@
 """Donor-level statistics for the Figures 3–4 correction candidate."""
 from pathlib import Path
+import os
 import json
 import hashlib
 import numpy as np
@@ -13,8 +14,9 @@ FOCAL = {
     "hotspot_hepatocytes_48f39dd4d817a10e": "Ductular injury",
 }
 HAC = ROOT / "RNA-seq/results/histology_anchored_continuum"
-ML = HAC / "molecular_layers/hac-molecular-layers-20260818T173348Z"
-AXES = HAC / "candidates/hac-continuum-20260818T024923Z/projection/score_registry.tsv"
+# FIG34_* variables select another input basis; unset, the original 844-record inputs are read.
+ML = Path(os.environ.get("FIG34_ML_ROOT", HAC / "molecular_layers/hac-molecular-layers-20260818T173348Z"))
+AXES = Path(os.environ.get("FIG34_AXES_PATH", HAC / "candidates/hac-continuum-20260818T024923Z/projection/score_registry.tsv"))
 PROGRAM = ROOT / "Analysis/Multimodal_Program_Projection/candidates/program-context-v2-stage-corrected-candidate-2026-08-13-v3/hotspot"
 
 

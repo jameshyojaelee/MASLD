@@ -41,8 +41,9 @@ missing or non-finite mass is excluded and written to
 
 Physical cluster. Clusters are formed once on the pooled positions of both trait
 classes, so a region reached by both classes is one physical cluster holding one
-direct row and one enzyme row. After the gate the coding test has 283 rows in
-264 physical clusters; 19 are shared, and they hold 19 of the 24 direct clusters.
+direct row and one enzyme row. After coordinate restoration and the gate the
+coding test has 247 rows in 233 physical clusters; 14 are shared, among 19
+direct and 228 enzyme clusters.
 
 Bootstrap. Physical clusters are resampled with replacement; a drawn shared
 cluster brings both its rows. The percentile interval comes from this bootstrap.
@@ -52,8 +53,7 @@ not tests, and no pass/fail column is written.
 
 No permutation p. The candidate null exchanges the class label only among
 class-exclusive clusters and keeps the shared pairs fixed. It would relabel 5 of
-24 direct clusters while the 19 fixed shared clusters hold 79% of the direct
-denominator and 76% of the direct coding mass, so it tests the five exclusive
+19 direct clusters while the 14 shared clusters remain fixed, so it tests the five exclusive
 direct clusters, not the direct-versus-enzyme contrast. Its exchangeability
 assumption also fails by ascertainment: enzyme GWAS are larger and reach
 smaller-effect loci, so an enzyme-exclusive cluster is not a draw from the same
@@ -74,6 +74,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from fig2_locus_coordinates import recover_locus_positions
 
 SEED = 20260817
 N_BOOT = 10000
@@ -98,19 +100,17 @@ TEST_LABEL = {
 # Gate failures in run_19783321, by credible_set_uid (review item 3).
 EXPECTED_GATE_FAILURES = {"tier1_direct_masld_pdff": 1, "tier2_liver_enzyme": 51}
 
-# Coding-mass estimate on gated sets, reproduced 2026-09-23 by a standalone
-# grouping that does not import this module (ungated it gives 0.22542908161519876
-# / 0.034420056715428145 / 6.549352416207798, the superseded published values).
+# Coordinate-restored gated estimates independently reproduced on 2026-10-13.
 CORRECTED_CODING = {
-    "fraction_direct": 0.22680460858995022,
-    "fraction_enzyme": 0.03389892569783767,
-    "ratio": 6.690613461075479,
+    "fraction_direct": 0.23342751888576008,
+    "fraction_enzyme": 0.038732412743244765,
+    "ratio": 6.026671264533389,
 }
 
 # (direct rows, enzyme rows, physical clusters, shared clusters) after the gate.
-# Coding census reproduced independently; context census from build_context_masses.
-EXPECTED_CENSUS = {"coding_mass": (24, 259, 264, 19)}
-EXPECTED_CENSUS.update({c: (22, 256, 261, 17) for c in CTX_COLS})
+# Coding census reproduced independently. Context subsets retain their own
+# clustering; their derived census is recorded and checked for consistency.
+EXPECTED_CENSUS = {"coding_mass": (19, 228, 233, 14)}
 
 P_PERMUTATION_STATUS = ("not_computed: most direct clusters are shared with the enzyme "
                         "class; no defensible label exchange (see "
@@ -193,15 +193,9 @@ def apply_gate(arch: pd.DataFrame, members: pd.DataFrame
             members[~members[uid].isin(reasons)].copy(), excluded)
 
 
-def parse_locus(frame: pd.DataFrame) -> pd.DataFrame:
-    """Copied verbatim from fig2_trait_directness_stats.py."""
-    text = frame["locus"].astype(str)
-    frame = frame.copy()
-    frame["chrom"] = text.str.split(".").str[0]
-    frame["pos"] = pd.to_numeric(text.str.split(".").str[1], errors="coerce")
-    if frame["pos"].isna().any():
-        raise ValueError("unparsable locus positions present")
-    return frame
+def parse_locus(frame: pd.DataFrame, members: pd.DataFrame) -> pd.DataFrame:
+    """Restore sentinel encoding against full native credible-set members."""
+    return recover_locus_positions(frame, members)
 
 
 def assign_clusters(frame: pd.DataFrame) -> pd.DataFrame:
@@ -356,8 +350,8 @@ def main() -> int:
     arch_path = base / "credible_set_pip_architecture.tsv"
     members_path = base / "credible_set_members_annotated.tsv"
 
-    arch = pd.read_csv(arch_path, sep="\t")
-    members = pd.read_csv(members_path, sep="\t", low_memory=False)
+    arch = pd.read_csv(arch_path, sep="\t", dtype={"locus": str})
+    members = pd.read_csv(members_path, sep="\t", low_memory=False, dtype={"locus": str})
     arch = arch[arch["trait_scope"].isin(SCOPES)].copy()
     members = members[members["trait_scope"].isin(SCOPES)].copy()
 
@@ -370,11 +364,13 @@ def main() -> int:
     print(f"[mult] excluded credible sets by reason: "
           f"{excluded.groupby(['reason', 'trait_scope']).size().to_dict()}", flush=True)
 
-    arch = assign_clusters(parse_locus(arch))
+    arch = parse_locus(arch, members)
+    arch.to_csv(out / "corrected_locus_coordinates.tsv", sep="\t", index=False)
+    arch = assign_clusters(arch)
     arch["coding_mass"] = arch[CODING_COLS].sum(axis=1)
     arch["arch_total"] = arch[ARCH_COLS].sum(axis=1)
 
-    per_set = assign_clusters(parse_locus(build_context_masses(members)))
+    per_set = assign_clusters(parse_locus(build_context_masses(members), members))
 
     specs = [("coding_mass", arch, "coding_mass", "arch_total")] + [
         (c, per_set, c, "noncoding_pip_mass") for c in CTX_COLS]
@@ -387,7 +383,9 @@ def main() -> int:
         rows.append(res)
         census = (res["n_clusters_direct"], res["n_clusters_enzyme"],
                   res["n_physical_clusters"], res["n_shared_clusters"])
-        if census != EXPECTED_CENSUS[name]:
+        if census[0] + census[1] - census[3] != census[2]:
+            raise AssertionError(f"{name} inconsistent physical/shared census: {census}")
+        if name in EXPECTED_CENSUS and census != EXPECTED_CENSUS[name]:
             raise AssertionError(f"{name} census (direct, enzyme, physical, shared) "
                                  f"{census}, expected {EXPECTED_CENSUS[name]}")
         print(f"[mult] {name:<26} direct {res.get('fraction_direct', float('nan')):.4f} "

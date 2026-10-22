@@ -76,10 +76,14 @@ class TestPhysicalClusterBootstrap(unittest.TestCase):
 
     def test_pooled_positions_give_one_id_across_classes(self):
         frame = pd.DataFrame({"trait_scope": [DIRECT, ENZYME, ENZYME],
-                              "locus": ["1.100", "1.500000", "1.5000000"]})
-        ids = m.assign_clusters(m.parse_locus(frame)).set_index("locus")["cluster_id"]
-        self.assertEqual(ids["1.100"], ids["1.500000"])
-        self.assertNotEqual(ids["1.100"], ids["1.5000000"])
+                              "credible_set_uid": ["d", "e1", "e2"],
+                              "locus": ["1.10000001", "1.10500001", "1.15000001"]})
+        members = pd.DataFrame({"credible_set_uid": ["d", "e1", "e2"],
+                                "chromosome": ["1", "1", "1"],
+                                "position": [10000001, 10500001, 15000001]})
+        ids = m.assign_clusters(m.parse_locus(frame, members)).set_index("credible_set_uid")["cluster_id"]
+        self.assertEqual(ids["d"], ids["e1"])
+        self.assertNotEqual(ids["d"], ids["e2"])
 
     def test_fit_seed_does_not_depend_on_run_order(self):
         first = m.fit_rng("window_size|1Mb").integers(0, 10**9, 5)

@@ -3,10 +3,11 @@
 
 The candidate producer deliberately calls the byte-pinned v1 Moran engine
 instead of maintaining a second scientific implementation.  The adapter owns
-only registry translation, isolated output, provenance, and release gates.
+registry translation, isolated output, provenance, release gates, and reuse of
+unchanged nuisance-design pseudoinverses.
 This gives the v1 regression run the strongest possible semantic check: the
 same matched-control, graph, residualization, donor-collapse, null, and
-sensitivity functions are exercised with parameterized inputs.
+sensitivity arithmetic is exercised with parameterized inputs.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import wraps
 from pathlib import Path
 from types import ModuleType
 from typing import Iterable, Mapping, Sequence
@@ -243,6 +245,32 @@ def universe_hash(rows: Sequence[Mapping[str, object]]) -> str:
     return canonical_rows_sha256(rows, columns)
 
 
+def cached_residualizer(residualize):
+    """Reuse up to four unchanged nuisance designs without changing arithmetic."""
+    import numpy as np
+
+    cached = []
+
+    @wraps(residualize)
+    def residualize_cached(values, design):
+        values = np.asarray(values, dtype=np.float32)
+        for snapshot, inverse in cached:
+            if (
+                design.shape == snapshot.shape
+                and design.dtype == snapshot.dtype
+                and np.array_equal(design, snapshot)
+            ):
+                break
+        else:
+            inverse = np.linalg.pinv(design)
+            cached.append((design.copy(), inverse))
+            if len(cached) > 4:
+                cached.pop(0)
+        return values - design @ (inverse @ values)
+
+    return residualize_cached
+
+
 def load_legacy_engine(paths: Paths) -> ModuleType:
     """Import the pinned v1 engine without allowing a canonical write target.
 
@@ -287,6 +315,7 @@ def load_legacy_engine(paths: Paths) -> ModuleType:
     module.SEED = SEED
     module.GRAPH_DISTANCE_MULTIPLIER = GRAPH_DISTANCE_MULTIPLIER
     module.MIN_GRAPH_SPOTS = MIN_GRAPH_SPOTS
+    module.residualize = cached_residualizer(module.residualize)
     return module
 
 

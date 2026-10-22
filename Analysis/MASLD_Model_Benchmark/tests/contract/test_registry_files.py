@@ -4684,6 +4684,17 @@ class RegistryFileContractTest(unittest.TestCase):
             protocol["gse289173"]["disease_control_secondary_sealed_eligible"],
             False,
         )
+        h90 = json.loads(
+            (
+                CONFIG
+                / "artifacts/incidents/gse289173_h90_public_matrices_20261015.json"
+            ).read_text(encoding="utf-8")
+        )
+        self.assertEqual(h90["exposed_sample_count"], 48)
+        self.assertIs(h90["primary_cell_state_labels_opened"], False)
+        self.assertIs(h90["primary_eqtl_or_ieqtl_outcomes_opened"], False)
+        self.assertIs(h90["containment"]["cell_state_mapping_sealed_eligible"], False)
+        self.assertIs(protocol["gse289173"]["cell_state_mapping_sealed_eligible"], False)
 
     def test_no_floating_latest_tags(self) -> None:
         for path in sorted(CONFIG.rglob("*.toml")):

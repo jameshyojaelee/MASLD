@@ -89,6 +89,30 @@ class CellBaselineStudy50000ScorerTests(unittest.TestCase):
         self.assertEqual(float(value["top_label_ece"][0]), 0.0)
         np.testing.assert_array_equal(value["class_f1"], np.ones((1, 5)))
 
+    def test_statistics_keep_missing_strata_and_calibration_boundaries(self) -> None:
+        truth = np.asarray([0, 0, 1, 1], dtype=np.int8)
+        predicted = np.asarray([0, 0, 1, 0], dtype=np.int8)
+        probabilities = np.asarray([
+            [1.0, 0.0, 0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.0, 0.0, 0.0],
+            [0.2, 0.8, 0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0, 0.0],
+        ])
+        stats = scorer.sufficient_statistics(
+            truth, predicted, probabilities, np.asarray([0, 0, 1, 1]), donors=3,
+        )
+        np.testing.assert_array_equal(stats["present"].sum(axis=1), [1, 1, 0])
+        np.testing.assert_array_equal(stats["confusion"][0, 0], [1, 0, 0, 0, 0])
+        np.testing.assert_array_equal(stats["confusion"][1, 1], [0.5, 0.5, 0, 0, 0])
+        self.assertEqual(stats["brier"][0, 0], 0.25)
+        self.assertEqual(stats["brier"][1, 1], 1.04)
+        np.testing.assert_array_equal(stats["bin_mass"][0, 0, [5, 9]], [0.5, 0.5])
+        np.testing.assert_array_equal(stats["bin_mass"][1, 1, [8, 9]], [0.5, 0.5])
+        self.assertEqual(stats["bin_confidence"][0, 0, 5], 0.25)
+        self.assertEqual(stats["bin_correct"][1, 1, 9], 0.0)
+        for values in stats.values():
+            self.assertFalse(values[2].any())
+
     def test_production_contract_is_evaluation_only(self) -> None:
         self.assertEqual(scorer.BOOTSTRAP_RESAMPLES, 10_000)
         self.assertEqual(scorer.SCREEN_SEEDS, (20260824, 20260825, 20260826))

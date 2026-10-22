@@ -47,10 +47,11 @@ def normalize_against_reference(
     """Orient, minimize, and left-align a biallelic variant on hg38.
 
     ``fetch`` uses zero-based half-open coordinates. One of the two supplied
-    alleles must match the reference; no assumption is made about effect-allele
-    ordering. Indels are explicitly left-aligned through their repeat context.
+    alleles must match the reference; both supplied allele orders are tried.
+    Ambiguous reference matches retain the first matching order. Indels are
+    explicitly left-aligned through their repeat context.
     """
-    if not allele1 or not allele2:
+    if position_1based < 1 or not allele1 or not allele2:
         return None
     candidates = [
         (allele1.upper(), allele2.upper(), "forward"),
@@ -64,8 +65,12 @@ def normalize_against_reference(
             pos, norm_ref, norm_alt = _minimal_representation(position_1based, ref, alt)
             if len(norm_ref) != len(norm_alt):
                 while pos > 1:
+                    # A shared suffix can rotate onto any preceding anchor,
+                    # including a different base immediately before a repeat.
+                    if norm_ref[-1] != norm_alt[-1]:
+                        break
                     previous = fetch(chrom, pos - 2, pos - 1).upper()
-                    if not previous or norm_ref[-1] != previous or norm_alt[-1] != previous:
+                    if not previous:
                         break
                     norm_ref = previous + norm_ref[:-1]
                     norm_alt = previous + norm_alt[:-1]

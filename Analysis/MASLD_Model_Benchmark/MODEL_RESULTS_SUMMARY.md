@@ -2924,14 +2924,6 @@ statistics would silently remove the etiology mean shift and require the whole t
 Re-standardizing on SOURCE statistics costs **−0.004 to +0.001** across all 8 cells, every interval
 straddling zero. The transfer is genuinely prospective.
 
-### The wording that may be published
-
-> In GSE276114, at a stage-matched marginal (13/11/42, n=66 per etiology), a MASLD-trained instrument
-> reaches Spearman 0.63–0.69 against a tie ceiling of 0.8545 in chronic viral hepatitis and vice versa,
-> with no loss detectable at this power. **The data are consistent with the transfer losing up to
-> ~0.20 Spearman, about 30% of native skill** (MDE80 0.185–0.362 by direct participant bootstrap);
-> smaller losses are not excluded. This is a weak null stated as a bound, not equivalence.
-
 ⛔ **Not** "transfers with no loss." Scope: one cohort, one quantification, one 3-level source-native
 outcome, two etiologies, ARLD untestable by construction, native baselines trained on less data.
 
@@ -2950,11 +2942,6 @@ somewhat LARGER, strengthening the underpowered direction, and explicitly labels
 rather than measurement.
 
 ### ✅ PRIORITY RESOLVED — Lane D's DESIGN is novel; its DIRECTION is not, and must be cited
-
-Source study checked directly, 2026-09-01: **Zeybel et al. 2025, *Cell Reports Medicine*,
-"Integrative proteo-transcriptomic characterization of advanced fibrosis in chronic liver disease
-across etiologies"**, PMID 39889710, PMC11866494, GSE276114, 330 individuals (40 healthy + 290 with
-histologically characterized fibrosis from viral, alcohol or metabolic causes).
 
 ⛔ **They never ran a cross-etiology transfer.** All three etiologies were **pooled into single
 training sets**; models trained on 70% of samples with stratified 5-fold cross-validation in the
@@ -3623,12 +3610,7 @@ the full expression model, and projecting ten purely distributional library summ
 gene removes 16–34% of both native and cross-etiology performance, the split between the two arms
 depending on whether the residualization is fitted across the cohort or within etiology.
 
-**(2)** Downstream of that, at a stage-matched marginal (F0–2 13, F3 11, F4 42; n = 66 per etiology),
-a MASLD-trained model predicts fibrosis stage in chronic viral hepatitis at Spearman 0.63–0.69 against
-a matched tie ceiling of 0.854, and a CVH-trained model does the same in MASLD, with the paired delta
-against a native model covering zero in all eight direction-by-learner arms.
-
-**(3)** This is a bounded null rather than an equivalence — a participant-level bootstrap gives 80%
+**(2)** This is a bounded null rather than an equivalence — a participant-level bootstrap gives 80%
 power only for a loss of 0.19–0.36 Spearman (26–64% of native skill), so a loss of up to approximately
 0.20 Spearman is not excluded — and the technically residualized re-test is **unidentified rather than
 merely imprecise**: its paired delta reverses sign with the scope of the residualization (−0.119 fitted
@@ -3654,11 +3636,9 @@ etiology reverses them: **zero of eight arms negative, median paired delta +0.12
 excluding zero in the POSITIVE direction. Neither specification is privileged, and the pair is
 reported together rather than either quoted alone.
 
-**Scope limit (a), HCC burden.** Concurrent hepatocellular carcinoma differs between the compared
-groups: 24 of 82 participants with chronic viral hepatitis (29.3%) and 9 or 10 of 81 with MASLD
-(11.1% or 12.3%). The one-participant range follows from a discrepancy in the deposited record: the
-source study reports 34 participants with HCC in a 178-participant cohort (24 CVH, 10 MASLD), but only
-177 were deposited to GEO, and the omitted participant is MASLD of unknown HCC status. Per-sample HCC
+**Scope limit (a), HCC burden.** The HCC counts have a one-participant range because the source
+study reports 34 participants with HCC in a 178-participant cohort (24 CVH, 10 MASLD), but only 177
+were deposited to GEO, and the omitted participant is MASLD of unknown HCC status. Per-sample HCC
 status is not deposited and could not be recovered from the series matrix, BioSample, SRA, the
 published supplementary data, or the associated Olink deposit, so it cannot be excluded or adjusted
 for. Tissue from participants with HCC was peritumoral, collected at least 1 cm from the tumour and
@@ -4405,12 +4385,6 @@ participant; crosswalk verified 1:1 with **zero axis genes reachable from more t
 ⚠ MDEs (0.083, 0.059, 0.095) resample test participants against fixed predictions and do not resample
 the native model's training, so they are a **lower bound on the true SE** — same estimator as the
 release, comparable by construction.
-
-### What this supports, every number measured through the released path
-**"Out of cohort the instrument reaches Spearman 0.64–0.75 against tie ceilings of 0.85–0.97 — 68% to
-79% of the maximum any score could reach — in three cohorts totalling 585 participants that the model
-never trained on, spanning MASLD, chronic viral hepatitis and alcohol-related disease, and in each it
-matches a ridge trained inside that cohort."**
 
 ---
 

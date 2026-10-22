@@ -1,0 +1,22 @@
+import pandas as pd
+pd.set_option('display.width',250); pd.set_option('display.max_colwidth',200); pd.set_option('display.max_rows',200)
+D='/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas/figures/candidates/catalog-r8-reviewed-20261014T142026Z_22236566/catalog_reviewed_r8/'
+g=pd.read_parquet(D+'passport_gene_index.parquet')
+e=pd.read_parquet(D+'passport_evidence_long.parquet')
+print('genes',len(g),'unique ensembl',g.ensembl_id.nunique(),'unique symbol',g.symbol.nunique(), 'null symbol', g.symbol.isna().sum())
+print(g.primary_evidence_class.value_counts(dropna=False))
+print('symbol_collision', g.symbol_collision.value_counts(dropna=False))
+print('evidence rows',len(e)); print(e.groupby(['evidence_domain','assay']).size())
+print(e.groupby(['evidence_domain','call_state']).size())
+print(e.groupby(['evidence_domain','testability_state','testability_reason']).size())
+w=e.pivot_table(index='ensembl_id',columns='evidence_domain',values='call_state',aggfunc='first')
+print(w.shape)
+ct=pd.crosstab(w['genetics'],w['transcriptomics'],margins=True); print(ct)
+m=g.set_index('ensembl_id').join(w)
+print(pd.crosstab([m.genetics,m.transcriptomics],m.primary_evidence_class))
+# tested_negative
+print('negative_call_passed', e.negative_call_passed.value_counts(dropna=False))
+print('negative_call_rule_id', e.negative_call_rule_id.value_counts(dropna=False))
+print('source_negative_call_rule_id', e.source_negative_call_rule_id.value_counts(dropna=False))
+print(g.role_hypothesis.value_counts()); print(g.next_experiment_rule_id.value_counts())
+print(g.groupby('primary_evidence_class').allowed_wording.unique())

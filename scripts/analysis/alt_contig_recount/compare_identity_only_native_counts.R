@@ -71,7 +71,7 @@ for (start in seq.int(1L, nrow(reference_dge), by = 1024L)) {
 }
 reference_groups <- reference_meta[, .N, by = .(dataset, group_binary)]
 reference_groups[, arm := "historical_corrected_844"]
-metrics <- list(data.table(arm = "historical_corrected_844", n_units = 844L,
+metrics <- list(data.table(arm = "historical_corrected_844", n_libraries = 844L, n_supported_analysis_units = NA_integer_,
     n_tested_genes = nrow(reference), canonical_n = deg_counts(reference)$canonical$n,
     canonical_up = deg_counts(reference)$canonical$up, canonical_down = deg_counts(reference)$canonical$down,
     treat_n = deg_counts(reference)$treat$n, treat_up = deg_counts(reference)$treat$up, treat_down = deg_counts(reference)$treat$down))
@@ -105,7 +105,7 @@ for (arm in c("primary_774", "strict_depth_738")) {
   fwrite(data.table(sample_id = rownames(fitted$design), fitted$design), file.path(arm_root, "model_design.tsv"), sep = "\t")
   fwrite(data.table(sample_id = colnames(dge), sample_weight = fitted$weights), file.path(arm_root, "sample_weights.tsv"), sep = "\t")
   calls <- deg_counts(out)
-  metrics[[length(metrics)+1L]] <- data.table(arm = arm, n_units = nrow(meta), n_tested_genes = nrow(out),
+  metrics[[length(metrics)+1L]] <- data.table(arm = arm, n_libraries = nrow(meta), n_supported_analysis_units = uniqueN(meta$analysis_unit_id), n_tested_genes = nrow(out),
       canonical_n = calls$canonical$n, canonical_up = calls$canonical$up, canonical_down = calls$canonical$down,
       treat_n = calls$treat$n, treat_up = calls$treat$up, treat_down = calls$treat$down)
   cohort <- meta[, .N, by = .(dataset, group_binary)]
@@ -139,11 +139,12 @@ fwrite(rbindlist(comparison_metrics), file.path(out_root, "comparison_metrics.ts
 status <- list(status = "identity_only_diagnostic_complete", candidate_not_adopted = TRUE,
     counts = "SAME HISTORICAL UNIQUE-ONLY NATIVE COUNTS; NOT COUNT-CORRECTED",
     annotation_resolution_complete = FALSE, counts_corrected = FALSE, primary_bulk_release = FALSE,
-    inferential_units = "one library per supported source-linked participant or conservative genetic identity cluster",
+    historical_inferential_units = "844 libraries; number of distinct supported analysis units not established",
+    qualified_roster_inferential_units = "one library per supported source-linked participant or conservative genetic identity cluster",
     contrast = "disease versus corrected source controls, adjusted for dataset and inferred sex",
     correction = "BH across all expression-filtered genes separately within each arm and each eBayes/TREAT family",
     canonical_rule = "eBayes BH<0.05 and abs(log2 fold change)>0.5", treat_rule = "TREAT BH<0.05 for abs(log2 fold change)>0.25",
-    historical_counts_sha256 = native_sha, limitations = "Identity selection evaluated while ALT/scaffold counting correction remains held; no independent-donor claim from genotype clusters alone.")
+    historical_counts_sha256 = native_sha, limitations = "Identity selection evaluated while ALT/scaffold counting correction remains held; no independent-donor claim from genotype clusters alone. Roster selection changes cohort and case composition, expression filtering, normalization and sample weights; differences cannot be attributed solely to removing repeats.")
 writeLines(toJSON(status, auto_unbox = TRUE, pretty = TRUE), file.path(out_root, "diagnostic_status.json"))
 writeLines(capture.output(sessionInfo()), file.path(out_root, "sessionInfo.txt"))
 writeLines(c("Identity-only diagnostic on unchanged historical unique-only native counts.",

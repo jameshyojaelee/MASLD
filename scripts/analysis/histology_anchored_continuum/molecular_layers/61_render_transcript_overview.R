@@ -23,7 +23,8 @@ dir.create(panel_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(source_dir, recursive = TRUE, showWarnings = FALSE)
 
 membership <- fread(file.path(analysis_candidate, "bulk", "continuum_membership.tsv.gz"))
-stopifnot(nrow(membership) == 23370L)
+# A corrected roster passes its own gene-family size through HAC_ML_GENE_FAMILY_SIZE.
+stopifnot(nrow(membership) == as.integer(Sys.getenv("HAC_ML_GENE_FAMILY_SIZE", "23370")))
 
 ordinary <- membership[
   axis_component == FALSE & is.finite(beta_signature_pc1) & is.finite(beta_fixed_projection)

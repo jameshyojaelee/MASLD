@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+from collections import Counter
 import os
 from pathlib import Path
+from random import Random
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,6 +17,7 @@ from masld_bench.evaluators.endpoint_power import (
     recompute_endpoint_bootstrap,
     registered_endpoint_evaluators,
 )
+from masld_bench.evaluators.metrics import multinomial_deviance
 
 
 def _hash(value: str) -> str:
@@ -352,6 +355,90 @@ class EndpointPowerTests(unittest.TestCase):
                 result.independent_unit_counts,
                 {"donor": 10, "genomic_block": 10},
             )
+
+    def test_rna_atac_profiles_preserve_two_way_bootstrap_multiplicities(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            rows = []
+            reductions = {}
+            for donor in range(5):
+                for block in range(4):
+                    if (donor, block) == (4, 3):
+                        continue
+                    for stratum in ("hep", "stellate"):
+                        key = (_hash(f"d{donor}"), _hash(f"b{block}"), stratum)
+                        observed = [1.0 + donor, 3.0 + block, 7.0]
+                        candidate = [2.0, 3.0 + donor, 4.0 + block]
+                        baseline = [4.0, 2.0, 1.0]
+                        base = multinomial_deviance(observed, baseline)
+                        reductions[key] = (
+                            base - multinomial_deviance(observed, candidate)
+                        ) / base
+                        for index in range(3):
+                            rows.append((
+                                _hash(f"{key}-{index}"), *key,
+                                observed[index], candidate[index], baseline[index],
+                            ))
+            table = _write_table(
+                Path(temporary), "profiles.tsv",
+                ("row_hash", "donor_hash", "block_hash", "stratum",
+                 "observed", "candidate", "baseline"), rows,
+            )
+            donors = sorted({key[0] for key in reductions})
+            blocks = sorted({key[1] for key in reductions})
+
+            def weighted_endpoint(donor_counts, block_counts):
+                values = []
+                for stratum in ("hep", "stellate"):
+                    total = mass = 0.0
+                    for (donor, block, lineage), value in reductions.items():
+                        if lineage == stratum:
+                            weight = donor_counts[donor] * block_counts[block]
+                            total += weight * value
+                            mass += weight
+                    values.append(total / mass)
+                return sum(values) / len(values)
+
+            rng = Random(19)
+            expected = []
+            for _ in range(40):
+                donor_counts = Counter(donors[rng.randrange(len(donors))]
+                                       for _ in donors)
+                block_counts = Counter(blocks[rng.randrange(len(blocks))]
+                                       for _ in blocks)
+                expected.append(weighted_endpoint(donor_counts, block_counts))
+            with patch.object(endpoint_power, "multinomial_deviance",
+                              wraps=multinomial_deviance) as deviance:
+                result = recompute_endpoint_bootstrap(
+                    evaluator_id="rna_atac_two_way_deviance_reduction_v1",
+                    table_path=table, n_resamples=40, seed=19,
+                    parameters={"strata": ["hep", "stellate"]},
+                )
+            self.assertEqual(deviance.call_count, 2 * len(reductions))
+            self.assertAlmostEqual(result.observed_effect,
+                                   weighted_endpoint(Counter(donors), Counter(blocks)))
+            for actual, reference in zip(result.paired_difference_bootstrap,
+                                         expected, strict=True):
+                self.assertAlmostEqual(actual, reference, places=14)
+            self.assertTrue(all(value == 0.0
+                                for value in result.baseline_primary_bootstrap))
+
+    def test_rna_atac_rejects_zero_baseline_deviance(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            rows = [(_hash(f"r{d}-{b}-{i}"), _hash(f"d{d}"), _hash(f"b{b}"),
+                     "hep", value, value, value)
+                    for d in range(2) for b in range(2)
+                    for i, value in enumerate((1.0, 2.0))]
+            table = _write_table(
+                Path(temporary), "zero.tsv",
+                ("row_hash", "donor_hash", "block_hash", "stratum",
+                 "observed", "candidate", "baseline"), rows,
+            )
+            with self.assertRaisesRegex(EndpointPowerError, "baseline profile deviance"):
+                recompute_endpoint_bootstrap(
+                    evaluator_id="rna_atac_two_way_deviance_reduction_v1",
+                    table_path=table, n_resamples=10, seed=19,
+                    parameters={"strata": ["hep"]},
+                )
 
     def test_undefined_fixed_bootstrap_draw_is_not_retried(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

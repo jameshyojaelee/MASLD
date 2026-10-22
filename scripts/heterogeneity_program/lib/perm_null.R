@@ -50,7 +50,9 @@ perm_null <- function(stat_fn, group, strata, n_perm = 1000L, seed = 42L,
                       alternative = c("greater", "two.sided", "less"),
                       n_cores = 1L, return_null = FALSE) {
   alternative <- match.arg(alternative)
-  stopifnot(length(group) == length(strata), n_perm >= 1L)
+  stopifnot(length(group) == length(strata), !anyNA(group), !anyNA(strata),
+            length(n_perm) == 1L, is.finite(n_perm), n_perm >= 1L, n_perm == floor(n_perm),
+            length(n_cores) == 1L, is.finite(n_cores), n_cores >= 1L, n_cores == floor(n_cores))
 
   set.seed(seed)
   obs <- as.numeric(stat_fn(group))
@@ -60,22 +62,41 @@ perm_null <- function(stat_fn, group, strata, n_perm = 1000L, seed = 42L,
   # pre-generate the (reproducible) permuted label sets before any parallelism
   perms <- lapply(seq_len(n_perm), function(i) within_stratum_permute(group, strata))
 
-  # single pass: collect the full permuted statistic per replicate (enables both
-  # the per-gene exceedance count AND a decile-pooled null without recomputation)
-  run_one <- function(g) as.numeric(stat_fn(g))
+  run_one <- function(g) {
+    value <- as.numeric(stat_fn(g))
+    if (length(value) != G) stop("a permutation returned wrong length")
+    value
+  }
+  exceed_count <- rep(0, G)
+  valid <- is.finite(obs)
+  accumulate <- function(value) {
+    valid <<- valid & is.finite(value)
+    exceeds <- switch(alternative,
+      greater = value >= obs,
+      less = value <= obs,
+      two.sided = abs(value) >= abs(obs))
+    exceeds[is.na(exceeds)] <- FALSE
+    exceed_count <<- exceed_count + exceeds
+  }
   if (n_cores > 1L && requireNamespace("parallel", quietly = TRUE)) {
     res <- parallel::mclapply(perms, run_one, mc.cores = n_cores)
     if (any(vapply(res, function(x) inherits(x, "try-error") || length(x) != G, logical(1))))
       stop("a permutation worker failed or returned wrong length")
-  } else {
+    for (value in res) accumulate(value)
+    if (return_null) null_mat <- do.call(cbind, res)
+  } else if (return_null) {
     res <- lapply(perms, run_one)
+    for (value in res) accumulate(value)
+    null_mat <- do.call(cbind, res)
+  } else {
+    # Preserve the seeded label draws and their order without storing G x B
+    # statistics when the caller only needs exceedance counts.
+    for (g in perms) accumulate(run_one(g))
   }
-  null_mat <- do.call(cbind, res)                    # G x n_perm
-
-  exceed_count <- switch(alternative,
-    greater   = rowSums(null_mat >= obs,            na.rm = TRUE),
-    less      = rowSums(null_mat <= obs,            na.rm = TRUE),
-    two.sided = rowSums(abs(null_mat) >= abs(obs),  na.rm = TRUE))
+  # An undefined observed statistic or null draw cannot support a calibrated
+  # tail probability. Retain the fixed permutation count; do not treat NA as
+  # a non-exceedance and thereby create an artificially small p-value.
+  exceed_count[!valid] <- NA_real_
   p_perm <- (exceed_count + 1) / (n_perm + 1)        # add-one (Phipson & Smyth 2010)
   q_perm <- p.adjust(p_perm, method = "BH")
 

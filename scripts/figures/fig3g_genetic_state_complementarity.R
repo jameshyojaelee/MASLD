@@ -25,9 +25,17 @@ source(file.path(base, "scripts/figures/load_figure_data.R"))  # is_canonical_de
 # adopted-release counts below are replaced by agreement with the interface run.
 expect_adopted <- Sys.getenv("FIG3G_EXPECT_ADOPTED_COUNTS", "1") != "0"
 model_manifest <- fread(file.path(stage_root, "model_input_manifest.tsv"))
+# A corrected-control refit ships expected_counts.json; the adopted release has
+# none, and 844 is its sample count.
+expected_counts_path <- file.path(stage_root, "expected_counts.json")
+expected_n_samples <- if (file.exists(expected_counts_path)) {
+  jsonlite::fromJSON(expected_counts_path)$n_samples
+} else {
+  844L
+}
 stopifnot(nrow(model_manifest) == 1L,
           !expect_adopted || model_manifest$n_genes == 23370L,
-          model_manifest$n_samples == 844L, model_manifest$n_cohorts == 5L)
+          model_manifest$n_samples == expected_n_samples, model_manifest$n_cohorts == 5L)
 # The corrected-control refit records the ORIGINAL fit as accepted_reference_path,
 # so its own deg_results.csv must be named explicitly.
 bulk_path <- Sys.getenv("FIG3G_BULK_DEG", "")

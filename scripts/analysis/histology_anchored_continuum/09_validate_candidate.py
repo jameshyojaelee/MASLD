@@ -38,6 +38,19 @@ SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 with (SCRIPT_DIR / "00_prespecification.json").open() as handle:
     PRESPEC = json.load(handle)
 
+# A corrected roster passes its own counts through HAC_EXPECTED_COUNTS_PATH, the
+# same file steps 00 to 03 read. HAC_SKIP_NATIVE_NMF=1 matches step 04: the native
+# NMF context scores do not exist for a corrected roster.
+N_SAMPLES = 844
+N_RESOURCE_SIGNATURE = 139
+EXPECTED_COUNTS_PATH = os.environ.get("HAC_EXPECTED_COUNTS_PATH", "")
+if EXPECTED_COUNTS_PATH:
+    with open(EXPECTED_COUNTS_PATH) as handle:
+        _expected_counts = json.load(handle)
+    N_SAMPLES = int(_expected_counts["n_samples"])
+    N_RESOURCE_SIGNATURE = int(_expected_counts["n_resource_signature"])
+SKIP_NATIVE_NMF = os.environ.get("HAC_SKIP_NATIVE_NMF", "0") == "1"
+
 
 def sha256(path: pathlib.Path) -> str:
     digest = hashlib.sha256()
@@ -147,22 +160,29 @@ def check_signature_mapping() -> str:
     missing = read_tsv(OUT / "reproduction/missing_signature_genes.tsv")
     mapping = read_tsv(OUT / "programs/signature_gencode_v49_mapping.tsv")
     assert len(signature) == 145 and len(unique(signature, ("gene_id_base",))) == 145
-    assert sum(as_bool(row["in_resource"]) for row in signature) == 139
-    assert len(missing) == 6 and all(not as_bool(row["in_resource"]) for row in missing)
+    n_missing = 145 - N_RESOURCE_SIGNATURE
+    assert sum(as_bool(row["in_resource"]) for row in signature) == N_RESOURCE_SIGNATURE
+    assert len(missing) == n_missing and all(
+        not as_bool(row["in_resource"]) for row in missing
+    )
     assert len(mapping) == 145 and all(as_bool(row["symbol_concordant"]) for row in mapping)
-    return "145 mapped by Ensembl base ID; 139 present; six explicitly missing"
+    return (
+        f"145 mapped by Ensembl base ID; {N_RESOURCE_SIGNATURE} present; "
+        f"{n_missing} explicitly missing"
+    )
 
 
 def check_score_registry() -> str:
     unsup = read_tsv(OUT / "unsupervised/participant_scores.tsv")
     projection = read_tsv(OUT / "projection/participant_scores.tsv")
-    native = read_tsv(OUT / "programs/native_nmf_participant_scores.tsv")
-    assert len(unsup) == 2 * 844
-    assert len(projection) == 3 * 844
-    assert len(native) == 2 * 844
-    assert {row["axis_id"] for row in native} == {"nmf_k4", "nmf_k6"}
+    assert len(unsup) == 2 * N_SAMPLES
+    assert len(projection) == 3 * N_SAMPLES
+    if not SKIP_NATIVE_NMF:
+        native = read_tsv(OUT / "programs/native_nmf_participant_scores.tsv")
+        assert len(native) == 2 * N_SAMPLES
+        assert {row["axis_id"] for row in native} == {"nmf_k4", "nmf_k6"}
     combined = unsup + projection
-    assert len(unique(combined, ("sample_id", "axis_id"))) == 5 * 844
+    assert len(unique(combined, ("sample_id", "axis_id"))) == 5 * N_SAMPLES
     expected_axes = set(
         PRESPEC["axes"]["co_primary"]
         + PRESPEC["axes"]["secondary"]
@@ -172,7 +192,7 @@ def check_score_registry() -> str:
     for row in combined:
         percentile = as_float(row["axis_percentile"])
         assert math.isfinite(percentile) and 0 <= percentile <= 1
-    return "844 donors have five bounded, nonduplicated scores"
+    return f"{N_SAMPLES} donors have five bounded, nonduplicated scores"
 
 
 def check_coverage() -> str:
@@ -195,7 +215,7 @@ def check_rf_isolation() -> str:
     assert int(row["mtry"]) == expected["mtry"]
     assert int(row["min_node_size"]) == expected["min_node_size"]
     assert int(row["seed"]) == PRESPEC["seeds"]["rf"]
-    assert int(row["n_predictors"]) == 139
+    assert int(row["n_predictors"]) == N_RESOURCE_SIGNATURE
     assert row["predictor_freeze_scope"] == "published_discovery_signature_only"
     assert row["missing_target_predictor_rule"] == "centered_value_zero_equals_discovery_center"
     assert not as_bool(row["target_histology_used_for_training"])

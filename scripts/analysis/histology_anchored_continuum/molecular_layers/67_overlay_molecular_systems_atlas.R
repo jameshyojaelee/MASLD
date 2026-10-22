@@ -172,9 +172,18 @@ ml_assert(!anyDuplicated(effects$feature_id), "Effect feature IDs are duplicated
 node_results <- merge(coordinates, effects, by = c("feature_id", "collection"),
                       all.x = TRUE, sort = FALSE)
 ml_assert(nrow(node_results) == nrow(coordinates), "Effect overlay changed node count")
-ml_assert(all(is.finite(node_results$stage_beta) &
-                is.finite(node_results$continuum_beta)),
-          "A geometry-eligible node lacks a stage or continuum estimate")
+# A frozen node that fails the testability rule in the analysis gene universe has
+# no estimate. It keeps its map position, is recorded, and is left out of every
+# system summary. On the original roster this table is empty.
+untestable_nodes <- ml_untestable_nodes(
+  analysis_candidate, coordinates[, .(feature_id, collection, community_id)]
+)
+ml_write_tsv_once(untestable_nodes,
+                  file.path(overlay_dir, "untestable_frozen_nodes.tsv"))
+ml_assert(all((is.finite(node_results$stage_beta) &
+                 is.finite(node_results$continuum_beta)) |
+                node_results$feature_id %in% untestable_nodes$feature_id),
+          "A testable geometry-eligible node lacks a stage or continuum estimate")
 node_results[, collection_label := factor(
   family_labels[collection], levels = unname(family_labels[family_order])
 )]
@@ -660,7 +669,7 @@ atlas_summary <- data.table(
     cor(system_node_results$stage_beta, system_node_results$continuum_beta,
         method = "spearman", use = "complete.obs"),
     mean(sign(system_node_results$stage_beta) ==
-           sign(system_node_results$continuum_beta)),
+           sign(system_node_results$continuum_beta), na.rm = TRUE),
     cor(community_effects$stage_beta, community_effects$continuum_beta,
         method = "spearman", use = "complete.obs"),
     mean(community_effects$same_direction),

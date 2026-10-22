@@ -97,9 +97,14 @@ if (nzchar(CANDIDATE_ROOT)) {
   }
   program_colors <- setNames(cat_palette[seq_len(6)], paste0("P", 1:6))
   program_plot <- function(axis_id, groups, labels, xlab) {
-    d <- activity[axis == axis_id]
+    # A program with no estimate (fixed axis unavailable) is left out of the
+    # lines and the legend; it stays in the source table with its failure reason.
+    d <- activity[axis == axis_id & is.finite(centered_activity)]
     d[, group := factor(group, levels = groups, labels = labels)]
-    ggplot(d, aes(group, centered_activity, group = program, color = program)) +
+    # The activity model's reference is the group fixed at zero. When that is not
+    # the first tick (the reference of the DEG row above), name it on the panel.
+    reference <- d[centered_activity == 0 & SE == 0, unique(as.character(group))]
+    p <- ggplot(d, aes(group, centered_activity, group = program, color = program)) +
       geom_hline(yintercept = 0, color = "grey75", linewidth = 0.25) +
       geom_line(linewidth = 0.55) + geom_point(size = 1.05) +
       scale_color_manual(values = program_colors, guide = guide_legend(nrow = 2)) +
@@ -110,6 +115,12 @@ if (nzchar(CANDIDATE_ROOT)) {
       theme(axis.text.x = element_text(size = 6, face = "plain"),
             legend.position = "bottom", legend.key.width = unit(8, "pt"),
             plot.margin = margin(1, 2, 2, 2))
+    if (length(reference) == 1L && reference != labels[[1L]]) {
+      p <- p + annotate("text", x = -Inf, y = Inf, hjust = -0.05, vjust = 1.5,
+                        label = paste("relative to", axis_id, reference),
+                        size = 6 / .pt, family = "Helvetica")
+    }
+    p
   }
   fib_count <- count_plot("fibrosis", paste0("F", 0:4), "Fibrosis stage", "DEGs vs F0")
   # NAS uses the same common-reference estimand as the fibrosis column: each
@@ -211,8 +222,9 @@ if (nzchar(CANDIDATE_ROOT)) {
   nas_comp <- composition_summary(nas_samples, "NAS", c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8"))
   comp_sum <- rbind(fib_comp$pooled, nas_comp$pooled)
   comp_sum_by_cohort <- rbind(fib_comp$by_cohort, nas_comp$by_cohort)
-  comp_plot <- function(axis_id, xlab) ggplot(comp_sum[axis == axis_id],
+  comp_plot <- function(axis_id, xlab, labels = waiver()) ggplot(comp_sum[axis == axis_id],
       aes(group, mean, color = compartment, group = compartment)) +
+    scale_x_discrete(labels = labels) +
     geom_line(linewidth = 0.65) + geom_point(size = 1.1) +
     geom_errorbar(aes(ymin = mean - SE, ymax = mean + SE), width = 0.1, linewidth = 0.3) +
     scale_color_manual(values = c(hepatocyte = "#9E9E9E", non_parenchymal = cat_palette[[3]]),
@@ -220,7 +232,9 @@ if (nzchar(CANDIDATE_ROOT)) {
     labs(x = xlab, y = "Estimated fraction") + theme_masld_compact() +
     theme(axis.text.x = element_text(size = 6, face = "plain"), legend.position = "bottom")
   full <- (fib_count | nas_count) / (fib_program | nas_program) /
-    (comp_plot("fibrosis", "Fibrosis stage") | comp_plot("NAS", "NAS group")) +
+    (comp_plot("fibrosis", "Fibrosis stage") |
+       comp_plot("NAS", "NAS group", labels = c(NAS0 = "0", "NAS1-2" = "1–2",
+                                                "NAS3-4" = "3–4", "NAS5-8" = "5–8"))) +
     plot_layout(heights = c(1, 1.05, 0.9), guides = "collect") & theme(legend.position = "bottom")
   ggsave(file.path(SUPP_DIR, "figs3_stage_remodeling_full.pdf"), full,
          width = 7.1, height = 4.8, device = cairo_pdf)
@@ -229,6 +243,14 @@ if (nzchar(CANDIDATE_ROOT)) {
   fwrite(activity, file.path(SRC_DIR, "fig3e_prespecified_nmf_activity.tsv"), sep = "\t")
   fwrite(comp_sum, file.path(SRC_DIR, "figs3_composition_summary.tsv"), sep = "\t")
   fwrite(comp_sum_by_cohort, file.path(SRC_DIR, "figs3_composition_summary_by_cohort.tsv"), sep = "\t")
+  not_shown <- activity[, .(shown = any(is.finite(centered_activity))), by = program][shown == FALSE, program]
+  if (length(not_shown)) {
+    writeLines(paste0(
+      paste(not_shown, collapse = ", "), " is not shown in Figure 3E or the Figure S3 stage figure ",
+      "because it is unavailable on the corrected counts. Its rows stay in ",
+      "fig3e_prespecified_nmf_activity.tsv with estimable = FALSE and the failure reason."
+    ), file.path(SRC_DIR, "README.md"))
+  }
   quit(save = "no", status = 0)
 }
 

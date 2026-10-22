@@ -222,16 +222,16 @@ for (p in seq_len(N_PERMS)) {
   }
 }
 
-# Empirical p-value: fraction of permutations with Jaccard >= observed.
+# Monte Carlo p-value: add one for the observed arrangement.
 pair_dt[, perm_mean_jaccard := colMeans(perm_pair)]
 pair_dt[, perm_p_value := vapply(seq_len(.N),
-                                 function(k) mean(perm_pair[, k] >= jaccard[k]),
+                                 function(k) (1 + sum(perm_pair[, k] >= jaccard[k])) / (N_PERMS + 1),
                                  numeric(1))]
 pair_dt[, enrichment_fold := jaccard / pmax(perm_mean_jaccard, .Machine$double.eps)]
 
 all3_observed <- summary_dt[method_A == "ALL3", jaccard]
 all3_mean <- mean(perm_all3)
-all3_p <- mean(perm_all3 >= all3_observed)
+all3_p <- (1 + sum(perm_all3 >= all3_observed)) / (N_PERMS + 1)
 all3_fold <- all3_observed / max(all3_mean, .Machine$double.eps)
 cat(sprintf("[perm] ALL3 observed=%.4f  null_mean=%.4f  fold=%.2fx  empirical p=%.4f\n",
             all3_observed, all3_mean, all3_fold, all3_p))

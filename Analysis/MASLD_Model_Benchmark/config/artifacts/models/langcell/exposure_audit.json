@@ -15,9 +15,9 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "0ebe526a3c441570403e5dd5734cab0e3e536563a3d623bead79dc8fffdc750b"
+    "sha256": "421f121d1edccb9c4d832b3c20dc05a79d7efc87acb03cd729698f44e52f7c69"
   },
-  "interpretation": "All released checkpoint modules carry May 2024 modification timestamps, before GSE289173 became public, so the held-back source and target labels are unexposed. The initialized Geneformer encoder nevertheless makes GSE136103 and Liver_Atlas encoder_seen, and the missing checkpoint-bound scLibrary UUID inventory leaves other pre-checkpoint cohorts unknown. Held-back use remains blocked because the separately hosted weights have no declared terms.",
+  "interpretation": "All released checkpoint modules carry May 2024 modification timestamps, before GSE289173 became public, so the held-back source and target labels are unexposed. The initialized Geneformer encoder makes GSE136103 encoder_seen. Liver_Atlas is Guilliams GSE192742 (2022), not MacParland; it postdates the Geneformer30M initialization corpus and predates LangCell, whose checkpoint-bound scLibrary UUID inventory is unresolved. Its exposure is unknown. Held-back use remains blocked because the separately hosted weights have no declared terms.",
   "remaining_blockers": [
     "Obtain explicit checkpoint terms before downloading, executing, adapting, or redistributing any Drive module.",
     "After approval and terms resolution, acquire every required module, freeze SHA-256 values and state-dict key/shape/dtype manifests, and prove that their configuration files match.",
@@ -27,5 +27,5 @@
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_while_weight_terms_are_unresolved",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-14"
 }

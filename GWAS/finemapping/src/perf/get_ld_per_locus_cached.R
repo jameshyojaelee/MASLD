@@ -44,6 +44,7 @@ get_ld_per_locus <- function(ss_per_locus, LOCUS, CHR, START, END, ancestry = "E
   ent <- .LD_CACHE$entry
   if (is.null(ent) || !identical(ent$key, key)) {
     .LD_CACHE$entry <- NULL   # drop the old block BEFORE allocating the new one
+    rm(ent)                 # the local reference also keeps the old block alive
     gc(FALSE)
 
     bim <- data.frame()

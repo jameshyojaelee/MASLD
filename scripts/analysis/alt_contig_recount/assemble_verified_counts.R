@@ -2,7 +2,13 @@
 # Combine read/fragment counts only after all annotation relationships are resolved.
 suppressPackageStartupMessages({library(data.table); library(jsonlite)})
 argv <- commandArgs(trailingOnly = TRUE)
-if (length(argv) != 4L) stop("Usage: annotation_summary.json primary_sample_ids.tsv sample_count_root output_root")
+if (!length(argv) %in% 4:5) stop("Usage: annotation_summary.json primary_sample_ids.tsv sample_count_root output_root [primary|single_candidate_credit]")
+# Held annotations are never tested. The sensitivity arm credits reads shared with a held
+# annotation to its only candidate primary gene; the primary arm does not count them.
+arm <- if (length(argv) == 5L) argv[[5]] else "primary"
+arm_files <- list(primary = c("gene_counts.tsv", "counts_tsv_sha256"),
+                  single_candidate_credit = c("gene_counts_single_candidate_credit.tsv", "single_candidate_credit_counts_tsv_sha256"))
+if (!arm %in% names(arm_files)) stop("Unknown count arm: ", arm)
 annotation_path <- normalizePath(argv[[1]], mustWork = TRUE)
 roster_path <- normalizePath(argv[[2]], mustWork = TRUE)
 count_root <- normalizePath(argv[[3]], mustWork = TRUE)
@@ -29,17 +35,24 @@ grouped_sha <- sha(grouped_path)
 correspondence_sha <- sha(correspondence_path)
 if (!identical(grouped_sha, annotation$grouped_counting_annotation_sha256) ||
     !identical(correspondence_sha, annotation$annotation_correspondence_sha256)) stop("Used annotation/correspondence hash differs")
-genes <- sort(unique(fread(correspondence_path)$counting_gene_id))
+correspondence <- fread(correspondence_path, colClasses = "character")
+held <- if ("disposition" %in% names(correspondence)) correspondence$disposition == "held_untestable" else rep(FALSE, nrow(correspondence))
+n_held <- if (is.null(annotation$n_held_untestable_annotations)) 0L else as.integer(annotation$n_held_untestable_annotations)
+if (sum(held) != n_held) stop("Held annotations differ from the annotation summary")
+if (arm != "primary" && !n_held) stop("Sensitivity arm requires held annotations")
+genes <- sort(unique(correspondence$counting_gene_id[
+  !held & !is.na(correspondence$counting_gene_id) & nzchar(correspondence$counting_gene_id)]))
+if (any(genes %in% correspondence$gene_id[held])) stop("Held annotation is a counting target of a tested gene")
 counts <- matrix(0L, nrow = length(genes), ncol = nrow(roster), dimnames = list(genes, roster$sample_id))
 sample_evidence <- vector("list", nrow(roster))
 for (i in seq_len(nrow(roster))) {
   sample <- roster$sample_id[[i]]
-  path <- file.path(count_root, sample, "gene_counts.tsv")
+  path <- file.path(count_root, sample, arm_files[[arm]][[1]])
   certificate <- fromJSON(file.path(count_root, sample, "count_completion.json"))
   if (length(certificate$count_reader_source_sha256) != 1L ||
       !grepl("^[a-f0-9]{64}$", certificate$count_reader_source_sha256)) stop("Count reader source hash missing: ", sample)
   if (certificate$sample_id != sample || certificate$annotation_summary_sha256 != annotation_sha ||
-      certificate$counts_tsv_sha256 != sha(path) || certificate$maximum_contribution_per_molecule != 1L ||
+      !identical(certificate[[arm_files[[arm]][[2]]]], sha(path)) || certificate$maximum_contribution_per_molecule != 1L ||
       isTRUE(certificate$fractional_renormalization)) stop("Invalid molecule certificate: ", sample)
   evidence_path <- file.path(count_root, sample, "assignment_execution.json")
   if (!identical(certificate$grouped_counting_annotation_sha256, grouped_sha) ||
@@ -113,6 +126,7 @@ certificate <- list(annotation_resolution_complete = TRUE, n_unresolved_annotati
                     grouped_counting_annotation = grouped_path, grouped_counting_annotation_sha256 = grouped_sha,
                     annotation_correspondence_sha256 = correspondence_sha,
                     sample_count_evidence = normalizePath(sample_manifest), sample_count_evidence_sha256 = sha(sample_manifest),
+                    count_arm = arm, n_held_untestable_annotations = n_held,
                     count_reader_source_sha256 = unique(rbindlist(sample_evidence)$count_reader_source_sha256),
                     annotation_summary_sha256 = annotation_sha, primary_sample_roster = roster_path,
                     primary_sample_roster_sha256 = sha(roster_path), n_genes = nrow(counts), n_samples = ncol(counts),

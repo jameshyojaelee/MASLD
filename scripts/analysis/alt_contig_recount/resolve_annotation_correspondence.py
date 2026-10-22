@@ -26,7 +26,8 @@ BASE = "https://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.2
 STRUCTURE = BASE + "GCA_000001405.29_GRCh38.p14_assembly_structure/"
 PRIMARY = {f"chr{i}" for i in range(1, 23)} | {"chrX", "chrY", "chrM"}
 ATTR = re.compile(r'(\w+) "([^"]*)"')
-DISPOSITIONS = {"primary_gene", "equivalent", "distinct_locus", "alternative_only", "duplicated", "unresolved"}
+DISPOSITIONS = {"primary_gene", "equivalent", "distinct_locus", "alternative_only", "duplicated", "excluded_reference", "unresolved",
+                "held_untestable"}
 
 
 def digest(path):
@@ -292,6 +293,130 @@ def added_patch_component(gene, seq, placement, source_root):
                and int(r[1])-1 <= start and int(r[2]) >= end for r in gaps)
 
 
+def reference_exclusion(gene, report, intervals):
+    """Exclude complete bodies/exon unions in official invalid reference regions.
+
+    BED and gene coordinates are zero-based half-open. An intron-only overlap
+    does not remove valid expression features. Assembly aliases are required.
+    """
+    seq = report.get(gene.chrom)
+    if not seq or not gene.exons:
+        return None
+    for kind in ("contamination", "false_duplication"):
+        matched = union([(start, end) for chrom, start, end, label in intervals
+                         if label == kind and report.get(chrom) == seq])
+        if (overlap([(gene.start, gene.end)], matched) == gene.end-gene.start
+                and overlap(gene.exons, matched) == length(gene.exons)):
+            return kind
+    return None
+
+
+def hold_unresolved(rows):
+    """Keep unresolved annotations as their own counting targets and mark them not testable.
+
+    A read shared between a held annotation and another gene then has two targets and is
+    rejected; the held gene itself is reported but never enters the tested matrix.
+    """
+    held = [r for r in rows if r["disposition"] == "unresolved"]
+    for r in held:
+        r.update(disposition="held_untestable", counting_gene_id=r["gene_id"])
+    return held
+
+
+def write_grouped_annotation(gtf, output, rows, mappings):
+    group_ids = {r["gene_id"]: r["counting_gene_id"] for r in rows}
+    excluded = {r["gene_id"] for r in rows if r["disposition"] == "excluded_reference"}
+    partial_equivalents = {r["gene_id"] for r in rows if r["disposition"] == "equivalent"
+                          and r["coordinate_alignment_state"] != "complete"}
+    with gzip.open(gtf, "rt") as src, gzip.open(output, "wt") as dest:
+        for line in src:
+            if line.startswith("#"): dest.write(line); continue
+            c = line.rstrip("\n").split("\t")
+            if len(c) != 9 or c[2] != "exon": continue
+            gid = dict(ATTR.findall(c[8]))["gene_id"]
+            if gid in excluded:
+                continue
+            if not group_ids[gid]:
+                raise ValueError(f"Included annotation lacks a counting target: {gid}")
+            c[8] = re.sub(r'gene_id "[^"]+"', f'gene_id "{group_ids[gid]}"', c[8])
+            segments = [(int(c[3])-1, int(c[4]))]
+            if gid in partial_equivalents:
+                segments = verified_exon_segments(segments, mappings[c[0]][1])
+            for start, end in segments:
+                c[3], c[4] = str(start+1), str(end)
+                dest.write("\t".join(c)+"\n")
+
+
+def exact_transcript_correspondence(source_exons, target_exons, source_strand, target_strand, blocks):
+    mapped, covered, orientations = project(source_exons, blocks)
+    if len(orientations) != 1 or covered != length(source_exons):
+        return False
+    strand = source_strand if orientations == {1} else ("-" if source_strand == "+" else "+")
+    return strand == target_strand and mapped == union(target_exons)
+
+
+def resolve_exact_RNA_transcripts(gtf, metadata, genes, mappings, rows, allele_groups, memberships):
+    """Unique curated RNA ID plus complete exact isoform coordinates, never xref alone."""
+    accessions = defaultdict(set)
+    with gzip.open(metadata, "rt") as handle:
+        for line in handle:
+            c = line.rstrip().split("\t")
+            if len(c) >= 2 and re.fullmatch(r"N[MR]_\d+\.\d+", c[1]):
+                accessions[c[0]].add(c[1])
+    unresolved = {r["gene_id"]: r for r in rows if r["disposition"] == "unresolved"}
+    wanted = set(unresolved)
+    for r in unresolved.values(): wanted.update(filter(None, r["primary_gene_candidates"].split(";")))
+    models, primary_accessions = {}, defaultdict(set)
+    with gzip.open(gtf, "rt") as handle:
+        for line in handle:
+            if line.startswith("#"): continue
+            c = line.rstrip().split("\t")
+            if len(c) != 9 or c[2] not in {"transcript", "exon"}: continue
+            a = dict(ATTR.findall(c[8])); tid = a.get("transcript_id")
+            if tid not in accessions: continue
+            gid = a["gene_id"]
+            if c[2] == "transcript" and c[0] in PRIMARY:
+                for acc in accessions[tid]: primary_accessions[acc].add(gid)
+            if gid not in wanted: continue
+            model = models.setdefault((gid, tid), {"strand": c[6], "exons": []})
+            if c[2] == "exon": model["exons"].append((int(c[3])-1, int(c[4])))
+    by_gene = defaultdict(list)
+    for (gid, tid), model in models.items():
+        model["exons"] = union(model["exons"])
+        by_gene[gid].append((tid, model))
+    dispositions = {r["gene_id"]: r["disposition"] for r in rows}
+    for gid, row in unresolved.items():
+        g = genes[gid]
+        if g.chrom not in mappings: continue
+        candidates, proof = set(), []
+        group_primary = set()
+        flags = set()
+        for group in memberships.get(gid, []):
+            for member, attributes in allele_groups[group]:
+                if member in genes and genes[member].chrom in PRIMARY: group_primary.add(member)
+                if member == gid: flags.update(attributes)
+        if flags & {"IN_ARTIFICIALLY_DUPLICATED_ASSEMBLY", "IN_BROKEN_ASSEMBLY_REGION", "IS_PAR"}: continue
+        for primary_id in filter(None, row["primary_gene_candidates"].split(";")):
+            p = genes[primary_id]
+            if dispositions[primary_id] != "primary_gene" or p.biotype != g.biotype: continue
+            if g.hgnc and p.hgnc and g.hgnc != p.hgnc: continue
+            if group_primary and primary_id not in group_primary: continue
+            for tid, model in by_gene[gid]:
+                for ptid, primary_model in by_gene[primary_id]:
+                    shared = {acc for acc in accessions[tid] & accessions[ptid]
+                              if primary_accessions[acc] == {primary_id}}
+                    if shared and exact_transcript_correspondence(model["exons"], primary_model["exons"],
+                        model["strand"], primary_model["strand"], mappings[g.chrom][1]):
+                        candidates.add(primary_id)
+                        proof.append(f"{tid}|{ptid}|{','.join(sorted(shared))}")
+        if len(candidates) == 1:
+            row.update(disposition="equivalent", counting_gene_id=next(iter(candidates)),
+                       reason="unique_curated_RNA_accession_and_complete_exact_transcript_coordinate_correspondence",
+                       transcript_identity_evidence=";".join(sorted(set(proof))))
+        elif len(candidates) > 1:
+            row.update(reason="conflicting_exact_transcript_gene_targets")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--gtf", type=Path, required=True)
@@ -301,7 +426,14 @@ def main():
     parser.add_argument("--ensembl-source-root", type=Path)
     parser.add_argument("--added-patch-source-root", type=Path)
     parser.add_argument("--grc-exclusions", type=Path)
+    parser.add_argument("--refseq-transcript-metadata", type=Path)
+    parser.add_argument("--hold-unresolved-as-untestable", action="store_true",
+                        help="Authorized 2026-10-07: count the resolved annotations and report the rest as not testable")
+    parser.add_argument("--apply-grc-reference-exclusions", action="store_true",
+                        help="Apply the authorized complete-body/exon contamination and false-duplication exclusions")
     args = parser.parse_args()
+    if args.apply_grc_reference_exclusions and not args.grc_exclusions:
+        parser.error("Reference exclusions require the official GRC BED")
     args.output.mkdir(parents=True, exist_ok=False)
     sources = args.output / "sources"; sources.mkdir()
     manifest = []
@@ -324,13 +456,18 @@ def main():
     if args.added_patch_source_root:
         manifest.extend(local_source_records(args.added_patch_source_root,
             ["alt.scaf.agp.gz", "chr13.agp.gz", "chr14.agp.gz", "chr15.agp.gz", "chr22.agp.gz"]))
+    if args.refseq_transcript_metadata:
+        manifest.extend(local_source_records(args.refseq_transcript_metadata.parent, [args.refseq_transcript_metadata.name]))
     contamination = []
+    reference_intervals = []
     if args.grc_exclusions:
         manifest.extend(local_source_records(args.grc_exclusions.parent, [args.grc_exclusions.name]))
         for line in args.grc_exclusions.read_text().splitlines():
             c = line.split("\t")
             if len(c) >= 4 and c[3] == "contamination":
                 contamination.append((c[0], int(c[1]), int(c[2])))
+            if len(c) >= 4 and c[3] in {"contamination", "false_duplication"}:
+                reference_intervals.append((c[0], int(c[1]), int(c[2]), c[3]))
     by_chrom = defaultdict(list)
     for g in genes.values():
         if g.chrom in PRIMARY: by_chrom[g.chrom].append(g)
@@ -369,8 +506,14 @@ def main():
                "unmapped_exonic_bases": "", "coordinate_alignment_state": "not_applicable",
                "alternate_biotype_differs": "false", "disposition": "unresolved", "reason": "", "evidence_source": ""}
         row["ensembl_allele_group_ids"] = ";".join(allele_memberships.get(gid, []))
+        row["transcript_identity_evidence"] = ""
         seq = report.get(g.chrom)
-        if any(report.get(g.chrom) == report.get(chrom) and report.get(chrom)
+        excluded_reason = reference_exclusion(g, report, reference_intervals) if args.apply_grc_reference_exclusions else None
+        if excluded_reason:
+            row.update(disposition="excluded_reference", counting_gene_id="",
+                       reason=f"GRC_{excluded_reason}_complete_gene_body_and_exons",
+                       evidence_source="GRC_exclusions.bed")
+        elif any(report.get(g.chrom) == report.get(chrom) and report.get(chrom)
                and g.start < end and g.end > start for chrom, start, end in contamination):
             row.update(reason="GRC_contamination_reference_policy_pending", evidence_source="GRC_exclusions.bed")
         elif g.chrom in PRIMARY:
@@ -444,6 +587,13 @@ def main():
                 else:
                     row["reason"] = "coordinate_overlap_does_not_resolve_gene_identity"
         rows.append(row)
+    if args.refseq_transcript_metadata:
+        resolve_exact_RNA_transcripts(args.gtf, args.refseq_transcript_metadata, genes, mappings, rows,
+                                     allele_groups, allele_memberships)
+    excluded_targets = {r["gene_id"] for r in rows if r["disposition"] == "excluded_reference"}
+    for r in rows:
+        if r["disposition"] == "equivalent" and r["counting_gene_id"] in excluded_targets:
+            r.update(disposition="unresolved", reason="equivalence_targets_excluded_reference_annotation")
     # Two copies within one haplotype cannot both silently become one primary gene.
     groups = defaultdict(list)
     for r in rows:
@@ -453,6 +603,8 @@ def main():
             for r in group:
                 r.update(disposition="duplicated", counting_gene_id=r["gene_id"], reason="multiple_gene_copies_within_one_haplotype")
     fields = list(rows[0])
+    held = hold_unresolved(rows) if args.hold_unresolved_as_untestable else []
+    if held: write_tsv(args.output/"untestable_annotations.tsv", held, fields)
     write_tsv(args.output/"annotation_correspondence.tsv", rows, fields)
     write_tsv(args.output/"source_manifest.tsv", manifest, ["url", "path", "sha256", "bytes"])
     counts = dict(Counter(r["disposition"] for r in rows))
@@ -467,32 +619,27 @@ def main():
                        (r["disposition"], r["reason"]) != (prior[r["gene_id"]]["disposition"], prior[r["gene_id"]]["reason"])]
         write_tsv(args.output/"reason_transitions.tsv", transitions,
                   ["gene_id", "previous_disposition", "previous_reason", "disposition", "reason"])
-    summary = {"status": "resolved" if not unresolved else "held_unresolved_annotations", "candidate_not_adopted": True,
+    status = "held_unresolved_annotations" if unresolved else ("resolved_with_held_untestable" if held else "resolved")
+    summary = {"status": status, "candidate_not_adopted": True,
                "assembly": "GCA_000001405.29_GRCh38.p14", "gtf": str(args.gtf.resolve()), "gtf_sha256": digest(args.gtf),
                "n_annotations": len(rows), "dispositions": counts, "n_unresolved": len(unresolved),
                "annotation_resolution_complete": not unresolved, "n_unresolved_annotations": len(unresolved),
                "counts_complete": False, "counts_sha256": None,
                "primary_refit_allowed": False, "symbol_only_merging_used": False,
                "partial_equivalent_exon_policy": "coordinate_verified_segments_only",
+               "reference_exclusions_applied": args.apply_grc_reference_exclusions,
+               "excluded_reference_annotations": sorted(excluded_targets),
+               "excluded_reference_count": len(excluded_targets),
+               "excluded_reference_evidence_state": "not_applicable_reference_artifact",
+               "valid_and_excluded_alignment_policy": "any_unassigned_alignment_rejects_complete_read_or_pair",
                "annotation_correspondence_sha256": digest(args.output/"annotation_correspondence.tsv"),
+               "n_held_untestable_annotations": len(held),
+               "held_untestable_policy": ("own_counting_target_excluded_from_tested_matrix;"
+                                          "shared_reads_rejected_in_primary;"
+                                          "single_candidate_credit_in_sensitivity") if held else None,
                "grouped_counting_annotation": None, "grouped_counting_annotation_sha256": None}
     if not unresolved:
-        group_ids = {r["gene_id"]: r["counting_gene_id"] for r in rows}
-        partial_equivalents = {r["gene_id"] for r in rows if r["disposition"] == "equivalent"
-                              and r["coordinate_alignment_state"] != "complete"}
-        with gzip.open(args.gtf, "rt") as src, gzip.open(args.output/"grouped_counting_annotation.gtf.gz", "wt") as dest:
-            for line in src:
-                if line.startswith("#"): dest.write(line); continue
-                c = line.rstrip("\n").split("\t")
-                if len(c) != 9 or c[2] != "exon": continue
-                gid = dict(ATTR.findall(c[8]))["gene_id"]
-                c[8] = re.sub(r'gene_id "[^"]+"', f'gene_id "{group_ids[gid]}"', c[8])
-                segments = [(int(c[3])-1, int(c[4]))]
-                if gid in partial_equivalents:
-                    segments = verified_exon_segments(segments, mappings[c[0]][1])
-                for start, end in segments:
-                    c[3], c[4] = str(start+1), str(end)
-                    dest.write("\t".join(c)+"\n")
+        write_grouped_annotation(args.gtf, args.output/"grouped_counting_annotation.gtf.gz", rows, mappings)
         grouped_path = args.output/"grouped_counting_annotation.gtf.gz"
         summary.update(grouped_counting_annotation=str(grouped_path.resolve()),
                        grouped_counting_annotation_sha256=digest(grouped_path))

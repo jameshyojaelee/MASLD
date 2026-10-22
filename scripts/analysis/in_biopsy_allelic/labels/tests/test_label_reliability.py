@@ -192,3 +192,33 @@ def test_r2_design_drops_all_missing_adds_indicators_and_adjusts():
     raw_ref = 1 - res @ res / ((S - S.mean()) @ (S - S.mean()))
     assert p == 3 and abs(raw - raw_ref) < 1e-12
     assert abs(adj - (1 - (1 - raw_ref) * (n - 1) / (n - 4))) < 1e-12
+
+
+def test_adjusted_r2_with_distinct_count_matches_r2_of_formula():
+    assert abs(lr.adjusted_r2(0.3, 100, 5) - (1 - 0.7 * 99 / 94)) < 1e-15
+    assert lr.adjusted_r2(0.01, 50, 5) == 0.0                     # floored at 0
+    assert np.isnan(lr.adjusted_r2(0.5, 6, 5))
+
+
+def test_het_profile_brackets_a_planted_b_and_flags_an_open_limit():
+    rng = np.random.default_rng(SEED + 8)
+    targets = [dict(key="F_X", set="F", cohort="X", scale="Y5", n=400,
+                    counts=np.array([80, 120, 100, 70, 30]), mu_Z=1.4, sd_Z=1.2)]
+
+    def table(n, b):
+        mu, sd_T, a, delta = 1.3, 1.0, np.log(0.4), 0.1
+        T = rng.normal(mu, sd_T, n)
+        z1 = T + np.exp(a + b * (T - lr.HET_CENTRE)) * rng.normal(0, 1, n)
+        z2 = T + delta + np.exp(a + b * (T + delta - lr.HET_CENTRE)) * rng.normal(0, 1, n)
+        return lr.pair_table(np.digitize(z1, lr.CUTS_Y), np.digitize(z2, lr.CUTS_Y))
+
+    grid = np.array([-0.5, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0])
+    N = table(20000, 0.5)
+    f = lr.fit_het(N, [lr.het_from_hom(lr.fit_pairs(N, rho_nonneg=True)["theta"])])
+    prof, s = lr.het_profile(N, f["theta"], targets, {"F_X": 0.0}, grid=grid)
+    assert s["identified"] and s["ci95_b_on_grid"][0] <= 0.5 <= s["ci95_b_on_grid"][1]
+    assert abs(prof["negll"].min() - f["negll"]) < 1.0               # the profile reaches the free fit
+    N = table(15, 0.5)                                                 # too few pairs: some limit stays open
+    f = lr.fit_het(N, [lr.het_from_hom(lr.fit_pairs(N, rho_nonneg=True)["theta"])])
+    _, s = lr.het_profile(N, f["theta"], targets, {"F_X": 0.0}, grid=np.array([0.0, 0.5, 1.0]))
+    assert not s["identified"]

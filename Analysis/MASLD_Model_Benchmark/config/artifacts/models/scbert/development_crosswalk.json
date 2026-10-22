@@ -23,7 +23,7 @@
     "GSE281367": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
     "GSE289173": {"evidence": "GEO first became public more than three years after the preprint fixed the existence of the pretrained model.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
     "GSE296875": {"evidence": "GEO first became public after the preprint fixed the existence of the pretrained model.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
-    "Liver_Atlas": {"evidence": "The MacParland liver dataset was an explicit downstream benchmark in the paper, and exact overlap with the PanglaoDB pretraining snapshot remains unresolved.", "exposure_state": "downstream_demo", "public_date": "2018-10-22"}
+    "Liver_Atlas": {"aliases": ["Liver_Atlas", "GSE192742", "DOI:10.1016/j.cell.2021.12.018"], "evidence": "The Resource atlas is Guilliams GSE192742, public 2022-01-11, not the MacParland GSE115469 downstream benchmark. Guilliams became public after the December 2021 preprint established the historical pretrained model. This historical-paper exposure finding is clean_declared by chronology; exposure of the mutable registered Weixin checkpoint remains unknown as recorded in exposure_audit.json.", "exposure_state": "clean_declared", "public_date": "2022-01-11"}
   },
   "rules": {
     "checkpoint_chronology": "The December 2021 preprint proves that a historical pretrained model existed by that date.",
@@ -31,5 +31,5 @@
     "pre_preprint": "Sources public before the preprint remain unknown unless the exact PanglaoDB source snapshot or explicit downstream-only use resolves them."
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-14"
 }

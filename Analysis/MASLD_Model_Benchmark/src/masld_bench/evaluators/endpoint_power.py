@@ -621,6 +621,23 @@ def _rna_atac_deviance(
             "RNA-ATAC table lacks frozen strata: " + ", ".join(missing_strata)
         )
 
+    # A donor x block x lineage profile is unchanged when resampled. Compute
+    # its deviance reduction once, retaining each draw's order and multiplicity.
+    profile_reductions: dict[tuple[str, str, str], float] = {}
+    for key, subset in by_profile.items():
+        observed = [_finite(row, "observed") for row in subset]
+        candidate = [_finite(row, "candidate") for row in subset]
+        baseline = [_finite(row, "baseline") for row in subset]
+        candidate_deviance = multinomial_deviance(observed, candidate)
+        baseline_deviance = multinomial_deviance(observed, baseline)
+        if not isfinite(baseline_deviance) or baseline_deviance <= 0.0:
+            raise EndpointPowerError(
+                "baseline profile deviance must be finite and positive"
+            )
+        profile_reductions[key] = (
+            baseline_deviance - candidate_deviance
+        ) / baseline_deviance
+
     def metric(
         selected_donors: Sequence[str], selected_blocks: Sequence[str]
     ) -> tuple[float, float]:
@@ -634,21 +651,10 @@ def _rna_atac_deviance(
         for donor in selected_donors:
             for block in selected_blocks:
                 for stratum in strata:
-                    subset = by_profile.get((donor, block, stratum), ())
-                    if not subset:
+                    reduction = profile_reductions.get((donor, block, stratum))
+                    if reduction is None:
                         continue
-                    observed = [_finite(row, "observed") for row in subset]
-                    candidate = [_finite(row, "candidate") for row in subset]
-                    baseline = [_finite(row, "baseline") for row in subset]
-                    candidate_deviance = multinomial_deviance(observed, candidate)
-                    baseline_deviance = multinomial_deviance(observed, baseline)
-                    if not isfinite(baseline_deviance) or baseline_deviance <= 0.0:
-                        raise EndpointPowerError(
-                            "baseline profile deviance must be finite and positive"
-                        )
-                    reductions_by_stratum[stratum].append(
-                        (baseline_deviance - candidate_deviance) / baseline_deviance
-                    )
+                    reductions_by_stratum[stratum].append(reduction)
         lineage_scores: list[float] = []
         for stratum in strata:
             reductions = reductions_by_stratum[stratum]

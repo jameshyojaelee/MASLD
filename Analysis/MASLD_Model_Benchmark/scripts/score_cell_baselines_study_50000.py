@@ -288,8 +288,9 @@ def sufficient_statistics(
         axis=1,
     )
     for donor in range(donors):
+        donor_selected = donor_index == donor
         for truth_class in range(classes):
-            selected = (donor_index == donor) & (truth == truth_class)
+            selected = donor_selected & (truth == truth_class)
             count = int(selected.sum())
             if not count:
                 continue
@@ -298,11 +299,14 @@ def sufficient_statistics(
                 np.bincount(predicted[selected], minlength=classes) / count
             )
             brier[donor, truth_class] = float(losses[selected].mean())
+            selected_bins = bin_ids[selected]
+            selected_confidence = confidence[selected]
+            selected_correct = correct[selected]
             for bin_id in range(CALIBRATION_BINS):
-                in_bin = selected & (bin_ids == bin_id)
+                in_bin = selected_bins == bin_id
                 bin_mass[donor, truth_class, bin_id] = in_bin.sum() / count
-                bin_confidence[donor, truth_class, bin_id] = confidence[in_bin].sum() / count
-                bin_correct[donor, truth_class, bin_id] = correct[in_bin].sum() / count
+                bin_confidence[donor, truth_class, bin_id] = selected_confidence[in_bin].sum() / count
+                bin_correct[donor, truth_class, bin_id] = selected_correct[in_bin].sum() / count
     return {
         "present": present,
         "confusion": confusion,

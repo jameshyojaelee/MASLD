@@ -50,10 +50,9 @@
 #   4. Within-modality aggregation with sqrt(K_eff) discount
 #   5. 4-state concordance classification:
 #      (Concordant-up / Concordant-down / Genetic+down-coherent / Conflicted)
-#      — the third state was renamed from "Protective-LOF" (2026-04-22).
-#      The label "Protective-LOF" was misleading: it implied LOF burden
-#      evidence (which we don't have) and fired for agonist targets like
-#      THRB. The new label is purely algorithmic ("genetic up + coherent
+#      — renamed on 2026-04-22 after the prior label overstated rare-variant
+#      burden evidence (which is unavailable) and misclassified agonist targets
+#      like THRB. The current label is purely algorithmic ("genetic up + coherent
 #      expression-down"). A separate sub-flag `inhibitor_target_candidate`
 #      restricts to the genes where TWAS direction (sign(twas_z) > 0) makes
 #      the inhibitor-target interpretation defensible.
@@ -968,13 +967,13 @@ cat("\n--- 7. Concordance state classification ---\n")
 # - concordance_ratio = |E_signed| / M_signed
 # - D_majority = sign(E_signed)
 #
-# Genetic+down-coherent (renamed from "Protective-LOF" 2026-04-22):
+# Genetic+down-coherent (renamed from an earlier protective-state label 2026-04-22):
 #   genetic-up flag AND expression-down majority AND enough expression
-#   evidence. The label is purely algorithmic — it does NOT claim LOF burden
-#   evidence (we have none) and does NOT claim therapeutic mechanism.
+#   evidence. The label is purely algorithmic — it does NOT claim rare-variant
+#   burden evidence (we have none) and does NOT claim therapeutic mechanism.
 #   THRB (resmetirom is an *agonist*) lands in this state because disease
 #   lowers THRB and TWAS z is significant; the algorithm cannot distinguish
-#   "disease-driven down" from "loss-of-function protective".
+#   "disease-driven down" from "the protective effect of reduced gene activity".
 # Genetic-up flag: S2a log_BF corresponds to PP4 > GDC_GENETIC_MIN OR
 #   |z_S2b| > GDC_Z_MIN.
 # Expression-down: weighted-majority sign over S1, S6, S7, S8 is negative
@@ -1022,7 +1021,7 @@ M_signed <- rowSums(bf_active)
 concordance_ratio <- ifelse(M_signed > 0, abs(E_signed) / M_signed, NA_real_)
 D_majority <- sign(E_signed)
 
-# Expression modalities subset (S1, S6, S7, S8) for LOF detection
+# Expression modalities subset (S1, S6, S7, S8) for functional-effect classification
 expr_idx <- which(signed_names %in% c("S1","S6","S7"))
 bf_expr <- bf_active[, expr_idx, drop = FALSE]
 sn_expr <- sn_active[, expr_idx, drop = FALSE]
@@ -1342,10 +1341,11 @@ debug_dump <- function(sym) {
 debug_dump("TM6SF2"); debug_dump("THRB"); debug_dump("HSD17B13"); debug_dump("HKDC1")
 
 # NOTE: THRB is disease-downregulated AND genetically validated, which
-# triggers the Genetic+down-coherent category (renamed from Protective-LOF)
+# triggers the Genetic+down-coherent category (renamed after the prior label
+# overstated rare-variant evidence)
 # even though Resmetirom is an AGONIST (not an inhibitor). The label is
 # algorithmic — it does NOT claim therapeutic mechanism. The pattern reflects
-# "disease lowers THRB; agonist therapy restores", not "LOF protective".
+# "disease lowers THRB; agonist therapy restores", not "reduced activity is protective".
 # THRB will likely NOT be in inhibitor_target_candidate (no defensible
 # inhibitor-mechanism claim from atlas data alone). This is a deliberate
 # behavior of the new sub-classification — not a bug.
@@ -1372,9 +1372,9 @@ assert_gene_either_state("THRB", "1_Genetic_validated",
 assert_gene("HKDC1",   "1_Genetic_validated", "Concordant-up",
             "F2->F3 driver, PP4=0.992 UKBB_AST")
 assert_gene("TM6SF2",  NULL, "Genetic+down-coherent",
-            "canonical MASLD LOF (BBJ_AST PP4=0.64)")
+            "canonical MASLD coding-variant signal (BBJ_AST PP4=0.64)")
 assert_gene("HSD17B13", NULL, NULL,
-            "known lit Protective-LOF but splice-isoform level; expected NOT to classify (and NOT in inhibitor candidates)")
+            "reported protective variant signal is splice-isoform-specific; expected NOT to classify (and NOT in inhibitor candidates)")
 assert_gene("NR1H4",   NULL, NULL, "Obeticholic acid; no genetic support")
 assert_gene("PPARA",   NULL, NULL, "Elafibranor; no genetic support")
 assert_gene("GAS6",    NULL, "Concordant-up", "novel; PP4=0.997")
@@ -1583,8 +1583,8 @@ fwrite(out, file.path(ME, sprintf("%s.csv", OUT_PREFIX)))
 cat(sprintf("  Wrote %s.csv (%d rows, %d cols)\n",
             OUT_PREFIX, nrow(out), ncol(out)))
 
-# Genetic+down-coherent (renamed from Protective-LOF) report — algorithmic
-# state, NOT a biological claim that all entries are LOF-protective targets.
+# Genetic+down-coherent report — algorithmic state, NOT a biological claim
+# about variant-burden mechanisms or therapeutic targets.
 gdc_out <- out[concordance_state == "Genetic+down-coherent" & !excluded][order(-convergence_score)]
 fwrite(gdc_out, file.path(ME, sprintf("%s_genetic_down_coherent.csv", OUT_PREFIX)))
 cat(sprintf("  Wrote genetic_down_coherent.csv (%d genes)\n", nrow(gdc_out)))

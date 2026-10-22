@@ -46,6 +46,17 @@ check_preflight("reject_roster_identity_disagreement", FALSE)
 fwrite(metadata, roster, sep = "\t")
 fwrite(data.table(sample_id = ids[-1], P1 = 1:9), scores, sep = "\t")
 check_preflight("reject_incomplete_projection_roster", FALSE)
+# A whole axis that failed the fixed reconstruction criteria is NA and is accepted;
+# a partly missing axis, an infinite score and an all-NA table are rejected.
+fwrite(data.table(sample_id = ids, P1 = 1:10, P2 = 1:10, P3 = 1:10, P4 = 1:10, P5 = 1:10, P6 = NA_real_), scores, sep = "\t")
+check_preflight("accept_whole_axis_unavailable", TRUE)
+fwrite(data.table(sample_id = ids, P1 = 1:10, P2 = 1:10, P3 = 1:10, P4 = 1:10, P5 = 1:10, P6 = c(NA, 2:10)), scores, sep = "\t")
+check_preflight("reject_partly_missing_axis", FALSE)
+fwrite(data.table(sample_id = ids, P1 = 1:10, P2 = 1:10, P3 = 1:10, P4 = 1:10, P5 = 1:10, P6 = c(Inf, 2:10)), scores, sep = "\t")
+check_preflight("reject_infinite_score", FALSE)
+fwrite(data.table(sample_id = ids, P1 = NA_real_, P2 = NA_real_, P3 = NA_real_, P4 = NA_real_, P5 = NA_real_, P6 = NA_real_), scores, sep = "\t")
+check_preflight("reject_all_axes_unavailable", FALSE)
+fwrite(data.table(sample_id = ids, P1 = 1:10, P2 = 1:10, P3 = 1:10, P4 = 1:10, P5 = 1:10, P6 = 1:10), scores, sep = "\t")
 
 # Load only the contrast function, excluding all script input/output execution.
 expressions <- parse(script)
@@ -66,10 +77,14 @@ stopifnot(nrow(failed_cohort) == 0L, !cohort_design_audit$cohort1$estimable,
           cohort_design_audit$cohort1$n_control == 0L)
 programs <- paste0("P", 1:6)
 program_labels <- data.table(program_code = programs, biological_label = programs)
-nmf_long <- CJ(sample_id = ids, program = programs)[, `:=`(centered_score = NaN, program_label = program)]
+nmf_long <- CJ(sample_id = ids, program = programs)[, `:=`(score = NA_real_, centered_score = NaN, program_label = program)]
 failed_program <- program_group_summary(samples, "fib_group", c("F0", "F1"), "fibrosis")
 stopifnot(nrow(failed_program) == 12L, all(!failed_program$estimable),
-          all(is.na(failed_program$centered_activity)), all(failed_program[group == "F1", n_samples] == 0L))
+          all(is.na(failed_program$centered_activity)), all(failed_program[group == "F1", n_samples] == 0L),
+          all(failed_program$failure_reason == "fixed_nmf_axis_unavailable_failed_reconstruction"))
+nmf_long[, score := rep(1:10, 6)]
+nonvarying <- program_group_summary(samples, "fib_group", c("F0", "F1"), "fibrosis")
+stopifnot(all(nonvarying$failure_reason == "program_score_has_no_finite_standardized_variation"))
 cat("PASS: dynamic qualified roster, identity mismatch, projection mismatch, missing stage comparator, missing cohort controls; no models fitted\n")
 
 system_script <- file.path(root, "scripts/analysis/histology_anchored_continuum/molecular_layers/70_infer_molecular_systems.R")

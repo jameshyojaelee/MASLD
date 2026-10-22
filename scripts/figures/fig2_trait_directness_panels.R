@@ -1,23 +1,11 @@
 #!/usr/bin/env Rscript
-# Panel A KEY MESSAGE: the closer a liver phenotype sits to the molecular lesion,
-# the more of its fine-mapped heritability is protein-coding.
-# Panel B KEY MESSAGE (revised 2026-08-17 after family multiplicity correction):
-# within the noncoding remainder, direct-trait posterior mass is promoter-proximal
-# and better resolved overall. It is NOT that the gap is specific to distal
-# enhancer-gene maps.
+# Panel A KEY MESSAGE: direct traits allocate more fine-mapping posterior mass
+# to protein-altering and canonical-splice consequences than enzyme traits.
+# Panel B KEY MESSAGE: deposited maps leave substantial noncoding posterior
+# mass unresolved. Its credible-set-weighted fractions are descriptive.
 #
-# The earlier message, "essentially absent from liver ABC enhancers", is RETIRED.
-# Across the family of six direct-vs-enzyme tests on these groups, ABC depletion
-# has permutation p = 0.398 (BH q = 0.398) and generic liver accessibility
-# p = 0.185 (q = 0.222); neither survives. What survives is promoter proximity
-# (3.92x, q = 0.0042), unresolved context (0.53x, q = 6.0e-4) and resolved-no-
-# context (2.06x, q = 0.0085). The ABC row is still drawn, because showing the
-# non-surviving comparison beside the surviving ones is the honest display, but
-# it may not be described as a depletion.
-# Source: GWAS/finemapping/results/fig2_multiplicity/20260817T161128Z/
-#
-# Both panels use 1-Mb genomic-region groups as the unit, not credible-set
-# instances. The grouping prevents repeated recovery of one region from
+# Panel A uses 1-Mb genomic-region groups as the unit. The grouping prevents
+# repeated recovery of one region from
 # dominating the summary; it does not assert statistical independence.
 
 suppressPackageStartupMessages({
@@ -32,6 +20,7 @@ BASE <- Sys.getenv(
 source(file.path(BASE, "scripts/figures/fig2_consequence_palette.R"))
 STATS_DIR <- Sys.getenv("FIG2_TRAIT_DIRECTNESS_STATS")
 OUT_DIR <- Sys.getenv("FIG2_TRAIT_DIRECTNESS_OUT")
+INFERENCE_DIR <- Sys.getenv("FIG2_CORRECTED_INFERENCE_DIR")
 stopifnot(nzchar(STATS_DIR), nzchar(OUT_DIR))
 dir.create(OUT_DIR, recursive = TRUE, showWarnings = FALSE)
 
@@ -39,6 +28,12 @@ est <- fread(file.path(STATS_DIR, "pip_architecture_estimates.tsv"))
 con <- fread(file.path(STATS_DIR, "trait_class_contrasts.tsv"))
 ind <- fread(file.path(STATS_DIR, "portfolio_independence.tsv"))
 cnc <- fread(file.path(STATS_DIR, "direct_trait_coding_concentration.tsv"))
+corrected_family <- NULL
+if (nzchar(INFERENCE_DIR)) {
+  corrected_family <- fread(file.path(INFERENCE_DIR, "fig2_family_multiplicity.tsv"))
+  coding <- corrected_family[test == "coding_mass"]
+  stopifnot(nrow(coding) == 1L)
+}
 
 DIRECT <- "tier1_direct_masld_pdff"
 ENZYME <- "tier2_liver_enzyme"
@@ -96,8 +91,6 @@ bar <- function(x, y, w, h, fill, col = NA, lwd = 0.4) {
 seg <- function(x0, y0, x1, y1, col = "black", lwd = 0.5, lty = 1) {
   grid.segments(u(x0), u(y0), u(x1), u(y1), gp = gpar(col = col, lwd = lwd, lty = lty))
 }
-
-fmt_p <- function(p) if (p < 1e-4) "P < 1e-4" else sprintf("P = %.3g", p)
 
 row_scope <- c(DIRECT, ENZYME)
 row_col <- c(COL_DIRECT, COL_ENZYME)
@@ -235,7 +228,7 @@ PB_H <- 2.70
 pb_pdf <- file.path(OUT_DIR, "Fig2_companion_noncoding_annotation_gap.pdf")
 open_page(pb_pdf, PB_W, PB_H)
 
-txt("Unresolved context", 0.25, 2.31, just = "left", size = 6.5)
+txt("Unresolved context", 0.25, 2.31, just = "left", size = FS)
 
 eb_x <- 0.25
 eb_w <- 2.35
@@ -249,7 +242,7 @@ for (i in seq_along(row_scope)) {
   bar(eb_x, eb_y[i], eb_w * value, 0.27, row_col[i])
   txt(sprintf("%.2f%% unresolved", 100 * value),
       eb_x + eb_w * value - 0.06, eb_y[i], just = "right",
-      size = 6.5, col = "white")
+      size = FS, col = "white")
 }
 for (tick in c(0, 50, 100)) {
   xx <- eb_x + eb_w * tick / 100
@@ -263,7 +256,7 @@ to_bx <- function(v) bx0 + (v / 0.10) * (bx1 - bx0)
 ctx_cats <- c("promoter_mass", "accessible_mass", "abc_mass")
 ctx_lab <- c("Within 2 kb of TSS", "Open in liver", "Liver ABC enhancer")
 cy <- c(2.02, 1.61, 1.20)
-txt("Deposited context", 2.88, 2.31, just = "left", size = 6.5)
+txt("Deposited context", 2.88, 2.31, just = "left", size = FS)
 for (k in seq_along(ctx_cats)) {
   txt(ctx_lab[k], 2.88, cy[k], just = "left", size = 6)
   for (i in seq_along(row_scope)) {
@@ -331,35 +324,65 @@ file.copy(file.path(STATS_DIR, "input_manifest.tsv"),
           file.path(OUT_DIR, "Fig2D_pip_architecture_by_trait_directness_input_manifest.tsv"),
           overwrite = TRUE)
 
+composition_text <- function(scope) {
+  paste(sprintf("%.2f%%", 100 * vapply(comp_cats, function(category) {
+    get_est(scope, category)$locus_weighted_fraction
+  }, numeric(1))), collapse = ", ")
+}
+region_count_column <- if ("n_operational_regions_1mb" %in% names(panel_est)) {
+  "n_operational_regions_1mb"
+} else stop("Source table lacks operational-region counts")
+region_count <- function(scope) {
+  rows <- panel_est[trait_scope == scope & family == "consequence"]
+  stopifnot(nrow(rows) == 4L, setequal(rows$category, comp_cats))
+  values <- unique(rows[[region_count_column]])
+  stopifnot(length(values) == 1L)
+  values
+}
+coding_fraction <- function(scope) {
+  sum(vapply(comp_cats[1:2], function(category) {
+    get_est(scope, category)$locus_weighted_fraction
+  }, numeric(1)))
+}
+coding_ratio <- coding_fraction(DIRECT) / coding_fraction(ENZYME)
+interval_text <- "Cluster-bootstrap intervals remain in the source tables."
+if (!is.null(corrected_family)) {
+  stopifnot(abs(coding_ratio - coding$ratio) < 1e-8)
+  interval_text <- sprintf(
+    "The coding-mass ratio is %.3f (physical-cluster bootstrap 95%% interval %.3f to %.3f).",
+    coding$ratio, coding$ratio_boot_lo, coding$ratio_boot_hi)
+  fwrite(coding, file.path(OUT_DIR, "Fig2D_corrected_coding_interval.tsv"), sep = "\t")
+  fwrite(corrected_family[test != "coding_mass"],
+         file.path(OUT_DIR, "Fig2_companion_corrected_context_intervals.tsv"), sep = "\t")
+}
 cap_a <- paste(
   "Distribution of fine-mapping posterior inclusion probability across four mutually",
   "exclusive variant-consequence classes. Within each trait class, the four segments sum",
   "to 100%: protein-altering, canonical splice, synonymous or UTR, and other noncoding.",
-  "Displayed locus-balanced estimates are 22.4%, 0.3%, 4.7%, and 72.6% for direct",
-  "MASLD/liver-fat traits and 3.4%, 0.0%, 3.6%, and 93.0% for liver-enzyme traits.",
+  sprintf("Displayed region-balanced estimates are %s for direct MASLD/liver-fat traits and %s for liver-enzyme traits.",
+          composition_text(DIRECT), composition_text(ENZYME)),
   "To prevent a region recovered in many studies from being counted repeatedly, credible-set",
   "sentinels within 1 Mb on the same chromosome were grouped as one genomic region and",
   "study-specific instances were averaged within that region before pooling. This grouping",
-  "does not assert LD or statistical independence. The 24 direct-trait and 259 enzyme-trait",
-  "regions are descriptive genomic units, not biological replicates. Cluster-bootstrap",
-  "intervals and the credible-set-weighted sensitivity estimator remain in the source tables.",
+  sprintf("does not assert LD or statistical independence. The %s direct-trait and %s enzyme-trait regions are descriptive genomic units, not biological replicates.",
+          region_count(DIRECT), region_count(ENZYME)),
+  interval_text,
+  "The credible-set-weighted sensitivity estimator remains in the source tables. No calibrated significance test is asserted.",
   "The panel describes allocation of fine-mapping probability, not heritability, effect size,",
   "variant count, or gene-causality probability."
 )
 cap_b <- paste(
   "Deposited regulatory context of fine-mapped noncoding posterior mass. Descriptive",
   "credible-set-weighted fractions are shown because the estimand is aggregate posterior",
-  "mass: 52.11% of direct MASLD/liver-fat mass and 60.43% of liver-enzyme mass has",
-  "unresolved deposited context. Only 7.87% and 4.46%, respectively, lies within 2 kb",
-  "of a GENCODE TSS; 7.32% and 4.15% is open in an available liver lineage; and 0.23%",
-  "and 1.57% overlaps a liver ABC enhancer. Positive context categories overlap and must",
-  "not be summed. Across the family of six direct-versus-enzyme tests on these groups,",
-  "corrected by Benjamini-Hochberg, the promoter-proximal difference survives (3.92-fold,",
-  "q=0.0042) as does the unresolved-context difference (0.53-fold, q=6.0e-4); the liver",
-  "ABC enhancer difference does not (q=0.398), nor does generic liver accessibility",
-  "(q=0.222). The ABC and accessibility rows are shown for completeness and must not be",
-  "described as depletion or enrichment. Groups are operational 1-Mb clusters, not",
-  "independent loci: no LD was consulted in forming them. Contrasts and sensitivity",
+  "mass.",
+  paste(vapply(c("unresolved_context_mass", ctx_cats), function(category) {
+    sprintf("%s: %.2f%% direct and %.2f%% enzyme.", category,
+            100 * get_est(DIRECT, category)$instance_weighted_fraction,
+            100 * get_est(ENZYME, category)$instance_weighted_fraction)
+  }, character(1)), collapse = " "),
+  "Positive context categories overlap and must not be summed.",
+  "These displayed fractions are credible-set-weighted descriptive summaries. Separate region-balanced bootstrap intervals, when supplied, are exported as a distinct source table; they do not provide calibrated p/q conclusions for the display.",
+  "Groups are operational 1-Mb clusters, not independent loci: no LD was consulted in forming them. Legacy contrasts are diagnostics, and sensitivity",
   "estimates remain in the source tables. Regulatory-DNA context is separate from",
   "colocalized-transcript biotype; unresolved loci should not be assigned automatically",
   "to the nearest gene."

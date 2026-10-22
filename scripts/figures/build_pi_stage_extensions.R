@@ -125,8 +125,13 @@ if (nrow(eligibility) != n_samples_expected || anyDuplicated(eligibility$sample_
     anyDuplicated(eligibility$analysis_unit_id)) fail("Biological-unit identity drift")
 nmf <- fread(nmf_path)
 programs <- paste0("P", 1:6)
-if (!all(c("sample_id", programs) %in% names(nmf)) ||
-    any(!is.finite(as.matrix(nmf[, ..programs])))) fail("Fixed P1-P6 scores are absent or non-finite")
+if (!all(c("sample_id", programs) %in% names(nmf))) fail("Fixed P1-P6 scores are absent")
+# An axis that failed the fixed reconstruction criteria is NA for every unit and
+# stays in the output as unestimable. A partly missing or infinite column is an error.
+nmf_scores <- as.matrix(nmf[, ..programs])
+nmf_axis_unavailable <- colSums(is.na(nmf_scores)) == nrow(nmf_scores)
+if (all(nmf_axis_unavailable) || any(is.infinite(nmf_scores)) ||
+    anyNA(nmf_scores[, !nmf_axis_unavailable, drop = FALSE])) fail("Fixed P1-P6 scores are absent or non-finite")
 if (unit_qualified && (anyDuplicated(nmf$sample_id) ||
     !setequal(nmf$sample_id, eligibility$sample_id))) fail("Fixed NMF projection roster differs from corrected model")
 if (identical(Sys.getenv("STAGE_EXTENSION_PREFLIGHT_ONLY"), "1")) {
@@ -273,22 +278,24 @@ cohort_design_audit <- list()
 fit_cohort <- function(cohort_id) {
   selected <- eligibility[dataset == cohort_id & group_binary %in% c("Control", "Disease")]
   selected[, group := factor(group_binary, levels = c("Control", "Disease"))]
+  varying_sex <- uniqueN(selected$inferred_sex) > 1L
+  cohort_covariates <- if (varying_sex) "inferred_sex" else "none_constant_sex_omitted"
   record_cohort <- function(estimable, reason = NA_character_) {
     cohort_design_audit[[cohort_id]] <<- data.table(
       dataset = cohort_id, contrast = "Disease_vs_Control", estimable = estimable,
       failure_reason = reason, n_control = sum(selected$group == "Control"),
       n_disease = sum(selected$group == "Disease"), n_analysis_units = nrow(selected),
-      covariates = "inferred_sex", bh_family_size = if (estimable) nrow(dge_all) else 0L)
+      covariates = cohort_covariates, bh_family_size = if (estimable) nrow(dge_all) else 0L)
   }
-  if (uniqueN(selected$group) != 2L || uniqueN(selected$inferred_sex) < 2L) {
-    record_cohort(FALSE, "group_or_sex_covariate_not_estimable")
+  if (uniqueN(selected$group) != 2L || anyNA(selected$inferred_sex)) {
+    record_cohort(FALSE, "group_not_estimable_or_missing_sex")
     return(data.table())
   }
   setorder(selected, sample_id)
   dge <- dge_all[, match(selected$sample_id, colnames(dge_all))]
   info <- data.frame(inferred_sex = droplevels(factor(selected$inferred_sex)),
                      group = selected$group, row.names = selected$sample_id)
-  design <- model.matrix(~ inferred_sex + group, info)
+  design <- model.matrix(if (varying_sex) ~ inferred_sex + group else ~ group, info)
   if (!"groupDisease" %in% colnames(design) || qr(design)$rank != ncol(design)) {
     record_cohort(FALSE, "rank_deficient_design")
     return(data.table())
@@ -303,7 +310,7 @@ fit_cohort <- function(cohort_id) {
     logFC = table[genes, "logFC"], P.Value = table[genes, "P.Value"],
     FDR = p.adjust(table[genes, "P.Value"], "BH"), t = table[genes, "t"],
     n_control = sum(selected$group == "Control"), n_disease = sum(selected$group == "Disease"),
-    n_participants = nrow(selected), covariates = "inferred_sex",
+    n_participants = nrow(selected), covariates = cohort_covariates,
     bh_family_size = nrow(dge)
   ))
 }
@@ -343,7 +350,8 @@ program_group_summary <- function(samples, group_column, groups, axis_name) {
         n_samples = vapply(groups, function(value) sum(d$group == value), integer(1)),
         n_cohorts = vapply(groups, function(value) uniqueN(d[group == value, dataset]), integer(1)),
         covariates = "dataset+inferred_sex", prespecified = TRUE,
-        estimable = FALSE, failure_reason = "program_score_has_no_finite_standardized_variation"))
+        estimable = FALSE, failure_reason = if (all(is.na(d$score))) "fixed_nmf_axis_unavailable_failed_reconstruction" else
+          "program_score_has_no_finite_standardized_variation"))
     }
     rbindlist(lapply(groups, function(group_id) {
       x <- d[group == group_id]
@@ -381,7 +389,25 @@ program_group_summary <- function(samples, group_column, groups, axis_name) {
 }
 
 fib_programs <- program_group_summary(stage_samples, "fib_group", paste0("F", 0:4), "fibrosis")
-nas_programs <- program_group_summary(nas_samples, "nas_group", c("NAS1-2", "NAS3-4", "NAS5-8"), "NAS")
+# NAS activity reference group. The default starts at NAS1-2 because the legacy
+# scores cover 1 of 46 NAS0 units. STAGE_NAS_ACTIVITY_REFERENCE=NAS0 adds NAS0 as
+# the zero reference and requires a finite score on every available axis for every
+# NAS0 unit; the fixed weights and scores are not changed.
+nas_activity_reference <- Sys.getenv("STAGE_NAS_ACTIVITY_REFERENCE", "NAS1-2")
+nas_activity_groups <- c("NAS0", "NAS1-2", "NAS3-4", "NAS5-8")
+if (!nas_activity_reference %in% nas_activity_groups[1:2]) {
+  fail("STAGE_NAS_ACTIVITY_REFERENCE must be NAS0 or NAS1-2")
+}
+nas_activity_groups <- nas_activity_groups[match(nas_activity_reference, nas_activity_groups):4]
+if (nas_activity_reference == "NAS0") {
+  nas0_ids <- nas_samples[nas_group == "NAS0", sample_id]
+  nas0_scores <- nmf_scores[match(nas0_ids, nmf$sample_id), !nmf_axis_unavailable, drop = FALSE]
+  if (!length(nas0_ids) || any(!is.finite(nas0_scores))) {
+    fail("NAS0 reference requires finite fixed NMF scores for every NAS0 unit")
+  }
+  cat("NAS0_ACTIVITY_REFERENCE:", length(nas0_ids), "NAS0 units with finite scores\n")
+}
+nas_programs <- program_group_summary(nas_samples, "nas_group", nas_activity_groups, "NAS")
 write_tsv_once(rbind(fib_programs, nas_programs), file.path(out_root, "prespecified_nmf_program_activity.tsv"))
 
 source_manifest <- data.table(

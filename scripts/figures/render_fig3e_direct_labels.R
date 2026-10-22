@@ -5,7 +5,7 @@ suppressPackageStartupMessages({
 })
 root <- Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas")
 source(file.path(root, "scripts/figures/publication_theme.R"))
-input <- file.path(root, "figures/main/fig3_bulk_transcriptomics/source_tables")
+input <- Sys.getenv("FIG3E_SOURCE_TABLES", file.path(root, "figures/main/fig3_bulk_transcriptomics/source_tables"))
 output <- commandArgs(trailingOnly = TRUE)[1]
 stopifnot(!is.na(output), !file.exists(output))
 counts <- fread(file.path(input, "fig3e_deg_counts.tsv"))[axis == "fibrosis"]

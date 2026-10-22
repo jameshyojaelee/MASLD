@@ -19,6 +19,14 @@ MIN_NODE_SIZE <- 5L
 SIGNATURE_SIZE <- 145L
 MIN_SIGNATURE_COVERAGE <- 0.90
 EXPECTED_RESOURCE_SIGNATURE <- 139L
+# A corrected roster changes the gene universe, and with it how many of the 145
+# signature genes the Resource observes; its expected count arrives in the JSON
+# named by HAC_EXPECTED_COUNTS_PATH.
+if (nzchar(Sys.getenv("HAC_EXPECTED_COUNTS_PATH", ""))) {
+  EXPECTED_RESOURCE_SIGNATURE <- as.integer(jsonlite::fromJSON(
+    Sys.getenv("HAC_EXPECTED_COUNTS_PATH"), simplifyVector = TRUE
+  )$n_resource_signature)
+}
 TARGET_COHORTS <- c("GSE126848", "GSE130970", "GSE135251",
                     "GSE162694", "GSE213621")
 INDEPENDENT_COHORTS <- c("GSE162694", "GSE213621")
@@ -181,9 +189,11 @@ assert_true(setequal(signature$gene_id_base, signature_all),
             "signature_genes.tsv and discovery model disagree on signature membership")
 signature[, in_resource := as.logical(in_resource)]
 assert_true(sum(signature$in_resource) == EXPECTED_RESOURCE_SIGNATURE,
-            "signature_genes.tsv does not record exactly 139 Resource genes")
+            paste0("signature_genes.tsv does not record exactly ",
+                   EXPECTED_RESOURCE_SIGNATURE, " Resource genes"))
 assert_true(sum(!signature$in_resource) == SIGNATURE_SIZE - EXPECTED_RESOURCE_SIGNATURE,
-            "signature_genes.tsv does not record the expected six missing genes")
+            paste0("signature_genes.tsv does not record the expected ",
+                   SIGNATURE_SIZE - EXPECTED_RESOURCE_SIGNATURE, " missing genes"))
 
 discovery_expression <- validate_expression(readRDS(discovery_expression_path),
                                             "discovery_normalized_expression.rds")

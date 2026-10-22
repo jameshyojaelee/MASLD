@@ -29,6 +29,8 @@ checkpoint_exclusion = "Any checkpoint trained on the 2026 scBaseCount snapshot 
 primary_task_outcomes_opened_in_development = false
 disease_control_secondary_sealed_eligible = false
 incident_record = "config/artifacts/incidents/gse289173_geo_metadata_20260821.json"
+cell_state_mapping_sealed_eligible = false
+h90_incident_record = "config/artifacts/incidents/gse289173_h90_public_matrices_20261015.json"
 required_mitigation = "Evaluator pseudonymizes feature row IDs, excludes disease/control AUROC from sealed claims, and never exposes the row-key map, cell-state labels, eQTL effects, ieQTL effects, or summary tables to development."
 
 [gse267031]

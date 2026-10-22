@@ -97,7 +97,7 @@
     "independent_biological_unit_count": "UNRESOLVED",
     "maximum_independent_units_admitted_for_inference": 1,
     "screen_pool_count": 1,
-    "source_method": "The article describes one 500,000-cluster infection workflow followed by FACS, expansion, passage, and media exposure; it does not report independent screen cultures or mouse-of-origin ancestry.",
+    "source_method": "The article describes one 500,000-cluster perturbation-screen workflow followed by FACS, expansion, passage, and media exposure; it does not report independent screen cultures or mouse-of-origin ancestry.",
     "valid_inference": "Development-visible descriptive use only. Production experiments, BioSamples, lanes, cells, guides, target genes, organoids, and files are not treated as biological replicates."
   },
   "release_and_exposure": {

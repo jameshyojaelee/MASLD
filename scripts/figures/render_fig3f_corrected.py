@@ -8,6 +8,7 @@ No models are refitted and no memberships or weights are changed.
 import argparse
 import hashlib
 import json
+import os
 import platform
 from pathlib import Path
 
@@ -41,7 +42,9 @@ def main():
     src = out / "source_tables"
     src.mkdir()
     genetics = root / "GWAS/finemapping/results/susie_coloc_r2_20260924T053244Z"
-    stage_root = root / "figures/candidates/bulk-release-corrected-controls-20260925T175215Z/analysis/stage_extensions"
+    # FIG3F_STAGE_ROOT and the three label variables below select another stage
+    # release; unset, the 2026-09-25 tables and their labels are used.
+    stage_root = Path(os.environ.get("FIG3F_STAGE_ROOT", root / "figures/candidates/bulk-release-corrected-controls-20260925T175215Z/analysis/stage_extensions"))
     paths = {
         "stage": stage_root / "stage_all_gene_results.tsv",
         "roster": stage_root / "stage_extension_sample_manifest.tsv",
@@ -94,7 +97,7 @@ def main():
     chosen = chosen[chosen.ensembl.isin(eligible)].copy()
     assert len(chosen) > 0
     matrix = stage.merge(chosen, left_on="gene_id_base", right_on="ensembl", validate="many_to_one")
-    matrix["evidence_state"] = "historical_library_roster_conditional_not_donor_qualified"
+    matrix["evidence_state"] = os.environ.get("FIG3F_EVIDENCE_STATE", "historical_library_roster_conditional_not_donor_qualified")
     matrix["estimand"] = "cross_sectional_higher_minus_lower_adjacent_fibrosis_stage"
     matrix["units"] = "log2_expression_fold_change"
     matrix["uncertainty"] = "pointwise_95_percent_moderated_t_interval"
@@ -130,7 +133,7 @@ def main():
         item["n_genotype_identity_components"] = r.individual_id.nunique()
         item["n_identity_unresolved_records"] = int(r.individual_id.isna().sum())
         item["n_components_on_both_sides"] = int((r.groupby("individual_id").group.nunique() > 1).sum())
-        item["inferential_unit_in_existing_fit"] = "library_record_not_verified_independent_donor"
+        item["inferential_unit_in_existing_fit"] = os.environ.get("FIG3F_INFERENTIAL_UNIT", "library_record_not_verified_independent_donor")
         item["cohorts"] = ";".join(sorted(r.dataset.unique()))
     pd.DataFrame(summaries).to_csv(src / "fig3f_contrast_denominators.tsv", sep="\t", index=False)
 
@@ -183,7 +186,7 @@ def main():
     summary = {"genes": n, "rows": len(matrix), "BH_family_size": sorted(stage.bh_family_size.unique().tolist()),
                "exact_PIP_available": 0, "labels": ordering.loc[ordering.row_label.ne(""), "row_label"].tolist(),
                "effect_color_limit": lim, "genetics_positive_family": 436,
-               "evidence_state": "historical_stage_fits_conditional;September_genetics_candidate",
+               "evidence_state": os.environ.get("FIG3F_SUMMARY_EVIDENCE_STATE", "historical_stage_fits_conditional;September_genetics_candidate"),
                "PIP_reason": "Saved exact-pair table lacks GWAS PIP; top_snp_PP is a different posterior.",
                "python": platform.python_version(), "pandas": pd.__version__, "numpy": np.__version__,
                "matplotlib": matplotlib.__version__, "seed": "No stochastic operation or new model fit"}

@@ -77,6 +77,9 @@ def test_palindrome_without_file_frequency_needs_the_convention():
     assert "no allele-order convention" in cd.palindrome_block("A", "T", np.nan, 0.2, "GWAS lead", None)
     assert "MAF > 0.4" in cd.palindrome_block("A", "T", np.nan, 0.45, "GWAS lead", True)
     assert "without a 1kGP frequency" in cd.palindrome_block("A", "T", 0.2, np.nan, "GWAS lead", True)
+    # the cap uses every available frequency, also the Broadaway EAF (round 2, 2026-10-15)
+    assert "MAF > 0.4" in cd.palindrome_block("A", "T", np.nan, 0.39, "GWAS lead", True, (0.42,))
+    assert cd.palindrome_block("A", "T", np.nan, 0.39, "GWAS lead", True, (0.38, np.nan)) is None
     # a file frequency is used before the convention
     assert "opposite strand" in cd.palindrome_block("A", "T", 0.2, 0.8, "GWAS lead", True)
 
@@ -387,3 +390,13 @@ def test_tag_flags_labels():
     assert f["g3"] == "not estimable"
     assert f["g4"] == "no Model A tag"
     assert f["g5"] == "not estimable"          # tags but no colocalized lead record
+
+
+def test_panel_record_note():
+    h = np.zeros(4, dtype=np.int8)
+    p = cd.Panel({"chr1": {100: [("A", "G", h)], 200: [("C", "CT", h)]}}, ["s1", "s2"], {"s1": "EUR", "s2": "EUR"})
+    assert p.indicator("chr1", 100, "+", "T", "C")[0] is None
+    assert "strand flip" in p.record_note("chr1", 100, "+", "T", "C")
+    assert "other alleles" in p.record_note("chr1", 200, "+", "C", "T")
+    assert "no biallelic" in p.record_note("chr1", 300, "+", "C", "T")
+    assert "other alleles" in p.record_note("chr1", 100, "-", "T", "C")     # minus strand: letters already complemented

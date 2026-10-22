@@ -1,0 +1,16 @@
+#!/bin/bash
+# Moves this round's pending jobs from innovation to nslab; exits (to notify) if one is already running on innovation.
+LOG=$(dirname $0)/guard.log
+while true; do
+  squeue -u $USER -h -t PENDING,RUNNING -o "%i|%j|%q|%T|%V" | while IFS='|' read id name qos state sub; do
+    [[ "$qos" == innovation && "$name" =~ ^[0-9]{4}$ && "$sub" > "2026-10-15T07:20" ]] || continue
+    if [[ "$state" == PENDING ]]; then
+      if scontrol update JobId=$id Account=nslab QOS=nslab >>$LOG 2>&1; then echo "$(date -Is) moved $id $name to nslab" >>$LOG
+      else echo "$(date -Is) FAILED to move $id $name" >>$LOG; echo "STOP $id $name move failed" >>$LOG.flag; fi
+    else
+      echo "STOP $id $name running on innovation" >>$LOG.flag
+    fi
+  done
+  if [[ -s $LOG.flag ]]; then cat $LOG.flag; exit 0; fi
+  sleep 120
+done

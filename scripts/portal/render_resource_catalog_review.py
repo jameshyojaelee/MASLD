@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
@@ -11,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 plt.rcParams.update({"font.size":6,"axes.labelsize":6,"xtick.labelsize":6,"ytick.labelsize":6,
-                     "pdf.fonttype":42,"ps.fonttype":42,"font.family":"DejaVu Sans"})
+                     "pdf.fonttype":42,"ps.fonttype":42,"font.family":os.environ.get("MASLD_FIG_FONT_FAMILY","DejaVu Sans")})
 GRAY="#9E9E9E";BLUE="#1565C0";PINK="#C9265E";TEAL="#00695C"
 
 
@@ -28,6 +29,9 @@ def box(ax,x,y,w,h,label,color):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--sidecar",type=Path,required=True)
+    # Display options; the defaults reproduce the earlier panels.
+    p.add_argument("--hide-status-lines",action="store_true",help="omit the candidate/local-review status lines on 6C and 6E")
+    p.add_argument("--class-header",default="Class in source bundle",help="6C header of the class column")
     args=p.parse_args();root=args.sidecar;panels=root/"panels";panels.mkdir(exist_ok=False)
     status=json.loads((root/"sidecar_completion.json").read_text())
     with (root/"worked_entries.tsv").open() as f:entries=list(csv.DictReader(f,delimiter="\t"))
@@ -45,7 +49,7 @@ def main():
     fig.savefig(panels/"fig6a_catalog_structure.pdf");plt.close(fig)
     # KEY MESSAGE: fixed worked entries expose separate calls and routes; their present classes are provisional.
     fig,ax=canvas(5.1,1.75)
-    headers=["Gene","Genetics","RNA","Class in source bundle","Gene route / coding-object route"]
+    headers=["Gene","Genetics","RNA",args.class_header,"Gene route / coding-object route"]
     x=[.01,.15,.28,.41,.70]
     for xx,label in zip(x,headers):ax.text(xx,.91,label,ha="left",fontsize=6)
     class_labels={"genetically_anchored":"Genetically anchored","concordant":"Concordant",
@@ -59,7 +63,7 @@ def main():
               legacy.get(r["legacy_next_experiment_rule_id"],r["legacy_next_experiment_rule_id"])+"\n"+obj.get(r["recommended_experiment_rule_id"],r["recommended_experiment_rule_id"])]
         for j,(xx,value) in enumerate(zip(x,vals)):
             ax.text(xx,y,value,ha="left",va="center",fontsize=6,fontstyle="italic" if j==0 else "normal")
-    ax.text(.5,.025,qualification,ha="center",fontsize=6,color="#555555")
+    if not args.hide_status_lines:ax.text(.5,.025,qualification,ha="center",fontsize=6,color="#555555")
     fig.savefig(panels/"fig6c_worked_entries.pdf");plt.close(fig)
     # KEY MESSAGE: entry details, object routes and source/download records refer to the same local candidate.
     fig,ax=canvas(4.1,1.7)
@@ -68,8 +72,9 @@ def main():
     box(ax,.70,.53,.29,.32,"Read source references\nAnnotation / assay states",GRAY)
     for a,b in [(.32,.36),(.65,.70)]:ax.annotate("",xy=(b,.69),xytext=(a,.69),arrowprops={"arrowstyle":"->","lw":.6,"color":GRAY})
     box(ax,.17,.12,.66,.22,"Download gene calls + molecular-object records\nSame selected inputs; no combined score or rank",GRAY)
-    ax.text(.5,.94,"Local review interface; unpublished",ha="center",fontsize=6)
-    ax.text(.5,.015,qualification,ha="center",fontsize=6,color="#555555")
+    if not args.hide_status_lines:
+        ax.text(.5,.94,"Local review interface; unpublished",ha="center",fontsize=6)
+        ax.text(.5,.015,qualification,ha="center",fontsize=6,color="#555555")
     fig.savefig(panels/"fig6e_portal_source_access.pdf");plt.close(fig)
     captions=[{"panel":"6A","file":"fig6a_catalog_structure.pdf","caption":"Gene calls remain distinct from program/assay context; molecular objects have explicit unresolved mechanisms and routes."},
               {"panel":"6C","file":"fig6c_worked_entries.pdf","caption":"The four existing review genes use the source bundle classes. Gene-level v1 routes and molecular-object v2 routes remain separate. "+qualification+"."},

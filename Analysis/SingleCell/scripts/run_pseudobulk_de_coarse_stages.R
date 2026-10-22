@@ -111,8 +111,8 @@ sample_meta <- cell_meta[, .(
 
 # Stage mapping (mirrors extract_atlas_umap_for_fig2.py)
 cond_to_stage <- c(
-  "Healthy" = "Healthy", "Mixed" = "Healthy",
-  "NAFLD" = "Steatosis", "MASL" = "Steatosis",
+  "Healthy" = "Healthy", "Mixed" = "Unresolved",
+  "NAFLD" = "Unresolved", "MASL" = "Steatosis",
   "NASH" = "Steatohepatitis", "MASH" = "Steatohepatitis",
   "Cirrhotic" = "Cirrhosis"
 )
@@ -179,6 +179,23 @@ srr_to_donor <- build_srr_to_donor_map(BASE)
 # all-NA field (GSE202379, whose generic "MASLD" has no coarse-stage mapping).
 n_runs_pre <- nrow(sample_meta)
 sample_meta <- collapse_sample_meta_to_donor(sample_meta, BASE)
+
+# Primary-source diagnoses override coarse sample titles. Generic NAFLD does
+# not establish steatosis; these two explants are explicitly cirrhotic in
+# Filliol Nature 2022 Methods (doi:10.1038/s41586-022-05289-6).
+sample_meta[dataset == "GSE174748" & sample %in% c("SRR14602057", "SRR14602058"),
+            disease_stage_coarse := "Cirrhosis"]
+source_correction <- file.path(BASE, "Analysis/SingleCell/candidates",
+  "source-diagnosis-primary-correction-20261014/metadata/donor_metadata_stage_corrected_donor.tsv")
+if (!file.exists(source_correction)) stop("Missing primary-source diagnosis correction: ", source_correction)
+qualified_meta <- fread(source_correction)
+atlas_meta <- qualified_meta[dataset == "Liver_Atlas"]
+stopifnot(nrow(atlas_meta) == 19L, !anyDuplicated(atlas_meta$sample),
+          all(atlas_meta$exclude_stage_analysis %in% c(TRUE, "TRUE")))
+for (i in seq_len(nrow(atlas_meta))) {
+  sample_meta[dataset == "Liver_Atlas" & sample == atlas_meta$sample[i],
+              disease_stage_coarse := atlas_meta$disease_stage_coarse[i]]
+}
 message(sprintf("  donor-collapse: %d run-level rows -> %d donor-level rows",
                 n_runs_pre, nrow(sample_meta)))
 

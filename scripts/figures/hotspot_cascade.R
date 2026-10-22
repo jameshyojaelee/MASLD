@@ -45,7 +45,7 @@ STAGE_COLORS <- c(Healthy        = masld_colors$control,   # #9E9E9E
                   Steatohepatitis= masld_colors$mash)      # #C9265E
 
 # Five hepatocyte modules ordered to trace the directional cascade:
-# gain-of-stress, then loss-of-mature-function (effect direction informs order).
+# increasing stress, then declining mature-cell activity (effect direction informs order).
 # Audit 2026-05-17: hep__24 actually matches the bulk-NMF "Progression-
 # Inflammatory" program (3-gene overlap HKDC1/AKR1B10/DEFB1, hyper p=0.007 —
 # NOT the labelled "P1 vascular-smooth-muscle"; the original P1 tag was the W
@@ -55,9 +55,9 @@ mods <- fread(file.path(HS_RES, "all_modules.tsv"))
 mods <- mods[cell_type == "hepatocytes"]
 
 # Five hepatocyte modules actively discussed in the manuscript results section.
-# Ordered: gaining modules first (increasing with severity), then losing modules.
+# Ordered: increasing modules first, then decreasing modules with severity.
 FOCAL_MODS <- c(20L, 24L, 26L, 19L, 27L)
-# Directional arm per focal module: gain-of-stress first, then loss-of-function.
+# Directional arm per focal module: increasing stress first, then declining activity.
 # Direction is shown IN-panel by the signed β + significance stars, so it is not
 # repeated in the strip title — that keeps the longer canonical names from
 # overflowing (and clipping in) the narrow facets.

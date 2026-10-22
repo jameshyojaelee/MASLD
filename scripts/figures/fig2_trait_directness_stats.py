@@ -92,15 +92,10 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def parse_locus(frame: pd.DataFrame) -> pd.DataFrame:
-    """Split the stored `locus` field into chromosome and base-pair position."""
-    text = frame["locus"].astype(str)
-    frame = frame.copy()
-    frame["chrom"] = text.str.split(".").str[0]
-    frame["pos"] = pd.to_numeric(text.str.split(".").str[1], errors="coerce")
-    if frame["pos"].isna().any():
-        raise ValueError("unparsable locus positions present")
-    return frame
+def parse_locus(frame: pd.DataFrame, members: pd.DataFrame) -> pd.DataFrame:
+    """Restore legacy decimal positions against the full native member set."""
+    from fig2_locus_coordinates import recover_locus_positions
+    return recover_locus_positions(frame, members)
 
 
 def assign_independent_loci(frame: pd.DataFrame) -> pd.DataFrame:
@@ -309,8 +304,8 @@ def main() -> int:
     arch_path = base / "credible_set_pip_architecture.tsv"
     members_path = base / "credible_set_members_annotated.tsv"
 
-    arch = pd.read_csv(arch_path, sep="\t")
-    members = pd.read_csv(members_path, sep="\t", low_memory=False)
+    arch = pd.read_csv(arch_path, sep="\t", dtype={"locus": str})
+    members = pd.read_csv(members_path, sep="\t", low_memory=False, dtype={"locus": str})
 
     manifest = pd.DataFrame([
         {"input_role": "credible_set_pip_architecture", "path": str(arch_path),
@@ -328,7 +323,9 @@ def main() -> int:
 
     # Cluster loci once on the architecture table, then map the same locus ids onto
     # the context table so both families use an identical independence structure.
-    arch = assign_independent_loci(parse_locus(arch))
+    arch = parse_locus(arch, members)
+    arch.to_csv(out / "corrected_locus_coordinates.tsv", sep="\t", index=False)
+    arch = assign_independent_loci(arch)
     ctx = ctx.merge(arch[["credible_set_uid", "locus_id"]], on="credible_set_uid",
                     how="left", validate="one_to_one")
     if ctx["locus_id"].isna().any():

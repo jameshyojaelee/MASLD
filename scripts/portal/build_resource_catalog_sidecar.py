@@ -77,13 +77,34 @@ def main():
     p.add_argument("--bundle",type=Path,required=True);p.add_argument("--gene-identity",type=Path,required=True)
     p.add_argument("--lncrna-class",type=Path,required=True);p.add_argument("--output",type=Path,required=True)
     p.add_argument("--provisional-review",action="store_true");p.add_argument("--count-certificate",type=Path)
+    p.add_argument("--counts",type=Path)
+    p.add_argument("--annotation-correspondence",type=Path)
     args=p.parse_args()
+    certificate=None;dispositions={}
     if not args.provisional_review:
         if not args.count_certificate:raise ValueError("Qualified candidate requires count certificate")
         c=json.loads(args.count_certificate.read_text())
         if not(c.get("annotation_resolution_complete") is True and c.get("n_unresolved_annotations")==0
                and c.get("counts_complete") is True and c.get("counts_sha256")):
             raise ValueError("Identity/counting completion is unresolved")
+        if not args.counts or digest(args.counts)!=c["counts_sha256"]:
+            raise ValueError("Corrected counts must match the count certificate")
+        annotation=Path(c["annotation_summary"])
+        if digest(annotation)!=c["annotation_summary_sha256"]:
+            raise ValueError("Annotation summary does not match the count certificate")
+        summary=json.loads(annotation.read_text())
+        if not(summary.get("annotation_resolution_complete") is True and summary.get("n_unresolved_annotations")==0):
+            raise ValueError("Annotation correspondence is unresolved")
+        if not args.annotation_correspondence or digest(args.annotation_correspondence)!=c["annotation_correspondence_sha256"]:
+            raise ValueError("Annotation correspondence does not match the count certificate")
+        dispositions={r["gene_id"].split(".")[0]:r["disposition"] for r in table(args.annotation_correspondence)}
+        held=sum(v=="held_untestable" for v in dispositions.values())
+        if held!=c.get("n_held_untestable_annotations",0) or held!=summary["dispositions"].get("held_untestable",0):
+            raise ValueError("Held-untestable annotations disagree between source records and certificate")
+        roster=Path(c["primary_sample_roster"])
+        if digest(roster)!=c["primary_sample_roster_sha256"]:
+            raise ValueError("Selected analysis units do not match the count certificate")
+        certificate=c
     args.output.mkdir(parents=True,exist_ok=False)
     identities=defaultdict(list)
     for r in table(args.gene_identity):
@@ -98,6 +119,18 @@ def main():
     release=genes[0]["analysis_release_id"]+":molecular-object-review-v2"
     records=[object_record(g,identities[g["ensembl_id"]][0] if len(identities[g["ensembl_id"]])==1 else None,
                            lncrna.get(g["ensembl_id"]),evidence[g["ensembl_id"]],release,args.provisional_review) for g in genes]
+    for r in records:
+        disposition=dispositions.get(r["ensembl_id_base"],"not_in_counting_annotation")
+        r["counting_annotation_disposition"]=disposition
+        if certificate:
+            r["bulk_analysis_unit"]=certificate["unit"]
+            r["bulk_analysis_unit_count"]=certificate["n_samples"]
+            r["input_state"]="qualified_counts_with_explicit_held_untestable"
+        if disposition in {"held_untestable","excluded_reference"}:
+            if r["rna_call"]=="supported":raise ValueError("Held or excluded annotation cannot have RNA support")
+            applicability=json.loads(r["assay_applicability"])
+            applicability["bulk_rna"]="untestable" if disposition=="held_untestable" else "not_applicable"
+            r["assay_applicability"]=catalog.canonical_assay_applicability(applicability)
     output=args.output/"molecular_object_sidecar.jsonl"
     with output.open("x") as f:
         for r in records:f.write(json.dumps(r,sort_keys=True,allow_nan=False)+"\n")
@@ -113,6 +146,11 @@ def main():
         "source_bundle":str(args.bundle.resolve()),"source_gene_index_sha256":digest(index_path),
         "source_evidence_sha256":digest(evidence_path),"gene_identity_sha256":digest(args.gene_identity),
         "lncrna_class_sha256":digest(args.lncrna_class),"sidecar_sha256":digest(output),
+        "count_certificate_sha256":digest(args.count_certificate) if certificate else None,
+        "n_held_untestable_annotations":certificate.get("n_held_untestable_annotations",0) if certificate else None,
+        "n_unresolved_annotations":certificate["n_unresolved_annotations"] if certificate else None,
+        "bulk_analysis_unit":certificate["unit"] if certificate else None,
+        "bulk_analysis_unit_count":certificate["n_samples"] if certificate else None,
         "limitation":"No signal-pair target links, PIP masses or cross-assay gene testability were inferred from static overlaps."}
     (args.output/"sidecar_completion.json").write_text(json.dumps(metadata,indent=2)+"\n")
     rows="".join("<tr>"+"".join("<td>"+html.escape(str(r[k]))+"</td>" for k in fields)+"</tr>" for r in examples)

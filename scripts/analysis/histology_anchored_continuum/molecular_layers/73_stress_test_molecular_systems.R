@@ -161,22 +161,35 @@ ml_assert(nrow(nodes) == main_component_nodes &&
           "Frozen main-component node family drift")
 ml_assert(setequal(unique(nodes$collection), collection_order),
           "Frozen system collections drift")
+# Nodes the frozen inference candidate recorded as untestable in the analysis gene
+# universe are left out here exactly as in 70; the record must match the analysis
+# candidate's testability tables.
+untestable_path <- file.path(inference_candidate, "tables", "system_untestable_nodes.tsv")
+if (file.exists(untestable_path)) {
+  untestable_nodes <- fread(untestable_path, na.strings = c("", "NA"))
+  ml_assert(setequal(untestable_nodes$feature_id,
+                     ml_untestable_nodes(analysis_candidate, nodes)$feature_id),
+            "Recorded untestable system nodes disagree with the analysis testability tables")
+  nodes <- nodes[!feature_id %in% untestable_nodes$feature_id]
+  communities <- ml_scored_registry(communities, nodes)
+}
+n_scored_nodes <- nrow(nodes)
 
 hotspot <- fread(hotspot_path, na.strings = c("", "NA"))
 metadata <- unique(hotspot[, .(
   sample_id, analysis_unit_id, dataset, inferred_sex, fibrosis_stage
 )], by = c("sample_id", "dataset"))
-ml_assert(nrow(metadata) == 844L && !anyDuplicated(metadata$analysis_unit_id),
-          "Stress tests require the frozen 844-participant roster")
+ml_assert(nrow(metadata) == contract$participant_count && !anyDuplicated(metadata$analysis_unit_id),
+          paste0("Stress tests require the frozen ", contract$participant_count, "-participant roster"))
 
 axes <- ml_load_axes(contract)[
   dataset %in% evaluation & axis_id %in% axes_primary
 ]
-ml_assert(nrow(axes) == 501L * length(axes_primary),
+ml_assert(nrow(axes) == metadata[dataset %in% evaluation, .N] * length(axes_primary),
           "Evaluation-cohort co-primary axis family drift")
 
 feature_scores <- ml_load_node_donor_scores(analysis_candidate, nodes, hotspot)
-ml_assert(uniqueN(feature_scores$feature_id) == main_component_nodes,
+ml_assert(uniqueN(feature_scores$feature_id) == n_scored_nodes,
           "At least one frozen system node lacks donor scores")
 
 # --------------------------------------------------------------------------
@@ -193,7 +206,7 @@ equivalence <- merge(
   rebuilt, frozen_scores,
   by = c("sample_id", "dataset", "community_id"), all = TRUE, sort = TRUE
 )
-ml_assert(nrow(equivalence) == 844L * system_family_size &&
+ml_assert(nrow(equivalence) == contract$participant_count * system_family_size &&
             !anyNA(equivalence$system_score_raw) && !anyNA(equivalence$frozen_raw),
           "Rebuilt system scores do not align with the frozen 70 candidate")
 maximum_score_difference <- max(abs(equivalence$system_score_raw - equivalence$frozen_raw))
@@ -394,7 +407,7 @@ joint_permutation <- function(axis_name, replicates, seed) {
     permuted <- lapply(prepared, function(item) {
       values <- item$context$x_residual
       for (group in item$context$strata_groups) {
-        values[group] <- sample(values[group], length(group), replace = FALSE)
+        values[group] <- values[group][sample.int(length(group), length(group), replace = FALSE)]
       }
       values
     })
@@ -458,7 +471,7 @@ graph <- graph_from_data_frame(
   edges[, .(from, to)], directed = FALSE, vertices = node_key$feature_id
 )
 graph <- simplify(graph, remove.multiple = TRUE, remove.loops = TRUE)
-ml_assert(vcount(graph) == main_component_nodes,
+ml_assert(vcount(graph) == n_scored_nodes,
           "Frozen graph vertex count drift")
 ml_assert(count_components(graph) == 1L,
           "Frozen main component is not connected")
@@ -469,16 +482,22 @@ draw_connected_set <- function(target_size) {
 }
 
 draw_uniform_set <- function(target_size) {
-  sample.int(main_component_nodes, target_size, replace = FALSE)
+  sample.int(n_scored_nodes, target_size, replace = FALSE)
 }
 
 statistic_for_set <- function(node_indices) {
+  # Both axes use the same whole-cohort donor columns. Build the collection
+  # medians once per cohort; axis-specific eligible rows are selected by fit_fast.
+  cohort_scores <- lapply(evaluation, function(cohort) {
+    context <- contexts[[paste(axes_primary[[1L]], cohort, sep = "|")]]
+    set_scores(node_indices, context$donor_columns)
+  })
   vapply(axes_primary, function(axis_name) {
     beta <- numeric(length(evaluation))
     se <- numeric(length(evaluation))
     for (index in seq_along(evaluation)) {
       context <- contexts[[paste(axis_name, evaluation[[index]], sep = "|")]]
-      fit <- fit_fast(context, set_scores(node_indices, context$donor_columns))
+      fit <- fit_fast(context, cohort_scores[[index]])
       beta[index] <- fit[["beta"]]
       se[index] <- fit[["se"]]
     }

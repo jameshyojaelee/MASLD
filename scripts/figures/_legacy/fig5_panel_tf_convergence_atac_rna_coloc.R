@@ -278,7 +278,7 @@ fwrite(df[, .(tf_name, activity_diff, activity_padj, logFC, padj,
 cat(sprintf("Wrote source %s\n", src_csv))
 
 # Print top-right (suppressed regulon + DEG-up + COLOC) — biological interest
-cat("\n=== Suppressed regulon + DEG-up + COLOC>=0.5 (canonical loss-of-function with genetic causality) ===\n")
+cat("\n=== Suppressed regulon + DEG-up + COLOC>=0.5 (regulatory signal with genetic support) ===\n")
 print(df[activity_diff < 0 & logFC > 0 & max_pp4 >= 0.5][order(-max_pp4),
         .(tf_name, activity_diff, logFC, n_concord_2of3, max_pp4)])
 

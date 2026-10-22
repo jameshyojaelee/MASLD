@@ -194,6 +194,50 @@ nmf_build_fixed_basis <- function(cache_path, annotation_path, signature_symbols
   list(scores = rbindlist(score_rows), gates = rbindlist(gate_rows))
 }
 
+# Fixed-W scores computed on corrected counts by score_corrected_fixed_nmf.R. The
+# bases are the released ones; nothing is refitted here. Only the
+# signature-excluded continuum variant is read, and an axis that failed the
+# scorer's reconstruction rule stays ineligible.
+nmf_read_corrected_fixed_scores <- function(root, manifest, dge_path, family_size) {
+  report <- jsonlite::fromJSON(file.path(root, "scoring_report.json"))
+  ml_assert(identical(report$bases_refitted, FALSE) &&
+              identical(report$fixed_criteria_relaxed, FALSE),
+            "Corrected fixed-NMF scores refit the bases or relaxed the fixed criteria")
+  provenance <- fread(file.path(root, "provenance", "input_manifest.tsv"))
+  ml_assert(identical(provenance[role == "refit_model_dge", sha256], ml_sha256(dge_path)),
+            "Corrected fixed-NMF scores were computed for a different expression object")
+  availability <- fread(file.path(root, "axis_availability.tsv"))[
+    variant == "signature_excluded_continuum"
+  ]
+  long <- fread(file.path(root, "fixed_nmf_scores_long.tsv.gz"), na.strings = c("", "NA"))[
+    variant == "signature_excluded_continuum"
+  ]
+  long[, outcome_id := paste0("k", k, "_", program)]
+  availability[, outcome_id := paste0("k", k, "_", program)]
+  ml_assert(nrow(availability) == family_size && !anyDuplicated(availability$outcome_id),
+            "Corrected fixed-NMF availability is not one row per axis")
+  ml_assert(nrow(long) == family_size * nrow(manifest) &&
+              !anyDuplicated(long[, .(sample_id, outcome_id)]) &&
+              all(long[, setequal(sample_id, manifest$sample_id), by = outcome_id]$V1),
+            "Corrected fixed-NMF scores do not match the analysis roster")
+  ml_assert(all(is.finite(long$score) == as.logical(long$axis_available)),
+            "Corrected fixed-NMF scores are not finite exactly where the axis is available")
+  list(
+    scores = long[, .(
+      sample_id, outcome_id, k, program_code = program, score_raw = score,
+      score_variant = "signature_excluded_fixed_w"
+    )],
+    gates = availability[, .(
+      outcome_id, k, program_code = program,
+      n_retained_basis_genes = retained_rows,
+      retained_l1_fraction = retained_basis_mass,
+      full_fixed_w_vs_released_h_rho = historical_global_spearman,
+      historical_min_cohort_spearman, unavailable_reason,
+      reconstruction_gate_pass = as.logical(axis_available)
+    )]
+  )
+}
+
 nmf_run <- function() {
   contract <- ml_read_contract()
   out_root <- ml_out_root(must_exist = TRUE)
@@ -229,6 +273,20 @@ nmf_run <- function() {
     score_variant = "native_released_loading",
     outcome_z = ml_standardize(score_raw)
   ), by = .(dataset, outcome_id)]
+  labels <- unique(native_source[, .(outcome_id, k, program_code, program_label)])
+  # HAC_FIXED_NMF_SCORES names fixed-W scores computed on a corrected roster. The
+  # released loadings were fit on the historical expression object, so they are
+  # not carried onto that roster and the native variant is left out.
+  corrected_scores_root <- Sys.getenv("HAC_FIXED_NMF_SCORES", unset = "")
+  use_corrected_scores <- nzchar(corrected_scores_root)
+  if (use_corrected_scores) {
+    native <- native[0L]
+    ml_write_tsv_once(data.table(
+      analysis = "native_released_loading",
+      state = "skipped_native_loading_not_recomputed_for_corrected_roster",
+      fixed_scores_source = normalizePath(corrected_scores_root, mustWork = TRUE)
+    ), file.path(output_dir, "nmf_native_variant_state.tsv"))
+  }
 
   fixed_state <- data.table(
     analysis = "signature_excluded_fixed_w",
@@ -238,12 +296,20 @@ nmf_run <- function() {
   fixed <- NULL
   fixed_gates <- data.table()
   fixed_result <- tryCatch(
-    nmf_build_fixed_basis(
-      ml_resolve(contract$nmf_cache), ml_resolve(contract$gene_annotation),
-      ml_signature_symbols(contract), as.character(contract$evaluation_cohorts), manifest
-    ),
+    if (use_corrected_scores) {
+      nmf_read_corrected_fixed_scores(
+        corrected_scores_root, manifest, ml_resolve(contract$dge_rds),
+        contract$nmf_family_size
+      )
+    } else {
+      nmf_build_fixed_basis(
+        ml_resolve(contract$nmf_cache), ml_resolve(contract$gene_annotation),
+        ml_signature_symbols(contract), as.character(contract$evaluation_cohorts), manifest
+      )
+    },
     error = function(e) e
   )
+  if (use_corrected_scores && inherits(fixed_result, "error")) stop(fixed_result)
   if (inherits(fixed_result, "error")) {
     fixed_state[, reason := conditionMessage(fixed_result)]
   } else {
@@ -311,7 +377,7 @@ nmf_run <- function() {
                .(sample_id, axis_raw, axis_percentile)],
           by = "sample_id", all = FALSE
         )
-        for (outcome in unique(native$outcome_id)) {
+        for (outcome in labels$outcome_id) {
           block <- joined[outcome_id == outcome]
           fit <- nmf_fit_continuum(block, "fibrosis_stage")
           fit[, `:=`(
@@ -344,7 +410,7 @@ nmf_run <- function() {
       nonlinear_p_value, contract$nmf_family_size
     )
   ), by = .(score_variant, axis_id, dataset)]
-  models <- merge(models, unique(native[, .(outcome_id, k, program_code, program_label)]),
+  models <- merge(models, labels,
                   by = "outcome_id", all.x = TRUE)
   models <- merge(models, gate_summary, by = "outcome_id", all.x = TRUE)
   models[, inference_eligible :=
@@ -355,7 +421,7 @@ nmf_run <- function() {
   nas_models[, q_value := ml_complete_bh(p_value, contract$nmf_family_size),
              by = .(score_variant, axis_id)]
   nas_models <- merge(
-    nas_models, unique(native[, .(outcome_id, k, program_code, program_label)]),
+    nas_models, labels,
     by = "outcome_id", all.x = TRUE
   )
   ml_write_tsv_once(nas_models, file.path(output_dir, "nmf_nas_sensitivity.tsv"))
@@ -414,7 +480,7 @@ nmf_run <- function() {
   meta <- rbindlist(meta_rows, fill = TRUE)
   meta[, fixed_q_value := ml_complete_bh(fixed_p_value, contract$nmf_family_size),
        by = .(score_variant, axis_id)]
-  meta <- merge(meta, unique(native[, .(outcome_id, k, program_code, program_label)]),
+  meta <- merge(meta, labels,
                 by = "outcome_id", all.x = TRUE)
   meta <- merge(meta, gate_summary, by = "outcome_id", all.x = TRUE)
   meta[, inference_eligible :=
@@ -428,7 +494,7 @@ nmf_run <- function() {
     fixed_w_gate_pass = all(reconstruction_gate_pass)
   ), by = outcome_id]
   membership <- merge(
-    data.table(outcome_id = unique(native$outcome_id)), membership,
+    data.table(outcome_id = labels$outcome_id), membership,
     by = "outcome_id", all.x = TRUE
   )
   membership[is.na(both_axes_meta_q), `:=`(
@@ -480,7 +546,7 @@ nmf_run <- function() {
   }
   windows <- rbindlist(window_rows, fill = TRUE)
   windows <- merge(windows,
-                   unique(native[, .(outcome_id, k, program_code, program_label)]),
+                   labels,
                    by = "outcome_id", all.x = TRUE)
   ml_write_tsv_once(windows, file.path(output_dir, "nmf_fixed_windows.tsv.gz"))
 

@@ -1,12 +1,12 @@
-"""Test drivers for Model A-final (spec v1 section 5 with v1.2): P1 conditional randomization
-with supplied S* draws, P2 cluster bootstrap with supplied indices and lambda draws, P3
-conditional parametric bootstrap with supplied uniforms. Draws come from files so that two
-implementations can be compared draw by draw.
+"""Test drivers for Model A-final (spec v1 section 5 with v1.2, v1.7 and v1.8): P1 conditional
+randomization with supplied S* draws, P2 cluster bootstrap with supplied indices and lambda
+draws, P3 conditional parametric bootstrap with supplied uniforms. Draws come from files so that
+two implementations can be compared draw by draw.
 
-Every refit is done twice: from the observed MLE (spec section 7, "warm", the primary
-result) and from the section 7 cold start. The "best" policy keeps the converged fit with the
-higher log-likelihood. The section-3 likelihood can have several local maxima in a resample
-(dispersion intercepts and slopes on their bounds), so the two policies can differ.
+Every refit is run from the warm start (the observed MLE) and the cold start (section 7), and
+the kept fit follows the v1.8 section 2 item 3 table (fitting.select): eps_tie = 1e-6 for
+section-3 fits and max(1e-6, 1e-8 G_fit) for section-4 fits, section-4 end points compared with
+the reference integrator for every gene. A refit that the table marks failed is an exceedance.
 """
 import numpy as np
 from scipy.stats import norm
@@ -18,7 +18,7 @@ from betabinom import bb_logpmf
 TIE = 1e-6
 BAND = 1e-3
 LAMBDA_MIN = 0.05
-BETTER = 1e-6          # log-likelihood gain that counts as a different optimum
+EPS3 = 1e-6            # v1.8 section 2 item 3, section-3 fits
 
 
 def mc_se(p, B):
@@ -30,16 +30,20 @@ def kappa_z(theta, D):
     return float(theta[D.L.kappa] / se), se, cond
 
 
-def refits3(D, warm):
-    """Section-3 refit warm-started from the observed MLE and from the section 7 start."""
-    return ft.fit_section3(D, start=warm), ft.fit_section3(D)
+def refit3(D, warm):
+    """Section-3 refit from the observed MLE (warm) and the section 7 start (cold)."""
+    fw, fc = ft.fit_section3(D, start=warm), ft.fit_section3(D)
+    kept, rule = ft.select(fw, fc, EPS3)
+    return kept, rule, fw, fc
 
 
-def better(a, b):
-    """Converged before failed, then the higher log-likelihood."""
-    if a.converged != b.converged:
-        return a if a.converged else b
-    return b if b.loglik > a.loglik + BETTER else a
+def refit4(D, warm_theta4, v_max):
+    """Section-4 refit: the section 5.3 two v starts from the observed section-4 MLE (warm) and
+    from the section 7 start (cold); kept fit by the v1.8 rule on reference-integrator l."""
+    w4 = ft.fit_section4_two_starts(D, warm_theta4, v_max)[0]
+    c4 = ft.fit_section4_two_starts(D, ft.start_values(D), v_max)[0]
+    kept, rule = ft.select(w4, c4, ft.eps_tie4(D), use_ref=True)
+    return kept, rule, w4, c4
 
 
 def _p(ind):
@@ -50,45 +54,39 @@ def _p(ind):
 
 def run_p1(prob, fit3, Sstar):
     """z = kappa_hat / sandwich SE; refit section 3 for every S* draw; exceedance when
-    |z*| >= |z| - 1e-6 or the refit fails."""
+    |z*| >= |z| - 1e-6 or the refit fails (v1.8 start-selection table)."""
     D = prob.data()
     z, se, cond = kappa_z(fit3.theta, D)
     L = prob.L
     draws = []
     for b, S in enumerate(Sstar):
         Db = prob.data(S=S)
-        fw, fc = refits3(Db, fit3.theta)
-        rec = dict(draw=b, loglik_warm=fw.loglik, loglik_cold=fc.loglik,
-                   kappa_cold=float(fc.theta[L.kappa]),
-                   cold_better=bool(fc.converged and fc.loglik > fw.loglik + BETTER))
-        for pol, f in (("warm", fw), ("best", better(fw, fc))):
-            rec[f"converged_{pol}"] = f.converged
-            rec[f"kappa_{pol}"] = float(f.theta[L.kappa])
-            if f.converged:
-                zb, seb, _ = kappa_z(f.theta, Db)
-                rec.update({f"se_{pol}": seb, f"z_{pol}": zb,
-                            f"exceed_{pol}": int(abs(zb) >= abs(z) - TIE),
-                            f"in_band_{pol}": bool(abs(abs(zb) - abs(z)) <= BAND)})
-            else:
-                rec.update({f"se_{pol}": None, f"z_{pol}": None, f"exceed_{pol}": 1,
-                            f"in_band_{pol}": False})
-        rec["proj_max_grad_warm"] = fw.proj_max_grad
+        f, rule, fw, fc = refit3(Db, fit3.theta)
+        rec = dict(draw=b, rule=rule, loglik_warm=fw.loglik, loglik_cold=fc.loglik,
+                   converged_warm=fw.converged, converged_cold=fc.converged,
+                   kappa_warm=float(fw.theta[L.kappa]), kappa_cold=float(fc.theta[L.kappa]),
+                   status_warm=fw.status, status_cold=fc.status, failed=f is None,
+                   proj_max_grad_warm=fw.proj_max_grad, proj_max_grad_cold=fc.proj_max_grad)
+        if f is None:
+            rec.update(kept=None, kappa=None, se=None, z=None, exceed=1, in_band=False)
+        else:
+            zb, seb, _ = kappa_z(f.theta, Db)
+            rec.update(kept="warm" if f is fw else "cold", kappa=float(f.theta[L.kappa]), se=seb,
+                       z=zb, exceed=int(abs(zb) >= abs(z) - TIE),
+                       in_band=bool(abs(abs(zb) - abs(z)) <= BAND))
         draws.append(rec)
     B = len(draws)
-    out = dict(kappa_hat=float(fit3.theta[L.kappa]), se=se, z=z, info_condition_number=cond, B=B,
-               cold_better_draws=[d["draw"] for d in draws if d["cold_better"]], draws=draws)
-    for pol in ("warm", "best"):
-        p = _p([d[f"exceed_{pol}"] for d in draws])
-        out[f"p_{pol}"] = p
-        out[f"mc_se_{pol}"] = mc_se(p, B)
-        out[f"failed_draws_{pol}"] = [d["draw"] for d in draws if not d[f"converged_{pol}"]]
-        out[f"band_draws_{pol}"] = [d["draw"] for d in draws if d[f"in_band_{pol}"]]
-    return out
+    p = _p([d["exceed"] for d in draws])
+    return dict(kappa_hat=float(fit3.theta[L.kappa]), se=se, z=z, info_condition_number=cond, B=B,
+                p=p, mc_se=mc_se(p, B), failed_draws=[d["draw"] for d in draws if d["failed"]],
+                cold_kept_draws=[d["draw"] for d in draws if d["kept"] == "cold"],
+                band_draws=[d["draw"] for d in draws if d["in_band"]], draws=draws)
 
 
 # --- P2 ----------------------------------------------------------------------------------------
 
 def _kappa_components(kap, conv, lam, Delta):
+    """p_up and p_lo with invalid lambda draws and failed refits counted as exceedances."""
     invalid = ~np.isfinite(lam) | (lam <= LAMBDA_MIN)
     with np.errstate(divide="ignore", invalid="ignore"):
         ratio = kap / lam
@@ -105,52 +103,61 @@ def _kappa_components(kap, conv, lam, Delta):
 
 def run_p2(prob, fit3, fit4, mult, lambdas, tau_max, Delta, v_scale):
     """kappa component per source from resample refits and lambda draws; tau component from
-    the section-4 profile signed root at tau0 = tau_max * lambda^(0.05) (v1.2 item 1)."""
+    the section-4 profile signed root at tau0 = tau_max * lambda^(0.05) (v1.2 item 1).
+    l_p(tau_hat) and l_p(tau0) use the reference integrator for every gene (v1.8 section 2
+    item 3); the l_p(tau0) profile is refit warm (observed section-4 MLE) and cold (section 7
+    start) and kept by the v1.8 rule; a failed profile gives p_tau = 1."""
     L = prob.L
     recs = []
     for b, m in enumerate(mult):
-        fw, fc = refits3(prob.data(mult=m), fit3.theta)
-        fb = better(fw, fc)
-        recs.append(dict(draw=b, kappa_warm=float(fw.theta[L.kappa]), loglik_warm=fw.loglik,
-                         converged_warm=fw.converged, kappa_cold=float(fc.theta[L.kappa]),
-                         loglik_cold=fc.loglik, converged_cold=fc.converged,
-                         kappa_best=float(fb.theta[L.kappa]), converged_best=fb.converged,
-                         cold_better=bool(fc.converged and fc.loglik > fw.loglik + BETTER)))
+        f, rule, fw, fc = refit3(prob.data(mult=m), fit3.theta)
+        recs.append(dict(draw=b, rule=rule, kappa_warm=float(fw.theta[L.kappa]),
+                         loglik_warm=fw.loglik, converged_warm=fw.converged,
+                         kappa_cold=float(fc.theta[L.kappa]), loglik_cold=fc.loglik,
+                         converged_cold=fc.converged, failed=f is None,
+                         kept=None if f is None else ("warm" if f is fw else "cold"),
+                         kappa=np.nan if f is None else float(f.theta[L.kappa])))
     B = len(recs)
-    tau_hat = float(np.sqrt(fit4.theta[L.v]))
-    ll_hat = max(fit4.loglik, fit3.loglik)
+    v_hat = float(fit4.theta[L.v])
+    tau_hat = float(np.sqrt(v_hat))
+    ll_hat = max(fit4.loglik_ref, fit3.loglik) if v_hat > 0 else fit3.loglik
     D = prob.data()
-    out = dict(B=B, draws=recs, cold_better_draws=[r["draw"] for r in recs if r["cold_better"]],
-               tau_hat=tau_hat, loglik_at_tau_hat=ll_hat, sources={})
+    kap = np.array([r["kappa"] for r in recs])
+    conv = np.array([not r["failed"] for r in recs])
+    out = dict(B=B, draws=recs, failed_draws=[r["draw"] for r in recs if r["failed"]],
+               cold_kept_draws=[r["draw"] for r in recs if r["kept"] == "cold"],
+               tau_hat=tau_hat, loglik_at_tau_hat=ll_hat, tau_hat_at_v_upper=bool(fit4.v_at_upper),
+               sources={})
     for s, lam in lambdas.items():
         lam = np.asarray(lam, float)
         invalid = ~np.isfinite(lam) | (lam <= LAMBDA_MIN)
         lam05 = float(np.quantile(np.where(invalid, 0.0, lam), 0.05))
         rec = dict(invalid_lambda_draws=np.flatnonzero(invalid).tolist(), lambda_q05=lam05)
-        for pol in ("warm", "best"):
-            kap = np.array([r[f"kappa_{pol}"] for r in recs])
-            conv = np.array([r[f"converged_{pol}"] for r in recs])
-            rec[pol] = _kappa_components(kap, conv, lam, Delta)
+        rec.update(_kappa_components(kap, conv, lam, Delta))
         if lam05 <= LAMBDA_MIN:
-            rec.update(tau0=None, p_tau_warm=1.0, p_tau_best=1.0, note="lambda_q05 <= 0.05")
+            rec.update(tau0=None, p_tau=1.0, note="lambda_q05 <= 0.05")
         else:
             tau0 = tau_max * lam05
             fpw = ft.fit_section4(D, fit4.theta, tau0 ** 2, v_scale, fix_v=True)
             fpc = ft.fit_section4(D, ft.start_values(D), tau0 ** 2, v_scale, fix_v=True)
-            rec.update(tau0=tau0, loglik_profile_tau0_warm=fpw.loglik,
-                       loglik_profile_tau0_cold=fpc.loglik, profile_converged_warm=fpw.converged,
-                       profile_converged_cold=fpc.converged,
-                       profile_proj_max_grad_warm=fpw.proj_max_grad)
-            for pol, llp in (("warm", fpw.loglik), ("best", better(fpw, fpc).loglik)):
-                diff = ll_hat - llp
+            fp, rule = ft.select(fpw, fpc, ft.eps_tie4(D), use_ref=True)
+            rec.update(tau0=tau0, profile_rule=rule,
+                       loglik_profile_tau0_warm_ref=fpw.loglik_ref,
+                       loglik_profile_tau0_cold_ref=fpc.loglik_ref,
+                       loglik_profile_tau0_warm_gh=fpw.loglik,
+                       profile_converged_warm=fpw.converged, profile_converged_cold=fpc.converged,
+                       profile_status_warm=fpw.status, profile_status_cold=fpc.status)
+            if fp is None:
+                rec.update(loglik_diff=None, signed_root=None, p_tau=1.0,
+                           note="profile refit failed: p_tau = 1")
+            else:
+                diff = ll_hat - fp.loglik_ref
                 r = float(np.sign(tau0 - tau_hat) * np.sqrt(2.0 * max(diff, 0.0)))
-                rec.update({f"loglik_diff_{pol}": diff, f"signed_root_{pol}": r,
-                            f"p_tau_{pol}": float(norm.sf(r))})
-        for pol in ("warm", "best"):
-            rec[f"p_source_{pol}"] = max(rec[pol]["p_up"], rec[pol]["p_lo"], rec[f"p_tau_{pol}"])
+                rec.update(loglik_diff=diff, signed_root=r, p_tau=float(norm.sf(r)),
+                           profile_kept="warm" if fp is fpw else "cold")
+        rec["p_source"] = max(rec["p_up"], rec["p_lo"], rec["p_tau"])
         out["sources"][s] = rec
-    for pol in ("warm", "best"):
-        out[f"p_{pol}"] = max(r[f"p_source_{pol}"] for r in out["sources"].values())
+    out["p"] = max(r["p_source"] for r in out["sources"].values())
     return out
 
 
@@ -191,13 +198,19 @@ def simulate_counts(D, theta, U):
     return a_new, cls
 
 
-def lr_fit(D, theta3_start, v_max):
-    f3 = ft.fit_section3(D, start=theta3_start)
-    best, f40, f41 = ft.fit_section4_two_starts(D, f3.theta, v_max)
-    return f3, best, f40, f41, ft.lr_statistic(f3, best)
+def lr_fit(D, theta3_warm, theta4_warm, v_max):
+    """Section-3 and section-4 refits with warm and cold starts (v1.8 section 2 item 3) and
+    LR = 2 (max(l4_ref, l3) - l3)."""
+    f3, rule3, f3w, f3c = refit3(D, theta3_warm)
+    f4, rule4, f4w, f4c = refit4(D, theta4_warm, v_max)
+    ok = f3 is not None and f4 is not None
+    LR = ft.lr_statistic(f3, f4) if ok else None
+    LR_gh = ft.lr_statistic_gh(f3, f4) if ok else None
+    return dict(f3=f3, f4=f4, rule3=rule3, rule4=rule4, f3w=f3w, f3c=f3c, f4w=f4w, f4c=f4c,
+                ok=ok, LR=LR, LR_gh=LR_gh)
 
 
-def run_p3(prob, fit3, LR_obs, U, v_max):
+def run_p3(prob, fit3, fit4, LR_obs, U, v_max):
     """LR* per draw with every included row (i, g, tag, n) held fixed; p = (1 + #{LR* >= LR -
     1e-6}) / (B + 1); a failed refit counts as an exceedance."""
     D = prob.data()
@@ -206,36 +219,33 @@ def run_p3(prob, fit3, LR_obs, U, v_max):
     for b in range(U.shape[0]):
         a_b, cls = simulate_counts(D, fit3.theta, U[b])
         Db = prob.data(rows=prob.rows.with_counts(a_b))
-        f3, best, f40, f41, LR = lr_fit(Db, fit3.theta, v_max)
-        ok = f3.converged and best.converged
-        rec = dict(draw=b, LR=LR, loglik3=f3.loglik, loglik4=best.loglik,
-                   v_hat=float(best.theta[L.v]), kappa3=float(f3.theta[L.kappa]),
-                   converged=ok, start_kept="v0" if best is f40 else "vmax",
+        r = lr_fit(Db, fit3.theta, fit4.theta, v_max)
+        f3, f4 = r["f3"], r["f4"]
+        rec = dict(draw=b, LR=r["LR"], LR_gh=r["LR_gh"], failed=not r["ok"],
+                   rule3=r["rule3"], rule4=r["rule4"],
+                   loglik3=None if f3 is None else f3.loglik,
+                   loglik4_ref=None if f4 is None else f4.loglik_ref,
+                   loglik4_gh=None if f4 is None else f4.loglik,
+                   v_hat=None if f4 is None else float(f4.theta[L.v]),
+                   v_at_upper=bool(f4 is not None and f4.v_at_upper),
+                   kappa3=None if f3 is None else float(f3.theta[L.kappa]),
+                   kept3=None if f3 is None else ("warm" if f3 is r["f3w"] else "cold"),
+                   kept4=None if f4 is None else ("warm" if f4 is r["f4w"] else "cold"),
+                   loglik3_warm=r["f3w"].loglik, loglik3_cold=r["f3c"].loglik,
+                   loglik4_warm_ref=r["f4w"].loglik_ref, loglik4_cold_ref=r["f4c"].loglik_ref,
+                   status4_warm=r["f4w"].status, status4_cold=r["f4c"].status,
+                   n_reference_genes4=None if f4 is None else f4.n_reference_genes,
+                   repolished4=bool(f4 is not None and f4.repolished),
                    n_class_H=int(np.sum(cls == 0)), n_class_R=int(np.sum(cls == 1)),
-                   n_class_A=int(np.sum(cls == 2)), sum_a=int(a_b.sum()),
-                   exceed=int((not ok) or LR >= LR_obs - TIE),
-                   in_band=bool(abs(LR - LR_obs) <= BAND))
-        # best policy: also refit section 3 from the section 7 start; if that optimum is
-        # higher, add section-4 fits started from it and recompute LR over all fits
-        fc = ft.fit_section3(Db)
-        rec.update(loglik3_cold=fc.loglik, kappa3_cold=float(fc.theta[L.kappa]),
-                   cold_better=bool(fc.converged and fc.loglik > f3.loglik + BETTER))
-        if rec["cold_better"]:
-            b4c, _, _ = ft.fit_section4_two_starts(Db, fc.theta, v_max)
-            b4 = better(best, b4c)
-            LRb = ft.lr_statistic(fc, b4)
-            okb = fc.converged and b4.converged
-            rec.update(LR_best=LRb, v_hat_best=float(b4.theta[L.v]), converged_best=okb,
-                       exceed_best=int((not okb) or LRb >= LR_obs - TIE))
-        else:
-            rec.update(LR_best=LR, v_hat_best=rec["v_hat"], converged_best=ok,
-                       exceed_best=rec["exceed"])
+                   n_class_A=int(np.sum(cls == 2)), sum_a=int(a_b.sum()))
+        rec["exceed"] = int((not r["ok"]) or r["LR"] >= LR_obs - TIE)
+        rec["in_band"] = bool(r["ok"] and abs(r["LR"] - LR_obs) <= BAND)
         draws.append(rec)
     B = len(draws)
     p = _p([d["exceed"] for d in draws])
-    pb = _p([d["exceed_best"] for d in draws])
-    return dict(LR_obs=LR_obs, B=B, p_warm=p, mc_se_warm=mc_se(p, B), p_best=pb,
-                mc_se_best=mc_se(pb, B),
-                failed_draws=[d["draw"] for d in draws if not d["converged"]],
+    return dict(LR_obs=LR_obs, B=B, p=p, mc_se=mc_se(p, B),
+                failed_draws=[d["draw"] for d in draws if d["failed"]],
                 band_draws=[d["draw"] for d in draws if d["in_band"]],
-                cold_better_draws=[d["draw"] for d in draws if d["cold_better"]], draws=draws)
+                v_upper_draws=[d["draw"] for d in draws if d["v_at_upper"]],
+                LR_on_v_upper=[d["draw"] for d in draws if d["v_at_upper"] and d["LR"]],
+                draws=draws)

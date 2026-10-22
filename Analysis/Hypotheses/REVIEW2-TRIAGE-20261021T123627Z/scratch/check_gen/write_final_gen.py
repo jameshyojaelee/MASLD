@@ -1,0 +1,36 @@
+import json, os
+RUN = '/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas/Analysis/Hypotheses/REVIEW2-TRIAGE-20261021T123627Z'
+d = json.load(open(os.path.join(RUN, 'scratch/check_gen/final_gen_edits_only.json')))
+G7 = 'Analysis/Hypotheses/H58-20261015T112423Z/jobs/5800/H58-20261015T113519Z_22252009/G7_coverage.tsv (EUR tier2_liver_enzyme: lead_windows 767, windows_with_cs 8, windows_with_cs_pos500kb 23)'
+for e in d['final_edits']:
+    if e['id'] in ('gen-fig2-17', 'gen-supp-7'):
+        e['number_sources'] = [G7]
+problems = [
+ dict(id='gen-fig2-5', kind='false claim', evidence='TOR1B is not tied: MVP_NAFLD_EUR PP.H4 0.9999927 against the PDFF GWAS 0.9999840 (r2 susie_coloc_all_gwas.csv). Parenthesis removed. 9 sole, 11 strongest and 12 any-support re-derived.'),
+ dict(id='gen-fig2-9', kind='wrong reason', evidence='Draft said identifiers "carry wrong positions". H58 01_gate_and_controls.py norm_key strips trailing zeros on both sides, so truncation cannot cause a miss. The C5 critic found 44 of the 82 UKBB sets were fit at an earlier lead set. The colocalization-targeted UKBB run (combined_finemapping_coloc_targeted.csv; 86/104/113 loci with a set, selected at PP.H4 >= 0.5) was not mentioned. Rewritten, with old extended to the sentence end.'),
+ dict(id='gen-leg-3', kind='false claim', evidence='The draft said "UKBB AST has no credible set at this locus". The targeted run has a UKBB_AST set at EFHD1 (locus 2.233509761, susie_cs 1, lead PIP 0.172). credible_sets.csv has no UKBB_AST chr2 locus. The original "was not fine-mapped here" is also false. Now names the run.'),
+ dict(id='gen-meth-4', kind='wrong number/parameter', evidence='(a) n is N_eff only for binary traits; quantitative traits use N_tot (06_susie_coloc.R:265-270; eligibility logs print [binary:N_eff] and [quant:N_tot]). (b) SuSiEx ran at all 81 loci and returned a credible set at 77; 4 .cs files are NULL (ALT chr17_38494150, chr7_73020337, chr8_143291101; AST chr17_5487452). The draft said "returned a fit at 77". (c) --pval_thresh removes credible sets with no marginal p below 1e-5 (SuSiEx --help); it is not a locus threshold. (d) Removed "Neither fit sets a random seed". Verified: 81 = ALT 43 + AST 35 + NAFLD 3; MESuSiE 79 (2 of them with no set); MESuSiE 1.0; coverage 0.95 is the meSuSie_get_cs default; LD panels from run_*_mvp.sh.'),
+ dict(id='gen-meth-8', kind='wrong wording', evidence='"largest marginal p >= 0.18" inverts the quantity. Per C4, the largest -log10 p in the NARS2 set is 0.74, so the smallest p is 0.18; MTMR3 is a one-variant set with p 0.096. Per C4, 94 of 108 genes have at least one own-refit row, so for the other 14 every qualifying entry, not just one, comes from another gene\'s refit.'),
+ dict(id='gen-fig2-2', kind='misleading wording', evidence='"the same internal GWAS SuSiE fit for every stratum" reads as one shared fit. 06_susie_coloc.R refits SuSiE per gene-by-GWAS test on the eQTL-fit positions. The AST 75 / ALT 60 / NAFLD 5 split was removed because WHRN and MAU2 tie within MVP EUR and the split depends on tie order. The total of 140 does not.'),
+ dict(id='gen-intro-1', kind='citation detail', evidence='Seagle 2025 (doi 10.1016/j.ajhg.2025.06.014) abstract says "genetically predicted gene expression", not liver expression. PMID placeholders were removed because final_cat cat-77 adds Hong 2025 as ref 42 and Seagle 2025 as ref 45; Zhu 2026 is ref 40. If cat-77 is not installed, the references for gen-intro-1 and gen-disc-5 are missing.'),
+ dict(id='gen-supp-2', kind='wrong denominator', evidence='14,704 = 10,928 no_susie_result + 3,343 tested_le_0.5 + 426 positive + 7 untestable (C1). D5 counted 10,935 as non-colocalized. Calling all of them "without a multi-signal result" would conflict with the 10,928 at fig2.md:21. The cat-12 opening was absorbed because final_cat dropped cat-12 in favour of this edit.'),
+ dict(id='gen-supp-1', kind='wording', evidence='"does not exclude a twofold enrichment" became "an odds ratio of 2". Added that all alternative intervals include 1 (RESULT_H57.md:39-51). "rests on one matched list" was unclear; all 1,000 matching orders returned the same list.'),
+ dict(id='gen-supp-5', kind='imprecise method', evidence='The lead position comes from the locus identifier. Dropped trailing zeros are restored with the one restoration that lies within 1 Mb of all member variants (C5 B-G4.2). It is not "restored from member positions".'),
+ dict(id='gen-supp-4', kind='incomplete', evidence='The European control failed only at 98.333%: 181 of 200 against a 180 floor at 95%, and 188 against 190 at 98.333% (N1_coverage.tsv; fig2.md:39). AMR (141) and combined (173) fail at 95%. No counts were added, because PLAN A2 recomputes these controls.'),
+ dict(id='gen-meth-5', kind='wrong source', evidence='The r2 sessionInfo.txt is the assembler session and lists no coloc. coloc_5.2.3 / susieR_0.14.2 are in susie_coloc_eligibility_20260923T211525Z/env/batch_1_sessionInfo.txt and the first-run logs. Text unchanged.'),
+ dict(id='gen-fig2-16/gen-leg-4/gen-fig2-17/gen-supp-7/gen-paper-5', kind='left contradiction', evidence='fig2.md:35 and the S2A legend still said the MVP EUR GWAS "were not fine-mapped", against gen-fig2-2 and gen-meth-4. fig2.md:39 and Supp Note 4 said UKBB was "fine-mapped at 8 of 767 lead windows", against gen-fig2-9 (G7: 8 by identifier, 23 by position). PAPER.md:615 still said "1-Mb clustering". Edits were added for each. No number changed.'),
+ dict(id='gen-meth-4', kind='unverified', evidence='The SuSiEx version is not recorded in bin/SuSiEx (no version string, and --help prints none) or in the logs. It stays as "[version to be supplied]". The legends spell the method "meSuSiE" (05_figure_legends.md:47,49,61,67); METHODS now uses the package name "MESuSiE".'),
+ dict(id='scope', kind='not checked', evidence='The framing writer (C14) edits are not staged, so overlap with 01_intro.md:9 and fig5_discussion.md:233 was not checked. Cross-writer overlap against final_bulk, final_cat and final_sc: none. gen-disc-5 sits next to final_cat cat-79 (Seagle sentence) and does not overlap it; it reads cleanly. validate_resource_scope.py not run (staged only).'),
+]
+out = dict(
+    final_edits=d['final_edits'],
+    dropped=[],
+    added_ids=d['added_ids'],
+    problems=problems,
+    summary=('56 edits: 51 gen edits kept (17 corrected) and 5 checker additions; none dropped. Every old occurs once, '
+             'and nothing overlaps within gen or with final_bulk, final_cat or final_sc. Corrections: false TOR1B tie (fig2-5); wrong coverage reason and missing targeted-run exclusion (fig2-9); '
+             'false "no UKBB AST credible set" at EFHD1 (leg-3; the targeted run has one); N_eff vs N_tot, SuSiEx 77 = loci with a credible set, and pval_thresh meaning (meth-4); '
+             'p-value wording and the 14-of-108 rule (meth-8); one-shared-fit wording and tie-dependent split (fig2-2); 10,935 denominator plus the cat-12 opening (supp-2); '
+             'Seagle "liver" and placeholder citations (intro-1, disc-5); clearer supp-1, supp-4 and supp-5; meth-5 source; meth-2 drops "fully".'))
+json.dump(out, open(os.path.join(RUN, 'staged/final_gen.json'), 'w'), indent=1, ensure_ascii=False)
+print(len(out['final_edits']), out['added_ids'])

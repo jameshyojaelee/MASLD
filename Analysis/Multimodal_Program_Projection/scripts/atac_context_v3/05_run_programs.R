@@ -242,12 +242,14 @@ for (cohort in c("GSE244832", "GSE281367")) {
       rownames(score_matrix) <- testable_uids
       design <- model.matrix(~ factor(contrast_donors$condition, levels = c("NORMAL", "MASH")))
       if (qr(design)$rank != ncol(design)) stop("Program design is not full rank")
-      fit <- eBayes(lmFit(score_matrix, design), robust = TRUE, trend = TRUE)
+      # Scores are centered across donors. Their near-zero means carry no
+      # abundance information for a variance trend and can reflect roundoff.
+      fit <- eBayes(lmFit(score_matrix, design), robust = TRUE, trend = FALSE)
       top <- topTable(fit, coef = 2L, number = Inf, sort.by = "none")
       fit_table <- data.table(
         program_uid = rownames(top),
         effect = top$logFC,
-        standard_error = fit$stdev.unscaled[, 2L] * fit$sigma,
+        standard_error = fit$stdev.unscaled[, 2L] * sqrt(fit$s2.post),
         pvalue = top$P.Value
       )
     }

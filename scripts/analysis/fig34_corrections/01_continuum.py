@@ -2,8 +2,10 @@
 
 Run on a compute node. No discovery, weight changes, or adopted-file writes.
 """
+import os
 import sys
 import platform
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from scipy.linalg import helmert
@@ -12,8 +14,13 @@ from common import ROOT, HAC, ML, AXES, FOCAL, SEED, PROGRAM, read, write, bh, d
 
 def main(out):
     out.mkdir(parents=True, exist_ok=False)
-    manifest = ROOT / "figures/candidates/bulk-release-corrected-controls-20260925T175215Z/analysis/stage_extensions/five_cohort_sample_manifest.tsv"
-    system_path = HAC / "molecular_systems_inference/hac-system-inference-20260824T232135Z/tables/participant_system_scores.tsv.gz"
+    env = os.environ.get
+    manifest = Path(env("FIG34_MANIFEST", ROOT / "figures/candidates/bulk-release-corrected-controls-20260925T175215Z/analysis/stage_extensions/five_cohort_sample_manifest.tsv"))
+    system_path = Path(env("FIG34_SYSTEM_SCORES", HAC / "molecular_systems_inference/hac-system-inference-20260824T232135Z/tables/participant_system_scores.tsv.gz"))
+    fraction_root = Path(env("FIG34_FRACTION_ROOT", ROOT / "Analysis/Deconvolution/results"))
+    expected_n = int(env("FIG34_EXPECTED_N", "844"))
+    # "none" skips the comparison with the stored 844-record cohort effects.
+    stored_effects = env("FIG34_STORED_EFFECTS", str(HAC / "translation/hac-translation-20260906T230500Z/program_cohort_effects.tsv"))
     program_path = ML / "programs/hotspot/hotspot_participant_scores.tsv.gz"
     m, a = read(manifest), read(AXES)
     m["source_control"] = m.group_binary.eq("Control")
@@ -26,7 +33,7 @@ def main(out):
     m["stage_group"] = m.fibrosis_group_reported
     m["stage_coarsened"] = m.fibrosis_stage_exact.map({0:"F0–F1",1:"F0–F1",2:"F2",3:"F3–F4",4:"F3–F4"})
     m.loc[grouped, "stage_coarsened"] = m.loc[grouped,"fibrosis_group_reported"]
-    assert len(m)==844 and not m.sample_id.duplicated().any()
+    assert len(m)==expected_n and not m.sample_id.duplicated().any()
     assert m.loc[grouped & m.fibrosis_stage.eq(1),"fibrosis_stage_exact"].isna().all()
     write(m, out/"participant_histology.tsv")
     write(m.groupby(["dataset","fibrosis_group_reported","source_control"], dropna=False).size().rename("n_participants").reset_index(), out/"histology_census.tsv")
@@ -39,7 +46,7 @@ def main(out):
     fractions = []
     inputs = [manifest, AXES, system_path, program_path, PROGRAM/"program_membership_v2.tsv"]
     for cohort in ["GSE162694","GSE213621"]:
-        p = ROOT/f"Analysis/Deconvolution/results/{cohort}/{cohort}_bayesprism_proportions.tsv"
+        p = fraction_root/f"{cohort}/{cohort}_bayesprism_proportions.tsv"
         f = pd.read_csv(p, sep="\t", index_col=0)
         assert f.shape[1]==16 and np.allclose(f.sum(axis=1),1,atol=1e-5)
         # Same orthonormal coordinates as the established R contr.helmert design.
@@ -87,11 +94,12 @@ def main(out):
     iv=pd.DataFrame(invariants);assert iv.absolute_difference.max()<1e-10
     write(iv,out/"categorical_relabel_invariance.tsv");write(pd.DataFrame(corr),out/"axis_correlations.tsv")
     # Reproduce the stored cohort and meta estimates, not merely code execution.
-    old=read(HAC/"translation/hac-translation-20260906T230500Z/program_cohort_effects.tsv")
-    chk=fits.query("family=='programs' and arm=='original_categories'").merge(old,left_on=["dataset","feature_id","axis","composition"],right_on=["dataset","program_uid","axis_id",old.model.eq("stage_sex_composition")],suffixes=("_new","_old"))
-    chk["absolute_beta_difference"]=(chk.beta_new-chk.beta_old).abs()
-    assert chk.absolute_beta_difference.max()<1e-8
-    write(chk[["dataset","feature_id","axis","composition","absolute_beta_difference"]],out/"stored_effect_reproduction.tsv")
+    if stored_effects != "none":
+        old=read(stored_effects)
+        chk=fits.query("family=='programs' and arm=='original_categories'").merge(old,left_on=["dataset","feature_id","axis","composition"],right_on=["dataset","program_uid","axis_id",old.model.eq("stage_sex_composition")],suffixes=("_new","_old"))
+        chk["absolute_beta_difference"]=(chk.beta_new-chk.beta_old).abs()
+        assert chk.absolute_beta_difference.max()<1e-8
+        write(chk[["dataset","feature_id","axis","composition","absolute_beta_difference"]],out/"stored_effect_reproduction.tsv")
     # Paired donor bootstrap; all 43 systems and both focal programs share each draw.
     rng=np.random.default_rng(SEED); bootrows=[]
     c=d[d.dataset.eq("GSE162694") & ~d.source_control & d.fibrosis_stage.notna() & (d.family.eq("systems")|d.feature_id.isin(FOCAL))].copy()
@@ -127,15 +135,16 @@ def main(out):
                 order=["F0","F1","F2","F3","F4"] if cohort=="GSE162694" else ["Control","F0–F1","F2","F3–F4"]
                 zz=zz.set_index("fibrosis_group_reported").reindex(order)
                 err=1.96*zz["std"]/np.sqrt(zz["count"])
-                ax.errorbar(range(len(order)),zz["mean"],yerr=err,fmt="o",ms=3,color="#C9265E",lw=.6)
-                if cohort=="GSE213621":ax.plot(0,zz["mean"].iloc[0],"o",color="#9E9E9E",ms=3)
+                ctrl=np.array(order)=="Control"  # source controls: marker and whisker both gray
+                for keep,colour in [(~ctrl,"#C9265E"),(ctrl,"#9E9E9E")]:
+                    if keep.any():ax.errorbar(np.flatnonzero(keep),zz["mean"][keep],yerr=err[keep],fmt="o",ms=3,color=colour,lw=.6)
                 ax.set_xticks(range(len(order)),order);ax.set_title(cohort);ax.axhline(0,color="#9E9E9E",lw=.5)
             axs[0].set_ylabel("Program score (cohort SD)")
             fig.tight_layout();fig.savefig(out/f"{prefix}_{FOCAL[uid].replace(' ','_')}.pdf");plt.close(fig)
     focal=fits[fits.feature_id.isin(FOCAL)]
     write(focal,out/"focal_effects.tsv")
     (out/"environment.txt").write_text(f"Python {platform.python_version()}\nnumpy {np.__version__}\npandas {pd.__version__}\nseed={SEED}\n")
-    (out/"COMPLETE").write_text("Frozen effects reproduced; categorical relabeling invariant; candidate only.\n")
+    (out/"COMPLETE").write_text(("Stored-effect comparison skipped" if stored_effects == "none" else "Frozen effects reproduced")+"; categorical relabeling invariant; candidate only.\n")
 
 
 if __name__=="__main__":

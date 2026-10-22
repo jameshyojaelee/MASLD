@@ -279,8 +279,8 @@ rule count_matrix:
         """
         mkdir -p $(dirname {log})
 
-        # Convert BED to SAF format (GeneID, Chr, Start, End, Strand)
-        awk 'BEGIN{{OFS="\\t"}} {{print "peak_"NR, $1, $2, $3, "."}}' {input.peaks} \
+        # BED is zero-based, half-open; SAF is one-based, closed.
+        awk 'BEGIN{{OFS="\\t"}} {{print "peak_"NR, $1, $2+1, $3, "."}}' {input.peaks} \
             > {params.saf}
 
         featureCounts \

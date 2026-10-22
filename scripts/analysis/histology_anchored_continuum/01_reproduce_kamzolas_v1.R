@@ -19,6 +19,14 @@ EXPECTED_OUTLIER <- "Sample 5"
 EXPECTED_N_DISCOVERY <- 135L
 EXPECTED_N_SIGNATURE <- 145L
 EXPECTED_N_RESOURCE_SIGNATURE <- 139L
+# A corrected roster changes the gene universe, and with it how many of the 145
+# signature genes the Resource observes; its expected count arrives in the JSON
+# named by HAC_EXPECTED_COUNTS_PATH.
+if (nzchar(Sys.getenv("HAC_EXPECTED_COUNTS_PATH", ""))) {
+  EXPECTED_N_RESOURCE_SIGNATURE <- as.integer(jsonlite::fromJSON(
+    Sys.getenv("HAC_EXPECTED_COUNTS_PATH"), simplifyVector = TRUE
+  )$n_resource_signature)
+}
 MIN_SIGNATURE_COVERAGE <- 0.90
 MIN_RELEASED_PC1_SPEARMAN <- 0.99
 SEED <- 20260817L
@@ -703,7 +711,8 @@ signature_genes <- data.frame(
 missing_signature_genes <- signature_genes[!signature_genes$in_resource, , drop = FALSE]
 assert_true(nrow(missing_signature_genes) == EXPECTED_N_SIGNATURE -
               EXPECTED_N_RESOURCE_SIGNATURE,
-            "Missing-signature audit must contain exactly six genes")
+            paste0("Missing-signature audit must contain exactly ",
+                   EXPECTED_N_SIGNATURE - EXPECTED_N_RESOURCE_SIGNATURE, " genes"))
 
 input_manifest <- data.frame(
   input_role = c(names(required_paths), "resource_gene_ids", "supplied_vendor_manifest"),

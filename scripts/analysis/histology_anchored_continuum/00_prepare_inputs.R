@@ -92,10 +92,23 @@ assert_true(length(git_commit) == 1L && identical(git_commit, pre$competitor_rel
 git_dirty <- system2("git", c("-C", kamzolas_root, "status", "--porcelain"), stdout = TRUE)
 assert_true(length(git_dirty) == 0L, "Kamzolas v1 checkout is dirty")
 
+# A corrected roster passes its own counts through HAC_EXPECTED_COUNTS_PATH
+# (n_genes, n_samples, cohort_sizes); without it the 2026-08 values apply.
+expected_counts_path <- Sys.getenv("HAC_EXPECTED_COUNTS_PATH", unset = "")
+expected_counts <- if (nzchar(expected_counts_path)) {
+  fromJSON(expected_counts_path, simplifyVector = TRUE)
+} else {
+  list(n_genes = 23370L, n_samples = 844L,
+       cohort_sizes = list(GSE126848 = 53L, GSE130970 = 76L, GSE135251 = 214L,
+                           GSE162694 = 140L, GSE213621 = 361L))
+}
+n_expected_genes <- as.integer(expected_counts$n_genes)
+n_expected_samples <- as.integer(expected_counts$n_samples)
+
 message("Reading Resource substrate")
 dge <- readRDS(paths$resource_dge)
 assert_true(!is.null(dge$counts), "Resource RDS is not a DGEList-like object")
-assert_true(identical(dim(dge$counts), c(23370L, 844L)),
+assert_true(identical(dim(dge$counts), c(n_expected_genes, n_expected_samples)),
             paste0("Resource count dimensions drifted: ", paste(dim(dge$counts), collapse = " x ")))
 assert_true(all(dge$counts == floor(dge$counts)), "Resource counts are not integer fragments")
 assert_true(!anyDuplicated(colnames(dge$counts)), "Resource sample IDs are duplicated")
@@ -104,15 +117,15 @@ manifest <- fread(paths$resource_manifest, na.strings = c("", "NA"))
 required_manifest <- c("sample_id", "analysis_unit_id", "dataset", "inferred_sex",
                        "fibrosis_stage", "nas_score")
 assert_true(all(required_manifest %in% names(manifest)), "Resource manifest schema drift")
-assert_true(nrow(manifest) == 844L && !anyDuplicated(manifest$sample_id),
+assert_true(nrow(manifest) == n_expected_samples && !anyDuplicated(manifest$sample_id),
             "Resource manifest donor census drift")
 assert_true(setequal(colnames(dge$counts), manifest$sample_id),
             "Resource DGE and manifest participant sets differ")
 assert_true(!anyDuplicated(manifest$analysis_unit_id),
             "Resource analysis unit is not one donor per row")
 
-expected <- c(GSE126848 = 53L, GSE130970 = 76L, GSE135251 = 214L,
-              GSE162694 = 140L, GSE213621 = 361L)
+expected <- unlist(expected_counts$cohort_sizes)
+expected <- setNames(as.integer(expected), names(expected))[order(names(expected))]
 census <- manifest[, .(
   n_donors = .N,
   n_fibrosis = sum(!is.na(fibrosis_stage)),
@@ -122,7 +135,7 @@ assert_true(identical(setNames(census$n_donors, census$dataset), expected),
             "Resource cohort census drift")
 
 resource_genes <- unique(base_gene_id(rownames(dge$counts)))
-assert_true(length(resource_genes) == 23370L, "Resource Ensembl base IDs are not unique")
+assert_true(length(resource_genes) == n_expected_genes, "Resource Ensembl base IDs are not unique")
 write_tsv_once(data.table(gene_id_base = resource_genes),
                file.path(inputs_out, "resource_gene_ids.tsv"))
 write_tsv_once(census, file.path(inputs_out, "cohort_census.tsv"))
@@ -196,7 +209,8 @@ preflight <- data.table(
   ),
   status = "PASS",
   observed = c(
-    git_commit, "clean", "23370x844", "844 unique analysis_unit_id",
+    git_commit, "clean", paste0(nrow(dge$counts), "x", ncol(dge$counts)),
+    paste(uniqueN(manifest$analysis_unit_id), "unique analysis_unit_id"),
     "DGE/manifest exact set; downstream reindexed to manifest order",
     length(resource_genes), paste(names(expected), expected, sep = "=", collapse = ";"),
     nrow(registry), paired_n

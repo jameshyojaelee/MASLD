@@ -80,15 +80,10 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def parse_locus(frame: pd.DataFrame) -> pd.DataFrame:
-    """Copied verbatim from fig2_trait_directness_stats.py."""
-    text = frame["locus"].astype(str)
-    frame = frame.copy()
-    frame["chrom"] = text.str.split(".").str[0]
-    frame["pos"] = pd.to_numeric(text.str.split(".").str[1], errors="coerce")
-    if frame["pos"].isna().any():
-        raise ValueError("unparsable locus positions present")
-    return frame
+def parse_locus(frame: pd.DataFrame, members: pd.DataFrame) -> pd.DataFrame:
+    """Restore legacy decimal positions against the full native member set."""
+    from fig2_locus_coordinates import recover_locus_positions
+    return recover_locus_positions(frame, members)
 
 
 def assign_independent_loci(frame: pd.DataFrame) -> pd.DataFrame:
@@ -289,8 +284,8 @@ def main() -> int:
     registry_path = root / "GWAS/finemapping/config/gwas_registry.tsv"
     sumstats_dir = root / "GWAS/finemapping/data/sumstats"
 
-    arch = pd.read_csv(arch_path, sep="\t")
-    members = pd.read_csv(members_path, sep="\t", low_memory=False)
+    arch = pd.read_csv(arch_path, sep="\t", dtype={"locus": str})
+    members = pd.read_csv(members_path, sep="\t", low_memory=False, dtype={"locus": str})
     registry = pd.read_csv(registry_path, sep="\t")
     arch = arch[arch["trait_scope"].isin(SCOPES)].copy()
     members = members[members["trait_scope"].isin(SCOPES)].copy()
@@ -304,7 +299,9 @@ def main() -> int:
     print("[control] published instance-weighted architecture reproduced exactly", flush=True)
 
     arch["coding_mass"] = arch[CODING_COLS].sum(axis=1)
-    arch = assign_independent_loci(parse_locus(arch))
+    arch = parse_locus(arch, members)
+    arch.to_csv(out / "corrected_locus_coordinates.tsv", sep="\t", index=False)
+    arch = assign_independent_loci(arch)
 
     # ---- baseline: the claim being tested, on independent loci ---------------
     baseline = ratio_with_ci(arch, "coding_mass", rng)

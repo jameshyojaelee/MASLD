@@ -202,13 +202,28 @@ make_window_plot <- function(data, facet_column, facet_levels, y_label,
       width = 0, linewidth = 0.22, alpha = 0.65
     )
   }
+  if ("testable" %in% names(data)) {
+    unavailable <- data[, .(testable = any(testable)), by = facet_value][testable == FALSE]
+    plot <- plot + geom_text(data = unavailable,
+      aes(x = 0.5, y = 0, label = "Untestable"), inherit.aes = FALSE,
+      family = font_family, size = text_size / .pt, color = "#737373")
+  }
   plot
+}
+
+qualify_coverage <- function(data, path, feature) {
+  coverage <- fread(path)[, c(feature, "dataset", "testable", "testability_reason"), with = FALSE]
+  stopifnot(!anyDuplicated(coverage[, c(feature, "dataset"), with = FALSE]))
+  data <- merge(data, coverage, by = c(feature, "dataset"), all.x = TRUE)
+  stopifnot(!anyNA(data$testable))
+  data[testable == FALSE, `:=`(mean_score = NA_real_, se_score = NA_real_)]
+  data
 }
 
 make_stage_plot <- function(data, facet_column, facet_levels, y_label, ncol = 2L) {
   data[, facet_value := factor(get(facet_column), levels = facet_levels)]
   data[, stage_factor := factor(as.integer(fibrosis_stage), levels = 0:4)]
-  ggplot(data, aes(stage_factor, mean_score, color = dataset, group = dataset,
+  plot <- ggplot(data, aes(stage_factor, mean_score, color = dataset, group = dataset,
                    linetype = dataset)) +
     geom_hline(yintercept = 0, color = "#D0D0D0", linewidth = 0.25) +
     geom_errorbar(aes(ymin = mean_score - 1.96 * se_score,
@@ -225,6 +240,19 @@ make_stage_plot <- function(data, facet_column, facet_levels, y_label, ncol = 2L
       )
     ) +
     theme_context() + theme(legend.position = "bottom", legend.box = "vertical")
+  if ("testable" %in% names(data)) {
+    unavailable <- data[, .(testable = any(testable)), by = facet_value][testable == FALSE]
+    plot <- plot + geom_text(data = unavailable,
+      aes(x = 3, y = 0, label = "Untestable"), inherit.aes = FALSE,
+      family = font_family, size = text_size / .pt, color = "#737373")
+  }
+  if ("stage_axis_state" %in% names(data)) {
+    unavailable <- unique(data[stage_axis_state == "unavailable", .(facet_value)])
+    plot <- plot + geom_text(data = unavailable,
+      aes(x = 3, y = 0, label = "Stage unavailable"), inherit.aes = FALSE,
+      family = font_family, size = text_size / .pt, color = "#737373")
+  }
+  plot
 }
 
 message("Focal Hotspot programs")
@@ -337,6 +365,15 @@ nmf_windows <- window_summary(
 nmf_stage <- stage_summary(
   nmf, c("outcome_id", "k", "program_code", "program_label", "axis_label"), "outcome_z"
 )
+nmf_scores_root <- Sys.getenv("HAC_FIXED_NMF_SCORES", unset = "")
+if (nzchar(nmf_scores_root)) {
+  unavailable <- fread(file.path(nmf_scores_root, "axis_availability.tsv"))[
+    variant == "full_stage" & axis_available == FALSE, paste0("k", k, "_", program)
+  ]
+  nmf_stage[, stage_axis_state := fifelse(outcome_id %in% unavailable,
+                                        "unavailable", "available")]
+  nmf_stage[stage_axis_state == "unavailable", `:=`(mean_score = NA_real_, se_score = NA_real_)]
+}
 ml_write_tsv_once(nmf_windows, file.path(source_dir, "all10_nmf_five_cohort_windows.tsv"))
 ml_write_tsv_once(nmf_stage, file.path(source_dir, "all10_nmf_four_cohort_stage.tsv"))
 nmf_window_path <- save_panel(
@@ -364,6 +401,9 @@ hallmark_stage_input <- merge(
   by = c("sample_id", "dataset"), all.x = TRUE
 )
 hallmark_stage <- stage_summary(hallmark_stage_input, c("set_id", "set_label"), "pathway_score")
+hallmark_coverage <- file.path(analysis_candidate, "pathway_tf", "pathways", "hallmark", "testability.tsv")
+hallmark_windows <- qualify_coverage(hallmark_windows, hallmark_coverage, "set_id")
+hallmark_stage <- qualify_coverage(hallmark_stage, hallmark_coverage, "set_id")
 ml_write_tsv_once(hallmark_windows, file.path(source_dir, "six_hallmark_five_cohort_windows.tsv"))
 ml_write_tsv_once(hallmark_stage, file.path(source_dir, "six_hallmark_four_cohort_stage.tsv"))
 hallmark_window_path <- save_panel(
@@ -382,6 +422,8 @@ tf <- fread(file.path(
   analysis_candidate, "pathway_tf", "tf", "donor_regulon_scores.tsv.gz"
 ))[tf %in% contract$display_tfs]
 tf_windows <- window_summary(tf, "tf", "regulon_score")
+tf_windows <- qualify_coverage(tf_windows,
+  file.path(analysis_candidate, "pathway_tf", "tf", "regulon_testability.tsv"), "tf")
 ml_write_tsv_once(tf_windows, file.path(source_dir, "four_tf_five_cohort_windows.tsv"))
 tf_path <- save_panel(
   make_window_plot(tf_windows, "tf", contract$display_tfs,

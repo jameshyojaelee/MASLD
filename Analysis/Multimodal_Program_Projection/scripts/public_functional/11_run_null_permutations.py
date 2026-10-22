@@ -21,10 +21,14 @@ FIELDS = [
 
 
 def exact_sign_flip(values: np.ndarray) -> tuple[np.ndarray, float]:
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 1 or values.size == 0 or not np.isfinite(values).all():
+        raise ValueError("Exact sign flips require a nonempty finite vector")
     signs = np.asarray(list(itertools.product([-1.0, 1.0], repeat=len(values))))
     null = (signs * values).mean(axis=1)
     observed = float(values.mean())
-    p = float((np.sum(np.abs(null) >= abs(observed)) + 1) / (len(null) + 1))
+    # All assignments, including the observed one, are enumerated exactly.
+    p = float(np.mean(np.abs(null) >= abs(observed)))
     return null, p
 
 
@@ -72,6 +76,8 @@ def biopsy(primary_uids: set[str], specification: str) -> list[dict[str, object]
         values = np.asarray(deltas)
         n_responder = labels.count("lifestyle_responder")
         observed_mask = np.asarray([label == "lifestyle_responder" for label in labels])
+        if not 0 < n_responder < len(values) or not np.isfinite(values).all():
+            raise ValueError("Exact response labels require two nonempty finite groups")
         observed = float(values[observed_mask].mean() - values[~observed_mask].mean())
         null = []
         for selected in itertools.combinations(range(len(values)), n_responder):
@@ -79,7 +85,7 @@ def biopsy(primary_uids: set[str], specification: str) -> list[dict[str, object]
             mask[list(selected)] = True
             null.append(values[mask].mean() - values[~mask].mean())
         null_array = np.asarray(null)
-        p = float((np.sum(np.abs(null_array) >= abs(observed)) + 1) / (len(null_array) + 1))
+        p = float(np.mean(np.abs(null_array) >= abs(observed)))
         tolerance = max(1e-12, 0.01 * float(null_array.std(ddof=1)))
         rows.append(record("GSE106737", "LSI_RESPONSE_DIFF", uid, "", "participant", "exact_10_of_20_response_label_permutation", values, null_array, p, tolerance, specification, observed=observed))
     return rows

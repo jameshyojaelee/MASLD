@@ -107,7 +107,7 @@ fit_voom <- function(counts, donors, batch = FALSE) {
   answer <- data.table(
     peak_coordinate = rownames(table),
     logFC = table$logFC,
-    standard_error = fit$stdev.unscaled[, coefficient] * fit$sigma,
+    standard_error = fit$stdev.unscaled[, coefficient] * sqrt(fit$s2.post),
     pvalue = table$P.Value,
     qvalue = p.adjust(table$P.Value, method = "BH")
   )

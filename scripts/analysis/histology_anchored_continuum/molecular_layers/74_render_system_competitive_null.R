@@ -152,7 +152,9 @@ focal_plot <- ggplot(focal_draws, aes(null_absolute_meta_z)) +
     x = "|Meta z| of size-matched draws (black line: S01 observed)",
     y = "Draws"
   ) +
-  theme_supplement()
+  theme_supplement() +
+  # The row labels are longer than a facet row; let them run past it uncut.
+  theme(strip.clip = "off")
 
 focal_path <- file.path(panel_dir, "s4v_system01_competitive_null.pdf")
 ggsave(focal_path, focal_plot, width = 4.3, height = 2.9, units = "in",

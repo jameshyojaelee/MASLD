@@ -14,6 +14,9 @@ from pathlib import Path
 import pandas as pd
 
 KEY = ["release", "ensembl", "trait"]
+# release labels before round 2 (2026-10-15) -> current labels, so old and new runs join
+LEGACY_RELEASE_LABEL = {"candidate_r2_20260924T053244Z": "adopted_r2_2026-10-14",
+                        "adopted_2026-08-17": "historical_2026-08-17"}
 COLS = ["gene", "direction_sign", "not_directional_reason", "reported_study", "hit1", "hit2"]
 
 
@@ -21,6 +24,7 @@ def load(d):
     t = pd.read_csv(Path(d) / "direction_by_trait.tsv", sep="\t", dtype=str, keep_default_na=False)
     t = t.rename(columns={"driving_study": "reported_study"})      # v1 (full-20260926T171722Z) name
     t["direction_sign"] = pd.to_numeric(t.direction_sign).astype(int)
+    t["release"] = t.release.replace(LEGACY_RELEASE_LABEL)
     return t[KEY + COLS]
 
 

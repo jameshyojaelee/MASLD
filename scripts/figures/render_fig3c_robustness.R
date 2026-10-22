@@ -19,13 +19,19 @@ out_path <- file.path(candidate_root, "supplementary", "figureS3", "panels", "fi
 dir.create(dirname(out_path), recursive = TRUE, showWarnings = FALSE)
 fig3c_source <- fread(source_path)
 # fig3d_endpoint_validation.R sources this file with `expected` read from the
-# release's expected_counts.json; a standalone render keeps the adopted count.
+# release's expected_counts.json; a standalone render uses its source-table count.
 expected_canonical <- if (exists("expected") && !is.null(expected$canonical$n)) {
   as.integer(expected$canonical$n)
 } else {
-  1347L
+  counts <- unique(fig3c_source[!is.na(canonical_genes), canonical_genes])
+  stopifnot(length(counts) == 1L, counts > 0L)
+  as.integer(counts)
 }
-stopifnot(nrow(fig3c_source) == 5L, all(fig3c_source$canonical_genes == expected_canonical))
+# A cohort without an estimable per-cohort contrast keeps its leave-one-out row
+# and has NA direction columns; the sourcing script supplies n_estimable_cohorts.
+n_estimable <- if (exists("n_estimable_cohorts")) n_estimable_cohorts else 5L
+stopifnot(nrow(fig3c_source) == 5L, sum(!is.na(fig3c_source$canonical_genes)) == n_estimable,
+          all(fig3c_source$canonical_genes == expected_canonical, na.rm = TRUE))
 
 cohort_order <- fig3c_source[order(-(n_control + n_disease)), dataset]
 fig3c_source[, dataset_factor := factor(dataset, levels = rev(cohort_order))]
@@ -34,6 +40,9 @@ p_direction <- ggplot(fig3c_source,
   geom_segment(aes(x = 50, xend = 100 * same_direction_fraction,
                    yend = dataset_factor), color = "grey82", linewidth = 0.45) +
   geom_point(size = 1.4) +
+  # A cohort with no estimable per-cohort contrast has no point; say so in its row.
+  geom_text(data = fig3c_source[is.na(same_direction_fraction)], aes(x = 50, label = "not estimable"),
+            hjust = 0, size = 6 / .pt, family = "Helvetica", color = "black") +
   scale_x_continuous(limits = c(50, 100), breaks = c(50, 75, 100)) +
   scale_color_manual(values = setNames(cat_palette[seq_along(cohort_order)], cohort_order),
                      guide = "none") +

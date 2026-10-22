@@ -235,6 +235,53 @@ ml_load_node_donor_scores <- function(analysis_candidate, nodes, hotspot) {
   feature_scores
 }
 
+# Frozen system nodes that fail the pre-specified testability rule (fewer than 10
+# observed genes, or under 80% of the original membership observed, signature genes
+# excluded) in any cohort of the analysis candidate's gene universe. They have no
+# donor scores, so they are recorded and left out of the system scores; they are
+# untestable, not unsupported.
+ml_untestable_nodes <- function(analysis_candidate, nodes) {
+  collection_order <- ml_node_collection_order()
+  paths <- c(
+    file.path(analysis_candidate, "pathway_tf", "pathways", collection_order[1:6],
+              "testability.tsv"),
+    file.path(analysis_candidate, "programs", "hotspot", "hotspot_testability.tsv")
+  )
+  ml_assert(all(file.exists(paths)), "A node testability table is missing")
+  id_columns <- c(rep("set_id", 6L), "program_uid")
+  testability <- rbindlist(lapply(seq_along(paths), function(index) {
+    table <- fread(paths[[index]], na.strings = c("", "NA"))
+    ml_assert(all(c(id_columns[[index]], "testable") %in% names(table)),
+              "Node testability schema drift")
+    table[, .(feature_id = get(id_columns[[index]]), collection = collection_order[[index]],
+              testable = as.logical(testable))]
+  }))
+  ml_assert(all(nodes$feature_id %in% testability$feature_id),
+            "A frozen node has no testability record")
+  untestable <- unique(testability[is.na(testable) | testable != TRUE, .(feature_id, collection)])
+  unique(merge(nodes[, .(feature_id, collection, community_id)], untestable,
+               by = c("feature_id", "collection")))
+}
+
+# System registry node counts recomputed from the scored nodes (the frozen counts
+# minus the untestable nodes).
+ml_scored_registry <- function(communities, nodes) {
+  counts <- nodes[, .(
+    n_features = .N, n_pathways = sum(collection != "hotspot"),
+    n_hotspot_programs = sum(collection == "hotspot"),
+    n_hallmark = sum(collection == "hallmark"), n_kegg = sum(collection == "kegg"),
+    n_reactome = sum(collection == "reactome"), n_go_bp = sum(collection == "go_bp"),
+    n_go_mf = sum(collection == "go_mf"), n_go_cc = sum(collection == "go_cc")
+  ), by = community_id]
+  scored <- copy(communities)
+  rows <- match(scored$community_id, counts$community_id)
+  ml_assert(!anyNA(rows), "A system has no scored node")
+  for (column in setdiff(names(counts), "community_id")) {
+    set(scored, j = column, value = as.integer(counts[[column]][rows]))
+  }
+  scored
+}
+
 # Collection-balanced system score: median within collection, then unweighted
 # mean across the collections present. Matches 70_infer_molecular_systems.R.
 ml_collection_balanced_scores <- function(feature_scores,

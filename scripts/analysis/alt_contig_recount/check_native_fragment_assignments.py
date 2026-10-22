@@ -10,10 +10,11 @@ from count_verified_fragments import molecule_assignment
 
 
 def write_bam(path, paired):
-    header={"HD":{"VN":"1.6","SO":"unsorted"},"SQ":[{"SN":c,"LN":1000} for c in ["chr1","ALT1","chr2"]]}
+    header={"HD":{"VN":"1.6","SO":"unsorted"},"SQ":[{"SN":c,"LN":1000} for c in ["chr1","ALT1","chr2","excluded_reference"]]}
     with pysam.AlignmentFile(str(path),"wb",header=header) as bam:
         examples=[("unique",[(0,1,1)]),("same_gene",[(0,2,1),(1,2,2)]),
-                  ("cross_gene",[(0,2,1),(2,2,2)]),("incomplete",[(0,2,1)])]
+                  ("cross_gene",[(0,2,1),(2,2,2)]),("incomplete",[(0,2,1)]),
+                  ("valid_and_excluded",[(0,2,1),(3,2,2)]),("excluded_only",[(3,1,1)])]
         for name,hits in examples:
             for chrom,nh,hi in hits:
                 for mate in ([1,2] if paired else [0]):
@@ -40,7 +41,9 @@ def main():
                           'ALT1\tfixture\texon\t101\t200\t.\t+\t.\tgene_id "G1";\n'
                           'chr2\tfixture\texon\t101\t200\t.\t+\t.\tgene_id "G2";\n')
     expected={"unique":("G1","accepted_unique"),"same_gene":("G1","accepted_same_gene_multimapper"),
-              "cross_gene":(None,"cross_gene_alignment_set"),"incomplete":(None,"incomplete_NH_alignment_set")}
+              "cross_gene":(None,"cross_gene_alignment_set"),"incomplete":(None,"incomplete_NH_alignment_set"),
+              "valid_and_excluded":(None,"unassigned_or_multigene_candidate"),
+              "excluded_only":(None,"unassigned_or_multigene_candidate")}
     result={"fixture_only":True,"scientific_outputs":False,"checks":[]}
     for paired in [False,True]:
         label="paired" if paired else "single";bam=args.output/f"{label}.bam";write_bam(bam,paired)

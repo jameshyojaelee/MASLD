@@ -1,0 +1,20 @@
+suppressPackageStartupMessages({library(edgeR); library(data.table)})
+B <- "/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas/"
+REL <- paste0(B, "RNA-seq/results/manuscript_release/candidates/bulk-corrected-controls-20261008T162308Z/primary_source_controls/")
+dge <- readRDS(paste0(REL, "merged_dge.rds"))
+meta <- as.data.table(readRDS(paste0(REL, "meta_matched.rds")))
+cat("dge dim", dim(dge), "\n")
+cat("meta rows", nrow(meta), "cols:", paste(names(meta), collapse=","), "\n")
+comp <- fread(paste0(B, "Analysis/Deconvolution/corrected_774_20261009T141331Z/summary/composition_new_774.tsv.gz"))
+cat("comp rows", nrow(comp), "\n")
+cat("dge cols in comp", sum(colnames(dge) %in% comp$sample_id), "of", ncol(dge), "\n")
+cat("dge cols in meta", sum(colnames(dge) %in% meta$sample_id), "\n")
+m <- meta[match(colnames(dge), sample_id)]
+print(table(m$dataset, m$group_binary))
+h <- comp$Hepatocytes[match(colnames(dge), comp$sample_id)]
+cat("hep NA", sum(is.na(h)), "summary", summary(h), "\n")
+print(tapply(h, m$group_binary, median))
+cat("cor(hep, disease) within design: ", cor(h, as.numeric(m$group_binary=="Disease")), "\n")
+md <- fread(paste0(REL, "model_design.tsv"))
+cat("model_design rows", nrow(md), "cols", paste(names(md), collapse=","), "\n")
+cat("model_design ids == dge cols", identical(md$sample_id, colnames(dge)), "\n")

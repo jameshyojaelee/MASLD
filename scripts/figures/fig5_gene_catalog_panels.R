@@ -31,8 +31,10 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "scripts/figures/publication_theme.R"))
 
-DATA_DIR  <- file.path(BASE, "figures/main/fig6_gene_catalog/data")
-PANEL_DIR <- file.path(BASE, "figures/main/fig6_gene_catalog/panels")
+DATA_DIR  <- Sys.getenv("MASLD_FIG6_DATA_DIR",
+                        file.path(BASE, "figures/main/fig6_gene_catalog/data"))
+PANEL_DIR <- Sys.getenv("MASLD_FIG6_PANEL_DIR",
+                        file.path(BASE, "figures/main/fig6_gene_catalog/panels"))
 dir.create(PANEL_DIR, recursive = TRUE, showWarnings = FALSE)
 
 PT <- 6 / ggplot2::.pt   # geom_text size for 6 pt
@@ -73,6 +75,14 @@ wrap_lab <- function(x, w) vapply(x, function(s)
 m$class_lab <- ifelse(m$n_genes > 0 & !grepl(";", m$primary_evidence_class) &
                         m$primary_evidence_class != "",
                       gsub("_", " ", m$primary_evidence_class), "")
+# MASLD_FIG6_ONE_SUPPORTED_LABEL: printed label (display only) for not-measurable
+# cells in which exactly one layer has a supported call; unset, the class name.
+ONE_SUP_LAB <- Sys.getenv("MASLD_FIG6_ONE_SUPPORTED_LABEL", "")
+if (nzchar(ONE_SUP_LAB)) {
+  one_sup <- m$n_genes > 0 & m$cell_kind == "not_measurable" &
+    xor(m$genetics_call == "supported", m$transcriptomics_call == "supported")
+  m$class_lab[one_sup] <- ONE_SUP_LAB
+}
 m$class_lab <- wrap_lab(m$class_lab, 12)
 
 p1 <- ggplot(m, aes(transcriptomics_call, genetics_call)) +

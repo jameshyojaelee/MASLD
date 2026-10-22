@@ -361,6 +361,28 @@ def _synthetic_problem(sizes, seed=21):
     return prob, th
 
 
+def _quad_at_mode(th, D, g, v, c, s, width=40.0):
+    """The scipy quad of ma.gh_gene_integral_quad, centred at a mode (c, s) already computed.
+    gh_gene_integral_quad recomputes loglik4(final=True) for every call, which runs the reference
+    integrator for all genes again; on the 500-row gene at v = (4 tau_max)^2 that is about 7 min
+    per call (HUNG_TEST.md). A loglik4 call on a fresh state runs the item 4 global check for
+    every gene, so its u_hat and sigma equal those of the final=True call."""
+    from scipy.integrate import quad
+    x1b, x2, _, _ = ma.predictors(th, D)
+    sel = D.gene == g
+    R = D.rows.take(np.flatnonzero(sel))
+    x1g, x2g, Sg, wg = x1b[sel], x2[sel], D.St[sel], D.w[sel]
+
+    def h(u):
+        return float(np.sum(wg * ma.row_eval(x1g + u * Sg, x2g, R, 0).logL)) - u ** 2 / (2.0 * v)
+
+    s = s if np.isfinite(s) else np.sqrt(v)
+    h0 = h(c)
+    val, err = quad(lambda u: np.exp(h(u) - h0), c - width * s, c + width * s,
+                    epsabs=1e-12, epsrel=1e-13, limit=500, points=[c])
+    return h0 + np.log(val) - 0.5 * np.log(2.0 * np.pi * v), err
+
+
 def test_adaptive_gh_matches_quad():
     sizes = [5, 20, 50, 200, 500]
     prob, th = _synthetic_problem(sizes)
@@ -370,9 +392,14 @@ def test_adaptive_gh_matches_quad():
         v = (mult * TAU_MAX) ** 2
         th[L.v] = v
         _, det = ma.loglik4(th, D, 0, detail=True)
+        _, dref = ma.loglik4(th, D, 0, detail=True, all_reference=True)
+        assert det["checked"].all()          # fresh state: global check ran for every gene
         for g in range(len(sizes)):
-            ref, err = ma.gh_gene_integral_quad(th, D, g, v)
-            assert abs(det["ell_g"][g] - ref) <= 1e-8 * abs(ref), (sizes[g], mult, det["ell_g"][g], ref)
+            ref, err = _quad_at_mode(th, D, g, v, det["u_hat"][g], det["sigma"][g])
+            # v1.8 section 1 item 1: 1e-8 relative in exp(ell_g) = 1e-8 absolute in ell_g
+            assert abs(det["ell_gh"][g] - ref) <= 1e-8, (sizes[g], mult, det["ell_gh"][g], ref)
+            assert abs(dref["ell_g"][g] - ref) <= 1e-8, (sizes[g], mult, dref["ell_g"][g], ref)
+            assert det["integrator"][g] == ma.GH
 
 
 def test_adaptive_gh_matches_quad_fixture_genes(fx):
@@ -383,9 +410,11 @@ def test_adaptive_gh_matches_quad_fixture_genes(fx):
         v = (mult * TAU_MAX) ** 2
         th[L.v] = v
         _, det = ma.loglik4(th, D, 0, detail=True)
+        _, dref = ma.loglik4(th, D, 0, detail=True, all_reference=True)
         for g in range(L.G):
             ref, err = ma.gh_gene_integral_quad(th, D, g, v)
-            assert abs(det["ell_g"][g] - ref) <= 1e-8 * abs(ref), (L.gene_names[g], mult)
+            assert abs(det["ell_gh"][g] - ref) <= 1e-8, (L.gene_names[g], mult)
+            assert abs(dref["ell_g"][g] - ref) <= 1e-8, (L.gene_names[g], mult)
 
 
 def test_adaptive_gh_20_vs_40_fixture(fx):
@@ -397,7 +426,7 @@ def test_adaptive_gh_20_vs_40_fixture(fx):
             th[L.v] = (mult * TAU_MAX) ** 2
             _, d20 = ma.loglik4(th, D, 0, nodes=20, detail=True)
             _, d40 = ma.loglik4(th, D, 0, nodes=40, detail=True)
-            assert np.allclose(d20["ell_g"], d40["ell_g"], rtol=1e-8, atol=0)
+            assert np.allclose(d20["ell_gh"], d40["ell_gh"], rtol=0, atol=1e-8)
 
 
 # --- design -----------------------------------------------------------------------------------
@@ -435,3 +464,84 @@ def test_start_values_fixture(fx):
     L = prob.L
     assert set(np.unique(th[L.alpha])) <= {-1.0, 0.0, 1.0}
     assert np.all(th[L.r] == logit(0.02))
+
+
+# --- v1.8 sections 1 and 2 ---------------------------------------------------------------------
+
+def test_v_bound_is_one(fx):
+    prob, D, params = fx
+    assert prob.L.lb[prob.L.v] == 0.0 and prob.L.ub[prob.L.v] == 1.0
+
+
+class _AnalyticCtx:
+    """h(u) = log(sum_j c_j exp(-(u - m_j)^2 / (2 s_j^2))) - u^2 / (2v) with sum_j c_j <= 1, so
+    h <= -u^2/(2v) as for a real gene (v1.8 section 1 item 2)."""
+
+    def __init__(self, v, comps):
+        self.v, self.comps = v, comps
+
+    def _f(self, u):
+        terms = [(np.log(c) - (u - m) ** 2 / (2 * s * s), -(u - m) / (s * s), -1.0 / (s * s))
+                 for c, m, s in self.comps]
+        lt = np.array([t[0] for t in terms])
+        lse = np.logaddexp.reduce(lt, axis=0)
+        wts = np.exp(lt - lse)
+        d1 = sum(w * t[1] for w, t in zip(wts, terms))
+        d2 = sum(w * (t[2] + t[1] ** 2) for w, t in zip(wts, terms)) - d1 ** 2
+        return lse, d1, d2
+
+    def h_gene(self, g, u, order):
+        u = np.atleast_1d(np.asarray(u, float))
+        f, d1, d2 = self._f(u)
+        h = f - u ** 2 / (2 * self.v)
+        return (h, None, None) if order < 2 else (h, d1 - u / self.v, d2 - 1.0 / self.v)
+
+    def exact_ell(self):
+        out = []
+        for c, m, s in self.comps:
+            prec = 1 / s ** 2 + 1 / self.v
+            mu = (m / s ** 2) / prec
+            out.append(np.log(c) - m ** 2 / (2 * s ** 2) + mu ** 2 * prec / 2
+                       + 0.5 * np.log(2 * np.pi / prec))
+        return float(np.logaddexp.reduce(out)) - 0.5 * np.log(2 * np.pi * self.v)
+
+
+def test_global_check_finds_both_modes_and_reference_is_exact():
+    ctx = _AnalyticCtx(4.0, [(0.5, -1.0, 0.05), (0.45, 1.5, 0.02)])
+    st = ma.Sec4State(1)
+    h0 = ctx.h_gene(0, 0.0, 0)[0][0]
+    U = np.sqrt(2 * ctx.v * -h0)
+    hc, h1, h2 = ctx.h_gene(0, np.array([-0.9]), 2)
+    hU = ctx.h_gene(0, np.array([-U, U]), 0)[0]
+    u, hu, h2u, ok, _ = ma._local_search(lambda x: ctx.h_gene(0, x, 2), [-U], [-0.9], [U],
+                                         [hU[0]], hc, [hU[1]], h1, h2)
+    assert ok[0] and abs(u[0] - (-1.0)) < 1e-3
+    cands, cap = ma._global_check(ctx, 0, U, [(float(u[0]), float(hu[0]), float(h2u[0]))], st)
+    assert not cap and len(cands) == 2
+    best = ma._pick(cands)
+    assert best[0] < 0                      # the component with the larger mass at its mode
+    md = dict(modes=[cands], sigma=np.array([ma._sigma(best[2])]), h_hat=np.array([best[1]]))
+    r = ma._reference(ctx, 0, md, st)
+    assert abs(r["ell"] - ctx.exact_ell()) <= 1e-8
+
+
+def test_tie_rule_table():
+    class F:
+        def __init__(self, conv, ll):
+            self.converged, self.loglik, self.loglik_ref = conv, ll, ll
+    w, c = F(True, -10.0), F(True, -10.0 + 5e-7)
+    assert ft.select(w, c, 1e-6)[0] is w
+    c = F(True, -9.0)
+    assert ft.select(w, c, 1e-6)[0] is c
+    assert ft.select(w, F(False, -10.0 + 5e-7), 1e-6)[0] is w
+    assert ft.select(w, F(False, -9.0), 1e-6)[0] is None
+    assert ft.select(F(False, -9.0), F(False, -8.0), 1e-6)[0] is None
+
+
+def test_fixture_section3_mle_unchanged_by_v18(fx):
+    """v1.7 observed fit: l = -529.93527549973, kappa = -0.13168771381 (both implementations)."""
+    prob, D, params = fx
+    f = ft.fit_section3(D)
+    assert f.converged and f.hessian_ok
+    assert abs(f.loglik - (-529.93527549973)) < 1e-9
+    assert abs(f.theta[prob.L.kappa] - (-0.13168771381)) < 1e-9

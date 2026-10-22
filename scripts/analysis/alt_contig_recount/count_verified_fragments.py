@@ -17,8 +17,11 @@ from pathlib import Path
 import shutil
 
 
-def molecule_assignment(records, paired):
-    """Return one read/pair assignment for a QNAME/RG, without UMI deduplication."""
+def molecule_assignment(records, paired, alias=None):
+    """Return one read/pair assignment for a QNAME/RG, without UMI deduplication.
+
+    alias maps a held annotation to its single candidate primary gene (sensitivity only).
+    """
     if not records: return None, "empty_group"
     if any(r.get("supplementary", False) for r in records):
         return None, "supplementary_alignment"
@@ -62,10 +65,22 @@ def molecule_assignment(records, paired):
             return None, "unassigned_or_multigene_candidate"
         if "," in r["XT"]:
             return None, "unassigned_or_multigene_candidate"
-        targets.add(r["XT"])
+        targets.add(alias.get(r["XT"], r["XT"]) if alias else r["XT"])
     if len(targets) != 1:
         return None, "cross_gene_alignment_set"
     return next(iter(targets)), "accepted_unique" if expected == 1 else "accepted_same_gene_multimapper"
+
+
+def held_alias(rows):
+    """Held annotation -> counting gene of its only primary candidate, when exactly one exists."""
+    held=[r for r in rows if r.get("disposition")=="held_untestable"]
+    if not held: return {}
+    target={r["gene_id"]:r["counting_gene_id"] for r in rows if r.get("disposition") not in ("held_untestable","excluded_reference")}
+    alias={}
+    for r in held:
+        candidates=[c for c in r.get("primary_gene_candidates","").split(";") if c]
+        if len(candidates)==1 and target.get(candidates[0]): alias[r["gene_id"]]=target[candidates[0]]
+    return alias
 
 
 def digest(path):
@@ -153,9 +168,15 @@ def main():
         raise ValueError("Primary counts require full annotation correspondence resolution")
     execution=validate_count_execution(args.annotation_summary,args.execution_evidence,args.assignment_bam,args.sample_id,args.layout)
     with (args.annotation_summary.parent/"annotation_correspondence.tsv").open() as f:
-        permitted={r["counting_gene_id"] for r in csv.DictReader(f,delimiter="\t")}
+        rows=list(csv.DictReader(f,delimiter="\t"))
+    permitted={r["counting_gene_id"] for r in rows
+               if r["counting_gene_id"] and r.get("disposition") != "excluded_reference"}
+    held={r["gene_id"] for r in rows if r.get("disposition") == "held_untestable"}
+    if len(held) != summary.get("n_held_untestable_annotations",0):
+        raise ValueError("Held annotations differ from the annotation summary")
+    alias=held_alias(rows); testable=permitted-held
     args.output.mkdir(parents=True,exist_ok=False)
-    counts=Counter(); dispositions=Counter(); previous=None
+    counts=Counter(); sensitivity=Counter(); dispositions=Counter(); previous=None
     with pysam.AlignmentFile(str(args.assignment_bam),"rb") as bam:
         if bam.header.to_dict().get("HD",{}).get("SO") != "queryname":
             raise ValueError("Assignments must be name-sorted with samtools sort -N")
@@ -179,14 +200,28 @@ def main():
                 if gene is not None:
                     if gene not in permitted: raise ValueError(f"Assigned gene absent from resolved GTF: {gene}")
                     counts[gene]+=1
-    out=args.output/"gene_counts.tsv"
-    with out.open("x") as f:
-        writer=csv.writer(f,delimiter="\t",lineterminator="\n")
-        writer.writerow(["gene_id",args.sample_id])
-        for gene in sorted(permitted): writer.writerow([gene,counts[gene]])
+                # The sensitivity differs only for molecules that touch an aliased held annotation.
+                if alias and any(r["XT"] in alias for r in records):
+                    gene=molecule_assignment(records,args.layout=="PAIRED",alias)[0]
+                if gene is not None: sensitivity[gene]+=1
+    def write_counts(name,values,genes):
+        path=args.output/name
+        with path.open("x") as f:
+            writer=csv.writer(f,delimiter="\t",lineterminator="\n")
+            writer.writerow(["gene_id",args.sample_id])
+            for gene in sorted(genes): writer.writerow([gene,values[gene]])
+        return path
+    out=write_counts("gene_counts.tsv",counts,testable)
+    sensitivity_out=write_counts("gene_counts_single_candidate_credit.tsv",sensitivity,testable)
+    held_out=write_counts("held_untestable_counts.tsv",counts,held)
     certificate={"sample_id":args.sample_id,"layout":args.layout,"candidate_not_adopted":True,
         "annotation_summary_sha256":digest(args.annotation_summary),"counts_tsv_sha256":digest(out),
-        "n_molecules":sum(dispositions.values()),"n_assigned_molecules":sum(counts.values()),
+        "n_molecules":sum(dispositions.values()),"n_assigned_molecules":sum(counts[g] for g in testable),
+        "n_held_untestable_annotations":len(held),"n_held_untestable_molecules":sum(counts[g] for g in held),
+        "n_single_candidate_credit_annotations":len(alias),
+        "n_single_candidate_credit_molecules":sum(sensitivity[g] for g in testable),
+        "single_candidate_credit_counts_tsv_sha256":digest(sensitivity_out),
+        "held_untestable_counts_tsv_sha256":digest(held_out),
         "dispositions":dict(dispositions),"maximum_contribution_per_molecule":1,"fractional_renormalization":False}
     certificate["sequencing_unit"]="QNAME/RG read or read pair; not UMI-deduplicated biological molecules"
     copied_evidence=args.output/"assignment_execution.json"

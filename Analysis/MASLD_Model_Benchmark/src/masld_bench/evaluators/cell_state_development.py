@@ -134,23 +134,21 @@ def score_rows(
     if not set(predicted).issubset(roster):
         raise CellEvaluationError("prediction falls outside the frozen roster")
     weights = donor_class_balanced_weights(donors, observed)
+    # Preserve the order within each sum without rescanning all cells per class.
+    true_positives = {class_id: [] for class_id in roster}
+    false_positives = {class_id: [] for class_id in roster}
+    false_negatives = {class_id: [] for class_id in roster}
+    for truth, guess, weight in zip(observed, predicted, weights):
+        if truth == guess:
+            true_positives[truth].append(weight)
+        else:
+            false_positives[guess].append(weight)
+            false_negatives[truth].append(weight)
     per_class: dict[str, float] = {}
     for class_id in roster:
-        true_positive = sum(
-            weight
-            for truth, guess, weight in zip(observed, predicted, weights)
-            if truth == class_id and guess == class_id
-        )
-        false_positive = sum(
-            weight
-            for truth, guess, weight in zip(observed, predicted, weights)
-            if truth != class_id and guess == class_id
-        )
-        false_negative = sum(
-            weight
-            for truth, guess, weight in zip(observed, predicted, weights)
-            if truth == class_id and guess != class_id
-        )
+        true_positive = sum(true_positives[class_id])
+        false_positive = sum(false_positives[class_id])
+        false_negative = sum(false_negatives[class_id])
         denominator = 2.0 * true_positive + false_positive + false_negative
         per_class[class_id] = 0.0 if denominator == 0 else 2.0 * true_positive / denominator
     macro_f1 = sum(per_class.values()) / len(roster)

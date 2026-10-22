@@ -14,9 +14,9 @@
   "development_crosswalk_record": {
     "path": "development_crosswalk.json",
     "scope": "resource_atlas_and_all_registered_cell_state_task_datasets",
-    "sha256": "8f31c7ee5667f929f9c8908932ed89ab113a9acd9c87b9a5a0925b5874c011ca"
+    "sha256": "c2bcb14eac47bf49d9493606caf88d1e283694622df3124532d39ccdb77feacc"
   },
-  "interpretation": "GSE289173 postdates the historical paper checkpoint by more than three years, so that historical object is target-label-unexposed. The current Weixin share has a name, file ID, and byte size but no read-only digest or timestamp, and the source does not declare checkpoint terms. The registered object therefore remains exposure-unknown and terms-blocked.",
+  "interpretation": "GSE289173 postdates the historical paper checkpoint by more than three years, so that historical object is target-label-unexposed. Liver_Atlas is Guilliams GSE192742 (public January 2022), not the MacParland benchmark; it postdates the December 2021 historical paper checkpoint and is clean_declared for that historical object only. The current Weixin share has a name, file ID, and byte size but no read-only digest or timestamp, and the source does not declare checkpoint terms. The registered object therefore remains exposure-unknown and terms-blocked.",
   "remaining_blockers": [
     "Obtain explicit terms covering the pretrained checkpoint and derivative use; the repository GPL license is not assumed to license separately hosted weights.",
     "Resolve an authenticated immutable download, SHA-256, object timestamp/history, and safe state-dict schema without unrestricted torch.load.",
@@ -26,5 +26,5 @@
   ],
   "schema_version": "masld-bench-checkpoint-exposure-audit-v1",
   "sealed_champion_eligibility": "ineligible_while_weight_terms_and_object_identity_are_unresolved",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-14"
 }

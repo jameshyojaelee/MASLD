@@ -1,0 +1,24 @@
+{
+  "affected_primary_task_outcomes": [],
+  "affected_secondary_endpoint": "cell_state_mapping_blindness",
+  "containment": {
+    "cell_state_mapping_sealed_eligible": false,
+    "disease_control_secondary_sealed_eligible": false,
+    "variant_to_regulation_sealed_eligible": true,
+    "development_use_forbidden": true
+  },
+  "date": "2026-10-15",
+  "exposed_fields": [
+    "disease_group",
+    "sex",
+    "all_48_gex_count_matrices",
+    "operator_celltypist_labels"
+  ],
+  "exposed_sample_count": 48,
+  "opened_by": "Resource analysis H90 (Analysis/Hypotheses/H90-20261015T120337Z), user-approved; result untestable at gate G3",
+  "primary_cell_state_labels_opened": false,
+  "primary_eqtl_or_ieqtl_outcomes_opened": false,
+  "schema_version": "masld-bench-seal-incident-v1",
+  "source": "GEO GSE289173 series matrix and GSE289173_RAW.tar; Zenodo 10.5281/zenodo.14586466 not opened",
+  "values_persisted_in_benchmark_files": false
+}

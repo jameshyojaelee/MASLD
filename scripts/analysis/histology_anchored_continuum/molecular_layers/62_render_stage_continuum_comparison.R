@@ -137,6 +137,16 @@ make_trajectory_pair <- function(stage_data, window_data, outcome_column,
     theme_compare() +
     theme(legend.position = "none")
 
+  if ("stage_axis_state" %in% names(stage_data)) {
+    unavailable <- unique(stage_data[stage_axis_state == "unavailable", .(outcome_label)])
+    if (nrow(unavailable)) {
+      stage_plot <- stage_plot + geom_text(
+        data = unavailable, aes(x = 2, y = 0, label = "Stage unavailable"),
+        inherit.aes = FALSE, family = "Helvetica", size = 6 / .pt, color = "#737373"
+      )
+    }
+  }
+
   continuum_plot <- ggplot(
     window_data,
     aes(.data[[window_center]], mean_score, color = dataset,
@@ -472,9 +482,25 @@ nmf_compare[, support_class := fifelse(
 )]
 nmf_compare[, support_class := factor(support_class, levels = names(support_colors))]
 nmf_compare[, axis_label := paste0("k", k, " ", program_code, ": ", program_label)]
+# HAC_FIXED_NMF_SCORES (as in 30_nmf_continuum.R) names corrected-roster scores.
+# A stage axis that failed their fixed reconstruction rule is unavailable: its
+# row and numbers stay in the source table with a state column, the panel shows
+# its continuum value only, and it is left out of the stage counts below.
+nmf_scores_root <- Sys.getenv("HAC_FIXED_NMF_SCORES", unset = "")
+nmf_stage_unavailable <- if (nzchar(nmf_scores_root)) {
+  fread(file.path(nmf_scores_root, "axis_availability.tsv"))[
+    variant == "full_stage" & axis_available == FALSE, paste0("k", k, "_", program)
+  ]
+} else {
+  character()
+}
+nmf_stage_available <- !nmf_compare$outcome_id %in% nmf_stage_unavailable
+if (any(!nmf_stage_available)) {
+  nmf_compare[, stage_axis_state := fifelse(nmf_stage_available, "available", "unavailable")]
+}
 fwrite(nmf_compare, file.path(source_dir, "nmf_stage_vs_continuum.tsv"), sep = "\t")
 nmf_effect_plot <- ggplot(
-  nmf_compare[is.finite(beta) & is.finite(continuum_beta)],
+  nmf_compare[nmf_stage_available & is.finite(beta) & is.finite(continuum_beta)],
   aes(beta, continuum_beta, color = support_class)
 ) +
   geom_hline(yintercept = 0, color = "#D0D0D0", linewidth = 0.25) +
@@ -487,6 +513,18 @@ nmf_effect_plot <- ggplot(
   labs(x = "Fibrosis-stage trend beta",
        y = "Stage-adjusted fixed-projection beta") +
   theme_compare()
+if (any(!nmf_stage_available)) {
+  nmf_effect_plot <- nmf_effect_plot +
+    geom_point(data = nmf_compare[!nmf_stage_available & is.finite(continuum_beta)],
+               aes(x = -Inf, y = continuum_beta), inherit.aes = FALSE,
+               shape = 1, size = 1.2, color = "black") +
+    geom_text(data = nmf_compare[!nmf_stage_available & is.finite(continuum_beta)],
+              aes(x = -Inf, y = continuum_beta,
+                  label = paste0("k", k, " ", program_code, ": stage unavailable")),
+              inherit.aes = FALSE, hjust = -0.08, size = 6 / ggplot2::.pt,
+              family = "Helvetica", color = "black") +
+    coord_cartesian(clip = "off")
+}
 nmf_effect_path <- save_panel(
   nmf_effect_plot, "s4_all10_nmf_stage_vs_continuum_effects.pdf", 3.5, 3.35
 )
@@ -495,6 +533,9 @@ nmf_stage <- fit_stage_groups(
   nmf_scores, c("outcome_id", "k", "program_code", "program_label", "score_variant")
 )
 nmf_stage[, axis_label := paste0("k", k, " ", program_code, ": ", program_label)]
+nmf_stage[, stage_axis_state := fifelse(outcome_id %in% nmf_stage_unavailable,
+                                      "unavailable", "available")]
+nmf_stage[stage_axis_state == "unavailable", `:=`(mean_score = NA_real_, se_score = NA_real_)]
 nmf_windows <- fread(file.path(nmf_root, "nmf_fixed_windows.tsv.gz"))[
   score_variant == "signature_excluded_fixed_w" & axis_id == "fixed_projection"
 ]
@@ -540,13 +581,17 @@ summary <- rbindlist(list(
   data.table(
     layer = "nmf",
     family_size = contract$nmf_family_size,
-    n_stage_supported = sum(nmf_compare$stage_supported, na.rm = TRUE),
+    n_stage_supported = sum(nmf_compare$stage_supported & nmf_stage_available, na.rm = TRUE),
     n_continuum_supported = sum(nmf_compare$continuum_associated, na.rm = TRUE),
-    n_both = sum(nmf_compare$support_class == "Both", na.rm = TRUE),
-    spearman = cor(nmf_compare$beta, nmf_compare$continuum_beta,
+    n_both = sum(nmf_compare$support_class == "Both" & nmf_stage_available, na.rm = TRUE),
+    spearman = cor(nmf_compare$beta[nmf_stage_available],
+                   nmf_compare$continuum_beta[nmf_stage_available],
                    method = "spearman", use = "complete.obs")
   )
 ), use.names = TRUE, fill = TRUE)
+if (any(!nmf_stage_available)) {
+  summary[layer == "nmf", n_stage_axes_available := sum(nmf_stage_available)]
+}
 summary[, interpretation := "same_expression_substrate_method_comparison_not_independent_validation"]
 fwrite(summary, file.path(figure_candidate, "comparison_summary.tsv"), sep = "\t")
 

@@ -10,7 +10,7 @@ df.rename(columns={'Direction_upon_KD': 'Steatosis_Change_upon_KD'}, inplace=Tru
 # Define Updates (Gene -> Direction)
 updates = {
     'PNPLA3': 'Decrease',   # Therapeutic KD of risk variant / I148M
-    'HSD17B13': 'Decrease', # Protective loss-of-function
+    'HSD17B13': 'Decrease', # Protective reduced-function variant
     'FAP': 'Decrease',      # Anti-fibrotic target
     'IRS1': 'Increase',     # Insulin resistance -> Steatosis
     'PPARG': 'Decrease',    # Hepatic PPARG is lipogenic

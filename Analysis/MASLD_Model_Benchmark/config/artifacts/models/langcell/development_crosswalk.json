@@ -27,7 +27,7 @@
     "GSE281367": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp.", "exposure_state": "clean_declared", "public_date": "2026-03-16"},
     "GSE289173": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp; neither its features nor frozen cell-state labels could have entered those objects.", "exposure_state": "target_label_unexposed", "public_date": "2025-02-12"},
     "GSE296875": {"evidence": "GEO first became public after every released checkpoint module's May 2024 modification timestamp.", "exposure_state": "clean_declared", "public_date": "2025-10-01"},
-    "Liver_Atlas": {"evidence": "MacParland is both a declared Genecorpus-30M source inherited through Geneformer initialization and an explicit LangCell downstream liver benchmark.", "exposure_state": "encoder_seen", "public_date": "2018-10-22"}
+    "Liver_Atlas": {"aliases": ["Liver_Atlas", "GSE192742", "DOI:10.1016/j.cell.2021.12.018"], "evidence": "The Resource atlas is Guilliams GSE192742, public 2022-01-11, not MacParland GSE115469. Geneformer Genecorpus-30M has no matched Guilliams records and predates this source (June 2021 cutoff), so inherited initialization does not establish exposure. Guilliams predates the May 2024 LangCell modules; exact checkpoint-bound scLibrary CELLxGENE membership is unresolved, so exposure remains unknown.", "exposure_state": "unknown", "public_date": "2022-01-11"}
   },
   "rules": {
     "inherited_encoder": "Declared Geneformer initialization sources remain encoder_seen even if excluded from later scLibrary construction or reused only as a downstream demonstration.",
@@ -35,5 +35,5 @@
     "pre_checkpoint": "Sources public before checkpoint creation remain unknown until the exact scLibrary CELLxGENE snapshot and dataset UUID roster are bound."
   },
   "schema_version": "masld-bench-development-crosswalk-v1",
-  "verified_date": "2026-08-22"
+  "verified_date": "2026-10-14"
 }

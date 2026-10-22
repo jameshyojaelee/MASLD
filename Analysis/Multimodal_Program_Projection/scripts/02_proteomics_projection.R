@@ -41,7 +41,7 @@ CONTRACT_FILE <- file.path(ROOT, "config/fig4_input_contract.tsv")
 FIXED_ROWS_FILE <- file.path(ROOT, "config/panel4c_fixed_rows.tsv")
 # Stable Ensembl ID of the bulk row for each fixed display gene. HLA-DQA1 has
 # four bulk rows; the display row is ENSG00000206305.
-BULK_ID_FILE <- file.path(ROOT, "config/panel4c_bulk_gene_ids.tsv")
+BULK_ID_FILE <- Sys.getenv("FIG5C_BULK_ID_FILE", file.path(ROOT, "config/panel4c_bulk_gene_ids.tsv"))
 BULK_FILE <- Sys.getenv(
   "BULK_DEG_FILE",
   file.path(

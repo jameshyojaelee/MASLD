@@ -207,17 +207,29 @@ pooled_heat_limit <- as.numeric(quantile(
   abs(pooled_display$display_value), 0.98,
   names = FALSE, type = 8, na.rm = TRUE
 ))
-pooled_heatmap <- ggplot(
-  plot_display,
-  aes(display_position, system_factor, fill = display_value)
-) +
-  geom_tile(width = 0.9, height = 0.94) +
+# HAC_STRIP_MARKER_COLUMN=1 draws the strict maxT marker as a row-centred
+# asterisk symbol in its own column inside the panel. Unset keeps the 6 pt text
+# asterisk beside the last tile.
+marker_column <- nzchar(Sys.getenv("HAC_STRIP_MARKER_COLUMN", unset = ""))
+strict_marker_layer <- if (marker_column) {
+  geom_point(
+    data = strict_markers, aes(x = 10.0, y = system_factor),
+    inherit.aes = FALSE, shape = 8, size = 1.1, stroke = 0.3, color = "#4D4D4D"
+  )
+} else {
   geom_text(
     data = strict_markers,
     aes(x = 9.80, y = system_factor, label = render_symbol),
     inherit.aes = FALSE, family = "Helvetica", fontface = "plain",
     size = 6 / ggplot2::.pt, color = "#4D4D4D", vjust = 0.35
-  ) +
+  )
+}
+pooled_heatmap <- ggplot(
+  plot_display,
+  aes(display_position, system_factor, fill = display_value)
+) +
+  geom_tile(width = 0.9, height = 0.94) +
+  strict_marker_layer +
   scale_fill_gradient2(
     low = "#1565C0", mid = "#F7F7F7", high = "#C9265E", midpoint = 0,
     limits = c(-pooled_heat_limit, pooled_heat_limit), oob = scales::squish,
@@ -228,7 +240,7 @@ pooled_heatmap <- ggplot(
   scale_x_continuous(
     breaks = c(1, 3, 5, 7, 9),
     labels = c("10", "30", "50", "70", "90"),
-    expand = expansion(add = c(0.04, 0.04))
+    expand = expansion(add = c(0.04, if (marker_column) 0.4 else 0.04))
   ) +
   scale_y_discrete(labels = label_lookup) +
   coord_fixed(ratio = 1) +

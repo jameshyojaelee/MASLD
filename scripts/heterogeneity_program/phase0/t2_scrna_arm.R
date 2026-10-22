@@ -6,7 +6,7 @@
 # cells/donor for a stable proportion.
 #
 # Bimodality test (rev C1 fix): McLachlan parametric bootstrap-LRT for #components
-# (2 vs 1) — NOT the prior Gaussian-GoF "dip" (that rejected any skew). BIC + sep
+# (2 vs 1) — NOT the prior Gaussian goodness-of-fit "dip" (that rejected any skew). BIC + sep
 # reported alongside. GATE-C (rev C2/C3 fix): a split is "real" only if it
 # reproduces WITHIN cohorts — >=2 datasets must contribute donors to BOTH sides of
 # the split (a between-cohort block fails this) AND the rare~dataset Fisher test is

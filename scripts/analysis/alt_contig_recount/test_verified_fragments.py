@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Scientific invariants: complete molecules, gene ambiguity, and pairing."""
 import unittest
-from count_verified_fragments import molecule_assignment
+from count_verified_fragments import held_alias, molecule_assignment
 
 
 def record(nh=1,hi=1,gene="GENE1",mate=0,**kwargs):
@@ -52,6 +52,21 @@ class MoleculeTests(unittest.TestCase):
 
     def test_hit_numbers_cannot_replace_missing_alignments(self):
         self.assertEqual(molecule_assignment([record(2,2),record(2,3)],False)[1],"invalid_HI_alignment_set")
+
+    def test_read_shared_with_held_annotation_is_counted_only_in_sensitivity(self):
+        shared=[record(2,1,"PRIMARY"),record(2,2,"HELD")]
+        self.assertEqual(molecule_assignment(shared,False),(None,"cross_gene_alignment_set"))
+        self.assertEqual(molecule_assignment(shared,False,{"HELD":"PRIMARY"}),("PRIMARY","accepted_same_gene_multimapper"))
+        self.assertEqual(molecule_assignment([record(2,1,"PRIMARY"),record(2,2,"OTHER")],False,{"HELD":"PRIMARY"})[0],None)
+
+    def test_only_single_candidate_held_annotations_receive_credit(self):
+        rows=[dict(gene_id="P1",counting_gene_id="P1",disposition="primary_gene",primary_gene_candidates=""),
+              dict(gene_id="P2",counting_gene_id="P2",disposition="primary_gene",primary_gene_candidates=""),
+              dict(gene_id="H1",counting_gene_id="H1",disposition="held_untestable",primary_gene_candidates="P1"),
+              dict(gene_id="H2",counting_gene_id="H2",disposition="held_untestable",primary_gene_candidates="P1;P2"),
+              dict(gene_id="H3",counting_gene_id="H3",disposition="held_untestable",primary_gene_candidates=""),
+              dict(gene_id="H4",counting_gene_id="H4",disposition="held_untestable",primary_gene_candidates="H1")]
+        self.assertEqual(held_alias(rows),{"H1":"P1"})
 
 
 if __name__=="__main__":unittest.main()

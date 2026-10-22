@@ -68,29 +68,23 @@ def weighted_macro_f1(
     if any(weight < 0.0 for weight in checked_weights) or sum(checked_weights) <= 0.0:
         raise MetricError("classification weights must be nonnegative with positive mass")
     classes = sorted(set(observed), key=str)
+    # Keep each sum's original observation order, including its floating-point
+    # summation behavior, while avoiding three full scans per class.
+    true_positives = {label: [] for label in classes}
+    false_positives = {label: [] for label in classes}
+    false_negatives = {label: [] for label in classes}
+    for truth, guess, weight in zip(observed, predicted, checked_weights, strict=True):
+        if truth == guess:
+            true_positives[truth].append(weight)
+        else:
+            false_negatives[truth].append(weight)
+            if guess in false_positives:
+                false_positives[guess].append(weight)
     class_scores: dict[Hashable, float] = {}
     for label in classes:
-        true_positive = sum(
-            weight
-            for truth, guess, weight in zip(
-                observed, predicted, checked_weights, strict=True
-            )
-            if truth == label and guess == label
-        )
-        false_positive = sum(
-            weight
-            for truth, guess, weight in zip(
-                observed, predicted, checked_weights, strict=True
-            )
-            if truth != label and guess == label
-        )
-        false_negative = sum(
-            weight
-            for truth, guess, weight in zip(
-                observed, predicted, checked_weights, strict=True
-            )
-            if truth == label and guess != label
-        )
+        true_positive = sum(true_positives[label])
+        false_positive = sum(false_positives[label])
+        false_negative = sum(false_negatives[label])
         denominator = 2 * true_positive + false_positive + false_negative
         class_scores[label] = 0.0 if denominator == 0 else 2 * true_positive / denominator
     return sum(class_scores.values()) / len(class_scores), class_scores
@@ -164,6 +158,10 @@ def pearson_correlation(left: Sequence[float], right: Sequence[float]) -> float:
 
 
 def spearman_correlation(left: Sequence[float], right: Sequence[float]) -> float:
+    # Validate before ranking can turn invalid values into finite ranks. Keep
+    # native values for sorting so large integers retain their original ties.
+    _finite_values(left, "left correlation vector")
+    _finite_values(right, "right correlation vector")
     return pearson_correlation(_average_ranks(left), _average_ranks(right))
 
 

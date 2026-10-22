@@ -10,7 +10,9 @@ import gzip
 import math
 import os
 from collections import defaultdict
+from itertools import chain
 from pathlib import Path
+from typing import Iterator
 
 import pysam
 
@@ -36,10 +38,14 @@ def arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_rows(path: Path) -> list[dict[str, str]]:
+def iter_rows(path: Path) -> Iterator[dict[str, str]]:
     opener = gzip.open if path.suffix == ".gz" else open
     with opener(path, "rt", encoding="utf-8", newline="") as handle:
-        return list(csv.DictReader(handle, delimiter="\t"))
+        yield from csv.DictReader(handle, delimiter="\t")
+
+
+def read_rows(path: Path) -> list[dict[str, str]]:
+    return list(iter_rows(path))
 
 
 class PeakIndex:
@@ -70,42 +76,12 @@ class PeakIndex:
         return upper > 0 and self.prefix_end[key][upper - 1] >= position_1based
 
 
-def main() -> None:
-    args = arguments()
-    root = candidate_root(args.candidate_root)
-    source = root / "genetics/liftover/variant_liftover_raw.tsv.gz"
-    peak_path = root / "consensus_peak_manifest.tsv"
-    if not source.is_file() or not peak_path.is_file():
-        raise ContractError("liftover and consensus peaks must exist before genetics aggregation")
-    out = root / "genetics/context"
-    if out.exists():
-        raise ContractError(f"refusing to overwrite genetics context: {out}")
-    stale_pending = sorted((root / "genetics").glob(".context.pending.*"))
-    if stale_pending:
-        raise ContractError(f"unresolved prior genetics context stage: {stale_pending}")
-    pending = root / f"genetics/.context.pending.{os.getpid()}"
-    if pending.exists() or pending.is_symlink():
-        raise ContractError(f"pending genetics context exists: {pending}")
-    pending.mkdir(parents=True)
-
-    rows = read_rows(source)
-    peaks = read_rows(peak_path)
-    if not rows or not peaks:
-        raise ContractError("liftover posterior or consensus peak table is empty")
-    frozen = read_rows(root / "input_manifest.tsv")
-    fasta_rows = [row for row in frozen if row["role"] == "hg38_fasta"]
-    if len(fasta_rows) != 1:
-        raise ContractError("frozen hg38 FASTA is not unique")
-    fasta_path = Path(fasta_rows[0]["relative_or_absolute_path"])
-    if not fasta_path.is_absolute():
-        fasta_path = project_root() / fasta_path
-    if not fasta_path.is_file() or sha256_file(fasta_path) != fasta_rows[0]["sha256"]:
-        raise ContractError("frozen hg38 FASTA hash mismatch")
-    index244 = PeakIndex(peaks, "supported_gse244832")
-    index281 = PeakIndex(peaks, "supported_gse281367")
-    fasta = pysam.FastaFile(str(fasta_path))
-    audit = []
-    grouped: dict[tuple[str, str, int], list[dict[str, object]]] = defaultdict(list)
+def normalized_records(
+    rows: Iterator[dict[str, str]],
+    fasta: pysam.FastaFile,
+    grouped: dict[tuple[str, str, int], list[dict[str, object]]],
+) -> Iterator[dict[str, object]]:
+    """Stream the audit while retaining only inputs needed for lineage masses."""
     posterior_keys: set[tuple[str, str, int, str]] = set()
     for number, row in enumerate(rows, start=1):
         posterior = float(row["SNP.PP.H4"])
@@ -151,7 +127,6 @@ def main() -> None:
             "hg38_alt": normalized and normalized.alt or "",
             "orientation": normalized and normalized.orientation or "",
         }
-        audit.append(record)
         grouped[(row["gwas_name"], row["ensembl"], int(row["signal_pair_index"]))].append(
             {
                 "posterior": posterior,
@@ -160,7 +135,55 @@ def main() -> None:
                 "position_1based": normalized.position_1based if normalized else 0,
             }
         )
-    fasta.close()
+        yield record
+
+
+def main() -> None:
+    args = arguments()
+    root = candidate_root(args.candidate_root)
+    source = root / "genetics/liftover/variant_liftover_raw.tsv.gz"
+    peak_path = root / "consensus_peak_manifest.tsv"
+    if not source.is_file() or not peak_path.is_file():
+        raise ContractError("liftover and consensus peaks must exist before genetics aggregation")
+    out = root / "genetics/context"
+    if out.exists():
+        raise ContractError(f"refusing to overwrite genetics context: {out}")
+    stale_pending = sorted((root / "genetics").glob(".context.pending.*"))
+    if stale_pending:
+        raise ContractError(f"unresolved prior genetics context stage: {stale_pending}")
+    pending = root / f"genetics/.context.pending.{os.getpid()}"
+    if pending.exists() or pending.is_symlink():
+        raise ContractError(f"pending genetics context exists: {pending}")
+    pending.mkdir(parents=True)
+
+    rows = iter_rows(source)
+    first_row = next(rows, None)
+    peaks = read_rows(peak_path)
+    if first_row is None or not peaks:
+        raise ContractError("liftover posterior or consensus peak table is empty")
+    frozen = read_rows(root / "input_manifest.tsv")
+    fasta_rows = [row for row in frozen if row["role"] == "hg38_fasta"]
+    if len(fasta_rows) != 1:
+        raise ContractError("frozen hg38 FASTA is not unique")
+    fasta_path = Path(fasta_rows[0]["relative_or_absolute_path"])
+    if not fasta_path.is_absolute():
+        fasta_path = project_root() / fasta_path
+    if not fasta_path.is_file() or sha256_file(fasta_path) != fasta_rows[0]["sha256"]:
+        raise ContractError("frozen hg38 FASTA hash mismatch")
+    index244 = PeakIndex(peaks, "supported_gse244832")
+    index281 = PeakIndex(peaks, "supported_gse281367")
+    fasta = pysam.FastaFile(str(fasta_path))
+    grouped: dict[tuple[str, str, int], list[dict[str, object]]] = defaultdict(list)
+    records = normalized_records(chain((first_row,), rows), fasta, grouped)
+    try:
+        first_record = next(records)
+        write_tsv(
+            pending / "variant_liftover_audit.tsv",
+            tuple(first_record),
+            chain((first_record,), records),
+        )
+    finally:
+        fasta.close()
 
     summaries: dict[tuple[str, str, int], dict[str, str]] = {}
     for path in sorted((root / "genetics/replay_execution").glob(
@@ -275,9 +298,8 @@ def main() -> None:
     observed_pairs = {(key[0], key[1]) for key in grouped}
     if observed_pairs != planned_pairs:
         raise ContractError("replay exports do not cover every planned gene-study pair")
-    if not audit or not lineage_rows:
+    if not lineage_rows:
         raise ContractError("genetics aggregation produced no biological rows")
-    write_tsv(pending / "variant_liftover_audit.tsv", tuple(audit[0]), audit)
     write_tsv(
         pending / "genetic_lineage_context_all_pairs.tsv",
         tuple(lineage_rows[0]),

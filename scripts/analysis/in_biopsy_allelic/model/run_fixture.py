@@ -1,7 +1,8 @@
-"""B-MODEL on the B-FIX shared fixture (spec v1 section 11): log-likelihood and gradient at
-theta1..4, the section-3 and section-4 fits, and P1, P2, P3 on the supplied draw files.
+"""B-MODEL on the B-FIX shared fixture (spec v1 section 11, rerun under v1.8 as a new labelled
+family): log-likelihood and gradient at theta1..4, the section-3 and section-4 fits, and P1, P2,
+P3 on the supplied draw files.
 
-Usage: run_fixture.py --fixture <model-a-bfix dir> --out <new dir> [--quick]
+Usage: run_fixture.py --fixture <model-a-bfix dir> --out <new dir> [--quick] [--only p1,p2,p3]
 """
 import argparse
 import csv
@@ -18,9 +19,12 @@ import model_a as ma
 
 
 def fit_record(fit, L):
-    return dict(loglik=fit.loglik, theta=L.to_dict(fit.theta), converged=fit.converged,
+    return dict(loglik=fit.loglik, loglik_ref=fit.loglik_ref, theta=L.to_dict(fit.theta),
+                converged=fit.converged, status=fit.status, hessian_ok=fit.hessian_ok,
                 proj_max_grad=fit.proj_max_grad, attempts=fit.attempts, seconds=fit.seconds,
-                at_bound=[L.names[i] for i in fit.at_bound], lbfgs_message=fit.lbfgs_message)
+                at_bound=[L.names[i] for i in fit.at_bound], lbfgs_message=fit.lbfgs_message,
+                repolished=fit.repolished, n_reference_genes=fit.n_reference_genes,
+                v_at_upper=fit.v_at_upper, events=fit.events)
 
 
 def write_tsv(path, recs, cols):
@@ -39,7 +43,9 @@ def main():
     ap.add_argument("--fixture", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--quick", action="store_true", help="stop after the observed fits")
+    ap.add_argument("--only", default="p1,p2,p3", help="comma list of tests to run")
     args = ap.parse_args()
+    only = set(args.only.split(","))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     stem = "quick_" if args.quick else ""
@@ -61,10 +67,13 @@ def main():
     res["at_params"] = {}
     for name, th in params.items():
         if th[L.v] > 0:
-            ll, g = ma.loglik4(th, D, 1)
+            ll, g, det = ma.loglik4(th, D, 1, detail=True)
             ll40 = ma.loglik4(th, D, 0, nodes=40)
-            rec = dict(form="section 4 (adaptive GH, 20 nodes)", v=float(th[L.v]), loglik=ll,
-                       loglik_gh40=ll40, gradient=L.to_dict(g))
+            llref = ma.loglik4(th, D, 0, all_reference=True)
+            rec = dict(form="section 4 (adaptive GH, 20 nodes, v1.8 mode search)", v=float(th[L.v]),
+                       loglik=ll, loglik_gh40=ll40, loglik_reference_all_genes=llref,
+                       integrator=[int(x) for x in det["integrator"]],
+                       u_hat=[float(x) for x in det["u_hat"]], gradient=L.to_dict(g))
         else:
             ll, g = ma.loglik3(th, D, 1)
             g[L.v] = ma.boundary_score(th, D)
@@ -86,14 +95,16 @@ def main():
                                tau_max_rule_value=float(Delta * np.median(np.abs(alpha_hat))))
     print("section3", repr(fit3.loglik), fit3.theta[L.kappa], fit3.converged, fit3.seconds, flush=True)
 
-    # 3. section-4 fits from v = 0 and v = tau_max^2 (timed), LR
-    best, f0, f1 = ft.fit_section4_two_starts(D, fit3.theta, v_max)
+    # 3. section-4 fits from v = 0 and v = tau_max^2 (timed), kept by the v1.8 rule, LR
+    best, f0, f1, rule4 = ft.fit_section4_two_starts(D, fit3.theta, v_max)
     LR = ft.lr_statistic(fit3, best)
     res["section4"] = dict(v_hat=float(best.theta[L.v]), tau_hat=float(np.sqrt(best.theta[L.v])),
-                           loglik=best.loglik, LR=LR,
+                           loglik=best.loglik, loglik_ref=best.loglik_ref, LR=LR,
+                           LR_gh=ft.lr_statistic_gh(fit3, best), converged=best.converged,
                            kappa_hat_section4=float(best.theta[L.kappa]),
                            boundary_score_at_section3_mle=ma.boundary_score(fit3.theta, D),
-                           start_kept="v0" if best is f0 else "vmax",
+                           start_kept="v0" if best is f0 else "vmax", rule=rule4,
+                           v_at_upper=best.v_at_upper,
                            fit_start_v0=fit_record(f0, L), fit_start_vmax=fit_record(f1, L))
     if best.theta[L.v] > 0:
         res["section4"]["loglik_gh40_at_mle"] = ma.loglik4(best.theta, D, 0, nodes=40)
@@ -128,48 +139,61 @@ def main():
         n_higher_than_section7_start=sum(p["converged"] and p["loglik"] > fit3.loglik + 1e-6
                                          for p in probe), fits=probe)
 
-    t = time.perf_counter()
-    p1 = dv.run_p1(prob, fit3, draws["Sstar"])
-    p1["seconds"] = time.perf_counter() - t
-    print("P1", p1["z"], p1["p_warm"], p1["p_best"], p1["seconds"], flush=True)
-    t = time.perf_counter()
-    p2 = dv.run_p2(prob, fit3, best, draws["mult"], draws["lambdas"], tau_max, Delta, v_max)
-    p2["seconds"] = time.perf_counter() - t
-    print("P2", p2["p_warm"], p2["p_best"], p2["seconds"], flush=True)
-    t = time.perf_counter()
-    p3 = dv.run_p3(prob, fit3, LR, draws["U"], v_max)
-    p3["seconds"] = time.perf_counter() - t
-    print("P3", p3["p_warm"], p3["p_best"], p3["seconds"], flush=True)
-    res["P1"], res["P2"], res["P3"] = p1, p2, p3
+    if "p1" in only:
+        t = time.perf_counter()
+        p1 = dv.run_p1(prob, fit3, draws["Sstar"])
+        p1["seconds"] = time.perf_counter() - t
+        res["P1"] = p1
+        print("P1", p1["z"], p1["p"], p1["failed_draws"], p1["seconds"], flush=True)
+        write_tsv(out / "p1_draws.tsv", p1["draws"],
+                  ["draw", "kappa", "se", "z", "exceed", "in_band", "failed", "kept", "rule",
+                   "kappa_warm", "loglik_warm", "converged_warm", "status_warm",
+                   "proj_max_grad_warm", "kappa_cold", "loglik_cold", "converged_cold",
+                   "status_cold", "proj_max_grad_cold"])
+    if "p2" in only:
+        t = time.perf_counter()
+        p2 = dv.run_p2(prob, fit3, best, draws["mult"], draws["lambdas"], tau_max, Delta, v_max)
+        p2["seconds"] = time.perf_counter() - t
+        res["P2"] = p2
+        print("P2", p2["p"], p2["failed_draws"], p2["seconds"], flush=True)
+        srcs = sorted(p2["sources"])
+        p2rows = []
+        for r0 in p2["draws"]:
+            r = dict(r0)
+            b = r["draw"]
+            for s_ in srcs:
+                comp = p2["sources"][s_]
+                r[f"ratio_{s_}"] = comp["ratio_draws"][b]
+                r[f"up_{s_}"] = comp["up_indicators"][b]
+                r[f"lo_{s_}"] = comp["lo_indicators"][b]
+            p2rows.append(r)
+        write_tsv(out / "p2_draws.tsv", p2rows,
+                  ["draw", "kappa", "failed", "kept", "rule", "kappa_warm", "loglik_warm",
+                   "converged_warm", "kappa_cold", "loglik_cold", "converged_cold"]
+                  + [f"{x}_{s_}" for s_ in srcs for x in ("ratio", "up", "lo")])
+    if "p3" in only:
+        t = time.perf_counter()
+        p3 = dv.run_p3(prob, fit3, best, LR, draws["U"], v_max)
+        p3["seconds"] = time.perf_counter() - t
+        res["P3"] = p3
+        print("P3", p3["p"], p3["failed_draws"], p3["seconds"], flush=True)
+        write_tsv(out / "p3_draws.tsv", p3["draws"],
+                  ["draw", "LR", "LR_gh", "exceed", "in_band", "failed", "rule3", "rule4",
+                   "loglik3", "loglik4_ref", "loglik4_gh", "v_hat", "v_at_upper", "kappa3",
+                   "kept3", "kept4", "loglik3_warm", "loglik3_cold", "loglik4_warm_ref",
+                   "loglik4_cold_ref", "status4_warm", "status4_cold", "n_reference_genes4",
+                   "repolished4", "n_class_H", "n_class_R", "n_class_A", "sum_a"])
+    # v1.8 section 1 item 10: fits with v_hat within 1e-8 of 1, with the gene count
+    G_fit = int(D.n_genes_with_rows)
+    vb = []
+    if best.v_at_upper:
+        vb.append(dict(fit="observed section 4", genes=G_fit))
+    for d in res.get("P3", {}).get("draws", []):
+        if d["v_at_upper"]:
+            vb.append(dict(fit=f"P3 draw {d['draw']} section 4", genes=G_fit, LR=d["LR"]))
+    res["v_upper_bound_fits"] = vb
     res["total_seconds"] = time.perf_counter() - t_all
-    (out / "results.json").write_text(json.dumps(res, indent=1))
-
-    write_tsv(out / "p1_draws.tsv", p1["draws"],
-              ["draw", "kappa_warm", "se_warm", "z_warm", "exceed_warm", "in_band_warm",
-               "converged_warm", "loglik_warm", "proj_max_grad_warm", "loglik_cold", "kappa_cold",
-               "cold_better", "kappa_best", "z_best", "exceed_best"])
-    srcs = sorted(p2["sources"])
-    p2rows = []
-    for r0 in p2["draws"]:
-        r = dict(r0)
-        b = r["draw"]
-        for s in srcs:
-            for pol in ("warm", "best"):
-                comp = p2["sources"][s][pol]
-                r[f"ratio_{pol}_{s}"] = comp["ratio_draws"][b]
-                r[f"up_{pol}_{s}"] = comp["up_indicators"][b]
-                r[f"lo_{pol}_{s}"] = comp["lo_indicators"][b]
-        p2rows.append(r)
-    write_tsv(out / "p2_draws.tsv", p2rows,
-              ["draw", "kappa_warm", "loglik_warm", "converged_warm", "kappa_cold", "loglik_cold",
-               "cold_better", "kappa_best"]
-              + [f"{x}_{pol}_{s}" for pol in ("warm", "best") for s in srcs
-                 for x in ("ratio", "up", "lo")])
-    write_tsv(out / "p3_draws.tsv", p3["draws"],
-              ["draw", "LR", "exceed", "in_band", "loglik3", "loglik4", "v_hat", "kappa3",
-               "start_kept", "converged", "n_class_H", "n_class_R", "n_class_A", "sum_a",
-               "loglik3_cold", "kappa3_cold", "cold_better", "LR_best", "v_hat_best",
-               "exceed_best"])
+    (out / "results.json").write_text(json.dumps(res, indent=1, default=float))
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """Render frozen candidate estimates with Helvetica, uniform 6 pt, and no titles."""
-import sys, importlib.util
+import os, sys, importlib.util
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -52,7 +52,8 @@ start = code.index('    # Main 4E')
 stop = code.index('    # Previously evaluated cohorts')
 from textwrap import dedent
 exec(dedent(code[start:stop]), globals())
-gs = ROOT/'figures/candidates/fig3g-coloc-r2-20260924T061535Z/source_tables'
+# FIG3G_SOURCE_TABLES selects another Figure 3G interface table; unset, the 2026-09-24 one.
+gs = Path(os.environ.get('FIG3G_SOURCE_TABLES', ROOT/'figures/candidates/fig3g-coloc-r2-20260924T061535Z/source_tables'))
 scatter = read(gs/'fig3g_raw_treat_interface.tsv')
 fig, ax = plt.subplots(figsize=(3.4, 2.8))
 for state, col in [('Neither','#9E9E9E'),('Transcriptomics sig.','#C9265E'),
@@ -61,7 +62,13 @@ for state, col in [('Neither','#9E9E9E'),('Transcriptomics sig.','#C9265E'),
     ax.scatter(g.logFC,g.susie_pp4,s=3,c=col,alpha=.7,
                label=f'{state} ({len(g)})',linewidths=0)
 ax.set_xlabel('Disease-state log2FC'); ax.set_ylabel('SuSiE PP.H4')
-ax.legend(frameon=False)
+# FIG3G_LEGEND_LOC (matplotlib loc) and FIG3G_LEGEND_ANCHOR (axes-fraction "x,y") place the
+# legend; unset, matplotlib chooses the position as before.
+legend_kw = {}
+if os.environ.get('FIG3G_LEGEND_LOC'): legend_kw['loc'] = os.environ['FIG3G_LEGEND_LOC']
+if os.environ.get('FIG3G_LEGEND_ANCHOR'):
+    legend_kw['bbox_to_anchor'] = tuple(float(v) for v in os.environ['FIG3G_LEGEND_ANCHOR'].split(','))
+ax.legend(frameon=False, **legend_kw)
 fig.savefig(out/'fig3g_genetics_state_interface.pdf'); plt.close(fig)
 pn = read(base/'protein/protein_pair_covariance.tsv')
 fig, axs = plt.subplots(1,3,figsize=(5.5,2.7),sharex=True)

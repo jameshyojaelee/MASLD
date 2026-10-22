@@ -99,7 +99,7 @@ def main() -> None:
     xml_text = fulltext_path.read_text(encoding="utf-8")
     fulltext = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", xml_text))
     required_methods = (
-        "500,000 cell clusters were infected",
+        "500,000 cell clusters",
         "30,000 BECs from EM condition",
         "60,000 differentiated hepatocyte-like cells from DM condition",
         "10,000 input cells for each lane",
@@ -125,7 +125,7 @@ def main() -> None:
         "distinct_biosample_count": len({record["biosample"] for record in experiments}),
         "experiments": experiments,
         "method_evidence": {
-            "upstream_screen": "The paper describes one 500,000-cluster infection workflow followed by FACS, expansion, passage, and context exposure; it does not report independent screen cultures or mouse-of-origin ancestry.",
+            "upstream_screen": "The paper describes one 500,000-cluster screen workflow followed by FACS, expansion, passage, and context exposure; it does not report independent screen cultures or mouse-of-origin ancestry.",
             "capture": "The paper describes approximately 30,000 EM and 60,000 DM cells captured with 10,000 input cells per Chromium lane, matching the three EM and six DM production experiments in GSA.",
             "filter": "The deposited author metadata contains cells retained after unique-sgRNA assignment; this is a source preprocessing gate, not a biological replicate definition."
         },

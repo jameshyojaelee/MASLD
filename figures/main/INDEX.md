@@ -6,13 +6,13 @@ its panel layout before any candidate PDF is adopted. `candidate` and
 
 | Figure | Authority directory | State | Scientific role |
 |---|---|---|---|
-| 1 | `fig1_atlas_overview/` | existing authority | Resource design and observability |
-| 2 | `fig2_genetics/` | existing authority; exact-size adopted-COLOC A-I candidate validated, not adopted | Inherited genetic variation; target-transcript biotype and final non-European locus choice remain open |
-| 3 | `fig3_bulk_transcriptomics/` | validated candidate; 3F blocked | Severity-linked GNMT–MAT1A–CYP2C19 remodeling and the exact genetics–state bridge |
-| 4 | `fig4_singlecell_programs/` | working main 4D–4H promoted; continuum S4F–S4U adopted as working supplements; synchronized release pending | Donor-level programs, multicellular context, and stage-adjusted continuum resolution across outcome-blind molecular systems |
+| 1 | `fig1_atlas_overview/` | current B/C; source-backed A/D and embedded four-panel layout proposed | Resource design and observability |
+| 2 | `fig2_genetics/` | verified r2 A–I panels installed; D retains adopted coordinate correction; D ancestry companion adopted 2026-10-17; direct-subclass split moved to Figure S2S; native-scale A–I review layout proposed | Inherited genetic variation; gene-target biotype is separate from noncoding DNA context |
+| 3 | `fig3_bulk_transcriptomics/` | corrected 774-unit panels installed; 3F 54 genes/216 effects; vector review assembly complete | Severity-linked GNMT–MAT1A–CYP2C19 remodeling and the exact genetics–state bridge |
+| 4 | `fig4_singlecell_programs/` | atlas schematic and corrected 4E–H/S4 panels installed; vector review assembly complete | Donor-level programs, multicellular context, and stage-adjusted continuum resolution across outcome-blind molecular systems |
 | 5 | `fig5_molecular_context/` | six canonical panels and vector assembly adopted; synchronized Resource release pending | Assay-native context and matched-null separation of disease association from tissue organization |
-| 6 | `fig6_gene_catalog/` | partial candidate; 6A/C/E missing | MASLD Gene Catalog and experiment routing |
-| 7 | `fig7_model_framework/` | new; all six panels are open | What predictive models learn from the maps, with every score reported beside that model's own training exposure |
+| 6 | `fig6_gene_catalog/` | all five individual r8 panels installed; native-size vector review assembly complete | MASLD Gene Catalog and experiment routing |
+| 7 | `fig7_model_framework/` | corrected 7A audit units and 7C/F source exposure installed; embedded six-panel review layout proposed; model-development alternatives separate | What predictive models learn from the maps, with every score reported beside that model's own training exposure |
 
 ## Shared Figure 1–7 decision rules
 
@@ -33,6 +33,27 @@ Their historical filenames remain as implementation provenance inside those
 directories, with the prior README files retained under `_legacy/`.
 
 ## Adoption rule
+
+**Current working panels, 2026-10-14.** The corrected 774-unit bulk substrate
+and verified r2 genetics replace earlier numerical artwork. Figure 4E uses
+112 programs in the three-cohort 364-unit arm of the 774-unit substrate, with
+no fibrosis or NAS call (BH over 224 tests); the four-cohort 457-record arm,
+which adds GSE174478 from outside the pooled 774-unit fit, is a sensitivity.
+Figures 4G and 4H use the 367 stage-complete disease units; Figure 4H plots the donor-first system estimates, rho=0.67 and 34/43 same direction (feature-first 0.63 and 32/43), with no outline. Eighteen strict maxT calls
+(435 units, including the 68 GSE213621 controls) remain a separate
+supplementary criterion. Figure 5B/C now use 774-unit RNA
+effects, and Figure 6 uses the selected r8 classes. The historical source
+paragraphs below describe prior artwork and do not select its numbers.
+Figure 4C now shows the H59 primary fit (60 ambient-correctable donors, a
+separate residual variance per dataset): 0 of 117 programs pass the
+within-dataset permutation BH/stability rule (smallest q=0.323). In the
+supplementary 62-donor equal-variance sensitivity, only Ductular injury
+(BICC1 member) has q<0.05 (q=0.038), and no program passes HC3. Figure 7C is broad cell-class mapping, drawn on all seven held-out studies and on each encoder's clean studies; the all-study TranscriptFormer score includes two training-seen studies. Figure 7F draws the clean-study comparison against the scVI encoder trained here.
+
+## Historical working artwork and source selections
+
+Historical authorization: working main 4D–4H promoted. The corrected
+October 14 artwork supersedes its E–H numerical panels, as described above.
 
 The user-reviewed compact Figure 4B–H panels were installed from
 `figures/candidates/fig4-assembly-review-20261005-v1/` on 2026-10-05. D is the

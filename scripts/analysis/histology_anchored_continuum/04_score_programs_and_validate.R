@@ -210,10 +210,13 @@ program_scores[, `:=`(
   program_score = as.numeric(program_score)
 )]
 program_scores <- merge(program_scores, meta, by = "sample_id", all.x = TRUE, sort = FALSE)
-write_tsv_once(program_scores[, .(
-  sample_id, analysis_unit_id, dataset, inferred_sex, fibrosis_stage, nas_score,
-  program_uid, program_score
-)], file.path(analysis_out, "program_scores.tsv.gz"))
+# A source-qualified manifest records how each analysis unit was defined; carry it
+# into the scores so downstream system inference can check it against its roster.
+score_columns <- c("sample_id", "analysis_unit_id", intersect("unit_evidence", names(meta)),
+                   "dataset", "inferred_sex", "fibrosis_stage", "nas_score",
+                   "program_uid", "program_score")
+write_tsv_once(program_scores[, ..score_columns],
+               file.path(analysis_out, "program_scores.tsv.gz"))
 
 message("Loading axes and enforcing method roles")
 axes <- rbindlist(list(
@@ -504,7 +507,7 @@ for (axis_name in pre$axes$co_primary) {
                  match(cohort, independent) * 100L + match(program, focal_ids))
       null <- replicate(pre$resampling$permutation_replicates, {
         rx_perm <- rx
-        for (g in groups) rx_perm[g] <- sample(rx[g], length(g), replace = FALSE)
+        for (g in groups) rx_perm[g] <- rx[g][sample.int(length(g), length(g), replace = FALSE)]
         suppressWarnings(cor(rx_perm, ry))
       })
       empirical_p <- (1 + sum(abs(null) >= abs(observed), na.rm = TRUE)) /
@@ -522,12 +525,20 @@ for (axis_name in pre$axes$co_primary) {
 write_tsv_once(rbindlist(permutation_rows),
                file.path(analysis_out, "focal_within_stage_permutations.tsv"))
 
-nmf_path <- read_env_path(
+# The native NMF axis (A3_axis.tsv) exists only for the 2026-08 844-participant
+# substrate. A corrected roster has none, so HAC_SKIP_NATIVE_NMF=1 skips this
+# context block and records that it was skipped.
+skip_native_nmf <- identical(Sys.getenv("HAC_SKIP_NATIVE_NMF", unset = "0"), "1")
+nmf_path <- if (skip_native_nmf) NA_character_ else read_env_path(
   "HAC_NMF_AXIS_PATH",
   file.path(root, "RNA-seq/results/continuous_axis_benchmark",
             "20260814T184338Z/arms/A3_axis.tsv")
 )
-if (file.exists(nmf_path)) {
+if (skip_native_nmf) {
+  write_tsv_once(data.table(analysis = "native_nmf_context",
+                            state = "skipped_native_axis_not_recomputed_for_corrected_roster"),
+                 file.path(analysis_out, "native_nmf_context_state.tsv"))
+} else if (file.exists(nmf_path)) {
   nmf_source <- fread(nmf_path)
   assert_true(nrow(nmf_source) == nrow(meta) &&
                 setequal(nmf_source$sample_id, meta$sample_id),

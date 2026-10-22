@@ -17,15 +17,17 @@ Inputs
   --kinship-pairs        identity/kinship_related_pairs.tsv (same_individual pairs; checked against the crosswalk).
   --metadata             unified_metadata.csv: fibrosis_stage 0-4 (Kleiner cohorts) and condition (GSE213621).
   --design-individuals   Gate A design_individuals.tsv (job 1208): z columns without the axes, cluster_id, S.
-  --ancestry             restricted library_ancestry_pcs.tsv: axis_EUR_AFR, axis_EUR_EAS (read, never written).
+  --gse193066-n1-pairs   N4 eligibility-corrected pair_type_table_with_n1.tsv: the 19 N1-eligible GSE193066 pairs.
+  --frozen-crosswalk-sha256  optional expected sha256 when --frozen-crosswalk is an authorised copy outside the seal.
+  --target-role          development (F, default) or sealed (sealed F; only inside the hashed opening run).
   --r2-moments           r2_moments_observed.json (job 1290): observed raw and adjusted R2 of S on z per F cohort.
   --p2-resamples         p2_resample_development.tsv.gz (job 1290): the fixed P2 resamples of F (spec 5.2).
   --r2-by-resample       r2_by_resample.tsv.gz (job 1290): adjusted R2 per P2 resample and cohort (checked).
   --codex-lambda         optional: Codex C8 lambda_558.json, compared at the point.
 Target (spec v1 1.1, 5.2)
   F: unit_library True, run_role development, C = 0, S observed, cohort in GSE130970, GSE135251, GSE162694,
-  GSE213621, GSE240729 (558). F_sealed (237, adds GSE174478) is reported for the sealed run (spec 6), marginal
-  lambda only. Each cohort's latent stage distribution is fitted from that set's own labels.
+  GSE213621, GSE240729 (558). Sealed F (237, adds GSE174478) is computed by the same code with --target-role sealed
+  (round 2; spec 6), never in a development run. Each cohort's latent stage distribution is fitted from that set's own labels.
 Sources and arms (pair tables; fitted per arm, deposits never pooled)
   GSE193066 (58 pairs), PXD051911_A1 (27 pairs)   the two spec 5.2 sources.
   PXD051911_A2, PXD051911_joint                   sensitivities (joint: one var_e shared by A1 and A2).
@@ -39,16 +41,16 @@ Specs per arm
 lambda
   lambda_c = Var(E[S|T]) / Var(S) at cohort c's latent stage distribution with the arm's var_e; the slope
   attenuation for kappa per unit of the true score E[S|T]. lambda_cond_c = (lambda_c - R2_c) / (1 - R2_c), R2_c the
-  adjusted within-cohort R2 of S on the spec z columns and ancestry axes (v1.2 items 6, 7), floored at 0.
+  adjusted within-cohort R2 of S on the v1.4 z columns and ancestry axes, read from --r2-moments (lambda_cond not floored).
   Carried spec per source: the smaller lambda of Y5 and S3 at the point (= the larger var_e), fixed across draws.
   Pools: headcount mean of lambda_c and lambda_cond_c (the spec pool with I_c replaced by n_c; B-MODEL re-pools
   with I_c from the per-cohort columns).
 Bootstrap and fit checks
   Seed 20260926. 2,000 draws: pairs resampled within arm; at draw b the F target is P2 resample b and R2 is
-  recomputed on it; F_sealed individuals resampled within cohort. Parametric-bootstrap goodness of fit per arm
+  fixed at the observed adjusted value (spec v1.3); per-draw R2 (from --r2-by-resample) is a sensitivity. Parametric-bootstrap goodness of fit per arm
   and spec (1,000 draws, refit each). Latent-shape sensitivity at the sources: grid NPMLE and LP bounds.
 Outputs (--out; label counts and aggregate summaries only, no identifiers)
-  label_reliability.json, lambda_source_draws.tsv.gz (the P2 consumer file), carried_spec.tsv,
+  label_reliability.json, lambda_source_draws.tsv.gz (the P2 consumer file), carried_spec.tsv, het_profile.tsv,
   lambda_by_cohort.tsv, het_sensitivity.tsv, latent_shape_sensitivity.tsv, goodness_of_fit.tsv, pair_tables.tsv,
   target_stage_counts.tsv, bootstrap_draws.npz, bootstrap_draws.tsv.gz.
   --restricted-out: pairs_used.tsv and target_participants.tsv (one row per person). No file is overwritten.
@@ -98,8 +100,11 @@ F_COUNTS = {"GSE130970": 54, "GSE135251": 160, "GSE162694": 83, "GSE213621": 208
 SEALED_COHORTS = F_COHORTS + ["GSE174478"]
 SEALED_COUNTS = {"GSE130970": 13, "GSE135251": 42, "GSE162694": 22, "GSE213621": 55, "GSE240729": 13,
                  "GSE174478": 92}
-SETS = {"F": ("development", F_COHORTS), "F_sealed": ("sealed", SEALED_COHORTS)}
-Z_COLS = ["z_b_log_e", "z_d_dup", "z_ffpe", "z_sex_female", "z_age10", "axis_EUR_AFR", "axis_EUR_EAS", "z_c"]
+# Round 2: one target set per run. --target-role development gives F (558); --target-role sealed gives sealed F (237)
+# with the same code path, for use inside the hashed opening run only. main() rebinds SETS and F_COHORTS.
+SETS = {"F": ("development", F_COHORTS)}
+C8_TOL = 5e-4                  # round 2: lambda_558.json and our fits agree to optimizer precision, about 2e-4
+HET_PROFILE_B = np.round(np.arange(-1.0, 4.001, 0.25), 2)   # round 2: profile of b, extends past the HET_BOUNDS cap 3
 GSE213621_CONDITION = {"Fibrosis_F0F1": 0, "Fibrosis_F2": 1, "Fibrosis_F3F4": 2}
 PXD_ARMS = {"PXD051911_A1": "A1_initial_to_at_surgery",
             "PXD051911_A2": "A2_initial_to_followup_no_surgery_sample"}
@@ -116,13 +121,22 @@ GOF_SPECS = {"Y5", "S3", "S3_sym"}
 SOURCES = ["GSE193066", "PXD051911_A1"]
 SOURCE_SPECS = ["Y5", "S3"]
 ARM_ORDER = ["GSE193066", "PXD051911_A1", "PXD051911_A2", "PXD051911_joint",
-             "GSE193066_same29", "GSE193066_drop11", "GSE213621_pairs25"]
+             "GSE193066_same29", "GSE193066_drop11", "GSE193066_n1eligible19", "GSE213621_pairs25"]
+GSE193066_ARMS = ["GSE193066", "GSE193066_drop11", "GSE193066_same29", "GSE193066_n1eligible19"]
+CARRIABLE = {
+    "GSE193066": "provisional: identity unqualified. docs/STATUS.md (blockers item 3) excludes GSE193066 from "
+                 "measurement-error calibration; spec Appendix B2 default (P2 cannot pass) applies unless the user "
+                 "accepts source-declared pairing for a labels-only error estimate; if carried, the less favourable "
+                 "identity arm (see GSE193066_identity_range) is the value to carry",
+}
 ARM_ROLE = {"GSE193066": "source (spec v1 5.2)",
             "PXD051911_A1": "source (spec v1 5.2; PRIMARY arm of the PXD051911 replication prespec)",
             "PXD051911_A2": "sensitivity (DESIGN-MATCHED arm of the PXD051911 replication prespec)",
             "PXD051911_joint": "sensitivity (A1 and A2 with one shared var_e)",
             "GSE193066_same29": "sensitivity, provisional identity (29 pairs called one person)",
             "GSE193066_drop11": "sensitivity, provisional identity (47 pairs; 11 pairs called two people dropped)",
+            "GSE193066_n1eligible19": "sensitivity, the 19 N1-eligible pairs (genotype same individual and accepted N1 "
+                                      "non-mixture status; docs/STATUS.md N4 row)",
             "GSE213621_pairs25": "sensitivity, selected set of 25 genotype-same library pairs, S only, symmetric"}
 PRIMARY_Y5_ARMS = ["GSE193066", "PXD051911_A1", "PXD051911_A2"]   # the recorded arms: SD agreement is a guard
 T0 = time.time()
@@ -527,6 +541,49 @@ def r2_of(Z, S):
     return n, p, raw, adj
 
 
+def adjusted_r2(raw, n, p):
+    """Adjusted R2 floored at 0 for a given row count n (round 2: n = distinct individuals of a resample)."""
+    return max(0.0, 1 - (1 - raw) * (n - 1) / (n - p - 1)) if n - p - 1 > 0 else np.nan
+
+
+# ---------------------------------------------------------------- heteroscedastic profile over b (round 2)
+def het_profile(N, theta_hat, targets, r2, grid=HET_PROFILE_B):
+    """Profile negative log-likelihood of the Y5_het model at fixed b, with lambda_cond and the SD check per b.
+
+    Each b is fitted from the previous grid point and from the homoscedastic-start with b replaced (best kept)."""
+    rows, warm = [], None
+    for b in grid:
+        bounds = list(HET_BOUNDS)
+        bounds[3] = (float(b), float(b))
+        starts = [np.r_[theta_hat[:3], b, theta_hat[4]]] + ([np.r_[warm[:3], b, warm[4]]] if warm is not None else [])
+        best = None
+        for st in starts:
+            st = np.array([np.clip(v, lo, hi) for v, (lo, hi) in zip(st, bounds)])
+            r = minimize(het_negll, st, args=(N,), method="L-BFGS-B", bounds=bounds)
+            if best is None or r.fun < best.fun:
+                best = r
+        warm = best.x
+        s = summarise_het(best.x, targets, r2)
+        rows.append(dict(b=float(b), negll=float(best.fun), converged=bool(best.success),
+                         other_params_at_bound=at_bound(np.delete(best.x, 3), [x for i, x in enumerate(bounds) if i != 3]),
+                         implied_within_pair_sd=s["implied_within_pair_sd"], lambda_hc_F=s["lambda_hc_F"],
+                         lambdacond_hc_F=s["lambdacond_hc_F"], sd_e_at_1p5=s["sd_e_at_1p5"],
+                         sd_e_at_2p5=s["sd_e_at_2p5"], n_target_fits_at_bound=s["n_target_fits_at_bound"]))
+    prof = pd.DataFrame(rows)
+    prof["lr_vs_min"] = 2.0 * (prof["negll"] - prof["negll"].min())
+    inside = prof[prof["lr_vs_min"] <= chi2.ppf(0.95, 1)]
+    summary = dict(grid=[float(g) for g in grid], b_profile_min=float(prof.loc[prof["negll"].idxmin(), "b"]),
+                   ci95_b_on_grid=[float(inside["b"].min()), float(inside["b"].max())],
+                   lower_limit_found=bool(inside["b"].min() > grid.min()),
+                   upper_limit_found=bool(inside["b"].max() < grid.max()),
+                   lambdacond_hc_F_range_in_ci=[float(inside["lambdacond_hc_F"].min()),
+                                                float(inside["lambdacond_hc_F"].max())],
+                   rule="b inside the 95% profile interval: 2 (negll(b) - min) <= chi2_1 0.95 quantile (3.84); a limit "
+                        "is found only if a grid point beyond it lies outside the interval")
+    summary["identified"] = summary["lower_limit_found"] and summary["upper_limit_found"]
+    return prof, summary
+
+
 # ---------------------------------------------------------------- latent-shape sensitivity
 def latent_kernel(cuts, var_e, grid=LATENT_GRID):
     sd_e = np.sqrt(max(var_e, 1e-10))
@@ -635,6 +692,23 @@ def gse193066_series_pairs(series_path):
     return out.reset_index(drop=True), int(len(df)), int(df["participant"].nunique())
 
 
+def gse193066_n1_pairs(path, g_pairs):
+    """Round 2: the GSE193066 source-declared pairs with n1_eligible TRUE in the N4 eligibility-corrected
+    pair_type_table_with_n1.tsv. Returns the participants and whether their runs and stages equal g_pairs."""
+    t = read_tsv(path, dtype=str)
+    t = t[(t["cohort"] == "GSE193066") & (t["n1_eligible"].str.upper() == "TRUE")].copy()
+    t["participant"] = t["person_id"].str.split("::").str[1]
+    g = g_pairs.set_index("participant")
+    ok = t["participant"].isin(g.index).all()
+    if ok:
+        for _, r in t.iterrows():
+            runs = set(r["libraries"].split(","))
+            stages = sorted(int(float(v)) for v in r["stage_codes"].split(","))
+            p = g.loc[r["participant"]]
+            ok &= runs == {p["run1"], p["run2"]} and stages == sorted([int(p["y1"]), int(p["y2"])])
+    return sorted(t["participant"]), bool(ok)
+
+
 def pxd_pairs(source_dir, meta_path):
     rec = read_tsv(Path(source_dir) / "results/pairs.tsv")
     j = json.load(open(Path(source_dir) / "results/kleiner_replication.json"))
@@ -664,9 +738,14 @@ def pxd_pairs(source_dir, meta_path):
     return out
 
 
-def read_frozen_crosswalk(path):
-    rec = Path(path).parent / "frozen_crosswalk.sha256"
-    expected = rec.read_text().split()[0]
+def read_frozen_crosswalk(path, expected_sha=None):
+    """Round 2: expected_sha lets an authorised sha-checked copy outside the seal directory be used; otherwise the
+    sibling frozen_crosswalk.sha256 record is the reference."""
+    if expected_sha:
+        rec, expected = "--frozen-crosswalk-sha256", expected_sha
+    else:
+        rec = Path(path).parent / "frozen_crosswalk.sha256"
+        expected = rec.read_text().split()[0]
     got = sha256(path)
     if got != expected:
         raise SystemExit(f"frozen crosswalk sha256 {got} != {expected} recorded in {rec}")
@@ -674,7 +753,7 @@ def read_frozen_crosswalk(path):
 
 
 def target_participants(x, meta):
-    """Staged unit individuals of F and F_sealed (spec v1 1.1) from the frozen seal crosswalk.
+    """Staged unit individuals of the target set (spec v1 1.1) from the frozen crosswalk.
 
     unit_library True (one library per development or sealed individual), C = 0, S observed. Kleiner cohorts: Y is
     the 0-4 metadata stage and must reproduce the frozen S. GSE213621: S must equal the coded condition label.
@@ -737,14 +816,16 @@ def gse213621_pairs(x, meta, kinship_path):
     return pairs.sort_values("participant").reset_index(drop=True), ours == kin_in
 
 
-def f_covariates(tp, design_path, ancestry_path):
-    """F individuals with the spec z columns: design_individuals.tsv plus the ancestry axes joined by the unit run."""
+def f_covariates(tp, design_path, role="development"):
+    """F individuals joined to design_individuals.tsv (cluster_id for the P2 resamples; cohort and S checked).
+
+    Round 2: R2 is read from the lead's r2_moments_observed.json and r2_by_resample.tsv.gz (spec v1.3 fixes R2 at the
+    observed adjusted value), so neither the z columns nor the restricted ancestry axes are read here."""
     d = pd.read_csv(design_path, sep="\t", dtype={"individual_id": str, "cluster_id": str})
-    d = d[d["set"] == "development"]
-    anc = pd.read_csv(ancestry_path, sep="\t", usecols=["run", "axis_EUR_AFR", "axis_EUR_EAS"], dtype={"run": str})
+    d = d[d["set"] == role]
     f = tp[tp["set"] == "F"]
-    m = f.merge(d.drop(columns=["set"]), on="individual_id", how="left", suffixes=("", "_design"))
-    m = m.merge(anc, on="run", how="left")
+    m = f.merge(d[["individual_id", "cohort", "cluster_id", "S"]], on="individual_id", how="left",
+                suffixes=("", "_design"))
     same = (len(d) == len(f) and set(d["individual_id"]) == set(f["individual_id"])
             and (m["cohort"] == m["cohort_design"]).all() and (m["S"] == m["S_design"]).all())
     return m, d, bool(same)
@@ -897,20 +978,29 @@ def chunks(n):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     for flag in ("--gse193066-placement", "--gse193066-source", "--gse193066-series", "--gse193066-crosswalk",
-                 "--pxd-source", "--pxd-meta", "--frozen-crosswalk", "--kinship-pairs", "--metadata",
-                 "--design-individuals", "--ancestry", "--r2-moments", "--p2-resamples", "--r2-by-resample",
+                 "--gse193066-n1-pairs", "--pxd-source", "--pxd-meta", "--frozen-crosswalk", "--kinship-pairs",
+                 "--metadata", "--design-individuals", "--r2-moments", "--p2-resamples", "--r2-by-resample",
                  "--out", "--restricted-out"):
         ap.add_argument(flag, required=True)
+    ap.add_argument("--frozen-crosswalk-sha256", default=None,
+                    help="expected sha256 when --frozen-crosswalk is an authorised copy outside the seal directory")
+    ap.add_argument("--target-role", choices=["development", "sealed"], default="development",
+                    help="development: F (558). sealed: sealed F (237), only inside the hashed opening run")
     ap.add_argument("--codex-lambda", default=None)
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
     ap.add_argument("--n-gof", type=int, default=N_GOF)
     ap.add_argument("--workers", type=int, default=int(os.environ.get("SLURM_CPUS_PER_TASK", "1")))
     a = ap.parse_args()
+    global SETS, F_COHORTS
+    if a.target_role == "sealed":
+        F_COHORTS = list(SEALED_COHORTS)
+    SETS = {"F": (a.target_role, F_COHORTS)}
+    expected_counts = F_COUNTS if a.target_role == "development" else SEALED_COUNTS
 
     out, rout = Path(a.out), Path(a.restricted_out)
     names = ["label_reliability.json", "lambda_source_draws.tsv.gz", "carried_spec.tsv", "lambda_by_cohort.tsv",
              "het_sensitivity.tsv", "latent_shape_sensitivity.tsv", "goodness_of_fit.tsv", "bootstrap_draws.npz",
-             "bootstrap_draws.tsv.gz", "pair_tables.tsv", "target_stage_counts.tsv"]
+             "bootstrap_draws.tsv.gz", "pair_tables.tsv", "target_stage_counts.tsv", "het_profile.tsv"]
     rnames = ["pairs_used.tsv", "target_participants.tsv"]
     clash = [str(out / f) for f in names if (out / f).exists()] + [str(rout / f) for f in rnames if (rout / f).exists()]
     if clash:
@@ -930,7 +1020,7 @@ def main():
           f"max |ours - scipy| over 60 random points = {err:.2e} (tolerance 1e-7)")
 
     # ---- pair inputs
-    x, xw = read_frozen_crosswalk(a.frozen_crosswalk)
+    x, xw = read_frozen_crosswalk(a.frozen_crosswalk, a.frozen_crosswalk_sha256)
     guard("frozen_crosswalk_sha256_matches_record", xw["matches"], f"{xw['sha256']} = first field of {xw['record']}")
     meta = pd.read_csv(a.metadata, keep_default_na=False, na_values=[""], dtype=str)
     if meta["sample_id"].duplicated().any():
@@ -971,6 +1061,16 @@ def main():
         sub = g_pairs[g_pairs["identity_class"].isin(keep)]
         arms[name] = dict(name=name, kind="single", input_scale="Y5", y1=sub["y1"].to_numpy(), y2=sub["y2"].to_numpy())
         pairs_out.append(sub.assign(arm=name))
+    n1_part, n1_ok = gse193066_n1_pairs(a.gse193066_n1_pairs, g_pairs)
+    guard("GSE193066_n1_eligible_pairs_are_19_and_match",
+          n1_ok and len(n1_part) == 19,
+          f"{len(n1_part)} GSE193066 pairs with n1_eligible TRUE in {a.gse193066_n1_pairs}; runs and stages equal the "
+          f"series-matrix pairs: {n1_ok} (docs/STATUS.md N4 row: 19 N1-eligible pairs)")
+    sub = g_pairs[g_pairs["participant"].isin(n1_part)]
+    n1_ic = sub["identity_class"].value_counts().to_dict()
+    arms["GSE193066_n1eligible19"] = dict(name="GSE193066_n1eligible19", kind="single", input_scale="Y5",
+                                          y1=sub["y1"].to_numpy(), y2=sub["y2"].to_numpy())
+    pairs_out.append(sub.assign(arm="GSE193066_n1eligible19"))
     p25, p25_ok = gse213621_pairs(x, meta, a.kinship_pairs)
     disc = p25[p25["y1"] != p25["y2"]]
     kinds = pd.Series([tuple(sorted(r)) for r in zip(disc["y1"], disc["y2"])]).value_counts().to_dict()
@@ -986,39 +1086,34 @@ def main():
     arms = {k: arms[k] for k in ARM_ORDER}
     arm_specs = {k: (PAIRS25_SPECS if k == "GSE213621_pairs25" else KLEINER_SPECS) for k in arms}
 
-    # ---- targets: F and F_sealed
+    # ---- target: F (development or sealed, one per run)
     tp, tcounts = target_participants(x, meta)
-    guard("F_counts_equal_spec_1_1", tcounts["F"] == F_COUNTS,
-          f"F staged development unit individuals by cohort {tcounts['F']} (total {sum(tcounts['F'].values())}); "
-          f"spec v1 1.1: {F_COUNTS} (558)")
-    guard("F_sealed_counts", tcounts["F_sealed"] == SEALED_COUNTS,
-          f"F_sealed by cohort {tcounts['F_sealed']} (total {sum(tcounts['F_sealed'].values())}); "
-          f"expected {SEALED_COUNTS} (237)")
-    fcov, design, same_design = f_covariates(tp, a.design_individuals, a.ancestry)
+    guard("F_counts_equal_spec_1_1", tcounts["F"] == expected_counts,
+          f"F ({a.target_role}) staged unit individuals by cohort {tcounts['F']} (total {sum(tcounts['F'].values())}); "
+          f"expected {expected_counts} ({sum(expected_counts.values())})")
+    fcov, design, same_design = f_covariates(tp, a.design_individuals, a.target_role)
     guard("F_equals_gateA_design_individuals", same_design,
-          f"558 F individual_id, cohort and S equal the development rows of {a.design_individuals}")
-    guard("F_axes_present", fcov[["axis_EUR_AFR", "axis_EUR_EAS"]].notna().all().all(),
-          f"ancestry axes found for every F unit run in {a.ancestry}")
+          f"{len(fcov)} F individual_id, cohort and S equal the {a.target_role} rows of {a.design_individuals}")
     fz = {c: fcov[fcov["cohort"] == c].sort_values("individual_id").reset_index(drop=True) for c in F_COHORTS}
 
-    # observed R2, reproduced against the lead's moments (job 1290)
+    # observed R2: read from the lead's moments (spec v1.3: R2_c fixed at the observed adjusted value in every draw)
     r2_obs, r2_raw_obs, r2_rows = {}, {}, []
     rec_m = json.load(open(a.r2_moments))
     for c in F_COHORTS:
-        n, p, raw, adj = r2_of(fz[c][Z_COLS].to_numpy(float), fz[c]["S"].to_numpy(float))
-        r2_obs[f"F_{c}"], r2_raw_obs[f"F_{c}"] = adj, raw
-        r2_rows.append(dict(cohort=c, n=n, rank_p=p, r2_raw=raw, r2_adjusted=adj,
-                            recorded_raw=rec_m[c]["r2_raw"], recorded_adjusted=rec_m[c]["r2_adjusted"]))
-    r2_diff = max(max(abs(r["r2_raw"] - r["recorded_raw"]), abs(r["r2_adjusted"] - r["recorded_adjusted"]))
-                  for r in r2_rows)
-    guard("R2_reproduces_r2_moments_observed", r2_diff < 1e-10,
-          f"max |ours - {a.r2_moments}| over raw and adjusted R2 = {r2_diff:.2e}; adjusted: "
-          + ", ".join(f"{r['cohort']} {r['r2_adjusted']:.4f}" for r in r2_rows))
+        m = rec_m[c]
+        r2_obs[f"F_{c}"], r2_raw_obs[f"F_{c}"] = float(m["r2_adjusted"]), float(m["r2_raw"])
+        r2_rows.append(dict(cohort=c, n=int(m["n"]), rank_p=int(m["rank_p"]), columns=m["columns"],
+                            r2_raw=float(m["r2_raw"]), r2_adjusted=float(m["r2_adjusted"])))
+    guard("R2_moments_cover_F", all(r["n"] == len(fz[r["cohort"]]) for r in r2_rows),
+          f"{a.r2_moments} (sha256 {sha256(a.r2_moments)[:8]}): n per cohort equals F; adjusted R2 "
+          + ", ".join(f"{r['cohort']} {r['r2_adjusted']:.4f} (rank {r['rank_p']})" for r in r2_rows))
     log("inputs read")
 
     # ---- target single-read fits and fit tests
-    rng_streams = np.random.SeedSequence(SEED).spawn(len(ARM_ORDER) + 4)
-    stream = dict(zip(ARM_ORDER + ["targets_sealed", "gof", "target_gof", "het_gof"], rng_streams))
+    # stream order kept from round 1 so existing arms reproduce their draws; the round-2 arm is appended
+    stream_names = ([k for k in ARM_ORDER if k != "GSE193066_n1eligible19"]
+                    + ["targets_sealed", "gof", "target_gof", "het_gof", "GSE193066_n1eligible19"])
+    stream = dict(zip(stream_names, np.random.SeedSequence(SEED).spawn(len(stream_names))))
     rng_tgof = np.random.default_rng(stream["target_gof"])
     targets, tc_rows, counts_of = [], [], {}
     for s, (_, cohorts) in SETS.items():
@@ -1062,7 +1157,7 @@ def main():
           "; ".join(f"{r['set']} {r['cohort']} n={r['n']} mu_Z={r['mu_Z']:.3f} sd_Z={r['sd_Z']:.3f}" for r in tc_rows))
     log("target fits done")
 
-    # ---- target draws: F = P2 resample b (spec 5.2) with R2 recomputed on it; F_sealed resampled here
+    # ---- target draws: F = P2 resample b (spec 5.2); R2 fixed at the observed value (v1.3)
     p2_idx, p2_info = p2_resample_index(a.p2_resamples, fz, design, a.n_boot)
     guard("P2_resamples_cover_every_draw_and_cohort",
           p2_info["complete"] and p2_info["resample_size_equals_cohort_size"] and p2_info["draws_in_file"] >= a.n_boot,
@@ -1070,15 +1165,12 @@ def main():
           f"strata: {p2_info['complete']}; resample size = cohort size: {p2_info['resample_size_equals_cohort_size']}; "
           f"largest development cluster {p2_info['max_cluster_size']}")
     label_of = {c: (fz[c]["S"] if c == "GSE213621" else fz[c]["Y"]).to_numpy(int) for c in F_COHORTS}
-    zmat = {c: fz[c][Z_COLS].to_numpy(float) for c in F_COHORTS}
-    smat = {c: fz[c]["S"].to_numpy(float) for c in F_COHORTS}
     base = {t["key"]: t for t in targets}
-    rng_ts = np.random.default_rng(stream["targets_sealed"])
-    sealed_sims = {t["key"]: rng_ts.multinomial(t["n"], t["counts"] / t["n"], size=a.n_boot)
-                   for t in targets if t["set"] == "F_sealed"}
+    rec_r2 = pd.read_csv(a.r2_by_resample, sep="\t")
+    rec_r2 = rec_r2[rec_r2["draw"] < a.n_boot].set_index(["draw", "cohort"])
     target_draws, r2_draws, r2_draw_rows = [], [], []
     for b in range(a.n_boot):
-        tb, rb = [], {}
+        tb = []
         for c in F_COHORTS:
             ii = p2_idx[b][c]
             key = f"F_{c}"
@@ -1086,24 +1178,24 @@ def main():
             cnt = np.bincount(label_of[c][ii], minlength=len(t["counts"]))
             fs = fit_single(cnt, CUTS[t["scale"]])
             tb.append(dict(t, counts=cnt, mu_Z=fs["mu_Z"], sd_Z=fs["sd_Z"]))
-            n, p, raw, adj = r2_of(zmat[c][ii], smat[c][ii])
-            rb[key] = adj
-            r2_draw_rows.append(dict(draw=b, cohort=c, n=n, rank_p=p, r2_raw=raw, r2_adjusted=adj))
-        for key, sims in sealed_sims.items():
-            fs = fit_single(sims[b], CUTS[base[key]["scale"]])
-            tb.append(dict(base[key], counts=sims[b], mu_Z=fs["mu_Z"], sd_Z=fs["sd_Z"]))
+            rr = rec_r2.loc[(b, c)]
+            n_dist = int(len(np.unique(ii)))
+            r2_draw_rows.append(dict(draw=b, cohort=c, n=int(rr["n"]), n_distinct=n_dist, rank_p=int(rr["rank_p"]),
+                                     r2_raw=float(rr["r2_raw"]), r2_adjusted=float(rr["r2_adjusted"]),
+                                     r2_adjusted_distinct=adjusted_r2(float(rr["r2_raw"]), n_dist, int(rr["rank_p"]))))
         target_draws.append(tb)
-        r2_draws.append(rb)
+        r2_draws.append(dict(r2_obs))       # primary: fixed observed adjusted R2 (spec v1.3)
     r2d = pd.DataFrame(r2_draw_rows)
-    rec_r2 = pd.read_csv(a.r2_by_resample, sep="\t")
-    cmp = r2d.merge(rec_r2, on=["draw", "cohort"], suffixes=("", "_rec"), how="left")
-    d_r2 = float(np.nanmax(np.abs(np.r_[cmp["r2_raw"] - cmp["r2_raw_rec"], cmp["r2_adjusted"] - cmp["r2_adjusted_rec"]])))
-    guard("R2_by_resample_reproduces_record", cmp["r2_adjusted_rec"].notna().all() and d_r2 < 1e-10,
-          f"per draw and cohort, max |ours - {a.r2_by_resample}| = {d_r2:.2e} over {len(cmp)} rows")
+    guard("R2_by_resample_covers_every_draw", len(r2d) == a.n_boot * len(F_COHORTS) and r2d["r2_adjusted"].notna().all(),
+          f"{a.r2_by_resample}: {len(r2d)} draw-cohort rows used; n per row equals the cohort size: "
+          f"{bool((r2d['n'] == r2d['cohort'].map({c: len(fz[c]) for c in F_COHORTS})).all())}")
     r2_shift = {c: dict(observed_adjusted=r2_obs[f"F_{c}"],
                         resample_median_adjusted=float(r2d.loc[r2d["cohort"] == c, "r2_adjusted"].median()),
+                        resample_median_adjusted_distinct_n=float(r2d.loc[r2d["cohort"] == c,
+                                                                          "r2_adjusted_distinct"].median()),
                         resample_p2p5_p97p5=interval(r2d.loc[r2d["cohort"] == c, "r2_adjusted"]))
                 for c in F_COHORTS}
+    r2_per_draw = {(int(r.draw), r.cohort): (r.r2_adjusted, r.r2_adjusted_distinct) for r in r2d.itertuples()}
     log("target draws done")
 
     # ---- point fits
@@ -1197,12 +1289,14 @@ def main():
                         lrt_vs_homoscedastic=dict(lrt=float(lrt), df=1, p_asymptotic=float(chi2.sf(max(lrt, 0.0), 1))),
                         sd_check=dict(implied=row["implied_within_pair_sd"], empirical=emp_sd,
                                       passed=abs(row["implied_within_pair_sd"] - emp_sd) <= SD_GUARD_TOL))
+        prof, psum = het_profile(N, f["theta"], targets, r2_obs)
+        het[src]["profile"], het[src]["profile_summary"] = prof.assign(source=src), psum
     log("point fits done")
 
     # ---- bootstrap and goodness of fit (all random draws made here; workers are deterministic)
     idx = {}
     for name in ("GSE193066", "PXD051911_A1", "PXD051911_A2", "GSE193066_same29", "GSE193066_drop11",
-                 "GSE213621_pairs25"):
+                 "GSE193066_n1eligible19", "GSE213621_pairs25"):
         n = len(arms[name]["y1"])
         rng = np.random.default_rng(stream[name])
         idx[name] = np.stack([rng.integers(0, n, n) for _ in range(a.n_boot)])
@@ -1240,11 +1334,13 @@ def main():
         d_obs = (het[g["arm"]]["deviance"] if g["spec"] == "Y5_het"
                  else point_deviance(arms[g["arm"]], g["spec"], fits[k]["theta"], point_tables[k]))
         p = float((1 + np.sum(g["devs"] >= d_obs - 1e-9)) / (len(g["devs"]) + 1))
-        gof[k] = dict(deviance=d_obs, p=p, rejected=p < GOF_ALPHA)
+        floor = 1.0 / (len(g["devs"]) + 1)
+        gof[k] = dict(deviance=d_obs, p=p, rejected=p < GOF_ALPHA, p_floor=floor, at_floor=bool(p <= floor + 1e-12))
         gof_rows.append(dict(arm=g["arm"], spec=g["spec"], deviance=round(d_obs, 4), n_sim=len(g["devs"]),
                              sim_deviance_median=round(float(np.median(g["devs"])), 4),
                              sim_deviance_95pct=round(float(np.percentile(g["devs"], 95)), 4),
-                             p_parametric_bootstrap=p, model_rejected_at_0p05=p < GOF_ALPHA,
+                             p_parametric_bootstrap=p, p_floor=floor, p_at_floor=gof[k]["at_floor"],
+                             model_rejected_at_0p05=p < GOF_ALPHA,
                              n_sim_refits_not_converged=g["n_not_converged"]))
 
     # ---- per arm/spec summaries
@@ -1261,7 +1357,7 @@ def main():
                                       recorded_within_pair_sd=recorded.get(name), specs={}))
         entry = dict(point=rnd(r), ci95=ci,
                      bootstrap=dict(n_draws=int(len(dr)), unit="pair (participant), resampled within arm; F target = "
-                                    "P2 resample b with R2 recomputed; F_sealed individuals resampled within cohort",
+                                    "P2 resample b; R2 fixed at the observed adjusted value (spec v1.3)",
                                     n_not_converged=int((~dr["converged"]).sum()), n_at_bound=int(dr["at_bound"].sum()),
                                     n_rho_negative=int((dr[rc].min(axis=1) < 0).sum()),
                                     n_var_e_below_0p01=int((dr["var_e"] < 0.01).sum()),
@@ -1269,6 +1365,7 @@ def main():
         if (name, spec) in gof:
             entry["goodness_of_fit"] = dict(deviance=round(gof[(name, spec)]["deviance"], 4),
                                             p_parametric_bootstrap=gof[(name, spec)]["p"],
+                                            p_floor=gof[(name, spec)]["p_floor"],
                                             label="model rejected" if gof[(name, spec)]["rejected"] else "not rejected")
         if arms[name]["kind"] == "single":
             N = point_tables[(name, spec)]
@@ -1296,6 +1393,18 @@ def main():
     cons.insert(2, "carried", cons.apply(lambda r: carried[r["source"]] == r["spec"], axis=1))
     lc = cons["lambdacond_hc_F"]
     cons["invalid_lambdacond_hc_F"] = ~np.isfinite(lc) | (lc <= INVALID_LAMBDA) | ~cons["converged"]
+    cons["n_cohorts_lambdacond_negative"] = (cons[[f"lambdacond_{k}" for k in fkeys]] < 0).sum(axis=1)
+    # sensitivities (spec v1.3: per-draw R2 is a sensitivity only): R2 recomputed on resample b, with the
+    # resample's row count (as recorded by the lead) and with its distinct-individual count
+    nF = np.array([len(fz[c]) for c in F_COHORTS], float)
+    for tag, j in (("perdrawR2", 0), ("perdrawR2distinct", 1)):
+        r2b = np.array([[r2_per_draw[(int(d), c)][j] for c in F_COHORTS] for d in cons["draw"]])
+        lamb = cons[[f"lambda_{k}" for k in fkeys]].to_numpy(float)
+        cond = (lamb - r2b) / (1.0 - r2b)
+        cons[f"lambdacond_hc_F_{tag}"] = cond @ nF / nF.sum()
+        cons[f"n_cohorts_lambdacond_negative_{tag}"] = (cond < 0).sum(axis=1)
+        v = cons[f"lambdacond_hc_F_{tag}"]
+        cons[f"invalid_lambdacond_hc_F_{tag}"] = ~np.isfinite(v) | (v <= INVALID_LAMBDA) | ~cons["converged"]
 
     def source_summary(src, spec):
         c = cons[(cons["source"] == src) & (cons["spec"] == spec)]
@@ -1308,15 +1417,27 @@ def main():
                     lambdacond_hc_F_draw_median=float(np.nanmedian(v)),
                     lambdacond_hc_F_p05_invalid_as_0=float(np.percentile(np.where(inv, 0.0, v), 5)),
                     n_invalid_draws=int(inv.sum()), n_draws=int(len(c)),
+                    pool="headcount pool (n_c), not the P2 lambda: the consumer re-pools the per-cohort lambdacond "
+                         "columns per draw with the Gate A I_c and recomputes the 5th percentile and invalid count",
+                    sensitivities={tag: dict(lambdacond_hc_F_draw_median=float(np.nanmedian(c[f"lambdacond_hc_F_{tag}"])),
+                                             lambdacond_hc_F_p05_invalid_as_0=float(np.percentile(np.where(
+                                                 c[f"invalid_lambdacond_hc_F_{tag}"], 0.0,
+                                                 c[f"lambdacond_hc_F_{tag}"]), 5)),
+                                             n_invalid_draws=int(c[f"invalid_lambdacond_hc_F_{tag}"].sum()),
+                                             n_draws_any_cohort_negative=int(
+                                                 (c[f"n_cohorts_lambdacond_negative_{tag}"] > 0).sum()))
+                                   for tag in ("perdrawR2", "perdrawR2distinct")},
+                    n_draws_any_cohort_lambdacond_negative=int((c["n_cohorts_lambdacond_negative"] > 0).sum()),
                     per_cohort={cc: dict(lambda_point=r[f"lambda_F_{cc}"], lambda_ci95=interval(c[f"lambda_F_{cc}"]),
                                          R2adj_observed=r2_obs[f"F_{cc}"],
                                          lambdacond_point=r[f"lambdacond_F_{cc}"],
                                          lambdacond_ci95=interval(c[f"lambdacond_F_{cc}"]),
+                                         n_draws_lambdacond_negative=int((c[f"lambdacond_F_{cc}"] < 0).sum()),
                                          lambdacond_rawR2_point=float(lambda_conditional(r[f"lambda_F_{cc}"],
                                                                                          r2_raw_obs[f"F_{cc}"])))
                                 for cc in F_COHORTS},
                     gof=("model rejected" if gof[(src, spec)]["rejected"] else "not rejected"),
-                    gof_p=gof[(src, spec)]["p"], sd_check=("passed" if sd_ok[(src, spec)] else "failed"))
+                    gof_p=gof[(src, spec)]["p"], gof_p_floor=gof[(src, spec)]["p_floor"], sd_check=("passed" if sd_ok[(src, spec)] else "failed"))
 
     src_summary = {src: {spec: source_summary(src, spec) for spec in SOURCE_SPECS} for src in SOURCES}
 
@@ -1334,6 +1455,19 @@ def main():
             carried_spec=cs, carried_gof=src_summary[src][cs]["gof"], carried_lambdacond_hc_F=cval,
             het_below_carried=bool(hp["lambdacond_hc_F"] < cval),
             n_draws=int(len(hd)), n_not_converged=int((~hd["converged"]).sum()), n_at_bound=int(hd["at_bound"].sum()))
+        # round-2 rule: a Y5_het value is forwarded as the less favourable lambda only if the point fit is off its
+        # bounds, passes the SD check and the b profile has both 95% limits inside the grid
+        ps = het[src]["profile_summary"]
+        why = [w for w, bad in (("point fit at a parameter bound", hp["at_bound"]),
+                                ("implied within-pair SD fails the 0.02 check", not het[src]["sd_check"]["passed"]),
+                                ("b profile has no 95% limit inside the grid", not ps["identified"])) if bad]
+        hs = het[src]["summary"]
+        hs["forwarded_as_less_favourable"] = bool(hs["het_below_carried"] and not why)
+        hs["not_forwarded_because"] = why
+        hs["error_at_S_cutpoints"] = ("identified under Y5_het" if ps["identified"] else
+                                      "not identified: level-dependent error is not bounded by the pairs; the "
+                                      "homoscedastic value is extrapolated from where the reads are")
+        hs["b_profile"] = ps
         for tgt, k in [(t["cohort"], t["key"]) for t in targets if t["set"] == "F"] + [("pool_headcount_F", "hc_F")]:
             het_tab.append(dict(source=src, target=tgt, lambda_point=hp[f"lambda_{k}"],
                                 lambda_ci95_lo=interval(hd[f"lambda_{k}"])[0],
@@ -1347,6 +1481,23 @@ def main():
                                 lrt_b0=het[src]["lrt_vs_homoscedastic"]["lrt"],
                                 lrt_b0_p=het[src]["lrt_vs_homoscedastic"]["p_asymptotic"],
                                 gof_p=gof[(src, "Y5_het")]["p"], sd_check_passed=het[src]["sd_check"]["passed"]))
+
+    # ---- carriability per source (round 2): written to the JSON, carried_spec.tsv and the consumer file
+    carriable = dict(CARRIABLE)
+    a1 = src_summary["PXD051911_A1"][carried["PXD051911_A1"]]
+    a1_ident = het["PXD051911_A1"]["summary"]["b_profile"]["identified"]
+    if a1["gof"] == "model rejected" or not a1_ident:
+        carriable["PXD051911_A1"] = (
+            f"provisional: carried spec {carried['PXD051911_A1']} goodness of fit {a1['gof']} (p {a1['gof_p']:.4f}, "
+            f"floor {a1['gof_p_floor']:.4f}); error at the S cutpoints "
+            f"{'identified' if a1_ident else 'not identified'} under Y5_het; B-SPEC decides: carry with the caveat, "
+            "prespecify a cap on b, or rule that the source cannot measure lambda at the S cutpoints")
+    else:
+        carriable["PXD051911_A1"] = "carriable"
+    cons.insert(3, "carriable", cons["source"].map(carriable))
+    for r in carried_rows:
+        r["carriable"] = carriable[r["source"]]
+        r["pool"] = "headcount pool (n_c), not the P2 lambda"
 
     # ---- lambda table (long; every arm, spec and target)
     lam_rows = []
@@ -1443,9 +1594,10 @@ def main():
                      .to_dict("records"),
                      codex_carried={s: cj["sources"][s]["conservative_spec_by_headcount"] for s in SOURCES},
                      codex_ci95={s: cj["sources"][s].get("ci95") for s in SOURCES})
-        check("Codex_C8_lambda_558_agrees_at_the_sources", src_max < 1e-4,
+        check("Codex_C8_lambda_558_agrees_at_the_sources", src_max < C8_TOL,
               f"per-cohort and headcount lambda for GSE193066 and PXD051911_A1 (Y5, S3) vs {a.codex_lambda}: max |diff| "
-              f"{src_max:.2e}; all arms {dd['abs_diff'].max():.2e}; carried specs ours {carried}, Codex "
+              f"{src_max:.2e} (tolerance {C8_TOL:.0e}: the reported precision; differences of about 2e-4 are optimizer "
+              f"tolerance [Inference]); all arms {dd['abs_diff'].max():.2e}; carried specs ours {carried}, Codex "
               f"{codex['codex_carried']}")
 
     # ---- statements (numbers read from this run)
@@ -1455,10 +1607,11 @@ def main():
     gexact = {c: int((g_pairs.loc[g_pairs["identity_class"] == c, "y1"] ==
                       g_pairs.loc[g_pairs["identity_class"] == c, "y2"]).sum()) for c in ("same", "different", "uncheckable")}
     ident = {}
-    for n_ in ("GSE193066", "GSE193066_drop11", "GSE193066_same29"):
+    for n_ in GSE193066_ARMS:
         cs = max(SOURCE_SPECS, key=lambda s: point[(n_, s)]["var_e"])
         ident[n_] = dict(spec=cs, lambdacond_hc_F=point[(n_, cs)]["lambdacond_hc_F"],
                          ci95=results[n_]["specs"][cs]["ci95"]["lambdacond_hc_F"])
+    ident["less_favourable_arm"] = min(GSE193066_ARMS, key=lambda k: ident[k]["lambdacond_hc_F"])
     pxd_first = {n_: int(point_tables[(n_, "Y5")].sum(1)[2:].sum()) for n_ in ("PXD051911_A1", "PXD051911_A2")}
     rejected = sorted(f"{k[0]} {k[1]} (p {v['p']:.3f})" for k, v in gof.items() if v["rejected"])
     tg_rej = [f"{r['set']} {r['cohort']} (X2 {r['gof_pearson_X2']:.2f}, bootstrap p {r['gof_p_parametric_bootstrap']:.3f})"
@@ -1469,22 +1622,29 @@ def main():
         "slope per step of the error-free stage cut(T).",
         "Target: F, the 558 staged development unit individuals of spec v1 1.1 (GSE130970 54, GSE135251 160, "
         "GSE162694 83, GSE213621 208, GSE240729 53). Each cohort's latent stage distribution is fitted from F's own "
-        "labels (0-4 Kleiner stage; GSE213621 the 3-level condition label, exactly identified). F_sealed (237) is "
-        "reported for the sealed run only (spec 6), marginal lambda.",
+        "labels (0-4 Kleiner stage; GSE213621 the 3-level condition label, exactly identified). Round 2: sealed F is not "
+        "computed in a development run. Spec 6 requires the 5.2 construction on sealed F; this script computes it "
+        "with --target-role sealed (sealed design, sealed R2 and sealed P2 resamples) inside the hashed opening run "
+        "only. The round-1 F_sealed block (marginal lambda, draws not index-aligned) was incomplete and is withdrawn.",
         "Carried spec per source (spec 5.2): the smaller of Y5 and S3 at the point estimate, fixed across draws. "
         "lambda_c falls as var_e rises for any fixed target distribution, so the carried spec is the one with the "
         f"larger var_e and is smaller in every cohort and pool: GSE193066 {carried['GSE193066']}, PXD051911_A1 "
         f"{carried['PXD051911_A1']}.",
         "Covariates: lambda_cond_c = (lambda_c - R2_c) / (1 - R2_c) with R2_c the adjusted within-cohort R2 of S on "
-        "the spec z columns and the two ancestry axes, floored at 0 (v1.2 items 5-7), reproduced to 1e-10 from the "
-        "lead's r2_moments_observed.json. It assumes the label error is independent of z. The raw-R2 value is a "
-        "sensitivity (lambdacond_rawR2_point).",
-        "Pools: lambdacond_hc_F is the spec 5.2 pool with I_c replaced by the headcount n_c; B-MODEL re-pools the "
-        "per-cohort lambdacond_F_<cohort> columns with the Gate A I_c.",
+        "the v1.4 z columns and the two ancestry axes (adjusted R2 floored at 0; v1.2 items 5-7, v1.4), read from the "
+        "lead's r2_moments_observed.json. lambda_cond itself is not floored: a negative per-cohort value is kept in "
+        "the pool, which lowers lambda and is conservative for P2; the count of draws with a negative per-cohort "
+        "value is n_cohorts_lambdacond_negative in the consumer file. It assumes the label error is independent of "
+        "z. The raw-R2 value is a sensitivity (lambdacond_rawR2_point).",
+        "Pools: every pooled value here is a headcount pool (I_c replaced by n_c), not the P2 lambda. The consumer must "
+        "re-pool the per-cohort lambdacond_F_<cohort> columns per draw with the hashed Gate A I_c, and recompute the "
+        "5th percentile and the invalid-draw count after re-pooling.",
         "Draws: draw b uses pair resample b for var_e and P2 resample b (p2_resample_development.tsv.gz, "
-        "SeedSequence([20260923, 2, b])) for the target fits and R2, so lambda*_b is index-aligned with kappa*_b. "
-        "R2 on a with-replacement resample is larger than the observed adjusted R2 (duplicated rows fit better), "
-        "which lowers lambda*_b relative to the point; see r2_resample_shift.",
+        "SeedSequence([20260923, 2, b])) for the target fits, so lambda*_b is index-aligned with kappa*_b. R2 is fixed "
+        "at the observed adjusted value in every draw (spec v1.3). Sensitivities: lambdacond_hc_F_perdrawR2 (R2 "
+        "recomputed on resample b, the round-1 primary) and lambdacond_hc_F_perdrawR2distinct (the same raw R2 "
+        "adjusted with the resample's distinct-individual count); resample R2 is biased upward by duplicated rows "
+        "(r2.resample_shift).",
         "Invalid draws (spec 5.2, v1.2 item 1): lambdacond_hc_F non-finite, <= 0.05 or unconverged. They are flagged "
         "in invalid_lambdacond_hc_F and entered as 0 for the 5th percentile.",
         "GSE213621 stage is a 3-level condition label per library. Genotypes place 25 same-person library pairs in it "
@@ -1513,27 +1673,42 @@ def main():
         f"{gsd['same']:.4f} ({gexact['same']} exact agreements), called two people {gsd['different']:.4f} "
         f"({gexact['different']}), uncheckable {gsd['uncheckable']:.4f} ({gexact['uncheckable']}). lambdacond_hc_F by "
         "identity status (carried spec each): "
-        + ", ".join(f"{k} {v['spec']} {v['lambdacond_hc_F']:.3f}" for k, v in ident.items())
-        + ". Provisional until the contamination-aware identity rerun; spec Appendix B2 applies if GSE193066 is "
-          "withdrawn.",
+        + ", ".join(f"{k} {ident[k]['spec']} {ident[k]['lambdacond_hc_F']:.3f}" for k in GSE193066_ARMS)
+        + f". Less favourable: {ident['less_favourable_arm']}. The 19 N1-eligible pairs (genotype-same and accepted "
+          f"N1 non-mixture status; identity classes {n1_ic}) are GSE193066_n1eligible19. Carriability: "
+          + CARRIABLE["GSE193066"] + ".",
         "rho < 0 draws (var_T < 0 in the source) are kept in the primary intervals; they raise var_e and lower "
         "lambda, which is conservative for P2. The rho >= 0 fits are the admissible-model sensitivity "
         "(rho_nonneg_sensitivity). Percentile intervals next to the var_e = 0 boundary are approximate.",
         "Goodness of fit: parametric bootstrap of the deviance per arm and spec, refit each draw, rejection at p < "
-        f"0.05. Rejected: {', '.join(rejected) if rejected else 'none'}. Rule fixed before this run: when a source's "
-        "carried spec is rejected, the Y5_het fit is its required sensitivity. The carried var_e draws stay the P2 "
-        "input (the heteroscedastic model has no single var_e); if Y5_het gives a smaller lambdacond_hc_F than the "
-        "carried value, that is flagged to B-SPEC as the less favourable value.",
+        f"0.05; resolution floor 1/({a.n_gof} + 1) = {1.0 / (a.n_gof + 1):.5f}. Rejected: "
+        f"{', '.join(rejected) if rejected else 'none'}. When a source's carried spec is rejected, the Y5_het fit is "
+        "its required sensitivity. The carried var_e draws stay the P2 input (the heteroscedastic model has no single "
+        "var_e). Round-2 rule: a Y5_het lambdacond_hc_F below the carried value is forwarded to B-SPEC as the less "
+        "favourable value only if the point fit is off its bounds, passes the SD check and the profile of b has both "
+        "95% limits inside the grid -1 to 4; otherwise the source's error at the S cutpoints is 'not identified' and "
+        "B-SPEC decides. Forwarded: "
+        + ", ".join(f"{s_} {het[s_]['summary']['forwarded_as_less_favourable']}"
+                    + (f" (not forwarded: {'; '.join(het[s_]['summary']['not_forwarded_because'])})"
+                       if het[s_]['summary']['not_forwarded_because'] else "") for s_ in SOURCES)
+        + "; b profile 95% interval on grid: "
+        + ", ".join(f"{s_} {het[s_]['profile_summary']['ci95_b_on_grid']}, lambdacond_hc_F over it "
+                    f"{[round(v, 3) for v in het[s_]['profile_summary']['lambdacond_hc_F_range_in_ci']]}"
+                    for s_ in SOURCES) + " (het_profile.tsv).",
         "Target latent shape: the normal single-read fit is rejected at p < 0.05 (parametric bootstrap, 2 df) in "
         f"{', '.join(tg_rej) if tg_rej else 'no cohort'}. latent_shape_sensitivity.tsv gives lambda under a "
         "nonparametric latent (grid NPMLE) and the range over all latent distributions that reproduce each cohort's "
         "observed labels; per-cohort lambda is not to be published without it.",
         "lambda depends on the stage distribution it is evaluated at; the transported quantity is var_e on the "
         "latent stage scale, not a reliability coefficient.",
-        "Carried values at F (headcount pool, lambda_cond): "
+        "Carried values at F (headcount pool, lambda_cond; not the P2 lambda): "
         + "; ".join(f"{s} {ss[s]['spec']} {ss[s]['lambdacond_hc_F_point']:.4f} [{ss[s]['lambdacond_hc_F_ci95'][0]:.4f}, "
                     f"{ss[s]['lambdacond_hc_F_ci95'][1]:.4f}], invalid draws {ss[s]['n_invalid_draws']}"
-                    for s in SOURCES) + ".",
+                    for s in SOURCES) + ". Carriability: "
+        + "; ".join(f"{s} {carriable[s]}" for s in SOURCES) + ".",
+        "Supersedes smoke-20260930T121336Z (job 1240; v1.3 R2 and design, per-draw R2 as primary, 20 draws): its "
+        "carried values 0.5712 (GSE193066 S3) and 0.7329 (PXD051911_A1 Y5) and its 20-draw intervals and GOF verdicts "
+        "are superseded and are not the P2 lambda.",
     ]
 
     report = dict(
@@ -1558,9 +1733,12 @@ def main():
         checks_consequence="checks are not exit-status guards; a fit that fails its SD check is labelled "
                            "'SD check failed' and is not carriable",
         carried_spec=carried_rows,
+        carriable=carriable,
+        target_role=a.target_role,
         sources=src_summary,
         heteroscedastic_sensitivity={s: dict(summary=het[s]["summary"], lrt_vs_homoscedastic=het[s]["lrt_vs_homoscedastic"],
-                                             sd_check=het[s]["sd_check"], point=rnd(het[s]["point"]))
+                                             sd_check=het[s]["sd_check"], point=rnd(het[s]["point"]),
+                                             b_profile=het[s]["profile_summary"])
                                      for s in SOURCES},
         pxd051911_shared_var_e_lrt=joint_lrt,
         goodness_of_fit=dict(rule=f"parametric bootstrap, {a.n_gof} draws from the fitted model at the arm's n, "
@@ -1571,8 +1749,8 @@ def main():
         rho_nonneg_sensitivity=rho_sens,
         GSE193066_identity_range=ident,
         codex_c8_comparison=codex,
-        targets=dict(rule="Frozen seal crosswalk (sha256 checked): unit_library True, C = 0, S observed; F = run_role "
-                          "development in the five F cohorts; F_sealed = run_role sealed in those plus GSE174478. "
+        targets=dict(rule="Frozen crosswalk (sha256 checked): unit_library True, C = 0, S observed; F = run_role "
+                          f"{a.target_role} in the cohorts {F_COHORTS}. "
                           "Kleiner cohorts: Y = metadata fibrosis_stage, checked against S; GSE213621: S checked "
                           "against the condition label.",
                      counts=tcounts, cohorts=tc_rows, p2_resamples=p2_info),
@@ -1586,7 +1764,7 @@ def main():
             "pxd_json": Path(a.pxd_source) / "results/kleiner_replication.json",
             "pxd_meta": Path(a.pxd_meta), "frozen_crosswalk": Path(a.frozen_crosswalk),
             "kinship_pairs": Path(a.kinship_pairs), "metadata": Path(a.metadata),
-            "design_individuals": Path(a.design_individuals), "ancestry": Path(a.ancestry),
+            "design_individuals": Path(a.design_individuals), "gse193066_n1_pairs": Path(a.gse193066_n1_pairs),
             "r2_moments": Path(a.r2_moments), "p2_resamples": Path(a.p2_resamples),
             "r2_by_resample": Path(a.r2_by_resample), "script": Path(__file__).resolve(),
             **({"codex_lambda": Path(a.codex_lambda)} if a.codex_lambda else {})}.items()},
@@ -1606,6 +1784,7 @@ def main():
     pd.DataFrame(carried_rows).to_csv(out / "carried_spec.tsv", sep="\t", index=False)
     lam.to_csv(out / "lambda_by_cohort.tsv", sep="\t", index=False)
     pd.DataFrame(het_tab).to_csv(out / "het_sensitivity.tsv", sep="\t", index=False)
+    pd.concat([het[s]["profile"] for s in SOURCES]).to_csv(out / "het_profile.tsv", sep="\t", index=False)
     shape.to_csv(out / "latent_shape_sensitivity.tsv", sep="\t", index=False)
     pd.DataFrame(gof_rows).to_csv(out / "goodness_of_fit.tsv", sep="\t", index=False)
     pd.DataFrame(table_rows).to_csv(out / "pair_tables.tsv", sep="\t", index=False)

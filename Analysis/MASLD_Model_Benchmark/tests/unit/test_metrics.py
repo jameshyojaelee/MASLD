@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from random import Random
 
 from masld_bench.evaluators.metrics import (
     MetricError,
@@ -18,6 +19,55 @@ from masld_bench.evaluators.metrics import (
 
 
 class MetricTests(unittest.TestCase):
+    def test_spearman_rejects_invalid_values_before_ranking(self) -> None:
+        for value in (float("nan"), float("inf"), -float("inf"), True, False):
+            for left, right in (([1.0, value, 3.0], [1.0, 2.0, 3.0]),
+                                ([1.0, 2.0, 3.0], [1.0, value, 3.0])):
+                with self.assertRaises(MetricError):
+                    spearman_correlation(left, right)
+
+    def test_spearman_preserves_ties_and_large_integer_order(self) -> None:
+        self.assertEqual(spearman_correlation([1, 1, 3], [2, 2, 6]), 1.0)
+        large = 2 ** 53
+        self.assertEqual(
+            spearman_correlation([large, large + 1, large + 2], [1, 2, 3]), 1.0,
+        )
+
+    def test_weighted_f1_preserves_class_sums_exactly(self) -> None:
+        rng = Random(20261021)
+        for _ in range(40):
+            observed = [rng.choice(("a", "b", "c")) for _ in range(200)]
+            predicted = [rng.choice(("a", "b", "c", "unknown")) for _ in observed]
+            weights = [rng.choice((0.0, 0.1, 1e-100, 1e100)) for _ in observed]
+            expected = {}
+            for label in sorted(set(observed), key=str):
+                tp = sum(w for y, p, w in zip(observed, predicted, weights)
+                         if y == label and p == label)
+                fp = sum(w for y, p, w in zip(observed, predicted, weights)
+                         if y != label and p == label)
+                fn = sum(w for y, p, w in zip(observed, predicted, weights)
+                         if y == label and p != label)
+                denominator = 2 * tp + fp + fn
+                expected[label] = 0.0 if denominator == 0 else 2 * tp / denominator
+            score, per_class = weighted_macro_f1(observed, predicted, weights)
+            self.assertEqual(per_class, expected)
+            self.assertEqual(score, sum(expected.values()) / len(expected))
+
+    def test_weighted_f1_handles_absent_predictions_and_zero_class_mass(self) -> None:
+        self.assertEqual(
+            weighted_macro_f1(["a", "b"], ["unknown", "unknown"], [1.0, 0.0]),
+            (0.0, {"a": 0.0, "b": 0.0}),
+        )
+        for observed, predicted, weights in (
+            ([], [], []),
+            (["a"], [], [1.0]),
+            (["a"], ["a"], [0.0]),
+            (["a"], ["a"], [-1.0]),
+            (["a"], ["a"], [float("inf")]),
+        ):
+            with self.assertRaises(MetricError):
+                weighted_macro_f1(observed, predicted, weights)
+
     def test_nonfinite_metric_inputs_fail_closed(self) -> None:
         with self.assertRaises(MetricError):
             pearson_correlation([1.0, float("nan")], [1.0, 2.0])

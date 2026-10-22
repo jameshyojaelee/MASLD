@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name=6262
+#SBATCH --partition=cpu
+#SBATCH --account=nslab
+#SBATCH --qos=nslab
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=4G
+#SBATCH --time=90:00:00
+#SBATCH --chdir=/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas
+#SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas/Analysis/Hypotheses/H86-20261015T125018Z/logs/slurm-6262-%j.out
+#SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas/Analysis/Hypotheses/H86-20261015T125018Z/logs/slurm-6262-%j.err
+# DEBUG run: gates and controls on real data; evidence classes permuted before T1/T1b/D7; D5 on 300 symbols.
+set -euo pipefail
+umask 027
+H86=/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas/Analysis/Hypotheses/H86-20261015T125018Z
+OUT=${H86}/debug-$(date -u +%Y%m%dT%H%M%SZ)
+test ! -e "${OUT}"; mkdir "${OUT}"; mkdir "${OUT}/tmp"
+export TMPDIR=${OUT}/tmp XDG_CACHE_HOME=${OUT}/tmp
+export PYTHONNOUSERSITE=1 PYTHONDONTWRITEBYTECODE=1
+ENV=/gpfs/commons/home/jameslee/micromamba/envs/rnaseq
+CAT=figures/candidates/catalog-r8-reviewed-20261014T142026Z_22236566/catalog_reviewed_r8
+${ENV}/bin/Rscript ${H86}/scripts/01_resolve_symbols.R --out "${OUT}" --catalog "${CAT}" --seed 20260923
+${ENV}/bin/python ${H86}/scripts/02_coverage.py --out "${OUT}" --catalog "${CAT}" --seed 20260923 --debug-permute-classes

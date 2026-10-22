@@ -2,10 +2,13 @@
 """B-COLOC: external signed direction for the COLOC genes of two releases.
 
 Inputs (defaults below; all hg19 unless stated)
-  adopted release 2026-08-17   GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv
-    its signal pairs (replay)  GWAS/finemapping/results/coloc_eligibility_offline_20260923T211525Z/eqtl_overlap_check.tsv
-  candidate corrected release  GWAS/finemapping/results/susie_coloc_r2_20260924T053244Z/susie_coloc_all_gwas.csv
+  COLOC r2 (adopted 2026-10-14; current) GWAS/finemapping/results/susie_coloc_r2_20260924T053244Z/susie_coloc_all_gwas.csv
     its signal pairs           .../susie_coloc_r2_20260924T053244Z/susie_coloc_signal_pairs.tsv.gz
+  August release 2026-08-17 (historical) GWAS/finemapping/results/susie_coloc/susie_coloc_all_gwas.csv
+    its signal pairs (replay)  GWAS/finemapping/results/coloc_eligibility_offline_20260923T211525Z/eqtl_overlap_check.tsv
+  Release labels (round 2, 2026-10-15): adopted_r2_2026-10-14 (release_status current) and
+  historical_2026-08-17 (release_status historical); runs up to full-20260930T120450Z used
+  candidate_r2_20260924T053244Z and adopted_2026-08-17 for the same two inputs.
   study tiers, ancestry        GWAS/finemapping/config/gwas_trait_tier.tsv, gwas_registry.tsv, gwas_af_sources.tsv
   GWAS summary statistics      the file COLOC read (sumstats_af/ copy when listed)
   Broadaway liver eQTL meta    data/broadaway_eqtl/chr*_marginal_summary_results.tsv; Beta is the EA effect
@@ -27,9 +30,9 @@ Outputs (--out-dir, must not exist)
   summary.json, params.json, input_manifest.tsv
 
 Rules
-  * Genes: tier-1/2 studies, SuSiE PP.H4 > 0.5, Ensembl ids (adopted 462, candidate 436). Every
-    signal pair with PP.H4 > 0.5 is evaluated (adopted: every pair, as that run had no
-    eligibility check; candidate: eligible pairs only).
+  * Genes: tier-1/2 studies, SuSiE PP.H4 > 0.5, Ensembl ids (r2 436, historical August 462).
+    Every signal pair with PP.H4 > 0.5 is evaluated (August: every pair, as that run had no
+    eligibility check; r2: eligible pairs only).
   * hit1 = GWAS credible-set lead, hit2 = eQTL credible-set lead. At hit1 the GWAS row is the
     lowest-p row at that position whose alleles match a Broadaway row for the gene (COLOC's merge).
   * GWAS effect allele. The files' `beta` is assumed to belong to `allele1` only after a
@@ -52,7 +55,9 @@ Rules
   * Technical blocks (the lead cannot be oriented):
     - either lead (GRCh38) inside excluded_spans_mhc_ig_tr.bed (MHC, IG, TR), as in the tag layer;
     - a palindromic SNV lead (A/T, C/G) needs a 1kGP record, MAF <= 0.4 in every available
-      frequency, and strand evidence: the file frequency fits the 1kGP strand (distance <= 0.15,
+      frequency (source file, 1kGP superpopulation, and Broadaway EAF at that position; the cap
+      applies whatever the strand evidence is, including the allele-order convention), and
+      strand evidence: the file frequency fits the 1kGP strand (distance <= 0.15,
       and not closer to the opposite strand by >= 0.10); or, when the file has no frequency, the
       file's allele1 follows the study's measured allele-order convention (UKBB ALT first; MVP,
       BBJ REF first; p0-orientation-check study_allele_conventions.tsv). Otherwise blocked;
@@ -65,7 +70,10 @@ Rules
     - GWAS marginal p >= 1e-3 at hit1, or Broadaway marginal p >= 1e-3 at hit2;
     - the colocalized eQTL SuSiE component's posterior effect at hit2 (mu[l, hit2]) and the
       fit's marginal there (XtXr) have opposite signs. The GWAS SuSiE fits were not saved, so
-      the GWAS side has the p floor only.
+      the GWAS side has the p floor only, which is a weaker test: every row carries
+      gwas_conditional_sign = 'not checked (marginal floor only)'. On the eQTL side, pairs that
+      pass the floor still oppose the component in 2-4% (summary.json
+      eqtl_component_conflicts_among_pairs_passing_floor).
     Each pair also carries sign_before_evidence_rules (the sign with only technical blocks).
   * A gene x study takes the agreed sign of its directional signal pairs, and a gene x trait
     the agreed sign of its directional studies; disagreement -> not_directional. Blocked pairs
@@ -94,26 +102,37 @@ FM = REPO / "GWAS/finemapping"
 KGP = REPO / "data/external/allelic_refs/kgp_highcov"
 HERE = Path(__file__).resolve().parent
 RELEASES = {
-    "adopted_2026-08-17": dict(
-        master=FM / "results/susie_coloc/susie_coloc_all_gwas.csv",
-        pairs=FM / "results/coloc_eligibility_offline_20260923T211525Z/eqtl_overlap_check.tsv",
-        expected_genes=462, eligible_only=False),
-    "candidate_r2_20260924T053244Z": dict(
+    "adopted_r2_2026-10-14": dict(
         master=FM / "results/susie_coloc_r2_20260924T053244Z/susie_coloc_all_gwas.csv",
         pairs=FM / "results/susie_coloc_r2_20260924T053244Z/susie_coloc_signal_pairs.tsv.gz",
         expected_genes=436, eligible_only=True),
+    "historical_2026-08-17": dict(
+        master=FM / "results/susie_coloc/susie_coloc_all_gwas.csv",
+        pairs=FM / "results/coloc_eligibility_offline_20260923T211525Z/eqtl_overlap_check.tsv",
+        expected_genes=462, eligible_only=False),
 }
+# release state (docs/RESULTS.md, 'COLOC r2 adopted, 2026-10-14'); labels used by runs up to full-20260930T120450Z
+RELEASE_STATUS = {"adopted_r2_2026-10-14": "current (COLOC r2, adopted 2026-10-14)",
+                  "historical_2026-08-17": "historical (August release, superseded 2026-10-14)"}
+LEGACY_RELEASE_LABEL = {"candidate_r2_20260924T053244Z": "adopted_r2_2026-10-14",
+                        "adopted_2026-08-17": "historical_2026-08-17"}
+GWAS_CONDITIONAL_SIGN = "not checked (marginal floor only; GWAS SuSiE fits not saved)"
 PAIR_SOURCE = {
-    "adopted_2026-08-17": "hit1/hit2 from the 2026-09-23 replay (coloc_eligibility_offline_20260923T211525Z/"
+    "historical_2026-08-17": "hit1/hit2 from the 2026-09-23 replay (coloc_eligibility_offline_20260923T211525Z/"
                           "eqtl_overlap_check.tsv): the adopted run saved no pair records; pairs ineligible "
                           "under the corrected rule are included by design",
-    "candidate_r2_20260924T053244Z": "hit1/hit2 from susie_coloc_r2_20260924T053244Z/susie_coloc_signal_pairs.tsv.gz; "
+    "adopted_r2_2026-10-14": "hit1/hit2 from susie_coloc_r2_20260924T053244Z/susie_coloc_signal_pairs.tsv.gz; "
                                      "eligible pairs only",
 }
 PP4_MIN, MIN_R2, MAX_PAL_MAF, PAL_MARGIN, PAL_MAX_DIST, TAG_R2, MIN_HAPS = 0.5, 0.5, 0.4, 0.10, 0.15, 0.8, 50
 # evidence floor at both leads (prespecified 2026-09-29 before rerun v4); 1e-5 is reported as sensitivity only
 MARGINAL_P_MAX, MARGINAL_P_SENSITIVITY = 1e-3, 1e-5
 FREQ_MAX_DIFF = 0.2          # source vs 1kGP frequency of a non-palindromic lead used for LD
+# sensitivity flags only (round 2, 2026-10-15; no call depends on them)
+PAL_NEAR_CAP = (0.35, 0.38)  # palindromic lead with max MAF in (x, MAX_PAL_MAF]; both bounds reported
+PAL_CAP_RULE = ("MAX_PAL_MAF applies to every palindromic SNV lead, whatever its strand evidence (file frequency "
+                "or allele-order convention), and uses every available frequency of the lead: source file, 1kGP "
+                "study superpopulation, and Broadaway EAF at that position (hit1: for the GWAS lead; hit2: the eQTL lead)")
 TAG_R2_BAND = (0.75, 0.85)   # reported: genes whose best tag r2 sits near TAG_R2
 EXEC = REPO / "Analysis/MASLD_Model_Benchmark/executions"
 EXCLUDED_SPANS = EXEC / "in-biopsy-allelic-tags-20260925T194248Z/excluded_spans_mhc_ig_tr.bed"
@@ -162,19 +181,20 @@ def finite(x):
     return x is not None and np.isfinite(x)
 
 
-def palindrome_block(a, b, file_freq, panel_freq, lead="lead", convention_ok=None):
+def palindrome_block(a, b, file_freq, panel_freq, lead="lead", convention_ok=None, other_freqs=()):
     """Reason a palindromic SNV lead cannot be oriented, or None.
 
     file_freq and panel_freq are the frequency of allele `a` in the source file and in the 1kGP
     superpopulation (either may be NaN). Strand evidence is needed besides the 1kGP MAF: the
     file frequency against 1kGP, or, without a file frequency, convention_ok (True when the
     file's allele1 follows the study's measured allele-order convention at this 1kGP record,
-    False when it does not, None when the study has no convention)."""
+    False when it does not, None when the study has no convention). other_freqs: further
+    frequencies of `a` that enter only the MAF cap (Broadaway EAF at the GWAS lead)."""
     if not is_palindromic(a, b):
         return None
     if not finite(panel_freq):
         return f"palindromic {lead} without a 1kGP frequency (strand unknown)"
-    freqs = [f for f in (file_freq, panel_freq) if finite(f)]
+    freqs = [f for f in (file_freq, panel_freq, *other_freqs) if finite(f)]
     if max(min(f, 1 - f) for f in freqs) > MAX_PAL_MAF:
         return f"palindromic {lead} with MAF > {MAX_PAL_MAF}"
     if finite(file_freq):
@@ -527,6 +547,18 @@ class Panel:
                 return x, "a=REF"
         return None, "allele pair not in 1kGP panel"
 
+    def record_note(self, chrom, pos, strand, a, b):
+        """Why letters did not match: records at the position, and whether complemented letters would."""
+        recs = self.haps.get(chrom, {}).get(pos, [])
+        if not recs:
+            return "no biallelic 1kGP record at this GRCh38 position"
+        ca, cb = a.translate(COMPLEMENT)[::-1], b.translate(COMPLEMENT)[::-1]
+        if strand == "-":
+            ca, cb = a, b
+        if any({ref, alt} == {ca, cb} for ref, alt, _ in recs):
+            return "complemented letters match a 1kGP record (possible strand flip)"
+        return "1kGP record has other alleles: " + ",".join(f"{ref}>{alt}" for ref, alt, _ in recs)
+
     def freq(self, x, pop):
         v = x[self.mask[pop] & (x >= 0)]
         return float(v.mean()) if len(v) >= MIN_HAPS else np.nan
@@ -700,11 +732,23 @@ def evaluate_pair(row, gw, eq, lifted, panel, pop, gtex, effect_column="allele1"
         out["panel_freq_gwas_effect_allele_hit1"] = f1
         conv_ok = convention_followed(convention, effect_column, o1) if x1 is not None else None
         out["gwas_allele1_follows_file_convention"] = conv_ok
-        tech.append(palindrome_block(ga, gb, gaf, f1, "GWAS lead", conv_ok))
+        bw1 = np.nan
+        if e1 is not None and finite(e1.eaf_num):
+            bw1 = e1.eaf_num if ga == e1.EA else 1 - e1.eaf_num
+        out["broadaway_eaf_gwas_effect_allele_hit1"] = bw1
+        if x1 is None and l1:
+            out["hit1_panel_record_note"] = panel.record_note(l1[0], l1[1], l1[2], ga, gb)
+        tech.append(palindrome_block(ga, gb, gaf, f1, "GWAS lead", conv_ok, (bw1,)))
+        if is_palindromic(ga, gb):
+            fs = [min(f, 1 - f) for f in (gaf, f1, bw1) if finite(f)]
+            out["palindromic_gwas_lead_max_maf"] = max(fs) if fs else np.nan
     if e2 is not None:
         f2 = panel.freq(y2, "EUR") if y2 is not None else np.nan
         out["panel_eur_freq_ea_hit2"] = f2
         tech.append(palindrome_block(e2.EA, e2.NEA, e2.eaf_num, f2, "eQTL lead"))
+        if is_palindromic(e2.EA, e2.NEA):
+            fs = [min(f, 1 - f) for f in (e2.eaf_num, f2) if finite(f)]
+            out["palindromic_eqtl_lead_max_maf"] = max(fs) if fs else np.nan
     # different leads: the 1kGP records give r, so they must be the files' variants
     if not same_lead:
         if g is not None:
@@ -747,6 +791,10 @@ def evaluate_pair(row, gw, eq, lifted, panel, pop, gtex, effect_column="allele1"
     beta_e = e2.beta_num if e2 is not None else np.nan
     sign_tech, _ = direction_sign(beta_g, r_used, beta_e, tech)
     sign, reason = direction_sign(beta_g, r_used, beta_e, tech + evid)
+    pal_maf = [out.get(k, np.nan) for k in ("palindromic_gwas_lead_max_maf", "palindromic_eqtl_lead_max_maf")]
+    for lo in PAL_NEAR_CAP:
+        out[f"palindrome_maf_{lo}_to_{MAX_PAL_MAF}"] = any(finite(m) and lo < m <= MAX_PAL_MAF for m in pal_maf)
+    out["gwas_conditional_sign"] = GWAS_CONDITIONAL_SIGN
     out.update(direction_sign=sign, not_directional_reason=reason, sign_before_evidence_rules=sign_tech,
                evidence_blocks="; ".join(b for b in evid if b),
                all_block_reasons="; ".join(b for b in tech + evid if b),
@@ -1124,8 +1172,27 @@ def main():
     trait_tab = trait_tab.merge(trait_units, on=["release", "ensembl", "trait"], how="left")
     trait_tab["provenance"] = PROVENANCE
 
+    # --- round 2 (2026-10-15): release state and sensitivity columns (no call depends on them) ---
+    near_cols = [f"palindrome_maf_{lo}_to_{MAX_PAL_MAF}" for lo in PAL_NEAR_CAP]
+    dpairs = pair_tab[pair_tab.direction_sign != 0]
+    for keys, tab_name in ((["release", "study", "ensembl"], "study"), (["release", "ensembl", "trait"], "trait")):
+        cnt = dpairs.groupby(keys)[near_cols].sum().astype(int) \
+            .rename(columns=lambda c: f"n_directional_pairs_{c}").reset_index()
+        if tab_name == "study":
+            study_tab = study_tab.merge(cnt, on=keys, how="left")
+        else:
+            trait_tab = trait_tab.merge(cnt, on=keys, how="left")
+    for tab in (pair_tab, study_tab, trait_tab):
+        for c in [c for c in tab.columns if c.startswith("n_directional_pairs_palindrome_maf_")]:
+            tab[c] = tab[c].fillna(0).astype(int)
+        tab["gwas_conditional_sign"] = GWAS_CONDITIONAL_SIGN
+        tab["release_status"] = tab.release.map(RELEASE_STATUS)
+        tab["release_source_dir"] = tab.release.map(lambda r: str(RELEASES[r]["master"].parent))
+    trait_tab["sensitivity_gwas_p_1e-5_to_1e-3"] = (trait_tab.direction_sign != 0) & (trait_tab.gwas_p >= MARGINAL_P_SENSITIVITY)
+    genes_rel["release_status"] = genes_rel.release.map(RELEASE_STATUS)
+
     flag_cols = [f"trait_tag_r2_ge_{TAG_R2}__{n}" for n in TAG_LISTS]
-    first = ["release", "gene", "ensembl", "trait", "tier_label", "reported_study", "reported_study_pp4_susie",
+    first = ["release", "release_status", "gene", "ensembl", "trait", "tier_label", "reported_study", "reported_study_pp4_susie",
              "study_superpop", "hit1", "gwas_allele1", "gwas_allele2", "gwas_beta", "gwas_p",
              "gwas_effect_allele_column", "gwas_effect_allele", "trait_raising_allele", "hit2", "eqtl_ea_hit2",
              "eqtl_nea_hit2", "eqtl_beta_ea_hit2", "eqtl_p_hit2", "hit1_panel_match", "hit2_panel_match", "same_lead",
@@ -1137,13 +1204,16 @@ def main():
              "n_pairs_trait", "n_pairs_blocked", "n_pairs_evidence_blocked_opposing_call",
              "n_pairs_evidence_blocked_agreeing_call", "n_pairs_component_blocked_opposing_call",
              "highest_pp4_study", "highest_pp4_study_not_directional_reason",
-             "check_eqtl_at_hit1_sign", "check_gtex_liver_same_sign_hit2"] + flag_cols + ["pair_source", "provenance"]
+             "check_eqtl_at_hit1_sign", "check_gtex_liver_same_sign_hit2", "gwas_conditional_sign",
+             "sensitivity_gwas_p_1e-5_to_1e-3"] + \
+        [f"n_directional_pairs_palindrome_maf_{lo}_to_{MAX_PAL_MAF}" for lo in PAL_NEAR_CAP] + \
+        flag_cols + ["pair_source", "release_source_dir", "provenance"]
     order = lambda d, lead: d[[c for c in lead if c in d.columns] + [c for c in d.columns if c not in lead]]
     trait_tab = order(trait_tab, first).sort_values(["release", "gene", "trait"])
     trait_tab.to_csv(a.out_dir / "direction_by_trait.tsv", sep="\t", index=False)
-    order(study_tab.rename(columns={"pp4": "study_pp4_susie"}), ["release", "gene", "ensembl", "study", "trait"] + first[7:]) \
+    order(study_tab.rename(columns={"pp4": "study_pp4_susie"}), ["release", "release_status", "gene", "ensembl", "study", "trait"] + first[8:]) \
         .sort_values(["release", "gene", "study"]).to_csv(a.out_dir / "direction_by_study.tsv", sep="\t", index=False)
-    order(pair_tab, ["release", "gene", "ensembl", "study", "trait", "idx1", "idx2", "pair_pp4", "is_highest_pp4_pair"]) \
+    order(pair_tab, ["release", "release_status", "gene", "ensembl", "study", "trait", "idx1", "idx2", "pair_pp4", "is_highest_pp4_pair"]) \
         .sort_values(["release", "gene", "study", "idx1", "idx2"]).to_csv(a.out_dir / "direction_signal_pairs.tsv", sep="\t", index=False)
     tag_ld.to_csv(a.out_dir / "tag_ld_to_coloc_lead.tsv", sep="\t", index=False)
     genes_rel["ld_reference_eur"] = f"1kGP EUR founders minus KING-related, n = {panel.n_samples['EUR']} (as T1 v2)"
@@ -1195,13 +1265,88 @@ def main():
     top_differs = trait_tab[trait_tab.reported_study != trait_tab.highest_pp4_study]
     diff_lead = pair_tab[~pair_tab.same_lead]
     ctrl_studies = audit[audit.n_positive_controls_p_lt_5e8 > 0]
+    def pal_counts(g):
+        pal = g[g.gwas_effect_allele.notna() & [is_palindromic(x, y) if isinstance(x, str) and isinstance(y, str) else False
+                                                 for x, y in zip(g.gwas_effect_allele, g.gwas_other_allele)]]
+        why = pal.all_block_reasons.str.extract(r"(palindromic GWAS lead[^;]*)")[0]
+        return {"pairs": int(len(pal)),
+                "distinct_study_x_hit1": int(pal.drop_duplicates(["study", "hit1"]).shape[0]),
+                "passed_on_file_frequency": int((why.isna() & pal.gwas_af_effect_allele.notna()).sum()),
+                "passed_on_allele_order_convention (no file frequency)": int((why.isna() & pal.gwas_af_effect_allele.isna()).sum()),
+                "blocked": norm(why.dropna()).value_counts().to_dict()}
+
+    def convention_counts(g):
+        k = g[(g.gwas_file_allele_order_convention.isin(["allele1_is_alt", "allele1_is_ref"]) & g.gwas_effect_allele.notna()
+               & g.gwas_allele1_follows_file_convention.notna()).values
+              & ~np.array([is_palindromic(x, y) for x, y in zip(g.gwas_effect_allele, g.gwas_other_allele)], dtype=bool)]
+        out = {}
+        for lab, s in (("snv", k[k.gwas_allele1.str.len().eq(1) & k.gwas_allele2.str.len().eq(1)]),
+                       ("indel", k[k.gwas_allele1.str.len().gt(1) | k.gwas_allele2.str.len().gt(1)])):
+            u = s.drop_duplicates(["study", "hit1"])
+            out[f"{lab}_pairs"] = f"{int((s.gwas_allele1_follows_file_convention == True).sum())}/{len(s)}"
+            out[f"{lab}_distinct_study_x_hit1"] = f"{int((u.gwas_allele1_follows_file_convention == True).sum())}/{len(u)}"
+        return out
+
+    def unmatched_hit1(g):
+        u = g[g.gwas_effect_allele.notna() & g.hit1_panel_match.eq("allele pair not in 1kGP panel")]
+        u = u.drop_duplicates(["study", "hit1"]).sort_values(["hit1", "study"])
+        return {"pairs": int(g.gwas_effect_allele.notna().mul(g.hit1_panel_match.eq("allele pair not in 1kGP panel")).sum()),
+                "distinct_study_x_hit1": int(len(u)),
+                "possible_strand_flips": int(u.get("hit1_panel_record_note", pd.Series(dtype=str))
+                                             .fillna("").str.startswith("complemented").sum()),
+                "leads": [f"{r.study} {r.hit1} ({r.hit1_grch38}) {r.gwas_allele1}/{r.gwas_allele2} {r.gene}: "
+                          f"{getattr(r, 'hit1_panel_record_note', '')}" for r in u.itertuples()]}
+
+    def component_floor(g):
+        c = g.eqtl_susie_conditional_sign_equals_fitted_marginal.astype(str).str.upper()
+        known = c.isin(["TRUE", "FALSE"])
+        out = {"pairs_with_component_sign": int(known.sum()), "conflicts_all": int((c == "FALSE").sum())}
+        for th in (MARGINAL_P_MAX, MARGINAL_P_SENSITIVITY, 1e-8):
+            s = known & (g.eqtl_p_hit2 < th)
+            out[f"conflicts_among_broadaway_p_lt_{th:g}"] = f"{int((c[s] == 'FALSE').sum())}/{int(s.sum())}"
+        out["conflicts_removed_by_floor_alone"] = f"{int(((c == 'FALSE') & ~(g.eqtl_p_hit2 < MARGINAL_P_MAX)).sum())}/{int((c == 'FALSE').sum())}"
+        return out
+
+    near = {f"({lo}, {MAX_PAL_MAF}]": by_rel(directional, lambda g, lo=lo: [
+        f"{r.gene} {r.trait}" for r in g[g[f"n_directional_pairs_palindrome_maf_{lo}_to_{MAX_PAL_MAF}"] > 0].itertuples()])
+        for lo in PAL_NEAR_CAP}
+    sens_rows = directional[directional["sensitivity_gwas_p_1e-5_to_1e-3"]]
+    summary_r2 = {
+        "release_state_note (2026-10-15)": {
+            "current": "adopted_r2_2026-10-14: COLOC r2 (susie_coloc_r2_20260924T053244Z), adopted 2026-10-14 per docs/RESULTS.md",
+            "historical": "historical_2026-08-17: the August release, kept for comparison only; includes pairs ineligible "
+                          "under the corrected rule; cite it only as history",
+            "earlier_labels": LEGACY_RELEASE_LABEL,
+            "current_counts": counts(trait_tab[trait_tab.release == "adopted_r2_2026-10-14"]).get("adopted_r2_2026-10-14")},
+        "gwas_conditional_sign": {
+            "status": GWAS_CONDITIONAL_SIGN,
+            "eqtl_component_conflicts_among_pairs_passing_floor (the floor's miss rate on the side where it can be measured)":
+                by_rel(pair_tab, component_floor),
+            "sensitivity_set_directional_trait_rows_gwas_p_1e-5_to_1e-3": by_rel(sens_rows, lambda g: {
+                "rows": int(len(g)), "single_directional_study": int(((g.n_studies_up + g.n_studies_down) == 1).sum()),
+                "rows_list": [f"{r.gene} {r.trait} {r.reported_study} p={r.gwas_p:.2g}" for r in g.itertuples()]}),
+            "directional_trait_rows_single_directional_study": by_rel(directional, lambda g: f"{int(((g.n_studies_up + g.n_studies_down) == 1).sum())}/{len(g)}")},
+        "palindrome_cap_rule": PAL_CAP_RULE,
+        "directional_trait_rows_with_a_directional_pair_whose_palindromic_lead_has_maf_near_cap": near,
+        "palindromic_gwas_leads_by_release": by_rel(pair_tab, pal_counts),
+        "allele_order_convention_check_nonpalindromic_hit1_by_release": by_rel(pair_tab, convention_counts),
+        "hit1_not_in_1kgp_panel_by_release": by_rel(pair_tab, unmatched_hit1),
+        "eqtl_susie_component_check_by_release": by_rel(pair_tab, lambda g: {
+            "pairs": int(len(g)), "fit_found": int((g.eqtl_susie_fit_found == "TRUE").sum()),
+            "hit2_is_component_lbf_argmax": int((g.eqtl_susie_lbf_argmax_is_hit2 == "TRUE").sum()),
+            "conditional_sign_equals_marginal": g.eqtl_conditional_sign_equals_marginal
+            .map({True: "TRUE", False: "FALSE"}).fillna("not available").value_counts().to_dict()}),
+        "note_on_pooled_keys": "keys below without _by_release that count pairs over both releases are descriptive only; "
+                               "use the _by_release keys above (r2 first)",
+    }
     summary = {
         "created_utc": t0.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        **summary_r2,
         "subset": {"studies": a.studies, "chroms": a.chroms},
         "genes_per_release_full": full_gene_counts,
         "genes_union_full": full_gene_union,
         "pair_source": {**PAIR_SOURCE,
-                        "adopted_pairs_ineligible_under_corrected_rule_included_by_design":
+                        "august_pairs_ineligible_under_corrected_rule_included_by_design":
                             by_rel(pair_tab, lambda g: f"{int((g.eligible_corrected_rule == 'FALSE').sum())}/{len(g)}")},
         "gene_study_rows_without_pair": int(len(no_pair)),
         "pp4_reproduced_by_pairs (max pair PP.H4 vs gene x study PP.H4, not lead identity)": {
@@ -1308,7 +1453,9 @@ def main():
     params = dict(PP4_MIN=PP4_MIN, MIN_R2=MIN_R2, MAX_PAL_MAF=MAX_PAL_MAF, PAL_MARGIN=PAL_MARGIN,
                   PAL_MAX_DIST=PAL_MAX_DIST, TAG_R2=TAG_R2, MIN_HAPS=MIN_HAPS, SUPERPOPS=SUPERPOPS,
                   MARGINAL_P_MAX=MARGINAL_P_MAX, MARGINAL_P_SENSITIVITY=MARGINAL_P_SENSITIVITY,
-                  FREQ_MAX_DIFF=FREQ_MAX_DIFF, TAG_R2_BAND=TAG_R2_BAND,
+                  FREQ_MAX_DIFF=FREQ_MAX_DIFF, TAG_R2_BAND=TAG_R2_BAND, PAL_NEAR_CAP=PAL_NEAR_CAP,
+                  PAL_CAP_RULE=PAL_CAP_RULE, GWAS_CONDITIONAL_SIGN=GWAS_CONDITIONAL_SIGN,
+                  RELEASE_STATUS=RELEASE_STATUS, LEGACY_RELEASE_LABEL=LEGACY_RELEASE_LABEL,
                   AUDIT_REF_P=AUDIT_REF_P, AUDIT_STUDY_P=AUDIT_STUDY_P, AUDIT_MIN_LOCI=AUDIT_MIN_LOCI,
                   AUDIT_AGREE=AUDIT_AGREE, AUDIT_WINDOW=AUDIT_WINDOW,
                   AUDIT_REFERENCE_BY_TRAIT=AUDIT_REFERENCE_BY_TRAIT,

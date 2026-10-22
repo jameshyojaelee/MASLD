@@ -1,0 +1,37 @@
+# Study meta-data
+gwas_id: GCST90083000
+author_notes: 'Backman, J.D., Li, A.H., Marcketta, A. et al. Exome sequencing and
+  analysis of 454,787 UK Biobank participants. Nature (2021). https://doi.org/10.1038/s41586-021-04103-z.
+  Burden Test Nomenclature: M1 = putative loss-of-function (pLOF) only, M3 = pLOF
+  + deleterious missense (5/5 prediction algorithms). For each burden test criteria,
+  we define rollups at 5 allele frequency thresholds: Singleton-only (eg. M1.singleton),
+  MAF ‚â§ 0.001% (eg. M1.0001),MAF ‚â§ 0.01% (eg. M1.001), MAF ‚â§ 0.1% (eg. M1.01),
+  MAF ‚â§ 1% (eg. M1.1).'
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90083000
+date_metadata_last_modified: 2026-04-23
+
+# Trait Information
+trait_description:
+  - Alanine aminotransferase levels (UKB data field 30620) (Gene-based burden)
+ontology_mapping:
+  - EFO_0802260
+
+# Genotyping Information
+genome_assembly: GRCh38
+genotyping_technology:
+  - Exome-wide sequencing
+
+# Sample Information
+samples:
+  - sample_ancestry_category:
+      - European
+    sample_size: 411932
+
+# Summary Statistic information
+data_file_name: GCST90083000_buildGRCh38.tsv.gz
+file_type: non-GWAS-SSF
+data_file_md5sum: 30383c4c9815aded3055f0f68e806e94
+
+# Harmonization status
+is_harmonised: false
+is_sorted: false

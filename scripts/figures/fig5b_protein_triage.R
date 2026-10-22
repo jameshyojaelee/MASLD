@@ -45,10 +45,20 @@ atlas <- fread(
 # that the protein table (HGNC symbols) needs. Genes absent from the fit drop out.
 BULK_DEG <- Sys.getenv("FIG5B_BULK_DEG", "")
 if (nzchar(BULK_DEG)) {
-  deg <- fread(BULK_DEG, select = c("gene", "logFC", "padj"))
+  deg <- fread(BULK_DEG, select = c("gene", "symbol", "logFC", "padj"))
   deg[, ensembl_id := sub("\\..*$", "", gene)]
   stopifnot(!anyDuplicated(deg$ensembl_id), !anyDuplicated(atlas$ensembl_id))
-  bulk <- merge(atlas[, .(gene = human_symbol, ensembl_id)],
+  # Reuse a historical symbol-to-ID mapping only when the primary annotation
+  # still has that symbol. A unique primary row restores replaced annotations.
+  mapping <- atlas[, .(gene = human_symbol, ensembl_id)]
+  mapping <- merge(mapping, deg[, .(ensembl_id, primary_symbol = symbol)], by = "ensembl_id")
+  mapping <- mapping[gene == primary_symbol, .(gene, ensembl_id)]
+  unique_primary <- deg[nzchar(symbol), .N, by = symbol][N == 1L, symbol]
+  replacement <- deg[symbol %in% unique_primary & !symbol %in% mapping$gene,
+                     .(gene = symbol, ensembl_id)]
+  mapping <- rbind(mapping, replacement)
+  stopifnot(!anyDuplicated(mapping$gene), !anyDuplicated(mapping$ensembl_id))
+  bulk <- merge(mapping,
                 deg[, .(ensembl_id, bulk_logFC = logFC, bulk_padj = padj)],
                 by = "ensembl_id", all = FALSE)[, .(gene, ensembl_id, bulk_logFC, bulk_padj)]
 } else {

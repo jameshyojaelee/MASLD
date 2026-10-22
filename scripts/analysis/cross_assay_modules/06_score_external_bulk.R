@@ -6,10 +6,8 @@
 # is a property of liver biology or of the five cohorts it was built on.
 # Neither shares an accession with a discovery cohort.
 #
-# GSE276114 is a mixed-etiology cohort: 81 participants with MASLD, 82 with
-# chronic viral hepatitis, 14 with alcohol-related disease. The primary test
-# uses the MASLD participants only. The all-etiology fit with an etiology term
-# is kept as a secondary, and both are reported.
+# The primary test uses MASLD participants only. The secondary model includes
+# all etiologies and adjusts for their group labels; both results are reported.
 #
 # v2: scores carry no direction (direction enters once, in 15); the endpoint
 # is z-scored so the coefficient is a standardized slope; the fit's residual

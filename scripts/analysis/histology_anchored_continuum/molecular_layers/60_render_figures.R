@@ -89,6 +89,9 @@ marginal_predictions <- function(data) {
   # 62_render_stage_continuum_comparison.R:182). An aliased stage x sex cell
   # leaves an NA in coef() while vcov() drops the column, and the quadratic form
   # below then fails with "non-conformable arguments" rather than a clear error.
+  # A stage absent from one cohort (GSE213621 has no F4 on the corrected roster)
+  # is an unused factor level there, not an aliased cell; drop it per cohort.
+  data <- droplevels(copy(data))
   design_check <- model.matrix(~ axis_z + stage_factor + sex_factor, data = data)
   ml_assert(qr(design_check)$rank == ncol(design_check),
             "Rank-deficient marginal-prediction model (aliased stage x sex cell)")

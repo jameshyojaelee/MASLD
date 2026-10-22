@@ -58,10 +58,14 @@ n_genes_expected <- if (file.exists(expected_counts_path)) {
 } else {
   23370L
 }
-if (nrow(mm) != 1L || mm$n_cohorts != 5L || mm$n_samples != 844L || mm$n_genes != n_genes_expected)
+unit_qualified <- "identity_qualified" %in% names(mm) && isTRUE(as.logical(mm$identity_qualified[[1L]]))
+n_samples_expected <- if (unit_qualified) as.integer(mm$n_samples[[1L]]) else 844L
+if (nrow(mm) != 1L || mm$n_cohorts != 5L || mm$n_samples != n_samples_expected || mm$n_genes != n_genes_expected ||
+    (unit_qualified && (!file.exists(expected_counts_path) ||
+      jsonlite::fromJSON(expected_counts_path)$n_samples != n_samples_expected)))
   fail("Five-cohort model-input contract drift")
 dge_all <- readRDS(normalizePath(mm$dge_path, mustWork = TRUE))
-if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(n_genes_expected, 844L)))
+if (!inherits(dge_all, "DGEList") || !identical(dim(dge_all), c(n_genes_expected, n_samples_expected)))
   fail("Five-cohort DGE identity drift")
 ann <- fread(normalizePath(mm$gene_metadata_path, mustWork = TRUE))[, .(
   gene_id_versioned = gene_id, gene_id_base = ensembl_base, gene_name)]
@@ -71,7 +75,7 @@ if (anyNA(ann$gene_id_versioned)) fail("gene annotation join failed")
 elig <- as.data.table(readRDS(normalizePath(mm$meta_path, mustWork = TRUE)))[
   sample_id %in% colnames(dge_all)]
 elig <- elig[!is.na(inferred_sex) & !is.na(dataset)]
-if (nrow(elig) != 844L) fail("Biological-unit identity drift")
+if (nrow(elig) != n_samples_expected) fail("Biological-unit identity drift")
 
 out_root <- file.path(candidate_root, "analysis", "f0_arms")
 dir.create(out_root, recursive = TRUE, showWarnings = FALSE)

@@ -56,10 +56,11 @@ input_manifest[, `:=`(
 )]
 ml_write_tsv_once(input_manifest, file.path(temporary_out, "input_manifest.tsv"))
 
-message("Loading the selected 23,370-gene F_five substrate")
+message("Loading the selected ", format(contract$gene_family_size, big.mark = ","),
+        "-gene F_five substrate")
 dge <- readRDS(dge_path)
 ml_assert(inherits(dge, "DGEList"), "The selected bulk substrate is not a DGEList")
-ml_assert(identical(dim(dge), c(contract$gene_family_size, 844L)),
+ml_assert(identical(dim(dge), c(contract$gene_family_size, contract$participant_count)),
           "F_five gene/participant census drift")
 gene_base <- ml_base_gene_id(rownames(dge))
 ml_assert(!anyDuplicated(gene_base), "Version stripping creates duplicate gene IDs")
@@ -71,7 +72,7 @@ bulk_required_columns(
     "fibrosis_stage", "nas_score"),
   "five-cohort participant manifest"
 )
-ml_assert(nrow(manifest) == 844L && !anyDuplicated(manifest$sample_id) &&
+ml_assert(nrow(manifest) == contract$participant_count && !anyDuplicated(manifest$sample_id) &&
             !anyDuplicated(manifest$analysis_unit_id),
           "Five-cohort manifest is not one row per participant")
 ml_assert(setequal(manifest$sample_id, colnames(dge)),
@@ -95,7 +96,8 @@ bulk_required_columns(signature, c("gene_id_base", "gene_symbol", "in_resource")
 signature[, gene_id_base := ml_base_gene_id(gene_id_base)]
 ml_assert(nrow(signature) == contract$signature_published_size &&
             sum(as.logical(signature$in_resource)) == contract$signature_observed_size,
-          "Frozen 145/139 signature census drift")
+          paste0("Frozen ", contract$signature_published_size, "/",
+                 contract$signature_observed_size, " signature census drift"))
 signature_ids <- signature[as.logical(in_resource), gene_id_base]
 # The frozen axes use the 139 signature genes flagged in_resource; all must be in
 # the bulk universe. A refit with a larger expression-filtered universe (the
@@ -328,7 +330,8 @@ ml_write_tsv_once(
   file.path(temporary_out, "continuum_gene_nas_sensitivity.tsv.gz")
 )
 
-message("Building target-specific leave-one-gene-out axes for 139 signature genes")
+message("Building target-specific leave-one-gene-out axes for ", length(signature_ids),
+        " signature genes")
 cohort_loadings <- fread(loading_path)
 projection_loadings <- fread(projection_loading_path)
 loo_rows <- list()
@@ -553,7 +556,8 @@ canonical[, gene_id_base := ml_base_gene_id(gene)]
 canonical[, canonical_deg := padj < 0.05 & abs(logFC) > 0.5]
 ml_assert(nrow(canonical) == contract$gene_family_size &&
             sum(canonical$canonical_deg) == contract$canonical_deg_size,
-          "Canonical 23,370/1,347 DEG contract drift")
+          paste0("Canonical ", format(contract$gene_family_size, big.mark = ","), "/",
+                 format(contract$canonical_deg_size, big.mark = ","), " DEG contract drift"))
 
 canonical_join <- merge(
   continuum_meta,

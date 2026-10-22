@@ -1,0 +1,16 @@
+suppressMessages(library(data.table))
+m <- as.data.table(readRDS("RNA-seq/results/manuscript_release/candidates/bulk-corrected-controls-20261008T162308Z/primary_source_controls/meta_matched.rds"))
+print(dim(m)); print(names(m))
+print(table(m$dataset, m$group_binary))
+d <- m[group_binary=="Disease" & dataset %in% c("GSE130970","GSE135251","GSE162694","GSE213621")]
+d[, bin3 := ifelse(dataset=="GSE213621", fibrosis_stage, ifelse(fibrosis_stage<=1,1L,ifelse(fibrosis_stage==2,2L,3L)))]
+print(dcast(d[, .N, by=.(dataset, bin3)], dataset~bin3))
+print(table(d$dataset, d$sex_final, useNA="ifany"))
+print(d[, .(nas_missing=sum(is.na(nas_score)), fib_na=sum(is.na(fibrosis_stage))), by=dataset])
+g <- m[dataset=="GSE213621"]; print(table(g$condition, g$fibrosis_stage, useNA="ifany"))
+print(table(d[dataset=="GSE213621"]$bin3, d[dataset=="GSE213621"]$sex_final))
+print(table(d[dataset=="GSE213621"]$sex_source))
+cat("unique units", uniqueN(m$analysis_unit_id), "of", nrow(m), "\n")
+cat("units in >1 dataset", sum(m[, uniqueN(dataset), by=analysis_unit_id]$V1>1), "\n")
+print(table(m$unit_evidence))
+print(table(d$dataset, d$fibrosis_stage, useNA="ifany"))

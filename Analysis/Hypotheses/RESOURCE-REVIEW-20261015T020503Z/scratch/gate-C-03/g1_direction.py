@@ -1,0 +1,16 @@
+import pandas as pd
+D='Analysis/MASLD_Model_Benchmark/executions/in-biopsy-allelic-obs-20260926T155651Z/coloc_direction/full-20260930T120450Z/direction_by_trait.tsv'
+t=pd.read_csv(D,sep='\t',low_memory=False,keep_default_na=False,na_values=[''])
+print(t.release.value_counts().to_dict())
+r=t[t.release=='candidate_r2_20260924T053244Z'].copy()
+print('rows',len(r),'genes',r.ensembl.nunique(),'symbols',r.gene.nunique())
+print('traits',r.trait.value_counts().to_dict())
+print('tier_label',r.tier_label.value_counts().to_dict())
+print('tier',r.tier.value_counts(dropna=False).to_dict())
+print('direction',r.direction.value_counts(dropna=False).to_dict())
+print('direction_sign',r.direction_sign.value_counts(dropna=False).to_dict())
+print('not_dir_reason',r.not_directional_reason.value_counts(dropna=False).head(20).to_dict())
+print('marginal_floor',r.marginal_floor.value_counts(dropna=False).to_dict())
+print('ld_r_used abs<sqrt(.5) among directional', ((r.ld_r_used.abs()<0.7071)&r.direction_sign.notna()&(r.direction_sign!=0)).sum())
+print('gtex check same sign', r.check_gtex_liver_same_sign_hit2.value_counts(dropna=False).to_dict())
+print('pair_pp4 min among rows',r.pair_pp4.min())

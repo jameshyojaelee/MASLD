@@ -17,9 +17,12 @@ system_context_units <- function(context) {
 }
 
 system_score_lineage <- function(root, corrected_hash) {
-  manifest_path <- file.path(root, "provenance", "input_manifest.tsv")
-  ml_assert(file.exists(manifest_path), "Corrected score input manifest is absent")
-  manifest <- fread(manifest_path)
+  # Corrected-score producers record their inputs in provenance/; the continuum
+  # core (00) and molecular-layer freeze (01) record them in inputs/.
+  manifest_path <- file.path(root, c("provenance", "inputs"), "input_manifest.tsv")
+  manifest_path <- manifest_path[file.exists(manifest_path)]
+  ml_assert(length(manifest_path) > 0L, "Corrected score input manifest is absent")
+  manifest <- fread(manifest_path[[1L]])
   ml_assert("sha256" %in% names(manifest) && corrected_hash %in% manifest$sha256,
             "Molecular scores or axes do not identify the corrected expression substrate")
 }
@@ -149,6 +152,19 @@ ml_assert(nrow(nodes) == 5439L && uniqueN(nodes$feature_id) == 5439L,
           "Frozen main-component node family drift")
 ml_assert(setequal(unique(nodes$collection), collection_order),
           "Frozen system collections drift")
+# A frozen node that fails the testability rule in the corrected gene universe has
+# no donor scores. It is recorded and left out of the system scores, and the system
+# node counts follow the scored nodes. Without a corrected roster every node is scored.
+untestable_nodes <- if (qualified) {
+  ml_untestable_nodes(analysis_candidate, nodes)
+} else {
+  nodes[0L, .(feature_id, collection, community_id)]
+}
+if (qualified) {
+  ml_write_tsv_once(untestable_nodes, file.path(table_dir, "system_untestable_nodes.tsv"))
+  nodes <- nodes[!feature_id %in% untestable_nodes$feature_id]
+  communities <- ml_scored_registry(communities, nodes)
+}
 
 hotspot <- fread(hotspot_path, na.strings = c("", "NA"))
 required_hotspot <- c(
@@ -206,8 +222,8 @@ feature_scores <- merge(
   feature_scores, nodes,
   by = c("feature_id", "collection"), all = FALSE, sort = FALSE
 )
-ml_assert(uniqueN(feature_scores$feature_id) == 5439L,
-          "At least one frozen system node lacks donor scores")
+ml_assert(uniqueN(feature_scores$feature_id) == nrow(nodes),
+          "At least one scored system node lacks donor scores")
 ml_assert(!anyDuplicated(feature_scores[, .(feature_id, sample_id, dataset)]),
           "Feature donor scores are duplicated")
 if (qualified) ml_assert(nrow(feature_scores) == n_units * nrow(nodes),
@@ -642,7 +658,7 @@ permutation_family <- function(score_data, axis_data, replicates, seed) {
   for (replicate_index in seq_len(replicates)) {
     permuted <- x_residual
     for (group in groups) {
-      permuted[group] <- sample(x_residual[group], length(group), replace = FALSE)
+      permuted[group] <- x_residual[group][sample.int(length(group), length(group), replace = FALSE)]
     }
     null <- as.numeric(crossprod(permuted, y_residual)) / denominator
     if (all(is.finite(null))) {
@@ -901,7 +917,7 @@ audit <- data.table(
   ),
   passed = c(
     all(input_manifest$hash_frozen_before_outcome_read),
-    nrow(communities) == system_family_size && nrow(nodes) == 5439L,
+    nrow(communities) == system_family_size && nrow(nodes) + nrow(untestable_nodes) == 5439L,
     participant_count_pass && nrow(system_scores) == expected_score_rows,
     metadata[dataset %in% evaluation, uniqueN(sample_id)] == n_evaluation,
     complete_family_pass, bh_pass, permutation_pass,
@@ -914,7 +930,8 @@ audit <- data.table(
   ),
   detail = c(
     paste(basename(required_inputs), collapse = ";"),
-    "43 systems; 5,439 main-component feature nodes",
+    paste0("43 systems; 5,439 main-component feature nodes, ", nrow(nodes), " scored, ",
+           nrow(untestable_nodes), " untestable in the analysis gene universe"),
     paste(n_units, "analysis units x 43 systems x 2 aggregation methods"),
     paste(evaluation, collapse = ";"),
     "43 systems x 2 axes x 2 cohorts x 2 aggregations; plus stage models",
