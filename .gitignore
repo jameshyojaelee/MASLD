@@ -185,3 +185,6 @@ micromamba
 **/*.pem
 **/*.key
 .streamlit/secrets.toml
+
+# Root README
+!/README.md
