@@ -183,12 +183,11 @@ mcp_cp_posterior <- function(scores, stages) {
   # Two-segment piecewise-linear with one changepoint anywhere in [0.5, 3.5].
   model <- list(y ~ 1 + x, ~ 1 + x)
   fit <- try(mcp::mcp(model, data = d, par_x = "x",
-                      adapt = 1500, iter = 4000, chains = 2,
-                      cores = 2),
+                      warmup = 1500, iter = 4000, chains = 2),
              silent = TRUE)
   if (inherits(fit, "try-error")) return(NULL)
   # Extract posterior samples on the changepoint cp_1
-  samp <- try(do.call(rbind, fit$mcmc_post), silent = TRUE)
+  samp <- try(do.call(rbind, coda::as.mcmc(fit)), silent = TRUE)
   if (inherits(samp, "try-error") || !"cp_1" %in% colnames(samp)) return(NULL)
   cp_post <- samp[, "cp_1"]
   cp_post <- cp_post[is.finite(cp_post)]
