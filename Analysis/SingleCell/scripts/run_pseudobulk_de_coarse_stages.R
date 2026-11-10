@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
-# Pseudobulk DE on consecutive coarse stage contrasts (proxies F-transitions).
+# Pseudobulk DE on cross-sectional coarse diagnosis contrasts.
 #
 # Contrasts:
-#   1. Steatosis vs Healthy           (proxies F0->F1 / F1->F2 entry)
-#   2. Steatohepatitis vs Steatosis   (proxies F2->F3)
-#   3. Cirrhosis vs Steatohepatitis   (proxies F3->F4)
+#   1. Steatosis vs Healthy
+#   2. Steatohepatitis vs Steatosis
+#   3. Cirrhosis vs Steatohepatitis
 #
 # Inputs:
 #   results_gpu_v2/integrated_atlas.h5ad            (cell metadata for stage mapping)
@@ -33,11 +33,14 @@ suppressPackageStartupMessages({
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 scvi_dir <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2")
-h5ad_file <- file.path(scvi_dir, "integrated_atlas.h5ad")
-pb_dir <- file.path(scvi_dir, "pseudobulk")
+h5ad_file <- Sys.getenv("SINGLECELL_ATLAS_H5AD", file.path(BASE,
+  "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/integrated_atlas_source_qualified_v2.h5ad"))
+pb_dir <- Sys.getenv("SINGLECELL_PSEUDOBULK_DIR", file.path(scvi_dir, "pseudobulk"))
 # Donor-collapsed output (fixes run-level pseudoreplication). Written to a NEW
 # directory so the legacy run-level coarse _de.csv files are not clobbered.
-out_dir <- file.path(scvi_dir, "pseudobulk_de/coarse_stage_donorcollapsed")
+out_dir <- Sys.getenv("SINGLECELL_STAGE_DE_OUT", file.path(
+  BASE, "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/pseudobulk_de_coarse"))
+if (dir.exists(out_dir) && length(list.files(out_dir))) stop("Refusing to overwrite stage results: ", out_dir)
 donor_pairing_file <- file.path(BASE, "data/GSE244832/metadata/donor_pairing.csv")
 gse202379_pairing_file <- file.path(BASE, "data/GSE202379/metadata/donor_pairing.csv")
 
@@ -177,6 +180,15 @@ srr_to_donor <- build_srr_to_donor_map(BASE)
 # per-run stage recovery above runs FIRST (it keys on raw SRR ids), so the vote
 # resolves each donor's stage from its runs; the hardened util returns NA for an
 # all-NA field (GSE202379, whose generic "MASLD" has no coarse-stage mapping).
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_source_diagnosis.R"))
+qualified_libraries <- load_source_diagnosis(BASE, "library")
+j <- match(sample_meta$sample, qualified_libraries$sample)
+stopifnot(!anyNA(j))
+de_preps <- c("nuclei", "cd45_negative", "unsorted")
+sample_meta <- sample_meta[
+  tolower(as.character(qualified_libraries$exclude_stage_analysis[j])) == "false" &
+  dataset != "GSE189600" & preparation_method %in% de_preps]
+eligible_runs <- sample_meta$sample
 n_runs_pre <- nrow(sample_meta)
 sample_meta <- collapse_sample_meta_to_donor(sample_meta, BASE)
 
@@ -199,15 +211,13 @@ for (i in seq_len(nrow(atlas_meta))) {
 message(sprintf("  donor-collapse: %d run-level rows -> %d donor-level rows",
                 n_runs_pre, nrow(sample_meta)))
 
-# Donor-level cell counts for the >=50-cell filter: sum each donor's per-run
-# cell counts (a run-level n_cells >=50 filter would wrongly drop donors whose
-# reads are split across many small runs).
-run_cell_counts <- cell_meta[, .N, by = sample]
-run_cell_counts[, donor := ifelse(sample %in% names(srr_to_donor),
-                                  srr_to_donor[sample], sample)]
-donor_cell_counts <- run_cell_counts[, .(n_cells = sum(N)), by = donor]
-setnames(donor_cell_counts, "donor", "sample")
-sample_meta <- merge(sample_meta, donor_cell_counts, by = "sample", all.x = TRUE)
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_source_diagnosis.R"))
+qualified <- load_source_diagnosis(BASE, "donor")
+j <- match(sample_meta$sample, qualified$donor)
+stopifnot(!anyNA(j))
+sample_meta[, disease_stage_coarse := qualified$disease_stage_coarse[j]]
+sample_meta <- sample_meta[
+  tolower(as.character(qualified$exclude_stage_analysis[j])) == "false" & dataset != "GSE189600"]
 
 # Apply prep-method filter consistently (same as pseudobulk_de.R)
 de_preps <- c("nuclei", "cd45_negative", "unsorted")
@@ -224,7 +234,7 @@ print(table(sample_meta_de$dataset, sample_meta_de$disease_stage_coarse))
 # ---------------------------------------------------------------------------
 # 2. Helper: run limma-voom for one cell type x contrast
 # ---------------------------------------------------------------------------
-run_de <- function(counts_mat_full, ct_name, contrast_name, ref_stage, trt_stage) {
+run_de <- function(counts_mat_full, lineage_cells, ct_name, contrast_name, ref_stage, trt_stage) {
   # counts_mat_full: genes x samples (full pseudobulk matrix for cell type)
   message(sprintf("  [%s] %s vs %s", ct_name, trt_stage, ref_stage))
 
@@ -237,10 +247,11 @@ run_de <- function(counts_mat_full, ct_name, contrast_name, ref_stage, trt_stage
   }
   cm <- counts_mat_full[, keep, drop = FALSE]
   meta <- sample_meta_de[matched_idx[keep]]
+  meta[, n_cells := lineage_cells$n_cells[match(sample, lineage_cells$sample)]]
 
   # Drop samples with <50 cells in this cell type's pseudobulk.
-  # Cell counts here use sample-level n_cells across ALL cell types as a proxy
-  # (matches the existing pipeline's logic in pseudobulk_de.R).
+  # Count only this lineage's cells from retained, eligible library columns.
+  stopifnot(!anyNA(meta$n_cells))
   keep_mc <- meta$n_cells >= 50L
   cm <- cm[, keep_mc, drop = FALSE]
   meta <- meta[keep_mc]
@@ -281,6 +292,14 @@ run_de <- function(counts_mat_full, ct_name, contrast_name, ref_stage, trt_stage
     design <- model.matrix(~ stage)
   }
   coef_name <- paste0("stage", trt_stage)
+  if (qr(design)$rank != ncol(design)) {
+    message("    Untestable: stage contrast is confounded with dataset")
+    fwrite(data.table(cell_type = ct_name, contrast = contrast_name,
+                      state = "untestable", reason = "stage_confounded_with_dataset", n_donors = nrow(meta)),
+           file.path(out_dir, paste0(ct_name, "_", contrast_name, "_untestable.tsv")), sep = "\t")
+    return(invisible(NULL))
+  }
+  fwrite(meta, file.path(out_dir, paste0(ct_name, "_", contrast_name, "_donor_roster.tsv")), sep = "\t")
   if (!coef_name %in% colnames(design)) {
     message("    WARNING: coefficient ", coef_name,
             " not found. Available: ",
@@ -336,6 +355,9 @@ for (ct_name in TARGET_CELL_TYPES) {
   rownames(counts_mat) <- gene_names
   storage.mode(counts_mat) <- "numeric"
   n_runs_cols <- ncol(counts_mat)
+  counts_mat <- counts_mat[, colnames(counts_mat) %in% eligible_runs, drop = FALSE]
+  lineage_cells <- source_lineage_cell_counts(qualified_libraries, ct_name, colnames(counts_mat), srr_to_donor)
+  fwrite(lineage_cells, file.path(out_dir, paste0(ct_name, "_lineage_cell_counts.tsv")), sep = "\t")
   # Collapse run-level columns (SRR) to donor level (sum raw counts per donor).
   counts_mat <- collapse_counts_to_donor(counts_mat, BASE)
   message(sprintf("  Loaded %d genes x %d samples (donor-collapsed from %d runs)",
@@ -343,7 +365,7 @@ for (ct_name in TARGET_CELL_TYPES) {
 
   for (contrast_name in names(CONTRASTS)) {
     pair <- CONTRASTS[[contrast_name]]
-    run_de(counts_mat, ct_name, contrast_name,
+    run_de(counts_mat, lineage_cells, ct_name, contrast_name,
            ref_stage = pair[1], trt_stage = pair[2])
   }
 }

@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+stop("Retired 2026-10-27: these panels (fig4c_convergence_or_ci_power, fig4d_endpoint_provenance) are stale and are not in Figure 5. Do not re-enable.")
 
 # Figure 4 honesty reframe (2026-08-08).
 #

@@ -1,5 +1,102 @@
 # Paper identity, novelty, and claims
 
+**Organizing claim and figure plan, 2026-11-09 (user-approved review plan).**
+The paper keeps its two arms but is organized around two positive partitions
+instead of the gene-set overlap:
+
+1. Genetic arm: of 167 colocalized ALT/AST loci (after the eQTL refit; 169 in r2), 18 carry MASLD liability at
+   the same lead SNP and 46 raise ALT without raising MASLD risk (enzyme only;
+   102 intermediate, 1 opposite), against the PNPLA3/TM6SF2 benchmark ratio
+   0.891. Out of sample (FinnGen MASLD, PDFF) enzyme-only and intermediate loci
+   are not separated; both carry about a quarter or less of the benchmark
+   signal. This is exploratory (DIG1 job 73, post hoc).
+2. State arm: of the 7,214 discovery F3–F4 genes replicated in SteatoSITE
+   (493 donors), 1,155 change inside hepatocytes after ambient correction in
+   four snRNA cohorts (689 up, 466 down); most of the rest cannot be separated
+   from cell mix in bulk data (CONF1 C3/C3b, post hoc combination).
+   GNMT, MAT1A and CYP2C19 are lower per hepatocyte in the held-out GSE289173
+   cohort (CONF1 C5; controls are a separate series).
+
+The genetics–state overlap (26 vs 21.4 expected) becomes one sentence and a
+supplementary panel. Figure 7 moves to the supplement; the main paper has six
+figures. The genetic class rule admits a fine-mapped coding variant (PIP ≥ 0.5)
+as a second mechanism type beside colocalization and adds a disease-liability
+field; this moves 20 genes, including PNPLA3 and TM6SF2, from unresolved to
+anchored (CONF1 C4). The rule is approved; the rebuilt Catalog table is a
+candidate until the final checklist. Exact values are in
+[RESULTS](RESULTS.md#review-round-confirmatory-tests-conf1-2026-11-09-not-adopted).
+Follow-up screen outcomes are not used.
+
+**Variant identity and transportability, 2026-11-07.** The 436-gene map is a
+provisional historical fit set: 90 genes use eQTL fits with duplicate variant
+identifiers, and MPRIP has both an ambiguous repeat event and invalid
+regularized reference LD. The remaining 346 genes have not thereby acquired
+verified GWAS variant identity or source-matched LD. Genetic counts, Catalog
+classes and downstream overlap/accessibility-QTL claims retain this qualification
+until corrected full fits are evaluated together.
+
+The 1,854 pooled tissue calls remain discovery associations. Their directions
+are broadly concordant (1,850 same-sign random-effects means; 1,208 same-sign
+effects in every available cohort), but no gene passes full-family BH in the
+24,115-gene REML/modified Hartung–Knapp sensitivity (minimum q=0.171430).
+This does not establish absence of tissue effects. Historical consistency
+classes and within-discovery agreement are not independent replication.
+The original prespecified SteatoSITE stage comparison retains its separate
+contrast and source credit. Genetic cross-study overlap is gene-level recurrence
+with a shared eQTL panel, not evidence that the same GWAS signal replicated.
+
+**Physical-capture correction, 2026-11-07.** Repeated sequencing runs from one
+capture do not contribute independent cells. Deeper sequencing may detect
+additional molecules; joint counting must deduplicate shared molecules and
+retain unique capture/barcode identities. Antibody-tag reads are excluded from
+RNA counting even when deposited under the same experiment accession.
+The 117 program memberships and weights stay fixed. A fixed-weight expression
+projection and the historical neighborhood-smoothed Hotspot PCA score are
+different measurements and must not be relabeled as each other. Historical
+embeddings and discovery stability remain conditional on their original input.
+Histology-error calculations require explicit assumptions and cannot establish
+empirical reliability or a performance ceiling from serial-biopsy variability.
+
+**Interpretation corrections, 2026-11-06.** The checked lineage-specific gene-DE
+fit uses at least 50 contributing cells per donor and tested lineage; the
+117-program stage result remains 0 selected. Intronic/exonic concordance supports
+a transcription-associated tissue component but cannot exclude RNA processing,
+stability or composition effects. Protein abundance does not measure metabolic
+function, between-batch agreement does not establish an assay ceiling, and a
+minimum detectable effect is not a bound on the true effect. Xenium disease
+resampling repeats carrier selection and retains its age/source qualifications.
+Near-one colocalization posteriors with LD diagnostics remain qualified rather
+than treated as certain mechanisms. Current correction values and the explicit
+historical-versus-candidate Catalog distinction are in
+[RESULTS](RESULTS.md#review-corrections-2026-11-06). These changes do not redefine
+the 117 programs, the 43 systems or the two-paper boundary.
+
+**Single-cell reference definition, 2026-10-26.** Disease comparisons use
+source-reported diagnoses with histology and etiology retained separately.
+Conflicting diagnoses are excluded rather than assigned an invented disease
+stage. A source-labelled nonsteatotic control is not necessarily numerically
+confirmed S0A0F0 tissue; P30 requires its activity qualification and exclusion
+sensitivity. Numeric fibrosis analyses require deposited numeric SAF and must
+not translate free-text healthy-control/end-stage categories into measured
+F0/F4. Liver Atlas's histology-only records and GSE136103 Alcohol/PBC cirrhosis
+cannot become MASLD cases by harmonization. The corrected RNA comparisons
+retain donor-level inference and the fixed 117-program coordinate system;
+they do not verify RNA–ATAC pair identities or physical sample swaps.
+The completed correction is described in
+`Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/REPORT.txt`;
+the user requested incorporation into main Figure 4 on 2026-11-03. Its
+individual panels, compact assembly, legend and Results text now use these
+corrections. Source-dependent supplementary artwork and other outputs still
+await incorporation; named release r9 is unchanged.
+
+The November 2 exploratory checks also qualify Figure 4. The focal gene sets
+were not recovered by Hotspot without GSE244832; their donor-level
+co-expression outside that dataset does not establish hepatocyte origin.
+Their continuum associations do not exceed matched random-axis references
+(Holm over four program-by-axis tests). This comparison did not test the 43
+systems. Neither program specificity nor independent molecular mechanisms
+follow from the displayed shared expression gradient.
+
 **Figure 3F interpretation, updated 2026-10-14:** the installed 54-gene matrix illustrates
 cross-sectional expression and exact-pair genetic support as separate quantities.
 It is conditioned on stage significance in the corrected 774-unit fits;
@@ -119,8 +216,8 @@ The paper establishes eight linked ideas:
 
 1. Trait-associated inherited genetic variation and the established MASLD
    transcriptome describe inherited trait associations and cross-sectional
-   disease remodeling. Their overlap (26 genes against 21.2
-   expected within expression deciles, among 3,769 genes evaluated by
+   disease remodeling. Their overlap (26 genes against 21.4
+   expected within expression deciles, among 3,589 eligible genes evaluated by
    multi-signal COLOC; expression not fully controlled, so no direction is
    stated) does not establish biological complementarity or antagonism. Most
    state-only genes (935 of 1,129 in the 14,704-gene interface) have no
@@ -137,6 +234,23 @@ The paper establishes eight linked ideas:
    stage; it is not a universal or longitudinal disease axis.
 3. Protein, chromatin, and spatial assays place genetic candidates and disease
    programs in assay-native molecular and physical tissue contexts.
+
+   The October 25 ATAC completion retains the current voom reference and treats
+   proximity/coaccessibility links as descriptive context. Internal prediction
+   robustness, cross-cohort accessibility agreement, and independent MASLD
+   validation are separate claims. Separate-library RNA may corroborate disease
+   effects after unique-cell reconstruction using source-native RNA diagnoses;
+   the completed RNA arm is testable only in hepatocytes and remains sensitive
+   to recorded batch. Donor-matched associations are untestable without a
+   documented cross-assay specimen key. The Cicero gain over distance also
+   persists after within-donor RNA shuffling, so correct nucleus-level pairing
+   has not demonstrated added predictive value for Cicero beyond proximity.
+   Manuscript inclusion was approved on October 26. The main-text finding is
+   modest cross-cohort accessibility agreement with batch sensitivity, not a
+   replicated MASH regulatory program. Four stellate peakwise candidates,
+   descriptive links, internal prediction controls and CHST9/TMEM150B
+   single-cohort RNA associations belong in the supplementary results.
+   These analyses cannot redefine the 117 programs or assign causal genes.
 4. Coding variants, noncoding DNA, supported regulatory relationships,
    transcription through a lncRNA locus, and the lncRNA molecule are distinct
    candidate objects whose interpretation cannot be inferred from proximity.
@@ -155,7 +269,8 @@ The paper establishes eight linked ideas:
 8. What a predictive model can learn from these maps depends on the task. Of six
    pretrained sequence models scored in seven rows, one (HyenaDNA) beats a
    sequence-free allele-identity ridge on a HepG2 reporter assay after
-   correction (sequence-based reporter baselines were not run); adding either pretrained
+   correction, but not a prespecified flank and dinucleotide ridge (gain 0.049,
+   Bonferroni lower bound -0.015); adding either pretrained
    embedding to distance lowers the score on endogenous eQTL effects, and no
    sequence model was scored on tissue-level severity. No score is
    interpretable without knowing
@@ -292,20 +407,17 @@ combined into a modality score.
    corrected. The aligned 117-program candidate uses current source-diagnosis
    metadata and a common-dataset primary universe. Original-source checking
    identifies two GSE174748 disease explants as cirrhotic, excluding them under
-   the unchanged three-stage rule. With a separate residual variance per
-   dataset and a within-dataset permutation null on the 60 ambient-correctable
-   donors (55 fitted for both programs, all in GSE202379 and GSE244832, the only
-   datasets with stage-informative donors), no
-   program passes the 117-program BH/stability rule: Ductular injury β=0.1365,
-   q=0.323375; Stromal ECM β=0.0837, q=0.577711, which cannot exclude its
-   earlier effect size. The 62-donor equal-variance fit (Ductular injury
-   q=0.037633, HC3 q=0.155826) is a supplementary sensitivity. On the 60-donor ambient common
-   universe, Stromal ECM changes from β=0.350898 to 0.127891 and Ductular injury
-   from β=0.384613 to 0.401035. Neither paired change passes the 117-program
-   BH family, although ECM's 64% reduction has nominal p=0.0064, the smallest
-   ordinary p of 106 computable paired changes (eighth by HC3 p). The
-   selection-conditioned attenuation classification applies to neither
-   program. The earlier 64/62-donor estimates are historical.
+   the unchanged three-stage rule. With source-diagnosis corrections adopted 2026-11-03 (GSE202379 P98
+   excluded, P30 retained as a qualified reference, GSE244832 D11/D14 set to
+   their deposited RNA diagnoses), a separate residual variance per dataset and
+   a within-dataset permutation null on at most 59 ambient-correctable donors
+   (54 hepatocyte donors fitted, all slope information from GSE202379 and
+   GSE244832), no program passes the 117-program BH/stability rule (smallest
+   q=0.18135): Ductular injury β=0.2065 (95% CI 0.0837 to 0.3293), q=0.18135;
+   Stromal ECM β=0.1624 (0.0113 to 0.3134), q=0.242929. Ambient-corrected GLS
+   selects none of 106 computable programs (smallest q=0.11115). The
+   equal-variance fit on at most 61 source records is a supplementary
+   sensitivity. The 60/62/64-donor estimates are historical.
    GSE189600 and Liver Atlas
    remain explicit uncorrected passthrough datasets only in the full-universe
    sensitivity. Donor-paired same-atlas contrasts descriptively localize
@@ -366,18 +478,22 @@ equivalence rule meets its error limits only in deciles 7 to 9. These are not fa
 They show why modality-vote counting converts absent coverage, unresolved donor
 identity, and assay mismatch into false confidence.
 
-The selected Gene Catalog r8 retains 28,233 gene identities: 400 genetically
-anchored, 26 supported in both domains (class `concordant`; effect directions not compared), 1,129 established-state associated, 13,127 unresolved
-and 13,551 untested. Its bulk input uses 774 conservative genetic-identity
+The adopted eligibility-corrected Gene Catalog (`gene-catalog-eligibility-20261106`)
+retains 28,233 gene identities: 400 genetically anchored, 26 supported in both
+domains (class `concordant`; effect directions not compared), 1,118
+established-state associated, 12,958 unresolved and 13,731 untested. Its bulk input uses 774 conservative genetic-identity
 clusters, not verified independent donors; 855 held annotations remain
-untestable. The October 14 local review and molecular-object companion preserve
-every class and all 117 program definitions. An untested interface class can
+untestable. The November 6 user-approved correction applies the existing
+priority eligibility rule: 188 genetic calls become untestable, and 180 classes
+change (169 unresolved and 11 state-associated become untested). All RNA
+effects/calls, 436 native genetic positives and 117 program definitions are
+preserved. An untested interface class can
 coexist with positive evidence in one measured domain. The 14,720 pre-adjudication
-symbol-grouped rows, 14,704 native stable-ID overlap rows and 14,682 jointly
+symbol-grouped rows, 14,704 native stable-ID interface rows and 14,502 jointly
 eligible Catalog identities are different universes and must be named beside
 their estimates. The molecular-object companion infers no credible-set target
 link or causal mechanism from a gene-level support call; see
-[the current Catalog results](RESULTS.md#catalog-review-and-molecular-object-companion-2026-10-14).
+[the current Catalog results](RESULTS.md#catalog-eligibility-adoption-2026-11-06).
 
 For spatial omics, the finding concerns two programs fixed in advance from the
 superseded August stage fit; neither passes the corrected 117-program rule.
@@ -450,11 +566,11 @@ DNA elements when the mechanism remains unresolved.
 |---|---|---|---|
 | **1. A multimodal human MASLD Resource** | What do inherited variation, disease remodeling, and tissue context each show for a gene? | Cohorts, modalities, biological units, phenotype provenance, the two primary maps, assay coverage, and the shared evidence rules | The Resource records germline signals and multicellular disease biology side by side without treating modalities as interchangeable |
 | **2. Inherited genetic variation** | Which trait-associated germline signals and candidate molecular links are supported? | GWAS portfolio, fine-mapped coding and noncoding variation, GWAS/eQTL shared signals, ancestry, method eligibility, DNA context, target-gene biotype, and a GNMT worked locus if retained after corrected COLOC | Inherited variation spans coding, supported regulatory, and unresolved noncoding mechanisms; shared-signal evidence narrows a locus but does not resolve its causal variant |
-| **3. Multicohort disease remodeling** | How is established MASLD remodeled across cohorts and cross-sectional disease stages? | Five-cohort differential expression on 774 genetic-identity clusters (not verified donors) and per-cohort DEG membership estimated for all five cohorts; the restored GSE126848 model omits constant sex on 23 control and 7 disease units. GSE126848 enters per-cohort membership through a refit on the 15,592 genes that pass its own expression filter (BH over those genes; the other four cohorts use the fixed 24,115-gene family). The per-cohort union contains 12,180 genes, including 8,341 called in one cohort and 3,839 in two or more, of which 2,628 have one sign in every calling cohort (40 in all five) and 1,211 (31.5%) have opposite signs in different cohorts; it is distinct from the 1,854 pooled calls. Prespecified endpoint PCA and DEG sensitivity, common-reference fibrosis-stage contrasts, continuous NMF axes, supplementary direction/leave-one-cohort-out stability and adjacent fibrosis/NAS views, the GNMT–MAT1A–CYP2C19 RNA–stage–protein state, and the genetics–state interface | The pooled established-disease signal agrees in direction for 78.3% to 100% of the 1,854 calls within each cohort (each cohort is also part of the pooled fit) and holds under a stricter histologic endpoint; shared per-cohort membership is not replication, because 1,211 of 3,839 multi-cohort genes change sign between cohorts. Removing one cohort and refitting keeps 88.6% to 96.8% of the 1,854 calls as same-sign calls for four cohorts and 66.7% (1,236) for GSE213621, which alone calls 1,654 of the 1,854 with the same sign and supplies 326 of the 774 units, 68 of the 138 controls and 45.1% of the quality weight; of the lost calls still tested, 505 of 510 keep their sign and effects shrink (slope 0.87). Figure S3C plots the fixed 24,115-gene version (70.7% to 96.6% kept; Spearman 0.870 to 0.995); a severity-linked reduction in hepatocyte metabolic gene and protein abundance connects the GNMT locus to established disease only provisionally (one single-signal ABF result, PP.H4 0.706, in a study where SuSiE was attempted for GNMT but returned no credible-set result) and without turning the three-gene state into one inherited mechanism |
-| **4. Multicellular programs and molecular continuum** | Which donor-level programs organize disease remodeling, how secure is their lineage assignment, and what variation remains within recorded fibrosis stage? | Seven-dataset atlas, all-117 signed disease skyline, donor-paired same-atlas localization and bulk transport for Stromal ECM and Ductular injury, working main Figure 4F, an outcome-blind pathway/Hotspot systems map in Figure 4G, and the complete 43-system stage-versus-continuum comparison in Figure 4H; complete transcript/pathway/program comparisons remain supplementary | Histology anchors severity, while the externally anchored continuum describes transcriptional variation within stage without redefining programs, pathways, or temporal order |
-| **5. Molecular and physical tissue context** | Where are candidate genes and disease programs observable and spatially organized? | Assay-native protein and chromatin context, ATAC, complete spatial coverage, and matched-null inference | Stromal ECM exceeds a matched-gene spatial null after all-cell adjustment and Ductular injury does not (indeterminate), but 68 and 74 of 114 fixed programs also exceed it; no prespecified test compared the two programs, and disease association, tissue architecture, and cellular origin are reported as separate claims |
+| **3. Multicohort disease remodeling** | How is established MASLD remodeled across cohorts and cross-sectional disease stages? | Five-cohort differential expression on 774 genetic-identity clusters (not verified donors) and per-cohort DEG membership estimated for all five cohorts; the restored GSE126848 model omits constant sex on 23 control and 7 disease units. GSE126848 enters per-cohort membership through a refit on the 15,592 genes that pass its own expression filter (BH over those genes; the other four cohorts use the fixed 24,115-gene family). The per-cohort union contains 12,180 genes, including 8,341 called in one cohort and 3,839 in two or more, of which 2,628 have one sign in every calling cohort (40 in all five) and 1,211 (31.5%) have opposite signs in different cohorts; it is distinct from the 1,854 pooled calls. Prespecified endpoint PCA and DEG sensitivity, common-reference fibrosis-stage contrasts, continuous NMF axes, supplementary direction/leave-one-cohort-out stability and adjacent fibrosis/NAS views, the GNMT–MAT1A–CYP2C19 RNA–stage–protein state, and the genetics–state interface | The historical fixed-family comparison agrees in direction for 78.3% to 100% of the 1,854 calls within each discovery cohort; native GSE126848 filtering instead gives 937/1,056 same-sign testable calls with 798 untestable. The current full-family REML/modified Hartung–Knapp sensitivity gives 0 BH calls (minimum q=0.171430); direction agreement is descriptive and holds under a stricter histologic endpoint; shared per-cohort membership is not replication, because 1,211 of 3,839 multi-cohort genes change sign between cohorts. Removing one cohort and refitting keeps 88.6% to 96.8% of the 1,854 calls as same-sign calls for four cohorts and 66.7% (1,236) for GSE213621, which alone calls 1,654 of the 1,854 with the same sign and supplies 326 of the 774 units, 68 of the 138 controls and 45.1% of the quality weight; of the lost calls still tested, 505 of 510 keep their sign and effects shrink (slope 0.87). Figure S3C plots the fixed 24,115-gene version (70.7% to 96.6% kept; Spearman 0.870 to 0.995); a severity-linked reduction in hepatocyte metabolic gene and protein abundance connects the GNMT locus to established disease only provisionally (one single-signal ABF result, PP.H4 0.706, in a study where SuSiE was attempted for GNMT but returned no credible-set result) and without turning the three-gene state into one inherited mechanism |
+| **4. Multicellular programs and molecular continuum** | Which donor-level programs organize disease remodeling, how secure is their lineage assignment, and what variation remains within recorded fibrosis stage? | Seven-dataset atlas, all-117 source-corrected stage skyline, complete discovery/content lineage comparison, 112-program bulk fibrosis coefficients, descriptive focal trajectories, coefficient strips across all 43 outcome-blind systems and their donor-first stage-versus-continuum comparison; complete transcript/pathway/program comparisons remain supplementary | Histology anchors severity; the continuum describes a shared expression gradient without establishing signature specificity, transcript origin or temporal order |
+| **5. Molecular and physical tissue context** | Where are candidate genes and disease programs observable, and in which cell type of intact tissue? | Liver protein (PXD051911) and Xenium in situ cell-type location (Tzouanas et al. 2026, 9 control livers); snATAC and Visium autocorrelation in the supplement | 188 of 211 protein-significant genes match the RNA sign; 22 of 95 programs have protein scores robustly associated with histologic burden (14 lower, 8 higher); in intact control liver the top cell type matches the snRNA lineage for 12 of 14 protein-supported and 8 of 11 colocalized genes. Chromatin enrichment sits in shared peaks and the Visium matched-gene null is passed by most programs, so neither supports a program- or lineage-specific claim. No disease change is claimed from Xenium. |
 | **6. MASLD Gene Catalog** | How can the two maps guide interpretation and the next experiment? | Gene and molecular-object entries, evidence states, unresolved alternatives, and deterministic follow-up routes | The Resource turns inherited variation and multicellular remodeling into an experiment-ready field resource |
-| **7. Model framework and transfer limits** | What can current predictive models learn from these maps, and how would we know it is not prior exposure? | A model evaluation framework run across tasks and model families, every score reported beside a per-cohort audit of that model's training exposure; gain over each task's own baseline; the measured limits on tissue-severity transfer and what they follow from | Of six pretrained sequence models scored in seven rows, one (HyenaDNA) beats a sequence-free control on a HepG2 reporter assay after correction; adding a pretrained embedding to distance lowers the score on endogenous eQTL effects; no sequence model was scored on severity; no score is readable without exposure control |
+| **S7 (moved to supplement 2026-11-09). Model framework and transfer limits** | What can current predictive models learn from these maps, and how would we know it is not prior exposure? | A model evaluation framework run across tasks and model families, every score reported beside a per-cohort audit of that model's training exposure; gain over each task's own baseline; the measured limits on tissue-severity transfer and what they follow from | Of six pretrained sequence models scored in seven rows, one (HyenaDNA) beats a sequence-free control on a HepG2 reporter assay after correction; adding a pretrained embedding to distance lowers the score on endogenous eQTL effects; no sequence model was scored on severity; no score is readable without exposure control |
 
 The single-cell model comparison maps five broad cell classes rather than
 disease stages. The exact evaluated TranscriptFormer checkpoint has five
@@ -493,6 +609,36 @@ MASLD effect. The candidate's exact task boundaries and current evidence are
 in [RESULTS](RESULTS.md#two-model-molecular-value-development-2026-09-22-not-adopted).
 No result from this unadopted candidate is reported in the paper.
 
+**Figure 7 redesign plan (user, 2026-11-03; not adopted, not built).** If the
+two-model candidate is adopted, Figure 7 asks what models can infer about a
+liver sample that was not directly measured. It treats two tasks separately
+and draws no link between them: sequence to liver caQTL effect (regulatory
+potential) and liver RNA to H3K27ac profile (measured tissue state). Model
+names label panels; they do not organize the figure. Every score keeps its
+training-exposure label. Planned content:
+
+- A small two-branch schematic of inputs, measured targets and held-out units.
+- Main chromatin result: the 99-participant increment of global-plus-local RNA
+  over the histology, sex and library comparator (+0.12162 [0.09542, 0.14682]).
+  The 22 histology-matched pairs (+0.02211 local over global) are shown as the
+  matched check and labelled as fibrosis 0–1 only (20 of 22 pairs are women
+  with fibrosis 0; no fibrosis 2–4 pairs).
+- Transfer: the released severity instrument in its external cohorts (Figure 7D
+  values), with its two limits stated beside it: no advantage over a ridge
+  fitted inside each cohort, and its expression transform was chosen on
+  GSE268273, so only GSE213621 and GSE276114 test transfer.
+- Supplement or text, not main panels, because each states a threshold or a
+  confounded test rather than liver biology: the adapter versus matched 2 kb
+  and native 1 Mb (3.15% against the 5% margin), sequence-by-RNA versus
+  additive (below the +0.01 margin), and the B4 cross-assay H3K27ac transfer
+  (both fixed recipes below the training mean in 17/17 GSE128072 normal
+  transplant-donor ChIP livers, which earlier jobs had already opened).
+- Supplement: single-cell foundation models, H&E and spatial models, other
+  severity models, and Model A.
+
+Building waits for adoption of the candidate and for completion of all models,
+as stated under figure rules below.
+
 This order starts with the complete Resource, then maps inherited genetic
 variation and established multicellular disease remodeling before resolving
 their cell and physical tissue context. It preserves the recognizable
@@ -500,8 +646,9 @@ transcriptomic core of differential gene
 counts, continuous bulk axes, and donor-level gene programs without describing separate human
 biopsies as longitudinal change.
 
-The working compact artwork selection uses slot-sized panels:
-Figure 4C is the tracked 24-module Hotspot heatmap. Figure 4D compares discovery
+The working compact artwork selection uses native slot dimensions and 6 pt
+Helvetica with no footnotes. Figure 4C displays all 117 source-corrected stage
+coefficients (0 selected; minimum permutation BH q=0.18135). Figure 4D compares discovery
 and content-associated lineage across all 117 fixed programs. Figure 4E shows
 the complete 112-program weighted linear fibrosis/NAS associations, with BH
 across 224 tests; linear NAS results do not summarize nonlinear remodeling.
@@ -526,10 +673,11 @@ in the standard 16-type composition candidate; 0.203 in the separate 13-part
 rare-type pooled sensitivity; unadjusted 0.760), and no adjusted system is named. The earlier two-program lineage and
 member-gene transport examples remain supporting source results. Working
 main Figure 4F shows five-cohort descriptive Stromal ECM and Ductular injury
-trajectories over the fixed external projection. Figure 4G places the
-stage-adjusted continuum coefficients, estimated in the 367 disease units, on a
-signature-excluded, outcome-blind
-membership geometry spanning pathways and fixed Hotspot programs. Its systems
+trajectories over the fixed external projection. Figure 4G shows the
+stage-adjusted continuum coefficients, estimated in the 367 disease units,
+as two columns of system coefficient strips. The fixed systems were defined
+from signature-excluded, outcome-blind gene membership spanning pathways and
+Hotspot programs; the membership map remains in Figure S4Q. Its systems
 are size-ranked visualization units, not an ontology, and its cross-system and
 sliding-window summaries are descriptive because the features and windows are
 correlated. The purpose of the systems layer is to give the continuum a unit of
@@ -591,10 +739,10 @@ two-axis fixed-effect meta-analysis BH/direction criteria, and 18 also pass maxT
    remains in the external caption authority. Figure 3 remains unchanged and the full
 synchronized Resource release remains open. The ambient
 audit is retained as source-table provenance rather than a figure panel. Figure
-5F contrasts all-cell-adjusted Moran excess over matched genes and pairs it
-with one outcome-blind registered H&E overlay of the same adjusted Stromal ECM
-score; the overlay is illustrative because no pathologist region masks are
-available. Figure
+5 (2026-11-03) is 5A and 5B protein, 5C Xenium cell-type location, and 5D
+program protein-histology forest; the former 5A, 5D, 5E and 5F (input
+diagram, snATAC context, three-track program summary and Visium Moran
+calibration) are supplementary. Figure
 6C–D use evidence and experiment-routing matrices rather than prose-heavy
 nodes. This is an assembly candidate, not an adopted release.
 
@@ -604,6 +752,32 @@ inside the plotting area. Exact estimates, unit qualifications, and claim
 boundaries remain in the panel source table and legend. The full 117-program
 coverage family remains visible in the supplement, while focused diagnostic
 plots may show only the comparison needed to explain the main call.
+
+### Figure priority: biology before statistics
+
+New panels are ranked by the biological finding they show, not by the
+analysis that produced them.
+
+1. Highest: one gene or program measured in two or more assays on the same
+   biology, where the assays agree or disagree in a stated way. Examples:
+   lineage in snRNA, transport to bulk cohorts, location in tissue, protein
+   or chromatin at the same gene.
+2. Next: a single-assay biological result. It names a gene or program, the
+   cell type or tissue compartment, and the direction and size of change
+   with disease or stage, on donors.
+3. Supplement, source table or one sentence of text: plots about the data or
+   method rather than the liver. These include coverage and observability
+   counts, power, null distributions, calibration, permutation histograms,
+   QC and method comparisons.
+
+Before proposing a main panel, write the biological sentence it supports. If
+that sentence is about an assay, a test or a threshold, the panel is not a main
+panel. An untestable or negative result goes in the text unless it changes a
+biological claim. The user chose the existing main-panel exceptions, which
+include the bulk-cohort overlap and endpoint PCA in Figure 3. Do not add others
+without asking. Figure 1 is the user's own Illustrator figure; do not generate
+panels for it. Figure 7 will be redesigned after all models are built; do not
+build Figure 7 panels before then.
 
 ## Claims we can make
 
@@ -663,31 +837,33 @@ native-scale error and independent biological units govern new comparisons.
   change RNA through nonsense-mediated decay or splicing (Rivas et al. 2015,
   PMID 25954003). Any role of the pooled coding difference in the
   genetic/disease-state overlap is a hypothesis this comparison did not test.
-- Among the 3,769 genes evaluated by multi-signal COLOC (SuSiE state positive
-  or tested at PP.H4 ≤ 0.5; the prespecified universe), the 426 colocalized and
-  220 canonical disease-state genes share 26, against 21.21 expected within 10
-  AveExpr quantile bins (Mantel-Haenszel OR 1.295, 95% CI 0.835 to 2.007; exact
-  two-sided P 0.2755; H57, one prespecified test). In the sensitivity that
+- Among the 3,589 genes eligible under the adopted priority rule and evaluated
+  by multi-signal COLOC (SuSiE state positive or tested at PP.H4 ≤ 0.5), the 426
+  colocalized and 209 canonical disease-state genes share 26, against 21.396
+  expected within 10 AveExpr quantile bins (Mantel-Haenszel OR 1.2815, 95% CI
+  0.8262 to 1.9878; exact two-sided P 0.27699; one overlap comparison). This
+  replaces the historical 3,769-gene comparison after the shared-posterior
+  eligibility check was applied to carried negatives. In the sensitivity that
   applies the shared-posterior check to the carried negatives and counts a gene
   as tested if any tier-1/2 study stays eligible (3,776 genes before the check,
   because the seven SuSiE-untestable genes count as tested), 40 genes become
   untestable, the universe is 3,736, and 26 genes are shared against 21.15
   expected (OR 1.300, 95% CI 0.838 to 2.017; exact P 0.2746). Under the
-  priority rule of the 3,769 universe it is 3,589 (OR 1.282, 95% CI 0.826 to
-  1.988; exact P 0.2770). These values use the
+  priority rule adopted on November 6 it is 3,589, as above. These values use the
   adopted 774-unit bulk refit and COLOC release
-  `susie_coloc_r2_20260924T053244Z`, adopted on October 14. A prespecified
-  list of non-colocalized genes matched on expression carried 13 DEGs against
-  21.3 expected within the same bins, so expression is labelled not fully
-  controlled and no direction may be stated. The 95% CI includes 1; ORs
-  between about 0.46 and 1.77 had less than 80% power to be detected. "At
-  chance" may be written only with the interval and this power limit. The
+  `susie_coloc_r2_20260924T053244Z`, adopted on October 14. The historical
+  3,769-gene expression-matched control carried 13 DEGs against 21.3 expected;
+  its power analysis found less than 80% power for ORs about 0.46–1.77. Neither
+  diagnostic was rerun on 3,589 genes and neither quantifies the updated
+  comparison. Expression is not established as fully controlled, and the
+  current interval includes 1. Do not claim equivalence or biological
+  opposition from this comparison. The
   earlier values counted genes without a multi-signal COLOC result as genetic
   negatives and are withdrawn: 26 against 33.46 expected, OR 0.757, in the
   14,704-gene interface (10,928 such genes, 935 of them canonical DEGs), and
   26 against 33.4 expected, OR 0.76, in the 14,720 symbol-grouped rows (10,941
   such genes, 935 of them canonical DEGs). The 14,704-gene stable-Ensembl interface, the 14,720
-  symbol-grouped rows and the 14,682-gene adjudicated Catalog are distinct
+  symbol-grouped rows and the 14,502-gene jointly eligible Catalog are distinct
   universes and must not be interchanged. This is reported as a
   description, never as a finding in its own right; any link to the coding
   difference above is a hypothesis. The class comparison was rerun on the
@@ -839,8 +1015,9 @@ native-scale error and independent biological units govern new comparisons.
   screen.
 - On a synthetic reporter assay in two HepG2 contexts, one of seven pretrained
   sequence-model rows (six models), HyenaDNA, exceeds a ridge on allele identity
-  alone after Bonferroni correction across the seven rows; sequence-based
-  reporter baselines were not run. On the endogenous variant-to-gene effect, adding
+  alone after Bonferroni correction across the seven rows. Against sequence
+  baselines (CpG ridge, flank and dinucleotide ridge) the gain does not survive
+  the same correction. On the endogenous variant-to-gene effect, adding
   either pretrained embedding to distance lowers the score, and permuting the
   correspondence between a variant and its embedding does not degrade the score.
   No pretrained sequence model was scored on tissue-level severity. These are statements about

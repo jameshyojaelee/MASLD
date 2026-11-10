@@ -191,10 +191,15 @@ def build_pseudobulk_de(ens2sym: dict) -> pd.DataFrame:
     allcell / F-transition bayesprism files); padj<0.1 filter, ENSG/symbol split,
     strip_version + rounding all reuse ggp.
     """
-    pbdir = ggp.PSEUDOBULK_DIR
-    print(f"Loading pseudobulk DE (with contrast) from {pbdir}")
+    # Checked lineage-cell correction candidate; named releases are unchanged.
+    corrected = PROJECT_ROOT / "Analysis/Hypotheses/REVIEW-FIX-20261107T020001Z/singlecell/results"
+    pbdirs = [Path(os.environ.get("SINGLECELL_BINARY_DE_OUT", str(corrected / "binary"))),
+              Path(os.environ.get("SINGLECELL_STAGE_DE_OUT", str(corrected / "coarse")))]
+    if any(not p.is_dir() for p in pbdirs):
+        raise FileNotFoundError("Source-qualified binary and stage DE are required")
+    print(f"Loading source-qualified pseudobulk DE from {pbdirs}")
     frames = []
-    for fp in sorted(pbdir.glob("*_de.csv")):
+    for fp in sorted(fp for pbdir in pbdirs for fp in pbdir.glob("*_de.csv")):
         if fp.name.startswith("archive"):
             continue
         try:

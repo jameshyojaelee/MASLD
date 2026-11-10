@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 """Add preparation_method and condition_harmonized to integrated atlas h5ad.
 
-Fixes:
-  1. Liver_Atlas condition: "Mixed" → "Healthy" (all 48 samples are healthy donors)
-  2. Adds obs["preparation_method"]: nuclei, cd45_negative, cd45_positive,
-     dc_sorted, monos_macs_sorted, unsorted
-  3. Adds obs["condition_harmonized"]: Healthy vs MASLD (collapses NAFLD/NASH)
+Uses deposited RNA diagnoses and preserves unresolved histology and other
+etiologies. Dataset membership never determines the disease group.
 
 Uses h5py for direct HDF5 modification — avoids loading the full expression
 matrix into memory. Safe for 25GB+ h5ad files on CPU nodes.
@@ -16,9 +13,12 @@ Also regenerates cell_type_proportions.csv with new metadata columns.
 import os
 import sys
 import csv
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import h5py
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from lib_source_diagnosis import load_library_diagnoses
 
 BASE = os.environ.get(
     "MASLD_PROJECT_ROOT",
@@ -26,8 +26,9 @@ BASE = os.environ.get(
 )
 
 SCVI_DIR = os.path.join(BASE, "Analysis/SingleCell/results_gpu_v2")
-H5AD_FILE = os.path.join(SCVI_DIR, "integrated_atlas.h5ad")
-PROPS_FILE = os.path.join(SCVI_DIR, "cell_type_proportions.csv")
+CORRECTED_DIR = os.path.join(BASE, "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026")
+H5AD_FILE = os.environ.get("SINGLECELL_ATLAS_H5AD", os.path.join(CORRECTED_DIR, "integrated_atlas_source_qualified_v2.h5ad"))
+PROPS_FILE = os.environ.get("SINGLECELL_PROPORTIONS_OUT", os.path.join(CORRECTED_DIR, "cell_type_proportions.csv"))
 
 # ---------------------------------------------------------------------------
 # SRR → preparation_method lookup (from SraRunTable.csv × GSE192740_sampleInfo)
@@ -63,16 +64,6 @@ MONOS_MACS_SORTED_SRRS = {
 # Everything else in Liver_Atlas human is CD45+ sorted
 # SRR17375012-019, SRR17375024-046 (excl 020/021/022/023/047/050),
 # SRR17375048-049 = 33 SRRs
-
-CONDITION_HARMONIZE = {
-    "Healthy": "Healthy",
-    "Mixed": "Healthy",  # Liver_Atlas healthy donors mislabeled as Mixed
-    "MASLD": "MASLD",
-    "NAFLD": "MASLD",
-    "NASH": "MASLD",
-    "Cirrhotic": "MASLD",  # GSE136103 (Ramachandran 2019) cirrhosis → MASLD
-}
-
 
 def read_obs_column(f, col_name):
     """Read an obs column from h5ad, handling both categorical and plain arrays."""
@@ -121,6 +112,10 @@ def write_categorical_column(f, col_name, values):
     grp.create_dataset("categories", data=cats.astype(object), dtype=dt)
     grp.attrs["encoding-type"] = "categorical"
     grp.attrs["encoding-version"] = "0.2.0"
+    grp.attrs["ordered"] = False
+    columns = list(f["obs"].attrs["column-order"])
+    if col_name not in columns:
+        f["obs"].attrs["column-order"] = np.asarray(columns + [col_name], dtype=h5py.string_dtype())
 
 
 ## GSE136103 (Ramachandran 2019): GSM → preparation_method
@@ -171,6 +166,8 @@ def classify_preparation(sample_id, dataset):
 
 
 def main():
+    if Path(PROPS_FILE).exists():
+        raise FileExistsError(PROPS_FILE)
     print(f"Reading h5ad: {H5AD_FILE}")
     assert os.path.exists(H5AD_FILE), f"h5ad not found: {H5AD_FILE}"
 
@@ -198,13 +195,10 @@ def main():
     for k, v in sorted(prep_counts.items(), key=lambda x: -x[1]):
         print(f"  {k}: {v:,} cells")
 
-    # --- Fix condition: Liver_Atlas "Mixed" → "Healthy" ---
-    print("Fixing condition labels...")
-    new_conditions = conditions.copy()
-    mixed_mask = (datasets == "Liver_Atlas") & (conditions == "Mixed")
-    n_fixed = mixed_mask.sum()
-    new_conditions[mixed_mask] = "Healthy"
-    print(f"  Fixed {n_fixed:,} cells: Liver_Atlas Mixed → Healthy")
+    labels = load_library_diagnoses(BASE)
+    assert set(samples).issubset(labels)
+    assert all(labels[s]["dataset"] == d for s, d in zip(samples, datasets))
+    new_conditions = np.array([labels[s]["condition"] for s in samples])
 
     cond_counts = Counter(new_conditions)
     for k, v in sorted(cond_counts.items(), key=lambda x: -x[1]):
@@ -212,9 +206,7 @@ def main():
 
     # --- Compute condition_harmonized ---
     print("Computing condition_harmonized...")
-    cond_harmonized = np.array([
-        CONDITION_HARMONIZE.get(c, "Unknown") for c in new_conditions
-    ])
+    cond_harmonized = np.array([labels[s]["condition_harmonized"] for s in samples])
     harm_counts = Counter(cond_harmonized)
     for k, v in sorted(harm_counts.items(), key=lambda x: -x[1]):
         print(f"  {k}: {v:,} cells")

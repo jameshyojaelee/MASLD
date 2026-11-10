@@ -25,7 +25,10 @@ The study-level deltas are means over the held-out studies, so small studies
 carry a large share of each mean. One held-out study contributes 2 donors and
 149 cells, 0.3% of the evaluation set, but receives one seventh of the weight.
 When we weighted studies by donors instead, two of twelve model-by-head blocks
-changed the sign of their delta (Figure 7F). We therefore report both means and
+changed the sign of their delta (Figure 7F). For TranscriptFormer minus scVI
+with the linear head, the donor-pooled delta drawn in Figure 7F is +0.0154,
+and the equal-study mean is -0.0042; both intervals exclude zero, so the sign
+depends on the estimand. We therefore report both means and
 make no sign claim that rests on the unweighted mean.
 
 We next tested pretrained sequence models on two variant-level tasks (Figure
@@ -34,8 +37,15 @@ GSE281364 reporter assay source study]. Of seven pretrained sequence-model rows
 (six models), one, HyenaDNA [ref: HyenaDNA model paper], exceeded a ridge on
 allele identity alone after Bonferroni correction across the seven rows. Its
 gain was 0.082 Spearman (95% interval 0.027 to 0.139; Bonferroni-corrected
-lower bound 0.009) (Figure 7B). We did not run sequence-based reporter
-baselines, so this gain is over a sequence-free control. The second task was
+lower bound 0.009) (Figure 7B). HyenaDNA scored 0.216 against 0.134 for the
+allele-identity ridge. We also scored sequence-based baselines: a CpG ridge
+(0.178), a composition ridge (0.176), and the prespecified flank and
+dinucleotide ridge (0.167). Over the flank and dinucleotide ridge, the HyenaDNA
+gain was 0.049 (95% interval 0.0006 to 0.099; Bonferroni-corrected lower bound
+-0.015). Over the CpG ridge it was 0.038 (95% interval -0.006 to 0.083).
+gkm-SVM scored 0.126. MPRALegNet scored 0.204 and 0.200 on a different
+endpoint, so its values are not comparable. The corrected gain therefore holds
+only against allele identity. The second task was
 the strength (|z|) of endogenous variant-to-gene associations. Adding either
 pretrained embedding to distance lowered the held-out Spearman correlation below
 that of distance alone (HyenaDNA -0.022, Nucleotide Transformer [ref:
@@ -45,7 +55,7 @@ The labels in this task are marginal associations that were not fine-mapped.
 The task therefore cannot separate a model failure from a target that is not
 sequence-determined at the variants tested. Taken together, the evidence that
 pretrained sequence models add skill on these tasks rests on one reporter-assay
-row, measured against a sequence-free control.
+row, and that gain does not survive correction against sequence-based baselines.
 
 No pretrained sequence model was scored on tissue-level severity. We did score
 BulkFormer [ref: BulkFormer model paper], a biologically pretrained expression
@@ -84,13 +94,12 @@ do not establish that any model class is generally superior. We also tested a
 nonlinear model with no biological pretraining on the same folds and the same
 30 or 100 principal components. Across four comparisons in 109 GSE268273
 participants, it differed from ridge by -0.014 to +0.001, and none of the four
-differences exceeded the minimum detectable effect of 0.067. An increment below
-a minimum detectable effect is not evidence of no effect, so we report it as a
-bound, not as a negative result. Across Figure 7, each statistic is placed
+differences exceeded the minimum detectable effect of 0.067. This describes
+the comparison's sensitivity, not an upper bound on the true increment. The
+paired confidence intervals describe uncertainty; no equivalence or adequate
+negative claim follows from an estimate below the minimum detectable effect. Across Figure 7, each statistic is placed
 against its own null and threshold, and an underpowered arm is labelled
 untestable, not negative (Figure 7E).
-
-[Figure 7 model results to be added]
 
 We next asked how much the recorded histology limits interpretation. The
 current data do not calibrate its measurement error. Within-participant stage

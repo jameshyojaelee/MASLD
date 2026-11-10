@@ -18,6 +18,8 @@ import time
 from pathlib import Path
 
 import scanpy as sc
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+from lib_source_diagnosis import load_library_diagnoses
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,7 +29,8 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 BASE = Path("/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
-OUTPUT_DIR = BASE / "Analysis/SingleCell/integration/input_h5ad"
+OUTPUT_DIR = Path(os.environ.get("SINGLECELL_INPUT_H5AD_ROOT", str(
+    BASE / "Analysis/SingleCell/integration/input_h5ad_unique_captures")))
 
 
 def parse_condition_gse174748():
@@ -159,7 +162,19 @@ def collect_samples():
             "condition": cond_map.get(srr, "Unknown"), "h5_path": str(h5),
         })
 
-    return samples
+    source_labels = load_library_diagnoses(BASE)
+    for sample in samples:
+        if sample["species"] == "human":
+            label = source_labels.get(sample["srr"])
+            if label is None:
+                sample["condition"] = "Unresolved"
+            else:
+                assert sample["dataset"] == label["dataset"]
+                sample["condition"] = label["condition"]
+    from lib_capture_identity import select_captures
+    manifest = Path(os.environ.get('SINGLECELL_CAPTURE_MANIFEST', str(
+        BASE / 'Analysis/Hypotheses/NUCLEUS-FIX-20261107/capture_manifest.tsv')))
+    return select_captures(samples, manifest)
 
 
 def convert_h5_to_h5ad(sample: dict, output_dir: Path) -> str:
@@ -169,6 +184,18 @@ def convert_h5_to_h5ad(sample: dict, output_dir: Path) -> str:
     out_path = species_dir / f"{sample['srr']}.h5ad"
 
     if out_path.exists():
+        if sample["species"] == "human":
+            expected = load_library_diagnoses(BASE).get(sample["srr"])
+            cached = sc.read_h5ad(out_path, backed="r")
+            fields = ("condition", "condition_harmonized", "source_diagnosis", "source_histology", "source_etiology")
+            valid = expected is not None and all(
+                key in cached.obs and cached.obs[key].astype(str).eq(expected[key]).all()
+                for key in fields)
+            valid = valid and cached.uns.get('capture') == sample.get('capture')
+            valid = valid and cached.uns.get('count_state') == sample.get('count_state')
+            cached.file.close()
+            if not valid:
+                raise ValueError(f"Cached human labels are superseded: {out_path}; choose a new output directory for source-qualified inputs")
         return f"  {sample['srr']}: exists, skipping"
 
     t0 = time.time()
@@ -180,6 +207,16 @@ def convert_h5_to_h5ad(sample: dict, output_dir: Path) -> str:
     adata.obs["dataset"] = sample["dataset"]
     adata.obs["species"] = sample["species"]
     adata.obs["condition"] = sample["condition"]
+    if sample['species'] == 'human':
+        adata.uns['capture'] = sample['capture']
+        adata.uns['source_runs'] = sample['source_runs']
+        adata.uns['count_state'] = sample['count_state']
+    if sample["species"] == "human":
+        label = load_library_diagnoses(BASE).get(sample["srr"])
+        for key in ("donor", "condition_harmonized", "disease_stage_coarse", "source_diagnosis", "source_histology", "source_etiology"):
+            adata.obs[key] = label[key] if label else "Unresolved"
+        adata.obs["binary_eligible"] = bool(label and label["binary_eligible"].lower() == "true")
+        adata.obs["exclude_stage_analysis"] = not label or label["exclude_stage_analysis"].lower() == "true"
 
     # Store raw counts
     adata.write_h5ad(out_path)
@@ -213,7 +250,7 @@ def main():
     # Write sample manifest
     manifest_path = OUTPUT_DIR / "sample_manifest.csv"
     with manifest_path.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["srr", "dataset", "species", "condition", "h5_path"])
+        writer = csv.DictWriter(f, fieldnames=["srr", "dataset", "species", "condition", "h5_path", "capture", "source_runs", "count_state"])
         writer.writeheader()
         writer.writerows(samples)
     log.info(f"Manifest: {manifest_path}")

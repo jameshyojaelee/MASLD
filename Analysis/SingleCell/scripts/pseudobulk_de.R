@@ -19,9 +19,12 @@ suppressPackageStartupMessages({
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 scvi_dir <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2")
-h5ad_file <- file.path(scvi_dir, "integrated_atlas.h5ad")
-pb_dir <- file.path(scvi_dir, "pseudobulk")
-out_dir <- file.path(scvi_dir, "pseudobulk_de")
+h5ad_file <- Sys.getenv("SINGLECELL_ATLAS_H5AD", file.path(BASE,
+  "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/integrated_atlas_source_qualified_v2.h5ad"))
+pb_dir <- Sys.getenv("SINGLECELL_PSEUDOBULK_DIR", file.path(scvi_dir, "pseudobulk"))
+out_dir <- Sys.getenv("SINGLECELL_BINARY_DE_OUT", file.path(
+  BASE, "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/pseudobulk_de_v2"))
+if (dir.exists(out_dir) && length(list.files(out_dir))) stop("Refusing to overwrite DE results: ", out_dir)
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # --------------------------------------------------------------------------
@@ -83,6 +86,16 @@ sample_meta <- cell_meta[, .(
   preparation_method = preparation_method[1]
 ), by = sample]
 
+# Source diagnoses and eligibility override historical atlas defaults. In
+# particular P98 is unresolved, and Alcohol/PBC are not MASLD cases.
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_source_diagnosis.R"))
+qualified <- load_source_diagnosis(BASE, "library")
+j <- match(sample_meta$sample, qualified$sample)
+stopifnot(!anyNA(j), identical(as.character(sample_meta$dataset), as.character(qualified$dataset[j])))
+sample_meta[, condition := qualified$condition_harmonized[j]]
+eligibility_field <- if (Sys.getenv("SINGLECELL_STRICT_CONTROL", "0") == "1") "strict_binary_eligible" else "binary_eligible"
+sample_meta <- sample_meta[tolower(as.character(qualified[[eligibility_field]][j])) == "true"]
+
 message("  ", nrow(sample_meta), " unique samples across ",
         length(unique(sample_meta$condition)), " conditions: ",
         paste(unique(sample_meta$condition), collapse = ", "))
@@ -118,14 +131,10 @@ message("    Dataset breakdown: ",
 # prep filter -> condition filter (above) -> THEN collapse.
 source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
 srr_to_donor <- build_srr_to_donor_map(BASE)
+eligible_runs <- sample_meta$sample
 sample_meta  <- collapse_sample_meta_to_donor(sample_meta, BASE)
-# Donor-aggregated per-unit cell counts for the >=50 min-cells gate below: a
-# donor with 8 runs x 20 cells must pass as 160, not fail as 8 sub-threshold
-# runs. Cells are re-keyed to donor id and summed (global across cell types,
-# matching the original per-sample approximation).
-cell_meta_donor_id <- ifelse(cell_meta$sample %in% names(srr_to_donor),
-                             srr_to_donor[cell_meta$sample], cell_meta$sample)
-cell_counts_donor  <- table(cell_meta_donor_id)
+# Lineage-specific contributing cell counts are calculated inside the loop,
+# after filtering library columns and before summing them within donors.
 message("  [donor-collapse] DE now keyed on ", nrow(sample_meta),
         " biological donors")
 
@@ -153,6 +162,9 @@ for (pb_file in pb_files) {
 
   # Donor-collapse (canonical default 2026-07-12): sum run-level columns to
   # biological donor. Columns not covered by any donor_pairing.csv relabel 1:1.
+  counts_mat <- counts_mat[, colnames(counts_mat) %in% eligible_runs, drop = FALSE]
+  lineage_cells <- source_lineage_cell_counts(qualified, ct_name, colnames(counts_mat), srr_to_donor)
+  fwrite(lineage_cells, file.path(out_dir, paste0(ct_name, "_lineage_cell_counts.tsv")), sep = "\t")
   counts_mat <- collapse_counts_to_donor(counts_mat, BASE)
 
   # Match columns (samples) to DE-eligible metadata
@@ -165,15 +177,12 @@ for (pb_file in pb_files) {
   }
   counts_mat <- counts_mat[, keep, drop = FALSE]
   matched <- sample_meta[matched_idx[keep]]
+  matched[, n_cells := lineage_cells$n_cells[match(sample, lineage_cells$sample)]]
 
   # Filter units with fewer than 50 cells contributing to the pseudobulk.
-  # counts_mat columns are now DONOR ids (post-collapse), so the min-cells gate
-  # uses donor-aggregated cell counts (cell_counts_donor, built once above):
-  # a donor spanning several runs of <50 cells each is summed and passes if the
-  # donor total is >=50 (fixing the run-level under-count). This is a global
-  # per-donor cell count (across cell types), matching the original per-sample
-  # approximation.
-  sample_cell_n <- as.integer(cell_counts_donor[colnames(counts_mat)])
+  # Sum only this lineage's cells in eligible, retained pseudobulk libraries.
+  # Several contributing runs can jointly satisfy the donor's >=50-cell gate.
+  sample_cell_n <- as.integer(matched$n_cells)
   sample_cell_n[is.na(sample_cell_n)] <- 0L
   keep_mincells <- sample_cell_n >= 50L
   n_dropped_mincells <- sum(!keep_mincells)
@@ -204,6 +213,7 @@ for (pb_file in pb_files) {
   message("  Samples: ", ncol(counts_mat),
           " (", paste(names(table(matched$condition)), table(matched$condition),
                       sep = "=", collapse = ", "), ")")
+  fwrite(matched, file.path(out_dir, paste0(ct_name, "_donor_roster.tsv")), sep = "\t")
 
   # Filter low-expression genes: >=5 counts in >=3 samples
   keep_genes <- rowSums(counts_mat >= 5) >= 3
@@ -230,6 +240,7 @@ for (pb_file in pb_files) {
     coef_name <- "conditionMASLD"
     message("  Design: ~ condition (single dataset)")
   }
+  if (qr(design)$rank != ncol(design)) stop("Disease contrast is confounded with dataset: ", ct_name)
 
   tryCatch({
     dge <- DGEList(counts = counts_mat)

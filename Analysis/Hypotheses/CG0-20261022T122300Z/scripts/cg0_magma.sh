@@ -20,12 +20,13 @@ ghouse_cirrhosis|$SS/Ghouse_Cirrhosis_reformatted_hg19.tsv|6000"
 sha256sum $LUT $ANNOT $(echo "$TRAITS" | cut -d'|' -f2) GWAS/MR_Data/Yengo_2018_BMI_GWAS.txt.gz > $OUT/input_sha256.txt
 
 # chr:pos -> rsID in one awk pass per trait (columns chromosome, position, pval)
-echo "$TRAITS" | while IFS='|' read id f n; do
+# loop runs in this shell (here-string), so the final wait covers every awk job
+while IFS='|' read id f n; do
   awk -F'\t' -v N=$n 'NR==FNR{if(FNR>1)l[$1]=$2; next}
     FNR==1{for(i=1;i<=NF;i++)h[$i]=i; print "SNP\tP\tN"; next}
     {c=$h["chromosome"]; sub(/^chr/,"",c); k=c":"$h["position"]; p=$h["pval"];
      if((k in l) && p>0 && p<=1) print l[k]"\t"p"\t"N}' $LUT $f > $OUT/$id.magma_input.tsv &
-done
+done <<< "$TRAITS"
 wait
 zcat GWAS/MR_Data/Yengo_2018_BMI_GWAS.txt.gz | awk 'NR==1{print "SNP\tP\tN"; next} {p=$9+0; if(p>0 && p<=1) print $3"\t"$9"\t"$10}' > $OUT/yengo_bmi.magma_input.tsv
 wc -l $OUT/*.magma_input.tsv

@@ -21,6 +21,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 
 import pandas as pd
@@ -134,7 +135,9 @@ def build_hep_subtypes(sc_dir: Path):
 
 
 def build_pseudobulk_parquet(sc_dir: Path, out: Path, emap: dict):
-    de = pd.read_csv(sc_dir / "pseudobulk_de/allcell_pseudobulk_de.csv")
+    # Checked lineage-cell correction candidate; named releases are unchanged.
+    corrected = project_root() / "Analysis/Hypotheses/REVIEW-FIX-20261107T020001Z/singlecell/results"
+    de = pd.read_csv(Path(os.environ.get("SINGLECELL_ALLCELL_OUT", str(corrected / "allcell"))) / "allcell_pseudobulk_de.csv")
     # gene col is (mostly) Ensembl; resolve to human_symbol, fallback to id.
     sym = de["gene"].map(lambda g: emap.get(strip_version(g), str(g)))
     pq = pd.DataFrame({
@@ -165,6 +168,7 @@ def build_hep_markers_parquet(sc_dir: Path, out: Path):
 
 
 def main():
+    raise RuntimeError("Historical single-cell activity and pooled-cell subtype tests use superseded diagnoses. Use Analysis/SingleCell/scripts/diagnosis_correction/export_context.py for corrected donor-level data.")
     root = project_root()
     ap = argparse.ArgumentParser()
     ap.add_argument("--output-dir", default=str(root / "masld-atlas-v2/public/data"))

@@ -2,6 +2,7 @@
 """Assemble the six validated Figure 5 panel PDFs on one vector PDF page."""
 
 from __future__ import annotations
+raise SystemExit("Composite figures are retired (2026-10-27): the user assembles figures from individual panels in Illustrator. Do not re-enable.")
 
 import argparse
 from pathlib import Path

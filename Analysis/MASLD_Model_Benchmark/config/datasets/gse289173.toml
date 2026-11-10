@@ -25,7 +25,7 @@ notes = "Contains 25 MASLD and 23 control donors. Cell-state labels and complete
 [provenance]
 source_url = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE289173"
 verified_date = "2026-08-21"
-local_exposure = "No local outcome analysis was found at seal declaration. On 2026-08-21, a GEO SOFT metadata query exposed disease-group and sex fields for two samples to the development operator; no cell-state or eQTL/ieQTL outcome table was opened. On 2026-10-15 H90 downloaded and opened all 48 GEO expression matrices and read disease group and sex for all 48 samples; it assigned its own CellTypist labels. The Zenodo archive with the source cell-state labels and eQTL/ieQTL summaries was not opened."
+local_exposure = "No local outcome analysis was found at seal declaration. On 2026-08-21, a GEO SOFT metadata query exposed disease-group and sex fields for two samples to the development operator; no cell-state or eQTL/ieQTL outcome table was opened. On 2026-10-15 H90 downloaded and opened all 48 GEO expression matrices and read disease group and sex for all 48 samples; it assigned its own CellTypist labels. The Zenodo archive with the source cell-state labels and eQTL/ieQTL summaries was not opened. On 2026-11-09, with user approval, CONF1 C5/C1b (job 23144496) fitted hepatocyte pseudobulk disease contrasts (GNMT, MAT1A, CYP2C19, all genes for a dilution check) and CCL20+ hepatocyte detection on the H90 matrices and labels; the Zenodo archive was again not opened."
 
 [split]
 group_key = "cohort_family_id+person_key"

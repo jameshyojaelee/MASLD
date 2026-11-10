@@ -216,6 +216,17 @@ def _genetic_display(
     return abf, study, _clean(source["abf_driving_trait"])
 
 
+def _genetic_display_method(
+    source: Mapping[str, Any], susie: float | None, abf: float | None
+) -> str:
+    """Name the method supplying the displayed posterior, separate from the call rule."""
+    abf_only_positive = abf is not None and abf > 0.5 and (susie is None or susie <= 0.5)
+    has_abf_driver = all(column in source for column in GEN_ABF_DRIVER_COLUMNS)
+    if susie is not None and not (abf_only_positive and has_abf_driver):
+        return "SuSiE_COLOC"
+    return "ABF_COLOC" if abf is not None else "SuSiE_COLOC"
+
+
 def _read_frame(path: Path) -> pd.DataFrame:
     if path.suffix == ".parquet":
         return pd.read_parquet(path, engine="pyarrow").astype("string").fillna("")
@@ -698,7 +709,7 @@ def adapt_gen_classes(
             genetic_pp4, driving_gwas, driving_trait = None, "", ""
         genetic_values = {
             "source_input_row_id": f"{row_id}:genetics",
-            "evidence_domain": "genetics", "assay": "SuSiE_COLOC_or_ABF_fallback",
+            "evidence_domain": "genetics", "assay": "SuSiE_COLOC" if genetic_call == "untestable" else _genetic_display_method(source, susie, abf),
             "dataset_id": driving_gwas or item.row["source_datasets"] or "GEN_frozen_interface",
             "phenotype": driving_trait or "source-defined genetic phenotype",
             "context": "bulk liver cis-eQTL interface",

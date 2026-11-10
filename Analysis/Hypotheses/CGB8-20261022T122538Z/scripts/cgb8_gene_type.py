@@ -23,6 +23,7 @@ def prepare(g, eqtl=None):
         g = g.merge(e, on="g", how="left")
     else:
         g["eqtl_n_p1e5"] = g.gtex_liver_n_p1e5
+    u = g[g.h57_ueval.astype(bool)].copy()
     deg = u.deg.fillna(False).astype(bool)
     gen = u.coloc_gen.astype(bool)
     u["set"] = np.select([gen & ~deg, deg & ~gen, gen & deg], ["G", "D", "GD"], "rest")

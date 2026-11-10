@@ -49,6 +49,8 @@ ADOPTED = os.path.join(FM, "results/susie_coloc")
 OLD = os.path.join(FM, "results/susie_coloc_preRerun_backup_2026-08-17")
 ENSG = re.compile(r"^ENSG\d{11}$")
 UNTESTABLE = "susie_untestable_insufficient_shared_posterior"
+UNTESTABLE_METHODS = {UNTESTABLE, "susie_untestable_ambiguous_variant_identity",
+                      "susie_untestable_invalid_reference_LD"}
 HEADER = ["ensembl", "coloc_best_susie_pp4", "coloc_best_abf_pp4", "driving_gwas",
           "driving_trait", "driving_tier", "any_main", "any_supp", "tier34_only",
           "susie_driving_gwas", "abf_driving_gwas", "abf_driving_trait", "abf_driving_tier",
@@ -114,7 +116,7 @@ def build(master_path, tier, trait, placement):
                     e["s"], e["s_g"] = s, st
                 if a is not None and better(a, st, e["a"], e["a_g"]):
                     e["a"], e["a_g"] = a, st
-                if r.get("method") == UNTESTABLE:
+                if r.get("method") in UNTESTABLE_METHODS:
                     e["u"] += 1
     return best, unmapped
 

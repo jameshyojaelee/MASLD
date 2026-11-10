@@ -1,3 +1,4 @@
+stop("Composite figures are retired (2026-10-27): the user assembles figures from individual panels in Illustrator. Do not re-enable.")
 # Alternate Fig 3 composite assembler — magick-based stitch from existing PDFs.
 # Layout (matches fig3_regulatory_architecture_v2.R composite, 2026-04-29 cascade):
 #   Row 1: pip_coloc_manhattan         (full width)

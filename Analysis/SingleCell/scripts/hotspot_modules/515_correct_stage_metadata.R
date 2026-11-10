@@ -57,19 +57,24 @@ metadata[disease_stage_coarse == "Steatosis", disease_stage_numeric := 1]
 metadata[disease_stage_coarse == "Steatohepatitis", disease_stage_numeric := 2]
 metadata[disease_stage_coarse == "Cirrhosis", disease_stage_numeric := 3]
 
-audit <- unique(metadata[dataset == "GSE202379", .(
+# Apply the complete source-qualified RNA table, including the P98 conflict,
+# GSE244832 RNA diagnoses, Liver Atlas histology and GSE136103 etiology.
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_source_diagnosis.R"))
+qualified <- load_source_diagnosis(BASE, "library")
+j <- match(metadata$sample, qualified$sample)
+if (anyNA(j)) stop("Missing source-qualified RNA library")
+for (nm in c("donor", "disease_stage_coarse", "source_diagnosis", "source_histology", "source_etiology",
+             "disease_stage_source", "condition_harmonized", "exclude_stage_analysis", "binary_eligible")) {
+  set(metadata, j = nm, value = qualified[[nm]][j])
+}
+metadata[, disease_stage_numeric := match(disease_stage_coarse, c("Healthy", "Steatosis", "Steatohepatitis", "Cirrhosis")) - 1L]
+metadata[donor == "GSE202379_P98", F_stage_documented := 1]
+if ("F_stage_documented" %in% names(qualified)) metadata[, F_stage_documented := as.numeric(qualified$F_stage_documented[j])]
+audit <- unique(metadata[, .(
   sample, source_diagnosis, disease_stage_coarse
 )])
-expected <- data.table(
-  source_diagnosis = names(stage_map),
-  disease_stage_coarse = unname(stage_map)
-)
-bad <- audit[expected, on = "source_diagnosis"][
-  is.na(i.disease_stage_coarse) | disease_stage_coarse != i.disease_stage_coarse
-]
-if (nrow(bad) || anyNA(audit$source_diagnosis)) {
-  stop("GSE202379 diagnosis-to-stage audit failed", call. = FALSE)
-}
+stopifnot(all(metadata$disease_stage_coarse == qualified$disease_stage_coarse[j]),
+          all(metadata[donor == "GSE202379_P98"]$exclude_stage_analysis))
 
 dir.create(dirname(OUTPUT), recursive = TRUE, showWarnings = FALSE)
 fwrite(metadata, OUTPUT, sep = "\t", quote = FALSE, na = "NA")

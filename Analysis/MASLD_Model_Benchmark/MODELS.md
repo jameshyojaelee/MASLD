@@ -1,5 +1,14 @@
 # MASLD model registry
 
+**Histology-error calculator corrected, 2026-11-07.** Use
+[`kleiner_sensitivity.py`](kleiner_sensitivity.py) with explicit `--sigma-e` and
+`--assumption` arguments. Its results are conditional sensitivity calculations,
+not calibrated latent severity or empirical performance ceilings. The historical
+`kleiner.py` packaged in named v1/v1.1/v1.2 releases is retired for current use;
+those files remain preserved as historical records. The fitted severity scorers
+and predictions are unchanged. A slope correction applies only when stage is
+the error-prone predictor, not when stage is the response.
+
 **Every model this project has built, its state, and what may be claimed for it.**
 One row per model. Update this file when a model is built, changed, released or retired.
 

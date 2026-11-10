@@ -1,0 +1,16 @@
+# Approved isolated environment installed; exact packages and smoke results in installation-20261023/.
+# NumPy <2 and CPU-only PyTorch are local compatibility choices, not upstream pins.
+name: masld-atac-linger-1.110
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - pip
+  - bedtools=2.31.1
+  - numpy=1.26.4
+  - pip:
+      # Native LINGER_tr import requires psutil, absent from upstream wheel metadata.
+      - psutil==7.2.2
+      - "torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.2.2%2Bcpu-cp310-cp310-linux_x86_64.whl#sha256=02c4fac3c964e73f5f49003e0060c697f73b67c10cc23f51c592facb29e1bd53"
+      - "lingergrn @ https://files.pythonhosted.org/packages/81/35/dd0b74fc52105ec1736c02fe8b32a64c0e7acc1cc752764bae2c1cea38b6/lingergrn-1.110-py3-none-any.whl#sha256=2db89d2953b12c79c5c9076fda53def08f956d70c1fe63eb31f9494177c7f2ec"

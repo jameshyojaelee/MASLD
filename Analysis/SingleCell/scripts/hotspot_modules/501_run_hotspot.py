@@ -44,6 +44,7 @@ import hotspot
 import numpy as np
 import pandas as pd
 import scanpy as sc
+from scipy.sparse import issparse
 
 sys.path.insert(0, str(Path(__file__).parent))
 from hotspot_io import (
@@ -88,6 +89,14 @@ def filter_detected(adata: ad.AnnData, min_frac: float = 0.01) -> ad.AnnData:
 
 
 def ensure_raw_layer(adata: ad.AnnData) -> None:
+    counts = adata.layers.get("counts", adata.X)
+    values = counts.data if issparse(counts) else np.asarray(counts).ravel(order="K")
+    # DANB requires nonnegative integer counts, including when X is the fallback.
+    # Check in chunks rather than allocating another atlas-sized dense array.
+    for start in range(0, values.size, 1_000_000):
+        chunk = values[start:start + 1_000_000]
+        if np.any(~np.isfinite(chunk) | (chunk < 0) | (chunk != np.floor(chunk))):
+            raise ValueError("Hotspot DANB requires raw nonnegative integer counts; log-normalized values cannot be used as counts")
     if "counts" not in adata.layers:
         adata.layers["counts"] = adata.X.copy()
     if "n_counts" not in adata.obs:

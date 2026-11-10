@@ -1,0 +1,6 @@
+suppressPackageStartupMessages(library(edgeR))
+a <- readRDS("RNA-seq/results/manuscript_release/candidates/bulk-corrected-controls-20261008T162308Z/primary_source_controls/merged_dge.rds")
+b <- readRDS("Analysis/Hypotheses/SS-20261025T135237Z/out_s2_qc/dge_included.rds")
+print(dim(a)); print(summary(a$samples$norm.factors)); print(head(rownames(a),3)); print(names(a$samples))
+print(dim(b)); print(head(rownames(b),3)); print(sum(rownames(a) %in% rownames(b)))
+print(summary(b$samples$norm.factors))

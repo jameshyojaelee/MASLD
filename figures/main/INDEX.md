@@ -1,18 +1,48 @@
 # Main figure authority index
 
+[Figure directory](../README.md) · [Candidate folders](../candidates/README.md) ·
+[Working manuscript and compiled PDFs](../../docs/manuscript/README.md)
+
+**Genetic qualification and tissue transportability, 2026-11-07.** The genetic
+counts shown in Figures 1, 2, 3 and 6 refer to the historical selected map;
+90/436 genes have duplicate identifiers in their eQTL fits and require refitting.
+This qualification applies to dependent overlap and accessibility links, not
+only the MPRIP example. Figure S3 now includes the checked individual panels
+`fig3_bulk_transcriptomics/panels/supplementary/figs3_native_cohort_transportability.pdf`
+and `figs3_REML_tissue_examples.pdf`. They use native GSE126848 eligibility and
+REML/modified Hartung–Knapp uncertainty. Their sources remain in
+`Analysis/Hypotheses/CATALOG-ADOPTION-20261107T022216Z/transportability/figures/`;
+matching legends distinguish descriptive direction agreement from independent
+replication and the complete-family BH result from nominal example intervals.
+
+**Catalog eligibility adopted, 2026-11-06.** Figures 1B and 3G use the 3,589
+eligible native overlap genes (426 genetic, 209 RNA, 26 shared); Figure 6 uses
+the approved classes 400/26/1,118/12,958/13,731. Its untested partition includes
+eight genes untestable in both domains. Figure 1C/2E labels distinguish finite
+recorded SuSiE output from qualified testability; their counts are unchanged.
+Current sources and matching review
+assemblies are recorded under
+`Analysis/Hypotheses/CATALOG-ADOPTION-20261107T022216Z/figures/`.
+
+**Working corrections, 2026-11-06.** Figure 3 uses the current individual panels
+and its adjusted exon/intron supplement highlights 114 genes. Figure 7E retains
+all estimates but classifies underpowered diet response and routing as
+untestable. These corrected working outputs preserve named release r9. See
+[correction results](../../docs/RESULTS.md#review-corrections-2026-11-06).
+
 The seven-figure manuscript uses the directories below. A directory can define
 its panel layout before any candidate PDF is adopted. `candidate` and
 `blocked` rows are not canonical manuscript files.
 
 | Figure | Authority directory | State | Scientific role |
 |---|---|---|---|
-| 1 | `fig1_atlas_overview/` | current B/C; source-backed A/D and embedded four-panel layout proposed | Resource design and observability |
-| 2 | `fig2_genetics/` | verified r2 A–I panels installed; D retains adopted coordinate correction; D ancestry companion adopted 2026-10-17; direct-subclass split moved to Figure S2S; native-scale A–I review layout proposed | Inherited genetic variation; gene-target biotype is separate from noncoding DNA context |
-| 3 | `fig3_bulk_transcriptomics/` | corrected 774-unit panels installed; 3F 54 genes/216 effects; vector review assembly complete | Severity-linked GNMT–MAT1A–CYP2C19 remodeling and the exact genetics–state bridge |
-| 4 | `fig4_singlecell_programs/` | atlas schematic and corrected 4E–H/S4 panels installed; vector review assembly complete | Donor-level programs, multicellular context, and stage-adjusted continuum resolution across outcome-blind molecular systems |
-| 5 | `fig5_molecular_context/` | six canonical panels and vector assembly adopted; synchronized Resource release pending | Assay-native context and matched-null separation of disease association from tissue organization |
-| 6 | `fig6_gene_catalog/` | all five individual r8 panels installed; native-size vector review assembly complete | MASLD Gene Catalog and experiment routing |
-| 7 | `fig7_model_framework/` | corrected 7A audit units and 7C/F source exposure installed; embedded six-panel review layout proposed; model-development alternatives separate | What predictive models learn from the maps, with every score reported beside that model's own training exposure |
+| 1 | [fig1_atlas_overview/](fig1_atlas_overview/README.md) | current B/C; source-backed A/D and embedded four-panel layout proposed | Resource design and observability |
+| 2 | [fig2_genetics/](fig2_genetics/README.md) | verified r2 A–I panels installed; D retains adopted coordinate correction; D ancestry companion adopted 2026-10-17; direct-subclass split moved to Figure S2S; native-scale A–I review layout proposed | Inherited genetic variation; gene-target biotype is separate from noncoding DNA context |
+| 3 | [fig3_bulk_transcriptomics/](fig3_bulk_transcriptomics/README.md) | corrected 774-unit panels installed; 3E SteatoSITE replication strip and S3 F3–F4 scatter adopted 2026-10-30; S3 SteatoSITE exon-intron and NMF stage-profile panels adopted 2026-11-03; 3F 54 genes/216 effects; vector review assembly complete | Severity-linked GNMT–MAT1A–CYP2C19 remodeling and the exact genetics–state bridge |
+| 4 | [fig4_singlecell_programs/](fig4_singlecell_programs/README.md) | A–H and compact assembly updated 2026-11-03: October 26 corrected C, November 2 caveats in legend, 6 pt Helvetica, no footnotes | Donor-level programs, lineage content and a shared bulk expression gradient |
+| 5 | [fig5_molecular_context/](fig5_molecular_context/README.md) | 5A protein triage, 5B mRNA-protein view, 5C Xenium cell-type location, 5D program protein forest installed 2026-11-03; former 5A, 5D, 5E, 5F moved to `panels/_archive/demoted-from-main-20261103/` for the supplement; synchronized Resource release pending | Liver protein against disease-state RNA and programs; cell type of each gene in intact healthy liver |
+| 6 | [fig6_gene_catalog/](fig6_gene_catalog/README.md) | eligibility-corrected B–D and matching review assembly; A/E unchanged | MASLD Gene Catalog and experiment routing |
+| 7 | [fig7_model_framework/](fig7_model_framework/README.md) | corrected 7A audit units and 7C/F source exposure installed; embedded six-panel review layout proposed; model-development alternatives separate | What predictive models learn from the maps, with every score reported beside that model's own training exposure |
 
 ## Shared Figure 1–7 decision rules
 
@@ -41,14 +71,16 @@ no fibrosis or NAS call (BH over 224 tests); the four-cohort 457-record arm,
 which adds GSE174478 from outside the pooled 774-unit fit, is a sensitivity.
 Figures 4G and 4H use the 367 stage-complete disease units; Figure 4H plots the donor-first system estimates, rho=0.67 and 34/43 same direction (feature-first 0.63 and 32/43), with no outline. Eighteen strict maxT calls
 (435 units, including the 68 GSE213621 controls) remain a separate
-supplementary criterion. Figure 5B/C now use 774-unit RNA
-effects, and Figure 6 uses the selected r8 classes. The historical source
+supplementary criterion. Figure 5A/B (former 5B/C) now use 774-unit RNA
+effects, and Figure 6 now uses the November 6 eligibility-corrected classes. The historical source
 paragraphs below describe prior artwork and do not select its numbers.
-Figure 4C now shows the H59 primary fit (60 ambient-correctable donors, a
-separate residual variance per dataset): 0 of 117 programs pass the
-within-dataset permutation BH/stability rule (smallest q=0.323). In the
-supplementary 62-donor equal-variance sensitivity, only Ductular injury
-(BICC1 member) has q<0.05 (q=0.038), and no program passes HC3. Figure 7C is broad cell-class mapping, drawn on all seven held-out studies and on each encoder's clean studies; the all-study TranscriptFormer score includes two training-seen studies. Figure 7F draws the clean-study comparison against the scVI encoder trained here.
+Figure 4C was updated on 2026-11-03 with all 117 October 26 source-corrected
+estimates (at most 59 donors, per-dataset residual variance): 0 pass the
+within-dataset permutation BH/stability rule, minimum q=0.18135. Main A–H and
+the compact 468 × 572 pt assembly have embedded 6 pt Helvetica and no
+footnotes. The legend includes the November 2 discovery-dependence and
+random-axis qualifications. Source-dependent supplementary artwork and other
+October 26 outputs remain outside this update. Figure 7C is broad cell-class mapping, drawn on all seven held-out studies and on each encoder's clean studies; the all-study TranscriptFormer score includes two training-seen studies. Figure 7F draws the clean-study comparison against the scVI encoder trained here.
 
 ## Historical working artwork and source selections
 

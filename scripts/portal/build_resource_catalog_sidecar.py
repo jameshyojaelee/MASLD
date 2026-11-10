@@ -62,7 +62,7 @@ def object_record(gene,identity,lncrna,evidence,release,provisional):
         "credible_set_to_gene_link_status":"no_authoritative_link",
         # A gene-level support call alone supplies no signal-pair target link.
         "target_link_basis":"none",
-        "assay_applicability":{"bulk_rna":"untestable" if rna.get("testability_state")=="untestable" else "indeterminate",
+        "assay_applicability":{"bulk_rna":"untestable" if rna.get("call_state")=="untestable" or rna.get("testability_state") in {"untestable","not_detected"} else "indeterminate",
             "proteomics":"not_applicable" if biotype=="lncRNA" else "indeterminate","chromatin":"indeterminate","spatial":"indeterminate"},
         "open_mechanistic_question":question,"genetics_call":genetic.get("call_state","indeterminate"),
         "rna_call":rna.get("call_state","indeterminate"),"candidate_not_adopted":True,

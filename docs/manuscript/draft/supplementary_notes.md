@@ -2,7 +2,7 @@
 
 ## Supplementary Note 1. Scope of the genetic and disease-state evidence layers
 
-Liver-trait genetic evidence in this Resource takes three forms: multi-signal liver eQTL colocalization, single-signal liver eQTL colocalization, and fine-mapped protein-altering or canonical-splice credible-set members. The Gene Catalog states which form applies to each gene. None of them alone identifies the gene that mediates a trait association. Of the 436 primary multi-signal colocalized genes, 423 take their strongest colocalization evidence from a liver-enzyme trait and 13 from a direct disease or liver-fat trait. Membership of genes near the threshold depends on the colocalization prior p12. At p12 = 1 × 10⁻⁶ instead of the 5 × 10⁻⁶ used for all calls, 122 of the 436 genes, those with best PP.H4 between 0.50 and 0.83, fall to PP.H4 ≤ 0.5: 111 of the 400 genetically anchored genes, 8 of the 26 supported on both axes and 3 untested genes whose RNA was not detected. At p12 = 1 × 10⁻⁵, 29 unresolved genes tested at PP.H4 ≤ 0.5 rise above 0.5. The Catalog classes use p12 = 5 × 10⁻⁶ and are unchanged.
+Liver-trait genetic evidence in this Resource takes three forms: multi-signal liver eQTL colocalization, single-signal liver eQTL colocalization, and fine-mapped protein-altering or canonical-splice credible-set members. The Gene Catalog states which form applies to each gene. None of them alone identifies the gene that mediates a trait association. Of the 436 primary multi-signal colocalized genes, 423 take their strongest colocalization evidence from a liver-enzyme trait and 13 from a direct disease or liver-fat trait. Membership of genes near the threshold depends on the colocalization prior p12. At p12 = 1 × 10⁻⁶ instead of the 5 × 10⁻⁶ used for all calls, 122 of the 436 genes, those with best PP.H4 between 0.50 and 0.83, fall to PP.H4 ≤ 0.5, leaving 314: 111 of the 400 genetically anchored genes, 8 of the 26 supported on both axes and 3 untested genes whose RNA was not detected. MVP and UK Biobank European GWAS of the same liver enzyme share 49 to 63% of each other's colocalized gene calls. This is gene-level recurrence with a reused eQTL panel, not matched-mechanism replication. In the historical named-r8 prior sensitivity, at p12 = 1 × 10⁻⁵, 29 unresolved genes tested at PP.H4 ≤ 0.5 rise above 0.5. That sensitivity was not rerun under the adopted eligibility qualification. The adopted calls retain p12 = 5 × 10⁻⁶; prior sensitivities do not change classes.
 
 Fourteen colocalized genes rest only on tier-1/2 GWAS fits with SuSiE PP.H4 of 1.0 (at least 0.999999; 18 gene-by-GWAS tests). We refit these tests with the inputs and seed of the colocalization run, which reproduced every PP.H4. All 18 fits converged, and PP.H4 stayed at 1.0 with 1 × 10⁻⁶ instead of 1 × 10⁻³ added to the LD diagonal and with the residual variance estimated. In 14 of the 18 tests, the GWAS variant that drives the colocalized signal does not fit the LD panel: its z score differs from the value predicted from nearby variants through LD by more than 5.45 standardized units (the χ² 1-df cut at p = 5 × 10⁻⁸), against at most 0.92 in three comparison tests (RORA with MVP European NAFLD, FABP1 and MAU2 with UK Biobank ALT). After variants above this cut were removed, 11 of the 14 genes no longer had PP.H4 > 0.5 (BRCA1 kept no GWAS credible set), and GALK1 (0.550), PKN3 and TMPRSS2 kept it. All 11 are genetically anchored genes supported by MVP European GWAS. We chose this filter after the first diagnostic, so it is a post hoc sensitivity analysis. It may also remove true signals at loci with several strong associations, which we did not test, and it changes no prespecified class.
 
@@ -10,27 +10,42 @@ Disease-state liver expression has two parts. The first is the pooled, cohort-ad
 
 We also describe how fine-mapped posterior probability at liver-trait loci divides among protein-altering, splice and noncoding variants. In that analysis, the contrast between direct traits and liver enzymes is descriptive. It rests on 16 direct-trait regions at genome-wide-significant leads and is pooled across ancestries. It is confounded with GWAS ancestry and fine-mapping coverage, and no ancestry stratum supports a trait-class call. It does not resolve the responsible variant at any locus.
 
+
+**Variant-identity and LD qualification.** A complete saved-eQTL-fit check found
+duplicate identifiers in 3,633/18,889 fits, affecting 90/436 primary positive
+genes and 137/708 full-portfolio positives. At MPRIP, a repeat insertion and
+deletion were assigned one position ID. MVP allele labels and frequency disagree
+about the event, and the original rounded and unrounded reference LD remain
+indefinite after regularization. Three event interpretations under each matrix
+therefore give no qualified H4. A genotype-derived sensitivity on 388 EUR
+pedigree founders yields valid LD and converged GWAS fits, but neither eQTL fit
+converges within 500 iterations, including repeat exclusion. MPRIP remains
+untestable. DIP2B also has a duplicate position in a supported eQTL credible set;
+all affected genes require full refits, not post-fit column deletion. These
+findings qualify the historical genetic counts and their downstream claims;
+they do not establish that 90 genes are false positives.
+
 ## Supplementary Note 2. GNMT colocalization and linkage, and stage association of the two focal programs
 
 GNMT has a single-signal colocalization with direct NAFLD (ABF PP.H4 0.706) but no multi-signal SuSiE call (best PP.H4 0.128). The disease side is sub-threshold (anchor GWAS p = 2.6 × 10⁻⁴; smallest p within 1 Mb 1.4 × 10⁻⁴), and PP.H4 depends on the prior p12: 0.33, 0.71 and 0.83 at p12 = 1 × 10⁻⁶, 5 × 10⁻⁶ and 1 × 10⁻⁵ in the earlier run of this pair. Its Catalog genetics call is therefore indeterminate, and its local regulatory haplotype is unresolved.
 
 The rs2296804 anchor has SNP.PP.H4 0.259. rs2296805 has UK Biobank European r2 = 0.998 with rs2296804, and rs9471976 and rs11752813 have r2 = 0.818 and 0.580 with rs2296805.
 
-For Stromal ECM (IGFBP7), the bulk fibrosis association does not reach BH q < 0.05 in the 364 units from the three cohorts of the 774-unit set that record both fibrosis and NAS (GSE130970, GSE135251 and GSE162694) (q = 0.214; q = 0.421 after composition adjustment). It reaches q = 0.045 only when 93 GSE174478 source records are added and the Knapp-Hartung variance is not floored at the REML value. In that analysis, q is 0.230 after composition adjustment. In the single-cell stage models, once dataset-specific variances are modeled, neither focal program passes within-dataset permutation BH over all 117 programs for a cross-sectional stage association (smallest q of any program 0.323).
+For Stromal ECM (IGFBP7), the bulk fibrosis association does not reach BH q < 0.05 in the 364 units from the three cohorts of the 774-unit set that record both fibrosis and NAS (GSE130970, GSE135251 and GSE162694) (q = 0.214; q = 0.421 after composition adjustment). It reaches q = 0.045 only when 93 GSE174478 source records are added and the Knapp-Hartung variance is not floored at the REML value. In that analysis, q is 0.230 after composition adjustment. In the single-cell stage models, once dataset-specific variances are modeled, neither focal program passes within-dataset permutation BH over all 117 programs for a cross-sectional stage association (smallest q of any program 0.18135 in the October 26 source-diagnosis correction).
 
 ## Supplementary Note 3. Gene-level comparison of colocalized and disease-state genes
 
 ### Overlap of the two gene sets
 
-Multi-signal colocalization evaluated 3,769 genes of the native RNA–genetics interface. Of these, 426 were colocalized and 220 were canonical disease-state calls. In all, 26 genes were in both, against 21.21 expected within expression deciles (Mantel-Haenszel odds ratio 1.295, 95% CI 0.835 to 2.007; exact stratified *p* = 0.2755; one prespecified test). Rounded, these values are 21.2 expected and an odds ratio of 1.29 (95% CI 0.84 to 2.01). The deciles did not fully control expression, so we read no direction from this result. The upper limit of the interval, 2.007, does not exclude an odds ratio of 2. Other adjustments gave odds ratios from 0.958 to 1.347, all with 95% intervals that include 1: 5 and 20 expression bins 1.297 and 1.304, a spline in expression 1.315 (95% CI 0.847 to 2.042), expression measured in control units only 1.347 (95% CI 0.867 to 2.093), standard-error deciles 1.028, expression by standard-error bins 0.958, and one gene per 500-kb cluster 1.288. The matched expression check (13 against 21.3 expected) used a single matched list, because all 1,000 matching orders returned the same list. Expression curves fitted to non-colocalized genes predict 20.2 to 20.8 disease-state calls among the 426 colocalized genes, close to the 21.2 expected.
+After the adopted shared-posterior qualification of carried negatives, multi-signal colocalization evaluates 3,589 genes of the 14,704-gene native RNA–genetics interface. These include 426 colocalized genes, 209 canonical disease-state calls and 26 shared genes, against 21.3962 expected within expression deciles (Mantel-Haenszel OR 1.28151, 95% CI 0.82618 to 1.98776; exact stratified *p* = 0.276987, the original test definition with updated eligibility). The interval includes 1; it does not establish equivalence or biological separation. Historical expression diagnostics were not repeated in this qualified universe, so no direction is inferred. Before qualification, the prespecified 3,769-gene universe contained 426 colocalized and 220 disease-state genes, with 26 shared against 21.2127 expected (OR 1.29475, CI 0.83509 to 2.00740; exact *p* = 0.275500). Its alternative expression adjustments, OR 0.958 to 1.347, the matched expression control (13 against 21.3 expected), and the expression curves predicting 20.2 to 20.8 shared calls remain historical diagnostics. They do not calibrate the updated universe.
 
-The overlap is not informative in itself. The interval includes 1. The unstratified test had less than 80% power to detect odds ratios between about 0.46 and 1.77. Two sets of these sizes are mostly disjoint whether or not the biology differs. Among the 14,704 genes that both analyses list, 935 of the 1,129 disease-state calls without colocalization had no multi-signal colocalization result. These genes have no multi-signal colocalization result. Their Catalog genetic call is indeterminate, and they are not genetic negatives. Over all 14,704 shared genes, counting the 10,935 genes outside the evaluated set (10,928 without a multi-signal result and 7 SuSiE-untestable) as non-colocalized, 26 genes were in both sets against 22.3 expected within expression deciles (odds ratio 1.19, 95% CI 0.79 to 1.81). With the single-signal ABF map in place of SuSiE (PP.H4 ≥ 0.5), 49 genes were in both against 43.6 expected (odds ratio 1.15, 95% CI 0.85 to 1.57). The annotation-adjudicated Gene Catalog has a separate 14,682-gene interface, and we did not substitute it for the universe of the native RNA comparison.
+Among the 14,704 native-interface genes, 10,928 have no multi-signal result and 187 are priority-untestable; these groups contain 935 and 11 canonical disease-state calls, respectively. A missing multi-signal result retains an indeterminate Catalog genetic call; a failed applicability check is untestable. Neither is a genetic negative. The historical full-interface comparison, which treated unevaluated genes as non-colocalized, gave 26 shared against 22.3 expected (OR 1.19, CI 0.79 to 1.81); the single-signal ABF comparison gave 49 against 43.6 (OR 1.15, CI 0.85 to 1.57). These are different estimands from the qualified multi-signal comparison. The annotation-adjudicated Catalog has 14,502 jointly eligible identities and does not replace the native stable-ID universe. Historical unstratified power calculations and expression controls in the 3,769-gene comparison are retained for reproduction, not claimed as updated checks.
 
-The colocalization rerun applied the shared-posterior check only to first-run positives. We applied the same check to the 12,087 primary negative results carried forward from the first run (Methods). Under the priority rule used for the 3,769 genes, in which one untestable tier-1/2 study makes a gene without a positive call untestable, 188 more genes became untestable, 180 of them among the 3,769, and the universe fell to 3,589 genes. It held 426 colocalized genes and 209 disease-state calls, with 26 in both against 21.4 expected within expression deciles (Mantel-Haenszel odds ratio 1.28, 95% CI 0.83 to 1.99; exact *p* = 0.28). When a gene counts as tested if any tier-1/2 study stays eligible, the seven SuSiE-untestable genes count as tested, and the universe is 3,776 genes before the check. After the check, 40 of these genes became untestable and the universe was 3,736 genes, with 217 disease-state calls and 26 in both against 21.1 expected (odds ratio 1.30, 95% CI 0.84 to 2.02; exact *p* = 0.27). These are nominal sensitivity values for the one prespecified test, and 3,769 remains the prespecified universe. In Figure 3G, 40 drawn genes would keep no finite PP.H4 under either rule. Under the priority rule, 141 more drawn genes would become untestable, giving 147 open circles (139 Neither, 8 Transcriptomics only). The Gene Catalog was not rebuilt. Under the priority rule, 169 of its unresolved genes and 11 of its established-state associated genes would move to the untested class.
+The original colocalization rerun checked first-run positives. Applying the same check to 12,087 carried primary negatives makes 188 more genes untestable under the existing priority rule; 180 were in the earlier 3,769-gene comparison, leaving 3,589 evaluated genes. The November 6 adoption applies this qualification to both the native comparison and the Gene Catalog. It changes 188 genetic states and 180 classes: 169 unresolved and 11 established-state-associated genes become untested, while eight genes were already untested. Positive genetic genes and all RNA calls, effects and directions are unchanged. Under the alternative rule that any eligible primary study makes the gene testable, 3,736 genes remain (426 colocalized, 217 disease-state calls, 26 shared; 21.1460 expected, OR 1.30032, CI 0.83838 to 2.01678, exact *p* = 0.274636). This is a sensitivity rather than the adopted aggregation rule. Historical Figure 3G versions with 3,776 or 3,769 genes are superseded by the qualified 3,589-gene panel.
 
 ### Expression-matched comparison of hepatocyte specificity
 
-Matched for expression, colocalized genes are not more hepatocyte-specific than disease-state genes, so the prespecified directional prediction failed. The comparison contains 281 expression-matched gene pairs (expression SMD 0.00371). In a post hoc comparison, the mean genetic-minus-state difference went the other way (−0.265515 log2 units; 126 positive and 155 negative pairs). The relabel-and-rematch outputs (*p* = 0.00079992; BH *q* = 0.00159984 across two outcomes) are diagnostic only. That null destroys the observed expression imbalance and matching structure, so it is anti-conservative, and family correction cannot repair it.
+In this historical comparison using named r8 classes, which was not rerun after November 6 qualification, colocalized genes are not more hepatocyte-specific than disease-state genes, so the prespecified directional prediction failed. The comparison contains 281 expression-matched gene pairs (expression SMD 0.00371). In a post hoc comparison, the mean genetic-minus-state difference went the other way (−0.265515 log2 units; 126 positive and 155 negative pairs). The relabel-and-rematch outputs (*p* = 0.00079992; BH *q* = 0.00159984 across two outcomes) are diagnostic only. That null destroys the observed expression imbalance and matching structure, so it is anti-conservative, and family correction cannot repair it.
 
 The separate post hoc paired sign-flip diagnostic gives nominal *p* = 0.01482985 (100,000 draws, seed 20260907). It assumes exchangeability within pairs. Flipping signs jointly within the 216 loci that hold the 281 colocalized genes gives nominal *p* = 0.01606 (100,000 draws, seed 20260907; 0.01625 with seed 20260923). A sign test gives *p* = 0.094677 (126 of 281 pairs positive), and 99 of 216 locus means are positive (*p* = 0.247). All of these tests are post hoc, and none is calibrated. The result is a descriptive difference conditional on selection. It is not confirmatory class separation or independent biological replication.
 
@@ -40,11 +55,15 @@ Within the 281 published pairs, the difference comes mainly from the 56 pairs wh
 
 ### Protein-response comparison
 
-This comparison asks whether the liver protein response to fibrosis stage differs between the two classes. It contains 73 pairs, with a mean residualized difference of −0.015601, a paired effect d of −0.08156 and a minimum detectable effect of 0.3279 at 80% power. We detected no difference (post hoc paired sign-flip nominal *p* = 0.487465). This is not evidence of equivalence. The relabel-and-rematch *p* and *q* (both 0.459654) are invalid diagnostics under the same null limitation. The unresidualized protein comparison is circular: class selection uses the RNA effect, and protein abundance tracks that effect. It therefore provides no independent biological evidence.
+This historical named-r8 comparison, not rerun after eligibility qualification, asks whether the liver protein response to fibrosis stage differs between the two classes. It contains 73 pairs, with a mean residualized difference of −0.015601, a paired effect d of −0.08156 and a minimum detectable effect of 0.3279 at 80% power. We detected no difference (post hoc paired sign-flip nominal *p* = 0.487465). This is not evidence of equivalence. The relabel-and-rematch *p* and *q* (both 0.459654) are invalid diagnostics under the same null limitation. The unresidualized protein comparison is circular: class selection uses the RNA effect, and protein abundance tracks that effect. It therefore provides no independent biological evidence.
 
 ### Expression observability of the two classes
 
-Among genes with a single-cell hepatocyte-specificity value (399 of 400 genetic-only and 1,124 of 1,129 state-only genes), genetic-only genes have mean bulk AveExpr 4.2115, against 0.4164 for state-only genes, a difference of 3.7951 log2 units. Of the 399 genetic-only genes, 281 (70.4%) obtain an expression-matched partner.
+In the historical named-r8 classes, among genes with a single-cell hepatocyte-specificity value (399 of 400 genetic-only and 1,124 of 1,129 state-only genes), genetic-only genes have mean bulk AveExpr 4.2115, against 0.4164 for state-only genes, a difference of 3.7951 log2 units. Of the 399 genetic-only genes, 281 (70.4%) obtain an expression-matched partner.
+
+### Gene-set association by MAGMA
+
+In a MAGMA gene-set test of the colocalized genes, the association was specific to AST. In UK Biobank AST, beta_std was 0.0276 (*p* = 0.0073; Holm *p* = 0.015 over two traits), and MVP AST gave *p* = 0.047. ALT, liver fat (PDFF) and cirrhosis showed no association.
 
 ## Supplementary Note 4. Fine-mapped coding and splice posterior by trait class and ancestry
 
@@ -106,23 +125,29 @@ Across the 12 pair-by-adjustment tests in the same 46 participants, BH q is 0.00
 
 ## Supplementary Note 8. Stage and lineage sensitivity analyses for the single-cell programs
 
-Units in these analyses are biological donors.
+Units in the primary analyses are source-qualified donor identifiers. The 61-record equal-variance sensitivity includes two GSE189600 records whose biological independence is unresolved.
 
 ### Equal-variance stage sensitivity
 
-The 62-donor equal-variance fit adds two GSE189600 donors without ambient correction. It gave Ductular injury q = 0.03763 (HC3 q = 0.1558). The call does not hold with the within-dataset permutation null (q = 0.123), without those two donors (q = 0.0985) or with a 50-cell lineage gate (q = 0.0765) (Figure S4 [panel letter to be assigned]). When the stored cell scores are averaged over QC-passing cells alone, the call holds (q = 0.0180), but adding a 50- or 20-cell lineage gate to those cells removes it (q = 0.0616 and 0.0889).
+The corrected equal-variance sensitivity retains at most 61 source records, including two GSE189600 records without ambient correction and with unresolved independence. Its complete 117-program ordinary and HC3 estimates are reported separately. Historical 62-record p/q values and cell-gate comparisons are superseded; they do not supply current primary evidence.
 
 ### Primary-model sensitivities
 
-Under the primary model (separate residual variance per dataset, 19,999 within-dataset stage permutations, BH over 117 programs; 55 donors for the hepatocyte programs), averaging the stored cell scores over QC-passing cells alone selects 0 of 117 programs (smallest q = 0.304). Stage betas correlate with the primary betas at Spearman 0.994. Five programs change sign, all with |beta| < 0.02 in both fits. Ductular injury gives beta 0.139 (q = 0.343) and Stromal ECM 0.076 (q = 0.578). Each stored cell score already averages over neighbors that can include failing cells, so this analysis restricts the donor average and is not a rescoring on passing cells. Removing T-cell donors with fewer than 20 T cells leaves 36 of the 53 fitted T-cell donors. No T-cell program is selected (smallest q over 117 = 0.587, with the other 106 programs' permutation p values unchanged). This is a completed test without a selection, not an untestable result.
+Under the corrected primary model, averaging stored scores over QC-passing cells selects 0 of 117 programs (smallest permutation BH q = 0.193); stage betas correlate with the primary estimates at Spearman 0.994. Ductular injury has beta = 0.208 (nominal 95% CI 0.085 to 0.331; permutation p = 0.00165, BH q = 0.193); Stromal ECM has beta = 0.149 (nominal 95% CI 0.004 to 0.294; permutation p = 0.04865, BH q = 0.271). These stored cell scores include neighbor contributions from failing cells, so this is not rescoring after QC. Removing donors with fewer than 20 T cells leaves 35 of 52 fitted T-cell donors, with 0 selected T-cell programs (smallest T-cell q after BH over the complete 117-program family = 0.552); the other 106 permutation p values remain fixed.
 
 ### Ambient-RNA audit
 
-The Stromal ECM paired change (nominal *p* = 0.0064) has the smallest ordinary *p* among 106 computable paired changes. Its HC3 *p* is 0.024, eighth by HC3 *p*.
+We next examined ambient RNA using unchanged scores, original full-transcriptome exposures and fixed program weights in the correction-available donor universe. Stromal ECM changes from 0.4207 to 0.1525 in the paired equal-variance analysis (delta -0.2682, nominal p = 0.00148, BH q = 0.173); its ambient-corrected GLS beta is 0.077 (permutation BH q = 0.331). Ductular injury changes from 0.4574 to 0.4504 in the paired equal-variance analysis (delta -0.0070, nominal p = 0.8588, BH q = 1.000); its ambient-corrected GLS beta is 0.172 (permutation BH q = 0.111). The GLS sensitivity tests 106 non-T-cell programs within the 117-program family and selects 0 (smallest q = 0.111). The 11 T-cell programs are untestable on the corrected native scale. Attenuation classification is conditional on primary selection, so it applies to neither focal program. These results do not establish the cellular origin of either program's transcripts.
 
 ### Content-lineage contrasts
 
-Both content-lineage results are reported with cohort-specific intervals, partial correction coverage, and full-raw, 20-cell and annotation-confidence sensitivities (Figure S4 [panel letter to be assigned]). A transfer of the member genes of the two programs to bulk tissue is also reported as a supplementary analysis.
+We compared steatohepatitis with steatosis within each focal program's content-associated lineage, using the same correction-available cells and donors and the corrected RNA diagnoses. Ductular injury in cholangiocytes: beta 0.135 (HC3-based meta-analysis 95% CI -0.075 to 0.346; n = 26 donors; two-program BH q = 0.208). Stromal ECM in fibroblasts: beta 0.321 (HC3-based meta-analysis 95% CI 0.086 to 0.556; n = 26 donors; two-program BH q = 0.015). These are targeted projected-expression tests in GSE202379 and GSE244832, with a 50-cell primary gate; they do not independently replicate the hepatocyte discovery or exclude within-lineage substate mixtures. Cohort-specific estimates, full-raw, 20-cell and annotation-confidence sensitivities are reported separately. Captured-lineage fractions are not whole-tissue proportions.
+
+### Dependence of the focal programs on GSE244832
+
+When GSE244832 is left out, the top-50-gene Jaccard overlap with the full-atlas program is 0.026 for Stromal ECM and 0.000 for Ductular injury, against 0.31 to 1.0 when other datasets are left out. Across all programs, 56 of 117 fall below 0.2 without GSE244832 and 40 fall below 0.1. The stability rule takes the median over left-out datasets, so a gene set defined mainly by one dataset can still pass it. GSE244832 contributes 430,704 hepatocyte nuclei, against 84,310 in GSE202379. The fibroblast Stromal ECM contrast splits by cohort: GSE244832, 13 donors, beta 0.369 (HC3 *p* = 0.026); GSE202379, 13 donors, beta 0.245 (HC3 *p* = 0.26). Only the GSE202379 half tests a gene set fixed before those donors were seen, and that half alone is not significant. Without GSE244832 (40 donors), the CDH1 to PTPRM communication score falls from 0.496 to 0.0034, and ST6GAL1 to EGFR from −0.299 to −0.070. Both results rest on one dataset.
+
+Donor-level variance of Ductular injury also differs by stage. In GSE244832, the residual SD rises from 0.08 in healthy donors to 1.25 in steatohepatitis. In the model with dataset- and stage-specific variances (E8), the stage beta was 0.172 (*p* = 0.013) for Ductular injury and 0.041 for Stromal ECM.
 
 ## Supplementary Note 9. Matched-background comparison for Hotspot program associations in bulk liver
 
@@ -158,11 +183,11 @@ The pooled heatmap of the 43 systems balances collections within each cohort and
 
 ## Supplementary Note 12. Retrospective transfer of the continuum loading
 
-GSE174478 and GSE240729 had already been evaluated, so they serve as retrospective transfer checks. These values come from a transfer of the 139-gene continuum loading built on an 844-record bulk set, and they were not recomputed on the 774 units. Sample-level correlations between the continuum and fibrosis were 0.510 (93 samples) and 0.710 (66 samples), with matched-background Holm *p* = 0.117 and 0.064 (1,000 matched random-signature draws), neither below 0.05. A positive association with histology therefore does not show that the loading performs better than matched random signatures. GSE240729 also uses FFPE tissue.
+GSE174478 and GSE240729 had already been evaluated, so they serve as retrospective transfer checks. These values come from a transfer of the 139-gene continuum loading built on an 844-record bulk set, and they were not recomputed on the 774 units. Sample-level correlations between the continuum and fibrosis were 0.510 (93 samples) and 0.710 (66 samples), with matched-background Holm *p* = 0.117 and 0.064 (1,000 matched random-signature draws), neither below 0.05. The prespecified primary test, a fixed projection within disease against matched random gene sets with Holm correction over GSE162694 and GSE213621 and both cohorts required to pass, missed: rho 0.547 against a null 95th percentile of 0.528 (109 samples) and rho 0.465 against 0.457 (293 samples), Holm *p* = 0.082 in each. Matched random gene sets give a mean of 86 continuum-associated programs against the 92 observed (*p* = 0.109). A positive association with histology therefore does not show that the loading performs better than matched random signatures. GSE240729 also uses FFPE tissue.
 
-## Supplementary Note 13. RNA-protein agreement in Figure 5B
+## Supplementary Note 13. RNA-protein agreement in Figure 5A
 
-Across the 3,054 measured genes of Figure 5B, Spearman *rho* between the RNA and protein changes was 0.458, and RNA and protein changed in the same direction for 2,013 genes (65.9%). HLA-DQA1 (Figure 5C) is quantified with the primary-assembly annotation ENSG00000196735.14.
+Across the 3,054 measured genes of Figure 5A, Spearman *rho* between the RNA and protein changes was 0.458, and RNA and protein changed in the same direction for 2,013 genes (65.9%). Between acquisition batches, protein-effect estimates agree at Spearman *rho* 0.34 over 3,034 genes. The batches contain different participants (28 MASLD and 5 controls; 18 MASLD and 7 controls), so this comparison mixes sampling error, case mix and technical variation and does not estimate an assay reliability ceiling. HLA-DQA1 (Figure 5C) is quantified with the primary-assembly annotation ENSG00000196735.14.
 
 ## Supplementary Note 14. Figure 7 severity instrument: fit and scores against task-native baselines
 
@@ -172,4 +197,240 @@ The severity instrument scored 0.6631 against 0.6094 for the in-cohort ridge bas
 
 ## Supplementary Note 15. Power of the comparison with Kumak et al.
 
-Planted shifts equal to an odds ratio of about 1.74 or 0.48 in the NAS list were detected in 82% and 65% of simulations, and shifts of about 1.75 or 0.48 in the fibrosis list in 77% and 62%.
+These historical power checks use the earlier 3,769-gene universe and were not rerun after eligibility qualification. Planted shifts equal to an odds ratio of about 1.74 or 0.48 in the NAS list were detected in 82% and 65% of simulations, and shifts of about 1.75 or 0.48 in the fibrosis list in 77% and 62%.
+
+## Supplementary Note 16. Disease accessibility, regulatory-link controls and recovered hepatocyte RNA
+
+The two disease ATAC cohorts were fitted separately: GSE244832 has 5 normal and
+9 MASH donors after excluding MASL, and GSE281367 has 6 normal and 6 MASH.
+All four corrected primary TMM–voom quality-weighted fits reproduce to within
+5.73 × 10^-13. Fragment-count effects and donor sums of binary nucleus
+accessibility have different units and were not pooled. Robust edgeR
+quasi-likelihood did not improve the fitted-negative-binomial null diagnostics;
+those simulations are not biological ground truth, and their binary-count
+versions cannot validate bounded-count calibration. The primary voom reference
+was retained (Supplementary Figure S5AA).
+
+Across 30,650 jointly testable hepatocyte and 9,264 stellate peaks, cross-cohort
+Spearman correlations are 0.3897 and 0.2654, with sign agreement of 64.40% and
+58.27%. These summaries describe dependent peaks, not independent donor tests.
+Four stellate peaks meet same-direction BH q < 0.05 in both cohorts; no lineage
+passes the separate three-lineage directional-replication family, which retains
+untestable macrophages. All four peakwise candidates retain their effect sign
+under each recorded donor omission in both cohorts; three retain BH q < 0.05
+after recorded-batch adjustment in GSE244832. The chr2:64404164–64404664 peak
+does not (adjusted q 0.343). These are within-cohort sensitivities, not further
+independent replication. No program or chromVAR motif passes strict two-cohort
+replication. Recorded-batch adjustment in GSE244832 changes hepatocyte calls
+from 1 to 3 and stellate calls from 820 to 291 on identical donors and peaks.
+The six batches include five with both conditions and one with three MASH
+donors only. Condition-only and adjusted designs have ranks 2 and 7 and residual
+degrees of freedom 12 and 7. Full rank is not complete separation of disease
+and batch. Donor omissions, batch tables and all peak effects accompany the
+displayed examples; none of these sensitivities changes the primary testing
+family (Supplementary Figure S5P–T,W).
+
+Separate disease-cohort distance and positive-Cicero annotations remain
+descriptive. Cross-cohort Cicero top-link Jaccard is 0.1579 in hepatocytes and
+0.1739 in stellate cells on common observability, compared with 0.9927 and
+0.9985 for distance. Shared consensus peaks and top-ten selection qualify these
+values. The complete peak-to-gene table preserves link method, score, coverage,
+accessibility uncertainty, batch and donor sensitivity, and evidence state.
+All 117 program memberships and weights remain fixed, with coverage exported
+even when no qualifying link exists. Motif-family compatibility does not identify
+TF activity. The illustrative AHNAK-linked stellate peak is a peakwise candidate,
+not evidence that AHNAK is regulated by that peak (Supplementary Figure S5U–W).
+
+The predictive benchmark is separate from these all-donor disease maps.
+Original-grid results did not establish distal predictive benefit; the wider
+grid was a secondary sensitivity prompted by tuning-boundary diagnostics, using
+the same previously evaluated donors. In the separate post hoc matched-gene
+comparison, adapted DIRECT-NET worsened hepatocyte RNA error by 0.246% versus
+distance, while Cicero improved it by 0.306% (the original four-test Holm family
+is unchanged). Complete original-grid references and wider-grid comparisons
+accompany the new stress tests. In
+GSE296875 hepatocytes, 39 held-out donors retain the original five outer/three
+inner folds and fixed wider ridge grid. Baseline Cicero RNA error is 0.9770%
+lower than promoter-only and 0.3062% lower than distance on matched genes.
+Across aggregation seeds 43 and 44, the 500-nucleus cap and three deliberately
+targeted training-donor omissions, reductions are 0.8394–1.0236% and
+0.2869–0.3376%, respectively. Every unshuffled comparison retains a positive
+gain over both baselines, satisfying the fixed internal robustness criterion.
+Intervals use 2,000 seeded donor bootstraps conditional on saved fitted
+predictions, without retraining uncertainty. No new confirmatory family was
+introduced; original and post hoc Holm families remain separate and unchanged.
+Genes unavailable to a method and tuning at the largest penalty are reported
+explicitly rather than silently changing comparison universes.
+
+For within-donor RNA pairing-shuffle seeds 43–45, paired-minus-shuffled Cicero
+gain over distance is −0.000180 [−0.000434, 0.000087], −0.000120
+[−0.000369, 0.000143] and −0.000226 [−0.000460, 0.000030] standardized MSE.
+All conditional intervals include zero. Paired gains over promoter-only are
+modestly larger than shuffled gains, but this does not establish a pairing-specific
+Cicero advantage beyond proximity. Shuffles preserve donor marginals, so they do
+not remove every donor-level chromatin–RNA association. GSE296875 is an internal
+development cohort without a qualified MASH contrast. Neither independent MASLD
+validation nor individual-edge correctness follows (Supplementary Figure S5X,Y).
+
+Joint reconstruction of 117 sequencing runs as 18 GSE244832 capture libraries
+recovers 149,096 called nuclei and 690,444,610 called-cell UMIs. Exact molecule
+accounting passes per cell and per gene in every library. Source-native RNA
+diagnosis, QC and lineage eligibility retain 5 normal and 9 MASH hepatocyte
+donors; stellate and macrophage RNA have only 3 and 2 normal donors and are
+untestable under the four-per-condition rule. Among the same 21,054 tested RNA
+genes, 11 meet BH q < 0.05 in the condition-only model and 3 after recorded-batch
+adjustment. CHST9 and TMEM150B are increased in both: their condition-only and
+adjusted q values are 0.00187/0.00405 and 0.04069/0.00640, respectively. TRIM9
+is significant only after adjustment (q 0.00389; condition-only q 0.11675).
+These selected candidates are not an independently validated hepatocyte
+signature. Recounting adds no ambient-RNA correction or doublet model, and
+unresolved specimen matches preclude donor-matched RNA–ATAC associations
+(Supplementary Figure S5Z). Complete effect and exclusion tables accompany
+these panels; no Catalog class, program weight or causal-gene assignment changes.
+
+## Supplementary Note 17. Held-out replication in SteatoSITE
+
+**Cohort and processing.** SteatoSITE (Kendall et al., 2023; ENA PRJEB58625) is archival FFPE liver sequenced as stranded total RNA (2 x 50 bp). We used only the public reads and the NASH-CRN fibrosis stage in the ENA sample records. The source has no F0 code, so code 1 is read as F0–F1; unstaged samples are not used as controls. Of 658 samples, 652 libraries were counted. Quality control blinded to stage kept 515 donors (114 technical, 18 possibly mixed and 5 same-individual libraries removed); 493 are staged (F0–F1 255, F2 74, F3 75, F4 89). Inferred sex agrees with the sex recorded in an independent reprocessing of these data (LiRNA atlas) for all 494 shared included donors. Models are `~ batch + inferred_sex + stage` with nine sequencing batches. Specimen type (biopsy, resection, explant) is not public, and F4 includes explants. Stage-associated expression in SteatoSITE, including THRB, the risk score and deconvolution trends with stage, was reported by Kendall et al.; we test our own fixed effects and claim none of these as new.
+
+**Controls.** COL1A1, EPCAM and LUM are higher and GNMT and CYP2C19 lower in F3–F4 than F0–F1 (all p < 10^-31). The slope of the SteatoSITE sex coefficient on discovery F3–F4 effects is -0.052 (95% CI -0.159 to 0.054), so sex and stage are separated here, unlike in GSE213621. Permutation-null mean slopes are -0.015 to 0.018. Adding RNA-quality covariates changes the F3–F4 slope from 1.462 to 1.452.
+
+**Grouped contrasts (two tests, Holm).** Over the 8,460 measurable discovery F3–F4 calls, b = 1.462 (95% CI 1.323 to 1.601), 93.5% same sign (null 52.6%), Holm p = 0.002, minimum detectable slope 0.289. F2 versus F0–F1: b = 0.917, 95.4% same sign, untestable (minimum detectable slope 0.538). For F3–F4: up calls 1.422, down calls 1.171, women only 1.315, F3 only (F4 removed) 1.134, and with six cell-composition coordinates 0.256. The composition-adjusted fit is compared with an unadjusted discovery vector, so the drop is descriptive; it indicates that most of the bulk stage signal moves with tissue composition.
+
+**Adjacent steps (three tests, Holm).** F0–F1 to F2 (discovery F1 to F2) b = 0.952, 94.4% same sign; F2 to F3 b = 0.691, 96.1%; F3 to F4 b = 0.705, 94.6%. All three are untestable (minimum detectable slope 0.36 to 0.59) and are descriptive.
+
+**Genes.** GNMT, MAT1A and CYP2C19 fall with stage code (log2 per code -0.569, -0.344, -0.718; Holm over three, all p < 10^-35). IGFBP7 rises from F2 to F3 (+0.666 log2, one-sided p = 7.9 x 10^-16). Of the 29 later-step Figure 3F marks, 28 pass BH q < 0.05 within 29 and all 29 have the discovery sign; PSMC3IP (F1 to F2) has q = 0.21. Of 10,903 measurable stage-supported genes, 92.5% have the discovery trend sign (null 52.0%; descriptive, because these genes were defined with GSE213621 and the continuum).
+
+**Gene Catalog field.** Of 8,542 Catalog genes that are discovery F3–F4 calls: 7,214 replicated, 645 underpowered, 383 not replicated at adequate power, 201 opposite sign and 99 not measurable. No class changes.
+
+**Continuum and programs.** The fixed continuum projection correlates with stage at Spearman rho = 0.776 (493 donors); expression-matched random gene sets give median 0.667 and 95th percentile 0.739 (p = 0.001), so most of this correlation is shared by random expressed genes. Hepatocyte-fraction partial rho is 0.495. Stromal ECM and Ductular injury rise per stage code (0.674 and 0.633 SD, HC3, Holm over two, both pass; 0.158 and 0.091 after composition adjustment). Of 112 testable programs, 98 change with stage at BH q < 0.05, and all 63 stage-supported programs agree in sign. This separate arm does not change the Figure 4E result.
+
+**Composition.** Within stage, portal-tract marker content explains a share of 0.506 (95% CI 0.451 to 0.562) of donor variation in continuum position, above the 95th percentile of its null (0.236). The IgA share of immunoglobulin heavy-chain fragments rises 0.148 logit per stage code (SE 0.023, p = 1.1 x 10^-10; 0.119 with plasma-cell and immunoglobulin-rate terms). This is a shift in antibody isotype, not a plasma-cell count.
+
+**Genotypes and allelic expression.** PNPLA3 rs738409 calls from RNA fail Hardy-Weinberg equilibrium (p = 8 x 10^-8; 147 heterozygotes observed, 197 expected). The heterozygote deficit is present in every stage group and is unchanged by duplicate removal, so the prespecified genotype analyses were not run. Allelic imbalance by stage: 0 of 220 testable genes at BH q < 0.05.
+
+**List overlap within one cohort.** In 50 random splits of the 493 donors into five groups of about 99, 26.8% of genes called in any group (F3–F4 versus F0–F1, BH q < 0.05 within group) were called in one group only, and 0.17% of genes called in two or more groups had mixed signs. Across the five Figure 3C cohorts the corresponding values are 68.5% and 31.5%. For disjoint pairs of 109 donors, a median of 76% of one group's calls were called in the other. The contrast differs from Figure 3C, and the groups share protocol and batches. These are descriptive within-cohort comparisons, not bounds on agreement or a decomposition of between-study heterogeneity.
+
+**Pooled sensitivity (descriptive; Figure 3 stays discovery-only).** We refitted the Figure 3E adjacent steps with the 387 discovery units and the 493 SteatoSITE donors together (`~ dataset + inferred_sex + group`, each SteatoSITE batch a dataset level; BH over 24,115 genes; SteatoSITE code 1 enters only the grouped F0–F1 to F2 step). The discovery-only refits reproduce Figure 3E exactly (maximum logFC difference 2 x 10^-14; 512 and 281 calls). Pooled calls are 7,239 for F0–F1 to F2 (discovery 2,922), 3,943 for F2 to F3 (512) and 9,475 for F3 to F4 (281). Of the pooled calls, 99.1%, 98.4% and 86.9% have the discovery sign, and every discovery call that stays called in the pooled fit keeps its sign. SteatoSITE carries a median 50%, 47% and 64% of the voom weights in the three pooled fits, and alone it gives 5,180, 3,755 and 9,857 calls, so the pooled counts mostly reflect SteatoSITE's larger later-stage groups. A stage-by-source interaction is called for 6, 2 and 351 genes, so effect sizes differ between the sources mainly at F3 to F4, where SteatoSITE F4 includes explants. Without GSE135251, the discovery F2 to F3 step keeps 2 genes (54 units); the pooled fit without GSE135251 keeps 3,327 (203 units, 66% SteatoSITE weight). The single-cohort dependence of this step in Figure 3E therefore reflects the small number of units left, not a step absent from other cohorts [Inference]. The discovery-only F3 to F4 fit without GSE135251 (29 units, 11 at F4) gives 6,565 calls; with so few units we do not interpret it.
+
+**Exonic and intronic change (exploratory).** Total-RNA libraries retain intronic reads, which mark pre-mRNA. For 12,010 genes with intronic signal, the F3–F4 versus F0–F1 change in intronic reads followed the change in exonic reads closely (Spearman 0.95; slope 0.92 over the 4,346 replicated Catalog genes that could be measured; Figure S3 [panel letter to be assigned]). In the corrected batch- and inferred-sex-adjusted model, the exon/intron ratio (Gaidatzis et al., 2015) changed for 2,711 genes at BH q < 0.05 over 12,010 (global call-count permutation p = 1/201 = 0.004975; 200 shuffles within batch and sex, seed 20261103). The median absolute ratio change among these calls was 0.152 log2; 114 genes changed by at least 0.5 log2, approximately 1.41-fold. The historical stage-only model gave 3,008 calls; 2,525 are shared, 483 lose a call and 186 gain a call after adjustment. Whether more of these ratios rise or fall depends on the normalization library set, so we do not interpret the direction balance. For GNMT, MAT1A, COL1A1, IGFBP7, TNFSF10 and LUM the intronic change was 90–113% of the exonic change. The aligned intronic and exonic effects are consistent with a substantial transcription-associated tissue component. Changes in cell mix also move both read types together. Intronic abundance depends on RNA processing, and separate normalization assumes that sample-wide exon/intron balance changes are technical. These data do not resolve absolute synthesis or degradation rates or exclude concurrent stability effects. The prespecified edgeR fit with donor terms was replaced by a limma test on each donor's log exon/intron ratio because the edgeR fit was too slow to permute; the historical comparison of 300 genes used the stage-only models and gave Pearson 0.94 between effect estimates. It is not a comparison of the current adjusted model and does not establish equivalence of uncertainty estimates or tests.
+
+**Figure 3E axes (exploratory).** The fixed k6 NMF bases were applied to SteatoSITE with the release transport, which reproduces the discovery scores exactly. A per-batch shift was needed for the new protocol, and scores were almost unchanged without it (within-batch Spearman ≥ 0.993). The F3–F4 versus F0–F1 activity had the discovery direction for P1 Inflammatory-EMT (1.34 SD), P2 Hepatocyte-Metabolic (−1.41), P3 Fibrotic-ECM (1.57) and P4 Unresolved (−1.31) (one-sided permutation tests, Holm over five axes, all p = 0.005), and the F2, F3 and F4 activities of these axes all had the discovery sign and order (Figure S3 [panel letter to be assigned]). P5 Noncoding is not interpretable: its discovery F3–F4 effect is near zero (−0.01), and its genes depend on total-RNA versus poly(A) library preparation. Like the gene-level slope, these axis shifts likely include cell-composition change.
+
+**Liver eQTL direction (exploratory).** At expressed SNPs that are GTEx v8 liver significant variants for the same gene, the allelic read share in heterozygous donors had the GTEx direction for 34 of 50 testable genes (68%; random-sign null 50%, one-sided p = 0.008), so these liver eQTL directions are visible in diseased FFPE liver.
+
+## Supplementary Note 18. Follow-up analyses of the colocalized genes
+
+Each analysis below had a written plan, checksummed before it ran. Analyses written after an earlier result was seen are labelled post hoc. None changes a Catalog class.
+
+The saved-signal inventory contains 383 unique unordered gene-study comparisons,
+including 94 recurrent comparisons representing 78 genes. Of these, 88
+comparisons (73 genes) reuse the same recorded eQTL signal index. That index
+does not establish a matched GWAS causal signal, and the shared eQTL panel is
+not independent molecular replication. The 342 directed tested rows below
+answer a different counting question and are not 342 independent genes or
+cohorts. These historical recurrence estimates also precede the variant-identity
+qualification of 90 primary genes; they cannot certify a replicated genetic core.
+
+**Gene-level recurrence in another GWAS of the same trait.** We used three European pairs of independent cohorts: MVP and UK Biobank ALT, MVP and UK Biobank AST, and MVP and FinnGen NAFLD. Other European NAFLD and liver-fat GWAS share UK Biobank or FinnGen participants with these and were not used. For each gene-by-GWAS colocalization (SuSiE PP.H4 > 0.5) in one member of a pair, the partner was scored as recurrent (PP.H4 > 0.5), distinct variant (PP.H3 > 0.5), neither, or untested (no SuSiE result). A gene takes its best state over its rows. Of the 436 genes, 78 have recurrent gene calls, 121 have a distinct variant in the partner, 12 neither, 103 are untested and 122 have no row in a pair (UK Biobank GGT 80, Biobank Japan 30, other 12). Of the 22 direct-trait genes, GPAM, RORA, OSGIN1, TOR1B and C2orf16 recur, all through enzyme GWAS pairs; the direct NAFLD pair was testable for one gene. Gene-level recurrence among the 342 directed tested rows, with 95% intervals from 10,000 bootstrap draws of 147 locus clusters (anchors on one chromosome within 500 kb; seed 20261102):
+
+| Discovery PP.H4 | Tested rows | Recurrent gene call | Distinct variant | Neither | Fraction (95% interval) |
+|---|---|---|---|---|---|
+| 0.5 to 0.8 | 63 | 17 | 42 | 4 | 0.27 (0.16 to 0.39) |
+| 0.8 to 0.95 | 99 | 51 | 45 | 3 | 0.52 (0.38 to 0.64) |
+| ≥ 0.95 | 180 | 120 | 53 | 7 | 0.67 (0.57 to 0.75) |
+| All | 342 | 188 | 140 | 14 | 0.55 (0.47 to 0.63) |
+
+Every row involves MVP summary statistics, which were fine-mapped with an out-of-sample LD reference. A distinct-variant call can come from different causal variants in the two cohorts or from the different LD references, and this analysis cannot separate the two. The plan stated in advance that all single-study genes would be labelled provisional if the fraction stayed near 0.5 at PP.H4 ≥ 0.95; it is 0.67, so that rule did not apply. Genes with discovery PP.H4 0.5 to 0.8 remain provisional. Recurrence alone does not qualify variant identity or demonstrate the same mechanism.
+
+**Coding variants of neighbouring genes.** For each of the 840 colocalized tier-1/2 signal pairs (767 gene-by-GWAS pairs), we took the GWAS-side lead variant and computed LD (1000 Genomes panel of the GWAS ancestry) with protein-altering or canonical-splice credible-set members of tier-1/2 studies at PIP ≥ 0.1. Gene-level flags, taking the most severe class over a gene's pairs:
+
+| Class | All 436 | Direct 22 |
+|---|---|---|
+| Anchor is another gene's coding variant | 1 (C2orf16; GCKR rs1260326) | 1 |
+| Not separable, r² ≥ 0.8 | 3 (CWF19L1 with ERLIN1, r² 0.92; RECQL4 and ZFTRAF1 with LRRC24, r² 0.85) | 1 |
+| Moderate LD, r² 0.2 to 0.8 | 5 (IFT172, LRRC14, LRRK2, SUPT7L, KCTD10) | 0 |
+| Anchor is or tags the gene's own coding variant | 3 (PTTG1IP, EXOC3L4, WIPI1) | 0 |
+| Not assessed (anchor absent from the LD panel) | 29 | 1 (MAU2) |
+| None | 395 | 19 |
+
+At any PIP the counts are 1, 5, 10, 6, 47 and 367. The per-gene lead variants of Figure 2C are a different summary, and for several genes they differ from the signal-pair anchors used here. SAMM50's Figure 2C lead is PNPLA3 rs738409, but its signal-pair anchor (22:44325748, GRCh37) has r² 0.05 with rs738409 (D′ 1). The MAU2 anchors have r² < 0.2 with TM6SF2 rs58542926 where computable. The IFI27L2 and SERPINA11 anchors lie 250 kb and 69 kb from SERPINA1 rs28929474 with r² < 0.2. The HSD17B13 variant rs72613567 is a splice-region insertion, outside the coding categories used, so SPP1 was not testable by this rule. The 29 not-assessed genes are not clear of a coding neighbour.
+
+**GNMT and the European enzyme GWAS.** The GNMT direct-NAFLD ABF result reproduces (PP.H4 0.706 on 3,384 variants; anchor 6:42931261). The five enzyme GWAS leads in the GNMT eQTL window lie at 6:43.74 to 43.81 Mb, 810 to 880 kb from the anchor, with r² < 0.005 in the European panel (379 samples). Conditioning NAFLD on each lead moves the anchor z from 3.65 to 3.56 to 3.63 and leaves PP.H4 at 0.64 to 0.69; conditioning each enzyme GWAS on the NAFLD anchor leaves its lead unchanged. Because the leads are at a different locus, this test could not have removed the NAFLD signal and is uninformative about the local haplotype. In a post hoc analysis with the eQTL window restricted to 250 kb around the anchor, chosen after the lead positions were seen:
+
+| GWAS | z at anchor (p) | Full-window PP.H3 | Local PP.H3 | Local PP.H4 |
+|---|---|---|---|---|
+| NAFLD (Ghodsian et al., 2021) | 3.65 (2.6 × 10⁻⁴) | 0.051 | 0.032 | 0.720 |
+| MVP ALT | 0.39 (0.70) | 1.000 | 0.099 | 0.001 |
+| MVP AST | 2.26 (0.024) | 1.000 | 0.228 | 0.009 |
+| UK Biobank ALT | −6.67 (4.3 × 10⁻¹¹) | 0.998 | 0.884 | 0.116 |
+| UK Biobank AST | −2.33 (0.022) | 1.000 | 0.060 | 0.011 |
+| UK Biobank GGT | 3.46 (6.6 × 10⁻⁴) | 0.939 | 0.054 | 0.219 |
+
+UK Biobank ALT has a local association (smallest p 1.5 × 10⁻¹³ at 6:42944988) that does not colocalize with the eQTL; MVP ALT has none at the anchor. The UK Biobank summary statistics carry beta and standard error at low precision, so their z values are approximate. GNMT's colocalization stays sub-threshold and provisional for the reasons in the main text.
+
+**Allele directions at three-way loci.** At loci where a GWAS signal colocalizes with both a liver eQTL and a bulk-liver accessibility QTL (Currin et al., 2025), we aligned all three effects to one allele. The caQTL effect is for the last allele of the variant identifier (998 of 998 matchable rows of Currin Table S23A agree). Palindromic variants were dropped, leaving 88 of 103 loci, one row per locus (highest three-way PP.H4). The accessibility-raising allele raised expression at 67 of 88 loci (0.761; binomial Holm p = 1.8 × 10⁻⁶ over two tests): 60 of 75 liver-trait loci and 7 of 13 platelet-count loci. The 21 opposite-direction loci (CYP4V2, PPP2R1B, S100A13, SLC2A2, IL15RA, SPATA13, PPP1R3B, LGR6, PPA1, ENAH, SEC14L2, EEF1AKMT3, RFC2, NAP1L5, KLC1, IL18R1, H1-0, NOL8, ATP5MG, ATP5IF1, SLC25A11) are not evidence against colocalization. At 49 tier-1/2 loci whose gene is a disease-state call, the trait-raising allele moved expression in the disease direction at 28 (0.571; Holm p = 0.39; Fisher OR 1.78). Forty-eight of the 49 are liver-enzyme loci.
+
+## Supplementary Note 19. Cross-cohort consistency of the disease-state calls
+
+**Current transportability sensitivity.** The complete 24,115-gene family was
+analyzed by REML with modified Hartung–Knapp uncertainty and a variance-factor
+floor of one (Methods). The native GSE126848 filter leaves 15,592 genes with
+five cohorts and 8,523 with four. Among the fixed 1,854 pooled calls, 1,056 are
+testable in GSE126848 and 798 are untestable there. Random-effects means retain
+the pooled sign for 1,850/1,854 genes; 1,208 agree in every available cohort.
+No gene passes BH over 24,115 tests (minimum q=0.171430). Median I-squared among
+the fixed calls is 60.35%; 908 nominal Q p values below 0.05 are descriptive.
+These results show broad directional agreement with unresolved small-cohort
+mean-effect inference, not absence of tissue effects or independent replication.
+The fixed pooled calls and separate SteatoSITE stage results are unchanged.
+
+**Historical consistency classes.** The earlier five-cohort DerSimonian–Laird
+screen retained all 1,854 selected genes in every cohort, including entries
+excluded by the current GSE126848 native filter. It gave 1,403 random-effects
+z-test calls and 902 heterogeneity calls under its original correction. The
+table below preserves those descriptive classifications; it does not describe
+the current REML/modified Hartung–Knapp inference. Input eligibility, testing
+family and uncertainty rules differ, so their numerical contrast cannot be
+attributed to one change alone. The label "Consistent" is historical and does
+not certify replication.
+
+| Class | Up | Down | Total | Median τ | Median I² |
+|---|---|---|---|---|---|
+| Consistent | 536 | 210 | 746 | 0.16 | 0.35 |
+| Single-cohort dependent | 467 | 184 | 651 | 0.32 | 0.64 |
+| Direction consistent, size heterogeneous | 259 | 99 | 358 | 0.51 | 0.79 |
+| Cohort-discordant (two or more cohorts opposite) | 71 | 28 | 99 | 0.58 | 0.77 |
+
+In the historical classification, consistent calls had at most one cohort with the opposite sign and a same-sign random-effects call at BH q < 0.05 that survives removal of any one cohort; 731 of the 746 have random-effects |log2FC| > 0.5. Single-cohort dependent calls lose the random-effects call when one cohort is removed. GSE213621 is that cohort, alone or with others, for 625 of the 651 (alone for 261), and GSE162694 is involved for 301. GSE213621 has 326 of the 774 units, so part of this dependence reflects power, but these calls are not replicated in the four smaller cohorts. The class, τ, I², the prediction interval and the cohorts whose removal loses the call are reported per gene.
+
+**GSE48452.** Deposited RMA values, with after-surgery biopsies excluded, from 12 lean, 16 obese normal-histology, 9 steatosis and 17 NASH participants, one biopsy each. 1,036 of the 1,854 calls matched by symbol (868 of 1,333 up, 168 of 521 down). Each group was compared with lean controls by limma (empirical Bayes with an intensity trend; sex in the model). The statistic was the least-squares slope of array log2 fold change on discovery log2 fold change over the matched calls, with a one-sided p from 1,000 label permutations (seed 20261102) and Holm correction over three contrasts:
+
+| Contrast versus lean | Slope | Null 95th percentile | Holm p | Sign agreement (up, down) |
+|---|---|---|---|---|
+| Obese, normal histology | −0.006 | 0.093 | 0.56 | 0.397 (0.374, 0.512) |
+| Steatosis | 0.069 | 0.125 | 0.34 | 0.576 (0.570, 0.607) |
+| NASH | 0.336 | 0.167 | 0.003 | 0.836 (0.820, 0.917) |
+
+The obese slope divided by the NASH slope was −0.017 (participant bootstrap 95% interval −0.607 to 0.305; 1,000 resamples within group). Four of the 1,036 calls had an obese-versus-lean one-sided BH q < 0.05. Adding age gave slopes of −0.0005, 0.101 and 0.351. The comparison is cross-sectional, in one microarray cohort with 12 lean and 16 obese participants.
+
+**GSE281797.** 91 participants with sex concordant between the record and expression: MASL or MASH 62, controls with no pathology 29 (26 female, 3 male; 6 controls have fibrosis stage F1). The cohort was reported by Zhao et al. (2026; PMID 41870035). Of the 1,854 calls, 1,063 were testable (874 up, 189 down); 573 failed the expression filter and 218 were not annotated. Statistics were compared with 1,000 label permutations within sex (seed 20261102), with Holm correction over two statistics:
+
+| Statistic | Observed | Null median | Null 95th percentile | Holm p |
+|---|---|---|---|---|
+| Sign agreement | 0.653 | 0.500 | 0.702 | 0.134 |
+| Slope of replication on discovery log2FC | 0.209 | 0.006 | 0.138 | 0.016 |
+
+Sign agreement was 0.598 for up calls and 0.905 for down calls (slopes 0.158 and 0.249). A per-gene binomial test of sign agreement gives p = 6 × 10⁻²⁴, but it treats genes as independent, which the permutation null shows they are not. No call reached one-sided BH q < 0.05 (0 of 1,063). The plan required sign agreement to pass before the slope was read, so direction replication is not shown in this cohort; the slope alone is above its null. Sensitivities gave sign agreement 0.543 to 0.706 and slope 0.177 to 0.415 (all 94 participants with deposited sex; F0-only controls; adding age, BMI and diabetes; MASH versus control). Post hoc, by consistency class, sign agreement was 0.724 for consistent calls (490), 0.608 for single-cohort dependent (360), 0.582 for size-heterogeneous (165) and 0.500 for cohort-discordant calls (48), with no test.
+
+**Per-hepatocyte abundance of GNMT, MAT1A and CYP2C19.** In hepatocyte pseudobulk (TMM log2 CPM) from GSE202379 (36 donors) and GSE244832 (18 donors), we regressed each gene on diagnosis category coded 0, 1, 2 (healthy, steatosis, steatohepatitis) with sex, log10 nuclei and log10 UMI per nucleus, using HC3 standard errors and Holm correction over six tests:
+
+| Cohort | Gene | Slope | p | Holm p |
+|---|---|---|---|---|
+| GSE202379 | GNMT | +0.165 | 0.68 | 1 |
+| GSE202379 | MAT1A | −0.222 | 0.065 | 0.39 |
+| GSE202379 | CYP2C19 | −0.720 | 0.11 | 0.53 |
+| GSE244832 | GNMT | −0.963 | 0.19 | 0.76 |
+| GSE244832 | MAT1A | −0.176 | 0.60 | 1 |
+| GSE244832 | CYP2C19 | −0.723 | 0.23 | 0.76 |
+
+Disease-versus-healthy contrasts, removing the UMI covariate and an alternative label set gave the same reading. Including cirrhotic donors in GSE202379 (45 donors) gave CYP2C19 −0.555 (nominal p = 0.011) and GNMT −0.25 (p = 0.46). The slope here is mostly steatosis against steatohepatitis, with 3 to 5 healthy donors per cohort, so a per-hepatocyte loss limited to advanced fibrosis is not excluded. The bulk and protein decreases are unaffected.

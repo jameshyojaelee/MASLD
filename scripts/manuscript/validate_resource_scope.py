@@ -311,7 +311,7 @@ def main() -> int:
             "4. Multicellular programs",
             "5. Molecular and physical tissue context",
             "6. MASLD Gene Catalog",
-            "7. Model framework and transfer limits",
+            "S7 (moved to supplement 2026-11-09). Model framework and transfer limits",
         ],
         "paper_figure_spine",
         errors,

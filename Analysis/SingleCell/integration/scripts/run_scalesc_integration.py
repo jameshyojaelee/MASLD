@@ -63,8 +63,10 @@ def run_integration(species: str, resolution: float, n_hvgs: int, max_cell_batch
     """Run ScaleSC integration pipeline."""
     import scalesc as ssc
 
-    input_dir = INTEGRATION_DIR / "input_h5ad" / species
-    output_dir = INTEGRATION_DIR / "output" / species
+    input_dir = Path(os.environ.get("SINGLECELL_INPUT_H5AD_ROOT", str(
+        INTEGRATION_DIR / "input_h5ad_unique_captures"))) / species
+    output_dir = Path(os.environ.get("SINGLECELL_INTEGRATION_OUTPUT_ROOT", str(
+        INTEGRATION_DIR / "output/unique_captures_20261107"))) / species
     output_dir.mkdir(parents=True, exist_ok=True)
 
     h5ad_files = sorted(input_dir.glob("*.h5ad"))
@@ -73,6 +75,19 @@ def run_integration(species: str, resolution: float, n_hvgs: int, max_cell_batch
     if not h5ad_files:
         log.error(f"No h5ad files found in {input_dir}")
         sys.exit(1)
+
+    if species == "human":
+        import h5py
+        from anndata.io import read_elem
+        captures = []
+        for path in h5ad_files:
+            with h5py.File(path, "r") as handle:
+                uns = read_elem(handle["uns"])
+            if uns.get("count_state") != "one_joint_matrix_per_physical_capture":
+                raise ValueError(f"Unqualified run-level input: {path}")
+            captures.append(uns["capture"])
+        if len(captures) != len(set(captures)):
+            raise ValueError("Repeated physical capture among integration inputs")
 
     # --- ScaleSC Pipeline ---
     t0 = time.time()

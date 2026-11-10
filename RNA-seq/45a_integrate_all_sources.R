@@ -23,9 +23,12 @@ cat("Start time:", format(Sys.time()), "\n\n")
 BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                    "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 
-ATLAS_FILE   <- file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv")
+ATLAS_FILE   <- Sys.getenv("MULTI_EVIDENCE_ATLAS_FILE", file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"))
+ATLAS_OUTPUT <- Sys.getenv("MULTI_EVIDENCE_ATLAS_OUT", "")
+if (!nzchar(ATLAS_OUTPUT) || file.exists(ATLAS_OUTPUT)) stop("Set MULTI_EVIDENCE_ATLAS_OUT to a new candidate file")
 SPATIAL_FILE <- file.path(BASE, "RNA-seq/Analysis/Spatial/results/integration/multi_evidence_atlas_with_spatial.csv")
-PSEUDOBULK_DIR <- file.path(BASE, "RNA-seq/Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
+# Checked lineage-cell correction candidate; named releases remain unchanged.
+PSEUDOBULK_DIR <- Sys.getenv("SINGLECELL_BINARY_DE_OUT", file.path(BASE, "Analysis/Hypotheses/REVIEW-FIX-20261107T020001Z/singlecell/results/binary"))
 LIANA_FILE   <- file.path(BASE, "RNA-seq/Analysis/SingleCell/results_gpu_v2/fig2_data/liana_differential_interactions.csv")
 
 stopifnot(file.exists(ATLAS_FILE))
@@ -42,7 +45,7 @@ stopifnot(all(c("bulk_padj","bulk_logFC") %in% names(atlas)))
 # ============================================================================
 cat("\n--- Part A: Spatial Transcriptomics ---\n")
 
-if (file.exists(SPATIAL_FILE)) {
+if (Sys.getenv("SINGLECELL_ONLY", "0") != "1" && file.exists(SPATIAL_FILE)) {
   spatial_atlas <- fread(SPATIAL_FILE)
   cat("Loaded spatial atlas:", nrow(spatial_atlas), "x", ncol(spatial_atlas), "\n")
 
@@ -109,10 +112,7 @@ if (dir.exists(PSEUDOBULK_DIR)) {
   cat("MASLD_vs_Healthy results:", nrow(masld_de), "\n")
 
   # If no contrast filter matches, use all results
-  if (nrow(masld_de) == 0) {
-    cat("WARNING: No MASLD_vs_Healthy contrast found. Using all results.\n")
-    masld_de <- all_de
-  }
+  if (nrow(masld_de) == 0) stop("No source-qualified binary disease contrast found")
 
   # Summarize per gene across cell types (using gene_symbol as key)
   # 1. Hepatocyte-specific results
@@ -149,14 +149,15 @@ if (dir.exists(PSEUDOBULK_DIR)) {
   sc_summary[is.na(sc_n_celltypes_sig), sc_n_celltypes_sig := 0L]
 
   # Cell-type specificity flag
-  sc_summary[, sc_is_celltype_specific := sc_n_celltypes_sig == 1L & sc_best_padj < 0.05]
+  sc_summary[, sc_one_celltype_significant := sc_n_celltypes_sig == 1L & sc_best_padj < 0.05]
+  sc_summary[, sc_is_celltype_specific := NA] # unequal detection power does not establish specificity
 
   cat("  Total genes with sc data:", nrow(sc_summary), "\n")
   cat("  Significant in any cell type:", sum(sc_summary$sc_n_celltypes_sig >= 1), "\n")
   cat("  Cell-type specific:", sum(sc_summary$sc_is_celltype_specific, na.rm = TRUE), "\n")
 
   # Remove existing sc_ columns from atlas (idempotent)
-  existing_sc <- grep("^sc_", names(atlas), value = TRUE)
+  existing_sc <- intersect(setdiff(names(sc_summary), "gene_symbol"), names(atlas))
   if (length(existing_sc) > 0) {
     cat("Removing", length(existing_sc), "existing sc columns\n")
     atlas[, (existing_sc) := NULL]
@@ -173,6 +174,12 @@ if (dir.exists(PSEUDOBULK_DIR)) {
 # ============================================================================
 # Part C: LIANA Differential Cell Communication
 # ============================================================================
+if (Sys.getenv("SINGLECELL_ONLY", "0") == "1") {
+  dir.create(dirname(ATLAS_OUTPUT),recursive=TRUE,showWarnings=FALSE)
+  fwrite(atlas, ATLAS_OUTPUT)
+  writeLines(capture.output(sessionInfo()), paste0(ATLAS_OUTPUT,".sessionInfo.txt"))
+  quit(save="no",status=0)
+}
 cat("\n--- Part C: LIANA Cell Communication ---\n")
 
 if (file.exists(LIANA_FILE)) {
@@ -431,12 +438,8 @@ if (length(leak_cols) > 0) {
 # Save
 # ============================================================================
 cat("\n--- Saving ---\n")
-backup <- paste0(ATLAS_FILE, ".pre45a.bak")
-file.copy(ATLAS_FILE, backup, overwrite = TRUE)
-cat("Backup:", backup, "\n")
-
-fwrite(atlas, ATLAS_FILE)
-cat("Saved:", ATLAS_FILE, "\n")
+fwrite(atlas, ATLAS_OUTPUT)
+cat("Saved:", ATLAS_OUTPUT, "\n")
 cat("Final dimensions:", nrow(atlas), "genes x", ncol(atlas), "cols\n")
 
 # Final column inventory

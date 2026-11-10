@@ -1,3 +1,4 @@
+stop("Composite figures are retired (2026-10-27): the user assembles figures from individual panels in Illustrator. Do not re-enable.")
 # Fig 3 (Multi-Ancestry Regulatory Architecture) composite assembler — v2.
 # 2026-05-18: 9-panel canonical layout, 3 x 3 grid, integrates the 3 NEW ATAC
 # panels (K exemplar -> J regulon heatmap -> L funnel) per legend reorder.

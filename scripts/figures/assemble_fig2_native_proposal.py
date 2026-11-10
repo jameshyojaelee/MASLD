@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+raise SystemExit("Composite figures are retired (2026-10-27): the user assembles figures from individual panels in Illustrator. Do not re-enable.")
 """Translation-only review proposal from indexed Figure 2 A-I PDFs."""
 import csv,hashlib,json,os
 from pathlib import Path

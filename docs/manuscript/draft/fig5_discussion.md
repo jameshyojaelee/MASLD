@@ -1,5 +1,11 @@
 ## The MASLD Gene Catalog records evidence class, observability and a follow-up experiment for each gene
 
+The November 6 eligibility correction defines the Catalog counts reported here.
+Its genetic memberships remain provisional following the duplicate-variant and
+reference-LD findings (Figure 2). The correction did not refit the affected
+positive genetic models, so these classes are not independently confirmed
+genetic evidence or a new corrected gene list.
+
 To make the Resource usable gene by gene rather than as a ranked list, we built
 the MASLD Gene Catalog (Figure 6). For every eligible gene and program, a Catalog
 entry records the primary gene class, phenotype provenance, assay and biological
@@ -34,25 +40,27 @@ at least one eligible SuSiE signal pair. Of these, 20 have PP.H3 above 0.8 and
 best PP.H4 at most 0.5, the pattern expected when the trait and expression
 signals have distinct causal variants. All 20 had PP.H4 above 0.5 in the first
 run and lost it when the check removed signal pairs, so the pattern was
-produced by the check and is not an independent observation. Eighteen of these 20 are called
+produced by the check and is not an independent observation. In the historical named r8 calls, eighteen of these 20 are called
 indeterminate, the same label given to genes with no evidence for either a shared
 or a distinct causal variant. The same pattern is common when every Tier-1/2
 SuSiE result is counted, including negative results carried forward from the
-first colocalization run without the shared-posterior check. Of the 3,918 genes
+first colocalization run without the shared-posterior check. Historically, of the 3,918 genes
 with any finite Tier-1/2 SuSiE result, a set that does not require a bulk RNA
-test and so is larger than the 3,769-gene comparison universe, 3,335 have PP.H3
+test and so is larger than the historical 3,769-gene comparison universe, 3,335 have PP.H3
 above 0.8 in at least one stratum and best PP.H4 at most 0.5. Of these 3,335,
 3,319 are called indeterminate. When the shared-posterior check was also applied
 to the carried negatives, 3,877 genes kept a finite Tier-1/2 SuSiE result and
 3,306 showed this PP.H3 pattern. This count keeps the first-run PP.H3 of
 gene-study results in which only some signal pairs failed. Their PP.H3 after
 the check is unknown, so the count lies between 3,101 and 3,416. Under the
-Catalog's rule for untestable genes, 3,148 of the 3,306 would be called
+Catalog's rule for untestable genes, 3,148 of the 3,306 are called
 indeterminate (range 2,948 to 3,252). The indeterminate genetic call also covers
 15,009 genes with a Tier-1/2 COLOC record but no SuSiE result; for them the
 multi-signal test is missing, not negative. Of these, 333 have a single-signal
 (ABF) PP.H4 above 0.5: 290 unresolved, 18 established-state and 25 untested
 genes, TM6SF2 (0.64) among them.
+
+The November 6 eligibility release adopts the existing priority testability rule for checked carried negatives. It changes 188 genetic states and 180 classes: 169 unresolved and 11 established-state-associated entries become untested; eight further entries were already untested. The adopted counts are 13,731 untested, 12,958 unresolved, 1,118 established-state associated, 400 genetically anchored and 26 supported on both axes. All RNA calls, effect directions and effect sizes and all positive genetic memberships are retained. The release also corrects 4,218 bulk-RNA applicability states to untestable and displays native SuSiE and ABF posteriors, driving studies and ancestries separately. It is a new Catalog release; the named r8/r9 files retain their historical values.
 
 The Catalog also carries annotation fields that describe each gene without
 changing its class or route. For each of the 28,233 genes, it records whether
@@ -61,7 +69,7 @@ participants) in the PXD051911 proteomes. It also records whether the gene is
 targeted by the CosMx panel of GSE312698 (Boesch et al., 2026), and in which of
 nine liver cell lineages its RNA is detected across donors. Where an assay did
 not observe a gene, absence is recorded as untestable, not negative. A liver
-protein row was quantified for 173 of 1,129 established-state genes, 203 of 400
+protein row was quantified for 170 of 1,118 established-state genes, 203 of 400
 genetically anchored genes and 11 of 26 genes supported on both axes. Each gene
 also carries its position along the central-portal axis in five non-steatotic
 live-donor livers (Visium; Yakubovsky et al., 2026) and its hepatocyte protein
@@ -97,7 +105,9 @@ decisive assay. THRB has genetic
 support (SuSiE PP.H4 > 0.999, UK Biobank GGT) and an indeterminate RNA call,
 because its change (log2FC -0.20) is below the 0.5 floor. HKDC1 is supported on
 both axes (SuSiE PP.H4 0.988, UK Biobank AST; log2FC +1.07, BH *q* = 8.0 ×
-10^-7). MTARC1 remains unresolved on these expression-based axes. The printed
+10^-7). Its two axes are read on the disease-risk allele. The
+AST-raising allele lowers MVP NAFLD (z -2.57) and cirrhosis (z -4.69) risk, so
+on the disease-risk allele HKDC1 is concordant across the axes. MTARC1 remains unresolved on these expression-based axes. The printed
 protein-coding routes propose context and function measurements. They do not
 convert genetic support into causality, and they do not rank the entries.
 
@@ -129,16 +139,16 @@ fine-mapped missense variant (maximum PIP 0.706 for PNPLA3 and 0.757 for
 MTARC1), and this leaves its eQTL-colocalization class unchanged. These examples
 show how routing works. They are not a ranking of the strongest genes.
 
-The routing layer assigns the smallest experiment that could distinguish the
-remaining explanations (Figure 6D). Of the 28,233 genes, 13,551 are untested,
-13,127 unresolved, 1,129 established-state associated, 400 genetically anchored
+The routing layer assigns each gene one of five class-level routes (Figure 6D). Of the 28,233 genes, 13,731 are untested,
+12,958 unresolved, 1,118 established-state associated, 400 genetically anchored
 and 26 supported on both axes. Genetically anchored regulatory candidates route
 to allele-aware editing with target-expression and locus-linked phenotypes.
 Established-state candidates route to context-matched perturbation and rescue.
 Candidates supported on both axes need both relationships connected in the same
-model. Untested candidates (13,551) route to the missing decisive assay and
-unresolved candidates (13,127) to measurement of the most decisive missing layer;
-for these 26,678 genes the route names the missing layer, not a specific assay. Transcript
+model. Untested candidates (13,731) route to the missing decisive assay and
+unresolved candidates (12,958) to measurement of the most decisive missing layer;
+for these 26,689 genes (94.5%) the route is to obtain the missing evidence
+layer, not a specific assay. Transcript
 depletion is only one possible perturbation. Increasing gene activity, testing
 regulatory-element changes, measuring protein function, lineage restriction and
 context-specific challenge are separate designs that no current record
@@ -156,7 +166,7 @@ The Catalog is deposited as machine-readable tables (Data availability;
 [accession to be supplied]). Each displayed entry links to its source graph, its
 complete tested universe, a data dictionary and its machine-readable
 next-experiment rule. A reader can therefore see, for any gene, which layers
-were tested, which were untestable and which experiment is proposed.
+were tested, which were untestable and which class-level route applies.
 
 Across Figures 1 to 7, the Resource records inherited genetic evidence and
 disease-state remodeling for each gene, and places both in cell and tissue
@@ -166,25 +176,18 @@ of the evidence and the next experiment.
 
 ## Discussion
 
-In this work, we present a human MASLD Resource that records, for each gene,
-liver-trait genetic evidence and cross-sectional stage-associated disease-state
-remodeling, and keeps the assay boundaries of the two separate. The bulk
-disease-state layer comes from 774 genetic-identity units in five cohorts. These
-units are conservative clusters, not verified independent donors. The genetic
-layer comes from eQTL colocalization across liver-trait GWAS. Among the 3,769
-genes that had stable Ensembl IDs, were tested in bulk RNA and had a
-multi-signal colocalization result, 426 were genetically supported and 220 were canonical
-disease-state calls, and 26 were in both, against 21.21 expected at the same
-expression level. We detected neither enrichment nor depletion. Because the
-matching did not fully control expression, we state no direction
-(Supplementary Note 3). A further 935 disease-state calls had no multi-signal
-colocalization result, and these are not genetic negatives. The size of this
-overlap does not establish biological separation, equivalence or a privileged
-intersection of the two maps. It is also not evidence that the underlying
-processes are independent. The signed comparison is bounded too. Genome-wide
-rank agreement between ALT TWAS z and the disease contrast lies inside ±0.03
-without composition adjustment, but not with hepatocyte fraction in the design,
-and we state no direction (Supplementary Note 5).
+Two unresolved input qualifications limit the map. Duplicate variant identifiers
+affect the saved eQTL fits of 90 of the 436 primary genetic candidates; valid
+allele-aware fits and justified LD are needed before confirming their genetic
+support or dependent overlap and accessibility links. The other 346 genes are
+not a validated replacement set. Separately, repeated sequencing of physical
+captures inflated the historical atlas cell census. Atlas-derived gene,
+composition, lineage and program estimates remain conditional on that input.
+The 117 program definitions and weights are unchanged, but fixed-weight
+expression projections do not repair the historical Hotspot neighbor graph,
+PCA scores or UMAP. Corrected unique-cell inference is not yet established.
+
+In this work, we present a human MASLD Resource that records liver-trait genetic evidence and cross-sectional disease-state remodeling for each gene, with assay boundaries kept separate. The bulk layer comes from 774 conservative genetic-identity clusters in five cohorts, not verified independent donors. After shared-posterior eligibility qualification, the native multi-signal comparison includes 3,589 genes with a bulk test: 426 genetically supported, 209 canonical disease-state calls and 26 shared, against 21.4 expected within expression deciles (Mantel-Haenszel OR 1.282, 95% CI 0.826 to 1.988; exact *p* = 0.277). We detected neither enrichment nor depletion. Historical expression controls were not rerun in the qualified universe, so no direction is inferred (Supplementary Note 3). Another 935 disease-state calls have no multi-signal result, and 11 more are priority-untestable; these are not genetic negatives. The overlap establishes neither biological separation nor equivalence, independence or a privileged intersection. The separate signed comparison remains bounded: genome-wide rank agreement between ALT TWAS z and the disease contrast lies inside ±0.03 without composition adjustment, but not with hepatocyte fraction in the design, and no direction is stated (Supplementary Note 5).
 
 Most colocalized genes take their strongest evidence from liver-enzyme traits,
 largely because far more gene-trait pairs were tested in that class. The
@@ -209,7 +212,7 @@ fixed. These results set one requirement for gene lists built this way in MASLD:
 the trait that supplies each gene's evidence should be stated. A gene nominated
 by ALT is not the same claim as a gene nominated by liver fat.
 
-Matching on expression did not recover the prespecified prediction that
+The historical named-r8 class comparison, not rerun after eligibility qualification, did not recover the prespecified prediction that
 genetically supported genes are more hepatocyte-specific than disease-state
 genes. In 281 expression-matched gene pairs, the observed difference was in the
 opposite direction (Supplementary Note 3). Every test of that opposite direction
@@ -220,15 +223,19 @@ confirmatory class separation or independent biological replication. The
 protein-response comparison of 73 pairs gives no support for a class difference,
 and it does not establish equivalence. Expression remains a major observability
 difference between the classes. Among genes with a single-cell hepatocyte-specificity
-value (399 of the 400 genetic-only and 1,124 of the 1,129 state-only genes),
+value in the historical named-r8 classes (399 of 400 genetic-only and 1,124 of 1,129 state-only genes),
 mean bulk expression of genetic-only genes exceeds that of state-only genes by
 3.80 log2 units, and 281 of the 399 genetic-only genes obtain an
 expression-matched partner. This 3.80 log2 gap belongs to the
 hepatocyte-specificity comparison. Within the expression deciles of the
-3,769-gene overlap test, colocalized genes differ from other genes by 0.07 log2
+historical 3,769-gene overlap test, colocalized genes differ from other genes by 0.07 log2
 units on average (0.70 before stratification). Unequal observability could affect which genes
 appear in both sets, but the present comparison does not isolate that
-explanation. Germline regulatory effects may act before biopsy, in restricted
+explanation. In a prespecified test, colocalized genes were more
+loss-of-function constrained (odds ratio 0.70 per SD of LOEUF, Holm *p* 0.012),
+consistent with the general pattern reported by Mostafavi et al. (2023).
+This model compares genetic-only with state-only genes and excludes the overlap;
+it does not explain why genes occur in both sets. Germline regulatory effects may act before biopsy, in restricted
 cell states or through small persistent shifts. Disease-state expression can
 reflect injury, adaptation or composition. Neither class is automatically causal
 or irrelevant.
@@ -307,6 +314,20 @@ were fixed before any outcome was read and are never reweighted by network
 position. A sparsely annotated gene therefore keeps its assigned weight, and an
 inadequately observed gene is recorded as untestable rather than ranked low.
 
+The 1,854 pooled disease-state calls describe tissue associations in the
+discovery cohorts, not an independently replicated disease signature. The
+current random-effects sensitivity retains the pooled direction for 1,850 genes
+and one direction in every available cohort for 1,208, but none passes BH over
+24,115 genes with modified Hartung–Knapp uncertainty. This combination is
+consistent with broad directional agreement and substantial uncertainty about
+effect magnitudes across four/five cohorts. It does not establish absence or
+equivalence. The earlier "consistent" classifications used different inputs
+and uncertainty rules and do not certify replication. SteatoSITE provides a
+separate test of cross-sectional fibrosis-stage effects; its success cannot be
+substituted for disease-versus-control replication. The measured tissue
+associations remain useful for follow-up, with their cohort and contrast limits
+attached to each interpretation.
+
 The stage-stratified analyses add biological context without establishing
 change over time. Adjacent-stage contrasts and cell-resolved programs describe
 stage-ordered remodeling across different participants. The externally anchored
@@ -317,6 +338,9 @@ major biological programs being preserved. This alignment was computed on the
 same data and is not independent validation. Stage-adjusted associations show
 that molecular variation within histologic bins tracks the continuum, and which
 programs carry that variation depends on adjustment for cell-type composition.
+The prespecified primary continuum test missed in both test cohorts (Holm *p*
+0.082 in GSE162694 and GSE213621), and matched random gene sets give a mean of
+86 continuum-associated programs against the 92 reported (*p* 0.109).
 Histology therefore remains the interpretable clinical anchor, and the continuum
 adds molecular resolution within a stage. All 117 Hotspot program definitions
 and 43 system memberships remain fixed. An outcome-blind map extends this
@@ -395,12 +419,26 @@ unseen cohorts, or that one model class is better in general.
 
 Two questions stay open. We do not assign genes or programs separately to steatosis, inflammation or fibrosis; fibrosis stage is the severity anchor, and NAS enters only as a sum or as an adjustment set. Colocalization here tests single variants, so the Resource does not test whether combinations of variants act differently, and the local haplotype at GNMT is unresolved. Both questions are recorded as indeterminate, not negative.
 
+The chromatin analyses further distinguish disease accessibility from predicted
+regulation. Modest cross-cohort agreement and four stellate peakwise candidates
+do not establish a replicated MASH regulatory program, particularly when
+recorded-batch adjustment substantially changes discovery counts. Cicero's
+small held-donor hepatocyte RNA benefit survives the fixed unshuffled stress
+tests, but its advantage over proximity also survives RNA-pairing shuffles.
+These data support descriptive regulatory context without validating individual
+edges or a pairing-specific mechanism. CHST9 and TMEM150B are single-cohort
+hepatocyte RNA candidates in both recorded-batch and condition-only models;
+their expression associations do not establish that a linked accessible region
+regulates either gene. Missing qualified cross-assay donor matches and
+insufficient normal donors in the other RNA lineages remain limits on what can
+be tested (Supplementary Note 16).
+
 Within these limits, the Resource gives each gene an experiment matched to its evidence. Genetically anchored candidates motivate allele-to-gene and
 context-appropriate perturbation without requiring disease-state expression.
 Disease-state-associated candidates motivate tests of active tissue function and
 reversibility without being labeled inherited drivers. Candidates supported on
 both axes motivate experiments that connect the two relationships in one model.
-Untested and unresolved candidates, 26,678 of the 28,233 genes, first need the
+Untested and unresolved candidates, 26,689 of the 28,233 genes, first need the
 missing decisive measurement. The Gene Catalog and the source tables needed to check each call
 are deposited with this paper (Data availability), so that others can look up
 these distinctions for any gene instead of relying on a single aggregate rank.

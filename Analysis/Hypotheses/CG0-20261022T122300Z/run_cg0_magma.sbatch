@@ -2,7 +2,7 @@
 #SBATCH --job-name=cg0_magma
 #SBATCH --account=nslab
 #SBATCH --partition=cpu
-#SBATCH --qos=nslab
+#SBATCH --qos=interactive
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=120G
 #SBATCH --time=24:00:00

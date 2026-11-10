@@ -1,0 +1,28 @@
+# Approved isolated environment installed; exact packages and smoke results in installation-20261023/.
+name: masld-atac-tripod-native
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base>=4.4,<4.6
+  - r-remotes
+  - r-jsonlite
+  - bioconductor-genomicranges
+  - bioconductor-biocparallel
+  - r-ggplot2
+  - r-matrix
+  - r-seurat>=4
+  - r-signac<2
+  # nbpMatching 1.5.6 requires the pinned CRAN source step in native-packages.json.
+  - r-hmisc
+  - r-mass
+  - c-compiler
+  - cxx-compiler
+  - fortran-compiler
+  - r-glmnet
+  - r-olsrr
+  - r-dendextend
+  - r-fnn
+  - r-patchwork
+  - r-dplyr
+  - r-stringr

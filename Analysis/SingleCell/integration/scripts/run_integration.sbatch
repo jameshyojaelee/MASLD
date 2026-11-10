@@ -36,7 +36,7 @@ fi
 cd /gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design
 
 # --- Step 1: Prepare h5ad files (skip if already done) ---
-H5AD_DIR="Analysis/SingleCell/integration/input_h5ad"
+H5AD_DIR="${SINGLECELL_INPUT_H5AD_ROOT:-Analysis/SingleCell/integration/input_h5ad_unique_captures}"
 N_HUMAN=$(ls "${H5AD_DIR}/human/"*.h5ad 2>/dev/null | wc -l)
 N_MOUSE=$(ls "${H5AD_DIR}/mouse/"*.h5ad 2>/dev/null | wc -l)
 if [ "$N_HUMAN" -gt 0 ] && [ "$N_MOUSE" -gt 0 ]; then

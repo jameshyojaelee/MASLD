@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+# The canonical implementation includes source-qualified labels and donor
+# collapse. Keep this historical launcher on the same analysis.
+source(file.path(Sys.getenv("MASLD_PROJECT_ROOT", "/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas"),
+                 "Analysis/SingleCell/scripts/pseudobulk_de.R"))
+quit(save = "no", status = 0L)
 # Pseudobulk DE per cell type using limma-voom — DONOR-COLLAPSED variant.
 #
 # Patched copy of pseudobulk_de.R that fixes the run-level pseudoreplication bug

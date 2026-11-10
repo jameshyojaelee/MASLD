@@ -111,6 +111,9 @@ p1c <- ggplot(trait, aes(x = N, y = label, fill = label)) +
 ggsave(file.path(FIG1_DIR, "fig1c_genetic_trait_scope.pdf"), p1c,
        width = 4.0, height = 2.25, device = cairo_pdf, bg = "white")
 
+# Figure 4A-4C below are retired (2026-10-27): stale, not in Figure 5. Stop after the Figure 1 panels.
+quit(save = "no", status = 0)
+
 # Figure 4A: assay-specific positive rates. Denominators are printed explicitly.
 val[, class_label := factor(class_labels[primary_evidence_class],
                             levels = unname(class_labels[c("neither", "genetic_only",

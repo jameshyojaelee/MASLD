@@ -1,3 +1,4 @@
+stop("Composite figures are retired (2026-10-27): the user assembles figures from individual panels in Illustrator. Do not re-enable.")
 # =====================================================================
 # assemble_fig4.R
 # ---------------------------------------------------------------------

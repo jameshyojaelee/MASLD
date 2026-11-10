@@ -1,0 +1,40 @@
+# Approved isolated environment installed; source pins in native-packages.json and installation-20261023/.
+# Tiny v3-Assay and legacy/modern XGBoost API smokes pass; full native workflow remains separate.
+name: masld-atac-directnet-native
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-base>=4.4,<4.6
+  - r-remotes
+  - r-jsonlite
+  - r-matrix
+  - r-fnn
+  - r-slam
+  - r-xgboost
+  - r-ggplot2
+  - r-patchwork
+  - r-seurat>=4
+  - r-signac<2
+  - r-monocle3
+  - r-stringr
+  - r-rcolorbrewer
+  - bioconductor-genomicranges
+  - bioconductor-chromvar
+  - bioconductor-motifmatchr
+  - bioconductor-gviz
+  - bioconductor-biobase
+  - bioconductor-biocgenerics
+  - bioconductor-iranges
+  - bioconductor-s4vectors
+  - r-assertthat
+  - r-data.table
+  - r-dplyr
+  - r-glasso
+  - r-igraph
+  - r-plyr
+  - r-reshape2
+  - r-stringi
+  - r-tibble
+  - r-tidyr
+  - r-vgam

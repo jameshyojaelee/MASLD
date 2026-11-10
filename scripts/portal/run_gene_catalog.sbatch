@@ -1,13 +1,24 @@
 #!/bin/bash
 #SBATCH --job-name=portal
+#SBATCH --account=nslab
+#SBATCH --qos=nslab
 #SBATCH --partition=cpu
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
-#SBATCH --time=48:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=8G
+#SBATCH --time=90:00:00
 #SBATCH --output=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/scripts/portal/gene_catalog_%j.out
 #SBATCH --error=/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design/scripts/portal/gene_catalog_%j.err
 
 set -euo pipefail
+
+if [[ "${GENE_CATALOG_MODE:-${PASSPORT_MODE:-adopted-eligibility}}" == "adopted-eligibility" ]]; then
+  PROJECT_ROOT="${MASLD_PROJECT_ROOT:-/gpfs/commons/groups/sanjana_lab/Cas13/masld_atlas}"
+  export PYTHONNOUSERSITE=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+  CATALOG_OUTPUT="${GENE_CATALOG_OUTPUT:-$PROJECT_ROOT/RNA-seq/results/evidence_passports/releases/gene-catalog-eligibility-20261106}"
+  /gpfs/commons/home/jameslee/micromamba/envs/rnaseq/bin/python "$PROJECT_ROOT/scripts/portal/build_adopted_eligibility_catalog.py" \
+    --project-root "$PROJECT_ROOT" --output "$CATALOG_OUTPUT"
+  exit 0
+fi
 
 module load Mesa/23.1.9-GCCcore-13.2.0
 

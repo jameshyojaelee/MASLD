@@ -15,12 +15,8 @@
 # pseudoreplicates. We now collapse RUN -> DONOR (sum raw counts) via
 # lib_donor_collapse.R BEFORE summing across cell types, so DE n = donors.
 #
-# CAVEAT (does NOT fix the scientific confound): the MASLD group is entirely
-# SRR-named datasets and the Healthy anchors are partly GSM-named (megareview
-# V4-0077). The `~ condition` design has no dataset/batch covariate, so the
-# all-cell contrast tracks platform batch and the bulk-vs-allcell rho is
-# NEGATIVE. Donor-collapse reduces pseudoreplication but leaves this confound.
-# Do not treat allcell_pseudobulk_de.csv as a validated disease axis.
+# Source-qualified labels and dataset adjustment are required. The all-cell
+# estimand includes composition differences; it is not a cell-intrinsic effect.
 #
 # Outputs (in Analysis/SingleCell/results_gpu_v2/pseudobulk_de/donor_collapsed/):
 #   allcell_pseudobulk_de.csv        — limma-voom DE (all-cell aggregated, donor-level)
@@ -38,16 +34,24 @@ suppressPackageStartupMessages({
 BASE    <- Sys.getenv("MASLD_PROJECT_ROOT",
                       "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 source(file.path(BASE, "Analysis/SingleCell/scripts/lib_donor_collapse.R"))
-PSEUDO_DIR  <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk")
-SC_DE_DIR   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk_de")
+PSEUDO_DIR  <- Sys.getenv("SINGLECELL_PSEUDOBULK_DIR", file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudobulk"))
+SC_DE_DIR   <- Sys.getenv("SINGLECELL_BINARY_DE_OUT", file.path(BASE, "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/pseudobulk_de_v2"))
 PROP_PATH   <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/disease_signatures",
                          "celltype_proportions_per_sample.csv")
-DREAM_PATH  <- file.path(BASE,
-  "RNA-seq/Human/Patient_Cohorts/analysis/integration/results/integration/canonical_deg_results.csv")
+DREAM_PATH <- Sys.getenv("SINGLECELL_BULK_COMPARISON", file.path(BASE,
+  "RNA-seq/results/manuscript_release/candidates/bulk-corrected-controls-20261008T162308Z/primary_source_controls/deg_results.csv"))
 
 # Write to a NEW location so the pre-fix run-level output is preserved.
-out_dir <- file.path(SC_DE_DIR, "donor_collapsed")
+out_dir <- Sys.getenv("SINGLECELL_ALLCELL_OUT", file.path(BASE, "Analysis/SingleCell/candidates/source-diagnosis-correction-20261026/allcell_v2"))
+if (dir.exists(out_dir) && length(list.files(out_dir))) stop("Refusing to overwrite all-cell results")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+source(file.path(BASE, "Analysis/SingleCell/scripts/lib_source_diagnosis.R"))
+qualified <- load_source_diagnosis(BASE, "library")
+# Match the preparation exclusions already used in the binary lineage fits.
+eligible_runs <- unique(unlist(lapply(list.files(SC_DE_DIR, pattern="_donor_roster\\.tsv$", full.names=TRUE), function(p) fread(p)$sample)))
+stopifnot(length(eligible_runs) > 0L)
+eligible_libraries <- qualified[tolower(as.character(binary_eligible)) == "true" & donor %in% eligible_runs &
+                               preparation_method %in% c("nuclei","cd45_negative","unsorted"), sample]
 
 log_lines <- character()
 add_log <- function(...) {
@@ -83,6 +87,7 @@ mat_list <- lapply(pseudo_files, function(f) {
   # Collapse SRR run columns to biological donor (sum raw counts); columns from
   # 1-run-per-donor datasets pass through unchanged. Done BEFORE cross-cell-type
   # summing so a donor's counts unify regardless of which cell type contributed.
+  mat <- mat[, colnames(mat) %in% eligible_libraries, drop=FALSE]
   collapse_counts_to_donor(mat, BASE)
 })
 names(mat_list) <- cell_types
@@ -110,11 +115,10 @@ common_donors <- all_donors
 # 3. Condition metadata
 # ---------------------------------------------------------------------------
 add_log("Loading condition metadata (collapsing run -> donor)...")
-props <- fread(PROP_PATH, select = c("sample", "condition"))
-props <- unique(props)
+props <- unique(qualified[donor %in% eligible_runs & tolower(as.character(binary_eligible)) == "true",
+                         .(sample=donor, dataset, condition=condition_harmonized)])
 # Collapse run-level condition metadata to donor (majority-vote condition), so
 # `sample` here shares the donor namespace with the collapsed count columns.
-props <- collapse_sample_meta_to_donor(props, BASE)
 props <- props[condition %in% c("MASLD", "Healthy")]
 
 # Map common_donors to conditions
@@ -141,7 +145,10 @@ dge <- dge[filterByExpr(dge, group = condition), ]
 add_log(sprintf("  After filterByExpr: %d genes", nrow(dge)))
 dge <- calcNormFactors(dge)
 
-design <- model.matrix(~ condition, data = data.frame(condition = factor(condition, levels = c("Healthy", "MASLD"))))
+design <- model.matrix(~ dataset + condition, data = data.frame(
+  dataset=factor(sample_meta$dataset), condition=factor(condition, levels=c("Healthy","MASLD"))))
+if (qr(design)$rank != ncol(design)) stop("All-cell disease contrast is confounded with dataset")
+fwrite(sample_meta, file.path(out_dir,"donors_in_model.tsv"), sep="\t")
 v      <- voom(dge, design, plot = FALSE)
 fit    <- lmFit(v, design)
 fit    <- eBayes(fit, trend = TRUE)
@@ -173,13 +180,25 @@ sc_hep <- fread(file.path(SC_DE_DIR, "Hepatocytes_de.csv"),
 sc_hep[, ensg_base := sub("\\.\\d+$", "", gene)]
 setnames(sc_hep, c("logFC", "padj"), c("hep_lfc", "hep_padj"))
 
+# Mixed symbol/Ensembl count-row identifiers must be matched in one namespace.
+# Ambiguous symbol mappings cannot contribute multiple times to a correlation.
+id_map <- unique(bulk[!is.na(symbol) & symbol!="",.(ensg_base,symbol)])
+id_map <- id_map[!duplicated(ensg_base) & !duplicated(ensg_base,fromLast=TRUE)]
+for (x in list(res,sc_hep)) {
+  x[, gene_key := fifelse(grepl("^ENSG",ensg_base),id_map$symbol[match(ensg_base,id_map$ensg_base)],ensg_base)]
+}
+bulk[,gene_key:=symbol]
+bulk<-bulk[!is.na(gene_key)&gene_key!="" & !duplicated(gene_key) & !duplicated(gene_key,fromLast=TRUE)]
+res<-res[!is.na(gene_key)&!duplicated(gene_key)&!duplicated(gene_key,fromLast=TRUE)]
+sc_hep<-sc_hep[!is.na(gene_key)&!duplicated(gene_key)&!duplicated(gene_key,fromLast=TRUE)]
+
 # Merge all three on base ENSG
 comparison <- Reduce(
-  function(a, b) merge(a, b, by = "ensg_base"),
+  function(a, b) merge(a, b, by = "gene_key"),
   list(
-    bulk[, .(ensg_base, symbol, bulk_lfc, bulk_padj)],
-    res[,  .(ensg_base, allcell_lfc = lfc, allcell_padj = padj)],
-    sc_hep[, .(ensg_base, hep_lfc, hep_padj)]
+    bulk[, .(gene_key, symbol, bulk_lfc, bulk_padj)],
+    res[,  .(gene_key, allcell_lfc = lfc, allcell_padj = padj)],
+    sc_hep[, .(gene_key, hep_lfc, hep_padj)]
   )
 )
 comparison <- comparison[!is.na(bulk_lfc) & !is.na(allcell_lfc) & !is.na(hep_lfc)]
@@ -200,11 +219,7 @@ fwrite(comparison, out_comp)
 add_log(sprintf("  Wrote comparison table: %s", out_comp))
 
 summary_lines <- c(
-  "[donor-collapsed run; ~condition design has NO dataset covariate]",
-  "[CAVEAT: MASLD=SRR datasets vs Healthy anchors partly GSM-named (megareview",
-  " V4-0077) => allcell contrast is batch-confounded; negative rho is expected",
-  " and is NOT rescued by donor-collapse. Hepatocyte-only ref below is the",
-  " pre-fix run-level Hepatocytes_de.csv (pending its own donor-collapse rerun).]",
+  "Source-qualified RNA labels; donor replication; dataset-adjusted contrast.",
   "",
   sprintf("All-cell pseudobulk vs bulk:   ρ = %.3f  (n=%d)", rho_allcell, nrow(comparison)),
   sprintf("Hepatocyte-only  vs bulk:      ρ = %.3f  (n=%d)", rho_hep,     nrow(comparison)),
