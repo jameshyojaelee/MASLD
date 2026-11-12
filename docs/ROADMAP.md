@@ -13,6 +13,23 @@ this documentation cleanup authorizes no new analysis or submission.
 | Closed or future analyses | [Closed analyses](#analyses-that-are-closed-for-this-paper) |
 | Find the existing files | [Analysis routes](technical/DATASETS_AND_PIPELINES.md) · [Hypothesis index](../Analysis/Hypotheses/README.md) |
 
+## Manuscript rewrite with the novelty analyses, 2026-11-12 (user-approved)
+
+The ENZFAT1, DIR6, MQTL2, PROT5, TRAIL4, CCL1, JOIN7/TRIAL1, AG2X Stage A/B and GSET8
+results are used in the manuscript text by user approval, 2026-11-12; formal adoption
+under the [final release checklist](#final-release-checklist) is pending. Scope is the
+2026-11-12 block at the top of [PAPER](PAPER.md); changed files are listed in
+[STATUS](STATUS.md). Remaining items:
+
+1. Place the Figure 6G candidate panel
+   (`figures/candidates/fig6g-trial-mechanisms-20261112T140124Z/`; highest trial phase,
+   not approval, and four endpoint columns) and build any new Figure 2 panels as
+   individual PDFs with numbers in CAPTION.md; then assign panel letters in the text.
+2. Write the Figure 5 Complex I and PLIN2 sentence from DIG1 values after they are
+   recorded in RESULTS.
+3. Bring `docs/manuscript/draft/*.md` in line with the LaTeX text, or mark it historical.
+4. Run the final checklist before any of these numbers counts as adopted.
+
 ## Review-round restructure, 2026-11-09 (user-approved plan)
 
 The user approved the review plan and asked for it to be carried through.

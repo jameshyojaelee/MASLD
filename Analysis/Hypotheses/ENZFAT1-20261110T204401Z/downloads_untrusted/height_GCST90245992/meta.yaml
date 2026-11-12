@@ -1,0 +1,28 @@
+# Study meta-data
+gwas_id: GCST90245992
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90245992
+date_metadata_last_modified: 2025-01-02
+
+# Trait Information
+trait_description:
+  - Height
+ontology_mapping:
+  - ''
+
+# Genotyping Information
+genome_assembly: GRCh37
+
+# Sample Information
+samples:
+  - sample_ancestry_category:
+      - European
+    sample_size: 1597374
+
+# Summary Statistic information
+data_file_name: GCST90245992_buildGRCh37.tsv
+file_type: pre-GWAS-SSF
+data_file_md5sum: 9fb7ecdc658f4067a17584efaaf6eea5
+
+# Harmonization status
+is_harmonised: false
+is_sorted: false

@@ -21,6 +21,7 @@ INT  <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration/resu
 INTB <- file.path(BASE, "RNA-seq/Human/Patient_Cohorts/analysis/integration")
 PUB  <- file.path(BASE, "data/published_degs")
 OUTDIR <- file.path(BASE, "figures/supplementary/figS_methods_validation/sensitivity")
+dir.create(OUTDIR, recursive = TRUE, showWarnings = FALSE)
 
 cat("=== 206e: Quantification Diagnostic ===\n")
 

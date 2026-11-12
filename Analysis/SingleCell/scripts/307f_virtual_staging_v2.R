@@ -15,6 +15,7 @@ BASE <- Sys.getenv("MASLD_PROJECT_ROOT",
                     "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design")
 PT_DIR <- file.path(BASE, "Analysis/SingleCell/results_gpu_v2/pseudotime")
 FIG_DIR <- file.path(BASE, "figures/supplementary/figS02_progression")
+dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
 
 theme_src <- file.path(BASE, "scripts/figures/publication_theme.R")
 if (file.exists(theme_src)) source(theme_src)

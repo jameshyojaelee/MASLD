@@ -78,6 +78,437 @@ programs 98/112 BH q < 0.05 (63 up, 35 down; adopted SS arm); CCL20+ NF-kB set G
 Holm 0.002; GSE202379 +0.99, 5/5, p 0.0625; PNPLA3 148M +0.18 SD (0.10 to 0.26), n 757, −0.02 after
 NAS and fibrosis.
 
+## Novelty analyses, 2026-11-10/11: not adopted
+
+Release state: used in the manuscript text by user approval, 2026-11-12; formal adoption under the
+ROADMAP final release checklist is pending. No Resource number, evidence class, gene membership, threshold, figure or
+claim changes because of this section. Adoption of any result here needs the ROADMAP final release
+checklist and explicit user approval. Each package is in `Analysis/Hypotheses/<ID>-<timestamp>/`, with a
+`PRESPEC_*.md` written before outcomes were read and a `RESULT_*.md`; every number below is from the
+named RESULT file and its output tables. Genetic shares are covariance partitions, not mechanisms.
+Colocalized means a shared-variant posterior, not a causal gene. AG2X Stages A to D are included.
+
+### ENZFAT1: ALT heritability shared with liver fat and cirrhosis
+
+Source: `ENZFAT1-20261110T204401Z/RESULT_ENZFAT1.md`; shares and tests from `out_S1b/shares.tsv` and
+`out_S1b/tests.tsv`, loci from `out_S2/`.
+
+- Question: how much of the common-variant heritability of serum ALT is shared with neither liver fat
+  (MRI-PDFF) nor cirrhosis?
+- Primary: Genomic SEM on 9 GWAS (observed scale), intervals from 10,000 draws of the LDSC sampling
+  covariance (seed 20261110). Unit: GWAS participants. Pan-UKBB EUR ALT, liver fat and Ghouse cirrhosis:
+  ALT heritability shared with neither liver fat nor cirrhosis 0.701 (95% interval 0.599 to 0.774);
+  one-sided test against 0.5, p 4.0e-4, Holm over the 2 primary tests 4.0e-4. The p is bounded by the
+  number of draws (3 of 10,000 at or below 0.5). Co-primary: the part of ALT heritability not shared with
+  liver fat has loading 0.286 (0.147 to 0.399) on cirrhosis, Holm 1.3e-5; this is 0.082 (0.022 to 0.159)
+  of cirrhosis heritability.
+- Replication trio (MVP ALT, liver fat, MVP cirrhosis): shared with neither 0.802 (0.686 to 0.878). The
+  two trios agree under the prespecified 2 SE rule (z -1.51).
+- Family F1 (Holm over 4): the same ALT component loads 0.517 (0.313 to 0.654) on FinnGen NAFLD (5,725
+  valid draws), 0.373 (0.223 to 0.506) on MVP phecode 571.5, 0.452 on GGT and 0.671 on AST; each Holm
+  2.0e-7 or smaller. Squared loadings, descriptive only: FinnGen NAFLD 0.27, MVP 571.5 0.14, cirrhosis 0.08.
+- Per locus (unit: locus; ashr local false sign rate, lfsr < 0.05 over the loci fitted): 6 of 149 ALT
+  loci have a liver-fat effect (TM6SF2 locus, GPAM, GCKR, PPP1R3B, NYNRIN/REC8, WHRN); at PPP1R3B the
+  ALT-raising allele lowers liver fat. Cirrhosis 5 of 145; both outcomes 2 (TM6SF2 locus, GPAM). 20 of
+  169 lead variants are absent from the liver-fat file and were not analysed. The other 143 loci are "no
+  liver-fat effect detected" at a liver-fat GWAS n of about 33,000, not "no effect".
+- Controls: all 10 orientation checks passed. PNPLA3, TM6SF2, GOT1 and HSD17B13 (proxy rs6834314,
+  because rs72613567 is absent from the liver-fat file) passed. GCKR passed, but the ALT z at that lead
+  is 1.5, so the ALT-raising allele is weakly defined there. The GPT negative control was not evaluable:
+  the lead indel 8:145733794 C/CG has no row in the liver-fat file, and no proxy was allowed.
+- Deviations: S1 dropped any draw whose full 9 x 9 matrix was not positive definite and kept only 721 of
+  10,000 draws; S1b applies the rule to each quantity's own trait set (point estimates unchanged) and is
+  the reported analysis. Control rows for PNPLA3, TM6SF2 and GOT1 were added by position or by a rule
+  fixed before liver-fat values were read.
+- Limits: MVP ALT LDSC intercept 1.491 (about a third of its excess chi-square not explained by LD
+  score). The ordering of the sampling covariance against S was checked after the run: heritability
+  standard errors from its diagonal match the LDSC log.
+- Not run: stage S3 and family F2; liability-scale heritability.
+
+### REL1: liver ALT content by stage and hepatocyte proteins in plasma
+
+Source: `REL1-20261110T210214Z/RESULT_REL1.md`; tables in `out_23184388/` (`families.tsv`,
+`A1_pooled.tsv`, `A2_liver_protein.tsv`, `B1_baseline.tsv`, `B2_pairs.tsv`, `controls.tsv`).
+
+- Question: does liver ALT (GPT) RNA per hepatocyte or liver GPT protein rise with cross-sectional stage,
+  and do hepatocyte proteins in plasma track ballooning and change after bariatric surgery?
+- A1 (unit: donor; 127 donors in 4 snRNA cohorts; limma-voom per cohort with sex and hepatocyte nuclei,
+  random-effects pooling; Holm over 4 genes): GPT -0.051 log2 CPM per stage step (95% CI -0.231 to
+  0.129), Holm 1. GOT2 -0.090 (-0.153 to -0.026), p 0.021, Holm 0.083, not significant. GOT1 and GGT1
+  differ between cohorts (I2 70% and 81%).
+- A2 (unit: participant; PXD051911 liver proteome, 58 participants; SAF category none, MASL, MASH;
+  covariates batch, age, BMI, sex; Holm over 4 proteins): GPT -0.289 log2 per SAF step (-0.397 to
+  -0.180), Holm 7.4e-6; GOT1 -0.118 (-0.199 to -0.038), Holm 0.0096; GGT1 +0.330 (0.192 to 0.468), Holm
+  4.0e-5; GOT2 Holm 0.73. A1 and A2 use different people, assays and stage scales; the two GPT results are
+  not a formal test of a difference. GPT protein per hepatocyte was not measured.
+- B1 (PXD051911 plasma, 136 participants, ballooning any vs none; Holm over 4 proteins): ALDOB +0.500
+  log2 (0.222 to 0.778), n 132, Holm 0.0021; ADH1B/ADH1A protein group +1.59 (0.57 to 2.61, Tobit), Holm
+  0.0067; ADH4 and GOT1 Holm 0.36 and 0.39. Cross-sectional association.
+- B2 (34 pairs with ALDOB at both visits; Holm over 4 proteins, 3 untestable at p = 1): ALDOB change
+  +0.279 log2 per NAS point change, HC3 95% CI -0.002 to 0.561 (HC3 p 0.052); prespecified permutation
+  p 0.0081, Holm 0.032. Borderline: the interval touches zero. All follow-up samples are in plasma batch 5,
+  so the mean change is not interpreted; only additive batch shifts are removed by the design.
+- Controls: all 7 passed. Two negative controls passed the size rule but their intervals exclude zero:
+  liver VCP protein +0.112 (0.053 to 0.170) and plasma ALB -0.080 (-0.138 to -0.021).
+- Deviations: output formatting only (`B2_secondary.tsv` long format; LPA null percentile stored in a
+  CI column).
+- Limits: no dataset has serum ALT, so this package gives no direct serum result. No positive control
+  for plasma ballooning existed.
+- Not testable: part C (NF-kB set by disease group in GSE256398; groups of 6, 3, 4 and 4 donors against a
+  rule of 5); B2 for ADH1B/ADH1A, ADH4 and GOT1 (fewer than 20 pairs).
+
+### MQTL2: plasma lipid and metabolite colocalization at the ALT loci
+
+Source: `MQTL2-20261111T000008Z/RESULT_MQTL2.md`; `out_23189934/primary_and_sensitivity.tsv`,
+`controls.tsv`, `per_locus.tsv`.
+
+- Question: do ALT loci with a liver-fat effect colocalize with plasma lipid species more often than other
+  ALT loci?
+- Method: coloc.abf, Pan-UKBB EUR ALT against 325 metabolite and lipid-species GWAS (Chen 2023,
+  Ottensmann 2023), lead +/- 500 kb, p12 1e-5. Unit: locus. Exposure: liver-fat lfsr < 0.05 from ENZFAT1
+  (149 loci with a value, 6 exposed).
+- Primary (one Fisher exact test, no correction needed): lipid-species PP.H4 >= 0.8 at 4 of 6 exposed
+  loci and 10 of 143 other loci; OR 25.2 (95% CI 3.18 to 308), p 6.8e-4. The 4 are the TM6SF2 region,
+  PPP1R3B, WHRN and GPAM; NYNRIN/REC8 and GCKR do not colocalize.
+- Sensitivity: PP.H4 >= 0.5 gives 4/6 vs 38/143, OR 5.45 (0.75 to 62.6), p 0.053. p12 5e-6: OR 31.5
+  (3.89 to 394), p 3.4e-4. Without GCKR and TM6SF2: OR 37.3 (2.73 to 2075), p 2.1e-3. Post hoc, not
+  prespecified, 82 loci with genome-wide ALT signal: 4/5 vs 8/77, OR 31.7 (2.73 to 1700), p 1.3e-3.
+- Controls: ALT self-colocalization 0.9999, TM6SF2 with lipid 0.983 and PNPLA3 with lipid 0.999 passed.
+  GCKR with triglyceride species was not applicable to ALT (PP.H4 0.156 Pan-UKBB, 0.019 MVP; ALT has no
+  signal at rs1260326). An added GGT control at GCKR, not prespecified, gave PP.H4 1.000.
+- Descriptive, uncorrected over 55,250 pairs: 29 of 170 windows colocalize with at least one trait. Two
+  amino-acid colocalizations (MPRIP with glutamate 0.873; CENPW with glutamine 0.839), both at loci
+  without a liver-fat value; no alanine, pyruvate, tyrosine or branched-chain amino acid colocalization.
+- Limits: 6 exposed loci, so one locus changing status moves the OR by a large factor. Metabolite GWAS n
+  about 6,000 to 8,300; absence of colocalization is not evidence of no shared variant. sdY = 1 assumed
+  on the metabolite side without checking. No lipoprotein GWAS on disk. TM6SF2, GPAM and PPP1R3B are
+  established lipid loci from published work, not findings here.
+- Not run: SuSiE-coloc.
+
+### TRAIL4: TNFSF10 ALT signal and plasma TRAIL
+
+Source: `TRAIL4-20261111T025501Z/RESULT_TRAIL4.md`; `out_23190150/coloc_abf.tsv`,
+`direction_TNFSF10.tsv`.
+
+- Question: does the serum-ALT signal at TNFSF10 share a variant with the plasma TRAIL cis pQTL, and with
+  albumin and platelet count?
+- Method: pairwise coloc.abf at one locus, lead +/- 500 kb (GRCh37), p12 1e-5 and 5e-6. Calls use the
+  prespecified fixed thresholds (PP.H4 >= 0.8 colocalized, PP.H3 >= 0.8 distinct, otherwise unresolved);
+  no family correction applies.
+- Primary: MVP ALT vs UKB Olink TRAIL (GCST90470917, n 47,745) PP.H4 1.000 under both priors.
+  Replication with Zhao 2023 Olink TRAIL (GCST90274843, n 14,735): PP.H4 0.997. Both leads are
+  3:172294500 (rs79287178). The ALT-raising allele G (frequency 0.97) raises plasma TRAIL: +0.476 NPX
+  units per G (se 0.017) in UKB and +0.489 (se 0.034) in Zhao. Pan-UKBB ALT, which shares participants
+  with UKB, gave PP.H4 1.000 (sensitivity only).
+- Test 2: ALT and platelets colocalized (PP.H4 1.000; 0.999 at 5e-6); the ALT-raising allele lowers
+  platelets (-0.086 SD). ALT and albumin PP.H4 0.854 at 1e-5 but 0.745 at 5e-6: unresolved because
+  prior-sensitive. Reported as unresolved pleiotropy.
+- PANX1 (secondary): plasma PANX1 pQTL not found, untestable; ALT vs platelets distinct (PP.H3 0.982);
+  ALT vs albumin unresolved (no albumin signal).
+- Controls: alleles and build passed; UKB vs Zhao TRAIL PP.H4 1.000; MVP vs Pan-UKBB ALT at PNPLA3 PP.H4
+  0.991. All passed.
+- Deviations: HyPrColoc is not installed in any repo environment, so the three-trait test was run as
+  three pairwise coloc.abf tests. SuSiE-coloc was run but not used, because LD mismatch with the
+  379-person 1000G EUR panel exceeded the prespecified cutoff (lambda 0.15 to 0.45).
+- Limits: Olink measures immunoreactive plasma TRAIL, not activity; an epitope effect of the variant was
+  not checked. The tissue source of plasma TRAIL is not identified. The earlier GTEx liver eQTL
+  colocalization did not pass (q 0.23), so support is at the protein level only. Not fine-mapped to one
+  variant.
+- Not run: gated pQTL sources (UKB-PPP Synapse, deCODE); LD for the Zhao lead 3:172274232.
+
+### PROT5: other hepatocyte proteins in plasma at the ALT loci
+
+Source: `PROT5-20261111T131149Z/RESULT_PROT5.md`; `out_23210604/slopes.tsv`, `controls.tsv`,
+`locus_panel_effects.tsv`.
+
+- Question: at the 169 serum-ALT loci, does the ALT-raising allele also raise plasma levels of other
+  hepatocyte intracellular proteins?
+- Method: UKB-PPP Olink pQTL (Quickdraws reanalysis; 42 GWAS Catalog files) for 21 hepatocyte proteins
+  and 21 non-liver intracellular control proteins, cis regions excluded per protein. Inverse-variance
+  weighted slope through the origin of panel effect on ALT effect, multiplicative random effects. Unit:
+  locus. Holm over the primary and co-primary tests. Seed 20261111.
+- Primary: 0.434 protein SD per SD of ALT (95% CI 0.386 to 0.482), p 6.1e-69, Holm 1.2e-68, n 169 loci.
+  Control panel -0.001 (-0.027 to 0.025). With MVP ALT, which has no sample overlap: 0.332 (0.289 to
+  0.374).
+- Co-primary: slope at the 6 liver-fat loci minus slope at the other 143: 0.088 (-0.151 to 0.326), Holm
+  0.47. Low power; not evidence of equal slopes.
+- Per locus (ashr): 25 "panel rises", 3 "ALT only" (GPT locus 68, PPP1R3B 61, OSGIN1 135), 0 "panel
+  falls", 141 untested or underpowered. At the GPT locus the panel effect is -0.003 SD (se 0.004).
+- Controls: allele alignment passed in 42 of 42 files. PNPLA3 rs738409: panel +0.057 SD (z 12.6),
+  passed. GOT1 cis control failed one arm: GOT1 protein z 4.77 against the prespecified z >= 5.45 (C2a
+  fail); the panel without GOT1 did not move (z -0.40, C2b pass).
+- Deviations: a fourth per-locus state, "panel falls", was added in the prespecification (no locus got
+  it); locus 99 used a proxy (r2 1.00).
+- Limits: effects are at the ALT lead variant; colocalization was not run, so a linked variant could
+  carry the panel effect. A shared hepatocyte release step is one reading; hepatocyte number or size, or
+  plasma clearance of liver proteins, would also move the panel and are not separated. Olink NPX is
+  relative abundance. Pan-UKBB ALT includes about 12% UKB-PPP participants.
+- Not run: colocalization, HyPrColoc, gated sources, a second protein cohort.
+
+### DIR6: do the H26 direction alleles move liver fat or cirrhosis?
+
+Source: `DIR6-20261111T024808Z/RESULT_DIR6.md`; `out_23210381/class_counts.tsv`,
+`power_enzyme_only.tsv`, `controls.tsv`; post hoc refit `out_posthoc_23226070/posthoc_control_refit.tsv`.
+
+- Question: for the 286 H26 direction calls (provisional on COLOC release
+  `susie_coloc_r2_20260924T053244Z`), does the allele H26 used also move liver fat (Pazoki 2022
+  MRI-PDFF) or cirrhosis (Ghouse 2024)?
+- Method: ashr per outcome, lfsr < 0.05 over the instrument rows. Unit: independent locus (197; 1 Mb
+  single-linkage clusters, not LD clumping). Exact Clopper-Pearson 95% intervals. Seed 20261111.
+- Result by locus: 178 of 197 (90.4%, 85.3 to 94.1) have enzyme support only (neither outcome at lfsr
+  < 0.05); 12 concordant (6.1%, 3.2 to 10.4); 1 reversed; 2 untestable; 4 with genes in different
+  classes. By gene: 260 of 286 enzyme only, 17 concordant, 3 reversed (PPP1R3B and PPP1R3B-DT on liver
+  fat, HKDC1 on cirrhosis), 6 untestable.
+- Power: "enzyme support only" is mostly absence of evidence. Of the 260 genes, 243 are underpowered for
+  liver fat and 251 for cirrhosis (95% interval of outcome effect per enzyme effect crosses the bound of
+  0.119 PDFF units or 0.268 log-odds per SD of enzyme). Only GGT1 falls inside both bounds.
+- Controls: GCKR, HSD17B13, GPT and GOT1 passed. PNPLA3 and TM6SF2 failed under the fixed prior fitted
+  on the H26 instruments (posterior mean 0, lfsr 1, because their effects lie beyond the largest effect in
+  that prior). A post hoc refit including the control rows (job 23226070, not prespecified) makes both
+  concordant on liver fat and changes no instrument call. The reported classes are the prespecified ones.
+- Deviations: job 23190132 crashed in summary code; job 23210381 reran that step on the unchanged step-1
+  files. HOMA-IR replaced fasting insulin as a labelled substitute. The post hoc refit above.
+- Limits: concordance tests whether the enzyme-raising allele is also a liver-outcome risk allele; it does
+  not test H26's eQTL-based inhibit or activate reading. Liver-fat concordance of ADH1C, GPAM, SAMM50 and
+  SPATA31H1 (NAFLD-defined) and ERCC2 (PDFF-defined) is partly built into instrument choice. 26
+  instruments come from non-European studies; outcomes are European. UK Biobank is in the enzyme and both
+  outcome GWAS.
+- Not run: LDL, type 2 diabetes and coronary disease co-effects (not downloaded); ambient-corrected
+  hepatocyte share; LD-based clumping.
+
+### GSET8: within-hepatocyte stage genes and liver-fat or cirrhosis GWAS
+
+Source: `GSET8-20261110T235125Z/RESULT_GSET8.md`; `out_23188024/results_primary.tsv`,
+`out_23190009/followup_results.tsv`.
+
+- Question: are the CONF1 C3b within-hepatocyte stage genes (689 up, 466 down) or Complex I subunits
+  enriched for liver-fat (PDFF) or Ghouse cirrhosis GWAS gene-level signal?
+- Method: MAGMA competitive gene-set test, one-sided, default gene covariates. Unit: genes. Background:
+  all MAGMA-scored genes. Holm over 6 tests (2 traits x 3 sets).
+- Primary: Ghouse cirrhosis x down genes, beta 0.127 (SE 0.043), P 0.0016, Holm 0.0094 (410 genes
+  scored); empirical P 0.002 against 1,000 size-matched random sets. The other 5 tests did not pass Holm
+  (smallest Holm 0.074, PDFF x up genes, P 0.015). No Complex I enrichment for either trait.
+- Controls: known liver genes scored high in both GWAS (PDFF: APOE, TM6SF2, PNPLA3; cirrhosis: HSD17B13,
+  PNPLA3, TM6SF2). Random-set false-positive rate at P < 0.05 was 0.043 to 0.070, under the 10% limit;
+  0.070 for cirrhosis sets of the down-set size, so the parametric P is slightly anti-conservative there.
+- Post hoc (not prespecified): the cirrhosis excess survives removal of genes within 1 Mb of six major
+  liver loci and the MHC (P 0.0027) and a hepatocyte-tested background (P 0.0021), but rests on the top 10
+  to 20 genes (dropping the top 20 gives P 0.14). Against down-direction stage genes only, P 0.033.
+- Not replicated in MVP cirrhosis (phecode 571.51, 13,367 cases): down genes P 0.69. Whether MVP
+  participants are in the Ghouse meta-analysis was not checked.
+- Deviations: GWAS Catalog input files keyed on their own rsIDs and per-SNP n, in place of the CG0 inputs;
+  follow-ups post hoc.
+- Limits: the MVP input kept 5.65 million SNPs after the imputation r2 >= 0.9 filter, against 12.4
+  million for Ghouse.
+
+### CCL1: do CCL20+ cells labelled hepatocyte have hepatocyte expression profiles?
+
+Source: `CCL1-20261110T235204Z/RESULT_CCL1.md`; `out_ccl1_job23189976/tests.tsv`, `control_summary.tsv`.
+
+- Question: do CCL20+ cells labelled hepatocyte in human MASLD single-cell and single-nucleus data carry
+  hepatocyte genes at the level of depth-matched CCL20- hepatocytes, and ductular genes well below the
+  donor's cholangiocytes?
+- Method: unit donor, donor pseudobulk log2(CPM + 1). Per cohort, intersection-union of two one-sided
+  exact sign-flip tests. Holm over the 2 primary cohorts, and separately over the 2 secondary cohorts.
+  Seed 20261110.
+- Primary not met. GSE298719 (Flex, 6 donors) gave Holm 0.031, but its positive control failed, so by
+  the prespecified rule it is not interpreted. GSE256398 (snRNA, 9 donors) gave Holm 0.078; the hepatocyte
+  arm failed in 2 of 9 donors (both with high PTPRC in the CCL20+ nuclei).
+- Secondary, both with passing controls: GSE244832 Holm 0.004 (9 donors); GSE202379 Holm 0.031 (5
+  donors). GSE289173 had 1 eligible donor and did not enter.
+- Positive control (cholangiocytes vs depth-matched hepatocytes): passed in 4 of 5 cohorts. In Flex the
+  hepatocyte-gene arm failed (mean -1.14, only 3 of 7 donors at or below -1); the ductular arm worked in
+  all 5.
+- Descriptive: CCL20+ hepatocytes carry ductular genes 4.1 to 6.0 log2 below the donor's cholangiocytes
+  (cohort means). A minority, median 8% to 18% per cohort, sits above the donor's hepatocyte 95th
+  percentile of cholangiocyte score, 2 to 3 times the matched rate. CCL20 RNA is detected in a median
+  0.2% to 1.6% of hepatocytes per MASLD donor. The share of CCL20 held by the top 5% of hepatocytes
+  is not stable per donor (10% to 81% in Flex and GSE256398).
+- Deviations: first job 23188095 crashed in the snRNA loader; the MT-gene mask was fixed; the
+  non-regressed concentration measure was added on request.
+- Limits: RNA only; no doublet scores exist in any cohort; ductular cells with low KRT19 and KRT7 would
+  pass as hepatocytes. Cell recovery differs by lineage, so shares are not tissue fractions. Prior art for
+  this cell state is in the CONF1 table above.
+
+### TRIAL1: trial outcome input table
+
+`TRIAL1-20261110T205624Z/trial_outcomes_v2.tsv` (closed 2026-11-10): a dated input table of 72 rows,
+28 mechanisms and 41 NCT IDs, with 16 fields marked not verified (13 values, and the action direction of
+3 rows). No genetic evidence joined; no claim.
+
+### JOIN7: target-gene genetics against randomized trial outcomes
+
+Source: `JOIN7-20261111T231036Z/RESULT_JOIN7.md`; `out_23226934/two_by_two.tsv`,
+`mechanism_summary.tsv` (28 rows), `mechanism_endpoint_table.tsv` (66 rows), `gene_trait_classes.tsv`.
+
+- Question: among drug mechanisms with a randomized MASLD or MASH trial, do mechanisms whose target gene
+  has matched genetic support improve the matched endpoint more often than mechanisms without it?
+- Method: TRIAL1 table joined to 43 target genes. Gene-level support: MAGMA gene p < 0.05/43 (liver fat,
+  cirrhosis) or any variant at p < 5e-8 within the gene +/- 50 kb (the only rule for ALT). Unit: drug
+  mechanism. Exact conditional odds ratio with exact 95% CI per matched pair; Holm over the 3 pairs.
+- Result: no pair is informative; Holm p 1.0 for all three.
+  Liver-fat genetics by liver-fat endpoint, 14 mechanisms: with support 2 improved and 0 not, without
+  support 11 and 1; OR not finite (0.004 to infinity). The smallest attainable p at these margins is
+  0.143, so this pair could not have reached p < 0.05.
+  Cirrhosis genetics by fibrosis improvement, 20 mechanisms: 0 and 1 against 8 and 11; OR 0 (0 to 58.5).
+  ALT genetics by ALT response, 11 mechanisms: 4 and 1 against 3 and 3; OR 3.5 (0.17 to 261).
+  The five sensitivity analyses and three descriptive rows also have intervals spanning 1.
+- Support counts (27 mechanisms with a target): liver fat 3 (DGAT2, KHK, PNPLA3), cirrhosis 1 (PNPLA3),
+  ALT 10. DGAT2 and KHK reach support through MAGMA only; KHK lies about 400 kb from GCKR and its
+  independence from that locus was not tested. No target gene reached a direction class.
+- Single observation, not a rule: PNPLA3 has support for all three traits, and its antisense knockdown
+  (NCT05809934) reported no histologic benefit.
+- Controls: rs738409 G raises liver fat, ALT and cirrhosis risk in all four files; PNPLA3, TM6SF2 and GCKR
+  reach liver-fat support. Passed.
+- Deviations (declared before the run): ALT support by the variant rule only (no ALT MAGMA on disk);
+  GRCh38 gene windows mapped through rsIDs; no direction annotation for PNPLA3; no TRAIL-receptor agonist
+  row in TRIAL1. First job 23226251 stopped on a checksum line before any analysis; job 23226934 is the run.
+- Limits: 11 to 20 mechanisms per pair; mechanisms sharing targets are not independent; trial outcomes
+  depend on dose, duration and population; a +/- 50 kb variant rule is not target validation.
+
+### AG2X Stage A: AlphaGenome 2 liver benchmark on endpoints fixed in September
+
+Source: `AG2X-20261112T000534Z/RESULT_AG2X_stageA.md`; `tables/stageA_metrics.tsv`,
+`stageA_contrasts.tsv`, `stageA_decisions.tsv`, `observed_tracks_used.tsv`. Prespecification sha256
+a6943f7d..., hashed 2026-11-12T00:24:05Z.
+
+- Question: does the hosted AlphaGenome 2 model (package 2.0.0, released 2026-11-11), with no fitting,
+  predict liver accessibility and expression effects of variants well enough to annotate credible-set
+  variants at liver-trait loci?
+- Method: zero-shot variant scores, 1-Mb input, bulk liver (`UBERON:0002107`) and liver hepatocyte
+  (`UBERON:0002107_CL:0000182`) conditions, observed tracks only (plain mean). Unit: 1-Mb block; 10,000
+  block-bootstrap draws, seed 20261111; version 1 recomputed in the same draws. Primary family (Holm
+  over 2, bulk-liver RNA): P1 sign agreement at Broadaway liver eQTL tops with PIP >= 0.9; P2 within-gene
+  AUROC of fine-mapped tops against matched low-PIP variants, minus the distance-to-gene-start AUROC.
+  The eQTL fine-mapping used a uniform prior, so PIPs do not use functional annotation.
+- Expression, not supported: P1 0.526 (428 of 813 genes, 558 blocks; 95% CI 0.492 to 0.561; Holm p
+  0.274). P2 0.016 (4,430 pairs in 945 genes, 624 blocks; -0.014 to 0.046; Holm p 0.310). The hepatocyte
+  single-nucleus RNA readout gives 0.510 (0.476 to 0.544) and -0.008 (-0.037 to 0.020). Version 2 minus
+  version 1 is not different from zero on any expression endpoint (BH q >= 0.60).
+- Accessibility, supported: signed Spearman with Currin caQTL effect at 3,845 leads in 1,743 blocks is
+  0.719 (0.704 to 0.733) for bulk ATAC, 0.621 (0.600 to 0.640) for bulk DNase and 0.747 (0.732 to
+  0.761) for hepatocyte single-nucleus ATAC; version 1 liver ATAC on the same leads is 0.736.
+  Hepatocyte-lineage allelic imbalance (292 sites, 50 blocks), weighted Spearman: 0.452 (0.353 to
+  0.552), 0.348 (0.237 to 0.489) and 0.450 (0.323 to 0.584).
+- Version 2 against version 1 (11 secondary contrasts, BH): bulk ATAC is lower than version 1 on caQTL
+  leads (-0.017, -0.024 to -0.011, q 0.00055); hepatocyte ATAC is higher than version 2 bulk ATAC
+  (+0.028, 0.021 to 0.035, q 0.00055). No other contrast has q < 0.05.
+- Decision under the rule fixed in advance: accessibility readouts may annotate credible-set variants;
+  expression readouts may not, so no model-predicted gene or expression direction is produced.
+- Controls: allele-identity and position controls are at zero on caQTL leads. On allelic imbalance the
+  allele-identity control is 0.108 (0.029 to 0.180; same value in the September version 1 program,
+  mapping bias) and on the hepatocyte-lineage subset the position control is 0.152 (0.023 to 0.290).
+  Version 1 values 0.7361 and 0.4507 were reproduced before any version 2 number was read.
+- Limits: the model may have been trained on the ENCODE liver and liver single-nucleus tracks used
+  here; nothing is held out by construction. caQTL leads are LD-selected, not proven functional bases.
+  PIP >= 0.9 marks a fine-mapped variant, not a causal one. The hosted model returns no version string
+  and can change. Bulk-liver RNA is 2 observed tracks. Reporter-assay endpoint (A5) not run.
+  24,610 hosted calls; requests carried coordinates, alleles and condition IDs only.
+
+### AG2X Stage B: AlphaGenome 2 accessibility scores at liver-trait credible sets
+
+Source: `AG2X-20261112T000534Z/RESULT_AG2X_stageB.md`; `stageB/tables/stageB_B1.tsv`, `stageB_B2.json`,
+`stageB_B3.tsv`, `stageB_B3_corrected_posthoc.tsv`, `stageB_B4.tsv`, `stageB_controls.json`,
+`stageB_pass_shares.tsv`, `stageB_tier1_locus_table.tsv`, `stageB_variant_fields.tsv.gz`. Prespecification
+sha256 969da6d6..., hashed 2026-11-12T02:55:01Z, before the first call on a GWAS locus (02:56:13Z).
+
+- Question: among credible-set members at liver-trait loci, which are predicted to change liver or
+  hepatocyte accessibility more than matched non-credible variants, and does that agree with fine-mapping
+  and with measured caQTL data?
+- Method: 13,595 variants (4,639 credible-set members, 6,668 allele-frequency-matched non-credible
+  background variants, 2,288 lead or proxy variants at loci without a scored set) in 9 conditions; only
+  the three readouts that passed Stage A are used for the label (bulk-liver ATAC, bulk-liver DNase,
+  hepatocyte single-nucleus ATAC). A member is a "sequence-supported candidate variant" if its absolute
+  predicted effect is at or above the 99th background percentile in at least one of the three. No
+  expression readout, predicted gene or predicted expression direction is produced. Unit: 1-Mb block.
+- Rate of the label by construction: 126 of 4,639 members (2.72%) are sequence-supported; the same rule
+  is met by 145 of 6,668 background variants (2.17%), so about 101 of the 126 are expected from the
+  rule alone. A single supported variant is weak evidence. Post hoc, no test: the supported share is
+  20 of 307 (6.5%) at max PIP >= 0.5 and 89 of 3,758 (2.4%) below 0.1.
+- B1 (Holm over 2; 1,112 SuSiE sets, 92 blocks; PIPs permuted within sets, 10,000 permutations): the
+  PIP-weighted mean hepatocyte percentile is 0.557 against a permutation mean of 0.548 (0.539 to 0.558),
+  Holm p 0.034; hepatocyte minus the mean of monocyte and neuron 0.067 against 0.057 (0.048 to 0.067),
+  Holm p 0.034. Both pass at 0.05 with a difference of about 0.009. Sets from different studies share
+  members and are permuted independently, so these p values are probably too small.
+- B2 (descriptive): 31 of 88 loci have exactly one supported member against 21.2 expected (15 to 28),
+  p 0.0035.
+- B3 (Holm over 3; supported against other members of the same sets, exact stratified odds ratio).
+  caQTL with matching sign, as prespecified: 8 of 62 against 13 of 1,783, OR 14.4 (4.2 to 48.0), Holm
+  2.9e-5; this version used a wrong allele orientation for the Currin effect and is not valid as a sign
+  test. Corrected after the result was seen (orientation fixed by 100% sign agreement with the Stage A
+  labels on 4,177 leads, not by the outcome): 26 of 62 against 30 of 1,783, OR 36.0 (15.3 to 89.0),
+  Holm 6.9e-19, post hoc. Hepatocyte allelic imbalance (11 members) and reporter assay (96 members,
+  OR 6.1, 0.32 to 103) are not informative.
+- B4 (descriptive): a hepatocyte-supported member is present at 6 of 9 loci with a liver-fat, cirrhosis
+  or NAFLD effect and at 17 of 25 without.
+- Tier 1 loci: one supported member at the EPHA2, TM6SF2, MTARC1, GCKR, SLC17A2/4-TRIM38, GPT, WHRN and
+  PNPLA3 loci; several at TNFSF10 (5 of 116 members, 2.5 expected), PANX1 (6 of 42, 0.9 expected),
+  PPP1R3B (2 of 9) and HSD17B13 (2 of 81); none at GPAM, CWF19L1 and IFI27L2; STAT6 and NYNRIN were
+  scored by lead and proxies only. At MTARC1 the supported member is the A165T missense. At the TM6SF2,
+  GCKR and PNPLA3 loci it is not the known coding variant (at TM6SF2 its PIP is 0.001).
+- Controls: SORT1 rs12740374 T is predicted to gain accessibility in bulk-liver ATAC, DNase and
+  hepatocyte ATAC (percentiles 1.000, 0.996, 0.999), as expected, but the predicted gain is larger in
+  the monocyte control (percentiles 0.9997 and 0.9991), so the prediction is not liver-specific. 200
+  variants rescored at the end gave identical values. 0 reference-allele mismatches.
+- Limits: only bulk-liver and hepatocyte accessibility were benchmarked; the other cell-type conditions
+  are not. At 51 ALT loci and 502 other loci the only credible sets are outside the scored variant table
+  (East Asian, African, admixed American and South Asian sets); they have no supported-variant field.
+  Bulk-liver ATAC predictions and the Currin caQTL come from the same assay type and possibly overlapping
+  training data. Current variant-identity and LD qualifications apply. No rank across loci is produced.
+  122,556 hosted calls (package total 147,166; 147,766 if 600 resent calls were counted).
+
+### AG2X Stage C: conditioning on CCL20-positive hepatocytes, not testable
+
+Source: `AG2X-20261112T000534Z/RESULT_AG2X_stageC.md`; `stageC/NOT_TESTABLE.json`,
+`stageC/tables/control_a_encode_cells.tsv`, `stageC/tables/pilot_sc_atac_tracks.tsv`. Prespecification
+sha256 0bf72914..., hashed 2026-11-12T11:12:12Z.
+
+- Question: is any tier 1 variant predicted to change accessibility more when the model is conditioned
+  on CCL20-positive hepatocytes than on depth-matched other hepatocytes of the same donors?
+- Outcome: not testable as prespecified. Under conditioning on user-supplied cells the service returned
+  five single-cell ATAC tracks with an empty imputation label; the readout accepts only tracks labelled
+  observed or imputed-supported. The job stopped at the pilot gate after 13 calls. The rule was not
+  changed after the gate failed.
+- Control that passed: the model's cell encoder separates the hepatocyte and stellate sets (balanced
+  accuracy 0.999, 0.981, 0.982 in GSE256398, GSE244832, GSE202379; 9, 9 and 5 donors, 256 nuclei per set).
+- Descriptive, not a prespecified outcome: mean encoder embeddings of CCL20-positive and other
+  hepatocytes are 0.019, 0.016 and 0.010 apart in cosine distance, against 0.56, 0.39 and 0.41 for
+  hepatocyte against stellate. This describes the model's encoder, not biology; the CCL20-positive nuclei
+  were selected on CCL20 counts and the comparison nuclei were depth-matched.
+- Not run: the reference-hepatocyte control and the state contrast.
+
+### AG2X Stage D: predicted accessibility tracks and mutagenesis at nine variants, descriptive
+
+Source: `AG2X-20261112T000534Z/RESULT_AG2X_stageD.md`; `stageD/tables/stageD_local_change.tsv`,
+`stageD_measured_sign_agreement.tsv`, `stageD_motif_ism_overlap.tsv`, `stageD_ism_vs_stageB_check.tsv`,
+`stageD_local_vs_scorer_check.tsv`; panels in `stageD/panels/`. Prespecification sha256 1c61380f...,
+hashed 2026-11-12T11:40:05Z. 4,377 hosted calls (package total 152,156 with resends).
+
+- Scope: one control (SORT1 rs12740374) and eight Stage B sequence-supported members (EPHA2, GCKR locus,
+  TNFSF10, PPP1R3B, chr8:144731148, WHRN, two at PANX1). Nine variants, no test, no correction, no
+  rank. Values are model predictions (ALT minus REF, log2 sum over 501 bp, observed tracks only).
+- Control: SORT1 met all four prespecified items. Predicted gain +0.879 (bulk liver ATAC) and +0.861
+  (hepatocyte); measured liver caQTL beta +0.953. A CEBPA motif is gained and the mutagenesis importance
+  inside it is 15.0 times that outside. The predicted monocyte gain (+2.013) is larger than in liver.
+- Agreement with measurements, where any exist: same sign as liver caQTL at EPHA2 (predicted -0.561,
+  measured -0.617) and PPP1R3B (+0.289, +0.612); same sign as hepatocyte allelic imbalance at EPHA2
+  (z -3.38, 12 donors), PPP1R3B (z +3.38, 5 donors) and WHRN (z -0.78, 12 donors, not significant).
+  The other five selected variants have no caQTL or allelic-imbalance measurement; none of the nine is
+  in the reporter-assay table.
+- No transcription-factor motif is established at any of the eight selected variants (importance ratio
+  0.7 to 2.8; several matched factors are not expressed in hepatocytes).
+- Not liver-specific in the model: the GCKR-locus variant chr2:27171732 (monocyte +1.668, liver +0.316)
+  and SORT1. PANX1 chr11:94190311 is near zero in ATAC (-0.012, -0.072) and passes only in bulk DNase.
+- Checks: the mutagenesis score of each variant's own substitution differs from its Stage B score by at
+  most 0.0028 (27 readouts; reason not determined). Bulk-liver scorer values equal log2(sum + 1) of the
+  tracks to 4.8e-7. For single-cell ATAC readouts the track-derived change is larger in magnitude than
+  the scorer value by up to 0.66 (reason not determined); signs agree in all 36 rows, but size comparisons
+  between conditions can depend on the definition (PANX1 chr11:94129519 monocyte -0.481 by tracks,
+  -0.143 by scorer).
+- Limits: no gene and no expression direction (Stage A expression readouts failed). The selection label
+  is weak for any single variant (about 101 of 126 supported members expected by rule). The panels
+  illustrate how the model reads a variant; they do not identify a causal variant.
+
 ## Variant identity and transportability, 2026-11-07
 
 The genetic map is qualified after inspection of the full saved eQTL fits,

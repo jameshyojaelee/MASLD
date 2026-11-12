@@ -1,0 +1,44 @@
+# Study meta-data
+gwas_id: GCST90239658
+author_notes: "Standardised format sumstats files are provided for the METAL results.
+  Info for the raw file is as follows: \n#Ancestry abbreviations\nAFR = African +
+  African American (primarily African American)\nEAS = East Asian\nEUR = European\n
+  HIS = Hispanic\nSAS = South Asian\n\n#Imputation panel abbreviations\n1KGP3: 1000
+  Genomes phase 3\nHRC: Haplotype Reference Consortium\nOthers: Study or ancestry-specific
+  reference panels (eg. CAAPA or SISu)\n\n#Columns:\nrsID: ID from dbSNP 150\nCHROM:
+  Chromosome\nPOS_b37: Position in build 37\nREF: non-effect allele\nALT: effect allele\n
+  N: total number of individuals with results for this variant\nN_studies: total number
+  of studies with results for this variant\nPOOLED_ALT_AF: allele frequency of the
+  ALT allele\nEFFECT_SIZE: effect size of the ALT allele\nSE: standard error\npvalue_neg_log10:
+  -log10(p-value)\npvalue: p-value\npvalue_neg_log10_GC: -log10(GC-corrected p-value)\n
+  pvalue_GC: GC-corrected p-value"
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90239658
+date_metadata_last_modified: 2025-01-02
+
+# Trait Information
+trait_description:
+  - Low density lipoprotein cholesterol levels
+ontology_mapping:
+  - EFO_0004611
+
+# Genotyping Information
+genome_assembly: GRCh38
+coordinate_system: 1-based
+genotyping_technology:
+  - Genome-wide genotyping array
+
+# Sample Information
+samples:
+  - sample_ancestry_category:
+      - European
+    sample_size: 1320016
+
+# Summary Statistic information
+data_file_name: GCST90239658.h.tsv.gz
+file_type: pre-GWAS-SSF
+data_file_md5sum: 1f7ef89b4dffd7db9d4179b066bef6c7
+
+# Harmonization status
+is_harmonised: true
+is_sorted: false
+harmonisation_reference: ftp://ftp.ensembl.org/pub/release-95/fasta/homo_sapiens/dna/

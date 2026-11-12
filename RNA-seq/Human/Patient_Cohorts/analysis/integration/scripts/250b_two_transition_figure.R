@@ -221,6 +221,7 @@ combined <- (panel_A | panel_B) / (panel_C | panel_D) +
                   theme = theme(plot.tag = element_text(face = "bold", size = 9)))
 
 pdf_path <- file.path(FIGS_GRANULAR_DIR, "figS_granular_two_transitions.pdf")
+dir.create(FIGS_GRANULAR_DIR, recursive = TRUE, showWarnings = FALSE)
 ggsave(pdf_path, combined, width = 7.5, height = 7.0, units = "in",
        device = cairo_pdf)
 cat("Wrote", pdf_path, "\n")

@@ -1,0 +1,28 @@
+# ENZFAT1 (Analysis/Hypotheses/ENZFAT1-20261110T204401Z): Genomic SEM ldsc() covariance and ashr.
+# After creating the env, install GenomicSEM at the pinned commit:
+#   Rscript -e 'remotes::install_github("GenomicSEM/GenomicSEM@da95d431a4709693d07eae55e172ade55526948b", upgrade="never")'
+name: genomicsem
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.4
+  - r-remotes
+  - r-lavaan
+  - r-data.table
+  - r-ashr
+  - r-mass
+  - r-matrix
+  - r-mgcv
+  - r-rcpp
+  - r-r.utils
+  - r-readr
+  - r-stringr
+  - r-plyr
+  - r-dplyr
+  - r-gdata
+  - r-e1071
+  - r-foreach
+  - r-doparallel
+  - r-splitstackshape
+  - r-mgsub
+  - r-ggplot2

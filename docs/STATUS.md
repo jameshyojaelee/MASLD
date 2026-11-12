@@ -1,6 +1,6 @@
 # Current paper and codebase status
 
-Navigation updated November 9, 2026. This page summarizes the latest recorded
+Navigation updated November 12, 2026. This page summarizes the latest recorded
 manuscript state; it is not a live SLURM report. Exact values and their
 qualifications remain in [RESULTS](RESULTS.md), with scientific scope in
 [PAPER](PAPER.md) and authorized next work in [ROADMAP](ROADMAP.md).
@@ -85,6 +85,25 @@ they are not instructions to repeat fits or submit new work.
 
 The following November 6–9 entries are retained from the previous status page.
 They describe their stated dates and scope.
+
+**Manuscript rewrite with the novelty analyses, 2026-11-12.** These results are used
+in the manuscript text by user approval, 2026-11-12; formal adoption under the ROADMAP final
+release checklist is pending. Nothing is adopted. Sources: the novelty section of
+[RESULTS](RESULTS.md#novelty-analyses-2026-1110-11-not-adopted) and each package's `RESULT_*.md`.
+Changed in `docs/manuscript/latex/sections/`: `abstract.tex` (new numbers), `fig1.tex` (figure
+logic), `fig2.tex` (new subsection on ALT heritability and direction calls; lipid colocalization,
+hepatocyte-protein panel, plasma TRAIL at TNFSF10; AlphaGenome 2 accessibility annotation),
+`fig4.tex` and `captions/figure4.tex` (CCL20: most CCL20 RNA is in cells with hepatocyte
+expression profiles, median 0.65 to 0.83 after removing cholangiocyte-like cells; replaces the
+label-based "main source" sentence), `catalog.tex` and `captions/figure6.tex` (Figure 6G is now the per-mechanism trial table in
+`figures/candidates/fig6g-trial-mechanisms-20261112T140124Z/`, replacing the drug-target
+calibration scatter: Catalog tiles, highest trial phase, four endpoint columns; JOIN7 support not
+plotted, no matched pair informative, Holm p 1.0), and
+`supplementary_notes.tex` (new Note 21: expression-direction null and GSET8). Figure 1 unchanged.
+Open: the 6G candidate panel is not yet placed in `figures/main`; any new Figure 2 panels need panel
+letters; the Figure 5 Complex I/PLIN2 sentence is planned but not written; `draft/*.md` was not
+updated and now lags the LaTeX text. Copies of the previous versions are in
+`archive/partC_rewrite_20261112T135839Z/`.
 
 **Review-round figure restructure installed in the manuscript, 2026-11-10 (candidate, not adopted).**
 Per the approved plan. Figure 1 is the user's plate (`figure1_JL.pdf`); old 1B/1C are S1A/S1B and the

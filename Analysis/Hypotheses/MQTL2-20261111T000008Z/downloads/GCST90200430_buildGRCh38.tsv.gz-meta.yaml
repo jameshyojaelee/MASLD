@@ -1,0 +1,30 @@
+# Study meta-data
+gwas_id: GCST90200430
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90200430
+date_metadata_last_modified: 2025-01-13
+
+# Trait Information
+trait_description:
+  - Pyruvate levels
+ontology_mapping:
+  - EFO_0010117
+
+# Genotyping Information
+genome_assembly: GRCh38
+genotyping_technology:
+  - Genome-wide genotyping array
+
+# Sample Information
+samples:
+  - sample_ancestry_category:
+      - European
+    sample_size: 8259
+
+# Summary Statistic information
+data_file_name: GCST90200430_buildGRCh38.tsv.gz
+file_type: pre-GWAS-SSF
+data_file_md5sum: dd42ac9fe8edaa0766446dd46d6b41e4
+
+# Harmonization status
+is_harmonised: false
+is_sorted: false

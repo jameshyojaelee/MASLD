@@ -1,5 +1,64 @@
 # Paper identity, novelty, and claims
 
+**Abstract numbers and figure logic, 2026-11-12 (user-approved rewrite).**
+These results are used in the manuscript text by user approval, 2026-11-12;
+formal adoption under the ROADMAP final release checklist is pending. Each
+number below is from the novelty section of
+[RESULTS](RESULTS.md#novelty-analyses-2026-1110-11-not-adopted) or the named
+`RESULT_*.md` file. Genetic shares are covariance partitions, not mechanisms.
+
+Abstract numbers:
+
+- ALT heritability shared with neither liver fat nor cirrhosis: 0.70 (95%
+  interval 0.60 to 0.77) (ENZFAT1).
+- 260 of 286 direction calls have liver-enzyme support only; 243 of the 260 are
+  underpowered for liver fat, so this is mostly absence of evidence (DIR6).
+- Hepatocyte-protein panel in plasma: 0.434 protein SD per ALT SD across 169
+  ALT loci (PROT5).
+- TNFSF10: ALT colocalizes with plasma TRAIL (PP.H4 1.00) (TRAIL4). The trial
+  table has no TRAIL-pathway trial; the trial result is the JOIN7 null (no
+  matched pair informative, Holm p 1.0).
+- Plasma lipid species colocalize at 4 of 6 liver-fat ALT loci against 10 of
+  143 others (OR 25.2, p 6.8e-4) (MQTL2). TM6SF2, GPAM and PPP1R3B are
+  established lipid loci (source-owned).
+- One AlphaGenome 2 number: liver accessibility benchmark, Spearman 0.719
+  against caQTL (version 1 0.736; hepatocyte single-nucleus ATAC 0.747)
+  (AG2X Stage A).
+- Supplement only, one sentence each: the expression-direction null (sign
+  agreement 0.526, CI 0.492 to 0.561) and the GSET8 cirrhosis gene-set result.
+
+Figure logic, one sentence each:
+
+1. Figure 1 is the user's plate and is unchanged.
+2. Figure 2: ALT, liver fat and cirrhosis share a minority of their
+   heritability; a few ALT loci are also associated with liver fat and colocalize with lipid
+   species; most ALT loci raise hepatocyte proteins in plasma without a
+   detected liver-fat or cirrhosis effect; GPT is an ALT-only locus; TNFSF10 is
+   the worked example. Sequence-supported candidate variants appear only as an
+   accessibility annotation beside measured evidence: 126 of 4,639
+   credible-set members, of which about 101 are expected from the rule alone.
+   No predicted gene, no predicted expression direction, never "causal
+   variant".
+3. Figure 3: of 7,214 replicated stage genes, 1,155 change inside hepatocytes.
+4. Figure 4: most CCL20 RNA is in cells with hepatocyte expression profiles
+   (median 0.65 to 0.83 of CCL20 UMIs after removing cholangiocyte-like cells,
+   three cohorts; CCL1). This replaces the earlier label-based statement that
+   hepatocytes are the main source. The prespecified primary identity
+   criterion was not met (one primary cohort's control failed; the other gave
+   Holm 0.078).
+5. Figure 5: Complex I protein is lower without an RNA fall, and PLIN2 protein
+   exceeds its RNA. Planned sentence only; its values are in
+   `Analysis/Hypotheses/DIG1-20261024T113951Z/RESULT_DIG1.md` and not yet in
+   the manuscript text.
+6. Figure 6: Catalog genes by disease evidence, direction, hepatocyte
+   expression, compounds and trial results. Figure 6G is a per-mechanism table
+   (28 mechanisms, alphabetical): target-gene tiles by candidate Catalog
+   genetic state, highest randomized trial phase (not approval) and four
+   endpoint columns (liver fat, ALT, MASH resolution, fibrosis improvement)
+   (`figures/candidates/fig6g-trial-mechanisms-20261112T140124Z/`). The JOIN7
+   gene-level support is not plotted; no matched genetics-by-endpoint pair was
+   informative (Holm p 1.0). No universal score or target rank.
+
 **Organizing claim and figure plan, 2026-11-09 (user-approved review plan).**
 The paper keeps its two arms but is organized around two positive partitions
 instead of the gene-set overlap:
@@ -561,6 +620,9 @@ as coding genes, checked across cohorts, and routed differently from regulatory
 DNA elements when the mechanism remains unresolved.
 
 ## Seven-figure story
+
+The one-sentence figure logic of 2026-11-12 at the top of this page takes
+precedence over the take-home column below where they differ.
 
 | Figure | Question | Main content | Take-home message |
 |---|---|---|---|

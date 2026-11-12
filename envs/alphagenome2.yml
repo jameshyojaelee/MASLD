@@ -1,0 +1,31 @@
+name: alphagenome2
+# AG2X (package 10): hosted AlphaGenome 2 client. alphagenome 2.0.0 is the first PyPI
+# release that ships alphagenome.models.v2 (checked 2026-11-11 by unpacking the wheel).
+# Other pins copy envs/alphagenome_atlas.yml and that env's resolved versions.
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - alphagenome==2.0.0
+    - anndata==0.12.19
+    - pandas==2.3.3
+    - pyarrow==25.0.0
+    - pyfaidx==0.9.0.4
+    - scipy==1.17.1
+    - numpy==2.4.6
+    - h5py==3.14.0
+    - grpcio==1.73.0
+    - protobuf==7.36.1
+    - absl-py==2.3.0
+    - immutabledict==4.3.1
+    - jaxtyping==0.3.11
+    - ml_dtypes==0.5.1
+    - matplotlib==3.11.1
+    - seaborn==0.13.2
+    - tqdm==4.70.0
+    - typeguard==4.6.0
+    - typing_extensions==4.15.0
+    - zstandard==0.25.0
+    - fsspec==2025.5.1

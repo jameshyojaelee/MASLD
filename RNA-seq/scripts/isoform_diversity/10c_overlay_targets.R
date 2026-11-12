@@ -10,6 +10,7 @@ source(file.path(PROJ, "scripts/figures/publication_theme.R"))
 HRES <- file.path(PROJ, "RNA-seq/results/isoform_diversity/human")
 MRES <- file.path(PROJ, "RNA-seq/results/isoform_diversity/mouse")
 OUT  <- file.path(PROJ, "figures/supplementary/figS_isoform_diversity")
+dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 strip <- function(x) sub("\\..*$","",x)
 
 COHORTS <- c("GSE135251","GSE213621","GSE130970")

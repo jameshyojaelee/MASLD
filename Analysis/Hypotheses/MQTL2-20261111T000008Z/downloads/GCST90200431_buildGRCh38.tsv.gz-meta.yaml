@@ -1,0 +1,30 @@
+# Study meta-data
+gwas_id: GCST90200431
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90200431
+date_metadata_last_modified: 2025-01-05
+
+# Trait Information
+trait_description:
+  - Alanine levels
+ontology_mapping:
+  - EFO_0009765
+
+# Genotyping Information
+genome_assembly: GRCh38
+genotyping_technology:
+  - Genome-wide genotyping array
+
+# Sample Information
+samples:
+  - sample_ancestry_category:
+      - European
+    sample_size: 8265
+
+# Summary Statistic information
+data_file_name: GCST90200431_buildGRCh38.tsv.gz
+file_type: pre-GWAS-SSF
+data_file_md5sum: 1ec56f86928dbe4ac2beadd9345fdf4e
+
+# Harmonization status
+is_harmonised: false
+is_sorted: false

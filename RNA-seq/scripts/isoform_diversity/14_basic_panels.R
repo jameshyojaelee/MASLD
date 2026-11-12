@@ -8,6 +8,7 @@ PROJ <- "/gpfs/commons/groups/sanjana_lab/Cas13/MASLD_library_design"
 source(file.path(PROJ, "scripts/figures/publication_theme.R"))
 RES <- file.path(PROJ, "RNA-seq/results/isoform_diversity/human")
 OUT <- file.path(PROJ, "figures/supplementary/figS_isoform_diversity")
+dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 GRAY <- "#9E9E9E"; DIS <- palette1[1]
 strip <- function(x) sub("\\..*$","",x)
 pp <- function(n) file.path(OUT, sprintf("figS_isoform_%s.pdf", n))

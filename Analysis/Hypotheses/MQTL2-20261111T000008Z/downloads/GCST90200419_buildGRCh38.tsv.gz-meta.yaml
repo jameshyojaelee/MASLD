@@ -1,0 +1,30 @@
+# Study meta-data
+gwas_id: GCST90200419
+gwas_catalog_api: https://www.ebi.ac.uk/gwas/rest/api/studies/GCST90200419
+date_metadata_last_modified: 2025-01-05
+
+# Trait Information
+trait_description:
+  - Glutamine levels
+ontology_mapping:
+  - EFO_0009768
+
+# Genotyping Information
+genome_assembly: GRCh38
+genotyping_technology:
+  - Genome-wide genotyping array
+
+# Sample Information
+samples:
+  - sample_ancestry_category:
+      - European
+    sample_size: 8253
+
+# Summary Statistic information
+data_file_name: GCST90200419_buildGRCh38.tsv.gz
+file_type: pre-GWAS-SSF
+data_file_md5sum: 51943332dd9fad5625ec0d9170388257
+
+# Harmonization status
+is_harmonised: false
+is_sorted: false
