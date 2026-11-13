@@ -86,7 +86,15 @@ claim changes because of this section. Adoption of any result here needs the ROA
 checklist and explicit user approval. Each package is in `Analysis/Hypotheses/<ID>-<timestamp>/`, with a
 `PRESPEC_*.md` written before outcomes were read and a `RESULT_*.md`; every number below is from the
 named RESULT file and its output tables. Genetic shares are covariance partitions, not mechanisms.
-Colocalized means a shared-variant posterior, not a causal gene. AG2X Stages A to D are included.
+Colocalized means a shared-variant posterior, not a causal gene. AG2X Stages A to D and B2 are included.
+Adoption, 2026-11-12: the user approved formal adoption of ENZFAT1 (S0 to S3, F2), MQTL2, TRAIL4, PROT5,
+DIR6 (with co-effects) and AG2X (Stages A to D and B2). Their result files, prespecifications, code and
+output tables (1,649 files; files over 50 MB, downloads and raw API responses left out) are named in
+`RNA-seq/results/manuscript_release/2026-11-12-r10/release_manifest.tsv`. The ROADMAP final release
+checklist is not met by r10: 702 paths carried from r9 no longer exist and the release check fails on 12
+main-figure panels missing from disk, so r10 is a record of these six packages, not a full paper release.
+REL1, GSET8, CCL1, TRIAL1 and JOIN7 are not adopted. "Not adopted" in the section title below now
+applies only to those five.
 
 ### ENZFAT1: ALT heritability shared with liver fat and cirrhosis
 
@@ -123,7 +131,29 @@ Source: `ENZFAT1-20261110T204401Z/RESULT_ENZFAT1.md`; shares and tests from `out
 - Limits: MVP ALT LDSC intercept 1.491 (about a third of its excess chi-square not explained by LD
   score). The ordering of the sampling covariance against S was checked after the run: heritability
   standard errors from its diagonal match the LDSC log.
-- Not run: stage S3 and family F2; liability-scale heritability.
+- S3, added 2026-11-12 (source: `ENZFAT1-20261110T204401Z/RESULT_ENZFAT1_S3_F2.md`; `out_S3_r2/`;
+  jobs 23239018 and 23239131). The component is the part of Pan-UKBB EUR ALT genetics not shared with
+  liver fat, as per-SNP statistics. It is a two-trait subtraction: cirrhosis is not removed, so it holds
+  0.786 of ALT heritability, not the three-trait 0.701. Its LDSC rg is 0.872 (SE 0.024) with ALT and
+  0.007 (SE 0.071) with liver fat. The chromosome 22 check against Genomic SEM userGWAS gave a z
+  correlation of 0.99999943 over 19,021 SNPs.
+- Family F2, added 2026-11-12 (`out_F2/f2_rg.tsv`; addendum `PRESPEC_ENZFAT1_ADDENDUM2_F2.md`, sha256
+  57cb15f5...). LDSC rg of the component, unit GWAS participants, two-sided, Benjamini-Hochberg over 5
+  traits: type 2 diabetes 0.248 (SE 0.026, q 2.5e-21), BMI 0.166 (0.025, q 1.1e-10), triglycerides 0.135
+  (0.050, q 0.012), fasting insulin 0.115 (0.056, q 0.048), drinks per week -0.017 (0.028, q 0.53). Raw
+  ALT has 0.457, 0.308, 0.351, 0.338 and -0.005 for the same traits (descriptive, no test). The ALT
+  genetics not shared with liver fat are therefore still associated with type 2 diabetes, BMI,
+  triglycerides and fasting insulin, at about one third to one half of the raw ALT values, and not with
+  alcohol intake. Text must not describe this component as free of metabolic association.
+- F2 height control (outside the family): rg -0.078 (95% interval -0.122 to -0.033). It passes the
+  prespecified |rg| < 0.1 clause, but the interval excludes 0. Raw ALT (-0.097) and liver fat (-0.068)
+  show the same small negative value.
+- F2 deviations and limits: the MVP type 2 diabetes file has no standard errors, so its z comes from p
+  and the sign of ln OR (p clipped at 1e-300). `40_build_f2.py` was edited after the addendum hash (two
+  build-check fixes and added logging; no association value changed). Type 2 diabetes is record-based
+  case status with a single-trait LDSC intercept of 1.64. Fasting insulin is BMI-adjusted as published.
+  European ancestry only.
+- Not run: independent-locus clumping of the component GWAS; liability-scale heritability.
 
 ### REL1: liver ALT content by stage and hepatocyte proteins in plasma
 
@@ -273,8 +303,35 @@ Source: `DIR6-20261111T024808Z/RESULT_DIR6.md`; `out_23210381/class_counts.tsv`,
   SPATA31H1 (NAFLD-defined) and ERCC2 (PDFF-defined) is partly built into instrument choice. 26
   instruments come from non-European studies; outcomes are European. UK Biobank is in the enzyme and both
   outcome GWAS.
-- Not run: LDL, type 2 diabetes and coronary disease co-effects (not downloaded); ambient-corrected
-  hepatocyte share; LD-based clumping.
+- Co-effects, added 2026-11-12 (source: `DIR6-20261111T024808Z/RESULT_DIR6_coeffects.md`;
+  `out_coeff_23239132/coeffect_counts.tsv`, `coeffects_six_trait_family.tsv`, `controls_coeffects.tsv`,
+  `known_locus_checks.tsv`; amendment `PRESPEC_DIR6_AMENDMENT1_coeffects.md`, sha256 4a781ba8...; job
+  23239132). The enzyme-lowering allele of each call (250 distinct variants, 197 loci) was read in LDL
+  (GLGC 2021 EUR, SD per allele), type 2 diabetes (MVP phecode 250.2 EUR, ln OR) and coronary disease
+  (Aragam 2022 EUR, ln OR), matched by GRCh38 position and allele pair, no proxies. Two-sided z tests,
+  Benjamini-Hochberg over 1,134 variant-by-trait tests in six traits (these three plus triglycerides,
+  BMI and HOMA-IR), q < 0.05; 420 tests pass.
+- Co-effect counts by locus, higher / lower / no evidence: LDL 47 / 79 / 67 of 193 with a reading; type
+  2 diabetes 21 / 42 / 131 of 194; coronary disease 15 / 33 / 145 of 193. By gene call: LDL 59 / 103 /
+  116 of 278; type 2 diabetes 29 / 52 / 198 of 279; coronary disease 16 / 49 / 211 of 276. No test of
+  higher against lower was prespecified or run. "No evidence" is mostly low power (80% power at the
+  family Bonferroni level needs 0.008 SD LDL, 0.032 ln OR type 2 diabetes or 0.029 ln OR coronary
+  disease per allele).
+- Derived from `gene_coeffects.tsv` after the run, not a prespecified output: in 87 of 286 calls the
+  enzyme-lowering allele is associated with a higher value of at least one of LDL, type 2 diabetes or
+  coronary disease; in 155 with a lower value of at least one; 30 calls are in both groups and 74 in
+  neither. A direction call has to be read with its own co-effect row.
+- Co-effect controls (outside the family): the liver-fat-raising alleles PNPLA3 rs738409 G and TM6SF2
+  rs58542926 T are associated with lower LDL (z -8.3, -42.2), lower coronary disease (z -4.4, -4.4) and
+  higher type 2 diabetes (z 7.2, 9.0), as published; GCKR rs1260326 T with lower type 2 diabetes
+  (z -9.9). All seven known-locus orientation and build checks passed. Allele-frequency agreement with
+  Pan-UKBB EUR was 99.1% to 99.5%.
+- Co-effect deviations and limits: the MVP type 2 diabetes file has no standard errors, so SE was taken
+  from the 95% interval of the odds ratio (median absolute log10 p difference 0.046 at 244 matched
+  variants). MVP type 2 diabetes overlaps the MVP enzyme replication sample. 26 instruments come from
+  non-European studies and were read in European outcomes. Gene counts are not independent (197 loci).
+  A variant association is not evidence about the effect of a drug on that gene.
+- Not run: ambient-corrected hepatocyte share; LD-based clumping.
 
 ### GSET8: within-hepatocyte stage genes and liver-fat or cirrhosis GWAS
 
@@ -508,6 +565,44 @@ hashed 2026-11-12T11:40:05Z. 4,377 hosted calls (package total 152,156 with rese
 - Limits: no gene and no expression direction (Stage A expression readouts failed). The selection label
   is weak for any single variant (about 101 of 126 supported members expected by rule). The panels
   illustrate how the model reads a variant; they do not identify a causal variant.
+
+### AG2X Stage B2: accessibility scores at credible-set members outside the Stage B substrate
+
+Source: `AG2X-20261112T000534Z/RESULT_AG2X_stageB2.md`; `stageB2/tables_20261112T190028Z_23244702/`
+(`stageB2_counts.tsv`, `stageB2_B1.tsv`, `stageB2_B2.json`, `stageB2_B3.tsv`, `stageB2_notes.json`).
+Prespecification sha256 838b5ebd..., hashed 2026-11-12T14:02:18Z. Jobs 23238942 (scoring) and 23244702
+(analysis). 75,577 hosted calls; package total 227,733 completed (227,783 with 50 resends), under the
+230,000 cap.
+
+- Scope: the 23,805 credible-set members that Stage B did not score (highest-PIP set from an African,
+  admixed American, East Asian or South Asian study). Stage B itself was not European-only. Scored:
+  12,683 members at the 51 ALT loci (9 conditions) and at a seeded random 160 of 502 tier 3 loci (bulk
+  liver and hepatocyte only). Not scored: 11,122 members at 342 tier 3 loci.
+- Label: 338 of 12,683 members (2.66%) are sequence-supported, against 284.1 expected from the
+  background share (254 of 11,340, 2.24%). About 84% of the labels are expected from the rule alone. By
+  ancestry: AFR 115 (77.3 expected), AMR 116 (128.3), EAS 105 (76.8), SAS 2 (1.7); no ancestry test was
+  prespecified or run.
+- B1 (Holm over 2; unit 1-Mb block; 10,000 within-set PIP permutations): both fail. Hepatocyte
+  single-nucleus ATAC PIP-weighted percentile 0.533 against 0.538 (p 0.87); hepatocyte minus controls
+  0.039 against 0.040 (p 0.56). The Stage B PIP result (Holm 0.034) is not repeated here.
+- B2 (descriptive): 57 of 211 loci have exactly one supported member, against 49.9 expected (p 0.097).
+- B3 (Holm over 3, exact Mantel-Haenszel by locus): supported members more often have a liver caQTL of
+  matching sign, 37 of 138 against 81 of 7,278 other members of the same sets (OR 28.8, 95% CI 16.4 to
+  50.6; Holm 9.8e-29; 66 loci). This arm was prespecified here with the corrected orientation; in Stage B
+  it was post hoc (OR 36.0). A member with no caQTL entry counts as no match, only 219 members have an
+  entry, and the caQTL map and its LD proxies are from European livers, so the odds ratio mixes caQTL
+  presence with sign agreement. Allelic imbalance: 2 informative members, not informative. Reporter
+  assay: not testable.
+- Per locus, 51 ALT loci: one supported member 19, several 16, none 16. Three single supported members
+  also have PIP at or above 0.9: ANPEP chr15:89804107:T:C, RAC1 chr7:6032462:C:T and DMTN/FHIP2B
+  chr8:22060578:A:C. They remain sequence-supported candidate variants. "None" is not evidence against a
+  locus.
+- Checks: 100 rescored variants returned identical values. Deviations: analysis code edited before the
+  analysis job (output directory, added table columns, Holm fixed at 3 arms); no label, percentile or test
+  rule changed.
+- Limits: accessibility only, benchmarked on European data (Stage A); no gene and no expression
+  direction; LD-reference match and credible-set quality by ancestry not checked; coding status not
+  annotated.
 
 ## Variant identity and transportability, 2026-11-07
 
@@ -7295,3 +7390,15 @@ Adopted: Figure S3 exon-intron panel (B), Figure S3 NMF stage-profile panel (C),
 - **A. GTEx liver eQTL direction in allelic expression.** 50 testable genes whose expressed SNP is a GTEx v8 liver significant variant for that gene (>= 30 heterozygous donors). 34 of 50 (68%) have more ALT reads when GTEx says ALT raises expression; random-sign null 50%, one-sided p 0.008. F0-F1 donors 80%, F3-F4 67% (descriptive, about 6 genes). RNA heterozygote deficit is assay-wide (76% of null sites F > 0.1), so that sensitivity is uninformative.
 - **B. Exon-intron split (EISA), F3-F4 vs F0-F1.** 12,010 genes with intronic signal. Intronic change follows exonic change: Spearman 0.949; slope 0.92 over 4,346 replicated genes. EISA (limma on donor log2 exon/intron, D-B-1): 3,008 hits at BH q < 0.05 (permutation p 0.005), mostly small (125 with >= 1.41-fold exon/intron change); the up/down balance depends on the TMM library set and is not interpreted. Of the 7,214 replicated Catalog F3-F4 genes: 2,900 transcriptional, 1,278 post-transcriptional (median 0.18 log2), 168 undetermined, 2,868 without usable intronic signal. GNMT, MAT1A, COL1A1, IGFBP7, TNFSF10 and LUM: intronic change 90-113% of exonic. Reading [Inference]: stage changes are mainly changes in transcription in the tissue, including change in cell mix; EISA cannot separate the two.
 - **C. Figure 3E fixed k6 NMF axes.** Release transport reproduces discovery scores (max difference 5e-16). F3-F4 vs F0-F1 activity, one-sided in the discovery direction, Holm over 5 (1,000 permutations): P1 Inflammatory-EMT 1.34, P2 Hepatocyte-Metabolic -1.41, P3 Fibrotic-ECM 1.57, P4 Unresolved -1.31, all Holm p 0.005; F2, F3 and F4 activities all have the discovery sign and the same stage order. P5 Noncoding is not interpretable (discovery F3-F4 effect -0.01; protocol-sensitive). Batch shift for the new protocol: within-batch Spearman with zero-shift scores >= 0.993 (D-C-1). Independent recompute of A, B and C reproduces all counts exactly and continuous values within 1e-12 (`verify_ssx-20261102T153423Z/`).
+
+## Recurring example genes in Figures 2 to 5 (XMOD2; working panels 2026-11-13, not adopted)
+
+Eight genes are labeled in Figures 2B, 2H (new), 3F, 3G, 4D (through their programs), 4E (new forest) and 5A: PPM1K, BCKDHA, BCKDHB, DBT, ADH1B, CFHR4, CFHR5, HKDC1. Gene list: `scripts/figures/example_genes.tsv`. They were chosen post hoc from the cross-modality screen (`Analysis/Hypotheses/XMOD1-20261112T202307Z/`), so every number below is exploratory. No Catalog class, threshold or adopted claim changes. Panels and code: `figures/candidates/example-genes-20261113T151052Z/`. Analysis: `Analysis/Hypotheses/XMOD2-20261113T151052Z/` (PRESPEC.md hashed before outcomes; NOTE_selection_overlap.md).
+
+- **Genetics (2H; values from the refit COLOC table and the Catalog).** SuSiE PP.H4: PPM1K 0.948 (GGT), CFHR4 0.978 (ALT), CFHR5 0.730 (ALT), HKDC1 0.988 (ALT and AST). ADH1B: fine-mapped missense variant 4:100239319:T:C, PIP 1.0, liver-fat GWAS; no SuSiE COLOC value. BCKDHA, BCKDHB, DBT: no supported signal. HKDC1 lead-variant z: cirrhosis -4.69, liver fat -1.56. CFHR5 cirrhosis z 2.71.
+- **Bulk (3F, 3G).** All eight keep their sign in SteatoSITE (discovery / SteatoSITE log2FC, F3-F4 vs F0-F1): PPM1K -0.24 / -0.18; BCKDHA -0.39 / -0.26; BCKDHB -0.21 / -0.53; DBT -0.14 / -0.36; ADH1B -0.28 / -0.61; CFHR4 -0.35 / -0.78; CFHR5 -0.35 / -0.65; HKDC1 +1.55 / +2.37. After cell-fraction adjustment the seven lower genes are -0.07 to +0.13 and HKDC1 is +0.80.
+- **Hepatocytes (4E).** Same model as the GNMT/MAT1A/CYP2C19 analysis (CONF1 C2/C5), gene vector changed; unit, donor; all eight pass the 0.80 detection gate in all five cohorts; the unchanged three-gene run reproduces CONF1 exactly. GSE289173 (23 control, 18 steatohepatitis donors; the only cohort not used in gene selection; Holm over 8): PPM1K -0.80 (95% CI -1.16 to -0.45), BCKDHA -0.51 (-0.74 to -0.28), BCKDHB -0.43 (-0.77 to -0.10), DBT -0.54 (-0.75 to -0.33), CFHR5 -1.26 (-1.86 to -0.66), HKDC1 +4.68 (3.06 to 6.30), all Holm p 8e-5; ADH1B -0.46 (-0.94 to 0.02), Holm p 0.002; CFHR4 -0.34 (-0.94 to 0.26), Holm p 0.11. Four-cohort combined T (79 donors; reuses the cohorts behind the within-hepatocyte call, so not independent for PPM1K, BCKDHB, CFHR4, CFHR5, HKDC1): Holm < 0.05 for PPM1K, BCKDHB, CFHR4, HKDC1; CFHR5 0.056, BCKDHA 0.088, DBT 0.39, ADH1B 0.39. BCKDHA is +0.23 in GSE298719 (heterogeneity I2 0.75).
+- **Programs (4D).** Stage coefficient to composition-adjusted coefficient: Complement (contains CFHR4) -0.519 to -0.029; Nucleoside catabolism (BCKDHB) -0.516 to -0.033; NRF2 antioxidant (HKDC1) 0.401 to 0.117. PPM1K, BCKDHA, DBT and CFHR5 are in no program.
+- **Protein (5A; mRNA / protein log2FC, protein BH p).** CFHR5 -0.56 / -0.79, 0.015; ADH1B -0.27 / -0.41, 0.022; BCKDHB -0.29 / -0.29, 0.025; DBT -0.21 / -0.24, 0.028; BCKDHA +0.11 / -0.25, 0.026 (opposite sign); PPM1K -0.48 / -0.70, 0.17; CFHR4 -0.51 / -0.33, 0.54; HKDC1 +1.07 / +0.50, 0.79.
+- **Limits.** CFHR4 is not supported in the independent hepatocyte cohort or in protein. HKDC1 protein is not significant. ADH1B has no snRNA lineage call and its GSE289173 interval includes zero. None of the eight is on the Xenium panel. Novelty of CFHR4/5 and HKDC1 was checked in PubMed abstracts only (`XMOD1-20261112T202307Z/NOVELTY_CHECK.md`).
+

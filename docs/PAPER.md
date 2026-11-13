@@ -30,11 +30,16 @@ Abstract numbers:
 Figure logic, one sentence each:
 
 1. Figure 1 is the user's plate and is unchanged.
-2. Figure 2: ALT, liver fat and cirrhosis share a minority of their
-   heritability; a few ALT loci are also associated with liver fat and colocalize with lipid
-   species; most ALT loci raise hepatocyte proteins in plasma without a
-   detected liver-fat or cirrhosis effect; GPT is an ALT-only locus; TNFSF10 is
-   the worked example. Sequence-supported candidate variants appear only as an
+2. Figure 2: fine-mapping and liver-eQTL colocalization narrow liver-trait GWAS
+   signals to candidate genes for testing in other measurements (28,233 Catalog
+   genes, 18,720 testable, 429 colocalized, 419 in bulk RNA); panels qualify each
+   candidate (PP.H4, lead consequence, ancestry, trait source) and show which
+   measurements can test it next (bulk RNA, single-cell RNA, liver and plasma
+   proteome, CosMx). Colocalization marks a gene for follow-up, not a disease
+   gene. Enzyme-locus MASLD liability, lipid and hepatocyte-protein results,
+   ALT heritability partition and TNFSF10 are supplementary (Figure S2Z to
+   S2AB, Supplementary Note 22), decided by the user 2026-11-12.
+   Sequence-supported candidate variants appear only as an
    accessibility annotation beside measured evidence: 126 of 4,639
    credible-set members, of which about 101 are expected from the rule alone.
    No predicted gene, no predicted expression direction, never "causal
@@ -442,6 +447,20 @@ what is inherited, what state is remodeled in established disease, where that
 state is organized in tissue, and which experiment resolves the remaining
 mechanism. Two outcome-blind examples carry that sequence without being
 combined into a modality score.
+
+**Working addition, 2026-11-13 (panels installed, not adopted).** Four example
+sets are labeled in the same way in Figures 2 to 5 so a reader can follow them
+across modalities: BCAA catabolism (PPM1K, BCKDHA, BCKDHB, DBT) and ADH1B as
+known biology; CFHR4/CFHR5 and HKDC1 as less-studied candidates. They were
+chosen after all modalities had been examined (XMOD1, exploratory), so they are
+illustrations, not outcome-blind examples and not tests. Panels: 2B labels, new
+2H (genetic evidence matrix), 3F and 3G labels, 4D program labels, 4E
+(hepatocyte forest for the eight genes; the GNMT/MAT1A/CYP2C19 forest is now
+Figure S4AG) and 5A labels. HKDC1 is a colocalized gene whose lead allele has
+the opposite sign for cirrhosis and liver fat; it is not a risk gene. CFHR4 is
+not supported in the one hepatocyte cohort that was not used to choose it.
+Numbers are in `docs/RESULTS.md` (XMOD2). The body text of Figures 2 to 5 and
+the abstract still name the earlier examples.
 
 1. **A GNMT locus-to-state bridge.** In the current official genetics release,
    GNMT has a single-signal shared-signal observation for direct NAFLD, with an
