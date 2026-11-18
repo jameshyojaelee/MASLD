@@ -1,3 +1,5 @@
+> **SUPERSEDED BY v1.2.1**: `masld-severity-v1.2` is preserved unchanged as a historical release; `kleiner.py` is retired in favor of `kleiner_sensitivity.py` in [`../masld-severity-v1.2.1/`](../masld-severity-v1.2.1/). All `score.py` weights and OOD predictions in v1.2.1 are bitwise identical to v1.2.
+
 # masld-severity-v1.2
 
 A latent fibrosis severity score for bulk liver RNA-seq, plus (v1.2) an activity ordering and

@@ -115,7 +115,7 @@ m=("SGLT2 inhibitor","empagliflozin","SLC5A2","inhibit","CHEMBL2107830")
 row(*m,"NCT04642261","4","98","52","nondiabetic MASLD, MRI-PDFF >=5%","pdff","improved","median MRI-PDFF change -2.49% vs -1.43%","p=0.025","38536017","10.1097/HEP.0000000000000855",AR,"primary endpoint","yes")
 row(*m,"NCT04642261","4","98","52","nondiabetic MASLD, MRI-PDFF >=5%","alt","not_improved","ALT drop >=17 U/L: 16.3% vs 12.2%","p=0.564","38536017","10.1097/HEP.0000000000000855",AR,"secondary responder endpoint, not mean ALT change","yes")
 # ---- MSDC-0602K
-m=("insulin sensitizer (MPC modulator per candidate list)","MSDC-0602K",NV,"inhibit (not verified)","CHEMBL4593380 (no mechanism)")
+m=("insulin sensitizer (MPC modulator)","MSDC-0602K",NV,"inhibit (not verified)","CHEMBL4593380 (no mechanism)")
 p=("NCT02784444","2b","392","52","biopsy NASH, fibrosis F1-F3")
 row(*m,*p,"mash_resolution","not_improved","no significant effect (no value in abstract)",NV,"31697972","10.1016/j.jhep.2019.10.023",AR,"EMMINENCE secondary; abstract names no molecular target; primary (NAS-based) not met, 250 mg OR 1.64 (0.83 to 3.27)","yes")
 row(*m,*p,"fibrosis_improvement","not_improved","no significant effect (no value in abstract)",NV,"31697972","10.1016/j.jhep.2019.10.023",AR,"EMMINENCE secondary","yes")
@@ -123,7 +123,7 @@ row(*m,*p,"alt","improved_unadjusted","two highest doses significantly reduced l
 # ---- KHK
 row("KHK inhibitor","PF-06835919","KHK","inhibit","CHEMBL4549658","NCT03969719","2","164","16","NAFLD (MRI-PDFF >=8%) with T2D on metformin","pdff","improved","300 mg LS mean % change in whole liver fat -19.13% vs placebo -5.26%","90% CI -25.51 to -12.20 (drug arm); P=0.0288 vs placebo","36515213","10.1111/dom.14946","PubMed abstract; registry record (NCT matched by drug, n=164, 16 weeks; not stated in abstract)","primary endpoint; ChEMBL has no mechanism; KHK from abstract text and ChEMBL synonym 'ketohexokinase inhibitor 1'","yes")
 # ---- FGF19
-row("FGF19 analogue","aldafermin","FGF1;FGFR4;KLB","activate","CHEMBL4298055","NCT03912532","2b","171","24","biopsy NASH, fibrosis F2-F3","fibrosis_improvement","not_improved","3 mg 30% vs 19%; difference 10 percentage points","90% CI -9 to 30, p=0.12; dose-response p=0.55","35325622","10.1016/S2468-1253(22)00017-6",AR,"ALPINE 2/3 primary; ChEMBL target CHEMBL4630720 lists FGF1 (P05230) with KLB, copied as listed","yes")
+row("FGF19 analogue","aldafermin","FGF19;FGFR4;KLB","activate","CHEMBL4298055","NCT03912532","2b","171","24","biopsy NASH, fibrosis F2-F3","fibrosis_improvement","not_improved","3 mg 30% vs 19%; difference 10 percentage points","90% CI -9 to 30, p=0.12; dose-response p=0.55","35325622","10.1016/S2468-1253(22)00017-6",AR,"ALPINE 2/3 primary; corrected FGF19/FGFR4/KLB receptor complex (ChEMBL target CHEMBL4630720 mis-indexed P05230/FGF1 instead of O95750/FGF19)","yes")
 # ---- A3AR
 row("adenosine A3 receptor agonist","namodenoson","ADORA3","activate","CHEMBL431733","NCT02927314","2","60","12","NAFLD with ALT >=60 IU/L","alt","not_improved","25 mg twice daily ALT change vs placebo (no value in abstract)","P=0.066","34671996","10.1111/apt.16664",AR,"main efficacy endpoint; AST P=0.03","yes")
 # ---- AOC3

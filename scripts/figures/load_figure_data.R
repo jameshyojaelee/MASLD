@@ -1375,16 +1375,21 @@ load_drug_validation_table <- function() {
   dt
 }
 
-# --- Protein differential results (v2 corrected contrasts) ---
+# --- Protein differential results (adjusted PXD051911 liver DIA-MS) ---
 .prot_diff_cache <- NULL
 load_protein_differential <- function() {
   if (!is.null(.prot_diff_cache)) return(.prot_diff_cache)
-  # Prefer v3 (multi-contrast); fall back to v2, then v1
-  f <- file.path(PROTEOMICS_DIR, "protein_differential_results_v3.csv")
-  if (!file.exists(f)) f <- file.path(PROTEOMICS_DIR, "protein_differential_results_v2.csv")
-  if (!file.exists(f)) f <- file.path(PROTEOMICS_DIR, "protein_differential_results.csv")
-  if (!file.exists(f)) { message("WARNING: protein differential results not found"); return(NULL) }
+  # Repointed away from legacy unadjusted/unnormalized protein_differential_results_v3.csv (N22).
+  f <- file.path(BASE, "Analysis/Multimodal_Program_Projection/results/proteomics_20261118/protein_de_adjusted.tsv")
+  if (!file.exists(f)) {
+    f <- file.path(BASE, "Analysis/Multimodal_Program_Projection/results/proteomics/protein_de_adjusted.tsv")
+  }
+  if (!file.exists(f)) {
+    message("WARNING: adjusted protein differential results (protein_de_adjusted.tsv) not found")
+    return(NULL)
+  }
   dt <- fread(f)
+  if (!"dataset" %in% names(dt)) dt[, dataset := "PXD051911"]
   .prot_diff_cache <<- dt
   dt
 }

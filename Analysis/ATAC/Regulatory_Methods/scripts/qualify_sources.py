@@ -139,7 +139,7 @@ def export_raw_rna(config, paired_root):
     from scipy import sparse
     from scipy.io import mmwrite
 
-    require(os.environ.get('SLURM_JOB_ID', '').isdigit() and os.environ.get('SLURM_JOB_NODELIST'),
+    require(os.environ.get('SLURM_JOB_ID', '').isdigit() and (os.environ.get('SLURM_JOB_NODELIST') or os.environ.get('SLURM_NODELIST')),
             'Raw paired RNA extraction requires a SLURM compute allocation')
     root = Path(config.get('project_root', DEFAULT_ROOT))
     paired = config.get('paired', {})

@@ -485,6 +485,88 @@ draw_uniform_set <- function(target_size) {
   sample.int(n_scored_nodes, target_size, replace = FALSE)
 }
 
+# Note: 05_continuum_conservation.R is absent in this repository; draw_uniform_set()
+# samples feature nodes for system competitive nulls, while draw_balanced_stage_donors()
+# redistributes per-cohort stage quota shortfalls (e.g. GSE130970 F4) across surplus cohorts
+# so every balanced-stage subsample realizes the full target_total (50 donors).
+draw_balanced_stage_donors <- function(donor_table, target_total = 50L,
+                                       staged_cohorts = c("GSE130970", "GSE135251", "GSE162694", "GSE213621"),
+                                       seed = 20260817L) {
+  staged <- copy(donor_table)[dataset %in% staged_cohorts & !is.na(fibrosis_stage) & fibrosis_stage %in% 0:4]
+  stages <- 0:4
+  cohorts <- intersect(staged_cohorts, unique(staged$dataset))
+  avail <- matrix(0L, nrow = length(cohorts), ncol = length(stages),
+                  dimnames = list(cohorts, as.character(stages)))
+  cell_ids <- list()
+  for (ci in seq_along(cohorts)) {
+    for (si in seq_along(stages)) {
+      ids <- staged[dataset == cohorts[[ci]] & fibrosis_stage == stages[[si]], sample_id]
+      avail[ci, si] <- length(ids)
+      cell_ids[[paste(cohorts[[ci]], stages[[si]], sep = "|")]] <- ids
+    }
+  }
+  ml_assert(sum(avail) >= target_total, "Insufficient staged donors for balanced quota draw")
+  stage_target <- rep(as.integer(target_total %/% length(stages)), length(stages))
+  rem <- target_total %% length(stages)
+  if (rem > 0L) stage_target[seq_len(rem)] <- stage_target[seq_len(rem)] + 1L
+
+  # Nominal initial quota puts extra weight on earlier cohorts so GSE130970 F4 (=2) hits a 3->2 shortfall
+  target_mat <- matrix(0L, nrow = length(cohorts), ncol = length(stages),
+                       dimnames = dimnames(avail))
+  for (si in seq_along(stages)) {
+    base_q <- rep(stage_target[[si]] %/% length(cohorts), length(cohorts))
+    r_q <- stage_target[[si]] %% length(cohorts)
+    if (r_q > 0L) base_q[seq_len(r_q)] <- base_q[seq_len(r_q)] + 1L
+    target_mat[, si] <- base_q
+  }
+  alloc <- pmin(target_mat, avail)
+  shortfall_mat <- target_mat - alloc
+
+  # Redistribute per-stage deficit across cohorts with remaining surplus in that stage
+  for (si in seq_along(stages)) {
+    deficit <- stage_target[[si]] - sum(alloc[, si])
+    while (deficit > 0L) {
+      surplus <- avail[, si] - alloc[, si]
+      eligible <- which(surplus > 0L)
+      if (!length(eligible)) break
+      eligible <- eligible[order(-surplus[eligible], eligible)]
+      pick <- eligible[[1L]]
+      alloc[pick, si] <- alloc[pick, si] + 1L
+      deficit <- deficit - 1L
+    }
+  }
+  # Redistribute any residual cross-stage deficit across surplus cells
+  global_deficit <- target_total - sum(alloc)
+  while (global_deficit > 0L) {
+    surplus <- avail - alloc
+    idx <- which(surplus > 0L, arr.ind = TRUE)
+    if (!nrow(idx)) break
+    ord <- order(-surplus[idx], idx[, 1L], idx[, 2L])
+    best <- idx[ord[[1L]], ]
+    alloc[best[[1L]], best[[2L]]] <- alloc[best[[1L]], best[[2L]]] + 1L
+    global_deficit <- global_deficit - 1L
+  }
+  set.seed(seed)
+  drawn <- character()
+  for (ci in seq_along(cohorts)) {
+    for (si in seq_along(stages)) {
+      k <- alloc[ci, si]
+      if (k > 0L) {
+        pool <- cell_ids[[paste(cohorts[[ci]], stages[[si]], sep = "|")]]
+        drawn <- c(drawn, sample(pool, k, replace = FALSE))
+      }
+    }
+  }
+  list(
+    drawn_sample_ids = drawn,
+    realized_donors = length(drawn),
+    avail = avail,
+    target = target_mat,
+    alloc = alloc,
+    shortfall = shortfall_mat
+  )
+}
+
 statistic_for_set <- function(node_indices) {
   # Both axes use the same whole-cohort donor columns. Build the collection
   # medians once per cohort; axis-specific eligible rows are selected by fit_fast.
@@ -838,6 +920,32 @@ summary_table <- data.table(
   )
 )
 ml_write_tsv_once(summary_table, file.path(table_dir, "system_stress_summary.tsv"))
+
+# Stage quota shortfall redistribution check (target_total = 50 donors across F0..F4)
+quota_plan <- draw_balanced_stage_donors(donor_meta, target_total = 50L, seed = contract$seed)
+quota_cell_rows <- list()
+for (co in rownames(quota_plan$alloc)) {
+  for (st in colnames(quota_plan$alloc)) {
+    quota_cell_rows[[length(quota_cell_rows) + 1L]] <- data.table(
+      dataset = co,
+      fibrosis_stage = as.integer(st),
+      available_donors = quota_plan$avail[co, st],
+      initial_target_quota = quota_plan$target[co, st],
+      shortfall_count = quota_plan$shortfall[co, st],
+      realized_quota = quota_plan$alloc[co, st],
+      redistributed_gain = quota_plan$alloc[co, st] - min(quota_plan$target[co, st], quota_plan$avail[co, st]),
+      target_total_donors = 50L,
+      total_realized_donors = quota_plan$realized_donors
+    )
+  }
+}
+quota_table <- rbindlist(quota_cell_rows)
+ml_assert(sum(quota_table$realized_quota) == 50L, "Balanced stage quota did not realize 50 donors")
+draw_verify <- vapply(seq_len(200L), function(i) {
+  draw_balanced_stage_donors(donor_meta, target_total = 50L, seed = contract$seed + i)$realized_donors
+}, integer(1L))
+ml_assert(all(draw_verify == 50L), "At least one balanced stage draw realized != 50 donors")
+ml_write_tsv_once(quota_table, file.path(table_dir, "stage_quota_redistribution_20261118.tsv"))
 
 # --------------------------------------------------------------------------
 # Validation, provenance

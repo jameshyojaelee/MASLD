@@ -14,26 +14,36 @@ info <- data.frame(group=factor(selected$group_binary,levels=c("Control","Diseas
 design <- model.matrix(~group,info)
 stopifnot(qr(design)$rank==2,ncol(design)==2)
 dge <- dge_all[,match(selected$sample_id,colnames(dge_all))]
-v <- voomWithQualityWeights(dge,design,plot=FALSE)
+keep_nz <- rowSums(dge$counts > 0) >= 3L
+dge_sub <- dge[keep_nz,,keep.lib.sizes=FALSE]
+v <- voomWithQualityWeights(dge_sub,design,plot=FALSE)
 stopifnot(all(is.finite(v$targets$sample.weights)),all(v$targets$sample.weights>0))
 f <- eBayes(lmFit(v,design))
 t <- topTable(f,coef="groupDisease",number=Inf,sort.by="none")
 prior <- fread(file.path(old,"cohort_disease_all_gene_results.tsv"))
 annotation <- unique(prior[,.(gene_id_versioned,gene_id_base,gene_name,gene_type,chromosome,is_canonical_chromosome,display_biotype)])
 annotation <- annotation[match(rownames(dge),gene_id_versioned)]
-restored <- cbind(annotation,data.table(dataset="GSE126848",contrast="Disease_vs_Control",logFC=t[rownames(dge),"logFC"],P.Value=t[rownames(dge),"P.Value"],FDR=p.adjust(t[rownames(dge),"P.Value"],"BH"),t=t[rownames(dge),"t"],n_control=23,n_disease=7,n_participants=30,covariates="none_constant_sex_omitted",bh_family_size=nrow(dge)))
+genes_all <- rownames(dge)
+genes_sub <- rownames(dge_sub)
+ok <- genes_all %in% genes_sub
+n_bh <- length(genes_sub)
+logfc <- rep(NA_real_, length(genes_all)); logfc[ok] <- t[genes_sub,"logFC"]
+pval <- rep(NA_real_, length(genes_all)); pval[ok] <- t[genes_sub,"P.Value"]
+fdr <- rep(NA_real_, length(genes_all)); fdr[ok] <- p.adjust(t[genes_sub,"P.Value"],"BH")
+tstat <- rep(NA_real_, length(genes_all)); tstat[ok] <- t[genes_sub,"t"]
+restored <- cbind(annotation,data.table(dataset="GSE126848",contrast="Disease_vs_Control",logFC=logfc,P.Value=pval,FDR=fdr,t=tstat,n_control=23,n_disease=7,n_participants=30,covariates="none_constant_sex_omitted",bh_family_size=n_bh))
 combined <- rbind(prior[dataset!="GSE126848"],restored)
 stopifnot(nrow(combined)==5*24115,all(combined[,uniqueN(gene_id_versioned),by=dataset]$V1==24115))
 fwrite(combined,file.path(out,"cohort_disease_all_gene_results.tsv"),sep="\t")
 audit <- fread(file.path(old,"cohort_disease_design_audit.tsv"))
-audit[dataset=="GSE126848", `:=`(estimable=TRUE,failure_reason=NA_character_,covariates="none_constant_sex_omitted",bh_family_size=24115)]
+audit[dataset=="GSE126848", `:=`(estimable=TRUE,failure_reason=NA_character_,covariates="none_constant_sex_omitted",bh_family_size=n_bh)]
 fwrite(audit,file.path(out,"cohort_disease_design_audit.tsv"),sep="\t")
 fwrite(selected,file.path(out,"GSE126848_selected_units.tsv"),sep="\t")
 fwrite(data.table(sample_id=selected$sample_id,quality_weight=v$targets$sample.weights),file.path(out,"GSE126848_quality_weights.tsv"),sep="\t")
 can <- fread(file.path(arm,"deg_results.csv"))[,.(gene_id_versioned=gene,full_logFC=logFC,canonical_deg=padj<.05 & abs(logFC)>.5)]
 j <- merge(combined,can,by="gene_id_versioned")
-s <- j[,.(n_tested=.N,n_calls=sum(FDR<.05 & abs(logFC)>.5),canonical_genes=sum(canonical_deg),same_direction_n=sum(canonical_deg & sign(logFC)==sign(full_logFC)),same_direction_fraction=mean(sign(logFC[canonical_deg])==sign(full_logFC[canonical_deg]))),by=dataset]
+s <- j[,.(n_tested=sum(!is.na(P.Value)),n_calls=sum(FDR<.05 & abs(logFC)>.5,na.rm=TRUE),canonical_genes=sum(canonical_deg),same_direction_n=sum(canonical_deg & sign(logFC)==sign(full_logFC),na.rm=TRUE),same_direction_fraction=mean(sign(logFC[canonical_deg])==sign(full_logFC[canonical_deg]),na.rm=TRUE)),by=dataset]
 fwrite(s,file.path(out,"cohort_summary.tsv"),sep="\t")
-fwrite(j[canonical_deg==TRUE,.(n_replication_cohorts=sum(FDR<.05 & abs(logFC)>.5 & sign(logFC)==sign(full_logFC))),by=gene_id_versioned],file.path(out,"canonical_cohort_replication.tsv"),sep="\t")
+fwrite(j[canonical_deg==TRUE,.(n_replication_cohorts=sum(FDR<.05 & abs(logFC)>.5 & sign(logFC)==sign(full_logFC),na.rm=TRUE)),by=gene_id_versioned],file.path(out,"canonical_cohort_replication.tsv"),sep="\t")
 writeLines(capture.output(sessionInfo()),file.path(out,"cohort_sessionInfo.txt"))
 print(s)

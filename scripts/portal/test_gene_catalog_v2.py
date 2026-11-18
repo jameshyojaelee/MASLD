@@ -252,7 +252,9 @@ class GeneCatalogV2Tests(unittest.TestCase):
             assay_applicability={"proteomics": "not_applicable"},
             open_mechanistic_question="lncrna_rna_product",
         )
-        self.assertIn("Cas13", catalog.experiment_for_record(record)["perturbation"])
+        perturbation = catalog.experiment_for_record(record)["perturbation"]
+        self.assertIn("RNA-targeting nuclease", perturbation)
+        self.assertNotIn("Cas13", perturbation)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ def write_table(p,rows):
  with p.open('w') as h:
   w=csv.DictWriter(h,fieldnames=list(rows[0]),delimiter='\t');w.writeheader();w.writerows(rows)
 with tempfile.TemporaryDirectory() as tmp:
- root=Path(tmp); execution=root/'execution'; motif=root/'motifs';motif.mkdir(); database=root/'database';database.write_bytes(b'fixture database identity')
+ root=Path(tmp).resolve(); execution=root/'execution'; motif=root/'motifs';motif.mkdir(); database=root/'database';database.write_bytes(b'fixture database identity')
  record=dict(database_path=str(database),database_sha256=hashlib.sha256(database.read_bytes()).hexdigest(),jaspar_package='fixture');write_table(motif/'jaspar_database.tsv',[record])
  networks=[];sources=[];coverage=[]
  for cohort in ['GSE244832','GSE281367','GSE296875']:

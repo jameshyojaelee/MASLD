@@ -5,7 +5,7 @@ root <- normalizePath(file.path(here, "../../../.."))
 source(file.path(root, "GWAS/finemapping/src/coloc_variant_identity.R"))
 stopifnot(identical(coloc_variant_identity_collisions(c("17:1", "17:2", "17:1")), c(1L, 3L)),
           length(coloc_variant_identity_collisions(c("17:1", "17:2"))) == 0L)
-fixture <- function(duplicate_gwas = FALSE, duplicate_eqtl = FALSE) {
+fixture <- function(duplicate_gwas = FALSE, duplicate_eqtl = FALSE, invalid_ld = FALSE) {
   env <- new.env(parent = globalenv())
   env$chr_num <- 17L
   env$ss_ld <- data.frame(position = if (duplicate_gwas) c(17164840L, 17164840L) else c(17164840L, 17164841L),
@@ -19,6 +19,7 @@ fixture <- function(duplicate_gwas = FALSE, duplicate_eqtl = FALSE) {
   env$OUT_DIR <- tempfile("identity-fixture-")
   dir.create(env$OUT_DIR)
   env$merged <- data.table(eqtl_pos = 17164840L, gwas_af = .2, eqtl_eaf = .8)
+  env$R_reg <- if (invalid_ld) matrix(c(1, 2, 2, 1), 2L, 2L) else diag(2)
   env$fit_called <- FALSE
   lines <- c('          snp_ids <- paste0(chr_num, ":", ss_ld$position)',
              'fit_called <- TRUE')
@@ -32,6 +33,9 @@ fixture <- function(duplicate_gwas = FALSE, duplicate_eqtl = FALSE) {
     stopifnot(any(endsWith(files, suffix)))
     collision <- fread(files[endsWith(files, suffix)])
     stopifnot(nrow(collision) == 2L)
+  } else if (invalid_ld) {
+    stopifnot(inherits(error, "error"), !env$fit_called, env$abf_pp4 == .8,
+      is.na(env$susie_pp4), env$susie_method == COLOC_INVALID_REFERENCE_LD_METHOD)
   } else {
     stopifnot(is.null(error), env$fit_called, env$susie_method == "abf_only", env$abf_pp4 == .8)
   }
@@ -39,4 +43,5 @@ fixture <- function(duplicate_gwas = FALSE, duplicate_eqtl = FALSE) {
 fixture(TRUE, FALSE)
 fixture(FALSE, TRUE)
 fixture(FALSE, FALSE)
-cat("PASS: all collisions retained, no ambiguous fit attempted, ABF preserved, both assay sides guarded, unique-ID path unchanged\n")
+fixture(FALSE, FALSE, TRUE)
+cat("PASS: all collisions and invalid-LD cases retained/rejected, no ambiguous fit attempted, ABF preserved, both assay sides guarded, unique-ID path unchanged\n")

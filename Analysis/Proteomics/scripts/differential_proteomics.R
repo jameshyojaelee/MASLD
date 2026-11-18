@@ -1,4 +1,21 @@
 #!/usr/bin/env Rscript
+# DEPRECATED LEGACY SCRIPT (N22): DO NOT USE FOR MANUSCRIPT OR RESOURCE OUTPUTS.
+# This legacy v3 script lacked quantile normalization, lacked batch/sex adjustment
+# in PXD051911, retained ; multi-gene shared PGs, and read superseded bulk comparators.
+# Use `Analysis/Multimodal_Program_Projection/scripts/02_proteomics_projection_20261118.R`
+# (outputting `protein_de_adjusted.tsv`) instead.
+if (Sys.getenv("ALLOW_LEGACY_UNADJUSTED_PROTEOMICS", "") != "1") {
+  stop(
+    paste(
+      "LEGACY DEPRECATED SCRIPT (N22): Analysis/Proteomics/scripts/differential_proteomics.R",
+      "is quarantined because it omits quantile normalization and acquisition-batch/sex",
+      "adjustment. Use 02_proteomics_projection_20261118.R -> protein_de_adjusted.tsv,",
+      "or set ALLOW_LEGACY_UNADJUSTED_PROTEOMICS=1 strictly for historical audit."
+    ),
+    call. = FALSE
+  )
+}
+
 # differential_proteomics.R — Multi-contrast proteomics validation (v3)
 #
 # Each proteomics dataset runs multiple contrasts matched to specific

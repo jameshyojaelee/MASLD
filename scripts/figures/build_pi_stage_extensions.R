@@ -171,25 +171,41 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
   if (!coef_name %in% colnames(design) || qr(design)$rank != ncol(design)) {
     return(unestimable("rank_deficient_design"))
   }
-  transformed <- voomWithQualityWeights(dge, design, plot = FALSE)
+  keep_nz <- rowSums(dge$counts > 0) >= 3L
+  dge_sub <- dge[keep_nz, , keep.lib.sizes = FALSE]
+  if (nrow(dge_sub) == 0L) {
+    return(unestimable("no_genes_with_3_nonzero_samples"))
+  }
+  transformed <- voomWithQualityWeights(dge_sub, design, plot = FALSE)
   fit <- eBayes(lmFit(transformed, design))
   coef_index <- match(coef_name, colnames(design))
   table <- topTable(fit, coef = coef_index, number = Inf, sort.by = "none")
   se <- fit$stdev.unscaled[, coef_index] * sqrt(fit$s2.post)
   critical <- qt(0.975, df = fit$df.total)
   names(critical) <- rownames(fit)
-  genes <- rownames(dge)
+  genes_all <- rownames(dge)
+  genes_sub <- rownames(dge_sub)
+  ok <- genes_all %in% genes_sub
+  n_bh <- length(genes_sub)
+  logfc <- rep(NA_real_, length(genes_all)); logfc[ok] <- table[genes_sub, "logFC"]
+  se_out <- rep(NA_real_, length(genes_all)); se_out[ok] <- se[genes_sub]
+  ci_low <- rep(NA_real_, length(genes_all)); ci_low[ok] <- table[genes_sub, "logFC"] - critical[genes_sub] * se[genes_sub]
+  ci_high <- rep(NA_real_, length(genes_all)); ci_high[ok] <- table[genes_sub, "logFC"] + critical[genes_sub] * se[genes_sub]
+  t_out <- rep(NA_real_, length(genes_all)); t_out[ok] <- table[genes_sub, "t"]
+  pval <- rep(NA_real_, length(genes_all)); pval[ok] <- table[genes_sub, "P.Value"]
+  fdr <- rep(NA_real_, length(genes_all)); fdr[ok] <- p.adjust(table[genes_sub, "P.Value"], method = "BH")
+  ave_out <- rep(NA_real_, length(genes_all)); ave_out[ok] <- table[genes_sub, "AveExpr"]
   result <- cbind(
     stage_annotation,
     data.table(
-      logFC = table[genes, "logFC"],
-      SE = se[genes],
-      CI_low = table[genes, "logFC"] - critical[genes] * se[genes],
-      CI_high = table[genes, "logFC"] + critical[genes] * se[genes],
-      t = table[genes, "t"],
-      P.Value = table[genes, "P.Value"],
-      FDR = p.adjust(table[genes, "P.Value"], method = "BH"),
-      AveExpr = table[genes, "AveExpr"],
+      logFC = logfc,
+      SE = se_out,
+      CI_low = ci_low,
+      CI_high = ci_high,
+      t = t_out,
+      P.Value = pval,
+      FDR = fdr,
+      AveExpr = ave_out,
       axis = axis_name,
       contrast = contrast_id,
       reference = reference,
@@ -199,10 +215,12 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
       n_samples = nrow(selected),
       n_cohorts = uniqueN(selected$dataset),
       covariates = "dataset+inferred_sex",
-      bh_family_size = nrow(dge)
+      bh_family_size = n_bh
     )
   )
-  if (nrow(result) != nrow(dge_all) || max(abs(result$FDR - p.adjust(result$P.Value, "BH"))) > 1e-12) {
+  ok_bh <- !is.na(result$P.Value)
+  if (nrow(result) != nrow(dge_all) || sum(ok_bh) != n_bh ||
+      max(abs(result$FDR[ok_bh] - p.adjust(result$P.Value[ok_bh], "BH"))) > 1e-12) {
     fail("Complete BH family check failed: ", contrast_id)
   }
   list(
@@ -212,7 +230,7 @@ fit_contrast <- function(sample_table, group_column, reference, comparison, cont
       comparison = comparison, n_reference = sum(selected$group == reference),
       n_comparison = sum(selected$group == comparison), n_samples = nrow(selected),
       n_cohorts = uniqueN(selected$dataset), covariates = "dataset+inferred_sex",
-      bh_method = "Benjamini-Hochberg", bh_family_size = nrow(dge),
+      bh_method = "Benjamini-Hochberg", bh_family_size = n_bh,
       biological_unit = if (unit_qualified) "source_linked_donor_or_conservative_identity_cluster" else "historical_library_record",
       estimable = TRUE, failure_reason = NA_character_
     ),
@@ -280,12 +298,12 @@ fit_cohort <- function(cohort_id) {
   selected[, group := factor(group_binary, levels = c("Control", "Disease"))]
   varying_sex <- uniqueN(selected$inferred_sex) > 1L
   cohort_covariates <- if (varying_sex) "inferred_sex" else "none_constant_sex_omitted"
-  record_cohort <- function(estimable, reason = NA_character_) {
+  record_cohort <- function(estimable, reason = NA_character_, bh_size = if (estimable) nrow(dge_all) else 0L) {
     cohort_design_audit[[cohort_id]] <<- data.table(
       dataset = cohort_id, contrast = "Disease_vs_Control", estimable = estimable,
       failure_reason = reason, n_control = sum(selected$group == "Control"),
       n_disease = sum(selected$group == "Disease"), n_analysis_units = nrow(selected),
-      covariates = cohort_covariates, bh_family_size = if (estimable) nrow(dge_all) else 0L)
+      covariates = cohort_covariates, bh_family_size = bh_size)
   }
   if (uniqueN(selected$group) != 2L || anyNA(selected$inferred_sex)) {
     record_cohort(FALSE, "group_not_estimable_or_missing_sex")
@@ -300,18 +318,31 @@ fit_cohort <- function(cohort_id) {
     record_cohort(FALSE, "rank_deficient_design")
     return(data.table())
   }
-  record_cohort(TRUE)
-  transformed <- voomWithQualityWeights(dge, design, plot = FALSE)
+  keep_nz <- rowSums(dge$counts > 0) >= 3L
+  dge_sub <- dge[keep_nz, , keep.lib.sizes = FALSE]
+  if (nrow(dge_sub) == 0L) {
+    record_cohort(FALSE, "no_genes_with_3_nonzero_samples")
+    return(data.table())
+  }
+  record_cohort(TRUE, bh_size = nrow(dge_sub))
+  transformed <- voomWithQualityWeights(dge_sub, design, plot = FALSE)
   fit <- eBayes(lmFit(transformed, design))
   table <- topTable(fit, coef = "groupDisease", number = Inf, sort.by = "none")
-  genes <- rownames(dge)
+  genes_all <- rownames(dge)
+  genes_sub <- rownames(dge_sub)
+  ok <- genes_all %in% genes_sub
+  n_bh <- length(genes_sub)
+  logfc <- rep(NA_real_, length(genes_all)); logfc[ok] <- table[genes_sub, "logFC"]
+  pval <- rep(NA_real_, length(genes_all)); pval[ok] <- table[genes_sub, "P.Value"]
+  fdr <- rep(NA_real_, length(genes_all)); fdr[ok] <- p.adjust(table[genes_sub, "P.Value"], "BH")
+  tstat <- rep(NA_real_, length(genes_all)); tstat[ok] <- table[genes_sub, "t"]
   cbind(stage_annotation, data.table(
     dataset = cohort_id, contrast = "Disease_vs_Control",
-    logFC = table[genes, "logFC"], P.Value = table[genes, "P.Value"],
-    FDR = p.adjust(table[genes, "P.Value"], "BH"), t = table[genes, "t"],
+    logFC = logfc, P.Value = pval,
+    FDR = fdr, t = tstat,
     n_control = sum(selected$group == "Control"), n_disease = sum(selected$group == "Disease"),
     n_participants = nrow(selected), covariates = cohort_covariates,
-    bh_family_size = nrow(dge)
+    bh_family_size = n_bh
   ))
 }
 cohort_results <- rbindlist(lapply(sort(unique(eligibility$dataset)), fit_cohort))

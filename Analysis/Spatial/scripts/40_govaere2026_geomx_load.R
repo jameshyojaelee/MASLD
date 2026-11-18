@@ -21,6 +21,14 @@
 #   geomx_loq_matrix.tsv        per-segment x gene boolean above-LOQ matrix
 #   geomx_load_summary.txt      QC + filter summary numbers
 # ============================================================================
+# QUARANTINED (N09 / GEOMX_DROPPED): stop immediately before package load / I/O
+stop(
+  paste(
+    "QUARANTINED (N09): Govaere 2026 GeoMx loader is permanently disabled pending a",
+    "verified AOI-to-DCC key. Do not run or emit geomx_de_* tables from unverified plate order."
+  ),
+  call. = FALSE
+)
 
 suppressPackageStartupMessages({
   library(NanoStringNCTools)
@@ -110,6 +118,18 @@ stopifnot(nrow(anno) == 80)
 productive_dccs <- dcc_meta[dcc_meta$is_productive, , drop = FALSE]
 productive_dccs <- productive_dccs[order(productive_dccs$plate_id,
                                          productive_dccs$well_tag), ]
+
+# QUARANTINED (N09 / GEOMX_DROPPED): Govaere 2026 GeoMx loading is disabled because
+# sequential plate-well assignment (`anno$Sample_ID <- productive_dccs$Sample_ID[...]`)
+# lacked a verified AOI-to-DCC key, invalidating sample identities, contrast direction,
+# and downstream consensus inputs.
+stop(
+  paste(
+    "QUARANTINED (N09): Govaere 2026 GeoMx loader is permanently disabled pending a",
+    "verified AOI-to-DCC key. Do not run or emit geomx_de_* tables from unverified plate order."
+  ),
+  call. = FALSE
+)
 
 if (nrow(productive_dccs) < nrow(anno)) {
   stop(sprintf("Only %d productive DCC files but %d annotation rows — cannot map",

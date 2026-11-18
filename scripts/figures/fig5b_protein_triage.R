@@ -32,9 +32,14 @@ OUTPUT_DIR <- if (nzchar(CANDIDATE_ROOT)) {
 # Protein estimates use quantile-normalized PXD051911 liver DIA-MS with
 # acquisition-batch, age, BMI, and sex adjustment. The atlas provides one
 # canonical bulk effect per HGNC symbol, avoiding ambiguous transcript collapse.
-prot <- fread(file.path(
-  BASE, "Analysis/Multimodal_Program_Projection/results/proteomics/protein_de_adjusted.tsv"
-))[, .(gene, protein_logFC = logFC, protein_padj = padj)]
+PROTEIN_DE <- Sys.getenv("FIG5B_PROTEIN_DE", "")
+if (!nzchar(PROTEIN_DE)) {
+  PROTEIN_DE <- file.path(BASE, "Analysis/Multimodal_Program_Projection/results/proteomics_20261118/protein_de_adjusted.tsv")
+  if (!file.exists(PROTEIN_DE)) {
+    PROTEIN_DE <- file.path(BASE, "Analysis/Multimodal_Program_Projection/results/proteomics/protein_de_adjusted.tsv")
+  }
+}
+prot <- fread(PROTEIN_DE)[, .(gene, protein_logFC = logFC, protein_padj = padj)]
 atlas <- fread(
   file.path(BASE, "RNA-seq/results/multi_evidence/multi_evidence_atlas.csv"),
   select = c("human_symbol", "ensembl_id", "bulk_logFC", "bulk_padj")
@@ -43,7 +48,10 @@ atlas <- fread(
 # of the atlas (whose bulk columns are the retired 846-sample fit). Joined by
 # unversioned Ensembl ID; the atlas supplies only the symbol -> Ensembl map
 # that the protein table (HGNC symbols) needs. Genes absent from the fit drop out.
-BULK_DEG <- Sys.getenv("FIG5B_BULK_DEG", "")
+BULK_DEG <- Sys.getenv(
+  "FIG5B_BULK_DEG",
+  file.path(BASE, "RNA-seq/results/manuscript_release/candidates/bulk-corrected-controls-20261008T162308Z/primary_source_controls/deg_results.csv")
+)
 if (nzchar(BULK_DEG)) {
   deg <- fread(BULK_DEG, select = c("gene", "symbol", "logFC", "padj"))
   deg[, ensembl_id := sub("\\..*$", "", gene)]

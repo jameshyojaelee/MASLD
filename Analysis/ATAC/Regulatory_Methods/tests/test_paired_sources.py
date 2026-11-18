@@ -24,7 +24,7 @@ class SourceQualificationTests(unittest.TestCase):
         self.assertFalse(result['FNIH']['qualified_for_MASH_replication'])
         self.assertEqual(result['FNIH']['independence_from_GSE244832'], 'unverified')
 
-    @unittest.skipUnless(os.environ.get('SLURM_JOB_ID'), 'RNA execution requires compute allocation')
+    @unittest.skipUnless(os.environ.get('SLURM_JOB_ID', '').isdigit() and (os.environ.get('SLURM_JOB_NODELIST') or os.environ.get('SLURM_NODELIST')), 'RNA execution requires compute allocation')
     def test_raw_rna_preserves_requested_cell_order_and_library_namespace(self):
         import h5py
         import numpy as np

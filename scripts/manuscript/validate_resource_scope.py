@@ -7,6 +7,7 @@ claim that scientific results are correct and performs no writes.
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from pathlib import Path
@@ -178,11 +179,95 @@ def require_order(text: str, tokens: list[str], label: str, errors: list[str]) -
         cursor = found
 
 
-def main() -> int:
+def check_latex_manuscript() -> tuple[list[str], dict[str, int]]:
+    """Scan active LaTeX sources under docs/manuscript/latex/**/*.tex.
+
+    Checks:
+      1. Missing \\includegraphics / \\paperpanel target files
+      2. Unresolved draft placeholders ({[}ref:, {[}panel letter, to be assigned)
+      3. Two-paper firewall (no Cas13 screen terms or retired public product names)
+    """
+    latex_root = ROOT / "docs/manuscript/latex"
+    findings: list[str] = []
+    counts = {
+        "files_scanned": 0,
+        "missing_graphics": 0,
+        "placeholders": 0,
+        "two_paper_violations": 0,
+    }
+    if not latex_root.is_dir():
+        findings.append("latex_missing_root:docs/manuscript/latex")
+        return findings, counts
+
+    placeholder_re = re.compile(
+        r"\{\[\}ref:|\[ref:|\{\[\}panel letter|\[panel letter|to be assigned",
+        flags=re.IGNORECASE,
+    )
+    graphics_re = re.compile(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}")
+    paperpanel_re = re.compile(r"\\paperpanel\{[^}]*\}\{[^}]*\}\{([^}]+)\}")
+    cas13_re = re.compile(r"\bcas13\b", flags=re.IGNORECASE)
+
+    for tex_path in sorted(latex_root.rglob("*.tex")):
+        rel = tex_path.relative_to(ROOT).as_posix()
+        # Exclude untouched archival Overleaf reference template under source/
+        if "/source/" in f"/{rel}/":
+            continue
+        counts["files_scanned"] += 1
+        raw_text = tex_path.read_text(errors="replace")
+        non_comment_lines = []
+        for lineno, line in enumerate(raw_text.splitlines(), 1):
+            stripped = line.lstrip()
+            if stripped.startswith("%"):
+                continue
+            non_comment_lines.append((lineno, line))
+
+        for lineno, line in non_comment_lines:
+            for pattern in (graphics_re, paperpanel_re):
+                for match in pattern.finditer(line):
+                    target = match.group(1).strip()
+                    if not target or target.startswith("#"):
+                        continue
+                    candidates = [
+                        latex_root / target,
+                        tex_path.parent / target,
+                    ]
+                    if Path(target).suffix == "":
+                        for ext in (".pdf", ".png", ".jpg", ".jpeg"):
+                            candidates.append(latex_root / f"{target}{ext}")
+                    if not any(c.is_file() for c in candidates):
+                        counts["missing_graphics"] += 1
+                        findings.append(
+                            f"latex_missing_graphic:{rel}:{lineno}:{target}"
+                        )
+
+            if placeholder_re.search(line):
+                counts["placeholders"] += 1
+                findings.append(f"latex_unresolved_placeholder:{rel}:{lineno}")
+
+            if cas13_re.search(line):
+                counts["two_paper_violations"] += 1
+                findings.append(f"latex_two_paper_boundary:{rel}:{lineno}:cas13")
+
+    return findings, counts
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--strict-latex",
+        action="store_true",
+        help="Treat LaTeX graphic, placeholder, and two-paper findings as hard validation errors.",
+    )
+    args = parser.parse_args(argv)
+
     errors: list[str] = []
     contract = json.loads(CONTRACT_PATH.read_text())
-    if len(contract.get("main_figure_roles", [])) != 7:
-        errors.append("main_figure_role_count_drift:expected_7")
+    if len(contract.get("main_figure_roles", [])) != 6:
+        errors.append("main_figure_role_count_drift:expected_6")
+    if "model_framework_and_transfer_limits" not in contract.get(
+        "supplementary_figure_roles", []
+    ):
+        errors.append("supplementary_figure_roles_missing:model_framework_and_transfer_limits")
     if contract.get("central_scientific_contribution") != (
         "inherited_genetic_variation_and_multicellular_disease_remodeling"
     ):
@@ -489,6 +574,9 @@ def main() -> int:
                 errors.append(f"retired_public_product_name:{relative}:{retired}")
 
     check_claim_firewall(errors)
+    latex_findings, latex_counts = check_latex_manuscript()
+    if args.strict_latex and latex_findings:
+        errors.extend(latex_findings)
 
     if errors:
         print("RESOURCE_SCOPE_VALIDATION\tFAIL")
@@ -500,6 +588,12 @@ def main() -> int:
     print(f"CONTRACT\t{contract['contract_id']}")
     print(f"REQUIRED_DOCUMENTS\t{len(required_documents)}")
     print(f"MAIN_FIGURE_ROLES\t{len(contract['main_figure_roles'])}")
+    print(f"SUPPLEMENTARY_FIGURE_ROLES\t{len(contract.get('supplementary_figure_roles', []))}")
+    print(f"LATEX_FILES_SCANNED\t{latex_counts['files_scanned']}")
+    print(f"LATEX_WARNINGS\t{len(latex_findings)}")
+    print(f"LATEX_MISSING_GRAPHICS\t{latex_counts['missing_graphics']}")
+    print(f"LATEX_PLACEHOLDERS\t{latex_counts['placeholders']}")
+    print(f"LATEX_TWO_PAPER_VIOLATIONS\t{latex_counts['two_paper_violations']}")
     print("PUBLIC_GENE_PRODUCT\tMASLD Gene Catalog")
     print("CAS13_FEEDBACK_TO_RESOURCE\tFALSE")
     print(f"PROMOTION_OWNER\t{contract['canonical_promotion_owner']}")

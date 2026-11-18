@@ -34,7 +34,9 @@
     "multicohort_disease_remodeling",
     "donor_aware_multicellular_programs",
     "molecular_physical_tissue_context",
-    "masld_gene_catalog",
+    "masld_gene_catalog"
+  ],
+  "supplementary_figure_roles": [
     "model_framework_and_transfer_limits"
   ],
   "resource_terminal_supplementary_plans": [

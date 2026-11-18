@@ -1558,7 +1558,7 @@ class CoordinatorContractTests(unittest.TestCase):
                 project
                 / "scripts/manuscript/program_context_v2/coordinator/prepared/DECISION"
             )
-            self.assertEqual(assert_safe_output(project, safe), safe.absolute())
+            self.assertEqual(assert_safe_output(project, safe), safe.parent.resolve() / safe.name)
             with self.assertRaisesRegex(CoordinatorContractError, "beneath"):
                 assert_safe_output(project, project / "elsewhere")
             safe.mkdir(parents=True)

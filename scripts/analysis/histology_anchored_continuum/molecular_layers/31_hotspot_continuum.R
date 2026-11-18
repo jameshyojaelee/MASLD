@@ -153,6 +153,22 @@ hotspot_run <- function() {
   registry <- fread(ml_resolve(contract$program_registry))
   membership_raw <- fread(ml_resolve(contract$program_membership))
   source_scores <- fread(file.path(source_root, "programs", "program_scores.tsv.gz"))
+  manifest <- fread(ml_resolve(contract$sample_manifest), na.strings = c("", "NA"))
+  ml_assert(all(c("sample_id", "dataset", "analysis_unit_id", "unit_evidence",
+                  "inferred_sex", "fibrosis_stage", "nas_score") %in% names(manifest)),
+            "Five-cohort sample manifest is missing required columns in 31_hotspot_continuum")
+  ml_assert(setequal(unique(source_scores$sample_id), manifest$sample_id),
+            "Hotspot source scores and contract sample manifest participant sets differ")
+  # Refresh participant covariates (including updated fibrosis_stage) from contract$sample_manifest
+  cov_cols <- intersect(c("analysis_unit_id", "unit_evidence", "inferred_sex", "fibrosis_stage", "nas_score"),
+                        names(source_scores))
+  if (length(cov_cols)) source_scores[, (cov_cols) := NULL]
+  source_scores <- merge(
+    source_scores,
+    manifest[, .(sample_id, dataset, analysis_unit_id, unit_evidence,
+                 inferred_sex, fibrosis_stage, nas_score)],
+    by = c("sample_id", "dataset"), all.x = TRUE, sort = FALSE
+  )
   source_testability <- fread(file.path(source_root, "programs", "program_testability.tsv"))
   axes <- ml_load_axes(contract)
   ml_assert(nrow(registry) == contract$program_family_size &&

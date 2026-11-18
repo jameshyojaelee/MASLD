@@ -550,6 +550,99 @@ nmf_run <- function() {
                    by = "outcome_id", all.x = TRUE)
   ml_write_tsv_once(windows, file.path(output_dir, "nmf_fixed_windows.tsv.gz"))
 
+  # Cohort- + sex-residualized k4/k6 NMF correlation diagnostics
+  nmf_residualize <- function(values, dt, include_stage = FALSE) {
+    terms <- character()
+    if (uniqueN(dt$dataset) >= 2L) terms <- c(terms, "factor(dataset)")
+    if (uniqueN(dt$inferred_sex[!is.na(dt$inferred_sex)]) >= 2L) terms <- c(terms, "factor(inferred_sex)")
+    if (include_stage && uniqueN(dt$fibrosis_stage[!is.na(dt$fibrosis_stage)]) >= 2L) {
+      terms <- c(terms, "factor(fibrosis_stage)")
+    }
+    if (!length(terms)) return(values)
+    fit_df <- data.frame(
+      y = values,
+      dataset = factor(dt$dataset),
+      inferred_sex = factor(dt$inferred_sex),
+      fibrosis_stage = factor(dt$fibrosis_stage)
+    )
+    as.numeric(residuals(lm(as.formula(paste("y ~", paste(terms, collapse = " + "))), data = fit_df)))
+  }
+
+  resid_axis_rows <- list()
+  cross_k_rows <- list()
+  scopes <- list(
+    all_five_cohorts = function(dt) rep(TRUE, nrow(dt)),
+    evaluation_all = function(dt) dt$dataset %in% evaluation,
+    evaluation_staged = function(dt) dt$dataset %in% evaluation & !is.na(dt$fibrosis_stage)
+  )
+  for (variant in unique(scores$score_variant)) {
+    sub_scores <- scores[score_variant == variant & is.finite(score_raw) & !is.na(inferred_sex)]
+    for (scope_name in names(scopes)) {
+      keep_scope <- scopes[[scope_name]](sub_scores)
+      sc <- sub_scores[keep_scope]
+      if (nrow(sc) < 20L) next
+      for (ax_name in as.character(contract$co_primary_axes)) {
+        ax_sub <- axes[axis_id == ax_name & is.finite(axis_raw), .(sample_id, axis_raw)]
+        merged <- merge(sc, ax_sub, by = "sample_id", all = FALSE)
+        for (out_id in unique(merged$outcome_id)) {
+          d <- merged[outcome_id == out_id]
+          if (nrow(d) < 20L) next
+          r_score <- nmf_residualize(d$score_raw, d, include_stage = FALSE)
+          r_axis <- nmf_residualize(d$axis_raw, d, include_stage = FALSE)
+          rs_score <- if (identical(scope_name, "evaluation_staged")) nmf_residualize(d$score_raw, d, include_stage = TRUE) else rep(NA_real_, nrow(d))
+          rs_axis <- if (identical(scope_name, "evaluation_staged")) nmf_residualize(d$axis_raw, d, include_stage = TRUE) else rep(NA_real_, nrow(d))
+          resid_axis_rows[[length(resid_axis_rows) + 1L]] <- data.table(
+            scope = scope_name,
+            score_variant = variant,
+            axis_id = ax_name,
+            outcome_id = out_id,
+            k = d$k[[1L]],
+            program_code = d$program_code[[1L]],
+            n_participants = nrow(d),
+            raw_pearson = suppressWarnings(cor(d$score_raw, d$axis_raw, method = "pearson")),
+            raw_spearman = suppressWarnings(cor(d$score_raw, d$axis_raw, method = "spearman")),
+            cohort_sex_residualized_pearson = suppressWarnings(cor(r_score, r_axis, method = "pearson")),
+            cohort_sex_residualized_spearman = suppressWarnings(cor(r_score, r_axis, method = "spearman")),
+            cohort_sex_stage_residualized_pearson = if (identical(scope_name, "evaluation_staged")) suppressWarnings(cor(rs_score, rs_axis, method = "pearson")) else NA_real_,
+            cohort_sex_stage_residualized_spearman = if (identical(scope_name, "evaluation_staged")) suppressWarnings(cor(rs_score, rs_axis, method = "spearman")) else NA_real_
+          )
+        }
+      }
+      wide_k <- dcast(sc, sample_id + dataset + inferred_sex + fibrosis_stage ~ outcome_id, value.var = "score_raw")
+      k4_cols <- sort(grep("^k4_", names(wide_k), value = TRUE))
+      k6_cols <- sort(grep("^k6_", names(wide_k), value = TRUE))
+      if (length(k4_cols) && length(k6_cols)) {
+        ok_rows <- complete.cases(wide_k[, c(k4_cols, k6_cols), with = FALSE])
+        wk <- wide_k[ok_rows]
+        if (nrow(wk) >= 20L) {
+          for (c4 in k4_cols) {
+            r4 <- nmf_residualize(wk[[c4]], wk, include_stage = identical(scope_name, "evaluation_staged"))
+            for (c6 in k6_cols) {
+              r6 <- nmf_residualize(wk[[c6]], wk, include_stage = identical(scope_name, "evaluation_staged"))
+              cross_k_rows[[length(cross_k_rows) + 1L]] <- data.table(
+                scope = scope_name,
+                score_variant = variant,
+                k4_outcome = c4,
+                k6_outcome = c6,
+                n_participants = nrow(wk),
+                raw_pearson = suppressWarnings(cor(wk[[c4]], wk[[c6]], method = "pearson")),
+                raw_spearman = suppressWarnings(cor(wk[[c4]], wk[[c6]], method = "spearman")),
+                cohort_residualized_pearson = suppressWarnings(cor(r4, r6, method = "pearson")),
+                cohort_residualized_spearman = suppressWarnings(cor(r4, r6, method = "spearman"))
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+  ml_write_tsv_once(rbindlist(resid_axis_rows, use.names = TRUE, fill = TRUE),
+                    file.path(output_dir, "nmf_cohort_residualized_correlations.tsv"))
+  if (length(cross_k_rows)) {
+    ml_write_tsv_once(rbindlist(cross_k_rows, use.names = TRUE, fill = TRUE),
+                      file.path(output_dir, "nmf_k4_k6_cohort_residualized_cross_correlations.tsv"))
+  }
+
   ml_write_session_info(file.path(output_dir, "sessionInfo.txt"))
   message("NMF_CONTINUUM_COMPLETE: ", output_dir)
 }

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Re-evaluate saved held-participant profiles beyond recorded histology.
 
-This is development evidence from the already inspected GSE267145 folds.  It
-does not refit the RNA model or claim a new external confirmation.
+WARNING (N22 legacy script): This script targets development evidence from
+already-inspected GSE267145 folds (`chromatin-stable-rrr-forms-20260908T192024Z`).
+In the original script, `fit_nuisance_ridge` included `0.0` (unregularized OLS)
+in `grid`, whereas production `run_transfer.py` patched the floor to `1e-4`.
+Zero-ridge is now guarded off by default (`grid` floors at `1e-4` unless
+`--allow-legacy-zero-ridge` is passed). It does not refit the RNA model or claim
+a new external confirmation.
 """
 import argparse
 import hashlib
@@ -10,6 +15,7 @@ import json
 import os
 import platform
 import sys
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -37,9 +43,18 @@ def fit_nuisance(train, test, y):
     return b @ coef
 
 
-def fit_nuisance_ridge(train, test, y, seed):
+def fit_nuisance_ridge(train, test, y, seed, allow_zero_ridge=False):
     """Select a whole-profile penalty inside the outer training participants."""
-    grid = (0.0, 0.01, 0.1, 1.0, 10.0, 100.0, float("inf"))
+    if allow_zero_ridge:
+        warnings.warn(
+            "chromatin_development.fit_nuisance_ridge using legacy 0.0 ridge grid point; "
+            "unregularized nuisance design can overfit/blow up under collinearity.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        grid = (0.0, 0.01, 0.1, 1.0, 10.0, 100.0, float("inf"))
+    else:
+        grid = (1e-4, 0.01, 0.1, 1.0, 10.0, 100.0, float("inf"))
     rng = np.random.default_rng(seed)
     split = np.array_split(rng.permutation(len(train)), 4)
     errors = np.zeros(len(grid))
@@ -186,7 +201,13 @@ def main(args):
             raise ValueError(f"Fold {f}: measured residual does not reproduce saved target")
         baseline[te] = ytr.mean(0)
         for name, c in covars.items():
-            conditional[name][te], chosen = fit_nuisance_ridge(c[tr], c[te], ytr, SEED+f)
+            conditional[name][te], chosen = fit_nuisance_ridge(
+                c[tr],
+                c[te],
+                ytr,
+                SEED + f,
+                allow_zero_ridge=getattr(args, "allow_legacy_zero_ridge", False),
+            )
             nuisance_choices.append({"outer_fold": int(f), "covariates": name,
                                      "inner_selected_penalty_fraction": chosen})
     ref = np.sum((truth-baseline)**2, axis=1)
@@ -259,4 +280,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument(
+        "--allow-legacy-zero-ridge",
+        action="store_true",
+        help="Opt in to the unregularized 0.0 point in fit_nuisance_ridge (legacy behavior).",
+    )
     main(parser.parse_args())

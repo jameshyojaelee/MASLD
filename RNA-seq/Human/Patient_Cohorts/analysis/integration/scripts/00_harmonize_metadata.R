@@ -208,7 +208,7 @@ harmonize <- function(dt, dataset) {
         sex            = NA_character_,
         age            = NA_real_,
         fibrosis_stage = fcase(
-          fibrotic_stage == "Control", 0L,
+          fibrotic_stage == "Control", NA_integer_,
           fibrotic_stage == "F0F1",    1L,
           fibrotic_stage == "F2",      2L,
           fibrotic_stage == "F3F4",    3L

@@ -31,23 +31,47 @@ bulk_voom_fit <- function(dge, sample_ids, design, coefficient, gene_annotation,
   ml_assert(identical(colnames(cohort_dge), sample_ids),
             paste0(cohort, " DGE could not be ordered to the model design"))
 
-  voom <- limma::voomWithQualityWeights(cohort_dge, design, plot = FALSE)
+  genes_all <- rownames(cohort_dge)
+  keep_nz <- rowSums(cohort_dge$counts > 0) >= 3L
+  ml_assert(sum(keep_nz) >= 1000L,
+            paste0(cohort, " ", analysis, " retains fewer than 1,000 genes after keep_nz"))
+  cohort_dge_nz <- cohort_dge[keep_nz, , keep.lib.sizes = TRUE]
+
+  voom <- limma::voomWithQualityWeights(cohort_dge_nz, design, plot = FALSE)
+  attr(voom, "full_genes") <- genes_all
+  attr(voom, "keep_nz") <- keep_nz
   fit <- limma::eBayes(limma::lmFit(voom, design))
   index <- match(coefficient, colnames(fit$coefficients))
-  se <- fit$stdev.unscaled[, index] * sqrt(fit$s2.post)
+  se_nz <- fit$stdev.unscaled[, index] * sqrt(fit$s2.post)
+
+  n_all <- length(genes_all)
+  nz_idx <- which(keep_nz)
+  beta_all <- rep(NA_real_, n_all)
+  se_all <- rep(NA_real_, n_all)
+  t_all <- rep(NA_real_, n_all)
+  p_all <- rep(NA_real_, n_all)
+  ave_all <- rep(NA_real_, n_all)
+  df_all <- rep(NA_real_, n_all)
+  beta_all[nz_idx] <- as.numeric(fit$coefficients[, index])
+  se_all[nz_idx] <- as.numeric(se_nz)
+  t_all[nz_idx] <- as.numeric(fit$t[, index])
+  p_all[nz_idx] <- as.numeric(fit$p.value[, index])
+  ave_all[nz_idx] <- as.numeric(fit$Amean)
+  df_all[nz_idx] <- as.numeric(fit$df.total)
+
   result <- data.table(
-    gene_id_versioned = rownames(fit$coefficients),
-    gene_id_base = ml_base_gene_id(rownames(fit$coefficients)),
+    gene_id_versioned = genes_all,
+    gene_id_base = ml_base_gene_id(genes_all),
     gene_name = gene_annotation$gene_name[
-      match(ml_base_gene_id(rownames(fit$coefficients)), gene_annotation$gene_id_base)
+      match(ml_base_gene_id(genes_all), gene_annotation$gene_id_base)
     ],
-    beta = as.numeric(fit$coefficients[, index]),
-    se = as.numeric(se),
-    t_value = as.numeric(fit$t[, index]),
-    raw_p_value = as.numeric(fit$p.value[, index]),
-    ave_expr = as.numeric(fit$Amean),
+    beta = beta_all,
+    se = se_all,
+    t_value = t_all,
+    raw_p_value = p_all,
+    ave_expr = ave_all,
     n_participants = length(sample_ids),
-    residual_df = as.numeric(fit$df.total),
+    residual_df = df_all,
     dataset = cohort,
     analysis = analysis,
     axis_id = axis_id,
@@ -56,8 +80,8 @@ bulk_voom_fit <- function(dge, sample_ids, design, coefficient, gene_annotation,
   )
   ml_assert(nrow(result) == nrow(dge) && !anyDuplicated(result$gene_id_base),
             paste0(cohort, " ", analysis, " did not return the complete gene family"))
-  ml_assert(all(is.finite(result$beta)) && all(is.finite(result$se)) &&
-              all(result$se > 0) && all(is.finite(result$raw_p_value)),
+  ml_assert(all(is.finite(result$beta[keep_nz])) && all(is.finite(result$se[keep_nz])) &&
+              all(result$se[keep_nz] > 0) && all(is.finite(result$raw_p_value[keep_nz])),
             paste0(cohort, " ", analysis, " returned invalid coefficients"))
   list(table = result, voom = voom, fit = fit)
 }
@@ -105,22 +129,38 @@ bulk_spline_timing <- function(voom, linear_fit, linear_design, axis_z,
   test <- bulk_nested_f_test(
     linear_sse, nonlinear_sse, df_difference, nonlinear_fit$df.residual
   )
-  genes <- rownames(nonlinear_fit$coefficients)
+  nz_genes <- rownames(nonlinear_fit$coefficients)
+  full_genes <- attr(voom, "full_genes")
+  if (is.null(full_genes)) full_genes <- nz_genes
+  nz_pos <- match(full_genes, nz_genes)
+  in_nz <- !is.na(nz_pos)
+
+  f_all <- rep(NA_real_, length(full_genes))
+  p_all <- rep(NA_real_, length(full_genes))
+  lin_sse_all <- rep(NA_real_, length(full_genes))
+  nonlin_sse_all <- rep(NA_real_, length(full_genes))
+  df_res_all <- rep(NA_real_, length(full_genes))
+  f_all[in_nz] <- as.numeric(test$f_value)[nz_pos[in_nz]]
+  p_all[in_nz] <- as.numeric(test$p_value)[nz_pos[in_nz]]
+  lin_sse_all[in_nz] <- as.numeric(linear_sse)[nz_pos[in_nz]]
+  nonlin_sse_all[in_nz] <- as.numeric(nonlinear_sse)[nz_pos[in_nz]]
+  df_res_all[in_nz] <- as.numeric(nonlinear_fit$df.residual)[nz_pos[in_nz]]
+
   result <- data.table(
-    gene_id_versioned = genes,
-    gene_id_base = ml_base_gene_id(genes),
+    gene_id_versioned = full_genes,
+    gene_id_base = ml_base_gene_id(full_genes),
     gene_name = gene_annotation$gene_name[
-      match(ml_base_gene_id(genes), gene_annotation$gene_id_base)
+      match(ml_base_gene_id(full_genes), gene_annotation$gene_id_base)
     ],
     dataset = cohort,
     axis_id = axis_id,
     spline_df = 3L,
     df_difference = df_difference,
-    f_value = as.numeric(test$f_value),
-    raw_p_value = as.numeric(test$p_value),
-    linear_sse = as.numeric(linear_sse),
-    nonlinear_sse = as.numeric(nonlinear_sse),
-    nonlinear_residual_df = as.numeric(nonlinear_fit$df.residual),
+    f_value = f_all,
+    raw_p_value = p_all,
+    linear_sse = lin_sse_all,
+    nonlinear_sse = nonlin_sse_all,
+    nonlinear_residual_df = df_res_all,
     n_participants = ncol(voom$E)
   )
   result[, axis_component := gene_id_base %in% signature_ids]
@@ -144,10 +184,13 @@ bulk_spline_timing <- function(voom, linear_fit, linear_design, axis_z,
   grid_basis <- predict(spline_basis, newx = grid_axis)
   spline_columns <- match(colnames(spline_basis), colnames(nonlinear_fit$coefficients))
   ml_assert(!anyNA(spline_columns), "Spline coefficients are absent from nonlinear fit")
-  predictions <- nonlinear_fit$coefficients[, spline_columns, drop = FALSE] %*%
+  nz_predictions <- nonlinear_fit$coefficients[, spline_columns, drop = FALSE] %*%
     t(grid_basis)
-  rownames(predictions) <- genes
-  colnames(predictions) <- sprintf("p%03d", round(100 * grid_probabilities))
+  predictions <- matrix(
+    NA_real_, nrow = length(full_genes), ncol = ncol(nz_predictions),
+    dimnames = list(full_genes, sprintf("p%03d", round(100 * grid_probabilities)))
+  )
+  predictions[in_nz, ] <- nz_predictions[nz_pos[in_nz], , drop = FALSE]
   list(table = result, predictions = predictions, grid_axis = grid_axis)
 }
 
@@ -224,11 +267,12 @@ bulk_continuum_membership <- function(meta_table, cohort_table, axes,
   ), by = .(gene_id_versioned, gene_id_base)]
   result <- merge(meta_wide, cohort_direction,
                   by = c("gene_id_versioned", "gene_id_base"), all.x = TRUE, sort = FALSE)
-  q_pass <- rowSums(as.data.frame(result[, ..expected_q]) < 0.05, na.rm = FALSE) == length(expected_q)
-  direction_pass <- rowSums(as.data.frame(result[, ..expected_direction]), na.rm = FALSE) ==
-    length(expected_direction)
+  q_mat <- as.data.frame(result[, ..expected_q])
+  q_pass <- !rowSums(is.na(q_mat)) & rowSums(q_mat < 0.05) == length(expected_q)
+  dir_mat <- as.data.frame(result[, ..expected_direction])
+  direction_pass <- !rowSums(is.na(dir_mat)) & rowSums(dir_mat) == length(expected_direction)
   result[, continuum_associated := !axis_component & q_pass & direction_pass &
-           four_model_direction_concordant]
+           (four_model_direction_concordant %in% TRUE)]
   result[, `:=`(
     membership_class = fifelse(
       axis_component, "axis_constituent_not_independently_testable",

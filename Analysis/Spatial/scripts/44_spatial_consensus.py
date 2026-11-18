@@ -248,14 +248,11 @@ def main():
     if not steatotic.empty:
         visium_dfs.append(steatotic)
 
-    # ---------- Dataset 2: Govaere2026 GeoMx SH-vs-PT ----------
-    geomx_pt = _load_geomx_cohort(
-        RESULTS_DIR / "govaere2026" / "geomx_de_sh_vs_pt.csv",
-        cohort_label="Govaere2026_GeoMx_SHvsPT",
-        dataset_label="Govaere2026_GeoMx",
-    )
-
-    all_dfs = visium_dfs + ([geomx_pt] if not geomx_pt.empty else [])
+    # ---------- Dataset 2: Govaere2026 GeoMx QUARANTINED (N09) ----------
+    # geomx_de_sh_vs_pt.csv came from 40_govaere2026_geomx_load.R sequential
+    # plate-well assignment without a verified AOI-to-DCC key and is excluded.
+    print("  [QUARANTINE N09] Skipping Govaere2026 GeoMx (unverified AOI-to-DCC key).")
+    all_dfs = visium_dfs
     if not all_dfs:
         print("ERROR: no per-cohort spatial inputs available.")
         sys.exit(1)
@@ -273,8 +270,8 @@ def main():
     print(f"  n_cohorts dist: {consensus['spatial_consensus_svg_n_cohorts'].value_counts().sort_index().to_dict()}")
     print(f"  direction dist: {consensus['spatial_consensus_direction'].value_counts().to_dict()}")
 
-    # ---------- Write ----------
-    out_path = RESULTS_DIR / "integration" / "spatial_consensus.csv"
+    # ---------- Write (clean 20261118 table; preserves historical spatial_consensus.csv) ----------
+    out_path = RESULTS_DIR / "integration" / "spatial_consensus_clean_20261118.csv"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     consensus.to_csv(out_path, index=False)
     print(f"\n  Saved: {out_path}")

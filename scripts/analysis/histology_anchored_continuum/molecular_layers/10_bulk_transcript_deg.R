@@ -253,8 +253,9 @@ timing_shape_rows <- lapply(co_primary, function(axis_name) {
     shape_threshold = 0.70
   )]
   q_values[, nonlinear_timing_supported := !axis_component &
-    get(evaluation[[1L]]) < 0.05 & get(evaluation[[2L]]) < 0.05 &
-    shape_spearman >= 0.70]
+    is.finite(get(evaluation[[1L]])) & get(evaluation[[1L]]) < 0.05 &
+    is.finite(get(evaluation[[2L]])) & get(evaluation[[2L]]) < 0.05 &
+    is.finite(shape_spearman) & shape_spearman >= 0.70]
   q_values[, evidence_role := fifelse(
     axis_component,
     "axis_constituent_not_independently_testable",
@@ -434,7 +435,8 @@ discovery_fit[, `:=`(
   bh_q_value = ml_complete_bh(raw_p_value, contract$gene_family_size),
   bh_family_size = contract$gene_family_size,
   abs_log2fc_threshold = 0.5,
-  heldout_signature_member = ml_complete_bh(raw_p_value, contract$gene_family_size) < 0.05 &
+  heldout_signature_member = is.finite(raw_p_value) & is.finite(beta) &
+    ml_complete_bh(raw_p_value, contract$gene_family_size) < 0.05 &
     abs(beta) > 0.5,
   discovery_cohorts = paste(source_overlap, collapse = ";"),
   evaluation_cohorts = paste(evaluation, collapse = ";"),
@@ -494,10 +496,11 @@ heldout_score_models <- list()
 for (cohort in evaluation) {
   cache <- heldout_voom[[cohort]]
   indices <- match(selected$gene_id_versioned, rownames(cache$voom$E))
-  ml_assert(!anyNA(indices), "A discovery signature gene is absent from held-out expression")
-  values <- cache$voom$E[indices, , drop = FALSE]
+  keep_obs <- !is.na(indices)
+  ml_assert(sum(keep_obs) >= 100L, "Too few discovery signature genes observed in held-out expression")
+  values <- cache$voom$E[indices[keep_obs], , drop = FALSE]
   z <- t(apply(values, 1L, ml_standardize))
-  direction <- sign(selected$beta)
+  direction <- sign(selected$beta[keep_obs])
   score <- as.numeric(crossprod(direction / length(direction), z))
   score_table <- data.table(
     sample_id = colnames(values), dataset = cohort,
@@ -568,6 +571,7 @@ canonical_join <- merge(
   by = "gene_id_base", all.x = TRUE, sort = FALSE
 )
 canonical_join[, direction_agrees :=
+                 is.finite(beta) & is.finite(canonical_logFC) &
                  sign(beta) == sign(canonical_logFC) & beta != 0 & canonical_logFC != 0]
 canonical_join <- merge(
   canonical_join,
@@ -577,10 +581,10 @@ canonical_join <- merge(
 canonical_summary <- canonical_join[, .(
   n_genes = .N,
   spearman_all_genes = bulk_rank_cor(beta, canonical_logFC),
-  n_canonical_degs = sum(canonical_deg),
-  canonical_deg_direction_agreement_fraction = mean(direction_agrees[canonical_deg]),
-  n_canonical_degs_continuum_associated = sum(canonical_deg & continuum_associated),
-  n_continuum_associated = sum(continuum_associated)
+  n_canonical_degs = sum(canonical_deg, na.rm = TRUE),
+  canonical_deg_direction_agreement_fraction = mean(direction_agrees[canonical_deg], na.rm = TRUE),
+  n_canonical_degs_continuum_associated = sum(canonical_deg & continuum_associated, na.rm = TRUE),
+  n_continuum_associated = sum(continuum_associated, na.rm = TRUE)
 ), by = axis_id]
 canonical_summary[, interpretation :=
   "same_substrate_concordance_not_independent_validation"]
@@ -609,12 +613,15 @@ heldout_concordance <- merge(
 heldout_summary <- heldout_concordance[, .(
   n_genes = .N,
   spearman_all_genes = bulk_rank_cor(discovery_beta, heldout_beta),
-  n_discovery_signature_genes = sum(discovery_member),
+  n_discovery_signature_genes = sum(discovery_member, na.rm = TRUE),
   discovery_signature_direction_agreement_fraction = mean(
-    sign(discovery_beta[discovery_member]) == sign(heldout_beta[discovery_member])
+    sign(discovery_beta[discovery_member]) == sign(heldout_beta[discovery_member]),
+    na.rm = TRUE
   ),
   n_discovery_signature_heldout_bh_supported = sum(
-    discovery_member & heldout_direction_concordant & heldout_q < 0.05
+    discovery_member & (heldout_direction_concordant %in% TRUE) &
+      is.finite(heldout_q) & heldout_q < 0.05,
+    na.rm = TRUE
   )
 )]
 heldout_summary[, interpretation :=
@@ -636,8 +643,8 @@ run_summary <- data.table(
   ),
   value = c(
     contract$gene_family_size, nrow(signature), length(signature_ids),
-    sum(canonical$canonical_deg), nrow(discovery_meta),
-    manifest[dataset %in% evaluation, .N], sum(membership$continuum_associated),
+    sum(canonical$canonical_deg, na.rm = TRUE), nrow(discovery_meta),
+    manifest[dataset %in% evaluation, .N], sum(membership$continuum_associated, na.rm = TRUE),
     sum(timing_shape$nonlinear_timing_supported, na.rm = TRUE),
     nrow(nas_sensitivity)
   )

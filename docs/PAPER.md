@@ -453,10 +453,11 @@ sets are labeled in the same way in Figures 2 to 5 so a reader can follow them
 across modalities: BCAA catabolism (PPM1K, BCKDHA, BCKDHB, DBT) and ADH1B as
 known biology; CFHR4/CFHR5 and HKDC1 as less-studied candidates. They were
 chosen after all modalities had been examined (XMOD1, exploratory), so they are
-illustrations, not outcome-blind examples and not tests. Panels: 2B labels, new
-2H (genetic evidence matrix), 3F and 3G labels, 4D program labels, 4E
-(hepatocyte forest for the eight genes; the GNMT/MAT1A/CYP2C19 forest is now
-Figure S4AG) and 5A labels. HKDC1 is a colocalized gene whose lead allele has
+illustrations, not outcome-blind examples and not tests. Main panels keep their
+existing content and only gain labels: 2B, 3F, 3G, 4D (program labels) and 5A.
+Figure 4E stays the GNMT/MAT1A/CYP2C19 forest. Two supporting panels are
+supplementary: the genetic evidence matrix (Figure S2AC) and the hepatocyte
+forest for the eight genes (Figure S4AG). HKDC1 is a colocalized gene whose lead allele has
 the opposite sign for cirrhosis and liver fat; it is not a risk gene. CFHR4 is
 not supported in the one hepatocyte cohort that was not used to choose it.
 Numbers are in `docs/RESULTS.md` (XMOD2). The body text of Figures 2 to 5 and

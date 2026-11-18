@@ -120,7 +120,7 @@ def assert_safe_output(project_root: Path, output_root: Path) -> Path:
     expected_parent = (
         project / "scripts/manuscript/program_context_v2/coordinator/prepared"
     ).resolve()
-    output = Path(output_root.absolute())
+    output = output_root.parent.resolve() / output_root.name
     try:
         relative = output.relative_to(expected_parent)
     except ValueError as error:

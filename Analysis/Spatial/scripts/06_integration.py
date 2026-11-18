@@ -78,11 +78,9 @@ def load_spatial_results():
     if cm.exists():
         results["cross_modality"] = pd.read_csv(cm, index_col=0)
 
-    # --- Govaere2026 spatial outputs (GeoMx regional + CosMx cell-type DE) ---
+    # --- Govaere2026 spatial outputs (CosMx cell-type DE only; GeoMx quarantined N09) ---
     govaere_dir = RESULTS_DIR / "govaere2026"
     gov_specs = {
-        "govaere_geomx_sh_vs_pt":  ("geomx_de_sh_vs_pt.csv", "gene_symbol"),
-        "govaere_geomx_sh_vs_ls":  ("geomx_de_sh_vs_ls.csv", "gene_symbol"),
         "govaere_cosmx_hep_mash":  ("cosmx_de_Hepatocyte_MASH_vs_noMASH.csv", "gene"),
         # KC pre-subcluster (loader 41 leiden res=0.5 merged MetMac+TransMac into KC)
         "govaere_cosmx_kc_mash":   ("cosmx_de_KC_MASH_vs_noMASH.csv",         "gene"),
@@ -108,8 +106,10 @@ def load_spatial_results():
     if sig_path.exists():
         results["govaere_signatures"] = pd.read_csv(sig_path, sep="\t")
 
-    # Multi-cohort spatial consensus (produced by 44_spatial_consensus.py)
-    consensus_path = RESULTS_DIR / "integration" / "spatial_consensus.csv"
+    # Multi-cohort spatial consensus (produced by 44_spatial_consensus.py clean 20261118)
+    consensus_path = RESULTS_DIR / "integration" / "spatial_consensus_clean_20261118.csv"
+    if not consensus_path.exists():
+        consensus_path = RESULTS_DIR / "integration" / "spatial_consensus.csv"
     if consensus_path.exists():
         results["spatial_consensus"] = pd.read_csv(consensus_path)
 
@@ -244,10 +244,15 @@ def build_spatial_evidence(atlas, spatial_results):
     # the fix here at integration time: map the CSV's `slide_logfc` as the logfc and
     # attach NO cell-level padj (all-NaN column). This keeps hep/kc identical (their
     # on-disk `logfoldchange` already IS the slide direction and `pval_adj` is blank).
+    # Drop any preexisting quarantined GeoMx columns inherited from a prior atlas merge (N09)
+    stale_geomx = [c for c in atlas.columns if c.startswith("spatial_govaere2026_geomx_")]
+    if stale_geomx:
+        print(f"  [QUARANTINE N09] Dropping {len(stale_geomx)} inherited spatial_govaere2026_geomx_* columns")
+        atlas = atlas.drop(columns=stale_geomx)
+
     govaere_map = [
         # (results-key,                  output_prefix,                            logfc_col,        padj_col)
-        ("govaere_geomx_sh_vs_pt",       "spatial_govaere2026_geomx_sh_vs_pt",     "logFC",         "padj_bh"),
-        ("govaere_geomx_sh_vs_ls",       "spatial_govaere2026_geomx_sh_vs_ls",     "logFC",         "padj_bh"),
+        # govaere_geomx_* quarantined (N09: unverified sequential AOI-to-DCC key).
         ("govaere_cosmx_hep_mash",       "spatial_govaere2026_cosmx_hep_mash",     "logfoldchange", "pval_adj"),
         ("govaere_cosmx_kc_mash",        "spatial_govaere2026_cosmx_kc_mash",      "logfoldchange", "pval_adj"),
         # Macrophage sub-cluster CosMx outputs (41b) — adds the GPNMB+/MetMac
@@ -498,11 +503,17 @@ def main():
             n_annotated = atlas[col].notna().sum()
             print(f"    {col}: {n_annotated} genes annotated")
 
-    # Save updated atlas
-    output_path = RESULTS_DIR / "integration" / "multi_evidence_atlas_with_spatial.csv"
+    # Save clean 20261118 tables (preserving historical multi_evidence_atlas_with_spatial.csv)
+    output_path = RESULTS_DIR / "integration" / "multi_evidence_atlas_with_spatial_clean_20261118.csv"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     atlas.to_csv(output_path, index=False)
     print(f"\n  Saved: {output_path} ({len(atlas)} genes × {len(atlas.columns)} columns)")
+
+    id_cols = [c for c in ("human_symbol", "ensembl_id", "gene_biotype") if c in atlas.columns]
+    sp_cols = [c for c in atlas.columns if c.startswith("spatial_") or c.startswith("signature_govaere2026_")]
+    per_gene_path = RESULTS_DIR / "integration" / "spatial_evidence_per_gene_clean_20261118.csv"
+    atlas[id_cols + sp_cols].to_csv(per_gene_path, index=False)
+    print(f"  Saved: {per_gene_path} ({len(atlas)} genes × {len(id_cols) + len(sp_cols)} columns)")
 
     # ---------- Validation assertions ----------
     print("\n  Running validation assertions...")
@@ -511,6 +522,13 @@ def main():
     new_govaere_spatial = [c for c in atlas.columns if c.startswith("spatial_govaere2026_")]
     new_signature      = [c for c in atlas.columns if c.startswith("signature_govaere2026_")]
     new_consensus      = [c for c in atlas.columns if c.startswith("spatial_consensus_")]
+
+    geomx_leaks = [c for c in atlas.columns if c.startswith("spatial_govaere2026_geomx_")]
+    if geomx_leaks:
+        msg = f"FAIL: quarantined GeoMx columns present: {geomx_leaks}"
+        failures.append(msg); print(f"    {msg}")
+    else:
+        print("    PASS: zero spatial_govaere2026_geomx_* columns in clean output (N09)")
 
     # Minimum 8 cols are the pre-subcluster contrasts (4 contrasts × {logfc, padj}).
     # MetMac/TransMac/KCpost from 41b add 6 more → 14 expected when 41b ran;
@@ -606,7 +624,7 @@ def main():
     print("\n  Running enrichment tests...")
     enrichment = enrichment_tests(atlas)
     if len(enrichment) > 0:
-        save_csv(enrichment, "spatial_enrichment_tests.csv", subdir="integration")
+        save_csv(enrichment, "spatial_enrichment_tests_clean_20261118.csv", subdir="integration")
         for _, row in enrichment.iterrows():
             sig = "***" if row["fisher_pval"] < 0.001 else "**" if row["fisher_pval"] < 0.01 else "*" if row["fisher_pval"] < 0.05 else "ns"
             padj_sig = f" (BH: {row['fisher_padj_bh']:.2e})" if "fisher_padj_bh" in row.index else ""
