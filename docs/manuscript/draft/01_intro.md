@@ -1,3 +1,5 @@
+> **SUPERSEDED MARKDOWN DRAFT (2026-11-18):** The authoritative manuscript text, citations, tables, captions, and compiled PDFs are maintained in `docs/manuscript/latex/` (`sections/*.tex`, `captions/*.tex`, `build/main.pdf`, `build/supplement.pdf`). Do not edit or cite numerical values from this archival Markdown draft.
+
 # Introduction
 
 Metabolic dysfunction-associated steatotic liver disease (MASLD) spans hepatic steatosis, metabolic dysfunction-associated steatohepatitis (MASH), fibrosis and cirrhosis. Fibrosis is closely associated with clinical outcomes, yet liver biopsies assigned the same stage can differ substantially in their molecular and cellular composition (Kendall et al., 2023; Kamzolas et al., 2026). Hepatocyte metabolic changes, immune activation and stromal remodeling all contribute to the diseased liver. Understanding how these features relate to inherited susceptibility is an important step toward identifying disease mechanisms and choosing appropriate targets for intervention.

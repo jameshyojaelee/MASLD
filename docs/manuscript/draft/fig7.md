@@ -1,3 +1,5 @@
+> **SUPERSEDED MARKDOWN DRAFT (2026-11-18):** The authoritative manuscript text, citations, tables, captions, and compiled PDFs are maintained in `docs/manuscript/latex/` (`sections/*.tex`, `captions/*.tex`, `build/main.pdf`, `build/supplement.pdf`). Do not edit or cite numerical values from this archival Markdown draft.
+
 ## Model scores are reported against task-native baselines and each model's training exposure
 
 For a Resource of this kind, a practical question is how much of the mapped

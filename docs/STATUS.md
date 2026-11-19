@@ -1,9 +1,27 @@
 # Current paper and codebase status
 
-Navigation updated November 12, 2026. This page summarizes the latest recorded
+Navigation updated November 18, 2026. This page summarizes the latest recorded
 manuscript state; it is not a live SLURM report. Exact values and their
 qualifications remain in [RESULTS](RESULTS.md), with scientific scope in
 [PAPER](PAPER.md) and authorized next work in [ROADMAP](ROADMAP.md).
+
+## 2026-11-18 remediation summary
+
+All 23 defects (`N01`–`N23`) in `reports/CODEBASE_DEEP_REVIEW_20261118.md` have been
+resolved across timestamped `*20261118*` candidate outputs and synchronized into the
+working LaTeX manuscript (`docs/manuscript/latex/`), rendered main and supplementary
+figure panels (`docs/manuscript/latex/figures/` and `figures/main/` mirrors), Unified
+Gene Catalog (`gene-catalog-unified-20261118`), and `.1` predictive model bundles
+(`masld-severity-v1.2.1`, `masld-panel-v1.1`, `masld-liver-chromatin-state-v1.2.1`).
+Historical named releases (`2026-10-21-r9`, `gene-catalog-eligibility-20261106`,
+`gene-catalog-conf1-20261110T023225Z`, prior model releases) and `figure1_JL.pdf`
+remain untouched. Remaining manual items before submission:
+
+1. Apply the panel text updates listed in `reports/FIGURE1_ILLUSTRATOR_UPDATES_20261118.md`
+   to the Illustrator plate `figure1_JL.pdf` (`Mouse`, sample counts, `AMR`, `Validations`).
+2. Populate the three external deposit placeholders once minted (`CODE_REPOSITORY_URL_TBD`,
+   `CODE_ARCHIVE_DOI_TBD`, `CATALOG_DEPOSIT_ACCESSION_TBD`).
+3. Execute final user sign-off against the [ROADMAP checklist](ROADMAP.md#final-release-checklist).
 
 ## Executive assessment
 

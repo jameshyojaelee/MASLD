@@ -1,3 +1,5 @@
+> **SUPERSEDED MARKDOWN DRAFT (2026-11-18):** The authoritative manuscript text, citations, tables, captions, and compiled PDFs are maintained in `docs/manuscript/latex/` (`sections/*.tex`, `captions/*.tex`, `build/main.pdf`, `build/supplement.pdf`). Do not edit or cite numerical values from this archival Markdown draft.
+
 ## Liver protein tests the disease-state RNA changes, and intact tissue places the genes in cell types
 
 We next asked how far the genetic and disease-state evidence extends beyond bulk

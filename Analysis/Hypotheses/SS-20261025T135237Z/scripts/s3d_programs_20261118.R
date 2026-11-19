@@ -6,6 +6,7 @@ A <- ss_args(c("composition", "loco_dir", "norm", "h54_design", "h54"))
 NORM <- if (is.null(A[["norm"]])) "rle" else A[["norm"]]; stopifnot(NORM %in% c("rle", "stored"))
 H54_DESIGN <- if (is.null(A[["h54_design"]])) "ss" else A[["h54_design"]]; stopifnot(H54_DESIGN %in% c("ss", "h54"))
 RUN_H54 <- is.null(A[["h54"]]) || A[["h54"]] == "run"
+OUT <- A$out
 
 H54_LIB <- file.path(SS_ROOT, "Analysis/Hypotheses/H54-20261015T111917Z/code/h54_lib.R")
 FIG4E <- file.path(SS_ROOT, "figures/candidates/fig4e-program-axis-774-20261012T010830Z/analysis")
@@ -76,21 +77,24 @@ if (!is.null(A[["composition"]])) {
 
 fit_one <- function(fid, form, d) {
   d <- copy(d); d[, score := as.numeric(S[fid, match(sample_alias, colnames(S))])]
-  f <- hc3_fit(form, d, "stage_num")
-  if (!isTRUE(f$estimable)) return(data.table(feature_id = fid, estimable = FALSE))
-  data.table(feature_id = fid, estimable = TRUE, n = f$n, df = f$df, beta = f$estimate, se_hc3 = f$se,
-             t = f$statistic, p_two_sided = f$p_value,
-             p_one_sided_increase = pt(f$statistic, df = f$df, lower.tail = FALSE))
+  f <- hc3_fit(d$score, d, form)
+  if (!isTRUE(f$estimable)) return(data.table(feature_id = fid, estimable = FALSE, n = nrow(d)))
+  tv <- f$statistic[["stage_num"]]
+  data.table(feature_id = fid, estimable = TRUE, n = f$n, df = f$df,
+             beta = f$coefficients[["stage_num"]],
+             se_hc3 = f$se[["stage_num"]], t = tv,
+             p_two_sided = f$p_value[["stage_num"]],
+             p_one_sided_increase = stats::pt(tv, f$df, lower.tail = FALSE))
 }
 
 variants <- list(primary = list(form = rhs(), d = D), without_F4 = list(form = rhs(d = D[stage_num < 4]), d = D[stage_num < 4]))
 if (has_qual) variants$quality <- list(form = rhs(QUAL), d = D)
 if (!is.null(ILR)) variants$composition_ilr <- list(form = rhs(ILR), d = D[complete.cases(D[, ..ILR])])
 fss4 <- rbindlist(lapply(names(variants), function(v) cbind(model = v, rbindlist(lapply(c(STROMAL, DUCT), function(f)
-  if (f %in% TESTABLE) fit_one(f, variants[[v]]$form, variants[[v]]$d) else data.table(feature_id = f, estimable = FALSE))))), fill = TRUE)
+  if (f %in% TESTABLE) fit_one(f, variants[[v]]$form, variants[[v]]$d) else data.table(feature_id = f, estimable = FALSE)), fill = TRUE))), fill = TRUE)
 fss4[, p_holm := NA_real_]
 for (v in names(variants)) fss4[model == v & estimable == TRUE, p_holm := p.adjust(p_one_sided_increase, method = "holm")]
-fss4[, pass := estimable == TRUE & beta > 0 & p_holm < 0.05]
+fss4[, pass := estimable == TRUE & !is.na(beta) & beta > 0 & !is.na(p_holm) & p_holm < 0.05]
 fss4[, program := fifelse(feature_id == STROMAL, "Stromal ECM (IGFBP7)", "Ductular injury (BICC1)")]
 w(fss4, "FSS4_confirmatory_programs.tsv")
 
@@ -103,10 +107,11 @@ fss5_sens <- rbindlist(lapply(setdiff(names(variants), "primary"), function(v) {
 # Primary FSS5
 fss5 <- rbindlist(lapply(TESTABLE, fit_one, form = rhs(), d = D), fill = TRUE)
 fss5[estimable == TRUE, q_bh := p.adjust(p_two_sided, method = "BH")]
+hs <- fread(FZ[2]); stopifnot(nrow(hs) == 117L, sum(hs$stage_supported %in% TRUE) == 64L)
+fss5 <- merge(fss5, hs[, .(feature_id = program_uid, frozen_stage_beta = beta, stage_supported)], by = "feature_id", all.x = TRUE)
 fss5 <- merge(registry[, .(feature_id = program_uid, cell_type, module_name)], fss5, by = "feature_id")
-stg_map <- fread(FZ[2])
-fss5 <- merge(fss5, stg_map[, .(feature_id, frozen_stage_beta = beta, stage_supported,
-                                fig4e_4cohort_beta_fibrosis, fig4e_4cohort_q)], by = "feature_id", all.x = TRUE)
+fe <- fread(file.path(FIG4E, "new774_plus_GSE174478/meta_effects.tsv"))[model_kind == "primary" & axis == "fibrosis"]
+fss5 <- merge(fss5, fe[, .(feature_id, fig4e_4cohort_beta_fibrosis = beta_meta, fig4e_4cohort_q = q_value)], by = "feature_id", all.x = TRUE)
 w(fss5, "FSS5_all_programs.tsv"); w(fss5_sens, "FSS5_sensitivities.tsv")
 
 # 22-autosome LOCO program sensitivity (envelope across chr1..chr22 + modal-chromosome-held-out LOCO)

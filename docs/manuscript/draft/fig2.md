@@ -1,3 +1,5 @@
+> **SUPERSEDED MARKDOWN DRAFT (2026-11-18):** The authoritative manuscript text, citations, tables, captions, and compiled PDFs are maintained in `docs/manuscript/latex/` (`sections/*.tex`, `captions/*.tex`, `build/main.pdf`, `build/supplement.pdf`). Do not edit or cite numerical values from this archival Markdown draft.
+
 ## Liver eQTL colocalization defines a provisional 436-gene map across 35 liver-trait GWAS strata
 
 A subsequent variant-identity check found duplicate position identifiers in

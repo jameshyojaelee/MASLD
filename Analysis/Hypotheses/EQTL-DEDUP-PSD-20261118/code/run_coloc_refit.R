@@ -58,7 +58,8 @@ lines <- replace_once(lines, '            if (!all(grepl("^[0-9]+:[0-9]+$", eqtl
 lines <- replace_once(lines, 'source(file.path(FM_DIR, "src/coloc_signal_eligibility.R"))',
   c('source(file.path(FM_DIR, "src/coloc_signal_eligibility.R"))',
     sprintf('source("%s")', file.path(run_dir, "code/unique_ld_match.R"))))
-writeLines(lines, file.path(run_dir, "code/patched_06_susie_coloc.R"))
+patched_path <- file.path(run_dir, "code/patched_06_susie_coloc.R")
+if (!file.exists(patched_path)) writeLines(lines, patched_path)
 invisible(parse(text = lines))
 if (nzchar(Sys.getenv("PATCH_ONLY"))) quit(save = "no", status = 0)
 connection <- textConnection(lines)

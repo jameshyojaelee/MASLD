@@ -1,3 +1,5 @@
+> **SUPERSEDED MARKDOWN DRAFT (2026-11-18):** The authoritative manuscript text, citations, tables, captions, and compiled PDFs are maintained in `docs/manuscript/latex/` (`sections/*.tex`, `captions/*.tex`, `build/main.pdf`, `build/supplement.pdf`). Do not edit or cite numerical values from this archival Markdown draft.
+
 # References
 
 1. Kamzolas, I. et al. A data-driven framework reconstructs the molecular continuum of human MASLD progression. *Nat Metab* **8**, 1545–1562 (2026). https://doi.org/10.1038/s42255-026-01543-7

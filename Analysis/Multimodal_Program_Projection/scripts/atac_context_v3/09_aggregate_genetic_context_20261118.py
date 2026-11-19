@@ -35,7 +35,106 @@ from genetics_context import normalize_against_reference
 def arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--candidate-root", type=Path, default=default_candidate_root())
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Optional output directory override (defaults to <candidate-root>/genetics/context).",
+    )
+    parser.add_argument(
+        "--eqtl-dedup-comparison",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to EQTL-DEDUP gene comparison TSV "
+            "(eqtl_dedup_gene_comparison.tsv) or directory containing both "
+            "eqtl_dedup_gene_comparison.tsv and eqtl_dedup_gene_study_comparison.tsv."
+        ),
+    )
+    parser.add_argument(
+        "--eqtl-dedup-gene-study-comparison",
+        type=Path,
+        default=None,
+        help=(
+            "Optional path to EQTL-DEDUP gene-study comparison TSV "
+            "(eqtl_dedup_gene_study_comparison.tsv). Auto-detected next to "
+            "--eqtl-dedup-comparison if omitted."
+        ),
+    )
+    parser.add_argument(
+        "--pp-h4-threshold",
+        type=float,
+        default=0.5,
+        help="Minimum SuSiE PP.H4 required to retain a refit gene-study pair (default: 0.5).",
+    )
     return parser.parse_args()
+
+
+def _parse_optional_float(value: str | None) -> float | None:
+    if value is None:
+        return None
+    text = value.strip()
+    if not text or text.upper() in {"NA", "NAN", "NULL", "NONE"}:
+        return None
+    parsed = float(text)
+    return parsed if math.isfinite(parsed) else None
+
+
+def load_eqtl_dedup_exclusions(
+    comparison_path: Path,
+    gene_study_path: Path | None = None,
+    pp_h4_threshold: float = 0.5,
+) -> tuple[dict[str, str], dict[tuple[str, str], str], list[dict[str, str]], list[Path]]:
+    """Parse EQTL-DEDUP comparison tables into excluded genes, failed pairs, and gained pairs."""
+    if comparison_path.is_dir():
+        gene_path = comparison_path / "eqtl_dedup_gene_comparison.tsv"
+        inferred_gs = comparison_path / "eqtl_dedup_gene_study_comparison.tsv"
+    else:
+        gene_path = comparison_path
+        inferred_gs = comparison_path.parent / "eqtl_dedup_gene_study_comparison.tsv"
+    gs_path = gene_study_path if gene_study_path is not None else (inferred_gs if inferred_gs.is_file() else None)
+
+    if not gene_path.is_file():
+        raise ContractError(f"EQTL-DEDUP gene comparison file not found: {gene_path}")
+
+    used_paths: list[Path] = [gene_path]
+    excluded_genes: dict[str, str] = {}
+    for row in read_rows(gene_path):
+        state = row.get("new_state", "").strip()
+        if state != "positive":
+            excluded_genes[row["ensembl"].strip()] = state or "non_positive"
+
+    excluded_pairs: dict[tuple[str, str], str] = {}
+    gained_pairs: list[dict[str, str]] = []
+    if gs_path is not None:
+        if not gs_path.is_file():
+            raise ContractError(f"EQTL-DEDUP gene-study comparison file not found: {gs_path}")
+        used_paths.append(gs_path)
+        for row in read_rows(gs_path):
+            key = (row["gwas_name"].strip(), row["ensembl"].strip())
+            old_method = row.get("old_method", "").strip()
+            new_method = row.get("new_method", "").strip()
+            old_susie = _parse_optional_float(row.get("old_susie"))
+            new_susie = _parse_optional_float(row.get("new_susie"))
+            was_pos = old_method == "susie" and old_susie is not None and old_susie > pp_h4_threshold
+            is_pos = new_method == "susie" and new_susie is not None and new_susie > pp_h4_threshold
+            if not is_pos:
+                excluded_pairs[key] = (
+                    f"pair_failed_refit:new_method={new_method or 'missing'},"
+                    f"new_susie={row.get('new_susie', '') or 'NA'}"
+                )
+            elif not was_pos and is_pos:
+                gained_pairs.append({
+                    "gwas_name": key[0],
+                    "ensembl": key[1],
+                    "gene": row.get("gene", "").strip(),
+                    "old_method": old_method,
+                    "old_susie": row.get("old_susie", "").strip(),
+                    "new_method": new_method,
+                    "new_susie": row.get("new_susie", "").strip(),
+                })
+
+    return excluded_genes, excluded_pairs, gained_pairs, used_paths
 
 
 def iter_rows(path: Path) -> Iterator[dict[str, str]]:
@@ -145,16 +244,30 @@ def main() -> None:
     peak_path = root / "consensus_peak_manifest.tsv"
     if not source.is_file() or not peak_path.is_file():
         raise ContractError("liftover and consensus peaks must exist before genetics aggregation")
-    out = root / "genetics/context"
+    out = args.output_dir.resolve() if args.output_dir is not None else (root / "genetics/context")
     if out.exists():
         raise ContractError(f"refusing to overwrite genetics context: {out}")
-    stale_pending = sorted((root / "genetics").glob(".context.pending.*"))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    stale_pending = sorted(out.parent.glob(f".{out.name}.pending.*"))
     if stale_pending:
         raise ContractError(f"unresolved prior genetics context stage: {stale_pending}")
-    pending = root / f"genetics/.context.pending.{os.getpid()}"
+    pending = out.parent / f".{out.name}.pending.{os.getpid()}"
     if pending.exists() or pending.is_symlink():
         raise ContractError(f"pending genetics context exists: {pending}")
     pending.mkdir(parents=True)
+
+    excluded_genes: dict[str, str] = {}
+    excluded_pairs: dict[tuple[str, str], str] = {}
+    gained_pairs: list[dict[str, str]] = []
+    dedup_input_paths: list[Path] = []
+    if args.eqtl_dedup_comparison is not None:
+        excluded_genes, excluded_pairs, gained_pairs, dedup_input_paths = (
+            load_eqtl_dedup_exclusions(
+                args.eqtl_dedup_comparison,
+                args.eqtl_dedup_gene_study_comparison,
+                pp_h4_threshold=args.pp_h4_threshold,
+            )
+        )
 
     rows = iter_rows(source)
     first_row = next(rows, None)
@@ -204,6 +317,50 @@ def main() -> None:
     plan_keys = [(row["gwas_name"], row["ensembl"]) for row in plan_rows]
     if len(plan_keys) != len(set(plan_keys)):
         raise ContractError("replay plan contains duplicated gene-study pairs")
+
+    audit_rows: list[dict[str, object]] = []
+    if args.eqtl_dedup_comparison is not None:
+        filtered_plan_rows = []
+        excluded_plan_pairs: set[tuple[str, str]] = set()
+        for row in plan_rows:
+            pair_key = (row["gwas_name"], row["ensembl"])
+            reason = ""
+            if row["ensembl"] in excluded_genes:
+                reason = f"gene_excluded:{excluded_genes[row['ensembl']]}"
+            elif pair_key in excluded_pairs:
+                reason = excluded_pairs[pair_key]
+            if reason:
+                excluded_plan_pairs.add(pair_key)
+                audit_rows.append({
+                    "action": "excluded",
+                    "gwas_name": row["gwas_name"],
+                    "ensembl": row["ensembl"],
+                    "gene": row.get("gene", ""),
+                    "trait_class": row.get("trait_class", ""),
+                    "reason": reason,
+                })
+            else:
+                filtered_plan_rows.append(row)
+        for gained in gained_pairs:
+            audit_rows.append({
+                "action": "gained_no_replay_export",
+                "gwas_name": gained["gwas_name"],
+                "ensembl": gained["ensembl"],
+                "gene": gained["gene"],
+                "trait_class": "",
+                "reason": (
+                    f"gained_in_refit:old={gained['old_method']}({gained['old_susie'] or 'NA'})"
+                    f"->new={gained['new_method']}({gained['new_susie']})"
+                ),
+            })
+        plan_rows = filtered_plan_rows
+        grouped = {
+            k: v for k, v in grouped.items() if (k[0], k[1]) not in excluded_plan_pairs
+        }
+        summaries = {
+            k: v for k, v in summaries.items() if (k[0], k[1]) not in excluded_plan_pairs
+        }
+
     pair_metadata = {
         (row["gwas_name"], row["ensembl"]): row
         for row in plan_rows
@@ -311,15 +468,29 @@ def main() -> None:
         tuple(primary[0]),
         primary,
     )
+    if args.eqtl_dedup_comparison is not None:
+        write_tsv(
+            pending / "eqtl_dedup_filter_audit.tsv",
+            ("action", "gwas_name", "ensembl", "gene", "trait_class", "reason"),
+            audit_rows,
+        )
+    manifest_rows = [{
+        "release_id": RELEASE_ID,
+        "role": "hg38_fasta",
+        "path": str(fasta_path),
+        "sha256": fasta_rows[0]["sha256"],
+    }]
+    for dedup_path in dedup_input_paths:
+        manifest_rows.append({
+            "release_id": RELEASE_ID,
+            "role": f"eqtl_dedup_{dedup_path.stem}",
+            "path": str(dedup_path.resolve()),
+            "sha256": sha256_file(dedup_path),
+        })
     write_tsv(
         pending / "genetics_context_input_manifest.tsv",
         ("release_id", "role", "path", "sha256"),
-        [{
-            "release_id": RELEASE_ID,
-            "role": "hg38_fasta",
-            "path": str(fasta_path),
-            "sha256": fasta_rows[0]["sha256"],
-        }],
+        manifest_rows,
     )
     os.replace(pending, out)
     print(f"Aggregated {len(grouped)} signal pairs across {len(LINEAGES)} lineages")

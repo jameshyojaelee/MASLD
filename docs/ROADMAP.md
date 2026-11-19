@@ -4,6 +4,22 @@ Use [STATUS](STATUS.md) for current completion and [RESULTS](RESULTS.md) for
 exact values. Dated execution notes below are records of their stated scope;
 this documentation cleanup authorizes no new analysis or submission.
 
+## 2026-11-18 comprehensive remediation (complete in working manuscript)
+
+All 23 defects (`N01`–`N23`) identified in `reports/CODEBASE_DEEP_REVIEW_20261118.md`
+have been executed on SLURM (`--account=nslab --qos=nslab`), verified via programmatic
+checks (`reports/verify_remediation_20261118.py`), unit test suites, model release
+tests, scope checks, and 150-DPI visual figure inspections, and synchronized across
+`docs/manuscript/latex/`, `figures/main/`, and `docs/{PAPER,STATUS,RESULTS,ROADMAP}.md`.
+All outputs reside in `*20261118*` candidate directories; historical releases and
+`figure1_JL.pdf` are untouched. `docs/manuscript/draft/*.md` files are marked
+superseded.
+
+Remaining items for formal manuscript submission:
+1. Update the Illustrator artwork `figure1_JL.pdf` following `reports/FIGURE1_ILLUSTRATOR_UPDATES_20261118.md`.
+2. Mint and fill `CODE_REPOSITORY_URL_TBD`, `CODE_ARCHIVE_DOI_TBD`, and `CATALOG_DEPOSIT_ACCESSION_TBD`.
+3. Complete formal user sign-off on the [final release checklist](#final-release-checklist).
+
 | Planning question | Section |
 |---|---|
 | Latest genetic-identity and transportability follow-up | [November 7 priorities](#variant-identity-and-transportability-follow-up-2026-11-07) |

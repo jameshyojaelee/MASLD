@@ -10,7 +10,7 @@ suppressPackageStartupMessages({
   library(jsonlite)
 })
 
-A <- ss_args(c("input", "stage", "out", "ilr_std", "loco_dir", "ref_s3a"))
+A <- parse_args(commandArgs(TRUE), required = character(), defaults = list())
 OUT <- A$out
 dir.create(OUT, recursive = TRUE, showWarnings = FALSE)
 NCORES <- max(1L, as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "8")))
@@ -44,35 +44,38 @@ KEEP <- rownames(dg_all)[keep_l]
 dg <- calcNormFactors(dg_all[keep_l, , keep.lib.sizes = TRUE], method = "RLE")
 log_msg("Staged units:", nrow(u), "KEEP genes:", length(KEEP))
 
-# Verify bit-for-bit reproduction of unadjusted FIT$bin from out_s3a-20261026T234211Z
+# Run BIN_CHECK, STD8, and chr1..chr22 fits in parallel across NCORES (all deterministic, zero RNG)
 ref_fit <- readRDS(file.path(REF_S3A, "observed_fits.rds"))
-fit_bin_check <- fit_qw(dg, design_of(u, "bin"))
-bin_diff <- max(abs(fit_bin_check$coefficients[, c("binF2", "binF3F4")] - ref_fit$bin$coef[, c("binF2", "binF3F4")]))
-log_msg(sprintf("FIT$bin max abs diff vs reference S3a: %.3e", bin_diff))
-stopifnot(bin_diff < 1e-11)
-
 pack <- function(f, cfs) list(coef = f$coefficients[, cfs, drop = FALSE], tab = gene_tab(f, cfs))
 cfs <- c("binF2", "binF3F4")
+chrs <- paste0("chr", 1:22)
+tasks <- c("BIN_CHECK", "STD8", chrs)
 
-fit_ilr_file <- function(path) {
+run_ilr_fit <- function(path) {
   il <- fread(path)
   icol <- grep("^ilr[0-9]+$", names(il), value = TRUE)
   stopifnot("sample_alias" %in% names(il), length(icol) == 7L, all(u$sample_alias %in% il$sample_alias))
   ilr_dt <- as.data.table(il[match(u$sample_alias, sample_alias), ..icol])
   info <- cbind(u[, .(batch, inferred_sex, bin)], ilr_dt)
-  pack(fit_qw(dg, design_of(info, "bin", icol)), cfs)
+  fit_qw(dg, design_of(info, "bin", icol))
 }
 
-log_msg("Fitting standard 8-part ILR...")
-comp_std <- fit_ilr_file(ILR_STD)
+log_msg(sprintf("Fitting BIN_CHECK + STD8 + 22 LOCO chromosomes (%d tasks) across %d cores...", length(tasks), NCORES))
+raw_fits <- mclapply(tasks, function(tk) {
+  if (tk == "BIN_CHECK") return(fit_qw(dg, design_of(u, "bin")))
+  if (tk == "STD8") return(run_ilr_fit(ILR_STD))
+  run_ilr_fit(file.path(LOCO_DIR, paste0(tk, "_steatosite_ilr8.tsv")))
+}, mc.cores = min(NCORES, length(tasks)), mc.preschedule = FALSE)
+names(raw_fits) <- tasks
+stopifnot(!any(vapply(raw_fits, inherits, TRUE, "try-error")))
 
-chrs <- paste0("chr", 1:22)
-log_msg("Fitting 22 held-out chromosome ILRs across ", NCORES, " cores...")
-chr_fits <- mclapply(chrs, function(ck) {
-  fit_ilr_file(file.path(LOCO_DIR, paste0(ck, "_steatosite_ilr8.tsv")))
-}, mc.cores = min(NCORES, 22L), mc.preschedule = FALSE)
+bin_diff <- max(abs(raw_fits[["BIN_CHECK"]]$coefficients[, cfs] - ref_fit$bin$coef[, cfs]))
+log_msg(sprintf("FIT$bin max abs diff vs reference S3a: %.3e", bin_diff))
+stopifnot(bin_diff < 1e-11)
+
+comp_std <- pack(raw_fits[["STD8"]], cfs)
+chr_fits <- lapply(raw_fits[chrs], pack, cfs = cfs)
 names(chr_fits) <- chrs
-stopifnot(!any(vapply(chr_fits, inherits, TRUE, "try-error")))
 
 # Assemble gene-level LOCO comp fit: gene g on chr_k gets fit from chr_fits[[chr_k]]
 keep_chr <- ann$chromosome[match(KEEP, ann$gene_id_versioned)]
