@@ -123,6 +123,17 @@
 !/docs/**/*.md
 /docs/archive/
 
+# LaTeX manuscript sources (keep build/ and mirrored figures/ ignored)
+!/docs/manuscript/latex/*.tex
+!/docs/manuscript/latex/sections/**/*.tex
+!/docs/manuscript/latex/references.bib
+!/docs/manuscript/latex/preamble-extra.tex
+!/docs/manuscript/latex/latexmkrc
+!/docs/manuscript/latex/README.txt
+
+# Deep-review and figure-update reports
+!/reports/*.md
+
 # 7d) Web portals and streamlit apps are ignored
 /masld-atlas-v2/
 /streamlit_convergence/

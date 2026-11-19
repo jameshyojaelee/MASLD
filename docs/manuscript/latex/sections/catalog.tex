@@ -1,0 +1,183 @@
+\subsection{The MASLD Gene Catalog records evidence class, observability and a follow-up experiment for each gene}\label{the-masld-gene-catalog-records-evidence-class-observability-and-a-follow-up-experiment-for-each-gene}
+
+The Unified MASLD Gene Catalog (\texttt{gene-catalog-unified-20261118}) integrates the PSD-remediated eQTL colocalization refit (\texttt{EQTL-DEDUP-PSD-20261118}; 430 multi-signal SuSiE genes), the 774-cluster bulk RNA disease fit (1,854 calls), the ambient-corrected within-hepatocyte stage partition (C3b; 188 genes) and a Tier-1 direct-MASLD/PDFF/cirrhosis coding fine-mapping rule (PIP $\ge$ 0.5) across all 28,233 gene identities. Historical named releases (\texttt{2026-10-21-r9} and \texttt{gene-catalog-eligibility-20261106}) remain untouched for provenance.
+
+To make the Resource usable gene by gene rather than as a ranked list, we built
+the MASLD Gene Catalog (Figure 6A). For every eligible gene and program, a Catalog
+entry records the primary gene class, phenotype provenance, assay and biological
+unit, testing universe, source dependence and direction where interpretable. It
+also records a machine-readable evidence state and the reason for it, the
+unresolved alternative explanation and a deterministic next-experiment rule. The
+Catalog covers 28,233 gene identities and keeps the eQTL-colocalization call
+separate from the bulk RNA call (Figure S6A). The genetic call is supported when
+SuSiE-COLOC PP.H4 exceeds 0.5 in any of 35 Tier-1/2 GWAS. The RNA call is
+supported at BH \emph{q} \textless{} 0.05 and \textbar log2FC\textbar{} \textgreater{} 0.5 in one limma-voom fit of 774
+genetic-identity clusters, which are not verified independent donors. The state
+vocabulary distinguishes supported, discordant, indeterminate, untestable, not
+applicable, source-dependent and prespecified adequate-negative states. The
+Catalog gene calls use three of them (supported, indeterminate and untestable).
+No nonsignificant result is converted into a negative call. In this paper,
+unsupported means tested without support (indeterminate), not tested negative.
+
+A blank evidence cell can mean that the gene was not detected, the source was
+underpowered, the assay cannot observe the proposed mechanism, the dataset lacks
+an authoritative biological-unit join, or the experiment has not been done
+(Figure S6A). These states have different scientific consequences, and the
+Catalog records them with the following limits. None of the Catalog's 56,466 gene-level evidence entries is classed as not
+applicable. Every entry also carries a source-dependence flag, separate from its evidence
+state, so that flag does not separate one gene from another.
+The 9,312 genes with no Tier-1/2 COLOC record have an untestable genetic call, and
+the Catalog gives the reason as no Tier-1/2 COLOC record. No power assessment was
+made for them, so the call marks a missing record, not a measured lack of power. The Catalog defines no negative-call rule, so no gene is
+recorded as tested negative. The genetics call also does not separate evidence
+for distinct causal variants from absence of evidence. Among the 816 Tier-1/2
+gene-study pairs rerun with a shared-posterior eligibility check, 456 genes have
+at least one eligible SuSiE signal pair. Of these, 20 have PP.H3 above 0.8 and
+best PP.H4 at most 0.5, the pattern expected when the trait and expression
+signals have distinct causal variants. All 20 had PP.H4 above 0.5 in the first
+run and lost it when the check removed signal pairs, so the pattern was
+produced by the check and is not an independent observation. In the historical named r8 calls, eighteen of these 20 are called
+indeterminate, the same label given to genes with no evidence for either a shared
+or a distinct causal variant. The same pattern is common when every Tier-1/2
+SuSiE result is counted, including negative results carried forward from the
+first colocalization run without the shared-posterior check. Historically, of the 3,918 genes
+with any finite Tier-1/2 SuSiE result, a set that does not require a bulk RNA
+test and so is larger than the historical 3,769-gene comparison universe, 3,335 have PP.H3
+above 0.8 in at least one stratum and best PP.H4 at most 0.5. Of these 3,335,
+3,319 are called indeterminate. When the shared-posterior check was also applied
+to the carried negatives, 3,877 genes kept a finite Tier-1/2 SuSiE result and
+3,306 showed this PP.H3 pattern. This count keeps the first-run PP.H3 of
+gene-study results in which only some signal pairs failed. Their PP.H3 after
+the check is unknown, so the count lies between 3,101 and 3,416. Under the
+Catalog's rule for untestable genes, 3,148 of the 3,306 are called
+indeterminate (range 2,948 to 3,252). The indeterminate genetic call also covers
+15,009 genes with a Tier-1/2 COLOC record but no SuSiE result; for them the
+multi-signal test is missing, not negative. Of these, 333 have a single-signal
+(ABF) PP.H4 above 0.5: 290 unresolved, 18 established-state and 25 untested
+genes, TM6SF2 (0.64) among them.
+
+The November 6 eligibility release adopted the priority testability rule for checked carried negatives (changing 188 genetic states and 180 classes to give 13,731 untested, 12,958 unresolved, 1,118 established-state associated, 400 genetically anchored and 26 supported on both axes). Applying the PSD eQTL refit (\texttt{EQTL-DEDUP-PSD-20261118}; Methods) removes four lost genes (\emph{THBS3, CDK5RAP3, LRRC37A, KANSL1-AS1}) and marks two untestable (\emph{CTSS, MPRIP}) while restoring \emph{IRF5} and \emph{ABHD12}, shifting the expression-only counts to 13,733 untested, 12,962 unresolved, 1,118 established-state associated, 394 genetically anchored and 26 supported on both axes (430 multi-signal SuSiE genes including 10 RNA-untestable genes). Admitting Tier-1 direct-MASLD, MRI-PDFF or cirrhosis coding credible-set variants at PIP $\ge$ 0.5 (below) adds 7 genes (\emph{ADH1B, APOE, MTARC1, PNPLA2, PNPLA3, SERPINA1, TM6SF2}; \emph{GCKR} and \emph{SAMM50} are already regulatory) to yield the Unified Catalog counts: 13,733 untested, 12,955 unresolved, 1,118 established-state associated, 401 genetically anchored and 26 supported on both axes. All bulk RNA calls, effect directions and effect sizes are unchanged, and native SuSiE and ABF posteriors, driving studies and ancestries are displayed separately. Historical named r8/r9 and November 6 files retain their original values.
+
+The Catalog also carries annotation fields that describe each gene without
+changing its class or route. For each of the 28,233 genes, it records whether
+the protein was detected in liver (58 participants) and plasma (143
+participants) in the PXD051911 proteomes. It also records whether the gene is
+targeted by the CosMx panel of GSE312698 (Boesch et al., 2026), and in which of
+nine liver cell lineages its RNA is detected across donors. Where an assay did
+not observe a gene, absence is recorded as untestable, not negative. A liver
+protein row was quantified for 170 of 1,118 established-state genes, 203 of 400
+genetically anchored genes and 11 of 26 genes supported on both axes. Each gene
+also carries its position along the central-portal axis in five non-steatotic
+live-donor livers (Visium; Yakubovsky et al., 2026) and its hepatocyte protein
+zonation (Weiss et al., 2026). Across 1,337 genes measured in both, the two
+agreed in direction (Spearman \emph{rho} 0.39, 95\% interval 0.34 to 0.44; positive in
+each of five donors). Weiss et al.~reported a comparison of RNA and protein
+zonation against single-nucleus RNA (their Supplementary Fig. 9). Each
+disease-state call also records whether the gene changed with image-measured
+histologic fat in 222 GTEx postmortem livers. Of the 1,002 measurable calls, 326
+did so at BH \emph{q} \textless{} 0.05, and 323 of these changed in the direction seen between
+disease and control biopsies. This field concerns histologic steatosis of
+unrecorded cause in postmortem liver. It does not assign any biopsy call to
+steatosis.
+
+On the genetics side, 31 Catalog genes carry a fine-mapped protein-altering or
+canonical-splice credible-set member at normalized SuSiE PIP of 0.5 or above,
+and 20 of them are in the unresolved class. This field does not change the
+eQTL-colocalization class and does not identify the gene through which a variant
+acts. Of 581 European liver-trait GWAS signals that colocalize with a liver
+eQTL, 191 share a signal with an accessible region in a 138-donor bulk-liver
+chromatin-accessibility QTL (caQTL) map (Currin et al., 2025). At least 45 of
+these 191 were already reported by the source. In 108 Catalog genes, the same region also
+colocalizes with the gene's eQTL, and in 100 when the accessibility-QTL and
+eQTL lead variants must have r² ≥ 0.8. These are annotation fields on
+gene records. They create no regulatory-element record and no
+credible-set-to-gene link. Constraint, essentiality and secretion fields are
+given for follow-up design and do not enter any class.
+
+We illustrate the record with four worked entries: GLP1R, THRB, HKDC1 and MTARC1
+(Figure S6C). GLP1R is untested because its RNA was not detected. Its genetic call is
+indeterminate, with no Tier-1/2 SuSiE result, and it routes first to the missing
+decisive assay. THRB has genetic
+support (SuSiE PP.H4 \textgreater{} 0.999, UK Biobank GGT) and an indeterminate RNA call,
+because its change (log2FC -0.20) is below the 0.5 floor. HKDC1 is supported on
+both axes (SuSiE PP.H4 0.988, UK Biobank AST; log2FC +1.07, BH \emph{q} = 8.0 ×
+10\^{}-7). Importantly, its genetic anchor is oriented to the enzyme-raising allele,
+not a disease-risk allele: the AST-raising allele is associated with lower MVP NAFLD
+(\emph{z} = $-$2.57) and lower cirrhosis (\emph{z} = $-$4.69) liability, so the
+enzyme-raising and disease-risk directions are opposite and ``supported in both domains''
+records presence of calls on both axes rather than directional concordance. MTARC1 has no
+expression-QTL colocalization and an indeterminate RNA call (log2FC $-$0.15), and enters
+\texttt{genetically\_anchored} in the Unified Catalog via its Tier-1 liver-fat missense
+variant (PIP 0.76). The printed protein-coding routes propose context and function measurements.
+They do not convert genetic support into causality, and they do not rank the entries.
+
+Because expression colocalization alone misses established MASLD genes whose risk alleles alter protein sequence, the Unified Catalog admits a fine-mapped protein-altering or canonical-splice variant (PIP $\ge$ 0.5) as a second genetic mechanism specifically when its top GWAS trait is a Tier-1 direct MASLD, liver-fat (MRI-PDFF) or cirrhosis trait (admitted even when liver eQTL testing is untestable). Under this Tier-1 coding rule, 7 unresolved genes move to \texttt{genetically\_anchored} (\emph{ADH1B, APOE, MTARC1, PNPLA2, PNPLA3, SERPINA1, TM6SF2}; \emph{GCKR} and \emph{SAMM50} are already regulatory, so all 9 Tier-1 coding genes are anchored), bringing \texttt{genetically\_anchored} from 394 to 401 while keeping \texttt{both\_supported} at 26 (Figure 6B). Crucially, all 17 non-regulatory Tier-2 liver-enzyme-only coding hits---including hemolysis or enzyme-clearance artifacts such as \emph{HBB} and \emph{GOT1}, as well as \emph{ABCB11, EPPK1, FOXN4, ALDH2, ALDOB, HNF1A} and \emph{HSPA1A}---are strictly retained outside \texttt{genetically\_anchored} and \texttt{both\_supported} with an explicit annotation (\texttt{coding\_liver\_enzyme\_gwas\_only}) so enzyme-clearance loci do not dilute disease-anchored sets. \emph{APOB, CIDEB, MTTP, PSD3} and \emph{TRIB1} remain unresolved, and \emph{HSD17B13} and \emph{MBOAT7} remain untested because these data do not observe their mechanisms. Each anchored gene also carries a disease-liability field recording whether the anchoring SNP is associated with MASLD, liver fat or cirrhosis (Figure S2Z; Supplementary Note 22).
+
+Read through these fields, all 26 genes supported in both domains are regulatory liver-enzyme colocalizations (Figure 6C; ALT 12, GGT 8, AST 6; bulk RNA 21 higher, 5 lower). At the anchoring SNP oriented to the enzyme-raising allele, four (\emph{IFI27L2, SPP1, FADS2} and \emph{IFI30}) are associated with MVP NAFLD or cirrhosis at \textbar z\textbar{} \textgreater{} 3.29, ten show no disease association, eight are weak or indeterminate, two are East Asian anchors not classifiable in European MVP (\emph{CDH6, MLIP}), and for \emph{HKDC1} and \emph{KRT8} the enzyme-raising allele lowers disease risk (Figure 6D). Under the ambient-corrected within-hepatocyte stage partition (C3b; Figure 3H), three of the 26 genes change inside hepatocytes (\emph{CFHR4, CFHR5, PCOLCE2}), nine change in a way not separable from cell mix, five are unresolved and nine are not replicated stage genes. The class was named ``concordant'' in earlier releases; we rename it ``supported in both domains'' because it records calls on both axes without claiming directional agreement.
+
+The same fields place the targets of MASH drugs (Figure 6E). THRB, the resmetirom target, is genetically anchored by a GGT colocalization (PP.H4 \textgreater{} 0.999) with no disease association at the anchoring SNP, and its RNA change is below the effect floor. GIPR, FGF21, FASN, SCD and CCR5 are higher in disease without genetic support, GLP1R is not measured in bulk RNA, and GCGR is not separable from cell mix under the ambient-corrected C3b partition. Across 36 genes of three therapeutic axes, KRT8 is the only gene with RNA, genetic and unified MASLD-only liver-protein calls (Figure 6F). Figure 6G lists 28 drug mechanisms tested in randomized MASLD or MASH trials (including the corrected \emph{FGF19}/\emph{FGFR4}/\emph{KLB} mapping for the FGF19 analogue aldafermin and the mitochondrial pyruvate carrier modulator label for MSDC-0602K). For each mechanism, it shows the Unified Catalog genetic state of each target gene, the highest randomized trial phase (not approval status) and the reported result for liver fat, ALT, MASH resolution and fibrosis improvement in separate columns. Under the Unified Catalog, 3 of the 53 target-gene tiles across 43 distinct genes (plus one not-applicable tile for vitamin E) are genetically supported (\emph{ACACB} and \emph{THRB} by colocalization, \emph{PNPLA3} by a Tier-1 coding variant; 49 indeterminate including \emph{FGF19} and \emph{KLB}; 1 untestable, \emph{FGFR4}); in the historical November 6 release \emph{PNPLA3} is indeterminate. Separately, and not plotted, we computed gene-level support at the target genes from MAGMA or genome-wide significant variants within 50 kb: liver-fat support reaches 3 mechanisms (DGAT2, KHK and PNPLA3), cirrhosis support 1 (PNPLA3), Pan-UKBB ALT support 10 and MVP ALT support 6 (FGF19 has no gene-level support on any trait). We asked whether mechanisms with matched genetic support improved the matched endpoint more often than mechanisms without it (unit: drug mechanism). No matched pair was informative (liver fat n = 14, Fisher \emph{p} = 1.0; cirrhosis n = 20, \emph{p} = 1.0; ALT n = 11, \emph{p} = 0.545; Holm \emph{p} = 1.0 for all three), and at its margins the liver-fat pair could not have reached \emph{p} \textless{} 0.05 (minimum attainable \emph{p} = 0.143). PNPLA3 has support for all three traits, and its antisense knockdown (NCT05809934) reported no histologic benefit; that trial is unpublished, and this is one observation, not a rule. GLP1R and THRB have no support for any of the three traits, and their agonists improved liver fat, MASH resolution and fibrosis, so absence of common-variant support is not evidence against a target. Trial outcomes come from a dated table of 72 rows (66 representative rows) in which 16 non-notes fields contain a not-verified flag; 11 of the 112 endpoint cells in Figure 6G come from a row with such a field. These panels describe what evidence each target has in human liver data; they do not predict drug response. Each entry can be viewed, inspected with its uncertainty and downloaded with its source references (Figure 6H).
+
+\input{sections/figures/figure6.tex}
+
+The recurring examples of the Resource show further follow-up experiments. GNMT
+and CYP2C19 are lower in disease at RNA and protein levels and are
+established-state entries, which the Catalog routes to context-matched
+perturbation and rescue. MAT1A is also lower at both levels, but its pooled RNA
+effect (log2FC -0.485) is below the 0.50 floor of a canonical call. Its Catalog
+class is therefore unresolved, not established-state. COLOC retains GNMT's single-signal direct-NAFLD ABF result (PP.H4 0.706), which rests on a sub-threshold GWAS association (p = 2.6 × 10⁻⁴) and does not extend to MAT1A or CYP2C19. GNMT has no multi-signal SuSiE call (best PP.H4 0.128), so its
+Catalog genetics call is indeterminate and it takes the same perturbation and
+rescue route. Its local regulatory haplotype is unresolved. The ECM/IGFBP7 and
+ductular-injury/BICC1 entries separate three routes: ambient-resistant lineage
+measurement, matched-null tissue organization and functional perturbation. With
+dataset-specific variances modelled, neither program passes the 117-program BH
+and stability rule for a pooled stage association. This analysis cannot exclude
+the ECM/IGFBP7 effect size estimated in the earlier stage analysis. The original
+single-cell atlas lacks ambient-RNA correction. An ambient-RNA sensitivity
+analysis corrected five datasets. Two datasets (GSE189600 and GSE192742) could
+not be corrected, and 11 T-cell programs were untestable. It does not establish cell of origin.
+Within the sampled sections, the ECM/IGFBP7 score is more spatially
+autocorrelated than matched control genes. This is not a donor-level result,
+and most fixed programs (68 and 74 of 114 per source) exceed the same null, so
+it does not show program-specific organization. Ductular-injury/BICC1 is
+spatially indeterminate. Ductular-injury/BICC1 therefore routes first to a better-powered
+donor-resolved tissue test, and both programs need an independent cell-of-origin
+assay. PNPLA3 and MTARC1 remain boundary controls for coding or protein-level
+mechanisms that expression-QTL analysis need not recover. Each carries a
+fine-mapped missense variant (maximum PIP 0.706 for PNPLA3 and 0.757 for
+MTARC1). In the adopted release this left their class unresolved; under the candidate coding rule below both are genetically anchored. These examples
+show how routing works. They are not a ranking of the strongest genes.
+
+The routing layer assigns each gene one of five class-level routes (Figure S6B). Of the 28,233 genes in the Unified Catalog, 13,733 are untested,
+12,955 unresolved, 1,118 established-state associated, 401 genetically anchored
+and 26 supported on both axes. Genetically anchored regulatory candidates route
+to allele-aware editing with target-expression and locus-linked phenotypes (and Tier-1 coding anchors route to allele-aware coding editing).
+Established-state candidates route to context-matched perturbation and rescue.
+Candidates supported on both axes need both relationships connected in the same
+model. Untested candidates (13,733) route to the missing decisive assay and
+unresolved candidates (12,955) to measurement of the most decisive missing layer;
+for these 26,688 genes (94.5\%) the route is to obtain the missing evidence
+layer, not a specific assay. Transcript
+depletion is only one possible perturbation. Increasing gene activity, testing
+regulatory-element changes, measuring protein function, lineage restriction and
+context-specific challenge are separate designs that no current record
+receives. For noncoding nominations,
+the route starts from the molecular object. A disease-associated lncRNA routes
+to RNA depletion with measurement of the neighboring gene. A colocalized or
+ambiguous lncRNA locus needs paired RNA and locus perturbations to distinguish
+DNA-element, transcriptional and mature-RNA effects. The Catalog records genes, not
+regulatory DNA elements, and does not link credible sets to genes. Genetically
+anchored genes route to allele-aware regulatory editing at the gene level, but no
+record names the element to edit, and the element-level route defined in Methods
+is assigned to no record.
+
+The Catalog is deposited as machine-readable tables (Data availability;
+\texttt{CATALOG\_DEPOSIT\_ACCESSION\_TBD}). Each displayed entry links to its source graph, its
+complete tested universe, a data dictionary and its machine-readable
+next-experiment rule. A reader can therefore see, for any gene, which layers
+were tested, which were untestable and which class-level route applies.
+
+Across Figures 1 to 6, the Resource records inherited genetic evidence and
+disease-state remodeling for each gene, and places both in cell and tissue
+context where an assay can observe them. The Gene Catalog is the reusable
+output. For each nominated molecular object, it records the biology, the limit
+of the evidence and the next experiment.

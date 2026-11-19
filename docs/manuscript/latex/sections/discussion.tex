@@ -1,0 +1,257 @@
+\section{Discussion}\label{discussion}
+
+In this work, we present a human MASLD Resource that records liver-trait genetic evidence and cross-sectional disease-state remodeling for each gene, with assay boundaries kept separate. Two earlier input defects—duplicate variant identifiers and non-PSD LD matrices across 90 primary eQTL fits, and repeated sequencing captures inflating the historical single-cell census—have been resolved across the synchronized figures and Unified Gene Catalog (yielding 430 primary multi-signal colocalized genes after allele-aware, PSD-projected refitting and 650,083 unique physical cells across 104 donors; the 117 frozen Hotspot program weights are unchanged). The bulk layer comes from 774 conservative genetic-identity clusters in five cohorts, not verified independent donors. After shared-posterior eligibility qualification and the PSD eQTL refit, the native multi-signal comparison includes 3,587 genes with a bulk test: 420 genetically supported, 209 canonical disease-state calls and 26 shared, against 20.9 expected within expression deciles (Mantel-Haenszel OR 1.321, 95\% CI 0.851 to 2.051; exact \emph{p} = 0.222). We detected neither enrichment nor depletion. Historical expression controls were not rerun in the qualified universe, so no direction is inferred (Supplementary Note 3). Another 935 disease-state calls have no multi-signal result, and 11 more are priority-untestable; these are not genetic negatives. The overlap establishes neither biological separation nor equivalence, independence or a privileged intersection. The separate signed comparison remains bounded: genome-wide rank agreement between ALT TWAS z and the disease contrast lies inside $\pm$0.03 without composition adjustment, but not with hepatocyte fraction in the design, and no direction is stated (Supplementary Note 5).
+
+Most colocalized genes take their strongest evidence from liver-enzyme traits,
+largely because far more gene-trait pairs were tested in that class. The
+strongest native colocalization evidence comes from liver-enzyme traits for 417
+of 430 genes and from direct disease or liver-fat traits for 13. Only 22 genes
+have any direct-trait colocalization, and far more enzyme than direct-trait
+gene-by-GWAS pairs were tested (12,121 against 771). Pooled across ancestries,
+protein-altering plus canonical-splice variants carry 29.65\% of fine-mapped
+posterior probability for direct MASLD and liver-fat traits and 6.67\% for enzyme
+traits, counting credible sets at genome-wide-significant leads. This contrast is confounded with GWAS ancestry and fine-mapping
+coverage, and no ancestry stratum supports a calibrated trait-class call
+(Supplementary Note 4). A comparison of the trait classes within one ancestry
+needs fine-mapping of all UKBB enzyme lead windows and of the MVP European ALT,
+AST and NAFLD GWAS. Some protein-altering variants may act through protein
+function without changing steady-state RNA. Others change RNA abundance through
+nonsense-mediated decay or splicing (Rivas et al., 2015). One hypothesis for
+which genes appear in both sets is therefore that expression-based
+colocalization misses risk variants that act through protein function rather
+than RNA abundance. The present comparison does not test it, because it does not
+hold gene eligibility, phenotype, study power and expression observability
+fixed. These results set one requirement for gene lists built this way in MASLD:
+the trait that supplies each gene's evidence should be stated. A gene nominated
+by ALT is not the same claim as a gene nominated by liver fat.
+
+The historical named-r8 class comparison, not rerun after eligibility qualification, did not recover the prespecified prediction that
+genetically supported genes are more hepatocyte-specific than disease-state
+genes. In 281 expression-matched gene pairs, the observed difference was in the
+opposite direction (Supplementary Note 3). Every test of that opposite direction
+is post hoc, and none is calibrated. The difference comes mainly from the 56
+pairs whose disease-state partner was itself tested by colocalization. We
+therefore read it as a descriptive difference conditioned on selection, not as
+confirmatory class separation or independent biological replication. The
+protein-response comparison of 73 pairs gives no support for a class difference,
+and it does not establish equivalence. Expression remains a major observability
+difference between the classes. Among genes with a single-cell hepatocyte-specificity
+value in the historical named-r8 classes (399 of 400 genetic-only and 1,124 of 1,129 state-only genes),
+mean bulk expression of genetic-only genes exceeds that of state-only genes by
+3.80 log2 units, and 281 of the 399 genetic-only genes obtain an
+expression-matched partner. This 3.80 log2 gap belongs to the
+hepatocyte-specificity comparison. Within the expression deciles of the
+historical 3,769-gene overlap test, colocalized genes differ from other genes by 0.07 log2
+units on average (0.70 before stratification). Unequal observability could affect which genes
+appear in both sets, but the present comparison does not isolate that
+explanation. In a prespecified test, colocalized genes were more
+loss-of-function constrained (odds ratio 0.70 per SD of LOEUF, Holm \emph{p} 0.012),
+consistent with the general pattern reported by Mostafavi et al.~(2023).
+This model compares genetic-only with state-only genes and excludes the overlap;
+it does not explain why genes occur in both sets. Germline regulatory effects may act before biopsy, in restricted
+cell states or through small persistent shifts. Disease-state expression can
+reflect injury, adaptation or composition. Neither class is automatically causal
+or irrelevant.
+
+The recurring examples make this distinction concrete. GNMT has a single-signal
+direct-NAFLD colocalization (ABF PP.H4 0.706) but no multi-signal call. With
+MAT1A and CYP2C19, it is lower in pooled RNA, in cross-sectional fibrosis
+contrasts and in adjusted liver protein. In an exploratory analysis of 46 MASLD
+participants, the three proteins covary. The covariation remains after
+adjustment for fibrosis stage but not after adjustment for NAS or for all four
+histology components (BH over 12 pair-by-adjustment tests). This pattern is
+compatible with a shared association with histologic severity rather than a
+three-gene circuit, but adjustment does not establish mediation. The ECM/IGFBP7 and ductular-injury/BICC1
+programs show a different limit. The original atlas lacks ambient-RNA
+correction, the ambient-RNA sensitivity analysis cannot resolve all datasets or
+programs, and of the two only ECM/IGFBP7 exceeds a matched-gene spatial null,
+which most of the 114 scorable fixed programs also exceed. Cross-assay
+evidence therefore strengthens specific claims, but disease association, tissue
+architecture, lineage origin and inherited mechanism remain distinct.
+
+Each component of this Resource has precedent. Staged bulk liver transcriptomes
+have been published (Hoang et al., 2019; Govaere et al., 2020; Pantano et al.,
+2021), meta-analyzed with gene-level GWAS signal (Piras and DiStefano, 2024),
+organized into network modules (Kumak et al., 2026) and ordered along a molecular continuum
+(Kamzolas et al., 2026; \url{doi:10.1038/s42255-026-01543-7}). Single-cell and
+spatial atlases resolve disease cell states (Ramachandran et al., 2019;
+Guilliams et al., 2022; Boesch et al., 2026). A single-cell multiome assigns MASH
+risk loci to liver cell types (Elison et al., 2025), single-cell eQTL mapping has been
+done in MASLD liver biopsies (Hong et al., 2025), chromatin,
+reporter-assay and CRISPR interference data assign target genes to MASLD risk
+variants (Zhu et al., 2026), and large GWAS have combined
+expression and coding evidence to nominate genes (Sveinbjornsson et al., 2022).
+Multi-ancestry genetic association data have been used to nominate 212
+candidate MASLD genes and, through genetically predicted expression, to select
+drug-repurposing targets among them (Seagle et al., 2025).
+This Resource adds a per-gene Catalog that keeps colocalization results beside
+disease-state calls and records whether each layer was untested or tested
+without support. Our reanalysis of a 138-donor liver caQTL map (Currin et al.,
+2025) places a colocalized accessible region at 191 of 581 European liver-trait
+GWAS signals that colocalized with a liver eQTL. At least 45 of these were
+already reported by the source.
+
+A related distinction between evidence roles has been reported at the protein layer. A
+liver proteogenomic study of 504 biopsies found that differential protein
+abundance and protein-QTL colocalization nominate largely different gene sets
+(Gobeil et al., 2026b). Of the
+five genes that study nominated, our map places GCKR on the primary
+expression-colocalization side, MTTP colocalizes only in the
+single-signal (ABF) sensitivity analysis (best PP.H4 0.82), ERLIN1 does not
+reach that set (best ABF PP.H4 0.47; Catalog class unresolved), and LGALS1 is in the established-state class. MTARC1 lies outside our
+expression map but is resolved by the protein-QTL analysis of that study. GCKR
+has differing expression-QTL and protein-QTL directions. These cases show the
+difference between protein and expression observability. They do not establish
+a binary split into causal and reactive genes. A single-cell multiomic liver
+study likewise reports that chromatin-accessibility QTL and expression QTL
+colocalize with largely distinct risk loci. It supplies cell-type regulatory
+context that tissue-level eQTL analysis cannot provide (Elison et al., 2025).
+These external studies extend the assay boundary that the Gene Catalog records.
+They are credited source comparisons, not results of this paper.
+
+The gene and module results of Kumak et al.~are likewise source findings, not
+results of this paper. Of their NAS-associated and fibrosis-associated genes,
+944 and 1,013 map to the Catalog, and 258 and 301 of these reach the canonical
+bulk call here. Of those present in both the bulk and colocalization tables, 661
+of 902 and 714 of 943 had no multi-signal colocalization result. The Catalog
+keeps this state separate from a tested negative. Among the 241 NAS and 228
+fibrosis genes that were evaluated, 36 and 28 colocalized, against 28.9 and 24.9
+expected for genes of the same expression level (Mantel-Haenszel OR 1.32, 95\% CI
+0.91 to 1.92, and OR 1.16, 95\% CI 0.76 to 1.76; Holm-adjusted \emph{p} 0.29 and 0.51,
+Holm over the two lists). Thus, among genes evaluated by multi-signal COLOC, the
+colocalization rate of these genes did not differ detectably from that of genes
+of the same expression level (power in Supplementary Note 15). Kumak et al.
+prioritize genes by combining meta-analysis evidence with centrality in a
+curated protein interaction network. The 117 programs and 43 systems used here
+were fixed before any outcome was read and are never reweighted by network
+position. A sparsely annotated gene therefore keeps its assigned weight, and an
+inadequately observed gene is recorded as untestable rather than ranked low.
+
+The 1,854 pooled disease-state calls describe tissue associations in the
+discovery cohorts, not an independently replicated disease signature. The
+current random-effects sensitivity retains the pooled direction for 1,850 genes
+and one direction in every available cohort for 1,208, but none passes BH over
+24,115 genes with modified Hartung--Knapp uncertainty. This combination is
+consistent with broad directional agreement and substantial uncertainty about
+effect magnitudes across four/five cohorts. It does not establish absence or
+equivalence. The earlier ``consistent'' classifications used different inputs
+and uncertainty rules and do not certify replication. SteatoSITE provides a
+separate test of cross-sectional fibrosis-stage effects; its success cannot be
+substituted for disease-versus-control replication. The measured tissue
+associations remain useful for follow-up, with their cohort and contrast limits
+attached to each interpretation.
+
+The stage-stratified analyses add biological context without establishing
+change over time. Adjacent-stage contrasts and cell-resolved programs describe
+stage-ordered remodeling across different participants. The externally anchored
+molecular continuum, adapted from Kamzolas et al.~(2026), adds a separate
+molecular view without redefining disease. It aligns strongly with the
+fibrosis-based pathway, NMF and Hotspot results, which is consistent with the
+major biological programs being preserved. This alignment was computed on the
+same data and is not independent validation. Stage-adjusted associations show
+that molecular variation within histologic bins tracks the continuum, and which
+programs carry that variation depends on adjustment for cell-type composition.
+The prespecified primary continuum test missed in both test cohorts (Holm \emph{p}
+0.082 in GSE162694 and GSE213621), and matched random gene sets give a mean of
+86 continuum-associated programs against the 92 reported (\emph{p} 0.109).
+Histology therefore remains the interpretable clinical anchor, and the continuum
+adds molecular resolution within a stage. All 117 Hotspot program definitions
+and 43 system memberships remain fixed. An outcome-blind map extends this
+comparison across complete pathway and Hotspot layers. Stage and continuum
+effects align broadly, but only a minority of systems keep one sliding-window
+direction across all five cohorts. This supports shared but cohort-variable
+remodeling, not a universal molecular sequence or ontology. Program-pair
+covariance is reported in Results. It could not be tested in GSE213621, where
+the program-group permutation control failed. Bulk covariance also mixes cell
+abundance with program activity, so it does not show coordination between cell
+types. Neither analysis identifies transitions within individuals, a dominant
+fibrosis switch or therapeutic windows. Those claims need repeated sampling of
+the same participants and perturbation experiments.
+
+For users of the Resource, the main lesson of Figure S7 is that each model score
+must be read beside its exposure audit and its task-native baseline.
+Our per-cohort exposure audit showed that all 109 GSE268273
+validation samples were in the BulkFormer pretraining data, so that model could not
+be evaluated on samples it had not seen. Against task-native baselines, the paired
+difference between the severity instrument and the in-cohort ridge has a 95\%
+interval that includes zero, and GSE268273 was also used to choose the
+expression transform. A per-region model of H3K27ac that adds the expression of genes near each
+region (the cis head) scored higher than a model on global expression components
+alone, but its gain over a reduced-rank RNA model like that of Figure S7B was
+smaller (Supplementary Note 14).
+
+There are several limitations to this study. The liver-eQTL panel is
+reused and of European ancestry, so non-European GWAS lack ancestry-matched
+molecular QTL data. The regulatory-genetic layer is based on expression QTL, so
+protein-altering and protein-level mechanisms that leave the transcript
+unchanged, such as MTARC1, fall outside its resolution. This layer is also
+tissue-level, not cell-type-resolved. Source-reported protein-QTL and
+single-cell chromatin studies supply distinct assay contexts, but no single
+layer is a complete causal filter. Most genetically supported genes come from
+liver-enzyme rather than direct MASLD traits. Partitioned polygenic scores
+already show that MASLD risk variants do not form one class (Jamialahmadi et
+al., 2024). The direct-versus-enzyme split used here is a different, trait-based
+partition. The class supported on both axes is small, and every context assay
+has source-specific coverage. No accepted spatial analysis provides a
+MASLD-versus-healthy disease-effect estimand, and this paper contains no new
+experimental perturbation. The GTEx comparison measures histologic fat of
+unrecorded cause in postmortem liver. Its slide tissue-area negative control
+missed its prediction (Spearman \emph{rho} 0.354, \emph{p} = 0.0564) and came close to its
+stop rule. In a post hoc check, adding tissue area to the model left the fat
+correlation at 0.631 (0.638 without it). Ischemic time was also correlated with the same genes' disease
+effects, with the opposite sign and less strongly than fat (\emph{rho} −0.350 against
+0.636). The caQTL reanalysis rests on one 138-donor map. Its chr1 and chr19
+positive controls were seen in a pilot and are not blind, and at least 45 of the
+191 colocalized signals were already reported by its authors. We did not check
+overlap with published three-way eQTL, caQTL and GWAS colocalizations
+(Broadaway et al., 2024). We record these as Catalog limitations and do not
+infer mechanisms from source-owned data.
+
+Further limitations concern units of analysis and models. Genotypes called from RNA-seq
+reads identified repeated libraries and conflicting labels, but these calls,
+sample-key checks and expression-based QC do not give complete genotype-based
+identity confirmation, which was not established here. The bulk units therefore remain genetic-identity
+clusters, not verified donors. Gene-level totals can hide opposing isoform
+changes. Differential gene expression concerns total gene abundance,
+differential transcript expression concerns individual transcript abundance, and
+differential transcript usage concerns relative isoform proportions within a
+gene. This Resource tests the first, not isoform switching. Short reads shared
+among isoforms add assignment uncertainty, and transcript estimates depend on
+the annotation. Oakes and Pachter (2026) emphasized these distinctions and the need to
+separate demonstrated responses from exploratory physiological explanations. Model validation is specific to its task, cohort and
+training exposure, and rank correlation is not absolute-stage calibration. The
+GSE193066 repeat-biopsy intraclass correlation (ICC) and SD 0.6433 use
+source-declared pairs whose identity was not qualified. They cannot establish
+primary within-person reliability or label-error calibration, and ceiling values
+derived from them remain sensitivity scenarios. Serial biopsies can include
+shared technical effects and true change, and uncertainty conditional on fitted
+predictions omits retraining variation. The comparator models were fitted
+within each test cohort, so they had already seen that cohort's data.
+Comparison with them therefore cannot show that the models perform equally on
+unseen cohorts, or that one model class is better in general.
+
+Two questions stay open. We do not assign genes or programs separately to steatosis, inflammation or fibrosis; fibrosis stage is the severity anchor, and NAS enters only as a sum or as an adjustment set. Colocalization here tests single variants, so the Resource does not test whether combinations of variants act differently, and the local haplotype at GNMT is unresolved. Both questions are recorded as indeterminate, not negative.
+
+The chromatin analyses further distinguish disease accessibility from predicted
+regulation. Modest cross-cohort agreement and four stellate peakwise candidates
+do not establish a replicated MASH regulatory program, particularly when
+recorded-batch adjustment substantially changes discovery counts. Cicero's
+small held-donor hepatocyte RNA benefit survives the fixed unshuffled stress
+tests, but its advantage over proximity also survives RNA-pairing shuffles.
+These data support descriptive regulatory context without validating individual
+edges or a pairing-specific mechanism. CHST9 and TMEM150B are single-cohort
+hepatocyte RNA candidates in both recorded-batch and condition-only models;
+their expression associations do not establish that a linked accessible region
+regulates either gene. Missing qualified cross-assay donor matches and
+insufficient normal donors in the other RNA lineages remain limits on what can
+be tested (Supplementary Note 16).
+
+Within these limits, the Resource gives each gene an experiment matched to its evidence. Genetically anchored candidates motivate allele-to-gene and
+context-appropriate perturbation without requiring disease-state expression.
+Disease-state-associated candidates motivate tests of active tissue function and
+reversibility without being labeled inherited drivers. Candidates supported on
+both axes motivate experiments that connect the two relationships in one model.
+Untested and unresolved candidates, 26,688 of the 28,233 genes (13,733 untested and 12,955 unresolved), first need the
+missing decisive measurement. The Gene Catalog and the source tables needed to check each call
+are deposited with this paper (Data availability), so that others can look up
+these distinctions for any gene instead of relying on a single aggregate rank.
